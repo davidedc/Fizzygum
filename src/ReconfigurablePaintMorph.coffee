@@ -6,7 +6,7 @@ class ReconfigurablePaintMorph extends Widget
   brushToolButton: nil
   toothpasteToolButton: nil
   eraserToolButton: nil
-  radioButtonsHolderMorph: nil
+  toolsPanel: nil
   stretchableCanvasContainer: nil
 
   # the external padding is the space between the edges
@@ -21,11 +21,12 @@ class ReconfigurablePaintMorph extends Widget
   # external padding
   internalPadding: 5
 
+  providesAmenitiesForEditing: true
+
   constructor: ->
     debugger
     super
     @buildAndConnectChildren()
-    @pencilToolButton.select 1
     @invalidateLayout()
 
   colloquialName: ->   
@@ -34,6 +35,10 @@ class ReconfigurablePaintMorph extends Widget
   representativeIcon: ->
     new PaintBucketIconWdgt()
 
+  rawSetExtent: (aPoint) ->
+    super
+    @reLayout()
+
   closeFromContainerWindow: (containerWindow) ->
     if !world.anyReferenceToWdgt containerWindow
       prompt = new SaveShortcutPromptWdgt @, containerWindow
@@ -41,8 +46,94 @@ class ReconfigurablePaintMorph extends Widget
     else
       containerWindow.close()
 
+
+  editButtonPressedFromWindowBar: ->
+    if @dragsDropsAndEditingEnabled
+      @disableDragsDropsAndEditing @
+    else
+      @enableDragsDropsAndEditing @
+
+  enableDragsDropsAndEditing: (triggeringWidget) ->
+    if !triggeringWidget? then triggeringWidget = @
+    if @dragsDropsAndEditingEnabled
+      return
+    @parent?.makePencilYellow?()
+    @dragsDropsAndEditingEnabled = true
+    @createToolsPanel()
+    @stretchableCanvasContainer.enableDragsDropsAndEditing @
+
+    if @layoutSpecDetails?
+      @layoutSpecDetails.canSetHeightFreely = true
+
+  # while in editing mode, the slide can take any dimension
+  # and if the content has already a decided ratio then
+  # the container will adjust the content within the given
+  # space so that the content will keep ratio.
+  #
+  # However, when NOT in editing mode, then we
+  # want the content to force the ratio of the window
+  # it might be in, so that
+  # 1) it takes the whole window rather than a
+  #    a letterboxed part, so it looks neat
+  # 2) if we drop the slide in
+  #    a document then it will take a height proportional
+  #    to the given width, which is what looks natural.
+  rawSetWidthSizeHeightAccordingly: (newWidth) ->
+    if @layoutSpecDetails?.canSetHeightFreely
+     super
+     return
+
+    if !@stretchableCanvasContainer?
+     super
+     return
+
+    if !@stretchableCanvasContainer.ratio?
+     super
+     return
+
+    @rawSetExtent new Point newWidth, Math.round(newWidth / @stretchableCanvasContainer.ratio)
+
+
+  disableDragsDropsAndEditing: (triggeringWidget) ->
+    if !triggeringWidget? then triggeringWidget = @
+    if !@dragsDropsAndEditingEnabled
+      return
+    @parent?.makePencilClear?()
+    @dragsDropsAndEditingEnabled = false
+    @toolsPanel.unselectAll()
+    @toolsPanel.destroy()
+    @toolsPanel = nil
+    @stretchableCanvasContainer.disableDragsDropsAndEditing @
+    @invalidateLayout()
+
+    if @layoutSpecDetails?
+      @layoutSpecDetails.canSetHeightFreely = false
+      # force a resize, so the slide and the window
+      # it's in will take the right ratio, and hence
+      # the content will take the whole window it's in.
+      # Note that the height of 0 here is ignored since
+      # "rawSetWidthSizeHeightAccordingly" will
+      # calculate the height.
+      if @stretchableCanvasContainer?.ratio?
+        # try to keep the current width and just adjust the height.
+        # HOWEVER it often happens that just doing that is not OK
+        # because the end result is taller than the screen
+        # which is *very* annoying because the window becomes difficult
+        # to handle and resize, SO calculate a width such that the
+        # height doesn't become problematic
+        if @parent? and (@parent instanceof WindowWdgt) and @parent.parent? and @parent.parent == world
+          newWidth = @parent.width()
+          # TODO magic number here
+          extraHeightOfWindowChrome = 20
+          if newWidth / @stretchableCanvasContainer.ratio + extraHeightOfWindowChrome > world.height()
+            newWidth = (world.height() - extraHeightOfWindowChrome) * @stretchableCanvasContainer.ratio
+            newWidth = Math.round(Math.min newWidth, world.width())
+          @parent.rawSetExtent new Point newWidth, 0
+        else
+          @rawSetExtent new Point @width(), 0
+
   isToolPressed: (buttonToCheckIfPressed) ->
-    whichButtonIsSelected = @radioButtonsHolderMorph.whichButtonSelected()
+    whichButtonIsSelected = @toolsPanel.whichButtonSelected()
     if whichButtonIsSelected?
       if whichButtonIsSelected == buttonToCheckIfPressed.parent
         return true
@@ -99,12 +190,13 @@ class ReconfigurablePaintMorph extends Widget
             @changed()
     """
 
+    @createToolsPanel()
+    @invalidateLayout()
 
-    # tools -------------------------------
 
-
-    @radioButtonsHolderMorph = new RadioButtonsHolderMorph()
-    @add @radioButtonsHolderMorph
+  createToolsPanel: ->
+    @toolsPanel = new RadioButtonsHolderMorph()
+    @add @toolsPanel
 
     pencilButtonOff = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new Pencil2IconMorph()
     pencilButtonOff.alpha = 0.1
@@ -459,24 +551,15 @@ class ReconfigurablePaintMorph extends Widget
     toothpasteAnnotation = new EditableMarkMorph @toothpasteToolButton, toothpasteToolButtonOff, "editInjectableSource"
     eraserAnnotation = new EditableMarkMorph @eraserToolButton, eraserToolButtonOff, "editInjectableSource"
 
-    @radioButtonsHolderMorph.add @pencilToolButton
-    @radioButtonsHolderMorph.add @brushToolButton
-    @radioButtonsHolderMorph.add @toothpasteToolButton
-    @radioButtonsHolderMorph.add @eraserToolButton
-    # ----------------------------------------------
+    @toolsPanel.add @pencilToolButton
+    @toolsPanel.add @brushToolButton
+    @toolsPanel.add @toothpasteToolButton
+    @toolsPanel.add @eraserToolButton
 
+    @pencilToolButton.toggle()
     @invalidateLayout()
 
-  doLayout: (newBoundsForThisLayout) ->
-    if !window.recalculatingLayouts
-      debugger
-
-    if @isCollapsed()
-      @layoutIsValid = true
-      @notifyChildrenThatParentHasReLayouted()
-      return
-
-    super
+  reLayout: ->
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -498,41 +581,57 @@ class ReconfigurablePaintMorph extends Widget
 
     # tools -------------------------------
 
-    toolButtonSize = new Point 93, 55
-    eachPaneWidth = Math.floor(@width() - 2 * @externalPadding - @internalPadding - toolButtonSize.width())
+    if @toolsPanel? and @toolsPanel.parent == @
+        toolButtonSize = new Point 93, 55
+    else
+        toolButtonSize = new Point 0, 0
+
+    eachPaneWidth = Math.floor(@width() - 2 * @externalPadding)
+
+    if @toolsPanel? and @toolsPanel.parent == @
+      eachPaneWidth -= Math.floor(@internalPadding + toolButtonSize.width())
+
     b = @bottom() - (2 * @externalPadding)
 
 
-    if @radioButtonsHolderMorph.parent == @
-      @radioButtonsHolderMorph.fullRawMoveTo new Point @left() + @externalPadding, labelBottom
-      @radioButtonsHolderMorph.rawSetExtent new Point 2 * @internalPadding + toolButtonSize.width(), @height() - 2 * @externalPadding
+    if @toolsPanel? and @toolsPanel.parent == @
+      @toolsPanel.fullRawMoveTo new Point @left() + @externalPadding, labelBottom
+      @toolsPanel.rawSetExtent new Point 2 * @internalPadding + toolButtonSize.width(), @height() - 2 * @externalPadding
 
-    if @pencilToolButton.parent == @radioButtonsHolderMorph
-      buttonBounds = new Rectangle new Point @radioButtonsHolderMorph.left() + @internalPadding, labelBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
-      @pencilToolButton.doLayout buttonBounds
+      if @pencilToolButton.parent == @toolsPanel
+        buttonBounds = new Rectangle new Point @toolsPanel.left() + @internalPadding, labelBottom + @internalPadding
+        buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
+        @pencilToolButton.doLayout buttonBounds
 
-    if @brushToolButton.parent == @radioButtonsHolderMorph
-      buttonBounds = new Rectangle new Point @radioButtonsHolderMorph.left() + @internalPadding, @pencilToolButton.bottom() + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
-      @brushToolButton.doLayout buttonBounds
+      if @brushToolButton.parent == @toolsPanel
+        buttonBounds = new Rectangle new Point @toolsPanel.left() + @internalPadding, @pencilToolButton.bottom() + @internalPadding
+        buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
+        @brushToolButton.doLayout buttonBounds
 
-    if @toothpasteToolButton.parent == @radioButtonsHolderMorph
-      buttonBounds = new Rectangle new Point @radioButtonsHolderMorph.left() + @internalPadding, @brushToolButton.bottom() + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
-      @toothpasteToolButton.doLayout buttonBounds
+      if @toothpasteToolButton.parent == @toolsPanel
+        buttonBounds = new Rectangle new Point @toolsPanel.left() + @internalPadding, @brushToolButton.bottom() + @internalPadding
+        buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
+        @toothpasteToolButton.doLayout buttonBounds
 
-    if @eraserToolButton.parent == @radioButtonsHolderMorph
-      buttonBounds = new Rectangle new Point @radioButtonsHolderMorph.left() + @internalPadding, @toothpasteToolButton.bottom() + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
-      @eraserToolButton.doLayout buttonBounds 
+      if @eraserToolButton.parent == @toolsPanel
+        buttonBounds = new Rectangle new Point @toolsPanel.left() + @internalPadding, @toothpasteToolButton.bottom() + @internalPadding
+        buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
+        @eraserToolButton.doLayout buttonBounds 
 
     # stretchableCanvasContainer --------------------------
-    stretchableCanvasContainerWidth = @width() - @radioButtonsHolderMorph.width() - 2*@externalPadding - @internalPadding
+    if @toolsPanel? and @toolsPanel.parent == @
+      stretchableCanvasContainerWidth = @width() - @toolsPanel.width() - 2*@externalPadding - @internalPadding
+    else
+      stretchableCanvasContainerWidth = @width() - 2*@externalPadding
+
     b = @bottom() - (2 * @externalPadding)
     stretchableCanvasContainerHeight =  @height() - 2 * @externalPadding
     stretchableCanvasContainerBottom = labelBottom + stretchableCanvasContainerHeight
-    stretchableCanvasContainerLeft = @radioButtonsHolderMorph.right() + @internalPadding
+
+    if @toolsPanel? and @toolsPanel.parent == @
+      stretchableCanvasContainerLeft = @toolsPanel.right() + @internalPadding
+    else
+      stretchableCanvasContainerLeft = @left() + @externalPadding
 
     if @stretchableCanvasContainer.parent == @
       @stretchableCanvasContainer.fullRawMoveTo new Point stretchableCanvasContainerLeft, labelBottom
