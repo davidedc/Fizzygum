@@ -106,6 +106,8 @@ class StretchableCanvasWdgt extends CanvasMorph
     if !@behindTheScenesBackBuffer? or !@anythingPaintedYet
       @createNewBigExtentBuffer extent
 
+    @createNewSmallExtentBuffer extent
+
     super
     @doLayout @bounds
 
