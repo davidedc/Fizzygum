@@ -2770,15 +2770,6 @@ class Widget extends TreeNode
   showMoveHandle: ->
     world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph @, "moveHandle"
   
-  hint: (msg) ->
-    text = msg
-    if msg
-      text = msg.toString()  if msg.toString
-    else
-      text = "NULL"
-    m = new MenuMorph @, false, @, true, true, text
-    m.popUpCenteredAtHand world
-  
   inform: (msg) ->
     text = msg
     if msg
