@@ -63,18 +63,21 @@ class StretchableEditableWdgt extends Widget
         @parent.fullRawMoveTo world.hand.position().subtract @parent.extent().floorDivideBy 2
         @parent.fullRawMoveWithin world
 
-  holderWindowAboutToBeDropped: (whereIn) ->
-    if whereIn instanceof SimpleVerticalStackPanelWdgt
-      if @layoutSpecDetails?
-        @layoutSpecDetails.canSetHeightFreely = false
-        # force a resize, so the slide and the window
-        # it's in will take the right ratio, and hence
-        # the content will take the whole window it's in.
-        # Note that the height of 0 here is ignored since
-        # "rawSetWidthSizeHeightAccordingly" will
-        # calculate the height.
-        if @stretchableWidgetContainer?.ratio?
-          @rawSetExtent new Point @width(), 0
+  holderWindowJustDropped: (whereIn) ->
+    if (whereIn instanceof SimpleVerticalStackPanelWdgt) and !(whereIn instanceof WindowWdgt)
+      @constrainToRatio()
+
+  constrainToRatio: ->
+    if @layoutSpecDetails?
+      @layoutSpecDetails.canSetHeightFreely = false
+      # force a resize, so the slide and the window
+      # it's in will take the right ratio, and hence
+      # the content will take the whole window it's in.
+      # Note that the height of 0 here is ignored since
+      # "rawSetWidthSizeHeightAccordingly" will
+      # calculate the height.
+      if @stretchableWidgetContainer?.ratio?
+        @rawSetExtent new Point @width(), 0
 
   enableDragsDropsAndEditing: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @

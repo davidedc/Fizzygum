@@ -10,6 +10,7 @@ class Example3DPlotWdgt extends Widget
   grids: nil
   previousMousePoint: nil
   autoRotate: true
+  ratio: nil
 
   constructor: ->
     super()
@@ -49,18 +50,63 @@ class Example3DPlotWdgt extends Widget
   colloquialName: ->
     "3D plot"
 
-  widthWithoutSpacing: ->
-    Math.min @width(), @height()
+  # ---------------------------------------------------------------
+  # Outside of a stack, the plot can take any dimension.
+  # When IN a stack, then we
+  # want the content to force the ratio of the window so that the
+  # plot grows/shrinks in both dimensions harmoniously as the
+  # page is widened/narrowed.
 
-  rawResizeToWithoutSpacing: ->
-    @rawSetExtent new Point @widthWithoutSpacing(), @widthWithoutSpacing()
-
-  initialiseDefaultWindowContentLayoutSpec: ->
+  justDropped: (whereIn) ->
+    debugger
     super
-    @layoutSpecDetails.canSetHeightFreely = false
+    if (whereIn instanceof SimpleVerticalStackPanelWdgt) and !(whereIn instanceof WindowWdgt)
+      @constrainToRatio()
+
+  holderWindowJustDropped: (whereIn) ->
+    if (whereIn instanceof SimpleVerticalStackPanelWdgt) and !(whereIn instanceof WindowWdgt)
+      @constrainToRatio()
+
+  constrainToRatio: ->
+    debugger
+    if @layoutSpecDetails?
+      @ratio = @width() / @height()
+      @layoutSpecDetails.canSetHeightFreely = false
+      # force a resize, so the slide and the window
+      # it's in will take the right ratio, and hence
+      # the content will take the whole window it's in.
+      # Note that the height of 0 here is ignored since
+      # "rawSetWidthSizeHeightAccordingly" will
+      # calculate the height.
+      @rawSetExtent new Point @width(), 0
+
+  holderWindowJustBeenGrabbed: (whereFrom) ->
+    debugger
+    if whereFrom instanceof SimpleVerticalStackPanelWdgt
+      @freeFromRatioConstraints()
+
+  justBeenGrabbed: (whereFrom) ->
+    if whereFrom instanceof SimpleVerticalStackPanelWdgt
+      @freeFromRatioConstraints()
+
+  freeFromRatioConstraints: ->
+    debugger
+    if @layoutSpecDetails?
+      @layoutSpecDetails.canSetHeightFreely = true
+      @ratio = nil
+
+      availableHeight = world.height() - 20
+      if @parent.height() > availableHeight
+        @parent.rawSetExtent (new Point Math.min((@width()/@height()) * availableHeight, world.width()), availableHeight).round()
+        @parent.fullRawMoveTo world.hand.position().subtract @parent.extent().floorDivideBy 2
+        @parent.fullRawMoveWithin world
 
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
-    @rawSetExtent new Point newWidth, newWidth
+    if @ratio?
+      @rawSetExtent new Point newWidth, Math.round(newWidth / @ratio)
+    else
+      super
+  # -----------------------------------------------------------------
 
   step: ->
     if @autoRotate

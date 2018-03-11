@@ -255,9 +255,19 @@ class HandMorph extends Widget
 
       @children = []
       @rawSetExtent new Point()
-      morphToDrop.justDropped? target
+
+      # first we notify the recipient of the drop
+      # this gives the chance to the recipient to
+      # initialise a layout spec for the dropped widget
       if target.reactToDropOf
         target.reactToDropOf morphToDrop, @
+
+      # then we notify the dropped widget. This currently
+      # is used to let the dropped morph tweak the layout
+      # spec (some widgets suddenly become constrained by ratio
+      # when they are dropped into a document)
+      morphToDrop.justDropped? target
+
     #else
     #  alert "if you never see this alert then you can delete the test"
   
