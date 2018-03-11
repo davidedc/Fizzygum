@@ -3736,6 +3736,7 @@ class Widget extends TreeNode
     if childrenNotHandlesNorCarets?
       for each in childrenNotHandlesNorCarets
         each.unlockFromPanels()
+        each.contrastOutFromPanelColor?()
         if each.isEditable?
           each.isEditable = true
 
@@ -3766,6 +3767,7 @@ class Widget extends TreeNode
     if childrenNotHandlesNorCarets?
       for each in childrenNotHandlesNorCarets
         each.lockToPanels()
+        each.blendInWithPanelColor?()
         if each.isEditable?
           each.isEditable = false
           if world.caret?.target == each

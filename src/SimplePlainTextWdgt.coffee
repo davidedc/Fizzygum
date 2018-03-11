@@ -175,6 +175,14 @@ class SimplePlainTextWdgt extends TextMorph2
     @reLayout()
     @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
+  blendInWithPanelColor: ->
+    if @backgroundColor.eq new Color 240, 240, 240
+      @setBackgroundColor new Color 249, 249, 249
+
+  contrastOutFromPanelColor: ->
+    if @backgroundColor.eq new Color 249, 249, 249
+      @setBackgroundColor new Color 240, 240, 240
+
   reLayout: ->
     super()
 
