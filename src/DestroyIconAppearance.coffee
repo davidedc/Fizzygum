@@ -7,8 +7,10 @@ class DestroyIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     # colors
-    widgetColor = @morph.color
-    colorString = 'rgba(0, 0, 0, 1)'
+    fillColorString = @morph.color.toString()
+
+    if @morph.strokeColor?
+      strokeColorString = @morph.strokeColor.toString()
 
     # the drawing
     # icon adapted from
@@ -35,10 +37,12 @@ class DestroyIconAppearance extends IconAppearance
     context.lineTo 37.5, 32.5
     context.lineTo 42.5, 4.5
     context.closePath()
-    context.fillStyle = colorString
+    context.fillStyle = fillColorString
     context.fill()
-    context.strokeStyle = widgetColor
-    context.lineWidth = 1
-    context.stroke()
+
+    if strokeColorString?
+      context.strokeStyle = strokeColorString
+      context.lineWidth = 1
+      context.stroke()
 
 
