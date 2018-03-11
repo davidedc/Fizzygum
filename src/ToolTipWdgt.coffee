@@ -8,6 +8,8 @@
 
 class ToolTipWdgt extends Widget
 
+  @ongoingTimeouts: []
+
   contents: nil
   padding: nil # additional vertical pixels
   morphInvokingThis: nil
@@ -35,13 +37,18 @@ class ToolTipWdgt extends Widget
       theBubble = new @ localize(contents), morphInvokingThis, nil, nil
       theBubble.openAt theBubble.morphInvokingThis.rightCenter().add new Point -8, 0
 
+  @cancelAllScheduledToolTips: ->
+    for eachTimeout in @ongoingTimeouts
+      clearTimeout eachTimeout
+    @eachTimeout = []
+
   @createInAWhileIfHandStillContainedInMorph: (morphInvokingThis, contents, delay = 500) ->
     # console.log "bubble createInAWhileIfHandStillContainedInMorph"
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.animationsPacingControl and
      AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE
         @createBubbleHelpIfHandStillOnMorph contents, morphInvokingThis
     else
-      setTimeout (=>
+      @ongoingTimeouts.push setTimeout (=>
         @createBubbleHelpIfHandStillOnMorph contents, morphInvokingThis
         )
         , delay

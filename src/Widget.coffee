@@ -2167,6 +2167,15 @@ class Widget extends TreeNode
     if (aMorph not instanceof HighlighterMorph) and (aMorph not instanceof CaretMorph)
       if @ == world
         aMorph.addShadow()
+        # when any morph is added to the world, all scheduled tooltips
+        # are cancelled. To avoid that a tooltip appears over what the
+        # button has just opened. This would happen for example in the
+        # "snippets" button in the Simple Document. You go over that
+        # button, you click it, the snippets windows come up, then
+        # the tooltip with "snippets windows" message pops up
+        # over it.
+        if !(aMorph instanceof ToolTipWdgt)
+          ToolTipWdgt.cancelAllScheduledToolTips()
       else
         aMorph.removeShadow()
 
