@@ -336,7 +336,11 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     if @contents?.providesAmenitiesForEditing and !@internalExternalSwitchButton?
       externalButton = new ExternalIconButtonWdgt()
       internalButton = new InternalIconButtonWdgt()
-      @internalExternalSwitchButton = new SwitchButtonMorph [externalButton, internalButton]
+      if @internal
+        listOfButtons = [internalButton, externalButton]
+      else
+        listOfButtons = [externalButton, internalButton]
+      @internalExternalSwitchButton = new SwitchButtonMorph listOfButtons
       @add @internalExternalSwitchButton, nil, nil, nil, true
 
   makePencilYellow: ->
