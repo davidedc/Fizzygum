@@ -281,7 +281,9 @@ class Widget extends TreeNode
     @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.THIS_ONE_I_HAVE_NOW , PreferredSize.THIS_ONE_I_HAVE_NOW, 1
 
   initialiseDefaultVerticalStackLayoutSpec: ->
-    @layoutSpecDetails = new VerticalStackLayoutSpec 1
+    # use the existing VerticalStackLayoutSpec (if it's there)
+    if !(@layoutSpecDetails instanceof VerticalStackLayoutSpec) or !@layoutSpecDetails?
+      @layoutSpecDetails = new VerticalStackLayoutSpec 1
 
   mouseClickRight: ->
     # you could bring up what you right-click,
@@ -3776,7 +3778,6 @@ class Widget extends TreeNode
     @userMovedThisFromComputedPosition = true
     @unlockFromPanels()
     @setLayoutSpec LayoutSpec.ATTACHEDAS_FREEFLOATING
-    @layoutSpecDetails = nil
 
   deduplicateSettersAndSortByMenuEntryString: (menuEntriesStrings, functionNamesStrings) ->
     menuEntriesStrings = menuEntriesStrings.uniqueKeepOrder()
