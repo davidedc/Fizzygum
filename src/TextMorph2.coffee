@@ -432,6 +432,24 @@ class TextMorph2 extends StringMorph2
       # it.
       backBufferContext.fillText (@eliminateInvisibleCharacter line), x, y + textVerticalPosition
 
+      # header line
+      # TODO string2 has very similar code, can be factored-out
+      # paying attention that in string2 some variables with the same
+      # name as here actually have slightly different meaning
+      if @isHeaderLine and @wrappedLines.length <= 1
+        debugger
+        heightOfText = fontHeight @fittingFontSize
+        textHorizontalPosition = x
+        textVertPosition = y + textVerticalPosition
+        widthOfText = width
+        backBufferContext.strokeStyle = new Color 198, 198, 198
+        backBufferContext.beginPath()
+        backBufferContext.moveTo 0, textVertPosition - heightOfText / 2
+        backBufferContext.lineTo textHorizontalPosition - 5, textVertPosition - heightOfText / 2
+        backBufferContext.moveTo textHorizontalPosition + widthOfText + 5, textVertPosition - heightOfText / 2
+        backBufferContext.lineTo @width(), textVertPosition - heightOfText / 2
+        backBufferContext.stroke()
+
     @drawSelection backBufferContext
 
     cacheEntry = [backBuffer, backBufferContext]
