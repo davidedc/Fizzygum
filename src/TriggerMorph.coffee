@@ -249,6 +249,3 @@ class TriggerMorph extends Widget
   mouseDoubleClick: ->
     @triggerDoubleClick()
 
-  # TriggerMorph bubble help:
-  startCountdownForBubbleHelp: (contents) ->
-    ToolTipWdgt.createInAWhileIfHandStillContainedInMorph @, contents

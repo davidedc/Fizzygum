@@ -351,6 +351,9 @@ class Widget extends TreeNode
       @lastBuiltInstanceNumericID++
     @lastBuiltInstanceNumericID = 1000 * Math.ceil @lastBuiltInstanceNumericID / 1000
 
+  startCountdownForBubbleHelp: (contents) ->
+    ToolTipWdgt.createInAWhileIfHandStillContainedInMorph @, contents
+
   constructor: ->
     super()
     @assignUniqueID()

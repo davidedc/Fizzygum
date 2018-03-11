@@ -137,8 +137,3 @@ class EmptyButtonMorph extends Widget
     else
       return @defaultRejectDrags
 
-
-  
-  # TriggerMorph bubble help:
-  startCountdownForBubbleHelp: (contents) ->
-    ToolTipWdgt.createInAWhileIfHandStillContainedInMorph @, contents
