@@ -13,7 +13,7 @@ class SimpleButtonMorph extends EmptyButtonMorph
 
       @dataSourceMorphForTarget = nil,
       @morphEnv,
-      @hint = nil,
+      @toolTipMessage = nil,
 
       @doubleClickAction = nil,
       @argumentToAction1 = nil,

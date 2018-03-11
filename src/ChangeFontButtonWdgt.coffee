@@ -19,7 +19,7 @@ class ChangeFontButtonWdgt extends IconMorph
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
     @setColor new Color 0, 0, 0
-    @hint = "change font"
+    @toolTipMessage = "change font"
 
   mouseClickLeft: ->
     # if there is already a font selection menu for the editor,

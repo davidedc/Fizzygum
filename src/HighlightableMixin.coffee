@@ -37,12 +37,12 @@ HighlightableMixin =
       mouseEnter: ->
         @state = @STATE_HIGHLIGHTED
         @updateColor()
-        @startCountdownForBubbleHelp? @hint  if @hint
+        @startCountdownForBubbleHelp? @toolTipMessage  if @toolTipMessage
       
       mouseLeave: ->
         @state = @STATE_NORMAL
         @updateColor()
-        world.hand.destroyToolTips()  if @hint
+        world.hand.destroyToolTips()  if @toolTipMessage
       
       mouseDownLeft: ->
         @state = @STATE_PRESSED

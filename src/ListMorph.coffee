@@ -74,7 +74,7 @@ class ListMorph extends ScrollPanelWdgt
 
       #labelString,
       #action,
-      #hint,
+      #toolTipMessage,
       #color,
       #bold = false,
       #italic = false,
@@ -86,7 +86,7 @@ class ListMorph extends ScrollPanelWdgt
         true,
         @, # target
         "select", # action
-        nil, # hint
+        nil, # toolTipMessage
         color, # color
         bold, # bold
         italic, # italic

@@ -3,9 +3,9 @@
 class MenuItemMorph extends TriggerMorph
 
   # labelString can also be a Widget or a Canvas or a tuple: [icon, string]
-  constructor: (ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph) ->
+  constructor: (ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, toolTipMessage, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph) ->
     #console.log "menuitem constructing"
-    super ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph 
+    super ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, toolTipMessage, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph 
     @actionableAsThumbnail = true
 
   getTextDescription: ->
@@ -121,8 +121,8 @@ class MenuItemMorph extends TriggerMorph
     unless @isListItem()
       @state = @STATE_HIGHLIGHTED
       @changed()
-    if @hint
-      @startCountdownForBubbleHelp @hint
+    if @toolTipMessage
+      @startCountdownForBubbleHelp @toolTipMessage
   
   mouseLeave: ->
     if @representsAMorph
@@ -138,7 +138,7 @@ class MenuItemMorph extends TriggerMorph
     unless @isListItem()
       @state = @STATE_NORMAL
       @changed()
-    world.hand.destroyToolTips()  if @hint
+    world.hand.destroyToolTips()  if @toolTipMessage
   
   mouseDownLeft: (pos) ->
     if @isListItem()

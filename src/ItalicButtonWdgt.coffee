@@ -15,7 +15,7 @@ class ItalicButtonWdgt extends Widget
     @appearance = new ItalicIconAppearance @
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
-    @hint = "italic"
+    @toolTipMessage = "italic"
 
   mouseClickLeft: ->
     debugger

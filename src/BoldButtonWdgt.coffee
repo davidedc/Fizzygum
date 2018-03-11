@@ -16,7 +16,7 @@ class BoldButtonWdgt extends Widget
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
     @setColor new Color 0, 0, 0
-    @hint = "bold"
+    @toolTipMessage = "bold"
 
   mouseClickLeft: ->
     debugger

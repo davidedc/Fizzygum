@@ -24,7 +24,7 @@ class TriggerMorph extends Widget
   doubleClickAction: nil
   argumentToAction1: nil
   argumentToAction2: nil
-  hint: nil
+  toolTipMessage: nil
   fontSize: nil
   fontStyle: nil
   # careful: Objects are shared with all the instances of this class.
@@ -60,7 +60,7 @@ class TriggerMorph extends Widget
       @centered = false,
       @dataSourceMorphForTarget = nil,
       @morphEnv,
-      @hint = nil,
+      @toolTipMessage = nil,
       @labelColor = (new Color 0, 0, 0),
       @labelBold = false,
       @labelItalic = false,
@@ -220,7 +220,7 @@ class TriggerMorph extends Widget
   mouseEnter: ->
     @state = @STATE_HIGHLIGHTED
     @changed()
-    @startCountdownForBubbleHelp @hint  if @hint
+    @startCountdownForBubbleHelp @toolTipMessage  if @toolTipMessage
   
   # a copied trigger usually wants to un-highlight
   # itself. This happens for example when you duplicate
@@ -231,7 +231,7 @@ class TriggerMorph extends Widget
   mouseLeave: ->
     @state = @STATE_NORMAL
     @changed()
-    world.hand.destroyToolTips()  if @hint
+    world.hand.destroyToolTips()  if @toolTipMessage
   
   mouseDownLeft: ->
     @state = @STATE_PRESSED

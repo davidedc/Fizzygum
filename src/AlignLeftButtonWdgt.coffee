@@ -15,7 +15,7 @@ class AlignLeftButtonWdgt extends Widget
     @appearance = new AlignLeftIconAppearance @
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
-    @hint = "align left"
+    @toolTipMessage = "align left"
 
   mouseClickLeft: ->
     debugger

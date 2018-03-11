@@ -22,7 +22,7 @@ class EmptyButtonMorph extends Widget
   argumentToAction1: nil
   argumentToAction2: nil
  
-  hint: nil
+  toolTipMessage: nil
  
   ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked: true
   
@@ -45,7 +45,7 @@ class EmptyButtonMorph extends Widget
 
       @dataSourceMorphForTarget = nil,
       @morphEnv,
-      @hint = nil,
+      @toolTipMessage = nil,
 
       @doubleClickAction = nil,
       @argumentToAction1 = nil,

@@ -16,7 +16,7 @@ class DecreaseFontSizeButtonWdgt extends IconMorph
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
     @setColor new Color 0, 0, 0
-    @hint = "decrease font size"
+    @toolTipMessage = "decrease font size"
 
   mouseClickLeft: ->
     debugger

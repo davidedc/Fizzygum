@@ -67,7 +67,7 @@ class MenuMorph extends PopUpWdgt
   createLabel: ->
     @label = new MenuHeader localize @title
 
-  createMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true, target, action, hint, color, bold = false, italic = false,doubleClickAction, arg1, arg2,representsAMorph = false)->
+  createMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true, target, action, toolTipMessage, color, bold = false, italic = false,doubleClickAction, arg1, arg2,representsAMorph = false)->
     # console.log "menu creating MenuItemMorph "
     item = new MenuItemMorph(
       ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, # closes unpinned menus
@@ -79,7 +79,7 @@ class MenuMorph extends PopUpWdgt
       false,
       @target, # environment
       @environment, # environment2
-      hint, # bubble help hint
+      toolTipMessage, # bubble help toolTipMessage
       color, # color
       bold, # bold
       italic, # italic
@@ -114,14 +114,14 @@ class MenuMorph extends PopUpWdgt
       else
         destroyNextLines = false
 
-  addMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, hint, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph)->
+  addMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph)->
     # console.log "menu creating MenuItemMorph "
-    item = @createMenuItem label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, hint, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph
+    item = @createMenuItem label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph
     @silentAdd item
 
-  prependMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, hint, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph)->
+  prependMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph)->
     # console.log "menu creating MenuItemMorph "
-    item = @createMenuItem label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, hint, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph
+    item = @createMenuItem label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph
     @silentAdd item, nil, 0
 
   # this is used by the test system to check that the menu

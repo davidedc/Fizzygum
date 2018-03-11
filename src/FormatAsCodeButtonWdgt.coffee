@@ -16,7 +16,7 @@ class FormatAsCodeButtonWdgt extends IconMorph
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
     @setColor new Color 0, 0, 0
-    @hint = "format as code"
+    @toolTipMessage = "format as code"
 
   mouseClickLeft: ->
     debugger
