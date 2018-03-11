@@ -169,11 +169,13 @@ class TemplatesButtonWdgt extends IconMorph
     startingContent.rawSetExtent new Point 405, 50
     startingContent.isTemplate = true
     sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
 
     startingContent = new SimpleVideoLinkWdgt()
     startingContent.rawSetExtent new Point 405, 50
     startingContent.isTemplate = true
     sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
 
     wm = new WindowWdgt nil, nil, sdspw
     wm.setExtent new Point 365, 335
