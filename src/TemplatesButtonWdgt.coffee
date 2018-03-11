@@ -34,10 +34,10 @@ class TemplatesButtonWdgt extends IconMorph
     sdspw.setContents startingContent, 5
 
 
-    arrowDown = new ArrowSIconWdgt()
-    arrowDown.rawSetExtent new Point 25, 25
-    sdspw.add arrowDown
-    arrowDown.layoutSpecDetails.setAlignmentToCenter()
+    startingContent = new ArrowSIconWdgt()
+    startingContent.rawSetExtent new Point 25, 25
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToCenter()
     startingContent.isTemplate = true
 
     startingContent = new SimplePlainTextWdgt(
