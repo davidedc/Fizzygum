@@ -15,6 +15,7 @@ class AlignCenterButtonWdgt extends Widget
     @appearance = new AlignCenterIconAppearance @
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
+    @hint = "align center"
 
   mouseClickLeft: ->
     debugger

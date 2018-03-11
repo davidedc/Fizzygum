@@ -17,6 +17,7 @@ class TemplatesButtonWdgt extends IconMorph
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
     @setColor new Color 0, 0, 0
+    @hint = "useful snippets"
 
   createNewTemplatesWindow: ->
     sdspw = new SimpleDocumentScrollPanelWdgt()
@@ -182,7 +183,7 @@ class TemplatesButtonWdgt extends IconMorph
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 50
     wm.fullRawMoveWithin world
     world.add wm
-    wm.setTitleWithoutPrependedContentName "templates"
+    wm.setTitleWithoutPrependedContentName "useful snippets"
     wm.changed()
 
 

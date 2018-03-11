@@ -34,7 +34,6 @@ HighlightableMixin =
 
         @changed()
       
-      # TriggerMorph events:
       mouseEnter: ->
         @state = @STATE_HIGHLIGHTED
         @updateColor()

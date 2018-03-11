@@ -16,6 +16,7 @@ class IncreaseFontSizeButtonWdgt extends IconMorph
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
     @setColor new Color 0, 0, 0
+    @hint = "increase font size"
 
   mouseClickLeft: ->
     debugger
