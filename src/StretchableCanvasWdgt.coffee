@@ -132,6 +132,23 @@ class StretchableCanvasWdgt extends CanvasMorph
   # paint on the "behind the scenes" backbuffer
   drawLine: (start, dest, lineWidth, color) ->
     throw new Error "not implemented yet"
+
+  paintImage: (pos, image) ->
+
+    extent = @extent()
+    if !@backBuffer?
+      @createNewFrontFacingBuffer extent
+
+    if !@behindTheScenesBackBuffer?
+      @createNewBehindTheScenesBuffer extent
+
+    contextForPainting = @getContextForPainting()
+
+    contextForPainting.drawImage image, pos.x, pos.y
+
+  reactToDropOf: (droppedWidget) ->
+    @paintImage droppedWidget.position(), droppedWidget.fullImage(nil, false, true)
+    world.add droppedWidget, nil, nil, true
   
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts
