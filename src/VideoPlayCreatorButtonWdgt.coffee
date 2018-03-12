@@ -3,6 +3,7 @@ class VideoPlayCreatorButtonWdgt extends ExternalLinkCreatorButtonWdgt
   constructor: (@color) ->
     super
     @appearance = new VideoPlayIconAppearance @
+    @toolTipMessage = "link to video"
 
   grabbedWidgetSwitcheroo: ->
     switcheroo = new SimpleVideoLinkWdgt()

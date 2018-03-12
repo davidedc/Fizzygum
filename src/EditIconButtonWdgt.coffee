@@ -19,6 +19,7 @@ class EditIconButtonWdgt extends EmptyButtonMorph
     @color_hover = new Color 255,153,0
     @color_pressed = @color_hover
     @appearance = new PencilIconAppearance @
+    @toolTipMessage = "edit contents"
 
 
   actOnClick: ->

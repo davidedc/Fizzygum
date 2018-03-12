@@ -32,6 +32,7 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
         if !aMorph.actionableAsThumbnail
           glassBoxTop = new GlassBoxTopWdgt()
           glassBoxBottom.add glassBoxTop
+          glassBoxTop.toolTipMessage = aMorph.toolTipMessage
 
         glassBoxBottom.fullRawMoveTo @topLeft().add new Point @internalPadding, @internalPadding
         if (aMorph instanceof MenuItemMorph)

@@ -16,6 +16,7 @@ class WorldMapCreatorButtonWdgt extends Widget
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
     @setColor new Color 0, 0, 0
+    @toolTipMessage = "world map"
 
   grabbedWidgetSwitcheroo: ->
     switcheroo = new SimpleWorldMapIconWdgt()

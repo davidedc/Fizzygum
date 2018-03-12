@@ -16,6 +16,7 @@ class ExternalLinkCreatorButtonWdgt extends Widget
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
     @setColor new Color 0, 0, 0
+    @toolTipMessage = "link"
 
   grabbedWidgetSwitcheroo: ->
     switcheroo = new SimpleLinkWdgt()

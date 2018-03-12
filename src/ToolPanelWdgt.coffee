@@ -29,6 +29,7 @@ class ToolPanelWdgt extends PanelWdgt
 
         if !aMorph.actionableAsThumbnail
           glassBoxTop = new GlassBoxTopWdgt()
+          glassBoxTop.toolTipMessage = aMorph.toolTipMessage
           glassBoxBottom.add glassBoxTop
 
         glassBoxBottom.fullRawMoveTo @topLeft().add new Point @externalPadding, @externalPadding

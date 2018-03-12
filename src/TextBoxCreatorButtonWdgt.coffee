@@ -16,6 +16,7 @@ class TextBoxCreatorButtonWdgt extends Widget
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
     @setColor new Color 0, 0, 0
+    @toolTipMessage = "text box"
 
   grabbedWidgetSwitcheroo: ->
     switcheroo = new TextMorph2 "insert text here"

@@ -16,6 +16,7 @@ class RectangleMorph extends Widget
     @appearance = new RectangularAppearance @
     @silentRawSetExtent(extent) if extent?
     @color = color if color?
+    @toolTipMessage = "rectangle"
 
   colloquialName: ->
     "rectangle"

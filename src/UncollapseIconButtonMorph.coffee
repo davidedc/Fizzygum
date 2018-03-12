@@ -18,6 +18,7 @@ class UncollapseIconButtonMorph extends EmptyButtonMorph
     @color_hover = new Color 255,153,0
     @color_pressed = @color_hover
     @appearance = new UncollapseIconAppearance @
+    @toolTipMessage = "un-collapse window"
 
 
   actOnClick: ->

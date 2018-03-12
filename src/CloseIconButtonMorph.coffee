@@ -19,6 +19,7 @@ class CloseIconButtonMorph extends EmptyButtonMorph
     @color_hover = new Color 255,0,0
     @color_pressed = @color_hover
     @appearance = new CloseIconAppearance @
+    @toolTipMessage = "close window"
 
 
   actOnClick: ->

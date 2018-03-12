@@ -16,6 +16,7 @@ class CodeInjectingSimpleRectangularButtonMorph extends SimpleRectangularButtonM
     super true, @, 'injectCodeIntoTarget', face
     @strokeColor = new Color 0, 0, 0
     @setColor new Color 150, 150, 150
+    @toolTipMessage = face.toolTipMessage
 
   editInjectableSource: ->
     @textPrompt "Code", @, "modifyCodeToBeInjected", @sourceCodeToBeInjected

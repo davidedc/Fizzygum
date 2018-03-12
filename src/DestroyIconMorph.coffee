@@ -6,3 +6,4 @@ class DestroyIconMorph extends IconMorph
   constructor: (@color) ->
     super
     @appearance = new DestroyIconAppearance @
+    @toolTipMessage = "explosion"
