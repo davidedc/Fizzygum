@@ -12,3 +12,6 @@ class ShadowInfo
   constructor: (@offset = new Point(7, 7), @alpha = 0.2) ->
     @offset.debugIfFloats()
 
+
+  @noShadow: ->
+    new ShadowInfo new Point(0, 0), 0
