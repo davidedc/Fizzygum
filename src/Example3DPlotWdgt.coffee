@@ -7,7 +7,7 @@ class Example3DPlotWdgt extends Widget
   quads: nil
   currentAngle: nil
   planeGrid: nil
-  grids: nil
+  graphGrid: nil
   previousMousePoint: nil
   autoRotate: true
   ratio: nil
@@ -24,37 +24,14 @@ class Example3DPlotWdgt extends Widget
     @setExtent new Point 200, 200
 
 
-    @vertices = []
-
-    @grids = []
-
-    @planeGrid = new PlaneGrid3D 21, 21
-    graphGrid = new Grid3D 21, 21, []
-
-    for i in [-1..1] by 0.1
-      for j in [-1..1] by 0.1
-        @vertices.push new Point3D i, j, (Math.sin(i*3) + Math.cos(j*3))/2
-        graphGrid.vertexIndexes.push @vertices.length - 1
-
-    for i in [-1..1] by 0.1
-      @vertices.push new Point3D i, -1, 0
-      @planeGrid.vertexIndexes.push @vertices.length - 1
-      @vertices.push new Point3D i, 1, 0
-      @planeGrid.vertexIndexes.push @vertices.length - 1
-
-    for j in [-1..1] by 0.1
-      @vertices.push new Point3D -1, j, 0
-      @planeGrid.vertexIndexes.push @vertices.length - 1
-      @vertices.push new Point3D 1, j, 0
-      @planeGrid.vertexIndexes.push @vertices.length - 1
-
-    @grids.push graphGrid
 
     @edges = []
 
     @quads = []
     
     @currentAngle = 0
+
+    @step()
 
   colloquialName: ->
     "3D plot"
@@ -120,6 +97,32 @@ class Example3DPlotWdgt extends Widget
   step: ->
     if @autoRotate
       @currentAngle++
+
+    @vertices = []
+
+    @graphGrid = new Grid3D 21, 21, []
+
+    for i in [-1..1] by 0.1
+      for j in [-1..1] by 0.1
+        @vertices.push new Point3D i, j, (Math.sin(i*3 + @currentAngle/160) + Math.cos(j*3 + @currentAngle/160))/2
+        @graphGrid.vertexIndexes.push @vertices.length - 1
+
+
+    @planeGrid = new PlaneGrid3D 21, 21
+
+    for i in [-1..1] by 0.1
+      @vertices.push new Point3D i, -1, 0
+      @planeGrid.vertexIndexes.push @vertices.length - 1
+      @vertices.push new Point3D i, 1, 0
+      @planeGrid.vertexIndexes.push @vertices.length - 1
+
+    for j in [-1..1] by 0.1
+      @vertices.push new Point3D -1, j, 0
+      @planeGrid.vertexIndexes.push @vertices.length - 1
+      @vertices.push new Point3D 1, j, 0
+      @planeGrid.vertexIndexes.push @vertices.length - 1
+
+
     @changed()
 
   # This method only paints this very morph's "image",
@@ -216,7 +219,7 @@ class Example3DPlotWdgt extends Widget
     context.scale squareDim/300, squareDim/300
 
     for eachVertex in @vertices
-      newPoint = eachVertex.rotateX(90).rotateY(@currentAngle).translateXYZ(0,0.5,0).project(300, 300, 220, 3)
+      newPoint = eachVertex.rotateX(90).rotateY(@currentAngle/2).translateXYZ(0,0.5,0).project(300, 300, 220, 3)
       newPoint.y -= squareDim * 1/6
       points.push newPoint
 
@@ -236,46 +239,44 @@ class Example3DPlotWdgt extends Widget
       context.closePath()
       context.stroke()
 
-    for k in [0...@grids.length]
-      eachGrid = @grids[k]
 
-      context.beginPath()
+    context.beginPath()
 
-      # draw the "horizontals" in the grid (each point x,y with x+1,y)
-      for i in [0...eachGrid.width-1]
-        for j in [0...eachGrid.height]
-          if i+1+j*eachGrid.width < eachGrid.vertexIndexes.length
-            context.moveTo points[eachGrid.vertexIndexes[i+j*eachGrid.width]].x, points[eachGrid.vertexIndexes[i+j*eachGrid.width]].y
-            context.lineTo points[eachGrid.vertexIndexes[(i+1)+j*eachGrid.width]].x, points[eachGrid.vertexIndexes[(i+1)+j*eachGrid.width]].y
+    # draw the "horizontals" in the grid (each point x,y with x+1,y)
+    for i in [0...@graphGrid.width-1]
+      for j in [0...@graphGrid.height]
+        if i+1+j*@graphGrid.width < @graphGrid.vertexIndexes.length
+          context.moveTo points[@graphGrid.vertexIndexes[i+j*@graphGrid.width]].x, points[@graphGrid.vertexIndexes[i+j*@graphGrid.width]].y
+          context.lineTo points[@graphGrid.vertexIndexes[(i+1)+j*@graphGrid.width]].x, points[@graphGrid.vertexIndexes[(i+1)+j*@graphGrid.width]].y
 
-      # draw the "verticals" in the grid (each point x,y with x,y+1)
-      for i in [0...eachGrid.width]
-        for j in [0...eachGrid.height-1]
-          if i+(j+1)*eachGrid.width < eachGrid.vertexIndexes.length
-            context.moveTo points[eachGrid.vertexIndexes[i+j*eachGrid.width]].x, points[eachGrid.vertexIndexes[i+j*eachGrid.width]].y
-            context.lineTo points[eachGrid.vertexIndexes[i+(j+1)*eachGrid.width]].x, points[eachGrid.vertexIndexes[i+(j+1)*eachGrid.width]].y
+    # draw the "verticals" in the grid (each point x,y with x,y+1)
+    for i in [0...@graphGrid.width]
+      for j in [0...@graphGrid.height-1]
+        if i+(j+1)*@graphGrid.width < @graphGrid.vertexIndexes.length
+          context.moveTo points[@graphGrid.vertexIndexes[i+j*@graphGrid.width]].x, points[@graphGrid.vertexIndexes[i+j*@graphGrid.width]].y
+          context.lineTo points[@graphGrid.vertexIndexes[i+(j+1)*@graphGrid.width]].x, points[@graphGrid.vertexIndexes[i+(j+1)*@graphGrid.width]].y
 
-      context.closePath()
+    context.closePath()
 
-      context.strokeStyle = 'black'
-      context.stroke()
+    context.strokeStyle = 'black'
+    context.stroke()
 
 
 
-      context.beginPath()
+    context.beginPath()
 
-      for i in [0...@planeGrid.width-1]
-        context.moveTo points[@planeGrid.vertexIndexes[2*i]].x, points[@planeGrid.vertexIndexes[2*i]].y
-        context.lineTo points[@planeGrid.vertexIndexes[2*i+1]].x, points[@planeGrid.vertexIndexes[2*i+1]].y
+    for i in [0...@planeGrid.width-1]
+      context.moveTo points[@planeGrid.vertexIndexes[2*i]].x, points[@planeGrid.vertexIndexes[2*i]].y
+      context.lineTo points[@planeGrid.vertexIndexes[2*i+1]].x, points[@planeGrid.vertexIndexes[2*i+1]].y
 
-      for i in [@planeGrid.width-1...@planeGrid.width+@planeGrid.height]
-        context.moveTo points[@planeGrid.vertexIndexes[2*i]].x, points[@planeGrid.vertexIndexes[2*i]].y
-        context.lineTo points[@planeGrid.vertexIndexes[2*i+1]].x, points[@planeGrid.vertexIndexes[2*i+1]].y
+    for i in [@planeGrid.width-1...@planeGrid.width+@planeGrid.height]
+      context.moveTo points[@planeGrid.vertexIndexes[2*i]].x, points[@planeGrid.vertexIndexes[2*i]].y
+      context.lineTo points[@planeGrid.vertexIndexes[2*i+1]].x, points[@planeGrid.vertexIndexes[2*i+1]].y
 
-      context.closePath()
+    context.closePath()
 
-      context.strokeStyle = 'grey'
-      context.stroke()
+    context.strokeStyle = 'grey'
+    context.stroke()
 
 
     context.globalAlpha = originalAlpha
