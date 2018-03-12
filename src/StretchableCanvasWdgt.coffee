@@ -144,7 +144,23 @@ class StretchableCanvasWdgt extends CanvasMorph
 
     contextForPainting = @getContextForPainting()
 
-    contextForPainting.drawImage image, pos.x, pos.y
+    # OK now this needs an explanation: in a hi-dpi display we get
+    # a widget image that is 2x the logical size.
+    # BUT the position is indicated by the mouse which works in logical
+    # coordinates.
+    # SO we need to keep the positioning correctly scaled at 2x
+    # BUT draw on the canvas at 1x
+    # SO here we undo the 2x scaling, re-introduce it manually only
+    # for the positioning, then draw.
+    # Note that there could be another way, i.e. to pass the other arguments
+    # to "drawImage" to specify the bounding box.
+
+    @behindTheScenesBackBufferContext.scale 1/pixelRatio, 1/pixelRatio
+    contextForPainting.drawImage image, pos.x * pixelRatio, pos.y * pixelRatio
+
+    # put back the scaling so it's right again.
+    # (always leave the scaling correct)
+    @behindTheScenesBackBufferContext.scale pixelRatio, pixelRatio
 
   reactToDropOf: (droppedWidget) ->
     @paintImage droppedWidget.position(), droppedWidget.fullImage(nil, false, true)
