@@ -1,11 +1,15 @@
 class ExampleScatterPlotWdgt extends Widget
 
 
+  graphNumber: 1
+
   constructor: ->
     super()
     @setColor new Color 255, 125, 125
     @setExtent new Point 200, 200
-    return
+
+    @fps = 1
+    world.addSteppingMorph @
 
   colloquialName: ->
     "Scatter plot"
@@ -57,32 +61,45 @@ class ExampleScatterPlotWdgt extends Widget
       @paintHighlight aContext, al, at, w, h
 
 
+  step: ->
+    @graphNumber++
+    @changed()
+
+  # see https://stackoverflow.com/a/19303725
+  seededRandom: ->
+    x = Math.sin(@seed++) * 10000
+    return x - Math.floor(x)
+
+  # Standard Normal variate using Box-Muller transform
+  # see https://stackoverflow.com/a/36481059
+  seeded_randn_bm: ->
+    u = 0
+    v = 0
+    while u == 0
+      u = @seededRandom()
+    #Converting [0,1) to (0,1)
+    while v == 0
+      v = @seededRandom()
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)
 
   renderingHelper: (context, color, appliedShadow) ->
-    seed = 1
 
-    # see https://stackoverflow.com/a/19303725
-    seededRandom = ->
-      x = Math.sin(seed++) * 10000
-      return x - Math.floor(x)
-
-    # Standard Normal variate using Box-Muller transform
-    # see https://stackoverflow.com/a/36481059
-    seeded_randn_bm = ->
-      u = 0
-      v = 0
-      while u == 0
-        u = seededRandom()
-      #Converting [0,1) to (0,1)
-      while v == 0
-        v = seededRandom()
-      return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)
-
-
+    @seed = @graphNumber
     circleRadius = 5
-
     height = @height()
     width = @width()
+
+
+    if appliedShadow?
+      context.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
+      context.fillStyle = (new Color 80, 80, 80).toString()
+      context.fillRect 0, 0, width, height
+      # let's avoid paint 3d stuff twice because
+      # of the shadow
+      return
+
+    context.fillStyle = (new Color 242,242,242).toString()
+    context.fillRect 0, 0, width, height
 
     availableHeight = height - 2 * circleRadius
     availableWidth = width - 2 * circleRadius
@@ -93,8 +110,8 @@ class ExampleScatterPlotWdgt extends Widget
 
     context.beginPath()
     for i in [0...100]
-      widthPerc = 0.4 + seeded_randn_bm() / 10
-      heightPerc = 0.4 + seeded_randn_bm() / 10
+      widthPerc = 0.4 + @seeded_randn_bm() / 10
+      heightPerc = 0.4 + @seeded_randn_bm() / 10
 
       context.moveTo Math.round(2 * circleRadius + availableWidth * widthPerc),Math.round(circleRadius + availableHeight * heightPerc)
       context.arc Math.round(circleRadius + availableWidth * widthPerc),Math.round(circleRadius + availableHeight * heightPerc),circleRadius,0,2*Math.PI
@@ -103,13 +120,16 @@ class ExampleScatterPlotWdgt extends Widget
 
     context.beginPath()
     for i in [0...100]
-      widthPerc = 0.6 + seeded_randn_bm() / 10
-      heightPerc = 0.6 + seeded_randn_bm() / 10
+      widthPerc = 0.6 + @seeded_randn_bm() / 10
+      heightPerc = 0.6 + @seeded_randn_bm() / 10
 
       context.moveTo Math.round(2 * circleRadius + availableWidth * widthPerc),Math.round(circleRadius + availableHeight * heightPerc)
       context.arc Math.round(circleRadius + availableWidth * widthPerc),Math.round(circleRadius + availableHeight * heightPerc),circleRadius,0,2*Math.PI
 
     context.strokeStyle = '#FF0000'
     context.stroke()
+
+    context.strokeStyle = (new Color 30,30,30).toString()
+    context.strokeRect 0, 0, width, height
 
 

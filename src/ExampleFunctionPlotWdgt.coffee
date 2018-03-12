@@ -1,11 +1,14 @@
 class ExampleFunctionPlotWdgt extends Widget
 
+  graphNumber: 1
 
   constructor: ->
     super()
     @setColor new Color 255, 125, 125
     @setExtent new Point 200, 200
-    return
+
+    @fps = 2
+    world.addSteppingMorph @
 
   colloquialName: ->
     "Function plot"
@@ -57,32 +60,44 @@ class ExampleFunctionPlotWdgt extends Widget
       @paintHighlight aContext, al, at, w, h
 
 
+  step: ->
+    @graphNumber++
+    @changed()
+
+  # see https://stackoverflow.com/a/19303725
+  seededRandom: ->
+    x = Math.sin(@seed++) * 10000
+    return x - Math.floor(x)
+
+  # Standard Normal variate using Box-Muller transform
+  # see https://stackoverflow.com/a/36481059
+  seeded_randn_bm: ->
+    u = 0
+    v = 0
+    while u == 0
+      u = @seededRandom()
+    #Converting [0,1) to (0,1)
+    while v == 0
+      v = @seededRandom()
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)
 
   renderingHelper: (context, color, appliedShadow) ->
-    seed = 1
 
-    # see https://stackoverflow.com/a/19303725
-    seededRandom = ->
-      x = Math.sin(seed++) * 10000
-      return x - Math.floor(x)
-
-    # Standard Normal variate using Box-Muller transform
-    # see https://stackoverflow.com/a/36481059
-    seeded_randn_bm = ->
-      u = 0
-      v = 0
-      while u == 0
-        u = seededRandom()
-      #Converting [0,1) to (0,1)
-      while v == 0
-        v = seededRandom()
-      return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)
-
-
+    @seed = @graphNumber
     circleRadius = 5
-
     height = @height()
     width = @width()
+
+    if appliedShadow?
+      context.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
+      context.fillStyle = (new Color 80, 80, 80).toString()
+      context.fillRect 0, 0, width, height
+      # let's avoid paint 3d stuff twice because
+      # of the shadow
+      return
+
+    context.fillStyle = (new Color 242,242,242).toString()
+    context.fillRect 0, 0, width, height
 
     availableHeight = height - 2 * circleRadius
     availableWidth = width - 2 * circleRadius
@@ -90,7 +105,11 @@ class ExampleFunctionPlotWdgt extends Widget
     context.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
 
     context.fillStyle = '#325FA2'
+    angle = @seededRandom()
     for i in [0..1000]
       xPos = (i/1000)*width
-      heightPerc = 0.4 + Math.sin(i/100)/3 - i/10000 + seeded_randn_bm() / 70
+      heightPerc = 0.5 + Math.sin(i/(100))/(3+3*@seededRandom()) - i/(5000+5000*angle) + @seeded_randn_bm() / 70
       context.fillRect xPos, availableHeight * heightPerc, 2,2
+
+    context.strokeStyle = (new Color 30,30,30).toString()
+    context.strokeRect 0, 0, width, height

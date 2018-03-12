@@ -6,7 +6,7 @@ class Example3DPlotWdgt extends Widget
   vertices: nil
   quads: nil
   currentAngle: nil
-  grid: nil
+  planeGrid: nil
   grids: nil
   previousMousePoint: nil
   autoRotate: true
@@ -28,17 +28,26 @@ class Example3DPlotWdgt extends Widget
 
     @grids = []
 
-    XYPlaneGrid = new Grid3D 21, 21, []
+    @planeGrid = new PlaneGrid3D 21, 21
     graphGrid = new Grid3D 21, 21, []
 
     for i in [-1..1] by 0.1
       for j in [-1..1] by 0.1
-        @vertices.push new Point3D i, j, 0
-        XYPlaneGrid.vertexIndexes.push @vertices.length - 1
         @vertices.push new Point3D i, j, (Math.sin(i*3) + Math.cos(j*3))/2
         graphGrid.vertexIndexes.push @vertices.length - 1
 
-    @grids.push XYPlaneGrid
+    for i in [-1..1] by 0.1
+      @vertices.push new Point3D i, -1, 0
+      @planeGrid.vertexIndexes.push @vertices.length - 1
+      @vertices.push new Point3D i, 1, 0
+      @planeGrid.vertexIndexes.push @vertices.length - 1
+
+    for j in [-1..1] by 0.1
+      @vertices.push new Point3D -1, j, 0
+      @planeGrid.vertexIndexes.push @vertices.length - 1
+      @vertices.push new Point3D 1, j, 0
+      @planeGrid.vertexIndexes.push @vertices.length - 1
+
     @grids.push graphGrid
 
     @edges = []
@@ -182,10 +191,7 @@ class Example3DPlotWdgt extends Widget
     height = @height()
     width = @width()
 
-
-
     # clean the background
-
     if appliedShadow?
       context.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
       context.fillStyle = (new Color 80, 80, 80).toString()
@@ -193,7 +199,6 @@ class Example3DPlotWdgt extends Widget
       # let's avoid paint 3d stuff twice because
       # of the shadow
       return
-
 
     context.fillStyle = (new Color 242,242,242).toString()
     context.fillRect 0, 0, width, height
@@ -239,25 +244,39 @@ class Example3DPlotWdgt extends Widget
       # draw the "horizontals" in the grid (each point x,y with x+1,y)
       for i in [0...eachGrid.width-1]
         for j in [0...eachGrid.height]
-          if eachGrid.vertexIndexes[i+1+j*eachGrid.width]?
+          if i+1+j*eachGrid.width < eachGrid.vertexIndexes.length
             context.moveTo points[eachGrid.vertexIndexes[i+j*eachGrid.width]].x, points[eachGrid.vertexIndexes[i+j*eachGrid.width]].y
             context.lineTo points[eachGrid.vertexIndexes[(i+1)+j*eachGrid.width]].x, points[eachGrid.vertexIndexes[(i+1)+j*eachGrid.width]].y
 
       # draw the "verticals" in the grid (each point x,y with x,y+1)
       for i in [0...eachGrid.width]
         for j in [0...eachGrid.height-1]
-          if eachGrid.vertexIndexes[i+(j+1)*eachGrid.width]?
+          if i+(j+1)*eachGrid.width < eachGrid.vertexIndexes.length
             context.moveTo points[eachGrid.vertexIndexes[i+j*eachGrid.width]].x, points[eachGrid.vertexIndexes[i+j*eachGrid.width]].y
             context.lineTo points[eachGrid.vertexIndexes[i+(j+1)*eachGrid.width]].x, points[eachGrid.vertexIndexes[i+(j+1)*eachGrid.width]].y
-            context.closePath()
 
       context.closePath()
 
-      if k==0
-        context.strokeStyle = 'grey'
-      else
-        context.strokeStyle = 'black'
+      context.strokeStyle = 'black'
       context.stroke()
+
+
+
+      context.beginPath()
+
+      for i in [0...@planeGrid.width-1]
+        context.moveTo points[@planeGrid.vertexIndexes[2*i]].x, points[@planeGrid.vertexIndexes[2*i]].y
+        context.lineTo points[@planeGrid.vertexIndexes[2*i+1]].x, points[@planeGrid.vertexIndexes[2*i+1]].y
+
+      for i in [@planeGrid.width-1...@planeGrid.width+@planeGrid.height]
+        context.moveTo points[@planeGrid.vertexIndexes[2*i]].x, points[@planeGrid.vertexIndexes[2*i]].y
+        context.lineTo points[@planeGrid.vertexIndexes[2*i+1]].x, points[@planeGrid.vertexIndexes[2*i+1]].y
+
+      context.closePath()
+
+      context.strokeStyle = 'grey'
+      context.stroke()
+
 
     context.globalAlpha = originalAlpha
 

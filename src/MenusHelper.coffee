@@ -510,7 +510,7 @@ class MenusHelper
     simpleVideoLinkWdgt.setExtent new Point 405, 50
     world.create simpleVideoLinkWdgt
 
-  createVerticalAxis: ->
+  create2DAxis: ->
     vertAxis = new AxisWdgt()
     vertAxis.setExtent new Point 40, 300
     world.create vertAxis
@@ -544,7 +544,7 @@ class MenusHelper
 
   popUpGraphsMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "graphs"
-    menu.addMenuItem "vertical axis", true, menusHelper, "createVerticalAxis"
+    menu.addMenuItem "axis", true, menusHelper, "create2DAxis"
     menu.addMenuItem "scatter plot", true, menusHelper, "createExampleScatterPlot"
     menu.addMenuItem "function plot", true, menusHelper, "createExampleFunctionPlot"
     menu.addMenuItem "bar plot", true, menusHelper, "createExampleBarPlot"
