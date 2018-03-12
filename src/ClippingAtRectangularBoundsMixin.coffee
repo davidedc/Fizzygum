@@ -135,7 +135,7 @@ ClippingAtRectangularBoundsMixin =
             @paintStroke aContext, clippingRectangle
 
       
-      fullPaintIntoAreaOrBlitFromBackBufferJustContent: (aContext, clippingRectangle, appliedShadow) ->
+      fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
 
         # a PanelWdgt has the special property that all of its children
         # are actually inside its boundary.
@@ -199,7 +199,7 @@ ClippingAtRectangularBoundsMixin =
             child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, appliedShadow
 
       fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
-        clippingRectangle = clippingRectangle.translateBy -@shadowInfo.offset.x, -@shadowInfo.offset.y
+        clippingRectangle = clippingRectangle.translateBy -appliedShadow.offset.x, -appliedShadow.offset.y
 
         if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
 
@@ -214,7 +214,7 @@ ClippingAtRectangularBoundsMixin =
           if !dirtyPartOfFrame.isEmpty()
 
             aContext.save()
-            aContext.translate @shadowInfo.offset.x * pixelRatio, @shadowInfo.offset.y * pixelRatio
+            aContext.translate appliedShadow.offset.x * pixelRatio, appliedShadow.offset.y * pixelRatio
           
             # this draws the background of the Panel itself
             @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, appliedShadow

@@ -1793,6 +1793,16 @@ class Widget extends TreeNode
   #
   # To draw a widget, basically you first have to draw its shadow
   # and then you draw the contents. See methods below.
+  #
+  # How the shadow painting works -----------------
+  # If appliedShadow is defined, it means that we are painting the whole
+  # of the widget recursively AS SHADOW. Since there are no shadows of a shadow
+  # so we can skip the "just shadow" part, and we paint the widget as shadow.
+  # If appliedShadow is NOT defined, then it means that we just have to paint the widget,
+  # which might have a shadow. If it does have a shadow, then we first paint it
+  # as shadow, then we paint it as non-shadow. If it doesn't have a shadow, then
+  # we just paint it as non-shadow.
+
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
     # used to track which widget has been throwing
@@ -1800,40 +1810,48 @@ class Widget extends TreeNode
     world.paintingWidget = @
 
     # if there is a shadow "property" object
-    # then first draw the shadow of the treee
-    if @shadowInfo?
+    # then first draw the shadow of the tree
+    # If appliedShadow is defined, then we just want to paint the
+    # content as shadow, so we skip this paragrah because we don't have
+    # to paint a shadow for a shadow.
+    if !appliedShadow? and @shadowInfo?
       @fullPaintIntoAreaOrBlitFromBackBufferJustShadow aContext, clippingRectangle, @shadowInfo
 
-    # draw the proper contents of the tree
+    # draw the proper contents of the tree. Potentially, draw them faintly as shadow.
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
       if aContext == world.worldCanvasContext
         @recordDrawnAreaForNextBrokenRects()
-      @fullPaintIntoAreaOrBlitFromBackBufferJustContent aContext, clippingRectangle, appliedShadow
+      @fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow aContext, clippingRectangle, appliedShadow
 
 
   # to draw the shadow, most of the times you have to draw the whole
   # of the contents, but with a darker/fainter color, and with
-  # transparency. The Panel is an exception, since you know that
-  # all of its contents are inside of it, and if it's fully opaque,
-  # then you can just draw the shadow as rectangle ignoring what's inside.
+  # transparency.
+  #
+  # The only variant is that if a Panel if fully opaque, then the shadow is just
+  # a rectangle, we don't need to draw anything inside the panel to
+  # contribute to the shadow of the panel
+  #
+  # In this function the parameter "appliedShadow" MUST contain a shadow info.
+  # This parameter will cause the whole widget to be painted recursively as shadow.
   fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
-    clippingRectangle = clippingRectangle.translateBy -@shadowInfo.offset.x, -@shadowInfo.offset.y
+    clippingRectangle = clippingRectangle.translateBy -appliedShadow.offset.x, -appliedShadow.offset.y
 
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
       aContext.save()
-      aContext.translate @shadowInfo.offset.x * pixelRatio, @shadowInfo.offset.y * pixelRatio
+      aContext.translate appliedShadow.offset.x * pixelRatio, appliedShadow.offset.y * pixelRatio
 
-      @fullPaintIntoAreaOrBlitFromBackBufferJustContent aContext, clippingRectangle, appliedShadow
+      @fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow aContext, clippingRectangle, appliedShadow
 
       aContext.restore()
   
 
-  # "drawing the content" actually just means drawing the tree
-  # of the widget normally.
+  # this just draws the tree of the widgets recursively, potentially "normally" or
+  # potentally more faintly to draw a shadow.
   # The only variant is that the Panel
   # draws its background, then its contents AND THEN its stroke
   # (because otherwise its content would paint over its stroke)
-  fullPaintIntoAreaOrBlitFromBackBufferJustContent: (aContext, clippingRectangle, appliedShadow) ->
+  fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
     @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
     @children.forEach (child) ->
       child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
