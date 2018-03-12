@@ -259,8 +259,7 @@ class HandMorph extends Widget
       # first we notify the recipient of the drop
       # this gives the chance to the recipient to
       # initialise a layout spec for the dropped widget
-      if target.reactToDropOf
-        target.reactToDropOf morphToDrop, @
+      target.reactToDropOf? morphToDrop, @
 
       # then we notify the dropped widget. This currently
       # is used to let the dropped morph tweak the layout

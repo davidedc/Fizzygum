@@ -1815,7 +1815,7 @@ class Widget extends TreeNode
   # of the contents, but with a darker/fainter color, and with
   # transparency. The Panel is an exception, since you know that
   # all of its contents are inside of it, and if it's fully opaque,
-  # then you can just draw a rectangle.
+  # then you can just draw the shadow as rectangle ignoring what's inside.
   fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
     clippingRectangle = clippingRectangle.translateBy -@shadowInfo.offset.x, -@shadowInfo.offset.y
 
@@ -1829,7 +1829,8 @@ class Widget extends TreeNode
   
 
   # "drawing the content" actually just means drawing the tree
-  # of the widget normally. The only variant is that the Panel
+  # of the widget normally.
+  # The only variant is that the Panel
   # draws its background, then its contents AND THEN its stroke
   # (because otherwise its content would paint over its stroke)
   fullPaintIntoAreaOrBlitFromBackBufferJustContent: (aContext, clippingRectangle, appliedShadow) ->

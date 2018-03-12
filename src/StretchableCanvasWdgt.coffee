@@ -76,7 +76,7 @@ class StretchableCanvasWdgt extends CanvasMorph
   clear: (color = @color) ->
     throw new Error "not implemented yet"
 
-  createNewBigExtentBuffer: (extent) ->
+  createNewBehindTheScenesBuffer: (extent) ->
     @behindTheScenesBackBuffer = newCanvas extent.scaleBy pixelRatio
     @behindTheScenesBackBufferContext = @behindTheScenesBackBuffer.getContext "2d"
 
@@ -104,7 +104,7 @@ class StretchableCanvasWdgt extends CanvasMorph
       return
 
     if !@behindTheScenesBackBuffer? or !@anythingPaintedYet
-      @createNewBigExtentBuffer extent
+      @createNewBehindTheScenesBuffer extent
 
     @createNewFrontFacingBuffer extent
 
@@ -155,11 +155,6 @@ class StretchableCanvasWdgt extends CanvasMorph
       @notifyChildrenThatParentHasReLayouted()
       return
 
-    console.log "scanvas dolayout 1"
-
-
-    console.log "scanvas dolayout 2"
-
     # here we are disabling all the broken
     # rectangles. The reason is that all the
     # submorphs of the inspector are within the
@@ -177,7 +172,6 @@ class StretchableCanvasWdgt extends CanvasMorph
       !((m instanceof HandleMorph) or (m instanceof CaretMorph))
 
     for eachChild in childrenNotHandlesNorCarets
-      console.log "scanvas eachChild: " + eachChild + " bounds: " + @bounds
       eachChild.rawSetBounds @bounds
 
 
