@@ -1996,9 +1996,34 @@ class Widget extends TreeNode
   # Widget full image:
   # Fixes https://github.com/jmoenig/morphic.js/issues/7
   # and https://github.com/davidedc/Fizzygum/issues/160
-  fullImage: (bounds, noShadow = false) ->
+  #
+  # if you want to forceShadow that noShadow must be
+  # sent as false
+  fullImage: (bounds, noShadow = false, forceShadow = false) ->
+
+    shadowHadBeenReplacedOrAdded = false
+
+    if noShadow
+      originalShadow = @shadowInfo
+      @shadowInfo = ShadowInfo.noShadow()
+      shadowHadBeenReplacedOrAdded = true
+    else if forceShadow and !@hasShadow()
+      # in this case originalShadow is nil
+      # because the widget has no shadow
+      # and the widget will get nil shadow back
+      # again at the end of this method
+      originalShadow = nil
+      @shadowInfo = new ShadowInfo new Point(4, 4), 0.2
+      shadowHadBeenReplacedOrAdded = true
+
+
     if !bounds?
       bounds = @fullBounds()
+      # if we do want the shadow, and there is one, then
+      # we have to consider bigger bounds for the full widget
+      if !noShadow and @hasShadow()
+        bounds = bounds.growBy @shadowInfo.offset
+
 
     img = newCanvas bounds.extent().scaleBy pixelRatio
     ctx = img.getContext "2d"
@@ -2013,6 +2038,10 @@ class Widget extends TreeNode
     # very top-left of the "img" canvas.
     ctx.translate -bounds.origin.x * pixelRatio , -bounds.origin.y * pixelRatio
     @fullPaintIntoAreaOrBlitFromBackBuffer ctx, bounds
+
+    if shadowHadBeenReplacedOrAdded
+      @shadowInfo = originalShadow
+
     img
 
   fullImageNoShadow: ->
