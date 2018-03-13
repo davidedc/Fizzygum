@@ -30,7 +30,6 @@ class TemplatesButtonWdgt extends IconMorph
     startingContent.setFontSize 18
     startingContent.isEditable = true
     startingContent.enableSelecting()
-    startingContent.isTemplate = true
 
     sdspw.setContents startingContent, 5
 
@@ -39,7 +38,6 @@ class TemplatesButtonWdgt extends IconMorph
     startingContent.rawSetExtent new Point 25, 25
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToCenter()
-    startingContent.isTemplate = true
 
     sdspw.addDivider()
 
@@ -50,7 +48,6 @@ class TemplatesButtonWdgt extends IconMorph
     startingContent.setFontSize 48
     startingContent.isEditable = true
     startingContent.enableSelecting()
-    startingContent.isTemplate = true
     sdspw.add startingContent
 
     startingContent = new SimplePlainTextWdgt(
@@ -59,7 +56,6 @@ class TemplatesButtonWdgt extends IconMorph
     startingContent.isEditable = true
     startingContent.enableSelecting()
     startingContent.setFontSize 28
-    startingContent.isTemplate = true
     sdspw.add startingContent
 
     startingContent = new SimplePlainTextWdgt(
@@ -67,7 +63,6 @@ class TemplatesButtonWdgt extends IconMorph
     startingContent.isEditable = true
     startingContent.enableSelecting()
     startingContent.setFontSize 24
-    startingContent.isTemplate = true
     sdspw.add startingContent
 
     sdspw.addNormalParagraph "Normal text."
@@ -78,7 +73,6 @@ class TemplatesButtonWdgt extends IconMorph
     startingContent.alignRight()
     startingContent.isEditable = true
     startingContent.enableSelecting()
-    startingContent.isTemplate = true
     sdspw.add startingContent
 
 
@@ -92,7 +86,6 @@ class TemplatesButtonWdgt extends IconMorph
     startingContent.toggleWeight()
     startingContent.isEditable = true
     startingContent.enableSelecting()
-    startingContent.isTemplate = true
     sdspw.add startingContent
 
     sdspw.addSpacer()
@@ -104,7 +97,6 @@ class TemplatesButtonWdgt extends IconMorph
     startingContent.toggleWeight()
     startingContent.isEditable = true
     startingContent.enableSelecting()
-    startingContent.isTemplate = true
     sdspw.add startingContent
 
     sdspw.addDivider()
@@ -114,20 +106,19 @@ class TemplatesButtonWdgt extends IconMorph
     startingContent.toggleWeight()
     startingContent.isEditable = true
     startingContent.enableSelecting()
-    startingContent.isTemplate = true
     sdspw.add startingContent
 
     startingContent = new SimpleLinkWdgt()
     startingContent.rawSetExtent new Point 405, 50
-    startingContent.isTemplate = true
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
     startingContent = new SimpleVideoLinkWdgt()
     startingContent.rawSetExtent new Point 405, 50
-    startingContent.isTemplate = true
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    sdspw.makeAllContentIntoTemplates()
 
     wm = new WindowWdgt nil, nil, sdspw
     wm.setExtent new Point 365, 335

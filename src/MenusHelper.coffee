@@ -559,7 +559,8 @@ class MenusHelper
     menu.popUpAtHand()
 
   createWelcomeMessageWindow: ->
-    sdspw = new SimpleDocumentScrollPanelWdgt()
+    simpleDocument = new SimpleDocumentWdgt()
+    sdspw = simpleDocument.simpleDocumentScrollPanel
 
     sdspw.fullRawMoveTo new Point 114, 10
     sdspw.rawSetExtent new Point 365, 405
@@ -579,13 +580,20 @@ class MenusHelper
     startingContent.enableSelecting()
     sdspw.add startingContent
 
+    startingContent = new SimplePlainTextWdgt(
+      "version 1.0.0",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 9
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
     sdspw.addDivider()
 
     startingContent = new SimplePlainTextWdgt(
       "Fizzygum is an open web framework to:",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
     startingContent.isEditable = true
     startingContent.enableSelecting()
-    startingContent.isTemplate = true
     sdspw.add startingContent
 
     sdspw.addBulletPoint "make dashboards and visualise data"
@@ -614,7 +622,6 @@ class MenusHelper
 
     startingContent = new SimpleLinkWdgt "screenshots"
     startingContent.rawSetExtent new Point 405, 50
-    startingContent.isTemplate = true
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
@@ -622,7 +629,6 @@ class MenusHelper
 
     startingContent = new SimpleVideoLinkWdgt "YouTube channel"
     startingContent.rawSetExtent new Point 405, 50
-    startingContent.isTemplate = true
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
@@ -630,7 +636,6 @@ class MenusHelper
 
     startingContent = new SimpleLinkWdgt "docs"
     startingContent.rawSetExtent new Point 405, 50
-    startingContent.isTemplate = true
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
@@ -650,15 +655,14 @@ class MenusHelper
 
     startingContent = new SimpleLinkWdgt "contacts"
     startingContent.rawSetExtent new Point 405, 50
-    startingContent.isTemplate = true
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
-
-    wm = new WindowWdgt nil, nil, sdspw
+    wm = new WindowWdgt nil, nil, simpleDocument
     wm.fullRawMoveTo new Point 114, 10
     wm.rawSetExtent new Point 365, 405
     world.add wm
     wm.setTitleWithoutPrependedContentName "Welcome"
     wm.changed()
 
+    simpleDocument.disableDragsDropsAndEditing()

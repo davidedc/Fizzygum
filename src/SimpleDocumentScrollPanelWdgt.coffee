@@ -16,8 +16,14 @@ class SimpleDocumentScrollPanelWdgt extends SimpleVerticalStackScrollPanelWdgt
       text,nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
     paragraph.isEditable = true
     paragraph.enableSelecting()
-    paragraph.isTemplate = true
     return paragraph
+
+  makeAllContentIntoTemplates: ->
+    childrenNotHandlesNorCarets = @contents.children.filter (m) ->
+      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+
+    for eachChild in childrenNotHandlesNorCarets
+      eachChild.isTemplate = true
 
   addNormalParagraph: (text) ->
     paragraph = @getNormalParagraph text
@@ -61,6 +67,5 @@ class SimpleDocumentScrollPanelWdgt extends SimpleVerticalStackScrollPanelWdgt
     spacer = @getNormalParagraph repeatStringNumTimes("\n",numberOfLines-1)
     spacer.isEditable = true
     spacer.enableSelecting()
-    spacer.isTemplate = true
     @add spacer
     return spacer
