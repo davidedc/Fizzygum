@@ -248,9 +248,9 @@ if typeof String::toggleTick == 'undefined'
 CanvasRenderingContext2D::clipToRectangle = (al,at,w,h) ->
   @beginPath()
   @moveTo Math.round(al), Math.round(at)
-  @lineTo Math.round(al) + Math.round(w), Math.round(at)
-  @lineTo Math.round(al) + Math.round(w), Math.round(at) + Math.round(h)
-  @lineTo Math.round(al), Math.round(at) + Math.round(h)
+  @lineTo Math.round(al + w), Math.round(at)
+  @lineTo Math.round(al + w), Math.round(at + h)
+  @lineTo Math.round(al), Math.round(at + h)
   @lineTo Math.round(al), Math.round(at)
   @closePath()
   @clip()
