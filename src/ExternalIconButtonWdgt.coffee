@@ -19,7 +19,7 @@ class ExternalIconButtonWdgt extends EmptyButtonMorph
     @color_hover = new Color 255,153,0
     @color_pressed = @color_hover
     @appearance = new ExternalIconAppearance @
-    @toolTipMessage = "turn into external window"
+    @toolTipMessage = "make this window droppable into other documents"
 
 
   actOnClick: ->

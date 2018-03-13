@@ -41,13 +41,7 @@ class TemplatesButtonWdgt extends IconMorph
     startingContent.layoutSpecDetails.setAlignmentToCenter()
     startingContent.isTemplate = true
 
-    startingContent = new SimplePlainTextWdgt(
-      "",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    startingContent.isTemplate = true
-    startingContent.toggleHeaderLine()
-    sdspw.add startingContent
+    sdspw.addDivider()
 
     startingContent = new SimplePlainTextWdgt(
       "Title",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
@@ -76,12 +70,7 @@ class TemplatesButtonWdgt extends IconMorph
     startingContent.isTemplate = true
     sdspw.add startingContent
 
-    startingContent = new SimplePlainTextWdgt(
-      "Normal text.",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    startingContent.isTemplate = true
-    sdspw.add startingContent
+    sdspw.addNormalParagraph "Normal text."
 
     startingContent = new SimplePlainTextWdgt(
       "“Be careful--with quotations, you can damn anything.”\n― André Malraux",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
@@ -93,25 +82,10 @@ class TemplatesButtonWdgt extends IconMorph
     sdspw.add startingContent
 
 
-    startingContent = new SimplePlainTextWdgt(
-      "indented text",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    startingContent.isTemplate = true
-    startingContent.rawSetExtent new Point Math.round(90*sdspw.width()/100), 335
-    sdspw.add startingContent
-    startingContent.layoutSpecDetails.setAlignmentToRight()
+    sdspw.addIndentedText "indentedText"
+    sdspw.addBulletPoint "bullet point"
+    sdspw.addCodeBlock "a code block with\n  some example\n    code in here"
 
-
-    startingContent = new SimplePlainTextWdgt(
-      "a code block with\n  some example\n    code in here",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
-    startingContent.setFontName nil, nil, startingContent.monoFontStack
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    startingContent.isTemplate = true
-    startingContent.rawSetExtent new Point Math.round(90*sdspw.width()/100), 335
-    sdspw.add startingContent
-    startingContent.layoutSpecDetails.setAlignmentToRight()
 
     startingContent = new SimplePlainTextWdgt(
       "Spacers:",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
@@ -121,26 +95,9 @@ class TemplatesButtonWdgt extends IconMorph
     startingContent.isTemplate = true
     sdspw.add startingContent
 
-    startingContent = new SimplePlainTextWdgt(
-      "",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    startingContent.isTemplate = true
-    sdspw.add startingContent
-
-    startingContent = new SimplePlainTextWdgt(
-      "\n",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    startingContent.isTemplate = true
-    sdspw.add startingContent
-
-    startingContent = new SimplePlainTextWdgt(
-      "\n\n",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    startingContent.isTemplate = true
-    sdspw.add startingContent
+    sdspw.addSpacer()
+    sdspw.addSpacer 2
+    sdspw.addSpacer 3
 
     startingContent = new SimplePlainTextWdgt(
       "Divider line:",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
@@ -150,13 +107,7 @@ class TemplatesButtonWdgt extends IconMorph
     startingContent.isTemplate = true
     sdspw.add startingContent
 
-    startingContent = new SimplePlainTextWdgt(
-      "",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    startingContent.isTemplate = true
-    startingContent.toggleHeaderLine()
-    sdspw.add startingContent
+    sdspw.addDivider()
 
     startingContent = new SimplePlainTextWdgt(
       "Links:",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)

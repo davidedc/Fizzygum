@@ -537,8 +537,8 @@ class MenusHelper
 
   popUpMapsMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Maps"
-    menu.addMenuItem "world map", false, menusHelper, "createWorldMapIconMorph", "others"
-    menu.addMenuItem "USA map", false, menusHelper, "createUSAMapIconMorph", "others"
+    menu.addMenuItem "world map", true, menusHelper, "createWorldMapIconMorph", "others"
+    menu.addMenuItem "USA map", true, menusHelper, "createUSAMapIconMorph", "others"
 
     menu.popUpAtHand()
 
@@ -551,3 +551,114 @@ class MenusHelper
     menu.addMenuItem "3D plot", true, menusHelper, "createExample3DPlot"
 
     menu.popUpAtHand()
+
+  popUpSupportDocsMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Support Docs"
+    menu.addMenuItem "welcome message", true, @, "createWelcomeMessageWindow", "welcome message"
+
+    menu.popUpAtHand()
+
+  createWelcomeMessageWindow: ->
+    sdspw = new SimpleDocumentScrollPanelWdgt()
+
+    sdspw.fullRawMoveTo new Point 114, 10
+    sdspw.rawSetExtent new Point 365, 405
+
+    startingContent = new FizzygumLogoIconWdgt()
+    startingContent.rawSetExtent new Point 85, 85
+
+    sdspw.setContents startingContent, 5
+    startingContent.layoutSpecDetails.setAlignmentToCenter()
+
+
+    startingContent = new SimplePlainTextWdgt(
+      "Welcome to Fizzygum",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 24
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    sdspw.addDivider()
+
+    startingContent = new SimplePlainTextWdgt(
+      "Fizzygum is an open web framework to:",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    startingContent.isTemplate = true
+    sdspw.add startingContent
+
+    sdspw.addBulletPoint "make dashboards and visualise data"
+    sdspw.addBulletPoint "author documents (drawings / text docs / slides)"
+    sdspw.addBulletPoint "embed live graphs, dynamic calculations or even entire running programs inside any document, via simple drag & drop"
+    sdspw.addBulletPoint "go beyond traditional embedding: you can now infinitely nest and compose programs and documents. Want to run a program inside a document inside a presentation inside another running program? No problem"
+    sdspw.addBulletPoint "make custom utilities (e.g. temperature converter) by simply connecting existing components (no coding required)"
+    sdspw.addBulletPoint "use the internal development tools to create entirely new apps, or change existing ones while they are running. Add custom features without even needing to refresh the page."
+
+    sdspw.addSpacer()
+
+    startingContent = new SimplePlainTextWdgt(
+      "New here?",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 22
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    sdspw.addDivider()    
+
+    sdspw.addNormalParagraph "Feel free to click around this sandbox. Just reload to start again from clean sheet."
+
+    sdspw.addSpacer()
+    sdspw.addNormalParagraph "Also check out some screenshots here:"
+
+    startingContent = new SimpleLinkWdgt "screenshots"
+    startingContent.rawSetExtent new Point 405, 50
+    startingContent.isTemplate = true
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    sdspw.addNormalParagraph "...or watch some quick demos on the Youtube channel:"
+
+    startingContent = new SimpleVideoLinkWdgt "YouTube channel"
+    startingContent.rawSetExtent new Point 405, 50
+    startingContent.isTemplate = true
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    sdspw.addNormalParagraph "...or docs here:"
+
+    startingContent = new SimpleLinkWdgt "docs"
+    startingContent.rawSetExtent new Point 405, 50
+    startingContent.isTemplate = true
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    sdspw.addSpacer(2)
+
+    startingContent = new SimplePlainTextWdgt(
+      "Get in touch",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 22
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    sdspw.addDivider()    
+
+    sdspw.addNormalParagraph "Mail? Mailing list? Facebook page? Twitter? Chat? We have it all."
+
+    startingContent = new SimpleLinkWdgt "contacts"
+    startingContent.rawSetExtent new Point 405, 50
+    startingContent.isTemplate = true
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+
+    wm = new WindowWdgt nil, nil, sdspw
+    wm.fullRawMoveTo new Point 114, 10
+    wm.rawSetExtent new Point 365, 405
+    world.add wm
+    wm.setTitleWithoutPrependedContentName "Welcome"
+    wm.changed()
+

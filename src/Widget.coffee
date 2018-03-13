@@ -3442,6 +3442,7 @@ class Widget extends TreeNode
     menu.addMenuItem "Simple slide", true, menusHelper, "createSimpleSlideWdgt"
     menu.addMenuItem "patch programming ➜", false, @, "popUpPatchProgrammingMenu", "icons"
     menu.addMenuItem "graphs ➜", false, menusHelper, "popUpGraphsMenu", "graphs"
+    menu.addMenuItem "support docs ➜", false, menusHelper, "popUpSupportDocsMenu", "support docs"
 
     menu.popUpAtHand()
 
