@@ -257,6 +257,18 @@ def main():
             if os.path.exists(DIRECTORY_WITH_AUTOMATOR_AND_TEST_HARNESS_CODE):
                 filenames = sorted(filenames + sorted(glob(DIRECTORY_WITH_AUTOMATOR_AND_TEST_HARNESS_CODE + "/*.coffee")))
 
+    # add the sources from the directories
+    filenames = sorted(filenames + sorted(glob("src/maps" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/basic-data-structures" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/buttons" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/fizzytiles" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/graphs-plots-charts" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/icons" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/meta" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/mixins" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/patch-programming" + "/*.coffee")))
+
+
     # Read each file and search it for each sort of dependency.
     # note that this is not strictly needed because it's not
     # kept anywhere, the loader
