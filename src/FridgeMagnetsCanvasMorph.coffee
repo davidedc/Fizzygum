@@ -1,4 +1,4 @@
-# not in fizzygum homepage
+# this file is excluded from the fizzygum homepage build
 # REQUIRES BackBufferMixin
 # REQUIRES numbertimes
 # 

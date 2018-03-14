@@ -76,7 +76,7 @@ DEPENDS = re.compile(r"\s\w+:\s*new\s*(\w+)")
 IS_CLASS = re.compile(r"^class +(\w+)", re.MULTILINE)
 IS_MIXIN = re.compile(r"^(\w+Mixin)[ ]*=", re.MULTILINE)
 TRIPLE_QUOTES = re.compile(r"'''")
-NOT_IN_FIZZYGUM_HOMEPAGE = re.compile(r"# not in fizzygum homepage")
+NOT_IN_FIZZYGUM_HOMEPAGE = re.compile(r"# this file is excluded from the fizzygum homepage build")
 
 # These two functions search for "requires" comments in the
 # files and generate a list of the order in which the files
