@@ -57,6 +57,8 @@ import ntpath
 # recursively in the src/tests folder
 import fnmatch
 
+import argparse
+
 # GLOBALS
 FINAL_OUTPUT_FILE = '../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee'
 
@@ -74,6 +76,7 @@ DEPENDS = re.compile(r"\s\w+:\s*new\s*(\w+)")
 IS_CLASS = re.compile(r"^class +(\w+)", re.MULTILINE)
 IS_MIXIN = re.compile(r"^(\w+Mixin)[ ]*=", re.MULTILINE)
 TRIPLE_QUOTES = re.compile(r"'''")
+NOT_IN_FIZZYGUM_HOMEPAGE = re.compile(r"# not in fizzygum homepage")
 
 # These two functions search for "requires" comments in the
 # files and generate a list of the order in which the files
@@ -236,6 +239,13 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
 
 
 def main():
+
+    # we just need to detect a switch
+    # see https://stackoverflow.com/a/8259080
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--homepage', action='store_true')
+    args = parser.parse_args()
+
     """
     Creates an ordered list of the coffee files, iterates through it, reads the
     source code of each file and puts each it its own .coffee containing the source
@@ -323,7 +333,13 @@ def main():
         # dynamically and asynchronously loaded following the manifest entries.
         # This is so Fizzygum can dynamically (and possibly lazily) load all
         # the morph's classes as coffeescript source code.
-        if is_class_file or is_mixin_file:
+
+        # the meaning of the first bracket is: if --homepage parameter
+        # is passed to this script, then
+        # there must be no "NOT_IN_FIZZYGUM_HOMEPAGE" directive in the source.
+        # (since p -> q is identical to not p or q, you have what's in the
+        # bracket).
+        if (not args.homepage or not NOT_IN_FIZZYGUM_HOMEPAGE.search(content)) and (is_class_file or is_mixin_file):
             # If there is a string block in the source, then we must escape it.
             escaped_content = re.sub(TRIPLE_QUOTES, "\\'\\'\\'", content)
             # also all the slashes need to be escaped

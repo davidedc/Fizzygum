@@ -60,7 +60,10 @@ mkdir ../Fizzygum-builds/latest/js/tests/
 # note that this file won't contain much code.
 # All the code of the morphs is put in other .coffee files
 # which just contain the coffeescript source as the text!
-python ./buildSystem/build.py
+# the first parameter "--homepage" specifies whether this
+# is a build for the homepage, in which case a lot of
+# legacy code and test-supporting code is left out.
+python ./buildSystem/build.py $1
 
 # turn the coffeescript file into js in the js directory
 coffee -b -c -o ../Fizzygum-builds/latest/js/ ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee 
@@ -73,6 +76,10 @@ uglifyjs --compress --output ../Fizzygum-builds/latest/js/fizzygum-boot-min.js -
 # compile all the files containing the coffeescript source for the morphs.
 # this creates javascript files which contain the original coffeescript source as text.
 coffee -b -c -o ../Fizzygum-builds/latest/js/sourceCode/ ../Fizzygum-builds/latest/js/sourceCode/
+
+# now that we have the coffeescript source code put inside .js files, we
+# can get rid of the .coffee files
+rm ../Fizzygum-builds/latest/js/sourceCode/*.coffee
 
 if [ "$?" != "0" ]; then
     tput bel;
