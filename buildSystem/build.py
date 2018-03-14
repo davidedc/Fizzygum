@@ -76,8 +76,10 @@ DEPENDS = re.compile(r"\s\w+:\s*new\s*(\w+)")
 IS_CLASS = re.compile(r"^class +(\w+)", re.MULTILINE)
 IS_MIXIN = re.compile(r"^(\w+Mixin)[ ]*=", re.MULTILINE)
 TRIPLE_QUOTES = re.compile(r"'''")
-HOMEPAGE_EXCLUSION_PARTS = re.compile(r"[ ]*# »>> this part is excluded from the fizzygum homepage build[^«]*«")
 
+# regexps to exclude entire files or parts of files from the
+# homepage build
+HOMEPAGE_EXCLUSION_PARTS = re.compile(r"[ ]*# »>> this part is excluded from the fizzygum homepage build[^«]*«")
 NOT_IN_FIZZYGUM_HOMEPAGE = re.compile(r"# this file is excluded from the fizzygum homepage build")
 
 # These two functions search for "requires" comments in the
