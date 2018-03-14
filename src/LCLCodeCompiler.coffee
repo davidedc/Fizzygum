@@ -1,3 +1,5 @@
+# this file is excluded from the fizzygum homepage build
+
 ##
 ## LCLCodeCompiler makes available the user sketch
 ## (written in simplified syntax) as a runnable javascript function.

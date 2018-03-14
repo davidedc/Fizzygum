@@ -1,3 +1,5 @@
+# this file is excluded from the fizzygum homepage build
+
 # Holds information about browser and machine
 # Note that some of these could
 # change during user session.

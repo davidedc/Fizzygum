@@ -1,3 +1,5 @@
+# this file is excluded from the fizzygum homepage build
+
 ##
 ## LCLCodePreprocessor takes care of translating the simplified syntax
 ## of livecodelb to a coffeescript that is degestible by the

@@ -1,3 +1,5 @@
+# this file is excluded from the fizzygum homepage build
+
 # It's a SINGLE line of text, i.e.
 # it doesn't represent line breaks as multiple lines.
 # It's useful when you mean an "enter" from the user to mean

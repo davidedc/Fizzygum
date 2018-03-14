@@ -1,3 +1,5 @@
+# this file is excluded from the fizzygum homepage build
+
 class InformationIconAppearance extends IconAppearance
 
   constructor: (@morph) ->

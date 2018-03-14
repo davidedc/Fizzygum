@@ -1,3 +1,5 @@
+# this file is excluded from the fizzygum homepage build
+
 # Points to a Widget. There can be multiple PointerMorph(s) for any
 # Widget.
 
