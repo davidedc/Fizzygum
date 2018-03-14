@@ -2230,7 +2230,6 @@ class WorldMorph extends PanelWdgt
       menu.addMenuItem "color picker", true, @, "createNewColorPickerMorph"
       menu.addLine()
       menu.addMenuItem "analog clock", true, @, "analogClock"
-      menu.addMenuItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
       menu.addMenuItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
 
     menu.popUpAtHand()
