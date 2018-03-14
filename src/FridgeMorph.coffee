@@ -1,3 +1,4 @@
+# not in fizzygum homepage
 
 class FridgeMorph extends PanelWdgt
 

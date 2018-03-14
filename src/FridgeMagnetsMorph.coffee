@@ -1,3 +1,4 @@
+# not in fizzygum homepage
 class FridgeMagnetsMorph extends Widget
 
   # panes:
