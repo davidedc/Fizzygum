@@ -375,7 +375,9 @@ class Widget extends TreeNode
     # so we wait and we let the actual extending
     # morph to draw itself.
 
+    # »>> this part is excluded from the fizzygum homepage build
     @setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+    # this part is excluded from the fizzygum homepage build <<«
 
   # this happens when the Widget's constructor runs
   # and also when the Widget is duplicated
@@ -4057,6 +4059,7 @@ class Widget extends TreeNode
   desiredHeight: 20
   maxHeight: 100
 
+  # »>> this part is excluded from the fizzygum homepage build
   makeSpacersTransparent: ->
     for C in @children
       C.makeSpacersTransparent()
@@ -4064,6 +4067,7 @@ class Widget extends TreeNode
   makeSpacersOpaque: ->
     for C in @children
       C.makeSpacersOpaque()
+  # this part is excluded from the fizzygum homepage build <<«
 
   invalidateLayout: ->
     if @layoutIsValid
@@ -4072,6 +4076,7 @@ class Widget extends TreeNode
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING and @parent?
       @parent.invalidateLayout()
 
+  # »>> this part is excluded from the fizzygum homepage build
   setMinAndMaxBoundsAndSpreadability: (minBounds, desiredBounds, spreadability = LayoutSpec.SPREADABILITY_MEDIUM) ->
     @minWidth = minBounds.x
     @minHeight = minBounds.y
@@ -4244,6 +4249,7 @@ class Widget extends TreeNode
       !C.isCollapsed()
         count++
     return count
+  # this part is excluded from the fizzygum homepage build <<«
 
   # it's useful to know when a morph defers its layout
   # because it means that its current size is indicative
@@ -4303,6 +4309,7 @@ class Widget extends TreeNode
     else
       @rawSetExtent newBoundsForThisLayout.extent()
 
+    # »>> this part is excluded from the fizzygum homepage build
     if @countOfChildrenToLayout() == 0
       @layoutIsValid = true
       return
@@ -4407,10 +4414,12 @@ class Widget extends TreeNode
         if childLeft > newBoundsForThisLayout.right() + 5
           debugger
         C.doLayout childBounds
+    # this part is excluded from the fizzygum homepage build <<«
 
     @layoutIsValid = true
     @notifyChildrenThatParentHasReLayouted()
 
+  # »>> this part is excluded from the fizzygum homepage build
   removeAdders: ->
     @_showsAdders = false
     @invalidateLayout()
@@ -4493,9 +4502,11 @@ class Widget extends TreeNode
             new LayoutElementAdderOrDropletMorph(),
             nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+  # this part is excluded from the fizzygum homepage build <<«
 
 
 
+  # »>> this part is excluded from the fizzygum homepage build
   @setupTestScreen1: ->
 
     ## draw some reference patterns to see the sizes
@@ -4752,3 +4763,4 @@ class Widget extends TreeNode
 
     world.add lmHolder
     new HandleMorph lmHolder
+  # this part is excluded from the fizzygum homepage build <<«
