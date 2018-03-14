@@ -590,18 +590,32 @@ class MenusHelper
 
     sdspw.addDivider()
 
+
+    sdspw.addNormalParagraph "You wanted more features in your software. So you added more libraries. What you obtained was: problems.\n\n" +
+    "Bacause each library was developed disjointly from the others, and each brought disjoint assumptions and constraints. So now your work is to help your libraries.\n\n" +
+    "Escape libraries hell. Use a powerful framework instead, one that was designed from the ground up to do complex things, coherently. Welcome to Fizzygum."
+
+    sdspw.addSpacer()
+
     startingContent = new SimplePlainTextWdgt(
-      "Fizzygum is an open web framework to:",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "What is Fizzygum",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 22
     startingContent.isEditable = true
     startingContent.enableSelecting()
     sdspw.add startingContent
 
+    sdspw.addDivider()    
+
+    sdspw.addNormalParagraph "Fizzygum is a web framework that lets you do all of this and more:"
+
     sdspw.addBulletPoint "make dashboards and visualise data"
-    sdspw.addBulletPoint "author documents (drawings / text docs / slides)"
+    sdspw.addBulletPoint "author, organise and navigate documents (drawings / text docs / slides)"
     sdspw.addBulletPoint "embed live graphs, dynamic calculations or even entire running programs inside any document, via simple drag & drop"
-    sdspw.addBulletPoint "go beyond traditional embedding: you can now infinitely nest and compose programs and documents. Want to run a program inside a document inside a presentation inside another running program? No problem"
-    sdspw.addBulletPoint "make custom utilities (e.g. temperature converter) by simply connecting existing components (no coding required)"
+    sdspw.addBulletPoint "go beyond traditional embedding: you can now infinitely nest and compose programs and documents. Need a program inside a presentation inside a text? You have it"
+    sdspw.addBulletPoint "make custom utilities (e.g. temperature converter) by simply connecting existing components - no coding required"
     sdspw.addBulletPoint "use the internal development tools to create entirely new apps, or change existing ones while they are running. Add custom features without even needing to refresh the page."
+    sdspw.addBulletPoint "do all of the above, concurrently"
 
     sdspw.addSpacer()
 
