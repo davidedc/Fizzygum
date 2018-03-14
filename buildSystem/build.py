@@ -76,6 +76,8 @@ DEPENDS = re.compile(r"\s\w+:\s*new\s*(\w+)")
 IS_CLASS = re.compile(r"^class +(\w+)", re.MULTILINE)
 IS_MIXIN = re.compile(r"^(\w+Mixin)[ ]*=", re.MULTILINE)
 TRIPLE_QUOTES = re.compile(r"'''")
+HOMEPAGE_EXCLUSION_PARTS = re.compile(r"[ ]*# »>> this part is excluded from the fizzygum homepage build[^«]*«")
+
 NOT_IN_FIZZYGUM_HOMEPAGE = re.compile(r"# this file is excluded from the fizzygum homepage build")
 
 # These two functions search for "requires" comments in the
@@ -340,10 +342,16 @@ def main():
         # (since p -> q is identical to not p or q, you have what's in the
         # bracket).
         if (not args.homepage or not NOT_IN_FIZZYGUM_HOMEPAGE.search(content)) and (is_class_file or is_mixin_file):
+
             # If there is a string block in the source, then we must escape it.
             escaped_content = re.sub(TRIPLE_QUOTES, "\\'\\'\\'", content)
             # also all the slashes need to be escaped
             escaped_content = escaped_content.replace("\\","\\\\")
+
+            # if we are building for the homepage, we strip out all
+            # sections of the file that don't belong to the homepage
+            if args.homepage:
+                escaped_content = re.sub(HOMEPAGE_EXCLUSION_PARTS, '', escaped_content)
 
             sourceFileName = ntpath.basename(filename).replace(".coffee","_coffeSource")
             with codecs.open("../Fizzygum-builds/latest/js/sourceCode/"+sourceFileName+".coffee", "w", "utf-8") as f:

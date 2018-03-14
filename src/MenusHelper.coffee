@@ -9,6 +9,7 @@ class MenusHelper
 
   @augmentWith DeepCopierMixin
 
+  # »>> this part is excluded from the fizzygum homepage build
   createFridgeMagnets: ->
     debugger
     fmm = new FridgeMagnetsMorph()
@@ -18,6 +19,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     world.add wm
     wm.changed()
+  # this part is excluded from the fizzygum homepage build <<«
 
 
   createReconfigurablePaint: ->
