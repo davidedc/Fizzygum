@@ -66,6 +66,7 @@ FINAL_OUTPUT_FILE = '../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee'
 DIRECTORY_WITH_TEST_FILES = "../Fizzygum-tests/tests/"
 FILE_TO_BE_ADDED_TEST_INCLUDES = "src/index.html"
 OUTPUT_FILE_WITH_TEST_INCLUDES = "../Fizzygum-builds/latest/worldWithSystemTestHarness.html"
+DIRECTORY_WITH_AUTOMATOR_AND_TEST_HARNESS_CODE = "../Fizzygum-tests/Automator-and-test-harness-src"
 
 # RegEx Patterns
 # We precompile them in order to improve performance and increase
@@ -253,8 +254,8 @@ def main():
 
     if not args.homepage:
         if os.path.exists("../Fizzygum-tests"):
-            if os.path.exists("../Fizzygum-tests/Automator-and-test-harness-src"):
-                filenames = sorted(filenames + sorted(glob("../Fizzygum-tests/Automator-and-test-harness-src/*.coffee")))
+            if os.path.exists(DIRECTORY_WITH_AUTOMATOR_AND_TEST_HARNESS_CODE):
+                filenames = sorted(filenames + sorted(glob(DIRECTORY_WITH_AUTOMATOR_AND_TEST_HARNESS_CODE + "/*.coffee")))
 
     # Read each file and search it for each sort of dependency.
     # note that this is not strictly needed because it's not
