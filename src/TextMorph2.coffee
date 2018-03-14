@@ -19,7 +19,7 @@ class TextMorph2 extends StringMorph2
 
   constructor: (
    @text = "TextMorph2",
-   @originallySetFontSize = 12,
+   @originallySetFontSize = WorldMorph.preferencesAndSettings.normalTextFontSize,
    @fontName = @justArialFontStack,
    @isBold = false,
    @isItalic = false,

@@ -20,7 +20,7 @@ class MenuMorph extends PopUpWdgt
     super @morphOpeningThePopUp, @killThisPopUpIfClickOutsideDescendants, @killThisPopUpIfClickOnDescendantsTriggers
     @isLockingToPanels = false
     @appearance = new MenuAppearance @
-    @strokeColor = new Color 210, 210, 210
+    @strokeColor = WorldMorph.preferencesAndSettings.menuStrokeColor
 
 
     if @isListContents

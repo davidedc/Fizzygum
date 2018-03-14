@@ -114,7 +114,7 @@ class StringMorph2 extends Widget
 
   constructor: (
       @text = (if text is "" then "" else "StringMorph2"),
-      @originallySetFontSize = 12,
+      @originallySetFontSize = WorldMorph.preferencesAndSettings.normalTextFontSize,
       @fontName = @justArialFontStack,
       @isBold = false,
       @isItalic = false,

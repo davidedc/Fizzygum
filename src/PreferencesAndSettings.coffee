@@ -21,6 +21,16 @@ class PreferencesAndSettings
   minimumFontHeight: nil
   menuFontName: nil
   menuFontSize: nil
+  menuHeaderFontSize: nil
+  menuHeaderColor: nil
+  menuHeaderBold: nil
+  menuStrokeColor: nil
+  menuBackgroundColor: nil
+  menuButtonsLabelColor: nil
+  normalTextFontSize: nil
+  titleBarTextFontSize: nil
+  titleBarBoldText: nil
+  titleBarTextHeight: nil
   bubbleHelpFontSize: nil
   prompterFontName: nil
   prompterFontSize: nil
@@ -64,8 +74,19 @@ class PreferencesAndSettings
     @inputMode = PreferencesAndSettings.INPUT_MODE_MOUSE
     @minimumFontHeight = getMinimumFontHeight() # browser settings
     @menuFontName = "sans-serif"
-    @menuFontSize = 12
-    @bubbleHelpFontSize = 10
+    @menuFontSize = 12 # 14
+    @menuHeaderFontSize = 12 # 13
+    @menuHeaderColor = new Color 77,77,77 # new Color 125, 125, 125
+    @menuHeaderBold = true # false
+    @menuStrokeColor = new Color 210, 210, 210 # new Color 186, 186, 186
+    @menuBackgroundColor = new Color 249, 249, 249 # new Color 244, 244, 244
+    @menuButtonsLabelColor = new Color 0, 0, 0 # new Color 50, 50, 50
+
+    @normalTextFontSize = 12 # 13
+    @titleBarTextFontSize = 12 # 13
+    @titleBarTextHeight = 15 # 16
+    @titleBarBoldText = true # false
+    @bubbleHelpFontSize = 10 # 12
     @prompterFontName = "sans-serif"
     @prompterFontSize = 12
     @prompterSliderSize = 10

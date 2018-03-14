@@ -304,9 +304,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     # label
     @label?.fullDestroy()
-    @label = new StringMorph2 @labelContent
-    @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
-    @label.isBold = true
+    @label = new StringMorph2 @labelContent, WorldMorph.preferencesAndSettings.titleBarTextFontSize
+    @label.isBold = WorldMorph.preferencesAndSettings.titleBarBoldText
     @label.color = new Color 255, 255, 255
     @add @label, nil, nil, nil, true
 
@@ -344,11 +343,17 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @add @internalExternalSwitchButton, nil, nil, nil, true
 
   makePencilYellow: ->
+      # TODO assigning to color_normal is not enough
+      # there should be a way to do these two lines with one line
       @editButton?.color_normal = new Color 248, 188, 58
+      @editButton?.setColor new Color 248, 188, 58
       @editButton?.changed()
 
   makePencilClear: ->
+      # TODO assigning to color_normal is not enough
+      # there should be a way to do these two lines with one line
       @editButton?.color_normal = new Color 245, 244, 245
+      @editButton?.setColor new Color 245, 244, 245
       @editButton?.changed()
 
   createAndAddEditButton: ->
@@ -501,7 +506,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       labelWidth = labelRight - labelLeft
 
       labelBounds = new Rectangle new Point labelLeft, labelTop
-      labelBounds = labelBounds.setBoundsWidthAndHeight labelWidth, 15
+      labelBounds = labelBounds.setBoundsWidthAndHeight labelWidth, WorldMorph.preferencesAndSettings.titleBarTextHeight
       @label.rawSetBounds labelBounds
 
     # edit button

@@ -4,13 +4,13 @@ class MenuHeader extends BoxMorph
 
   constructor: (textContents) ->
     super 3
-    @color = new Color 77,77,77
+    @color = WorldMorph.preferencesAndSettings.menuHeaderColor
 
     @text = new TextMorph(
       textContents,
-      @fontSize or WorldMorph.preferencesAndSettings.menuFontSize,
+      @fontSize or WorldMorph.preferencesAndSettings.menuHeaderFontSize,
       WorldMorph.preferencesAndSettings.menuFontName,
-      true,
+      WorldMorph.preferencesAndSettings.menuHeaderBold,
       false,
       "center")
     @text.alignment = "center"

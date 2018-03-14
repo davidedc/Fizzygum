@@ -47,21 +47,19 @@ class TriggerMorph extends Widget
   STATE_HIGHLIGHTED: 1
   STATE_PRESSED: 2
 
-  # overrides to superclass
-  color: new Color 249, 249, 249
 
   constructor: (
       @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true,
       @target = nil,
       @action = nil,
       @labelString = nil,
-      @fontSize = (WorldMorph.preferencesAndSettings.menuFontSize),
+      @fontSize = WorldMorph.preferencesAndSettings.menuFontSize,
       @fontStyle = "sans-serif",
       @centered = false,
       @dataSourceMorphForTarget = nil,
       @morphEnv,
       @toolTipMessage = nil,
-      @labelColor = (new Color 0, 0, 0),
+      @labelColor = WorldMorph.preferencesAndSettings.menuButtonsLabelColor,
       @labelBold = false,
       @labelItalic = false,
       @doubleClickAction = nil,
@@ -85,8 +83,7 @@ class TriggerMorph extends Widget
     # either
     @defaultRejectDrags = true
 
-    #@color = new Color 255, 152, 152
-    #@color = new Color 255, 255, 255
+    @color = WorldMorph.preferencesAndSettings.menuBackgroundColor
     if @labelString?
       @layoutSubmorphs()
   
