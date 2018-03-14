@@ -18,8 +18,6 @@ class AnalogClockWdgt extends Widget
     @setExtent new Point 200, 200
     return
 
-    #@setMinAndMaxBoundsAndSpreadability (new Point 15,15) , (new Point 15,15), LayoutSpec.SPREADABILITY_HANDLES
-
   colloquialName: ->
     "analog clock"
 
@@ -157,7 +155,6 @@ class AnalogClockWdgt extends Widget
     @drawHoursHand context, squareDim
     @drawMinutesHand context, squareDim
     @drawSecondsHand context, squareDim
-    debugger
     @drawDotInMiddleOfFace context, squareDim
 
     context.beginPath()

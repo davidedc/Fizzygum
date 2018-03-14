@@ -1,6 +1,3 @@
-# StackElementsSizeAdjustingMorph
-
-
 
 class StackElementsSizeAdjustingMorph extends Widget
 
