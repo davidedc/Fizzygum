@@ -1241,8 +1241,19 @@ class Widget extends TreeNode
         # the stretchable panel will get them to the
         # correct positions
         if morphStartingTheChange? and @parent? and (morphStartingTheChange instanceof HandleMorph)
-          @positionFractionalInHoldingPanel = @positionFractionalInMorph @parent
+          @rememberFractionalPositionInHoldingPanel()
 
+
+  rememberFractionalPositionInHoldingPanel: ->
+    @positionFractionalInHoldingPanel = @positionFractionalInMorph @parent
+
+  rememberFractionalExtentInHoldingPanel: ->
+    @extentFractionalInHoldingPanel = @extentFractionalInMorph @parent
+
+  rememberFractionalSituationInHoldingPanel: ->
+    @rememberFractionalPositionInHoldingPanel()
+    @rememberFractionalExtentInHoldingPanel()
+    @wasPositionedSlightlyOutsidePanel = ! @parent.bounds.containsRectangle @bounds
   
   silentFullRawMoveTo: (aPoint) ->
     # TODO in theory the low-level APIs should only be
@@ -2230,6 +2241,8 @@ class Widget extends TreeNode
         aMorph.removeShadow()
 
     @addRaw arguments...
+    if @ == world
+      aMorph.rememberFractionalPositionInHoldingPanel()
   
   # attaches submorph on top
   # ??? TODO you should handle the case of Widget
@@ -2732,11 +2745,7 @@ class Widget extends TreeNode
       world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.remove @
 
   justDropped: (whereIn) ->
-    @positionFractionalInHoldingPanel = @positionFractionalInMorph whereIn
-    @extentFractionalInHoldingPanel = @extentFractionalInMorph whereIn
-
-    @wasPositionedSlightlyOutsidePanel = ! whereIn.bounds.containsRectangle @bounds
-
+    @rememberFractionalSituationInHoldingPanel()
     
   wantsDropOf: (aMorph) ->
     return @_acceptsDrops
