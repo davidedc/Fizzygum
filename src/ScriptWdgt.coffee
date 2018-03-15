@@ -69,7 +69,7 @@ class ScriptWdgt extends Widget
 
     @saveTextWdgt = new StringMorph2 "save + close"
     @saveTextWdgt.alignCenter()
-    @saveButton = new SimpleButtonMorph true, @, "saveScript", @saveTextWdgt
+    @saveButton = new SimpleButtonMorph true, @, "saveScriptAndClose", @saveTextWdgt
     @add @saveButton
     # ---------------------------------------
 
@@ -87,6 +87,9 @@ class ScriptWdgt extends Widget
 
     @textMorph.considerCurrentTextAsReferenceText()
     @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
+
+  saveScriptAndClose: ->
+    @saveScript()
     @closeFromContainerWindow @parent
 
   doAll: ->

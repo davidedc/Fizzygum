@@ -169,7 +169,7 @@ class MenusHelper
     world.add wm
     wm.changed()
 
-  createFizzyPaintLauncherAndItsIcon: ->
+  createFizzyPaintLauncher: ->
     scriptWdgt = new ScriptWdgt """
       reconfPaint = new ReconfigurablePaintWdgt()
       wm = new WindowWdgt nil, nil, reconfPaint
@@ -188,7 +188,6 @@ class MenusHelper
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
-    world.add wm
     wm.changed()
 
     fizzyPaintLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Fizzypaint", new PaintBucketIconWdgt()
@@ -197,8 +196,13 @@ class MenusHelper
     world.add fizzyPaintLauncher
     fizzyPaintLauncher.setExtent new Point 75, 75
     fizzyPaintLauncher.fullChanged()
+    return wm
 
-  createSimpleDocumentLauncherAndItsIcon: ->
+  createFizzyPaintLauncherAndItsIcon: ->
+    wm = @createFizzyPaintLauncher()
+    world.add wm
+
+  createSimpleDocumentLauncher: ->
     scriptWdgt = new ScriptWdgt """
       reconfPaint = new SimpleDocumentWdgt()
       wm = new WindowWdgt nil, nil, reconfPaint
@@ -217,7 +221,6 @@ class MenusHelper
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
-    world.add wm
     wm.changed()
 
     fizzyPaintLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Simple docs", new TypewriterIconWdgt()
@@ -226,8 +229,13 @@ class MenusHelper
     world.add fizzyPaintLauncher
     fizzyPaintLauncher.setExtent new Point 75, 75
     fizzyPaintLauncher.fullChanged()
+    return wm
 
-  createSimpleSlideLauncherAndItsIcon: ->
+  createSimpleDocumentLauncherAndItsIcon: ->
+    wm = @createSimpleDocumentLauncher()
+    world.add wm
+
+  createSimpleSlideLauncher: ->
     scriptWdgt = new ScriptWdgt """
       reconfPaint = new SimpleSlideWdgt()
       wm = new WindowWdgt nil, nil, reconfPaint
@@ -246,7 +254,6 @@ class MenusHelper
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
-    world.add wm
     wm.changed()
 
     fizzyPaintLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Simple slides", new SimpleSlideIconWdgt()
@@ -255,7 +262,11 @@ class MenusHelper
     world.add fizzyPaintLauncher
     fizzyPaintLauncher.setExtent new Point 75, 75
     fizzyPaintLauncher.fullChanged()
+    return wm
 
+  createSimpleSlideLauncherAndItsIcon: ->
+    wm = @createSimpleSlideLauncher()
+    world.add wm
 
   createFanout: ->
     fanoutWdgt = new FanoutWdgt()

@@ -400,13 +400,16 @@ class WorldMorph extends PanelWdgt
     WorldMorph.ongoingUrlActionNumber= 0
 
     if @isIndexPage
+      acm = new AnalogClockWdgt()
+      acm.rawSetExtent new Point 200, 200
+      acm.fullRawMoveTo new Point @width()-acm.width()-5, @top() + 5
+      @add acm
+
       menusHelper.createWelcomeMessageWindow()
       menusHelper.basementIconAndText()
-
-      acm = new AnalogClockWdgt()
-      @add acm
-      acm.fullMoveTo new Point 860, 40
-      acm.setExtent new Point 200, 200
+      menusHelper.createSimpleDocumentLauncher()
+      menusHelper.createFizzyPaintLauncher()
+      menusHelper.createSimpleSlideLauncher()
 
   # some test urls:
 
