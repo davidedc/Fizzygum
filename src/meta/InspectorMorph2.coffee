@@ -184,7 +184,7 @@ class InspectorMorph2 extends Widget
 
     counter = 0
     for eachNamedClass in @classesNames
-      classButton = new SimpleButtonMorph true, @, "openClassInspector", (new StringMorph2 eachNamedClass),nil,nil,nil,nil,eachNamedClass,nil,nil,@classNamesTextPadding
+      classButton = new SimpleButtonMorph true, @, "openClassInspector", (new StringMorph2 eachNamedClass, WorldMorph.preferencesAndSettings.textInButtonsFontSize),nil,nil,nil,nil,eachNamedClass,nil,nil,@classNamesTextPadding
       @classesButtons.push classButton
       @add classButton
 
@@ -201,31 +201,31 @@ class InspectorMorph2 extends Widget
     @lastArrowInHierarchy = new AngledArrowUpLeftIconMorph new Color 0,0,0
     @add @lastArrowInHierarchy
 
-    @showMethodsOnButton = new SimpleButtonMorph true, @, "hideMethods", (new StringMorph2 "methods: on").alignCenter()
-    @showMethodsOffButton = new SimpleButtonMorph true, @, "showMethods", (new StringMorph2 "methods: off").alignCenter()
+    @showMethodsOnButton = new SimpleButtonMorph true, @, "hideMethods", "methods: on"
+    @showMethodsOffButton = new SimpleButtonMorph true, @, "showMethods", "methods: off"
     @showMethodsToggle = new ToggleButtonMorph @showMethodsOnButton, @showMethodsOffButton, if @showingMethods then 0 else 1
     @add @showMethodsToggle
 
-    @showFieldsOnButton = new SimpleButtonMorph true, @, "hideFields", (new StringMorph2 "fields: on").alignCenter()
-    @showFieldsOffButton = new SimpleButtonMorph true, @, "showFields", (new StringMorph2 "fields: off").alignCenter()
+    @showFieldsOnButton = new SimpleButtonMorph true, @, "hideFields", "fields: on"
+    @showFieldsOffButton = new SimpleButtonMorph true, @, "showFields", "fields: off"
     @showFieldsToggle = new ToggleButtonMorph @showFieldsOnButton, @showFieldsOffButton, if @showingFields then 0 else 1
     @add @showFieldsToggle
 
-    @showInheritedOnButton = new SimpleButtonMorph true, @, "hideInherited", (new StringMorph2 "inherited: on").alignCenter()
-    @showInheritedOffButton = new SimpleButtonMorph true, @, "showInherited", (new StringMorph2 "inherited: off").alignCenter()
+    @showInheritedOnButton = new SimpleButtonMorph true, @, "hideInherited", "inherited: on"
+    @showInheritedOffButton = new SimpleButtonMorph true, @, "showInherited", "inherited: off"
     @showInheritedToggle = new ToggleButtonMorph @showInheritedOnButton, @showInheritedOffButton, if @showingInherited then 0 else 1
     @add @showInheritedToggle
 
     @buildAndConnectObjOwnPropsButton()
 
-    @addPropertyButton = new SimpleButtonMorph true, @, "addPropertyPopout", (new StringMorph2 "add...").alignCenter()
+    @addPropertyButton = new SimpleButtonMorph true, @, "addPropertyPopout", "add..."
     @add @addPropertyButton
-    @renamePropertyButton = new SimpleButtonMorph true, @, "renamePropertyPopout", (new StringMorph2 "rename...").alignCenter()
+    @renamePropertyButton = new SimpleButtonMorph true, @, "renamePropertyPopout", "rename..."
     @add @renamePropertyButton
-    @removePropertyButton = new SimpleButtonMorph true, @, "removeProperty", (new StringMorph2 "remove").alignCenter()
+    @removePropertyButton = new SimpleButtonMorph true, @, "removeProperty", "remove"
     @add @removePropertyButton
 
-    @saveTextWdgt = (new StringMorph2 "save").alignCenter()
+    @saveTextWdgt = (new StringMorph2 "save", WorldMorph.preferencesAndSettings.textInButtonsFontSize).alignCenter()
     @saveButton = new SimpleButtonMorph true, @, "save", @saveTextWdgt
     @add @saveButton
 
@@ -299,13 +299,13 @@ class InspectorMorph2 extends Widget
 
 
 
-    @hierarchyHeaderString = new StringMorph2 "Hierarchy"
+    @hierarchyHeaderString = new StringMorph2 "Hierarchy", WorldMorph.preferencesAndSettings.textInButtonsFontSize
     @hierarchyHeaderString.toggleHeaderLine()
     @hierarchyHeaderString.alignCenter()
     @add @hierarchyHeaderString
 
 
-    @propertyHeaderString = new StringMorph2 "Properties"
+    @propertyHeaderString = new StringMorph2 "Properties", WorldMorph.preferencesAndSettings.textInButtonsFontSize
     @propertyHeaderString.toggleHeaderLine()
     @propertyHeaderString.alignCenter()
     @add @propertyHeaderString
@@ -332,8 +332,8 @@ class InspectorMorph2 extends Widget
 
 
   buildAndConnectObjOwnPropsButton: ->
-    @showOwnPropsOnlyOnButton = new SimpleButtonMorph true, @, "hideOwnPropsOnly", (new StringMorph2 "obj own props only: on").alignCenter()
-    @showOwnPropsOnlyOffButton = new SimpleButtonMorph true, @, "showOwnPropsOnly", (new StringMorph2 "obj own props only: off").alignCenter()
+    @showOwnPropsOnlyOnButton = new SimpleButtonMorph true, @, "hideOwnPropsOnly", "obj own props only: on"
+    @showOwnPropsOnlyOffButton = new SimpleButtonMorph true, @, "showOwnPropsOnly", "obj own props only: off"
     @showOwnPropsOnlyToggle = new ToggleButtonMorph @showOwnPropsOnlyOnButton, @showOwnPropsOnlyOffButton, if @showingOwnPropsOnly then 0 else 1
     @add @showOwnPropsOnlyToggle
 

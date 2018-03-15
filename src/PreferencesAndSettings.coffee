@@ -29,6 +29,7 @@ class PreferencesAndSettings
   menuBackgroundColor: nil
   menuButtonsLabelColor: nil
   normalTextFontSize: nil
+  textInButtonsFontSize: nil
   titleBarTextFontSize: nil
   titleBarBoldText: nil
   titleBarTextHeight: nil
@@ -87,6 +88,8 @@ class PreferencesAndSettings
     @menuButtonsLabelColor = new Color 0, 0, 0 # new Color 50, 50, 50
 
     @normalTextFontSize = 12 # 13
+    @textInButtonsFontSize = 12 # 13
+
     @titleBarTextFontSize = 12 # 13
     @titleBarTextHeight = 15 # 16
     @titleBarBoldText = true # false

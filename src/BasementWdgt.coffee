@@ -37,8 +37,8 @@ class BasementWdgt extends BoxMorph
     @scrollPanel = new ScrollPanelWdgt()
     @add @scrollPanel
 
-    @hideUsedWdgtsOnButton = new SimpleButtonMorph true, @, "showAllWidgets", (new StringMorph2 "☒ only show lost items").alignCenter()
-    @hideUsedWdgtsOffButton = new SimpleButtonMorph true, @, "hideUsedWidgets", (new StringMorph2 "☐ only show lost items").alignCenter()
+    @hideUsedWdgtsOnButton = new SimpleButtonMorph true, @, "showAllWidgets", "☒ only show lost items"
+    @hideUsedWdgtsOffButton = new SimpleButtonMorph true, @, "hideUsedWidgets", "☐ only show lost items"
     @hideUsedWdgtsToggle = new ToggleButtonMorph @hideUsedWdgtsOffButton, @hideUsedWdgtsOnButton, 0
     @add @hideUsedWdgtsToggle
 
