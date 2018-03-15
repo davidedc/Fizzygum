@@ -8,7 +8,7 @@ class SimpleSlideIconAppearance extends IconAppearance
   paintFunction: (context) ->
     #// Color Declarations
     black = 'rgba(0, 0, 0, 1)'
-    outlineColor = 'rgba(184, 184, 184, 1)'
+    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// Group
     #// outline Drawing
     context.beginPath()
@@ -22,7 +22,7 @@ class SimpleSlideIconAppearance extends IconAppearance
     context.lineTo 94, 23.87
     context.bezierCurveTo 94, 20.67, 91.06, 18, 87.54, 18
     context.closePath()
-    context.fillStyle = outlineColor
+    context.fillStyle = outlineColorString
     context.fill()
     #// column 1 line 1 Drawing
     context.beginPath()

@@ -8,7 +8,7 @@ class ExternalLinkIconAppearance extends IconAppearance
   paintFunction: (context) ->
     #// Color Declarations
     black = 'rgba(0, 0, 0, 1)'
-    outlineColor = 'rgba(184, 184, 184, 1)'
+    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// Group
     #// outline box Drawing
     context.beginPath()
@@ -17,7 +17,7 @@ class ExternalLinkIconAppearance extends IconAppearance
     context.lineTo 13.5, 86.5
     context.lineTo 78, 86.5
     context.lineTo 78, 46
-    context.strokeStyle = outlineColor
+    context.strokeStyle = outlineColorString
     context.lineWidth = 16
     context.lineJoin = 'round'
     context.stroke()
@@ -34,7 +34,7 @@ class ExternalLinkIconAppearance extends IconAppearance
     context.lineTo 62.33, 6.9
     context.lineTo 62.33, 23.13
     context.closePath()
-    context.fillStyle = outlineColor
+    context.fillStyle = outlineColorString
     context.fill()
     #// box Drawing
     context.beginPath()

@@ -3457,7 +3457,7 @@ class Widget extends TreeNode
     menu.addMenuItem "windows ➜", false, @, "popUpWindowsMenu", "icons"
     menu.addMenuItem "shortcuts & scripts ➜", false, @, "popUpShortcutsAndScriptsMenu", "Shortcuts & Scripts"
     menu.addMenuItem "analog clock", true, @, "analogClock"
-    menu.addMenuItem "dev tools ➜", false, @, "popUpDevToolsMenu", "icons"
+    menu.addMenuItem "dev tools ➜", false, menusHelper, "popUpDevToolsMenu", "icons"
     menu.addMenuItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
     menu.addMenuItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
     menu.addMenuItem "simple button", true, menusHelper, "createSimpleButton"
@@ -3466,12 +3466,6 @@ class Widget extends TreeNode
 
     menu.popUpAtHand()
 
-  popUpDevToolsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Dev Tools"
-    menu.addMenuItem "inspect", true, @, "inspect2", "open a window\non all properties"
-    menu.addMenuItem "console", true, @, "createConsole", "console"
-
-    menu.popUpAtHand()
 
   serialiseToMemory: ->
     world.lastSerializationString = @serialize()
@@ -3492,21 +3486,13 @@ class Widget extends TreeNode
       true,
       (@constructor.name.replace "Wdgt", "") or (@constructor.toString().replace "Wdgt", "").split(" ")[1].split("(")[0])
 
-    if !world.isIndexPage
+    if world.isIndexPage
       menu.addMenuItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
       menu.addMenuItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
       menu.addMenuItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
       menu.addLine()
       menu.addMenuItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
       menu.addMenuItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
-      menu.addMenuItem "attach...", true, @, "attach", "stick this morph\nto another one"
-      menu.addMenuItem "inspect", true, @, "inspect", "open a window\non all properties"
-
-
-      menu.addMenuItem "create shortcut", true, @, "createReference", "creates a reference to this wdgt and leaves it on the desktop"
-
-      menu.addMenuItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
-
     else
       menu.addMenuItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
       menu.addMenuItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
@@ -3515,9 +3501,11 @@ class Widget extends TreeNode
       menu.addMenuItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
       menu.addMenuItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
       menu.addMenuItem "attach...", true, @, "attach", "stick this morph\nto another one"
-      menu.addMenuItem "inspect", true, @, "inspect2", "open a window\non all properties"
+      menu.addMenuItem "inspect", true, @, "inspect", "open a window\non all properties"
+      menu.addMenuItem "create shortcut", true, @, "createReference", "creates a reference to this wdgt and leaves it on the desktop"
+      menu.addMenuItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
+      menu.addLine()
 
-    menu.addLine()
     if (@parent instanceof PanelWdgt) and !(@parent instanceof ScrollPanelWdgt)
       if @parent instanceof WorldMorph
         whereToOrFrom = "desktop"
@@ -3532,7 +3520,12 @@ class Widget extends TreeNode
       menu.addMenuItem "close", true, @, "close"
     else
       menu.addMenuItem "delete", true, @, "close"
-    menu.addMenuItem "destroy", true, @, "fullDestroy"
+
+    if !world.isIndexPage
+      menu.addMenuItem "destroy", true, @, "fullDestroy"
+    else
+      menu.addLine()
+      menu.addMenuItem "dev ➜", false, menusHelper, "popUpDevToolsMenu", "dev tools"
 
     menu
 

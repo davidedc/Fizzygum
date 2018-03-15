@@ -19,6 +19,7 @@ class PreferencesAndSettings
   # by the input mode.
   inputMode: nil
   minimumFontHeight: nil
+  shortcutsFontSize: nil
   menuFontName: nil
   menuFontSize: nil
   menuHeaderFontSize: nil
@@ -37,6 +38,9 @@ class PreferencesAndSettings
   prompterSliderSize: nil
   handleSize: nil
   scrollBarsThickness: nil
+
+  outlineColor: nil
+  outlineColorString: nil
 
   wheelScaleX: 1
   wheelScaleY: 1
@@ -93,6 +97,13 @@ class PreferencesAndSettings
 
     @defaultPanelsBackgroundColor = new Color 255, 250, 245
     @defaultPanelsStrokeColor = new Color 100, 100, 100
+
+    @outlineColor = new Color 249, 249, 249
+    # let's create this shortcut just because
+    # we use this string so many times
+    @outlineColorString = @outlineColor.toString()
+
+    @shortcutsFontSize = 12
 
     # handle and scrollbar should ideally be the
     # same size because they often show next to

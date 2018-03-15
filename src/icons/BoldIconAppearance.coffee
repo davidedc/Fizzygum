@@ -8,7 +8,7 @@ class BoldIconAppearance extends IconAppearance
   paintFunction: (context) ->
     #// Color Declarations
     black = 'rgba(0, 0, 0, 1)'
-    outlineColor = 'rgba(184, 184, 184, 1)'
+    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// Group
     #// outline Drawing
     context.beginPath()
@@ -37,7 +37,7 @@ class BoldIconAppearance extends IconAppearance
     context.lineTo 47.18, 43.33
     context.bezierCurveTo 47.18, 43.33, 66, 45, 64.86, 28.27
     context.closePath()
-    context.fillStyle = outlineColor
+    context.fillStyle = outlineColorString
     context.fill()
     #// letter B bold Drawing
     context.beginPath()

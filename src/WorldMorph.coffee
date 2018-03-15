@@ -391,6 +391,7 @@ class WorldMorph extends PanelWdgt
     # boot-up state machine
     console.log "booting"
     @basementWdgt = new BasementWdgt()
+
     WorldMorph.bootState = WorldMorph.JUST_STARTED
 
     ProfilingDataCollector.enableProfiling()
@@ -399,40 +400,8 @@ class WorldMorph extends PanelWdgt
     WorldMorph.ongoingUrlActionNumber= 0
 
     if @isIndexPage
-      @createErrorConsole()
-      welcomeTitle = new StringMorph2 "Welcome to Fizzygum!"
-      welcomeTitle.isEditable = true
-      @add welcomeTitle
-      welcomeTitle.togglefittingSpecWhenBoundsTooLarge()
-      welcomeTitle.fullMoveTo new Point 40, 15
-      welcomeTitle.setExtent new Point 271, 35
-
-      version = new StringMorph2 "version 2017-05-26"
-      version.isEditable = true
-      @add version
-      version.togglefittingSpecWhenBoundsTooLarge()
-      version.fullMoveTo new Point 41, 47
-      version.setExtent new Point 134, 15
-
-      welcomeMessage = """
-      ...a small dynamic web environment for experimenting with live programming, prototyping and mashups.
-
-      Right-click on the desktop to try more widgets!
-      """
-
-      welcomeBody = new TextMorph2 welcomeMessage,nil,nil,nil,nil,nil,nil,nil
-      welcomeBody.isEditable = true
-      @add welcomeBody
-      welcomeBody.fullMoveTo new Point 37, 80
-      welcomeBody.setExtent new Point 340, 175
-
-      reconfPaint = new ReconfigurablePaintWdgt()
-      wm = new WindowWdgt nil, nil, reconfPaint
-      wm.setExtent new Point 460, 400
-      wm.fullRawMoveTo new Point 35, 275
-      wm.fullRawMoveWithin world
-      world.add wm
-      wm.changed()
+      menusHelper.createWelcomeMessageWindow()
+      menusHelper.basementIconAndText()
 
       acm = new AnalogClockWdgt()
       @add acm

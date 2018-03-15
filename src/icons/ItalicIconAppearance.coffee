@@ -8,7 +8,7 @@ class ItalicIconAppearance extends IconAppearance
   paintFunction: (context) ->
     #// Color Declarations
     black = 'rgba(0, 0, 0, 1)'
-    outlineColor = 'rgba(184, 184, 184, 1)'
+    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// outline Drawing
     context.beginPath()
     context.moveTo 37.67, 4
@@ -29,7 +29,7 @@ class ItalicIconAppearance extends IconAppearance
     context.lineTo 86, 4
     context.lineTo 37.67, 4
     context.closePath()
-    context.fillStyle = outlineColor
+    context.fillStyle = outlineColorString
     context.fill()
     #// letter I in italic Drawing
     context.beginPath()

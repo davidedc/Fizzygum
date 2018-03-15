@@ -8,7 +8,7 @@ class FolderIconAppearance extends IconAppearance
   paintFunction: (context) ->
     # Color Declarations
     widgetColor = @morph.color
-    outlineColorString = 'rgba(184, 184, 184, 1)'
+    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     # outline Drawing
     context.beginPath()
     context.moveTo 89.18, 21.7

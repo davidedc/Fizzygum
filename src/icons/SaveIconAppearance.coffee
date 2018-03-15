@@ -8,7 +8,7 @@ class SaveIconAppearance extends IconAppearance
   paintFunction: (context) ->
     #// Color Declarations
     black = 'rgba(0, 0, 0, 1)'
-    outlineColor = 'rgba(184, 184, 184, 1)'
+    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// Group
     #// outline Drawing
     context.beginPath()
@@ -19,7 +19,7 @@ class SaveIconAppearance extends IconAppearance
     context.lineTo 3.5, 97.5
     context.lineTo 3.5, 2.5
     context.closePath()
-    context.fillStyle = outlineColor
+    context.fillStyle = outlineColorString
     context.fill()
     #// floppy silhouette Drawing
     context.beginPath()

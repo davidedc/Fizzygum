@@ -8,7 +8,7 @@ class ShortcutArrowIconAppearance extends IconAppearance
   paintFunction: (context) ->
     # Color Declarations
     widgetColor = @morph.color
-    outlineColorString = 'rgba(184, 184, 184, 1)'
+    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     # Group 4
     # outline Drawing
     context.beginPath()

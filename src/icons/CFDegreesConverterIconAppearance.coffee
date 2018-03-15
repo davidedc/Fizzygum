@@ -8,7 +8,7 @@ class CFDegreesConverterIconAppearance extends IconAppearance
   paintFunction: (context) ->
     #// Color Declarations
     black = 'rgba(0, 0, 0, 1)'
-    outlineColor = 'rgba(184, 184, 184, 1)'
+    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// degrees writings
     #// degrees F
     #// degrees of F outline Drawing
@@ -23,7 +23,7 @@ class CFDegreesConverterIconAppearance extends IconAppearance
     context.lineTo 93.5, 16
     context.moveTo 82, 26
     context.lineTo 87, 26
-    context.strokeStyle = outlineColor
+    context.strokeStyle = outlineColorString
     context.lineWidth = 7
     context.lineCap = 'round'
     context.stroke()
@@ -58,7 +58,7 @@ class CFDegreesConverterIconAppearance extends IconAppearance
     #// degrees C
     #// degrees of C outline Drawing
     @oval context, 2.5, 6.5, 13, 13
-    context.fillStyle = outlineColor
+    context.fillStyle = outlineColorString
     context.fill()
     #// C letter outline Drawing
     context.beginPath()
@@ -76,7 +76,7 @@ class CFDegreesConverterIconAppearance extends IconAppearance
     context.bezierCurveTo 34.15, 32.39, 34.14, 35.38, 33.55, 35.98
     context.bezierCurveTo 30.97, 38.58, 27.56, 40.02, 23.94, 40.02
     context.closePath()
-    context.fillStyle = outlineColor
+    context.fillStyle = outlineColorString
     context.fill()
     #// C letter Drawing
     context.beginPath()
@@ -114,7 +114,7 @@ class CFDegreesConverterIconAppearance extends IconAppearance
     context.bezierCurveTo 63.52, 45.14, 64, 30.33, 63.69, 12.2
     context.bezierCurveTo 63.72, 6.05, 58.09, 1.97, 51.3, 2
     context.closePath()
-    context.fillStyle = outlineColor
+    context.fillStyle = outlineColorString
     context.fill()
     #// thermometer Drawing
     context.beginPath()

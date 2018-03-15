@@ -9,6 +9,15 @@ class MenusHelper
 
   @augmentWith DeepCopierMixin
 
+  popUpDevToolsMenu: (morphOpeningThePopUp, widgetThisMenuIsAbout) ->
+    debugger
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Dev Tools"
+    menu.addMenuItem "inspect", true, widgetThisMenuIsAbout, "inspect2", "open a window\non all properties"
+    menu.addMenuItem "console", true, widgetThisMenuIsAbout, "createConsole", "console"
+
+    menu.popUpAtHand()
+
+
   # »>> this part is excluded from the fizzygum homepage build
   createFridgeMagnets: ->
     debugger

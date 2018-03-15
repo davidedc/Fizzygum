@@ -8,7 +8,7 @@ class TypewriterIconAppearance extends IconAppearance
   paintFunction: (context) ->
     #// Color Declarations
     black = 'rgba(0, 0, 0, 1)'
-    outlineColor = 'rgba(184, 184, 184, 1)'
+    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// Group
     #// outline Drawing
     context.beginPath()
@@ -34,7 +34,7 @@ class TypewriterIconAppearance extends IconAppearance
     context.lineTo 90.79, 38.03
     context.lineTo 90.79, 34.25
     context.closePath()
-    context.fillStyle = outlineColor
+    context.fillStyle = outlineColorString
     context.fill()
     #// Document lines
     #// Rectangle Drawing

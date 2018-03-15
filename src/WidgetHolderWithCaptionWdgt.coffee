@@ -13,9 +13,8 @@ class WidgetHolderWithCaptionWdgt extends Widget
       @icon = new SimpleDropletWdgt "icon"
     @rawSetExtent new Point 95, 95
     @add @icon
-    @label = new StringMorph2 @labelContent
+    @label = new StringMorph2 @labelContent, WorldMorph.preferencesAndSettings.shortcutsFontSize
     @label.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
-    @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
     @label.color = new Color 255, 255, 255
     @label.hasDarkOutline = true
     @add @label, nil, nil, true

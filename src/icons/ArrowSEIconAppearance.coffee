@@ -8,7 +8,7 @@ class ArrowSEIconAppearance extends IconAppearance
   paintFunction: (context) ->
     #// Color Declarations
     black = 'rgba(1, 1, 1, 1)'
-    outlineColor = 'rgba(184, 184, 184, 1)'
+    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// Bezier 2 Drawing
     context.beginPath()
     context.moveTo 93.37, 16.62
@@ -22,7 +22,7 @@ class ArrowSEIconAppearance extends IconAppearance
     context.lineTo 93.01, 93.34
     context.lineTo 93.37, 16.62
     context.closePath()
-    context.fillStyle = outlineColor
+    context.fillStyle = outlineColorString
     context.fill()
     #// Bezier Drawing
     context.beginPath()

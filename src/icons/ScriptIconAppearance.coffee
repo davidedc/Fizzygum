@@ -9,7 +9,7 @@ class ScriptIconAppearance extends IconAppearance
 
     # Color Declarations
     widgetColorString = @morph.color
-    outlineColorString = 'rgba(184, 184, 184, 1)'
+    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
 
     # paper outline
     context.beginPath()

@@ -8,7 +8,7 @@ class BasementIconAppearance extends IconAppearance
   paintFunction: (context) ->
     # Color Declarations
     widgetColor = @morph.color
-    outlineColorString = 'rgba(184, 184, 184, 1)'
+    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     # outline Drawing
     context.beginPath()
     context.moveTo 49.93, 6

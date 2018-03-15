@@ -10,11 +10,11 @@ class InformationIconAppearance extends IconAppearance
   paintFunction: (context) ->
     #// Color Declarations
     black = 'rgba(0, 0, 0, 1)'
-    outlineColor = 'rgba(184, 184, 184, 1)'
+    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// Group
     #// outline Drawing
     @oval context, 3, 3, 94, 94
-    context.fillStyle = outlineColor
+    context.fillStyle = outlineColorString
     context.fill()
     #// the i letter
     #// i without dot Drawing
