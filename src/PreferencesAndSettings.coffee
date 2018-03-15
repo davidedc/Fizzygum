@@ -91,6 +91,9 @@ class PreferencesAndSettings
     @prompterFontSize = 12
     @prompterSliderSize = 10
 
+    @defaultPanelsBackgroundColor = new Color 255, 250, 245
+    @defaultPanelsStrokeColor = new Color 100, 100, 100
+
     # handle and scrollbar should ideally be the
     # same size because they often show next to
     # each other

@@ -237,10 +237,10 @@ class WorldMorph extends PanelWdgt
   pattern6: "zigzag"
   pattern7: "bricks"
 
-  prettier: false
-
   howManyUntitledShortcuts: 0
   howManyUntitledFoldersShortcuts: 0
+
+  isIndexPage: nil
 
   constructor: (
       @worldCanvas,
@@ -250,11 +250,17 @@ class WorldMorph extends PanelWdgt
     # The WorldMorph is the very first morph to
     # be created.
 
+    if window.location.href.contains "worldWithSystemTestHarness"
+      @isIndexPage = false
+    else
+      @isIndexPage = true
+
+    WorldMorph.preferencesAndSettings = new PreferencesAndSettings()
+
     super()
     @patternName = @pattern1
     @appearance = new DesktopAppearance @
 
-    WorldMorph.preferencesAndSettings = new PreferencesAndSettings()
     #console.log WorldMorph.preferencesAndSettings.menuFontName
     @color = new Color 205, 205, 205 # (130, 130, 130)
     @strokeColor = nil
@@ -271,7 +277,7 @@ class WorldMorph extends PanelWdgt
     @temporaryHandlesAndLayoutAdjusters = []
     @inputDOMElementForVirtualKeyboard = nil
 
-    if @automaticallyAdjustToFillEntireBrowserAlsoOnResize and !window.location.href.contains "worldWithSystemTestHarness"
+    if @automaticallyAdjustToFillEntireBrowserAlsoOnResize and @isIndexPage
       @stretchWorldToFillEntirePage()
     else
       @sizeCanvasToTestScreenResolution()
@@ -310,7 +316,23 @@ class WorldMorph extends PanelWdgt
     "Desktop"
 
   makePrettier: ->
-    @prettier = true
+    WorldMorph.preferencesAndSettings.menuFontSize = 14
+    WorldMorph.preferencesAndSettings.menuHeaderFontSize = 13
+    WorldMorph.preferencesAndSettings.menuHeaderColor = new Color 125, 125, 125
+    WorldMorph.preferencesAndSettings.menuHeaderBold = false
+    WorldMorph.preferencesAndSettings.menuStrokeColor = new Color 186, 186, 186
+    WorldMorph.preferencesAndSettings.menuBackgroundColor = new Color 250, 250, 250
+    WorldMorph.preferencesAndSettings.menuButtonsLabelColor = new Color 50, 50, 50
+
+    WorldMorph.preferencesAndSettings.normalTextFontSize = 13
+    WorldMorph.preferencesAndSettings.titleBarTextFontSize = 13
+    WorldMorph.preferencesAndSettings.titleBarTextHeight = 16
+    WorldMorph.preferencesAndSettings.titleBarBoldText = false
+    WorldMorph.preferencesAndSettings.bubbleHelpFontSize = 12
+
+    WorldMorph.preferencesAndSettings.defaultPanelsBackgroundColor = new Color 249, 249, 249
+    WorldMorph.preferencesAndSettings.defaultPanelsStrokeColor = new Color 198, 198, 198
+
     @changed()
 
   getNextUntitledShortcutName: ->
@@ -351,7 +373,7 @@ class WorldMorph extends PanelWdgt
 
   boot: ->
 
-    if !window.location.href.contains "worldWithSystemTestHarness"
+    if @isIndexPage
       @buildContextMenu= ->
         if @isDevMode
           menu = new MenuMorph @, false, @, true, true, "Fizzygum"
@@ -361,7 +383,9 @@ class WorldMorph extends PanelWdgt
           menu.addMenuItem "parts bin ➜", false, @, "popUpDemoMenu", "sample morphs"
           menu.addMenuItem "delete all", true, @, "fullClose"
         menu
+
       @setColor new Color 244,243,244
+      @makePrettier()
 
 
     # boot-up state machine
@@ -374,7 +398,7 @@ class WorldMorph extends PanelWdgt
 
     WorldMorph.ongoingUrlActionNumber= 0
 
-    if !window.location.href.contains "worldWithSystemTestHarness"
+    if @isIndexPage
       @createErrorConsole()
       welcomeTitle = new StringMorph2 "Welcome to Fizzygum!"
       welcomeTitle.isEditable = true
@@ -466,12 +490,14 @@ class WorldMorph extends PanelWdgt
       @automatorRecorderAndPlayer.runAllSystemTests()
     WorldMorph.ongoingUrlActionNumber++
 
+  # »>> this part is excluded from the fizzygum homepage build
   getMorphViaTextLabel: ([textDescription, occurrenceNumber, numberOfOccurrences]) ->
     allCandidateMorphsWithSameTextDescription = 
       @allChildrenTopToBottomSuchThat (m) ->
         m.getTextDescription() == textDescription
 
     return allCandidateMorphsWithSameTextDescription[occurrenceNumber]
+  # this part is excluded from the fizzygum homepage build <<«
 
   mostRecentlyCreatedPopUp: ->
     mostRecentPopUp = nil
@@ -1963,7 +1989,7 @@ class WorldMorph extends PanelWdgt
         menu.addMenuItem "standard settings", true, WorldMorph.preferencesAndSettings, "toggleInputMode", "smaller menu fonts\nand sliders"
       menu.addLine()
     
-    if AutomatorRecorderAndPlayer? and window.location.href.contains "worldWithSystemTestHarness"
+    if AutomatorRecorderAndPlayer? and !@isIndexPage
       menu.addMenuItem "system tests ➜", false, @, "popUpSystemTestsMenu", ""
     if @isDevMode
       menu.addMenuItem "switch to user mode", true, @, "toggleDevMode", "disable developers'\ncontext menus"
@@ -2182,7 +2208,7 @@ class WorldMorph extends PanelWdgt
 
 
   popUpDemoMenu: (morphOpeningThePopUp,b,c,d) ->
-    if window.location.href.contains "worldWithSystemTestHarness"
+    if !@isIndexPage
       menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "make a morph"
       menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"
       menu.addMenuItem "box", true, @, "createNewBoxMorph"

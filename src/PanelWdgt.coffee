@@ -21,12 +21,8 @@ class PanelWdgt extends Widget
     super()
     @appearance = new RectangularAppearance @
 
-    if world.prettier
-      @color = new Color 249, 249, 249
-      @strokeColor = new Color 198, 198, 198
-    else
-      @color = new Color 255, 250, 245
-      @strokeColor = new Color 100, 100, 100
+    @color = WorldMorph.preferencesAndSettings.defaultPanelsBackgroundColor
+    @strokeColor = WorldMorph.preferencesAndSettings.defaultPanelsStrokeColor
 
     if @scrollPanel
       @noticesTransparentClick = false

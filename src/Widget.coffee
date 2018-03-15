@@ -3492,7 +3492,7 @@ class Widget extends TreeNode
       true,
       (@constructor.name.replace "Wdgt", "") or (@constructor.toString().replace "Wdgt", "").split(" ")[1].split("(")[0])
 
-    if window.location.href.contains "worldWithSystemTestHarness"
+    if !world.isIndexPage
       menu.addMenuItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
       menu.addMenuItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
       menu.addMenuItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
