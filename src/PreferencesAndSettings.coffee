@@ -98,7 +98,7 @@ class PreferencesAndSettings
     @defaultPanelsBackgroundColor = new Color 255, 250, 245
     @defaultPanelsStrokeColor = new Color 100, 100, 100
 
-    @outlineColor = new Color 249, 249, 249
+    @outlineColor = new Color 244,243,244
     # let's create this shortcut just because
     # we use this string so many times
     @outlineColorString = @outlineColor.toString()
