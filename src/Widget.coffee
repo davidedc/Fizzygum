@@ -3502,41 +3502,6 @@ class Widget extends TreeNode
       menu.addMenuItem "attach...", true, @, "attach", "stick this morph\nto another one"
       menu.addMenuItem "inspect", true, @, "inspect", "open a window\non all properties"
 
-      # A) normally, just take a picture of this morph
-      # and open it in a new tab.
-      # B) If a test is being recorded, then the behaviour
-      # is slightly different: a system test command is
-      # triggered to take a screenshot of this particular
-      # morph.
-      # C) If a test is being played, then the screenshot of
-      # the particular morph is put in a special place
-      # in the test player. The command recorded at B) is
-      # going to replay but *waiting* for that screenshot
-      # first.
-      takePic = =>
-        if AutomatorRecorderAndPlayer?
-          switch AutomatorRecorderAndPlayer.state
-            when AutomatorRecorderAndPlayer.RECORDING
-              # While recording a test, just trigger for
-              # the takeScreenshot command to be recorded. 
-              window.world.automatorRecorderAndPlayer.takeScreenshot @
-            when AutomatorRecorderAndPlayer.PLAYING
-              # While playing a test, this command puts the
-              # screenshot of this morph in a special
-              # variable of the system test runner.
-              # The test runner will wait for this variable
-              # to contain the morph screenshot before
-              # doing the comparison as per command recorded
-              # in the case above.
-              window.world.automatorRecorderAndPlayer.imageDataOfAParticularMorph = @fullImageData()
-            else
-              # no system tests recording/playing ongoing,
-              # just open new tab with image of morph.
-              window.open @fullImageData()
-        else
-          # no system tests recording/playing ongoing,
-          # just open new tab with image of morph.
-          window.open @fullImageData()
 
       menu.addMenuItem "create shortcut", true, @, "createReference", "creates a reference to this wdgt and leaves it on the desktop"
 
