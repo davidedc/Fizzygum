@@ -9,7 +9,7 @@ class TrashcanIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     # Color Declarations
-    widgetColor = @morph.color
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     # Group
     # outline Drawing
@@ -70,21 +70,21 @@ class TrashcanIconAppearance extends IconAppearance
     context.lineTo 26.02, 90.06
     context.bezierCurveTo 24.87, 90.06, 23.84, 89.14, 23.72, 87.87
     context.closePath()
-    context.fillStyle = widgetColor
+    context.fillStyle = iconColorString
     context.fill()
     # corrugation 1 Drawing
     context.beginPath()
     context.rect 48, 38, 5, 35.9
-    context.fillStyle = widgetColor
+    context.fillStyle = iconColorString
     context.fill()
     # corrugation 2 Drawing
     context.beginPath()
     context.rect 34, 38, 4, 35.9
-    context.fillStyle = widgetColor
+    context.fillStyle = iconColorString
     context.fill()
     # corrugation 3 Drawing
     context.beginPath()
     context.rect 63, 38, 4, 35.9
-    context.fillStyle = widgetColor
+    context.fillStyle = iconColorString
     context.fill()
 

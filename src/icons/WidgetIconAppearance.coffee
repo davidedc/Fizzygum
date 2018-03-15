@@ -7,7 +7,7 @@ class WidgetIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     # Color Declarations
-    widgetColor = @morph.color
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     # outline Drawing
     context.beginPath()
@@ -121,5 +121,5 @@ class WidgetIconAppearance extends IconAppearance
     context.lineTo 57, 65
     context.bezierCurveTo 57, 60.52, 60.52, 57, 65, 57
     context.closePath()
-    context.fillStyle = widgetColor
+    context.fillStyle = iconColorString
     context.fill()

@@ -6,7 +6,7 @@
 class IconMorph extends Widget
 
 
-  constructor: (@color = new Color 0,0,0) ->
+  constructor: (@color = WorldMorph.preferencesAndSettings.iconDarkLineColor) ->
     super()
     @appearance = new IconAppearance @
 

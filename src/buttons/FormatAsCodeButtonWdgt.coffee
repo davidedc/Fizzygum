@@ -12,10 +12,9 @@ class FormatAsCodeButtonWdgt extends IconMorph
 
   constructor: ->
     super
-    @appearance = new FormatAsCodeIconAppearance @
+    @appearance = new FormatAsCodeIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
-    @setColor new Color 0, 0, 0
     @toolTipMessage = "format as code"
 
   mouseClickLeft: ->

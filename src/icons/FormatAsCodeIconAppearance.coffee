@@ -8,7 +8,7 @@ class FormatAsCodeIconAppearance extends IconAppearance
   paintFunction: (context) ->
     #// Color Declarations
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     #// Group
     #// cket 2 Drawing
     context.beginPath()
@@ -35,7 +35,7 @@ class FormatAsCodeIconAppearance extends IconAppearance
     context.moveTo 60.58, 28
     context.lineTo 83, 50.5
     context.lineTo 60.58, 73
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 5
     context.lineCap = 'round'
     context.lineJoin = 'round'
@@ -45,7 +45,7 @@ class FormatAsCodeIconAppearance extends IconAppearance
     context.moveTo 39.42, 28
     context.lineTo 17, 50.5
     context.lineTo 39.42, 73
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 5
     context.lineCap = 'round'
     context.lineJoin = 'round'

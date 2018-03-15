@@ -12,10 +12,9 @@ class ExternalLinkCreatorButtonWdgt extends Widget
 
   constructor: ->
     super
-    @appearance = new ExternalLinkIconAppearance @
+    @appearance = new ExternalLinkIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
-    @setColor new Color 0, 0, 0
     @toolTipMessage = "link"
 
   grabbedWidgetSwitcheroo: ->

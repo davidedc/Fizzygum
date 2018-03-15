@@ -12,11 +12,10 @@ class TemplatesButtonWdgt extends IconMorph
 
   constructor: ->
     super
-    @appearance = new TemplatesIconAppearance @
+    @appearance = new TemplatesIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
 
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
-    @setColor new Color 0, 0, 0
     @toolTipMessage = "useful snippets"
 
   createNewTemplatesWindow: ->

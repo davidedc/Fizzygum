@@ -7,7 +7,7 @@ class LittleWorldIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     #// Group 3
     #// Bezier 4 Drawing
     context.beginPath()
@@ -21,7 +21,7 @@ class LittleWorldIconAppearance extends IconAppearance
     context.lineTo 89, 52
     context.lineTo 90, 48
     context.lineTo 93, 52
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 3.5
     context.lineCap = 'round'
     context.lineJoin = 'round'
@@ -68,7 +68,7 @@ class LittleWorldIconAppearance extends IconAppearance
     context.lineTo 20.4, 43.7
     context.lineTo 13.9, 36.6
     context.lineTo 14, 26
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 3.5
     context.miterLimit = 4
     context.lineCap = 'round'
@@ -76,6 +76,6 @@ class LittleWorldIconAppearance extends IconAppearance
     context.stroke()
     #// @oval Drawing
     @oval context, 6, 7, 87, 87
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 3.5
     context.stroke()

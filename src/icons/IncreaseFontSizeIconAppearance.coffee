@@ -7,7 +7,7 @@ class IncreaseFontSizeIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     #// Group
     #// letter a Drawing
     context.beginPath()
@@ -31,7 +31,7 @@ class IncreaseFontSizeIconAppearance extends IconAppearance
     context.lineTo 45.78, 58.71
     context.lineTo 23.26, 58.71
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// arrow up Drawing
     context.beginPath()
@@ -40,6 +40,6 @@ class IncreaseFontSizeIconAppearance extends IconAppearance
     context.lineTo 58.44, 56.79
     context.lineTo 91.5, 56.79
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
 

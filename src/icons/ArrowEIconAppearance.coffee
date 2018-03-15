@@ -7,7 +7,7 @@ class ArrowEIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// Group
     #// Bezier 2 Drawing
@@ -38,6 +38,6 @@ class ArrowEIconAppearance extends IconAppearance
     context.lineTo 95.06, 50.5
     context.lineTo 49.55, 4.94
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
 

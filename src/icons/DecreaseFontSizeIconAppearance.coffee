@@ -7,7 +7,7 @@ class DecreaseFontSizeIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     #// Group
     #// letter a Drawing
     context.beginPath()
@@ -31,7 +31,7 @@ class DecreaseFontSizeIconAppearance extends IconAppearance
     context.lineTo 45.78, 58.71
     context.lineTo 23.26, 58.71
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// arrow down Drawing
     context.beginPath()
@@ -40,5 +40,5 @@ class DecreaseFontSizeIconAppearance extends IconAppearance
     context.lineTo 91.5, 40.34
     context.lineTo 58.44, 40.34
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()

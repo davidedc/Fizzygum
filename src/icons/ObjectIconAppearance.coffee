@@ -7,7 +7,7 @@ class ObjectIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     # Color Declarations
-    widgetColor = @morph.color
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     # outline Drawing
     context.beginPath()
@@ -53,6 +53,6 @@ class ObjectIconAppearance extends IconAppearance
     context.lineTo 80.9, 89.01
     context.lineTo 20.05, 89.01
     context.closePath()
-    context.fillStyle = widgetColor
+    context.fillStyle = iconColorString
     context.fill()
 

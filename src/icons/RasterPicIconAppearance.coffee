@@ -7,7 +7,7 @@ class RasterPicIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     # Color Declarations
-    widgetColor = @morph.color
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     # outline Drawing
     context.beginPath()
@@ -64,10 +64,10 @@ class RasterPicIconAppearance extends IconAppearance
     context.lineTo 77.79, 87.13
     context.lineTo 77.79, 87.13
     context.closePath()
-    context.fillStyle = widgetColor
+    context.fillStyle = iconColorString
     context.fill()
     # sun Drawing
     @oval context, 56.25, 23.5, 20.5, 20.75
-    context.strokeStyle = widgetColor
+    context.strokeStyle = iconColorString
     context.lineWidth = 4
     context.stroke()

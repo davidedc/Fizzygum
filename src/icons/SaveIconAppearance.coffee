@@ -7,7 +7,7 @@ class SaveIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// Group
     #// outline Drawing
@@ -32,24 +32,24 @@ class SaveIconAppearance extends IconAppearance
     context.closePath()
     context.fillStyle = 'rgb(255, 255, 255)'
     context.fill()
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 3.5
     context.stroke()
     #// metal slot hole Drawing
     context.beginPath()
     context.rect 57.5, 14.5, 8, 13
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2
     context.stroke()
     #// dot in line 2 Drawing
     @oval context, 52.5, 70.5, 4, 4
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// line 2 Drawing
     context.beginPath()
     context.moveTo 29.63, 72.33
     context.lineTo 48.15, 72.33
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 4
     context.lineCap = 'round'
     context.stroke()
@@ -57,19 +57,19 @@ class SaveIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 29.63, 64.91
     context.lineTo 43.52, 64.91
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 4
     context.lineCap = 'round'
     context.stroke()
     #// metal disk cover Drawing
     context.beginPath()
     context.rect 24.5, 7.5, 47, 27
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2.5
     context.stroke()
     #// label Drawing
     context.beginPath()
     context.rect 21, 54.5, 58, 39
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2.5
     context.stroke()

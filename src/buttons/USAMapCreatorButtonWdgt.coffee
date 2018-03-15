@@ -12,10 +12,9 @@ class USAMapCreatorButtonWdgt extends Widget
 
   constructor: ->
     super
-    @appearance = new LittleUSAIconAppearance @
+    @appearance = new LittleUSAIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
-    @setColor new Color 0, 0, 0
     @toolTipMessage = "USA map"
 
   grabbedWidgetSwitcheroo: ->

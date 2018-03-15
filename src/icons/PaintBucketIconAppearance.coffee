@@ -7,7 +7,7 @@ class PaintBucketIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     # Color Declarations
-    widgetColor = @morph.color
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     # Bezier 2 Drawing
     context.beginPath()
@@ -137,5 +137,5 @@ class PaintBucketIconAppearance extends IconAppearance
     context.bezierCurveTo 85.35, 42.26, 88.62, 48.15, 90.4, 53.16
     context.bezierCurveTo 92.49, 58.86, 92.39, 63.08, 90.3, 65.15
     context.closePath()
-    context.fillStyle = widgetColor
+    context.fillStyle = iconColorString
     context.fill()

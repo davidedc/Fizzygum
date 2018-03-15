@@ -7,7 +7,7 @@ class TextIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     #// Group
     #// Group 2
     #// Bezier Drawing
@@ -50,7 +50,7 @@ class TextIconAppearance extends IconAppearance
     context.lineTo 23.59, 52.85
     context.lineTo 36.69, 52.85
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// Bezier 2 Drawing
     context.beginPath()
@@ -95,6 +95,6 @@ class TextIconAppearance extends IconAppearance
     context.bezierCurveTo 80.99, 68.39, 81.07, 68.19, 82.89, 66.67
     context.lineTo 82.89, 59.65
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
 

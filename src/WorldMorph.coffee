@@ -330,6 +330,10 @@ class WorldMorph extends PanelWdgt
     WorldMorph.preferencesAndSettings.titleBarBoldText = false
     WorldMorph.preferencesAndSettings.bubbleHelpFontSize = 12
 
+
+    WorldMorph.preferencesAndSettings.iconDarkLineColor = new Color 37, 37, 37
+
+
     WorldMorph.preferencesAndSettings.defaultPanelsBackgroundColor = new Color 249, 249, 249
     WorldMorph.preferencesAndSettings.defaultPanelsStrokeColor = new Color 198, 198, 198
 

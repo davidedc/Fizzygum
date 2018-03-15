@@ -7,7 +7,7 @@ class TypewriterIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// Group
     #// outline Drawing
@@ -40,32 +40,32 @@ class TypewriterIconAppearance extends IconAppearance
     #// Rectangle Drawing
     context.beginPath()
     context.rect 29.5, 16.5, 30, 2
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// Rectangle 2 Drawing
     context.beginPath()
     context.rect 29.5, 22.5, 43, 2
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// Rectangle 3 Drawing
     context.beginPath()
     context.rect 29.5, 27.5, 9.5, 2
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// Rectangle 4 Drawing
     context.beginPath()
     context.rect 29.5, 33.5, 21.5, 2
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// Rectangle 5 Drawing
     context.beginPath()
     context.rect 42.5, 27.5, 30, 2
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// Rectangle 6 Drawing
     context.beginPath()
     context.rect 63, 16.5, 9.5, 2
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// typewriter body Drawing
     context.beginPath()
@@ -143,62 +143,62 @@ class TypewriterIconAppearance extends IconAppearance
     context.lineTo 88.69, 42.56
     context.lineTo 89.3, 42.56
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// keyboard
     #// key 1 Drawing
     @oval context, 20, 76, 6.5, 6.5
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2.5
     context.stroke()
     #// key 2 Drawing
     @oval context, 29, 76, 6.5, 6.5
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2.5
     context.stroke()
     #// key 3 Drawing
     @oval context, 20, 66, 6.5, 6.5
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2.5
     context.stroke()
     #// key 4 Drawing
     @oval context, 29, 66, 6.5, 6.5
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2.5
     context.stroke()
     #// key 5 Drawing
     @oval context, 38, 66, 6.5, 6.5
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2.5
     context.stroke()
     #// key 6 Drawing
     @oval context, 47, 66, 6.5, 6.5
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2.5
     context.stroke()
     #// key 7 Drawing
     @oval context, 56, 66, 6.5, 6.5
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2.5
     context.stroke()
     #// key 8 Drawing
     @oval context, 65, 66, 6.5, 6.5
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2.5
     context.stroke()
     #// key 9 Drawing
     @oval context, 74, 66, 6.5, 6.5
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2.5
     context.stroke()
     #// key 10 Drawing
     @oval context, 65, 76, 6.5, 6.5
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2.5
     context.stroke()
     #// key 11 Drawing
     @oval context, 74, 76, 6.5, 6.5
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2.5
     context.stroke()
     #// spacebar Drawing
@@ -219,5 +219,5 @@ class TypewriterIconAppearance extends IconAppearance
     context.bezierCurveTo 60.6, 77.57, 61.43, 78.44, 61.43, 79.5
     context.bezierCurveTo 61.43, 80.56, 60.6, 81.43, 59.57, 81.43
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()

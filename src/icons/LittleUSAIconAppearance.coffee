@@ -7,7 +7,7 @@ class LittleUSAIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     #// Bezier Drawing
     context.beginPath()
     context.moveTo 96.16, 27.93
@@ -47,7 +47,7 @@ class LittleUSAIconAppearance extends IconAppearance
     context.lineTo 92.73, 33.53
     context.lineTo 96.16, 27.93
     context.closePath()
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 3
     context.miterLimit = 4
     context.stroke()

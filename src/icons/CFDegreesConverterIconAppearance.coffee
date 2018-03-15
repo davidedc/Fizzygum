@@ -7,7 +7,7 @@ class CFDegreesConverterIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// degrees writings
     #// degrees F
@@ -29,7 +29,7 @@ class CFDegreesConverterIconAppearance extends IconAppearance
     context.stroke()
     #// degrees of F Drawing
     @oval context, 70, 9.5, 7, 7
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2.5
     context.stroke()
     #// F letter Drawing
@@ -53,7 +53,7 @@ class CFDegreesConverterIconAppearance extends IconAppearance
     context.lineTo 93.36, 14.92
     context.bezierCurveTo 94.26, 14.92, 95, 15.62, 95, 16.49
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// degrees C
     #// degrees of C outline Drawing
@@ -94,11 +94,11 @@ class CFDegreesConverterIconAppearance extends IconAppearance
     context.bezierCurveTo 32.13, 33.2, 32.12, 34.05, 31.63, 34.56
     context.bezierCurveTo 29.48, 36.79, 26.65, 38.02, 23.64, 38.02
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// degrees of C Drawing
     @oval context, 5.5, 9.5, 7, 7
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2.5
     context.stroke()
     #// thermometer with lines
@@ -153,14 +153,14 @@ class CFDegreesConverterIconAppearance extends IconAppearance
     context.bezierCurveTo 51.61, 49.96, 50.53, 48.82, 49.38, 48.59
     context.bezierCurveTo 48.61, 48.43, 47.98, 48.79, 47.4, 49.18
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// thermometer lines
     #// thermometer line 9 Drawing
     context.beginPath()
     context.moveTo 47, 16
     context.lineTo 56, 16
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -168,7 +168,7 @@ class CFDegreesConverterIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 47, 23.5
     context.lineTo 56, 23.5
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -176,7 +176,7 @@ class CFDegreesConverterIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 47, 31
     context.lineTo 56, 31
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -184,7 +184,7 @@ class CFDegreesConverterIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 47, 38.5
     context.lineTo 56, 38.5
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -192,7 +192,7 @@ class CFDegreesConverterIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 47, 46
     context.lineTo 56, 46
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -200,7 +200,7 @@ class CFDegreesConverterIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 51.5, 19.75
     context.lineTo 56, 19.75
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -208,7 +208,7 @@ class CFDegreesConverterIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 51.5, 27.25
     context.lineTo 56, 27.25
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -216,7 +216,7 @@ class CFDegreesConverterIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 51.5, 34.75
     context.lineTo 56, 34.75
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -224,7 +224,7 @@ class CFDegreesConverterIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 51.5, 42.25
     context.lineTo 56, 42.25
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()

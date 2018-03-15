@@ -12,7 +12,7 @@ class ItalicButtonWdgt extends Widget
 
   constructor: (@color) ->
     super
-    @appearance = new ItalicIconAppearance @
+    @appearance = new ItalicIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
     @toolTipMessage = "italic"

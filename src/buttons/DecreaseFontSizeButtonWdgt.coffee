@@ -12,10 +12,9 @@ class DecreaseFontSizeButtonWdgt extends IconMorph
 
   constructor: ->
     super
-    @appearance = new DecreaseFontSizeIconAppearance @
+    @appearance = new DecreaseFontSizeIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
-    @setColor new Color 0, 0, 0
     @toolTipMessage = "decrease font size"
 
   mouseClickLeft: ->

@@ -12,10 +12,9 @@ class WorldMapCreatorButtonWdgt extends Widget
 
   constructor: ->
     super
-    @appearance = new LittleWorldIconAppearance @
+    @appearance = new LittleWorldIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
-    @setColor new Color 0, 0, 0
     @toolTipMessage = "world map"
 
   grabbedWidgetSwitcheroo: ->

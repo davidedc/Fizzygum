@@ -7,7 +7,7 @@ class ShortcutArrowIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     # Color Declarations
-    widgetColor = @morph.color
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     # Group 4
     # outline Drawing
@@ -58,7 +58,7 @@ class ShortcutArrowIconAppearance extends IconAppearance
     context.bezierCurveTo 82.45, 15.61, 85.39, 18.55, 85.39, 22.18
     context.lineTo 85.39, 78.17
     context.closePath()
-    context.fillStyle = widgetColor
+    context.fillStyle = iconColorString
     context.fill()
     # the arrow Drawing
     context.beginPath()
@@ -72,5 +72,5 @@ class ShortcutArrowIconAppearance extends IconAppearance
     context.bezierCurveTo 27.64, 76.82, 30.09, 67.94, 38.14, 60.81
     context.bezierCurveTo 45.79, 54.01, 54.12, 52.78, 57.22, 52.5
     context.closePath()
-    context.fillStyle = widgetColor
+    context.fillStyle = iconColorString
     context.fill()

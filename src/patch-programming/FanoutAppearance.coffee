@@ -8,7 +8,7 @@ class FanoutAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    blackColorString = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     highlightColorString = 'rgba(184, 184, 184, 1)'
     #// highlight Drawing
     context.beginPath()
@@ -39,7 +39,7 @@ class FanoutAppearance extends IconAppearance
     context.fill()
     #// circle Drawing
     @oval context, 37, 37, 26, 26
-    context.strokeStyle = blackColorString
+    context.strokeStyle = iconColorString
     context.lineWidth = 3.5
     context.stroke()
     #// arrows
@@ -60,7 +60,7 @@ class FanoutAppearance extends IconAppearance
     context.lineTo 50.25, 42.23
     context.bezierCurveTo 50.25, 41.6, 49.7, 41.08, 49.01, 41.08
     context.closePath()
-    context.fillStyle = blackColorString
+    context.fillStyle = iconColorString
     context.fill()
     #// arrow up Drawing
     context.beginPath()
@@ -79,7 +79,7 @@ class FanoutAppearance extends IconAppearance
     context.lineTo 45.6, 29.01
     context.bezierCurveTo 45.19, 29.41, 45.19, 30.07, 45.6, 30.47
     context.closePath()
-    context.fillStyle = blackColorString
+    context.fillStyle = iconColorString
     context.fill()
     #// arrow right Drawing
     context.beginPath()
@@ -98,7 +98,7 @@ class FanoutAppearance extends IconAppearance
     context.lineTo 71.15, 45.43
     context.bezierCurveTo 70.75, 45.02, 70.09, 45.02, 69.69, 45.43
     context.closePath()
-    context.fillStyle = blackColorString
+    context.fillStyle = iconColorString
     context.fill()
     #// arrow down Drawing
     context.beginPath()
@@ -117,7 +117,7 @@ class FanoutAppearance extends IconAppearance
     context.lineTo 54.76, 71.16
     context.bezierCurveTo 55.17, 70.76, 55.17, 70.1, 54.76, 69.7
     context.closePath()
-    context.fillStyle = blackColorString
+    context.fillStyle = iconColorString
     context.fill()
     #// arrow left Drawing
     context.beginPath()
@@ -136,5 +136,5 @@ class FanoutAppearance extends IconAppearance
     context.lineTo 28.85, 54.24
     context.bezierCurveTo 29.25, 54.64, 29.91, 54.64, 30.31, 54.24
     context.closePath()
-    context.fillStyle = blackColorString
+    context.fillStyle = iconColorString
     context.fill()

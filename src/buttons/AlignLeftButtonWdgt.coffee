@@ -12,7 +12,7 @@ class AlignLeftButtonWdgt extends Widget
 
   constructor: (@color) ->
     super
-    @appearance = new AlignLeftIconAppearance @
+    @appearance = new AlignLeftIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
     @toolTipMessage = "align left"

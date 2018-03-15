@@ -7,7 +7,7 @@ class ArrowSWIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(1, 1, 1, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// Bezier 2 Drawing
     context.beginPath()
@@ -37,5 +37,5 @@ class ArrowSWIconAppearance extends IconAppearance
     context.lineTo 9.48, 90.2
     context.lineTo 81.54, 90.53
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()

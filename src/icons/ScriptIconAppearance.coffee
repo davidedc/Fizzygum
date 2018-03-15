@@ -8,7 +8,7 @@ class ScriptIconAppearance extends IconAppearance
   paintFunction: (context) ->
 
     # Color Declarations
-    widgetColorString = @morph.color
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
 
     # paper outline
@@ -20,7 +20,7 @@ class ScriptIconAppearance extends IconAppearance
     # paper
     context.beginPath()
     context.rect 18, 7, 65, 84
-    context.strokeStyle = widgetColorString
+    context.strokeStyle = iconColorString
     context.lineWidth = 2.5
     context.stroke()
 
@@ -64,7 +64,7 @@ class ScriptIconAppearance extends IconAppearance
     context.rect 21, 70, 3, 3
     context.rect 21, 77, 3, 3
     context.rect 21, 83, 3, 3
-    context.fillStyle = widgetColorString
+    context.fillStyle = iconColorString
     context.fill()
 
     # Play button ------------------
@@ -80,11 +80,11 @@ class ScriptIconAppearance extends IconAppearance
     context.lineTo 78.35, 73.95
     context.lineTo 78.35, 87.95
     context.closePath()
-    context.fillStyle = widgetColorString
+    context.fillStyle = iconColorString
     context.fill()
     # circle around play symbol
     @oval context, 69, 68, 27, 27
-    context.strokeStyle = widgetColorString
+    context.strokeStyle = iconColorString
     context.lineWidth = 3
     context.stroke()
 

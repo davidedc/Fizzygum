@@ -9,7 +9,7 @@ class ChapterXXXIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     #// Text Drawing
     context.beginPath()
     context.moveTo 34.57, 40.55
@@ -100,6 +100,6 @@ class ChapterXXXIconAppearance extends IconAppearance
     context.lineTo 90.78, 76.15
     context.lineTo 98.63, 87
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
 

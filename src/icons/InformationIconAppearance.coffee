@@ -9,7 +9,7 @@ class InformationIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// Group
     #// outline Drawing
@@ -31,11 +31,11 @@ class InformationIconAppearance extends IconAppearance
     context.lineTo 58.61, 69.32
     context.lineTo 54.1, 69.32
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// i dot Drawing
     @oval context, 45, 23, 9, 10
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// circle Drawing
     @oval context, 10, 10, 80, 80

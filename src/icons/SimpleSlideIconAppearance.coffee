@@ -7,7 +7,7 @@ class SimpleSlideIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// Group
     #// outline Drawing
@@ -28,7 +28,7 @@ class SimpleSlideIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 16.86, 33.6
     context.lineTo 44.54, 33.6
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
@@ -36,7 +36,7 @@ class SimpleSlideIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 16.86, 45.34
     context.lineTo 44.54, 45.34
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
@@ -44,7 +44,7 @@ class SimpleSlideIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 16.86, 56.08
     context.lineTo 44.54, 56.08
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
@@ -52,7 +52,7 @@ class SimpleSlideIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 16.86, 67.36
     context.lineTo 44.54, 67.36
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
@@ -60,7 +60,7 @@ class SimpleSlideIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 53.77, 56.08
     context.lineTo 81.45, 56.08
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
@@ -68,28 +68,28 @@ class SimpleSlideIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 53.77, 67.36
     context.lineTo 81.45, 67.36
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
     #// graph bar 1 Drawing
     context.beginPath()
     context.rect 54, 36, 8, 9.5
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 1.5
     context.lineJoin = 'round'
     context.stroke()
     #// graph bar 2 Drawing
     context.beginPath()
     context.rect 65, 33, 7, 12.5
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 1.5
     context.lineJoin = 'round'
     context.stroke()
     #// graph bar 3 Drawing
     context.beginPath()
     context.rect 75, 28, 8, 17.5
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 1.5
     context.lineJoin = 'round'
     context.stroke()
@@ -115,6 +115,6 @@ class SimpleSlideIconAppearance extends IconAppearance
     context.bezierCurveTo 87.41, 23, 88.64, 24.1, 88.64, 25.5
     context.lineTo 88.53, 74.5
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
 

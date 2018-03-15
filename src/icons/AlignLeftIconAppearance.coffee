@@ -7,7 +7,7 @@ class AlignLeftIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// Group
     #// outline
@@ -48,7 +48,7 @@ class AlignLeftIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 13, 17
     context.lineTo 88, 17
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 8.5
     context.lineCap = 'round'
     context.stroke()
@@ -56,7 +56,7 @@ class AlignLeftIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 12.75, 82
     context.lineTo 84, 82
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 8.5
     context.lineCap = 'round'
     context.stroke()
@@ -64,7 +64,7 @@ class AlignLeftIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 13.69, 60.71
     context.lineTo 69, 60.71
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 8.5
     context.lineCap = 'round'
     context.stroke()
@@ -72,7 +72,7 @@ class AlignLeftIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 13.88, 38.36
     context.lineTo 57, 38.36
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 8.5
     context.lineCap = 'round'
     context.stroke()

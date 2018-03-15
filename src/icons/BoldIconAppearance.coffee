@@ -7,7 +7,7 @@ class BoldIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// Group
     #// outline Drawing
@@ -66,6 +66,6 @@ class BoldIconAppearance extends IconAppearance
     context.lineTo 44.77, 45.63
     context.bezierCurveTo 44.77, 45.63, 69, 50, 67.77, 28.77
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
 

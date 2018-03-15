@@ -14,11 +14,10 @@ class ChangeFontButtonWdgt extends IconMorph
 
   constructor: (@simpleDocument) ->
     super
-    @appearance = new ChangeFontIconAppearance @
+    @appearance = new ChangeFontIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
 
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
-    @setColor new Color 0, 0, 0
     @toolTipMessage = "change font"
 
   mouseClickLeft: ->

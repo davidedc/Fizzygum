@@ -9,7 +9,7 @@ class ChapterXIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     #// Group 2
     #// Bezier 2 Drawing
     context.beginPath()
@@ -47,7 +47,7 @@ class ChapterXIconAppearance extends IconAppearance
     context.lineTo 83.87, 34.38
     context.lineTo 83.87, 43.84
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// Group
     #// Bezier Drawing
@@ -66,5 +66,5 @@ class ChapterXIconAppearance extends IconAppearance
     context.lineTo 53.81, 76.08
     context.lineTo 63.9, 91
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()

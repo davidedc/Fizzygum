@@ -7,7 +7,7 @@ class FanoutPinAppearance extends IconAppearance
     @specificationSize = new Point 100, 100
 
   paintFunction: (context) ->
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColor = 'rgba(184, 184, 184, 1)'
     #// Group 4
     #// outline Drawing
@@ -58,5 +58,5 @@ class FanoutPinAppearance extends IconAppearance
     context.bezierCurveTo 82.45, 15.61, 85.39, 18.55, 85.39, 22.18
     context.lineTo 85.39, 78.17
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()

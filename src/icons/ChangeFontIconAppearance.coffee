@@ -7,7 +7,7 @@ class ChangeFontIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     #// A serif Drawing
     context.beginPath()
     context.moveTo 75.17, 68.88
@@ -40,7 +40,7 @@ class ChangeFontIconAppearance extends IconAppearance
     context.lineTo 54.16, 92
     context.lineTo 36.32, 92
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()
     #// A sans serif Drawing
     context.beginPath()
@@ -62,5 +62,5 @@ class ChangeFontIconAppearance extends IconAppearance
     context.lineTo 38.12, 7
     context.lineTo 38.12, 7
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = iconColorString
     context.fill()

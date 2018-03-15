@@ -12,10 +12,9 @@ class TextBoxCreatorButtonWdgt extends Widget
 
   constructor: ->
     super
-    @appearance = new TextIconAppearance @
+    @appearance = new TextIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
-    @setColor new Color 0, 0, 0
     @toolTipMessage = "text box"
 
   grabbedWidgetSwitcheroo: ->

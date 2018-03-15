@@ -106,6 +106,8 @@ class PreferencesAndSettings
     # we use this string so many times
     @outlineColorString = @outlineColor.toString()
 
+    @iconDarkLineColor = new Color 0, 0, 0
+
     @shortcutsFontSize = 12
 
     # handle and scrollbar should ideally be the

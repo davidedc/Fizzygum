@@ -12,7 +12,7 @@ class AlignCenterButtonWdgt extends Widget
 
   constructor: (@color) ->
     super
-    @appearance = new AlignCenterIconAppearance @
+    @appearance = new AlignCenterIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
     @toolTipMessage = "align center"

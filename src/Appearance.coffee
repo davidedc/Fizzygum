@@ -5,8 +5,14 @@ class Appearance
   @augmentWith DeepCopierMixin
 
   morph: nil
+  # the ownColorInsteadOfWidgetColor is used for buttons
+  # with icons on a glass bottom: the glass bottom has
+  # to change the color on hover, so the icon_button on it
+  # stain it, but they have to retain their color otherwise
+  # they are not visible anymore.
+  ownColorInsteadOfWidgetColor: nil
 
-  constructor: (@morph) ->
+  constructor: (@morph, @ownColorInsteadOfWidgetColor) ->
 
   isTransparentAt: (aPoint) ->
 

@@ -7,7 +7,7 @@ class TemplatesIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     #// Group
     #// page below
     #// page below bottom right corner Drawing
@@ -54,7 +54,7 @@ class TemplatesIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 28.29, 75.06
     context.lineTo 53.36, 75.06
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -62,7 +62,7 @@ class TemplatesIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 28.29, 63.39
     context.lineTo 70.71, 63.39
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -70,7 +70,7 @@ class TemplatesIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 28.29, 51.71
     context.lineTo 70.71, 51.71
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -90,14 +90,14 @@ class TemplatesIconAppearance extends IconAppearance
     context.lineTo 50.63, 40.28
     context.bezierCurveTo 50.31, 40.61, 49.98, 40.77, 49.49, 40.77
     context.closePath()
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 1.5
     context.miterLimit = 4
     context.stroke()
     #// first page Drawing
     context.beginPath()
     context.rect 21, 13, 57, 74
-    context.strokeStyle = black
+    context.strokeStyle = iconColorString
     context.lineWidth = 2
     context.lineJoin = 'round'
     context.stroke()
