@@ -22,8 +22,8 @@ class AlignCenterButtonWdgt extends Widget
     if world.caret?
       world.caret.target.alignCenter?()
     else if world.lastNonTextPropertyChangerButtonClickedOrDropped?
-      lastNonTextPropertyChangerButtonClickedOrDropped = world.lastNonTextPropertyChangerButtonClickedOrDropped
-      if lastNonTextPropertyChangerButtonClickedOrDropped.layoutSpec? and
+      lastNonTextPropertyChangerButtonClickedOrDropped = world.lastNonTextPropertyChangerButtonClickedOrDropped.findRootForGrab()
+      if lastNonTextPropertyChangerButtonClickedOrDropped?.layoutSpec? and
        lastNonTextPropertyChangerButtonClickedOrDropped.layoutSpec == LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
         lastNonTextPropertyChangerButtonClickedOrDropped.layoutSpecDetails.setAlignmentToCenter()
 
