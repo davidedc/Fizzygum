@@ -401,8 +401,8 @@ class WorldMorph extends PanelWdgt
 
     if @isIndexPage
       acm = new AnalogClockWdgt()
-      acm.rawSetExtent new Point 200, 200
-      acm.fullRawMoveTo new Point @width()-acm.width()-5, @top() + 5
+      acm.rawSetExtent new Point 80, 80
+      acm.fullRawMoveTo new Point @width()-80-5, @top() + 5
       @add acm
 
       menusHelper.createWelcomeMessageWindow()

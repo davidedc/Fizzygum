@@ -15,7 +15,7 @@ class AnalogClockWdgt extends Widget
 
     super()
     @setColor new Color 255, 125, 125
-    @setExtent new Point 200, 200
+    @rawSetExtent new Point 200, 200
     return
 
   colloquialName: ->
