@@ -614,7 +614,7 @@ class MenusHelper
 
 
     sdspw.addNormalParagraph "You wanted more features in your software. So you added more libraries. What you obtained was: problems.\n\n" +
-    "Bacause each library was developed disjointly from the others, and each brought disjoint assumptions and constraints. So now your work is to help your libraries.\n\n" +
+    "Because each library was developed disjointly from the others, and each brought disjoint assumptions and constraints. So now your work is to help your libraries.\n\n" +
     "Escape libraries hell. Use a powerful framework instead, one that was designed from the ground up to do complex things, coherently. Welcome to Fizzygum."
 
     sdspw.addSpacer()
