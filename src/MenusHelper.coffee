@@ -702,3 +702,10 @@ class MenusHelper
     wm.changed()
 
     simpleDocument.disableDragsDropsAndEditing()
+
+    readmeLauncher = new IconicDesktopSystemDocumentShortcutWdgt wm, "Welcome", new WelcomeIconWdgt()
+    # this "add" is going to try to position the reference
+    # in some smart way (i.e. according to a grid)
+    world.add readmeLauncher
+    readmeLauncher.setExtent new Point 75, 75
+    readmeLauncher.fullChanged()
