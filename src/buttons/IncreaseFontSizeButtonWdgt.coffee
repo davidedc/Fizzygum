@@ -19,21 +19,23 @@ class IncreaseFontSizeButtonWdgt extends IconMorph
 
   mouseClickLeft: ->
     debugger
-    if world.caret?
-      if world.caret.target.originallySetFontSize < 12
-        world.caret.target.setFontSize world.caret.target.originallySetFontSize + 1
-      else if world.caret.target.originallySetFontSize < 28
-        world.caret.target.setFontSize world.caret.target.originallySetFontSize + 2
-      else if world.caret.target.originallySetFontSize < 36
-        world.caret.target.setFontSize 36
-      else if world.caret.target.originallySetFontSize < 48
-        world.caret.target.setFontSize 48
-      else if world.caret.target.originallySetFontSize < 72
-        world.caret.target.setFontSize 72
-      else if world.caret.target.originallySetFontSize < 80
-        world.caret.target.setFontSize 80
+
+    if world.lastNonTextPropertyChangerButtonClickedOrDropped?.originallySetFontSize?
+      widgetClickedLast = world.lastNonTextPropertyChangerButtonClickedOrDropped
+      if widgetClickedLast.originallySetFontSize < 12
+        widgetClickedLast.setFontSize widgetClickedLast.originallySetFontSize + 1
+      else if widgetClickedLast.originallySetFontSize < 28
+        widgetClickedLast.setFontSize widgetClickedLast.originallySetFontSize + 2
+      else if widgetClickedLast.originallySetFontSize < 36
+        widgetClickedLast.setFontSize 36
+      else if widgetClickedLast.originallySetFontSize < 48
+        widgetClickedLast.setFontSize 48
+      else if widgetClickedLast.originallySetFontSize < 72
+        widgetClickedLast.setFontSize 72
+      else if widgetClickedLast.originallySetFontSize < 80
+        widgetClickedLast.setFontSize 80
       else
-        world.caret.target.setFontSize world.caret.target.originallySetFontSize + 10
+        widgetClickedLast.setFontSize widgetClickedLast.originallySetFontSize + 10
 
 
 

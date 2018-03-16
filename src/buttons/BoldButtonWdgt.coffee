@@ -19,5 +19,5 @@ class BoldButtonWdgt extends Widget
 
   mouseClickLeft: ->
     debugger
-    if world.caret?
-      world.caret.target.toggleWeight?()
+    if world.lastNonTextPropertyChangerButtonClickedOrDropped?.toggleWeight?
+      world.lastNonTextPropertyChangerButtonClickedOrDropped.toggleWeight()

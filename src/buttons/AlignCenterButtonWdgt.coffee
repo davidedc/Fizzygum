@@ -19,8 +19,8 @@ class AlignCenterButtonWdgt extends Widget
 
   mouseClickLeft: ->
     debugger
-    if world.caret?
-      world.caret.target.alignCenter?()
+    if world.lastNonTextPropertyChangerButtonClickedOrDropped?.alignCenter?
+      world.lastNonTextPropertyChangerButtonClickedOrDropped.alignCenter()
     else if world.lastNonTextPropertyChangerButtonClickedOrDropped?
       lastNonTextPropertyChangerButtonClickedOrDropped = world.lastNonTextPropertyChangerButtonClickedOrDropped.findRootForGrab()
       if lastNonTextPropertyChangerButtonClickedOrDropped?.layoutSpec? and

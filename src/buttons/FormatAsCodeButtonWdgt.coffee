@@ -19,9 +19,10 @@ class FormatAsCodeButtonWdgt extends IconMorph
 
   mouseClickLeft: ->
     debugger
-    if world.caret?
-      if world.caret.target.fontName != world.caret.target.monoFontStack
-        world.caret.target.setFontName nil, nil, world.caret.target.monoFontStack
+    if world.lastNonTextPropertyChangerButtonClickedOrDropped?.setFontName?
+      widgetClickedLast = world.lastNonTextPropertyChangerButtonClickedOrDropped
+      if widgetClickedLast.fontName != widgetClickedLast.monoFontStack
+        widgetClickedLast.setFontName nil, nil, widgetClickedLast.monoFontStack
       else
-        world.caret.target.setFontName nil, nil, world.caret.target.justArialFontStack
+        widgetClickedLast.setFontName nil, nil, widgetClickedLast.justArialFontStack
 

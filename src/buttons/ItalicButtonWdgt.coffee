@@ -19,5 +19,5 @@ class ItalicButtonWdgt extends Widget
 
   mouseClickLeft: ->
     debugger
-    if world.caret?
-      world.caret.target.toggleItalic?()
+    if world.lastNonTextPropertyChangerButtonClickedOrDropped?.toggleItalic?
+      world.lastNonTextPropertyChangerButtonClickedOrDropped.toggleItalic()

@@ -47,9 +47,9 @@ class ChangeFontButtonWdgt extends IconMorph
       @simpleDocument.fontSelectionMenu = menu
 
   setFontName: (ignored1, ignored2, theNewFontName) ->
-    if world.caret?
-      textWdgt = world.caret.target
-      textWdgt.setFontName(nil, ignored2, textWdgt[theNewFontName])
+    if world.lastNonTextPropertyChangerButtonClickedOrDropped?.setFontName?
+      widgetClickedLast = world.lastNonTextPropertyChangerButtonClickedOrDropped
+      widgetClickedLast.setFontName(nil, ignored2, widgetClickedLast[theNewFontName])
 
 
 
