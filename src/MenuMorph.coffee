@@ -65,7 +65,7 @@ class MenuMorph extends PopUpWdgt
     @silentAdd item,nil,0
   
   createLabel: ->
-    @label = new MenuHeader localize @title
+    @label = new MenuHeader @title
 
   createMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true, target, action, toolTipMessage, color, bold = false, italic = false,doubleClickAction, arg1, arg2,representsAMorph = false)->
     # console.log "menu creating MenuItemMorph "

@@ -366,10 +366,6 @@ noOperation = ->
 isFunction = (functionToCheck) ->
   typeof(functionToCheck) is "function"
 
-localize = (string) ->
-  # override this function with custom localizations
-  string
-
 detect = (list, predicate) ->
   # answer the first element of list for which predicate evaluates
   # true, otherwise answer nil
