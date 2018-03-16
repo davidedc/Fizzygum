@@ -21,7 +21,8 @@ class ToolPanelWdgt extends PanelWdgt
       if aMorph.grabbedWidgetSwitcheroo == Widget::grabbedWidgetSwitcheroo
         aMorph.isTemplate = true
 
-      aMorph.originalExtentBeforeBecomingThumbnail = aMorph.extent()
+      if !aMorph.extentToGetWhenDraggedFromGlassBox?
+        aMorph.extentToGetWhenDraggedFromGlassBox = aMorph.extent()
 
       if !(aMorph instanceof GlassBoxBottomWdgt)
         glassBoxBottom = new GlassBoxBottomWdgt()

@@ -160,17 +160,16 @@ class HandMorph extends Widget
         # so just like the next case it's OK to center it under the pointer
         aMorph.fullRawMoveTo @position().subtract aMorph.extent().floorDivideBy 2
         aMorph.fullRawMoveWithin world
-      else if aMorph.originalExtentBeforeBecomingThumbnail?
+      else if aMorph.extentToGetWhenDraggedFromGlassBox? and (oldParent instanceof GlassBoxBottomWdgt)
         # in this case the widget is "inflating". So, all
         # visual references that the user might have around the
         # position of the grab go out of the window: just center
         # the widget under the pointer and fit it within the
         # desktop bounds since we are at it (useful in case the
         # widget is inflating near the screen edges)
-        aMorph.rawSetExtent aMorph.originalExtentBeforeBecomingThumbnail
+        aMorph.rawSetExtent aMorph.extentToGetWhenDraggedFromGlassBox
         aMorph.fullRawMoveTo @position().subtract aMorph.extent().floorDivideBy 2
         aMorph.fullRawMoveWithin world
-        aMorph.originalExtentBeforeBecomingThumbnail = nil
       else if displacementDueToGrabDragThreshold?
         # in this case keep some visual consistency and move
         # the widget accordingly to where the grab started
@@ -251,7 +250,11 @@ class HandMorph extends Widget
       target.add morphToDrop, nil, nil, true, nil, @position()
       morphToDrop.fullChanged()
 
-      world.lastNonTextPropertyChangerButtonClickedOrDropped = morphToDrop
+      # when you click the buttons, sometimes you end up
+      # clicking between the buttons, and so the "proper"
+      # widget "loses focus" so to speak. So avoiding that here.
+      if !(morphToDrop instanceof HorizontalMenuPanelWdgt)
+        world.lastNonTextPropertyChangerButtonClickedOrDropped = morphToDrop
 
       @children = []
       @rawSetExtent new Point()
@@ -546,7 +549,7 @@ class HandMorph extends Widget
               morph.mouseUpRight? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
           # fire the click
-          if !morph.editorContentPropertyChangerButton
+          if !morph.editorContentPropertyChangerButton and !(morph instanceof HorizontalMenuPanelWdgt)
             world.lastNonTextPropertyChangerButtonClickedOrDropped = morph
           morph[expectedClick] @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
           #console.log ">>> sent event " + expectedClick + " to: " + morph

@@ -23,7 +23,8 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
       super
     else
       aMorph.isTemplate = true
-      aMorph.originalExtentBeforeBecomingThumbnail = aMorph.extent()
+      if !aMorph.extentToGetWhenDraggedFromGlassBox?
+        aMorph.extentToGetWhenDraggedFromGlassBox = aMorph.extent()
 
       if !(aMorph instanceof GlassBoxBottomWdgt)
         glassBoxBottom = new GlassBoxBottomWdgt()
