@@ -2183,7 +2183,20 @@ class WorldMorph extends PanelWdgt
 
 
   popUpDemoMenu: (morphOpeningThePopUp,b,c,d) ->
-    if !@isIndexPage
+    if @isIndexPage
+      menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "parts bin"
+      menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"
+      menu.addMenuItem "box", true, @, "createNewBoxMorph"
+      menu.addMenuItem "circle box", true, @, "createNewCircleBoxMorph"
+      menu.addMenuItem "slider", true, @, "createNewSliderMorph"
+      menu.addMenuItem "speech bubble", true, @, "createNewSpeechBubbleWdgt"
+      menu.addLine()
+      menu.addMenuItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
+      menu.addMenuItem "color palette", true, @, "createNewColorPaletteMorph"
+      menu.addMenuItem "color picker", true, @, "createNewColorPickerMorph"
+      menu.addLine()
+      menu.addMenuItem "analog clock", true, @, "analogClock"
+    else
       menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "make a morph"
       menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"
       menu.addMenuItem "box", true, @, "createNewBoxMorph"
@@ -2212,19 +2225,6 @@ class WorldMorph extends PanelWdgt
       menu.addMenuItem "layout tests ➜", false, @, "layoutTestsMenu", "sample morphs"
       menu.addLine()
       menu.addMenuItem "under the carpet", true, @, "underTheCarpet"
-    else
-      menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "parts bin"
-      menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"
-      menu.addMenuItem "box", true, @, "createNewBoxMorph"
-      menu.addMenuItem "circle box", true, @, "createNewCircleBoxMorph"
-      menu.addMenuItem "slider", true, @, "createNewSliderMorph"
-      menu.addMenuItem "speech bubble", true, @, "createNewSpeechBubbleWdgt"
-      menu.addLine()
-      menu.addMenuItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
-      menu.addMenuItem "color palette", true, @, "createNewColorPaletteMorph"
-      menu.addMenuItem "color picker", true, @, "createNewColorPickerMorph"
-      menu.addLine()
-      menu.addMenuItem "analog clock", true, @, "analogClock"
 
     menu.popUpAtHand()
 
