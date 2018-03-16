@@ -1,3 +1,6 @@
+# Note that the ColorPicker has no "set target..." from
+# the menu.
+
 class ColorPickerMorph extends Widget
 
   # pattern: all the children should be declared here
@@ -23,21 +26,80 @@ class ColorPickerMorph extends Widget
     @rawSetExtent new Point 80, 80
     @buildSubmorphs()
 
+  colloquialName: ->
+    "color picker"
+
   buildSubmorphs: ->
     @feedback = new RectangleMorph new Point(20, 20), @choice
     @colorPalette = new ColorPaletteMorph @feedback, new Point @width(), 50
     @grayPalette = new GrayPaletteMorph @feedback, new Point @width(), 5
-    @colorPalette.fullRawMoveTo @position()
     @add @colorPalette
-    @grayPalette.fullRawMoveTo @colorPalette.bottomLeft()
     @add @grayPalette
-    x = @grayPalette.left() + Math.floor((@grayPalette.width() - @feedback.width()) / 2)
-    y = @grayPalette.bottom() + Math.floor((@bottom() - @grayPalette.bottom() - @feedback.height()) / 2)
-    @feedback.fullRawMoveTo new Point x, y
     @add @feedback
+    @invalidateLayout()
 
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
   
   getColor: ->
     @feedback.color
   
+
+  rawSetExtent: (aPoint) ->
+    super
+    @invalidateLayout()
+
+  doLayout: (newBoundsForThisLayout) ->
+    debugger
+
+    if !window.recalculatingLayouts
+      debugger
+
+    if !newBoundsForThisLayout?
+      if @desiredExtent?
+        newBoundsForThisLayout = @desiredExtent
+        @desiredExtent = nil
+      else
+        newBoundsForThisLayout = @extent()
+
+      if @desiredPosition?
+        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
+        @desiredPosition = nil
+      else
+        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
+
+    if @isCollapsed()
+      @layoutIsValid = true
+      @notifyChildrenThatParentHasReLayouted()
+      return
+
+    # here we are disabling all the broken
+    # rectangles. The reason is that all the
+    # submorphs of the inspector are within the
+    # bounds of the parent Widget. This means that
+    # if only the parent morph breaks its rectangle
+    # then everything is OK.
+    # Also note that if you attach something else to its
+    # boundary in a way that sticks out, that's still
+    # going to be painted and moved OK.
+    trackChanges.push false
+
+    @rawSetBounds newBoundsForThisLayout
+    @colorPalette.fullRawMoveTo @position()
+    @colorPalette.rawSetExtent new Point @width(), Math.round(@height() * 0.625)
+
+    @grayPalette.fullRawMoveTo @colorPalette.bottomLeft()
+    @grayPalette.rawSetExtent new Point @width(), Math.round(@height() * 0.0625)
+
+    x = @grayPalette.left() + Math.floor((@grayPalette.width() - @feedback.width()) / 2)
+    y = @grayPalette.bottom() + Math.floor((@bottom() - @grayPalette.bottom() - @feedback.height()) / 2)
+    @feedback.fullRawMoveTo new Point x, y
+    @feedback.rawSetExtent new Point Math.min(@width(), Math.round(@height() * 0.25)), Math.round(@height() * 0.25)
+
+    trackChanges.pop()
+    @fullChanged()
+
+    @layoutIsValid = true
+    @notifyChildrenThatParentHasReLayouted()
+
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+      world.alignIDsOfNextMorphsInSystemTests()
