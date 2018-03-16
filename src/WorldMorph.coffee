@@ -2126,6 +2126,20 @@ class WorldMorph extends PanelWdgt
     @create new GrayPaletteMorph()
   createNewColorPaletteMorph: ->
     @create new ColorPaletteMorph()
+  createNewGrayPaletteMorphInWindow: ->
+    gP = new GrayPaletteMorph()
+    wm = new WindowWdgt nil, nil, gP
+    world.add wm
+    wm.rawSetExtent new Point 130, 70
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.changed()
+  createNewColorPaletteMorphInWindow: ->
+    cP = new ColorPaletteMorph()
+    wm = new WindowWdgt nil, nil, cP
+    world.add wm
+    wm.rawSetExtent new Point 130, 100
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.changed()
   createNewColorPickerMorph: ->
     @create new ColorPickerMorph()
   createNewSensorDemo: ->
@@ -2191,9 +2205,8 @@ class WorldMorph extends PanelWdgt
       menu.addMenuItem "slider", true, @, "createNewSliderMorph"
       menu.addMenuItem "speech bubble", true, @, "createNewSpeechBubbleWdgt"
       menu.addLine()
-      menu.addMenuItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
-      menu.addMenuItem "color palette", true, @, "createNewColorPaletteMorph"
-      menu.addMenuItem "color picker", true, @, "createNewColorPickerMorph"
+      menu.addMenuItem "gray scale palette", true, @, "createNewGrayPaletteMorphInWindow"
+      menu.addMenuItem "color palette", true, @, "createNewColorPaletteMorphInWindow"
       menu.addLine()
       menu.addMenuItem "analog clock", true, @, "analogClock"
     else
