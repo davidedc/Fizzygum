@@ -64,10 +64,10 @@ class ScriptWdgt extends Widget
     @add @tempPromptEntryField
 
     # buttons -------------------------------
-    @runItButton = new SimpleButtonMorph true, @, "tryIt", (new StringMorph2 "try it").alignCenter()
+    @runItButton = new SimpleButtonMorph true, @, "tryIt", "try it"
     @add @runItButton
 
-    @saveTextWdgt = new StringMorph2 "save + close"
+    @saveTextWdgt = new StringMorph2 "save + close", WorldMorph.preferencesAndSettings.textInButtonsFontSize
     @saveTextWdgt.alignCenter()
     @saveButton = new SimpleButtonMorph true, @, "saveScriptAndClose", @saveTextWdgt
     @add @saveButton

@@ -53,16 +53,16 @@ class CodePromptMorph extends Widget
     @add @tempPromptEntryField
 
     # buttons -------------------------------
-    @cancelButton = new SimpleButtonMorph true, @, "close", (new StringMorph2 "cancel").alignCenter()
+    @cancelButton = new SimpleButtonMorph true, @, "close", "cancel"
     @add @cancelButton
 
     
-    @saveTextWdgt = new StringMorph2 "save"
+    @saveTextWdgt = new StringMorph2 "save", WorldMorph.preferencesAndSettings.textInButtonsFontSize
     @saveTextWdgt.alignCenter()
     @saveButton = new SimpleButtonMorph true, @, "informTarget", @saveTextWdgt
     @add @saveButton
 
-    @okButton = new SimpleButtonMorph true, @, "notifyTargetAndClose", (new StringMorph2 "ok").alignCenter()
+    @okButton = new SimpleButtonMorph true, @, "notifyTargetAndClose", "ok"
     @add @okButton
     # ---------------------------------------
 
