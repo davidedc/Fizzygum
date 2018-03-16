@@ -378,16 +378,6 @@ class WorldMorph extends PanelWdgt
   boot: ->
 
     if @isIndexPage
-      @buildContextMenu= ->
-        if @isDevMode
-          menu = new MenuMorph @, false, @, true, true, "Fizzygum"
-        else
-          menu = new MenuMorph @, false, @, true, true, "Widgetic"
-        if @isDevMode
-          menu.addMenuItem "parts bin ➜", false, @, "popUpDemoMenu", "sample morphs"
-          menu.addMenuItem "delete all", true, @, "fullClose"
-        menu
-
       @setColor new Color 244,243,244
       @makePrettier()
 
@@ -1939,6 +1929,13 @@ class WorldMorph extends PanelWdgt
     super()
 
   buildContextMenu: ->
+
+    if @isIndexPage
+      menu = new MenuMorph @, false, @, true, true, "Desktop"
+      menu.addMenuItem "parts bin ➜", false, @, "popUpDemoMenu", "sample morphs"
+      menu.addMenuItem "wallpapers ➜", false, @, "wallpapersMenu", "choose a wallpaper for the Desktop"
+      return menu
+
     if @isDevMode
       menu = new MenuMorph(@, false, 
         @, true, true, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
@@ -1965,7 +1962,7 @@ class WorldMorph extends PanelWdgt
         menu.addMenuItem "standard settings", true, WorldMorph.preferencesAndSettings, "toggleInputMode", "smaller menu fonts\nand sliders"
       menu.addLine()
     
-    if AutomatorRecorderAndPlayer? and !@isIndexPage
+    if AutomatorRecorderAndPlayer?
       menu.addMenuItem "system tests ➜", false, @, "popUpSystemTestsMenu", ""
     if @isDevMode
       menu.addMenuItem "switch to user mode", true, @, "toggleDevMode", "disable developers'\ncontext menus"
@@ -2119,8 +2116,11 @@ class WorldMorph extends PanelWdgt
     newMorph.isEditable = true
     newMorph.maxTextWidth = 300
     @create newMorph
+  createNewSpeechBubbleWdgt: ->
+    newMorph = new SpeechBubbleWdgt()
+    @create newMorph
   createNewToolTipWdgt: ->
-    newMorph = new ToolTipWdgt "Hello, World!"
+    newMorph = new ToolTipWdgt()
     @create newMorph
   createNewGrayPaletteMorph: ->
     @create new GrayPaletteMorph()
@@ -2180,7 +2180,6 @@ class WorldMorph extends PanelWdgt
   underTheCarpet: ->
     newMorph = new BasementWdgt()
     @create newMorph
-  closingWindow: ->
 
 
   popUpDemoMenu: (morphOpeningThePopUp,b,c,d) ->
@@ -2198,7 +2197,8 @@ class WorldMorph extends PanelWdgt
       menu.addLine()
       menu.addMenuItem "string", true, @, "createNewString"
       menu.addMenuItem "text", true, @, "createNewText"
-      menu.addMenuItem "speech bubble", true, @, "createNewToolTipWdgt"
+      menu.addMenuItem "tool tip", true, @, "createNewToolTipWdgt"
+      menu.addMenuItem "speech bubble", true, @, "createNewSpeechBubbleWdgt"
       menu.addLine()
       menu.addMenuItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
       menu.addMenuItem "color palette", true, @, "createNewColorPaletteMorph"
@@ -2212,27 +2212,19 @@ class WorldMorph extends PanelWdgt
       menu.addMenuItem "layout tests ➜", false, @, "layoutTestsMenu", "sample morphs"
       menu.addLine()
       menu.addMenuItem "under the carpet", true, @, "underTheCarpet"
-      menu.addMenuItem "closing window", true, @, "closingWindow"
     else
       menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "parts bin"
       menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"
       menu.addMenuItem "box", true, @, "createNewBoxMorph"
       menu.addMenuItem "circle box", true, @, "createNewCircleBoxMorph"
       menu.addMenuItem "slider", true, @, "createNewSliderMorph"
-      menu.addMenuItem "panel", true, @, "createNewPanelWdgt"
-      menu.addMenuItem "scrollable panel", true, @, "createNewScrollPanelWdgt"
-      menu.addMenuItem "canvas", true, @, "createNewCanvas"
-      menu.addLine()
-      menu.addMenuItem "string", true, @, "createNewStringMorph2WithoutBackground"
-      menu.addMenuItem "text", true, @, "createNewTextMorph2WithBackground"
-      menu.addMenuItem "speech bubble", true, @, "createNewToolTipWdgt"
+      menu.addMenuItem "speech bubble", true, @, "createNewSpeechBubbleWdgt"
       menu.addLine()
       menu.addMenuItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
       menu.addMenuItem "color palette", true, @, "createNewColorPaletteMorph"
       menu.addMenuItem "color picker", true, @, "createNewColorPickerMorph"
       menu.addLine()
       menu.addMenuItem "analog clock", true, @, "analogClock"
-      menu.addMenuItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
 
     menu.popUpAtHand()
 

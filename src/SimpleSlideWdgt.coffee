@@ -22,6 +22,8 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
 
     @toolsPanel.add new MapPinIconWdgt()
 
+    @toolsPanel.add new SpeechBubbleWdgt()
+
     @toolsPanel.add new DestroyIconMorph()
     @toolsPanel.add new ScratchAreaIconMorph()
     @toolsPanel.add new FloraIconMorph()
