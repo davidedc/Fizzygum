@@ -15,16 +15,17 @@ class ToolTipWdgt extends Widget
   morphInvokingThis: nil
 
   constructor: (
-   @contents="",
+   @contents="text here",
    @morphInvokingThis,
-   @color = (new Color 230, 230, 230),
+   @color = WorldMorph.preferencesAndSettings.menuBackgroundColor,
    cornerRadius,
-   @padding = 0,
-   isThought = false) ->
+   @padding = 0) ->
+    debugger
     # console.log "bubble super"
     super()
+    @strokeColor = WorldMorph.preferencesAndSettings.menuStrokeColor
     @cornerRadius = cornerRadius or 6
-    @appearance = new BubblyAppearance @, isThought, true
+    @appearance = new BubblyAppearance @
     # console.log @color
   
   @createBubbleHelpIfHandStillOnMorph: (contents, morphInvokingThis) ->
@@ -34,7 +35,7 @@ class ToolTipWdgt extends Widget
     # and the mouse is still over it, otherwise
     # do nothing.
     if morphInvokingThis.root() == world and morphInvokingThis.boundsContainPoint world.hand.position()
-      theBubble = new @ localize(contents), morphInvokingThis, nil, nil
+      theBubble = new @ contents, morphInvokingThis
       theBubble.openAt theBubble.morphInvokingThis.rightCenter().add new Point -8, 0
 
   @cancelAllScheduledToolTips: ->
