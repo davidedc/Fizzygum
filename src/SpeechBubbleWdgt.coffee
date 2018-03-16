@@ -27,6 +27,9 @@ class SpeechBubbleWdgt extends Widget
     @extentToGetWhenDraggedFromGlassBox = new Point 105,80
 
     # console.log @color
+
+  colloquialName: ->
+    "speech bubble"
   
   buildAndConnectChildren: ->
     @contentsMorph = new TextMorph2(
