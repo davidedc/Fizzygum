@@ -1,11 +1,12 @@
 class ExampleBarPlotWdgt extends Widget
 
   graphNumber: 1
+  drawOnlyPartOfBoundingRect: false
 
-  constructor: ->
+  constructor: (@drawOnlyPartOfBoundingRect)->
     super()
     @setColor new Color 255, 125, 125
-    @setExtent new Point 200, 200
+    @rawSetExtent new Point 200, 200
 
     @fps = 0.5
     world.addSteppingMorph @
@@ -111,7 +112,14 @@ class ExampleBarPlotWdgt extends Widget
         context.fillStyle = '#325FA2'
       else
         context.fillStyle = '#FF0000'
-      context.fillRect xPos, availableHeight - (availableHeight * heightPerc), (1/20)*width - 2, (availableHeight * heightPerc)
+      context.fillRect Math.round(xPos), Math.round(availableHeight - (availableHeight * heightPerc)), Math.round((1/20)*width - 2), Math.round(availableHeight * heightPerc)
 
     context.strokeStyle = (new Color 30,30,30).toString()
-    context.strokeRect 0, 0, width, height
+    if @drawOnlyPartOfBoundingRect
+      context.beginPath()
+      context.moveTo 0, 0
+      context.lineTo width, 0
+      context.lineTo width, height
+      context.stroke()
+    else
+      context.strokeRect 0, 0, width, height

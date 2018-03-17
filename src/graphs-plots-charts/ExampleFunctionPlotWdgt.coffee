@@ -1,11 +1,12 @@
 class ExampleFunctionPlotWdgt extends Widget
 
   graphNumber: 1
+  drawOnlyPartOfBoundingRect: false
 
-  constructor: ->
+  constructor: (@drawOnlyPartOfBoundingRect)->
     super()
     @setColor new Color 255, 125, 125
-    @setExtent new Point 200, 200
+    @rawSetExtent new Point 200, 200
 
     @fps = 2
     world.addSteppingMorph @
@@ -112,4 +113,11 @@ class ExampleFunctionPlotWdgt extends Widget
       context.fillRect xPos, availableHeight * heightPerc, 2,2
 
     context.strokeStyle = (new Color 30,30,30).toString()
-    context.strokeRect 0, 0, width, height
+    if @drawOnlyPartOfBoundingRect
+      context.beginPath()
+      context.moveTo 0, 0
+      context.lineTo width, 0
+      context.lineTo width, height
+      context.stroke()
+    else
+      context.strokeRect 0, 0, width, height
