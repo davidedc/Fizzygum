@@ -1,4 +1,8 @@
+# REQUIRES KeepsRatioWhenInVerticalStackMixin
+
 class StretchableEditableWdgt extends Widget
+
+  @augmentWith KeepsRatioWhenInVerticalStackMixin, @name
 
   toolsPanel: nil
   stretchableWidgetContainer: nil
@@ -45,27 +49,6 @@ class StretchableEditableWdgt extends Widget
       @disableDragsDropsAndEditing @
     else
       @enableDragsDropsAndEditing @
-
-  holderWindowJustBeenGrabbed: (whereFrom) ->
-    if whereFrom instanceof SimpleVerticalStackPanelWdgt
-      @freeFromRatioConstraints()
-
-  holderWindowMadeIntoExternal: ->
-    @freeFromRatioConstraints()
-
-  freeFromRatioConstraints: ->
-    if @layoutSpecDetails?
-      @layoutSpecDetails.canSetHeightFreely = true
-
-      availableHeight = world.height() - 20
-      if @parent.height() > availableHeight
-        @parent.rawSetExtent (new Point Math.min((@width()/@height()) * availableHeight, world.width()), availableHeight).round()
-        @parent.fullRawMoveTo world.hand.position().subtract @parent.extent().floorDivideBy 2
-        @parent.fullRawMoveWithin world
-
-  holderWindowJustDropped: (whereIn) ->
-    if (whereIn instanceof SimpleVerticalStackPanelWdgt) and !(whereIn instanceof WindowWdgt)
-      @constrainToRatio()
 
   constrainToRatio: ->
     if @layoutSpecDetails?

@@ -1,4 +1,8 @@
+# REQUIRES KeepsRatioWhenInVerticalStackMixin
+
 class PlotWithAxesWdgt extends Widget
+
+  @augmentWith KeepsRatioWhenInVerticalStackMixin, @name
 
   constructor: (@plot) ->
     super

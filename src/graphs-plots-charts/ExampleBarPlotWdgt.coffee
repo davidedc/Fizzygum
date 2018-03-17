@@ -1,13 +1,10 @@
-class ExampleBarPlotWdgt extends Widget
+class ExampleBarPlotWdgt extends GraphsPlotsChartsWdgt
 
   graphNumber: 1
   drawOnlyPartOfBoundingRect: false
 
   constructor: (@drawOnlyPartOfBoundingRect)->
     super()
-    @setColor new Color 255, 125, 125
-    @rawSetExtent new Point 200, 200
-
     @fps = 0.5
     world.addSteppingMorph @
 
@@ -65,23 +62,6 @@ class ExampleBarPlotWdgt extends Widget
     @graphNumber++
     @changed()
 
-  # see https://stackoverflow.com/a/19303725
-  seededRandom: ->
-    x = Math.sin(@seed++) * 10000
-    return x - Math.floor(x)
-
-  # Standard Normal variate using Box-Muller transform
-  # see https://stackoverflow.com/a/36481059
-  seeded_randn_bm: ->
-    u = 0
-    v = 0
-    while u == 0
-      u = @seededRandom()
-    #Converting [0,1) to (0,1)
-    while v == 0
-      v = @seededRandom()
-    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)
-
   renderingHelper: (context, color, appliedShadow) ->
 
     @seed = @graphNumber
@@ -90,11 +70,7 @@ class ExampleBarPlotWdgt extends Widget
     width = @width()
 
     if appliedShadow?
-      context.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
-      context.fillStyle = (new Color 80, 80, 80).toString()
-      context.fillRect 0, 0, width, height
-      # let's avoid paint 3d stuff twice because
-      # of the shadow
+      @simpleShadow context, color, appliedShadow
       return
 
     context.fillStyle = (new Color 242,242,242).toString()
@@ -114,12 +90,4 @@ class ExampleBarPlotWdgt extends Widget
         context.fillStyle = '#FF0000'
       context.fillRect Math.round(xPos), Math.round(availableHeight - (availableHeight * heightPerc)), Math.round((1/20)*width - 2), Math.round(availableHeight * heightPerc)
 
-    context.strokeStyle = (new Color 30,30,30).toString()
-    if @drawOnlyPartOfBoundingRect
-      context.beginPath()
-      context.moveTo 0, 0
-      context.lineTo width, 0
-      context.lineTo width, height
-      context.stroke()
-    else
-      context.strokeRect 0, 0, width, height
+    @drawBoundingBox context, color, appliedShadow

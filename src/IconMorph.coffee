@@ -3,8 +3,11 @@
 # or
 #   world.create(new IconMorph("color = 'rgba(226, 0, 75, 1)'\ncontext.beginPath()\ncontext.moveTo 23, 103\ncontext.lineTo 93, 178\ncontext.strokeStyle = color\ncontext.stroke()"))
 
+# REQUIRES KeepsRatioWhenInVerticalStackMixin
+
 class IconMorph extends Widget
 
+  @augmentWith KeepsRatioWhenInVerticalStackMixin, @name
 
   constructor: (@color = WorldMorph.preferencesAndSettings.iconDarkLineColor) ->
     super()
@@ -20,8 +23,4 @@ class IconMorph extends Widget
     super
     @layoutSpecDetails.canSetHeightFreely = false
 
-  rawSetWidthSizeHeightAccordingly: (newWidth) ->
-    @rawResizeToWithoutSpacing()
-    ratio = @height()/@width()
-    @rawSetExtent new Point newWidth, Math.round newWidth * ratio
    
