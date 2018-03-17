@@ -542,6 +542,12 @@ class MenusHelper
     exampleScatterPlot.setExtent new Point 300, 300
     world.create exampleScatterPlot
 
+  createExampleScatterPlotWithAxes: ->
+    exampleScatterPlot = new ExampleScatterPlotWdgt()
+    plotWithAxesWdgt = new PlotWithAxesWdgt exampleScatterPlot
+    plotWithAxesWdgt.setExtent new Point 300, 300
+    world.create plotWithAxesWdgt
+
   createExampleFunctionPlot: ->
     exampleFunctionPlot = new ExampleFunctionPlotWdgt()
     exampleFunctionPlot.setExtent new Point 300, 300
@@ -568,6 +574,7 @@ class MenusHelper
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "graphs"
     menu.addMenuItem "axis", true, menusHelper, "create2DAxis"
     menu.addMenuItem "scatter plot", true, menusHelper, "createExampleScatterPlot"
+    menu.addMenuItem "scatter plot with axes", true, menusHelper, "createExampleScatterPlotWithAxes"
     menu.addMenuItem "function plot", true, menusHelper, "createExampleFunctionPlot"
     menu.addMenuItem "bar plot", true, menusHelper, "createExampleBarPlot"
     menu.addMenuItem "3D plot", true, menusHelper, "createExample3DPlot"

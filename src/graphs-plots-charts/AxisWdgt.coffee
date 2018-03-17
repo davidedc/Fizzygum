@@ -37,6 +37,23 @@ class AxisWdgt extends Widget
     super
     @invalidateLayout()
 
+  # TODO some duplication of code here with
+  # the method below
+  distanceOfAxisOriginFromEdge: ->
+    height = @height()
+    width = @width()
+
+    numberOfTicks = @max - @min + 1
+    if height > width
+      # vert axis
+      tickHeight = height/(numberOfTicks + 1)
+      return new Point -5, tickHeight
+    else
+      # horiz axis
+      tickHeight = width/(numberOfTicks + 1)
+      return new Point tickHeight, 5 
+
+
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts
       debugger
