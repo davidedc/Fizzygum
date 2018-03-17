@@ -21,7 +21,7 @@ class Example3DPlotWdgt extends Widget
     world.addSteppingMorph @
 
     @setColor new Color 255, 125, 125
-    @setExtent new Point 200, 200
+    @rawSetExtent new Point 200, 200
 
 
 
