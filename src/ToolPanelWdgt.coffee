@@ -6,7 +6,13 @@ class ToolPanelWdgt extends PanelWdgt
   externalPadding: 10
   thumbnailSize: 30
 
-  add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
+  addMany: (widgetsToBeAdded) ->
+
+    for eachWidget in widgetsToBeAdded
+      @add eachWidget, nil, nil, nil, nil, nil, true
+    @reLayout()
+
+  add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen, dontLayout) ->
 
     if (aMorph instanceof ModifiedTextTriangleAnnotationWdgt) or
      (aMorph instanceof HandleMorph)
@@ -60,7 +66,9 @@ class ToolPanelWdgt extends PanelWdgt
         super aMorph, @numberOfIconsOnPanel, layoutSpec, beingDropped
 
       @numberOfIconsOnPanel++
-      @reLayout()
+
+      unless dontLayout
+        @reLayout()
 
 
   rawSetExtent: (aPoint) ->

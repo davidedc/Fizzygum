@@ -194,6 +194,14 @@ class ScrollPanelWdgt extends PanelWdgt
       @adjustContentsBounds()
       @adjustScrollBars()
 
+  # see SimpleSlideWdgt for performance improvements
+  # of this over the non-
+  addMany: (widgetsToBeAdded) ->
+    @contents.addMany widgetsToBeAdded
+    @adjustContentsBounds()
+    @adjustScrollBars()
+
+
   showResizeAndMoveHandlesAndLayoutAdjusters: ->
     super
     @adjustContentsBounds()
