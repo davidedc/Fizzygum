@@ -15,7 +15,6 @@ class GlassBoxBottomWdgt extends BoxMorph
     @setAlphaScaled 50
 
   reLayout: ->
-    debugger
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

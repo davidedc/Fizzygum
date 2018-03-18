@@ -8,8 +8,6 @@ class ToolPanelWdgt extends PanelWdgt
 
   add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
 
-    debugger
-
     if (aMorph instanceof ModifiedTextTriangleAnnotationWdgt) or
      (aMorph instanceof HandleMorph)
       super
@@ -70,7 +68,6 @@ class ToolPanelWdgt extends PanelWdgt
     @reLayout()
 
   reLayout: ->
-    debugger
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
