@@ -274,10 +274,10 @@ class MenusHelper
       # tools -------------------------------
       toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
 
-      toolsPanel.add new TextBoxCreatorButtonWdgt()
-      toolsPanel.add new ExternalLinkCreatorButtonWdgt()
-      toolsPanel.add new VideoPlayCreatorButtonWdgt()
-      toolsPanel.add new WorldMapCreatorButtonWdgt()
+      toolsPanel.add new UsefulTextSnippetsToolbarCreatorButtonWdgt()
+      toolsPanel.add new SlidesToolbarCreatorButtonWdgt()
+      toolsPanel.add new PlotsToolbarCreatorButtonWdgt()
+      toolsPanel.add new PatchProgrammingComponentsToolbarCreatorButtonWdgt()
 
       toolsPanel.disableDragsDropsAndEditing()
 
@@ -308,6 +308,114 @@ class MenusHelper
     fizzyPaintLauncher.setExtent new Point 75, 75
     fizzyPaintLauncher.fullChanged()
     return wm
+
+  createNewTemplatesWindow: ->
+    sdspw = new SimpleDocumentScrollPanelWdgt()
+
+    sdspw.rawSetExtent new Point 365, 335
+
+    startingContent = new SimplePlainTextWdgt(
+      "Simply drag the items below into your document",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 18
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+
+    sdspw.setContents startingContent, 5
+
+
+    startingContent = new ArrowSIconWdgt()
+    startingContent.rawSetExtent new Point 25, 25
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToCenter()
+
+    sdspw.addDivider()
+
+    startingContent = new SimplePlainTextWdgt(
+      "Title",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    startingContent.alignCenter()
+    startingContent.setFontName nil, nil, startingContent.georgiaFontStack
+    startingContent.setFontSize 48
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    startingContent = new SimplePlainTextWdgt(
+      "Section X",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    startingContent.toggleWeight()
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    startingContent.setFontSize 28
+    sdspw.add startingContent
+
+    startingContent = new SimplePlainTextWdgt(
+      "Section X.X",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    startingContent.setFontSize 24
+    sdspw.add startingContent
+
+    sdspw.addNormalParagraph "Normal text."
+
+    startingContent = new SimplePlainTextWdgt(
+      "“Be careful--with quotations, you can damn anything.”\n― André Malraux",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    startingContent.toggleItalic()
+    startingContent.alignRight()
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+
+    sdspw.addIndentedText "indentedText"
+    sdspw.addBulletPoint "bullet point"
+    sdspw.addCodeBlock "a code block with\n  some example\n    code in here"
+
+
+    startingContent = new SimplePlainTextWdgt(
+      "Spacers:",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    startingContent.toggleWeight()
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    sdspw.addSpacer()
+    sdspw.addSpacer 2
+    sdspw.addSpacer 3
+
+    startingContent = new SimplePlainTextWdgt(
+      "Divider line:",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    startingContent.toggleWeight()
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    sdspw.addDivider()
+
+    startingContent = new SimplePlainTextWdgt(
+      "Links:",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    startingContent.toggleWeight()
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    startingContent = new SimpleLinkWdgt()
+    startingContent.rawSetExtent new Point 405, 50
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    startingContent = new SimpleVideoLinkWdgt()
+    startingContent.rawSetExtent new Point 405, 50
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    sdspw.makeAllContentIntoTemplates()
+
+    wm = new WindowWdgt nil, nil, sdspw
+    wm.setExtent new Point 365, 335
+    wm.setTitleWithoutPrependedContentName "useful snippets"
+    wm.changed()
+    return wm
+
 
   createFanout: ->
     fanoutWdgt = new FanoutWdgt()
