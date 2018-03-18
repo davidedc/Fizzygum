@@ -268,6 +268,47 @@ class MenusHelper
     wm = @createSimpleSlideLauncher()
     world.add wm
 
+  createToolbarsOpener: ->
+    scriptWdgt = new ScriptWdgt """
+
+      # tools -------------------------------
+      toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
+
+      toolsPanel.add new TextBoxCreatorButtonWdgt()
+      toolsPanel.add new ExternalLinkCreatorButtonWdgt()
+      toolsPanel.add new VideoPlayCreatorButtonWdgt()
+      toolsPanel.add new WorldMapCreatorButtonWdgt()
+
+      toolsPanel.disableDragsDropsAndEditing()
+
+      wm = new WindowWdgt nil, nil, toolsPanel
+      wm.setExtent new Point 60, 192
+      wm.fullRawMoveTo new Point 90, Math.floor((world.height()-192)/2)
+      wm.fullRawMoveWithin world
+      world.add wm
+      wm.changed()
+
+
+    """
+    # the starting script string above is not
+    # actually saved, it's just there as starting
+    # content, so let's save it
+    scriptWdgt.saveScript()
+
+    wm = new WindowWdgt nil, nil, scriptWdgt
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    wm.changed()
+
+    fizzyPaintLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Toolbars", new ToolbarsIconWdgt()
+    # this "add" is going to try to position the reference
+    # in some smart way (i.e. according to a grid)
+    world.add fizzyPaintLauncher
+    fizzyPaintLauncher.setExtent new Point 75, 75
+    fizzyPaintLauncher.fullChanged()
+    return wm
+
   createFanout: ->
     fanoutWdgt = new FanoutWdgt()
     world.create fanoutWdgt
