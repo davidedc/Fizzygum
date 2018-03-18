@@ -52,7 +52,7 @@ class SpeechBubbleWdgt extends Widget
 
   rawSetExtent: (aPoint) ->
     super
-    @invalidateLayout()
+    @doLayout @bounds
 
   doLayout: (newBoundsForThisLayout) ->
 
