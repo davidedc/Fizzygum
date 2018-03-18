@@ -123,5 +123,6 @@ class ToolPanelWdgt extends PanelWdgt
       numberOfEntries++
 
     trackChanges.pop()
+    @layoutIsValid = true
     @fullChanged()
 
