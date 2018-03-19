@@ -830,14 +830,12 @@ class MenusHelper
     sdspw.addDivider()
 
 
-    sdspw.addNormalParagraph "You wanted more features in your software. So you added more libraries. What you obtained was: problems.\n\n" +
-    "Because each library was developed disjointly from the others, and each brought disjoint assumptions and constraints. So now your work is to help your libraries.\n\n" +
-    "Escape libraries hell. Use a powerful framework instead, one that was designed from the ground up to do complex things, coherently. Welcome to Fizzygum."
+    sdspw.addNormalParagraph "Welcome to a powerful new framework designed from the ground up to do complex things, simply. Welcome to Fizzygum."
 
     sdspw.addSpacer()
 
     startingContent = new SimplePlainTextWdgt(
-      "What is Fizzygum",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "What it can do for you",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22
     startingContent.isEditable = true
@@ -846,7 +844,7 @@ class MenusHelper
 
     sdspw.addDivider()    
 
-    sdspw.addNormalParagraph "Fizzygum is a web framework that lets you do all of this and more:"
+    sdspw.addNormalParagraph "Fizzygum enables you to do all of this and more:"
 
     sdspw.addBulletPoint "make dashboards and visualise data"
     sdspw.addBulletPoint "author, organise and navigate documents (drawings / text docs / slides)"
@@ -868,7 +866,7 @@ class MenusHelper
 
     sdspw.addDivider()    
 
-    sdspw.addNormalParagraph "Feel free to click around this sandbox. Just reload to start again from clean sheet."
+    sdspw.addNormalParagraph "Feel free to click around this sandbox. Just reload to start again from scratch."
 
     sdspw.addSpacer()
     sdspw.addNormalParagraph "Also check out some screenshots here:"
