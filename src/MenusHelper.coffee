@@ -304,6 +304,7 @@ class MenusHelper
       # tools -------------------------------
       toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
 
+      toolsPanel.add new TextToolbarCreatorButtonWdgt()
       toolsPanel.add new UsefulTextSnippetsToolbarCreatorButtonWdgt()
       toolsPanel.add new SlidesToolbarCreatorButtonWdgt()
       toolsPanel.add new PlotsToolbarCreatorButtonWdgt()
@@ -312,7 +313,7 @@ class MenusHelper
       toolsPanel.disableDragsDropsAndEditing()
 
       wm = new WindowWdgt nil, nil, toolsPanel
-      wm.setExtent new Point 60, 192
+      wm.setExtent new Point 60, 226
       wm.fullRawMoveTo new Point 90, Math.floor((world.height()-192)/2)
       wm.fullRawMoveWithin world
       world.add wm
