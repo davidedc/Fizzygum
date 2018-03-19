@@ -13,7 +13,7 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
   constructor: ->
     super "Basement", new GenericShortcutIconWdgt new BasementIconWdgt()
     @target = world.basementWdgt
-    @setExtent new Point 75, 75
+    @rawSetExtent new Point 75, 75
 
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
     super

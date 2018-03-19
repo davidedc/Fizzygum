@@ -396,7 +396,7 @@ class WorldMorph extends PanelWdgt
     if @isIndexPage
       acm = new AnalogClockWdgt()
       acm.rawSetExtent new Point 80, 80
-      acm.fullRawMoveTo new Point @width()-80-5, @top() + 5
+      acm.fullRawMoveTo new Point @right()-80-@desktopSidesPadding, @top() + @desktopSidesPadding
       @add acm
 
       menusHelper.createWelcomeMessageWindow()
@@ -1243,10 +1243,20 @@ class WorldMorph extends PanelWdgt
         if !basementOpenerWdgt.wasPositionedSlightlyOutsidePanel
           basementOpenerWdgt.fullRawMoveWithin @
       else
-        basementOpenerWdgt.fullMoveTo @bottomRight().subtract basementOpenerWdgt.extent().add @desktopSidesPadding
+        basementOpenerWdgt.fullMoveTo @bottomRight().subtract (new Point 75, 75).add @desktopSidesPadding
+
+    analogClockWdgt = @firstChildSuchThat (w) ->
+      w instanceof AnalogClockWdgt
+    if analogClockWdgt?
+      if analogClockWdgt.userMovedThisFromComputedPosition
+        analogClockWdgt.fullRawMoveInDesktopToFractionalPosition()
+        if !analogClockWdgt.wasPositionedSlightlyOutsidePanel
+          analogClockWdgt.fullRawMoveWithin @
+      else
+        analogClockWdgt.fullMoveTo new Point @right() - 80 - @desktopSidesPadding, @top() + @desktopSidesPadding 
 
     @children.forEach (child) =>
-      if child != basementOpenerWdgt and !(child instanceof WidgetHolderWithCaptionWdgt)
+      if child != basementOpenerWdgt and child != analogClockWdgt and  !(child instanceof WidgetHolderWithCaptionWdgt)
         if child.positionFractionalInHoldingPanel?
           child.fullRawMoveInDesktopToFractionalPosition()
         if !child.wasPositionedSlightlyOutsidePanel
