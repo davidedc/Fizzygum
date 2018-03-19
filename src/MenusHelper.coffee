@@ -997,7 +997,7 @@ class MenusHelper
 
     wm = new WindowWdgt nil, nil, simpleDocument
     wm.fullRawMoveTo new Point 114, 10
-    wm.rawSetExtent new Point 365, 405
+    wm.rawSetExtent new Point 365, 447
     world.add wm
     wm.setTitleWithoutPrependedContentName "How to save"
     wm.changed()
