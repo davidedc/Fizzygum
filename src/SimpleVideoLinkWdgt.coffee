@@ -1,6 +1,6 @@
 class SimpleVideoLinkWdgt extends SimpleLinkWdgt
 
-  constructor: (@descriptionString, @linkString = "https://www.youtube.com/watch?v=cU8HrO7XuiE") ->
+  constructor: (@descriptionString, @linkString = "https://goo.gl/9xZrmG") ->
     super @descriptionString, @linkString
 
   createLinkIcon: ->
