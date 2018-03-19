@@ -21,10 +21,10 @@ class PlotsToolbarCreatorButtonWdgt extends Widget
 
     toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
 
-    toolsPanel.add new TextBoxCreatorButtonWdgt()
-    toolsPanel.add new ExternalLinkCreatorButtonWdgt()
-    toolsPanel.add new VideoPlayCreatorButtonWdgt()
-    toolsPanel.add new WorldMapCreatorButtonWdgt()
+    toolsPanel.add new ScatterPlotWithAxesCreatorButtonWdgt()
+    toolsPanel.add new FunctionPlotWithAxesCreatorButtonWdgt()
+    toolsPanel.add new BarPlotWithAxesCreatorButtonWdgt()
+    toolsPanel.add new Plot3DCreatorButtonWdgt()
 
     toolsPanel.disableDragsDropsAndEditing()
 
