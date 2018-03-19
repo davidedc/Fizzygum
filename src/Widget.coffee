@@ -3501,6 +3501,7 @@ class Widget extends TreeNode
       menu.addMenuItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
       menu.addLine()
       menu.addMenuItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
+      menu.addMenuItem "create shortcut", true, @, "createReference", "creates a reference to this wdgt and leaves it on the desktop"
       menu.addMenuItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
     else
       menu.addMenuItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
