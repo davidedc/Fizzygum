@@ -399,7 +399,8 @@ class WorldMorph extends PanelWdgt
       acm.fullRawMoveTo new Point @right()-80-@desktopSidesPadding, @top() + @desktopSidesPadding
       @add acm
 
-      menusHelper.createWelcomeMessageWindow()
+      menusHelper.createWelcomeMessageWindowAndShortcut()
+      menusHelper.createHowToSaveMessageOpener()
       menusHelper.basementIconAndText()
       menusHelper.createSimpleDocumentLauncher()
       menusHelper.createFizzyPaintLauncher()

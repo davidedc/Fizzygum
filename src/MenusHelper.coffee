@@ -792,11 +792,11 @@ class MenusHelper
 
   popUpSupportDocsMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Support Docs"
-    menu.addMenuItem "welcome message", true, @, "createWelcomeMessageWindow", "welcome message"
+    menu.addMenuItem "welcome message", true, @, "createWelcomeMessageWindowAndShortcut", "welcome message"
 
     menu.popUpAtHand()
 
-  createWelcomeMessageWindow: ->
+  createWelcomeMessageWindowAndShortcut: ->
     simpleDocument = new SimpleDocumentWdgt()
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
@@ -924,3 +924,93 @@ class MenusHelper
     world.add readmeLauncher
     readmeLauncher.setExtent new Point 75, 75
     readmeLauncher.fullChanged()
+
+  createHowToSaveMessageOpener: ->
+    scriptWdgt = new ScriptWdgt """
+
+     menusHelper.createHowToSaveMessageWindowOrBringItUpIfAlreadyCreated()
+
+
+    """
+    # the starting script string above is not
+    # actually saved, it's just there as starting
+    # content, so let's save it
+    scriptWdgt.saveScript()
+
+    wm = new WindowWdgt nil, nil, scriptWdgt
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    wm.changed()
+
+    toolbarsOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "How to save", new FloppyDiskIconWdgt()
+    # this "add" is going to try to position the reference
+    # in some smart way (i.e. according to a grid)
+    world.add toolbarsOpenerLauncher
+    toolbarsOpenerLauncher.setExtent new Point 75, 75
+    toolbarsOpenerLauncher.fullChanged()
+    return wm
+
+
+  createHowToSaveMessageWindowOrBringItUpIfAlreadyCreated: ->
+    if world.howToSaveDocWindow?
+      if !world.howToSaveDocWindow.destroyed and world.howToSaveDocWindow.parent?
+        world.add world.howToSaveDocWindow
+        world.howToSaveDocWindow.bringToForeground()
+        world.howToSaveDocWindow.fullRawMoveTo world.hand.position().add new Point 100, -50
+        world.howToSaveDocWindow.fullRawMoveWithin world
+        return
+
+    simpleDocument = new SimpleDocumentWdgt()
+    sdspw = simpleDocument.simpleDocumentScrollPanel
+
+    sdspw.fullRawMoveTo new Point 114, 10
+    sdspw.rawSetExtent new Point 365, 405
+
+    startingContent = new FloppyDiskIconWdgt()
+    startingContent.rawSetExtent new Point 85, 85
+
+    sdspw.setContents startingContent, 5
+    startingContent.layoutSpecDetails.setElasticity 0
+    startingContent.layoutSpecDetails.setAlignmentToCenter()
+
+    startingContent = new SimplePlainTextWdgt(
+      "Saving",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 24
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+
+    sdspw.addDivider()
+
+
+    sdspw.addNormalParagraph "There are a couple of ways to save in Fizzygum.\n\nHowever, stable saving solutions are only available in private-beta versions.\n\nIn the meantime that these solutions make their way into the public version, the Fizzygum team can consult with you to connect Fizzygum to databases and/or tailor saving functionality for you.\n\nPlease enquiry via one of the Fizzygum contacts here:"
+
+    sdspw.addSpacer()
+
+    startingContent = new SimpleLinkWdgt "contacts"
+    startingContent.rawSetExtent new Point 405, 50
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    wm = new WindowWdgt nil, nil, simpleDocument
+    wm.fullRawMoveTo new Point 114, 10
+    wm.rawSetExtent new Point 365, 405
+    world.add wm
+    wm.setTitleWithoutPrependedContentName "How to save"
+    wm.changed()
+
+    simpleDocument.disableDragsDropsAndEditing()
+
+    # if we don't do this, the window would ask to save content
+    # when closed. Just close it instead.
+    # TODO: should be done using a flag, we don't like
+    # to inject code like this: the source is not tracked
+    simpleDocument.closeFromContainerWindow = (containerWindow) ->
+      containerWindow.close()
+
+
+    world.howToSaveDocWindow = wm
+

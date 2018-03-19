@@ -128,7 +128,7 @@ class ScriptWdgt extends Widget
     textHeight = @height() - 2 * @externalPadding - @internalPadding - 15
     textBottom = @top() + @externalPadding + textHeight
     textWidth = @width() - 2 * @externalPadding
-    buttonsWidth = (textWidth - 2 * @internalPadding - WorldMorph.preferencesAndSettings.handleSize)/2
+    buttonsWidth = Math.round((textWidth - 2 * @internalPadding - WorldMorph.preferencesAndSettings.handleSize)/2)
 
     if @tempPromptEntryField.parent == @
       @tempPromptEntryField.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
