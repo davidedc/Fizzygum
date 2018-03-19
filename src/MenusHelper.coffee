@@ -223,12 +223,12 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    fizzyPaintLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Simple docs", new TypewriterIconWdgt()
+    simpleDocumentLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Simple docs", new TypewriterIconWdgt()
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
-    world.add fizzyPaintLauncher
-    fizzyPaintLauncher.setExtent new Point 75, 75
-    fizzyPaintLauncher.fullChanged()
+    world.add simpleDocumentLauncher
+    simpleDocumentLauncher.setExtent new Point 75, 75
+    simpleDocumentLauncher.fullChanged()
     return wm
 
   createSimpleDocumentLauncherAndItsIcon: ->
@@ -256,17 +256,47 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    fizzyPaintLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Simple slides", new SimpleSlideIconWdgt()
+    simpleSlideLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Simple slides", new SimpleSlideIconWdgt()
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
-    world.add fizzyPaintLauncher
-    fizzyPaintLauncher.setExtent new Point 75, 75
-    fizzyPaintLauncher.fullChanged()
+    world.add simpleSlideLauncher
+    simpleSlideLauncher.setExtent new Point 75, 75
+    simpleSlideLauncher.fullChanged()
     return wm
 
   createSimpleSlideLauncherAndItsIcon: ->
     wm = @createSimpleSlideLauncher()
     world.add wm
+
+
+  createGenericPanelLauncher: ->
+    scriptWdgt = new ScriptWdgt """
+      genericPanel = new StretchableEditableWdgt()
+      wm = new WindowWdgt nil, nil, genericPanel
+      wm.setExtent new Point 460, 400
+      wm.fullRawMoveTo world.hand.position()
+      wm.fullRawMoveWithin world
+      world.add wm
+      wm.changed()
+    """
+    # the starting script string above is not
+    # actually saved, it's just there as starting
+    # content, so let's save it
+    scriptWdgt.saveScript()
+
+    wm = new WindowWdgt nil, nil, scriptWdgt
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    wm.changed()
+
+    genericPanelLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Generic panel", new GenericPanelIconWdgt()
+    # this "add" is going to try to position the reference
+    # in some smart way (i.e. according to a grid)
+    world.add genericPanelLauncher
+    genericPanelLauncher.setExtent new Point 75, 75
+    genericPanelLauncher.fullChanged()
+    return wm
 
   createToolbarsOpener: ->
     scriptWdgt = new ScriptWdgt """
@@ -301,12 +331,12 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    fizzyPaintLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Toolbars", new ToolbarsIconWdgt()
+    toolbarsOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Toolbars", new ToolbarsIconWdgt()
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
-    world.add fizzyPaintLauncher
-    fizzyPaintLauncher.setExtent new Point 75, 75
-    fizzyPaintLauncher.fullChanged()
+    world.add toolbarsOpenerLauncher
+    toolbarsOpenerLauncher.setExtent new Point 75, 75
+    toolbarsOpenerLauncher.fullChanged()
     return wm
 
   createNewTemplatesWindow: ->

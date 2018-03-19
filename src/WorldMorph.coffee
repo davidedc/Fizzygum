@@ -404,6 +404,7 @@ class WorldMorph extends PanelWdgt
       menusHelper.createSimpleDocumentLauncher()
       menusHelper.createFizzyPaintLauncher()
       menusHelper.createSimpleSlideLauncher()
+      menusHelper.createGenericPanelLauncher()
       menusHelper.createToolbarsOpener()
 
   # some test urls:

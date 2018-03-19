@@ -26,6 +26,58 @@ class StretchableEditableWdgt extends Widget
     @buildAndConnectChildren()
     @invalidateLayout()
 
+  colloquialName: ->
+    "Generic panel"
+
+  representativeIcon: ->
+    new GenericPanelIconWdgt()
+
+
+  createToolsPanel: ->
+
+  createNewStretchablePanel: ->
+    @stretchableWidgetContainer = new StretchableWidgetContainerWdgt()
+    @add @stretchableWidgetContainer
+
+
+  reLayout: ->
+    # here we are disabling all the broken
+    # rectangles. The reason is that all the
+    # submorphs of the inspector are within the
+    # bounds of the parent Widget. This means that
+    # if only the parent morph breaks its rectangle
+    # then everything is OK.
+    # Also note that if you attach something else to its
+    # boundary in a way that sticks out, that's still
+    # going to be painted and moved OK.
+    trackChanges.push false
+
+    labelBottom = @top() + @externalPadding
+
+
+    # stretchableWidgetContainer --------------------------
+
+    stretchableWidgetContainerWidth = @width() - 2*@externalPadding
+    
+    b = @bottom() - (2 * @externalPadding)
+    stretchableWidgetContainerHeight =  @height() - 2 * @externalPadding
+    stretchableWidgetContainerBottom = labelBottom + stretchableWidgetContainerHeight
+    stretchableWidgetContainerLeft = @left() + @externalPadding
+
+    if @stretchableWidgetContainer.parent == @
+      @stretchableWidgetContainer.fullRawMoveTo new Point stretchableWidgetContainerLeft, labelBottom
+      @stretchableWidgetContainer.setExtent new Point stretchableWidgetContainerWidth, stretchableWidgetContainerHeight
+
+    # ----------------------------------------------
+
+
+    trackChanges.pop()
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+      world.alignIDsOfNextMorphsInSystemTests()
+
+    @layoutIsValid = true
+    @notifyChildrenThatParentHasReLayouted()
+
   rawSetExtent: (aPoint) ->
     super
     @reLayout()
@@ -107,9 +159,10 @@ class StretchableEditableWdgt extends Widget
       return
     @parent?.makePencilClear?()
     @dragsDropsAndEditingEnabled = false
-    @toolsPanel.unselectAll?()
-    @toolsPanel.destroy()
-    @toolsPanel = nil
+    if @toolsPanel?
+      @toolsPanel.unselectAll?()
+      @toolsPanel.destroy()
+      @toolsPanel = nil
     @stretchableWidgetContainer.disableDragsDropsAndEditing @
     @invalidateLayout()
 
