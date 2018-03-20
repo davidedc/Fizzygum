@@ -36,7 +36,7 @@ class ToolTipWdgt extends Widget
     # do nothing.
     if morphInvokingThis.root() == world and morphInvokingThis.boundsContainPoint world.hand.position()
       theBubble = new @ contents, morphInvokingThis
-      theBubble.openAt theBubble.morphInvokingThis.rightCenter().add new Point -8, 0
+      theBubble.openAt morphInvokingThis.topRight()
 
   @cancelAllScheduledToolTips: ->
     for eachTimeout in @ongoingTimeouts
@@ -56,12 +56,9 @@ class ToolTipWdgt extends Widget
   
   # ToolTipWdgt invoking:
   openAt: (pos) ->
-    # console.log "tool tip opening"
-    @fullRawMoveTo pos.subtract new Point 0, @height()
-    @fullRawMoveWithin world
-
     @buildAndConnectChildren()
-
+    @fullRawMoveTo pos.subtract new Point 8, @height()
+    @fullRawMoveWithin world
     world.add @
     @addShadow()
     @fullChanged()
