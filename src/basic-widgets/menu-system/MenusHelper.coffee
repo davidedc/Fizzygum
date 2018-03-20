@@ -468,6 +468,19 @@ class MenusHelper
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
+    startingContent = new SimplePlainTextWdgt(
+      "Useful characters:",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    startingContent.toggleWeight()
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+    # in March 2018, greek chars take a long time to paint on OSX/Chrome so
+    # not adding those to the paragraph, however here they are:
+    # αβγδεζηθικλμνξοπρστυφχψω ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ
+    specialCharsParagraph = sdspw.addNormalParagraph "… †‡§ ↵⏎⇧␣ ☐☑☒✓X✗ •‣⁃◦ °±⁻¹²³µ×÷ℓΩ√∛∜∝∞∟∠∡∩∪∿≈⊂⋅⌀▫◽◻□⩽⩾ ¼½¾⅛⅜⅝⅞ ←↑→↓↔↕↵⇎⇏⇑⇒⇓⇔⇕ ©®™ $£€¥"
+    specialCharsParagraph.setFontSize 16
+
+
     sdspw.makeAllContentIntoTemplates()
 
     wm = new WindowWdgt nil, nil, sdspw
