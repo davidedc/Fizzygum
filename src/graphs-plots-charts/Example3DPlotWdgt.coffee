@@ -179,7 +179,6 @@ class Example3DPlotWdgt extends Widget
         @previousMousePoint = pos
 
   mouseDownLeft: (pos) ->
-    super
     @autoRotate = false
 
   mouseUpLeft: ->
