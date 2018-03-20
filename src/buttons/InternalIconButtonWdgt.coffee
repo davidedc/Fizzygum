@@ -19,7 +19,7 @@ class InternalIconButtonWdgt extends EmptyButtonMorph
     @color_hover = new Color 255,153,0
     @color_pressed = @color_hover
     @appearance = new InternalIconAppearance @
-    @toolTipMessage = "pop-out window from documents, make it un-droppable into other documents"
+    @toolTipMessage = "pop-out window from documents,\nmake it un-droppable\ninto other documents"
 
 
   actOnClick: ->
