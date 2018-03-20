@@ -44,7 +44,6 @@ class Example3DPlotWdgt extends Widget
   # page is widened/narrowed.
 
   justDropped: (whereIn) ->
-    debugger
     super
     if (whereIn instanceof SimpleVerticalStackPanelWdgt) and !(whereIn instanceof WindowWdgt)
       @constrainToRatio()
@@ -54,7 +53,6 @@ class Example3DPlotWdgt extends Widget
       @constrainToRatio()
 
   constrainToRatio: ->
-    debugger
     if @layoutSpecDetails?
       @ratio = @width() / @height()
       @layoutSpecDetails.canSetHeightFreely = false
@@ -67,7 +65,6 @@ class Example3DPlotWdgt extends Widget
       @rawSetExtent new Point @width(), 0
 
   holderWindowJustBeenGrabbed: (whereFrom) ->
-    debugger
     if whereFrom instanceof SimpleVerticalStackPanelWdgt
       @freeFromRatioConstraints()
 
@@ -76,7 +73,6 @@ class Example3DPlotWdgt extends Widget
       @freeFromRatioConstraints()
 
   freeFromRatioConstraints: ->
-    debugger
     if @layoutSpecDetails?
       @layoutSpecDetails.canSetHeightFreely = true
       @ratio = nil
@@ -171,7 +167,6 @@ class Example3DPlotWdgt extends Widget
       @paintHighlight aContext, al, at, w, h
 
   mouseMove: (pos, mouseButton) ->
-    debugger
     if world.hand.draggingSomething() then return
     if mouseButton == 'left'
         if @previousMousePoint?
@@ -188,7 +183,6 @@ class Example3DPlotWdgt extends Widget
     @autoRotate = true
 
   renderingHelper: (context, color, appliedShadow) ->
-
 
     height = @height()
     width = @width()
