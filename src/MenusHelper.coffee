@@ -846,7 +846,7 @@ class MenusHelper
 
     sdspw.addNormalParagraph "Fizzygum enables you to do all of this and more:"
 
-    sdspw.addBulletPoint "make dashboards and visualise data"
+    sdspw.addBulletPoint "make dashboards and visualise data (plots, maps, ...)"
     sdspw.addBulletPoint "author, organise and navigate documents (drawings / text docs / slides)"
     sdspw.addBulletPoint "embed live graphs, dynamic calculations or even entire running programs inside any document, via simple drag & drop"
     sdspw.addBulletPoint "go beyond traditional embedding: you can now infinitely nest and compose programs and documents. Need a program inside a presentation inside a text? You have it"
@@ -986,7 +986,7 @@ class MenusHelper
     sdspw.addDivider()
 
 
-    sdspw.addNormalParagraph "There are a couple of ways to save in Fizzygum.\n\nHowever, stable saving solutions are only available in private-beta versions.\n\nIn the meantime that these solutions make their way into the public version, the Fizzygum team can consult with you to connect Fizzygum to databases and/or tailor saving functionality for you.\n\nPlease enquiry via one of the Fizzygum contacts here:"
+    sdspw.addNormalParagraph "There are a couple of ways to save data in Fizzygum.\n\nHowever, stable saving solutions are only available in private-beta versions.\n\nIn the meantime that these solutions make their way into the public version, the Fizzygum team can consult for you to tailor 'saving' functionality to your needs (save to file, save to cloud, connect to databases etc. ).\n\nPlease enquiry via one of the Fizzygum contacts here:"
 
     sdspw.addSpacer()
 
