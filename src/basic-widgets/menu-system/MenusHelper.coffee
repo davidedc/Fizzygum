@@ -298,6 +298,35 @@ class MenusHelper
     return wm
 
 
+  createPatchProgrammingLauncher: ->
+    scriptWdgt = new ScriptWdgt """
+      reconfPaint = new PatchProgrammingWdgt()
+      wm = new WindowWdgt nil, nil, reconfPaint
+      wm.setExtent new Point 460, 400
+      wm.fullRawMoveTo world.hand.position()
+      wm.fullRawMoveWithin world
+      world.add wm
+      wm.changed()
+    """
+    # the starting script string above is not
+    # actually saved, it's just there as starting
+    # content, so let's save it
+    scriptWdgt.saveScript()
+
+    wm = new WindowWdgt nil, nil, scriptWdgt
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    wm.changed()
+
+    patchProgrammingLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Patch progr.", new PatchProgrammingIconWdgt()
+    # this "add" is going to try to position the reference
+    # in some smart way (i.e. according to a grid)
+    world.add patchProgrammingLauncher
+    patchProgrammingLauncher.setExtent new Point 75, 75
+    patchProgrammingLauncher.fullChanged()
+    return wm
+
   createGenericPanelLauncher: ->
     scriptWdgt = new ScriptWdgt """
       genericPanel = new StretchableEditableWdgt()

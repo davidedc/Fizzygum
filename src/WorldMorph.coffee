@@ -406,6 +406,7 @@ class WorldMorph extends PanelWdgt
       menusHelper.createFizzyPaintLauncher()
       menusHelper.createSimpleSlideLauncher()
       menusHelper.createDashboardsLauncher()
+      menusHelper.createPatchProgrammingLauncher()
       menusHelper.createGenericPanelLauncher()
       menusHelper.createToolbarsOpener()
 
