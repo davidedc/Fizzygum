@@ -18,10 +18,8 @@ class Plot3DCreatorButtonWdgt extends Widget
     @toolTipMessage = "link"
 
   grabbedWidgetSwitcheroo: ->
-
-    switcherooWm = new Example3DPlotWdgt()
+    switcherooWm = new WindowWdgt nil, nil, new Example3DPlotWdgt(), true
     switcherooWm.setExtent new Point 200, 200
-
     return switcherooWm
 
   # otherwise the glassbox bottom will answer on drags
