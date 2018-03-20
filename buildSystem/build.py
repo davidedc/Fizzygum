@@ -258,15 +258,21 @@ def main():
                 filenames = sorted(filenames + sorted(glob(DIRECTORY_WITH_AUTOMATOR_AND_TEST_HARNESS_CODE + "/*.coffee")))
 
     # add the sources from the directories
-    filenames = sorted(filenames + sorted(glob("src/maps" + "/*.coffee")))
+    # the order here has no importance, just try to
+    # give it some sense anyways, from most basic/necessary
+    # to more elaborate/optional
+    filenames = sorted(filenames + sorted(glob("src/mixins" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/basic-data-structures" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/basic-widgets" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/basic-widgets/menu-system" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/patch-programming" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/buttons" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/fizzytiles" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/graphs-plots-charts" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/icons" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/meta" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/mixins" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/patch-programming" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/apps" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/graphs-plots-charts" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/maps" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/fizzytiles" + "/*.coffee")))
 
 
     # Read each file and search it for each sort of dependency.
