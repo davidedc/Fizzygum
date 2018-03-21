@@ -994,7 +994,6 @@ class HandMorph extends Widget
           [skipDragging, displacementDueToGrabDragThreshold] = @checkDraggingTreshold()
           if skipDragging then return
 
-          debugger
           originalMorphToGrab = @morphToGrab
           @morphToGrab = @morphToGrab.grabbedWidgetSwitcheroo()
           morph = @morphToGrab
