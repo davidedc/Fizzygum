@@ -5,7 +5,7 @@ class SlidesToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
     @appearance = new SlidesToolbarIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "items for slides"
 
-  grabbedWidgetSwitcheroo: ->
+  createWidgetToBeHandled: ->
 
     toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
 

@@ -1,4 +1,5 @@
 # REQUIRES HighlightableMixin
+# REQUIRES WidgetCreatorAndSmartPlacerOnClickMixin
 
 # If the widget in the tool panel doesn't
 # need to be interactive (i.e. it's just there
@@ -11,6 +12,12 @@
 class GlassBoxTopWdgt extends Widget
 
   @augmentWith HighlightableMixin, @name
+  @augmentWith WidgetCreatorAndSmartPlacerOnClickMixin, @name
+
+  createWidgetToBeHandled: ->
+    widgetToBeHandled = @parent.children[0].fullCopy()
+    widgetToBeHandled.isTemplate = false
+    return widgetToBeHandled
 
   # grab the widget inside the glass box
   # i.e. the first child of my parent

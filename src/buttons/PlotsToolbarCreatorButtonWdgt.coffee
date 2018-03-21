@@ -5,7 +5,7 @@ class PlotsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
     @appearance = new AllPlotsIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "plots/graphs"
 
-  grabbedWidgetSwitcheroo: ->
+  createWidgetToBeHandled: ->
 
     toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
 

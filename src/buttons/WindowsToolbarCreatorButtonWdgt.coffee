@@ -5,7 +5,7 @@ class WindowsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
     @appearance = new WindowsToolbarIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "many types of\npre-made windows"
 
-  grabbedWidgetSwitcheroo: ->
+  createWidgetToBeHandled: ->
 
     toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
 

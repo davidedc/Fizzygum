@@ -5,7 +5,7 @@ class PatchProgrammingComponentsToolbarCreatorButtonWdgt extends ToolbarCreatorB
     @appearance = new PatchProgrammingComponentsIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "components that can be connected"
 
-  grabbedWidgetSwitcheroo: ->
+  createWidgetToBeHandled: ->
 
     toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
 

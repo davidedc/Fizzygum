@@ -16,7 +16,7 @@ class PlotWithAxesWdgt extends Widget
     @horizAxis = new AxisWdgt -5, 5
     @add @horizAxis
 
-    @setColor WorldMorph.preferencesAndSettings.editableItemBackgroundColor
+    @setColor new Color 242,242,242
 
     @invalidateLayout()
 

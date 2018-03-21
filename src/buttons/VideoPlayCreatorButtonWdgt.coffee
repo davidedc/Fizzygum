@@ -5,7 +5,7 @@ class VideoPlayCreatorButtonWdgt extends ExternalLinkCreatorButtonWdgt
     @appearance = new VideoPlayIconAppearance @
     @toolTipMessage = "link to video"
 
-  grabbedWidgetSwitcheroo: ->
+  createWidgetToBeHandled: ->
     switcheroo = new SimpleVideoLinkWdgt()
     switcheroo.fullRawMoveTo @position()
     switcheroo.rawSetExtent new Point 330, 65

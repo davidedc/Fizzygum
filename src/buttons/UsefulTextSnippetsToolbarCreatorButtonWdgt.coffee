@@ -5,5 +5,5 @@ class UsefulTextSnippetsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdg
     @appearance = new TemplatesIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "Useful text snippets"
 
-  grabbedWidgetSwitcheroo: ->
+  createWidgetToBeHandled: ->
     return menusHelper.createNewTemplatesWindow()

@@ -5,7 +5,7 @@ class TextToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
     @appearance = new TextToolbarIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "Text tools"
 
-  grabbedWidgetSwitcheroo: ->
+  createWidgetToBeHandled: ->
 
     toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
 
