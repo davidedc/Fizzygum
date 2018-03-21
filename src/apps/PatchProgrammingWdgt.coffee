@@ -13,27 +13,11 @@ class PatchProgrammingWdgt extends StretchableEditableWdgt
 
     @toolsPanel.addMany [
       new TextBoxCreatorButtonWdgt()
-      new ExternalLinkCreatorButtonWdgt()
+      new SliderNodeCreatorButtonWdgt()
 
-      new ScatterPlotWithAxesCreatorButtonWdgt()
-      new FunctionPlotWithAxesCreatorButtonWdgt()
-      new BarPlotWithAxesCreatorButtonWdgt()
-      new Plot3DCreatorButtonWdgt()
-
-      new WorldMapCreatorButtonWdgt()
-      new USAMapCreatorButtonWdgt()
-      new MapPinIconWdgt()
-
-      new SpeechBubbleWdgt()
-
-      new ArrowNIconWdgt()
-      new ArrowSIconWdgt()
-      new ArrowWIconWdgt()
-      new ArrowEIconWdgt()
-      new ArrowNWIconWdgt()
-      new ArrowNEIconWdgt()
-      new ArrowSWIconWdgt()
-      new ArrowSEIconWdgt()
+      new ColorPaletteNodeCreatorButtonWdgt()
+      new GrayscalePaletteNodeCreatorButtonWdgt()
+      new CalculatingNodeCreatorButtonWdgt()
     ]
 
 
