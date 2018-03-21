@@ -21,38 +21,12 @@ class PatchProgrammingComponentsToolbarCreatorButtonWdgt extends Widget
 
     toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
 
-    toolsPanel.add new TextBoxCreatorButtonWdgt()
-    toolsPanel.add new ExternalLinkCreatorButtonWdgt()
-    toolsPanel.add new VideoPlayCreatorButtonWdgt()
-
-    toolsPanel.add new WorldMapCreatorButtonWdgt()
-    toolsPanel.add new USAMapCreatorButtonWdgt()
-
-    toolsPanel.add new RectangleMorph()
-
-    toolsPanel.add new MapPinIconWdgt()
-
-    toolsPanel.add new SpeechBubbleWdgt()
-
-    toolsPanel.add new DestroyIconMorph()
-    toolsPanel.add new ScratchAreaIconMorph()
-    toolsPanel.add new FloraIconMorph()
-    toolsPanel.add new ScooterIconMorph()
-    toolsPanel.add new HeartIconMorph()
-
-    toolsPanel.add new FizzygumLogoIconWdgt()
-    toolsPanel.add new FizzygumLogoWithTextIconWdgt()
-    toolsPanel.add new VaporwaveBackgroundIconWdgt()
-    toolsPanel.add new VaporwaveSunIconWdgt()
-
-    toolsPanel.add new ArrowNIconWdgt()
-    toolsPanel.add new ArrowSIconWdgt()
-    toolsPanel.add new ArrowWIconWdgt()
-    toolsPanel.add new ArrowEIconWdgt()
-    toolsPanel.add new ArrowNWIconWdgt()
-    toolsPanel.add new ArrowNEIconWdgt()
-    toolsPanel.add new ArrowSWIconWdgt()
-    toolsPanel.add new ArrowSEIconWdgt()
+    toolsPanel.addMany [
+      new SliderNodeCreatorButtonWdgt()
+      new ColorPaletteNodeCreatorButtonWdgt()
+      new GrayscalePaletteNodeCreatorButtonWdgt()
+      new CalculatingNodeCreatorButtonWdgt()
+    ]
 
     toolsPanel.disableDragsDropsAndEditing()
 
@@ -60,7 +34,7 @@ class PatchProgrammingComponentsToolbarCreatorButtonWdgt extends Widget
     switcherooWm.fullRawMoveTo new Point 90, Math.floor((world.height()-192)/2)
     switcherooWm.fullRawMoveWithin world
     world.add switcherooWm
-    switcherooWm.rawSetExtent new Point 105, 300
+    switcherooWm.rawSetExtent new Point 61, 192
 
     return switcherooWm
 
