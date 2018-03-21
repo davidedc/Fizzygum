@@ -17,7 +17,6 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
 
   add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
 
-    debugger
     if (aMorph instanceof ModifiedTextTriangleAnnotationWdgt) or
      (aMorph instanceof HandleMorph)
       super
