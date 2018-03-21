@@ -40,7 +40,7 @@ class StretchableWidgetContainerWdgt extends Widget
       super
     else
       @contents.add aMorph, position, layoutSpec, beingDropped
-      @grandChildAdded()
+      @grandChildAdded?()
 
   setRatio: (@ratio) ->
     @layoutSpecDetails?.canSetHeightFreely = false

@@ -409,6 +409,7 @@ class WorldMorph extends PanelWdgt
       menusHelper.createPatchProgrammingLauncher()
       menusHelper.createGenericPanelLauncher()
       menusHelper.createToolbarsOpener()
+      menusHelper.createDegreesConverterWindowAndShortcut()
 
   # some test urls:
 
