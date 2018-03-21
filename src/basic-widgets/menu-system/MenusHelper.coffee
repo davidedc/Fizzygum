@@ -392,6 +392,7 @@ class MenusHelper
     wm.changed()
 
     toolbarsOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Super Toolbar", new ToolbarsIconWdgt()
+    toolbarsOpenerLauncher.toolTipMessage = "a toolbar to rule them all"
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add toolbarsOpenerLauncher

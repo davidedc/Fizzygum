@@ -15,7 +15,7 @@ class WindowsToolbarCreatorButtonWdgt extends Widget
     @appearance = new WindowsToolbarIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
-    @toolTipMessage = "link"
+    @toolTipMessage = "many types of\npre-made windows"
 
   grabbedWidgetSwitcheroo: ->
 

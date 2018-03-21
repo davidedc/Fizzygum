@@ -15,7 +15,7 @@ class PlotsToolbarCreatorButtonWdgt extends Widget
     @appearance = new AllPlotsIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
-    @toolTipMessage = "text box"
+    @toolTipMessage = "plots/graphs"
 
   grabbedWidgetSwitcheroo: ->
 

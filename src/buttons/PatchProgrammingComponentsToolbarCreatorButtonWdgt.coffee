@@ -15,7 +15,7 @@ class PatchProgrammingComponentsToolbarCreatorButtonWdgt extends Widget
     @appearance = new PatchProgrammingComponentsIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
-    @toolTipMessage = "link"
+    @toolTipMessage = "components that can be connected"
 
   grabbedWidgetSwitcheroo: ->
 

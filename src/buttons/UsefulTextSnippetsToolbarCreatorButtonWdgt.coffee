@@ -15,7 +15,7 @@ class UsefulTextSnippetsToolbarCreatorButtonWdgt extends Widget
     @appearance = new TemplatesIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
-    @toolTipMessage = "link"
+    @toolTipMessage = "Useful text snippets"
 
   grabbedWidgetSwitcheroo: ->
 

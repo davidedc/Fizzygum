@@ -15,7 +15,7 @@ class TextToolbarCreatorButtonWdgt extends Widget
     @appearance = new TextToolbarIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
-    @toolTipMessage = "link"
+    @toolTipMessage = "Text tools"
 
   grabbedWidgetSwitcheroo: ->
 

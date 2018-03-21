@@ -15,7 +15,7 @@ class SlidesToolbarCreatorButtonWdgt extends Widget
     @appearance = new SlidesToolbarIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
-    @toolTipMessage = "link"
+    @toolTipMessage = "items for slides"
 
   grabbedWidgetSwitcheroo: ->
 
