@@ -1035,13 +1035,13 @@ class MenusHelper
     container.add fText
     fText.rememberFractionalSituationInHoldingPanel()
 
-    calc1 = new WindowWdgt nil, nil, new CalculatingPatchNodeWdgt("(in1)->Math.round in1*9/5+32"), true
+    calc1 = new WindowWdgt nil, nil, new CalculatingPatchNodeWdgt("# °C → °F formula\n(in1)->Math.round in1*9/5+32"), true
     calc1.fullRawMoveTo container.position().add new Point 148+xCorrection/2, 19
     calc1.rawSetExtent new Point 241, 167
     container.add calc1
     calc1.rememberFractionalSituationInHoldingPanel()
 
-    calc2 = new WindowWdgt nil, nil, new CalculatingPatchNodeWdgt("(in1)->Math.round (in1-32)*5/9"), true
+    calc2 = new WindowWdgt nil, nil, new CalculatingPatchNodeWdgt("# °F → °C formula\n(in1)->Math.round (in1-32)*5/9"), true
     calc2.fullRawMoveTo container.position().add new Point 148+xCorrection/2, 365
     calc2.rawSetExtent new Point 241, 167
     container.add calc2
