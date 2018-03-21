@@ -391,7 +391,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    toolbarsOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Toolbars", new ToolbarsIconWdgt()
+    toolbarsOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Super Toolbar", new ToolbarsIconWdgt()
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add toolbarsOpenerLauncher
