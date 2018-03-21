@@ -367,11 +367,12 @@ class MenusHelper
       toolsPanel.add new SlidesToolbarCreatorButtonWdgt()
       toolsPanel.add new PlotsToolbarCreatorButtonWdgt()
       toolsPanel.add new PatchProgrammingComponentsToolbarCreatorButtonWdgt()
+      toolsPanel.add new WindowsToolbarCreatorButtonWdgt()
 
       toolsPanel.disableDragsDropsAndEditing()
 
       wm = new WindowWdgt nil, nil, toolsPanel
-      wm.setExtent new Point 60, 226
+      wm.setExtent new Point 60, 261
       wm.fullRawMoveTo new Point 90, Math.floor((world.height()-192)/2)
       wm.fullRawMoveWithin world
       world.add wm
