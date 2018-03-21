@@ -404,7 +404,7 @@ class MenusHelper
     sdspw.rawSetExtent new Point 365, 335
 
     startingContent = new SimplePlainTextWdgt(
-      "Simply drag the items below into your document",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "Simply drag the items below into your document",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 18
     startingContent.isEditable = true
@@ -421,7 +421,7 @@ class MenusHelper
     sdspw.addDivider()
 
     startingContent = new SimplePlainTextWdgt(
-      "Title",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "Title",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontName nil, nil, startingContent.georgiaFontStack
     startingContent.setFontSize 48
@@ -430,7 +430,7 @@ class MenusHelper
     sdspw.add startingContent
 
     startingContent = new SimplePlainTextWdgt(
-      "Section X",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "Section X",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.toggleWeight()
     startingContent.isEditable = true
     startingContent.enableSelecting()
@@ -438,7 +438,7 @@ class MenusHelper
     sdspw.add startingContent
 
     startingContent = new SimplePlainTextWdgt(
-      "Section X.X",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "Section X.X",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.isEditable = true
     startingContent.enableSelecting()
     startingContent.setFontSize 24
@@ -447,7 +447,7 @@ class MenusHelper
     sdspw.addNormalParagraph "Normal text."
 
     startingContent = new SimplePlainTextWdgt(
-      "“Be careful--with quotations, you can damn anything.”\n― André Malraux",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "“Be careful--with quotations, you can damn anything.”\n― André Malraux",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.toggleItalic()
     startingContent.alignRight()
     startingContent.isEditable = true
@@ -461,7 +461,7 @@ class MenusHelper
 
 
     startingContent = new SimplePlainTextWdgt(
-      "Spacers:",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "Spacers:",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.toggleWeight()
     startingContent.isEditable = true
     startingContent.enableSelecting()
@@ -472,7 +472,7 @@ class MenusHelper
     sdspw.addSpacer 3
 
     startingContent = new SimplePlainTextWdgt(
-      "Divider line:",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "Divider line:",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.toggleWeight()
     startingContent.isEditable = true
     startingContent.enableSelecting()
@@ -481,7 +481,7 @@ class MenusHelper
     sdspw.addDivider()
 
     startingContent = new SimplePlainTextWdgt(
-      "Links:",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "Links:",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.toggleWeight()
     startingContent.isEditable = true
     startingContent.enableSelecting()
@@ -498,7 +498,7 @@ class MenusHelper
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
     startingContent = new SimplePlainTextWdgt(
-      "Useful characters:",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "Useful characters:",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.toggleWeight()
     startingContent.isEditable = true
     startingContent.enableSelecting()
@@ -854,7 +854,7 @@ class MenusHelper
 
 
     startingContent = new SimplePlainTextWdgt(
-      "Welcome to Fizzygum",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "Welcome to Fizzygum",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 24
     startingContent.isEditable = true
@@ -862,7 +862,7 @@ class MenusHelper
     sdspw.add startingContent
 
     startingContent = new SimplePlainTextWdgt(
-      "version 1.0.0",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "version 1.0.0",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 9
     startingContent.isEditable = true
@@ -877,7 +877,7 @@ class MenusHelper
     sdspw.addSpacer()
 
     startingContent = new SimplePlainTextWdgt(
-      "What it can do for you",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "What it can do for you",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22
     startingContent.isEditable = true
@@ -899,7 +899,7 @@ class MenusHelper
     sdspw.addSpacer()
 
     startingContent = new SimplePlainTextWdgt(
-      "New here?",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "New here?",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22
     startingContent.isEditable = true
@@ -935,7 +935,7 @@ class MenusHelper
     sdspw.addSpacer(2)
 
     startingContent = new SimplePlainTextWdgt(
-      "Get in touch",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "Get in touch",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22
     startingContent.isEditable = true
@@ -1143,7 +1143,7 @@ class MenusHelper
     startingContent.layoutSpecDetails.setAlignmentToCenter()
 
     startingContent = new SimplePlainTextWdgt(
-      "How to save?",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "How to save?",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 24
     startingContent.isEditable = true
@@ -1166,7 +1166,7 @@ class MenusHelper
     sdspw.addSpacer()
 
     startingContent = new SimplePlainTextWdgt(
-      "Footnotes",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+      "Footnotes",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.toggleWeight()
     startingContent.isEditable = true
     startingContent.enableSelecting()

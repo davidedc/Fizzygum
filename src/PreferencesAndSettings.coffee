@@ -100,6 +100,7 @@ class PreferencesAndSettings
 
     @defaultPanelsBackgroundColor = new Color 255, 250, 245
     @defaultPanelsStrokeColor = new Color 100, 100, 100
+    @editableItemBackgroundColor = new Color 240, 240, 240
 
     @outlineColor = new Color 244,243,244
     # let's create this shortcut just because

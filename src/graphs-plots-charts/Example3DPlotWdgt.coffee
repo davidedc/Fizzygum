@@ -196,7 +196,7 @@ class Example3DPlotWdgt extends Widget
       # of the shadow
       return
 
-    context.fillStyle = (new Color 242,242,242).toString()
+    context.fillStyle = WorldMorph.preferencesAndSettings.editableItemBackgroundColor.toString()
     context.fillRect 0, 0, width, height
 
 

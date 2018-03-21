@@ -2,7 +2,7 @@ class WindowContentsPlaceholderText extends TextMorph2
 
   constructor: ->
 
-    super "Drop a widget in here",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1
+    super "Drop a widget in here",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1
 
     @alignCenter()
     @alignMiddle()
