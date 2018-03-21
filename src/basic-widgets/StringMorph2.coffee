@@ -14,6 +14,7 @@
 #
 # REQUIRES WorldMorph
 # REQUIRES BackBufferMixin
+# REQUIRES ControllerMixin
 # REQUIRES AlignmentSpecHorizontal
 # REQUIRES AlignmentSpecVertical
 # REQUIRES LRUCache
@@ -24,6 +25,7 @@
 class StringMorph2 extends Widget
 
   @augmentWith BackBufferMixin
+  @augmentWith ControllerMixin
 
   # clear unadulterated text
   text: ""
@@ -999,6 +1001,10 @@ class StringMorph2 extends Widget
     else
       menu.addMenuItem "→⋯← crop to fit", true, @, "togglefittingSpecWhenBoundsTooSmall"
 
+    if world.isIndexPage
+      menu.addLine()
+      menu.addMenuItem "set target", true, @, "openTargetSelector", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"
+
 
   togglefittingSpecWhenBoundsTooSmall: ->
     @fittingSpecWhenBoundsTooSmall = not @fittingSpecWhenBoundsTooSmall
@@ -1067,6 +1073,8 @@ class StringMorph2 extends Widget
       @synchroniseTextAndActualText()
       @changed()
 
+    @updateTarget()
+
   considerCurrentTextAsReferenceText: ->
     @hashOfTextConsideredAsReference = hashCode @text
 
@@ -1093,6 +1101,15 @@ class StringMorph2 extends Widget
       @originallySetFontSize = newSize
       @changed()
   
+  openTargetPropertySelector: (ignored, ignored2, theTarget) ->
+    debugger
+    [menuEntriesStrings, functionNamesStrings] = theTarget.stringSetters()
+    menu = new MenuMorph @, false, @, true, true, "choose target property:"
+    for i in [0...menuEntriesStrings.length]
+      menu.addMenuItem menuEntriesStrings[i], true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil, theTarget, functionNamesStrings[i]
+    if menuEntriesStrings.length == 0
+      menu = new MenuMorph @, false, @, true, true, "no target properties available"
+    menu.popUpAtHand()
   
   numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
@@ -1100,6 +1117,20 @@ class StringMorph2 extends Widget
     functionNamesStrings.push "setAlphaScaled", "setFontSize", "setText"
     return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
   
+  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
+    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
+    menuEntriesStrings.push "bang!", "text"
+    functionNamesStrings.push "bang", "setText"
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+
+  updateTarget: ->
+    if @action and @action != ""
+      @target[@action].call @target, @text, nil, @connectionsCalculationToken
+    return
+
+  reactToTargetConnection: ->
+    @updateTarget()
+
   
   # StringMorph2 editing:
   edit: ->
