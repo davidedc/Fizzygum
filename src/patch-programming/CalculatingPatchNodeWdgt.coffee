@@ -5,8 +5,11 @@ class CalculatingPatchNodeWdgt extends Widget
   @augmentWith ControllerMixin
 
   tempPromptEntryField: nil
-  defaultContents: nil
+  defaultFormulaBoxContents: nil
   textMorph: nil
+
+  formulaTextBoxLabel: nil
+  outputTextBoxLabel: nil
 
   outputTextArea: nil
   outputTextAreaText: nil
@@ -45,7 +48,7 @@ class CalculatingPatchNodeWdgt extends Widget
   # external padding
   internalPadding: 5
 
-  constructor: (@defaultContents = "") ->
+  constructor: (@defaultFormulaBoxContents = "# function with formula here e.g.\n# (in1) -> in1 * 2\n") ->
     super new Point 200,400
     @buildAndConnectChildren()
 
@@ -181,7 +184,7 @@ class CalculatingPatchNodeWdgt extends Widget
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
-    @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
+    @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultFormulaBoxContents, false, 5
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
     @tempPromptEntryField.color = new Color 255, 255, 255
@@ -192,7 +195,7 @@ class CalculatingPatchNodeWdgt extends Widget
     @textMorph.enableSelecting()
     @add @tempPromptEntryField
 
-    @outputTextArea = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
+    @outputTextArea = new SimplePlainTextScrollPanelWdgt "", false, 5
     @outputTextArea.disableDrops()
     @outputTextArea.contents.disableDrops()
     @outputTextArea.color = new Color 255, 255, 255
@@ -201,6 +204,17 @@ class CalculatingPatchNodeWdgt extends Widget
     @outputTextAreaText.setFontName nil, nil, @outputTextAreaText.monoFontStack
     @outputTextAreaText.isEditable = false
     @add @outputTextArea
+
+
+    @formulaTextBoxLabel = new StringMorph2 "Formula", WorldMorph.preferencesAndSettings.textInButtonsFontSize
+    @formulaTextBoxLabel.toggleHeaderLine()
+    #@formulaTextBoxLabel.alignCenter()
+    @add @formulaTextBoxLabel
+
+    @outputTextBoxLabel = new StringMorph2 "Output", WorldMorph.preferencesAndSettings.textInButtonsFontSize
+    @outputTextBoxLabel.toggleHeaderLine()
+    #@outputTextBoxLabel.alignCenter()
+    @add @outputTextBoxLabel
 
 
     @invalidateLayout()
@@ -228,18 +242,26 @@ class CalculatingPatchNodeWdgt extends Widget
     # going to be painted and moved OK.
     trackChanges.push false
 
-    availableHeight = @height() - 2 * @externalPadding - @internalPadding
+    availableHeight = @height() - 2 * @externalPadding - 3 * @internalPadding - 2 * 15
     text1Height = Math.round(availableHeight * 2/3)
     text2Height = Math.round(availableHeight * 1/3)
 
-    textBottom = @top() + @externalPadding + text1Height
+    textBottom = @top() + @externalPadding + 15 + @internalPadding + text1Height
+
+    if @formulaTextBoxLabel.parent == @
+      @formulaTextBoxLabel.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
+      @formulaTextBoxLabel.rawSetExtent new Point @width() - 2 * @externalPadding, 15
 
     if @tempPromptEntryField.parent == @
-      @tempPromptEntryField.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
+      @tempPromptEntryField.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding + 15 + @internalPadding
       @tempPromptEntryField.rawSetExtent new Point @width() - 2 * @externalPadding, text1Height
 
+    if @outputTextBoxLabel.parent == @
+      @outputTextBoxLabel.fullRawMoveTo new Point @left() + @externalPadding, @tempPromptEntryField.bottom() + @internalPadding
+      @outputTextBoxLabel.rawSetExtent new Point @width() - 2 * @externalPadding, 15
+
     if @outputTextArea.parent == @
-      @outputTextArea.fullRawMoveTo new Point @left() + @externalPadding, textBottom + @internalPadding
+      @outputTextArea.fullRawMoveTo new Point @left() + @externalPadding, textBottom + @internalPadding + 15 + @internalPadding
       @outputTextArea.rawSetExtent new Point @width() - 2 * @externalPadding, text2Height
 
 
