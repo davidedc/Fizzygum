@@ -967,8 +967,42 @@ class MenusHelper
     readmeLauncher.setExtent new Point 75, 75
     readmeLauncher.fullChanged()
 
-  createDegreesConverterWindowAndShortcut: ->
-    debugger
+  createDegreesConverterOpener: ->
+    scriptWdgt = new ScriptWdgt """
+
+     menusHelper.createDegreesConverterWindowOrBringItUpIfAlreadyCreated()
+
+
+    """
+    # the starting script string above is not
+    # actually saved, it's just there as starting
+    # content, so let's save it
+    scriptWdgt.saveScript()
+
+    wm = new WindowWdgt nil, nil, scriptWdgt
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    wm.changed()
+
+    degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "°C ↔ °F", new DegreesConverterIconWdgt()
+    # this "add" is going to try to position the reference
+    # in some smart way (i.e. according to a grid)
+    world.add degreesConverterOpenerLauncher
+    degreesConverterOpenerLauncher.setExtent new Point 75, 75
+    degreesConverterOpenerLauncher.fullChanged()
+    return wm
+
+
+  createDegreesConverterWindowOrBringItUpIfAlreadyCreated: ->
+    if world.degreesConverterWindow?
+      if !world.degreesConverterWindow.destroyed and world.degreesConverterWindow.parent?
+        world.add world.degreesConverterWindow
+        world.degreesConverterWindow.bringToForeground()
+        world.degreesConverterWindow.fullRawMoveTo world.hand.position().add new Point 100, -50
+        world.degreesConverterWindow.fullRawMoveWithin world
+        return
+
     xCorrection = 32
     yCorrection = 50
     patchProgrammingWdgt = new PatchProgrammingWdgt()
@@ -1050,12 +1084,14 @@ class MenusHelper
     cText.isEditable = true
     fText.isEditable = true
 
-    degreesConverterLauncher = new IconicDesktopSystemDocumentShortcutWdgt wm, "°C ↔ °F", new DegreesConverterIconWdgt()
-    # this "add" is going to try to position the reference
-    # in some smart way (i.e. according to a grid)
-    world.add degreesConverterLauncher
-    degreesConverterLauncher.setExtent new Point 75, 75
-    degreesConverterLauncher.fullChanged()
+    # if we don't do this, the window would ask to save content
+    # when closed. Just close it instead.
+    # TODO: should be done using a flag, we don't like
+    # to inject code like this: the source is not tracked
+    patchProgrammingWdgt.closeFromContainerWindow = (containerWindow) ->
+      containerWindow.close()
+
+    world.degreesConverterWindow = wm
 
   createHowToSaveMessageOpener: ->
     scriptWdgt = new ScriptWdgt """
