@@ -362,12 +362,14 @@ class MenusHelper
       # tools -------------------------------
       toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
 
-      toolsPanel.add new TextToolbarCreatorButtonWdgt()
-      toolsPanel.add new UsefulTextSnippetsToolbarCreatorButtonWdgt()
-      toolsPanel.add new SlidesToolbarCreatorButtonWdgt()
-      toolsPanel.add new PlotsToolbarCreatorButtonWdgt()
-      toolsPanel.add new PatchProgrammingComponentsToolbarCreatorButtonWdgt()
-      toolsPanel.add new WindowsToolbarCreatorButtonWdgt()
+      toolsPanel.addMany [
+        new TextToolbarCreatorButtonWdgt()
+        new UsefulTextSnippetsToolbarCreatorButtonWdgt()
+        new SlidesToolbarCreatorButtonWdgt()
+        new PlotsToolbarCreatorButtonWdgt()
+        new PatchProgrammingComponentsToolbarCreatorButtonWdgt()
+        new WindowsToolbarCreatorButtonWdgt()
+      ]
 
       toolsPanel.disableDragsDropsAndEditing()
 
