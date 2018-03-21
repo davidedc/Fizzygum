@@ -19,7 +19,7 @@ class CalculatingNodeCreatorButtonWdgt extends Widget
 
   grabbedWidgetSwitcheroo: ->
     switcherooWm = new WindowWdgt nil, nil, new CalculatingPatchNodeWdgt(), true
-    switcherooWm.setExtent new Point 260, 265
+    switcherooWm.rawSetExtent new Point 260, 265
     return switcherooWm
 
   # otherwise the glassbox bottom will answer on drags

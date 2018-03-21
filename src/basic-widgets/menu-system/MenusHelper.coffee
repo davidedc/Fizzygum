@@ -800,7 +800,7 @@ class MenusHelper
   createExampleScatterPlotWithAxes: ->
     exampleScatterPlot = new ExampleScatterPlotWdgt()
     plotWithAxesWdgt = new PlotWithAxesWdgt exampleScatterPlot
-    plotWithAxesWdgt.setExtent new Point 300, 300
+    plotWithAxesWdgt.rawSetExtent new Point 300, 300
     world.create plotWithAxesWdgt
 
   createExampleFunctionPlot: ->

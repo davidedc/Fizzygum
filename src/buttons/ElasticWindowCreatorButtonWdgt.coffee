@@ -23,7 +23,7 @@ class ElasticWindowCreatorButtonWdgt extends Widget
     genericPanel = new StretchableEditableWdgt()
     switcherooWm = new WindowWdgt nil, nil, genericPanel, true, true
     switcherooWm.setTitleWithoutPrependedContentName "elastic panel"
-    switcherooWm.setExtent new Point 200, 200
+    switcherooWm.rawSetExtent new Point 200, 200
 
     return switcherooWm
 

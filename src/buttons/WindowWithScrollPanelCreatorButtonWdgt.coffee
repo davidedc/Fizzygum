@@ -19,7 +19,7 @@ class WindowWithScrollPanelCreatorButtonWdgt extends Widget
 
   grabbedWidgetSwitcheroo: ->
     switcherooWm = new WindowWdgt nil, nil, new ScrollPanelWdgt(), true, true
-    switcherooWm.setExtent new Point 200, 200
+    switcherooWm.rawSetExtent new Point 200, 200
     return switcherooWm
 
   # otherwise the glassbox bottom will answer on drags

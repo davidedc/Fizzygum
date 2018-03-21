@@ -21,7 +21,7 @@ class ScatterPlotWithAxesCreatorButtonWdgt extends Widget
 
     exampleScatterPlot = new ExampleScatterPlotWdgt()
     switcherooWm = new PlotWithAxesWdgt exampleScatterPlot
-    switcherooWm.setExtent new Point 200, 200
+    switcherooWm.rawSetExtent new Point 200, 200
 
     return switcherooWm
 
