@@ -3741,11 +3741,12 @@ class Widget extends TreeNode
 
     if @contents?
       whereToAct = @contents
+      if whereToAct.dragsDropsAndEditingEnabled
+        return
+      whereToAct.dragsDropsAndEditingEnabled = true
     else
       whereToAct = @
 
-    if whereToAct.dragsDropsAndEditingEnabled
-      return
 
     @parent?.makePencilYellow?()
     whereToAct.dragsDropsAndEditingEnabled = true
@@ -3772,11 +3773,12 @@ class Widget extends TreeNode
 
     if @contents?
       whereToAct = @contents
+      if !whereToAct.dragsDropsAndEditingEnabled
+        return
+      whereToAct.dragsDropsAndEditingEnabled = false
     else
       whereToAct = @
 
-    if !whereToAct.dragsDropsAndEditingEnabled
-      return
 
     @parent?.makePencilClear?()
     whereToAct.disableDrops()

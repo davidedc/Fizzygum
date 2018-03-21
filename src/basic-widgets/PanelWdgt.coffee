@@ -14,11 +14,13 @@ class PanelWdgt extends Widget
   scrollPanel: nil
   extraPadding: 0
   _acceptsDrops: true
+  providesAmenitiesForEditing: true
 
   # if this Panel belongs to a ScrollPanel, then
   # the @scrollPanel points to it
   constructor: (@scrollPanel = nil) ->
     super()
+    @dragsDropsAndEditingEnabled = true
     @appearance = new RectangularAppearance @
 
     @color = WorldMorph.preferencesAndSettings.defaultPanelsBackgroundColor
@@ -173,3 +175,11 @@ class PanelWdgt extends Widget
   keepAllSubmorphsWithin: ->
     @children.forEach (m) =>
       m.fullRawMoveWithin @
+
+  editButtonPressedFromWindowBar: ->
+    debugger
+    if @dragsDropsAndEditingEnabled
+      @disableDragsDropsAndEditing @
+    else
+      @enableDragsDropsAndEditing @
+

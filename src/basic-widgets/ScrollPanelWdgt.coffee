@@ -603,3 +603,28 @@ class ScrollPanelWdgt extends PanelWdgt
   
   toggleTextLineWrapping: ->
     @isTextLineWrapping = not @isTextLineWrapping
+
+  enableDragsDropsAndEditing: (triggeringWidget) ->
+    if !triggeringWidget? then triggeringWidget = @
+    if @dragsDropsAndEditingEnabled
+      return
+    @parent?.makePencilYellow?()
+
+    @enableDrops()
+    @dragsDropsAndEditingEnabled = true
+
+    @contents.enableDragsDropsAndEditing @
+
+  disableDragsDropsAndEditing: (triggeringWidget) ->
+    debugger
+    if !triggeringWidget? then triggeringWidget = @
+    if !@dragsDropsAndEditingEnabled
+      return
+    @parent?.makePencilClear?()
+
+    @disableDrops()
+    @dragsDropsAndEditingEnabled = false
+
+    @contents.disableDragsDropsAndEditing @
+    @invalidateLayout()
+
