@@ -37,12 +37,13 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   reInflating: false
 
   internalExternalSwitchButton: nil
+  alwaysShowInternalExternalButton: nil
 
   # TODO passing the @labelContent doesn't quite work, when
   # you add a widget to the window it overwrites the
   # title which means that this one parameter passed in
   # the constructor has no effect
-  constructor: (@labelContent = "my window", @closeButton, @contents, @internal = false) ->
+  constructor: (@labelContent = "my window", @closeButton, @contents, @internal = false, @alwaysShowInternalExternalButton = false) ->
     super nil, nil, 40, true
 
     if @internal
@@ -332,7 +333,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @resizer = new HandleMorph @
 
   createAndAddInternalExternalSwitchButton: ->
-    if @contents?.providesAmenitiesForEditing and !@internalExternalSwitchButton?
+    if (@contents?.providesAmenitiesForEditing or @alwaysShowInternalExternalButton) and !@internalExternalSwitchButton?
       externalButton = new ExternalIconButtonWdgt()
       internalButton = new InternalIconButtonWdgt()
       if @internal
