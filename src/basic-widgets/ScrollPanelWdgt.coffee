@@ -355,6 +355,10 @@ class ScrollPanelWdgt extends PanelWdgt
       return true
     else
       return false
+
+  scrollToBottom: ->
+    @scrollY -100000
+    @adjustScrollBars()    
   
   scrollY: (steps) ->
     ct = @contents.top()
