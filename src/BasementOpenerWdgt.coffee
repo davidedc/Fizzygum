@@ -31,12 +31,16 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
     if @target.isOrphan()
       @target.unCollapse()
       windowedBasementWdgt = new WindowWdgt nil, nil, @target
-      windowedBasementWdgt.setExtent new Point 460, 400
-      windowedBasementWdgt.spawnNextTo @
+      world.add windowedBasementWdgt
+      windowedBasementWdgt.rawSetExtent new Point 460, 400
+      windowedBasementWdgt.fullRawMoveTo new Point 140, 90
+      windowedBasementWdgt.rememberFractionalSituationInHoldingPanel()
+      menusHelper.createBasementOneOffInfoWindowNextTo windowedBasementWdgt
     else
       # if the basement is not an orphan, then it's
       # visible somewhere and it's in a window
       @target.parent.spawnNextTo @
+      @target.parent.rememberFractionalSituationInHoldingPanel()
 
 
   reactToDropOf: (droppedWidget) ->

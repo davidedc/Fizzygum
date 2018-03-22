@@ -178,6 +178,8 @@ class MenusHelper
       wm.fullRawMoveWithin world
       world.add wm
       wm.changed()
+
+      menusHelper.createDrawingsMakerOneOffInfoWindowNextTo wm
     """
     # the starting script string above is not
     # actually saved, it's just there as starting
@@ -211,6 +213,8 @@ class MenusHelper
       wm.fullRawMoveWithin world
       world.add wm
       wm.changed()
+
+      menusHelper.createDocsMakerOneOffInfoWindowNextTo wm
     """
     # the starting script string above is not
     # actually saved, it's just there as starting
@@ -244,6 +248,9 @@ class MenusHelper
       wm.fullRawMoveWithin world
       world.add wm
       wm.changed()
+ 
+      menusHelper.createSlidesMakerOneOffInfoWindowNextTo wm
+
     """
     # the starting script string above is not
     # actually saved, it's just there as starting
@@ -277,6 +284,8 @@ class MenusHelper
       wm.fullRawMoveWithin world
       world.add wm
       wm.changed()
+
+      menusHelper.createDashboardsMakerOneOffInfoWindowNextTo wm
     """
     # the starting script string above is not
     # actually saved, it's just there as starting
@@ -307,6 +316,8 @@ class MenusHelper
       wm.fullRawMoveWithin world
       world.add wm
       wm.changed()
+      
+      menusHelper.createPatchProgrammingOneOffInfoWindowNextTo wm
     """
     # the starting script string above is not
     # actually saved, it's just there as starting
@@ -336,6 +347,8 @@ class MenusHelper
       wm.fullRawMoveWithin world
       world.add wm
       wm.changed()
+
+      menusHelper.createGenericPanelOneOffInfoWindowNextTo wm
     """
     # the starting script string above is not
     # actually saved, it's just there as starting
@@ -380,6 +393,7 @@ class MenusHelper
       world.add wm
       wm.changed()
 
+      menusHelper.createSuperToolbarOneOffInfoWindowNextTo wm
 
     """
     # the starting script string above is not
@@ -515,6 +529,7 @@ class MenusHelper
 
 
     sdspw.makeAllContentIntoTemplates()
+    sdspw.disableDragsDropsAndEditing()
 
     wm = new WindowWdgt nil, nil, sdspw
     wm.setExtent new Point 370, 335
@@ -972,6 +987,536 @@ class MenusHelper
     readmeLauncher.setExtent new Point 75, 75
     readmeLauncher.fullChanged()
 
+  createSuperToolbarOneOffInfoWindowNextTo: (nextToThisWidget) ->
+    if world.infoDoc_superToolbar_created
+      return nil
+
+    simpleDocument = new SimpleDocumentWdgt()
+    sdspw = simpleDocument.simpleDocumentScrollPanel
+
+    sdspw.fullRawMoveTo new Point 114, 10
+    sdspw.rawSetExtent new Point 365, 405
+
+    startingContent = new ToolbarsIconWdgt()
+    startingContent.rawSetExtent new Point 85, 85
+
+    sdspw.setContents startingContent, 5
+    startingContent.layoutSpecDetails.setElasticity 0
+    startingContent.layoutSpecDetails.setAlignmentToCenter()
+
+    startingContent = new SimplePlainTextWdgt(
+      "Super Toolbar",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 22
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    sdspw.addDivider()    
+
+    sdspw.addNormalParagraph "The Super Toolbar can create all other toolbars for you, and from those toolbars you can create any widget.\n\nThis is handy because any widget can go in any document... so here is a way to access them all.\n\nFor an example on how this is useful, see the video on `mixing widgets`:"
+
+    startingContent = new SimpleVideoLinkWdgt "Mixing widgets"
+    startingContent.rawSetExtent new Point 405, 50
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    wm = new WindowWdgt nil, nil, simpleDocument
+    wm.rawSetExtent new Point 365, 405
+    wm.fullRawMoveFullCenterTo world.center()
+    world.add wm
+    wm.setTitleWithoutPrependedContentName "Super Toolbar info"
+    wm.changed()
+
+    simpleDocument.disableDragsDropsAndEditing()
+    world.infoDoc_superToolbar_created = true
+
+    # if we don't do this, the window would ask to save content
+    # when closed. Just destroy it instead, since we only show
+    # it once.
+    # TODO: should be done using a flag, we don't like
+    # to inject code like this: the source is not tracked
+    simpleDocument.closeFromContainerWindow = (containerWindow) ->
+      containerWindow.destroy()
+
+    wm.fullRawMoveToSideOf nextToThisWidget
+    wm.rememberFractionalSituationInHoldingPanel()
+
+  createDocsMakerOneOffInfoWindowNextTo: (nextToThisWidget) ->
+    if world.infoDoc_docsMaker_created
+      return nil
+
+    simpleDocument = new SimpleDocumentWdgt()
+    sdspw = simpleDocument.simpleDocumentScrollPanel
+
+    sdspw.fullRawMoveTo new Point 114, 10
+    sdspw.rawSetExtent new Point 365, 405
+
+    startingContent = new TypewriterIconWdgt()
+    startingContent.rawSetExtent new Point 85, 85
+
+    sdspw.setContents startingContent, 5
+    startingContent.layoutSpecDetails.setElasticity 0
+    startingContent.layoutSpecDetails.setAlignmentToCenter()
+
+    startingContent = new SimplePlainTextWdgt(
+      "Docs Maker",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 22
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    sdspw.addDivider()    
+
+    sdspw.addNormalParagraph "A basic text editor. But you can drop anything inside it.\n\nNote that the Docs Maker works 'by paragraph': you can drag/drop paragraphs, and when you change the style the whole paragraph is affected.\n\nQuickest way to compose a document is to drag/drop snippets, which you can find by clicking the button that looks like this:"
+
+    startingContent = new TemplatesIconWdgt()
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToCenter()
+
+    sdspw.addSpacer()
+
+    sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
+    sdspw.addNormalParagraph "To see an example of use, check out the video here:"
+
+    startingContent = new SimpleVideoLinkWdgt "Docs Maker"
+    startingContent.rawSetExtent new Point 405, 50
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    wm = new WindowWdgt nil, nil, simpleDocument
+    wm.rawSetExtent new Point 365, 405
+    wm.fullRawMoveFullCenterTo world.center()
+    world.add wm
+    wm.setTitleWithoutPrependedContentName "Docs Maker info"
+    wm.changed()
+
+    simpleDocument.disableDragsDropsAndEditing()
+    world.infoDoc_docsMaker_created = true
+
+    # if we don't do this, the window would ask to save content
+    # when closed. Just destroy it instead, since we only show
+    # it once.
+    # TODO: should be done using a flag, we don't like
+    # to inject code like this: the source is not tracked
+    simpleDocument.closeFromContainerWindow = (containerWindow) ->
+      containerWindow.destroy()
+
+    wm.fullRawMoveToSideOf nextToThisWidget
+    wm.rememberFractionalSituationInHoldingPanel()
+
+  createDrawingsMakerOneOffInfoWindowNextTo: (nextToThisWidget) ->
+    if world.infoDoc_drawingsMaker_created
+      return nil
+
+    simpleDocument = new SimpleDocumentWdgt()
+    sdspw = simpleDocument.simpleDocumentScrollPanel
+
+    sdspw.fullRawMoveTo new Point 114, 10
+    sdspw.rawSetExtent new Point 365, 405
+
+    startingContent = new PaintBucketIconWdgt()
+    startingContent.rawSetExtent new Point 85, 85
+
+    sdspw.setContents startingContent, 5
+    startingContent.layoutSpecDetails.setElasticity 0
+    startingContent.layoutSpecDetails.setAlignmentToCenter()
+
+    startingContent = new SimplePlainTextWdgt(
+      "Drawings Maker",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 22
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    sdspw.addDivider()    
+
+    sdspw.addNormalParagraph "Simple paint app. But you can drop anything inside it (try with the clock) to 'use it as a stamp'."
+
+    sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
+    sdspw.addNormalParagraph "To see an example of use, check out the video here:"
+
+    startingContent = new SimpleVideoLinkWdgt "Docs Maker"
+    startingContent.rawSetExtent new Point 405, 50
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    sdspw.addNormalParagraph "You can also edit the tools you use, by clicking on the pencil icon next to the tool."
+    sdspw.addNormalParagraph "To see how an example of editing the tools, see this video:"
+
+    startingContent = new SimpleVideoLinkWdgt "Hacking Fizzygum from within Fizzygum"
+    startingContent.rawSetExtent new Point 405, 50
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    wm = new WindowWdgt nil, nil, simpleDocument
+    wm.rawSetExtent new Point 365, 405
+    wm.fullRawMoveFullCenterTo world.center()
+    world.add wm
+    wm.setTitleWithoutPrependedContentName "Drawings Maker info"
+    wm.changed()
+
+    simpleDocument.disableDragsDropsAndEditing()
+    world.infoDoc_drawingsMaker_created = true
+
+    # if we don't do this, the window would ask to save content
+    # when closed. Just destroy it instead, since we only show
+    # it once.
+    # TODO: should be done using a flag, we don't like
+    # to inject code like this: the source is not tracked
+    simpleDocument.closeFromContainerWindow = (containerWindow) ->
+      containerWindow.destroy()
+
+    wm.fullRawMoveToSideOf nextToThisWidget
+    wm.rememberFractionalSituationInHoldingPanel()
+
+  createSlidesMakerOneOffInfoWindowNextTo: (nextToThisWidget) ->
+    if world.infoDoc_slidesMaker_created
+      return nil
+
+    simpleDocument = new SimpleDocumentWdgt()
+    sdspw = simpleDocument.simpleDocumentScrollPanel
+
+    sdspw.fullRawMoveTo new Point 114, 10
+    sdspw.rawSetExtent new Point 365, 405
+
+    startingContent = new SimpleSlideIconWdgt()
+    startingContent.rawSetExtent new Point 85, 85
+
+    sdspw.setContents startingContent, 5
+    startingContent.layoutSpecDetails.setElasticity 0
+    startingContent.layoutSpecDetails.setAlignmentToCenter()
+
+    startingContent = new SimplePlainTextWdgt(
+      "Slides Maker",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 22
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    sdspw.addDivider()    
+
+    sdspw.addNormalParagraph "Anything you drop inside the slide 'keeps proportion' when resized, which makes it handy to put pins on maps, add callouts, arrange text in custom layouts etc."
+
+    sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
+    sdspw.addNormalParagraph "To see an example of use, check out the video here:"
+
+    startingContent = new SimpleVideoLinkWdgt "Slides Maker"
+    startingContent.rawSetExtent new Point 405, 50
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    wm = new WindowWdgt nil, nil, simpleDocument
+    wm.rawSetExtent new Point 365, 405
+    wm.fullRawMoveFullCenterTo world.center()
+    world.add wm
+    wm.setTitleWithoutPrependedContentName "Slides Maker info"
+    wm.changed()
+
+    simpleDocument.disableDragsDropsAndEditing()
+    world.infoDoc_slidesMaker_created = true
+
+    # if we don't do this, the window would ask to save content
+    # when closed. Just destroy it instead, since we only show
+    # it once.
+    # TODO: should be done using a flag, we don't like
+    # to inject code like this: the source is not tracked
+    simpleDocument.closeFromContainerWindow = (containerWindow) ->
+      containerWindow.destroy()
+
+    wm.fullRawMoveToSideOf nextToThisWidget
+    wm.rememberFractionalSituationInHoldingPanel()
+
+  createDashboardsMakerOneOffInfoWindowNextTo: (nextToThisWidget) ->
+    if world.infoDoc_dashboardsMaker_created
+      return nil
+
+    simpleDocument = new SimpleDocumentWdgt()
+    sdspw = simpleDocument.simpleDocumentScrollPanel
+
+    sdspw.fullRawMoveTo new Point 114, 10
+    sdspw.rawSetExtent new Point 365, 405
+
+    startingContent = new DashboardsIconWdgt()
+    startingContent.rawSetExtent new Point 85, 85
+
+    sdspw.setContents startingContent, 5
+    startingContent.layoutSpecDetails.setElasticity 0
+    startingContent.layoutSpecDetails.setAlignmentToCenter()
+
+    startingContent = new SimplePlainTextWdgt(
+      "Dashboards Maker",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 22
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    sdspw.addDivider()    
+
+    sdspw.addNormalParagraph "Lets you arrange a choice of graphs/charts/plots/maps in any way you please. The visualisations can also be interactive (as in the 3D plot example, which you can drag to rotate) and/or calculated on the fly.\n\nOn the bar on the left you can find four example graphs and two example maps."
+
+    sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
+    sdspw.addNormalParagraph "To see an example of use, check out the video here:"
+
+    startingContent = new SimpleVideoLinkWdgt "Dashboards Maker"
+    startingContent.rawSetExtent new Point 405, 50
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    wm = new WindowWdgt nil, nil, simpleDocument
+    wm.rawSetExtent new Point 365, 405
+    wm.fullRawMoveFullCenterTo world.center()
+    world.add wm
+    wm.setTitleWithoutPrependedContentName "Dashboards Maker info"
+    wm.changed()
+
+    simpleDocument.disableDragsDropsAndEditing()
+    world.infoDoc_dashboardsMaker_created = true
+
+    # if we don't do this, the window would ask to save content
+    # when closed. Just destroy it instead, since we only show
+    # it once.
+    # TODO: should be done using a flag, we don't like
+    # to inject code like this: the source is not tracked
+    simpleDocument.closeFromContainerWindow = (containerWindow) ->
+      containerWindow.destroy()
+
+    wm.fullRawMoveToSideOf nextToThisWidget
+    wm.rememberFractionalSituationInHoldingPanel()
+
+  createPatchProgrammingOneOffInfoWindowNextTo: (nextToThisWidget) ->
+    if world.infoDoc_patchProgramming_created
+      return nil
+
+    simpleDocument = new SimpleDocumentWdgt()
+    sdspw = simpleDocument.simpleDocumentScrollPanel
+
+    sdspw.fullRawMoveTo new Point 114, 10
+    sdspw.rawSetExtent new Point 365, 405
+
+    startingContent = new PatchProgrammingIconWdgt()
+    startingContent.rawSetExtent new Point 85, 85
+
+    sdspw.setContents startingContent, 5
+    startingContent.layoutSpecDetails.setElasticity 0
+    startingContent.layoutSpecDetails.setAlignmentToCenter()
+
+    startingContent = new SimplePlainTextWdgt(
+      "Patch Programming",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 22
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    sdspw.addDivider()    
+
+    sdspw.addNormalParagraph "'Patch programming' is a type of visual programming where you simply connect together existing widgets. It's useful to make simple applications/utilities quickly."
+    sdspw.addNormalParagraph "You can imagine the widgets being 'patched together' by imaginary wires."
+    sdspw.addNormalParagraph "You can see in the `example docs` folder a °C ↔ °F converter example made with this."
+    sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
+    sdspw.addNormalParagraph "To see an example of use, check out the video here:"
+
+    startingContent = new SimpleVideoLinkWdgt "Patch programming"
+    startingContent.rawSetExtent new Point 405, 50
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    wm = new WindowWdgt nil, nil, simpleDocument
+    wm.rawSetExtent new Point 365, 405
+    wm.fullRawMoveFullCenterTo world.center()
+    world.add wm
+    wm.setTitleWithoutPrependedContentName "Patch Programming info"
+    wm.changed()
+
+    simpleDocument.disableDragsDropsAndEditing()
+    world.infoDoc_patchProgramming_created = true
+
+    # if we don't do this, the window would ask to save content
+    # when closed. Just destroy it instead, since we only show
+    # it once.
+    # TODO: should be done using a flag, we don't like
+    # to inject code like this: the source is not tracked
+    simpleDocument.closeFromContainerWindow = (containerWindow) ->
+      containerWindow.destroy()
+
+    wm.fullRawMoveToSideOf nextToThisWidget
+    wm.rememberFractionalSituationInHoldingPanel()
+
+  createGenericPanelOneOffInfoWindowNextTo: (nextToThisWidget) ->
+    if world.infoDoc_genericPanel_created
+      return nil
+
+    simpleDocument = new SimpleDocumentWdgt()
+    sdspw = simpleDocument.simpleDocumentScrollPanel
+
+    sdspw.fullRawMoveTo new Point 114, 10
+    sdspw.rawSetExtent new Point 365, 405
+
+    startingContent = new GenericPanelIconWdgt()
+    startingContent.rawSetExtent new Point 85, 85
+
+    sdspw.setContents startingContent, 5
+    startingContent.layoutSpecDetails.setElasticity 0
+    startingContent.layoutSpecDetails.setAlignmentToCenter()
+
+    startingContent = new SimplePlainTextWdgt(
+      "Generic Panel",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 22
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    sdspw.addDivider()    
+
+    sdspw.addNormalParagraph "You can use this panel to temporarily hold widgets, or to put together any mix of widgets. It's just a more generic version of slides and dashboards."
+    sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
+    sdspw.addNormalParagraph "To see an example of use, check out the video here:"
+
+    startingContent = new SimpleVideoLinkWdgt "Generic Panels"
+    startingContent.rawSetExtent new Point 405, 50
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    wm = new WindowWdgt nil, nil, simpleDocument
+    wm.rawSetExtent new Point 365, 405
+    wm.fullRawMoveFullCenterTo world.center()
+    world.add wm
+    wm.setTitleWithoutPrependedContentName "Generic Panels info"
+    wm.changed()
+
+    simpleDocument.disableDragsDropsAndEditing()
+    world.infoDoc_genericPanel_created = true
+
+    # if we don't do this, the window would ask to save content
+    # when closed. Just destroy it instead, since we only show
+    # it once.
+    # TODO: should be done using a flag, we don't like
+    # to inject code like this: the source is not tracked
+    simpleDocument.closeFromContainerWindow = (containerWindow) ->
+      containerWindow.destroy()
+
+    wm.fullRawMoveToSideOf nextToThisWidget
+    wm.rememberFractionalSituationInHoldingPanel()
+
+  createBasementOneOffInfoWindowNextTo: (nextToThisWidget) ->
+    if world.infoDoc_basement_created
+      return nil
+
+    simpleDocument = new SimpleDocumentWdgt()
+    sdspw = simpleDocument.simpleDocumentScrollPanel
+
+    sdspw.fullRawMoveTo new Point 114, 10
+    sdspw.rawSetExtent new Point 365, 405
+
+    startingContent = new BasementIconWdgt()
+    startingContent.rawSetExtent new Point 85, 85
+
+    sdspw.setContents startingContent, 5
+    startingContent.layoutSpecDetails.setElasticity 0
+    startingContent.layoutSpecDetails.setAlignmentToCenter()
+
+    startingContent = new SimplePlainTextWdgt(
+      "Basement",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 22
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    sdspw.addDivider()    
+
+    sdspw.addNormalParagraph "Drag things in here to recycle them.\n\nClosed or invisible items also end up in here, and the items that can't be used again are automatically recycled."
+
+    wm = new WindowWdgt nil, nil, simpleDocument
+    wm.rawSetExtent new Point 365, 405
+    wm.fullRawMoveFullCenterTo world.center()
+    world.add wm
+    wm.setTitleWithoutPrependedContentName "Basement info"
+    wm.changed()
+
+    simpleDocument.disableDragsDropsAndEditing()
+    world.infoDoc_basement_created = true
+
+    # if we don't do this, the window would ask to save content
+    # when closed. Just destroy it instead, since we only show
+    # it once.
+    # TODO: should be done using a flag, we don't like
+    # to inject code like this: the source is not tracked
+    simpleDocument.closeFromContainerWindow = (containerWindow) ->
+      containerWindow.destroy()
+
+    wm.fullRawMoveToSideOf nextToThisWidget
+    wm.rememberFractionalSituationInHoldingPanel()
+
+  createWindowsToolbarOneOffInfoWindowNextTo: (nextToThisWidget) ->
+    if world.infoDoc_windowsToolbar_created
+      return nil
+
+    simpleDocument = new SimpleDocumentWdgt()
+    sdspw = simpleDocument.simpleDocumentScrollPanel
+
+    sdspw.fullRawMoveTo new Point 114, 10
+    sdspw.rawSetExtent new Point 365, 405
+
+    startingContent = new WindowsToolbarIconWdgt()
+    startingContent.rawSetExtent new Point 85, 85
+
+    sdspw.setContents startingContent, 5
+    startingContent.layoutSpecDetails.setElasticity 0
+    startingContent.layoutSpecDetails.setAlignmentToCenter()
+
+    startingContent = new SimplePlainTextWdgt(
+      "Types of windows",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 22
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    sdspw.addDivider()    
+
+    sdspw.addNormalParagraph "There are four main types of windows"
+    sdspw.addBulletPoint "empty windows, with a target area where you can drop other items in"
+    sdspw.addBulletPoint "windows that crop their content"
+    sdspw.addBulletPoint "windows with a scroll view on their content"
+    sdspw.addBulletPoint "windows with an elastic panel, such that when resized the content will resize as well"
+
+    sdspw.addNormalParagraph "Check out some examples of use in this video:"
+
+    startingContent = new SimpleVideoLinkWdgt "Using windows"
+    startingContent.rawSetExtent new Point 405, 50
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+
+    wm = new WindowWdgt nil, nil, simpleDocument
+    wm.rawSetExtent new Point 365, 405
+    wm.fullRawMoveFullCenterTo world.center()
+    world.add wm
+    wm.setTitleWithoutPrependedContentName "Windows info"
+    wm.changed()
+
+    simpleDocument.disableDragsDropsAndEditing()
+    world.infoDoc_windowsToolbar_created = true
+
+    # if we don't do this, the window would ask to save content
+    # when closed. Just destroy it instead, since we only show
+    # it once.
+    # TODO: should be done using a flag, we don't like
+    # to inject code like this: the source is not tracked
+    simpleDocument.closeFromContainerWindow = (containerWindow) ->
+      containerWindow.destroy()
+
+    wm.fullRawMoveToSideOf nextToThisWidget
+    wm.rememberFractionalSituationInHoldingPanel()
+    return wm
+
   createDegreesConverterOpener: (inWhichFolder) ->
     scriptWdgt = new ScriptWdgt """
 
@@ -1009,6 +1554,7 @@ class MenusHelper
         world.degreesConverterWindow.bringToForeground()
         world.degreesConverterWindow.fullRawMoveTo world.hand.position().add new Point 100, -50
         world.degreesConverterWindow.fullRawMoveWithin world
+        world.degreesConverterWindow.rememberFractionalSituationInHoldingPanel()
         return
 
     xCorrection = 32
@@ -1135,6 +1681,7 @@ class MenusHelper
         world.howToSaveDocWindow.bringToForeground()
         world.howToSaveDocWindow.fullRawMoveTo world.hand.position().add new Point 100, -50
         world.howToSaveDocWindow.fullRawMoveWithin world
+        world.howToSaveDocWindow.rememberFractionalSituationInHoldingPanel()
         return
 
     simpleDocument = new SimpleDocumentWdgt()
@@ -1196,6 +1743,7 @@ class MenusHelper
     wm.fullRawMoveTo new Point 114, 10
     wm.rawSetExtent new Point 365, 447
     world.add wm
+    wm.rememberFractionalSituationInHoldingPanel()
     wm.setTitleWithoutPrependedContentName "How to save?"
     wm.changed()
 

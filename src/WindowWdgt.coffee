@@ -128,6 +128,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       if previousParent != world
         @fullRawMoveTo @position().add new Point 10, 10
         @fullRawMoveWithin world
+        @rememberFractionalSituationInHoldingPanel()
 
   setTitle: (newTitle) ->
     @label.setText @contents.colloquialName() + ": " + newTitle
