@@ -175,6 +175,7 @@ class Example3DPlotWdgt extends Widget
 
   mouseDownLeft: (pos) ->
     @autoRotate = false
+    @bringToForeground()
 
   mouseUpLeft: ->
     @autoRotate = true
