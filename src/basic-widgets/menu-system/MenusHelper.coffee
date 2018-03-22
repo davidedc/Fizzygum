@@ -529,7 +529,6 @@ class MenusHelper
 
 
     sdspw.makeAllContentIntoTemplates()
-    sdspw.disableDragsDropsAndEditing()
 
     wm = new WindowWdgt nil, nil, sdspw
     wm.setExtent new Point 370, 335
