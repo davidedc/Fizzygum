@@ -1250,6 +1250,11 @@ class Widget extends TreeNode
   rememberFractionalExtentInHoldingPanel: ->
     @extentFractionalInHoldingPanel = @extentFractionalInMorph @parent
 
+  # TODO this is used a lot, where I suspect all we need to do
+  # is to do this automatically ALSO when a widget is added/moved
+  # to a new parent. I don't dare to do this now because I don't
+  # have enough tests in the new environment to check for
+  # bad implications.
   rememberFractionalSituationInHoldingPanel: ->
     @rememberFractionalPositionInHoldingPanel()
     @rememberFractionalExtentInHoldingPanel()

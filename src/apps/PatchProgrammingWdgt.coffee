@@ -1,7 +1,7 @@
 class PatchProgrammingWdgt extends StretchableEditableWdgt
 
   colloquialName: ->   
-    "Patch programming"
+    "Patch Programming"
 
   representativeIcon: ->
     new PatchProgrammingIconWdgt()

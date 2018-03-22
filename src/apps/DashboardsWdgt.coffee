@@ -1,7 +1,7 @@
 class DashboardsWdgt extends StretchableEditableWdgt
 
   colloquialName: ->   
-    "Dashboards"
+    "Dashboards Maker"
 
   representativeIcon: ->
     new DashboardsIconWdgt()

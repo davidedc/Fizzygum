@@ -35,7 +35,7 @@ class SimpleDocumentWdgt extends Widget
     @buildAndConnectChildren()
 
   colloquialName: ->
-    "Simple document"
+    "Docs Maker"
 
   representativeIcon: ->
     new TypewriterIconWdgt()

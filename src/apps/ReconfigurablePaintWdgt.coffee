@@ -10,7 +10,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
 
 
   colloquialName: ->   
-    "Fizzypaint"
+    "Drawings Maker"
 
   representativeIcon: ->
     new PaintBucketIconWdgt()

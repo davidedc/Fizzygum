@@ -1949,7 +1949,6 @@ class WorldMorph extends PanelWdgt
 
     if @isIndexPage
       menu = new MenuMorph @, false, @, true, true, "Desktop"
-      menu.addMenuItem "parts bin ➜", false, @, "popUpDemoMenu", "sample morphs"
       menu.addMenuItem "wallpapers ➜", false, @, "wallpapersMenu", "choose a wallpaper for the Desktop"
       menu.addMenuItem "new folder", true, @, "makeFolder"
       return menu

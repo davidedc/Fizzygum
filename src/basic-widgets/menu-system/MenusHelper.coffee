@@ -174,7 +174,7 @@ class MenusHelper
       reconfPaint = new ReconfigurablePaintWdgt()
       wm = new WindowWdgt nil, nil, reconfPaint
       wm.setExtent new Point 460, 400
-      wm.fullRawMoveTo world.hand.position()
+      wm.fullRawMoveTo new Point 174, 114
       wm.fullRawMoveWithin world
       world.add wm
       wm.changed()
@@ -190,7 +190,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    fizzyPaintLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Fizzypaint", new PaintBucketIconWdgt()
+    fizzyPaintLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Draw", new PaintBucketIconWdgt()
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add fizzyPaintLauncher
@@ -206,8 +206,8 @@ class MenusHelper
     scriptWdgt = new ScriptWdgt """
       reconfPaint = new SimpleDocumentWdgt()
       wm = new WindowWdgt nil, nil, reconfPaint
-      wm.setExtent new Point 460, 400
-      wm.fullRawMoveTo world.hand.position()
+      wm.setExtent new Point 370, 395
+      wm.fullRawMoveTo new Point 170, 88
       wm.fullRawMoveWithin world
       world.add wm
       wm.changed()
@@ -223,7 +223,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    simpleDocumentLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Simple docs", new TypewriterIconWdgt()
+    simpleDocumentLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Docs Maker", new TypewriterIconWdgt()
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add simpleDocumentLauncher
@@ -240,7 +240,7 @@ class MenusHelper
       reconfPaint = new SimpleSlideWdgt()
       wm = new WindowWdgt nil, nil, reconfPaint
       wm.setExtent new Point 460, 400
-      wm.fullRawMoveTo world.hand.position()
+      wm.fullRawMoveTo new Point 168, 134
       wm.fullRawMoveWithin world
       world.add wm
       wm.changed()
@@ -256,7 +256,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    simpleSlideLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Simple slides", new SimpleSlideIconWdgt()
+    simpleSlideLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Slides Maker", new SimpleSlideIconWdgt()
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add simpleSlideLauncher
@@ -300,8 +300,8 @@ class MenusHelper
 
   createPatchProgrammingLauncher: ->
     scriptWdgt = new ScriptWdgt """
-      reconfPaint = new PatchProgrammingWdgt()
-      wm = new WindowWdgt nil, nil, reconfPaint
+      patchProgramming = new PatchProgrammingWdgt()
+      wm = new WindowWdgt nil, nil, patchProgramming
       wm.setExtent new Point 460, 400
       wm.fullRawMoveTo world.hand.position()
       wm.fullRawMoveWithin world
@@ -517,9 +517,10 @@ class MenusHelper
     sdspw.makeAllContentIntoTemplates()
 
     wm = new WindowWdgt nil, nil, sdspw
-    wm.setExtent new Point 365, 335
+    wm.setExtent new Point 370, 335
     wm.setTitleWithoutPrependedContentName "useful snippets"
     wm.changed()
+
     return wm
 
 
