@@ -3,7 +3,7 @@ class ExternalLinkCreatorButtonWdgt extends CreatorButtonWdgt
   constructor: ->
     super
     @appearance = new ExternalLinkIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
-    @toolTipMessage = "link"
+    @toolTipMessage = "external link"
 
   createWidgetToBeHandled: ->
     switcheroo = new SimpleLinkWdgt()

@@ -3,7 +3,7 @@ class FunctionPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
   constructor: ->
     super
     @appearance = new FunctionPlotIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
-    @toolTipMessage = "link"
+    @toolTipMessage = "function plot"
 
   createWidgetToBeHandled: ->
     switcherooWm = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleFunctionPlotWdgt()), true, true

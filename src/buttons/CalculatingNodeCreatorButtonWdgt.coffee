@@ -3,7 +3,7 @@ class CalculatingNodeCreatorButtonWdgt extends CreatorButtonWdgt
   constructor: ->
     super
     @appearance = new CalculatingNodeIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
-    @toolTipMessage = "link"
+    @toolTipMessage = "calculating node"
 
   createWidgetToBeHandled: ->
     switcherooWm = new WindowWdgt nil, nil, new CalculatingPatchNodeWdgt(), true
