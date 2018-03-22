@@ -34,11 +34,13 @@ class PanelWdgt extends Widget
 
   # only the desktop and folder panels have menu entries
   # to invoke this
-  makeFolder: ->
+  makeFolder: (ignored, ignored2, name) ->
+    debugger
     newFolderWindow = new FolderWindowWdgt()
     newFolderWindow.close()
-    newFolderWindow.createReference world.getNextUntitledFolderShortcutName(), @
+    newFolderWindow.createReference (name or world.getNextUntitledFolderShortcutName()), @
     world.howManyUntitledShortcuts++
+    return newFolderWindow
 
   setColor: (aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
