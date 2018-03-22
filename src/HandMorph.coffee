@@ -548,15 +548,9 @@ class HandMorph extends Widget
                 world.automatorRecorderAndPlayer.addMouseClickCommand 2, nil, pointerAndMorphInfo...
               morph.mouseUpRight? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
-          # fire the click
-          if !morph.editorContentPropertyChangerButton and !(morph instanceof HorizontalMenuPanelWdgt)
-            world.lastNonTextPropertyChangerButtonClickedOrDropped = morph
-          morph[expectedClick] @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
-          #console.log ">>> sent event " + expectedClick + " to: " + morph
-
           # also send doubleclick if the
           # two clicks happen on the same morph
-          doubleClickInvoked = false
+          doubleClickInvocation = false
 
           if @doubleClickMorph?
             # three conditions:
@@ -574,8 +568,12 @@ class HandMorph extends Widget
                 if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
                   disableConsecutiveClicksFromSingleClicksDueToFastTests = true
               if !disableConsecutiveClicksFromSingleClicksDueToFastTests
-                @processDoubleClick morph
-                doubleClickInvoked = true
+                # remember we are going to send a double click
+                # but let's do it after. That's because we first
+                # want to send the normal click AND we want to tell
+                # in the normal click that that normal click is part
+                # of a double click
+                doubleClickInvocation = true
                 # triple-click detection starts here, it's just
                 # like chaining a second double-click detection
                 # once this double-click has just been detected
@@ -586,6 +584,8 @@ class HandMorph extends Widget
           else
             @rememberDoubleClickMorphsForAWhile morph
 
+          tripleClickInvocation = false
+
           # also send tripleclick if the
           # three clicks happen on the same morph
           # Don't do anything if a double-click has
@@ -593,7 +593,7 @@ class HandMorph extends Widget
           # fire a tripleClick
           # This pargraph of code is basically the same
           # as the previous one.
-          if !doubleClickInvoked
+          if !doubleClickInvocation
             # same three conditions as double click
             if @mouseButton == "left" and
              @tripleClickMorph == morph and
@@ -606,9 +606,28 @@ class HandMorph extends Widget
                   if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
                     disableConsecutiveClicksFromSingleClicksDueToFastTests = true
                 if !disableConsecutiveClicksFromSingleClicksDueToFastTests
-                  @processTripleClick morph
+                  # remember we are going to send a triple click
+                  # but let's do it after. That's because we first
+                  # want to send the normal click AND we want to tell
+                  # in the normal click that that normal click is part
+                  # of a triple click
+                  tripleClickInvocation = true
               else
                 @forgetTripleClickMorphs()
+
+          # fire the click, sending info on whether this was part
+          # of a double/triple click
+          if !morph.editorContentPropertyChangerButton and !(morph instanceof HorizontalMenuPanelWdgt)
+            world.lastNonTextPropertyChangerButtonClickedOrDropped = morph
+          morph[expectedClick] @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey, doubleClickInvocation, tripleClickInvocation
+          #console.log ">>> sent event " + expectedClick + " to: " + morph
+
+          # now send the double/triple clicks
+          if doubleClickInvocation
+            @processDoubleClick morph
+          if tripleClickInvocation
+            @processTripleClick morph
+
 
       # some pop-overs can contain horizontal sliders
       # and when the user interacts with them, it's easy
