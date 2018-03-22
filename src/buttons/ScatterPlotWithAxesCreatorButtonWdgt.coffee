@@ -6,9 +6,7 @@ class ScatterPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
     @toolTipMessage = "link"
 
   createWidgetToBeHandled: ->
-
-    exampleScatterPlot = new ExampleScatterPlotWdgt()
-    switcherooWm = new PlotWithAxesWdgt exampleScatterPlot
+    switcherooWm = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleScatterPlotWdgt()), true, true
     switcherooWm.rawSetExtent new Point 200, 200
 
     return switcherooWm
