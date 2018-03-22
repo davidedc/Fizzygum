@@ -956,8 +956,8 @@ class MenusHelper
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
     wm = new WindowWdgt nil, nil, simpleDocument
-    wm.fullRawMoveTo new Point 114, 10
     wm.rawSetExtent new Point 365, 405
+    wm.fullRawMoveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Welcome"
     wm.changed()
