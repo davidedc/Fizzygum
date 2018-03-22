@@ -362,12 +362,10 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @editButton = new EditIconButtonWdgt @
       @add @editButton, nil, nil, nil, true
 
-      @makePencilYellow()
-      # we also need to set directly the color
-      # because the oroginal "color_normal" has
-      # been copied already to "color", so
-      # we need to set "color" too in this case
-      @editButton.setColor new Color 248, 188, 58
+      if @contents.dragsDropsAndEditingEnabled
+        @makePencilYellow()
+      else
+        @makePencilClear()
 
   initialiseDefaultWindowContentLayoutSpec: ->
     super
