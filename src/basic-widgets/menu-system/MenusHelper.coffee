@@ -971,7 +971,7 @@ class MenusHelper
     readmeLauncher.setExtent new Point 75, 75
     readmeLauncher.fullChanged()
 
-  createDegreesConverterOpener: ->
+  createDegreesConverterOpener: (inWhichFolder) ->
     scriptWdgt = new ScriptWdgt """
 
      menusHelper.createDegreesConverterWindowOrBringItUpIfAlreadyCreated()
@@ -992,9 +992,12 @@ class MenusHelper
     degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "°C ↔ °F", new DegreesConverterIconWdgt()
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
-    world.add degreesConverterOpenerLauncher
+    
     degreesConverterOpenerLauncher.setExtent new Point 75, 75
-    degreesConverterOpenerLauncher.fullChanged()
+    if inWhichFolder?
+      inWhichFolder.contents.contents.add degreesConverterOpenerLauncher
+    else
+      world.add degreesConverterOpenerLauncher
     return wm
 
 
