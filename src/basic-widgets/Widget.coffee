@@ -1310,6 +1310,15 @@ class Widget extends TreeNode
       debugger
 
     @fullRawMoveTo aPoint.subtract @extent().floorDivideBy 2
+
+  fullRawMoveToSideOf: (aWidget) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
+    @fullRawMoveTo aWidget.topRight().add new Point 10, -Math.round((@height() - aWidget.height())/2)
+    @fullRawMoveWithin @parent
   
   fullRawMoveFullCenterTo: (aPoint) ->
     # TODO in theory the low-level APIs should only be
