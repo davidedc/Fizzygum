@@ -375,7 +375,7 @@ class MenusHelper
 
       wm = new WindowWdgt nil, nil, toolsPanel
       wm.setExtent new Point 60, 261
-      wm.fullRawMoveTo new Point 90, Math.floor((world.height()-192)/2)
+      wm.fullRawMoveTo new Point 170, 170
       wm.fullRawMoveWithin world
       world.add wm
       wm.changed()
