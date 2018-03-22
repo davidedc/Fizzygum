@@ -1123,6 +1123,10 @@ class HandMorph extends Widget
 
       # autoScrolling support:
       if @floatDraggingSomething()
+        widgetBeingFloatDragged = @children[0]
+        # if we are dragging stuff that can't be dropped
+        # (e.g. external windows) then nothing happens
+        if !widgetBeingFloatDragged.rejectsBeingDropped? or !widgetBeingFloatDragged.rejectsBeingDropped()
           if newMorph instanceof ScrollPanelWdgt
               if !newMorph.boundingBox().insetBy(
                 WorldMorph.preferencesAndSettings.scrollBarsThickness * 3
