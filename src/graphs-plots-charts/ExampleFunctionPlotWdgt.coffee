@@ -85,7 +85,7 @@ class ExampleFunctionPlotWdgt extends GraphsPlotsChartsWdgt
     angle = @seededRandom()
     for i in [0..1000]
       xPos = (i/1000)*width
-      heightPerc = 0.5 + Math.sin(i/(100))/(3+3*@seededRandom()) - i/(5000+5000*angle) + @seeded_randn_bm() / 70
+      heightPerc = 0.5 + Math.sin(10*angle+i/(300*(angle+0.01)))/3 - i/(5000+50000*angle)
       context.fillRect xPos, availableHeight * heightPerc, 2,2
 
     @drawBoundingBox context, color, appliedShadow
