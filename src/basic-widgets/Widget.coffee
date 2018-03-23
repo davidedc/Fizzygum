@@ -3539,7 +3539,10 @@ class Widget extends TreeNode
         menu.addMenuItem "unlock from " + whereToOrFrom, true, @, "toggleIsLockingToPanels", "make this morph\nunmovable"
       else
         menu.addMenuItem "lock to " + whereToOrFrom, true, @, "toggleIsLockingToPanels", "make this morph\nmovable"
-    menu.addMenuItem "hide", true, @, "hide"
+
+    if !world.isIndexPage
+      menu.addMenuItem "hide", true, @, "hide"
+
     if @ instanceof WindowWdgt
       menu.addMenuItem "close", true, @, "close"
     else
