@@ -1560,33 +1560,37 @@ class WorldMorph extends PanelWdgt
 
     canvas.addEventListener "mousedown", @mousedownEventListener, false
 
-    @touchstartEventListener = (event) =>
-      @events.push "touchstartEventListener"
-      @events.push event
-
-    canvas.addEventListener "touchstart", @touchstartEventListener , false
     
     @mouseupEventListener = (event) =>
       @events.push "mouseupEventListener"
       @events.push event
 
     canvas.addEventListener "mouseup", @mouseupEventListener, false
-    
-    @touchendEventListener = (event) =>
-      @events.push "touchendEventListener"
-      @events.push event
-
-    canvas.addEventListener "touchend", @touchendEventListener, false
-    
+        
     @mousemoveEventListener = (event) =>
       @events.push "mousemoveEventListener"
       @events.push event
 
     canvas.addEventListener "mousemove", @mousemoveEventListener, false
     
+    @touchstartEventListener = (event) =>
+      @events.push "touchstartEventListener"
+      @events.push event
+      event.preventDefault()
+
+    canvas.addEventListener "touchstart", @touchstartEventListener , false
+
+    @touchendEventListener = (event) =>
+      @events.push "touchendEventListener"
+      @events.push event
+      event.preventDefault()
+
+    canvas.addEventListener "touchend", @touchendEventListener, false
+
     @touchmoveEventListener = (event) =>
       @events.push "touchmoveEventListener"
       @events.push event
+      event.preventDefault()
 
     canvas.addEventListener "touchmove", @touchmoveEventListener, false
     
