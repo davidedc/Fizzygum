@@ -1373,8 +1373,6 @@ class WorldMorph extends PanelWdgt
     @hand.processMouseDown button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
   processMouseUp: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    # event.preventDefault()
-
     @addMouseChangeCommand "up", button, buttons, ctrlKey, shiftKey, altKey, metaKey
     @hand.processMouseUp button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
