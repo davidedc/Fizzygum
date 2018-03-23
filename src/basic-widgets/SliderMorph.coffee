@@ -130,7 +130,7 @@ class SliderMorph extends CircleBoxMorph
     debugger
     if @action and @action != ""
       @target[@action].call @target, @value, @argumentToAction, @connectionsCalculationToken
-    return    
+    return
 
   reactToTargetConnection: ->
     @updateTarget()

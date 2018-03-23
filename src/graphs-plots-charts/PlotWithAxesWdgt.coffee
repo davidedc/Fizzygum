@@ -20,6 +20,9 @@ class PlotWithAxesWdgt extends Widget
 
     @invalidateLayout()
 
+  colloquialName: ->
+    @plot.colloquialName()
+
   rawSetExtent: (aPoint) ->
     super
     @invalidateLayout()
