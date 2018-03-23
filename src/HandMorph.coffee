@@ -420,21 +420,22 @@ class HandMorph extends Widget
   # A long touch emulates a right click. This is done via
   # setting a timer 400ms after the touch which triggers
   # a right mouse click. Any touch event before then just
-  # resets the timer, so one has to hold the finger in
-  # position for the right click to happen.
+  # resets the timer (if far enough from the touch start point,
+  # to "de-noise" the hold).
   processTouchStart: (event) ->
-    event.preventDefault()
-    WorldMorph.preferencesAndSettings.isTouchDevice = true
+    #WorldMorph.preferencesAndSettings.isTouchDevice = true
     clearInterval @touchHoldTimeout
     if event.touches.length is 1
       # simulate mouseRightClick
+      touch = event.touches[0]
+      @touchStartPosition = new Point touch.pageX, touch.pageY
       @touchHoldTimeout = setInterval(=>
         @processMouseDown 2 # button 2 is the right one
         @processMouseUp 2 # button 2 is the right one, we don't use this parameter
         event.preventDefault() # I don't think that this is needed
         clearInterval @touchHoldTimeout
       , 400)
-      @processMouseMove event.touches[0].pageX, event.touches[0].pageY # update my position
+      @processMouseMove touch.pageX, touch.pageY # update my position
       @processMouseDown 0 # button zero is the left button
   
   processTouchMove: (event) ->
@@ -444,8 +445,9 @@ class HandMorph extends Widget
     if event.touches.length is 1
       touch = event.touches[0]
       @processMouseMove touch.pageX, touch.pageY
-      clearInterval @touchHoldTimeout
-  
+      if ((new Point touch.pageX, touch.pageY).distanceTo @touchStartPosition) > WorldMorph.preferencesAndSettings.grabDragThreshold
+        clearInterval @touchHoldTimeout
+
   processTouchEnd: (event) ->
     # note that the mouse down event handler
     # that is calling this method has ALREADY
@@ -454,6 +456,9 @@ class HandMorph extends Widget
     WorldMorph.preferencesAndSettings.isTouchDevice = true
     clearInterval @touchHoldTimeout
     @processMouseUp 0 # button zero is the left button, we don't use this parameter
+    
+    # no need to set this to nil, but let's just clean up
+    @touchStartPosition = nil
   
    # note that the button param is not used,
    # but adding it for consistency...
