@@ -12,6 +12,10 @@ class Example3DPlotWdgt extends Widget
   autoRotate: true
   ratio: nil
 
+  # a parameter for a slider to control,
+  # so to show interactive graph/plot
+  parameterValue: 0
+
   constructor: ->
     super()
     @defaultRejectDrags = true
@@ -35,6 +39,26 @@ class Example3DPlotWdgt extends Widget
 
   colloquialName: ->
     "3D plot"
+
+  setParameter: (parameterValue, ignored, connectionsCalculationToken, superCall) ->
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    @parameterValue = parameterValue
+    @calculateNewPlotValues()
+
+  reactToTargetConnection: ->
+    @calculateNewPlotValues()
+
+  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
+    if !menuEntriesStrings? 
+      menuEntriesStrings = []
+      functionNamesStrings = []
+    menuEntriesStrings.push "param"
+    functionNamesStrings.push "setParameter"
+
+    if @addShapeSpecificNumericalSetters?
+      [menuEntriesStrings, functionNamesStrings] = @addShapeSpecificNumericalSetters menuEntriesStrings, functionNamesStrings
+
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
 
   # ---------------------------------------------------------------
   # Outside of a stack, the plot can take any dimension.
@@ -93,14 +117,16 @@ class Example3DPlotWdgt extends Widget
   step: ->
     if @autoRotate
       @currentAngle++
+    @calculateNewPlotValues()
 
+  calculateNewPlotValues: ->
     @vertices = []
 
     @graphGrid = new Grid3D 21, 21, []
 
     for i in [-1..1] by 0.1
       for j in [-1..1] by 0.1
-        @vertices.push new Point3D i, j, (Math.sin(i*3 + @currentAngle/160) + Math.cos(j*3 + @currentAngle/160))/2
+        @vertices.push new Point3D i, j, (Math.sin(i*@parameterValue/30)) + (Math.sin(i*3 + @currentAngle/160) + Math.cos(j*3 + @currentAngle/160))/2
         @graphGrid.vertexIndexes.push @vertices.length - 1
 
 
