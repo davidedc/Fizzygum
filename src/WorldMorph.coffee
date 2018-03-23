@@ -377,6 +377,12 @@ class WorldMorph extends PanelWdgt
 
   boot: ->
 
+    # remove the fake desktop for quick launch and the spinner
+    spinner = document.getElementById 'spinner'
+    spinner.parentNode.removeChild spinner
+    splashScreenFakeDesktop = document.getElementById 'splashScreenFakeDesktop'
+    splashScreenFakeDesktop.parentNode.removeChild splashScreenFakeDesktop
+
     if @isIndexPage
       @setColor new Color 244,243,244
       @makePrettier()

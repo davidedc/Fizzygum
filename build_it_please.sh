@@ -101,6 +101,7 @@ cp auxiliary\ files/pre-compiled.js ../Fizzygum-builds/latest/js/pre-compiled.js
 
 # copy aux icon files
 cp auxiliary\ files/additional-icons/*.png ../Fizzygum-builds/latest/icons/
+cp auxiliary\ files/additional-icons/spinner.svg ../Fizzygum-builds/latest/icons/
 
 # the tests files are copied from a directory
 # structure so it's cleaner, but they
