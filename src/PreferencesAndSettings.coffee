@@ -87,6 +87,11 @@ class PreferencesAndSettings
     @menuBackgroundColor = new Color 249, 249, 249 # new Color 244, 244, 244
     @menuButtonsLabelColor = new Color 0, 0, 0 # new Color 50, 50, 50
 
+    @externalWindowBarBackgroundColor = new Color 125, 125, 125
+    @externalWindowBarStrokeColor = new Color 100,100,100
+    @internalWindowBarBackgroundColor = new Color 172, 172, 172
+    @internalWindowBarStrokeColor = new Color 150,150,150
+
     @normalTextFontSize = 12 # 13
     @textInButtonsFontSize = 12 # 13
 

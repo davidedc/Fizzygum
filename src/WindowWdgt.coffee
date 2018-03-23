@@ -274,11 +274,11 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @titlebarBackground.appearance = new BoxyAppearance @titlebarBackground
 
     if @internal
-      @titlebarBackground.setColor new Color 172,172,172
-      @titlebarBackground.strokeColor = new Color 150,150,150
+      @titlebarBackground.setColor WorldMorph.preferencesAndSettings.internalWindowBarBackgroundColor
+      @titlebarBackground.strokeColor = WorldMorph.preferencesAndSettings.internalWindowBarStrokeColor
     else
-      @titlebarBackground.setColor new Color 125,125,125
-      @titlebarBackground.strokeColor = new Color 100,100,100
+      @titlebarBackground.setColor WorldMorph.preferencesAndSettings.externalWindowBarBackgroundColor
+      @titlebarBackground.strokeColor = WorldMorph.preferencesAndSettings.externalWindowBarStrokeColor
 
 
   buildTitlebarBackground: ->
