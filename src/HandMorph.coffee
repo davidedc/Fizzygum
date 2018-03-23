@@ -439,9 +439,6 @@ class HandMorph extends Widget
       @processMouseDown 0 # button zero is the left button
   
   processTouchMove: (event) ->
-    # Prevent scrolling on this element
-    event.preventDefault()
-
     if event.touches.length is 1
       touch = event.touches[0]
       @processMouseMove touch.pageX, touch.pageY
