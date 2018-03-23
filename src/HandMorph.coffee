@@ -450,7 +450,7 @@ class HandMorph extends Widget
     # that is calling this method has ALREADY
     # added a mousedown command
 
-    WorldMorph.preferencesAndSettings.isTouchDevice = true
+    #WorldMorph.preferencesAndSettings.isTouchDevice = true
     clearInterval @touchHoldTimeout
     @processMouseUp 0 # button zero is the left button, we don't use this parameter
     
