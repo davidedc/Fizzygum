@@ -411,6 +411,7 @@ class WorldMorph extends PanelWdgt
       menusHelper.createToolbarsOpener()
       exampleDocsFolder = @makeFolder nil, nil, "example docs"
       menusHelper.createDegreesConverterOpener exampleDocsFolder
+      menusHelper.createSampleDashboardOpener exampleDocsFolder
 
   # some test urls:
 

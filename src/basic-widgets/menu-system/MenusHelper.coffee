@@ -1545,6 +1545,127 @@ class MenusHelper
       world.add degreesConverterOpenerLauncher
     return wm
 
+  createSampleDashboardOpener: (inWhichFolder) ->
+    scriptWdgt = new ScriptWdgt """
+
+     menusHelper.createSampleDashboardWindowOrBringItUpIfAlreadyCreated()
+
+
+    """
+    # the starting script string above is not
+    # actually saved, it's just there as starting
+    # content, so let's save it
+    scriptWdgt.saveScript()
+
+    wm = new WindowWdgt nil, nil, scriptWdgt
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    wm.changed()
+
+    degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "sample dashb.", new GenericShortcutIconWdgt new DashboardsIconWdgt()
+    # this "add" is going to try to position the reference
+    # in some smart way (i.e. according to a grid)
+    
+    degreesConverterOpenerLauncher.setExtent new Point 75, 75
+    if inWhichFolder?
+      inWhichFolder.contents.contents.add degreesConverterOpenerLauncher
+    else
+      world.add degreesConverterOpenerLauncher
+    return wm
+
+
+  createSampleDashboardWindowOrBringItUpIfAlreadyCreated: ->
+    if world.sampleDashboardWindow?
+      if !world.sampleDashboardWindow.destroyed and world.sampleDashboardWindow.parent?
+        world.add world.sampleDashboardWindow
+        world.sampleDashboardWindow.bringToForeground()
+        world.sampleDashboardWindow.fullRawMoveTo world.hand.position().add new Point 100, -50
+        world.sampleDashboardWindow.fullRawMoveWithin world
+        world.sampleDashboardWindow.rememberFractionalSituationInHoldingPanel()
+        return
+
+    slideWdgt = new SimpleSlideWdgt()
+
+    container = slideWdgt.stretchableWidgetContainer.contents
+    container.rawSetExtent new Point 725,556
+
+    scatterPlot = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleScatterPlotWdgt()), true, true
+    scatterPlot.fullRawMoveTo container.position().add new Point 19, 86
+    scatterPlot.rawSetExtent new Point 200, 200
+    container.add scatterPlot
+    scatterPlot.rememberFractionalSituationInHoldingPanel()
+
+    functionPlot = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleFunctionPlotWdgt()), true, true
+    functionPlot.fullRawMoveTo container.position().add new Point 251, 86
+    functionPlot.rawSetExtent new Point 200, 200
+    container.add functionPlot
+    functionPlot.rememberFractionalSituationInHoldingPanel()
+
+    barPlot = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleBarPlotWdgt()), true, true
+    barPlot.fullRawMoveTo container.position().add new Point 19, 327
+    barPlot.rawSetExtent new Point 200, 200
+    container.add barPlot
+    barPlot.rememberFractionalSituationInHoldingPanel()
+
+    plot3D = new WindowWdgt nil, nil, new Example3DPlotWdgt, true, true
+    plot3D.fullRawMoveTo container.position().add new Point 491, 327
+    plot3D.rawSetExtent new Point 200, 150
+    container.add plot3D
+    plot3D.rememberFractionalSituationInHoldingPanel()
+
+    usaMap = new SimpleUSAMapIconWdgt()
+    usaMap.fullRawMoveTo container.position().add new Point 242, 355
+    usaMap.rawSetExtent new Point 230, 145
+    container.add usaMap
+    usaMap.rememberFractionalSituationInHoldingPanel()
+
+    worldMap = new SimpleWorldMapIconWdgt()
+    worldMap.fullRawMoveTo container.position().add new Point 464, 128
+    worldMap.rawSetExtent new Point 240, 125
+    container.add worldMap
+    worldMap.rememberFractionalSituationInHoldingPanel()
+
+    speechBubble1 = new SpeechBubbleWdgt "online"
+    speechBubble1.fullRawMoveTo container.position().add new Point 506, 123
+    speechBubble1.rawSetExtent new Point 66, 42
+    container.add speechBubble1
+    speechBubble1.rememberFractionalSituationInHoldingPanel()
+
+    speechBubble2 = new SpeechBubbleWdgt "offline"
+    speechBubble2.fullRawMoveTo container.position().add new Point 590, 105
+    speechBubble2.rawSetExtent new Point 66, 42
+    container.add speechBubble2
+    speechBubble2.rememberFractionalSituationInHoldingPanel()
+
+    slider1 = new SliderMorph nil, nil, nil, nil, nil, true
+    slider1.fullRawMoveTo container.position().add new Point 491, 484
+    slider1.rawSetExtent new Point 201, 24
+    container.add slider1
+    slider1.rememberFractionalSituationInHoldingPanel()
+
+    slider1.setTargetAndActionWithOnesPickedFromMenu nil, nil, plot3D.contents, "setParameter"
+
+    wm = new WindowWdgt nil, nil, slideWdgt
+    wm.fullRawMoveTo new Point 114, 10
+    wm.rawSetExtent new Point 596, 592
+    world.add wm
+    wm.setTitleWithoutPrependedContentName "Sample dashboard"
+    wm.changed()
+
+
+    slideWdgt.disableDragsDropsAndEditing()
+    
+    # if we don't do this, the window would ask to save content
+    # when closed. Just close it instead.
+    # TODO: should be done using a flag, we don't like
+    # to inject code like this: the source is not tracked
+    slideWdgt.closeFromContainerWindow = (containerWindow) ->
+      containerWindow.close()
+
+    world.sampleDashboardWindow = wm
+
+
 
   createDegreesConverterWindowOrBringItUpIfAlreadyCreated: ->
     if world.degreesConverterWindow?
