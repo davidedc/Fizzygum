@@ -377,6 +377,14 @@ class WorldMorph extends PanelWdgt
 
   boot: ->
 
+    # prevent overscroll (and bounce) in iOS
+    document.body.addEventListener 'touchmove', (evt) ->
+      #In this case, the default behavior is scrolling the body, which
+      #would result in an overflow.  Since we don't want that, we preventDefault.
+      if !evt._isScroller
+        evt.preventDefault()
+      return
+
     # remove the fake desktop for quick launch and the spinner
     spinner = document.getElementById 'spinner'
     spinner.parentNode.removeChild spinner
