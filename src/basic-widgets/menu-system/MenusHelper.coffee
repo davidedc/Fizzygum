@@ -1563,7 +1563,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "sample dashb.", new GenericShortcutIconWdgt new DashboardsIconWdgt()
+    degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "sample dashb", new GenericShortcutIconWdgt new DashboardsIconWdgt()
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     
@@ -1614,13 +1614,38 @@ class MenusHelper
     container.add plot3D
     plot3D.rememberFractionalSituationInHoldingPanel()
 
-    usaMap = new SimpleUSAMapIconWdgt()
+    usaMap = new SimpleUSAMapIconWdgt new Color 183, 183, 183
     usaMap.fullRawMoveTo container.position().add new Point 242, 355
     usaMap.rawSetExtent new Point 230, 145
     container.add usaMap
     usaMap.rememberFractionalSituationInHoldingPanel()
 
-    worldMap = new SimpleWorldMapIconWdgt()
+    mapPin1 = new MapPinIconWdgt()
+    mapPin1.fullRawMoveTo container.position().add new Point 226, 376
+    container.add mapPin1
+    mapPin1.rememberFractionalSituationInHoldingPanel()
+
+    mapPin2 = new MapPinIconWdgt()
+    mapPin2.fullRawMoveTo container.position().add new Point 289, 363
+    container.add mapPin2
+    mapPin2.rememberFractionalSituationInHoldingPanel()
+
+    mapPin3 = new MapPinIconWdgt()
+    mapPin3.fullRawMoveTo container.position().add new Point 323, 397
+    container.add mapPin3
+    mapPin3.rememberFractionalSituationInHoldingPanel()
+
+    mapPin4 = new MapPinIconWdgt()
+    mapPin4.fullRawMoveTo container.position().add new Point 360, 421
+    container.add mapPin4
+    mapPin4.rememberFractionalSituationInHoldingPanel()
+
+    mapPin5 = new MapPinIconWdgt()
+    mapPin5.fullRawMoveTo container.position().add new Point 417, 374
+    container.add mapPin5
+    mapPin5.rememberFractionalSituationInHoldingPanel()
+
+    worldMap = new SimpleWorldMapIconWdgt new Color 183, 183, 183
     worldMap.fullRawMoveTo container.position().add new Point 464, 128
     worldMap.rawSetExtent new Point 240, 125
     container.add worldMap
@@ -1637,6 +1662,15 @@ class MenusHelper
     speechBubble2.rawSetExtent new Point 66, 42
     container.add speechBubble2
     speechBubble2.rememberFractionalSituationInHoldingPanel()
+
+    dashboardTitle = new TextMorph2 "Example dashboard with interactive 3D plot"
+    dashboardTitle.alignRight()
+    dashboardTitle.alignMiddle()
+    dashboardTitle.fullRawMoveTo container.position().add new Point 161, 6
+    dashboardTitle.rawSetExtent new Point 403, 50
+    container.add dashboardTitle
+    dashboardTitle.rememberFractionalSituationInHoldingPanel()
+
 
     slider1 = new SliderMorph nil, nil, nil, nil, nil, true
     slider1.fullRawMoveTo container.position().add new Point 491, 484
