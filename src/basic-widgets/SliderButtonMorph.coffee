@@ -145,6 +145,7 @@ class SliderButtonMorph extends CircleBoxMorph
     @setNormalColor()
   
   mouseDownLeft: (pos) ->
+    @bringToForeground()
     @setPressedColor()
 
   mouseClickLeft: ->
