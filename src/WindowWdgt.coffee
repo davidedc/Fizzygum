@@ -240,6 +240,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
         @rawSetWidth @widthWhenUnCollapsed
       @adjustContentsBounds()
       @reInflating = false
+      @rememberFractionalSituationInHoldingPanel()
       @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   resetToDefaultContents: ->
