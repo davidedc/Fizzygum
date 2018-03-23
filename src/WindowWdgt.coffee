@@ -308,7 +308,15 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # label
     @label?.fullDestroy()
     @label = new StringMorph2 @labelContent, WorldMorph.preferencesAndSettings.titleBarTextFontSize
-    @label.isBold = WorldMorph.preferencesAndSettings.titleBarBoldText
+
+    # as of March 2018, Safari 10.1.1 on OSX 10.12.5 :
+    # safari's rendering of bright text on dark background is atrocious
+    # so we have to force bold style in the window bars
+    if /^((?!chrome|android).)*safari/i.test navigator.userAgent
+      @label.isBold = true
+    else
+      @label.isBold = WorldMorph.preferencesAndSettings.titleBarBoldText
+
     @label.color = new Color 255, 255, 255
     @add @label, nil, nil, nil, true
 
