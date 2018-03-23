@@ -83,8 +83,8 @@ class ExampleFunctionPlotWdgt extends GraphsPlotsChartsWdgt
 
     context.fillStyle = '#325FA2'
     angle = @seededRandom()
-    for i in [0..1000]
-      xPos = (i/1000)*width
+    for xPos in [0..width]
+      i = xPos/width * 1000
       heightPerc = 0.5 + Math.sin(10*angle+i/(300*(angle+0.01)))/3 - i/(5000+50000*angle)
       context.fillRect xPos, availableHeight * heightPerc, 2,2
 
