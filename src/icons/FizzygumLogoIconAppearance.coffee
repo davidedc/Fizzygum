@@ -7,7 +7,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    white = 'rgba(255, 255, 255, 1)'
+    white = 'rgb(255, 255, 255)'
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// everything
     #// bubble outline Drawing

@@ -9,10 +9,10 @@ class VaporwaveBackgroundIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    blue = 'rgba(0, 0, 159, 1)'
-    yellow = 'rgba(255, 255, 0, 1)'
-    darkBlue = 'rgba(0, 0, 82, 1)'
-    pink = 'rgba(255, 6, 136, 1)'
+    blue = 'rgb(0, 0, 159)'
+    yellow = 'rgb(255, 255, 0)'
+    darkBlue = 'rgb(0, 0, 82)'
+    pink = 'rgb(255, 6, 136)'
     #// background Drawing
     #// Gradient Declarations
 

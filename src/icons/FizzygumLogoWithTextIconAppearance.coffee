@@ -9,7 +9,7 @@ class FizzygumLogoWithTextIconAppearance extends IconAppearance
   # and the text, we are duplicating the logo data instead...
   paintFunction: (context) ->
     #// Color Declarations
-    white = 'rgba(255, 255, 255, 1)'
+    white = 'rgb(255, 255, 255)'
     #// Text Drawing
     context.fillStyle = 'rgb(0, 0, 0)'
     context.font = 'bold 17px Arial-BoldMT, Arial, "Helvetica Neue", Helvetica, sans-serif'

@@ -7,8 +7,8 @@ class VideoPlayIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    white = 'rgba(255, 255, 255, 1)'
-    red = 'rgba(255, 38, 0, 1)'
+    white = 'rgb(255, 255, 255)'
+    red = 'rgb(255, 38, 0)'
     #// Group
     #// background Drawing
     context.beginPath()

@@ -7,7 +7,7 @@ class CollapsedStateIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    colorString = 'rgba(0, 0, 0, 1)'
+    colorString = 'rgb(0, 0, 0)'
     #// Bezier Drawing
     context.beginPath()
     context.moveTo 44.5, 262.42

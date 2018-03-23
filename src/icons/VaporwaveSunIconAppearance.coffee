@@ -9,9 +9,9 @@ class VaporwaveSunIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    blue = 'rgba(0, 0, 255, 1)'
-    pink = 'rgba(255, 0, 255, 1)'
-    yellow = 'rgba(255, 244, 6, 1)'
+    blue = 'rgb(0, 0, 255)'
+    pink = 'rgb(255, 0, 255)'
+    yellow = 'rgb(255, 244, 6)'
     #// sun Drawing
     #// Gradient Declarations
 

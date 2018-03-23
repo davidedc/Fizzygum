@@ -8,7 +8,7 @@ class FanoutPinAppearance extends IconAppearance
 
   paintFunction: (context) ->
     if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
-    outlineColor = 'rgba(184, 184, 184, 1)'
+    outlineColor = 'rgb(184, 184, 184)'
     #// Group 4
     #// outline Drawing
     context.beginPath()

@@ -9,7 +9,7 @@ class FanoutAppearance extends IconAppearance
   paintFunction: (context) ->
     #// Color Declarations
     if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
-    highlightColorString = 'rgba(184, 184, 184, 1)'
+    highlightColorString = 'rgb(184, 184, 184)'
     #// highlight Drawing
     context.beginPath()
     context.moveTo 51.38, 22.81
