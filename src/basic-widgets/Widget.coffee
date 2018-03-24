@@ -2347,38 +2347,7 @@ class Widget extends TreeNode
     @addChild aMorph, position
     if !avoidExtentCalculation
       aMorph.calculateAndUpdateExtent()
-  
-  
-
-  # never currently used in ZK
-  # TBD whether this is 100% correct,
-  # see "topMorphUnderPointer" implementation in
-  # HandMorph.
-  # Also there must be a quicker implementation
-  # cause there is no need to create the entire
-  # morph list. It would be sufficient to
-  # navigate the structure and just return
-  # at the first morph satisfying the test.
-  morphAt: (aPoint) ->
-    morphs = @allChildrenTopToBottom()
-    result = nil
-    morphs.forEach (m) ->
-      if m.fullBounds().containsPoint(aPoint) and (!result?)
-        result = m
-
-    result
-  
-  #
-  #	potential alternative - solution for morphAt.
-  #	Has some issues, commented out for now...
-  #
-  # Widget::morphAt = function (aPoint) {
-  #	return this.topMorphSuchThat(function (m) {
-  #		return m.fullBounds().containsPoint(aPoint);
-  #	});
-  #};
-  #
-  
+    
 
   # Duplication and Serialization /////////////////////////////////////////
 

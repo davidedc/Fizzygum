@@ -1068,21 +1068,6 @@ class HandMorph extends Widget
         @previousNonFloatDraggingPos = pos.copy()
         @nonFloatDraggedMorph.nonFloatDragging?(@nonFloatDragPositionWithinMorphAtStart, pos, deltaDragFromPreviousCall)
     
-    #
-    # original, more cautious code for grabbing Widgets,
-    # retained in case of needing to fall back:
-    #
-    #   if (morph === this.morphToGrab) {
-    #     if (morph.grabsToParentWhenDragged) {
-    #       this.grab(morph);
-    #     } else if (morph.isTemplate) {
-    #       morph = morph.fullCopy();
-    #       morph.isTemplate = false;
-    #       morph.grabsToParentWhenDragged = true;
-    #       this.grab(morph);
-    #     }
-    #   }
-    #
 
   # this is used by the ScrollMorph: clicking on the slider
   # (but OUTSIDE of the button), the (center of the) button
