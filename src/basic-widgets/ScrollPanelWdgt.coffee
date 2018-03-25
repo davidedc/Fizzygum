@@ -356,6 +356,12 @@ class ScrollPanelWdgt extends PanelWdgt
     else
       return false
 
+  scrollTo: (whereTo) ->
+    @contents.fullRawMoveLeftSideTo -whereTo.x
+    @contents.fullRawMoveTopSideTo -whereTo.y
+    @adjustScrollBars()    
+
+
   scrollToBottom: ->
     @scrollY -100000
     @adjustScrollBars()    
