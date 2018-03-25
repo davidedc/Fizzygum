@@ -1587,7 +1587,7 @@ class MenusHelper
         world.sampleDashboardWindow.rememberFractionalSituationInHoldingPanel()
         return
 
-    slideWdgt = new SimpleSlideWdgt()
+    slideWdgt = new DashboardsWdgt()
 
     container = slideWdgt.stretchableWidgetContainer.contents
     container.rawSetExtent new Point 725,556
