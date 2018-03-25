@@ -2354,6 +2354,7 @@ class Widget extends TreeNode
 
   duplicateMenuAction: ->
     aFullCopy = @fullCopy()
+    aFullCopy.unlockFromPanels()
     world.add aFullCopy
     aFullCopy.fullRawMoveTo @position().add new Point 10, 10
     aFullCopy.rememberFractionalSituationInHoldingPanel()
