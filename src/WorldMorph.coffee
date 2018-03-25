@@ -427,6 +427,7 @@ class WorldMorph extends PanelWdgt
       menusHelper.createDegreesConverterOpener exampleDocsFolder
       menusHelper.createSampleSlideOpener exampleDocsFolder
       menusHelper.createSampleDashboardOpener exampleDocsFolder
+      menusHelper.createSampleDocOpener exampleDocsFolder
 
   # some test urls:
 
