@@ -2354,6 +2354,12 @@ class Widget extends TreeNode
 
   duplicateMenuAction: ->
     aFullCopy = @fullCopy()
+    world.add aFullCopy
+    aFullCopy.fullRawMoveTo @position().add new Point 10, 10
+    aFullCopy.rememberFractionalSituationInHoldingPanel()
+
+  duplicateMenuActionAndPickItUp: ->
+    aFullCopy = @fullCopy()
     aFullCopy?.pickUp()
 
   # in case we copy a morph, if the original was in some
@@ -3483,7 +3489,7 @@ class Widget extends TreeNode
       menu.addMenuItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
       menu.addMenuItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
       menu.addLine()
-      menu.addMenuItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
+      menu.addMenuItem "duplicate", true, @, "duplicateMenuAction" , "make a copy"
       menu.addMenuItem "create shortcut", true, @, "createReference", "creates a reference to this wdgt and leaves it on the desktop"
       menu.addMenuItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
     else
@@ -3491,7 +3497,7 @@ class Widget extends TreeNode
       menu.addMenuItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
       menu.addMenuItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
       menu.addLine()
-      menu.addMenuItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
+      menu.addMenuItem "duplicate", true, @, "duplicateMenuActionAndPickItUp" , "make a copy\nand pick it up"
       menu.addMenuItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
       menu.addMenuItem "attach...", true, @, "attach", "stick this morph\nto another one"
       menu.addMenuItem "inspect", true, @, "inspect", "open a window\non all properties"
