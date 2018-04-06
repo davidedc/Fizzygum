@@ -891,7 +891,8 @@ class MenusHelper
     sdspw.addDivider()
 
 
-    sdspw.addNormalParagraph "Welcome to a powerful new framework designed from the ground up to do complex things, simply. Welcome to Fizzygum."
+    sdspw.addNormalParagraph "Tired of stringing libraries together?"
+    sdspw.addNormalParagraph "Welcome to a powerful new framework designed from the ground up to do complex things, easily."
 
     sdspw.addSpacer()
 
@@ -932,21 +933,21 @@ class MenusHelper
     sdspw.addSpacer()
     sdspw.addNormalParagraph "Also check out some screenshots here:"
 
-    startingContent = new SimpleLinkWdgt "screenshots"
+    startingContent = new SimpleLinkWdgt "Screenshots", "http://fizzygum.org/screenshots/"
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
     sdspw.addNormalParagraph "...or watch some quick demos on the Youtube channel:"
 
-    startingContent = new SimpleVideoLinkWdgt "YouTube channel"
+    startingContent = new SimpleVideoLinkWdgt "YouTube channel", "https://www.youtube.com/channel/UCmYco9RU3h9dofRVN3bqxIw"
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
     sdspw.addNormalParagraph "...or docs here:"
 
-    startingContent = new SimpleLinkWdgt "docs"
+    startingContent = new SimpleLinkWdgt "Docs", "http://fizzygum.org/docs/intro/"
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
@@ -965,7 +966,7 @@ class MenusHelper
 
     sdspw.addNormalParagraph "Mail? Mailing list? Facebook page? Twitter? Chat? We have it all."
 
-    startingContent = new SimpleLinkWdgt "contacts"
+    startingContent = new SimpleLinkWdgt "Contacts", "http://fizzygum.org/contact/"
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
@@ -1015,7 +1016,7 @@ class MenusHelper
 
     sdspw.addNormalParagraph "The Super Toolbar can create all other toolbars for you, and from those toolbars you can create any widget.\n\nThis is handy because any widget can go in any document... so here is a way to access them all.\n\nFor an example on how this is useful, see the video on `mixing widgets`:"
 
-    startingContent = new SimpleVideoLinkWdgt "Mixing widgets"
+    startingContent = new SimpleVideoLinkWdgt "Mixing widgets", "http://fizzygum.org/docs/mixing-widgets/"
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
@@ -1081,7 +1082,7 @@ class MenusHelper
     sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
     sdspw.addNormalParagraph "To see an example of use, check out the video here:"
 
-    startingContent = new SimpleVideoLinkWdgt "Docs Maker"
+    startingContent = new SimpleVideoLinkWdgt "Docs Maker", "http://fizzygum.org/docs/documents-maker/"
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
@@ -1139,7 +1140,7 @@ class MenusHelper
     sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
     sdspw.addNormalParagraph "To see an example of use, check out the video here:"
 
-    startingContent = new SimpleVideoLinkWdgt "Docs Maker"
+    startingContent = new SimpleVideoLinkWdgt "Draw app", "http://fizzygum.org/docs/draw-app/"
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
@@ -1147,7 +1148,7 @@ class MenusHelper
     sdspw.addNormalParagraph "You can also edit the tools you use, by clicking on the pencil icon next to the tool."
     sdspw.addNormalParagraph "To see how an example of editing the tools, see this video:"
 
-    startingContent = new SimpleVideoLinkWdgt "Hacking Fizzygum from within Fizzygum"
+    startingContent = new SimpleVideoLinkWdgt "Hacking Fizzygum", "http://fizzygum.org/docs/hacking-fizzygum/"
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
@@ -1205,7 +1206,7 @@ class MenusHelper
     sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
     sdspw.addNormalParagraph "To see an example of use, check out the video here:"
 
-    startingContent = new SimpleVideoLinkWdgt "Slides Maker"
+    startingContent = new SimpleVideoLinkWdgt "Slides Maker", "http://fizzygum.org/docs/slides-maker/"
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
@@ -1263,7 +1264,7 @@ class MenusHelper
     sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
     sdspw.addNormalParagraph "To see an example of use, check out the video here:"
 
-    startingContent = new SimpleVideoLinkWdgt "Dashboards Maker"
+    startingContent = new SimpleVideoLinkWdgt "Dashboards Maker", "http://fizzygum.org/docs/dashboards/"
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
@@ -1320,9 +1321,14 @@ class MenusHelper
     sdspw.addNormalParagraph "You can imagine the widgets being 'patched together' by imaginary wires."
     sdspw.addNormalParagraph "You can see in the `example docs` folder a °C ↔ °F converter example made with this."
     sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
-    sdspw.addNormalParagraph "To see an example of use, check out the video here:"
+    sdspw.addNormalParagraph "To see an example of use, check out the videos here:"
 
-    startingContent = new SimpleVideoLinkWdgt "Patch programming"
+    startingContent = new SimpleVideoLinkWdgt "Patch programming - basics", "http://fizzygum.org/docs/basic-connections/"
+    startingContent.rawSetExtent new Point 405, 50
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    startingContent = new SimpleVideoLinkWdgt "Patch programming - advanced", "http://fizzygum.org/docs/advanced-connections/"
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
@@ -1379,7 +1385,7 @@ class MenusHelper
     sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
     sdspw.addNormalParagraph "To see an example of use, check out the video here:"
 
-    startingContent = new SimpleVideoLinkWdgt "Generic Panels"
+    startingContent = new SimpleVideoLinkWdgt "Mixing widgets (using generic panels)", "http://fizzygum.org/docs/mixing-widgets/"
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
@@ -1488,12 +1494,12 @@ class MenusHelper
     sdspw.addBulletPoint "windows with a scroll view on their content"
     sdspw.addBulletPoint "windows with an elastic panel, such that when resized the content will resize as well"
 
-    sdspw.addNormalParagraph "Check out some examples of use in this video:"
+    #sdspw.addNormalParagraph "Check out some examples of use in this video:"
 
-    startingContent = new SimpleVideoLinkWdgt "Using windows"
-    startingContent.rawSetExtent new Point 405, 50
-    sdspw.add startingContent
-    startingContent.layoutSpecDetails.setAlignmentToRight()
+    #startingContent = new SimpleVideoLinkWdgt "Using windows"
+    #startingContent.rawSetExtent new Point 405, 50
+    #sdspw.add startingContent
+    #startingContent.layoutSpecDetails.setAlignmentToRight()
 
 
     wm = new WindowWdgt nil, nil, simpleDocument
@@ -1875,7 +1881,7 @@ class MenusHelper
     speechBubble2.rememberFractionalSituationInHoldingPanel()
 
     dashboardTitle = new TextMorph2 "Example dashboard with interactive 3D plot"
-    dashboardTitle.alignRight()
+    dashboardTitle.alignCenter()
     dashboardTitle.alignMiddle()
     dashboardTitle.fullRawMoveTo container.position().add new Point 161, 6
     dashboardTitle.rawSetExtent new Point 403, 50
@@ -2078,7 +2084,7 @@ class MenusHelper
 
     sdspw.addSpacer()
 
-    startingContent = new SimpleLinkWdgt "contacts"
+    startingContent = new SimpleLinkWdgt "Contacts", "http://fizzygum.org/contact/"
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
