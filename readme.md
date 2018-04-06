@@ -6,12 +6,12 @@ Try a new web framework that does complex things, easily.
 
 Fizzygum is designed from the ground up to: 
 
-✔ make dashboards and visualise data (plots, maps, …) 
-✔ author, organise and navigate documents 
-✔ insert dynamic calculations anywhere, via simple drag & drop 
-✔ make custom utilities visually (no coding required) 
-✔ use internal development tools to customise anything, as it runs
-✔ do all of the above, concurrently
+* make dashboards and visualise data (plots, maps, …) 
+* author, organise and navigate documents 
+* insert dynamic calculations anywhere, via simple drag & drop 
+* make custom utilities visually (no coding required) 
+* use internal development tools to customise anything, as it runs
+* do all of the above, concurrently
 
 All info here: [http://fizzygum.org/](http://fizzygum.org/)
 
