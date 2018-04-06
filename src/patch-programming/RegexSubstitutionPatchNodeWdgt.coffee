@@ -184,7 +184,10 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
     menu.addLine()
-    menu.addMenuItem "set target", true, @, "openTargetSelector", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"
+    if world.isIndexPage
+      menu.addMenuItem "connect to ➜", true, @, "openTargetSelector", "connect to\nanother widget"
+    else
+      menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another morph\nwhose numerical property\n will be" + " controlled by this one"
 
 
   buildAndConnectChildren: ->
