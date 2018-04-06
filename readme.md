@@ -1,28 +1,23 @@
 Fizzygum
 ========
 
-Fizzygum is a minimal live desktop system similar in concept to Squeak and Lively Kernel.
+Tired of stringing libraries together?
+Try a new web framework that does complex things, easily.
 
-![alt tag](https://raw.githubusercontent.com/davidedc/Zombie-Kernel-builds/gh-pages/other-support-files/docs/other/imgs/ZombieKernelScreenshot5thSept2013.png)
+Fizzygum is designed from the ground up to: 
 
-It's "live" in the sense that it allows direct interaction/inspection with/of all its elements. Everything in Fizzygum is an object that can be inspected and changed "live".
+✔ make dashboards and visualise data (plots, maps, …) 
+✔ author, organise and navigate documents 
+✔ insert dynamic calculations anywhere, via simple drag & drop 
+✔ make custom utilities visually (no coding required) 
+✔ use internal development tools to customise anything, as it runs
+✔ do all of the above, concurrently
 
-Play with it
--------------------
-Try it [here](http://fizzygum.net)
+All info here: [http://fizzygum.org/](http://fizzygum.org/)
 
-Download it / build it
--------------------
-Install npm. Then install coffeescript. Run the "build_it_please.sh" script. No server needed, just drag "index.html" from the "build" directory into any browser and right click to open a system menu. The "demo" section has some elements that you can play with.
-
-Build it / Hack it
----------------------------------------------
-TBD
-
-Standing on the shoulders of giants
------------------------------------
-Fizzygum was inspired by [Lively Kernel](http://www.lively-kernel.org/).
-Fizzygum was built starting from [Morphic.js](https://github.com/jmoenig/morphic.js) by [Jens Mönig](https://twitter.com/moenig).
+Credits
+-------
+Fizzygum started (in Oct 2012) from [Morphic.js](https://github.com/jmoenig/morphic.js) by [Jens Mönig](https://twitter.com/moenig).
 
 The MIT License
 -----------------------------------
