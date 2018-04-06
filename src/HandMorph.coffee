@@ -1115,6 +1115,7 @@ class HandMorph extends Widget
         # (e.g. external windows) then nothing happens
         if !widgetBeingFloatDragged.rejectsBeingDropped? or !widgetBeingFloatDragged.rejectsBeingDropped()
           if newMorph instanceof ScrollPanelWdgt
+            if newMorph.wantsDropOf widgetBeingFloatDragged
               if !newMorph.boundingBox().insetBy(
                 WorldMorph.preferencesAndSettings.scrollBarsThickness * 3
                 ).containsPoint @position()
