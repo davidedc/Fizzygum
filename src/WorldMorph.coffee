@@ -86,6 +86,7 @@ class WorldMorph extends PanelWdgt
   # (but anyways, it was global before, so it's not any worse than before)
   @preferencesAndSettings: nil
   @currentTime: nil
+  @currentDate: nil
   showRedraws: false
   doubleCheckCachedMethodsResults: false
   automatorRecorderAndPlayer: nil
@@ -1133,6 +1134,7 @@ class WorldMorph extends PanelWdgt
 
   doOneCycle: ->
     WorldMorph.currentTime = Date.now()
+    WorldMorph.currentDate = new Date()
     # console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
 
     @showErrorsHappenedInRepaintingStepInPreviousCycle()
@@ -1167,6 +1169,7 @@ class WorldMorph extends PanelWdgt
   # Widget stepping:
   runChildrensStepFunction: ->
 
+
     # make a shallow copy of the array before iterating over
     # it in the case some morph destroys itself and takes itself
     # out of the array thus changing it in place and mangling the
@@ -1175,40 +1178,71 @@ class WorldMorph extends PanelWdgt
     steppingMorphs = arrayShallowCopy @steppingMorphs
 
     for eachSteppingMorph in steppingMorphs
-      if eachSteppingMorph.isBeingFloatDragged()
-        continue
+
+      #if eachSteppingMorph.isBeingFloatDragged()
+      #  continue
+
       # for objects where @fps is defined, check which ones are due to be stepped
       # and which ones want to wait.
-      elapsedMilliseconds = WorldMorph.currentTime - eachSteppingMorph.lastTime
-      if eachSteppingMorph.fps > 0
-        millisecondsRemainingToWaitedFrame = (1000 / eachSteppingMorph.fps) - elapsedMilliseconds
-      else
+      millisBetweenSteps = Math.round(1000 / eachSteppingMorph.fps)
+      if eachSteppingMorph.fps <= 0
         # if fps 0 or negative, then just run as fast as possible,
         # so 0 milliseconds remaining to the next invokation
         millisecondsRemainingToWaitedFrame = 0
+      else
+        if eachSteppingMorph.synchronisedStepping
+          millisecondsRemainingToWaitedFrame = millisBetweenSteps - (WorldMorph.currentTime % millisBetweenSteps)
+          if eachSteppingMorph.previousMillisecondsRemainingToWaitedFrame != 0 and millisecondsRemainingToWaitedFrame > eachSteppingMorph.previousMillisecondsRemainingToWaitedFrame
+            millisecondsRemainingToWaitedFrame = 0
+          eachSteppingMorph.previousMillisecondsRemainingToWaitedFrame = millisecondsRemainingToWaitedFrame
+          #console.log millisBetweenSteps + " " + millisecondsRemainingToWaitedFrame
+        else
+          elapsedMilliseconds = WorldMorph.currentTime - eachSteppingMorph.lastTime
+          millisecondsRemainingToWaitedFrame = millisBetweenSteps - elapsedMilliseconds
       
-      # We could fire at the exact due time or when the time is past by
-      # firing when remaining ms is <= 0
-      # Or like in this case we can fire slightly earlier so to compensate
-      # for when we come to fire late for one reason or the other.
-      # There is no excat science in choosing to fire
-      # a ms earlier here, it's quite random.
-      # This whole mechanism will need to be remade anyways.
-      if millisecondsRemainingToWaitedFrame <= 1
-        eachSteppingMorph.lastTime = WorldMorph.currentTime
-        if eachSteppingMorph.onNextStep
-          nxt = eachSteppingMorph.onNextStep
-          eachSteppingMorph.onNextStep = nil
-          nxt.call eachSteppingMorph
-        if !eachSteppingMorph.step?
-          debugger
-        try
-          eachSteppingMorph.step()
-        catch err
-          @softResetWorld()
-          if !world.errorConsole? then world.createErrorConsole()
-          @errorConsole.contents.showUpWithError err
+      if millisecondsRemainingToWaitedFrame <= 0
+        @stepWidget eachSteppingMorph
 
+        # Increment "lastTime" by millisBetweenSteps. Two notes:
+        # 1) We don't just set it to currentTime so that there is no drifting
+        # in running it the next time: we run it the next time as if this time it
+        # ran exactly on time.
+        # 2) We are going to update "last time" with the loop
+        # below. This is because in case the window is not in foreground,
+        # requestAnimationFrame doesn't run, so we might skip a number of steps.
+        # In such cases, just bring "lastTime" up to speed here.
+        # If we don't do that, "skipped" steps would catch up on us and run all
+        # in contigous frames when the window comes to foreground, so the
+        # widgets would animate frantically (every frame) catching up on
+        # all the steps they missed. We don't want that.
+        #
+        # while eachSteppingMorph.lastTime + millisBetweenSteps < WorldMorph.currentTime
+        #   eachSteppingMorph.lastTime += millisBetweenSteps
+        #
+        # 3) and finally, here is the equivalent of the loop above, but done
+        # in one shot using remainders.
+        # Again: we are looking for the last "multiple" k such that
+        #      lastTime + k * millisBetweenSteps
+        # is less than currentTime.
+
+        eachSteppingMorph.lastTime = WorldMorph.currentTime - ((WorldMorph.currentTime - eachSteppingMorph.lastTime) % millisBetweenSteps)
+
+
+
+  stepWidget: (whichWidget) ->
+    if whichWidget.onNextStep
+      nxt = whichWidget.onNextStep
+      whichWidget.onNextStep = nil
+      nxt.call whichWidget
+    if !whichWidget.step?
+      debugger
+    try
+      whichWidget.step()
+      console.log "stepping " + whichWidget
+    catch err
+      @softResetWorld()
+      if !world.errorConsole? then world.createErrorConsole()
+      @errorConsole.contents.showUpWithError err
 
   
   runOtherTasksStepFunction : ->

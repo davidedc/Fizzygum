@@ -7,10 +7,13 @@ class AnalogClockWdgt extends Widget
   minutesHandAngle: 0
   secondsHandAngle: 0
   strokeSizeToClockDimensionRatio: 1/250
+  dateLastTicked: nil
 
   constructor: ->
 
     @fps = 1
+    @synchronisedStepping = true
+    @dateLastTicked = WorldMorph.currentDate
     world.addSteppingMorph @
 
     super()
@@ -81,6 +84,7 @@ class AnalogClockWdgt extends Widget
       @paintHighlight aContext, al, at, w, h
 
   step: ->
+    @dateLastTicked = WorldMorph.currentDate
     @changed()
 
   calculateHandsAngles: ->
@@ -88,14 +92,12 @@ class AnalogClockWdgt extends Widget
     if AutomatorRecorderAndPlayer? and
      AutomatorRecorderAndPlayer.animationsPacingControl and
      AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-      now = new Date 2011,10,30
-    else
-      now = new Date()
+      @dateLastTicked = new Date 2011,10,30
 
-    #sec = now.getSeconds()
-    sec = now.getSeconds() + now.getMilliseconds()/1000
-    min = now.getMinutes()
-    hr = now.getHours()
+    #sec = @dateLastTicked.getSeconds()
+    sec = @dateLastTicked.getSeconds() + @dateLastTicked.getMilliseconds()/1000
+    min = @dateLastTicked.getMinutes()
+    hr = @dateLastTicked.getHours()
     hr = if hr >= 12 then hr - 12 else hr
     @hoursHandAngle = hr * Math.PI / 6 + Math.PI / 360 * min + Math.PI / 21600 * sec
     @minutesHandAngle = Math.PI / 30 * min + Math.PI / 1800 * sec
