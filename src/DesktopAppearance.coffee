@@ -30,57 +30,50 @@ class DesktopAppearance extends RectangularAppearance
 
       switch @morph.patternName
         when @morph.pattern2
-          pctx.fillStyle = 'rgb(235, 235, 235)'
+          pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
           pctx.lineWidth = 0.25
           pctx.beginPath()
           pctx.arc 2,2,2,0,2*Math.PI
-          pctx.fillStyle = 'rgb(225, 225, 225)'
-          pctx.strokeStyle = 'rgb(190, 190, 190)'
+          pctx.fillStyle = 'rgb(220, 219, 220)'
           pctx.fill()
-          pctx.stroke()
         when @morph.pattern3
-          pctx.fillStyle = 'rgb(230, 236, 241)'
+          pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
-          pctx.lineWidth = 0.25
           pctx.moveTo 1,0
           pctx.lineTo 1,5
-          pctx.strokeStyle = 'rgb(166, 183, 194)'
+          pctx.strokeStyle = 'rgb(225, 224, 225)'
           pctx.stroke()
         when @morph.pattern4
-          pctx.fillStyle = 'rgb(230, 230, 230)'
+          pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
-          pctx.lineWidth = 0.25
           pctx.moveTo 0,5
           pctx.lineTo 5,0
-          pctx.strokeStyle = 'rgb(166, 166, 166)'
+          pctx.strokeStyle = 'rgb(225, 224, 225)'
           pctx.stroke()
         when @morph.pattern5
-          pctx.fillStyle = 'rgb(230, 230, 230)'
+          pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
-          pctx.lineWidth = 0.25
           pctx.moveTo 2,2
           pctx.lineTo 4,4
-          pctx.strokeStyle = 'rgb(166, 166, 166)'
+          pctx.strokeStyle = 'rgb(225, 224, 225)'
           pctx.stroke()
         when @morph.pattern6
-          pctx.fillStyle = 'rgb(230, 230, 230)'
+          pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
-          pctx.lineWidth = 0.25
           pctx.moveTo 0,0
           pctx.lineTo 3,3
           pctx.lineTo 5,0
-          pctx.strokeStyle = 'rgb(166, 166, 166)'
+          pctx.strokeStyle = 'rgb(225, 224, 225)'
           pctx.stroke()
         when @morph.pattern7
-          pctx.fillStyle = 'rgb(230, 230, 230)'
+          pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
-          pctx.lineWidth = 0.25
           pctx.moveTo 0,5
           pctx.lineTo 5,0
           pctx.moveTo 2.5,2.5
           pctx.lineTo 0,0
-          pctx.strokeStyle = 'rgb(166, 166, 166)'
+          pctx.strokeStyle = 'rgb(225, 224, 225)'
           pctx.stroke()
 
 
