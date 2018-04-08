@@ -928,7 +928,7 @@ class MenusHelper
 
     sdspw.addDivider()    
 
-    sdspw.addNormalParagraph "Feel free to click around this sandbox. Just reload to start again from scratch."
+    sdspw.addNormalParagraph "Feel free to click around this sandbox. Double-click the items on the desktop to open them. Just reload to start again from scratch."
 
     sdspw.addSpacer()
     sdspw.addNormalParagraph "Also check out some screenshots here:"
