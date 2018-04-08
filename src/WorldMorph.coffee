@@ -1455,17 +1455,6 @@ class WorldMorph extends PanelWdgt
     if @keyboardEventsReceiver
       @keyboardEventsReceiver.processKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey
 
-    # suppress backspace override
-    if event? and scanCode is 8
-      event.preventDefault()
-
-    # suppress tab override and make sure tab gets
-    # received by all browsers
-    if event? and scanCode is 9
-      if @keyboardEventsReceiver
-        @keyboardEventsReceiver.processKeyPress scanCode, "\t", shiftKey, ctrlKey, altKey, metaKey
-      event.preventDefault()
-
   processKeyup: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       @automatorRecorderAndPlayer.addKeyUpCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
