@@ -338,6 +338,8 @@ class WorldMorph extends PanelWdgt
     WorldMorph.preferencesAndSettings.defaultPanelsBackgroundColor = new Color 249, 249, 249
     WorldMorph.preferencesAndSettings.defaultPanelsStrokeColor = new Color 198, 198, 198
 
+    @setPattern nil, nil, "dots"
+
     @changed()
 
   getNextUntitledShortcutName: ->
