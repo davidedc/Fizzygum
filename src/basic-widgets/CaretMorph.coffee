@@ -120,6 +120,21 @@ class CaretMorph extends BlinkerMorph
       when 8
         @deleteLeft()
         @keyDownEventUsed = true
+      when 9
+        # TAB is another key that doesn't
+        # produce a keypress in all browsers/OSs
+        @keyDownEventUsed = true
+        if @target?
+          if shiftKey
+            return @target.backTab @target
+          else
+            if @target instanceof SimplePlainTextWdgt
+              @insert "  "
+              @keyDownEventUsed = true
+              debugger
+            else
+              return @target.tab @target
+
       when 13
         # we can't check the class using instanceof
         # because TextMorphs are instances of StringMorphs
@@ -282,13 +297,7 @@ class CaretMorph extends BlinkerMorph
     else
       @target.clearSelection()
   
-  insert: (symbol, shiftKey) ->
-    if symbol is "\t"
-      @target.escalateEvent 'reactToEdit', @target
-      if shiftKey
-        return @target.backTab @target
-      return @target.tab @target
-    
+  insert: (symbol, shiftKey) ->    
     # if the target "isNumeric", then only accept
     # numbers and "-" and "." as input
     if not @target.isNumeric or not isNaN(parseFloat(symbol)) or symbol in ["-", "."]

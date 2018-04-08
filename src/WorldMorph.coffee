@@ -1671,6 +1671,11 @@ class WorldMorph extends PanelWdgt
         # it didn't work).
         doPrevent = true
 
+      # also browsers tend to do special things when "tab"
+      # is pressed, so let's avoid that
+      if event.keyCode == 9 and event.target == @worldCanvas
+        doPrevent = true
+
       if doPrevent
         event.preventDefault()
 
