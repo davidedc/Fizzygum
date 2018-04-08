@@ -2382,7 +2382,6 @@ class WorldMorph extends PanelWdgt
     if @caret
       @lastEditedText = @caret.target
       @lastEditedText.clearSelection()
-      @lastEditedText.escalateEvent "reactToEdit", @lastEditedText
       @caret = @caret.fullDestroy()
 
     # the only place where the @keyboardEventsReceiver is unset
