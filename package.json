@@ -1,0 +1,30 @@
+{
+  "name": "fizzygum",
+  "version": "1.1.6",
+  "description": "Tired of stringing libraries together? Try a new web framework that puts the power of an entire Operating System at your fingertips.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidedc/Fizzygum.git"
+  },
+  "keywords": [
+    "desktop",
+    "operating-system",
+    "windowing",
+    "coffeescript",
+    "javascript",
+    "dashboard"
+  ],
+  "author": "Fizzygum",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/davidedc/Fizzygum/issues"
+  },
+  "homepage": "https://github.com/davidedc/Fizzygum#readme"
+}
