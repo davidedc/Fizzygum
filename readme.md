@@ -1,3 +1,5 @@
+![Fizzygum header](http://fizzygum.org/assets/images/fg-og-image.png)
+
 Fizzygum
 ========
 
