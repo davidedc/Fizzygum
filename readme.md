@@ -4,7 +4,7 @@ Fizzygum
 ========
 
 Tired of stringing libraries together?
-Try a new web framework that does complex things, easily.
+Try a new web framework that handles complex things, easily.
 
 Fizzygum is designed from the ground up to: 
 
