@@ -22,7 +22,6 @@ class ErrorsLogViewerMorph extends Widget
   paused: false
 
   constructor: (@msg, @target, @callback, @defaultContents) ->
-    debugger
     super new Point 200,400
     @buildAndConnectChildren()
 
@@ -61,7 +60,6 @@ class ErrorsLogViewerMorph extends Widget
 
 
   buildAndConnectChildren: ->
-    debugger
     if AutomatorRecorderAndPlayer? and
      AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and
      AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
@@ -112,9 +110,8 @@ class ErrorsLogViewerMorph extends Widget
     @close()
 
   doLayout: (newBoundsForThisLayout) ->
-    debugger
-    if !window.recalculatingLayouts
-      debugger
+    #if !window.recalculatingLayouts
+    #  debugger
 
     if !newBoundsForThisLayout?
       if @desiredExtent?

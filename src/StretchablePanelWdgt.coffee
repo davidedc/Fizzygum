@@ -33,8 +33,8 @@ class StretchablePanelWdgt extends PanelWdgt
 
 
   doLayout: (newBoundsForThisLayout) ->
-    if !window.recalculatingLayouts
-      debugger
+    #if !window.recalculatingLayouts
+    #  debugger
 
     if !newBoundsForThisLayout?
       if @desiredExtent?
@@ -53,9 +53,6 @@ class StretchablePanelWdgt extends PanelWdgt
       @layoutIsValid = true
       @notifyChildrenThatParentHasReLayouted()
       return
-
-    debugger
-
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -90,7 +87,6 @@ class StretchablePanelWdgt extends PanelWdgt
       world.alignIDsOfNextMorphsInSystemTests()
 
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
-    debugger
     super
 
     childrenNotHandlesNorCarets = @children.filter (m) ->
@@ -106,7 +102,6 @@ class StretchablePanelWdgt extends PanelWdgt
     menu.removeConsecutiveLines()
 
   enableDragsDropsAndEditing: (triggeringWidget) ->
-    debugger
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
@@ -117,7 +112,6 @@ class StretchablePanelWdgt extends PanelWdgt
       super @
 
   disableDragsDropsAndEditing: (triggeringWidget) ->
-    debugger
     if !triggeringWidget? then triggeringWidget = @
     if !@dragsDropsAndEditingEnabled
       return

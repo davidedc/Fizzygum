@@ -428,7 +428,6 @@ class StringMorph2 extends Widget
 
           if paragraphBeforeWithNewLineHasBeenCropped
             if !@doesTextFitInExtent fittingText + "\n", @originallySetFontSize
-              console.log "break 1"
               break
             else
               fittingText += "\n"
@@ -1105,7 +1104,6 @@ class StringMorph2 extends Widget
       @changed()
   
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    debugger
     [menuEntriesStrings, functionNamesStrings] = theTarget.stringSetters()
     menu = new MenuMorph @, false, @, true, true, "choose target property:"
     for i in [0...menuEntriesStrings.length]

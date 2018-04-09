@@ -10,7 +10,6 @@ class MenusHelper
   @augmentWith DeepCopierMixin
 
   popUpDevToolsMenu: (morphOpeningThePopUp, widgetThisMenuIsAbout) ->
-    debugger
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Dev Tools"
     menu.addMenuItem "inspect", true, widgetThisMenuIsAbout, "inspect2", "open a window\non all properties"
     menu.addMenuItem "console", true, widgetThisMenuIsAbout, "createConsole", "console"
@@ -20,7 +19,6 @@ class MenusHelper
 
   # »>> this part is excluded from the fizzygum homepage build
   createFridgeMagnets: ->
-    debugger
     fmm = new FridgeMagnetsMorph()
     wm = new WindowWdgt nil, nil, fmm
     wm.setExtent new Point 570, 400
@@ -76,7 +74,6 @@ class MenusHelper
     world.create new WidgetHolderWithCaptionWdgt "hey there"
 
   makeFolderWindow: (a,b,c,d,e) ->
-    debugger
     world.create new FolderWindowWdgt nil,nil,nil,nil, @
 
   makeBouncingParticle: ->
@@ -562,7 +559,6 @@ class MenusHelper
     wm.changed()
 
   createSliderWithSmallestValueAtBottomEnd: ->
-    debugger
     world.create new SliderMorph nil, nil, nil, nil, nil, true
 
   createRegexSubstitutionPatchNodeWdgt: ->

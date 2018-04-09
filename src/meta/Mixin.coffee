@@ -5,7 +5,7 @@ class Mixin
   name: ""
 
   _equivalentforSuper: (aString) ->
-    console.log "removing super from: " + aString
+    #console.log "removing super from: " + aString
 
     # coffeescript won't compile "super" unless it's an instance
     # method (i.e. if it comes inside a class), so we need to
@@ -46,7 +46,7 @@ class Mixin
     if (aString.indexOf "[].indexOf") != -1 or
      (aString.indexOf "{}.hasProp") != -1 or
      (aString.indexOf "[].slice") != -1
-      alert "code contains a helper var, it shouldn't: " +  aString
+      console.log "code contains a helper var, it shouldn't: " +  aString
       debugger
 
     return aString
@@ -60,12 +60,12 @@ class Mixin
     mixinRegex = /^([a-zA-Z_$][0-9a-zA-Z_$]*)Mixin *=/m
     if (m = mixinRegex.exec(source))?
         m.forEach((match, groupIndex) ->
-            console.log("Found match, group #{groupIndex}: #{match}")
+            if srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
         )
         @name = m[1]
-        console.log "mixin name: " + @name
+        if srcLoadCompileDebugWrites then console.log "mixin name: " + @name
 
-    console.log "source ---------\n" + source
+    if srcLoadCompileDebugWrites then console.log "source ---------\n" + source
 
     sourceToBeParsed = source + "\n      $$$STOPTOKEN_LASTFIELD :"
 
@@ -82,12 +82,12 @@ class Mixin
         if (m.index == regex.lastIndex)
             regex.lastIndex++
         m.forEach (match, groupIndex) ->
-            console.log "Found match, group #{groupIndex}: #{match}"
+            if srcLoadCompileDebugWrites then console.log "Found match, group #{groupIndex}: #{match}"
 
         if m[1].valueOf() == "$$$STOPTOKEN_LASTFIELD "
           break
         else
-          console.log "not the stop field: " + m[1].valueOf()
+          if srcLoadCompileDebugWrites then console.log "not the stop field: " + m[1].valueOf()
 
         @nonStaticPropertiesSources[m[1]] = m[2]
 

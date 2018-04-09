@@ -400,7 +400,7 @@ class WorldMorph extends PanelWdgt
 
 
     # boot-up state machine
-    console.log "booting"
+    if !@isIndexPage then console.log "booting"
     @basementWdgt = new BasementWdgt()
 
     WorldMorph.bootState = WorldMorph.JUST_STARTED
@@ -456,7 +456,7 @@ class WorldMorph extends PanelWdgt
     if WorldMorph.bootState == WorldMorph.BOOT_COMPLETE
       return
 
-    console.log "nextStartupAction " + (WorldMorph.ongoingUrlActionNumber+1) + " / " + startupActions.actions.length
+    if !@isIndexPage then console.log "nextStartupAction " + (WorldMorph.ongoingUrlActionNumber+1) + " / " + startupActions.actions.length
 
     currentAction = startupActions.actions[WorldMorph.ongoingUrlActionNumber]
     if AutomatorRecorderAndPlayer? and currentAction.name == "runTests"
@@ -1240,7 +1240,7 @@ class WorldMorph extends PanelWdgt
       debugger
     try
       whichWidget.step()
-      console.log "stepping " + whichWidget
+      #console.log "stepping " + whichWidget
     catch err
       @softResetWorld()
       if !world.errorConsole? then world.createErrorConsole()
@@ -1492,15 +1492,15 @@ class WorldMorph extends PanelWdgt
         unless @doublePressOfZeroKeypadKey?
           @doublePressOfZeroKeypadKey = 1
           setTimeout (=>
-            if @doublePressOfZeroKeypadKey is 1
-              console.log "single keypress"
+            #if @doublePressOfZeroKeypadKey is 1
+            #  console.log "single keypress"
             @doublePressOfZeroKeypadKey = nil
             event.keyCode = 0
             return false
           ), 300
         else
           @doublePressOfZeroKeypadKey = nil
-          console.log "double keypress"
+          #console.log "double keypress"
           event.keyCode = 0
         return false
 
@@ -1522,7 +1522,7 @@ class WorldMorph extends PanelWdgt
   # it's handled in the listeners
 
   processCut: (selectedText) ->
-    console.log "processing cut"
+    #console.log "processing cut"
     if @caret
       # see comment on outstandingTimerTriggeredOperationsCounter
       # above where the property is declared and initialised.
@@ -1536,14 +1536,14 @@ class WorldMorph extends PanelWdgt
       @automatorRecorderAndPlayer.addCutCommand selectedText
 
   processCopy: (selectedText) ->
-    console.log "processing copy"
+    #console.log "processing copy"
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       @automatorRecorderAndPlayer.addCopyCommand selectedText
 
   processPaste: (clipboardText) ->
     if @caret
       # Needs a few msec to execute paste
-      console.log "about to insert text: " + clipboardText
+      #console.log "about to insert text: " + clipboardText
       if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
         @automatorRecorderAndPlayer.addPasteCommand clipboardText
 
@@ -2058,7 +2058,6 @@ class WorldMorph extends PanelWdgt
     menu.popUpAtHand()
 
   setPattern: (menuItem, ignored2, thePatternName) ->
-    debugger
     if @patternName == thePatternName
       return
 

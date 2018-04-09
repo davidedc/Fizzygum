@@ -56,32 +56,27 @@ class CalculatingPatchNodeWdgt extends Widget
     "Calculating patch node"
 
   setInput1: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    debugger
     if !superCall and connectionsCalculationToken == @input1connectionsCalculationToken then return else if !connectionsCalculationToken? then @input1connectionsCalculationToken = getRandomInt -20000, 20000 else @input1connectionsCalculationToken = connectionsCalculationToken
     @input1 = Number(newvalue)
     @updateTarget @input1connectionsCalculationToken
 
   setInput2: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    debugger
     if !superCall and connectionsCalculationToken == @input2connectionsCalculationToken then return else if !connectionsCalculationToken? then @input2connectionsCalculationToken = getRandomInt -20000, 20000 else @input2connectionsCalculationToken = connectionsCalculationToken
     @input2 = Number(newvalue)
     @updateTarget @input2connectionsCalculationToken
 
   setInput3: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    debugger
     if !superCall and connectionsCalculationToken == @input3connectionsCalculationToken then return else if !connectionsCalculationToken? then @input3connectionsCalculationToken = getRandomInt -20000, 20000 else @input3connectionsCalculationToken = connectionsCalculationToken
     @input3 = Number(newvalue)
     @updateTarget @input3connectionsCalculationToken
 
   setInput4: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    debugger
     if !superCall and connectionsCalculationToken == @input4connectionsCalculationToken then return else if !connectionsCalculationToken? then @input4connectionsCalculationToken = getRandomInt -20000, 20000 else @input4connectionsCalculationToken = connectionsCalculationToken
     @input4 = Number(newvalue)
     @updateTarget @input4connectionsCalculationToken
 
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    debugger
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
     @updateTarget @connectionsCalculationToken, true
 
@@ -95,8 +90,6 @@ class CalculatingPatchNodeWdgt extends Widget
     menu.popUpAtHand()
 
   updateTarget: (tokenToCheckIfEqual, directFireViaBang) ->
-    debugger
-
     if !@setInput1IsConnected and
      !@setInput2IsConnected and
      !@setInput3IsConnected and
@@ -183,7 +176,6 @@ class CalculatingPatchNodeWdgt extends Widget
 
 
   buildAndConnectChildren: ->
-    debugger
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
@@ -223,8 +215,8 @@ class CalculatingPatchNodeWdgt extends Widget
     @invalidateLayout()
 
   doLayout: (newBoundsForThisLayout) ->
-    if !window.recalculatingLayouts
-      debugger
+    #if !window.recalculatingLayouts
+    #  debugger
 
     if @isCollapsed()
       @layoutIsValid = true
@@ -232,7 +224,6 @@ class CalculatingPatchNodeWdgt extends Widget
       return
 
     super
-    debugger
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

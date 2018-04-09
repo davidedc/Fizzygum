@@ -18,7 +18,6 @@ class StretchableWidgetContainerWdgt extends Widget
   contents: nil
 
   constructor: (contents) ->
-    debugger
     super new Point 300, 300
     
     if !contents?
@@ -34,7 +33,6 @@ class StretchableWidgetContainerWdgt extends Widget
   # actually
   # ends up in the Panel inside it
   add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
-    debugger
     if !@contents? or (aMorph instanceof ModifiedTextTriangleAnnotationWdgt) or
      (aMorph instanceof HandleMorph)
       super
@@ -83,7 +81,6 @@ class StretchableWidgetContainerWdgt extends Widget
       @invalidateLayout()
 
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
-    debugger
     childrenNotHandlesNorCarets = @contents.children.filter (m) ->
       !((m instanceof HandleMorph) or (m instanceof CaretMorph))
 
@@ -108,8 +105,8 @@ class StretchableWidgetContainerWdgt extends Widget
 
 
   doLayout: (newBoundsForThisLayout) ->
-    if !window.recalculatingLayouts
-      debugger
+    #if !window.recalculatingLayouts
+    #  debugger
 
     #console.log "spanel @contents: " + @contents + " doLayout 1"
 
@@ -133,9 +130,6 @@ class StretchableWidgetContainerWdgt extends Widget
       return
 
     #console.log "spanel @contents: " + @contents + " doLayout 2"
-
-    debugger
-
 
     @rawSetBounds newBoundsForThisLayout
 
@@ -206,7 +200,6 @@ class StretchableWidgetContainerWdgt extends Widget
     menu.removeConsecutiveLines()
 
   enableDragsDropsAndEditing: (triggeringWidget) ->
-    debugger
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
@@ -217,7 +210,6 @@ class StretchableWidgetContainerWdgt extends Widget
       super @
 
   disableDragsDropsAndEditing: (triggeringWidget) ->
-    debugger
     if !triggeringWidget? then triggeringWidget = @
     if !@dragsDropsAndEditingEnabled
       return

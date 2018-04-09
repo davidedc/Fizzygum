@@ -437,7 +437,6 @@ class TextMorph2 extends StringMorph2
       # paying attention that in string2 some variables with the same
       # name as here actually have slightly different meaning
       if @isHeaderLine and @wrappedLines.length <= 1
-        debugger
         heightOfText = fontHeight @fittingFontSize
         textHorizontalPosition = x
         textVertPosition = y + textVerticalPosition

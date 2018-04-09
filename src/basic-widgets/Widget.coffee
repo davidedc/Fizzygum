@@ -711,8 +711,8 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setBounds: (aRectangle, morphStartingTheChange = nil) ->
-    if window.recalculatingLayouts
-      debugger
+    #if window.recalculatingLayouts
+    #  debugger
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
@@ -1220,8 +1220,8 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   fullMoveTo: (aPoint, morphStartingTheChange = nil) ->
-    if window.recalculatingLayouts
-      debugger
+    #if window.recalculatingLayouts
+    #  debugger
 
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
@@ -1465,8 +1465,8 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setExtent: (aPoint, morphStartingTheChange = nil) ->
-    if window.recalculatingLayouts
-      debugger
+    #if window.recalculatingLayouts
+    #  debugger
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
@@ -1551,8 +1551,8 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setWidth: (width) ->
-    if window.recalculatingLayouts
-      debugger
+    #if window.recalculatingLayouts
+    #  debugger
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
@@ -1588,8 +1588,8 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setHeight: (height) ->
-    if window.recalculatingLayouts
-      debugger
+    #if window.recalculatingLayouts
+    #  debugger
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
@@ -2747,7 +2747,6 @@ class Widget extends TreeNode
     @_acceptsDrops = false
   
   pickUp: ->
-    debugger
     oldParent = @parent
     oldParent?.childBeingPickedUp? @
     world.hand.grab @
@@ -3758,8 +3757,6 @@ class Widget extends TreeNode
 
 
   disableDragsDropsAndEditing: ->
-    debugger
-
     if !@dragsDropsAndEditingEnabled
       return
     @dragsDropsAndEditingEnabled = false
@@ -3801,8 +3798,6 @@ class Widget extends TreeNode
   deduplicateSettersAndSortByMenuEntryString: (menuEntriesStrings, functionNamesStrings) ->
     menuEntriesStrings = menuEntriesStrings.uniqueKeepOrder()
     functionNamesStrings = functionNamesStrings.uniqueKeepOrder()
-
-    debugger
 
     #1) combine the arrays:
     list = []
@@ -3950,7 +3945,6 @@ class Widget extends TreeNode
   
   # Widget eval. Used by the Inspector and the TextMorph.
   evaluateString: (codeSource) ->
-    debugger
     result = eval compileFGCode codeSource, true
     @reLayout()
     @changed()
@@ -4221,8 +4215,8 @@ class Widget extends TreeNode
     @doLayout != Widget::doLayout
 
   doLayout: (newBoundsForThisLayout) ->
-    if !window.recalculatingLayouts
-      debugger
+    #if !window.recalculatingLayouts
+    #  debugger
 
     if !newBoundsForThisLayout?
       if @desiredExtent?
@@ -4347,7 +4341,7 @@ class Widget extends TreeNode
       desWidth = nil
       extraSpace = newBoundsForThisLayout.width() - desired.width()
       if extraSpace < 0
-        alert "extraSpace is negative: " + extraSpace
+        console.log "this shouldn't happen, extraSpace is negative: " + extraSpace
         debugger
       if @parent == world then console.log "case 3 maxMargin: " + maxMargin
 
@@ -4356,7 +4350,7 @@ class Widget extends TreeNode
       else if maxMargin == 0
         ssss = 1
       else
-        alert "maxMargin negative: " + maxMargin + " max.width(): " + max.width() + " desired.width(): " + desired.width()
+        console.log "this shouldn't happen, maxMargin negative: " + maxMargin + " max.width(): " + max.width() + " desired.width(): " + desired.width()
         debugger
 
       childLeft = newBoundsForThisLayout.left()
@@ -4419,18 +4413,15 @@ class Widget extends TreeNode
             return false
           if m instanceof LayoutElementAdderOrDropletMorph
             return false
-          debugger
           kkk = m.lastSiblingBeforeMeSuchThat(
               (mm) ->
                 mm.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
             )
-          debugger
           if !kkk?
             return true
           if kkk instanceof LayoutElementAdderOrDropletMorph
             return false
-          return true            
-      debugger
+          return true
       if !leftToDo?
         break
       leftToDo.addAsSiblingBeforeMe \
@@ -4447,18 +4438,15 @@ class Widget extends TreeNode
             return false
           if m instanceof LayoutElementAdderOrDropletMorph
             return false
-          debugger
           kkk = m.firstSiblingAfterMeSuchThat(
               (mm) ->
                 mm.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
             )
-          debugger
           if !kkk?
             return true
           if kkk instanceof LayoutElementAdderOrDropletMorph
             return false
-          return true            
-      debugger
+          return true
       if !leftToDo?
         break
       leftToDo.addAsSiblingAfterMe \

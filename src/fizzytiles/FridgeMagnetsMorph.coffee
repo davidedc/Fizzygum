@@ -103,9 +103,8 @@ class FridgeMagnetsMorph extends Widget
     @invalidateLayout()
 
   doLayout: (newBoundsForThisLayout) ->
-    debugger
-    if !window.recalculatingLayouts
-      debugger
+    #if !window.recalculatingLayouts
+    #  debugger
 
     if @isCollapsed()
       @layoutIsValid = true

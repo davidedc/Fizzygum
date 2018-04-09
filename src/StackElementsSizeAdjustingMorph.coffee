@@ -53,7 +53,7 @@ class StackElementsSizeAdjustingMorph extends Widget
       # change based on how much the biggest max factor is.
       biggestMaxOfTheTwo = Math.max Math.abs(lmdd.x), Math.abs(rmdd.x)
       deltaX = (deltaDragFromPreviousCall.x * Math.pow(biggestMaxOfTheTwo,1.07)) * 500
-      console.log " deltax 2 : " + deltaX + " lmdd.x: " + lmdd.x + " rmdd.x: " + rmdd.x
+      #console.log " deltax 2 : " + deltaX + " lmdd.x: " + lmdd.x + " rmdd.x: " + rmdd.x
       deltaX = deltaX / (@parent.width() * 700)
 
       totalMax = 0
@@ -62,12 +62,12 @@ class StackElementsSizeAdjustingMorph extends Widget
 
       deltaX = deltaX * (totalMax / biggestMaxOfTheTwo)
 
-      console.log "(@parent.width() * 100): " + (@parent.width() * 100) + " deltax 3: " + deltaX
+      #console.log "(@parent.width() * 100): " + (@parent.width() * 100) + " deltax 3: " + deltaX
 
       until (lmdd.x + deltaX > 0) and (rmdd.x - deltaX > 0)
         deltaX = deltaX / 2
 
-      console.log " deltax 4 : " + deltaX
+      #console.log " deltax 4 : " + deltaX
 
       prev = leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x
       leftMorph.setMaxDim new Point lmdd.x + deltaX, lmdd.y
@@ -80,7 +80,7 @@ class StackElementsSizeAdjustingMorph extends Widget
       #console.log "leftMorph.getDesiredDim().x: " + leftMorph.getDesiredDim().x
       #console.log "rightMorph.getMaxDim().x: " + rightMorph.getMaxDim().x
       #console.log "rightMorph.getDesiredDim().x: " + rightMorph.getDesiredDim().x 
-      console.log "should be constant: " + (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
+      #console.log "should be constant: " + (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
 
 
   # TODO: this mechanism to show the right cursor is 90%

@@ -29,6 +29,5 @@ CreateShortcutOfDroppedItemsMixin =
 
       reactToDropOf: (droppedWidget) ->
         super
-        debugger
         if !(droppedWidget instanceof IconicDesktopSystemShortcutWdgt)
           droppedWidget.createReferenceAndClose nil, @

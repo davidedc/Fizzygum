@@ -14,7 +14,6 @@ class ModifiedTextTriangleAnnotationWdgt extends Widget
     # to only react to pointer events happening
     # within tha shape
     @noticesTransparentClick = false
-    debugger
 
     size = WorldMorph.preferencesAndSettings.handleSize
     @silentRawSetExtent new Point size, size

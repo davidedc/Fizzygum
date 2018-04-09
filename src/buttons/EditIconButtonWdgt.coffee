@@ -23,7 +23,6 @@ class EditIconButtonWdgt extends EmptyButtonMorph
 
 
   actOnClick: ->
-    debugger
     if @parent?
       if (@parent instanceof WindowWdgt)
         @parent.contents?.editButtonPressedFromWindowBar?()

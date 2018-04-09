@@ -40,7 +40,6 @@ class ScriptWdgt extends Widget
       containerWindow.close()
 
   buildAndConnectChildren: ->
-    debugger
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
@@ -103,8 +102,8 @@ class ScriptWdgt extends Widget
   textContentUnmodified: ->
 
   doLayout: (newBoundsForThisLayout) ->
-    if !window.recalculatingLayouts
-      debugger
+    #if !window.recalculatingLayouts
+    #  debugger
 
     if @isCollapsed()
       @layoutIsValid = true
@@ -112,7 +111,6 @@ class ScriptWdgt extends Widget
       return
 
     super
-    debugger
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

@@ -18,7 +18,6 @@ class AlignRightButtonWdgt extends Widget
     @toolTipMessage = "align right"
 
   mouseClickLeft: ->
-    debugger
     if world.lastNonTextPropertyChangerButtonClickedOrDropped?.alignRight?
       world.lastNonTextPropertyChangerButtonClickedOrDropped.alignRight()
     else if world.lastNonTextPropertyChangerButtonClickedOrDropped?

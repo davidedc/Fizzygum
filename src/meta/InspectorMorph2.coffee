@@ -113,7 +113,6 @@ class InspectorMorph2 extends Widget
     @buildAndConnectChildren()
   
   buildAndConnectChildren: ->
-    debugger
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
@@ -163,8 +162,6 @@ class InspectorMorph2 extends Widget
 
     if @showingOwnPropsOnly
       attribs = attribs.filter (prop) => @target.hasOwnProperty(prop)
-
-    console.log "attribs: " + attribs
 
 
     # caches the own methods of the object
@@ -317,14 +314,12 @@ class InspectorMorph2 extends Widget
     @invalidateLayout()
 
   textContentModified: ->
-    debugger
     # TODO this would stand for enabling/disabling the button
     # but really we are just changing the color and the button
     # still works. Need some better enabling/disabling
     @saveTextWdgt.setColor new Color 0,0,0
 
   textContentUnmodified: ->
-    debugger
     # TODO this would stand for enabling/disabling the button
     # but really we are just changing the color and the button
     # still works. Need some better enabling/disabling
@@ -427,9 +422,8 @@ class InspectorMorph2 extends Widget
     @detail.checkIfTextContentWasModifiedFromTextAtStart()
   
   doLayout: (newBoundsForThisLayout) ->
-    debugger
-    if !window.recalculatingLayouts
-      debugger
+    #if !window.recalculatingLayouts
+    #  debugger
 
     if @isCollapsed()
       @layoutIsValid = true

@@ -131,7 +131,6 @@ class CaretMorph extends BlinkerMorph
             if @target instanceof SimplePlainTextWdgt
               @insert "  "
               @keyDownEventUsed = true
-              debugger
             else
               return @target.tab @target
 

@@ -626,7 +626,6 @@ class ScrollPanelWdgt extends PanelWdgt
     @contents.enableDragsDropsAndEditing @
 
   disableDragsDropsAndEditing: (triggeringWidget) ->
-    debugger
     if !triggeringWidget? then triggeringWidget = @
     if !@dragsDropsAndEditingEnabled
       return

@@ -67,7 +67,6 @@ class PreferencesAndSettings
 
   constructor: ->
     @setMouseInputMode()
-    console.log("constructing PreferencesAndSettings")
 
   toggleInputMode: ->
     if @inputMode == PreferencesAndSettings.INPUT_MODE_MOUSE

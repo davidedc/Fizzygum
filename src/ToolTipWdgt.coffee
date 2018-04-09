@@ -20,7 +20,6 @@ class ToolTipWdgt extends Widget
    @color = WorldMorph.preferencesAndSettings.menuBackgroundColor,
    cornerRadius,
    @padding = 0) ->
-    debugger
     # console.log "bubble super"
     super()
     @strokeColor = WorldMorph.preferencesAndSettings.menuStrokeColor

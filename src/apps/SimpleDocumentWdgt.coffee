@@ -41,7 +41,6 @@ class SimpleDocumentWdgt extends Widget
     new TypewriterIconWdgt()
 
   hasStartingContentBeenChangedByUser: ->
-    debugger
     !(
       @simpleDocumentScrollPanel.contents.children.length == 1 and
       @simpleDocumentScrollPanel.contents.children[0] instanceof SimplePlainTextWdgt and
@@ -130,8 +129,8 @@ class SimpleDocumentWdgt extends Widget
     @invalidateLayout()
 
   doLayout: (newBoundsForThisLayout) ->
-    if !window.recalculatingLayouts
-      debugger
+    #if !window.recalculatingLayouts
+    #  debugger
 
     if @isCollapsed()
       @layoutIsValid = true
@@ -139,7 +138,6 @@ class SimpleDocumentWdgt extends Widget
       return
 
     super
-    debugger
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

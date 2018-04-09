@@ -23,7 +23,6 @@ class InternalIconButtonWdgt extends EmptyButtonMorph
 
 
   actOnClick: ->
-    debugger
     if @parent?.parent?
       if (@parent.parent instanceof WindowWdgt)
         @parent.parent.makeExternal()

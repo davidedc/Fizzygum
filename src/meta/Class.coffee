@@ -64,7 +64,7 @@ class Class
     if (aString.indexOf "[].indexOf") != -1 or
      (aString.indexOf "{}.hasProp") != -1 or
      (aString.indexOf "[].slice") != -1
-      alert "code contains a helper var, it shouldn't: " +  aString
+      console.log "code contains a helper var, it shouldn't: " +  aString
       debugger
 
     return aString

@@ -57,8 +57,8 @@ class SimpleLinkWdgt extends Widget
     @invalidateLayout()
 
   doLayout: (newBoundsForThisLayout) ->
-    if !window.recalculatingLayouts
-      debugger
+    #if !window.recalculatingLayouts
+    #  debugger
 
     if @isCollapsed()
       @layoutIsValid = true
@@ -66,7 +66,6 @@ class SimpleLinkWdgt extends Widget
       return
 
     super
-    debugger
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

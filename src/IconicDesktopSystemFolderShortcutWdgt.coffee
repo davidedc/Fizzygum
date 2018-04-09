@@ -3,7 +3,6 @@ class IconicDesktopSystemFolderShortcutWdgt extends IconicDesktopSystemShortcutW
   _acceptsDrops: true
 
   reactToDropOf: (droppedWidget) ->
-    debugger
     if droppedWidget instanceof IconicDesktopSystemLinkWdgt
       @target.contents.contents.add droppedWidget
     else

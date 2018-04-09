@@ -28,7 +28,6 @@ class ConsoleWdgt extends Widget
     "Console for: " + @target.colloquialName().toLowerCase()
 
   buildAndConnectChildren: ->
-    debugger
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
@@ -59,7 +58,6 @@ class ConsoleWdgt extends Widget
     @invalidateLayout()
 
   doSelection: ->
-    debugger
     savedScript = @textMorph.selection()
     compiled = compileFGCode savedScript, true
     functionFromCompiledCode = new Function compiled
@@ -73,8 +71,8 @@ class ConsoleWdgt extends Widget
     functionFromCompiledCode?.call @target
 
   doLayout: (newBoundsForThisLayout) ->
-    if !window.recalculatingLayouts
-      debugger
+    #if !window.recalculatingLayouts
+    #  debugger
 
     if @isCollapsed()
       @layoutIsValid = true
@@ -82,7 +80,6 @@ class ConsoleWdgt extends Widget
       return
 
     super
-    debugger
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

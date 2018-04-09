@@ -369,7 +369,6 @@ class StringMorph3 extends Widget
 
           if paragraphBeforeWithNewLineHasBeenCropped
             if !@doesTextFitInExtent fittingText + "\n", @originallySetFontSize
-              console.log "break 1"
               break
             else
               fittingText += "\n"

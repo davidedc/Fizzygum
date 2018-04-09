@@ -49,10 +49,8 @@ class ColorPickerMorph extends Widget
     @invalidateLayout()
 
   doLayout: (newBoundsForThisLayout) ->
-    debugger
-
-    if !window.recalculatingLayouts
-      debugger
+    #if !window.recalculatingLayouts
+    #  debugger
 
     if !newBoundsForThisLayout?
       if @desiredExtent?

@@ -34,7 +34,6 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
   # and in that case we tell the button to actually
   # inject the code.
   newCodeToInjectFromButton: (whichButtonHasNewCode) ->
-    debugger
     if @isToolPressed whichButtonHasNewCode
       whichButtonHasNewCode.injectCodeIntoTarget()
 
@@ -305,16 +304,14 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
         initialiseQueueIfNeeded = ->
             if !@queue?
                 @queue = [0..24].map -> nil
-            console.log "resetting the queue"
 
         mouseUpLeft = ->
             if world.hand.draggingSomething() then return
             if @queue?
-                console.log "draining the queue"
+                # draining the queue
                 contextMain = @underlyingCanvasMorph.getContextForPainting()
                 
                 until @queue.length == 0
-                    console.log @queue.length + " more point left to drain"
                     previousPos = @queue[0]
                     @queue.shift()
                     if previousPos?

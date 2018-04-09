@@ -18,7 +18,6 @@ class AlignCenterButtonWdgt extends Widget
     @toolTipMessage = "align center"
 
   mouseClickLeft: ->
-    debugger
     if world.lastNonTextPropertyChangerButtonClickedOrDropped?.alignCenter?
       world.lastNonTextPropertyChangerButtonClickedOrDropped.alignCenter()
     else if world.lastNonTextPropertyChangerButtonClickedOrDropped?

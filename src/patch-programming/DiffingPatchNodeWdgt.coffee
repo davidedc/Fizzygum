@@ -48,32 +48,27 @@ class DiffingPatchNodeWdgt extends Widget
     "Diffing patch node"
 
   setInput1: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    debugger
     if !superCall and connectionsCalculationToken == @input1connectionsCalculationToken then return else if !connectionsCalculationToken? then @input1connectionsCalculationToken = getRandomInt -20000, 20000 else @input1connectionsCalculationToken = connectionsCalculationToken
     @input1 = newvalue
     @updateTarget @input1connectionsCalculationToken
 
   setInput2: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    debugger
     if !superCall and connectionsCalculationToken == @input2connectionsCalculationToken then return else if !connectionsCalculationToken? then @input2connectionsCalculationToken = getRandomInt -20000, 20000 else @input2connectionsCalculationToken = connectionsCalculationToken
     @input1 = newvalue
     @updateTarget @input2connectionsCalculationToken
 
   setInput1Hot: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    debugger
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
     @input1 = newvalue
     @updateTarget @connectionsCalculationToken, false, true
 
   setInput2Hot: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    debugger
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
     @input2 = newvalue
     @updateTarget @connectionsCalculationToken, false, true
 
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    debugger
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
     @updateTarget @connectionsCalculationToken, true
 
@@ -87,8 +82,6 @@ class DiffingPatchNodeWdgt extends Widget
     menu.popUpAtHand()
 
   updateTarget: (tokenToCheckIfEqual, directFireViaBang, fireViaHotInput) ->
-    debugger
-
     if !@setInput1IsConnected and
      !@setInput2IsConnected and
      !@setInput1HotIsConnected and
@@ -140,7 +133,6 @@ class DiffingPatchNodeWdgt extends Widget
     @fireOutputToTarget getRandomInt -20000, 20000
 
   doCalculation: ->
-    debugger
     @output = @formattedDiff @input1, @input2
     @textMorph.setText @output
 
@@ -167,7 +159,6 @@ class DiffingPatchNodeWdgt extends Widget
 
 
   buildAndConnectChildren: ->
-    debugger
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
@@ -188,8 +179,8 @@ class DiffingPatchNodeWdgt extends Widget
     @invalidateLayout()
 
   doLayout: (newBoundsForThisLayout) ->
-    if !window.recalculatingLayouts
-      debugger
+    #if !window.recalculatingLayouts
+    #  debugger
 
     if @isCollapsed()
       @layoutIsValid = true
@@ -197,7 +188,6 @@ class DiffingPatchNodeWdgt extends Widget
       return
 
     super
-    debugger
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

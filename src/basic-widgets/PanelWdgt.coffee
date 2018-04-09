@@ -35,7 +35,6 @@ class PanelWdgt extends Widget
   # only the desktop and folder panels have menu entries
   # to invoke this
   makeFolder: (ignored, ignored2, name) ->
-    debugger
     newFolderWindow = new FolderWindowWdgt()
     newFolderWindow.close()
     newFolderWindow.createReference (name or world.getNextUntitledFolderShortcutName()), @
@@ -179,7 +178,6 @@ class PanelWdgt extends Widget
       m.fullRawMoveWithin @
 
   editButtonPressedFromWindowBar: ->
-    debugger
     if @dragsDropsAndEditingEnabled
       @disableDragsDropsAndEditing @
     else

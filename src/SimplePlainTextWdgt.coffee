@@ -51,7 +51,6 @@ class SimplePlainTextWdgt extends TextMorph2
     @layoutSpecDetails.canSetHeightFreely = false
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    debugger
     [menuEntriesStrings, functionNamesStrings] = theTarget.stringSetters()
     menu = new MenuMorph @, false, @, true, true, "choose target property:"
     for i in [0...menuEntriesStrings.length]
@@ -104,8 +103,6 @@ class SimplePlainTextWdgt extends TextMorph2
 
 
   softWrapOn: ->
-    debugger
-
     @parent.parent.isTextLineWrapping = true
     @maxTextWidth = true
 
@@ -114,7 +111,6 @@ class SimplePlainTextWdgt extends TextMorph2
     @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   softWrapOff: ->
-
     @parent.parent.isTextLineWrapping = false
     @maxTextWidth = nil
 

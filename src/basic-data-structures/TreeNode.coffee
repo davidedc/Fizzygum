@@ -153,7 +153,6 @@ class TreeNode
     return thereCouldBeOne.length == 1
 
   isInBasementButReachable: (newGcSessionId) ->
-    debugger
     if @gcSessionId == newGcSessionId
       return true
     if @parent.gcSessionId == newGcSessionId

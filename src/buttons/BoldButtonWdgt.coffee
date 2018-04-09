@@ -18,6 +18,5 @@ class BoldButtonWdgt extends Widget
     @toolTipMessage = "bold"
 
   mouseClickLeft: ->
-    debugger
     if world.lastNonTextPropertyChangerButtonClickedOrDropped?.toggleWeight?
       world.lastNonTextPropertyChangerButtonClickedOrDropped.toggleWeight()

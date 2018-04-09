@@ -41,7 +41,6 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
     menu.removeConsecutiveLines()
 
   enableDragsDropsAndEditing: (triggeringWidget) ->
-    debugger
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
@@ -52,7 +51,6 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
       super @
 
   disableDragsDropsAndEditing: (triggeringWidget) ->
-    debugger
     if !triggeringWidget? then triggeringWidget = @
     if !@dragsDropsAndEditingEnabled
       return

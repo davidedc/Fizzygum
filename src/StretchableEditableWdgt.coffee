@@ -183,7 +183,6 @@ class StretchableEditableWdgt extends Widget
   # same as simpledocumentscrollpanel, you can lock the contents.
   # worth factoring it out as a mixin?
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
-    debugger
     super
 
     childrenNotHandlesNorCarets = @children.filter (m) ->

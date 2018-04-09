@@ -174,7 +174,6 @@ class FridgeMorph extends PanelWdgt
   compileTiles: ->
    if @sourceCodeHolder?
       code = @putIntoWords()
-      debugger
       @sourceCodeHolder.showCompiledCode code
       @fridgeMagnetsCanvas?.newGraphicsCode code
 

@@ -347,7 +347,7 @@ Object::addInstanceProperties = (fromClass, obj) ->
     if fromClass?
       if isFunction value
         @::[key + "_class_injected_in"] = fromClass
-        console.log "addingClassToMixin " + key + "_class_injected_in"
+        if srcLoadCompileDebugWrites then console.log "addingClassToMixin " + key + "_class_injected_in"
 
   obj.included?.apply @
   this
@@ -493,7 +493,7 @@ loadJSFile = (fileName, dontLogToDiv) ->
 
     script.onload = ->
       addLineToLogDiv "loading " + this.src
-      console.log "loading " + this.src
+      if srcLoadCompileDebugWrites then console.log "loading " + this.src
       resolve(script)
 
     document.head.appendChild script
@@ -518,13 +518,11 @@ loadJSFilesWithCoffeescriptSources = ->
 
 
 compileFGCode = (codeSource, bare) ->
-  debugger
   t0 = performance.now()
   try
     # Coffeescript v2 is used
     compiled = CoffeeScript.compile codeSource,{"bare":bare}
   catch err
-    debugger
     errorMessage =  "error in compiling:\n"
     errorMessage += codeSource + "\n"
     errorMessage += "error:\n"
@@ -659,7 +657,6 @@ boot = ->
           AutomatorRecorderAndPlayer.testsManifest = testsManifest
           AutomatorRecorderAndPlayer.testsAssetsManifest = testsAssetsManifest
         startupActions = getParameterByName "startupActions"
-        console.log "startupActions: " + startupActions
         if startupActions?
           world.nextStartupAction()
     else
@@ -671,7 +668,6 @@ boot = ->
       .then ->
         createWorldAndStartStepping()
         startupActions = getParameterByName "startupActions"
-        console.log "startupActions: " + startupActions
         if startupActions?
           world.nextStartupAction()
 
@@ -712,7 +708,7 @@ generate_inclusion_order = (dependencies) ->
     #value = dependencies[key]
     #console.log value
     visit dependencies, key, inclusion_order
-  console.log "inclusion_order: " + inclusion_order
+  if srcLoadCompileDebugWrites then console.log "inclusion_order: " + inclusion_order
   return inclusion_order
 
 
@@ -762,7 +758,7 @@ generateInclusionOrder = ->
     eachFile = eachFile.replace "_coffeSource",""
     if eachFile == "Class" then continue
     if eachFile == "Mixin" then continue
-    console.log eachFile + " - "
+    if srcLoadCompileDebugWrites then console.log eachFile + " - "
     dependencies[eachFile] = []
     lines = window[eachFile + "_coffeSource"].split '\n'
     i = 0
@@ -773,19 +769,19 @@ generateInclusionOrder = ->
       if matches?
         #console.log matches
         dependencies[eachFile].push matches[1]
-        console.log eachFile + " extends " + matches[1]
+        if srcLoadCompileDebugWrites then console.log eachFile + " extends " + matches[1]
 
       matches = lines[i].match REQUIRES
       if matches?
         #console.log matches
         dependencies[eachFile].push matches[1]
-        console.log eachFile + " requires " + matches[1]
+        if srcLoadCompileDebugWrites then console.log eachFile + " requires " + matches[1]
 
       matches = lines[i].match DEPENDS
       if matches?
         #console.log matches
         dependencies[eachFile].push matches[1]
-        console.log eachFile + " has class init in instance variable " + matches[1]
+        if srcLoadCompileDebugWrites then console.log eachFile + " has class init in instance variable " + matches[1]
 
       i++
   inclusion_order = generate_inclusion_order dependencies
@@ -795,7 +791,7 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
   emptyLogDiv()
 
 
-  console.log "--------------------------------"
+  if srcLoadCompileDebugWrites then console.log "--------------------------------"
   inclusion_order = generateInclusionOrder()
 
 
@@ -856,7 +852,7 @@ compileSource = (fileName, justLoadSources) ->
 
   t0 = performance.now()
 
-  console.log "checking whether " + fileName + " is already in the system "
+  if srcLoadCompileDebugWrites then console.log "checking whether " + fileName + " is already in the system "
 
   # loading via Class means that we register all the source
   # code and manually create any extensions
@@ -872,12 +868,12 @@ compileSource = (fileName, justLoadSources) ->
     else
       new Mixin fileContents, true, true
 
-  console.log "compiling and evalling " + fileName + " from souce code"
+  if srcLoadCompileDebugWrites then console.log "compiling and evalling " + fileName + " from souce code"
   emptyLogDiv()
   addLineToLogDiv "compiling and evalling " + fileName
 
   t1 = performance.now()
-  console.log "loadSourcesAndPotentiallyCompileThem call time: " + (t1 - t0) + " milliseconds."
+  if srcLoadCompileDebugWrites then console.log "loadSourcesAndPotentiallyCompileThem call time: " + (t1 - t0) + " milliseconds."
 
 
 # we use the trackChanges array as a stack to

@@ -18,6 +18,5 @@ class ItalicButtonWdgt extends Widget
     @toolTipMessage = "italic"
 
   mouseClickLeft: ->
-    debugger
     if world.lastNonTextPropertyChangerButtonClickedOrDropped?.toggleItalic?
       world.lastNonTextPropertyChangerButtonClickedOrDropped.toggleItalic()

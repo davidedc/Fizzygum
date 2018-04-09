@@ -7,7 +7,6 @@ class AxisWdgt extends Widget
   max: 0
 
   constructor: (@min = -15, @max = 15) ->
-    debugger
     super()
     @ticksRectangles = []
     @labelsTextBoxes = []
@@ -55,8 +54,8 @@ class AxisWdgt extends Widget
 
 
   doLayout: (newBoundsForThisLayout) ->
-    if !window.recalculatingLayouts
-      debugger
+    #if !window.recalculatingLayouts
+    #  debugger
 
     if !newBoundsForThisLayout?
       if @desiredExtent?
@@ -76,7 +75,6 @@ class AxisWdgt extends Widget
       @notifyChildrenThatParentHasReLayouted()
       return
 
-    debugger
     @rawSetBounds newBoundsForThisLayout
 
     # here we are disabling all the broken

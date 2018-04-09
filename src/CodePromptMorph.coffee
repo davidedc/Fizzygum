@@ -29,7 +29,6 @@ class CodePromptMorph extends Widget
     "Edit tool code"
 
   buildAndConnectChildren: ->
-    debugger
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
@@ -74,11 +73,9 @@ class CodePromptMorph extends Widget
     @invalidateLayout()
 
   textContentModified: ->
-    debugger
     @saveTextWdgt.setColor new Color 0,0,0
 
   textContentUnmodified: ->
-    debugger
     @saveTextWdgt.setColor new Color 200, 200, 200
 
 
@@ -92,8 +89,8 @@ class CodePromptMorph extends Widget
     @close()
 
   doLayout: (newBoundsForThisLayout) ->
-    if !window.recalculatingLayouts
-      debugger
+    #if !window.recalculatingLayouts
+    #  debugger
 
     if @isCollapsed()
       @layoutIsValid = true
@@ -101,7 +98,6 @@ class CodePromptMorph extends Widget
       return
 
     super
-    debugger
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

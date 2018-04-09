@@ -18,7 +18,6 @@ class IncreaseFontSizeButtonWdgt extends IconMorph
     @toolTipMessage = "increase font size"
 
   mouseClickLeft: ->
-    debugger
 
     if world.lastNonTextPropertyChangerButtonClickedOrDropped?.originallySetFontSize?
       widgetClickedLast = world.lastNonTextPropertyChangerButtonClickedOrDropped

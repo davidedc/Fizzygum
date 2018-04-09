@@ -44,7 +44,6 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
 
 
   reactToDropOf: (droppedWidget) ->
-    debugger
     @target.scrollPanel.contents.addInPseudoRandomPosition droppedWidget
 
   rejectsBeingDropped: ->

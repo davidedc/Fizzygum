@@ -167,8 +167,8 @@ class StretchableCanvasWdgt extends CanvasMorph
     world.add droppedWidget, nil, nil, true
   
   doLayout: (newBoundsForThisLayout) ->
-    if !window.recalculatingLayouts
-      debugger
+    #if !window.recalculatingLayouts
+    #  debugger
 
     if !newBoundsForThisLayout?
       if @desiredExtent?

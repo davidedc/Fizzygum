@@ -255,7 +255,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @removeChild @contents
 
   justDropped: (whereIn) ->
-    debugger
     super
     @contents?.holderWindowJustDropped? whereIn
 

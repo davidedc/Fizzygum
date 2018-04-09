@@ -18,7 +18,6 @@ class FormatAsCodeButtonWdgt extends IconMorph
     @toolTipMessage = "format as code"
 
   mouseClickLeft: ->
-    debugger
     if world.lastNonTextPropertyChangerButtonClickedOrDropped?.setFontName?
       widgetClickedLast = world.lastNonTextPropertyChangerButtonClickedOrDropped
       if widgetClickedLast.fontName != widgetClickedLast.monoFontStack
