@@ -151,6 +151,14 @@ echo "moving all tests body into the same directory..."
 find ../Fizzygum-builds/latest/js/tests -iname '*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js' -exec mv \{\} ../Fizzygum-builds/latest/js/tests \;
 echo "...done"
 
+# also all the assets are lumped-in into another directory
+# this is because the path would otherwise be too long to be
+# accessed by browsers (both Edge and Chrome in Nov 2018) in
+# Windows.
+echo "moving all tests assets into the same directory..."
+find ../Fizzygum-builds/latest/js/tests/assets -iname 'SystemTest_*.js' -exec mv \{\} ../Fizzygum-builds/latest/js/tests/assets \;
+echo "...done"
+
 echo "cleanup unneeded files"
 rm -rdf ../Fizzygum-builds/latest/delete_me
 echo "...done"
