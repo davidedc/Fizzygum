@@ -122,7 +122,27 @@ echo "... done copying icon files"
 # structure they come from, so a simple cp
 # doesn't cut it, we need the find below
 mkdir ../Fizzygum-builds/latest/js/tests/assets
-cp -r ../Fizzygum-tests/tests/* ../Fizzygum-builds/latest/js/tests/assets
+echo "copying all tests (this could take a minute)..."
+cp -r ../Fizzygum-tests/tests/* ../Fizzygum-builds/latest/js/tests/assets &
+
+# ------  spinning wheel  -------
+pid=$! # Process Id of the previous running command
+spin='-\|/'
+i=0
+TOTAL_NUMBER_OF_FILES=$(ls -afq ../Fizzygum-tests/tests/ | wc -l)
+
+while kill -0 $pid 2>/dev/null
+do
+  i=$(( (i+1) %4 ))
+  CURRENT_NUMBER_OF_FILES=$(ls -afq ../Fizzygum-builds/latest/js/tests/assets | wc -l)
+  printf "\r${spin:$i:1} %s / %s" $CURRENT_NUMBER_OF_FILES $TOTAL_NUMBER_OF_FILES
+  sleep 1
+done
+# ------  END OF spinning wheel  -------
+
+
+echo "... done copying all tests"
+
 find ../Fizzygum-builds/latest/js/tests -iname '*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js' -exec mv \{\} ../Fizzygum-builds/latest/js/tests \;
 
 echo "cleanup unneeded files"
