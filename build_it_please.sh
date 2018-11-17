@@ -117,10 +117,8 @@ cp auxiliary\ files/additional-icons/spinner.svg ../Fizzygum-builds/latest/icons
 echo "... done copying icon files"
 
 # the tests files are copied from a directory
-# structure so it's cleaner, but they
-# are copied recursively ignoring the directory
-# structure they come from, so a simple cp
-# doesn't cut it, we need the find below
+# where they are organised in a clean structure
+# so we copy them with their structure first...
 mkdir ../Fizzygum-builds/latest/js/tests/assets
 echo "copying all tests (this could take a minute)..."
 cp -r ../Fizzygum-tests/tests/* ../Fizzygum-builds/latest/js/tests/assets &
@@ -143,7 +141,15 @@ done
 
 echo "... done copying all tests"
 
+# ...however, the system actually needs the "body"
+# of the test (the one file with the commands)
+# all into one directory.
+# So we go through what we just copied and pick the
+# test body files and move them all into one
+# directory
+echo "moving all tests body into the same directory..."
 find ../Fizzygum-builds/latest/js/tests -iname '*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js' -exec mv \{\} ../Fizzygum-builds/latest/js/tests \;
+echo "...done"
 
 echo "cleanup unneeded files"
 rm -rdf ../Fizzygum-builds/latest/delete_me
