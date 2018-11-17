@@ -66,16 +66,22 @@ mkdir ../Fizzygum-builds/latest/js/tests/
 python ./buildSystem/build.py $1
 
 # turn the coffeescript file into js in the js directory
+echo "compiling boot file..."
 coffee -b -c -o ../Fizzygum-builds/latest/js/ ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee 
+echo "... done compiling boot file"
 
 # need to install uglify-es with:
 #   npm install uglify-es -g
 # why the executable has a different name than the package is beyond me
+echo "minifying boot file..."
 uglifyjs --compress --output ../Fizzygum-builds/latest/js/fizzygum-boot-min.js -- ../Fizzygum-builds/latest/js/fizzygum-boot.js
+echo "... done minifying boot file"
 
 # compile all the files containing the coffeescript source for the morphs.
 # this creates javascript files which contain the original coffeescript source as text.
+echo "putting sources strings from .coffee into .js files..."
 coffee -b -c -o ../Fizzygum-builds/latest/js/sourceCode/ ../Fizzygum-builds/latest/js/sourceCode/
+echo "... done putting sources strings from .coffee into .js files"
 
 # now that we have the coffeescript source code put inside .js files, we
 # can get rid of the .coffee files
@@ -96,12 +102,19 @@ cp auxiliary\ files/JSZip/jszip.min.js ../Fizzygum-builds/latest/js/libs/
 
 cp auxiliary\ files/CoffeeScript/coffee-script_2.0.3.js ../Fizzygum-builds/latest/js/libs/
 coffee -b -c -o ../Fizzygum-builds/latest/js/libs auxiliary\ files/Mousetrap/Mousetrap.coffee 
+echo "minifying..."
 uglifyjs --compress --output ../Fizzygum-builds/latest/js/libs/Mousetrap.min.js -- ../Fizzygum-builds/latest/js/libs/Mousetrap.js
+echo "... done minifying"
+
+echo "copying pre-compiled file"
 cp auxiliary\ files/pre-compiled.js ../Fizzygum-builds/latest/js/pre-compiled.js
+echo "... done"
 
 # copy aux icon files
+echo "copying icon files..."
 cp auxiliary\ files/additional-icons/*.png ../Fizzygum-builds/latest/icons/
 cp auxiliary\ files/additional-icons/spinner.svg ../Fizzygum-builds/latest/icons/
+echo "... done copying icon files"
 
 # the tests files are copied from a directory
 # structure so it's cleaner, but they
@@ -112,7 +125,9 @@ mkdir ../Fizzygum-builds/latest/js/tests/assets
 cp -r ../Fizzygum-tests/tests/* ../Fizzygum-builds/latest/js/tests/assets
 find ../Fizzygum-builds/latest/js/tests -iname '*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js' -exec mv \{\} ../Fizzygum-builds/latest/js/tests \;
 
+echo "cleanup unneeded files"
 rm -rdf ../Fizzygum-builds/latest/delete_me
+echo "...done"
 
 say build done
 echo done!!!!!!!!!!!!
