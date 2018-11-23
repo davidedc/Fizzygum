@@ -76,7 +76,6 @@ EXTENDS = re.compile(r"\sextends\s*(\w+)")
 DEPENDS = re.compile(r"\s\w+:\s*new\s*(\w+)")
 IS_CLASS = re.compile(r"^class +(\w+)", re.MULTILINE)
 IS_MIXIN = re.compile(r"^(\w+Mixin)[ ]*=", re.MULTILINE)
-TRIPLE_QUOTES = re.compile(r"'''")
 
 # regexps to exclude entire files or parts of files from the
 # homepage build
@@ -308,8 +307,37 @@ def main():
         print(filename)
 
 
-    STRING_BLOCK = \
-    """window.%s = '''\n%s\n'''"""
+    # so here we need to take a .coffee file and generate a js that
+    # , when run, puts its contents as string into a variable.
+    # There are three ways of doing this.
+    # 1) generate a coffeescript that contains a multiline string
+    #    with the file inside it, then do another pass to convert
+    #    the .coffee into .js
+    # 2) directly generate a .js file that uses JS multi-line strings
+    # 3) directly generate a .js that contains a normal JS string
+    #    (which requires us to turn the multi-line source into a normal
+    #    js string)
+    # 
+    # We used 1) before, however 3) is the easiest of the three.
+    # You'd think that 2) is easiest but that still requires some escaping
+    # of the source contents (multiline JS delimiters and in-string variables).
+    # 3) Only requires us to escape the " and the \ and to turn the newlines
+    # into something else. The easiest way is to replace " and \ with
+    # similarly-looking unicode characters and \n with another dedicated
+    # character (⤶).
+    # Of course we need to make sure that the obtained JS string is
+    # transformed back to the original source, hence why we append the
+    # three "replace"s to the string, so we undo the transformations
+    # of above.
+    #
+    # Note that this mechanism fails if the "transformed to" characters
+    # are already in the string, however we detect that and besides that's why
+    # we picked some strange characters.
+    #
+    # Also note that we tried to use .json to store these strings rather
+    # than using this js trick, however .json loading is not permitted from
+    # filesystem, so we'd always need a server...
+    STRING_BLOCK = 'window.%s = "%s".replace(/＂/g, "\\\"").replace(/⧹/g, "\\\\").replace(/⤶/g, "\\n");'
     sourcesManifests = "sourcesManifests = [];\n"
 
     # now iterate through the files and create the *.coffee files.
@@ -356,10 +384,23 @@ def main():
         # bracket).
         if (not args.homepage or not NOT_IN_FIZZYGUM_HOMEPAGE.search(content)) and (is_class_file or is_mixin_file):
 
-            # If there is a string block in the source, then we must escape it.
-            escaped_content = re.sub(TRIPLE_QUOTES, "\\'\\'\\'", content)
-            # also all the slashes need to be escaped
-            escaped_content = escaped_content.replace("\\","\\\\")
+            # backslashes and quotes and newlines all need
+            # to be escaped. Quotes need to be escaped otherwise
+            # they'll conflict with the starting and ending quote of
+            # the complete string. Backslashes need to be escaped
+            # otherwise that'll pair up with the next characters to
+            # encode all kinds of escape sequences including backspace
+            # and tabs and others (https://en.wikipedia.org/wiki/Escape_sequences_in_C)
+            # finally, obviously newlines need to be turned into something else
+            # since js (plain) strings can't span across multiple lines.
+
+            if ("＂" in content) or ("⧹" in content) or ("⤶" in content): 
+              print("ERROR: I'm replacing a special character with a character that is already present in " + filename + ". Likely to be a problem.")
+              exit()
+
+            escaped_content = content.replace('"',"＂")
+            escaped_content = escaped_content.replace("\\","⧹")
+            escaped_content = escaped_content.replace("\n","⤶")
 
             # if we are building for the homepage, we strip out all
             # sections of the file that don't belong to the homepage
@@ -367,7 +408,7 @@ def main():
                 escaped_content = re.sub(HOMEPAGE_EXCLUSION_PARTS, '', escaped_content)
 
             sourceFileName = ntpath.basename(filename).replace(".coffee","_coffeSource")
-            with codecs.open("../Fizzygum-builds/latest/js/sourceCode/"+sourceFileName+".coffee", "w", "utf-8") as f:
+            with codecs.open("../Fizzygum-builds/latest/js/sourceCode/"+sourceFileName+".js", "w", "utf-8") as f:
                 f.write(STRING_BLOCK % (unicode(sourceFileName), unicode(escaped_content)))
                 sourcesManifests += "sourcesManifests.push('" + sourceFileName + "');\n";
 

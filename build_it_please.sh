@@ -77,16 +77,6 @@ echo "minifying boot file..."
 uglifyjs --compress --output ../Fizzygum-builds/latest/js/fizzygum-boot-min.js -- ../Fizzygum-builds/latest/js/fizzygum-boot.js
 echo "... done minifying boot file"
 
-# compile all the files containing the coffeescript source for the morphs.
-# this creates javascript files which contain the original coffeescript source as text.
-echo "putting sources strings from .coffee into .js files..."
-coffee -b -c -o ../Fizzygum-builds/latest/js/sourceCode/ ../Fizzygum-builds/latest/js/sourceCode/
-echo "... done putting sources strings from .coffee into .js files"
-
-# now that we have the coffeescript source code put inside .js files, we
-# can get rid of the .coffee files
-rm ../Fizzygum-builds/latest/js/sourceCode/*.coffee
-
 if [ "$?" != "0" ]; then
     tput bel;
     echo "!!!!!!!!!!! error: coffeescript compilation failed!" 1>&2
