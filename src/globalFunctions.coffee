@@ -687,13 +687,23 @@ visit = (dependencies, theClass, inclusion_order) ->
   if dependencies[theClass]?
     for key in dependencies[theClass]
       if key in inclusion_order
-        break
+        # this needed thing is already in the dependency
+        # list (and hence also all the things that needs
+        # are in turn already in the list so we can move on
+        # to the next needed thing)
+        continue
       visit dependencies, key, inclusion_order
-  inclusion_order.push theClass
+  # if theClass == "Widget" then debugger
+  # if this thing was already visited or required by something
+  # else then there is no need to add it again in the
+  # inclusions
+  if theClass not in inclusion_order
+    inclusion_order.push theClass
 
-# we still need to evaluate the classes in the
+# we still need to go through the classes in the
 # correct order. We do that by looking at the sources
 # and some hints in the sources.
+# "dependencies" here is a dictionary
 generate_inclusion_order = (dependencies) ->
   """
   Returns a list of the coffee files. The list is ordered in such a way  that
@@ -703,8 +713,6 @@ generate_inclusion_order = (dependencies) ->
 
 
   for key of dependencies
-    if key == 'length' or !dependencies.hasOwnProperty key
-      continue
     #value = dependencies[key]
     #console.log value
     visit dependencies, key, inclusion_order
@@ -742,6 +750,17 @@ waitNextTurn = ->
           resolve args...
         , 1
     return prms
+
+# 1) if class A extends class B, then B needs to be before class A. This
+#    dependency can be figured out automatically (although at the moment in
+#    a sort of naive way) by looking at the source code.
+# 
+# 2) no objects of a class can be instantiated before the definition of the
+#    class. This dependency can be figured out automatically (although at the
+#    moment in a sort of naive way) by looking at the source code.
+# 
+# 3) some classes use global functions or global variables. These dependencies
+#    must be manually specified by creating a specially formatted comment.
 
 generateInclusionOrder = ->
   # find out the dependencies looking at each class'
