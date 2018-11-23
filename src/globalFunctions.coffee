@@ -715,6 +715,8 @@ generate_inclusion_order = (dependencies) ->
   for key of dependencies
     #value = dependencies[key]
     #console.log value
+    # recursively find out what this needed thing needs
+    # and add those to the dependency list
     visit dependencies, key, inclusion_order
   if srcLoadCompileDebugWrites then console.log "inclusion_order: " + inclusion_order
   return inclusion_order

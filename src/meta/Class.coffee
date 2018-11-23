@@ -133,6 +133,7 @@ class Class
             if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
         )
         @superClassName = m[1]
+        if window.srcLoadCompileDebugWrites then console.log "we should have already loaded " + @superClassName
         @superClass = window[@superClassName].class
 
         if window.srcLoadCompileDebugWrites then console.log "superClassName: " + @superClassName
