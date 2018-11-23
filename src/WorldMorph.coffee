@@ -442,7 +442,8 @@ class WorldMorph extends PanelWdgt
   #file:///Users/daviddellacasa/Fizzygum/Fizzygum-builds/latest/worldWithSystemTestHarness.html?startupActions=%7B%0A%20%20%22paramsVersion%22%3A%200.1%2C%0A%20%20%22actions%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22name%22%3A%20%22runTests%22%2C%0A%20%20%20%20%20%20%22testsToRun%22%3A%20%5B%22shadow%22%5D%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D
 
   nextStartupAction: ->
-    startupActions = JSON.parse getParameterByName "startupActions"
+    if (getParameterByName "startupActions")?
+      startupActions = JSON.parse getParameterByName "startupActions"
 
     if (!startupActions?) or (WorldMorph.ongoingUrlActionNumber == startupActions.actions.length)
       WorldMorph.bootState = WorldMorph.BOOT_COMPLETE
