@@ -177,6 +177,8 @@ def main():
     # the order here has no importance, just try to
     # give it some sense anyways, from most basic/necessary
     # to more elaborate/optional
+    # note that the boot/ directory is not visited, those files are
+    # concatenated by the shell script
     filenames = sorted(filenames + sorted(glob("src/mixins" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/basic-data-structures" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/basic-widgets" + "/*.coffee")))
@@ -225,7 +227,6 @@ def main():
     sourcesManifests = "sourcesManifests = [];\n"
 
     # now iterate through the files and create the *.coffee files.
-    text = []
     for filename in filenames:
         print(">>>> %s " % (filename))
         # open file and read its contents
@@ -240,15 +241,6 @@ def main():
         is_class_file = IS_CLASS.search(content)
         is_mixin_file = IS_MIXIN.search(content)
 
-        if (is_class_file):
-            print("#### not appending because is a class: %s " % (filename))
-
-        if (is_mixin_file):
-            print("#### not appending because is a mixin: %s " % (filename))
-
-        if not (is_class_file or is_mixin_file):
-            print("#### appending %s " % (filename))
-            text.append(content)
 
         # all the class and mixins files' coffeescript source is put
         # in .coffee files containing such sources as text.
@@ -300,18 +292,6 @@ def main():
         f.write(sourcesManifests)
 
 
-    # add the morphic version. This is used in the about box.
-    time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    text.append("morphicVersion = 'version of %s'" % time)
-
-    #concatenate text to a huge string.
-    text = str.join(str("\n"), text)
-
-    # write to disk
-    if not os.path.exists(os.path.dirname(FINAL_OUTPUT_FILE)):
-        os.makedirs(os.path.dirname(FINAL_OUTPUT_FILE))
-    with codecs.open(FINAL_OUTPUT_FILE, "w", "utf-8") as f:
-        f.write(text)
 
     # 4) a new HTML file is generated which also contains
     # all the loading of the test files
