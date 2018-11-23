@@ -132,16 +132,13 @@ Array::chunk = (chunkSize) ->
   [].concat.apply [], array.map (elem, i) ->
     if i % chunkSize then [] else [ array.slice(i, i + chunkSize) ]
 
-# from http://stackoverflow.com/a/13895743
 # removes the elements IN PLACE, i.e. the
 # array IS modified
-Array::remove = (args...) ->
-  output = []
-  for arg in args
-    index = @indexOf arg
-    output.push @splice index, 1 if index isnt -1
-  output = output[0] if args.length is 1
-  output
+Array::remove = (theElement) ->
+  index = @indexOf theElement
+  if index isnt -1
+    @splice index, 1
+  return @
 
 # deduplicates array entries
 # does NOT modify array in place
@@ -741,7 +738,7 @@ generate_inclusion_order = (dependencies) ->
 # so we can just wait each compilation step on
 # a timer.
 waitNextTurn = ->
-  (args...) ->
+  () ->
     if window.preCompiled
       prms = new Promise (resolve, reject) ->
         window.srcLoadsSteps.push resolve
@@ -749,7 +746,7 @@ waitNextTurn = ->
       # see https://gist.github.com/joepie91/2664c85a744e6bd0629c
       prms = new Promise (resolve, reject) ->
         setTimeout () ->
-          resolve args...
+          resolve arguments
         , 1
     return prms
 
