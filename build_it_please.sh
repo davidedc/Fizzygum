@@ -68,8 +68,8 @@ python ./buildSystem/build.py $1
 # turn the coffeescript file into js in the js directory
 echo "compiling boot file..."
 cp src/boot/globalFunctions.coffee ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+cat src/boot/numbertimes.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
 printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
-echo src/boot/numbertimes.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
 printf "\nmorphicVersion = 'version of $(date)'" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
 coffee -b -c -o ../Fizzygum-builds/latest/js/ ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee 
 echo "... done compiling boot file"
