@@ -534,18 +534,8 @@ boot = ->
   # The only thing that is loaded already is fizzygum-boot.js
   # which is this very file of globals.
   #
-  # The advantage of doing this asynchronous loading
-  # instead of plainly using script tags in the index
-  # is that script tags in the index file tend to load
-  # and execute in sequence (because the running of a
-  # script could change the html afterwards that loads the
-  # others, although browsers can speculatively
-  # try to do everything in parallel).
-  #
-  # By doing this here instead we have exact control of what
-  # is loaded and what the logic of the order is, all
-  # in one place, and all this loading and parsing can be
-  # done in parallel.
+  # You could probably do the same loading here by
+  # plainly using script tags in the index file.
   #
   # Note that it's important that none of the code in each
   # of these entries of this batch uses the code of any
