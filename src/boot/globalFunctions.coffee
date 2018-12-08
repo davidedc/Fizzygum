@@ -66,80 +66,6 @@ CanvasRenderingContext2D::rebuildDerivedValue = (objectIBelongTo, myPropertyName
   # e.g. "backBufferContext" -> belongs to canvas named: "backBuffer"
   objectIBelongTo[myPropertyName] = objectIBelongTo[myPropertyName.replace "Context", ""].getContext "2d"
 
-# Extending Array's prototype if 'filter' doesn't exist
-# already
-unless Array::filter
-  Array::filter = (callback) ->
-    element for element in this when callback element
-
-Array::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
-  haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf @
-  if haveIBeenCopiedAlready >= 0
-    if doSerialize
-      return "$" + haveIBeenCopiedAlready
-    else
-      return objectClones[haveIBeenCopiedAlready]
-
-  positionInObjClonesArray = objOriginalsClonedAlready.length
-  objOriginalsClonedAlready.push @
-  cloneOfMe = []
-  objectClones.push  cloneOfMe
-
-  for i in [0... @.length]
-    if !@[i]?
-        cloneOfMe[i] = nil
-    else if typeof @[i] == 'object'
-      if !@[i].deepCopy?
-        # this should never happen
-        debugger
-      cloneOfMe[i] = @[i].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
-    else
-      cloneOfMe[i] = @[i]
-
-  if doSerialize
-    return "$" + positionInObjClonesArray
-
-  return cloneOfMe
-
-Array::chunk = (chunkSize) ->
-  array = this
-  [].concat.apply [], array.map (elem, i) ->
-    if i % chunkSize then [] else [ array.slice(i, i + chunkSize) ]
-
-# removes the elements IN PLACE, i.e. the
-# array IS modified
-Array::remove = (theElement) ->
-  index = @indexOf theElement
-  if index isnt -1
-    @splice index, 1
-  return @
-
-# deduplicates array entries
-# does NOT modify array in place
-Array::unique = ->
-  output = {}
-  output[@[key]] = @[key] for key in [0...@length]
-  value for key, value of output
-
-# deduplicates array entries
-# keeping the current order
-# see https://stackoverflow.com/a/14438954
-# does NOT modify array in place
-uniqueKeepOrder = (value, index, self) ->
-  self.indexOf(value) == index
-
-Array::uniqueKeepOrder = ->
-  return @filter uniqueKeepOrder
-
-
-if typeof String::contains == 'undefined'
-  String::contains = (it) ->
-    @indexOf(it) != -1
-
-if typeof String::isLetter == 'undefined'
-  String::isLetter = ->
-    @length == 1 && @match /[a-z]/i
-
 ## -------------------------------------------------------
 
 # canvas gradients might be tied to a specific context
@@ -287,42 +213,6 @@ getParameterByName = (name) ->
   else
     return nil
 
-## -------------------------------------------------------
-# These two methods are for mixins
-## -------------------------------------------------------
-# adds class properties
-# these are added to the constructor
-Object::augmentWith = (obj, fromClass) ->
-  for key, value of obj when key not in MixedClassKeywords
-    @[key] = value
-  obj.onceAddedClassProperties?.apply @, [fromClass]
-  this
-
-# adds instance properties
-# these are added to the prototype
-Object::addInstanceProperties = (fromClass, obj) ->
-  for own key, value of obj when key not in MixedClassKeywords
-    # Assign properties to the prototype
-    @::[key] = value
-
-    # this is so we can use "super" in a mixin.
-    # we normally can't compile "super" in a mixin because
-    # we can't tell which class this will be mixed in in advance,
-    # i.e. at compile time it doesn't
-    # belong to a class, so at compile time it doesn't know which class
-    # it will be injected in.
-    # So that's why _at time of injection_ we need
-    # to store the class it's injected in in a special
-    # variable... and then at runtime we use that variable to
-    # implement super
-    if fromClass?
-      if isFunction value
-        @::[key + "_class_injected_in"] = fromClass
-        if srcLoadCompileDebugWrites then console.log "addingClassToMixin " + key + "_class_injected_in"
-
-  obj.included?.apply @
-  this
-##--------------- end of mixins methods -------------------
 
 
 arrayShallowCopy = (anArray) ->

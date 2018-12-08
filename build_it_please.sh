@@ -70,6 +70,12 @@ echo "compiling boot file..."
 cp src/boot/globalFunctions.coffee ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
 
 printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+cat src/boot/array-extensions.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+
+printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+cat src/boot/object-extensions.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+
+printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
 cat src/boot/numbertimes.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
 
 printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
