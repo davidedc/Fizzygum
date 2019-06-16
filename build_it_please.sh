@@ -153,7 +153,8 @@ echo "... done copying all tests"
 # test body files and move them all into one
 # directory
 echo "moving all tests body into the same directory..."
-find ../Fizzygum-builds/latest/js/tests -iname '*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js' -exec mv \{\} ../Fizzygum-builds/latest/js/tests \;
+# we don't seem to need the escaping in Windows Subsystem for Linux, while in OSX we needed \{\}
+find ../Fizzygum-builds/latest/js/tests -iname '*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js' -exec mv {} ../Fizzygum-builds/latest/js/tests \;
 echo "...done"
 
 # also all the assets are lumped-in into another directory
@@ -161,7 +162,8 @@ echo "...done"
 # accessed by browsers (both Edge and Chrome in Nov 2018) in
 # Windows.
 echo "moving all tests assets into the same directory..."
-find ../Fizzygum-builds/latest/js/tests/assets -iname 'SystemTest_*.js' -exec mv \{\} ../Fizzygum-builds/latest/js/tests/assets \;
+# we don't seem to need the escaping in Windows Subsystem for Linux, while in OSX we needed \{\}
+find ../Fizzygum-builds/latest/js/tests/assets -iname 'SystemTest_*.js' -exec mv {} ../Fizzygum-builds/latest/js/tests/assets \;
 echo "...done"
 
 echo "cleanup unneeded files"
