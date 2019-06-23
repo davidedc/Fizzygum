@@ -101,7 +101,17 @@ class BoxyAppearance extends Appearance
   outlinePath: (context, radius, isStroke) ->
     offset = radius
     # in order to be crisp, strokes have to be displaced a bit
-    # (while fills don't, they'd look fuzzy instead)
+    # (while fills don't, they'd look fuzzy instead).
+    # Note that the curved corners will be drawn with antialiasing,
+    # which for small dimensions and/or for small curvatures looks messy.
+    # There is really no way to disable antialiasing when drawing
+    # vector graphics (see:
+    # https://stackoverflow.com/questions/195262/can-i-turn-off-antialiasing-on-an-html-canvas-element
+    # ). A possible solution is to detect when you are
+    # drawing small components (somehow track the scale that it's drawn at)
+    # and small radius, and in those cases avoid to paint the arc, but
+    # rather fiddle with pixels individually (following the equation of the
+    # circle or just manually pixel-painting the curve).
     if isStroke
       offset += 0.5
     w = @morph.width()
