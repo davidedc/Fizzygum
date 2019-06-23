@@ -351,6 +351,7 @@ loadJSFile = (fileName, dontLogToDiv) ->
 
     script = document.createElement "script"
     script.src = fileName
+    script.async = true # should be the default
 
     script.onload = ->
       addLineToLogDiv "loading " + this.src
