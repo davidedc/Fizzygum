@@ -59,6 +59,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @contents = @defaultContents
 
     @padding = 5
+    # TODO this looks better:
+    #@padding = 10
     @color = new Color 248, 248, 248
     @buildAndConnectChildren()
 
@@ -491,6 +493,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     @titlebarBackground.rawSetExtent (new Point @width(), closeIconSize + 2 * @padding).subtract new Point 2,2
     @titlebarBackground.fullRawMoveTo @position().add new Point 1,1
+    # TODO this looks better:
+    #@titlebarBackground.rawSetExtent (new Point @width(), closeIconSize + 2 * @padding).subtract new Point 4,4
+    #@titlebarBackground.fullRawMoveTo @position().add new Point 2,2
 
     if @width() < 4 * (closeIconSize + @padding) + @padding
       @editButton?.collapse()

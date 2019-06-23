@@ -730,6 +730,8 @@ compileSource = (fileName, justLoadSources) ->
   # code and manually create any extensions
   if /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m.test fileContents
     if justLoadSources
+      # registers the class, its superclasses, its augmentations and the
+      # source code      
       morphClass = new Class fileContents, false, false
     else
       morphClass = new Class fileContents, true, true

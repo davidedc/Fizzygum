@@ -133,7 +133,7 @@ class RectangularAppearance extends Appearance
         aContext.clip()
 
         aContext.globalAlpha = @morph.alpha
-        aContext.lineWidth = 1
+        aContext.lineWidth = 1 # TODO might look better if * pixelRatio
         aContext.strokeStyle = @morph.strokeColor.toString()
         # half-pixel adjustments are needed in HTML5 Canvas to draw
         # pixel-perfect lines. Also note how we have to multiply the

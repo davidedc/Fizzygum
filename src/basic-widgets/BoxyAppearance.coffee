@@ -81,7 +81,7 @@ class BoxyAppearance extends Appearance
       aContext.fill()
 
       if @morph.strokeColor? and !appliedShadow?
-        aContext.lineWidth = 1
+        aContext.lineWidth = 1 # TODO might look better if * pixelRatio
         aContext.strokeStyle = @morph.strokeColor.toString()
         aContext.beginPath()
         @outlinePath aContext, Math.max @getCornerRadius(), true
