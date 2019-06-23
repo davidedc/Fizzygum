@@ -30,6 +30,7 @@ class SystemInfo
     @screenWidth = window.screen.width
     @screenHeight = window.screen.height
     @screenColorDepth = window.screen.colorDepth
+    # TODO for fractional scaling: Math.ceil window.devicePixelRatio
     @screenPixelRatio = window.devicePixelRatio
     @appCodeName = navigator.appCodeName
     @appName = navigator.appName
