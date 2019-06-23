@@ -4,14 +4,20 @@
 		<title>Fizzygum</title>
 	</head>
 
-	<style>
-		.centeredSpinner {
-		  position: fixed;
-		  top: 50%;
-		  left: 50%;
-		  transform: translate(-50%, -50%);
-		}
-	</style>
+		<style>
+			.centeredSpinner {
+			  position: fixed;
+			  top: 50%;
+			  left: 50%;
+			  animation: 0.8s rotate linear infinite;
+		  	  margin-left: -0.5em;
+		  	  margin-top: -1.5em;
+			}
+			@keyframes rotate {
+			  from {transform: rotate(0deg);}
+			  to {transform: rotate(360deg);}
+			}
+		</style>
 
 	<!-- the style below is for disabling any browser selection on
 	the DOM of the page, we don't want any of that, see
