@@ -682,11 +682,10 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
 
 
   # start of the promise. It will "trigger" the chain
-  # in 1 ms
-  promiseChain = new Promise (resolve) ->
-    setTimeout ->
-      resolve()
-    , 1
+  # immediately, however the first step is to wait for
+  # a turn, so we are not really immediately starting
+  # to compile.
+  promiseChain = new Promise (resolve) -> resolve()
 
   # chain two steps for each file, one to compile the file
   # and one to wait for the next turn
@@ -694,8 +693,8 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
     if eachFile == "Class" or eachFile == "Mixin" or eachFile == "globalFunctions"
       continue
     compileEachFileFunction = createCompileSourceFunction eachFile, justLoadSources
-    promiseChain = promiseChain.then compileEachFileFunction
     promiseChain = promiseChain.then waitNextTurn()
+    promiseChain = promiseChain.then compileEachFileFunction
 
   # final step, proceed with the boot sequence
   promiseChain.then ->
