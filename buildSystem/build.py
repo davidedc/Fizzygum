@@ -226,7 +226,21 @@ def main():
     STRING_BLOCK = 'window.%s = "%s".replace(/＂/g, "\\\"").replace(/⧹/g, "\\\\").replace(/⤶/g, "\\n");'
     sourcesManifests = "sourcesManifests = [];\n"
 
-    # now iterate through the files and create the *.coffee files.
+    # now iterate through the source files and create
+    # 1) the js files with the coffeescript sources, one for each
+    # 2) a few the js files with A BATCH OF coffeescript sources
+    #    (so we load like 12 source batches rathern tna 400 sources)
+    # 3) the manifest for the files above, so the system knows what to load
+    #    and also we put in the manifest the number of batches that we
+    #    ended up creating
+    # In theory you don't need both emitting/loading mechanisms 1) and 2),
+    # we just generate sources in both ways for completeness even if we end
+    # up loading the batches only (i.e. 2).
+    
+    batchedSources = ""
+    numberOfSourceBatches = 0
+    minimumSourcesBatchSize = 150000
+
     for filename in filenames:
         print(">>>> %s " % (filename))
         # open file and read its contents
@@ -284,10 +298,32 @@ def main():
                 escaped_content = re.sub(HOMEPAGE_EXCLUSION_PARTS, '', escaped_content)
 
             sourceFileName = ntpath.basename(filename).replace(".coffee","_coffeSource")
+            escaped_content_with_declaration = STRING_BLOCK % (unicode(sourceFileName), unicode(escaped_content))
+
             with codecs.open("../Fizzygum-builds/latest/js/sourceCode/"+sourceFileName+".js", "w", "utf-8") as f:
-                f.write(STRING_BLOCK % (unicode(sourceFileName), unicode(escaped_content)))
+                f.write(escaped_content_with_declaration)
                 sourcesManifests += "sourcesManifests.push('" + sourceFileName + "');\n";
 
+            # pile up the sources into a batch and save the batch
+            # when is big enough
+            batchedSources += "\n\n" + escaped_content_with_declaration
+            if len(batchedSources) > minimumSourcesBatchSize:
+                sourceFileName = ntpath.basename("sources_batch_"+str(numberOfSourceBatches))
+                with codecs.open("../Fizzygum-builds/latest/js/sourceCode/"+sourceFileName+".js", "w", "utf-8") as f:
+                    f.write(unicode(batchedSources))
+                numberOfSourceBatches = numberOfSourceBatches + 1
+                batchedSources = ""
+
+
+
+    # take care of saving the last batch with the remainder
+    # of the sources
+    sourceFileName = ntpath.basename("sources_batch_"+str(numberOfSourceBatches))
+    with codecs.open("../Fizzygum-builds/latest/js/sourceCode/"+sourceFileName+".js", "w", "utf-8") as f:
+        f.write(unicode(batchedSources))
+    numberOfSourceBatches = numberOfSourceBatches + 1
+
+    sourcesManifests += "\n\nnumberOfSourceBatches = " + str(numberOfSourceBatches) + ";\n"
     with codecs.open("../Fizzygum-builds/latest/js/sourceCode/sourceCodeManifest.js", "w", "utf-8") as f:
         f.write(sourcesManifests)
 
