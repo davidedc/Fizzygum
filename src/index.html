@@ -46,11 +46,10 @@
 
 		<script type="text/javascript">			
 
-			var	worldCanvas, pixelRatio;
+			var	worldCanvas, ceilPixelRatio;
 			// retina and high-dpi displays have something like
 			// 2 here
-			// TODO for fractional scaling: Math.ceil(window.devicePixelRatio);
-			pixelRatio = window.devicePixelRatio;
+			ceilPixelRatio = Math.ceil(window.devicePixelRatio);
 
 			window.onload = function () {
 				worldCanvas = document.getElementById('world');

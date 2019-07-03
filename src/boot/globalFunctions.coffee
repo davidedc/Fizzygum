@@ -36,7 +36,7 @@ HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClo
   positionInObjClonesArray = objOriginalsClonedAlready.length
   objOriginalsClonedAlready.push @
   # with and height here are not the morph's,
-  # which would be in logical units and hence would need pixelRatio
+  # which would be in logical units and hence would need ceilPixelRatio
   # correction,
   # but in actual physical units i.e. the actual bugffer size
   cloneOfMe = newCanvas new Point @width, @height
@@ -289,7 +289,7 @@ fontHeight = (fontSize) ->
 # already physical pixels.
 # If the dimensions come form other measurements of the morphs
 # then those are in logical coordinates and need to be
-# corrected with pixelRatio before being passed here.
+# corrected with ceilPixelRatio before being passed here.
 newCanvas = (extentPoint) ->
   extentPoint?.debugIfFloats()
   # answer a new empty instance of Canvas, don't display anywhere

@@ -31,14 +31,14 @@ class CanvasMorph extends PanelWdgt
       # @backBuffer.width and @backBuffer.height are already in
       # physical coordinates so no need to adjust for pixelratio
       backBufferExtent = new Point @backBuffer.width, @backBuffer.height
-      if backBufferExtent.eq extent.scaleBy pixelRatio
+      if backBufferExtent.eq extent.scaleBy ceilPixelRatio
         return [@backBuffer, @backBufferContext]
       else
 
         original_backBuffer = @backBuffer
 
         # make a new canvas of the new size
-        @backBuffer = newCanvas extent.scaleBy pixelRatio
+        @backBuffer = newCanvas extent.scaleBy ceilPixelRatio
         @backBufferContext = @backBuffer.getContext "2d"
 
         # paint the background over it all so there are
@@ -46,26 +46,26 @@ class CanvasMorph extends PanelWdgt
         # enlarged).
         if @color?
           @backBufferContext.fillStyle = @color.toString()
-          @backBufferContext.fillRect 0, 0, extent.x * pixelRatio, extent.y * pixelRatio
+          @backBufferContext.fillRect 0, 0, extent.x * ceilPixelRatio, extent.y * ceilPixelRatio
 
         # copy back the original canvas in the new one.
         @backBufferContext.drawImage original_backBuffer, 0, 0
         
         # we leave the context with the correct pixel scaling.
         # ALWAYS leave the context with the correct pixel scaling.
-        @backBufferContext.scale pixelRatio, pixelRatio
+        @backBufferContext.scale ceilPixelRatio, ceilPixelRatio
         return [@backBuffer, @backBufferContext]
 
-    @backBuffer = newCanvas extent.scaleBy pixelRatio
+    @backBuffer = newCanvas extent.scaleBy ceilPixelRatio
     @backBufferContext = @backBuffer.getContext "2d"
 
     if @color?
       @backBufferContext.fillStyle = @color.toString()
-      @backBufferContext.fillRect 0, 0, extent.x * pixelRatio, extent.y * pixelRatio
+      @backBufferContext.fillRect 0, 0, extent.x * ceilPixelRatio, extent.y * ceilPixelRatio
 
     # we leave the context with the correct scaling.
     # ALWAYS leave the context with the correct pixel scaling.
-    @backBufferContext.scale pixelRatio, pixelRatio
+    @backBufferContext.scale ceilPixelRatio, ceilPixelRatio
     return [@backBuffer, @backBufferContext]
 
 
@@ -80,14 +80,14 @@ class CanvasMorph extends PanelWdgt
     @backBufferContext.setTransform(1, 0, 0, 1, 0, 0)
     # no need to scale here because we get the physical pixels
     # in backBufferExtent 
-    #@backBufferContext.scale pixelRatio, pixelRatio
+    #@backBufferContext.scale ceilPixelRatio, ceilPixelRatio
     
     @backBufferContext.fillStyle = color.toString()
     @backBufferContext.fillRect 0, 0, backBufferExtent.x, backBufferExtent.y
 
     # we leave the context with the correct scaling.
     # ALWAYS leave the context with the correct pixel scaling.
-    @backBufferContext.scale pixelRatio, pixelRatio
+    @backBufferContext.scale ceilPixelRatio, ceilPixelRatio
     @changed()
 
   drawLine: (start, dest, lineWidth, color) ->

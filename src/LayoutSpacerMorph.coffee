@@ -57,7 +57,7 @@ class LayoutSpacerMorph extends Widget
       # rather than logical pixels, this is why
       # it's called before the scaling.
       @paintRectangle aContext, al, at, w, h, @color
-      aContext.scale pixelRatio, pixelRatio
+      aContext.scale ceilPixelRatio, ceilPixelRatio
 
 
       morphPosition = @position()
@@ -71,7 +71,7 @@ class LayoutSpacerMorph extends Widget
       # al, at, w, h which are actual pixels
       # rather than logical pixels, so it's generally used
       # outside the effect of the scaling because
-      # of the pixelRatio (i.e. after the restore)
+      # of the ceilPixelRatio (i.e. after the restore)
       @paintHighlight aContext, al, at, w, h
 
   doPath: (context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown) ->

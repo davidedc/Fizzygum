@@ -41,7 +41,7 @@ class LayoutElementAdderOrDropletMorph extends Widget
       # rather than logical pixels, this is why
       # it's called before the scaling.
       @paintRectangle aContext, al, at, w, h, @color
-      aContext.scale pixelRatio, pixelRatio
+      aContext.scale ceilPixelRatio, ceilPixelRatio
 
       morphPosition = @position()
       aContext.translate morphPosition.x, morphPosition.y

@@ -34,9 +34,9 @@ class ColorPaletteMorph extends Widget
     if cacheHit? then return cacheHit
 
     extent = @extent()
-    backBuffer = newCanvas extent.scaleBy pixelRatio
+    backBuffer = newCanvas extent.scaleBy ceilPixelRatio
     backBufferContext = backBuffer.getContext "2d"
-    backBufferContext.scale pixelRatio, pixelRatio
+    backBufferContext.scale ceilPixelRatio, ceilPixelRatio
     @choice = new Color()
     for x in [0..extent.x]
       h = 360 * x / extent.x

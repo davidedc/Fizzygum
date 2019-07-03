@@ -385,10 +385,10 @@ class TextMorph2 extends StringMorph2
     backBuffer = newCanvas()
     backBufferContext = backBuffer.getContext "2d"
 
-    backBuffer.width = @width() * pixelRatio
-    backBuffer.height = @height() * pixelRatio
+    backBuffer.width = @width() * ceilPixelRatio
+    backBuffer.height = @height() * ceilPixelRatio
 
-    backBufferContext.scale pixelRatio, pixelRatio
+    backBufferContext.scale ceilPixelRatio, ceilPixelRatio
     backBufferContext.font = @buildCanvasFontProperty()
     backBufferContext.textAlign = "left"
     backBufferContext.textBaseline = "bottom"
@@ -398,7 +398,7 @@ class TextMorph2 extends StringMorph2
     # paintRectangle here is passed logical pixels
     # rather than actual pixels, contrary to how it's used
     # most other places. This is because it's inside
-    # the scope of the "scale pixelRatio, pixelRatio".
+    # the scope of the "scale ceilPixelRatio, ceilPixelRatio".
     if @backgroundColor
       backBufferContext.save()
       backBufferContext.fillStyle = @backgroundColor.toString()

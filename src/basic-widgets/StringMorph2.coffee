@@ -649,11 +649,11 @@ class StringMorph2 extends Widget
       width = widthOfText
       height = heightOfText
 
-    backBuffer = newCanvas (new Point width, height).scaleBy pixelRatio
+    backBuffer = newCanvas (new Point width, height).scaleBy ceilPixelRatio
 
     backBufferContext = backBuffer.getContext "2d"
 
-    backBufferContext.scale pixelRatio, pixelRatio
+    backBufferContext.scale ceilPixelRatio, ceilPixelRatio
     backBufferContext.font = @buildCanvasFontProperty()
     backBufferContext.textAlign = "left"
     backBufferContext.textBaseline = "bottom"
@@ -663,7 +663,7 @@ class StringMorph2 extends Widget
     # paintRectangle here is passed logical pixels
     # rather than actual pixels, contrary to how it's used
     # most other places. This is because it's inside
-    # the scope of the "scale pixelRatio, pixelRatio".
+    # the scope of the "scale ceilPixelRatio, ceilPixelRatio".
     if @backgroundColor
       backBufferContext.save()
       backBufferContext.fillStyle = @backgroundColor.toString()

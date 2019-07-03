@@ -77,7 +77,7 @@ class MenuItemMorph extends TriggerMorph
       src = icon.backBuffer
       icon.backBuffer = newCanvas(
         source.fullBounds().extent().subtract(
-          @shadowBlur * 2).scaleBy pixelRatio)
+          @shadowBlur * 2).scaleBy ceilPixelRatio)
       icon.backBufferContext = icon.backBuffer.getContext "2d"
       icon.backBufferContext.drawImage src, 0, 0
 

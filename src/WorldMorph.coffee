@@ -285,7 +285,7 @@ class WorldMorph extends PanelWdgt
 
     # @worldCanvas.width and height here are in phisical pixels
     # so we want to bring them back to logical pixels
-    @setBounds new Rectangle 0, 0, @worldCanvas.width / pixelRatio, @worldCanvas.height / pixelRatio
+    @setBounds new Rectangle 0, 0, @worldCanvas.width / ceilPixelRatio, @worldCanvas.height / ceilPixelRatio
 
     @initEventListeners()
     if AutomatorRecorderAndPlayer?
@@ -295,7 +295,7 @@ class WorldMorph extends PanelWdgt
 
     @canvasForTextMeasurements = newCanvas()
     @canvasContextForTextMeasurements = @canvasForTextMeasurements.getContext "2d"
-    @canvasContextForTextMeasurements.scale pixelRatio, pixelRatio
+    @canvasContextForTextMeasurements.scale ceilPixelRatio, ceilPixelRatio
     @canvasContextForTextMeasurements.textAlign = "left"
     @canvasContextForTextMeasurements.textBaseline = "bottom"
 
@@ -762,7 +762,7 @@ class WorldMorph extends PanelWdgt
   showBrokenRects: (aContext) ->
     aContext.save()
     aContext.globalAlpha = 0.5
-    aContext.scale pixelRatio, pixelRatio
+    aContext.scale ceilPixelRatio, ceilPixelRatio
  
     for eachBrokenRect in @broken
       if eachBrokenRect?
@@ -1254,8 +1254,8 @@ class WorldMorph extends PanelWdgt
       task()
 
   sizeCanvasToTestScreenResolution: ->
-    @worldCanvas.width = Math.round(960 * pixelRatio)
-    @worldCanvas.height = Math.round(440 * pixelRatio)
+    @worldCanvas.width = Math.round(960 * ceilPixelRatio)
+    @worldCanvas.height = Math.round(440 * ceilPixelRatio)
     @worldCanvas.style.width = "960px"
     @worldCanvas.style.height = "440px"
 
@@ -1285,9 +1285,9 @@ class WorldMorph extends PanelWdgt
 
     if (@worldCanvas.width isnt clientWidth) or (@worldCanvas.height isnt clientHeight)
       @fullChanged()
-      @worldCanvas.width = (clientWidth * pixelRatio)
+      @worldCanvas.width = (clientWidth * ceilPixelRatio)
       @worldCanvas.style.width = clientWidth + "px"
-      @worldCanvas.height = (clientHeight * pixelRatio)
+      @worldCanvas.height = (clientHeight * ceilPixelRatio)
       @worldCanvas.style.height = clientHeight + "px"
       @rawSetExtent new Point clientWidth, clientHeight
       @desktopReLayout()

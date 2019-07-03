@@ -11,6 +11,7 @@ class SystemInfo
   screenHeight: nil
   screenColorDepth: nil
   screenPixelRatio: nil
+  screenCeilPixelRatio: nil
   appCodeName: nil
   appName: nil
   appVersion: nil
@@ -30,8 +31,8 @@ class SystemInfo
     @screenWidth = window.screen.width
     @screenHeight = window.screen.height
     @screenColorDepth = window.screen.colorDepth
-    # TODO for fractional scaling: Math.ceil window.devicePixelRatio
     @screenPixelRatio = window.devicePixelRatio
+    @screenCeilPixelRatio = Math.ceil window.devicePixelRatio
     @appCodeName = navigator.appCodeName
     @appName = navigator.appName
     @appVersion = navigator.appVersion

@@ -12,10 +12,10 @@ class RectangularAppearance extends Appearance
   # paintHighlight can work in two patterns:
   #  * passing actual pixels, when used
   #    outside the effect of the scope of
-  #    "scale pixelRatio, pixelRatio", or
+  #    "scale ceilPixelRatio, ceilPixelRatio", or
   #  * passing logical pixels, when used
   #    inside the effect of the scope of
-  #    "scale pixelRatio, pixelRatio", or
+  #    "scale ceilPixelRatio, ceilPixelRatio", or
   # Mostly, the first pattern is used.
   #
   # useful for example when hovering over references
@@ -70,7 +70,7 @@ class RectangularAppearance extends Appearance
       # al, at, w, h which are actual pixels
       # rather than logical pixels, so it's generally used
       # outside the effect of the scaling because
-      # of the pixelRatio
+      # of the ceilPixelRatio
 
       # paint the background
       toBePainted = new Rectangle al, at, al + w, at + h
@@ -84,7 +84,7 @@ class RectangularAppearance extends Appearance
 
       # now paint the actual morph, which is a rectangle
       # (potentially inset because of the padding)
-      toBePainted = toBePainted.intersect @morph.boundingBoxTight().scaleBy pixelRatio
+      toBePainted = toBePainted.intersect @morph.boundingBoxTight().scaleBy ceilPixelRatio
 
       color = @morph.color
       if appliedShadow?
@@ -103,7 +103,7 @@ class RectangularAppearance extends Appearance
       # al, at, w, h which are actual pixels
       # rather than logical pixels, so it's generally used
       # outside the effect of the scaling because
-      # of the pixelRatio
+      # of the ceilPixelRatio
       @paintHighlight aContext, al, at, w, h
 
   paintStroke: (aContext, clippingRectangle) ->
@@ -121,7 +121,7 @@ class RectangularAppearance extends Appearance
       aContext.save()
 
       toBePainted = new Rectangle al, at, al + w, at + h
-      toBePainted = toBePainted.intersect @morph.boundingBoxTight().scaleBy pixelRatio
+      toBePainted = toBePainted.intersect @morph.boundingBoxTight().scaleBy ceilPixelRatio
 
       if @morph.strokeColor?
 
@@ -133,15 +133,15 @@ class RectangularAppearance extends Appearance
         aContext.clip()
 
         aContext.globalAlpha = @morph.alpha
-        aContext.lineWidth = 1 # TODO might look better if * pixelRatio
+        aContext.lineWidth = 1 # TODO might look better if * ceilPixelRatio
         aContext.strokeStyle = @morph.strokeColor.toString()
         # half-pixel adjustments are needed in HTML5 Canvas to draw
         # pixel-perfect lines. Also note how we have to multiply the
         # morph metrics to bring them to physical pixels coords.
-        aContext.strokeRect  (Math.round(@morph.left() * pixelRatio)+0.5),
-            (Math.round(@morph.top() * pixelRatio)+0.5),
-            (Math.round(@morph.width() * pixelRatio)-1),
-            (Math.round(@morph.height() * pixelRatio)-1)
+        aContext.strokeRect  (Math.round(@morph.left() * ceilPixelRatio)+0.5),
+            (Math.round(@morph.top() * ceilPixelRatio)+0.5),
+            (Math.round(@morph.width() * ceilPixelRatio)-1),
+            (Math.round(@morph.height() * ceilPixelRatio)-1)
 
       aContext.restore()
 

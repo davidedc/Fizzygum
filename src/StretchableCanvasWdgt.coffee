@@ -52,7 +52,7 @@ class StretchableCanvasWdgt extends CanvasMorph
     # just clean up the small canvas
     if !@anythingPaintedYet and @color?
       @backBufferContext.fillStyle = @color.toString()
-      @backBufferContext.fillRect 0, 0, extent.x * pixelRatio, extent.y * pixelRatio
+      @backBufferContext.fillRect 0, 0, extent.x * ceilPixelRatio, extent.y * ceilPixelRatio
 
     # if something *has* been painted then
     # we need to paint the "behind the scenes" buffer into the
@@ -65,7 +65,7 @@ class StretchableCanvasWdgt extends CanvasMorph
     
     # we leave the context with the correct pixel scaling.
     # ALWAYS leave the context with the correct pixel scaling.
-    @backBufferContext.scale pixelRatio, pixelRatio
+    @backBufferContext.scale ceilPixelRatio, ceilPixelRatio
     return [@backBuffer, @backBufferContext]
 
 
@@ -77,25 +77,25 @@ class StretchableCanvasWdgt extends CanvasMorph
     throw new Error "not implemented yet"
 
   createNewBehindTheScenesBuffer: (extent) ->
-    @behindTheScenesBackBuffer = newCanvas extent.scaleBy pixelRatio
+    @behindTheScenesBackBuffer = newCanvas extent.scaleBy ceilPixelRatio
     @behindTheScenesBackBufferContext = @behindTheScenesBackBuffer.getContext "2d"
 
     if @color?
       @behindTheScenesBackBufferContext.fillStyle = @color.toString()
-      @behindTheScenesBackBufferContext.fillRect 0, 0, extent.x * pixelRatio, extent.y * pixelRatio
+      @behindTheScenesBackBufferContext.fillRect 0, 0, extent.x * ceilPixelRatio, extent.y * ceilPixelRatio
 
     # we leave the context with the correct scaling.
     # ALWAYS leave the context with the correct pixel scaling.
-    @behindTheScenesBackBufferContext.scale pixelRatio, pixelRatio
+    @behindTheScenesBackBufferContext.scale ceilPixelRatio, ceilPixelRatio
 
   createNewFrontFacingBuffer: (extent) ->
-    @backBuffer = newCanvas extent.scaleBy pixelRatio
+    @backBuffer = newCanvas extent.scaleBy ceilPixelRatio
     @backBufferContext = @backBuffer.getContext "2d"
 
 
     # we leave the context with the correct scaling.
     # ALWAYS leave the context with the correct pixel scaling.
-    @backBufferContext.scale pixelRatio, pixelRatio
+    @backBufferContext.scale ceilPixelRatio, ceilPixelRatio
 
 
   rawSetExtent: (extent) ->
@@ -121,7 +121,7 @@ class StretchableCanvasWdgt extends CanvasMorph
       @anythingPaintedYet = true
 
     @behindTheScenesBackBufferContext.setTransform 1, 0, 0, 1, 0, 0
-    @behindTheScenesBackBufferContext.scale pixelRatio, pixelRatio
+    @behindTheScenesBackBufferContext.scale ceilPixelRatio, ceilPixelRatio
 
     @behindTheScenesBackBufferContext.scale @extentWhenCanvasGotDirty.x/@width(), @extentWhenCanvasGotDirty.y/@height()
 
@@ -155,12 +155,12 @@ class StretchableCanvasWdgt extends CanvasMorph
     # Note that there could be another way, i.e. to pass the other arguments
     # to "drawImage" to specify the bounding box.
 
-    @behindTheScenesBackBufferContext.scale 1/pixelRatio, 1/pixelRatio
-    contextForPainting.drawImage image, pos.x * pixelRatio, pos.y * pixelRatio
+    @behindTheScenesBackBufferContext.scale 1/ceilPixelRatio, 1/ceilPixelRatio
+    contextForPainting.drawImage image, pos.x * ceilPixelRatio, pos.y * ceilPixelRatio
 
     # put back the scaling so it's right again.
     # (always leave the scaling correct)
-    @behindTheScenesBackBufferContext.scale pixelRatio, pixelRatio
+    @behindTheScenesBackBufferContext.scale ceilPixelRatio, ceilPixelRatio
 
   reactToDropOf: (droppedWidget) ->
     @paintImage droppedWidget.position(), droppedWidget.fullImage(nil, false, true)

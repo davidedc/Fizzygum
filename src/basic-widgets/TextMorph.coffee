@@ -50,7 +50,7 @@ class TextMorph extends StringMorph
     paragraphs = @text.split "\n"
     canvas = newCanvas()
     context = canvas.getContext "2d"
-    context.scale pixelRatio, pixelRatio
+    context.scale ceilPixelRatio, ceilPixelRatio
     currentLine = ""
     slot = 0
     context.font = @buildCanvasFontProperty()
@@ -155,13 +155,13 @@ class TextMorph extends StringMorph
     shadowHeight = Math.abs @shadowOffset.y
 
 
-    backBuffer.width = @width() * pixelRatio
-    backBuffer.height = @height() * pixelRatio
+    backBuffer.width = @width() * ceilPixelRatio
+    backBuffer.height = @height() * ceilPixelRatio
 
     # changing the canvas size resets many of
     # the properties of the canvas, so we need to
     # re-initialise the font and alignments here
-    backBufferContext.scale pixelRatio, pixelRatio
+    backBufferContext.scale ceilPixelRatio, ceilPixelRatio
     backBufferContext.font = @buildCanvasFontProperty()
     backBufferContext.textAlign = "left"
     backBufferContext.textBaseline = "bottom"

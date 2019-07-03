@@ -153,7 +153,7 @@ class TriggerMorph extends Widget
       # al, at, w, h which are actual pixels
       # rather than logical pixels, so it's generally used
       # outside the effect of the scaling because
-      # of the pixelRatio
+      # of the ceilPixelRatio
       @paintRectangle \
         aContext,
         al, at, w, h,
@@ -166,7 +166,7 @@ class TriggerMorph extends Widget
       # al, at, w, h which are actual pixels
       # rather than logical pixels, so it's generally used
       # outside the effect of the scaling because
-      # of the pixelRatio
+      # of the ceilPixelRatio
       @paintHighlight aContext, al, at, w, h
 
   createLabel: ->

@@ -50,10 +50,10 @@ BackBufferMixin =
       # backBufferContext value can be derived from others
       backBufferContext_isDerivedValue: true
 
-      # as seen by the " * pixelRatio " parts in the code,
+      # as seen by the " * ceilPixelRatio " parts in the code,
       # this function returns actual pixels, not logical pixels.
       # Hence, these values are only good outside of the
-      # scope of the scaling due to the pixelRatio
+      # scope of the scaling due to the ceilPixelRatio
       calculateKeyValues: (aContext, clippingRectangle) ->
         area = clippingRectangle.intersect(@boundingBox()).round()
         # test whether anything that we are going to be drawing
@@ -62,16 +62,16 @@ BackBufferMixin =
           delta = @position().neg()
           src = area.translateBy(delta).round()
           
-          # the " * pixelRatio " multiplications
+          # the " * ceilPixelRatio " multiplications
           # tranform logical pixels into actual pixels.
-          sl = src.left() * pixelRatio
-          st = src.top() * pixelRatio
-          al = area.left() * pixelRatio
-          at = area.top() * pixelRatio
+          sl = src.left() * ceilPixelRatio
+          st = src.top() * ceilPixelRatio
+          al = area.left() * ceilPixelRatio
+          at = area.top() * ceilPixelRatio
           # @backBuffer.width and @backBuffer.height are already in
           # physical coordinates so no need to adjust for pixelratio
-          w = Math.min(src.width() * pixelRatio, @backBuffer.width - sl)
-          h = Math.min(src.height() * pixelRatio, @backBuffer.height - st)
+          w = Math.min(src.width() * ceilPixelRatio, @backBuffer.width - sl)
+          h = Math.min(src.height() * ceilPixelRatio, @backBuffer.height - st)
         return [area,sl,st,al,at,w,h]
 
       isTransparentAt: (aPoint) ->
@@ -87,7 +87,7 @@ BackBufferMixin =
       getPixelColor: (aPoint) ->
         [@backBuffer, @backBufferContext] = @createRefreshOrGetBackBuffer()
         point = aPoint.toLocalCoordinatesOf @
-        data = @backBufferContext.getImageData point.x * pixelRatio, point.y * pixelRatio, 1, 1
+        data = @backBufferContext.getImageData point.x * ceilPixelRatio, point.y * ceilPixelRatio, 1, 1
         new Color data.data[0], data.data[1], data.data[2], data.data[3]
 
 
@@ -133,5 +133,5 @@ BackBufferMixin =
           # al, at, w, h which are actual pixels
           # rather than logical pixels, so it's generally used
           # outside the effect of the scaling because
-          # of the pixelRatio
+          # of the ceilPixelRatio
           @paintHighlight aContext, al, at, w, h

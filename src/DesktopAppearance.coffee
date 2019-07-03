@@ -23,10 +23,10 @@ class DesktopAppearance extends RectangularAppearance
     if @morph.patternName? && @morph.patternName != @currentPattern
       @currentPattern = @morph.patternName
       @pattern = document.createElement('canvas')
-      @pattern.width = 5 * pixelRatio
-      @pattern.height = 5 * pixelRatio
+      @pattern.width = 5 * ceilPixelRatio
+      @pattern.height = 5 * ceilPixelRatio
       pctx = @pattern.getContext('2d')
-      pctx.scale pixelRatio, pixelRatio
+      pctx.scale ceilPixelRatio, ceilPixelRatio
 
       switch @morph.patternName
         when @morph.pattern2
@@ -100,7 +100,7 @@ class DesktopAppearance extends RectangularAppearance
       # al, at, w, h which are actual pixels
       # rather than logical pixels, so it's generally used
       # outside the effect of the scaling because
-      # of the pixelRatio
+      # of the ceilPixelRatio
 
       # paint the background
       toBePainted = new Rectangle al, at, al + w, at + h
@@ -114,7 +114,7 @@ class DesktopAppearance extends RectangularAppearance
 
       # now paint the actual morph, which is a rectangle
       # (potentially inset because of the padding)
-      toBePainted = toBePainted.intersect @morph.boundingBoxTight().scaleBy pixelRatio
+      toBePainted = toBePainted.intersect @morph.boundingBoxTight().scaleBy ceilPixelRatio
 
       color = @morph.color
       if appliedShadow?
@@ -137,6 +137,6 @@ class DesktopAppearance extends RectangularAppearance
       # al, at, w, h which are actual pixels
       # rather than logical pixels, so it's generally used
       # outside the effect of the scaling because
-      # of the pixelRatio
+      # of the ceilPixelRatio
       @paintHighlight aContext, al, at, w, h
 

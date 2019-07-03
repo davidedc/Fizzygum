@@ -127,10 +127,10 @@ class StringMorph extends Widget
     text = (if @isPassword then @password("*", @text.length) else @text)
     # initialize my surface property
     width = @widthOfText @text
-    backBuffer = newCanvas (new Point width, @height()).scaleBy pixelRatio
+    backBuffer = newCanvas (new Point width, @height()).scaleBy ceilPixelRatio
     backBufferContext = backBuffer.getContext "2d"
 
-    backBufferContext.scale pixelRatio, pixelRatio
+    backBufferContext.scale ceilPixelRatio, ceilPixelRatio
     backBufferContext.font = @buildCanvasFontProperty()
     backBufferContext.textAlign = "left"
     backBufferContext.textBaseline = "bottom"
@@ -163,7 +163,7 @@ class StringMorph extends Widget
       context.drawImage blank, Math.round(x), 0
       x += space
     space = Math.ceil context.measureText(" ").width
-    blank = newCanvas new Point(space, @height()).scaleBy pixelRatio
+    blank = newCanvas new Point(space, @height()).scaleBy ceilPixelRatio
     ctx = blank.getContext "2d"
     words = @text.split " "
     isFirst = true

@@ -210,7 +210,7 @@ ClippingAtRectangularBoundsMixin =
           if !dirtyPartOfFrame.isEmpty()
 
             aContext.save()
-            aContext.translate appliedShadow.offset.x * pixelRatio, appliedShadow.offset.y * pixelRatio
+            aContext.translate appliedShadow.offset.x * ceilPixelRatio, appliedShadow.offset.y * ceilPixelRatio
           
             # this draws the background of the Panel itself
             @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, appliedShadow

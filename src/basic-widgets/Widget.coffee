@@ -1708,12 +1708,12 @@ class Widget extends TreeNode
       delta = @position().neg()
       src = area.translateBy(delta).round()
 
-      sl = src.left() * pixelRatio
-      st = src.top() * pixelRatio
-      al = area.left() * pixelRatio
-      at = area.top() * pixelRatio
-      w = Math.min(src.width() * pixelRatio, @width() * pixelRatio - sl)
-      h = Math.min(src.height() * pixelRatio, @height() * pixelRatio - st)
+      sl = src.left() * ceilPixelRatio
+      st = src.top() * ceilPixelRatio
+      al = area.left() * ceilPixelRatio
+      at = area.top() * ceilPixelRatio
+      w = Math.min(src.width() * ceilPixelRatio, @width() * ceilPixelRatio - sl)
+      h = Math.min(src.height() * ceilPixelRatio, @height() * ceilPixelRatio - st)
 
     return [area,sl,st,al,at,w,h]
 
@@ -1733,10 +1733,10 @@ class Widget extends TreeNode
   # paintRectangle can work in two patterns:
   #  * passing actual pixels, when used
   #    outside the effect of the scope of
-  #    "scale pixelRatio, pixelRatio", or
+  #    "scale ceilPixelRatio, ceilPixelRatio", or
   #  * passing logical pixels, when used
   #    inside the effect of the scope of
-  #    "scale pixelRatio, pixelRatio", or
+  #    "scale ceilPixelRatio, ceilPixelRatio", or
   # Mostly, the first pattern is used.
   # Note that the resulting rectangle WILL reflect
   # if it's being painted as a shadow or not,
@@ -1866,7 +1866,7 @@ class Widget extends TreeNode
 
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
       aContext.save()
-      aContext.translate appliedShadow.offset.x * pixelRatio, appliedShadow.offset.y * pixelRatio
+      aContext.translate appliedShadow.offset.x * ceilPixelRatio, appliedShadow.offset.y * ceilPixelRatio
 
       @fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow aContext, clippingRectangle, appliedShadow
 
@@ -2052,9 +2052,9 @@ class Widget extends TreeNode
         bounds = bounds.growBy @shadowInfo.offset
 
 
-    img = newCanvas bounds.extent().scaleBy pixelRatio
+    img = newCanvas bounds.extent().scaleBy ceilPixelRatio
     ctx = img.getContext "2d"
-    # ctx.scale pixelRatio, pixelRatio
+    # ctx.scale ceilPixelRatio, ceilPixelRatio
     # we are going to draw this morph and its children into "img".
     # note that the children are not necessarily geometrically
     # contained in the morph (in which case it would be ok to
@@ -2063,7 +2063,7 @@ class Widget extends TreeNode
     # Hence we have to translate the context
     # so that the origin of the entire bounds is at the
     # very top-left of the "img" canvas.
-    ctx.translate -bounds.origin.x * pixelRatio , -bounds.origin.y * pixelRatio
+    ctx.translate -bounds.origin.x * ceilPixelRatio , -bounds.origin.y * ceilPixelRatio
     @fullPaintIntoAreaOrBlitFromBackBuffer ctx, bounds
 
     if shadowHadBeenReplacedOrAdded
@@ -2097,17 +2097,17 @@ class Widget extends TreeNode
   # exactly as the user sees them.
   fullImageAsItAppearsOnScreen: ->
     fullExtentOfMorph = @fullBounds()
-    destCanvas = newCanvas fullExtentOfMorph.extent().scaleBy pixelRatio
+    destCanvas = newCanvas fullExtentOfMorph.extent().scaleBy ceilPixelRatio
     destCtx = destCanvas.getContext '2d'
     destCtx.drawImage world.worldCanvas,
-      fullExtentOfMorph.topLeft().x * pixelRatio,
-      fullExtentOfMorph.topLeft().y * pixelRatio,
-      fullExtentOfMorph.width() * pixelRatio,
-      fullExtentOfMorph.height() * pixelRatio,
+      fullExtentOfMorph.topLeft().x * ceilPixelRatio,
+      fullExtentOfMorph.topLeft().y * ceilPixelRatio,
+      fullExtentOfMorph.width() * ceilPixelRatio,
+      fullExtentOfMorph.height() * ceilPixelRatio,
       0,
       0,
-      fullExtentOfMorph.width() * pixelRatio,
-      fullExtentOfMorph.height() * pixelRatio
+      fullExtentOfMorph.width() * ceilPixelRatio,
+      fullExtentOfMorph.height() * ceilPixelRatio
 
     return destCanvas.toDataURL "image/png"
 
@@ -3963,11 +3963,11 @@ class Widget extends TreeNode
     fb = @fullBounds()
     otherFb = otherMorph.fullBounds()
     oRect = fb.intersect(otherFb)
-    oImg = newCanvas oRect.extent().scaleBy pixelRatio
+    oImg = newCanvas oRect.extent().scaleBy ceilPixelRatio
     ctx = oImg.getContext "2d"
-    ctx.scale pixelRatio, pixelRatio
+    ctx.scale ceilPixelRatio, ceilPixelRatio
     if oRect.width() < 1 or oRect.height() < 1
-      return newCanvas (new Point 1, 1).scaleBy pixelRatio
+      return newCanvas (new Point 1, 1).scaleBy ceilPixelRatio
     ctx.drawImage @fullImage(),
       Math.round(oRect.origin.x - fb.origin.x),
       Math.round(oRect.origin.y - fb.origin.y)

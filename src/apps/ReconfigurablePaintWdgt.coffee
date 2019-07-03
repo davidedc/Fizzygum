@@ -66,7 +66,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
         (pos) ->
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
-            context.clearRect 0, 0, @width() * pixelRatio, @height() * pixelRatio
+            context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
             @changed()
     """
 
@@ -81,8 +81,8 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             if world.hand.draggingSomething() then return
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
-            context.clearRect 0, 0, @width() * pixelRatio, @height() * pixelRatio
-            context.scale pixelRatio, pixelRatio
+            context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
+            context.scale ceilPixelRatio, ceilPixelRatio
 
             # give it a little bit of a tint so
             # you can see the canvas when you take it
@@ -131,8 +131,8 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             if world.hand.draggingSomething() then return
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
-            context.clearRect 0, 0, @width() * pixelRatio, @height() * pixelRatio
-            context.scale pixelRatio, pixelRatio
+            context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
+            context.scale ceilPixelRatio, ceilPixelRatio
 
             context.translate -@bounds.origin.x, -@bounds.origin.y
             context.translate pos.x, pos.y
@@ -326,8 +326,8 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             if world.hand.draggingSomething() then return
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
-            context.clearRect 0, 0, @width() * pixelRatio, @height() * pixelRatio
-            context.scale pixelRatio, pixelRatio
+            context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
+            context.scale ceilPixelRatio, ceilPixelRatio
 
             context.translate -@bounds.origin.x, -@bounds.origin.y
             context.translate pos.x, pos.y
@@ -385,8 +385,8 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             if world.hand.draggingSomething() then return
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
-            context.clearRect 0, 0, @width() * pixelRatio, @height() * pixelRatio
-            context.scale pixelRatio, pixelRatio
+            context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
+            context.scale ceilPixelRatio, ceilPixelRatio
 
             context.translate -@bounds.origin.x, -@bounds.origin.y
             context.translate pos.x, pos.y

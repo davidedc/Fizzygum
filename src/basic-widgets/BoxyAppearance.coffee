@@ -67,7 +67,7 @@ class BoxyAppearance extends Appearance
 
       aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
 
-      aContext.scale pixelRatio, pixelRatio
+      aContext.scale ceilPixelRatio, ceilPixelRatio
       morphPosition = @morph.position()
       aContext.translate morphPosition.x, morphPosition.y
       aContext.fillStyle = @morph.color.toString()
@@ -81,7 +81,7 @@ class BoxyAppearance extends Appearance
       aContext.fill()
 
       if @morph.strokeColor? and !appliedShadow?
-        aContext.lineWidth = 1 # TODO might look better if * pixelRatio
+        aContext.lineWidth = 1 # TODO might look better if * ceilPixelRatio
         aContext.strokeStyle = @morph.strokeColor.toString()
         aContext.beginPath()
         @outlinePath aContext, Math.max @getCornerRadius(), true
@@ -94,7 +94,7 @@ class BoxyAppearance extends Appearance
       # al, at, w, h which are actual pixels
       # rather than logical pixels, so it's generally used
       # outside the effect of the scaling because
-      # of the pixelRatio (i.e. after the restore)
+      # of the ceilPixelRatio (i.e. after the restore)
       @paintHighlight aContext, al, at, w, h
 
   
