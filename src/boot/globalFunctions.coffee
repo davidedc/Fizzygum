@@ -365,18 +365,21 @@ loadJSFile = (fileName, dontLogToDiv) ->
 
 
 loadJSFilesWithCoffeescriptSources = ->
+  # start of the promise.
+  # It will "trigger" the chain immediately, however each element
+  # of the chain will wait for its turn to avoid requesting too many
+  # file loads all at the same time.
+  promiseChain = new Promise (resolve) -> resolve()
 
-  allSourceLoadsPromises = []
+  # Note that the sources for "Class" and "Mixin" might end-up
+  # being recompiled even though those are two of the few things that
+  # we run from the start in the skeletal system.
+  # It doesn't seem to cause problems though?  
+  for i in [0...numberOfSourceBatches]
+    promiseChain = promiseChain.then waitNextTurn()
+    promiseChain = promiseChain.then loadJSFile "js/sourceCode/sources_batch_" + i + ".js"
 
-  for eachFile in sourcesManifests
-    
-    # just skip this one cause it's already loaded
-    if eachFile == "Class_coffeSource" then continue
-    if eachFile == "Mixin_coffeSource" then continue
-    
-    allSourceLoadsPromises.push loadJSFile "js/sourceCode/" + eachFile + ".js"
-
-  return (Promise.all allSourceLoadsPromises)
+  return promiseChain
 
 
 compileFGCode = (codeSource, bare) ->
@@ -589,7 +592,9 @@ generate_inclusion_order = (dependencies) ->
 # that the next source can be loaded.
 #
 # 2. In non-precompiled mode we don't care about
-# the gitter because there is no running world,
+# the gitter because there is no running world
+# (because we still have to build it from the
+# sources we are loading now),
 # so we can just wait each compilation step on
 # a timer.
 waitNextTurn = ->
@@ -682,11 +687,10 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
 
 
   # start of the promise. It will "trigger" the chain
-  # in 1 ms
-  promiseChain = new Promise (resolve) ->
-    setTimeout ->
-      resolve()
-    , 1
+  # immediately, however the first step is to wait for
+  # a turn, so we are not really immediately starting
+  # to compile.
+  promiseChain = new Promise (resolve) -> resolve()
 
   # chain two steps for each file, one to compile the file
   # and one to wait for the next turn
@@ -694,8 +698,8 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
     if eachFile == "Class" or eachFile == "Mixin" or eachFile == "globalFunctions"
       continue
     compileEachFileFunction = createCompileSourceFunction eachFile, justLoadSources
-    promiseChain = promiseChain.then compileEachFileFunction
     promiseChain = promiseChain.then waitNextTurn()
+    promiseChain = promiseChain.then compileEachFileFunction
 
   # final step, proceed with the boot sequence
   promiseChain.then ->
