@@ -142,11 +142,6 @@ class WorldMorph extends PanelWdgt
   freshlyCreatedPopUps: []
   openPopUps: []
 
-  # boot-up state machine
-  @BOOT_COMPLETE: 2
-  @EXECUTING_URL_ACTIONS: 1
-  @JUST_STARTED: 0
-  @bootState: 0
   @ongoingUrlActionNumber: 0
 
   @frameCount: 0
@@ -398,17 +393,11 @@ class WorldMorph extends PanelWdgt
       @setColor new Color 244,243,244
       @makePrettier()
 
-
-    # boot-up state machine
     if !@isIndexPage then console.log "booting"
     @basementWdgt = new BasementWdgt()
 
-    WorldMorph.bootState = WorldMorph.JUST_STARTED
-
     ProfilingDataCollector.enableProfiling()
     ProfilingDataCollector.enableBrokenRectsProfiling()
-
-    WorldMorph.ongoingUrlActionNumber= 0
 
     if @isIndexPage
       acm = new AnalogClockWdgt()
@@ -446,15 +435,12 @@ class WorldMorph extends PanelWdgt
       startupActions = JSON.parse getParameterByName "startupActions"
 
     if (!startupActions?) or (WorldMorph.ongoingUrlActionNumber == startupActions.actions.length)
-      WorldMorph.bootState = WorldMorph.BOOT_COMPLETE
       WorldMorph.ongoingUrlActionNumber = 0
       if AutomatorRecorderAndPlayer?
         if window.location.href.indexOf("worldWithSystemTestHarness") != -1
           if @automatorRecorderAndPlayer.atLeastOneTestHasBeenRun
             if @automatorRecorderAndPlayer.allTestsPassedSoFar
               document.getElementById("background").style.background = "green"
-
-    if WorldMorph.bootState == WorldMorph.BOOT_COMPLETE
       return
 
     if !@isIndexPage then console.log "nextStartupAction " + (WorldMorph.ongoingUrlActionNumber+1) + " / " + startupActions.actions.length
