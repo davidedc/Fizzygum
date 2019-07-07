@@ -373,7 +373,7 @@ class WorldMorph extends PanelWdgt
     @errorConsole.setExtent new Point 550,415
     @errorConsole.hide()
 
-  boot: ->
+  setupDOMandDesktop: ->
 
     # prevent overscroll (and bounce) in iOS
     document.body.addEventListener 'touchmove', (evt) ->

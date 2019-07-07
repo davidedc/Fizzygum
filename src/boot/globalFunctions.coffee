@@ -805,7 +805,7 @@ createWorldAndStartStepping = ->
       new SystemTestsControlPanelUpdater
 
   window.menusHelper = new MenusHelper()
-  world.boot()
+  world.setupDOMandDesktop()
 
 # a helper function to use Promise style
 # instead of callback style when creating
