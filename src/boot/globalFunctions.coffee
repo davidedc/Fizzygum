@@ -421,6 +421,8 @@ boot = ->
 
   window.stillLoadingSources = true
 
+  window.ceilPixelRatio = Math.ceil window.devicePixelRatio
+
   # First loaded batch ----------------------------------------
   #
   # note that we assume that all the parts of this first batch
