@@ -160,6 +160,9 @@ class StretchableCanvasWdgt extends CanvasMorph
 
     # put back the scaling so it's right again.
     # (always leave the scaling correct)
+    # TODO: you could use a save() / restore() here to avoid
+    # the anti-scaling followed by re-scaling introducing any artifacts
+    # due to rounding errors
     @behindTheScenesBackBufferContext.scale ceilPixelRatio, ceilPixelRatio
 
   reactToDropOf: (droppedWidget) ->
