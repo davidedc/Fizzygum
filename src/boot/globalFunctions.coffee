@@ -421,6 +421,83 @@ boot = ->
 
   window.stillLoadingSources = true
 
+  # There are four separate but related questions related to scaling:
+  # -----------------------------------------------------------------
+  # 1) how do I know the physical measurement (e.g. actual inches)
+  #    of something I paint on screen (e.g. how to make a button
+  #    big enough for tapping)
+  # 2) how do I know the current zoom level of the browser
+  # 3) how do I make the fizzygum canvas not blurry
+  # 4) how do I make the fizzygum UI big enough for good readibility
+  #    and touch input?
+
+  # The answer to 1) is easy:
+  #   it can't be done with CSS or JS alone. Deal with it. Some screens
+  #   are more dense and report the same pixelRatio as normal ones.
+  #   Even iPad models have slightly different retina densities.
+  #   This is not exposed via CSS or JS in any way. We can put in place
+  #   _an interacive_ way to ask the user to tell us how far apart are
+  #    her fingers for example, so we can draw the UI well.
+
+  # The answer to 2) is:
+  #   There is no way to ONLY know the zoom level independently.
+  #   devicePixelRatio takes into account both the pixel density of the
+  #   display and the current zoom level of the browser.
+
+  # Answer to 3):
+  #   Device pixel ratio reflects not only the pixel density on screen
+  #   (e.g. for retina displays and high-dpi displays), BUT ALSO the current
+  #   zoom level of the page. So for example many windows setups have a
+  #   default page zoom of 110% or 125% ... this means that on a
+  #   "standard-dpi" screen the devicePixelRatio would be 1.1 and
+  #   1.25 respectively.
+  #
+  #   So at 110% zoom level, the browser gives the canvas THE SAME LOGICAL PIXELS,
+  #   BUT it makes it physically bigger on the screen and it changes the
+  #   device pixel ratio. So if Fizzygum plays its cards well, it will give
+  #   more physical pixels to the canvas accordingly to the device pixel ratio,
+  #   and paint on that, keeping the canvas crisp even if it's larger than normal.
+  #
+  #   While in theory knowing the device pixel ratio would allow us to give the
+  #   canvas the exact amount of extra physical pixels and we could draw the
+  #   canvas crisply, it's impossible to deal simply and effectively with
+  #   non-integer pixel ratios, because, say, a 9-units large widget would
+  #   become 9.9 physical units which is difficult to draw sharply and clip
+  #   and pointer-test. So, logical 9-units would become 10 physical units...
+  #   and you see the kind of complications you'd get as you are trying to
+  #   make pixel-accurate clipping and drawing...
+  #
+  #   E.g. a logical 9-units widget would effectlively paint contiguously next
+  #   to a widget to its right that has a logical 10-units displacement
+  #   (instead of leaving one empty pixel between the two).
+  #
+  #   Other forms of approximation (e.g. use ceil instead of round) would incur
+  #   in similar problems.
+  #
+  #   Expecially clipping and pointer-testing would be prone to error because
+  #   they are done in logical coordinates where that complication is not
+  #   visible... so the problem is that the logical and physical coordinates
+  #   would be out-of-step in subtle ways.
+  #
+  #   Also for example a 5-unit widget would need rounding of its pixels, but
+  #   a 5+5 unit widget wouldn't (cause it would be precisely 11 physical pixels).
+  #
+  #   WHAT WE DO INSTEAD is the following: just ceil the devicePixelRatio and
+  #   use that. The canvas then has *more* pixels than needed, and will fill
+  #   its assigned area quite crisply in my experiments.
+
+  # Answer to 4):
+  #   So our job in terms of this question consists of:
+  #     a) first and foremost, keep the drawing crisp because a blurry screen
+  #       is terrible - see answer to 3) AND
+  #     b) to find the "big enough" logical sizing of things (buttons,
+  #       thickness of lines etc).
+  #   As mentioned there is no way in CSS/JS to actually know the real-world
+  #   measurement of things. What you _can_ do though is some interactive tests
+  #   where the user can directly or indirectly tell a good size for things
+  #   (e.g. place index and middle finger attached to each other and tap in a space).
+  #   THEN our job is just to make the UI elements of the comfortable logical units.
+
   window.ceilPixelRatio = Math.ceil window.devicePixelRatio
 
   # First loaded batch ----------------------------------------

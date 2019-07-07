@@ -376,6 +376,7 @@ class WorldMorph extends PanelWdgt
   setupDOMandDesktop: ->
 
     # prevent overscroll (and bounce) in iOS
+    # NOT HERE
     document.body.addEventListener 'touchmove', (evt) ->
       #In this case, the default behavior is scrolling the body, which
       #would result in an overflow.  Since we don't want that, we preventDefault.
