@@ -373,23 +373,14 @@ class WorldMorph extends PanelWdgt
     @errorConsole.setExtent new Point 550,415
     @errorConsole.hide()
 
-  setupDOMandDesktop: ->
-
-    # prevent overscroll (and bounce) in iOS
-    # NOT HERE
-    document.body.addEventListener 'touchmove', (evt) ->
-      #In this case, the default behavior is scrolling the body, which
-      #would result in an overflow.  Since we don't want that, we preventDefault.
-      if !evt._isScroller
-        evt.preventDefault()
-      return
-
+  removeSpinnerAndFakeDesktop: ->
     # remove the fake desktop for quick launch and the spinner
     spinner = document.getElementById 'spinner'
     spinner.parentNode.removeChild spinner
     splashScreenFakeDesktop = document.getElementById 'splashScreenFakeDesktop'
     splashScreenFakeDesktop.parentNode.removeChild splashScreenFakeDesktop
 
+  createDesktop: ->
     if @isIndexPage
       @setColor new Color 244,243,244
       @makePrettier()
@@ -1547,6 +1538,14 @@ class WorldMorph extends PanelWdgt
   # note that we don't register the normal click,
   # we figure that out independently.
   initEventListeners: ->
+    # prevent overscroll (and bounce) in iOS
+    document.body.addEventListener 'touchmove', (evt) ->
+      #In this case, the default behavior is scrolling the body, which
+      #would result in an overflow.  Since we don't want that, we preventDefault.
+      if !evt._isScroller
+        evt.preventDefault()
+      return
+
     canvas = @worldCanvas
 
     # there is indeed a "dblclick" JS event
@@ -1862,7 +1861,7 @@ class WorldMorph extends PanelWdgt
 
     # this is a DOM thing, little to do with other r e s i z e methods
     window.addEventListener "resize", @resizeEventListener, false
-    
+  
   
   removeEventListeners: ->
     canvas = @worldCanvas
