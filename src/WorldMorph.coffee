@@ -1535,19 +1535,8 @@ class WorldMorph extends PanelWdgt
       ), 50, true
 
 
-  # note that we don't register the normal click,
-  # we figure that out independently.
-  initEventListeners: ->
-    # prevent overscroll (and bounce) in iOS
-    document.body.addEventListener 'touchmove', (evt) ->
-      #In this case, the default behavior is scrolling the body, which
-      #would result in an overflow.  Since we don't want that, we preventDefault.
-      if !evt._isScroller
-        evt.preventDefault()
-      return
-
+  initMouseEventListeners: ->
     canvas = @worldCanvas
-
     # there is indeed a "dblclick" JS event
     # but we reproduce it internally.
     # The reason is that we do so for "click"
@@ -1586,7 +1575,18 @@ class WorldMorph extends PanelWdgt
       @events.push event
 
     canvas.addEventListener "mousemove", @mousemoveEventListener, false
-    
+
+  initTouchEventListeners: ->
+    canvas = @worldCanvas
+
+    # prevent overscroll (and bounce) in iOS
+    document.body.addEventListener 'touchmove', (evt) ->
+      #In this case, the default behavior is scrolling the body, which
+      #would result in an overflow.  Since we don't want that, we preventDefault.
+      if !evt._isScroller
+        evt.preventDefault()
+      return
+
     @touchstartEventListener = (event) =>
       @events.push "touchstartEventListener"
       @events.push event
@@ -1617,12 +1617,9 @@ class WorldMorph extends PanelWdgt
       # Disable browser zoom
       event.preventDefault()
     canvas.addEventListener "gesturechange", @gesturechangeEventListener, false
-    
-    @contextmenuEventListener = (event) ->
-      # suppress context menu for Mac-Firefox
-      event.preventDefault()
-    canvas.addEventListener "contextmenu", @contextmenuEventListener, false
-    
+
+  initKeyboardEventListeners: ->
+    canvas = @worldCanvas
     @keydownEventListener = (event) =>
       @events.push "keydownEventListener"
       @events.push event
@@ -1697,19 +1694,8 @@ class WorldMorph extends PanelWdgt
 
     canvas.addEventListener "keypress", @keypressEventListener, false
 
-    # Safari, Chrome
-    
-    @wheelEventListener = (event) =>
-      @events.push "wheelEventListener"
-      @events.push event
-      event.preventDefault()
-
-    canvas.addEventListener "wheel", @wheelEventListener, false
-
-    # in theory there should be no scroll event on the page
-    # window.addEventListener "scroll", ((event) =>
-    #  nop # nothing to do, I just need this to set an interrupt point.
-    # ), false
+  initClipboardEventListeners: ->
+    canvas = @worldCanvas
 
     # snippets of clipboard-handling code taken from
     # http://codebits.glennjones.net/editing/setclipboarddata.htm
@@ -1789,6 +1775,9 @@ class WorldMorph extends PanelWdgt
 
     document.body.addEventListener "paste", @pasteEventListener, false
 
+  initKeyCombosEventListeners: ->
+    canvas = @worldCanvas
+
     #console.log "binding via mousetrap"
 
     @keyComboResetWorldEventListener = (event) =>
@@ -1845,6 +1834,30 @@ class WorldMorph extends PanelWdgt
       false
     Mousetrap.bind ["alt+z"], @keyComboCheckStringsOfItemsInMenuOrderUnimportant
 
+  initOtherMiscEventListeners: ->
+    canvas = @worldCanvas
+
+    @contextmenuEventListener = (event) ->
+      # suppress context menu for Mac-Firefox
+      event.preventDefault()
+    canvas.addEventListener "contextmenu", @contextmenuEventListener, false
+    
+
+    # Safari, Chrome
+    
+    @wheelEventListener = (event) =>
+      @events.push "wheelEventListener"
+      @events.push event
+      event.preventDefault()
+
+    canvas.addEventListener "wheel", @wheelEventListener, false
+
+    # in theory there should be no scroll event on the page
+    # window.addEventListener "scroll", ((event) =>
+    #  nop # nothing to do, I just need this to set an interrupt point.
+    # ), false
+
+
     @dragoverEventListener = (event) ->
       event.preventDefault()
     window.addEventListener "dragover", @dragoverEventListener, false
@@ -1861,7 +1874,17 @@ class WorldMorph extends PanelWdgt
 
     # this is a DOM thing, little to do with other r e s i z e methods
     window.addEventListener "resize", @resizeEventListener, false
-  
+
+  # note that we don't register the normal click,
+  # we figure that out independently.
+  initEventListeners: ->
+    @initMouseEventListeners()
+    @initTouchEventListeners()
+    @initKeyboardEventListeners()
+    @initClipboardEventListeners()
+    @initKeyCombosEventListeners()
+    @initOtherMiscEventListeners()
+
   
   removeEventListeners: ->
     canvas = @worldCanvas
