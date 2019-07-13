@@ -119,7 +119,7 @@ class PopUpWdgt extends Widget
       @addShadow()
 
   # shadow is added to a morph by
-  # the HandMorph while floatDragging
+  # the ActivePointerWdgt while floatDragging
   addShadow: (offset = new Point(5, 5), alpha = 0.2, color) ->
 
     if @isPopUpPinned() and @parent == world

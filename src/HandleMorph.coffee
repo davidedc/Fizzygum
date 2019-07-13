@@ -1,4 +1,4 @@
-# not to be confused with the HandMorph
+# not to be confused with the ActivePointerWdgt
 # I am a resize / move handle that can be attached to any Widget
 
 # this comment below is needed to figure out dependencies between classes

@@ -33,7 +33,7 @@ class PenMorph extends Widget
 
 
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
-    if !(whereTo instanceof HandMorph or whereTo instanceof CanvasMorph)
+    if !(whereTo instanceof ActivePointerWdgt or whereTo instanceof CanvasMorph)
       @inform "a pen will only\nwork on a canvas..."
 
 

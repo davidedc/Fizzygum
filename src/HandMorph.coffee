@@ -2,7 +2,7 @@
 # is never added to any other morph. [TODO] Find out why and write explanation.
 # Not to be confused with the HandleMorph
 
-class HandMorph extends Widget
+class ActivePointerWdgt extends Widget
 
   world: nil
   mouseButton: nil
@@ -43,7 +43,7 @@ class HandMorph extends Widget
     @clipThroughCache = @boundingBox()
     return @clipThroughCache
   
-  # HandMorph navigation:
+  # ActivePointerWdgt navigation:
   topMorphUnderPointer: ->
     result = @world.topMorphSuchThat (m) =>
       m.clippedThroughBounds().containsPoint(@position()) and
@@ -121,15 +121,15 @@ class HandMorph extends Widget
   
   
   
-  # HandMorph floatDragging and dropping:
+  # ActivePointerWdgt floatDragging and dropping:
   #
   # floatDrag 'n' drop events, method(arg) -> receiver:
   #
   #   prepareToBeGrabbed() -> grabTarget
   #   reactToGrabOf(grabbedMorph) -> oldParent
   #   wantsDropOf(morphToDrop) ->  newParent
-  #   justDropped(handMorph) -> droppedMorph
-  #   reactToDropOf(droppedMorph, handMorph) -> newParent
+  #   justDropped(activePointerWdgt) -> droppedMorph
+  #   reactToDropOf(droppedMorph, activePointerWdgt) -> newParent
   #
   dropTargetFor: (aMorph) ->
     target = @topMorphUnderPointer()
@@ -273,7 +273,7 @@ class HandMorph extends Widget
     #else
     #  alert "if you never see this alert then you can delete the test"
   
-  # HandMorph event dispatching:
+  # ActivePointerWdgt event dispatching:
   #
   #    mouse events:
   #
@@ -901,7 +901,7 @@ class HandMorph extends Widget
       img.src = src  if src
   
   
-  # HandMorph tools
+  # ActivePointerWdgt tools
   destroyToolTips: ->
 
     # "toolTipsList" keeps a list of widgets which will be deleted upon
@@ -919,7 +919,7 @@ class HandMorph extends Widget
         @toolTipsList.remove morph
   
   
-  # HandMorph floatDragging optimization
+  # ActivePointerWdgt floatDragging optimization
   fullRawMoveBy: (delta) ->
     if delta.isZero() then return
     trackChanges.push false

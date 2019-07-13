@@ -1160,7 +1160,7 @@ class Widget extends TreeNode
   breakNumberOfRawMovesAndResizesCaches: ->
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
-    if @ instanceof HandMorph
+    if @ instanceof ActivePointerWdgt
       if @children.length == 0
         return
     WorldMorph.numberOfRawMovesAndResizes++
@@ -2115,7 +2115,7 @@ class Widget extends TreeNode
     return hashCode @fullImageData()
   
   # shadow is added to a morph by
-  # the HandMorph while floatDragging
+  # the ActivePointerWdgt while floatDragging
   addShadow: (offset = new Point(4, 4), alpha = 0.2) ->
     @silentAddShadow offset, alpha    
     @fullChanged()
@@ -2673,7 +2673,7 @@ class Widget extends TreeNode
       return false
 
     # then check if my root is the hand
-    if @root() instanceof HandMorph
+    if @root() instanceof ActivePointerWdgt
       return true
 
     # if we are here it means we are not being
@@ -2764,9 +2764,9 @@ class Widget extends TreeNode
   
   # note how this checks whether
   # at *any point* up in the
-  # morphs hierarchy there is a HandMorph
+  # morphs hierarchy there is an ActivePointerWdgt
   isPickedUp: ->
-    @parentThatIsA(HandMorph)?
+    @parentThatIsA(ActivePointerWdgt)?
   
   situation: ->
     # answer a dictionary specifying where I am right now, so
