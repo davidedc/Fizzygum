@@ -32,9 +32,9 @@ class MouseSensorMorph extends BoxMorph
         else
           @alpha = 0
           @step = nil
-          world.removeSteppingMorph @
+          world.steppingMorphs.delete @
         @changed()
-      world.addSteppingMorph @
+      world.steppingMorphs.add @
   
   unTouch: ->
     @isTouched = false

@@ -22,7 +22,7 @@ class Example3DPlotWdgt extends Widget
     @isLockingToPanels = true
 
     @fps = 0
-    world.addSteppingMorph @
+    world.steppingMorphs.add @
 
     @setColor new Color 255, 125, 125
     @rawSetExtent new Point 200, 200

@@ -164,7 +164,7 @@ class WorldMorph extends PanelWdgt
   currentPinoutingMorphs: []
   morphsBeingPinouted: []
 
-  steppingMorphs: []
+  steppingMorphs: new Set
 
   basementWdgt: nil
 
@@ -1140,26 +1140,12 @@ class WorldMorph extends PanelWdgt
 
     WorldMorph.frameCount++
 
-  addSteppingMorph: (theMorph) ->
-    if @steppingMorphs.indexOf(theMorph) == -1
-      @steppingMorphs.push theMorph
-
-  removeSteppingMorph: (theMorph) ->
-    if @steppingMorphs.indexOf(theMorph) != -1
-      @steppingMorphs.remove theMorph
-
   # Widget stepping:
   runChildrensStepFunction: ->
 
 
-    # make a shallow copy of the array before iterating over
-    # it in the case some morph destroys itself and takes itself
-    # out of the array thus changing it in place and mangling the
-    # stepping.
-    # TODO all these array modifications should be immutable...
-    steppingMorphs = arrayShallowCopy @steppingMorphs
-
-    for eachSteppingMorph in steppingMorphs
+    # TODO all these set modifications should be immutable...
+    @steppingMorphs.forEach (eachSteppingMorph) =>
 
       #if eachSteppingMorph.isBeingFloatDragged()
       #  continue

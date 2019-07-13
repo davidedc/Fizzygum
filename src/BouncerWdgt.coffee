@@ -7,7 +7,7 @@ class BouncerWdgt extends Widget
   constructor: ->
     super()
     @fps = 60
-    world.addSteppingMorph @
+    world.steppingMorphs.add @
     @rawSetExtent new Point 5, 5
 
     @appearance = new RectangularAppearance @

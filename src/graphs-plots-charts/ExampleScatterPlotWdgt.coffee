@@ -7,7 +7,7 @@ class ExampleScatterPlotWdgt extends GraphsPlotsChartsWdgt
   constructor: (@drawOnlyPartOfBoundingRect)->
     super()
     @fps = 1
-    world.addSteppingMorph @
+    world.steppingMorphs.add @
 
   colloquialName: ->
     "Scatter plot"

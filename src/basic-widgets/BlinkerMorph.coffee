@@ -3,7 +3,7 @@
 class BlinkerMorph extends Widget
 
   constructor: (@fps = 2) ->
-    world.addSteppingMorph @
+    world.steppingMorphs.add @
     super()
     @appearance = new RectangularAppearance @
     @color = new Color 0, 0, 0

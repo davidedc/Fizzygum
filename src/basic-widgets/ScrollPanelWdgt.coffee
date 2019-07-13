@@ -409,7 +409,7 @@ class ScrollPanelWdgt extends PanelWdgt
     deltaX = 0
     deltaY = 0
     friction = 0.8
-    world.addSteppingMorph @
+    world.steppingMorphs.add @
     @step = =>
       scrollbarJustChanged = false
       if world.hand.mouseButton and
@@ -438,11 +438,11 @@ class ScrollPanelWdgt extends PanelWdgt
       else
         unless @hasVelocity
           @step = noOperation
-          world.removeSteppingMorph @
+          world.steppingMorphs.delete @
         else
           if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)
             @step = noOperation
-            world.removeSteppingMorph @
+            world.steppingMorphs.delete @
           else
             if @hBar.visibleBasedOnIsVisibleProperty() and
             !@hBar.isCollapsed()
@@ -464,7 +464,7 @@ class ScrollPanelWdgt extends PanelWdgt
     if @isOrphan() then return nil
     hand = world.hand
     @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
-    world.addSteppingMorph @
+    world.steppingMorphs.add @
     @step = =>
       pos = hand.position()
       inner = @boundingBox().insetBy inset
@@ -474,7 +474,7 @@ class ScrollPanelWdgt extends PanelWdgt
           @autoScroll pos
       else
         @step = noOperation
-        world.removeSteppingMorph @
+        world.steppingMorphs.delete @
         @autoScrollTrigger = nil
   
   autoScroll: (pos) ->

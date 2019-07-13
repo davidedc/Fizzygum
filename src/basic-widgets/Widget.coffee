@@ -526,7 +526,7 @@ class Widget extends TreeNode
     @breakNumberOfRawMovesAndResizesCaches()
     WorldMorph.numberOfAddsAndRemoves++
 
-    world.removeSteppingMorph @
+    world.steppingMorphs.delete @
 
     # if there is anything being edited inside
     # what we are destroying, then also
@@ -2378,8 +2378,8 @@ class Widget extends TreeNode
   # in case we copy a morph, if the original was in some
   # stepping structures, then we have to add the copy too.
   alignCopiedMorphToSteppingStructures: (copiedMorph) ->
-    if world.steppingMorphs.indexOf(@) != -1
-      world.addSteppingMorph copiedMorph
+    if world.steppingMorphs.has @
+      world.steppingMorphs.add copiedMorph
 
   # note that the entire copying mechanism
   # should also take care of inserting the copied
@@ -2786,7 +2786,7 @@ class Widget extends TreeNode
     oldStep = @step
     oldFps = @fps
     @fps = 0
-    world.addSteppingMorph @
+    world.steppingMorphs.add @
     @step = =>
       @silentFullRawMoveBy new Point xStep, yStep
       @fullChanged()
@@ -2797,7 +2797,7 @@ class Widget extends TreeNode
         @step = oldStep
         @fps = oldFps
         if @step == noOperation or !@step?
-          world.removeSteppingMorph @
+          world.steppingMorphs.delete @
   
   
   # Widget utilities ////////////////////////////////////////////////////////

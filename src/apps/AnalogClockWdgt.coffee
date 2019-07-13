@@ -14,7 +14,7 @@ class AnalogClockWdgt extends Widget
     @fps = 1
     @synchronisedStepping = true
     @dateLastTicked = WorldMorph.currentDate
-    world.addSteppingMorph @
+    world.steppingMorphs.add @
 
     super()
     @setColor new Color 255, 125, 125

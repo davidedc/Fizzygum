@@ -30,7 +30,7 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
     super
 
     @fps = 0
-    world.addSteppingMorph @
+    world.steppingMorphs.add @
 
     numberOfPrimitives = 0
     @primitiveTypes.ambientLight = numberOfPrimitives++
