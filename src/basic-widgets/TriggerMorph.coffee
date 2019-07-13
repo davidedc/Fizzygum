@@ -228,7 +228,7 @@ class TriggerMorph extends Widget
   mouseLeave: ->
     @state = @STATE_NORMAL
     @changed()
-    world.hand.destroyToolTips()  if @toolTipMessage
+    world.destroyToolTips()  if @toolTipMessage
   
   mouseDownLeft: ->
     @state = @STATE_PRESSED

@@ -42,7 +42,7 @@ HighlightableMixin =
       mouseLeave: ->
         @state = @STATE_NORMAL
         @updateColor()
-        world.hand.destroyToolTips()  if @toolTipMessage
+        world.destroyToolTips()  if @toolTipMessage
       
       mouseDownLeft: ->
         @state = @STATE_PRESSED

@@ -16,7 +16,6 @@ class ActivePointerWdgt extends Widget
   morphToGrab: nil
   grabOrigin: nil
   mouseOverList: nil
-  toolTipsList: nil
   touchHoldTimeout: nil
   doubleClickMorph: nil
   tripleClickMorph: nil
@@ -28,7 +27,6 @@ class ActivePointerWdgt extends Widget
 
   constructor: (@world) ->
     @mouseOverList = []
-    @toolTipsList = []
     super()
     @minimumExtent = new Point 0,0
     @silentRawSetBounds Rectangle.EMPTY
@@ -355,7 +353,7 @@ class ActivePointerWdgt extends Widget
 
 
   processMouseDown: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    @destroyToolTips()
+    world.destroyToolTips()
     @morphToGrab = nil
 
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
@@ -469,7 +467,7 @@ class ActivePointerWdgt extends Widget
     morph = @topMorphUnderPointer()
 
     alreadyRecordedLeftOrRightClickOnMenuItem = false
-    @destroyToolTips()
+    world.destroyToolTips()
     world.freshlyCreatedPopUps = []
 
 
@@ -748,7 +746,7 @@ class ActivePointerWdgt extends Widget
     if AutomatorRecorderAndPlayer?
       world.automatorRecorderAndPlayer.addMouseDoubleClickCommand nil, pointerAndMorphInfo...
 
-    @destroyToolTips()
+    world.destroyToolTips()
     if @floatDraggingSomething()
       @drop()
     else
@@ -761,7 +759,7 @@ class ActivePointerWdgt extends Widget
     if AutomatorRecorderAndPlayer?
       world.automatorRecorderAndPlayer.addMouseTripleClickCommand nil, pointerAndMorphInfo...
 
-    @destroyToolTips()
+    world.destroyToolTips()
     if @floatDraggingSomething()
       @drop()
     else
@@ -902,22 +900,6 @@ class ActivePointerWdgt extends Widget
   
   
   # ActivePointerWdgt tools
-  destroyToolTips: ->
-
-    # "toolTipsList" keeps a list of widgets which will be deleted upon
-    # the next mouse click, or whenever another temporary Widget decides
-    # that it needs to remove them.
-    # Note that we actually destroy toolTipsList because we are not expecting
-    # anybody to revive them once they are gone (as opposed to menus)
-
-    # use a shallow copy of the list because we are
-    # removing elements while iterating through it
-    scanningTemporaries = arrayShallowCopy @toolTipsList
-    scanningTemporaries.forEach (morph) =>
-      unless morph.boundsContainPoint @position()
-        morph.fullDestroy()
-        @toolTipsList.remove morph
-  
   
   # ActivePointerWdgt floatDragging optimization
   fullRawMoveBy: (delta) ->
