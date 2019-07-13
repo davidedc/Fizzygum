@@ -141,7 +141,7 @@ class WorldMorph extends PanelWdgt
   popUpsMarkedForClosure: []
   freshlyCreatedPopUps: []
   openPopUps: []
-  toolTipsList: []
+  toolTipsList: new Set
 
   @ongoingUrlActionNumber: 0
 
@@ -2006,19 +2006,16 @@ class WorldMorph extends PanelWdgt
     super()
 
   destroyToolTips: ->
-    # "toolTipsList" keeps a list of widgets which will be deleted upon
+    # "toolTipsList" keeps the widgets to be deleted upon
     # the next mouse click, or whenever another temporary Widget decides
     # that it needs to remove them.
     # Note that we actually destroy toolTipsList because we are not expecting
     # anybody to revive them once they are gone (as opposed to menus)
 
-    # use a shallow copy of the list because we are
-    # removing elements while iterating through it
-    scanningTemporaries = arrayShallowCopy @toolTipsList
-    scanningTemporaries.forEach (morph) =>
-      unless morph.boundsContainPoint @position()
-        morph.fullDestroy()
-        @toolTipsList.remove morph
+    @toolTipsList.forEach (tooltip) =>
+      unless tooltip.boundsContainPoint @position()
+        tooltip.fullDestroy()
+        @toolTipsList.delete tooltip
   
 
   buildContextMenu: ->

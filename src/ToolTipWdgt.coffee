@@ -62,7 +62,7 @@ class ToolTipWdgt extends Widget
     @addShadow()
     @fullChanged()
     world.destroyToolTips()
-    world.toolTipsList.push @
+    world.toolTipsList.add @
     
   buildAndConnectChildren: ->
     # console.log "bubble buildAndConnectChildren"
