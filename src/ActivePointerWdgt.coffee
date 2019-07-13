@@ -112,7 +112,7 @@ class ActivePointerWdgt extends Widget
       contextMenu.popUpAtHand()
 
 
-  # not used in ZK yet
+  # not used in Fizzygum yet
   allMorphsAtPointer: ->
     return @world.collectAllChildrenBottomToTopSuchThat (m) =>
       m.visibleBasedOnIsVisibleProperty() and
@@ -1052,12 +1052,12 @@ class ActivePointerWdgt extends Widget
       #console.log "nonFloatDraggedMorph: " + @nonFloatDraggedMorph
 
       # OK so this is an interesting choice. You can avoid
-      # this next line and have ZK to behave like OSX where you
+      # this next line and have Fizzygum to behave like OSX where you
       # can scroll on a panel without bringing its window in the
       # foreground. OR you can have the window to automatically
       # pop into the foreground. I'm liking the OSX style
       # so I'm leaving this commented-out, but it's there.
-      # TODO this could be a setting somewhere in ZK.
+      # TODO this could be a setting somewhere in Fizzygum.
       # @nonFloatDraggedMorph.bringToForeground()
 
       if @mouseButton

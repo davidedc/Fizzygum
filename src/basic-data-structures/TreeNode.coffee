@@ -62,7 +62,7 @@ class TreeNode
       childrenLength = "-"
     "a TreeNode" + "[" + childrenLength + "]"
 
-  # currently unused in ZK
+  # currently unused in Fizzygum
   childrenTopToBottom: ->
     arrayShallowCopyAndReverse @children
   
@@ -285,7 +285,7 @@ class TreeNode
       @children.forEach (child) ->
         child.forAllChildrenBottomToTop aFunction
   
-  # not used in ZK so far
+  # not used in Fizzygum so far
   allLeafsBottomToTop: ->
     if @children.length == 0
       return [@]
@@ -368,7 +368,7 @@ class TreeNode
     return false
 
   # The direct children of the parent of this node. (current node not included)
-  # never used in ZK
+  # never used in Fizzygum
   # There is an alternative solution here below, in comment,
   # but I believe to be slower because it requires applying a function to
   # all the children. My version below just required an array copy, then

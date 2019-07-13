@@ -3981,7 +3981,7 @@ class Widget extends TreeNode
   # ------------------------------------------------------------------------------------
   # Layouts
   # ------------------------------------------------------------------------------------
-  # So layouts in ZK work the following way:
+  # So layouts in Fizzygum work the following way:
   #  1) Any Widget can contain a number of other morphs
   #     according to a number of layouts *simultaneously*
   #     e.g. you can have two morphs being horizontally stacked
