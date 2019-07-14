@@ -140,7 +140,7 @@ class WorldMorph extends PanelWdgt
   hierarchyOfClickedMenus: []
   popUpsMarkedForClosure: []
   freshlyCreatedPopUps: []
-  openPopUps: []
+  openPopUps: new Set
   toolTipsList: new Set
 
   @ongoingUrlActionNumber: 0
@@ -481,16 +481,13 @@ class WorldMorph extends PanelWdgt
     # the destroy() function used
     # everywhere is not recursive and
     # that's where we update the @openPopUps
-    # array so we have to doublecheck here
-    # note how we examine the array in reverse order
-    # because we might delete its elements
-    for i in [(@openPopUps.length-1).. 0] by -1
-      if @openPopUps[i].isOrphan()
-        @openPopUps.splice i, 1
-
-    for eachPopUp in @openPopUps
-      if eachPopUp.instanceNumericID >= mostRecentPopUpID
+    # set so we have to doublecheck here
+    @openPopUps.forEach (eachPopUp) =>
+      if eachPopUp.isOrphan()
+        @openPopUps.delete eachPopUp
+      else if eachPopUp.instanceNumericID >= mostRecentPopUpID
         mostRecentPopUp = eachPopUp
+
     return mostRecentPopUp
 
   # see roundNumericIDsToNextThousand method in

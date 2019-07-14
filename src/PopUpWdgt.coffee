@@ -31,7 +31,7 @@ class PopUpWdgt extends Widget
     super()
     @isLockingToPanels = false
     world.freshlyCreatedPopUps.push @
-    world.openPopUps.push @
+    world.openPopUps.add @
 
   hierarchyOfPopUps: ->
     ascendingMorphs = @
@@ -162,9 +162,9 @@ class PopUpWdgt extends Widget
 
   destroy: ->
     super()
-    world.openPopUps.remove @
+    world.openPopUps.delete @
 
   close: ->
     super()
-    world.openPopUps.remove @
+    world.openPopUps.delete @
 
