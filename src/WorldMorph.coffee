@@ -156,13 +156,13 @@ class WorldMorph extends PanelWdgt
   numberOfDuplicatedBrokenRects: 0
   numberOfMergedSourceAndDestination: 0
 
-  morphsToBeHighlighted: []
-  currentHighlightingMorphs: []
-  morphsBeingHighlighted: []
+  morphsToBeHighlighted: new Set
+  currentHighlightingMorphs: new Set
+  morphsBeingHighlighted: new Set
 
-  morphsToBePinouted: []
-  currentPinoutingMorphs: []
-  morphsBeingPinouted: []
+  morphsToBePinouted: new Set
+  currentPinoutingMorphs: new Set
+  morphsBeingPinouted: new Set
 
   steppingMorphs: new Set
 
@@ -946,21 +946,21 @@ class WorldMorph extends PanelWdgt
     @numberOfMergedSourceAndDestination = 0
 
   addPinoutingMorphs: ->
-    for eachPinoutingMorph in @currentPinoutingMorphs.slice()
-      if eachPinoutingMorph.morphThisMorphIsPinouting in @morphsToBePinouted
+    @currentPinoutingMorphs.forEach (eachPinoutingMorph) =>
+      if @morphsToBePinouted.has eachPinoutingMorph.morphThisMorphIsPinouting
         if eachPinoutingMorph.morphThisMorphIsPinouting.hasMaybeChangedGeometryOrPosition()
           # reposition the pinout morph if needed
           peekThroughBox = eachPinoutingMorph.morphThisMorphIsPinouting.clippedThroughBounds()
           eachPinoutingMorph.fullRawMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
 
       else
-        @currentPinoutingMorphs.remove eachPinoutingMorph
-        @morphsBeingPinouted.remove eachPinoutingMorph.morphThisMorphIsPinouting
+        @currentPinoutingMorphs.delete eachPinoutingMorph
+        @morphsBeingPinouted.delete eachPinoutingMorph.morphThisMorphIsPinouting
         eachPinoutingMorph.morphThisMorphIsPinouting = nil
         eachPinoutingMorph.fullDestroy()
 
-    for eachMorphNeedingPinout in @morphsToBePinouted.slice()
-      if eachMorphNeedingPinout not in @morphsBeingPinouted
+    @morphsToBePinouted.forEach (eachMorphNeedingPinout) =>
+      unless @morphsBeingPinouted.has eachMorphNeedingPinout
         hM = new StringMorph2 eachMorphNeedingPinout.toString()
         world.add hM
         hM.morphThisMorphIsPinouting = eachMorphNeedingPinout
@@ -968,30 +968,30 @@ class WorldMorph extends PanelWdgt
         hM.fullRawMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
         hM.setColor new Color 0, 0, 255
         hM.setWidth 400
-        @currentPinoutingMorphs.push hM
-        @morphsBeingPinouted.push eachMorphNeedingPinout
+        @currentPinoutingMorphs.add hM
+        @morphsBeingPinouted.add eachMorphNeedingPinout
   
   addHighlightingMorphs: ->
-    for eachHighlightingMorph in @currentHighlightingMorphs.slice()
-      if eachHighlightingMorph.morphThisMorphIsHighlighting in @morphsToBeHighlighted
+    @currentHighlightingMorphs.forEach (eachHighlightingMorph) =>
+      if @morphsToBeHighlighted.has eachHighlightingMorph.morphThisMorphIsHighlighting
         if eachHighlightingMorph.morphThisMorphIsHighlighting.hasMaybeChangedGeometryOrPosition()
           eachHighlightingMorph.rawSetBounds eachHighlightingMorph.morphThisMorphIsHighlighting.clippedThroughBounds()
       else
-        @currentHighlightingMorphs.remove eachHighlightingMorph
-        @morphsBeingHighlighted.remove eachHighlightingMorph.morphThisMorphIsHighlighting
+        @currentHighlightingMorphs.delete eachHighlightingMorph
+        @morphsBeingHighlighted.delete eachHighlightingMorph.morphThisMorphIsHighlighting
         eachHighlightingMorph.morphThisMorphIsHighlighting = nil
         eachHighlightingMorph.fullDestroy()
 
-    for eachMorphNeedingHighlight in @morphsToBeHighlighted.slice()
-      if eachMorphNeedingHighlight not in @morphsBeingHighlighted
+    @morphsToBeHighlighted.forEach (eachMorphNeedingHighlight) =>
+      unless @morphsBeingHighlighted.has eachMorphNeedingHighlight 
         hM = new HighlighterMorph()
         world.add hM
         hM.morphThisMorphIsHighlighting = eachMorphNeedingHighlight
         hM.rawSetBounds eachMorphNeedingHighlight.clippedThroughBounds()
         hM.setColor new Color 0, 0, 255
         hM.setAlphaScaled 50
-        @currentHighlightingMorphs.push hM
-        @morphsBeingHighlighted.push eachMorphNeedingHighlight
+        @currentHighlightingMorphs.add hM
+        @morphsBeingHighlighted.add eachMorphNeedingHighlight
 
 
   playQueuedEvents: ->

@@ -1720,13 +1720,13 @@ class Widget extends TreeNode
   turnOnHighlight: ->
     if !@highlighted
       @highlighted = true
-      world.morphsToBeHighlighted.push @
+      world.morphsToBeHighlighted.add @
       @changed()
 
   turnOffHighlight: ->
     if @highlighted
       @highlighted = false
-      world.morphsToBeHighlighted.remove @
+      world.morphsToBeHighlighted.delete @
       @changed()
 
 
@@ -3289,10 +3289,10 @@ class Widget extends TreeNode
     sdspw.rawSetExtent new Point 370, 325
 
   showOutputPins: (a,b,c,d) ->
-    world.morphsToBePinouted.push b
+    world.morphsToBePinouted.add b
 
   removeOutputPins: (a,b,c,d) ->
-    world.morphsToBePinouted.remove b
+    world.morphsToBePinouted.delete b
 
   testMenu: (morphOpeningThePopUp,targetMorph)->
     menu = new MenuMorph morphOpeningThePopUp,  false, targetMorph, true, true, nil
@@ -3309,7 +3309,7 @@ class Widget extends TreeNode
     menu.addMenuItem "TextMorph2 with background", true, @, "createNewTextMorph2WithBackground"
     menu.addMenuItem "StringMorph3 with background", true, @, "createNewStringMorph3WithBackground"
     menu.addMenuItem "TextMorph3 with background", true, @, "createNewTextMorph3WithBackground"
-    if targetMorph in world.morphsToBePinouted
+    if world.morphsToBePinouted.has targetMorph
       menu.addMenuItem "remove output pins", true, @, "removeOutputPins"
     else
       menu.addMenuItem "show output pins", true, @, "showOutputPins"
