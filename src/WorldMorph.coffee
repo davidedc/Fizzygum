@@ -135,11 +135,11 @@ class WorldMorph extends PanelWdgt
   @KEYPAD_0_mappedToThaiKeyboard_Q: "ย"
   @KEYPAD_DOT_mappedToThaiKeyboard_R: "พ"
 
-  morphsDetectingClickOutsideMeOrAnyOfMeChildren: []
-  hierarchyOfClickedMorphs: []
-  hierarchyOfClickedMenus: []
-  popUpsMarkedForClosure: []
-  freshlyCreatedPopUps: []
+  morphsDetectingClickOutsideMeOrAnyOfMeChildren: new Set
+  hierarchyOfClickedMorphs: new Set
+  hierarchyOfClickedMenus: new Set
+  popUpsMarkedForClosure: new Set
+  freshlyCreatedPopUps: new Set
   openPopUps: new Set
   toolTipsList: new Set
 
@@ -509,9 +509,9 @@ class WorldMorph extends PanelWdgt
 
   # used to close temporary menus
   closePopUpsMarkedForClosure: ->
-    for eachMorph in @popUpsMarkedForClosure
+    @popUpsMarkedForClosure.forEach (eachMorph) =>
       eachMorph.close()
-    @popUpsMarkedForClosure = []
+    @popUpsMarkedForClosure.clear()
   
   # World Widget broken rects debugging
   # not using it anywhere
@@ -1932,9 +1932,9 @@ class WorldMorph extends PanelWdgt
   # So, try to clean-up things as much as possible.
   softResetWorld: ->
     @hand.drop()
-    @hand.mouseOverList = []
+    @hand.mouseOverList.clear()
     @hand.nonFloatDraggedMorph = nil
-    @morphsDetectingClickOutsideMeOrAnyOfMeChildren = []
+    @morphsDetectingClickOutsideMeOrAnyOfMeChildren.clear()
     @lastNonTextPropertyChangerButtonClickedOrDropped = nil
 
   resetWorld: ->

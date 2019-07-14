@@ -24,7 +24,7 @@ class MenuMorph extends PopUpWdgt
 
 
     if @isListContents
-      world.freshlyCreatedPopUps.remove @
+      world.freshlyCreatedPopUps.delete @
       world.openPopUps.delete @
     # important not to traverse all the children for stepping through, because
     # there could be a lot of entries for example in the inspector the number

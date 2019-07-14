@@ -30,16 +30,16 @@ class PopUpWdgt extends Widget
   constructor: (@morphOpeningThePopUp, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true) ->
     super()
     @isLockingToPanels = false
-    world.freshlyCreatedPopUps.push @
+    world.freshlyCreatedPopUps.add @
     world.openPopUps.add @
 
   hierarchyOfPopUps: ->
     ascendingMorphs = @
-    hierarchy = [ascendingMorphs]
+    hierarchy = new Set [ascendingMorphs]
     while ascendingMorphs?.getParentPopUp?
       ascendingMorphs = ascendingMorphs.getParentPopUp()
       if ascendingMorphs?
-        hierarchy.push ascendingMorphs
+        hierarchy.add ascendingMorphs
     return hierarchy
 
   # for pop ups, the propagation happens through the getParentPopUp method
@@ -51,7 +51,7 @@ class PopUpWdgt extends Widget
       @markPopUpForClosure()
 
   markPopUpForClosure: ->
-    world.popUpsMarkedForClosure.push @
+    world.popUpsMarkedForClosure.add @
     @isPopUpMarkedForClosure = true
 
   # why introduce a new flag when you can calculate

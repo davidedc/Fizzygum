@@ -26,7 +26,7 @@ class ActivePointerWdgt extends Widget
   previousNonFloatDraggingPos: nil
 
   constructor: (@world) ->
-    @mouseOverList = []
+    @mouseOverList = new Set
     super()
     @minimumExtent = new Point 0,0
     @silentRawSetBounds Rectangle.EMPTY
@@ -468,7 +468,7 @@ class ActivePointerWdgt extends Widget
 
     alreadyRecordedLeftOrRightClickOnMenuItem = false
     world.destroyToolTips()
-    world.freshlyCreatedPopUps = []
+    world.freshlyCreatedPopUps.clear()
 
 
     if @floatDraggingSomething()
@@ -674,8 +674,8 @@ class ActivePointerWdgt extends Widget
 
   cleanupMenuMorphs: (expectedClick, morph, alsoKillFreshMenus)->
 
-    world.hierarchyOfClickedMorphs = []
-    world.hierarchyOfClickedMenus = []
+    world.hierarchyOfClickedMorphs.clear()
+    world.hierarchyOfClickedMenus.clear()
 
     # note that all the actions due to the clicked
     # morphs have been performed, now we can destroy
@@ -696,10 +696,11 @@ class ActivePointerWdgt extends Widget
     # the one the user clicked on.
     # (including the one the user clicked on)
     ascendingMorphs = morph
-    world.hierarchyOfClickedMorphs = [ascendingMorphs]
+    world.hierarchyOfClickedMorphs.clear()
+    world.hierarchyOfClickedMorphs.add ascendingMorphs
     while ascendingMorphs.parent?
       ascendingMorphs = ascendingMorphs.parent
-      world.hierarchyOfClickedMorphs.push ascendingMorphs
+      world.hierarchyOfClickedMorphs.add ascendingMorphs
 
     # remove menus that have requested
     # to be removed when a click happens outside
@@ -726,18 +727,15 @@ class ActivePointerWdgt extends Widget
     #console.log "hierarchy of clicked menus: " + world.hierarchyOfClickedMenus
     
 
-    # here we do a shallow copy of world.morphsDetectingClickOutsideMeOrAnyOfMeChildren
-    # because we might remove elements of the array while we
+    # because we might remove elements of the set while we
     # iterate on it (as we destroy menus that want to be destroyed
     # when the user clicks outside of them or their children)
-    # so we need to do a shallow copy to avoid to mangle the for loop
-    morphsDetectingClickOutsideMeOrAnyOfMeChildren = arrayShallowCopy world.morphsDetectingClickOutsideMeOrAnyOfMeChildren
-    for eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren in morphsDetectingClickOutsideMeOrAnyOfMeChildren
-      if (eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren not in world.hierarchyOfClickedMenus) and
-         (eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren not in world.hierarchyOfClickedMorphs)
+    world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.forEach (eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren) =>
+      if (!world.hierarchyOfClickedMenus.has eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren) and
+         (!world.hierarchyOfClickedMorphs.has eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren)
         # skip the freshly created menus as otherwise we might
         # destroy them immediately
-        if alsoKillFreshMenus or eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren not in world.freshlyCreatedPopUps
+        if alsoKillFreshMenus or !world.freshlyCreatedPopUps.has eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren
           if eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]?
             eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren[eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren, eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
 
@@ -936,7 +934,9 @@ class ActivePointerWdgt extends Widget
     # commented-out implementation of 1):
     # mouseOverNew = @allMorphsAtPointer().reverse()
     topMorph = @topMorphUnderPointer()
-    mouseOverNew = topMorph.allParentsTopToBottom()
+    # allParentsTopToButton makes more logical sense but
+    # allParentsBottomToTop is cheaper and it all ends up in a set anyways   
+    mouseOverNew = new Set topMorph.allParentsBottomToTop()
 
     @determineGrabs pos, topMorph, mouseOverNew
 
@@ -1055,7 +1055,9 @@ class ActivePointerWdgt extends Widget
   # (but OUTSIDE of the button), the (center of the) button
   # is immediately non-float dragged to where clicked.
   nonFloatDragMorphFarAwayToHere: (morphFarAway, pos) ->
-    mouseOverNew = morphFarAway.allParentsTopToBottom()
+    # allParentsTopToButton makes more logical sense but
+    # allParentsBottomToTop is cheaper and it all ends up in a set anyways   
+    mouseOverNew = new Set morphFarAway.allParentsBottomToTop()
     @previousNonFloatDraggingPos = morphFarAway.center()
     @nonFloatDragPositionWithinMorphAtStart = (new Point morphFarAway.width()/2, morphFarAway.height()/2).round()
     @nonFloatDraggedMorph = morphFarAway
@@ -1068,13 +1070,15 @@ class ActivePointerWdgt extends Widget
 
   reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges: ->
     topMorph = @topMorphUnderPointer()
-    mouseOverNew = topMorph.allParentsTopToBottom()
+    # allParentsTopToButton makes more logical sense but
+    # allParentsBottomToTop is cheaper and it all ends up in a set anyways   
+    mouseOverNew = new Set topMorph.allParentsBottomToTop()
     @dispatchEventsFollowingMouseMove mouseOverNew
 
   dispatchEventsFollowingMouseMove: (mouseOverNew) ->
 
     @mouseOverList.forEach (old) =>
-      unless old in mouseOverNew
+      unless mouseOverNew.has old
         old.mouseLeave?()
         old.mouseLeavefloatDragging?()  if @mouseButton
 
@@ -1086,7 +1090,7 @@ class ActivePointerWdgt extends Widget
       if !@mouseDownPosition? or !@mouseDownPosition.eq @position()
         newMorph.mouseMove?(@position(), @mouseButton)
       
-      unless newMorph in @mouseOverList
+      unless @mouseOverList.has newMorph
         newMorph.mouseEnter?()
         newMorph.mouseEnterfloatDragging?()  if @mouseButton
 

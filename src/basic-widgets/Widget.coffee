@@ -499,7 +499,7 @@ class Widget extends TreeNode
       @parent.close()
       return
 
-    world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.remove @
+    world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
     @parent?.childBeingClosed? @
     if world.basementWdgt?
       world.basementWdgt.scrollPanel.contents.addInPseudoRandomPosition @
@@ -519,7 +519,7 @@ class Widget extends TreeNode
 
     @parent?.childBeingDestroyed? @
     @unregisterThisInstance()
-    world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.remove @
+    world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
 
     @destroyed = true
     @parent?.invalidateLayout()
@@ -2728,11 +2728,10 @@ class Widget extends TreeNode
   onClickOutsideMeOrAnyOfMyChildren: (functionName, arg1, arg2, arg3)->
     if functionName?
       @clickOutsideMeOrAnyOfMeChildrenCallback = [functionName, arg1, arg2, arg3]
-      if @ not in world.morphsDetectingClickOutsideMeOrAnyOfMeChildren
-        world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.push @
+      world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.add @
     else
       #console.log "****** onClickOutsideMeOrAnyOfMyChildren removing element"
-      world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.remove @
+      world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
 
   justDropped: (whereIn) ->
     @rememberFractionalSituationInHoldingPanel()
