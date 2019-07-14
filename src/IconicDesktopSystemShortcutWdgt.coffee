@@ -31,13 +31,12 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
       @title = @target.colloquialName()
 
     super @title, @icon
-    world.widgetsReferencingOtherWidgets.push @
+    world.widgetsReferencingOtherWidgets.add @
 
   destroy: ->
     super
-    world.widgetsReferencingOtherWidgets.remove @
+    world.widgetsReferencingOtherWidgets.delete @
 
   alignCopiedMorphToReferenceTracker: (cloneOfMe) ->
-    if world.widgetsReferencingOtherWidgets.indexOf(@) != -1
-      world.widgetsReferencingOtherWidgets.push cloneOfMe
+    world.widgetsReferencingOtherWidgets.add cloneOfMe
 

@@ -204,7 +204,7 @@ class WorldMorph extends PanelWdgt
   # solution is more ad-hoc and is much much slower.
   outstandingTimerTriggeredOperationsCounter: []
 
-  widgetsReferencingOtherWidgets: []
+  widgetsReferencingOtherWidgets: new Set
   incrementalGcSessionId: 0
   desktopSidesPadding: 10
 
@@ -2403,7 +2403,7 @@ class WorldMorph extends PanelWdgt
     # go through all the references and check whether they reference
     # the wanted widget. Note that the reference could be unreachable
     # in the basement, or even in the trash
-    for eachReferencingMorph in @widgetsReferencingOtherWidgets
+    for eachReferencingMorph from @widgetsReferencingOtherWidgets
       if eachReferencingMorph.target == whichWdgt
         return true
     return false

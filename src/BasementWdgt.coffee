@@ -65,7 +65,7 @@ class BasementWdgt extends BoxMorph
     # definition (remember, the BasementWdgt is on screen, so they
     # are not even in the basement!) and
     # so they don't make their target reacheable.
-    for eachReferencingMorph in world.widgetsReferencingOtherWidgets
+    for eachReferencingMorph from world.widgetsReferencingOtherWidgets
       if eachReferencingMorph.isOrphan()
         eachReferencingMorph.markReferenceAsVisited newGcSessionId
 
@@ -76,7 +76,7 @@ class BasementWdgt extends BoxMorph
     #  - mark what they reach (and their parents) as reachable
     #     (note that what they reach MIGHT be in the basement)
     #  - mark them as visited so we don't visit again
-    for eachReferencingMorph in world.widgetsReferencingOtherWidgets
+    for eachReferencingMorph from world.widgetsReferencingOtherWidgets
       if !eachReferencingMorph.wasReferenceVisited newGcSessionId
         if !eachReferencingMorph.isInBasement()
           eachReferencingMorph.target.markItAndItsParentsAsReachable newGcSessionId
@@ -98,7 +98,7 @@ class BasementWdgt extends BoxMorph
     newReachableReferencesUncovered = true
     while newReachableReferencesUncovered
       newReachableReferencesUncovered = false
-      for eachReferencingMorph in world.widgetsReferencingOtherWidgets
+      for eachReferencingMorph from world.widgetsReferencingOtherWidgets
         if !eachReferencingMorph.wasReferenceVisited newGcSessionId
           if eachReferencingMorph.isInBasementButReachable newGcSessionId
             newReachableReferencesUncovered = true
