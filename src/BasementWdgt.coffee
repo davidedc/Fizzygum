@@ -114,14 +114,13 @@ class BasementWdgt extends BoxMorph
 
     # now we have an idea of which children in the basement
     # are reachable and which aren't
-    referencedChildren = []
+    referencedChildren = new Set
 
     for eachChild in @scrollPanel.contents.children
       if eachChild.isInBasementButReachable newGcSessionId
-        if referencedChildren.indexOf eachChild == -1
-          referencedChildren.push eachChild
+        referencedChildren.add eachChild
 
-    for eachChild in referencedChildren
+    referencedChildren.forEach (eachChild) =>
       eachChild.hide()
 
   showAllWidgets: ->
