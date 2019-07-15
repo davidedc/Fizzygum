@@ -119,6 +119,10 @@ class Example3DPlotWdgt extends Widget
       @currentAngle++
     @calculateNewPlotValues()
 
+  
+  # TODO seems like in a plot and a grid like these
+  # one could really reuse past vertices and just modify them
+  # and avoid aaaaaall these constructions every time
   calculateNewPlotValues: ->
     @vertices = []
 
