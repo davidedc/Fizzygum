@@ -2802,13 +2802,13 @@ class Widget extends TreeNode
   
   showResizeAndMoveHandlesAndLayoutAdjusters: ->
     if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
-      world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "resizeHorizontalHandle")
-      world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "resizeVerticalHandle")
-      world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "moveHandle")
-      world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "resizeBothDimensionsHandle")
+      world.temporaryHandlesAndLayoutAdjusters.add new HandleMorph(@, "resizeHorizontalHandle")
+      world.temporaryHandlesAndLayoutAdjusters.add new HandleMorph(@, "resizeVerticalHandle")
+      world.temporaryHandlesAndLayoutAdjusters.add new HandleMorph(@, "moveHandle")
+      world.temporaryHandlesAndLayoutAdjusters.add new HandleMorph(@, "resizeBothDimensionsHandle")
     else
       if (@lastSiblingBeforeMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingBeforeMeIsA(StackElementsSizeAdjustingMorph)
-        world.temporaryHandlesAndLayoutAdjusters.push \
+        world.temporaryHandlesAndLayoutAdjusters.add \
           @addAsSiblingBeforeMe \
             new StackElementsSizeAdjustingMorph(),
             nil,
@@ -2817,7 +2817,7 @@ class Widget extends TreeNode
       #console.log "@: " + @.toString() + " amITheLastSibling: " + @amITheLastSibling()
 
       if (@firstSiblingAfterMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingAfterMeIsA(StackElementsSizeAdjustingMorph)
-        world.temporaryHandlesAndLayoutAdjusters.push \
+        world.temporaryHandlesAndLayoutAdjusters.add \
           @addAsSiblingAfterMe \
             new StackElementsSizeAdjustingMorph(),
             nil,
@@ -2826,7 +2826,7 @@ class Widget extends TreeNode
         @parent.showResizeAndMoveHandlesAndLayoutAdjusters()
   
   showMoveHandle: ->
-    world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph @, "moveHandle"
+    world.temporaryHandlesAndLayoutAdjusters.add new HandleMorph @, "moveHandle"
   
   inform: (msg) ->
     text = msg

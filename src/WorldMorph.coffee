@@ -271,7 +271,7 @@ class WorldMorph extends PanelWdgt
     @keyboardEventsReceiver = nil
     @lastEditedText = nil
     @caret = nil
-    @temporaryHandlesAndLayoutAdjusters = []
+    @temporaryHandlesAndLayoutAdjusters = new Set
     @inputDOMElementForVirtualKeyboard = nil
 
     if @automaticallyAdjustToFillEntireBrowserAlsoOnResize and @isIndexPage

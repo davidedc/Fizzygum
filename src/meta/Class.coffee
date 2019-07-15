@@ -119,7 +119,7 @@ class Class
 
     @nonStaticPropertiesSources = {}
     @staticPropertiesSources = {}
-    @subClasses = []
+    @subClasses = new Set
 
     # find the class name
     classRegex = /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
@@ -329,7 +329,7 @@ class Class
     # then add the .class field
     window[@name].class = @
     if @superclass? 
-      @superclass.subClasses.push @
+      @superclass.subClasses.add @
 
 
     #if @name == "LCLCodePreprocessor" then debugger
@@ -339,7 +339,7 @@ class Class
       eachInstance.sourceChanged()
   
     for eachProperty in propertiesArray
-      for eachSubClass in @subClasses
+      @subClasses.forEach (eachSubClass) =>
         # if a subclass redefined a property, then
         # the change doesn't apply, so there is no
         # notification to propagate

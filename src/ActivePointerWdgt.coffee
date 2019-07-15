@@ -294,11 +294,11 @@ class ActivePointerWdgt extends Widget
   # event object.
 
   destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem: (actionedMorph) ->
-    if @world.temporaryHandlesAndLayoutAdjusters.length > 0
-      if actionedMorph not in @world.temporaryHandlesAndLayoutAdjusters
-        for eachTemporaryHandlesAndLayoutAdjusters in @world.temporaryHandlesAndLayoutAdjusters
+    if @world.temporaryHandlesAndLayoutAdjusters.size > 0
+      unless @world.temporaryHandlesAndLayoutAdjusters.has actionedMorph
+        @world.temporaryHandlesAndLayoutAdjusters.forEach (eachTemporaryHandlesAndLayoutAdjusters) =>
           eachTemporaryHandlesAndLayoutAdjusters.fullDestroy()
-        @world.temporaryHandlesAndLayoutAdjusters = []
+        @world.temporaryHandlesAndLayoutAdjusters.clear()
 
   stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere: (actionedMorph) ->
     if @world.caret?
