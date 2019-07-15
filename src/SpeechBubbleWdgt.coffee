@@ -7,8 +7,6 @@
 
 class SpeechBubbleWdgt extends Widget
 
-  @ongoingTimeouts: []
-
   contents: nil
   padding: nil # additional vertical pixels
   morphInvokingThis: nil
