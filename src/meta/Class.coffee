@@ -39,7 +39,10 @@ class Class
     # [ \t]*constructor:[ \t]*->.*$\n([ \t]*)
     # but let's keep it simple: there are going to be four spaces under for the
     # body of the constructor
-    aString += "\n    return\n"
+
+    # if there is a return, keep it, otherwise add it
+    if !aString.includes "\n    return"
+      aString += "\n    return\n"
     aString.replace(/^([ \t]*)return/gm, "$1this.registerThisInstance?();\n$1return")
     
   _equivalentforSuper: (fieldName, aString) ->
