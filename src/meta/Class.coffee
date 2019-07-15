@@ -245,10 +245,6 @@ class Class
       # Object.defineProperty(window[@name], 'name', { value: @name })
       JS_string_definitions += "Object.defineProperty(window.#{@name}, 'name', { value: '#{@name}' });" + "\n"
 
-      # analogous to
-      # window[@name].instances = []
-      JS_string_definitions += "window.#{@name}.instances = [];" + "\n"
-
       # if the class extends another one
       if @superClassName?
         if window.srcLoadCompileDebugWrites then console.log "extend: " + @name + " extends " + @superClassName
@@ -306,6 +302,10 @@ class Class
           if window.srcLoadCompileDebugWrites then console.log fieldDeclaration
           JS_string_definitions += fieldDeclaration + "\n"
 
+
+      # analogous to
+      # window[@name].instances = []
+      JS_string_definitions += "window.#{@name}.instances = [];" + "\n"
 
       JSSourcesContainer.content += JS_string_definitions + "\n"
 
