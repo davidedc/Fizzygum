@@ -16,16 +16,20 @@ class Class
   # the constructor always calling "super", so constructors
   # up the chain cause the object to register itself
   # with all the superclasses.
-  # this mechanism can be tested by opening an AnalogClockWdgt and
-  # then from the console:
-  #  world.children[0].constructor.instances[0] === world.children[0]
-  # or
-  #  AnalogClockWdgt.instances[0] === world.children[0]
-  # or
-  #  AnalogClockWdgt.instances
-  # to check whether AnalogClockWdgt was removed from the superclass'
-  # (i.e. Widget) list:
-  #  AnalogClockWdgt.__super__.instances.map((elem)=>elem.constructor.name).filter((name)=>name === "AnalogClockWdgt");
+  # 
+  # TODO this mechanism can be tested like so:
+  # open AnalogClockWdgt and then from the console:
+  #    window.AnalogClockWdgt.instances
+  # ...should give one object
+  #    window.AnalogClockWdgt.__super__.constructor.instances.forEach((each) => console.log(each.constructor.name==="AnalogClockWdgt"));
+  # should only give one 'true'
+  #    window.AnalogClockWdgt.instances.forEach((each) => each.fullDestroy());
+  # should destroy all clocks
+  #    window.AnalogClockWdgt.instances
+  # should show empty set
+  #    window.AnalogClockWdgt.__super__.constructor.instances.forEach((each) => console.log(each.constructor.name==="AnalogClockWdgt"));
+  # should type all 'false'
+  # 
   # Note that only Widgets have that kind
   # of tracking and hence the existence check of
   # the registerThisInstance function
@@ -304,8 +308,8 @@ class Class
 
 
       # analogous to
-      # window[@name].instances = []
-      JS_string_definitions += "window.#{@name}.instances = [];" + "\n"
+      # window[@name].instances = new Set
+      JS_string_definitions += "window.#{@name}.instances = new Set;" + "\n"
 
       JSSourcesContainer.content += JS_string_definitions + "\n"
 
@@ -331,7 +335,7 @@ class Class
     #if @name == "LCLCodePreprocessor" then debugger
 
   notifyInstancesOfSourceChange: (propertiesArray)->
-    for eachInstance in window[@name].instances
+    window[@name].instances.forEach (eachInstance) =>
       eachInstance.sourceChanged()
   
     for eachProperty in propertiesArray

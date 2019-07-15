@@ -388,8 +388,7 @@ class Widget extends TreeNode
       # which doesn't have the "instances" property
       if !goingUpClassHyerarchy.instances?
         break
-      if @ not in goingUpClassHyerarchy.instances
-        goingUpClassHyerarchy.instances.push @
+      goingUpClassHyerarchy.instances.add @
       goingUpClassHyerarchy = goingUpClassHyerarchy.__super__.constructor
 
   # this happens when the Widget is destroyed
@@ -397,7 +396,7 @@ class Widget extends TreeNode
     # remove instance from the instances tracker
     # in the class. To see this: just create an
     # AnalogClockWdgt, see that
-    # AnalogClockWdgt.instances[0] has one
+    # AnalogClockWdgt.instances has one
     # element. Then delete the clock, and see that the
     # tracker is now an empty array.
     goingUpClassHyerarchy = @constructor
@@ -406,7 +405,7 @@ class Widget extends TreeNode
       # which doesn't have the "instances" property
       if !goingUpClassHyerarchy.instances?
         break
-      goingUpClassHyerarchy.instances.remove @
+      goingUpClassHyerarchy.instances.delete @
       goingUpClassHyerarchy = goingUpClassHyerarchy.__super__.constructor
 
 
