@@ -572,8 +572,7 @@ class TreeNode
     # now that all children are tested, test myself
     if predicate.call nil, @
       return @
-    else
-      return nil
+
     # ok none of my children nor me test positive,
     # so return nil.
     return nil
