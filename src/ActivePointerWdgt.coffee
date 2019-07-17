@@ -806,10 +806,9 @@ class ActivePointerWdgt extends Widget
 
     readSVG = (aFile) ->
       pic = new Image()
-      frd = new FileReader()
-      target = target.parent  until target.droppedSVG
+      targetDrop = targetDrop.parent  until targetDrop.droppedSVG
       pic.onload = ->
-        target.droppedSVG pic, aFile.name
+        targetDrop.droppedSVG pic, aFile.name
       frd = new FileReader()
       frd.onloadend = (e) ->
         pic.src = e.target.result
@@ -817,7 +816,6 @@ class ActivePointerWdgt extends Widget
 
     readImage = (aFile) ->
       pic = new Image()
-      frd = new FileReader()
       targetDrop = targetDrop.parent  until targetDrop.droppedImage
       pic.onload = ->
         canvas = newCanvas new Point pic.width, pic.height
@@ -879,12 +877,12 @@ class ActivePointerWdgt extends Widget
           readBinary file
     else if url
       if url.slice(url.lastIndexOf(".") + 1).toLowerCase() in ["gif", "png", "jpg", "jpeg", "bmp"]
-        target = target.parent  until target.droppedImage
+        targetDrop = targetDrop.parent  until targetDrop.droppedImage
         img = new Image()
         img.onload = ->
           canvas = newCanvas new Point img.width, img.height
           canvas.getContext("2d").drawImage img, 0, 0
-          target.droppedImage canvas
+          targetDrop.droppedImage canvas
         img.src = url
     else if txt
       targetDrop = targetDrop.parent  until targetDrop.droppedImage
