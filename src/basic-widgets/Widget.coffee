@@ -2304,12 +2304,7 @@ class Widget extends TreeNode
       aMorph.changed()
 
     @insetMorph = aMorph
-
-    if @children.length > 0
-      @add aMorph, 0
-    else
-      @add aMorph, 0
-
+    @add aMorph, 0
     aMorph.fullRawMoveTo @insetPosition()
     aMorph.rawSetExtent @insetSpaceExtent(), @
 
