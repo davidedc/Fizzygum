@@ -70,6 +70,7 @@ class BoxyAppearance extends Appearance
       aContext.scale ceilPixelRatio, ceilPixelRatio
       morphPosition = @morph.position()
       aContext.translate morphPosition.x, morphPosition.y
+      if !@morph.color? then debugger
       aContext.fillStyle = @morph.color.toString()
       
       if appliedShadow?

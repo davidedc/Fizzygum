@@ -90,11 +90,8 @@ class DesktopAppearance extends RectangularAppearance
 
       aContext.save()
       aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
+      if !@morph.color? then debugger
       aContext.fillStyle = @morph.color.toString()
-
-      if !@morph.color?
-        debugger
-
 
       # paintRectangle is usually made to work with
       # al, at, w, h which are actual pixels
