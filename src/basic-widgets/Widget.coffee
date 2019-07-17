@@ -4335,8 +4335,6 @@ class Widget extends TreeNode
     else
       maxMargin = max.width() - desired.width()
       totDesWidth = desired.width()
-      maxWidth = nil
-      desWidth = nil
       extraSpace = newBoundsForThisLayout.width() - desired.width()
       if extraSpace < 0
         console.log "this shouldn't happen, extraSpace is negative: " + extraSpace

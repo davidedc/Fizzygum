@@ -169,9 +169,7 @@ class BasementWdgt extends BoxMorph
     trackChanges.push false
 
     x = @left() + @cornerRadius
-    y = @top() + @cornerRadius
     r = @right() - @cornerRadius
-    w = r - x
 
     # scrollPanel
     y = @top() + 2

@@ -193,7 +193,6 @@ class Color
     max = Math.max rr, gg, bb
     min = Math.min rr, gg, bb
     h = max
-    s = max
     v = max
     d = max - min
     s = (if max is 0 then 0 else d / max)
