@@ -659,7 +659,7 @@ class WorldMorph extends PanelWdgt
       # even if the Widget is not visible anymore
       if brokenMorph.clippedBoundsWhenLastPainted?
         if brokenMorph.clippedBoundsWhenLastPainted.isNotEmpty()
-          sourceBroken = brokenMorph.clippedBoundsWhenLastPainted.growBy @maxShadowSize
+          sourceBroken = brokenMorph.clippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
 
         #if brokenMorph!= world and (brokenMorph.clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
         #  debugger
@@ -676,7 +676,7 @@ class WorldMorph extends PanelWdgt
         boundsToBeChanged = brokenMorph.clippedThroughBounds()
 
         if boundsToBeChanged.isNotEmpty()
-          destinationBroken = boundsToBeChanged.spread().growBy @maxShadowSize
+          destinationBroken = boundsToBeChanged.spread().expandBy(1).growBy @maxShadowSize
           #if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint new Point 10, 10)
           #  debugger
 
@@ -707,7 +707,7 @@ class WorldMorph extends PanelWdgt
 
       if brokenMorph.fullClippedBoundsWhenLastPainted?
         if brokenMorph.fullClippedBoundsWhenLastPainted.isNotEmpty()
-          sourceBroken = brokenMorph.fullClippedBoundsWhenLastPainted.growBy @maxShadowSize
+          sourceBroken = brokenMorph.fullClippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
 
       # for the "destination" broken rectangle we can actually
       # check whether the Widget is still visible because we
@@ -718,7 +718,7 @@ class WorldMorph extends PanelWdgt
         boundsToBeChanged = brokenMorph.fullClippedBounds()
 
         if boundsToBeChanged.isNotEmpty()
-          destinationBroken = boundsToBeChanged.spread().growBy @maxShadowSize
+          destinationBroken = boundsToBeChanged.spread().expandBy(1).growBy @maxShadowSize
           #if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
           #  debugger
       

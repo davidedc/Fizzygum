@@ -76,7 +76,7 @@ class BoxyAppearance extends Appearance
         aContext.fillStyle = "black"
 
       aContext.beginPath()
-      @outlinePath aContext, Math.max @getCornerRadius(), false
+      @outlinePath aContext, @getCornerRadius(), false
       aContext.closePath()
       aContext.fill()
 
@@ -84,7 +84,7 @@ class BoxyAppearance extends Appearance
         aContext.lineWidth = 1 # TODO might look better if * ceilPixelRatio
         aContext.strokeStyle = @morph.strokeColor.toString()
         aContext.beginPath()
-        @outlinePath aContext, Math.max @getCornerRadius(), true
+        @outlinePath aContext, @getCornerRadius(), true
         aContext.closePath()
         aContext.stroke()
 
