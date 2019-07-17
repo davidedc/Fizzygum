@@ -1378,6 +1378,7 @@ class Widget extends TreeNode
       @fullRawMoveBy new Point 0, -topOff
       newBoundsForThisLayout = @bounds
 
+    return
 
   notifyChildrenThatParentHasReLayouted: ->
     for child in @children.slice()
