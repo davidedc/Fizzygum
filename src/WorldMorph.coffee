@@ -1679,8 +1679,6 @@ class WorldMorph extends PanelWdgt
     canvas.addEventListener "keypress", @keypressEventListener, false
 
   initClipboardEventListeners: ->
-    canvas = @worldCanvas
-
     # snippets of clipboard-handling code taken from
     # http://codebits.glennjones.net/editing/setclipboarddata.htm
     # Note that this works only in Chrome. Firefox and Safari need a piece of
@@ -1760,8 +1758,6 @@ class WorldMorph extends PanelWdgt
     document.body.addEventListener "paste", @pasteEventListener, false
 
   initKeyCombosEventListeners: ->
-    canvas = @worldCanvas
-
     #console.log "binding via mousetrap"
 
     @keyComboResetWorldEventListener = (event) =>
