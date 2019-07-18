@@ -801,11 +801,7 @@ class StringMorph2 extends Widget
           return idx - 1
         break
 
-      if charX?
-        charXMinusOne = charX
-      else
-        charXMinusOne = 0
-
+      charXMinusOne = charX
       charX += @calculateTextWidth text[idx]
 
       idx += 1
