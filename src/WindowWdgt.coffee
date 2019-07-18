@@ -386,11 +386,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # avoid recursively re-entering this function
     if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true
 
-    totalPadding = 2 * @padding
     closeIconSize = 16
-
-
-
 
     # close button
     if @closeButton? and @closeButton.parent == @
@@ -403,8 +399,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       buttonBounds = new Rectangle new Point @left() + closeIconSize + 2 * @padding, @top() + @padding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
       @collapseUncollapseSwitchButton.doLayout buttonBounds
-
-
 
     stackHeight = 0
 

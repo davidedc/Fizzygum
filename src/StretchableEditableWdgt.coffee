@@ -59,9 +59,7 @@ class StretchableEditableWdgt extends Widget
 
     stretchableWidgetContainerWidth = @width() - 2*@externalPadding
     
-    b = @bottom() - (2 * @externalPadding)
     stretchableWidgetContainerHeight =  @height() - 2 * @externalPadding
-    stretchableWidgetContainerBottom = labelBottom + stretchableWidgetContainerHeight
     stretchableWidgetContainerLeft = @left() + @externalPadding
 
     if @stretchableWidgetContainer.parent == @

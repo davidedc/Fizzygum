@@ -78,7 +78,6 @@ class SimpleVerticalStackPanelWdgt extends Widget
     # avoid recursively re-entering this function
     if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true
     @padding = 5
-    totalPadding = 2 * @padding
 
     stackHeight = 0
     verticalPadding = 0
@@ -96,7 +95,6 @@ class SimpleVerticalStackPanelWdgt extends Widget
       verticalPadding += @padding
 
       if !@constrainContentWidth
-        recommendedElementWidth = morph.width()
         # if the stack doesn't contrain the positions of the
         # contents then it's much harder to right/left/center align
         # things, because for example imagine this case: you

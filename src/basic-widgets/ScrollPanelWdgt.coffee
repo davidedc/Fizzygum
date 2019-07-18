@@ -286,7 +286,7 @@ class ScrollPanelWdgt extends PanelWdgt
       if @isTextLineWrapping or
        (@ instanceof SimplePlainTextScrollPanelWdgt) or
        (@ instanceof SimpleVerticalStackScrollPanelWdgt)
-        newBounds = subBounds.expandBy(padding)?.ceil()
+        newBounds = subBounds.expandBy(padding).ceil()
 
         # ok so this is tricky: say that you have a document with
         # ONLY a centered icon in it.
@@ -501,7 +501,6 @@ class ScrollPanelWdgt extends PanelWdgt
   # so to bring the caret fully into view.
   scrollCaretIntoView: (caretMorph) ->
     txt = caretMorph.target
-    offset = txt.position().subtract @contents.position()
     ft = @top() + @padding
     fb = @bottom() - @padding
     fl = @left() + @padding
@@ -529,15 +528,12 @@ class ScrollPanelWdgt extends PanelWdgt
     @adjustContentsBounds()
     @adjustScrollBars()
 
-  # ScrollPanelWdgt events:
+  # ScrollPanelWdgt events.
   wheel: (xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg) ->
 
     x = xArg
     y = yArg
     z = zArg
-    altKey = altKeyArg
-    button = buttonArg
-    buttons = buttonsArg
 
     # if we don't destroy the resizing handles,
     # they'll follow the contents being moved!
@@ -559,6 +555,7 @@ class ScrollPanelWdgt extends PanelWdgt
       x *= -1
     if WorldMorph.preferencesAndSettings.invertWheelY
       y *= -1
+    # unused
     if WorldMorph.preferencesAndSettings.invertWheelZ
       z *= -1
 

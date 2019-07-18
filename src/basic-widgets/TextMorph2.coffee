@@ -558,10 +558,6 @@ class TextMorph2 extends StringMorph2
     if slotRow < 1
       return 0
     return @slotAtRow slotRow, (@slotCoordinates @caretHorizPositionForVertMovement).x
-    above = @wrappedLines[slotRow - 1]
-    if above.length < slotColumn - 1
-      return @wrappedLineSlots[slotRow - 1] + above.length
-    @wrappedLineSlots[slotRow - 1] + slotColumn
   
   downFrom: (slot) ->
     # answer the slot below the given one
@@ -569,10 +565,6 @@ class TextMorph2 extends StringMorph2
     if slotRow > @wrappedLines.length - 2
       return @textPossiblyCroppedToFit.length
     return @slotAtRow(slotRow+2, (@slotCoordinates @caretHorizPositionForVertMovement).x)
-    below = @wrappedLines[slotRow + 1]
-    if below.length < slotColumn - 1
-      return @wrappedLineSlots[slotRow + 1] + below.length
-    @wrappedLineSlots[slotRow + 1] + slotColumn
   
   startOfLine: (slot) ->
     # answer the first slot (index) of the line for the given slot

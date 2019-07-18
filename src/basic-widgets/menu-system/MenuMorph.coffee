@@ -38,7 +38,6 @@ class MenuMorph extends PopUpWdgt
         @silentAdd @label
 
   colloquialName: ->
-    toBeReturned = "menu"
     if @title
       return "\"" + @title + "\" menu"
     else

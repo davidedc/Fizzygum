@@ -21,7 +21,6 @@ class IconicDesktopSystemDocumentShortcutWdgt extends IconicDesktopSystemShortcu
     # basement view "only show lost items"
     @target.show()
 
-    myPosition = @positionAmongSiblings()
     whatToBringUp = @target.findRootForGrab()
     # things like draggable graphs have no root for grab,
     # however since they are in the basement "directly" on their own

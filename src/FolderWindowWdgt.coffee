@@ -29,7 +29,6 @@ class FolderWindowWdgt extends WindowWdgt
     # in that case.
     if referenceName? and typeof(referenceName) != "string"
       referenceName = nil
-      placeToDropItIn = world
 
     morphToAdd = new IconicDesktopSystemFolderShortcutWdgt @, referenceName
     # this "add" is going to try to position the reference
