@@ -239,6 +239,23 @@ class WorldMorph extends PanelWdgt
 
   isIndexPage: nil
 
+  # This method also handles keypresses from a special
+  # external keypad which is used to
+  # record tests commands (such as capture screen, etc.).
+  # These external keypads are inexpensive
+  # so they are a good device for this kind
+  # of stuff.
+  # http://www.amazon.co.uk/Perixx-PERIPAD-201PLUS-Numeric-Keypad-Laptop/dp/B001R6FZLU/
+  # They keypad is mapped
+  # to Thai keyboard characters via an OSX app
+  # called keyremap4macbook (also one needs to add the
+  # Thai keyboard, which is just a click from System Preferences)
+  # Those Thai characters are used to trigger test
+  # commands. The only added complexity is about
+  # the "00" key of such keypads - see
+  # note below.
+  doublePressOfZeroKeypadKey: nil
+
   constructor: (
       @worldCanvas,
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
@@ -1654,23 +1671,6 @@ class WorldMorph extends PanelWdgt
       @events.push event
 
     canvas.addEventListener "keyup", @keyupEventListener, false
-
-    # This method also handles keypresses from a special
-    # external keypad which is used to
-    # record tests commands (such as capture screen, etc.).
-    # These external keypads are inexpensive
-    # so they are a good device for this kind
-    # of stuff.
-    # http://www.amazon.co.uk/Perixx-PERIPAD-201PLUS-Numeric-Keypad-Laptop/dp/B001R6FZLU/
-    # They keypad is mapped
-    # to Thai keyboard characters via an OSX app
-    # called keyremap4macbook (also one needs to add the
-    # Thai keyboard, which is just a click from System Preferences)
-    # Those Thai characters are used to trigger test
-    # commands. The only added complexity is about
-    # the "00" key of such keypads - see
-    # note below.
-    doublePressOfZeroKeypadKey: nil
     
     @keypressEventListener = (event) =>
       @events.push "keypressEventListener"
