@@ -81,7 +81,7 @@ class ExampleScatterPlotWdgt extends GraphsPlotsChartsWdgt
     availableHeight = height - 2 * circleRadius
     availableWidth = width - 2 * circleRadius
 
-    context.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
+    context.globalAlpha = @alpha
 
     context.lineWidth = 1
 

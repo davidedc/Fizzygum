@@ -35,7 +35,7 @@ class GraphsPlotsChartsWdgt extends Widget
     width = @width()
 
     if appliedShadow?
-      context.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
+      context.globalAlpha = appliedShadow.alpha * @alpha
       context.fillStyle = (new Color 80, 80, 80).toString()
       context.fillRect 0, 0, width, height
       # let's avoid paint 3d stuff twice because

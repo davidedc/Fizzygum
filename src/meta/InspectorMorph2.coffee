@@ -443,10 +443,6 @@ class InspectorMorph2 extends Widget
     # going to be painted and moved OK.
     trackChanges.push false
 
-
-    classDiagrHeight = Math.floor(@height() / 3)
-
-
     headerBounds = new Rectangle new Point(Math.round(@left() + @externalPadding), Math.round(@top() + @externalPadding))
     headerBounds = headerBounds.setBoundsWidthAndHeight @width() - 2 * @externalPadding, 15
     @hierarchyHeaderString.doLayout headerBounds
@@ -466,9 +462,9 @@ class InspectorMorph2 extends Widget
 
         # the top class doesn't get an arrow pointing upwards
         if anotherCount > 0
-          @angledArrows[anotherCount-1].parent == @
-          @angledArrows[anotherCount-1].fullRawMoveTo new Point(eachClassButton.left() - 15, Math.round(eachClassButton.top()))
-          @angledArrows[anotherCount-1].rawSetExtent new Point 15, 15
+          if @angledArrows[anotherCount-1].parent == @
+            @angledArrows[anotherCount-1].fullRawMoveTo new Point(eachClassButton.left() - 15, Math.round(eachClassButton.top()))
+            @angledArrows[anotherCount-1].rawSetExtent new Point 15, 15
 
         justAcounter += 20
 

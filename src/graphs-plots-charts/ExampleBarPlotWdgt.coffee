@@ -77,9 +77,8 @@ class ExampleBarPlotWdgt extends GraphsPlotsChartsWdgt
     context.fillRect 0, 0, width, height
 
     availableHeight = height
-    availableWidth = width - 2 * circleRadius
 
-    context.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
+    context.globalAlpha = @alpha
 
     for i in [0..20]
       xPos = (i/21)*width

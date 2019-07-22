@@ -27,5 +27,5 @@ class CloseIconButtonMorph extends EmptyButtonMorph
       if (@parent instanceof WindowWdgt) and @parent.contents?
         @parent.closeFromWindowBar()
       else
-        @parent?.close()
+        @parent.close()
 

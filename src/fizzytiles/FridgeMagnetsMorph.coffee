@@ -133,7 +133,6 @@ class FridgeMagnetsMorph extends Widget
     fridgeHeight = Math.floor((@height() - 2 * @externalPadding - 2 * 15 - 3 * @internalPadding)/2)
 
     magnetsBoxLeft = @left() + @externalPadding + eachPaneWidth + @internalPadding
-    magnetsBoxWidth = eachPaneWidth
 
     if @fridge.parent == @
       @fridge.fullRawMoveTo new Point magnetsBoxLeft, @top() + @externalPadding +  15 + @internalPadding
@@ -164,7 +163,6 @@ class FridgeMagnetsMorph extends Widget
 
     # visual output
     visualOutputLeft = @codeOutput.right() + @internalPadding
-    visualOutputWidth = eachPaneWidth
     if @visualOutput.parent == @
       @visualOutput.fullRawMoveTo new Point visualOutputLeft, @top() + @externalPadding +  15 + @internalPadding
       @visualOutput.rawSetExtent new Point(eachPaneWidth, magnetsBoxHeight).round()

@@ -93,7 +93,7 @@ class IconAppearance extends Appearance
 
       aContext.scale ceilPixelRatio, ceilPixelRatio
 
-      morphPosition = @morph.position()
+      #morphPosition = @morph.position()
       #aContext.translate morphPosition.x, morphPosition.y
       #debugger
 

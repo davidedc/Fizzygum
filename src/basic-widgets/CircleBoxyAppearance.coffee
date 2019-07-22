@@ -5,9 +5,9 @@ class CircleBoxyAppearance extends Appearance
 
   autoOrientation: ->
     if @morph.height() > @morph.width()
-      orientation = "vertical"
+      return "vertical"
     else
-      orientation = "horizontal"
+      return "horizontal"
 
 
   calculateKeyPoints: ->

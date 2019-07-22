@@ -61,14 +61,13 @@ class ConsoleWdgt extends Widget
     savedScript = @textMorph.selection()
     compiled = compileFGCode savedScript, true
     functionFromCompiledCode = new Function compiled
-    functionFromCompiledCode?.call @target
-
+    functionFromCompiledCode.call @target
 
   doAll: ->
     savedScript = @textMorph.text
     compiled = compileFGCode savedScript, true
     functionFromCompiledCode = new Function compiled
-    functionFromCompiledCode?.call @target
+    functionFromCompiledCode.call @target
 
   doLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts

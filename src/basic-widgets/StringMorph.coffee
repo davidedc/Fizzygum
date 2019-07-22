@@ -330,7 +330,6 @@ class StringMorph extends Widget
     @text.slice start, stop
   
   firstSelectedSlot: ->
-    Math.min @startMark, @endMark
     if !@startMark? or !@endMark?
       return nil
     return Math.min @startMark, @endMark

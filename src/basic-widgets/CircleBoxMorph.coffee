@@ -13,6 +13,6 @@ class CircleBoxMorph extends Widget
   
   autoOrientation: ->
     if @height() > @width()
-      orientation = "vertical"
+      return "vertical"
     else
-      orientation = "horizontal"
+      return "horizontal"

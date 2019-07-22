@@ -409,14 +409,12 @@ class LCLCodePreprocessor
               rebuiltNewLines = rebuiltNewLines + "\n"
             rebuiltNewLines
       )
-      codeWithoutComments = code
       
       # in the version we use for syntax checking we delete all the strings
       codeWithoutStringsOrComments =
         code.replace(/("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')/g, "")
     else
       codeWithoutStringsOrComments = code
-      codeWithoutComments = code
 
     # taking away the new line we added to
     # work around the fact that comments on the last
@@ -1058,7 +1056,7 @@ class LCLCodePreprocessor
     return [undefined, error] if error?
 
     expressionsAndUserDefinedFunctionsRegex = @expressionsRegex + userDefinedFunctions
-    allFunctionsRegex = @allCommandsRegex + "|" + expressionsAndUserDefinedFunctionsRegex
+    # allFunctionsRegex = @allCommandsRegex + "|" + expressionsAndUserDefinedFunctionsRegex
     
     rx = RegExp("("+@allCommandsRegex+")([ \\t]*)("+@allCommandsRegex+")([ ]*)($)?",'gm')
     code = code.replace(rx, "$1();$2$3$4$5")
@@ -1871,7 +1869,7 @@ class LCLCodePreprocessor
       #console.log "start of line: >" + startOfThisLine + "<"
       if startOfThisLine.length > startOfPreviousLine.length
         linesWithBlockStart.push eachLine-1
-        blockStart = eachLine-1
+        #blockStart = eachLine-1
         #blockEnd = @identifyBlockEnd(sourceByLine, eachLine)
         #console.log 'block ' + blockStart + ' to ' + blockEnd
       startOfPreviousLine = startOfThisLine

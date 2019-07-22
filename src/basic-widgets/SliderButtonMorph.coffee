@@ -38,14 +38,15 @@ class SliderButtonMorph extends CircleBoxMorph
   reLayout: ->
     super()
 
-    sliderValue = @parent.value
-    # notably, if you type "-2" as an input to the slider
-    # then as you type the "-"
-    # you get "-" as the value, which becomes NaN
-    if isNaN sliderValue
-      sliderValue = 0
-
     if @parent?
+
+      sliderValue = @parent.value
+      # notably, if you type "-2" as an input to the slider
+      # then as you type the "-"
+      # you get "-" as the value, which becomes NaN
+      if isNaN sliderValue
+        sliderValue = 0
+
       orientation = @parent.autoOrientation()
       if orientation is "vertical"
         bw = @parent.width() - 2
@@ -56,8 +57,7 @@ class SliderButtonMorph extends CircleBoxMorph
           Math.round((sliderValue - @parent.start) * @parent.unitSize()),
           @parent.height() - @height()))
         if @parent.smallestValueIsAtBottomEnd
-          posY = @parent.height() - (posY + @height())
- 
+          posY = @parent.height() - (posY + @height()) 
       else
         bh = @parent.height() - 2
         bw = Math.max bh, Math.round @parent.width() * @parent.ratio()

@@ -249,8 +249,6 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     text2Height = Math.round(availableHeight * 1/4)
     text3Height = Math.round(availableHeight * 2/4)
 
-    textBottom = @top() + @externalPadding + text1Height
-
     if @regexEntryField.parent == @
       @regexEntryField.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
       @regexEntryField.rawSetExtent new Point @width() - 2 * @externalPadding, text1Height
