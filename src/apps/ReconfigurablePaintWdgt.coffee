@@ -419,12 +419,6 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     eraserToolButtonOn.sourceCodeToBeInjected = "mouseMove = -> return"
     @eraserToolButton = new ToggleButtonMorph eraserToolButtonOff, eraserToolButtonOn
 
-
-    pencilAnnotation = new EditableMarkMorph @pencilToolButton, pencilButtonOff, "editInjectableSource"
-    brushAnnotation = new EditableMarkMorph @brushToolButton, brushToolButtonOff, "editInjectableSource"
-    toothpasteAnnotation = new EditableMarkMorph @toothpasteToolButton, toothpasteToolButtonOff, "editInjectableSource"
-    eraserAnnotation = new EditableMarkMorph @eraserToolButton, eraserToolButtonOff, "editInjectableSource"
-
     @toolsPanel.add @pencilToolButton
     @toolsPanel.add @brushToolButton
     @toolsPanel.add @toothpasteToolButton
@@ -448,9 +442,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
 
     # label
     labelLeft = @left() + @externalPadding
-    labelTop = @top() + @externalPadding
     labelRight = @right() - @externalPadding
-    labelWidth = labelRight - labelLeft
     labelBottom = @top() + @externalPadding
 
     # tools -------------------------------
@@ -459,14 +451,6 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
         toolButtonSize = new Point 93, 55
     else
         toolButtonSize = new Point 0, 0
-
-    eachPaneWidth = Math.floor(@width() - 2 * @externalPadding)
-
-    if @toolsPanel? and @toolsPanel.parent == @
-      eachPaneWidth -= Math.floor(@internalPadding + toolButtonSize.width())
-
-    b = @bottom() - (2 * @externalPadding)
-
 
     if @toolsPanel? and @toolsPanel.parent == @
       @toolsPanel.fullRawMoveTo new Point @left() + @externalPadding, labelBottom
@@ -498,9 +482,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     else
       stretchableWidgetContainerWidth = @width() - 2*@externalPadding
 
-    b = @bottom() - (2 * @externalPadding)
     stretchableWidgetContainerHeight =  @height() - 2 * @externalPadding
-    stretchableWidgetContainerBottom = labelBottom + stretchableWidgetContainerHeight
 
     if @toolsPanel? and @toolsPanel.parent == @
       stretchableWidgetContainerLeft = @toolsPanel.right() + @internalPadding

@@ -114,14 +114,10 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
 
     # label
     labelLeft = @left() + @externalPadding
-    labelTop = @top() + @externalPadding
     labelRight = @right() - @externalPadding
-    labelWidth = labelRight - labelLeft
     labelBottom = @top() + @externalPadding
 
     # tools -------------------------------
-
-    b = @bottom() - (2 * @externalPadding)
 
     if @toolsPanel?.parent == @
       @toolsPanel.fullRawMoveTo new Point @left() + @externalPadding, labelBottom
@@ -135,9 +131,7 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
     if @dragsDropsAndEditingEnabled
       stretchableWidgetContainerWidth -= @toolsPanel.width() + @internalPadding
 
-    b = @bottom() - (2 * @externalPadding)
     stretchableWidgetContainerHeight =  @height() - 2 * @externalPadding
-    stretchableWidgetContainerBottom = labelBottom + stretchableWidgetContainerHeight
     if @dragsDropsAndEditingEnabled
       stretchableWidgetContainerLeft = @toolsPanel.right() + @internalPadding
     else
