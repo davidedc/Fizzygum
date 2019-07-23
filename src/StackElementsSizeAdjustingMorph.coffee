@@ -56,9 +56,7 @@ class StackElementsSizeAdjustingMorph extends Widget
       #console.log " deltax 2 : " + deltaX + " lmdd.x: " + lmdd.x + " rmdd.x: " + rmdd.x
       deltaX = deltaX / (@parent.width() * 700)
 
-      totalMax = 0
-      for C in @parent.children
-        totalMax += C.getMaxDim().x
+      totalMax = @parent.children.reduce ((acc,elem) => acc + elem.getMaxDim().x), 0
 
       deltaX = deltaX * (totalMax / biggestMaxOfTheTwo)
 
