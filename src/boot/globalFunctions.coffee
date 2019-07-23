@@ -369,7 +369,7 @@ loadJSFilesWithCoffeescriptSources = ->
   # It will "trigger" the chain immediately, however each element
   # of the chain will wait for its turn to avoid requesting too many
   # file loads all at the same time.
-  promiseChain = new Promise (resolve) -> resolve()
+  promiseChain = Promise.resolve()
 
   # Note that the sources for "Class" and "Mixin" might end-up
   # being recompiled even though those are two of the few things that
@@ -717,6 +717,8 @@ generateInclusionOrder = ->
     if eachFile == "Mixin" then continue
     if srcLoadCompileDebugWrites then console.log eachFile + " - "
     dependencies[eachFile] = []
+    if !window[eachFile + "_coffeSource"]?
+      debugger
     lines = window[eachFile + "_coffeSource"].split '\n'
     i = 0
     while i < lines.length
@@ -769,7 +771,7 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
   # immediately, however the first step is to wait for
   # a turn, so we are not really immediately starting
   # to compile.
-  promiseChain = new Promise (resolve) -> resolve()
+  promiseChain = Promise.resolve()
 
   # chain two steps for each file, one to compile the file
   # and one to wait for the next turn
