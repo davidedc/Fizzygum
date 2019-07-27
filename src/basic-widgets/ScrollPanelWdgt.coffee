@@ -413,7 +413,7 @@ class ScrollPanelWdgt extends PanelWdgt
     @step = =>
       scrollbarJustChanged = false
       if world.hand.mouseButton and
-        !world.hand.floatDraggingSomething() and
+        !world.hand.isThisPointerFloatDraggingSomething() and
         # if the Widget at hand is float draggable then
         # we are probably about to detach it, so
         # we shouldn't move anything, because user might
@@ -470,7 +470,7 @@ class ScrollPanelWdgt extends PanelWdgt
       inner = @boundingBox().insetBy inset
       if @boundsContainPoint(pos) and
         !inner.containsPoint(pos) and
-        hand.floatDraggingSomething()
+        hand.isThisPointerFloatDraggingSomething()
           @autoScroll pos
       else
         @step = noOperation

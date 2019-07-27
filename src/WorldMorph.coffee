@@ -1401,7 +1401,7 @@ class WorldMorph extends PanelWdgt
     # add the mouse move command here *after* the
     # potential grab command.
 
-    if @hand.floatDraggingSomething()
+    if @hand.isThisPointerFloatDraggingSomething()
       if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
         action = "floatDrag"
         arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
@@ -1409,7 +1409,7 @@ class WorldMorph extends PanelWdgt
           arr.push action
     
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-      @automatorRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.floatDraggingSomething(), button, buttons, ctrlKey, shiftKey, altKey, metaKey)
+      @automatorRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.isThisPointerFloatDraggingSomething(), button, buttons, ctrlKey, shiftKey, altKey, metaKey)
 
 
   processWheel: (deltaX, deltaY, deltaZ, altKey, button, buttons) ->

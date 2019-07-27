@@ -138,7 +138,7 @@ class ActivePointerWdgt extends Widget
   grab: (aMorph, displacementDueToGrabDragThreshold,  switcherooHappened) ->
     return nil  if aMorph instanceof WorldMorph
     oldParent = aMorph.parent
-    if !@floatDraggingSomething()
+    if !@isThisPointerFloatDraggingSomething()
 
       if AutomatorRecorderAndPlayer?
         @world.automatorRecorderAndPlayer.addGrabCommand()
@@ -214,18 +214,18 @@ class ActivePointerWdgt extends Widget
       # out of it.
       oldParent?.reactToGrabOf? aMorph
 
-  draggingSomething: ->
-    @floatDraggingSomething() or @nonFloatDraggingSomething()
+  isThisPointerDraggingSomething: ->
+    @isThisPointerFloatDraggingSomething() or @isThisPointerNonFloatDraggingSomething()
 
-  floatDraggingSomething: ->
+  isThisPointerFloatDraggingSomething: ->
     if @children.length > 0 then true else false
 
-  nonFloatDraggingSomething: ->
+  isThisPointerNonFloatDraggingSomething: ->
     return @nonFloatDraggedMorph?
 
 
   drop: ->
-    if @floatDraggingSomething()
+    if @isThisPointerFloatDraggingSomething()
 
       if AutomatorRecorderAndPlayer?
         @world.automatorRecorderAndPlayer.addDropCommand()
@@ -367,7 +367,7 @@ class ActivePointerWdgt extends Widget
 
     # check whether we are in the middle
     # of a floatDrag/drop operation
-    if @floatDraggingSomething()
+    if @isThisPointerFloatDraggingSomething()
       @drop()
       @mouseButton = nil
     else
@@ -471,7 +471,7 @@ class ActivePointerWdgt extends Widget
     world.freshlyCreatedPopUps.clear()
 
 
-    if @floatDraggingSomething()
+    if @isThisPointerFloatDraggingSomething()
       @drop()
     else
 
@@ -480,7 +480,7 @@ class ActivePointerWdgt extends Widget
       # up outside of its bounds, and yet we need to
       # notify the button that the drag is over so it
       # can repaint itself of another color.
-      if @nonFloatDraggingSomething()
+      if @isThisPointerNonFloatDraggingSomething()
         @nonFloatDraggedMorph.endOfNonFloatDrag?()
 
       @previousNonFloatDraggingPos = nil
@@ -745,7 +745,7 @@ class ActivePointerWdgt extends Widget
       world.automatorRecorderAndPlayer.addMouseDoubleClickCommand nil, pointerAndMorphInfo...
 
     world.destroyToolTips()
-    if @floatDraggingSomething()
+    if @isThisPointerFloatDraggingSomething()
       @drop()
     else
       morph = morph.parent  while morph and not morph.mouseDoubleClick
@@ -758,7 +758,7 @@ class ActivePointerWdgt extends Widget
       world.automatorRecorderAndPlayer.addMouseTripleClickCommand nil, pointerAndMorphInfo...
 
     world.destroyToolTips()
-    if @floatDraggingSomething()
+    if @isThisPointerFloatDraggingSomething()
       @drop()
     else
       morph = morph.parent  while morph and not morph.mouseTripleClick
@@ -973,7 +973,7 @@ class ActivePointerWdgt extends Widget
     return [false, displacementDueToGrabDragThreshold]
 
   determineGrabs: (pos, topMorph, mouseOverNew) ->
-    if !@draggingSomething() and (@mouseButton is "left")
+    if !@isThisPointerDraggingSomething() and (@mouseButton is "left")
       morph = topMorph.findRootForGrab()
       topMorph.mouseMove pos  if topMorph.mouseMove
 
@@ -1028,7 +1028,7 @@ class ActivePointerWdgt extends Widget
     #console.log('Execution time ProcessMouseMove: ' + timeProcessMouseMove)
 
 
-    if @nonFloatDraggingSomething()
+    if @isThisPointerNonFloatDraggingSomething()
       #console.log "nonFloatDraggedMorph: " + @nonFloatDraggedMorph
 
       # OK so this is an interesting choice. You can avoid
@@ -1093,7 +1093,7 @@ class ActivePointerWdgt extends Widget
         newMorph.mouseEnterfloatDragging?()  if @mouseButton
 
       # autoScrolling support:
-      if @floatDraggingSomething()
+      if @isThisPointerFloatDraggingSomething()
         widgetBeingFloatDragged = @children[0]
         # if we are dragging stuff that can't be dropped
         # (e.g. external windows) then nothing happens

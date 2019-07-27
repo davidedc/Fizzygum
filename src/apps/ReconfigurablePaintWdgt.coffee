@@ -78,7 +78,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     pencilButtonOff.alpha = 0.1
     pencilButtonOff.sourceCodeToBeInjected = """
         mouseMove = (pos, mouseButton) ->
-            if world.hand.draggingSomething() then return
+            if world.hand.isThisPointerDraggingSomething() then return
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
             context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
@@ -128,7 +128,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
 
     brushToolButtonOff.sourceCodeToBeInjected = """
         mouseMove = (pos, mouseButton) ->
-            if world.hand.draggingSomething() then return
+            if world.hand.isThisPointerDraggingSomething() then return
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
             context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
@@ -306,7 +306,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
                 @queue = [0..24].map -> nil
 
         mouseUpLeft = ->
-            if world.hand.draggingSomething() then return
+            if world.hand.isThisPointerDraggingSomething() then return
             if @queue?
                 # draining the queue
                 contextMain = @underlyingCanvasMorph.getContextForPainting()
@@ -323,7 +323,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
                 delete @queue
 
         mouseMove = (pos, mouseButton) ->
-            if world.hand.draggingSomething() then return
+            if world.hand.isThisPointerDraggingSomething() then return
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
             context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
@@ -382,7 +382,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
 
     eraserToolButtonOff.sourceCodeToBeInjected = """
         mouseMove = (pos, mouseButton) ->
-            if world.hand.draggingSomething() then return
+            if world.hand.isThisPointerDraggingSomething() then return
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
             context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio

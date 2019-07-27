@@ -197,7 +197,7 @@ class Example3DPlotWdgt extends Widget
       @paintHighlight aContext, al, at, w, h
 
   mouseMove: (pos, mouseButton) ->
-    if world.hand.draggingSomething() then return
+    if world.hand.isThisPointerDraggingSomething() then return
     if mouseButton == 'left'
         if @previousMousePoint?
           @currentAngle +=  @previousMousePoint.x - pos.x

@@ -126,21 +126,21 @@ class SliderButtonMorph extends CircleBoxMorph
   mouseMove: ->
     # remember that a drag can start a few pixels after the
     # mouse button is pressed (because of de-noising), so
-    # only checking for "draggingSomething" is not going to be
-    # enough since we receive a few moves without the "draggingSomething"
+    # only checking for "isThisPointerDraggingSomething" is not going to be
+    # enough since we receive a few moves without the "isThisPointerDraggingSomething"
     # being set. So we also check for the "pressed" state.
-    if @state == @STATE_PRESSED or world.hand.draggingSomething()
+    if @state == @STATE_PRESSED or world.hand.isThisPointerDraggingSomething()
       return
     @setHiglightedColor()
   
   #SliderButtonMorph events:
   mouseEnter: ->
-    if world.hand.draggingSomething()
+    if world.hand.isThisPointerDraggingSomething()
       return
     @setHiglightedColor()
   
   mouseLeave: ->
-    if world.hand.draggingSomething()
+    if world.hand.isThisPointerDraggingSomething()
       return
     @setNormalColor()
   
