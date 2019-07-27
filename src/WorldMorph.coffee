@@ -22,13 +22,8 @@ class WorldMorph extends PanelWdgt
   # here.
   # dblclickEventListener: nil
   mousedownEventListener: nil
-  touchstartEventListener: nil
   mouseupEventListener: nil
-  touchendEventListener: nil
   mousemoveEventListener: nil
-  touchmoveEventListener: nil
-  gesturestartEventListener: nil
-  gesturechangeEventListener: nil
   contextmenuEventListener: nil
   # Note how there can be two handlers for
   # keyboard events.
@@ -1046,14 +1041,8 @@ class WorldMorph extends PanelWdgt
           when "mousedownEventListener"
             @processMouseDown event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
 
-          when "touchstartEventListener"
-            @hand.processTouchStart event
-
           when "mouseupEventListener"
             @processMouseUp  event.button, event.ctrlKey, event.buttons, event.shiftKey, event.altKey, event.metaKey
-
-          when "touchendEventListener"
-            @hand.processTouchEnd event
 
           when "mousemoveEventListener"
             posInDocument = getDocumentPositionOf @worldCanvas
@@ -1063,9 +1052,6 @@ class WorldMorph extends PanelWdgt
             worldX = event.pageX - posInDocument.x
             worldY = event.pageY - posInDocument.y
             @processMouseMove worldX, worldY, event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
-
-          when "touchmoveEventListener"
-            @hand.processTouchMove event
 
           when "keydownEventListener"
             @processKeydown event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
@@ -1577,47 +1563,6 @@ class WorldMorph extends PanelWdgt
 
     canvas.addEventListener "mousemove", @mousemoveEventListener, false
 
-  initTouchEventListeners: ->
-    canvas = @worldCanvas
-
-    # prevent overscroll (and bounce) in iOS
-    document.body.addEventListener 'touchmove', (evt) ->
-      #In this case, the default behavior is scrolling the body, which
-      #would result in an overflow.  Since we don't want that, we preventDefault.
-      if !evt._isScroller
-        evt.preventDefault()
-      return
-
-    @touchstartEventListener = (event) =>
-      @events.push "touchstartEventListener"
-      @events.push event
-      event.preventDefault()
-
-    canvas.addEventListener "touchstart", @touchstartEventListener , false
-
-    @touchendEventListener = (event) =>
-      @events.push "touchendEventListener"
-      @events.push event
-      event.preventDefault()
-
-    canvas.addEventListener "touchend", @touchendEventListener, false
-
-    @touchmoveEventListener = (event) =>
-      @events.push "touchmoveEventListener"
-      @events.push event
-      event.preventDefault()
-
-    canvas.addEventListener "touchmove", @touchmoveEventListener, false
-    
-    @gesturestartEventListener = (event) =>
-      # Disable browser zoom
-      event.preventDefault()
-    canvas.addEventListener "gesturestart", @gesturestartEventListener, false
-    
-    @gesturechangeEventListener = (event) =>
-      # Disable browser zoom
-      event.preventDefault()
-    canvas.addEventListener "gesturechange", @gesturechangeEventListener, false
 
   initKeyboardEventListeners: ->
     canvas = @worldCanvas
@@ -1859,7 +1804,6 @@ class WorldMorph extends PanelWdgt
   # we figure that out independently.
   initEventListeners: ->
     @initMouseEventListeners()
-    @initTouchEventListeners()
     @initKeyboardEventListeners()
     @initClipboardEventListeners()
     @initKeyCombosEventListeners()
@@ -1870,13 +1814,8 @@ class WorldMorph extends PanelWdgt
     canvas = @worldCanvas
     # canvas.removeEventListener 'dblclick', @dblclickEventListener
     canvas.removeEventListener 'mousedown', @mousedownEventListener
-    canvas.removeEventListener 'touchstart', @touchstartEventListener
     canvas.removeEventListener 'mouseup', @mouseupEventListener
-    canvas.removeEventListener 'touchend', @touchendEventListener
     canvas.removeEventListener 'mousemove', @mousemoveEventListener
-    canvas.removeEventListener 'touchmove', @touchmoveEventListener
-    canvas.removeEventListener 'gesturestart', @gesturestartEventListener
-    canvas.removeEventListener 'gesturechange', @gesturechangeEventListener
     canvas.removeEventListener 'contextmenu', @contextmenuEventListener
     canvas.removeEventListener 'keydown', @keydownEventListener
     canvas.removeEventListener 'keyup', @keyupEventListener

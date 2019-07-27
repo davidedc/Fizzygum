@@ -16,7 +16,6 @@ class ActivePointerWdgt extends Widget
   morphToGrab: nil
   grabOrigin: nil
   mouseOverList: nil
-  touchHoldTimeout: nil
   doubleClickMorph: nil
   tripleClickMorph: nil
   nonFloatDraggedMorph: nil
@@ -413,47 +412,6 @@ class ActivePointerWdgt extends Widget
       #morph = morph.parent  until morph[actualClick]
       #morph[actualClick] @position()
   
-  # touch events, see:
-  # https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html
-  # A long touch emulates a right click. This is done via
-  # setting a timer 400ms after the touch which triggers
-  # a right mouse click. Any touch event before then just
-  # resets the timer (if far enough from the touch start point,
-  # to "de-noise" the hold).
-  processTouchStart: (event) ->
-    #WorldMorph.preferencesAndSettings.isTouchDevice = true
-    clearInterval @touchHoldTimeout
-    if event.touches.length is 1
-      # simulate mouseRightClick
-      touch = event.touches[0]
-      @touchStartPosition = new Point touch.pageX, touch.pageY
-      @touchHoldTimeout = setInterval(=>
-        @processMouseDown 2 # button 2 is the right one
-        @processMouseUp 2 # button 2 is the right one, we don't use this parameter
-        event.preventDefault() # I don't think that this is needed
-        clearInterval @touchHoldTimeout
-      , 400)
-      @processMouseMove touch.pageX, touch.pageY # update my position
-      @processMouseDown 0 # button zero is the left button
-  
-  processTouchMove: (event) ->
-    if event.touches.length is 1
-      touch = event.touches[0]
-      @processMouseMove touch.pageX, touch.pageY
-      if ((new Point touch.pageX, touch.pageY).distanceTo @touchStartPosition) > WorldMorph.preferencesAndSettings.grabDragThreshold
-        clearInterval @touchHoldTimeout
-
-  processTouchEnd: (event) ->
-    # note that the mouse down event handler
-    # that is calling this method has ALREADY
-    # added a mousedown command
-
-    #WorldMorph.preferencesAndSettings.isTouchDevice = true
-    clearInterval @touchHoldTimeout
-    @processMouseUp 0 # button zero is the left button, we don't use this parameter
-    
-    # no need to set this to nil, but let's just clean up
-    @touchStartPosition = nil
   
    # note that the button param is not used,
    # but adding it for consistency...
