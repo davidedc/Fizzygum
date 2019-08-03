@@ -45,8 +45,7 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
         aMorph = glassBoxBottom
 
 
-      childrenNotHandlesNorCarets = @children.filter (m) ->
-        !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+      childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
       foundDrop = false
 
@@ -87,8 +86,7 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
     # going to be painted and moved OK.
     trackChanges.push false
 
-    childrenNotHandlesNorCarets = @children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
     widthOfContentsSoFar = @internalPadding
     countOfItems = 0

@@ -28,8 +28,8 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
     super
     menu.removeMenuItem "move all inside"
 
-    childrenNotHandlesNorCarets = @contents?.children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+    if @contents?
+      childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets @contents
 
     if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
       menu.addLine()

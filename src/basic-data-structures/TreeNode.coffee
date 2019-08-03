@@ -465,6 +465,11 @@ class TreeNode
         searchActuallyOngoing = true
     return nil
 
+
+  childrenNotHandlesNorCarets: (whereToAct = @) ->
+    whereToAct.children.filter (w) ->
+      !((w instanceof HandleMorph) or (w instanceof CaretMorph))
+
   # find the nth child satisfying
   # a property.
   # This is used when finding

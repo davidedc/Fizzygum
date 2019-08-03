@@ -29,8 +29,7 @@ class GlassBoxBottomWdgt extends BoxMorph
 
     thumbnailSize = @width()
 
-    childrenNotHandlesNorCarets = @children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
     for eachChild in childrenNotHandlesNorCarets
 

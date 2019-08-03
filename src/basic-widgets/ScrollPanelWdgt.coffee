@@ -601,8 +601,8 @@ class ScrollPanelWdgt extends PanelWdgt
 
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     if @takesOverAndCoalescesChildrensMenus
-      childrenNotHandlesNorCarets = @contents?.children.filter (m) ->
-        !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+      if @contents
+        childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets @contents
       if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length == 1
         childrenNotHandlesNorCarets[0].addMorphSpecificMenuEntries morphOpeningThePopUp, menu
     else

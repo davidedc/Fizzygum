@@ -184,8 +184,7 @@ class SimpleDocumentWdgt extends Widget
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
 
-    childrenNotHandlesNorCarets = @children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
     if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
       menu.addLine()

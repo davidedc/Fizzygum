@@ -19,8 +19,7 @@ class SimpleDocumentScrollPanelWdgt extends SimpleVerticalStackScrollPanelWdgt
     return paragraph
 
   makeAllContentIntoTemplates: ->
-    childrenNotHandlesNorCarets = @contents.children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets @contents
 
     for eachChild in childrenNotHandlesNorCarets
       eachChild.isTemplate = true

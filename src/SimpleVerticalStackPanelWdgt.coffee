@@ -24,8 +24,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     # stack that is at the same height, and put the new
     # widget after it
 
-    childrenNotHandlesNorCarets = @children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
     # The vertical stack just lays down
     # the children in the exact sibling order, so all we have to do
@@ -82,8 +81,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     stackHeight = 0
     verticalPadding = 0
 
-    childrenNotHandlesNorCarets = @children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
     childrenNotHandlesNorCarets.forEach (morph) =>
       if morph.layoutSpec != LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT

@@ -3739,8 +3739,7 @@ class Widget extends TreeNode
 
     whereToAct.enableDrops()
 
-    childrenNotHandlesNorCarets = whereToAct.children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets whereToAct
 
     if childrenNotHandlesNorCarets?
       for each in childrenNotHandlesNorCarets
@@ -3769,8 +3768,7 @@ class Widget extends TreeNode
 
     whereToAct.dragsDropsAndEditingEnabled = false
 
-    childrenNotHandlesNorCarets = whereToAct.children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets whereToAct
 
     if childrenNotHandlesNorCarets?
       for each in childrenNotHandlesNorCarets

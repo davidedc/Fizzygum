@@ -81,8 +81,7 @@ class StretchableWidgetContainerWdgt extends Widget
       @invalidateLayout()
 
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
-    childrenNotHandlesNorCarets = @contents.children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets @contents
 
     if childrenNotHandlesNorCarets.length != 0
       if !@ratio?
@@ -187,8 +186,7 @@ class StretchableWidgetContainerWdgt extends Widget
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
 
-    childrenNotHandlesNorCarets = @children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
     if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
       menu.addLine()

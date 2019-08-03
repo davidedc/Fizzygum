@@ -44,8 +44,7 @@ class ToolPanelWdgt extends PanelWdgt
         aMorph = glassBoxBottom
 
 
-      childrenNotHandlesNorCarets = @children.filter (m) ->
-        !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+      childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
       foundDrop = false
 
@@ -88,8 +87,7 @@ class ToolPanelWdgt extends PanelWdgt
     # going to be painted and moved OK.
     trackChanges.push false
 
-    childrenNotHandlesNorCarets = @children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
     scanningChildrenX = 0
     scanningChildrenY = 0

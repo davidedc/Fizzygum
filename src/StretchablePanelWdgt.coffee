@@ -6,8 +6,7 @@ class StretchablePanelWdgt extends PanelWdgt
   childRemoved: (child) ->
     super
     if @parent?.setRatio? and @parent.ratio?
-      childrenNotHandlesNorCarets = @children.filter (m) ->
-        !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+      childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
       if childrenNotHandlesNorCarets.length == 0
         @parent.resetRatio()
@@ -17,8 +16,7 @@ class StretchablePanelWdgt extends PanelWdgt
     # only set ratio with the first added child
     # the following ones don't change it
     if @parent?.setRatio? and !@parent.ratio?
-      childrenNotHandlesNorCarets = @children.filter (m) ->
-        !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+      childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
       if childrenNotHandlesNorCarets.length != 0
         @parent.setRatio @width() / @height()
@@ -65,8 +63,7 @@ class StretchablePanelWdgt extends PanelWdgt
     # going to be painted and moved OK.
     trackChanges.push false
 
-    childrenNotHandlesNorCarets = @children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
     for eachChild in childrenNotHandlesNorCarets
       eachChild.fullRawMoveInStretchablePanelToFractionalPosition newBoundsForThisLayout
@@ -89,8 +86,7 @@ class StretchablePanelWdgt extends PanelWdgt
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
 
-    childrenNotHandlesNorCarets = @children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
     if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
       menu.addLine()
