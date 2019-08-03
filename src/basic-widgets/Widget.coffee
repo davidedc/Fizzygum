@@ -2386,7 +2386,7 @@ class Widget extends TreeNode
   fullCopy: ->
     if @destroyed
       @inform "The item you are\ntrying to copy\nis dead!"
-      return null
+      return nil
     allMorphsInStructure = @allChildrenBottomToTop()
     copiedMorph = @deepCopy false, [], [], allMorphsInStructure
     return copiedMorph
