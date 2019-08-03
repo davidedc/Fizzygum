@@ -51,10 +51,10 @@ class ToolPanelWdgt extends PanelWdgt
       if positionOnScreen? and childrenNotHandlesNorCarets.length > 0
         positionNumberAmongSiblings = 0
 
-        for eachChild in childrenNotHandlesNorCarets
-          if eachChild.bounds.growBy(@internalPadding).containsPoint positionOnScreen
+        for w in childrenNotHandlesNorCarets
+          if w.bounds.growBy(@internalPadding).containsPoint positionOnScreen
             foundDrop = true
-            if eachChild.bounds.growBy(@internalPadding).rightHalf().containsPoint positionOnScreen
+            if w.bounds.growBy(@internalPadding).rightHalf().containsPoint positionOnScreen
               positionNumberAmongSiblings++
             break
           positionNumberAmongSiblings++
@@ -106,7 +106,7 @@ class ToolPanelWdgt extends PanelWdgt
       else
         widthINeedToFitContentIn = @width()
 
-    for eachChild in childrenNotHandlesNorCarets
+    for w in childrenNotHandlesNorCarets
 
       xPos = scanningChildrenX * (@thumbnailSize + @internalPadding)
       yPos = scanningChildrenY * (@thumbnailSize + @internalPadding)
@@ -119,9 +119,9 @@ class ToolPanelWdgt extends PanelWdgt
         xPos = scanningChildrenX * (@thumbnailSize + @internalPadding)
         yPos = scanningChildrenY * (@thumbnailSize + @internalPadding)
 
-      horizAdj = (@thumbnailSize - eachChild.width()) / 2
-      vertAdj = (@thumbnailSize - eachChild.height()) / 2
-      eachChild.fullRawMoveTo @position().add(new Point @externalPadding, @externalPadding).add(new Point xPos, yPos).add(new Point horizAdj, vertAdj).round()
+      horizAdj = (@thumbnailSize - w.width()) / 2
+      vertAdj = (@thumbnailSize - w.height()) / 2
+      w.fullRawMoveTo @position().add(new Point @externalPadding, @externalPadding).add(new Point xPos, yPos).add(new Point horizAdj, vertAdj).round()
       scanningChildrenX++
       numberOfEntries++
 

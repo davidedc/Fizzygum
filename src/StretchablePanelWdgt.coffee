@@ -65,9 +65,9 @@ class StretchablePanelWdgt extends PanelWdgt
 
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
-    for eachChild in childrenNotHandlesNorCarets
-      eachChild.fullRawMoveInStretchablePanelToFractionalPosition newBoundsForThisLayout
-      eachChild.rawSetExtentToFractionalExtentInPaneUserHasSet newBoundsForThisLayout      
+    for w in childrenNotHandlesNorCarets
+      w.fullRawMoveInStretchablePanelToFractionalPosition newBoundsForThisLayout
+      w.rawSetExtentToFractionalExtentInPaneUserHasSet newBoundsForThisLayout      
 
     @rawSetBounds newBoundsForThisLayout
 

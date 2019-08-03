@@ -21,8 +21,8 @@ class SimpleDocumentScrollPanelWdgt extends SimpleVerticalStackScrollPanelWdgt
   makeAllContentIntoTemplates: ->
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets @contents
 
-    for eachChild in childrenNotHandlesNorCarets
-      eachChild.isTemplate = true
+    for w in childrenNotHandlesNorCarets
+      w.isTemplate = true
 
   addNormalParagraph: (text) ->
     paragraph = @getNormalParagraph text

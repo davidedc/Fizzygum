@@ -36,9 +36,9 @@ class SimpleVerticalStackPanelWdgt extends Widget
     positionNumberAmongSiblings = nil
     if (childrenNotHandlesNorCarets.length > 0) and (positionOnScreen instanceof Point)
       positionNumberAmongSiblings = 0
-      for eachChild in childrenNotHandlesNorCarets
+      for w in childrenNotHandlesNorCarets
         positionNumberAmongSiblings++
-        if eachChild.top() < positionOnScreen.y and eachChild.bottom() > positionOnScreen.y
+        if w.top() < positionOnScreen.y and w.bottom() > positionOnScreen.y
           break
 
     if positionNumberAmongSiblings?

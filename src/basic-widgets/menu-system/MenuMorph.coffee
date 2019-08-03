@@ -156,9 +156,9 @@ class MenuMorph extends PopUpWdgt
     # If the list of @items has changed, we
     # make sure we destroy the children that
     # are going away.
-    #for eachChild in @children
-    #  if @items.indexOf(eachChild) == -1
-    #    eachChild.fullDestroy()
+    #for w in @children
+    #  if @items.indexOf(w) == -1
+    #    w.fullDestroy()
 
     #@children = []
 

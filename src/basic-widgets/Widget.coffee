@@ -2004,8 +2004,8 @@ class Widget extends TreeNode
       placeToDropItIn = world
 
     # don't create new reference if it exists already
-    for eachChild in placeToDropItIn.children
-      if (eachChild instanceof IconicDesktopSystemShortcutWdgt) and eachChild.target == @
+    for w in placeToDropItIn.children
+      if (w instanceof IconicDesktopSystemShortcutWdgt) and w.target == @
         return
 
     morphToAdd = new IconicDesktopSystemDocumentShortcutWdgt @, referenceName

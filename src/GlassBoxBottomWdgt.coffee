@@ -31,23 +31,23 @@ class GlassBoxBottomWdgt extends BoxMorph
 
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
-    for eachChild in childrenNotHandlesNorCarets
+    for w in childrenNotHandlesNorCarets
 
-      if (eachChild instanceof MenuItemMorph)
-        eachChild.fullRawMoveTo @topLeft().add((new Point 0 ,(@height() - eachChild.height())/2 ).round())
+      if (w instanceof MenuItemMorph)
+        w.fullRawMoveTo @topLeft().add((new Point 0 ,(@height() - w.height())/2 ).round())
       else
-        if eachChild.idealRatioWidthToHeight?
-          ratio = eachChild.idealRatioWidthToHeight
+        if w.idealRatioWidthToHeight?
+          ratio = w.idealRatioWidthToHeight
           if ratio > 1
             # more wide than tall
-            eachChild.rawSetExtent new Point thumbnailSize, thumbnailSize / ratio
+            w.rawSetExtent new Point thumbnailSize, thumbnailSize / ratio
           else
             # more tall than wide
-            eachChild.rawSetExtent new Point thumbnailSize * ratio, thumbnailSize 
+            w.rawSetExtent new Point thumbnailSize * ratio, thumbnailSize 
         else
-          eachChild.rawSetExtent new Point thumbnailSize, thumbnailSize
+          w.rawSetExtent new Point thumbnailSize, thumbnailSize
 
-        eachChild.fullRawMoveTo @topLeft().add((new Point (thumbnailSize - eachChild.width())/2 ,(thumbnailSize - eachChild.height())/2 ).round())
+        w.fullRawMoveTo @topLeft().add((new Point (thumbnailSize - w.width())/2 ,(thumbnailSize - w.height())/2 ).round())
 
 
     trackChanges.pop()

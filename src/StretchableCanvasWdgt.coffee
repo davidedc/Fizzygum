@@ -206,8 +206,8 @@ class StretchableCanvasWdgt extends CanvasMorph
 
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
-    for eachChild in childrenNotHandlesNorCarets
-      eachChild.rawSetBounds @bounds
+    for w in childrenNotHandlesNorCarets
+      w.rawSetBounds @bounds
 
 
     trackChanges.pop()

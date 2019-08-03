@@ -10,9 +10,9 @@ class RadioButtonsHolderMorph extends Widget
 
 
   mouseClickLeft: (morphThatFired) ->
-    for eachChild in @children
-      if eachChild != morphThatFired
-        eachChild.resetSwitchButton?()
+    for w in @children
+      if w != morphThatFired
+        w.resetSwitchButton?()
 
   whichButtonSelected: ->
     @firstChildSuchThat (w) =>
@@ -20,7 +20,7 @@ class RadioButtonsHolderMorph extends Widget
 
   unselectAll: ->
     if @allowsRadioButtonsToBeAllDisabled
-      for eachChild in @children
-        if eachChild.isSelected()
-          eachChild.toggle()
+      for w in @children
+        if w.isSelected()
+          w.toggle()
     return null

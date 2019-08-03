@@ -52,10 +52,10 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
       if positionOnScreen? and childrenNotHandlesNorCarets.length > 0
         positionNumberAmongSiblings = 0
 
-        for eachChild in childrenNotHandlesNorCarets
-          if eachChild.bounds.growBy(@internalPadding).containsPoint positionOnScreen
+        for w in childrenNotHandlesNorCarets
+          if w.bounds.growBy(@internalPadding).containsPoint positionOnScreen
             foundDrop = true
-            if eachChild.bounds.growBy(@internalPadding).rightHalf().containsPoint positionOnScreen
+            if w.bounds.growBy(@internalPadding).rightHalf().containsPoint positionOnScreen
               positionNumberAmongSiblings++
             break
           positionNumberAmongSiblings++
@@ -91,11 +91,11 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
     widthOfContentsSoFar = @internalPadding
     countOfItems = 0
 
-    for eachChild in childrenNotHandlesNorCarets
-      if widthOfContentsSoFar + @internalPadding  + eachChild.width() > @width()
+    for w in childrenNotHandlesNorCarets
+      if widthOfContentsSoFar + @internalPadding  + w.width() > @width()
         break
 
-      widthOfContentsSoFar += @internalPadding  + eachChild.width()
+      widthOfContentsSoFar += @internalPadding  + w.width()
       countOfItems++
 
     widthLayingDown = @internalPadding

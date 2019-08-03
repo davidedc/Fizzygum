@@ -116,17 +116,17 @@ class BasementWdgt extends BoxMorph
     # are reachable and which aren't
     referencedChildren = new Set
 
-    for eachChild in @scrollPanel.contents.children
-      if eachChild.isInBasementButReachable newGcSessionId
-        referencedChildren.add eachChild
+    for w in @scrollPanel.contents.children
+      if w.isInBasementButReachable newGcSessionId
+        referencedChildren.add w
 
-    referencedChildren.forEach (eachChild) =>
-      eachChild.hide()
+    referencedChildren.forEach (w) =>
+      w.hide()
 
   showAllWidgets: ->
     @showingLostItemsOnly = false
-    for eachChild in @scrollPanel.contents.children
-      eachChild.show()
+    for w in @scrollPanel.contents.children
+      w.show()
 
   # if a child has been added to the scrollPanel,
   # the scrollPanel checks its parent to see if it
