@@ -479,11 +479,11 @@ class TreeNode
   # click on the nth button labelled "X")
   nthChildSuchThat: (n, predicate) ->
     theCount = 0
-    for eachChild in @children
-      if predicate.call nil, eachChild
+    for w in @children
+      if predicate.call nil, w
         theCount++
         if theCount is n
-          return eachChild
+          return w
     return nil
 
   firstChildSuchThat: (predicate) ->

@@ -129,9 +129,9 @@ class FridgeMorph extends PanelWdgt
 
 
   clearUpTranslitteratedFlags: ->
-    for eachChild in @children
-      if eachChild.putIntoWords?
-        eachChild.putIntoWords = false
+    for w in @children
+      if w.putIntoWords?
+        w.putIntoWords = false
 
   putIntoWords: ->
     translitteration = ""

@@ -20,5 +20,5 @@ ChildrenStainerMixin =
       setColor: (theColor, ignored, connectionsCalculationToken, superCall) ->
         if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
         super theColor, ignored, connectionsCalculationToken, true
-        for eachChild in @children
-          eachChild.setColor theColor, ignored, connectionsCalculationToken
+        for w in @children
+          w.setColor theColor, ignored, connectionsCalculationToken
