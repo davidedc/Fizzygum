@@ -15,10 +15,8 @@ class RadioButtonsHolderMorph extends Widget
         eachChild.resetSwitchButton?()
 
   whichButtonSelected: ->
-    for eachChild in @children
-      if eachChild.isSelected()
-        return eachChild
-    return null
+    @firstChildSuchThat (w) =>
+      w.isSelected()
 
   unselectAll: ->
     if @allowsRadioButtonsToBeAllDisabled
