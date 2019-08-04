@@ -178,21 +178,21 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       return "window"
 
-  add: (aMorph, position = nil, layoutSpec, beingDropped, notContent) ->
-    unless notContent or (aMorph instanceof CaretMorph) or (aMorph instanceof HandleMorph)
+  add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
+    unless notContent or (aWdgt instanceof CaretMorph) or (aWdgt instanceof HandleMorph)
       @contentNeverSetInPlaceYet = true
-      titleToBeSet = aMorph.colloquialName()
+      titleToBeSet = aWdgt.colloquialName()
       if titleToBeSet == "window"
         titleToBeSet = "window with another " + titleToBeSet
       if titleToBeSet == "internal window"
         titleToBeSet = "window with an " + titleToBeSet
       @label.setText titleToBeSet
       @removeChild @contents
-      @contents = aMorph
+      @contents = aWdgt
       @adjustContentsBounds()
-      super aMorph, position, LayoutSpec.ATTACHEDAS_WINDOW_CONTENT, beingDropped
+      super aWdgt, position, LayoutSpec.ATTACHEDAS_WINDOW_CONTENT, beingDropped
     else
-      super aMorph, position, LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped
+      super aWdgt, position, LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped
     @resizer?.moveInFrontOfSiblings()
 
   childBeingDestroyed: (child) ->

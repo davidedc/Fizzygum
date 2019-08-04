@@ -131,7 +131,7 @@ class WorldMorph extends PanelWdgt
   @KEYPAD_DOT_mappedToThaiKeyboard_R: "พ"
 
   morphsDetectingClickOutsideMeOrAnyOfMeChildren: new Set
-  hierarchyOfClickedMorphs: new Set
+  hierarchyOfClickedWdgts: new Set
   hierarchyOfClickedMenus: new Set
   popUpsMarkedForClosure: new Set
   freshlyCreatedPopUps: new Set
@@ -369,7 +369,7 @@ class WorldMorph extends PanelWdgt
     return name
 
 
-  wantsDropOf: (aMorph) ->
+  wantsDropOf: (aWdgt) ->
     return @_acceptsDrops
 
   createErrorConsole: ->
@@ -527,9 +527,9 @@ class WorldMorph extends PanelWdgt
   
   # World Widget broken rects debugging
   # not using it anywhere
-  brokenFor: (aMorph) ->
+  brokenFor: (aWdgt) ->
     # private
-    fb = aMorph.fullBounds()
+    fb = aWdgt.fullBounds()
     @broken.filter (rect) ->
       rect.isIntersecting fb
   
@@ -2067,8 +2067,8 @@ class WorldMorph extends PanelWdgt
 
     menu.popUpAtHand()
 
-  create: (aMorph) ->
-    aMorph.pickUp()
+  create: (aWdgt) ->
+    aWdgt.pickUp()
 
   createNewStackElementsSizeAdjustingMorph: ->
     @create new StackElementsSizeAdjustingMorph()

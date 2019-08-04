@@ -117,16 +117,16 @@ class PanelWdgt extends Widget
   # puts the morph in the ScrollPanel
   # in some sparse manner and keeping it
   # "in view"
-  addInPseudoRandomPosition: (aMorph) ->
+  addInPseudoRandomPosition: (aWdgt) ->
     width = @width()
     height = @height()
 
-    posx = Math.abs(hashCode(aMorph.toString())) % width
-    posy = Math.abs(hashCode(aMorph.toString() + "x")) % height
+    posx = Math.abs(hashCode(aWdgt.toString())) % width
+    posy = Math.abs(hashCode(aWdgt.toString() + "x")) % height
     position = @position().add new Point posx, posy
 
-    @add aMorph
-    aMorph.fullRawMoveTo position
+    @add aWdgt
+    aWdgt.fullRawMoveTo position
 
     if @parent?
       if @parent.adjustContentsBounds?

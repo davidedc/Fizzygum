@@ -12,36 +12,36 @@ class ToolPanelWdgt extends PanelWdgt
       @add eachWidget, nil, nil, nil, nil, nil, true
     @reLayout()
 
-  add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen, dontLayout) ->
+  add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen, dontLayout) ->
 
-    if (aMorph instanceof ModifiedTextTriangleAnnotationWdgt) or
-     (aMorph instanceof HandleMorph)
+    if (aWdgt instanceof ModifiedTextTriangleAnnotationWdgt) or
+     (aWdgt instanceof HandleMorph)
       super
     else
-      # if aMorph specifies a non-default switcharoo then it
+      # if aWdgt specifies a non-default switcharoo then it
       # means it's like the TextBoxCreatorButtonWdgt, which creates a textbox
       # when dragged. So in that case we DON'T set it as a template
       # otherwise we do.
-      if aMorph.grabbedWidgetSwitcheroo == Widget::grabbedWidgetSwitcheroo
-        aMorph.isTemplate = true
+      if aWdgt.grabbedWidgetSwitcheroo == Widget::grabbedWidgetSwitcheroo
+        aWdgt.isTemplate = true
 
-      if !aMorph.extentToGetWhenDraggedFromGlassBox?
-        aMorph.extentToGetWhenDraggedFromGlassBox = aMorph.extent()
+      if !aWdgt.extentToGetWhenDraggedFromGlassBox?
+        aWdgt.extentToGetWhenDraggedFromGlassBox = aWdgt.extent()
 
-      if !(aMorph instanceof GlassBoxBottomWdgt)
+      if !(aWdgt instanceof GlassBoxBottomWdgt)
         glassBoxBottom = new GlassBoxBottomWdgt()
-        glassBoxBottom.add aMorph
+        glassBoxBottom.add aWdgt
 
-        if !aMorph.actionableAsThumbnail
+        if !aWdgt.actionableAsThumbnail
           glassBoxTop = new GlassBoxTopWdgt()
-          glassBoxTop.toolTipMessage = aMorph.toolTipMessage
+          glassBoxTop.toolTipMessage = aWdgt.toolTipMessage
           glassBoxBottom.add glassBoxTop
 
         glassBoxBottom.fullRawMoveTo @topLeft().add new Point @externalPadding, @externalPadding
         glassBoxBottom.rawSetExtent new Point @thumbnailSize, @thumbnailSize
         glassBoxBottom.reLayout()
 
-        aMorph = glassBoxBottom
+        aWdgt = glassBoxBottom
 
 
       childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
@@ -60,9 +60,9 @@ class ToolPanelWdgt extends PanelWdgt
           positionNumberAmongSiblings++
       
       if foundDrop
-        super aMorph, positionNumberAmongSiblings, layoutSpec, beingDropped
+        super aWdgt, positionNumberAmongSiblings, layoutSpec, beingDropped
       else
-        super aMorph, @numberOfIconsOnPanel, layoutSpec, beingDropped
+        super aWdgt, @numberOfIconsOnPanel, layoutSpec, beingDropped
 
       @numberOfIconsOnPanel++
 

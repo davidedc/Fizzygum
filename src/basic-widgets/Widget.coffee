@@ -1328,7 +1328,7 @@ class Widget extends TreeNode
     @fullRawMoveTo aPoint.subtract @fullBounds().extent().floorDivideBy 2
   
   # make sure I am completely within another Widget's bounds
-  fullRawMoveWithin: (aMorph) ->
+  fullRawMoveWithin: (aWdgt) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
@@ -1358,22 +1358,22 @@ class Widget extends TreeNode
     # Note that we have to update newBoundsForThisLayout as
     # we update the widget position!
 
-    rightOff = newBoundsForThisLayout.right() - aMorph.right()
+    rightOff = newBoundsForThisLayout.right() - aWdgt.right()
     if rightOff > 0
       @fullRawMoveBy new Point -rightOff, 0
       newBoundsForThisLayout = @bounds
 
-    leftOff = newBoundsForThisLayout.left() - aMorph.left()
+    leftOff = newBoundsForThisLayout.left() - aWdgt.left()
     if leftOff < 0
       @fullRawMoveBy new Point -leftOff, 0
       newBoundsForThisLayout = @bounds
 
-    bottomOff = newBoundsForThisLayout.bottom() - aMorph.bottom()
+    bottomOff = newBoundsForThisLayout.bottom() - aWdgt.bottom()
     if bottomOff > 0
       @fullRawMoveBy new Point 0, -bottomOff
       newBoundsForThisLayout = @bounds
     
-    topOff = newBoundsForThisLayout.top() - aMorph.top()
+    topOff = newBoundsForThisLayout.top() - aWdgt.top()
     if topOff < 0
       @fullRawMoveBy new Point 0, -topOff
       newBoundsForThisLayout = @bounds
@@ -1697,8 +1697,8 @@ class Widget extends TreeNode
   boundsContainPoint: (aPoint) ->
     @bounds.containsPoint aPoint
 
-  areBoundsIntersecting: (aMorph) ->
-    @bounds.isIntersecting aMorph.bounds
+  areBoundsIntersecting: (aWdgt) ->
+    @bounds.isIntersecting aWdgt.bounds
 
   calculateKeyValues: (aContext, clippingRectangle) ->
     area = clippingRectangle.intersect(@bounds).round()
@@ -2221,13 +2221,13 @@ class Widget extends TreeNode
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
     @reLayout()
 
-  addAsSiblingAfterMe: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
+  addAsSiblingAfterMe: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
     myPosition = @positionAmongSiblings()
-    @parent.add aMorph, (myPosition + 1), layoutSpec
+    @parent.add aWdgt, (myPosition + 1), layoutSpec
 
-  addAsSiblingBeforeMe: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
+  addAsSiblingBeforeMe: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
     myPosition = @positionAmongSiblings()
-    @parent.add aMorph, myPosition, layoutSpec
+    @parent.add aWdgt, myPosition, layoutSpec
 
   # this level of indirection is needed because
   # you have a "raw" "tree" need of adding stuff
@@ -2238,10 +2238,10 @@ class Widget extends TreeNode
   # both a high-level and a low-level.
   # For most morphs the two things coincide, and the
   # high-level just calls the low-level.
-  add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
-    if (aMorph not instanceof HighlighterMorph) and (aMorph not instanceof CaretMorph)
+  add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
+    if (aWdgt not instanceof HighlighterMorph) and (aWdgt not instanceof CaretMorph)
       if @ == world
-        aMorph.addShadow()
+        aWdgt.addShadow()
         # when any morph is added to the world, all scheduled tooltips
         # are cancelled. To avoid that a tooltip appears over what the
         # button has just opened. This would happen for example in the
@@ -2249,65 +2249,65 @@ class Widget extends TreeNode
         # button, you click it, the snippets windows come up, then
         # the tooltip with "snippets windows" message pops up
         # over it.
-        if !(aMorph instanceof ToolTipWdgt)
+        if !(aWdgt instanceof ToolTipWdgt)
           ToolTipWdgt.cancelAllScheduledToolTips()
       else
-        aMorph.removeShadow()
+        aWdgt.removeShadow()
 
     @addRaw arguments...
     if @ == world
-      aMorph.rememberFractionalPositionInHoldingPanel()
+      aWdgt.rememberFractionalPositionInHoldingPanel()
   
   # attaches submorph on top
   # ??? TODO you should handle the case of Widget
   #     being added to itself and the case of
   # ??? TODO a Widget being added to one of its
   #     children
-  addRaw: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
+  addRaw: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
 
     # let's check if we are trying to add
     # an ancestor of me below me.
     # That would be impossible to do,
     # so we return nil to signal the error.
-    if aMorph.isAncestorOf @
+    if aWdgt.isAncestorOf @
       return nil
 
-    previousParent = aMorph.parent
-    aMorph.parent?.invalidateLayout()
+    previousParent = aWdgt.parent
+    aWdgt.parent?.invalidateLayout()
 
     # if the morph contributes to a shadow, unfortunately
     # we have to walk towards the top to
     # break the morph that has the shadow.
-    firstParentOwningMyShadow = aMorph.firstParentOwningMyShadow()
+    firstParentOwningMyShadow = aWdgt.firstParentOwningMyShadow()
     if firstParentOwningMyShadow?
       firstParentOwningMyShadow.fullChanged()
     else
-      aMorph.fullChanged()
+      aWdgt.fullChanged()
 
-    aMorph.setLayoutSpec layoutSpec
+    aWdgt.setLayoutSpec layoutSpec
     if layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       @invalidateLayout()
 
-    aMorph.fullChanged()
-    @silentAdd aMorph, true, position
-    aMorph.iHaveBeenAddedTo @, beingDropped
+    aWdgt.fullChanged()
+    @silentAdd aWdgt, true, position
+    aWdgt.iHaveBeenAddedTo @, beingDropped
     if previousParent?.childRemoved?
       previousParent.childRemoved @
 
     if @childAdded?
-      @childAdded aMorph
+      @childAdded aWdgt
 
-    return aMorph
+    return aWdgt
 
-  addInset: (aMorph) ->
+  addInset: (aWdgt) ->
 
-    if aMorph.parent?
-      aMorph.changed()
+    if aWdgt.parent?
+      aWdgt.changed()
 
-    @insetMorph = aMorph
-    @add aMorph, 0
-    aMorph.fullRawMoveTo @insetPosition()
-    aMorph.rawSetExtent @insetSpaceExtent(), @
+    @insetMorph = aWdgt
+    @add aWdgt, 0
+    aWdgt.fullRawMoveTo @insetPosition()
+    aWdgt.rawSetExtent @insetSpaceExtent(), @
 
 
   sourceChanged: ->
@@ -2326,7 +2326,7 @@ class Widget extends TreeNode
 
   calculateAndUpdateExtent: ->
 
-  silentAdd: (aMorph, avoidExtentCalculation, position = nil) ->
+  silentAdd: (aWdgt, avoidExtentCalculation, position = nil) ->
     # the morph that is being
     # attached might be attached to
     # a clipping morph. So we
@@ -2334,14 +2334,14 @@ class Widget extends TreeNode
     # to make sure that anything that
     # is outside the clipping Widget gets
     # painted over.
-    owner = aMorph.parent
+    owner = aWdgt.parent
     if owner?
-      owner.removeChild aMorph
-    if aMorph.isPopUpMarkedForClosure?
-      aMorph.isPopUpMarkedForClosure = false
-    @addChild aMorph, position
+      owner.removeChild aWdgt
+    if aWdgt.isPopUpMarkedForClosure?
+      aWdgt.isPopUpMarkedForClosure = false
+    @addChild aWdgt, position
     if !avoidExtentCalculation
-      aMorph.calculateAndUpdateExtent()
+      aWdgt.calculateAndUpdateExtent()
     
 
   # Duplication and Serialization /////////////////////////////////////////
@@ -2731,7 +2731,7 @@ class Widget extends TreeNode
   justDropped: (whereIn) ->
     @rememberFractionalSituationInHoldingPanel()
     
-  wantsDropOf: (aMorph) ->
+  wantsDropOf: (aWdgt) ->
     return @_acceptsDrops
 
   enableDrops: ->

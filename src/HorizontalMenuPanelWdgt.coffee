@@ -15,34 +15,34 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
     super
     @rawSetExtent new Point 300,15
 
-  add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
+  add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
 
-    if (aMorph instanceof ModifiedTextTriangleAnnotationWdgt) or
-     (aMorph instanceof HandleMorph)
+    if (aWdgt instanceof ModifiedTextTriangleAnnotationWdgt) or
+     (aWdgt instanceof HandleMorph)
       super
     else
-      aMorph.isTemplate = true
-      if !aMorph.extentToGetWhenDraggedFromGlassBox?
-        aMorph.extentToGetWhenDraggedFromGlassBox = aMorph.extent()
+      aWdgt.isTemplate = true
+      if !aWdgt.extentToGetWhenDraggedFromGlassBox?
+        aWdgt.extentToGetWhenDraggedFromGlassBox = aWdgt.extent()
 
-      if !(aMorph instanceof GlassBoxBottomWdgt)
+      if !(aWdgt instanceof GlassBoxBottomWdgt)
         glassBoxBottom = new GlassBoxBottomWdgt()
-        glassBoxBottom.add aMorph
+        glassBoxBottom.add aWdgt
 
-        if !aMorph.actionableAsThumbnail
+        if !aWdgt.actionableAsThumbnail
           glassBoxTop = new GlassBoxTopWdgt()
           glassBoxBottom.add glassBoxTop
-          glassBoxTop.toolTipMessage = aMorph.toolTipMessage
+          glassBoxTop.toolTipMessage = aWdgt.toolTipMessage
 
         glassBoxBottom.fullRawMoveTo @topLeft().add new Point @internalPadding, @internalPadding
-        if (aMorph instanceof MenuItemMorph)
-          aMorph.shrinkToTextSize()
-          glassBoxBottom.rawSetExtent new Point aMorph.width(), @thumbnailSize
+        if (aWdgt instanceof MenuItemMorph)
+          aWdgt.shrinkToTextSize()
+          glassBoxBottom.rawSetExtent new Point aWdgt.width(), @thumbnailSize
         else
           glassBoxBottom.rawSetExtent new Point @thumbnailSize, @thumbnailSize
         glassBoxBottom.reLayout()
 
-        aMorph = glassBoxBottom
+        aWdgt = glassBoxBottom
 
 
       childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
@@ -61,9 +61,9 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
           positionNumberAmongSiblings++
       
       if foundDrop
-        super aMorph, positionNumberAmongSiblings, layoutSpec, beingDropped
+        super aWdgt, positionNumberAmongSiblings, layoutSpec, beingDropped
       else
-        super aMorph, @numberOfIconsOnPanel, layoutSpec, beingDropped
+        super aWdgt, @numberOfIconsOnPanel, layoutSpec, beingDropped
 
       @numberOfIconsOnPanel++
       @reLayout()

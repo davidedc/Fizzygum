@@ -17,8 +17,8 @@ class SimpleVerticalStackPanelWdgt extends Widget
   colloquialName: ->
     "stack"
 
-  add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
-    aMorph.rawResizeToWithoutSpacing()
+  add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
+    aWdgt.rawResizeToWithoutSpacing()
 
     # find out WHERE to add the widget. Find the existing widget in the
     # stack that is at the same height, and put the new
@@ -42,7 +42,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
           break
 
     if positionNumberAmongSiblings?
-      super aMorph, positionNumberAmongSiblings, layoutSpec, beingDropped
+      super aWdgt, positionNumberAmongSiblings, layoutSpec, beingDropped
     else
       super
 

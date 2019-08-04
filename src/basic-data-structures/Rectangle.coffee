@@ -330,8 +330,8 @@ class Rectangle
     dy = aRect.top() - @top()  if (@top() + dy) < aRect.top()
     new Point dx, dy
   
-  toLocalCoordinatesOf: (aMorph) ->
-    new @constructor @origin.x - aMorph.left(),@origin.y - aMorph.top(),@corner.x - aMorph.left(),@corner.y - aMorph.top()
+  toLocalCoordinatesOf: (aWdgt) ->
+    new @constructor @origin.x - aWdgt.left(),@origin.y - aWdgt.top(),@corner.x - aWdgt.left(),@corner.y - aWdgt.top()
   
   # Rectangle testing:
   containsPoint: (aPoint) ->

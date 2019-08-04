@@ -67,7 +67,7 @@ class ScrollPanelWdgt extends PanelWdgt
 
     @adjustScrollBars()
 
-  wantsDropOf: (aMorph) ->
+  wantsDropOf: (aWdgt) ->
     if @contents instanceof FolderPanelWdgt
       return false
     return @_acceptsDrops
@@ -186,11 +186,11 @@ class ScrollPanelWdgt extends PanelWdgt
   # when you add things to the ScrollPanelWdgt they actually
   # end up in the Panel inside it. This also applies to
   # resizing handles!
-  add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
-    if aMorph instanceof ModifiedTextTriangleAnnotationWdgt
+  add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
+    if aWdgt instanceof ModifiedTextTriangleAnnotationWdgt
       super
     else
-      @contents.add aMorph, position, layoutSpec, beingDropped, nil, positionOnScreen
+      @contents.add aWdgt, position, layoutSpec, beingDropped, nil, positionOnScreen
       @adjustContentsBounds()
       @adjustScrollBars()
 
@@ -208,15 +208,15 @@ class ScrollPanelWdgt extends PanelWdgt
     @adjustScrollBars()
 
   
-  setContents: (aMorph, extraPadding) ->
+  setContents: (aWdgt, extraPadding) ->
     @extraPadding = extraPadding
     # there should never be a shadow but one never knows...
     @contents.closeChildren()
     @contents.fullRawMoveTo @position()
 
-    aMorph.fullRawMoveTo @position().add @padding + @extraPadding
+    aWdgt.fullRawMoveTo @position().add @padding + @extraPadding
 
-    @add aMorph
+    @add aWdgt
 
 
   rawSetExtent: (aPoint) ->

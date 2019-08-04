@@ -128,15 +128,15 @@ class ActivePointerWdgt extends Widget
   #   justDropped(activePointerWdgt) -> droppedWdgt
   #   reactToDropOf(droppedWdgt, activePointerWdgt) -> newParent
   #
-  dropTargetFor: (aMorph) ->
+  dropTargetFor: (aWdgt) ->
     target = @topWdgtUnderPointer()
-    until target.wantsDropOf aMorph
+    until target.wantsDropOf aWdgt
       target = target.parent
     target
   
-  grab: (aMorph, displacementDueToGrabDragThreshold,  switcherooHappened) ->
-    return nil  if aMorph instanceof WorldMorph
-    oldParent = aMorph.parent
+  grab: (aWdgt, displacementDueToGrabDragThreshold,  switcherooHappened) ->
+    return nil  if aWdgt instanceof WorldMorph
+    oldParent = aWdgt.parent
     if !@isThisPointerFloatDraggingSomething()
 
       if AutomatorRecorderAndPlayer?
@@ -155,18 +155,18 @@ class ActivePointerWdgt extends Widget
       if switcherooHappened
         # in this case the widget being grabbed is created on the fly
         # so just like the next case it's OK to center it under the pointer
-        aMorph.fullRawMoveTo @position().subtract aMorph.extent().floorDivideBy 2
-        aMorph.fullRawMoveWithin world
-      else if aMorph.extentToGetWhenDraggedFromGlassBox? and (oldParent instanceof GlassBoxBottomWdgt)
+        aWdgt.fullRawMoveTo @position().subtract aWdgt.extent().floorDivideBy 2
+        aWdgt.fullRawMoveWithin world
+      else if aWdgt.extentToGetWhenDraggedFromGlassBox? and (oldParent instanceof GlassBoxBottomWdgt)
         # in this case the widget is "inflating". So, all
         # visual references that the user might have around the
         # position of the grab go out of the window: just center
         # the widget under the pointer and fit it within the
         # desktop bounds since we are at it (useful in case the
         # widget is inflating near the screen edges)
-        aMorph.rawSetExtent aMorph.extentToGetWhenDraggedFromGlassBox
-        aMorph.fullRawMoveTo @position().subtract aMorph.extent().floorDivideBy 2
-        aMorph.fullRawMoveWithin world
+        aWdgt.rawSetExtent aWdgt.extentToGetWhenDraggedFromGlassBox
+        aWdgt.fullRawMoveTo @position().subtract aWdgt.extent().floorDivideBy 2
+        aWdgt.fullRawMoveWithin world
       else if displacementDueToGrabDragThreshold?
         # in this case keep some visual consistency and move
         # the widget accordingly to where the grab started
@@ -177,16 +177,16 @@ class ActivePointerWdgt extends Widget
         # happens to pick up a widget that is partially outside the
         # screen and it's no good to make it jump within the screen
         # - I tried and it looks really strange -
-        aMorph.fullMoveTo aMorph.position().add displacementDueToGrabDragThreshold
+        aWdgt.fullMoveTo aWdgt.position().add displacementDueToGrabDragThreshold
 
-      @grabOrigin = aMorph.situation()
-      aMorph.prepareToBeGrabbed?()
+      @grabOrigin = aWdgt.situation()
+      aWdgt.prepareToBeGrabbed?()
 
-      @add aMorph
-      aMorph.justBeenGrabbed? oldParent
+      @add aWdgt
+      aWdgt.justBeenGrabbed? oldParent
       # you must add the shadow
       # after the morph has been added
-      # because "@add aMorph" causes
+      # because "@add aWdgt" causes
       # the morph to be painted potentially
       # for the first time.
       # The shadow needs the image of the
@@ -203,7 +203,7 @@ class ActivePointerWdgt extends Widget
       # which illustrates how things being dragged
       # are above anything else.
 
-      aMorph.addShadow new Point(6, 6), 0.1
+      aWdgt.addShadow new Point(6, 6), 0.1
       
       #debugger
       @fullChanged()
@@ -211,7 +211,7 @@ class ActivePointerWdgt extends Widget
       # morph to adjust itself e.g. the ScrollPanelWdgt
       # readjusts itself if you take some morphs
       # out of it.
-      oldParent?.reactToGrabOf? aMorph
+      oldParent?.reactToGrabOf? aWdgt
 
   isThisPointerDraggingSomething: ->
     @isThisPointerFloatDraggingSomething() or @isThisPointerNonFloatDraggingSomething()
@@ -385,7 +385,7 @@ class ActivePointerWdgt extends Widget
       # small movements of the mouse while clicking on the
       # desktop would not dismiss menus.
       if !(morph.firstParentThatIsAPopUp() instanceof MenuMorph)
-        @cleanupMenuMorphs nil, morph, true
+        @cleanupMenuWdgts nil, morph, true
 
       @wdgtToGrab = morph.findRootForGrab()
       if button is 2 or ctrlKey
@@ -536,11 +536,11 @@ class ActivePointerWdgt extends Widget
                 # like chaining a second double-click detection
                 # once this double-click has just been detected
                 # right here.
-                @rememberTripleClickMorphsForAWhile morph
+                @rememberTripleClickWdgtsForAWhile morph
             else
-              @forgetDoubleClickMorphs()
+              @forgetDoubleClickWdgts()
           else
-            @rememberDoubleClickMorphsForAWhile morph
+            @rememberDoubleClickWdgtsForAWhile morph
 
           tripleClickInvocation = false
 
@@ -571,7 +571,7 @@ class ActivePointerWdgt extends Widget
                   # of a triple click
                   tripleClickInvocation = true
               else
-                @forgetTripleClickMorphs()
+                @forgetTripleClickWdgts()
 
           # fire the click, sending info on whether this was part
           # of a double/triple click
@@ -595,44 +595,44 @@ class ActivePointerWdgt extends Widget
       # is a non-float drag ongoing then we avoid
       # cleaning-up the pop-overs
       if !@nonFloatDraggedWdgt?
-        @cleanupMenuMorphs expectedClick, morph
+        @cleanupMenuWdgts expectedClick, morph
 
     @mouseButton = nil
     @nonFloatDraggedWdgt = nil
 
 
-  forgetDoubleClickMorphs: ->
+  forgetDoubleClickWdgts: ->
     @doubleClickWdgt = nil
     @doubleClickPosition = nil
 
-  rememberDoubleClickMorphsForAWhile: (morph) ->
+  rememberDoubleClickWdgtsForAWhile: (morph) ->
     @doubleClickWdgt = morph
     @doubleClickPosition = @position()
     setTimeout (=>
       #if @doubleClickWdgt?
       #  console.log "single click"
-      @forgetDoubleClickMorphs()
+      @forgetDoubleClickWdgts()
       return false
     ), 300
 
-  # basically the same as rememberDoubleClickMorphsForAWhile
-  forgetTripleClickMorphs: ->
+  # basically the same as rememberDoubleClickWdgtsForAWhile
+  forgetTripleClickWdgts: ->
     @tripleClickWdgt = nil
     @tripleClickPosition = nil
 
-  rememberTripleClickMorphsForAWhile: (morph) ->
+  rememberTripleClickWdgtsForAWhile: (morph) ->
     @tripleClickWdgt = morph
     @tripleClickPosition = @position()
     setTimeout (=>
       #if @tripleClickWdgt?
       #  console.log "not a triple click, just a double click"
-      @forgetTripleClickMorphs()
+      @forgetTripleClickWdgts()
       return false
     ), 300
 
-  cleanupMenuMorphs: (expectedClick, morph, alsoKillFreshMenus)->
+  cleanupMenuWdgts: (expectedClick, morph, alsoKillFreshMenus)->
 
-    world.hierarchyOfClickedMorphs.clear()
+    world.hierarchyOfClickedWdgts.clear()
     world.hierarchyOfClickedMenus.clear()
 
     # note that all the actions due to the clicked
@@ -654,11 +654,11 @@ class ActivePointerWdgt extends Widget
     # the one the user clicked on.
     # (including the one the user clicked on)
     ascendingMorphs = morph
-    world.hierarchyOfClickedMorphs.clear()
-    world.hierarchyOfClickedMorphs.add ascendingMorphs
+    world.hierarchyOfClickedWdgts.clear()
+    world.hierarchyOfClickedWdgts.add ascendingMorphs
     while ascendingMorphs.parent?
       ascendingMorphs = ascendingMorphs.parent
-      world.hierarchyOfClickedMorphs.add ascendingMorphs
+      world.hierarchyOfClickedWdgts.add ascendingMorphs
 
     # remove menus that have requested
     # to be removed when a click happens outside
@@ -681,7 +681,7 @@ class ActivePointerWdgt extends Widget
     # in the hierarchy of the clicked morphs
     # and call their callback.
     #console.log "morphs wanting to be notified: " + world.morphsDetectingClickOutsideMeOrAnyOfMeChildren
-    #console.log "hierarchy of clicked morphs: " + world.hierarchyOfClickedMorphs
+    #console.log "hierarchy of clicked morphs: " + world.hierarchyOfClickedWdgts
     #console.log "hierarchy of clicked menus: " + world.hierarchyOfClickedMenus
     
 
@@ -690,7 +690,7 @@ class ActivePointerWdgt extends Widget
     # when the user clicks outside of them or their children)
     world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.forEach (eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren) =>
       if (!world.hierarchyOfClickedMenus.has eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren) and
-         (!world.hierarchyOfClickedMorphs.has eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren)
+         (!world.hierarchyOfClickedWdgts.has eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren)
         # skip the freshly created menus as otherwise we might
         # destroy them immediately
         if alsoKillFreshMenus or !world.freshlyCreatedPopUps.has eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren
