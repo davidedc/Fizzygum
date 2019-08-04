@@ -257,7 +257,7 @@ class Widget extends TreeNode
   # if this morph has the purpose of highlighting
   # another morph, then this field points to the
   # morph that this morph is supposed to highlight
-  morphThisMorphIsHighlighting: nil
+  wdgtThisWdgtIsHighlighting: nil
 
   destroyed: false
 
@@ -322,7 +322,7 @@ class Widget extends TreeNode
     @constructor.name or @constructor.toString().split(" ")[1].split("(")[0]
 
   @morphFromUniqueIDString: (theUniqueID) ->
-    result = world.topMorphSuchThat (m) =>
+    result = world.topWdgtSuchThat (m) =>
       m.uniqueIDString() is theUniqueID
     if not result?
       alert "theUniqueID " + theUniqueID + " not found!"
@@ -2664,7 +2664,7 @@ class Widget extends TreeNode
     # first check if the hand is floatdragging
     # anything, in that case if it's floatdragging
     # it can't be non-floatdragging
-    if world.hand.nonFloatDraggedMorph?
+    if world.hand.nonFloatDraggedWdgt?
       return false
 
     # then check if my root is the hand
@@ -2923,7 +2923,7 @@ class Widget extends TreeNode
     #show the normal menu in case there is text selected,
     #otherwise show the spacial multiplexing list
     #if !@world().caret
-    #  if @world().hand.allMorphsAtPointer().length > 2
+    #  if @world().hand.allWdgtsAtPointer().length > 2
     #    return @buildHierarchyMenu()
 
     morphToAskMenuTo = @
@@ -2966,7 +2966,7 @@ class Widget extends TreeNode
     #   2) all morphs parents of the topmost morph under the pointer
     # 2 is what is used in Cuis
     # commented-out addendum for the implementation of 1):
-    # parents = @world().hand.allMorphsAtPointer().reverse()
+    # parents = @world().hand.allWdgtsAtPointer().reverse()
     parents = @allParentsTopToBottom()
     parents.forEach (each) ->
       # only add morphs that have a menu, and

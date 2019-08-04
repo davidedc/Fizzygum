@@ -21,11 +21,11 @@ CreateShortcutOfDroppedItemsMixin =
       # of the neat automatic grid positioning.
       # So, move the "transient" dropped widget just a bit to the
       # right and below the origin.
-      aboutToDrop: (morphToDrop) ->
-        if morphToDrop instanceof IconicDesktopSystemShortcutWdgt
-          morphToDrop.fullRawMoveWithin @
+      aboutToDrop: (wdgtToDrop) ->
+        if wdgtToDrop instanceof IconicDesktopSystemShortcutWdgt
+          wdgtToDrop.fullRawMoveWithin @
         else
-          morphToDrop.fullRawMoveTo @position().add new Point 10, 10
+          wdgtToDrop.fullRawMoveTo @position().add new Point 10, 10
 
       reactToDropOf: (droppedWidget) ->
         super

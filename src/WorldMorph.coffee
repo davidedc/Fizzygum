@@ -959,23 +959,23 @@ class WorldMorph extends PanelWdgt
 
   addPinoutingMorphs: ->
     @currentPinoutingMorphs.forEach (eachPinoutingMorph) =>
-      if @morphsToBePinouted.has eachPinoutingMorph.morphThisMorphIsPinouting
-        if eachPinoutingMorph.morphThisMorphIsPinouting.hasMaybeChangedGeometryOrPosition()
+      if @morphsToBePinouted.has eachPinoutingMorph.wdgtThisWdgtIsPinouting
+        if eachPinoutingMorph.wdgtThisWdgtIsPinouting.hasMaybeChangedGeometryOrPosition()
           # reposition the pinout morph if needed
-          peekThroughBox = eachPinoutingMorph.morphThisMorphIsPinouting.clippedThroughBounds()
+          peekThroughBox = eachPinoutingMorph.wdgtThisWdgtIsPinouting.clippedThroughBounds()
           eachPinoutingMorph.fullRawMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
 
       else
         @currentPinoutingMorphs.delete eachPinoutingMorph
-        @morphsBeingPinouted.delete eachPinoutingMorph.morphThisMorphIsPinouting
-        eachPinoutingMorph.morphThisMorphIsPinouting = nil
+        @morphsBeingPinouted.delete eachPinoutingMorph.wdgtThisWdgtIsPinouting
+        eachPinoutingMorph.wdgtThisWdgtIsPinouting = nil
         eachPinoutingMorph.fullDestroy()
 
     @morphsToBePinouted.forEach (eachMorphNeedingPinout) =>
       unless @morphsBeingPinouted.has eachMorphNeedingPinout
         hM = new StringMorph2 eachMorphNeedingPinout.toString()
         world.add hM
-        hM.morphThisMorphIsPinouting = eachMorphNeedingPinout
+        hM.wdgtThisWdgtIsPinouting = eachMorphNeedingPinout
         peekThroughBox = eachMorphNeedingPinout.clippedThroughBounds()
         hM.fullRawMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
         hM.setColor new Color 0, 0, 255
@@ -985,20 +985,20 @@ class WorldMorph extends PanelWdgt
   
   addHighlightingMorphs: ->
     @currentHighlightingMorphs.forEach (eachHighlightingMorph) =>
-      if @morphsToBeHighlighted.has eachHighlightingMorph.morphThisMorphIsHighlighting
-        if eachHighlightingMorph.morphThisMorphIsHighlighting.hasMaybeChangedGeometryOrPosition()
-          eachHighlightingMorph.rawSetBounds eachHighlightingMorph.morphThisMorphIsHighlighting.clippedThroughBounds()
+      if @morphsToBeHighlighted.has eachHighlightingMorph.wdgtThisWdgtIsHighlighting
+        if eachHighlightingMorph.wdgtThisWdgtIsHighlighting.hasMaybeChangedGeometryOrPosition()
+          eachHighlightingMorph.rawSetBounds eachHighlightingMorph.wdgtThisWdgtIsHighlighting.clippedThroughBounds()
       else
         @currentHighlightingMorphs.delete eachHighlightingMorph
-        @morphsBeingHighlighted.delete eachHighlightingMorph.morphThisMorphIsHighlighting
-        eachHighlightingMorph.morphThisMorphIsHighlighting = nil
+        @morphsBeingHighlighted.delete eachHighlightingMorph.wdgtThisWdgtIsHighlighting
+        eachHighlightingMorph.wdgtThisWdgtIsHighlighting = nil
         eachHighlightingMorph.fullDestroy()
 
     @morphsToBeHighlighted.forEach (eachMorphNeedingHighlight) =>
       unless @morphsBeingHighlighted.has eachMorphNeedingHighlight 
         hM = new HighlighterMorph()
         world.add hM
-        hM.morphThisMorphIsHighlighting = eachMorphNeedingHighlight
+        hM.wdgtThisWdgtIsHighlighting = eachMorphNeedingHighlight
         hM.rawSetBounds eachMorphNeedingHighlight.clippedThroughBounds()
         hM.setColor new Color 0, 0, 255
         hM.setAlphaScaled 50
@@ -1341,20 +1341,20 @@ class WorldMorph extends PanelWdgt
     @inputDOMElementForVirtualKeyboard.addEventListener "keypress",
       @inputDOMElementForVirtualKeyboardKeypressEventListener, false
 
-  getPointerAndMorphInfo:  (topMorphUnderPointer = @hand.topMorphUnderPointer()) ->
+  getPointerAndMorphInfo:  (topWdgtUnderPointer = @hand.topWdgtUnderPointer()) ->
     # we might eliminate this command afterwards if
     # we find out user is clicking on a menu item
     # or right-clicking on a morph
-    absoluteBoundsOfMorphRelativeToWorld = topMorphUnderPointer.boundingBox().asArray_xywh()
-    morphIdentifierViaTextLabel = topMorphUnderPointer.identifyViaTextLabel()
-    morphPathRelativeToWorld = topMorphUnderPointer.pathOfChildrenPositionsRelativeToWorld()
-    pointerPositionFractionalInMorph = @hand.positionFractionalInMorph topMorphUnderPointer
-    pointerPositionPixelsInMorph = @hand.positionPixelsInMorph topMorphUnderPointer
+    absoluteBoundsOfMorphRelativeToWorld = topWdgtUnderPointer.boundingBox().asArray_xywh()
+    morphIdentifierViaTextLabel = topWdgtUnderPointer.identifyViaTextLabel()
+    morphPathRelativeToWorld = topWdgtUnderPointer.pathOfChildrenPositionsRelativeToWorld()
+    pointerPositionFractionalInMorph = @hand.positionFractionalInMorph topWdgtUnderPointer
+    pointerPositionPixelsInMorph = @hand.positionPixelsInMorph topWdgtUnderPointer
     # note that this pointer position is in world
     # coordinates not in page coordinates
     pointerPositionPixelsInWorld = @hand.position()
-    isPartOfListMorph = (topMorphUnderPointer.parentThatIsA ListMorph)?
-    return [ topMorphUnderPointer.uniqueIDString(), morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph]
+    isPartOfListMorph = (topWdgtUnderPointer.parentThatIsA ListMorph)?
+    return [ topWdgtUnderPointer.uniqueIDString(), morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph]
 
 
   addMouseChangeCommand: (upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
@@ -1868,7 +1868,7 @@ class WorldMorph extends PanelWdgt
   softResetWorld: ->
     @hand.drop()
     @hand.mouseOverList.clear()
-    @hand.nonFloatDraggedMorph = nil
+    @hand.nonFloatDraggedWdgt = nil
     @morphsDetectingClickOutsideMeOrAnyOfMeChildren.clear()
     @lastNonTextPropertyChangerButtonClickedOrDropped = nil
 

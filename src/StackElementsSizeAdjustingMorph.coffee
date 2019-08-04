@@ -25,7 +25,7 @@ class StackElementsSizeAdjustingMorph extends Widget
   grabsToParentWhenDragged: ->
     return false
 
-  nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos, deltaDragFromPreviousCall) ->
+  nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
 
     # the user is in the process of dragging but didn't
     # actually move the mouse yet

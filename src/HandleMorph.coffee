@@ -268,8 +268,8 @@ class HandleMorph extends Widget
     return nil  unless @target
     @target.bringToForeground()
 
-  nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos, deltaDragFromPreviousCall) ->
-    newPos = pos.subtract nonFloatDragPositionWithinMorphAtStart
+  nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
+    newPos = pos.subtract nonFloatDragPositionWithinWdgtAtStart
     switch @type
       when "resizeBothDimensionsHandle"
         newExt = newPos.add(@extent().add(@inset)).subtract @target.position()

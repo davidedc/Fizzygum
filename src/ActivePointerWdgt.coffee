@@ -11,15 +11,15 @@ class ActivePointerWdgt extends Widget
   # same Widget (otherwise clicks happen for
   # example when resizing a button via the
   # handle)
-  mouseDownMorph: nil
+  mouseDownWdgt: nil
   mouseDownPosition: nil
-  morphToGrab: nil
+  wdgtToGrab: nil
   grabOrigin: nil
   mouseOverList: nil
-  doubleClickMorph: nil
-  tripleClickMorph: nil
-  nonFloatDraggedMorph: nil
-  nonFloatDragPositionWithinMorphAtStart: nil
+  doubleClickWdgt: nil
+  tripleClickWdgt: nil
+  nonFloatDraggedWdgt: nil
+  nonFloatDragPositionWithinWdgtAtStart: nil
   # this is useful during nonFloatDrags to pass the morph
   # the delta position since the last invokation
   previousNonFloatDraggingPos: nil
@@ -41,8 +41,8 @@ class ActivePointerWdgt extends Widget
     return @clipThroughCache
   
   # ActivePointerWdgt navigation:
-  topMorphUnderPointer: ->
-    result = @world.topMorphSuchThat (m) =>
+  topWdgtUnderPointer: ->
+    result = @world.topWdgtSuchThat (m) =>
       m.clippedThroughBounds().containsPoint(@position()) and
         m.visibleBasedOnIsVisibleProperty() and
         !m.isCollapsed() and
@@ -58,15 +58,15 @@ class ActivePointerWdgt extends Widget
         (m not instanceof CaretMorph) and
         # exclude morphs we use for highlighting
         # other morphs
-        !m.morphThisMorphIsHighlighting? and
-        !m.morphThisMorphIsPinouting?
+        !m.wdgtThisWdgtIsHighlighting? and
+        !m.wdgtThisWdgtIsPinouting?
     if result?
       return result
     else
       return @world
 
   menuAtPointer: ->
-    result = @world.topMorphSuchThat (m) =>
+    result = @world.topWdgtSuchThat (m) =>
       m.clippedThroughBounds().containsPoint(@position()) and
         m.visibleBasedOnIsVisibleProperty() and
         !m.isCollapsed() and
@@ -76,7 +76,7 @@ class ActivePointerWdgt extends Widget
 
 
 
-  openContextMenuAtPointer: (morphTheMenuIsAbout) ->
+  openContextMenuAtPointer: (wdgtTheMenuIsAbout) ->
     # note that the morphs that the menu
     # belongs to might not be under the mouse.
     # It usually is, but in cases
@@ -89,8 +89,8 @@ class ActivePointerWdgt extends Widget
     # removed that event as we collapsed the down and up
     # into this coalesced higher-level event,
     # but we still need to make these checks and actions
-    @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem morphTheMenuIsAbout
-    @stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere morphTheMenuIsAbout
+    @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem wdgtTheMenuIsAbout
+    @stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere wdgtTheMenuIsAbout
 
     if AutomatorRecorderAndPlayer? and
      AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
@@ -100,17 +100,17 @@ class ActivePointerWdgt extends Widget
           fade 'rightMouseButtonIndicator', 1, 0, 500, new Date().getTime()
         , 100
     
-    contextMenu = morphTheMenuIsAbout.buildContextMenu()
-    while !contextMenu and morphTheMenuIsAbout.parent
-      morphTheMenuIsAbout = morphTheMenuIsAbout.parent
-      contextMenu = morphTheMenuIsAbout.buildContextMenu()
+    contextMenu = wdgtTheMenuIsAbout.buildContextMenu()
+    while !contextMenu and wdgtTheMenuIsAbout.parent
+      wdgtTheMenuIsAbout = wdgtTheMenuIsAbout.parent
+      contextMenu = wdgtTheMenuIsAbout.buildContextMenu()
 
     if contextMenu
       contextMenu.popUpAtHand()
 
 
   # not used in Fizzygum yet
-  allMorphsAtPointer: ->
+  allWdgtsAtPointer: ->
     return @world.collectAllChildrenBottomToTopSuchThat (m) =>
       m.visibleBasedOnIsVisibleProperty() and
       !m.isCollapsed() and
@@ -123,13 +123,13 @@ class ActivePointerWdgt extends Widget
   # floatDrag 'n' drop events, method(arg) -> receiver:
   #
   #   prepareToBeGrabbed() -> grabTarget
-  #   reactToGrabOf(grabbedMorph) -> oldParent
-  #   wantsDropOf(morphToDrop) ->  newParent
-  #   justDropped(activePointerWdgt) -> droppedMorph
-  #   reactToDropOf(droppedMorph, activePointerWdgt) -> newParent
+  #   reactToGrabOf(grabbedWdgt) -> oldParent
+  #   wantsDropOf(wdgtToDrop) ->  newParent
+  #   justDropped(activePointerWdgt) -> droppedWdgt
+  #   reactToDropOf(droppedWdgt, activePointerWdgt) -> newParent
   #
   dropTargetFor: (aMorph) ->
-    target = @topMorphUnderPointer()
+    target = @topWdgtUnderPointer()
     until target.wantsDropOf aMorph
       target = target.parent
     target
@@ -220,7 +220,7 @@ class ActivePointerWdgt extends Widget
     if @children.length > 0 then true else false
 
   isThisPointerNonFloatDraggingSomething: ->
-    return @nonFloatDraggedMorph?
+    return @nonFloatDraggedWdgt?
 
 
   drop: ->
@@ -234,24 +234,24 @@ class ActivePointerWdgt extends Widget
           if action not in arr
             arr.push action
 
-      morphToDrop = @children[0]
+      wdgtToDrop = @children[0]
 
-      if morphToDrop.rejectsBeingDropped?()
+      if wdgtToDrop.rejectsBeingDropped?()
         target = world
       else
-        target = @dropTargetFor morphToDrop
+        target = @dropTargetFor wdgtToDrop
 
       @fullChanged()
-      morphToDrop.aboutToBeDropped? target
-      target.aboutToDrop? morphToDrop
-      target.add morphToDrop, nil, nil, true, nil, @position()
-      morphToDrop.fullChanged()
+      wdgtToDrop.aboutToBeDropped? target
+      target.aboutToDrop? wdgtToDrop
+      target.add wdgtToDrop, nil, nil, true, nil, @position()
+      wdgtToDrop.fullChanged()
 
       # when you click the buttons, sometimes you end up
       # clicking between the buttons, and so the "proper"
       # widget "loses focus" so to speak. So avoiding that here.
-      if !(morphToDrop instanceof HorizontalMenuPanelWdgt)
-        world.lastNonTextPropertyChangerButtonClickedOrDropped = morphToDrop
+      if !(wdgtToDrop instanceof HorizontalMenuPanelWdgt)
+        world.lastNonTextPropertyChangerButtonClickedOrDropped = wdgtToDrop
 
       @children = []
       @rawSetExtent new Point()
@@ -259,13 +259,13 @@ class ActivePointerWdgt extends Widget
       # first we notify the recipient of the drop
       # this gives the chance to the recipient to
       # initialise a layout spec for the dropped widget
-      target.reactToDropOf? morphToDrop, @
+      target.reactToDropOf? wdgtToDrop, @
 
       # then we notify the dropped widget. This currently
       # is used to let the dropped morph tweak the layout
       # spec (some widgets suddenly become constrained by ratio
       # when they are dropped into a document)
-      morphToDrop.justDropped? target
+      wdgtToDrop.justDropped? target
 
     #else
     #  alert "if you never see this alert then you can delete the test"
@@ -292,20 +292,20 @@ class ActivePointerWdgt extends Widget
   # rather than a multifaceted and sometimes browser-specific
   # event object.
 
-  destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem: (actionedMorph) ->
+  destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem: (actionedWdgt) ->
     if @world.temporaryHandlesAndLayoutAdjusters.size > 0
-      unless @world.temporaryHandlesAndLayoutAdjusters.has actionedMorph
+      unless @world.temporaryHandlesAndLayoutAdjusters.has actionedWdgt
         @world.temporaryHandlesAndLayoutAdjusters.forEach (eachTemporaryHandlesAndLayoutAdjusters) =>
           eachTemporaryHandlesAndLayoutAdjusters.fullDestroy()
         @world.temporaryHandlesAndLayoutAdjusters.clear()
 
-  stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere: (actionedMorph) ->
+  stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere: (actionedWdgt) ->
     if @world.caret?
 
       # some actioning widgets rely on the
       # caret, for example to change the properties
       # of text (e.g. make it bold)
-      if actionedMorph.editorContentPropertyChangerButton? and actionedMorph.editorContentPropertyChangerButton
+      if actionedWdgt.editorContentPropertyChangerButton? and actionedWdgt.editorContentPropertyChangerButton
         return
 
       # if you click anything directly inside a button that has
@@ -313,10 +313,10 @@ class ActivePointerWdgt extends Widget
       # This is needed because you might "down" on the label of the
       # button and you don't want to stopEditing in that case
       # either...
-      if actionedMorph.parent? and
-       (actionedMorph.parent instanceof SimpleButtonMorph) and
-       actionedMorph.parent.editorContentPropertyChangerButton? and
-       actionedMorph.parent.editorContentPropertyChangerButton
+      if actionedWdgt.parent? and
+       (actionedWdgt.parent instanceof SimpleButtonMorph) and
+       actionedWdgt.parent.editorContentPropertyChangerButton? and
+       actionedWdgt.parent.editorContentPropertyChangerButton
         return
 
       # there is a caret on the screen
@@ -335,13 +335,13 @@ class ActivePointerWdgt extends Widget
       # In other words, if we are actioning on something that has
       # the text as an ancestor, then don't stop the
       # editing.
-      if actionedMorph isnt @world.caret.target
+      if actionedWdgt isnt @world.caret.target
         # user clicked on something other than what the
         # caret is attached to
         mostRecentlyCreatedPopUp = world.mostRecentlyCreatedPopUp()
         if mostRecentlyCreatedPopUp?
-          unless mostRecentlyCreatedPopUp.isAncestorOf actionedMorph
-            # only dismiss editing if the actionedMorph the user
+          unless mostRecentlyCreatedPopUp.isAncestorOf actionedWdgt
+            # only dismiss editing if the actionedWdgt the user
             # clicked on is not part of a menu.
             @world.stopEditing()
         # there is no menu at all, in which case
@@ -353,7 +353,7 @@ class ActivePointerWdgt extends Widget
 
   processMouseDown: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     world.destroyToolTips()
-    @morphToGrab = nil
+    @wdgtToGrab = nil
 
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       if button is 2 or ctrlKey
@@ -370,7 +370,7 @@ class ActivePointerWdgt extends Widget
       @drop()
       @mouseButton = nil
     else
-      morph = @topMorphUnderPointer()
+      morph = @topWdgtUnderPointer()
 
       @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem morph
       # TODO it seems a little aggressive to stop any editing
@@ -387,7 +387,7 @@ class ActivePointerWdgt extends Widget
       if !(morph.firstParentThatIsAPopUp() instanceof MenuMorph)
         @cleanupMenuMorphs nil, morph, true
 
-      @morphToGrab = morph.findRootForGrab()
+      @wdgtToGrab = morph.findRootForGrab()
       if button is 2 or ctrlKey
         @mouseButton = "right"
         actualClick = "mouseDownRight"
@@ -397,8 +397,8 @@ class ActivePointerWdgt extends Widget
         actualClick = "mouseDownLeft"
         expectedClick = "mouseClickLeft"
 
-      @mouseDownMorph = morph
-      @mouseDownMorph = @mouseDownMorph.parent  until @mouseDownMorph[expectedClick]
+      @mouseDownWdgt = morph
+      @mouseDownWdgt = @mouseDownWdgt.parent  until @mouseDownWdgt[expectedClick]
 
       
       while !morph[actualClick]?
@@ -422,7 +422,7 @@ class ActivePointerWdgt extends Widget
       else
         fade 'leftMouseButtonIndicator', 1, 0, 500, new Date().getTime()
 
-    morph = @topMorphUnderPointer()
+    morph = @topWdgtUnderPointer()
 
     alreadyRecordedLeftOrRightClickOnMenuItem = false
     world.destroyToolTips()
@@ -439,7 +439,7 @@ class ActivePointerWdgt extends Widget
       # notify the button that the drag is over so it
       # can repaint itself of another color.
       if @isThisPointerNonFloatDraggingSomething()
-        @nonFloatDraggedMorph.endOfNonFloatDrag?()
+        @nonFloatDraggedWdgt.endOfNonFloatDrag?()
 
       @previousNonFloatDraggingPos = nil
       # let's check if the user clicked on a menu item,
@@ -492,7 +492,7 @@ class ActivePointerWdgt extends Widget
         if not morph?
           break
       if morph?
-        if morph == @mouseDownMorph
+        if morph == @mouseDownWdgt
 
           switch expectedClick
             when "mouseClickLeft"
@@ -510,17 +510,17 @@ class ActivePointerWdgt extends Widget
           # two clicks happen on the same morph
           doubleClickInvocation = false
 
-          if @doubleClickMorph?
+          if @doubleClickWdgt?
             # three conditions:
             #  - both clicks are left-button clicks
             #  - both clicks on same widget
             #  - both clicks nearby
             if @mouseButton == "left" and
-             @doubleClickMorph == morph and
+             @doubleClickWdgt == morph and
              ((@doubleClickPosition.distanceTo @position()) < WorldMorph.preferencesAndSettings.grabDragThreshold)
               #console.log "@doubleClickPosition.distanceTo @position():" + @doubleClickPosition.distanceTo @position()
               #console.log "WorldMorph.preferencesAndSettings.grabDragThreshold:" + WorldMorph.preferencesAndSettings.grabDragThreshold
-              @doubleClickMorph = nil
+              @doubleClickWdgt = nil
               disableConsecutiveClicksFromSingleClicksDueToFastTests = false
               if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
                 if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
@@ -554,11 +554,11 @@ class ActivePointerWdgt extends Widget
           if !doubleClickInvocation
             # same three conditions as double click
             if @mouseButton == "left" and
-             @tripleClickMorph == morph and
+             @tripleClickWdgt == morph and
              ((@tripleClickPosition.distanceTo @position()) < WorldMorph.preferencesAndSettings.grabDragThreshold)
               #debugger
-              if @tripleClickMorph == morph
-                @tripleClickMorph = nil
+              if @tripleClickWdgt == morph
+                @tripleClickWdgt = nil
                 disableConsecutiveClicksFromSingleClicksDueToFastTests = false
                 if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
                   if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
@@ -594,22 +594,22 @@ class ActivePointerWdgt extends Widget
       # of the pop-over. So we avoid that here, if there
       # is a non-float drag ongoing then we avoid
       # cleaning-up the pop-overs
-      if !@nonFloatDraggedMorph?
+      if !@nonFloatDraggedWdgt?
         @cleanupMenuMorphs expectedClick, morph
 
     @mouseButton = nil
-    @nonFloatDraggedMorph = nil
+    @nonFloatDraggedWdgt = nil
 
 
   forgetDoubleClickMorphs: ->
-    @doubleClickMorph = nil
+    @doubleClickWdgt = nil
     @doubleClickPosition = nil
 
   rememberDoubleClickMorphsForAWhile: (morph) ->
-    @doubleClickMorph = morph
+    @doubleClickWdgt = morph
     @doubleClickPosition = @position()
     setTimeout (=>
-      #if @doubleClickMorph?
+      #if @doubleClickWdgt?
       #  console.log "single click"
       @forgetDoubleClickMorphs()
       return false
@@ -617,14 +617,14 @@ class ActivePointerWdgt extends Widget
 
   # basically the same as rememberDoubleClickMorphsForAWhile
   forgetTripleClickMorphs: ->
-    @tripleClickMorph = nil
+    @tripleClickWdgt = nil
     @tripleClickPosition = nil
 
   rememberTripleClickMorphsForAWhile: (morph) ->
-    @tripleClickMorph = morph
+    @tripleClickWdgt = morph
     @tripleClickPosition = @position()
     setTimeout (=>
-      #if @tripleClickMorph?
+      #if @tripleClickWdgt?
       #  console.log "not a triple click, just a double click"
       @forgetTripleClickMorphs()
       return false
@@ -697,7 +697,7 @@ class ActivePointerWdgt extends Widget
           if eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]?
             eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren[eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren, eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
 
-  processDoubleClick: (morph = @topMorphUnderPointer()) ->
+  processDoubleClick: (morph = @topWdgtUnderPointer()) ->
     pointerAndMorphInfo = world.getPointerAndMorphInfo morph
     if AutomatorRecorderAndPlayer?
       world.automatorRecorderAndPlayer.addMouseDoubleClickCommand nil, pointerAndMorphInfo...
@@ -710,7 +710,7 @@ class ActivePointerWdgt extends Widget
       morph.mouseDoubleClick @position() if morph
     @mouseButton = nil
 
-  processTripleClick: (morph = @topMorphUnderPointer()) ->
+  processTripleClick: (morph = @topWdgtUnderPointer()) ->
     pointerAndMorphInfo = world.getPointerAndMorphInfo morph
     if AutomatorRecorderAndPlayer?
       world.automatorRecorderAndPlayer.addMouseTripleClickCommand nil, pointerAndMorphInfo...
@@ -725,7 +725,7 @@ class ActivePointerWdgt extends Widget
   
   # see https://developer.mozilla.org/en-US/docs/Web/Events/wheel
   processWheel: (deltaX, deltaY, deltaZ, altKey, button, buttons) ->
-    morph = @topMorphUnderPointer()
+    morph = @topWdgtUnderPointer()
     morph = morph.parent  while morph and not morph.wheel
 
     if morph?
@@ -759,7 +759,7 @@ class ActivePointerWdgt extends Widget
     files = (if event instanceof FileList then event else (event.target.files || event.dataTransfer.files))
     url = (if event.dataTransfer then event.dataTransfer.getData("URL") else nil)
     txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else nil)
-    targetDrop = @topMorphUnderPointer()
+    targetDrop = @topWdgtUnderPointer()
     img = new Image()
 
     readSVG = (aFile) ->
@@ -888,8 +888,8 @@ class ActivePointerWdgt extends Widget
     # 2 is what is used in Cuis
     
     # commented-out implementation of 1):
-    # mouseOverNew = @allMorphsAtPointer().reverse()
-    topMorph = @topMorphUnderPointer()
+    # mouseOverNew = @allWdgtsAtPointer().reverse()
+    topMorph = @topWdgtUnderPointer()
     # allParentsTopToButton makes more logical sense but
     # allParentsBottomToTop is cheaper and it all ends up in a set anyways   
     mouseOverNew = new Set topMorph.allParentsBottomToTop()
@@ -923,7 +923,7 @@ class ActivePointerWdgt extends Widget
         skipGrabDragThreshold = true
 
     if !skipGrabDragThreshold
-      if @morphToGrab.parent != world or (!@morphToGrab.isEditable? or @morphToGrab.isEditable )
+      if @wdgtToGrab.parent != world or (!@wdgtToGrab.isEditable? or @wdgtToGrab.isEditable )
         if (@mouseDownPosition.distanceTo @position()) < WorldMorph.preferencesAndSettings.grabDragThreshold
           return [true,nil]
       displacementDueToGrabDragThreshold = @position().subtract @mouseDownPosition
@@ -936,26 +936,26 @@ class ActivePointerWdgt extends Widget
       topMorph.mouseMove pos  if topMorph.mouseMove
 
       # if a morph is marked for grabbing, grab it
-      if @morphToGrab
+      if @wdgtToGrab
         
         # these first two cases are for float dragging
         # the third case is non-float drag
-        if @morphToGrab.isTemplate
+        if @wdgtToGrab.isTemplate
           [skipDragging, displacementDueToGrabDragThreshold] = @checkDraggingTreshold()
           if skipDragging then return
 
-          morph = @morphToGrab.fullCopy()
+          morph = @wdgtToGrab.fullCopy()
           morph.isTemplate = false
           @grab morph, displacementDueToGrabDragThreshold
-          @grabOrigin = @morphToGrab.situation()
+          @grabOrigin = @wdgtToGrab.situation()
 
-        else if @morphToGrab.detachesWhenDragged()
+        else if @wdgtToGrab.detachesWhenDragged()
           [skipDragging, displacementDueToGrabDragThreshold] = @checkDraggingTreshold()
           if skipDragging then return
 
-          originalMorphToGrab = @morphToGrab
-          @morphToGrab = @morphToGrab.grabbedWidgetSwitcheroo()
-          morph = @morphToGrab
+          originalMorphToGrab = @wdgtToGrab
+          @wdgtToGrab = @wdgtToGrab.grabbedWidgetSwitcheroo()
+          morph = @wdgtToGrab
           @grab morph, displacementDueToGrabDragThreshold, (originalMorphToGrab != morph)
 
         else
@@ -967,11 +967,11 @@ class ActivePointerWdgt extends Widget
           # Users don't seem to click on a slider for any other
           # reason than to move it (as opposed to selecting them
           # or picking a position for a cursor), so it's OK.
-          @nonFloatDraggedMorph = @morphToGrab         
-          @nonFloatDragPositionWithinMorphAtStart =
+          @nonFloatDraggedWdgt = @wdgtToGrab         
+          @nonFloatDragPositionWithinWdgtAtStart =
             # if we ever will need to compensate for the grab/drag
             # treshold here, just add .subtract displacementDueToGrabDragThreshold
-            (pos.subtract @nonFloatDraggedMorph.position())
+            (pos.subtract @nonFloatDraggedWdgt.position())
 
 
         # if the mouse has left its fullBounds, center it
@@ -987,7 +987,7 @@ class ActivePointerWdgt extends Widget
 
 
     if @isThisPointerNonFloatDraggingSomething()
-      #console.log "nonFloatDraggedMorph: " + @nonFloatDraggedMorph
+      #console.log "nonFloatDraggedWdgt: " + @nonFloatDraggedWdgt
 
       # OK so this is an interesting choice. You can avoid
       # this next line and have Fizzygum to behave like OSX where you
@@ -996,7 +996,7 @@ class ActivePointerWdgt extends Widget
       # pop into the foreground. I'm liking the OSX style
       # so I'm leaving this commented-out, but it's there.
       # TODO this could be a setting somewhere in Fizzygum.
-      # @nonFloatDraggedMorph.bringToForeground()
+      # @nonFloatDraggedWdgt.bringToForeground()
 
       if @mouseButton
         if @previousNonFloatDraggingPos?
@@ -1004,7 +1004,7 @@ class ActivePointerWdgt extends Widget
         else
           deltaDragFromPreviousCall = nil
         @previousNonFloatDraggingPos = pos.copy()
-        @nonFloatDraggedMorph.nonFloatDragging?(@nonFloatDragPositionWithinMorphAtStart, pos, deltaDragFromPreviousCall)
+        @nonFloatDraggedWdgt.nonFloatDragging?(@nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall)
     
 
   # this is used by the ScrollMorph: clicking on the slider
@@ -1015,8 +1015,8 @@ class ActivePointerWdgt extends Widget
     # allParentsBottomToTop is cheaper and it all ends up in a set anyways   
     mouseOverNew = new Set morphFarAway.allParentsBottomToTop()
     @previousNonFloatDraggingPos = morphFarAway.center()
-    @nonFloatDragPositionWithinMorphAtStart = (new Point morphFarAway.width()/2, morphFarAway.height()/2).round()
-    @nonFloatDraggedMorph = morphFarAway
+    @nonFloatDragPositionWithinWdgtAtStart = (new Point morphFarAway.width()/2, morphFarAway.height()/2).round()
+    @nonFloatDraggedWdgt = morphFarAway
     # this one calls the morphFarAway's nonFloatDragging method,
     # for example in case of a SliderMorph invoking this on its
     # button, this causes the movement of the button
@@ -1025,7 +1025,7 @@ class ActivePointerWdgt extends Widget
     @determineGrabs pos, morphFarAway, mouseOverNew
 
   reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges: ->
-    topMorph = @topMorphUnderPointer()
+    topMorph = @topWdgtUnderPointer()
     # allParentsTopToButton makes more logical sense but
     # allParentsBottomToTop is cheaper and it all ends up in a set anyways   
     mouseOverNew = new Set topMorph.allParentsBottomToTop()

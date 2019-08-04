@@ -554,7 +554,7 @@ class TreeNode
   # just navigate through the children arrays depth-first
   # (in reverse order though, see below)
   # and stop at the first morph that satisfies the test.
-  topMorphSuchThat: (predicate) ->
+  topWdgtSuchThat: (predicate) ->
     # base case - I am a leaf child, so I just test
     # the predicate on myself and return myself
     # if I satisfy, else I return nil
@@ -571,7 +571,7 @@ class TreeNode
     # over.
     for morphNumber in [@children.length-1..0] by -1
       morph = @children[morphNumber]
-      foundMorph = morph.topMorphSuchThat predicate
+      foundMorph = morph.topWdgtSuchThat predicate
       if foundMorph?
         return foundMorph
     # now that all children are tested, test myself

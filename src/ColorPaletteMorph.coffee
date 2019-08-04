@@ -55,7 +55,7 @@ class ColorPaletteMorph extends Widget
     world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
     return cacheEntry
   
-  nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos, deltaDragFromPreviousCall) ->
+  nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
     @choice = @getPixelColor pos.add (deltaDragFromPreviousCall or new Point 0, 0)
     @connectionsCalculationToken = getRandomInt -20000, 20000
     @updateTarget()
