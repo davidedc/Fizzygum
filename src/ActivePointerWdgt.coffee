@@ -496,14 +496,14 @@ class ActivePointerWdgt extends Widget
 
           switch expectedClick
             when "mouseClickLeft"
-              pointerAndMorphInfo = world.getPointerAndMorphInfo()
+              pointerAndWdgtInfo = world.getPointerAndWdgtInfo()
               if AutomatorRecorderAndPlayer?
-                world.automatorRecorderAndPlayer.addMouseClickCommand 0, nil, pointerAndMorphInfo...
+                world.automatorRecorderAndPlayer.addMouseClickCommand 0, nil, pointerAndWdgtInfo...
               morph.mouseUpLeft? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
             when "mouseClickRight"
-              pointerAndMorphInfo = world.getPointerAndMorphInfo()
+              pointerAndWdgtInfo = world.getPointerAndWdgtInfo()
               if AutomatorRecorderAndPlayer?
-                world.automatorRecorderAndPlayer.addMouseClickCommand 2, nil, pointerAndMorphInfo...
+                world.automatorRecorderAndPlayer.addMouseClickCommand 2, nil, pointerAndWdgtInfo...
               morph.mouseUpRight? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
           # also send doubleclick if the
@@ -698,9 +698,9 @@ class ActivePointerWdgt extends Widget
             eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren[eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren, eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
 
   processDoubleClick: (morph = @topWdgtUnderPointer()) ->
-    pointerAndMorphInfo = world.getPointerAndMorphInfo morph
+    pointerAndWdgtInfo = world.getPointerAndWdgtInfo morph
     if AutomatorRecorderAndPlayer?
-      world.automatorRecorderAndPlayer.addMouseDoubleClickCommand nil, pointerAndMorphInfo...
+      world.automatorRecorderAndPlayer.addMouseDoubleClickCommand nil, pointerAndWdgtInfo...
 
     world.destroyToolTips()
     if @isThisPointerFloatDraggingSomething()
@@ -711,9 +711,9 @@ class ActivePointerWdgt extends Widget
     @mouseButton = nil
 
   processTripleClick: (morph = @topWdgtUnderPointer()) ->
-    pointerAndMorphInfo = world.getPointerAndMorphInfo morph
+    pointerAndWdgtInfo = world.getPointerAndWdgtInfo morph
     if AutomatorRecorderAndPlayer?
-      world.automatorRecorderAndPlayer.addMouseTripleClickCommand nil, pointerAndMorphInfo...
+      world.automatorRecorderAndPlayer.addMouseTripleClickCommand nil, pointerAndWdgtInfo...
 
     world.destroyToolTips()
     if @isThisPointerFloatDraggingSomething()

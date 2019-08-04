@@ -1341,7 +1341,7 @@ class WorldMorph extends PanelWdgt
     @inputDOMElementForVirtualKeyboard.addEventListener "keypress",
       @inputDOMElementForVirtualKeyboardKeypressEventListener, false
 
-  getPointerAndMorphInfo:  (topWdgtUnderPointer = @hand.topWdgtUnderPointer()) ->
+  getPointerAndWdgtInfo:  (topWdgtUnderPointer = @hand.topWdgtUnderPointer()) ->
     # we might eliminate this command afterwards if
     # we find out user is clicking on a menu item
     # or right-clicking on a morph
@@ -1359,8 +1359,8 @@ class WorldMorph extends PanelWdgt
 
   addMouseChangeCommand: (upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-      pointerAndMorphInfo = @getPointerAndMorphInfo()
-      @automatorRecorderAndPlayer.addMouseChangeCommand upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey, pointerAndMorphInfo...
+      pointerAndWdgtInfo = @getPointerAndWdgtInfo()
+      @automatorRecorderAndPlayer.addMouseChangeCommand upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey, pointerAndWdgtInfo...
 
 
   processMouseDown: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
@@ -1400,8 +1400,8 @@ class WorldMorph extends PanelWdgt
 
   processWheel: (deltaX, deltaY, deltaZ, altKey, button, buttons) ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-      pointerAndMorphInfo = @getPointerAndMorphInfo()
-      @automatorRecorderAndPlayer.addWheelCommand deltaX, deltaY, deltaZ, altKey, button, buttons, pointerAndMorphInfo...
+      pointerAndWdgtInfo = @getPointerAndWdgtInfo()
+      @automatorRecorderAndPlayer.addWheelCommand deltaX, deltaY, deltaZ, altKey, button, buttons, pointerAndWdgtInfo...
 
     @hand.processWheel deltaX, deltaY, deltaZ, altKey, button, buttons
 

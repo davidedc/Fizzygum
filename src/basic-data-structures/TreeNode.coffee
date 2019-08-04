@@ -67,24 +67,24 @@ class TreeNode
     arrayShallowCopyAndReverse @children
   
   # TreeNode accessing:
-  addChild: (aMorphicNode, position = nil) ->
+  addChild: (node, position = nil) ->
     WorldMorph.numberOfAddsAndRemoves++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
     if !position?
-      @children.push aMorphicNode
+      @children.push node
     else
-      @children.splice position, 0, aMorphicNode
-    aMorphicNode.parent = @
+      @children.splice position, 0, node
+    node.parent = @
   
   # currently used to add the shadow. The shadow
   # is in the background in respect to everything
   # else, BUT it's drawn as the first child
   # (i.e. AFTER the morph itself, but the shadow has a hole
   # or semi-transparency for it!)
-  addChildFirst: (aMorphicNode) ->
+  addChildFirst: (node) ->
     
-    @addChild aMorphicNode, 0
+    @addChild node, 0
 
   # used from bringToForeground method
   # for example when you
@@ -107,14 +107,14 @@ class TreeNode
     # here because it seems like a lower-level
     # function calling a higher-level one.
   
-  removeChild: (aMorphicNode) ->
+  removeChild: (node) ->
     # remove the array element from the
     # array
     WorldMorph.numberOfAddsAndRemoves++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
-    @children.remove aMorphicNode
-    aMorphicNode.parent = nil
+    @children.remove node
+    node.parent = nil
 
   markReferenceAsVisited: (newGcSessionId) ->
     @gcReferenceExaminedSessionIdMark = newGcSessionId
