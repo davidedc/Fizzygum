@@ -130,7 +130,7 @@ class WorldMorph extends PanelWdgt
   @KEYPAD_0_mappedToThaiKeyboard_Q: "ย"
   @KEYPAD_DOT_mappedToThaiKeyboard_R: "พ"
 
-  morphsDetectingClickOutsideMeOrAnyOfMeChildren: new Set
+  wdgtsDetectingClickOutsideMeOrAnyOfMeChildren: new Set
   hierarchyOfClickedWdgts: new Set
   hierarchyOfClickedMenus: new Set
   popUpsMarkedForClosure: new Set
@@ -159,7 +159,7 @@ class WorldMorph extends PanelWdgt
   currentPinoutingMorphs: new Set
   morphsBeingPinouted: new Set
 
-  steppingMorphs: new Set
+  steppingWdgts: new Set
 
   basementWdgt: nil
 
@@ -1145,7 +1145,7 @@ class WorldMorph extends PanelWdgt
 
 
     # TODO all these set modifications should be immutable...
-    @steppingMorphs.forEach (eachSteppingMorph) =>
+    @steppingWdgts.forEach (eachSteppingMorph) =>
 
       #if eachSteppingMorph.isBeingFloatDragged()
       #  continue
@@ -1869,7 +1869,7 @@ class WorldMorph extends PanelWdgt
     @hand.drop()
     @hand.mouseOverList.clear()
     @hand.nonFloatDraggedWdgt = nil
-    @morphsDetectingClickOutsideMeOrAnyOfMeChildren.clear()
+    @wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.clear()
     @lastNonTextPropertyChangerButtonClickedOrDropped = nil
 
   resetWorld: ->
@@ -2085,27 +2085,27 @@ class WorldMorph extends PanelWdgt
   createNewSliderMorph: ->
     @create new SliderMorph()
   createNewPanelWdgt: ->
-    newMorph = new PanelWdgt()
-    newMorph.rawSetExtent new Point 350, 250
-    @create newMorph
+    newWdgt = new PanelWdgt()
+    newWdgt.rawSetExtent new Point 350, 250
+    @create newWdgt
   createNewScrollPanelWdgt: ->
-    newMorph = new ScrollPanelWdgt()
-    newMorph.adjustContentsBounds()
-    newMorph.adjustScrollBars()
-    newMorph.rawSetExtent new Point 350, 250
-    @create newMorph
+    newWdgt = new ScrollPanelWdgt()
+    newWdgt.adjustContentsBounds()
+    newWdgt.adjustScrollBars()
+    newWdgt.rawSetExtent new Point 350, 250
+    @create newWdgt
   createNewCanvas: ->
-    newMorph = new CanvasMorph()
-    newMorph.rawSetExtent new Point 350, 250
-    @create newMorph
+    newWdgt = new CanvasMorph()
+    newWdgt.rawSetExtent new Point 350, 250
+    @create newWdgt
   createNewHandle: ->
     @create new HandleMorph()
   createNewString: ->
-    newMorph = new StringMorph "Hello, World!"
-    newMorph.isEditable = true
-    @create newMorph
+    newWdgt = new StringMorph "Hello, World!"
+    newWdgt.isEditable = true
+    @create newWdgt
   createNewText: ->
-    newMorph = new TextMorph("Ich weiß nicht, was soll es bedeuten, dass ich so " +
+    newWdgt = new TextMorph("Ich weiß nicht, was soll es bedeuten, dass ich so " +
       "traurig bin, ein Märchen aus uralten Zeiten, das " +
       "kommt mir nicht aus dem Sinn. Die Luft ist kühl " +
       "und es dunkelt, und ruhig fließt der Rhein; der " +
@@ -2120,15 +2120,15 @@ class WorldMorph extends PanelWdgt
       "die Höh'. Ich glaube, die Wellen verschlingen " +
       "am Ende Schiffer und Kahn, und das hat mit ihrem " +
       "Singen, die Loreley getan.")
-    newMorph.isEditable = true
-    newMorph.maxTextWidth = 300
-    @create newMorph
+    newWdgt.isEditable = true
+    newWdgt.maxTextWidth = 300
+    @create newWdgt
   createNewSpeechBubbleWdgt: ->
-    newMorph = new SpeechBubbleWdgt()
-    @create newMorph
+    newWdgt = new SpeechBubbleWdgt()
+    @create newWdgt
   createNewToolTipWdgt: ->
-    newMorph = new ToolTipWdgt()
-    @create newMorph
+    newWdgt = new ToolTipWdgt()
+    @create newWdgt
   createNewGrayPaletteMorph: ->
     @create new GrayPaletteMorph()
   createNewColorPaletteMorph: ->
@@ -2150,12 +2150,12 @@ class WorldMorph extends PanelWdgt
   createNewColorPickerMorph: ->
     @create new ColorPickerMorph()
   createNewSensorDemo: ->
-    newMorph = new MouseSensorMorph()
-    newMorph.setColor new Color 230, 200, 100
-    newMorph.cornerRadius = 35
-    newMorph.alpha = 0.2
-    newMorph.rawSetExtent new Point 100, 100
-    @create newMorph
+    newWdgt = new MouseSensorMorph()
+    newWdgt.setColor new Color 230, 200, 100
+    newWdgt.cornerRadius = 35
+    newWdgt.alpha = 0.2
+    newWdgt.rawSetExtent new Point 100, 100
+    @create newWdgt
   createNewAnimationDemo: ->
     foo = new BouncerMorph()
     foo.fullRawMoveTo new Point 50, 20
@@ -2199,8 +2199,8 @@ class WorldMorph extends PanelWdgt
   createNewPenMorph: ->
     @create new PenMorph()
   underTheCarpet: ->
-    newMorph = new BasementWdgt()
-    @create newMorph
+    newWdgt = new BasementWdgt()
+    @create newWdgt
 
 
   popUpDemoMenu: (morphOpeningThePopUp,b,c,d) ->
@@ -2338,7 +2338,7 @@ class WorldMorph extends PanelWdgt
     # go through all the references and check whether they reference
     # the wanted widget. Note that the reference could be unreachable
     # in the basement, or even in the trash
-    for eachReferencingMorph from @widgetsReferencingOtherWidgets
-      if eachReferencingMorph.target == whichWdgt
+    for eachReferencingWdgt from @widgetsReferencingOtherWidgets
+      if eachReferencingWdgt.target == whichWdgt
         return true
     return false

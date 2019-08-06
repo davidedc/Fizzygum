@@ -65,9 +65,9 @@ class BasementWdgt extends BoxMorph
     # definition (remember, the BasementWdgt is on screen, so they
     # are not even in the basement!) and
     # so they don't make their target reacheable.
-    for eachReferencingMorph from world.widgetsReferencingOtherWidgets
-      if eachReferencingMorph.isOrphan()
-        eachReferencingMorph.markReferenceAsVisited newGcSessionId
+    for eachReferencingWdgt from world.widgetsReferencingOtherWidgets
+      if eachReferencingWdgt.isOrphan()
+        eachReferencingWdgt.markReferenceAsVisited newGcSessionId
 
     # then, take all remaining references, filter OUT the ones in the
     # basement (so: get the non-orphan non-basement references, which means
@@ -76,11 +76,11 @@ class BasementWdgt extends BoxMorph
     #  - mark what they reach (and their parents) as reachable
     #     (note that what they reach MIGHT be in the basement)
     #  - mark them as visited so we don't visit again
-    for eachReferencingMorph from world.widgetsReferencingOtherWidgets
-      if !eachReferencingMorph.wasReferenceVisited newGcSessionId
-        if !eachReferencingMorph.isInBasement()
-          eachReferencingMorph.target.markItAndItsParentsAsReachable newGcSessionId
-          eachReferencingMorph.markReferenceAsVisited newGcSessionId
+    for eachReferencingWdgt from world.widgetsReferencingOtherWidgets
+      if !eachReferencingWdgt.wasReferenceVisited newGcSessionId
+        if !eachReferencingWdgt.isInBasement()
+          eachReferencingWdgt.target.markItAndItsParentsAsReachable newGcSessionId
+          eachReferencingWdgt.markReferenceAsVisited newGcSessionId
 
     # then, take all remaining references (which by exclusion at this point
     # must be the references the basement) and,
@@ -98,12 +98,12 @@ class BasementWdgt extends BoxMorph
     newReachableReferencesUncovered = true
     while newReachableReferencesUncovered
       newReachableReferencesUncovered = false
-      for eachReferencingMorph from world.widgetsReferencingOtherWidgets
-        if !eachReferencingMorph.wasReferenceVisited newGcSessionId
-          if eachReferencingMorph.isInBasementButReachable newGcSessionId
+      for eachReferencingWdgt from world.widgetsReferencingOtherWidgets
+        if !eachReferencingWdgt.wasReferenceVisited newGcSessionId
+          if eachReferencingWdgt.isInBasementButReachable newGcSessionId
             newReachableReferencesUncovered = true
-            eachReferencingMorph.target.markItAndItsParentsAsReachable newGcSessionId
-            eachReferencingMorph.markReferenceAsVisited newGcSessionId
+            eachReferencingWdgt.target.markItAndItsParentsAsReachable newGcSessionId
+            eachReferencingWdgt.markReferenceAsVisited newGcSessionId
 
     return newGcSessionId
 

@@ -6,7 +6,7 @@ class ExampleFunctionPlotWdgt extends GraphsPlotsChartsWdgt
   constructor: (@drawOnlyPartOfBoundingRect)->
     super()
     @fps = 2
-    world.steppingMorphs.add @
+    world.steppingWdgts.add @
 
   colloquialName: ->
     "Function plot"

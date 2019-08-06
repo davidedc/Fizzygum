@@ -9,10 +9,10 @@ class CodeInjectingSimpleRectangularButtonMorph extends SimpleRectangularButtonM
   #    we just hold the Function then we lose the CS source
 
   sourceCodeToBeInjected: ""
-  morphWhereToInject: nil
-  morphToBeNotifiedForNewCode: nil
+  wdgtWhereToInject: nil
+  wdgtToBeNotifiedForNewCode: nil
 
-  constructor: (@morphToBeNotifiedForNewCode, @morphWhereToInject, face) ->
+  constructor: (@wdgtToBeNotifiedForNewCode, @wdgtWhereToInject, face) ->
     super true, @, 'injectCodeIntoTarget', face
     @strokeColor = new Color 0, 0, 0
     @setColor new Color 150, 150, 150
@@ -23,8 +23,8 @@ class CodeInjectingSimpleRectangularButtonMorph extends SimpleRectangularButtonM
 
   # this happens when pressed, the source code is injected
   injectCodeIntoTarget: ->
-    @morphWhereToInject.injectProperties @sourceCodeToBeInjected
+    @wdgtWhereToInject.injectProperties @sourceCodeToBeInjected
 
   modifyCodeToBeInjected: (unused,textMorph) ->
     @sourceCodeToBeInjected = textMorph.text
-    @morphToBeNotifiedForNewCode.newCodeToInjectFromButton? @
+    @wdgtToBeNotifiedForNewCode.newCodeToInjectFromButton? @

@@ -258,7 +258,7 @@ class InspectorMorph2 extends Widget
     # we set that here. Note that the ListMorph itself does require animation because of the
     # scrollbars, but the MenuMorph (which contains the actual list contents)
     # in this context doesn't.
-    world.steppingMorphs.delete @list.listContents
+    world.steppingWdgts.delete @list.listContents
     @add @list
 
     # we add a Widget alignment here because adjusting IDs whenever

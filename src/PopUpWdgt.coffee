@@ -34,12 +34,12 @@ class PopUpWdgt extends Widget
     world.openPopUps.add @
 
   hierarchyOfPopUps: ->
-    ascendingMorphs = @
-    hierarchy = new Set [ascendingMorphs]
-    while ascendingMorphs?.getParentPopUp?
-      ascendingMorphs = ascendingMorphs.getParentPopUp()
-      if ascendingMorphs?
-        hierarchy.add ascendingMorphs
+    ascendingWdgts = @
+    hierarchy = new Set [ascendingWdgts]
+    while ascendingWdgts?.getParentPopUp?
+      ascendingWdgts = ascendingWdgts.getParentPopUp()
+      if ascendingWdgts?
+        hierarchy.add ascendingWdgts
     return hierarchy
 
   # for pop ups, the propagation happens through the getParentPopUp method

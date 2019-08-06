@@ -498,7 +498,7 @@ class Widget extends TreeNode
       @parent.close()
       return
 
-    world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
+    world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
     @parent?.childBeingClosed? @
     if world.basementWdgt?
       world.basementWdgt.scrollPanel.contents.addInPseudoRandomPosition @
@@ -518,14 +518,14 @@ class Widget extends TreeNode
 
     @parent?.childBeingDestroyed? @
     @unregisterThisInstance()
-    world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
+    world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
 
     @destroyed = true
     @parent?.invalidateLayout()
     @breakNumberOfRawMovesAndResizesCaches()
     WorldMorph.numberOfAddsAndRemoves++
 
-    world.steppingMorphs.delete @
+    world.steppingWdgts.delete @
 
     # if there is anything being edited inside
     # what we are destroying, then also
@@ -2373,8 +2373,8 @@ class Widget extends TreeNode
   # in case we copy a morph, if the original was in some
   # stepping structures, then we have to add the copy too.
   alignCopiedMorphToSteppingStructures: (copiedMorph) ->
-    if world.steppingMorphs.has @
-      world.steppingMorphs.add copiedMorph
+    if world.steppingWdgts.has @
+      world.steppingWdgts.add copiedMorph
 
   # note that the entire copying mechanism
   # should also take care of inserting the copied
@@ -2723,10 +2723,10 @@ class Widget extends TreeNode
   onClickOutsideMeOrAnyOfMyChildren: (functionName, arg1, arg2, arg3)->
     if functionName?
       @clickOutsideMeOrAnyOfMeChildrenCallback = [functionName, arg1, arg2, arg3]
-      world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.add @
+      world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.add @
     else
       #console.log "****** onClickOutsideMeOrAnyOfMyChildren removing element"
-      world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
+      world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
 
   justDropped: (whereIn) ->
     @rememberFractionalSituationInHoldingPanel()
@@ -2780,7 +2780,7 @@ class Widget extends TreeNode
     oldStep = @step
     oldFps = @fps
     @fps = 0
-    world.steppingMorphs.add @
+    world.steppingWdgts.add @
     @step = =>
       @silentFullRawMoveBy new Point xStep, yStep
       @fullChanged()
@@ -2791,7 +2791,7 @@ class Widget extends TreeNode
         @step = oldStep
         @fps = oldFps
         if @step == noOperation or !@step?
-          world.steppingMorphs.delete @
+          world.steppingWdgts.delete @
   
   
   # Widget utilities ////////////////////////////////////////////////////////
@@ -3024,18 +3024,18 @@ class Widget extends TreeNode
       true
 
   createNewStringMorph2WithBackground: ->
-    #newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(255, 255, 54), 0.5
-    newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(230, 230, 130), 1
-    newMorph.isEditable = true
-    world.create newMorph
+    #newWdgt = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(255, 255, 54), 0.5
+    newWdgt = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(230, 230, 130), 1
+    newWdgt.isEditable = true
+    world.create newWdgt
 
   createNewStringMorph2WithoutBackground: ->
-    newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa"
-    newMorph.isEditable = true
-    world.create newMorph
+    newWdgt = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa"
+    newWdgt.isEditable = true
+    world.create newWdgt
 
   createNewTextMorph2WithBackground: ->
-    newMorph = new TextMorph2(
+    newWdgt = new TextMorph2(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "lectus posuere a. Phasellus finibus blandit ex vitae " +
@@ -3057,12 +3057,12 @@ class Widget extends TreeNode
       "porta sollicitudin bibendum. Pellentesque imperdiet " +
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
       "nisi.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
-    newMorph.isEditable = true
-    #newMorph.maxTextWidth = 300
-    world.create newMorph
+    newWdgt.isEditable = true
+    #newWdgt.maxTextWidth = 300
+    world.create newWdgt
 
   createNewWrappingSimplePlainTextWdgtWithBackground: ->
-    newMorph = new SimplePlainTextWdgt(
+    newWdgt = new SimplePlainTextWdgt(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "lectus posuere a. Phasellus finibus blandit ex vitae " +
@@ -3084,15 +3084,15 @@ class Widget extends TreeNode
       "porta sollicitudin bibendum. Pellentesque imperdiet " +
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
       "nisi.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
-    newMorph.isEditable = true
-    #newMorph.maxTextWidth = 300
+    newWdgt.isEditable = true
+    #newWdgt.maxTextWidth = 300
 
-    world.add newMorph
-    newMorph.fullRawMoveTo new Point 25, 40
-    newMorph.rawSetExtent new Point 500, 300
+    world.add newWdgt
+    newWdgt.fullRawMoveTo new Point 25, 40
+    newWdgt.rawSetExtent new Point 500, 300
 
   createNewNonWrappingSimplePlainTextWdgtWithBackground: ->
-    newMorph = new SimplePlainTextWdgt(
+    newWdgt = new SimplePlainTextWdgt(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "lectus posuere a. Phasellus finibus blandit ex vitae " +
@@ -3103,13 +3103,13 @@ class Widget extends TreeNode
       "ex dui a velit. Nullam lectus leo, lobortis eget " +
       "erat ac, lobortis dignissim " +
       "magna.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
-    newMorph.isEditable = true
-    newMorph.maxTextWidth = nil
-    #newMorph.maxTextWidth = 300
+    newWdgt.isEditable = true
+    newWdgt.maxTextWidth = nil
+    #newWdgt.maxTextWidth = 300
 
-    world.add newMorph
-    newMorph.fullRawMoveTo new Point 540, 40
-    newMorph.rawSetExtent new Point 500, 300
+    world.add newWdgt
+    newWdgt.fullRawMoveTo new Point 540, 40
+    newWdgt.rawSetExtent new Point 500, 300
 
   createNewWrappingAndNonWrappingSimplePlainTextWdgtWithBackground: ->
     @createNewWrappingSimplePlainTextWdgtWithBackground()
@@ -3212,13 +3212,13 @@ class Widget extends TreeNode
 
 
   createNewStringMorph3WithBackground: ->
-    #newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(255, 255, 54), 0.5
-    newMorph = new StringMorph3 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(230, 230, 130), 1
-    newMorph.isEditable = true
-    world.create newMorph
+    #newWdgt = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(255, 255, 54), 0.5
+    newWdgt = new StringMorph3 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(230, 230, 130), 1
+    newWdgt.isEditable = true
+    world.create newWdgt
 
   createNewTextMorph3WithBackground: ->
-    newMorph = new TextMorph3(
+    newWdgt = new TextMorph3(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "lectus posuere a. Phasellus finibus blandit ex vitae " +
@@ -3240,9 +3240,9 @@ class Widget extends TreeNode
       "porta sollicitudin bibendum. Pellentesque imperdiet " +
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
       "nisi.",nil,nil,nil,nil,nil,new Color(255, 255, 54), 0.5)
-    newMorph.isEditable = true
-    #newMorph.maxTextWidth = 300
-    world.create newMorph
+    newWdgt.isEditable = true
+    #newWdgt.maxTextWidth = 300
+    world.create newWdgt
 
   createSimpleVerticalStackPanelWdgt: ->
     svspw = new SimpleVerticalStackPanelWdgt()

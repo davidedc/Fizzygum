@@ -653,12 +653,12 @@ class ActivePointerWdgt extends Widget
     # collect all morphs up the hierarchy of
     # the one the user clicked on.
     # (including the one the user clicked on)
-    ascendingMorphs = morph
+    ascendingWdgts = morph
     world.hierarchyOfClickedWdgts.clear()
-    world.hierarchyOfClickedWdgts.add ascendingMorphs
-    while ascendingMorphs.parent?
-      ascendingMorphs = ascendingMorphs.parent
-      world.hierarchyOfClickedWdgts.add ascendingMorphs
+    world.hierarchyOfClickedWdgts.add ascendingWdgts
+    while ascendingWdgts.parent?
+      ascendingWdgts = ascendingWdgts.parent
+      world.hierarchyOfClickedWdgts.add ascendingWdgts
 
     # remove menus that have requested
     # to be removed when a click happens outside
@@ -680,7 +680,7 @@ class ActivePointerWdgt extends Widget
     # i.e. check from the notification list which ones are not
     # in the hierarchy of the clicked morphs
     # and call their callback.
-    #console.log "morphs wanting to be notified: " + world.morphsDetectingClickOutsideMeOrAnyOfMeChildren
+    #console.log "morphs wanting to be notified: " + world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren
     #console.log "hierarchy of clicked morphs: " + world.hierarchyOfClickedWdgts
     #console.log "hierarchy of clicked menus: " + world.hierarchyOfClickedMenus
     
@@ -688,14 +688,14 @@ class ActivePointerWdgt extends Widget
     # because we might remove elements of the set while we
     # iterate on it (as we destroy menus that want to be destroyed
     # when the user clicks outside of them or their children)
-    world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.forEach (eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren) =>
-      if (!world.hierarchyOfClickedMenus.has eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren) and
-         (!world.hierarchyOfClickedWdgts.has eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren)
+    world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.forEach (eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren) =>
+      if (!world.hierarchyOfClickedMenus.has eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren) and
+         (!world.hierarchyOfClickedWdgts.has eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren)
         # skip the freshly created menus as otherwise we might
         # destroy them immediately
-        if alsoKillFreshMenus or !world.freshlyCreatedPopUps.has eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren
-          if eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]?
-            eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren[eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren, eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
+        if alsoKillFreshMenus or !world.freshlyCreatedPopUps.has eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren
+          if eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]?
+            eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren[eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren, eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
 
   processDoubleClick: (morph = @topWdgtUnderPointer()) ->
     pointerAndWdgtInfo = world.getPointerAndWdgtInfo morph
@@ -889,12 +889,12 @@ class ActivePointerWdgt extends Widget
     
     # commented-out implementation of 1):
     # mouseOverNew = @allWdgtsAtPointer().reverse()
-    topMorph = @topWdgtUnderPointer()
+    topWdgt = @topWdgtUnderPointer()
     # allParentsTopToButton makes more logical sense but
     # allParentsBottomToTop is cheaper and it all ends up in a set anyways   
-    mouseOverNew = new Set topMorph.allParentsBottomToTop()
+    mouseOverNew = new Set topWdgt.allParentsBottomToTop()
 
-    @determineGrabs pos, topMorph, mouseOverNew
+    @determineGrabs pos, topWdgt, mouseOverNew
 
     @dispatchEventsFollowingMouseMove mouseOverNew
 
@@ -930,10 +930,10 @@ class ActivePointerWdgt extends Widget
 
     return [false, displacementDueToGrabDragThreshold]
 
-  determineGrabs: (pos, topMorph, mouseOverNew) ->
+  determineGrabs: (pos, topWdgt, mouseOverNew) ->
     if !@isThisPointerDraggingSomething() and (@mouseButton is "left")
-      morph = topMorph.findRootForGrab()
-      topMorph.mouseMove pos  if topMorph.mouseMove
+      morph = topWdgt.findRootForGrab()
+      topWdgt.mouseMove pos  if topWdgt.mouseMove
 
       # if a morph is marked for grabbing, grab it
       if @wdgtToGrab
@@ -953,10 +953,10 @@ class ActivePointerWdgt extends Widget
           [skipDragging, displacementDueToGrabDragThreshold] = @checkDraggingTreshold()
           if skipDragging then return
 
-          originalMorphToGrab = @wdgtToGrab
+          originalWdgtToGrab = @wdgtToGrab
           @wdgtToGrab = @wdgtToGrab.grabbedWidgetSwitcheroo()
           morph = @wdgtToGrab
-          @grab morph, displacementDueToGrabDragThreshold, (originalMorphToGrab != morph)
+          @grab morph, displacementDueToGrabDragThreshold, (originalWdgtToGrab != morph)
 
         else
           # non-float drags are for things such as sliders
@@ -1010,25 +1010,25 @@ class ActivePointerWdgt extends Widget
   # this is used by the ScrollMorph: clicking on the slider
   # (but OUTSIDE of the button), the (center of the) button
   # is immediately non-float dragged to where clicked.
-  nonFloatDragMorphFarAwayToHere: (morphFarAway, pos) ->
+  nonFloatDragWdgtFarAwayToHere: (wdgtFarAway, pos) ->
     # allParentsTopToButton makes more logical sense but
     # allParentsBottomToTop is cheaper and it all ends up in a set anyways   
-    mouseOverNew = new Set morphFarAway.allParentsBottomToTop()
-    @previousNonFloatDraggingPos = morphFarAway.center()
-    @nonFloatDragPositionWithinWdgtAtStart = (new Point morphFarAway.width()/2, morphFarAway.height()/2).round()
-    @nonFloatDraggedWdgt = morphFarAway
-    # this one calls the morphFarAway's nonFloatDragging method,
+    mouseOverNew = new Set wdgtFarAway.allParentsBottomToTop()
+    @previousNonFloatDraggingPos = wdgtFarAway.center()
+    @nonFloatDragPositionWithinWdgtAtStart = (new Point wdgtFarAway.width()/2, wdgtFarAway.height()/2).round()
+    @nonFloatDraggedWdgt = wdgtFarAway
+    # this one calls the wdgtFarAway's nonFloatDragging method,
     # for example in case of a SliderMorph invoking this on its
     # button, this causes the movement of the button
     # and adjusting of the Slider values and potentially
     # adjusting scrollpanel etc.
-    @determineGrabs pos, morphFarAway, mouseOverNew
+    @determineGrabs pos, wdgtFarAway, mouseOverNew
 
   reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges: ->
-    topMorph = @topWdgtUnderPointer()
+    topWdgt = @topWdgtUnderPointer()
     # allParentsTopToButton makes more logical sense but
     # allParentsBottomToTop is cheaper and it all ends up in a set anyways   
-    mouseOverNew = new Set topMorph.allParentsBottomToTop()
+    mouseOverNew = new Set topWdgt.allParentsBottomToTop()
     @dispatchEventsFollowingMouseMove mouseOverNew
 
   dispatchEventsFollowingMouseMove: (mouseOverNew) ->
@@ -1038,17 +1038,17 @@ class ActivePointerWdgt extends Widget
         old.mouseLeave?()
         old.mouseLeavefloatDragging?()  if @mouseButton
 
-    mouseOverNew.forEach (newMorph) =>
+    mouseOverNew.forEach (newWdgt) =>
       
       # send mouseMove only if mouse actually moved,
       # otherwise it will fire also when the user
       # simply clicks
       if !@mouseDownPosition? or !@mouseDownPosition.eq @position()
-        newMorph.mouseMove?(@position(), @mouseButton)
+        newWdgt.mouseMove?(@position(), @mouseButton)
       
-      unless @mouseOverList.has newMorph
-        newMorph.mouseEnter?()
-        newMorph.mouseEnterfloatDragging?()  if @mouseButton
+      unless @mouseOverList.has newWdgt
+        newWdgt.mouseEnter?()
+        newWdgt.mouseEnterfloatDragging?()  if @mouseButton
 
       # autoScrolling support:
       if @isThisPointerFloatDraggingSomething()
@@ -1056,11 +1056,11 @@ class ActivePointerWdgt extends Widget
         # if we are dragging stuff that can't be dropped
         # (e.g. external windows) then nothing happens
         if !widgetBeingFloatDragged.rejectsBeingDropped? or !widgetBeingFloatDragged.rejectsBeingDropped()
-          if newMorph instanceof ScrollPanelWdgt
-            if newMorph.wantsDropOf widgetBeingFloatDragged
-              if !newMorph.boundingBox().insetBy(
+          if newWdgt instanceof ScrollPanelWdgt
+            if newWdgt.wantsDropOf widgetBeingFloatDragged
+              if !newWdgt.boundingBox().insetBy(
                 WorldMorph.preferencesAndSettings.scrollBarsThickness * 3
                 ).containsPoint @position()
-                  newMorph.startAutoScrolling()
+                  newWdgt.startAutoScrolling()
 
     @mouseOverList = mouseOverNew
