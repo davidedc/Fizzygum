@@ -1,3 +1,13 @@
+# Three ways to invoke:
+#   ./build_it_please --homepage
+#     leaves out all tests and removes experimental parts of the code
+#   ./build_it_please --notests
+#     removes tests, leaves in experimental parts of the code
+#   ./build_it_please
+#     leaves in tests and experimental parts of the code
+
+
+
 if [ ! -d ../../Fizzygum-all ]; then
   echo
   echo ----------- error -------------
@@ -121,50 +131,54 @@ cp auxiliary\ files/additional-icons/*.png ../Fizzygum-builds/latest/icons/
 cp auxiliary\ files/additional-icons/spinner.svg ../Fizzygum-builds/latest/icons/
 echo "... done copying icon files"
 
-# the tests files are copied from a directory
-# where they are organised in a clean structure
-# so we copy them with their structure first...
-mkdir ../Fizzygum-builds/latest/js/tests/assets
-echo "copying all tests (this could take a minute)..."
-cp -r ../Fizzygum-tests/tests/* ../Fizzygum-builds/latest/js/tests/assets &
 
-# ------  spinning wheel  -------
-pid=$! # Process Id of the previous running command
-spin='-\|/'
-i=0
-TOTAL_NUMBER_OF_FILES=$(ls -afq ../Fizzygum-tests/tests/ | wc -l)
+if [ "$1" != "--notests" ] && [ "$1" != "--homepage" ]; then
+  # the tests files are copied from a directory
+  # where they are organised in a clean structure
+  # so we copy them with their structure first...
+  mkdir ../Fizzygum-builds/latest/js/tests/assets
+  echo "copying all tests (this could take a minute)..."
+  cp -r ../Fizzygum-tests/tests/* ../Fizzygum-builds/latest/js/tests/assets &
 
-while kill -0 $pid 2>/dev/null
-do
-  i=$(( (i+1) %4 ))
-  CURRENT_NUMBER_OF_FILES=$(ls -afq ../Fizzygum-builds/latest/js/tests/assets | wc -l)
-  printf "\r${spin:$i:1} %s / %s" $CURRENT_NUMBER_OF_FILES $TOTAL_NUMBER_OF_FILES
-  sleep 1
-done
-# ------  END OF spinning wheel  -------
+  # ------  spinning wheel  -------
+  pid=$! # Process Id of the previous running command
+  spin='-\|/'
+  i=0
+  TOTAL_NUMBER_OF_FILES=$(ls -afq ../Fizzygum-tests/tests/ | wc -l)
+
+  while kill -0 $pid 2>/dev/null
+  do
+    i=$(( (i+1) %4 ))
+    CURRENT_NUMBER_OF_FILES=$(ls -afq ../Fizzygum-builds/latest/js/tests/assets | wc -l)
+    printf "\r${spin:$i:1} %s / %s" $CURRENT_NUMBER_OF_FILES $TOTAL_NUMBER_OF_FILES
+    sleep 1
+  done
+  # ------  END OF spinning wheel  -------
 
 
-echo "... done copying all tests"
+  echo "... done copying all tests"
 
-# ...however, the system actually needs the "body"
-# of the test (the one file with the commands)
-# all into one directory.
-# So we go through what we just copied and pick the
-# test body files and move them all into one
-# directory
-echo "moving all tests body into the same directory..."
-# we don't seem to need the escaping in Windows Subsystem for Linux, while in OSX we needed \{\}
-find ../Fizzygum-builds/latest/js/tests -iname '*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js' -exec mv {} ../Fizzygum-builds/latest/js/tests \;
-echo "...done"
+  # ...however, the system actually needs the "body"
+  # of the test (the one file with the commands)
+  # all into one directory.
+  # So we go through what we just copied and pick the
+  # test body files and move them all into one
+  # directory
+  echo "moving all tests body into the same directory..."
+  # we don't seem to need the escaping in Windows Subsystem for Linux, while in OSX we needed \{\}
+  find ../Fizzygum-builds/latest/js/tests -iname '*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js' -exec mv {} ../Fizzygum-builds/latest/js/tests \;
+  echo "...done"
 
-# also all the assets are lumped-in into another directory
-# this is because the path would otherwise be too long to be
-# accessed by browsers (both Edge and Chrome in Nov 2018) in
-# Windows.
-echo "moving all tests assets into the same directory..."
-# we don't seem to need the escaping in Windows Subsystem for Linux, while in OSX we needed \{\}
-find ../Fizzygum-builds/latest/js/tests/assets -iname 'SystemTest_*.js' -exec mv {} ../Fizzygum-builds/latest/js/tests/assets \;
-echo "...done"
+  # also all the assets are lumped-in into another directory
+  # this is because the path would otherwise be too long to be
+  # accessed by browsers (both Edge and Chrome in Nov 2018) in
+  # Windows.
+  echo "moving all tests assets into the same directory..."
+  # we don't seem to need the escaping in Windows Subsystem for Linux, while in OSX we needed \{\}
+  find ../Fizzygum-builds/latest/js/tests/assets -iname 'SystemTest_*.js' -exec mv {} ../Fizzygum-builds/latest/js/tests/assets \;
+  echo "...done"
+fi
+
 
 echo "cleanup unneeded files"
 rm -rdf ../Fizzygum-builds/latest/delete_me

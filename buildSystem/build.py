@@ -65,6 +65,7 @@ NOT_IN_FIZZYGUM_HOMEPAGE = re.compile(r"# this file is excluded from the fizzygu
 # see https://stackoverflow.com/a/8259080
 parser = argparse.ArgumentParser()
 parser.add_argument('--homepage', action='store_true')
+parser.add_argument('--notests', action='store_true')
 args = parser.parse_args()
 
 
@@ -83,7 +84,7 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
     # src/tests/
     # filenames = sorted(glob(testsDirectory + "*.js"))
 
-    if not args.homepage:
+    if not (args.homepage or args.notests):
 
         # creating the manifest for the tests ------------------------------------
         # which only includes the test steps and not the
@@ -115,7 +116,7 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
 
     manifest = "testsAssetsManifest = [];\n\n"
 
-    if not args.homepage:
+    if not (args.homepage or args.notests):
         # creating the manifest for the tests ASSETS ------------------------------------
         # which only includes the test steps and not the
         # assets, so it's one js file for each test
@@ -168,7 +169,7 @@ def main():
     # create a list with the coffeescript files
     filenames = sorted(glob("src/*.coffee"))
 
-    if not args.homepage:
+    if not (args.homepage or args.notests):
         if os.path.exists("../Fizzygum-tests"):
             if os.path.exists(DIRECTORY_WITH_AUTOMATOR_AND_TEST_HARNESS_CODE):
                 filenames = sorted(filenames + sorted(glob(DIRECTORY_WITH_AUTOMATOR_AND_TEST_HARNESS_CODE + "/*.coffee")))
