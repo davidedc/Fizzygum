@@ -21,9 +21,9 @@ class WorldMorph extends PanelWdgt
   # going to put them all in properties
   # here.
   # dblclickEventListener: nil
-  mousedownEventListener: nil
-  mouseupEventListener: nil
-  mousemoveEventListener: nil
+  mousedownBrowserEventListener: nil
+  mouseupBrowserEventListener: nil
+  mousemoveBrowserEventListener: nil
   contextmenuEventListener: nil
   # Note how there can be two handlers for
   # keyboard events.
@@ -34,12 +34,12 @@ class WorldMorph extends PanelWdgt
   # handler. See "initVirtualKeyboard"
   # method to see where and when this input and
   # these handlers are set up.
-  keydownEventListener: nil
-  keyupEventListener: nil
-  keypressEventListener: nil
-  wheelEventListener: nil
-  copyEventListener: nil
-  pasteEventListener: nil
+  keydownBrowserEventListener: nil
+  keyupBrowserEventListener: nil
+  keypressBrowserEventListener: nil
+  wheelBrowserEventListener: nil
+  copyBrowserEventListener: nil
+  pasteBrowserEventListener: nil
   clipboardTextIfTestRunning: nil
   errorConsole: nil
 
@@ -55,9 +55,9 @@ class WorldMorph extends PanelWdgt
   # attached to a hidden
   # "input" div which keeps track of the
   # text that is being input.
-  inputDOMElementForVirtualKeyboardKeydownEventListener: nil
-  inputDOMElementForVirtualKeyboardKeyupEventListener: nil
-  inputDOMElementForVirtualKeyboardKeypressEventListener: nil
+  inputDOMElementForVirtualKeyboardKeydownBrowserEventListener: nil
+  inputDOMElementForVirtualKeyboardKeyupBrowserEventListener: nil
+  inputDOMElementForVirtualKeyboardKeypressBrowserEventListener: nil
 
   keyComboResetWorldEventListener: nil
   keyComboTurnOnAnimationsPacingControl: nil
@@ -71,8 +71,8 @@ class WorldMorph extends PanelWdgt
   keyComboCheckNumberOfMenuItemsEventListener: nil
 
   dragoverEventListener: nil
-  dropEventListener: nil
-  resizeEventListener: nil
+  dropBrowserEventListener: nil
+  resizeBrowserEventListener: nil
   otherTasksToBeRunOnStep: []
 
   # these variables shouldn't be static to the WorldMorph, because
@@ -1020,13 +1020,13 @@ class WorldMorph extends PanelWdgt
 
         switch eventType
 
-          when "inputDOMElementForVirtualKeyboardKeydownEventListener"
             @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
+          when "inputDOMElementForVirtualKeyboardKeydownBrowserEvent"
 
             if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
               @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
 
-          when "inputDOMElementForVirtualKeyboardKeyupEventListener"
+          when "inputDOMElementForVirtualKeyboardKeyupBrowserEvent"
             # dispatch to keyboard receiver
             if @keyboardEventsReceiver
               # so far the caret is the only keyboard
@@ -1034,17 +1034,18 @@ class WorldMorph extends PanelWdgt
               # handler
               if @keyboardEventsReceiver.processKeyUp
                 @keyboardEventsReceiver.processKeyUp event  
+          when "inputDOMElementForVirtualKeyboardKeypressBrowserEvent"
+          when "mousedownBrowserEvent"
 
-          when "inputDOMElementForVirtualKeyboardKeypressEventListener"
             @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
+          when "mouseupBrowserEvent"
 
-          when "mousedownEventListener"
             @processMouseDown event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
+          when "mousemoveBrowserEvent"
 
-          when "mouseupEventListener"
             @processMouseUp  event.button, event.ctrlKey, event.buttons, event.shiftKey, event.altKey, event.metaKey
+          when "wheelBrowserEvent"
 
-          when "mousemoveEventListener"
             posInDocument = getDocumentPositionOf @worldCanvas
             # events from JS arrive in page coordinates,
             # we turn those into world coordinates
@@ -1053,45 +1054,44 @@ class WorldMorph extends PanelWdgt
             worldY = event.pageY - posInDocument.y
             @processMouseMove worldX, worldY, event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
 
-          when "keydownEventListener"
             @processKeydown event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+          when "keydownBrowserEvent"
 
-          when "keyupEventListener"
             @processKeyup event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+          when "keyupBrowserEvent"
 
-          when "keypressEventListener"
             @processKeypress event, event.keyCode, @getChar(event), event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+          when "keypressBrowserEvent"
 
-          when "wheelEventListener"
             @processWheel event.deltaX, event.deltaY, event.deltaZ, event.altKey, event.button, event.buttons
 
-          when "cutEventListener"
+          when "cutBrowserEvent"
             # note that "event" here is actually a string,
             # for security reasons clipboard access is not
             # allowed outside of the event listener, we
             # have to work with text here.
             @processCut event
 
-          when "copyEventListener"
+          when "copyBrowserEvent"
             # note that "event" here is actually a string,
             # for security reasons clipboard access is not
             # allowed outside of the event listener, we
             # have to work with text here.
             @processCopy event
 
-          when "pasteEventListener"
+          when "pasteBrowserEvent"
             # note that "event" here is actually a string,
             # for security reasons clipboard access is not
             # allowed outside of the event listener, we
             # have to work with text here.
             @processPaste event
 
-          when "dropEventListener"
             @hand.processDrop event
 
-          when "resizeEventListener"
             if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
               @stretchWorldToFillEntirePage()
+          when "dropBrowserEvent"
+          when "resizeBrowserEvent"
 
     catch err
       @softResetWorld()
@@ -1307,8 +1307,8 @@ class WorldMorph extends PanelWdgt
     @inputDOMElementForVirtualKeyboard.autocapitalize = "none" # iOS specific
     document.body.appendChild @inputDOMElementForVirtualKeyboard
 
-    @inputDOMElementForVirtualKeyboardKeydownEventListener = (event) =>
-      @events.push "inputDOMElementForVirtualKeyboardKeydownEventListener"
+    @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener = (event) =>
+      @events.push "inputDOMElementForVirtualKeyboardKeydownBrowserEvent"
       @events.push event
       # Default in several browsers
       # is for the backspace button to trigger
@@ -1323,23 +1323,23 @@ class WorldMorph extends PanelWdgt
         event.preventDefault()
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keydown",
-      @inputDOMElementForVirtualKeyboardKeydownEventListener, false
+      @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener, false
 
-    @inputDOMElementForVirtualKeyboardKeyupEventListener = (event) =>
-      @events.push "inputDOMElementForVirtualKeyboardKeyupEventListener"
+    @inputDOMElementForVirtualKeyboardKeyupBrowserEventListener = (event) =>
+      @events.push "inputDOMElementForVirtualKeyboardKeyupBrowserEvent"
       @events.push event
       event.preventDefault()
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keyup",
-      @inputDOMElementForVirtualKeyboardKeyupEventListener, false
+      @inputDOMElementForVirtualKeyboardKeyupBrowserEventListener, false
 
-    @inputDOMElementForVirtualKeyboardKeypressEventListener = (event) =>
-      @events.push "inputDOMElementForVirtualKeyboardKeypressEventListener"
+    @inputDOMElementForVirtualKeyboardKeypressBrowserEventListener = (event) =>
+      @events.push "inputDOMElementForVirtualKeyboardKeypressBrowserEvent"
       @events.push event
       event.preventDefault()
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keypress",
-      @inputDOMElementForVirtualKeyboardKeypressEventListener, false
+      @inputDOMElementForVirtualKeyboardKeypressBrowserEventListener, false
 
   getPointerAndWdgtInfo:  (topWdgtUnderPointer = @hand.topWdgtUnderPointer()) ->
     # we might eliminate this command afterwards if
@@ -1544,30 +1544,30 @@ class WorldMorph extends PanelWdgt
     #  @hand.processDoubleClick event
     #canvas.addEventListener "dblclick", @dblclickEventListener, false
 
-    @mousedownEventListener = (event) =>
-      @events.push "mousedownEventListener"
+    @mousedownBrowserEventListener = (event) =>
+      @events.push "mousedownBrowserEvent"
       @events.push event
 
-    canvas.addEventListener "mousedown", @mousedownEventListener, false
+    canvas.addEventListener "mousedown", @mousedownBrowserEventListener, false
 
     
-    @mouseupEventListener = (event) =>
-      @events.push "mouseupEventListener"
+    @mouseupBrowserEventListener = (event) =>
+      @events.push "mouseupBrowserEvent"
       @events.push event
 
-    canvas.addEventListener "mouseup", @mouseupEventListener, false
+    canvas.addEventListener "mouseup", @mouseupBrowserEventListener, false
         
-    @mousemoveEventListener = (event) =>
-      @events.push "mousemoveEventListener"
+    @mousemoveBrowserEventListener = (event) =>
+      @events.push "mousemoveBrowserEvent"
       @events.push event
 
-    canvas.addEventListener "mousemove", @mousemoveEventListener, false
+    canvas.addEventListener "mousemove", @mousemoveBrowserEventListener, false
 
 
   initKeyboardEventListeners: ->
     canvas = @worldCanvas
-    @keydownEventListener = (event) =>
-      @events.push "keydownEventListener"
+    @keydownBrowserEventListener = (event) =>
+      @events.push "keydownBrowserEvent"
       @events.push event
 
       # this paragraph is to prevent the browser going
@@ -1609,19 +1609,19 @@ class WorldMorph extends PanelWdgt
       if doPrevent
         event.preventDefault()
 
-    canvas.addEventListener "keydown", @keydownEventListener, false
+    canvas.addEventListener "keydown", @keydownBrowserEventListener, false
 
-    @keyupEventListener = (event) =>
-      @events.push "keyupEventListener"
+    @keyupBrowserEventListener = (event) =>
+      @events.push "keyupBrowserEvent"
       @events.push event
 
-    canvas.addEventListener "keyup", @keyupEventListener, false
+    canvas.addEventListener "keyup", @keyupBrowserEventListener, false
     
-    @keypressEventListener = (event) =>
-      @events.push "keypressEventListener"
+    @keypressBrowserEventListener = (event) =>
+      @events.push "keypressBrowserEvent"
       @events.push event
 
-    canvas.addEventListener "keypress", @keypressEventListener, false
+    canvas.addEventListener "keypress", @keypressBrowserEventListener, false
 
   initClipboardEventListeners: ->
     # snippets of clipboard-handling code taken from
@@ -1645,7 +1645,7 @@ class WorldMorph extends PanelWdgt
     # we have to do with the clipboard here, and in every
     # other place we work with text.
 
-    @cutEventListener = (event) =>
+    @cutBrowserEventListener = (event) =>
       selectedText = ""
       if @caret
         selectedText = @caret.target.selection()
@@ -1657,12 +1657,12 @@ class WorldMorph extends PanelWdgt
           event.returnValue = false
           setStatus = window.clipboardData.setData "Text", selectedText
 
-      @events.push "cutEventListener"
+      @events.push "cutBrowserEvent"
       @events.push selectedText
 
-    document.body.addEventListener "cut", @cutEventListener, false
+    document.body.addEventListener "cut", @cutBrowserEventListener, false
     
-    @copyEventListener = (event) =>
+    @copyBrowserEventListener = (event) =>
       selectedText = ""
       if @caret
         if clipboardTextIfTestRunning?
@@ -1677,12 +1677,12 @@ class WorldMorph extends PanelWdgt
           event.returnValue = false
           setStatus = window.clipboardData.setData "Text", selectedText
 
-      @events.push "copyEventListener"
+      @events.push "copyBrowserEvent"
       @events.push selectedText
 
-    document.body.addEventListener "copy", @copyEventListener, false
+    document.body.addEventListener "copy", @copyBrowserEventListener, false
 
-    @pasteEventListener = (event) =>
+    @pasteBrowserEventListener = (event) =>
       if @caret
         if event?
           if event.clipboardData
@@ -1697,10 +1697,10 @@ class WorldMorph extends PanelWdgt
             text = window.clipboardData.getData "Text"
             #url = window.clipboardData.getData "URL"
 
-      @events.push "pasteEventListener"
+      @events.push "pasteBrowserEvent"
       @events.push text
 
-    document.body.addEventListener "paste", @pasteEventListener, false
+    document.body.addEventListener "paste", @pasteBrowserEventListener, false
 
   initKeyCombosEventListeners: ->
     #console.log "binding via mousetrap"
@@ -1770,12 +1770,12 @@ class WorldMorph extends PanelWdgt
 
     # Safari, Chrome
     
-    @wheelEventListener = (event) =>
-      @events.push "wheelEventListener"
+    @wheelBrowserEventListener = (event) =>
+      @events.push "wheelBrowserEvent"
       @events.push event
       event.preventDefault()
 
-    canvas.addEventListener "wheel", @wheelEventListener, false
+    canvas.addEventListener "wheel", @wheelBrowserEventListener, false
 
     # in theory there should be no scroll event on the page
     # window.addEventListener "scroll", ((event) =>
@@ -1787,18 +1787,18 @@ class WorldMorph extends PanelWdgt
       event.preventDefault()
     window.addEventListener "dragover", @dragoverEventListener, false
     
-    @dropEventListener = (event) =>
-      @events.push "dropEventListener"
+    @dropBrowserEventListener = (event) =>
+      @events.push "dropBrowserEvent"
       @events.push event
       event.preventDefault()
-    window.addEventListener "drop", @dropEventListener, false
+    window.addEventListener "drop", @dropBrowserEventListener, false
     
-    @resizeEventListener = =>
-      @events.push "resizeEventListener"
+    @resizeBrowserEventListener = =>
+      @events.push "resizeBrowserEvent"
       @events.push nil
 
     # this is a DOM thing, little to do with other r e s i z e methods
-    window.addEventListener "resize", @resizeEventListener, false
+    window.addEventListener "resize", @resizeBrowserEventListener, false
 
   # note that we don't register the normal click,
   # we figure that out independently.
@@ -1813,21 +1813,21 @@ class WorldMorph extends PanelWdgt
   removeEventListeners: ->
     canvas = @worldCanvas
     # canvas.removeEventListener 'dblclick', @dblclickEventListener
-    canvas.removeEventListener 'mousedown', @mousedownEventListener
-    canvas.removeEventListener 'mouseup', @mouseupEventListener
-    canvas.removeEventListener 'mousemove', @mousemoveEventListener
+    canvas.removeEventListener 'mousedown', @mousedownBrowserEventListener
+    canvas.removeEventListener 'mouseup', @mouseupBrowserEventListener
+    canvas.removeEventListener 'mousemove', @mousemoveBrowserEventListener
     canvas.removeEventListener 'contextmenu', @contextmenuEventListener
-    canvas.removeEventListener 'keydown', @keydownEventListener
-    canvas.removeEventListener 'keyup', @keyupEventListener
-    canvas.removeEventListener 'keypress', @keypressEventListener
-    canvas.removeEventListener 'wheel', @wheelEventListener
-    canvas.removeEventListener 'cut', @cutEventListener
-    canvas.removeEventListener 'copy', @copyEventListener
-    canvas.removeEventListener 'paste', @pasteEventListener
+    canvas.removeEventListener 'keydown', @keydownBrowserEventListener
+    canvas.removeEventListener 'keyup', @keyupBrowserEventListener
+    canvas.removeEventListener 'keypress', @keypressBrowserEventListener
+    canvas.removeEventListener 'wheel', @wheelBrowserEventListener
+    canvas.removeEventListener 'cut', @cutBrowserEventListener
+    canvas.removeEventListener 'copy', @copyBrowserEventListener
+    canvas.removeEventListener 'paste', @pasteBrowserEventListener
     Mousetrap.reset()
     canvas.removeEventListener 'dragover', @dragoverEventListener
-    canvas.removeEventListener 'drop', @dropEventListener
-    canvas.removeEventListener 'resize', @resizeEventListener
+    canvas.removeEventListener 'drop', @dropBrowserEventListener
+    canvas.removeEventListener 'resize', @resizeBrowserEventListener
   
   mouseDownLeft: ->
     noOperation
