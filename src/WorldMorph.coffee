@@ -1455,17 +1455,13 @@ class WorldMorph extends PanelWdgt
             #if @doublePressOfZeroKeypadKey is 1
             #  console.log "single keypress"
             @doublePressOfZeroKeypadKey = nil
-            event.keyCode = 0
             return false
           ), 300
         else
           @doublePressOfZeroKeypadKey = nil
           #console.log "double keypress"
-          event.keyCode = 0
         return false
 
-    if event?
-      event.preventDefault()
     @keyboardEventsReceiver?.processKeyPress charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
 
   # -----------------------------------------------------
