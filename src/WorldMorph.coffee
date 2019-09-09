@@ -1020,20 +1020,19 @@ class WorldMorph extends PanelWdgt
 
         switch eventType
 
-            @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
           when "inputDOMElementForVirtualKeyboardKeydownBrowserEvent"
+            @keyboardEventsReceiver?.processKeyDown event
 
             if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
-              @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
+              @keyboardEventsReceiver?.processKeyPress event
 
           when "inputDOMElementForVirtualKeyboardKeyupBrowserEvent"
             # dispatch to keyboard receiver
-            if @keyboardEventsReceiver
-              # so far the caret is the only keyboard
-              # event handler and it has no keyup
-              # handler
-              if @keyboardEventsReceiver.processKeyUp
-                @keyboardEventsReceiver.processKeyUp event  
+            # so far the caret is the only keyboard
+            # event handler and it has no keyup
+            # handler
+            @keyboardEventsReceiver?.processKeyUp? event  
+
           when "inputDOMElementForVirtualKeyboardKeypressBrowserEvent"
           when "mousedownBrowserEvent"
 
@@ -1418,21 +1417,16 @@ class WorldMorph extends PanelWdgt
   processKeydown: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       @automatorRecorderAndPlayer.addKeyDownCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
-    if @keyboardEventsReceiver
-      @keyboardEventsReceiver.processKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey
+    @keyboardEventsReceiver?.processKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey
 
   processKeyup: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       @automatorRecorderAndPlayer.addKeyUpCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
     # dispatch to keyboard receiver
-    if @keyboardEventsReceiver
-      # so far the caret is the only keyboard
-      # event handler and it has no keyup
-      # handler
-      if @keyboardEventsReceiver.processKeyUp
-        @keyboardEventsReceiver.processKeyUp scanCode, shiftKey, ctrlKey, altKey, metaKey    
-    if event?
-      event.preventDefault()
+    # so far the caret is the only keyboard
+    # event handler and it has no keyup
+    # handler
+    @keyboardEventsReceiver?.processKeyUp? scanCode, shiftKey, ctrlKey, altKey, metaKey
 
   processKeypress: (event, charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
@@ -1470,10 +1464,9 @@ class WorldMorph extends PanelWdgt
           event.keyCode = 0
         return false
 
-    if @keyboardEventsReceiver
-      @keyboardEventsReceiver.processKeyPress charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
     if event?
       event.preventDefault()
+    @keyboardEventsReceiver?.processKeyPress charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
 
   # -----------------------------------------------------
   # clipboard events processing
