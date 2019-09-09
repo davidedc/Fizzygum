@@ -152,6 +152,32 @@ class CaretMorph extends BlinkerMorph
     @target.escalateEvent "reactToKeystroke", scanCode, nil, shiftKey, ctrlKey, altKey, metaKey
     @updateDimension()
   
+  processCut: (selectedText) ->
+    #console.log "processing cut"
+    # see comment on outstandingTimerTriggeredOperationsCounter
+    # above where the property is declared and initialised.
+    world.outstandingTimerTriggeredOperationsCounter.push true
+    window.setTimeout ( =>
+     @deleteLeft()
+     world.outstandingTimerTriggeredOperationsCounter.pop()
+    ), 50, true
+
+
+  processCopy: (selectedText) ->
+    #console.log "processing copy"
+
+  processPaste: (clipboardText) ->
+    # Needs a few msec to execute paste
+    #console.log "about to insert text: " + clipboardText
+
+    # see comment on outstandingTimerTriggeredOperationsCounter
+    # above where the property is declared and initialised.
+    world.outstandingTimerTriggeredOperationsCounter.push true
+    window.setTimeout ( =>
+     @insert clipboardText
+     world.outstandingTimerTriggeredOperationsCounter.pop()
+    ), 50, true
+
   
   gotoSlot: (slot, becauseOfMouseClick) ->
     # check that slot is within the allowed boundaries of

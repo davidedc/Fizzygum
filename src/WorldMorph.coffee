@@ -1020,6 +1020,10 @@ class WorldMorph extends PanelWdgt
 
         switch eventType
 
+          # --------------------------------------
+          # input DOM element for virtual keyboard
+          # --------------------------------------
+
           when "inputDOMElementForVirtualKeyboardKeydownBrowserEvent"
             @keyboardEventsReceiver?.processKeyDown event
 
@@ -1034,63 +1038,71 @@ class WorldMorph extends PanelWdgt
             @keyboardEventsReceiver?.processKeyUp? event  
 
           when "inputDOMElementForVirtualKeyboardKeypressBrowserEvent"
+            @keyboardEventsReceiver?.processKeyPress event
+
+          # -----
+          # mouse
+          # -----
+
           when "mousedownBrowserEvent"
+            @mousedownBrowserEventHandler event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
 
-            @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
           when "mouseupBrowserEvent"
+            @mouseupBrowserEventHandler  event.button, event.ctrlKey, event.buttons, event.shiftKey, event.altKey, event.metaKey
 
-            @processMouseDown event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
           when "mousemoveBrowserEvent"
+            @mousemoveBrowserEventHandler event.pageX, event.pageY, event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
 
-            @processMouseUp  event.button, event.ctrlKey, event.buttons, event.shiftKey, event.altKey, event.metaKey
           when "wheelBrowserEvent"
+            @wheelBrowserEventHandler event.deltaX, event.deltaY, event.deltaZ, event.altKey, event.button, event.buttons
 
-            posInDocument = getDocumentPositionOf @worldCanvas
-            # events from JS arrive in page coordinates,
-            # we turn those into world coordinates
-            # instead.
-            worldX = event.pageX - posInDocument.x
-            worldY = event.pageY - posInDocument.y
-            @processMouseMove worldX, worldY, event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
+          # --------
+          # keyboard
+          # --------
 
-            @processKeydown event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
           when "keydownBrowserEvent"
+            @keydownBrowserEventHandler event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
 
-            @processKeyup event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
           when "keyupBrowserEvent"
+            @keyupBrowserEventHandler event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
 
-            @processKeypress event, event.keyCode, @getChar(event), event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
           when "keypressBrowserEvent"
+            @keypressBrowserEventHandler event.keyCode, @getChar(event), event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
 
-            @processWheel event.deltaX, event.deltaY, event.deltaZ, event.altKey, event.button, event.buttons
+          # ------------------
+          # cut / copy / paste
+          # ------------------
 
           when "cutBrowserEvent"
             # note that "event" here is actually a string,
             # for security reasons clipboard access is not
             # allowed outside of the event listener, we
             # have to work with text here.
-            @processCut event
+            @cutBrowserEventHandler event
 
           when "copyBrowserEvent"
             # note that "event" here is actually a string,
             # for security reasons clipboard access is not
             # allowed outside of the event listener, we
             # have to work with text here.
-            @processCopy event
+            @copyBrowserEventHandler event
 
           when "pasteBrowserEvent"
             # note that "event" here is actually a string,
             # for security reasons clipboard access is not
             # allowed outside of the event listener, we
             # have to work with text here.
-            @processPaste event
+            @pasteBrowserEventHandler event
 
-            @hand.processDrop event
+          # ------
+          # others
+          # ------
 
-            if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
-              @stretchWorldToFillEntirePage()
           when "dropBrowserEvent"
+            @dropBrowserEventHandler event
+
           when "resizeBrowserEvent"
+            @resizeBrowserEventHandler()
 
     catch err
       @softResetWorld()
@@ -1362,7 +1374,7 @@ class WorldMorph extends PanelWdgt
       @automatorRecorderAndPlayer.addMouseChangeCommand upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey, pointerAndWdgtInfo...
 
 
-  processMouseDown: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
+  mousedownBrowserEventHandler: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     # the recording of the test command (in case we are
     # recording a test) is handled inside the function
     # here below.
@@ -1375,12 +1387,19 @@ class WorldMorph extends PanelWdgt
     @addMouseChangeCommand "down", button, buttons, ctrlKey, shiftKey, altKey, metaKey
     @hand.processMouseDown button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
-  processMouseUp: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
+  mouseupBrowserEventHandler: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     @addMouseChangeCommand "up", button, buttons, ctrlKey, shiftKey, altKey, metaKey
     @hand.processMouseUp button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
-  processMouseMove: (pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    @hand.processMouseMove pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey
+  mousemoveBrowserEventHandler: (pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
+    posInDocument = getDocumentPositionOf @worldCanvas
+    # events from JS arrive in page coordinates,
+    # we turn those into world coordinates
+    # instead.
+    worldX = pageX - posInDocument.x
+    worldY = pageY - posInDocument.y
+
+    @hand.processMouseMove worldX, worldY, button, buttons, ctrlKey, shiftKey, altKey, metaKey
     # "@hand.processMouseMove" could cause a Grab
     # command to be issued, so we want to
     # add the mouse move command here *after* the
@@ -1394,10 +1413,10 @@ class WorldMorph extends PanelWdgt
           arr.push action
     
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-      @automatorRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.isThisPointerFloatDraggingSomething(), button, buttons, ctrlKey, shiftKey, altKey, metaKey)
+      @automatorRecorderAndPlayer.addMouseMoveCommand(worldX, worldY, @hand.isThisPointerFloatDraggingSomething(), button, buttons, ctrlKey, shiftKey, altKey, metaKey)
 
 
-  processWheel: (deltaX, deltaY, deltaZ, altKey, button, buttons) ->
+  wheelBrowserEventHandler: (deltaX, deltaY, deltaZ, altKey, button, buttons) ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       pointerAndWdgtInfo = @getPointerAndWdgtInfo()
       @automatorRecorderAndPlayer.addWheelCommand deltaX, deltaY, deltaZ, altKey, button, buttons, pointerAndWdgtInfo...
@@ -1414,12 +1433,12 @@ class WorldMorph extends PanelWdgt
     else
       nil # special key
 
-  processKeydown: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
+  keydownBrowserEventHandler: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       @automatorRecorderAndPlayer.addKeyDownCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
     @keyboardEventsReceiver?.processKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey
 
-  processKeyup: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
+  keyupBrowserEventHandler: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       @automatorRecorderAndPlayer.addKeyUpCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
     # dispatch to keyboard receiver
@@ -1428,7 +1447,7 @@ class WorldMorph extends PanelWdgt
     # handler
     @keyboardEventsReceiver?.processKeyUp? scanCode, shiftKey, ctrlKey, altKey, metaKey
 
-  processKeypress: (event, charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
+  keypressBrowserEventHandler: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       @automatorRecorderAndPlayer.addKeyPressCommand charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
     # This if block adapted from:
@@ -1445,22 +1464,22 @@ class WorldMorph extends PanelWdgt
     # special case within Fizzygum
     # is not best, but there aren't any
     # good alternatives.
-    if event?
-      # don't manage external keypad if we are playing back
-      # the tests (i.e. when event is nil)
-      if symbol == @constructor.KEYPAD_0_mappedToThaiKeyboard_Q
-        unless @doublePressOfZeroKeypadKey?
-          @doublePressOfZeroKeypadKey = 1
-          setTimeout (=>
-            #if @doublePressOfZeroKeypadKey is 1
-            #  console.log "single keypress"
-            @doublePressOfZeroKeypadKey = nil
-            return false
-          ), 300
-        else
+
+    # don't manage external keypad if we are playing back
+    # the tests (i.e. when event is nil)
+    if symbol == @constructor.KEYPAD_0_mappedToThaiKeyboard_Q
+      unless @doublePressOfZeroKeypadKey?
+        @doublePressOfZeroKeypadKey = 1
+        setTimeout (=>
+          #if @doublePressOfZeroKeypadKey is 1
+          #  console.log "single keypress"
           @doublePressOfZeroKeypadKey = nil
-          #console.log "double keypress"
-        return false
+          return false
+        ), 300
+      else
+        @doublePressOfZeroKeypadKey = nil
+        #console.log "double keypress"
+      return false
 
     @keyboardEventsReceiver?.processKeyPress charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
 
@@ -1476,40 +1495,33 @@ class WorldMorph extends PanelWdgt
   # we have to work with text. The clipboard IS handled, but
   # it's handled in the listeners
 
-  processCut: (selectedText) ->
+  cutBrowserEventHandler: (selectedText) ->
     #console.log "processing cut"
-    if @caret
-      # see comment on outstandingTimerTriggeredOperationsCounter
-      # above where the property is declared and initialised.
-      @outstandingTimerTriggeredOperationsCounter.push true
-      window.setTimeout ( =>
-       @caret.deleteLeft()
-       @outstandingTimerTriggeredOperationsCounter.pop()
-      ), 50, true
+    @caret?.processCut selectedText
 
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       @automatorRecorderAndPlayer.addCutCommand selectedText
 
-  processCopy: (selectedText) ->
+  copyBrowserEventHandler: (selectedText) ->
     #console.log "processing copy"
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       @automatorRecorderAndPlayer.addCopyCommand selectedText
 
-  processPaste: (clipboardText) ->
+  pasteBrowserEventHandler: (clipboardText) ->
+    #console.log "processing paste"
     if @caret
-      # Needs a few msec to execute paste
-      #console.log "about to insert text: " + clipboardText
+      @caret.processPaste clipboardText
       if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-        @automatorRecorderAndPlayer.addPasteCommand clipboardText
+        @automatorRecorderAndPlayer.addPasteCommand selectedText
 
-      # see comment on outstandingTimerTriggeredOperationsCounter
-      # above where the property is declared and initialised.
-      @outstandingTimerTriggeredOperationsCounter.push true
-      window.setTimeout ( =>
-       @caret.insert clipboardText
-       @outstandingTimerTriggeredOperationsCounter.pop()
-      ), 50, true
+  dropBrowserEventHandler: (event) ->
+    #console.log "processing drop"
+    @hand.processDrop event
 
+  resizeBrowserEventHandler: ->
+    #console.log "processing resize"
+    if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
+      @stretchWorldToFillEntirePage()
 
   initMouseEventListeners: ->
     canvas = @worldCanvas
