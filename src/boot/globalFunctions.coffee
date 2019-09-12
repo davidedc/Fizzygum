@@ -902,16 +902,51 @@ createImageFromImageData = (theImageData) ->
     img.src = theImageData
 
 # these two are to build classes
+
+# this is a classic extention mechanism in JS,
+# also used by the CoffeeScript versions 1.x
 extend = (child, parent) ->
+  # starting situation: both child and parent are classes
+  # i.e. constructors with their own prototype. Those prototypes
+  # have .constructor and _proto_ that points to their
+  # respective class.
+
+  # what we want to do is to create a new prototype for the child,
+  # where its constructor still points to child, however its
+  # _proto_ points to the parent prototype, so there is the
+  # inheritance chain that we want.
+
+  # create a temporary function. we'll use it as
+  # a constructor (with new) to construct a new prototype for the
+  # child, and then throw it a way
   ctor = ->
+    # the prototype associated with this constructor
+    # will have its .constructor that
+    # will point to child (instead of pointing at this very
+    # constructor function)
     @constructor = child
     return
 
+  # copy over static fields/methods from parent to child
   for own key of parent
     child[key] = parent[key]
+
+  # by doing this, anything created with new ctor()
+  # will have the _proto_ pointing to parent.prototype
+  # which is indeed what we want for the new child
+  # prototype we are going to create via the temp constructor
   ctor.prototype = parent.prototype
+
+  # invoke the temp constructor so it creates a new object
+  # where its .constructor will point to child, and its _proto_
+  # will point to the parent prototype.
+  # For this object will be the new child.prototype,
+  # just make child.prototype to actually point to it
   child.prototype = new ctor()
+
+  # just a service field to be able to use super
   child.__super__ = parent.prototype
+
   return child
 
 getRandomInt = (min, max) ->
