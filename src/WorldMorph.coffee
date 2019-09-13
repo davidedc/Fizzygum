@@ -1134,8 +1134,13 @@ class WorldMorph extends PanelWdgt
 
     @playQueuedEvents()
 
-    # most notably replays test actions at the right time
+    # replays test actions at the right time
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+      @automatorRecorderAndPlayer.replayTestCommands()
+    
+    # currently unused
     @runOtherTasksStepFunction()
+    
     @loadAPartOfFizzyGumSourceIfNeeded()
     
     @runChildrensStepFunction()
