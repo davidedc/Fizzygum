@@ -173,6 +173,7 @@ def main():
         if os.path.exists("../Fizzygum-tests"):
             if os.path.exists(DIRECTORY_WITH_AUTOMATOR_AND_TEST_HARNESS_CODE):
                 filenames = sorted(filenames + sorted(glob(DIRECTORY_WITH_AUTOMATOR_AND_TEST_HARNESS_CODE + "/*.coffee")))
+                filenames = sorted(filenames + sorted(glob(DIRECTORY_WITH_AUTOMATOR_AND_TEST_HARNESS_CODE + "/AutomatorEventCommands/*.coffee")))
 
     # add the sources from the directories
     # the order here has no importance, just try to
