@@ -23,7 +23,7 @@ class GrayPaletteMorph extends ColorPaletteMorph
     backBuffer = newCanvas extent.scaleBy ceilPixelRatio
     backBufferContext = backBuffer.getContext "2d"
     backBufferContext.scale ceilPixelRatio, ceilPixelRatio
-    @choice = new Color()
+    @choice = new Color
     gradient = backBufferContext.createLinearGradient 0, extent.y, extent.x, extent.y
     gradient.addColorStop 0, "black"
     gradient.addColorStop 1, "white"

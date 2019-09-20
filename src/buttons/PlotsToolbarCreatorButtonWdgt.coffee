@@ -7,13 +7,13 @@ class PlotsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   createWidgetToBeHandled: ->
 
-    toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
+    toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
 
     toolsPanel.addMany [
-      new ScatterPlotWithAxesCreatorButtonWdgt()
-      new FunctionPlotWithAxesCreatorButtonWdgt()
-      new BarPlotWithAxesCreatorButtonWdgt()
-      new Plot3DCreatorButtonWdgt()
+      new ScatterPlotWithAxesCreatorButtonWdgt
+      new FunctionPlotWithAxesCreatorButtonWdgt
+      new BarPlotWithAxesCreatorButtonWdgt
+      new Plot3DCreatorButtonWdgt
     ]
 
     toolsPanel.disableDragsDropsAndEditing()

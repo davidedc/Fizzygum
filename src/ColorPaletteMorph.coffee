@@ -37,7 +37,7 @@ class ColorPaletteMorph extends Widget
     backBuffer = newCanvas extent.scaleBy ceilPixelRatio
     backBufferContext = backBuffer.getContext "2d"
     backBufferContext.scale ceilPixelRatio, ceilPixelRatio
-    @choice = new Color()
+    @choice = new Color
     for x in [0..extent.x]
       h = 360 * x / extent.x
       y = 0

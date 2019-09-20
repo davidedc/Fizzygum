@@ -11,7 +11,7 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
   _acceptsDrops: true
 
   constructor: ->
-    super "Basement", new GenericShortcutIconWdgt new BasementIconWdgt()
+    super "Basement", new GenericShortcutIconWdgt new BasementIconWdgt
     @target = world.basementWdgt
     @rawSetExtent new Point 75, 75
 

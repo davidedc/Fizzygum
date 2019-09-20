@@ -2,7 +2,7 @@ class IconicDesktopSystemScriptShortcutWdgt extends IconicDesktopSystemShortcutW
 
   constructor: (@target, @title, @icon) ->
     if !@icon?
-      @icon = new GenericShortcutIconWdgt new ScriptIconWdgt()
+      @icon = new GenericShortcutIconWdgt new ScriptIconWdgt
     
     super @target, @title, @icon
 

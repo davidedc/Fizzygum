@@ -885,7 +885,7 @@ createWorldAndStartStepping = ->
     if SystemTestsControlPanelUpdater?
       new SystemTestsControlPanelUpdater
 
-  window.menusHelper = new MenusHelper()
+  window.menusHelper = new MenusHelper
   world.removeSpinnerAndFakeDesktop()
   world.createDesktop()
 
@@ -894,7 +894,7 @@ createWorldAndStartStepping = ->
 # an Image from the image data
 createImageFromImageData = (theImageData) ->
   return new Promise (resolve, reject) ->
-    img = new Image()
+    img = new Image
     img.onload = ->
         resolve(img)
     img.onerror = ->
@@ -931,7 +931,7 @@ extend = (child, parent) ->
   for own key of parent
     child[key] = parent[key]
 
-  # by doing this, anything created with new ctor()
+  # by doing this, anything created with new ctor
   # will have the _proto_ pointing to parent.prototype
   # which is indeed what we want for the new child
   # prototype we are going to create via the temp constructor
@@ -942,7 +942,7 @@ extend = (child, parent) ->
   # will point to the parent prototype.
   # For this object will be the new child.prototype,
   # just make child.prototype to actually point to it
-  child.prototype = new ctor()
+  child.prototype = new ctor
 
   # just a service field to be able to use super
   child.__super__ = parent.prototype

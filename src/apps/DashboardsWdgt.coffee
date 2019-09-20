@@ -4,36 +4,36 @@ class DashboardsWdgt extends StretchableEditableWdgt
     "Dashboards Maker"
 
   representativeIcon: ->
-    new DashboardsIconWdgt()
+    new DashboardsIconWdgt
 
 
   createToolsPanel: ->
     # tools -------------------------------
-    @toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
+    @toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
 
     @toolsPanel.addMany [
-      new TextBoxCreatorButtonWdgt()
-      new ExternalLinkCreatorButtonWdgt()
+      new TextBoxCreatorButtonWdgt
+      new ExternalLinkCreatorButtonWdgt
 
-      new ScatterPlotWithAxesCreatorButtonWdgt()
-      new FunctionPlotWithAxesCreatorButtonWdgt()
-      new BarPlotWithAxesCreatorButtonWdgt()
-      new Plot3DCreatorButtonWdgt()
+      new ScatterPlotWithAxesCreatorButtonWdgt
+      new FunctionPlotWithAxesCreatorButtonWdgt
+      new BarPlotWithAxesCreatorButtonWdgt
+      new Plot3DCreatorButtonWdgt
 
-      new WorldMapCreatorButtonWdgt()
-      new USAMapCreatorButtonWdgt()
-      new MapPinIconWdgt()
+      new WorldMapCreatorButtonWdgt
+      new USAMapCreatorButtonWdgt
+      new MapPinIconWdgt
 
-      new SpeechBubbleWdgt()
+      new SpeechBubbleWdgt
 
-      new ArrowNIconWdgt()
-      new ArrowSIconWdgt()
-      new ArrowWIconWdgt()
-      new ArrowEIconWdgt()
-      new ArrowNWIconWdgt()
-      new ArrowNEIconWdgt()
-      new ArrowSWIconWdgt()
-      new ArrowSEIconWdgt()
+      new ArrowNIconWdgt
+      new ArrowSIconWdgt
+      new ArrowWIconWdgt
+      new ArrowEIconWdgt
+      new ArrowNWIconWdgt
+      new ArrowNEIconWdgt
+      new ArrowSWIconWdgt
+      new ArrowSEIconWdgt
     ]
 
 
@@ -44,7 +44,7 @@ class DashboardsWdgt extends StretchableEditableWdgt
     @invalidateLayout()
 
   createNewStretchablePanel: ->
-    @stretchableWidgetContainer = new StretchableWidgetContainerWdgt()
+    @stretchableWidgetContainer = new StretchableWidgetContainerWdgt
     @add @stretchableWidgetContainer
 
 

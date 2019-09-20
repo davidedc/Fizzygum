@@ -9,7 +9,7 @@ class IconicDesktopSystemFolderShortcutWdgt extends IconicDesktopSystemShortcutW
       droppedWidget.createReferenceAndClose nil, @target.contents.contents
 
   constructor: (@target, @title) ->
-    super @target, @title, new GenericShortcutIconWdgt new FolderIconWdgt()
+    super @target, @title, new GenericShortcutIconWdgt new FolderIconWdgt
 
   mouseDoubleClick: ->
     if @target.destroyed

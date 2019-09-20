@@ -54,7 +54,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @strokeColor = new Color 125,125,125
     @tight = true
 
-    @defaultContents = new WindowContentsPlaceholderText()
+    @defaultContents = new WindowContentsPlaceholderText
     if !@contents?
       @contents = @defaultContents
 
@@ -294,9 +294,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # HOWEVER a bunch of tests would fail if I do the proper
     # thing so we are doing this for the time being.
     if @internal
-      @titlebarBackground = new RectangleMorph()
+      @titlebarBackground = new RectangleMorph
     else
-      @titlebarBackground = new BoxMorph()
+      @titlebarBackground = new BoxMorph
 
     @setAppearanceAndColorOfTitleBackground()
     @add @titlebarBackground, nil, nil, nil, true
@@ -324,13 +324,13 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # upper-left button, often a close button
     # but it can be anything
     if !@closeButton?
-      @closeButton = new CloseIconButtonMorph()
+      @closeButton = new CloseIconButtonMorph
     @add @closeButton, nil, nil, nil, true
 
 
     if !@collapseUncollapseSwitchButton?
-      collapseButton = new CollapseIconButtonMorph()
-      uncollapseButton = new UncollapseIconButtonMorph()
+      collapseButton = new CollapseIconButtonMorph
+      uncollapseButton = new UncollapseIconButtonMorph
       @collapseUncollapseSwitchButton = new SwitchButtonMorph [collapseButton, uncollapseButton]
     @add @collapseUncollapseSwitchButton, nil, nil, nil, true
 
@@ -345,8 +345,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
   createAndAddInternalExternalSwitchButton: ->
     if (@contents?.providesAmenitiesForEditing or @alwaysShowInternalExternalButton) and !@internalExternalSwitchButton?
-      externalButton = new ExternalIconButtonWdgt()
-      internalButton = new InternalIconButtonWdgt()
+      externalButton = new ExternalIconButtonWdgt
+      internalButton = new InternalIconButtonWdgt
       if @internal
         listOfButtons = [internalButton, externalButton]
       else

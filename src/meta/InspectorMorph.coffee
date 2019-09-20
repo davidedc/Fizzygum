@@ -160,7 +160,7 @@ class InspectorMorph extends BoxMorph
 
 
     # details pane
-    @detail = new ScrollPanelWdgt()
+    @detail = new ScrollPanelWdgt
     @detail.disableDrops()
     @detail.contents.disableDrops()
     @detail.isTextLineWrapping = true
@@ -173,7 +173,7 @@ class InspectorMorph extends BoxMorph
     @add @detail
 
     # work ('evaluation') pane
-    @work = new ScrollPanelWdgt()
+    @work = new ScrollPanelWdgt
     @work.disableDrops()
     @work.contents.disableDrops()
     @work.isTextLineWrapping = true

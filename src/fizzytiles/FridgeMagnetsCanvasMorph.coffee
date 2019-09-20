@@ -8,7 +8,7 @@
 class FridgeMagnetsCanvasMorph extends CanvasMorph
 
   primitiveTypes: {}
-  lclCodeCompiler: new LCLCodeCompiler()
+  lclCodeCompiler: new LCLCodeCompiler
 
   createRefreshOrGetBackBuffer: ->
     [@backBuffer, @backBufferContext] = super
@@ -57,7 +57,7 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
 
   pulse: (frequency) ->
 
-    d = new Date()
+    d = new Date
     n = d.getMilliseconds()
 
     if typeof frequency != "number"
@@ -167,7 +167,7 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
     if typeof arg_a isnt "number"
       if isFunction arg_a then appendedFunctionsStartIndex = 0
 
-      d = new Date()
+      d = new Date
       n = d.getTime()
 
       arg_a = Math.sin(n/150) * 15

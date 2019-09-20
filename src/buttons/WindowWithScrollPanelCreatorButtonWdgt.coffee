@@ -6,7 +6,7 @@ class WindowWithScrollPanelCreatorButtonWdgt extends CreatorButtonWdgt
     @toolTipMessage = "scroll panel"
 
   createWidgetToBeHandled: ->
-    switcherooWm = new WindowWdgt nil, nil, new ScrollPanelWdgt(), true, true
+    switcherooWm = new WindowWdgt nil, nil, new ScrollPanelWdgt, true, true
     switcherooWm.rawSetExtent new Point 200, 200
     return switcherooWm
 

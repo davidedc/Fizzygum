@@ -13,7 +13,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     "Drawings Maker"
 
   representativeIcon: ->
-    new PaintBucketIconWdgt()
+    new PaintBucketIconWdgt
 
 
   isToolPressed: (buttonToCheckIfPressed) ->
@@ -39,14 +39,14 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
 
   createNewStretchablePanel: ->
     # mainCanvas
-    @stretchableWidgetContainer = new StretchableWidgetContainerWdgt new StretchableCanvasWdgt()
+    @stretchableWidgetContainer = new StretchableWidgetContainerWdgt new StretchableCanvasWdgt
     @stretchableWidgetContainer.disableDrops()
     @add @stretchableWidgetContainer
 
     @mainCanvas = @stretchableWidgetContainer.contents
 
     # overlayCanvas
-    @overlayCanvas = new CanvasGlassTopWdgt()
+    @overlayCanvas = new CanvasGlassTopWdgt
     @overlayCanvas.underlyingCanvasMorph = @mainCanvas
     @overlayCanvas.disableDrops()
     @mainCanvas.add @overlayCanvas
@@ -71,10 +71,10 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     """
 
   createToolsPanel: ->
-    @toolsPanel = new RadioButtonsHolderMorph()
+    @toolsPanel = new RadioButtonsHolderMorph
     @add @toolsPanel
 
-    pencilButtonOff = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new Pencil2IconMorph()
+    pencilButtonOff = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new Pencil2IconMorph
     pencilButtonOff.alpha = 0.1
     pencilButtonOff.sourceCodeToBeInjected = """
         mouseMove = (pos, mouseButton) ->
@@ -123,7 +123,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
 
 
 
-    brushToolButtonOff = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new BrushIconMorph()
+    brushToolButtonOff = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new BrushIconMorph
     brushToolButtonOff.alpha = 0.1
 
     brushToolButtonOff.sourceCodeToBeInjected = """
@@ -223,7 +223,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     @brushToolButton = new ToggleButtonMorph brushToolButtonOff, brushToolButtonOn
 
 
-    toothpasteToolButtonOff = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new ToothpasteIconMorph()
+    toothpasteToolButtonOff = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new ToothpasteIconMorph
     toothpasteToolButtonOff.alpha = 0.1
 
     toothpasteToolButtonOff.sourceCodeToBeInjected = """
@@ -377,7 +377,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     @toothpasteToolButton = new ToggleButtonMorph toothpasteToolButtonOff, toothpasteToolButtonOn
 
 
-    eraserToolButtonOff = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new EraserIconMorph()
+    eraserToolButtonOff = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new EraserIconMorph
     eraserToolButtonOff.alpha = 0.1
 
     eraserToolButtonOff.sourceCodeToBeInjected = """

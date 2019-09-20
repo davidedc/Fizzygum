@@ -6,5 +6,5 @@ class EventCommand
   execute: ->
 
   constructor: ->
-    @date = new Date()
+    @date = new Date
     @dateJSON = @date.toJSON()

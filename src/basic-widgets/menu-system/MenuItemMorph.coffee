@@ -43,7 +43,7 @@ class MenuItemMorph extends TriggerMorph
       @label = @createLabelString @labelString
     else if @labelString instanceof Array      
       # assume its pattern is: [icon, string] 
-      @label = new Widget()
+      @label = new Widget
       @label.alpha = 0 # transparent
 
       icon = @createIcon @labelString[0]
@@ -68,7 +68,7 @@ class MenuItemMorph extends TriggerMorph
 
   createIcon: (source) ->
     # source can be either a Widget or an HTMLCanvasElement
-    icon = new Widget()
+    icon = new Widget
     icon.backBuffer = (if source instanceof Widget then source.fullImage() else source)
     icon.backBufferContext = icon.backBuffer.getContext "2d"
 

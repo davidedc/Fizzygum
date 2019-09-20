@@ -21,7 +21,7 @@ class StretchableWidgetContainerWdgt extends Widget
     super new Point 300, 300
     
     if !contents?
-      contents = new StretchablePanelWdgt()
+      contents = new StretchablePanelWdgt
 
     @add contents
     @contents = contents

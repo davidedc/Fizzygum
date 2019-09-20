@@ -4,5 +4,5 @@ class SimpleVideoLinkWdgt extends SimpleLinkWdgt
     super @descriptionString, @linkString
 
   createLinkIcon: ->
-    @externalLinkIcon = new VideoPlayButtonWdgt()
+    @externalLinkIcon = new VideoPlayButtonWdgt
 

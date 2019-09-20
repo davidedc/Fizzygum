@@ -49,7 +49,7 @@ class MenuMorph extends PopUpWdgt
 
 
   createLine: (height = 1) ->
-    item = new RectangleMorph()
+    item = new RectangleMorph
     item.setMinimumExtent new Point 5,1
     item.color = new Color 230,230,230
     item.rawSetHeight height + 2

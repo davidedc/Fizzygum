@@ -5,7 +5,7 @@
 
 class LRUCache
   constructor: (@capacity = 10, @maxAge = 60000) ->
-    @_linkList = new DoubleLinkedList()
+    @_linkList = new DoubleLinkedList
     @reset()
 
   keys: ->

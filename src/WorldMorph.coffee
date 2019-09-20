@@ -264,7 +264,7 @@ class WorldMorph extends PanelWdgt
     else
       @isIndexPage = true
 
-    WorldMorph.preferencesAndSettings = new PreferencesAndSettings()
+    WorldMorph.preferencesAndSettings = new PreferencesAndSettings
 
     super()
     @patternName = @pattern1
@@ -399,13 +399,13 @@ class WorldMorph extends PanelWdgt
       @makePrettier()
 
     if !@isIndexPage then console.log "booting"
-    @basementWdgt = new BasementWdgt()
+    @basementWdgt = new BasementWdgt
 
     ProfilingDataCollector.enableProfiling()
     ProfilingDataCollector.enableBrokenRectsProfiling()
 
     if @isIndexPage
-      acm = new AnalogClockWdgt()
+      acm = new AnalogClockWdgt
       acm.rawSetExtent new Point 80, 80
       acm.fullRawMoveTo new Point @right()-80-@desktopSidesPadding, @top() + @desktopSidesPadding
       @add acm
@@ -996,7 +996,7 @@ class WorldMorph extends PanelWdgt
 
     @morphsToBeHighlighted.forEach (eachMorphNeedingHighlight) =>
       unless @morphsBeingHighlighted.has eachMorphNeedingHighlight 
-        hM = new HighlighterMorph()
+        hM = new HighlighterMorph
         world.add hM
         hM.wdgtThisWdgtIsHighlighting = eachMorphNeedingHighlight
         hM.rawSetBounds eachMorphNeedingHighlight.clippedThroughBounds()
@@ -1127,7 +1127,7 @@ class WorldMorph extends PanelWdgt
 
   doOneCycle: ->
     WorldMorph.currentTime = Date.now()
-    WorldMorph.currentDate = new Date()
+    WorldMorph.currentDate = new Date
     # console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
 
     @showErrorsHappenedInRepaintingStepInPreviousCycle()
@@ -2077,35 +2077,35 @@ class WorldMorph extends PanelWdgt
     aWdgt.pickUp()
 
   createNewStackElementsSizeAdjustingMorph: ->
-    @create new StackElementsSizeAdjustingMorph()
+    @create new StackElementsSizeAdjustingMorph
 
   createNewLayoutElementAdderOrDropletMorph: ->
-    @create new LayoutElementAdderOrDropletMorph()
+    @create new LayoutElementAdderOrDropletMorph
 
   createNewRectangleMorph: ->
-    @create new RectangleMorph()
+    @create new RectangleMorph
   createNewBoxMorph: ->
-    @create new BoxMorph()
+    @create new BoxMorph
   createNewCircleBoxMorph: ->
-    @create new CircleBoxMorph()
+    @create new CircleBoxMorph
   createNewSliderMorph: ->
-    @create new SliderMorph()
+    @create new SliderMorph
   createNewPanelWdgt: ->
-    newWdgt = new PanelWdgt()
+    newWdgt = new PanelWdgt
     newWdgt.rawSetExtent new Point 350, 250
     @create newWdgt
   createNewScrollPanelWdgt: ->
-    newWdgt = new ScrollPanelWdgt()
+    newWdgt = new ScrollPanelWdgt
     newWdgt.adjustContentsBounds()
     newWdgt.adjustScrollBars()
     newWdgt.rawSetExtent new Point 350, 250
     @create newWdgt
   createNewCanvas: ->
-    newWdgt = new CanvasMorph()
+    newWdgt = new CanvasMorph
     newWdgt.rawSetExtent new Point 350, 250
     @create newWdgt
   createNewHandle: ->
-    @create new HandleMorph()
+    @create new HandleMorph
   createNewString: ->
     newWdgt = new StringMorph "Hello, World!"
     newWdgt.isEditable = true
@@ -2130,45 +2130,45 @@ class WorldMorph extends PanelWdgt
     newWdgt.maxTextWidth = 300
     @create newWdgt
   createNewSpeechBubbleWdgt: ->
-    newWdgt = new SpeechBubbleWdgt()
+    newWdgt = new SpeechBubbleWdgt
     @create newWdgt
   createNewToolTipWdgt: ->
-    newWdgt = new ToolTipWdgt()
+    newWdgt = new ToolTipWdgt
     @create newWdgt
   createNewGrayPaletteMorph: ->
-    @create new GrayPaletteMorph()
+    @create new GrayPaletteMorph
   createNewColorPaletteMorph: ->
-    @create new ColorPaletteMorph()
+    @create new ColorPaletteMorph
   createNewGrayPaletteMorphInWindow: ->
-    gP = new GrayPaletteMorph()
+    gP = new GrayPaletteMorph
     wm = new WindowWdgt nil, nil, gP
     world.add wm
     wm.rawSetExtent new Point 130, 70
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.changed()
   createNewColorPaletteMorphInWindow: ->
-    cP = new ColorPaletteMorph()
+    cP = new ColorPaletteMorph
     wm = new WindowWdgt nil, nil, cP
     world.add wm
     wm.rawSetExtent new Point 130, 100
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.changed()
   createNewColorPickerMorph: ->
-    @create new ColorPickerMorph()
+    @create new ColorPickerMorph
   createNewSensorDemo: ->
-    newWdgt = new MouseSensorMorph()
+    newWdgt = new MouseSensorMorph
     newWdgt.setColor new Color 230, 200, 100
     newWdgt.cornerRadius = 35
     newWdgt.alpha = 0.2
     newWdgt.rawSetExtent new Point 100, 100
     @create newWdgt
   createNewAnimationDemo: ->
-    foo = new BouncerMorph()
+    foo = new BouncerMorph
     foo.fullRawMoveTo new Point 50, 20
     foo.rawSetExtent new Point 300, 200
     foo.alpha = 0.9
     foo.speed = 3
-    bar = new BouncerMorph()
+    bar = new BouncerMorph
     bar.setColor new Color 50, 50, 50
     bar.fullRawMoveTo new Point 80, 80
     bar.rawSetExtent new Point 80, 250
@@ -2176,21 +2176,21 @@ class WorldMorph extends PanelWdgt
     bar.direction = "right"
     bar.alpha = 0.9
     bar.speed = 5
-    baz = new BouncerMorph()
+    baz = new BouncerMorph
     baz.setColor new Color 20, 20, 20
     baz.fullRawMoveTo new Point 90, 140
     baz.rawSetExtent new Point 40, 30
     baz.type = "horizontal"
     baz.direction = "right"
     baz.speed = 3
-    garply = new BouncerMorph()
+    garply = new BouncerMorph
     garply.setColor new Color 200, 20, 20
     garply.fullRawMoveTo new Point 90, 140
     garply.rawSetExtent new Point 20, 20
     garply.type = "vertical"
     garply.direction = "up"
     garply.speed = 8
-    fred = new BouncerMorph()
+    fred = new BouncerMorph
     fred.setColor new Color 20, 200, 20
     fred.fullRawMoveTo new Point 120, 140
     fred.rawSetExtent new Point 20, 20
@@ -2203,9 +2203,9 @@ class WorldMorph extends PanelWdgt
     foo.add bar
     @create foo
   createNewPenMorph: ->
-    @create new PenMorph()
+    @create new PenMorph
   underTheCarpet: ->
-    newWdgt = new BasementWdgt()
+    newWdgt = new BasementWdgt
     @create newWdgt
 
 

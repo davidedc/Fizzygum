@@ -7,41 +7,41 @@ class SlidesToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   createWidgetToBeHandled: ->
 
-    toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
+    toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
 
     toolsPanel.addMany [
-      new TextBoxCreatorButtonWdgt()
-      new ExternalLinkCreatorButtonWdgt()
-      new VideoPlayCreatorButtonWdgt()
+      new TextBoxCreatorButtonWdgt
+      new ExternalLinkCreatorButtonWdgt
+      new VideoPlayCreatorButtonWdgt
 
-      new WorldMapCreatorButtonWdgt()
-      new USAMapCreatorButtonWdgt()
+      new WorldMapCreatorButtonWdgt
+      new USAMapCreatorButtonWdgt
 
-      new RectangleMorph()
+      new RectangleMorph
 
-      new MapPinIconWdgt()
+      new MapPinIconWdgt
 
-      new SpeechBubbleWdgt()
+      new SpeechBubbleWdgt
 
-      new DestroyIconMorph()
-      new ScratchAreaIconMorph()
-      new FloraIconMorph()
-      new ScooterIconMorph()
-      new HeartIconMorph()
+      new DestroyIconMorph
+      new ScratchAreaIconMorph
+      new FloraIconMorph
+      new ScooterIconMorph
+      new HeartIconMorph
 
-      new FizzygumLogoIconWdgt()
-      new FizzygumLogoWithTextIconWdgt()
-      new VaporwaveBackgroundIconWdgt()
-      new VaporwaveSunIconWdgt()
+      new FizzygumLogoIconWdgt
+      new FizzygumLogoWithTextIconWdgt
+      new VaporwaveBackgroundIconWdgt
+      new VaporwaveSunIconWdgt
 
-      new ArrowNIconWdgt()
-      new ArrowSIconWdgt()
-      new ArrowWIconWdgt()
-      new ArrowEIconWdgt()
-      new ArrowNWIconWdgt()
-      new ArrowNEIconWdgt()
-      new ArrowSWIconWdgt()
-      new ArrowSEIconWdgt()
+      new ArrowNIconWdgt
+      new ArrowSIconWdgt
+      new ArrowWIconWdgt
+      new ArrowEIconWdgt
+      new ArrowNWIconWdgt
+      new ArrowNEIconWdgt
+      new ArrowSWIconWdgt
+      new ArrowSEIconWdgt
     ]
 
     toolsPanel.disableDragsDropsAndEditing()

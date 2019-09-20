@@ -1983,7 +1983,7 @@ class Widget extends TreeNode
     "generic widget"
 
   representativeIcon: ->
-    new WidgetIconWdgt()
+    new WidgetIconWdgt
 
   createPointerMorph: ->
     myPosition = @positionAmongSiblings()
@@ -2432,7 +2432,7 @@ class Widget extends TreeNode
         theClone = newCanvas new Point eachObject.width, eachObject.height
         ctx = theClone.getContext "2d"
 
-        image = new Image()
+        image = new Image
         image.src = eachObject.data
         # if something doesn't get painted here,
         # it might be because the allocation of the image
@@ -2806,7 +2806,7 @@ class Widget extends TreeNode
       if (@lastSiblingBeforeMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingBeforeMeIsA(StackElementsSizeAdjustingMorph)
         world.temporaryHandlesAndLayoutAdjusters.add \
           @addAsSiblingBeforeMe \
-            new StackElementsSizeAdjustingMorph(),
+            new StackElementsSizeAdjustingMorph,
             nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
@@ -2815,7 +2815,7 @@ class Widget extends TreeNode
       if (@firstSiblingAfterMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingAfterMeIsA(StackElementsSizeAdjustingMorph)
         world.temporaryHandlesAndLayoutAdjusters.add \
           @addAsSiblingAfterMe \
-            new StackElementsSizeAdjustingMorph(),
+            new StackElementsSizeAdjustingMorph,
             nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
       if @parent?
@@ -3245,13 +3245,13 @@ class Widget extends TreeNode
     world.create newWdgt
 
   createSimpleVerticalStackPanelWdgt: ->
-    svspw = new SimpleVerticalStackPanelWdgt()
+    svspw = new SimpleVerticalStackPanelWdgt
     world.add svspw
     svspw.fullRawMoveTo new Point 35, 30
     svspw.rawSetExtent new Point 370, 325
 
   createSimpleVerticalStackScrollPanelWdgt: ->
-    svsspw = new SimpleVerticalStackScrollPanelWdgt()
+    svsspw = new SimpleVerticalStackScrollPanelWdgt
     world.add svsspw
     svsspw.fullRawMoveTo new Point 430, 25
     svsspw.rawSetExtent new Point 370, 325
@@ -3277,7 +3277,7 @@ class Widget extends TreeNode
     @createSimpleVerticalStackScrollPanelWdgt()
 
   createSimpleDocumentScrollPanelWdgt: ->
-    sdspw = new SimpleDocumentScrollPanelWdgt()
+    sdspw = new SimpleDocumentScrollPanelWdgt
     world.add sdspw
     sdspw.fullRawMoveTo new Point 35, 30
     sdspw.rawSetExtent new Point 370, 325
@@ -3322,7 +3322,7 @@ class Widget extends TreeNode
     menu.popUpAtHand()
 
   analogClock: ->
-    world.create new AnalogClockWdgt()
+    world.create new AnalogClockWdgt
 
   popUpIconsMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "icons"
@@ -4375,7 +4375,7 @@ class Widget extends TreeNode
     @_showsAdders = true
     if @children.length == 0
       @add \
-        new LayoutElementAdderOrDropletMorph(),
+        new LayoutElementAdderOrDropletMorph,
         nil,
         LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     @invalidateLayout()
@@ -4393,7 +4393,7 @@ class Widget extends TreeNode
 
     if @children.length == 0
       @add \
-        new LayoutElementAdderOrDropletMorph(),
+        new LayoutElementAdderOrDropletMorph,
         nil,
         LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
@@ -4415,7 +4415,7 @@ class Widget extends TreeNode
       if !leftToDo?
         break
       leftToDo.addAsSiblingBeforeMe \
-            new LayoutElementAdderOrDropletMorph(),
+            new LayoutElementAdderOrDropletMorph,
             nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
@@ -4440,7 +4440,7 @@ class Widget extends TreeNode
       if !leftToDo?
         break
       leftToDo.addAsSiblingAfterMe \
-            new LayoutElementAdderOrDropletMorph(),
+            new LayoutElementAdderOrDropletMorph,
             nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
   # this part is excluded from the fizzygum homepage build <<«
@@ -4453,7 +4453,7 @@ class Widget extends TreeNode
     ## draw some reference patterns to see the sizes
 
     for i in [0..5]
-      lmHolder = new RectangleMorph()
+      lmHolder = new RectangleMorph
       lmHolder.setExtent new Point 10 + i*10,10 + i*10
       lmHolder.fullMoveTo new Point 10 + 60 * i, 10 + 50 * 0
 
@@ -4461,10 +4461,10 @@ class Widget extends TreeNode
 
     # ----------------------------------------------
 
-    lmHolder = new RectangleMorph()
-    lmContent1 = new RectangleMorph()
-    lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new RectangleMorph()
+    lmHolder = new RectangleMorph
+    lmContent1 = new RectangleMorph
+    lmAdj = new StackElementsSizeAdjustingMorph
+    lmContent2 = new RectangleMorph
 
     lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4483,10 +4483,10 @@ class Widget extends TreeNode
 
     # ----------------------------------------------
 
-    lmHolder = new RectangleMorph()
-    lmContent1 = new RectangleMorph()
-    lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new RectangleMorph()
+    lmHolder = new RectangleMorph
+    lmContent1 = new RectangleMorph
+    lmAdj = new StackElementsSizeAdjustingMorph
+    lmContent2 = new RectangleMorph
 
     lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4505,11 +4505,11 @@ class Widget extends TreeNode
 
     # ----------------------------------------------
 
-    lmHolder = new RectangleMorph()
-    lmContent1 = new RectangleMorph()
-    lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new RectangleMorph()
-    lmContent3 = new RectangleMorph()
+    lmHolder = new RectangleMorph
+    lmContent1 = new RectangleMorph
+    lmAdj = new StackElementsSizeAdjustingMorph
+    lmContent2 = new RectangleMorph
+    lmContent3 = new RectangleMorph
 
     lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4531,12 +4531,12 @@ class Widget extends TreeNode
 
     # ----------------------------------------------
 
-    lmHolder = new RectangleMorph()
-    lmContent1 = new RectangleMorph()
-    lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new RectangleMorph()
-    lmAdj2 = new StackElementsSizeAdjustingMorph()
-    lmContent3 = new RectangleMorph()
+    lmHolder = new RectangleMorph
+    lmContent1 = new RectangleMorph
+    lmAdj = new StackElementsSizeAdjustingMorph
+    lmContent2 = new RectangleMorph
+    lmAdj2 = new StackElementsSizeAdjustingMorph
+    lmContent3 = new RectangleMorph
 
     lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4559,17 +4559,17 @@ class Widget extends TreeNode
 
     # ----------------------------------------------
 
-    lmHolder = new RectangleMorph()
+    lmHolder = new RectangleMorph
 
-    lmSpacer1 = new LayoutSpacerMorph()
-    lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent1 = new RectangleMorph()
-    lmAdj2 = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new RectangleMorph()
-    lmAdj3 = new StackElementsSizeAdjustingMorph()
-    lmContent3 = new RectangleMorph()
-    lmAdj4 = new StackElementsSizeAdjustingMorph()
-    lmSpacer2 = new LayoutSpacerMorph()
+    lmSpacer1 = new LayoutSpacerMorph
+    lmAdj = new StackElementsSizeAdjustingMorph
+    lmContent1 = new RectangleMorph
+    lmAdj2 = new StackElementsSizeAdjustingMorph
+    lmContent2 = new RectangleMorph
+    lmAdj3 = new StackElementsSizeAdjustingMorph
+    lmContent3 = new RectangleMorph
+    lmAdj4 = new StackElementsSizeAdjustingMorph
+    lmSpacer2 = new LayoutSpacerMorph
 
     lmHolder.add lmSpacer1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4596,16 +4596,16 @@ class Widget extends TreeNode
 
     # ----------------------------------------------
 
-    lmHolder = new RectangleMorph()
+    lmHolder = new RectangleMorph
 
-    lmSpacer1 = new LayoutSpacerMorph()
-    lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent1 = new RectangleMorph()
-    lmAdj2 = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new RectangleMorph()
-    lmAdj3 = new StackElementsSizeAdjustingMorph()
-    lmContent3 = new RectangleMorph()
-    lmAdj4 = new StackElementsSizeAdjustingMorph()
+    lmSpacer1 = new LayoutSpacerMorph
+    lmAdj = new StackElementsSizeAdjustingMorph
+    lmContent1 = new RectangleMorph
+    lmAdj2 = new StackElementsSizeAdjustingMorph
+    lmContent2 = new RectangleMorph
+    lmAdj3 = new StackElementsSizeAdjustingMorph
+    lmContent3 = new RectangleMorph
+    lmAdj4 = new StackElementsSizeAdjustingMorph
     lmSpacer2 = new LayoutSpacerMorph 2
 
     lmHolder.add lmSpacer1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4633,16 +4633,16 @@ class Widget extends TreeNode
 
     # ----------------------------------------------
 
-    lmHolder = new RectangleMorph()
+    lmHolder = new RectangleMorph
 
-    lmSpacer1 = new LayoutSpacerMorph()
-    lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent1 = new RectangleMorph()
-    lmAdj2 = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new RectangleMorph()
-    lmAdj3 = new StackElementsSizeAdjustingMorph()
-    lmContent3 = new RectangleMorph()
-    lmAdj4 = new StackElementsSizeAdjustingMorph()
+    lmSpacer1 = new LayoutSpacerMorph
+    lmAdj = new StackElementsSizeAdjustingMorph
+    lmContent1 = new RectangleMorph
+    lmAdj2 = new StackElementsSizeAdjustingMorph
+    lmContent2 = new RectangleMorph
+    lmAdj3 = new StackElementsSizeAdjustingMorph
+    lmContent3 = new RectangleMorph
+    lmAdj4 = new StackElementsSizeAdjustingMorph
     lmSpacer2 = new LayoutSpacerMorph 2
 
     lmHolder.add lmSpacer1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4670,16 +4670,16 @@ class Widget extends TreeNode
 
     # ----------------------------------------------
 
-    lmHolder = new RectangleMorph()
+    lmHolder = new RectangleMorph
 
-    lmSpacer1 = new LayoutSpacerMorph()
-    lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent1 = new RectangleMorph()
-    lmAdj2 = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new RectangleMorph()
-    lmAdj3 = new StackElementsSizeAdjustingMorph()
-    lmContent3 = new RectangleMorph()
-    lmAdj4 = new StackElementsSizeAdjustingMorph()
+    lmSpacer1 = new LayoutSpacerMorph
+    lmAdj = new StackElementsSizeAdjustingMorph
+    lmContent1 = new RectangleMorph
+    lmAdj2 = new StackElementsSizeAdjustingMorph
+    lmContent2 = new RectangleMorph
+    lmAdj3 = new StackElementsSizeAdjustingMorph
+    lmContent3 = new RectangleMorph
+    lmAdj4 = new StackElementsSizeAdjustingMorph
     lmSpacer2 = new LayoutSpacerMorph 2
 
     lmHolder.add lmSpacer1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED

@@ -7,19 +7,19 @@ class TextToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   createWidgetToBeHandled: ->
 
-    toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
+    toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
 
     toolsPanel.addMany [
       new ChangeFontButtonWdgt @
-      new BoldButtonWdgt()
-      new ItalicButtonWdgt()
-      new FormatAsCodeButtonWdgt()
-      new IncreaseFontSizeButtonWdgt()
-      new DecreaseFontSizeButtonWdgt()
+      new BoldButtonWdgt
+      new ItalicButtonWdgt
+      new FormatAsCodeButtonWdgt
+      new IncreaseFontSizeButtonWdgt
+      new DecreaseFontSizeButtonWdgt
 
-      new AlignLeftButtonWdgt()
-      new AlignCenterButtonWdgt()
-      new AlignRightButtonWdgt()
+      new AlignLeftButtonWdgt
+      new AlignCenterButtonWdgt
+      new AlignRightButtonWdgt
     ]
 
     toolsPanel.disableDragsDropsAndEditing()

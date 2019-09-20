@@ -175,7 +175,7 @@ class InspectorMorph2 extends Widget
         @classesNames.push goingUpTargetProtChain.constructor.name
         goingUpTargetProtChain = goingUpTargetProtChain.__proto__
 
-    @hierarchyBackgroundPanel = new RectangleMorph()
+    @hierarchyBackgroundPanel = new RectangleMorph
     @hierarchyBackgroundPanel.setColor new Color 255,255,255,.2
     @add @hierarchyBackgroundPanel
 

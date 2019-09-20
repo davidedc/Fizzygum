@@ -7,13 +7,13 @@ class WindowsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   createWidgetToBeHandled: ->
 
-    toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
+    toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
 
     toolsPanel.addMany [
-      new EmptyWindowCreatorButtonWdgt()
-      new WindowWithPanelCreatorButtonWdgt()
-      new WindowWithScrollPanelCreatorButtonWdgt()
-      new ElasticWindowCreatorButtonWdgt()
+      new EmptyWindowCreatorButtonWdgt
+      new WindowWithPanelCreatorButtonWdgt
+      new WindowWithScrollPanelCreatorButtonWdgt
+      new ElasticWindowCreatorButtonWdgt
     ]
 
     toolsPanel.disableDragsDropsAndEditing()

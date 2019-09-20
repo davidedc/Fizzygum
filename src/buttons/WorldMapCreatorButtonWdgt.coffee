@@ -6,7 +6,7 @@ class WorldMapCreatorButtonWdgt extends CreatorButtonWdgt
     @toolTipMessage = "world map"
 
   createWidgetToBeHandled: ->
-    switcheroo = new SimpleWorldMapIconWdgt()
+    switcheroo = new SimpleWorldMapIconWdgt
     switcheroo.rawSetExtent new Point 240, 125
     switcheroo.setColor new Color 183, 183, 183
     return switcheroo

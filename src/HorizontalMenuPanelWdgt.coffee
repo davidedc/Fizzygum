@@ -26,11 +26,11 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
         aWdgt.extentToGetWhenDraggedFromGlassBox = aWdgt.extent()
 
       if !(aWdgt instanceof GlassBoxBottomWdgt)
-        glassBoxBottom = new GlassBoxBottomWdgt()
+        glassBoxBottom = new GlassBoxBottomWdgt
         glassBoxBottom.add aWdgt
 
         if !aWdgt.actionableAsThumbnail
-          glassBoxTop = new GlassBoxTopWdgt()
+          glassBoxTop = new GlassBoxTopWdgt
           glassBoxBottom.add glassBoxTop
           glassBoxTop.toolTipMessage = aWdgt.toolTipMessage
 

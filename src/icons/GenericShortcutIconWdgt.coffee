@@ -15,7 +15,7 @@ class GenericShortcutIconWdgt extends Widget
     @rawSetExtent new Point 95, 95
     @add @icon
 
-    @referenceArrowIcon = new ShortcutArrowIconWdgt()
+    @referenceArrowIcon = new ShortcutArrowIconWdgt
     @add @referenceArrowIcon
 
     # update layout

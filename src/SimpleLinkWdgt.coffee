@@ -50,7 +50,7 @@ class SimpleLinkWdgt extends Widget
     @invalidateLayout()
 
   createLinkIcon: ->
-    @externalLinkIcon = new ExternalLinkButtonWdgt()
+    @externalLinkIcon = new ExternalLinkButtonWdgt
 
   rawSetExtent: (aPoint) ->
     super

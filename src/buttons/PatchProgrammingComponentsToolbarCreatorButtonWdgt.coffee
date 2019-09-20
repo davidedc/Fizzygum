@@ -7,13 +7,13 @@ class PatchProgrammingComponentsToolbarCreatorButtonWdgt extends ToolbarCreatorB
 
   createWidgetToBeHandled: ->
 
-    toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
+    toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
 
     toolsPanel.addMany [
-      new SliderNodeCreatorButtonWdgt()
-      new ColorPaletteNodeCreatorButtonWdgt()
-      new GrayscalePaletteNodeCreatorButtonWdgt()
-      new CalculatingNodeCreatorButtonWdgt()
+      new SliderNodeCreatorButtonWdgt
+      new ColorPaletteNodeCreatorButtonWdgt
+      new GrayscalePaletteNodeCreatorButtonWdgt
+      new CalculatingNodeCreatorButtonWdgt
     ]
 
     toolsPanel.disableDragsDropsAndEditing()

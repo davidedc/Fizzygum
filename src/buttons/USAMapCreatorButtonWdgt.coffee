@@ -6,7 +6,7 @@ class USAMapCreatorButtonWdgt extends CreatorButtonWdgt
     @toolTipMessage = "USA map"
 
   createWidgetToBeHandled: ->
-    switcheroo = new SimpleUSAMapIconWdgt()
+    switcheroo = new SimpleUSAMapIconWdgt
     switcheroo.rawSetExtent new Point 230, 145
     switcheroo.setColor new Color 183, 183, 183
     return switcheroo

@@ -4,12 +4,12 @@ class FolderWindowWdgt extends WindowWdgt
 
 
   constructor: (@labelContent, @closeButton, @contents, @internal = false) ->
-    @contents = new ScrollPanelWdgt new FolderPanelWdgt()
+    @contents = new ScrollPanelWdgt new FolderPanelWdgt
     super "", @closeButton, @contents, @internal
 
 
   representativeIcon: ->
-    new GenericShortcutIconWdgt new FolderIconWdgt()
+    new GenericShortcutIconWdgt new FolderIconWdgt
 
   closeFromWindowBar: ->
     if !world.anyReferenceToWdgt @

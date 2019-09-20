@@ -15,7 +15,7 @@ class ExternalIconButtonWdgt extends EmptyButtonMorph
   constructor: (@target) ->
     # can't set the parent as the target directly because this morph
     # might not have a parent yet.
-    super true, @, 'actOnClick', new Widget()
+    super true, @, 'actOnClick', new Widget
     @color_hover = new Color 255,153,0
     @color_pressed = @color_hover
     @appearance = new ExternalIconAppearance @

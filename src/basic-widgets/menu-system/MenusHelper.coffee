@@ -19,7 +19,7 @@ class MenusHelper
 
   # »>> this part is excluded from the fizzygum homepage build
   createFridgeMagnets: ->
-    fmm = new FridgeMagnetsMorph()
+    fmm = new FridgeMagnetsMorph
     wm = new WindowWdgt nil, nil, fmm
     wm.setExtent new Point 570, 400
     wm.fullRawMoveTo world.hand.position()
@@ -30,7 +30,7 @@ class MenusHelper
 
 
   createReconfigurablePaint: ->
-    reconfPaint = new ReconfigurablePaintWdgt()
+    reconfPaint = new ReconfigurablePaintWdgt
     wm = new WindowWdgt nil, nil, reconfPaint
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position()
@@ -39,7 +39,7 @@ class MenusHelper
     wm.changed()
 
   createSimpleSlideWdgt: ->
-    simpleSlide = new SimpleSlideWdgt()
+    simpleSlide = new SimpleSlideWdgt
     wm = new WindowWdgt nil, nil, simpleSlide
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position()
@@ -56,7 +56,7 @@ class MenusHelper
     world.create new SwitchButtonMorph [button1, button2]
 
   createNewClippingBoxMorph: ->
-    world.create new ClippingBoxMorph()
+    world.create new ClippingBoxMorph
 
   makeSlidersButtonsStatesBright: ->
     world.forAllChildrenBottomToTop (child) ->
@@ -68,7 +68,7 @@ class MenusHelper
   # Icons --------------------------------------------------------------
 
   makeIconWithText: ->
-    world.create new WidgetHolderWithCaptionWdgt "hey there", new BrushIconMorph()
+    world.create new WidgetHolderWithCaptionWdgt "hey there", new BrushIconMorph
 
   makeEmptyIconWithText: ->
     world.create new WidgetHolderWithCaptionWdgt "hey there"
@@ -77,88 +77,88 @@ class MenusHelper
     world.create new FolderWindowWdgt nil,nil,nil,nil, @
 
   makeBouncingParticle: ->
-    world.create new BouncerWdgt()
+    world.create new BouncerWdgt
 
   createDestroyIconMorph: ->
-    world.create new DestroyIconMorph()
+    world.create new DestroyIconMorph
 
   createUnderCarpetIconMorph: ->
-    world.create new UnderCarpetIconMorph()
+    world.create new UnderCarpetIconMorph
 
   createUncollapsedStateIconMorph: ->
-    world.create new UncollapsedStateIconMorph()
+    world.create new UncollapsedStateIconMorph
 
   createCollapsedStateIconMorph: ->
-    world.create new CollapsedStateIconMorph()
+    world.create new CollapsedStateIconMorph
 
   createCloseIconButtonMorph: ->
-    world.create new CloseIconButtonMorph()
+    world.create new CloseIconButtonMorph
 
   createScratchAreaIconMorph: ->
-    world.create new ScratchAreaIconMorph()
+    world.create new ScratchAreaIconMorph
 
   createFloraIconMorph: ->
-    world.create new FloraIconMorph()
+    world.create new FloraIconMorph
 
   createScooterIconMorph: ->
-    world.create new ScooterIconMorph()
+    world.create new ScooterIconMorph
 
   createHeartIconMorph: ->
-    world.create new HeartIconMorph()
+    world.create new HeartIconMorph
 
 
   createPencil1IconMorph: ->
-    world.create new PencilIconMorph()
+    world.create new PencilIconMorph
 
   createPencil2IconMorph: ->
-    world.create new Pencil2IconMorph()
+    world.create new Pencil2IconMorph
 
   createBrushIconMorph: ->
-    world.create new BrushIconMorph()
+    world.create new BrushIconMorph
 
   createToothpasteIconMorph: ->
-    world.create new ToothpasteIconMorph()
+    world.create new ToothpasteIconMorph
 
   createEraserIconMorph: ->
-    world.create new EraserIconMorph()
+    world.create new EraserIconMorph
 
 
   createTrashcanIconWdgt: ->
-    world.create new TrashcanIconWdgt()
+    world.create new TrashcanIconWdgt
 
   createShortcutArrowIconWdgt: ->
-    world.create new ShortcutArrowIconWdgt()
+    world.create new ShortcutArrowIconWdgt
 
   createRasterPicIconWdgt: ->
-    world.create new RasterPicIconWdgt()
+    world.create new RasterPicIconWdgt
 
   createPaintBucketIconWdgt: ->
-    world.create new PaintBucketIconWdgt()
+    world.create new PaintBucketIconWdgt
 
   createObjectIconWdgt: ->
-    world.create new ObjectIconWdgt()
+    world.create new ObjectIconWdgt
 
   createFolderIconWdgt: ->
-    world.create new FolderIconWdgt()
+    world.create new FolderIconWdgt
 
   createBasementIconWdgt: ->
-    world.create new BasementIconWdgt()
+    world.create new BasementIconWdgt
 
   createWidgetIconWdgt: ->
-    world.create new WidgetIconWdgt()
+    world.create new WidgetIconWdgt
 
   makeGenericReferenceIcon: ->
-    world.create new GenericShortcutIconWdgt()
+    world.create new GenericShortcutIconWdgt
 
   makeGenericObjectIcon: ->
-    world.create new GenericObjectIconWdgt()
+    world.create new GenericObjectIconWdgt
 
 
   basementIconAndText: ->
-    world.add new BasementOpenerWdgt()
+    world.add new BasementOpenerWdgt
 
   newScriptWindow: ->
-    scriptWdgt = new ScriptWdgt()
+    scriptWdgt = new ScriptWdgt
     wm = new WindowWdgt nil, nil, scriptWdgt
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
@@ -168,7 +168,7 @@ class MenusHelper
 
   createFizzyPaintLauncher: ->
     scriptWdgt = new ScriptWdgt """
-      reconfPaint = new ReconfigurablePaintWdgt()
+      reconfPaint = new ReconfigurablePaintWdgt
       wm = new WindowWdgt nil, nil, reconfPaint
       wm.setExtent new Point 460, 400
       wm.fullRawMoveTo new Point 174, 114
@@ -189,7 +189,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    fizzyPaintLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Draw", new PaintBucketIconWdgt()
+    fizzyPaintLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Draw", new PaintBucketIconWdgt
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add fizzyPaintLauncher
@@ -203,7 +203,7 @@ class MenusHelper
 
   createSimpleDocumentLauncher: ->
     scriptWdgt = new ScriptWdgt """
-      reconfPaint = new SimpleDocumentWdgt()
+      reconfPaint = new SimpleDocumentWdgt
       wm = new WindowWdgt nil, nil, reconfPaint
       wm.setExtent new Point 370, 395
       wm.fullRawMoveTo new Point 170, 88
@@ -224,7 +224,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    simpleDocumentLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Docs Maker", new TypewriterIconWdgt()
+    simpleDocumentLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Docs Maker", new TypewriterIconWdgt
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add simpleDocumentLauncher
@@ -238,7 +238,7 @@ class MenusHelper
 
   createSimpleSlideLauncher: ->
     scriptWdgt = new ScriptWdgt """
-      reconfPaint = new SimpleSlideWdgt()
+      reconfPaint = new SimpleSlideWdgt
       wm = new WindowWdgt nil, nil, reconfPaint
       wm.setExtent new Point 460, 400
       wm.fullRawMoveTo new Point 168, 134
@@ -260,7 +260,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    simpleSlideLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Slides Maker", new SimpleSlideIconWdgt()
+    simpleSlideLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Slides Maker", new SimpleSlideIconWdgt
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add simpleSlideLauncher
@@ -274,7 +274,7 @@ class MenusHelper
 
   createDashboardsLauncher: ->
     scriptWdgt = new ScriptWdgt """
-      reconfPaint = new DashboardsWdgt()
+      reconfPaint = new DashboardsWdgt
       wm = new WindowWdgt nil, nil, reconfPaint
       wm.setExtent new Point 460, 400
       wm.fullRawMoveTo world.hand.position()
@@ -295,7 +295,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    simpleDashboardsLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Dashboards", new DashboardsIconWdgt()
+    simpleDashboardsLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Dashboards", new DashboardsIconWdgt
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add simpleDashboardsLauncher
@@ -306,7 +306,7 @@ class MenusHelper
 
   createPatchProgrammingLauncher: ->
     scriptWdgt = new ScriptWdgt """
-      patchProgramming = new PatchProgrammingWdgt()
+      patchProgramming = new PatchProgrammingWdgt
       wm = new WindowWdgt nil, nil, patchProgramming
       wm.setExtent new Point 460, 400
       wm.fullRawMoveTo world.hand.position()
@@ -327,7 +327,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    patchProgrammingLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Patch progr.", new PatchProgrammingIconWdgt()
+    patchProgrammingLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Patch progr.", new PatchProgrammingIconWdgt
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add patchProgrammingLauncher
@@ -337,7 +337,7 @@ class MenusHelper
 
   createGenericPanelLauncher: ->
     scriptWdgt = new ScriptWdgt """
-      genericPanel = new StretchableEditableWdgt()
+      genericPanel = new StretchableEditableWdgt
       wm = new WindowWdgt nil, nil, genericPanel
       wm.setExtent new Point 460, 400
       wm.fullRawMoveTo world.hand.position()
@@ -358,7 +358,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    genericPanelLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Generic panel", new GenericPanelIconWdgt()
+    genericPanelLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Generic panel", new GenericPanelIconWdgt
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add genericPanelLauncher
@@ -370,15 +370,15 @@ class MenusHelper
     scriptWdgt = new ScriptWdgt """
 
       # tools -------------------------------
-      toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
+      toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
 
       toolsPanel.addMany [
-        new TextToolbarCreatorButtonWdgt()
-        new UsefulTextSnippetsToolbarCreatorButtonWdgt()
-        new SlidesToolbarCreatorButtonWdgt()
-        new PlotsToolbarCreatorButtonWdgt()
-        new PatchProgrammingComponentsToolbarCreatorButtonWdgt()
-        new WindowsToolbarCreatorButtonWdgt()
+        new TextToolbarCreatorButtonWdgt
+        new UsefulTextSnippetsToolbarCreatorButtonWdgt
+        new SlidesToolbarCreatorButtonWdgt
+        new PlotsToolbarCreatorButtonWdgt
+        new PatchProgrammingComponentsToolbarCreatorButtonWdgt
+        new WindowsToolbarCreatorButtonWdgt
       ]
 
       toolsPanel.disableDragsDropsAndEditing()
@@ -404,7 +404,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    toolbarsOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Super Toolbar", new ToolbarsIconWdgt()
+    toolbarsOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Super Toolbar", new ToolbarsIconWdgt
     toolbarsOpenerLauncher.toolTipMessage = "a toolbar to rule them all"
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
@@ -414,7 +414,7 @@ class MenusHelper
     return wm
 
   createNewTemplatesWindow: ->
-    sdspw = new SimpleDocumentScrollPanelWdgt()
+    sdspw = new SimpleDocumentScrollPanelWdgt
 
     sdspw.rawSetExtent new Point 365, 335
 
@@ -428,7 +428,7 @@ class MenusHelper
     sdspw.setContents startingContent, 5
 
 
-    startingContent = new ArrowSIconWdgt()
+    startingContent = new ArrowSIconWdgt
     startingContent.rawSetExtent new Point 25, 25
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToCenter()
@@ -502,12 +502,12 @@ class MenusHelper
     startingContent.enableSelecting()
     sdspw.add startingContent
 
-    startingContent = new SimpleLinkWdgt()
+    startingContent = new SimpleLinkWdgt
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
-    startingContent = new SimpleVideoLinkWdgt()
+    startingContent = new SimpleVideoLinkWdgt
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
@@ -536,12 +536,12 @@ class MenusHelper
 
 
   createFanout: ->
-    fanoutWdgt = new FanoutWdgt()
+    fanoutWdgt = new FanoutWdgt
     world.create fanoutWdgt
     fanoutWdgt.setExtent new Point 100, 100
 
   createCalculatingPatchNode: ->
-    calculatingPatchNodeWdgt = new CalculatingPatchNodeWdgt()
+    calculatingPatchNodeWdgt = new CalculatingPatchNodeWdgt
     wm = new WindowWdgt nil, nil, calculatingPatchNodeWdgt, true
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
@@ -550,7 +550,7 @@ class MenusHelper
     wm.changed()
 
   createDiffingPatchNode: ->
-    diffingPatchNodeWdgt = new DiffingPatchNodeWdgt()
+    diffingPatchNodeWdgt = new DiffingPatchNodeWdgt
     wm = new WindowWdgt nil, nil, diffingPatchNodeWdgt, true
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
@@ -562,7 +562,7 @@ class MenusHelper
     world.create new SliderMorph nil, nil, nil, nil, nil, true
 
   createRegexSubstitutionPatchNodeWdgt: ->
-    regexSubstitutionPatchNodeWdgt = new RegexSubstitutionPatchNodeWdgt()
+    regexSubstitutionPatchNodeWdgt = new RegexSubstitutionPatchNodeWdgt
     wm = new WindowWdgt nil, nil, regexSubstitutionPatchNodeWdgt, true
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
@@ -574,12 +574,12 @@ class MenusHelper
     throw new Error "you manually threw an error!"
 
   createStretchablePanel: ->
-    stretchablePanel = new StretchableWidgetContainerWdgt()
+    stretchablePanel = new StretchableWidgetContainerWdgt
     world.create stretchablePanel
     stretchablePanel.setExtent new Point 400, 300
 
   createToolsPanel: ->
-    toolPanel = new ScrollPanelWdgt new ToolPanelWdgt()
+    toolPanel = new ScrollPanelWdgt new ToolPanelWdgt
     wm = new WindowWdgt nil, nil, toolPanel, true
     wm.setExtent new Point 200, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
@@ -588,7 +588,7 @@ class MenusHelper
     wm.changed()
 
   createHorizontalMenuPanelPanel: ->
-    horizontalMenuPanel = new HorizontalMenuPanelWdgt()
+    horizontalMenuPanel = new HorizontalMenuPanelWdgt
     wm = new WindowWdgt nil, nil, horizontalMenuPanel, true
     wm.setExtent new Point 200, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
@@ -653,40 +653,40 @@ class MenusHelper
     menu.popUpAtHand()
 
   createFizzygumLogoWithTextIconWdgt : ->
-    world.create new FizzygumLogoWithTextIconWdgt()
+    world.create new FizzygumLogoWithTextIconWdgt
 
   createVaporwaveBackgroundIconWdgt : ->
-    world.create new VaporwaveBackgroundIconWdgt()
+    world.create new VaporwaveBackgroundIconWdgt
 
   createCFDegreesConverterIconWdgt : ->
-    world.create new CFDegreesConverterIconWdgt()
+    world.create new CFDegreesConverterIconWdgt
 
   createFizzygumLogoIconWdgt : ->
-    world.create new FizzygumLogoIconWdgt()
+    world.create new FizzygumLogoIconWdgt
 
   createVaporwaveSunIconWdgt : ->
-    world.create new VaporwaveSunIconWdgt()
+    world.create new VaporwaveSunIconWdgt
 
   createLittleWorldIconWdgt : ->
-    world.create new LittleWorldIconWdgt()
+    world.create new LittleWorldIconWdgt
 
   createChangeFontIconWdgt : ->
-    world.create new ChangeFontIconWdgt()
+    world.create new ChangeFontIconWdgt
 
   createSimpleSlideIconWdgt : ->
-    world.create new SimpleSlideIconWdgt()
+    world.create new SimpleSlideIconWdgt
 
   createTypewriterIconWdgt : ->
-    world.create new TypewriterIconWdgt()
+    world.create new TypewriterIconWdgt
 
   createLittleUSAIconWdgt : ->
-    world.create new LittleUSAIconWdgt()
+    world.create new LittleUSAIconWdgt
 
   createMapPinIconWdgt : ->
-    world.create new MapPinIconWdgt()
+    world.create new MapPinIconWdgt
 
   createSaveIconWdgt : ->
-    world.create new SaveIconWdgt()
+    world.create new SaveIconWdgt
 
 
   popUpArrowsIconsMenu: (morphOpeningThePopUp) ->
@@ -702,85 +702,85 @@ class MenusHelper
     menu.popUpAtHand()
 
   createArrowEIconWdgt: ->
-    world.create new ArrowEIconWdgt()
+    world.create new ArrowEIconWdgt
 
   createArrowNEIconWdgt: ->
-    world.create new ArrowNEIconWdgt()
+    world.create new ArrowNEIconWdgt
 
   createArrowNIconWdgt: ->
-    world.create new ArrowNIconWdgt()
+    world.create new ArrowNIconWdgt
 
   createArrowNWIconWdgt: ->
-    world.create new ArrowNWIconWdgt()
+    world.create new ArrowNWIconWdgt
 
   createArrowSEIconWdgt: ->
-    world.create new ArrowSEIconWdgt()
+    world.create new ArrowSEIconWdgt
 
   createArrowSIconWdgt: ->
-    world.create new ArrowSIconWdgt()
+    world.create new ArrowSIconWdgt
 
   createArrowSWIconWdgt: ->
-    world.create new ArrowSWIconWdgt()
+    world.create new ArrowSWIconWdgt
 
   createArrowWIconWdgt: ->
-    world.create new ArrowWIconWdgt()
+    world.create new ArrowWIconWdgt
 
   createDecreaseFontSizeIconWdgt: ->
-    world.create new DecreaseFontSizeIconWdgt()
+    world.create new DecreaseFontSizeIconWdgt
 
   createExternalLinkIconWdgt: ->
-    world.create new ExternalLinkIconWdgt()
+    world.create new ExternalLinkIconWdgt
 
   createIncreaseFontSizeIconWdgt: ->
-    world.create new IncreaseFontSizeIconWdgt()
+    world.create new IncreaseFontSizeIconWdgt
 
   createTemplatesIconWdgt: ->
-    world.create new TemplatesIconWdgt()
+    world.create new TemplatesIconWdgt
 
   createFormatAsCodeIconWdgt: ->
-    world.create new FormatAsCodeIconWdgt()
+    world.create new FormatAsCodeIconWdgt
 
   createChXIconWdgt: ->
-    world.create new ChapterXIconWdgt()
+    world.create new ChapterXIconWdgt
 
   createChXXIconWdgt: ->
-    world.create new ChapterXXIconWdgt()
+    world.create new ChapterXXIconWdgt
 
   createChXXXIconWdgt: ->
-    world.create new ChapterXXXIconWdgt()
+    world.create new ChapterXXXIconWdgt
 
   createAlignRightIconWdgt: ->
-    world.create new AlignRightIconWdgt()
+    world.create new AlignRightIconWdgt
 
   createAlignCenterIconWdgt: ->
-    world.create new AlignCenterIconWdgt()
+    world.create new AlignCenterIconWdgt
 
   createAlignLeftIconWdgt: ->
-    world.create new AlignLeftIconWdgt()
+    world.create new AlignLeftIconWdgt
 
   createWorldMapIconMorph: ->
-    world.create new SimpleWorldMapIconWdgt()
+    world.create new SimpleWorldMapIconWdgt
 
   createUSAMapIconMorph: ->
-    world.create new SimpleUSAMapIconWdgt()
+    world.create new SimpleUSAMapIconWdgt
 
   createBoldIconWdgt: ->
-    world.create new BoldIconWdgt()
+    world.create new BoldIconWdgt
 
   createItalicIconWdgt: ->
-    world.create new ItalicIconWdgt()
+    world.create new ItalicIconWdgt
 
   createInformationIconWdgt: ->
-    world.create new InformationIconWdgt()
+    world.create new InformationIconWdgt
 
   createTextboxIconWdgt: ->
-    world.create new TextIconWdgt()
+    world.create new TextIconWdgt
 
   createVideoPlayIconWdgt: ->
-    world.create new VideoPlayIconWdgt()
+    world.create new VideoPlayIconWdgt
 
   createSimpleDocumentWdgt: ->
-    simpleDocument = new SimpleDocumentWdgt()
+    simpleDocument = new SimpleDocumentWdgt
     wm = new WindowWdgt nil, nil, simpleDocument
     wm.setExtent new Point 368, 335
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
@@ -789,43 +789,43 @@ class MenusHelper
     wm.changed()
 
   createSimpleLinkWdgt: ->
-    simpleLinkWdgt = new SimpleLinkWdgt()
+    simpleLinkWdgt = new SimpleLinkWdgt
     simpleLinkWdgt.setExtent new Point 405, 50
     world.create simpleLinkWdgt
 
   createSimpleVideoLinkWdgt: ->
-    simpleVideoLinkWdgt = new SimpleVideoLinkWdgt()
+    simpleVideoLinkWdgt = new SimpleVideoLinkWdgt
     simpleVideoLinkWdgt.setExtent new Point 405, 50
     world.create simpleVideoLinkWdgt
 
   create2DAxis: ->
-    vertAxis = new AxisWdgt()
+    vertAxis = new AxisWdgt
     vertAxis.setExtent new Point 40, 300
     world.create vertAxis
 
   createExampleScatterPlot: ->
-    exampleScatterPlot = new ExampleScatterPlotWdgt()
+    exampleScatterPlot = new ExampleScatterPlotWdgt
     exampleScatterPlot.setExtent new Point 300, 300
     world.create exampleScatterPlot
 
   createExampleScatterPlotWithAxes: ->
-    exampleScatterPlot = new ExampleScatterPlotWdgt()
+    exampleScatterPlot = new ExampleScatterPlotWdgt
     plotWithAxesWdgt = new PlotWithAxesWdgt exampleScatterPlot
     plotWithAxesWdgt.rawSetExtent new Point 300, 300
     world.create plotWithAxesWdgt
 
   createExampleFunctionPlot: ->
-    exampleFunctionPlot = new ExampleFunctionPlotWdgt()
+    exampleFunctionPlot = new ExampleFunctionPlotWdgt
     exampleFunctionPlot.setExtent new Point 300, 300
     world.create exampleFunctionPlot
   
   createExampleBarPlot: ->
-    exampleBarPlot = new ExampleBarPlotWdgt()
+    exampleBarPlot = new ExampleBarPlotWdgt
     exampleBarPlot.setExtent new Point 300, 300
     world.create exampleBarPlot
 
   createExample3DPlot: ->
-    example3DPlot = new Example3DPlotWdgt()
+    example3DPlot = new Example3DPlotWdgt
     example3DPlot.setExtent new Point 300, 300
     world.create example3DPlot
 
@@ -854,13 +854,13 @@ class MenusHelper
     menu.popUpAtHand()
 
   createWelcomeMessageWindowAndShortcut: ->
-    simpleDocument = new SimpleDocumentWdgt()
+    simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
     sdspw.fullRawMoveTo new Point 114, 10
     sdspw.rawSetExtent new Point 365, 405
 
-    startingContent = new FizzygumLogoIconWdgt()
+    startingContent = new FizzygumLogoIconWdgt
     startingContent.rawSetExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
@@ -976,7 +976,7 @@ class MenusHelper
 
     simpleDocument.disableDragsDropsAndEditing()
 
-    readmeLauncher = new IconicDesktopSystemDocumentShortcutWdgt wm, "Welcome", new WelcomeIconWdgt()
+    readmeLauncher = new IconicDesktopSystemDocumentShortcutWdgt wm, "Welcome", new WelcomeIconWdgt
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add readmeLauncher
@@ -987,13 +987,13 @@ class MenusHelper
     if world.infoDoc_superToolbar_created
       return nil
 
-    simpleDocument = new SimpleDocumentWdgt()
+    simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
     sdspw.fullRawMoveTo new Point 114, 10
     sdspw.rawSetExtent new Point 365, 405
 
-    startingContent = new ToolbarsIconWdgt()
+    startingContent = new ToolbarsIconWdgt
     startingContent.rawSetExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
@@ -1042,13 +1042,13 @@ class MenusHelper
     if world.infoDoc_docsMaker_created
       return nil
 
-    simpleDocument = new SimpleDocumentWdgt()
+    simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
     sdspw.fullRawMoveTo new Point 114, 10
     sdspw.rawSetExtent new Point 365, 405
 
-    startingContent = new TypewriterIconWdgt()
+    startingContent = new TypewriterIconWdgt
     startingContent.rawSetExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
@@ -1067,8 +1067,8 @@ class MenusHelper
 
     sdspw.addNormalParagraph "A basic text editor. But you can drop anything inside it.\n\nNote that the Docs Maker works 'by paragraph': you can drag/drop paragraphs, and when you change the style the whole paragraph is affected.\n\nQuickest way to compose a document is to drag/drop snippets, which you can find by clicking the button that looks like this:"
 
-    startingContent = new GlassBoxBottomWdgt()
-    startingContent.add new TemplatesButtonWdgt()
+    startingContent = new GlassBoxBottomWdgt
+    startingContent.add new TemplatesButtonWdgt
     startingContent.rawSetExtent new Point 50, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToCenter()
@@ -1108,13 +1108,13 @@ class MenusHelper
     if world.infoDoc_drawingsMaker_created
       return nil
 
-    simpleDocument = new SimpleDocumentWdgt()
+    simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
     sdspw.fullRawMoveTo new Point 114, 10
     sdspw.rawSetExtent new Point 365, 405
 
-    startingContent = new PaintBucketIconWdgt()
+    startingContent = new PaintBucketIconWdgt
     startingContent.rawSetExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
@@ -1174,13 +1174,13 @@ class MenusHelper
     if world.infoDoc_slidesMaker_created
       return nil
 
-    simpleDocument = new SimpleDocumentWdgt()
+    simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
     sdspw.fullRawMoveTo new Point 114, 10
     sdspw.rawSetExtent new Point 365, 405
 
-    startingContent = new SimpleSlideIconWdgt()
+    startingContent = new SimpleSlideIconWdgt
     startingContent.rawSetExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
@@ -1232,13 +1232,13 @@ class MenusHelper
     if world.infoDoc_dashboardsMaker_created
       return nil
 
-    simpleDocument = new SimpleDocumentWdgt()
+    simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
     sdspw.fullRawMoveTo new Point 114, 10
     sdspw.rawSetExtent new Point 365, 405
 
-    startingContent = new DashboardsIconWdgt()
+    startingContent = new DashboardsIconWdgt
     startingContent.rawSetExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
@@ -1290,13 +1290,13 @@ class MenusHelper
     if world.infoDoc_patchProgramming_created
       return nil
 
-    simpleDocument = new SimpleDocumentWdgt()
+    simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
     sdspw.fullRawMoveTo new Point 114, 10
     sdspw.rawSetExtent new Point 365, 405
 
-    startingContent = new PatchProgrammingIconWdgt()
+    startingContent = new PatchProgrammingIconWdgt
     startingContent.rawSetExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
@@ -1354,13 +1354,13 @@ class MenusHelper
     if world.infoDoc_genericPanel_created
       return nil
 
-    simpleDocument = new SimpleDocumentWdgt()
+    simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
     sdspw.fullRawMoveTo new Point 114, 10
     sdspw.rawSetExtent new Point 365, 405
 
-    startingContent = new GenericPanelIconWdgt()
+    startingContent = new GenericPanelIconWdgt
     startingContent.rawSetExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
@@ -1411,13 +1411,13 @@ class MenusHelper
     if world.infoDoc_basement_created
       return nil
 
-    simpleDocument = new SimpleDocumentWdgt()
+    simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
     sdspw.fullRawMoveTo new Point 114, 10
     sdspw.rawSetExtent new Point 365, 405
 
-    startingContent = new BasementIconWdgt()
+    startingContent = new BasementIconWdgt
     startingContent.rawSetExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
@@ -1461,13 +1461,13 @@ class MenusHelper
     if world.infoDoc_windowsToolbar_created
       return nil
 
-    simpleDocument = new SimpleDocumentWdgt()
+    simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
     sdspw.fullRawMoveTo new Point 114, 10
     sdspw.rawSetExtent new Point 365, 405
 
-    startingContent = new WindowsToolbarIconWdgt()
+    startingContent = new WindowsToolbarIconWdgt
     startingContent.rawSetExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
@@ -1538,7 +1538,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "°C ↔ °F", new DegreesConverterIconWdgt()
+    degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "°C ↔ °F", new DegreesConverterIconWdgt
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     
@@ -1567,7 +1567,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "sample dashb", new GenericShortcutIconWdgt new DashboardsIconWdgt()
+    degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "sample dashb", new GenericShortcutIconWdgt new DashboardsIconWdgt
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     
@@ -1596,7 +1596,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "sample slide", new GenericShortcutIconWdgt new SimpleSlideIconWdgt()
+    degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "sample slide", new GenericShortcutIconWdgt new SimpleSlideIconWdgt
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     
@@ -1626,7 +1626,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "sample doc", new GenericShortcutIconWdgt new TypewriterIconWdgt()
+    degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "sample doc", new GenericShortcutIconWdgt new TypewriterIconWdgt
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     
@@ -1649,12 +1649,12 @@ class MenusHelper
         world.sampleSlideWindow.rememberFractionalSituationInHoldingPanel()
         return
 
-    slideWdgt = new SimpleSlideWdgt()
+    slideWdgt = new SimpleSlideWdgt
 
     container = slideWdgt.stretchableWidgetContainer.contents
     container.rawSetExtent new Point 575,454
 
-    windowWithScrollingPanel = new WindowWdgt nil, nil, new ScrollPanelWdgt(), true, true
+    windowWithScrollingPanel = new WindowWdgt nil, nil, new ScrollPanelWdgt, true, true
     windowWithScrollingPanel.setTitleWithoutPrependedContentName "New York City"
     windowWithScrollingPanel.fullRawMoveTo container.position().add new Point 28, 43
     windowWithScrollingPanel.rawSetExtent new Point 322, 268
@@ -1668,12 +1668,12 @@ class MenusHelper
     windowWithScrollingPanel.contents.scrollTo new Point 1484, 246
     usaMap.rememberFractionalSituationInHoldingPanel()
 
-    mapPin = new MapPinIconWdgt()
+    mapPin = new MapPinIconWdgt
     windowWithScrollingPanel.contents.add mapPin
     mapPin.fullRawMoveTo windowWithScrollingPanel.contents.contents.position().add new Point 1606, 343
     mapPin.rememberFractionalSituationInHoldingPanel()
 
-    sampleBarPlot = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleBarPlotWdgt()), true, true
+    sampleBarPlot = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleBarPlotWdgt), true, true
     sampleBarPlot.rawSetExtent new Point 240, 104
     windowWithScrollingPanel.contents.add sampleBarPlot
     sampleBarPlot.fullRawMoveTo windowWithScrollingPanel.contents.contents.position().add new Point 1566, 420
@@ -1726,7 +1726,7 @@ class MenusHelper
         world.sampleDocWindow.rememberFractionalSituationInHoldingPanel()
         return
 
-    simpleDocument = new SimpleDocumentWdgt()
+    simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
     sdspw.fullRawMoveTo new Point 114, 10
@@ -1798,24 +1798,24 @@ class MenusHelper
         world.sampleDashboardWindow.rememberFractionalSituationInHoldingPanel()
         return
 
-    slideWdgt = new DashboardsWdgt()
+    slideWdgt = new DashboardsWdgt
 
     container = slideWdgt.stretchableWidgetContainer.contents
     container.rawSetExtent new Point 725,556
 
-    scatterPlot = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleScatterPlotWdgt()), true, true
+    scatterPlot = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleScatterPlotWdgt), true, true
     scatterPlot.fullRawMoveTo container.position().add new Point 19, 86
     scatterPlot.rawSetExtent new Point 200, 200
     container.add scatterPlot
     scatterPlot.rememberFractionalSituationInHoldingPanel()
 
-    functionPlot = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleFunctionPlotWdgt()), true, true
+    functionPlot = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleFunctionPlotWdgt), true, true
     functionPlot.fullRawMoveTo container.position().add new Point 251, 86
     functionPlot.rawSetExtent new Point 200, 200
     container.add functionPlot
     functionPlot.rememberFractionalSituationInHoldingPanel()
 
-    barPlot = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleBarPlotWdgt()), true, true
+    barPlot = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleBarPlotWdgt), true, true
     barPlot.fullRawMoveTo container.position().add new Point 19, 327
     barPlot.rawSetExtent new Point 200, 200
     container.add barPlot
@@ -1833,27 +1833,27 @@ class MenusHelper
     container.add usaMap
     usaMap.rememberFractionalSituationInHoldingPanel()
 
-    mapPin1 = new MapPinIconWdgt()
+    mapPin1 = new MapPinIconWdgt
     mapPin1.fullRawMoveTo container.position().add new Point 226, 376
     container.add mapPin1
     mapPin1.rememberFractionalSituationInHoldingPanel()
 
-    mapPin2 = new MapPinIconWdgt()
+    mapPin2 = new MapPinIconWdgt
     mapPin2.fullRawMoveTo container.position().add new Point 289, 363
     container.add mapPin2
     mapPin2.rememberFractionalSituationInHoldingPanel()
 
-    mapPin3 = new MapPinIconWdgt()
+    mapPin3 = new MapPinIconWdgt
     mapPin3.fullRawMoveTo container.position().add new Point 323, 397
     container.add mapPin3
     mapPin3.rememberFractionalSituationInHoldingPanel()
 
-    mapPin4 = new MapPinIconWdgt()
+    mapPin4 = new MapPinIconWdgt
     mapPin4.fullRawMoveTo container.position().add new Point 360, 421
     container.add mapPin4
     mapPin4.rememberFractionalSituationInHoldingPanel()
 
-    mapPin5 = new MapPinIconWdgt()
+    mapPin5 = new MapPinIconWdgt
     mapPin5.fullRawMoveTo container.position().add new Point 417, 374
     container.add mapPin5
     mapPin5.rememberFractionalSituationInHoldingPanel()
@@ -1926,7 +1926,7 @@ class MenusHelper
 
     xCorrection = 32
     yCorrection = 50
-    patchProgrammingWdgt = new PatchProgrammingWdgt()
+    patchProgrammingWdgt = new PatchProgrammingWdgt
 
     container = patchProgrammingWdgt.stretchableWidgetContainer.contents
     container.rawSetExtent new Point 584,552
@@ -2032,7 +2032,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     wm.changed()
 
-    toolbarsOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "How to save?", new FloppyDiskIconWdgt()
+    toolbarsOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "How to save?", new FloppyDiskIconWdgt
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add toolbarsOpenerLauncher
@@ -2051,13 +2051,13 @@ class MenusHelper
         world.howToSaveDocWindow.rememberFractionalSituationInHoldingPanel()
         return
 
-    simpleDocument = new SimpleDocumentWdgt()
+    simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
     sdspw.fullRawMoveTo new Point 114, 10
     sdspw.rawSetExtent new Point 365, 405
 
-    startingContent = new FloppyDiskIconWdgt()
+    startingContent = new FloppyDiskIconWdgt
     startingContent.rawSetExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5

@@ -30,7 +30,7 @@ class ScriptWdgt extends Widget
     "script"
 
   representativeIcon: ->
-    new ScriptIconWdgt()
+    new ScriptIconWdgt
 
   closeFromContainerWindow: (containerWindow) ->
     if !world.anyReferenceToWdgt containerWindow

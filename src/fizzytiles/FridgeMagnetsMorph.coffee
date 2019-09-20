@@ -32,7 +32,7 @@ class FridgeMagnetsMorph extends Widget
     #super
 
     # visual output
-    @visualOutput = new FridgeMagnetsCanvasMorph()
+    @visualOutput = new FridgeMagnetsCanvasMorph
     @visualOutput.disableDrops()
     @add @visualOutput
     
@@ -45,13 +45,13 @@ class FridgeMagnetsMorph extends Widget
     @add @codeOutput
 
     # fridge
-    @fridge = new FridgeMorph()
+    @fridge = new FridgeMorph
     @fridge.fridgeMagnetsCanvas = @visualOutput
     @fridge.sourceCodeHolder = @codeOutput
     @add @fridge
 
     # magnets box
-    @magnetsBox = new PanelWdgt()
+    @magnetsBox = new PanelWdgt
     @add @magnetsBox
 
 

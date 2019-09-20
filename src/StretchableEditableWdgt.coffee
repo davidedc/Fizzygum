@@ -30,13 +30,13 @@ class StretchableEditableWdgt extends Widget
     "Generic panel"
 
   representativeIcon: ->
-    new GenericPanelIconWdgt()
+    new GenericPanelIconWdgt
 
 
   createToolsPanel: ->
 
   createNewStretchablePanel: ->
-    @stretchableWidgetContainer = new StretchableWidgetContainerWdgt()
+    @stretchableWidgetContainer = new StretchableWidgetContainerWdgt
     @add @stretchableWidgetContainer
 
 

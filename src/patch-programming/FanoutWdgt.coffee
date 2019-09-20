@@ -12,10 +12,10 @@ class FanoutWdgt extends Widget
     super
     @appearance = new FanoutAppearance @
 
-    @pinUp = new FanoutPinWdgt()
-    @pinDown = new FanoutPinWdgt()
-    @pinLeft = new FanoutPinWdgt()
-    @pinRight = new FanoutPinWdgt()
+    @pinUp = new FanoutPinWdgt
+    @pinDown = new FanoutPinWdgt
+    @pinLeft = new FanoutPinWdgt
+    @pinRight = new FanoutPinWdgt
 
     @add @pinUp
     @add @pinDown

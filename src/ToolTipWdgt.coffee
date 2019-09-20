@@ -80,7 +80,7 @@ class ToolTipWdgt extends Widget
         true,
         "center")
     else if @contents instanceof HTMLCanvasElement
-      @contentsMorph = new Widget()
+      @contentsMorph = new Widget
       @contentsMorph.silentRawSetWidth @contents.width
       @contentsMorph.silentRawSetHeight @contents.height
       @contentsMorph.backBuffer = @contents

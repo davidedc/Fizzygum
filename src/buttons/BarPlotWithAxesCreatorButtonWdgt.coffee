@@ -6,7 +6,7 @@ class BarPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
     @toolTipMessage = "bar plot"
 
   createWidgetToBeHandled: ->
-    switcherooWm = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleBarPlotWdgt()), true, true
+    switcherooWm = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleBarPlotWdgt), true, true
     switcherooWm.rawSetExtent new Point 200, 200
 
     return switcherooWm

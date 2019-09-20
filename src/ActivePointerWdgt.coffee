@@ -254,7 +254,7 @@ class ActivePointerWdgt extends Widget
         world.lastNonTextPropertyChangerButtonClickedOrDropped = wdgtToDrop
 
       @children = []
-      @rawSetExtent new Point()
+      @rawSetExtent new Point
 
       # first we notify the recipient of the drop
       # this gives the chance to the recipient to
@@ -760,35 +760,35 @@ class ActivePointerWdgt extends Widget
     url = (if event.dataTransfer then event.dataTransfer.getData("URL") else nil)
     txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else nil)
     targetDrop = @topWdgtUnderPointer()
-    img = new Image()
+    img = new Image
 
     readSVG = (aFile) ->
-      pic = new Image()
+      pic = new Image
       targetDrop = targetDrop.parent  until targetDrop.droppedSVG
       pic.onload = ->
         targetDrop.droppedSVG pic, aFile.name
-      frd = new FileReader()
+      frd = new FileReader
       frd.onloadend = (e) ->
         pic.src = e.target.result
       frd.readAsDataURL aFile
 
     readImage = (aFile) ->
-      pic = new Image()
+      pic = new Image
       targetDrop = targetDrop.parent  until targetDrop.droppedImage
       pic.onload = ->
         canvas = newCanvas new Point pic.width, pic.height
         canvas.getContext("2d").drawImage pic, 0, 0
         targetDrop.droppedImage canvas, aFile.name
 
-      frd = new FileReader()
+      frd = new FileReader
       frd.onloadend = (e) ->
         pic.src = e.target.result
 
       frd.readAsDataURL aFile
 
     readAudio = (aFile) ->
-      snd = new Audio()
-      frd = new FileReader()
+      snd = new Audio
+      frd = new FileReader
       targetDrop = targetDrop.parent  until targetDrop.droppedAudio
       frd.onloadend = (e) ->
         snd.src = e.target.result
@@ -796,7 +796,7 @@ class ActivePointerWdgt extends Widget
       frd.readAsDataURL aFile
     
     readText = (aFile) ->
-      frd = new FileReader()
+      frd = new FileReader
       targetDrop = targetDrop.parent  until targetDrop.droppedText
       frd.onloadend = (e) ->
         targetDrop.droppedText e.target.result, aFile.name
@@ -804,7 +804,7 @@ class ActivePointerWdgt extends Widget
 
 
     readBinary = (aFile) ->
-      frd = new FileReader()
+      frd = new FileReader
       targetDrop = targetDrop.parent  until targetDrop.droppedBinary
       frd.onloadend = (e) ->
         targetDrop.droppedBinary e.target.result, aFile.name
@@ -836,7 +836,7 @@ class ActivePointerWdgt extends Widget
     else if url
       if url.slice(url.lastIndexOf(".") + 1).toLowerCase() in ["gif", "png", "jpg", "jpeg", "bmp"]
         targetDrop = targetDrop.parent  until targetDrop.droppedImage
-        img = new Image()
+        img = new Image
         img.onload = ->
           canvas = newCanvas new Point img.width, img.height
           canvas.getContext("2d").drawImage img, 0, 0
@@ -844,7 +844,7 @@ class ActivePointerWdgt extends Widget
         img.src = url
     else if txt
       targetDrop = targetDrop.parent  until targetDrop.droppedImage
-      img = new Image()
+      img = new Image
       img.onload = ->
         canvas = newCanvas new Point img.width, img.height
         canvas.getContext("2d").drawImage img, 0, 0

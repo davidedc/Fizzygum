@@ -6,7 +6,7 @@ class ExternalLinkCreatorButtonWdgt extends CreatorButtonWdgt
     @toolTipMessage = "external link"
 
   createWidgetToBeHandled: ->
-    switcheroo = new SimpleLinkWdgt()
+    switcheroo = new SimpleLinkWdgt
     switcheroo.fullRawMoveTo @position()
     switcheroo.rawSetExtent new Point 330, 65
     return switcheroo

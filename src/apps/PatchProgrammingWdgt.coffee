@@ -4,20 +4,20 @@ class PatchProgrammingWdgt extends StretchableEditableWdgt
     "Patch Programming"
 
   representativeIcon: ->
-    new PatchProgrammingIconWdgt()
+    new PatchProgrammingIconWdgt
 
 
   createToolsPanel: ->
     # tools -------------------------------
-    @toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
+    @toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
 
     @toolsPanel.addMany [
-      new TextBoxCreatorButtonWdgt()
-      new SliderNodeCreatorButtonWdgt()
+      new TextBoxCreatorButtonWdgt
+      new SliderNodeCreatorButtonWdgt
 
-      new ColorPaletteNodeCreatorButtonWdgt()
-      new GrayscalePaletteNodeCreatorButtonWdgt()
-      new CalculatingNodeCreatorButtonWdgt()
+      new ColorPaletteNodeCreatorButtonWdgt
+      new GrayscalePaletteNodeCreatorButtonWdgt
+      new CalculatingNodeCreatorButtonWdgt
     ]
 
 
@@ -28,7 +28,7 @@ class PatchProgrammingWdgt extends StretchableEditableWdgt
     @invalidateLayout()
 
   createNewStretchablePanel: ->
-    @stretchableWidgetContainer = new StretchableWidgetContainerWdgt()
+    @stretchableWidgetContainer = new StretchableWidgetContainerWdgt
     @add @stretchableWidgetContainer
 
 

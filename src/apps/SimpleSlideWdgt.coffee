@@ -4,47 +4,47 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
     "Slides Maker"
 
   representativeIcon: ->
-    new SimpleSlideIconWdgt()
+    new SimpleSlideIconWdgt
 
 
   createToolsPanel: ->
     # tools -------------------------------
-    @toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
+    @toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
 
     if false
       console.time 'createToolsPanel'
-      @toolsPanel.add new TextBoxCreatorButtonWdgt()
-      @toolsPanel.add new ExternalLinkCreatorButtonWdgt()
-      @toolsPanel.add new VideoPlayCreatorButtonWdgt()
+      @toolsPanel.add new TextBoxCreatorButtonWdgt
+      @toolsPanel.add new ExternalLinkCreatorButtonWdgt
+      @toolsPanel.add new VideoPlayCreatorButtonWdgt
 
-      @toolsPanel.add new WorldMapCreatorButtonWdgt()
-      @toolsPanel.add new USAMapCreatorButtonWdgt()
+      @toolsPanel.add new WorldMapCreatorButtonWdgt
+      @toolsPanel.add new USAMapCreatorButtonWdgt
 
-      @toolsPanel.add new RectangleMorph()
+      @toolsPanel.add new RectangleMorph
 
-      @toolsPanel.add new MapPinIconWdgt()
+      @toolsPanel.add new MapPinIconWdgt
 
-      @toolsPanel.add new SpeechBubbleWdgt()
+      @toolsPanel.add new SpeechBubbleWdgt
 
-      @toolsPanel.add new DestroyIconMorph()
-      @toolsPanel.add new ScratchAreaIconMorph()
-      @toolsPanel.add new FloraIconMorph()
-      @toolsPanel.add new ScooterIconMorph()
-      @toolsPanel.add new HeartIconMorph()
+      @toolsPanel.add new DestroyIconMorph
+      @toolsPanel.add new ScratchAreaIconMorph
+      @toolsPanel.add new FloraIconMorph
+      @toolsPanel.add new ScooterIconMorph
+      @toolsPanel.add new HeartIconMorph
 
-      @toolsPanel.add new FizzygumLogoIconWdgt()
-      @toolsPanel.add new FizzygumLogoWithTextIconWdgt()
-      @toolsPanel.add new VaporwaveBackgroundIconWdgt()
-      @toolsPanel.add new VaporwaveSunIconWdgt()
+      @toolsPanel.add new FizzygumLogoIconWdgt
+      @toolsPanel.add new FizzygumLogoWithTextIconWdgt
+      @toolsPanel.add new VaporwaveBackgroundIconWdgt
+      @toolsPanel.add new VaporwaveSunIconWdgt
 
-      @toolsPanel.add new ArrowNIconWdgt()
-      @toolsPanel.add new ArrowSIconWdgt()
-      @toolsPanel.add new ArrowWIconWdgt()
-      @toolsPanel.add new ArrowEIconWdgt()
-      @toolsPanel.add new ArrowNWIconWdgt()
-      @toolsPanel.add new ArrowNEIconWdgt()
-      @toolsPanel.add new ArrowSWIconWdgt()
-      @toolsPanel.add new ArrowSEIconWdgt()
+      @toolsPanel.add new ArrowNIconWdgt
+      @toolsPanel.add new ArrowSIconWdgt
+      @toolsPanel.add new ArrowWIconWdgt
+      @toolsPanel.add new ArrowEIconWdgt
+      @toolsPanel.add new ArrowNWIconWdgt
+      @toolsPanel.add new ArrowNEIconWdgt
+      @toolsPanel.add new ArrowSWIconWdgt
+      @toolsPanel.add new ArrowSEIconWdgt
       console.timeEnd 'createToolsPanel'
 
     # from some measuring (30 measurements or so)
@@ -53,38 +53,38 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
     # also variance is lower (3.1 vs 9.5).
     #console.time 'createToolsPanel'
     @toolsPanel.addMany [
-      new TextBoxCreatorButtonWdgt()
-      new ExternalLinkCreatorButtonWdgt()
-      new VideoPlayCreatorButtonWdgt()
+      new TextBoxCreatorButtonWdgt
+      new ExternalLinkCreatorButtonWdgt
+      new VideoPlayCreatorButtonWdgt
 
-      new WorldMapCreatorButtonWdgt()
-      new USAMapCreatorButtonWdgt()
+      new WorldMapCreatorButtonWdgt
+      new USAMapCreatorButtonWdgt
 
-      new RectangleMorph()
+      new RectangleMorph
 
-      new MapPinIconWdgt()
+      new MapPinIconWdgt
 
-      new SpeechBubbleWdgt()
+      new SpeechBubbleWdgt
 
-      new DestroyIconMorph()
-      new ScratchAreaIconMorph()
-      new FloraIconMorph()
-      new ScooterIconMorph()
-      new HeartIconMorph()
+      new DestroyIconMorph
+      new ScratchAreaIconMorph
+      new FloraIconMorph
+      new ScooterIconMorph
+      new HeartIconMorph
 
-      new FizzygumLogoIconWdgt()
-      new FizzygumLogoWithTextIconWdgt()
-      new VaporwaveBackgroundIconWdgt()
-      new VaporwaveSunIconWdgt()
+      new FizzygumLogoIconWdgt
+      new FizzygumLogoWithTextIconWdgt
+      new VaporwaveBackgroundIconWdgt
+      new VaporwaveSunIconWdgt
 
-      new ArrowNIconWdgt()
-      new ArrowSIconWdgt()
-      new ArrowWIconWdgt()
-      new ArrowEIconWdgt()
-      new ArrowNWIconWdgt()
-      new ArrowNEIconWdgt()
-      new ArrowSWIconWdgt()
-      new ArrowSEIconWdgt()
+      new ArrowNIconWdgt
+      new ArrowSIconWdgt
+      new ArrowWIconWdgt
+      new ArrowEIconWdgt
+      new ArrowNWIconWdgt
+      new ArrowNEIconWdgt
+      new ArrowSWIconWdgt
+      new ArrowSEIconWdgt
     ]
     #console.timeEnd 'createToolsPanel'
 
@@ -96,7 +96,7 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
     @invalidateLayout()
 
   createNewStretchablePanel: ->
-    @stretchableWidgetContainer = new StretchableWidgetContainerWdgt()
+    @stretchableWidgetContainer = new StretchableWidgetContainerWdgt
     @add @stretchableWidgetContainer
 
 

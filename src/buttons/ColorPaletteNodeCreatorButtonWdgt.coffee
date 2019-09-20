@@ -6,7 +6,7 @@ class ColorPaletteNodeCreatorButtonWdgt extends CreatorButtonWdgt
     @toolTipMessage = "color palette"
 
   createWidgetToBeHandled: ->
-    switcherooWm = new WindowWdgt nil, nil, new ColorPaletteMorph(), true
+    switcherooWm = new WindowWdgt nil, nil, new ColorPaletteMorph, true
     switcherooWm.rawSetExtent new Point 200, 200
     return switcherooWm
 

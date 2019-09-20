@@ -23,8 +23,8 @@ class LCLCodeCompiler
   constructor: (@eventRouter) ->
     # the code compiler needs the LCLCodePreprocessor
     
-    @codePreprocessor = new LCLCodePreprocessor()
-    #@codePreprocessor = new LCLCodePreprocessor()
+    @codePreprocessor = new LCLCodePreprocessor
+    #@codePreprocessor = new LCLCodePreprocessor
 
 
   compileCode: (code) ->

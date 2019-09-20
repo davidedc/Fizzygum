@@ -6,6 +6,6 @@ class CalculatingNodeCreatorButtonWdgt extends CreatorButtonWdgt
     @toolTipMessage = "calculating node"
 
   createWidgetToBeHandled: ->
-    switcherooWm = new WindowWdgt nil, nil, new CalculatingPatchNodeWdgt(), true
+    switcherooWm = new WindowWdgt nil, nil, new CalculatingPatchNodeWdgt, true
     switcherooWm.rawSetExtent new Point 260, 265
     return switcherooWm

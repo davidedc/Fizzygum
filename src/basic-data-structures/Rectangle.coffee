@@ -40,7 +40,7 @@ class Rectangle
 
   origin: nil # a Point
   corner: nil # a Point
-  @EMPTY: new Rectangle()
+  @EMPTY: new Rectangle
   
   constructor: (left = 0, top = 0, right = 0, bottom = 0) ->
     

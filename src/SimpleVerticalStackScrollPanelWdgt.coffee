@@ -4,7 +4,7 @@
 class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
 
   constructor: (@isTextLineWrapping = true) ->
-    VS = new SimpleVerticalStackPanelWdgt()
+    VS = new SimpleVerticalStackPanelWdgt
 
     if !@isTextLineWrapping
       VS.constrainContentWidth = false

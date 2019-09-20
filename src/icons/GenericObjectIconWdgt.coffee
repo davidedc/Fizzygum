@@ -9,7 +9,7 @@ class GenericObjectIconWdgt extends Widget
   constructor: (@icon) ->
     super()
 
-    @objectIcon = new ObjectIconWdgt()
+    @objectIcon = new ObjectIconWdgt
     @add @objectIcon
 
 

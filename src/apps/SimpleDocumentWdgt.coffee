@@ -38,7 +38,7 @@ class SimpleDocumentWdgt extends Widget
     "Docs Maker"
 
   representativeIcon: ->
-    new TypewriterIconWdgt()
+    new TypewriterIconWdgt
 
   hasStartingContentBeenChangedByUser: ->
     !(
@@ -65,7 +65,7 @@ class SimpleDocumentWdgt extends Widget
 
 
     @createToolsPanel()
-    @simpleDocumentScrollPanel = new SimpleDocumentScrollPanelWdgt()
+    @simpleDocumentScrollPanel = new SimpleDocumentScrollPanelWdgt
 
     startingContent = new SimplePlainTextWdgt(
       @startingText,nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
@@ -78,23 +78,23 @@ class SimpleDocumentWdgt extends Widget
     @invalidateLayout()
 
   createToolsPanel: ->
-    @toolsPanel = new HorizontalMenuPanelWdgt()
+    @toolsPanel = new HorizontalMenuPanelWdgt
     @toolsPanel.strokeColor = nil
     @toolsPanel.rawSetExtent new Point 300,10
 
 
     @toolsPanel.add new ChangeFontButtonWdgt @
-    @toolsPanel.add new BoldButtonWdgt()
-    @toolsPanel.add new ItalicButtonWdgt()
-    @toolsPanel.add new FormatAsCodeButtonWdgt()
-    @toolsPanel.add new IncreaseFontSizeButtonWdgt()
-    @toolsPanel.add new DecreaseFontSizeButtonWdgt()
+    @toolsPanel.add new BoldButtonWdgt
+    @toolsPanel.add new ItalicButtonWdgt
+    @toolsPanel.add new FormatAsCodeButtonWdgt
+    @toolsPanel.add new IncreaseFontSizeButtonWdgt
+    @toolsPanel.add new DecreaseFontSizeButtonWdgt
 
-    @toolsPanel.add new AlignLeftButtonWdgt()
-    @toolsPanel.add new AlignCenterButtonWdgt()
-    @toolsPanel.add new AlignRightButtonWdgt()
+    @toolsPanel.add new AlignLeftButtonWdgt
+    @toolsPanel.add new AlignCenterButtonWdgt
+    @toolsPanel.add new AlignRightButtonWdgt
 
-    @toolsPanel.add new TemplatesButtonWdgt()
+    @toolsPanel.add new TemplatesButtonWdgt
 
     @add @toolsPanel
     @toolsPanel.disableDragsDropsAndEditing()

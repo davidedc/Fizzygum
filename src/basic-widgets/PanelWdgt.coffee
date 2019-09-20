@@ -35,7 +35,7 @@ class PanelWdgt extends Widget
   # only the desktop and folder panels have menu entries
   # to invoke this
   makeFolder: (ignored, ignored2, name) ->
-    newFolderWindow = new FolderWindowWdgt()
+    newFolderWindow = new FolderWindowWdgt
     newFolderWindow.close()
     newFolderWindow.createReference (name or world.getNextUntitledFolderShortcutName()), @
     world.howManyUntitledShortcuts++

@@ -34,7 +34,7 @@ class BasementWdgt extends BoxMorph
   
   buildAndConnectChildren: ->
 
-    @scrollPanel = new ScrollPanelWdgt()
+    @scrollPanel = new ScrollPanelWdgt
     @add @scrollPanel
 
     @hideUsedWdgtsOnButton = new SimpleButtonMorph true, @, "showAllWidgets", "☒ only show lost items"

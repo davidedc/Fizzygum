@@ -128,14 +128,14 @@ class LayoutElementAdderOrDropletMorph extends Widget
     # put a supporting morph underneath it and put the adder/droplet
     # in a layout.
     if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
-      newWdgt = new Widget()
+      newWdgt = new Widget
       @parent.add newWdgt
       newWdgt.rawSetBounds @boundingBox()
       newWdgt.add @, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
       newWdgt.showAdders()
 
     @addAsSiblingAfterMe \
-      (new LayoutElementAdderOrDropletMorph()),
+      (new LayoutElementAdderOrDropletMorph),
       nil,
       LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
