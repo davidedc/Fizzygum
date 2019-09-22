@@ -178,7 +178,7 @@ CanvasRenderingContext2D::clipToRectangle = (al,at,w,h) ->
 # utility function taken from:
 # http://blog.abhranil.net/2011/11/03/simplest-javascript-fade-animation/
 
-fade = (eid, initOp, finalOp, TimeToFade, time) ->
+fade = (eid, initOp, finalOp, TimeToFade, time, thenRun) ->
   if initOp == 0
     document.getElementById(eid).style.visibility = 'visible'
   curTick = new Date().getTime()
@@ -188,9 +188,15 @@ fade = (eid, initOp, finalOp, TimeToFade, time) ->
     document.getElementById(eid).style.opacity = finalOp
     if finalOp == 0
       document.getElementById(eid).style.visibility = 'hidden'
+    thenRun?()
     return
   document.getElementById(eid).style.opacity = newOp
-  setTimeout 'fade( \'' + eid + '\',' + initOp + ',' + finalOp + ',' + TimeToFade + ',' + time + ')', TimeToFade / 100
+
+  setTimeout \
+    =>
+      fade eid, initOp, finalOp, TimeToFade, time, thenRun      
+    , TimeToFade / 100
+
   return
 
 ## -------------------------------------------------------
