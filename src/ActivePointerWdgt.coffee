@@ -140,7 +140,7 @@ class ActivePointerWdgt extends Widget
     if !@isThisPointerFloatDraggingSomething()
 
       if AutomatorRecorderAndPlayer?
-        @world.automatorRecorderAndPlayer.addGrabCommand()
+        @world.automatorRecorder.addGrabCommand()
         if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
           action = "grab"
           arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
@@ -227,7 +227,7 @@ class ActivePointerWdgt extends Widget
     if @isThisPointerFloatDraggingSomething()
 
       if AutomatorRecorderAndPlayer?
-        @world.automatorRecorderAndPlayer.addDropCommand()
+        @world.automatorRecorder.addDropCommand()
         if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
           action = "drop"
           arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
@@ -467,7 +467,7 @@ class ActivePointerWdgt extends Widget
             # the mouse down/up commands that have
             # recently/just been added.
             if AutomatorRecorderAndPlayer?
-              @world.automatorRecorderAndPlayer.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
+              @world.automatorRecorder.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
             alreadyRecordedLeftOrRightClickOnMenuItem = true
 
       # TODO check if there is any other
@@ -484,7 +484,7 @@ class ActivePointerWdgt extends Widget
             # this being a right click, pop
             # up a menu as needed.
             if AutomatorRecorderAndPlayer?
-              @world.automatorRecorderAndPlayer.addOpenContextMenuCommand morph.uniqueIDString()
+              @world.automatorRecorder.addOpenContextMenuCommand morph.uniqueIDString()
 
       # trigger the action
       until morph[expectedClick]
@@ -498,12 +498,12 @@ class ActivePointerWdgt extends Widget
             when "mouseClickLeft"
               pointerAndWdgtInfo = world.getPointerAndWdgtInfo()
               if AutomatorRecorderAndPlayer?
-                world.automatorRecorderAndPlayer.addMouseClickCommand 0, nil, pointerAndWdgtInfo...
+                world.automatorRecorder.addMouseClickCommand 0, nil, pointerAndWdgtInfo...
               morph.mouseUpLeft? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
             when "mouseClickRight"
               pointerAndWdgtInfo = world.getPointerAndWdgtInfo()
               if AutomatorRecorderAndPlayer?
-                world.automatorRecorderAndPlayer.addMouseClickCommand 2, nil, pointerAndWdgtInfo...
+                world.automatorRecorder.addMouseClickCommand 2, nil, pointerAndWdgtInfo...
               morph.mouseUpRight? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
           # also send doubleclick if the
@@ -700,7 +700,7 @@ class ActivePointerWdgt extends Widget
   processDoubleClick: (morph = @topWdgtUnderPointer()) ->
     pointerAndWdgtInfo = world.getPointerAndWdgtInfo morph
     if AutomatorRecorderAndPlayer?
-      world.automatorRecorderAndPlayer.addMouseDoubleClickCommand nil, pointerAndWdgtInfo...
+      world.automatorRecorder.addMouseDoubleClickCommand nil, pointerAndWdgtInfo...
 
     world.destroyToolTips()
     if @isThisPointerFloatDraggingSomething()
@@ -713,7 +713,7 @@ class ActivePointerWdgt extends Widget
   processTripleClick: (morph = @topWdgtUnderPointer()) ->
     pointerAndWdgtInfo = world.getPointerAndWdgtInfo morph
     if AutomatorRecorderAndPlayer?
-      world.automatorRecorderAndPlayer.addMouseTripleClickCommand nil, pointerAndWdgtInfo...
+      world.automatorRecorder.addMouseTripleClickCommand nil, pointerAndWdgtInfo...
 
     world.destroyToolTips()
     if @isThisPointerFloatDraggingSomething()
