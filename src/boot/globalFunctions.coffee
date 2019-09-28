@@ -193,7 +193,7 @@ fade = (eid, initOp, finalOp, TimeToFade, time, thenRun) ->
   document.getElementById(eid).style.opacity = newOp
 
   setTimeout \
-    =>
+    ->
       fade eid, initOp, finalOp, TimeToFade, time, thenRun      
     , TimeToFade / 100
 
