@@ -1,0 +1,2 @@
+
+class BrowserEventCommand extends EventCommand

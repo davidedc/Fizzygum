@@ -88,6 +88,7 @@ class WorldMorph extends PanelWdgt
   automatorRecorderAndPlayer: nil
   automatorRecorder: nil
   automatorPlayer: nil
+  automatorLoader: nil
 
   # this is the actual reference to the canvas
   # on the html page, where the world is
@@ -303,6 +304,7 @@ class WorldMorph extends PanelWdgt
       @automatorRecorderAndPlayer = new AutomatorRecorderAndPlayer @, @hand
       @automatorRecorder = new AutomatorRecorder()
       @automatorPlayer = new AutomatorPlayer()
+      @automatorLoader = new AutomatorLoader()
 
     @worldCanvasContext = @worldCanvas.getContext "2d"
 
@@ -2073,8 +2075,8 @@ class WorldMorph extends PanelWdgt
     menu.addMenuItem "(re)play recorded test  fast run in-between mouse moves", true, @automatorRecorderAndPlayer, "startTestPlayingFastRunInbetweenMouseMoves", "start playing the test"
 
     menu.addMenuItem "show test source", true, @automatorRecorderAndPlayer, "showTestSource", "opens a window with the source of the latest test"
-    menu.addMenuItem "save recorded test", true, @automatorRecorderAndPlayer, "saveTest", "save the recorded test"
-    menu.addMenuItem "save failed screenshots", true, @automatorRecorderAndPlayer, "saveFailedScreenshots", "save failed screenshots"
+    menu.addMenuItem "save recorded test", true, @automatorRecorder, "saveTest", "save the recorded test"
+    menu.addMenuItem "save failed screenshots", true, @automatorPlayer, "saveFailedScreenshots", "save failed screenshots"
 
     menu.popUpAtHand()
 
