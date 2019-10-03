@@ -143,7 +143,7 @@ class ActivePointerWdgt extends Widget
         @world.automatorRecorder.addGrabCommand()
         if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
           action = "grab"
-          arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
+          arr = world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
           if action not in arr
             arr.push action
 
@@ -230,7 +230,7 @@ class ActivePointerWdgt extends Widget
         @world.automatorRecorder.addDropCommand()
         if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
           action = "drop"
-          arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
+          arr = world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
           if action not in arr
             arr.push action
 
@@ -523,7 +523,7 @@ class ActivePointerWdgt extends Widget
               @doubleClickWdgt = nil
               disableConsecutiveClicksFromSingleClicksDueToFastTests = false
               if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-                if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
+                if !world.automatorRecorderAndPlayer.runningInSlowMode()
                   disableConsecutiveClicksFromSingleClicksDueToFastTests = true
               if !disableConsecutiveClicksFromSingleClicksDueToFastTests
                 # remember we are going to send a double click
@@ -561,7 +561,7 @@ class ActivePointerWdgt extends Widget
                 @tripleClickWdgt = nil
                 disableConsecutiveClicksFromSingleClicksDueToFastTests = false
                 if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-                  if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
+                  if !world.automatorRecorderAndPlayer.runningInSlowMode()
                     disableConsecutiveClicksFromSingleClicksDueToFastTests = true
                 if !disableConsecutiveClicksFromSingleClicksDueToFastTests
                   # remember we are going to send a triple click

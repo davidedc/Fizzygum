@@ -1418,7 +1418,7 @@ class WorldMorph extends PanelWdgt
     if @hand.isThisPointerFloatDraggingSomething()
       if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
         action = "floatDrag"
-        arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
+        arr = world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
         if action not in arr
           arr.push action
     
@@ -1927,10 +1927,10 @@ class WorldMorph extends PanelWdgt
         window[eachMorphClass].lastBuiltInstanceNumericID = 0
 
     if AutomatorRecorderAndPlayer?
-      window.world.automatorRecorder.turnOffAnimationsPacingControl()
-      window.world.automatorRecorder.turnOffAlignmentOfMorphIDsMechanism()
-      window.world.automatorRecorder.turnOffHidingOfMorphsContentExtractInLabels()
-      window.world.automatorRecorder.turnOffHidingOfMorphsNumberIDInLabels()
+      world.automatorRecorder.turnOffAnimationsPacingControl()
+      world.automatorRecorder.turnOffAlignmentOfMorphIDsMechanism()
+      world.automatorRecorder.turnOffHidingOfMorphsContentExtractInLabels()
+      world.automatorRecorder.turnOffHidingOfMorphsNumberIDInLabels()
 
     super()
 

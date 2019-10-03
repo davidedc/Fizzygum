@@ -359,7 +359,7 @@ class Widget extends TreeNode
     @assignUniqueID()
 
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-      arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
+      arr = world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
       if @constructor.name not in arr
         arr.push @constructor.name
 
