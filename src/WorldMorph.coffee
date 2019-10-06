@@ -479,7 +479,7 @@ class WorldMorph extends PanelWdgt
       if currentAction.forceRunningInBetweenMouseMoves?
         @automatorRecorderAndPlayer.forceRunningInBetweenMouseMoves = true
 
-      @automatorRecorderAndPlayer.runAllSystemTests()
+      @automatorPlayer.runAllSystemTests()
     WorldMorph.ongoingUrlActionNumber++
 
   # »>> this part is excluded from the fizzygum homepage build
@@ -2062,17 +2062,17 @@ class WorldMorph extends PanelWdgt
   popUpSystemTestsMenu: ->
     menu = new MenuMorph @, false, @, true, true, "system tests"
 
-    menu.addMenuItem "run system tests", true, @automatorRecorderAndPlayer, "runAllSystemTests", "runs all the system tests"
-    menu.addMenuItem "run system tests force slow", true, @automatorRecorderAndPlayer, "runAllSystemTestsForceSlow", "runs all the system tests"
-    menu.addMenuItem "run system tests force fast skip in-between mouse moves", true, @automatorRecorderAndPlayer, "runAllSystemTestsForceFastSkipInbetweenMouseMoves", "runs all the system tests"
-    menu.addMenuItem "run system tests force fast run in-between mouse moves", true, @automatorRecorderAndPlayer, "runAllSystemTestsForceFastRunInbetweenMouseMoves", "runs all the system tests"
+    menu.addMenuItem "run system tests", true, @automatorPlayer, "runAllSystemTests", "runs all the system tests"
+    menu.addMenuItem "run system tests force slow", true, @automatorPlayer, "runAllSystemTestsForceSlow", "runs all the system tests"
+    menu.addMenuItem "run system tests force fast skip in-between mouse moves", true, @automatorPlayer, "runAllSystemTestsForceFastSkipInbetweenMouseMoves", "runs all the system tests"
+    menu.addMenuItem "run system tests force fast run in-between mouse moves", true, @automatorPlayer, "runAllSystemTestsForceFastRunInbetweenMouseMoves", "runs all the system tests"
 
     menu.addMenuItem "start test recording", true, @automatorRecorder, "startTestRecording", "start recording a test"
     menu.addMenuItem "stop test recording", true, @automatorRecorder, "stopTestRecording", "stop recording the test"
 
-    menu.addMenuItem "(re)play recorded test slow", true, @automatorRecorderAndPlayer, "startTestPlayingSlow", "start playing the test"
-    menu.addMenuItem "(re)play recorded test fast skip in-between mouse moves", true, @automatorRecorderAndPlayer, "startTestPlayingFastSkipInbetweenMouseMoves", "start playing the test"
-    menu.addMenuItem "(re)play recorded test  fast run in-between mouse moves", true, @automatorRecorderAndPlayer, "startTestPlayingFastRunInbetweenMouseMoves", "start playing the test"
+    menu.addMenuItem "(re)play recorded test slow", true, @automatorPlayer, "startTestPlayingSlow", "start playing the test"
+    menu.addMenuItem "(re)play recorded test fast skip in-between mouse moves", true, @automatorPlayer, "startTestPlayingFastSkipInbetweenMouseMoves", "start playing the test"
+    menu.addMenuItem "(re)play recorded test  fast run in-between mouse moves", true, @automatorPlayer, "startTestPlayingFastRunInbetweenMouseMoves", "start playing the test"
 
     menu.addMenuItem "show test source", true, @automatorRecorderAndPlayer, "showTestSource", "opens a window with the source of the latest test"
     menu.addMenuItem "save recorded test", true, @automatorRecorder, "saveTest", "save the recorded test"

@@ -523,7 +523,7 @@ class ActivePointerWdgt extends Widget
               @doubleClickWdgt = nil
               disableConsecutiveClicksFromSingleClicksDueToFastTests = false
               if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-                if !world.automatorRecorderAndPlayer.runningInSlowMode()
+                if !world.automatorPlayer.runningInSlowMode()
                   disableConsecutiveClicksFromSingleClicksDueToFastTests = true
               if !disableConsecutiveClicksFromSingleClicksDueToFastTests
                 # remember we are going to send a double click
@@ -561,7 +561,7 @@ class ActivePointerWdgt extends Widget
                 @tripleClickWdgt = nil
                 disableConsecutiveClicksFromSingleClicksDueToFastTests = false
                 if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-                  if !world.automatorRecorderAndPlayer.runningInSlowMode()
+                  if !world.automatorPlayer.runningInSlowMode()
                     disableConsecutiveClicksFromSingleClicksDueToFastTests = true
                 if !disableConsecutiveClicksFromSingleClicksDueToFastTests
                   # remember we are going to send a triple click
