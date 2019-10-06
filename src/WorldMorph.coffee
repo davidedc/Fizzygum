@@ -459,7 +459,7 @@ class WorldMorph extends PanelWdgt
 
     currentAction = startupActions.actions[WorldMorph.ongoingUrlActionNumber]
     if AutomatorRecorderAndPlayer? and currentAction.name == "runTests"
-      @automatorRecorderAndPlayer.selectTestsFromTagsOrTestNames(currentAction.testsToRun)
+      @automatorLoader.selectTestsFromTagsOrTestNames(currentAction.testsToRun)
 
       if currentAction.numberOfGroups?
         @automatorRecorderAndPlayer.numberOfGroups = currentAction.numberOfGroups
