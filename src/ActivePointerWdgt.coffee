@@ -42,7 +42,7 @@ class ActivePointerWdgt extends Widget
   
   # ActivePointerWdgt navigation:
   topWdgtUnderPointer: ->
-    result = @world.topWdgtSuchThat (m) =>
+    result = world.topWdgtSuchThat (m) =>
       m.clippedThroughBounds().containsPoint(@position()) and
         m.visibleBasedOnIsVisibleProperty() and
         !m.isCollapsed() and
@@ -66,7 +66,7 @@ class ActivePointerWdgt extends Widget
       return @world
 
   menuAtPointer: ->
-    result = @world.topWdgtSuchThat (m) =>
+    result = world.topWdgtSuchThat (m) =>
       m.clippedThroughBounds().containsPoint(@position()) and
         m.visibleBasedOnIsVisibleProperty() and
         !m.isCollapsed() and
@@ -111,7 +111,7 @@ class ActivePointerWdgt extends Widget
 
   # not used in Fizzygum yet
   allWdgtsAtPointer: ->
-    return @world.collectAllChildrenBottomToTopSuchThat (m) =>
+    return world.collectAllChildrenBottomToTopSuchThat (m) =>
       m.visibleBasedOnIsVisibleProperty() and
       !m.isCollapsed() and
       m.clippedThroughBounds().containsPoint @position()
@@ -140,7 +140,7 @@ class ActivePointerWdgt extends Widget
     if !@isThisPointerFloatDraggingSomething()
 
       if AutomatorRecorderAndPlayer?
-        @world.automatorRecorder.addGrabCommand()
+        world.automatorRecorderAndPlayer.recorder.addGrabCommand()
         if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
           action = "grab"
           arr = world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
@@ -148,7 +148,7 @@ class ActivePointerWdgt extends Widget
             arr.push action
 
 
-      @world.stopEditing()
+      world.stopEditing()
 
       # this paragraph deals with how to resize/reposition the widget
       # that we are grabbing in respect to the hand
@@ -227,7 +227,7 @@ class ActivePointerWdgt extends Widget
     if @isThisPointerFloatDraggingSomething()
 
       if AutomatorRecorderAndPlayer?
-        @world.automatorRecorder.addDropCommand()
+        world.automatorRecorderAndPlayer.recorder.addDropCommand()
         if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
           action = "drop"
           arr = world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
@@ -293,14 +293,14 @@ class ActivePointerWdgt extends Widget
   # event object.
 
   destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem: (actionedWdgt) ->
-    if @world.temporaryHandlesAndLayoutAdjusters.size > 0
-      unless @world.temporaryHandlesAndLayoutAdjusters.has actionedWdgt
-        @world.temporaryHandlesAndLayoutAdjusters.forEach (eachTemporaryHandlesAndLayoutAdjusters) =>
+    if world.temporaryHandlesAndLayoutAdjusters.size > 0
+      unless world.temporaryHandlesAndLayoutAdjusters.has actionedWdgt
+        world.temporaryHandlesAndLayoutAdjusters.forEach (eachTemporaryHandlesAndLayoutAdjusters) =>
           eachTemporaryHandlesAndLayoutAdjusters.fullDestroy()
-        @world.temporaryHandlesAndLayoutAdjusters.clear()
+        world.temporaryHandlesAndLayoutAdjusters.clear()
 
   stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere: (actionedWdgt) ->
-    if @world.caret?
+    if world.caret?
 
       # some actioning widgets rely on the
       # caret, for example to change the properties
@@ -335,7 +335,7 @@ class ActivePointerWdgt extends Widget
       # In other words, if we are actioning on something that has
       # the text as an ancestor, then don't stop the
       # editing.
-      if actionedWdgt isnt @world.caret.target
+      if actionedWdgt isnt world.caret.target
         # user clicked on something other than what the
         # caret is attached to
         mostRecentlyCreatedPopUp = world.mostRecentlyCreatedPopUp()
@@ -343,12 +343,12 @@ class ActivePointerWdgt extends Widget
           unless mostRecentlyCreatedPopUp.isAncestorOf actionedWdgt
             # only dismiss editing if the actionedWdgt the user
             # clicked on is not part of a menu.
-            @world.stopEditing()
+            world.stopEditing()
         # there is no menu at all, in which case
         # we know there was an editing operation going
         # on that we need to stop
         else
-          @world.stopEditing()
+          world.stopEditing()
 
 
   processMouseDown: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
@@ -467,7 +467,7 @@ class ActivePointerWdgt extends Widget
             # the mouse down/up commands that have
             # recently/just been added.
             if AutomatorRecorderAndPlayer?
-              @world.automatorRecorder.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
+              world.automatorRecorderAndPlayer.recorder.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
             alreadyRecordedLeftOrRightClickOnMenuItem = true
 
       # TODO check if there is any other
@@ -484,7 +484,7 @@ class ActivePointerWdgt extends Widget
             # this being a right click, pop
             # up a menu as needed.
             if AutomatorRecorderAndPlayer?
-              @world.automatorRecorder.addOpenContextMenuCommand morph.uniqueIDString()
+              world.automatorRecorderAndPlayer.recorder.addOpenContextMenuCommand morph.uniqueIDString()
 
       # trigger the action
       until morph[expectedClick]
@@ -498,12 +498,12 @@ class ActivePointerWdgt extends Widget
             when "mouseClickLeft"
               pointerAndWdgtInfo = world.getPointerAndWdgtInfo()
               if AutomatorRecorderAndPlayer?
-                world.automatorRecorder.addMouseClickCommand 0, nil, pointerAndWdgtInfo...
+                world.automatorRecorderAndPlayer.recorder.addMouseClickCommand 0, nil, pointerAndWdgtInfo...
               morph.mouseUpLeft? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
             when "mouseClickRight"
               pointerAndWdgtInfo = world.getPointerAndWdgtInfo()
               if AutomatorRecorderAndPlayer?
-                world.automatorRecorder.addMouseClickCommand 2, nil, pointerAndWdgtInfo...
+                world.automatorRecorderAndPlayer.recorder.addMouseClickCommand 2, nil, pointerAndWdgtInfo...
               morph.mouseUpRight? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
           # also send doubleclick if the
@@ -523,7 +523,7 @@ class ActivePointerWdgt extends Widget
               @doubleClickWdgt = nil
               disableConsecutiveClicksFromSingleClicksDueToFastTests = false
               if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-                if !world.automatorPlayer.runningInSlowMode()
+                if !world.automatorRecorderAndPlayer.player.runningInSlowMode()
                   disableConsecutiveClicksFromSingleClicksDueToFastTests = true
               if !disableConsecutiveClicksFromSingleClicksDueToFastTests
                 # remember we are going to send a double click
@@ -561,7 +561,7 @@ class ActivePointerWdgt extends Widget
                 @tripleClickWdgt = nil
                 disableConsecutiveClicksFromSingleClicksDueToFastTests = false
                 if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-                  if !world.automatorPlayer.runningInSlowMode()
+                  if !world.automatorRecorderAndPlayer.player.runningInSlowMode()
                     disableConsecutiveClicksFromSingleClicksDueToFastTests = true
                 if !disableConsecutiveClicksFromSingleClicksDueToFastTests
                   # remember we are going to send a triple click
@@ -700,7 +700,7 @@ class ActivePointerWdgt extends Widget
   processDoubleClick: (morph = @topWdgtUnderPointer()) ->
     pointerAndWdgtInfo = world.getPointerAndWdgtInfo morph
     if AutomatorRecorderAndPlayer?
-      world.automatorRecorder.addMouseDoubleClickCommand nil, pointerAndWdgtInfo...
+      world.automatorRecorderAndPlayer.recorder.addMouseDoubleClickCommand nil, pointerAndWdgtInfo...
 
     world.destroyToolTips()
     if @isThisPointerFloatDraggingSomething()
@@ -713,7 +713,7 @@ class ActivePointerWdgt extends Widget
   processTripleClick: (morph = @topWdgtUnderPointer()) ->
     pointerAndWdgtInfo = world.getPointerAndWdgtInfo morph
     if AutomatorRecorderAndPlayer?
-      world.automatorRecorder.addMouseTripleClickCommand nil, pointerAndWdgtInfo...
+      world.automatorRecorderAndPlayer.recorder.addMouseTripleClickCommand nil, pointerAndWdgtInfo...
 
     world.destroyToolTips()
     if @isThisPointerFloatDraggingSomething()
@@ -873,7 +873,7 @@ class ActivePointerWdgt extends Widget
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       mousePointerIndicator = document.getElementById "mousePointerIndicator"
       mousePointerIndicator.style.display = 'block'
-      posInDocument = getDocumentPositionOf @world.worldCanvas
+      posInDocument = getDocumentPositionOf world.worldCanvas
       mousePointerIndicator.style.left = (posInDocument.x + worldX - (mousePointerIndicator.clientWidth/2)) + 'px'
       mousePointerIndicator.style.top = (posInDocument.y + worldY - (mousePointerIndicator.clientHeight/2)) + 'px'
 
