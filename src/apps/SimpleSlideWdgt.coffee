@@ -145,7 +145,7 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
 
 
     trackChanges.pop()
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     @layoutIsValid = true

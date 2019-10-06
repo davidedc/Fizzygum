@@ -350,9 +350,9 @@ class TreeNode
       # and let the user navigate through the world
       # to find the state of affairs that caused
       # the problem.
-      if AutomatorRecorderAndPlayer?
-        console.log "failed to find morph in test: " + world.automatorRecorderAndPlayer.name
-        console.log "trying to find item with text label: " +  world.automatorRecorderAndPlayer.player.getCommandBeingPlayed().textLabelOfClickedItem
+      if Automator?
+        console.log "failed to find morph in test: " + world.automator.name
+        console.log "trying to find item with text label: " +  world.automator.player.getCommandBeingPlayed().textLabelOfClickedItem
         console.log "...you can likely fix the test by correcting the label above in the test"
         debugger
     # test the morph itself

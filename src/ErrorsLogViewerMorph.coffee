@@ -60,9 +60,9 @@ class ErrorsLogViewerMorph extends Widget
 
 
   buildAndConnectChildren: ->
-    if AutomatorRecorderAndPlayer? and
-     AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and
-     AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if Automator? and
+     Automator.state != Automator.IDLE and
+     Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
@@ -177,9 +177,9 @@ class ErrorsLogViewerMorph extends Widget
 
 
     trackChanges.pop()
-    if AutomatorRecorderAndPlayer? and
-     AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and
-     AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if Automator? and
+     Automator.state != Automator.IDLE and
+     Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
 

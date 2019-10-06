@@ -184,7 +184,7 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
 
 
   buildAndConnectChildren: ->
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     @regexEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
@@ -264,7 +264,7 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
 
     trackChanges.pop()
     @fullChanged()
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     @layoutIsValid = true

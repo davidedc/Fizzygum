@@ -99,5 +99,5 @@ class ColorPickerMorph extends Widget
     @layoutIsValid = true
     @notifyChildrenThatParentHasReLayouted()
 
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

@@ -26,7 +26,7 @@ class SimpleLinkWdgt extends Widget
     "Simple link"
 
   buildAndConnectChildren: ->
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     @tempPromptEntryField = new StringMorph2 @descriptionString
@@ -99,7 +99,7 @@ class SimpleLinkWdgt extends Widget
 
     trackChanges.pop()
     @fullChanged()
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     @layoutIsValid = true

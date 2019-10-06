@@ -89,9 +89,9 @@ class AnalogClockWdgt extends Widget
 
   calculateHandsAngles: ->
 
-    if AutomatorRecorderAndPlayer? and
-     AutomatorRecorderAndPlayer.animationsPacingControl and
-     AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+    if Automator? and
+     Automator.animationsPacingControl and
+     Automator.state == Automator.PLAYING
       @dateLastTicked = new Date 2011,10,30
 
     #sec = @dateLastTicked.getSeconds()

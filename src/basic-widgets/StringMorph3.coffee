@@ -183,8 +183,8 @@ class StringMorph3 extends Widget
   toString: ->
     # e.g. 'a StringMorph3("Hello World")'
     firstPart = super()
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and
-    AutomatorRecorderAndPlayer.hidingOfMorphsContentExtractInLabels
+    if Automator? and Automator.state != Automator.IDLE and
+    Automator.hidingOfMorphsContentExtractInLabels
       return firstPart
     else
       return firstPart + " (\"" + @text.slice(0, 30).replace(/(?:\r\n|\r|\n)/g, '↵') + "...\")"

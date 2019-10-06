@@ -40,7 +40,7 @@ class ScriptWdgt extends Widget
       containerWindow.close()
 
   buildAndConnectChildren: ->
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @savedScript, false, 5
@@ -152,7 +152,7 @@ class ScriptWdgt extends Widget
 
     trackChanges.pop()
     @fullChanged()
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     @layoutIsValid = true

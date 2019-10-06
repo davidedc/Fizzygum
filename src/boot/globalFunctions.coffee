@@ -593,18 +593,18 @@ boot = ->
     if window.preCompiled
       (loadSourcesAndPotentiallyCompileThem true).then ->
         window.stillLoadingSources = false
-        if AutomatorRecorderAndPlayer?
-          AutomatorRecorderAndPlayer.testsManifest = testsManifest
-          AutomatorRecorderAndPlayer.testsAssetsManifest = testsAssetsManifest
+        if Automator?
+          Automator.testsManifest = testsManifest
+          Automator.testsAssetsManifest = testsAssetsManifest
         startupActions = getParameterByName "startupActions"
         if startupActions?
           world.nextStartupAction()
     else
       (loadSourcesAndPotentiallyCompileThem false).then ->
         window.stillLoadingSources = false
-        if AutomatorRecorderAndPlayer?
-          AutomatorRecorderAndPlayer.testsManifest = testsManifest
-          AutomatorRecorderAndPlayer.testsAssetsManifest = testsAssetsManifest
+        if Automator?
+          Automator.testsManifest = testsManifest
+          Automator.testsAssetsManifest = testsAssetsManifest
       .then ->
         createWorldAndStartStepping()
         startupActions = getParameterByName "startupActions"

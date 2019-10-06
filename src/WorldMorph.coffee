@@ -85,7 +85,7 @@ class WorldMorph extends PanelWdgt
   showRedraws: false
   doubleCheckCachedMethodsResults: false
 
-  automatorRecorderAndPlayer: nil
+  automator: nil
 
   # this is the actual reference to the canvas
   # on the html page, where the world is
@@ -297,8 +297,8 @@ class WorldMorph extends PanelWdgt
     @setBounds new Rectangle 0, 0, @worldCanvas.width / ceilPixelRatio, @worldCanvas.height / ceilPixelRatio
 
     @initEventListeners()
-    if AutomatorRecorderAndPlayer?
-      @automatorRecorderAndPlayer = new AutomatorRecorderAndPlayer @, @hand
+    if Automator?
+      @automator = new Automator @, @hand
 
     @worldCanvasContext = @worldCanvas.getContext "2d"
 
@@ -442,38 +442,38 @@ class WorldMorph extends PanelWdgt
 
     if (!startupActions?) or (WorldMorph.ongoingUrlActionNumber == startupActions.actions.length)
       WorldMorph.ongoingUrlActionNumber = 0
-      if AutomatorRecorderAndPlayer?
+      if Automator?
         if window.location.href.indexOf("worldWithSystemTestHarness") != -1
-          if @automatorRecorderAndPlayer.atLeastOneTestHasBeenRun
-            if @automatorRecorderAndPlayer.allTestsPassedSoFar
+          if @automator.atLeastOneTestHasBeenRun
+            if @automator.allTestsPassedSoFar
               document.getElementById("background").style.background = "green"
       return
 
     if !@isIndexPage then console.log "nextStartupAction " + (WorldMorph.ongoingUrlActionNumber+1) + " / " + startupActions.actions.length
 
     currentAction = startupActions.actions[WorldMorph.ongoingUrlActionNumber]
-    if AutomatorRecorderAndPlayer? and currentAction.name == "runTests"
-      @automatorRecorderAndPlayer.loader.selectTestsFromTagsOrTestNames(currentAction.testsToRun)
+    if Automator? and currentAction.name == "runTests"
+      @automator.loader.selectTestsFromTagsOrTestNames(currentAction.testsToRun)
 
       if currentAction.numberOfGroups?
-        @automatorRecorderAndPlayer.numberOfGroups = currentAction.numberOfGroups
+        @automator.numberOfGroups = currentAction.numberOfGroups
       else
-        @automatorRecorderAndPlayer.numberOfGroups = 1
+        @automator.numberOfGroups = 1
       if currentAction.groupToBeRun?
-        @automatorRecorderAndPlayer.groupToBeRun = currentAction.groupToBeRun
+        @automator.groupToBeRun = currentAction.groupToBeRun
       else
-        @automatorRecorderAndPlayer.groupToBeRun = 0
+        @automator.groupToBeRun = 0
 
       if currentAction.forceSlowTestPlaying?
-        @automatorRecorderAndPlayer.forceSlowTestPlaying = true
+        @automator.forceSlowTestPlaying = true
       if currentAction.forceTurbo?
-        @automatorRecorderAndPlayer.forceTurbo = true
+        @automator.forceTurbo = true
       if currentAction.forceSkippingInBetweenMouseMoves?
-        @automatorRecorderAndPlayer.forceSkippingInBetweenMouseMoves = true
+        @automator.forceSkippingInBetweenMouseMoves = true
       if currentAction.forceRunningInBetweenMouseMoves?
-        @automatorRecorderAndPlayer.forceRunningInBetweenMouseMoves = true
+        @automator.forceRunningInBetweenMouseMoves = true
 
-      @automatorRecorderAndPlayer.player.runAllSystemTests()
+      @automator.player.runAllSystemTests()
     WorldMorph.ongoingUrlActionNumber++
 
   # »>> this part is excluded from the fizzygum homepage build
@@ -507,7 +507,7 @@ class WorldMorph extends PanelWdgt
   # Widget for an explanation of why we need this
   # method.
   alignIDsOfNextMorphsInSystemTests: ->
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE
+    if Automator? and Automator.state != Automator.IDLE
       # Check which objects end with the word Widget
       theWordMorph = "Morph"
       theWordWdgt = "Wdgt"
@@ -1136,8 +1136,8 @@ class WorldMorph extends PanelWdgt
     @playQueuedEvents()
 
     # replays test actions at the right time
-    if AutomatorPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-      @automatorRecorderAndPlayer.player.replayTestCommands()
+    if AutomatorPlayer? and Automator.state == Automator.PLAYING
+      @automator.player.replayTestCommands()
     
     # currently unused
     @runOtherTasksStepFunction()
@@ -1375,9 +1375,9 @@ class WorldMorph extends PanelWdgt
 
 
   addMouseChangeCommand: (upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+    if Automator? and Automator.state == Automator.RECORDING
       pointerAndWdgtInfo = @getPointerAndWdgtInfo()
-      @automatorRecorderAndPlayer.recorder.addMouseChangeCommand upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey, pointerAndWdgtInfo...
+      @automator.recorder.addMouseChangeCommand upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey, pointerAndWdgtInfo...
 
 
   mousedownBrowserEventHandler: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
@@ -1412,20 +1412,20 @@ class WorldMorph extends PanelWdgt
     # potential grab command.
 
     if @hand.isThisPointerFloatDraggingSomething()
-      if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+      if Automator? and Automator.state == Automator.RECORDING
         action = "floatDrag"
-        arr = world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
+        arr = world.automator.tagsCollectedWhileRecordingTest
         if action not in arr
           arr.push action
     
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-      @automatorRecorderAndPlayer.recorder.addMouseMoveCommand(worldX, worldY, @hand.isThisPointerFloatDraggingSomething(), button, buttons, ctrlKey, shiftKey, altKey, metaKey)
+    if Automator? and Automator.state == Automator.RECORDING
+      @automator.recorder.addMouseMoveCommand(worldX, worldY, @hand.isThisPointerFloatDraggingSomething(), button, buttons, ctrlKey, shiftKey, altKey, metaKey)
 
 
   wheelBrowserEventHandler: (deltaX, deltaY, deltaZ, altKey, button, buttons) ->
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+    if Automator? and Automator.state == Automator.RECORDING
       pointerAndWdgtInfo = @getPointerAndWdgtInfo()
-      @automatorRecorderAndPlayer.recorder.addWheelCommand deltaX, deltaY, deltaZ, altKey, button, buttons, pointerAndWdgtInfo...
+      @automator.recorder.addWheelCommand deltaX, deltaY, deltaZ, altKey, button, buttons, pointerAndWdgtInfo...
 
     @hand.processWheel deltaX, deltaY, deltaZ, altKey, button, buttons
 
@@ -1440,13 +1440,13 @@ class WorldMorph extends PanelWdgt
       nil # special key
 
   keydownBrowserEventHandler: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-      @automatorRecorderAndPlayer.recorder.addKeyDownCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
+    if Automator? and Automator.state == Automator.RECORDING
+      @automator.recorder.addKeyDownCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
     @keyboardEventsReceiver?.processKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey
 
   keyupBrowserEventHandler: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-      @automatorRecorderAndPlayer.recorder.addKeyUpCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
+    if Automator? and Automator.state == Automator.RECORDING
+      @automator.recorder.addKeyUpCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
     # dispatch to keyboard receiver
     # so far the caret is the only keyboard
     # event handler and it has no keyup
@@ -1454,8 +1454,8 @@ class WorldMorph extends PanelWdgt
     @keyboardEventsReceiver?.processKeyUp? scanCode, shiftKey, ctrlKey, altKey, metaKey
 
   keypressBrowserEventHandler: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-      @automatorRecorderAndPlayer.recorder.addKeyPressCommand charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
+    if Automator? and Automator.state == Automator.RECORDING
+      @automator.recorder.addKeyPressCommand charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
     # This if block adapted from:
     # http://stackoverflow.com/a/16033129
     # it rejects the
@@ -1505,20 +1505,20 @@ class WorldMorph extends PanelWdgt
     #console.log "processing cut"
     @caret?.processCut selectedText
 
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-      @automatorRecorderAndPlayer.recorder.addCutCommand selectedText
+    if Automator? and Automator.state == Automator.RECORDING
+      @automator.recorder.addCutCommand selectedText
 
   copyBrowserEventHandler: (selectedText) ->
     #console.log "processing copy"
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-      @automatorRecorderAndPlayer.recorder.addCopyCommand selectedText
+    if Automator? and Automator.state == Automator.RECORDING
+      @automator.recorder.addCopyCommand selectedText
 
   pasteBrowserEventHandler: (clipboardText) ->
     #console.log "processing paste"
     if @caret
       @caret.processPaste clipboardText
-      if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-        @automatorRecorderAndPlayer.recorder.addPasteCommand selectedText
+      if Automator? and Automator.state == Automator.RECORDING
+        @automator.recorder.addPasteCommand selectedText
 
   dropBrowserEventHandler: (event) ->
     #console.log "processing drop"
@@ -1714,55 +1714,55 @@ class WorldMorph extends PanelWdgt
 
     @keyComboResetWorldEventListener = (event) =>
       if AutomatorRecorder?
-        @automatorRecorderAndPlayer.recorder.resetWorld()
+        @automator.recorder.resetWorld()
       false
     Mousetrap.bind ["alt+d"], @keyComboResetWorldEventListener
 
     @keyComboTurnOnAnimationsPacingControl = (event) =>
-      if AutomatorRecorderAndPlayer?
-        @automatorRecorderAndPlayer.recorder.turnOnAnimationsPacingControl()
+      if Automator?
+        @automator.recorder.turnOnAnimationsPacingControl()
       false
     Mousetrap.bind ["alt+e"], @keyComboTurnOnAnimationsPacingControl
 
     @keyComboTurnOffAnimationsPacingControl = (event) =>
-      if AutomatorRecorderAndPlayer?
-        @automatorRecorderAndPlayer.recorder.turnOffAnimationsPacingControl()
+      if Automator?
+        @automator.recorder.turnOffAnimationsPacingControl()
       false
     Mousetrap.bind ["alt+u"], @keyComboTurnOffAnimationsPacingControl
 
     @keyComboTakeScreenshotEventListener = (event) =>
       if AutomatorRecorder?
-        @automatorRecorderAndPlayer.recorder.addTakeScreenshotCommand()
+        @automator.recorder.addTakeScreenshotCommand()
       false
     Mousetrap.bind ["alt+c"], @keyComboTakeScreenshotEventListener
 
     @keyComboStopTestRecordingEventListener = (event) =>
-      if AutomatorRecorderAndPlayer?
-        @automatorRecorderAndPlayer.recorder.stopTestRecording()
+      if Automator?
+        @automator.recorder.stopTestRecording()
       false
     Mousetrap.bind ["alt+t"], @keyComboStopTestRecordingEventListener
 
     @keyComboAddTestCommentEventListener = (event) =>
-      if AutomatorRecorderAndPlayer?
-        @automatorRecorderAndPlayer.recorder.addTestComment()
+      if Automator?
+        @automator.recorder.addTestComment()
       false
     Mousetrap.bind ["alt+m"], @keyComboAddTestCommentEventListener
 
     @keyComboCheckNumberOfMenuItemsEventListener = (event) =>
       if AutomatorRecorder?
-        @automatorRecorderAndPlayer.recorder.addCheckNumberOfItemsInMenuCommand()
+        @automator.recorder.addCheckNumberOfItemsInMenuCommand()
       false
     Mousetrap.bind ["alt+k"], @keyComboCheckNumberOfMenuItemsEventListener
 
     @keyComboCheckStringsOfItemsInMenuOrderImportant = (event) =>
       if AutomatorRecorder?
-        @automatorRecorderAndPlayer.recorder.addCheckStringsOfItemsInMenuOrderImportantCommand()
+        @automator.recorder.addCheckStringsOfItemsInMenuOrderImportantCommand()
       false
     Mousetrap.bind ["alt+a"], @keyComboCheckStringsOfItemsInMenuOrderImportant
 
     @keyComboCheckStringsOfItemsInMenuOrderUnimportant = (event) =>
       if AutomatorRecorder?
-        @automatorRecorderAndPlayer.recorder.addCheckStringsOfItemsInMenuOrderUnimportantCommand()
+        @automator.recorder.addCheckStringsOfItemsInMenuOrderUnimportantCommand()
       false
     Mousetrap.bind ["alt+z"], @keyComboCheckStringsOfItemsInMenuOrderUnimportant
 
@@ -1922,11 +1922,11 @@ class WorldMorph extends PanelWdgt
         # which is set based on lastBuiltInstanceNumericID
         window[eachMorphClass].lastBuiltInstanceNumericID = 0
 
-    if AutomatorRecorderAndPlayer?
-      world.automatorRecorderAndPlayer.recorder.turnOffAnimationsPacingControl()
-      world.automatorRecorderAndPlayer.recorder.turnOffAlignmentOfMorphIDsMechanism()
-      world.automatorRecorderAndPlayer.recorder.turnOffHidingOfMorphsContentExtractInLabels()
-      world.automatorRecorderAndPlayer.recorder.turnOffHidingOfMorphsNumberIDInLabels()
+    if Automator?
+      world.automator.recorder.turnOffAnimationsPacingControl()
+      world.automator.recorder.turnOffAlignmentOfMorphIDsMechanism()
+      world.automator.recorder.turnOffHidingOfMorphsContentExtractInLabels()
+      world.automator.recorder.turnOffHidingOfMorphsNumberIDInLabels()
 
     super()
 
@@ -1977,7 +1977,7 @@ class WorldMorph extends PanelWdgt
         menu.addMenuItem "standard settings", true, WorldMorph.preferencesAndSettings, "toggleInputMode", "smaller menu fonts\nand sliders"
       menu.addLine()
     
-    if AutomatorRecorderAndPlayer?
+    if Automator?
       menu.addMenuItem "system tests ➜", false, @, "popUpSystemTestsMenu", ""
     if @isDevMode
       menu.addMenuItem "switch to user mode", true, @, "toggleDevMode", "disable developers'\ncontext menus"
@@ -2056,21 +2056,21 @@ class WorldMorph extends PanelWdgt
   popUpSystemTestsMenu: ->
     menu = new MenuMorph @, false, @, true, true, "system tests"
 
-    menu.addMenuItem "run system tests", true, @automatorRecorderAndPlayer.player, "runAllSystemTests", "runs all the system tests"
-    menu.addMenuItem "run system tests force slow", true, @automatorRecorderAndPlayer.player, "runAllSystemTestsForceSlow", "runs all the system tests"
-    menu.addMenuItem "run system tests force fast skip in-between mouse moves", true, @automatorRecorderAndPlayer.player, "runAllSystemTestsForceFastSkipInbetweenMouseMoves", "runs all the system tests"
-    menu.addMenuItem "run system tests force fast run in-between mouse moves", true, @automatorRecorderAndPlayer.player, "runAllSystemTestsForceFastRunInbetweenMouseMoves", "runs all the system tests"
+    menu.addMenuItem "run system tests", true, @automator.player, "runAllSystemTests", "runs all the system tests"
+    menu.addMenuItem "run system tests force slow", true, @automator.player, "runAllSystemTestsForceSlow", "runs all the system tests"
+    menu.addMenuItem "run system tests force fast skip in-between mouse moves", true, @automator.player, "runAllSystemTestsForceFastSkipInbetweenMouseMoves", "runs all the system tests"
+    menu.addMenuItem "run system tests force fast run in-between mouse moves", true, @automator.player, "runAllSystemTestsForceFastRunInbetweenMouseMoves", "runs all the system tests"
 
-    menu.addMenuItem "start test recording", true, @automatorRecorderAndPlayer.recorder, "startTestRecording", "start recording a test"
-    menu.addMenuItem "stop test recording", true, @automatorRecorderAndPlayer.recorder, "stopTestRecording", "stop recording the test"
+    menu.addMenuItem "start test recording", true, @automator.recorder, "startTestRecording", "start recording a test"
+    menu.addMenuItem "stop test recording", true, @automator.recorder, "stopTestRecording", "stop recording the test"
 
-    menu.addMenuItem "(re)play recorded test slow", true, @automatorRecorderAndPlayer.player, "startTestPlayingSlow", "start playing the test"
-    menu.addMenuItem "(re)play recorded test fast skip in-between mouse moves", true, @automatorRecorderAndPlayer.player, "startTestPlayingFastSkipInbetweenMouseMoves", "start playing the test"
-    menu.addMenuItem "(re)play recorded test  fast run in-between mouse moves", true, @automatorRecorderAndPlayer.player, "startTestPlayingFastRunInbetweenMouseMoves", "start playing the test"
+    menu.addMenuItem "(re)play recorded test slow", true, @automator.player, "startTestPlayingSlow", "start playing the test"
+    menu.addMenuItem "(re)play recorded test fast skip in-between mouse moves", true, @automator.player, "startTestPlayingFastSkipInbetweenMouseMoves", "start playing the test"
+    menu.addMenuItem "(re)play recorded test  fast run in-between mouse moves", true, @automator.player, "startTestPlayingFastRunInbetweenMouseMoves", "start playing the test"
 
-    menu.addMenuItem "show test source", true, @automatorRecorderAndPlayer, "showTestSource", "opens a window with the source of the latest test"
-    menu.addMenuItem "save recorded test", true, @automatorRecorderAndPlayer.recorder, "saveTest", "save the recorded test"
-    menu.addMenuItem "save failed screenshots", true, @automatorRecorderAndPlayer.player, "saveFailedScreenshots", "save failed screenshots"
+    menu.addMenuItem "show test source", true, @automator, "showTestSource", "opens a window with the source of the latest test"
+    menu.addMenuItem "save recorded test", true, @automator.recorder, "saveTest", "save the recorded test"
+    menu.addMenuItem "save failed screenshots", true, @automator.player, "saveFailedScreenshots", "save failed screenshots"
 
     menu.popUpAtHand()
 

@@ -92,8 +92,8 @@ class ActivePointerWdgt extends Widget
     @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem wdgtTheMenuIsAbout
     @stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere wdgtTheMenuIsAbout
 
-    if AutomatorRecorderAndPlayer? and
-     AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+    if Automator? and
+     Automator.state == Automator.PLAYING
       fade 'rightMouseButtonIndicator', 0, 1, 10, new Date().getTime()
       setTimeout \
         =>
@@ -139,11 +139,11 @@ class ActivePointerWdgt extends Widget
     oldParent = aWdgt.parent
     if !@isThisPointerFloatDraggingSomething()
 
-      if AutomatorRecorderAndPlayer?
-        world.automatorRecorderAndPlayer.recorder.addGrabCommand()
-        if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+      if Automator?
+        world.automator.recorder.addGrabCommand()
+        if Automator.state == Automator.RECORDING
           action = "grab"
-          arr = world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
+          arr = world.automator.tagsCollectedWhileRecordingTest
           if action not in arr
             arr.push action
 
@@ -226,11 +226,11 @@ class ActivePointerWdgt extends Widget
   drop: ->
     if @isThisPointerFloatDraggingSomething()
 
-      if AutomatorRecorderAndPlayer?
-        world.automatorRecorderAndPlayer.recorder.addDropCommand()
-        if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+      if Automator?
+        world.automator.recorder.addDropCommand()
+        if Automator.state == Automator.RECORDING
           action = "drop"
-          arr = world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
+          arr = world.automator.tagsCollectedWhileRecordingTest
           if action not in arr
             arr.push action
 
@@ -355,7 +355,7 @@ class ActivePointerWdgt extends Widget
     world.destroyToolTips()
     @wdgtToGrab = nil
 
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+    if Automator? and Automator.state == Automator.PLAYING
       if button is 2 or ctrlKey
         fade 'rightMouseButtonIndicator', 0, 1, 10, new Date().getTime()
       else
@@ -416,7 +416,7 @@ class ActivePointerWdgt extends Widget
    # note that the button param is not used,
    # but adding it for consistency...
   processMouseUp: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+    if Automator? and Automator.state == Automator.PLAYING
       if button is 2
         fade 'rightMouseButtonIndicator', 1, 0, 500, new Date().getTime()
       else
@@ -466,8 +466,8 @@ class ActivePointerWdgt extends Widget
             # this method below is also going to remove
             # the mouse down/up commands that have
             # recently/just been added.
-            if AutomatorRecorderAndPlayer?
-              world.automatorRecorderAndPlayer.recorder.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
+            if Automator?
+              world.automator.recorder.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
             alreadyRecordedLeftOrRightClickOnMenuItem = true
 
       # TODO check if there is any other
@@ -483,8 +483,8 @@ class ActivePointerWdgt extends Widget
           if !alreadyRecordedLeftOrRightClickOnMenuItem
             # this being a right click, pop
             # up a menu as needed.
-            if AutomatorRecorderAndPlayer?
-              world.automatorRecorderAndPlayer.recorder.addOpenContextMenuCommand morph.uniqueIDString()
+            if Automator?
+              world.automator.recorder.addOpenContextMenuCommand morph.uniqueIDString()
 
       # trigger the action
       until morph[expectedClick]
@@ -497,13 +497,13 @@ class ActivePointerWdgt extends Widget
           switch expectedClick
             when "mouseClickLeft"
               pointerAndWdgtInfo = world.getPointerAndWdgtInfo()
-              if AutomatorRecorderAndPlayer?
-                world.automatorRecorderAndPlayer.recorder.addMouseClickCommand 0, nil, pointerAndWdgtInfo...
+              if Automator?
+                world.automator.recorder.addMouseClickCommand 0, nil, pointerAndWdgtInfo...
               morph.mouseUpLeft? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
             when "mouseClickRight"
               pointerAndWdgtInfo = world.getPointerAndWdgtInfo()
-              if AutomatorRecorderAndPlayer?
-                world.automatorRecorderAndPlayer.recorder.addMouseClickCommand 2, nil, pointerAndWdgtInfo...
+              if Automator?
+                world.automator.recorder.addMouseClickCommand 2, nil, pointerAndWdgtInfo...
               morph.mouseUpRight? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
           # also send doubleclick if the
@@ -522,8 +522,8 @@ class ActivePointerWdgt extends Widget
               #console.log "WorldMorph.preferencesAndSettings.grabDragThreshold:" + WorldMorph.preferencesAndSettings.grabDragThreshold
               @doubleClickWdgt = nil
               disableConsecutiveClicksFromSingleClicksDueToFastTests = false
-              if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-                if !world.automatorRecorderAndPlayer.player.runningInSlowMode()
+              if Automator? and Automator.state == Automator.PLAYING
+                if !world.automator.player.runningInSlowMode()
                   disableConsecutiveClicksFromSingleClicksDueToFastTests = true
               if !disableConsecutiveClicksFromSingleClicksDueToFastTests
                 # remember we are going to send a double click
@@ -560,8 +560,8 @@ class ActivePointerWdgt extends Widget
               if @tripleClickWdgt == morph
                 @tripleClickWdgt = nil
                 disableConsecutiveClicksFromSingleClicksDueToFastTests = false
-                if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-                  if !world.automatorRecorderAndPlayer.player.runningInSlowMode()
+                if Automator? and Automator.state == Automator.PLAYING
+                  if !world.automator.player.runningInSlowMode()
                     disableConsecutiveClicksFromSingleClicksDueToFastTests = true
                 if !disableConsecutiveClicksFromSingleClicksDueToFastTests
                   # remember we are going to send a triple click
@@ -699,8 +699,8 @@ class ActivePointerWdgt extends Widget
 
   processDoubleClick: (morph = @topWdgtUnderPointer()) ->
     pointerAndWdgtInfo = world.getPointerAndWdgtInfo morph
-    if AutomatorRecorderAndPlayer?
-      world.automatorRecorderAndPlayer.recorder.addMouseDoubleClickCommand nil, pointerAndWdgtInfo...
+    if Automator?
+      world.automator.recorder.addMouseDoubleClickCommand nil, pointerAndWdgtInfo...
 
     world.destroyToolTips()
     if @isThisPointerFloatDraggingSomething()
@@ -712,8 +712,8 @@ class ActivePointerWdgt extends Widget
 
   processTripleClick: (morph = @topWdgtUnderPointer()) ->
     pointerAndWdgtInfo = world.getPointerAndWdgtInfo morph
-    if AutomatorRecorderAndPlayer?
-      world.automatorRecorderAndPlayer.recorder.addMouseTripleClickCommand nil, pointerAndWdgtInfo...
+    if Automator?
+      world.automator.recorder.addMouseTripleClickCommand nil, pointerAndWdgtInfo...
 
     world.destroyToolTips()
     if @isThisPointerFloatDraggingSomething()
@@ -870,7 +870,7 @@ class ActivePointerWdgt extends Widget
     pos = new Point worldX, worldY
     @fullRawMoveTo pos
 
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+    if Automator? and Automator.state == Automator.PLAYING
       mousePointerIndicator = document.getElementById "mousePointerIndicator"
       mousePointerIndicator.style.display = 'block'
       posInDocument = getDocumentPositionOf world.worldCanvas
@@ -917,8 +917,8 @@ class ActivePointerWdgt extends Widget
     displacementDueToGrabDragThreshold = nil
     skipGrabDragThreshold = false
     
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-      currentlyPlayingTestName = world.automatorRecorderAndPlayer.currentlyPlayingTestName
+    if Automator? and Automator.state == Automator.PLAYING
+      currentlyPlayingTestName = world.automator.currentlyPlayingTestName
       if !window["#{currentlyPlayingTestName}"].grabDragThreshold?
         skipGrabDragThreshold = true
 
