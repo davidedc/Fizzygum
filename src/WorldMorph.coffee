@@ -298,7 +298,7 @@ class WorldMorph extends PanelWdgt
 
     @initEventListeners()
     if Automator?
-      @automator = new Automator @, @hand
+      @automator = new Automator
 
     @worldCanvasContext = @worldCanvas.getContext "2d"
 
