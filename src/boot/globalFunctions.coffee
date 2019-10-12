@@ -254,13 +254,6 @@ noOperation = ->
 isFunction = (functionToCheck) ->
   typeof(functionToCheck) is "function"
 
-detect = (list, predicate) ->
-  # answer the first element of list for which predicate evaluates
-  # true, otherwise answer nil
-  for element in list
-    return element  if predicate.call nil, element
-  nil
-
 sizeOf = (object) ->
   # answer the number of own properties
   size = 0
