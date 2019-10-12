@@ -109,29 +109,27 @@ BackBufferMixin =
           return nil
 
         [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
-        if area.isNotEmpty()
-          if w < 1 or h < 1
-            return nil
+        return nil if w < 1 or h < 1 or area.isEmpty()
 
-          aContext.save()
+        aContext.save()
 
-          aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
+        aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
 
-          aContext.drawImage @backBuffer,
-            Math.round(sl),
-            Math.round(st),
-            Math.round(w),
-            Math.round(h),
-            Math.round(al),
-            Math.round(at),
-            Math.round(w),
-            Math.round(h)
+        aContext.drawImage @backBuffer,
+          Math.round(sl),
+          Math.round(st),
+          Math.round(w),
+          Math.round(h),
+          Math.round(al),
+          Math.round(at),
+          Math.round(w),
+          Math.round(h)
 
-          aContext.restore()
+        aContext.restore()
 
-          # paintHighlight is usually made to work with
-          # al, at, w, h which are actual pixels
-          # rather than logical pixels, so it's generally used
-          # outside the effect of the scaling because
-          # of the ceilPixelRatio
-          @paintHighlight aContext, al, at, w, h
+        # paintHighlight is usually made to work with
+        # al, at, w, h which are actual pixels
+        # rather than logical pixels, so it's generally used
+        # outside the effect of the scaling because
+        # of the ceilPixelRatio
+        @paintHighlight aContext, al, at, w, h

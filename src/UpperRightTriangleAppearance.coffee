@@ -17,32 +17,30 @@ class UpperRightTriangleAppearance extends Appearance
       return nil
 
     [area,sl,st,al,at,w,h] = @morph.calculateKeyValues aContext, clippingRectangle
-    if area.isNotEmpty()
-      if w < 1 or h < 1
-        return nil
+    return nil if w < 1 or h < 1 or area.isEmpty()
 
-      aContext.save()
+    aContext.save()
 
-      # clip out the dirty rectangle as we are
-      # going to paint the whole of the box
-      aContext.clipToRectangle al,at,w,h
+    # clip out the dirty rectangle as we are
+    # going to paint the whole of the box
+    aContext.clipToRectangle al,at,w,h
 
-      aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
+    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
 
-      aContext.scale ceilPixelRatio, ceilPixelRatio
-      morphPosition = @morph.position()
-      aContext.translate morphPosition.x, morphPosition.y
+    aContext.scale ceilPixelRatio, ceilPixelRatio
+    morphPosition = @morph.position()
+    aContext.translate morphPosition.x, morphPosition.y
 
-      @renderingHelper aContext, @morph.color
+    @renderingHelper aContext, @morph.color
 
-      aContext.restore()
+    aContext.restore()
 
-      # paintHighlight is usually made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, so it's generally used
-      # outside the effect of the scaling because
-      # of the ceilPixelRatio (i.e. after the restore)
-      @paintHighlight aContext, al, at, w, h
+    # paintHighlight is usually made to work with
+    # al, at, w, h which are actual pixels
+    # rather than logical pixels, so it's generally used
+    # outside the effect of the scaling because
+    # of the ceilPixelRatio (i.e. after the restore)
+    @paintHighlight aContext, al, at, w, h
 
   renderingHelper: (context, color) ->
     context.lineWidth = 1

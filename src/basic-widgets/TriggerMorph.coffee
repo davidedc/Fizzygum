@@ -134,40 +134,38 @@ class TriggerMorph extends Widget
       return nil
 
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
-    if area.isNotEmpty()
-      if w < 1 or h < 1
-        return nil
+    return nil if w < 1 or h < 1 or area.isEmpty()
 
-      if appliedShadow?
-        color = "black"
-      else
-        color = switch @state
-          when @STATE_NORMAL
-            @color
-          when @STATE_HIGHLIGHTED
-            @highlightColor
-          when @STATE_PRESSED
-            @pressColor
+    if appliedShadow?
+      color = "black"
+    else
+      color = switch @state
+        when @STATE_NORMAL
+          @color
+        when @STATE_HIGHLIGHTED
+          @highlightColor
+        when @STATE_PRESSED
+          @pressColor
 
-      # paintRectangle is usually made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, so it's generally used
-      # outside the effect of the scaling because
-      # of the ceilPixelRatio
-      @paintRectangle \
-        aContext,
-        al, at, w, h,
-        color,
-        @alpha,
-        true, # push and pop the context
-        appliedShadow
+    # paintRectangle is usually made to work with
+    # al, at, w, h which are actual pixels
+    # rather than logical pixels, so it's generally used
+    # outside the effect of the scaling because
+    # of the ceilPixelRatio
+    @paintRectangle \
+      aContext,
+      al, at, w, h,
+      color,
+      @alpha,
+      true, # push and pop the context
+      appliedShadow
 
-      # paintHighlight is usually made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, so it's generally used
-      # outside the effect of the scaling because
-      # of the ceilPixelRatio
-      @paintHighlight aContext, al, at, w, h
+    # paintHighlight is usually made to work with
+    # al, at, w, h which are actual pixels
+    # rather than logical pixels, so it's generally used
+    # outside the effect of the scaling because
+    # of the ceilPixelRatio
+    @paintHighlight aContext, al, at, w, h
 
   createLabel: ->
     # bold

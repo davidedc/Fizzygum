@@ -55,55 +55,53 @@ class CircleBoxyAppearance extends Appearance
       return nil
 
     [area,sl,st,al,at,w,h] = @morph.calculateKeyValues aContext, clippingRectangle
-    if area.isNotEmpty()
-      if w < 1 or h < 1
-        return nil
+    return nil if w < 1 or h < 1 or area.isEmpty()
 
-      aContext.save()
+    aContext.save()
 
-      # clip out the dirty rectangle as we are
-      # going to paint the whole of the box
-      aContext.clipToRectangle al,at,w,h
+    # clip out the dirty rectangle as we are
+    # going to paint the whole of the box
+    aContext.clipToRectangle al,at,w,h
 
-      aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
+    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
 
-      aContext.scale ceilPixelRatio, ceilPixelRatio
-      morphPosition = @morph.position()
-      aContext.translate morphPosition.x, morphPosition.y
+    aContext.scale ceilPixelRatio, ceilPixelRatio
+    morphPosition = @morph.position()
+    aContext.translate morphPosition.x, morphPosition.y
 
-      [radius,center1,center2,rect] = @calculateKeyPoints()
+    [radius,center1,center2,rect] = @calculateKeyPoints()
 
-      # the centers of two circles
-      points = [center1.toLocalCoordinatesOf(@morph), center2.toLocalCoordinatesOf(@morph)]
+    # the centers of two circles
+    points = [center1.toLocalCoordinatesOf(@morph), center2.toLocalCoordinatesOf(@morph)]
 
-      color = @morph.color
+    color = @morph.color
 
-      if appliedShadow?
-        aContext.fillStyle = "black"
-      else
-        aContext.fillStyle = color.toString()
+    if appliedShadow?
+      aContext.fillStyle = "black"
+    else
+      aContext.fillStyle = color.toString()
 
-      aContext.beginPath()
+    aContext.beginPath()
 
-      # the two circles (one at each end)
-      aContext.arc points[0].x, points[0].y, radius, 0, 2 * Math.PI
-      aContext.arc points[1].x, points[1].y, radius, 0, 2 * Math.PI
-      # the rectangle
-      rect = rect.floor()
-      rect = rect.toLocalCoordinatesOf @morph
-      aContext.moveTo rect.origin.x, rect.origin.y
-      aContext.lineTo rect.origin.x + rect.width(), rect.origin.y
-      aContext.lineTo rect.origin.x + rect.width(), rect.origin.y + rect.height()
-      aContext.lineTo rect.origin.x, rect.origin.y + rect.height()
+    # the two circles (one at each end)
+    aContext.arc points[0].x, points[0].y, radius, 0, 2 * Math.PI
+    aContext.arc points[1].x, points[1].y, radius, 0, 2 * Math.PI
+    # the rectangle
+    rect = rect.floor()
+    rect = rect.toLocalCoordinatesOf @morph
+    aContext.moveTo rect.origin.x, rect.origin.y
+    aContext.lineTo rect.origin.x + rect.width(), rect.origin.y
+    aContext.lineTo rect.origin.x + rect.width(), rect.origin.y + rect.height()
+    aContext.lineTo rect.origin.x, rect.origin.y + rect.height()
 
-      aContext.closePath()
-      aContext.fill()
+    aContext.closePath()
+    aContext.fill()
 
-      aContext.restore()
+    aContext.restore()
 
-      # paintHighlight is usually made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, so it's generally used
-      # outside the effect of the scaling because
-      # of the ceilPixelRatio (i.e. after the restore)
-      @paintHighlight aContext, al, at, w, 
+    # paintHighlight is usually made to work with
+    # al, at, w, h which are actual pixels
+    # rather than logical pixels, so it's generally used
+    # outside the effect of the scaling because
+    # of the ceilPixelRatio (i.e. after the restore)
+    @paintHighlight aContext, al, at, w, 

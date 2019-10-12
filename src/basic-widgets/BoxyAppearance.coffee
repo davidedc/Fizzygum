@@ -55,48 +55,46 @@ class BoxyAppearance extends Appearance
       return nil
 
     [area,sl,st,al,at,w,h] = @morph.calculateKeyValues aContext, clippingRectangle
-    if area.isNotEmpty()
-      if w < 1 or h < 1
-        return nil
+    return nil if w < 1 or h < 1 or area.isEmpty()
 
-      aContext.save()
+    aContext.save()
 
-      # clip out the dirty rectangle as we are
-      # going to paint the whole of the box
-      aContext.clipToRectangle al,at,w,h
+    # clip out the dirty rectangle as we are
+    # going to paint the whole of the box
+    aContext.clipToRectangle al,at,w,h
 
-      aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
+    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
 
-      aContext.scale ceilPixelRatio, ceilPixelRatio
-      morphPosition = @morph.position()
-      aContext.translate morphPosition.x, morphPosition.y
-      if !@morph.color? then debugger
-      aContext.fillStyle = @morph.color.toString()
-      
-      if appliedShadow?
-        aContext.fillStyle = "black"
+    aContext.scale ceilPixelRatio, ceilPixelRatio
+    morphPosition = @morph.position()
+    aContext.translate morphPosition.x, morphPosition.y
+    if !@morph.color? then debugger
+    aContext.fillStyle = @morph.color.toString()
+    
+    if appliedShadow?
+      aContext.fillStyle = "black"
 
+    aContext.beginPath()
+    @outlinePath aContext, @getCornerRadius(), false
+    aContext.closePath()
+    aContext.fill()
+
+    if @morph.strokeColor? and !appliedShadow?
+      aContext.lineWidth = 1 # TODO might look better if * ceilPixelRatio
+      aContext.strokeStyle = @morph.strokeColor.toString()
       aContext.beginPath()
-      @outlinePath aContext, @getCornerRadius(), false
+      @outlinePath aContext, @getCornerRadius(), true
       aContext.closePath()
-      aContext.fill()
+      aContext.stroke()
 
-      if @morph.strokeColor? and !appliedShadow?
-        aContext.lineWidth = 1 # TODO might look better if * ceilPixelRatio
-        aContext.strokeStyle = @morph.strokeColor.toString()
-        aContext.beginPath()
-        @outlinePath aContext, @getCornerRadius(), true
-        aContext.closePath()
-        aContext.stroke()
+    aContext.restore()
 
-      aContext.restore()
-
-      # paintHighlight is usually made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, so it's generally used
-      # outside the effect of the scaling because
-      # of the ceilPixelRatio (i.e. after the restore)
-      @paintHighlight aContext, al, at, w, h
+    # paintHighlight is usually made to work with
+    # al, at, w, h which are actual pixels
+    # rather than logical pixels, so it's generally used
+    # outside the effect of the scaling because
+    # of the ceilPixelRatio (i.e. after the restore)
+    @paintHighlight aContext, al, at, w, h
 
   
   outlinePath: (context, radius, isStroke) ->

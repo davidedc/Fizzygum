@@ -52,60 +52,58 @@ class PenMorph extends Widget
       return
 
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
-    if area.isNotEmpty()
-      if w < 1 or h < 1
-        return nil
+    return nil if w < 1 or h < 1 or area.isEmpty()
 
-      aContext.save()
+    aContext.save()
 
-      # clip out the dirty rectangle as we are
-      # going to paint the whole of the box
-      aContext.clipToRectangle al,at,w,h
+    # clip out the dirty rectangle as we are
+    # going to paint the whole of the box
+    aContext.clipToRectangle al,at,w,h
 
-      aContext.globalAlpha = @alpha
+    aContext.globalAlpha = @alpha
 
-      aContext.scale ceilPixelRatio, ceilPixelRatio
-      morphPosition = @position()
-      aContext.translate morphPosition.x, morphPosition.y
+    aContext.scale ceilPixelRatio, ceilPixelRatio
+    morphPosition = @position()
+    aContext.translate morphPosition.x, morphPosition.y
 
-      direction = @heading
-      len = @width() / 2
-      start = @center().subtract(@position())
+    direction = @heading
+    len = @width() / 2
+    start = @center().subtract(@position())
 
-      if @penPoint is "tip"
-        dest = start.distanceAngle(len * 0.75, direction - 180)
-        left = start.distanceAngle(len, direction + 195)
-        right = start.distanceAngle(len, direction - 195)
-      else # 'middle'
-        dest = start.distanceAngle(len * 0.75, direction)
-        left = start.distanceAngle(len * 0.33, direction + 230)
-        right = start.distanceAngle(len * 0.33, direction - 230)
+    if @penPoint is "tip"
+      dest = start.distanceAngle(len * 0.75, direction - 180)
+      left = start.distanceAngle(len, direction + 195)
+      right = start.distanceAngle(len, direction - 195)
+    else # 'middle'
+      dest = start.distanceAngle(len * 0.75, direction)
+      left = start.distanceAngle(len * 0.33, direction + 230)
+      right = start.distanceAngle(len * 0.33, direction - 230)
 
-      aContext.fillStyle = @color.toString()
-      aContext.beginPath()
+    aContext.fillStyle = @color.toString()
+    aContext.beginPath()
 
-      aContext.moveTo start.x, start.y
-      aContext.lineTo left.x, left.y
-      aContext.lineTo dest.x, dest.y
-      aContext.lineTo right.x, right.y
+    aContext.moveTo start.x, start.y
+    aContext.lineTo left.x, left.y
+    aContext.lineTo dest.x, dest.y
+    aContext.lineTo right.x, right.y
 
-      aContext.closePath()
-      aContext.strokeStyle = "white"
-      aContext.lineWidth = 3
-      aContext.stroke()
-      aContext.strokeStyle = "black"
-      aContext.lineWidth = 1
-      aContext.stroke()
-      aContext.fill()
+    aContext.closePath()
+    aContext.strokeStyle = "white"
+    aContext.lineWidth = 3
+    aContext.stroke()
+    aContext.strokeStyle = "black"
+    aContext.lineWidth = 1
+    aContext.stroke()
+    aContext.fill()
 
-      aContext.restore()
+    aContext.restore()
 
-      # paintHighlight is usually made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, so it's generally used
-      # outside the effect of the scaling because
-      # of the ceilPixelRatio (i.e. after the restore)
-      @paintHighlight aContext, al, at, w, h
+    # paintHighlight is usually made to work with
+    # al, at, w, h which are actual pixels
+    # rather than logical pixels, so it's generally used
+    # outside the effect of the scaling because
+    # of the ceilPixelRatio (i.e. after the restore)
+    @paintHighlight aContext, al, at, w, h
 
   
   

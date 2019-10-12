@@ -82,58 +82,56 @@ class DesktopAppearance extends RectangularAppearance
 
 
     [area,sl,st,al,at,w,h] = @morph.calculateKeyValues aContext, clippingRectangle
-    if area.isNotEmpty()
-      if w < 1 or h < 1
-        return nil
+    return nil if w < 1 or h < 1 or area.isEmpty()
 
-      @morph.justBeforeBeingPainted?()
+    @morph.justBeforeBeingPainted?()
 
-      aContext.save()
-      aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
-      if !@morph.color? then debugger
-      aContext.fillStyle = @morph.color.toString()
+    aContext.save()
+    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
+    if !@morph.color? then debugger
+    aContext.fillStyle = @morph.color.toString()
 
-      # paintRectangle is usually made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, so it's generally used
-      # outside the effect of the scaling because
-      # of the ceilPixelRatio
+    # paintRectangle is usually made to work with
+    # al, at, w, h which are actual pixels
+    # rather than logical pixels, so it's generally used
+    # outside the effect of the scaling because
+    # of the ceilPixelRatio
 
-      # paint the background
-      toBePainted = new Rectangle al, at, al + w, at + h
+    # paint the background
+    toBePainted = new Rectangle al, at, al + w, at + h
 
-      if @morph.backgroundColor?
-        color = @morph.backgroundColor
-        if appliedShadow?
-          color = "black"
-        @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
-
-
-      # now paint the actual morph, which is a rectangle
-      # (potentially inset because of the padding)
-      toBePainted = toBePainted.intersect @morph.boundingBoxTight().scaleBy ceilPixelRatio
-
-      color = @morph.color
+    if @morph.backgroundColor?
+      color = @morph.backgroundColor
       if appliedShadow?
         color = "black"
-
       @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
 
-      @drawAdditionalPartsOnBaseShape? false, false, appliedShadow, aContext, al, at, w, h
 
-      if !appliedShadow?
-        @paintStroke aContext, clippingRectangle
+    # now paint the actual morph, which is a rectangle
+    # (potentially inset because of the padding)
+    toBePainted = toBePainted.intersect @morph.boundingBoxTight().scaleBy ceilPixelRatio
 
-      if @pattern?
-        aContext.fillStyle = @pattern
-        aContext.fillRect toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height()
+    color = @morph.color
+    if appliedShadow?
+      color = "black"
 
-      aContext.restore()
+    @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
 
-      # paintHighlight is usually made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, so it's generally used
-      # outside the effect of the scaling because
-      # of the ceilPixelRatio
-      @paintHighlight aContext, al, at, w, h
+    @drawAdditionalPartsOnBaseShape? false, false, appliedShadow, aContext, al, at, w, h
+
+    if !appliedShadow?
+      @paintStroke aContext, clippingRectangle
+
+    if @pattern?
+      aContext.fillStyle = @pattern
+      aContext.fillRect toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height()
+
+    aContext.restore()
+
+    # paintHighlight is usually made to work with
+    # al, at, w, h which are actual pixels
+    # rather than logical pixels, so it's generally used
+    # outside the effect of the scaling because
+    # of the ceilPixelRatio
+    @paintHighlight aContext, al, at, w, h
 

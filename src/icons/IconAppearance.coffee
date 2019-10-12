@@ -79,44 +79,42 @@ class IconAppearance extends Appearance
       return
 
     [area,sl,st,al,at,w,h] = @morph.calculateKeyValues aContext, clippingRectangle
-    if area.isNotEmpty()
-      if w < 1 or h < 1
-        return nil
+    return nil if w < 1 or h < 1 or area.isEmpty()
 
-      aContext.save()
+    aContext.save()
 
-      # clip out the dirty rectangle as we are
-      # going to paint the whole of the box
-      aContext.clipToRectangle al,at,w,h
+    # clip out the dirty rectangle as we are
+    # going to paint the whole of the box
+    aContext.clipToRectangle al,at,w,h
 
-      aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
+    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
 
-      aContext.scale ceilPixelRatio, ceilPixelRatio
+    aContext.scale ceilPixelRatio, ceilPixelRatio
 
-      #morphPosition = @morph.position()
-      #aContext.translate morphPosition.x, morphPosition.y
-      #debugger
+    #morphPosition = @morph.position()
+    #aContext.translate morphPosition.x, morphPosition.y
+    #debugger
 
-      result = @calculateRectangleOfIcon()
+    result = @calculateRectangleOfIcon()
 
 
-      aContext.translate(result.left(), result.top())
-      aContext.scale(result.width() / @preferredSize.width(), result.height() / @preferredSize.height())
-      aContext.scale(@preferredSize.width() / @specificationSize.width(), @preferredSize.height() / @specificationSize.height())
+    aContext.translate(result.left(), result.top())
+    aContext.scale(result.width() / @preferredSize.width(), result.height() / @preferredSize.height())
+    aContext.scale(@preferredSize.width() / @specificationSize.width(), @preferredSize.height() / @specificationSize.height())
 
-      ## at this point, you draw in a squareSize x squareSize
-      ## canvas, and it gets painted in a square that fits
-      ## the morph, right in the middle.
-      @paintFunction aContext
+    ## at this point, you draw in a squareSize x squareSize
+    ## canvas, and it gets painted in a square that fits
+    ## the morph, right in the middle.
+    @paintFunction aContext
 
-      aContext.restore()
+    aContext.restore()
 
-      # paintHighlight is usually made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, so it's generally used
-      # outside the effect of the scaling because
-      # of the ceilPixelRatio (i.e. after the restore)
-      #@paintHighlight aContext, al, at, w, h
+    # paintHighlight is usually made to work with
+    # al, at, w, h which are actual pixels
+    # rather than logical pixels, so it's generally used
+    # outside the effect of the scaling because
+    # of the ceilPixelRatio (i.e. after the restore)
+    #@paintHighlight aContext, al, at, w, h
 
   oval: (context, x, y, w, h) ->
     context.save()

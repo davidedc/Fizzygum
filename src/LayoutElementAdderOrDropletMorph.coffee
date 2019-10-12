@@ -24,38 +24,36 @@ class LayoutElementAdderOrDropletMorph extends Widget
       return
 
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
-    if area.isNotEmpty()
-      if w < 1 or h < 1
-        return nil
+    return nil if w < 1 or h < 1 or area.isEmpty()
 
-      aContext.save()
+    aContext.save()
 
-      # clip out the dirty rectangle as we are
-      # going to paint the whole of the box
-      aContext.clipToRectangle al,at,w,h
+    # clip out the dirty rectangle as we are
+    # going to paint the whole of the box
+    aContext.clipToRectangle al,at,w,h
 
-      aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
+    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
 
-      # paintRectangle here is made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, this is why
-      # it's called before the scaling.
-      @paintRectangle aContext, al, at, w, h, @color
-      aContext.scale ceilPixelRatio, ceilPixelRatio
+    # paintRectangle here is made to work with
+    # al, at, w, h which are actual pixels
+    # rather than logical pixels, this is why
+    # it's called before the scaling.
+    @paintRectangle aContext, al, at, w, h, @color
+    aContext.scale ceilPixelRatio, ceilPixelRatio
 
-      morphPosition = @position()
-      aContext.translate morphPosition.x, morphPosition.y
+    morphPosition = @position()
+    aContext.translate morphPosition.x, morphPosition.y
 
-      @spacerMorphRenderingHelper aContext, new Color(255, 255, 255), new Color(200, 200, 255)
+    @spacerMorphRenderingHelper aContext, new Color(255, 255, 255), new Color(200, 200, 255)
 
-      aContext.restore()
+    aContext.restore()
 
-      # paintHighlight here is made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, this is why
-      # it's called outside the effect of the scaling
-      # (after the restore).
-      @paintHighlight aContext, al, at, w, h
+    # paintHighlight here is made to work with
+    # al, at, w, h which are actual pixels
+    # rather than logical pixels, this is why
+    # it's called outside the effect of the scaling
+    # (after the restore).
+    @paintHighlight aContext, al, at, w, h
 
   drawHandle: (context) ->
     height = @height()
