@@ -82,9 +82,9 @@ class InspectorMorph extends BoxMorph
         attribs
 
     # filter out some fields we don't want to see...
-    attribs = attribs.filter((prop) => prop.indexOf("_class_injected_in") == -1)
+    attribs = attribs.filter((prop) => !prop.includes "_class_injected_in" )
     attribs = attribs.filter((prop) => prop != "instances")
-    #attribs = attribs.filter((prop) => prop.indexOf("function ") == -1)
+    #attribs = attribs.filter((prop) => !prop.includes "function " )
     #attribs = attribs.unique()
 
     # otherwise show all properties

@@ -157,7 +157,7 @@ class MenuMorph extends PopUpWdgt
     # make sure we destroy the children that
     # are going away.
     #for w in @children
-    #  if @items.indexOf(w) == -1
+    #  if !@items.includes(w)
     #    w.fullDestroy()
 
     #@children = []

@@ -105,7 +105,7 @@ class MenuItemMorph extends TriggerMorph
     
     # this could be a way to catch menu entries that should cause
     # an highlighting but don't
-    #if @labelString.indexOf("a ") == 0 and !@representsAMorph
+    #if @labelString.startsWith("a ") and !@representsAMorph
     #  debugger
 
     if @representsAMorph

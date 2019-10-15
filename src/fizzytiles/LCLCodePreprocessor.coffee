@@ -221,7 +221,7 @@ class LCLCodePreprocessor
     code = code.replace(/^(\s*)✓[ ]*doOnce[ \t]+.*$/gm, "$1noOperation")
 
     if @detailedDebug then console.log "removeTickedDoOnce\n" + code + " error: " + error
-    if code.indexOf("✓") != -1
+    if code.includes "✓"
       return [undefined,"✓ must be next to a doOnce"]
     return [code, error]
 
@@ -289,7 +289,7 @@ class LCLCodePreprocessor
     #   ones have been run regroup the lines into a single string again
     #
     elaboratedSourceByLine = undefined
-    if code.indexOf("doOnce") > -1
+    if code.includes "doOnce"
       
       #alert("a doOnce is potentially executable")
       elaboratedSourceByLine = code.split("\n")

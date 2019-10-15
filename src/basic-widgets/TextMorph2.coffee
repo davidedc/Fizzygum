@@ -116,7 +116,7 @@ class TextMorph2 extends StringMorph2
       # So this can be done only if the textbox is
       # constrained horizontally but not vertically...
 
-      #if !word.substr(0, word.length-1).contains(" ")
+      #if !word.substr(0, word.length-1).includes(" ")
       #  console.log ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
       #  console.log "> no space word: " + word
       #  checkingLongerSingleWorld = Math.ceil @measureText overrideFontSize, word

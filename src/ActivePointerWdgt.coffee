@@ -823,13 +823,13 @@ class ActivePointerWdgt extends Widget
     
     if files.length
       for file in files
-        if file.type.contains("svg") && !WorldMorph.preferencesAndSettings.rasterizeSVGs
+        if file.type.includes("svg") && !WorldMorph.preferencesAndSettings.rasterizeSVGs
           readSVG file
-        else if file.type.indexOf("image") is 0
+        else if file.type.startsWith "image"
           readImage file
-        else if file.type.indexOf("audio") is 0
+        else if file.type.startsWith "audio"
           readAudio file
-        else if file.type.indexOf("text") is 0
+        else if file.type.startsWith "text"
           readText file
         else
           readBinary file

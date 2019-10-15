@@ -2362,12 +2362,12 @@ class Widget extends TreeNode
   # data structures related to broken morphs, then
   # we have to add the copy too.
   alignCopiedMorphToBrokenInfoDataStructures: (copiedMorph) ->
-    if window.morphsThatMaybeChangedGeometryOrPosition.indexOf(@) != -1 and
-     window.morphsThatMaybeChangedGeometryOrPosition.indexOf(copiedMorph) == -1
+    if window.morphsThatMaybeChangedGeometryOrPosition.includes(@) and
+     !window.morphsThatMaybeChangedGeometryOrPosition.includes(copiedMorph)
       window.morphsThatMaybeChangedGeometryOrPosition.push copiedMorph
 
-    if window.morphsThatMaybeChangedFullGeometryOrPosition.indexOf(@) != -1 and
-     window.morphsThatMaybeChangedFullGeometryOrPosition.indexOf(copiedMorph) == -1
+    if window.morphsThatMaybeChangedFullGeometryOrPosition.includes(@) and
+     !window.morphsThatMaybeChangedFullGeometryOrPosition.includes(copiedMorph)
       window.morphsThatMaybeChangedFullGeometryOrPosition.push copiedMorph
 
   # in case we copy a morph, if the original was in some
@@ -2461,7 +2461,7 @@ class Widget extends TreeNode
             console.log "looking at property: " + property
             clonedMorphs[i][property] = createdObjects[i][property]
             if typeof clonedMorphs[i][property] is "string"
-              if (clonedMorphs[i][property].indexOf "$") == 0
+              if clonedMorphs[i][property].startsWith "$"
                 referenceNumberAsString = clonedMorphs[i][property].substring(1)
                 referenceNumber = parseInt referenceNumberAsString
                 clonedMorphs[i][property] = clonedMorphs[referenceNumber]
@@ -2470,7 +2470,7 @@ class Widget extends TreeNode
           eachArrayElement = createdObjects[i][j]
           clonedMorphs[i][j] = createdObjects[i][j]
           if typeof eachArrayElement is "string"
-            if (eachArrayElement.indexOf "$") == 0
+            if eachArrayElement.startsWith "$"
               referenceNumberAsString = eachArrayElement.substring(1)
               referenceNumber = parseInt referenceNumberAsString
               clonedMorphs[i][j] = clonedMorphs[referenceNumber]

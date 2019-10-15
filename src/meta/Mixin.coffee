@@ -43,9 +43,9 @@ class Mixin
     aString = aString.replace /hasProp = {}.hasProp/, "$$$$$$"
     aString = aString.replace /slice = [].slice/, "$$$$$$"
 
-    if (aString.indexOf "[].indexOf") != -1 or
-     (aString.indexOf "{}.hasProp") != -1 or
-     (aString.indexOf "[].slice") != -1
+    if (aString.includes "[].indexOf") or
+     (aString.includes "{}.hasProp") or
+     (aString.includes "[].slice")
       console.log "code contains a helper var, it shouldn't: " +  aString
       debugger
 

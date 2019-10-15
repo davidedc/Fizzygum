@@ -99,7 +99,7 @@ class SystemInfo
     cookieEnabled = if navigator.cookieEnabled then true else false
     if typeof navigator.cookieEnabled == 'undefined' and !cookieEnabled
       document.cookie = 'testcookie'
-      cookieEnabled = if document.cookie.indexOf('testcookie') != -1 then true else false
+      cookieEnabled = document.cookie.includes('testcookie')
     # system
     os = unknown
     clientStrings = [

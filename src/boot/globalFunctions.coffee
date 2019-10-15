@@ -784,7 +784,7 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
   # final step, proceed with the boot sequence
   promiseChain.then ->
 
-    if window.location.href.contains "generatePreCompiled"
+    if window.location.href.includes "generatePreCompiled"
       zip = new JSZip
       zip.file 'pre-compiled.js', "window.preCompiled = true;\n\n" + window.JSSourcesContainer.content
       zip.generateAsync(type: 'blob').then (content) ->
@@ -855,7 +855,7 @@ createWorldAndStartStepping = ->
   # to fit the world in canvas as per dimensions
   # specified in the canvas element. Fill entire
   # page otherwise.
-  if window.location.href.contains "worldWithSystemTestHarness"
+  if window.location.href.includes "worldWithSystemTestHarness"
     # the user is here to record a system test so
     # don't fill entire page cause there are some
     # controls on the right side of the canvas
@@ -880,7 +880,7 @@ createWorldAndStartStepping = ->
   # for the System Tests, then add a panel
   # to the right where helper commands can be
   # clicked.
-  if window.location.href.contains "worldWithSystemTestHarness"
+  if window.location.href.includes "worldWithSystemTestHarness"
     if SystemTestsControlPanelUpdater?
       new SystemTestsControlPanelUpdater
 

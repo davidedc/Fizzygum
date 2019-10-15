@@ -260,7 +260,7 @@ class WorldMorph extends PanelWdgt
     # The WorldMorph is the very first morph to
     # be created.
 
-    if window.location.href.contains "worldWithSystemTestHarness"
+    if window.location.href.includes "worldWithSystemTestHarness"
       @isIndexPage = false
     else
       @isIndexPage = true
@@ -443,7 +443,7 @@ class WorldMorph extends PanelWdgt
     if (!startupActions?) or (WorldMorph.ongoingUrlActionNumber == startupActions.actions.length)
       WorldMorph.ongoingUrlActionNumber = 0
       if Automator?
-        if window.location.href.indexOf("worldWithSystemTestHarness") != -1
+        if window.location.href.includes("worldWithSystemTestHarness")
           if @automator.atLeastOneTestHasBeenRun
             if @automator.allTestsPassedSoFar
               document.getElementById("background").style.background = "green"
@@ -513,9 +513,9 @@ class WorldMorph extends PanelWdgt
       theWordWdgt = "Wdgt"
       theWordWidget = "Widget"
       listOfMorphsClasses = (Object.keys(window)).filter (i) ->
-        (i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1) or
-        (i.indexOf(theWordWdgt, i.length - theWordWdgt.length) isnt -1) or
-        (i.indexOf(theWordWidget, i.length - theWordWidget.length) isnt -1)
+        i.includes(theWordMorph, i.length - theWordMorph.length) or
+        i.includes(theWordWdgt, i.length - theWordWdgt.length) or
+        i.includes(theWordWidget, i.length - theWordWidget.length)
       for eachMorphClass in listOfMorphsClasses
         #console.log "bumping up ID of class: " + eachMorphClass
         window[eachMorphClass].roundNumericIDsToNextThousand?()
@@ -943,12 +943,12 @@ class WorldMorph extends PanelWdgt
     # next cycle, and add the offending widget to a
     # "banned" list
     @errorsWhileRepainting.push err
-    if (@widgetsGivingErrorWhileRepainting.indexOf @paintingWidget) == -1
+    if !@widgetsGivingErrorWhileRepainting.includes @paintingWidget
       @widgetsGivingErrorWhileRepainting.push @paintingWidget
       @paintingWidget.silentHide()
 
   hideOffendingWidget: ->
-    if (@widgetsGivingErrorWhileRepainting.indexOf @paintingWidget) == -1
+    if !@widgetsGivingErrorWhileRepainting.includes @paintingWidget
       @widgetsGivingErrorWhileRepainting.push @paintingWidget
       @paintingWidget.silentHide()
 
@@ -1911,9 +1911,9 @@ class WorldMorph extends PanelWdgt
     theWordWdgt = "Wdgt"
     theWordWidget = "Widget"
     ListOfMorphs = (Object.keys(window)).filter (i) ->
-      (i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1) or
-      (i.indexOf(theWordWdgt, i.length - theWordWdgt.length) isnt -1) or
-      (i.indexOf(theWordWidget, i.length - theWordWidget.length) isnt -1)
+      i.includes(theWordMorph, i.length - theWordMorph.length) or
+      i.includes(theWordWdgt, i.length - theWordWdgt.length) or
+      i.includes(theWordWidget, i.length - theWordWidget.length)
     for eachMorphClass in ListOfMorphs
       if eachMorphClass != "WorldMorph"
         #console.log "resetting " + eachMorphClass + " from " + window[eachMorphClass].instancesCounter
