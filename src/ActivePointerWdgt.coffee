@@ -918,8 +918,7 @@ class ActivePointerWdgt extends Widget
     skipGrabDragThreshold = false
     
     if Automator? and Automator.state == Automator.PLAYING
-      currentlyPlayingTestName = world.automator.currentlyPlayingTestName
-      if !window["#{currentlyPlayingTestName}"].grabDragThreshold?
+      if !window["#{world.automator.player.currentlyPlayingTestName()}"].grabDragThreshold?
         skipGrabDragThreshold = true
 
     if !skipGrabDragThreshold
