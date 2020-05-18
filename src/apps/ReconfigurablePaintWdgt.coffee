@@ -419,6 +419,15 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     eraserToolButtonOn.sourceCodeToBeInjected = "mouseMove = -> return"
     @eraserToolButton = new ToggleButtonMorph eraserToolButtonOff, eraserToolButtonOn
 
+    # pencilAnnotation
+    new EditableMarkMorph @pencilToolButton, pencilButtonOff, "editInjectableSource"
+    # brushAnnotation
+    new EditableMarkMorph @brushToolButton, brushToolButtonOff, "editInjectableSource"
+    # toothpasteAnnotation
+    new EditableMarkMorph @toothpasteToolButton, toothpasteToolButtonOff, "editInjectableSource"
+    # eraserAnnotation
+    new EditableMarkMorph @eraserToolButton, eraserToolButtonOff, "editInjectableSource"
+
     @toolsPanel.add @pencilToolButton
     @toolsPanel.add @brushToolButton
     @toolsPanel.add @toothpasteToolButton
