@@ -184,5 +184,31 @@ echo "cleanup unneeded files"
 rm -rdf ../Fizzygum-builds/latest/delete_me
 echo "...done"
 
+if [ "$1" == "--homepage" ]; then
+rm ../Fizzygum-builds/latest/worldWithSystemTestHarness.html
+rm ../Fizzygum-builds/latest/icons/doubleClickLeft.png
+rm ../Fizzygum-builds/latest/icons/middleButtonPressed.png
+rm ../Fizzygum-builds/latest/icons/scrollUp.png
+rm ../Fizzygum-builds/latest/icons/doubleClickRight.png
+rm ../Fizzygum-builds/latest/icons/rightButtonPressed.png
+rm ../Fizzygum-builds/latest/icons/xPointerImage.png
+rm ../Fizzygum-builds/latest/icons/leftButtonPressed.png
+rm ../Fizzygum-builds/latest/icons/scrollDown.png
+rm ../Fizzygum-builds/latest/js/fizzygum-boot.js
+rm ../Fizzygum-builds/latest/js/libs/Mousetrap.js
+
+ls -d -1 ../Fizzygum-builds/latest/js/sourceCode/* | grep -v /sources_batch | grep -v /sourceCodeManifest | grep -v /Mixin_coffeSource | grep -v /Class_coffeSource | xargs rm -f
+
+echo
+echo "========================================================="
+echo "further steps for homepage build:"
+echo "1. generate the pre-compiled by loading fizzygum with the URL file:///...index.html?generatePreCompiled and put in the /js/ folder"
+echo "2. rm -rdf ../Fizzygum-builds/latest/js/tests"
+echo "3. rm ../Fizzygum-builds/latest/js/libs/FileSaver.min.js"
+echo "4. rm ../Fizzygum-builds/latest/js/libs/jszip.min.js"
+echo "========================================================="
+echo
+fi
+
 say build done
 echo done!!!!!!!!!!!!
