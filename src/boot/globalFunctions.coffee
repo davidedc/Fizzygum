@@ -556,18 +556,22 @@ boot = ->
   # and parse them ideally in parallel but I didn't measure
   # that).
 
-  (Promise.all [
-      loadJSFile("js/libs/FileSaver.min.js"),
-      loadJSFile("js/libs/jszip.min.js"),
-      loadJSFile("js/sourceCode/Class_coffeSource.js"),
-      loadJSFile("js/sourceCode/Mixin_coffeSource.js"),
-      loadJSFile("js/sourceCode/sourceCodeManifest.js"),
-      loadJSFile("js/tests/testsManifest.js"),
-      loadJSFile("js/tests/testsAssetsManifest.js"),
-      loadJSFile("js/libs/coffee-script_2.0.3.js"),
-      loadJSFile("js/pre-compiled.js"),
-      loadJSFile("js/libs/Mousetrap.min.js"),
-  ]).then ->
+  bootLoadPromises = [
+    loadJSFile("js/sourceCode/Class_coffeSource.js"),
+    loadJSFile("js/sourceCode/Mixin_coffeSource.js"),
+    loadJSFile("js/sourceCode/sourceCodeManifest.js"),
+    loadJSFile("js/libs/coffee-script_2.0.3.js"),
+    loadJSFile("js/pre-compiled.js"),
+    loadJSFile("js/libs/Mousetrap.min.js"),
+  ]
+
+  if (window.location.href.includes "worldWithSystemTestHarness") or (window.location.href.includes "generatePreCompiled")
+    bootLoadPromises.push loadJSFile("js/libs/FileSaver.min.js")
+    bootLoadPromises.push loadJSFile("js/libs/jszip.min.js")
+    bootLoadPromises.push loadJSFile("js/tests/testsManifest.js")
+    bootLoadPromises.push loadJSFile("js/tests/testsAssetsManifest.js")
+
+  (Promise.all bootLoadPromises).then ->
 
   # end of first batch
   # -----------------------------------------------------------
