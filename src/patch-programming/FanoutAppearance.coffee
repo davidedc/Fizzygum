@@ -1,4 +1,6 @@
 
+# this file is excluded from the fizzygum homepage build
+
 class FanoutAppearance extends IconAppearance
 
   constructor: (@morph) ->

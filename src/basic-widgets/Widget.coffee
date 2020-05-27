@@ -313,7 +313,9 @@ class Widget extends TreeNode
     #console.log [myTextDescription, position, theLenght]
     return [myTextDescription, position, theLenght]
 
+  # »>> this part is excluded from the fizzygum homepage build
   setTextDescription: (@textDescription) ->
+  # this part is excluded from the fizzygum homepage build <<«
 
   uniqueIDString: ->
     @morphClassString() + "#" + @instanceNumericID
@@ -612,6 +614,7 @@ class Widget extends TreeNode
       isThereAnHandle.updateVisibilityAndPosition()
 
 
+  # »>> this part is excluded from the fizzygum homepage build
   # not used within Fizzygum yet.
   nextSteps: (lst = []) ->
     nxt = lst.shift()
@@ -619,6 +622,7 @@ class Widget extends TreeNode
       @onNextStep = =>
         nxt.call @
         @nextSteps lst  
+  # this part is excluded from the fizzygum homepage build <<«
   
   # leaving this function as step means that the morph wants to do nothing
   # but the children *are* traversed and their step function is invoked.
@@ -743,8 +747,11 @@ class Widget extends TreeNode
 
     @silentRawSetExtent newBounds.extent()
   
+  # »>> this part is excluded from the fizzygum homepage build
+  # unused code
   corners: ->
     @bounds.corners()
+  # this part is excluded from the fizzygum homepage build <<«
   
   leftCenter: ->
     @bounds.leftCenter()
@@ -798,8 +805,11 @@ class Widget extends TreeNode
   height: ->
     @bounds.height()
 
+  # »>> this part is excluded from the fizzygum homepage build
+  # unused code
   cornersTight: ->
     [@topLeftTight(), @bottomLeftTight(), @bottomRightTight(), @topRightTight()]
+  # this part is excluded from the fizzygum homepage build <<«
   
   leftCenterTight: ->
     @bounds.leftCenter().add new Point @paddingLeft, 0
@@ -1682,7 +1692,9 @@ class Widget extends TreeNode
   # * fullPaintIntoAreaOrBlitFromBackBuffer: recursively draws all the local canvas of this morph and all
   #   its children into a specific area of a passed canvas.
 
+  # »>> this part is excluded from the fizzygum homepage build
   # tiles the texture - never used in Fizzygum at the moment.
+  # unused code
   drawCachedTexture: ->
     bg = @cachedTexture
     cols = Math.floor @backBuffer.width / bg.width
@@ -1692,6 +1704,7 @@ class Widget extends TreeNode
       for x in [0..cols]
         context.drawImage bg, Math.round(x * bg.width), Math.round(y * bg.height)
     @changed()
+  # this part is excluded from the fizzygum homepage build <<«
   
   
   boundsContainPoint: (aPoint) ->
@@ -2020,12 +2033,14 @@ class Widget extends TreeNode
     @createReference referenceName, placeToDropItIn
     @close()
 
+  # »>> this part is excluded from the fizzygum homepage build
   # Widget full image:
   # Fixes https://github.com/jmoenig/morphic.js/issues/7
   # and https://github.com/davidedc/Fizzygum/issues/160
   #
   # if you want to forceShadow that noShadow must be
   # sent as false
+  # unused code
   fullImage: (bounds, noShadow = false, forceShadow = false) ->
 
     shadowHadBeenReplacedOrAdded = false
@@ -2071,15 +2086,19 @@ class Widget extends TreeNode
 
     img
 
+  # unused code
   fullImageNoShadow: ->
     boundsWithNoShadow = @fullBounds()
     return @fullImage boundsWithNoShadow, true
 
+  # unused code
   fullImageData: ->
     # returns a string like "data:image/png;base64,iVBORw0KGgoAA..."
     # note that "image/png" below could be omitted as it's
     # the default, but leaving it here for clarity.
     @fullImage().toDataURL "image/png"
+
+  # this part is excluded from the fizzygum homepage build <<«
 
   # the way we take a picture here is different
   # than the way we usually take a picture.
@@ -2111,8 +2130,11 @@ class Widget extends TreeNode
 
     return destCanvas.toDataURL "image/png"
 
+  # »>> this part is excluded from the fizzygum homepage build
+  # unused code
   fullImageHashCode: ->
     return hashCode @fullImageData()
+  # this part is excluded from the fizzygum homepage build <<«
   
   # shadow is added to a morph by
   # the ActivePointerWdgt while floatDragging
@@ -2756,11 +2778,14 @@ class Widget extends TreeNode
   grabbedWidgetSwitcheroo: ->
     @
   
+  # »>> this part is excluded from the fizzygum homepage build
   # note how this checks whether
   # at *any point* up in the
   # morphs hierarchy there is an ActivePointerWdgt
+  # unused code
   isPickedUp: ->
     @parentThatIsA(ActivePointerWdgt)?
+  # this part is excluded from the fizzygum homepage build <<«
   
   situation: ->
     # answer a dictionary specifying where I am right now, so
@@ -2772,6 +2797,8 @@ class Widget extends TreeNode
       )
     nil
   
+  # »>> this part is excluded from the fizzygum homepage build
+  # unused code
   slideBackTo: (situation, steps = 5) ->
     pos = situation.origin.position().add situation.position
     xStep = -(@left() - pos.x) / steps
@@ -2792,6 +2819,7 @@ class Widget extends TreeNode
         @fps = oldFps
         if @step == noOperation or !@step?
           world.steppingWdgts.delete @
+  # this part is excluded from the fizzygum homepage build <<«
   
   
   # Widget utilities ////////////////////////////////////////////////////////
@@ -3419,6 +3447,7 @@ class Widget extends TreeNode
 
     menu.popUpAtHand()
 
+  # »>> this part is excluded from the fizzygum homepage build
   popUpFirstMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "others"
     menu.addMenuItem "make sliders' buttons states bright", true, menusHelper, "makeSlidersButtonsStatesBright"
@@ -3458,7 +3487,6 @@ class Widget extends TreeNode
 
     menu.popUpAtHand()
 
-
   serialiseToMemory: ->
     world.lastSerializationString = @serialize()
 
@@ -3469,6 +3497,7 @@ class Widget extends TreeNode
   deserialiseFromMemoryAndAttachToWorld: ->
     derezzedObject = world.deserialize world.lastSerializationString
     world.add derezzedObject
+  # this part is excluded from the fizzygum homepage build <<«
 
   buildBaseMorphClassContextMenu: (morphOpeningThePopUp) ->
 

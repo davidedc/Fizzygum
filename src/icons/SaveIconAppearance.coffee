@@ -1,3 +1,5 @@
+# this file is excluded from the fizzygum homepage build
+
 class SaveIconAppearance extends IconAppearance
 
   constructor: (@morph) ->

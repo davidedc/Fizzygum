@@ -81,6 +81,9 @@ class Rectangle
     #if !@onlyContainingIntegers()
     #  debugger
 
+  # »>> this part is excluded from the fizzygum homepage build
+
+  # currently unused. Also: duplicated function
   prepareBeforeSerialization: ->
     @debugIfFloats()
     @className = @constructor.name
@@ -92,6 +95,7 @@ class Rectangle
           if !@[property].className?
             if @[property].prepareBeforeSerialization?
               @[property].prepareBeforeSerialization()
+  # this part is excluded from the fizzygum homepage build <<«
   
   # Rectangle copying:
   copy: ->
@@ -159,9 +163,12 @@ class Rectangle
     @debugIfFloats()
     @origin.add @corner.subtract(@origin).floorDivideBy(2)
   
+  # »>> this part is excluded from the fizzygum homepage build
+  # unused code
   corners: ->
     @debugIfFloats()
     [@origin, @bottomLeft(), @corner, @topRight()]
+  # this part is excluded from the fizzygum homepage build <<«
   
   extent: ->
     @debugIfFloats()
@@ -317,6 +324,8 @@ class Rectangle
     # round me by applying floor() to my origin and ceil() to my corner
     @origin.floor().corner @corner.ceil()
   
+  # »>> this part is excluded from the fizzygum homepage build
+  # unused code
   amountToTranslateWithin: (aRect) ->
     @debugIfFloats()
     #
@@ -329,6 +338,7 @@ class Rectangle
     dx = aRect.left() - @left()  if (@left() + dx) < aRect.left()
     dy = aRect.top() - @top()  if (@top() + dy) < aRect.top()
     new Point dx, dy
+  # this part is excluded from the fizzygum homepage build <<«
   
   toLocalCoordinatesOf: (aWdgt) ->
     new @constructor @origin.x - aWdgt.left(),@origin.y - aWdgt.top(),@corner.x - aWdgt.left(),@corner.y - aWdgt.top()

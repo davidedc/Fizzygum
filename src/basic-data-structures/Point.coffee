@@ -12,12 +12,15 @@ class Point
    
   constructor: (@x = 0, @y = 0) ->
 
+  # »>> this part is excluded from the fizzygum homepage build
   onlyContainingIntegers: ->
     if Math.floor(@x) == @x and
       Math.floor(@y) == @y
         return true
     else
       return false
+  # this part is excluded from the fizzygum homepage build <<«
+
 
   debugIfFloats: ->
     return
@@ -28,6 +31,9 @@ class Point
   toString: ->
     Math.round(@x) + "@" + Math.round(@y)
 
+  # »>> this part is excluded from the fizzygum homepage build
+
+  # currently unused. Also: duplicated function
   prepareBeforeSerialization: ->
     @className = @constructor.name
     @classVersion = "0.0.1"
@@ -38,6 +44,8 @@ class Point
           if !@[property].className?
             if @[property].prepareBeforeSerialization?
               @[property].prepareBeforeSerialization()
+
+  # this part is excluded from the fizzygum homepage build <<«
   
   # Point copying:
   copy: ->

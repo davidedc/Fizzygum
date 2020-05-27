@@ -427,6 +427,7 @@ class WorldMorph extends PanelWdgt
       menusHelper.createSampleDashboardOpener exampleDocsFolder
       menusHelper.createSampleDocOpener exampleDocsFolder
 
+  # »>> this part is excluded from the fizzygum homepage build
   # some test urls:
 
   # this one contains two actions, two tests each, but only
@@ -476,7 +477,6 @@ class WorldMorph extends PanelWdgt
       @automator.player.runAllSystemTests()
     WorldMorph.ongoingUrlActionNumber++
 
-  # »>> this part is excluded from the fizzygum homepage build
   getMorphViaTextLabel: ([textDescription, occurrenceNumber, numberOfOccurrences]) ->
     allCandidateMorphsWithSameTextDescription = 
       @allChildrenTopToBottomSuchThat (m) ->
@@ -503,6 +503,7 @@ class WorldMorph extends PanelWdgt
 
     return mostRecentPopUp
 
+  # »>> this part is excluded from the fizzygum homepage build
   # see roundNumericIDsToNextThousand method in
   # Widget for an explanation of why we need this
   # method.
@@ -519,6 +520,7 @@ class WorldMorph extends PanelWdgt
       for eachMorphClass in listOfMorphsClasses
         #console.log "bumping up ID of class: " + eachMorphClass
         window[eachMorphClass].roundNumericIDsToNextThousand?()
+  # this part is excluded from the fizzygum homepage build <<«
 
   # used to close temporary menus
   closePopUpsMarkedForClosure: ->
@@ -526,13 +528,15 @@ class WorldMorph extends PanelWdgt
       eachMorph.close()
     @popUpsMarkedForClosure.clear()
   
+  # »>> this part is excluded from the fizzygum homepage build
   # World Widget broken rects debugging
-  # not using it anywhere
+  # currently unused
   brokenFor: (aWdgt) ->
     # private
     fb = aWdgt.fullBounds()
     @broken.filter (rect) ->
       rect.isIntersecting fb
+  # this part is excluded from the fizzygum homepage build <<«
   
   
   # fullPaintIntoAreaOrBlitFromBackBuffer results into actual painting of pieces of
@@ -560,6 +564,9 @@ class WorldMorph extends PanelWdgt
     @clippedThroughBoundsCache = @boundingBox()
     return @clippedThroughBoundsCache
 
+  # using the code coverage tool from Chrome, it
+  # doesn't seem that this is ever used
+  # TODO investigate and see whether this is needed
   clipThrough: ->
     @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @clipThroughCache = @boundingBox()
@@ -580,6 +587,9 @@ class WorldMorph extends PanelWdgt
       @broken.push theRect
     @duplicatedBrokenRectsTracker[theRect.toString()] = true
 
+  # using the code coverage tool from Chrome, it
+  # doesn't seem that this is ever used
+  # TODO investigate and see whether this is needed
   mergeBrokenRectsIfCloseOrPushBoth: (brokenMorph, sourceBroken, destinationBroken) ->
     mergedBrokenRect = sourceBroken.merge destinationBroken
     mergedBrokenRectArea = mergedBrokenRect.area()
@@ -1185,6 +1195,7 @@ class WorldMorph extends PanelWdgt
           elapsedMilliseconds = WorldMorph.currentTime - eachSteppingMorph.lastTime
           millisecondsRemainingToWaitedFrame = millisBetweenSteps - elapsedMilliseconds
       
+      # when the firing time comes (or as soon as it's past):
       if millisecondsRemainingToWaitedFrame <= 0
         @stepWidget eachSteppingMorph
 
@@ -1235,6 +1246,7 @@ class WorldMorph extends PanelWdgt
       #console.log "running a task: " + task
       task()
 
+  # »>> this part is excluded from the fizzygum homepage build
   sizeCanvasToTestScreenResolution: ->
     @worldCanvas.width = Math.round(960 * ceilPixelRatio)
     @worldCanvas.height = Math.round(440 * ceilPixelRatio)
@@ -1245,6 +1257,7 @@ class WorldMorph extends PanelWdgt
     bkground.style.width = "960px"
     bkground.style.height = "720px"
     bkground.style.backgroundColor = "rgb(245, 245, 245)"
+  # this part is excluded from the fizzygum homepage build <<«
 
   stretchWorldToFillEntirePage: ->
     # once you call this, the world will forever take the whole page
@@ -1304,6 +1317,8 @@ class WorldMorph extends PanelWdgt
           child.fullRawMoveWithin @
   
   # WorldMorph events:
+
+  # »>> this part is excluded from the fizzygum homepage build
   initVirtualKeyboard: ->
     if @inputDOMElementForVirtualKeyboard
       document.body.removeChild @inputDOMElementForVirtualKeyboard
@@ -1357,6 +1372,7 @@ class WorldMorph extends PanelWdgt
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keypress",
       @inputDOMElementForVirtualKeyboardKeypressBrowserEventListener, false
+  # this part is excluded from the fizzygum homepage build <<«
 
   getPointerAndWdgtInfo:  (topWdgtUnderPointer = @hand.topWdgtUnderPointer()) ->
     # we might eliminate this command afterwards if
@@ -1879,6 +1895,7 @@ class WorldMorph extends PanelWdgt
     @wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.clear()
     @lastNonTextPropertyChangerButtonClickedOrDropped = nil
 
+  # »>> this part is excluded from the fizzygum homepage build
   resetWorld: ->
     @softResetWorld()
     @changed() # redraw the whole screen
@@ -1895,6 +1912,8 @@ class WorldMorph extends PanelWdgt
     # so we can see the test results while tests
     # are running.
     document.body.scrollTop = document.documentElement.scrollTop = 0    
+
+  # this part is excluded from the fizzygum homepage build <<«
   
   # There is something special about the
   # "world" version of fullDestroyChildren:
@@ -2053,6 +2072,7 @@ class WorldMorph extends PanelWdgt
     menu.children[7].label.setText pattern7Tick + @pattern7
 
 
+  # »>> this part is excluded from the fizzygum homepage build
   popUpSystemTestsMenu: ->
     menu = new MenuMorph @, false, @, true, true, "system tests"
 
@@ -2073,10 +2093,12 @@ class WorldMorph extends PanelWdgt
     menu.addMenuItem "save failed screenshots", true, @automator.player, "saveFailedScreenshots", "save failed screenshots"
 
     menu.popUpAtHand()
+  # this part is excluded from the fizzygum homepage build <<«
 
   create: (aWdgt) ->
     aWdgt.pickUp()
 
+  # »>> this part is excluded from the fizzygum homepage build
   createNewStackElementsSizeAdjustingMorph: ->
     @create new StackElementsSizeAdjustingMorph
 
@@ -2265,6 +2287,8 @@ class WorldMorph extends PanelWdgt
   
   toggleDevMode: ->
     @isDevMode = not @isDevMode
+  # this part is excluded from the fizzygum homepage build <<«
+
   
   # This method is obsolete. It assumes a different meaning
   # for "minimise" than what we have now.

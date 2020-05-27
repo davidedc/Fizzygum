@@ -62,9 +62,11 @@ class TreeNode
       childrenLength = "-"
     "a TreeNode" + "[" + childrenLength + "]"
 
-  # currently unused in Fizzygum
+  # »>> this part is excluded from the fizzygum homepage build
+  # currently unused
   childrenTopToBottom: ->
     arrayShallowCopyAndReverse @children
+  # this part is excluded from the fizzygum homepage build <<«
   
   # TreeNode accessing:
   addChild: (node, position = nil) ->
@@ -77,14 +79,12 @@ class TreeNode
       @children.splice position, 0, node
     node.parent = @
   
-  # currently used to add the shadow. The shadow
-  # is in the background in respect to everything
-  # else, BUT it's drawn as the first child
-  # (i.e. AFTER the morph itself, but the shadow has a hole
-  # or semi-transparency for it!)
+  # »>> this part is excluded from the fizzygum homepage build
+  # currently unused
   addChildFirst: (node) ->
     
     @addChild node, 0
+  # this part is excluded from the fizzygum homepage build <<«
 
   # used from bringToForeground method
   # for example when you
@@ -218,10 +218,12 @@ class TreeNode
         return nil
 
   
+  # »>> this part is excluded from the fizzygum homepage build
   # currently unused
   depth: ->
     return 0  unless @parent
     @parent.depth() + 1
+  # this part is excluded from the fizzygum homepage build <<«
   
   # Returns all the internal AND terminal nodes in the subtree starting
   # at this node - including this node.
@@ -234,8 +236,12 @@ class TreeNode
       result = result.concat child.allChildrenBottomToTop()
     result
 
+  
+  # »>> this part is excluded from the fizzygum homepage build
+  # currently unused
   allChildrenTopToBottom: ->
     return allChildrenTopToBottomSuchThat -> true
+  # this part is excluded from the fizzygum homepage build <<«
 
   # the easiest way here would be to just return
   #   arrayShallowCopyAndReverse(@allChildrenBottomToTop())
@@ -285,7 +291,8 @@ class TreeNode
       @children.forEach (child) ->
         child.forAllChildrenBottomToTop aFunction
   
-  # not used in Fizzygum so far
+  # »>> this part is excluded from the fizzygum homepage build
+  # currently unused
   allLeafsBottomToTop: ->
     if @children.length == 0
       return [@]
@@ -293,6 +300,7 @@ class TreeNode
     @children.forEach (child) ->
       result = result.concat child.allLeafsBottomToTop()
     return result
+  # this part is excluded from the fizzygum homepage build <<«
 
   # Return all "parent" nodes from the root down to this node (including both)
   allParentsBottomToTop: ->
@@ -367,6 +375,7 @@ class TreeNode
         return true
     return false
 
+  # »>> this part is excluded from the fizzygum homepage build
   # The direct children of the parent of this node. (current node not included)
   # never used in Fizzygum
   # There is an alternative solution here below, in comment,
@@ -378,6 +387,8 @@ class TreeNode
   #    return []  unless @parent
   #    @parent.children.filter (child) =>
   #      child isnt @
+  #
+  # currently unused
   siblings: ->
     return []  unless @parent
     siblings = arrayShallowCopy @parent.children
@@ -385,11 +396,13 @@ class TreeNode
     siblings.remove @
     return siblings
 
+  # currently unused
   firstSiblingsSuchThat: (predicate) ->
     for eachSibling in @parent.children
       if predicate.call nil, eachSibling
         return eachSibling
     return nil
+  # this part is excluded from the fizzygum homepage build <<«
 
   amITheFirstSibling: ->
     if @parent.children[0] == @
@@ -534,16 +547,18 @@ class TreeNode
     return nil  unless @parent
     @parent.parentThatIsA constructors...
 
+  # »>> this part is excluded from the fizzygum homepage build
   # checks whether the morph is a child,
   # directly or indirectly, of a specified
   # supposed ancestor morph
-  # this is currently unused
+  # currently unused
   isADescendantOf: (theSupposedAncestorMorph) ->
     if @ == theSupposedAncestorMorph
       return true
     if !@parent?
       return false
     return @parent.isADescendantOf theSupposedAncestorMorph
+  # this part is excluded from the fizzygum homepage build <<«
   
 
   # There would be another, simpler, implementation

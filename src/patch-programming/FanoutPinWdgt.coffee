@@ -1,3 +1,5 @@
+# this file is excluded from the fizzygum homepage build
+
 class FanoutPinWdgt extends Widget
 
   @augmentWith ControllerMixin

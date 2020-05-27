@@ -1,3 +1,4 @@
+# this file is excluded from the fizzygum homepage build
 
 class FanoutPinAppearance extends IconAppearance
 

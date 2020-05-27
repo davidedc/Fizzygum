@@ -11,10 +11,13 @@ class LRUCache
   keys: ->
     return Object.keys @_hash
 
+  # »>> this part is excluded from the fizzygum homepage build
+  # unused code
   values: ->
     values = @keys().map (key) =>
       @get key
     return values.filter (v) -> v isnt undefined
+  # this part is excluded from the fizzygum homepage build <<«
 
   remove: (key) ->
     if @_hash[key]?

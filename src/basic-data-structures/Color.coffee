@@ -163,6 +163,8 @@ class Color
     "rgba(" + Math.round(@r) + "," + Math.round(@g) + "," + Math.round(@b) + "," + @a + ")"
 
 
+  # »>> this part is excluded from the fizzygum homepage build
+  # currently unused. Also: duplicated function
   prepareBeforeSerialization: ->
     @className = @constructor.name
     @classVersion = "0.0.1"
@@ -173,6 +175,7 @@ class Color
           if !@[property].className?
             if @[property].prepareBeforeSerialization?
               @[property].prepareBeforeSerialization()
+  # this part is excluded from the fizzygum homepage build <<«
   
   # Color copying:
   copy: ->
@@ -184,6 +187,8 @@ class Color
     aColor and @r is aColor.r and @g is aColor.g and @b is aColor.b
   
   
+  # »>> this part is excluded from the fizzygum homepage build
+  # currently unused
   # Color conversion (hsv):
   hsv: ->
     # ignore alpha
@@ -209,6 +214,7 @@ class Color
       h /= 6
     [h, s, v]
   
+  # currently unused
   set_hsv: (h, s, v) ->
     # ignore alpha
     # h, s and v are to be within [0, 1]
@@ -248,6 +254,7 @@ class Color
   
   
   # Color mixing:
+  # currently unused
   mixed: (proportion, otherColor) ->
     # answer a copy of this color mixed with another color, ignore alpha
     frac1 = Math.min Math.max(proportion, 0), 1
@@ -257,18 +264,21 @@ class Color
       @g * frac1 + otherColor.g * frac2,
       @b * frac1 + otherColor.b * frac2)
   
+  # currently unused
   darker: (percent) ->
     # return an rgb-interpolated darker copy of me, ignore alpha
     fract = 0.8333
     fract = (100 - percent) / 100  if percent
     @mixed fract, new @constructor 0, 0, 0
   
+  # currently unused
   lighter: (percent) ->
     # return an rgb-interpolated lighter copy of me, ignore alpha
     fract = 0.8333
     fract = (100 - percent) / 100  if percent
     @mixed fract, new @constructor 255, 255, 255
   
+  # currently unused
   dansDarker: ->
     # return an hsv-interpolated darker copy of me, ignore alpha
     hsv = @hsv()
@@ -276,6 +286,8 @@ class Color
     vv = Math.max hsv[2] - 0.16, 0
     result.set_hsv hsv[0], hsv[1], vv
     result
+
+  # this part is excluded from the fizzygum homepage build <<«
 
   @transparent: ->
     return new @ 0,0,0,0

@@ -26,7 +26,6 @@ class MenusHelper
     wm.fullRawMoveWithin world
     world.add wm
     wm.changed()
-  # this part is excluded from the fizzygum homepage build <<«
 
 
   createReconfigurablePaint: ->
@@ -152,6 +151,8 @@ class MenusHelper
 
   makeGenericObjectIcon: ->
     world.create new GenericObjectIconWdgt
+
+  # this part is excluded from the fizzygum homepage build <<«
 
 
   basementIconAndText: ->
@@ -596,6 +597,8 @@ class MenusHelper
     world.add wm
     wm.changed()
 
+  # »>> this part is excluded from the fizzygum homepage build
+
   popUpMore1IconsMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "More Icons 1"
     menu.addMenuItem "Pencil 1 icon", true, menusHelper, "createPencil1IconMorph"
@@ -652,6 +655,8 @@ class MenusHelper
 
     menu.popUpAtHand()
 
+  # this part is excluded from the fizzygum homepage build <<«
+
   createFizzygumLogoWithTextIconWdgt : ->
     world.create new FizzygumLogoWithTextIconWdgt
 
@@ -688,6 +693,7 @@ class MenusHelper
   createSaveIconWdgt : ->
     world.create new SaveIconWdgt
 
+  # »>> this part is excluded from the fizzygum homepage build
 
   popUpArrowsIconsMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Arrows"
@@ -700,6 +706,9 @@ class MenusHelper
     menu.addMenuItem "Arrow SE icon", true, menusHelper, "createArrowSEIconWdgt"
     menu.addMenuItem "Arrow SW icon", true, menusHelper, "createArrowSWIconWdgt"
     menu.popUpAtHand()
+
+  # this part is excluded from the fizzygum homepage build <<«
+
 
   createArrowEIconWdgt: ->
     world.create new ArrowEIconWdgt

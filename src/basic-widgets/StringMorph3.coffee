@@ -199,6 +199,7 @@ class StringMorph3 extends Widget
     textWithoutLocationOrInstanceNo = @text.replace /#\d*/, ""
     return textWithoutLocationOrInstanceNo.slice(0, 30) + " (content of string)"
   
+  # »>> this part is excluded from the fizzygum homepage build
   obfuscateAsPassword: (letter, length) ->
     # there is an alternative to this, using an idiom
     # http://stackoverflow.com/a/19892144
@@ -207,6 +208,7 @@ class StringMorph3 extends Widget
     for i in [0...length]
       ans += letter
     ans
+  # this part is excluded from the fizzygum homepage build <<«
 
   buildCanvasFontProperty: (overrideFontSize = @fittingFontSize) ->
     # answer a font string, e.g. 'bold italic 12px Arial'
@@ -440,8 +442,11 @@ class StringMorph3 extends Widget
     #    alert "problem with cache on: " + overrideFontSize + "-" + text + " hit is: " + cacheHit + " should be: " + cacheEntry
     return cacheEntry
 
+  # »>> this part is excluded from the fizzygum homepage build
+  # unused code
   visualisedText: ->
     return @textPossiblyCroppedToFit
+  # this part is excluded from the fizzygum homepage build <<«
 
   # this should be a 1-1 transformation.
   # for example substitute any letter with "*" for passwords

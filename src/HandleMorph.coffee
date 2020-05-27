@@ -178,6 +178,8 @@ class HandleMorph extends Widget
     context.closePath()
     context.stroke()
 
+  # from Chrome code coverage - it doesn't seem tha this is used?
+  # TODO check and remove if not needed
   drawHandle: (context) ->
 
     # horizontal arrow

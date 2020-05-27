@@ -1,4 +1,5 @@
 # REQUIRES globalFunctions
+# this file is excluded from the fizzygum homepage build
 
 # adapted from http://stackoverflow.com/a/7616484
 

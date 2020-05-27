@@ -123,6 +123,8 @@ class MenuMorph extends PopUpWdgt
     item = @createMenuItem label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph
     @silentAdd item, nil, 0
 
+  # »>> this part is excluded from the fizzygum homepage build
+
   # this is used by the test system to check that the menu
   # has the correct number of items. Note that we count the
   # children, but we don't count the top label and we don't
@@ -140,6 +142,8 @@ class MenuMorph extends PopUpWdgt
       if item != @label
         items.push item
     items
+
+  # this part is excluded from the fizzygum homepage build <<«
 
   reLayout: ->
     # console.log "menu update rendering"

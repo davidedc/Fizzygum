@@ -608,8 +608,11 @@ class ScrollPanelWdgt extends PanelWdgt
     else
       super
   
+  # »>> this part is excluded from the fizzygum homepage build
+  # unused code
   toggleTextLineWrapping: ->
     @isTextLineWrapping = not @isTextLineWrapping
+  # this part is excluded from the fizzygum homepage build <<«
 
   enableDragsDropsAndEditing: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @

@@ -1,5 +1,7 @@
 # REQUIRES ControllerMixin
 
+# this file is excluded from the fizzygum homepage build
+
 class DiffingPatchNodeWdgt extends Widget
 
   @augmentWith ControllerMixin
