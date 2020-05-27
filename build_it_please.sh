@@ -75,9 +75,18 @@ mkdir ../Fizzygum-builds/latest/js/tests/
 # legacy code and test-supporting code is left out.
 python ./buildSystem/build.py $1
 
+touch ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+
+if [ "$1" == "--notests" ] || [ "$1" == "--homepage" ]; then
+  printf "BUILDFLAG_LOAD_TESTS = false\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+else
+  printf "BUILDFLAG_LOAD_TESTS = true\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+fi
+
+
 # turn the coffeescript file into js in the js directory
 echo "compiling boot file..."
-cp src/boot/globalFunctions.coffee ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+cat src/boot/globalFunctions.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
 
 printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
 cat src/boot/array-extensions.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
@@ -92,20 +101,18 @@ printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
 cat src/boot/logging-div.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
 
 printf "\nmorphicVersion = 'version of $(date)'" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+
 coffee -b -c -o ../Fizzygum-builds/latest/js/ ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee 
 echo "... done compiling boot file"
 
-# need to install uglify-es with:
-#   npm install uglify-es -g
-# why the executable has a different name than the package is beyond me
 echo "minifying boot file..."
-uglifyjs --compress --output ../Fizzygum-builds/latest/js/fizzygum-boot-min.js -- ../Fizzygum-builds/latest/js/fizzygum-boot.js
+terser --compress --mangle --output ../Fizzygum-builds/latest/js/fizzygum-boot-min.js -- ../Fizzygum-builds/latest/js/fizzygum-boot.js
 echo "... done minifying boot file"
 
 if [ "$?" != "0" ]; then
-    tput bel;
-    echo "!!!!!!!!!!! error: coffeescript compilation failed!" 1>&2
-    exit 1
+  tput bel;
+  echo "!!!!!!!!!!! error: coffeescript compilation failed!" 1>&2
+  exit 1
 fi
 
 # copy the html files
@@ -118,7 +125,7 @@ cp auxiliary\ files/JSZip/jszip.min.js ../Fizzygum-builds/latest/js/libs/
 cp auxiliary\ files/CoffeeScript/coffee-script_2.0.3.js ../Fizzygum-builds/latest/js/libs/
 coffee -b -c -o ../Fizzygum-builds/latest/js/libs auxiliary\ files/Mousetrap/Mousetrap.coffee 
 echo "minifying..."
-uglifyjs --compress --output ../Fizzygum-builds/latest/js/libs/Mousetrap.min.js -- ../Fizzygum-builds/latest/js/libs/Mousetrap.js
+terser --compress --mangle --output ../Fizzygum-builds/latest/js/libs/Mousetrap.min.js -- ../Fizzygum-builds/latest/js/libs/Mousetrap.js
 echo "... done minifying"
 
 echo "copying pre-compiled file"
@@ -185,29 +192,29 @@ rm -rdf ../Fizzygum-builds/latest/delete_me
 echo "...done"
 
 if [ "$1" == "--homepage" ]; then
-rm ../Fizzygum-builds/latest/worldWithSystemTestHarness.html
-rm ../Fizzygum-builds/latest/icons/doubleClickLeft.png
-rm ../Fizzygum-builds/latest/icons/middleButtonPressed.png
-rm ../Fizzygum-builds/latest/icons/scrollUp.png
-rm ../Fizzygum-builds/latest/icons/doubleClickRight.png
-rm ../Fizzygum-builds/latest/icons/rightButtonPressed.png
-rm ../Fizzygum-builds/latest/icons/xPointerImage.png
-rm ../Fizzygum-builds/latest/icons/leftButtonPressed.png
-rm ../Fizzygum-builds/latest/icons/scrollDown.png
-rm ../Fizzygum-builds/latest/js/fizzygum-boot.js
-rm ../Fizzygum-builds/latest/js/libs/Mousetrap.js
+  rm ../Fizzygum-builds/latest/worldWithSystemTestHarness.html
+  rm ../Fizzygum-builds/latest/icons/doubleClickLeft.png
+  rm ../Fizzygum-builds/latest/icons/middleButtonPressed.png
+  rm ../Fizzygum-builds/latest/icons/scrollUp.png
+  rm ../Fizzygum-builds/latest/icons/doubleClickRight.png
+  rm ../Fizzygum-builds/latest/icons/rightButtonPressed.png
+  rm ../Fizzygum-builds/latest/icons/xPointerImage.png
+  rm ../Fizzygum-builds/latest/icons/leftButtonPressed.png
+  rm ../Fizzygum-builds/latest/icons/scrollDown.png
+  rm ../Fizzygum-builds/latest/js/fizzygum-boot.js
+  rm ../Fizzygum-builds/latest/js/libs/Mousetrap.js
+  
+  ls -d -1 ../Fizzygum-builds/latest/js/sourceCode/* | grep -v /sources_batch | grep -v /sourceCodeManifest | grep -v /Mixin_coffeSource | grep -v /Class_coffeSource | xargs rm -f
+  
+  echo "generating the pre-compiled file via the browser. this might take a few seconds..."
+  . ./buildSystem/generate-pre-compiled-file-via-browser.sh
 
-ls -d -1 ../Fizzygum-builds/latest/js/sourceCode/* | grep -v /sources_batch | grep -v /sourceCodeManifest | grep -v /Mixin_coffeSource | grep -v /Class_coffeSource | xargs rm -f
-
-echo
-echo "========================================================="
-echo "further steps for homepage build:"
-echo "1. generate the pre-compiled by loading fizzygum with the URL file:///...index.html?generatePreCompiled and put in the /js/ folder"
-echo "2. rm -rdf ../Fizzygum-builds/latest/js/tests"
-echo "3. rm ../Fizzygum-builds/latest/js/libs/FileSaver.min.js"
-echo "4. rm ../Fizzygum-builds/latest/js/libs/jszip.min.js"
-echo "========================================================="
-echo
+  rm -rdf ../Fizzygum-builds/latest/js/tests
+  rm ../Fizzygum-builds/latest/js/libs/FileSaver.min.js
+  rm ../Fizzygum-builds/latest/js/libs/jszip.min.js
+  terser --compress --mangle --output ../Fizzygum-builds/latest/js/pre-compiled-min.js -- ../Fizzygum-builds/latest/js/pre-compiled.js
+  mv ../Fizzygum-builds/latest/js/pre-compiled.js ../Fizzygum-builds/latest/js/pre-compiled-max.js
+  mv ../Fizzygum-builds/latest/js/pre-compiled-min.js ../Fizzygum-builds/latest/js/pre-compiled.js
 fi
 
 say build done
