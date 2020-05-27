@@ -173,31 +173,6 @@ CanvasRenderingContext2D::clipToRectangle = (al,at,w,h) ->
   @closePath()
   @clip()
 
-## -------------------------------------------------------
-
-# utility function taken from:
-# http://blog.abhranil.net/2011/11/03/simplest-javascript-fade-animation/
-
-fade = (eid, initOp, finalOp, TimeToFade, time, thenRun) ->
-  if initOp == 0
-    document.getElementById(eid).style.visibility = 'visible'
-  curTick = new Date().getTime()
-  elapsedTicks = curTick - time
-  newOp = initOp + (finalOp - initOp) * elapsedTicks / TimeToFade
-  if Math.abs(newOp - initOp) > Math.abs(finalOp - initOp)
-    document.getElementById(eid).style.opacity = finalOp
-    if finalOp == 0
-      document.getElementById(eid).style.visibility = 'hidden'
-    thenRun?()
-    return
-  document.getElementById(eid).style.opacity = newOp
-
-  setTimeout \
-    ->
-      fade eid, initOp, finalOp, TimeToFade, time, thenRun      
-    , TimeToFade / 100
-
-  return
 
 ## -------------------------------------------------------
 # de-camelize
