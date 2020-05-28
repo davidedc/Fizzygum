@@ -25,6 +25,13 @@ class WorldMorph extends PanelWdgt
   mouseupBrowserEventListener: nil
   mousemoveBrowserEventListener: nil
   contextmenuEventListener: nil
+
+  touchstartBrowserEventListener: nil
+  touchendBrowserEventListener: nil
+  touchmoveBrowserEventListener: nil
+  gesturestartBrowserEventListener: nil
+  gesturechangeBrowserEventListener: nil
+
   # Note how there can be two handlers for
   # keyboard events.
   # This one is attached
@@ -1056,17 +1063,57 @@ class WorldMorph extends PanelWdgt
           # mouse
           # -----
 
+          # TODO mouseup and mousedown currently don't take the pointer position
+          # from the event - the idea being that the position is always changed
+          # by a mousemove, so we only change the pointer position on move events
+          # so we don't need it on mouseup or mousedown.
+          # While this thinking is "parsimonious", it doesn't apply well to pointer events,
+          # where there is no pointer update until the "down" happens.
+          # So we'll need to correct this eventually
+
           when "mousedownBrowserEvent"
             @mousedownBrowserEventHandler event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
+            #console.log "mousedownBrowserEventHandler " + event.button + "  " + event.buttons
 
           when "mouseupBrowserEvent"
             @mouseupBrowserEventHandler  event.button, event.ctrlKey, event.buttons, event.shiftKey, event.altKey, event.metaKey
+            #console.log "mouseupBrowserEventHandler " + event.button + "  " + event.buttons
 
           when "mousemoveBrowserEvent"
             @mousemoveBrowserEventHandler event.pageX, event.pageY, event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
+            #console.log "mousemoveBrowserEventHandler " + event.button + "  " + event.buttons + "  " + event.pageX + "  " + event.pageY
 
           when "wheelBrowserEvent"
             @wheelBrowserEventHandler event.deltaX, event.deltaY, event.deltaZ, event.altKey, event.button, event.buttons
+
+          # -----
+          # touch
+          # -----
+
+          when "touchstartBrowserEvent"
+            # note that the position can be non-integer, so rounding it
+            # we have no real use for fractional input position and it's complicated
+            # to handle for drawing, clipping etc., better stick to integer coords
+            @mousemoveBrowserEventHandler Math.round(event.touches[0].pageX), Math.round(event.touches[0].pageY), 0, 0, false, false, false, false
+            @mousedownBrowserEventHandler 0, 1, false, false, false, false
+            #console.log "touchstartBrowserEvent"
+
+          when "touchendBrowserEvent"
+            @mouseupBrowserEventHandler  0, false, 0, false, false, false
+            #console.log "touchendBrowserEvent"
+
+          when "touchmoveBrowserEvent"
+            # note that the position can be non-integer, so rounding it
+            # we have no real use for fractional input position and it's complicated
+            # to handle for drawing, clipping etc., better stick to integer coords
+            @mousemoveBrowserEventHandler Math.round(event.touches[0].pageX), Math.round(event.touches[0].pageY), 0, 1, false, false, false, false
+            #console.log "touchmoveBrowserEvent " + event.touches[0].pageX + "  " + event.touches[0].pageY
+
+          when "gesturestartBrowserEvent"
+            "doNothing"
+
+          when "gesturechangeBrowserEvent"
+            "doNothing"
 
           # --------
           # keyboard
@@ -1587,6 +1634,44 @@ class WorldMorph extends PanelWdgt
 
     canvas.addEventListener "mousemove", @mousemoveBrowserEventListener, false
 
+  initTouchEventListeners: ->
+    canvas = @worldCanvas
+    
+    @touchstartBrowserEventListener = (event) =>
+      @events.push "touchstartBrowserEvent"
+      @events.push event
+      event.preventDefault() # (unsure that this one is needed)
+
+    canvas.addEventListener "touchstart", @touchstartBrowserEventListener, false
+
+    @touchendBrowserEventListener = (event) =>
+      @events.push "touchendBrowserEvent"
+      @events.push event
+      event.preventDefault() # prevent mouse events emulation
+
+    canvas.addEventListener "touchend", @touchendBrowserEventListener, false
+        
+    @touchmoveBrowserEventListener = (event) =>
+      @events.push "touchmoveBrowserEvent"
+      @events.push event
+      event.preventDefault() # (unsure that this one is needed)
+
+    canvas.addEventListener "touchmove", @touchmoveBrowserEventListener, false
+
+    @gesturestartBrowserEventListener = (event) =>
+      @events.push "gesturestartBrowserEvent"
+      @events.push event
+      event.preventDefault() # (unsure that this one is needed)
+
+    canvas.addEventListener "gesturestart", @gesturestartBrowserEventListener, false
+
+    @gesturechangeBrowserEventListener = (event) =>
+      @events.push "gesturechangeBrowserEvent"
+      @events.push event
+      event.preventDefault() # (unsure that this one is needed)
+
+    canvas.addEventListener "gesturechange", @gesturechangeBrowserEventListener, false
+
 
   initKeyboardEventListeners: ->
     canvas = @worldCanvas
@@ -1828,6 +1913,7 @@ class WorldMorph extends PanelWdgt
   # we figure that out independently.
   initEventListeners: ->
     @initMouseEventListeners()
+    @initTouchEventListeners()
     @initKeyboardEventListeners()
     @initClipboardEventListeners()
     @initKeyCombosEventListeners()
@@ -1841,6 +1927,13 @@ class WorldMorph extends PanelWdgt
     canvas.removeEventListener 'mouseup', @mouseupBrowserEventListener
     canvas.removeEventListener 'mousemove', @mousemoveBrowserEventListener
     canvas.removeEventListener 'contextmenu', @contextmenuEventListener
+
+    canvas.removeEventListener "touchstart", @touchstartBrowserEventListener
+    canvas.removeEventListener "touchend", @touchendBrowserEventListener
+    canvas.removeEventListener "touchmove", @touchmoveBrowserEventListener
+    canvas.removeEventListener "gesturestart", @gesturestartBrowserEventListener
+    canvas.removeEventListener "gesturechange", @gesturechangeBrowserEventListener
+
     canvas.removeEventListener 'keydown', @keydownBrowserEventListener
     canvas.removeEventListener 'keyup', @keyupBrowserEventListener
     canvas.removeEventListener 'keypress', @keypressBrowserEventListener
