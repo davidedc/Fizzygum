@@ -886,7 +886,7 @@ class MenusHelper
     sdspw.add startingContent
 
     startingContent = new SimplePlainTextWdgt(
-      "version 1.1.7",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "version 1.1.8",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 9
     startingContent.isEditable = true
