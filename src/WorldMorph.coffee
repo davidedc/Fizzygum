@@ -38,6 +38,7 @@ class WorldMorph extends PanelWdgt
   keyupBrowserEventListener: nil
   keypressBrowserEventListener: nil
   wheelBrowserEventListener: nil
+
   copyBrowserEventListener: nil
   pasteBrowserEventListener: nil
   clipboardTextIfTestRunning: nil
@@ -1139,7 +1140,7 @@ class WorldMorph extends PanelWdgt
   doOneCycle: ->
     WorldMorph.currentTime = Date.now()
     WorldMorph.currentDate = new Date
-    # console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
+    #console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
 
     @showErrorsHappenedInRepaintingStepInPreviousCycle()
 
@@ -1844,10 +1845,13 @@ class WorldMorph extends PanelWdgt
     canvas.removeEventListener 'keyup', @keyupBrowserEventListener
     canvas.removeEventListener 'keypress', @keypressBrowserEventListener
     canvas.removeEventListener 'wheel', @wheelBrowserEventListener
+
     canvas.removeEventListener 'cut', @cutBrowserEventListener
     canvas.removeEventListener 'copy', @copyBrowserEventListener
     canvas.removeEventListener 'paste', @pasteBrowserEventListener
+
     Mousetrap.reset()
+
     canvas.removeEventListener 'dragover', @dragoverEventListener
     canvas.removeEventListener 'drop', @dropBrowserEventListener
     canvas.removeEventListener 'resize', @resizeBrowserEventListener
