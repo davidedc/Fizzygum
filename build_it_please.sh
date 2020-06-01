@@ -123,10 +123,13 @@ cp auxiliary\ files/FileSaver/FileSaver.min.js ../Fizzygum-builds/latest/js/libs
 cp auxiliary\ files/JSZip/jszip.min.js ../Fizzygum-builds/latest/js/libs/
 
 cp auxiliary\ files/CoffeeScript/coffee-script_2.0.3.js ../Fizzygum-builds/latest/js/libs/
-coffee -b -c -o ../Fizzygum-builds/latest/js/libs auxiliary\ files/Mousetrap/Mousetrap.coffee 
-echo "minifying..."
-terser --compress --mangle --output ../Fizzygum-builds/latest/js/libs/Mousetrap.min.js -- ../Fizzygum-builds/latest/js/libs/Mousetrap.js
-echo "... done minifying"
+
+if [ "$1" != "--notests" ] && [ "$1" != "--homepage" ]; then
+  coffee -b -c -o ../Fizzygum-builds/latest/js/libs auxiliary\ files/Mousetrap/Mousetrap.coffee 
+  echo "minifying..."
+  terser --compress --mangle --output ../Fizzygum-builds/latest/js/libs/Mousetrap.min.js -- ../Fizzygum-builds/latest/js/libs/Mousetrap.js
+  echo "... done minifying"
+fi
 
 echo "copying pre-compiled file"
 cp auxiliary\ files/pre-compiled.js ../Fizzygum-builds/latest/js/pre-compiled.js
@@ -202,7 +205,6 @@ if [ "$1" == "--homepage" ]; then
   rm ../Fizzygum-builds/latest/icons/leftButtonPressed.png
   rm ../Fizzygum-builds/latest/icons/scrollDown.png
   rm ../Fizzygum-builds/latest/js/fizzygum-boot.js
-  rm ../Fizzygum-builds/latest/js/libs/Mousetrap.js
   
   ls -d -1 ../Fizzygum-builds/latest/js/sourceCode/* | grep -v /sources_batch | grep -v /sourceCodeManifest | grep -v /Mixin_coffeSource | grep -v /Class_coffeSource | xargs rm -f
   

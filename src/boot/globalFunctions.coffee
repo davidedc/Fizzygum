@@ -537,12 +537,15 @@ boot = ->
     loadJSFile("js/sourceCode/sourceCodeManifest.js"),
     loadJSFile("js/libs/coffee-script_2.0.3.js"),
     loadJSFile("js/pre-compiled.js"),
-    loadJSFile("js/libs/Mousetrap.min.js"),
   ]
 
   # TODO rather than relying on this test to load these .js at boot,
   # we should really just dynamically load these when needed
   # (e.g. when tests are run, or when pre-compiled generation is invoked)
+
+  if BUILDFLAG_LOAD_TESTS
+    bootLoadPromises.push loadJSFile("js/libs/Mousetrap.min.js")
+
   if BUILDFLAG_LOAD_TESTS or (window.location.href.includes "generatePreCompiled")
     bootLoadPromises.push loadJSFile("js/libs/FileSaver.min.js")
     bootLoadPromises.push loadJSFile("js/libs/jszip.min.js")
