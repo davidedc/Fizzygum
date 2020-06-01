@@ -563,7 +563,6 @@ boot = ->
       addLogDiv()
   .then ->
     eval.call window, compileFGCode window["Mixin_coffeSource"], true
-  .then ->
     eval.call window, compileFGCode window["Class_coffeSource"], true
   .then ->
     loadJSFilesWithCoffeescriptSources()
