@@ -1946,8 +1946,8 @@ class WorldMorph extends PanelWdgt
     Mousetrap.reset()
 
     canvas.removeEventListener 'dragover', @dragoverEventListener
-    canvas.removeEventListener 'drop', @dropBrowserEventListener
     canvas.removeEventListener 'resize', @resizeBrowserEventListener
+    canvas.removeEventListener 'drop', @dropBrowserEventListener
   
   mouseDownLeft: ->
     noOperation

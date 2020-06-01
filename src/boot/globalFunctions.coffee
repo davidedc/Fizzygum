@@ -357,7 +357,7 @@ loadJSFilesWithCoffeescriptSources = ->
 
 
 compileFGCode = (codeSource, bare) ->
-  t0 = performance.now()
+  #t0 = performance.now()
   try
     # Coffeescript v2 is used
     compiled = CoffeeScript.compile codeSource,{"bare":bare}
@@ -368,7 +368,7 @@ compileFGCode = (codeSource, bare) ->
     errorMessage += err + "\n"
     throw new Error errorMessage
 
-  t1 = performance.now()
+  #t1 = performance.now()
   #console.log "compileFGCode time: " + (t1 - t0) + " milliseconds."
 
   return compiled
@@ -789,8 +789,7 @@ compileSource = (fileName, justLoadSources) ->
 
   fileContents = window[fileName + "_coffeSource"]
 
-  t0 = performance.now()
-
+  if srcLoadCompileDebugWrites then t0 = performance.now()
   if srcLoadCompileDebugWrites then console.log "checking whether " + fileName + " is already in the system "
 
   # loading via Class means that we register all the source
@@ -813,7 +812,7 @@ compileSource = (fileName, justLoadSources) ->
   emptyLogDiv()
   addLineToLogDiv "compiling and evalling " + fileName
 
-  t1 = performance.now()
+  if srcLoadCompileDebugWrites then t1 = performance.now()
   if srcLoadCompileDebugWrites then console.log "loadSourcesAndPotentiallyCompileThem call time: " + (t1 - t0) + " milliseconds."
 
 
