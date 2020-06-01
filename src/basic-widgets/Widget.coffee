@@ -323,18 +323,21 @@ class Widget extends TreeNode
   morphClassString: ->
     @constructor.name or @constructor.toString().split(" ")[1].split("(")[0]
 
+  # »>> this part is excluded from the fizzygum homepage build
   @morphFromUniqueIDString: (theUniqueID) ->
     result = world.topWdgtSuchThat (m) =>
       m.uniqueIDString() is theUniqueID
     if not result?
       alert "theUniqueID " + theUniqueID + " not found!"
     return result
+  # this part is excluded from the fizzygum homepage build <<«
 
   assignUniqueID: ->
     @constructor.instancesCounter++
     @constructor.lastBuiltInstanceNumericID++
     @instanceNumericID = @constructor.lastBuiltInstanceNumericID
 
+  # »>> this part is excluded from the fizzygum homepage build
   # some test commands specify morphs via
   # their uniqueIDString. This means that
   # if there is one more TextMorph anywhere during
@@ -352,6 +355,7 @@ class Widget extends TreeNode
     if @lastBuiltInstanceNumericID % 1000 == 0
       @lastBuiltInstanceNumericID++
     @lastBuiltInstanceNumericID = 1000 * Math.ceil @lastBuiltInstanceNumericID / 1000
+  # this part is excluded from the fizzygum homepage build <<«
 
   startCountdownForBubbleHelp: (contents) ->
     ToolTipWdgt.createInAWhileIfHandStillContainedInMorph @, contents
@@ -2098,8 +2102,6 @@ class Widget extends TreeNode
     # the default, but leaving it here for clarity.
     @fullImage().toDataURL "image/png"
 
-  # this part is excluded from the fizzygum homepage build <<«
-
   # the way we take a picture here is different
   # than the way we usually take a picture.
   # Usually we ask the morph and submorphs to
@@ -2130,7 +2132,6 @@ class Widget extends TreeNode
 
     return destCanvas.toDataURL "image/png"
 
-  # »>> this part is excluded from the fizzygum homepage build
   # unused code
   fullImageHashCode: ->
     return hashCode @fullImageData()
@@ -2243,6 +2244,7 @@ class Widget extends TreeNode
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
     @reLayout()
 
+  # »>> this part is excluded from the fizzygum homepage build
   addAsSiblingAfterMe: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
     myPosition = @positionAmongSiblings()
     @parent.add aWdgt, (myPosition + 1), layoutSpec
@@ -2250,6 +2252,7 @@ class Widget extends TreeNode
   addAsSiblingBeforeMe: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
     myPosition = @positionAmongSiblings()
     @parent.add aWdgt, myPosition, layoutSpec
+  # this part is excluded from the fizzygum homepage build <<«
 
   # this level of indirection is needed because
   # you have a "raw" "tree" need of adding stuff
@@ -2321,8 +2324,8 @@ class Widget extends TreeNode
 
     return aWdgt
 
+  # »>> this part is excluded from the fizzygum homepage build
   addInset: (aWdgt) ->
-
     if aWdgt.parent?
       aWdgt.changed()
 
@@ -2330,6 +2333,7 @@ class Widget extends TreeNode
     @add aWdgt, 0
     aWdgt.fullRawMoveTo @insetPosition()
     aWdgt.rawSetExtent @insetSpaceExtent(), @
+  # this part is excluded from the fizzygum homepage build <<«
 
 
   sourceChanged: ->
@@ -2413,6 +2417,7 @@ class Widget extends TreeNode
     copiedMorph = @deepCopy false, [], [], allMorphsInStructure
     return copiedMorph
 
+  # »>> this part is excluded from the fizzygum homepage build
   serialize: ->
     allMorphsInStructure = @allChildrenBottomToTop()
     arr1 = []
@@ -2499,6 +2504,7 @@ class Widget extends TreeNode
 
 
     return clonedMorphs[0]
+  # this part is excluded from the fizzygum homepage build <<«
 
   # Injecting code /////////////////////////////////////////
 
@@ -2901,11 +2907,9 @@ class Widget extends TreeNode
 
     menu.popUpAtHand()
 
+  # »>> this part is excluded from the fizzygum homepage build
   inspect: (anotherObject) ->
     @spawnInspector @
-
-  inspect2: (anotherObject) ->
-    @spawnInspector2 @
 
   spawnInspector: (inspectee) ->
     inspector = new InspectorMorph inspectee
@@ -2913,6 +2917,10 @@ class Widget extends TreeNode
     inspector.fullRawMoveWithin world
     world.add inspector
     inspector.changed()
+  # this part is excluded from the fizzygum homepage build <<«
+
+  inspect2: (anotherObject) ->
+    @spawnInspector2 @
 
   spawnInspector2: (inspectee) ->
     inspector = new InspectorMorph2 inspectee
@@ -3051,6 +3059,7 @@ class Widget extends TreeNode
       100,
       true
 
+  # »>> this part is excluded from the fizzygum homepage build
   createNewStringMorph2WithBackground: ->
     #newWdgt = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(255, 255, 54), 0.5
     newWdgt = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(230, 230, 130), 1
@@ -3447,7 +3456,6 @@ class Widget extends TreeNode
 
     menu.popUpAtHand()
 
-  # »>> this part is excluded from the fizzygum homepage build
   popUpFirstMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "others"
     menu.addMenuItem "make sliders' buttons states bright", true, menusHelper, "makeSlidersButtonsStatesBright"
@@ -3584,6 +3592,7 @@ class Widget extends TreeNode
         unscaled = newAlpha / 100
         return Math.min Math.max(unscaled, 0.1), 1
 
+  # »>> this part is excluded from the fizzygum homepage build
   setPadding: (paddingOrMorphGivingPadding, morphGivingPadding) ->
     if morphGivingPadding?.getValue?
       padding = morphGivingPadding.getValue()
@@ -3653,6 +3662,7 @@ class Widget extends TreeNode
         @changed()
 
     return padding
+  # this part is excluded from the fizzygum homepage build <<«
 
   setAlphaScaled: (alphaOrMorphGivingAlpha, morphGivingAlpha) ->
     if morphGivingAlpha?.getValue?
@@ -3710,6 +3720,7 @@ class Widget extends TreeNode
       menu = new MenuMorph @, false, @, true, true, "no morphs to attach to"
     menu.popUpAtHand()
 
+  # »>> this part is excluded from the fizzygum homepage build
   attachWithHorizLayout: ->
     choices = world.plausibleTargetAndDestinationMorphs @
 
@@ -3735,6 +3746,7 @@ class Widget extends TreeNode
       # morphs then show some kind of message.
       menu = new MenuMorph @, false, @, true, true, "no morphs to attach to"
     menu.popUpAtHand()
+  # this part is excluded from the fizzygum homepage build <<«
   
   toggleIsLockingToPanels: ->
     @isLockingToPanels = not @isLockingToPanels
@@ -3971,6 +3983,8 @@ class Widget extends TreeNode
     @changed()
   
   
+  # »>> this part is excluded from the fizzygum homepage build
+
   # Widget collision detection - not used anywhere at the moment ////////////////////////
   
   isTouching: (otherMorph) ->
@@ -3997,6 +4011,7 @@ class Widget extends TreeNode
       Math.round(otherFb.origin.x - oRect.origin.x),
       Math.round(otherFb.origin.y - oRect.origin.y)
     oImg
+  # this part is excluded from the fizzygum homepage build <<«
 
 
   # ------------------------------------------------------------------------------------

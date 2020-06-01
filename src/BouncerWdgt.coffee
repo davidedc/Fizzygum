@@ -1,5 +1,8 @@
 # bounces within the parent. Veeery similar to the good old
 # AtomMorph from Squeak
+
+# this file is excluded from the fizzygum homepage build
+
 class BouncerWdgt extends Widget
 
   velocity: nil

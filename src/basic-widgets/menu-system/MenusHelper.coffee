@@ -536,6 +536,7 @@ class MenusHelper
     return wm
 
 
+  # »>> this part is excluded from the fizzygum homepage build
   createFanout: ->
     fanoutWdgt = new FanoutWdgt
     world.create fanoutWdgt
@@ -597,7 +598,6 @@ class MenusHelper
     world.add wm
     wm.changed()
 
-  # »>> this part is excluded from the fizzygum homepage build
 
   popUpMore1IconsMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "More Icons 1"
@@ -655,8 +655,6 @@ class MenusHelper
 
     menu.popUpAtHand()
 
-  # this part is excluded from the fizzygum homepage build <<«
-
   createFizzygumLogoWithTextIconWdgt : ->
     world.create new FizzygumLogoWithTextIconWdgt
 
@@ -693,8 +691,6 @@ class MenusHelper
   createSaveIconWdgt : ->
     world.create new SaveIconWdgt
 
-  # »>> this part is excluded from the fizzygum homepage build
-
   popUpArrowsIconsMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Arrows"
     menu.addMenuItem "Arrow N icon", true, menusHelper, "createArrowNIconWdgt"
@@ -706,9 +702,6 @@ class MenusHelper
     menu.addMenuItem "Arrow SE icon", true, menusHelper, "createArrowSEIconWdgt"
     menu.addMenuItem "Arrow SW icon", true, menusHelper, "createArrowSWIconWdgt"
     menu.popUpAtHand()
-
-  # this part is excluded from the fizzygum homepage build <<«
-
 
   createArrowEIconWdgt: ->
     world.create new ArrowEIconWdgt
@@ -861,6 +854,8 @@ class MenusHelper
     menu.addMenuItem "welcome message", true, @, "createWelcomeMessageWindowAndShortcut", "welcome message"
 
     menu.popUpAtHand()
+
+  # this part is excluded from the fizzygum homepage build <<«
 
   createWelcomeMessageWindowAndShortcut: ->
     simpleDocument = new SimpleDocumentWdgt

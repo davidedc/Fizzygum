@@ -1,5 +1,5 @@
 # Data collected at run time ///////////////////////////////////
-
+# this file is excluded from the fizzygum homepage build
 
 class ProfilingDataCollector
 

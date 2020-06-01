@@ -1,3 +1,5 @@
+# this file is excluded from the fizzygum homepage build
+
 class SimpleDropletAppearance extends RectangularAppearance
 
   # the "alreadyUsingCanvasClipping" flag is needed because when

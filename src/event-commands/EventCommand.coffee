@@ -1,3 +1,4 @@
+# this file is excluded from the fizzygum homepage build
 
 class EventCommand
   dateJSON: nil

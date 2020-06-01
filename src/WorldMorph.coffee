@@ -79,9 +79,11 @@ class WorldMorph extends PanelWdgt
   keyComboCheckNumberOfMenuItemsEventListener: nil
 
   dragoverEventListener: nil
-  dropBrowserEventListener: nil
   resizeBrowserEventListener: nil
   otherTasksToBeRunOnStep: []
+  # »>> this part is excluded from the fizzygum homepage build
+  dropBrowserEventListener: nil
+  # this part is excluded from the fizzygum homepage build <<«
 
   # these variables shouldn't be static to the WorldMorph, because
   # in pure theory you could have multiple worlds in the same
@@ -117,6 +119,7 @@ class WorldMorph extends PanelWdgt
   # automatically adjusts the world size.
   automaticallyAdjustToFillEntireBrowserAlsoOnResize: true
 
+  # »>> this part is excluded from the fizzygum homepage build
   # keypad keys map to special characters
   # so we can trigger test actions
   # see more comments below
@@ -138,6 +141,7 @@ class WorldMorph extends PanelWdgt
   @KEYPAD_ENTER_mappedToThaiKeyboard_P: "น"
   @KEYPAD_0_mappedToThaiKeyboard_Q: "ย"
   @KEYPAD_DOT_mappedToThaiKeyboard_R: "พ"
+  # this part is excluded from the fizzygum homepage build <<«
 
   wdgtsDetectingClickOutsideMeOrAnyOfMeChildren: new Set
   hierarchyOfClickedWdgts: new Set
@@ -243,6 +247,7 @@ class WorldMorph extends PanelWdgt
 
   isIndexPage: nil
 
+  # »>> this part is excluded from the fizzygum homepage build
   # This method also handles keypresses from a special
   # external keypad which is used to
   # record tests commands (such as capture screen, etc.).
@@ -259,6 +264,7 @@ class WorldMorph extends PanelWdgt
   # the "00" key of such keypads - see
   # note below.
   doublePressOfZeroKeypadKey: nil
+  # this part is excluded from the fizzygum homepage build <<«
 
   constructor: (
       @worldCanvas,
@@ -410,8 +416,10 @@ class WorldMorph extends PanelWdgt
     if !@isIndexPage then console.log "booting"
     @basementWdgt = new BasementWdgt
 
+    # »>> this part is excluded from the fizzygum homepage build
     ProfilingDataCollector.enableProfiling()
     ProfilingDataCollector.enableBrokenRectsProfiling()
+    # this part is excluded from the fizzygum homepage build <<«
 
     if @isIndexPage
       acm = new AnalogClockWdgt
@@ -766,6 +774,7 @@ class WorldMorph extends PanelWdgt
       brokenMorph.fullClippedBoundsWhenLastPainted = nil
 
 
+  # »>> this part is excluded from the fizzygum homepage build
   showBrokenRects: (aContext) ->
     aContext.save()
     aContext.globalAlpha = 0.5
@@ -783,6 +792,7 @@ class WorldMorph extends PanelWdgt
             Math.round(eachBrokenRect.width()),
             Math.round(eachBrokenRect.height())
     aContext.restore()
+    # this part is excluded from the fizzygum homepage build <<«
 
 
   # layouts are recalculated like so:
@@ -864,7 +874,9 @@ class WorldMorph extends PanelWdgt
 
     window.morphsThatMaybeChangedGeometryOrPosition = []
     window.morphsThatMaybeChangedFullGeometryOrPosition = []
+    # »>> this part is excluded from the fizzygum homepage build
     #ProfilingDataCollector.profileBrokenRects @broken, @numberOfDuplicatedBrokenRects, @numberOfMergedSourceAndDestination
+    # this part is excluded from the fizzygum homepage build <<«
 
     # each broken rectangle requires traversing the scenegraph to
     # redraw what's overlapping it. Not all Widgets are traversed
@@ -976,6 +988,7 @@ class WorldMorph extends PanelWdgt
     @numberOfDuplicatedBrokenRects = 0
     @numberOfMergedSourceAndDestination = 0
 
+  # »>> this part is excluded from the fizzygum homepage build
   addPinoutingMorphs: ->
     @currentPinoutingMorphs.forEach (eachPinoutingMorph) =>
       if @morphsToBePinouted.has eachPinoutingMorph.wdgtThisWdgtIsPinouting
@@ -1001,6 +1014,7 @@ class WorldMorph extends PanelWdgt
         hM.setWidth 400
         @currentPinoutingMorphs.add hM
         @morphsBeingPinouted.add eachMorphNeedingPinout
+  # this part is excluded from the fizzygum homepage build <<«
   
   addHighlightingMorphs: ->
     @currentHighlightingMorphs.forEach (eachHighlightingMorph) =>
@@ -1157,8 +1171,10 @@ class WorldMorph extends PanelWdgt
           # others
           # ------
 
+          # »>> this part is excluded from the fizzygum homepage build
           when "dropBrowserEvent"
             @dropBrowserEventHandler event
+          # this part is excluded from the fizzygum homepage build <<«
 
           when "resizeBrowserEvent"
             @resizeBrowserEventHandler()
@@ -1207,7 +1223,9 @@ class WorldMorph extends PanelWdgt
     window.recalculatingLayouts = true
     @recalculateLayouts()
     window.recalculatingLayouts = false
+    # »>> this part is excluded from the fizzygum homepage build
     @addPinoutingMorphs()
+    # this part is excluded from the fizzygum homepage build <<«
     @addHighlightingMorphs()
 
     # here is where the repainting on screen happens
@@ -1520,6 +1538,8 @@ class WorldMorph extends PanelWdgt
   keypressBrowserEventHandler: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
     if Automator? and Automator.state == Automator.RECORDING
       @automator.recorder.addKeyPressCommand charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
+
+    # »>> this part is excluded from the fizzygum homepage build
     # This if block adapted from:
     # http://stackoverflow.com/a/16033129
     # it rejects the
@@ -1550,6 +1570,7 @@ class WorldMorph extends PanelWdgt
         @doublePressOfZeroKeypadKey = nil
         #console.log "double keypress"
       return false
+    # this part is excluded from the fizzygum homepage build <<«
 
     @keyboardEventsReceiver?.processKeyPress charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
 
@@ -1584,9 +1605,11 @@ class WorldMorph extends PanelWdgt
       if Automator? and Automator.state == Automator.RECORDING
         @automator.recorder.addPasteCommand selectedText
 
+  # »>> this part is excluded from the fizzygum homepage build
   dropBrowserEventHandler: (event) ->
     #console.log "processing drop"
     @hand.processDrop event
+  # this part is excluded from the fizzygum homepage build <<«
 
   resizeBrowserEventHandler: ->
     #console.log "processing resize"
@@ -1812,6 +1835,9 @@ class WorldMorph extends PanelWdgt
     document.body.addEventListener "paste", @pasteBrowserEventListener, false
 
   initKeyCombosEventListeners: ->
+
+    # »>> this part is excluded from the fizzygum homepage build
+
     #console.log "binding via mousetrap"
 
     @keyComboResetWorldEventListener = (event) =>
@@ -1868,6 +1894,8 @@ class WorldMorph extends PanelWdgt
       false
     Mousetrap.bind ["alt+z"], @keyComboCheckStringsOfItemsInMenuOrderUnimportant
 
+    # this part is excluded from the fizzygum homepage build <<«
+
   initOtherMiscEventListeners: ->
     canvas = @worldCanvas
 
@@ -1896,11 +1924,13 @@ class WorldMorph extends PanelWdgt
       event.preventDefault()
     window.addEventListener "dragover", @dragoverEventListener, false
     
+    # »>> this part is excluded from the fizzygum homepage build
     @dropBrowserEventListener = (event) =>
       @events.push "dropBrowserEvent"
       @events.push event
       event.preventDefault()
     window.addEventListener "drop", @dropBrowserEventListener, false
+    # this part is excluded from the fizzygum homepage build <<«
     
     @resizeBrowserEventListener = =>
       @events.push "resizeBrowserEvent"
@@ -1919,7 +1949,7 @@ class WorldMorph extends PanelWdgt
     @initKeyCombosEventListeners()
     @initOtherMiscEventListeners()
 
-  
+  # »>> this part is excluded from the fizzygum homepage build  
   removeEventListeners: ->
     canvas = @worldCanvas
     # canvas.removeEventListener 'dblclick', @dblclickEventListener
@@ -1948,6 +1978,7 @@ class WorldMorph extends PanelWdgt
     canvas.removeEventListener 'dragover', @dragoverEventListener
     canvas.removeEventListener 'resize', @resizeBrowserEventListener
     canvas.removeEventListener 'drop', @dropBrowserEventListener
+  # this part is excluded from the fizzygum homepage build <<«
   
   mouseDownLeft: ->
     noOperation
@@ -1958,11 +1989,13 @@ class WorldMorph extends PanelWdgt
   mouseDownRight: ->
     noOperation
       
+  # »>> this part is excluded from the fizzygum homepage build
   droppedImage: ->
     nil
 
   droppedSVG: ->
     nil  
+  # this part is excluded from the fizzygum homepage build <<«
 
   # WorldMorph text field tabbing:
   nextTab: (editField) ->

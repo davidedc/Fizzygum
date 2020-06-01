@@ -65,6 +65,7 @@ class ActivePointerWdgt extends Widget
     else
       return @world
 
+  # »>> this part is excluded from the fizzygum homepage build
   menuAtPointer: ->
     result = world.topWdgtSuchThat (m) =>
       m.clippedThroughBounds().containsPoint(@position()) and
@@ -73,6 +74,7 @@ class ActivePointerWdgt extends Widget
         (m.noticesTransparentClick or
         (not m.isTransparentAt(@position()))) and (m instanceof MenuMorph)
     return result
+  # this part is excluded from the fizzygum homepage build <<«
 
 
 
@@ -109,12 +111,14 @@ class ActivePointerWdgt extends Widget
       contextMenu.popUpAtHand()
 
 
+  # »>> this part is excluded from the fizzygum homepage build
   # not used in Fizzygum yet
   allWdgtsAtPointer: ->
     return world.collectAllChildrenBottomToTopSuchThat (m) =>
       m.visibleBasedOnIsVisibleProperty() and
       !m.isCollapsed() and
       m.clippedThroughBounds().containsPoint @position()
+  # this part is excluded from the fizzygum homepage build <<«
   
   
   
@@ -732,7 +736,8 @@ class ActivePointerWdgt extends Widget
       morph.wheel deltaX, deltaY, deltaZ, altKey, button, buttons
   
   
-  #
+  # »>> this part is excluded from the fizzygum homepage build
+
   # drop event:
   #
   #        droppedImage
@@ -851,6 +856,7 @@ class ActivePointerWdgt extends Widget
         targetDrop.droppedImage canvas
       src = parseImgURL txt
       img.src = src  if src
+  # this part is excluded from the fizzygum homepage build <<«
   
   
   # ActivePointerWdgt tools

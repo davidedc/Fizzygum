@@ -66,6 +66,10 @@ class MenuItemMorph extends TriggerMorph
     @label.silentFullRawMoveTo np
   
 
+  # »>> this part is excluded from the fizzygum homepage build
+  # TODO this should be in a more general place,
+  # seems useful for more cases
+  # also, this is currently unused
   createIcon: (source) ->
     # source can be either a Widget or an HTMLCanvasElement
     icon = new Widget
@@ -84,6 +88,7 @@ class MenuItemMorph extends TriggerMorph
     icon.silentRawSetWidth icon.backBuffer.width
     icon.silentRawSetHeight icon.backBuffer.height
     icon
+  # this part is excluded from the fizzygum homepage build <<«
 
   createLabelString: (string) ->
     # console.log "menuitem createLabelString"
