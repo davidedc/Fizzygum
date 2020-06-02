@@ -534,7 +534,6 @@ boot = ->
   bootLoadPromises = [
     loadJSFile("js/sourceCode/Class_coffeSource.js"),
     loadJSFile("js/sourceCode/Mixin_coffeSource.js"),
-    loadJSFile("js/sourceCode/sourceCodeManifest.js"),
     loadJSFile("js/libs/coffee-script_2.0.3.js"),
     loadJSFile("js/pre-compiled.js"),
   ]
@@ -692,15 +691,18 @@ generateInclusionOrder = ->
   DEPENDS = ///\s\w+:\s*new\s*(\w+)///
   IS_CLASS = ///\s*class\s+(\w+)///
   TRIPLE_QUOTES = ///'''///
-  #debugger
-  for eachFile in sourcesManifest
 
+  allSources = Object.keys(window).filter (i) ->
+    i.endsWith "_coffeSource"
+
+  for eachFile in allSources
+
+    eachFile = eachFile.replace "_coffeSource",""
     if eachFile == "Class" then continue
     if eachFile == "Mixin" then continue
     if srcLoadCompileDebugWrites then console.log eachFile + " - "
     dependencies[eachFile] = []
-    if !window[eachFile + "_coffeSource"]?
-      debugger
+
     lines = window[eachFile + "_coffeSource"].split '\n'
     i = 0
     while i < lines.length

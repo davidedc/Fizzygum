@@ -86,6 +86,10 @@ fi
 
 # turn the coffeescript file into js in the js directory
 echo "compiling boot file..."
+
+cat ../Fizzygum-builds/latest/delete_me/numberOfSourceBatches.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+
+printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
 cat src/boot/globalFunctions.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
 
 printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
@@ -206,7 +210,7 @@ if [ "$1" == "--homepage" ]; then
   rm ../Fizzygum-builds/latest/icons/scrollDown.png
   rm ../Fizzygum-builds/latest/js/fizzygum-boot.js
   
-  ls -d -1 ../Fizzygum-builds/latest/js/sourceCode/* | grep -v /sources_batch | grep -v /sourceCodeManifest | grep -v /Mixin_coffeSource | grep -v /Class_coffeSource | xargs rm -f
+  ls -d -1 ../Fizzygum-builds/latest/js/sourceCode/* | grep -v /sources_batch | grep -v /Mixin_coffeSource | grep -v /Class_coffeSource | xargs rm -f
   
   echo "generating the pre-compiled file via the browser. this might take a few seconds..."
   . ./buildSystem/generate-pre-compiled-file-via-browser.sh

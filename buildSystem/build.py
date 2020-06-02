@@ -227,7 +227,6 @@ def main():
     # than using this js trick, however .json loading is not permitted from
     # filesystem, so we'd always need a server...
     STRING_BLOCK = 'window.%s = "%s".replace(/＂/g, "\\\"").replace(/⧹/g, "\\\\").replace(/⤶/g, "\\n");'
-    sourcesManifest = "sourcesManifest = [\n"
 
     # now iterate through the source files and create
     # 1) the js files with the coffeescript sources, one for each
@@ -305,7 +304,6 @@ def main():
 
             with codecs.open("../Fizzygum-builds/latest/js/sourceCode/"+sourceFileName+".js", "w", "utf-8") as f:
                 f.write(escaped_content_with_declaration)
-                sourcesManifest += "  '" + sourceFileName.replace("_coffeSource","") + "',\n";
 
             # pile up the sources into a batch and save the batch
             # when is big enough
@@ -324,11 +322,10 @@ def main():
     sourceFileName = ntpath.basename("sources_batch_"+str(numberOfSourceBatches))
     with codecs.open("../Fizzygum-builds/latest/js/sourceCode/"+sourceFileName+".js", "w", "utf-8") as f:
         f.write(unicode(batchedSources))
-    numberOfSourceBatches = numberOfSourceBatches + 1
+    numberOfSourceBatches += 1
 
-    sourcesManifest += "];\n\nnumberOfSourceBatches = " + str(numberOfSourceBatches) + ";\n"
-    with codecs.open("../Fizzygum-builds/latest/js/sourceCode/sourceCodeManifest.js", "w", "utf-8") as f:
-        f.write(sourcesManifest)
+    with codecs.open("../Fizzygum-builds/latest/delete_me/numberOfSourceBatches.coffee", "w", "utf-8") as f:
+        f.write("numberOfSourceBatches = " + str(numberOfSourceBatches) + "\n")
 
 
 
