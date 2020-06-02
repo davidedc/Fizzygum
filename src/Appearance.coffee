@@ -1,5 +1,3 @@
-# REQUIRES DeepCopierMixin
-
 class Appearance
 
   @augmentWith DeepCopierMixin

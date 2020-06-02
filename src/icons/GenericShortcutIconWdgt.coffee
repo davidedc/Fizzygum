@@ -1,5 +1,3 @@
-# REQUIRES ChildrenStainerMixin
-
 class GenericShortcutIconWdgt extends Widget
 
   @augmentWith ChildrenStainerMixin, @name

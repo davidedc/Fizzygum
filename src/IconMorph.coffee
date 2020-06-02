@@ -3,8 +3,6 @@
 # or
 #   world.create(new IconMorph("color = 'rgb(226, 0, 75)'\ncontext.beginPath()\ncontext.moveTo 23, 103\ncontext.lineTo 93, 178\ncontext.strokeStyle = color\ncontext.stroke()"))
 
-# REQUIRES KeepsRatioWhenInVerticalStackMixin
-
 class IconMorph extends Widget
 
   @augmentWith KeepsRatioWhenInVerticalStackMixin, @name

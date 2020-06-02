@@ -1,6 +1,3 @@
-# REQUIRES HighlightableMixin
-# REQUIRES ParentStainerMixin
-
 class AlignCenterButtonWdgt extends Widget
 
   @augmentWith HighlightableMixin, @name

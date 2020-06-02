@@ -1,8 +1,6 @@
 # this file is excluded from the fizzygum homepage build
 
-# REQUIRES DeepCopierMixin
 # REQUIRES PinType
-
 
 class Pin
 

@@ -1,5 +1,3 @@
-# REQUIRES ControllerMixin
-
 class CalculatingPatchNodeWdgt extends Widget
 
   @augmentWith ControllerMixin

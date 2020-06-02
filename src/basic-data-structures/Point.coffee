@@ -1,5 +1,3 @@
-# REQUIRES DeepCopierMixin
-
 # See the Rectangle class about the "copy on change" policy
 # of this class.
 

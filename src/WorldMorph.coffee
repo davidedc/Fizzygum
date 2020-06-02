@@ -5,9 +5,6 @@
 # REQUIRES ProfilingDataCollector
 # REQUIRES SystemTestsControlPanelUpdater
 
-# REQUIRES GridPositioningOfAddedShortcutsMixin
-# REQUIRES KeepIconicDesktopSystemLinksBackMixin
-
 # REQUIRES DesktopAppearance
 
 # The WorldMorph takes over the canvas on the page

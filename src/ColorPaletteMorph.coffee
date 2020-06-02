@@ -1,6 +1,3 @@
-# REQUIRES ControllerMixin
-# REQUIRES BackBufferMixin
-
 class ColorPaletteMorph extends Widget
 
   @augmentWith ControllerMixin

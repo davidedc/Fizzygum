@@ -1,5 +1,3 @@
-# REQUIRES ControllerMixin
-
 # A multi-line, optionally word-wrapping string.
 # It's not "contained": it will literally blurt itself out allover the
 # screen. For "contained" text (the only practical solution for long

@@ -1,5 +1,4 @@
 # REQUIRES globalFunctions
-# REQUIRES UpperRightInternalHaloMixin
 
 class ModifiedTextTriangleAnnotationWdgt extends Widget
 

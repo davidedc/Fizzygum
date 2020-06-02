@@ -1,6 +1,3 @@
-# REQUIRES HighlightableMixin
-# REQUIRES ParentStainerMixin
-
 class BoldButtonWdgt extends Widget
 
   @augmentWith HighlightableMixin, @name

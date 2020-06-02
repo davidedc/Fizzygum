@@ -690,6 +690,7 @@ generateInclusionOrder = ->
   EXTENDS = ///\sextends\s*(\w+)///
   DEPENDS = ///\s\w+:\s*new\s*(\w+)///
   IS_CLASS = ///\s*class\s+(\w+)///
+  REQUIRES_MIXIN = ///\s*@augmentWith\s+(\w+)/// 
   TRIPLE_QUOTES = ///'''///
 
   allSources = Object.keys(window).filter (i) ->
@@ -719,6 +720,12 @@ generateInclusionOrder = ->
         #console.log matches
         dependencies[eachFile].push matches[1]
         if srcLoadCompileDebugWrites then console.log eachFile + " requires " + matches[1]
+
+      matches = lines[i].match REQUIRES_MIXIN
+      if matches?
+        #console.log matches
+        dependencies[eachFile].push matches[1]
+        if srcLoadCompileDebugWrites then console.log eachFile + " requires the mixin" + matches[1]
 
       matches = lines[i].match DEPENDS
       if matches?

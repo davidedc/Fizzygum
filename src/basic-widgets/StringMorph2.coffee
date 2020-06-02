@@ -13,8 +13,6 @@
 # behave well in layouts.
 #
 # REQUIRES WorldMorph
-# REQUIRES BackBufferMixin
-# REQUIRES ControllerMixin
 # REQUIRES AlignmentSpecHorizontal
 # REQUIRES AlignmentSpecVertical
 # REQUIRES LRUCache

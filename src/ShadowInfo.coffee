@@ -1,5 +1,3 @@
-# REQUIRES DeepCopierMixin
-
 class ShadowInfo
 
   @augmentWith DeepCopierMixin

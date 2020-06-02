@@ -1,9 +1,6 @@
 # this comment below is needed to figure out dependencies between classes
 
 # REQUIRES globalFunctions
-# REQUIRES UpperRightInternalHaloMixin
-# REQUIRES HighlightableMixin
-
 class UpperRightTriangle extends Widget
 
 

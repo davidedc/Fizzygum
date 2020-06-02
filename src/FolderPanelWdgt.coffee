@@ -18,10 +18,6 @@
 # Also, the desktop IS NOT a FolderPanelWdgt because it
 # doesn't need 3)
 
-# REQUIRES GridPositioningOfAddedShortcutsMixin
-# REQUIRES KeepIconicDesktopSystemLinksBackMixin
-# REQUIRES CreateShortcutOfDroppedItemsMixin
-
 class FolderPanelWdgt extends PanelWdgt
 
   @augmentWith GridPositioningOfAddedShortcutsMixin, @name

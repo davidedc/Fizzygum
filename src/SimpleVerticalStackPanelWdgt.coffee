@@ -1,6 +1,3 @@
-# REQUIRES ClippingAtRectangularBoundsMixin
-
-
 class SimpleVerticalStackPanelWdgt extends Widget
 
   # stacks don't necessarily enforce a width on contents

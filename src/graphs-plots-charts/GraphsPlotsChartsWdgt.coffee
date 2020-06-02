@@ -1,5 +1,3 @@
-# REQUIRES KeepsRatioWhenInVerticalStackMixin
-
 class GraphsPlotsChartsWdgt extends Widget
 
   @augmentWith KeepsRatioWhenInVerticalStackMixin, @name

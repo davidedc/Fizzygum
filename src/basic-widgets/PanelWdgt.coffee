@@ -4,7 +4,6 @@
 # "container"/"contained" scenario going on.
 
 # REQUIRES RectangularAppearance
-# REQUIRES ClippingAtRectangularBoundsMixin
 # TODO unclear whether this actually requires RectangularAppearance
 
 class PanelWdgt extends Widget

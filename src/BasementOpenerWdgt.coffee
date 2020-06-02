@@ -1,5 +1,3 @@
-# REQUIRES HighlightableMixin
-
 class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
 
   @augmentWith HighlightableMixin, @name

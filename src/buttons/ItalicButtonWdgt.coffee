@@ -1,6 +1,3 @@
-# REQUIRES HighlightableMixin
-# REQUIRES ParentStainerMixin
-
 class ItalicButtonWdgt extends Widget
 
   @augmentWith HighlightableMixin, @name

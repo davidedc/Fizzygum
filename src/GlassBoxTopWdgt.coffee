@@ -1,6 +1,3 @@
-# REQUIRES HighlightableMixin
-# REQUIRES WidgetCreatorAndSmartPlacerOnClickMixin
-
 # If the widget in the tool panel doesn't
 # need to be interactive (i.e. it's just there
 # to be dragged out, then we should put

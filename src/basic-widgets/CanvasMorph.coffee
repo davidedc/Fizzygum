@@ -1,5 +1,3 @@
-# REQUIRES BackBufferMixin
-# 
 # I clip my submorphs at my bounds. Which potentially saves a lot of redrawing
 # and event handling. 
 # Also I always use a canvas to retain my graphical representation and respond

@@ -1,4 +1,3 @@
-# REQUIRES HighlightableMixin
 # this file is excluded from the fizzygum homepage build
 
 # looks like a plus sign and it replaces itself with whatever you

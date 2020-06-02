@@ -1,5 +1,3 @@
-# REQUIRES HighlightableMixin
-
 # a "shortcut" (for friends) is a reference to something else.
 # What does it mean? That if you duplicate the shortcut you just
 # duplicate a reference, and opening either one will open the

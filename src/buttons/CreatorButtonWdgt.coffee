@@ -1,7 +1,3 @@
-# REQUIRES HighlightableMixin
-# REQUIRES ParentStainerMixin
-# REQUIRES WidgetCreatorAndSmartPlacerOnClickMixin
-
 class CreatorButtonWdgt extends Widget
 
   @augmentWith HighlightableMixin, @name

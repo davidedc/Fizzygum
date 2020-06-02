@@ -1,5 +1,3 @@
-# REQUIRES DeepCopierMixin
-
 class Grid3D
 
   @augmentWith DeepCopierMixin

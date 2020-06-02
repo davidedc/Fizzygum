@@ -1,5 +1,3 @@
-# REQUIRES DeepCopierMixin
-
 # Just like the Point class, this class has a "new on change"
 # policy (also often called "immutable data structures").
 # This means that any time you change any part of a

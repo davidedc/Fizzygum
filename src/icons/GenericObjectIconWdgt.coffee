@@ -1,5 +1,3 @@
-# REQUIRES ChildrenStainerMixin
-
 class GenericObjectIconWdgt extends Widget
 
   @augmentWith ChildrenStainerMixin, @name

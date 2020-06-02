@@ -1,6 +1,3 @@
-# REQUIRES HighlightableMixin
-# REQUIRES ParentStainerMixin
-
 class FormatAsCodeButtonWdgt extends IconMorph
 
   @augmentWith HighlightableMixin, @name

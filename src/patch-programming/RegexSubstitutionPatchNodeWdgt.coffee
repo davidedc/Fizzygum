@@ -1,5 +1,3 @@
-# REQUIRES ControllerMixin
-
 # this file is excluded from the fizzygum homepage build
 
 class RegexSubstitutionPatchNodeWdgt extends Widget

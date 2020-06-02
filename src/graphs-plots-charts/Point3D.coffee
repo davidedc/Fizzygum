@@ -1,5 +1,3 @@
-# REQUIRES DeepCopierMixin
-
 # adapted from thomasdarimont/spinning-cube.html
 # https://gist.github.com/thomasdarimont/8c694b4522c6cb10d85c
 

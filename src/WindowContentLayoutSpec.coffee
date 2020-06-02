@@ -1,6 +1,4 @@
 # WindowContentLayoutSpec
-# REQUIRES DeepCopierMixin
-
 
 class WindowContentLayoutSpec extends VerticalStackLayoutSpec
 

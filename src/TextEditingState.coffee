@@ -1,5 +1,3 @@
-# REQUIRES DeepCopierMixin
-
 class TextEditingState
 
   @augmentWith DeepCopierMixin

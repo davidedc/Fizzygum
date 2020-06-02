@@ -8,7 +8,6 @@
 
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
-# REQUIRES ControllerMixin
 
 class SliderMorph extends CircleBoxMorph
 

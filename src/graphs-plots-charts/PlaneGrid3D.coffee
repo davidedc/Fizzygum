@@ -1,5 +1,3 @@
-# REQUIRES DeepCopierMixin
-
 class PlaneGrid3D
 
   @augmentWith DeepCopierMixin

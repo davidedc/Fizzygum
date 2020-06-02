@@ -1,5 +1,3 @@
-# REQUIRES DeepCopierMixin
-
 class Color
 
   @augmentWith DeepCopierMixin

@@ -1,6 +1,3 @@
-# REQUIRES HighlightableMixin
-# REQUIRES ParentStainerMixin
-
 class DecreaseFontSizeButtonWdgt extends IconMorph
 
   @augmentWith HighlightableMixin, @name

@@ -1,5 +1,3 @@
-# REQUIRES KeepsRatioWhenInVerticalStackMixin
-
 class StretchableEditableWdgt extends Widget
 
   @augmentWith KeepsRatioWhenInVerticalStackMixin, @name

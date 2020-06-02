@@ -1,6 +1,3 @@
-# REQUIRES HighlightableMixin
-# REQUIRES ParentStainerMixin
-
 class TemplatesButtonWdgt extends IconMorph
 
   @augmentWith HighlightableMixin, @name

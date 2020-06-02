@@ -11,7 +11,6 @@
 
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
-# REQUIRES DeepCopierMixin
 # REQUIRES LayoutSpec
 # REQUIRES PreferredSize
 # REQUIRES VerticalStackLayoutSpec

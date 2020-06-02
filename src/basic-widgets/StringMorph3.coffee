@@ -14,7 +14,6 @@
 # behave well in layouts.
 #
 # REQUIRES WorldMorph
-# REQUIRES BackBufferMixin
 # REQUIRES AlignmentSpecHorizontal
 # REQUIRES AlignmentSpecVertical
 # REQUIRES LRUCache

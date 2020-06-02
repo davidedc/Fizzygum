@@ -1,5 +1,3 @@
-# REQUIRES DeepCopierMixin
-
 # All "actions" functions for all accessory menu items should belong
 # in here. Also helps so we don't pollute moprhs with a varying number
 # of helper functions, which is problematic for visual diffing

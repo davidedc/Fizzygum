@@ -1,6 +1,3 @@
-# REQUIRES HighlightableMixin
-# REQUIRES ParentStainerMixin
-
 class AlignLeftButtonWdgt extends Widget
 
   @augmentWith HighlightableMixin, @name
