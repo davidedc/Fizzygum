@@ -227,7 +227,7 @@ def main():
     # than using this js trick, however .json loading is not permitted from
     # filesystem, so we'd always need a server...
     STRING_BLOCK = 'window.%s = "%s".replace(/＂/g, "\\\"").replace(/⧹/g, "\\\\").replace(/⤶/g, "\\n");'
-    sourcesManifests = "sourcesManifests = [];\n"
+    sourcesManifest = "sourcesManifest = [\n"
 
     # now iterate through the source files and create
     # 1) the js files with the coffeescript sources, one for each
@@ -305,7 +305,7 @@ def main():
 
             with codecs.open("../Fizzygum-builds/latest/js/sourceCode/"+sourceFileName+".js", "w", "utf-8") as f:
                 f.write(escaped_content_with_declaration)
-                sourcesManifests += "sourcesManifests.push('" + sourceFileName + "');\n";
+                sourcesManifest += "  '" + sourceFileName.replace("_coffeSource","") + "',\n";
 
             # pile up the sources into a batch and save the batch
             # when is big enough
@@ -326,9 +326,9 @@ def main():
         f.write(unicode(batchedSources))
     numberOfSourceBatches = numberOfSourceBatches + 1
 
-    sourcesManifests += "\n\nnumberOfSourceBatches = " + str(numberOfSourceBatches) + ";\n"
+    sourcesManifest += "];\n\nnumberOfSourceBatches = " + str(numberOfSourceBatches) + ";\n"
     with codecs.open("../Fizzygum-builds/latest/js/sourceCode/sourceCodeManifest.js", "w", "utf-8") as f:
-        f.write(sourcesManifests)
+        f.write(sourcesManifest)
 
 
 

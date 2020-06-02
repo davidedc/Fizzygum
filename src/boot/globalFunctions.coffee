@@ -693,9 +693,8 @@ generateInclusionOrder = ->
   IS_CLASS = ///\s*class\s+(\w+)///
   TRIPLE_QUOTES = ///'''///
   #debugger
-  for eachFile in sourcesManifests
+  for eachFile in sourcesManifest
 
-    eachFile = eachFile.replace "_coffeSource",""
     if eachFile == "Class" then continue
     if eachFile == "Mixin" then continue
     if srcLoadCompileDebugWrites then console.log eachFile + " - "
