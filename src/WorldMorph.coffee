@@ -1105,6 +1105,9 @@ class WorldMorph extends PanelWdgt
             # note that the position can be non-integer, so rounding it
             # we have no real use for fractional input position and it's complicated
             # to handle for drawing, clipping etc., better stick to integer coords
+            # TODO it might be nice to discard duplicates due to the fact that
+            # two events in a row (first one being fractional and second one being integer)
+            # might be lumped-up into the same integer position
             @mousemoveBrowserEventHandler Math.round(event.touches[0].pageX), Math.round(event.touches[0].pageY), 0, 0, false, false, false, false
             @mousedownBrowserEventHandler 0, 1, false, false, false, false
             #console.log "touchstartBrowserEvent"
