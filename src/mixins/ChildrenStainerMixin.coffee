@@ -1,7 +1,3 @@
-# these comments below needed to figure out dependencies between classes
-# REQUIRES globalFunctions
-
-
 # some widgets are composed by a number of other widgets,
 # and you'd want them all to change color at the same time
 # an example is the reference widget, which is composed by

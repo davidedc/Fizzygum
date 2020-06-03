@@ -1,8 +1,5 @@
 # //////////////////////////////////////////////////////////
 
-# these comments below needed to figure out dependencies between classes
-# REQUIRES globalFunctions
-
 # A BackBuffer is a canvas that a morph can keep for
 # two reasons:
 #   1) as a cache

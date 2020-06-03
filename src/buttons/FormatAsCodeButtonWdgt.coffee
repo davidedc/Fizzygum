@@ -1,3 +1,5 @@
+# REQUIRES Color
+
 class FormatAsCodeButtonWdgt extends IconMorph
 
   @augmentWith HighlightableMixin, @name

@@ -1,6 +1,3 @@
-# this comment below is needed to figure out dependencies between classes
-# REQUIRES globalFunctions
-
 # The SimplePlainTextScrollPanelWdgt allows you show/edit ONE
 # text blurb only.
 # It doesn't allow you to view/edit multiple text blurbs or

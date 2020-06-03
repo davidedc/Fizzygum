@@ -1,3 +1,5 @@
+# REQUIRES Color
+
 class AlignLeftButtonWdgt extends Widget
 
   @augmentWith HighlightableMixin, @name

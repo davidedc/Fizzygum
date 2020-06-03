@@ -1,6 +1,3 @@
-# REQUIRES globalFunctions
-
-
 KeepsRatioWhenInVerticalStackMixin =
   # class properties here:
   # none

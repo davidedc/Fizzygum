@@ -1,6 +1,3 @@
-# these comments below needed to figure out dependencies between classes
-# REQUIRES LRUCache
-
 # A multi-line, word-wrapping String
 
 class TextMorph2 extends StringMorph2

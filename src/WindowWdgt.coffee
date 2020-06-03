@@ -1,5 +1,3 @@
-# REQUIRES WindowContentsPlaceholderText
-
 # TODO: when floating, windows should really be able to
 # accommodate any extent always, because really windows should
 # be stackable and dockable in any place...

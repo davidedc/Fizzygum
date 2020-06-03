@@ -1,6 +1,3 @@
-# this comment below is needed to figure out dependencies between classes
-# REQUIRES globalFunctions
-
 class ScrollPanelWdgt extends PanelWdgt
 
   autoScrollTrigger: nil

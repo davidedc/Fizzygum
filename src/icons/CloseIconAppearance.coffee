@@ -1,5 +1,3 @@
-# REQUIRES Point
-
 class CloseIconAppearance extends IconAppearance
 
   paintFunction: (context) ->

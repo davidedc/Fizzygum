@@ -1,5 +1,3 @@
-# REQUIRES Point3D
-
 class Example3DPlotWdgt extends Widget
 
 

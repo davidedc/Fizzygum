@@ -1,6 +1,3 @@
-# this comment below is needed to figure out dependencies between classes
-# REQUIRES Widget
-
 class AnalogClockWdgt extends Widget
 
   hoursHandAngle: 0

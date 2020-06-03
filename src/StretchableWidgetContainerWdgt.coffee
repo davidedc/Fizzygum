@@ -1,5 +1,3 @@
-# REQUIRES StretchablePanelWdgt
-
 # We need this because we need a panel that keeps its content
 # all in the same relative positions and sizes when its
 # resized, so you can drag and drop it inside stacks

@@ -3,9 +3,6 @@
 # It's a good idea to use me whenever it's clear that there is a  
 # "container"/"contained" scenario going on.
 
-# REQUIRES RectangularAppearance
-# TODO unclear whether this actually requires RectangularAppearance
-
 class PanelWdgt extends Widget
 
   @augmentWith ClippingAtRectangularBoundsMixin, @name

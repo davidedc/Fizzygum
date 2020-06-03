@@ -1,5 +1,3 @@
-# REQUIRES WindowContentsPlaceholderText
-
 class FolderWindowWdgt extends WindowWdgt
 
 

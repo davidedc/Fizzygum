@@ -1,9 +1,5 @@
 # //////////////////////////////////////////////////////////
 
-# these comments below needed to figure out dependencies between classes
-# REQUIRES globalFunctions
-
-
 DeepCopierMixin =
   # class properties here:
   # none

@@ -1,3 +1,5 @@
+# REQUIRES Color
+
 class SwitchButtonMorph extends Widget
 
   buttons: nil

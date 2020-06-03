@@ -1,7 +1,5 @@
 # Like StringFieldMorph, but it uses the StringMorph2
 
-# REQUIRES StringMorph2
-
 class StringFieldWdgt2 extends PanelWdgt
 
   defaultContents: nil

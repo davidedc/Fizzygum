@@ -2,12 +2,11 @@
 # note that this should all be done with actual layouts but this
 # will do for the moment.
 
-# this comment below is needed to figure out dependencies between classes
-# REQUIRES globalFunctions
-#
 # to test this:
 # create a canvas. then:
 # new UpperRightTriangleIconicButton(world.children[0])
+
+# REQUIRES Color
 
 class UpperRightTriangleIconicButton extends UpperRightTriangle
 

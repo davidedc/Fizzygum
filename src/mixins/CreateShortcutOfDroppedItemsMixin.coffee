@@ -1,6 +1,3 @@
-# REQUIRES globalFunctions
-
-
 CreateShortcutOfDroppedItemsMixin =
   # class properties here:
   # none

@@ -6,9 +6,6 @@
 # more wide than tall. Simplified that code because it doesn't
 # look like a common need.
 
-# this comment below is needed to figure out dependencies between classes
-# REQUIRES globalFunctions
-
 class SliderMorph extends CircleBoxMorph
 
   @augmentWith ControllerMixin

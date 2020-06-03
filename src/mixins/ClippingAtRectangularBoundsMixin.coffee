@@ -1,5 +1,3 @@
-# REQUIRES globalFunctions
-
 ClippingAtRectangularBoundsMixin =
   # class properties here:
   # none

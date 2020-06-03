@@ -1,5 +1,6 @@
 # A StringMorph is a single line of text. It can only be left-aligned.
-# REQUIRES WorldMorph
+
+# REQUIRES Color
 
 class StringMorph extends Widget
 

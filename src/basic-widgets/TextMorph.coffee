@@ -1,7 +1,4 @@
-# these comments below needed to figure out dependencies between classes
-
 # I am a multi-line, word-wrapping String
-
 
 class TextMorph extends StringMorph
 

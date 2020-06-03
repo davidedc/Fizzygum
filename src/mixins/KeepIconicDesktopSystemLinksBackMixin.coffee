@@ -1,6 +1,3 @@
-# REQUIRES globalFunctions
-
-
 # keeps folders and shortcuts and scripts in
 # the background in respect to other windows
 # and widgets

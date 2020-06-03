@@ -1,6 +1,3 @@
-# this comment below is needed to figure out dependencies between classes
-# REQUIRES globalFunctions
-
 class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
 
   constructor: (@isTextLineWrapping = true) ->

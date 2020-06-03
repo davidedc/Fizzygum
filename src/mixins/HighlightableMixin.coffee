@@ -1,9 +1,7 @@
 # changes the color of a morph based on whether pointer is
 # hovering over or pressing on it
 
-# these comments below needed to figure out dependencies between classes
-# REQUIRES globalFunctions
-
+# REQUIRES Color
 
 HighlightableMixin =
   # class properties here:

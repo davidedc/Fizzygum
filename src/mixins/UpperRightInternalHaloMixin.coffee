@@ -1,6 +1,3 @@
-# these comments below needed to figure out dependencies between classes
-# REQUIRES globalFunctions
-
 UpperRightInternalHaloMixin =
   # class properties here:
   # none

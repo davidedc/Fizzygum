@@ -10,11 +10,8 @@
 # (but note that there are other ways to hide a Widget).
 
 # this comment below is needed to figure out dependencies between classes
-# REQUIRES globalFunctions
 # REQUIRES LayoutSpec
-# REQUIRES PreferredSize
-# REQUIRES VerticalStackLayoutSpec
-# REQUIRES WindowContentLayoutSpec
+# REQUIRES Color
 
 class Widget extends TreeNode
 

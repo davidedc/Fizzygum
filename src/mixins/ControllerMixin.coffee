@@ -1,8 +1,5 @@
 # //////////////////////////////////////////////////////////
 
-# these comments below needed to figure out dependencies between classes
-# REQUIRES globalFunctions
-
 # some morphs (for example ColorPaletteMorph
 # or SliderMorph) can control a target
 # and they have the same function to attach

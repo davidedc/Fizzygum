@@ -3,9 +3,6 @@
 # Contains all possible preferences and settings for a World.
 # So it's World-wide values.
 # It belongs to a world, each world may have different settings.
-# this comment below is needed to figure out dependencies between classes
-
-# REQUIRES globalFunctions
 
 class PreferencesAndSettings
 

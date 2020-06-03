@@ -11,14 +11,12 @@
 # use a TextMorph instead.
 # It's like StringMorph BUT it fits any given size, so to
 # behave well in layouts.
-#
-# REQUIRES WorldMorph
+
 # REQUIRES AlignmentSpecHorizontal
 # REQUIRES AlignmentSpecVertical
-# REQUIRES LRUCache
 # REQUIRES FittingSpecTextInSmallerBounds
 # REQUIRES FittingSpecTextInLargerBounds
-# REQUIRES TextEditingState
+# REQUIRES Color
 
 class StringMorph2 extends Widget
 

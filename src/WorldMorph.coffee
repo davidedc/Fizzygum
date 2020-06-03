@@ -1,12 +1,3 @@
-# these comments below needed to figure out dependencies between classes
-# REQUIRES globalFunctions
-# REQUIRES PreferencesAndSettings
-# REQUIRES Color
-# REQUIRES ProfilingDataCollector
-# REQUIRES SystemTestsControlPanelUpdater
-
-# REQUIRES DesktopAppearance
-
 # The WorldMorph takes over the canvas on the page
 class WorldMorph extends PanelWdgt
 

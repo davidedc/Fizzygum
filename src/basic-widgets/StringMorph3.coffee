@@ -12,16 +12,15 @@
 # use a TextMorph instead.
 # It's like StringMorph BUT it fits any given size, so to
 # behave well in layouts.
-#
-# REQUIRES WorldMorph
+
 # REQUIRES AlignmentSpecHorizontal
 # REQUIRES AlignmentSpecVertical
-# REQUIRES LRUCache
 # REQUIRES FittingSpecText
 # REQUIRES FittingSpecTextBoxFittingTextTightOrLoose
 # REQUIRES FittingSpecTextBoxFittingTextWhichDimensionAdjusts
 # REQUIRES FittingSpecTextInSmallerBounds
 # REQUIRES FittingSpecTextInLargerBounds
+# REQUIRES Color
 
 class StringMorph3 extends Widget
 

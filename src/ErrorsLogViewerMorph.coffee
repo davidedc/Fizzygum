@@ -1,7 +1,3 @@
-# REQUIRES SimplePlainTextScrollPanelWdgt
-# REQUIRES SimpleButtonMorph
-# REQUIRES ToggleButtonMorph
-
 # to make this error log viewer come up, edit any code
 # in the inspector so to get a compilation error
 # (e.g. unmatched parens) and click "save"

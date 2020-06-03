@@ -1,6 +1,3 @@
-# this comment below is needed to figure out dependencies between classes
-# REQUIRES globalFunctions
-
 # TODO the SimplePlainTextPanelWdgt can't quite stand on its own,
 # it's really meant to be inside a ScrollPanel.
 #

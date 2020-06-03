@@ -1,6 +1,3 @@
-# REQUIRES globalFunctions
-
-
 GridPositioningOfAddedShortcutsMixin =
   # class properties here:
   # none

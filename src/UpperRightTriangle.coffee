@@ -1,8 +1,4 @@
-# this comment below is needed to figure out dependencies between classes
-
-# REQUIRES globalFunctions
 class UpperRightTriangle extends Widget
-
 
   @augmentWith UpperRightInternalHaloMixin, @name
 

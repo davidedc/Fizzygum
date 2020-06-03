@@ -1,6 +1,3 @@
-# REQUIRES globalFunctions
-
-
 WidgetCreatorAndSmartPlacerOnClickMixin =
   # class properties here:
   # none

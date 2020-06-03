@@ -1,5 +1,3 @@
-# REQUIRES Point
-
 class BrushIconAppearance extends IconAppearance
 
   paintFunction: (context) ->

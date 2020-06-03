@@ -1,5 +1,3 @@
-# REQUIRES globalFunctions
-
 class ModifiedTextTriangleAnnotationWdgt extends Widget
 
   @augmentWith UpperRightInternalHaloMixin, @name

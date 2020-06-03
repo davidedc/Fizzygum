@@ -709,6 +709,12 @@ generateInclusionOrder = ->
     while i < lines.length
       #console.log lines[i]
 
+      # TODO for robustness, you should add things in array without duplicates,
+      # in fact, you can use a Set
+
+      # everything depends on globalFunctions, let's get that out of the way
+      dependencies[eachFile].push "globalFunctions"
+
       matches = lines[i].match EXTENDS
       if matches?
         #console.log matches

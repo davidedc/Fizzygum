@@ -1,12 +1,16 @@
 # this file is excluded from the fizzygum homepage build
 # REQUIRES numbertimes
-# 
-# 
+# REQUIRES LCLCodeCompiler
+
 # "container"/"contained" scenario going on.
 
 class FridgeMagnetsCanvasMorph extends CanvasMorph
 
   primitiveTypes: {}
+  # TODO this type of construction in the fields is bad for
+  # dependency checks, because this contructor might in turn
+  # depend on a number of other definitions. Better to initialise
+  # things in the constructor
   lclCodeCompiler: new LCLCodeCompiler
 
   createRefreshOrGetBackBuffer: ->

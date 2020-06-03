@@ -4,9 +4,6 @@
 #      THIS MIXIN IS TEMPORARY. JUST STARTED IT.
 # //////////////////////////////////////////////////////////
 
-# these comments below needed to figure out dependencies between classes
-# REQUIRES globalFunctions
-
 #   1) a container has potentially a background and
 #   2) some padding
 #   3) it resizes itself so to *at least contain* all the morphs attached to it (i.e. it could be bigger).

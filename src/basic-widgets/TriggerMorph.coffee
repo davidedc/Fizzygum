@@ -10,6 +10,8 @@
 # dataSourceMorphForTarget, target and action
 # are used - see comments.
 
+# REQUIRES Color
+
 class TriggerMorph extends Widget
 
   target: nil

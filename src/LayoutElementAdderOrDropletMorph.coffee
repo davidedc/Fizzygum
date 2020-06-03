@@ -1,9 +1,5 @@
 # this file is excluded from the fizzygum homepage build
 
-# this comment below is needed to figure out dependencies between classes
-# REQUIRES LayoutSpec
-
-
 class LayoutElementAdderOrDropletMorph extends Widget
   _acceptsDrops: true
 

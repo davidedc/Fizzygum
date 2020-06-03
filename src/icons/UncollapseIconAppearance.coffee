@@ -1,5 +1,3 @@
-# REQUIRES Point
-
 class UncollapseIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
