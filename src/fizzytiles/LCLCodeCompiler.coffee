@@ -11,8 +11,6 @@
 ## makes it available to the LCLProgramRunner.
 ##
 
-# REQUIRES LCLCodePreprocessor
-
 class LCLCodeCompiler
   currentCodeString: nil
   codePreprocessor: nil

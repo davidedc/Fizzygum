@@ -11,7 +11,7 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
   # dependency checks, because this contructor might in turn
   # depend on a number of other definitions. Better to initialise
   # things in the constructor
-  lclCodeCompiler: new LCLCodeCompiler
+  lclCodeCompiler: nil
 
   createRefreshOrGetBackBuffer: ->
     [@backBuffer, @backBufferContext] = super
@@ -32,6 +32,7 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
   constructor: ->
     super
 
+    @lclCodeCompiler = new LCLCodeCompiler
     @fps = 0
     world.steppingWdgts.add @
 
