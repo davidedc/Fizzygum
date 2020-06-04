@@ -111,6 +111,7 @@ echo "... done compiling boot file"
 
 echo "minifying boot file..."
 terser --compress --mangle --output ../Fizzygum-builds/latest/js/fizzygum-boot-min.js -- ../Fizzygum-builds/latest/js/fizzygum-boot.js
+#cp ../Fizzygum-builds/latest/js/fizzygum-boot.js ../Fizzygum-builds/latest/js/fizzygum-boot-min.js
 echo "... done minifying boot file"
 
 if [ "$?" != "0" ]; then
