@@ -600,9 +600,9 @@ boot = ->
 # and collecting the nodes in reverse "coming back" from
 # the leafs.
 visit = (dependencies, theClass, inclusion_order) ->
-  if dependencies[theClass]?
-    for key in dependencies[theClass]
-      if key in inclusion_order
+  if dependencies.has theClass
+    for key from dependencies.get theClass
+      if inclusion_order.has key
         # this needed thing is already in the dependency
         # list (and hence also all the things that needs
         # are in turn already in the list so we can move on
@@ -610,25 +610,21 @@ visit = (dependencies, theClass, inclusion_order) ->
         continue
       visit dependencies, key, inclusion_order
   # if theClass == "Widget" then debugger
-  # if this thing was already visited or required by something
-  # else then there is no need to add it again in the
-  # inclusions
-  if theClass not in inclusion_order
-    inclusion_order.push theClass
+  inclusion_order.add theClass
 
 # we still need to go through the classes in the
 # correct order. We do that by looking at the sources
 # and some hints in the sources.
-# "dependencies" here is a dictionary
+# "dependencies" here is a Map
 generate_inclusion_order = (dependencies) ->
-  """
-  Returns a list of the coffee files. The list is ordered in such a way  that
-  the dependencies between the files are respected.
-  """
-  inclusion_order = []
+  # Returns a list of the coffee files. The list is ordered in such a way  that
+  # the dependencies between the files are respected.
+
+  # note that "Set" preserves the insertion order
+  inclusion_order = new Set
 
 
-  for key of dependencies
+  for key from dependencies.keys()
     #value = dependencies[key]
     #console.log value
     # recursively find out what this needed thing needs
@@ -685,7 +681,7 @@ waitNextTurn = ->
 generateInclusionOrder = ->
   # find out the dependencies looking at each class'
   # source code and hints in it.
-  dependencies = []
+  dependencies = new Map
   REQUIRES = ///\sREQUIRES\s*(\w+)///
   EXTENDS = ///\sextends\s*(\w+)///
   DEPENDS = ///\s\w+:\s*new\s*(\w+)///
@@ -702,44 +698,43 @@ generateInclusionOrder = ->
     if eachFile == "Class" then continue
     if eachFile == "Mixin" then continue
     if srcLoadCompileDebugWrites then console.log eachFile + " - "
-    dependencies[eachFile] = []
+    dependenciesSet = new Set
 
     lines = window[eachFile + "_coffeSource"].split '\n'
     i = 0
     while i < lines.length
       #console.log lines[i]
 
-      # TODO for robustness, you should add things in array without duplicates,
-      # in fact, you can use a Set
-
       # everything depends on globalFunctions, let's get that out of the way
-      dependencies[eachFile].push "globalFunctions"
+      dependenciesSet.add "globalFunctions"
 
       matches = lines[i].match EXTENDS
       if matches?
         #console.log matches
-        dependencies[eachFile].push matches[1]
+        dependenciesSet.add matches[1]
         if srcLoadCompileDebugWrites then console.log eachFile + " extends " + matches[1]
 
       matches = lines[i].match REQUIRES
       if matches?
         #console.log matches
-        dependencies[eachFile].push matches[1]
+        dependenciesSet.add matches[1]
         if srcLoadCompileDebugWrites then console.log eachFile + " requires " + matches[1]
 
       matches = lines[i].match REQUIRES_MIXIN
       if matches?
         #console.log matches
-        dependencies[eachFile].push matches[1]
+        dependenciesSet.add matches[1]
         if srcLoadCompileDebugWrites then console.log eachFile + " requires the mixin" + matches[1]
 
       matches = lines[i].match DEPENDS
       if matches?
         #console.log matches
-        dependencies[eachFile].push matches[1]
+        dependenciesSet.add matches[1]
         if srcLoadCompileDebugWrites then console.log eachFile + " has class init in instance variable " + matches[1]
 
       i++
+    dependencies.set eachFile, dependenciesSet
+
   inclusion_order = generate_inclusion_order dependencies
 
 loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
@@ -772,7 +767,7 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
 
   # chain two steps for each file, one to compile the file
   # and one to wait for the next turn
-  for eachFile in inclusion_order
+  for eachFile from inclusion_order
     if eachFile == "Class" or eachFile == "Mixin" or eachFile == "globalFunctions"
       continue
     compileEachFileFunction = createCompileSourceFunction eachFile, justLoadSources
