@@ -1,6 +1,4 @@
 # this file is excluded from the fizzygum homepage build
-# REQUIRES numbertimes
-# REQUIRES LCLCodeCompiler
 
 # "container"/"contained" scenario going on.
 

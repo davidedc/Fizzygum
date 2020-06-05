@@ -1,5 +1,3 @@
-# REQUIRES Color
-
 class ReconfigurablePaintWdgt extends StretchableEditableWdgt
 
   mainCanvas: nil

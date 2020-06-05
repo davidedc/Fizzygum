@@ -1,8 +1,6 @@
 # changes the color of a morph based on whether pointer is
 # hovering over or pressing on it
 
-# REQUIRES Color
-
 HighlightableMixin =
   # class properties here:
   # none

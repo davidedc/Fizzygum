@@ -1,5 +1,3 @@
-# REQUIRES Color
-
 class ChangeFontButtonWdgt extends IconMorph
 
   @augmentWith HighlightableMixin, @name

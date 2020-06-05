@@ -6,8 +6,6 @@
 # create a canvas. then:
 # new UpperRightTriangleIconicButton(world.children[0])
 
-# REQUIRES Color
-
 class UpperRightTriangleIconicButton extends UpperRightTriangle
 
   @augmentWith HighlightableMixin, @name

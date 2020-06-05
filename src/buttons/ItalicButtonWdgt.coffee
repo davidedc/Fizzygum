@@ -1,5 +1,3 @@
-# REQUIRES Color
-
 class ItalicButtonWdgt extends Widget
 
   @augmentWith HighlightableMixin, @name

@@ -1,5 +1,3 @@
-# REQUIRES Color
-
 class CreatorButtonWdgt extends Widget
 
   @augmentWith HighlightableMixin, @name

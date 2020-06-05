@@ -14,8 +14,6 @@
 # separate Fizzypaint instances that have different lifes and can be
 # shown both at the same time on the screen.
 
-# REQUIRES Color
-
 class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
 
   @augmentWith HighlightableMixin, @name

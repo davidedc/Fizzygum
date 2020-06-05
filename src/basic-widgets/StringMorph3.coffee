@@ -13,15 +13,6 @@
 # It's like StringMorph BUT it fits any given size, so to
 # behave well in layouts.
 
-# REQUIRES AlignmentSpecHorizontal
-# REQUIRES AlignmentSpecVertical
-# REQUIRES FittingSpecText
-# REQUIRES FittingSpecTextBoxFittingTextTightOrLoose
-# REQUIRES FittingSpecTextBoxFittingTextWhichDimensionAdjusts
-# REQUIRES FittingSpecTextInSmallerBounds
-# REQUIRES FittingSpecTextInLargerBounds
-# REQUIRES Color
-
 class StringMorph3 extends Widget
 
   @augmentWith BackBufferMixin

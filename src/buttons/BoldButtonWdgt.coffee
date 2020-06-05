@@ -1,5 +1,3 @@
-# REQUIRES Color
-
 class BoldButtonWdgt extends Widget
 
   @augmentWith HighlightableMixin, @name

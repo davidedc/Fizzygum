@@ -1,7 +1,5 @@
 # this file is excluded from the fizzygum homepage build
 
-# REQUIRES PinType
-
 class Pin
 
   @augmentWith DeepCopierMixin

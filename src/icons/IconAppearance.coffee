@@ -1,5 +1,3 @@
-# REQUIRES Point
-
 class IconAppearance extends Appearance
 
   # preferredSize and specificationSize should be

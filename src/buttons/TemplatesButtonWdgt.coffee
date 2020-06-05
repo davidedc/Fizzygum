@@ -1,5 +1,3 @@
-# REQUIRES Color
-
 class TemplatesButtonWdgt extends IconMorph
 
   @augmentWith HighlightableMixin, @name

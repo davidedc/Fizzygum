@@ -667,6 +667,9 @@ waitNextTurn = ->
         , 1
     return prms
 
+goodMatch = (theMatch, currentClass) ->
+  theMatch? and theMatch[1] != currentClass and theMatch[1] not in ["Set", "Array", "Map"]
+
 # 1) if class A extends class B, then B needs to be before class A. This
 #    dependency can be figured out automatically (although at the moment in
 #    a sort of naive way) by looking at the source code.
@@ -682,12 +685,18 @@ generateInclusionOrder = ->
   # find out the dependencies looking at each class'
   # source code and hints in it.
   dependencies = new Map
+
+  # currently REQUIRES is unused, it should be a debug or temporary option
+  # as we should really pick up all the dependencies automatically from
+  # the source code
   REQUIRES = ///\sREQUIRES\s*(\w+)///
+
   EXTENDS = ///\sextends\s*(\w+)///
-  DEPENDS = ///\s\w+:\s*new\s*(\w+)///
   IS_CLASS = ///\s*class\s+(\w+)///
   REQUIRES_MIXIN = ///\s*@augmentWith\s+(\w+)/// 
   TRIPLE_QUOTES = ///'''///
+  CONSTRUCTION_IN_CLASS_DECLARATION = ///^\s\s@?[a-zA-Z_$][0-9a-zA-Z_$]*\s*:\s*new\s*([a-zA-Z_$][0-9a-zA-Z_$]*)///
+  CLASS_USE_IN_CLASS_DECLARATION = ///^\s\s@?[a-zA-Z_$][0-9a-zA-Z_$]*\s*:\s*([A-Z][0-9a-zA-Z_$]*)///
 
   allSources = Object.keys(window).filter (i) ->
     i.endsWith "_coffeSource"
@@ -709,28 +718,34 @@ generateInclusionOrder = ->
       dependenciesSet.add "globalFunctions"
 
       matches = lines[i].match EXTENDS
-      if matches?
+      if goodMatch matches, eachFile
         #console.log matches
         dependenciesSet.add matches[1]
         if srcLoadCompileDebugWrites then console.log eachFile + " extends " + matches[1]
 
       matches = lines[i].match REQUIRES
-      if matches?
+      if goodMatch matches, eachFile
         #console.log matches
         dependenciesSet.add matches[1]
         if srcLoadCompileDebugWrites then console.log eachFile + " requires " + matches[1]
 
       matches = lines[i].match REQUIRES_MIXIN
-      if matches?
+      if goodMatch matches, eachFile
         #console.log matches
         dependenciesSet.add matches[1]
         if srcLoadCompileDebugWrites then console.log eachFile + " requires the mixin" + matches[1]
 
-      matches = lines[i].match DEPENDS
-      if matches?
+      matches = lines[i].match CONSTRUCTION_IN_CLASS_DECLARATION
+      if goodMatch matches, eachFile
         #console.log matches
         dependenciesSet.add matches[1]
-        if srcLoadCompileDebugWrites then console.log eachFile + " has class init in instance variable " + matches[1]
+        if srcLoadCompileDebugWrites then console.log eachFile + " has construction in class declaration " + matches[1]
+
+      matches = lines[i].match CLASS_USE_IN_CLASS_DECLARATION
+      if goodMatch matches, eachFile
+        #console.log matches
+        dependenciesSet.add matches[1]
+        if srcLoadCompileDebugWrites then console.log eachFile + " has class use in class declaration " + matches[1]
 
       i++
     dependencies.set eachFile, dependenciesSet

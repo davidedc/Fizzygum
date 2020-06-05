@@ -9,10 +9,6 @@
 # if a Widget has no owner it never gets drawn
 # (but note that there are other ways to hide a Widget).
 
-# this comment below is needed to figure out dependencies between classes
-# REQUIRES LayoutSpec
-# REQUIRES Color
-
 class Widget extends TreeNode
 
   @augmentWith DeepCopierMixin

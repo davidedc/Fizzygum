@@ -1,5 +1,3 @@
-# REQUIRES Color
-
 class IncreaseFontSizeButtonWdgt extends IconMorph
 
   @augmentWith HighlightableMixin, @name

@@ -1,5 +1,3 @@
-# REQUIRES Color
-
 class AlignCenterButtonWdgt extends Widget
 
   @augmentWith HighlightableMixin, @name

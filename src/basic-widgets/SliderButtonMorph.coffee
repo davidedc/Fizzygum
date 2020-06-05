@@ -2,8 +2,6 @@
 # Sliders (and hence this button)
 # are also used in the ScrollPanelWdgts.
 
-# REQUIRES Color
-
 class SliderButtonMorph extends CircleBoxMorph
 
   # careful: Objects are shared with all the instances of this class.
