@@ -2033,14 +2033,12 @@ class Widget extends TreeNode
     @createReference referenceName, placeToDropItIn
     @close()
 
-  # »>> this part is excluded from the fizzygum homepage build
   # Widget full image:
   # Fixes https://github.com/jmoenig/morphic.js/issues/7
   # and https://github.com/davidedc/Fizzygum/issues/160
   #
   # if you want to forceShadow that noShadow must be
   # sent as false
-  # unused code
   fullImage: (bounds, noShadow = false, forceShadow = false) ->
 
     shadowHadBeenReplacedOrAdded = false
@@ -2086,6 +2084,7 @@ class Widget extends TreeNode
 
     img
 
+  # »>> this part is excluded from the fizzygum homepage build
   # unused code
   fullImageNoShadow: ->
     boundsWithNoShadow = @fullBounds()
