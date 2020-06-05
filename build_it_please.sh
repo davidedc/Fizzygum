@@ -98,8 +98,10 @@ cat src/boot/array-extensions.coffee >> ../Fizzygum-builds/latest/delete_me/fizz
 printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
 cat src/boot/object-extensions.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
 
-printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
-cat src/boot/numbertimes.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+if [ "$1" != "--homepage" ]; then
+  printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+  cat src/boot/numbertimes.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+fi
 
 printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
 cat src/boot/logging-div.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
