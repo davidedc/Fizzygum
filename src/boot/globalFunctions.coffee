@@ -338,6 +338,40 @@ loadJSFile = (fileName, dontLogToDiv) ->
         reject(script)
 
 
+# useful function to pace "then" steps,
+# we use it in two modes:
+#
+# 1. in "pre-compiled" mode we load all the
+# sources and we pace those loads triggering
+# the "waits" on animationFrames, so that
+# we don't create too much gitter as the
+# world is going.
+# We achieve this by storing the "resolve"
+# method in an array that we check in
+# doOneCycle. So when there is a frame running
+# we see if we can resolve one such "gate" so
+# that the next source can be loaded.
+#
+# 2. In non-precompiled mode we don't care about
+# the gitter because there is no running world
+# (because we still have to build it from the
+# sources we are loading now),
+# so we can just wait each compilation step on
+# a timer.
+waitNextTurn = ->
+  () ->
+    if window.preCompiled
+      prms = new Promise (resolve, reject) ->
+        window.srcLoadsSteps.push resolve
+    else
+      # see https://gist.github.com/joepie91/2664c85a744e6bd0629c
+      prms = new Promise (resolve, reject) ->
+        setTimeout () ->
+          resolve arguments
+        , 1
+    return prms
+
+
 loadJSFilesWithCoffeescriptSources = ->
   # start of the promise.
   # It will "trigger" the chain immediately, however each element
@@ -587,170 +621,6 @@ boot = ->
         if startupActions?
           world.nextStartupAction()
 
-  
-
-
-# The whole idea here is that
-#    a needs b,c,d
-#    b needs c
-# forms a tree. (a root with b,c,d as children,
-# and b's node has C as child)
-# You basically find out the correct inclusion order
-# by just doing a depth-first visit of that tree
-# and collecting the nodes in reverse "coming back" from
-# the leafs.
-visit = (dependencies, theClass, inclusion_order) ->
-  if dependencies.has theClass
-    for key from dependencies.get theClass
-      if inclusion_order.has key
-        # this needed thing is already in the dependency
-        # list (and hence also all the things that needs
-        # are in turn already in the list so we can move on
-        # to the next needed thing)
-        continue
-      visit dependencies, key, inclusion_order
-  # if theClass == "Widget" then debugger
-  inclusion_order.add theClass
-
-# we still need to go through the classes in the
-# correct order. We do that by looking at the sources
-# and some hints in the sources.
-# "dependencies" here is a Map
-generate_inclusion_order = (dependencies) ->
-  # Returns a list of the coffee files. The list is ordered in such a way  that
-  # the dependencies between the files are respected.
-
-  # note that "Set" preserves the insertion order
-  inclusion_order = new Set
-
-
-  for key from dependencies.keys()
-    #value = dependencies[key]
-    #console.log value
-    # recursively find out what this needed thing needs
-    # and add those to the dependency list
-    visit dependencies, key, inclusion_order
-  if srcLoadCompileDebugWrites then console.log "inclusion_order: " + inclusion_order
-  return inclusion_order
-
-
-# useful function to pace "then" steps,
-# we use it in two modes:
-#
-# 1. in "pre-compiled" mode we load all the
-# sources and we pace those loads triggering
-# the "waits" on animationFrames, so that
-# we don't create too much gitter as the
-# world is going.
-# We achieve this by storing the "resolve"
-# method in an array that we check in
-# doOneCycle. So when there is a frame running
-# we see if we can resolve one such "gate" so
-# that the next source can be loaded.
-#
-# 2. In non-precompiled mode we don't care about
-# the gitter because there is no running world
-# (because we still have to build it from the
-# sources we are loading now),
-# so we can just wait each compilation step on
-# a timer.
-waitNextTurn = ->
-  () ->
-    if window.preCompiled
-      prms = new Promise (resolve, reject) ->
-        window.srcLoadsSteps.push resolve
-    else
-      # see https://gist.github.com/joepie91/2664c85a744e6bd0629c
-      prms = new Promise (resolve, reject) ->
-        setTimeout () ->
-          resolve arguments
-        , 1
-    return prms
-
-goodMatch = (theMatch, currentClass) ->
-  theMatch? and theMatch[1] != currentClass and theMatch[1] not in ["Set", "Array", "Map"]
-
-# 1) if class A extends class B, then B needs to be before class A. This
-#    dependency can be figured out automatically (although at the moment in
-#    a sort of naive way) by looking at the source code.
-# 
-# 2) no objects of a class can be instantiated before the definition of the
-#    class. This dependency can be figured out automatically (although at the
-#    moment in a sort of naive way) by looking at the source code.
-# 
-# 3) some classes use global functions or global variables. These dependencies
-#    must be manually specified by creating a specially formatted comment.
-
-generateInclusionOrder = ->
-  # find out the dependencies looking at each class'
-  # source code and hints in it.
-  dependencies = new Map
-
-  # currently REQUIRES is unused, it should be a debug or temporary option
-  # as we should really pick up all the dependencies automatically from
-  # the source code
-  REQUIRES = ///\sREQUIRES\s*(\w+)///
-
-  EXTENDS = ///\sextends\s*(\w+)///
-  IS_CLASS = ///\s*class\s+(\w+)///
-  REQUIRES_MIXIN = ///\s*@augmentWith\s+(\w+)/// 
-  TRIPLE_QUOTES = ///'''///
-  CONSTRUCTION_IN_CLASS_DECLARATION = ///^\s\s@?[a-zA-Z_$][0-9a-zA-Z_$]*\s*:\s*new\s*([a-zA-Z_$][0-9a-zA-Z_$]*)///
-  CLASS_USE_IN_CLASS_DECLARATION = ///^\s\s@?[a-zA-Z_$][0-9a-zA-Z_$]*\s*:\s*([A-Z][0-9a-zA-Z_$]*)///
-
-  allSources = Object.keys(window).filter (i) ->
-    i.endsWith "_coffeSource"
-
-  for eachFile in allSources
-
-    eachFile = eachFile.replace "_coffeSource",""
-    if eachFile == "Class" then continue
-    if eachFile == "Mixin" then continue
-    if srcLoadCompileDebugWrites then console.log eachFile + " - "
-    dependenciesSet = new Set
-
-    lines = window[eachFile + "_coffeSource"].split '\n'
-    i = 0
-    while i < lines.length
-      #console.log lines[i]
-
-      # everything depends on globalFunctions, let's get that out of the way
-      dependenciesSet.add "globalFunctions"
-
-      matches = lines[i].match EXTENDS
-      if goodMatch matches, eachFile
-        #console.log matches
-        dependenciesSet.add matches[1]
-        if srcLoadCompileDebugWrites then console.log eachFile + " extends " + matches[1]
-
-      matches = lines[i].match REQUIRES
-      if goodMatch matches, eachFile
-        #console.log matches
-        dependenciesSet.add matches[1]
-        if srcLoadCompileDebugWrites then console.log eachFile + " requires " + matches[1]
-
-      matches = lines[i].match REQUIRES_MIXIN
-      if goodMatch matches, eachFile
-        #console.log matches
-        dependenciesSet.add matches[1]
-        if srcLoadCompileDebugWrites then console.log eachFile + " requires the mixin" + matches[1]
-
-      matches = lines[i].match CONSTRUCTION_IN_CLASS_DECLARATION
-      if goodMatch matches, eachFile
-        #console.log matches
-        dependenciesSet.add matches[1]
-        if srcLoadCompileDebugWrites then console.log eachFile + " has construction in class declaration " + matches[1]
-
-      matches = lines[i].match CLASS_USE_IN_CLASS_DECLARATION
-      if goodMatch matches, eachFile
-        #console.log matches
-        dependenciesSet.add matches[1]
-        if srcLoadCompileDebugWrites then console.log eachFile + " has class use in class declaration " + matches[1]
-
-      i++
-    dependencies.set eachFile, dependenciesSet
-
-  inclusion_order = generate_inclusion_order dependencies
 
 loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
 
@@ -758,7 +628,7 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
 
 
   if srcLoadCompileDebugWrites then console.log "--------------------------------"
-  inclusion_order = generateInclusionOrder()
+  loadOrder = findLoadOrder()
 
 
   # We remove these Coffeescript helper functions from
@@ -782,7 +652,7 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
 
   # chain two steps for each file, one to compile the file
   # and one to wait for the next turn
-  for eachFile from inclusion_order
+  for eachFile from loadOrder
     if eachFile == "Class" or eachFile == "Mixin" or eachFile == "globalFunctions"
       continue
     compileEachFileFunction = createCompileSourceFunction eachFile, justLoadSources
