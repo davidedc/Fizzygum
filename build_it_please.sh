@@ -6,7 +6,8 @@
 #   ./build_it_please
 #     leaves in tests and experimental parts of the code
 
-
+BUILD_PATH=../Fizzygum-builds/latest
+SCRATCH_PATH=$BUILD_PATH/delete_me
 
 if [ ! -d ../../Fizzygum-all ]; then
   echo
@@ -35,35 +36,35 @@ fi
 echo coffeescript version -------------
 coffee --version
 
-if [ ! -d ../Fizzygum-builds/latest ]; then
-  mkdir ../Fizzygum-builds/latest
+if [ ! -d $BUILD_PATH ]; then
+  mkdir $BUILD_PATH
 fi
 
 # cleanup the contents of the build directory
-rm -rf ../Fizzygum-builds/latest/*
+rm -rf $BUILD_PATH/*
 
-if [ ! -d ../Fizzygum-builds/latest/js ]; then
-  mkdir ../Fizzygum-builds/latest/js
+if [ ! -d $BUILD_PATH/js ]; then
+  mkdir $BUILD_PATH/js
 fi
 
-if [ ! -d ../Fizzygum-builds/latest/icons ]; then
-  mkdir ../Fizzygum-builds/latest/icons
+if [ ! -d $BUILD_PATH/icons ]; then
+  mkdir $BUILD_PATH/icons
 fi
 
-if [ ! -d ../Fizzygum-builds/latest/js/libs ]; then
-  mkdir ../Fizzygum-builds/latest/js/libs
+if [ ! -d $BUILD_PATH/js/libs ]; then
+  mkdir $BUILD_PATH/js/libs
 fi
 
-if [ ! -d ../Fizzygum-builds/latest/js/sourceCode ]; then
-  mkdir ../Fizzygum-builds/latest/js/sourceCode
+if [ ! -d $BUILD_PATH/js/sourceCode ]; then
+  mkdir $BUILD_PATH/js/sourceCode
 fi
 
-if [ ! -d ../Fizzygum-builds/latest/delete_me ]; then
-  mkdir ../Fizzygum-builds/latest/delete_me
+if [ ! -d $SCRATCH_PATH ]; then
+  mkdir $SCRATCH_PATH
 fi
 
 # make space for the test files
-mkdir ../Fizzygum-builds/latest/js/tests/
+mkdir $BUILD_PATH/js/tests/
 
 
 # generate the Fizzygum coffee file in the delete_me directory
@@ -75,45 +76,48 @@ mkdir ../Fizzygum-builds/latest/js/tests/
 # legacy code and test-supporting code is left out.
 python ./buildSystem/build.py $1
 
-touch ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+touch $SCRATCH_PATH/fizzygum-boot.coffee
 
 if [ "$1" == "--notests" ] || [ "$1" == "--homepage" ]; then
-  printf "BUILDFLAG_LOAD_TESTS = false\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+  printf "BUILDFLAG_LOAD_TESTS = false\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 else
-  printf "BUILDFLAG_LOAD_TESTS = true\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+  printf "BUILDFLAG_LOAD_TESTS = true\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 fi
 
 
 # turn the coffeescript file into js in the js directory
 echo "compiling boot file..."
 
-cat ../Fizzygum-builds/latest/delete_me/numberOfSourceBatches.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+cat $SCRATCH_PATH/numberOfSourceBatches.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
-printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
-cat src/boot/globalFunctions.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat src/boot/globalFunctions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
-printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
-cat src/boot/array-extensions.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat src/boot/array-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
-printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
-cat src/boot/object-extensions.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat src/boot/object-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 if [ "$1" != "--homepage" ]; then
-  printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
-  cat src/boot/numbertimes.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+  printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+  cat src/boot/numbertimes.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 fi
 
-printf "\n" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
-cat src/boot/logging-div.coffee >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat src/boot/logging-div.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
-printf "\nmorphicVersion = 'version of $(date)'" >> ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee
+printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat src/boot/dependencies-finding.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
-coffee -b -c -o ../Fizzygum-builds/latest/js/ ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee 
+printf "\nmorphicVersion = 'version of $(date)'" >> $SCRATCH_PATH/fizzygum-boot.coffee
+
+coffee -b -c -o $BUILD_PATH/js/ $SCRATCH_PATH/fizzygum-boot.coffee 
 echo "... done compiling boot file"
 
 echo "minifying boot file..."
-terser --compress --mangle --output ../Fizzygum-builds/latest/js/fizzygum-boot-min.js -- ../Fizzygum-builds/latest/js/fizzygum-boot.js
-#cp ../Fizzygum-builds/latest/js/fizzygum-boot.js ../Fizzygum-builds/latest/js/fizzygum-boot-min.js
+terser --compress --mangle --output $BUILD_PATH/js/fizzygum-boot-min.js -- $BUILD_PATH/js/fizzygum-boot.js
+#cp $BUILD_PATH/js/fizzygum-boot.js $BUILD_PATH/js/fizzygum-boot-min.js
 echo "... done minifying boot file"
 
 if [ "$?" != "0" ]; then
@@ -123,29 +127,29 @@ if [ "$?" != "0" ]; then
 fi
 
 # copy the html files
-cp src/index.html ../Fizzygum-builds/latest/
+cp src/index.html $BUILD_PATH/
 
 # copy the interesting js files from the submodules
-cp auxiliary\ files/FileSaver/FileSaver.min.js ../Fizzygum-builds/latest/js/libs/
-cp auxiliary\ files/JSZip/jszip.min.js ../Fizzygum-builds/latest/js/libs/
+cp auxiliary\ files/FileSaver/FileSaver.min.js $BUILD_PATH/js/libs/
+cp auxiliary\ files/JSZip/jszip.min.js $BUILD_PATH/js/libs/
 
-cp auxiliary\ files/CoffeeScript/coffee-script_2.0.3.js ../Fizzygum-builds/latest/js/libs/
+cp auxiliary\ files/CoffeeScript/coffee-script_2.0.3.js $BUILD_PATH/js/libs/
 
 if [ "$1" != "--notests" ] && [ "$1" != "--homepage" ]; then
-  coffee -b -c -o ../Fizzygum-builds/latest/js/libs auxiliary\ files/Mousetrap/Mousetrap.coffee 
+  coffee -b -c -o $BUILD_PATH/js/libs auxiliary\ files/Mousetrap/Mousetrap.coffee 
   echo "minifying..."
-  terser --compress --mangle --output ../Fizzygum-builds/latest/js/libs/Mousetrap.min.js -- ../Fizzygum-builds/latest/js/libs/Mousetrap.js
+  terser --compress --mangle --output $BUILD_PATH/js/libs/Mousetrap.min.js -- $BUILD_PATH/js/libs/Mousetrap.js
   echo "... done minifying"
 fi
 
 echo "copying pre-compiled file"
-cp auxiliary\ files/pre-compiled.js ../Fizzygum-builds/latest/js/pre-compiled.js
+cp auxiliary\ files/pre-compiled.js $BUILD_PATH/js/pre-compiled.js
 echo "... done"
 
 # copy aux icon files
 echo "copying icon files..."
-cp auxiliary\ files/additional-icons/*.png ../Fizzygum-builds/latest/icons/
-cp auxiliary\ files/additional-icons/spinner.svg ../Fizzygum-builds/latest/icons/
+cp auxiliary\ files/additional-icons/*.png $BUILD_PATH/icons/
+cp auxiliary\ files/additional-icons/spinner.svg $BUILD_PATH/icons/
 echo "... done copying icon files"
 
 
@@ -153,9 +157,9 @@ if [ "$1" != "--notests" ] && [ "$1" != "--homepage" ]; then
   # the tests files are copied from a directory
   # where they are organised in a clean structure
   # so we copy them with their structure first...
-  mkdir ../Fizzygum-builds/latest/js/tests/assets
+  mkdir $BUILD_PATH/js/tests/assets
   echo "copying all tests (this could take a minute)..."
-  cp -r ../Fizzygum-tests/tests/* ../Fizzygum-builds/latest/js/tests/assets &
+  cp -r ../Fizzygum-tests/tests/* $BUILD_PATH/js/tests/assets &
 
   # ------  spinning wheel  -------
   pid=$! # Process Id of the previous running command
@@ -166,7 +170,7 @@ if [ "$1" != "--notests" ] && [ "$1" != "--homepage" ]; then
   while kill -0 $pid 2>/dev/null
   do
     i=$(( (i+1) %4 ))
-    CURRENT_NUMBER_OF_FILES=$(ls -afq ../Fizzygum-builds/latest/js/tests/assets | wc -l)
+    CURRENT_NUMBER_OF_FILES=$(ls -afq $BUILD_PATH/js/tests/assets | wc -l)
     printf "\r${spin:$i:1} %s / %s" $CURRENT_NUMBER_OF_FILES $TOTAL_NUMBER_OF_FILES
     sleep 1
   done
@@ -183,7 +187,7 @@ if [ "$1" != "--notests" ] && [ "$1" != "--homepage" ]; then
   # directory
   echo "moving all tests body into the same directory..."
   # we don't seem to need the escaping in Windows Subsystem for Linux, while in OSX we needed \{\}
-  find ../Fizzygum-builds/latest/js/tests -iname '*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js' -exec mv {} ../Fizzygum-builds/latest/js/tests \;
+  find $BUILD_PATH/js/tests -iname '*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js' -exec mv {} $BUILD_PATH/js/tests \;
   echo "...done"
 
   # also all the assets are lumped-in into another directory
@@ -192,39 +196,40 @@ if [ "$1" != "--notests" ] && [ "$1" != "--homepage" ]; then
   # Windows.
   echo "moving all tests assets into the same directory..."
   # we don't seem to need the escaping in Windows Subsystem for Linux, while in OSX we needed \{\}
-  find ../Fizzygum-builds/latest/js/tests/assets -iname 'SystemTest_*.js' -exec mv {} ../Fizzygum-builds/latest/js/tests/assets \;
+  find $BUILD_PATH/js/tests/assets -iname 'SystemTest_*.js' -exec mv {} $BUILD_PATH/js/tests/assets \;
   echo "...done"
 fi
 
 
 echo "cleanup unneeded files"
-rm -rdf ../Fizzygum-builds/latest/delete_me
+rm -rdf $SCRATCH_PATH
 echo "...done"
 
 if [ "$1" == "--homepage" ]; then
-  rm ../Fizzygum-builds/latest/worldWithSystemTestHarness.html
-  rm ../Fizzygum-builds/latest/icons/doubleClickLeft.png
-  rm ../Fizzygum-builds/latest/icons/middleButtonPressed.png
-  rm ../Fizzygum-builds/latest/icons/scrollUp.png
-  rm ../Fizzygum-builds/latest/icons/doubleClickRight.png
-  rm ../Fizzygum-builds/latest/icons/rightButtonPressed.png
-  rm ../Fizzygum-builds/latest/icons/xPointerImage.png
-  rm ../Fizzygum-builds/latest/icons/leftButtonPressed.png
-  rm ../Fizzygum-builds/latest/icons/scrollDown.png
-  rm ../Fizzygum-builds/latest/js/fizzygum-boot.js
+  rm $BUILD_PATH/worldWithSystemTestHarness.html
+  rm $BUILD_PATH/icons/doubleClickLeft.png
+  rm $BUILD_PATH/icons/middleButtonPressed.png
+  rm $BUILD_PATH/icons/scrollUp.png
+  rm $BUILD_PATH/icons/doubleClickRight.png
+  rm $BUILD_PATH/icons/rightButtonPressed.png
+  rm $BUILD_PATH/icons/xPointerImage.png
+  rm $BUILD_PATH/icons/leftButtonPressed.png
+  rm $BUILD_PATH/icons/scrollDown.png
+  rm $BUILD_PATH/js/fizzygum-boot.js
   
-  ls -d -1 ../Fizzygum-builds/latest/js/sourceCode/* | grep -v /sources_batch | grep -v /Mixin_coffeSource | grep -v /Class_coffeSource | xargs rm -f
+  ls -d -1 $BUILD_PATH/js/sourceCode/* | grep -v /sources_batch | grep -v /Mixin_coffeSource | grep -v /Class_coffeSource | xargs rm -f
   
   echo "generating the pre-compiled file via the browser. this might take a few seconds..."
   . ./buildSystem/generate-pre-compiled-file-via-browser.sh
 
-  rm -rdf ../Fizzygum-builds/latest/js/tests
-  rm ../Fizzygum-builds/latest/js/libs/FileSaver.min.js
-  rm ../Fizzygum-builds/latest/js/libs/jszip.min.js
-  terser --compress --mangle --output ../Fizzygum-builds/latest/js/pre-compiled-min.js -- ../Fizzygum-builds/latest/js/pre-compiled.js
-  mv ../Fizzygum-builds/latest/js/pre-compiled.js ../Fizzygum-builds/latest/js/pre-compiled-max.js
-  mv ../Fizzygum-builds/latest/js/pre-compiled-min.js ../Fizzygum-builds/latest/js/pre-compiled.js
+  rm -rdf $BUILD_PATH/js/tests
+  rm $BUILD_PATH/js/libs/FileSaver.min.js
+  rm $BUILD_PATH/js/libs/jszip.min.js
+  terser --compress --mangle --output $BUILD_PATH/js/pre-compiled-min.js -- $BUILD_PATH/js/pre-compiled.js
+  mv $BUILD_PATH/js/pre-compiled.js $BUILD_PATH/js/pre-compiled-max.js
+  mv $BUILD_PATH/js/pre-compiled-min.js $BUILD_PATH/js/pre-compiled.js
 fi
 
-say build done
+# for OSX: say build done
+tput bel
 echo done!!!!!!!!!!!!

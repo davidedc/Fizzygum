@@ -14,5 +14,5 @@ if [[ "$HAYSTACK" == *"$NEEDLE"* ]]; then
    eval "rm $DOWNLOADS_DIRECTORY/pre-compiled*.zip"
    eval $TO_RUN
    sleep 12
-   unzip -o -d ../Fizzygum-builds/latest/js/ $DOWNLOADS_DIRECTORY/pre-compiled.zip
+   unzip -o -d $BUILD_PATH/js/ $DOWNLOADS_DIRECTORY/pre-compiled.zip
 fi
