@@ -26,5 +26,8 @@
   "bugs": {
     "url": "https://github.com/davidedc/Fizzygum/issues"
   },
-  "homepage": "https://github.com/davidedc/Fizzygum#readme"
+  "homepage": "https://github.com/davidedc/Fizzygum#readme",
+  "devDependencies": {
+    "coffeescript": "^2.5.1"
+  }
 }
