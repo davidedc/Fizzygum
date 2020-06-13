@@ -11,7 +11,7 @@ class Class
 
   # adds code into the constructor, such that when a
   # Widget is created, it registers itself as in instance
-  # on the Class it belongs to AND TO ALL THE SUPERKLASSES
+  # on the Class it belongs to AND TO ALL THE SUPERCLASSES
   # The way it's added to all the superclasses is via
   # the constructor always calling "super", so constructors
   # up the chain cause the object to register itself
