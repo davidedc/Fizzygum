@@ -1,9 +1,3 @@
-# Extending Array's prototype if 'filter' doesn't exist
-# already
-unless Array::filter
-  Array::filter = (callback) ->
-    element for element in this when callback element
-
 Array::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
   haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf @
   if haveIBeenCopiedAlready >= 0

@@ -229,14 +229,6 @@ noOperation = ->
 isFunction = (functionToCheck) ->
   typeof(functionToCheck) is "function"
 
-sizeOf = (object) ->
-  # answer the number of own properties
-  size = 0
-  key = undefined
-  for key of object
-    size += 1  if Object::hasOwnProperty.call object, key
-  size
-
 isString = (target) ->
   typeof target is "string" or target instanceof String
 
