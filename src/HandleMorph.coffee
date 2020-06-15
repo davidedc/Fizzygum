@@ -140,7 +140,7 @@ class HandleMorph extends Widget
 
     aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
 
-    aContext.scale ceilPixelRatio, ceilPixelRatio
+    aContext.usePhysicalPixelsUntilRestore()
     morphPosition = @position()
     aContext.translate morphPosition.x, morphPosition.y
 

@@ -589,7 +589,7 @@ class StringMorph3 extends Widget
 
     backBufferContext = backBuffer.getContext "2d"
 
-    backBufferContext.scale ceilPixelRatio, ceilPixelRatio
+    backBufferContext.usePhysicalPixelsUntilRestore()
     backBufferContext.font = @buildCanvasFontProperty()
     backBufferContext.textAlign = "left"
     backBufferContext.textBaseline = "bottom"
@@ -599,7 +599,7 @@ class StringMorph3 extends Widget
     # paintRectangle here is passed logical pixels
     # rather than actual pixels, contrary to how it's used
     # most other places. This is because it's inside
-    # the scope of the "scale ceilPixelRatio, ceilPixelRatio".
+    # the scope of the "usePhysicalPixelsUntilRestore()".
     if @backgroundColor
       backBufferContext.save()
       backBufferContext.fillStyle = @backgroundColor.toString()

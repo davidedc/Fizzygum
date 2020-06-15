@@ -26,7 +26,7 @@ class DesktopAppearance extends RectangularAppearance
       @pattern.width = 5 * ceilPixelRatio
       @pattern.height = 5 * ceilPixelRatio
       pctx = @pattern.getContext('2d')
-      pctx.scale ceilPixelRatio, ceilPixelRatio
+      pctx.usePhysicalPixelsUntilRestore()
 
       switch @morph.patternName
         when @morph.pattern2

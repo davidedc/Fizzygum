@@ -65,7 +65,7 @@ class CircleBoxyAppearance extends Appearance
 
     aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
 
-    aContext.scale ceilPixelRatio, ceilPixelRatio
+    aContext.usePhysicalPixelsUntilRestore()
     morphPosition = @morph.position()
     aContext.translate morphPosition.x, morphPosition.y
 

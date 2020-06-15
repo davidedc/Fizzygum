@@ -39,7 +39,7 @@ class ExampleFunctionPlotWdgt extends GraphsPlotsChartsWdgt
     # rather than logical pixels, this is why
     # it's called before the scaling.
     @paintRectangle aContext, al, at, w, h, @backgroundColor
-    aContext.scale ceilPixelRatio, ceilPixelRatio
+    aContext.usePhysicalPixelsUntilRestore()
 
     morphPosition = @position()
     aContext.translate morphPosition.x, morphPosition.y

@@ -65,7 +65,7 @@ class StretchableCanvasWdgt extends CanvasMorph
     
     # we leave the context with the correct pixel scaling.
     # ALWAYS leave the context with the correct pixel scaling.
-    @backBufferContext.scale ceilPixelRatio, ceilPixelRatio
+    @backBufferContext.usePhysicalPixelsUntilRestore()
     return [@backBuffer, @backBufferContext]
 
 
@@ -86,7 +86,7 @@ class StretchableCanvasWdgt extends CanvasMorph
 
     # we leave the context with the correct scaling.
     # ALWAYS leave the context with the correct pixel scaling.
-    @behindTheScenesBackBufferContext.scale ceilPixelRatio, ceilPixelRatio
+    @behindTheScenesBackBufferContext.usePhysicalPixelsUntilRestore()
 
   createNewFrontFacingBuffer: (extent) ->
     @backBuffer = newCanvas extent.scaleBy ceilPixelRatio
@@ -95,7 +95,7 @@ class StretchableCanvasWdgt extends CanvasMorph
 
     # we leave the context with the correct scaling.
     # ALWAYS leave the context with the correct pixel scaling.
-    @backBufferContext.scale ceilPixelRatio, ceilPixelRatio
+    @backBufferContext.usePhysicalPixelsUntilRestore()
 
 
   rawSetExtent: (extent) ->
@@ -121,7 +121,7 @@ class StretchableCanvasWdgt extends CanvasMorph
       @anythingPaintedYet = true
 
     @behindTheScenesBackBufferContext.setTransform 1, 0, 0, 1, 0, 0
-    @behindTheScenesBackBufferContext.scale ceilPixelRatio, ceilPixelRatio
+    @behindTheScenesBackBufferContext.usePhysicalPixelsUntilRestore()
 
     @behindTheScenesBackBufferContext.scale @extentWhenCanvasGotDirty.x/@width(), @extentWhenCanvasGotDirty.y/@height()
 
@@ -163,7 +163,7 @@ class StretchableCanvasWdgt extends CanvasMorph
     # TODO: you could use a save() / restore() here to avoid
     # the anti-scaling followed by re-scaling introducing any artifacts
     # due to rounding errors
-    @behindTheScenesBackBufferContext.scale ceilPixelRatio, ceilPixelRatio
+    @behindTheScenesBackBufferContext.usePhysicalPixelsUntilRestore()
 
   reactToDropOf: (droppedWidget) ->
     @paintImage droppedWidget.position(), droppedWidget.fullImage(nil, false, true)

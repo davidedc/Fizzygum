@@ -82,7 +82,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
             context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
-            context.scale ceilPixelRatio, ceilPixelRatio
+            context.usePhysicalPixelsUntilRestore()
 
             # give it a little bit of a tint so
             # you can see the canvas when you take it
@@ -132,7 +132,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
             context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
-            context.scale ceilPixelRatio, ceilPixelRatio
+            context.usePhysicalPixelsUntilRestore()
 
             context.translate -@bounds.origin.x, -@bounds.origin.y
             context.translate pos.x, pos.y
@@ -327,7 +327,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
             context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
-            context.scale ceilPixelRatio, ceilPixelRatio
+            context.usePhysicalPixelsUntilRestore()
 
             context.translate -@bounds.origin.x, -@bounds.origin.y
             context.translate pos.x, pos.y
@@ -386,7 +386,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
             context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
-            context.scale ceilPixelRatio, ceilPixelRatio
+            context.usePhysicalPixelsUntilRestore()
 
             context.translate -@bounds.origin.x, -@bounds.origin.y
             context.translate pos.x, pos.y

@@ -99,6 +99,9 @@ cat src/boot/array-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/object-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
+printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat src/boot/CanvasRenderingContext2D-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+
 if [ "$1" != "--homepage" ]; then
   printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
   cat src/boot/numbertimes.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
