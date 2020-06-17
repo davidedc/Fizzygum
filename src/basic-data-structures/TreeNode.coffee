@@ -65,7 +65,7 @@ class TreeNode
   # »>> this part is excluded from the fizzygum homepage build
   # currently unused
   childrenTopToBottom: ->
-    arrayShallowCopyAndReverse @children
+    @children.shallowCopy().reverse()
   # this part is excluded from the fizzygum homepage build <<«
   
   # TreeNode accessing:
@@ -244,7 +244,7 @@ class TreeNode
   # this part is excluded from the fizzygum homepage build <<«
 
   # the easiest way here would be to just return
-  #   arrayShallowCopyAndReverse(@allChildrenBottomToTop())
+  #   @allChildrenBottomToTop().shallowCopy().reverse()
   # but that's slower.
   # So we do the proper visit here instead.
   allChildrenTopToBottomSuchThat: (predicate) ->
@@ -391,7 +391,7 @@ class TreeNode
   # currently unused
   siblings: ->
     return []  unless @parent
-    siblings = arrayShallowCopy @parent.children
+    siblings = @parent.children.shallowCopy()
     # now remove myself
     siblings.remove @
     return siblings

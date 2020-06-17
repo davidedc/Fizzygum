@@ -194,14 +194,6 @@ getParameterByName = (name) ->
   else
     return nil
 
-
-
-arrayShallowCopy = (anArray) ->
-  anArray.concat()
-
-arrayShallowCopyAndReverse = (anArray) ->
-  anArray.concat().reverse()
-
 # This is used a) for testing, we hash the
 # data URL of a canvas object so to get a fingerprint
 # of the image data, and compare it with "OK" pre-recorded

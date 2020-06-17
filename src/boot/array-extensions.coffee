@@ -1,3 +1,6 @@
+Array::shallowCopy = ->
+  @concat()
+
 Array::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
   haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf @
   if haveIBeenCopiedAlready >= 0
