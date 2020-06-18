@@ -94,24 +94,24 @@ class CalculatingPatchNodeWdgt extends Widget
      !@setInput4IsConnected
       return
 
-    okToFire = true
+    allConnectedInputsAreFresh = true
     if @setInput1IsConnected
       if @input1connectionsCalculationToken != tokenToCheckIfEqual
-        okToFire = false
+        allConnectedInputsAreFresh = false
     if @setInput2IsConnected
       if @input2connectionsCalculationToken != tokenToCheckIfEqual
-        okToFire = false
+        allConnectedInputsAreFresh = false
     if @setInput3IsConnected
       if @input3connectionsCalculationToken != tokenToCheckIfEqual
-        okToFire = false
+        allConnectedInputsAreFresh = false
     if @setInput4IsConnected
       if @input4connectionsCalculationToken != tokenToCheckIfEqual
-        okToFire = false
+        allConnectedInputsAreFresh = false
 
     # if we are firing via bang then we use
     # the existing output value, we don't
     # recalculate a new one
-    if okToFire and !directFireViaBang
+    if allConnectedInputsAreFresh and !directFireViaBang
       # note that we calculate an output value
       # even if this node has no target. This
       # is because the node might be visualising the
@@ -122,7 +122,7 @@ class CalculatingPatchNodeWdgt extends Widget
     # are firing via bang, then at this point we
     # are going to update the target with the output
     # value.
-    if okToFire or directFireViaBang      
+    if allConnectedInputsAreFresh or directFireViaBang      
       @fireOutputToTarget tokenToCheckIfEqual
 
     return    

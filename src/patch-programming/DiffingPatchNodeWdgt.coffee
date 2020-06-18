@@ -81,25 +81,30 @@ class DiffingPatchNodeWdgt extends Widget
       menu = new MenuMorph @, false, @, true, true, "no target properties available"
     menu.popUpAtHand()
 
-  updateTarget: (tokenToCheckIfEqual, directFireViaBang, fireViaHotInput) ->
+  updateTarget: (tokenToCheckIfEqual, directFireViaBang, fireBecauseOneHotInputHasBeenUpdated) ->
     if !@setInput1IsConnected and
      !@setInput2IsConnected and
      !@setInput1HotIsConnected and
      !@setInput2HotIsConnected
       return
 
-    okToFire = true
+    # if BOTH inputs are fresh, then we are allConnectedInputsAreFresh, i.e. we'll fire for sure
+    allConnectedInputsAreFresh = true
     if @setInput1IsConnected
       if @input1connectionsCalculationToken != tokenToCheckIfEqual
-        okToFire = false
+        allConnectedInputsAreFresh = false
     if @setInput2IsConnected
       if @input2connectionsCalculationToken != tokenToCheckIfEqual
-        okToFire = false
+        allConnectedInputsAreFresh = false
 
     # if we are firing via bang then we use
     # the existing output value, we don't
     # recalculate a new one
-    if (okToFire or fireViaHotInput) and !directFireViaBang
+    #
+    # otherwise (we are not firing via bang)
+    # if both inputs are fresh OR only one of them is but it's a HOT input, then
+    # we have to recalculate the diff
+    if (allConnectedInputsAreFresh or fireBecauseOneHotInputHasBeenUpdated) and !directFireViaBang
       # note that we calculate an output value
       # even if this node has no target. This
       # is because the node might be visualising the
@@ -110,7 +115,7 @@ class DiffingPatchNodeWdgt extends Widget
     # are firing via bang, then at this point we
     # are going to update the target with the output
     # value.
-    if okToFire or fireViaHotInput or directFireViaBang      
+    if allConnectedInputsAreFresh or fireBecauseOneHotInputHasBeenUpdated or directFireViaBang      
       @fireOutputToTarget tokenToCheckIfEqual
 
     return    
