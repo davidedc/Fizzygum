@@ -87,7 +87,7 @@ class CalculatingPatchNodeWdgt extends Widget
       menu = new MenuMorph @, false, @, true, true, "no target properties available"
     menu.popUpAtHand()
 
-  updateTarget: (tokenToCheckIfEqual, directFireViaBang) ->
+  updateTarget: (connectionsCalculationToken, fireBecauseBang) ->
     if !@setInput1IsConnected and
      !@setInput2IsConnected and
      !@setInput3IsConnected and
@@ -96,34 +96,34 @@ class CalculatingPatchNodeWdgt extends Widget
 
     allConnectedInputsAreFresh = true
     if @setInput1IsConnected
-      if @input1connectionsCalculationToken != tokenToCheckIfEqual
+      if @input1connectionsCalculationToken != connectionsCalculationToken
         allConnectedInputsAreFresh = false
     if @setInput2IsConnected
-      if @input2connectionsCalculationToken != tokenToCheckIfEqual
+      if @input2connectionsCalculationToken != connectionsCalculationToken
         allConnectedInputsAreFresh = false
     if @setInput3IsConnected
-      if @input3connectionsCalculationToken != tokenToCheckIfEqual
+      if @input3connectionsCalculationToken != connectionsCalculationToken
         allConnectedInputsAreFresh = false
     if @setInput4IsConnected
-      if @input4connectionsCalculationToken != tokenToCheckIfEqual
+      if @input4connectionsCalculationToken != connectionsCalculationToken
         allConnectedInputsAreFresh = false
 
     # if we are firing via bang then we use
     # the existing output value, we don't
     # recalculate a new one
-    if allConnectedInputsAreFresh and !directFireViaBang
+    if allConnectedInputsAreFresh and !fireBecauseBang
       # note that we calculate an output value
       # even if this node has no target. This
       # is because the node might be visualising the
       # output in some other way.
-      @doCalculation()
+      @recalculateOutput()
 
     # if all the connected inputs are fresh OR we
     # are firing via bang, then at this point we
     # are going to update the target with the output
     # value.
-    if allConnectedInputsAreFresh or directFireViaBang      
-      @fireOutputToTarget tokenToCheckIfEqual
+    if allConnectedInputsAreFresh or fireBecauseBang      
+      @fireOutputToTarget connectionsCalculationToken
 
     return    
 
@@ -144,7 +144,7 @@ class CalculatingPatchNodeWdgt extends Widget
     # but we might be starting a new chain of calculations
     @fireOutputToTarget getRandomInt -20000, 20000
 
-  doCalculation: ->
+  recalculateOutput: ->
     if @textMorph.text != ""
       @evaluateString "@functionFromCompiledCode = " + @textMorph.text
       # now we have the user-defined function in @functionFromCompiledCode

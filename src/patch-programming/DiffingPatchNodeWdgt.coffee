@@ -14,7 +14,7 @@ class DiffingPatchNodeWdgt extends Widget
   input2: nil
 
   # we need to keep track of which inputs are
-  # connected becayse we wait for those to be
+  # connected because we wait for those to be
   # all updated before the node fires
   setInput1IsConnected: false
   setInput2IsConnected: false
@@ -57,6 +57,8 @@ class DiffingPatchNodeWdgt extends Widget
     @input1 = newvalue
     @updateTarget @input2connectionsCalculationToken
 
+  # TODO note that only the first hot input will cause the widget to fire
+  # in this cycle - so the order of arrivals might matter.
   setInput1Hot: (newvalue, ignored, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
     @input1 = newvalue
@@ -81,20 +83,25 @@ class DiffingPatchNodeWdgt extends Widget
       menu = new MenuMorph @, false, @, true, true, "no target properties available"
     menu.popUpAtHand()
 
-  updateTarget: (tokenToCheckIfEqual, directFireViaBang, fireBecauseOneHotInputHasBeenUpdated) ->
+  updateTarget: (connectionsCalculationToken, fireBecauseBang, fireBecauseOneHotInputHasBeenUpdated) ->
+    # if there is no input connected, then bail
+    # TODO we could be more lenient, one could enter the node value in a box in the widget for example
+    # and we might issue a bang, so we'd expect the output to be pushed to the target
     if !@setInput1IsConnected and
      !@setInput2IsConnected and
      !@setInput1HotIsConnected and
      !@setInput2HotIsConnected
       return
 
-    # if BOTH inputs are fresh, then we are allConnectedInputsAreFresh, i.e. we'll fire for sure
+    # if all connected inputs are updated in the very same connectors update cycle,
+    # (althought of course they would get updated one at a time)
+    # then allConnectedInputsAreFresh is true, and we'll fire for sure
     allConnectedInputsAreFresh = true
     if @setInput1IsConnected
-      if @input1connectionsCalculationToken != tokenToCheckIfEqual
+      if @input1connectionsCalculationToken != connectionsCalculationToken
         allConnectedInputsAreFresh = false
     if @setInput2IsConnected
-      if @input2connectionsCalculationToken != tokenToCheckIfEqual
+      if @input2connectionsCalculationToken != connectionsCalculationToken
         allConnectedInputsAreFresh = false
 
     # if we are firing via bang then we use
@@ -104,19 +111,22 @@ class DiffingPatchNodeWdgt extends Widget
     # otherwise (we are not firing via bang)
     # if both inputs are fresh OR only one of them is but it's a HOT input, then
     # we have to recalculate the diff
-    if (allConnectedInputsAreFresh or fireBecauseOneHotInputHasBeenUpdated) and !directFireViaBang
+    if (allConnectedInputsAreFresh or fireBecauseOneHotInputHasBeenUpdated) and !fireBecauseBang
       # note that we calculate an output value
       # even if this node has no target. This
       # is because the node might be visualising the
       # output in some other way.
-      @doCalculation()
+      @recalculateOutput()
 
-    # if all the connected inputs are fresh OR we
-    # are firing via bang, then at this point we
-    # are going to update the target with the output
-    # value.
-    if allConnectedInputsAreFresh or fireBecauseOneHotInputHasBeenUpdated or directFireViaBang      
-      @fireOutputToTarget tokenToCheckIfEqual
+    # if
+    #   * all the connected inputs are fresh OR
+    #   * we are firing via bang OR
+    #   * one hot input has been updated
+    if allConnectedInputsAreFresh or fireBecauseOneHotInputHasBeenUpdated or fireBecauseBang      
+      # AND if the widget still has to fire
+      if connectionPropagationToken != @connectionPropagationToken
+        # THEN we update the target with the output value
+        @fireOutputToTarget connectionsCalculationToken
 
     return    
 
@@ -137,7 +147,7 @@ class DiffingPatchNodeWdgt extends Widget
     # but we might be starting a new chain of calculations
     @fireOutputToTarget getRandomInt -20000, 20000
 
-  doCalculation: ->
+  recalculateOutput: ->
     @output = @formattedDiff @input1, @input2
     @textMorph.setText @output
 
