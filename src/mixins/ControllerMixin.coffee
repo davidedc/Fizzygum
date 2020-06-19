@@ -31,6 +31,6 @@ ControllerMixin =
         @action = each
         if @target[@action + "IsConnected"]?
           @target[@action + "IsConnected"] = true
-        @connectionsCalculationToken = getRandomInt -20000, 20000
+        @connectionsCalculationToken = world.makeNewConnectionsCalculationToken()
         @reactToTargetConnection?()
 

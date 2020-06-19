@@ -31,10 +31,10 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
 
   # to keep track of whether each input is
   # up-to-date or not
-  input1connectionsCalculationToken: 314
-  input2connectionsCalculationToken: 314
-  input3connectionsCalculationToken: 314
-  input4connectionsCalculationToken: 314
+  input1connectionsCalculationToken: 0
+  input2connectionsCalculationToken: 0
+  input3connectionsCalculationToken: 0
+  input4connectionsCalculationToken: 0
 
   # the external padding is the space between the edges
   # of the container and all of its internals. The reason
@@ -56,28 +56,28 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     "Regex subst. patch node"
 
   setInput1: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @input1connectionsCalculationToken then return else if !connectionsCalculationToken? then @input1connectionsCalculationToken = getRandomInt -20000, 20000 else @input1connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @input1connectionsCalculationToken then return else if !connectionsCalculationToken? then @input1connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @input1connectionsCalculationToken = connectionsCalculationToken
     @input1 = newvalue
     @updateTarget @input1connectionsCalculationToken
 
   setInput2: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @input2connectionsCalculationToken then return else if !connectionsCalculationToken? then @input2connectionsCalculationToken = getRandomInt -20000, 20000 else @input2connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @input2connectionsCalculationToken then return else if !connectionsCalculationToken? then @input2connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @input2connectionsCalculationToken = connectionsCalculationToken
     @input2 = newvalue
     @updateTarget @input2connectionsCalculationToken
 
   setInput3: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @input3connectionsCalculationToken then return else if !connectionsCalculationToken? then @input3connectionsCalculationToken = getRandomInt -20000, 20000 else @input3connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @input3connectionsCalculationToken then return else if !connectionsCalculationToken? then @input3connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @input3connectionsCalculationToken = connectionsCalculationToken
     @input3 = newvalue
     @updateTarget @input3connectionsCalculationToken
 
   setInput4: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @input4connectionsCalculationToken then return else if !connectionsCalculationToken? then @input4connectionsCalculationToken = getRandomInt -20000, 20000 else @input4connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @input4connectionsCalculationToken then return else if !connectionsCalculationToken? then @input4connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @input4connectionsCalculationToken = connectionsCalculationToken
     @input4 = newvalue
     @updateTarget @input4connectionsCalculationToken
 
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     @updateTarget @connectionsCalculationToken, true
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
@@ -144,7 +144,7 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     # we generate a new calculation token, that's OK because
     # we are definitely not in the middle of the calculation here
     # but we might be starting a new chain of calculations
-    @fireOutputToTarget getRandomInt -20000, 20000
+    @fireOutputToTarget world.makeNewConnectionsCalculationToken()
 
   recalculateOutput: ->
     if @textMorph.text != ""

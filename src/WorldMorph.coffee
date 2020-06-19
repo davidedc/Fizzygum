@@ -233,6 +233,8 @@ class WorldMorph extends PanelWdgt
   howManyUntitledShortcuts: 0
   howManyUntitledFoldersShortcuts: 0
 
+  lastUsedConnectionsCalculationToken: 0
+
   isIndexPage: nil
 
   # »>> this part is excluded from the fizzygum homepage build
@@ -375,8 +377,15 @@ class WorldMorph extends PanelWdgt
   wantsDropOf: (aWdgt) ->
     return @_acceptsDrops
 
-  createErrorConsole: ->
+  makeNewConnectionsCalculationToken: ->
+    # not nice to read but this means:
+    # first increment and then return the value
+    # this is so the first token we use is 1
+    # and we can initialise all input/node tokens to 0
+    # so to make them receptive to the first token generated
+    ++@lastUsedConnectionsCalculationToken
 
+  createErrorConsole: ->
     errorsLogViewerMorph = new ErrorsLogViewerMorph "Errors", @, "modifyCodeToBeInjected", ""
     wm = new WindowWdgt nil, nil, errorsLogViewerMorph
     wm.setExtent new Point 460, 400

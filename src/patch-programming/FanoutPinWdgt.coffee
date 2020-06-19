@@ -13,7 +13,7 @@ class FanoutPinWdgt extends Widget
     @appearance = new FanoutPinAppearance @
 
   setInput: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     @inputValue = newvalue
     @updateTarget()
 
@@ -38,7 +38,7 @@ class FanoutPinWdgt extends Widget
 
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     @updateTarget()
 
 

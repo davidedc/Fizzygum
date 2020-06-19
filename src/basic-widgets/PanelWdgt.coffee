@@ -38,7 +38,7 @@ class PanelWdgt extends Widget
     return newFolderWindow
 
   setColor: (aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
 
     aColor = super aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, true
     # keep in synch the value of the container scrollPanel

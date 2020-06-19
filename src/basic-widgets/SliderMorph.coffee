@@ -92,7 +92,7 @@ class SliderMorph extends CircleBoxMorph
       return (@width() - @button.width()) / @rangeSize()
 
   setValue: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     @value = Number(newvalue)
     @updateTarget()
     @reLayout()
@@ -117,7 +117,7 @@ class SliderMorph extends CircleBoxMorph
 
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     @updateTarget()
 
   

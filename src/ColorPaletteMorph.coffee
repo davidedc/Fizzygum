@@ -54,12 +54,12 @@ class ColorPaletteMorph extends Widget
   
   nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
     @choice = @getPixelColor pos.add (deltaDragFromPreviousCall or new Point 0, 0)
-    @connectionsCalculationToken = getRandomInt -20000, 20000
+    @connectionsCalculationToken = world.makeNewConnectionsCalculationToken()
     @updateTarget()
   
   mouseDownLeft: (pos) ->
     @choice = @getPixelColor pos
-    @connectionsCalculationToken = getRandomInt -20000, 20000
+    @connectionsCalculationToken = world.makeNewConnectionsCalculationToken()
     @updateTarget()
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
@@ -84,7 +84,7 @@ class ColorPaletteMorph extends Widget
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
     if !@choice? then return
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     @updateTarget()
   
   updateTarget: ->

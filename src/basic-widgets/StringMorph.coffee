@@ -48,7 +48,7 @@ class StringMorph extends Widget
     @noticesTransparentClick = true
 
   setText: (theTextContent, stringFieldMorph, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     if stringFieldMorph?
       theTextContent = stringFieldMorph.text.text
     theTextContent = theTextContent + ""

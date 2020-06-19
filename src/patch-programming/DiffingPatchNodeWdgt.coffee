@@ -23,8 +23,8 @@ class DiffingPatchNodeWdgt extends Widget
 
   # to keep track of whether each input is
   # up-to-date or not
-  input1connectionsCalculationToken: 314
-  input2connectionsCalculationToken: 314
+  input1connectionsCalculationToken: 0
+  input2connectionsCalculationToken: 0
 
   # the external padding is the space between the edges
   # of the container and all of its internals. The reason
@@ -48,30 +48,30 @@ class DiffingPatchNodeWdgt extends Widget
     "Diffing patch node"
 
   setInput1: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @input1connectionsCalculationToken then return else if !connectionsCalculationToken? then @input1connectionsCalculationToken = getRandomInt -20000, 20000 else @input1connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @input1connectionsCalculationToken then return else if !connectionsCalculationToken? then @input1connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @input1connectionsCalculationToken = connectionsCalculationToken
     @input1 = newvalue
     @updateTarget @input1connectionsCalculationToken
 
   setInput2: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @input2connectionsCalculationToken then return else if !connectionsCalculationToken? then @input2connectionsCalculationToken = getRandomInt -20000, 20000 else @input2connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @input2connectionsCalculationToken then return else if !connectionsCalculationToken? then @input2connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @input2connectionsCalculationToken = connectionsCalculationToken
     @input1 = newvalue
     @updateTarget @input2connectionsCalculationToken
 
   # TODO note that only the first hot input will cause the widget to fire
   # in this cycle - so the order of arrivals might matter.
   setInput1Hot: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     @input1 = newvalue
     @updateTarget @connectionsCalculationToken, false, true
 
   setInput2Hot: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     @input2 = newvalue
     @updateTarget @connectionsCalculationToken, false, true
 
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     @updateTarget @connectionsCalculationToken, true
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
@@ -145,7 +145,7 @@ class DiffingPatchNodeWdgt extends Widget
     # we generate a new calculation token, that's OK because
     # we are definitely not in the middle of the calculation here
     # but we might be starting a new chain of calculations
-    @fireOutputToTarget getRandomInt -20000, 20000
+    @fireOutputToTarget world.makeNewConnectionsCalculationToken()
 
   recalculateOutput: ->
     @output = @formattedDiff @input1, @input2

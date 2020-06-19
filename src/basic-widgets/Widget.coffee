@@ -267,7 +267,7 @@ class Widget extends TreeNode
   positionFractionalInHoldingPanel: nil
   wasPositionedSlightlyOutsidePanel: false
 
-  connectionsCalculationToken: 314
+  connectionsCalculationToken: 0
 
   initialiseDefaultWindowContentLayoutSpec: ->
     @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.THIS_ONE_I_HAVE_NOW , PreferredSize.THIS_ONE_I_HAVE_NOW, 1
@@ -1618,7 +1618,7 @@ class Widget extends TreeNode
     @bounds = new Rectangle @bounds.origin, new Point @bounds.corner.x, @bounds.origin.y + h
   
   setColor: (aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
 
     if morphGivingColor?.getColor?
       aColor = morphGivingColor.getColor()
@@ -1641,7 +1641,7 @@ class Widget extends TreeNode
     return aColor
   
   setBackgroundColor: (aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
 
     if morphGivingColor?.getColor?
       aColor = morphGivingColor.getColor()
