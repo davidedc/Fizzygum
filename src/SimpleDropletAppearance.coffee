@@ -67,7 +67,7 @@ class SimpleDropletAppearance extends RectangularAppearance
       context.clipToRectangle al,at,w,h
 
     if !alreadyUsingCanvasScaling
-      context.usePhysicalPixelsUntilRestore()
+      context.useLogicalPixelsUntilRestore()
 
     context.beginPath()
     context.moveTo 0.5 + plusSignLeft.x, 0.5 + plusSignLeft.y

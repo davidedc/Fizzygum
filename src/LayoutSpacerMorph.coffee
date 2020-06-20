@@ -51,7 +51,7 @@ class LayoutSpacerMorph extends Widget
     # rather than logical pixels, this is why
     # it's called before the scaling.
     @paintRectangle aContext, al, at, w, h, @color
-    aContext.usePhysicalPixelsUntilRestore()
+    aContext.useLogicalPixelsUntilRestore()
 
 
     morphPosition = @position()

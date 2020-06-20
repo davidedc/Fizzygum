@@ -1742,10 +1742,10 @@ class Widget extends TreeNode
   # paintRectangle can work in two patterns:
   #  * passing actual pixels, when used
   #    outside the effect of the scope of
-  #    "usePhysicalPixelsUntilRestore()", or
+  #    "useLogicalPixelsUntilRestore()", or
   #  * passing logical pixels, when used
   #    inside the effect of the scope of
-  #    "usePhysicalPixelsUntilRestore()", or
+  #    "useLogicalPixelsUntilRestore()", or
   # Mostly, the first pattern is used.
   # Note that the resulting rectangle WILL reflect
   # if it's being painted as a shadow or not,
@@ -2063,7 +2063,7 @@ class Widget extends TreeNode
 
     img = newCanvas bounds.extent().scaleBy ceilPixelRatio
     ctx = img.getContext "2d"
-    # ctx.usePhysicalPixelsUntilRestore()
+    # ctx.useLogicalPixelsUntilRestore()
     # we are going to draw this morph and its children into "img".
     # note that the children are not necessarily geometrically
     # contained in the morph (in which case it would be ok to
@@ -3991,7 +3991,7 @@ class Widget extends TreeNode
     oRect = fb.intersect(otherFb)
     oImg = newCanvas oRect.extent().scaleBy ceilPixelRatio
     ctx = oImg.getContext "2d"
-    ctx.usePhysicalPixelsUntilRestore()
+    ctx.useLogicalPixelsUntilRestore()
     if oRect.width() < 1 or oRect.height() < 1
       return newCanvas (new Point 1, 1).scaleBy ceilPixelRatio
     ctx.drawImage @fullImage(),

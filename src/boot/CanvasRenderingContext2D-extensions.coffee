@@ -1,2 +1,2 @@
-CanvasRenderingContext2D::usePhysicalPixelsUntilRestore = ->
+CanvasRenderingContext2D::useLogicalPixelsUntilRestore = ->
   @scale ceilPixelRatio, ceilPixelRatio

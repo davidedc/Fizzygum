@@ -308,7 +308,7 @@ class WorldMorph extends PanelWdgt
 
     @canvasForTextMeasurements = newCanvas()
     @canvasContextForTextMeasurements = @canvasForTextMeasurements.getContext "2d"
-    @canvasContextForTextMeasurements.usePhysicalPixelsUntilRestore()
+    @canvasContextForTextMeasurements.useLogicalPixelsUntilRestore()
     @canvasContextForTextMeasurements.textAlign = "left"
     @canvasContextForTextMeasurements.textBaseline = "bottom"
 
@@ -775,7 +775,7 @@ class WorldMorph extends PanelWdgt
   showBrokenRects: (aContext) ->
     aContext.save()
     aContext.globalAlpha = 0.5
-    aContext.usePhysicalPixelsUntilRestore()
+    aContext.useLogicalPixelsUntilRestore()
  
     for eachBrokenRect in @broken
       if eachBrokenRect?

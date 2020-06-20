@@ -128,7 +128,7 @@ class StringMorph extends Widget
     backBuffer = newCanvas (new Point width, @height()).scaleBy ceilPixelRatio
     backBufferContext = backBuffer.getContext "2d"
 
-    backBufferContext.usePhysicalPixelsUntilRestore()
+    backBufferContext.useLogicalPixelsUntilRestore()
     backBufferContext.font = @buildCanvasFontProperty()
     backBufferContext.textAlign = "left"
     backBufferContext.textBaseline = "bottom"

@@ -17,10 +17,10 @@ class Appearance
   # paintHighlight can work in two patterns:
   #  * passing actual pixels, when used
   #    outside the effect of the scope of
-  #    "usePhysicalPixelsUntilRestore()", or
+  #    "useLogicalPixelsUntilRestore()", or
   #  * passing logical pixels, when used
   #    inside the effect of the scope of
-  #    "usePhysicalPixelsUntilRestore()", or
+  #    "useLogicalPixelsUntilRestore()", or
   # Mostly, the first pattern is used.
   #
   # useful for example when hovering over references

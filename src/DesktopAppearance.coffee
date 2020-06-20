@@ -25,8 +25,8 @@ class DesktopAppearance extends RectangularAppearance
       @pattern = document.createElement('canvas')
       @pattern.width = 5 * ceilPixelRatio
       @pattern.height = 5 * ceilPixelRatio
-      pctx.usePhysicalPixelsUntilRestore()
       pctx = @pattern.getContext "2d"
+      pctx.useLogicalPixelsUntilRestore()
 
       switch @morph.patternName
         when @morph.pattern2

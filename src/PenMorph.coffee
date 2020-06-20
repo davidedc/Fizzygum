@@ -62,7 +62,7 @@ class PenMorph extends Widget
 
     aContext.globalAlpha = @alpha
 
-    aContext.usePhysicalPixelsUntilRestore()
+    aContext.useLogicalPixelsUntilRestore()
     morphPosition = @position()
     aContext.translate morphPosition.x, morphPosition.y
 

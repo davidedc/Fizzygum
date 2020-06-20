@@ -27,7 +27,7 @@ class UpperRightTriangleAppearance extends Appearance
 
     aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
 
-    aContext.usePhysicalPixelsUntilRestore()
+    aContext.useLogicalPixelsUntilRestore()
     morphPosition = @morph.position()
     aContext.translate morphPosition.x, morphPosition.y
 
