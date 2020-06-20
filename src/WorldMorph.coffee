@@ -960,7 +960,6 @@ class WorldMorph extends PanelWdgt
     # whole screen without the offending widgets
     # widgets).
     @worldCanvasContext.closePath()
-    @worldCanvasContext.resetClip?()
     @worldCanvasContext.resetTransform?()
     for j in [1...2000]
       @worldCanvasContext.restore()
