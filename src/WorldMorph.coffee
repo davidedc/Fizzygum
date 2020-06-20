@@ -957,8 +957,7 @@ class WorldMorph extends PanelWdgt
     # We are doing this for "cleanliness" of the context
     # state, not because we care of the drawing being
     # perfect (we are eventually going to repaint the
-    # whole screen without the offending widgets
-    # widgets).
+    # whole screen without the offending widgets)
     @worldCanvasContext.closePath()
     @worldCanvasContext.resetTransform?()
     for j in [1...2000]
