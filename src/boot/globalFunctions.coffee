@@ -717,18 +717,12 @@ createWorldAndStartStepping = ->
   else
     world = new WorldMorph worldCanvas, true
   world.isDevMode = true
-  # shim layer with setTimeout fallback
-  window.requestAnimFrame = do ->
-    window.requestAnimationFrame or window.webkitRequestAnimationFrame or window.mozRequestAnimationFrame or window.oRequestAnimationFrame or window.msRequestAnimationFrame or (callback) ->
-      window.setTimeout callback, 1000 / 60
-      return
-  # usage: 
-  # instead of setInterval(render, 16) ....
-  (animloop = ->
-    requestAnimFrame animloop
+
+  # ref https://www.google.com/search?q=requestanimationframe
+  animloop = ->
     world.doOneCycle()
-    return
-  )()
+    window.requestAnimationFrame animloop
+  animloop()
 
   # in case we want to set up the page
   # for the System Tests, then add a panel
