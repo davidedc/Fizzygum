@@ -15,7 +15,7 @@ class MenuHeader extends BoxMorph
       "center")
     @text.alignment = "center"
     @text.color = new Color 255, 255, 255
-    @text.backgroundColor = @color.copy()
+    @text.backgroundColor = @color
 
     @add @text
     @rawSetExtent @text.extent().add 2

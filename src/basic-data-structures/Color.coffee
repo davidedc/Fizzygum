@@ -1,3 +1,5 @@
+# IMMUTABLE
+
 class Color
 
   @augmentWith DeepCopierMixin
@@ -155,6 +157,9 @@ class Color
   constructor: (@r = 0, @g = 0, @b = 0, a) ->
     # all values are optional, just (r, g, b) is fine
     @a = a or ((if (a is 0) then 0 else 1))
+
+  bluerBy: (howMuchMoreBlue) ->
+    new @constructor @r, @g, (@b+howMuchMoreBlue), @a
   
   # Color string representation: e.g. 'rgba(255,165,0,1)'
   toString: ->
@@ -175,14 +180,10 @@ class Color
               @[property].prepareBeforeSerialization()
   # this part is excluded from the fizzygum homepage build <<«
   
-  # Color copying:
-  copy: ->
-    new @constructor @r, @g, @b, @a
-  
   # Color comparison:
   eq: (aColor) ->
     # ==
-    aColor and @r is aColor.r and @g is aColor.g and @b is aColor.b
+    @==aColor or (aColor and @r == aColor.r and @g == aColor.g and @b == aColor.b)
   
   
   # »>> this part is excluded from the fizzygum homepage build

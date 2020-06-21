@@ -22,7 +22,7 @@ class SliderButtonMorph extends CircleBoxMorph
   constructor: ->
     super
     @isLockingToPanels = false
-    @color = @normalColor.copy()
+    @color = @normalColor
     @noticesTransparentClick = true
     @alpha = 0.4
 
@@ -99,25 +99,25 @@ class SliderButtonMorph extends CircleBoxMorph
   endOfNonFloatDrag: ->  
     if @state != @STATE_NORMAL
       @state = @STATE_NORMAL
-      @color = @normalColor.copy()
+      @color = @normalColor
       @changed()
 
   setHiglightedColor: ->
     if @state != @STATE_HIGHLIGHTED
       @state = @STATE_HIGHLIGHTED
-      @color = @highlightColor.copy()
+      @color = @highlightColor
       @changed()
 
   setNormalColor: ->
     if @state != @STATE_NORMAL
       @state = @STATE_NORMAL
-      @color = @normalColor.copy()
+      @color = @normalColor
       @changed()
 
   setPressedColor: ->
     if @state != @STATE_PRESSED
       @state = @STATE_PRESSED
-      @color = @pressColor.copy()
+      @color = @pressColor
       @changed()
 
   mouseMove: ->

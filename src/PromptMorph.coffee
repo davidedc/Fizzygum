@@ -42,10 +42,8 @@ class PromptMorph extends MenuMorph
       slider.alpha = 1
       slider.color = new Color 225, 225, 225
       slider.button.color = new Color 60,60,60
-      slider.button.highlightColor = slider.button.color.copy()
-      slider.button.highlightColor.b += 100
-      slider.button.pressColor = slider.button.color.copy()
-      slider.button.pressColor.b += 150
+      slider.button.highlightColor = slider.button.color.bluerBy 100
+      slider.button.pressColor = slider.button.color.bluerBy 150
       slider.silentRawSetHeight WorldMorph.preferencesAndSettings.prompterSliderSize
       slider.target = @
       slider.argumentToAction = @
