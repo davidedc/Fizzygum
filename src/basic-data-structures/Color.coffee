@@ -2,7 +2,7 @@ class Color
 
   @augmentWith DeepCopierMixin
 
-  # if you values like these instead: aliceblue: "0xfff0f8ff"
+  # if you want values like these instead: aliceblue: "0xfff0f8ff"
   # then search for CoulourLiterals in LiveCodeLab repo
   @byName_aliceblue:            [0xf0,0xf8,0xff]
   @byName_antiquewhite:         [0xfa,0xeb,0xd7]
@@ -213,7 +213,7 @@ class Color
     [h, s, v]
   
   # currently unused
-  set_hsv: (h, s, v) ->
+  @fromHsv: (h, s, v) ->
     # ignore alpha
     # h, s and v are to be within [0, 1]
     i = Math.floor(h * 6)
@@ -223,32 +223,33 @@ class Color
     t = v * (1 - (1 - f) * s)
     switch i % 6
       when 0
-        @r = v
-        @g = t
-        @b = p
+        r = v
+        g = t
+        b = p
       when 1
-        @r = q
-        @g = v
-        @b = p
+        r = q
+        g = v
+        b = p
       when 2
-        @r = p
-        @g = v
-        @b = t
+        r = p
+        g = v
+        b = t
       when 3
-        @r = p
-        @g = q
-        @b = v
+        r = p
+        g = q
+        b = v
       when 4
-        @r = t
-        @g = p
-        @b = v
+        r = t
+        g = p
+        b = v
       when 5
-        @r = v
-        @g = p
-        @b = q
-    @r *= 255
-    @g *= 255
-    @b *= 255
+        r = v
+        g = p
+        b = q
+    r *= 255
+    g *= 255
+    b *= 255
+    new @constructor r, g, b
   
   
   # Color mixing:
@@ -276,15 +277,6 @@ class Color
     fract = (100 - percent) / 100  if percent
     @mixed fract, new @constructor 255, 255, 255
   
-  # currently unused
-  dansDarker: ->
-    # return an hsv-interpolated darker copy of me, ignore alpha
-    hsv = @hsv()
-    result = new @constructor()
-    vv = Math.max hsv[2] - 0.16, 0
-    result.set_hsv hsv[0], hsv[1], vv
-    result
-
   # this part is excluded from the fizzygum homepage build <<«
 
   @transparent: ->
