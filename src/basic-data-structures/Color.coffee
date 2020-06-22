@@ -149,6 +149,10 @@ class Color
   # case that it's OK to use a non-integer.
   @byName_angleColor:           "angleColor"
 
+  @transparent:  CONSTANT_INIT_AFTER_CLASS_DEFINITION
+  @black:  CONSTANT_INIT_AFTER_CLASS_DEFINITION
+  @white:  CONSTANT_INIT_AFTER_CLASS_DEFINITION
+
   a: nil
   r: nil
   g: nil
@@ -280,6 +284,10 @@ class Color
   
   # this part is excluded from the fizzygum homepage build <<«
 
-  @transparent: ->
-    return new @ 0,0,0,0
+  # static method to initialise static constants. Will be called
+  # immediately after the Class is defined
+  @initStaticConstsAfterClassDefinition: ->
+    @transparent = new @ 0,0,0,0
+    @black = new @ 0,0,0
+    @white = new @ 255,255,255
 

@@ -25,6 +25,8 @@ MixedClassKeywords = ['onceAddedClassProperties', 'included']
 # and "null" explicitly.
 nil = undefined
 
+CONSTANT_INIT_AFTER_CLASS_DEFINITION = undefined
+
 HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
   haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf(@)
   if  haveIBeenCopiedAlready >= 0
