@@ -5,7 +5,7 @@ class LayoutElementAdderOrDropletMorph extends Widget
 
   constructor: ->
     super()
-    @setColor new Color 0, 0, 0
+    @setColor Color.black
     @setMinAndMaxBoundsAndSpreadability (new Point 15,15) , (new Point 15,15), LayoutSpec.SPREADABILITY_HANDLES
 
   # This method only paints this very morph's "image",
@@ -144,6 +144,6 @@ class LayoutElementAdderOrDropletMorph extends Widget
     @setColor new Color 100, 100, 100
   
   mouseLeave: ->
-    @setColor new Color 0, 0, 0
+    @setColor Color.black
 
 

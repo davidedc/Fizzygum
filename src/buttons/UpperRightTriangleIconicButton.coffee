@@ -15,7 +15,7 @@ class UpperRightTriangleIconicButton extends UpperRightTriangle
 
   constructor: (parent = nil) ->
     super
-    @pencilIconMorph = new PencilIconMorph new Color 0,0,0
+    @pencilIconMorph = new PencilIconMorph Color.black
 
     @pencilIconMorph.parentHasReLayouted = ->
       @updateResizerPosition()

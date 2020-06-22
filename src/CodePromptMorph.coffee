@@ -73,7 +73,7 @@ class CodePromptMorph extends Widget
     @invalidateLayout()
 
   textContentModified: ->
-    @saveTextWdgt.setColor new Color 0,0,0
+    @saveTextWdgt.setColor Color.black
 
   textContentUnmodified: ->
     @saveTextWdgt.setColor new Color 200, 200, 200

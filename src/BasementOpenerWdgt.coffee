@@ -4,7 +4,7 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
 
   color_hover: new Color 90, 90, 90
   color_pressed: new Color 128, 128, 128
-  color_normal: new Color 0, 0, 0
+  color_normal: Color.black
 
   _acceptsDrops: true
 

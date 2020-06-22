@@ -14,7 +14,7 @@ class CodeInjectingSimpleRectangularButtonMorph extends SimpleRectangularButtonM
 
   constructor: (@wdgtToBeNotifiedForNewCode, @wdgtWhereToInject, face) ->
     super true, @, 'injectCodeIntoTarget', face
-    @strokeColor = new Color 0, 0, 0
+    @strokeColor = Color.black
     @setColor new Color 150, 150, 150
     @toolTipMessage = face.toolTipMessage
 

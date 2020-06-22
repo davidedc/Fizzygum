@@ -113,7 +113,7 @@ class StringMorph3 extends Widget
       @isItalic = false,
       @isHeaderLine = false,
       @isNumeric = false,
-      @color = (new Color 0, 0, 0),
+      @color = Color.black,
       backgroundColor,
       backgroundTransparency
       ) ->

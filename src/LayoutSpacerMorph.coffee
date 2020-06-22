@@ -5,7 +5,7 @@ class LayoutSpacerMorph extends Widget
 
   constructor: (spacerWeight = 1) ->
     super()
-    @setColor new Color 0, 0, 0
+    @setColor Color.black
     @setMinAndMaxBoundsAndSpreadability (new Point 0,0) , (new Point 1,1), spacerWeight * LayoutSpec.SPREADABILITY_SPACERS
     @minimumExtent = new Point 0,0
 

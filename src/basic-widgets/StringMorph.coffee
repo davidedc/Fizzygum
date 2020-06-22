@@ -38,7 +38,7 @@ class StringMorph extends Widget
       @isBold = false,
       @isItalic = false,
       @isNumeric = false,
-      @color = (new Color 0, 0, 0),
+      @color = Color.black,
       @fontName = ""
       ) ->
 

@@ -28,7 +28,7 @@ class SimplePlainTextWdgt extends TextMorph2
    @isBold = false,
    @isItalic = false,
    #@isNumeric = false,
-   @color = (new Color 0, 0, 0),
+   @color = Color.black,
    @backgroundColor = nil,
    @backgroundTransparency = nil
    ) ->

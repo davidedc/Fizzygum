@@ -40,7 +40,7 @@ class TextMorph extends StringMorph
     # override inherited properties:
     @markedTextColor = Color.white
     @markedBackgoundColor = new Color 60, 60, 120
-    @color = new Color 0, 0, 0
+    @color = Color.black
     @noticesTransparentClick = true
   
   breakTextIntoLines: ->

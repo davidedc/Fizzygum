@@ -30,7 +30,7 @@ class SliderMorph extends CircleBoxMorph
     @stop = 100,
     @value = 50,
     @size = 10,
-    @color = (new Color 0, 0, 0),
+    @color = Color.black,
     @smallestValueIsAtBottomEnd = false
     ) ->
     @button = new SliderButtonMorph
