@@ -182,7 +182,7 @@ class CalculatingPatchNodeWdgt extends Widget
     @tempPromptEntryField.contents.disableDrops()
     @tempPromptEntryField.color = Color.white
     @textMorph = @tempPromptEntryField.textWdgt
-    @textMorph.backgroundColor = new Color 0,0,0,0
+    @textMorph.backgroundColor = Color.transparent
     @textMorph.setFontName nil, nil, @textMorph.monoFontStack
     @textMorph.isEditable = true
     @textMorph.enableSelecting()
@@ -193,7 +193,7 @@ class CalculatingPatchNodeWdgt extends Widget
     @outputTextArea.contents.disableDrops()
     @outputTextArea.color = Color.white
     @outputTextAreaText = @outputTextArea.textWdgt
-    @outputTextAreaText.backgroundColor = new Color 0,0,0,0
+    @outputTextAreaText.backgroundColor = Color.transparent
     @outputTextAreaText.setFontName nil, nil, @outputTextAreaText.monoFontStack
     @outputTextAreaText.isEditable = false
     @add @outputTextArea

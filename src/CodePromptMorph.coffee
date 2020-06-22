@@ -44,7 +44,7 @@ class CodePromptMorph extends Widget
     @tempPromptEntryField.widgetToBeNotifiedOfTextModificationChange = @
 
     @textMorph = @tempPromptEntryField.textWdgt
-    @textMorph.backgroundColor = new Color 0,0,0,0
+    @textMorph.backgroundColor = Color.transparent
     @textMorph.setFontName nil, nil, @textMorph.monoFontStack
     @textMorph.isEditable = true
     @textMorph.enableSelecting()

@@ -288,7 +288,7 @@ class InspectorMorph2 extends Widget
     @detail.widgetToBeNotifiedOfTextModificationChange = @
 
     @textMorph = @detail.textWdgt
-    @textMorph.backgroundColor = new Color 0,0,0,0
+    @textMorph.backgroundColor = Color.transparent
     @textMorph.setFontName nil, nil, @textMorph.monoFontStack
     @textMorph.isEditable = false
 
