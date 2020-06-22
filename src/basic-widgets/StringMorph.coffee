@@ -27,7 +27,7 @@ class StringMorph extends Widget
   startMark: nil
   endMark: nil
   # see note above about Colors and shared objects
-  markedTextColor: new Color 255, 255, 255
+  markedTextColor: Color.white
   # see note above about Colors and shared objects
   markedBackgoundColor: new Color 60, 60, 120
 

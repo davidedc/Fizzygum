@@ -38,7 +38,7 @@ class TextMorph extends StringMorph
       nil,
       @fontName
     # override inherited properties:
-    @markedTextColor = new Color 255, 255, 255
+    @markedTextColor = Color.white
     @markedBackgoundColor = new Color 60, 60, 120
     @color = new Color 0, 0, 0
     @noticesTransparentClick = true

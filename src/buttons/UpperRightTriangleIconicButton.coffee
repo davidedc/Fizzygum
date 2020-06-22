@@ -10,7 +10,7 @@ class UpperRightTriangleIconicButton extends UpperRightTriangle
 
   @augmentWith HighlightableMixin, @name
 
-  color: new Color 255, 255, 255
+  color: Color.white
   pencilIconMorph: nil
 
   constructor: (parent = nil) ->

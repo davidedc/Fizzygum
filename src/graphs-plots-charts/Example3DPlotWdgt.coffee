@@ -181,7 +181,7 @@ class Example3DPlotWdgt extends Widget
     morphPosition = @position()
     aContext.translate morphPosition.x, morphPosition.y
 
-    @renderingHelper aContext, new Color(255, 255, 255), appliedShadow
+    @renderingHelper aContext, Color.white, appliedShadow
 
     aContext.restore()
 

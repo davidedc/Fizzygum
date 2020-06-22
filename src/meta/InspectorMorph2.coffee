@@ -271,7 +271,7 @@ class InspectorMorph2 extends Widget
     @detail = new SimplePlainTextScrollPanelWdgt "", false, 5
     @detail.disableDrops()
     @detail.contents.disableDrops()
-    @detail.color = new Color 255, 255, 255
+    @detail.color = Color.white
     @detail.addModifiedContentIndicator()
     
     # when there is no selected item in the list

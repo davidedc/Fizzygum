@@ -190,7 +190,7 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     @regexEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
     @regexEntryField.disableDrops()
     @regexEntryField.contents.disableDrops()
-    @regexEntryField.color = new Color 255, 255, 255
+    @regexEntryField.color = Color.white
     @textMorph = @regexEntryField.textWdgt
     @textMorph.backgroundColor = new Color 0,0,0,0
     @textMorph.setFontName nil, nil, @textMorph.monoFontStack
@@ -201,7 +201,7 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     @substitutionTextArea = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
     @substitutionTextArea.disableDrops()
     @substitutionTextArea.contents.disableDrops()
-    @substitutionTextArea.color = new Color 255, 255, 255
+    @substitutionTextArea.color = Color.white
     @substitutionTextAreaText = @substitutionTextArea.textWdgt
     @substitutionTextAreaText.backgroundColor = new Color 0,0,0,0
     @substitutionTextAreaText.setFontName nil, nil, @substitutionTextAreaText.monoFontStack
@@ -212,7 +212,7 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     @outputTextArea = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
     @outputTextArea.disableDrops()
     @outputTextArea.contents.disableDrops()
-    @outputTextArea.color = new Color 255, 255, 255
+    @outputTextArea.color = Color.white
     @outputTextAreaText = @outputTextArea.textWdgt
     @outputTextAreaText.backgroundColor = new Color 0,0,0,0
     @outputTextAreaText.setFontName nil, nil, @outputTextAreaText.monoFontStack

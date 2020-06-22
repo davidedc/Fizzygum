@@ -180,7 +180,7 @@ class DiffingPatchNodeWdgt extends Widget
     @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
-    @tempPromptEntryField.color = new Color 255, 255, 255
+    @tempPromptEntryField.color = Color.white
 
     @textMorph = @tempPromptEntryField.textWdgt
     @textMorph.backgroundColor = new Color 0,0,0,0

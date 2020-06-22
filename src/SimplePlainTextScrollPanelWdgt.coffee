@@ -26,7 +26,7 @@ class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
     @disableDrops()
     @contents.disableDrops()
     @isTextLineWrapping = wraps
-    @color = new Color 255, 255, 255
+    @color = Color.white
     @textWdgt = new SimplePlainTextWdgt(
       textAsString,nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
     @textWdgt.isEditable = true

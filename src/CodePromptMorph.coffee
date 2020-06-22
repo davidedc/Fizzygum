@@ -35,7 +35,7 @@ class CodePromptMorph extends Widget
     @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
-    @tempPromptEntryField.color = new Color 255, 255, 255
+    @tempPromptEntryField.color = Color.white
     @tempPromptEntryField.addModifiedContentIndicator()
 
     # register this wdgt as one to be notified when the text

@@ -180,7 +180,7 @@ class CalculatingPatchNodeWdgt extends Widget
     @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultFormulaBoxContents, false, 5
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
-    @tempPromptEntryField.color = new Color 255, 255, 255
+    @tempPromptEntryField.color = Color.white
     @textMorph = @tempPromptEntryField.textWdgt
     @textMorph.backgroundColor = new Color 0,0,0,0
     @textMorph.setFontName nil, nil, @textMorph.monoFontStack
@@ -191,7 +191,7 @@ class CalculatingPatchNodeWdgt extends Widget
     @outputTextArea = new SimplePlainTextScrollPanelWdgt "", false, 5
     @outputTextArea.disableDrops()
     @outputTextArea.contents.disableDrops()
-    @outputTextArea.color = new Color 255, 255, 255
+    @outputTextArea.color = Color.white
     @outputTextAreaText = @outputTextArea.textWdgt
     @outputTextAreaText.backgroundColor = new Color 0,0,0,0
     @outputTextAreaText.setFontName nil, nil, @outputTextAreaText.monoFontStack

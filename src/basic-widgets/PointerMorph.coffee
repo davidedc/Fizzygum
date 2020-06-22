@@ -20,7 +20,7 @@ class PointerMorph extends BoxMorph
       nil, #@isItalic,
       false, # isNumeric
       nil, #color,
-      new Color 255, 255, 255, #@backgroundColor,
+      Color.white, #@backgroundColor,
       nil, #@backgroundTransparency
     )
     # override inherited properties:

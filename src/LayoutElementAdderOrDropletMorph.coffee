@@ -40,7 +40,7 @@ class LayoutElementAdderOrDropletMorph extends Widget
     morphPosition = @position()
     aContext.translate morphPosition.x, morphPosition.y
 
-    @spacerMorphRenderingHelper aContext, new Color(255, 255, 255), new Color(200, 200, 255)
+    @spacerMorphRenderingHelper aContext, Color.white, new Color 200, 200, 255
 
     aContext.restore()
 

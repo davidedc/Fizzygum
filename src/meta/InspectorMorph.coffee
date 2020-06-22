@@ -49,7 +49,7 @@ class InspectorMorph extends BoxMorph
     @label = new TextMorph @target.toString().replace "Wdgt", ""
     @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
     @label.isBold = true
-    @label.color = new Color 255, 255, 255
+    @label.color = Color.white
     @add @label
     
     # properties list. Note that this picks up ALL properties
@@ -164,7 +164,7 @@ class InspectorMorph extends BoxMorph
     @detail.disableDrops()
     @detail.contents.disableDrops()
     @detail.isTextLineWrapping = true
-    @detail.color = new Color 255, 255, 255
+    @detail.color = Color.white
     ctrl = new TextMorph ""
     ctrl.isEditable = true
     ctrl.enableSelecting()
@@ -177,7 +177,7 @@ class InspectorMorph extends BoxMorph
     @work.disableDrops()
     @work.contents.disableDrops()
     @work.isTextLineWrapping = true
-    @work.color = new Color 255, 255, 255
+    @work.color = Color.white
     ev = new TextMorph ""
     ev.isEditable = true
     ev.enableSelecting()
