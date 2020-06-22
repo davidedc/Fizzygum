@@ -318,7 +318,7 @@ class Class
 
       if createClass
         try
-          if window.srcLoadCompileDebugWrites then console.log "actually evalling " + @name + " to crete Class"
+          if window.srcLoadCompileDebugWrites then console.log "actually evalling " + @name + " to create the class"
           eval.call window, JS_string_definitions
         catch err
           console.log " error " + err + " evaling : " + JS_string_definitions
