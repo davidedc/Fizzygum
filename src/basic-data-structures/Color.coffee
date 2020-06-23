@@ -208,14 +208,14 @@ class Color
     # return an rgb-interpolated darker copy of me, ignore alpha
     fract = 0.8333
     fract = (100 - percent) / 100  if percent
-    @mixed fract, new @constructor 0, 0, 0
+    @mixed fract, @constructor.black
   
   # currently unused
   lighter: (percent) ->
     # return an rgb-interpolated lighter copy of me, ignore alpha
     fract = 0.8333
     fract = (100 - percent) / 100  if percent
-    @mixed fract, new @constructor 255, 255, 255
+    @mixed fract, @constructor.white
   
   # this part is excluded from the fizzygum homepage build <<«
 
