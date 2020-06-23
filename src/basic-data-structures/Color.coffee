@@ -153,21 +153,20 @@ class Color
   @black:  CONSTANT_INIT_AFTER_CLASS_DEFINITION
   @white:  CONSTANT_INIT_AFTER_CLASS_DEFINITION
 
-  a: nil
-  r: nil
-  g: nil
-  b: nil
+  _r: nil
+  _g: nil
+  _b: nil
+  _a: nil
 
-  constructor: (@r = 0, @g = 0, @b = 0, a) ->
+  constructor: (@_r = 0, @_g = 0, @_b = 0, @_a=1) ->
     # all values are optional, just (r, g, b) is fine
-    @a = a or ((if (a is 0) then 0 else 1))
 
   bluerBy: (howMuchMoreBlue) ->
-    new @constructor @r, @g, (@b+howMuchMoreBlue), @a
+    new @constructor @_r, @_g, (@_b+howMuchMoreBlue), @_a
   
   # Color string representation: e.g. 'rgba(255,165,0,1)'
   toString: ->
-    "rgba(" + Math.round(@r) + "," + Math.round(@g) + "," + Math.round(@b) + "," + @a + ")"
+    "rgba(" + Math.round(@_r) + "," + Math.round(@_g) + "," + Math.round(@_b) + "," + @_a + ")"
 
 
   # »>> this part is excluded from the fizzygum homepage build
@@ -187,7 +186,7 @@ class Color
   # Color comparison:
   eq: (aColor) ->
     # ==
-    @==aColor or (aColor and @r == aColor.r and @g == aColor.g and @b == aColor.b)
+    @==aColor or (aColor and @_r == aColor._r and @_g == aColor._g and @_b == aColor._b and @_a == aColor._a)
   
   
   # »>> this part is excluded from the fizzygum homepage build
@@ -199,9 +198,10 @@ class Color
     frac1 = Math.min Math.max(proportion, 0), 1
     frac2 = 1 - frac1
     new @constructor(
-      @r * frac1 + otherColor.r * frac2,
-      @g * frac1 + otherColor.g * frac2,
-      @b * frac1 + otherColor.b * frac2)
+      @_r * frac1 + otherColor._r * frac2,
+      @_g * frac1 + otherColor._g * frac2,
+      @_b * frac1 + otherColor._b * frac2,
+      @_a * frac1 + otherColor._a * frac2)
   
   # currently unused
   darker: (percent) ->
