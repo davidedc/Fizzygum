@@ -80,7 +80,7 @@ class PreferencesAndSettings
     @menuHeaderBold = true # false
     @menuStrokeColor = new Color 210, 210, 210 # new Color 186, 186, 186
     @menuBackgroundColor = new Color 249, 249, 249 # new Color 244, 244, 244
-    @menuButtonsLabelColor = Color.black # new Color 50, 50, 50
+    @menuButtonsLabelColor = Color.BLACK # new Color 50, 50, 50
 
     @externalWindowBarBackgroundColor = new Color 125, 125, 125
     @externalWindowBarStrokeColor = new Color 100,100,100
@@ -107,7 +107,7 @@ class PreferencesAndSettings
     # we use this string so many times
     @outlineColorString = @outlineColor.toString()
 
-    @iconDarkLineColor = Color.black
+    @iconDarkLineColor = Color.BLACK
 
     @shortcutsFontSize = 12
 

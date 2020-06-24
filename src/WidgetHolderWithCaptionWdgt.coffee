@@ -15,7 +15,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
     @add @icon
     @label = new StringMorph2 @labelContent, WorldMorph.preferencesAndSettings.shortcutsFontSize
     @label.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
-    @label.color = Color.white
+    @label.color = Color.WHITE
     @label.hasDarkOutline = true
     @add @label, nil, nil, true
     @label.alignCenter()

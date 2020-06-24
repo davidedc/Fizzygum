@@ -402,7 +402,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
 
                 contextMain.beginPath()
                 contextMain.lineWidth="2"
-                contextMain.fillStyle = Color.white.toString()
+                contextMain.fillStyle = Color.WHITE.toString()
                 contextMain.rect(-5,-5,10,10)
                 contextMain.fill()
                 @underlyingCanvasMorph.changed()

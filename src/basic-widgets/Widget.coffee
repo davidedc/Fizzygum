@@ -3037,7 +3037,7 @@ class Widget extends TreeNode
     @buildMorphContextMenu(morphOpeningThePopUp).popUpAtHand()
 
   popUpColorSetter: ->
-    @pickColor "color:", "setColor", Color.black
+    @pickColor "color:", "setColor", Color.BLACK
 
 
   transparencyPopout: (menuItem)->

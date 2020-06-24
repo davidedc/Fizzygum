@@ -44,7 +44,7 @@ class ExampleFunctionPlotWdgt extends GraphsPlotsChartsWdgt
     morphPosition = @position()
     aContext.translate morphPosition.x, morphPosition.y
 
-    @renderingHelper aContext, Color.white, appliedShadow
+    @renderingHelper aContext, Color.WHITE, appliedShadow
 
     aContext.restore()
 

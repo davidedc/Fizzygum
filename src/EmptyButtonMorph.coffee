@@ -32,7 +32,7 @@ class EmptyButtonMorph extends Widget
 
 
   # overrides to superclass
-  color: Color.white
+  color: Color.WHITE
 
   constructor: (
       @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true,
@@ -58,7 +58,7 @@ class EmptyButtonMorph extends Widget
     @defaultRejectDrags = true
 
     #@color = new Color 255, 152, 152
-    #@color = Color.white
+    #@color = Color.WHITE
     if @faceMorph?
 
       if (typeof @faceMorph) == "string"

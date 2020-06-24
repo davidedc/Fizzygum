@@ -10,7 +10,7 @@ class CanvasMorph extends PanelWdgt
 
   constructor: ->
     super
-    @color = Color.white
+    @color = Color.WHITE
   
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
 

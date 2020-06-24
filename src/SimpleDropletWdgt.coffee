@@ -10,7 +10,7 @@ class SimpleDropletWdgt extends Widget
 
   color_hover: new Color 90, 90, 90
   color_pressed: new Color 128, 128, 128
-  color_normal: Color.black
+  color_normal: Color.BLACK
 
   _acceptsDrops: true
   parentFieldToAttachingTheWidgetToAsString: nil
@@ -18,7 +18,7 @@ class SimpleDropletWdgt extends Widget
   constructor: (@parentFieldToAttachingTheWidgetToAsString) ->
     super()
     @appearance = new SimpleDropletAppearance @
-    @setColor Color.black
+    @setColor Color.BLACK
 
   reactToDropOf: (morphBeingDropped) ->
     # TODO we add as FREEFLOATING if we don't pass

@@ -24,7 +24,7 @@ class StringFieldMorph extends PanelWdgt
       @isNumeric = false
       ) ->
     super()
-    @color = Color.white
+    @color = Color.WHITE
 
   rawSetWidth: (newWidth)->
     super

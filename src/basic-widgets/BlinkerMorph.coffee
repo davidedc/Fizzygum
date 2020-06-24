@@ -6,7 +6,7 @@ class BlinkerMorph extends Widget
     world.steppingWdgts.add @
     super()
     @appearance = new RectangularAppearance @
-    @color = Color.black
+    @color = Color.BLACK
   
   # BlinkerMorph stepping:
   step: ->

@@ -62,7 +62,7 @@ class StringMorph3 extends Widget
   endMark: nil
 
   # see note above about Colors and shared objects
-  markedTextColor: Color.white
+  markedTextColor: Color.WHITE
   # see note above about Colors and shared objects
   markedBackgoundColor: new Color 60, 60, 120
 
@@ -113,7 +113,7 @@ class StringMorph3 extends Widget
       @isItalic = false,
       @isHeaderLine = false,
       @isNumeric = false,
-      @color = Color.black,
+      @color = Color.BLACK,
       backgroundColor,
       backgroundTransparency
       ) ->

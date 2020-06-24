@@ -316,7 +316,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       @label.isBold = WorldMorph.preferencesAndSettings.titleBarBoldText
 
-    @label.color = Color.white
+    @label.color = Color.WHITE
     @add @label, nil, nil, nil, true
 
     # upper-left button, often a close button

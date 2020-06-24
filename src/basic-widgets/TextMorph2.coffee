@@ -39,7 +39,7 @@ class TextMorph2 extends StringMorph2
       @backgroundTransparency
       )
     # override inherited properties:
-    @markedTextColor = Color.white
+    @markedTextColor = Color.WHITE
     @markedBackgoundColor = new Color 60, 60, 120
     @textPossiblyCroppedToFit = @transformTextOneToOne @text
     @noticesTransparentClick = true

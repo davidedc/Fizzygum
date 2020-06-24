@@ -46,7 +46,7 @@ class ScriptWdgt extends Widget
     @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @savedScript, false, 5
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
-    @tempPromptEntryField.color = Color.white
+    @tempPromptEntryField.color = Color.WHITE
     @tempPromptEntryField.addModifiedContentIndicator()
 
     # register this wdgt as one to be notified when the text
@@ -55,7 +55,7 @@ class ScriptWdgt extends Widget
     @tempPromptEntryField.widgetToBeNotifiedOfTextModificationChange = @
 
     @textMorph = @tempPromptEntryField.textWdgt
-    @textMorph.backgroundColor = Color.transparent
+    @textMorph.backgroundColor = Color.TRANSPARENT
     @textMorph.setFontName nil, nil, @textMorph.monoFontStack
     @textMorph.isEditable = true
     @textMorph.enableSelecting()

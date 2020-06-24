@@ -316,10 +316,10 @@ class Class
 
       # some classes have a static initStaticConstsAfterClassDefinition method
       # we need to call that method to give a chance to the class to initialise
-      # static constants e.g. Color.white etc.
+      # static constants e.g. Color.WHITE etc.
       # We do that here (i.e. soon after the class definition), so that any other
       # class defined afterwards (that might initialise its fields with things like
-      # Color.white) can use such static values.
+      # Color.WHITE) can use such static values.
       JS_string_definitions += """
         if (typeof window.#{@name}.initStaticConstsAfterClassDefinition === "function") {
           window.#{@name}.initStaticConstsAfterClassDefinition();

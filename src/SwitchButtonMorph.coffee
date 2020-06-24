@@ -16,7 +16,7 @@ class SwitchButtonMorph extends Widget
   buttonShown: 0
 
   # overrides to superclass
-  color: Color.white
+  color: Color.WHITE
 
   constructor: (@buttons) ->
 
@@ -25,7 +25,7 @@ class SwitchButtonMorph extends Widget
     super()
 
     #@color = new Color 255, 152, 152
-    #@color = Color.white
+    #@color = Color.WHITE
     for eachButton in @buttons
       @add eachButton
 

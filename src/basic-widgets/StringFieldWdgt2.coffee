@@ -22,7 +22,7 @@ class StringFieldWdgt2 extends PanelWdgt
       @isNumeric = false
       ) ->
     super()
-    @color = Color.white
+    @color = Color.WHITE
 
   rawSetWidth: (newWidth)->
     super

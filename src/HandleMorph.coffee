@@ -23,7 +23,7 @@ class HandleMorph extends Widget
     else
       @inset = new Point minimumPadding, minimumPadding
     super()
-    @color = Color.white
+    @color = Color.WHITE
     @noticesTransparentClick = true
     size = WorldMorph.preferencesAndSettings.handleSize
     @silentRawSetExtent new Point size, size
@@ -147,7 +147,7 @@ class HandleMorph extends Widget
     if @state == @STATE_NORMAL
       @handleMorphRenderingHelper aContext, @color, new Color 150, 150, 150
     if @state == @STATE_HIGHLIGHTED
-      @handleMorphRenderingHelper aContext, Color.white, new Color 200, 200, 255
+      @handleMorphRenderingHelper aContext, Color.WHITE, new Color 200, 200, 255
 
     aContext.restore()
 

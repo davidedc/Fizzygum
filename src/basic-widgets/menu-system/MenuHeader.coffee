@@ -14,7 +14,7 @@ class MenuHeader extends BoxMorph
       false,
       "center")
     @text.alignment = "center"
-    @text.color = Color.white
+    @text.color = Color.WHITE
     @text.backgroundColor = @color
 
     @add @text

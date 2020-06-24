@@ -54,7 +54,7 @@ class SimpleDropletAppearance extends RectangularAppearance
     plusSignTop = p0.add new Point Math.ceil(squareDim/2), -Math.ceil(squareDim/3)
     plusSignBottom = p0.add new Point Math.ceil(squareDim/2), Math.ceil(squareDim/3)
 
-    color = Color.white
+    color = Color.WHITE
 
     context.save()
 

@@ -21,7 +21,7 @@ class SimplePlainTextPanelWdgt extends PanelWdgt
     @disableDrops()
     @disableDrops()
     @isTextLineWrapping = wraps
-    @color = Color.white
+    @color = Color.WHITE
     ostmA = new SimplePlainTextWdgt(
       textAsString,nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
     ostmA.isEditable = true

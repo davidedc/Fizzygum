@@ -35,7 +35,7 @@ class CodePromptMorph extends Widget
     @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
-    @tempPromptEntryField.color = Color.white
+    @tempPromptEntryField.color = Color.WHITE
     @tempPromptEntryField.addModifiedContentIndicator()
 
     # register this wdgt as one to be notified when the text
@@ -44,7 +44,7 @@ class CodePromptMorph extends Widget
     @tempPromptEntryField.widgetToBeNotifiedOfTextModificationChange = @
 
     @textMorph = @tempPromptEntryField.textWdgt
-    @textMorph.backgroundColor = Color.transparent
+    @textMorph.backgroundColor = Color.TRANSPARENT
     @textMorph.setFontName nil, nil, @textMorph.monoFontStack
     @textMorph.isEditable = true
     @textMorph.enableSelecting()
@@ -73,7 +73,7 @@ class CodePromptMorph extends Widget
     @invalidateLayout()
 
   textContentModified: ->
-    @saveTextWdgt.setColor Color.black
+    @saveTextWdgt.setColor Color.BLACK
 
   textContentUnmodified: ->
     @saveTextWdgt.setColor new Color 200, 200, 200

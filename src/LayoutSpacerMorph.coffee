@@ -5,7 +5,7 @@ class LayoutSpacerMorph extends Widget
 
   constructor: (spacerWeight = 1) ->
     super()
-    @setColor Color.black
+    @setColor Color.BLACK
     @setMinAndMaxBoundsAndSpreadability (new Point 0,0) , (new Point 1,1), spacerWeight * LayoutSpec.SPREADABILITY_SPACERS
     @minimumExtent = new Point 0,0
 
@@ -57,7 +57,7 @@ class LayoutSpacerMorph extends Widget
     morphPosition = @position()
     aContext.translate morphPosition.x, morphPosition.y
 
-    @spacerMorphRenderingHelper aContext, Color.white, new Color 200, 200, 255
+    @spacerMorphRenderingHelper aContext, Color.WHITE, new Color 200, 200, 255
 
     aContext.restore()
 

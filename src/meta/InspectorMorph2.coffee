@@ -187,7 +187,7 @@ class InspectorMorph2 extends Widget
 
       # the top class doesn't get an arrow pointing upwards
       if counter > 0
-        angledArrow = new AngledArrowUpLeftIconMorph Color.black
+        angledArrow = new AngledArrowUpLeftIconMorph Color.BLACK
         @angledArrows.push angledArrow
         @add angledArrow
 
@@ -195,7 +195,7 @@ class InspectorMorph2 extends Widget
 
     @lastLabelInHierarchy = new TextMorph "this object"
     @add @lastLabelInHierarchy
-    @lastArrowInHierarchy = new AngledArrowUpLeftIconMorph Color.black
+    @lastArrowInHierarchy = new AngledArrowUpLeftIconMorph Color.BLACK
     @add @lastArrowInHierarchy
 
     @showMethodsOnButton = new SimpleButtonMorph true, @, "hideMethods", "methods: on"
@@ -271,7 +271,7 @@ class InspectorMorph2 extends Widget
     @detail = new SimplePlainTextScrollPanelWdgt "", false, 5
     @detail.disableDrops()
     @detail.contents.disableDrops()
-    @detail.color = Color.white
+    @detail.color = Color.WHITE
     @detail.addModifiedContentIndicator()
     
     # when there is no selected item in the list
@@ -288,7 +288,7 @@ class InspectorMorph2 extends Widget
     @detail.widgetToBeNotifiedOfTextModificationChange = @
 
     @textMorph = @detail.textWdgt
-    @textMorph.backgroundColor = Color.transparent
+    @textMorph.backgroundColor = Color.TRANSPARENT
     @textMorph.setFontName nil, nil, @textMorph.monoFontStack
     @textMorph.isEditable = false
 
@@ -317,7 +317,7 @@ class InspectorMorph2 extends Widget
     # TODO this would stand for enabling/disabling the button
     # but really we are just changing the color and the button
     # still works. Need some better enabling/disabling
-    @saveTextWdgt.setColor Color.black
+    @saveTextWdgt.setColor Color.BLACK
 
   textContentUnmodified: ->
     # TODO this would stand for enabling/disabling the button

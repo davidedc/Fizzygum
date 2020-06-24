@@ -5,7 +5,7 @@ class MouseSensorMorph extends BoxMorph
 
   constructor: (@cornerRadius = 4) ->
     super
-    @color = Color.white
+    @color = Color.WHITE
     @isTouched = false
     @upStep = 0.05
     @downStep = 0.02

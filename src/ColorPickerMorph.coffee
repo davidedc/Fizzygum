@@ -17,10 +17,10 @@ class ColorPickerMorph extends Widget
   colorPalette: nil
   grayPalette: nil
 
-  constructor: ( @choice = Color.white ) ->    
+  constructor: ( @choice = Color.WHITE ) ->    
     super()
     @appearance = new RectangularAppearance @
-    @color = Color.white
+    @color = Color.WHITE
     @rawSetExtent new Point 80, 80
     @buildSubmorphs()
 
