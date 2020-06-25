@@ -41,11 +41,7 @@ class StringMorph2 extends Widget
   isNumeric: nil
   isPassword: false
   isShowingBlanks: false
-  # careful: Objects are shared with all the instances of this class.
-  # if you modify it, then all the objects will get the change
-  # but if you replace it with a new Color, then that will only affect the
-  # specific object instance. Same behaviour as with arrays.
-  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
+
   blanksColor: new Color 180, 140, 140
 
   # Used for when the cursor movement causes the
