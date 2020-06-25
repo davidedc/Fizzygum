@@ -215,6 +215,11 @@ class Color
 
   # static method to initialise static constants. Will be called
   # immediately after the Class is defined
+  # Note that this puts a spanner in the source management system
+  # i.e. the source doesn't show these colors. Whatever solution you
+  # put in place, remember that you should be able to re-generate valid
+  # sources from whatever source code is loaded. I.e. the roundtrip
+  # should be source -> parsed sources -> regen sources and the 1st step == last step
   @initStaticConstsAfterClassDefinition: ->
     for eachLiteral in @_literalsData
       @[eachLiteral[0]] = new @ eachLiteral[1], eachLiteral[2], eachLiteral[3]
