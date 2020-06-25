@@ -1,6 +1,6 @@
 {
   "name": "fizzygum",
-  "version": "1.1.9",
+  "version": "1.1.10",
   "description": "Tired of stringing libraries together? Try a new web framework that puts the power of an entire Operating System at your fingertips.",
   "main": "index.js",
   "directories": {
