@@ -115,11 +115,11 @@ class EmptyButtonMorph extends Widget
     @target[@doubleClickAction]()  
 
   
-  mouseClickLeft: ->
+  mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     if @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
       @propagateKillPopUps()
     @trigger()
-    @escalateEvent "mouseClickLeft"
+    @escalateEvent "mouseClickLeft", arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
 
   mouseDoubleClick: ->
     @triggerDoubleClick()

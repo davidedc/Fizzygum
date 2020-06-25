@@ -2736,8 +2736,8 @@ class Widget extends TreeNode
     @bringToForeground()
     @escalateEvent "mouseDownLeft", pos
 
-  mouseClickLeft: (pos) ->
-    @escalateEvent "mouseClickLeft", pos
+  mouseClickLeft: (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
+    @escalateEvent "mouseClickLeft", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
 
   onClickOutsideMeOrAnyOfMyChildren: (functionName, arg1, arg2, arg3)->
     if functionName?
@@ -3960,11 +3960,11 @@ class Widget extends TreeNode
 
   # TODO I'm sure there is a cleaner way to handle arbitrary
   # number of arguments here
-  escalateEvent: (functionName, arg1, arg2, arg3, arg4, arg5, arg6) ->
+  escalateEvent: (functionName, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     handler = @parent
     if handler?
       handler = handler.parent  while not handler[functionName] and handler.parent?
-      handler[functionName] arg1, arg2, arg3, arg4, arg5, arg6  if handler[functionName]
+      handler[functionName] arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9  if handler[functionName]
   
   
   # Widget eval. Used by the Inspector and the TextMorph.

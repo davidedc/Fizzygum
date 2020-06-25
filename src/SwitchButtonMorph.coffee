@@ -73,11 +73,13 @@ class SwitchButtonMorph extends Widget
   isSelected: ->
     return @buttonShown != 0  
 
-  mouseClickLeft: ->
+  mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     @buttonShown++
     @buttonShown = @buttonShown % @buttons.length
 
     @invalidateLayout()
+    # TODO gross pattern break - usually mouseClickLeft has 9 params
+    # none of which is a widget
     @escalateEvent "mouseClickLeft", @
 
   resetSwitchButton: ->

@@ -1188,7 +1188,7 @@ class StringMorph3 extends Widget
 
   # Every time the user clicks on the text, a new edit()
   # is triggered, which creates a new caret.
-  mouseClickLeft: (pos, ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey) ->
+  mouseClickLeft: (pos, arg2, arg3, arg4, shiftKey, arg6, arg7, arg8, arg9) ->
     @bringToForeground()
     world.caret?.bringToForeground()
     if @isEditable
@@ -1216,7 +1216,7 @@ class StringMorph3 extends Widget
         @caretHorizPositionForVertMovement = world.caret.slot
 
     else
-      @escalateEvent "mouseClickLeft", pos
+      @escalateEvent "mouseClickLeft", pos, arg2, arg3, arg4, shiftKey, arg6, arg7, arg8, arg9
   
   enableSelecting: ->
     @mouseDownLeft = (pos) ->

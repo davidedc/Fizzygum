@@ -6,7 +6,10 @@ class IconicDesktopSystemScriptShortcutWdgt extends IconicDesktopSystemShortcutW
     
     super @target, @title, @icon
 
-  mouseDoubleClick: ->
+  mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
+    if doubleClickInvocation
+      return
+
     if @target.destroyed
       @inform "The referenced item\nis dead!"
       return
