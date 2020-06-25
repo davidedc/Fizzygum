@@ -217,7 +217,7 @@ class ScrollPanelWdgt extends PanelWdgt
 
 
   rawSetExtent: (aPoint) ->
-    unless aPoint.eq @extent()
+    unless aPoint.equals @extent()
       #console.log "move 15"
       @breakNumberOfRawMovesAndResizesCaches()
       if @isTextLineWrapping and !(@contents instanceof SimpleVerticalStackPanelWdgt)
@@ -306,11 +306,11 @@ class ScrollPanelWdgt extends PanelWdgt
     else
       newBounds = @boundingBox()?.ceil()
 
-    unless @contents.boundingBox().eq newBounds
+    unless @contents.boundingBox().equals newBounds
       @contents.silentRawSetBounds newBounds
       @contents.reLayout()
     
-    # you'd think that if @contents.boundingBox().eq newBounds
+    # you'd think that if @contents.boundingBox().equals newBounds
     # then we don't need to check if the contents are "in good view"
     # but actually for example a stack resizes itself automatically when the
     # elements are resized (in the foreach loop above),

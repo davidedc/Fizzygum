@@ -23,7 +23,7 @@ class StretchablePanelWdgt extends PanelWdgt
 
 
   rawSetExtent: (extent) ->
-    if extent.eq @extent()
+    if extent.equals @extent()
       return
 
     super

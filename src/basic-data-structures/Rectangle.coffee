@@ -224,10 +224,10 @@ class Rectangle
     @origin
   
   # Rectangle comparison:
-  eq: (aRect) ->
+  equals: (aRect) ->
     if !aRect? then return false
     @debugIfFloats()
-    @origin.eq(aRect.origin) and @corner.eq(aRect.corner)
+    @origin.equals(aRect.origin) and @corner.equals(aRect.corner)
   
   abs: ->
     @debugIfFloats()

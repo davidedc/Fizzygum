@@ -94,7 +94,7 @@ class StretchableWidgetContainerWdgt extends Widget
 
   rawSetExtent: (extent) ->
 
-    if extent.eq @extent()
+    if extent.equals @extent()
       return
 
     super

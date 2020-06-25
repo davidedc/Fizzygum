@@ -108,7 +108,7 @@ class ListMorph extends ScrollPanelWdgt
 
   
   rawSetExtent: (aPoint) ->
-    unless aPoint.eq @extent()
+    unless aPoint.equals @extent()
       #console.log "move 3"
       @breakNumberOfRawMovesAndResizesCaches()
       lb = @listContents.boundingBox()

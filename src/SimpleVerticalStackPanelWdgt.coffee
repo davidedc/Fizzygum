@@ -134,7 +134,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     @_adjustingContentsBounds = false
 
   rawSetExtent: (aPoint) ->
-    unless aPoint.eq @extent()
+    unless aPoint.equals @extent()
       #console.log "move 15"
       @breakNumberOfRawMovesAndResizesCaches()
       super aPoint

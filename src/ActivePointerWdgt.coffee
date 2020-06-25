@@ -1048,7 +1048,7 @@ class ActivePointerWdgt extends Widget
       # send mouseMove only if mouse actually moved,
       # otherwise it will fire also when the user
       # simply clicks
-      if !@mouseDownPosition? or !@mouseDownPosition.eq @position()
+      if !@mouseDownPosition? or !@mouseDownPosition.equals @position()
         newWdgt.mouseMove?(@position(), @mouseButton)
       
       unless @mouseOverList.has newWdgt

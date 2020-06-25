@@ -76,7 +76,7 @@ ClippingAtRectangularBoundsMixin =
       fullBounds: ->
         if @cachedFullBounds?
           if world.doubleCheckCachedMethodsResults
-            if !@cachedFullBounds.eq @SLOWfullBounds()
+            if !@cachedFullBounds.equals @SLOWfullBounds()
               debugger
               alert "fullBounds is broken (cached)"
           return @cachedFullBounds
@@ -84,7 +84,7 @@ ClippingAtRectangularBoundsMixin =
         result = @bounds
 
         if world.doubleCheckCachedMethodsResults
-          if !result.eq @SLOWfullBounds()
+          if !result.equals @SLOWfullBounds()
             debugger
             alert "fullBounds is broken (uncached)"
 
@@ -97,7 +97,7 @@ ClippingAtRectangularBoundsMixin =
           if @cachedFullClippedBounds?
             if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
               if world.doubleCheckCachedMethodsResults
-                if !@cachedFullClippedBounds.eq @SLOWfullClippedBounds()
+                if !@cachedFullClippedBounds.equals @SLOWfullClippedBounds()
                   debugger
                   alert "fullClippedBounds is broken"
               return @cachedFullClippedBounds
@@ -105,7 +105,7 @@ ClippingAtRectangularBoundsMixin =
           result = @clippedThroughBounds()
 
         if world.doubleCheckCachedMethodsResults
-          if !result.eq @SLOWfullClippedBounds()
+          if !result.equals @SLOWfullClippedBounds()
             debugger
             alert "fullClippedBounds is broken"
 

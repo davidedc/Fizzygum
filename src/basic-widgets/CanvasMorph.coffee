@@ -29,7 +29,7 @@ class CanvasMorph extends PanelWdgt
       # @backBuffer.width and @backBuffer.height are already in
       # physical coordinates so no need to adjust for pixelratio
       backBufferExtent = new Point @backBuffer.width, @backBuffer.height
-      if backBufferExtent.eq extent.scaleBy ceilPixelRatio
+      if backBufferExtent.equals extent.scaleBy ceilPixelRatio
         return [@backBuffer, @backBufferContext]
       else
 

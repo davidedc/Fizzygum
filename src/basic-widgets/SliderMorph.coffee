@@ -60,7 +60,7 @@ class SliderMorph extends CircleBoxMorph
     @changed()
 
   rawSetExtent: (aPoint) ->
-    unless aPoint.eq @extent()
+    unless aPoint.equals @extent()
       #console.log "move 17"
       @breakNumberOfRawMovesAndResizesCaches()  
       super aPoint

@@ -695,10 +695,10 @@ class Widget extends TreeNode
     if false and !window.recalculatingLayouts
       debugger
 
-    if @bounds.eq newBounds
+    if @bounds.equals newBounds
       return
 
-    unless @bounds.origin.eq newBounds.origin
+    unless @bounds.origin.equals newBounds.origin
       @bounds = @bounds.translateTo newBounds.origin
       @breakNumberOfRawMovesAndResizesCaches()
       @changed()
@@ -718,12 +718,12 @@ class Widget extends TreeNode
       aRectangle = aRectangle.round()
 
       newExtent = new Point aRectangle.width(), aRectangle.height()
-      unless @extent().eq newExtent
+      unless @extent().equals newExtent
         @desiredExtent = newExtent
         @invalidateLayout()
 
       newPos = aRectangle.origin.copy()
-      unless @position().eq newPos
+      unless @position().equals newPos
         @desiredPosition = newPos
         @invalidateLayout()
 
@@ -734,10 +734,10 @@ class Widget extends TreeNode
     if false and !window.recalculatingLayouts
       debugger
 
-    if @bounds.eq newBounds
+    if @bounds.equals newBounds
       return
 
-    unless @bounds.origin.eq newBounds.origin
+    unless @bounds.origin.equals newBounds.origin
       @bounds = @bounds.translateTo newBounds.origin
       @breakNumberOfRawMovesAndResizesCaches()
 
@@ -999,7 +999,7 @@ class Widget extends TreeNode
   fullBounds: ->
     if @cachedFullBounds?
       if world.doubleCheckCachedMethodsResults
-        if !@cachedFullBounds.eq @SLOWfullBounds()
+        if !@cachedFullBounds.equals @SLOWfullBounds()
           debugger
           alert "fullBounds is broken (cached)"
       return @cachedFullBounds
@@ -1010,7 +1010,7 @@ class Widget extends TreeNode
         result = result.merge child.fullBounds()
 
     if world.doubleCheckCachedMethodsResults
-      if !result.eq @SLOWfullBounds()
+      if !result.equals @SLOWfullBounds()
         debugger
         alert "fullBounds is broken (uncached)"
 
@@ -1029,7 +1029,7 @@ class Widget extends TreeNode
     else
       if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
         if world.doubleCheckCachedMethodsResults
-          if !@cachedFullClippedBounds.eq @SLOWfullClippedBounds()
+          if !@cachedFullClippedBounds.equals @SLOWfullClippedBounds()
             debugger
             alert "fullClippedBounds is broken"
         return @cachedFullClippedBounds
@@ -1045,7 +1045,7 @@ class Widget extends TreeNode
           result = result.merge child.fullClippedBounds()
 
     if world.doubleCheckCachedMethodsResults
-      if !result.eq @SLOWfullClippedBounds()
+      if !result.equals @SLOWfullClippedBounds()
         debugger
         alert "fullClippedBounds is broken"
 
@@ -1235,7 +1235,7 @@ class Widget extends TreeNode
       newX = Math.max aPoint.x, 0
       newY = Math.max aPoint.y, 0
       newPos = new Point newX, newY
-      unless @position().eq newPos
+      unless @position().equals newPos
         @desiredPosition = newPos
         @invalidateLayout()
         # all the moves via the handles arrive here,
@@ -1454,7 +1454,7 @@ class Widget extends TreeNode
     if !morphStartingTheChange?
       morphStartingTheChange = @
     # check whether we are actually changing the extent.
-    unless aPoint.eq @extent()
+    unless aPoint.equals @extent()
       @breakNumberOfRawMovesAndResizesCaches()
 
       @silentRawSetExtent aPoint
@@ -1480,7 +1480,7 @@ class Widget extends TreeNode
       newWidth = Math.max aPoint.x, 0
       newHeight = Math.max aPoint.y, 0
       newExtent = new Point newWidth, newHeight
-      unless @extent().eq newExtent
+      unless @extent().equals newExtent
         @desiredExtent = newExtent
         @invalidateLayout()
         # all the resizes via the handles arrive here,
@@ -1512,7 +1512,7 @@ class Widget extends TreeNode
 
     newBounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + newWidth, @bounds.origin.y + newHeight
 
-    unless @bounds.eq newBounds
+    unless @bounds.equals newBounds
       @bounds = newBounds
       @breakNumberOfRawMovesAndResizesCaches()
 
@@ -1564,7 +1564,7 @@ class Widget extends TreeNode
     else
       newWidth = Math.max width, 0
       newExtent = new Point newWidth, @height()
-      unless @extent().eq newExtent
+      unless @extent().equals newExtent
         @desiredExtent = newExtent
         @invalidateLayout()
   
@@ -1601,7 +1601,7 @@ class Widget extends TreeNode
     else
       newHeight = Math.max 0, height
       newExtent = new Point @width(), newHeight
-      unless @extent().eq newExtent
+      unless @extent().equals newExtent
         @desiredExtent = newExtent
         @invalidateLayout()
 
@@ -1627,12 +1627,12 @@ class Widget extends TreeNode
     if aColor
 
       # if the color is set using the color string literal
-      # e.g. "red" then we can't check equality using .eq
+      # e.g. "red" then we can't check equality using .equals
       # so just skip the check and set the color
       # TODO either all colors should be set as Color instead
       # of strings, or this check should be smarter
-      if @color?.eq?
-        if @color.eq aColor
+      if @color?.equals?
+        if @color.equals aColor
           return
 
       @color = aColor
@@ -1650,12 +1650,12 @@ class Widget extends TreeNode
     if aColor
 
       # if the color is set using the color string literal
-      # e.g. "red" then we can't check equality using .eq
+      # e.g. "red" then we can't check equality using .equals
       # so just skip the check and set the color
       # TODO either all colors should be set as Color instead
       # of strings, or this check should be smarter
-      if @backgroundColor?.eq?
-        if @backgroundColor.eq aColor
+      if @backgroundColor?.equals?
+        if @backgroundColor.equals aColor
           return
 
       @backgroundColor = aColor
@@ -4263,7 +4263,7 @@ class Widget extends TreeNode
       @notifyChildrenThatParentHasReLayouted()
       return
 
-    #if (@ instanceof LayoutableMorph) and (newBoundsForThisLayout.eq @boundingBox())
+    #if (@ instanceof LayoutableMorph) and (newBoundsForThisLayout.equals @boundingBox())
     #  debugger
 
     # freefloating layouts never need

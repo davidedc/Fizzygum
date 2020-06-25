@@ -173,11 +173,11 @@ class SimplePlainTextWdgt extends TextMorph2
     @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   blendInWithPanelColor: ->
-    if @backgroundColor.eq WorldMorph.preferencesAndSettings.editableItemBackgroundColor
+    if @backgroundColor.equals WorldMorph.preferencesAndSettings.editableItemBackgroundColor
       @setBackgroundColor new Color 249, 249, 249
 
   contrastOutFromPanelColor: ->
-    if @backgroundColor.eq new Color 249, 249, 249
+    if @backgroundColor.equals new Color 249, 249, 249
       @setBackgroundColor WorldMorph.preferencesAndSettings.editableItemBackgroundColor
 
   reLayout: ->

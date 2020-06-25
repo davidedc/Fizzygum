@@ -55,7 +55,7 @@ class Point
     @x is 0 and @y is 0
   
   # Point comparison:
-  eq: (aPoint) ->
+  equals: (aPoint) ->
     # ==
     @x is aPoint.x and @y is aPoint.y
   

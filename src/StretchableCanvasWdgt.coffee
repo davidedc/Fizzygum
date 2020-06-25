@@ -100,7 +100,7 @@ class StretchableCanvasWdgt extends CanvasMorph
 
   rawSetExtent: (extent) ->
 
-    if extent.eq @extent()
+    if extent.equals @extent()
       return
 
     if !@behindTheScenesBackBuffer? or !@anythingPaintedYet

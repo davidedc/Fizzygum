@@ -178,7 +178,7 @@ class Color
   # this part is excluded from the fizzygum homepage build <<«
   
   # Color comparison:
-  eq: (aColor) ->
+  equals: (aColor) ->
     # ==
     @==aColor or (aColor and @_r == aColor._r and @_g == aColor._g and @_b == aColor._b and @_a == aColor._a)
   
