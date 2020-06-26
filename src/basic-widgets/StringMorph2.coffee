@@ -670,7 +670,7 @@ class StringMorph2 extends Widget
     textHorizontalPosition = @textHorizontalPosition widthOfText
 
     if @hasDarkOutline
-      backBufferContext.fillStyle = "black"
+      backBufferContext.fillStyle = Color.BLACK.toString()
       backBufferContext.fillText text, textHorizontalPosition+0, textVerticalPosition+0
       backBufferContext.fillText text, textHorizontalPosition+1.5, textVerticalPosition+0
       backBufferContext.fillText text, textHorizontalPosition-1.5, textVerticalPosition+0
@@ -686,7 +686,7 @@ class StringMorph2 extends Widget
 
     # header line
     if @isHeaderLine
-      backBufferContext.strokeStyle = new Color 198, 198, 198
+      backBufferContext.strokeStyle = (new Color 198, 198, 198).toString()
       backBufferContext.beginPath()
       backBufferContext.moveTo 0, textVerticalPosition - heightOfText / 2
       backBufferContext.lineTo textHorizontalPosition - 5, textVerticalPosition - heightOfText / 2

@@ -88,10 +88,10 @@ class PenMorph extends Widget
     aContext.lineTo right.x, right.y
 
     aContext.closePath()
-    aContext.strokeStyle = "white"
+    aContext.strokeStyle = Color.WHITE.toString()
     aContext.lineWidth = 3
     aContext.stroke()
-    aContext.strokeStyle = "black"
+    aContext.strokeStyle = Color.BLACK.toString()
     aContext.lineWidth = 1
     aContext.stroke()
     aContext.fill()

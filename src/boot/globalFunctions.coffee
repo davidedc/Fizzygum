@@ -264,7 +264,7 @@ getMinimumFontHeight = ->
   ctx = canvas.getContext "2d"
   ctx.font = "1px serif"
   maxX = Math.ceil ctx.measureText(str).width
-  ctx.fillStyle = "black"
+  ctx.fillStyle = Color.BLACK.toString()
   ctx.textBaseline = "bottom"
   ctx.fillText str, 0, size
   for y in [0...size]

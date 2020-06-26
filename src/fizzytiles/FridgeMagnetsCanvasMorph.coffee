@@ -241,11 +241,11 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
 
     #context.beginPath()
     #context.lineWidth="6"
-    #context.strokeStyle="red"
+    #context.strokeStyle=Color.RED.toString()
     #context.rect(5,5,290,140)
     #context.stroke()
 
-    @backBufferContext.strokeStyle = "black"
+    @backBufferContext.strokeStyle = Color.BLACK.toString()
     @backBufferContext.beginPath()
     @backBufferContext.rect -50,-50,100,100
     @backBufferContext.stroke()

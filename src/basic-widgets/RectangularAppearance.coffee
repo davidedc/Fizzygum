@@ -73,7 +73,7 @@ class RectangularAppearance extends Appearance
     if @morph.backgroundColor?
       color = @morph.backgroundColor
       if appliedShadow?
-        color = "black"
+        color = Color.BLACK
       @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
 
 
@@ -83,7 +83,7 @@ class RectangularAppearance extends Appearance
 
     color = @morph.color
     if appliedShadow?
-      color = "black"
+      color = Color.BLACK
 
     @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
 

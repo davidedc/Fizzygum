@@ -140,7 +140,7 @@ class StackElementsSizeAdjustingMorph extends Widget
     radius = radius - radius / 20
     aContext.beginPath()
     aContext.arc centerX, centerY, radius, 0, 2 * Math.PI
-    aContext.fillStyle = 'Gray'
+    aContext.fillStyle = Color.GRAY.toString()
     aContext.fill()
     aContext.closePath()
 

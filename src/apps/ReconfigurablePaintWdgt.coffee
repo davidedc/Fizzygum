@@ -102,13 +102,13 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
 
                 contextMain.beginPath()
                 contextMain.lineWidth="2"
-                contextMain.fillStyle = "black"
+                contextMain.fillStyle = Color.BLACK.toString()
                 contextMain.rect(-2,-2,4,4)
                 contextMain.fill()
                 @underlyingCanvasMorph.changed()
 
             else
-                context.strokeStyle="red"
+                context.strokeStyle=Color.RED.toString()
                 context.rect(-2,-2,4,4)
                 context.stroke()
             @changed()
@@ -141,11 +141,11 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             context.lineWidth="2"
 
             if mouseButton == 'left'
-                context.fillStyle = "red"
+                context.fillStyle = Color.RED.toString()
 
                 contextMain = @underlyingCanvasMorph.getContextForPainting()
                 contextMain.translate pos.x, pos.y
-                contextMain.fillStyle = "black"
+                contextMain.fillStyle = Color.BLACK.toString()
 
                 # the brush is 16 x 16, so center it
                 contextMain.translate -8, -8
@@ -211,7 +211,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
                 @underlyingCanvasMorph.changed()
 
             else
-                context.strokeStyle="green"
+                context.strokeStyle=Color.GREEN.toString()
             context.rect(-5,-5,10,10)
             context.stroke()
             @changed()
@@ -317,7 +317,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
                     if previousPos?
                         contextMain.save()
                         contextMain.translate previousPos.x, previousPos.y
-                        contextMain.fillStyle = "white"
+                        contextMain.fillStyle = Color.WHITE.toString()
                         @paintBrush contextMain
                         contextMain.restore()
                 delete @queue
@@ -338,13 +338,13 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             if mouseButton == 'left'
                 @initialiseQueueIfNeeded()
                 @queue.push pos
-                context.fillStyle = "red"
+                context.fillStyle = Color.RED.toString()
 
                 contextMain = @underlyingCanvasMorph.getContextForPainting()
                 
                 contextMain.save()
                 contextMain.translate pos.x, pos.y
-                contextMain.fillStyle = "black"
+                contextMain.fillStyle = Color.BLACK.toString()
                 #@paintBrush contextMain
                 contextMain.beginPath()
                 contextMain.arc 0,0,9,0,2*Math.PI
@@ -357,7 +357,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
                 if previousPos?
                     contextMain.save()
                     contextMain.translate previousPos.x, previousPos.y
-                    contextMain.fillStyle = "white"
+                    contextMain.fillStyle = Color.WHITE.toString()
                     @paintBrush contextMain
                     contextMain.restore()
 
@@ -365,7 +365,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
                 @underlyingCanvasMorph.changed()
 
             else
-                context.strokeStyle="green"
+                context.strokeStyle=Color.GREEN.toString()
             context.rect(-5,-5,10,10)
             context.stroke()
             @changed()
@@ -395,7 +395,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             context.lineWidth="2"
 
             if mouseButton == 'left'
-                context.fillStyle = "red"
+                context.fillStyle = Color.RED.toString()
 
                 contextMain = @underlyingCanvasMorph.getContextForPainting()
                 contextMain.translate pos.x, pos.y
@@ -408,7 +408,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
                 @underlyingCanvasMorph.changed()
 
             else
-                context.strokeStyle="green"
+                context.strokeStyle=Color.GREEN.toString()
             context.rect(-5,-5,10,10)
             context.stroke()
             @changed()

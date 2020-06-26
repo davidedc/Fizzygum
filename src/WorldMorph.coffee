@@ -460,7 +460,7 @@ class WorldMorph extends PanelWdgt
         if window.location.href.includes("worldWithSystemTestHarness")
           if @automator.atLeastOneTestHasBeenRun
             if @automator.allTestsPassedSoFar
-              document.getElementById("background").style.background = "green"
+              document.getElementById("background").style.background = Color.GREEN.toString()
       return
 
     if !@isIndexPage then console.log "nextStartupAction " + (WorldMorph.ongoingUrlActionNumber+1) + " / " + startupActions.actions.length
@@ -1391,8 +1391,8 @@ class WorldMorph extends PanelWdgt
       return
     @inputDOMElementForVirtualKeyboard = document.createElement "input"
     @inputDOMElementForVirtualKeyboard.type = "text"
-    @inputDOMElementForVirtualKeyboard.style.color = "transparent"
-    @inputDOMElementForVirtualKeyboard.style.backgroundColor = "transparent"
+    @inputDOMElementForVirtualKeyboard.style.color = Color.TRANSPARENT.toString()
+    @inputDOMElementForVirtualKeyboard.style.backgroundColor = Color.TRANSPARENT.toString()
     @inputDOMElementForVirtualKeyboard.style.border = "none"
     @inputDOMElementForVirtualKeyboard.style.outline = "none"
     @inputDOMElementForVirtualKeyboard.style.position = "absolute"

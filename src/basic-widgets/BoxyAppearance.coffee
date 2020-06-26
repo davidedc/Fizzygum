@@ -72,7 +72,7 @@ class BoxyAppearance extends Appearance
     aContext.fillStyle = @morph.color.toString()
     
     if appliedShadow?
-      aContext.fillStyle = "black"
+      aContext.fillStyle = Color.BLACK.toString()
 
     aContext.beginPath()
     @outlinePath aContext, @getCornerRadius(), false

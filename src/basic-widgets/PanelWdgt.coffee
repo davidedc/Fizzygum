@@ -45,14 +45,8 @@ class PanelWdgt extends Widget
     # if there is one. Note that the container scrollPanel
     # is actually not painted.
     if @scrollPanel
-      # if the color is set using the color string literal
-      # e.g. "red" then we can't check equality using .equals
-      # so just skip the check and set the color
-      # TODO either all colors should be set as Color instead
-      # of strings, or this check should be smarter
-      if @scrollPanel.color?.equals?
-        if @scrollPanel.color.equals aColor
-          return
+      if @scrollPanel.color?.equals aColor
+        return
       @scrollPanel.color = aColor
       @scrollPanel.changed()
 

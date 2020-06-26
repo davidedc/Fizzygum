@@ -77,7 +77,7 @@ class CircleBoxyAppearance extends Appearance
     color = @morph.color
 
     if appliedShadow?
-      aContext.fillStyle = "black"
+      aContext.fillStyle = Color.BLACK.toString()
     else
       aContext.fillStyle = color.toString()
 

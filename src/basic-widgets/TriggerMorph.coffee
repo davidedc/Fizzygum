@@ -133,7 +133,7 @@ class TriggerMorph extends Widget
     return nil if w < 1 or h < 1 or area.isEmpty()
 
     if appliedShadow?
-      color = "black"
+      color = Color.BLACK
     else
       color = switch @state
         when @STATE_NORMAL

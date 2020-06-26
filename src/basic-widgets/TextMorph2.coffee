@@ -438,7 +438,7 @@ class TextMorph2 extends StringMorph2
         textHorizontalPosition = x
         textVertPosition = y + textVerticalPosition
         widthOfText = width
-        backBufferContext.strokeStyle = new Color 198, 198, 198
+        backBufferContext.strokeStyle = (new Color 198, 198, 198).toString()
         backBufferContext.beginPath()
         backBufferContext.moveTo 0, textVertPosition - heightOfText / 2
         backBufferContext.lineTo textHorizontalPosition - 5, textVertPosition - heightOfText / 2

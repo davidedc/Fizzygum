@@ -7,7 +7,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    white = 'rgb(255, 255, 255)'
+    whiteColorString = 'rgb(255, 255, 255)'
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
     #// everything
     #// bubble outline Drawing
@@ -38,51 +38,51 @@ class FizzygumLogoIconAppearance extends IconAppearance
     #// bubbles
     #// bubble 1 Drawing
     @oval context, 65, 29, 5, 5
-    context.fillStyle = white
+    context.fillStyle = whiteColorString
     context.fill()
     #// bubble 2 Drawing
     @oval context, 60, 45, 9, 9
-    context.fillStyle = white
+    context.fillStyle = whiteColorString
     context.fill()
     #// bubble 3 Drawing
     @oval context, 53, 35, 6, 6
-    context.fillStyle = white
+    context.fillStyle = whiteColorString
     context.fill()
     #// bubble 4 Drawing
     @oval context, 40, 45, 8, 8
-    context.fillStyle = white
+    context.fillStyle = whiteColorString
     context.fill()
     #// bubble 5 Drawing
     @oval context, 39, 30, 6, 6
-    context.fillStyle = white
+    context.fillStyle = whiteColorString
     context.fill()
     #// bubble 7 Drawing
     @oval context, 28, 37, 4, 4
-    context.fillStyle = white
+    context.fillStyle = whiteColorString
     context.fill()
     #// bubble 8 Drawing
     @oval context, 26, 52, 5, 5
-    context.fillStyle = white
+    context.fillStyle = whiteColorString
     context.fill()
     #// bubble 9 Drawing
     @oval context, 32, 69, 4, 4
-    context.fillStyle = white
+    context.fillStyle = whiteColorString
     context.fill()
     #// bubble 10 Drawing
     @oval context, 50, 74, 3, 3
-    context.fillStyle = white
+    context.fillStyle = whiteColorString
     context.fill()
     #// bubble 12 Drawing
     @oval context, 72, 56, 4, 4
-    context.fillStyle = white
+    context.fillStyle = whiteColorString
     context.fill()
     #// bubble 13 Drawing
     @oval context, 53, 58, 4, 4
-    context.fillStyle = white
+    context.fillStyle = whiteColorString
     context.fill()
     #// bubble 20 Drawing
     @oval context, 62, 66, 6, 6
-    context.fillStyle = white
+    context.fillStyle = whiteColorString
     context.fill()
     #// twinkles
     #// twinkle 1

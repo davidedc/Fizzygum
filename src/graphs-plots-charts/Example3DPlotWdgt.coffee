@@ -232,7 +232,7 @@ class Example3DPlotWdgt extends Widget
 
     points = []
 
-    context.strokeStyle = 'black'
+    context.strokeStyle = Color.BLACK.toString()
     originalAlpha = context.globalAlpha
     context.globalAlpha = 0.6
 
@@ -278,7 +278,7 @@ class Example3DPlotWdgt extends Widget
 
     context.closePath()
 
-    context.strokeStyle = 'black'
+    context.strokeStyle = Color.BLACK.toString()
     context.stroke()
 
 
@@ -295,7 +295,7 @@ class Example3DPlotWdgt extends Widget
 
     context.closePath()
 
-    context.strokeStyle = 'grey'
+    context.strokeStyle = Color.GRAY.toString()
     context.stroke()
 
 

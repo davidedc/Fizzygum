@@ -116,8 +116,8 @@ class AnalogClockWdgt extends Widget
     context.scale 0.9, 0.9
 
     context.rotate -Math.PI / 2
-    context.strokeStyle = 'black'
-    context.fillStyle = 'white'
+    context.strokeStyle = Color.BLACK.toString()
+    context.fillStyle = Color.WHITE.toString()
     context.lineWidth = 6 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
     context.lineCap = 'round'
 
@@ -147,7 +147,7 @@ class AnalogClockWdgt extends Widget
       i++
     context.restore()
 
-    context.fillStyle = 'black'
+    context.fillStyle = Color.BLACK.toString()
 
     @calculateHandsAngles()
 

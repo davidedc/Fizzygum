@@ -25,8 +25,8 @@ class GrayPaletteMorph extends ColorPaletteMorph
     backBufferContext.useLogicalPixelsUntilRestore()
     @choice = new Color
     gradient = backBufferContext.createLinearGradient 0, extent.y, extent.x, extent.y
-    gradient.addColorStop 0, "black"
-    gradient.addColorStop 1, "white"
+    gradient.addColorStop 0, Color.BLACK.toString()
+    gradient.addColorStop 1, Color.WHITE.toString()
     backBufferContext.fillStyle = gradient
     backBufferContext.fillRect 0, 0, extent.x, extent.y
 

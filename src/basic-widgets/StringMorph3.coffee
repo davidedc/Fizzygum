@@ -611,7 +611,7 @@ class StringMorph3 extends Widget
     textHorizontalPosition = @textHorizontalPosition widthOfText
 
     if @hasDarkOutline
-      backBufferContext.fillStyle = "black"
+      backBufferContext.fillStyle = Color.BLACK.toString()
       backBufferContext.fillText text, textHorizontalPosition+0, textVerticalPosition+0
       backBufferContext.fillText text, textHorizontalPosition+1.5, textVerticalPosition+0
       backBufferContext.fillText text, textHorizontalPosition-1.5, textVerticalPosition+0
