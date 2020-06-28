@@ -90,7 +90,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 52, 17.98
     context.lineTo 52, 19.98
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -98,7 +98,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 48, 22
     context.lineTo 50, 22
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -106,7 +106,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 54, 22
     context.lineTo 56, 22
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -114,7 +114,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 52, 23.98
     context.lineTo 52, 25.98
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -123,7 +123,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 44, 60.48
     context.lineTo 44, 62.48
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
@@ -131,7 +131,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 40.5, 64
     context.lineTo 42.5, 64
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
@@ -139,7 +139,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 45.5, 64
     context.lineTo 47.5, 64
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
@@ -147,7 +147,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 44, 65.48
     context.lineTo 44, 67.48
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
@@ -156,7 +156,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 77.5, 37.98
     context.lineTo 77.5, 39.98
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -164,7 +164,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 73.5, 42
     context.lineTo 75.5, 42
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -172,7 +172,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 79.5, 42
     context.lineTo 81.5, 42
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()
@@ -180,7 +180,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 77.5, 43.98
     context.lineTo 77.5, 45.98
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 2
     context.lineCap = 'round'
     context.stroke()

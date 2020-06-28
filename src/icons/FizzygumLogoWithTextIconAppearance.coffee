@@ -85,7 +85,7 @@ class FizzygumLogoWithTextIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 52, 13.98
     context.lineTo 52, 15.48
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
@@ -93,7 +93,7 @@ class FizzygumLogoWithTextIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 49, 17
     context.lineTo 50.5, 17
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
@@ -101,7 +101,7 @@ class FizzygumLogoWithTextIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 53.5, 17
     context.lineTo 55, 17
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
@@ -109,7 +109,7 @@ class FizzygumLogoWithTextIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 52, 18.48
     context.lineTo 52, 19.98
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
@@ -118,7 +118,7 @@ class FizzygumLogoWithTextIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 46, 47.48
     context.lineTo 46, 48.91
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 1
     context.lineCap = 'round'
     context.stroke()
@@ -126,7 +126,7 @@ class FizzygumLogoWithTextIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 43.5, 49.99
     context.lineTo 44.93, 49.99
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 1
     context.lineCap = 'round'
     context.stroke()
@@ -134,7 +134,7 @@ class FizzygumLogoWithTextIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 47.07, 49.99
     context.lineTo 48.5, 49.99
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 1
     context.lineCap = 'round'
     context.stroke()
@@ -142,7 +142,7 @@ class FizzygumLogoWithTextIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 46, 51.05
     context.lineTo 46, 52.48
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 1
     context.lineCap = 'round'
     context.stroke()
@@ -151,7 +151,7 @@ class FizzygumLogoWithTextIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 72.5, 30.98
     context.lineTo 72.5, 32.48
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
@@ -159,7 +159,7 @@ class FizzygumLogoWithTextIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 69.5, 34
     context.lineTo 71, 34
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
@@ -167,7 +167,7 @@ class FizzygumLogoWithTextIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 74, 34
     context.lineTo 75.5, 34
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
@@ -175,7 +175,7 @@ class FizzygumLogoWithTextIconAppearance extends IconAppearance
     context.beginPath()
     context.moveTo 72.5, 35.48
     context.lineTo 72.5, 36.98
-    context.strokeStyle = 'rgb(255, 255, 255)'
+    context.strokeStyle = whiteColorString
     context.lineWidth = 1.5
     context.lineCap = 'round'
     context.stroke()
