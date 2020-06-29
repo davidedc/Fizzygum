@@ -152,7 +152,7 @@ class Color
   _b: nil
   _a: nil
 
-  constructor: (@_r = 0, @_g = 0, @_b = 0, @_a=1) ->
+  constructor: (@_r = 0, @_g = 0, @_b = 0, @_a = 1) ->
     # all values are optional, just (r, g, b) is fine
 
   bluerBy: (howMuchMoreBlue) ->
