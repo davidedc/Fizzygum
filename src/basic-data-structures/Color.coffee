@@ -153,7 +153,7 @@ class Color
   _r: nil
   _g: nil
   _b: nil
-  _a: nil
+  _a: nil # opacity as a number between 0.0 (fully transparent) and 1.0 (fully opaque)
 
   constructor: (@_r = 0, @_g = 0, @_b = 0, @_a = 1) ->
     # all values are optional, just (r, g, b) is fine
