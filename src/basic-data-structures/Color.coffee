@@ -230,7 +230,7 @@ class Color
   # put in place, remember that you should be able to re-generate valid
   # sources from whatever source code is loaded. I.e. the roundtrip
   # should be source -> parsed sources -> regen sources and the 1st step == last step
-  @initStaticConstsAfterClassDefinition: ->
+  @initPublicStaticConstsAfterEachClassDefinition: ->
     for eachLiteral in @_literalsData
       @[eachLiteral[0]] = new @ eachLiteral[1], eachLiteral[2], eachLiteral[3]
       @AVAILABLE_LITERALS_NAMES.push eachLiteral[0]
