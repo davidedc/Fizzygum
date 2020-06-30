@@ -101,6 +101,17 @@ class Class
         sourceWithoutComments += eachLine + "\n"
     return sourceWithoutComments
 
+  findClassName: (source) ->
+    # find the class name
+    classRegex = /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
+    if (m = classRegex.exec(source))?
+        m.forEach (match, groupIndex) ->
+            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
+        name = m[1]
+        if window.srcLoadCompileDebugWrites then console.log "name: " + name
+    return name
+
+
   # You can create a Class in 3 main "modes" of use:
   #  1. you want to load up the CS source, turn it to JS
   #     and eval the JS so to create the class:
@@ -125,13 +136,7 @@ class Class
     @subClasses = new Set
 
     # find the class name
-    classRegex = /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
-    if (m = classRegex.exec(source))?
-        m.forEach((match, groupIndex) ->
-            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
-        )
-        @name = m[1]
-        if window.srcLoadCompileDebugWrites then console.log "name: " + @name
+    @name = @findClassName source
 
     # find if it extends some other class
     extendsRegex = /^class[ \t]*[a-zA-Z_$][0-9a-zA-Z_$]*[ \t]*extends[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
