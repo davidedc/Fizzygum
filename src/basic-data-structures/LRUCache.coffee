@@ -2,6 +2,7 @@
 ## from https://github.com/viruschidai/lru-cache
 
 class LRUCache
+
   constructor: (@capacity = 10, @maxAge = 60000) ->
     @_linkList = new DoubleLinkedList
     @reset()

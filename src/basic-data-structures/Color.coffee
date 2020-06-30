@@ -149,6 +149,7 @@ class Color
 
   @_cache: nil
 
+
   _r: nil
   _g: nil
   _b: nil
