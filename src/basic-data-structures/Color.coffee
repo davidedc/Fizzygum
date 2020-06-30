@@ -160,6 +160,7 @@ class Color
 
   # draft code to cache constructed colors since they are immutable
   #@create: (r = 0, g = 0, b = 0, a = 1) ->
+  #  if !@_cache then @_cache = new LRUCache 300, 1000*60*60*24
   #  cacheKey = Math.round(r) + "," + Math.round(g) + "," + Math.round(b) + "," + a
   #  cachedColor = @_cache.get cacheKey
   #  cacheEntry = new @ r, g, b, a
@@ -253,6 +254,3 @@ class Color
     # case that it's OK to use a non-integer.
     # note that this is not an actual Color!
     @ANGLECOLOR = "angleColor"
-
-    #@_cache = new LRUCache 300, 1000*60*60*24
-
