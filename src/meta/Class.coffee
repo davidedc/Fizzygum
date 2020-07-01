@@ -101,6 +101,22 @@ class Class
         sourceWithoutComments += eachLine + "\n"
     return sourceWithoutComments
 
+
+  findIfItExtendsAnotherClass: (source) ->
+    # find if it extends some other class
+    extendsRegex = /^class[ \t]*[a-zA-Z_$][0-9a-zA-Z_$]*[ \t]*extends[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
+    if (m = extendsRegex.exec(source))?
+        m.forEach((match, groupIndex) ->
+            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
+        )
+        superClassName = m[1]
+        if window.srcLoadCompileDebugWrites then console.log "we should have already loaded " + superClassName
+        superClass = window[superClassName].class
+
+        if window.srcLoadCompileDebugWrites then console.log "superClassName: " + superClassName
+
+    return [superClassName, superClass]
+
   findClassName: (source) ->
     # find the class name
     classRegex = /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
@@ -135,20 +151,8 @@ class Class
     @staticPropertiesSources = {}
     @subClasses = new Set
 
-    # find the class name
     @name = @findClassName source
-
-    # find if it extends some other class
-    extendsRegex = /^class[ \t]*[a-zA-Z_$][0-9a-zA-Z_$]*[ \t]*extends[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
-    if (m = extendsRegex.exec(source))?
-        m.forEach((match, groupIndex) ->
-            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
-        )
-        @superClassName = m[1]
-        if window.srcLoadCompileDebugWrites then console.log "we should have already loaded " + @superClassName
-        @superClass = window[@superClassName].class
-
-        if window.srcLoadCompileDebugWrites then console.log "superClassName: " + @superClassName
+    [@superClassName, @superClass] = @findIfItExtendsAnotherClass source
 
     # find which mixins need to be mixed-in
     @augmentedWith = []
