@@ -159,6 +159,9 @@ class Color
 
   # all values are optional, just (r, g, b) is fine
   constructor: (@_r = 0, @_g = 0, @_b = 0, @_a = 1) ->
+    @_r = Math.round(@_r)
+    @_g = Math.round(@_g)
+    @_b = Math.round(@_b)
 
   # draft code to cache constructed colors since they are immutable
   #@create: (r = 0, g = 0, b = 0, a = 1) ->
