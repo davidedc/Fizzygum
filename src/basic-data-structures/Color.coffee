@@ -1,4 +1,5 @@
 # IMMUTABLE
+# REQUIRES LRUCache
 
 class Color
 
@@ -174,19 +175,28 @@ class Color
   _a: nil # opacity as a number between 0.0 (fully transparent) and 1.0 (fully opaque)
 
   # all values are optional, just (r, g, b) is fine
+  # this should ONLY be used from the "synthetic" constructors
+  # the reason being that from the "synthetic" constructors you can
+  # go through a cache so you try to keep only ONE instance
+  # of each color, say, BLACK, in the system.
   constructor: (@_r = 0, @_g = 0, @_b = 0, @_a = 1) ->
     @_r = Math.round(@_r)
     @_g = Math.round(@_g)
     @_b = Math.round(@_b)
 
   # draft code to cache constructed colors since they are immutable
-  #@create: (r = 0, g = 0, b = 0, a = 1) ->
-  #  if !@_cache then @_cache = new LRUCache 300, 1000*60*60*24
-  #  cacheKey = Math.round(r) + "," + Math.round(g) + "," + Math.round(b) + "," + a
-  #  cachedColor = @_cache.get cacheKey
-  #  cacheEntry = new @ r, g, b, a
-  #  @_cache.set cacheKey, cacheEntry
-  #  return cacheEntry
+  @create: (r = 0, g = 0, b = 0, a = 1) ->
+    r = Math.round r
+    g = Math.round g
+    b = Math.round b
+
+    if !@_cache then @_cache = new LRUCache 300, 1000*60*60*24
+    cacheKey = r + "," + g + "," + b + "," + a
+    cacheEntry = @_cache.get cacheKey
+    if !cacheEntry?
+      cacheEntry = new @ r, g, b, a
+      @_cache.set cacheKey, cacheEntry
+    return cacheEntry
 
   bluerBy: (howMuchMoreBlue) ->
     new @constructor @_r, @_g, (@_b+howMuchMoreBlue), @_a
