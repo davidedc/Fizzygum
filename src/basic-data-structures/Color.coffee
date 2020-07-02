@@ -145,6 +145,7 @@ class Color
     ["YELLOWGREEN",0x9a,0xcd,0x32]
   ]
 
+  # TODO
   @AVAILABLE_LITERALS_NAMES: []
 
   @_cache: nil
