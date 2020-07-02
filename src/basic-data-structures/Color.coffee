@@ -193,7 +193,6 @@ class Color
   
   # Color comparison:
   equals: (aColor) ->
-    # ==
     @==aColor or (aColor and @_r == aColor._r and @_g == aColor._g and @_b == aColor._b and @_a == aColor._a)
   
   
