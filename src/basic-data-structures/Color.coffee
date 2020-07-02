@@ -206,9 +206,9 @@ class Color
     frac1 = Math.min Math.max(proportion, 0), 1
     frac2 = 1 - frac1
     new @constructor(
-      @_r * frac1 + otherColor._r * frac2,
-      @_g * frac1 + otherColor._g * frac2,
-      @_b * frac1 + otherColor._b * frac2,
+      @_r * frac1 + otherColor._r * frac2
+      @_g * frac1 + otherColor._g * frac2
+      @_b * frac1 + otherColor._b * frac2
       @_a * frac1 + otherColor._a * frac2)
   
   # currently unused
