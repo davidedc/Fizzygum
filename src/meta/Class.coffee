@@ -302,6 +302,8 @@ class Class
           #if @name == "StringMorph2" then debugger
           JS_string_definitions += fieldDeclaration + "\n"
 
+      JS_staticConstantsBuiltWithClassItself_definitions = ""
+
       # now the static fields, which are put in the constructor
       # rather than in the prototype
       for own fieldName, fieldValue of @staticPropertiesSources
@@ -316,24 +318,23 @@ class Class
           fieldDeclaration = "window." + @name + "." + fieldName + " = " + fieldDeclaration
 
           if window.srcLoadCompileDebugWrites then console.log fieldDeclaration
-          JS_string_definitions += fieldDeclaration + "\n"
+
+          if (new RegExp("\\s*new\\s*" + @name + "(\\s|$)")).test fieldValue
+            # for example, in the Color class:
+            #    @BLACK: new Color 0,0,0
+            # we need to put these aside and add them last, so that the
+            # rest of the class is defined and we can initialise these
+            # properly.
+            JS_staticConstantsBuiltWithClassItself_definitions += fieldDeclaration + "\n"
+          else
+            JS_string_definitions += fieldDeclaration + "\n"
 
 
       # analogous to
       # window[@name].instances = new Set
       JS_string_definitions += "window.#{@name}.instances = new Set;" + "\n"
 
-      # some classes have a static initPublicStaticConstsAfterEachClassDefinition method
-      # we need to call that method to give a chance to the class to initialise
-      # static constants e.g. Color.WHITE etc.
-      # We do that here (i.e. soon after the class definition), so that any other
-      # class defined afterwards (that might initialise its fields with things like
-      # Color.WHITE) can use such static values.
-      JS_string_definitions += """
-        if (typeof window.#{@name}.initPublicStaticConstsAfterEachClassDefinition === "function") {
-          window.#{@name}.initPublicStaticConstsAfterEachClassDefinition();
-        }
-      """
+      JS_string_definitions += JS_staticConstantsBuiltWithClassItself_definitions
 
       JSSourcesContainer.content += JS_string_definitions + "\n"
 
