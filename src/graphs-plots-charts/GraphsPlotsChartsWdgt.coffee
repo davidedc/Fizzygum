@@ -6,7 +6,7 @@ class GraphsPlotsChartsWdgt extends Widget
 
   constructor: (@drawOnlyPartOfBoundingRect)->
     super()
-    @setColor new Color 255, 125, 125
+    @setColor Color.create 255, 125, 125
     @rawSetExtent new Point 200, 200
 
 
@@ -34,7 +34,7 @@ class GraphsPlotsChartsWdgt extends Widget
 
     if appliedShadow?
       context.globalAlpha = appliedShadow.alpha * @alpha
-      context.fillStyle = (new Color 80, 80, 80).toString()
+      context.fillStyle = (Color.create 80, 80, 80).toString()
       context.fillRect 0, 0, width, height
       # let's avoid paint 3d stuff twice because
       # of the shadow
@@ -44,7 +44,7 @@ class GraphsPlotsChartsWdgt extends Widget
     height = @height()
     width = @width()
 
-    context.strokeStyle = (new Color 30,30,30).toString()
+    context.strokeStyle = (Color.create 30,30,30).toString()
     if @drawOnlyPartOfBoundingRect
       context.beginPath()
       context.moveTo 0, 0

@@ -40,7 +40,7 @@ class LayoutElementAdderOrDropletMorph extends Widget
     morphPosition = @position()
     aContext.translate morphPosition.x, morphPosition.y
 
-    @spacerMorphRenderingHelper aContext, Color.WHITE, new Color 200, 200, 255
+    @spacerMorphRenderingHelper aContext, Color.WHITE, Color.create 200, 200, 255
 
     aContext.restore()
 
@@ -141,7 +141,7 @@ class LayoutElementAdderOrDropletMorph extends Widget
     @fullDestroy()
 
   mouseEnter: ->
-    @setColor new Color 100, 100, 100
+    @setColor Color.create 100, 100, 100
   
   mouseLeave: ->
     @setColor Color.BLACK

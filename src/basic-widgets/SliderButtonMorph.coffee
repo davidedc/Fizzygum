@@ -4,8 +4,8 @@
 
 class SliderButtonMorph extends CircleBoxMorph
 
-  highlightColor: new Color 110, 110, 110
-  pressColor: new Color 100, 100, 100
+  highlightColor: Color.create 110, 110, 110
+  pressColor: Color.create 100, 100, 100
   normalColor: Color.BLACK
 
   state: 0

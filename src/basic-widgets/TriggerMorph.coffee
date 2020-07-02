@@ -28,8 +28,8 @@ class TriggerMorph extends Widget
   fontSize: nil
   fontStyle: nil
 
-  highlightColor: new Color 192, 192, 192
-  pressColor: new Color 128, 128, 128
+  highlightColor: Color.create 192, 192, 192
+  pressColor: Color.create 128, 128, 128
 
   centered: false
   ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked: true

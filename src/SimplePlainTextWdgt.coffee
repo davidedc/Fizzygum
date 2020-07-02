@@ -174,10 +174,10 @@ class SimplePlainTextWdgt extends TextMorph2
 
   blendInWithPanelColor: ->
     if @backgroundColor.equals WorldMorph.preferencesAndSettings.editableItemBackgroundColor
-      @setBackgroundColor new Color 249, 249, 249
+      @setBackgroundColor Color.create 249, 249, 249
 
   contrastOutFromPanelColor: ->
-    if @backgroundColor.equals new Color 249, 249, 249
+    if @backgroundColor.equals Color.create 249, 249, 249
       @setBackgroundColor WorldMorph.preferencesAndSettings.editableItemBackgroundColor
 
   reLayout: ->

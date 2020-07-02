@@ -27,6 +27,6 @@ class SimpleButtonMorph extends EmptyButtonMorph
     super
 
     @appearance = new BoxyAppearance @
-    @strokeColor = new Color 196,195,196
-    @color = new Color 245, 244, 245
+    @strokeColor = Color.create 196,195,196
+    @color = Color.create 245, 244, 245
 

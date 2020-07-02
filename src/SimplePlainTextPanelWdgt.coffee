@@ -23,7 +23,7 @@ class SimplePlainTextPanelWdgt extends PanelWdgt
     @isTextLineWrapping = wraps
     @color = Color.WHITE
     ostmA = new SimplePlainTextWdgt(
-      textAsString,nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
+      textAsString,nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     ostmA.isEditable = true
     if !wraps
       ostmA.maxTextWidth = 0

@@ -176,7 +176,7 @@ class InspectorMorph2 extends Widget
         goingUpTargetProtChain = goingUpTargetProtChain.__proto__
 
     @hierarchyBackgroundPanel = new RectangleMorph
-    @hierarchyBackgroundPanel.setColor new Color 255,255,255,.2
+    @hierarchyBackgroundPanel.setColor Color.create 255,255,255,.2
     @add @hierarchyBackgroundPanel
 
     counter = 0
@@ -280,7 +280,7 @@ class InspectorMorph2 extends Widget
     # and disable the "save" button
     if !@list.selected?
       @detail.modifiedTextTriangleAnnotation?.hide()
-      @saveTextWdgt.setColor new Color 200, 200, 200
+      @saveTextWdgt.setColor Color.create 200, 200, 200
 
     # register this wdgt as one to be notified when the text
     # changes/unchanges from "reference" content
@@ -323,7 +323,7 @@ class InspectorMorph2 extends Widget
     # TODO this would stand for enabling/disabling the button
     # but really we are just changing the color and the button
     # still works. Need some better enabling/disabling
-    @saveTextWdgt.setColor new Color 200, 200, 200
+    @saveTextWdgt.setColor Color.create 200, 200, 200
 
 
   buildAndConnectObjOwnPropsButton: ->
@@ -357,7 +357,7 @@ class InspectorMorph2 extends Widget
     if @markOwnershipOfProperties
       return [
         # give color criteria from the most general to the most specific
-        [new Color(0, 0, 180),
+        [Color.create(0, 0, 180),
           (element) =>
             # if the element is either an enumerable property of the object
             # or it belongs to the own methods, then it is highlighted.
@@ -367,7 +367,7 @@ class InspectorMorph2 extends Widget
             # are still not picked up, maybe because of the coffeescript construction system, I am not sure
             true
         ],
-        [new Color(0, 180, 0),
+        [Color.create(0, 180, 0),
           (element) =>
             # if the element is either an enumerable property of the object
             # or it belongs to the own methods, then it is highlighted.

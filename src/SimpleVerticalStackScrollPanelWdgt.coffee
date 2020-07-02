@@ -16,7 +16,7 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
     ostmA.isEditable = true
     ostmA.enableSelecting()
     @setContents ostmA, 5
-    @setColor new Color 249, 249, 249
+    @setColor Color.create 249, 249, 249
 
   colloquialName: ->
     "stack"

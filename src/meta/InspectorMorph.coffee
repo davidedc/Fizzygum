@@ -24,7 +24,7 @@ class InspectorMorph extends BoxMorph
     @silentRawSetExtent new Point(WorldMorph.preferencesAndSettings.handleSize * 20,
       WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3).round()
     @padding = if WorldMorph.preferencesAndSettings.isFlat then 1 else 5
-    @color = new Color 60, 60, 60
+    @color = Color.create 60, 60, 60
     @buildAndConnectChildren()  if @target
   
   inspectObject: (objectToBeInspected) ->
@@ -276,7 +276,7 @@ class InspectorMorph extends BoxMorph
     if @markOwnershipOfProperties
       return [
         # give color criteria from the most general to the most specific
-        [new Color(0, 0, 180),
+        [Color.create(0, 0, 180),
           (element) =>
             # if the element is either an enumerable property of the object
             # or it belongs to the own methods, then it is highlighted.
@@ -286,7 +286,7 @@ class InspectorMorph extends BoxMorph
             # are still not picked up, maybe because of the coffeescript construction system, I am not sure
             true
         ],
-        [new Color(255, 165, 0),
+        [Color.create(255, 165, 0),
           (element) =>
             # if the element is either an enumerable property of the object
             # or it belongs to the own methods, then it is highlighted.
@@ -296,7 +296,7 @@ class InspectorMorph extends BoxMorph
             # are still not picked up, maybe because of the coffeescript construction system, I am not sure
             element in staticProperties
         ],
-        [new Color(0, 180, 0),
+        [Color.create(0, 180, 0),
           (element) =>
             # if the element is either an enumerable property of the object
             # or it belongs to the own methods, then it is highlighted.
@@ -306,7 +306,7 @@ class InspectorMorph extends BoxMorph
             # are still not picked up, maybe because of the coffeescript construction system, I am not sure
             (Object::hasOwnProperty.call(@target, element))
         ],
-        [new Color(180, 0, 0),
+        [Color.create(180, 0, 0),
           (element) =>
             # if the element is either an enumerable property of the object
             # or it belongs to the own methods, then it is highlighted.

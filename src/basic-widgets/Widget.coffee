@@ -50,7 +50,7 @@ class Widget extends TreeNode
   # access this property.
   bounds: nil
   minimumExtent: nil
-  color: new Color 80, 80, 80
+  color: Color.create 80, 80, 80
   strokeColor: nil
   texture: nil # optional url of a fill-image
   cachedTexture: nil # internal cache of actual bg image
@@ -3040,8 +3040,8 @@ class Widget extends TreeNode
 
   # »>> this part is excluded from the fizzygum homepage build
   createNewStringMorph2WithBackground: ->
-    #newWdgt = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(255, 255, 54), 0.5
-    newWdgt = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(230, 230, 130), 1
+    #newWdgt = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, Color.create(255, 255, 54), 0.5
+    newWdgt = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, Color.create(230, 230, 130), 1
     newWdgt.isEditable = true
     world.create newWdgt
 
@@ -3072,7 +3072,7 @@ class Widget extends TreeNode
       "Praesent varius ac erat id fringilla. Suspendisse " +
       "porta sollicitudin bibendum. Pellentesque imperdiet " +
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
-      "nisi.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
+      "nisi.",nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     newWdgt.isEditable = true
     #newWdgt.maxTextWidth = 300
     world.create newWdgt
@@ -3099,7 +3099,7 @@ class Widget extends TreeNode
       "Praesent varius ac erat id fringilla. Suspendisse " +
       "porta sollicitudin bibendum. Pellentesque imperdiet " +
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
-      "nisi.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
+      "nisi.",nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     newWdgt.isEditable = true
     #newWdgt.maxTextWidth = 300
 
@@ -3118,7 +3118,7 @@ class Widget extends TreeNode
       "porttitor, elit augue vestibulum est, nec congue " +
       "ex dui a velit. Nullam lectus leo, lobortis eget " +
       "erat ac, lobortis dignissim " +
-      "magna.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
+      "magna.",nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     newWdgt.isEditable = true
     newWdgt.maxTextWidth = nil
     #newWdgt.maxTextWidth = 300
@@ -3228,8 +3228,8 @@ class Widget extends TreeNode
 
 
   createNewStringMorph3WithBackground: ->
-    #newWdgt = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(255, 255, 54), 0.5
-    newWdgt = new StringMorph3 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(230, 230, 130), 1
+    #newWdgt = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, Color.create(255, 255, 54), 0.5
+    newWdgt = new StringMorph3 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, Color.create(230, 230, 130), 1
     newWdgt.isEditable = true
     world.create newWdgt
 
@@ -3255,7 +3255,7 @@ class Widget extends TreeNode
       "Praesent varius ac erat id fringilla. Suspendisse " +
       "porta sollicitudin bibendum. Pellentesque imperdiet " +
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
-      "nisi.",nil,nil,nil,nil,nil,new Color(255, 255, 54), 0.5)
+      "nisi.",nil,nil,nil,nil,nil,Color.create(255, 255, 54), 0.5)
     newWdgt.isEditable = true
     #newWdgt.maxTextWidth = 300
     world.create newWdgt
@@ -4493,8 +4493,8 @@ class Widget extends TreeNode
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color 0, 255, 0
-    lmContent2.setColor new Color 0, 0, 255
+    lmContent1.setColor Color.create 0, 255, 0
+    lmContent2.setColor Color.create 0, 0, 255
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), 2* LayoutSpec.SPREADABILITY_MEDIUM
@@ -4515,8 +4515,8 @@ class Widget extends TreeNode
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color 0, 255, 0
-    lmContent2.setColor new Color 0, 0, 255
+    lmContent1.setColor Color.create 0, 255, 0
+    lmContent2.setColor Color.create 0, 0, 255
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
@@ -4539,9 +4539,9 @@ class Widget extends TreeNode
     lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color 0, 255, 0
-    lmContent2.setColor new Color 0, 0, 255
-    lmContent3.setColor new Color 255, 255, 0
+    lmContent1.setColor Color.create 0, 255, 0
+    lmContent2.setColor Color.create 0, 0, 255
+    lmContent3.setColor Color.create 255, 255, 0
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
@@ -4567,9 +4567,9 @@ class Widget extends TreeNode
     lmHolder.add lmAdj2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color 0, 255, 0
-    lmContent2.setColor new Color 0, 0, 255
-    lmContent3.setColor new Color 255, 255, 0
+    lmContent1.setColor Color.create 0, 255, 0
+    lmContent2.setColor Color.create 0, 0, 255
+    lmContent3.setColor Color.create 255, 255, 0
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
@@ -4604,9 +4604,9 @@ class Widget extends TreeNode
     lmHolder.add lmAdj4, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmSpacer2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color 0, 255, 0
-    lmContent2.setColor new Color 0, 0, 255
-    lmContent3.setColor new Color 255, 255, 0
+    lmContent1.setColor Color.create 0, 255, 0
+    lmContent2.setColor Color.create 0, 0, 255
+    lmContent3.setColor Color.create 255, 255, 0
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
@@ -4641,9 +4641,9 @@ class Widget extends TreeNode
     lmHolder.add lmAdj4, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmSpacer2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color 0, 255, 0
-    lmContent2.setColor new Color 0, 0, 255
-    lmContent3.setColor new Color 255, 255, 0
+    lmContent1.setColor Color.create 0, 255, 0
+    lmContent2.setColor Color.create 0, 0, 255
+    lmContent3.setColor Color.create 255, 255, 0
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
@@ -4678,9 +4678,9 @@ class Widget extends TreeNode
     lmHolder.add lmAdj4, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmSpacer2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color 0, 255, 0
-    lmContent2.setColor new Color 0, 0, 255
-    lmContent3.setColor new Color 255, 255, 0
+    lmContent1.setColor Color.create 0, 255, 0
+    lmContent2.setColor Color.create 0, 0, 255
+    lmContent3.setColor Color.create 255, 255, 0
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60), LayoutSpec.SPREADABILITY_NONE
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60)
@@ -4715,9 +4715,9 @@ class Widget extends TreeNode
     lmHolder.add lmAdj4, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmSpacer2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color 0, 255, 0
-    lmContent2.setColor new Color 0, 0, 255
-    lmContent3.setColor new Color 255, 255, 0
+    lmContent1.setColor Color.create 0, 255, 0
+    lmContent2.setColor Color.create 0, 0, 255
+    lmContent3.setColor Color.create 255, 255, 0
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE

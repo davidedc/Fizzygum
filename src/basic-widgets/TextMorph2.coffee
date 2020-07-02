@@ -40,7 +40,7 @@ class TextMorph2 extends StringMorph2
       )
     # override inherited properties:
     @markedTextColor = Color.WHITE
-    @markedBackgoundColor = new Color 60, 60, 120
+    @markedBackgoundColor = Color.create 60, 60, 120
     @textPossiblyCroppedToFit = @transformTextOneToOne @text
     @noticesTransparentClick = true
 
@@ -438,7 +438,7 @@ class TextMorph2 extends StringMorph2
         textHorizontalPosition = x
         textVertPosition = y + textVerticalPosition
         widthOfText = width
-        backBufferContext.strokeStyle = (new Color 198, 198, 198).toString()
+        backBufferContext.strokeStyle = (Color.create 198, 198, 198).toString()
         backBufferContext.beginPath()
         backBufferContext.moveTo 0, textVertPosition - heightOfText / 2
         backBufferContext.lineTo textHorizontalPosition - 5, textVertPosition - heightOfText / 2

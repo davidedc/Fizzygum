@@ -76,16 +76,16 @@ class PreferencesAndSettings
     @menuFontName = "sans-serif"
     @menuFontSize = 12 # 14
     @menuHeaderFontSize = 12 # 13
-    @menuHeaderColor = new Color 77,77,77 # new Color 125, 125, 125
+    @menuHeaderColor = Color.create 77,77,77 # Color.create 125, 125, 125
     @menuHeaderBold = true # false
-    @menuStrokeColor = new Color 210, 210, 210 # new Color 186, 186, 186
-    @menuBackgroundColor = new Color 249, 249, 249 # new Color 244, 244, 244
-    @menuButtonsLabelColor = Color.BLACK # new Color 50, 50, 50
+    @menuStrokeColor = Color.create 210, 210, 210 # Color.create 186, 186, 186
+    @menuBackgroundColor = Color.create 249, 249, 249 # Color.create 244, 244, 244
+    @menuButtonsLabelColor = Color.BLACK # Color.create 50, 50, 50
 
-    @externalWindowBarBackgroundColor = new Color 125, 125, 125
-    @externalWindowBarStrokeColor = new Color 100,100,100
-    @internalWindowBarBackgroundColor = new Color 172, 172, 172
-    @internalWindowBarStrokeColor = new Color 150,150,150
+    @externalWindowBarBackgroundColor = Color.create 125, 125, 125
+    @externalWindowBarStrokeColor = Color.create 100,100,100
+    @internalWindowBarBackgroundColor = Color.create 172, 172, 172
+    @internalWindowBarStrokeColor = Color.create 150,150,150
 
     @normalTextFontSize = 12 # 13
     @textInButtonsFontSize = 12 # 13
@@ -98,11 +98,11 @@ class PreferencesAndSettings
     @prompterFontSize = 12
     @prompterSliderSize = 10
 
-    @defaultPanelsBackgroundColor = new Color 255, 250, 245
-    @defaultPanelsStrokeColor = new Color 100, 100, 100
-    @editableItemBackgroundColor = new Color 240, 240, 240
+    @defaultPanelsBackgroundColor = Color.create 255, 250, 245
+    @defaultPanelsStrokeColor = Color.create 100, 100, 100
+    @editableItemBackgroundColor = Color.create 240, 240, 240
 
-    @outlineColor = new Color 244,243,244
+    @outlineColor = Color.create 244,243,244
     # let's create this shortcut just because
     # we use this string so many times
     @outlineColorString = @outlineColor.toString()

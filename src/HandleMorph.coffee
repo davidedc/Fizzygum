@@ -145,9 +145,9 @@ class HandleMorph extends Widget
     aContext.translate morphPosition.x, morphPosition.y
 
     if @state == @STATE_NORMAL
-      @handleMorphRenderingHelper aContext, @color, new Color 150, 150, 150
+      @handleMorphRenderingHelper aContext, @color, Color.create 150, 150, 150
     if @state == @STATE_HIGHLIGHTED
-      @handleMorphRenderingHelper aContext, Color.WHITE, new Color 200, 200, 255
+      @handleMorphRenderingHelper aContext, Color.WHITE, Color.create 200, 200, 255
 
     aContext.restore()
 

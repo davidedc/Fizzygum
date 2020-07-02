@@ -14,7 +14,7 @@ class BasementWdgt extends BoxMorph
     super()
 
     @silentRawSetExtent new Point 340, 270
-    @color = new Color 60, 60, 60
+    @color = Color.create 60, 60, 60
     @padding = 5
     @buildAndConnectChildren()
 

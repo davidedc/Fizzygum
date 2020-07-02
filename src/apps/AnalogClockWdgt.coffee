@@ -14,7 +14,7 @@ class AnalogClockWdgt extends Widget
     world.steppingWdgts.add @
 
     super()
-    @setColor new Color 255, 125, 125
+    @setColor Color.create 255, 125, 125
     @rawSetExtent new Point 200, 200
     return
 

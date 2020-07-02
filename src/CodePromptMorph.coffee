@@ -76,7 +76,7 @@ class CodePromptMorph extends Widget
     @saveTextWdgt.setColor Color.BLACK
 
   textContentUnmodified: ->
-    @saveTextWdgt.setColor new Color 200, 200, 200
+    @saveTextWdgt.setColor Color.create 200, 200, 200
 
 
   informTarget: ->

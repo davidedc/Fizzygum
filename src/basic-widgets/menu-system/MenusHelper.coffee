@@ -58,8 +58,8 @@ class MenusHelper
   makeSlidersButtonsStatesBright: ->
     world.forAllChildrenBottomToTop (child) ->
       if child instanceof SliderButtonMorph
-       child.pressColor = new Color 0, 255, 0
-       child.highlightColor = new Color 0, 0, 255
+       child.pressColor = Color.create 0, 255, 0
+       child.highlightColor = Color.create 0, 0, 255
        child.normalColor = Color.BLACK
 
   # Icons --------------------------------------------------------------
@@ -1664,7 +1664,7 @@ class MenusHelper
     windowWithScrollingPanel.rememberFractionalSituationInHoldingPanel()
 
 
-    usaMap = new SimpleUSAMapIconWdgt new Color 183, 183, 183
+    usaMap = new SimpleUSAMapIconWdgt Color.create 183, 183, 183
     usaMap.rawSetExtent new Point 1808, 1115
     windowWithScrollingPanel.contents.add usaMap
     windowWithScrollingPanel.contents.scrollTo new Point 1484, 246
@@ -1829,7 +1829,7 @@ class MenusHelper
     container.add plot3D
     plot3D.rememberFractionalSituationInHoldingPanel()
 
-    usaMap = new SimpleUSAMapIconWdgt new Color 183, 183, 183
+    usaMap = new SimpleUSAMapIconWdgt Color.create 183, 183, 183
     usaMap.fullRawMoveTo container.position().add new Point 242, 355
     usaMap.rawSetExtent new Point 230, 145
     container.add usaMap
@@ -1860,7 +1860,7 @@ class MenusHelper
     container.add mapPin5
     mapPin5.rememberFractionalSituationInHoldingPanel()
 
-    worldMap = new SimpleWorldMapIconWdgt new Color 183, 183, 183
+    worldMap = new SimpleWorldMapIconWdgt Color.create 183, 183, 183
     worldMap.fullRawMoveTo container.position().add new Point 464, 128
     worldMap.rawSetExtent new Point 240, 125
     container.add worldMap

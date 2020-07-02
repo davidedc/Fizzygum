@@ -276,7 +276,7 @@ class WorldMorph extends PanelWdgt
     @appearance = new DesktopAppearance @
 
     #console.log WorldMorph.preferencesAndSettings.menuFontName
-    @color = new Color 205, 205, 205 # (130, 130, 130)
+    @color = Color.create 205, 205, 205 # (130, 130, 130)
     @strokeColor = nil
 
     @alpha = 1
@@ -332,11 +332,11 @@ class WorldMorph extends PanelWdgt
   makePrettier: ->
     WorldMorph.preferencesAndSettings.menuFontSize = 14
     WorldMorph.preferencesAndSettings.menuHeaderFontSize = 13
-    WorldMorph.preferencesAndSettings.menuHeaderColor = new Color 125, 125, 125
+    WorldMorph.preferencesAndSettings.menuHeaderColor = Color.create 125, 125, 125
     WorldMorph.preferencesAndSettings.menuHeaderBold = false
-    WorldMorph.preferencesAndSettings.menuStrokeColor = new Color 186, 186, 186
-    WorldMorph.preferencesAndSettings.menuBackgroundColor = new Color 250, 250, 250
-    WorldMorph.preferencesAndSettings.menuButtonsLabelColor = new Color 50, 50, 50
+    WorldMorph.preferencesAndSettings.menuStrokeColor = Color.create 186, 186, 186
+    WorldMorph.preferencesAndSettings.menuBackgroundColor = Color.create 250, 250, 250
+    WorldMorph.preferencesAndSettings.menuButtonsLabelColor = Color.create 50, 50, 50
 
     WorldMorph.preferencesAndSettings.normalTextFontSize = 13
     WorldMorph.preferencesAndSettings.titleBarTextFontSize = 13
@@ -345,11 +345,11 @@ class WorldMorph extends PanelWdgt
     WorldMorph.preferencesAndSettings.bubbleHelpFontSize = 12
 
 
-    WorldMorph.preferencesAndSettings.iconDarkLineColor = new Color 37, 37, 37
+    WorldMorph.preferencesAndSettings.iconDarkLineColor = Color.create 37, 37, 37
 
 
-    WorldMorph.preferencesAndSettings.defaultPanelsBackgroundColor = new Color 249, 249, 249
-    WorldMorph.preferencesAndSettings.defaultPanelsStrokeColor = new Color 198, 198, 198
+    WorldMorph.preferencesAndSettings.defaultPanelsBackgroundColor = Color.create 249, 249, 249
+    WorldMorph.preferencesAndSettings.defaultPanelsStrokeColor = Color.create 198, 198, 198
 
     @setPattern nil, nil, "dots"
 
@@ -407,7 +407,7 @@ class WorldMorph extends PanelWdgt
 
   createDesktop: ->
     if @isIndexPage
-      @setColor new Color 244,243,244
+      @setColor Color.create 244,243,244
       @makePrettier()
 
     if !@isIndexPage then console.log "booting"
@@ -1005,7 +1005,7 @@ class WorldMorph extends PanelWdgt
         hM.wdgtThisWdgtIsPinouting = eachMorphNeedingPinout
         peekThroughBox = eachMorphNeedingPinout.clippedThroughBounds()
         hM.fullRawMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
-        hM.setColor new Color 0, 0, 255
+        hM.setColor Color.create 0, 0, 255
         hM.setWidth 400
         @currentPinoutingMorphs.add hM
         @morphsBeingPinouted.add eachMorphNeedingPinout
@@ -1028,7 +1028,7 @@ class WorldMorph extends PanelWdgt
         world.add hM
         hM.wdgtThisWdgtIsHighlighting = eachMorphNeedingHighlight
         hM.rawSetBounds eachMorphNeedingHighlight.clippedThroughBounds()
-        hM.setColor new Color 0, 0, 255
+        hM.setColor Color.create 0, 0, 255
         hM.setAlphaScaled 50
         @currentHighlightingMorphs.add hM
         @morphsBeingHighlighted.add eachMorphNeedingHighlight
@@ -2034,7 +2034,7 @@ class WorldMorph extends PanelWdgt
     @basementWdgt?.empty()
     # some tests might change the background
     # color of the world so let's reset it.
-    @setColor new Color 205, 205, 205
+    @setColor Color.create 205, 205, 205
     SystemTestsControlPanelUpdater.blinkLink SystemTestsControlPanelUpdater.resetWorldLink
     # make sure thw window is scrolled to top
     # so we can see the test results while tests
@@ -2308,7 +2308,7 @@ class WorldMorph extends PanelWdgt
     @create new ColorPickerMorph
   createNewSensorDemo: ->
     newWdgt = new MouseSensorMorph
-    newWdgt.setColor new Color 230, 200, 100
+    newWdgt.setColor Color.create 230, 200, 100
     newWdgt.cornerRadius = 35
     newWdgt.alpha = 0.2
     newWdgt.rawSetExtent new Point 100, 100
@@ -2320,7 +2320,7 @@ class WorldMorph extends PanelWdgt
     foo.alpha = 0.9
     foo.speed = 3
     bar = new BouncerMorph
-    bar.setColor new Color 50, 50, 50
+    bar.setColor Color.create 50, 50, 50
     bar.fullRawMoveTo new Point 80, 80
     bar.rawSetExtent new Point 80, 250
     bar.type = "horizontal"
@@ -2328,21 +2328,21 @@ class WorldMorph extends PanelWdgt
     bar.alpha = 0.9
     bar.speed = 5
     baz = new BouncerMorph
-    baz.setColor new Color 20, 20, 20
+    baz.setColor Color.create 20, 20, 20
     baz.fullRawMoveTo new Point 90, 140
     baz.rawSetExtent new Point 40, 30
     baz.type = "horizontal"
     baz.direction = "right"
     baz.speed = 3
     garply = new BouncerMorph
-    garply.setColor new Color 200, 20, 20
+    garply.setColor Color.create 200, 20, 20
     garply.fullRawMoveTo new Point 90, 140
     garply.rawSetExtent new Point 20, 20
     garply.type = "vertical"
     garply.direction = "up"
     garply.speed = 8
     fred = new BouncerMorph
-    fred.setColor new Color 20, 200, 20
+    fred.setColor Color.create 20, 200, 20
     fred.fullRawMoveTo new Point 120, 140
     fred.rawSetExtent new Point 20, 20
     fred.type = "vertical"

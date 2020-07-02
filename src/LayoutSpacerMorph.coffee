@@ -57,7 +57,7 @@ class LayoutSpacerMorph extends Widget
     morphPosition = @position()
     aContext.translate morphPosition.x, morphPosition.y
 
-    @spacerMorphRenderingHelper aContext, Color.WHITE, new Color 200, 200, 255
+    @spacerMorphRenderingHelper aContext, Color.WHITE, Color.create 200, 200, 255
 
     aContext.restore()
 

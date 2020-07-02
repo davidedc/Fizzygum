@@ -10,8 +10,8 @@ class GlassBoxBottomWdgt extends BoxMorph
 
   constructor: ->
     super
-    @setColor new Color 230,230,230
-    @strokeColor = new Color 196,195,196
+    @setColor Color.create 230,230,230
+    @strokeColor = Color.create 196,195,196
     @setAlphaScaled 50
 
   reLayout: ->

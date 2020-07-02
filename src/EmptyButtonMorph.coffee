@@ -57,7 +57,7 @@ class EmptyButtonMorph extends Widget
     super()
     @defaultRejectDrags = true
 
-    #@color = new Color 255, 152, 152
+    #@color = Color.create 255, 152, 152
     #@color = Color.WHITE
     if @faceMorph?
 

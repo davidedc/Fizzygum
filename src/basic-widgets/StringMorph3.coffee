@@ -42,7 +42,7 @@ class StringMorph3 extends Widget
   isPassword: false
   isShowingBlanks: false
 
-  blanksColor: new Color 180, 140, 140
+  blanksColor: Color.create 180, 140, 140
 
   # Used for when the cursor movement causes the
   # text to scroll, so that the caret is in-view when
@@ -60,7 +60,7 @@ class StringMorph3 extends Widget
   # see note above about Colors and shared objects
   markedTextColor: Color.WHITE
   # see note above about Colors and shared objects
-  markedBackgoundColor: new Color 60, 60, 120
+  markedBackgoundColor: Color.create 60, 60, 120
 
   horizontalAlignment: AlignmentSpecHorizontal.LEFT
   verticalAlignment: AlignmentSpecVertical.TOP

@@ -42,7 +42,7 @@ class StringMorph2 extends Widget
   isPassword: false
   isShowingBlanks: false
 
-  blanksColor: new Color 180, 140, 140
+  blanksColor: Color.create 180, 140, 140
 
   # Used for when the cursor movement causes the
   # text to scroll, so that the caret is in-view when
@@ -60,7 +60,7 @@ class StringMorph2 extends Widget
   # see note above about Colors and shared objects
   markedTextColor: Color.WHITE
   # see note above about Colors and shared objects
-  markedBackgoundColor: new Color 60, 60, 120
+  markedBackgoundColor: Color.create 60, 60, 120
 
   horizontalAlignment: AlignmentSpecHorizontal.LEFT
   verticalAlignment: AlignmentSpecVertical.TOP
@@ -108,7 +108,7 @@ class StringMorph2 extends Widget
       @isItalic = false,
       @isHeaderLine = false,
       @isNumeric = false,
-      @color = (new Color 37, 37, 37),
+      @color = (Color.create 37, 37, 37),
       backgroundColor,
       backgroundTransparency
       ) ->
@@ -686,7 +686,7 @@ class StringMorph2 extends Widget
 
     # header line
     if @isHeaderLine
-      backBufferContext.strokeStyle = (new Color 198, 198, 198).toString()
+      backBufferContext.strokeStyle = (Color.create 198, 198, 198).toString()
       backBufferContext.beginPath()
       backBufferContext.moveTo 0, textVerticalPosition - heightOfText / 2
       backBufferContext.lineTo textHorizontalPosition - 5, textVerticalPosition - heightOfText / 2

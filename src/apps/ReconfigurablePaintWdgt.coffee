@@ -6,7 +6,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
   brushToolButton: nil
   toothpasteToolButton: nil
   eraserToolButton: nil
-  highlightedToolIconColor: new Color 245, 126, 0
+  highlightedToolIconColor: Color.create 245, 126, 0
 
 
   colloquialName: ->   
@@ -87,7 +87,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             # give it a little bit of a tint so
             # you can see the canvas when you take it
             # apart from the paint tool.
-            #context.fillStyle = (new Color 0,255,0,0.5).toString()
+            #context.fillStyle = (Color.create 0,255,0,0.5).toString()
             #context.fillRect 0, 0, @width(), @height()
 
             context.translate -@bounds.origin.x, -@bounds.origin.y

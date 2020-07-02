@@ -8,7 +8,7 @@ class PointerMorph extends BoxMorph
   constructor: (@target) ->
     super()
 
-    @color = new Color 160, 160, 160
+    @color = Color.create 160, 160, 160
     @noticesTransparentClick = true
 
     lmContent1 = new CollapsedStateIconMorph
@@ -37,8 +37,8 @@ class PointerMorph extends BoxMorph
     @add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     @add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    #lmContent1.setColor new Color 0, 255, 0
-    #lmContent2.setColor new Color 0, 0, 255
+    #lmContent1.setColor Color.create 0, 255, 0
+    #lmContent2.setColor Color.create 0, 0, 255
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), LayoutSpec.SPREADABILITY_NONE
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), LayoutSpec.SPREADABILITY_MEDIUM

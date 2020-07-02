@@ -22,7 +22,7 @@ class Example3DPlotWdgt extends Widget
     @fps = 0
     world.steppingWdgts.add @
 
-    @setColor new Color 255, 125, 125
+    @setColor Color.create 255, 125, 125
     @rawSetExtent new Point 200, 200
 
 
@@ -217,7 +217,7 @@ class Example3DPlotWdgt extends Widget
     # clean the background
     if appliedShadow?
       context.globalAlpha = appliedShadow.alpha * @alpha
-      context.fillStyle = (new Color 80, 80, 80).toString()
+      context.fillStyle = (Color.create 80, 80, 80).toString()
       context.fillRect 0, 0, width, height
       # let's avoid paint 3d stuff twice because
       # of the shadow

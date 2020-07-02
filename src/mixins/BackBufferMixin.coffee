@@ -85,7 +85,7 @@ BackBufferMixin =
         [@backBuffer, @backBufferContext] = @createRefreshOrGetBackBuffer()
         point = aPoint.toLocalCoordinatesOf @
         data = @backBufferContext.getImageData point.x * ceilPixelRatio, point.y * ceilPixelRatio, 1, 1
-        new Color data.data[0], data.data[1], data.data[2], data.data[3]
+        Color.create data.data[0], data.data[1], data.data[2], data.data[3]
 
 
       # This method only paints this very morph's "image",

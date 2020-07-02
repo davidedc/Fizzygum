@@ -37,7 +37,7 @@ class FridgeMagnetsMorph extends Widget
     @add @visualOutput
     
     # source code output pane
-    @codeOutput = new FizzytilesCodeMorph "",nil,nil,nil,nil,nil,(new Color 255, 250, 245), 1
+    @codeOutput = new FizzytilesCodeMorph "",nil,nil,nil,nil,nil,(Color.create 255, 250, 245), 1
     @codeOutput.fridgeMagnetsCanvas = @visualOutput
     @codeOutput.isEditable = true
     @codeOutput.enableSelecting()

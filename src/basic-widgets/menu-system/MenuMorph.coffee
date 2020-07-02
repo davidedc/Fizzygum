@@ -51,7 +51,7 @@ class MenuMorph extends PopUpWdgt
   createLine: (height = 1) ->
     item = new RectangleMorph
     item.setMinimumExtent new Point 5,1
-    item.color = new Color 230,230,230
+    item.color = Color.create 230,230,230
     item.rawSetHeight height + 2
     item
 
@@ -168,7 +168,7 @@ class MenuMorph extends PopUpWdgt
 
     unless @isListContents
       @cornerRadius = if WorldMorph.preferencesAndSettings.isFlat then 0 else 5
-    @color = new Color 238, 238, 238
+    @color = Color.create 238, 238, 238
     @silentRawSetExtent new Point 0, 0
     y = @top()
     x = @left() + 2

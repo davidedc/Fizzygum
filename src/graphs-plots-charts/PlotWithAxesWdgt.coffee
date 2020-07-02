@@ -14,7 +14,7 @@ class PlotWithAxesWdgt extends Widget
     @horizAxis = new AxisWdgt -5, 5
     @add @horizAxis
 
-    @setColor new Color 242,242,242
+    @setColor Color.create 242,242,242
 
     @invalidateLayout()
 

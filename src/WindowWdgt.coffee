@@ -49,7 +49,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       @appearance = new BoxyAppearance @
 
-    @strokeColor = new Color 125,125,125
+    @strokeColor = Color.create 125,125,125
     @tight = true
 
     @defaultContents = new WindowContentsPlaceholderText
@@ -59,7 +59,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @padding = 5
     # TODO this looks better:
     #@padding = 10
-    @color = new Color 248, 248, 248
+    @color = Color.create 248, 248, 248
     @buildAndConnectChildren()
 
     if @contents == @defaultContents
@@ -355,15 +355,15 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   makePencilYellow: ->
       # TODO assigning to color_normal is not enough
       # there should be a way to do these two lines with one line
-      @editButton?.color_normal = new Color 248, 188, 58
-      @editButton?.setColor new Color 248, 188, 58
+      @editButton?.color_normal = Color.create 248, 188, 58
+      @editButton?.setColor Color.create 248, 188, 58
       @editButton?.changed()
 
   makePencilClear: ->
       # TODO assigning to color_normal is not enough
       # there should be a way to do these two lines with one line
-      @editButton?.color_normal = new Color 245, 244, 245
-      @editButton?.setColor new Color 245, 244, 245
+      @editButton?.color_normal = Color.create 245, 244, 245
+      @editButton?.setColor Color.create 245, 244, 245
       @editButton?.changed()
 
   createAndAddEditButton: ->

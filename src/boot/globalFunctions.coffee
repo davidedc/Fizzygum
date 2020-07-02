@@ -519,7 +519,7 @@ boot = ->
   # directives are well set). So for example a Widget can
   # initialise a "color" property doing something like
   #
-  #   myCol: new Color(...)
+  #   myCol: Color.create(...)
   #
   # Also note that we load "Coffeescript" here.
   # Obviously if we don't have the pre-compiled file we need

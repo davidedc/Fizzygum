@@ -6,7 +6,7 @@ class RadioButtonsHolderMorph extends Widget
   constructor: ->
     super()
     @appearance = new RectangularAppearance @
-    @setColor new Color 230, 230, 230
+    @setColor Color.create 230, 230, 230
 
 
   # TODO gross pattern break - usually mouseClickLeft has 9 params

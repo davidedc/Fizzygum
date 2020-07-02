@@ -34,7 +34,7 @@ class ColorPaletteMorph extends Widget
     backBuffer = newCanvas extent.scaleBy ceilPixelRatio
     backBufferContext = backBuffer.getContext "2d"
     backBufferContext.useLogicalPixelsUntilRestore()
-    @choice = new Color
+    @choice = Color.BLACK
     for x in [0..extent.x]
       h = 360 * x / extent.x
       y = 0

@@ -28,7 +28,7 @@ class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
     @isTextLineWrapping = wraps
     @color = Color.WHITE
     @textWdgt = new SimplePlainTextWdgt(
-      textAsString,nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
+      textAsString,nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     @textWdgt.isEditable = true
     if !wraps
       @textWdgt.maxTextWidth = 0

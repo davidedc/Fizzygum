@@ -15,7 +15,7 @@ class StringMorph extends Widget
   isPassword: false
   isShowingBlanks: false
 
-  blanksColor: new Color 180, 140, 140
+  blanksColor: Color.create 180, 140, 140
 
   # Properties for text-editing
   isScrollable: true
@@ -25,7 +25,7 @@ class StringMorph extends Widget
   # see note above about Colors and shared objects
   markedTextColor: Color.WHITE
   # see note above about Colors and shared objects
-  markedBackgoundColor: new Color 60, 60, 120
+  markedBackgoundColor: Color.create 60, 60, 120
 
   constructor: (
       @text = (if text is "" then "" else "StringMorph"),
