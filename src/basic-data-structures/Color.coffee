@@ -150,13 +150,15 @@ class Color
   @_cache: nil
 
 
-  _r: nil
-  _g: nil
-  _b: nil
+  # params as in the HTML rgba() function
+  # https://www.w3schools.com/cssref/func_rgba.asp
+  _r: nil # intensity of red as an integer between 0 and 255
+  _g: nil # intensity of green as an integer between 0 and 255
+  _b: nil # intensity of blue as an integer between 0 and 255
   _a: nil # opacity as a number between 0.0 (fully transparent) and 1.0 (fully opaque)
 
+  # all values are optional, just (r, g, b) is fine
   constructor: (@_r = 0, @_g = 0, @_b = 0, @_a = 1) ->
-    # all values are optional, just (r, g, b) is fine
 
   # draft code to cache constructed colors since they are immutable
   #@create: (r = 0, g = 0, b = 0, a = 1) ->
