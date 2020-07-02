@@ -1,4 +1,5 @@
 class Class
+
   @allClasses: []
   nonStaticPropertiesSources: nil
   staticPropertiesSources: nil
@@ -6,8 +7,7 @@ class Class
   superClassName: nil
   augmentedWith: nil
   superClass: nil
-  subClasses: nil
-  
+  subClasses: nil  
 
   # adds code into the constructor, such that when a
   # Widget is created, it registers itself as in instance
