@@ -145,7 +145,13 @@ class LCLCodePreprocessor
     @expressionsRegex = @expressions.join "|"
 
     # build the regex for the colour literals
-    @colorsRegex = Color.AVAILABLE_LITERALS_NAMES.map((eachName)->eachName.toLowerCase()).join "|"
+    @colorsRegex = ""
+    for own key, value of Color
+      # all the color literals are UPPERCASE
+      if key.toUpperCase() == key
+        @colorsRegex = @colorsRegex + "|" + key.toLowerCase()
+    # delete the pre-pended pipe character
+    @colorsRegex = @colorsRegex.substring 1, @colorsRegex.length
 
     @colorsCommandsRegex = @colorCommands.join "|"
 

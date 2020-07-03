@@ -159,10 +159,6 @@ class Color
   # TODO this is not an actual Color, breaks equality, can we do something else?
   @ANGLECOLOR:           "angleColor"
 
-
-  # TODO
-  @AVAILABLE_LITERALS_NAMES: []
-
   @_cache: new LRUCache 300, 1000*60*60*24
 
   # params as in the HTML rgba() function
