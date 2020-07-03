@@ -184,7 +184,8 @@ class Color
     @_g = Math.round(@_g)
     @_b = Math.round(@_b)
 
-  # draft code to cache constructed colors since they are immutable
+  # synthetic constructor - this is the one that should be used all the
+  # times - caches constructed colors, since they are immutable
   @create: (r = 0, g = 0, b = 0, a = 1) ->
     r = Math.round r
     g = Math.round g

@@ -31,7 +31,6 @@ extractDependenciesFromDependenciesMap = (dependenciesMap) ->
   # note that "Set" preserves the insertion order
   loadOrder = new Set
 
-
   for key from dependenciesMap.keys()
     #value = dependenciesMap[key]
     #console.log value
