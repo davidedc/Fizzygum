@@ -1,5 +1,4 @@
 # IMMUTABLE
-# REQUIRES LRUCache
 
 class Color
 
@@ -164,8 +163,7 @@ class Color
   # TODO
   @AVAILABLE_LITERALS_NAMES: []
 
-  @_cache: nil
-
+  @_cache: new LRUCache 300, 1000*60*60*24
 
   # params as in the HTML rgba() function
   # https://www.w3schools.com/cssref/func_rgba.asp
@@ -191,7 +189,6 @@ class Color
     g = Math.round g
     b = Math.round b
 
-    if !@_cache then @_cache = new LRUCache 300, 1000*60*60*24
     cacheKey = r + "," + g + "," + b + "," + a
     cacheEntry = @_cache.get cacheKey
     if !cacheEntry?
