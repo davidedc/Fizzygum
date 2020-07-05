@@ -1005,7 +1005,7 @@ class WorldMorph extends PanelWdgt
         hM.wdgtThisWdgtIsPinouting = eachMorphNeedingPinout
         peekThroughBox = eachMorphNeedingPinout.clippedThroughBounds()
         hM.fullRawMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
-        hM.setColor Color.create 0, 0, 255
+        hM.setColor Color.BLUE
         hM.setWidth 400
         @currentPinoutingMorphs.add hM
         @morphsBeingPinouted.add eachMorphNeedingPinout
@@ -1028,7 +1028,7 @@ class WorldMorph extends PanelWdgt
         world.add hM
         hM.wdgtThisWdgtIsHighlighting = eachMorphNeedingHighlight
         hM.rawSetBounds eachMorphNeedingHighlight.clippedThroughBounds()
-        hM.setColor Color.create 0, 0, 255
+        hM.setColor Color.BLUE
         hM.setAlphaScaled 50
         @currentHighlightingMorphs.add hM
         @morphsBeingHighlighted.add eachMorphNeedingHighlight

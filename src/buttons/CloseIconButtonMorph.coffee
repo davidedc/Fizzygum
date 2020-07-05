@@ -16,7 +16,7 @@ class CloseIconButtonMorph extends EmptyButtonMorph
     # can't set the parent as the target directly because this morph
     # might not have a parent yet.
     super true, @, 'actOnClick', new Widget
-    @color_hover = Color.create 255,0,0
+    @color_hover = Color.RED
     @color_pressed = @color_hover
     @appearance = new CloseIconAppearance @
     @toolTipMessage = "close window"

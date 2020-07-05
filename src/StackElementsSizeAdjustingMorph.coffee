@@ -11,7 +11,7 @@ class StackElementsSizeAdjustingMorph extends Widget
   constructor: ->
     super()
     @noticesTransparentClick = true
-    #@setColor Color.create 0, 255, 0
+    #@setColor Color.GREEN
     @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_HANDLES
     @minimumExtent = new Point 0,0
 

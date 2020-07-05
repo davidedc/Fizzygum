@@ -9,7 +9,7 @@ class SimpleDropletWdgt extends Widget
   @augmentWith HighlightableMixin, @name
 
   color_hover: Color.create 90, 90, 90
-  color_pressed: Color.create 128, 128, 128
+  color_pressed: Color.GRAY
   color_normal: Color.BLACK
 
   _acceptsDrops: true

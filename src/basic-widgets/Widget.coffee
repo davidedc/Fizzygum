@@ -4493,8 +4493,8 @@ class Widget extends TreeNode
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor Color.create 0, 255, 0
-    lmContent2.setColor Color.create 0, 0, 255
+    lmContent1.setColor Color.GREEN
+    lmContent2.setColor Color.BLUE
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), 2* LayoutSpec.SPREADABILITY_MEDIUM
@@ -4515,8 +4515,8 @@ class Widget extends TreeNode
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor Color.create 0, 255, 0
-    lmContent2.setColor Color.create 0, 0, 255
+    lmContent1.setColor Color.GREEN
+    lmContent2.setColor Color.BLUE
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
@@ -4539,9 +4539,9 @@ class Widget extends TreeNode
     lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor Color.create 0, 255, 0
-    lmContent2.setColor Color.create 0, 0, 255
-    lmContent3.setColor Color.create 255, 255, 0
+    lmContent1.setColor Color.GREEN
+    lmContent2.setColor Color.BLUE
+    lmContent3.setColor Color.YELLOW
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
@@ -4567,9 +4567,9 @@ class Widget extends TreeNode
     lmHolder.add lmAdj2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor Color.create 0, 255, 0
-    lmContent2.setColor Color.create 0, 0, 255
-    lmContent3.setColor Color.create 255, 255, 0
+    lmContent1.setColor Color.GREEN
+    lmContent2.setColor Color.BLUE
+    lmContent3.setColor Color.YELLOW
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
@@ -4604,9 +4604,9 @@ class Widget extends TreeNode
     lmHolder.add lmAdj4, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmSpacer2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor Color.create 0, 255, 0
-    lmContent2.setColor Color.create 0, 0, 255
-    lmContent3.setColor Color.create 255, 255, 0
+    lmContent1.setColor Color.GREEN
+    lmContent2.setColor Color.BLUE
+    lmContent3.setColor Color.YELLOW
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
@@ -4641,9 +4641,9 @@ class Widget extends TreeNode
     lmHolder.add lmAdj4, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmSpacer2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor Color.create 0, 255, 0
-    lmContent2.setColor Color.create 0, 0, 255
-    lmContent3.setColor Color.create 255, 255, 0
+    lmContent1.setColor Color.GREEN
+    lmContent2.setColor Color.BLUE
+    lmContent3.setColor Color.YELLOW
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
@@ -4678,9 +4678,9 @@ class Widget extends TreeNode
     lmHolder.add lmAdj4, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmSpacer2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor Color.create 0, 255, 0
-    lmContent2.setColor Color.create 0, 0, 255
-    lmContent3.setColor Color.create 255, 255, 0
+    lmContent1.setColor Color.GREEN
+    lmContent2.setColor Color.BLUE
+    lmContent3.setColor Color.YELLOW
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60), LayoutSpec.SPREADABILITY_NONE
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60)
@@ -4715,9 +4715,9 @@ class Widget extends TreeNode
     lmHolder.add lmAdj4, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmSpacer2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor Color.create 0, 255, 0
-    lmContent2.setColor Color.create 0, 0, 255
-    lmContent3.setColor Color.create 255, 255, 0
+    lmContent1.setColor Color.GREEN
+    lmContent2.setColor Color.BLUE
+    lmContent3.setColor Color.YELLOW
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
