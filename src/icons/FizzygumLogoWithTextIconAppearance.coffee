@@ -9,9 +9,9 @@ class FizzygumLogoWithTextIconAppearance extends IconAppearance
   # and the text, we are duplicating the logo data instead...
   paintFunction: (context) ->
     #// Color Declarations
-    whiteColorString = 'rgb(255, 255, 255)'
+    whiteColorString = Color.WHITE.toString()
     #// Text Drawing
-    context.fillStyle = 'rgb(0, 0, 0)'
+    context.fillStyle = Color.BLACK.toString()
     context.font = 'bold 17px Arial-BoldMT, Arial, "Helvetica Neue", Helvetica, sans-serif'
     context.textAlign = 'center'
     textTotalHeight = 17 * 1.3
@@ -27,7 +27,7 @@ class FizzygumLogoWithTextIconAppearance extends IconAppearance
     context.bezierCurveTo 18.48, 73.13, 48.71, 74.77, 59.45, 71.85
     context.bezierCurveTo 70.2, 68.93, 86.65, 59.63, 86.65, 39.23
     context.closePath()
-    context.fillStyle = 'rgb(255, 0, 0)'
+    context.fillStyle = Color.RED.toString()
     context.fill()
     #// twinkles and bubbles 2
     #// bubbles 2

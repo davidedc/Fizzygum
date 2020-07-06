@@ -32,7 +32,7 @@ class SaveIconAppearance extends IconAppearance
     context.lineTo 7.63, 93.37
     context.lineTo 7.63, 6.63
     context.closePath()
-    context.fillStyle = 'rgb(255, 255, 255)'
+    context.fillStyle = Color.WHITE.toString()
     context.fill()
     context.strokeStyle = iconColorString
     context.lineWidth = 3.5

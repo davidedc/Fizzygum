@@ -9,7 +9,7 @@ HighlightableMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
 
-      color_hover: Color.create 192, 192, 192
+      color_hover: Color.SILVER
       color_pressed: Color.GRAY
       color_normal: Color.create 245, 244, 245
 

@@ -39,7 +39,7 @@ class InformationIconAppearance extends IconAppearance
     context.fill()
     #// circle Drawing
     @oval context, 10, 10, 80, 80
-    context.strokeStyle = 'rgb(0, 0, 0)'
+    context.strokeStyle = Color.BLACK.toString()
     context.lineWidth = 6.5
     context.stroke()
 

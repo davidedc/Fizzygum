@@ -7,7 +7,7 @@ class ScratchAreaIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    colorString = 'rgb(0, 0, 0)'
+    colorString = Color.BLACK.toString()
     #// Bezier Drawing
     context.beginPath()
     context.moveTo 40.5, 118.5

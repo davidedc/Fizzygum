@@ -6,7 +6,7 @@ class FloraIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    colorString = 'rgb(0, 0, 0)'
+    colorString = Color.BLACK.toString()
     #// Oval Drawing
     @arc context, 101.5, 46.5, 77, 77, 193, 259, false
     context.strokeStyle = colorString

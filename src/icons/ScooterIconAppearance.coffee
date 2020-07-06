@@ -6,7 +6,7 @@ class ScooterIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    colorString = 'rgb(0, 0, 0)'
+    colorString = Color.BLACK.toString()
     #// Oval Drawing
     @oval context, 10.5, 136.5, 34.5, 34.5
     context.strokeStyle = colorString

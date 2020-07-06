@@ -10,7 +10,7 @@ class VaporwaveBackgroundIconAppearance extends IconAppearance
   paintFunction: (context) ->
     #// Color Declarations
     blue = 'rgb(0, 0, 159)'
-    yellow = 'rgb(255, 255, 0)'
+    yellow = Color.YELLOW.toString()
     darkBlue = 'rgb(0, 0, 82)'
     pink = 'rgb(255, 6, 136)'
     #// background Drawing

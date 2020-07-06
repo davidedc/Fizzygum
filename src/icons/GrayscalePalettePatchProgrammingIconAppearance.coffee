@@ -14,8 +14,8 @@ class GrayscalePalettePatchProgrammingIconAppearance extends IconAppearance
 
     if !@grayscaleGradient?
       colorStops = (g) ->
-        g.addColorStop 0, 'rgb(0, 0, 0)'
-        g.addColorStop 0.81, 'rgb(255, 255, 255)'
+        g.addColorStop 0, Color.BLACK.toString()
+        g.addColorStop 0.81, Color.WHITE.toString()
         g
       @grayscaleGradient = colorStops context.createLinearGradient 79, 82, 21, 82
 

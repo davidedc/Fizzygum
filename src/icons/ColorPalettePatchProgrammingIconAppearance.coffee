@@ -14,13 +14,13 @@ class ColorPalettePatchProgrammingIconAppearance extends IconAppearance
 
     if !@colorGradient?
       colorStops = (g) ->
-        g.addColorStop 0, 'rgb(255, 0, 0)'
-        g.addColorStop 0.15, 'rgb(255, 0, 255)' # magenta
-        g.addColorStop 0.33, 'rgb(0, 0, 255)'
-        g.addColorStop 0.49, 'rgb(0, 255, 255)' # cyan
-        g.addColorStop 0.67, 'rgb(0, 255, 0)'
-        g.addColorStop 0.84, 'rgb(255, 255, 0)' # yellow
-        g.addColorStop 1, 'rgb(255, 0, 0)'
+        g.addColorStop 0, Color.RED.toString()
+        g.addColorStop 0.15, Color.MAGENTA.toString()
+        g.addColorStop 0.33, Color.BLUE.toString()
+        g.addColorStop 0.49, Color.CYAN.toString()
+        g.addColorStop 0.67, Color.GREEN.toString()
+        g.addColorStop 0.84, Color.YELLOW.toString()
+        g.addColorStop 1, Color.RED.toString()
         g
       @colorGradient = colorStops context.createLinearGradient 79, 82, 21, 82
 

@@ -7,7 +7,7 @@ class VideoPlayIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    white = 'rgb(255, 255, 255)'
+    white = Color.WHITE.toString()
     red = 'rgb(255, 38, 0)'
     #// Group
     #// background Drawing

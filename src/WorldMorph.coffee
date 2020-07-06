@@ -1320,7 +1320,7 @@ class WorldMorph extends PanelWdgt
     bkground = document.getElementById("background")
     bkground.style.width = "960px"
     bkground.style.height = "720px"
-    bkground.style.backgroundColor = "rgb(245, 245, 245)"
+    bkground.style.backgroundColor = Color.WHITESMOKE.toString()
   # this part is excluded from the fizzygum homepage build <<«
 
   stretchWorldToFillEntirePage: ->

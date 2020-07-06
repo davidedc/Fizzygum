@@ -7,7 +7,7 @@ class MapPinIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    pinColorString = 'rgb(255, 0, 0)'
+    pinColorString = Color.RED.toString()
     #// Group
     #// map pin outline Drawing
     context.beginPath()

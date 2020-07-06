@@ -2,7 +2,7 @@ class SwitchButtonMorph extends Widget
 
   buttons: nil
  
-  highlightColor: Color.create 192, 192, 192
+  highlightColor: Color.SILVER
   pressColor: Color.GRAY
  
   ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked: true

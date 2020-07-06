@@ -6,7 +6,7 @@ class HeartIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    colorString = 'rgb(0, 0, 0)'
+    colorString = Color.BLACK.toString()
 
     context.strokeStyle = colorString
     context.fillStyle = colorString

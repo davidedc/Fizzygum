@@ -9,7 +9,7 @@ class UnderCarpetIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    colorString = 'rgb(0, 0, 0)'
+    colorString = Color.BLACK.toString()
     #// Bezier Drawing
     context.beginPath()
     context.moveTo 96.5, 32.5

@@ -28,7 +28,7 @@ class TriggerMorph extends Widget
   fontSize: nil
   fontStyle: nil
 
-  highlightColor: Color.create 192, 192, 192
+  highlightColor: Color.SILVER
   pressColor: Color.GRAY
 
   centered: false

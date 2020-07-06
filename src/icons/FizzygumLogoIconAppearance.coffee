@@ -7,7 +7,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    whiteColorString = 'rgb(255, 255, 255)'
+    whiteColorString = Color.WHITE.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
 
     #// bubble outline Drawing
@@ -32,7 +32,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
     context.bezierCurveTo 8, 93.41, 46.58, 95.53, 60.29, 91.77
     context.bezierCurveTo 74, 88, 95, 76, 95, 49.7
     context.closePath()
-    context.fillStyle = 'rgb(255, 0, 0)'
+    context.fillStyle = Color.RED.toString()
     context.fill()
     #// twinkles and bubbles
     #// bubbles

@@ -9,7 +9,7 @@ class GenericPanelIconAppearance extends IconAppearance
     #// Color Declarations
     if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
-    toolbarsHeaderLineColorString = 'rgb(255, 255, 255)'
+    toolbarsHeaderLineColorString = Color.WHITE.toString()
     toolbarsHeaderBackgroundColorString = 'rgb(170, 170, 170)'
 
     #// Group

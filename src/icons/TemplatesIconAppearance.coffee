@@ -15,7 +15,7 @@ class TemplatesIconAppearance extends IconAppearance
     context.moveTo 43, 87
     context.lineTo 64.21, 95.76
     context.lineTo 67.11, 87
-    context.strokeStyle = 'rgb(0, 0, 0)'
+    context.strokeStyle = Color.BLACK.toString()
     context.lineWidth = 2
     context.lineCap = 'round'
     context.lineJoin = 'round'
@@ -25,7 +25,7 @@ class TemplatesIconAppearance extends IconAppearance
     context.moveTo 20.57, 43.92
     context.lineTo 9, 75.06
     context.lineTo 20.57, 78.96
-    context.strokeStyle = 'rgb(0, 0, 0)'
+    context.strokeStyle = Color.BLACK.toString()
     context.lineWidth = 2
     context.lineCap = 'round'
     context.lineJoin = 'round'
@@ -35,7 +35,7 @@ class TemplatesIconAppearance extends IconAppearance
     context.moveTo 32.14, 12.78
     context.lineTo 34.07, 5
     context.lineTo 57.21, 12.78
-    context.strokeStyle = 'rgb(0, 0, 0)'
+    context.strokeStyle = Color.BLACK.toString()
     context.lineWidth = 2
     context.lineCap = 'round'
     context.lineJoin = 'round'
@@ -45,7 +45,7 @@ class TemplatesIconAppearance extends IconAppearance
     context.moveTo 78.43, 20.57
     context.lineTo 90, 24.46
     context.lineTo 78.43, 53.66
-    context.strokeStyle = 'rgb(0, 0, 0)'
+    context.strokeStyle = Color.BLACK.toString()
     context.lineWidth = 2
     context.lineCap = 'round'
     context.lineJoin = 'round'

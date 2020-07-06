@@ -9,8 +9,8 @@ class VaporwaveSunIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    blue = 'rgb(0, 0, 255)'
-    pink = 'rgb(255, 0, 255)'
+    blue = Color.BLUE.toString()
+    pink = Color.MAGENTA.toString()
     yellow = 'rgb(255, 244, 6)'
     #// sun Drawing
     #// Gradient Declarations
