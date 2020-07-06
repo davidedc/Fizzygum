@@ -168,6 +168,8 @@ class Color
   _b: nil # intensity of blue as an integer between 0 and 255
   _a: nil # opacity as a number between 0.0 (fully transparent) and 1.0 (fully opaque)
 
+  _derived_String: nil
+
   # all values are optional, just (r, g, b) is fine
   # this should ONLY be used from the "synthetic" constructors
   # the reason being that from the "synthetic" constructors you can
@@ -197,7 +199,12 @@ class Color
   
   # Color string representation: e.g. 'rgba(255,165,0,1)'
   toString: ->
-    "rgba(" + Math.round(@_r) + "," + Math.round(@_g) + "," + Math.round(@_b) + "," + @_a + ")"
+    if !@_derived_String
+      if @_a == 1
+        @_derived_String = "rgb(" + Math.round(@_r) + "," + Math.round(@_g) + "," + Math.round(@_b) + ")"
+      else
+        @_derived_String = "rgba(" + Math.round(@_r) + "," + Math.round(@_g) + "," + Math.round(@_b) + "," + @_a + ")"
+    return @_derived_String
 
 
   # »>> this part is excluded from the fizzygum homepage build
