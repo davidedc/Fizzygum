@@ -255,3 +255,20 @@ class Color
     @mixed fract, @constructor.WHITE
   
   # this part is excluded from the fizzygum homepage build <<«
+
+  createPristineObjOfSameTypeAsThisOne: (doSerialize)->
+    if doSerialize
+      theClone = Object.create(@constructor::)
+      theClone.className = @constructor.name
+      return theClone
+    else
+      return @
+
+  recursivelyCloneProperties: (cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure)->
+    if doSerialize
+      # we normally serialise each field, however for immutable classes
+      # we want to serialise something special so we don't end up
+      # just cloning the object. We'd rather use the synthetic constructor
+      # so that we don't actually create a new object if there is another
+      # immutable one with the same contents that we can reference.
+      cloneOfMe.compactSerialisedForm = [@_r,@_g,@_b,@_a]
