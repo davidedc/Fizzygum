@@ -256,7 +256,7 @@ class Color
   
   # this part is excluded from the fizzygum homepage build <<«
 
-  createPristineObjOfSameTypeAsThisOne: (doSerialize)->
+  createEmptyShellObjectOfSameTypeAsThisOne: (doSerialize)->
     if doSerialize
       theClone = Object.create(@constructor::)
       theClone.className = @constructor.name

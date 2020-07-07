@@ -32,7 +32,7 @@ DeepCopierMixin =
         positionInObjClonesArray = objOriginalsClonedAlready.length
         objOriginalsClonedAlready.push @
 
-        cloneOfMe = @createPristineObjOfSameTypeAsThisOne doSerialize
+        cloneOfMe = @createEmptyShellObjectOfSameTypeAsThisOne doSerialize
         objectClones.push  cloneOfMe
 
         # cloneOfMe at this point is just an "empty shell" copy
@@ -136,7 +136,7 @@ DeepCopierMixin =
       #   3) this new object is not a copy
       #      of the original object. It just has the
       #      same type. The properties are not copied.
-      createPristineObjOfSameTypeAsThisOne: (doSerialize)->
+      createEmptyShellObjectOfSameTypeAsThisOne: (doSerialize)->
         #alert "cloning a " + @constructor.name
         if typeof @ is "object"
           # note that this case ALSO handles arrays
