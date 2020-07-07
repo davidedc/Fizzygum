@@ -31,35 +31,15 @@ DeepCopierMixin =
      
         positionInObjClonesArray = objOriginalsClonedAlready.length
         objOriginalsClonedAlready.push @
+
         cloneOfMe = @createPristineObjOfSameTypeAsThisOne doSerialize
         objectClones.push  cloneOfMe
 
-        for property of @
+        # cloneOfMe at this point is just an "empty shell" copy
 
-          # also includes the "parent" property
-          if @hasOwnProperty property
+        @recursivelyCloneProperties cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
 
-            #if property == "backBufferContext"
-            #  debugger
-            if !@[property]?
-              cloneOfMe[property] = nil
-            else if typeof @[property] == 'object'
-              # if the value can be rebuilt after the cloning
-              # then skip it, otherwise clone it. We know when
-              # that's the case because the object also has a
-              # rebuildDerivedValue method to be used to
-              # rebuild it
-              if @[property].rebuildDerivedValue?
-                cloneOfMe[property] = nil
-              else
-                if !@[property].deepCopy?
-                  console.dir @
-                  console.log property
-                  debugger
-                cloneOfMe[property] = @[property].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
-            else
-              if property != "instanceNumericID"
-                cloneOfMe[property] = @[property]
+        # cloneOfMe at this point is a full deep copy
 
         if doSerialize
           return "$" + positionInObjClonesArray
@@ -118,6 +98,35 @@ DeepCopierMixin =
             if theOriginal[property]?.rebuildDerivedValue?
               theOriginal[property].rebuildDerivedValue(@, property)
 
+      recursivelyCloneProperties: (cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure)->
+        for property of @
+
+          # also includes the "parent" property
+          if @hasOwnProperty property
+
+            #if property == "backBufferContext"
+            #  debugger
+            if !@[property]?
+              cloneOfMe[property] = nil
+            else if typeof @[property] == 'object'
+              # if the value can be rebuilt after the cloning
+              # then skip it, otherwise clone it. We know when
+              # that's the case because the object also has a
+              # rebuildDerivedValue method to be used to
+              # rebuild it
+              if @[property].rebuildDerivedValue?
+                cloneOfMe[property] = nil
+              else
+                if !@[property].deepCopy?
+                  console.dir @
+                  console.log property
+                  debugger
+                cloneOfMe[property] = @[property].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
+            else
+              if property != "instanceNumericID"
+                cloneOfMe[property] = @[property]
+
+
       # creates a new instance of target's type
       # note that
       #   1) the constructor method is not run!
@@ -126,8 +135,8 @@ DeepCopierMixin =
       #      the type you wanted, so all is good there
       #   3) this new object is not a copy
       #      of the original object. It just has the
-      #      same type.
-      createPristineObjOfSameTypeAsThisOne: (addClassNameFieldIfObjectNotArray)->
+      #      same type. The properties are not copied.
+      createPristineObjOfSameTypeAsThisOne: (doSerialize)->
         #alert "cloning a " + @constructor.name
         if typeof @ is "object"
           # note that this case ALSO handles arrays
@@ -137,7 +146,8 @@ DeepCopierMixin =
           # note that only Widgets have that kind
           # of tracking
           theClone.registerThisInstance?()
-          if addClassNameFieldIfObjectNotArray
+          if doSerialize
+            # add a className field if object is not an array
             theClone.className = @constructor.name
           #console.log "theClone class:" + theClone.constructor.name
 
