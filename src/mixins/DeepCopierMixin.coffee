@@ -8,14 +8,14 @@ DeepCopierMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
 
-      # Note 1: we deep-copy all kinds of data structures, not just morphs
+      # Note 1: we deep-copy all kinds of data structures, not just widgets
       # Note 2: the entire copying mechanism
       # should also take care of inserting the copied
-      # morph in whatever other data structures where the
-      # original morph was.
-      # For example, if the Widget appeared in a data
+      # widget in whatever other data structures where the
+      # original widget was.
+      # For example, if the widget appeared in a data
       # structure related to the broken rectangles mechanism,
-      # we should place the copied morph there.
+      # we should place the copied widget there.
       deepCopy: (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure)->
         haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf @
         if haveIBeenCopiedAlready >= 0
