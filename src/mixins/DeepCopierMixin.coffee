@@ -30,10 +30,18 @@ DeepCopierMixin =
             return @
      
         positionInObjClonesArray = objOriginalsClonedAlready.length
-        objOriginalsClonedAlready.push @
 
-        cloneOfMe = @createEmptyShellObjectOfSameTypeAsThisOne doSerialize
-        objectClones.push  cloneOfMe
+        # note that for immutable objects, in the non-serialisation case,
+        # we actually don't create a copy, we just use the same object
+        cloneOfMe = @getEmptyObjectOfSameTypeAsThisOne doSerialize
+
+        # this is the only place where we add to these arrays.
+        # Note that we know for sure that @ is NOT already in objOriginalsClonedAlready
+        # (because we do the check at the top of this function)
+        # and also we know that cloneOfMe is NOT in objectClones either
+        # (because we only do these two adds in together)
+        objOriginalsClonedAlready.push @
+        objectClones.push cloneOfMe
 
         # cloneOfMe at this point is just an "empty shell" copy
 
@@ -136,7 +144,7 @@ DeepCopierMixin =
       #   3) this new object is not a copy
       #      of the original object. It just has the
       #      same type. The properties are not copied.
-      createEmptyShellObjectOfSameTypeAsThisOne: (doSerialize)->
+      getEmptyObjectOfSameTypeAsThisOne: (doSerialize)->
         #alert "cloning a " + @constructor.name
         if typeof @ is "object"
           # note that this case ALSO handles arrays
