@@ -353,7 +353,7 @@ class CaretMorph extends BlinkerMorph
       #         position, text, position, text, ...
       #
       # actually are saved without the "position"
-      # changes (these is a check in "pushUndoState" that if there
+      # changes (there is a check in "pushUndoState" that if there
       # is only a change position of one then that state is not
       # pushed)
 
