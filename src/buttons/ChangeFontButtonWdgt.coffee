@@ -10,7 +10,7 @@ class ChangeFontButtonWdgt extends IconMorph
   simpleDocument: nil
 
   constructor: (@simpleDocument) ->
-    super
+    super nil
     @appearance = new ChangeFontIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
 
     @actionableAsThumbnail = true
