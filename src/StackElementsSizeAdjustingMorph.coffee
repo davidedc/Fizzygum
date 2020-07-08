@@ -94,7 +94,7 @@ class StackElementsSizeAdjustingMorph extends Widget
 
   #adoptWidgetsColor: (paneColor) ->
   #  super adoptWidgetsColor paneColor
-  #  @color = paneColord
+  #  @color = paneColor
   #
   #cursor: ->
   #  if @owner.direction == "#horizontal"

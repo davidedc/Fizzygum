@@ -1624,8 +1624,8 @@ class Widget extends TreeNode
       aColor = morphGivingColor.getColor()
     else
       aColor = aColorOrAMorphGivingAColor
-    if aColor
 
+    if aColor
       if @color?.equals aColor
         return
 
