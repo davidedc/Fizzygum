@@ -144,11 +144,11 @@ DeepCopierMixin =
       #   3) this new object is not a copy
       #      of the original object. It just has the
       #      same type. The properties are not copied.
+      # This is never run on Arrays because they
+      # override deepCopy altogether
       getEmptyObjectOfSameTypeAsThisOne: (doSerialize)->
         #alert "cloning a " + @constructor.name
         if typeof @ is "object"
-          # note that this case ALSO handles arrays
-          # since they test positive as typeof "object"
           theClone = Object.create(@constructor::)
           # add to the instances tracking.
           # note that only Widgets have that kind
