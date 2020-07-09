@@ -59,7 +59,3 @@ uniqueKeepOrder = (value, index, self) ->
 
 Array::uniqueKeepOrder = ->
   return @filter uniqueKeepOrder
-
-if typeof String::isLetter == 'undefined'
-  String::isLetter = ->
-    @length == 1 && @match /[a-z]/i

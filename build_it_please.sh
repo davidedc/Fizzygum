@@ -93,14 +93,30 @@ cat $SCRATCH_PATH/numberOfSourceBatches.coffee >> $SCRATCH_PATH/fizzygum-boot.co
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/globalFunctions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
-printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/array-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+# extensions -----------------------------------------------------
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/object-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat src/boot/extensions/Array-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/CanvasRenderingContext2D-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat src/boot/extensions/Object-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+
+printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat src/boot/extensions/CanvasRenderingContext2D-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+
+printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat src/boot/extensions/CanvasGradient-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+
+printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat src/boot/extensions/String-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+
+printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat src/boot/extensions/HTMLCanvasElement-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+
+printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat src/boot/extensions/Date-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+
+# extensions -----------------------------------------------------
 
 if [ "$1" != "--homepage" ]; then
   printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee

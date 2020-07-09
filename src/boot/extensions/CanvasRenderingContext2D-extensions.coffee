@@ -7,3 +7,15 @@ CanvasRenderingContext2D::rebuildDerivedValue = (objectIBelongTo, myPropertyName
   # in in a property with name same as the context one, but without "Context"
   # e.g. "backBufferContext" -> belongs to canvas named: "backBuffer"
   objectIBelongTo[myPropertyName] = objectIBelongTo[myPropertyName.replace "Context", ""].getContext "2d"
+
+# used to clip any subsequent drawing on the context
+# to the dirty rectangle.
+CanvasRenderingContext2D::clipToRectangle = (al,at,w,h) ->
+  @beginPath()
+  @moveTo Math.round(al), Math.round(at)
+  @lineTo Math.round(al + w), Math.round(at)
+  @lineTo Math.round(al + w), Math.round(at + h)
+  @lineTo Math.round(al), Math.round(at + h)
+  @lineTo Math.round(al), Math.round(at)
+  @closePath()
+  @clip()
