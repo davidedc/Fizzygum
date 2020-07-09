@@ -18,7 +18,7 @@ class ColorPalettePatchProgrammingIconAppearance extends IconAppearance
         g.addColorStop 0.15, Color.MAGENTA.toString()
         g.addColorStop 0.33, Color.BLUE.toString()
         g.addColorStop 0.49, Color.CYAN.toString()
-        g.addColorStop 0.67, Color.GREEN.toString()
+        g.addColorStop 0.67, Color.LIME.toString()
         g.addColorStop 0.84, Color.YELLOW.toString()
         g.addColorStop 1, Color.RED.toString()
         g

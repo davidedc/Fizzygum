@@ -58,7 +58,7 @@ class MenusHelper
   makeSlidersButtonsStatesBright: ->
     world.forAllChildrenBottomToTop (child) ->
       if child instanceof SliderButtonMorph
-       child.pressColor = Color.GREEN
+       child.pressColor = Color.LIME
        child.highlightColor = Color.BLUE
        child.normalColor = Color.BLACK
 

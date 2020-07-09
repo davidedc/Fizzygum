@@ -37,7 +37,7 @@ class PointerMorph extends BoxMorph
     @add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     @add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    #lmContent1.setColor Color.GREEN
+    #lmContent1.setColor Color.LIME
     #lmContent2.setColor Color.BLUE
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), LayoutSpec.SPREADABILITY_NONE
