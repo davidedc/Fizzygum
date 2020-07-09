@@ -265,7 +265,7 @@ class Color
     else
       return @
 
-  recursivelyCloneProperties: (cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure)->
+  recursivelyCloneContent: (cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure)->
     if doSerialize
       # we normally serialise each field, however for immutable classes
       # we want to serialise something special so we don't end up

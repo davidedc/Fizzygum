@@ -45,7 +45,7 @@ DeepCopierMixin =
 
         # cloneOfMe at this point is just an "empty shell" copy
 
-        @recursivelyCloneProperties cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
+        @recursivelyCloneContent cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
 
         # cloneOfMe at this point is a full deep copy
 
@@ -106,7 +106,7 @@ DeepCopierMixin =
             if theOriginal[property]?.rebuildDerivedValue?
               theOriginal[property].rebuildDerivedValue(@, property)
 
-      recursivelyCloneProperties: (cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure)->
+      recursivelyCloneContent: (cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure)->
         for property of @
 
           # also includes the "parent" property
