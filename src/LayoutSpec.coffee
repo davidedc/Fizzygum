@@ -21,6 +21,11 @@ class LayoutSpec
   # @STACK_HORIZONTAL_VERTICALALIGNMENTS_CENTER: 100012
   # @STACK_HORIZONTAL_VERTICALALIGNMENTS_BOTTOM: 100013
 
+  # TODO
+  # These should go in a separate constants class,
+  # maybe "LayoutSpreadibilityConsts", because the
+  # ones above are (two) enums, these below are constants
+  # (in enums, the actual value of the enum is not used)
   @SPREADABILITY_HANDLES: 1
   @SPREADABILITY_NONE: 10
   @SPREADABILITY_LOW: 100
