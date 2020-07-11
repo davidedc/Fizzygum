@@ -107,32 +107,39 @@ DeepCopierMixin =
               theOriginal[property].rebuildDerivedValue(@, property)
 
       recursivelyCloneContent: (cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure)->
-        for property of @
-
+        # these are all the properties that are NOT static
+        # AND that are "attached" to the object.
+        # Which means basically inherited and non-inherited, non-static properties that
+        # have been re-assigned (Javascript runtime has a copy-on-write mechanism when you
+        # change the properties of an object).
+        # https://coffeescript.org/#try:class%20ColorExtended%0A%20%20%40extendedStatic%3A%204%0A%20%20extendedNonStatic%3A%205%0A%0A%0Aclass%20Color%20extends%20ColorExtended%0A%20%20%40aStatic%3A%202%0A%20%20nonStatic%3A%202%0A%20%20%0A%0AColor.aStatic%20%3D%2010%0AmyColor%20%3D%20new%20Color%0AmyColor.extendedNonStatic%20%3D%209%0A%0Afor%20property%20of%20myColor%0A%20%20alert%20property%20%2B%20%22%20%22%20%2B%20myColor.hasOwnProperty(property)
+        for own property of @
           # also includes the "parent" property
-          if @hasOwnProperty property
 
-            #if property == "backBufferContext"
-            #  debugger
-            if !@[property]?
+          #if property == "backBufferContext"
+          #  debugger
+
+          if !@[property]?
+            # undefined, null, nil
+            cloneOfMe[property] = nil
+          else if typeof @[property] == 'object'
+            # if the value can be rebuilt after the cloning
+            # then skip it, otherwise clone it. We know when
+            # that's the case because the object also has a
+            # rebuildDerivedValue method to be used to
+            # rebuild it
+            if @[property].rebuildDerivedValue?
               cloneOfMe[property] = nil
-            else if typeof @[property] == 'object'
-              # if the value can be rebuilt after the cloning
-              # then skip it, otherwise clone it. We know when
-              # that's the case because the object also has a
-              # rebuildDerivedValue method to be used to
-              # rebuild it
-              if @[property].rebuildDerivedValue?
-                cloneOfMe[property] = nil
-              else
-                if !@[property].deepCopy?
-                  console.dir @
-                  console.log property
-                  debugger
-                cloneOfMe[property] = @[property].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
             else
-              if property != "instanceNumericID"
-                cloneOfMe[property] = @[property]
+              if !@[property].deepCopy?
+                console.dir @
+                console.log property
+                debugger
+              cloneOfMe[property] = @[property].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
+          else
+            # boolean, number, bigint, string, symbol and function
+            if property != "instanceNumericID"
+              cloneOfMe[property] = @[property]
 
 
       # creates a new instance of target's type
