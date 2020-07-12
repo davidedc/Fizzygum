@@ -1,0 +1,2 @@
+ # example: sh ./find-tokens-used-only-once.sh ../../Fizzygum-builds/latest/js/pre-compiled-max.js
+ cat $1 | grep -o '^[^/]*' | tr " " "\n" | tr ";" "\n" | tr ":" "\n" | tr "," "\n" | tr "(" "\n" | tr ")" "\n" | tr "." "\n" | tr "{" "\n" | tr "}" "\n" | tr "=" "\n" | tr "+" "\n" | tr "-" "\n" | tr "*" "\n" | tr "[" "\n" | tr "]" "\n" | tr ">" "\n" | tr "<" "\n" | tr "!" "\n" | tr "?" "\n" | tr "|" "\n" | tr "&" "\n" | tr "\"" "\n" | tr "'" "\n" | tr "\`" "\n" | sed 's/\\n/\n/g' | tr "\\" "\n" | sort | uniq -u
