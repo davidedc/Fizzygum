@@ -351,18 +351,21 @@ class TreeNode
   # and lets us return as soon as
   # we find a match
   isAncestorOf: (morph) ->
-    if !morph?
+
+    # »>> this part is excluded from the fizzygum homepage build
+    if !morph? and Automator?
       # this happens when in a test, you select
       # a menu entry that doesn't exist.
       # so it's a good thing that we block the test
       # and let the user navigate through the world
       # to find the state of affairs that caused
       # the problem.
-      if Automator?
-        console.log "failed to find morph in test: " + world.automator.name
-        console.log "trying to find item with text label: " +  world.automator.player.getCommandBeingPlayed().textLabelOfClickedItem
-        console.log "...you can likely fix the test by correcting the label above in the test"
-        debugger
+      console.log "failed to find morph in test: " + world.automator.name
+      console.log "trying to find item with text label: " +  world.automator.player.getCommandBeingPlayed().textLabelOfClickedItem
+      console.log "...you can likely fix the test by correcting the label above in the test"
+      debugger
+    # this part is excluded from the fizzygum homepage build <<«
+
     # test the morph itself
     if morph is @
       return true

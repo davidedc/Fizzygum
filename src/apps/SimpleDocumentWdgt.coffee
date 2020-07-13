@@ -11,7 +11,6 @@ class SimpleDocumentWdgt extends Widget
   textMorph: nil
 
   simpleDocumentScrollPanel: nil
-  simpleDocumentScrollPanelText: nil
 
   # the external padding is the space between the edges
   # of the container and all of its internals. The reason

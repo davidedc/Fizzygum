@@ -2833,9 +2833,12 @@ class Widget extends TreeNode
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
       if @parent?
         @parent.showResizeAndMoveHandlesAndLayoutAdjusters()
-  
+
+  # »>> this part is excluded from the fizzygum homepage build
+  # currently unused
   showMoveHandle: ->
     world.temporaryHandlesAndLayoutAdjusters.add new HandleMorph @, "moveHandle"
+  # this part is excluded from the fizzygum homepage build <<«
   
   inform: (msg) ->
     text = msg

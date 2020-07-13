@@ -21,6 +21,7 @@ class LayoutSpec
   # @STACK_HORIZONTAL_VERTICALALIGNMENTS_CENTER: 100012
   # @STACK_HORIZONTAL_VERTICALALIGNMENTS_BOTTOM: 100013
 
+  # »>> this part is excluded from the fizzygum homepage build
   # TODO
   # These should go in a separate constants class,
   # maybe "LayoutSpreadibilityConsts", because the
@@ -31,3 +32,4 @@ class LayoutSpec
   @SPREADABILITY_LOW: 100
   @SPREADABILITY_MEDIUM: 1000
   @SPREADABILITY_SPACERS: 100000000
+  # this part is excluded from the fizzygum homepage build <<«

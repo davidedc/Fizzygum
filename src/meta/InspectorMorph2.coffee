@@ -341,14 +341,6 @@ class InspectorMorph2 extends Widget
     world.add wm
     wm.changed()
 
-  showAttributes: ->
-    @showing = "attributes"
-    @buildAndConnectChildren()
-
-  showAttributesAndMethods: ->
-    @showing = "all"
-    @buildAndConnectChildren()
-
   highlightOwnershipOfProperties: ->
     @markOwnershipOfProperties = not @markOwnershipOfProperties
     @buildAndConnectChildren()

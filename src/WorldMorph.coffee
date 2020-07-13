@@ -2069,11 +2069,13 @@ class WorldMorph extends PanelWdgt
         # which is set based on lastBuiltInstanceNumericID
         window[eachMorphClass].lastBuiltInstanceNumericID = 0
 
+    # »>> this part is excluded from the fizzygum homepage build
     if Automator?
       world.automator.recorder.turnOffAnimationsPacingControl()
       world.automator.recorder.turnOffAlignmentOfMorphIDsMechanism()
       world.automator.recorder.turnOffHidingOfMorphsContentExtractInLabels()
       world.automator.recorder.turnOffHidingOfMorphsNumberIDInLabels()
+    # this part is excluded from the fizzygum homepage build <<«
 
     super()
 
@@ -2106,8 +2108,9 @@ class WorldMorph extends PanelWdgt
     if @isDevMode
       menu.addMenuItem "demo ➜", false, @, "popUpDemoMenu", "sample morphs"
       menu.addLine()
-      menu.addMenuItem "show all", true, @, "showAllMinimised"
-      menu.addMenuItem "hide all", true, @, "minimiseAll"
+      # TODO remove these two, they do nothing now
+      menu.addMenuItem "show all", true, @, "noOperation"
+      menu.addMenuItem "hide all", true, @, "noOperation"
       menu.addMenuItem "delete all", true, @, "closeChildren"
       menu.addMenuItem "move all inside", true, @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
       menu.addMenuItem "inspect", true, @, "inspect", "open a window on\nall properties"
@@ -2417,20 +2420,6 @@ class WorldMorph extends PanelWdgt
     @isDevMode = not @isDevMode
   # this part is excluded from the fizzygum homepage build <<«
 
-  
-  # This method is obsolete. It assumes a different meaning
-  # for "minimise" than what we have now.
-  #minimiseAll: ->
-  #  @children.forEach (child) ->
-  #    child.minimise()
-  
-  # This method is obsolete. It assumes a different meaning
-  # for "minimise" than what we have now.
-  #showAllMinimised: ->
-  #  @forAllChildrenBottomToTop (child) ->
-  #    if !child.visibleBasedOnIsVisibleProperty() or
-  #    child.isCollapsed()
-  #      child.unminimise()
   
   edit: (aStringMorphOrTextMorph) ->
     # first off, if the Widget is not editable
