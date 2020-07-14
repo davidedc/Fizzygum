@@ -20,6 +20,7 @@ class BoxMorph extends Widget
   extentBasedOnInsetExtent: (insetMorph) ->
     return insetMorph.extent().add(2*(@cornerRadius - Math.round(@cornerRadius/Math.sqrt(2))))
 
+  # »>> this part is excluded from the fizzygum homepage build
   # there is another method almost equal to this
   # todo refactor
   choiceOfMorphToBePicked: (ignored, morphPickingUp) ->
@@ -29,6 +30,7 @@ class BoxMorph extends Widget
     if @ instanceof ScrollPanelWdgt
       @adjustContentsBounds()
       @adjustScrollBars()
+  # this part is excluded from the fizzygum homepage build <<«
 
 
   setCornerRadius: (radiusOrMorphGivingRadius, morphGivingRadius) ->
@@ -46,7 +48,7 @@ class BoxMorph extends Widget
     @layoutInset()
     @changed()
 
-  
+  # »>> this part is excluded from the fizzygum homepage build  
   # there is another method almost equal to this
   # todo refactor
   pickInset: ->
@@ -74,4 +76,5 @@ class BoxMorph extends Widget
       # morphs then show some kind of message.
       menu = new MenuMorph @, false, @, true, true, "no morphs to pick"
     menu.popUpAtHand()
+  # this part is excluded from the fizzygum homepage build <<«
 

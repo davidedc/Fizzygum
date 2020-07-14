@@ -34,16 +34,6 @@ class Widget extends TreeNode
 
   dragsDropsAndEditingEnabled: true
 
-  # Just some tests here ////////////////////
-  propertyUpTheChain: [1,2,3]
-  morphMethod: ->
-    3.14
-  @morphStaticMethod: ->
-    3.14
-  # End of tests here ////////////////////
-
-  isMorph: true
-
   # we conveniently keep all geometry information
   # into a single property (a Rectangle). Only
   # a few geometry-related methods should directly
@@ -53,7 +43,10 @@ class Widget extends TreeNode
   color: Color.create 80, 80, 80
   strokeColor: nil
   texture: nil # optional url of a fill-image
-  cachedTexture: nil # internal cache of actual bg image
+
+  # unused
+  #cachedTexture: nil # internal cache of actual bg image
+
   lastTime: nil
   # when you use the high-level geometry-change APIs
   # you don't actually change the geometry right away,
@@ -1982,6 +1975,7 @@ class Widget extends TreeNode
   representativeIcon: ->
     new WidgetIconWdgt
 
+  # »>> this part is excluded from the fizzygum homepage build
   createPointerMorph: ->
     myPosition = @positionAmongSiblings()
     morphToAdd = new PointerMorph @
@@ -1990,6 +1984,7 @@ class Widget extends TreeNode
     morphToAdd.setExtent new Point 150, 20
     morphToAdd.fullChanged()
     @removeFromTree()
+  # this part is excluded from the fizzygum homepage build <<«
 
   createReference: (referenceName, placeToDropItIn = world) ->
     # this function can also be called as a callback
@@ -2809,6 +2804,7 @@ class Widget extends TreeNode
   
   # Widget utilities ////////////////////////////////////////////////////////
   
+  # »>> this part is excluded from the fizzygum homepage build
   showResizeAndMoveHandlesAndLayoutAdjusters: ->
     if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
       world.temporaryHandlesAndLayoutAdjusters.add new HandleMorph(@, "resizeHorizontalHandle")
@@ -2834,7 +2830,6 @@ class Widget extends TreeNode
       if @parent?
         @parent.showResizeAndMoveHandlesAndLayoutAdjusters()
 
-  # »>> this part is excluded from the fizzygum homepage build
   # currently unused
   showMoveHandle: ->
     world.temporaryHandlesAndLayoutAdjusters.add new HandleMorph @, "moveHandle"
@@ -2890,7 +2885,7 @@ class Widget extends TreeNode
     menu.popUpAtHand()
 
   # »>> this part is excluded from the fizzygum homepage build
-  inspect: (anotherObject) ->
+  inspect: ->
     @spawnInspector @
 
   spawnInspector: (inspectee) ->
@@ -2901,7 +2896,7 @@ class Widget extends TreeNode
     inspector.changed()
   # this part is excluded from the fizzygum homepage build <<«
 
-  inspect2: (anotherObject) ->
+  inspect2: ->
     @spawnInspector2 @
 
   spawnInspector2: (inspectee) ->
@@ -3863,6 +3858,7 @@ class Widget extends TreeNode
 
     return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
 
+  # »>> this part is excluded from the fizzygum homepage build
   allSetters: (menuEntriesStrings, functionNamesStrings) ->
     if !menuEntriesStrings? 
       menuEntriesStrings = []
@@ -3874,6 +3870,7 @@ class Widget extends TreeNode
 
     # already sorted and deduplicated by the last of the calls above
     return [menuEntriesStrings, functionNamesStrings]
+  # this part is excluded from the fizzygum homepage build <<«
   
   # Widget entry field tabbing //////////////////////////////////////////////
   
@@ -4026,13 +4023,19 @@ class Widget extends TreeNode
   #     spec properties of the content.
 
 
+  # »>> this part is excluded from the fizzygum homepage build
   minWidth: 10
   desiredWidth: 20
   maxWidth: 100
+  # this part is excluded from the fizzygum homepage build <<«
 
+  # »>> this part is excluded from the fizzygum homepage build
   minHeight: 10
+  # this part is excluded from the fizzygum homepage build <<«
   desiredHeight: 20
+  # »>> this part is excluded from the fizzygum homepage build
   maxHeight: 100
+  # this part is excluded from the fizzygum homepage build <<«
 
   # »>> this part is excluded from the fizzygum homepage build
   makeSpacersTransparent: ->

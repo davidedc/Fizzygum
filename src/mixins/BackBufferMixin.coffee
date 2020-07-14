@@ -45,7 +45,8 @@ BackBufferMixin =
 
       # just a flag to indicate that the
       # backBufferContext value can be derived from others
-      backBufferContext_isDerivedValue: true
+      # currently unused
+      # backBufferContext_isDerivedValue: true
 
       # as seen by the " * ceilPixelRatio " parts in the code,
       # this function returns actual pixels, not logical pixels.

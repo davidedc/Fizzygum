@@ -471,6 +471,7 @@ class TreeNode
     else
       return nil
 
+  # »>> this part is excluded from the fizzygum homepage build
   firstSiblingAfterMeSuchThat: (predicate) ->
     searchActuallyOngoing = false
     for eachSibling in @parent.children
@@ -480,6 +481,7 @@ class TreeNode
       if eachSibling == @
         searchActuallyOngoing = true
     return nil
+  # this part is excluded from the fizzygum homepage build <<«
 
 
   childrenNotHandlesNorCarets: (whereToAct = @) ->

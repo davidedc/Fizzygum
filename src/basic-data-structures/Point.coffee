@@ -132,10 +132,12 @@ class Point
     return new @constructor @x * other.x, @y * other.y  if other instanceof Point
     new @constructor @x * other, @y * other
   
+  # »>> this part is excluded from the fizzygum homepage build
   divideBy: (other) ->
     @debugIfFloats()
     return new @constructor @x / other.x, @y / other.y  if other instanceof Point
     new @constructor @x / other, @y / other
+  # this part is excluded from the fizzygum homepage build <<«
   
   floorDivideBy: (other) ->
     @debugIfFloats()
@@ -186,6 +188,7 @@ class Point
   distanceTo: (aPoint) ->
     aPoint.subtract(@).r()
   
+  # »>> this part is excluded from the fizzygum homepage build
   rotate: (direction, center) ->
     # direction must be 'right', 'left' or 'pi'
     offset = @subtract center
@@ -214,6 +217,7 @@ class Point
     x = Math.sin(degreesToRadians(180 - deg)) * dist
     y = Math.sqrt((dist * dist) - (x * x))
     new @constructor x + @x, @y + y
+  # this part is excluded from the fizzygum homepage build <<«
   
   
   # Point transforming:
@@ -223,6 +227,7 @@ class Point
   translateBy: (deltaPoint) ->
     @add deltaPoint
   
+  # »>> this part is excluded from the fizzygum homepage build
   rotateBy: (
     angle,
     center = (new @constructor 0, 0)
@@ -231,6 +236,7 @@ class Point
     r = p.r()
     theta = angle - p.theta()
     new @constructor center.x + (r * Math.cos(theta)), center.y - (r * Math.sin(theta))
+  # this part is excluded from the fizzygum homepage build <<«
   
   
   # Point conversion:

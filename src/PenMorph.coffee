@@ -23,19 +23,10 @@ class PenMorph extends Widget
     # todo we need to change the size two times, for getting the right size
     # of the arrow and of the line. Probably should make the two distinct
     @penSize = 1
-    #alert @morphMethod() # works
-    # doesn't work cause coffeescript doesn't support static inheritance
-    #alert @morphStaticMethod()
-
-    # no need to call  because @rawSetExtent does it.
-    # (should it?)
-    #
-
 
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
     if !(whereTo instanceof ActivePointerWdgt or whereTo instanceof CanvasMorph)
       @inform "a pen will only\nwork on a canvas..."
-
 
   # NOTE: here we are painting the turtle/pen,
   # NOT what the turtle/pen is drawing!

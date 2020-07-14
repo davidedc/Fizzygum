@@ -156,9 +156,11 @@ class WorldMorph extends PanelWdgt
   currentHighlightingMorphs: new Set
   morphsBeingHighlighted: new Set
 
+  # »>> this part is excluded from the fizzygum homepage build
   morphsToBePinouted: new Set
   currentPinoutingMorphs: new Set
   morphsBeingPinouted: new Set
+  # this part is excluded from the fizzygum homepage build <<«
 
   steppingWdgts: new Set
 

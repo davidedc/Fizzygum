@@ -138,7 +138,9 @@ class BoxyAppearance extends Appearance
   addShapeSpecificMenuItems: (menu) ->
     menu.addLine()
     menu.addMenuItem "corner radius...", true, @, "cornerRadiusPopout", "set the corner's\nradius"
+    # »>> this part is excluded from the fizzygum homepage build
     menu.addMenuItem "pick inset...", true, @morph, "pickInset", "put a morph as inset"
+    # this part is excluded from the fizzygum homepage build <<«
     menu
   
   addShapeSpecificNumericalSetters: (menuEntriesStrings, functionNamesStrings) ->

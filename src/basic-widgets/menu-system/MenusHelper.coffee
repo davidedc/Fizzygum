@@ -196,9 +196,11 @@ class MenusHelper
     fizzyPaintLauncher.fullChanged()
     return wm
 
+  # »>> this part is excluded from the fizzygum homepage build
   createFizzyPaintLauncherAndItsIcon: ->
     wm = @createFizzyPaintLauncher()
     world.add wm
+  # this part is excluded from the fizzygum homepage build <<«
 
   createSimpleDocumentLauncher: ->
     scriptWdgt = new ScriptWdgt """
@@ -231,9 +233,11 @@ class MenusHelper
     simpleDocumentLauncher.fullChanged()
     return wm
 
+  # »>> this part is excluded from the fizzygum homepage build
   createSimpleDocumentLauncherAndItsIcon: ->
     wm = @createSimpleDocumentLauncher()
     world.add wm
+  # this part is excluded from the fizzygum homepage build <<«
 
   createSimpleSlideLauncher: ->
     scriptWdgt = new ScriptWdgt """
@@ -267,9 +271,11 @@ class MenusHelper
     simpleSlideLauncher.fullChanged()
     return wm
 
+  # »>> this part is excluded from the fizzygum homepage build
   createSimpleSlideLauncherAndItsIcon: ->
     wm = @createSimpleSlideLauncher()
     world.add wm
+  # this part is excluded from the fizzygum homepage build <<«
 
   createDashboardsLauncher: ->
     scriptWdgt = new ScriptWdgt """

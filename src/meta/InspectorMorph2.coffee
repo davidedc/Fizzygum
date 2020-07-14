@@ -2,7 +2,6 @@ class InspectorMorph2 extends Widget
 
   target: nil
   currentProperty: nil
-  showing: "attributes"
   markOwnershipOfProperties: true
   # panes:
   list: nil
@@ -105,11 +104,6 @@ class InspectorMorph2 extends Widget
     @classesNames = []
     @angledArrows = []
     super new Point 300, 300
-    @buildAndConnectChildren()
-  
-  inspectObject: (objectToBeInspected) ->
-    @target = objectToBeInspected
-    @currentProperty = nil
     @buildAndConnectChildren()
   
   buildAndConnectChildren: ->
@@ -340,10 +334,6 @@ class InspectorMorph2 extends Widget
     wm.fullRawMoveWithin world
     world.add wm
     wm.changed()
-
-  highlightOwnershipOfProperties: ->
-    @markOwnershipOfProperties = not @markOwnershipOfProperties
-    @buildAndConnectChildren()
 
   filterProperties: (targetOwnMethods)->
     if @markOwnershipOfProperties
