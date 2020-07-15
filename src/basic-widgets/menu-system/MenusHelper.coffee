@@ -156,6 +156,7 @@ class MenusHelper
   basementIconAndText: ->
     world.add new BasementOpenerWdgt
 
+  # »>> this part is excluded from the fizzygum homepage build
   newScriptWindow: ->
     scriptWdgt = new ScriptWdgt
     wm = new WindowWdgt nil, nil, scriptWdgt
@@ -164,6 +165,7 @@ class MenusHelper
     wm.fullRawMoveWithin world
     world.add wm
     wm.changed()
+  # this part is excluded from the fizzygum homepage build <<«
 
   createFizzyPaintLauncher: ->
     scriptWdgt = new ScriptWdgt """

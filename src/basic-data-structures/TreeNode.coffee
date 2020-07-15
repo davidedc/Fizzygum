@@ -424,6 +424,7 @@ class TreeNode
         return theCount
       theCount++
 
+  # »>> this part is excluded from the fizzygum homepage build
   siblingBeforeMeIsA: (theConstructor) ->
     if @amITheFirstSibling()
       return false
@@ -437,7 +438,7 @@ class TreeNode
     if @parent.children[@positionAmongSiblings()+1] instanceof theConstructor
       return true
     return false
-
+  # this part is excluded from the fizzygum homepage build <<«
 
   # find how many siblings before me
   # satisfy a property
@@ -456,6 +457,7 @@ class TreeNode
         theCount++
     return theCount
 
+  # »>> this part is excluded from the fizzygum homepage build
   lastSiblingBeforeMeSuchThat: (predicate) ->
     theCount = 0
     indexOfMorph = nil
@@ -471,7 +473,6 @@ class TreeNode
     else
       return nil
 
-  # »>> this part is excluded from the fizzygum homepage build
   firstSiblingAfterMeSuchThat: (predicate) ->
     searchActuallyOngoing = false
     for eachSibling in @parent.children

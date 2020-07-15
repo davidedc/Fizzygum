@@ -3663,6 +3663,7 @@ class Widget extends TreeNode
       @adjustContentsBounds()
       @adjustScrollBars()
 
+  # »>> this part is excluded from the fizzygum homepage build
   newParentChoiceWithHorizLayout: (ignored, theMorphToBeAttached) ->
     # this is what happens when "each" is
     # selected: we attach the selected morph
@@ -3670,6 +3671,7 @@ class Widget extends TreeNode
     if @ instanceof ScrollPanelWdgt
       @adjustContentsBounds()
       @adjustScrollBars()
+  # this part is excluded from the fizzygum homepage build <<«
 
   attach: ->
     choices = world.plausibleTargetAndDestinationMorphs @

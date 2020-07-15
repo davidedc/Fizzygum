@@ -131,9 +131,11 @@ class PopUpWdgt extends Widget
   popUpCenteredAtHand: (world) ->
     @popUp (world.hand.position().subtract @extent().floorDivideBy 2), world
   
+  # »>> this part is excluded from the fizzygum homepage build
   # currently unused
   popUpCenteredInWorld: (world) ->
     @popUp (world.center().subtract @extent().floorDivideBy 2), world
+  # this part is excluded from the fizzygum homepage build <<«
 
   popUpAtHand: ->
     @popUp world.hand.position(), world

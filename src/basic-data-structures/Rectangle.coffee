@@ -66,6 +66,7 @@ class Rectangle
   toString: ->
     "[" + @origin + " | " + @extent() + "]"
 
+  # »>> this part is excluded from the fizzygum homepage build
   onlyContainingIntegers: ->
     if Math.floor(@origin.x) == @origin.x and
       Math.floor(@origin.y) == @origin.y and
@@ -74,6 +75,7 @@ class Rectangle
         return true
     else
       return false
+  # this part is excluded from the fizzygum homepage build <<«
 
   debugIfFloats: ->
     #if !@onlyContainingIntegers()

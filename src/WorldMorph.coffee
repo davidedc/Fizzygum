@@ -55,6 +55,7 @@ class WorldMorph extends PanelWdgt
   inputDOMElementForVirtualKeyboardKeyupBrowserEventListener: nil
   inputDOMElementForVirtualKeyboardKeypressBrowserEventListener: nil
 
+  # »>> this part is excluded from the fizzygum homepage build
   keyComboResetWorldEventListener: nil
   keyComboTurnOnAnimationsPacingControl: nil
   keyComboTurnOffAnimationsPacingControl: nil
@@ -65,6 +66,7 @@ class WorldMorph extends PanelWdgt
   keyComboCheckStringsOfItemsInMenuOrderUnimportant: nil
   keyComboAddTestCommentEventListener: nil
   keyComboCheckNumberOfMenuItemsEventListener: nil
+  # this part is excluded from the fizzygum homepage build <<«
 
   dragoverEventListener: nil
   resizeBrowserEventListener: nil
@@ -139,7 +141,9 @@ class WorldMorph extends PanelWdgt
   openPopUps: new Set
   toolTipsList: new Set
 
+  # »>> this part is excluded from the fizzygum homepage build
   @ongoingUrlActionNumber: 0
+  # this part is excluded from the fizzygum homepage build <<«
 
   @frameCount: 0
   @numberOfAddsAndRemoves: 0
@@ -2107,6 +2111,8 @@ class WorldMorph extends PanelWdgt
         @, true, true, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     else
       menu = new MenuMorph @, false, @, true, true, "Widgetic"
+
+    # »>> this part is excluded from the fizzygum homepage build
     if @isDevMode
       menu.addMenuItem "demo ➜", false, @, "popUpDemoMenu", "sample morphs"
       menu.addLine()
@@ -2128,13 +2134,16 @@ class WorldMorph extends PanelWdgt
       else
         menu.addMenuItem "standard settings", true, WorldMorph.preferencesAndSettings, "toggleInputMode", "smaller menu fonts\nand sliders"
       menu.addLine()
+    # this part is excluded from the fizzygum homepage build <<«
     
     if Automator?
       menu.addMenuItem "system tests ➜", false, @, "popUpSystemTestsMenu", ""
+
     if @isDevMode
       menu.addMenuItem "switch to user mode", true, @, "toggleDevMode", "disable developers'\ncontext menus"
     else
       menu.addMenuItem "switch to dev mode", true, @, "toggleDevMode"
+
     menu.addMenuItem "new folder", true, @, "makeFolder"
     menu.addMenuItem "about Fizzygum...", true, @, "about"
     menu
