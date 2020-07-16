@@ -2804,7 +2804,6 @@ class Widget extends TreeNode
   
   # Widget utilities ////////////////////////////////////////////////////////
   
-  # »>> this part is excluded from the fizzygum homepage build
   showResizeAndMoveHandlesAndLayoutAdjusters: ->
     if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
       world.temporaryHandlesAndLayoutAdjusters.add new HandleMorph(@, "resizeHorizontalHandle")
@@ -2830,6 +2829,7 @@ class Widget extends TreeNode
       if @parent?
         @parent.showResizeAndMoveHandlesAndLayoutAdjusters()
 
+  # »>> this part is excluded from the fizzygum homepage build
   # currently unused
   showMoveHandle: ->
     world.temporaryHandlesAndLayoutAdjusters.add new HandleMorph @, "moveHandle"
