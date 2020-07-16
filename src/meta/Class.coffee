@@ -127,6 +127,18 @@ class Class
         if window.srcLoadCompileDebugWrites then console.log "name: " + name
     return name
 
+  findMixinsInTheClass: (source) ->
+    augmentedWith = []
+    augmentRegex = /^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/gm
+    while (m = augmentRegex.exec(source))?
+        if (m.index == augmentRegex.lastIndex)
+            augmentRegex.lastIndex++
+        m.forEach((match, groupIndex) ->
+            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
+        )
+        augmentedWith.push m[1]
+        if window.srcLoadCompileDebugWrites then console.log "augmentedWith: " + augmentedWith
+    return augmentedWith
 
   # You can create a Class in 3 main "modes" of use:
   #  1. you want to load up the CS source, turn it to JS
@@ -155,17 +167,7 @@ class Class
     [@superClassName, @superClass] = @findIfItExtendsAnotherClass source
 
     # find which mixins need to be mixed-in
-    @augmentedWith = []
-    augmentRegex = /^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/gm
-    while (m = augmentRegex.exec(source))?
-        if (m.index == augmentRegex.lastIndex)
-            augmentRegex.lastIndex++
-        m.forEach((match, groupIndex) ->
-            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
-        )
-        @augmentedWith.push m[1]
-        if window.srcLoadCompileDebugWrites then console.log "augmentedWith: " + @augmentedWith
-
+    @augmentedWith = @findMixinsInTheClass source
 
     # remove the augmentations because we don't want
     # them to mangle up the parsing
