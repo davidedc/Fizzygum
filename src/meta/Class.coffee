@@ -140,6 +140,33 @@ class Class
         if window.srcLoadCompileDebugWrites then console.log "augmentedWith: " + augmentedWith
     return augmentedWith
 
+  removeAugmentations: (source) ->
+    source.replace(/^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$, @]*)/gm,"")
+
+  getSourceOfAllProperties: (source) ->
+    staticPropertiesSources = {}
+    nonStaticPropertiesSources = {}
+    # to match a valid JS variable name (we just ignore the keywords):
+    #    [a-zA-Z_$][0-9a-zA-Z_$]*
+    regex = /^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *: *([^]*?)(?=^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *:)/gm
+    while (m = regex.exec(source + "\n  $$$STOPTOKEN_LASTFIELD :"))?
+        if (m.index == regex.lastIndex)
+            regex.lastIndex++
+        m.forEach((match, groupIndex) ->
+            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
+        )
+
+        if m[1].valueOf() == "$$$STOPTOKEN_LASTFIELD "
+          break
+        else
+          if window.srcLoadCompileDebugWrites then console.log "not the stop field: " + m[1].valueOf()
+
+        if m[1].substring(0, 1) == "@"
+          staticPropertiesSources[m[1].substring(1, m[1].length)] = m[2]
+        else
+          nonStaticPropertiesSources[m[1]] = m[2]
+    [staticPropertiesSources, nonStaticPropertiesSources]
+
   # You can create a Class in 3 main "modes" of use:
   #  1. you want to load up the CS source, turn it to JS
   #     and eval the JS so to create the class:
@@ -159,8 +186,6 @@ class Class
     if !window.classDefinitionAsJS?
       window.classDefinitionAsJS = []
 
-    @nonStaticPropertiesSources = {}
-    @staticPropertiesSources = {}
     @subClasses = new Set
 
     @name = @findClassName source
@@ -171,37 +196,15 @@ class Class
 
     # remove the augmentations because we don't want
     # them to mangle up the parsing
-    source = source.replace(/^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$, @]*)/gm,"")
+    source = @removeAugmentations source
 
     if window.srcLoadCompileDebugWrites then console.log "source ---------\n" + source
-
-    source += "\n  $$$STOPTOKEN_LASTFIELD :"
 
     # Now find all the fields definitions
     # note that the constructor, methods, properties and static properties
     # are ALL fields definitions, so we are basically going to cycle through
     # everything
-
-    # to match a valid JS variable name (we just ignore the keywords):
-    #    [a-zA-Z_$][0-9a-zA-Z_$]*
-    regex = /^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *: *([^]*?)(?=^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *:)/gm
-    while (m = regex.exec(source))?
-        if (m.index == regex.lastIndex)
-            regex.lastIndex++
-        m.forEach((match, groupIndex) ->
-            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
-        )
-
-        if m[1].valueOf() == "$$$STOPTOKEN_LASTFIELD "
-          break
-        else
-          if window.srcLoadCompileDebugWrites then console.log "not the stop field: " + m[1].valueOf()
-
-        if m[1].substring(0, 1) == "@"
-          @staticPropertiesSources[m[1].substring(1, m[1].length)] = m[2]
-        else
-          @nonStaticPropertiesSources[m[1]] = m[2]
-
+    [@staticPropertiesSources, @nonStaticPropertiesSources] = @getSourceOfAllProperties source
 
     if generatePreCompiledJS or createClass
       # --------------------
