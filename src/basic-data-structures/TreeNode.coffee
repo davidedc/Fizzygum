@@ -405,7 +405,6 @@ class TreeNode
       if predicate.call nil, eachSibling
         return eachSibling
     return nil
-  # this part is excluded from the fizzygum homepage build <<«
 
   amITheFirstSibling: ->
     if @parent.children[0] == @
@@ -416,6 +415,7 @@ class TreeNode
     if @parent.children[@parent.children.length - 1] == @
       return true
     return false
+  # this part is excluded from the fizzygum homepage build <<«
 
   positionAmongSiblings: ->
     theCount = 0
