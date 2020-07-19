@@ -30,6 +30,8 @@ class AllPlotsIconAppearance extends IconAppearance
     context.lineTo 7, 8
 
     # dots
+    # ...you MUST use moveTos otherwise the arcs create a joint path
+    # rather than unconnected circles
     context.moveTo 37, 20
     context.arc 37, 20, 3, 0, 2 * Math.PI
     context.moveTo 20, 39
