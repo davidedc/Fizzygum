@@ -9,9 +9,18 @@ class AllPlotsIconAppearance extends IconAppearance
     #// Color Declarations
     if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
 
-    #// Group
-    #// axes Drawing
+    context.fillStyle = iconColorString
+
+    # this is all done in one path - but note how it has some unconnected
+    # parts: moveTo() is used to put together the unconnected parts
+    # into one path
+
     context.beginPath()
+
+    # axes
+    # ...this would look like a better job for a stroke rather than a fill, however
+    # hey hardware is fast and this way we only create one path that is filled
+    # all at once.
     context.moveTo 7, 8
     context.lineTo 11.25, 8
     context.lineTo 11.25, 88.76
@@ -19,40 +28,27 @@ class AllPlotsIconAppearance extends IconAppearance
     context.lineTo 92, 93
     context.lineTo 7, 93
     context.lineTo 7, 8
-    context.closePath()
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Group 2
-    #// Oval Drawing
-    @oval context, 37, 20, 5, 5
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Oval 2 Drawing
-    @oval context, 20, 39, 5, 5
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Oval 3 Drawing
-    @oval context, 20, 18, 5, 5
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Oval 10 Drawing
-    @oval context, 29, 29, 5, 5
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Oval 11 Drawing
-    @oval context, 42, 29, 5, 5
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Oval 12 Drawing
-    @oval context, 53, 25, 5, 5
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Oval 13 Drawing
-    @oval context, 53, 15, 5, 5
-    context.fillStyle = iconColorString
-    context.fill()
-    #// function plot Drawing
-    context.beginPath()
+
+    # dots
+    context.moveTo 37, 20
+    context.arc 37, 20, 3, 0, 2 * Math.PI
+    context.moveTo 20, 39
+    context.arc 20, 39, 3, 0, 2 * Math.PI
+    context.moveTo 20, 18
+    context.arc 20, 18, 3, 0, 2 * Math.PI
+    context.moveTo 29, 29
+    context.arc 29, 29, 3, 0, 2 * Math.PI
+    context.moveTo 42, 29
+    context.arc 42, 29, 3, 0, 2 * Math.PI
+    context.moveTo 53, 25
+    context.arc 53, 25, 3, 0, 2 * Math.PI
+    context.moveTo 53, 15
+    context.arc 53, 15, 3, 0, 2 * Math.PI
+
+    # function plot line drawing
+    # ...this would look like a better job for a stroke rather than a fill, however
+    # hey hardware is fast and this way we only create one path that is filled
+    # all at once.
     context.moveTo 20.06, 79.26
     context.lineTo 15.23, 75.9
     context.lineTo 26.06, 56.31
@@ -65,28 +61,15 @@ class AllPlotsIconAppearance extends IconAppearance
     context.bezierCurveTo 54.43, 63.84, 52, 63, 48.31, 59.85
     context.bezierCurveTo 44.62, 56.71, 41.39, 52.14, 38.2, 51.57
     context.bezierCurveTo 35, 51, 32.45, 56.53, 30.62, 59.61
+    # now close this part of the path back to its opening point
     context.lineTo 20.06, 79.26
-    context.closePath()
-    context.fillStyle = iconColorString
-    context.fill()
-    #// bar 4 Drawing
-    context.beginPath()
-    context.rect 79, 41, 11, 45
-    context.fillStyle = iconColorString
-    context.fill()
-    #// bar 3 Drawing
-    context.beginPath()
-    context.rect 63, 66, 11, 20
-    context.fillStyle = iconColorString
-    context.fill()
-    #// bar 2 Drawing
-    context.beginPath()
-    context.rect 47, 72, 11, 14
-    context.fillStyle = iconColorString
-    context.fill()
-    #// bar 1 Drawing
-    context.beginPath()
-    context.rect 32, 66, 10, 20
-    context.fillStyle = iconColorString
-    context.fill()
 
+    # bars
+    # note that rects don't need moveTo to draw correctly as
+    # distinct parts of the path (while arcs do!)
+    context.rect 79, 41, 11, 45
+    context.rect 63, 66, 11, 20
+    context.rect 47, 72, 11, 14
+    context.rect 32, 66, 10, 20
+
+    context.fill()
