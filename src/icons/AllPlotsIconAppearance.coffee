@@ -30,22 +30,15 @@ class AllPlotsIconAppearance extends IconAppearance
     context.lineTo 7, 8
 
     # dots
-    # ...you MUST use moveTos otherwise the arcs create a joint path
-    # rather than unconnected circles
-    context.moveTo 37, 20
-    context.arc 37, 20, 3, 0, 2 * Math.PI
-    context.moveTo 20, 39
-    context.arc 20, 39, 3, 0, 2 * Math.PI
-    context.moveTo 20, 18
-    context.arc 20, 18, 3, 0, 2 * Math.PI
-    context.moveTo 29, 29
-    context.arc 29, 29, 3, 0, 2 * Math.PI
-    context.moveTo 42, 29
-    context.arc 42, 29, 3, 0, 2 * Math.PI
-    context.moveTo 53, 25
-    context.arc 53, 25, 3, 0, 2 * Math.PI
-    context.moveTo 53, 15
-    context.arc 53, 15, 3, 0, 2 * Math.PI
+    # note that @circles don't need moveTo to draw correctly as
+    # distinct parts of the path
+    @circle context, 37, 20, 3
+    @circle context, 20, 39, 3
+    @circle context, 20, 18, 3
+    @circle context, 29, 29, 3
+    @circle context, 42, 29, 3
+    @circle context, 53, 25, 3
+    @circle context, 53, 15, 3
 
     # function plot line drawing
     # ...this would look like a better job for a stroke rather than a fill, however
@@ -68,7 +61,7 @@ class AllPlotsIconAppearance extends IconAppearance
 
     # bars
     # note that rects don't need moveTo to draw correctly as
-    # distinct parts of the path (while arcs do!)
+    # distinct parts of the path
     context.rect 79, 41, 11, 45
     context.rect 63, 66, 11, 20
     context.rect 47, 72, 11, 14

@@ -124,6 +124,13 @@ class IconAppearance extends Appearance
     context.restore()
     return
 
+  # uses moveTos to create unconnected circles
+  # (otherwise the arcs create a joint path)
+  # basically does the equvalent of what context.rect does
+  circle: (context, x, y, r) ->
+    context.moveTo x, y
+    context.arc x, y, r, 0, 2 * Math.PI
+
   arc: (context, x, y, w, h, startAngle, endAngle, isClosed) ->
     context.save()
     context.beginPath()
