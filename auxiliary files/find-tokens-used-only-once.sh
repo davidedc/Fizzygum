@@ -1,2 +1,4 @@
  # example: sh ./find-tokens-used-only-once.sh ../../Fizzygum-builds/latest/js/pre-compiled-max.js
+ # ...then open the pre-compiled-max.js to check where the single-invocation happens and check if you can remove
+
  cat $1 | grep -o '^[^/]*' | tr " " "\n" | tr ";" "\n" | tr ":" "\n" | tr "," "\n" | tr "(" "\n" | tr ")" "\n" | tr "." "\n" | tr "{" "\n" | tr "}" "\n" | tr "=" "\n" | tr "+" "\n" | tr "-" "\n" | tr "*" "\n" | tr "[" "\n" | tr "]" "\n" | tr ">" "\n" | tr "<" "\n" | tr "!" "\n" | tr "?" "\n" | tr "|" "\n" | tr "&" "\n" | tr "\"" "\n" | tr "'" "\n" | tr "\`" "\n" | sed 's/\\n/\n/g' | tr "\\" "\n" | tr "@" "\n" | sort | uniq -u
