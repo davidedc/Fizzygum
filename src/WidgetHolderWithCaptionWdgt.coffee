@@ -5,7 +5,7 @@
 
 class WidgetHolderWithCaptionWdgt extends Widget
 
-  labl: nil
+  label: nil
 
   constructor: (@labelContent, @icon) ->
     super()
