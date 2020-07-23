@@ -29,8 +29,10 @@ class BasementWdgt extends BoxMorph
     # there is nothing in it
     containerWindow.fullDestroy()
   
+  # »>> this part is excluded from the fizzygum homepage build
   empty: ->
     @scrollPanel?.contents?.fullDestroyChildren()
+  # this part is excluded from the fizzygum homepage build <<«
   
   buildAndConnectChildren: ->
 

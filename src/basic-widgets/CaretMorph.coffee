@@ -435,7 +435,9 @@ class CaretMorph extends BlinkerMorph
     @updateSelection false
     @clearSelectionIfStartAndEndMeet false
   
+  # »>> this part is excluded from the fizzygum homepage build
   # CaretMorph utilities:
   inspectKeyEvent: (event) ->
     # private
     @inform "Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode + "\nkeyCode: " + event.keyCode + "\naltKey: " + event.altKey + "\nctrlKey: " + event.ctrlKey  + "\ncmdKey: " + event.metaKey
+  # this part is excluded from the fizzygum homepage build <<«
