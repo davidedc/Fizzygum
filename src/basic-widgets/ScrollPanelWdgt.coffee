@@ -3,7 +3,6 @@ class ScrollPanelWdgt extends PanelWdgt
   autoScrollTrigger: nil
   hasVelocity: true # dto.
   padding: 0 # around the scrollable area
-  growth: 0 # pixels or Point to grow right/left when near edge
   isTextLineWrapping: false
   isScrollingByfloatDragging: true
   scrollBarsThickness: nil
