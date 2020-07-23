@@ -2046,7 +2046,6 @@ class WorldMorph extends PanelWdgt
     # so we can see the test results while tests
     # are running.
     document.body.scrollTop = document.documentElement.scrollTop = 0    
-
   # this part is excluded from the fizzygum homepage build <<«
   
   # There is something special about the
