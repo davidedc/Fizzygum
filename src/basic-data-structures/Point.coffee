@@ -94,10 +94,12 @@ class Point
   neg: ->
     @debugIfFloats()
     new @constructor -@x, -@y
-  
+
+  # »>> this part is excluded from the fizzygum homepage build
   mirror: ->
     @debugIfFloats()
     new @constructor @y, @x 
+  # this part is excluded from the fizzygum homepage build <<«
   
   floor: ->
     new @constructor Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0)
