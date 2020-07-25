@@ -32,6 +32,7 @@ class Point3D
     x = @z * sina + @x * cosa
     new @constructor x, @y, z
 
+  # »>> this part is excluded from the fizzygum homepage build
   rotateZ: (angle) ->
     rad = angle * Math.PI / 180
     cosa = Math.cos rad
@@ -39,6 +40,7 @@ class Point3D
     x = @x * cosa - @y * sina
     y = @x * sina + @y * cosa
     new @constructor x, y, @z
+  # this part is excluded from the fizzygum homepage build <<«
 
   # the order of the translations doesn't matter
   # so one can do them all together

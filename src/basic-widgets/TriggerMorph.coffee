@@ -99,13 +99,14 @@ class TriggerMorph extends Widget
     else
       return super()
 
-
+  # »>> this part is excluded from the fizzygum homepage build
   setLabel: (@labelString) ->
     # just recreated the label
     # from scratch
     if @label?
       @label = @label.fullDestroy()
     @layoutSubmorphs()
+  # this part is excluded from the fizzygum homepage build <<«
 
   alignCenter: ->
     if !@centered

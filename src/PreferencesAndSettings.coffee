@@ -64,11 +64,13 @@ class PreferencesAndSettings
   constructor: ->
     @setMouseInputMode()
 
+  # »>> this part is excluded from the fizzygum homepage build
   toggleInputMode: ->
     if @inputMode == PreferencesAndSettings.INPUT_MODE_MOUSE
       @setTouchInputMode()
     else
       @setMouseInputMode()
+  # this part is excluded from the fizzygum homepage build <<«
 
   setMouseInputMode: ->
     @inputMode = PreferencesAndSettings.INPUT_MODE_MOUSE

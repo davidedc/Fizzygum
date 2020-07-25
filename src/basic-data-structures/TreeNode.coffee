@@ -415,7 +415,6 @@ class TreeNode
     if @parent.children[@parent.children.length - 1] == @
       return true
     return false
-  # this part is excluded from the fizzygum homepage build <<«
 
   positionAmongSiblings: ->
     theCount = 0
@@ -424,7 +423,6 @@ class TreeNode
         return theCount
       theCount++
 
-  # »>> this part is excluded from the fizzygum homepage build
   siblingBeforeMeIsA: (theConstructor) ->
     if @amITheFirstSibling()
       return false
