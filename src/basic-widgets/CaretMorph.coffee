@@ -163,6 +163,7 @@ class CaretMorph extends BlinkerMorph
     ), 50, true
 
 
+  # unused
   processCopy: (selectedText) ->
     #console.log "processing copy"
 
