@@ -2160,8 +2160,6 @@ class Widget extends TreeNode
           window.morphsThatMaybeChangedGeometryOrPosition.push @
           @geometryOrPositionPossiblyChanged = true
 
-    @parent.childChanged @  if @parent
-
   # to actually make sure if a morph has changed
   # position, you need to check it and all its
   # parents.
@@ -2192,13 +2190,6 @@ class Widget extends TreeNode
       if !@fullGeometryOrPositionPossiblyChanged
         window.morphsThatMaybeChangedFullGeometryOrPosition.push @
         @fullGeometryOrPositionPossiblyChanged = true
-  
-  childChanged: ->
-    # react to a  change in one of my children,
-    # default is to just pass this message on upwards
-    # override this method for Widgets that need to adjust accordingly
-    @parent.childChanged @  if @parent
-  
   
   # Widget accessing - structure //////////////////////////////////////////////
 
