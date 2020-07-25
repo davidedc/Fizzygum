@@ -102,17 +102,6 @@ class Rectangle
     @debugIfFloats()
     new @constructor @left(), @top(), @right(), @bottom()
   
-  # Rectangle accessing - setting:
-  setTo: (left, top, right, bottom) ->
-    @debugIfFloats()
-    # note: all inputs are optional and can be omitted
-    @origin = new Point(
-      left or ((if (left is 0) then 0 else @left())),
-      top or ((if (top is 0) then 0 else @top())))
-    @corner = new Point(
-      right or ((if (right is 0) then 0 else @right())),
-      bottom or ((if (bottom is 0) then 0 else @bottom())))
-
   # Rectangle accessing - setting
   # This is used to create a bound with the specified
   # width and height: the corner needs to be displaced

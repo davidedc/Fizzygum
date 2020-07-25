@@ -288,7 +288,6 @@ class WorldMorph extends PanelWdgt
     @alpha = 1
 
     # additional properties:
-    @stamp = Date.now() # reference in multi-world setups
     @isDevMode = false
     @hand = new ActivePointerWdgt @
     @keyboardEventsReceiver = nil
