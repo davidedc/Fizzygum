@@ -2280,7 +2280,6 @@ class Widget extends TreeNode
   # e.g. the MenuMorph
   reLayout: ->
 
-
   calculateAndUpdateExtent: ->
 
   silentAdd: (aWdgt, avoidExtentCalculation, position = nil) ->
