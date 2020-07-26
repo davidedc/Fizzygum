@@ -39,23 +39,8 @@ class MenuItemMorph extends TriggerMorph
 
   createLabel: ->
     # console.log "menuitem createLabel"
-    if isString @labelString
-      @label = @createLabelString @labelString
-    else if @labelString instanceof Array      
-      # assume its pattern is: [icon, string] 
-      @label = new Widget
-      @label.alpha = 0 # transparent
-
-      icon = @createIcon @labelString[0]
-      @label.add icon
-      lbl = @createLabelString @labelString[1]
-      @label.add lbl
-
-      lbl.fullRawMoveCenterTo icon.center()
-      lbl.fullRawMoveLeftSideTo icon.right() + 4
-      @label.rawSetBounds icon.boundingBox().merge lbl.boundingBox()
-    else # assume it's either a Widget or a Canvas
-      @label = @createIcon @labelString
+    @label = new TextMorph @labelString, @fontSize, @fontStyle
+    @label.setColor @labelColor
 
     @add @label
   
@@ -65,37 +50,6 @@ class MenuItemMorph extends TriggerMorph
     np = @position().add new Point 4, 0
     @label.silentFullRawMoveTo np
   
-
-  # »>> this part is excluded from the fizzygum homepage build
-  # TODO this should be in a more general place,
-  # seems useful for more cases
-  # also, this is currently unused
-  createIcon: (source) ->
-    # source can be either a Widget or an HTMLCanvasElement
-    icon = new Widget
-    icon.backBuffer = (if source instanceof Widget then source.fullImage() else source)
-    icon.backBufferContext = icon.backBuffer.getContext "2d"
-
-    # adjust shadow dimensions
-    if source instanceof Widget and source.hasShadow()
-      src = icon.backBuffer
-      icon.backBuffer = newCanvas(
-        source.fullBounds().extent().subtract(
-          @shadowBlur * 2).scaleBy ceilPixelRatio)
-      icon.backBufferContext = icon.backBuffer.getContext "2d"
-      icon.backBufferContext.drawImage src, 0, 0
-
-    icon.silentRawSetWidth icon.backBuffer.width
-    icon.silentRawSetHeight icon.backBuffer.height
-    icon
-  # this part is excluded from the fizzygum homepage build <<«
-
-  createLabelString: (string) ->
-    # console.log "menuitem createLabelString"
-    lbl = new TextMorph string, @fontSize, @fontStyle
-    lbl.setColor @labelColor
-    lbl  
-
   shrinkToTextSize: ->
     # '5' is to add some padding between
     # the text and the button edge

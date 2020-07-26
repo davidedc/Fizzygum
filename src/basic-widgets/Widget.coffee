@@ -170,7 +170,6 @@ class Widget extends TreeNode
   # text
   takesOverAndCoalescesChildrensMenus: false
 
-  shadowBlur: 10
   onNextStep: nil # optional function to be run once. Not currently used in Fizzygum
 
   clickOutsideMeOrAnyOfMeChildrenCallback: [nil]
