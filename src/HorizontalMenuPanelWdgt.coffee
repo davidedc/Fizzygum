@@ -40,7 +40,6 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
           glassBoxBottom.rawSetExtent new Point aWdgt.width(), @thumbnailSize
         else
           glassBoxBottom.rawSetExtent new Point @thumbnailSize, @thumbnailSize
-        glassBoxBottom.reLayout()
 
         aWdgt = glassBoxBottom
 
@@ -68,10 +67,6 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
       @numberOfIconsOnPanel++
       @reLayout()
 
-
-  rawSetExtent: (aPoint) ->
-    super
-    @reLayout()
 
   reLayout: ->
 
