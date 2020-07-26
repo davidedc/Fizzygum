@@ -1394,12 +1394,6 @@ class Widget extends TreeNode
   parentHasReLayouted: ->
     @notifyChildrenThatParentHasReLayouted()
 
-  layoutInset: (morphStartingTheChange = nil) ->
-    if @insetMorph?
-      if @insetMorph != morphStartingTheChange
-        @insetMorph.fullRawMoveTo @insetPosition()
-        @insetMorph.rawSetExtent @insetSpaceExtent(), @
-  
   # the default of layoutSubmorphs
   # is to do nothing apart from notifying
   # the children (in case, for example,
@@ -1410,20 +1404,9 @@ class Widget extends TreeNode
   # the inspector might well want to
   # tweak many of their children...
   layoutSubmorphs: (morphStartingTheChange = nil) ->
-    @layoutInset morphStartingTheChange
-
     for child in @children.slice()
       if morphStartingTheChange != child
-        child.parentHasReLayouted()
-  
-
-  # do nothing in most cases but for example for
-  # layouts, if something inside a layout wants to
-  # change extent, then the whole layout might need to
-  # change extent.
-  childChangedExtent: (theMorphChangingTheExtent) ->
-    if @insetMorph == theMorphChangingTheExtent
-      @rawSetExtent @extentBasedOnInsetExtent(theMorphChangingTheExtent), theMorphChangingTheExtent
+        child.parentHasReLayouted()  
 
   # more complex Widgets, e.g. layouts, might
   # do a more complex calculation to get the
@@ -1454,9 +1437,6 @@ class Widget extends TreeNode
       @reLayout()
       
       @layoutSubmorphs morphStartingTheChange
-      if @parent?
-        if @parent != morphStartingTheChange
-          @parent.childChangedExtent @
 
   # high-level geometry-change API,
   # you don't actually change the geometry right away,
@@ -2288,22 +2268,9 @@ class Widget extends TreeNode
 
     return aWdgt
 
-  # »>> this part is excluded from the fizzygum homepage build
-  addInset: (aWdgt) ->
-    if aWdgt.parent?
-      aWdgt.changed()
-
-    @insetMorph = aWdgt
-    @add aWdgt, 0
-    aWdgt.fullRawMoveTo @insetPosition()
-    aWdgt.rawSetExtent @insetSpaceExtent(), @
-  # this part is excluded from the fizzygum homepage build <<«
-
-
   sourceChanged: ->
     @reLayout?() 
     @changed?()
-
 
   # this is done before the updating of the
   # backing store in some morphs that
