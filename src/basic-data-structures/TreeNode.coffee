@@ -455,7 +455,6 @@ class TreeNode
         theCount++
     return theCount
 
-  # »>> this part is excluded from the fizzygum homepage build
   lastSiblingBeforeMeSuchThat: (predicate) ->
     theCount = 0
     indexOfMorph = nil
@@ -480,8 +479,6 @@ class TreeNode
       if eachSibling == @
         searchActuallyOngoing = true
     return nil
-  # this part is excluded from the fizzygum homepage build <<«
-
 
   childrenNotHandlesNorCarets: (whereToAct = @) ->
     whereToAct.children.filter (w) ->
