@@ -1090,7 +1090,7 @@ class WorldMorph extends PanelWdgt
             #console.log "mousedownBrowserEventHandler " + event.button + "  " + event.buttons
 
           when "mouseupBrowserEvent"
-            @mouseupBrowserEventHandler  event.button, event.ctrlKey, event.buttons, event.shiftKey, event.altKey, event.metaKey
+            @mouseupBrowserEventHandler  event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
             #console.log "mouseupBrowserEventHandler " + event.button + "  " + event.buttons
 
           when "mousemoveBrowserEvent"
@@ -1116,7 +1116,7 @@ class WorldMorph extends PanelWdgt
             #console.log "touchstartBrowserEvent"
 
           when "touchendBrowserEvent"
-            @mouseupBrowserEventHandler  0, false, 0, false, false, false
+            @mouseupBrowserEventHandler  0, 0, false, false, false, false
             #console.log "touchendBrowserEvent"
 
           when "touchmoveBrowserEvent"
