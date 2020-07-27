@@ -172,8 +172,8 @@ class Color
   _derived_String: nil
 
   # all values are optional, just (r, g, b) is fine
-  # this should ONLY be used from the "synthetic" constructors
-  # the reason being that from the "synthetic" constructors you can
+  # this should ONLY be used from the static factories
+  # the reason being that from the static factories you can
   # go through a cache so you try to keep only ONE instance
   # of each color, say, BLACK, in the system.
   constructor: (@_r = 0, @_g = 0, @_b = 0, @_a = 1) ->
@@ -181,8 +181,9 @@ class Color
     @_g = Math.round(@_g)
     @_b = Math.round(@_b)
 
-  # synthetic constructor - this is the one that should be used all the
+  # static factory - this is the one that should be used all the
   # times - caches constructed colors, since they are immutable
+  # see https://stackoverflow.com/questions/929021/what-are-static-factory-methods
   @create: (r = 0, g = 0, b = 0, a = 1) ->
     r = Math.round r
     g = Math.round g
@@ -269,7 +270,7 @@ class Color
     if doSerialize
       # we normally serialise each field, however for immutable classes
       # we want to serialise something special so we don't end up
-      # just cloning the object. We'd rather use the synthetic constructor
+      # just cloning the object. We'd rather use the static factory
       # so that we don't actually create a new object if there is another
       # immutable one with the same contents that we can reference.
       cloneOfMe.compactSerialisedForm = [@_r,@_g,@_b,@_a]
