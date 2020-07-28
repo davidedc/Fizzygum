@@ -123,7 +123,7 @@ class StretchableWidgetContainerWdgt extends Widget
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyChildrenThatParentHasReLayouted()
+      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     #console.log "spanel @contents: " + @contents + " doLayout 2"
@@ -174,7 +174,7 @@ class StretchableWidgetContainerWdgt extends Widget
     @fullChanged()
 
     @layoutIsValid = true
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

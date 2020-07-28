@@ -86,7 +86,7 @@ class EmptyButtonMorph extends Widget
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyChildrenThatParentHasReLayouted()
+      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     @rawSetBounds newBoundsForThisLayout
@@ -95,7 +95,7 @@ class EmptyButtonMorph extends Widget
       @faceMorph.rawSetBounds newBoundsForThisLayout.insetBy @padding
 
     @layoutIsValid = true
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
   # TODO
   getTextDescription: ->

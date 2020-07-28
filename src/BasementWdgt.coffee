@@ -163,7 +163,7 @@ class BasementWdgt extends BoxMorph
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyChildrenThatParentHasReLayouted()
+      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     @rawSetBounds newBoundsForThisLayout
@@ -190,4 +190,4 @@ class BasementWdgt extends BoxMorph
     trackChanges.pop()
 
     @layoutIsValid = true
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()

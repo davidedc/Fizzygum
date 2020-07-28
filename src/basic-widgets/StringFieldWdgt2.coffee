@@ -50,7 +50,7 @@ class StringFieldWdgt2 extends PanelWdgt
     @text.fullRawMoveTo @position().add new Point 5,2
     @text.rawSetExtent new Point 300, 18
     @silentRawSetExtent new Point @width(), 18
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
   
   getValue: ->

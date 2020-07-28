@@ -199,5 +199,5 @@ class SimplePlainTextWdgt extends TextMorph2
     @silentRawSetExtent new Point width, height
 
     @changed()
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 

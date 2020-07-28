@@ -65,7 +65,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyChildrenThatParentHasReLayouted()
+      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     @rawSetBounds newBoundsForThisLayout
@@ -106,7 +106,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
     @fullChanged()
 
     @layoutIsValid = true
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

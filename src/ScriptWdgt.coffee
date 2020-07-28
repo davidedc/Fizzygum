@@ -107,7 +107,7 @@ class ScriptWdgt extends Widget
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyChildrenThatParentHasReLayouted()
+      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     super
@@ -156,5 +156,5 @@ class ScriptWdgt extends Widget
       world.alignIDsOfNextMorphsInSystemTests()
 
     @layoutIsValid = true
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 

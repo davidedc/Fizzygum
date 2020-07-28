@@ -228,7 +228,7 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyChildrenThatParentHasReLayouted()
+      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     super
@@ -268,5 +268,5 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
       world.alignIDsOfNextMorphsInSystemTests()
 
     @layoutIsValid = true
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 

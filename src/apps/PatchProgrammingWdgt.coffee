@@ -82,6 +82,6 @@ class PatchProgrammingWdgt extends StretchableEditableWdgt
       world.alignIDsOfNextMorphsInSystemTests()
 
     @layoutIsValid = true
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
 

@@ -199,7 +199,7 @@ class DiffingPatchNodeWdgt extends Widget
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyChildrenThatParentHasReLayouted()
+      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     super
@@ -229,7 +229,7 @@ class DiffingPatchNodeWdgt extends Widget
       world.alignIDsOfNextMorphsInSystemTests()
 
     @layoutIsValid = true
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
   # Simple Diff function
   # (C) Paul Butler 2008 <http://www.paulbutler.org/>

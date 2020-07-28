@@ -508,5 +508,5 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
       world.alignIDsOfNextMorphsInSystemTests()
 
     @layoutIsValid = true
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 

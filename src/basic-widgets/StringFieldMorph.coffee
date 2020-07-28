@@ -49,7 +49,7 @@ class StringFieldMorph extends PanelWdgt
       @add @text
     @text.fullRawMoveTo @position()
     @silentRawSetExtent new Point Math.max(@width(), @minTextWidth), @text.height()
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
   
   getValue: ->

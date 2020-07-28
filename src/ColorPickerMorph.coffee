@@ -65,7 +65,7 @@ class ColorPickerMorph extends Widget
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyChildrenThatParentHasReLayouted()
+      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     # here we are disabling all the broken
@@ -95,7 +95,7 @@ class ColorPickerMorph extends Widget
     @fullChanged()
 
     @layoutIsValid = true
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

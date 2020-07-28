@@ -49,7 +49,7 @@ class StretchablePanelWdgt extends PanelWdgt
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyChildrenThatParentHasReLayouted()
+      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     # here we are disabling all the broken
@@ -78,7 +78,7 @@ class StretchablePanelWdgt extends PanelWdgt
     @fullChanged()
 
     @layoutIsValid = true
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

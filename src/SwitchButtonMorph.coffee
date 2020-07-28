@@ -62,7 +62,7 @@ class SwitchButtonMorph extends Widget
       counter++
 
     @layoutIsValid = true
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
 
   # TODO

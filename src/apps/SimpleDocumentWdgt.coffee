@@ -133,7 +133,7 @@ class SimpleDocumentWdgt extends Widget
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyChildrenThatParentHasReLayouted()
+      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     super
@@ -176,7 +176,7 @@ class SimpleDocumentWdgt extends Widget
       world.alignIDsOfNextMorphsInSystemTests()
 
     @layoutIsValid = true
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
   # same as simpledocumentscrollpanel, you can lock the contents.
   # worth factoring it out as a mixin?

@@ -94,7 +94,7 @@ class StringMorph extends Widget
     super()
     width = @widthOfText @text
     @silentRawSetExtent new Point width, fontHeight @fontSize
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
   reflowText: ->
     @reLayout()

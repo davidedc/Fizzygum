@@ -1378,7 +1378,7 @@ class Widget extends TreeNode
 
     return
 
-  notifyChildrenThatParentHasReLayouted: ->
+  notifyAllChildrenRecursivelyThatParentHasReLayouted: ->
     for child in @children.slice()
       child.parentHasReLayouted()
 
@@ -1395,7 +1395,7 @@ class Widget extends TreeNode
   # are old widgets that predated layouts, and the other cases were
   # done in haste copying HandleMorphs)
   parentHasReLayouted: ->
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
   # the default of layoutSubmorphs
   # is to do nothing apart from notifying
@@ -4215,7 +4215,7 @@ class Widget extends TreeNode
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyChildrenThatParentHasReLayouted()
+      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     #if (@ instanceof LayoutableMorph) and (newBoundsForThisLayout.equals @boundingBox())
@@ -4354,7 +4354,7 @@ class Widget extends TreeNode
     # this part is excluded from the fizzygum homepage build <<«
 
     @layoutIsValid = true
-    @notifyChildrenThatParentHasReLayouted()
+    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
   # »>> this part is excluded from the fizzygum homepage build
   removeAdders: ->
