@@ -271,10 +271,9 @@ class HandleMorph extends Widget
       when "resizeBothDimensionsHandle"
         newExt = newPos.add(@extent().add(@inset)).subtract @target.position()
         @target.setExtent newExt, @
-      # the position of this handle will be changed when the
-      # parentHasReLayouted method of this handle will be called
-      # as the parent has re-layouted following the rawSetExtent call just
-      # made.
+        # the position of this handle will be changed when the
+        # parentHasReLayouted method of this handle will be called
+        # ...after the parent has re-layouted (in the deferred layout phase).
       when "moveHandle"
         @target.fullMoveTo (newPos.subtract @inset), @
       when "resizeHorizontalHandle"

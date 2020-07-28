@@ -1382,15 +1382,18 @@ class Widget extends TreeNode
     for child in @children.slice()
       child.parentHasReLayouted()
 
-  # normally morphs do nothing when the
-  # parent is layouting, as they are
-  # placed with absolute positioning.
-  # In some cases though, such as in the
-  # case of the HandleMorph, a Widget
-  # make take the occasion to do special things
-  # In the case of the HandleMorph, it's going
-  # to place itself in the bottom-right
-  # corner.
+  # Normally children widgets need to do nothing when the
+  # parent has finished layouting, because their parent
+  # sets them in place and that's that.
+  # The exceptions (so far) are the HandleMorph and the
+  # "content changed" triangle and the "edit pencil triangular icon",
+  # all of these place themselves in a corner or edge
+  # of the parent.
+  # (TODO the parent should be doing that instead, using layouts,
+  # following an "internal edge" or "internal corner" layout spec.
+  # The reason we didn't use that pattern is that  HandleMorphs
+  # are old widgets that predated layouts, and the other cases were
+  # done in haste copying HandleMorphs)
   parentHasReLayouted: ->
     @notifyChildrenThatParentHasReLayouted()
 
@@ -1399,7 +1402,7 @@ class Widget extends TreeNode
   # the children (in case, for example,
   # there is a HandleMorph in this morph
   # which will cause the HandleMorph to
-  # replace itself in the new position)
+  # re-place itself in the updated position)
   # , but things like
   # the inspector might well want to
   # tweak many of their children...
