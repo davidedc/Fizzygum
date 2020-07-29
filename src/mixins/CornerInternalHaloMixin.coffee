@@ -1,4 +1,4 @@
-UpperRightInternalHaloMixin =
+CornerInternalHaloMixin =
   # class properties here:
   # none
 

@@ -1,6 +1,6 @@
 class UpperRightTriangle extends Widget
 
-  @augmentWith UpperRightInternalHaloMixin, @name
+  @augmentWith CornerInternalHaloMixin, @name
 
   constructor: (parent = nil, @proportionOfParent = 4/8) ->
     super()
