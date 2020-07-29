@@ -82,7 +82,6 @@ class TreeNode
   # »>> this part is excluded from the fizzygum homepage build
   # currently unused
   addChildFirst: (node) ->
-    
     @addChild node, 0
   # this part is excluded from the fizzygum homepage build <<«
 
