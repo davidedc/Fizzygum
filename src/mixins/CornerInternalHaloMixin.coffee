@@ -8,6 +8,7 @@ CornerInternalHaloMixin =
 
       # floatDragging and dropping:
       isLockingToPanels: false
+
       proportionOfParent: 4/8
       fixedSize: 0
       positionWithinParent: "topRight"

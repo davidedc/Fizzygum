@@ -719,7 +719,6 @@ class Widget extends TreeNode
         @desiredPosition = newPos
         @invalidateLayout()
 
-
   silentRawSetBounds: (newBounds) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
@@ -1579,7 +1578,6 @@ class Widget extends TreeNode
       unless @extent().equals newExtent
         @desiredExtent = newExtent
         @invalidateLayout()
-
   
   silentRawSetHeight: (height) ->
     # TODO in theory the low-level APIs should only be
