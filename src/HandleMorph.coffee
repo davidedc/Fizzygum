@@ -268,12 +268,13 @@ class HandleMorph extends Widget
   nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
     newPos = pos.subtract nonFloatDragPositionWithinWdgtAtStart
     switch @type
+      # 1. all these changes applied to the target are all deferred
+      # 2. the position of this handle will be changed when the
+      # parentHasReLayouted method of this handle will be called
+      # ...i.e. *after* the parent has re-layouted (in the deferred layout phase).
       when "resizeBothDimensionsHandle"
         newExt = newPos.add(@extent().add(@inset)).subtract @target.position()
         @target.setExtent newExt, @
-        # the position of this handle will be changed when the
-        # parentHasReLayouted method of this handle will be called
-        # ...after the parent has re-layouted (in the deferred layout phase).
       when "moveHandle"
         @target.fullMoveTo (newPos.subtract @inset), @
       when "resizeHorizontalHandle"
