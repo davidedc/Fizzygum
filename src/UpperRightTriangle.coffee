@@ -4,6 +4,7 @@ class UpperRightTriangle extends Widget
 
   constructor: (parent = nil, @proportionOfParent = 4/8) ->
     super()
+    @fixedSize = 0
     @appearance = new UpperRightTriangleAppearance @
 
     # this morph has triangular shape and we want it
@@ -13,8 +14,4 @@ class UpperRightTriangle extends Widget
 
     size = WorldMorph.preferencesAndSettings.handleSize
     @silentRawSetExtent new Point size, size
-    if parent
-      parent.add @
-    @updateResizerPosition()
-
-
+    parent?.add @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT

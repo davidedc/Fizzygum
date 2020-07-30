@@ -21,6 +21,11 @@ class LayoutSpec
   # @STACK_HORIZONTAL_VERTICALALIGNMENTS_CENTER: 100012
   # @STACK_HORIZONTAL_VERTICALALIGNMENTS_BOTTOM: 100013
 
+
+  @ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT: 100014
+  @ATTACHEDAS_CORNER_INTERNAL_TOPLEFT: 100015
+
+
   # »>> this part is excluded from the fizzygum homepage build
   # TODO
   # These should go in a separate constants class,

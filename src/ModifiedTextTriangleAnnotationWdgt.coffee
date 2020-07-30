@@ -14,8 +14,4 @@ class ModifiedTextTriangleAnnotationWdgt extends Widget
 
     size = WorldMorph.preferencesAndSettings.handleSize
     @silentRawSetExtent new Point size, size
-    if parent
-      parent.add @
-    @updateResizerPosition()
-
-
+    parent?.add @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT

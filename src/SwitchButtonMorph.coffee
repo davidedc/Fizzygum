@@ -61,8 +61,7 @@ class SwitchButtonMorph extends Widget
           eachButton.hide()
       counter++
 
-    @layoutIsValid = true
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
+    super newBoundsForThisLayout
 
 
   # TODO

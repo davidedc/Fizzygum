@@ -1,6 +1,4 @@
 # like an UpperRightTriangle, but it adds an icon on the top-right
-# note that this should all be done with actual layouts but this
-# will do for the moment.
 
 # to test this:
 # create a canvas. then:
@@ -17,24 +15,6 @@ class UpperRightTriangleIconicButton extends UpperRightTriangle
     super
     @pencilIconMorph = new PencilIconMorph Color.BLACK
 
-    @pencilIconMorph.parentHasReLayouted = ->
-      @updateResizerPosition()
-      @moveInFrontOfSiblings()
-
-    @pencilIconMorph.updateResizerPosition = ->
-      if @parent
-        @silentUpdateResizerPosition()
-        @changed()
-
-    @pencilIconMorph.silentUpdateResizerPosition = ->
-      if @parent
-        xDim = @parent.width()
-        yDim = @parent.height()
-        minDim = Math.min(xDim, yDim) / 2
-
-        @silentRawSetExtent new Point minDim, minDim
-        @silentFullRawMoveTo new Point @parent.right() - minDim, @parent.top()
-
-    @add @pencilIconMorph
-    @pencilIconMorph.updateResizerPosition()
-
+    @add @pencilIconMorph, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
+    @pencilIconMorph.proportionOfParent = 1/2
+    @pencilIconMorph.fixedSize = 0

@@ -4178,7 +4178,7 @@ class Widget extends TreeNode
     # the widget
     return @maxDimCache
 
-  countOfChildrenToLayout: ->
+  countOfChildrenInHorizontalStackLayout: ->
     if @isCollapsed() then return 0
     count = 0
     for C in @children
@@ -4246,113 +4246,129 @@ class Widget extends TreeNode
     else
       @rawSetExtent newBoundsForThisLayout.extent()
 
+    if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
+      if @parent
+        xDim = @parent.width()
+        yDim = @parent.height()
+        minDim = Math.min(xDim, yDim) * @proportionOfParent + @fixedSize
+
+        @silentRawSetExtent new Point minDim, minDim
+        if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT
+          @silentFullRawMoveTo new Point @parent.left(), @parent.top()
+        else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
+          @silentFullRawMoveTo new Point @parent.right() - minDim, @parent.top()
+
     # »>> this part is excluded from the fizzygum homepage build
-    if @countOfChildrenToLayout() == 0
-      @layoutIsValid = true
-      return
+    else if @countOfChildrenInHorizontalStackLayout() != 0
 
-    @addOrRemoveAdders()
+      @addOrRemoveAdders()
 
+      min = @getRecursiveMinDim()
+      desired = @getRecursiveDesiredDim()
+      max = @getRecursiveMaxDim()
+      
+      # we are forced to be in a space smaller
+      # than the minimum needed. We obey.
+      if min.width() >= newBoundsForThisLayout.width()
+        if @parent == world then console.log "case 1"
+        # Give all children under minimum
+        # this is unfortunate but
+        # we don't want to rely on clipping what's
+        # beyond the allocated space. Clipping
+        # in this Widgetic implementation has special
+        # status and we don't want to meddle with
+        # that.
+        # example: if newBoundsForThisLayout.width() is 10 and min.width() is 50
+        # then reductionFraction = 1/5 , i.e. all the minimums
+        # will be further reduced to fit
+        reductionFraction = newBoundsForThisLayout.width() / min.width()
+        childLeft = newBoundsForThisLayout.left()
+        for C in @children
+          if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
+          childBounds = new Rectangle \
+            childLeft,
+            newBoundsForThisLayout.top(),
+            childLeft + C.getMinDim().width() * reductionFraction,
+            newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
+          childLeft += childBounds.width()
+          C.doLayout childBounds
 
-    min = @getRecursiveMinDim()
-    desired = @getRecursiveDesiredDim()
-    max = @getRecursiveMaxDim()
-    
-    # we are forced to be in a space smaller
-    # than the minimum needed. We obey.
-    if min.width() >= newBoundsForThisLayout.width()
-      if @parent == world then console.log "case 1"
-      # Give all children under minimum
-      # this is unfortunate but
-      # we don't want to rely on clipping what's
-      # beyond the allocated space. Clipping
-      # in this Widgetic implementation has special
-      # status and we don't want to meddle with
-      # that.
-      # example: if newBoundsForThisLayout.width() is 10 and min.width() is 50
-      # then reductionFraction = 1/5 , i.e. all the minimums
-      # will be further reduced to fit
-      reductionFraction = newBoundsForThisLayout.width() / min.width()
-      childLeft = newBoundsForThisLayout.left()
-      for C in @children
-        if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
-        childBounds = new Rectangle \
-          childLeft,
-          newBoundsForThisLayout.top(),
-          childLeft + C.getMinDim().width() * reductionFraction,
-          newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
-        childLeft += childBounds.width()
-        C.doLayout childBounds
-
-    # the min is within the bounds but the desired is just
-    # equal or larger than the bounds.
-    # i.e. we have more space then what is strictly needed
-    # but less of what is desired.
-    # give min to all and then what is left available
-    # redistribute proportionally based on desired
-    else if desired.width() >= newBoundsForThisLayout.width()
-      if @parent == world then console.log "case 2"
-      desiredMargin = desired.width() - min.width()
-      if desiredMargin != 0
-        fraction = (newBoundsForThisLayout.width() - min.width()) / desiredMargin
-      else
-        fraction = 0      
-      childLeft = newBoundsForThisLayout.left()
-      for C in @children
-        if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
-        minWidth = C.getMinDim().width()
-        desWidth = C.getDesiredDim().width()
-        childBounds = new Rectangle \
-          childLeft,
-          newBoundsForThisLayout.top(),
-          childLeft + minWidth + (desWidth - minWidth) * fraction,
-          newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
-        childLeft += childBounds.width()
-        C.doLayout childBounds
-
-    # min and desired are strictly less than the bounds
-    # i.e. we have more space than needed or desired
-    # allocate all the desired spaces, and on top of that
-    # give extra space based on maximum widths
-    else
-      maxMargin = max.width() - desired.width()
-      totDesWidth = desired.width()
-      extraSpace = newBoundsForThisLayout.width() - desired.width()
-      if extraSpace < 0
-        console.log "this shouldn't happen, extraSpace is negative: " + extraSpace
-        debugger
-      if @parent == world then console.log "case 3 maxMargin: " + maxMargin
-
-      if maxMargin > 0
-        ssss = 0
-      else if maxMargin == 0
-        ssss = 1
-      else
-        console.log "this shouldn't happen, maxMargin negative: " + maxMargin + " max.width(): " + max.width() + " desired.width(): " + desired.width()
-        debugger
-
-      childLeft = newBoundsForThisLayout.left()
-      for C in @children
-        if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
-        maxWidth = C.getMaxDim().width()
-        desWidth = C.getDesiredDim().width()
-        if (maxWidth - desWidth) > 0
-          xtra = extraSpace * ((maxWidth - desWidth)/maxMargin)
+      # the min is within the bounds but the desired is just
+      # equal or larger than the bounds.
+      # i.e. we have more space then what is strictly needed
+      # but less of what is desired.
+      # give min to all and then what is left available
+      # redistribute proportionally based on desired
+      else if desired.width() >= newBoundsForThisLayout.width()
+        if @parent == world then console.log "case 2"
+        desiredMargin = desired.width() - min.width()
+        if desiredMargin != 0
+          fraction = (newBoundsForThisLayout.width() - min.width()) / desiredMargin
         else
-          xtra = 0
-        childBounds = new Rectangle \
-          childLeft,
-          newBoundsForThisLayout.top(),
-          childLeft + desWidth + xtra + ssss * (newBoundsForThisLayout.width()-desired.width()) * (desWidth / totDesWidth),
-          newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
-        childLeft += childBounds.width()
-        if childLeft > newBoundsForThisLayout.right() + 5
+          fraction = 0      
+        childLeft = newBoundsForThisLayout.left()
+        for C in @children
+          if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
+          minWidth = C.getMinDim().width()
+          desWidth = C.getDesiredDim().width()
+          childBounds = new Rectangle \
+            childLeft,
+            newBoundsForThisLayout.top(),
+            childLeft + minWidth + (desWidth - minWidth) * fraction,
+            newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
+          childLeft += childBounds.width()
+          C.doLayout childBounds
+
+      # min and desired are strictly less than the bounds
+      # i.e. we have more space than needed or desired
+      # allocate all the desired spaces, and on top of that
+      # give extra space based on maximum widths
+      else
+        maxMargin = max.width() - desired.width()
+        totDesWidth = desired.width()
+        extraSpace = newBoundsForThisLayout.width() - desired.width()
+        if extraSpace < 0
+          console.log "this shouldn't happen, extraSpace is negative: " + extraSpace
           debugger
-        C.doLayout childBounds
+        if @parent == world then console.log "case 3 maxMargin: " + maxMargin
+
+        if maxMargin > 0
+          ssss = 0
+        else if maxMargin == 0
+          ssss = 1
+        else
+          console.log "this shouldn't happen, maxMargin negative: " + maxMargin + " max.width(): " + max.width() + " desired.width(): " + desired.width()
+          debugger
+
+        childLeft = newBoundsForThisLayout.left()
+        for C in @children
+          if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
+          maxWidth = C.getMaxDim().width()
+          desWidth = C.getDesiredDim().width()
+          if (maxWidth - desWidth) > 0
+            xtra = extraSpace * ((maxWidth - desWidth)/maxMargin)
+          else
+            xtra = 0
+          childBounds = new Rectangle \
+            childLeft,
+            newBoundsForThisLayout.top(),
+            childLeft + desWidth + xtra + ssss * (newBoundsForThisLayout.width()-desired.width()) * (desWidth / totDesWidth),
+            newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
+          childLeft += childBounds.width()
+          if childLeft > newBoundsForThisLayout.right() + 5
+            debugger
+          C.doLayout childBounds
     # this part is excluded from the fizzygum homepage build <<«
 
     @layoutIsValid = true
     @notifyAllChildrenRecursivelyThatParentHasReLayouted()
+
+    # if I just did my layout, also do the layout
+    # of all children that have position/size depending on mine
+    allCornerLayoutedChildren = @children.filter (m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
+    for w in allCornerLayoutedChildren 
+      w.doLayout()
+
 
   # »>> this part is excluded from the fizzygum homepage build
   removeAdders: ->
