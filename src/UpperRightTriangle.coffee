@@ -2,9 +2,9 @@ class UpperRightTriangle extends Widget
 
   @augmentWith CornerInternalHaloMixin, @name
 
-  constructor: (parent = nil, @proportionOfParent = 4/8) ->
+  constructor: (parent = nil, @layoutSpec_cornerInternal_proportionOfParent = 4/8) ->
     super()
-    @fixedSize = 0
+    @layoutSpec_cornerInternal_fixedSize = 0
     @appearance = new UpperRightTriangleAppearance @
 
     # this morph has triangular shape and we want it

@@ -3,7 +3,7 @@ class ModifiedTextTriangleAnnotationWdgt extends Widget
   @augmentWith CornerInternalHaloMixin, @name
   positionWithinParent: "topLeft"
 
-  constructor: (parent = nil, @proportionOfParent = 0, @fixedSize = 10) ->
+  constructor: (parent = nil, @layoutSpec_cornerInternal_proportionOfParent = 0, @layoutSpec_cornerInternal_fixedSize = 10) ->
     super()
     @appearance = new UpperRightTriangleAppearance @, @positionWithinParent
 

@@ -16,5 +16,5 @@ class UpperRightTriangleIconicButton extends UpperRightTriangle
     @pencilIconMorph = new PencilIconMorph Color.BLACK
 
     @add @pencilIconMorph, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
-    @pencilIconMorph.proportionOfParent = 1/2
-    @pencilIconMorph.fixedSize = 0
+    @pencilIconMorph.layoutSpec_cornerInternal_proportionOfParent = 1/2
+    @pencilIconMorph.layoutSpec_cornerInternal_fixedSize = 0

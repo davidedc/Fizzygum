@@ -4250,7 +4250,7 @@ class Widget extends TreeNode
       if @parent
         xDim = @parent.width()
         yDim = @parent.height()
-        minDim = Math.min(xDim, yDim) * @proportionOfParent + @fixedSize
+        minDim = Math.min(xDim, yDim) * @layoutSpec_cornerInternal_proportionOfParent + @layoutSpec_cornerInternal_fixedSize
 
         @silentRawSetExtent new Point minDim, minDim
         if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT

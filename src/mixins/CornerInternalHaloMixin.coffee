@@ -9,5 +9,5 @@ CornerInternalHaloMixin =
       # floatDragging and dropping:
       isLockingToPanels: false
 
-      proportionOfParent: 4/8
-      fixedSize: 0
+      layoutSpec_cornerInternal_proportionOfParent: 4/8
+      layoutSpec_cornerInternal_fixedSize: 0
