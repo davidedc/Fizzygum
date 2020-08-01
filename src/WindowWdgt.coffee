@@ -190,7 +190,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @adjustContentsBounds()
       super aWdgt, position, LayoutSpec.ATTACHEDAS_WINDOW_CONTENT, beingDropped
     else
-      super aWdgt, position, LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped
+      super aWdgt, position, layoutSpec, beingDropped
     @resizer?.moveInFrontOfSiblings()
 
   childBeingDestroyed: (child) ->
