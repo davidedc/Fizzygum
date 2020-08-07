@@ -172,8 +172,6 @@ class MenuMorph extends PopUpWdgt
     @silentRawSetExtent new Point 0, 0
     y = @top()
     x = @left() + 2
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
-
 
     unless @isListContents
       if @title

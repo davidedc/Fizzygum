@@ -218,7 +218,6 @@ class CalculatingPatchNodeWdgt extends Widget
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     # here we are disabling all the broken
@@ -262,5 +261,4 @@ class CalculatingPatchNodeWdgt extends Widget
 
     super
     @layoutIsValid = true
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 

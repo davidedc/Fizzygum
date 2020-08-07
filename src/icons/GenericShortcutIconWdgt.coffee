@@ -54,7 +54,6 @@ class GenericShortcutIconWdgt extends Widget
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     @rawSetBounds newBoundsForThisLayout
@@ -98,7 +97,6 @@ class GenericShortcutIconWdgt extends Widget
 
     super
     @layoutIsValid = true
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

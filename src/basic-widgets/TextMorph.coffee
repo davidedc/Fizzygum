@@ -124,7 +124,6 @@ class TextMorph extends StringMorph
       @silentRawSetExtent new Point @maxLineWidth + shadowWidth, height
     else
       @silentRawSetExtent new Point @maxTextWidth + shadowWidth, height
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
   # no changes of position or extent should be
   # performed in here

@@ -81,10 +81,9 @@ class TriggerMorph extends Widget
 
     @color = WorldMorph.preferencesAndSettings.menuBackgroundColor
     if @labelString?
-      @layoutSubmorphs()
+      @reLayout()
   
-  layoutSubmorphs: (morphStartingTheChange = nil) ->
-    super()
+  reLayout: ->
     if not @label?
       @createLabel()
     if @centered
@@ -105,18 +104,18 @@ class TriggerMorph extends Widget
     # from scratch
     if @label?
       @label = @label.fullDestroy()
-    @layoutSubmorphs()
+    @reLayout()
   # this part is excluded from the fizzygum homepage build <<«
 
   alignCenter: ->
     if !@centered
       @centered = true
-      @layoutSubmorphs()
+      @reLayout()
 
   alignLeft: ->
     if @centered
       @centered = false
-      @layoutSubmorphs()
+      @reLayout()
   
 
   # This method only paints this very morph's "image",

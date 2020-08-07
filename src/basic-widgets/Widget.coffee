@@ -463,11 +463,7 @@ class Widget extends TreeNode
   #	single submorph's changes tremendous performance improvements can be
   #	achieved by setting the trackChanges flag to false before propagating
   #	the layout changes, setting it to true again and then storing the full
-  #	bounds of the surrounding morph. An an example refer to the
-  #
-  #		layoutSubmorphs()
-  #		
-  #	method of InspectorMorph
+  #	bounds of the surrounding morph.
   
   
   # Widget string representation: e.g. 'a Widget' or 'a Widget#2'
@@ -1379,39 +1375,6 @@ class Widget extends TreeNode
 
     return
 
-  notifyAllChildrenRecursivelyThatParentHasReLayouted: ->
-    for child in @children.slice()
-      child.parentHasReLayouted()
-
-  # Normally children widgets need to do nothing when the
-  # parent has finished layouting, because their parent
-  # sets them in place and that's that.
-  # The exceptions (so far) are the HandleMorph and the
-  # "content changed" triangle and the "edit pencil triangular icon",
-  # all of these place themselves in a corner or edge
-  # of the parent.
-  # (TODO the parent should be doing that instead, using layouts,
-  # following an "internal edge" or "internal corner" layout spec.
-  # The reason we didn't use that pattern is that  HandleMorphs
-  # are old widgets that predated layouts, and the other cases were
-  # done in haste copying HandleMorphs)
-  parentHasReLayouted: ->
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
-
-  # the default of layoutSubmorphs
-  # is to do nothing apart from notifying
-  # the children (in case, for example,
-  # there is a HandleMorph in this morph
-  # which will cause the HandleMorph to
-  # re-place itself in the updated position)
-  # , but things like
-  # the inspector might well want to
-  # tweak many of their children...
-  layoutSubmorphs: (morphStartingTheChange = nil) ->
-    for child in @children.slice()
-      if morphStartingTheChange != child
-        child.parentHasReLayouted()  
-
   # more complex Widgets, e.g. layouts, might
   # do a more complex calculation to get the
   # minimum extent
@@ -1439,8 +1402,6 @@ class Widget extends TreeNode
       @silentRawSetExtent aPoint
       @changed()
       @reLayout()
-      
-      @layoutSubmorphs morphStartingTheChange
 
   # high-level geometry-change API,
   # you don't actually change the geometry right away,
@@ -4215,7 +4176,6 @@ class Widget extends TreeNode
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     # freefloating layouts never need
@@ -4372,7 +4332,6 @@ class Widget extends TreeNode
     # this part is excluded from the fizzygum homepage build <<«
 
     @layoutIsValid = true
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
     # if I just did my layout, also do the layout
     # of all children that have position/size depending on mine

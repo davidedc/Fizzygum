@@ -40,7 +40,6 @@ class SaveShortcutPromptWdgt extends MenuMorph
   reLayout: ->
     super()
     @buildSubmorphs()
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
   buildSubmorphs: ->
 

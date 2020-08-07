@@ -409,7 +409,6 @@ class InspectorMorph2 extends Widget
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     # here we are disabling all the broken
@@ -498,7 +497,6 @@ class InspectorMorph2 extends Widget
 
     super
     @layoutIsValid = true
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

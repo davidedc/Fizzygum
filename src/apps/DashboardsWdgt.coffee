@@ -98,6 +98,4 @@ class DashboardsWdgt extends StretchableEditableWdgt
       world.alignIDsOfNextMorphsInSystemTests()
 
     @layoutIsValid = true
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
-
 

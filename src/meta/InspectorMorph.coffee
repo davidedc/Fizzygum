@@ -358,7 +358,6 @@ class InspectorMorph extends BoxMorph
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     @rawSetBounds newBoundsForThisLayout
@@ -455,7 +454,6 @@ class InspectorMorph extends BoxMorph
 
     super
     @layoutIsValid = true
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

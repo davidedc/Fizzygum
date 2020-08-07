@@ -124,7 +124,6 @@ class ErrorsLogViewerMorph extends Widget
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     @rawSetBounds newBoundsForThisLayout
@@ -181,6 +180,4 @@ class ErrorsLogViewerMorph extends Widget
 
     super
     @layoutIsValid = true
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
-
 

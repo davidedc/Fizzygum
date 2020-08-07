@@ -214,7 +214,7 @@ class HandleMorph extends Widget
     switch @type
       # 1. all these changes applied to the target are all deferred
       # 2. the position of this handle will be changed when the
-      # parentHasReLayouted method of this handle will be called
+      # doLayout method of the parent of the handle will be called
       # ...i.e. *after* the parent has re-layouted (in the deferred layout phase).
       when "resizeBothDimensionsHandle"
         newExt = newPos.add(@extent().add(@inset)).subtract @target.position()

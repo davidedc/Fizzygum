@@ -62,7 +62,6 @@ class SimpleLinkWdgt extends Widget
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     # here we are disabling all the broken
@@ -102,5 +101,4 @@ class SimpleLinkWdgt extends Widget
 
     super
     @layoutIsValid = true
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 

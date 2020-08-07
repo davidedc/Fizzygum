@@ -72,7 +72,6 @@ class PromptMorph extends MenuMorph
   reLayout: ->
     super()
     @buildSubmorphs()
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
   buildSubmorphs: ->
 

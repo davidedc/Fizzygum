@@ -72,7 +72,6 @@ class StretchableEditableWdgt extends Widget
       world.alignIDsOfNextMorphsInSystemTests()
 
     @layoutIsValid = true
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
   rawSetExtent: (aPoint) ->
     super

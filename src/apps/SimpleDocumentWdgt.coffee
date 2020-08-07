@@ -133,7 +133,6 @@ class SimpleDocumentWdgt extends Widget
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     # here we are disabling all the broken
@@ -175,7 +174,6 @@ class SimpleDocumentWdgt extends Widget
 
     super
     @layoutIsValid = true
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
   # same as simpledocumentscrollpanel, you can lock the contents.
   # worth factoring it out as a mixin?

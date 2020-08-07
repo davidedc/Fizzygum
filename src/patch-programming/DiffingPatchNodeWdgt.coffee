@@ -199,7 +199,6 @@ class DiffingPatchNodeWdgt extends Widget
 
     if @isCollapsed()
       @layoutIsValid = true
-      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
     # here we are disabling all the broken
@@ -228,7 +227,6 @@ class DiffingPatchNodeWdgt extends Widget
 
     super
     @layoutIsValid = true
-    @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
   # Simple Diff function
   # (C) Paul Butler 2008 <http://www.paulbutler.org/>

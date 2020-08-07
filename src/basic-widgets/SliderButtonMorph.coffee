@@ -60,8 +60,6 @@ class SliderButtonMorph extends CircleBoxMorph
 
       @silentFullRawMoveTo new Point(posX, posY).add @parent.position()
 
-      @notifyAllChildrenRecursivelyThatParentHasReLayouted()
-
   grabsToParentWhenDragged: ->
     if @parent instanceof SliderMorph
       return false
