@@ -180,8 +180,9 @@ class ScrollPanelWdgt extends PanelWdgt
         @vBar.hide()
   
   # when you add things to the ScrollPanelWdgt they actually
-  # end up in the Panel inside it. This also applies to
-  # resizing handles!
+  # end up in the Panel inside it.
+  # This would also apply to resizing handles - so we need to
+  # correct for that case
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
     if aWdgt instanceof ModifiedTextTriangleAnnotationWdgt
       super

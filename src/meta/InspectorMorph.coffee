@@ -363,6 +363,7 @@ class InspectorMorph extends BoxMorph
 
     @rawSetBounds newBoundsForThisLayout
 
+
     # here we are disabling all the broken
     # rectangles. The reason is that all the
     # submorphs of the inspector are within the

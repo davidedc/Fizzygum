@@ -3,7 +3,6 @@
 
 class HandleMorph extends Widget
 
-
   target: nil
   inset: nil
   type: nil

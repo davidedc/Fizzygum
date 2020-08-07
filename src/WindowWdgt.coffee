@@ -526,8 +526,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
       @internalExternalSwitchButton.doLayout buttonBounds
 
-
-
     @resizer?.silentUpdateResizerHandlePosition()
 
     @_adjustingContentsBounds = false

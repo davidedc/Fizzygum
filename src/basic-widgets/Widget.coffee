@@ -4216,9 +4216,6 @@ class Widget extends TreeNode
       @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
-    #if (@ instanceof LayoutableMorph) and (newBoundsForThisLayout.equals @boundingBox())
-    #  debugger
-
     # freefloating layouts never need
     # adjusting. We marked the @layoutIsValid
     # to false because it's an important breadcrumb
