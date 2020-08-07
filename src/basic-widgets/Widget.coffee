@@ -596,10 +596,12 @@ class Widget extends TreeNode
     # The resizing handle becomes visible/invisible
     # when the layout spec of the parent changes
     # (typically it's visible only when freefloating)
+    # TODO unclear if we should rather have handles subscribe to the parent
+    # layout change ??? What if there are multiple handles or they are
+    # nested deeper?
     isThereAnHandle = @firstChildSuchThat (m) ->
       m instanceof HandleMorph
-    if isThereAnHandle?
-      isThereAnHandle.updateVisibilityAndPosition()
+    isThereAnHandle?.updateVisibility()
 
 
   # »>> this part is excluded from the fizzygum homepage build

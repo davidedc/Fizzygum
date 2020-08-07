@@ -47,12 +47,9 @@ class HandleMorph extends Widget
   grabsToParentWhenDragged: ->
     return false
 
-  updateVisibilityAndPosition: ->
-    @updateVisibility()
-    # TODO is this check and action really needed? Can't we just
-    # do that in the add and then never do this again?
-    if @parent.layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
-      @moveInFrontOfSiblings()
+
+  iHaveBeenAddedTo: (whereTo, beingDropped) ->
+    @moveInFrontOfSiblings()
 
   updateVisibility: ->
     # TODO rather than updating the visibility, we could
