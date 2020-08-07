@@ -94,6 +94,7 @@ class ColorPickerMorph extends Widget
     trackChanges.pop()
     @fullChanged()
 
+    super
     @layoutIsValid = true
     @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 

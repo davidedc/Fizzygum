@@ -105,6 +105,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
     trackChanges.pop()
     @fullChanged()
 
+    super
     @layoutIsValid = true
     @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 

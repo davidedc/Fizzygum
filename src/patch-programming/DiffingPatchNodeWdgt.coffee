@@ -202,8 +202,6 @@ class DiffingPatchNodeWdgt extends Widget
       @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
-    super
-
     # here we are disabling all the broken
     # rectangles. The reason is that all the
     # submorphs of the inspector are within the
@@ -228,6 +226,7 @@ class DiffingPatchNodeWdgt extends Widget
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
+    super
     @layoutIsValid = true
     @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 

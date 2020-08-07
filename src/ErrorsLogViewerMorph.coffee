@@ -179,6 +179,7 @@ class ErrorsLogViewerMorph extends Widget
       world.alignIDsOfNextMorphsInSystemTests()
 
 
+    super
     @layoutIsValid = true
     @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 

@@ -380,8 +380,10 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     super
     @layoutSpecDetails.canSetHeightFreely = false
 
+  # should this just be the doLayout function? Why do we need this extra one?
   adjustContentsBounds: ->
     # avoid recursively re-entering this function
+    # TODO nasty check this one, can we make this go away?
     if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true
 
     closeIconSize = 16
@@ -526,6 +528,12 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
       @internalExternalSwitchButton.doLayout buttonBounds
 
-    @resizer?.silentUpdateResizerHandlePosition()
+    # TODO there is *already* a way to make handles do the right thing, and that is
+    # to have this sort of code in a doLayout function, and calling super in there,
+    # where the base Windget.doLayout takes care of everything that has a
+    # corner or edge internal layout, like handles. This should work the same way i.e.
+    # this code should not be here.
+    if @resizer?.parent == @
+      @resizer.silentFullRawMoveTo new Point @right() - WorldMorph.preferencesAndSettings.handleSize - @padding, @bottom() - WorldMorph.preferencesAndSettings.handleSize - @padding
 
     @_adjustingContentsBounds = false

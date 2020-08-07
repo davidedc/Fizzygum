@@ -184,7 +184,9 @@ class ScrollPanelWdgt extends PanelWdgt
   # This would also apply to resizing handles - so we need to
   # correct for that case
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
-    if aWdgt instanceof ModifiedTextTriangleAnnotationWdgt
+    # TODO this check below should probably just be testing if layoutSpec
+    # is a corner or edge internal layout
+    if aWdgt instanceof ModifiedTextTriangleAnnotationWdgt or aWdgt instanceof HandleMorph
       super
     else
       @contents.add aWdgt, position, layoutSpec, beingDropped, nil, positionOnScreen

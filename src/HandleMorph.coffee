@@ -24,11 +24,12 @@ class HandleMorph extends Widget
     super()
     @color = Color.WHITE
     @noticesTransparentClick = true
-    size = WorldMorph.preferencesAndSettings.handleSize
-    @silentRawSetExtent new Point size, size
-    if @target
-      @target.add @
-    @updateResizerHandlePosition()
+
+    @layoutSpec_cornerInternal_proportionOfParent = 0
+    @layoutSpec_cornerInternal_fixedSize = WorldMorph.preferencesAndSettings.handleSize
+    @layoutSpec_cornerInternal_inset = @inset
+
+    @makeHandleSolidWithParentMorph nil, nil, @target
 
   detachesWhenDragged: ->
     if (@parent instanceof WorldMorph)
@@ -48,8 +49,9 @@ class HandleMorph extends Widget
 
   updateVisibilityAndPosition: ->
     @updateVisibility()
+    # TODO is this check and action really needed? Can't we just
+    # do that in the add and then never do this again?
     if @parent.layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
-      @updateResizerHandlePosition()
       @moveInFrontOfSiblings()
 
   updateVisibility: ->
@@ -62,60 +64,6 @@ class HandleMorph extends Widget
     else
       @hide()
 
-  parentHasReLayouted: ->
-    # right now you can resize a morph only if it's
-    # free-floating, however this will change in the future
-    # as for example things inside vertically-stretchable
-    # Panels can potentially change their width.
-    # so this handle has to go away now.
-    @updateVisibilityAndPosition()
-    if @parent.layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
-      super
-
-  updateResizerHandlePosition: ->
-    if @target
-      # collapse some of the handles if the
-      # morph gets too small because they
-      # become unusable anyways once they
-      # overlap
-      switch @type
-        when "moveHandle"
-          if @target.width() < 2 * @width()
-            @hide()
-            return
-          else
-            @show()
-        when "resizeHorizontalHandle"
-          if @target.height() < 3 * @height()
-            @hide()
-            return
-          else
-            @show()
-        when "resizeVerticalHandle"
-          if @target.width() < 3 * @width()
-            @hide()
-            return
-          else
-            @show()
-
-      @silentUpdateResizerHandlePosition()
-      @changed()
-
-  silentUpdateResizerHandlePosition: ->
-    if @target
-        switch @type
-          when "resizeBothDimensionsHandle"
-            @silentFullRawMoveTo @target.bottomRight().subtract @extent().add @inset
-          when "moveHandle"
-            @silentFullRawMoveTo @target.topLeft().add @inset
-          when "resizeHorizontalHandle"
-            offsetFromMiddlePoint = new Point @extent().x + @inset.x, Math.floor(@extent().y/2)
-            @silentFullRawMoveTo @target.rightCenter().subtract offsetFromMiddlePoint
-          when "resizeVerticalHandle"
-            offsetFromMiddlePoint = new Point Math.floor(@extent().x/2), @extent().y + @inset.y
-            @silentFullRawMoveTo @target.bottomCenter().subtract offsetFromMiddlePoint
-  
-  
 
   # This method only paints this very morph's "image",
   # it doesn't descend the children
@@ -296,10 +244,18 @@ class HandleMorph extends Widget
     @changed()
 
   makeHandleSolidWithParentMorph: (ignored, ignored2, morphAttachedTo)->
-    @target = morphAttachedTo
-    @target.add @
-    @updateResizerHandlePosition()
-    @noticesTransparentClick = true
+    if morphAttachedTo?
+      @target = morphAttachedTo
+      switch @type
+        when "resizeBothDimensionsHandle"
+          @target.add @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT
+        when "moveHandle"
+          @target.add @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT
+        when "resizeHorizontalHandle"
+          @target.add @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT
+        when "resizeVerticalHandle"
+          @target.add @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
+      @noticesTransparentClick = true
 
     
   # HandleMorph menu:

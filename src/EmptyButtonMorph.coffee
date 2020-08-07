@@ -94,6 +94,7 @@ class EmptyButtonMorph extends Widget
     if @faceMorph?.parent == @
       @faceMorph.rawSetBounds newBoundsForThisLayout.insetBy @padding
 
+    super
     @layoutIsValid = true
     @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 

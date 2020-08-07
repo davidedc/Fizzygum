@@ -189,5 +189,6 @@ class BasementWdgt extends BoxMorph
     @hideUsedWdgtsToggle.doLayout (new Rectangle  0,0,w,h).translateBy new Point x, y
     trackChanges.pop()
 
+    super
     @layoutIsValid = true
     @notifyAllChildrenRecursivelyThatParentHasReLayouted()

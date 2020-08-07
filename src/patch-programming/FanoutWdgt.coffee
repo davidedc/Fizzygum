@@ -125,6 +125,7 @@ class FanoutWdgt extends Widget
     trackChanges.pop()
     @fullChanged()
 
+    super
     @layoutIsValid = true
     @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 

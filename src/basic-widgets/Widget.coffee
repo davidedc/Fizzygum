@@ -4243,17 +4243,29 @@ class Widget extends TreeNode
     else
       @rawSetExtent newBoundsForThisLayout.extent()
 
-    if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
+    if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
       if @parent
         xDim = @parent.width()
         yDim = @parent.height()
         minDim = Math.min(xDim, yDim) * @layoutSpec_cornerInternal_proportionOfParent + @layoutSpec_cornerInternal_fixedSize
 
         @silentRawSetExtent new Point minDim, minDim
+
+        # TODO this hack is because I couldn't initialise this properly
+        # where I should, due to load dependency problems
+        if !@layoutSpec_cornerInternal_inset?
+          @layoutSpec_cornerInternal_inset = new Point 0, 0
+
         if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT
-          @silentFullRawMoveTo new Point @parent.left(), @parent.top()
+          @fullRawMoveTo new Point @parent.left() + @layoutSpec_cornerInternal_inset.x, @parent.top() + @layoutSpec_cornerInternal_inset.y
         else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
-          @silentFullRawMoveTo new Point @parent.right() - minDim, @parent.top()
+          @fullRawMoveTo new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, @parent.top() + @layoutSpec_cornerInternal_inset.y
+        else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT
+          @fullRawMoveTo new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, @parent.bottom() - minDim - @layoutSpec_cornerInternal_inset.y
+        else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT
+          @fullRawMoveTo new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, Math.floor(@parent.top() + (@parent.extent().y - minDim)/2)
+        else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
+          @fullRawMoveTo new Point Math.floor(@parent.left() + (@parent.extent().x - minDim)/2), @parent.bottom() - minDim - @layoutSpec_cornerInternal_inset.y
 
     # »>> this part is excluded from the fizzygum homepage build
     else if @countOfChildrenInHorizontalStackLayout() != 0
@@ -4362,7 +4374,7 @@ class Widget extends TreeNode
 
     # if I just did my layout, also do the layout
     # of all children that have position/size depending on mine
-    allCornerLayoutedChildren = @children.filter (m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
+    allCornerLayoutedChildren = @children.filter (m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
     for w in allCornerLayoutedChildren 
       w.doLayout()
 

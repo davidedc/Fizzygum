@@ -213,6 +213,7 @@ class StretchableCanvasWdgt extends CanvasMorph
     trackChanges.pop()
     @fullChanged()
 
+    super
     @layoutIsValid = true
     @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 

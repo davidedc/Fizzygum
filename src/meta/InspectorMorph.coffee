@@ -391,7 +391,6 @@ class InspectorMorph extends BoxMorph
         @reLayout()
         
         @changed()
-        @resizer.silentUpdateResizerHandlePosition()
 
     # list
     labelBottom = labelTop + @label.height() + 2
@@ -454,6 +453,7 @@ class InspectorMorph extends BoxMorph
     trackChanges.pop()
     @fullChanged()
 
+    super
     @layoutIsValid = true
     @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 

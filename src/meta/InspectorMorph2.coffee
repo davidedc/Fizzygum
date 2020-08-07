@@ -412,8 +412,6 @@ class InspectorMorph2 extends Widget
       @notifyAllChildrenRecursivelyThatParentHasReLayouted()
       return
 
-    super
-
     # here we are disabling all the broken
     # rectangles. The reason is that all the
     # submorphs of the inspector are within the
@@ -498,6 +496,7 @@ class InspectorMorph2 extends Widget
     trackChanges.pop()
     @fullChanged()
 
+    super
     @layoutIsValid = true
     @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 

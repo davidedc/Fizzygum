@@ -77,6 +77,7 @@ class StretchablePanelWdgt extends PanelWdgt
     trackChanges.pop()
     @fullChanged()
 
+    super
     @layoutIsValid = true
     @notifyAllChildrenRecursivelyThatParentHasReLayouted()
 
