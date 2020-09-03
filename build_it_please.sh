@@ -1,8 +1,13 @@
 # Three ways to invoke:
 #   ./build_it_please --homepage
 #     leaves out all tests and removes experimental parts of the code
+#   ./build_it_please.sh --homepage --keepTestsDirectoryAsIs
+#     homepage build, but if there are any tests in the current build, it leaves them there,
+#     so you can do a full-test build much quicker later
 #   ./build_it_please --notests
 #     removes tests, leaves in experimental parts of the code
+#   ./build_it_please --keepTestsDirectoryAsIs
+#     leaves in experimental parts of the code, leaves the whole "tests" directory AS IS, which saves a loooot of time
 #   ./build_it_please
 #     leaves in tests and experimental parts of the code
 
@@ -40,8 +45,25 @@ if [ ! -d $BUILD_PATH ]; then
   mkdir $BUILD_PATH
 fi
 
-# cleanup the contents of the build directory
-rm -rf $BUILD_PATH/*
+
+if [ "$1" == "--keepTestsDirectoryAsIs" ] || [ "$2" == "--keepTestsDirectoryAsIs" ]; then
+  if [ ! -d $BUILD_PATH/js/tests ]; then
+    echo
+    echo ----------- error -------------
+    echo You asked to keep the tests but there
+    echo is no tests directory
+    echo
+    exit
+  else
+    find $BUILD_PATH/ -maxdepth 1 ! -path $BUILD_PATH/ -not -name "js" -exec rm -r {} \;
+    find $BUILD_PATH/js/ -maxdepth 1 ! -path $BUILD_PATH/js/ -not -name "tests" -exec rm -r {} \;
+    # read -p "Delete everything old, press any key to continue... " -n1 -s
+  fi
+else
+  # cleanup the contents of the build directory
+  rm -rf $BUILD_PATH/*
+fi
+
 
 if [ ! -d $BUILD_PATH/js ]; then
   mkdir $BUILD_PATH/js
@@ -64,8 +86,9 @@ if [ ! -d $SCRATCH_PATH ]; then
 fi
 
 # make space for the test files
-mkdir $BUILD_PATH/js/tests/
-
+if [ ! -d $BUILD_PATH/js/tests ]; then
+  mkdir $BUILD_PATH/js/tests
+fi
 
 # generate the Fizzygum coffee file in the delete_me directory
 # note that this file won't contain much code.
@@ -74,7 +97,7 @@ mkdir $BUILD_PATH/js/tests/
 # the first parameter "--homepage" specifies whether this
 # is a build for the homepage, in which case a lot of
 # legacy code and test-supporting code is left out.
-python ./buildSystem/build.py $1
+python ./buildSystem/build.py $1 $2 $3 $4
 
 touch $SCRATCH_PATH/fizzygum-boot.coffee
 
@@ -172,7 +195,10 @@ cp auxiliary\ files/additional-icons/spinner.svg $BUILD_PATH/icons/
 echo "... done copying icon files"
 
 
-if [ "$1" != "--notests" ] && [ "$1" != "--homepage" ]; then
+if [ "$1" != "--notests" ] && [ "$1" != "--homepage" ] && [ "$1" != "--keepTestsDirectoryAsIs" ]; then
+
+  # read -p "Got in the notests area. Press any key to continue... " -n1 -s
+
   # the tests files are copied from a directory
   # where they are organised in a clean structure
   # so we copy them with their structure first...
@@ -241,7 +267,10 @@ if [ "$1" == "--homepage" ]; then
   echo "generating the pre-compiled file via the browser. this might take a few seconds..."
   . ./buildSystem/generate-pre-compiled-file-via-browser.sh
 
-  rm -rdf $BUILD_PATH/js/tests
+  if [ "$1" != "--keepTestsDirectoryAsIs" ] && [ "$2" != "--keepTestsDirectoryAsIs" ]; then
+    rm -rdf $BUILD_PATH/js/tests
+  fi
+
   rm $BUILD_PATH/js/libs/FileSaver.min.js
   rm $BUILD_PATH/js/libs/jszip.min.js
   terser --compress --mangle --output $BUILD_PATH/js/pre-compiled-min.js -- $BUILD_PATH/js/pre-compiled.js
