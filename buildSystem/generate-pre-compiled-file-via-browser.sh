@@ -3,7 +3,7 @@
 . ./buildSystem/configure-these-paths.sh
 
 HAYSTACK=$(uname -r)
-NEEDLE='Microsoft'
+NEEDLE='microsoft' # wsl2 only works with lowercase m
 
 URL_PARAM='?generatePreCompiled'
 
