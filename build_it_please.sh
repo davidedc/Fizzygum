@@ -1,4 +1,6 @@
-# Three ways to invoke:
+#!/bin/bash
+
+# Ways to invoke:
 #   ./build_it_please --homepage
 #     leaves out all tests and removes experimental parts of the code
 #   ./build_it_please.sh --homepage --keepTestsDirectoryAsIs
