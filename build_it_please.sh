@@ -14,6 +14,39 @@
 BUILD_PATH=../Fizzygum-builds/latest
 SCRATCH_PATH=$BUILD_PATH/delete_me
 
+# save the arguments because we are going to shift them to parse them here,
+# but we need to pass them as-is to the python script
+args=( "$@" )
+
+# parse the arguments ###################################################################
+
+# we'll put the switches in these variables:
+homepage=false
+keepTestsDirectoryAsIs=false
+notests=false
+
+# see https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash
+while test $# -gt 0; do
+  case "$1" in
+    --homepage)
+      homepage='true'
+      shift
+      ;;
+    --keepTestsDirectoryAsIs)
+      keepTestsDirectoryAsIs='true'
+      shift
+      ;;
+    --notests)
+      notests='true'
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+
 if [ ! -d ../../Fizzygum-all ]; then
   echo
   echo ----------- error -------------
@@ -46,7 +79,7 @@ if [ ! -d $BUILD_PATH ]; then
 fi
 
 
-if [ "$1" == "--keepTestsDirectoryAsIs" ] || [ "$2" == "--keepTestsDirectoryAsIs" ]; then
+if $keepTestsDirectoryAsIs || $keepTestsDirectoryAsIs ; then
   if [ ! -d $BUILD_PATH/js/tests ]; then
     echo
     echo ----------- error -------------
@@ -97,11 +130,11 @@ fi
 # the first parameter "--homepage" specifies whether this
 # is a build for the homepage, in which case a lot of
 # legacy code and test-supporting code is left out.
-python ./buildSystem/build.py $1 $2 $3 $4
+python ./buildSystem/build.py "${args[@]}"
 
 touch $SCRATCH_PATH/fizzygum-boot.coffee
 
-if [ "$1" == "--notests" ] || [ "$1" == "--homepage" ]; then
+if $notests || $homepage ; then
   printf "BUILDFLAG_LOAD_TESTS = false\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 else
   printf "BUILDFLAG_LOAD_TESTS = true\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
@@ -141,7 +174,7 @@ cat src/boot/extensions/Date-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.co
 
 # extensions -----------------------------------------------------
 
-if [ "$1" != "--homepage" ]; then
+if ! $homepage ; then
   printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
   cat src/boot/numbertimes.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 fi
@@ -177,7 +210,7 @@ cp auxiliary\ files/JSZip/jszip.min.js $BUILD_PATH/js/libs/
 
 cp auxiliary\ files/CoffeeScript/coffee-script_2.0.3.js $BUILD_PATH/js/libs/
 
-if [ "$1" != "--notests" ] && [ "$1" != "--homepage" ]; then
+if ! $notests && ! $homepage ; then
   coffee -b -c -o $BUILD_PATH/js/libs auxiliary\ files/Mousetrap/Mousetrap.coffee 
   echo "minifying..."
   terser --compress --mangle --output $BUILD_PATH/js/libs/Mousetrap.min.js -- $BUILD_PATH/js/libs/Mousetrap.js
@@ -195,7 +228,7 @@ cp auxiliary\ files/additional-icons/spinner.svg $BUILD_PATH/icons/
 echo "... done copying icon files"
 
 
-if [ "$1" != "--notests" ] && [ "$1" != "--homepage" ] && [ "$1" != "--keepTestsDirectoryAsIs" ]; then
+if ! $notests && ! $homepage && ! $keepTestsDirectoryAsIs ; then
 
   # read -p "Got in the notests area. Press any key to continue... " -n1 -s
 
@@ -250,7 +283,7 @@ echo "cleanup unneeded files"
 rm -rdf $SCRATCH_PATH
 echo "...done"
 
-if [ "$1" == "--homepage" ]; then
+if $homepage ; then
   rm $BUILD_PATH/worldWithSystemTestHarness.html
   rm $BUILD_PATH/icons/doubleClickLeft.png
   rm $BUILD_PATH/icons/middleButtonPressed.png
@@ -267,7 +300,7 @@ if [ "$1" == "--homepage" ]; then
   echo "generating the pre-compiled file via the browser. this might take a few seconds..."
   . ./buildSystem/generate-pre-compiled-file-via-browser.sh
 
-  if [ "$1" != "--keepTestsDirectoryAsIs" ] && [ "$2" != "--keepTestsDirectoryAsIs" ]; then
+  if ! $keepTestsDirectoryAsIs && ! $keepTestsDirectoryAsIs ; then
     rm -rdf $BUILD_PATH/js/tests
   fi
 
