@@ -12,7 +12,7 @@ class MenuMorph extends PopUpWdgt
   constructor: (@morphOpeningThePopUp, @isListContents = false, @target, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true, @title = nil, @environment = nil, @fontSize = nil) ->
     # console.log "menu constructor"
     # console.log "menu super"
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
+    if Automator and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
     if !@isListContents
       if @killThisPopUpIfClickOutsideDescendants

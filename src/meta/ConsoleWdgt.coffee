@@ -28,7 +28,7 @@ class ConsoleWdgt extends Widget
     "Console for: " + @target.colloquialName().toLowerCase()
 
   buildAndConnectChildren: ->
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
+    if Automator and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt "", false, 5
@@ -117,7 +117,7 @@ class ConsoleWdgt extends Widget
 
     trackChanges.pop()
     @fullChanged()
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
+    if Automator and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     super

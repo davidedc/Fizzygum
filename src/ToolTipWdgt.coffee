@@ -44,7 +44,7 @@ class ToolTipWdgt extends Widget
 
   @createInAWhileIfHandStillContainedInMorph: (morphInvokingThis, contents, delay = 500) ->
     # console.log "bubble createInAWhileIfHandStillContainedInMorph"
-    if Automator? and Automator.animationsPacingControl and
+    if Automator and Automator.animationsPacingControl and
      Automator.state != Automator.IDLE
         @createBubbleHelpIfHandStillOnMorph contents, morphInvokingThis
     else

@@ -33,7 +33,7 @@ class InspectorMorph extends BoxMorph
     @buildAndConnectChildren()
   
   buildAndConnectChildren: ->
-    if Automator? and
+    if Automator and
      Automator.state != Automator.IDLE and
      Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
@@ -155,7 +155,7 @@ class InspectorMorph extends BoxMorph
 
     # we add a Widget alignment here because adjusting IDs whenever
     # we add or remove methods is a pain...
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
+    if Automator and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
 
@@ -455,7 +455,7 @@ class InspectorMorph extends BoxMorph
     super
     @layoutIsValid = true
 
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
+    if Automator and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
   

@@ -306,7 +306,7 @@ class WorldMorph extends PanelWdgt
     @setBounds new Rectangle 0, 0, @worldCanvas.width / ceilPixelRatio, @worldCanvas.height / ceilPixelRatio
 
     @initEventListeners()
-    if Automator?
+    if Automator
       @automator = new Automator
 
     @worldCanvasContext = @worldCanvas.getContext "2d"
@@ -461,7 +461,7 @@ class WorldMorph extends PanelWdgt
 
     if (!startupActions?) or (WorldMorph.ongoingUrlActionNumber == startupActions.actions.length)
       WorldMorph.ongoingUrlActionNumber = 0
-      if Automator?
+      if Automator
         if window.location.href.includes("worldWithSystemTestHarness")
           if @automator.atLeastOneTestHasBeenRun
             if @automator.allTestsPassedSoFar
@@ -471,7 +471,7 @@ class WorldMorph extends PanelWdgt
     if !@isIndexPage then console.log "nextStartupAction " + (WorldMorph.ongoingUrlActionNumber+1) + " / " + startupActions.actions.length
 
     currentAction = startupActions.actions[WorldMorph.ongoingUrlActionNumber]
-    if Automator? and currentAction.name == "runTests"
+    if Automator and currentAction.name == "runTests"
       @automator.loader.selectTestsFromTagsOrTestNames(currentAction.testsToRun)
 
       if currentAction.numberOfGroups?
@@ -526,7 +526,7 @@ class WorldMorph extends PanelWdgt
   # Widget for an explanation of why we need this
   # method.
   alignIDsOfNextMorphsInSystemTests: ->
-    if Automator? and Automator.state != Automator.IDLE
+    if Automator and Automator.state != Automator.IDLE
       # Check which objects end with the word Widget
       theWordMorph = "Morph"
       theWordWdgt = "Wdgt"
@@ -1213,7 +1213,7 @@ class WorldMorph extends PanelWdgt
     @playQueuedEvents()
 
     # replays test actions at the right time
-    if AutomatorPlayer? and Automator.state == Automator.PLAYING
+    if AutomatorPlayer and Automator.state == Automator.PLAYING
       @automator.player.replayTestCommands()
     
     # currently unused
@@ -1460,7 +1460,7 @@ class WorldMorph extends PanelWdgt
 
 
   addMouseChangeCommand: (upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    if Automator? and Automator.state == Automator.RECORDING
+    if Automator and Automator.state == Automator.RECORDING
       pointerAndWdgtInfo = @getPointerAndWdgtInfo()
       @automator.recorder.addMouseChangeCommand upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey, pointerAndWdgtInfo...
 
@@ -1497,18 +1497,18 @@ class WorldMorph extends PanelWdgt
     # potential grab command.
 
     if @hand.isThisPointerFloatDraggingSomething()
-      if Automator? and Automator.state == Automator.RECORDING
+      if Automator and Automator.state == Automator.RECORDING
         action = "floatDrag"
         arr = world.automator.tagsCollectedWhileRecordingTest
         if action not in arr
           arr.push action
     
-    if Automator? and Automator.state == Automator.RECORDING
+    if Automator and Automator.state == Automator.RECORDING
       @automator.recorder.addMouseMoveCommand(worldX, worldY, @hand.isThisPointerFloatDraggingSomething(), button, buttons, ctrlKey, shiftKey, altKey, metaKey)
 
 
   wheelBrowserEventHandler: (deltaX, deltaY, deltaZ, altKey, button, buttons) ->
-    if Automator? and Automator.state == Automator.RECORDING
+    if Automator and Automator.state == Automator.RECORDING
       pointerAndWdgtInfo = @getPointerAndWdgtInfo()
       @automator.recorder.addWheelCommand deltaX, deltaY, deltaZ, altKey, button, buttons, pointerAndWdgtInfo...
 
@@ -1525,12 +1525,12 @@ class WorldMorph extends PanelWdgt
       nil # special key
 
   keydownBrowserEventHandler: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    if Automator? and Automator.state == Automator.RECORDING
+    if Automator and Automator.state == Automator.RECORDING
       @automator.recorder.addKeyDownCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
     @keyboardEventsReceiver?.processKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey
 
   keyupBrowserEventHandler: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    if Automator? and Automator.state == Automator.RECORDING
+    if Automator and Automator.state == Automator.RECORDING
       @automator.recorder.addKeyUpCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
     # dispatch to keyboard receiver
     # so far the caret is the only keyboard
@@ -1539,7 +1539,7 @@ class WorldMorph extends PanelWdgt
     @keyboardEventsReceiver?.processKeyUp? scanCode, shiftKey, ctrlKey, altKey, metaKey
 
   keypressBrowserEventHandler: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
-    if Automator? and Automator.state == Automator.RECORDING
+    if Automator and Automator.state == Automator.RECORDING
       @automator.recorder.addKeyPressCommand charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
 
     # »>> this part is excluded from the fizzygum homepage build
@@ -1593,19 +1593,19 @@ class WorldMorph extends PanelWdgt
     #console.log "processing cut"
     @caret?.processCut selectedText
 
-    if Automator? and Automator.state == Automator.RECORDING
+    if Automator and Automator.state == Automator.RECORDING
       @automator.recorder.addCutCommand selectedText
 
   copyBrowserEventHandler: (selectedText) ->
     #console.log "processing copy"
-    if Automator? and Automator.state == Automator.RECORDING
+    if Automator and Automator.state == Automator.RECORDING
       @automator.recorder.addCopyCommand selectedText
 
   pasteBrowserEventHandler: (clipboardText) ->
     #console.log "processing paste"
     if @caret
       @caret.processPaste clipboardText
-      if Automator? and Automator.state == Automator.RECORDING
+      if Automator and Automator.state == Automator.RECORDING
         @automator.recorder.addPasteCommand selectedText
 
   # »>> this part is excluded from the fizzygum homepage build
@@ -1844,55 +1844,55 @@ class WorldMorph extends PanelWdgt
     #console.log "binding via mousetrap"
 
     @keyComboResetWorldEventListener = (event) =>
-      if AutomatorRecorder?
+      if AutomatorRecorder
         @automator.recorder.resetWorld()
       false
     Mousetrap.bind ["alt+d"], @keyComboResetWorldEventListener
 
     @keyComboTurnOnAnimationsPacingControl = (event) =>
-      if Automator?
+      if Automator
         @automator.recorder.turnOnAnimationsPacingControl()
       false
     Mousetrap.bind ["alt+e"], @keyComboTurnOnAnimationsPacingControl
 
     @keyComboTurnOffAnimationsPacingControl = (event) =>
-      if Automator?
+      if Automator
         @automator.recorder.turnOffAnimationsPacingControl()
       false
     Mousetrap.bind ["alt+u"], @keyComboTurnOffAnimationsPacingControl
 
     @keyComboTakeScreenshotEventListener = (event) =>
-      if AutomatorRecorder?
+      if AutomatorRecorder
         @automator.recorder.addTakeScreenshotCommand()
       false
     Mousetrap.bind ["alt+c"], @keyComboTakeScreenshotEventListener
 
     @keyComboStopTestRecordingEventListener = (event) =>
-      if Automator?
+      if Automator
         @automator.recorder.stopTestRecording()
       false
     Mousetrap.bind ["alt+t"], @keyComboStopTestRecordingEventListener
 
     @keyComboAddTestCommentEventListener = (event) =>
-      if Automator?
+      if Automator
         @automator.recorder.addTestComment()
       false
     Mousetrap.bind ["alt+m"], @keyComboAddTestCommentEventListener
 
     @keyComboCheckNumberOfMenuItemsEventListener = (event) =>
-      if AutomatorRecorder?
+      if AutomatorRecorder
         @automator.recorder.addCheckNumberOfItemsInMenuCommand()
       false
     Mousetrap.bind ["alt+k"], @keyComboCheckNumberOfMenuItemsEventListener
 
     @keyComboCheckStringsOfItemsInMenuOrderImportant = (event) =>
-      if AutomatorRecorder?
+      if AutomatorRecorder
         @automator.recorder.addCheckStringsOfItemsInMenuOrderImportantCommand()
       false
     Mousetrap.bind ["alt+a"], @keyComboCheckStringsOfItemsInMenuOrderImportant
 
     @keyComboCheckStringsOfItemsInMenuOrderUnimportant = (event) =>
-      if AutomatorRecorder?
+      if AutomatorRecorder
         @automator.recorder.addCheckStringsOfItemsInMenuOrderUnimportantCommand()
       false
     Mousetrap.bind ["alt+z"], @keyComboCheckStringsOfItemsInMenuOrderUnimportant
@@ -2074,7 +2074,7 @@ class WorldMorph extends PanelWdgt
         window[eachMorphClass].lastBuiltInstanceNumericID = 0
 
     # »>> this part is excluded from the fizzygum homepage build
-    if Automator?
+    if Automator
       world.automator.recorder.turnOffAnimationsPacingControl()
       world.automator.recorder.turnOffAlignmentOfMorphIDsMechanism()
       world.automator.recorder.turnOffHidingOfMorphsContentExtractInLabels()
@@ -2134,7 +2134,7 @@ class WorldMorph extends PanelWdgt
       menu.addLine()
     # this part is excluded from the fizzygum homepage build <<«
     
-    if Automator?
+    if Automator
       menu.addMenuItem "system tests ➜", false, @, "popUpSystemTestsMenu", ""
 
     if @isDevMode

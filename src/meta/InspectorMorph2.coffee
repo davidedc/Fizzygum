@@ -107,7 +107,7 @@ class InspectorMorph2 extends Widget
     @buildAndConnectChildren()
   
   buildAndConnectChildren: ->
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
+    if Automator and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     # remove all submorhs i.e. panes and buttons
@@ -257,7 +257,7 @@ class InspectorMorph2 extends Widget
 
     # we add a Widget alignment here because adjusting IDs whenever
     # we add or remove methods is a pain...
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
+    if Automator and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
 
@@ -498,7 +498,7 @@ class InspectorMorph2 extends Widget
     super
     @layoutIsValid = true
 
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
+    if Automator and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
   layoutOwnPropsOnlyToggle: (height, listWidth, detailWidth) ->

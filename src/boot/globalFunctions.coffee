@@ -4,6 +4,10 @@ window.srcLoadsSteps = []
 
 window.srcLoadCompileDebugWrites = false
 
+window.Automator = null
+window.AutomatorRecorder = null
+window.AutomatorPlayer = null
+
 
 # This is used for mixins: MixedClassKeywords is used
 # to protect some methods so the are not copied to object,
@@ -440,7 +444,7 @@ boot = ->
     if window.preCompiled
       (loadSourcesAndPotentiallyCompileThem true).then ->
         window.stillLoadingSources = false
-        if Automator?
+        if Automator
           Automator.testsManifest = testsManifest
           Automator.testsAssetsManifest = testsAssetsManifest
         startupActions = getParameterByName "startupActions"
@@ -449,7 +453,7 @@ boot = ->
     else
       (loadSourcesAndPotentiallyCompileThem false).then ->
         window.stillLoadingSources = false
-        if Automator?
+        if Automator
           Automator.testsManifest = testsManifest
           Automator.testsAssetsManifest = testsAssetsManifest
       .then ->
