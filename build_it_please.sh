@@ -325,6 +325,8 @@ if $homepage ; then
   # and the code in those sections is completely dead,
   # so we can search/replace those checks with "if (false", so that terser can just eliminate
   # both the checks and the dead-code sections.
+  # At the moment this was put in place, this line saves around 9kBs
+  # (9183 bytes to be precise) in the final build.
   sed -i 's/if (Automator[a-zA-Z]*/if (false/g' $BUILD_PATH/js/pre-compiled.js
 
   terser --compress --mangle --output $BUILD_PATH/js/pre-compiled-min.js -- $BUILD_PATH/js/pre-compiled.js
