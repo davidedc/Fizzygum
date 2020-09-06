@@ -308,6 +308,15 @@ if $homepage ; then
 
   rm $BUILD_PATH/js/libs/FileSaver.min.js
   rm $BUILD_PATH/js/libs/jszip.min.js
+
+
+  # There are many "if Automator ..." and "if AutomatorRecorder ..." and "if AutomatorPlayer ..."
+  # sections in the code. In the homepage version we don't use any of those three classes,
+  # and the code in those sections is completely dead,
+  # so we can search/replace those checks with "if (false", so that terser can just eliminate
+  # both the checks and the dead-code sections.
+  sed -i 's/if (Automator[a-zA-Z]*/if (false/g' $BUILD_PATH/js/pre-compiled.js
+
   terser --compress --mangle --output $BUILD_PATH/js/pre-compiled-min.js -- $BUILD_PATH/js/pre-compiled.js
   mv $BUILD_PATH/js/pre-compiled.js $BUILD_PATH/js/pre-compiled-max.js
   mv $BUILD_PATH/js/pre-compiled-min.js $BUILD_PATH/js/pre-compiled.js
