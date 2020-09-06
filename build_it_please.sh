@@ -193,6 +193,16 @@ coffee -b -c -o $BUILD_PATH/js/ $SCRATCH_PATH/fizzygum-boot.coffee
 echo "... done compiling boot file"
 
 echo "minifying boot file..."
+
+if $homepage ; then
+  # There are a few "if Automator ..." and "if AutomatorRecorder ..." and "if AutomatorPlayer ..."
+  # sections in the boot code. In the homepage version we don't use any of those three classes,
+  # and the code in those sections is completely dead,
+  # so we can search/replace those checks with "if (false", so that terser can just eliminate
+  # both the checks and the dead-code sections.
+  sed -i 's/if (Automator[a-zA-Z]*/if (false/g' $BUILD_PATH/js/fizzygum-boot.js
+fi
+
 terser --compress --mangle --output $BUILD_PATH/js/fizzygum-boot-min.js -- $BUILD_PATH/js/fizzygum-boot.js
 #cp $BUILD_PATH/js/fizzygum-boot.js $BUILD_PATH/js/fizzygum-boot-min.js
 echo "... done minifying boot file"
