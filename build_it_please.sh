@@ -187,7 +187,7 @@ cat src/boot/logging-div.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/dependencies-finding.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
-printf "\nmorphicVersion = 'version of $(date)'" >> $SCRATCH_PATH/fizzygum-boot.coffee
+printf "\buildVersion = 'version of $(date)'" >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 coffee -b -c -o $BUILD_PATH/js/ $SCRATCH_PATH/fizzygum-boot.coffee 
 echo "... done compiling boot file"
