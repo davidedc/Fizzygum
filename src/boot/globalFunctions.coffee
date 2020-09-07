@@ -664,3 +664,26 @@ getRandomInt = (min, max) ->
   min = Math.ceil min
   max = Math.floor max
   Math.floor Math.random() * (max - min) + min
+
+# ----------------------------------------------------------------------------
+# Draft example of source check done within the system (to be completed) TODO
+# ----------------------------------------------------------------------------
+# allSources = Object.keys(window).filter (eachSourceFile) ->
+#     eachSourceFile.endsWith "_coffeSource"
+# 
+# allSourcesJustClassName = allSources.map (eachSourceFile) ->
+#     eachSourceFile.replace "_coffeSource", ""
+# 
+# allSourcesWithDoLayout = allSourcesJustClassName.filter (eachSource) ->
+#     window[eachSource]?.class?.nonStaticPropertiesSources.doLayout?
+# 
+# allSourcesWithDoLayoutWithoutSuper = allSourcesWithDoLayout.filter (eachSource) ->
+#     doLayoutMethod = window[eachSource].class.nonStaticPropertiesSources.doLayout
+#     doLayoutLineByLine = doLayoutMethod.split("\n")
+#     doLayoutLastLines = doLayoutLineByLine.slice(Math.max(doLayoutLineByLine.length - 5, 1))
+#     doLayoutLastLinesJoined = doLayoutLastLines.join "\n"
+#     if !doLayoutLastLinesJoined.includes("super")
+#       console.log eachSource + "-------------------------"
+#       console.log doLayoutLastLinesJoined
+#       return true
+#     return false
