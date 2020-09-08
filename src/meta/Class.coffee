@@ -7,7 +7,8 @@ class Class
   superClassName: nil
   augmentedWith: nil
   superClass: nil
-  subClasses: nil  
+  subClasses: nil
+  classRegex: /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
 
   # adds code into the constructor, such that when a
   # Widget is created, it registers itself as in instance
@@ -119,8 +120,7 @@ class Class
 
   findClassName: (source) ->
     # find the class name
-    classRegex = /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
-    if (m = classRegex.exec(source))?
+    if (m = @classRegex.exec(source))?
         m.forEach (match, groupIndex) ->
             if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
         name = m[1]
@@ -142,6 +142,19 @@ class Class
 
   removeAugmentations: (source) ->
     source.replace(/^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$, @]*)/gm,"")
+
+  getClassDescriptionHeaderComment: (source) ->
+    sourceLines = source.split "\n"
+    classDescriptionHeaderCommentLines = []
+    howManyCommentLines = 0
+    for eachLine in sourceLines
+      if @classRegex.test eachLine
+        break
+      classDescriptionHeaderCommentLines.push eachLine
+      howManyCommentLines++
+    sourceLines = sourceLines.slice howManyCommentLines, sourceLines.length - howManyCommentLines
+    classDescriptionHeaderComment = classDescriptionHeaderCommentLines.join "\n"
+    [classDescriptionHeaderComment, sourceLines]
 
   getSourceOfAllProperties: (source) ->
     staticPropertiesSources = {}
@@ -189,6 +202,8 @@ class Class
     @subClasses = new Set
 
     @name = @findClassName source
+    [classDescriptionHeaderComment, sourceLines] = @getClassDescriptionHeaderComment source
+    #console.log @name + "========\n" + classDescriptionHeaderComment
     [@superClassName, @superClass] = @findIfItExtendsAnotherClass source
 
     # find which mixins need to be mixed-in
