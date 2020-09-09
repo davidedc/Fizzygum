@@ -134,10 +134,12 @@ class Class
     augmentationNames = []
 
     while true
-      # consider everything that follows as comment
-      # until the next augmentation or property
+
       nextAugmentationCommentLines = []
       nextAugmentationHowManyCommentLines = 0
+
+      # collect comment lines until the
+      # next augmentation or property is found
       for eachLine in remainingSourceLines
         if @augmentRegex.test eachLine
           # we finally found the augmentation: all that we just went
