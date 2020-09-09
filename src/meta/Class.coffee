@@ -143,8 +143,7 @@ class Class
   removeAugmentations: (source) ->
     source.replace(/^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$, @]*)/gm,"")
 
-  getClassDescriptionHeaderComment: (source) ->
-    sourceLines = source.split "\n"
+  getClassDescriptionHeaderComment: (sourceLines) ->
     classDescriptionHeaderCommentLines = []
     howManyCommentLines = 0
     for eachLine in sourceLines
@@ -152,9 +151,9 @@ class Class
         break
       classDescriptionHeaderCommentLines.push eachLine
       howManyCommentLines++
-    sourceLines = sourceLines.slice howManyCommentLines, sourceLines.length - howManyCommentLines
+    sourceLinesWithoutDescriptionHeaderComment = sourceLines.slice howManyCommentLines, sourceLines.length
     classDescriptionHeaderComment = classDescriptionHeaderCommentLines.join "\n"
-    [classDescriptionHeaderComment, sourceLines]
+    [classDescriptionHeaderComment, sourceLinesWithoutDescriptionHeaderComment]
 
   getSourceOfAllProperties: (source) ->
     staticPropertiesSources = {}
@@ -202,7 +201,8 @@ class Class
     @subClasses = new Set
 
     @name = @findClassName source
-    [classDescriptionHeaderComment, sourceLines] = @getClassDescriptionHeaderComment source
+    sourceLines = source.split "\n"
+    [classDescriptionHeaderComment, sourceLines] = @getClassDescriptionHeaderComment sourceLines
     #console.log @name + "========\n" + classDescriptionHeaderComment
     [@superClassName, @superClass] = @findIfItExtendsAnotherClass source
 
