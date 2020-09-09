@@ -107,9 +107,8 @@ class Class
     # find if it extends some other class
     extendsRegex = /^class[ \t]*[a-zA-Z_$][0-9a-zA-Z_$]*[ \t]*extends[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
     if (m = extendsRegex.exec(source))?
-        m.forEach((match, groupIndex) ->
+        m.forEach (match, groupIndex) ->
             if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
-        )
         superClassName = m[1]
         if window.srcLoadCompileDebugWrites then console.log "we should have already loaded " + superClassName
         superClass = window[superClassName].class
