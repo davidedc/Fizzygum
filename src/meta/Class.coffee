@@ -9,6 +9,9 @@ class Class
   superClass: nil
   subClasses: nil
   classRegex: /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
+  propertyRegex: /^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *: *([^]*?)(?=^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *:)/gm
+  augmentRegex: /^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
+
 
   # adds code into the constructor, such that when a
   # Widget is created, it registers itself as in instance
@@ -118,39 +121,74 @@ class Class
     return [superClassName, superClass]
 
   findClassName: (sourceLines) ->
-    # find the class name
-    if (m = @classRegex.exec(sourceLines[0]))?
-        m.forEach (match, groupIndex) ->
-            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
-        name = m[1]
-        if window.srcLoadCompileDebugWrites then console.log "name: " + name
-    return name
+    return (sourceLines[0].match @classRegex)[1]
 
-  findMixinsInTheClass: (source) ->
-    augmentedWith = []
-    augmentRegex = /^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/gm
-    while (m = augmentRegex.exec(source))?
-        if (m.index == augmentRegex.lastIndex)
-            augmentRegex.lastIndex++
-        m.forEach((match, groupIndex) ->
-            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
-        )
-        augmentedWith.push m[1]
-        if window.srcLoadCompileDebugWrites then console.log "augmentedWith: " + augmentedWith
-    return augmentedWith
+  findMixinsInTheClass: (remainingSourceLines) ->
+    # This works by prospectively collecting comment lines until an
+    # augmentation is found, then stashing
+    # both the comment and the augmentation, then removing the
+    # lines examined so far, and then looping the same scan from the next line,
+    # until either a property is found, or end of file.
+
+    augmentationComments = []
+    augmentationNames = []
+
+    while true
+      # consider everything that follows as comment
+      # until the next augmentation or property
+      nextAugmentationCommentLines = []
+      nextAugmentationHowManyCommentLines = 0
+      for eachLine in remainingSourceLines
+        if @augmentRegex.test eachLine
+          # we finally found the augmentation: all that we just went
+          # through is then a comment to the augmentation, to be stashed, and we have
+          # to parse the augmentation
+          break
+        else if @propertyRegex.test eachLine
+          # we finally found a property: we can stop now
+          return [augmentationNames, augmentationComments, remainingSourceLines]
+
+        nextAugmentationCommentLines.push eachLine
+        nextAugmentationHowManyCommentLines++
+
+        if nextAugmentationHowManyCommentLines == remainingSourceLines.length
+          # reached the end of the file without finding
+          # neither augmentations nor fields: we are done
+          return [augmentationNames, augmentationComments, remainingSourceLines]
+
+
+      # group the comments of the augmentation into a line and stash them
+      augmentationComment = nextAugmentationCommentLines.join "\n"
+      augmentationComments.push augmentationComment
+
+      # remove the comments of the augmentation from the remaining lines
+      remainingSourceLines = remainingSourceLines.slice nextAugmentationHowManyCommentLines
+
+      # parse the augmentation
+      #console.log "there should be an augmentation here: " + remainingSourceLines[0]
+      augmentationName = (remainingSourceLines[0].match @augmentRegex)[1]
+      augmentationNames.push augmentationName
+      if window.srcLoadCompileDebugWrites
+        console.log "augmentationName: " + augmentationName + " ================"
+        console.log "augmentationComment: " + augmentationComment
+
+      # remove the augmentation from the remaining lines and repeat
+      remainingSourceLines = remainingSourceLines.slice 1, remainingSourceLines.length
+
+    return [augmentationNames, augmentationComments, remainingSourceLines]
 
   removeAugmentations: (source) ->
     source.replace(/^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$, @]*)/gm,"")
 
   getClassDescriptionHeaderComment: (sourceLines) ->
     classDescriptionHeaderCommentLines = []
-    howManyCommentLines = 0
+    classDescriptionHowManyCommentLines = 0
     for eachLine in sourceLines
       if @classRegex.test eachLine
         break
       classDescriptionHeaderCommentLines.push eachLine
-      howManyCommentLines++
-    sourceLinesWithoutDescriptionHeaderComment = sourceLines.slice howManyCommentLines, sourceLines.length
+      classDescriptionHowManyCommentLines++
+    sourceLinesWithoutDescriptionHeaderComment = sourceLines.slice classDescriptionHowManyCommentLines
     classDescriptionHeaderComment = classDescriptionHeaderCommentLines.join "\n"
     [classDescriptionHeaderComment, sourceLinesWithoutDescriptionHeaderComment]
 
@@ -159,13 +197,11 @@ class Class
     nonStaticPropertiesSources = {}
     # to match a valid JS variable name (we just ignore the keywords):
     #    [a-zA-Z_$][0-9a-zA-Z_$]*
-    regex = /^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *: *([^]*?)(?=^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *:)/gm
-    while (m = regex.exec(source + "\n  $$$STOPTOKEN_LASTFIELD :"))?
-        if (m.index == regex.lastIndex)
-            regex.lastIndex++
-        m.forEach((match, groupIndex) ->
+    while (m = @propertyRegex.exec(source + "\n  $$$STOPTOKEN_LASTFIELD :"))?
+        if (m.index == @propertyRegex.lastIndex)
+            @propertyRegex.lastIndex++
+        m.forEach (match, groupIndex) ->
             if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
-        )
 
         if m[1].valueOf() == "$$$STOPTOKEN_LASTFIELD "
           break
@@ -202,11 +238,12 @@ class Class
     sourceLines = source.split "\n"
     [classDescriptionHeaderComment, sourceLines] = @getClassDescriptionHeaderComment sourceLines
     @name = @findClassName sourceLines
+    sourceLines = sourceLines.slice 1 # remove the first line with the class now that you just parsed it
     #console.log @name + "========\n" + classDescriptionHeaderComment
     [@superClassName, @superClass] = @findIfItExtendsAnotherClass source
 
     # find which mixins need to be mixed-in
-    @augmentedWith = @findMixinsInTheClass source
+    [@augmentedWith, ignored] = @findMixinsInTheClass sourceLines
 
     # remove the augmentations because we don't want
     # them to mangle up the parsing
