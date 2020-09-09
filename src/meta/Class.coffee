@@ -118,9 +118,9 @@ class Class
 
     return [superClassName, superClass]
 
-  findClassName: (source) ->
+  findClassName: (sourceLines) ->
     # find the class name
-    if (m = @classRegex.exec(source))?
+    if (m = @classRegex.exec(sourceLines[0]))?
         m.forEach (match, groupIndex) ->
             if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
         name = m[1]
@@ -200,9 +200,9 @@ class Class
 
     @subClasses = new Set
 
-    @name = @findClassName source
     sourceLines = source.split "\n"
     [classDescriptionHeaderComment, sourceLines] = @getClassDescriptionHeaderComment sourceLines
+    @name = @findClassName sourceLines
     #console.log @name + "========\n" + classDescriptionHeaderComment
     [@superClassName, @superClass] = @findIfItExtendsAnotherClass source
 
