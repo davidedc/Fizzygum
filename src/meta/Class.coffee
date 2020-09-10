@@ -154,7 +154,7 @@ class Class
         remainingSourceLinesExcludingStopPositive = remainingSourceLinesIncludingStopPositive.slice 1
         return [stopPositiveLine, everythingUpToStopPositive, remainingSourceLinesExcludingStopPositive]
 
-      else if regexStopNegative.test eachLine
+      else if regexStopNegative?.test eachLine
         # found the stop negative: what we collected is no good
         return false
 
