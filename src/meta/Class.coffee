@@ -123,61 +123,66 @@ class Class
   findClassName: (sourceLines) ->
     return (sourceLines[0].match @classRegex)[1]
 
+  findUpTo: (sourceLines, regexStopPositive, regexStopNegative) ->
+    # This works by prospectively collecting lines until a
+    # stop regex is found.
+    # If a stop positive is found, we return the stash and the line with the stop.
+    # Otherwise, if a stop negative or end of file, we return false.
+
+    linesUpToStop = []
+
+    # collect lines until a stop is found
+    for eachLine in sourceLines
+      if regexStopPositive.test eachLine
+        # we finally found the stop positive: all lines we found so far
+        # are a good stash, we'll return the good finds
+
+        # re-assemble the lines we found so far
+        everythingUpToStopPositive = linesUpToStop.join "\n"
+
+        # remove what we found so far from what we were passed
+        remainingSourceLinesIncludingStopPositive = sourceLines.slice linesUpToStop.length
+
+        # the first line of remainingSourceLinesIncludingStopPositive
+        # now is the stop positive
+        #console.log "stop positive: " + remainingSourceLinesIncludingStopPositive[0]
+        stopPositiveLine = remainingSourceLinesIncludingStopPositive[0]
+        if window.srcLoadCompileDebugWrites
+          console.log "stopPositiveLine: " + stopPositiveLine + " ================"
+          console.log "everythingUpToStopPositive: " + everythingUpToStopPositive
+
+        remainingSourceLinesExcludingStopPositive = remainingSourceLinesIncludingStopPositive.slice 1
+        return [stopPositiveLine, everythingUpToStopPositive, remainingSourceLinesExcludingStopPositive]
+
+      else if regexStopNegative.test eachLine
+        # found the stop negative: what we collected is no good
+        return false
+
+      # no stop found yet, keep collecting
+      linesUpToStop.push eachLine
+
+    # reached the end of the file without finding a stop:
+    # what we collected is no good
+    return false
+
   findMixinsInTheClass: (remainingSourceLines) ->
     # This works by prospectively collecting comment lines until an
-    # augmentation is found, then stashing
-    # both the comment and the augmentation, then removing the
-    # lines examined so far, and then looping the same scan from the next line,
-    # until either a property is found, or end of file.
+    # stop positive regex for augmentation is found, then stashing
+    # both the comment and the augmentation, then looping over what remains
 
     augmentationComments = []
     augmentationNames = []
 
-    while true
-
-      nextAugmentationCommentLines = []
-      nextAugmentationHowManyCommentLines = 0
-
-      # collect comment lines until the
-      # next augmentation or property is found
-      for eachLine in remainingSourceLines
-        if @augmentRegex.test eachLine
-          # we finally found the augmentation: all that we just went
-          # through is then a comment to the augmentation, to be stashed, and we have
-          # to parse the augmentation
-          break
-        else if @propertyRegex.test eachLine
-          # we finally found a property: we can stop now
-          return [augmentationNames, augmentationComments, remainingSourceLines]
-
-        nextAugmentationCommentLines.push eachLine
-        nextAugmentationHowManyCommentLines++
-
-        if nextAugmentationHowManyCommentLines == remainingSourceLines.length
-          # reached the end of the file without finding
-          # neither augmentations nor fields: we are done
-          return [augmentationNames, augmentationComments, remainingSourceLines]
-
-
-      # group the comments of the augmentation into a line and stash them
-      augmentationComment = nextAugmentationCommentLines.join "\n"
-      augmentationComments.push augmentationComment
-
-      # remove the comments of the augmentation from the remaining lines
-      remainingSourceLines = remainingSourceLines.slice nextAugmentationHowManyCommentLines
-
-      # parse the augmentation
-      #console.log "there should be an augmentation here: " + remainingSourceLines[0]
-      augmentationName = (remainingSourceLines[0].match @augmentRegex)[1]
-      augmentationNames.push augmentationName
+    while returned = @findUpTo remainingSourceLines, @augmentRegex, @propertyRegex
+      augmentationNames.push (returned[0].match @augmentRegex)[1]
+      augmentationComments.push returned[1]
+      remainingSourceLines = returned[2]
       if window.srcLoadCompileDebugWrites
-        console.log "augmentationName: " + augmentationName + " ================"
-        console.log "augmentationComment: " + augmentationComment
-
-      # remove the augmentation from the remaining lines and repeat
-      remainingSourceLines = remainingSourceLines.slice 1, remainingSourceLines.length
+        console.log "augmentation: " + (returned[0].match @augmentRegex)[1] + " =========="
+        console.log "comments: \n" + returned[1]
 
     return [augmentationNames, augmentationComments, remainingSourceLines]
+
 
   removeAugmentations: (source) ->
     source.replace(/^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$, @]*)/gm,"")
