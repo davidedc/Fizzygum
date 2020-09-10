@@ -120,9 +120,6 @@ class Class
 
     return [superClassName, superClass]
 
-  findClassName: (sourceLines) ->
-    return (sourceLines[0].match @classRegex)[1]
-
   findUpTo: (sourceLines, regexStopPositive, regexStopNegative) ->
     # This works by prospectively collecting lines until a
     # stop regex is found.
@@ -187,18 +184,6 @@ class Class
   removeAugmentations: (source) ->
     source.replace(/^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$, @]*)/gm,"")
 
-  getClassDescriptionHeaderComment: (sourceLines) ->
-    classDescriptionHeaderCommentLines = []
-    classDescriptionHowManyCommentLines = 0
-    for eachLine in sourceLines
-      if @classRegex.test eachLine
-        break
-      classDescriptionHeaderCommentLines.push eachLine
-      classDescriptionHowManyCommentLines++
-    sourceLinesWithoutDescriptionHeaderComment = sourceLines.slice classDescriptionHowManyCommentLines
-    classDescriptionHeaderComment = classDescriptionHeaderCommentLines.join "\n"
-    [classDescriptionHeaderComment, sourceLinesWithoutDescriptionHeaderComment]
-
   getSourceOfAllProperties: (source) ->
     staticPropertiesSources = {}
     nonStaticPropertiesSources = {}
@@ -220,6 +205,14 @@ class Class
         else
           nonStaticPropertiesSources[m[1]] = m[2]
     [staticPropertiesSources, nonStaticPropertiesSources]
+
+  findClassDescriptionHeaderCommentAndClassName: (sourceLines) ->
+    [classLine, classDescriptionHeaderComment, remainingSourceLines] = @findUpTo sourceLines, @classRegex
+    className = (classLine.match @classRegex)[1]
+    if window.srcLoadCompileDebugWrites
+      console.log "className: " + name + " =========="
+      console.log "comments: \n" + classDescriptionHeaderComment
+    [className, classDescriptionHeaderComment, remainingSourceLines]
 
   # You can create a Class in 3 main "modes" of use:
   #  1. you want to load up the CS source, turn it to JS
@@ -243,12 +236,9 @@ class Class
     @subClasses = new Set
 
     sourceLines = source.split "\n"
-    [classDescriptionHeaderComment, sourceLines] = @getClassDescriptionHeaderComment sourceLines
-    @name = @findClassName sourceLines
-    sourceLines = sourceLines.slice 1 # remove the first line with the class now that you just parsed it
-    #console.log @name + "========\n" + classDescriptionHeaderComment
-    [@superClassName, @superClass] = @findIfItExtendsAnotherClass source
 
+    [@name, ignored, sourceLines] = @findClassDescriptionHeaderCommentAndClassName sourceLines
+    [@superClassName, @superClass] = @findIfItExtendsAnotherClass source
     # find which mixins need to be mixed-in
     [@augmentedWith, ignored] = @findMixinsInTheClass sourceLines
 
