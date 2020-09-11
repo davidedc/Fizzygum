@@ -9,8 +9,9 @@ class Class
   superClass: nil
   subClasses: nil
   classRegex: /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
-  propertyRegex: /^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *: *([^]*?)(?=^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *:)/gm
+  propertyRegex: /^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *: *(.*)/m
   augmentRegex: /^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
+  topLevelCommentRegex: /^  #.*/m
 
 
   # adds code into the constructor, such that when a
@@ -120,17 +121,18 @@ class Class
 
     return [superClassName, superClass]
 
-  findUpTo: (sourceLines, regexStopPositive, regexStopNegative) ->
+  findUpTo: (sourceLines, regexStopPositive, regexStopNegative, regexStopPositive2, keepStashWhenEOF) ->
     # This works by prospectively collecting lines until a
     # stop regex is found.
     # If a stop positive is found, we return the stash and the line with the stop.
     # Otherwise, if a stop negative or end of file, we return false.
 
+    sourceLinesOrig = sourceLines
     linesUpToStop = []
 
     # collect lines until a stop is found
     for eachLine in sourceLines
-      if regexStopPositive.test eachLine
+      if (regexStopPositive?.test eachLine) or (regexStopPositive2?.test eachLine)
         # we finally found the stop positive: all lines we found so far
         # are a good stash, we'll return the good finds
 
@@ -149,7 +151,7 @@ class Class
           console.log "everythingUpToStopPositive: " + everythingUpToStopPositive
 
         remainingSourceLinesExcludingStopPositive = remainingSourceLinesIncludingStopPositive.slice 1
-        return [stopPositiveLine, everythingUpToStopPositive, remainingSourceLinesExcludingStopPositive]
+        return [stopPositiveLine, everythingUpToStopPositive, remainingSourceLinesExcludingStopPositive, remainingSourceLinesIncludingStopPositive]
 
       else if regexStopNegative?.test eachLine
         # found the stop negative: what we collected is no good
@@ -158,9 +160,12 @@ class Class
       # no stop found yet, keep collecting
       linesUpToStop.push eachLine
 
-    # reached the end of the file without finding a stop:
-    # what we collected is no good
-    return false
+    if keepStashWhenEOF
+      return ["", (sourceLinesOrig.join "\n"), [], []]
+    else
+      # reached the end of the file without finding a stop:
+      # what we collected is no good
+      return false
 
   findMixinsInTheClass: (remainingSourceLines) ->
     # This works by prospectively collecting comment lines until an
@@ -184,27 +189,42 @@ class Class
   removeAugmentations: (source) ->
     source.replace(/^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$, @]*)/gm,"")
 
-  getSourceOfAllProperties: (source) ->
+  getSourceOfAllProperties: (remainingSourceLines) ->
     staticPropertiesSources = {}
     nonStaticPropertiesSources = {}
-    # to match a valid JS variable name (we just ignore the keywords):
-    #    [a-zA-Z_$][0-9a-zA-Z_$]*
-    while (m = @propertyRegex.exec(source + "\n  $$$STOPTOKEN_LASTFIELD :"))?
-        if (m.index == @propertyRegex.lastIndex)
-            @propertyRegex.lastIndex++
-        m.forEach (match, groupIndex) ->
-            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
 
-        if m[1].valueOf() == "$$$STOPTOKEN_LASTFIELD "
-          break
-        else
-          if window.srcLoadCompileDebugWrites then console.log "not the stop field: " + m[1].valueOf()
+    while returned = @findUpTo remainingSourceLines, @propertyRegex
+      propertyName = (returned[0].match @propertyRegex)[1]
+      propertyComment = returned[1]
+      propertyFirstLineOfBody = (returned[0].match @propertyRegex)[2]
+      remainingSourceLines = returned[2]
+      if window.srcLoadCompileDebugWrites
+        console.log "propertyName: " + propertyName + " =========="
+        console.log "propertyComment: \n" + propertyComment
+        console.log "propertyFirstLineOfBody: \n" + propertyFirstLineOfBody
 
-        if m[1].substring(0, 1) == "@"
-          staticPropertiesSources[m[1].substring(1, m[1].length)] = m[2]
-        else
-          nonStaticPropertiesSources[m[1]] = m[2]
+      propertyBodyExceptFirstLine = ""
+      if returned = @findUpTo remainingSourceLines, @topLevelCommentRegex, nil, @propertyRegex, true
+        propertyBodyExceptFirstLine = returned[1]
+        remainingSourceLines = returned[3] # leave the next top level comment or property regex IN
+
+      if propertyBodyExceptFirstLine.length == 0
+        propertyBody = propertyFirstLineOfBody
+      else
+        propertyBody = propertyFirstLineOfBody + "\n" + propertyBodyExceptFirstLine
+
+      if window.srcLoadCompileDebugWrites
+        console.log "propertyBody: \n" + propertyBody
+
+      if propertyName.substring(0, 1) == "@"
+        staticPropertiesSources[propertyName.substring(1, propertyName.length)] = propertyBody
+      else
+        nonStaticPropertiesSources[propertyName] = propertyBody
+
+
     [staticPropertiesSources, nonStaticPropertiesSources]
+
+
 
   findClassDescriptionHeaderCommentAndClassName: (sourceLines) ->
     [classLine, classDescriptionHeaderComment, remainingSourceLines] = @findUpTo sourceLines, @classRegex
@@ -240,7 +260,7 @@ class Class
     [@name, ignored, sourceLines] = @findClassDescriptionHeaderCommentAndClassName sourceLines
     [@superClassName, @superClass] = @findIfItExtendsAnotherClass source
     # find which mixins need to be mixed-in
-    [@augmentedWith, ignored] = @findMixinsInTheClass sourceLines
+    [@augmentedWith, ignored, sourceLines] = @findMixinsInTheClass sourceLines
 
     # remove the augmentations because we don't want
     # them to mangle up the parsing
@@ -252,7 +272,7 @@ class Class
     # note that the constructor, methods, properties and static properties
     # are ALL fields definitions, so we are basically going to cycle through
     # everything
-    [@staticPropertiesSources, @nonStaticPropertiesSources] = @getSourceOfAllProperties source
+    [@staticPropertiesSources, @nonStaticPropertiesSources] = @getSourceOfAllProperties sourceLines
 
     if generatePreCompiledJS or createClass
       # --------------------
