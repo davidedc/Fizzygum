@@ -159,8 +159,8 @@ class ActivePointerWdgt extends Widget
       if switcherooHappened
         # in this case the widget being grabbed is created on the fly
         # so just like the next case it's OK to center it under the pointer
-        aWdgt.fullRawMoveTo @position().subtract aWdgt.extent().floorDivideBy 2
-        aWdgt.fullRawMoveWithin world
+        aWdgt.fullMoveTo @position().subtract aWdgt.extent().floorDivideBy 2
+        aWdgt.fullRawMoveWithin world # TODO no fullMoveWithin ?
       else if aWdgt.extentToGetWhenDraggedFromGlassBox? and (oldParent instanceof GlassBoxBottomWdgt)
         # in this case the widget is "inflating". So, all
         # visual references that the user might have around the
@@ -168,8 +168,8 @@ class ActivePointerWdgt extends Widget
         # the widget under the pointer and fit it within the
         # desktop bounds since we are at it (useful in case the
         # widget is inflating near the screen edges)
-        aWdgt.rawSetExtent aWdgt.extentToGetWhenDraggedFromGlassBox
-        aWdgt.fullRawMoveTo @position().subtract aWdgt.extent().floorDivideBy 2
+        aWdgt.setExtent aWdgt.extentToGetWhenDraggedFromGlassBox
+        aWdgt.fullMoveTo @position().subtract aWdgt.extent().floorDivideBy 2
         aWdgt.fullRawMoveWithin world
       else if displacementDueToGrabDragThreshold?
         # in this case keep some visual consistency and move
