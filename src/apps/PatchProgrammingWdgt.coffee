@@ -20,8 +20,6 @@ class PatchProgrammingWdgt extends StretchableEditableWdgt
       new CalculatingNodeCreatorButtonWdgt
     ]
 
-
-
     @toolsPanel.disableDragsDropsAndEditing()
     @add @toolsPanel
     @dragsDropsAndEditingEnabled = true
