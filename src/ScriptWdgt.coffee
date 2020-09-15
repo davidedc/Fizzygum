@@ -1,3 +1,21 @@
+# As usual in Widgetic widgets are visual interactable things, and
+# this widget embodies a script.
+#
+# A script is
+#   * an easy-to modify piece of code
+#     (i.e. it opens in its own panel, where you can edit and run it)
+#   * it's standalone, i.e. it's independent i.e.
+#     it's code that doesn't belong to any other widget
+#     (i.e.: if this code should belong to a widget, add it to a widget)
+#   * it's probably temporary "glue" or "scaffholding" or "utility"
+#     code that is not meant to be around for long (i.e.: this code,
+#     if really useful, should really find its place in a proper class)
+#
+# When writing a script, consider the alternatives:
+#   * a menu entry invoking a proper method from a widget
+#   * a button invoking a proper method from a widget
+#   * an iconic link on the desktop... invoking a proper method from a widget
+
 class ScriptWdgt extends Widget
 
   tempPromptEntryField: nil
