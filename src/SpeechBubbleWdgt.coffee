@@ -48,9 +48,6 @@ class SpeechBubbleWdgt extends Widget
     @add @contentsMorph
     @invalidateLayout()
 
-  rawSetExtent: (aPoint) ->
-    super
-    @doLayout @bounds
 
   doLayout: (newBoundsForThisLayout) ->
 
@@ -86,16 +83,16 @@ class SpeechBubbleWdgt extends Widget
     trackChanges.push false
 
     # adjust my layout
-    @silentRawSetWidth newBoundsForThisLayout.width()
-    @silentRawSetHeight newBoundsForThisLayout.height()
+    @rawSetWidth newBoundsForThisLayout.width()
+    @rawSetHeight newBoundsForThisLayout.height()
 
-    @contentsMorph.rawSetWidth newBoundsForThisLayout.width() - (2 * @cornerRadius)
-    @contentsMorph.rawSetHeight newBoundsForThisLayout.height() - (2 * @cornerRadius) - newBoundsForThisLayout.height()/5
-
-
-    # position my contents
-    @contentsMorph.fullRawMoveTo @position().add(
-      new Point(@padding + @cornerRadius, @padding + @cornerRadius))
+    # adjust layout of my contents
+    @contentsMorph.doLayout (
+      (new Rectangle 0, 0,
+        (newBoundsForThisLayout.width() - (2 * @cornerRadius)),
+        (newBoundsForThisLayout.height() - (2 * @cornerRadius) - newBoundsForThisLayout.height()/5))
+      .translateBy @position().add @padding + @cornerRadius
+    )
 
     trackChanges.pop()
     @fullChanged()

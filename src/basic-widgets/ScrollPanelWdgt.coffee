@@ -222,6 +222,9 @@ class ScrollPanelWdgt extends PanelWdgt
     unless aPoint.equals @extent()
       #console.log "move 15"
       @breakNumberOfRawMovesAndResizesCaches()
+
+      # TODO this part seems like it should be in a doLayout function
+      # rather than here
       if @isTextLineWrapping and !(@contents instanceof SimpleVerticalStackPanelWdgt)
         @contents.fullRawMoveTo @position()
       super aPoint

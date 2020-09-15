@@ -7,10 +7,9 @@ class ToolPanelWdgt extends PanelWdgt
   thumbnailSize: 30
 
   addMany: (widgetsToBeAdded) ->
-
     for eachWidget in widgetsToBeAdded
       @add eachWidget, nil, nil, nil, nil, nil, true
-    @reLayout()
+    @invalidateLayout()
 
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen, dontLayout) ->
 
@@ -38,8 +37,9 @@ class ToolPanelWdgt extends PanelWdgt
           glassBoxBottom.add glassBoxTop
 
         glassBoxBottom.fullRawMoveTo @topLeft().add new Point @externalPadding, @externalPadding
+        # TODO anti-pattern - this rawSetExtent should be called within doLayout, not here
         glassBoxBottom.rawSetExtent new Point @thumbnailSize, @thumbnailSize
-        glassBoxBottom.reLayout()
+        glassBoxBottom.invalidateLayout()
 
         aWdgt = glassBoxBottom
 
@@ -67,14 +67,36 @@ class ToolPanelWdgt extends PanelWdgt
       @numberOfIconsOnPanel++
 
       unless dontLayout
-        @reLayout()
+        @invalidateLayout()
 
-
+  # TODO this is an anti-pattern where a lower-level function calls an higher-level
+  # one. doLayout should be calling this rawSetExtent.
+  # If we don't do this, the toolbar won't relayout its content when resized, but this
+  # is not the right way to go about it
   rawSetExtent: (aPoint) ->
     super
-    @reLayout()
+    @invalidateLayout()
 
-  reLayout: ->
+  doLayout: ->
+    #if !window.recalculatingLayouts
+    #  debugger
+
+    if !newBoundsForThisLayout?
+      if @desiredExtent?
+        newBoundsForThisLayout = @desiredExtent
+        @desiredExtent = nil
+      else
+        newBoundsForThisLayout = @extent()
+
+      if @desiredPosition?
+        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
+        @desiredPosition = nil
+      else
+        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
+
+    if @isCollapsed()
+      @layoutIsValid = true
+      return
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -126,6 +148,11 @@ class ToolPanelWdgt extends PanelWdgt
       numberOfEntries++
 
     trackChanges.pop()
-    @layoutIsValid = true
     @fullChanged()
+
+    super
+    @layoutIsValid = true
+
+    if Automator and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
+      world.alignIDsOfNextMorphsInSystemTests()
 
