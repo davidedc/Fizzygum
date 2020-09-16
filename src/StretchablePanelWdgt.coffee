@@ -64,6 +64,11 @@ class StretchablePanelWdgt extends PanelWdgt
 
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
+    # TODO antipattern - in doLayout you should never set raw position
+    # and extent like this directly on the children (except in the base Widget
+    # implementation) because the children might have their own layouts
+    # inside of them, so you have to call doLayout on them in some form.
+    # the bad news here is that doLayout cannot take in input a fractional position yet
     for w in childrenNotHandlesNorCarets
       w.fullRawMoveInStretchablePanelToFractionalPosition newBoundsForThisLayout
       w.rawSetExtentToFractionalExtentInPaneUserHasSet newBoundsForThisLayout      
