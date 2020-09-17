@@ -2784,7 +2784,6 @@ class Widget extends TreeNode
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
     world.add wm
-    wm.changed()
 
 
   
@@ -2826,7 +2825,6 @@ class Widget extends TreeNode
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
     world.add wm
-    wm.changed()
 
   createConsole: ->
     inspector = new ConsoleWdgt @
@@ -2835,7 +2833,6 @@ class Widget extends TreeNode
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
     world.add wm
-    wm.changed()
 
   spawnNextTo: (morphToBeNextTo, whereToAddIt) ->
     if !whereToAddIt?
@@ -3328,14 +3325,12 @@ class Widget extends TreeNode
     wm.fullRawMoveTo world.hand.position()
     wm.fullRawMoveWithin world
     world.add wm
-    wm.changed()
 
   createEmptyWindow: ->
     wm = new WindowWdgt nil, nil, nil
     wm.fullRawMoveTo world.hand.position()
     wm.fullRawMoveWithin world
     world.add wm
-    wm.changed()
 
 
 

@@ -395,7 +395,6 @@ class WorldMorph extends PanelWdgt
     wm = new WindowWdgt nil, nil, errorsLogViewerMorph
     wm.setExtent new Point 460, 400
     world.add wm
-    wm.changed()
 
 
     @errorConsole = wm
@@ -2308,14 +2307,12 @@ class WorldMorph extends PanelWdgt
     world.add wm
     wm.rawSetExtent new Point 130, 70
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.changed()
   createNewColorPaletteMorphInWindow: ->
     cP = new ColorPaletteMorph
     wm = new WindowWdgt nil, nil, cP
     world.add wm
     wm.rawSetExtent new Point 130, 100
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.changed()
   createNewColorPickerMorph: ->
     @create new ColorPickerMorph
   createNewSensorDemo: ->

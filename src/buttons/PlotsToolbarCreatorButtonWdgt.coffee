@@ -23,7 +23,6 @@ class PlotsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
     switcherooWm.fullRawMoveTo new Point 90, Math.floor((world.height()-192)/2)
     switcherooWm.fullRawMoveWithin world
     world.add switcherooWm
-    switcherooWm.changed()
 
     return switcherooWm
 

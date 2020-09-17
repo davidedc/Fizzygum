@@ -333,7 +333,6 @@ class InspectorMorph2 extends Widget
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
     world.add wm
-    wm.changed()
 
   filterProperties: (targetOwnMethods)->
     if @markOwnershipOfProperties

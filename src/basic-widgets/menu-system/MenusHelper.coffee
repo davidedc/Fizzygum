@@ -23,7 +23,6 @@ class MenusHelper
     wm.fullRawMoveTo world.hand.position()
     wm.fullRawMoveWithin world
     world.add wm
-    wm.changed()
 
 
   createReconfigurablePaint: ->
@@ -33,7 +32,6 @@ class MenusHelper
     wm.fullRawMoveTo world.hand.position()
     wm.fullRawMoveWithin world
     world.add wm
-    wm.changed()
 
   createSimpleSlideWdgt: ->
     simpleSlide = new SimpleSlideWdgt
@@ -42,7 +40,6 @@ class MenusHelper
     wm.fullRawMoveTo world.hand.position()
     wm.fullRawMoveWithin world
     world.add wm
-    wm.changed()
 
   createSimpleButton: ->
     world.create new SimpleRectangularButtonMorph true, @, nil, new IconMorph(nil)
@@ -164,7 +161,6 @@ class MenusHelper
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
     world.add wm
-    wm.changed()
   # this part is excluded from the fizzygum homepage build <<«
 
   createFizzyPaintLauncher: ->
@@ -175,7 +171,6 @@ class MenusHelper
       wm.fullRawMoveTo new Point 174, 114
       wm.fullRawMoveWithin world
       world.add wm
-      wm.changed()
 
       menusHelper.createDrawingsMakerOneOffInfoWindowNextTo wm
     """
@@ -188,7 +183,6 @@ class MenusHelper
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
-    wm.changed()
 
     fizzyPaintLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Draw", new PaintBucketIconWdgt
     # this "add" is going to try to position the reference
@@ -212,7 +206,6 @@ class MenusHelper
       wm.fullRawMoveTo new Point 170, 88
       wm.fullRawMoveWithin world
       world.add wm
-      wm.changed()
 
       menusHelper.createDocsMakerOneOffInfoWindowNextTo wm
     """
@@ -225,7 +218,6 @@ class MenusHelper
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
-    wm.changed()
 
     simpleDocumentLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Docs Maker", new TypewriterIconWdgt
     # this "add" is going to try to position the reference
@@ -249,7 +241,6 @@ class MenusHelper
       wm.fullRawMoveTo new Point 168, 134
       wm.fullRawMoveWithin world
       world.add wm
-      wm.changed()
  
       menusHelper.createSlidesMakerOneOffInfoWindowNextTo wm
 
@@ -263,7 +254,6 @@ class MenusHelper
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
-    wm.changed()
 
     simpleSlideLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Slides Maker", new SimpleSlideIconWdgt
     # this "add" is going to try to position the reference
@@ -287,7 +277,6 @@ class MenusHelper
       wm.fullRawMoveTo world.hand.position()
       wm.fullRawMoveWithin world
       world.add wm
-      wm.changed()
 
       menusHelper.createDashboardsMakerOneOffInfoWindowNextTo wm
     """
@@ -300,7 +289,6 @@ class MenusHelper
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
-    wm.changed()
 
     simpleDashboardsLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Dashboards", new DashboardsIconWdgt
     # this "add" is going to try to position the reference
@@ -319,7 +307,6 @@ class MenusHelper
       wm.fullRawMoveTo world.hand.position()
       wm.fullRawMoveWithin world
       world.add wm
-      wm.changed()
       
       menusHelper.createPatchProgrammingOneOffInfoWindowNextTo wm
     """
@@ -332,7 +319,6 @@ class MenusHelper
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
-    wm.changed()
 
     patchProgrammingLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Patch progr.", new PatchProgrammingIconWdgt
     # this "add" is going to try to position the reference
@@ -350,7 +336,6 @@ class MenusHelper
       wm.fullRawMoveTo world.hand.position()
       wm.fullRawMoveWithin world
       world.add wm
-      wm.changed()
 
       menusHelper.createGenericPanelOneOffInfoWindowNextTo wm
     """
@@ -363,7 +348,6 @@ class MenusHelper
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
-    wm.changed()
 
     genericPanelLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Generic panel", new GenericPanelIconWdgt
     # this "add" is going to try to position the reference
@@ -395,7 +379,6 @@ class MenusHelper
       wm.fullRawMoveTo new Point 170, 170
       wm.fullRawMoveWithin world
       world.add wm
-      wm.changed()
 
       menusHelper.createSuperToolbarOneOffInfoWindowNextTo wm
 
@@ -409,7 +392,6 @@ class MenusHelper
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
-    wm.changed()
 
     toolbarsOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Super Toolbar", new ToolbarsIconWdgt
     toolbarsOpenerLauncher.toolTipMessage = "a toolbar to rule them all"
@@ -537,7 +519,6 @@ class MenusHelper
     wm = new WindowWdgt nil, nil, sdspw
     wm.setExtent new Point 370, 335
     wm.setTitleWithoutPrependedContentName "useful snippets"
-    wm.changed()
 
     return wm
 
@@ -555,7 +536,6 @@ class MenusHelper
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
     world.add wm
-    wm.changed()
 
   createDiffingPatchNode: ->
     diffingPatchNodeWdgt = new DiffingPatchNodeWdgt
@@ -564,7 +544,6 @@ class MenusHelper
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
     world.add wm
-    wm.changed()
 
   createSliderWithSmallestValueAtBottomEnd: ->
     world.create new SliderMorph nil, nil, nil, nil, nil, true
@@ -576,7 +555,6 @@ class MenusHelper
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
     world.add wm
-    wm.changed()
 
   throwAnError: ->
     throw new Error "you manually threw an error!"
@@ -593,7 +571,6 @@ class MenusHelper
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
     world.add wm
-    wm.changed()
 
   createHorizontalMenuPanelPanel: ->
     horizontalMenuPanel = new HorizontalMenuPanelWdgt
@@ -602,7 +579,6 @@ class MenusHelper
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
     world.add wm
-    wm.changed()
 
 
   popUpMore1IconsMenu: (morphOpeningThePopUp) ->
@@ -794,7 +770,6 @@ class MenusHelper
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
     world.add wm
-    wm.changed()
 
   createSimpleLinkWdgt: ->
     simpleLinkWdgt = new SimpleLinkWdgt
@@ -982,7 +957,6 @@ class MenusHelper
     wm.fullRawMoveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Welcome"
-    wm.changed()
 
     simpleDocument.disableDragsDropsAndEditing()
 
@@ -1032,7 +1006,6 @@ class MenusHelper
     wm.fullRawMoveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Super Toolbar info"
-    wm.changed()
 
     simpleDocument.disableDragsDropsAndEditing()
     world.infoDoc_superToolbar_created = true
@@ -1098,7 +1071,6 @@ class MenusHelper
     wm.fullRawMoveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Docs Maker info"
-    wm.changed()
 
     simpleDocument.disableDragsDropsAndEditing()
     world.infoDoc_docsMaker_created = true
@@ -1164,7 +1136,6 @@ class MenusHelper
     wm.fullRawMoveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Drawings Maker info"
-    wm.changed()
 
     simpleDocument.disableDragsDropsAndEditing()
     world.infoDoc_drawingsMaker_created = true
@@ -1222,7 +1193,6 @@ class MenusHelper
     wm.fullRawMoveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Slides Maker info"
-    wm.changed()
 
     simpleDocument.disableDragsDropsAndEditing()
     world.infoDoc_slidesMaker_created = true
@@ -1280,7 +1250,6 @@ class MenusHelper
     wm.fullRawMoveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Dashboards Maker info"
-    wm.changed()
 
     simpleDocument.disableDragsDropsAndEditing()
     world.infoDoc_dashboardsMaker_created = true
@@ -1344,7 +1313,6 @@ class MenusHelper
     wm.fullRawMoveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Patch Programming info"
-    wm.changed()
 
     simpleDocument.disableDragsDropsAndEditing()
     world.infoDoc_patchProgramming_created = true
@@ -1401,7 +1369,6 @@ class MenusHelper
     wm.fullRawMoveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Generic Panels info"
-    wm.changed()
 
     simpleDocument.disableDragsDropsAndEditing()
     world.infoDoc_genericPanel_created = true
@@ -1451,7 +1418,6 @@ class MenusHelper
     wm.fullRawMoveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Basement info"
-    wm.changed()
 
     simpleDocument.disableDragsDropsAndEditing()
     world.infoDoc_basement_created = true
@@ -1513,7 +1479,6 @@ class MenusHelper
     wm.fullRawMoveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Windows info"
-    wm.changed()
 
     simpleDocument.disableDragsDropsAndEditing()
     world.infoDoc_windowsToolbar_created = true
@@ -1546,7 +1511,6 @@ class MenusHelper
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
-    wm.changed()
 
     degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "°C ↔ °F", new DegreesConverterIconWdgt
     # this "add" is going to try to position the reference
@@ -1575,7 +1539,6 @@ class MenusHelper
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
-    wm.changed()
 
     degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "sample dashb", new GenericShortcutIconWdgt new DashboardsIconWdgt
     # this "add" is going to try to position the reference
@@ -1604,7 +1567,6 @@ class MenusHelper
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
-    wm.changed()
 
     degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "sample slide", new GenericShortcutIconWdgt new SimpleSlideIconWdgt
     # this "add" is going to try to position the reference
@@ -1634,7 +1596,6 @@ class MenusHelper
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
-    wm.changed()
 
     degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "sample doc", new GenericShortcutIconWdgt new TypewriterIconWdgt
     # this "add" is going to try to position the reference
@@ -1713,7 +1674,6 @@ class MenusHelper
     wm.rawSetExtent new Point 596, 592
     world.add wm
     wm.setTitleWithoutPrependedContentName "Sample slide"
-    wm.changed()
 
     slideWdgt.disableDragsDropsAndEditing()
     
@@ -1784,7 +1744,6 @@ class MenusHelper
     wm.fullRawMoveTo new Point 257, 110
     world.add wm
     wm.setTitleWithoutPrependedContentName "Sample text document"
-    wm.changed()
 
     simpleDocument.disableDragsDropsAndEditing()
 
@@ -1908,7 +1867,6 @@ class MenusHelper
     wm.rawSetExtent new Point 596, 592
     world.add wm
     wm.setTitleWithoutPrependedContentName "Sample dashboard"
-    wm.changed()
 
 
     slideWdgt.disableDragsDropsAndEditing()
@@ -2007,7 +1965,6 @@ class MenusHelper
     wm.rawSetExtent new Point 596, 592
     world.add wm
     wm.setTitleWithoutPrependedContentName "°C ↔ °F converter"
-    wm.changed()
 
 
     patchProgrammingWdgt.disableDragsDropsAndEditing()
@@ -2040,7 +1997,6 @@ class MenusHelper
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
-    wm.changed()
 
     toolbarsOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "How to save?", new FloppyDiskIconWdgt
     # this "add" is going to try to position the reference
@@ -2122,7 +2078,6 @@ class MenusHelper
     world.add wm
     wm.rememberFractionalSituationInHoldingPanel()
     wm.setTitleWithoutPrependedContentName "How to save?"
-    wm.changed()
 
     simpleDocument.disableDragsDropsAndEditing()
 
