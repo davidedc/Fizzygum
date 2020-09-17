@@ -71,7 +71,14 @@ class StretchablePanelWdgt extends PanelWdgt
     # the bad news here is that doLayout cannot take in input a fractional position yet
     for w in childrenNotHandlesNorCarets
       w.fullRawMoveInStretchablePanelToFractionalPosition newBoundsForThisLayout
-      w.rawSetExtentToFractionalExtentInPaneUserHasSet newBoundsForThisLayout      
+      w.rawSetExtentToFractionalExtentInPaneUserHasSet newBoundsForThisLayout
+
+      # Since we can't call doLayout with fractional position/bounds yet (TODO), we
+      # have set the raw position and extent directly, and
+      # we now still need to invoke doLayout.
+      w.desiredPosition = nil
+      w.desiredExtent = nil
+      w.doLayout()
 
     @rawSetBounds newBoundsForThisLayout
 
