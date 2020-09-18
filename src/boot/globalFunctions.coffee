@@ -678,12 +678,24 @@ getRandomInt = (min, max) ->
 #     window[eachSource]?.class?.nonStaticPropertiesSources.doLayout?
 # 
 # allSourcesWithDoLayoutWithoutSuper = allSourcesWithDoLayout.filter (eachSource) ->
+#     if eachSource == "Widget" then return false
 #     doLayoutMethod = window[eachSource].class.nonStaticPropertiesSources.doLayout
-#     doLayoutLineByLine = doLayoutMethod.split("\n")
-#     doLayoutLastLines = doLayoutLineByLine.slice(Math.max(doLayoutLineByLine.length - 5, 1))
+#     doLayoutNoEmptyLines = doLayoutMethod.replace /^ *$/gm, ""
+#     doLayoutNoEmptyLines = doLayoutNoEmptyLines.replace /\n+/g, "\n"
+#     doLayoutLineByLine = doLayoutNoEmptyLines.split "\n"
+#     doLayoutLastLines = doLayoutLineByLine.slice Math.max doLayoutLineByLine.length - 5, 1
 #     doLayoutLastLinesJoined = doLayoutLastLines.join "\n"
-#     if !doLayoutLastLinesJoined.includes("super")
-#       console.log eachSource + "-------------------------"
-#       console.log doLayoutLastLinesJoined
+#     if doLayoutLastLinesJoined.includes "super"
+#       return false
+#     console.log eachSource + "-------------------------"
+#     console.log doLayoutLastLinesJoined
+#     return true
+#
+# allSourcesWithDoLayoutCallingRaw  = allSourcesWithDoLayout.filter (eachSource) ->
+#     doLayoutMethod = window[eachSource].class.nonStaticPropertiesSources.doLayout
+#     if doLayoutMethod.match /raw/i
+#       console.log "x " + eachSource
 #       return true
-#     return false
+#     else
+#       console.log "✓ " + eachSource
+#       return false
