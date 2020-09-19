@@ -668,10 +668,16 @@ getRandomInt = (min, max) ->
 # ----------------------------------------------------------------------------
 # Draft example of source check done within the system (to be completed) TODO
 # ----------------------------------------------------------------------------
-# allSources = Object.keys(window).filter (eachSourceFile) ->
+# allSourceFilesNames = Object.keys(window).filter (eachSourceFile) ->
 #     eachSourceFile.endsWith "_coffeSource"
 # 
-# allSourcesJustClassName = allSources.map (eachSourceFile) ->
+# allSourcesIncludingReLayoutCall = allSourceFilesNames.filter (eachSourceFile) ->
+#     window[eachSourceFile].replace(/^ *#.*$/gm, "").match /[@\.]reLayout/
+# 
+# allSourcesIncludingQuestionMark = allSourceFilesNames.filter (eachSourceFile) ->
+#     window[eachSourceFile].replace(/^ *#.*$/gm, "").match /\?/
+# 
+# allSourcesJustClassName = allSourceFilesNames.map (eachSourceFile) ->
 #     eachSourceFile.replace "_coffeSource", ""
 # 
 # allSourcesWithDoLayout = allSourcesJustClassName.filter (eachSource) ->
@@ -679,7 +685,7 @@ getRandomInt = (min, max) ->
 # 
 # allSourcesWithDoLayoutWithoutSuper = allSourcesWithDoLayout.filter (eachSource) ->
 #     if eachSource == "Widget" then return false
-#     doLayoutMethod = window[eachSource].class.nonStaticPropertiesSources.doLayout
+#     doLayoutMethod = window[eachSource].class.nonStaticPropertiesSources.doLayout.replace(/^ *#.*$/gm, "")
 #     doLayoutNoEmptyLines = doLayoutMethod.replace /^ *$/gm, ""
 #     doLayoutNoEmptyLines = doLayoutNoEmptyLines.replace /\n+/g, "\n"
 #     doLayoutLineByLine = doLayoutNoEmptyLines.split "\n"
@@ -692,10 +698,16 @@ getRandomInt = (min, max) ->
 #     return true
 #
 # allSourcesWithDoLayoutCallingRaw  = allSourcesWithDoLayout.filter (eachSource) ->
-#     doLayoutMethod = window[eachSource].class.nonStaticPropertiesSources.doLayout
+#     doLayoutMethod = window[eachSource].class.nonStaticPropertiesSources.doLayout.replace(/^ *#.*$/gm, "")
 #     if doLayoutMethod.match /raw/i
 #       console.log "x " + eachSource
 #       return true
 #     else
 #       console.log "✓ " + eachSource
 #       return false
+#
+# allSourcesWithReLayoutMethod = allSourcesJustClassName.filter (eachSource) ->
+#     window[eachSource]?.class?.nonStaticPropertiesSources.reLayout?
+#
+# allSourcesWithReLayoutMethod = allSourcesJustClassName.filter (eachSource) ->
+#     window[eachSource]?.class?.nonStaticPropertiesSources.reLayout?
