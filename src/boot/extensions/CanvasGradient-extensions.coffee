@@ -1,3 +1,7 @@
+# before monkey-patching, consider whether you could/should
+# just create a class that extends this one, and has the extra
+# functionality that you want
+
 # canvas gradients might be tied to a specific context
 # (unclear to me at the moment), so to keep things
 # simple we just return NIL and we ask to the user of the

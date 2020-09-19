@@ -1,3 +1,7 @@
+# before monkey-patching, consider whether you could/should
+# just create a class that extends this one, and has the extra
+# functionality that you want
+
 HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
   haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf(@)
   if  haveIBeenCopiedAlready >= 0
