@@ -2,30 +2,56 @@
 
 class SourceVault
 
+  @runAllAnalyses: ->
+    console.log "allSourcesIncludingReLayoutCall -----------------"
+    console.log @allSourcesIncludingReLayoutCall()
+
+    console.log "allSourcesIncludingQuestionMark -----------------"
+    console.log @allSourcesIncludingQuestionMark()
+
+    console.log "allSourcesWithDoLayout -----------------"
+    console.log @allSourcesWithDoLayout()
+
+    console.log "allSourcesWithDoLayoutWithoutSuper -----------------"
+    console.log @allSourcesWithDoLayoutWithoutSuper()
+
+    console.log "allSourcesWithDoLayoutCallingRaw -----------------"
+    console.log @allSourcesWithDoLayoutCallingRaw()
+
+    console.log "allSourcesWithReLayoutMethod -----------------"
+    console.log @allSourcesWithReLayoutMethod()
+
+  @getSourceContent: (sourceFileName) ->
+    if !window[sourceFileName]?
+      return nil
+    stringToBeReturned = new Source window[sourceFileName]
+    return stringToBeReturned
+
   @allSourceFilesNames: ->
-    Object.keys(window).filter (eachSourceFile) ->
+    Object.keys(window).filter (eachSourceFile) =>
       eachSourceFile.endsWith "_coffeSource"
   
   @allSourcesIncludingReLayoutCall: ->
-    @allSourceFilesNames().filter (eachSourceFile) ->
-      window[eachSourceFile].replace(/^ *#.*$/gm, "").match /[@\.]reLayout/
+    @allSourceFilesNames().filter (eachSourceFile) =>
+      @getSourceContent(eachSourceFile).stripComments().match /[@\.]reLayout/
   
   @allSourcesIncludingQuestionMark: ->
-    @allSourceFilesNames().filter (eachSourceFile) ->
-      window[eachSourceFile].replace(/^ *#.*$/gm, "").match /\?/
+    @allSourceFilesNames().filter (eachSourceFile) =>
+      @getSourceContent(eachSourceFile).stripComments().match /\?/
   
   @allSourcesJustClassName: ->
-    @allSourceFilesNames().map (eachSourceFile) ->
+    @allSourceFilesNames().map (eachSourceFile) =>
       eachSourceFile.replace "_coffeSource", ""
   
   @allSourcesWithDoLayout: ->
-    @allSourcesJustClassName().filter (eachSource) ->
+    @allSourcesJustClassName().filter (eachSource) =>
       window[eachSource]?.class?.nonStaticPropertiesSources.doLayout?
   
   @allSourcesWithDoLayoutWithoutSuper: ->
-    @allSourcesWithDoLayout().filter (eachSource) ->
+    @allSourcesWithDoLayout().filter (eachSource) =>
       if eachSource == "Widget" then return false
-      doLayoutMethod = window[eachSource].class.nonStaticPropertiesSources.doLayout.replace(/^ *#.*$/gm, "")
+      doLayoutMethod = new Source window[eachSource].class.nonStaticPropertiesSources.doLayout
+      doLayoutMethod = doLayoutMethod.stripComments()
       doLayoutNoEmptyLines = doLayoutMethod.replace /^ *$/gm, ""
       doLayoutNoEmptyLines = doLayoutNoEmptyLines.replace /\n+/g, "\n"
       doLayoutLineByLine = doLayoutNoEmptyLines.split "\n"
@@ -38,8 +64,9 @@ class SourceVault
       return true
 
   @allSourcesWithDoLayoutCallingRaw: ->
-    @allSourcesWithDoLayout().filter (eachSource) ->
-      doLayoutMethod = window[eachSource].class.nonStaticPropertiesSources.doLayout.replace(/^ *#.*$/gm, "")
+    @allSourcesWithDoLayout().filter (eachSource) =>
+      doLayoutMethod = new Source window[eachSource].class.nonStaticPropertiesSources.doLayout
+      doLayoutMethod = doLayoutMethod.stripComments()
       if doLayoutMethod.match /raw/i
         console.log "x " + eachSource
         return true
@@ -48,5 +75,5 @@ class SourceVault
         return false
 
   @allSourcesWithReLayoutMethod: ->
-    @allSourcesJustClassName().filter (eachSource) ->
+    @allSourcesJustClassName().filter (eachSource) =>
       window[eachSource]?.class?.nonStaticPropertiesSources.reLayout?
