@@ -51,10 +51,8 @@ class SourceVault
     @allSourcesWithDoLayout().filter (eachSource) =>
       if eachSource == "Widget" then return false
       doLayoutMethod = new Source window[eachSource].class.nonStaticPropertiesSources.doLayout
-      doLayoutMethod = doLayoutMethod.stripComments()
-      doLayoutNoEmptyLines = doLayoutMethod.replace /^ *$/gm, ""
-      doLayoutNoEmptyLines = doLayoutNoEmptyLines.replace /\n+/g, "\n"
-      doLayoutLineByLine = doLayoutNoEmptyLines.split "\n"
+      doLayoutMethod = doLayoutMethod.stripComments().removeLineEndSpaces().collapseLastEmptyLines()
+      doLayoutLineByLine = doLayoutMethod.split "\n"
       doLayoutLastLines = doLayoutLineByLine.slice Math.max doLayoutLineByLine.length - 5, 1
       doLayoutLastLinesJoined = doLayoutLastLines.join "\n"
       if doLayoutLastLinesJoined.includes "super"
