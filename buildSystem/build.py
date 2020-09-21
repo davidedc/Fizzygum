@@ -188,6 +188,7 @@ def main():
     filenames = sorted(filenames + sorted(glob("src/patch-programming" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/buttons" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/icons" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/extendable-base-classes" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/meta" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/apps" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/graphs-plots-charts" + "/*.coffee")))

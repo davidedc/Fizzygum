@@ -50,8 +50,8 @@ class SourceVault
   @allSourcesWithDoLayoutWithoutSuper: ->
     @allSourcesWithDoLayout().filter (eachSource) =>
       if eachSource == "Widget" then return false
-      doLayoutMethod = new Source window[eachSource].class.nonStaticPropertiesSources.doLayout
-      doLayoutMethod = doLayoutMethod.stripComments().removeLineEndSpaces().collapseLastEmptyLines()
+      doLayoutMethod = NonStaticPropertyOfClassSource.fromFileAndMethodName eachSource, "doLayout"
+      doLayoutMethod = doLayoutMethod.stripComments().collapseLinesWithOnlySpaces().collapseLastEmptyLines()
       doLayoutLineByLine = doLayoutMethod.split "\n"
       doLayoutLastLines = doLayoutLineByLine.slice Math.max doLayoutLineByLine.length - 5, 1
       doLayoutLastLinesJoined = doLayoutLastLines.join "\n"
@@ -63,7 +63,7 @@ class SourceVault
 
   @allSourcesWithDoLayoutCallingRaw: ->
     @allSourcesWithDoLayout().filter (eachSource) =>
-      doLayoutMethod = new Source window[eachSource].class.nonStaticPropertiesSources.doLayout
+      doLayoutMethod = NonStaticPropertyOfClassSource.fromFileAndMethodName eachSource, "doLayout"
       doLayoutMethod = doLayoutMethod.stripComments()
       if doLayoutMethod.match /raw/i
         console.log "x " + eachSource
