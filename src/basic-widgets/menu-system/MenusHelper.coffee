@@ -163,40 +163,92 @@ class MenusHelper
     world.add wm
   # this part is excluded from the fizzygum homepage build <<«
 
-  createFizzyPaintLauncher: ->
-    scriptWdgt = new ScriptWdgt """
-      reconfPaint = new ReconfigurablePaintWdgt
-      wm = new WindowWdgt nil, nil, reconfPaint
-      wm.setExtent new Point 460, 400
-      wm.fullRawMoveTo new Point 174, 114
-      wm.fullRawMoveWithin world
-      world.add wm
+  # ------------------------------------------------------------------------
 
-      menusHelper.createDrawingsMakerOneOffInfoWindowNextTo wm
-    """
-    # the starting script string above is not
-    # actually saved, it's just there as starting
-    # content, so let's save it
-    scriptWdgt.saveScript()
-
-    wm = new WindowWdgt nil, nil, scriptWdgt
+  launchFizzyPaint: ->
+    reconfPaint = new ReconfigurablePaintWdgt
+    wm = new WindowWdgt nil, nil, reconfPaint
     wm.setExtent new Point 460, 400
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveTo new Point 174, 114
     wm.fullRawMoveWithin world
+    world.add wm
 
-    fizzyPaintLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Draw", new PaintBucketIconWdgt
+    menusHelper.createDrawingsMakerOneOffInfoWindowNextTo wm
+
+  createFizzyPaintLauncher: ->
+    fizzyPaintLauncher = new IconicDesktopSystemWindowedAppLauncherWdgt "Draw", new PaintBucketIconWdgt, @, "launchFizzyPaint"
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add fizzyPaintLauncher
     fizzyPaintLauncher.setExtent new Point 75, 75
     fizzyPaintLauncher.fullChanged()
-    return wm
 
-  # »>> this part is excluded from the fizzygum homepage build
-  createFizzyPaintLauncherAndItsIcon: ->
-    wm = @createFizzyPaintLauncher()
+  createDrawingsMakerOneOffInfoWindowNextTo: (nextToThisWidget) ->
+    if world.infoDoc_drawingsMaker_created
+      return nil
+
+    simpleDocument = new SimpleDocumentWdgt
+    sdspw = simpleDocument.simpleDocumentScrollPanel
+
+    sdspw.fullRawMoveTo new Point 114, 10
+    sdspw.rawSetExtent new Point 365, 405
+
+    startingContent = new PaintBucketIconWdgt
+    startingContent.rawSetExtent new Point 85, 85
+
+    sdspw.setContents startingContent, 5
+    startingContent.layoutSpecDetails.setElasticity 0
+    startingContent.layoutSpecDetails.setAlignmentToCenter()
+
+    startingContent = new SimplePlainTextWdgt(
+      "Drawings Maker",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+    startingContent.alignCenter()
+    startingContent.setFontSize 22
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+    sdspw.add startingContent
+
+    sdspw.addDivider()    
+
+    sdspw.addNormalParagraph "Simple paint app. But you can drop anything inside it (try with the clock) to 'use it as a stamp'."
+
+    sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
+    sdspw.addNormalParagraph "To see an example of use, check out the video here:"
+
+    startingContent = new SimpleVideoLinkWdgt "Draw app", "http://fizzygum.org/docs/draw-app/"
+    startingContent.rawSetExtent new Point 405, 50
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    sdspw.addNormalParagraph "You can also edit the tools you use, by clicking on the pencil icon next to the tool."
+    sdspw.addNormalParagraph "To see how an example of editing the tools, see this video:"
+
+    startingContent = new SimpleVideoLinkWdgt "Hacking Fizzygum", "http://fizzygum.org/docs/hacking-fizzygum/"
+    startingContent.rawSetExtent new Point 405, 50
+    sdspw.add startingContent
+    startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    wm = new WindowWdgt nil, nil, simpleDocument
+    wm.rawSetExtent new Point 365, 405
+    wm.fullRawMoveFullCenterTo world.center()
     world.add wm
-  # this part is excluded from the fizzygum homepage build <<«
+    wm.setTitleWithoutPrependedContentName "Drawings Maker info"
+
+    simpleDocument.disableDragsDropsAndEditing()
+    world.infoDoc_drawingsMaker_created = true
+
+    # if we don't do this, the window would ask to save content
+    # when closed. Just destroy it instead, since we only show
+    # it once.
+    # TODO: should be done using a flag, we don't like
+    # to inject code like this: the source is not tracked
+    simpleDocument.closeFromContainerWindow = (containerWindow) ->
+      containerWindow.destroy()
+
+    wm.fullRawMoveToSideOf nextToThisWidget
+    wm.rememberFractionalSituationInHoldingPanel()
+
+  # ------------------------------------------------------------------------
 
   createSimpleDocumentLauncher: ->
     scriptWdgt = new ScriptWdgt """
@@ -1074,71 +1126,6 @@ class MenusHelper
 
     simpleDocument.disableDragsDropsAndEditing()
     world.infoDoc_docsMaker_created = true
-
-    # if we don't do this, the window would ask to save content
-    # when closed. Just destroy it instead, since we only show
-    # it once.
-    # TODO: should be done using a flag, we don't like
-    # to inject code like this: the source is not tracked
-    simpleDocument.closeFromContainerWindow = (containerWindow) ->
-      containerWindow.destroy()
-
-    wm.fullRawMoveToSideOf nextToThisWidget
-    wm.rememberFractionalSituationInHoldingPanel()
-
-  createDrawingsMakerOneOffInfoWindowNextTo: (nextToThisWidget) ->
-    if world.infoDoc_drawingsMaker_created
-      return nil
-
-    simpleDocument = new SimpleDocumentWdgt
-    sdspw = simpleDocument.simpleDocumentScrollPanel
-
-    sdspw.fullRawMoveTo new Point 114, 10
-    sdspw.rawSetExtent new Point 365, 405
-
-    startingContent = new PaintBucketIconWdgt
-    startingContent.rawSetExtent new Point 85, 85
-
-    sdspw.setContents startingContent, 5
-    startingContent.layoutSpecDetails.setElasticity 0
-    startingContent.layoutSpecDetails.setAlignmentToCenter()
-
-    startingContent = new SimplePlainTextWdgt(
-      "Drawings Maker",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
-    startingContent.alignCenter()
-    startingContent.setFontSize 22
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    sdspw.add startingContent
-
-    sdspw.addDivider()    
-
-    sdspw.addNormalParagraph "Simple paint app. But you can drop anything inside it (try with the clock) to 'use it as a stamp'."
-
-    sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
-    sdspw.addNormalParagraph "To see an example of use, check out the video here:"
-
-    startingContent = new SimpleVideoLinkWdgt "Draw app", "http://fizzygum.org/docs/draw-app/"
-    startingContent.rawSetExtent new Point 405, 50
-    sdspw.add startingContent
-    startingContent.layoutSpecDetails.setAlignmentToRight()
-
-    sdspw.addNormalParagraph "You can also edit the tools you use, by clicking on the pencil icon next to the tool."
-    sdspw.addNormalParagraph "To see how an example of editing the tools, see this video:"
-
-    startingContent = new SimpleVideoLinkWdgt "Hacking Fizzygum", "http://fizzygum.org/docs/hacking-fizzygum/"
-    startingContent.rawSetExtent new Point 405, 50
-    sdspw.add startingContent
-    startingContent.layoutSpecDetails.setAlignmentToRight()
-
-    wm = new WindowWdgt nil, nil, simpleDocument
-    wm.rawSetExtent new Point 365, 405
-    wm.fullRawMoveFullCenterTo world.center()
-    world.add wm
-    wm.setTitleWithoutPrependedContentName "Drawings Maker info"
-
-    simpleDocument.disableDragsDropsAndEditing()
-    world.infoDoc_drawingsMaker_created = true
 
     # if we don't do this, the window would ask to save content
     # when closed. Just destroy it instead, since we only show

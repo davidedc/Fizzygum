@@ -3303,7 +3303,7 @@ class Widget extends TreeNode
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Shortcuts & Scripts"
     menu.addMenuItem "basement shortcut", true, menusHelper, "basementIconAndText"
     menu.addMenuItem "new script", true, menusHelper, "newScriptWindow"
-    menu.addMenuItem "Fizzypaint launcher", true, menusHelper, "createFizzyPaintLauncherAndItsIcon"
+    menu.addMenuItem "Fizzypaint launcher", true, menusHelper, "createFizzyPaintLauncher"
     menu.addMenuItem "Simple doc launcher", true, menusHelper, "createSimpleDocumentLauncherAndItsIcon"
     menu.addMenuItem "Simple slide launcher", true, menusHelper, "createSimpleSlideLauncherAndItsIcon"
     menu.addMenuItem "Link", true, menusHelper, "createSimpleLinkWdgt"
