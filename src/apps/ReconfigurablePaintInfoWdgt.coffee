@@ -10,12 +10,16 @@ class ReconfigurablePaintInfoWdgt extends SimpleDocumentWdgt
     sdspw.fullRawMoveTo new Point 114, 10
     sdspw.rawSetExtent new Point 365, 405
 
+    # ---------------------
+
     startingContent = new PaintBucketIconWdgt
     startingContent.rawSetExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
     startingContent.layoutSpecDetails.setElasticity 0
     startingContent.layoutSpecDetails.setAlignmentToCenter()
+
+    # ---------------------
 
     startingContent = new SimplePlainTextWdgt(
       "Drawings Maker",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
@@ -25,6 +29,8 @@ class ReconfigurablePaintInfoWdgt extends SimpleDocumentWdgt
     startingContent.enableSelecting()
     sdspw.add startingContent
 
+    # ---------------------
+
     sdspw.addDivider()    
 
     sdspw.addNormalParagraph "Simple paint app. But you can drop anything inside it (try with the clock) to 'use it as a stamp'."
@@ -32,18 +38,26 @@ class ReconfigurablePaintInfoWdgt extends SimpleDocumentWdgt
     sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
     sdspw.addNormalParagraph "To see an example of use, check out the video here:"
 
+    # ---------------------
+
     startingContent = new SimpleVideoLinkWdgt "Draw app", "http://fizzygum.org/docs/draw-app/"
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
+    # ---------------------
+
     sdspw.addNormalParagraph "You can also edit the tools you use, by clicking on the pencil icon next to the tool."
     sdspw.addNormalParagraph "To see how an example of editing the tools, see this video:"
+
+    # ---------------------
 
     startingContent = new SimpleVideoLinkWdgt "Hacking Fizzygum", "http://fizzygum.org/docs/hacking-fizzygum/"
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    # ---------------------
 
     wm = new WindowWdgt nil, nil, simpleDocument
     wm.rawSetExtent new Point 365, 405

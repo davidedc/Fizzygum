@@ -10,12 +10,16 @@ class SimpleDocumentInfoWdgt extends SimpleDocumentWdgt
     sdspw.fullRawMoveTo new Point 114, 10
     sdspw.rawSetExtent new Point 365, 405
 
+    # ---------------------
+
     startingContent = new TypewriterIconWdgt
     startingContent.rawSetExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
     startingContent.layoutSpecDetails.setElasticity 0
     startingContent.layoutSpecDetails.setAlignmentToCenter()
+
+    # ---------------------
 
     startingContent = new SimplePlainTextWdgt(
       "Docs Maker",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
@@ -25,9 +29,13 @@ class SimpleDocumentInfoWdgt extends SimpleDocumentWdgt
     startingContent.enableSelecting()
     sdspw.add startingContent
 
+    # ---------------------
+
     sdspw.addDivider()    
 
     sdspw.addNormalParagraph "A basic text editor. But you can drop anything inside it.\n\nNote that the Docs Maker works 'by paragraph': you can drag/drop paragraphs, and when you change the style the whole paragraph is affected.\n\nQuickest way to compose a document is to drag/drop snippets, which you can find by clicking the button that looks like this:"
+
+    # ---------------------
 
     startingContent = new GlassBoxBottomWdgt
     startingContent.add new TemplatesButtonWdgt
@@ -35,15 +43,21 @@ class SimpleDocumentInfoWdgt extends SimpleDocumentWdgt
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToCenter()
 
+    # ---------------------
+
     sdspw.addSpacer()
 
     sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
     sdspw.addNormalParagraph "To see an example of use, check out the video here:"
 
+    # ---------------------
+
     startingContent = new SimpleVideoLinkWdgt "Docs Maker", "http://fizzygum.org/docs/documents-maker/"
     startingContent.rawSetExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
+
+    # ---------------------
 
     wm = new WindowWdgt nil, nil, simpleDocument
     wm.rawSetExtent new Point 365, 405
