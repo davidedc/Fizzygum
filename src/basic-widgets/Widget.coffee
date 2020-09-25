@@ -3304,7 +3304,7 @@ class Widget extends TreeNode
     menu.addMenuItem "basement shortcut", true, menusHelper, "basementIconAndText"
     menu.addMenuItem "new script", true, menusHelper, "newScriptWindow"
     menu.addMenuItem "Fizzypaint launcher", true, menusHelper, "createFizzyPaintLauncher"
-    menu.addMenuItem "Simple doc launcher", true, menusHelper, "createSimpleDocumentLauncherAndItsIcon"
+    menu.addMenuItem "Simple doc launcher", true, menusHelper, "createSimpleDocumentLauncher"
     menu.addMenuItem "Simple slide launcher", true, menusHelper, "createSimpleSlideLauncherAndItsIcon"
     menu.addMenuItem "Link", true, menusHelper, "createSimpleLinkWdgt"
     menu.addMenuItem "Video link", true, menusHelper, "createSimpleVideoLinkWdgt"
