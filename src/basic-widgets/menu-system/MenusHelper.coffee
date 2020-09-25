@@ -166,8 +166,7 @@ class MenusHelper
   # ------------------------------------------------------------------------
 
   launchFizzyPaint: ->
-    reconfPaint = new ReconfigurablePaintWdgt
-    wm = new WindowWdgt nil, nil, reconfPaint
+    wm = new WindowWdgt nil, nil, new ReconfigurablePaintWdgt
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo new Point 174, 114
     wm.fullRawMoveWithin world
