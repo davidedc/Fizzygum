@@ -3,17 +3,17 @@
 class SourceVault
 
   @runAllAnalyses: ->
-    console.log "allSourcesIncludingReLayoutCall -----------------"
-    console.log @allSourcesIncludingReLayoutCall()
+    console.log "allSourcesContainingReLayoutCall -----------------"
+    console.log @allSourcesContainingReLayoutCall()
 
-    console.log "allSourcesIncludingQuestionMark -----------------"
-    console.log @allSourcesIncludingQuestionMark()
+    console.log "allSourcesContainingQuestionMark -----------------"
+    console.log @allSourcesContainingQuestionMark()
 
     console.log "allSourcesWithDoLayout -----------------"
     console.log @allSourcesWithDoLayout()
 
-    console.log "allSourcesIncludingStringifiedCodeForScript -----------------"
-    console.log @allSourcesIncludingStringifiedCodeForScript()
+    console.log "allSourcesContainingStringifiedCodeForScript -----------------"
+    console.log @allSourcesContainingStringifiedCodeForScript()
 
     console.log "allSourcesWithDoLayoutWithoutSuper -----------------"
     console.log @allSourcesWithDoLayoutWithoutSuper()
@@ -34,11 +34,11 @@ class SourceVault
     Object.keys(window).filter (eachSourceFileName) =>
       eachSourceFileName.endsWith "_coffeSource"
   
-  @allSourcesIncludingReLayoutCall: ->
+  @allSourcesContainingReLayoutCall: ->
     @allSourceFilesNames().filter (eachSourceFileName) =>
       @getSourceContent(eachSourceFileName).stripComments().match /[@\.]reLayout/
   
-  @allSourcesIncludingQuestionMark: ->
+  @allSourcesContainingQuestionMark: ->
     @allSourceFilesNames().filter (eachSourceFileName) =>
       @getSourceContent(eachSourceFileName).stripComments().match /\?/
 
@@ -46,7 +46,7 @@ class SourceVault
   # be rare beasts in core codebase. They should only be priviledge
   # of user code, and ideally even there they should be temporary
   # and eventually migrated to code in a class somewhere.
-  @allSourcesIncludingStringifiedCodeForScript: ->
+  @allSourcesContainingStringifiedCodeForScript: ->
     theRegexp = /scriptWdgt \= new ScriptWdgt """/g
     @allSourceFilesNames().filter (eachSourceFileName) =>
       eachSource = @getSourceContent(eachSourceFileName).stripComments()
