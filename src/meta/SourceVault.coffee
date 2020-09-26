@@ -31,16 +31,16 @@ class SourceVault
     return stringToBeReturned
 
   @allSourceFilesNames: ->
-    Object.keys(window).filter (eachSourceFile) =>
-      eachSourceFile.endsWith "_coffeSource"
+    Object.keys(window).filter (eachSourceFileName) =>
+      eachSourceFileName.endsWith "_coffeSource"
   
   @allSourcesIncludingReLayoutCall: ->
-    @allSourceFilesNames().filter (eachSourceFile) =>
-      @getSourceContent(eachSourceFile).stripComments().match /[@\.]reLayout/
+    @allSourceFilesNames().filter (eachSourceFileName) =>
+      @getSourceContent(eachSourceFileName).stripComments().match /[@\.]reLayout/
   
   @allSourcesIncludingQuestionMark: ->
-    @allSourceFilesNames().filter (eachSourceFile) =>
-      @getSourceContent(eachSourceFile).stripComments().match /\?/
+    @allSourceFilesNames().filter (eachSourceFileName) =>
+      @getSourceContent(eachSourceFileName).stripComments().match /\?/
 
   # there should rarely be stringified code - scripts should
   # be rare beasts in core codebase. They should only be priviledge
@@ -48,16 +48,16 @@ class SourceVault
   # and eventually migrated to code in a class somewhere.
   @allSourcesIncludingStringifiedCodeForScript: ->
     theRegexp = /scriptWdgt \= new ScriptWdgt """/g
-    @allSourceFilesNames().filter (eachSourceFile) =>
-      eachSource = @getSourceContent(eachSourceFile).stripComments()
+    @allSourceFilesNames().filter (eachSourceFileName) =>
+      eachSource = @getSourceContent(eachSourceFileName).stripComments()
       # nifty way to count regex matches https://stackoverflow.com/a/1072782
       matchCount = ((eachSource || '').match(theRegexp) || []).length
       if matchCount
-        console.log eachSourceFile + " : " + matchCount + " matches of stringified code (for script)"
+        console.log eachSourceFileName + " : " + matchCount + " matches of stringified code (for script)"
   
   @allSourcesJustClassName: ->
-    @allSourceFilesNames().map (eachSourceFile) =>
-      eachSourceFile.replace "_coffeSource", ""
+    @allSourceFilesNames().map (eachSourceFileName) =>
+      eachSourceFileName.replace "_coffeSource", ""
   
   @allSourcesWithDoLayout: ->
     @allSourcesJustClassName().filter (eachSource) =>
