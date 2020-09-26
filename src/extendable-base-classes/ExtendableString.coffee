@@ -5,8 +5,10 @@
 # is tricky.
 #
 # The reason why we are not *just* extending String is that
-# we get the error:
+# we get the errors:
 #    "String.prototype.toString requires that 'this' be a String"
+#   or
+#    "String.prototype.valueOf requires that 'this' be a String"
 # because of these:
 #    https://stackoverflow.com/questions/46992393/how-to-correctly-inherit-from-string-built-in-class
 #    https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work
