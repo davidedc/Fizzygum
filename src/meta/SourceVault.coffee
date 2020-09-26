@@ -50,6 +50,7 @@ class SourceVault
     theRegexp = /scriptWdgt \= new ScriptWdgt """/g
     @allSourceFilesNames().filter (eachSourceFile) =>
       eachSource = @getSourceContent(eachSourceFile).stripComments()
+      # nifty way to count regex matches https://stackoverflow.com/a/1072782
       matchCount = ((eachSource || '').match(theRegexp) || []).length
       if matchCount
         console.log eachSourceFile + " : " + matchCount + " matches of stringified code (for script)"
