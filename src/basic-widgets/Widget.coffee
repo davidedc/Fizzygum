@@ -1195,6 +1195,8 @@ class Widget extends TreeNode
     @rawSetExtent new Point @extentFractionalInHoldingPanel[0] * boundsOfParent.width(), @extentFractionalInHoldingPanel[1] * boundsOfParent.height()
 
   
+  # this one actually immediately changes the position and
+  # bounds of widgets
   fullRawMoveTo: (aPoint) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
