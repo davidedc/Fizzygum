@@ -12,6 +12,9 @@ class SourceVault
     console.log "allSourcesWithDoLayout -----------------"
     console.log @allSourcesWithDoLayout()
 
+    console.log "allSourcesIncludingStringifiedCodeForScript -----------------"
+    console.log @allSourcesIncludingStringifiedCodeForScript()
+
     console.log "allSourcesWithDoLayoutWithoutSuper -----------------"
     console.log @allSourcesWithDoLayoutWithoutSuper()
 
@@ -38,6 +41,18 @@ class SourceVault
   @allSourcesIncludingQuestionMark: ->
     @allSourceFilesNames().filter (eachSourceFile) =>
       @getSourceContent(eachSourceFile).stripComments().match /\?/
+
+  # there should rarely be stringified code - scripts should
+  # be rare beasts in core codebase. They should only be priviledge
+  # of user code, and ideally even there they should be temporary
+  # and eventually migrated to code in a class somewhere.
+  @allSourcesIncludingStringifiedCodeForScript: ->
+    theRegexp = /scriptWdgt \= new ScriptWdgt """/g
+    @allSourceFilesNames().filter (eachSourceFile) =>
+      eachSource = @getSourceContent(eachSourceFile).stripComments()
+      matchCount = ((eachSource || '').match(theRegexp) || []).length
+      if matchCount
+        console.log eachSourceFile + " : " + matchCount + " matches of stringified code (for script)"
   
   @allSourcesJustClassName: ->
     @allSourceFilesNames().map (eachSourceFile) =>
