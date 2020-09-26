@@ -27,3 +27,7 @@ class ExtendableString extends String
   # adapted from String
   toString: ->
     @_string
+
+  # adapted from String
+  valueOf: ->
+    @_string
