@@ -53,7 +53,7 @@ class SourceVault
       # nifty way to count regex matches https://stackoverflow.com/a/1072782
       matchCount = ((eachSource || '').match(theRegexp) || []).length
       if matchCount
-        console.log eachSourceFileName + " : " + matchCount + " matches of stringified code (for script)"
+        console.log eachSourceFileName + " : " + matchCount + " matches of stringified code (scripts)"
   
   @allSourcesJustClassName: ->
     @allSourceFilesNames().map (eachSourceFileName) =>
