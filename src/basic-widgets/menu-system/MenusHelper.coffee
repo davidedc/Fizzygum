@@ -204,174 +204,119 @@ class MenusHelper
 
   # ------------------------------------------------------------------------
 
-  createSimpleSlideLauncher: ->
-    scriptWdgt = new ScriptWdgt """
-      reconfPaint = new SimpleSlideWdgt
-      wm = new WindowWdgt nil, nil, reconfPaint
-      wm.setExtent new Point 460, 400
-      wm.fullRawMoveTo new Point 168, 134
-      wm.fullRawMoveWithin world
-      world.add wm
- 
-      menusHelper.createSlidesMakerOneOffInfoWindowNextTo wm
-
-    """
-    # the starting script string above is not
-    # actually saved, it's just there as starting
-    # content, so let's save it
-    scriptWdgt.saveScript()
-
-    wm = new WindowWdgt nil, nil, scriptWdgt
+  launchSimpleSlide: ->
+    wm = new WindowWdgt nil, nil, new SimpleSlideWdgt
     wm.setExtent new Point 460, 400
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveTo new Point 168, 134
     wm.fullRawMoveWithin world
+    world.add wm
 
-    simpleSlideLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Slides Maker", new SimpleSlideIconWdgt
+    SimpleSlideInfoWdgt.createNextTo wm
+
+  createSimpleSlideLauncher: ->
+    simpleSlideLauncher = new IconicDesktopSystemWindowedAppLauncherWdgt "Slides Maker", new SimpleSlideIconWdgt, @, "launchSimpleSlide"
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add simpleSlideLauncher
     simpleSlideLauncher.setExtent new Point 75, 75
     simpleSlideLauncher.fullChanged()
-    return wm
 
-  # »>> this part is excluded from the fizzygum homepage build
-  createSimpleSlideLauncherAndItsIcon: ->
-    wm = @createSimpleSlideLauncher()
+  # ------------------------------------------------------------------------
+
+  launchDashboards: ->
+    reconfPaint = new DashboardsWdgt
+    wm = new WindowWdgt nil, nil, reconfPaint
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position()
+    wm.fullRawMoveWithin world
     world.add wm
-  # this part is excluded from the fizzygum homepage build <<«
+
+    DashboardsInfoWdgt.createNextTo wm
 
   createDashboardsLauncher: ->
-    scriptWdgt = new ScriptWdgt """
-      reconfPaint = new DashboardsWdgt
-      wm = new WindowWdgt nil, nil, reconfPaint
-      wm.setExtent new Point 460, 400
-      wm.fullRawMoveTo world.hand.position()
-      wm.fullRawMoveWithin world
-      world.add wm
-
-      menusHelper.createDashboardsMakerOneOffInfoWindowNextTo wm
-    """
-    # the starting script string above is not
-    # actually saved, it's just there as starting
-    # content, so let's save it
-    scriptWdgt.saveScript()
-
-    wm = new WindowWdgt nil, nil, scriptWdgt
-    wm.setExtent new Point 460, 400
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.fullRawMoveWithin world
-
-    simpleDashboardsLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Dashboards", new DashboardsIconWdgt
+    simpleDashboardsLauncher = new IconicDesktopSystemWindowedAppLauncherWdgt "Dashboards", new DashboardsIconWdgt, @, "launchDashboards"
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add simpleDashboardsLauncher
     simpleDashboardsLauncher.setExtent new Point 75, 75
     simpleDashboardsLauncher.fullChanged()
-    return wm
 
+
+  # ------------------------------------------------------------------------
+
+  launchPatchProgramming: ->
+    patchProgramming = new PatchProgrammingWdgt
+    wm = new WindowWdgt nil, nil, patchProgramming
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position()
+    wm.fullRawMoveWithin world
+    world.add wm
+    
+    PatchProgrammingInfoWdgt.createNextTo wm
 
   createPatchProgrammingLauncher: ->
-    scriptWdgt = new ScriptWdgt """
-      patchProgramming = new PatchProgrammingWdgt
-      wm = new WindowWdgt nil, nil, patchProgramming
-      wm.setExtent new Point 460, 400
-      wm.fullRawMoveTo world.hand.position()
-      wm.fullRawMoveWithin world
-      world.add wm
-      
-      menusHelper.createPatchProgrammingOneOffInfoWindowNextTo wm
-    """
-    # the starting script string above is not
-    # actually saved, it's just there as starting
-    # content, so let's save it
-    scriptWdgt.saveScript()
-
-    wm = new WindowWdgt nil, nil, scriptWdgt
-    wm.setExtent new Point 460, 400
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.fullRawMoveWithin world
-
-    patchProgrammingLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Patch progr.", new PatchProgrammingIconWdgt
+    patchProgrammingLauncher = new IconicDesktopSystemWindowedAppLauncherWdgt "Patch progr.", new PatchProgrammingIconWdgt, @, "launchPatchProgramming"
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add patchProgrammingLauncher
     patchProgrammingLauncher.setExtent new Point 75, 75
     patchProgrammingLauncher.fullChanged()
-    return wm
+
+  # ------------------------------------------------------------------------
+
+  launchGenericPanel: ->
+    genericPanel = new StretchableEditableWdgt
+    wm = new WindowWdgt nil, nil, genericPanel
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position()
+    wm.fullRawMoveWithin world
+    world.add wm
+
+    GenericPanelInfoWdgt.createNextTo wm
 
   createGenericPanelLauncher: ->
-    scriptWdgt = new ScriptWdgt """
-      genericPanel = new StretchableEditableWdgt
-      wm = new WindowWdgt nil, nil, genericPanel
-      wm.setExtent new Point 460, 400
-      wm.fullRawMoveTo world.hand.position()
-      wm.fullRawMoveWithin world
-      world.add wm
-
-      menusHelper.createGenericPanelOneOffInfoWindowNextTo wm
-    """
-    # the starting script string above is not
-    # actually saved, it's just there as starting
-    # content, so let's save it
-    scriptWdgt.saveScript()
-
-    wm = new WindowWdgt nil, nil, scriptWdgt
-    wm.setExtent new Point 460, 400
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.fullRawMoveWithin world
-
-    genericPanelLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Generic panel", new GenericPanelIconWdgt
+    genericPanelLauncher = new IconicDesktopSystemWindowedAppLauncherWdgt "Generic panel", new GenericPanelIconWdgt, @, "launchGenericPanel"
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add genericPanelLauncher
     genericPanelLauncher.setExtent new Point 75, 75
     genericPanelLauncher.fullChanged()
-    return wm
+
+  # ------------------------------------------------------------------------
+
+  launchToolbars: ->
+    # tools -------------------------------
+    toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
+
+    toolsPanel.addMany [
+      new TextToolbarCreatorButtonWdgt
+      new UsefulTextSnippetsToolbarCreatorButtonWdgt
+      new SlidesToolbarCreatorButtonWdgt
+      new PlotsToolbarCreatorButtonWdgt
+      new PatchProgrammingComponentsToolbarCreatorButtonWdgt
+      new WindowsToolbarCreatorButtonWdgt
+    ]
+
+    toolsPanel.disableDragsDropsAndEditing()
+
+    wm = new WindowWdgt nil, nil, toolsPanel
+    wm.setExtent new Point 60, 261
+    wm.fullRawMoveTo new Point 170, 170
+    wm.fullRawMoveWithin world
+    world.add wm
+
+    ToolbarsInfoWdgt.createNextTo wm
 
   createToolbarsOpener: ->
-    scriptWdgt = new ScriptWdgt """
-
-      # tools -------------------------------
-      toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
-
-      toolsPanel.addMany [
-        new TextToolbarCreatorButtonWdgt
-        new UsefulTextSnippetsToolbarCreatorButtonWdgt
-        new SlidesToolbarCreatorButtonWdgt
-        new PlotsToolbarCreatorButtonWdgt
-        new PatchProgrammingComponentsToolbarCreatorButtonWdgt
-        new WindowsToolbarCreatorButtonWdgt
-      ]
-
-      toolsPanel.disableDragsDropsAndEditing()
-
-      wm = new WindowWdgt nil, nil, toolsPanel
-      wm.setExtent new Point 60, 261
-      wm.fullRawMoveTo new Point 170, 170
-      wm.fullRawMoveWithin world
-      world.add wm
-
-      menusHelper.createSuperToolbarOneOffInfoWindowNextTo wm
-
-    """
-    # the starting script string above is not
-    # actually saved, it's just there as starting
-    # content, so let's save it
-    scriptWdgt.saveScript()
-
-    wm = new WindowWdgt nil, nil, scriptWdgt
-    wm.setExtent new Point 460, 400
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.fullRawMoveWithin world
-
-    toolbarsOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Super Toolbar", new ToolbarsIconWdgt
+    toolbarsOpenerLauncher = new IconicDesktopSystemWindowedAppLauncherWdgt "Super Toolbar", new ToolbarsIconWdgt, @, "launchToolbars"
     toolbarsOpenerLauncher.toolTipMessage = "a toolbar to rule them all"
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add toolbarsOpenerLauncher
     toolbarsOpenerLauncher.setExtent new Point 75, 75
     toolbarsOpenerLauncher.fullChanged()
-    return wm
+
+  # ------------------------------------------------------------------------
 
   createNewTemplatesWindow: ->
     sdspw = new SimpleDocumentScrollPanelWdgt
@@ -938,293 +883,6 @@ class MenusHelper
     readmeLauncher.setExtent new Point 75, 75
     readmeLauncher.fullChanged()
 
-  createSuperToolbarOneOffInfoWindowNextTo: (nextToThisWidget) ->
-    if world.infoDoc_superToolbar_created
-      return nil
-
-    simpleDocument = new SimpleDocumentWdgt
-    sdspw = simpleDocument.simpleDocumentScrollPanel
-
-    sdspw.fullRawMoveTo new Point 114, 10
-    sdspw.rawSetExtent new Point 365, 405
-
-    startingContent = new ToolbarsIconWdgt
-    startingContent.rawSetExtent new Point 85, 85
-
-    sdspw.setContents startingContent, 5
-    startingContent.layoutSpecDetails.setElasticity 0
-    startingContent.layoutSpecDetails.setAlignmentToCenter()
-
-    startingContent = new SimplePlainTextWdgt(
-      "Super Toolbar",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
-    startingContent.alignCenter()
-    startingContent.setFontSize 22
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    sdspw.add startingContent
-
-    sdspw.addDivider()    
-
-    sdspw.addNormalParagraph "The Super Toolbar can create all other toolbars for you, and from those toolbars you can create any widget.\n\nThis is handy because any widget can go in any document... so here is a way to access them all.\n\nFor an example on how this is useful, see the video on `mixing widgets`:"
-
-    startingContent = new SimpleVideoLinkWdgt "Mixing widgets", "http://fizzygum.org/docs/mixing-widgets/"
-    startingContent.rawSetExtent new Point 405, 50
-    sdspw.add startingContent
-    startingContent.layoutSpecDetails.setAlignmentToRight()
-
-    wm = new WindowWdgt nil, nil, simpleDocument
-    wm.rawSetExtent new Point 365, 405
-    wm.fullRawMoveFullCenterTo world.center()
-    world.add wm
-    wm.setTitleWithoutPrependedContentName "Super Toolbar info"
-
-    simpleDocument.disableDragsDropsAndEditing()
-    world.infoDoc_superToolbar_created = true
-
-    # if we don't do this, the window would ask to save content
-    # when closed. Just destroy it instead, since we only show
-    # it once.
-    # TODO: should be done using a flag, we don't like
-    # to inject code like this: the source is not tracked
-    simpleDocument.closeFromContainerWindow = (containerWindow) ->
-      containerWindow.destroy()
-
-    wm.fullRawMoveToSideOf nextToThisWidget
-    wm.rememberFractionalSituationInHoldingPanel()
-
-  createSlidesMakerOneOffInfoWindowNextTo: (nextToThisWidget) ->
-    if world.infoDoc_slidesMaker_created
-      return nil
-
-    simpleDocument = new SimpleDocumentWdgt
-    sdspw = simpleDocument.simpleDocumentScrollPanel
-
-    sdspw.fullRawMoveTo new Point 114, 10
-    sdspw.rawSetExtent new Point 365, 405
-
-    startingContent = new SimpleSlideIconWdgt
-    startingContent.rawSetExtent new Point 85, 85
-
-    sdspw.setContents startingContent, 5
-    startingContent.layoutSpecDetails.setElasticity 0
-    startingContent.layoutSpecDetails.setAlignmentToCenter()
-
-    startingContent = new SimplePlainTextWdgt(
-      "Slides Maker",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
-    startingContent.alignCenter()
-    startingContent.setFontSize 22
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    sdspw.add startingContent
-
-    sdspw.addDivider()    
-
-    sdspw.addNormalParagraph "Anything you drop inside the slide 'keeps proportion' when resized, which makes it handy to put pins on maps, add callouts, arrange text in custom layouts etc."
-
-    sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
-    sdspw.addNormalParagraph "To see an example of use, check out the video here:"
-
-    startingContent = new SimpleVideoLinkWdgt "Slides Maker", "http://fizzygum.org/docs/slides-maker/"
-    startingContent.rawSetExtent new Point 405, 50
-    sdspw.add startingContent
-    startingContent.layoutSpecDetails.setAlignmentToRight()
-
-    wm = new WindowWdgt nil, nil, simpleDocument
-    wm.rawSetExtent new Point 365, 405
-    wm.fullRawMoveFullCenterTo world.center()
-    world.add wm
-    wm.setTitleWithoutPrependedContentName "Slides Maker info"
-
-    simpleDocument.disableDragsDropsAndEditing()
-    world.infoDoc_slidesMaker_created = true
-
-    # if we don't do this, the window would ask to save content
-    # when closed. Just destroy it instead, since we only show
-    # it once.
-    # TODO: should be done using a flag, we don't like
-    # to inject code like this: the source is not tracked
-    simpleDocument.closeFromContainerWindow = (containerWindow) ->
-      containerWindow.destroy()
-
-    wm.fullRawMoveToSideOf nextToThisWidget
-    wm.rememberFractionalSituationInHoldingPanel()
-
-  createDashboardsMakerOneOffInfoWindowNextTo: (nextToThisWidget) ->
-    if world.infoDoc_dashboardsMaker_created
-      return nil
-
-    simpleDocument = new SimpleDocumentWdgt
-    sdspw = simpleDocument.simpleDocumentScrollPanel
-
-    sdspw.fullRawMoveTo new Point 114, 10
-    sdspw.rawSetExtent new Point 365, 405
-
-    startingContent = new DashboardsIconWdgt
-    startingContent.rawSetExtent new Point 85, 85
-
-    sdspw.setContents startingContent, 5
-    startingContent.layoutSpecDetails.setElasticity 0
-    startingContent.layoutSpecDetails.setAlignmentToCenter()
-
-    startingContent = new SimplePlainTextWdgt(
-      "Dashboards Maker",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
-    startingContent.alignCenter()
-    startingContent.setFontSize 22
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    sdspw.add startingContent
-
-    sdspw.addDivider()    
-
-    sdspw.addNormalParagraph "Lets you arrange a choice of graphs/charts/plots/maps in any way you please. The visualisations can also be interactive (as in the 3D plot example, which you can drag to rotate) and/or calculated on the fly.\n\nOn the bar on the left you can find four example graphs and two example maps."
-
-    sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
-    sdspw.addNormalParagraph "To see an example of use, check out the video here:"
-
-    startingContent = new SimpleVideoLinkWdgt "Dashboards Maker", "http://fizzygum.org/docs/dashboards/"
-    startingContent.rawSetExtent new Point 405, 50
-    sdspw.add startingContent
-    startingContent.layoutSpecDetails.setAlignmentToRight()
-
-    wm = new WindowWdgt nil, nil, simpleDocument
-    wm.rawSetExtent new Point 365, 405
-    wm.fullRawMoveFullCenterTo world.center()
-    world.add wm
-    wm.setTitleWithoutPrependedContentName "Dashboards Maker info"
-
-    simpleDocument.disableDragsDropsAndEditing()
-    world.infoDoc_dashboardsMaker_created = true
-
-    # if we don't do this, the window would ask to save content
-    # when closed. Just destroy it instead, since we only show
-    # it once.
-    # TODO: should be done using a flag, we don't like
-    # to inject code like this: the source is not tracked
-    simpleDocument.closeFromContainerWindow = (containerWindow) ->
-      containerWindow.destroy()
-
-    wm.fullRawMoveToSideOf nextToThisWidget
-    wm.rememberFractionalSituationInHoldingPanel()
-
-  createPatchProgrammingOneOffInfoWindowNextTo: (nextToThisWidget) ->
-    if world.infoDoc_patchProgramming_created
-      return nil
-
-    simpleDocument = new SimpleDocumentWdgt
-    sdspw = simpleDocument.simpleDocumentScrollPanel
-
-    sdspw.fullRawMoveTo new Point 114, 10
-    sdspw.rawSetExtent new Point 365, 405
-
-    startingContent = new PatchProgrammingIconWdgt
-    startingContent.rawSetExtent new Point 85, 85
-
-    sdspw.setContents startingContent, 5
-    startingContent.layoutSpecDetails.setElasticity 0
-    startingContent.layoutSpecDetails.setAlignmentToCenter()
-
-    startingContent = new SimplePlainTextWdgt(
-      "Patch Programming",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
-    startingContent.alignCenter()
-    startingContent.setFontSize 22
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    sdspw.add startingContent
-
-    sdspw.addDivider()    
-
-    sdspw.addNormalParagraph "'Patch programming' is a type of visual programming where you simply connect together existing widgets. It's useful to make simple applications/utilities quickly."
-    sdspw.addNormalParagraph "You can imagine the widgets being 'patched together' by imaginary wires."
-    sdspw.addNormalParagraph "You can see in the `example docs` folder a °C ↔ °F converter example made with this."
-    sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
-    sdspw.addNormalParagraph "To see an example of use, check out the videos here:"
-
-    startingContent = new SimpleVideoLinkWdgt "Patch programming - basics", "http://fizzygum.org/docs/basic-connections/"
-    startingContent.rawSetExtent new Point 405, 50
-    sdspw.add startingContent
-    startingContent.layoutSpecDetails.setAlignmentToRight()
-
-    startingContent = new SimpleVideoLinkWdgt "Patch programming - advanced", "http://fizzygum.org/docs/advanced-connections/"
-    startingContent.rawSetExtent new Point 405, 50
-    sdspw.add startingContent
-    startingContent.layoutSpecDetails.setAlignmentToRight()
-
-    wm = new WindowWdgt nil, nil, simpleDocument
-    wm.rawSetExtent new Point 365, 405
-    wm.fullRawMoveFullCenterTo world.center()
-    world.add wm
-    wm.setTitleWithoutPrependedContentName "Patch Programming info"
-
-    simpleDocument.disableDragsDropsAndEditing()
-    world.infoDoc_patchProgramming_created = true
-
-    # if we don't do this, the window would ask to save content
-    # when closed. Just destroy it instead, since we only show
-    # it once.
-    # TODO: should be done using a flag, we don't like
-    # to inject code like this: the source is not tracked
-    simpleDocument.closeFromContainerWindow = (containerWindow) ->
-      containerWindow.destroy()
-
-    wm.fullRawMoveToSideOf nextToThisWidget
-    wm.rememberFractionalSituationInHoldingPanel()
-
-  createGenericPanelOneOffInfoWindowNextTo: (nextToThisWidget) ->
-    if world.infoDoc_genericPanel_created
-      return nil
-
-    simpleDocument = new SimpleDocumentWdgt
-    sdspw = simpleDocument.simpleDocumentScrollPanel
-
-    sdspw.fullRawMoveTo new Point 114, 10
-    sdspw.rawSetExtent new Point 365, 405
-
-    startingContent = new GenericPanelIconWdgt
-    startingContent.rawSetExtent new Point 85, 85
-
-    sdspw.setContents startingContent, 5
-    startingContent.layoutSpecDetails.setElasticity 0
-    startingContent.layoutSpecDetails.setAlignmentToCenter()
-
-    startingContent = new SimplePlainTextWdgt(
-      "Generic Panel",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
-    startingContent.alignCenter()
-    startingContent.setFontSize 22
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    sdspw.add startingContent
-
-    sdspw.addDivider()    
-
-    sdspw.addNormalParagraph "You can use this panel to temporarily hold widgets, or to put together any mix of widgets. It's just a more generic version of slides and dashboards."
-    sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."
-    sdspw.addNormalParagraph "To see an example of use, check out the video here:"
-
-    startingContent = new SimpleVideoLinkWdgt "Mixing widgets (using generic panels)", "http://fizzygum.org/docs/mixing-widgets/"
-    startingContent.rawSetExtent new Point 405, 50
-    sdspw.add startingContent
-    startingContent.layoutSpecDetails.setAlignmentToRight()
-
-    wm = new WindowWdgt nil, nil, simpleDocument
-    wm.rawSetExtent new Point 365, 405
-    wm.fullRawMoveFullCenterTo world.center()
-    world.add wm
-    wm.setTitleWithoutPrependedContentName "Generic Panels info"
-
-    simpleDocument.disableDragsDropsAndEditing()
-    world.infoDoc_genericPanel_created = true
-
-    # if we don't do this, the window would ask to save content
-    # when closed. Just destroy it instead, since we only show
-    # it once.
-    # TODO: should be done using a flag, we don't like
-    # to inject code like this: the source is not tracked
-    simpleDocument.closeFromContainerWindow = (containerWindow) ->
-      containerWindow.destroy()
-
-    wm.fullRawMoveToSideOf nextToThisWidget
-    wm.rememberFractionalSituationInHoldingPanel()
-
   createBasementOneOffInfoWindowNextTo: (nextToThisWidget) ->
     if world.infoDoc_basement_created
       return nil
@@ -1336,24 +994,13 @@ class MenusHelper
     wm.rememberFractionalSituationInHoldingPanel()
     return wm
 
+  # ------------------------------------------------------------------------
+
+  launchDegreesConverter: ->
+    @createDegreesConverterWindowOrBringItUpIfAlreadyCreated()
+
   createDegreesConverterOpener: (inWhichFolder) ->
-    scriptWdgt = new ScriptWdgt """
-
-     menusHelper.createDegreesConverterWindowOrBringItUpIfAlreadyCreated()
-
-
-    """
-    # the starting script string above is not
-    # actually saved, it's just there as starting
-    # content, so let's save it
-    scriptWdgt.saveScript()
-
-    wm = new WindowWdgt nil, nil, scriptWdgt
-    wm.setExtent new Point 460, 400
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.fullRawMoveWithin world
-
-    degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "°C ↔ °F", new DegreesConverterIconWdgt
+    degreesConverterOpenerLauncher = new IconicDesktopSystemWindowedAppLauncherWdgt "°C ↔ °F", new DegreesConverterIconWdgt, @, "launchDegreesConverter"
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     
@@ -1362,26 +1009,14 @@ class MenusHelper
       inWhichFolder.contents.contents.add degreesConverterOpenerLauncher
     else
       world.add degreesConverterOpenerLauncher
-    return wm
+
+  # ------------------------------------------------------------------------
+
+  launchSampleDashboard: ->
+    @createSampleDashboardWindowOrBringItUpIfAlreadyCreated()
 
   createSampleDashboardOpener: (inWhichFolder) ->
-    scriptWdgt = new ScriptWdgt """
-
-     menusHelper.createSampleDashboardWindowOrBringItUpIfAlreadyCreated()
-
-
-    """
-    # the starting script string above is not
-    # actually saved, it's just there as starting
-    # content, so let's save it
-    scriptWdgt.saveScript()
-
-    wm = new WindowWdgt nil, nil, scriptWdgt
-    wm.setExtent new Point 460, 400
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.fullRawMoveWithin world
-
-    degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "sample dashb", new GenericShortcutIconWdgt new DashboardsIconWdgt
+    degreesConverterOpenerLauncher = new IconicDesktopSystemWindowedAppLauncherWdgt "sample dashb", (new GenericShortcutIconWdgt new DashboardsIconWdgt), @, "launchSampleDashboard"
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     
@@ -1390,26 +1025,14 @@ class MenusHelper
       inWhichFolder.contents.contents.add degreesConverterOpenerLauncher
     else
       world.add degreesConverterOpenerLauncher
-    return wm
+
+  # ------------------------------------------------------------------------
+
+  launchSampleSlide: ->
+    @createSampleSlideWindowOrBringItUpIfAlreadyCreated()
 
   createSampleSlideOpener: (inWhichFolder) ->
-    scriptWdgt = new ScriptWdgt """
-
-     menusHelper.createSampleSlideWindowOrBringItUpIfAlreadyCreated()
-
-
-    """
-    # the starting script string above is not
-    # actually saved, it's just there as starting
-    # content, so let's save it
-    scriptWdgt.saveScript()
-
-    wm = new WindowWdgt nil, nil, scriptWdgt
-    wm.setExtent new Point 460, 400
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.fullRawMoveWithin world
-
-    degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "sample slide", new GenericShortcutIconWdgt new SimpleSlideIconWdgt
+    degreesConverterOpenerLauncher = new IconicDesktopSystemWindowedAppLauncherWdgt "sample slide", (new GenericShortcutIconWdgt new SimpleSlideIconWdgt), @, "launchSampleSlide"
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     
@@ -1418,27 +1041,14 @@ class MenusHelper
       inWhichFolder.contents.contents.add degreesConverterOpenerLauncher
     else
       world.add degreesConverterOpenerLauncher
-    return wm
 
+  # ------------------------------------------------------------------------
+
+  launchSampleDoc: ->
+    @createSampleDocWindowOrBringItUpIfAlreadyCreated()
 
   createSampleDocOpener: (inWhichFolder) ->
-    scriptWdgt = new ScriptWdgt """
-
-     menusHelper.createSampleDocWindowOrBringItUpIfAlreadyCreated()
-
-
-    """
-    # the starting script string above is not
-    # actually saved, it's just there as starting
-    # content, so let's save it
-    scriptWdgt.saveScript()
-
-    wm = new WindowWdgt nil, nil, scriptWdgt
-    wm.setExtent new Point 460, 400
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.fullRawMoveWithin world
-
-    degreesConverterOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "sample doc", new GenericShortcutIconWdgt new TypewriterIconWdgt
+    degreesConverterOpenerLauncher = new IconicDesktopSystemWindowedAppLauncherWdgt "sample doc", (new GenericShortcutIconWdgt new TypewriterIconWdgt), @, "launchSampleDoc"
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     
@@ -1447,9 +1057,8 @@ class MenusHelper
       inWhichFolder.contents.contents.add degreesConverterOpenerLauncher
     else
       world.add degreesConverterOpenerLauncher
-    return wm
 
-  
+  # ------------------------------------------------------------------------  
 
   createSampleSlideWindowOrBringItUpIfAlreadyCreated: ->
     if world.sampleSlideWindow?
@@ -1822,31 +1431,20 @@ class MenusHelper
 
     world.degreesConverterWindow = wm
 
+  # ------------------------------------------------------------------------  
+
+  launchHowToSaveMessage: ->
+    @createHowToSaveMessageWindowOrBringItUpIfAlreadyCreated()
+
   createHowToSaveMessageOpener: ->
-    scriptWdgt = new ScriptWdgt """
-
-     menusHelper.createHowToSaveMessageWindowOrBringItUpIfAlreadyCreated()
-
-
-    """
-    # the starting script string above is not
-    # actually saved, it's just there as starting
-    # content, so let's save it
-    scriptWdgt.saveScript()
-
-    wm = new WindowWdgt nil, nil, scriptWdgt
-    wm.setExtent new Point 460, 400
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.fullRawMoveWithin world
-
-    toolbarsOpenerLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "How to save?", new FloppyDiskIconWdgt
+    toolbarsOpenerLauncher = new IconicDesktopSystemWindowedAppLauncherWdgt "How to save?", new FloppyDiskIconWdgt, @, "launchHowToSaveMessage"
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add toolbarsOpenerLauncher
     toolbarsOpenerLauncher.setExtent new Point 75, 75
     toolbarsOpenerLauncher.fullChanged()
-    return wm
 
+  # ------------------------------------------------------------------------  
 
   createHowToSaveMessageWindowOrBringItUpIfAlreadyCreated: ->
     if world.howToSaveDocWindow?
