@@ -168,9 +168,11 @@ loadJSFile = (fileName, dontLogToDiv) ->
     script.src = fileName
     script.async = true # should be the default
 
+    # triggers after the script was loaded and executed
+    # see https://javascript.info/onload-onerror#script-onload
     script.onload = ->
-      addLineToLogDiv "loading " + this.src
-      if srcLoadCompileDebugWrites then console.log "loading " + this.src
+      addLineToLogDiv "loaded and executed " + this.src
+      if srcLoadCompileDebugWrites then console.log "loaded and executed " + this.src
       resolve(script)
 
     document.head.appendChild script
