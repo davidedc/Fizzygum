@@ -408,20 +408,20 @@ boot = ->
   # and parse them ideally in parallel but I didn't measure
   # that).
 
-  bootLoadPromises = [loadJSFilePromise("js/pre-compiled.js")]
+  bootLoadPromises = [loadJSFilePromise "js/pre-compiled.js"]
 
   # TODO rather than relying on this test to load these .js at boot,
   # we should really just dynamically load these when needed
   # (e.g. when tests are run, or when pre-compiled generation is invoked)
 
   if BUILDFLAG_LOAD_TESTS
-    bootLoadPromises.push loadJSFilePromise("js/libs/Mousetrap.min.js")
+    bootLoadPromises.push loadJSFilePromise "js/libs/Mousetrap.min.js"
 
   if BUILDFLAG_LOAD_TESTS or (window.location.href.includes "generatePreCompiled")
-    bootLoadPromises.push loadJSFilePromise("js/libs/FileSaver.min.js")
-    bootLoadPromises.push loadJSFilePromise("js/libs/jszip.min.js")
-    bootLoadPromises.push loadJSFilePromise("js/tests/testsManifest.js")
-    bootLoadPromises.push loadJSFilePromise("js/tests/testsAssetsManifest.js")
+    bootLoadPromises.push loadJSFilePromise "js/libs/FileSaver.min.js"
+    bootLoadPromises.push loadJSFilePromise "js/libs/jszip.min.js"
+    bootLoadPromises.push loadJSFilePromise "js/tests/testsManifest.js"
+    bootLoadPromises.push loadJSFilePromise "js/tests/testsAssetsManifest.js"
 
   (Promise.all bootLoadPromises).then ->
 
