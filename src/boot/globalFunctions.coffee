@@ -406,12 +406,7 @@ boot = ->
   # and parse them ideally in parallel but I didn't measure
   # that).
 
-  bootLoadPromises = [
-    loadJSFile("js/sourceCode/Class_coffeSource.js"),
-    loadJSFile("js/sourceCode/Mixin_coffeSource.js"),
-    loadJSFile("js/libs/coffee-script_2.0.3.js"),
-    loadJSFile("js/pre-compiled.js"),
-  ]
+  bootLoadPromises = [loadJSFile("js/pre-compiled.js")]
 
   # TODO rather than relying on this test to load these .js at boot,
   # we should really just dynamically load these when needed
@@ -435,6 +430,12 @@ boot = ->
       createWorldAndStartStepping()
     else
       addLogDiv()
+  .then ->
+    Promise.all [
+      loadJSFile("js/libs/coffee-script_2.0.3.js"),
+      loadJSFile("js/sourceCode/Class_coffeSource.js"),
+      loadJSFile("js/sourceCode/Mixin_coffeSource.js"),
+    ]
   .then ->
     eval.call window, compileFGCode window["Mixin_coffeSource"], true
     eval.call window, compileFGCode window["Class_coffeSource"], true
