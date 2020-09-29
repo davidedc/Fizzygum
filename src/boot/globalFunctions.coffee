@@ -161,7 +161,7 @@ howManySourcesCompiledAndEvalled = 0
 
 # a helper function to use Promise style
 # instead of callback style when loading a JS
-loadJSFile = (fileName, dontLogToDiv) ->
+loadJSFile = (fileName) ->
   return new Promise (resolve, reject) ->
 
     script = document.createElement "script"
