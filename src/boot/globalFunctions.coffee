@@ -161,7 +161,7 @@ howManySourcesCompiledAndEvalled = 0
 
 # a helper function to use Promise style
 # instead of callback style when loading a JS
-loadJSFile = (fileName) ->
+loadJSFilePromise = (fileName) ->
   return new Promise (resolve, reject) ->
 
     script = document.createElement "script"
@@ -215,7 +215,7 @@ waitNextTurn = ->
     return prms
 
 
-loadJSFilesWithCoffeescriptSources = ->
+loadJSFilesWithCoffeescriptSourcesPromise = ->
   # start of the promise.
   # It will "trigger" the chain immediately, however each element
   # of the chain will wait for its turn to avoid requesting too many
@@ -228,7 +228,7 @@ loadJSFilesWithCoffeescriptSources = ->
   # It doesn't seem to cause problems though?  
   for i in [0...numberOfSourceBatches]
     promiseChain = promiseChain.then waitNextTurn()
-    promiseChain = promiseChain.then loadJSFile "js/sourceCode/sources_batch_" + i + ".js"
+    promiseChain = promiseChain.then loadJSFilePromise "js/sourceCode/sources_batch_" + i + ".js"
 
   return promiseChain
 
@@ -408,20 +408,20 @@ boot = ->
   # and parse them ideally in parallel but I didn't measure
   # that).
 
-  bootLoadPromises = [loadJSFile("js/pre-compiled.js")]
+  bootLoadPromises = [loadJSFilePromise("js/pre-compiled.js")]
 
   # TODO rather than relying on this test to load these .js at boot,
   # we should really just dynamically load these when needed
   # (e.g. when tests are run, or when pre-compiled generation is invoked)
 
   if BUILDFLAG_LOAD_TESTS
-    bootLoadPromises.push loadJSFile("js/libs/Mousetrap.min.js")
+    bootLoadPromises.push loadJSFilePromise("js/libs/Mousetrap.min.js")
 
   if BUILDFLAG_LOAD_TESTS or (window.location.href.includes "generatePreCompiled")
-    bootLoadPromises.push loadJSFile("js/libs/FileSaver.min.js")
-    bootLoadPromises.push loadJSFile("js/libs/jszip.min.js")
-    bootLoadPromises.push loadJSFile("js/tests/testsManifest.js")
-    bootLoadPromises.push loadJSFile("js/tests/testsAssetsManifest.js")
+    bootLoadPromises.push loadJSFilePromise("js/libs/FileSaver.min.js")
+    bootLoadPromises.push loadJSFilePromise("js/libs/jszip.min.js")
+    bootLoadPromises.push loadJSFilePromise("js/tests/testsManifest.js")
+    bootLoadPromises.push loadJSFilePromise("js/tests/testsAssetsManifest.js")
 
   (Promise.all bootLoadPromises).then ->
 
@@ -434,15 +434,15 @@ boot = ->
       addLogDiv()
   .then ->
     Promise.all [
-      loadJSFile("js/libs/coffee-script_2.0.3.js"),
-      loadJSFile("js/sourceCode/Class_coffeSource.js"),
-      loadJSFile("js/sourceCode/Mixin_coffeSource.js"),
+      loadJSFilePromise("js/libs/coffee-script_2.0.3.js"),
+      loadJSFilePromise("js/sourceCode/Class_coffeSource.js"),
+      loadJSFilePromise("js/sourceCode/Mixin_coffeSource.js"),
     ]
   .then ->
     eval.call window, compileFGCode window["Mixin_coffeSource"], true
     eval.call window, compileFGCode window["Class_coffeSource"], true
   .then ->
-    loadJSFilesWithCoffeescriptSources()
+    loadJSFilesWithCoffeescriptSourcesPromise()
   .then ->
     if window.preCompiled
       (loadSourcesAndPotentiallyCompileThem true).then ->
