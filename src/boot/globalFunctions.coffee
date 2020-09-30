@@ -445,7 +445,7 @@ boot = ->
     loadJSFilesWithCoffeescriptSourcesPromise()
   .then ->
     if window.preCompiled
-      (loadSourcesAndPotentiallyCompileThem true).then ->
+      (storeSourcesAndPotentiallyCompileThemAndExecuteThem true).then ->
         window.stillLoadingSources = false
         if Automator
           Automator.testsManifest = testsManifest
@@ -454,7 +454,7 @@ boot = ->
         if startupActions?
           world.nextStartupAction()
     else
-      (loadSourcesAndPotentiallyCompileThem false).then ->
+      (storeSourcesAndPotentiallyCompileThemAndExecuteThem false).then ->
         window.stillLoadingSources = false
         if Automator
           Automator.testsManifest = testsManifest
@@ -466,7 +466,7 @@ boot = ->
           world.nextStartupAction()
 
 
-loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
+storeSourcesAndPotentiallyCompileThemAndExecuteThem = (justIngestSources) ->
 
   emptyLogDiv()
 
@@ -483,9 +483,16 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
   window.indexOf = [].indexOf
   window.slice = [].slice
 
-  # to return a function where the argument is bound
-  createCompileSourceFunction = (fileName, justLoadSources2) ->
-    return -> compileSource fileName, justLoadSources2
+  # closure: a function where the arguments are bound.
+  # This is because you want to freeze the arguments now at
+  # function creation time, because when the closure be called, you want
+  # the value of the two arguments to be the ones at closure creation time
+  # (rather than at closure invocation)
+  createStoreSourceAndPotentiallyCompileItAndExecuteItClosure = (fileName, justIngestSources) ->
+    # this is the closure being created and returned
+    # when the closure will be run (later), fileName and justIngestSources
+    # will be have the values of now when we are creating it
+    -> storeSourceAndPotentiallyCompileItAndExecuteIt fileName, justIngestSources
 
 
   # start of the promise. It will "trigger" the chain
@@ -499,9 +506,9 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
   for eachFile from loadOrder
     if eachFile == "Class" or eachFile == "Mixin" or eachFile == "globalFunctions"
       continue
-    compileEachFileFunction = createCompileSourceFunction eachFile, justLoadSources
     promiseChain = promiseChain.then waitNextTurn()
-    promiseChain = promiseChain.then compileEachFileFunction
+    promiseChain = promiseChain.then \
+      createStoreSourceAndPotentiallyCompileItAndExecuteItClosure eachFile, justIngestSources
 
   # final step, proceed with the boot sequence
   promiseChain.then ->
@@ -519,8 +526,7 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
   return promiseChain
 
 
-compileSource = (fileName, justLoadSources) ->
-
+storeSourceAndPotentiallyCompileItAndExecuteIt = (fileName, justIngestSources) ->
 
   if !window.JSSourcesContainer?
     window.JSSourcesContainer = {content: ""}
@@ -533,7 +539,7 @@ compileSource = (fileName, justLoadSources) ->
   # loading via Class means that we register all the source
   # code and manually create any extensions
   if /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m.test fileContents
-    if justLoadSources
+    if justIngestSources
       # registers the class, its superclasses, its augmentations and the
       # source code      
       morphClass = new Class fileContents, false, false
@@ -541,7 +547,7 @@ compileSource = (fileName, justLoadSources) ->
       morphClass = new Class fileContents, true, true
   # Loaded Mixins here:
   else if /^  onceAddedClassProperties:/m.test fileContents
-    if justLoadSources
+    if justIngestSources
       new Mixin fileContents, false, false
     else
       new Mixin fileContents, true, true
@@ -551,7 +557,7 @@ compileSource = (fileName, justLoadSources) ->
   addLineToLogDiv "compiling and evalling " + fileName
 
   if srcLoadCompileDebugWrites then t1 = performance.now()
-  if srcLoadCompileDebugWrites then console.log "loadSourcesAndPotentiallyCompileThem call time: " + (t1 - t0) + " milliseconds."
+  if srcLoadCompileDebugWrites then console.log "storeSourcesAndPotentiallyCompileThemAndExecuteThem call time: " + (t1 - t0) + " milliseconds."
 
 
 # we use the trackChanges array as a stack to
