@@ -521,8 +521,6 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
 
 compileSource = (fileName, justLoadSources) ->
 
-  if !window.CS1CompiledClasses?
-    window.CS1CompiledClasses = []
 
   if !window.JSSourcesContainer?
     window.JSSourcesContainer = {content: ""}
