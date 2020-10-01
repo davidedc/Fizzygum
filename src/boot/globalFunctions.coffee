@@ -1,12 +1,13 @@
-world = {} # we make "world" global
+# globals -------------------------------------------------
+world = {}
 
-window.srcLoadsSteps = []
+srcLoadsSteps = []
 
-window.srcLoadCompileDebugWrites = false
+srcLoadCompileDebugWrites = false
 
-window.Automator = null
-window.AutomatorRecorder = null
-window.AutomatorPlayer = null
+Automator = null
+AutomatorRecorder = null
+AutomatorPlayer = null
 
 
 # This is used for mixins: MixedClassKeywords is used
