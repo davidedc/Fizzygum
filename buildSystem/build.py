@@ -303,7 +303,7 @@ def main():
             sourceFileName = ntpath.basename(filename).replace(".coffee","_coffeSource")
             escaped_content_with_declaration = STRING_BLOCK % (unicode(sourceFileName), unicode(escaped_content))
 
-            with codecs.open("../Fizzygum-builds/latest/js/sourceCode/"+sourceFileName+".js", "w", "utf-8") as f:
+            with codecs.open("../Fizzygum-builds/latest/js/coffeescript-sources/"+sourceFileName+".js", "w", "utf-8") as f:
                 f.write(escaped_content_with_declaration)
 
             # pile up the sources into a batch and save the batch
@@ -311,7 +311,7 @@ def main():
             batchedSources += "\n\n" + escaped_content_with_declaration
             if len(batchedSources) > minimumSourcesBatchSize:
                 sourceFileName = ntpath.basename("sources_batch_"+str(numberOfSourceBatches))
-                with codecs.open("../Fizzygum-builds/latest/js/sourceCode/"+sourceFileName+".js", "w", "utf-8") as f:
+                with codecs.open("../Fizzygum-builds/latest/js/coffeescript-sources/"+sourceFileName+".js", "w", "utf-8") as f:
                     f.write(unicode(batchedSources))
                 numberOfSourceBatches = numberOfSourceBatches + 1
                 batchedSources = ""
@@ -321,7 +321,7 @@ def main():
     # take care of saving the last batch with the remainder
     # of the sources
     sourceFileName = ntpath.basename("sources_batch_"+str(numberOfSourceBatches))
-    with codecs.open("../Fizzygum-builds/latest/js/sourceCode/"+sourceFileName+".js", "w", "utf-8") as f:
+    with codecs.open("../Fizzygum-builds/latest/js/coffeescript-sources/"+sourceFileName+".js", "w", "utf-8") as f:
         f.write(unicode(batchedSources))
     numberOfSourceBatches += 1
 

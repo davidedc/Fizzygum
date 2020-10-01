@@ -112,8 +112,8 @@ if [ ! -d $BUILD_PATH/js/libs ]; then
   mkdir $BUILD_PATH/js/libs
 fi
 
-if [ ! -d $BUILD_PATH/js/sourceCode ]; then
-  mkdir $BUILD_PATH/js/sourceCode
+if [ ! -d $BUILD_PATH/js/coffeescript-sources ]; then
+  mkdir $BUILD_PATH/js/coffeescript-sources
 fi
 
 if [ ! -d $BUILD_PATH/js/src ]; then
@@ -311,7 +311,7 @@ if $homepage ; then
   rm $BUILD_PATH/icons/scrollDown.png
   rm $BUILD_PATH/js/fizzygum-boot.js
   
-  ls -d -1 $BUILD_PATH/js/sourceCode/* | grep -v /sources_batch | grep -v /Mixin_coffeSource | grep -v /Class_coffeSource | xargs rm -f
+  ls -d -1 $BUILD_PATH/js/coffeescript-sources/* | grep -v /sources_batch | grep -v /Mixin_coffeSource | grep -v /Class_coffeSource | xargs rm -f
   
   echo "generating the pre-compiled file via the browser. this might take a few seconds..."
   . ./buildSystem/generate-pre-compiled-file-via-browser.sh

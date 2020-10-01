@@ -229,7 +229,7 @@ loadJSFilesWithCoffeescriptSourcesPromise = ->
   # It doesn't seem to cause problems though?  
   for i in [0...numberOfSourceBatches]
     promiseChain = promiseChain.then waitNextTurn()
-    promiseChain = promiseChain.then loadJSFilePromise "js/sourceCode/sources_batch_" + i + ".js"
+    promiseChain = promiseChain.then loadJSFilePromise "js/coffeescript-sources/sources_batch_" + i + ".js"
 
   return promiseChain
 
@@ -436,8 +436,8 @@ boot = ->
   .then ->
     Promise.all [
       loadJSFilePromise("js/libs/coffee-script_2.0.3.js"),
-      loadJSFilePromise("js/sourceCode/Class_coffeSource.js"),
-      loadJSFilePromise("js/sourceCode/Mixin_coffeSource.js"),
+      loadJSFilePromise("js/coffeescript-sources/Class_coffeSource.js"),
+      loadJSFilePromise("js/coffeescript-sources/Mixin_coffeSource.js"),
     ]
   .then ->
     eval.call window, compileFGCode window["Mixin_coffeSource"], true
