@@ -226,6 +226,9 @@ cp auxiliary\ files/CoffeeScript/coffee-script_2.0.3.js $BUILD_PATH/js/libs/
 coffee -b -c -o $BUILD_PATH/js/src/ src/boot/dependencies-finding.coffee
 terser --compress --output $BUILD_PATH/js/src/dependencies-finding-min.js -- $BUILD_PATH/js/src/dependencies-finding.js
 
+coffee -b -c -o $BUILD_PATH/js/src/ src/boot/loading-and-compiling-coffeescript-sources.coffee
+terser --compress --output $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources-min.js -- $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources.js
+
 if ! $notests && ! $homepage ; then
   coffee -b -c -o $BUILD_PATH/js/libs auxiliary\ files/Mousetrap/Mousetrap.coffee 
   echo "minifying..."
@@ -324,6 +327,7 @@ if $homepage ; then
   rm $BUILD_PATH/js/libs/jszip.min.js
 
   rm $BUILD_PATH/js/src/dependencies-finding.js
+  rm $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources.js
 
 
   # There are many "if Automator ..." and "if AutomatorRecorder ..." and "if AutomatorPlayer ..."
