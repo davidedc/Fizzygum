@@ -116,6 +116,10 @@ if [ ! -d $BUILD_PATH/js/sourceCode ]; then
   mkdir $BUILD_PATH/js/sourceCode
 fi
 
+if [ ! -d $BUILD_PATH/js/src ]; then
+  mkdir $BUILD_PATH/js/src
+fi
+
 if [ ! -d $SCRATCH_PATH ]; then
   mkdir $SCRATCH_PATH
 fi
@@ -184,9 +188,6 @@ fi
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/logging-div.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
-printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/dependencies-finding.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-
 printf "\nbuildVersion = 'version of $(date)'" >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 coffee -b -c -o $BUILD_PATH/js/ $SCRATCH_PATH/fizzygum-boot.coffee 
@@ -219,8 +220,11 @@ cp src/index.html $BUILD_PATH/
 # copy the interesting js files from the submodules
 cp auxiliary\ files/FileSaver/FileSaver.min.js $BUILD_PATH/js/libs/
 cp auxiliary\ files/JSZip/jszip.min.js $BUILD_PATH/js/libs/
-
 cp auxiliary\ files/CoffeeScript/coffee-script_2.0.3.js $BUILD_PATH/js/libs/
+
+# code that can be loaded after a pre-compiled world has started
+coffee -b -c -o $BUILD_PATH/js/src/ src/boot/dependencies-finding.coffee
+terser --compress --output $BUILD_PATH/js/src/dependencies-finding-min.js -- $BUILD_PATH/js/src/dependencies-finding.js
 
 if ! $notests && ! $homepage ; then
   coffee -b -c -o $BUILD_PATH/js/libs auxiliary\ files/Mousetrap/Mousetrap.coffee 
@@ -318,6 +322,8 @@ if $homepage ; then
 
   rm $BUILD_PATH/js/libs/FileSaver.min.js
   rm $BUILD_PATH/js/libs/jszip.min.js
+
+  rm $BUILD_PATH/js/src/dependencies-finding.js
 
 
   # There are many "if Automator ..." and "if AutomatorRecorder ..." and "if AutomatorPlayer ..."

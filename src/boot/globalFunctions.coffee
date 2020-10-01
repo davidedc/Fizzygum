@@ -442,6 +442,8 @@ boot = ->
     eval.call window, compileFGCode window["Mixin_coffeSource"], true
     eval.call window, compileFGCode window["Class_coffeSource"], true
   .then ->
+    loadJSFilePromise("js/src/dependencies-finding-min.js")
+  .then ->
     loadJSFilesWithCoffeescriptSourcesPromise()
   .then ->
     if window.preCompiled
