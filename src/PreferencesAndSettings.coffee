@@ -72,9 +72,29 @@ class PreferencesAndSettings
       @setMouseInputMode()
   # this part is excluded from the fizzygum homepage build <<«
 
+
+  # answer the height of the smallest font renderable in pixels
+  getMinimumFontHeight: ->
+    str = "I"
+    size = 50
+    canvas = document.createElement "canvas"
+    canvas.width = size
+    canvas.height = size
+    ctx = canvas.getContext "2d"
+    ctx.font = "1px serif"
+    maxX = Math.ceil ctx.measureText(str).width
+    ctx.fillStyle = Color.BLACK.toString()
+    ctx.textBaseline = "bottom"
+    ctx.fillText str, 0, size
+    for y in [0...size]
+      for x in [0...maxX]
+        data = ctx.getImageData x, y, 1, 1
+        return size - y + 1  if data.data[3] isnt 0
+    0
+
   setMouseInputMode: ->
     @inputMode = PreferencesAndSettings.INPUT_MODE_MOUSE
-    @minimumFontHeight = getMinimumFontHeight() # browser settings
+    @minimumFontHeight = @getMinimumFontHeight() # browser settings
     @menuFontName = "sans-serif"
     @menuFontSize = 12 # 14
     @menuHeaderFontSize = 12 # 13
@@ -134,7 +154,7 @@ class PreferencesAndSettings
 
   setTouchInputMode: ->
     @inputMode = PreferencesAndSettings.INPUT_MODE_TOUCH
-    @minimumFontHeight = getMinimumFontHeight()
+    @minimumFontHeight = @getMinimumFontHeight()
     @menuFontName = "sans-serif"
     @menuFontSize = 24
     @bubbleHelpFontSize = 18

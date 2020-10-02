@@ -117,25 +117,6 @@ newCanvas = (extentPoint) ->
   canvas.height = Math.ceil  ext.y
   canvas
 
-getMinimumFontHeight = ->
-  # answer the height of the smallest font renderable in pixels
-  str = "I"
-  size = 50
-  canvas = document.createElement "canvas"
-  canvas.width = size
-  canvas.height = size
-  ctx = canvas.getContext "2d"
-  ctx.font = "1px serif"
-  maxX = Math.ceil ctx.measureText(str).width
-  ctx.fillStyle = Color.BLACK.toString()
-  ctx.textBaseline = "bottom"
-  ctx.fillText str, 0, size
-  for y in [0...size]
-    for x in [0...maxX]
-      data = ctx.getImageData x, y, 1, 1
-      return size - y + 1  if data.data[3] isnt 0
-  0
-
 # -------------------------------------------
 
 howManyTestManifestsLoaded = 0
