@@ -22,7 +22,7 @@ class DesktopAppearance extends RectangularAppearance
 
     if @morph.patternName? && @morph.patternName != @currentPattern
       @currentPattern = @morph.patternName
-      @pattern = document.createElement('canvas')
+      @pattern = document.createElement "canvas"
       @pattern.width = 5 * ceilPixelRatio
       @pattern.height = 5 * ceilPixelRatio
       pctx = @pattern.getContext "2d"
