@@ -331,6 +331,24 @@ class WorldMorph extends PanelWdgt
 
     @changed()
 
+  # answer the absolute coordinates of the world canvas within the document
+  getCanvasPosition: ->
+    if !@worldCanvas?
+      return {x: 0, y: 0}
+    pos =
+      x: @worldCanvas.offsetLeft
+      y: @worldCanvas.offsetTop
+
+    offsetParent = @worldCanvas.offsetParent
+    while offsetParent?
+      pos.x += offsetParent.offsetLeft
+      pos.y += offsetParent.offsetTop
+      if offsetParent isnt document.body and offsetParent isnt document.documentElement
+        pos.x -= offsetParent.scrollLeft
+        pos.y -= offsetParent.scrollTop
+      offsetParent = offsetParent.offsetParent
+    pos
+
   colloquialName: ->
     "Desktop"
 
@@ -1330,7 +1348,7 @@ class WorldMorph extends PanelWdgt
   stretchWorldToFillEntirePage: ->
     # once you call this, the world will forever take the whole page
     @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
-    pos = getDocumentPositionOf @worldCanvas
+    pos = @getCanvasPosition()
     clientHeight = window.innerHeight
     clientWidth = window.innerWidth
     if pos.x > 0
@@ -1482,7 +1500,7 @@ class WorldMorph extends PanelWdgt
     @hand.processMouseUp button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
   mousemoveBrowserEventHandler: (pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    posInDocument = getDocumentPositionOf @worldCanvas
+    posInDocument = @getCanvasPosition()
     # events from JS arrive in page coordinates,
     # we turn those into world coordinates
     # instead.
@@ -2457,7 +2475,7 @@ class WorldMorph extends PanelWdgt
       # So, it is important to position the textbox around
       # where the caret is, so that the changed text is going to
       # be visible rather than out of the viewport.
-      pos = getDocumentPositionOf @worldCanvas
+      pos = @getCanvasPosition()
       @inputDOMElementForVirtualKeyboard.style.top = @caret.top() + pos.y + "px"
       @inputDOMElementForVirtualKeyboard.style.left = @caret.left() + pos.x + "px"
       @inputDOMElementForVirtualKeyboard.focus()

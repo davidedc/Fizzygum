@@ -136,25 +136,6 @@ getMinimumFontHeight = ->
       return size - y + 1  if data.data[3] isnt 0
   0
 
-
-getDocumentPositionOf = (aDOMelement) ->
-  # answer the absolute coordinates of a DOM element in the document
-  if !aDOMelement?
-    return {x: 0, y: 0}
-  pos =
-    x: aDOMelement.offsetLeft
-    y: aDOMelement.offsetTop
-
-  offsetParent = aDOMelement.offsetParent
-  while offsetParent?
-    pos.x += offsetParent.offsetLeft
-    pos.y += offsetParent.offsetTop
-    if offsetParent isnt document.body and offsetParent isnt document.documentElement
-      pos.x -= offsetParent.scrollLeft
-      pos.y -= offsetParent.scrollTop
-    offsetParent = offsetParent.offsetParent
-  pos
-
 # -------------------------------------------
 
 howManyTestManifestsLoaded = 0

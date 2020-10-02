@@ -879,7 +879,7 @@ class ActivePointerWdgt extends Widget
     if Automator and Automator.state == Automator.PLAYING
       mousePointerIndicator = document.getElementById "mousePointerIndicator"
       mousePointerIndicator.style.display = 'block'
-      posInDocument = getDocumentPositionOf world.worldCanvas
+      posInDocument = world.getCanvasPosition()
       mousePointerIndicator.style.left = (posInDocument.x + worldX - (mousePointerIndicator.clientWidth/2)) + 'px'
       mousePointerIndicator.style.top = (posInDocument.y + worldY - (mousePointerIndicator.clientHeight/2)) + 'px'
 
