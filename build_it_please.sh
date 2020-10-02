@@ -185,9 +185,6 @@ if ! $homepage ; then
   cat src/boot/numbertimes.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 fi
 
-printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/logging-div.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-
 printf "\nbuildVersion = 'version of $(date)'" >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 coffee -b -c -o $BUILD_PATH/js/ $SCRATCH_PATH/fizzygum-boot.coffee 
@@ -228,6 +225,9 @@ terser --compress --output $BUILD_PATH/js/src/dependencies-finding-min.js -- $BU
 
 coffee -b -c -o $BUILD_PATH/js/src/ src/boot/loading-and-compiling-coffeescript-sources.coffee
 terser --compress --output $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources-min.js -- $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources.js
+
+coffee -b -c -o $BUILD_PATH/js/src/ src/boot/logging-div.coffee
+terser --compress --output $BUILD_PATH/js/src/logging-div-min.js -- $BUILD_PATH/js/src/logging-div.js
 
 if ! $notests && ! $homepage ; then
   coffee -b -c -o $BUILD_PATH/js/libs auxiliary\ files/Mousetrap/Mousetrap.coffee 
@@ -328,6 +328,7 @@ if $homepage ; then
 
   rm $BUILD_PATH/js/src/dependencies-finding.js
   rm $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources.js
+  rm $BUILD_PATH/js/src/logging-div.js
 
 
   # There are many "if Automator ..." and "if AutomatorRecorder ..." and "if AutomatorPlayer ..."

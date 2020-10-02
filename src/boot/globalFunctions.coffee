@@ -172,7 +172,7 @@ loadJSFilePromise = (fileName) ->
     # triggers after the script was loaded and executed
     # see https://javascript.info/onload-onerror#script-onload
     script.onload = ->
-      addLineToLogDiv "loaded and executed " + this.src
+      addLineToLogDiv? "loaded and executed " + this.src
       if srcLoadCompileDebugWrites then console.log "loaded and executed " + this.src
       resolve(script)
 
@@ -396,14 +396,13 @@ boot = ->
 
     if window.preCompiled
       createWorldAndStartStepping()
-    else
-      addLogDiv()
   .then ->
     Promise.all [
       loadJSFilePromise("js/libs/coffee-script_2.0.3.js"),
       loadJSFilePromise("js/coffeescript-sources/Class_coffeSource.js"),
       loadJSFilePromise("js/coffeescript-sources/Mixin_coffeSource.js"),
       loadJSFilePromise("js/src/loading-and-compiling-coffeescript-sources-min.js"),
+      loadJSFilePromise("js/src/logging-div-min.js")
     ]
   .then ->
     eval.call window, compileFGCode window["Mixin_coffeSource"], true
@@ -423,6 +422,7 @@ boot = ->
         if startupActions?
           world.nextStartupAction()
     else
+      addLogDiv()
       (storeSourcesAndPotentiallyCompileThemAndExecuteThem false).then ->
         window.stillLoadingSources = false
         if Automator
