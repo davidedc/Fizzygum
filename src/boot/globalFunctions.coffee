@@ -52,21 +52,6 @@ getParameterByName = (name) ->
   else
     return nil
 
-# This is used a) for testing, we hash the
-# data URL of a canvas object so to get a fingerprint
-# of the image data, and compare it with "OK" pre-recorded
-# values and b) to generate keys for some caches.
-# adapted from http://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
-
-hashCode = (stringToBeHashed) ->
-  hash = 0
-  return hash  if stringToBeHashed.length is 0
-  for i in [0...stringToBeHashed.length]
-    char = stringToBeHashed.charCodeAt i
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash # Convert to 32bit integer
-  hash
-
 # returns the function that does nothing
 nop = ->
   # this is the function that does nothing:

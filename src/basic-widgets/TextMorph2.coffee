@@ -60,7 +60,7 @@ class TextMorph2 extends StringMorph2
     return doesItFit
 
   getParagraphs: (text) ->
-    cacheKey = hashCode text
+    cacheKey = text.hashCode()
     paragraphs = world.cacheForTextParagraphSplits.get cacheKey
     if paragraphs? then return paragraphs
     paragraphs = text.split "\n"
@@ -68,7 +68,7 @@ class TextMorph2 extends StringMorph2
     paragraphs
 
   getWordsOfParapraph: (eachParagraph) ->
-    cacheKey = hashCode eachParagraph
+    cacheKey = eachParagraph.hashCode()
     wordsOfThisParagraph = world.cacheForParagraphsWordsSplits.get cacheKey
     if wordsOfThisParagraph? then return wordsOfThisParagraph
     wordsOfThisParagraph = eachParagraph.split " "
@@ -81,7 +81,7 @@ class TextMorph2 extends StringMorph2
     string = string + @emptyCharacter
 
   getWrappingData: (overrideFontSize, maxTextWidth, eachParagraph, wordsOfThisParagraph) ->
-    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + hashCode eachParagraph
+    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + eachParagraph.hashCode()
     wrappingData = world.cacheForParagraphsWrappingData.get cacheKey
 
 
@@ -198,7 +198,7 @@ class TextMorph2 extends StringMorph2
       justCheckIfItFitsInThisExtent = null
       overrideFontSize = @originallySetFontSize
 
-    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + hashCode(text) + "-" + justCheckIfItFitsInThisExtent
+    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + text.hashCode() + "-" + justCheckIfItFitsInThisExtent
     textWrappingData = world.cacheForTextWrappingData.get cacheKey
     if textWrappingData? then return textWrappingData
     wrappedLinesOfWholeText = []
@@ -311,7 +311,7 @@ class TextMorph2 extends StringMorph2
     else
       morphWidth = Number.MAX_VALUE
 
-    cacheKey = hashCode(text) + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + morphWidth + "-" + justCheckIfItFitsInThisExtent
+    cacheKey = text.hashCode() + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + morphWidth + "-" + justCheckIfItFitsInThisExtent
     textWrappingData = world.cacheForTextBreakingIntoLinesTopLevel.get cacheKey
     if textWrappingData? then return textWrappingData
 

@@ -2053,7 +2053,7 @@ class Widget extends TreeNode
 
   # unused code
   fullImageHashCode: ->
-    return hashCode @fullImageData()
+    return @fullImageData().hashCode()
   # this part is excluded from the fizzygum homepage build <<«
   
   # shadow is added to a morph by

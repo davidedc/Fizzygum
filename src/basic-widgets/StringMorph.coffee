@@ -109,7 +109,7 @@ class StringMorph extends Widget
       @buildCanvasFontProperty()  + "-" +
       @alignment  + "-" +
       @color.toString()  + "-" +
-      hashCode(@text)  + "-" +
+      @text.hashCode()  + "-" +
       @startMark  + "-" +
       @endMark  + "-" +
       @markedBackgoundColor.toString()

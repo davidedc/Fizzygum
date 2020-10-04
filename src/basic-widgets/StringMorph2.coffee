@@ -472,7 +472,7 @@ class StringMorph2 extends Widget
   # change when we do the binary search for trying to
   # see the largest fitting size.
   measureText: (overrideFontSize = @fittingFontSize, text) ->
-    cacheKey =  @buildCanvasFontProperty(overrideFontSize) + "-" + hashCode text
+    cacheKey =  @buildCanvasFontProperty(overrideFontSize) + "-" + text.hashCode()
     cacheHit = world.cacheForTextMeasurements.get cacheKey
     if cacheHit? then return cacheHit
     world.canvasContextForTextMeasurements.font = @buildCanvasFontProperty overrideFontSize
@@ -564,8 +564,8 @@ class StringMorph2 extends Widget
     @color.toString()  + "-" +
     (if @backgroundColor? then @backgroundColor.toString() else "transp") + "-" +
     (if @backgroundTransparency? then @backgroundTransparency.toString() else "transp") + "-" +
-    hashCode(@text)  + "-" +
-    hashCode(@textPossiblyCroppedToFit)  + "-" +
+    @text.hashCode()  + "-" +
+    @textPossiblyCroppedToFit.hashCode()  + "-" +
     @startMark  + "-" +
     @endMark  + "-" +
     @markedBackgoundColor.toString()  + "-" +
@@ -1065,11 +1065,11 @@ class StringMorph2 extends Widget
     @updateTarget()
 
   considerCurrentTextAsReferenceText: ->
-    @hashOfTextConsideredAsReference = hashCode @text
+    @hashOfTextConsideredAsReference = @text.hashCode()
 
   checkIfTextContentWasModifiedFromTextAtStart: ->
     if @widgetToBeNotifiedOfTextModificationChange?
-      if @hashOfTextConsideredAsReference == hashCode @text
+      if @hashOfTextConsideredAsReference == @text.hashCode()
         @widgetToBeNotifiedOfTextModificationChange.textContentUnmodified?()
       else
         @widgetToBeNotifiedOfTextModificationChange.textContentModified?()

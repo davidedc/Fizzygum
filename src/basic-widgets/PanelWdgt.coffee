@@ -111,8 +111,8 @@ class PanelWdgt extends Widget
     width = @width()
     height = @height()
 
-    posx = Math.abs(hashCode(aWdgt.toString())) % width
-    posy = Math.abs(hashCode(aWdgt.toString() + "x")) % height
+    posx = Math.abs(aWdgt.hashCode()) % width
+    posy = Math.abs((aWdgt.toString() + "x").hashCode()) % height
     position = @position().add new Point posx, posy
 
     @add aWdgt

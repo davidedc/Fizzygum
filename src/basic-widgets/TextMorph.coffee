@@ -135,7 +135,7 @@ class TextMorph extends StringMorph
       @alignment  + "-" +
       @backgroundColor?.toString()  + "-" +
       @color.toString()  + "-" +
-      hashCode(@text)  + "-" +
+      @text.hashCode()  + "-" +
       @startMark  + "-" +
       @endMark  + "-" +
       @markedBackgoundColor.toString()

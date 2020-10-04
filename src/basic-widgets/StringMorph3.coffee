@@ -412,7 +412,7 @@ class StringMorph3 extends Widget
   # change when we do the binary search for trying to
   # see the largest fitting size.
   measureText: (overrideFontSize = @fittingFontSize, text) ->
-    cacheKey =  @buildCanvasFontProperty(overrideFontSize) + "-" + hashCode text
+    cacheKey =  @buildCanvasFontProperty(overrideFontSize) + "-" + text.hashCode()
     cacheHit = world.cacheForTextMeasurements.get cacheKey
     if cacheHit? then return cacheHit
     world.canvasContextForTextMeasurements.font = @buildCanvasFontProperty overrideFontSize
@@ -504,8 +504,8 @@ class StringMorph3 extends Widget
     @color.toString()  + "-" +
     (if @backgroundColor? then @backgroundColor.toString() else "transp") + "-" +
     (if @backgroundTransparency? then @backgroundTransparency.toString() else "transp") + "-" +
-    hashCode(@text)  + "-" +
-    hashCode(@textPossiblyCroppedToFit)  + "-" +
+    @text.hashCode() + "-" +
+    @textPossiblyCroppedToFit.hashCode() + "-" +
     @startMark  + "-" +
     @endMark  + "-" +
     @markedBackgoundColor.toString()  + "-" +
