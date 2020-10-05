@@ -33,15 +33,6 @@ nil = undefined
 CONSTANT_INIT_AFTER_CLASS_DEFINITION = undefined
 
 ## -------------------------------------------------------
-# de-camelize
-# taken from https://github.com/sindresorhus/decamelize/blob/master/index.js
-
-decamelize = (str, sep) ->
-  if (typeof str) != 'string'
-    throw new TypeError "Expected a string"
-  str.replace(/([a-z\d])([A-Z])/g, '$1' + (sep or '_') + '$2').toLowerCase()
-
-## -------------------------------------------------------
 
 getParameterByName = (name) ->
   name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]')
@@ -422,18 +413,6 @@ createWorldAndStartStepping = ->
   window.menusHelper = new MenusHelper
   world.removeSpinnerAndFakeDesktop()
   world.createDesktop()
-
-# a helper function to use Promise style
-# instead of callback style when creating
-# an Image from the image data
-createImageFromImageData = (theImageData) ->
-  return new Promise (resolve, reject) ->
-    img = new Image
-    img.onload = ->
-        resolve(img)
-    img.onerror = ->
-        reject(img)
-    img.src = theImageData
 
 # these two are to build classes
 
