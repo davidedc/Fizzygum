@@ -170,6 +170,9 @@ printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/extensions/CanvasGradient-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat src/boot/extensions/Math-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+
+printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/extensions/Number-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee

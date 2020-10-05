@@ -16,7 +16,7 @@ class BouncerWdgt extends Widget
     @appearance = new RectangularAppearance @
 
     while !@velocity? or @velocity.x == 0 or @velocity.y == 0
-      @velocity = new Point getRandomInt(-10,10), getRandomInt(-10,10)
+      @velocity = new Point Math.getRandomInt(-10,10), Math.getRandomInt(-10,10)
 
   
   step: ->
