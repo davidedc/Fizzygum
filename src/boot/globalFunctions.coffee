@@ -30,8 +30,6 @@ MixedClassKeywords = ['onceAddedClassProperties', 'included']
 # and "null" explicitly.
 nil = undefined
 
-CONSTANT_INIT_AFTER_CLASS_DEFINITION = undefined
-
 ## -------------------------------------------------------
 
 getParameterByName = (name) ->
@@ -88,9 +86,6 @@ newCanvas = (extentPoint) ->
   canvas
 
 # -------------------------------------------
-
-howManyTestManifestsLoaded = 0
-howManySourcesCompiledAndEvalled = 0
 
 # a helper function to use Promise style
 # instead of callback style when loading a JS
