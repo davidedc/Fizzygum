@@ -161,7 +161,7 @@ class StringMorph extends Widget
     words = @text.split " "
     isFirst = true
     ctx.fillStyle = @blanksColor.toString()
-    ctx.arc space / 2, blank.height / 2, space / 2, degreesToRadians(0), degreesToRadians(360)
+    ctx.arc space / 2, blank.height / 2, space / 2, (0).toRadians(), (360).toRadians()
     ctx.fill()
 
     # render my text inserting blanks

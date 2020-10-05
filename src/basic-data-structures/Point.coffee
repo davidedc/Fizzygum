@@ -166,9 +166,9 @@ class Point
     tan = @y / @x
     theta = Math.atan tan
     if @x >= 0
-      return radiansToDegrees theta  if @y >= 0
-      return 360 + radiansToDegrees theta
-    180 + radiansToDegrees theta
+      return theta.toDegrees()  if @y >= 0
+      return 360 + theta.toDegrees()
+    180 + theta.toDegrees()
   
   theta: ->
     #
@@ -176,14 +176,14 @@ class Point
     #    Right is 0, down is 90
     #
     if @x is 0
-      return degreesToRadians 90  if @y >= 0
-      return degreesToRadians 270
+      return (90).toRadians()  if @y >= 0
+      return (270).toRadians()
     tan = @y / @x
     theta = Math.atan(tan)
     if @x >= 0
       return theta  if @y >= 0
-      return degreesToRadians(360) + theta
-    degreesToRadians(180) + theta
+      return (360).toRadians() + theta
+    (180).toRadians() + theta
   
   
   # Point functions:
@@ -213,10 +213,10 @@ class Point
       deg = deg - 360
     else deg = deg + 360  if deg < -270
     if -90 <= deg and deg <= 90
-      x = Math.sin(degreesToRadians(deg)) * dist
+      x = Math.sin(deg.toRadians()) * dist
       y = Math.sqrt((dist * dist) - (x * x))
       return new @constructor x + @x, @y - y
-    x = Math.sin(degreesToRadians(180 - deg)) * dist
+    x = Math.sin((180 - deg).toRadians()) * dist
     y = Math.sqrt((dist * dist) - (x * x))
     new @constructor x + @x, @y + y
   # this part is excluded from the fizzygum homepage build <<«

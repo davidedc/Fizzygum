@@ -70,12 +70,6 @@ isString = (target) ->
 isObject = (target) ->
   target? and (typeof target is "object" or target instanceof Object)
 
-degreesToRadians = (degrees) ->
-  degrees * Math.PI / 180
-
-radiansToDegrees = (radians) ->
-  radians * 180 / Math.PI
-
 # this fontHeight is too thin.
 # tall characters such as ⎲ƒ⎳⎷ ⎸⎹ are cut
 # but hey they look cut also in this text editor I'm using.
