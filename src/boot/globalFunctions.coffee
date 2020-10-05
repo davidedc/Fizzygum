@@ -371,10 +371,10 @@ boot = ->
 # wouldn't account for nesting of "disabling track
 # changes" correctly.
 trackChanges = [true]
-window.healingRectanglesPhase = false
-window.morphsThatMaybeChangedGeometryOrPosition = []
-window.morphsThatMaybeChangedFullGeometryOrPosition = []
-window.morphsThatMaybeChangedLayout = []
+healingRectanglesPhase = false
+morphsThatMaybeChangedGeometryOrPosition = []
+morphsThatMaybeChangedFullGeometryOrPosition = []
+morphsThatMaybeChangedLayout = []
 
 createWorldAndStartStepping = ->
 
