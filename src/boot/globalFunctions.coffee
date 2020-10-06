@@ -55,12 +55,13 @@ fontHeight = (fontSize) ->
   minHeight = Math.max fontSize, WorldMorph.preferencesAndSettings.minimumFontHeight
   Math.ceil minHeight * 1.2 # assuming 1/5 font size for ascenders
 
-# newCanvas takes physical size, i.e. actual buffer pixels
-# on retina displays that's twice the amount of logical pixels,
+# newCanvas takes physical size, i.e. actual buffer pixels.
+# On non-retina displays, that's just the amount of logical pixels,
 # which are used for all other measures of morphs.
-# So if the dimensions come from a canvas size, then those are
+# On retina displays, that's twice the amount of logical pixels.
+# If the dimensions come from a canvas size, then those are
 # already physical pixels.
-# If the dimensions come form other measurements of the morphs
+# If the dimensions come form other measurements of the morphs,
 # then those are in logical coordinates and need to be
 # corrected with ceilPixelRatio before being passed here.
 newCanvas = (extentPoint) ->
