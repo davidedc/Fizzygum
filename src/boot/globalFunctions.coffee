@@ -30,17 +30,6 @@ MixedClassKeywords = ['onceAddedClassProperties', 'included']
 # and "null" explicitly.
 nil = undefined
 
-## -------------------------------------------------------
-
-getParameterByName = (name) ->
-  name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]')
-  regex = new RegExp '[\\?&]' + name + '=([^&#]*)'
-  results = regex.exec location.search
-  if results?
-    return decodeURIComponent results[1].replace(/\+/g, ' ')
-  else
-    return nil
-
 # returns the function that does nothing
 nop = ->
   # this is the function that does nothing:

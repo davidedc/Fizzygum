@@ -463,6 +463,17 @@ class WorldMorph extends PanelWdgt
       menusHelper.createSampleDocOpener exampleDocsFolder
 
   # »>> this part is excluded from the fizzygum homepage build
+
+  getParameterPassedInURL: (name) ->
+    name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]')
+    regex = new RegExp '[\\?&]' + name + '=([^&#]*)'
+    results = regex.exec location.search
+    if results?
+      return decodeURIComponent results[1].replace(/\+/g, ' ')
+    else
+      return nil
+
+
   # some test urls:
 
   # this one contains two actions, two tests each, but only
@@ -473,8 +484,8 @@ class WorldMorph extends PanelWdgt
   #file:///Users/daviddellacasa/Fizzygum/Fizzygum-builds/latest/worldWithSystemTestHarness.html?startupActions=%7B%0A%20%20%22paramsVersion%22%3A%200.1%2C%0A%20%20%22actions%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22name%22%3A%20%22runTests%22%2C%0A%20%20%20%20%20%20%22testsToRun%22%3A%20%5B%22shadow%22%5D%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D
 
   nextStartupAction: ->
-    if (getParameterByName "startupActions")?
-      startupActions = JSON.parse getParameterByName "startupActions"
+    if (@getParameterPassedInURL "startupActions")?
+      startupActions = JSON.parse @getParameterPassedInURL "startupActions"
 
     if (!startupActions?) or (WorldMorph.ongoingUrlActionNumber == startupActions.actions.length)
       WorldMorph.ongoingUrlActionNumber = 0
