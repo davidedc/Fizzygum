@@ -238,6 +238,10 @@ boot = ->
   # -----------------------------------------------------------
 
   (Promise.all bootLoadPromises).then ->
+    # this is the code path that we want to load/start fast.
+    # All other situations (non-precompiled, or loading tests)
+    # are not as important, they can take a few second more, we don't
+    # care that much.
     if window.preCompiled
       createWorldAndStartStepping()
   .then ->
