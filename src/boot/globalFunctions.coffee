@@ -30,11 +30,6 @@ MixedClassKeywords = ['onceAddedClassProperties', 'included']
 # and "null" explicitly.
 nil = undefined
 
-# returns the function that does nothing
-nop = ->
-  # this is the function that does nothing:
-  ->
-    nil
 
 noOperation = ->
     nil
