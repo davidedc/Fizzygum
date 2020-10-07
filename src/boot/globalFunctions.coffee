@@ -267,8 +267,8 @@ boot = ->
         if Automator
           Automator.testsManifest = testsManifest
           Automator.testsAssetsManifest = testsAssetsManifest
-        startupActions = getParameterByName "startupActions"
-        if startupActions?
+        # world.getParameterPassedInURL is not included in the homepage build
+        if startupActions = world.getParameterPassedInURL? "startupActions"
           world.nextStartupAction()
     else
       addLogDiv()
@@ -279,8 +279,8 @@ boot = ->
           Automator.testsAssetsManifest = testsAssetsManifest
       .then ->
         createWorldAndStartStepping()
-        startupActions = getParameterByName "startupActions"
-        if startupActions?
+        # world.getParameterPassedInURL is not included in the homepage build
+        if startupActions = world.getParameterPassedInURL? "startupActions"
           world.nextStartupAction()
 
 
