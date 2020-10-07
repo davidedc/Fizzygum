@@ -68,40 +68,6 @@ loadJSFilePromise = (fileName) ->
         reject(script)
 
 
-# useful function to pace "then" steps,
-# we use it in two modes:
-#
-# 1. in "pre-compiled" mode we load all the
-# sources and we pace those loads triggering
-# the "waits" on animationFrames, so that
-# we don't create too much gitter as the
-# world is going.
-# We achieve this by storing the "resolve"
-# method in an array that we check in
-# doOneCycle. So when there is a frame running
-# we see if we can resolve one such "gate" so
-# that the next source can be loaded.
-#
-# 2. In non-precompiled mode we don't care about
-# the gitter because there is no running world
-# (because we still have to build it from the
-# sources we are loading now),
-# so we can just wait each compilation step on
-# a timer.
-waitNextTurn = ->
-  () ->
-    if window.preCompiled
-      prms = new Promise (resolve, reject) ->
-        window.srcLoadsSteps.push resolve
-    else
-      # see https://gist.github.com/joepie91/2664c85a744e6bd0629c
-      prms = new Promise (resolve, reject) ->
-        setTimeout () ->
-          resolve arguments
-        , 1
-    return prms
-
-
 # there are two main ways of booting the world:
 # 1. without pre-compiled files. In this case the
 #    boot needs to load all the sources, compile
