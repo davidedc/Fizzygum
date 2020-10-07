@@ -393,14 +393,14 @@ class ScrollPanelWdgt extends PanelWdgt
     else
       return false
   
-  # sometimes you can scroll the contents of a ScrollPanel
+  # Sometimes you can scroll the contents of a ScrollPanel
   # by floatDragging its contents. This is particularly
   # useful in touch devices.
   # You can test this also in non-touch mode
   # by anchoring a ScrollPanel to something
   # non-draggable such as a color palette (can't drag it
-  # because user can drag on it to pick a color)
-  # Ten you chuck a long text into the ScrollPanel and
+  # because user can drag on it to pick a color).
+  # Then you chuck a long text into the ScrollPanel and
   # drag the Panel (on the side of the text, where there is no
   # text) and you should see the ScrollPanel scrolling.
   mouseDownLeft: (pos) ->

@@ -118,19 +118,20 @@ waitNextTurn = ->
 #    boot needs to load all the sources, compile
 #    them and build all the classes and mixins.
 #    The classes need to be appropriately chained
-#    into a class hyerarchy and they need to be
+#    into a class hierarchy and they need to be
 #    augmented with the desired mixins.
 #    Only after all that the world will be able to
 #    start.
 # 2. with pre-compiled files. In this case there
 #    is a JS file that containes all the compiled
 #    JS versions of all the classes and mixins, plus
-#    all the code to build the class hyerarchy and
+#    all the code to build the class hierarchy and
 #    to augment the classes with the correct mixins.
 #    So, no compilation of sources is needed for the
-#    world to start, so this is much faster. The
-#    world will still asynchronously load all the
-#    sources so one can edit the original coffeescript.
+#    world to start, so this is much faster. After start,
+#    the world will still asynchronously load all the
+#    sources so one can view/edit the original
+#    coffeescript sources.
 boot = ->
 
   window.stillLoadingSources = true
@@ -222,7 +223,8 @@ boot = ->
   # which is this very file of globals.
   #
   # You could probably do the same loading here by
-  # plainly using script tags in the index file.
+  # plainly using script tags in the index file, however we do it
+  # here so the logic of all the loading is here.
   #
   # Note that it's important that none of the code in each
   # of these entries of this batch uses the code of any
@@ -236,47 +238,41 @@ boot = ->
   #
   # would run the compilation immediately during the class
   # definition and would hence depend on Coffeescript being
-  # loaded already.
+  # loaded already.)
   #
   # Note however that since the pre-compiled classes are pre-
-  # compiled in the correct dependency order (following the
-  # REQUIRES directives), each class *can*
+  # compiled in the correct dependency order, each class *can*
   # initialise static/nonstatic properties with objects
-  # created from other classes (as long as the REQUIRES
-  # directives are well set). So for example a Widget can
+  # created from other classes (as long as we do the dependencies-
+  # finding correctly). So for example a Widget can
   # initialise a "color" property doing something like
   #
   #   myCol: Color.create(...)
-  #
-  # Also note that we load "Coffeescript" here.
-  # Obviously if we don't have the pre-compiled file we need
-  # that to create the Widgets and all that is needed to
-  # start the world, that's a given.
-  # But *also* we need it now if we have the pre-compiled file,
-  # that's because actually the Fizzypaint application
-  # compiles the paint instruments on start, so we
-  # really need to have the Coffeescript compiler on
-  # world start if we open the world with Fizzypaint in it.
-  # If it wasn't for that, we could
-  # postpone the loading of the compiler to after
-  # world start.
   #
   # An alternative way of doing things here would be
   # to try to generate at build time a SINGLE big JS file
   # that includes all these parts, and hence loading all in
   # one go.
-  # That wouldn't necessarily be more performant but it could
-  # be tried.
+  # However this wouldn't necessarily feel more performant,
+  # because really
+  #    1) anything loaded after createWorldAndStartStepping
+  #       happens in the background
+  #    2) all that is loaded before createWorldAndStartStepping
+  #       is: the pre-compiled code, and other test-related stuff,
+  #       and we don't care about test-related builds to load
+  #       a little slower
   # (it could be better to load a few files in parallel
   # and parse them ideally in parallel but I didn't measure
   # that).
 
+  # The case that we want to optimise is the pre-compiled case:
+  # the pre-compiled pack should ideally only contain everything
+  # that is needed to boot the world.
   bootLoadPromises = [loadJSFilePromise "js/pre-compiled.js"]
 
   # TODO rather than relying on this test to load these .js at boot,
   # we should really just dynamically load these when needed
-  # (e.g. when tests are run, or when pre-compiled generation is invoked)
-
+  # (i.e. when tests are run, or when pre-compiled generation is invoked)
   if BUILDFLAG_LOAD_TESTS
     bootLoadPromises.push loadJSFilePromise "js/libs/Mousetrap.min.js"
 
@@ -310,6 +306,7 @@ boot = ->
     loadJSFilesWithCoffeescriptSourcesPromise()
   .then ->
     if window.preCompiled
+      # the world has already started stepping
       (storeSourcesAndPotentiallyCompileThemAndExecuteThem true).then ->
         window.stillLoadingSources = false
         if Automator
@@ -379,10 +376,11 @@ createWorldAndStartStepping = ->
   world.removeSpinnerAndFakeDesktop()
   world.createDesktop()
 
-# these two are to build classes
-
-# this is a classic extention mechanism in JS,
-# also used by the CoffeeScript versions 1.x
+# This is a classic extention mechanism in JS,
+# also used by the CoffeeScript versions 1.x.
+# Nominally CoffeeScript v2 (which we use) just uses the ES6
+# native implementation, however we scrap what CoffeeScript v2
+# does and we use this (a more "manual" way)
 extend = (child, parent) ->
   # starting situation: both child and parent are classes
   # i.e. constructors with their own prototype. Those prototypes

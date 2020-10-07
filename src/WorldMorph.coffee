@@ -473,7 +473,6 @@ class WorldMorph extends PanelWdgt
     else
       return nil
 
-
   # some test urls:
 
   # this one contains two actions, two tests each, but only
