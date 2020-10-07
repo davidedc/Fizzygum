@@ -42,6 +42,7 @@ isString = (target) ->
 
 isObject = (target) ->
   target? and (typeof target is "object" or target instanceof Object)
+stillLoadingSources = nil
 
 
 # -------------------------------------------
@@ -89,7 +90,7 @@ loadJSFilePromise = (fileName) ->
 #    coffeescript sources.
 boot = ->
 
-  window.stillLoadingSources = true
+  stillLoadingSources = true
 
   # There are four separate but related questions related to scaling:
   # -----------------------------------------------------------------
@@ -263,7 +264,7 @@ boot = ->
     if window.preCompiled
       # the world has already started stepping
       (storeSourcesAndPotentiallyCompileThemAndExecuteThem true).then ->
-        window.stillLoadingSources = false
+        stillLoadingSources = false
         if Automator
           Automator.testsManifest = testsManifest
           Automator.testsAssetsManifest = testsAssetsManifest
@@ -273,7 +274,7 @@ boot = ->
     else
       addLogDiv()
       (storeSourcesAndPotentiallyCompileThemAndExecuteThem false).then ->
-        window.stillLoadingSources = false
+        stillLoadingSources = false
         if Automator
           Automator.testsManifest = testsManifest
           Automator.testsAssetsManifest = testsAssetsManifest
