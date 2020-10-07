@@ -372,14 +372,14 @@ class Widget extends TreeNode
   # this happens when the Widget's constructor runs
   # and also when the Widget is duplicated
   registerThisInstance: ->
-    goingUpClassHyerarchy = @constructor
+    goingUpClassHierarchy = @constructor
     loop
       # __super__ will always get to Object,
       # which doesn't have the "instances" property
-      if !goingUpClassHyerarchy.instances?
+      if !goingUpClassHierarchy.instances?
         break
-      goingUpClassHyerarchy.instances.add @
-      goingUpClassHyerarchy = goingUpClassHyerarchy.__super__.constructor
+      goingUpClassHierarchy.instances.add @
+      goingUpClassHierarchy = goingUpClassHierarchy.__super__.constructor
 
   # this happens when the Widget is destroyed
   unregisterThisInstance: ->
@@ -389,14 +389,14 @@ class Widget extends TreeNode
     # AnalogClockWdgt.instances has one
     # element. Then delete the clock, and see that the
     # tracker is now an empty array.
-    goingUpClassHyerarchy = @constructor
+    goingUpClassHierarchy = @constructor
     loop
       # __super__ will always get to Object,
       # which doesn't have the "instances" property
-      if !goingUpClassHyerarchy.instances?
+      if !goingUpClassHierarchy.instances?
         break
-      goingUpClassHyerarchy.instances.delete @
-      goingUpClassHyerarchy = goingUpClassHyerarchy.__super__.constructor
+      goingUpClassHierarchy.instances.delete @
+      goingUpClassHierarchy = goingUpClassHierarchy.__super__.constructor
 
 
   isTransparentAt: (aPoint) ->
