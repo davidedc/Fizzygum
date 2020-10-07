@@ -119,7 +119,7 @@ class TextMorph extends StringMorph
 
     shadowWidth = Math.abs @shadowOffset.x
     shadowHeight = Math.abs @shadowOffset.y
-    height = @lines.length * (Math.ceil(fontHeight @fontSize) + shadowHeight)
+    height = @lines.length * (Math.ceil(@fontHeight @fontSize) + shadowHeight)
     if @maxTextWidth is 0
       @silentRawSetExtent new Point @maxLineWidth + shadowWidth, height
     else
@@ -183,7 +183,7 @@ class TextMorph extends StringMorph
             (@width() - width) / 2
           else # 'left'
             0
-        y = (i + 1) * (Math.ceil(fontHeight @fontSize) + shadowHeight) - shadowHeight
+        y = (i + 1) * (Math.ceil(@fontHeight @fontSize) + shadowHeight) - shadowHeight
         i++
         backBufferContext.fillText line, x + offx, y + offy
 
@@ -202,7 +202,7 @@ class TextMorph extends StringMorph
           (@width() - width) / 2
         else # 'left'
           0
-      y = (i + 1) * (Math.ceil(fontHeight @fontSize) + shadowHeight) - shadowHeight
+      y = (i + 1) * (Math.ceil(@fontHeight @fontSize) + shadowHeight) - shadowHeight
       i++
       backBufferContext.fillText line, x + offx, y + offy
 
@@ -215,9 +215,9 @@ class TextMorph extends StringMorph
       p = @slotCoordinates(i).subtract @position()
       c = @text.charAt i
       backBufferContext.fillStyle = @markedBackgoundColor.toString()
-      backBufferContext.fillRect p.x, p.y, Math.ceil(backBufferContext.measureText(c).width) + 1, Math.ceil(fontHeight @fontSize)
+      backBufferContext.fillRect p.x, p.y, Math.ceil(backBufferContext.measureText(c).width) + 1, Math.ceil(@fontHeight @fontSize)
       backBufferContext.fillStyle = @markedTextColor.toString()
-      backBufferContext.fillText c, p.x, p.y + Math.ceil fontHeight @fontSize
+      backBufferContext.fillText c, p.x, p.y + Math.ceil @fontHeight @fontSize
 
     cacheEntry = [backBuffer, backBufferContext]
     world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
@@ -258,7 +258,7 @@ class TextMorph extends StringMorph
   slotCoordinates: (slot) ->
     [slotRow, slotColumn] = @slotRowAndColumn slot
     shadowHeight = Math.abs @shadowOffset.y
-    yOffset = slotRow * (Math.ceil(fontHeight @fontSize) + shadowHeight)
+    yOffset = slotRow * (Math.ceil(@fontHeight @fontSize) + shadowHeight)
     xOffset = Math.ceil @backBufferContext.measureText((@lines[slotRow]).substring(0,slotColumn)).width
     x = @left() + xOffset
     y = @top() + yOffset
@@ -272,7 +272,7 @@ class TextMorph extends StringMorph
     row = 0
     col = 0
     shadowHeight = Math.abs @shadowOffset.y
-    row += 1  while aPoint.y - @top() > (Math.ceil(fontHeight @fontSize) + shadowHeight) * row
+    row += 1  while aPoint.y - @top() > (Math.ceil(@fontHeight @fontSize) + shadowHeight) * row
     row = Math.max row, 1
     while aPoint.x - @left() > charX
       charX += Math.ceil @backBufferContext.measureText(@lines[row - 1][col]).width

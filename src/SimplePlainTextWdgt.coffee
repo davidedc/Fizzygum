@@ -195,7 +195,7 @@ class SimplePlainTextWdgt extends TextMorph2
         @breakTextIntoLines @text, @originallySetFontSize, veryWideExtent
       width = @widthOfPossiblyCroppedText
 
-    height = @wrappedLines.length *  Math.ceil fontHeight @originallySetFontSize
+    height = @wrappedLines.length *  Math.ceil @fontHeight @originallySetFontSize
     @silentRawSetExtent new Point width, height
 
     @changed()

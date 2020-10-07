@@ -272,7 +272,7 @@ class TextMorph2 extends StringMorph2
       maxWrappedLineWidthOfWholeText = Math.max maxWrappedLineWidthOfWholeText, maxWrappedLineWidthOfThisParagraph
 
       if justCheckIfItFitsInThisExtent?
-        heightOfPossiblyCroppedText = (wrappedLineSlotsOfWholeText.length - 1) * Math.ceil(fontHeight overrideFontSize)
+        heightOfPossiblyCroppedText = (wrappedLineSlotsOfWholeText.length - 1) * Math.ceil(@fontHeight overrideFontSize)
         #console.log "heightOfPossiblyCroppedText: " + heightOfPossiblyCroppedText + " justCheckIfItFitsInThisExtent: " + justCheckIfItFitsInThisExtent
         if heightOfPossiblyCroppedText > justCheckIfItFitsInThisExtent.y or maxWrappedLineWidthOfWholeText > justCheckIfItFitsInThisExtent.x
           world.cacheForTextWrappingData.set cacheKey, false
@@ -285,7 +285,7 @@ class TextMorph2 extends StringMorph2
     if justCheckIfItFitsInThisExtent?
       world.cacheForTextWrappingData.set cacheKey, true
       return true
-    heightOfPossiblyCroppedText = wrappedLinesOfWholeText.length * Math.ceil(fontHeight overrideFontSize)
+    heightOfPossiblyCroppedText = wrappedLinesOfWholeText.length * Math.ceil(@fontHeight overrideFontSize)
     textWrappingDataCacheEntry = [wrappedLinesOfWholeText, wrappedLineSlotsOfWholeText, maxWrappedLineWidthOfWholeText, heightOfPossiblyCroppedText]
     world.cacheForTextWrappingData.set cacheKey, textWrappingDataCacheEntry
     textWrappingData = textWrappingDataCacheEntry
@@ -372,7 +372,7 @@ class TextMorph2 extends StringMorph2
     contentHeight = @reflowText()
 
     if @ instanceof SimplePlainTextWdgt
-      contentHeight = @wrappedLines.length *  Math.ceil fontHeight @originallySetFontSize
+      contentHeight = @wrappedLines.length *  Math.ceil @fontHeight @originallySetFontSize
 
     # if we are calculating a new buffer then
     # for sure we have to mark the caret as broken
@@ -420,7 +420,7 @@ class TextMorph2 extends StringMorph2
           (@width() - width) / 2
         else # 'left'
           0
-      y = (i + 1) * Math.ceil fontHeight @fittingFontSize
+      y = (i + 1) * Math.ceil @fontHeight @fittingFontSize
       i++
 
       # you'd think that we don't need to eliminate the invisible character
@@ -434,7 +434,7 @@ class TextMorph2 extends StringMorph2
       # paying attention that in string2 some variables with the same
       # name as here actually have slightly different meaning
       if @isHeaderLine and @wrappedLines.length <= 1
-        heightOfText = fontHeight @fittingFontSize
+        heightOfText = @fontHeight @fittingFontSize
         textHorizontalPosition = x
         textVertPosition = y + textVerticalPosition
         widthOfText = width
@@ -502,7 +502,7 @@ class TextMorph2 extends StringMorph2
 
     lineWidth = @measureText nil, @wrappedLines[slotRow]
     xOffset = Math.ceil @measureText nil, (@wrappedLines[slotRow]).substring(0,slotColumn)
-    yOffset = slotRow * Math.ceil fontHeight @fittingFontSize
+    yOffset = slotRow * Math.ceil @fontHeight @fittingFontSize
 
     textVerticalPosition = @textVerticalPosition @heightOfPossiblyCroppedText
     textHorizontalPosition = @textHorizontalPosition lineWidth
@@ -542,7 +542,7 @@ class TextMorph2 extends StringMorph2
 
     row = 0
 
-    while aPoint.y - @top() > textVerticalPosition + row * Math.ceil fontHeight @fittingFontSize
+    while aPoint.y - @top() > textVerticalPosition + row * Math.ceil @fontHeight @fittingFontSize
       row += 1
     row = Math.max row, 1
 

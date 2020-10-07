@@ -37,7 +37,7 @@ class CaretMorph extends BlinkerMorph
     @adjustAccordingToTargetText()
 
   updateDimension: ->
-    ls = fontHeight @target.actualFontSizeUsedInRendering()
+    ls = @target.fontHeight @target.actualFontSizeUsedInRendering()
     if ls != @currentCaretFontSize
       @currentCaretFontSize = ls
       @rawSetExtent new Point Math.max(Math.floor(ls / 20), 1), ls

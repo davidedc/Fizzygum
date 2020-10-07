@@ -128,6 +128,13 @@ class StringMorph2 extends Widget
     @noticesTransparentClick = true
     @changed()
 
+  # this font height is too thin.
+  # tall characters such as ⎲ƒ⎳⎷ ⎸⎹ are cut
+  # but hey they look cut also in this text editor I'm using.
+  fontHeight: (fontSize) ->
+    minHeight = Math.max fontSize, WorldMorph.preferencesAndSettings.minimumFontHeight
+    Math.ceil minHeight * 1.2 # assuming 1/5 font size for ascenders
+
   # the actual font size used might be
   # different than the one specified originally
   # because this morph has to be able to fit
@@ -509,7 +516,7 @@ class StringMorph2 extends Widget
       debugger
     if text == ""
       return true
-    extentOccupiedByText = new Point Math.ceil(@measureText overrideFontSize, text), fontHeight(overrideFontSize)
+    extentOccupiedByText = new Point Math.ceil(@measureText overrideFontSize, text), @fontHeight(overrideFontSize)
 
     return extentOccupiedByText.le @extent()
 
@@ -629,7 +636,7 @@ class StringMorph2 extends Widget
     # be really small so to fit, say, the width, while a lot of height of
     # the morph could be "wasted" in memory.
     widthOfText = @calculateTextWidth text
-    heightOfText = fontHeight @fittingFontSize
+    heightOfText = @fontHeight @fittingFontSize
     if @backgroundColor? or
      @verticalAlignment != AlignmentSpecVertical.TOP or
      @horizontalAlignment != AlignmentSpecHorizontal.LEFT or
@@ -666,7 +673,7 @@ class StringMorph2 extends Widget
       backBufferContext.restore()
 
 
-    textVerticalPosition = @textVerticalPosition(fontHeight @fittingFontSize) + fontHeight(@fittingFontSize)
+    textVerticalPosition = @textVerticalPosition(@fontHeight @fittingFontSize) + @fontHeight(@fittingFontSize)
     textHorizontalPosition = @textHorizontalPosition widthOfText
 
     if @hasDarkOutline
@@ -721,9 +728,9 @@ class StringMorph2 extends Widget
       p = @slotCoordinates(i).subtract @position()
       c = @textPossiblyCroppedToFit.charAt(i)
       backBufferContext.fillStyle = @markedBackgoundColor.toString()
-      backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText nil, c) + 1, Math.ceil fontHeight @fittingFontSize
+      backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText nil, c) + 1, Math.ceil @fontHeight @fittingFontSize
       backBufferContext.fillStyle = @markedTextColor.toString()
-      backBufferContext.fillText c, p.x, p.y + Math.ceil fontHeight @fittingFontSize
+      backBufferContext.fillText c, p.x, p.y + Math.ceil @fontHeight @fittingFontSize
     
   
   # StringMorph2 measuring:
@@ -754,7 +761,7 @@ class StringMorph2 extends Widget
 
     widthOfText = @calculateTextWidth text
 
-    textVerticalPosition = @textVerticalPosition fontHeight @fittingFontSize
+    textVerticalPosition = @textVerticalPosition @fontHeight @fittingFontSize
     textHorizontalPosition = @textHorizontalPosition widthOfText
 
     x += textHorizontalPosition
@@ -802,7 +809,7 @@ class StringMorph2 extends Widget
     idx
 
   pointIsAboveFirstLine: (aPoint) ->
-    textVerticalPosition = @textVerticalPosition fontHeight @fittingFontSize
+    textVerticalPosition = @textVerticalPosition @fontHeight @fittingFontSize
 
     if aPoint.y - @top() < textVerticalPosition
       return 0
@@ -810,11 +817,11 @@ class StringMorph2 extends Widget
     return false
 
   pointIsUnderLastLine: (aPoint) ->
-    textVerticalPosition = @textVerticalPosition(fontHeight @fittingFontSize) + fontHeight(@fittingFontSize)
+    textVerticalPosition = @textVerticalPosition(@fontHeight @fittingFontSize) + @fontHeight(@fittingFontSize)
 
     # if pointer is below the line, the slot is at
     # the last character.
-    if (aPoint.y - textVerticalPosition) - @top() > Math.ceil fontHeight @fittingFontSize
+    if (aPoint.y - textVerticalPosition) - @top() > Math.ceil @fontHeight @fittingFontSize
       return @textPossiblyCroppedToFit.length
 
     return false

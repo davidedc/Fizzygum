@@ -54,6 +54,13 @@ class StringMorph extends Widget
       
       @changed()
 
+  # this font height is too thin.
+  # tall characters such as ⎲ƒ⎳⎷ ⎸⎹ are cut
+  # but hey they look cut also in this text editor I'm using.
+  fontHeight: (fontSize) ->
+    minHeight = Math.max fontSize, WorldMorph.preferencesAndSettings.minimumFontHeight
+    Math.ceil minHeight * 1.2 # assuming 1/5 font size for ascenders
+
   actualFontSizeUsedInRendering: ->
     @fontSize
   
@@ -93,7 +100,7 @@ class StringMorph extends Widget
   reLayout: ->
     super()
     width = @widthOfText @text
-    @silentRawSetExtent new Point width, fontHeight @fontSize
+    @silentRawSetExtent new Point width, @fontHeight @fontSize
 
   reflowText: ->
     @reLayout()
@@ -130,9 +137,9 @@ class StringMorph extends Widget
 
     backBufferContext.fillStyle = @color.toString()
     if @isShowingBlanks
-      @renderWithBlanks backBufferContext, 0, fontHeight @fontSize
+      @renderWithBlanks backBufferContext, 0, @fontHeight @fontSize
     else
-      backBufferContext.fillText text, 0, fontHeight @fontSize
+      backBufferContext.fillText text, 0, @fontHeight @fontSize
 
     # draw the selection
     start = Math.min @startMark, @endMark
@@ -142,9 +149,9 @@ class StringMorph extends Widget
       c = text.charAt(i)
       backBufferContext.fillStyle = @markedBackgoundColor.toString()
       backBufferContext.fillRect p.x, p.y, Math.ceil(backBufferContext.measureText(c).width) + 1,
-        fontHeight @fontSize
+        @fontHeight @fontSize
       backBufferContext.fillStyle = @markedTextColor.toString()
-      backBufferContext.fillText c, p.x, fontHeight @fontSize
+      backBufferContext.fillText c, p.x, @fontHeight @fontSize
 
     cacheEntry = [backBuffer, backBufferContext]
     world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
