@@ -31,7 +31,7 @@ Object::addInstanceProperties = (fromClass, obj) ->
     # variable... and then at runtime we use that variable to
     # implement super
     if fromClass?
-      if isFunction value
+      if typeof(value) is "function"
         @::[key + "_class_injected_in"] = fromClass
         if srcLoadCompileDebugWrites then console.log "addingClassToMixin " + key + "_class_injected_in"
 

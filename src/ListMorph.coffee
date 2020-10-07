@@ -15,7 +15,7 @@ class ListMorph extends ScrollPanelWdgt
     @action,
     @elements = [],
     @labelGetter = (element) ->
-        return element  if isString element
+        return element  if Utils.isString element
         return element.toSource()  if element.toSource
         element.toString()
     ,

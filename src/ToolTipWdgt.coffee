@@ -71,7 +71,7 @@ class ToolTipWdgt extends Widget
       @contentsMorph = @contentsMorph.destroy()
     if @contents instanceof Widget
       @contentsMorph = @contents
-    else if isString @contents
+    else if Utils.isString @contents
       @contentsMorph = new TextMorph(
         @contents,
         WorldMorph.preferencesAndSettings.bubbleHelpFontSize,

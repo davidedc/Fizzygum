@@ -79,18 +79,18 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
     appendedFunctionsStartIndex = undefined
 
     if typeof arg_a isnt "number"
-      if isFunction arg_a then appendedFunctionsStartIndex = 0
+      if Utils.isFunction arg_a then appendedFunctionsStartIndex = 0
       arg_a = 0.5 + @pulse()
       arg_b = arg_a
       arg_c = arg_a
     else if typeof arg_b isnt "number"
-      if isFunction arg_b then appendedFunctionsStartIndex = 1
+      if Utils.isFunction arg_b then appendedFunctionsStartIndex = 1
       arg_b = arg_a
       arg_c = arg_a
     else if typeof arg_c isnt "number"
-      if isFunction arg_c then appendedFunctionsStartIndex = 2
+      if Utils.isFunction arg_c then appendedFunctionsStartIndex = 2
       arg_c = 1
-    else if isFunction arg_d
+    else if Utils.isFunction arg_d
       appendedFunctionsStartIndex = 3
 
 
@@ -108,7 +108,7 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
     context.scale arg_a, arg_b
 
     if appendedFunctionsStartIndex?
-      while isFunction arguments[appendedFunctionsStartIndex]
+      while Utils.isFunction arguments[appendedFunctionsStartIndex]
         result = arguments[appendedFunctionsStartIndex].apply @
         # we find out that the function is actually
         # a fake so we have to undo the push and leave
@@ -127,18 +127,18 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
     appendedFunctionsStartIndex = undefined
 
     if typeof arg_a isnt "number"
-      if isFunction arg_a then appendedFunctionsStartIndex = 0
+      if Utils.isFunction arg_a then appendedFunctionsStartIndex = 0
       arg_a = @pulse() * Math.PI
       arg_b = arg_a
       arg_c = 0
     else if typeof arg_b isnt "number"
-      if isFunction arg_b then appendedFunctionsStartIndex = 1
+      if Utils.isFunction arg_b then appendedFunctionsStartIndex = 1
       arg_b = arg_a
       arg_c = arg_a
     else if typeof arg_c isnt "number"
-      if isFunction arg_c then appendedFunctionsStartIndex = 2
+      if Utils.isFunction arg_c then appendedFunctionsStartIndex = 2
       arg_c = 0
-    else if isFunction arg_d
+    else if Utils.isFunction arg_d
       appendedFunctionsStartIndex = 3
 
     context = @backBufferContext
@@ -148,7 +148,7 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
     context.rotate arg_a
 
     if appendedFunctionsStartIndex?
-      while isFunction arguments[appendedFunctionsStartIndex]
+      while Utils.isFunction arguments[appendedFunctionsStartIndex]
         result = arguments[appendedFunctionsStartIndex].apply @
         # we find out that the function is actually
         # a fake so we have to undo the push and leave
@@ -167,7 +167,7 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
     appendedFunctionsStartIndex = undefined
 
     if typeof arg_a isnt "number"
-      if isFunction arg_a then appendedFunctionsStartIndex = 0
+      if Utils.isFunction arg_a then appendedFunctionsStartIndex = 0
 
       d = new Date
       n = d.getTime()
@@ -176,13 +176,13 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
       arg_b = Math.cos(n/150) * 15
       arg_c = arg_a
     else if typeof arg_b isnt "number"
-      if isFunction arg_b then appendedFunctionsStartIndex = 1
+      if Utils.isFunction arg_b then appendedFunctionsStartIndex = 1
       arg_b = arg_a
       arg_c = arg_a
     else if typeof arg_c isnt "number"
-      if isFunction arg_c then appendedFunctionsStartIndex = 2
+      if Utils.isFunction arg_c then appendedFunctionsStartIndex = 2
       arg_c = 0
-    else if isFunction arg_d
+    else if Utils.isFunction arg_d
       appendedFunctionsStartIndex = 3
 
     context = @backBufferContext
@@ -192,7 +192,7 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
     context.translate arg_a, arg_b
 
     if appendedFunctionsStartIndex?
-      while isFunction arguments[appendedFunctionsStartIndex]
+      while Utils.isFunction arguments[appendedFunctionsStartIndex]
         result = arguments[appendedFunctionsStartIndex].apply @
         # we find out that the function is actually
         # a fake so we have to undo the push and leave
@@ -225,18 +225,18 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
     # primitives, but we handle them here in all cases
     # to make the code uniform and unifiable
     if typeof a isnt "number"
-      if isFunction a then appendedFunction = a
+      if Utils.isFunction a then appendedFunction = a
       a = 1
       b = 1
       c = 1
     else if typeof b isnt "number"
-      if isFunction b then appendedFunction = b
+      if Utils.isFunction b then appendedFunction = b
       b = a
       c = a
     else if typeof c isnt "number"
-      if isFunction c then appendedFunction = c
+      if Utils.isFunction c then appendedFunction = c
       c = 1
-    else if isFunction d
+    else if Utils.isFunction d
       appendedFunction = d
 
     #context.beginPath()

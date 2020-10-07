@@ -55,10 +55,10 @@ class LCLProgramRunner
 
     # in the case "run <box>"
     # we have to paint it now
-    if isFunction functionToBeRun
+    if Utils.isFunction functionToBeRun
       functionToBeRun()
 
-    if isFunction chainedFunction
+    if Utils.isFunction chainedFunction
       chainedFunction()
 
   # This is the function called from the compiled code to add the doOnce line

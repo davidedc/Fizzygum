@@ -16,18 +16,12 @@ world = {}
 
 srcLoadsSteps = []
 
-isFunction = (functionToCheck) ->
-  typeof(functionToCheck) is "function"
 srcLoadCompileDebugWrites = false
 
-isString = (target) ->
-  typeof target is "string" or target instanceof String
 Automator = nil
 AutomatorRecorder = nil
 AutomatorPlayer = nil
 
-isObject = (target) ->
-  target? and (typeof target is "object" or target instanceof Object)
 stillLoadingSources = nil
 
 

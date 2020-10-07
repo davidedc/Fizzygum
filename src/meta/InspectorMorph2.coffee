@@ -141,10 +141,10 @@ class InspectorMorph2 extends Widget
       attribs.push property  if property
 
     if !@showingMethods
-      attribs = attribs.filter (prop) => !isFunction @target[prop]
+      attribs = attribs.filter (prop) => !Utils.isFunction @target[prop]
 
     if !@showingFields
-      attribs = attribs.filter (prop) => isFunction @target[prop]
+      attribs = attribs.filter (prop) => Utils.isFunction @target[prop]
 
     # if we don't show inherited props, then we let through two types of props (each side of the "or"
     # takes care of one type):
@@ -226,7 +226,7 @@ class InspectorMorph2 extends Widget
     # the idea is that you can view / change
     # its fields
     doubleClickAction = =>
-      if !isObject @currentProperty
+      if !Utils.isObject @currentProperty
         return
       inspector = new @constructor @currentProperty
       inspector.fullRawMoveTo world.hand.position()
@@ -371,7 +371,7 @@ class InspectorMorph2 extends Widget
     # functions should have a source somewhere
     # either in the object or in a superclass,
     # try to find it.
-    if isFunction(val)
+    if Utils.isFunction(val)
       if @target[selected + "_source"]?
           val = @target[selected + "_source"]
       else
@@ -389,7 +389,7 @@ class InspectorMorph2 extends Widget
       
       if !val?
         txt = "nil"
-      else if isString val
+      else if Utils.isString val
         txt = '"'+val+'"'
       else
         txt = val.toString()

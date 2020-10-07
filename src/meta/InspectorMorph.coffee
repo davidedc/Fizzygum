@@ -74,10 +74,10 @@ class InspectorMorph extends BoxMorph
     attribs = switch @showing
       when "attributes"
         attribs.filter (prop) =>
-          not isFunction @target[prop]
+          not Utils.isFunction @target[prop]
       when "methods"
         attribs.filter (prop) =>
-          isFunction @target[prop]
+          Utils.isFunction @target[prop]
       when "all"
         attribs
 
@@ -101,14 +101,14 @@ class InspectorMorph extends BoxMorph
       when "attributes"
         staticFunctions = []
         staticAttributes = staticProperties.filter (prop) =>
-          not isFunction @target.constructor[prop]
+          not Utils.isFunction @target.constructor[prop]
       when "methods"
         staticFunctions = staticProperties.filter (prop) =>
-          isFunction @target.constructor[prop]
+          Utils.isFunction @target.constructor[prop]
         staticAttributes = []
       else
         staticFunctions = staticProperties.filter (prop) =>
-          isFunction @target.constructor[prop]
+          Utils.isFunction @target.constructor[prop]
         staticAttributes = staticProperties.filter (prop) =>
           prop not in staticFunctions
 
@@ -124,7 +124,7 @@ class InspectorMorph extends BoxMorph
     # the idea is that you can view / change
     # its fields
     doubleClickAction = =>
-      if !isObject @currentProperty
+      if !Utils.isObject @currentProperty
         return
       inspector = new @constructor @currentProperty
       inspector.fullRawMoveTo world.hand.position()
@@ -246,7 +246,7 @@ class InspectorMorph extends BoxMorph
     menu.popUpAtHand()
 
   openInspectorMenu: ->
-    if isObject @currentProperty
+    if Utils.isObject @currentProperty
       menu = new MenuMorph @, false
       menu.addMenuItem "in new inspector...", true, @, =>
         inspector = new @constructor @currentProperty
@@ -329,7 +329,7 @@ class InspectorMorph extends BoxMorph
     @currentProperty = val
     if !val?
       txt = "nil"
-    else if isString val
+    else if Utils.isString val
       txt = '"'+val+'"'
     else
       txt = val.toString()

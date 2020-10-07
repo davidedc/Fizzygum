@@ -42,7 +42,7 @@ class ClassInspectorMorph extends InspectorMorph2
     # if we are saving a function, we'd like to
     # keep the source code so we can edit Coffeescript
     # again.
-    if isFunction @target[propertyName]
+    if Utils.isFunction @target[propertyName]
       @target[propertyName + "_source"] = txt
     @notifyInstancesOfSourceChange([propertyName])
 

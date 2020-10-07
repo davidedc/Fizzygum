@@ -2412,7 +2412,7 @@ class Widget extends TreeNode
     # if we are saving a function, we'd like to
     # keep the source code so we can edit Coffeescript
     # again.
-    if isFunction @[propertyName]
+    if Utils.isFunction @[propertyName]
       @[propertyName + "_source"] = txt
     @sourceChanged()
 
