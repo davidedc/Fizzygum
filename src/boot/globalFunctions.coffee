@@ -1,22 +1,3 @@
-# globals -------------------------------------------------
-world = {}
-
-srcLoadsSteps = []
-
-srcLoadCompileDebugWrites = false
-
-Automator = null
-AutomatorRecorder = null
-AutomatorPlayer = null
-
-
-# This is used for mixins: MixedClassKeywords is used
-# to protect some methods so the are not copied to object,
-# because they have special meaning
-# (this comment from a stackOverflow answer from clyde
-# here: http://stackoverflow.com/a/8728164/1318347 )
-MixedClassKeywords = ['onceAddedClassProperties', 'included']
-
 # we use "nil" everywhere instead of "null"
 # and this "nil" we use is really "undefined"
 # The reason is the following: Coffeescript v2 has the
@@ -30,20 +11,35 @@ MixedClassKeywords = ['onceAddedClassProperties', 'included']
 # and "null" explicitly.
 nil = undefined
 
+# globals -------------------------------------------------
+world = {}
 
-noOperation = ->
-    nil
+srcLoadsSteps = []
 
 isFunction = (functionToCheck) ->
   typeof(functionToCheck) is "function"
+srcLoadCompileDebugWrites = false
 
 isString = (target) ->
   typeof target is "string" or target instanceof String
+Automator = nil
+AutomatorRecorder = nil
+AutomatorPlayer = nil
 
 isObject = (target) ->
   target? and (typeof target is "object" or target instanceof Object)
 stillLoadingSources = nil
 
+
+# This is used for mixins: MixedClassKeywords is used
+# to protect some methods so the are not copied to object,
+# because they have special meaning
+# (this comment from a stackOverflow answer from clyde
+# here: http://stackoverflow.com/a/8728164/1318347 )
+MixedClassKeywords = ['onceAddedClassProperties', 'included']
+
+noOperation = ->
+    nil
 
 # -------------------------------------------
 
@@ -238,11 +234,10 @@ boot = ->
     bootLoadPromises.push loadJSFilePromise "js/tests/testsManifest.js"
     bootLoadPromises.push loadJSFilePromise "js/tests/testsAssetsManifest.js"
 
-  (Promise.all bootLoadPromises).then ->
-
   # end of first batch
   # -----------------------------------------------------------
 
+  (Promise.all bootLoadPromises).then ->
     if window.preCompiled
       createWorldAndStartStepping()
   .then ->
