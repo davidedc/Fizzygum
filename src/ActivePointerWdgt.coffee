@@ -781,7 +781,7 @@ class ActivePointerWdgt extends Widget
       pic = new Image
       targetDrop = targetDrop.parent  until targetDrop.droppedImage
       pic.onload = ->
-        canvas = newCanvas new Point pic.width, pic.height
+        canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point pic.width, pic.height
         canvas.getContext("2d").drawImage pic, 0, 0
         targetDrop.droppedImage canvas, aFile.name
 
@@ -843,7 +843,7 @@ class ActivePointerWdgt extends Widget
         targetDrop = targetDrop.parent  until targetDrop.droppedImage
         img = new Image
         img.onload = ->
-          canvas = newCanvas new Point img.width, img.height
+          canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point img.width, img.height
           canvas.getContext("2d").drawImage img, 0, 0
           targetDrop.droppedImage canvas
         img.src = url
@@ -851,7 +851,7 @@ class ActivePointerWdgt extends Widget
       targetDrop = targetDrop.parent  until targetDrop.droppedImage
       img = new Image
       img.onload = ->
-        canvas = newCanvas new Point img.width, img.height
+        canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point img.width, img.height
         canvas.getContext("2d").drawImage img, 0, 0
         targetDrop.droppedImage canvas
       src = parseImgURL txt

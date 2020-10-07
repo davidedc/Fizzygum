@@ -1989,7 +1989,7 @@ class Widget extends TreeNode
         bounds = bounds.growBy @shadowInfo.offset
 
 
-    img = newCanvas bounds.extent().scaleBy ceilPixelRatio
+    img = HTMLCanvasElement.createOfPhysicalDimensions bounds.extent().scaleBy ceilPixelRatio
     ctx = img.getContext "2d"
     # ctx.useLogicalPixelsUntilRestore()
     # we are going to draw this morph and its children into "img".
@@ -2037,7 +2037,7 @@ class Widget extends TreeNode
   # exactly as the user sees them.
   fullImageAsItAppearsOnScreen: ->
     fullExtentOfMorph = @fullBounds()
-    destCanvas = newCanvas fullExtentOfMorph.extent().scaleBy ceilPixelRatio
+    destCanvas = HTMLCanvasElement.createOfPhysicalDimensions fullExtentOfMorph.extent().scaleBy ceilPixelRatio
     destCtx = destCanvas.getContext '2d'
     destCtx.drawImage world.worldCanvas,
       fullExtentOfMorph.topLeft().x * ceilPixelRatio,
@@ -2352,7 +2352,7 @@ class Widget extends TreeNode
       #console.log "cloning:" + eachMorph.className
       #console.log "with:" + window[eachObject.className].prototype
       if eachObject.className == "Canvas"
-        theClone = newCanvas new Point eachObject.width, eachObject.height
+        theClone = HTMLCanvasElement.createOfPhysicalDimensions new Point eachObject.width, eachObject.height
         ctx = theClone.getContext "2d"
 
         image = new Image
@@ -3896,11 +3896,11 @@ class Widget extends TreeNode
     fb = @fullBounds()
     otherFb = otherMorph.fullBounds()
     oRect = fb.intersect(otherFb)
-    oImg = newCanvas oRect.extent().scaleBy ceilPixelRatio
+    oImg = HTMLCanvasElement.createOfPhysicalDimensions oRect.extent().scaleBy ceilPixelRatio
     ctx = oImg.getContext "2d"
     ctx.useLogicalPixelsUntilRestore()
     if oRect.width() < 1 or oRect.height() < 1
-      return newCanvas (new Point 1, 1).scaleBy ceilPixelRatio
+      return HTMLCanvasElement.createOfPhysicalDimensions (new Point 1, 1).scaleBy ceilPixelRatio
     ctx.drawImage @fullImage(),
       Math.round(oRect.origin.x - fb.origin.x),
       Math.round(oRect.origin.y - fb.origin.y)

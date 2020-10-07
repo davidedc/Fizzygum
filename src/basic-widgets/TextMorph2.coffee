@@ -379,7 +379,7 @@ class TextMorph2 extends StringMorph2
     if world.caret?
       world.caret.changed()      
 
-    backBuffer = newCanvas()
+    backBuffer = HTMLCanvasElement.createOfPhysicalDimensions()
     backBufferContext = backBuffer.getContext "2d"
 
     backBuffer.width = @width() * ceilPixelRatio

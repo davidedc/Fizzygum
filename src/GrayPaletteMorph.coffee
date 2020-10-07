@@ -20,7 +20,7 @@ class GrayPaletteMorph extends ColorPaletteMorph
     if cacheHit? then return cacheHit
 
     extent = @extent()
-    backBuffer = newCanvas extent.scaleBy ceilPixelRatio
+    backBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
     backBufferContext = backBuffer.getContext "2d"
     backBufferContext.useLogicalPixelsUntilRestore()
     @choice = Color.BLACK

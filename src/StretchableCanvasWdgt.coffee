@@ -77,7 +77,7 @@ class StretchableCanvasWdgt extends CanvasMorph
     throw new Error "not implemented yet"
 
   createNewBehindTheScenesBuffer: (extent) ->
-    @behindTheScenesBackBuffer = newCanvas extent.scaleBy ceilPixelRatio
+    @behindTheScenesBackBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
     @behindTheScenesBackBufferContext = @behindTheScenesBackBuffer.getContext "2d"
 
     if @color?
@@ -89,7 +89,7 @@ class StretchableCanvasWdgt extends CanvasMorph
     @behindTheScenesBackBufferContext.useLogicalPixelsUntilRestore()
 
   createNewFrontFacingBuffer: (extent) ->
-    @backBuffer = newCanvas extent.scaleBy ceilPixelRatio
+    @backBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
     @backBufferContext = @backBuffer.getContext "2d"
 
 

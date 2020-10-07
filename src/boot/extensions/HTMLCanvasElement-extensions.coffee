@@ -15,8 +15,8 @@ HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClo
   # with and height here are not the morph's,
   # which would be in logical units and hence would need ceilPixelRatio
   # correction,
-  # but in actual physical units i.e. the actual bugffer size
-  cloneOfMe = newCanvas new Point @width, @height
+  # but in actual physical units i.e. the actual buffer size
+  cloneOfMe = HTMLCanvasElement.createOfPhysicalDimensions new Point @width, @height
 
   ctx = cloneOfMe.getContext "2d"
   ctx.drawImage @, 0, 0
@@ -35,3 +35,25 @@ HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClo
 
 
   return cloneOfMe
+
+# HTMLCanvasElement.createOfPhysicalDimensions takes physical size, i.e. actual buffer pixels.
+# On non-retina displays, that's just the amount of logical pixels,
+# which are used for all other measures of morphs.
+# On retina displays, that's twice the amount of logical pixels.
+# If the dimensions come from a canvas size, then those are
+# already physical pixels.
+# If the dimensions come form other measurements of the morphs,
+# then those are in logical coordinates and need to be
+# corrected with ceilPixelRatio before being passed here.
+HTMLCanvasElement.createOfPhysicalDimensions = (extentPoint) ->
+  extentPoint?.debugIfFloats()
+  # answer a new empty instance of Canvas, don't display anywhere
+  ext = extentPoint or
+    x: 0
+    y: 0
+  canvas = document.createElement "canvas"
+  canvas.width = Math.ceil ext.x
+  canvas.height = Math.ceil  ext.y
+  canvas
+
+

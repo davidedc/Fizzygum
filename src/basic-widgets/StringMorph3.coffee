@@ -581,7 +581,7 @@ class StringMorph3 extends Widget
       width = widthOfText
       height = heightOfText
 
-    backBuffer = newCanvas (new Point width, height).scaleBy ceilPixelRatio
+    backBuffer = HTMLCanvasElement.createOfPhysicalDimensions (new Point width, height).scaleBy ceilPixelRatio
 
     backBufferContext = backBuffer.getContext "2d"
 

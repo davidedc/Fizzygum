@@ -311,7 +311,7 @@ class WorldMorph extends PanelWdgt
 
     @worldCanvasContext = @worldCanvas.getContext "2d"
 
-    @canvasForTextMeasurements = newCanvas()
+    @canvasForTextMeasurements = HTMLCanvasElement.createOfPhysicalDimensions()
     @canvasContextForTextMeasurements = @canvasForTextMeasurements.getContext "2d"
     @canvasContextForTextMeasurements.useLogicalPixelsUntilRestore()
     @canvasContextForTextMeasurements.textAlign = "left"

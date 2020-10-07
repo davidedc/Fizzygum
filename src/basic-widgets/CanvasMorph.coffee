@@ -36,7 +36,7 @@ class CanvasMorph extends PanelWdgt
         original_backBuffer = @backBuffer
 
         # make a new canvas of the new size
-        @backBuffer = newCanvas extent.scaleBy ceilPixelRatio
+        @backBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
         @backBufferContext = @backBuffer.getContext "2d"
 
         # paint the background over it all so there are
@@ -54,7 +54,7 @@ class CanvasMorph extends PanelWdgt
         @backBufferContext.useLogicalPixelsUntilRestore()
         return [@backBuffer, @backBufferContext]
 
-    @backBuffer = newCanvas extent.scaleBy ceilPixelRatio
+    @backBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
     @backBufferContext = @backBuffer.getContext "2d"
 
     if @color?

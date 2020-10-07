@@ -55,26 +55,6 @@ fontHeight = (fontSize) ->
   minHeight = Math.max fontSize, WorldMorph.preferencesAndSettings.minimumFontHeight
   Math.ceil minHeight * 1.2 # assuming 1/5 font size for ascenders
 
-# newCanvas takes physical size, i.e. actual buffer pixels.
-# On non-retina displays, that's just the amount of logical pixels,
-# which are used for all other measures of morphs.
-# On retina displays, that's twice the amount of logical pixels.
-# If the dimensions come from a canvas size, then those are
-# already physical pixels.
-# If the dimensions come form other measurements of the morphs,
-# then those are in logical coordinates and need to be
-# corrected with ceilPixelRatio before being passed here.
-newCanvas = (extentPoint) ->
-  extentPoint?.debugIfFloats()
-  # answer a new empty instance of Canvas, don't display anywhere
-  ext = extentPoint or
-    x: 0
-    y: 0
-  canvas = document.createElement "canvas"
-  canvas.width = Math.ceil ext.x
-  canvas.height = Math.ceil  ext.y
-  canvas
-
 # -------------------------------------------
 
 # a helper function to use Promise style

@@ -45,7 +45,7 @@ class TextMorph extends StringMorph
   
   breakTextIntoLines: ->
     paragraphs = @text.split "\n"
-    canvas = newCanvas()
+    canvas = HTMLCanvasElement.createOfPhysicalDimensions()
     context = canvas.getContext "2d"
     context.useLogicalPixelsUntilRestore()
     currentLine = ""
@@ -112,7 +112,7 @@ class TextMorph extends StringMorph
 
   reLayout: ->
     super()
-    ANimage = newCanvas()
+    ANimage = HTMLCanvasElement.createOfPhysicalDimensions()
     context = ANimage.getContext "2d"
     context.font = @buildCanvasFontProperty()
     @breakTextIntoLines()
@@ -144,7 +144,7 @@ class TextMorph extends StringMorph
     if cacheHit? then return cacheHit
 
 
-    backBuffer = newCanvas()
+    backBuffer = HTMLCanvasElement.createOfPhysicalDimensions()
     backBufferContext = backBuffer.getContext "2d"
 
     shadowWidth = Math.abs @shadowOffset.x
