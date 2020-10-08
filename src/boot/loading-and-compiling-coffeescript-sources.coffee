@@ -12,12 +12,15 @@
 # we see if we can resolve one such "gate" so
 # that the next source can be loaded.
 #
-# 2. In non-precompiled mode we don't care about
-# the gitter because there is no running world
-# (because we still have to build it from the
-# sources we are loading now),
-# so we can just wait each compilation step on
-# a timer.
+# 2. In non-precompiled mode
+#    a) we don't have a running world
+#       so there is no concept of doing things "on next frame"
+#       (because we still have to build it from the
+#       sources we are loading now),
+#       so we can just wait each compilation step on
+#       a timer.
+#    b) we don't care about the gitter again because
+#       there is no running world
 waitNextTurn = ->
   () ->
     if window.preCompiled
