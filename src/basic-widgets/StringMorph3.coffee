@@ -175,7 +175,7 @@ class StringMorph3 extends Widget
   toString: ->
     # e.g. 'a StringMorph3("Hello World")'
     firstPart = super()
-    if Automator and Automator.state != Automator.IDLE and
+    if Automator? and Automator.state != Automator.IDLE and
     Automator.hidingOfMorphsContentExtractInLabels
       return firstPart
     else

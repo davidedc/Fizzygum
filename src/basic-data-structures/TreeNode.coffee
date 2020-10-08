@@ -352,7 +352,7 @@ class TreeNode
   isAncestorOf: (morph) ->
 
     # »>> this part is excluded from the fizzygum homepage build
-    if Automator and !morph?
+    if Automator? and !morph?
       # this happens when in a test, you select
       # a menu entry that doesn't exist.
       # so it's a good thing that we block the test

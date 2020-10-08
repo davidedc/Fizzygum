@@ -174,7 +174,7 @@ class DiffingPatchNodeWdgt extends Widget
 
 
   buildAndConnectChildren: ->
-    if Automator and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
@@ -222,7 +222,7 @@ class DiffingPatchNodeWdgt extends Widget
 
     world.trackChanges.pop()
     @fullChanged()
-    if Automator and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     super

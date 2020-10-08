@@ -348,7 +348,7 @@ class Widget extends TreeNode
     super()
     @assignUniqueID()
 
-    if Automator and Automator.state == Automator.RECORDING
+    if Automator? and Automator.state == Automator.RECORDING
       arr = world.automator.tagsCollectedWhileRecordingTest
       if @constructor.name not in arr
         arr.push @constructor.name
@@ -470,7 +470,7 @@ class Widget extends TreeNode
   toString: ->
     firstPart = "a "
 
-    if Automator and Automator.state != Automator.IDLE and Automator.hidingOfMorphsNumberIDInLabels
+    if Automator? and Automator.state != Automator.IDLE and Automator.hidingOfMorphsNumberIDInLabels
       return firstPart + @morphClassString()
     else
       return firstPart + @uniqueIDString()

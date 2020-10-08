@@ -15,7 +15,7 @@ class MouseSensorMorph extends BoxMorph
 
     # don't animate anything if we are in an animation pacing control
     # situation.
-    if Automator and Automator.animationsPacingControl
+    if Automator? and Automator.animationsPacingControl
       if Automator.state == Automator.RECORDING or Automator.state == Automator.PLAYING
         @alpha = 0.6
         @changed()

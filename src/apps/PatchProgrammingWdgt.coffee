@@ -76,7 +76,7 @@ class PatchProgrammingWdgt extends StretchableEditableWdgt
 
 
     world.trackChanges.pop()
-    if Automator and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     @layoutIsValid = true

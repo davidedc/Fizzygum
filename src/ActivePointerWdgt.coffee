@@ -93,7 +93,7 @@ class ActivePointerWdgt extends Widget
     @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem wdgtTheMenuIsAbout
     @stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere wdgtTheMenuIsAbout
 
-    if Automator and
+    if Automator? and
      Automator.state == Automator.PLAYING
       Automator.fade 'rightMouseButtonIndicator', 0, 1, 10, new Date().getTime()
       setTimeout \
@@ -142,7 +142,7 @@ class ActivePointerWdgt extends Widget
     oldParent = aWdgt.parent
     if !@isThisPointerFloatDraggingSomething()
 
-      if Automator
+      if Automator?
         world.automator.recorder.addGrabCommand()
         if Automator.state == Automator.RECORDING
           action = "grab"
@@ -229,7 +229,7 @@ class ActivePointerWdgt extends Widget
   drop: ->
     if @isThisPointerFloatDraggingSomething()
 
-      if Automator
+      if Automator?
         world.automator.recorder.addDropCommand()
         if Automator.state == Automator.RECORDING
           action = "drop"
@@ -358,7 +358,7 @@ class ActivePointerWdgt extends Widget
     world.destroyToolTips()
     @wdgtToGrab = nil
 
-    if Automator and Automator.state == Automator.PLAYING
+    if Automator? and Automator.state == Automator.PLAYING
       if button is 2 or ctrlKey
         Automator.fade 'rightMouseButtonIndicator', 0, 1, 10, new Date().getTime()
       else
@@ -419,7 +419,7 @@ class ActivePointerWdgt extends Widget
    # note that the button param is not used,
    # but adding it for consistency...
   processMouseUp: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    if Automator and Automator.state == Automator.PLAYING
+    if Automator? and Automator.state == Automator.PLAYING
       if button is 2
         Automator.fade 'rightMouseButtonIndicator', 1, 0, 500, new Date().getTime()
       else
@@ -469,7 +469,7 @@ class ActivePointerWdgt extends Widget
             # this method below is also going to remove
             # the mouse down/up commands that have
             # recently/just been added.
-            if Automator
+            if Automator?
               world.automator.recorder.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
             alreadyRecordedLeftOrRightClickOnMenuItem = true
 
@@ -486,7 +486,7 @@ class ActivePointerWdgt extends Widget
           if !alreadyRecordedLeftOrRightClickOnMenuItem
             # this being a right click, pop
             # up a menu as needed.
-            if Automator
+            if Automator?
               world.automator.recorder.addOpenContextMenuCommand w.uniqueIDString()
 
       # trigger the action
@@ -500,12 +500,12 @@ class ActivePointerWdgt extends Widget
           switch expectedClick
             when "mouseClickLeft"
               pointerAndWdgtInfo = world.getPointerAndWdgtInfo()
-              if Automator
+              if Automator?
                 world.automator.recorder.addMouseClickCommand 0, nil, pointerAndWdgtInfo...
               w.mouseUpLeft? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
             when "mouseClickRight"
               pointerAndWdgtInfo = world.getPointerAndWdgtInfo()
-              if Automator
+              if Automator?
                 world.automator.recorder.addMouseClickCommand 2, nil, pointerAndWdgtInfo...
               w.mouseUpRight? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
@@ -525,7 +525,7 @@ class ActivePointerWdgt extends Widget
               #console.log "WorldMorph.preferencesAndSettings.grabDragThreshold:" + WorldMorph.preferencesAndSettings.grabDragThreshold
               @doubleClickWdgt = nil
               disableConsecutiveClicksFromSingleClicksDueToFastTests = false
-              if Automator and Automator.state == Automator.PLAYING
+              if Automator? and Automator.state == Automator.PLAYING
                 if !world.automator.player.runningInSlowMode()
                   disableConsecutiveClicksFromSingleClicksDueToFastTests = true
               if !disableConsecutiveClicksFromSingleClicksDueToFastTests
@@ -563,7 +563,7 @@ class ActivePointerWdgt extends Widget
               if @tripleClickWdgt == w
                 @tripleClickWdgt = nil
                 disableConsecutiveClicksFromSingleClicksDueToFastTests = false
-                if Automator and Automator.state == Automator.PLAYING
+                if Automator? and Automator.state == Automator.PLAYING
                   if !world.automator.player.runningInSlowMode()
                     disableConsecutiveClicksFromSingleClicksDueToFastTests = true
                 if !disableConsecutiveClicksFromSingleClicksDueToFastTests
@@ -702,7 +702,7 @@ class ActivePointerWdgt extends Widget
 
   processDoubleClick: (w = @topWdgtUnderPointer()) ->
     pointerAndWdgtInfo = world.getPointerAndWdgtInfo w
-    if Automator
+    if Automator?
       world.automator.recorder.addMouseDoubleClickCommand nil, pointerAndWdgtInfo...
 
     world.destroyToolTips()
@@ -715,7 +715,7 @@ class ActivePointerWdgt extends Widget
 
   processTripleClick: (w = @topWdgtUnderPointer()) ->
     pointerAndWdgtInfo = world.getPointerAndWdgtInfo w
-    if Automator
+    if Automator?
       world.automator.recorder.addMouseTripleClickCommand nil, pointerAndWdgtInfo...
 
     world.destroyToolTips()
@@ -875,7 +875,7 @@ class ActivePointerWdgt extends Widget
     pos = new Point worldX, worldY
     @fullRawMoveTo pos
 
-    if Automator and Automator.state == Automator.PLAYING
+    if Automator? and Automator.state == Automator.PLAYING
       mousePointerIndicator = document.getElementById "mousePointerIndicator"
       mousePointerIndicator.style.display = 'block'
       posInDocument = world.getCanvasPosition()
@@ -922,7 +922,7 @@ class ActivePointerWdgt extends Widget
     displacementDueToGrabDragThreshold = nil
     skipGrabDragThreshold = false
     
-    if Automator and Automator.state == Automator.PLAYING
+    if Automator? and Automator.state == Automator.PLAYING
       if !window["#{world.automator.player.currentlyPlayingTestName()}"].grabDragThreshold?
         skipGrabDragThreshold = true
 

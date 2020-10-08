@@ -18,7 +18,7 @@ class BlinkerMorph extends Widget
     # screenshots.
     # So we check here that flag, and make the
     # caret is always going to be visible.
-    if Automator and
+    if Automator? and
      Automator.animationsPacingControl and
      Automator.state != Automator.IDLE
       return

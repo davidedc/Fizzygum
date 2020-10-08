@@ -24,7 +24,7 @@ class FridgeMagnetsMorph extends Widget
     "Fizzytiles"
  
   buildAndConnectChildren: ->
-    if Automator and
+    if Automator? and
      Automator.state != Automator.IDLE and
      Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
@@ -186,7 +186,7 @@ class FridgeMagnetsMorph extends Widget
 
 
     world.trackChanges.pop()
-    if Automator and
+    if Automator? and
      Automator.state != Automator.IDLE and
      Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

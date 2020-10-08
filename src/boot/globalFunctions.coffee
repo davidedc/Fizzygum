@@ -18,10 +18,6 @@ framePacedPromises = []
 
 srcLoadCompileDebugWrites = false
 
-Automator = nil
-AutomatorRecorder = nil
-AutomatorPlayer = nil
-
 stillLoadingSources = nil
 
 
@@ -258,7 +254,7 @@ boot = ->
       # the world has already started stepping
       (storeSourcesAndPotentiallyCompileThemAndExecuteThem true).then ->
         stillLoadingSources = false
-        if Automator
+        if Automator?
           Automator.testsManifest = testsManifest
           Automator.testsAssetsManifest = testsAssetsManifest
         # world.getParameterPassedInURL is not included in the homepage build
@@ -268,7 +264,7 @@ boot = ->
       addLogDiv()
       (storeSourcesAndPotentiallyCompileThemAndExecuteThem false).then ->
         stillLoadingSources = false
-        if Automator
+        if Automator?
           Automator.testsManifest = testsManifest
           Automator.testsAssetsManifest = testsAssetsManifest
       .then ->

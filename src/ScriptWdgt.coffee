@@ -58,7 +58,7 @@ class ScriptWdgt extends Widget
       containerWindow.close()
 
   buildAndConnectChildren: ->
-    if Automator and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @savedScript, false, 5
@@ -167,7 +167,7 @@ class ScriptWdgt extends Widget
 
     world.trackChanges.pop()
     @fullChanged()
-    if Automator and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     super

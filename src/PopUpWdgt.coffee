@@ -151,7 +151,7 @@ class PopUpWdgt extends Widget
     # nopainting happening and the morph doesn't
     # know its extent.
     @fullRawMoveWithin world
-    if Automator and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
     # shadow must be added after the morph
     # has been placed somewhere because

@@ -235,7 +235,7 @@ class StringMorph2 extends Widget
   toString: ->
     # e.g. 'a StringMorph2("Hello World")'
     firstPart = super()
-    if Automator and Automator.state != Automator.IDLE and
+    if Automator? and Automator.state != Automator.IDLE and
     Automator.hidingOfMorphsContentExtractInLabels
       return firstPart
     else

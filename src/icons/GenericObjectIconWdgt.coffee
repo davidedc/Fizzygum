@@ -99,5 +99,5 @@ class GenericObjectIconWdgt extends Widget
     super
     @layoutIsValid = true
 
-    if Automator and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

@@ -56,7 +56,7 @@ class ErrorsLogViewerMorph extends Widget
 
 
   buildAndConnectChildren: ->
-    if Automator and
+    if Automator? and
      Automator.state != Automator.IDLE and
      Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
@@ -172,7 +172,7 @@ class ErrorsLogViewerMorph extends Widget
 
 
     world.trackChanges.pop()
-    if Automator and
+    if Automator? and
      Automator.state != Automator.IDLE and
      Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
