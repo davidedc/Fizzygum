@@ -262,6 +262,20 @@ class WorldMorph extends PanelWdgt
   doublePressOfZeroKeypadKey: nil
   # this part is excluded from the fizzygum homepage build <<«
 
+  healingRectanglesPhase: false
+
+  # we use the trackChanges array as a stack to
+  # keep track whether a whole segment of code
+  # (including all function calls in it) will
+  # record the broken rectangles.
+  # Using a stack we can correctly track nested "disabling of track
+  # changes" correctly.
+  trackChanges: [true]
+
+  morphsThatMaybeChangedGeometryOrPosition: []
+  morphsThatMaybeChangedFullGeometryOrPosition: []
+  morphsThatMaybeChangedLayout: []
+
   constructor: (
       @worldCanvas,
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
@@ -269,6 +283,13 @@ class WorldMorph extends PanelWdgt
 
     # The WorldMorph is the very first morph to
     # be created.
+
+    # world at the moment is a global variable, there is only one
+    # world and this variable needs to be initialised as soon as possible, which
+    # is right here. This is because there is code in this contructor that
+    # will reference that global world variable, so it needs to be set
+    # very early
+    window.world = @
 
     if window.location.href.includes "worldWithSystemTestHarness"
       @isIndexPage = false
@@ -289,7 +310,7 @@ class WorldMorph extends PanelWdgt
 
     # additional properties:
     @isDevMode = false
-    @hand = new ActivePointerWdgt @
+    @hand = new ActivePointerWdgt
     @keyboardEventsReceiver = nil
     @lastEditedText = nil
     @caret = nil
@@ -412,7 +433,7 @@ class WorldMorph extends PanelWdgt
     errorsLogViewerMorph = new ErrorsLogViewerMorph "Errors", @, "modifyCodeToBeInjected", ""
     wm = new WindowWdgt nil, nil, errorsLogViewerMorph
     wm.setExtent new Point 460, 400
-    world.add wm
+    @add wm
 
 
     @errorConsole = wm
@@ -686,7 +707,7 @@ class WorldMorph extends PanelWdgt
 
 
   rectAlreadyIncludedInParentBrokenMorph: ->
-    for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
+    for brokenMorph in @morphsThatMaybeChangedGeometryOrPosition
         if brokenMorph.srcBrokenRect?
           aRect = @broken[brokenMorph.srcBrokenRect]
           @checkARectWithHierarchy aRect, brokenMorph, true
@@ -694,7 +715,7 @@ class WorldMorph extends PanelWdgt
           aRect = @broken[brokenMorph.dstBrokenRect]
           @checkARectWithHierarchy aRect, brokenMorph, false
 
-    for brokenMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
+    for brokenMorph in @morphsThatMaybeChangedFullGeometryOrPosition
         if brokenMorph.srcBrokenRect?
           aRect = @broken[brokenMorph.srcBrokenRect]
           @checkARectWithHierarchy aRect, brokenMorph
@@ -703,23 +724,23 @@ class WorldMorph extends PanelWdgt
           @checkARectWithHierarchy aRect, brokenMorph
 
   cleanupSrcAndDestRectsOfMorphs: ->
-    for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
+    for brokenMorph in @morphsThatMaybeChangedGeometryOrPosition
       brokenMorph.srcBrokenRect = nil
       brokenMorph.dstBrokenRect = nil
-    for brokenMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
+    for brokenMorph in @morphsThatMaybeChangedFullGeometryOrPosition
       brokenMorph.srcBrokenRect = nil
       brokenMorph.dstBrokenRect = nil
 
 
   fleshOutBroken: ->
-    #if window.morphsThatMaybeChangedGeometryOrPosition.length > 0
+    #if @morphsThatMaybeChangedGeometryOrPosition.length > 0
     #  debugger
 
     sourceBroken = nil
     destinationBroken = nil
 
 
-    for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
+    for brokenMorph in @morphsThatMaybeChangedGeometryOrPosition
 
       # let's see if this Widget that marked itself as broken
       # was actually painted in the past frame.
@@ -763,13 +784,13 @@ class WorldMorph extends PanelWdgt
     
 
   fleshOutFullBroken: ->
-    #if window.morphsThatMaybeChangedFullGeometryOrPosition.length > 0
+    #if @morphsThatMaybeChangedFullGeometryOrPosition.length > 0
     #  debugger
 
     sourceBroken = nil
     destinationBroken = nil
 
-    for brokenMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
+    for brokenMorph in @morphsThatMaybeChangedFullGeometryOrPosition
 
       #console.log "fleshOutFullBroken: " + brokenMorph
 
@@ -840,15 +861,15 @@ class WorldMorph extends PanelWdgt
   # to heal.
   recalculateLayouts: ->
 
-    until morphsThatMaybeChangedLayout.length == 0
+    until @morphsThatMaybeChangedLayout.length == 0
 
       # find the first Widget which has a broken layout,
       # take out of queue all the others
       loop
-        tryThisMorph = morphsThatMaybeChangedLayout[morphsThatMaybeChangedLayout.length - 1]
+        tryThisMorph = @morphsThatMaybeChangedLayout[@morphsThatMaybeChangedLayout.length - 1]
         if tryThisMorph.layoutIsValid
-          morphsThatMaybeChangedLayout.pop()
-          if morphsThatMaybeChangedLayout.length == 0
+          @morphsThatMaybeChangedLayout.pop()
+          if @morphsThatMaybeChangedLayout.length == 0
             return
         else
           break
@@ -874,16 +895,16 @@ class WorldMorph extends PanelWdgt
         tryThisMorph.doLayout()
       catch err
         @softResetWorld()
-        if !world.errorConsole? then world.createErrorConsole()
+        if !@errorConsole? then @createErrorConsole()
         @errorConsole.contents.showUpWithError err
 
 
   clearGeometryOrPositionPossiblyChangedFlags: ->
-    for m in window.morphsThatMaybeChangedGeometryOrPosition
+    for m in @morphsThatMaybeChangedGeometryOrPosition
       m.geometryOrPositionPossiblyChanged = false
 
   clearFullGeometryOrPositionPossiblyChangedFlags: ->
-    for m in window.morphsThatMaybeChangedFullGeometryOrPosition
+    for m in @morphsThatMaybeChangedFullGeometryOrPosition
       m.fullGeometryOrPositionPossiblyChanged = false
 
   updateBroken: ->
@@ -901,8 +922,8 @@ class WorldMorph extends PanelWdgt
     @clearGeometryOrPositionPossiblyChangedFlags()
     @clearFullGeometryOrPositionPossiblyChangedFlags()
 
-    window.morphsThatMaybeChangedGeometryOrPosition = []
-    window.morphsThatMaybeChangedFullGeometryOrPosition = []
+    @morphsThatMaybeChangedGeometryOrPosition = []
+    @morphsThatMaybeChangedFullGeometryOrPosition = []
     # »>> this part is excluded from the fizzygum homepage build
     #ProfilingDataCollector.profileBrokenRects @broken, @numberOfDuplicatedBrokenRects, @numberOfMergedSourceAndDestination
     # this part is excluded from the fizzygum homepage build <<«
@@ -916,7 +937,7 @@ class WorldMorph extends PanelWdgt
     # each broken rectangle, one might want to consolidate overlapping
     # and nearby rectangles.
 
-    window.healingRectanglesPhase = true
+    @healingRectanglesPhase = true
 
     @errorsWhileRepainting = []
 
@@ -943,13 +964,13 @@ class WorldMorph extends PanelWdgt
     if @errorsWhileRepainting.length != 0
       @findOutAllOtherOffendingWidgetsAndPaintWholeScreen()
 
-    if world.showRedraws
+    if @showRedraws
       @showBrokenRects @worldCanvasContext
 
     @resetDataStructuresForBrokenRects()
 
-    window.healingRectanglesPhase = false
-    if trackChanges.length != 1 and trackChanges[0] != true
+    @healingRectanglesPhase = false
+    if @trackChanges.length != 1 and @trackChanges[0] != true
       alert "trackChanges array should have only one element (true)"
 
   findOutAllOtherOffendingWidgetsAndPaintWholeScreen: ->
@@ -1033,7 +1054,7 @@ class WorldMorph extends PanelWdgt
     @morphsToBePinouted.forEach (eachMorphNeedingPinout) =>
       unless @morphsBeingPinouted.has eachMorphNeedingPinout
         hM = new StringMorph2 eachMorphNeedingPinout.toString()
-        world.add hM
+        @add hM
         hM.wdgtThisWdgtIsPinouting = eachMorphNeedingPinout
         peekThroughBox = eachMorphNeedingPinout.clippedThroughBounds()
         hM.fullRawMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
@@ -1057,7 +1078,7 @@ class WorldMorph extends PanelWdgt
     @morphsToBeHighlighted.forEach (eachMorphNeedingHighlight) =>
       unless @morphsBeingHighlighted.has eachMorphNeedingHighlight 
         hM = new HighlighterMorph
-        world.add hM
+        @add hM
         hM.wdgtThisWdgtIsHighlighting = eachMorphNeedingHighlight
         hM.rawSetBounds eachMorphNeedingHighlight.clippedThroughBounds()
         hM.setColor Color.BLUE
@@ -1211,23 +1232,23 @@ class WorldMorph extends PanelWdgt
 
     catch err
       @softResetWorld()
-      if !world.errorConsole? then world.createErrorConsole()
+      if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError err
 
     @events = []
 
   # we keep the "pacing" promises in this
-  # srcLoadsSteps array, (or, more precisely,
+  # framePacedPromises array, (or, more precisely,
   # we keep their resolving functions) and each frame
   # we resolve one, so we don't cause gitter.
-  loadAPartOfFizzyGumSourceIfNeeded: ->
-    if window.srcLoadsSteps.length > 0
-      resolvingFunction = window.srcLoadsSteps.shift()
+  progressFramePacedActions: ->
+    if window.framePacedPromises.length > 0
+      resolvingFunction = window.framePacedPromises.shift()
       resolvingFunction.call()
 
   showErrorsHappenedInRepaintingStepInPreviousCycle: ->
     for eachErr in @errorsWhileRepainting
-      if !world.errorConsole? then world.createErrorConsole()
+      if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError eachErr
 
   doOneCycle: ->
@@ -1246,7 +1267,8 @@ class WorldMorph extends PanelWdgt
     # currently unused
     @runOtherTasksStepFunction()
     
-    @loadAPartOfFizzyGumSourceIfNeeded()
+    # used to load fizzygum sources progressively
+    @progressFramePacedActions()
     
     @runChildrensStepFunction()
     @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()
@@ -1333,7 +1355,7 @@ class WorldMorph extends PanelWdgt
       #console.log "stepping " + whichWidget
     catch err
       @softResetWorld()
-      if !world.errorConsole? then world.createErrorConsole()
+      if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError err
 
   
@@ -1526,7 +1548,7 @@ class WorldMorph extends PanelWdgt
     if @hand.isThisPointerFloatDraggingSomething()
       if Automator and Automator.state == Automator.RECORDING
         action = "floatDrag"
-        arr = world.automator.tagsCollectedWhileRecordingTest
+        arr = @automator.tagsCollectedWhileRecordingTest
         if action not in arr
           arr.push action
     
@@ -2102,10 +2124,10 @@ class WorldMorph extends PanelWdgt
 
     # »>> this part is excluded from the fizzygum homepage build
     if Automator
-      world.automator.recorder.turnOffAnimationsPacingControl()
-      world.automator.recorder.turnOffAlignmentOfMorphIDsMechanism()
-      world.automator.recorder.turnOffHidingOfMorphsContentExtractInLabels()
-      world.automator.recorder.turnOffHidingOfMorphsNumberIDInLabels()
+      @automator.recorder.turnOffAnimationsPacingControl()
+      @automator.recorder.turnOffAlignmentOfMorphIDsMechanism()
+      @automator.recorder.turnOffHidingOfMorphsContentExtractInLabels()
+      @automator.recorder.turnOffHidingOfMorphsNumberIDInLabels()
     # this part is excluded from the fizzygum homepage build <<«
 
     super()
@@ -2332,15 +2354,15 @@ class WorldMorph extends PanelWdgt
   createNewGrayPaletteMorphInWindow: ->
     gP = new GrayPaletteMorph
     wm = new WindowWdgt nil, nil, gP
-    world.add wm
+    @add wm
     wm.rawSetExtent new Point 130, 70
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveTo @hand.position().subtract new Point 50, 100
   createNewColorPaletteMorphInWindow: ->
     cP = new ColorPaletteMorph
     wm = new WindowWdgt nil, nil, cP
-    world.add wm
+    @add wm
     wm.rawSetExtent new Point 130, 100
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveTo @hand.position().subtract new Point 50, 100
   createNewColorPickerMorph: ->
     @create new ColorPickerMorph
   createNewSensorDemo: ->

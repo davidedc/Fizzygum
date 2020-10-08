@@ -67,7 +67,7 @@ class GenericObjectIconWdgt extends Widget
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
     # going to be painted and moved OK.
-    trackChanges.push false
+    world.trackChanges.push false
 
     height = @height()
     width = @width()
@@ -93,7 +93,7 @@ class GenericObjectIconWdgt extends Widget
     @objectIcon.fullRawMoveTo p0
 
 
-    trackChanges.pop()
+    world.trackChanges.pop()
     @fullChanged()
 
     super

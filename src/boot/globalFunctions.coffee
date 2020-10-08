@@ -12,9 +12,9 @@
 nil = undefined
 
 # globals -------------------------------------------------
-world = {}
+world = nil
 
-srcLoadsSteps = []
+framePacedPromises = []
 
 srcLoadCompileDebugWrites = false
 
@@ -278,33 +278,18 @@ boot = ->
           world.nextStartupAction()
 
 
-# we use the trackChanges array as a stack to
-# keep track whether a whole segment of code
-# (including all function calls in it) will
-# record the broken rectangles.
-# This was previously done only by using one global
-# flag but this was not entirely correct because it
-# wouldn't account for nesting of "disabling track
-# changes" correctly.
-trackChanges = [true]
-healingRectanglesPhase = false
-morphsThatMaybeChangedGeometryOrPosition = []
-morphsThatMaybeChangedFullGeometryOrPosition = []
-morphsThatMaybeChangedLayout = []
-
 createWorldAndStartStepping = ->
 
-  # Add "false" as second parameter below
-  # to fit the world in canvas as per dimensions
-  # specified in the canvas element. Fill entire
-  # page otherwise.
-  if window.location.href.includes "worldWithSystemTestHarness"
-    # the user is here to record a system test so
-    # don't fill entire page cause there are some
-    # controls on the right side of the canvas
-    world = new WorldMorph worldCanvas, false
-  else
-    world = new WorldMorph worldCanvas, true
+  # "false" as second parameter below
+  #   fits the world in canvas as per dimensions
+  #   specified in the canvas element.
+  #   I.e. the user is here to record a system test so
+  #   don't fill entire page cause there are some
+  #   controls on the right side of the canvas.
+  # "true" will make the world fill the entire page.
+  # Also note that the first thing that this constructor does
+  # is to initialise the global "world" variable with... the world.
+  new WorldMorph worldCanvas, !(window.location.href.includes "worldWithSystemTestHarness")
   world.isDevMode = true
 
   # ref https://www.google.com/search?q=requestanimationframe

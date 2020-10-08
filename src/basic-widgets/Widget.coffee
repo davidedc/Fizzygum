@@ -454,14 +454,14 @@ class Widget extends TreeNode
   #
   #    damage list housekeeping
   #
-  #	the trackChanges property of the Widget prototype is a Boolean switch
+  #	the world.trackChanges property of the Widget prototype is a Boolean switch
   #	that determines whether the World's damage list ('broken' rectangles)
   #	tracks changes. By default the switch is always on. If set to false,
   #	changes are not stored. This can be very useful for housekeeping of
   #	the damage list in situations where a large number of (sub-) morphs
   #	are changed more or less at once. Instead of keeping track of every
   #	single submorph's changes tremendous performance improvements can be
-  #	achieved by setting the trackChanges flag to false before propagating
+  #	achieved by setting the world.trackChanges flag to false before propagating
   #	the layout changes, setting it to true again and then storing the full
   #	bounds of the surrounding morph.
   
@@ -2078,14 +2078,14 @@ class Widget extends TreeNode
   # Widget updating ///////////////////////////////////////////////////////////////
   changed: ->
     # tests should all pass even if you don't
-    # use the trackChanges flag, perhaps things
+    # use the world.trackChanges flag, perhaps things
     # should just be a bit slower (but probably not
     # significantly). This is because there is no
     # harm into changing children of a morph
     # that is fullChanged, the checks should
     # simplify the situation.
     # I tested this was OK in December 2017
-    if trackChanges[trackChanges.length - 1]
+    if world.trackChanges[world.trackChanges.length - 1]
 
       # if the morph is attached to a hand then
       # there is also a shadow to change, so we
@@ -2102,7 +2102,7 @@ class Widget extends TreeNode
         # if we already issued a fullChanged on this morph
         # then there is no point issuing a change too.
         if !@fullGeometryOrPositionPossiblyChanged
-          window.morphsThatMaybeChangedGeometryOrPosition.push @
+          world.morphsThatMaybeChangedGeometryOrPosition.push @
           @geometryOrPositionPossiblyChanged = true
 
   # to actually make sure if a morph has changed
@@ -2123,17 +2123,17 @@ class Widget extends TreeNode
   # property above for more info.
   fullChanged: ->
     # tests should all pass even if you don't
-    # use the trackChanges flag, perhaps things
+    # use the world.trackChanges flag, perhaps things
     # should just be a bit slower (but probably not
     # significantly). This is because there is no
     # harm into changing children of a morph
     # that is fullChanged, the checks should
     # simplify the situation.
     # I tested this was OK in December 2017
-    if trackChanges[trackChanges.length - 1]
+    if world.trackChanges[world.trackChanges.length - 1]
       # check if we already issued a fullChanged on this morph
       if !@fullGeometryOrPositionPossiblyChanged
-        window.morphsThatMaybeChangedFullGeometryOrPosition.push @
+        world.morphsThatMaybeChangedFullGeometryOrPosition.push @
         @fullGeometryOrPositionPossiblyChanged = true
   
   # Widget accessing - structure //////////////////////////////////////////////
@@ -2284,13 +2284,13 @@ class Widget extends TreeNode
   # data structures related to broken morphs, then
   # we have to add the copy too.
   alignCopiedMorphToBrokenInfoDataStructures: (copiedMorph) ->
-    if window.morphsThatMaybeChangedGeometryOrPosition.includes(@) and
-     !window.morphsThatMaybeChangedGeometryOrPosition.includes(copiedMorph)
-      window.morphsThatMaybeChangedGeometryOrPosition.push copiedMorph
+    if world.morphsThatMaybeChangedGeometryOrPosition.includes(@) and
+     !world.morphsThatMaybeChangedGeometryOrPosition.includes(copiedMorph)
+      world.morphsThatMaybeChangedGeometryOrPosition.push copiedMorph
 
-    if window.morphsThatMaybeChangedFullGeometryOrPosition.includes(@) and
-     !window.morphsThatMaybeChangedFullGeometryOrPosition.includes(copiedMorph)
-      window.morphsThatMaybeChangedFullGeometryOrPosition.push copiedMorph
+    if world.morphsThatMaybeChangedFullGeometryOrPosition.includes(@) and
+     !world.morphsThatMaybeChangedFullGeometryOrPosition.includes(copiedMorph)
+      world.morphsThatMaybeChangedFullGeometryOrPosition.push copiedMorph
 
   # in case we copy a morph, if the original was in some
   # stepping structures, then we have to add the copy too.
@@ -3968,7 +3968,7 @@ class Widget extends TreeNode
 
   invalidateLayout: ->
     if @layoutIsValid
-      window.morphsThatMaybeChangedLayout.push @
+      world.morphsThatMaybeChangedLayout.push @
     @layoutIsValid = false
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING and @parent?
       @parent.invalidateLayout()

@@ -22,17 +22,24 @@
 #    b) we don't care about the gitter again because
 #       there is no running world
 waitNextTurn = ->
+  if window.preCompiled
+    return waitNextWorldCycle()
+  else
+    return waitNextJSEventLoopCycle()
+
+waitNextWorldCycle = ->
+  # this promise is stored in a queue, and each frame
+  # one is popped out and resolved
   () ->
-    if window.preCompiled
-      prms = new Promise (resolve, reject) ->
-        window.srcLoadsSteps.push resolve
-    else
-      # see https://gist.github.com/joepie91/2664c85a744e6bd0629c
-      prms = new Promise (resolve, reject) ->
-        setTimeout () ->
-          resolve arguments
-        , 1
-    return prms
+    return new Promise (resolve, reject) ->
+      window.framePacedPromises.push resolve
+
+waitNextJSEventLoopCycle = ->
+  () ->
+    return new Promise (resolve, reject) ->
+      setTimeout () ->
+        resolve arguments
+      , 1
 
 loadJSFilesWithCoffeescriptSourcesPromise = ->
   # start of the promise.

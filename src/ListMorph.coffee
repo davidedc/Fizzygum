@@ -57,7 +57,7 @@ class ListMorph extends ScrollPanelWdgt
     @listContents = new MenuMorph @, true, @, false, false, nil, nil
     @listContents.isLockingToPanels = true
     @elements = ["(empty)"]  if !@elements.length
-    trackChanges.push false
+    world.trackChanges.push false
     @elements.forEach (element) =>
       color = nil
       bold = false
@@ -93,7 +93,7 @@ class ListMorph extends ScrollPanelWdgt
         @doubleClickAction # doubleClickAction
       )
 
-    trackChanges.pop()
+    world.trackChanges.pop()
     @listContents.silentFullRawMoveTo @contents.position()
     @listContents.reLayout()
     

@@ -4,7 +4,6 @@
 
 class ActivePointerWdgt extends Widget
 
-  world: nil
   mouseButton: nil
   # used for example to check that
   # mouseDown and mouseUp happen on the
@@ -24,7 +23,7 @@ class ActivePointerWdgt extends Widget
   # the delta position since the last invokation
   previousNonFloatDraggingPos: nil
 
-  constructor: (@world) ->
+  constructor: ->
     @mouseOverList = new Set
     super()
     @minimumExtent = new Point 0,0
@@ -63,7 +62,7 @@ class ActivePointerWdgt extends Widget
     if result?
       return result
     else
-      return @world
+      return world
 
   # »>> this part is excluded from the fizzygum homepage build
   menuAtPointer: ->
@@ -864,11 +863,11 @@ class ActivePointerWdgt extends Widget
   # ActivePointerWdgt floatDragging optimization
   fullRawMoveBy: (delta) ->
     if delta.isZero() then return
-    trackChanges.push false
+    world.trackChanges.push false
     #console.log "move 2"
     @breakNumberOfRawMovesAndResizesCaches()
     super delta
-    trackChanges.pop()
+    world.trackChanges.pop()
     @fullChanged()
 
   processMouseMove: (worldX, worldY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->

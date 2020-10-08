@@ -167,7 +167,7 @@ class BasementWdgt extends BoxMorph
 
     @rawSetBounds newBoundsForThisLayout
 
-    trackChanges.push false
+    world.trackChanges.push false
 
     x = @left() + @cornerRadius
 
@@ -186,7 +186,7 @@ class BasementWdgt extends BoxMorph
     h = WorldMorph.preferencesAndSettings.handleSize
     w = @scrollPanel.width() - h - @cornerRadius
     @hideUsedWdgtsToggle.doLayout (new Rectangle  0,0,w,h).translateBy new Point x, y
-    trackChanges.pop()
+    world.trackChanges.pop()
 
     super
     @layoutIsValid = true

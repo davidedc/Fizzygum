@@ -76,7 +76,7 @@ class ColorPickerMorph extends Widget
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
     # going to be painted and moved OK.
-    trackChanges.push false
+    world.trackChanges.push false
 
     @rawSetBounds newBoundsForThisLayout
     @colorPalette.fullRawMoveTo @position()
@@ -90,7 +90,7 @@ class ColorPickerMorph extends Widget
     @feedback.fullRawMoveTo new Point x, y
     @feedback.rawSetExtent new Point Math.min(@width(), Math.round(@height() * 0.25)), Math.round(@height() * 0.25)
 
-    trackChanges.pop()
+    world.trackChanges.pop()
     @fullChanged()
 
     super

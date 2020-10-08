@@ -419,7 +419,7 @@ class InspectorMorph2 extends Widget
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
     # going to be painted and moved OK.
-    trackChanges.push false
+    world.trackChanges.push false
 
     headerBounds = new Rectangle new Point(Math.round(@left() + @externalPadding), Math.round(@top() + @externalPadding))
     headerBounds = headerBounds.setBoundsWidthAndHeight @width() - 2 * @externalPadding, 15
@@ -491,7 +491,7 @@ class InspectorMorph2 extends Widget
     buttonBounds = buttonBounds.setBoundsWidthAndHeight Math.round(@width()/4), 15
     @saveButton.doLayout buttonBounds
 
-    trackChanges.pop()
+    world.trackChanges.pop()
     @fullChanged()
 
     super

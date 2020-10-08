@@ -1,10 +1,10 @@
 class Utils
 
-  @isFunction: (functionToCheck) ->
-    typeof(functionToCheck) is "function"
+  @isFunction: (toBeChecked) ->
+    typeof toBeChecked is "function"
 
-  @isString: (target) ->
-    typeof target is "string" or target instanceof String
+  @isString: (toBeChecked) ->
+    typeof toBeChecked is "string" or toBeChecked instanceof String
 
-  @isObject: (target) ->
-    target? and (typeof target is "object" or target instanceof Object)
+  @isObject: (toBeChecked) ->
+    toBeChecked? and (typeof toBeChecked is "object" or toBeChecked instanceof Object)
