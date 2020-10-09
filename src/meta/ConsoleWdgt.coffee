@@ -70,8 +70,7 @@ class ConsoleWdgt extends Widget
     functionFromCompiledCode.call @target
 
   doLayout: (newBoundsForThisLayout) ->
-    #if !window.recalculatingLayouts
-    #  debugger
+    #if !window.recalculatingLayouts then debugger
 
     if @isCollapsed()
       @layoutIsValid = true

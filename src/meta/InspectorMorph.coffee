@@ -340,8 +340,7 @@ class InspectorMorph extends BoxMorph
     @detail.setContents cnts, 2
 
   doLayout: (newBoundsForThisLayout) ->
-    #if !window.recalculatingLayouts
-    #  debugger
+    #if !window.recalculatingLayouts then debugger
 
     if !newBoundsForThisLayout?
       if @desiredExtent?

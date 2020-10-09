@@ -68,8 +68,7 @@ class EmptyButtonMorph extends Widget
   
 
   doLayout: (newBoundsForThisLayout) ->
-    #if !window.recalculatingLayouts
-    #  debugger
+    #if !window.recalculatingLayouts then debugger
 
     if !newBoundsForThisLayout?
       if @desiredExtent?

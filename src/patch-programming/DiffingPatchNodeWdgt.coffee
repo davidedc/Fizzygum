@@ -194,8 +194,7 @@ class DiffingPatchNodeWdgt extends Widget
     @invalidateLayout()
 
   doLayout: (newBoundsForThisLayout) ->
-    #if !window.recalculatingLayouts
-    #  debugger
+    #if !window.recalculatingLayouts then debugger
 
     if @isCollapsed()
       @layoutIsValid = true
