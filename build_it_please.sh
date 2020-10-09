@@ -199,7 +199,9 @@ echo "... done compiling boot file"
 echo "minifying boot file..."
 
 if $homepage ; then
-  # There are a few "if Automator? ..." and "if AutomatorRecorder? ..." and "if AutomatorPlayer? ..."
+  # There are a few
+  #    "if Automator? ...", "if AutomatorRecorder? ...", "if AutomatorPlayer? ..."
+  #    "if Automator? and ...", "if AutomatorRecorder? and ...", "if AutomatorPlayer? and ..."
   # sections in the boot code. In the homepage version we don't use any of those three classes,
   # and the code in those sections is completely dead,
   # so we can search/replace those checks with "if (false", so that terser can just eliminate
@@ -338,13 +340,15 @@ if $homepage ; then
   rm $BUILD_PATH/js/src/logging-div.js
 
 
-  # There are many "if Automator? ..." and "if AutomatorRecorder? ..." and "if AutomatorPlayer? ..."
+  # There are many
+  #    "if Automator? ...", "if AutomatorRecorder? ...", "if AutomatorPlayer? ..."
+  #    "if Automator? and ...", "if AutomatorRecorder? and ...", "if AutomatorPlayer? and ..."
   # sections in the code. In the homepage version we don't use any of those three classes,
   # and the code in those sections is completely dead,
   # so we can search/replace those checks with "if (false", so that terser can just eliminate
   # both the checks and the dead-code sections.
-  # At the moment this was put in place, this line saves around 9kBs
-  # (9183 bytes to be precise) in the final build.
+  # At the moment this was put in place, this line saves around 12kBs
+  # (11990 bytes to be precise) in the final build.
   sed -i 's/if ((typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false/g' $BUILD_PATH/js/pre-compiled.js
   sed -i 's/if (typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false)/g' $BUILD_PATH/js/pre-compiled.js
 
