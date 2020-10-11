@@ -24,6 +24,11 @@ class SourceVault
     console.log "allSourcesWithReLayoutMethod -----------------"
     console.log @allSourcesWithReLayoutMethod()
 
+    console.log "allTrailingWhiteSpaces -----------------"
+    @allTrailingWhiteSpaces()
+
+    return
+
   @getSourceContent: (sourceFileName) ->
     if !window[sourceFileName]?
       return nil
@@ -91,3 +96,13 @@ class SourceVault
   @allSourcesWithReLayoutMethod: ->
     @allSourcesJustClassName().filter (eachSource) =>
       window[eachSource]?.class?.nonStaticPropertiesSources.reLayout?
+
+  @allTrailingWhiteSpaces: ->
+    for eachSourceFileName in @allSourceFilesNames()
+      theSource = @getSourceContent(eachSourceFileName)
+      theSourceByLine = theSource.split "\n"
+      lineNumber = 0
+      for eachLine in theSourceByLine
+        lineNumber++
+        if eachLine.match /[^\s#][ ]+$/gm
+          console.log eachSourceFileName + " line " + lineNumber + " " + eachLine + "<"
