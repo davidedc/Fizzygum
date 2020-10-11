@@ -124,7 +124,7 @@ class WorldMorph extends PanelWdgt
   @KEYPAD_4_mappedToThaiKeyboard_I: "ร"
   @KEYPAD_5_mappedToThaiKeyboard_J: "่" # looks like empty string but isn't :-)
   @KEYPAD_6_mappedToThaiKeyboard_K: "า"
-  @KEYPAD_PLUS_mappedToThaiKeyboard_L: "ส" 
+  @KEYPAD_PLUS_mappedToThaiKeyboard_L: "ส"
   @KEYPAD_1_mappedToThaiKeyboard_M: "ท"
   @KEYPAD_2_mappedToThaiKeyboard_N: "ท"
   @KEYPAD_3_mappedToThaiKeyboard_O: "ื"
@@ -544,7 +544,7 @@ class WorldMorph extends PanelWdgt
     WorldMorph.ongoingUrlActionNumber++
 
   getMorphViaTextLabel: ([textDescription, occurrenceNumber, numberOfOccurrences]) ->
-    allCandidateMorphsWithSameTextDescription = 
+    allCandidateMorphsWithSameTextDescription =
       @allChildrenTopToBottomSuchThat (m) ->
         m.getTextDescription() == textDescription
 
@@ -703,7 +703,7 @@ class WorldMorph extends PanelWdgt
             brokenMorph.dstBrokenRect = nil
         else if aRect.containsRectangle @broken[brokenMorphAncestor.dstBrokenRect]
           @broken[brokenMorphAncestor.dstBrokenRect] = nil
-          brokenMorphAncestor.dstBrokenRect = nil      
+          brokenMorphAncestor.dstBrokenRect = nil
 
 
   rectAlreadyIncludedInParentBrokenMorph: ->
@@ -1076,7 +1076,7 @@ class WorldMorph extends PanelWdgt
         eachHighlightingMorph.fullDestroy()
 
     @morphsToBeHighlighted.forEach (eachMorphNeedingHighlight) =>
-      unless @morphsBeingHighlighted.has eachMorphNeedingHighlight 
+      unless @morphsBeingHighlighted.has eachMorphNeedingHighlight
         hM = new HighlighterMorph
         @add hM
         hM.wdgtThisWdgtIsHighlighting = eachMorphNeedingHighlight
@@ -1116,7 +1116,7 @@ class WorldMorph extends PanelWdgt
             # so far the caret is the only keyboard
             # event handler and it has no keyup
             # handler
-            @keyboardEventsReceiver?.processKeyUp? event  
+            @keyboardEventsReceiver?.processKeyUp? event
 
           when "inputDOMElementForVirtualKeyboardKeypressBrowserEvent"
             @keyboardEventsReceiver?.processKeyPress event
@@ -1425,7 +1425,7 @@ class WorldMorph extends PanelWdgt
         if !analogClockWdgt.wasPositionedSlightlyOutsidePanel
           analogClockWdgt.fullRawMoveWithin @
       else
-        analogClockWdgt.fullMoveTo new Point @right() - 80 - @desktopSidesPadding, @top() + @desktopSidesPadding 
+        analogClockWdgt.fullMoveTo new Point @right() - 80 - @desktopSidesPadding, @top() + @desktopSidesPadding
 
     @children.forEach (child) =>
       if child != basementOpenerWdgt and child != analogClockWdgt and  !(child instanceof WidgetHolderWithCaptionWdgt)
@@ -1465,7 +1465,7 @@ class WorldMorph extends PanelWdgt
       # the "back button", so we prevent that
       # default here.
       if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
-        event.preventDefault()  
+        event.preventDefault()
 
       # suppress tab override and make sure tab gets
       # received by all browsers
@@ -2001,7 +2001,7 @@ class WorldMorph extends PanelWdgt
     @initKeyCombosEventListeners()
     @initOtherMiscEventListeners()
 
-  # »>> this part is excluded from the fizzygum homepage build  
+  # »>> this part is excluded from the fizzygum homepage build
   removeEventListeners: ->
     canvas = @worldCanvas
     # canvas.removeEventListener 'dblclick', @dblclickEventListener
@@ -2046,7 +2046,7 @@ class WorldMorph extends PanelWdgt
     nil
 
   droppedSVG: ->
-    nil  
+    nil
   # this part is excluded from the fizzygum homepage build <<«
 
   # WorldMorph text field tabbing:
@@ -2093,7 +2093,7 @@ class WorldMorph extends PanelWdgt
     # make sure thw window is scrolled to top
     # so we can see the test results while tests
     # are running.
-    document.body.scrollTop = document.documentElement.scrollTop = 0    
+    document.body.scrollTop = document.documentElement.scrollTop = 0
   # this part is excluded from the fizzygum homepage build <<«
   
   # There is something special about the
@@ -2154,7 +2154,7 @@ class WorldMorph extends PanelWdgt
       return menu
 
     if @isDevMode
-      menu = new MenuMorph(@, false, 
+      menu = new MenuMorph(@, false,
         @, true, true, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     else
       menu = new MenuMorph @, false, @, true, true, "Widgetic"

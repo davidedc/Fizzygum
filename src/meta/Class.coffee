@@ -428,7 +428,7 @@ class Class
     # (or if already created anyways, in pre-compiled mode)
     # then add the .class field
     window[@name].class = @
-    if @superclass? 
+    if @superclass?
       @superclass.subClasses.add @
 
 

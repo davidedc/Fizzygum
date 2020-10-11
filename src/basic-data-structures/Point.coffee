@@ -81,7 +81,7 @@ class Point
   
   min: (aPoint) ->
     @debugIfFloats()
-    new @constructor Math.min(@x, aPoint.x), Math.min(@y, aPoint.y)  
+    new @constructor Math.min(@x, aPoint.x), Math.min(@y, aPoint.y)
   
   # Point conversion:
   round: ->
@@ -98,7 +98,7 @@ class Point
   # »>> this part is excluded from the fizzygum homepage build
   mirror: ->
     @debugIfFloats()
-    new @constructor @y, @x 
+    new @constructor @y, @x
   # this part is excluded from the fizzygum homepage build <<«
   
   floor: ->

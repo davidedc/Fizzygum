@@ -193,7 +193,7 @@ fi
 
 printf "\nbuildVersion = 'version of $(date)'" >> $SCRATCH_PATH/fizzygum-boot.coffee
 
-coffee -b -c -o $BUILD_PATH/js/ $SCRATCH_PATH/fizzygum-boot.coffee 
+coffee -b -c -o $BUILD_PATH/js/ $SCRATCH_PATH/fizzygum-boot.coffee
 echo "... done compiling boot file"
 
 echo "minifying boot file..."
@@ -239,7 +239,7 @@ coffee -b -c -o $BUILD_PATH/js/src/ src/boot/logging-div.coffee
 terser --compress --output $BUILD_PATH/js/src/logging-div-min.js -- $BUILD_PATH/js/src/logging-div.js
 
 if ! $notests && ! $homepage ; then
-  coffee -b -c -o $BUILD_PATH/js/libs auxiliary\ files/Mousetrap/Mousetrap.coffee 
+  coffee -b -c -o $BUILD_PATH/js/libs auxiliary\ files/Mousetrap/Mousetrap.coffee
   echo "minifying..."
   terser --compress --mangle --output $BUILD_PATH/js/libs/Mousetrap.min.js -- $BUILD_PATH/js/libs/Mousetrap.js
   echo "... done minifying"

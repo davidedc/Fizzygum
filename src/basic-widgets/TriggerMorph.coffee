@@ -176,7 +176,7 @@ class TriggerMorph extends Widget
       @labelBold,
       @labelItalic,
       false,
-      @labelColor      
+      @labelColor
     )
     @add @label
     
@@ -205,7 +205,7 @@ class TriggerMorph extends Widget
     # same as trigger() but use doubleClickAction instead of action property
     # note that specifying a doubleClickAction is optional
     return  unless @doubleClickAction
-    @target[@doubleClickAction]()  
+    @target[@doubleClickAction]()
   
   # TriggerMorph events:
   mouseEnter: ->

@@ -74,10 +74,10 @@ class StackElementsSizeAdjustingMorph extends Widget
       if prev != newone
         leftMorph.setMaxDim lmdd
         rightMorph.setMaxDim rmdd
-      #console.log "leftMorph.getMaxDim().x : " + leftMorph.getMaxDim().x 
+      #console.log "leftMorph.getMaxDim().x : " + leftMorph.getMaxDim().x
       #console.log "leftMorph.getDesiredDim().x: " + leftMorph.getDesiredDim().x
       #console.log "rightMorph.getMaxDim().x: " + rightMorph.getMaxDim().x
-      #console.log "rightMorph.getDesiredDim().x: " + rightMorph.getDesiredDim().x 
+      #console.log "rightMorph.getDesiredDim().x: " + rightMorph.getDesiredDim().x
       #console.log "should be constant: " + (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
 
 

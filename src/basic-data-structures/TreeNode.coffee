@@ -148,7 +148,7 @@ class TreeNode
   # as part of another widget.
   isInBasement: ->
     thereCouldBeOne = @allParentsBottomToTopSuchThat (eachWdgt) ->
-      eachWdgt instanceof BasementWdgt 
+      eachWdgt instanceof BasementWdgt
     return thereCouldBeOne.length == 1
 
   isInBasementButReachable: (newGcSessionId) ->
@@ -200,7 +200,7 @@ class TreeNode
   #  world.children[0].children[2].children[1]
   pathOfChildrenPositionsRelativeToWorld: (pathSoFar) ->
     if !pathSoFar?
-      pathSoFar = 
+      pathSoFar =
         actualPath: []
         lengthOfChildrenArrays: []
 

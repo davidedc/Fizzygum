@@ -45,7 +45,7 @@ class StringFieldMorph extends PanelWdgt
       @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
       @text.isNumeric = @isNumeric # for whichever reason...
       @text.isEditable = @isEditable
-      @text.enableSelecting()    
+      @text.enableSelecting()
       @add @text
     @text.fullRawMoveTo @position()
     @silentRawSetExtent new Point Math.max(@width(), @minTextWidth), @text.height()

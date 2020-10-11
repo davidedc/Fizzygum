@@ -6,12 +6,12 @@ Fizzygum
 Tired of stringing libraries together?
 Try a new web framework that handles complex things, easily.
 
-Fizzygum is designed from the ground up to: 
+Fizzygum is designed from the ground up to:
 
-* make dashboards and visualise data (plots, maps, …) 
-* author, organise and navigate documents 
-* insert dynamic calculations anywhere, via simple drag & drop 
-* make custom utilities visually (no coding required) 
+* make dashboards and visualise data (plots, maps, …)
+* author, organise and navigate documents
+* insert dynamic calculations anywhere, via simple drag & drop
+* make custom utilities visually (no coding required)
 * use internal development tools to customise anything, as it runs
 * do all of the above, concurrently
 

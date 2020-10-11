@@ -137,7 +137,7 @@ class LayoutElementAdderOrDropletMorph extends Widget
     @addAsSiblingAfterMe \
       morphBeingDropped,
       nil,
-      LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED    
+      LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     @fullDestroy()
 
   mouseEnter: ->

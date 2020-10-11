@@ -1,6 +1,6 @@
 # I clip my submorphs at my bounds. Which potentially saves a lot of redrawing
-# and event handling. 
-# It's a good idea to use me whenever it's clear that there is a  
+# and event handling.
+# It's a good idea to use me whenever it's clear that there is a
 # "container"/"contained" scenario going on.
 
 class PanelWdgt extends Widget
@@ -88,10 +88,10 @@ class PanelWdgt extends Widget
 
   childRemoved: (child) ->
     if @parent?
-      @parent.grandChildRemoved?()  
+      @parent.grandChildRemoved?()
       if @parent.adjustContentsBounds?
         @parent.adjustContentsBounds()
-        @parent.adjustScrollBars?()  
+        @parent.adjustScrollBars?()
 
   childAdded: (child) ->
     # the BasementWdgt has a filter that can

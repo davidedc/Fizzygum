@@ -801,7 +801,7 @@ class MenusHelper
     startingContent.enableSelecting()
     sdspw.add startingContent
 
-    sdspw.addDivider()    
+    sdspw.addDivider()
 
     sdspw.addNormalParagraph "Fizzygum enables you to do all of this and more:"
 
@@ -823,7 +823,7 @@ class MenusHelper
     startingContent.enableSelecting()
     sdspw.add startingContent
 
-    sdspw.addDivider()    
+    sdspw.addDivider()
 
     sdspw.addNormalParagraph "Feel free to click around this sandbox. Double-click the items on the desktop to open them. Just reload to start again from scratch."
 
@@ -859,7 +859,7 @@ class MenusHelper
     startingContent.enableSelecting()
     sdspw.add startingContent
 
-    sdspw.addDivider()    
+    sdspw.addDivider()
 
     sdspw.addNormalParagraph "Mail? Mailing list? Facebook page? Twitter? Chat? We have it all."
 
@@ -908,7 +908,7 @@ class MenusHelper
     startingContent.enableSelecting()
     sdspw.add startingContent
 
-    sdspw.addDivider()    
+    sdspw.addDivider()
 
     sdspw.addNormalParagraph "Drag things in here to recycle them.\n\nClosed or invisible items also end up in here, and the items that can't be used again are automatically recycled."
 
@@ -957,7 +957,7 @@ class MenusHelper
     startingContent.enableSelecting()
     sdspw.add startingContent
 
-    sdspw.addDivider()    
+    sdspw.addDivider()
 
     sdspw.addNormalParagraph "There are four main types of windows"
     sdspw.addBulletPoint "empty windows, with a target area where you can drop other items in"
@@ -1058,7 +1058,7 @@ class MenusHelper
     else
       world.add degreesConverterOpenerLauncher
 
-  # ------------------------------------------------------------------------  
+  # ------------------------------------------------------------------------
 
   createSampleSlideWindowOrBringItUpIfAlreadyCreated: ->
     if world.sampleSlideWindow?
@@ -1160,7 +1160,7 @@ class MenusHelper
     startingContent.enableSelecting()
     sdspw.setContents startingContent, 5
 
-    sdspw.addDivider()    
+    sdspw.addDivider()
 
     sdspw.addNormalParagraph "Text documents (or simply: docs) don't just contain text or images: they can embed any widget."
     sdspw.addNormalParagraph "For example, here is an interactive 3D plot:\n"
@@ -1431,7 +1431,7 @@ class MenusHelper
 
     world.degreesConverterWindow = wm
 
-  # ------------------------------------------------------------------------  
+  # ------------------------------------------------------------------------
 
   launchHowToSaveMessage: ->
     @createHowToSaveMessageWindowOrBringItUpIfAlreadyCreated()
@@ -1444,7 +1444,7 @@ class MenusHelper
     toolbarsOpenerLauncher.setExtent new Point 75, 75
     toolbarsOpenerLauncher.fullChanged()
 
-  # ------------------------------------------------------------------------  
+  # ------------------------------------------------------------------------
 
   createHowToSaveMessageWindowOrBringItUpIfAlreadyCreated: ->
     if world.howToSaveDocWindow?

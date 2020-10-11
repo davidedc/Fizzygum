@@ -6,7 +6,7 @@ class ClassInspectorMorph extends InspectorMorph2
   buildAndConnectChildren: ->
     super
     @lastLabelInHierarchy.setText "this class"
-    #@label.setText "class " + @target.constructor.name   
+    #@label.setText "class " + @target.constructor.name
 
   colloquialName: ->
     "Class Inspector (" + @target.constructor.name.replace("Morph", "").replace("Wdgt", "") + ")"

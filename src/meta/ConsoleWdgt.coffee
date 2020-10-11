@@ -103,12 +103,12 @@ class ConsoleWdgt extends Widget
     if @runSelectionButton.parent == @
       buttonBounds = new Rectangle new Point @left() + @externalPadding, textBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonsWidth, 15
-      @runSelectionButton.doLayout buttonBounds 
+      @runSelectionButton.doLayout buttonBounds
 
     if @runAllButton.parent == @
       buttonBounds = new Rectangle new Point buttonBounds.right() + @internalPadding, textBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonsWidth, 15
-      @runAllButton.doLayout buttonBounds 
+      @runAllButton.doLayout buttonBounds
 
 
     # ----------------------------------------------

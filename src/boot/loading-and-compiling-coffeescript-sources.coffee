@@ -51,7 +51,7 @@ loadJSFilesWithCoffeescriptSourcesPromise = ->
   # Note that the sources for "Class" and "Mixin" might end-up
   # being recompiled even though those are two of the few things that
   # we run from the start in the skeletal system.
-  # It doesn't seem to cause problems though?  
+  # It doesn't seem to cause problems though?
   for i in [0...numberOfSourceBatches]
     promiseChain = promiseChain.then waitNextTurn()
     promiseChain = promiseChain.then loadJSFilePromise "js/coffeescript-sources/sources_batch_" + i + ".js"
@@ -150,7 +150,7 @@ storeSourceAndPotentiallyCompileItAndExecuteIt = (fileName, justIngestSources) -
   if /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m.test fileContents
     if justIngestSources
       # registers the class, its superclasses, its augmentations and the
-      # source code      
+      # source code
       morphClass = new Class fileContents, false, false
     else
       morphClass = new Class fileContents, true, true

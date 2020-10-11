@@ -201,7 +201,7 @@ class MenuMorph extends PopUpWdgt
     w = 0
     #if @parent instanceof PanelWdgt
     #  if @parent.scrollPanel instanceof ScrollPanelWdgt
-    #    w = @parent.scrollPanel.width()    
+    #    w = @parent.scrollPanel.width()
     @children.forEach (item) ->
       if item instanceof MenuItemMorph
         if !item.children[0]? then debugger

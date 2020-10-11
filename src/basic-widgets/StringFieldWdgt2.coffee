@@ -32,7 +32,7 @@ class StringFieldWdgt2 extends PanelWdgt
   calculateAndUpdateExtent: ->
     txt = (if @text then @getValue() else @defaultContents)
     text = new StringMorph2 txt, @fontSize, @fontStyle, @isBold, @isItalic, false, @isNumeric
-    text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN   
+    text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
     #console.log "text morph extent: " + text.text + " : " + text.extent()
     @rawSetWidth Math.max @minTextWidth, text.width()
     #console.log "string field morph extent: " + @extent()
@@ -44,7 +44,7 @@ class StringFieldWdgt2 extends PanelWdgt
       @text = new StringMorph2(txt, @fontSize, @fontStyle, @isBold, @isItalic, false, @isNumeric)
       @text.isNumeric = @isNumeric # for whichever reason...
       @text.isEditable = @isEditable
-      @text.enableSelecting() 
+      @text.enableSelecting()
       @text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
       @add @text
     @text.fullRawMoveTo @position().add new Point 5,2

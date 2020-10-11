@@ -31,7 +31,7 @@ class PatchProgrammingInfoWdgt extends SimpleDocumentWdgt
 
     # ---------------------
 
-    sdspw.addDivider()    
+    sdspw.addDivider()
 
     sdspw.addNormalParagraph "'Patch programming' is a type of visual programming where you simply connect together existing widgets. It's useful to make simple applications/utilities quickly."
     sdspw.addNormalParagraph "You can imagine the widgets being 'patched together' by imaginary wires."

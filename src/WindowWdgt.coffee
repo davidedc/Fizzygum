@@ -81,7 +81,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # that is it. However, windows containing a ScriptWdgt create
   # a special type of reference that has a slightly different icon
   # and when double-clicked actually runs the script rather than
-  # bringing up the script 
+  # bringing up the script
   createReference: (referenceName, placeToDropItIn) ->
     # this function can also be called as a callback
     # of a trigger, in which case the first parameter

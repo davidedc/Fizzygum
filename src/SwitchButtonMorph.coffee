@@ -69,7 +69,7 @@ class SwitchButtonMorph extends Widget
   # if one calls "isSelected" it probably means that this SwitchButton
   # has two buttons: a "selected" button and an "unselected" button
   isSelected: ->
-    return @buttonShown != 0  
+    return @buttonShown != 0
 
   mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     @buttonShown++

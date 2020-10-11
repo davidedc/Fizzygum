@@ -122,10 +122,10 @@ class CalculatingPatchNodeWdgt extends Widget
     # are firing via bang, then at this point we
     # are going to update the target with the output
     # value.
-    if allConnectedInputsAreFresh or fireBecauseBang      
+    if allConnectedInputsAreFresh or fireBecauseBang
       @fireOutputToTarget connectionsCalculationToken
 
-    return    
+    return
 
   fireOutputToTarget: (calculationToken) ->
     # mark this node as fired.

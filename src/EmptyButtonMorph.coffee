@@ -110,7 +110,7 @@ class EmptyButtonMorph extends Widget
     # same as trigger() but use doubleClickAction instead of action property
     # note that specifying a doubleClickAction is optional
     return  unless @doubleClickAction
-    @target[@doubleClickAction]()  
+    @target[@doubleClickAction]()
 
   
   mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->

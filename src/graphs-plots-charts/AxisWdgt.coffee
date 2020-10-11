@@ -50,7 +50,7 @@ class AxisWdgt extends Widget
     else
       # horiz axis
       tickHeight = width/(numberOfTicks + 1)
-      return new Point tickHeight, 5 
+      return new Point tickHeight, 5
 
 
   doLayout: (newBoundsForThisLayout) ->
@@ -105,7 +105,7 @@ class AxisWdgt extends Widget
       @majorDimLine.setExtent new Point thickness, heightOfTheDrawnBar
     else
       @majorDimLine.fullRawMoveTo new Point @left() + tickHeight, @top() + 5
-      @majorDimLine.setExtent new Point heightOfTheDrawnBar, thickness 
+      @majorDimLine.setExtent new Point heightOfTheDrawnBar, thickness
 
     for i in [0 ... numberOfTicks]
       if height > width

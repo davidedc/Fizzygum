@@ -325,7 +325,7 @@ class TextMorph extends StringMorph
   setAlignmentToCenter: ->
     @alignment = "center"
     @reLayout()
-    @changed()  
+    @changed()
   
   # TextMorph evaluation:
   evaluationMenu: ->

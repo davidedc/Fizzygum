@@ -122,13 +122,13 @@ class DiffingPatchNodeWdgt extends Widget
     #   * all the connected inputs are fresh OR
     #   * we are firing via bang OR
     #   * one hot input has been updated
-    if allConnectedInputsAreFresh or fireBecauseOneHotInputHasBeenUpdated or fireBecauseBang      
+    if allConnectedInputsAreFresh or fireBecauseOneHotInputHasBeenUpdated or fireBecauseBang
       # AND if the widget still has to fire
       if connectionPropagationToken != @connectionPropagationToken
         # THEN we update the target with the output value
         @fireOutputToTarget connectionsCalculationToken
 
-    return    
+    return
 
   fireOutputToTarget: (calculationToken) ->
     # mark this node as fired.

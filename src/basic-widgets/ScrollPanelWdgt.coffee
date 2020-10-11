@@ -140,7 +140,7 @@ class ScrollPanelWdgt extends PanelWdgt
     # change the dimensions and hiding/unhiding of the scrollbar.
     # So here we avoid that by actually checking what the scrollbar is
     # attached to.
-    if @hBar.target == @ 
+    if @hBar.target == @
       if @contents.width() >= @width() + 1
         @hBar.show()
         @hBar.rawSetWidth hWidth  if @hBar.width() isnt hWidth
@@ -361,12 +361,12 @@ class ScrollPanelWdgt extends PanelWdgt
   scrollTo: (whereTo) ->
     @contents.fullRawMoveLeftSideTo -whereTo.x
     @contents.fullRawMoveTopSideTo -whereTo.y
-    @adjustScrollBars()    
+    @adjustScrollBars()
 
 
   scrollToBottom: ->
     @scrollY -100000
-    @adjustScrollBars()    
+    @adjustScrollBars()
   
   scrollY: (steps) ->
     ct = @contents.top()
@@ -497,7 +497,7 @@ class ScrollPanelWdgt extends PanelWdgt
       scrollbarJustChanged ||= @scrollY -(inset - (@bottom() - pos.y))
     if scrollbarJustChanged
       @adjustContentsBounds()
-      @adjustScrollBars()  
+      @adjustScrollBars()
   
   # ScrollPanelWdgt scrolling when editing text
   # so to bring the caret fully into view.

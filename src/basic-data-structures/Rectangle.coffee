@@ -105,7 +105,7 @@ class Rectangle
   # Rectangle accessing - setting
   # This is used to create a bound with the specified
   # width and height: the corner needs to be displaced
-  # of (width, bound) in respect to the origin 
+  # of (width, bound) in respect to the origin
   setBoundsWidthAndHeight: (width, height) ->
     copy = @copy()
     if (typeof(width) is "number") and (typeof(height) is "number")

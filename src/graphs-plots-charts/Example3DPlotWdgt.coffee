@@ -47,7 +47,7 @@ class Example3DPlotWdgt extends Widget
     @calculateNewPlotValues()
 
   numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    if !menuEntriesStrings? 
+    if !menuEntriesStrings?
       menuEntriesStrings = []
       functionNamesStrings = []
     menuEntriesStrings.push "param"

@@ -551,7 +551,7 @@ class InspectorMorph2 extends Widget
 
 
   # TODO should have a removeProperty method in Widget (and in the classes somehow)
-  # rather than here 
+  # rather than here
   addProperty: (ignoringThis, morphWithProperty) ->
     prop = morphWithProperty.text.text
     if prop?
@@ -565,7 +565,7 @@ class InspectorMorph2 extends Widget
     @prompt "new property name:", @, "addProperty", "property" # Chrome cannot handle empty strings (others do)
 
   # TODO should have a removeProperty method in Widget (and in the classes somehow)
-  # rather than here 
+  # rather than here
   renameProperty: (ignoringThis, morphWithProperty) ->
     propertyName = @list.selected.labelString
     prop = morphWithProperty.text.text
@@ -583,7 +583,7 @@ class InspectorMorph2 extends Widget
     @prompt "property name:", @, "renameProperty", propertyName
   
   # TODO should have a removeProperty method in Widget (and in the classes somehow)
-  # rather than here 
+  # rather than here
   removeProperty: ->
     propertyName = @list.selected.labelString
 

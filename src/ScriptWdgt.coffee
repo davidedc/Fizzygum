@@ -153,12 +153,12 @@ class ScriptWdgt extends Widget
     if @runItButton.parent == @
       buttonBounds = new Rectangle new Point @left() + @externalPadding, textBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonsWidth, 15
-      @runItButton.doLayout buttonBounds 
+      @runItButton.doLayout buttonBounds
 
     if @saveButton.parent == @
       buttonBounds = new Rectangle new Point buttonBounds.right() + @internalPadding, textBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonsWidth, 15
-      @saveButton.doLayout buttonBounds 
+      @saveButton.doLayout buttonBounds
 
 
     # ----------------------------------------------

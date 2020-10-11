@@ -25,7 +25,7 @@ class ToolbarsInfoWdgt extends SimpleDocumentWdgt
     startingContent.enableSelecting()
     sdspw.add startingContent
 
-    sdspw.addDivider()    
+    sdspw.addDivider()
 
     sdspw.addNormalParagraph "The Super Toolbar can create all other toolbars for you, and from those toolbars you can create any widget.\n\nThis is handy because any widget can go in any document... so here is a way to access them all.\n\nFor an example on how this is useful, see the video on `mixing widgets`:"
 

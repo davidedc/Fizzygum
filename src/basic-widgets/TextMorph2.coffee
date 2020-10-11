@@ -232,7 +232,7 @@ class TextMorph2 extends StringMorph2
       ## so this wouldn't be a BackBuffer anymore
       ## SO you need to REMOVE the mixin from this class.
       ## cause there would be a paint method and it would
-      ## compose the 
+      ## compose the
       ## it would be much better to handle AND in theory
       ## the single bitmaps per paragraph would be easy
       ## to cache and could be created
@@ -366,7 +366,7 @@ class TextMorph2 extends StringMorph2
       # not, then we mark the caret as broken.
       if @backBuffer != cacheHit[0]
         if world.caret?
-          world.caret.changed()      
+          world.caret.changed()
       return cacheHit
 
     contentHeight = @reflowText()
@@ -377,7 +377,7 @@ class TextMorph2 extends StringMorph2
     # if we are calculating a new buffer then
     # for sure we have to mark the caret as broken
     if world.caret?
-      world.caret.changed()      
+      world.caret.changed()
 
     backBuffer = HTMLCanvasElement.createOfPhysicalDimensions()
     backBufferContext = backBuffer.getContext "2d"

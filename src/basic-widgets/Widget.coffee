@@ -287,7 +287,7 @@ class Widget extends TreeNode
 
   identifyViaTextLabel: ->
     myTextDescription = @getTextDescription()
-    allCandidateMorphsWithSameTextDescription = 
+    allCandidateMorphsWithSameTextDescription =
       world.allChildrenTopToBottomSuchThat (m) ->
         m.getTextDescription() == myTextDescription
 
@@ -359,7 +359,7 @@ class Widget extends TreeNode
     @silentRawSetBounds new Rectangle 0,0,50,40
 
     @lastTime = Date.now()
-    # Note that we don't call 
+    # Note that we don't call
     # that's because the actual extending morph will probably
     # set more details of how it should look (e.g. size),
     # so we wait and we let the actual extending
@@ -442,7 +442,7 @@ class Widget extends TreeNode
 
 
   addShapeSpecificNumericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    if !menuEntriesStrings? 
+    if !menuEntriesStrings?
       menuEntriesStrings = []
       functionNamesStrings = []
 
@@ -492,7 +492,7 @@ class Widget extends TreeNode
       world.inform "There is no\nbasement to go in!"
 
   closeFromContainerWindow: (containerWindow) ->
-    containerWindow.close()  
+    containerWindow.close()
   
   # Widgets destroying ======
   # this is different from a widget being closed/deleted
@@ -607,7 +607,7 @@ class Widget extends TreeNode
     if nxt
       @onNextStep = =>
         nxt.call @
-        @nextSteps lst  
+        @nextSteps lst
   # this part is excluded from the fizzygum homepage build <<«
   
   # leaving this function as step means that the morph wants to do nothing
@@ -982,7 +982,7 @@ class Widget extends TreeNode
             result = result.merge child.bounds
           else
             result = result.merge child.fullBounds()
-    result    
+    result
 
   # does not take into account orphanage or visibility
   fullBounds: ->
@@ -1061,7 +1061,7 @@ class Widget extends TreeNode
     if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
       @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
       @clippedThroughBoundsCache = Rectangle.EMPTY
-      return @clippedThroughBoundsCache 
+      return @clippedThroughBoundsCache
 
     @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @clippedThroughBoundsCache = @boundingBox().intersect @clipThrough()
@@ -1090,7 +1090,7 @@ class Widget extends TreeNode
     if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
       @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
       @clipThroughCache = Rectangle.EMPTY
-      return @clipThroughCache 
+      return @clipThroughCache
 
     firstParentClippingAtBounds = @firstParentClippingAtBounds()
     if !firstParentClippingAtBounds?
@@ -1147,7 +1147,7 @@ class Widget extends TreeNode
 
     #console.log "move 5"
     @breakNumberOfRawMovesAndResizesCaches()
-    @bounds = @bounds.translateBy delta    
+    @bounds = @bounds.translateBy delta
     @children.forEach (child) ->
       child.silentFullRawMoveBy delta
   
@@ -2059,7 +2059,7 @@ class Widget extends TreeNode
   # shadow is added to a morph by
   # the ActivePointerWdgt while floatDragging
   addShadow: (offset = new Point(4, 4), alpha = 0.2) ->
-    @silentAddShadow offset, alpha    
+    @silentAddShadow offset, alpha
     @fullChanged()
 
   silentAddShadow: (offset, alpha) ->
@@ -2235,7 +2235,7 @@ class Widget extends TreeNode
     return aWdgt
 
   sourceChanged: ->
-    @reLayout?() 
+    @reLayout?()
     @changed?()
 
   # this is done before the updating of the
@@ -2610,13 +2610,13 @@ class Widget extends TreeNode
     if @isPopUpMarkedForClosure
       return true
     else if @parent?
-      return @parent.anyParentPopUpMarkedForClosure() 
+      return @parent.anyParentPopUpMarkedForClosure()
     return false
 
   rootForFocus: ->
     if !@parent? or
       @parent instanceof WorldMorph
-        return @  
+        return @
     @parent.rootForFocus()
 
   moveInFrontOfSiblings: ->
@@ -3339,8 +3339,8 @@ class Widget extends TreeNode
   popUpSimplePlainTextWdgtMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Simple plain text"
     menu.addMenuItem "simple plain text wrapping", true, @, "createNewWrappingSimplePlainTextWdgtWithBackground"
-    menu.addMenuItem "simple plain text not wrapping", true, @, "createNewNonWrappingSimplePlainTextWdgtWithBackground"    
-    menu.addMenuItem "simple plain text (wrapping / not wrapping)", true, @, "createNewWrappingAndNonWrappingSimplePlainTextWdgtWithBackground"    
+    menu.addMenuItem "simple plain text not wrapping", true, @, "createNewNonWrappingSimplePlainTextWdgtWithBackground"
+    menu.addMenuItem "simple plain text (wrapping / not wrapping)", true, @, "createNewWrappingAndNonWrappingSimplePlainTextWdgtWithBackground"
     menu.addMenuItem "simple plain text panel wrapping", true, @, "createWrappingSimplePlainTextPanelWdgt"
     menu.addMenuItem "simple plain text panel not wrapping", true, @, "createNonWrappingSimplePlainTextPanelWdgt"
     menu.addMenuItem "simple plain text panel (wrapping / not wrapping)", true, @, "createWrappingAndNonWrappingSimplePlainTextPanelWdgt"
@@ -3403,7 +3403,7 @@ class Widget extends TreeNode
 
   buildBaseMorphClassContextMenu: (morphOpeningThePopUp) ->
 
-    menu = new MenuMorph(morphOpeningThePopUp, false, 
+    menu = new MenuMorph(morphOpeningThePopUp, false,
       @,
       true,
       true,
@@ -3434,7 +3434,7 @@ class Widget extends TreeNode
       if @parent instanceof WorldMorph
         whereToOrFrom = "desktop"
       else
-        whereToOrFrom = "panel"          
+        whereToOrFrom = "panel"
       if @isLockingToPanels
         menu.addMenuItem "unlock from " + whereToOrFrom, true, @, "toggleIsLockingToPanels", "make this morph\nunmovable"
       else
@@ -3739,7 +3739,7 @@ class Widget extends TreeNode
     #2) sort:
     list.sort (a, b) ->
       if a.menuEntriesStrings < b.menuEntriesStrings then -1 else if a.menuEntriesStrings == b.menuEntriesStrings then 0 else 1
-      #Sort could be modified to, for example, sort on the age 
+      #Sort could be modified to, for example, sort on the age
       # if the name is the same.
     #3) separate them back out:
     k = 0
@@ -3751,7 +3751,7 @@ class Widget extends TreeNode
     return [menuEntriesStrings, functionNamesStrings]
 
   colorSetters: (menuEntriesStrings, functionNamesStrings) ->
-    if !menuEntriesStrings? 
+    if !menuEntriesStrings?
       menuEntriesStrings = []
       functionNamesStrings = []
     menuEntriesStrings.push "color", "background color"
@@ -3759,14 +3759,14 @@ class Widget extends TreeNode
     return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
-    if !menuEntriesStrings? 
+    if !menuEntriesStrings?
       menuEntriesStrings = []
       functionNamesStrings = []
     # we don't add anything so no need to sort/deduplicate
     return [menuEntriesStrings, functionNamesStrings]
 
   numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    if !menuEntriesStrings? 
+    if !menuEntriesStrings?
       menuEntriesStrings = []
       functionNamesStrings = []
     menuEntriesStrings.push "width", "height", "alpha 0-100", "padding", "padding top", "padding bottom", "padding left", "padding right"
@@ -3779,7 +3779,7 @@ class Widget extends TreeNode
 
   # »>> this part is excluded from the fizzygum homepage build
   allSetters: (menuEntriesStrings, functionNamesStrings) ->
-    if !menuEntriesStrings? 
+    if !menuEntriesStrings?
       menuEntriesStrings = []
       functionNamesStrings = []
 
@@ -4272,7 +4272,7 @@ class Widget extends TreeNode
         if desiredMargin != 0
           fraction = (newBoundsForThisLayout.width() - min.width()) / desiredMargin
         else
-          fraction = 0      
+          fraction = 0
         childLeft = newBoundsForThisLayout.left()
         for C in @children
           if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
@@ -4332,7 +4332,7 @@ class Widget extends TreeNode
     # if I just did my layout, also do the layout
     # of all children that have position/size depending on mine
     allCornerLayoutedChildren = @children.filter (m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
-    for w in allCornerLayoutedChildren 
+    for w in allCornerLayoutedChildren
       w.doLayout()
 
 
@@ -4449,7 +4449,7 @@ class Widget extends TreeNode
     lmHolder.fullMoveTo new Point 10 + 60 * 0, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleMorph lmHolder 
+    new HandleMorph lmHolder
 
     # ----------------------------------------------
 
@@ -4670,7 +4670,7 @@ class Widget extends TreeNode
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
 
-    lmHolder.fullMoveTo new Point 10 + 60 * 7, 30 + 50 * 1 
+    lmHolder.fullMoveTo new Point 10 + 60 * 7, 30 + 50 * 1
 
     world.add lmHolder
     new HandleMorph lmHolder

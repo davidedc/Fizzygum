@@ -20,7 +20,7 @@ class FridgeMagnetsMorph extends Widget
     super new Point 400, 400
     @buildAndConnectChildren()
 
-  colloquialName: ->   
+  colloquialName: ->
     "Fizzytiles"
  
   buildAndConnectChildren: ->
@@ -121,7 +121,7 @@ class FridgeMagnetsMorph extends Widget
     world.trackChanges.push false
 
 
-    eachPaneWidth = Math.floor( (@width() - 2*@externalPadding - 2 * @internalPadding) / 3) 
+    eachPaneWidth = Math.floor( (@width() - 2*@externalPadding - 2 * @internalPadding) / 3)
 
 
     # fridge

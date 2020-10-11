@@ -5,7 +5,7 @@ class MenuItemMorph extends TriggerMorph
   # labelString can also be a Widget or a Canvas or a tuple: [icon, string]
   constructor: (ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, toolTipMessage, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph) ->
     #console.log "menuitem constructing"
-    super ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, toolTipMessage, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph 
+    super ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, toolTipMessage, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph
     @actionableAsThumbnail = true
 
   getTextDescription: ->
@@ -109,7 +109,7 @@ class MenuItemMorph extends TriggerMorph
     return @parent.isListContents  if @parent
     false
 
-  # »>> this part is excluded from the fizzygum homepage build  
+  # »>> this part is excluded from the fizzygum homepage build
   isSelectedListItem: ->
     return @state is @STATE_PRESSED if @isListItem()
     false

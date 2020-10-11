@@ -117,7 +117,7 @@ class StringMorph2 extends Widget
 
     # properties that override existing ones only when passed
     @backgroundColor = backgroundColor if backgroundColor?
-    @backgroundTransparency = backgroundTransparency if backgroundTransparency?      
+    @backgroundTransparency = backgroundTransparency if backgroundTransparency?
 
     @undoHistory = []
     @redoHistory = []
@@ -581,7 +581,7 @@ class StringMorph2 extends Widget
     @fittingSpecWhenBoundsTooLarge  + "-" +
     @fittingSpecWhenBoundsTooSmall
 
-  textVerticalPosition: (heightOfText) -> 
+  textVerticalPosition: (heightOfText) ->
     switch @verticalAlignment
       when AlignmentSpecVertical.TOP
         0
@@ -614,7 +614,7 @@ class StringMorph2 extends Widget
       # not, then we mark the caret as broken.
       if @backBuffer != cacheHit[0]
         if world.caret?
-          world.caret.changed()      
+          world.caret.changed()
       return cacheHit
 
     @reflowText()
@@ -622,7 +622,7 @@ class StringMorph2 extends Widget
     # if we are calculating a new buffer then
     # for sure we have to mark the caret as broken
     if world.caret?
-      world.caret.changed()      
+      world.caret.changed()
 
     text = @textPossiblyCroppedToFit
     # Initialize my surface property.
@@ -793,8 +793,8 @@ class StringMorph2 extends Widget
     # other parts to move on to now.
     while true
       if charX > xPosition - @left()
-        #console.log "xPosition - @left(): " + (xPosition - @left()) + " charXMinusOne " + charXMinusOne + "  charX " + charX 
-        #console.log "Math.abs(xPosition - @left() - charXMinusOne) " + Math.abs(xPosition - @left() - charXMinusOne) + "  Math.abs(xPosition - @left() - charX) " + Math.abs(xPosition - @left() - charX) 
+        #console.log "xPosition - @left(): " + (xPosition - @left()) + " charXMinusOne " + charXMinusOne + "  charX " + charX
+        #console.log "Math.abs(xPosition - @left() - charXMinusOne) " + Math.abs(xPosition - @left() - charXMinusOne) + "  Math.abs(xPosition - @left() - charX) " + Math.abs(xPosition - @left() - charX)
         if Math.abs(xPosition - @left() - charXMinusOne) < Math.abs(xPosition - @left() - charX)
           return idx - 1
         break
@@ -804,7 +804,7 @@ class StringMorph2 extends Widget
 
       idx += 1
       if idx is text.length
-        if ((@calculateTextWidth(text)) - ((@calculateTextWidth(text[idx-1])) / 2)) < (xPosition - @left())  
+        if ((@calculateTextWidth(text)) - ((@calculateTextWidth(text[idx-1])) / 2)) < (xPosition - @left())
           return idx
     idx
 
@@ -1179,7 +1179,7 @@ class StringMorph2 extends Widget
 
   selectAll: ->
     @startMark = 0
-    @endMark = @textPossiblyCroppedToFit.length    
+    @endMark = @textPossiblyCroppedToFit.length
     @changed()
 
   # used when shift-clicking somewhere when there is

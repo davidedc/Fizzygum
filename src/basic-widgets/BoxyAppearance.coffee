@@ -144,7 +144,7 @@ class BoxyAppearance extends Appearance
     menu
   
   addShapeSpecificNumericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    if !menuEntriesStrings? 
+    if !menuEntriesStrings?
       menuEntriesStrings = []
       functionNamesStrings = []
     menuEntriesStrings.push "corner radius"

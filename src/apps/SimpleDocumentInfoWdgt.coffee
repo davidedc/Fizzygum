@@ -31,7 +31,7 @@ class SimpleDocumentInfoWdgt extends SimpleDocumentWdgt
 
     # ---------------------
 
-    sdspw.addDivider()    
+    sdspw.addDivider()
 
     sdspw.addNormalParagraph "A basic text editor. But you can drop anything inside it.\n\nNote that the Docs Maker works 'by paragraph': you can drag/drop paragraphs, and when you change the style the whole paragraph is affected.\n\nQuickest way to compose a document is to drag/drop snippets, which you can find by clicking the button that looks like this:"
 

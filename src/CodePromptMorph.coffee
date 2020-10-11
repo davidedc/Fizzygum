@@ -122,17 +122,17 @@ class CodePromptMorph extends Widget
     if @cancelButton.parent == @
       buttonBounds = new Rectangle new Point @left() + @externalPadding + 0*(eachButtonWidth + @internalPadding), textBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-      @cancelButton.doLayout buttonBounds 
+      @cancelButton.doLayout buttonBounds
 
     if @saveButton.parent == @
       buttonBounds = new Rectangle new Point @left() + @externalPadding + 1*(eachButtonWidth + @internalPadding), textBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-      @saveButton.doLayout buttonBounds 
+      @saveButton.doLayout buttonBounds
 
     if @okButton.parent == @
       buttonBounds = new Rectangle new Point @left() + @externalPadding + 2*(eachButtonWidth + @internalPadding), textBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-      @okButton.doLayout buttonBounds 
+      @okButton.doLayout buttonBounds
 
     # ----------------------------------------------
 

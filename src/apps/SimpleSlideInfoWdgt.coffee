@@ -31,7 +31,7 @@ class SimpleSlideInfoWdgt extends SimpleDocumentWdgt
 
     # ---------------------
 
-    sdspw.addDivider()    
+    sdspw.addDivider()
 
     sdspw.addNormalParagraph "Anything you drop inside the slide 'keeps proportion' when resized, which makes it handy to put pins on maps, add callouts, arrange text in custom layouts etc."
 

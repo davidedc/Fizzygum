@@ -209,7 +209,7 @@ class StringMorph extends Widget
       charX += Math.ceil @widthOfText text[idx]
       idx += 1
       if idx is text.length
-        if (Math.ceil(@widthOfText(text)) - (Math.ceil(@widthOfText(text[idx-1])) / 2)) < (aPoint.x - @left())  
+        if (Math.ceil(@widthOfText(text)) - (Math.ceil(@widthOfText(text[idx-1])) / 2)) < (aPoint.x - @left())
           return idx
     idx - 1
   
@@ -353,7 +353,7 @@ class StringMorph extends Widget
   selectBetween: (start, end) ->
     @startMark = Math.min start, end
     @endMark = Math.max start, end
-    @changed()  
+    @changed()
 
   deleteSelection: ->
     text = @text

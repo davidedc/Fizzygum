@@ -287,7 +287,7 @@ def main():
             # finally, obviously newlines need to be turned into something else
             # since js (plain) strings can't span across multiple lines.
 
-            if ("＂" in content) or ("⧹" in content) or ("⤶" in content): 
+            if ("＂" in content) or ("⧹" in content) or ("⤶" in content):
               print("ERROR: I'm replacing a special character with a character that is already present in " + filename + ". Likely to be a problem.")
               exit()
 

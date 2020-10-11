@@ -9,7 +9,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
   highlightedToolIconColor: Color.create 245, 126, 0
 
 
-  colloquialName: ->   
+  colloquialName: ->
     "Drawings Maker"
 
   representativeIcon: ->
@@ -483,7 +483,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
       if @eraserToolButton.parent == @toolsPanel
         buttonBounds = new Rectangle new Point @toolsPanel.left() + @internalPadding, @toothpasteToolButton.bottom() + @internalPadding
         buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
-        @eraserToolButton.doLayout buttonBounds 
+        @eraserToolButton.doLayout buttonBounds
 
     # stretchableWidgetContainer --------------------------
     if @toolsPanel? and @toolsPanel.parent == @

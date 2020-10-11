@@ -104,4 +104,4 @@ class CircleBoxyAppearance extends Appearance
     # rather than logical pixels, so it's generally used
     # outside the effect of the scaling because
     # of the ceilPixelRatio (i.e. after the restore)
-    @paintHighlight aContext, al, at, w, 
+    @paintHighlight aContext, al, at, w,

@@ -115,7 +115,7 @@ class PopUpWdgt extends Widget
         @addShadow()
       else
         @removeShadow()
-    else 
+    else
       @addShadow()
 
   # shadow is added to a morph by

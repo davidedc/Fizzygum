@@ -124,10 +124,10 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     # are firing via bang, then at this point we
     # are going to update the target with the output
     # value.
-    if allConnectedInputsAreFresh or fireBecauseBang      
+    if allConnectedInputsAreFresh or fireBecauseBang
       @fireOutputToTarget connectionsCalculationToken
 
-    return    
+    return
 
   fireOutputToTarget: (calculationToken) ->
     # mark this node as fired.
@@ -152,7 +152,7 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
       # from: https://stackoverflow.com/a/22763959
       regParts = @textMorph.text.match(/^\/(.*?)\/([gim]*)$/)
       if regParts
-        # the parsed pattern had delimiters and modifiers. handle them. 
+        # the parsed pattern had delimiters and modifiers. handle them.
         regexp = new RegExp(regParts[1], regParts[2])
       else
         # we got pattern string without delimiters

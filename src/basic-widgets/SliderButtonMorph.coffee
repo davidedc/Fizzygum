@@ -48,7 +48,7 @@ class SliderButtonMorph extends CircleBoxMorph
           Math.round((sliderValue - @parent.start) * @parent.unitSize()),
           @parent.height() - @height()))
         if @parent.smallestValueIsAtBottomEnd
-          posY = @parent.height() - (posY + @height()) 
+          posY = @parent.height() - (posY + @height())
       else
         bh = @parent.height() - 2
         bw = Math.max bh, Math.round @parent.width() * @parent.ratio()
@@ -88,7 +88,7 @@ class SliderButtonMorph extends CircleBoxMorph
         @fullRawMoveTo newPosition
         @parent.updateValue()
   
-  endOfNonFloatDrag: ->  
+  endOfNonFloatDrag: ->
     if @state != @STATE_NORMAL
       @state = @STATE_NORMAL
       @color = @normalColor

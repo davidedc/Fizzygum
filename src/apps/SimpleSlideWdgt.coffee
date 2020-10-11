@@ -1,6 +1,6 @@
 class SimpleSlideWdgt extends StretchableEditableWdgt
 
-  colloquialName: ->   
+  colloquialName: ->
     "Slides Maker"
 
   representativeIcon: ->

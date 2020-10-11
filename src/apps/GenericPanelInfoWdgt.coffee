@@ -31,7 +31,7 @@ class GenericPanelInfoWdgt extends SimpleDocumentWdgt
 
     # ---------------------
 
-    sdspw.addDivider()    
+    sdspw.addDivider()
 
     sdspw.addNormalParagraph "You can use this panel to temporarily hold widgets, or to put together any mix of widgets. It's just a more generic version of slides and dashboards."
     sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."

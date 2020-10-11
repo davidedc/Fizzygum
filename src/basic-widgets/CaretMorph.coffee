@@ -323,7 +323,7 @@ class CaretMorph extends BlinkerMorph
     else
       @target.clearSelection()
   
-  insert: (symbol, shiftKey) ->    
+  insert: (symbol, shiftKey) ->
     # if the target "isNumeric", then only accept
     # numbers and "-" and "." as input
     if not @target.isNumeric or not isNaN(parseFloat(symbol)) or symbol in ["-", "."]

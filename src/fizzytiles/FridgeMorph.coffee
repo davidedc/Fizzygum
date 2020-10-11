@@ -182,4 +182,4 @@ class FridgeMorph extends PanelWdgt
     @compileTiles()
 
   reactToDropOf: ->
-    @compileTiles() 
+    @compileTiles()

@@ -896,7 +896,7 @@ class ActivePointerWdgt extends Widget
     # mouseOverNew = @allWdgtsAtPointer().reverse()
     topWdgt = @topWdgtUnderPointer()
     # allParentsTopToButton makes more logical sense but
-    # allParentsBottomToTop is cheaper and it all ends up in a set anyways   
+    # allParentsBottomToTop is cheaper and it all ends up in a set anyways
     mouseOverNew = new Set topWdgt.allParentsBottomToTop()
 
     @determineGrabs pos, topWdgt, mouseOverNew
@@ -971,7 +971,7 @@ class ActivePointerWdgt extends Widget
           # Users don't seem to click on a slider for any other
           # reason than to move it (as opposed to selecting them
           # or picking a position for a cursor), so it's OK.
-          @nonFloatDraggedWdgt = @wdgtToGrab         
+          @nonFloatDraggedWdgt = @wdgtToGrab
           @nonFloatDragPositionWithinWdgtAtStart =
             # if we ever will need to compensate for the grab/drag
             # treshold here, just add .subtract displacementDueToGrabDragThreshold
@@ -1016,7 +1016,7 @@ class ActivePointerWdgt extends Widget
   # is immediately non-float dragged to where clicked.
   nonFloatDragWdgtFarAwayToHere: (wdgtFarAway, pos) ->
     # allParentsTopToButton makes more logical sense but
-    # allParentsBottomToTop is cheaper and it all ends up in a set anyways   
+    # allParentsBottomToTop is cheaper and it all ends up in a set anyways
     mouseOverNew = new Set wdgtFarAway.allParentsBottomToTop()
     @previousNonFloatDraggingPos = wdgtFarAway.center()
     @nonFloatDragPositionWithinWdgtAtStart = (new Point wdgtFarAway.width()/2, wdgtFarAway.height()/2).round()
@@ -1031,7 +1031,7 @@ class ActivePointerWdgt extends Widget
   reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges: ->
     topWdgt = @topWdgtUnderPointer()
     # allParentsTopToButton makes more logical sense but
-    # allParentsBottomToTop is cheaper and it all ends up in a set anyways   
+    # allParentsBottomToTop is cheaper and it all ends up in a set anyways
     mouseOverNew = new Set topWdgt.allParentsBottomToTop()
     @dispatchEventsFollowingMouseMove mouseOverNew
 

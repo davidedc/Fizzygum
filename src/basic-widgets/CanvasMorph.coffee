@@ -1,5 +1,5 @@
 # I clip my submorphs at my bounds. Which potentially saves a lot of redrawing
-# and event handling. 
+# and event handling.
 # Also I always use a canvas to retain my graphical representation and respond
 # to the HTML5 commands.
 # 
@@ -77,7 +77,7 @@ class CanvasMorph extends PanelWdgt
     # set it to the identity.
     @backBufferContext.setTransform(1, 0, 0, 1, 0, 0)
     # no need to scale here because we get the physical pixels
-    # in backBufferExtent 
+    # in backBufferExtent
     #@backBufferContext.useLogicalPixelsUntilRestore()
     
     @backBufferContext.fillStyle = color.toString()

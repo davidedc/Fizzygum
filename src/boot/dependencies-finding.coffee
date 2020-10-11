@@ -56,7 +56,7 @@ extractDependenciesFromSource = ->
 
   EXTENDS = ///\sextends\s*(\w+)///
   IS_CLASS = ///\s*class\s+(\w+)///
-  REQUIRES_MIXIN = ///\s*@augmentWith\s+(\w+)/// 
+  REQUIRES_MIXIN = ///\s*@augmentWith\s+(\w+)///
   TRIPLE_QUOTES = ///'''///
   CONSTRUCTION_IN_CLASS_DECLARATION = ///^\s\s@?[a-zA-Z_$][0-9a-zA-Z_$]*\s*:\s*new\s*([a-zA-Z_$][0-9a-zA-Z_$]*)///
   CLASS_USE_IN_CLASS_DECLARATION = ///^\s\s@?[a-zA-Z_$][0-9a-zA-Z_$]*\s*:\s*([A-Z][0-9a-zA-Z_$]*)///

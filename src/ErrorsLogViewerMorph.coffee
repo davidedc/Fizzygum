@@ -96,7 +96,7 @@ class ErrorsLogViewerMorph extends Widget
     @paused = false
 
   clearTextPane: ->
-    @textMorph.setText ""    
+    @textMorph.setText ""
 
   informTarget: ->
     @target[@callback].call @target, nil, @textMorph

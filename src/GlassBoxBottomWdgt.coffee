@@ -43,7 +43,7 @@ class GlassBoxBottomWdgt extends BoxMorph
             w.rawSetExtent new Point thumbnailSize, thumbnailSize / ratio
           else
             # more tall than wide
-            w.rawSetExtent new Point thumbnailSize * ratio, thumbnailSize 
+            w.rawSetExtent new Point thumbnailSize * ratio, thumbnailSize
         else
           w.rawSetExtent new Point thumbnailSize, thumbnailSize
 

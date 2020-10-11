@@ -45,7 +45,7 @@ class FanoutPinWdgt extends Widget
   updateTarget: ->
     if @action and @action != ""
       @target[@action].call @target, @inputValue, nil, @connectionsCalculationToken
-    return    
+    return
 
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super

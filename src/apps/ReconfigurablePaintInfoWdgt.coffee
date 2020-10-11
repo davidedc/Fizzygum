@@ -31,7 +31,7 @@ class ReconfigurablePaintInfoWdgt extends SimpleDocumentWdgt
 
     # ---------------------
 
-    sdspw.addDivider()    
+    sdspw.addDivider()
 
     sdspw.addNormalParagraph "Simple paint app. But you can drop anything inside it (try with the clock) to 'use it as a stamp'."
 

@@ -137,7 +137,7 @@ class PenMorph extends Widget
     @parent.clear()
     
   
-  # PenMorph demo ops:  
+  # PenMorph demo ops:
   sierpinski: (length, min) ->
     if length > min
       for i in [0...3]

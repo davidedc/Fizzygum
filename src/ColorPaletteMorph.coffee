@@ -94,7 +94,7 @@ class ColorPaletteMorph extends Widget
       @action = "setColor"
 
     @target[@action].call @target, @choice, nil, @connectionsCalculationToken
-    return  
+    return
 
   reactToTargetConnection: ->
 

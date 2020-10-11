@@ -89,7 +89,7 @@ class LCLCodePreprocessor
   ]
   colorCommands: [
     "fill"
-    "stroke"      
+    "stroke"
   ]
 
   expressions: [
@@ -702,7 +702,7 @@ class LCLCodePreprocessor
   unbindFunctionsToArguments: (code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
-    # put back in place "sin⨁a,b" into "sin a,b" 
+    # put back in place "sin⨁a,b" into "sin a,b"
     code = code.replace(/⨁/g, "")
     return @normaliseCode(code, error)
 
@@ -726,7 +726,7 @@ class LCLCodePreprocessor
 
 
     # "expression" functions such as in "sin a,b" need to become
-    # "sin⨁a,b" 
+    # "sin⨁a,b"
     # the for is needed for example for cases like round(pulse 15) times
     expsAndUserFunctionsWithArgs =  @expressionsRegex + userDefinedFunctionsWithArguments
     rx = RegExp("(^|[^\\w\\d\\r\\n])("+expsAndUserFunctionsWithArgs+")([ \\(]+)(?![⧻\\+\\-*/%,⨁])",'gm')
@@ -818,7 +818,7 @@ class LCLCodePreprocessor
     code = code.replace(/^([\t ]*)[♦;][;♦ ]*/gm, "$1")
     if @detailedDebug then console.log "transformTimesSyntax-3.9\n" + code + " error: " + error
     
-    # It's unclear whether the cases catered by the two 
+    # It's unclear whether the cases catered by the two
     # transformatione below ever make sense.
     # without the following, "a = (2 times box)" becomes "(a = 2.times -> box())"
     code = code.replace(/(\()\s*([\w\d])([^;\r\n]*) times[:]?([^\w\d])/g, "$1 ($2$3).times -> $4")
@@ -871,7 +871,7 @@ class LCLCodePreprocessor
   #   3 times with i box i
   # first bring to intermediate form
   #   3.timesWithVariable -> (i) -> box i
-  # then just to 
+  # then just to
   #   3.times (i) -> box i
   # which is then handled correctly by
   # coffeescript
