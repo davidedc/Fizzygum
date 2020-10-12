@@ -59,9 +59,7 @@ class SimpleLinkWdgt extends Widget
   doLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
-    if @isCollapsed()
-      @layoutIsValid = true
-      return
+    if @_handleCollapsedStateShouldWeReturn() then return
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -99,5 +97,5 @@ class SimpleLinkWdgt extends Widget
       world.alignIDsOfNextMorphsInSystemTests()
 
     super
-    @layoutIsValid = true
+    @markLayoutAsFixed()
 

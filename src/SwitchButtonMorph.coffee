@@ -34,18 +34,7 @@ class SwitchButtonMorph extends Widget
   doLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
-    if !newBoundsForThisLayout?
-      if @desiredExtent?
-        newBoundsForThisLayout = @desiredExtent
-        @desiredExtent = nil
-      else
-        newBoundsForThisLayout = @extent()
-
-      if @desiredPosition?
-        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
-        @desiredPosition = nil
-      else
-        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
+    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
 
 
     # TODO should'be calling this rawSetBounds from here,

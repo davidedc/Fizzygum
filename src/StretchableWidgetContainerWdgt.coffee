@@ -107,22 +107,9 @@ class StretchableWidgetContainerWdgt extends Widget
     #console.log "spanel @contents: " + @contents + " doLayout 1"
 
 
-    if !newBoundsForThisLayout?
-      if @desiredExtent?
-        newBoundsForThisLayout = @desiredExtent
-        @desiredExtent = nil
-      else
-        newBoundsForThisLayout = @extent()
+    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
 
-      if @desiredPosition?
-        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
-        @desiredPosition = nil
-      else
-        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
-
-    if @isCollapsed()
-      @layoutIsValid = true
-      return
+    if @_handleCollapsedStateShouldWeReturn() then return
 
     #console.log "spanel @contents: " + @contents + " doLayout 2"
 
@@ -174,7 +161,7 @@ class StretchableWidgetContainerWdgt extends Widget
     @fullChanged()
 
     super
-    @layoutIsValid = true
+    @markLayoutAsFixed()
 
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

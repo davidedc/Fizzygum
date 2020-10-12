@@ -405,9 +405,7 @@ class InspectorMorph2 extends Widget
   doLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
-    if @isCollapsed()
-      @layoutIsValid = true
-      return
+    if @_handleCollapsedStateShouldWeReturn() then return
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -494,7 +492,7 @@ class InspectorMorph2 extends Widget
     @fullChanged()
 
     super
-    @layoutIsValid = true
+    @markLayoutAsFixed()
 
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

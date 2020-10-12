@@ -196,9 +196,7 @@ class DiffingPatchNodeWdgt extends Widget
   doLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
-    if @isCollapsed()
-      @layoutIsValid = true
-      return
+    if @_handleCollapsedStateShouldWeReturn() then return
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -225,7 +223,7 @@ class DiffingPatchNodeWdgt extends Widget
       world.alignIDsOfNextMorphsInSystemTests()
 
     super
-    @layoutIsValid = true
+    @markLayoutAsFixed()
 
   # Simple Diff function
   # (C) Paul Butler 2008 <http://www.paulbutler.org/>

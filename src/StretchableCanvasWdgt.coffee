@@ -172,22 +172,9 @@ class StretchableCanvasWdgt extends CanvasMorph
   doLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
-    if !newBoundsForThisLayout?
-      if @desiredExtent?
-        newBoundsForThisLayout = @desiredExtent
-        @desiredExtent = nil
-      else
-        newBoundsForThisLayout = @extent()
+    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
 
-      if @desiredPosition?
-        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
-        @desiredPosition = nil
-      else
-        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
-
-    if @isCollapsed()
-      @layoutIsValid = true
-      return
+    if @_handleCollapsedStateShouldWeReturn() then return
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -214,7 +201,7 @@ class StretchableCanvasWdgt extends CanvasMorph
     @fullChanged()
 
     super
-    @layoutIsValid = true
+    @markLayoutAsFixed()
 
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

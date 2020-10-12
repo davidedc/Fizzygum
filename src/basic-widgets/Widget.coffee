@@ -4154,9 +4154,7 @@ class Widget extends TreeNode
   implementsDeferredLayout: ->
     @doLayout != Widget::doLayout
 
-  doLayout: (newBoundsForThisLayout) ->
-    #if !window.recalculatingLayouts then debugger
-
+  __calculateNewBoundsWhenDoingLayout: (newBoundsForThisLayout) ->
     if !newBoundsForThisLayout?
       if @desiredExtent?
         newBoundsForThisLayout = @desiredExtent
@@ -4170,9 +4168,23 @@ class Widget extends TreeNode
       else
         newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
 
+    return newBoundsForThisLayout
+
+  _handleCollapsedStateShouldWeReturn: ->
     if @isCollapsed()
-      @layoutIsValid = true
-      return
+      @markLayoutAsFixed()
+      return true
+    return false
+
+  markLayoutAsFixed: ->
+    @layoutIsValid = true
+
+  doLayout: (newBoundsForThisLayout) ->
+    #if !window.recalculatingLayouts then debugger
+
+    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
+
+    if @_handleCollapsedStateShouldWeReturn() then return
 
     # freefloating layouts never need
     # adjusting. We marked the @layoutIsValid
@@ -4181,7 +4193,7 @@ class Widget extends TreeNode
     # layout to be recalculated but this Widget
     # now needs to do nothing.
     #if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
-    #  @layoutIsValid = true
+    #  @markLayoutAsFixed()
     #  return
     
     # todo should we do a fullChanged here?
@@ -4327,7 +4339,7 @@ class Widget extends TreeNode
           C.doLayout childBounds
     # this part is excluded from the fizzygum homepage build <<«
 
-    @layoutIsValid = true
+    @markLayoutAsFixed()
 
     # if I just did my layout, also do the layout
     # of all children that have position/size depending on mine

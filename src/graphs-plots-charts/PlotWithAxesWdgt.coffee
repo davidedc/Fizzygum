@@ -28,22 +28,9 @@ class PlotWithAxesWdgt extends Widget
   doLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
-    if !newBoundsForThisLayout?
-      if @desiredExtent?
-        newBoundsForThisLayout = @desiredExtent
-        @desiredExtent = nil
-      else
-        newBoundsForThisLayout = @extent()
+    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
 
-      if @desiredPosition?
-        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
-        @desiredPosition = nil
-      else
-        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
-
-    if @isCollapsed()
-      @layoutIsValid = true
-      return
+    if @_handleCollapsedStateShouldWeReturn() then return
 
     # TODO should'be calling this rawSetBounds from here,
     # rather use super
@@ -79,7 +66,7 @@ class PlotWithAxesWdgt extends Widget
     @fullChanged()
 
     super
-    @layoutIsValid = true
+    @markLayoutAsFixed()
 
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

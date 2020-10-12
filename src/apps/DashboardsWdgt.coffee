@@ -97,5 +97,5 @@ class DashboardsWdgt extends StretchableEditableWdgt
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
-    @layoutIsValid = true
+    @markLayoutAsFixed()
 
