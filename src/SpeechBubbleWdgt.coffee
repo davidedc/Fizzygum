@@ -79,7 +79,7 @@ class SpeechBubbleWdgt extends Widget
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
     # going to be painted and moved OK.
-    world.trackChanges.push false
+    world.disableTrackChanges()
 
     # adjust my layout
     @rawSetWidth newBoundsForThisLayout.width()
@@ -93,7 +93,7 @@ class SpeechBubbleWdgt extends Widget
       .translateBy @position().add @padding + @cornerRadius
     )
 
-    world.trackChanges.pop()
+    world.maybeEnableTrackChanges()
     @fullChanged()
 
     super

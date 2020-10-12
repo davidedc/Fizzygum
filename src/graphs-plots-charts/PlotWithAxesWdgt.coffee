@@ -56,7 +56,7 @@ class PlotWithAxesWdgt extends Widget
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
     # going to be painted and moved OK.
-    world.trackChanges.push false
+    world.disableTrackChanges()
 
     height = @height()
     width = @width()
@@ -73,7 +73,7 @@ class PlotWithAxesWdgt extends Widget
     @plot.rawSetExtent (new Point width - 2 *  @horizAxis.distanceOfAxisOriginFromEdge().x , height - 2 *  @vertAxis.distanceOfAxisOriginFromEdge().y).round()
     @plot.fullRawMoveTo (@position().add new Point @horizAxis.distanceOfAxisOriginFromEdge().x - adjustmentX + 1, @vertAxis.distanceOfAxisOriginFromEdge().y - 1).round().subtract((new Point -width/ftft,height/ftft).round())
 
-    world.trackChanges.pop()
+    world.maybeEnableTrackChanges()
     @fullChanged()
 
     super

@@ -907,6 +907,12 @@ class WorldMorph extends PanelWdgt
     for m in @morphsThatMaybeChangedFullGeometryOrPosition
       m.fullGeometryOrPositionPossiblyChanged = false
 
+  disableTrackChanges: ->
+    @trackChanges.push false
+
+  maybeEnableTrackChanges: ->
+    @trackChanges.pop()
+
   updateBroken: ->
     #console.log "number of broken rectangles: " + @broken.length
     @broken = []

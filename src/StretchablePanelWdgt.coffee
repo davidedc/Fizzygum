@@ -59,7 +59,7 @@ class StretchablePanelWdgt extends PanelWdgt
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
     # going to be painted and moved OK.
-    world.trackChanges.push false
+    world.disableTrackChanges()
 
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
@@ -84,7 +84,7 @@ class StretchablePanelWdgt extends PanelWdgt
 
 
 
-    world.trackChanges.pop()
+    world.maybeEnableTrackChanges()
     @fullChanged()
 
     super

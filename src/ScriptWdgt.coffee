@@ -135,7 +135,7 @@ class ScriptWdgt extends Widget
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
     # going to be painted and moved OK.
-    world.trackChanges.push false
+    world.disableTrackChanges()
 
     textHeight = @height() - 2 * @externalPadding - @internalPadding - 15
     textBottom = @top() + @externalPadding + textHeight
@@ -164,7 +164,7 @@ class ScriptWdgt extends Widget
     # ----------------------------------------------
 
 
-    world.trackChanges.pop()
+    world.maybeEnableTrackChanges()
     @fullChanged()
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

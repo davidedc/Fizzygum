@@ -209,7 +209,7 @@ class DiffingPatchNodeWdgt extends Widget
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
     # going to be painted and moved OK.
-    world.trackChanges.push false
+    world.disableTrackChanges()
 
     textHeight = @height() - 2 * @externalPadding
 
@@ -219,7 +219,7 @@ class DiffingPatchNodeWdgt extends Widget
 
 
 
-    world.trackChanges.pop()
+    world.maybeEnableTrackChanges()
     @fullChanged()
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

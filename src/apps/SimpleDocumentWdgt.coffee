@@ -143,7 +143,7 @@ class SimpleDocumentWdgt extends Widget
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
     # going to be painted and moved OK.
-    world.trackChanges.push false
+    world.disableTrackChanges()
 
     availableHeight = @height() - 2 * @externalPadding
     simpleDocumentScrollPanelTop = @top() + @externalPadding
@@ -166,7 +166,7 @@ class SimpleDocumentWdgt extends Widget
       @simpleDocumentScrollPanel.rawSetExtent new Point @width() - 2 * @externalPadding, simpleDocumentScrollPanelHeight
 
 
-    world.trackChanges.pop()
+    world.maybeEnableTrackChanges()
     @fullChanged()
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

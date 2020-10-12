@@ -41,7 +41,7 @@ class PatchProgrammingWdgt extends StretchableEditableWdgt
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
     # going to be painted and moved OK.
-    world.trackChanges.push false
+    world.disableTrackChanges()
 
     # label
     labelLeft = @left() + @externalPadding
@@ -75,7 +75,7 @@ class PatchProgrammingWdgt extends StretchableEditableWdgt
     # ----------------------------------------------
 
 
-    world.trackChanges.pop()
+    world.maybeEnableTrackChanges()
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 

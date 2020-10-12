@@ -863,11 +863,11 @@ class ActivePointerWdgt extends Widget
   # ActivePointerWdgt floatDragging optimization
   fullRawMoveBy: (delta) ->
     if delta.isZero() then return
-    world.trackChanges.push false
+    world.disableTrackChanges()
     #console.log "move 2"
     @breakNumberOfRawMovesAndResizesCaches()
     super delta
-    world.trackChanges.pop()
+    world.maybeEnableTrackChanges()
     @fullChanged()
 
   processMouseMove: (worldX, worldY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->

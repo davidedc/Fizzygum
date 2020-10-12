@@ -147,7 +147,7 @@ class MenuMorph extends PopUpWdgt
     # no point in breaking a rectangle for each menu entry,
     # let's hold on the broken rects and then issue
     # a fullChanged() at the end.
-    world.trackChanges.push false
+    world.disableTrackChanges()
 
 
     # we are going to re-build the
@@ -194,7 +194,7 @@ class MenuMorph extends PopUpWdgt
     #console.log "fb: " + fb
     # add some padding to the right and bottom of the menu
     @silentRawSetExtent fb.extent().add 2
-    world.trackChanges.pop()
+    world.maybeEnableTrackChanges()
     @fullChanged()
   
   maxWidthOfMenuEntries: ->
@@ -223,10 +223,10 @@ class MenuMorph extends PopUpWdgt
     w = @maxWidthOfMenuEntries()
     #console.log "maxWidthOfMenuEntries " + w
     @children.forEach (item) =>
-      world.trackChanges.push false
+      world.disableTrackChanges()
       item.rawSetWidth w
       #console.log "new width of " + item + " : " + item.width()
-      world.trackChanges.pop()
+      world.maybeEnableTrackChanges()
 
   
   unselectAllItems: ->

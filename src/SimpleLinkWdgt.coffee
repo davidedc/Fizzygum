@@ -72,7 +72,7 @@ class SimpleLinkWdgt extends Widget
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
     # going to be painted and moved OK.
-    world.trackChanges.push false
+    world.disableTrackChanges()
 
     availableHeight = @height() - 2 * @externalPadding - @internalPadding
     text1Height = Math.round availableHeight * 50/100
@@ -93,7 +93,7 @@ class SimpleLinkWdgt extends Widget
       @externalLinkIcon.rawSetExtent new Point squareSize, squareSize
 
 
-    world.trackChanges.pop()
+    world.maybeEnableTrackChanges()
     @fullChanged()
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

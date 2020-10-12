@@ -228,7 +228,7 @@ class CalculatingPatchNodeWdgt extends Widget
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
     # going to be painted and moved OK.
-    world.trackChanges.push false
+    world.disableTrackChanges()
 
     availableHeight = @height() - 2 * @externalPadding - 3 * @internalPadding - 2 * 15
     text1Height = Math.round(availableHeight * 2/3)
@@ -253,7 +253,7 @@ class CalculatingPatchNodeWdgt extends Widget
       @outputTextArea.rawSetExtent new Point @width() - 2 * @externalPadding, text2Height
 
 
-    world.trackChanges.pop()
+    world.maybeEnableTrackChanges()
     @fullChanged()
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

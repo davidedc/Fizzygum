@@ -447,7 +447,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
     # going to be painted and moved OK.
-    world.trackChanges.push false
+    world.disableTrackChanges()
 
     # label
     labelLeft = @left() + @externalPadding
@@ -503,7 +503,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
       @stretchableWidgetContainer.setExtent new Point stretchableWidgetContainerWidth, stretchableWidgetContainerHeight
 
 
-    world.trackChanges.pop()
+    world.maybeEnableTrackChanges()
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 

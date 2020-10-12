@@ -25,7 +25,7 @@ class GlassBoxBottomWdgt extends BoxMorph
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
     # going to be painted and moved OK.
-    world.trackChanges.push false
+    world.disableTrackChanges()
 
     thumbnailSize = @width()
 
@@ -50,5 +50,5 @@ class GlassBoxBottomWdgt extends BoxMorph
         w.fullRawMoveTo @topLeft().add((new Point (thumbnailSize - w.width())/2 ,(thumbnailSize - w.height())/2 ).round())
 
 
-    world.trackChanges.pop()
+    world.maybeEnableTrackChanges()
     @fullChanged()
