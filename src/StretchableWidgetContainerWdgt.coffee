@@ -126,6 +126,8 @@ class StretchableWidgetContainerWdgt extends Widget
 
     #console.log "spanel @contents: " + @contents + " doLayout 2"
 
+    # TODO should'be calling this rawSetBounds from here,
+    # rather use super
     @rawSetBounds newBoundsForThisLayout
 
     #console.log "spanel @contents: " + @contents + " doLayout 3"

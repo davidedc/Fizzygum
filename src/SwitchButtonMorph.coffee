@@ -48,6 +48,8 @@ class SwitchButtonMorph extends Widget
         newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
 
 
+    # TODO should'be calling this rawSetBounds from here,
+    # rather use super
     @rawSetBounds newBoundsForThisLayout
 
     counter = 0

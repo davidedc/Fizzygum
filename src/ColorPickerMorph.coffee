@@ -77,6 +77,8 @@ class ColorPickerMorph extends Widget
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
+    # TODO should'be calling this rawSetBounds from here,
+    # rather use super
     @rawSetBounds newBoundsForThisLayout
     @colorPalette.fullRawMoveTo @position()
     @colorPalette.rawSetExtent new Point @width(), Math.round(@height() * 0.625)

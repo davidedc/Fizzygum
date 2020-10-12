@@ -200,6 +200,8 @@ class StretchableCanvasWdgt extends CanvasMorph
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
+    # TODO should'be calling this rawSetBounds from here,
+    # rather use super
     @rawSetBounds newBoundsForThisLayout
 
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()

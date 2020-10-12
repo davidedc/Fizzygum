@@ -79,6 +79,8 @@ class FanoutWdgt extends Widget
       @layoutIsValid = true
       return
 
+    # TODO should'be calling this rawSetBounds from here,
+    # rather use super
     @rawSetBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
