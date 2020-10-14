@@ -1967,16 +1967,22 @@ class WorldMorph extends PanelWdgt
     
     @wheelBrowserEventListener = (event) =>
       @events.push "wheelBrowserEvent"
+      if ((/iPad|iPhone/.test navigator.platform) or (navigator.platform == 'MacIntel' && navigator.maxTouchPoints > 1)) and !event.deltaX? and !event.deltaY? and !event.deltaZ?
+        event.deltaX = 0
+        event.deltaY = window.pageYOffset
+        event.deltaZ = 0
+        event.altKey = false
+        event.button = 0
+        event.buttons = 0
       @events.push event
       event.preventDefault()
 
     canvas.addEventListener "wheel", @wheelBrowserEventListener, false
 
     # in theory there should be no scroll event on the page
-    # window.addEventListener "scroll", ((event) =>
-    #  nop # nothing to do, I just need this to set an interrupt point.
-    # ), false
 
+    if ((/iPad|iPhone/.test navigator.platform) or (navigator.platform == 'MacIntel' && navigator.maxTouchPoints > 1))
+      window.addEventListener "scroll", @wheelBrowserEventListener, false
 
     @dragoverEventListener = (event) ->
       event.preventDefault()
