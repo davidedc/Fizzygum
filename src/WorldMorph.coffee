@@ -1967,21 +1967,30 @@ class WorldMorph extends PanelWdgt
     
     @wheelBrowserEventListener = (event) =>
       @events.push "wheelBrowserEvent"
-      if ((/iPad|iPhone/.test navigator.platform) or (navigator.platform == 'MacIntel' && navigator.maxTouchPoints > 1)) and !event.deltaX? and !event.deltaY? and !event.deltaZ?
-        event.deltaX = 0
+
+      if Utils.runningInMobileSafari() and !event.deltaX? and !event.deltaY? and !event.deltaZ?
+        # create passable, fake wheel event for mouse/trackpad in
+        # Mobile Safari. (we are here after a "scroll" event).
+        # See comment below for more info.
+        event.deltaX = event.deltaZ = event.button = event.buttons = 0
         event.deltaY = window.pageYOffset
-        event.deltaZ = 0
         event.altKey = false
-        event.button = 0
-        event.buttons = 0
+
       @events.push event
       event.preventDefault()
 
     canvas.addEventListener "wheel", @wheelBrowserEventListener, false
 
-    # in theory there should be no scroll event on the page
-
-    if ((/iPad|iPhone/.test navigator.platform) or (navigator.platform == 'MacIntel' && navigator.maxTouchPoints > 1))
+    # CHECK AFTER 15 Jan 2021 00:00:00 GMT
+    # As of Oct 2020, using mouse/trackpad in
+    # Mobile Safari, the wheel event is not sent.
+    # See:
+    #   https://github.com/cdr/code-server/issues/1455
+    #   https://bugs.webkit.org/show_bug.cgi?id=210071
+    # However, the scroll event is sent, and when that is sent,
+    # we can use the window.pageYOffset
+    # to re-create a passable, fake wheel event.
+    if Utils.runningInMobileSafari()
       window.addEventListener "scroll", @wheelBrowserEventListener, false
 
     @dragoverEventListener = (event) ->
@@ -2032,6 +2041,8 @@ class WorldMorph extends PanelWdgt
     canvas.removeEventListener 'keyup', @keyupBrowserEventListener
     canvas.removeEventListener 'keypress', @keypressBrowserEventListener
     canvas.removeEventListener 'wheel', @wheelBrowserEventListener
+    if Utils.runningInMobileSafari()
+      canvas.removeEventListener 'scroll', @wheelBrowserEventListener
 
     canvas.removeEventListener 'cut', @cutBrowserEventListener
     canvas.removeEventListener 'copy', @copyBrowserEventListener
