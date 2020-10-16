@@ -35,7 +35,7 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
       windowedBasementWdgt.rawSetExtent new Point 460, 400
       windowedBasementWdgt.fullRawMoveTo new Point 140, 90
       windowedBasementWdgt.rememberFractionalSituationInHoldingPanel()
-      menusHelper.createBasementOneOffInfoWindowNextTo windowedBasementWdgt
+      BasementInfoWdgt.createNextTo windowedBasementWdgt
     else
       # if the basement is not an orphan, then it's
       # visible somewhere and it's in a window
