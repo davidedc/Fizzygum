@@ -23,7 +23,7 @@ class WindowsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
     switcherooWm.fullRawMoveWithin world
     world.add switcherooWm
     switcherooWm.rawSetExtent new Point 61, 192
-    readmeWindow = menusHelper.createWindowsToolbarOneOffInfoWindowNextTo switcherooWm
+    readmeWindow = WindowsToolbarInfoWdgt.createNextTo switcherooWm
     readmeWindow?.fullRawMoveTo new Point 300, 200
     readmeWindow?.rememberFractionalSituationInHoldingPanel()
 
