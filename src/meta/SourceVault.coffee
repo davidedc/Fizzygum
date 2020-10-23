@@ -27,6 +27,9 @@ class SourceVault
     console.log "allTrailingWhiteSpaces -----------------"
     @allTrailingWhiteSpaces()
 
+    console.log "allTODOs -----------------"
+    @allTODOs()
+
     return
 
   @getSourceContent: (sourceFileName) ->
@@ -106,3 +109,18 @@ class SourceVault
         lineNumber++
         if eachLine.match /[^\s#][ ]+$/gm
           console.log eachSourceFileName + " line " + lineNumber + " " + eachLine + "<"
+
+  @allTODOs: ->
+    howManyLinesBeforeAndAfter = 5
+    for eachSourceFileName in @allSourceFilesNames()
+      theSource = @getSourceContent(eachSourceFileName)
+      theSourceByLine = theSource.split "\n"
+      lineNumber = 0
+      for eachLine in theSourceByLine
+        lineNumber++
+        if eachLine.match /^ *# *.*TODO/gi
+          theSourceByLine[lineNumber-1] = theSourceByLine[lineNumber-1].replace /todo/gi, "██𝙏𝙊𝘿𝙊██"
+          for aBitBeforeABitAfter in [-(howManyLinesBeforeAndAfter+1)...howManyLinesBeforeAndAfter]
+            if lineNumber + aBitBeforeABitAfter >= 0 and lineNumber + aBitBeforeABitAfter < theSourceByLine.length
+              console.log eachSourceFileName + " line " + (lineNumber+aBitBeforeABitAfter) + " >" + theSourceByLine[lineNumber+aBitBeforeABitAfter]
+          console.log "-----------------------------------------------"
