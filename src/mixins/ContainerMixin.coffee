@@ -8,7 +8,7 @@
 #   2) some padding
 #   3) it resizes itself so to *at least contain* all the morphs attached to it (i.e. it could be bigger).
 # It doesn’t need to be rectangular.
-# [TODO] Also it can draw a border of its own cause of the padding, you can add enough padding so the border is drawn correctly, maybe the padding can be automatically determined based on the border color.
+# TODO Also it can draw a border of its own cause of the padding, you can add enough padding so the border is drawn correctly, maybe the padding can be automatically determined based on the border color.
 
 ContainerMixin =
   # class properties here:

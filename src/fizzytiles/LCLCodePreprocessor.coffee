@@ -1002,7 +1002,7 @@ class LCLCodePreprocessor
     # "wave +1" is different from "wave + 1" (and same with -)
     delimitersForExpressionsWithSpaces = delimitersForCommands + "|" + "\\+[\\s|;]|-[\\s|;]|\\*|/|%|&|]|<|>|==|!=|>=|<=|!(?![=])|\\s+and\\s+|\\s+or\\s+|\\s+not\\s+|\\|"
 
-    # [todo] you should ideally derive this coming regexp
+    # TODO you should ideally derive this coming regexp
     # from the one above
     delimitersForExpressionsWithoutSpaces = delimitersForCommands + "|" + "\\+|-|\\*|/|%|&|]|<|>|==|!=|>=|<=|!(?![=])|\\s+and\\s+|\\s+or\\s+|\\s+not\\s+|\\|"
 

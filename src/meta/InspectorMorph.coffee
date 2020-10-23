@@ -65,7 +65,7 @@ class InspectorMorph extends BoxMorph
     #   c) some of these are not proprietary, i.e. they belong to an object up
     #   the chain of prototypes. These are shown BLUE
     #
-    # todo: show the static methods and variables in yet another color.
+    # TODO show the static methods and variables in yet another color.
     
     for property of @target
       # dummy condition, to be refined

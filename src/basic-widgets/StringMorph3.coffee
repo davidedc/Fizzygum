@@ -339,7 +339,7 @@ class StringMorph3 extends Widget
         # fits, and that might have a crop in it.
         if start != fittingText.length
 
-          # todo you should count the newlines
+          # TODO you should count the newlines
           paragraphBeforeWithNewLineHasBeenCropped = false
           if fittingText.substr(fittingText.length - 1) == "\n"
             paragraphBeforeWithNewLineHasBeenCropped = true
@@ -933,7 +933,7 @@ class StringMorph3 extends Widget
     if otherMenuEntryToCheck[0].isTicked()
       morphOpeningThePopUp.toggleTick()
       otherMenuEntryToCheck[0].toggleTick()
-      # todo actually do something that changes the
+      # TODO actually do something that changes the
       # fitting mode of the morph
 
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "fit text to box"
@@ -973,7 +973,7 @@ class StringMorph3 extends Widget
     if otherMenuEntryToCheck[0].isTicked()
       morphOpeningThePopUp.toggleTick()
       otherMenuEntryToCheck[0].toggleTick()
-      # todo actually do something that changes the
+      # TODO actually do something that changes the
       # fitting mode of the morph
 
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "fit box to text"

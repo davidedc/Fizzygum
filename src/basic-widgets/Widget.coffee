@@ -4196,7 +4196,7 @@ class Widget extends TreeNode
     #  @markLayoutAsFixed()
     #  return
     
-    # todo should we do a fullChanged here?
+    # TODO should we do a fullChanged here?
     # rather than breaking what could be many
     # rectangles?
 

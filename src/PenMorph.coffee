@@ -20,7 +20,7 @@ class PenMorph extends Widget
     @penSize = WorldMorph.preferencesAndSettings.handleSize * 4
     super()
     @rawSetExtent new Point @penSize, @penSize
-    # todo we need to change the size two times, for getting the right size
+    # TODO we need to change the size two times, for getting the right size
     # of the arrow and of the line. Probably should make the two distinct
     @penSize = 1
 

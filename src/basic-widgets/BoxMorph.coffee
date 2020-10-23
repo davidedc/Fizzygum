@@ -13,7 +13,7 @@ class BoxMorph extends Widget
 
   # »>> this part is excluded from the fizzygum homepage build
   # there is another method almost equal to this
-  # todo refactor
+  # TODO refactor
   choiceOfMorphToBePicked: (ignored, morphPickingUp) ->
     # this is what happens when "each" is
     # selected: we attach the selected morph

@@ -399,7 +399,7 @@ class StringMorph2 extends Widget
         # fits, and that might have a crop in it.
         if start != fittingText.length
 
-          # todo you should count the newlines
+          # TODO you should count the newlines
           paragraphBeforeWithNewLineHasBeenCropped = false
           if fittingText.substr(fittingText.length - 1) == "\n"
             paragraphBeforeWithNewLineHasBeenCropped = true
