@@ -15,9 +15,6 @@ class SourceVault
     console.log "allSourcesContainingStringifiedCodeForScript -----------------"
     console.log @allSourcesContainingStringifiedCodeForScript()
 
-    console.log "allSourcesWithDoLayoutWithoutSuper -----------------"
-    console.log @allSourcesWithDoLayoutWithoutSuper()
-
     console.log "allSourcesWithDoLayoutCallingRaw -----------------"
     console.log @allSourcesWithDoLayoutCallingRaw()
 
@@ -29,6 +26,9 @@ class SourceVault
 
     console.log "allTODOs -----------------"
     @allTODOs()
+
+    console.log "allSourcesWithDoLayoutWithoutStandardStructure -----------------"
+    @allSourcesWithDoLayoutWithoutStandardStructure()
 
     return
 
@@ -71,6 +71,7 @@ class SourceVault
     @allSourcesJustClassName().filter (eachSource) =>
       window[eachSource]?.class?.nonStaticPropertiesSources.doLayout?
   
+  # unused, this is now included in a bigger check we do on the doLayout source
   @allSourcesWithDoLayoutWithoutSuper: ->
     @allSourcesWithDoLayout().filter (eachSource) =>
       if eachSource == "Widget" then return false
@@ -124,3 +125,16 @@ class SourceVault
             if lineNumber + aBitBeforeABitAfter >= 0 and lineNumber + aBitBeforeABitAfter < theSourceByLine.length
               console.log eachSourceFileName + " line " + (lineNumber+aBitBeforeABitAfter) + " >" + theSourceByLine[lineNumber+aBitBeforeABitAfter]
           console.log "-----------------------------------------------"
+
+  @allSourcesWithDoLayoutWithoutStandardStructure: ->
+    @allSourcesWithDoLayout().filter (eachSource) =>
+      if eachSource == "Widget" then return false
+      doLayoutMethod = NonStaticPropertyOfClassSource.fromFileAndMethodName eachSource, "doLayout"
+      doLayoutMethod = doLayoutMethod.stripComments().collapseLinesWithOnlySpaces().collapseLastEmptyLines()
+      if doLayoutMethod.match /newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout\s*if @_handleCollapsedStateShouldWeReturn\(\) then return\s*@rawSetBounds newBoundsForThisLayout\s*world.disableTrackChanges\(\)/m
+        if doLayoutMethod.match /world.maybeEnableTrackChanges\(\)\s*super\s*@markLayoutAsFixed\(\)/
+          return false
+      console.log eachSource + "-------------------------"
+      console.log doLayoutMethod.toString()
+      return true
+
