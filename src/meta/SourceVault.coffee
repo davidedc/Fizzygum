@@ -111,7 +111,7 @@ class SourceVault
         if eachLine.match /[^\s#][ ]+$/gm
           console.log eachSourceFileName + " line " + lineNumber + " " + eachLine + "<"
 
-  @highlightRegex: (regexesArray, replaceWhatRegexArray, replaceWithWhatStringArray) ->
+  @highlightRegex: (regexesArray, replaceWhatRegexesArray, replaceWithWhatStringsArray) ->
     howManyLinesBeforeAndAfter = 5
     for eachSourceFileName in @allSourceFilesNames()
       theSource = @getSourceContent(eachSourceFileName)
@@ -123,7 +123,7 @@ class SourceVault
         for eachRegex in regexesArray
           regexNumber++
           if eachLine.match regexesArray[regexNumber]
-            theSourceByLine[lineNumber-1] = theSourceByLine[lineNumber-1].replace replaceWhatRegexArray[regexNumber], replaceWithWhatStringArray[regexNumber]
+            theSourceByLine[lineNumber-1] = theSourceByLine[lineNumber-1].replace replaceWhatRegexesArray[regexNumber], replaceWithWhatStringsArray[regexNumber]
             for aBitBeforeABitAfter in [-(howManyLinesBeforeAndAfter+1)...howManyLinesBeforeAndAfter]
               if lineNumber + aBitBeforeABitAfter >= 0 and lineNumber + aBitBeforeABitAfter < theSourceByLine.length
                 console.log eachSourceFileName + " line " + (lineNumber+aBitBeforeABitAfter) + " >" + theSourceByLine[lineNumber+aBitBeforeABitAfter]
