@@ -111,7 +111,7 @@ class SourceVault
         if eachLine.match /[^\s#][ ]+$/gm
           console.log eachSourceFileName + " line " + lineNumber + " " + eachLine + "<"
 
-  @allTODOs: ->
+  @highlightRegex: (regexesArray, replaceWhatRegexArray, replaceWithWhatStringArray) ->
     howManyLinesBeforeAndAfter = 5
     for eachSourceFileName in @allSourceFilesNames()
       theSource = @getSourceContent(eachSourceFileName)
@@ -119,12 +119,18 @@ class SourceVault
       lineNumber = 0
       for eachLine in theSourceByLine
         lineNumber++
-        if eachLine.match /^ *# *.*TODO/gi
-          theSourceByLine[lineNumber-1] = theSourceByLine[lineNumber-1].replace /todo/gi, "🡆𝙏𝙊𝘿𝙊🡄"
-          for aBitBeforeABitAfter in [-(howManyLinesBeforeAndAfter+1)...howManyLinesBeforeAndAfter]
-            if lineNumber + aBitBeforeABitAfter >= 0 and lineNumber + aBitBeforeABitAfter < theSourceByLine.length
-              console.log eachSourceFileName + " line " + (lineNumber+aBitBeforeABitAfter) + " >" + theSourceByLine[lineNumber+aBitBeforeABitAfter]
-          console.log "-----------------------------------------------"
+        regexNumber = -1
+        for eachRegex in regexesArray
+          regexNumber++
+          if eachLine.match regexesArray[regexNumber]
+            theSourceByLine[lineNumber-1] = theSourceByLine[lineNumber-1].replace replaceWhatRegexArray[regexNumber], replaceWithWhatStringArray[regexNumber]
+            for aBitBeforeABitAfter in [-(howManyLinesBeforeAndAfter+1)...howManyLinesBeforeAndAfter]
+              if lineNumber + aBitBeforeABitAfter >= 0 and lineNumber + aBitBeforeABitAfter < theSourceByLine.length
+                console.log eachSourceFileName + " line " + (lineNumber+aBitBeforeABitAfter) + " >" + theSourceByLine[lineNumber+aBitBeforeABitAfter]
+            console.log "-----------------------------------------------"
+
+  @allTODOs: ->
+    @highlightRegex [/^ *# *.*TODO/gi],[/todo/gi],["🡆𝙏𝙊𝘿𝙊🡄"]
 
   @allSourcesWithDoLayoutWithoutStandardStructure: ->
     @allSourcesWithDoLayout().filter (eachSource) =>
