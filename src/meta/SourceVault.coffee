@@ -120,7 +120,7 @@ class SourceVault
       for eachLine in theSourceByLine
         lineNumber++
         if eachLine.match /^ *# *.*TODO/gi
-          theSourceByLine[lineNumber-1] = theSourceByLine[lineNumber-1].replace /todo/gi, "██𝙏𝙊𝘿𝙊██"
+          theSourceByLine[lineNumber-1] = theSourceByLine[lineNumber-1].replace /todo/gi, "🡆𝙏𝙊𝘿𝙊🡄"
           for aBitBeforeABitAfter in [-(howManyLinesBeforeAndAfter+1)...howManyLinesBeforeAndAfter]
             if lineNumber + aBitBeforeABitAfter >= 0 and lineNumber + aBitBeforeABitAfter < theSourceByLine.length
               console.log eachSourceFileName + " line " + (lineNumber+aBitBeforeABitAfter) + " >" + theSourceByLine[lineNumber+aBitBeforeABitAfter]
