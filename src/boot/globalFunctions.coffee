@@ -210,7 +210,13 @@ boot = ->
   # The case that we want to optimise is the pre-compiled case:
   # the pre-compiled pack should ideally only contain everything
   # that is needed to boot the world.
-  bootLoadPromises = [loadJSFilePromise "js/pre-compiled.js"]
+  bootLoadPromises = [
+    loadJSFilePromise "js/pre-compiled.js",
+    # coffeescript could nominally be loaded later
+    # if it wasn't for the fact that the paint tool needs it
+    # (see comment later to see where you can load it)
+    loadJSFilePromise "js/libs/coffee-script_2.0.3.js"
+  ]
 
   # TODO rather than relying on this test to load these .js at boot,
   # we should really just dynamically load these when needed
@@ -236,7 +242,8 @@ boot = ->
       createWorldAndStartStepping()
   .then ->
     Promise.all [
-      loadJSFilePromise("js/libs/coffee-script_2.0.3.js"),
+      # coffeescript could nominally be loaded here
+      # if it wasn't for the fact that the paint tool needs it
       loadJSFilePromise("js/coffeescript-sources/Class_coffeSource.js"),
       loadJSFilePromise("js/coffeescript-sources/Mixin_coffeSource.js"),
       loadJSFilePromise("js/src/loading-and-compiling-coffeescript-sources-min.js"),
