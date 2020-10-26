@@ -27,6 +27,9 @@ class SourceVault
     console.log "allTODOs -----------------"
     @allTODOs()
 
+    console.log "allScheduledChecks -----------------"
+    @allScheduledChecks()
+
     console.log "allSourcesWithDoLayoutWithoutStandardStructure -----------------"
     @allSourcesWithDoLayoutWithoutStandardStructure()
 
@@ -111,7 +114,7 @@ class SourceVault
         if eachLine.match /[^\s#][ ]+$/gm
           console.log eachSourceFileName + " line " + lineNumber + " " + eachLine + "<"
 
-  @highlightRegex: (regexesArray, replaceWhatRegexesArray, replaceWithWhatStringsArray) ->
+  @highlightRegex: (regexesArray, replaceWhatRegexesArray, replaceWithWhatStringsArray, testFunction) ->
     howManyLinesBeforeAndAfter = 5
     for eachSourceFileName in @allSourceFilesNames()
       theSource = @getSourceContent(eachSourceFileName)
@@ -122,15 +125,21 @@ class SourceVault
         regexNumber = -1
         for eachRegex in regexesArray
           regexNumber++
-          if eachLine.match regexesArray[regexNumber]
-            theSourceByLine[lineNumber-1] = theSourceByLine[lineNumber-1].replace replaceWhatRegexesArray[regexNumber], replaceWithWhatStringsArray[regexNumber]
-            for aBitBeforeABitAfter in [-(howManyLinesBeforeAndAfter+1)...howManyLinesBeforeAndAfter]
-              if lineNumber + aBitBeforeABitAfter >= 0 and lineNumber + aBitBeforeABitAfter < theSourceByLine.length
-                console.log eachSourceFileName + " line " + (lineNumber+aBitBeforeABitAfter) + " >" + theSourceByLine[lineNumber+aBitBeforeABitAfter]
-            console.log "-----------------------------------------------"
+          if matches = eachLine.match regexesArray[regexNumber]
+            if !testFunction? or (testFunction? and testFunction matches)
+              theSourceByLine[lineNumber-1] = theSourceByLine[lineNumber-1].replace replaceWhatRegexesArray[regexNumber], replaceWithWhatStringsArray[regexNumber]
+              for aBitBeforeABitAfter in [-(howManyLinesBeforeAndAfter+1)...howManyLinesBeforeAndAfter]
+                if lineNumber + aBitBeforeABitAfter >= 0 and lineNumber + aBitBeforeABitAfter < theSourceByLine.length
+                  console.log eachSourceFileName + " line " + (lineNumber+aBitBeforeABitAfter) + " >" + theSourceByLine[lineNumber+aBitBeforeABitAfter]
+              console.log "-----------------------------------------------"
 
   @allTODOs: ->
-    @highlightRegex [/^ *# *.*TODO/gi],[/todo/gi],["🡆𝙏𝙊𝘿𝙊🡄"]
+    @highlightRegex [/^ *# *.*TODO/gi],[/(todo)/gi],["🡆$1🡄"]
+
+  # Here follows just a test of this very function
+  # CHECK AFTER 1 Jan 0 00:00:00 GMT
+  @allScheduledChecks: ->
+    @highlightRegex [/CHECK AFTER (.*)/gi],[/(CHECK AFTER .*)/gi],["🡆$1🡄"], ((matches) -> Date.parse(matches[0]) < new Date)
 
   @allSourcesWithDoLayoutWithoutStandardStructure: ->
     @allSourcesWithDoLayout().filter (eachSource) =>
