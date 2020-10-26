@@ -24,7 +24,7 @@ class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
     sdspw.add startingContent
 
     startingContent = new SimplePlainTextWdgt(
-      "version 1.1.11",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "version 1.1.12",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 9
     startingContent.isEditable = true
