@@ -33,6 +33,9 @@ class SourceVault
     console.log "allSourcesWithDoLayoutWithoutStandardStructure -----------------"
     @allSourcesWithDoLayoutWithoutStandardStructure()
 
+    console.log "allUnused -----------------"
+    @allUnused()
+
     return
 
   @getSourceContent: (sourceFileName) ->
@@ -140,6 +143,9 @@ class SourceVault
   # CHECK AFTER 1 Jan 0 00:00:00 GMT
   @allScheduledChecks: ->
     @highlightRegex [/CHECK AFTER (.*)/gi],[/(CHECK AFTER .*)/gi],["🡆$1🡄"], ((matches) -> Date.parse(matches[0]) < new Date)
+
+  @allUnused: ->
+    @highlightRegex [/^ *# *.*unused/gi, /^ *# *.*not *used/gi],[/(unused)/gi, /(not *used)/gi],["🡆$1🡄", "🡆$1🡄"]
 
   @allSourcesWithDoLayoutWithoutStandardStructure: ->
     @allSourcesWithDoLayout().filter (eachSource) =>
