@@ -3469,7 +3469,7 @@
             mootInputAppend = @normaliseCode(mootInputAppend,nil)[0]
             [transformedMootAppend, errorMootAppend,] = @preprocess(mootInputAppend)
             mootInputPrepend = @normaliseCode(mootInputPrepend,nil)[0]
-            [transformedMootPrepend, errorMootPrepend,] = @preprocess(mootInputPrepend)            
+            [transformedMootPrepend, errorMootPrepend,] = @preprocess(mootInputPrepend)
 
           if !errorMootAppend?
             if userDefinedFunctions != ""
@@ -3480,18 +3480,18 @@
               failedMootAppends++
               console.log "unexpected transformation"
               console.log "moot input:\n" + mootInputAppend
-              console.log "transformed into:\n" + transformedMootAppend          
+              console.log "transformed into:\n" + transformedMootAppend
 
           if !errorMootPrepend? and testMoots
             if userDefinedFunctions != ""
               rx = RegExp(prependString+"("+userDefinedFunctions+")\\(\\)",'gm')
-              transformedMootPrepend = transformedMootPrepend.replace(rx, prependString+"$1")            
+              transformedMootPrepend = transformedMootPrepend.replace(rx, prependString+"$1")
             transformedMootPrepend = @stripCommentsAndStrings(transformedMootPrepend,nil)[0]
             if mootInputPrepend != transformedMootPrepend
               failedMootPrepends++
               console.log "unexpected transformation"
               console.log "moot input:\n" + mootInputPrepend
-              console.log "transformed into:\n" + transformedMootPrepend          
+              console.log "transformed into:\n" + transformedMootPrepend
 
 
         if transformed == testCase.expected and
