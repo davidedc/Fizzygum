@@ -108,14 +108,7 @@ class SourceVault
       window[eachSource]?.class?.nonStaticPropertiesSources.reLayout?
 
   @allTrailingWhiteSpaces: ->
-    for eachSourceFileName in @allSourceFilesNames()
-      theSource = @getSourceContent(eachSourceFileName)
-      theSourceByLine = theSource.split "\n"
-      lineNumber = 0
-      for eachLine in theSourceByLine
-        lineNumber++
-        if eachLine.match /[^\s#][ ]+$/gm
-          console.log eachSourceFileName + " line " + lineNumber + " " + eachLine + "<"
+    @highlightRegex [/[^\s#][ ]+$/gm],[/[^\s#]([ ]+)$/gm],["🡆$1🡄"]
 
   @highlightRegex: (regexesArray, replaceWhatRegexesArray, replaceWithWhatStringsArray, testFunction) ->
     howManyLinesBeforeAndAfter = 5
