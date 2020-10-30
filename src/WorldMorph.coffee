@@ -80,8 +80,10 @@ class WorldMorph extends PanelWdgt
   # page with different settings
   # (but anyways, it was global before, so it's not any worse than before)
   @preferencesAndSettings: nil
-  @currentTime: nil
-  @currentDate: nil
+
+  @dateOfPreviousCycleStart: nil
+  @dateOfCurrentCycleStart: nil
+
   showRedraws: false
   doubleCheckCachedMethodsResults: false
 
@@ -1257,9 +1259,14 @@ class WorldMorph extends PanelWdgt
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError eachErr
 
+
+  updateTimeReferences: ->
+    WorldMorph.dateOfCurrentCycleStart = new Date
+    if !WorldMorph.dateOfPreviousCycleStart?
+      WorldMorph.dateOfPreviousCycleStart = new Date WorldMorph.dateOfCurrentCycleStart.getTime() - 30
+
   doOneCycle: ->
-    WorldMorph.currentTime = Date.now()
-    WorldMorph.currentDate = new Date
+    @updateTimeReferences()
     #console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
 
     @showErrorsHappenedInRepaintingStepInPreviousCycle()
@@ -1291,6 +1298,9 @@ class WorldMorph extends PanelWdgt
 
     WorldMorph.frameCount++
 
+    WorldMorph.dateOfPreviousCycleStart = WorldMorph.dateOfCurrentCycleStart
+    WorldMorph.dateOfCurrentCycleStart = nil
+
   # Widget stepping:
   runChildrensStepFunction: ->
 
@@ -1304,19 +1314,21 @@ class WorldMorph extends PanelWdgt
       # for objects where @fps is defined, check which ones are due to be stepped
       # and which ones want to wait.
       millisBetweenSteps = Math.round(1000 / eachSteppingMorph.fps)
+      timeOfCurrentCycleStart = WorldMorph.dateOfCurrentCycleStart.getTime()
+
       if eachSteppingMorph.fps <= 0
         # if fps 0 or negative, then just run as fast as possible,
         # so 0 milliseconds remaining to the next invokation
         millisecondsRemainingToWaitedFrame = 0
       else
         if eachSteppingMorph.synchronisedStepping
-          millisecondsRemainingToWaitedFrame = millisBetweenSteps - (WorldMorph.currentTime % millisBetweenSteps)
+          millisecondsRemainingToWaitedFrame = millisBetweenSteps - (timeOfCurrentCycleStart % millisBetweenSteps)
           if eachSteppingMorph.previousMillisecondsRemainingToWaitedFrame != 0 and millisecondsRemainingToWaitedFrame > eachSteppingMorph.previousMillisecondsRemainingToWaitedFrame
             millisecondsRemainingToWaitedFrame = 0
           eachSteppingMorph.previousMillisecondsRemainingToWaitedFrame = millisecondsRemainingToWaitedFrame
           #console.log millisBetweenSteps + " " + millisecondsRemainingToWaitedFrame
         else
-          elapsedMilliseconds = WorldMorph.currentTime - eachSteppingMorph.lastTime
+          elapsedMilliseconds = timeOfCurrentCycleStart - eachSteppingMorph.lastTime
           millisecondsRemainingToWaitedFrame = millisBetweenSteps - elapsedMilliseconds
       
       # when the firing time comes (or as soon as it's past):
@@ -1324,7 +1336,7 @@ class WorldMorph extends PanelWdgt
         @stepWidget eachSteppingMorph
 
         # Increment "lastTime" by millisBetweenSteps. Two notes:
-        # 1) We don't just set it to currentTime so that there is no drifting
+        # 1) We don't just set it to timeOfCurrentCycleStart so that there is no drifting
         # in running it the next time: we run it the next time as if this time it
         # ran exactly on time.
         # 2) We are going to update "last time" with the loop
@@ -1336,16 +1348,16 @@ class WorldMorph extends PanelWdgt
         # widgets would animate frantically (every frame) catching up on
         # all the steps they missed. We don't want that.
         #
-        # while eachSteppingMorph.lastTime + millisBetweenSteps < WorldMorph.currentTime
+        # while eachSteppingMorph.lastTime + millisBetweenSteps < timeOfCurrentCycleStart
         #   eachSteppingMorph.lastTime += millisBetweenSteps
         #
         # 3) and finally, here is the equivalent of the loop above, but done
         # in one shot using remainders.
         # Again: we are looking for the last "multiple" k such that
         #      lastTime + k * millisBetweenSteps
-        # is less than currentTime.
+        # is less than timeOfCurrentCycleStart.
 
-        eachSteppingMorph.lastTime = WorldMorph.currentTime - ((WorldMorph.currentTime - eachSteppingMorph.lastTime) % millisBetweenSteps)
+        eachSteppingMorph.lastTime = timeOfCurrentCycleStart - ((timeOfCurrentCycleStart - eachSteppingMorph.lastTime) % millisBetweenSteps)
 
 
 
