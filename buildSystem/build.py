@@ -195,6 +195,7 @@ def main():
     filenames = sorted(filenames + sorted(glob("src/graphs-plots-charts" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/maps" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/fizzytiles" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/synthetic-events" + "/*.coffee")))
 
 
     # so here we need to take a .coffee file and generate a js that
