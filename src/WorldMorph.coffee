@@ -1112,6 +1112,45 @@ class WorldMorph extends PanelWdgt
     @eventsQueue.push WorldMorph.dateOfPreviousCycleStart.getTime() + 1010
     @eventsQueue.push new MousedownSyntheticEvent 0, 0, false, false, false, false
 
+  draftMacroTranslation: ->
+    theMacro = """
+      start:
+        doSomething
+      then: // equivalent to a pause of 100ms
+        doSomething2
+        doSomething3
+      then, after 200 ms and no inputs ongoing: // checks that no input is ongoing
+        doSomething4
+        doSomething5
+      then, [after x ms, ] when condition1: // also implicit pause of 100ms if unspecified
+        doSomething6
+        doSomething7
+      then: // equivalent to a pause of 100ms
+        doSomething8
+    """
+    theMacro = theMacro.replace /^  /mg, "      "
+    theMacro = theMacro.replace /^start:/mg, """
+      switch (nextBlockToBeRun)
+        when 1
+          if waitingStepTimer > 0 and noCodeLoading()
+    """
+    theMacroByLine = theMacro.split "\n"
+    lineNumber = 0
+    thenNumber = 0
+    for eachLine in theMacroByLine
+      if eachLine.match /^then/
+        theMacroByLine[lineNumber] = """
+          # ignore
+                nextBlockToBeRun = #{thenNumber+2}; waitingStepTimer = 0
+            when #{thenNumber+2}
+              if waitingStepTimer > 100 and noCodeLoading()
+        """
+        thenNumber++
+      lineNumber++
+    theMacro = theMacroByLine.join "\n"
+    theMacro = theMacro.replace /# ignore\n/g, ""
+
+
 
   playQueuedEvents: ->
     try
