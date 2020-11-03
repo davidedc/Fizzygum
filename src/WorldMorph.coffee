@@ -1122,7 +1122,7 @@ class WorldMorph extends PanelWdgt
       then, after 200 ms and no inputs ongoing: // checks that no input is ongoing
         doSomething4
         doSomething5
-      then, [after x ms, ] when condition1: // also implicit pause of 100ms if unspecified
+      then, after 500 ms, when condition1: // also implicit pause of 100ms if unspecified
         doSomething6
         doSomething7
       then: // equivalent to a pause of 100ms
@@ -1143,8 +1143,12 @@ class WorldMorph extends PanelWdgt
           # ignore
                 nextBlockToBeRun = #{thenNumber+2}; waitingStepTimer = 0
             when #{thenNumber+2}
-              if waitingStepTimer > 100 and noCodeLoading()
+
         """
+        if matches = eachLine.match /after *(\d+) *ms/
+          theMacroByLine[lineNumber] += "    if waitingStepTimer > #{matches[1]} and noCodeLoading()"
+        else
+          theMacroByLine[lineNumber] += "    if waitingStepTimer > 100 and noCodeLoading()"
         thenNumber++
       lineNumber++
     theMacro = theMacroByLine.join "\n"
