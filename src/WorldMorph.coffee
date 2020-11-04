@@ -1145,14 +1145,20 @@ class WorldMorph extends PanelWdgt
             when #{thenNumber+2}
 
         """
+        theMacroByLine[lineNumber] += "    if noCodeLoading() and waitingStepTimer > "
         if matches = eachLine.match /after *(\d+) *ms/
-          theMacroByLine[lineNumber] += "    if waitingStepTimer > #{matches[1]} and noCodeLoading()"
+          theMacroByLine[lineNumber] += matches[1]
         else
-          theMacroByLine[lineNumber] += "    if waitingStepTimer > 100 and noCodeLoading()"
+          theMacroByLine[lineNumber] += "100"
+
+        if matches = eachLine.match /when *([^:]*):/
+          theMacroByLine[lineNumber] += " and " + matches[1]
+
         thenNumber++
       lineNumber++
     theMacro = theMacroByLine.join "\n"
     theMacro = theMacro.replace /# ignore\n/g, ""
+    theMacro = theMacro.replace /no inputs ongoing/g, "noInputsOngoing()"
 
 
 
