@@ -1122,7 +1122,7 @@ class WorldMorph extends PanelWdgt
       then, after 200 ms, when no inputs ongoing: // checks that no input is ongoing
         doSomething4
         doSomething5
-      then, after 500 ms, when condition1: // also implicit pause of 100ms if unspecified
+      then, after 500 ms, when condition1(): // also implicit pause of 100ms if unspecified
         doSomething6
         doSomething7
       then: // equivalent to a pause of 100ms
