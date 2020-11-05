@@ -1114,30 +1114,40 @@ class WorldMorph extends PanelWdgt
 
   draftMacroTranslation: ->
     theMacro = """
-      start:
+      start
         doSomething
-      then: // equivalent to a pause of 100ms
+      then # equivalent to a pause of 100ms
         doSomething2
         doSomething3
-      then, after 200 ms, when no inputs ongoing: // checks that no input is ongoing
+      then, after 200 ms, when no inputs ongoing # checks that no input is ongoing
         doSomething4
-        doSomething5
-      then, after 500 ms, when condition1(): // also implicit pause of 100ms if unspecified
+        # some comment here
+        doSomething5 # and some other comment here
+      then, after 500 ms, when condition1()
         doSomething6
         doSomething7
-      then: // equivalent to a pause of 100ms
+      then, when condition2() # also implicit pause of 100ms if unspecified
         doSomething8
+      then # after 500 ms, when conditionCommented()
+        doSomething9
     """
     theMacro = theMacro.replace /^  /mg, "      "
-    theMacro = theMacro.replace /^start:/mg, """
+    theMacro = theMacro.replace /^start/mg, """
       switch (nextBlockToBeRun)
         when 1
-          if waitingStepTimer > 0 and noCodeLoading()
+          if noCodeLoading() and waitingStepTimer > 100
     """
     theMacroByLine = theMacro.split "\n"
     lineNumber = 0
     thenNumber = 0
     for eachLine in theMacroByLine
+
+      comment = ""
+      if matches = eachLine.match /#(.*)/
+        comment = " #" + matches[1]
+        eachLine = eachLine.replace /#(.*)/, ""
+
+
       if eachLine.match /^then/
         theMacroByLine[lineNumber] = """
           # ignore
@@ -1146,13 +1156,17 @@ class WorldMorph extends PanelWdgt
 
         """
         theMacroByLine[lineNumber] += "    if noCodeLoading() and waitingStepTimer > "
+
         if matches = eachLine.match /after *(\d+) *ms/
           theMacroByLine[lineNumber] += matches[1]
         else
           theMacroByLine[lineNumber] += "100"
 
-        if matches = eachLine.match /when *([^:]*):/
+        if matches = eachLine.match /when *(.*)/
           theMacroByLine[lineNumber] += " and " + matches[1]
+
+        theMacroByLine[lineNumber] += comment
+
 
         thenNumber++
       lineNumber++
