@@ -1114,26 +1114,8 @@ class WorldMorph extends PanelWdgt
 
   draftMacroTranslation: ->
     macros = [
-      "aMacroChain",
+      "aTopLevelMacro",
       """
-        doSomethingFromAMacroChain
-      then # equivalent to a pause of 100ms
-        doSomething2FromAMacroChain
-        doSomething3FromAMacroChain
-      """,
-
-      "aMacro",
-      """
-        doSomethingFromAMacro
-      then # equivalent to a pause of 100ms
-        doSomething2FromAMacro
-        doSomething3FromAMacro
-        🡆aMacroChain
-      """
-    ]
-
-
-    theMacro = """
       start
         doSomething
       then # equivalent to a pause of 100ms
@@ -1149,8 +1131,29 @@ class WorldMorph extends PanelWdgt
       then, when condition2() # also implicit pause of 100ms if unspecified
         doSomething8
       then # after 500 ms, when conditionCommented()
-        🡆aMacro
-    """
+        🡆aMacroCall
+      """,
+
+      "aMacroDeeperCall",
+      """
+        doSomethingFromAMacroChain
+      then # equivalent to a pause of 100ms
+        doSomething2FromAMacroChain
+        doSomething3FromAMacroChain
+      """,
+
+      "aMacroCall",
+      """
+        doSomethingFromAMacro
+      then # equivalent to a pause of 100ms
+        doSomething2FromAMacro
+        doSomething3FromAMacro
+        🡆aMacroDeeperCall
+      """
+    ]
+
+
+    theMacro = macros[1]
 
     anyMacroFound = true
     while anyMacroFound
