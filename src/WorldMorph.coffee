@@ -1136,18 +1136,18 @@ class WorldMorph extends PanelWdgt
 
       "aMacroDeeperCall",
       """
-        doSomethingFromAMacroChain
+        doSomethingFromAMacroDeeperCall
       then # equivalent to a pause of 100ms
-        doSomething2FromAMacroChain
-        doSomething3FromAMacroChain
+        doSomething2FromAMacroDeeperCall
+        doSomething3FromAMacroDeeperCall
       """,
 
       "aMacroCall",
       """
-        doSomethingFromAMacro
+        doSomethingFromAMacroCall
       then # equivalent to a pause of 100ms
-        doSomething2FromAMacro
-        doSomething3FromAMacro
+        doSomething2FromAMacroCall
+        doSomething3FromAMacroCall
         🡆aMacroDeeperCall
       """
     ]
