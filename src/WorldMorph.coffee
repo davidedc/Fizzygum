@@ -1113,6 +1113,26 @@ class WorldMorph extends PanelWdgt
     @eventsQueue.push new MousedownSyntheticEvent 0, 0, false, false, false, false
 
   draftMacroTranslation: ->
+    macros = [
+      "aMacroChain",
+      """
+        doSomethingFromAMacroChain
+      then # equivalent to a pause of 100ms
+        doSomething2FromAMacroChain
+        doSomething3FromAMacroChain
+      """,
+
+      "aMacro",
+      """
+        doSomethingFromAMacro
+      then # equivalent to a pause of 100ms
+        doSomething2FromAMacro
+        doSomething3FromAMacro
+        🡆aMacroChain
+      """
+    ]
+
+
     theMacro = """
       start
         doSomething
@@ -1129,8 +1149,17 @@ class WorldMorph extends PanelWdgt
       then, when condition2() # also implicit pause of 100ms if unspecified
         doSomething8
       then # after 500 ms, when conditionCommented()
-        doSomething9
+        🡆aMacro
     """
+
+    anyMacroFound = true
+    while anyMacroFound
+      anyMacroFound = false
+      for i in [0...macros.length] by 2
+        if theMacro.match new RegExp "🡆" + macros[i] + "$",'m'
+          anyMacroFound = true
+          theMacro = theMacro.replace (new RegExp(" *🡆" + macros[i] + "$",'gm')), macros[i+1]
+
     theMacro = theMacro.replace /^  /mg, "      "
     theMacro = theMacro.replace /^start/mg, """
       switch (nextBlockToBeRun)
