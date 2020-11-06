@@ -1179,7 +1179,7 @@ class WorldMorph extends PanelWdgt
 
       if eachLine.match /^then/
         theMacroByLine[lineNumber] = """
-          # ignore
+          # tab-level-reference
                 nextBlockToBeRun = #{thenNumber+2}; waitingStepTimer = 0
             when #{thenNumber+2}
 
@@ -1200,7 +1200,7 @@ class WorldMorph extends PanelWdgt
         thenNumber++
       lineNumber++
     theMacro = theMacroByLine.join "\n"
-    theMacro = theMacro.replace /# ignore\n/g, ""
+    theMacro = theMacro.replace /# tab-level-reference\n/g, ""
     theMacro = theMacro.replace /no inputs ongoing/g, "noInputsOngoing()"
 
 
