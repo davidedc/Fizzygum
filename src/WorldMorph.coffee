@@ -1156,11 +1156,17 @@ class WorldMorph extends PanelWdgt
     theMacro = macros[1]
 
     anyMacroFound = true
+    macroCallsExpansionLoopsCount = 0
     while anyMacroFound
+      if macroCallsExpansionLoopsCount > 10
+        console.log "too many macro expansions (infinite loop?)"
+        debugger
+        throw "too many macro expansions (infinite loop?)"
       anyMacroFound = false
       for i in [0...macros.length] by 2
         if theMacro.match new RegExp "🡆" + macros[i] + "$",'m'
           anyMacroFound = true
+          macroCallsExpansionLoopsCount++
           theMacro = theMacro.replace (new RegExp(" *🡆" + macros[i] + "$",'gm')), macros[i+1]
 
     theMacro = theMacro.replace /^  /mg, "      "
