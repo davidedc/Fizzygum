@@ -278,6 +278,10 @@ class WorldMorph extends PanelWdgt
   morphsThatMaybeChangedFullGeometryOrPosition: []
   morphsThatMaybeChangedLayout: []
 
+  # »>> this part is excluded from the fizzygum homepage build
+  waitingStepTimer: 0
+  # this part is excluded from the fizzygum homepage build <<«
+
   constructor: (
       @worldCanvas,
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
@@ -1095,6 +1099,9 @@ class WorldMorph extends PanelWdgt
         @morphsBeingHighlighted.add eachMorphNeedingHighlight
 
   # »>> this part is excluded from the fizzygum homepage build
+  noCodeLoading: ->
+    true
+
   syntheticEventsDraftTest: ->
     @eventsQueue.push "mousemoveBrowserEvent"
     @eventsQueue.push WorldMorph.dateOfPreviousCycleStart.getTime() + 0.001
@@ -1174,7 +1181,7 @@ class WorldMorph extends PanelWdgt
     theMacro = theMacro.replace /^start/mg, """
       switch (nextBlockToBeRun)
         when 1
-          if noCodeLoading() and waitingStepTimer > 100
+          if world.noCodeLoading() and world.waitingStepTimer > 100
     """
     theMacroByLine = theMacro.split "\n"
     lineNumber = 0
@@ -1190,11 +1197,11 @@ class WorldMorph extends PanelWdgt
       if eachLine.match /^then/
         theMacroByLine[lineNumber] = """
           # tab-level-reference
-                nextBlockToBeRun = #{thenNumber+2}; waitingStepTimer = 0
+                nextBlockToBeRun = #{thenNumber+2}; world.waitingStepTimer = 0
             when #{thenNumber+2}
 
         """
-        theMacroByLine[lineNumber] += "    if noCodeLoading() and waitingStepTimer > "
+        theMacroByLine[lineNumber] += "    if world.noCodeLoading() and world.waitingStepTimer > "
 
         if matches = eachLine.match /after *(\d+) *ms/
           theMacroByLine[lineNumber] += matches[1]
