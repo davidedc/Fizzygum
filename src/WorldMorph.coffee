@@ -1428,10 +1428,12 @@ class WorldMorph extends PanelWdgt
     if !WorldMorph.dateOfPreviousCycleStart?
       WorldMorph.dateOfPreviousCycleStart = new Date WorldMorph.dateOfCurrentCycleStart.getTime() - 30
 
+    # »>> this part is excluded from the fizzygum homepage build
     if !@macroStepsWaitingTimer?
       @macroStepsWaitingTimer = 0
     else
       @macroStepsWaitingTimer += WorldMorph.dateOfCurrentCycleStart.getTime() - WorldMorph.dateOfPreviousCycleStart.getTime()
+    # this part is excluded from the fizzygum homepage build <<«
 
   doOneCycle: ->
     @updateTimeReferences()
