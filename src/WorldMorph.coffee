@@ -279,7 +279,8 @@ class WorldMorph extends PanelWdgt
   morphsThatMaybeChangedLayout: []
 
   # »>> this part is excluded from the fizzygum homepage build
-  waitingStepTimer: 0
+  waitingStepTimer: nil
+  nextBlockToBeRun: nil
   # this part is excluded from the fizzygum homepage build <<«
 
   constructor: (
@@ -1162,6 +1163,25 @@ class WorldMorph extends PanelWdgt
 
     @translateMacro macros, macros[1]
 
+  draftRunMacro: ->
+    world.waitingStepTimer = 0
+    world.nextBlockToBeRun = 1
+    macros = [
+      "theTestMacro",
+      """
+      start
+        console.log "first console out"
+      then, after 1000 ms
+        console.log "second console out"
+      then, after 1000 ms
+        console.log "third console out"
+      """
+    ]
+
+    code = "world.macroStepsFunction = -> " + @translateMacro macros, macros[1] + "\n  world.nextBlockToBeRun = -1; world.macroStepsFunction = noOperation"
+
+    world.evaluateString code
+
   translateMacro: (macros, theMacro) ->
 
     anyMacroFound = true
@@ -1180,7 +1200,7 @@ class WorldMorph extends PanelWdgt
 
     theMacro = theMacro.replace /^  /mg, "      "
     theMacro = theMacro.replace /^start/mg, """
-      switch (nextBlockToBeRun)
+      switch (world.nextBlockToBeRun)
         when 1
           if world.noCodeLoading() and world.waitingStepTimer > 100
     """
@@ -1198,7 +1218,7 @@ class WorldMorph extends PanelWdgt
       if eachLine.match /^then/
         theMacroByLine[lineNumber] = """
           # tab-level-reference
-                nextBlockToBeRun = #{thenNumber+2}; world.waitingStepTimer = 0
+                world.nextBlockToBeRun = #{thenNumber+2}; world.waitingStepTimer = 0
             when #{thenNumber+2}
 
         """
@@ -1405,6 +1425,12 @@ class WorldMorph extends PanelWdgt
     WorldMorph.dateOfCurrentCycleStart = new Date
     if !WorldMorph.dateOfPreviousCycleStart?
       WorldMorph.dateOfPreviousCycleStart = new Date WorldMorph.dateOfCurrentCycleStart.getTime() - 30
+    if !@waitingStepTimer?
+      @waitingStepTimer = 0
+    else
+      @waitingStepTimer += WorldMorph.dateOfCurrentCycleStart.getTime() - WorldMorph.dateOfPreviousCycleStart.getTime()
+
+  macroStepsFunction: ->
 
   doOneCycle: ->
     @updateTimeReferences()
@@ -1413,6 +1439,8 @@ class WorldMorph extends PanelWdgt
     @showErrorsHappenedInRepaintingStepInPreviousCycle()
 
     @playQueuedEvents()
+
+    @macroStepsFunction()
 
     # replays test actions at the right time
     if AutomatorPlayer? and Automator.state == Automator.PLAYING
