@@ -1100,7 +1100,7 @@ class WorldMorph extends PanelWdgt
         @morphsBeingHighlighted.add eachMorphNeedingHighlight
 
   # »>> this part is excluded from the fizzygum homepage build
-  macroStepsFunction: ->
+  progressOnMacroSteps: ->
 
   noCodeLoading: ->
     true
@@ -1180,7 +1180,7 @@ class WorldMorph extends PanelWdgt
       """
     ]
 
-    code = "world.macroStepsFunction = -> " + @translateMacro macros, macros[1] + "\n  world.nextBlockToBeRun = -1; world.macroStepsFunction = noOperation"
+    code = "world.progressOnMacroSteps = -> " + @translateMacro macros, macros[1] + "\n  world.nextBlockToBeRun = -1; world.progressOnMacroSteps = noOperation"
 
     world.evaluateString code
 
@@ -1444,7 +1444,7 @@ class WorldMorph extends PanelWdgt
     @playQueuedEvents()
 
     # »>> this part is excluded from the fizzygum homepage build
-    @macroStepsFunction()
+    @progressOnMacroSteps()
     # this part is excluded from the fizzygum homepage build <<«
 
     # replays test actions at the right time
