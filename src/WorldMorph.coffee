@@ -1160,8 +1160,9 @@ class WorldMorph extends PanelWdgt
       """
     ]
 
+    @translateMacro macros, macros[1]
 
-    theMacro = macros[1]
+  translateMacro: (macros, theMacro) ->
 
     anyMacroFound = true
     macroCallsExpansionLoopsCount = 0
