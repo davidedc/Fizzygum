@@ -1094,6 +1094,7 @@ class WorldMorph extends PanelWdgt
         @currentHighlightingMorphs.add hM
         @morphsBeingHighlighted.add eachMorphNeedingHighlight
 
+  # »>> this part is excluded from the fizzygum homepage build
   syntheticEventsDraftTest: ->
     @eventsQueue.push "mousemoveBrowserEvent"
     @eventsQueue.push WorldMorph.dateOfPreviousCycleStart.getTime() + 0.001
@@ -1212,6 +1213,7 @@ class WorldMorph extends PanelWdgt
     theMacro = theMacro.replace /# tab-level-reference\n/g, ""
     theMacro = theMacro.replace /no inputs ongoing/g, "noInputsOngoing()"
 
+  # this part is excluded from the fizzygum homepage build <<«
 
 
   playQueuedEvents: ->
