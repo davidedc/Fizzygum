@@ -279,7 +279,7 @@ class WorldMorph extends PanelWdgt
   morphsThatMaybeChangedLayout: []
 
   # »>> this part is excluded from the fizzygum homepage build
-  waitingStepTimer: nil
+  macroStepsWaitingTimer: nil
   nextBlockToBeRun: nil
   # this part is excluded from the fizzygum homepage build <<«
 
@@ -1166,7 +1166,7 @@ class WorldMorph extends PanelWdgt
     @translateMacro macros, macros[1]
 
   draftRunMacro: ->
-    world.waitingStepTimer = 0
+    world.macroStepsWaitingTimer = 0
     world.nextBlockToBeRun = 1
     macros = [
       "theTestMacro",
@@ -1204,7 +1204,7 @@ class WorldMorph extends PanelWdgt
     theMacro = theMacro.replace /^start/mg, """
       switch (world.nextBlockToBeRun)
         when 1
-          if world.noCodeLoading() and world.waitingStepTimer > 100
+          if world.noCodeLoading() and world.macroStepsWaitingTimer > 100
     """
     theMacroByLine = theMacro.split "\n"
     lineNumber = 0
@@ -1220,11 +1220,11 @@ class WorldMorph extends PanelWdgt
       if eachLine.match /^then/
         theMacroByLine[lineNumber] = """
           # tab-level-reference
-                world.nextBlockToBeRun = #{thenNumber+2}; world.waitingStepTimer = 0
+                world.nextBlockToBeRun = #{thenNumber+2}; world.macroStepsWaitingTimer = 0
             when #{thenNumber+2}
 
         """
-        theMacroByLine[lineNumber] += "    if world.noCodeLoading() and world.waitingStepTimer > "
+        theMacroByLine[lineNumber] += "    if world.noCodeLoading() and world.macroStepsWaitingTimer > "
 
         if matches = eachLine.match /after *(\d+) *ms/
           theMacroByLine[lineNumber] += matches[1]
@@ -1427,11 +1427,11 @@ class WorldMorph extends PanelWdgt
     WorldMorph.dateOfCurrentCycleStart = new Date
     if !WorldMorph.dateOfPreviousCycleStart?
       WorldMorph.dateOfPreviousCycleStart = new Date WorldMorph.dateOfCurrentCycleStart.getTime() - 30
-    if !@waitingStepTimer?
-      @waitingStepTimer = 0
-    else
-      @waitingStepTimer += WorldMorph.dateOfCurrentCycleStart.getTime() - WorldMorph.dateOfPreviousCycleStart.getTime()
 
+    if !@macroStepsWaitingTimer?
+      @macroStepsWaitingTimer = 0
+    else
+      @macroStepsWaitingTimer += WorldMorph.dateOfCurrentCycleStart.getTime() - WorldMorph.dateOfPreviousCycleStart.getTime()
 
   doOneCycle: ->
     @updateTimeReferences()
