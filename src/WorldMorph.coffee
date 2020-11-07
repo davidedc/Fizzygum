@@ -1100,6 +1100,8 @@ class WorldMorph extends PanelWdgt
         @morphsBeingHighlighted.add eachMorphNeedingHighlight
 
   # »>> this part is excluded from the fizzygum homepage build
+  macroStepsFunction: ->
+
   noCodeLoading: ->
     true
 
@@ -1430,7 +1432,6 @@ class WorldMorph extends PanelWdgt
     else
       @waitingStepTimer += WorldMorph.dateOfCurrentCycleStart.getTime() - WorldMorph.dateOfPreviousCycleStart.getTime()
 
-  macroStepsFunction: ->
 
   doOneCycle: ->
     @updateTimeReferences()
@@ -1440,7 +1441,9 @@ class WorldMorph extends PanelWdgt
 
     @playQueuedEvents()
 
+    # »>> this part is excluded from the fizzygum homepage build
     @macroStepsFunction()
+    # this part is excluded from the fizzygum homepage build <<«
 
     # replays test actions at the right time
     if AutomatorPlayer? and Automator.state == Automator.PLAYING
