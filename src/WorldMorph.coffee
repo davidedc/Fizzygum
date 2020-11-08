@@ -1105,6 +1105,9 @@ class WorldMorph extends PanelWdgt
   noCodeLoading: ->
     true
 
+  noInputsOngoing: ->
+    @eventsQueue.length == 0
+
   syntheticEventsDraftTest: ->
     @eventsQueue.push "mousemoveBrowserEvent"
     @eventsQueue.push WorldMorph.dateOfPreviousCycleStart.getTime() + 0.001
@@ -1172,6 +1175,10 @@ class WorldMorph extends PanelWdgt
       "theTestMacro",
       """
       start
+        world.syntheticEventsDraftTest()
+      then, when no inputs ongoing
+        console.log "finished the drag events"
+      then, after 1000 ms
         console.log "first console out"
       then, after 1000 ms
         console.log "second console out"
@@ -1241,7 +1248,7 @@ class WorldMorph extends PanelWdgt
       lineNumber++
     theMacro = theMacroByLine.join "\n"
     theMacro = theMacro.replace /# tab-level-reference\n/g, ""
-    theMacro = theMacro.replace /no inputs ongoing/g, "noInputsOngoing()"
+    theMacro = theMacro.replace /no inputs ongoing/g, "@noInputsOngoing()"
 
   # this part is excluded from the fizzygum homepage build <<«
 
