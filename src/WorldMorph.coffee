@@ -1169,13 +1169,13 @@ class WorldMorph extends PanelWdgt
     @translateMacro macros, macros[1]
 
   draftRunMacro: ->
-    world.macroStepsWaitingTimer = 0
-    world.nextBlockToBeRun = 1
+    @macroStepsWaitingTimer = 0
+    @nextBlockToBeRun = 1
     macros = [
       "theTestMacro",
       """
       start
-        world.syntheticEventsDraftTest()
+        @syntheticEventsDraftTest()
       then, when no inputs ongoing
         console.log "finished the drag events"
       then, after 1000 ms
@@ -1189,8 +1189,8 @@ class WorldMorph extends PanelWdgt
     @startMacro macros, macros[1]
 
   startMacro: (helperMacros, theMacro) ->
-    code = "world.progressOnMacroSteps = -> " + @translateMacro helperMacros, theMacro + "\n  world.nextBlockToBeRun = -1; world.progressOnMacroSteps = noOperation"
-    world.evaluateString code
+    code = "@progressOnMacroSteps = -> " + @translateMacro helperMacros, theMacro + "\n  @nextBlockToBeRun = -1; @progressOnMacroSteps = noOperation"
+    @evaluateString code
 
   translateMacro: (macros, theMacro) ->
 
@@ -1210,9 +1210,9 @@ class WorldMorph extends PanelWdgt
 
     theMacro = theMacro.replace /^  /mg, "      "
     theMacro = theMacro.replace /^start/mg, """
-      switch (world.nextBlockToBeRun)
+      switch (@nextBlockToBeRun)
         when 1
-          if world.noCodeLoading() and world.macroStepsWaitingTimer > 100
+          if @noCodeLoading() and @macroStepsWaitingTimer > 100
     """
     theMacroByLine = theMacro.split "\n"
     lineNumber = 0
@@ -1228,11 +1228,11 @@ class WorldMorph extends PanelWdgt
       if eachLine.match /^then/
         theMacroByLine[lineNumber] = """
           # tab-level-reference
-                world.nextBlockToBeRun = #{thenNumber+2}; world.macroStepsWaitingTimer = 0
+                @nextBlockToBeRun = #{thenNumber+2}; @macroStepsWaitingTimer = 0
             when #{thenNumber+2}
 
         """
-        theMacroByLine[lineNumber] += "    if world.noCodeLoading() and world.macroStepsWaitingTimer > "
+        theMacroByLine[lineNumber] += "    if @noCodeLoading() and @macroStepsWaitingTimer > "
 
         if matches = eachLine.match /after *(\d+) *ms/
           theMacroByLine[lineNumber] += matches[1]
