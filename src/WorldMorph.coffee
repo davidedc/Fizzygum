@@ -1186,9 +1186,10 @@ class WorldMorph extends PanelWdgt
         console.log "third console out"
       """
     ]
+    @startMacro macros, macros[1]
 
-    code = "world.progressOnMacroSteps = -> " + @translateMacro macros, macros[1] + "\n  world.nextBlockToBeRun = -1; world.progressOnMacroSteps = noOperation"
-
+  startMacro: (helperMacros, theMacro) ->
+    code = "world.progressOnMacroSteps = -> " + @translateMacro helperMacros, theMacro + "\n  world.nextBlockToBeRun = -1; world.progressOnMacroSteps = noOperation"
     world.evaluateString code
 
   translateMacro: (macros, theMacro) ->
