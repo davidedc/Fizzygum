@@ -1108,6 +1108,14 @@ class WorldMorph extends PanelWdgt
   noInputsOngoing: ->
     @eventsQueue.length == 0
 
+  syntheticEventsMoveMousePressed: (milliseconds, numberOfEventsPerMillisecond, startTime, origX, origY, destX, destY) ->
+    numberOfEvents = milliseconds * numberOfEventsPerMillisecond
+    for i in [0...numberOfEvents]
+      @eventsQueue.push "mousemoveBrowserEvent"
+      @eventsQueue.push startTime + i/numberOfEventsPerMillisecond
+      proportionOfMovementDone = i/numberOfEvents
+      @eventsQueue.push new MousemoveSyntheticEvent (Math.floor origX + proportionOfMovementDone * (destX-origX)), (Math.floor origY + proportionOfMovementDone * (destY-origY)), 0, 1, false, false, false, false
+
   syntheticEventsDraftTest: ->
     @eventsQueue.push "mousemoveBrowserEvent"
     @eventsQueue.push WorldMorph.dateOfPreviousCycleStart.getTime() + 0.001
@@ -1117,10 +1125,7 @@ class WorldMorph extends PanelWdgt
     @eventsQueue.push WorldMorph.dateOfPreviousCycleStart.getTime() + 0.002
     @eventsQueue.push new MousedownSyntheticEvent 0, 1, false, false, false, false
 
-    for i in [0...1000]
-      @eventsQueue.push "mousemoveBrowserEvent"
-      @eventsQueue.push WorldMorph.dateOfPreviousCycleStart.getTime() +  0.002 + i
-      @eventsQueue.push new MousemoveSyntheticEvent i/1000 * 200, i/1000 * 200, 0, 1, false, false, false, false
+    @syntheticEventsMoveMousePressed 1000,1,WorldMorph.dateOfPreviousCycleStart.getTime() +  0.002,20,20,200,200
 
     @eventsQueue.push "mouseupBrowserEvent"
     @eventsQueue.push WorldMorph.dateOfPreviousCycleStart.getTime() + 1010
