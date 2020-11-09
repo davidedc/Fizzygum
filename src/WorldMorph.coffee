@@ -1108,13 +1108,21 @@ class WorldMorph extends PanelWdgt
   noInputsOngoing: ->
     @eventsQueue.length == 0
 
+  # other useful tween functions here:
+  # https://github.com/ashblue/simple-tween-js/blob/master/tween.js
+  expoOut: (i, origin, distance, numberOfEvents) ->
+    distance * (-Math.pow(2, -10 * i/numberOfEvents) + 1) + origin
+
   syntheticEventsMoveMousePressed: (milliseconds, numberOfEventsPerMillisecond, startTime, origX, origY, destX, destY) ->
     numberOfEvents = milliseconds * numberOfEventsPerMillisecond
     for i in [0...numberOfEvents]
       @eventsQueue.push "mousemoveBrowserEvent"
       @eventsQueue.push startTime + i/numberOfEventsPerMillisecond
       proportionOfMovementDone = i/numberOfEvents
-      @eventsQueue.push new MousemoveSyntheticEvent (Math.floor origX + proportionOfMovementDone * (destX-origX)), (Math.floor origY + proportionOfMovementDone * (destY-origY)), 0, 1, false, false, false, false
+      currentX = @expoOut i, origX, (destX-origX), numberOfEvents
+      currentY = @expoOut i, origY, (destY-origY), numberOfEvents
+      @eventsQueue.push new MousemoveSyntheticEvent (Math.floor currentX), (Math.floor currentY), 0, 1, false, false, false, false
+
 
   syntheticEventsDraftTest: ->
     @eventsQueue.push "mousemoveBrowserEvent"
