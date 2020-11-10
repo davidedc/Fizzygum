@@ -4162,7 +4162,10 @@ class Widget extends TreeNode
       else
         newBoundsForThisLayout = @extent()
 
-      if @desiredPosition?
+      # stuff that is being floatDragged ignores any @desiredPosition,
+      # the relationship between the Active Pointer and its "dragged" widgets
+      # is not quite a layout relationship
+      if !@isBeingFloatDragged() and @desiredPosition?
         newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
         @desiredPosition = nil
       else

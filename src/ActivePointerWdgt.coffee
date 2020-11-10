@@ -180,7 +180,7 @@ class ActivePointerWdgt extends Widget
         # happens to pick up a widget that is partially outside the
         # screen and it's no good to make it jump within the screen
         # - I tried and it looks really strange -
-        aWdgt.fullMoveTo aWdgt.position().add displacementDueToGrabDragThreshold
+        aWdgt.fullRawMoveTo aWdgt.position().add displacementDueToGrabDragThreshold
 
       @grabOrigin = aWdgt.situation()
       aWdgt.prepareToBeGrabbed?()
