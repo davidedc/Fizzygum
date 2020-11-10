@@ -1116,28 +1116,30 @@ class WorldMorph extends PanelWdgt
   syntheticEventsMoveMousePressed: (milliseconds, numberOfEventsPerMillisecond, startTime, origX, origY, destX, destY) ->
     numberOfEvents = milliseconds * numberOfEventsPerMillisecond
     for i in [0...numberOfEvents]
-      @eventsQueue.push "mousemoveBrowserEvent"
-      @eventsQueue.push startTime + i/numberOfEventsPerMillisecond
-      proportionOfMovementDone = i/numberOfEvents
-      currentX = @expoOut i, origX, (destX-origX), numberOfEvents
-      currentY = @expoOut i, origY, (destY-origY), numberOfEvents
-      @eventsQueue.push new MousemoveSyntheticEvent (Math.floor currentX), (Math.floor currentY), 0, 1, false, false, false, false
+      scheduledTimeOfEvent = startTime + i/numberOfEventsPerMillisecond
+      currentX = Math.round @expoOut i, origX, (destX-origX), numberOfEvents
+      currentY = Math.round @expoOut i, origY, (destY-origY), numberOfEvents
+      if currentX != prevX or currentY != prevY
+        prevX = currentX
+        prevY = currentY
+        @eventsQueue.push "mousemoveBrowserEvent"
+        @eventsQueue.push scheduledTimeOfEvent
+        @eventsQueue.push new MousemoveSyntheticEvent currentX, currentY, 0, 1, false, false, false, false
 
-
-  syntheticEventsDraftTest: ->
-    @eventsQueue.push "mousemoveBrowserEvent"
-    @eventsQueue.push WorldMorph.dateOfPreviousCycleStart.getTime() + 0.001
-    @eventsQueue.push new MousemoveSyntheticEvent 20, 20, 0, 0, false, false, false, false
-
+  syntheticEventsMouseDown: (startTime) ->
     @eventsQueue.push "mousedownBrowserEvent"
-    @eventsQueue.push WorldMorph.dateOfPreviousCycleStart.getTime() + 0.002
+    @eventsQueue.push startTime
     @eventsQueue.push new MousedownSyntheticEvent 0, 1, false, false, false, false
 
-    @syntheticEventsMoveMousePressed 1000,1,WorldMorph.dateOfPreviousCycleStart.getTime() +  0.002,20,20,200,200
-
+  syntheticEventsMouseUp: (startTime) ->
     @eventsQueue.push "mouseupBrowserEvent"
-    @eventsQueue.push WorldMorph.dateOfPreviousCycleStart.getTime() + 1010
+    @eventsQueue.push startTime
     @eventsQueue.push new MousedownSyntheticEvent 0, 0, false, false, false, false
+
+  syntheticEventsInstantMouseMove: (startTime, posX, posY) ->
+    @eventsQueue.push "mousemoveBrowserEvent"
+    @eventsQueue.push startTime
+    @eventsQueue.push new MousemoveSyntheticEvent posX, posY, 0, 0, false, false, false, false
 
   draftMacroTranslation: ->
     macros = [
@@ -1182,13 +1184,17 @@ class WorldMorph extends PanelWdgt
     @translateMacro macros, macros[1]
 
   draftRunMacro: ->
-    @macroStepsWaitingTimer = 0
-    @nextBlockToBeRun = 1
     macros = [
       "theTestMacro",
       """
       start
-        @syntheticEventsDraftTest()
+        @syntheticEventsInstantMouseMove currentTime, 5, 5
+      then, when no inputs ongoing
+        @syntheticEventsMouseDown currentTime
+      then, when no inputs ongoing
+        @syntheticEventsMoveMousePressed 500,1,currentTime,5,5,200,200
+      then, when no inputs ongoing
+        @syntheticEventsMouseUp currentTime
       then, when no inputs ongoing
         console.log "finished the drag events"
       then, after 1000 ms
@@ -1202,7 +1208,14 @@ class WorldMorph extends PanelWdgt
     @startMacro macros, macros[1]
 
   startMacro: (helperMacros, theMacro) ->
-    code = "@progressOnMacroSteps = -> " + @translateMacro helperMacros, theMacro + "\n  @nextBlockToBeRun = -1; @progressOnMacroSteps = noOperation"
+    @macroStepsWaitingTimer = 0
+    @nextBlockToBeRun = 1
+
+    # .replace /^/mg, "  " is to add a couple of spaces to
+    # the start of the line so indentation is correct
+    translatedMacro = (@translateMacro helperMacros, theMacro).replace /^/mg, "  "
+
+    code = "@progressOnMacroSteps = ->\n" + translatedMacro + "\n        @nextBlockToBeRun = -1; @progressOnMacroSteps = noOperation"
     @evaluateString code
 
   translateMacro: (macros, theMacro) ->
@@ -1223,6 +1236,7 @@ class WorldMorph extends PanelWdgt
 
     theMacro = theMacro.replace /^  /mg, "      "
     theMacro = theMacro.replace /^start/mg, """
+      currentTime = WorldMorph.dateOfCurrentCycleStart.getTime()
       switch (@nextBlockToBeRun)
         when 1
           if @noCodeLoading() and @macroStepsWaitingTimer > 100
@@ -1281,6 +1295,7 @@ class WorldMorph extends PanelWdgt
         # so you want to consume only the ones that pertain to the current
         # frame and return
         if eventDateMilliseconds > timeOfCurrentCycleStart
+          beforeLength = @eventsQueue.length
           @eventsQueue.splice 0, i
           return
 
@@ -1462,11 +1477,11 @@ class WorldMorph extends PanelWdgt
 
     @showErrorsHappenedInRepaintingStepInPreviousCycle()
 
-    @playQueuedEvents()
-
     # »>> this part is excluded from the fizzygum homepage build
     @progressOnMacroSteps()
     # this part is excluded from the fizzygum homepage build <<«
+
+    @playQueuedEvents()
 
     # replays test actions at the right time
     if AutomatorPlayer? and Automator.state == Automator.PLAYING
