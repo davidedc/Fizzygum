@@ -1216,10 +1216,10 @@ class WorldMorph extends PanelWdgt
     translatedMacro = (@translateMacro helperMacros, theMacro).replace /^/mg, "  "
 
     code = "@progressOnMacroSteps = ->\n" + translatedMacro + "\n        @nextBlockToBeRun = -1; @progressOnMacroSteps = noOperation"
+    console.log code
     @evaluateString code
 
   translateMacro: (macros, theMacro) ->
-
     anyMacroFound = true
     macroCallsExpansionLoopsCount = 0
     while anyMacroFound
@@ -1290,7 +1290,7 @@ class WorldMorph extends PanelWdgt
         eventType = @eventsQueue[i]
         eventDateMilliseconds = @eventsQueue[i+1]
 
-        # this happens when you consime synthetic events: you can inject
+        # this happens when you consume synthetic events: you can inject
         # MANY of them across frames (say, a slow drag across the screen),
         # so you want to consume only the ones that pertain to the current
         # frame and return
