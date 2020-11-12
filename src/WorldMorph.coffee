@@ -281,6 +281,7 @@ class WorldMorph extends PanelWdgt
   # »>> this part is excluded from the fizzygum homepage build
   macroStepsWaitingTimer: nil
   nextBlockToBeRun: nil
+  macroVars: nil
   # this part is excluded from the fizzygum homepage build <<«
 
   constructor: (
@@ -1203,6 +1204,18 @@ class WorldMorph extends PanelWdgt
         console.log "second console out"
       then, after 1000 ms
         console.log "third console out"
+      then, after 1000 ms
+        clock = world.topWdgtSuchThat (item) -> item.morphClassString() == "AnalogClockWdgt"
+        @macroVars.clockCenter = clock.center()
+        @syntheticEventsInstantMouseMove currentTime, @macroVars.clockCenter.x, @macroVars.clockCenter.y
+      then, when no inputs ongoing
+        @syntheticEventsMouseDown currentTime
+      then, when no inputs ongoing
+        @syntheticEventsMoveMousePressed 500,1,currentTime,@macroVars.clockCenter.x, @macroVars.clockCenter.y,@macroVars.clockCenter.x - 4, @macroVars.clockCenter.y + 4
+      then, after 1000 ms
+        @syntheticEventsMoveMousePressed 500,1,currentTime,@macroVars.clockCenter.x - 4, @macroVars.clockCenter.y + 4, 250,250
+      then, when no inputs ongoing
+        @syntheticEventsMouseUp currentTime
       """
     ]
     @startMacro macros, macros[1]
@@ -1210,6 +1223,7 @@ class WorldMorph extends PanelWdgt
   startMacro: (helperMacros, theMacro) ->
     @macroStepsWaitingTimer = 0
     @nextBlockToBeRun = 1
+    @macroVars = {}
 
     # .replace /^/mg, "  " is to add a couple of spaces to
     # the start of the line so indentation is correct
