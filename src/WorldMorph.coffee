@@ -1193,27 +1193,27 @@ class WorldMorph extends PanelWdgt
       then, when no inputs ongoing
         @syntheticEventsMouseDown currentTime
       then, when no inputs ongoing
-        @syntheticEventsMoveMousePressed 500,1,currentTime,5,5,200,200
+        @syntheticEventsMoveMousePressed .5s,1,currentTime,5,5,200,200
       then, when no inputs ongoing
         @syntheticEventsMouseUp currentTime
       then, when no inputs ongoing
         console.log "finished the drag events"
-      then, after 1000 ms
+      then, after 1s
         console.log "first console out"
-      then, after 1000 ms
+      then, after 1s
         console.log "second console out"
-      then, after 1000 ms
+      then, after 1s
         console.log "third console out"
-      then, after 1000 ms
+      then, after 1s
         clock = world.topWdgtSuchThat (item) -> item.morphClassString() == "AnalogClockWdgt"
         @macroVars.clockCenter = clock.center()
         @syntheticEventsInstantMouseMove currentTime, @macroVars.clockCenter.x, @macroVars.clockCenter.y
       then, when no inputs ongoing
         @syntheticEventsMouseDown currentTime
       then, when no inputs ongoing
-        @syntheticEventsMoveMousePressed 500,1,currentTime,@macroVars.clockCenter.x, @macroVars.clockCenter.y,@macroVars.clockCenter.x - 4, @macroVars.clockCenter.y + 4
-      then, after 1000 ms
-        @syntheticEventsMoveMousePressed 500,1,currentTime,@macroVars.clockCenter.x - 4, @macroVars.clockCenter.y + 4, 250,250
+        @syntheticEventsMoveMousePressed .5s,1,currentTime,@macroVars.clockCenter.x, @macroVars.clockCenter.y,@macroVars.clockCenter.x - 4, @macroVars.clockCenter.y + 4
+      then, after 1s
+        @syntheticEventsMoveMousePressed .5s,1,currentTime,@macroVars.clockCenter.x - 4, @macroVars.clockCenter.y + 4, 250,250
       then, when no inputs ongoing
         @syntheticEventsMouseUp currentTime
       """
@@ -1249,6 +1249,10 @@ class WorldMorph extends PanelWdgt
           theMacro = theMacro.replace (new RegExp(" *🡆" + macros[i] + "$",'gm')), macros[i+1]
 
     theMacro = theMacro.replace /^  /mg, "      "
+
+    theMacro = theMacro.replace /[ ]s(\s)/mg, "*1000$1"
+    theMacro = theMacro.replace /(\d)[ ]*s/mg, "$1*1000"
+
     theMacro = theMacro.replace /^start/mg, """
       currentTime = WorldMorph.dateOfCurrentCycleStart.getTime()
       switch (@nextBlockToBeRun)
@@ -1275,7 +1279,9 @@ class WorldMorph extends PanelWdgt
         """
         theMacroByLine[lineNumber] += "    if @noCodeLoading() and @macroStepsWaitingTimer > "
 
-        if matches = eachLine.match /after *(\d+) *ms/
+        if matches = eachLine.match /after *(\d+ *\* *1000) *(ms)?/
+          theMacroByLine[lineNumber] += matches[1]
+        else if matches = eachLine.match /after *(\d+) *(ms)?/
           theMacroByLine[lineNumber] += matches[1]
         else
           theMacroByLine[lineNumber] += "100"
