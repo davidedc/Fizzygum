@@ -1148,26 +1148,26 @@ class WorldMorph extends PanelWdgt
       """
       start
         doSomething
-      then # equivalent to a pause of 100ms
+       🠶 # equivalent to a pause of 100ms
         doSomething2
         doSomething3
-      then, after 200 ms, when no inputs ongoing # checks that no input is ongoing
+       🠶, after 200 ms, when no inputs ongoing # checks that no input is ongoing
         doSomething4
         # some comment here
         doSomething5 # and some other comment here
-      then, after 500 ms, when condition1()
+       🠶, after 500 ms, when condition1()
         doSomething6
         doSomething7
-      then, when condition2() # also implicit pause of 100ms if unspecified
+       🠶, when condition2() # also implicit pause of 100ms if unspecified
         doSomething8
-      then # after 500 ms, when conditionCommented()
-        🡆aMacroCall
+       🠶 # after 500 ms, when conditionCommented()
+        ⤷aMacroCall
       """,
 
       "aMacroDeeperCall",
       """
         doSomethingFromAMacroDeeperCall
-      then # equivalent to a pause of 100ms
+       🠶 # equivalent to a pause of 100ms
         doSomething2FromAMacroDeeperCall
         doSomething3FromAMacroDeeperCall
       """,
@@ -1175,10 +1175,10 @@ class WorldMorph extends PanelWdgt
       "aMacroCall",
       """
         doSomethingFromAMacroCall
-      then # equivalent to a pause of 100ms
+       🠶 # equivalent to a pause of 100ms
         doSomething2FromAMacroCall
         doSomething3FromAMacroCall
-        🡆aMacroDeeperCall
+        ⤷aMacroDeeperCall
       """
     ]
 
@@ -1190,31 +1190,31 @@ class WorldMorph extends PanelWdgt
       """
       start
         @syntheticEventsInstantMouseMove currentTime, 5, 5
-      then, when no inputs ongoing
+       🠶, when no inputs ongoing
         @syntheticEventsMouseDown currentTime
-      then, when no inputs ongoing
+       🠶, when no inputs ongoing
         @syntheticEventsMoveMousePressed .5s,1,currentTime,5,5,200,200
-      then, when no inputs ongoing
+       🠶, when no inputs ongoing
         @syntheticEventsMouseUp currentTime
-      then, when no inputs ongoing
+       🠶, when no inputs ongoing
         console.log "finished the drag events"
-      then, after 1s
+       🠶, after 1s
         console.log "first console out"
-      then, after 1s
+       🠶, after 1s
         console.log "second console out"
-      then, after 1s
+       🠶, after 1s
         console.log "third console out"
-      then, after 1s
+       🠶, after 1s
         clock = world.topWdgtSuchThat (item) -> item.morphClassString() == "AnalogClockWdgt"
         @macroVars.clockCenter = clock.center()
         @syntheticEventsInstantMouseMove currentTime, @macroVars.clockCenter.x, @macroVars.clockCenter.y
-      then, when no inputs ongoing
+       🠶, when no inputs ongoing
         @syntheticEventsMouseDown currentTime
-      then, when no inputs ongoing
+       🠶, when no inputs ongoing
         @syntheticEventsMoveMousePressed .5s,1,currentTime,@macroVars.clockCenter.x, @macroVars.clockCenter.y,@macroVars.clockCenter.x - 4, @macroVars.clockCenter.y + 4
-      then, after 1s
+       🠶, after 1s
         @syntheticEventsMoveMousePressed .5s,1,currentTime,@macroVars.clockCenter.x - 4, @macroVars.clockCenter.y + 4, 250,250
-      then, when no inputs ongoing
+       🠶, when no inputs ongoing
         @syntheticEventsMouseUp currentTime
       """
     ]
@@ -1243,10 +1243,10 @@ class WorldMorph extends PanelWdgt
         throw "too many macro expansions (infinite loop?)"
       anyMacroFound = false
       for i in [0...macros.length] by 2
-        if theMacro.match new RegExp "🡆" + macros[i] + "$",'m'
+        if theMacro.match new RegExp "⤷" + macros[i] + "$",'m'
           anyMacroFound = true
           macroCallsExpansionLoopsCount++
-          theMacro = theMacro.replace (new RegExp(" *🡆" + macros[i] + "$",'gm')), macros[i+1]
+          theMacro = theMacro.replace (new RegExp(" *⤷" + macros[i] + "$",'gm')), macros[i+1]
 
     theMacro = theMacro.replace /^  /mg, "      "
 
@@ -1270,7 +1270,7 @@ class WorldMorph extends PanelWdgt
         eachLine = eachLine.replace /#(.*)/, ""
 
 
-      if eachLine.match /^then/
+      if eachLine.match /^ 🠶/
         theMacroByLine[lineNumber] = """
           # tab-level-reference
                 @nextBlockToBeRun = #{thenNumber+2}; @macroStepsWaitingTimer = 0
