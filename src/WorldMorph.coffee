@@ -1250,8 +1250,8 @@ class WorldMorph extends PanelWdgt
 
     theMacro = theMacro.replace /^  /mg, "      "
 
-    theMacro = theMacro.replace /[ ]s(\s)/mg, "*1000$1"
-    theMacro = theMacro.replace /(\d)[ ]*s/mg, "$1*1000"
+    theMacro = theMacro.replace /([ \d])s([\s,])/mg, "$1*1000$2"
+    theMacro = theMacro.replace /([ \d])ms([\s,])/mg, "$1$2"
 
     theMacro = theMacro.replace /^start/mg, """
       currentTime = WorldMorph.dateOfCurrentCycleStart.getTime()
@@ -1279,9 +1279,9 @@ class WorldMorph extends PanelWdgt
         """
         theMacroByLine[lineNumber] += "    if @noCodeLoading() and @macroStepsWaitingTimer > "
 
-        if matches = eachLine.match /after *(\d+ *\* *1000) *(ms)?/
+        if matches = eachLine.match /after *(\d+ *\* *1000)/
           theMacroByLine[lineNumber] += matches[1]
-        else if matches = eachLine.match /after *(\d+) *(ms)?/
+        else if matches = eachLine.match /after *(\d+)/
           theMacroByLine[lineNumber] += matches[1]
         else
           theMacroByLine[lineNumber] += "100"
