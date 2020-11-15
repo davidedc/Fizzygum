@@ -1151,16 +1151,16 @@ class WorldMorph extends PanelWdgt
        🠶 # equivalent to a pause of 100ms
         doSomething2
         doSomething3
-       🠶 after 200 ms, when no inputs ongoing # checks that no input is ongoing
+       🠶 ⌛ 200 ms, when no inputs ongoing # checks that no input is ongoing
         doSomething4
         # some comment here
         doSomething5 # and some other comment here
-       🠶 after 500 ms, when condition1()
+       🠶 ⌛ 500 ms, when condition1()
         doSomething6
         doSomething7
        🠶 when condition2() # also implicit pause of 100ms if unspecified
         doSomething8
-       🠶 # after 500 ms, when conditionCommented()
+       🠶 # ⌛ 500 ms, when conditionCommented()
         ⤷aMacroCall
       """,
 
@@ -1198,13 +1198,13 @@ class WorldMorph extends PanelWdgt
         @syntheticEventsMouseUp currentTime
        🠶 when no inputs ongoing
         console.log "finished the drag events"
-       🠶 after 1s
+       🠶 ⌛ 1s
         console.log "first console out"
-       🠶 after 1s
+       🠶 ⌛ 1s
         console.log "second console out"
-       🠶 after 1s
+       🠶 ⌛ 1s
         console.log "third console out"
-       🠶 after 1s
+       🠶 ⌛ 1s
         clock = world.topWdgtSuchThat (item) -> item.morphClassString() == "AnalogClockWdgt"
         💼clockCenter = clock.center()
         @syntheticEventsInstantMouseMove currentTime, 💼clockCenter.x, 💼clockCenter.y
@@ -1212,7 +1212,7 @@ class WorldMorph extends PanelWdgt
         @syntheticEventsMouseDown currentTime
        🠶 when no inputs ongoing
         @syntheticEventsMoveMousePressed .5s,1,currentTime,💼clockCenter.x, 💼clockCenter.y,💼clockCenter.x - 4, 💼clockCenter.y + 4
-       🠶 after 1s
+       🠶 ⌛ 1s
         @syntheticEventsMoveMousePressed .5s,1,currentTime,💼clockCenter.x - 4, 💼clockCenter.y + 4, 250,250
        🠶 when no inputs ongoing
         @syntheticEventsMouseUp currentTime
@@ -1281,9 +1281,9 @@ class WorldMorph extends PanelWdgt
         """
         theMacroByLine[lineNumber] += "    if @noCodeLoading() and @macroStepsWaitingTimer > "
 
-        if matches = eachLine.match /after *(\d+ *\* *1000)/
+        if matches = eachLine.match /⌛ *(\d+ *\* *1000)/
           theMacroByLine[lineNumber] += matches[1]
-        else if matches = eachLine.match /after *(\d+)/
+        else if matches = eachLine.match /⌛ *(\d+)/
           theMacroByLine[lineNumber] += matches[1]
         else
           theMacroByLine[lineNumber] += "100"
