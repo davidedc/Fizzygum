@@ -1206,14 +1206,14 @@ class WorldMorph extends PanelWdgt
         console.log "third console out"
        🠶 after 1s
         clock = world.topWdgtSuchThat (item) -> item.morphClassString() == "AnalogClockWdgt"
-        @macroVars.clockCenter = clock.center()
-        @syntheticEventsInstantMouseMove currentTime, @macroVars.clockCenter.x, @macroVars.clockCenter.y
+        💼clockCenter = clock.center()
+        @syntheticEventsInstantMouseMove currentTime, 💼clockCenter.x, 💼clockCenter.y
        🠶 when no inputs ongoing
         @syntheticEventsMouseDown currentTime
-        @syntheticEventsMoveMousePressed .5s,1,currentTime,@macroVars.clockCenter.x, @macroVars.clockCenter.y,@macroVars.clockCenter.x - 4, @macroVars.clockCenter.y + 4
-        @syntheticEventsMoveMousePressed .5s,1,currentTime,@macroVars.clockCenter.x - 4, @macroVars.clockCenter.y + 4, 250,250
        🠶 when no inputs ongoing
+        @syntheticEventsMoveMousePressed .5s,1,currentTime,💼clockCenter.x, 💼clockCenter.y,💼clockCenter.x - 4, 💼clockCenter.y + 4
        🠶 after 1s
+        @syntheticEventsMoveMousePressed .5s,1,currentTime,💼clockCenter.x - 4, 💼clockCenter.y + 4, 250,250
        🠶 when no inputs ongoing
         @syntheticEventsMouseUp currentTime
       """
@@ -1252,6 +1252,8 @@ class WorldMorph extends PanelWdgt
 
     theMacro = theMacro.replace /([ \d])s([\s,])/mg, "$1*1000$2"
     theMacro = theMacro.replace /([ \d])ms([\s,])/mg, "$1$2"
+
+    theMacro = theMacro.replace /💼/g, "@macroVars."
 
     theMacro = theMacro.replace /^start/mg, """
       currentTime = WorldMorph.dateOfCurrentCycleStart.getTime()
