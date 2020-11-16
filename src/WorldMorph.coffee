@@ -1197,13 +1197,13 @@ class WorldMorph extends PanelWdgt
        🠶 when no inputs ongoing
         @syntheticEventsMouseUp currentTime
        🠶 when no inputs ongoing
-        console.log "finished the drag events"
+        🖶 "finished the drag events"
        🠶 ⌛ 1s
-        console.log "first console out"
+        🖶 "first console out"
        🠶 ⌛ 1s
-        console.log "second console out"
+        🖶 "second console out"
        🠶 ⌛ 1s
-        console.log "third console out"
+        🖶 "third console out"
        🠶 ⌛ 1s
         clock = world.topWdgtSuchThat (item) -> item.morphClassString() == "AnalogClockWdgt"
         💼clockCenter = clock.center()
@@ -1254,6 +1254,8 @@ class WorldMorph extends PanelWdgt
     theMacro = theMacro.replace /([ \d])ms([\s,])/mg, "$1$2"
 
     theMacro = theMacro.replace /💼/g, "@macroVars."
+    #theMacro = theMacro.replace /🌎/g, "world."
+    theMacro = theMacro.replace /🖶/g, "console.log"
 
     theMacro = theMacro.replace /^start/mg, """
       currentTime = WorldMorph.dateOfCurrentCycleStart.getTime()
