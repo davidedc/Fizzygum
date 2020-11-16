@@ -1205,7 +1205,7 @@ class WorldMorph extends PanelWdgt
        🠶 ⌛ 1s
         🖶 "third console out"
        🠶 ⌛ 1s
-        clock = world.topWdgtSuchThat (item) -> item.morphClassString() == "AnalogClockWdgt"
+        clock = @topWdgtSuchThat (item) -> item.morphClassString() == "AnalogClockWdgt"
         💼clockCenter = clock.center()
         @syntheticEventsInstantMouseMove currentTime, 💼clockCenter.x, 💼clockCenter.y
        🠶 when no inputs ongoing
