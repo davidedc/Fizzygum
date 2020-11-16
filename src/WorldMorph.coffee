@@ -1146,7 +1146,6 @@ class WorldMorph extends PanelWdgt
     macros = [
       "aTopLevelMacro",
       """
-      start
         doSomething
        🠶 # equivalent to a pause of 100ms
         doSomething2
@@ -1188,7 +1187,6 @@ class WorldMorph extends PanelWdgt
     macros = [
       "theTestMacro",
       """
-      start
         @syntheticEventsInstantMouseMove currentTime, 5, 5
        🠶 when no inputs ongoing
         @syntheticEventsMouseDown currentTime
@@ -1229,11 +1227,19 @@ class WorldMorph extends PanelWdgt
     # the start of the line so indentation is correct
     translatedMacro = (@translateMacro helperMacros, theMacro).replace /^/mg, "  "
 
-    code = "@progressOnMacroSteps = ->\n" + translatedMacro + "\n        @nextBlockToBeRun = -1; @progressOnMacroSteps = noOperation"
+    headerCode = """
+      currentTime = WorldMorph.dateOfCurrentCycleStart.getTime()
+      switch (@nextBlockToBeRun)
+        when 1
+          if @noCodeLoading() and @macroStepsWaitingTimer > 100
+    """.replace /^/mg, "  "
+
+    code = "@progressOnMacroSteps = ->\n" + headerCode + "\n" + translatedMacro + "\n        @nextBlockToBeRun = -1; @progressOnMacroSteps = noOperation"
     console.log code
     @evaluateString code
 
   translateMacro: (macros, theMacro) ->
+    theMacro = theMacro.replace /^/mg, " "
     anyMacroFound = true
     macroCallsExpansionLoopsCount = 0
     while anyMacroFound
@@ -1257,12 +1263,6 @@ class WorldMorph extends PanelWdgt
     #theMacro = theMacro.replace /🌎/g, "world."
     theMacro = theMacro.replace /🖶/g, "console.log"
 
-    theMacro = theMacro.replace /^start/mg, """
-      currentTime = WorldMorph.dateOfCurrentCycleStart.getTime()
-      switch (@nextBlockToBeRun)
-        when 1
-          if @noCodeLoading() and @macroStepsWaitingTimer > 100
-    """
     theMacroByLine = theMacro.split "\n"
     lineNumber = 0
     thenNumber = 0
