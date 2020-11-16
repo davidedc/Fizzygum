@@ -1186,6 +1186,7 @@ class WorldMorph extends PanelWdgt
   draftRunMacro: ->
     macros = [
       "theTestMacro",
+      [],
       """
         @syntheticEventsInstantMouseMove currentTime, 5, 5
        🠶 when no inputs ongoing
@@ -1197,11 +1198,7 @@ class WorldMorph extends PanelWdgt
        🠶 when no inputs ongoing
         🖶 "finished the drag events"
        🠶 ⌛ 1s
-        🖶 "first console out"
-       🠶 ⌛ 1s
-        🖶 "second console out"
-       🠶 ⌛ 1s
-        🖶 "third console out"
+        ⤷printoutsMacro "first console out" | "second console out" | "third console out"
        🠶 ⌛ 1s
         clock = @topWdgtSuchThat (item) -> item.morphClassString() == "AnalogClockWdgt"
         💼clockCenter = clock.center()
@@ -1214,9 +1211,19 @@ class WorldMorph extends PanelWdgt
         @syntheticEventsMoveMousePressed .5s,1,currentTime,💼clockCenter.x - 4, 💼clockCenter.y + 4, 250,250
        🠶 when no inputs ongoing
         @syntheticEventsMouseUp currentTime
+      """.replace(/^/mg, " "),
+      "printoutsMacro",
+      ["string1", "string2", "string3"],
       """
+        🖶 string1
+       🠶 ⌛ 1s
+        🖶 string2
+       🠶 ⌛ 1s
+        🖶 string3
+      """.replace(/^/mg, " ")
+
     ]
-    @startMacro macros, macros[1]
+    @startMacro macros, macros[2]
 
   startMacro: (helperMacros, theMacro) ->
     @macroStepsWaitingTimer = 0
@@ -1239,7 +1246,6 @@ class WorldMorph extends PanelWdgt
     @evaluateString code
 
   translateMacro: (macros, theMacro) ->
-    theMacro = theMacro.replace /^/mg, " "
     anyMacroFound = true
     macroCallsExpansionLoopsCount = 0
     while anyMacroFound
@@ -1248,11 +1254,20 @@ class WorldMorph extends PanelWdgt
         debugger
         throw "too many macro expansions (infinite loop?)"
       anyMacroFound = false
-      for i in [0...macros.length] by 2
-        if theMacro.match new RegExp "⤷" + macros[i] + "$",'m'
+      for i in [0...macros.length] by 3
+        if matches = theMacro.match new RegExp "^  ⤷" + macros[i] + "[ ]+(.*)[ ]*\\|[ ]*(.*)[ ]*\\|[ ]*(.*)[ ]*$",'m'
           anyMacroFound = true
           macroCallsExpansionLoopsCount++
-          theMacro = theMacro.replace (new RegExp(" *⤷" + macros[i] + "$",'gm')), macros[i+1]
+          macroBody = macros[i+2]
+          if macros[i+1][0]? and matches[1]?
+            macroBody = macroBody.replace (new RegExp(macros[i+1][0],'gm')), matches[1]
+          if macros[i+1][1]? and matches[2]?
+            macroBody = macroBody.replace (new RegExp(macros[i+1][1],'gm')), matches[2]
+          if macros[i+1][2]? and matches[3]?
+            macroBody = macroBody.replace (new RegExp(macros[i+1][2],'gm')), matches[3]
+
+          # substitute the call line (including params) with the body
+          theMacro = theMacro.replace (new RegExp("^[ ]*⤷" + macros[i] + "([ ]+.*$|$)",'m')), macroBody
 
     theMacro = theMacro.replace /^  /mg, "      "
 
