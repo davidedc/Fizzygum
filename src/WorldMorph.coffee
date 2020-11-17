@@ -1188,6 +1188,7 @@ class WorldMorph extends PanelWdgt
       "theTestMacro",
       [],
       """
+      Macro theTestMacro
         @syntheticEventsInstantMouseMove currentTime, 5, 5
        🠶 when no inputs ongoing
         @syntheticEventsMouseDown currentTime
@@ -1197,7 +1198,6 @@ class WorldMorph extends PanelWdgt
         @syntheticEventsMouseUp currentTime
        🠶 when no inputs ongoing
         🖶 "finished the drag events"
-       🠶 ⌛ 1s
         ⤷printoutsMacro "first console out" | "second console out" | "third console out"
        🠶 ⌛ 1s
         ⤷printoutsMacro "fourth console out" | "fifth console out" | "sixth console out"
@@ -1213,17 +1213,19 @@ class WorldMorph extends PanelWdgt
         @syntheticEventsMoveMousePressed .5s,1,currentTime,💼clockCenter.x - 4, 💼clockCenter.y + 4, 250,250
        🠶 when no inputs ongoing
         @syntheticEventsMouseUp currentTime
-      """.replace(/^/mg, " "),
+      """,
       "printoutsMacro",
       ["string1", "string2", "string3"],
       """
+      Macro printoutsMacro
+       🠶 ⌛ 1s
         🖶 string1
        🠶 ⌛ 1s
         🖶 string2
         💼aLocalVariableInACall = ""
        🠶 ⌛ 1s
         🖶 string3
-      """.replace(/^/mg, " ")
+      """
 
     ]
     @startMacro macros, macros[2]
@@ -1302,12 +1304,10 @@ class WorldMorph extends PanelWdgt
 
       if eachLine.match /^ 🠶/
         theMacroByLine[lineNumber] = """
-          # tab-level-reference
                 @nextBlockToBeRun = #{thenNumber+2}; @macroStepsWaitingTimer = 0
             when #{thenNumber+2}
-
-        """
-        theMacroByLine[lineNumber] += "    if @noCodeLoading() and @macroStepsWaitingTimer > "
+        """.replace(/^/mg, "  ")
+        theMacroByLine[lineNumber] += "\n    if @noCodeLoading() and @macroStepsWaitingTimer > "
 
         if matches = eachLine.match /⌛ *(\d+ *\* *1000)/
           theMacroByLine[lineNumber] += matches[1]
@@ -1325,7 +1325,7 @@ class WorldMorph extends PanelWdgt
         thenNumber++
       lineNumber++
     theMacro = theMacroByLine.join "\n"
-    theMacro = theMacro.replace /# tab-level-reference\n/g, ""
+    theMacro = theMacro.replace /^Macro (.*)$/mg, "      # Macro $1\n      noOperation()"
     theMacro = theMacro.replace /no inputs ongoing/g, "@noInputsOngoing()"
 
   # this part is excluded from the fizzygum homepage build <<«
