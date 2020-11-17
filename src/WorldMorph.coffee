@@ -1200,6 +1200,8 @@ class WorldMorph extends PanelWdgt
        🠶 ⌛ 1s
         ⤷printoutsMacro "first console out" | "second console out" | "third console out"
        🠶 ⌛ 1s
+        ⤷printoutsMacro "fourth console out" | "fifth console out" | "sixth console out"
+       🠶 ⌛ 1s
         clock = @topWdgtSuchThat (item) -> item.morphClassString() == "AnalogClockWdgt"
         💼clockCenter = clock.center()
         @syntheticEventsInstantMouseMove currentTime, 💼clockCenter.x, 💼clockCenter.y
@@ -1218,6 +1220,7 @@ class WorldMorph extends PanelWdgt
         🖶 string1
        🠶 ⌛ 1s
         🖶 string2
+        💼aLocalVariableInACall = ""
        🠶 ⌛ 1s
         🖶 string3
       """.replace(/^/mg, " ")
@@ -1248,33 +1251,41 @@ class WorldMorph extends PanelWdgt
   translateMacro: (macros, theMacro) ->
     anyMacroFound = true
     macroCallsExpansionLoopsCount = 0
+    theMacro = theMacro.replace /💼/g, "@macroVars.expansion0." 
+
     while anyMacroFound
       if macroCallsExpansionLoopsCount > 10
         console.log "too many macro expansions (infinite loop?)"
         debugger
         throw "too many macro expansions (infinite loop?)"
       anyMacroFound = false
-      for i in [0...macros.length] by 3
-        if matches = theMacro.match new RegExp "^  ⤷" + macros[i] + "[ ]+(.*)[ ]*\\|[ ]*(.*)[ ]*\\|[ ]*(.*)[ ]*$",'m'
-          anyMacroFound = true
-          macroCallsExpansionLoopsCount++
-          macroBody = macros[i+2]
-          if macros[i+1][0]? and matches[1]?
-            macroBody = macroBody.replace (new RegExp(macros[i+1][0],'gm')), matches[1]
-          if macros[i+1][1]? and matches[2]?
-            macroBody = macroBody.replace (new RegExp(macros[i+1][1],'gm')), matches[2]
-          if macros[i+1][2]? and matches[3]?
-            macroBody = macroBody.replace (new RegExp(macros[i+1][2],'gm')), matches[3]
+      if theMacro.match /^  ⤷/m
+        for i in [0...macros.length] by 3
+          if matches = theMacro.match new RegExp "^  ⤷" + macros[i] + "[ ]+(.*)[ ]*\\|[ ]*(.*)[ ]*\\|[ ]*(.*)[ ]*$",'m'
+            anyMacroFound = true
+            macroCallsExpansionLoopsCount++
+            macroBody = macros[i+2]
+            if macros[i+1][0]? and matches[1]?
+              macroBody = macroBody.replace (new RegExp(macros[i+1][0],'gm')), matches[1]
+            if macros[i+1][1]? and matches[2]?
+              macroBody = macroBody.replace (new RegExp(macros[i+1][1],'gm')), matches[2]
+            if macros[i+1][2]? and matches[3]?
+              macroBody = macroBody.replace (new RegExp(macros[i+1][2],'gm')), matches[3]
 
-          # substitute the call line (including params) with the body
-          theMacro = theMacro.replace (new RegExp("^[ ]*⤷" + macros[i] + "([ ]+.*$|$)",'m')), macroBody
+
+            macroBody = macroBody.replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}." 
+            # substitute the call line (including params) with the body
+            theMacro = theMacro.replace (new RegExp("^[ ]*⤷" + macros[i] + "([ ]+.*$|$)",'m')), macroBody
+
+    for i in [0..macroCallsExpansionLoopsCount]
+      theMacro = "  @macroVars.expansion#{i} ?= {}\n" + theMacro
 
     theMacro = theMacro.replace /^  /mg, "      "
 
     theMacro = theMacro.replace /([ \d])s([\s,])/mg, "$1*1000$2"
     theMacro = theMacro.replace /([ \d])ms([\s,])/mg, "$1$2"
 
-    theMacro = theMacro.replace /💼/g, "@macroVars."
+    theMacro = theMacro.replace /📌/g, "@macroVars."    
     #theMacro = theMacro.replace /🌎/g, "world."
     theMacro = theMacro.replace /🖶/g, "console.log"
 
