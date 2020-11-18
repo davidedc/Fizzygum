@@ -1183,11 +1183,24 @@ class WorldMorph extends PanelWdgt
 
     @translateMacro macros, macros[1]
 
+  parseMacros: (macroStrings) ->
+    macros = []
+    for eachMacroString in macroStrings
+      macroStringFirstLine = (eachMacroString.split "\n")[0]
+      matches = macroStringFirstLine.match /^Macro[ ]+([a-zA-Z0-9]*).*$/m
+      macros.push matches[1]
+      theArguments = []
+      if matches = macroStringFirstLine.match /^Macro[ ]+[a-zA-Z0-9]*[ ]+([a-zA-Z0-9]*)[ ]*\|[ ]*([a-zA-Z0-9]*)[ ]*\|[ ]*([a-zA-Z0-9]*)[ ]*$/m
+        if matches[1]? then theArguments.push matches[1]
+        if matches[2]? then theArguments.push matches[2]
+        if matches[3]? then theArguments.push matches[3]
+      macros.push theArguments
+      macros.push eachMacroString
+    return macros
+
+
   draftRunMacro: ->
-    macros = [
-      "theTestMacro",
-      [],
-      """
+    macro1 = """
       Macro theTestMacro
         @syntheticEventsInstantMouseMove currentTime, 5, 5
        🠶 when no inputs ongoing
@@ -1213,11 +1226,10 @@ class WorldMorph extends PanelWdgt
         @syntheticEventsMoveMousePressed .5s,1,currentTime,💼clockCenter.x - 4, 💼clockCenter.y + 4, 250,250
        🠶 when no inputs ongoing
         @syntheticEventsMouseUp currentTime
-      """,
-      "printoutsMacro",
-      ["string1", "string2", "string3"],
-      """
-      Macro printoutsMacro
+    """
+
+    macro2 = """
+      Macro printoutsMacro string1 | string2 | string3
        🠶 ⌛ 1s
         🖶 string1
        🠶 ⌛ 1s
@@ -1225,9 +1237,9 @@ class WorldMorph extends PanelWdgt
         💼aLocalVariableInACall = ""
        🠶 ⌛ 1s
         🖶 string3
-      """
+    """
 
-    ]
+    macros = @parseMacros [macro1, macro2]
     @startMacro macros, macros[2]
 
   startMacro: (helperMacros, theMacro) ->
@@ -1253,6 +1265,8 @@ class WorldMorph extends PanelWdgt
   translateMacro: (macros, theMacro) ->
     anyMacroFound = true
     macroCallsExpansionLoopsCount = 0
+
+    theMacro = theMacro.replace /^Macro[ ]+([a-zA-Z0-9]*).*$/mg, "  # Macro $1\n  noOperation()"
     theMacro = theMacro.replace /💼/g, "@macroVars.expansion0." 
 
     while anyMacroFound
@@ -1267,6 +1281,7 @@ class WorldMorph extends PanelWdgt
             anyMacroFound = true
             macroCallsExpansionLoopsCount++
             macroBody = macros[i+2]
+            macroBody = macroBody.replace /^Macro[ ]+([a-zA-Z0-9]*).*$/mg, "  # Macro $1\n  noOperation()"
             if macros[i+1][0]? and matches[1]?
               macroBody = macroBody.replace (new RegExp(macros[i+1][0],'gm')), matches[1]
             if macros[i+1][1]? and matches[2]?
@@ -1325,7 +1340,6 @@ class WorldMorph extends PanelWdgt
         thenNumber++
       lineNumber++
     theMacro = theMacroByLine.join "\n"
-    theMacro = theMacro.replace /^Macro (.*)$/mg, "      # Macro $1\n      noOperation()"
     theMacro = theMacro.replace /no inputs ongoing/g, "@noInputsOngoing()"
 
   # this part is excluded from the fizzygum homepage build <<«
