@@ -1190,10 +1190,11 @@ class WorldMorph extends PanelWdgt
       matches = macroStringFirstLine.match /^Macro[ ]+([a-zA-Z0-9]*).*$/m
       macros.push matches[1]
       theArguments = []
-      if matches = macroStringFirstLine.match /^Macro[ ]+[a-zA-Z0-9]*[ ]+([a-zA-Z0-9]*)[ ]*\|[ ]*([a-zA-Z0-9]*)[ ]*\|[ ]*([a-zA-Z0-9]*)[ ]*$/m
-        if matches[1]? then theArguments.push matches[1]
-        if matches[2]? then theArguments.push matches[2]
-        if matches[3]? then theArguments.push matches[3]
+
+      if matches = macroStringFirstLine.match /^Macro[ ]+[a-zA-Z0-9]+[ ]+([a-zA-Z0-9]+)[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*$/m
+        for paramNumber in [0...10]
+          if matches[paramNumber+1]? then theArguments.push matches[paramNumber+1]
+
       macros.push theArguments
       macros.push eachMacroString
     return macros
@@ -1226,6 +1227,8 @@ class WorldMorph extends PanelWdgt
         @syntheticEventsMoveMousePressed .5s,1,currentTime,💼clockCenter.x - 4, 💼clockCenter.y + 4, 250,250
        🠶 when no inputs ongoing
         @syntheticEventsMouseUp currentTime
+        ⤷macroWithNoParams
+        ⤷macroWithOneParam "here is the one param"
     """
 
     macro2 = """
@@ -1239,7 +1242,17 @@ class WorldMorph extends PanelWdgt
         🖶 string3
     """
 
-    macros = @parseMacros [macro1, macro2]
+    macro3 = """
+      Macro macroWithNoParams
+        🖶 "macro with no params"
+    """
+
+    macro4 = """
+      Macro macroWithOneParam theParameter
+        🖶 "macro with one param: " + theParameter
+    """
+
+    macros = @parseMacros [macro1, macro2, macro3, macro4]
     @startMacro macros, macros[2]
 
   startMacro: (helperMacros, theMacro) ->
@@ -1281,20 +1294,22 @@ class WorldMorph extends PanelWdgt
       anyMacroFound = false
       if theMacro.match /^  ⤷/m
         for i in [0...macros.length] by 3
-          if matches = theMacro.match new RegExp "^  ⤷" + macros[i] + "[ ]+(.*)[ ]*\\|[ ]*(.*)[ ]*\\|[ ]*(.*)[ ]*$",'m'
+          matches = nil
+          if (theMacro.match new RegExp "^  ⤷" + macros[i] + "[ ]*$",'m') or
+           # note that this parses up to 10 parameters,
+           # including any space before the pipe (we're gonna trim it later)
+           # also note that the first parameter is mandatory in this match,
+           # and everything beyond it (including the pipe) is optional
+           matches = theMacro.match new RegExp "^  ⤷" + macros[i] + "[ ]+([^|\\n]+)[ ]*\\|?[ ]*([^|\\n]+)?[ ]*\\|?[ ]*([^|\\n]+)?[ ]*\\|?[ ]*([^|\\n]+)?[ ]*\\|?[ ]*([^|\\n]+)?[ ]*\\|?[ ]*([^|\\n]+)?[ ]*\\|?[ ]*([^|\\n]+)?[ ]*\\|?[ ]*([^|\\n]+)?[ ]*\\|?[ ]*([^|\\n]+)?[ ]*\\|?[ ]*([^|\\n]+)?[ ]*$",'m'
             anyMacroFound = true
             macroCallsExpansionLoopsCount++
 
             macroBody = macros[i+2]
             macroBody = @macroFirstCleanUpPass macroBody, macroCallsExpansionLoopsCount
 
-            if macros[i+1][0]? and matches[1]?
-              macroBody = macroBody.replace (new RegExp(macros[i+1][0],'gm')), matches[1]
-            if macros[i+1][1]? and matches[2]?
-              macroBody = macroBody.replace (new RegExp(macros[i+1][1],'gm')), matches[2]
-            if macros[i+1][2]? and matches[3]?
-              macroBody = macroBody.replace (new RegExp(macros[i+1][2],'gm')), matches[3]
-
+            for paramNumber in [0...10]
+              if macros[i+1][paramNumber]? and matches[paramNumber+1]?
+                macroBody = macroBody.replace (new RegExp(macros[i+1][paramNumber],'gm')), matches[paramNumber+1].trim()
 
             # substitute the call line (including params) with the body
             theMacro = theMacro.replace (new RegExp("^[ ]*⤷" + macros[i] + "([ ]+.*$|$)",'m')), macroBody
