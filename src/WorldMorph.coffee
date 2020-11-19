@@ -1307,8 +1307,7 @@ class WorldMorph extends PanelWdgt
     theMacro = theMacro.replace /([ \d])s([\s,])/mg, "$1*1000$2"
     theMacro = theMacro.replace /([ \d])ms([\s,])/mg, "$1$2"
 
-    theMacro = theMacro.replace /📌/g, "@macroVars."    
-    #theMacro = theMacro.replace /🌎/g, "world."
+    theMacro = theMacro.replace /🌎/g, "@macroVars."    
     theMacro = theMacro.replace /🖶/g, "console.log"
 
     theMacroByLine = theMacro.split "\n"
