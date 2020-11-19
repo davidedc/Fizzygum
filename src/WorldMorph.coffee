@@ -1262,14 +1262,16 @@ class WorldMorph extends PanelWdgt
     console.log code
     @evaluateString code
 
+  macroFirstCleanUpPass: (theMacro, macroCallsExpansionLoopsCount) ->
+    theMacro = theMacro.replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}." 
+    theMacro = theMacro.replace /^Macro[ ]+([a-zA-Z0-9]*).*$/mg, "  # Macro $1\n  noOperation()"
+    theMacro = theMacro.replace /^[ ]*🠶?[ ]*⤷/mg, "  ⤷"
+
   translateMacro: (macros, theMacro) ->
     anyMacroFound = true
     macroCallsExpansionLoopsCount = 0
 
-    theMacro = theMacro.replace /💼/g, "@macroVars.expansion0." 
-    theMacro = theMacro.replace /^Macro[ ]+([a-zA-Z0-9]*).*$/mg, "  # Macro $1\n  noOperation()"
-    theMacro = theMacro.replace /^[ ]*🠶?[ ]*⤷/mg, "  ⤷"
-
+    theMacro = @macroFirstCleanUpPass theMacro, macroCallsExpansionLoopsCount
 
     while anyMacroFound
       if macroCallsExpansionLoopsCount > 10
@@ -1282,10 +1284,9 @@ class WorldMorph extends PanelWdgt
           if matches = theMacro.match new RegExp "^  ⤷" + macros[i] + "[ ]+(.*)[ ]*\\|[ ]*(.*)[ ]*\\|[ ]*(.*)[ ]*$",'m'
             anyMacroFound = true
             macroCallsExpansionLoopsCount++
-            macroBody = macros[i+2]
 
-            macroBody = macroBody.replace /^Macro[ ]+([a-zA-Z0-9]*).*$/mg, "  # Macro $1\n  noOperation()"
-            macroBody = macroBody.replace /^[ ]*🠶?[ ]*⤷/mg, "  ⤷"
+            macroBody = macros[i+2]
+            macroBody = @macroFirstCleanUpPass macroBody, macroCallsExpansionLoopsCount
 
             if macros[i+1][0]? and matches[1]?
               macroBody = macroBody.replace (new RegExp(macros[i+1][0],'gm')), matches[1]
@@ -1295,7 +1296,6 @@ class WorldMorph extends PanelWdgt
               macroBody = macroBody.replace (new RegExp(macros[i+1][2],'gm')), matches[3]
 
 
-            macroBody = macroBody.replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}." 
             # substitute the call line (including params) with the body
             theMacro = theMacro.replace (new RegExp("^[ ]*⤷" + macros[i] + "([ ]+.*$|$)",'m')), macroBody
 
