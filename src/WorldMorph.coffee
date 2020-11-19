@@ -1213,7 +1213,7 @@ class WorldMorph extends PanelWdgt
         🖶 "finished the drag events"
         ⤷printoutsMacro "first console out" | "second console out" | "third console out"
        🠶 ⌛ 1s
-        ⤷printoutsMacro "fourth console out" | "fifth console out" | "sixth console out"
+       🠶 ⤷printoutsMacro "fourth console out" | "fifth console out" | "sixth console out"
        🠶 ⌛ 1s
         clock = @topWdgtSuchThat (item) -> item.morphClassString() == "AnalogClockWdgt"
         💼clockCenter = clock.center()
@@ -1266,8 +1266,10 @@ class WorldMorph extends PanelWdgt
     anyMacroFound = true
     macroCallsExpansionLoopsCount = 0
 
-    theMacro = theMacro.replace /^Macro[ ]+([a-zA-Z0-9]*).*$/mg, "  # Macro $1\n  noOperation()"
     theMacro = theMacro.replace /💼/g, "@macroVars.expansion0." 
+    theMacro = theMacro.replace /^Macro[ ]+([a-zA-Z0-9]*).*$/mg, "  # Macro $1\n  noOperation()"
+    theMacro = theMacro.replace /^[ ]*🠶?[ ]*⤷/mg, "  ⤷"
+
 
     while anyMacroFound
       if macroCallsExpansionLoopsCount > 10
@@ -1281,7 +1283,10 @@ class WorldMorph extends PanelWdgt
             anyMacroFound = true
             macroCallsExpansionLoopsCount++
             macroBody = macros[i+2]
+
             macroBody = macroBody.replace /^Macro[ ]+([a-zA-Z0-9]*).*$/mg, "  # Macro $1\n  noOperation()"
+            macroBody = macroBody.replace /^[ ]*🠶?[ ]*⤷/mg, "  ⤷"
+
             if macros[i+1][0]? and matches[1]?
               macroBody = macroBody.replace (new RegExp(macros[i+1][0],'gm')), matches[1]
             if macros[i+1][1]? and matches[2]?
