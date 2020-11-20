@@ -1114,6 +1114,19 @@ class WorldMorph extends PanelWdgt
   expoOut: (i, origin, distance, numberOfEvents) ->
     distance * (-Math.pow(2, -10 * i/numberOfEvents) + 1) + origin
 
+  syntheticEventsLetterPressed: (theString, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    @eventsQueue.push "keydownBrowserEvent"
+    @eventsQueue.push startTime
+    @eventsQueue.push new KeydownSyntheticEvent theString.toUpperCase().charCodeAt(0), false, false, false, false
+
+    @eventsQueue.push "keypressBrowserEvent"
+    @eventsQueue.push startTime + 1
+    @eventsQueue.push new KeypressSyntheticEvent theString.charCodeAt(0),theString.charCodeAt(0),theString.charCodeAt(0), false, false, false, false
+
+    @eventsQueue.push "keyupBrowserEvent"
+    @eventsQueue.push startTime + 2
+    @eventsQueue.push new KeyupSyntheticEvent theString.toUpperCase().charCodeAt(0), false, false, false, false
+
   syntheticEventsMoveMousePressed: (orig, dest, milliseconds, startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
     numberOfEvents = milliseconds * numberOfEventsPerMillisecond
     for i in [0...numberOfEvents]
@@ -1203,6 +1216,8 @@ class WorldMorph extends PanelWdgt
   draftRunMacro: ->
     macro1 = """
       Macro theTestMacro
+        @syntheticEventsLetterPressed "a"
+       🠶 when no inputs ongoing
         @syntheticEventsInstantMouseMove ⦿(5, 5)
        🠶 when no inputs ongoing
         @syntheticEventsMouseDown()
