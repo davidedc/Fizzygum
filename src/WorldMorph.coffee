@@ -1114,7 +1114,7 @@ class WorldMorph extends PanelWdgt
   expoOut: (i, origin, distance, numberOfEvents) ->
     distance * (-Math.pow(2, -10 * i/numberOfEvents) + 1) + origin
 
-  syntheticEventsMoveMousePressed: (orig, dest, milliseconds, startTime, numberOfEventsPerMillisecond) ->
+  syntheticEventsMoveMousePressed: (orig, dest, milliseconds, startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
     numberOfEvents = milliseconds * numberOfEventsPerMillisecond
     for i in [0...numberOfEvents]
       scheduledTimeOfEvent = startTime + i/numberOfEventsPerMillisecond
@@ -1127,17 +1127,17 @@ class WorldMorph extends PanelWdgt
         @eventsQueue.push scheduledTimeOfEvent
         @eventsQueue.push new MousemoveSyntheticEvent currentX, currentY, 0, 1, false, false, false, false
 
-  syntheticEventsMouseDown: (startTime) ->
+  syntheticEventsMouseDown: (startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @eventsQueue.push "mousedownBrowserEvent"
     @eventsQueue.push startTime
     @eventsQueue.push new MousedownSyntheticEvent 0, 1, false, false, false, false
 
-  syntheticEventsMouseUp: (startTime) ->
+  syntheticEventsMouseUp: (startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @eventsQueue.push "mouseupBrowserEvent"
     @eventsQueue.push startTime
     @eventsQueue.push new MousedownSyntheticEvent 0, 0, false, false, false, false
 
-  syntheticEventsInstantMouseMove: (pos, startTime) ->
+  syntheticEventsInstantMouseMove: (pos, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @eventsQueue.push "mousemoveBrowserEvent"
     @eventsQueue.push startTime
     @eventsQueue.push new MousemoveSyntheticEvent pos.x, pos.y, 0, 0, false, false, false, false
@@ -1203,13 +1203,13 @@ class WorldMorph extends PanelWdgt
   draftRunMacro: ->
     macro1 = """
       Macro theTestMacro
-        @syntheticEventsInstantMouseMove new Point(5, 5), currentTime
+        @syntheticEventsInstantMouseMove new Point(5, 5)
        🠶 when no inputs ongoing
-        @syntheticEventsMouseDown currentTime
+        @syntheticEventsMouseDown()
        🠶 when no inputs ongoing
-        @syntheticEventsMoveMousePressed new Point(5,5),new Point(200,200),.5s,currentTime,1
+        @syntheticEventsMoveMousePressed new Point(5,5),new Point(200,200),.5s
        🠶 when no inputs ongoing
-        @syntheticEventsMouseUp currentTime
+        @syntheticEventsMouseUp()
        🠶 when no inputs ongoing
         🖶 "finished the drag events"
         ⤷printoutsMacro "first console out" | "second console out" | "third console out"
@@ -1218,15 +1218,15 @@ class WorldMorph extends PanelWdgt
        🠶 ⌛ 1s
         clock = @topWdgtSuchThat (item) -> item.morphClassString() == "AnalogClockWdgt"
         💼clockCenter = clock.center()
-        @syntheticEventsInstantMouseMove 💼clockCenter, currentTime
+        @syntheticEventsInstantMouseMove 💼clockCenter
        🠶 when no inputs ongoing
-        @syntheticEventsMouseDown currentTime
+        @syntheticEventsMouseDown()
        🠶 when no inputs ongoing
-        @syntheticEventsMoveMousePressed 💼clockCenter,new Point(💼clockCenter.x - 4, 💼clockCenter.y + 4),.5s,currentTime,1
+        @syntheticEventsMoveMousePressed 💼clockCenter,new Point(💼clockCenter.x - 4, 💼clockCenter.y + 4),.5s
        🠶 ⌛ 1s
-        @syntheticEventsMoveMousePressed new Point(💼clockCenter.x - 4, 💼clockCenter.y + 4),new Point(250,250),.5s,currentTime,1
+        @syntheticEventsMoveMousePressed new Point(💼clockCenter.x - 4, 💼clockCenter.y + 4),new Point(250,250),.5s
        🠶 when no inputs ongoing
-        @syntheticEventsMouseUp currentTime
+        @syntheticEventsMouseUp()
         ⤷macroWithNoParams
         ⤷macroWithOneParam "here is the one param"
     """
