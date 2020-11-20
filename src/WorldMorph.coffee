@@ -1203,11 +1203,11 @@ class WorldMorph extends PanelWdgt
   draftRunMacro: ->
     macro1 = """
       Macro theTestMacro
-        @syntheticEventsInstantMouseMove new Point(5, 5)
+        @syntheticEventsInstantMouseMove ⦿(5, 5)
        🠶 when no inputs ongoing
         @syntheticEventsMouseDown()
        🠶 when no inputs ongoing
-        @syntheticEventsMoveMousePressed new Point(5,5),new Point(200,200),.5s
+        @syntheticEventsMoveMousePressed ⦿(5,5),⦿(200,200),.5s
        🠶 when no inputs ongoing
         @syntheticEventsMouseUp()
        🠶 when no inputs ongoing
@@ -1222,9 +1222,9 @@ class WorldMorph extends PanelWdgt
        🠶 when no inputs ongoing
         @syntheticEventsMouseDown()
        🠶 when no inputs ongoing
-        @syntheticEventsMoveMousePressed 💼clockCenter,new Point(💼clockCenter.x - 4, 💼clockCenter.y + 4),.5s
+        @syntheticEventsMoveMousePressed 💼clockCenter,⦿(💼clockCenter.x - 4, 💼clockCenter.y + 4),.5s
        🠶 ⌛ 1s
-        @syntheticEventsMoveMousePressed new Point(💼clockCenter.x - 4, 💼clockCenter.y + 4),new Point(250,250),.5s
+        @syntheticEventsMoveMousePressed ⦿(💼clockCenter.x - 4, 💼clockCenter.y + 4),⦿(250,250),.5s
        🠶 when no inputs ongoing
         @syntheticEventsMouseUp()
         ⤷macroWithNoParams
@@ -1324,6 +1324,7 @@ class WorldMorph extends PanelWdgt
 
     theMacro = theMacro.replace /🌎/g, "@macroVars."    
     theMacro = theMacro.replace /🖶/g, "console.log"
+    theMacro = theMacro.replace /⦿/g, "new Point"
 
     theMacroByLine = theMacro.split "\n"
     lineNumber = 0
