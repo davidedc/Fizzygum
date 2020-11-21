@@ -1114,18 +1114,39 @@ class WorldMorph extends PanelWdgt
   expoOut: (i, origin, distance, numberOfEvents) ->
     distance * (-Math.pow(2, -10 * i/numberOfEvents) + 1) + origin
 
-  syntheticEventsLetterPressed: (theString, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-    @eventsQueue.push "keydownBrowserEvent"
-    @eventsQueue.push startTime
-    @eventsQueue.push new KeydownSyntheticEvent theString.toUpperCase().charCodeAt(0), false, false, false, false
+  syntheticEventsStringKeys: (theString, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    timeDelta = 0
 
-    @eventsQueue.push "keypressBrowserEvent"
-    @eventsQueue.push startTime + 1
-    @eventsQueue.push new KeypressSyntheticEvent theString.charCodeAt(0),theString.charCodeAt(0),theString.charCodeAt(0), false, false, false, false
+    for i in [0...theString.length]
 
-    @eventsQueue.push "keyupBrowserEvent"
-    @eventsQueue.push startTime + 2
-    @eventsQueue.push new KeyupSyntheticEvent theString.toUpperCase().charCodeAt(0), false, false, false, false
+      isUpperCase = theString.charAt(i) == theString.charAt(i).toUpperCase()
+
+      if isUpperCase
+        @eventsQueue.push "keydownBrowserEvent"
+        @eventsQueue.push startTime + timeDelta
+        timeDelta++
+        @eventsQueue.push new KeydownSyntheticEvent 16, true, false, false, false
+
+      @eventsQueue.push "keydownBrowserEvent"
+      @eventsQueue.push startTime + timeDelta
+      timeDelta++
+      @eventsQueue.push new KeydownSyntheticEvent theString.toUpperCase().charCodeAt(i), isUpperCase, false, false, false
+
+      @eventsQueue.push "keypressBrowserEvent"
+      @eventsQueue.push startTime + timeDelta
+      timeDelta++
+      @eventsQueue.push new KeypressSyntheticEvent theString.charCodeAt(i),theString.charCodeAt(i),theString.charCodeAt(i), isUpperCase, false, false, false
+
+      @eventsQueue.push "keyupBrowserEvent"
+      @eventsQueue.push startTime + timeDelta
+      timeDelta++
+      @eventsQueue.push new KeyupSyntheticEvent theString.toUpperCase().charCodeAt(i), isUpperCase, false, false, false
+
+      if isUpperCase
+        @eventsQueue.push "keyupBrowserEvent"
+        @eventsQueue.push startTime + timeDelta
+        timeDelta++
+        @eventsQueue.push new KeyupSyntheticEvent 16, false, false, false, false
 
   syntheticEventsMoveMousePressed: (orig, dest, milliseconds, startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
     numberOfEvents = milliseconds * numberOfEventsPerMillisecond
@@ -1216,7 +1237,7 @@ class WorldMorph extends PanelWdgt
   draftRunMacro: ->
     macro1 = """
       Macro theTestMacro
-        @syntheticEventsLetterPressed "a"
+        @syntheticEventsStringKeys "SoMeThInG"
        🠶 when no inputs ongoing
         @syntheticEventsInstantMouseMove ⦿(5, 5)
        🠶 when no inputs ongoing
