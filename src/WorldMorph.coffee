@@ -1161,15 +1161,35 @@ class WorldMorph extends PanelWdgt
         @eventsQueue.push scheduledTimeOfEvent
         @eventsQueue.push new MousemoveSyntheticEvent currentX, currentY, 0, 1, false, false, false, false
 
-  syntheticEventsMouseDown: (startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+  syntheticEventsMouseDown: (whichButton = "left button", startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    if whichButton == "left button"
+      button = 0
+      buttons = 1
+    else if whichButton == "right button"
+      button = 2
+      buttons = 2
+    else
+      debugger
+      throw "syntheticEventsMouseDown: whichButton is unknown"
+
     @eventsQueue.push "mousedownBrowserEvent"
     @eventsQueue.push startTime
-    @eventsQueue.push new MousedownSyntheticEvent 0, 1, false, false, false, false
+    @eventsQueue.push new MousedownSyntheticEvent button, buttons, false, false, false, false
 
-  syntheticEventsMouseUp: (startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+  syntheticEventsMouseUp: (whichButton = "left button", startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    if whichButton == "left button"
+      button = 0
+      buttons = 0
+    else if whichButton == "right button"
+      button = 2
+      buttons = 0
+    else
+      debugger
+      throw "syntheticEventsMouseUp: whichButton is unknown"
+
     @eventsQueue.push "mouseupBrowserEvent"
     @eventsQueue.push startTime
-    @eventsQueue.push new MousedownSyntheticEvent 0, 0, false, false, false, false
+    @eventsQueue.push new MousedownSyntheticEvent button, buttons, false, false, false, false
 
   syntheticEventsInstantMouseMove: (pos, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @eventsQueue.push "mousemoveBrowserEvent"
