@@ -1161,6 +1161,10 @@ class WorldMorph extends PanelWdgt
         @eventsQueue.push scheduledTimeOfEvent
         @eventsQueue.push new MousemoveSyntheticEvent currentX, currentY, 0, 1, false, false, false, false
 
+  syntheticEventsMouseClick: (whichButton = "left button", milliseconds = 100, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    @syntheticEventsMouseDown whichButton, startTime
+    @syntheticEventsMouseUp whichButton, startTime + milliseconds
+
   syntheticEventsMouseDown: (whichButton = "left button", startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     if whichButton == "left button"
       button = 0
