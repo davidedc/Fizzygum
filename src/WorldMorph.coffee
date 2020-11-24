@@ -1148,7 +1148,16 @@ class WorldMorph extends PanelWdgt
         scheduledTimeOfEvent += millisecondsBetweenKeys
         @eventsQueue.push new KeyupSyntheticEvent 16, false, false, false, false
 
-  syntheticEventsMouseDrag: (dest, milliseconds = 1000, orig = @hand.position(), startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
+  syntheticEventsMouseMovePressDragRelease: (orig, dest, millisecondsForDrag = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
+    @syntheticEventsMouseMove orig, "left button", 100, nil, startTime, numberOfEventsPerMillisecond
+    @syntheticEventsMouseDown "left button", startTime + 100
+    @syntheticEventsMouseMove dest, "left button", millisecondsForDrag, orig, startTime + 100 + 100, numberOfEventsPerMillisecond
+    @syntheticEventsMouseUp "left button", startTime + 100 + 100 + millisecondsForDrag + 100
+
+  # This should be used if you want to drag from point A to B to C ...
+  # If rather you want to just drag from point A to point B,
+  # then just use syntheticEventsMouseMovePressDragRelease
+  syntheticEventsMouseMoveWhileDragging: (dest, milliseconds = 1000, orig = @hand.position(), startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
     @syntheticEventsMouseMove dest, "left button", milliseconds, orig, startTime, numberOfEventsPerMillisecond
 
   # mouse moves need an origin and a destination, so we
@@ -1220,11 +1229,6 @@ class WorldMorph extends PanelWdgt
     @eventsQueue.push startTime
     @eventsQueue.push new MousedownSyntheticEvent button, buttons, false, false, false, false
 
-  syntheticEventsInstantMouseMove: (pos, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-    @eventsQueue.push "mousemoveBrowserEvent"
-    @eventsQueue.push startTime
-    @eventsQueue.push new MousemoveSyntheticEvent pos.x, pos.y, 0, 0, false, false, false, false
-
   findTopWidgetByClassNameOrClass: (widgetNameOrClass) ->
     if typeof widgetNameOrClass == "string"
       @topWdgtSuchThat (item) -> item.morphClassString() == "AnalogClockWdgt"
@@ -1294,13 +1298,7 @@ class WorldMorph extends PanelWdgt
       Macro theTestMacro
         @syntheticEventsStringKeys "SoMeThInG"
        🠶 when no inputs ongoing
-        @syntheticEventsInstantMouseMove ⦿(5, 5)
-       🠶 when no inputs ongoing
-        @syntheticEventsMouseDown()
-       🠶 when no inputs ongoing
-        @syntheticEventsMouseDrag ⦿(200,200)
-       🠶 when no inputs ongoing
-        @syntheticEventsMouseUp()
+        @syntheticEventsMouseMovePressDragRelease ⦿(5, 5), ⦿(200,200)
        🠶 when no inputs ongoing
         🖶 "finished the drag events"
         ⤷printoutsMacro "first console out" | "second console out" | "third console out"
@@ -1309,13 +1307,13 @@ class WorldMorph extends PanelWdgt
        🠶 ⌛ 1s
         clock = @findTopWidgetByClassNameOrClass AnalogClockWdgt
         💼clockCenter = clock.center()
-        @syntheticEventsInstantMouseMove 💼clockCenter
+        @syntheticEventsMouseMove 💼clockCenter
        🠶 when no inputs ongoing
         @syntheticEventsMouseDown()
        🠶 when no inputs ongoing
-        @syntheticEventsMouseDrag ⦿(💼clockCenter.x - 4, 💼clockCenter.y + 4)
+        @syntheticEventsMouseMoveWhileDragging ⦿(💼clockCenter.x - 4, 💼clockCenter.y + 4)
        🠶 ⌛ 1s
-        @syntheticEventsMouseDrag ⦿(250,250)
+        @syntheticEventsMouseMoveWhileDragging ⦿(250,250)
        🠶 when no inputs ongoing
         @syntheticEventsMouseUp()
         ⤷macroWithNoParams
@@ -1348,7 +1346,7 @@ class WorldMorph extends PanelWdgt
 
   startMacro: (helperMacros, theMacro) ->
     @macroStepsWaitingTimer = 0
-    @nextBlockToBeRun = 1
+    @nextBlockToBeRun = 0
     @macroVars = {}
 
     # .replace /^/mg, "  " is to add a couple of spaces to
@@ -1358,8 +1356,11 @@ class WorldMorph extends PanelWdgt
     headerCode = """
       currentTime = WorldMorph.dateOfCurrentCycleStart.getTime()
       switch (@nextBlockToBeRun)
+        when 0
+          @syntheticEventsMousePlace()
+          @nextBlockToBeRun = 1; @macroStepsWaitingTimer = 0
         when 1
-          if @noCodeLoading() and @macroStepsWaitingTimer > 100
+          if @noCodeLoading() and @macroStepsWaitingTimer > 100 and @noInputsOngoing()
     """.replace /^/mg, "  "
 
     code = "@progressOnMacroSteps = ->\n" + headerCode + "\n" + translatedMacro + "\n        @nextBlockToBeRun = -1; @progressOnMacroSteps = noOperation"
