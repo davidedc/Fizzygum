@@ -1148,18 +1148,43 @@ class WorldMorph extends PanelWdgt
         scheduledTimeOfEvent += millisecondsBetweenKeys
         @eventsQueue.push new KeyupSyntheticEvent 16, false, false, false, false
 
-  syntheticEventsMoveMousePressed: (orig, dest, milliseconds, startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
+  syntheticEventsMouseDrag: (dest, milliseconds = 1000, orig = @hand.position(), startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
+    @syntheticEventsMouseMove dest, "left button", milliseconds, orig, startTime, numberOfEventsPerMillisecond
+
+  # mouse moves need an origin and a destination, so we
+  # need to place the mouse in _some_ place to begin with
+  # in order to do that.
+  syntheticEventsMousePlace: (place = new Point(0,0), scheduledTimeOfEvent = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    @eventsQueue.push "mousemoveBrowserEvent"
+    @eventsQueue.push scheduledTimeOfEvent
+    @eventsQueue.push new MousemoveSyntheticEvent place.x, place.y, 0, 0, false, false, false, false
+
+  syntheticEventsMouseMove: (dest, whichButton = "no button", milliseconds = 1000, orig = @hand.position(), startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
+    if whichButton == "left button"
+      button = 0
+      buttons = 1
+    else if whichButton == "no button"
+      button = 0
+      buttons = 0
+    else if whichButton == "right button"
+      button = 0
+      buttons = 2
+    else
+      debugger
+      throw "syntheticEventsMouseMove: whichButton is unknown"
+
     numberOfEvents = milliseconds * numberOfEventsPerMillisecond
     for i in [0...numberOfEvents]
       scheduledTimeOfEvent = startTime + i/numberOfEventsPerMillisecond
-      currentX = Math.round @expoOut i, orig.x, (dest.x-orig.x), numberOfEvents
-      currentY = Math.round @expoOut i, orig.y, (dest.y-orig.y), numberOfEvents
-      if currentX != prevX or currentY != prevY
-        prevX = currentX
-        prevY = currentY
+      nextX = Math.round @expoOut i, orig.x, (dest.x-orig.x), numberOfEvents
+      nextY = Math.round @expoOut i, orig.y, (dest.y-orig.y), numberOfEvents
+      if nextX != prevX or nextY != prevY
+        prevX = nextX
+        prevY = nextY
+        #console.log nextX + " " + nextY + " scheduled at: " + scheduledTimeOfEvent
         @eventsQueue.push "mousemoveBrowserEvent"
         @eventsQueue.push scheduledTimeOfEvent
-        @eventsQueue.push new MousemoveSyntheticEvent currentX, currentY, 0, 1, false, false, false, false
+        @eventsQueue.push new MousemoveSyntheticEvent nextX, nextY, button, buttons, false, false, false, false
 
   syntheticEventsMouseClick: (whichButton = "left button", milliseconds = 100, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @syntheticEventsMouseDown whichButton, startTime
@@ -1199,6 +1224,12 @@ class WorldMorph extends PanelWdgt
     @eventsQueue.push "mousemoveBrowserEvent"
     @eventsQueue.push startTime
     @eventsQueue.push new MousemoveSyntheticEvent pos.x, pos.y, 0, 0, false, false, false, false
+
+  findTopWidgetByClassNameOrClass: (widgetNameOrClass) ->
+    if typeof widgetNameOrClass == "string"
+      @topWdgtSuchThat (item) -> item.morphClassString() == "AnalogClockWdgt"
+    else
+      @topWdgtSuchThat (item) -> item instanceof widgetNameOrClass
 
   draftMacroTranslation: ->
     macros = [
@@ -1267,7 +1298,7 @@ class WorldMorph extends PanelWdgt
        🠶 when no inputs ongoing
         @syntheticEventsMouseDown()
        🠶 when no inputs ongoing
-        @syntheticEventsMoveMousePressed ⦿(5,5),⦿(200,200),.5s
+        @syntheticEventsMouseDrag ⦿(200,200)
        🠶 when no inputs ongoing
         @syntheticEventsMouseUp()
        🠶 when no inputs ongoing
@@ -1276,15 +1307,15 @@ class WorldMorph extends PanelWdgt
        🠶 ⌛ 1s
        🠶 ⤷printoutsMacro "fourth console out" | "fifth console out" | "sixth console out"
        🠶 ⌛ 1s
-        clock = @topWdgtSuchThat (item) -> item.morphClassString() == "AnalogClockWdgt"
+        clock = @findTopWidgetByClassNameOrClass AnalogClockWdgt
         💼clockCenter = clock.center()
         @syntheticEventsInstantMouseMove 💼clockCenter
        🠶 when no inputs ongoing
         @syntheticEventsMouseDown()
        🠶 when no inputs ongoing
-        @syntheticEventsMoveMousePressed 💼clockCenter,⦿(💼clockCenter.x - 4, 💼clockCenter.y + 4),.5s
+        @syntheticEventsMouseDrag ⦿(💼clockCenter.x - 4, 💼clockCenter.y + 4)
        🠶 ⌛ 1s
-        @syntheticEventsMoveMousePressed ⦿(💼clockCenter.x - 4, 💼clockCenter.y + 4),⦿(250,250),.5s
+        @syntheticEventsMouseDrag ⦿(250,250)
        🠶 when no inputs ongoing
         @syntheticEventsMouseUp()
         ⤷macroWithNoParams
