@@ -1265,18 +1265,9 @@ class WorldMorph extends PanelWdgt
     else
       @topWdgtSuchThat (item) -> item instanceof widgetNameOrClass
 
-
-  bringListItemFromTopInspectorInView: (listItemString) ->
-    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
-
-    vBar = inspectorNaked.list.vBar
+  calculateVertBarMovement: (vBar, index, total) ->
     vBarHandle = vBar.children[0]
     vBarHandleCenter = vBarHandle.center()
-
-    listContents = inspectorNaked.list.elements
-    index = listContents.indexOf listItemString
-
-
 
     highestHandlePosition = vBar.top()
     lowestHandlePosition = vBar.bottom() - vBarHandle.height()
@@ -1287,13 +1278,21 @@ class WorldMorph extends PanelWdgt
 
     handleCenterRange = lowestHandleCenterPosition - highestHandleCenterPosition
 
-    # index : (listContents.length-1) = handleCenterOffset : handleCenterRange
+    handleCenterOffset = Math.round index * handleCenterRange / (total-1)
 
-    handleCenterOffset = Math.round index * handleCenterRange / (listContents.length-1)
+    [vBarHandleCenter, vBarHandleCenter.translateBy new Point(0,handleCenterOffset)]
 
-    # newHandleCenterHeight = highestHandleCenterPosition + handleCenterOffset
+  bringListItemFromTopInspectorInView: (listItemString) ->
+    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
+    list = inspectorNaked.list
+    elements = list.elements
 
-    @syntheticEventsMouseMovePressDragRelease vBarHandleCenter, vBarHandleCenter.translateBy new Point(0,handleCenterOffset)
+    vBar = list.vBar
+    index = elements.indexOf listItemString
+    total = elements.length
+    [vBarCenterFromHere, vBarCenterToHere] = @calculateVertBarMovement vBar, index, total
+
+    @syntheticEventsMouseMovePressDragRelease vBarCenterFromHere, vBarCenterToHere
 
   clickOnListItemFromTopInspector: (listItemString, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
@@ -1321,6 +1320,22 @@ class WorldMorph extends PanelWdgt
     inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
     saveButton = inspectorNaked.saveButton
     @moveToAndClick saveButton, "left button", milliseconds, startTime
+
+  bringcodeStringFromTopInspectorInView: (codeString) ->
+    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
+
+    slotCoords = inspectorNaked.textMorph.text.indexOf codeString
+
+    textScrollPane = inspectorNaked.topWdgtSuchThat (item) -> item.morphClassString() == "SimplePlainTextScrollPanelWdgt"
+    textMorph = inspectorNaked.textMorph
+
+
+    vBar = textScrollPane.vBar
+    index = textMorph.slotRowAndColumn(slotCoords)[0]
+    total = textMorph.wrappedLines.length
+    [vBarCenterFromHere, vBarCenterToHere] = @calculateVertBarMovement vBar, index, total
+
+    @syntheticEventsMouseMovePressDragRelease vBarCenterFromHere, vBarCenterToHere
 
 
   draftMacroTranslation: ->
@@ -1408,6 +1423,8 @@ class WorldMorph extends PanelWdgt
         ⤷printoutsMacro "first console out" | "second console out" | "third console out"
        🠶 when no inputs ongoing
         ⤷bringUpInspectorAndSelectListItem 💼clock | "drawSecondsHand"
+       🠶 when no inputs ongoing
+        @bringcodeStringFromTopInspectorInView "context.restore()"
        🠶 when no inputs ongoing
         @clickOnCodeBoxFromTopInspectorBeforeCodeString "@secondsHandAngle"
        🠶 when no inputs ongoing
