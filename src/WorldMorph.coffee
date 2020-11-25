@@ -1182,6 +1182,12 @@ class WorldMorph extends PanelWdgt
       debugger
       throw "syntheticEventsMouseMove: whichButton is unknown"
 
+    if dest instanceof Widget
+      dest = dest.center()
+
+    if orig instanceof Widget
+      orig = orig.center()
+
     numberOfEvents = milliseconds * numberOfEventsPerMillisecond
     for i in [0...numberOfEvents]
       scheduledTimeOfEvent = startTime + i/numberOfEventsPerMillisecond
@@ -1229,11 +1235,82 @@ class WorldMorph extends PanelWdgt
     @eventsQueue.push startTime
     @eventsQueue.push new MousedownSyntheticEvent button, buttons, false, false, false, false
 
+  moveToAndClick: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    @syntheticEventsMouseMove positionOrWidget, "no button", milliseconds, nil, startTime, nil
+    @syntheticEventsMouseClick whichButton, 100, startTime + milliseconds + 100
+
+  openMenuOf: (widget, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    @moveToAndClick widget, "right button", milliseconds, startTime
+
+  getMostRecentlyOpenedMenu: ->
+    # gets the last element added to the "freshlyCreatedPopUps" set
+    # (Sets keep order of insertion)
+    Array.from(@freshlyCreatedPopUps).pop()
+
+  getTextMenuItemFromMenu: (theMenu, theLabel) ->
+    theMenu.topWdgtSuchThat (item) ->
+      if item.labelString?
+        item.labelString == theLabel
+      else
+        false
+
+  moveToItemOfTopMenuAndClick: (theLabel) ->
+    theMenu = @getMostRecentlyOpenedMenu()
+    theItem = @getTextMenuItemFromMenu theMenu, theLabel
+    @moveToAndClick theItem
+
   findTopWidgetByClassNameOrClass: (widgetNameOrClass) ->
     if typeof widgetNameOrClass == "string"
       @topWdgtSuchThat (item) -> item.morphClassString() == "AnalogClockWdgt"
     else
       @topWdgtSuchThat (item) -> item instanceof widgetNameOrClass
+
+
+  bringListItemFromTopInspectorInView: (listItemString) ->
+    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
+
+    vBar = inspectorNaked.list.vBar
+    vBarHandle = vBar.children[0]
+    vBarHandleCenter = vBarHandle.center()
+
+    listContents = inspectorNaked.list.elements
+    index = listContents.indexOf listItemString
+
+
+
+    highestHandlePosition = vBar.top()
+    lowestHandlePosition = vBar.bottom() - vBarHandle.height()
+
+
+    highestHandleCenterPosition = highestHandlePosition + vBarHandle.height()/2
+    lowestHandleCenterPosition = lowestHandlePosition + vBarHandle.height()/2
+
+    handleCenterRange = lowestHandleCenterPosition - highestHandleCenterPosition
+
+    # index : (listContents.length-1) = handleCenterOffset : handleCenterRange
+
+    handleCenterOffset = Math.round index * handleCenterRange / (listContents.length-1)
+
+    # newHandleCenterHeight = highestHandleCenterPosition + handleCenterOffset
+
+    @syntheticEventsMouseMovePressDragRelease vBarHandleCenter, vBarHandleCenter.translateBy new Point(0,handleCenterOffset)
+
+  clickOnListItemFromTopInspector: (listItemString, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
+
+    list = inspectorNaked.list
+
+    entry = list.topWdgtSuchThat (item) ->
+      if item.text?
+        item.text == listItemString
+      else
+        false
+    entryTopLeft = entry.topLeft()
+
+    @moveToAndClick entryTopLeft.translateBy(new Point 10, 2), "left button", milliseconds, startTime
+
+
+
 
   draftMacroTranslation: ->
     macros = [
@@ -1297,20 +1374,15 @@ class WorldMorph extends PanelWdgt
     macro1 = """
       Macro theTestMacro
         @syntheticEventsStringKeys "SoMeThInG"
-       🠶 when no inputs ongoing
-        @syntheticEventsMouseMovePressDragRelease ⦿(5, 5), ⦿(200,200)
-       🠶 when no inputs ongoing
-        🖶 "finished the drag events"
-        ⤷printoutsMacro "first console out" | "second console out" | "third console out"
        🠶 ⌛ 1s
        🠶 ⤷printoutsMacro "fourth console out" | "fifth console out" | "sixth console out"
        🠶 ⌛ 1s
-        clock = @findTopWidgetByClassNameOrClass AnalogClockWdgt
-        💼clockCenter = clock.center()
-        @syntheticEventsMouseMove 💼clockCenter
+        💼clock = @findTopWidgetByClassNameOrClass AnalogClockWdgt
+        @syntheticEventsMouseMove 💼clock
        🠶 when no inputs ongoing
         @syntheticEventsMouseDown()
        🠶 when no inputs ongoing
+        💼clockCenter = 💼clock.center()
         @syntheticEventsMouseMoveWhileDragging ⦿(💼clockCenter.x - 4, 💼clockCenter.y + 4)
        🠶 ⌛ 1s
         @syntheticEventsMouseMoveWhileDragging ⦿(250,250)
@@ -1318,9 +1390,40 @@ class WorldMorph extends PanelWdgt
         @syntheticEventsMouseUp()
         ⤷macroWithNoParams
         ⤷macroWithOneParam "here is the one param"
+       🠶 when no inputs ongoing
+        @syntheticEventsMouseMovePressDragRelease ⦿(5, 5), ⦿(200,200)
+       🠶 when no inputs ongoing
+        🖶 "finished the drag events"
+        ⤷printoutsMacro "first console out" | "second console out" | "third console out"
+       🠶 when no inputs ongoing
+        ⤷bringUpInspectorAndSelectListItem 💼clock | "widthWithoutSpacing"
+
+    """
+
+    macro7 = """
+      Macro bringUpInspectorAndSelectListItem whichWidget | whichItem
+        ⤷clickMenuItemOfWidget whichWidget | "dev ➜"
+       🠶 when no inputs ongoing
+        @moveToItemOfTopMenuAndClick "inspect"
+       🠶 when no inputs ongoing
+        ⤷bringInViewAndClickOnListItemFromTopInspector whichItem
+    """
+
+    macro6 = """
+      Macro bringInViewAndClickOnListItemFromTopInspector whichItem
+        @bringListItemFromTopInspectorInView whichItem
+       🠶 when no inputs ongoing
+        @clickOnListItemFromTopInspector whichItem
     """
 
     macro2 = """
+      Macro clickMenuItemOfWidget whichWidget | whichItem
+        @openMenuOf whichWidget
+       🠶 when no inputs ongoing
+        @moveToItemOfTopMenuAndClick whichItem
+    """
+
+    macro3 = """
       Macro printoutsMacro string1 | string2 | string3
        🠶 ⌛ 1s
         🖶 string1
@@ -1331,17 +1434,17 @@ class WorldMorph extends PanelWdgt
         🖶 string3
     """
 
-    macro3 = """
+    macro4 = """
       Macro macroWithNoParams
         🖶 "macro with no params"
     """
 
-    macro4 = """
+    macro5 = """
       Macro macroWithOneParam theParameter
         🖶 "macro with one param: " + theParameter
     """
 
-    macros = @parseMacros [macro1, macro2, macro3, macro4]
+    macros = @parseMacros [macro1, macro2, macro3, macro4, macro5, macro6, macro7]
     @startMacro macros, macros[2]
 
   startMacro: (helperMacros, theMacro) ->
