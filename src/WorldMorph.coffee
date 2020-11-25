@@ -1309,7 +1309,18 @@ class WorldMorph extends PanelWdgt
 
     @moveToAndClick entryTopLeft.translateBy(new Point 10, 2), "left button", milliseconds, startTime
 
+  clickOnCodeBoxFromTopInspectorBeforeCodeString: (codeString, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
 
+    slotCoords = inspectorNaked.textMorph.text.indexOf codeString
+    clickPosition = inspectorNaked.textMorph.slotCoordinates(slotCoords).translateBy new Point 3,3
+
+    @moveToAndClick clickPosition, "left button", milliseconds, startTime
+
+  clickOnSaveButtonFromTopInspector: (milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
+    saveButton = inspectorNaked.saveButton
+    @moveToAndClick saveButton, "left button", milliseconds, startTime
 
 
   draftMacroTranslation: ->
@@ -1396,7 +1407,13 @@ class WorldMorph extends PanelWdgt
         🖶 "finished the drag events"
         ⤷printoutsMacro "first console out" | "second console out" | "third console out"
        🠶 when no inputs ongoing
-        ⤷bringUpInspectorAndSelectListItem 💼clock | "widthWithoutSpacing"
+        ⤷bringUpInspectorAndSelectListItem 💼clock | "drawSecondsHand"
+       🠶 when no inputs ongoing
+        @clickOnCodeBoxFromTopInspectorBeforeCodeString "@secondsHandAngle"
+       🠶 when no inputs ongoing
+        @syntheticEventsStringKeys "-"
+       🠶 when no inputs ongoing
+        @clickOnSaveButtonFromTopInspector()
 
     """
 
