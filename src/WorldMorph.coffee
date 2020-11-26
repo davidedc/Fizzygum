@@ -1308,10 +1308,12 @@ class WorldMorph extends PanelWdgt
 
     @moveToAndClick entryTopLeft.translateBy(new Point 10, 2), "left button", milliseconds, startTime
 
-  clickOnCodeBoxFromTopInspectorBeforeCodeString: (codeString, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+
+  clickOnCodeBoxFromTopInspectorAtCodeString: (codeString, occurrenceNumber = 1, after = true,  milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
 
-    slotCoords = inspectorNaked.textMorph.text.indexOf codeString
+    slotCoords = inspectorNaked.textMorph.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
+
     clickPosition = inspectorNaked.textMorph.slotCoordinates(slotCoords).translateBy new Point 3,3
 
     @moveToAndClick clickPosition, "left button", milliseconds, startTime
@@ -1321,14 +1323,13 @@ class WorldMorph extends PanelWdgt
     saveButton = inspectorNaked.saveButton
     @moveToAndClick saveButton, "left button", milliseconds, startTime
 
-  bringcodeStringFromTopInspectorInView: (codeString) ->
+  bringcodeStringFromTopInspectorInView: (codeString, occurrenceNumber = 1, after = true) ->
     inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
 
-    slotCoords = inspectorNaked.textMorph.text.indexOf codeString
+    slotCoords = inspectorNaked.textMorph.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
 
     textScrollPane = inspectorNaked.topWdgtSuchThat (item) -> item.morphClassString() == "SimplePlainTextScrollPanelWdgt"
     textMorph = inspectorNaked.textMorph
-
 
     vBar = textScrollPane.vBar
     index = textMorph.slotRowAndColumn(slotCoords)[0]
@@ -1397,7 +1398,9 @@ class WorldMorph extends PanelWdgt
 
 
   draftRunMacro: ->
-    macro1 = """
+    macros = []
+
+    macros.push """
       Macro theTestMacro
         @syntheticEventsStringKeys "SoMeThInG"
        🠶 ⌛ 1s
@@ -1414,8 +1417,6 @@ class WorldMorph extends PanelWdgt
         @syntheticEventsMouseMoveWhileDragging ⦿(250,250)
        🠶 when no inputs ongoing
         @syntheticEventsMouseUp()
-        ⤷macroWithNoParams
-        ⤷macroWithOneParam "here is the one param"
        🠶 when no inputs ongoing
         @syntheticEventsMouseMovePressDragRelease ⦿(5, 5), ⦿(200,200)
        🠶 when no inputs ongoing
@@ -1426,38 +1427,46 @@ class WorldMorph extends PanelWdgt
        🠶 when no inputs ongoing
         @bringcodeStringFromTopInspectorInView "context.restore()"
        🠶 when no inputs ongoing
-        @clickOnCodeBoxFromTopInspectorBeforeCodeString "@secondsHandAngle"
+        @clickOnCodeBoxFromTopInspectorAtCodeString "@secondsHandAngle", 1, false
        🠶 when no inputs ongoing
         @syntheticEventsStringKeys "-"
-       🠶 when no inputs ongoing
         @clickOnSaveButtonFromTopInspector()
+       🠶 when no inputs ongoing
+        ⤷macroWithNoParams
+        ⤷macroWithOneParam "here is the one param"
+        ⤷macroWithTwoParamsButPassingOnlyOne "first parameter"
 
     """
 
-    macro7 = """
-      Macro bringUpInspectorAndSelectListItem whichWidget | whichItem
+    macros.push """
+      Macro bringUpInspector whichWidget
         ⤷clickMenuItemOfWidget whichWidget | "dev ➜"
        🠶 when no inputs ongoing
         @moveToItemOfTopMenuAndClick "inspect"
+    """
+
+    macros.push """
+      Macro bringUpInspectorAndSelectListItem whichWidget | whichItem
+        ⤷bringUpInspector whichWidget
        🠶 when no inputs ongoing
         ⤷bringInViewAndClickOnListItemFromTopInspector whichItem
     """
 
-    macro6 = """
+    macros.push """
       Macro bringInViewAndClickOnListItemFromTopInspector whichItem
         @bringListItemFromTopInspectorInView whichItem
        🠶 when no inputs ongoing
         @clickOnListItemFromTopInspector whichItem
     """
 
-    macro2 = """
+    macros.push """
       Macro clickMenuItemOfWidget whichWidget | whichItem
         @openMenuOf whichWidget
        🠶 when no inputs ongoing
         @moveToItemOfTopMenuAndClick whichItem
     """
 
-    macro3 = """
+    macros.push """
       Macro printoutsMacro string1 | string2 | string3
        🠶 ⌛ 1s
         🖶 string1
@@ -1468,18 +1477,23 @@ class WorldMorph extends PanelWdgt
         🖶 string3
     """
 
-    macro4 = """
+    macros.push """
       Macro macroWithNoParams
         🖶 "macro with no params"
     """
 
-    macro5 = """
+    macros.push """
       Macro macroWithOneParam theParameter
         🖶 "macro with one param: " + theParameter
     """
 
-    macros = @parseMacros [macro1, macro2, macro3, macro4, macro5, macro6, macro7]
-    @startMacro macros, macros[2]
+    macros.push """
+      Macro macroWithTwoParamsButPassingOnlyOne param1 | param2
+        🖶 "macro with two params but passing only one: param 1: " + param1 + " param 2: " + param2
+    """
+
+    parsedMacros = @parseMacros macros
+    @startMacro parsedMacros, parsedMacros[2]
 
   startMacro: (helperMacros, theMacro) ->
     @macroStepsWaitingTimer = 0
@@ -1537,8 +1551,12 @@ class WorldMorph extends PanelWdgt
             macroBody = @macroFirstCleanUpPass macroBody, macroCallsExpansionLoopsCount
 
             for paramNumber in [0...10]
-              if macros[i+1][paramNumber]? and matches[paramNumber+1]?
-                macroBody = macroBody.replace (new RegExp(macros[i+1][paramNumber],'gm')), matches[paramNumber+1].trim()
+              if macros[i+1][paramNumber]?
+                if matches[paramNumber+1]?
+                  replaceWithThis = matches[paramNumber+1].trim()
+                else
+                  replaceWithThis = "nil"
+                macroBody = macroBody.replace (new RegExp(macros[i+1][paramNumber],'gm')), replaceWithThis
 
             # substitute the call line (including params) with the body
             theMacro = theMacro.replace (new RegExp("^[ ]*⤷" + macros[i] + "([ ]+.*$|$)",'m')), macroBody

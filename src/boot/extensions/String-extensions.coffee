@@ -43,3 +43,10 @@ if typeof String::toggleTick == 'undefined'
 if typeof String::isLetter == 'undefined'
   String::isLetter = ->
     @length == 1 && @match /[a-z]/i
+
+if typeof String::getNthPositionInStringBeforeOrAfter == 'undefined'
+  String::getNthPositionInStringBeforeOrAfter = (subString, occurrenceNumber = 1, after = true) ->
+    position = @split(subString, occurrenceNumber).join(subString).length
+    if after
+      position += subString.length
+    return position
