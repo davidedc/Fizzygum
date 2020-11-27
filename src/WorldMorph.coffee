@@ -1339,47 +1339,6 @@ class WorldMorph extends PanelWdgt
     @syntheticEventsMouseMovePressDragRelease vBarCenterFromHere, vBarCenterToHere
 
 
-  draftMacroTranslation: ->
-    macros = [
-      "aTopLevelMacro",
-      """
-        doSomething
-       🠶 # equivalent to a pause of 100ms
-        doSomething2
-        doSomething3
-       🠶 ⌛ 200 ms, when no inputs ongoing # checks that no input is ongoing
-        doSomething4
-        # some comment here
-        doSomething5 # and some other comment here
-       🠶 ⌛ 500 ms, when condition1()
-        doSomething6
-        doSomething7
-       🠶 when condition2() # also implicit pause of 100ms if unspecified
-        doSomething8
-       🠶 # ⌛ 500 ms, when conditionCommented()
-        ⤷aMacroCall
-      """,
-
-      "aMacroDeeperCall",
-      """
-        doSomethingFromAMacroDeeperCall
-       🠶 # equivalent to a pause of 100ms
-        doSomething2FromAMacroDeeperCall
-        doSomething3FromAMacroDeeperCall
-      """,
-
-      "aMacroCall",
-      """
-        doSomethingFromAMacroCall
-       🠶 # equivalent to a pause of 100ms
-        doSomething2FromAMacroCall
-        doSomething3FromAMacroCall
-        ⤷aMacroDeeperCall
-      """
-    ]
-
-    @translateMacro macros, macros[1]
-
   parseMacros: (macroStrings) ->
     macros = []
     for eachMacroString in macroStrings
@@ -1399,6 +1358,10 @@ class WorldMorph extends PanelWdgt
 
   draftRunMacro: ->
     macros = []
+
+    # TODO check that these are handled too
+    # 🠶 ⌛ 500 ms, when condition1()
+    # 🠶 # ⌛ 500 ms, when conditionCommented()
 
     macros.push """
       Macro theTestMacro
