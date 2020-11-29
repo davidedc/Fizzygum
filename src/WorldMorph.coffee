@@ -1399,6 +1399,7 @@ class WorldMorph extends PanelWdgt
        🠶 when no inputs ongoing
         ⤷macroWithNoParams
         ⤷macroWithOneParam "here is the one param"
+        ⤷macroWithOneParamButPassingNone
         ⤷macroWithTwoParamsButPassingOnlyOne "first parameter"
 
     """
@@ -1453,8 +1454,13 @@ class WorldMorph extends PanelWdgt
     """
 
     macros.push """
+      Macro macroWithOneParamButPassingNone theParameter
+        🖶 "macro with one param but passing none, this should be undefined: " + theParameter
+    """
+
+    macros.push """
       Macro macroWithTwoParamsButPassingOnlyOne param1 | param2
-        🖶 "macro with two params but passing only one: param 1: " + param1 + " param 2: " + param2
+        🖶 "macro with two params but passing only one: param 1: " + param1 + " param 2 should be undefined: " + param2
     """
 
     parsedMacros = @parseMacros macros
@@ -1517,7 +1523,7 @@ class WorldMorph extends PanelWdgt
 
             for paramNumber in [0...10]
               if macros[i+1][paramNumber]?
-                if matches[paramNumber+1]?
+                if matches?[paramNumber+1]?
                   replaceWithThis = matches[paramNumber+1].trim()
                 else
                   replaceWithThis = "nil"
