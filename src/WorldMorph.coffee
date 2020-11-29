@@ -1341,13 +1341,15 @@ class WorldMorph extends PanelWdgt
 
   parseMacros: (macroStrings) ->
     macros = []
+    iDRegexp = "[a-zA-Z0-9]+"
+    macroAndParamsRegexp = new RegExp "^Macro[ ]+" + iDRegexp + "[ ]+(" + iDRegexp + ")" + ("[ ]*\\|?[ ]*(" + iDRegexp + ")?").repeat(10) +  "[ ]*$", 'm'
     for eachMacroString in macroStrings
       macroStringFirstLine = (eachMacroString.split "\n")[0]
       matches = macroStringFirstLine.match /^Macro[ ]+([a-zA-Z0-9]*).*$/m
       macros.push matches[1]
       theArguments = []
 
-      if matches = macroStringFirstLine.match /^Macro[ ]+[a-zA-Z0-9]+[ ]+([a-zA-Z0-9]+)[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*\|?[ ]*([a-zA-Z0-9]+)?[ ]*$/m
+      if matches = macroStringFirstLine.match macroAndParamsRegexp
         for paramNumber in [0...10]
           if matches[paramNumber+1]? then theArguments.push matches[paramNumber+1]
 
