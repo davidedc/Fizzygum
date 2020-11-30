@@ -1339,32 +1339,6 @@ class WorldMorph extends PanelWdgt
     @syntheticEventsMouseMovePressDragRelease vBarCenterFromHere, vBarCenterToHere
 
 
-  parseMacros: (macroStrings) ->
-    macros = []
-    iDRegexp = "[a-zA-Z0-9]+"
-    macroAndParamsRegexp = new RegExp "^Macro[ ]+" + iDRegexp +
-     "[ ]+(" + iDRegexp + ")" + # first param
-     ("[ ]*\\|?[ ]*(" + iDRegexp + ")?").repeat(9) + # up to 9 more optional params
-     "[ ]*$", 'm'
-
-    for eachMacroString in macroStrings
-      macroStringFirstLine = (eachMacroString.split "\n")[0]
-
-      # get the macro name
-      matches = macroStringFirstLine.match /^Macro[ ]+([a-zA-Z0-9]*).*$/m
-      macros.push matches[1]
-
-      # if there is one to 10 params, then parse them
-      theArguments = []
-      if matches = macroStringFirstLine.match macroAndParamsRegexp
-        for paramNumber in [0...10]
-          if matches[paramNumber+1]? then theArguments.push matches[paramNumber+1]
-
-      macros.push theArguments
-      macros.push eachMacroString
-    return macros
-
-
   draftRunMacro: ->
     macros = []
 
@@ -1470,8 +1444,12 @@ class WorldMorph extends PanelWdgt
         🖶 "macro with two params but passing only one: param 1: " + param1 + " param 2 should be undefined: " + param2
     """
 
-    parsedMacros = @parseMacros macros
-    @startMacro parsedMacros, parsedMacros[2]
+    parsedMacros = []
+
+    for eachMacroString in macros
+      parsedMacros.push Macro.fromString eachMacroString
+
+    @startMacro parsedMacros, parsedMacros[0].body
 
   startMacro: (helperMacros, theMacro) ->
     @macroStepsWaitingTimer = 0
@@ -1514,33 +1492,33 @@ class WorldMorph extends PanelWdgt
         throw "too many macro expansions (infinite loop?)"
       anyMacroFound = false
       if theMacro.match /^  ⤷/m
-        for i in [0...macros.length] by 3
+        for eachMacro in macros
           matches = nil
-          if (theMacro.match new RegExp "^  ⤷" + macros[i] + "[ ]*$",'m') or
+          if (theMacro.match new RegExp "^  ⤷" + eachMacro.name + "[ ]*$",'m') or
            # note that this parses up to 10 parameters,
            # including any space before the pipe (we're gonna trim it later)
            # also note that the first parameter is mandatory in this match,
            # and everything beyond it (including the pipe) is optional
-           matches = theMacro.match new RegExp "^  ⤷" + macros[i] +
+           matches = theMacro.match new RegExp "^  ⤷" + eachMacro.name +
             "[ ]+([^|\\n]+)[ ]*" + # first parameter
             "\\|?[ ]*([^|\\n]+)?[ ]*".repeat(9) + # up to 9 other optional parameters
             "$" , 'm'
               anyMacroFound = true
               macroCallsExpansionLoopsCount++
 
-              macroBody = macros[i+2]
+              macroBody = eachMacro.body
               macroBody = @macroFirstCleanUpPass macroBody, macroCallsExpansionLoopsCount
 
               for paramNumber in [0...10]
-                if macros[i+1][paramNumber]?
+                if eachMacro.theArguments[paramNumber]?
                   if matches?[paramNumber+1]?
                     replaceWithThis = matches[paramNumber+1].trim()
                   else
                     replaceWithThis = "nil"
-                  macroBody = macroBody.replace (new RegExp(macros[i+1][paramNumber],'gm')), replaceWithThis
+                  macroBody = macroBody.replace (new RegExp(eachMacro.theArguments[paramNumber],'gm')), replaceWithThis
 
               # substitute the call line (including params) with the body
-              theMacro = theMacro.replace (new RegExp("^[ ]*⤷" + macros[i] + "([ ]+.*$|$)",'m')), macroBody
+              theMacro = theMacro.replace (new RegExp("^[ ]*⤷" + eachMacro.name + "([ ]+.*$|$)",'m')), macroBody
 
     for i in [0..macroCallsExpansionLoopsCount]
       theMacro = "  @macroVars.expansion#{i} ?= {}\n" + theMacro
