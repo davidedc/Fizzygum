@@ -1444,10 +1444,7 @@ class WorldMorph extends PanelWdgt
         🖶 "macro with two params but passing only one: param 1: " + param1 + " param 2 should be undefined: " + param2
     """
 
-    parsedMacros = []
-
-    for eachMacroString in macros
-      parsedMacros.push Macro.fromString eachMacroString
+    parsedMacros = macros.map (eachMacroString) -> Macro.fromString eachMacroString
 
     @startMacro parsedMacros, parsedMacros[0].body
 
