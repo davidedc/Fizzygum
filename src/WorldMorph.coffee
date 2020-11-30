@@ -1472,7 +1472,9 @@ class WorldMorph extends PanelWdgt
     @evaluateString code
 
   macroFirstCleanUpPass: (theMacro, macroCallsExpansionLoopsCount) ->
+    # this one should be done at linker stage
     theMacro = theMacro.replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}." 
+    
     theMacro = theMacro.replace /^Macro[ ]+([a-zA-Z0-9]*).*$/mg, "  # Macro $1\n  noOperation()"
     theMacro = theMacro.replace /^[ ]*🠶?[ ]*⤷/mg, "  ⤷"
 
