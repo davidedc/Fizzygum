@@ -5,8 +5,10 @@ class Macro
   body: nil
   theArguments: []
   name: nil
+  translated: nil
 
   constructor: (@name, @theArguments, @body) ->
+    @translated = @translateMacro()
 
   @fromString: (macroString) ->
 
@@ -29,3 +31,52 @@ class Macro
         if matches[paramNumber+1]? then theArguments.push matches[paramNumber+1]
 
     return new @ name, theArguments, macroString
+
+
+  translateMacro: ->
+    theMacro = @body
+    theMacro = theMacro.replace /^Macro[ ]+([a-zA-Z0-9]*).*$/mg, "  # Macro $1\n  noOperation()"
+    theMacro = theMacro.replace /^[ ]*🠶?[ ]*⤷/mg, "  ⤷"
+
+    theMacro = theMacro.replace /^  /mg, "      "
+
+    theMacro = theMacro.replace /([ \d])s([\s,])/mg, "$1*1000$2"
+    theMacro = theMacro.replace /([ \d])ms([\s,])/mg, "$1$2"
+
+    theMacro = theMacro.replace /🌎/g, "@macroVars."    
+    theMacro = theMacro.replace /🖶/g, "console.log"
+    theMacro = theMacro.replace /⦿/g, "new Point"
+
+    theMacroByLine = theMacro.split "\n"
+    lineNumber = 0
+    for eachLine in theMacroByLine
+
+      comment = ""
+      if matches = eachLine.match /#(.*)/
+        comment = " #" + matches[1]
+        eachLine = eachLine.replace /#(.*)/, ""
+
+
+      if eachLine.match /^ 🠶/
+        theMacroByLine[lineNumber] = """
+                @nextBlockToBeRun++; @macroStepsWaitingTimer = 0
+            when ?this_number__to_be_inserted_by_linker
+        """.replace(/^/mg, "  ")
+        theMacroByLine[lineNumber] += "\n    if @noCodeLoading() and @macroStepsWaitingTimer > "
+
+        if matches = eachLine.match /⌛ *(\d+ *\* *1000)/
+          theMacroByLine[lineNumber] += matches[1]
+        else if matches = eachLine.match /⌛ *(\d+)/
+          theMacroByLine[lineNumber] += matches[1]
+        else
+          theMacroByLine[lineNumber] += "100"
+
+        if matches = eachLine.match /when *(.*)/
+          theMacroByLine[lineNumber] += " and " + matches[1]
+
+        theMacroByLine[lineNumber] += comment
+
+
+      lineNumber++
+    theMacro = theMacroByLine.join "\n"
+    theMacro = theMacro.replace /no inputs ongoing/g, "@noInputsOngoing()"

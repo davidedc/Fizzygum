@@ -1454,7 +1454,7 @@ class WorldMorph extends PanelWdgt
 
     # .replace /^/mg, "  " is to add a couple of spaces to
     # the start of the line so indentation is correct
-    translatedMacro = (@translateMacro macroSubroutines, mainMacro.body).replace /^/mg, "  "
+    translatedMacro = (@linkMacro mainMacro, macroSubroutines).replace /^/mg, "  "
 
     headerCode = """
       currentTime = WorldMorph.dateOfCurrentCycleStart.getTime()
@@ -1470,18 +1470,16 @@ class WorldMorph extends PanelWdgt
     console.log code
     @evaluateString code
 
-  macroFirstCleanUpPass: (theMacro, macroCallsExpansionLoopsCount) ->
-    # this one should be done at linker stage
-    theMacro = theMacro.replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}." 
-    
-    theMacro = theMacro.replace /^Macro[ ]+([a-zA-Z0-9]*).*$/mg, "  # Macro $1\n  noOperation()"
-    theMacro = theMacro.replace /^[ ]*🠶?[ ]*⤷/mg, "  ⤷"
+  linkMacro: (mainMacro, macros) ->
 
-  translateMacro: (macros, theMacro) ->
+    callSiteRegexString = "^[ ]*⤷"
+
+    theMacro = mainMacro.translated
+
     anyMacroFound = true
     macroCallsExpansionLoopsCount = 0
 
-    theMacro = @macroFirstCleanUpPass theMacro, macroCallsExpansionLoopsCount
+    theMacro = theMacro.replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}." 
 
     while anyMacroFound
       if macroCallsExpansionLoopsCount > 10
@@ -1489,23 +1487,22 @@ class WorldMorph extends PanelWdgt
         debugger
         throw "too many macro expansions (infinite loop?)"
       anyMacroFound = false
-      if theMacro.match /^  ⤷/m
+      if theMacro.match new RegExp callSiteRegexString,'m'
         for eachMacro in macros
           matches = nil
-          if (theMacro.match new RegExp "^  ⤷" + eachMacro.name + "[ ]*$",'m') or
+          if (theMacro.match new RegExp callSiteRegexString + eachMacro.name + "[ ]*$",'m') or
            # note that this parses up to 10 parameters,
            # including any space before the pipe (we're gonna trim it later)
            # also note that the first parameter is mandatory in this match,
            # and everything beyond it (including the pipe) is optional
-           matches = theMacro.match new RegExp "^  ⤷" + eachMacro.name +
+           matches = theMacro.match new RegExp callSiteRegexString + eachMacro.name +
             "[ ]+([^|\\n]+)[ ]*" + # first parameter
             "\\|?[ ]*([^|\\n]+)?[ ]*".repeat(9) + # up to 9 other optional parameters
             "$" , 'm'
               anyMacroFound = true
               macroCallsExpansionLoopsCount++
 
-              macroBody = eachMacro.body
-              macroBody = @macroFirstCleanUpPass macroBody, macroCallsExpansionLoopsCount
+              macroBody = eachMacro.translated
 
               for paramNumber in [0...10]
                 if eachMacro.theArguments[paramNumber]?
@@ -1516,55 +1513,21 @@ class WorldMorph extends PanelWdgt
                   macroBody = macroBody.replace (new RegExp(eachMacro.theArguments[paramNumber],'gm')), replaceWithThis
 
               # substitute the call line (including params) with the body
-              theMacro = theMacro.replace (new RegExp("^[ ]*⤷" + eachMacro.name + "([ ]+.*$|$)",'m')), macroBody
+              theMacro = theMacro.replace (new RegExp(callSiteRegexString + eachMacro.name + "([ ]+.*$|$)",'m')), macroBody
+              theMacro = theMacro.replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}." 
+    
 
     for i in [0..macroCallsExpansionLoopsCount]
-      theMacro = "  @macroVars.expansion#{i} ?= {}\n" + theMacro
+      theMacro = "      @macroVars.expansion#{i} ?= {}\n" + theMacro
 
-    theMacro = theMacro.replace /^  /mg, "      "
 
-    theMacro = theMacro.replace /([ \d])s([\s,])/mg, "$1*1000$2"
-    theMacro = theMacro.replace /([ \d])ms([\s,])/mg, "$1$2"
-
-    theMacro = theMacro.replace /🌎/g, "@macroVars."    
-    theMacro = theMacro.replace /🖶/g, "console.log"
-    theMacro = theMacro.replace /⦿/g, "new Point"
-
-    theMacroByLine = theMacro.split "\n"
-    lineNumber = 0
     thenNumber = 0
-    for eachLine in theMacroByLine
+    thenNumbersRegex = new RegExp "\\?this_number__to_be_inserted_by_linker"
+    while theMacro.match thenNumbersRegex
+      theMacro = theMacro.replace thenNumbersRegex, "#{thenNumber}"
+      thenNumber++
 
-      comment = ""
-      if matches = eachLine.match /#(.*)/
-        comment = " #" + matches[1]
-        eachLine = eachLine.replace /#(.*)/, ""
-
-
-      if eachLine.match /^ 🠶/
-        theMacroByLine[lineNumber] = """
-                @nextBlockToBeRun = #{thenNumber+2}; @macroStepsWaitingTimer = 0
-            when #{thenNumber+2}
-        """.replace(/^/mg, "  ")
-        theMacroByLine[lineNumber] += "\n    if @noCodeLoading() and @macroStepsWaitingTimer > "
-
-        if matches = eachLine.match /⌛ *(\d+ *\* *1000)/
-          theMacroByLine[lineNumber] += matches[1]
-        else if matches = eachLine.match /⌛ *(\d+)/
-          theMacroByLine[lineNumber] += matches[1]
-        else
-          theMacroByLine[lineNumber] += "100"
-
-        if matches = eachLine.match /when *(.*)/
-          theMacroByLine[lineNumber] += " and " + matches[1]
-
-        theMacroByLine[lineNumber] += comment
-
-
-        thenNumber++
-      lineNumber++
-    theMacro = theMacroByLine.join "\n"
-    theMacro = theMacro.replace /no inputs ongoing/g, "@noInputsOngoing()"
+    return theMacro
 
   # this part is excluded from the fizzygum homepage build <<«
 
