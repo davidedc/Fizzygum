@@ -1435,12 +1435,16 @@ class WorldMorph extends PanelWdgt
         @clickOnCodeBoxFromTopInspectorAtCodeString "@secondsHandAngle", 1, false
        🠶 when no inputs ongoing
         @syntheticEventsStringKeys "-"
-        @clickOnSaveButtonFromTopInspector()
-       🠶 when no inputs ongoing
+        @clickOnSaveButtonFromTopInspector()  # some comments here
+       🠶 when no inputs ongoing # also some comments here
         ⤷macroWithNoParams
         ⤷macroWithOneParam "here is the one param"
         ⤷macroWithOneParamButPassingNone
         ⤷macroWithTwoParamsButPassingOnlyOne "first parameter"
+        ⤷macroWithNoParams # comment1
+        ⤷macroWithOneParam "here is the one param" # comment2
+        ⤷macroWithOneParamButPassingNone # comment3
+        ⤷macroWithTwoParamsButPassingOnlyOne "first parameter" # comment4
 
     """
 
@@ -1490,31 +1494,47 @@ class WorldMorph extends PanelWdgt
       if theMacro.match new RegExp callSiteRegexString,'m'
         for eachMacro in macros
           matches = nil
-          if (theMacro.match new RegExp callSiteRegexString + eachMacro.name + "[ ]*$",'m') or
-           # note that this parses up to 10 parameters,
-           # including any space before the pipe (we're gonna trim it later)
-           # also note that the first parameter is mandatory in this match,
-           # and everything beyond it (including the pipe) is optional
-           matches = theMacro.match new RegExp callSiteRegexString + eachMacro.name +
-            "[ ]+([^|\\n]+)[ ]*" + # first parameter
-            "\\|?[ ]*([^|\\n]+)?[ ]*".repeat(9) + # up to 9 other optional parameters
-            "$" , 'm'
-              anyMacroFound = true
-              macroCallsExpansionLoopsCount++
+          if matches = theMacro.match(new RegExp callSiteRegexString + eachMacro.name + "([ ]+.*$|[ ]*#.*$|$)",'m')
+            line = matches[0]
+            
+            # extract the inline comment at call site, we want
+            # to preserve it in the final translation
+            comment = ""
+            # this is a sloppy regex that could match "macroNamePlusSometingElse #...",
+            # however the regex we just did is tight, so there is no risk with this one
+            if matchesComment = line.match(new RegExp callSiteRegexString + eachMacro.name + ".*(#.*)$",'m')
+              comment = matchesComment[1]
 
-              macroBody = eachMacro.translated
+            line = line.replace /#.*/,""
 
-              for paramNumber in [0...10]
-                if eachMacro.theArguments[paramNumber]?
-                  if matches?[paramNumber+1]?
-                    replaceWithThis = matches[paramNumber+1].trim()
-                  else
-                    replaceWithThis = "nil"
-                  macroBody = macroBody.replace (new RegExp(eachMacro.theArguments[paramNumber],'gm')), replaceWithThis
+            anyMacroFound = true
+            macroCallsExpansionLoopsCount++
 
-              # substitute the call line (including params) with the body
-              theMacro = theMacro.replace (new RegExp(callSiteRegexString + eachMacro.name + "([ ]+.*$|$)",'m')), macroBody
-              theMacro = theMacro.replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}." 
+            macroBody = eachMacro.translated
+
+            # note that this parses up to 10 parameters,
+            # including any space before the pipe (we're gonna trim it later)
+            # also note that the first parameter is mandatory in this match,
+            # and everything beyond it (including the pipe) is optional
+            matches = line.match new RegExp callSiteRegexString + eachMacro.name +
+             "[ ]+([^|\\n]+)[ ]*" + # first parameter
+             "\\|?[ ]*([^|\\n]+)?[ ]*".repeat(9) + # up to 9 other optional parameters
+             "$" , 'm'
+
+            for paramNumber in [0...10]
+              if eachMacro.theArguments[paramNumber]?
+                if matches?[paramNumber+1]?
+                  replaceWithThis = matches[paramNumber+1].trim()
+                else
+                  replaceWithThis = "nil"
+                macroBody = macroBody.replace (new RegExp(eachMacro.theArguments[paramNumber],'gm')), replaceWithThis
+
+            if comment != ""
+              macroBody = macroBody.replace /(# Macro \w+)$/m, "$1 " + comment
+
+            # substitute the call line (including params) with the body
+            theMacro = theMacro.replace (new RegExp(callSiteRegexString + eachMacro.name + "([ ]+.*$|[ ]*#.*$|$)",'m')), macroBody
+            theMacro = theMacro.replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}."
     
 
     for i in [0..macroCallsExpansionLoopsCount]
