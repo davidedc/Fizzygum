@@ -1340,13 +1340,72 @@ class WorldMorph extends PanelWdgt
 
 
   draftRunMacro: ->
-    macros = []
+    macroSubroutines = []
+
+    macroSubroutines.push Macro.fromString """
+      Macro bringUpInspector whichWidget
+        ⤷clickMenuItemOfWidget whichWidget | "dev ➜"
+       🠶 when no inputs ongoing
+        @moveToItemOfTopMenuAndClick "inspect"
+    """
+
+    macroSubroutines.push Macro.fromString """
+      Macro bringUpInspectorAndSelectListItem whichWidget | whichItem
+        ⤷bringUpInspector whichWidget
+       🠶 when no inputs ongoing
+        ⤷bringInViewAndClickOnListItemFromTopInspector whichItem
+    """
+
+    macroSubroutines.push Macro.fromString """
+      Macro bringInViewAndClickOnListItemFromTopInspector whichItem
+        @bringListItemFromTopInspectorInView whichItem
+       🠶 when no inputs ongoing
+        @clickOnListItemFromTopInspector whichItem
+    """
+
+    macroSubroutines.push Macro.fromString """
+      Macro clickMenuItemOfWidget whichWidget | whichItem
+        @openMenuOf whichWidget
+       🠶 when no inputs ongoing
+        @moveToItemOfTopMenuAndClick whichItem
+    """
+
+    macroSubroutines.push Macro.fromString """
+      Macro printoutsMacro string1 | string2 | string3
+       🠶 ⌛ 1s
+        🖶 string1
+       🠶 ⌛ 1s
+        🖶 string2
+        💼aLocalVariableInACall = ""
+       🠶 ⌛ 1s
+        🖶 string3
+    """
+
+    macroSubroutines.push Macro.fromString """
+      Macro macroWithNoParams
+        🖶 "macro with no params"
+    """
+
+    macroSubroutines.push Macro.fromString """
+      Macro macroWithOneParam theParameter
+        🖶 "macro with one param: " + theParameter
+    """
+
+    macroSubroutines.push Macro.fromString """
+      Macro macroWithOneParamButPassingNone theParameter
+        🖶 "macro with one param but passing none, this should be undefined: " + theParameter
+    """
+
+    macroSubroutines.push Macro.fromString """
+      Macro macroWithTwoParamsButPassingOnlyOne param1 | param2
+        🖶 "macro with two params but passing only one: param 1: " + param1 + " param 2 should be undefined: " + param2
+    """
 
     # TODO check that these are handled too
     # 🠶 ⌛ 500 ms, when condition1()
     # 🠶 # ⌛ 500 ms, when conditionCommented()
 
-    macros.push """
+    mainMacro = Macro.fromString """
       Macro theTestMacro
         @syntheticEventsStringKeys "SoMeThInG"
        🠶 ⌛ 1s
@@ -1385,77 +1444,17 @@ class WorldMorph extends PanelWdgt
 
     """
 
-    macros.push """
-      Macro bringUpInspector whichWidget
-        ⤷clickMenuItemOfWidget whichWidget | "dev ➜"
-       🠶 when no inputs ongoing
-        @moveToItemOfTopMenuAndClick "inspect"
-    """
 
-    macros.push """
-      Macro bringUpInspectorAndSelectListItem whichWidget | whichItem
-        ⤷bringUpInspector whichWidget
-       🠶 when no inputs ongoing
-        ⤷bringInViewAndClickOnListItemFromTopInspector whichItem
-    """
+    @startMacro mainMacro, macroSubroutines
 
-    macros.push """
-      Macro bringInViewAndClickOnListItemFromTopInspector whichItem
-        @bringListItemFromTopInspectorInView whichItem
-       🠶 when no inputs ongoing
-        @clickOnListItemFromTopInspector whichItem
-    """
-
-    macros.push """
-      Macro clickMenuItemOfWidget whichWidget | whichItem
-        @openMenuOf whichWidget
-       🠶 when no inputs ongoing
-        @moveToItemOfTopMenuAndClick whichItem
-    """
-
-    macros.push """
-      Macro printoutsMacro string1 | string2 | string3
-       🠶 ⌛ 1s
-        🖶 string1
-       🠶 ⌛ 1s
-        🖶 string2
-        💼aLocalVariableInACall = ""
-       🠶 ⌛ 1s
-        🖶 string3
-    """
-
-    macros.push """
-      Macro macroWithNoParams
-        🖶 "macro with no params"
-    """
-
-    macros.push """
-      Macro macroWithOneParam theParameter
-        🖶 "macro with one param: " + theParameter
-    """
-
-    macros.push """
-      Macro macroWithOneParamButPassingNone theParameter
-        🖶 "macro with one param but passing none, this should be undefined: " + theParameter
-    """
-
-    macros.push """
-      Macro macroWithTwoParamsButPassingOnlyOne param1 | param2
-        🖶 "macro with two params but passing only one: param 1: " + param1 + " param 2 should be undefined: " + param2
-    """
-
-    parsedMacros = macros.map (eachMacroString) -> Macro.fromString eachMacroString
-
-    @startMacro parsedMacros, parsedMacros[0].body
-
-  startMacro: (helperMacros, theMacro) ->
+  startMacro: (mainMacro, macroSubroutines) ->
     @macroStepsWaitingTimer = 0
     @nextBlockToBeRun = 0
     @macroVars = {}
 
     # .replace /^/mg, "  " is to add a couple of spaces to
     # the start of the line so indentation is correct
-    translatedMacro = (@translateMacro helperMacros, theMacro).replace /^/mg, "  "
+    translatedMacro = (@translateMacro macroSubroutines, mainMacro.body).replace /^/mg, "  "
 
     headerCode = """
       currentTime = WorldMorph.dateOfCurrentCycleStart.getTime()
