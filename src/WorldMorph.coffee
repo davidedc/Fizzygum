@@ -1482,7 +1482,7 @@ class WorldMorph extends PanelWdgt
     theMacro = theMacro.replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}." 
 
     while anyMacroFound
-      if macroCallsExpansionLoopsCount > 10
+      if macroCallsExpansionLoopsCount > 10000
         console.log "too many macro expansions (infinite loop?)"
         debugger
         throw "too many macro expansions (infinite loop?)"
