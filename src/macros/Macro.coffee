@@ -24,7 +24,9 @@ class Macro
   @fromString: (macroString) ->
 
     iDRegexp = "[a-zA-Z0-9]+"
-    macroAndParamsRegexp = new RegExp "^Macro[ ]+" + iDRegexp +
+    macroPreambleRegexp = "^Macro[ ]+"
+
+    macroAndParamsRegexp = new RegExp macroPreambleRegexp + iDRegexp +
      "[ ]+(" + iDRegexp + ")" + # first param
      ("[ ]*\\|?[ ]*(" + iDRegexp + ")?").repeat(9) + # up to 9 more optional params
      "[ ]*$", 'm'
@@ -32,7 +34,7 @@ class Macro
     macroStringFirstLine = (macroString.split "\n")[0]
 
     # get the macro name
-    matches = macroStringFirstLine.match /^Macro[ ]+([a-zA-Z0-9]*).*$/m
+    matches = macroStringFirstLine.match new RegExp macroPreambleRegexp + "(" + iDRegexp + ").*$", 'm'
     name = matches[1]
 
     # if there is one to 10 params, then parse them
@@ -46,7 +48,7 @@ class Macro
 
   _doPreliminarySubstitutions: ->
     macroString = @getBody()
-    macroString = macroString.replace /^Macro[ ]+([a-zA-Z0-9]*).*$/mg, "  # Macro $1\n  noOperation()"
+    macroString = macroString.replace /^Macro[ ]+([a-zA-Z0-9]+).*$/mg, "  # Macro $1\n  noOperation()"
     macroString = macroString.replace /^[ ]*🠶?[ ]*⤷/mg, "  ⤷"
 
     macroString = macroString.replace /^  /mg, "      "
