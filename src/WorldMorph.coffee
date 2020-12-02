@@ -1340,37 +1340,37 @@ class WorldMorph extends PanelWdgt
 
 
   draftRunMacro: ->
-    macroSubroutines = []
+    macroSubroutines = new Set
 
-    macroSubroutines.push Macro.fromString """
+    macroSubroutines.add Macro.fromString """
       Macro bringUpInspector whichWidget
         ⤷clickMenuItemOfWidget whichWidget | "dev ➜"
        🠶 when no inputs ongoing
         @moveToItemOfTopMenuAndClick "inspect"
     """
 
-    macroSubroutines.push Macro.fromString """
+    macroSubroutines.add Macro.fromString """
       Macro bringUpInspectorAndSelectListItem whichWidget | whichItem
         ⤷bringUpInspector whichWidget
        🠶 when no inputs ongoing
         ⤷bringInViewAndClickOnListItemFromTopInspector whichItem
     """
 
-    macroSubroutines.push Macro.fromString """
+    macroSubroutines.add Macro.fromString """
       Macro bringInViewAndClickOnListItemFromTopInspector whichItem
         @bringListItemFromTopInspectorInView whichItem
        🠶 when no inputs ongoing
         @clickOnListItemFromTopInspector whichItem
     """
 
-    macroSubroutines.push Macro.fromString """
+    macroSubroutines.add Macro.fromString """
       Macro clickMenuItemOfWidget whichWidget | whichItem
         @openMenuOf whichWidget
        🠶 when no inputs ongoing
         @moveToItemOfTopMenuAndClick whichItem
     """
 
-    macroSubroutines.push Macro.fromString """
+    macroSubroutines.add Macro.fromString """
       Macro printoutsMacro string1 | string2 | string3
        🠶 ⌛ 1s
         🖶 string1
@@ -1381,22 +1381,22 @@ class WorldMorph extends PanelWdgt
         🖶 string3
     """
 
-    macroSubroutines.push Macro.fromString """
+    macroSubroutines.add Macro.fromString """
       Macro macroWithNoParams
         🖶 "macro with no params"
     """
 
-    macroSubroutines.push Macro.fromString """
+    macroSubroutines.add Macro.fromString """
       Macro macroWithOneParam theParameter
         🖶 "macro with one param: " + theParameter
     """
 
-    macroSubroutines.push Macro.fromString """
+    macroSubroutines.add Macro.fromString """
       Macro macroWithOneParamButPassingNone theParameter
         🖶 "macro with one param but passing none, this should be undefined: " + theParameter
     """
 
-    macroSubroutines.push Macro.fromString """
+    macroSubroutines.add Macro.fromString """
       Macro macroWithTwoParamsButPassingOnlyOne param1 | param2
         🖶 "macro with two params but passing only one: param 1: " + param1 + " param 2 should be undefined: " + param2
     """
@@ -1492,7 +1492,7 @@ class WorldMorph extends PanelWdgt
         throw "too many macro expansions (infinite loop?)"
       anyMacroFound = false
       if theMacro.match new RegExp callSiteRegexString,'m'
-        for eachMacro in macros
+        for eachMacro from macros
           matches = nil
           if matches = theMacro.match(new RegExp callSiteRegexString + eachMacro.name + "([ ]+.*$|[ ]*#.*$|$)",'m')
             line = matches[0]
