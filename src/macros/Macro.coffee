@@ -159,7 +159,9 @@ class Macro
       linkedMacroString = "      @macroVars.expansion#{i} ?= {}\n" + linkedMacroString
 
 
-    thenNumber = 0
+    # we start with 2 because 0 and 1 are already taken by
+    # two previous sections
+    thenNumber = 2
     thenNumbersRegex = new RegExp "\\?this_number__to_be_inserted_by_linker"
     while linkedMacroString.match thenNumbersRegex
       linkedMacroString = linkedMacroString.replace thenNumbersRegex, "#{thenNumber}"
