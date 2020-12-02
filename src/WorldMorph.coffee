@@ -1474,7 +1474,7 @@ class WorldMorph extends PanelWdgt
     console.log code
     @evaluateString code
 
-  linkMacro: (mainMacro, macros) ->
+  linkMacro: (mainMacro, macroSubroutines) ->
 
     callSiteRegexString = "^[ ]*⤷"
 
@@ -1492,7 +1492,7 @@ class WorldMorph extends PanelWdgt
         throw "too many macro expansions (infinite loop?)"
       anyMacroFound = false
       if theMacro.match new RegExp callSiteRegexString,'m'
-        for eachMacro from macros
+        for eachMacro from macroSubroutines
           matches = nil
           if matches = theMacro.match(new RegExp callSiteRegexString + eachMacro.name + "([ ]+.*$|[ ]*#.*$|$)",'m')
             line = matches[0]
