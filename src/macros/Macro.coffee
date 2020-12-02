@@ -170,3 +170,21 @@ class Macro
       thenNumber++
 
     return linkedMacroString
+
+  getRunnableMacroStepsCode: (macroSubroutines) ->
+
+    # .replace /^/mg, "  " is to add a couple of spaces to
+    # the start of the line so indentation is correct
+    linkedMacro = (@linkToSubroutines macroSubroutines).replace /^/mg, "  "
+
+    headerCode = """
+      currentTime = WorldMorph.dateOfCurrentCycleStart.getTime()
+      switch (@nextBlockToBeRun)
+        when 0
+          @syntheticEventsMousePlace()
+          @nextBlockToBeRun = 1; @macroStepsWaitingTimer = 0
+        when 1
+          if @noCodeLoading() and @macroStepsWaitingTimer > 100 and @noInputsOngoing()
+    """.replace /^/mg, "  "
+
+    code = "@progressOnMacroSteps = ->\n" + headerCode + "\n" + linkedMacro + "\n        @nextBlockToBeRun = -1; @progressOnMacroSteps = noOperation"
