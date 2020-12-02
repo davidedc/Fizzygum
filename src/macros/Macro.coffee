@@ -1,14 +1,25 @@
 # this file is excluded from the fizzygum homepage build
-# TODO make this immutable, and use getters
+# IMMUTABLE
 
 class Macro
-  body: nil
-  theArguments: []
-  name: nil
-  translated: nil
+  _body: nil
+  _arguments: []
+  _name: nil
+  _preliminarySubstitutionsBody: nil
 
-  constructor: (@name, @theArguments, @body) ->
-    @translated = @translateMacro()
+  constructor: (@_name, @_arguments, @_body) ->
+
+  getBody: ->
+    @_body
+
+  getArguments: ->
+    @_arguments
+
+  getName: ->
+    @_name
+
+  getPreliminarySubstitutionsBody: ->
+    @_preliminarySubstitutionsBody ?= @_doPreliminarySubstitutions()
 
   @fromString: (macroString) ->
 
@@ -33,23 +44,23 @@ class Macro
     return new @ name, theArguments, macroString
 
 
-  translateMacro: ->
-    theMacro = @body
-    theMacro = theMacro.replace /^Macro[ ]+([a-zA-Z0-9]*).*$/mg, "  # Macro $1\n  noOperation()"
-    theMacro = theMacro.replace /^[ ]*🠶?[ ]*⤷/mg, "  ⤷"
+  _doPreliminarySubstitutions: ->
+    macroString = @getBody()
+    macroString = macroString.replace /^Macro[ ]+([a-zA-Z0-9]*).*$/mg, "  # Macro $1\n  noOperation()"
+    macroString = macroString.replace /^[ ]*🠶?[ ]*⤷/mg, "  ⤷"
 
-    theMacro = theMacro.replace /^  /mg, "      "
+    macroString = macroString.replace /^  /mg, "      "
 
-    theMacro = theMacro.replace /([ \d])s([\s,])/mg, "$1*1000$2"
-    theMacro = theMacro.replace /([ \d])ms([\s,])/mg, "$1$2"
+    macroString = macroString.replace /([ \d])s([\s,])/mg, "$1*1000$2"
+    macroString = macroString.replace /([ \d])ms([\s,])/mg, "$1$2"
 
-    theMacro = theMacro.replace /🌎/g, "@macroVars."    
-    theMacro = theMacro.replace /🖶/g, "console.log"
-    theMacro = theMacro.replace /⦿/g, "new Point"
+    macroString = macroString.replace /🌎/g, "@macroVars."    
+    macroString = macroString.replace /🖶/g, "console.log"
+    macroString = macroString.replace /⦿/g, "new Point"
 
-    theMacroByLine = theMacro.split "\n"
+    macroStringByLine = macroString.split "\n"
     lineNumber = 0
-    for eachLine in theMacroByLine
+    for eachLine in macroStringByLine
 
       comment = ""
       if matches = eachLine.match /#(.*)/
@@ -58,28 +69,28 @@ class Macro
 
 
       if eachLine.match /^ 🠶/
-        theMacroByLine[lineNumber] = """
+        macroStringByLine[lineNumber] = """
                 @nextBlockToBeRun++; @macroStepsWaitingTimer = 0
             when ?this_number__to_be_inserted_by_linker
         """.replace(/^/mg, "  ")
-        theMacroByLine[lineNumber] += "\n    if @noCodeLoading() and @macroStepsWaitingTimer > "
+        macroStringByLine[lineNumber] += "\n    if @noCodeLoading() and @macroStepsWaitingTimer > "
 
         if matches = eachLine.match /⌛ *(\d+ *\* *1000)/
-          theMacroByLine[lineNumber] += matches[1]
+          macroStringByLine[lineNumber] += matches[1]
         else if matches = eachLine.match /⌛ *(\d+)/
-          theMacroByLine[lineNumber] += matches[1]
+          macroStringByLine[lineNumber] += matches[1]
         else
-          theMacroByLine[lineNumber] += "100"
+          macroStringByLine[lineNumber] += "100"
 
         if matches = eachLine.match /when *(.*)/
-          theMacroByLine[lineNumber] += " and " + matches[1]
+          macroStringByLine[lineNumber] += " and " + matches[1]
 
-        theMacroByLine[lineNumber] += comment
+        macroStringByLine[lineNumber] += comment
 
 
       lineNumber++
-    theMacro = theMacroByLine.join "\n"
-    theMacro = theMacro.replace /no inputs ongoing/g, "@noInputsOngoing()"
+    macroString = macroStringByLine.join "\n"
+    macroString = macroString.replace /no inputs ongoing/g, "@noInputsOngoing()"
 
   linkToSubroutines: (macroSubroutines) ->
 
@@ -90,7 +101,7 @@ class Macro
     anyMacroFound = true
     macroCallsExpansionLoopsCount = 0
 
-    theMacro = @translated.replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}." 
+    linkedMacroString = @getPreliminarySubstitutionsBody().replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}." 
 
     while anyMacroFound
       if macroCallsExpansionLoopsCount > MAX_MACRO_EXPANSIONS
@@ -98,10 +109,10 @@ class Macro
         debugger
         throw "too many macro expansions (infinite loop?)"
       anyMacroFound = false
-      if theMacro.match new RegExp callSiteRegexString,'m'
+      if linkedMacroString.match new RegExp callSiteRegexString,'m'
         for eachMacro from macroSubroutines
           matches = nil
-          if matches = theMacro.match(new RegExp callSiteRegexString + eachMacro.name + "([ ]+.*$|[ ]*#.*$|$)",'m')
+          if matches = linkedMacroString.match(new RegExp callSiteRegexString + eachMacro.getName() + "([ ]+.*$|[ ]*#.*$|$)",'m')
             line = matches[0]
             
             # extract the inline comment at call site, we want
@@ -109,7 +120,7 @@ class Macro
             comment = ""
             # this is a sloppy regex that could match "macroNamePlusSometingElse #...",
             # however the regex we just did is tight, so there is no risk with this one
-            if matchesComment = line.match(new RegExp callSiteRegexString + eachMacro.name + ".*(#.*)$",'m')
+            if matchesComment = line.match(new RegExp callSiteRegexString + eachMacro.getName() + ".*(#.*)$",'m')
               comment = matchesComment[1]
 
             line = line.replace /#.*/,""
@@ -117,41 +128,41 @@ class Macro
             anyMacroFound = true
             macroCallsExpansionLoopsCount++
 
-            macroBody = eachMacro.translated
+            macroBody = eachMacro.getPreliminarySubstitutionsBody()
 
             # note that this parses up to 10 parameters,
             # including any space before the pipe (we're gonna trim it later)
             # also note that the first parameter is mandatory in this match,
             # and everything beyond it (including the pipe) is optional
-            matches = line.match new RegExp callSiteRegexString + eachMacro.name +
+            matches = line.match new RegExp callSiteRegexString + eachMacro.getName() +
              "[ ]+([^|\\n]+)[ ]*" + # first parameter
              "\\|?[ ]*([^|\\n]+)?[ ]*".repeat(9) + # up to 9 other optional parameters
              "$" , 'm'
 
             for paramNumber in [0...10]
-              if eachMacro.theArguments[paramNumber]?
+              if eachMacro.getArguments()[paramNumber]?
                 if matches?[paramNumber+1]?
                   replaceWithThis = matches[paramNumber+1].trim()
                 else
                   replaceWithThis = "nil"
-                macroBody = macroBody.replace (new RegExp(eachMacro.theArguments[paramNumber],'gm')), replaceWithThis
+                macroBody = macroBody.replace (new RegExp(eachMacro.getArguments()[paramNumber],'gm')), replaceWithThis
 
             if comment != ""
               macroBody = macroBody.replace /(# Macro \w+)$/m, "$1 " + comment
 
             # substitute the call line (including params) with the body
-            theMacro = theMacro.replace (new RegExp(callSiteRegexString + eachMacro.name + "([ ]+.*$|[ ]*#.*$|$)",'m')), macroBody
-            theMacro = theMacro.replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}."
+            linkedMacroString = linkedMacroString.replace (new RegExp(callSiteRegexString + eachMacro.getName() + "([ ]+.*$|[ ]*#.*$|$)",'m')), macroBody
+            linkedMacroString = linkedMacroString.replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}."
     
 
     for i in [0..macroCallsExpansionLoopsCount]
-      theMacro = "      @macroVars.expansion#{i} ?= {}\n" + theMacro
+      linkedMacroString = "      @macroVars.expansion#{i} ?= {}\n" + linkedMacroString
 
 
     thenNumber = 0
     thenNumbersRegex = new RegExp "\\?this_number__to_be_inserted_by_linker"
-    while theMacro.match thenNumbersRegex
-      theMacro = theMacro.replace thenNumbersRegex, "#{thenNumber}"
+    while linkedMacroString.match thenNumbersRegex
+      linkedMacroString = linkedMacroString.replace thenNumbersRegex, "#{thenNumber}"
       thenNumber++
 
-    return theMacro
+    return linkedMacroString
