@@ -80,3 +80,78 @@ class Macro
       lineNumber++
     theMacro = theMacroByLine.join "\n"
     theMacro = theMacro.replace /no inputs ongoing/g, "@noInputsOngoing()"
+
+  linkToSubroutines: (macroSubroutines) ->
+
+    MAX_MACRO_EXPANSIONS = 10000
+    callSiteRegexString = "^[ ]*⤷"
+
+
+    anyMacroFound = true
+    macroCallsExpansionLoopsCount = 0
+
+    theMacro = @translated.replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}." 
+
+    while anyMacroFound
+      if macroCallsExpansionLoopsCount > MAX_MACRO_EXPANSIONS
+        console.log "too many macro expansions (infinite loop?)"
+        debugger
+        throw "too many macro expansions (infinite loop?)"
+      anyMacroFound = false
+      if theMacro.match new RegExp callSiteRegexString,'m'
+        for eachMacro from macroSubroutines
+          matches = nil
+          if matches = theMacro.match(new RegExp callSiteRegexString + eachMacro.name + "([ ]+.*$|[ ]*#.*$|$)",'m')
+            line = matches[0]
+            
+            # extract the inline comment at call site, we want
+            # to preserve it in the final translation
+            comment = ""
+            # this is a sloppy regex that could match "macroNamePlusSometingElse #...",
+            # however the regex we just did is tight, so there is no risk with this one
+            if matchesComment = line.match(new RegExp callSiteRegexString + eachMacro.name + ".*(#.*)$",'m')
+              comment = matchesComment[1]
+
+            line = line.replace /#.*/,""
+
+            anyMacroFound = true
+            macroCallsExpansionLoopsCount++
+
+            macroBody = eachMacro.translated
+
+            # note that this parses up to 10 parameters,
+            # including any space before the pipe (we're gonna trim it later)
+            # also note that the first parameter is mandatory in this match,
+            # and everything beyond it (including the pipe) is optional
+            matches = line.match new RegExp callSiteRegexString + eachMacro.name +
+             "[ ]+([^|\\n]+)[ ]*" + # first parameter
+             "\\|?[ ]*([^|\\n]+)?[ ]*".repeat(9) + # up to 9 other optional parameters
+             "$" , 'm'
+
+            for paramNumber in [0...10]
+              if eachMacro.theArguments[paramNumber]?
+                if matches?[paramNumber+1]?
+                  replaceWithThis = matches[paramNumber+1].trim()
+                else
+                  replaceWithThis = "nil"
+                macroBody = macroBody.replace (new RegExp(eachMacro.theArguments[paramNumber],'gm')), replaceWithThis
+
+            if comment != ""
+              macroBody = macroBody.replace /(# Macro \w+)$/m, "$1 " + comment
+
+            # substitute the call line (including params) with the body
+            theMacro = theMacro.replace (new RegExp(callSiteRegexString + eachMacro.name + "([ ]+.*$|[ ]*#.*$|$)",'m')), macroBody
+            theMacro = theMacro.replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}."
+    
+
+    for i in [0..macroCallsExpansionLoopsCount]
+      theMacro = "      @macroVars.expansion#{i} ?= {}\n" + theMacro
+
+
+    thenNumber = 0
+    thenNumbersRegex = new RegExp "\\?this_number__to_be_inserted_by_linker"
+    while theMacro.match thenNumbersRegex
+      theMacro = theMacro.replace thenNumbersRegex, "#{thenNumber}"
+      thenNumber++
+
+    return theMacro
