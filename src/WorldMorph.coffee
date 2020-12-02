@@ -1476,6 +1476,7 @@ class WorldMorph extends PanelWdgt
 
   linkMacro: (mainMacro, macroSubroutines) ->
 
+    MAX_MACRO_EXPANSIONS = 10000
     callSiteRegexString = "^[ ]*⤷"
 
     theMacro = mainMacro.translated
@@ -1486,7 +1487,7 @@ class WorldMorph extends PanelWdgt
     theMacro = theMacro.replace /💼/g, "@macroVars.expansion#{macroCallsExpansionLoopsCount}." 
 
     while anyMacroFound
-      if macroCallsExpansionLoopsCount > 10000
+      if macroCallsExpansionLoopsCount > MAX_MACRO_EXPANSIONS
         console.log "too many macro expansions (infinite loop?)"
         debugger
         throw "too many macro expansions (infinite loop?)"
