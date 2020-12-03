@@ -1409,7 +1409,7 @@ class WorldMorph extends PanelWdgt
       Macro theTestMacro
         @syntheticEventsStringKeys "SoMeThInG"
        🠶 ⌛ 1s
-       🠶 ⤷printoutsMacro "fourth console out" | "fifth console out" | "sixth console out"
+       🠶 ⤷printoutsMacro "first console out" | "second console out" | "third console out"
        🠶 ⌛ 1s
         💼clock = @findTopWidgetByClassNameOrClass AnalogClockWdgt
         @syntheticEventsMouseMove 💼clock
@@ -1426,7 +1426,7 @@ class WorldMorph extends PanelWdgt
         @syntheticEventsMouseMovePressDragRelease ⦿(5, 5), ⦿(200,200)
        🠶 when no inputs ongoing
         🖶 "finished the drag events"
-        ⤷printoutsMacro "first console out" | "second console out" | "third console out"
+        ⤷printoutsMacro "fourth console out" | "fifth console out" | "sixth console out"
        🠶 when no inputs ongoing
         ⤷bringUpInspectorAndSelectListItem 💼clock | "drawSecondsHand"
        🠶 when no inputs ongoing
