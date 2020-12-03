@@ -48,7 +48,7 @@ class Macro
 
   _doPreliminarySubstitutions: ->
     macroString = @getBody()
-    macroString = macroString.replace /^Macro[ ]+([a-zA-Z0-9]+).*$/mg, "  # Macro $1\n  noOperation()"
+    macroString = macroString.replace /^Macro[ ]+([a-zA-Z0-9]+).*$/mg, "  # Macro $1"
     macroString = macroString.replace /^[ ]*🠶?[ ]*⤷/mg, "  ⤷"
 
     macroString = macroString.replace /^  /mg, "      "
