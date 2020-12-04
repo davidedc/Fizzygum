@@ -1114,6 +1114,20 @@ class WorldMorph extends PanelWdgt
   expoOut: (i, origin, distance, numberOfEvents) ->
     distance * (-Math.pow(2, -10 * i/numberOfEvents) + 1) + origin
 
+  bringUpTestMenu: (millisecondsBetweenKeys = 35, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+      @syntheticEventsShortcutsAndSpecialKeys "F2", millisecondsBetweenKeys, startTime
+
+  syntheticEventsShortcutsAndSpecialKeys: (whichShortcutOrSpecialKey, millisecondsBetweenKeys = 35, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+      switch whichShortcutOrSpecialKey
+        when "F2"
+          @eventsQueue.push "keydownBrowserEvent"
+          @eventsQueue.push startTime
+          @eventsQueue.push new KeydownSyntheticEvent 113, false, false, false, false
+
+          @eventsQueue.push "keyupBrowserEvent"
+          @eventsQueue.push startTime + millisecondsBetweenKeys
+          @eventsQueue.push new KeyupSyntheticEvent  113, false, false, false, false
+
   syntheticEventsStringKeys: (theString, millisecondsBetweenKeys = 35, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     scheduledTimeOfEvent = startTime
 
@@ -1445,6 +1459,7 @@ class WorldMorph extends PanelWdgt
         ⤷macroWithOneParam "here is the one param" # comment2
         ⤷macroWithOneParamButPassingNone # comment3
         ⤷macroWithTwoParamsButPassingOnlyOne "first parameter" # comment4
+        @bringUpTestMenu()
 
     """
 
