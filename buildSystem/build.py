@@ -58,7 +58,10 @@ IS_MIXIN = re.compile(r"^(\w+Mixin)[ ]*=", re.MULTILINE)
 # regexps to exclude entire files or parts of files from the
 # homepage build
 HOMEPAGE_EXCLUSION_PARTS = re.compile(r"[ ]*# »>> this part is excluded from the fizzygum homepage build[^«]*«")
-NOT_IN_FIZZYGUM_HOMEPAGE = re.compile(r"# this file is excluded from the fizzygum homepage build")
+FILE_NOT_IN_FIZZYGUM_HOMEPAGE = re.compile(r"# this file is excluded from the fizzygum homepage build")
+
+MACROS_INCLUSION_PARTS = re.compile(r"[ ]*# »>> this part is only needed for Macros[^«]*«")
+FILE_ONLY_FOR_MACROS = re.compile(r"# this file is only needed for Macros")
 
 
 # we just need to detect a switch
@@ -274,10 +277,11 @@ def main():
 
         # the meaning of the first bracket is: if --homepage parameter
         # is passed to this script, then
-        # there must be no "NOT_IN_FIZZYGUM_HOMEPAGE" directive in the source.
+        # there must be no "FILE_NOT_IN_FIZZYGUM_HOMEPAGE" directive in the source,
+        # nor "FILE_ONLY_FOR_MACROS" directive in the source,
         # (since p -> q is identical to not p or q, you have what's in the
         # bracket).
-        if (not args.homepage or not NOT_IN_FIZZYGUM_HOMEPAGE.search(content)) and (is_class_file or is_mixin_file):
+        if (not args.homepage or not (FILE_NOT_IN_FIZZYGUM_HOMEPAGE.search(content) or FILE_ONLY_FOR_MACROS.search(content))) and (is_class_file or is_mixin_file):
 
             # backslashes and quotes and newlines all need
             # to be escaped. Quotes need to be escaped otherwise
@@ -301,6 +305,7 @@ def main():
             # sections of the file that don't belong to the homepage
             if args.homepage:
                 escaped_content = re.sub(HOMEPAGE_EXCLUSION_PARTS, '', escaped_content)
+                escaped_content = re.sub(MACROS_INCLUSION_PARTS, '', escaped_content)
 
             sourceFileName = ntpath.basename(filename).replace(".coffee","_coffeSource")
             escaped_content_with_declaration = STRING_BLOCK % (unicode(sourceFileName), unicode(escaped_content))

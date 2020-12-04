@@ -278,11 +278,11 @@ class WorldMorph extends PanelWdgt
   morphsThatMaybeChangedFullGeometryOrPosition: []
   morphsThatMaybeChangedLayout: []
 
-  # »>> this part is excluded from the fizzygum homepage build
+  # »>> this part is only needed for Macros
   macroStepsWaitingTimer: nil
   nextBlockToBeRun: nil
   macroVars: nil
-  # this part is excluded from the fizzygum homepage build <<«
+  # this part is only needed for Macros <<«
 
   constructor: (
       @worldCanvas,
@@ -1100,7 +1100,7 @@ class WorldMorph extends PanelWdgt
         @currentHighlightingMorphs.add hM
         @morphsBeingHighlighted.add eachMorphNeedingHighlight
 
-  # »>> this part is excluded from the fizzygum homepage build
+  # »>> this part is only needed for Macros
   progressOnMacroSteps: ->
 
   noCodeLoading: ->
@@ -1460,7 +1460,7 @@ class WorldMorph extends PanelWdgt
     console.log code
     @evaluateString code
 
-  # this part is excluded from the fizzygum homepage build <<«
+  # this part is only needed for Macros <<«
 
 
   playQueuedEvents: ->
@@ -1646,12 +1646,12 @@ class WorldMorph extends PanelWdgt
     if !WorldMorph.dateOfPreviousCycleStart?
       WorldMorph.dateOfPreviousCycleStart = new Date WorldMorph.dateOfCurrentCycleStart.getTime() - 30
 
-    # »>> this part is excluded from the fizzygum homepage build
+    # »>> this part is only needed for Macros
     if !@macroStepsWaitingTimer?
       @macroStepsWaitingTimer = 0
     else
       @macroStepsWaitingTimer += WorldMorph.dateOfCurrentCycleStart.getTime() - WorldMorph.dateOfPreviousCycleStart.getTime()
-    # this part is excluded from the fizzygum homepage build <<«
+    # this part is only needed for Macros <<«
 
   doOneCycle: ->
     @updateTimeReferences()
@@ -1659,9 +1659,9 @@ class WorldMorph extends PanelWdgt
 
     @showErrorsHappenedInRepaintingStepInPreviousCycle()
 
-    # »>> this part is excluded from the fizzygum homepage build
+    # »>> this part is only needed for Macros
     @progressOnMacroSteps()
-    # this part is excluded from the fizzygum homepage build <<«
+    # this part is only needed for Macros <<«
 
     @playQueuedEvents()
 

@@ -1,4 +1,4 @@
-# this file is excluded from the fizzygum homepage build
+# this file is only needed for Macros
 # IMMUTABLE
 
 class Macro

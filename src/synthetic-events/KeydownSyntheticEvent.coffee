@@ -1,3 +1,5 @@
+# this file is only needed for Macros
+
 class KeydownSyntheticEvent
   keyCode: nil
   shiftKey: nil

@@ -1,3 +1,5 @@
+# this file is only needed for Macros
+
 class MousemoveSyntheticEvent
   pageX: nil
   pageY: nil
