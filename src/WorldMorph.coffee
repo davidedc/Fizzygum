@@ -2000,6 +2000,12 @@ class WorldMorph extends PanelWdgt
     # handler
     @keyboardEventsReceiver?.processKeyUp? scanCode, shiftKey, ctrlKey, altKey, metaKey
 
+    # »>> this part is excluded from the fizzygum homepage build
+    # catch the F2 key
+    if scanCode == 113 and !shiftKey and !ctrlKey and !altKey and !metaKey
+      @testMenu()
+    # this part is excluded from the fizzygum homepage build <<«
+
   keypressBrowserEventHandler: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
     if Automator? and Automator.state == Automator.RECORDING
       @automator.recorder.addKeyPressCommand charCode, symbol, shiftKey, ctrlKey, altKey, metaKey

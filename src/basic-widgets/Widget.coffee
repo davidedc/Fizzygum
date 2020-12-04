@@ -3243,10 +3243,11 @@ class Widget extends TreeNode
     
     # unclear whether the "un-collapse" entry would ever be
     # visible.
-    if targetMorph.collapsed
-      menu.addMenuItem "un-collapse", true, @, "unCollapse"
-    else
-      menu.addMenuItem "collapse", true, @, "collapse"
+    if targetMorph?
+      if targetMorph.collapsed
+        menu.addMenuItem "un-collapse", true, @, "unCollapse"
+      else
+        menu.addMenuItem "collapse", true, @, "collapse"
 
     menu.addMenuItem "others ➜", false, @, "popUpFirstMenu", "others"
     menu.addMenuItem "others 2 ➜", false, @, "popUpSecondMenu", "others"
