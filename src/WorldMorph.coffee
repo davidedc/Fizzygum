@@ -1354,6 +1354,48 @@ class WorldMorph extends PanelWdgt
 
 
   draftRunMacro: ->
+    # When does it make sense to generate events "just via functions" vs.
+    # needing a macro?
+    #
+    # **Important Note:** a macro can call functions, while functions
+    # can never include macros!!!
+    #
+    # A macro is needed:
+    #   1. for generating (potentially via functions!) events spanning
+    #      multiple cycles. E.g. "opening the inspector for a widget",
+    #      which involves moving the mouse there, right-clicking on
+    #      the widget, wait a cycle for the menu to come up, then
+    #      navigating other menus, until finally finding and
+    #      clicking on a "inspect" entry,
+    #      and finally waiting a cycle for the inspector to come up.
+    #      Those things *together* can't be done using functions alone
+    #      (i.e. with no macros), because functions can only push
+    #      synthetic events (now or in the future) all at once.
+    #   2. so to have a convenient way to specify pauses between
+    #      events. This could also be done with functions, however
+    #      it's more convoluted.
+    #
+    # For all other cases, macros are not needed, i.e. functions alone
+    # can suffice. Note that
+    # functions *can* specify events that
+    # happen over time e.g. multiple key strokes and events
+    # happening over a few seconds, as there are parameters that help
+    # to specify dates of events in the future. As mentioned though,
+    # functions alone cannot "see past the effects" of any event happening
+    # in the future.
+    #
+    # Examples of macros (potentially using functions):
+    #   - opening a menu of a widget AND clicking on one of its items
+    #   - opening inspector for a widget
+    #   - opening inspector for a widget, changing a method, then
+    #     clicking "save"
+    #
+    # Examples that don't need macros (functions alone are OK):
+    #   - moving an icon to the bin
+    #   - closing the top window
+    #   - opening the menu of a widget
+    #   - moving pointer to entry of top menu and clicking it
+
     macroSubroutines = new Set
 
     macroSubroutines.add Macro.fromString """
