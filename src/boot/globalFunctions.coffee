@@ -311,7 +311,14 @@ createWorldAndStartStepping = ->
 
   window.menusHelper = new MenusHelper
   world.removeSpinnerAndFakeDesktop()
-  world.createDesktop()
+
+  world.basementWdgt = new BasementWdgt
+
+  #ProfilingDataCollector.enableProfiling()
+  #ProfilingDataCollector.enableBrokenRectsProfiling()
+
+  if world.isIndexPage
+    world.createDesktop()
 
 # This is a classic extention mechanism in JS,
 # also used by the CoffeeScript versions 1.x.

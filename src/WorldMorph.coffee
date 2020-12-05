@@ -458,39 +458,29 @@ class WorldMorph extends PanelWdgt
     splashScreenFakeDesktop.parentNode.removeChild splashScreenFakeDesktop
 
   createDesktop: ->
-    if @isIndexPage
-      @setColor Color.create 244,243,244
-      @makePrettier()
+    @setColor Color.create 244,243,244
+    @makePrettier()
 
-    if !@isIndexPage then console.log "booting"
-    @basementWdgt = new BasementWdgt
+    acm = new AnalogClockWdgt
+    acm.rawSetExtent new Point 80, 80
+    acm.fullRawMoveTo new Point @right()-80-@desktopSidesPadding, @top() + @desktopSidesPadding
+    @add acm
 
-    # »>> this part is excluded from the fizzygum homepage build
-    ProfilingDataCollector.enableProfiling()
-    ProfilingDataCollector.enableBrokenRectsProfiling()
-    # this part is excluded from the fizzygum homepage build <<«
-
-    if @isIndexPage
-      acm = new AnalogClockWdgt
-      acm.rawSetExtent new Point 80, 80
-      acm.fullRawMoveTo new Point @right()-80-@desktopSidesPadding, @top() + @desktopSidesPadding
-      @add acm
-
-      menusHelper.createWelcomeMessageWindowAndShortcut()
-      menusHelper.createHowToSaveMessageOpener()
-      menusHelper.basementIconAndText()
-      menusHelper.createSimpleDocumentLauncher()
-      menusHelper.createFizzyPaintLauncher()
-      menusHelper.createSimpleSlideLauncher()
-      menusHelper.createDashboardsLauncher()
-      menusHelper.createPatchProgrammingLauncher()
-      menusHelper.createGenericPanelLauncher()
-      menusHelper.createToolbarsOpener()
-      exampleDocsFolder = @makeFolder nil, nil, "examples"
-      menusHelper.createDegreesConverterOpener exampleDocsFolder
-      menusHelper.createSampleSlideOpener exampleDocsFolder
-      menusHelper.createSampleDashboardOpener exampleDocsFolder
-      menusHelper.createSampleDocOpener exampleDocsFolder
+    menusHelper.createWelcomeMessageWindowAndShortcut()
+    menusHelper.createHowToSaveMessageOpener()
+    menusHelper.basementIconAndText()
+    menusHelper.createSimpleDocumentLauncher()
+    menusHelper.createFizzyPaintLauncher()
+    menusHelper.createSimpleSlideLauncher()
+    menusHelper.createDashboardsLauncher()
+    menusHelper.createPatchProgrammingLauncher()
+    menusHelper.createGenericPanelLauncher()
+    menusHelper.createToolbarsOpener()
+    exampleDocsFolder = @makeFolder nil, nil, "examples"
+    menusHelper.createDegreesConverterOpener exampleDocsFolder
+    menusHelper.createSampleSlideOpener exampleDocsFolder
+    menusHelper.createSampleDashboardOpener exampleDocsFolder
+    menusHelper.createSampleDocOpener exampleDocsFolder
 
   # »>> this part is excluded from the fizzygum homepage build
 
