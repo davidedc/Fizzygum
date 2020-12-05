@@ -2052,7 +2052,7 @@ class WorldMorph extends PanelWdgt
     # »>> this part is excluded from the fizzygum homepage build
     # catch the F2 key
     if scanCode == 113 and !shiftKey and !ctrlKey and !altKey and !metaKey
-      @testMenu()
+      @testMenuForMacros()
     # this part is excluded from the fizzygum homepage build <<«
 
   keypressBrowserEventHandler: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->

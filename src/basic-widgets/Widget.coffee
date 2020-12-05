@@ -3255,6 +3255,11 @@ class Widget extends TreeNode
 
     menu.popUpAtHand()
 
+  testMenuForMacros: ->
+    menu = new MenuMorph @, false, @, true, true, "Tests"
+    menu.addMenuItem "create desktop", true, world, "createDesktop"
+    menu.popUpAtHand()
+
   analogClock: ->
     world.create new AnalogClockWdgt
 
@@ -3449,11 +3454,11 @@ class Widget extends TreeNode
     else
       menu.addMenuItem "delete", true, @, "close"
 
-    if !world.isIndexPage
-      menu.addMenuItem "destroy", true, @, "fullDestroy"
-    else
+    if world.isIndexPage or world.macroIsRunning?
       menu.addLine()
       menu.addMenuItem "dev ➜", false, menusHelper, "popUpDevToolsMenu", "dev tools"
+    else
+      menu.addMenuItem "destroy", true, @, "fullDestroy"
 
     menu
 
