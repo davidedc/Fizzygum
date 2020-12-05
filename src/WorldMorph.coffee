@@ -282,6 +282,7 @@ class WorldMorph extends PanelWdgt
   macroStepsWaitingTimer: nil
   nextBlockToBeRun: nil
   macroVars: nil
+  macroIsRunning: nil
   # this part is only needed for Macros <<«
 
   constructor: (
@@ -1512,6 +1513,7 @@ class WorldMorph extends PanelWdgt
     @macroStepsWaitingTimer = 0
     @nextBlockToBeRun = 0
     @macroVars = {}
+    @macroIsRunning = true
 
     code = mainMacro.getRunnableMacroStepsCode macroSubroutines
     console.log code

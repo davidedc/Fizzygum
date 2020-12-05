@@ -187,4 +187,4 @@ class Macro
           if @noCodeLoading() and @macroStepsWaitingTimer > 100 and @noInputsOngoing()
     """.replace /^/mg, "  "
 
-    code = "@progressOnMacroSteps = ->\n" + headerCode + "\n" + linkedMacro + "\n        @nextBlockToBeRun = -1; @progressOnMacroSteps = noOperation"
+    code = "@progressOnMacroSteps = ->\n" + headerCode + "\n" + linkedMacro + "\n        @nextBlockToBeRun = -1; @progressOnMacroSteps = noOperation; @macroIsRunning = false"
