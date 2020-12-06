@@ -3255,11 +3255,6 @@ class Widget extends TreeNode
 
     menu.popUpAtHand()
 
-  testMenuForMacros: ->
-    menu = new MenuMorph @, false, @, true, true, "Tests"
-    menu.addMenuItem "create desktop", true, world, "createDesktop"
-    menu.popUpAtHand()
-
   analogClock: ->
     world.create new AnalogClockWdgt
 
@@ -3406,6 +3401,14 @@ class Widget extends TreeNode
     derezzedObject = world.deserialize world.lastSerializationString
     world.add derezzedObject
   # this part is excluded from the fizzygum homepage build <<«
+
+
+  # »>> this part is only needed for Macros
+  testMenuForMacros: ->
+    menu = new MenuMorph @, false, @, true, true, "Tests"
+    menu.addMenuItem "create desktop", true, world, "createDesktop"
+    menu.popUpAtHand()
+  # this part is only needed for Macros <<«
 
   buildBaseMorphClassContextMenu: (morphOpeningThePopUp) ->
 
