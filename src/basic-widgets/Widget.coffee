@@ -3407,6 +3407,23 @@ class Widget extends TreeNode
   testMenuForMacros: ->
     menu = new MenuMorph @, false, @, true, true, "Tests"
     menu.addMenuItem "create desktop", true, world, "createDesktop"
+
+
+    menu.addMenuItem "attach with horizontal layout", true, @, "attachWithHorizLayout"
+    menu.addMenuItem "make spacers transparent", true, @, "makeSpacersTransparent"
+    menu.addMenuItem "make spacers opaque", true, @, "makeSpacersOpaque"
+    menu.addMenuItem "show adders", true, @, "showAdders"
+    menu.addMenuItem "remove adders", true, @, "removeAdders"
+    menu.addMenuItem "StringMorph2 without background", true, @, "createNewStringMorph2WithoutBackground"
+    menu.addMenuItem "StringMorph2 with background", true, @, "createNewStringMorph2WithBackground"
+    menu.addMenuItem "TextMorph2 with background", true, @, "createNewTextMorph2WithBackground"
+    menu.addMenuItem "StringMorph3 with background", true, @, "createNewStringMorph3WithBackground"
+    menu.addMenuItem "TextMorph3 with background", true, @, "createNewTextMorph3WithBackground"
+    
+    menu.addMenuItem "others ➜", false, @, "popUpFirstMenu", "others"
+    menu.addMenuItem "others 2 ➜", false, @, "popUpSecondMenu", "others"
+
+
     menu.popUpAtHand()
   # this part is only needed for Macros <<«
 
