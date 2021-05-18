@@ -37,7 +37,7 @@ class AnalogClockWdgt extends Widget
     @rawSetExtent new Point newWidth, newWidth
 
 
-  # This method only paints this very morph's "image",
+  # This method only paints this very widget's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
   # eventually invokes paintIntoAreaOrBlitFromBackBuffer.

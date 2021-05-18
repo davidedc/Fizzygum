@@ -20,7 +20,7 @@ class ActivePointerWdgt extends Widget
   nonFloatDraggedWdgt: nil
   nonFloatDragPositionWithinWdgtAtStart: nil
   # this is useful during nonFloatDrags to pass the widget
-  # the delta position since the last invokation
+  # the delta position since the last invocation
   previousNonFloatDraggingPos: nil
 
   constructor: ->

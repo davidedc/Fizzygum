@@ -47,14 +47,14 @@ Array::remove = (theElement) ->
     @splice index, 1
   return @
 
-# deduplicates array entries
+# de-duplicates array entries
 # does NOT modify array in place
 Array::unique = ->
   output = {}
   output[@[key]] = @[key] for key in [0...@length]
   value for key, value of output
 
-# deduplicates array entries
+# de-duplicates array entries
 # keeping the current order
 # see https://stackoverflow.com/a/14438954
 # does NOT modify array in place
