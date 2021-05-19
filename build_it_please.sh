@@ -73,6 +73,12 @@ if [ ! -d ../Fizzygum-builds ]; then
   mkdir ../Fizzygum-builds
 fi
 
+if ! command -v terser &> /dev/null
+then
+    echo "Terser could not be found, please see https://www.npmjs.com/package/terser"
+    exit
+fi
+
 echo coffeescript version -------------
 coffee --version
 
