@@ -39,7 +39,7 @@ class TextMorph extends StringMorph
       @fontName
     # override inherited properties:
     @markedTextColor = Color.WHITE
-    @markedBackgoundColor = Color.create 60, 60, 120
+    @markedBackgroundColor = Color.create 60, 60, 120
     @color = Color.BLACK
     @noticesTransparentClick = true
   
@@ -138,7 +138,7 @@ class TextMorph extends StringMorph
       @text.hashCode()  + "-" +
       @startMark  + "-" +
       @endMark  + "-" +
-      @markedBackgoundColor.toString()
+      @markedBackgroundColor.toString()
 
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
     if cacheHit? then return cacheHit
@@ -214,7 +214,7 @@ class TextMorph extends StringMorph
     for i in [start...stop]
       p = @slotCoordinates(i).subtract @position()
       c = @text.charAt i
-      backBufferContext.fillStyle = @markedBackgoundColor.toString()
+      backBufferContext.fillStyle = @markedBackgroundColor.toString()
       backBufferContext.fillRect p.x, p.y, Math.ceil(backBufferContext.measureText(c).width) + 1, Math.ceil(@fontHeight @fontSize)
       backBufferContext.fillStyle = @markedTextColor.toString()
       backBufferContext.fillText c, p.x, p.y + Math.ceil @fontHeight @fontSize

@@ -61,7 +61,7 @@ BackBufferMixin =
           src = area.translateBy(delta).round()
           
           # the " * ceilPixelRatio " multiplications
-          # tranform logical pixels into actual pixels.
+          # transform logical pixels into actual pixels.
           sl = src.left() * ceilPixelRatio
           st = src.top() * ceilPixelRatio
           al = area.left() * ceilPixelRatio

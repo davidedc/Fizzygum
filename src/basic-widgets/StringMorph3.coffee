@@ -60,7 +60,7 @@ class StringMorph3 extends Widget
   # see note above about Colors and shared objects
   markedTextColor: Color.WHITE
   # see note above about Colors and shared objects
-  markedBackgoundColor: Color.create 60, 60, 120
+  markedBackgroundColor: Color.create 60, 60, 120
 
   horizontalAlignment: AlignmentSpecHorizontal.LEFT
   verticalAlignment: AlignmentSpecVertical.TOP
@@ -82,7 +82,7 @@ class StringMorph3 extends Widget
   # Since we let the browser paint the text, we can't guarantee that
   # a specific font will be available to the user.
   # So we do what web designers do: we allow for a few families of
-  # very simialar fonts (at least in style in not in shape),
+  # very similar fonts (at least in style in not in shape),
   # each specifying a list of fallbacks that
   # are chosen to be similar and, collectively, widely available.
   # On top of that we also add a justArialFontStack, since Arial
@@ -303,7 +303,7 @@ class StringMorph3 extends Widget
 
       #console.log "searchLongestFittingTextByMultiCroppingIt trying to fit one more paragraph:"
       #console.log "   " + eachParagraph
-      #console.log " overal blurb we are fitting: " + fittingText
+      #console.log " overall blurb we are fitting: " + fittingText
 
       # add each new line of textToFit to the existing blurb to be tested
       # (if we are done with adding lines of textToFit, then we have our
@@ -515,7 +515,7 @@ class StringMorph3 extends Widget
     @textPossiblyCroppedToFit.hashCode() + "-" +
     @startMark  + "-" +
     @endMark  + "-" +
-    @markedBackgoundColor.toString()  + "-" +
+    @markedBackgroundColor.toString()  + "-" +
     @horizontalAlignment  + "-" +
     @verticalAlignment  + "-" +
     @fittingSpecWhenBoundsTooLarge  + "-" +
@@ -668,7 +668,7 @@ class StringMorph3 extends Widget
     for i in [startSlot...endSlot]
       p = @slotCoordinates(i).subtract @position()
       c = @textPossiblyCroppedToFit.charAt(i)
-      backBufferContext.fillStyle = @markedBackgoundColor.toString()
+      backBufferContext.fillStyle = @markedBackgroundColor.toString()
       backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText nil, c) + 1, Math.ceil @fontHeight @fittingFontSize
       backBufferContext.fillStyle = @markedTextColor.toString()
       backBufferContext.fillText c, p.x, p.y + Math.ceil @fontHeight @fittingFontSize
@@ -910,7 +910,7 @@ class StringMorph3 extends Widget
     # the second one. The way to do that is to pass
     # an array, so we can modify the array once the
     # "other" menu entry is made.
-    # This whenanigal should go away when menus
+    # This hack should go away when menus
     # will be able to listen to (and reflect) state changes,
     # so the ticks will be refreshed automatically to
     # reflect the fitting "mode"

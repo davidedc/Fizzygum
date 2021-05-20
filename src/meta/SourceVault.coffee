@@ -57,7 +57,7 @@ class SourceVault
       @getSourceContent(eachSourceFileName).stripComments().match /\?/
 
   # there should rarely be stringified code - scripts should
-  # be rare beasts in core codebase. They should only be priviledge
+  # be rare beasts in core codebase. They should only be privilege
   # of user code, and ideally even there they should be temporary
   # and eventually migrated to code in a class somewhere.
   @allSourcesContainingStringifiedCodeForScript: ->

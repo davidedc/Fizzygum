@@ -28,7 +28,7 @@ class VideoPlayIconAppearance extends IconAppearance
     context.closePath()
     context.fillStyle = red
     context.fill()
-    #// white lozange Drawing
+    #// white lozenge Drawing
     context.beginPath()
     context.moveTo 92.5, 32.5
     context.bezierCurveTo 92.5, 32.5, 91.5, 26.5, 89, 24

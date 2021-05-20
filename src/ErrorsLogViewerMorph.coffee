@@ -112,7 +112,7 @@ class ErrorsLogViewerMorph extends Widget
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    # TODO should'be calling this rawSetBounds from here,
+    # TODO shouldn't be calling this rawSetBounds from here,
     # rather use super
     @rawSetBounds newBoundsForThisLayout
 

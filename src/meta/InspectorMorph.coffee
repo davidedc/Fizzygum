@@ -93,7 +93,7 @@ class InspectorMorph extends BoxMorph
     # format element: [color, predicate(element]
     
     staticProperties = Object.getOwnPropertyNames(@target.constructor)
-    # get rid of all the standard fuff properties that are in classes
+    # get rid of all the standard fluff properties that are in classes
     staticProperties = staticProperties.filter (prop) =>
         prop not in ["name","length","prototype","caller","__super__","arguments"]
 
@@ -346,7 +346,7 @@ class InspectorMorph extends BoxMorph
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    # TODO should'be calling this rawSetBounds from here,
+    # TODO shouldn't be calling this rawSetBounds from here,
     # rather use super
     @rawSetBounds newBoundsForThisLayout
 

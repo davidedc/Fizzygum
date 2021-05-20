@@ -1,6 +1,6 @@
 # this file is excluded from the fizzygum homepage build
 
-# This extention is a little wonky, as you see we have to keep a
+# This extension is a little wonky, as you see we have to keep a
 # String inside, because extending native classes
 # is tricky.
 #

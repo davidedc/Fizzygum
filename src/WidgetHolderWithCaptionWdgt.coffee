@@ -53,7 +53,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    # TODO should'be calling this rawSetBounds from here,
+    # TODO shouldn't be calling this rawSetBounds from here,
     # rather use super
     @rawSetBounds newBoundsForThisLayout
 
@@ -80,7 +80,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
     p0 = p0.add new Point width/2, height/2
     
     # now the origin is in the middle height of the morph,
-    # on the left edge of the square incribed in the morph
+    # on the left edge of the square inscribed in the morph
     p0 = p0.subtract new Point squareDim/2, squareDim/2
 
     @icon.setExtent (new Point squareDim, squareDim*8/10).round()

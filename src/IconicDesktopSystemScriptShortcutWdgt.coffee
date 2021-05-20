@@ -1,6 +1,6 @@
 # Normally a shortcut just brings up another widget
 # so normally a Script Shortcut would bring up... a ScriptWdgt
-# However here we make an exception and insted of doing that,
+# However here we make an exception and instead of doing that,
 # we actually ask the referred ScriptWdgt to run the its code.
 
 # TODO I don't think this should be extending IconicDesktopSystemShortcutWdgt but

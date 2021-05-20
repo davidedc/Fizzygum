@@ -2,7 +2,7 @@
 
 ##
 ## LCLCodePreprocessor takes care of translating the simplified syntax
-## of livecodelb to a coffeescript that is degestible by the
+## of livecodelb to a coffeescript that is digestible by the
 ## coffeescript compiler.
 ## This pre-processing step can raise some errors - which are
 ## returned in a dedicated variable.
@@ -26,7 +26,7 @@ class LCLCodePreprocessor
 
   # We separate Commands from Expressions here.
   # Expressions return a value that is potentially
-  # useful, while Stataments just change some sort
+  # useful, while Statements just change some sort
   # of state but don't return anything useful.
   # For example you can say
   #   wave + 1; scale wave
@@ -708,7 +708,7 @@ class LCLCodePreprocessor
 
   # in order to proper recognise where expressions
   # start and end, we need to tie the functions with their
-  # arguments. For example "sin a" has to becomde
+  # arguments. For example "sin a" has to become
   # sin⨁ a.
   # The regexp for isolating expressions stops capturing
   # when there are two tokens not tied by an operator,
@@ -719,7 +719,7 @@ class LCLCodePreprocessor
 
     # we don't want "sin times" to be considered an expression
     # so introduce a blocker character to avoid "sin times"
-    # to becomde "sin⨁ times"
+    # to become "sin⨁ times"
     rx = RegExp("([^\\w\\d\\r\\n])("+(@allCommandsRegex+"|times")+")(?![\w\d])",'g')
     code = code.replace(rx, "$1⧻$2")
     if @detailedDebug then console.log "transformTimesSyntax-1\n" + code + " error: " + error
@@ -735,7 +735,7 @@ class LCLCodePreprocessor
       if @detailedDebug then console.log "transformTimesSyntax-2\n" + code + " error: " + error
 
     # remove blocker character to avoid "sin times"
-    # to becomde "sin⨁ times"
+    # to become "sin⨁ times"
     code = code.replace(/⧻/g, "")
 
     return @normaliseCode(code, error)
@@ -819,7 +819,7 @@ class LCLCodePreprocessor
     if @detailedDebug then console.log "transformTimesSyntax-3.9\n" + code + " error: " + error
     
     # It's unclear whether the cases catered by the two
-    # transformatione below ever make sense.
+    # transformation below ever make sense.
     # without the following, "a = (2 times box)" becomes "(a = 2.times -> box())"
     code = code.replace(/(\()\s*([\w\d])([^;\r\n]*) times[:]?([^\w\d])/g, "$1 ($2$3).times -> $4")
     if @detailedDebug then console.log "transformTimesSyntax-4\n" + code + " error: " + error
@@ -1117,7 +1117,7 @@ class LCLCodePreprocessor
 
 
     # we need to consider things like rotateQUALIFIER
-    # as a keyword beause we want
+    # as a keyword because we want
     #   rotateQUALIFIER rotateQUALIFIER box
     # to first expand the first rotateQUALIFIER into
     #   rotate (→ rotateQUALIFIER box)
@@ -1161,7 +1161,7 @@ class LCLCodePreprocessor
 
       if @detailedDebug then console.log "fleshOutQualifiers 2: " + code
 
-    # the trasformations above creates
+    # the transformations above creates
     # stuff like:
     #    run <→ box> 2;
     # so fixing that
@@ -1173,7 +1173,7 @@ class LCLCodePreprocessor
     code = code.replace(/;+[\t ]*else/gm, " else")
     code = code.replace(/^(\t*) else/gm, "$1else")
 
-    # the trasformations above add lots of redundant
+    # the transformations above add lots of redundant
     # semicolons and spaces like so:
     #    ...tate (-> rotate (-> box())))))))))); ;  ;   
     # so fixing that
@@ -1214,7 +1214,7 @@ class LCLCodePreprocessor
   # what we are trying to do here is to figure
   # out which other keywords besides the LCL ones
   # we need to automatically invoke as functions.
-  # Findind user functions is an ill-posed problem
+  # Finding user functions is an ill-posed problem
   # because the same variable might be a function
   # in one place and a number in another. And yet
   # once we find that there is a function definition
@@ -1874,7 +1874,7 @@ class LCLCodePreprocessor
         #console.log 'block ' + blockStart + ' to ' + blockEnd
       startOfPreviousLine = startOfThisLine
 
-    #console.log "code lenght at identifyBlockStarts: " + code.split("\n").length
+    #console.log "code length at identifyBlockStarts: " + code.split("\n").length
     return [code, linesWithBlockStart, undefined]
 
   # we might not need this function, leaving it here,
@@ -1959,6 +1959,6 @@ class LCLCodePreprocessor
 
     transformedCode = transformedLines.join "\n"
 
-    #console.log "code lenght at completeImplicitFunctionPasses: " + transformedCode.split("\n").length
+    #console.log "code length at completeImplicitFunctionPasses: " + transformedCode.split("\n").length
     return [transformedCode, undefined]
 

@@ -4,7 +4,7 @@
 # and resizable windows and it doesn't mangle the contents
 # when it's resized. The way to achieve that is to
 # have a container and a type of panel that works together
-# to "cristallize" a specific width/height ratio as soon
+# to "crystallize" a specific width/height ratio as soon
 # as there is one element dropped/added in the panel.
 # So when the panel is empty, you can give it any shape you
 # want, but as soon as there is one element, it sticks
@@ -113,7 +113,7 @@ class StretchableWidgetContainerWdgt extends Widget
 
     #console.log "spanel @contents: " + @contents + " doLayout 2"
 
-    # TODO should'be calling this rawSetBounds from here,
+    # TODO shouldn't be calling this rawSetBounds from here,
     # rather use super
     @rawSetBounds newBoundsForThisLayout
 

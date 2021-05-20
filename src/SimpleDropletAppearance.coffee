@@ -45,7 +45,7 @@ class SimpleDropletAppearance extends RectangularAppearance
     p0 = p0.subtract new Point 0, Math.ceil height/2
     
     # now the origin is in the middle height of the morph,
-    # on the left edge of the square incribed in the morph
+    # on the left edge of the square inscribed in the morph
     p0 = p0.add new Point (width -  squareDim)/2, 0
 
     

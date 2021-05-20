@@ -85,7 +85,7 @@ DeepCopierMixin =
 
         # last chance for a morph to do other
         # cleanup, for example a button that is
-        # highlihted might want to un-highlight
+        # highlighted might want to un-highlight
         # itself
         cloneOfMe.justBeenCopied?()
 

@@ -1,7 +1,7 @@
 # The difference between this and a Canvas is that once the
 # user starts to paint on the StretchableCanvas, it locks the
 # aspect ratio... and any further resizing keeps the original
-# paiting and the user can keep painting at any new scale...
+# painting and the user can keep painting at any new scale...
 #
 # This is achieved by keeping an extra canvas behind the scenes
 # that keeps the original resolution of when the first paint
@@ -187,7 +187,7 @@ class StretchableCanvasWdgt extends CanvasMorph
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    # TODO should'be calling this rawSetBounds from here,
+    # TODO shouldn't be calling this rawSetBounds from here,
     # rather use super
     @rawSetBounds newBoundsForThisLayout
 

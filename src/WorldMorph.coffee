@@ -295,7 +295,7 @@ class WorldMorph extends PanelWdgt
 
     # world at the moment is a global variable, there is only one
     # world and this variable needs to be initialised as soon as possible, which
-    # is right here. This is because there is code in this contructor that
+    # is right here. This is because there is code in this constructor that
     # will reference that global world variable, so it needs to be set
     # very early
     window.world = @
@@ -331,7 +331,7 @@ class WorldMorph extends PanelWdgt
     else
       @sizeCanvasToTestScreenResolution()
 
-    # @worldCanvas.width and height here are in phisical pixels
+    # @worldCanvas.width and height here are in physical pixels
     # so we want to bring them back to logical pixels
     @setBounds new Rectangle 0, 0, @worldCanvas.width / ceilPixelRatio, @worldCanvas.height / ceilPixelRatio
 
@@ -938,7 +938,7 @@ class WorldMorph extends PanelWdgt
     # in particular the following can stop the recursion:
     #  - invisible Widgets
     #  - PanelWdgts that don't overlap the broken rectangle
-    # Since potentially there is a lot of traversal ongoin for
+    # Since potentially there is a lot of traversal ongoing for
     # each broken rectangle, one might want to consolidate overlapping
     # and nearby rectangles.
 
@@ -1759,7 +1759,7 @@ class WorldMorph extends PanelWdgt
 
       if eachSteppingMorph.fps <= 0
         # if fps 0 or negative, then just run as fast as possible,
-        # so 0 milliseconds remaining to the next invokation
+        # so 0 milliseconds remaining to the next invocation
         millisecondsRemainingToWaitedFrame = 0
       else
         if eachSteppingMorph.synchronisedStepping
@@ -1785,7 +1785,7 @@ class WorldMorph extends PanelWdgt
         # requestAnimationFrame doesn't run, so we might skip a number of steps.
         # In such cases, just bring "lastTime" up to speed here.
         # If we don't do that, "skipped" steps would catch up on us and run all
-        # in contigous frames when the window comes to foreground, so the
+        # in contiguous frames when the window comes to foreground, so the
         # widgets would animate frantically (every frame) catching up on
         # all the steps they missed. We don't want that.
         #
@@ -2701,7 +2701,7 @@ class WorldMorph extends PanelWdgt
     menu = new MenuMorph @, false, targetMorph, true, true, "Wallpapers"
 
     # we add the "untick" prefix to all entries
-    # so we allocate the right amout of space for
+    # so we allocate the right amount of space for
     # the labels, we are going to put the
     # right ticks soon after
     menu.addMenuItem untick + @pattern1, true, @, "setPattern", nil, nil, nil, nil, nil, @pattern1

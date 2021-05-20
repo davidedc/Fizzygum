@@ -40,7 +40,7 @@ class TextMorph2 extends StringMorph2
       )
     # override inherited properties:
     @markedTextColor = Color.WHITE
-    @markedBackgoundColor = Color.create 60, 60, 120
+    @markedBackgroundColor = Color.create 60, 60, 120
     @textPossiblyCroppedToFit = @transformTextOneToOne @text
     @noticesTransparentClick = true
 
@@ -67,7 +67,7 @@ class TextMorph2 extends StringMorph2
     world.cacheForTextParagraphSplits.set cacheKey, paragraphs
     paragraphs
 
-  getWordsOfParapraph: (eachParagraph) ->
+  getWordsOfParagraph: (eachParagraph) ->
     cacheKey = eachParagraph.hashCode()
     wordsOfThisParagraph = world.cacheForParagraphsWordsSplits.get cacheKey
     if wordsOfThisParagraph? then return wordsOfThisParagraph
@@ -106,7 +106,7 @@ class TextMorph2 extends StringMorph2
       # following can happen: when the line wraps,
       # it pushes down the lines. In doing so, the text
       # might resize. In doing so, the line doesn't need
-      # to wrap anymore, and hence the text can embiggen,
+      # to wrap anymore, and hence the text can enbiggen,
       # and hence the line wraps...
       # In other words there is no fixed point in the font
       # size...
@@ -209,7 +209,7 @@ class TextMorph2 extends StringMorph2
 
     for eachParagraph in paragraphs
 
-      wordsOfThisParagraph = @getWordsOfParapraph eachParagraph
+      wordsOfThisParagraph = @getWordsOfParagraph eachParagraph
 
       ## ////////////////////////////////////////////////////////////////
 
@@ -222,7 +222,7 @@ class TextMorph2 extends StringMorph2
       ## two arrays "linesHit" and "lineslotsHit" AND the
       ## "maxlinewidthHit" which you can
       ## concatenate to the "running" ones
-      ## basically a) make two nested forach, outer by paragraph and
+      ## basically a) make two nested foreach, outer by paragraph and
       ## inner by words.
       ## Then cache the hell out of each loop.
 

@@ -1,4 +1,4 @@
-# bounces within the parent. Veeery similar to the good old
+# bounces within the parent. Similar to the good old
 # AtomMorph from Squeak
 
 # this file is excluded from the fizzygum homepage build

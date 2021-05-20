@@ -65,7 +65,7 @@ loadJSFilePromise = (fileName) ->
 #    Only after all that the world will be able to
 #    start.
 # 2. with pre-compiled files. In this case there
-#    is a JS file that containes all the compiled
+#    is a JS file that contains all the compiled
 #    JS versions of all the classes and mixins, plus
 #    all the code to build the class hierarchy and
 #    to augment the classes with the correct mixins.
@@ -85,7 +85,7 @@ boot = ->
   #    big enough for tapping)
   # 2) how do I know the current zoom level of the browser
   # 3) how do I make the fizzygum canvas not blurry
-  # 4) how do I make the fizzygum UI big enough for good readibility
+  # 4) how do I make the fizzygum UI big enough for good readability
   #    and touch input?
 
   # The answer to 1) is easy:
@@ -93,7 +93,7 @@ boot = ->
   #   are more dense and report the same pixelRatio as normal ones.
   #   Even iPad models have slightly different retina densities.
   #   This is not exposed via CSS or JS in any way. We can put in place
-  #   _an interacive_ way to ask the user to tell us how far apart are
+  #   _an interactive_ way to ask the user to tell us how far apart are
   #    her fingers for example, so we can draw the UI well.
 
   # The answer to 2) is:
@@ -124,14 +124,14 @@ boot = ->
   #   and you see the kind of complications you'd get as you are trying to
   #   make pixel-accurate clipping and drawing...
   #
-  #   E.g. a logical 9-units widget would effectlively paint contiguously next
+  #   E.g. a logical 9-units widget would effectively paint contiguously next
   #   to a widget to its right that has a logical 10-units displacement
   #   (instead of leaving one empty pixel between the two).
   #
   #   Other forms of approximation (e.g. use ceil instead of round) would incur
   #   in similar problems.
   #
-  #   Expecially clipping and pointer-testing would be prone to error because
+  #   Especially clipping and pointer-testing would be prone to error because
   #   they are done in logical coordinates where that complication is not
   #   visible... so the problem is that the logical and physical coordinates
   #   would be out-of-step in subtle ways.
@@ -320,7 +320,7 @@ createWorldAndStartStepping = ->
   if world.isIndexPage
     world.createDesktop()
 
-# This is a classic extention mechanism in JS,
+# This is a classic extension mechanism in JS,
 # also used by the CoffeeScript versions 1.x.
 # Nominally CoffeeScript v2 (which we use) just uses the ES6
 # native implementation, however we scrap what CoffeeScript v2

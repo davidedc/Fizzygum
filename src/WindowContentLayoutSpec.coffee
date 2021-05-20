@@ -33,7 +33,7 @@ class WindowContentLayoutSpec extends VerticalStackLayoutSpec
   # or the clock (same reason) or vertical stacks or "naked"
   # wrapping text (in those cases it's the content that dictates
   # what the height should be, there literally is nothing
-  # boyond the height that they have).
+  # beyond the height that they have).
   #
   # Note that we'll have to override this when we'll want
   # to maximise windows, we'll just have to

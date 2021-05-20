@@ -1,7 +1,7 @@
 # PopUp widgets are special Widgets that have quite complex logic for
-# opening themselves, closing themseves when users click outside,
+# opening themselves, closing themselves when users click outside,
 # popping up, opening sub-widgets, and pinning them down.
-# They don't specify their own "look" (apart from shadowsn, see below),
+# They don't specify their own "look" (apart from shadows, see below),
 # nor the contents or the look of the contents.
 #
 # PopUps have 3 different shadows: "normal", "when dragged" and

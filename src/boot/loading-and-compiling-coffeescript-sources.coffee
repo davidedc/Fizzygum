@@ -161,7 +161,7 @@ storeSourceAndPotentiallyCompileItAndExecuteIt = (fileName, justIngestSources) -
     else
       new Mixin fileContents, true, true
 
-  if srcLoadCompileDebugWrites then console.log "compiling and evalling " + fileName + " from souce code"
+  if srcLoadCompileDebugWrites then console.log "compiling and evalling " + fileName + " from source code"
   emptyLogDiv()
   addLineToLogDiv "compiling and evalling " + fileName
 

@@ -22,7 +22,7 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
   input4: nil
 
   # we need to keep track of which inputs are
-  # connected becayse we wait for those to be
+  # connected because we wait for those to be
   # all updated before the node fires
   setInput1IsConnected: false
   setInput2IsConnected: false

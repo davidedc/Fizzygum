@@ -5,7 +5,7 @@
 ## (written in simplified syntax) as a runnable javascript function.
 ## Also note that LCLCodeCompiler might return a program
 ## that substituted the program passed as input.
-## This is because doOnce statements get transformed by pre-prending a
+## This is because doOnce statements get transformed by pre-pending a
 ## tick once they are run, which prevents them from being run again.
 ## Note that LCLCodeCompiler doesn't run the user sketch, it just
 ## makes it available to the LCLProgramRunner.

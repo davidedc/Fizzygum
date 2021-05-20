@@ -38,7 +38,7 @@ class TreeNode
   # and it's painted on top (otherwise it wouldn't be visible).
   #
   # Note that when you add a morph A to a morph B, it doesn't
-  # mean that A is cointained in B. The two potentially might
+  # mean that A is contained in B. The two potentially might
   # not even overlap.
   children: nil
 
@@ -276,7 +276,7 @@ class TreeNode
   # which is the most "bottom" of the children
   # (i.e. when painted, the first child in the "children" array
   # and its children are painted just above the parent node)
-  # and then recursively depht-first all its children
+  # and then recursively depth-first all its children
   # and then the second - bottomest child and children etc.
   # Also note that there is a more elegant implementation where
   # we just use @allChildrenBottomToTop() but that would mean to create

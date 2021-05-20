@@ -120,7 +120,7 @@ class Macro
             # extract the inline comment at call site, we want
             # to preserve it in the final translation
             comment = ""
-            # this is a sloppy regex that could match "macroNamePlusSometingElse #...",
+            # this is a sloppy regex that could match "macroNamePlusSomethingElse #...",
             # however the regex we just did is tight, so there is no risk with this one
             if matchesComment = line.match(new RegExp callSiteRegexString + eachMacro.getName() + ".*(#.*)$",'m')
               comment = matchesComment[1]

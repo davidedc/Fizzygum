@@ -37,7 +37,7 @@ class ScrollPanelWdgt extends PanelWdgt
     @addRaw @contents
 
     # the ScrollPanel is never going to paint itself,
-    # but its values are going to mimick the values of the
+    # but its values are going to mimic the values of the
     # contained Panel
     @color = @contents.color
     @alpha = @contents.alpha
@@ -90,7 +90,7 @@ class ScrollPanelWdgt extends PanelWdgt
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
 
     aColor = super aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, true
-    # keep in synch the color of the content.
+    # keep in sync the color of the content.
     # Note that the container ScrollPanel.
     # is actually not painted.
     @contents.setColor aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken
@@ -113,7 +113,7 @@ class ScrollPanelWdgt extends PanelWdgt
 
   adjustScrollBars: ->
     # one typically has both scrollbars in view, plus a resizer
-    # in buttom right corner, so adjust the width/height of the
+    # in bottom right corner, so adjust the width/height of the
     # scrollbars so that there is no overlap between the three things
     spaceToLeaveOnOneSide = Math.max(@scrollBarsThickness, WorldMorph.preferencesAndSettings.handleSize) + 2 * @padding
     hWidth = @width() - spaceToLeaveOnOneSide

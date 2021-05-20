@@ -19,7 +19,7 @@ class ChangeFontButtonWdgt extends IconMorph
 
   mouseClickLeft: ->
     # if there is already a font selection menu for the editor,
-    # bring that one up, otherwise create one and rember that we created it
+    # bring that one up, otherwise create one and remember that we created it
     if @simpleDocument.fontSelectionMenu? and
      !@simpleDocument.fontSelectionMenu.destroyed
       @simpleDocument.fontSelectionMenu.popUp @position().subtract(new Point 80,0), world

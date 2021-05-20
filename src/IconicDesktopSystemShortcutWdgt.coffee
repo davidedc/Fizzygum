@@ -11,7 +11,7 @@
 # So, for example, is the Fizzypaint launcher icon a reference?
 # NO, because if you duplicate the launcher, and open both of the
 # launchers, you don't get to the SAME widget, you get to two entirely
-# separate Fizzypaint instances that have different lifes and can be
+# separate Fizzypaint instances that have different lives and can be
 # shown both at the same time on the screen.
 
 class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt

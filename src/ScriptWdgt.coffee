@@ -7,7 +7,7 @@
 #   * it's standalone, i.e. it's independent i.e.
 #     it's code that doesn't belong to any other widget
 #     (i.e.: if this code should belong to a widget, add it to a widget)
-#   * it's probably temporary "glue" or "scaffholding" or "utility"
+#   * it's probably temporary "glue" or "scaffolding" or "utility"
 #     code that is not meant to be around for long (i.e.: this code,
 #     if really useful, should really find its place in a proper class)
 #

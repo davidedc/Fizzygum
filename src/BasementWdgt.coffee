@@ -66,7 +66,7 @@ class BasementWdgt extends BoxMorph
     # get them out of the way immediately. They are unreachable by
     # definition (remember, the BasementWdgt is on screen, so they
     # are not even in the basement!) and
-    # so they don't make their target reacheable.
+    # so they don't make their target reachable.
     for eachReferencingWdgt from world.widgetsReferencingOtherWidgets
       if eachReferencingWdgt.isOrphan()
         eachReferencingWdgt.markReferenceAsVisited newGcSessionId
@@ -91,10 +91,10 @@ class BasementWdgt extends BoxMorph
     # How do we know if they are reachable?
     # They are reachable if one of their parents is reachable.
     # Then:
-    #   - mark what it references (and parents) as reacheable
+    #   - mark what it references (and parents) as reachable
     #   - mark it as visited so we don't visit again
     # Note that this a progressive search, because a reference might
-    # make another reference reacheable, which might make another
+    # make another reference reachable, which might make another
     # reference reachable... in those chains we have to keep
     # searching until we find no new references
     newReachableReferencesUncovered = true

@@ -86,7 +86,7 @@ class LCLProgramRunner
       @setProgram(p)
 
   runProgram: ->
-    # this invokation below could be throwing an error,
+    # this invocation below could be throwing an error,
     # in which case the lines afterwards are not executed
     # and the exception is propagated to the callee of this function,
     # which is the main animation loop.

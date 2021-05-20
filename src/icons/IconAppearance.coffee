@@ -126,7 +126,7 @@ class IconAppearance extends Appearance
 
   # uses moveTos to create unconnected circles
   # (otherwise the arcs create a joint path)
-  # basically does the equvalent of what context.rect does
+  # basically does the equivalent of what context.rect does
   circle: (context, x, y, r) ->
     context.moveTo x, y
     context.arc x, y, r, 0, 2 * Math.PI

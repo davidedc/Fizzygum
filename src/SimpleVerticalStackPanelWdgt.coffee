@@ -90,7 +90,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
       verticalPadding += @padding
 
       if !@constrainContentWidth
-        # if the stack doesn't contrain the positions of the
+        # if the stack doesn't constrain the positions of the
         # contents then it's much harder to right/left/center align
         # things, because for example imagine this case: you
         # remove an element from the stack. Now, something that was
@@ -99,7 +99,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
         # was centered, so it could not possibly define the bounds...
         # So the determination of the bounds becomes rather more
         # complex, we are skipping that for the time being: if a stack
-        # doesn't contrain the widths of the contents then everything in
+        # doesn't constrain the widths of the contents then everything in
         # it looks left-aligned
         leftPosition = @left() + @padding
       else

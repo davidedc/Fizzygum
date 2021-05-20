@@ -25,7 +25,7 @@ class StringMorph extends Widget
   # see note above about Colors and shared objects
   markedTextColor: Color.WHITE
   # see note above about Colors and shared objects
-  markedBackgoundColor: Color.create 60, 60, 120
+  markedBackgroundColor: Color.create 60, 60, 120
 
   constructor: (
       @text = (if text is "" then "" else "StringMorph"),
@@ -119,7 +119,7 @@ class StringMorph extends Widget
       @text.hashCode()  + "-" +
       @startMark  + "-" +
       @endMark  + "-" +
-      @markedBackgoundColor.toString()
+      @markedBackgroundColor.toString()
 
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
     if cacheHit? then return cacheHit
@@ -147,7 +147,7 @@ class StringMorph extends Widget
     for i in [start...stop]
       p = @slotCoordinates(i).subtract @position()
       c = text.charAt(i)
-      backBufferContext.fillStyle = @markedBackgoundColor.toString()
+      backBufferContext.fillStyle = @markedBackgroundColor.toString()
       backBufferContext.fillRect p.x, p.y, Math.ceil(backBufferContext.measureText(c).width) + 1,
         @fontHeight @fontSize
       backBufferContext.fillStyle = @markedTextColor.toString()

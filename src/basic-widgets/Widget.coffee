@@ -119,12 +119,12 @@ class Widget extends TreeNode
   #
   # Setting this flag prevents that: a Widget rejecting
   # a drag can never be part of a chain that is dragged.
-  # An example is buttons that are part of a compund Widget
+  # An example is buttons that are part of a compound Widget
   # (such as the Inspector):
   # in those cases you can never drag the compound Widget by
   # dragging a button (because it is a common behaviour to
   # "drag away" from a button to avoid actioning it when one
-  # mousedowns on it). (Note however that buttont on the desktop
+  # mousedowns on it). (Note however that buttons on the desktop
   # are draggable).
   # Another example are morphs like the ColorPanelMorph where
   # users can drag the mouse on them to pick a color: it would be
@@ -293,9 +293,9 @@ class Widget extends TreeNode
 
     position = allCandidateMorphsWithSameTextDescription.indexOf @
 
-    theLenght = allCandidateMorphsWithSameTextDescription.length
-    #console.log [myTextDescription, position, theLenght]
-    return [myTextDescription, position, theLenght]
+    theLength = allCandidateMorphsWithSameTextDescription.length
+    #console.log [myTextDescription, position, theLength]
+    return [myTextDescription, position, theLength]
 
   # »>> this part is excluded from the fizzygum homepage build
   setTextDescription: (@textDescription) ->
@@ -539,7 +539,7 @@ class Widget extends TreeNode
       if previousParent.childRemoved?
         previousParent.childRemoved @
 
-    # in case I'm a destory at the end of a fullDestroy,
+    # in case I'm a destroy at the end of a fullDestroy,
     # the children array is already empty
     if @children.length != 0
       @children = []
@@ -1678,7 +1678,7 @@ class Widget extends TreeNode
   # so it can't be used to paint on a backbuffer,
   # since you always want to paint on a backbuffer
   # "pristine", since the shadow effect is applied
-  # when the backbuffer is in turn blitte to
+  # when the backbuffer is in turn blitted to
   # screen, LATER.
 
   paintRectangle: (
@@ -1774,7 +1774,7 @@ class Widget extends TreeNode
     # if there is a shadow "property" object
     # then first draw the shadow of the tree
     # If appliedShadow is defined, then we just want to paint the
-    # content as shadow, so we skip this paragrah because we don't have
+    # content as shadow, so we skip this paragraph because we don't have
     # to paint a shadow for a shadow.
     if !appliedShadow? and @shadowInfo?
       @fullPaintIntoAreaOrBlitFromBackBufferJustShadow aContext, clippingRectangle, @shadowInfo
@@ -1809,7 +1809,7 @@ class Widget extends TreeNode
   
 
   # this just draws the tree of the widgets recursively, potentially "normally" or
-  # potentally more faintly to draw a shadow.
+  # potentially more faintly to draw a shadow.
   # The only variant is that the Panel
   # draws its background, then its contents AND THEN its stroke
   # (because otherwise its content would paint over its stroke)
@@ -2145,7 +2145,7 @@ class Widget extends TreeNode
   #           versions below
   # “raw”: lower level. This is what the re-layout routines use. Usually call the
   #        silent version below.
-  # “silent”: doesn’t mark the morph as changed
+  # “silent”: doesn't mark the morph as changed
   #
   # It's important that lower-level functions don't ever call the higher-level
   # functions, as that's architecturally incorrect and can cause infinite loops in
@@ -2472,7 +2472,7 @@ class Widget extends TreeNode
   # can be dragged and none of the children of B can be dragged either
   # (so: nor A nor B can't be dragged).
   #
-  # Note that there is no away to prevent userts from "picking up"
+  # Note that there is no away to prevent users from "picking up"
   # a Widget and then do a drag (which in that case would be a FLOATING drag).
 
   grabsToParentWhenDragged: ->

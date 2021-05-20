@@ -1,7 +1,7 @@
 # this wraps the functionality of the
 # SimpleVerticalStackScrollPanelWdgt into something that has
 # a more human name. Also provides additional document-oriented
-# features such as for addind divider lines, bullets etc.
+# features such as for adding divider lines, bullets etc.
 
 class SimpleDocumentScrollPanelWdgt extends SimpleVerticalStackScrollPanelWdgt
 

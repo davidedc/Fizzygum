@@ -41,7 +41,7 @@ class PanelWdgt extends Widget
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
 
     aColor = super aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, true
-    # keep in synch the value of the container scrollPanel
+    # keep in sync the value of the container scrollPanel
     # if there is one. Note that the container scrollPanel
     # is actually not painted.
     if @scrollPanel

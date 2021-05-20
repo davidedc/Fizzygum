@@ -6,7 +6,7 @@
 # You basically find out the correct inclusion order
 # by just doing a depth-first visit of that tree
 # and collecting the nodes in reverse "coming back" from
-# the leafs.
+# the leaves.
 visit = (dependenciesMap, theClass, loadOrder) ->
   if dependenciesMap.has theClass
     for key from dependenciesMap.get theClass
