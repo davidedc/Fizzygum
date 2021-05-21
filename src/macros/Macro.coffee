@@ -49,7 +49,7 @@ class Macro
   _doPreliminarySubstitutions: ->
     macroString = @getBody()
     macroString = macroString.replace /^Macro[ ]+([a-zA-Z0-9]+).*$/mg, "  # Macro $1"
-    macroString = macroString.replace /^[ ]*🠶?[ ]*⤷/mg, "  ⤷"
+    macroString = macroString.replace /^[ ]*▶?[ ]*⤷/mg, "  ⤷"
 
     macroString = macroString.replace /^  /mg, "      "
 
@@ -57,7 +57,7 @@ class Macro
     macroString = macroString.replace /([ \d])ms([\s,])/mg, "$1$2"
 
     macroString = macroString.replace /🌎/g, "@macroVars."    
-    macroString = macroString.replace /🖶/g, "console.log"
+    macroString = macroString.replace /🖨️/g, "console.log"
     macroString = macroString.replace /⦿/g, "new Point"
 
     macroStringByLine = macroString.split "\n"
@@ -70,7 +70,7 @@ class Macro
         eachLine = eachLine.replace /#(.*)/, ""
 
 
-      if eachLine.match /^ 🠶/
+      if eachLine.match /^ ▶/
         macroStringByLine[lineNumber] = """
                 @nextBlockToBeRun++; @macroStepsWaitingTimer = 0
             when ?this_number__to_be_inserted_by_linker

@@ -1392,98 +1392,98 @@ class WorldMorph extends PanelWdgt
     macroSubroutines.add Macro.fromString """
       Macro bringUpInspector whichWidget
         ⤷clickMenuItemOfWidget whichWidget | "dev ➜"
-       🠶 when no inputs ongoing
+       ▶ when no inputs ongoing
         @moveToItemOfTopMenuAndClick "inspect"
     """
 
     macroSubroutines.add Macro.fromString """
       Macro bringUpInspectorAndSelectListItem whichWidget | whichItem
         ⤷bringUpInspector whichWidget
-       🠶 when no inputs ongoing
+       ▶ when no inputs ongoing
         ⤷bringInViewAndClickOnListItemFromTopInspector whichItem
     """
 
     macroSubroutines.add Macro.fromString """
       Macro bringInViewAndClickOnListItemFromTopInspector whichItem
         @bringListItemFromTopInspectorInView whichItem
-       🠶 when no inputs ongoing
+       ▶ when no inputs ongoing
         @clickOnListItemFromTopInspector whichItem
     """
 
     macroSubroutines.add Macro.fromString """
       Macro clickMenuItemOfWidget whichWidget | whichItem
         @openMenuOf whichWidget
-       🠶 when no inputs ongoing
+       ▶ when no inputs ongoing
         @moveToItemOfTopMenuAndClick whichItem
     """
 
     macroSubroutines.add Macro.fromString """
       Macro printoutsMacro string1 | string2 | string3
-       🠶 ⌛ 1s
-        🖶 string1
-       🠶 ⌛ 1s
-        🖶 string2
+       ▶ ⌛ 1s
+        🖨️ string1
+       ▶ ⌛ 1s
+        🖨️ string2
         💼aLocalVariableInACall = ""
-       🠶 ⌛ 1s
-        🖶 string3
+       ▶ ⌛ 1s
+        🖨️ string3
     """
 
     macroSubroutines.add Macro.fromString """
       Macro macroWithNoParams
-        🖶 "macro with no params"
+        🖨️ "macro with no params"
     """
 
     macroSubroutines.add Macro.fromString """
       Macro macroWithOneParam theParameter
-        🖶 "macro with one param: " + theParameter
+        🖨️ "macro with one param: " + theParameter
     """
 
     macroSubroutines.add Macro.fromString """
       Macro macroWithOneParamButPassingNone theParameter
-        🖶 "macro with one param but passing none, this should be undefined: " + theParameter
+        🖨️ "macro with one param but passing none, this should be undefined: " + theParameter
     """
 
     macroSubroutines.add Macro.fromString """
       Macro macroWithTwoParamsButPassingOnlyOne param1 | param2
-        🖶 "macro with two params but passing only one: param 1: " + param1 + " param 2 should be undefined: " + param2
+        🖨️ "macro with two params but passing only one: param 1: " + param1 + " param 2 should be undefined: " + param2
     """
 
     # TODO check that these are handled too
-    # 🠶 ⌛ 500 ms, when condition1()
-    # 🠶 # ⌛ 500 ms, when conditionCommented()
+    # ▶ ⌛ 500 ms, when condition1()
+    # ▶ # ⌛ 500 ms, when conditionCommented()
 
     mainMacro = Macro.fromString """
       Macro theTestMacro
         @syntheticEventsStringKeys "SoMeThInG"
-       🠶 ⌛ 1s
-       🠶 ⤷printoutsMacro "first console out" | "second console out" | "third console out"
-       🠶 ⌛ 1s
+       ▶ ⌛ 1s
+       ▶ ⤷printoutsMacro "first console out" | "second console out" | "third console out"
+       ▶ ⌛ 1s
         💼clock = @findTopWidgetByClassNameOrClass AnalogClockWdgt
         @syntheticEventsMouseMove 💼clock
-       🠶 when no inputs ongoing
+       ▶ when no inputs ongoing
         @syntheticEventsMouseDown()
-       🠶 when no inputs ongoing
+       ▶ when no inputs ongoing
         💼clockCenter = 💼clock.center()
         @syntheticEventsMouseMoveWhileDragging ⦿(💼clockCenter.x - 4, 💼clockCenter.y + 4)
-       🠶 ⌛ 1s
+       ▶ ⌛ 1s
         @syntheticEventsMouseMoveWhileDragging ⦿(250,250)
-       🠶 when no inputs ongoing
+       ▶ when no inputs ongoing
         @syntheticEventsMouseUp()
-       🠶 when no inputs ongoing
+       ▶ when no inputs ongoing
         @syntheticEventsMouseMovePressDragRelease ⦿(5, 5), ⦿(200,200)
-       🠶 when no inputs ongoing
-        🖶 "finished the drag events"
+       ▶ when no inputs ongoing
+        🖨️ "finished the drag events"
         ⤷printoutsMacro "fourth console out" | "fifth console out" | "sixth console out"
-       🠶 when no inputs ongoing
+       ▶ when no inputs ongoing
         ⤷bringUpInspectorAndSelectListItem 💼clock | "drawSecondsHand"
-       🠶 when no inputs ongoing
+       ▶ when no inputs ongoing
         @bringcodeStringFromTopInspectorInView "context.restore()"
-       🠶 when no inputs ongoing
+       ▶ when no inputs ongoing
         @clickOnCodeBoxFromTopInspectorAtCodeString "@secondsHandAngle", 1, false
-       🠶 when no inputs ongoing
+       ▶ when no inputs ongoing
         @syntheticEventsStringKeys "-"
         @clickOnSaveButtonFromTopInspector()  # some comments here
-       🠶 when no inputs ongoing # also some comments here
+       ▶ when no inputs ongoing # also some comments here
         ⤷macroWithNoParams
         ⤷macroWithOneParam "here is the one param"
         ⤷macroWithOneParamButPassingNone
