@@ -6,6 +6,7 @@ class Macro
   _arguments: []
   _name: nil
   _preliminarySubstitutionsBody: nil
+  _linkedCode: nil
 
   constructor: (@_name, @_arguments, @_body) ->
 
@@ -94,7 +95,7 @@ class Macro
     macroString = macroStringByLine.join "\n"
     macroString = macroString.replace /no inputs ongoing/g, "@noInputsOngoing()"
 
-  linkToSubroutines: (macroSubroutines) ->
+  linkTo: (macroSubroutines) ->
 
     MAX_MACRO_EXPANSIONS = 10000
     callSiteRegexString = "^[ ]*⤷"
@@ -169,14 +170,22 @@ class Macro
       linkedMacroString = linkedMacroString.replace thenNumbersRegex, "#{thenNumber}"
       thenNumber++
 
-    return linkedMacroString
-
-  getRunnableMacroStepsCode: (macroSubroutines) ->
-
     # .replace /^/mg, "  " is to add a couple of spaces to
     # the start of the line so indentation is correct
-    linkedMacro = (@linkToSubroutines macroSubroutines).replace /^/mg, "  "
+    linkedMacroString = linkedMacroString.replace /^/mg, "  "
 
+    @_linkedCode = @addHeaderAndFooterCode linkedMacroString
+
+  start: ->
+    world.macroStepsWaitingTimer = 0
+    world.nextBlockToBeRun = 0
+    world.macroVars = {}
+    world.macroIsRunning = true
+
+    console.log @_linkedCode
+    world.evaluateString @_linkedCode
+
+  addHeaderAndFooterCode: (linkedMacro) ->
     headerCode = """
       currentTime = WorldMorph.dateOfCurrentCycleStart.getTime()
       switch (@nextBlockToBeRun)
@@ -187,4 +196,6 @@ class Macro
           if @noCodeLoading() and @macroStepsWaitingTimer > 100 and @noInputsOngoing()
     """.replace /^/mg, "  "
 
-    code = "@progressOnMacroSteps = ->\n" + headerCode + "\n" + linkedMacro + "\n        @nextBlockToBeRun = -1; @progressOnMacroSteps = noOperation; @macroIsRunning = false"
+    footerCode = "\n        @nextBlockToBeRun = -1; @progressOnMacroSteps = noOperation; @macroIsRunning = false"
+
+    return "@progressOnMacroSteps = ->\n" + headerCode + "\n" + linkedMacro + footerCode

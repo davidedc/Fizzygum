@@ -1497,17 +1497,8 @@ class WorldMorph extends PanelWdgt
     """
 
 
-    @startMacro mainMacro, macroSubroutines
-
-  startMacro: (mainMacro, macroSubroutines) ->
-    @macroStepsWaitingTimer = 0
-    @nextBlockToBeRun = 0
-    @macroVars = {}
-    @macroIsRunning = true
-
-    code = mainMacro.getRunnableMacroStepsCode macroSubroutines
-    console.log code
-    @evaluateString code
+    mainMacro.linkTo macroSubroutines
+    mainMacro.start()
 
   # this part is only needed for Macros <<«
 
