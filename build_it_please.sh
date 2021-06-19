@@ -240,6 +240,7 @@ terser --compress --output $BUILD_PATH/js/src/dependencies-finding-min.js -- $BU
 
 coffee -b -c -o $BUILD_PATH/js/src/ src/boot/loading-and-compiling-coffeescript-sources.coffee
 terser --compress --output $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources-min.js -- $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources.js
+#cp $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources.js $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources-min.js
 
 coffee -b -c -o $BUILD_PATH/js/src/ src/boot/logging-div.coffee
 terser --compress --output $BUILD_PATH/js/src/logging-div-min.js -- $BUILD_PATH/js/src/logging-div.js
