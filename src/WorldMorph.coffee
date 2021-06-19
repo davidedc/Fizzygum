@@ -1113,11 +1113,11 @@ class WorldMorph extends PanelWdgt
         when "F2"
           @eventsQueue.push "keydownBrowserEvent"
           @eventsQueue.push startTime
-          @eventsQueue.push new KeydownSyntheticEvent 113, false, false, false, false
+          @eventsQueue.push (new KeydownInputEvent 113, false, false, false, false).markAsSynthetic()
 
           @eventsQueue.push "keyupBrowserEvent"
           @eventsQueue.push startTime + millisecondsBetweenKeys
-          @eventsQueue.push new KeyupSyntheticEvent  113, false, false, false, false
+          @eventsQueue.push (new KeyupInputEvent  113, false, false, false, false).markAsSynthetic()
 
   syntheticEventsStringKeys: (theString, millisecondsBetweenKeys = 35, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     scheduledTimeOfEvent = startTime
@@ -1130,28 +1130,28 @@ class WorldMorph extends PanelWdgt
         @eventsQueue.push "keydownBrowserEvent"
         @eventsQueue.push scheduledTimeOfEvent
         scheduledTimeOfEvent += millisecondsBetweenKeys
-        @eventsQueue.push new KeydownSyntheticEvent 16, true, false, false, false
+        @eventsQueue.push (new KeydownInputEvent 16, true, false, false, false).markAsSynthetic()
 
       @eventsQueue.push "keydownBrowserEvent"
       @eventsQueue.push scheduledTimeOfEvent
       scheduledTimeOfEvent += millisecondsBetweenKeys
-      @eventsQueue.push new KeydownSyntheticEvent theString.toUpperCase().charCodeAt(i), isUpperCase, false, false, false
+      @eventsQueue.push (new KeydownInputEvent theString.toUpperCase().charCodeAt(i), isUpperCase, false, false, false).markAsSynthetic()
 
       @eventsQueue.push "keypressBrowserEvent"
       @eventsQueue.push scheduledTimeOfEvent
       scheduledTimeOfEvent += millisecondsBetweenKeys
-      @eventsQueue.push new KeypressSyntheticEvent theString.charCodeAt(i),theString.charCodeAt(i),theString.charCodeAt(i), isUpperCase, false, false, false
+      @eventsQueue.push (new KeypressInputEvent theString.charCodeAt(i),theString.charCodeAt(i),theString.charCodeAt(i), isUpperCase, false, false, false).markAsSynthetic()
 
       @eventsQueue.push "keyupBrowserEvent"
       @eventsQueue.push scheduledTimeOfEvent
       scheduledTimeOfEvent += millisecondsBetweenKeys
-      @eventsQueue.push new KeyupSyntheticEvent theString.toUpperCase().charCodeAt(i), isUpperCase, false, false, false
+      @eventsQueue.push (new KeyupInputEvent theString.toUpperCase().charCodeAt(i), isUpperCase, false, false, false).markAsSynthetic()
 
       if isUpperCase
         @eventsQueue.push "keyupBrowserEvent"
         @eventsQueue.push scheduledTimeOfEvent
         scheduledTimeOfEvent += millisecondsBetweenKeys
-        @eventsQueue.push new KeyupSyntheticEvent 16, false, false, false, false
+        @eventsQueue.push (new KeyupInputEvent 16, false, false, false, false).markAsSynthetic()
 
   syntheticEventsMouseMovePressDragRelease: (orig, dest, millisecondsForDrag = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
     @syntheticEventsMouseMove orig, "left button", 100, nil, startTime, numberOfEventsPerMillisecond
@@ -1171,7 +1171,7 @@ class WorldMorph extends PanelWdgt
   syntheticEventsMousePlace: (place = new Point(0,0), scheduledTimeOfEvent = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @eventsQueue.push "mousemoveBrowserEvent"
     @eventsQueue.push scheduledTimeOfEvent
-    @eventsQueue.push new MousemoveSyntheticEvent place.x, place.y, 0, 0, false, false, false, false
+    @eventsQueue.push (new MousemoveInputEvent place.x, place.y, 0, 0, false, false, false, false).markAsSynthetic()
 
   syntheticEventsMouseMove: (dest, whichButton = "no button", milliseconds = 1000, orig = @hand.position(), startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
     if whichButton == "left button"
@@ -1204,7 +1204,7 @@ class WorldMorph extends PanelWdgt
         #console.log nextX + " " + nextY + " scheduled at: " + scheduledTimeOfEvent
         @eventsQueue.push "mousemoveBrowserEvent"
         @eventsQueue.push scheduledTimeOfEvent
-        @eventsQueue.push new MousemoveSyntheticEvent nextX, nextY, button, buttons, false, false, false, false
+        @eventsQueue.push (new MousemoveInputEvent nextX, nextY, button, buttons, false, false, false, false).markAsSynthetic()
 
   syntheticEventsMouseClick: (whichButton = "left button", milliseconds = 100, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @syntheticEventsMouseDown whichButton, startTime
@@ -1223,7 +1223,7 @@ class WorldMorph extends PanelWdgt
 
     @eventsQueue.push "mousedownBrowserEvent"
     @eventsQueue.push startTime
-    @eventsQueue.push new MousedownSyntheticEvent button, buttons, false, false, false, false
+    @eventsQueue.push (new MousedownInputEvent button, buttons, false, false, false, false).markAsSynthetic()
 
   syntheticEventsMouseUp: (whichButton = "left button", startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     if whichButton == "left button"
@@ -1238,7 +1238,7 @@ class WorldMorph extends PanelWdgt
 
     @eventsQueue.push "mouseupBrowserEvent"
     @eventsQueue.push startTime
-    @eventsQueue.push new MousedownSyntheticEvent button, buttons, false, false, false, false
+    @eventsQueue.push (new MousedownInputEvent button, buttons, false, false, false, false).markAsSynthetic()
 
   moveToAndClick: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @syntheticEventsMouseMove positionOrWidget, "no button", milliseconds, nil, startTime, nil

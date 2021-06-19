@@ -1,6 +1,4 @@
-# this file is only needed for Macros
-
-class KeyupSyntheticEvent
+class KeyboardInputEvent extends InputEvent
   keyCode: nil
   shiftKey: nil
   ctrlKey: nil

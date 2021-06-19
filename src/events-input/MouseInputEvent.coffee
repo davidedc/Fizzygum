@@ -1,6 +1,4 @@
-# this file is only needed for Macros
-
-class MousedownSyntheticEvent
+class MouseInputEvent extends InputEvent
   button: nil
   buttons: nil
   ctrlKey: nil

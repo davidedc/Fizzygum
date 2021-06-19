@@ -198,7 +198,7 @@ def main():
     filenames = sorted(filenames + sorted(glob("src/graphs-plots-charts" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/maps" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/fizzytiles" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/events-synthetic" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/events-input" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/macros" + "/*.coffee")))
 
 
