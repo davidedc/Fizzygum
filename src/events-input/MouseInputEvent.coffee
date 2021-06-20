@@ -7,4 +7,5 @@ class MouseInputEvent extends InputEvent
   metaKey: nil
 
 
-  constructor: (@button, @buttons, @ctrlKey, @shiftKey, @altKey, @metaKey) ->
+  constructor: (@button, @buttons, @ctrlKey, @shiftKey, @altKey, @metaKey, isSynthetic, time) ->
+    super isSynthetic, time

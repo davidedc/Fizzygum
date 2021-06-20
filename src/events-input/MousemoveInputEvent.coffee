@@ -4,8 +4,8 @@ class MousemoveInputEvent extends MouseInputEvent
   pageX: nil
   pageY: nil
 
-  constructor: (pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    super button, buttons, ctrlKey, shiftKey, altKey, metaKey
+  constructor: (pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey, isSynthetic, time) ->
+    super button, buttons, ctrlKey, shiftKey, altKey, metaKey, isSynthetic, time
     # When the macro system calculates the mouse moves, it takes
     # as input information the logical coordinates of widgets,
     # which are all relative to the canvas. Those then need to be

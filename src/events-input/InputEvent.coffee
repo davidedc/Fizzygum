@@ -1,6 +1,5 @@
 class InputEvent
-  _isSynthetic: false
+  isSynthetic: false
+  time: 0
 
-  markAsSynthetic: ->
-    @_isSynthetic = true
-    @
+  constructor: (@isSynthetic, @time) ->
