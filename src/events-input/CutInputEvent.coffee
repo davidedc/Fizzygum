@@ -1,0 +1,1 @@
+class CutInputEvent extends ClipboardInputEvent

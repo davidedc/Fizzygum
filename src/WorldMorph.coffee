@@ -1631,7 +1631,7 @@ class WorldMorph extends PanelWdgt
             # for security reasons clipboard access is not
             # allowed outside of the event listener, we
             # have to work with text here.
-            @cutBrowserEventHandler event
+            @cutBrowserEventHandler event.text
 
           when "copyBrowserEvent"
             # note that "event" here is actually a string,
@@ -2311,9 +2311,10 @@ class WorldMorph extends PanelWdgt
           event.returnValue = false
           setStatus = window.clipboardData.setData "Text", selectedText
 
+      dateOfTheEvent = Date.now()
       @eventsQueue.push "cutBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push selectedText
+      @eventsQueue.push dateOfTheEvent
+      @eventsQueue.push new CutInputEvent selectedText, false, dateOfTheEvent
 
     document.body.addEventListener "cut", @cutBrowserEventListener, false
     
