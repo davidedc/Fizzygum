@@ -1,0 +1,1 @@
+class PasteInputEvent extends ClipboardInputEvent

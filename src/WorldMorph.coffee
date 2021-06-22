@@ -1627,25 +1627,22 @@ class WorldMorph extends PanelWdgt
           # ------------------
 
           when "cutBrowserEvent"
-            # note that "event" here is actually a string,
             # for security reasons clipboard access is not
             # allowed outside of the event listener, we
             # have to work with text here.
             @cutBrowserEventHandler event.text
 
           when "copyBrowserEvent"
-            # note that "event" here is actually a string,
             # for security reasons clipboard access is not
             # allowed outside of the event listener, we
             # have to work with text here.
-            @copyBrowserEventHandler event
+            @copyBrowserEventHandler event.text
 
           when "pasteBrowserEvent"
-            # note that "event" here is actually a string,
             # for security reasons clipboard access is not
             # allowed outside of the event listener, we
             # have to work with text here.
-            @pasteBrowserEventHandler event
+            @pasteBrowserEventHandler event.text
 
           # ------
           # others
@@ -2333,9 +2330,10 @@ class WorldMorph extends PanelWdgt
           event.returnValue = false
           setStatus = window.clipboardData.setData "Text", selectedText
 
+      dateOfTheEvent = Date.now()
       @eventsQueue.push "copyBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push selectedText
+      @eventsQueue.push dateOfTheEvent
+      @eventsQueue.push new CopyInputEvent selectedText, false, dateOfTheEvent
 
     document.body.addEventListener "copy", @copyBrowserEventListener, false
 
@@ -2354,9 +2352,10 @@ class WorldMorph extends PanelWdgt
             text = window.clipboardData.getData "Text"
             #url = window.clipboardData.getData "URL"
 
+      dateOfTheEvent = Date.now()
       @eventsQueue.push "pasteBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push text
+      @eventsQueue.push dateOfTheEvent
+      @eventsQueue.push new PasteInputEvent text, false, dateOfTheEvent
 
     document.body.addEventListener "paste", @pasteBrowserEventListener, false
 
