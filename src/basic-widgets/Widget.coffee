@@ -348,10 +348,7 @@ class Widget extends TreeNode
     super()
     @assignUniqueID()
 
-    if Automator? and Automator.state == Automator.RECORDING
-      arr = world.automator.tagsCollectedWhileRecordingTest
-      if @constructor.name not in arr
-        arr.push @constructor.name
+    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
 
     @bounds = Rectangle.EMPTY
     @minimumExtent = new Point 5,5

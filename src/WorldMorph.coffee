@@ -1958,12 +1958,6 @@ class WorldMorph extends PanelWdgt
     return [ topWdgtUnderPointer.uniqueIDString(), morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph]
 
 
-  addMouseChangeCommand: (upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    if Automator? and Automator.state == Automator.RECORDING
-      pointerAndWdgtInfo = @getPointerAndWdgtInfo()
-      @automator.recorder.addMouseChangeCommand upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey, pointerAndWdgtInfo...
-
-
   mousedownBrowserEventHandler: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     # the recording of the test command (in case we are
     # recording a test) is handled inside the function
@@ -1974,11 +1968,11 @@ class WorldMorph extends PanelWdgt
     # or user left or right-clicks on a menu,
     # in which case we record a more specific test
     # commands.
-    @addMouseChangeCommand "down", button, buttons, ctrlKey, shiftKey, altKey, metaKey
+    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
     @hand.processMouseDown button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
   mouseupBrowserEventHandler: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    @addMouseChangeCommand "up", button, buttons, ctrlKey, shiftKey, altKey, metaKey
+    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
     @hand.processMouseUp button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
   mousemoveBrowserEventHandler: (pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
@@ -1995,22 +1989,11 @@ class WorldMorph extends PanelWdgt
     # add the mouse move command here *after* the
     # potential grab command.
 
-    if @hand.isThisPointerFloatDraggingSomething()
-      if Automator? and Automator.state == Automator.RECORDING
-        action = "floatDrag"
-        arr = @automator.tagsCollectedWhileRecordingTest
-        if action not in arr
-          arr.push action
-    
-    if Automator? and Automator.state == Automator.RECORDING
-      @automator.recorder.addMouseMoveCommand(worldX, worldY, @hand.isThisPointerFloatDraggingSomething(), button, buttons, ctrlKey, shiftKey, altKey, metaKey)
-
+    #if @hand.isThisPointerFloatDraggingSomething()
+    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
 
   wheelBrowserEventHandler: (deltaX, deltaY, deltaZ, altKey, button, buttons) ->
-    if Automator? and Automator.state == Automator.RECORDING
-      pointerAndWdgtInfo = @getPointerAndWdgtInfo()
-      @automator.recorder.addWheelCommand deltaX, deltaY, deltaZ, altKey, button, buttons, pointerAndWdgtInfo...
-
+    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
     @hand.processWheel deltaX, deltaY, deltaZ, altKey, button, buttons
 
 
@@ -2024,13 +2007,12 @@ class WorldMorph extends PanelWdgt
       nil # special key
 
   keydownBrowserEventHandler: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    if Automator? and Automator.state == Automator.RECORDING
-      @automator.recorder.addKeyDownCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
-    @keyboardEventsReceiver?.processKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey
+    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
+    @keyboardEventsReceiver?.processKeyDown keyCode, shiftKey, ctrlKey, altKey, metaKey
 
   keyupBrowserEventHandler: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    if Automator? and Automator.state == Automator.RECORDING
-      @automator.recorder.addKeyUpCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
+    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
+
     # dispatch to keyboard receiver
     # so far the caret is the only keyboard
     # event handler and it has no keyup
@@ -2044,8 +2026,7 @@ class WorldMorph extends PanelWdgt
     # this part is excluded from the fizzygum homepage build <<«
 
   keypressBrowserEventHandler: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
-    if Automator? and Automator.state == Automator.RECORDING
-      @automator.recorder.addKeyPressCommand charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
+    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
 
     # »>> this part is excluded from the fizzygum homepage build
     # This if block adapted from:
@@ -2098,20 +2079,17 @@ class WorldMorph extends PanelWdgt
     #console.log "processing cut"
     @caret?.processCut selectedText
 
-    if Automator? and Automator.state == Automator.RECORDING
-      @automator.recorder.addCutCommand selectedText
+    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
 
   copyBrowserEventHandler: (selectedText) ->
     #console.log "processing copy"
-    if Automator? and Automator.state == Automator.RECORDING
-      @automator.recorder.addCopyCommand selectedText
+    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
 
   pasteBrowserEventHandler: (clipboardText) ->
     #console.log "processing paste"
     if @caret
       @caret.processPaste clipboardText
-      if Automator? and Automator.state == Automator.RECORDING
-        @automator.recorder.addPasteCommand selectedText
+      # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
 
   # »>> this part is excluded from the fizzygum homepage build
   dropBrowserEventHandler: (event) ->
