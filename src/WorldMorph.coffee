@@ -1533,22 +1533,21 @@ class WorldMorph extends PanelWdgt
           # --------------------------------------
           # input DOM element for virtual keyboard
           # --------------------------------------
-
-          when "inputDOMElementForVirtualKeyboardKeydownBrowserEvent"
-            @keyboardEventsReceiver?.processKeyDown event
-
-            if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
-              @keyboardEventsReceiver?.processKeyPress event
-
-          when "inputDOMElementForVirtualKeyboardKeyupBrowserEvent"
-            # dispatch to keyboard receiver
-            # so far the caret is the only keyboard
-            # event handler and it has no keyup
-            # handler
-            @keyboardEventsReceiver?.processKeyUp? event
-
-          when "inputDOMElementForVirtualKeyboardKeypressBrowserEvent"
-            @keyboardEventsReceiver?.processKeyPress event
+          #when "inputDOMElementForVirtualKeyboardKeydownBrowserEvent"
+          #  @keyboardEventsReceiver?.processKeyDown event
+          #
+          #  if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
+          #    @keyboardEventsReceiver?.processKeyPress event
+          #
+          #when "inputDOMElementForVirtualKeyboardKeyupBrowserEvent"
+          #  # dispatch to keyboard receiver
+          #  # so far the caret is the only keyboard
+          #  # event handler and it has no keyup
+          #  # handler
+          #  @keyboardEventsReceiver?.processKeyUp? event
+          #
+          #when "inputDOMElementForVirtualKeyboardKeypressBrowserEvent"
+          #  @keyboardEventsReceiver?.processKeyPress event
 
           # -----
           # mouse
