@@ -2045,19 +2045,19 @@ class WorldMorph extends PanelWdgt
 
     # don't manage external keypad if we are playing back
     # the tests (i.e. when event is nil)
-    if symbol == @constructor.KEYPAD_0_mappedToThaiKeyboard_Q
-      unless @doublePressOfZeroKeypadKey?
-        @doublePressOfZeroKeypadKey = 1
-        setTimeout (=>
-          #if @doublePressOfZeroKeypadKey is 1
-          #  console.log "single keypress"
-          @doublePressOfZeroKeypadKey = nil
-          return false
-        ), 300
-      else
-        @doublePressOfZeroKeypadKey = nil
-        #console.log "double keypress"
-      return false
+    #if symbol == @constructor.KEYPAD_0_mappedToThaiKeyboard_Q
+    #  unless @doublePressOfZeroKeypadKey?
+    #    @doublePressOfZeroKeypadKey = 1
+    #    setTimeout (=>
+    #      #if @doublePressOfZeroKeypadKey is 1
+    #      #  console.log "single keypress"
+    #      @doublePressOfZeroKeypadKey = nil
+    #      return false
+    #    ), 300
+    #  else
+    #    @doublePressOfZeroKeypadKey = nil
+    #    #console.log "double keypress"
+    #  return false
     # this part is excluded from the fizzygum homepage build <<«
 
     @keyboardEventsReceiver?.processKeyPress charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
