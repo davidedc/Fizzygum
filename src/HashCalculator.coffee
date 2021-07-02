@@ -7,6 +7,8 @@
 # different os/browser config: a hash of the
 # configuration is added to the filename.
 
+# TODO if you look for "charCodeAt", you'll find a duplicate
+
 class HashCalculator
 
   @calculateHash: (theString) ->
