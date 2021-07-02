@@ -386,21 +386,7 @@ class CaretMorph extends BlinkerMorph
       # keydown but 90 here matches the keydown only
       when 90
         @undo shiftKey
-      # unclear which keyboard needs ctrl
-      # to be pressed to give a keypressed
-      # event for {}[]@
-      # but this is what this catches
-      when 123
-        @insert "{"
-      when 125
-        @insert "}"
-      when 91
-        @insert "["
-      when 93
-        @insert "]"
-      when 64
-        @insert "@"
-  
+
   # these two arrive only from
   # keypressed, at least in Chrome/OSX
   # 65 and 90 are both scan codes.
