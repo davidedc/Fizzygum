@@ -43,24 +43,24 @@ class CaretMorph extends BlinkerMorph
       @rawSetExtent new Point Math.max(Math.floor(ls / 20), 1), ls
   
   # CaretMorph event processing:
-  processKeyPress: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
+  processKeyPress: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
     # @inspectKeyEvent event
     if @keyDownEventUsed
       @keyDownEventUsed = false
       @updateDimension()
       return nil
     if ctrlKey
-      @ctrl charCode, shiftKey
+      @ctrl key, shiftKey
     # in Chrome/OSX cmd-a and cmd-z
     # don't trigger a keypress so this
     # function invocation here does
     # nothing.
     else if metaKey
-      @cmd charCode, shiftKey
+      @cmd key, shiftKey
     else
-      @insert symbol, shiftKey
+      @insert key, shiftKey
     # notify target's parent of key event
-    @target.escalateEvent "reactToKeystroke", charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
+    @target.escalateEvent "reactToKeystroke", key, code, shiftKey, ctrlKey, altKey, metaKey
     @updateDimension()
   
   # Some "keys" don't produce a keypress,
@@ -72,23 +72,28 @@ class CaretMorph extends BlinkerMorph
   # the same thing twice just in case in some
   # platforms some unexpected keys DO produce
   # both the keydown + keypress ...
-  processKeyDown: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
+  processKeyDown: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
     # @inspectKeyEvent event
     @keyDownEventUsed = false
     if ctrlKey
-      @ctrl scanCode, shiftKey
+      @ctrl key, shiftKey
       # notify target's parent of key event
-      @target.escalateEvent "reactToKeystroke", scanCode, nil, shiftKey, ctrlKey, altKey, metaKey
+      @target.escalateEvent "reactToKeystroke", key, code, shiftKey, ctrlKey, altKey, metaKey
       @updateDimension()
       return
     else if metaKey
-      @cmd scanCode, shiftKey
+      if key == "z" then debugger
+      @cmd key, shiftKey
       # notify target's parent of key event
-      @target.escalateEvent "reactToKeystroke", scanCode, nil, shiftKey, ctrlKey, altKey, metaKey
+      @target.escalateEvent "reactToKeystroke", key, code, shiftKey, ctrlKey, altKey, metaKey
       @updateDimension()
       return
-    switch scanCode
-      when 32
+
+    # see:
+    #   https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values
+    #   https://w3c.github.io/uievents/tools/key-event-viewer.html
+    switch key
+      when " "
         # when you do a preventDefault() on the spacebar,
         # (to avoid the page to scroll), then the
         # keypress event for the space doesn't happen
@@ -96,31 +101,31 @@ class CaretMorph extends BlinkerMorph
         # so we must process it in the keydown here instead!
         @insert " "
         @keyDownEventUsed = true
-      when 37
+      when "ArrowLeft"
         @goLeft shiftKey
         @keyDownEventUsed = true
-      when 39
+      when "ArrowRight"
         @goRight shiftKey
         @keyDownEventUsed = true
-      when 38
+      when "ArrowUp"
         @goUp shiftKey
         @keyDownEventUsed = true
-      when 40
+      when "ArrowDown"
         @goDown shiftKey
         @keyDownEventUsed = true
-      when 36
+      when "Home"
         @goHome shiftKey
         @keyDownEventUsed = true
-      when 35
+      when "End"
         @goEnd shiftKey
         @keyDownEventUsed = true
-      when 46
+      when "Delete"
         @deleteRight()
         @keyDownEventUsed = true
-      when 8
+      when "Backspace"
         @deleteLeft()
         @keyDownEventUsed = true
-      when 9
+      when "Tab"
         # TAB is another key that doesn't
         # produce a keypress in all browsers/OSs
         @keyDownEventUsed = true
@@ -134,7 +139,7 @@ class CaretMorph extends BlinkerMorph
             else
               return @target.tab @target
 
-      when 13
+      when "Enter"
         # we can't check the class using instanceof
         # because TextMorphs are instances of StringMorphs
         # but they want the enter to insert a carriage return.
@@ -143,13 +148,13 @@ class CaretMorph extends BlinkerMorph
         else
           @insert "\n"
         @keyDownEventUsed = true
-      when 27
+      when "Escape"
         @cancel()
         @keyDownEventUsed = true
       else
     # @inspectKeyEvent event
     # notify target's parent of key event
-    @target.escalateEvent "reactToKeystroke", scanCode, nil, shiftKey, ctrlKey, altKey, metaKey
+    @target.escalateEvent "reactToKeystroke", key, code, shiftKey, ctrlKey, altKey, metaKey
     @updateDimension()
   
   processCut: (selectedText) ->
@@ -323,10 +328,10 @@ class CaretMorph extends BlinkerMorph
     else
       @target.clearSelection()
   
-  insert: (symbol, shiftKey) ->
+  insert: (key, shiftKey) ->
     # if the target "isNumeric", then only accept
     # numbers and "-" and "." as input
-    if not @target.isNumeric or not isNaN(parseFloat(symbol)) or symbol in ["-", "."]
+    if not @target.isNumeric or not isNaN(parseFloat(key)) or key in ["-", "."]
       
       # we push the state here before the change, then again
       # after the change. This seems redundant, however
@@ -364,39 +369,39 @@ class CaretMorph extends BlinkerMorph
         @gotoSlot @target.firstSelectedSlot()
         @target.deleteSelection()
       text = @target.text
-      text = text.slice(0, @slot) + symbol + text.slice(@slot)
+      text = text.slice(0, @slot) + key + text.slice(@slot)
       # this is a setText that will trigger the text
       # connections "from within", starting a new connections
       # update round
       @target.setText text, nil, nil
-      @goRight false, symbol.length
+      @goRight false, key.length
       @updateDimension()
       @target.pushUndoState? @slot
   
-  ctrl: (scanCodeOrCharCode, shiftKey) ->
+  ctrl: (key, shiftKey) ->
     # ctrl-a apparently can come from either
     # keypress or keydown
     # 64 is for keydown
     # 97 is for keypress
     # in Chrome on OSX there is no keypress
-    switch scanCodeOrCharCode
-      when 97, 65
+    switch key
+      when "a", "A"
         @target.selectAll()
       # ctrl-z arrives both via keypress and
       # keydown but 90 here matches the keydown only
-      when 90
+      when "z"
         @undo shiftKey
 
   # these two arrive only from
   # keypressed, at least in Chrome/OSX
   # 65 and 90 are both scan codes.
-  cmd: (scanCode, shiftKey) ->
+  cmd: (key, shiftKey) ->
     # CMD-A
-    switch scanCode
-      when 65
+    switch key
+      when "a", "A"
         @target.selectAll()
       # CMD-Z
-      when 90
+      when "z", "Z"
         @undo shiftKey
   
   deleteRight: ->
@@ -426,5 +431,5 @@ class CaretMorph extends BlinkerMorph
   # CaretMorph utilities:
   inspectKeyEvent: (event) ->
     # private
-    @inform "Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode + "\nkeyCode: " + event.keyCode + "\naltKey: " + event.altKey + "\nctrlKey: " + event.ctrlKey  + "\ncmdKey: " + event.metaKey
+    @inform "Key pressed: " + event.key + "\n------------------------" + "\nkey: " + event.key + "\ncode: " + event.code + "\naltKey: " + event.altKey + "\nctrlKey: " + event.ctrlKey  + "\ncmdKey: " + event.metaKey
   # this part is excluded from the fizzygum homepage build <<«

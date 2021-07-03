@@ -1113,11 +1113,11 @@ class WorldMorph extends PanelWdgt
         when "F2"
           @eventsQueue.push "keydownBrowserEvent"
           @eventsQueue.push startTime
-          @eventsQueue.push new KeydownInputEvent 113, false, false, false, false, true, startTime
+          @eventsQueue.push new KeydownInputEvent "F2", "F2", false, false, false, false, true, startTime
 
           @eventsQueue.push "keyupBrowserEvent"
           @eventsQueue.push startTime + millisecondsBetweenKeys
-          @eventsQueue.push new KeyupInputEvent  113, false, false, false, false, true, startTime + millisecondsBetweenKeys
+          @eventsQueue.push new KeyupInputEvent  "F2", "F2", false, false, false, false, true, startTime + millisecondsBetweenKeys
 
   syntheticEventsStringKeys: (theString, millisecondsBetweenKeys = 35, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     scheduledTimeOfEvent = startTime
@@ -1130,28 +1130,31 @@ class WorldMorph extends PanelWdgt
         @eventsQueue.push "keydownBrowserEvent"
         @eventsQueue.push scheduledTimeOfEvent
         scheduledTimeOfEvent += millisecondsBetweenKeys
-        @eventsQueue.push new KeydownInputEvent 16, true, false, false, false, true, scheduledTimeOfEvent
+        @eventsQueue.push new KeydownInputEvent "Shift", "ShiftLeft", true, false, false, false, true, scheduledTimeOfEvent
 
       @eventsQueue.push "keydownBrowserEvent"
       @eventsQueue.push scheduledTimeOfEvent
       scheduledTimeOfEvent += millisecondsBetweenKeys
-      @eventsQueue.push new KeydownInputEvent theString.toUpperCase().charCodeAt(i), isUpperCase, false, false, false, true, scheduledTimeOfEvent
+      # note that the second parameter (code) we are making up, assuming a hypothetical "1:1" key->code layout
+      @eventsQueue.push new KeydownInputEvent theString.charAt(i), theString.charAt(i), isUpperCase, false, false, false, true, scheduledTimeOfEvent
 
       @eventsQueue.push "keypressBrowserEvent"
       @eventsQueue.push scheduledTimeOfEvent
       scheduledTimeOfEvent += millisecondsBetweenKeys
-      @eventsQueue.push new KeypressInputEvent theString.charCodeAt(i),theString.charCodeAt(i),theString.charCodeAt(i), isUpperCase, false, false, false, true, scheduledTimeOfEvent
+      # note that the second parameter (code) we are making up, assuming a hypothetical "1:1" key->code layout
+      @eventsQueue.push new KeypressInputEvent theString.charAt(i), theString.charAt(i),isUpperCase, false, false, false, true, scheduledTimeOfEvent
 
       @eventsQueue.push "keyupBrowserEvent"
       @eventsQueue.push scheduledTimeOfEvent
       scheduledTimeOfEvent += millisecondsBetweenKeys
-      @eventsQueue.push new KeyupInputEvent theString.toUpperCase().charCodeAt(i), isUpperCase, false, false, false, true, scheduledTimeOfEvent
+      # note that the second parameter (code) we are making up, assuming a hypothetical "1:1" key->code layout
+      @eventsQueue.push new KeyupInputEvent theString.charAt(i), theString.charAt(i), isUpperCase, false, false, false, true, scheduledTimeOfEvent
 
       if isUpperCase
         @eventsQueue.push "keyupBrowserEvent"
         @eventsQueue.push scheduledTimeOfEvent
         scheduledTimeOfEvent += millisecondsBetweenKeys
-        @eventsQueue.push new KeyupInputEvent 16, false, false, false, false, true, scheduledTimeOfEvent
+        @eventsQueue.push new KeyupInputEvent "Shift", "ShiftLeft", false, false, false, false, true, scheduledTimeOfEvent
 
   syntheticEventsMouseMovePressDragRelease: (orig, dest, millisecondsForDrag = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
     @syntheticEventsMouseMove orig, "left button", 100, nil, startTime, numberOfEventsPerMillisecond
@@ -1613,13 +1616,13 @@ class WorldMorph extends PanelWdgt
           # --------
 
           when "keydownBrowserEvent"
-            @keydownBrowserEventHandler event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+            @keydownBrowserEventHandler event.key, event.code, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
 
           when "keyupBrowserEvent"
-            @keyupBrowserEventHandler event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+            @keyupBrowserEventHandler event.key, event.code, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
 
           when "keypressBrowserEvent"
-            @keypressBrowserEventHandler event.keyCode, @getChar(event), event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+            @keypressBrowserEventHandler event.key, event.code, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
 
           # ------------------
           # cut / copy / paste
@@ -1996,35 +1999,26 @@ class WorldMorph extends PanelWdgt
     @hand.processWheel deltaX, deltaY, deltaZ, altKey, button, buttons
 
 
-  # event.type must be keypress
-  getChar: (event) ->
-    unless event.which?
-      String.fromCharCode event.keyCode # IE
-    else if event.which isnt 0 and event.charCode isnt 0
-      String.fromCharCode event.which # the rest
-    else
-      nil # special key
-
-  keydownBrowserEventHandler: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
+  keydownBrowserEventHandler: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
     # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
-    @keyboardEventsReceiver?.processKeyDown keyCode, shiftKey, ctrlKey, altKey, metaKey
+    @keyboardEventsReceiver?.processKeyDown key, code, shiftKey, ctrlKey, altKey, metaKey
 
-  keyupBrowserEventHandler: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
+  keyupBrowserEventHandler: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
     # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
 
     # dispatch to keyboard receiver
     # so far the caret is the only keyboard
     # event handler and it has no keyup
     # handler
-    @keyboardEventsReceiver?.processKeyUp? scanCode, shiftKey, ctrlKey, altKey, metaKey
+    @keyboardEventsReceiver?.processKeyUp? key, code, shiftKey, ctrlKey, altKey, metaKey
 
     # »>> this part is excluded from the fizzygum homepage build
     # catch the F2 key
-    if scanCode == 113 and !shiftKey and !ctrlKey and !altKey and !metaKey
+    if key == "F2" and !shiftKey and !ctrlKey and !altKey and !metaKey
       @testMenuForMacros()
     # this part is excluded from the fizzygum homepage build <<«
 
-  keypressBrowserEventHandler: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
+  keypressBrowserEventHandler: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
     # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
 
     # »>> this part is excluded from the fizzygum homepage build
@@ -2060,7 +2054,7 @@ class WorldMorph extends PanelWdgt
     #  return false
     # this part is excluded from the fizzygum homepage build <<«
 
-    @keyboardEventsReceiver?.processKeyPress charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
+    @keyboardEventsReceiver?.processKeyPress key, code, shiftKey, ctrlKey, altKey, metaKey
 
   # -----------------------------------------------------
   # clipboard events processing
@@ -2192,15 +2186,16 @@ class WorldMorph extends PanelWdgt
   initKeyboardEventListeners: ->
     canvas = @worldCanvas
     @keydownBrowserEventListener = (event) =>
+      dateOfTheEvent = Date.now()
       @eventsQueue.push "keydownBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push event
+      @eventsQueue.push dateOfTheEvent
+      @eventsQueue.push KeydownInputEvent.fromBrowserEvent event, false, dateOfTheEvent
 
       # this paragraph is to prevent the browser going
       # "back button" when the user presses delete backspace.
       # taken from http://stackoverflow.com/a/2768256
       doPrevent = false
-      if event.keyCode == 8
+      if event.key == "Backspace"
         d = event.srcElement or event.target
         if d.tagName.toUpperCase() == 'INPUT' and
         (d.type.toUpperCase() == 'TEXT' or
@@ -2218,7 +2213,7 @@ class WorldMorph extends PanelWdgt
       # this paragraph is to prevent the browser scrolling when
       # user presses spacebar, see
       # https://stackoverflow.com/a/22559917
-      if event.keyCode == 32 and event.target == @worldCanvas
+      if event.key == " " and event.target == @worldCanvas
         # Note that doing a preventDefault on the spacebar
         # causes it not to generate the keypress event
         # (just the keydown), so we had to modify the keydown
@@ -2229,7 +2224,7 @@ class WorldMorph extends PanelWdgt
 
       # also browsers tend to do special things when "tab"
       # is pressed, so let's avoid that
-      if event.keyCode == 9 and event.target == @worldCanvas
+      if event.key == "Tab" and event.target == @worldCanvas
         doPrevent = true
 
       if doPrevent
