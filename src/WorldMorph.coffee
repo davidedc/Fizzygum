@@ -1907,9 +1907,12 @@ class WorldMorph extends PanelWdgt
     document.body.appendChild @inputDOMElementForVirtualKeyboard
 
     @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener = (event) =>
+
+      dateOfTheEvent = Date.now()
       @eventsQueue.push "inputDOMElementForVirtualKeyboardKeydownBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push event
+      @eventsQueue.push dateOfTheEvent
+      @eventsQueue.push InputDOMElementForVirtualKeyboardKeydownInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+
       # Default in several browsers
       # is for the backspace button to trigger
       # the "back button", so we prevent that
