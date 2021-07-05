@@ -1,1 +1,0 @@
-class KeypressInputEvent extends KeyboardInputEvent

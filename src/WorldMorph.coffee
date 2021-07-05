@@ -1138,12 +1138,6 @@ class WorldMorph extends PanelWdgt
       # note that the second parameter (code) we are making up, assuming a hypothetical "1:1" key->code layout
       @eventsQueue.push new KeydownInputEvent theString.charAt(i), theString.charAt(i), isUpperCase, false, false, false, true, scheduledTimeOfEvent
 
-      @eventsQueue.push "keypressBrowserEvent"
-      @eventsQueue.push scheduledTimeOfEvent
-      scheduledTimeOfEvent += millisecondsBetweenKeys
-      # note that the second parameter (code) we are making up, assuming a hypothetical "1:1" key->code layout
-      @eventsQueue.push new KeypressInputEvent theString.charAt(i), theString.charAt(i),isUpperCase, false, false, false, true, scheduledTimeOfEvent
-
       @eventsQueue.push "keyupBrowserEvent"
       @eventsQueue.push scheduledTimeOfEvent
       scheduledTimeOfEvent += millisecondsBetweenKeys
@@ -1549,8 +1543,6 @@ class WorldMorph extends PanelWdgt
           #  # handler
           #  @keyboardEventsReceiver?.processKeyUp? event
           #
-          #when "inputDOMElementForVirtualKeyboardKeypressBrowserEvent"
-          #  @keyboardEventsReceiver?.processKeyPress event
 
           # -----
           # mouse
@@ -1620,9 +1612,6 @@ class WorldMorph extends PanelWdgt
 
           when "keyupBrowserEvent"
             @keyupBrowserEventHandler event.key, event.code, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
-
-          when "keypressBrowserEvent"
-            @keypressBrowserEventHandler event.key, event.code, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
 
           # ------------------
           # cut / copy / paste
@@ -2021,44 +2010,6 @@ class WorldMorph extends PanelWdgt
       @testMenuForMacros()
     # this part is excluded from the fizzygum homepage build <<«
 
-  keypressBrowserEventHandler: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
-    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
-
-    # »>> this part is excluded from the fizzygum homepage build
-    # This if block adapted from:
-    # http://stackoverflow.com/a/16033129
-    # it rejects the
-    # characters from the special
-    # test-command-triggering external
-    # keypad. Also there is a "00" key
-    # in such keypads which is implemented
-    # buy just a double-press of the zero.
-    # We manage that case - if that key is
-    # pressed twice we understand that it's
-    # that particular key. Managing this
-    # special case within Fizzygum
-    # is not best, but there aren't any
-    # good alternatives.
-
-    # don't manage external keypad if we are playing back
-    # the tests (i.e. when event is nil)
-    #if symbol == @constructor.KEYPAD_0_mappedToThaiKeyboard_Q
-    #  unless @doublePressOfZeroKeypadKey?
-    #    @doublePressOfZeroKeypadKey = 1
-    #    setTimeout (=>
-    #      #if @doublePressOfZeroKeypadKey is 1
-    #      #  console.log "single keypress"
-    #      @doublePressOfZeroKeypadKey = nil
-    #      return false
-    #    ), 300
-    #  else
-    #    @doublePressOfZeroKeypadKey = nil
-    #    #console.log "double keypress"
-    #  return false
-    # this part is excluded from the fizzygum homepage build <<«
-
-    @keyboardEventsReceiver?.processKeyPress key, code, shiftKey, ctrlKey, altKey, metaKey
-
   # -----------------------------------------------------
   # clipboard events processing
   # -----------------------------------------------------
@@ -2243,9 +2194,6 @@ class WorldMorph extends PanelWdgt
     canvas.addEventListener "keyup", @keyupBrowserEventListener, false
     
     @keypressBrowserEventListener = (event) =>
-      @eventsQueue.push "keypressBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push event
 
     canvas.addEventListener "keypress", @keypressBrowserEventListener, false
 

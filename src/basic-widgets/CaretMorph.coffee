@@ -2,7 +2,6 @@
 
 class CaretMorph extends BlinkerMorph
 
-  keyDownEventUsed: false
   target: nil
   slot: nil
   viewPadding: 1
@@ -43,115 +42,64 @@ class CaretMorph extends BlinkerMorph
       @rawSetExtent new Point Math.max(Math.floor(ls / 20), 1), ls
   
   # CaretMorph event processing:
-  processKeyPress: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
-    # @inspectKeyEvent event
-    if @keyDownEventUsed
-      @keyDownEventUsed = false
-      @updateDimension()
-      return nil
-    if ctrlKey
-      @ctrl key, shiftKey
-    # in Chrome/OSX cmd-a and cmd-z
-    # don't trigger a keypress so this
-    # function invocation here does
-    # nothing.
-    else if metaKey
-      @cmd key, shiftKey
-    else
-      @insert key, shiftKey
-    # notify target's parent of key event
-    @target.escalateEvent "reactToKeystroke", key, code, shiftKey, ctrlKey, altKey, metaKey
-    @updateDimension()
-  
-  # Some "keys" don't produce a keypress,
-  # they just produce a keydown/keyup,
-  # (see https://stackoverflow.com/q/1367700 )
-  # so we handle those here.
-  # Note that we use the keyDownEventUsed flag
-  # to absolutely make sure that we don't process
-  # the same thing twice just in case in some
-  # platforms some unexpected keys DO produce
-  # both the keydown + keypress ...
+
   processKeyDown: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
     # @inspectKeyEvent event
-    @keyDownEventUsed = false
-    if ctrlKey
-      @ctrl key, shiftKey
-      # notify target's parent of key event
-      @target.escalateEvent "reactToKeystroke", key, code, shiftKey, ctrlKey, altKey, metaKey
-      @updateDimension()
-      return
-    else if metaKey
-      if key == "z" then debugger
-      @cmd key, shiftKey
-      # notify target's parent of key event
-      @target.escalateEvent "reactToKeystroke", key, code, shiftKey, ctrlKey, altKey, metaKey
-      @updateDimension()
-      return
 
     # see:
     #   https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values
     #   https://w3c.github.io/uievents/tools/key-event-viewer.html
-    switch key
-      when " "
-        # when you do a preventDefault() on the spacebar,
-        # (to avoid the page to scroll), then the
-        # keypress event for the space doesn't happen
-        # (at least in Chrome/OSX),
-        # so we must process it in the keydown here instead!
-        @insert " "
-        @keyDownEventUsed = true
-      when "ArrowLeft"
-        @goLeft shiftKey
-        @keyDownEventUsed = true
-      when "ArrowRight"
-        @goRight shiftKey
-        @keyDownEventUsed = true
-      when "ArrowUp"
-        @goUp shiftKey
-        @keyDownEventUsed = true
-      when "ArrowDown"
-        @goDown shiftKey
-        @keyDownEventUsed = true
-      when "Home"
-        @goHome shiftKey
-        @keyDownEventUsed = true
-      when "End"
-        @goEnd shiftKey
-        @keyDownEventUsed = true
-      when "Delete"
-        @deleteRight()
-        @keyDownEventUsed = true
-      when "Backspace"
-        @deleteLeft()
-        @keyDownEventUsed = true
-      when "Tab"
-        # TAB is another key that doesn't
-        # produce a keypress in all browsers/OSs
-        @keyDownEventUsed = true
-        if @target?
-          if shiftKey
-            return @target.backTab @target
-          else
-            if @target instanceof SimplePlainTextWdgt
-              @insert "  "
-              @keyDownEventUsed = true
-            else
-              return @target.tab @target
 
-      when "Enter"
-        # we can't check the class using instanceof
-        # because TextMorphs are instances of StringMorphs
-        # but they want the enter to insert a carriage return.
-        if @target.constructor.name == "StringMorph" or @target.constructor.name == "StringMorph2"
-          @accept()
+    if ctrlKey
+      @ctrl key, shiftKey
+    else if metaKey
+      @cmd key, shiftKey
+    else
+      switch key
+        when " "
+          @insert " "
+        when "ArrowLeft"
+          @goLeft shiftKey
+        when "ArrowRight"
+          @goRight shiftKey
+        when "ArrowUp"
+          @goUp shiftKey
+        when "ArrowDown"
+          @goDown shiftKey
+        when "Home"
+          @goHome shiftKey
+        when "End"
+          @goEnd shiftKey
+        when "Delete"
+          @deleteRight()
+        when "Backspace"
+          @deleteLeft()
+        when "Tab"
+          if @target?
+            if shiftKey
+              return @target.backTab @target
+            else
+              if @target instanceof SimplePlainTextWdgt
+                @insert "  "
+              else
+                return @target.tab @target
+        when "Enter"
+          # we can't check the class using instanceof
+          # because TextMorphs are instances of StringMorphs
+          # but they want the enter to insert a carriage return.
+          if @target.constructor.name == "StringMorph" or @target.constructor.name == "StringMorph2"
+            @accept()
+          else
+            @insert "\n"
+        when "Escape"
+          @cancel()
+        # don't insert anything in case of shift or alt or CapsLock
+        when "Shift", "Alt", "CapsLock"
+          return
         else
-          @insert "\n"
-        @keyDownEventUsed = true
-      when "Escape"
-        @cancel()
-        @keyDownEventUsed = true
-      else
+          if !key? then debugger
+          @insert key, shiftKey
+
     # @inspectKeyEvent event
     # notify target's parent of key event
     @target.escalateEvent "reactToKeystroke", key, code, shiftKey, ctrlKey, altKey, metaKey
@@ -379,28 +327,16 @@ class CaretMorph extends BlinkerMorph
       @target.pushUndoState? @slot
   
   ctrl: (key, shiftKey) ->
-    # ctrl-a apparently can come from either
-    # keypress or keydown
-    # 64 is for keydown
-    # 97 is for keypress
-    # in Chrome on OSX there is no keypress
     switch key
       when "a", "A"
         @target.selectAll()
-      # ctrl-z arrives both via keypress and
-      # keydown but 90 here matches the keydown only
       when "z", "Z"
         @undo shiftKey
 
-  # these two arrive only from
-  # keypressed, at least in Chrome/OSX
-  # 65 and 90 are both scan codes.
   cmd: (key, shiftKey) ->
-    # CMD-A
     switch key
       when "a", "A"
         @target.selectAll()
-      # CMD-Z
       when "z", "Z"
         @undo shiftKey
   
