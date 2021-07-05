@@ -389,7 +389,7 @@ class CaretMorph extends BlinkerMorph
         @target.selectAll()
       # ctrl-z arrives both via keypress and
       # keydown but 90 here matches the keydown only
-      when "z"
+      when "z", "Z"
         @undo shiftKey
 
   # these two arrive only from
