@@ -9,3 +9,6 @@ class KeyboardInputEvent extends InputEvent
 
   constructor: (@key, @code, @shiftKey, @ctrlKey, @altKey, @metaKey, isSynthetic, time) ->
     super isSynthetic, time
+
+  @fromBrowserEvent: (event, isSynthetic, time) ->
+    new @ event.key, event.code, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey, isSynthetic, time

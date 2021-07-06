@@ -2187,9 +2187,10 @@ class WorldMorph extends PanelWdgt
     canvas.addEventListener "keydown", @keydownBrowserEventListener, false
 
     @keyupBrowserEventListener = (event) =>
+      dateOfTheEvent = Date.now()
       @eventsQueue.push "keyupBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push event
+      @eventsQueue.push dateOfTheEvent
+      @eventsQueue.push KeyupInputEvent.fromBrowserEvent event, false, dateOfTheEvent
 
     canvas.addEventListener "keyup", @keyupBrowserEventListener, false
     
