@@ -1918,18 +1918,20 @@ class WorldMorph extends PanelWdgt
       @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener, false
 
     @inputDOMElementForVirtualKeyboardKeyupBrowserEventListener = (event) =>
+      dateOfTheEvent = Date.now()
       @eventsQueue.push "inputDOMElementForVirtualKeyboardKeyupBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push event
+      @eventsQueue.push dateOfTheEvent
+      @eventsQueue.push InputDOMElementForVirtualKeyboardKeyupInputEvent.fromBrowserEvent event, false, dateOfTheEvent
       event.preventDefault()
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keyup",
       @inputDOMElementForVirtualKeyboardKeyupBrowserEventListener, false
 
+    # Keypress events are deprecated in the JS specs and are not needed
     @inputDOMElementForVirtualKeyboardKeypressBrowserEventListener = (event) =>
-      @eventsQueue.push "inputDOMElementForVirtualKeyboardKeypressBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push event
+      #@eventsQueue.push "inputDOMElementForVirtualKeyboardKeypressBrowserEvent"
+      #@eventsQueue.push Date.now()
+      #@eventsQueue.push event
       event.preventDefault()
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keypress",
