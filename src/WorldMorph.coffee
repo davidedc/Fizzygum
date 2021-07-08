@@ -2070,24 +2070,28 @@ class WorldMorph extends PanelWdgt
     #canvas.addEventListener "dblclick", @dblclickEventListener, false
 
     @mousedownBrowserEventListener = (event) =>
+      dateOfTheEvent = Date.now()
       @eventsQueue.push "mousedownBrowserEvent"
       @eventsQueue.push Date.now()
-      @eventsQueue.push event
+      @eventsQueue.push dateOfTheEvent
+      @eventsQueue.push MousedownInputEvent.fromBrowserEvent event, false, dateOfTheEvent
 
     canvas.addEventListener "mousedown", @mousedownBrowserEventListener, false
 
     
     @mouseupBrowserEventListener = (event) =>
+      dateOfTheEvent = Date.now()
       @eventsQueue.push "mouseupBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push event
+      @eventsQueue.push dateOfTheEvent
+      @eventsQueue.push MouseupInputEvent.fromBrowserEvent event, false, dateOfTheEvent
 
     canvas.addEventListener "mouseup", @mouseupBrowserEventListener, false
         
     @mousemoveBrowserEventListener = (event) =>
+      dateOfTheEvent = Date.now()
       @eventsQueue.push "mousemoveBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push event
+      @eventsQueue.push dateOfTheEvent
+      @eventsQueue.push MousemoveInputEvent.fromBrowserEvent event, false, dateOfTheEvent
 
     canvas.addEventListener "mousemove", @mousemoveBrowserEventListener, false
 

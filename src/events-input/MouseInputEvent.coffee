@@ -1,3 +1,4 @@
+# see also https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent
 class MouseInputEvent extends InputEvent
   button: nil
   buttons: nil
@@ -9,3 +10,6 @@ class MouseInputEvent extends InputEvent
 
   constructor: (@button, @buttons, @ctrlKey, @shiftKey, @altKey, @metaKey, isSynthetic, time) ->
     super isSynthetic, time
+
+  @fromBrowserEvent: (event, isSynthetic, time) ->
+    new @ event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey, isSynthetic, time

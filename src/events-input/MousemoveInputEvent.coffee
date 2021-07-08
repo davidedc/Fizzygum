@@ -15,3 +15,6 @@ class MousemoveInputEvent extends MouseInputEvent
     canvasPosition = world.getCanvasPosition()
     @pageX = pageX + canvasPosition.x
     @pageY = pageY + canvasPosition.y
+
+  @fromBrowserEvent: (event, isSynthetic, time) ->
+    new @ event.pageX, event.pageY, event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey, isSynthetic, time
