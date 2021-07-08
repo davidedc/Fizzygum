@@ -2099,25 +2099,28 @@ class WorldMorph extends PanelWdgt
     canvas = @worldCanvas
     
     @touchstartBrowserEventListener = (event) =>
+      dateOfTheEvent = Date.now()
       @eventsQueue.push "touchstartBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push event
+      @eventsQueue.push dateOfTheEvent
+      @eventsQueue.push TouchstartInputEvent.fromBrowserEvent event, false, dateOfTheEvent
       event.preventDefault() # (unsure that this one is needed)
 
     canvas.addEventListener "touchstart", @touchstartBrowserEventListener, false
 
     @touchendBrowserEventListener = (event) =>
+      dateOfTheEvent = Date.now()
       @eventsQueue.push "touchendBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push event
+      @eventsQueue.push dateOfTheEvent
+      @eventsQueue.push TouchendInputEvent.fromBrowserEvent event, false, dateOfTheEvent
       event.preventDefault() # prevent mouse events emulation
 
     canvas.addEventListener "touchend", @touchendBrowserEventListener, false
         
     @touchmoveBrowserEventListener = (event) =>
+      dateOfTheEvent = Date.now()
       @eventsQueue.push "touchmoveBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push event
+      @eventsQueue.push dateOfTheEvent
+      @eventsQueue.push TouchmoveInputEvent.fromBrowserEvent event, false, dateOfTheEvent
       event.preventDefault() # (unsure that this one is needed)
 
     canvas.addEventListener "touchmove", @touchmoveBrowserEventListener, false

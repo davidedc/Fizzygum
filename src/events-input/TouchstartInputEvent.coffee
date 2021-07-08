@@ -1,0 +1,1 @@
+class TouchstartInputEvent extends TouchInputEvent
