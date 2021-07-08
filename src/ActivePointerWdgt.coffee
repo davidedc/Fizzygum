@@ -735,128 +735,126 @@ class ActivePointerWdgt extends Widget
       w.wheel deltaX, deltaY, deltaZ, altKey, button, buttons
   
   
-  # »>> this part is excluded from the fizzygum homepage build
 
-  # drop event:
+  ## Drop types:
+  ##
+  ##        droppedImage
+  ##        droppedSVG
+  ##        droppedAudio
+  ##        droppedText
+  ##
+  #processDrop: (event) ->
+  #  #
+  #  #    find out whether an external image or audio file was dropped
+  #  #    onto the world canvas, turn it into an offscreen canvas or audio
+  #  #    element and dispatch the
+  #  #
+  #  #        droppedImage(canvas, name)
+  #  #        droppedSVG(image, name)
+  #  #        droppedAudio(audio, name)
+  #  #
+  #  #    events to interested Widgets at the mouse pointer
+  #  #    if none of the above content types can be determined, the file contents
+  #  #    is dispatched as an ArrayBuffer to interested Widgets:
+  #  #
+  #  #    ```droppedBinary(anArrayBuffer, name)```
   #
-  #        droppedImage
-  #        droppedSVG
-  #        droppedAudio
-  #        droppedText
+  #  files = (if event instanceof FileList then event else (event.target.files || event.dataTransfer.files))
+  #  url = (if event.dataTransfer then event.dataTransfer.getData("URL") else nil)
+  #  txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else nil)
+  #  targetDrop = @topWdgtUnderPointer()
+  #  img = new Image
   #
-  processDrop: (event) ->
-    #
-    #    find out whether an external image or audio file was dropped
-    #    onto the world canvas, turn it into an offscreen canvas or audio
-    #    element and dispatch the
-    #    
-    #        droppedImage(canvas, name)
-    #        droppedSVG(image, name)
-    #        droppedAudio(audio, name)
-    #    
-    #    events to interested Widgets at the mouse pointer
-    #    if none of the above content types can be determined, the file contents
-    #    is dispatched as an ArrayBuffer to interested Widgets:
-    #
-    #    ```droppedBinary(anArrayBuffer, name)```
+  #  readSVG = (aFile) ->
+  #    pic = new Image
+  #    targetDrop = targetDrop.parent  until targetDrop.droppedSVG
+  #    pic.onload = ->
+  #      targetDrop.droppedSVG pic, aFile.name
+  #    frd = new FileReader
+  #    frd.onloadend = (e) ->
+  #      pic.src = e.target.result
+  #    frd.readAsDataURL aFile
+  #
+  #  readImage = (aFile) ->
+  #    pic = new Image
+  #    targetDrop = targetDrop.parent  until targetDrop.droppedImage
+  #    pic.onload = ->
+  #      canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point pic.width, pic.height
+  #      canvas.getContext("2d").drawImage pic, 0, 0
+  #      targetDrop.droppedImage canvas, aFile.name
+  #
+  #    frd = new FileReader
+  #    frd.onloadend = (e) ->
+  #      pic.src = e.target.result
+  #
+  #    frd.readAsDataURL aFile
+  #
+  #  readAudio = (aFile) ->
+  #    snd = new Audio
+  #    frd = new FileReader
+  #    targetDrop = targetDrop.parent  until targetDrop.droppedAudio
+  #    frd.onloadend = (e) ->
+  #      snd.src = e.target.result
+  #      targetDrop.droppedAudio snd, aFile.name
+  #    frd.readAsDataURL aFile
+  #
+  #  readText = (aFile) ->
+  #    frd = new FileReader
+  #    targetDrop = targetDrop.parent  until targetDrop.droppedText
+  #    frd.onloadend = (e) ->
+  #      targetDrop.droppedText e.target.result, aFile.name
+  #    frd.readAsText aFile
+  #
+  #
+  #  readBinary = (aFile) ->
+  #    frd = new FileReader
+  #    targetDrop = targetDrop.parent  until targetDrop.droppedBinary
+  #    frd.onloadend = (e) ->
+  #      targetDrop.droppedBinary e.target.result, aFile.name
+  #    frd.readAsArrayBuffer aFile
+  #
+  #  parseImgURL = (html) ->
+  #    url = ""
+  #    start = html.indexOf "<img src=\""
+  #    return nil  if start is -1
+  #    start += 10
+  #    for i in [start...html.length]
+  #      c = html[i]
+  #      return url  if c is "\""
+  #      url = url.concat c
+  #    nil
+  #
+  #  if files.length
+  #    for file in files
+  #      if file.type.includes("svg") && !WorldMorph.preferencesAndSettings.rasterizeSVGs
+  #        readSVG file
+  #      else if file.type.startsWith "image"
+  #        readImage file
+  #      else if file.type.startsWith "audio"
+  #        readAudio file
+  #      else if file.type.startsWith "text"
+  #        readText file
+  #      else
+  #        readBinary file
+  #  else if url
+  #    if url.slice(url.lastIndexOf(".") + 1).toLowerCase() in ["gif", "png", "jpg", "jpeg", "bmp"]
+  #      targetDrop = targetDrop.parent  until targetDrop.droppedImage
+  #      img = new Image
+  #      img.onload = ->
+  #        canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point img.width, img.height
+  #        canvas.getContext("2d").drawImage img, 0, 0
+  #        targetDrop.droppedImage canvas
+  #      img.src = url
+  #  else if txt
+  #    targetDrop = targetDrop.parent  until targetDrop.droppedImage
+  #    img = new Image
+  #    img.onload = ->
+  #      canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point img.width, img.height
+  #      canvas.getContext("2d").drawImage img, 0, 0
+  #      targetDrop.droppedImage canvas
+  #    src = parseImgURL txt
+  #    img.src = src  if src
 
-    files = (if event instanceof FileList then event else (event.target.files || event.dataTransfer.files))
-    url = (if event.dataTransfer then event.dataTransfer.getData("URL") else nil)
-    txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else nil)
-    targetDrop = @topWdgtUnderPointer()
-    img = new Image
-
-    readSVG = (aFile) ->
-      pic = new Image
-      targetDrop = targetDrop.parent  until targetDrop.droppedSVG
-      pic.onload = ->
-        targetDrop.droppedSVG pic, aFile.name
-      frd = new FileReader
-      frd.onloadend = (e) ->
-        pic.src = e.target.result
-      frd.readAsDataURL aFile
-
-    readImage = (aFile) ->
-      pic = new Image
-      targetDrop = targetDrop.parent  until targetDrop.droppedImage
-      pic.onload = ->
-        canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point pic.width, pic.height
-        canvas.getContext("2d").drawImage pic, 0, 0
-        targetDrop.droppedImage canvas, aFile.name
-
-      frd = new FileReader
-      frd.onloadend = (e) ->
-        pic.src = e.target.result
-
-      frd.readAsDataURL aFile
-
-    readAudio = (aFile) ->
-      snd = new Audio
-      frd = new FileReader
-      targetDrop = targetDrop.parent  until targetDrop.droppedAudio
-      frd.onloadend = (e) ->
-        snd.src = e.target.result
-        targetDrop.droppedAudio snd, aFile.name
-      frd.readAsDataURL aFile
-    
-    readText = (aFile) ->
-      frd = new FileReader
-      targetDrop = targetDrop.parent  until targetDrop.droppedText
-      frd.onloadend = (e) ->
-        targetDrop.droppedText e.target.result, aFile.name
-      frd.readAsText aFile
-
-
-    readBinary = (aFile) ->
-      frd = new FileReader
-      targetDrop = targetDrop.parent  until targetDrop.droppedBinary
-      frd.onloadend = (e) ->
-        targetDrop.droppedBinary e.target.result, aFile.name
-      frd.readAsArrayBuffer aFile
-
-    parseImgURL = (html) ->
-      url = ""
-      start = html.indexOf "<img src=\""
-      return nil  if start is -1
-      start += 10
-      for i in [start...html.length]
-        c = html[i]
-        return url  if c is "\""
-        url = url.concat c
-      nil
-    
-    if files.length
-      for file in files
-        if file.type.includes("svg") && !WorldMorph.preferencesAndSettings.rasterizeSVGs
-          readSVG file
-        else if file.type.startsWith "image"
-          readImage file
-        else if file.type.startsWith "audio"
-          readAudio file
-        else if file.type.startsWith "text"
-          readText file
-        else
-          readBinary file
-    else if url
-      if url.slice(url.lastIndexOf(".") + 1).toLowerCase() in ["gif", "png", "jpg", "jpeg", "bmp"]
-        targetDrop = targetDrop.parent  until targetDrop.droppedImage
-        img = new Image
-        img.onload = ->
-          canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point img.width, img.height
-          canvas.getContext("2d").drawImage img, 0, 0
-          targetDrop.droppedImage canvas
-        img.src = url
-    else if txt
-      targetDrop = targetDrop.parent  until targetDrop.droppedImage
-      img = new Image
-      img.onload = ->
-        canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point img.width, img.height
-        canvas.getContext("2d").drawImage img, 0, 0
-        targetDrop.droppedImage canvas
-      src = parseImgURL txt
-      img.src = src  if src
-  # this part is excluded from the fizzygum homepage build <<«
-  
   
   # ActivePointerWdgt tools
   

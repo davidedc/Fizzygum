@@ -1639,10 +1639,8 @@ class WorldMorph extends PanelWdgt
           # others
           # ------
 
-          # »>> this part is excluded from the fizzygum homepage build
-          when "dropBrowserEvent"
-            @dropBrowserEventHandler event
-          # this part is excluded from the fizzygum homepage build <<«
+          #when "dropBrowserEvent"
+          #  @dropBrowserEventHandler event
 
           when "resizeBrowserEvent"
             @resizeBrowserEventHandler()
@@ -2040,11 +2038,9 @@ class WorldMorph extends PanelWdgt
       @caret.processPaste clipboardText
       # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
 
-  # »>> this part is excluded from the fizzygum homepage build
-  dropBrowserEventHandler: (event) ->
-    #console.log "processing drop"
-    @hand.processDrop event
-  # this part is excluded from the fizzygum homepage build <<«
+  #dropBrowserEventHandler: (event) ->
+  #  #console.log "processing drop"
+  #  @hand.processDrop event
 
   resizeBrowserEventHandler: ->
     #console.log "processing resize"
@@ -2391,15 +2387,12 @@ class WorldMorph extends PanelWdgt
       event.preventDefault()
     window.addEventListener "dragover", @dragoverEventListener, false
     
-    # »>> this part is excluded from the fizzygum homepage build
     @dropBrowserEventListener = (event) =>
-      @eventsQueue.push "dropBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push event
+      # nothing here, although code for handling a "drop" is in the
+      # comments
       event.preventDefault()
     window.addEventListener "drop", @dropBrowserEventListener, false
-    # this part is excluded from the fizzygum homepage build <<«
-    
+
     @resizeBrowserEventListener = =>
       @eventsQueue.push "resizeBrowserEvent"
       @eventsQueue.push Date.now()
