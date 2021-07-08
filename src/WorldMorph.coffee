@@ -1582,19 +1582,19 @@ class WorldMorph extends PanelWdgt
             # TODO it might be nice to discard duplicates due to the fact that
             # two events in a row (first one being fractional and second one being integer)
             # might be lumped-up into the same integer position
-            @mousemoveBrowserEventHandler Math.round(event.touches[0].pageX), Math.round(event.touches[0].pageY), 0, 0, false, false, false, false
-            @mousedownBrowserEventHandler 0, 1, false, false, false, false
+            @mousemoveBrowserEventHandler Math.round(event.touches[0].pageX), Math.round(event.touches[0].pageY), 0, 0, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
+            @mousedownBrowserEventHandler 0, 1, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
             #console.log "touchstartBrowserEvent"
 
           when "touchendBrowserEvent"
-            @mouseupBrowserEventHandler  0, 0, false, false, false, false
+            @mouseupBrowserEventHandler  0, 0, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
             #console.log "touchendBrowserEvent"
 
           when "touchmoveBrowserEvent"
             # note that the position can be non-integer, so rounding it
             # we have no real use for fractional input position and it's complicated
             # to handle for drawing, clipping etc., better stick to integer coords
-            @mousemoveBrowserEventHandler Math.round(event.touches[0].pageX), Math.round(event.touches[0].pageY), 0, 1, false, false, false, false
+            @mousemoveBrowserEventHandler Math.round(event.touches[0].pageX), Math.round(event.touches[0].pageY), 0, 1, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
             #console.log "touchmoveBrowserEvent " + event.touches[0].pageX + "  " + event.touches[0].pageY
 
           #when "gesturestartBrowserEvent"
