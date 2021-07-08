@@ -2191,7 +2191,9 @@ class WorldMorph extends PanelWdgt
       @eventsQueue.push KeyupInputEvent.fromBrowserEvent event, false, dateOfTheEvent
 
     canvas.addEventListener "keyup", @keyupBrowserEventListener, false
-    
+
+    # keypress is deprecated in the latest specs, and it's really not needed/used,
+    # since all keys really have an effect when they are pushed down
     @keypressBrowserEventListener = (event) =>
 
     canvas.addEventListener "keypress", @keypressBrowserEventListener, false
