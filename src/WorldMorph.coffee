@@ -1597,11 +1597,11 @@ class WorldMorph extends PanelWdgt
             @mousemoveBrowserEventHandler Math.round(event.touches[0].pageX), Math.round(event.touches[0].pageY), 0, 1, false, false, false, false
             #console.log "touchmoveBrowserEvent " + event.touches[0].pageX + "  " + event.touches[0].pageY
 
-          when "gesturestartBrowserEvent"
-            "doNothing"
+          #when "gesturestartBrowserEvent"
+          #  # nothing yet
 
-          when "gesturechangeBrowserEvent"
-            "doNothing"
+          #when "gesturechangeBrowserEvent"
+          #  # nothing yet
 
           # --------
           # keyboard
@@ -2119,17 +2119,13 @@ class WorldMorph extends PanelWdgt
     canvas.addEventListener "touchmove", @touchmoveBrowserEventListener, false
 
     @gesturestartBrowserEventListener = (event) =>
-      @eventsQueue.push "gesturestartBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push event
+      # we don't do anything with gestures for the time being
       event.preventDefault() # (unsure that this one is needed)
 
     canvas.addEventListener "gesturestart", @gesturestartBrowserEventListener, false
 
     @gesturechangeBrowserEventListener = (event) =>
-      @eventsQueue.push "gesturechangeBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push event
+      # we don't do anything with gestures for the time being
       event.preventDefault() # (unsure that this one is needed)
 
     canvas.addEventListener "gesturechange", @gesturechangeBrowserEventListener, false
