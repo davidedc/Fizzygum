@@ -2396,9 +2396,10 @@ class WorldMorph extends PanelWdgt
     window.addEventListener "drop", @dropBrowserEventListener, false
 
     @resizeBrowserEventListener = =>
+      dateOfTheEvent = Date.now()
       @eventsQueue.push "resizeBrowserEvent"
-      @eventsQueue.push Date.now()
-      @eventsQueue.push nil
+      @eventsQueue.push dateOfTheEvent
+      @eventsQueue.push ResizeInputEvent.fromBrowserEvent event, false, dateOfTheEvent
 
     # this is a DOM thing, little to do with other r e s i z e methods
     window.addEventListener "resize", @resizeBrowserEventListener, false
