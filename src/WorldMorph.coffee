@@ -2360,18 +2360,10 @@ class WorldMorph extends PanelWdgt
     # Safari, Chrome
     
     @wheelBrowserEventListener = (event) =>
+      dateOfTheEvent = Date.now()
       @eventsQueue.push "wheelBrowserEvent"
-
-      if Utils.runningInMobileSafari() and !event.deltaX? and !event.deltaY? and !event.deltaZ?
-        # create passable, fake wheel event for mouse/trackpad in
-        # Mobile Safari. (we are here after a "scroll" event).
-        # See comment below for more info.
-        event.deltaX = event.deltaZ = event.button = event.buttons = 0
-        event.deltaY = window.pageYOffset
-        event.altKey = false
-
-      @eventsQueue.push Date.now()
-      @eventsQueue.push event
+      @eventsQueue.push dateOfTheEvent
+      @eventsQueue.push WheelInputEvent.fromBrowserEvent event, false, dateOfTheEvent
       event.preventDefault()
 
     canvas.addEventListener "wheel", @wheelBrowserEventListener, false
