@@ -34,9 +34,9 @@ class WorldMorph extends PanelWdgt
   keypressBrowserEventListener: nil
   wheelBrowserEventListener: nil
 
+  cutBrowserEventListener: nil
   copyBrowserEventListener: nil
   pasteBrowserEventListener: nil
-  clipboardTextIfTestRunning: nil
   errorConsole: nil
 
   # the string for the last serialised morph
@@ -2224,65 +2224,29 @@ class WorldMorph extends PanelWdgt
     # other place we work with text.
 
     @cutBrowserEventListener = (event) =>
-      selectedText = ""
-      if @caret
-        selectedText = @caret.target.selection()
-        if event?.clipboardData
-          event.preventDefault()
-          setStatus = event.clipboardData.setData "text/plain", selectedText
-
-        if window.clipboardData
-          event.returnValue = false
-          setStatus = window.clipboardData.setData "Text", selectedText
-
       dateOfTheEvent = Date.now()
       @eventsQueue.push "cutBrowserEvent"
       @eventsQueue.push dateOfTheEvent
-      @eventsQueue.push new CutInputEvent selectedText, false, dateOfTheEvent
+      # TODO this should follow the fromBrowserEvent pattern
+      @eventsQueue.push new CutInputEvent.fromBrowserEvent event, false, dateOfTheEvent
 
     document.body.addEventListener "cut", @cutBrowserEventListener, false
     
     @copyBrowserEventListener = (event) =>
-      selectedText = ""
-      if @caret
-        if clipboardTextIfTestRunning?
-          selectedText = clipboardTextIfTestRunning
-        else
-          selectedText = @caret.target.selection()
-        if event?.clipboardData
-          event.preventDefault()
-          setStatus = event.clipboardData.setData "text/plain", selectedText
-
-        if window.clipboardData
-          event.returnValue = false
-          setStatus = window.clipboardData.setData "Text", selectedText
-
       dateOfTheEvent = Date.now()
       @eventsQueue.push "copyBrowserEvent"
       @eventsQueue.push dateOfTheEvent
-      @eventsQueue.push new CopyInputEvent selectedText, false, dateOfTheEvent
+      # TODO this should follow the fromBrowserEvent pattern
+      @eventsQueue.push new CopyInputEvent.fromBrowserEvent event, false, dateOfTheEvent
 
     document.body.addEventListener "copy", @copyBrowserEventListener, false
 
     @pasteBrowserEventListener = (event) =>
-      if @caret
-        if event?
-          if event.clipboardData
-            # Look for access to data if types array is missing
-            text = event.clipboardData.getData "text/plain"
-            #url = event.clipboardData.getData("text/uri-list")
-            #html = event.clipboardData.getData("text/html")
-            #custom = event.clipboardData.getData("text/xcustom")
-          # IE event is attached to the window object
-          if window.clipboardData
-            # The schema is fixed
-            text = window.clipboardData.getData "Text"
-            #url = window.clipboardData.getData "URL"
-
       dateOfTheEvent = Date.now()
       @eventsQueue.push "pasteBrowserEvent"
       @eventsQueue.push dateOfTheEvent
-      @eventsQueue.push new PasteInputEvent text, false, dateOfTheEvent
+      # TODO this should follow the fromBrowserEvent pattern
+      @eventsQueue.push new PasteInputEvent.fromBrowserEvent event, false, dateOfTheEvent
 
     document.body.addEventListener "paste", @pasteBrowserEventListener, false
 
