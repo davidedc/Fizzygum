@@ -17,5 +17,4 @@ class PasteInputEvent extends ClipboardInputEvent
           text = window.clipboardData.getData "Text"
           #url = window.clipboardData.getData "URL"
 
-    # TODO surely we should be able to say "new @" here? Why doesn't that work?
-    new PasteInputEvent text, isSynthetic, time
+    new @ text, isSynthetic, time

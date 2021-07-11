@@ -15,5 +15,4 @@ class CopyInputEvent extends ClipboardInputEvent
         event.returnValue = false
         setStatus = window.clipboardData.setData "Text", selectedText
 
-    # TODO surely we should be able to say "new @" here? Why doesn't that work?
-    new CopyInputEvent selectedText, isSynthetic, time
+    new @ selectedText, isSynthetic, time
