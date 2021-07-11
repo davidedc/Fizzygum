@@ -2205,7 +2205,7 @@ class WorldMorph extends PanelWdgt
       dateOfTheEvent = Date.now()
       @eventsQueue.push "cutBrowserEvent"
       # TODO this should follow the fromBrowserEvent pattern
-      @eventsQueue.push new CutInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push CutInputEvent.fromBrowserEvent event, false, dateOfTheEvent
 
     document.body.addEventListener "cut", @cutBrowserEventListener, false
     
@@ -2213,7 +2213,7 @@ class WorldMorph extends PanelWdgt
       dateOfTheEvent = Date.now()
       @eventsQueue.push "copyBrowserEvent"
       # TODO this should follow the fromBrowserEvent pattern
-      @eventsQueue.push new CopyInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push CopyInputEvent.fromBrowserEvent event, false, dateOfTheEvent
 
     document.body.addEventListener "copy", @copyBrowserEventListener, false
 
@@ -2221,7 +2221,7 @@ class WorldMorph extends PanelWdgt
       dateOfTheEvent = Date.now()
       @eventsQueue.push "pasteBrowserEvent"
       # TODO this should follow the fromBrowserEvent pattern
-      @eventsQueue.push new PasteInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push PasteInputEvent.fromBrowserEvent event, false, dateOfTheEvent
 
     document.body.addEventListener "paste", @pasteBrowserEventListener, false
 
