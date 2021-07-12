@@ -868,7 +868,15 @@ class ActivePointerWdgt extends Widget
     world.maybeEnableTrackChanges()
     @fullChanged()
 
-  processMouseMove: (worldX, worldY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
+  processMouseMove: (pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
+
+    posInDocument = world.getCanvasPosition()
+    # events from JS arrive in page coordinates,
+    # we turn those into world coordinates
+    # instead.
+    worldX = pageX - posInDocument.x
+    worldY = pageY - posInDocument.y
+
     #startProcessMouseMove = new Date().getTime()
     pos = new Point worldX, worldY
     @fullRawMoveTo pos

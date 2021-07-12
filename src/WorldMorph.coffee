@@ -1957,14 +1957,8 @@ class WorldMorph extends PanelWdgt
     @hand.processMouseUp button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
   mousemoveBrowserEventHandler: (pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    posInDocument = @getCanvasPosition()
-    # events from JS arrive in page coordinates,
-    # we turn those into world coordinates
-    # instead.
-    worldX = pageX - posInDocument.x
-    worldY = pageY - posInDocument.y
 
-    @hand.processMouseMove worldX, worldY, button, buttons, ctrlKey, shiftKey, altKey, metaKey
+    @hand.processMouseMove pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey
     # "@hand.processMouseMove" could cause a Grab
     # command to be issued, so we want to
     # add the mouse move command here *after* the
