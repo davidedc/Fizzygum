@@ -1225,7 +1225,7 @@ class WorldMorph extends PanelWdgt
       throw "syntheticEventsMouseUp: whichButton is unknown"
 
     @eventsQueue.push "mouseupBrowserEvent"
-    @eventsQueue.push new MousedownInputEvent button, buttons, false, false, false, false, true, startTime
+    @eventsQueue.push new MouseupInputEvent button, buttons, false, false, false, false, true, startTime
 
   moveToAndClick: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @syntheticEventsMouseMove positionOrWidget, "no button", milliseconds, nil, startTime, nil
@@ -1509,131 +1509,8 @@ class WorldMorph extends PanelWdgt
           @eventsQueue.splice 0, i
           return
 
-        # note that these events are actually strings
-        # in the case of clipboard events. Since
-        # for security reasons clipboard access is not
-        # allowed outside of the event listener, we
-        # have to work with text here.
-
-        switch eventType
-
-          # --------------------------------------
-          # input DOM element for virtual keyboard
-          # --------------------------------------
-          #when "inputDOMElementForVirtualKeyboardKeydownBrowserEvent"
-          #  @keyboardEventsReceiver?.processKeyDown event
-          #
-          #  if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
-          #    @keyboardEventsReceiver?.processKeyPress event
-          #
-          #when "inputDOMElementForVirtualKeyboardKeyupBrowserEvent"
-          #  # dispatch to keyboard receiver
-          #  # so far the caret is the only keyboard
-          #  # event handler and it has no keyup
-          #  # handler
-          #  @keyboardEventsReceiver?.processKeyUp? event
-          #
-
-          # -----
-          # mouse
-          # -----
-
-          # TODO mouseup and mousedown currently don't take the pointer position
-          # from the event - the idea being that the position is always changed
-          # by a mousemove, so we only change the pointer position on move events
-          # so we don't need it on mouseup or mousedown.
-          # While this thinking is "parsimonious", it doesn't apply well to pointer events,
-          # where there is no pointer update until the "down" happens.
-          # So we'll need to correct this eventually
-
-          when "mousedownBrowserEvent"
-            @mousedownBrowserEventHandler event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
-            #console.log "mousedownBrowserEventHandler " + event.button + "  " + event.buttons
-
-          when "mouseupBrowserEvent"
-            @mouseupBrowserEventHandler  event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
-            #console.log "mouseupBrowserEventHandler " + event.button + "  " + event.buttons
-
-          when "mousemoveBrowserEvent"
-            @mousemoveBrowserEventHandler event.pageX, event.pageY, event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
-            #console.log "mousemoveBrowserEventHandler " + event.button + "  " + event.buttons + "  " + event.pageX + "  " + event.pageY
-
-          when "wheelBrowserEvent"
-            @wheelBrowserEventHandler event.deltaX, event.deltaY, event.deltaZ, event.altKey, event.button, event.buttons
-
-          # -----
-          # touch
-          # -----
-
-          when "touchstartBrowserEvent"
-            # note that the position can be non-integer, so rounding it
-            # we have no real use for fractional input position and it's complicated
-            # to handle for drawing, clipping etc., better stick to integer coords
-            # TODO it might be nice to discard duplicates due to the fact that
-            # two events in a row (first one being fractional and second one being integer)
-            # might be lumped-up into the same integer position
-            @mousemoveBrowserEventHandler Math.round(event.touches[0].pageX), Math.round(event.touches[0].pageY), 0, 0, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
-            @mousedownBrowserEventHandler 0, 1, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
-            #console.log "touchstartBrowserEvent"
-
-          when "touchendBrowserEvent"
-            @mouseupBrowserEventHandler  0, 0, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
-            #console.log "touchendBrowserEvent"
-
-          when "touchmoveBrowserEvent"
-            # note that the position can be non-integer, so rounding it
-            # we have no real use for fractional input position and it's complicated
-            # to handle for drawing, clipping etc., better stick to integer coords
-            @mousemoveBrowserEventHandler Math.round(event.touches[0].pageX), Math.round(event.touches[0].pageY), 0, 1, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
-            #console.log "touchmoveBrowserEvent " + event.touches[0].pageX + "  " + event.touches[0].pageY
-
-          #when "gesturestartBrowserEvent"
-          #  # nothing yet
-
-          #when "gesturechangeBrowserEvent"
-          #  # nothing yet
-
-          # --------
-          # keyboard
-          # --------
-
-          when "keydownBrowserEvent"
-            @keydownBrowserEventHandler event.key, event.code, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
-
-          when "keyupBrowserEvent"
-            @keyupBrowserEventHandler event.key, event.code, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
-
-          # ------------------
-          # cut / copy / paste
-          # ------------------
-
-          when "cutBrowserEvent"
-            # for security reasons clipboard access is not
-            # allowed outside of the event listener, we
-            # have to work with text here.
-            @cutBrowserEventHandler event.text
-
-          when "copyBrowserEvent"
-            # for security reasons clipboard access is not
-            # allowed outside of the event listener, we
-            # have to work with text here.
-            @copyBrowserEventHandler event.text
-
-          when "pasteBrowserEvent"
-            # for security reasons clipboard access is not
-            # allowed outside of the event listener, we
-            # have to work with text here.
-            @pasteBrowserEventHandler event.text
-
-          # ------
-          # others
-          # ------
-
-          #when "dropBrowserEvent"
-          #  @dropBrowserEventHandler event
-
-          when "resizeBrowserEvent"
-            @resizeBrowserEventHandler()
+        # currently not handled: DOM virtual keyboard events
+        event.processEvent()
 
     catch err
       @softResetWorld()
@@ -1939,94 +1816,10 @@ class WorldMorph extends PanelWdgt
     return [ topWdgtUnderPointer.uniqueIDString(), morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph]
 
 
-  mousedownBrowserEventHandler: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    # the recording of the test command (in case we are
-    # recording a test) is handled inside the function
-    # here below.
-    # This is different from the other methods similar
-    # to this one but there is a little bit of
-    # logic we apply in case there is a right-click,
-    # or user left or right-clicks on a menu,
-    # in which case we record a more specific test
-    # commands.
-    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
-    @hand.processMouseDown button, buttons, ctrlKey, shiftKey, altKey, metaKey
-
-  mouseupBrowserEventHandler: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
-    @hand.processMouseUp button, buttons, ctrlKey, shiftKey, altKey, metaKey
-
-  mousemoveBrowserEventHandler: (pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-
-    @hand.processMouseMove pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey
-    # "@hand.processMouseMove" could cause a Grab
-    # command to be issued, so we want to
-    # add the mouse move command here *after* the
-    # potential grab command.
-
-    #if @hand.isThisPointerFloatDraggingSomething()
-    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
-
-  wheelBrowserEventHandler: (deltaX, deltaY, deltaZ, altKey, button, buttons) ->
-    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
-    @hand.processWheel deltaX, deltaY, deltaZ, altKey, button, buttons
-
-
-  keydownBrowserEventHandler: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
-    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
-    @keyboardEventsReceiver?.processKeyDown key, code, shiftKey, ctrlKey, altKey, metaKey
-
-  keyupBrowserEventHandler: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
-    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
-
-    # dispatch to keyboard receiver
-    # so far the caret is the only keyboard
-    # event handler and it has no keyup
-    # handler
-    @keyboardEventsReceiver?.processKeyUp? key, code, shiftKey, ctrlKey, altKey, metaKey
-
-    # »>> this part is excluded from the fizzygum homepage build
-    # catch the F2 key
-    if key == "F2" and !shiftKey and !ctrlKey and !altKey and !metaKey
-      @testMenuForMacros()
-    # this part is excluded from the fizzygum homepage build <<«
-
   # -----------------------------------------------------
   # clipboard events processing
   # -----------------------------------------------------
-  # clipboard events take a text instead of the event,
-  # the reason is that you can't access the clipboard
-  # outside of the EventListener, I presume for
-  # security reasons. So, since these process* methods
-  # are executed outside of the listeners, we really can't use
-  # the event and the clipboard object in the event, so
-  # we have to work with text. The clipboard IS handled, but
-  # it's handled in the listeners
 
-  cutBrowserEventHandler: (selectedText) ->
-    #console.log "processing cut"
-    @caret?.processCut selectedText
-
-    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
-
-  copyBrowserEventHandler: (selectedText) ->
-    #console.log "processing copy"
-    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
-
-  pasteBrowserEventHandler: (clipboardText) ->
-    #console.log "processing paste"
-    if @caret
-      @caret.processPaste clipboardText
-      # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
-
-  #dropBrowserEventHandler: (event) ->
-  #  #console.log "processing drop"
-  #  @hand.processDrop event
-
-  resizeBrowserEventHandler: ->
-    #console.log "processing resize"
-    if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
-      @stretchWorldToFillEntirePage()
 
   initMouseEventListeners: ->
     canvas = @worldCanvas

@@ -25,3 +25,7 @@ class WheelInputEvent extends MouseInputEvent
       event.altKey = false
 
     new @ event.deltaX, event.deltaY, event.deltaZ, event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey, isSynthetic, time
+
+  processEvent: ->
+    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
+    world.hand.processWheel @deltaX, @deltaY, @deltaZ, @altKey, @button, @buttons

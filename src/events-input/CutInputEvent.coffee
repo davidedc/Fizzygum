@@ -16,3 +16,7 @@ class CutInputEvent extends ClipboardInputEvent
         setStatus = window.clipboardData.setData "Text", selectedText
 
     new @ selectedText, isSynthetic, time
+
+  processEvent: ->
+    world.caret?.processCut @text
+    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED

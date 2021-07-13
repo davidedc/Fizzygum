@@ -3,3 +3,8 @@ class ResizeInputEvent extends InputEvent
 
   @fromBrowserEvent: (event, isSynthetic, time) ->
     new @()
+
+  processEvent: ->
+    #console.log "processing resize"
+    if world.automaticallyAdjustToFillEntireBrowserAlsoOnResize
+      world.stretchWorldToFillEntirePage()

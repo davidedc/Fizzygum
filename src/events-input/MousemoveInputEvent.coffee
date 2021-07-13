@@ -18,3 +18,15 @@ class MousemoveInputEvent extends MouseInputEvent
 
   @fromBrowserEvent: (event, isSynthetic, time) ->
     new @ event.pageX, event.pageY, event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey, isSynthetic, time
+
+
+  processEvent: ->
+
+    world.hand.processMouseMove @pageX, @pageY, @button, @buttons, @ctrlKey, @shiftKey, @altKey, @metaKey
+    # "@hand.processMouseMove" could cause a Grab
+    # command to be issued, so we want to
+    # add the mouse move command here *after* the
+    # potential grab command.
+
+    #if @hand.isThisPointerFloatDraggingSomething()
+    # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED

@@ -3,3 +3,5 @@ class InputEvent
   time: 0
 
   constructor: (@isSynthetic, @time) ->
+
+  processEvent: ->
