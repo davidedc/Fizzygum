@@ -187,27 +187,6 @@ class WorldMorph extends PanelWdgt
 
   eventsQueue: []
 
-  # Some operations are triggered by a callback
-  # actioned via a timeout
-  # e.g. see the cut and paste callbacks.
-  # In such cases, we count how many outstanding
-  # callbacks there are of this kind
-  # (by adding elements to this stack when the
-  # callback is scheduled, and popping them when
-  # the callback is executed), so that
-  # we can tell the automator player to PAUSE
-  # execution of actions until the scheduled
-  # callbacks are called. This is so turbo-mode macros
-  # can be still run at maximum speed.
-  # The alternative is to run at normal speed the
-  # macros containing such cases, which
-  # indeed would also take care of the problem
-  # (as the callbacks are likely satisfied at running
-  # time in the same span of time as when the macro
-  # was recorded), but the "slow-play"
-  # solution is more ad-hoc and is much much slower.
-  outstandingTimerTriggeredOperationsCounter: []
-
   widgetsReferencingOtherWidgets: new Set
   incrementalGcSessionId: 0
   desktopSidesPadding: 10

@@ -107,13 +107,7 @@ class CaretMorph extends BlinkerMorph
   
   processCut: (selectedText) ->
     #console.log "processing cut"
-    # see comment on outstandingTimerTriggeredOperationsCounter
-    # above where the property is declared and initialised.
-    world.outstandingTimerTriggeredOperationsCounter.push true
-    window.setTimeout ( =>
-     @deleteLeft()
-     world.outstandingTimerTriggeredOperationsCounter.pop()
-    ), 50, true
+    @deleteLeft()
 
 
   # unused
@@ -121,16 +115,8 @@ class CaretMorph extends BlinkerMorph
     #console.log "processing copy"
 
   processPaste: (clipboardText) ->
-    # Needs a few msec to execute paste
     #console.log "about to insert text: " + clipboardText
-
-    # see comment on outstandingTimerTriggeredOperationsCounter
-    # above where the property is declared and initialised.
-    world.outstandingTimerTriggeredOperationsCounter.push true
-    window.setTimeout ( =>
-     @insert clipboardText
-     world.outstandingTimerTriggeredOperationsCounter.pop()
-    ), 50, true
+    @insert clipboardText
 
   
   gotoSlot: (slot, becauseOfMouseClick) ->
