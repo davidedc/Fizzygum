@@ -1726,9 +1726,7 @@ class WorldMorph extends PanelWdgt
     document.body.appendChild @inputDOMElementForVirtualKeyboard
 
     @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener = (event) =>
-
-      dateOfTheEvent = Date.now()
-      @eventsQueue.push InputDOMElementForVirtualKeyboardKeydownInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push InputDOMElementForVirtualKeyboardKeydownInputEvent.fromBrowserEvent event, false
 
       # Default in several browsers
       # is for the backspace button to trigger
@@ -1746,8 +1744,7 @@ class WorldMorph extends PanelWdgt
       @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener, false
 
     @inputDOMElementForVirtualKeyboardKeyupBrowserEventListener = (event) =>
-      dateOfTheEvent = Date.now()
-      @eventsQueue.push InputDOMElementForVirtualKeyboardKeyupInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push InputDOMElementForVirtualKeyboardKeyupInputEvent.fromBrowserEvent event, false
       event.preventDefault()
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keyup",
@@ -1806,21 +1803,18 @@ class WorldMorph extends PanelWdgt
     #canvas.addEventListener "dblclick", @dblclickEventListener, false
 
     @mousedownBrowserEventListener = (event) =>
-      dateOfTheEvent = Date.now()
-      @eventsQueue.push MousedownInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push MousedownInputEvent.fromBrowserEvent event, false
 
     canvas.addEventListener "mousedown", @mousedownBrowserEventListener, false
 
     
     @mouseupBrowserEventListener = (event) =>
-      dateOfTheEvent = Date.now()
-      @eventsQueue.push MouseupInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push MouseupInputEvent.fromBrowserEvent event, false
 
     canvas.addEventListener "mouseup", @mouseupBrowserEventListener, false
         
     @mousemoveBrowserEventListener = (event) =>
-      dateOfTheEvent = Date.now()
-      @eventsQueue.push MousemoveInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push MousemoveInputEvent.fromBrowserEvent event, false
 
     canvas.addEventListener "mousemove", @mousemoveBrowserEventListener, false
 
@@ -1828,22 +1822,19 @@ class WorldMorph extends PanelWdgt
     canvas = @worldCanvas
     
     @touchstartBrowserEventListener = (event) =>
-      dateOfTheEvent = Date.now()
-      @eventsQueue.push TouchstartInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push TouchstartInputEvent.fromBrowserEvent event, false
       event.preventDefault() # (unsure that this one is needed)
 
     canvas.addEventListener "touchstart", @touchstartBrowserEventListener, false
 
     @touchendBrowserEventListener = (event) =>
-      dateOfTheEvent = Date.now()
-      @eventsQueue.push TouchendInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push TouchendInputEvent.fromBrowserEvent event, false
       event.preventDefault() # prevent mouse events emulation
 
     canvas.addEventListener "touchend", @touchendBrowserEventListener, false
         
     @touchmoveBrowserEventListener = (event) =>
-      dateOfTheEvent = Date.now()
-      @eventsQueue.push TouchmoveInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push TouchmoveInputEvent.fromBrowserEvent event, false
       event.preventDefault() # (unsure that this one is needed)
 
     canvas.addEventListener "touchmove", @touchmoveBrowserEventListener, false
@@ -1864,8 +1855,7 @@ class WorldMorph extends PanelWdgt
   initKeyboardEventListeners: ->
     canvas = @worldCanvas
     @keydownBrowserEventListener = (event) =>
-      dateOfTheEvent = Date.now()
-      @eventsQueue.push KeydownInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push KeydownInputEvent.fromBrowserEvent event, false
 
       # this paragraph is to prevent the browser going
       # "back button" when the user presses delete backspace.
@@ -1909,8 +1899,7 @@ class WorldMorph extends PanelWdgt
     canvas.addEventListener "keydown", @keydownBrowserEventListener, false
 
     @keyupBrowserEventListener = (event) =>
-      dateOfTheEvent = Date.now()
-      @eventsQueue.push KeyupInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push KeyupInputEvent.fromBrowserEvent event, false
 
     canvas.addEventListener "keyup", @keyupBrowserEventListener, false
 
@@ -1943,23 +1932,20 @@ class WorldMorph extends PanelWdgt
     # other place we work with text.
 
     @cutBrowserEventListener = (event) =>
-      dateOfTheEvent = Date.now()
       # TODO this should follow the fromBrowserEvent pattern
-      @eventsQueue.push CutInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push CutInputEvent.fromBrowserEvent event, false
 
     document.body.addEventListener "cut", @cutBrowserEventListener, false
     
     @copyBrowserEventListener = (event) =>
-      dateOfTheEvent = Date.now()
       # TODO this should follow the fromBrowserEvent pattern
-      @eventsQueue.push CopyInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push CopyInputEvent.fromBrowserEvent event, false
 
     document.body.addEventListener "copy", @copyBrowserEventListener, false
 
     @pasteBrowserEventListener = (event) =>
-      dateOfTheEvent = Date.now()
       # TODO this should follow the fromBrowserEvent pattern
-      @eventsQueue.push PasteInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push PasteInputEvent.fromBrowserEvent event, false
 
     document.body.addEventListener "paste", @pasteBrowserEventListener, false
 
@@ -2037,8 +2023,7 @@ class WorldMorph extends PanelWdgt
     # Safari, Chrome
     
     @wheelBrowserEventListener = (event) =>
-      dateOfTheEvent = Date.now()
-      @eventsQueue.push WheelInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push WheelInputEvent.fromBrowserEvent event, false
       event.preventDefault()
 
     canvas.addEventListener "wheel", @wheelBrowserEventListener, false
@@ -2066,8 +2051,7 @@ class WorldMorph extends PanelWdgt
     window.addEventListener "drop", @dropBrowserEventListener, false
 
     @resizeBrowserEventListener = =>
-      dateOfTheEvent = Date.now()
-      @eventsQueue.push ResizeInputEvent.fromBrowserEvent event, false, dateOfTheEvent
+      @eventsQueue.push ResizeInputEvent.fromBrowserEvent event, false
 
     # this is a DOM thing, little to do with other r e s i z e methods
     window.addEventListener "resize", @resizeBrowserEventListener, false
