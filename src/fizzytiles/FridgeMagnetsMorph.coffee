@@ -32,7 +32,8 @@ class FridgeMagnetsMorph extends Widget
     #super
 
     # visual output
-    @visualOutput = new FridgeMagnetsCanvasMorph
+    #@visualOutput = new FridgeMagnetsCanvasMorph
+    @visualOutput = new FridgeMagnets3DCanvasMorph
     @visualOutput.disableDrops()
     @add @visualOutput
     
