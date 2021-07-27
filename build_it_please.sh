@@ -233,6 +233,7 @@ cp src/index.html $BUILD_PATH/
 cp auxiliary\ files/FileSaver/FileSaver.min.js $BUILD_PATH/js/libs/
 cp auxiliary\ files/JSZip/jszip.min.js $BUILD_PATH/js/libs/
 cp auxiliary\ files/CoffeeScript/coffee-script_2.0.3.js $BUILD_PATH/js/libs/
+cp auxiliary\ files/twgl/twgl-full.js $BUILD_PATH/js/libs/
 
 # code that can be loaded after a pre-compiled world has started
 coffee -b -c -o $BUILD_PATH/js/src/ src/boot/dependencies-finding.coffee
