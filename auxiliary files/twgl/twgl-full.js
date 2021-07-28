@@ -6322,7 +6322,7 @@ function setBlockUniforms(uniformBlockInfo, values) {
   for (var name in values) {
     var setter = setters[name];
 
-    if (setter) {
+    if (name != "hashCode" && name != "augmentWith" && name != "addInstanceProperties" && setter) {
       var value = values[name];
       setter(value);
     }
@@ -6462,7 +6462,7 @@ function setUniforms(setters, values) {
       for (var name in _values) {
         var setter = actualSetters[name];
 
-        if (setter) {
+        if (name != "hashCode" && name != "augmentWith" && name != "addInstanceProperties" && setter) {
           setter(_values[name]);
         }
       }
@@ -6573,7 +6573,7 @@ function setAttributes(setters, buffers) {
   for (var name in buffers) {
     var setter = setters[name];
 
-    if (setter) {
+    if (name != "hashCode" && name != "augmentWith" && name != "addInstanceProperties" && setter) {
       setter(buffers[name]);
     }
   }
