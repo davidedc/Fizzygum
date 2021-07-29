@@ -68,6 +68,115 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
     #console.log "stepping FridgeMagnetsCanvasMorph"
     @paintNewFrame()
 
+
+  # crafty function from https://github.com/search?q=setUpBarycentricCoordinates&type=code
+  setUpBarycentricCoordinates: (positions, normals) ->
+    # Build new attribute storing barycentric coordinates
+    # for each vertex
+    centers = []
+    # start with all edges disabled
+    # Hash all the edges and remember which face they're associated with
+    # (Adapted from THREE.EdgesHelper)
+
+    sortFunction = (a, b) ->
+      if a[0] - (b[0]) != 0
+        a[0] - (b[0])
+      else if a[1] - (b[1]) != 0
+        a[1] - (b[1])
+      else
+        a[2] - (b[2])
+
+    f = 0
+    while f < positions.length
+      centers[f] = 1
+      f++
+    edge = [0,0]
+    hash = {}
+    face = undefined
+    numEdges = 0
+
+    for i in [0...positions.length / 9]
+      a = i * 9
+      face = [
+        [
+          positions[a + 0]
+          positions[a + 1]
+          positions[a + 2]
+        ]
+        [
+          positions[a + 3]
+          positions[a + 4]
+          positions[a + 5]
+        ]
+        [
+          positions[a + 6]
+          positions[a + 7]
+          positions[a + 8]
+        ]
+      ]
+      for j in [0...3]
+        console.log "considering an edge"
+        k = (j + 1) % 3
+        b = j * 3
+        c = k * 3
+        edge[0] = face[j]
+        edge[1] = face[k]
+        edge.sort sortFunction
+        key = edge[0] + ' | ' + edge[1]
+        if !hash[key]?
+          hash[key] =
+            face1: a
+            face1vert1: a + b
+            face1vert2: a + c
+            face2: undefined
+            face2vert1: undefined
+            face2vert2: undefined
+          numEdges++
+        else
+          hash[key].face2 = a
+          hash[key].face2vert1 = a + b
+          hash[key].face2vert2 = a + c
+          console.log "one edge in common with two triangles"
+    dot = (a, b) => a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n)
+    for key of hash
+      `key = key`
+      h = hash[key]
+      # ditch any edges that are bordered by two coplanar faces
+      normal1 = undefined
+      normal2 = undefined
+      if h.face2 != undefined
+        normal1 = [normals[h.face1 + 0], normals[h.face1 + 1], normals[h.face1 + 2]]
+        normal2 = [normals[h.face2 + 0], normals[h.face2 + 1], normals[h.face2 + 2]]
+        console.log "dot: " + dot(normal1, normal2)
+        if dot(normal1, normal2) >= 0.9999
+          console.log("skipping co-planar edge")
+          continue
+      # mark edge vertices as such by altering barycentric coordinates
+      otherVert = undefined
+      otherVert = 3 - (h.face1vert1 / 3 % 3) - (h.face1vert2 / 3 % 3)
+      centers[h.face1vert1 + otherVert] = 0
+      centers[h.face1vert2 + otherVert] = 0
+      otherVert = 3 - (h.face2vert1 / 3 % 3) - (h.face2vert2 / 3 % 3)
+      centers[h.face2vert1 + otherVert] = 0
+      centers[h.face2vert2 + otherVert] = 0
+    return centers
+
+  barycentricCoordinates: (bufferGeometry, removeEdge) ->
+    count = bufferGeometry.length / 9
+    barycentric = []
+    # for each triangle in the geometry, add the barycentric coordinates
+    i = 0
+    while i < count
+      even = i % 2 == 0
+      Q = if removeEdge then 1 else 0
+      if !even
+        barycentric.push 0, 0, 1, 0, 1, 0, 1, 0, Q
+      else
+        barycentric.push 0, 1, 0, 0, 0, 1, 1, 0, Q
+      i++
+    # add the attribute to the geometry
+    return barycentric
+
   initialiseWebGLStuff: ->
     @m4 = window.twgl.m4
 
@@ -75,6 +184,7 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
     # make a new canvas of the new size
     @glBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
     @gl = @glBuffer.getContext "webgl"
+    @gl.getExtension('OES_standard_derivatives')
 
     # TODO which of this code can actually be done only once
     # instead of each time a gl canvas/context is created?
@@ -88,65 +198,273 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
 
     attribute vec4 position;
     attribute vec3 normal;
-    attribute vec2 texcoord;
 
     varying vec4 v_position;
-    varying vec2 v_texCoord;
     varying vec3 v_normal;
     varying vec3 v_surfaceToLight;
     varying vec3 v_surfaceToView;
 
+    attribute vec3 barycentric;
+    attribute float even;
+    varying vec3 vBarycentric;
+    varying float vEven;
+
     void main() {
-      v_texCoord = texcoord;
-    v_position = u_worldViewProjection * position;
-    v_normal = (u_worldInverseTranspose * vec4(normal, 0)).xyz;
-    v_surfaceToLight = u_lightWorldPos - (u_world * position).xyz;
-    v_surfaceToView = (u_viewInverse[3] - (u_world * position)).xyz;
-    gl_Position = v_position;
+      vBarycentric = barycentric;
+      vEven = even;
+
+      v_position = u_worldViewProjection * position;
+      v_normal = (u_worldInverseTranspose * vec4(normal, 0)).xyz;
+      v_surfaceToLight = u_lightWorldPos - (u_world * position).xyz;
+      v_surfaceToView = (u_viewInverse[3] - (u_world * position)).xyz;
+      gl_Position = v_position;
     }"""
 
-    fs = """precision mediump float;
+    fs = """#extension GL_OES_standard_derivatives : enable
+    precision mediump float;
+    varying vec3 vBarycentric;
+    varying float vEven;
+    varying vec2 v_normal;
     varying vec4 v_position;
-    varying vec2 v_texCoord;
-    varying vec3 v_normal;
-    varying vec3 v_surfaceToLight;
-    varying vec3 v_surfaceToView;
 
-    uniform vec4 u_lightColor;
-    uniform vec4 u_ambient;
-    uniform sampler2D u_diffuse;
-    uniform vec4 u_specular;
-    uniform float u_shininess;
-    uniform float u_specularFactor;
+    uniform float time;
+    uniform float thickness;
+    uniform float secondThickness;
 
-    vec4 lit(float l ,float h, float m) {
-      return vec4(1.0,
-                  max(l, 0.0),
-                  (l > 0.0) ? pow(max(0.0, h), m) : 0.0,
-                  1.0);
+    uniform float dashRepeats;
+    uniform float dashLength;
+    uniform bool dashOverlap;
+    uniform bool dashEnabled;
+    uniform bool dashAnimate;
+
+    uniform bool seeThrough;
+    uniform bool insideAltColor;
+    uniform bool dualStroke;
+    uniform bool noiseA;
+    uniform bool noiseB;
+
+    uniform bool squeeze;
+    uniform float squeezeMin;
+    uniform float squeezeMax;
+
+    uniform vec3 stroke;
+    uniform vec3 fill;
+
+    // This is like
+    float aastep (float threshold, float dist) {
+      float afwidth = fwidth(dist) * 0.5;
+      return smoothstep(threshold - afwidth, threshold + afwidth, dist);
     }
 
-    void main() {
-      vec4 diffuseColor = texture2D(u_diffuse, v_texCoord);
-      vec3 a_normal = normalize(v_normal);
-      vec3 surfaceToLight = normalize(v_surfaceToLight);
-      vec3 surfaceToView = normalize(v_surfaceToView);
-      vec3 halfVector = normalize(surfaceToLight + surfaceToView);
-      vec4 litR = lit(dot(a_normal, surfaceToLight),
-                        dot(a_normal, halfVector), u_shininess);
-      vec4 outColor = vec4((
-      u_lightColor * (diffuseColor * litR.y + diffuseColor * u_ambient +
-                    u_specular * litR.z * u_specularFactor)).rgb,
-          diffuseColor.a);
-      gl_FragColor = outColor;
+    // This function is not currently used, but it can be useful
+    // to achieve a fixed width wireframe regardless of z-depth
+    //float computeScreenSpaceWireframe (vec3 barycentric, float lineWidth) {
+    //  vec3 dist = fwidth(barycentric);
+    //  vec3 smoothed = smoothstep(dist * ((lineWidth * 0.5) - 0.5), dist * ((lineWidth * 0.5) + 0.5), barycentric);
+    //  return 1.0 - min(min(smoothed.x, smoothed.y), smoothed.z);
+    //}
+
+    // This function returns the fragment color for our styled wireframe effect
+    // based on the barycentric coordinates for this fragment
+    vec4 getStyledWireframe (vec3 barycentric) {
+      // this will be our signed distance for the wireframe edge
+      float d = min(min(barycentric.x, barycentric.y), barycentric.z);
+
+
+      // for dashed rendering, we can use this to get the 0 .. 1 value of the line length
+      float positionAlong = max(barycentric.x, barycentric.y);
+      if (barycentric.y < barycentric.x && barycentric.y < barycentric.z) {
+        positionAlong = 1.0 - positionAlong;
+      }
+
+      // the thickness of the stroke
+      float computedThickness = thickness;
+
+      // if we want to shrink the thickness toward the center of the line segment
+      //if (squeeze) {
+      //  computedThickness *= mix(squeezeMin, squeezeMax, (1.0 - sin(positionAlong * PI)));
+      //}
+
+      // if we should create a dash pattern
+      if (dashEnabled) {
+        // here we offset the stroke position depending on whether it
+        // should overlap or not
+        float offset = 1.0 / dashRepeats * dashLength / 2.0;
+        if (!dashOverlap) {
+          offset += 1.0 / dashRepeats / 2.0;
+        }
+
+        // if we should animate the dash or not
+        if (dashAnimate) {
+          offset += time * 0.22;
+        }
+
+        // create the repeating dash pattern
+        //float pattern = fract((positionAlong + offset) * dashRepeats);
+        //computedThickness *= 1.0 - aastep(dashLength, pattern);
+      }
+
+      // compute the anti-aliased stroke edge
+      float edge = 1.0 - aastep(computedThickness, d);
+      //float edge = 1.0;
+
+      // now compute the final color of the mesh
+      vec4 outColor = vec4(0.0);
+      if (seeThrough) {
+        outColor = vec4(stroke, edge);
+        if (insideAltColor && !gl_FrontFacing) {
+          outColor.rgb = fill;
+        }
+      } else {
+        vec3 mainStroke = mix(fill, stroke, edge);
+        outColor.a = 1.0;
+        if (dualStroke) {
+          float inner = 1.0 - aastep(secondThickness, d);
+          //float inner = 1.0;
+          vec3 wireColor = mix(fill, stroke, abs(inner - edge));
+          outColor.rgb = wireColor;
+        } else {
+          outColor.rgb = mainStroke;
+        }
+      }
+
+      return outColor;
+    }
+
+    void main () {
+      gl_FragColor = getStyledWireframe(vBarycentric);
     }"""
 
     @programInfo = window.twgl.createProgramInfo @gl, [vs,fs]
+
+    indices = []
+    vertices = []
+    normals = []
+    uvs = []
+    numberOfVertices = 0
+    groupStart = 0
+    # build each side of the box geometry
+    # nz
+    # build geometry
+
+    # this is all very nice but it generates indexed buffers, and it's tricky to avoid
+    # painting the diagonals in that case
+    buildPlane = (u, v, w, udir, vdir, width = 1, height = 1, depth = 1, gridX = 1, gridY = 1) ->
+
+      segmentWidth = width / gridX
+      segmentHeight = height / gridY
+      widthHalf = width / 2
+      heightHalf = height / 2
+      depthHalf = depth / 2
+      gridX1 = gridX + 1
+      gridY1 = gridY + 1
+      vertexCounter = 0
+      groupCount = 0
+      vector = {}
+      # generate vertices, normals and uvs
+      iy = 0
+      while iy < gridY1
+        y = iy * segmentHeight - heightHalf
+        ix = 0
+        while ix < gridX1
+          x = ix * segmentWidth - widthHalf
+          # set values to correct vector component
+          vector[u] = x * udir
+          vector[v] = y * vdir
+          vector[w] = depthHalf
+          # now apply vector to vertex buffer
+          vertices.push vector.x, vector.y, vector.z
+          # set values to correct vector component
+          vector[u] = 0
+          vector[v] = 0
+          vector[w] = if depth > 0 then 1 else -1
+          # now apply vector to normal buffer
+          normals.push vector.x, vector.y, vector.z
+          # uvs
+          uvs.push ix / gridX
+          uvs.push 1 - (iy / gridY)
+          # counters
+          vertexCounter += 1
+          ix++
+        iy++
+      # indices
+      # 1. you need three indices to draw a single face
+      # 2. a single segment consists of two faces
+      # 3. so we need to generate six (2*3) indices per segment
+      iy = 0
+      while iy < gridY
+        ix = 0
+        while ix < gridX
+          a = numberOfVertices + ix + gridX1 * iy
+          b = numberOfVertices + ix + gridX1 * (iy + 1)
+          c = numberOfVertices + ix + 1 + gridX1 * (iy + 1)
+          d = numberOfVertices + ix + 1 + gridX1 * iy
+          # faces
+          indices.push a, b, d
+          indices.push b, c, d
+          # increase counter
+          groupCount += 6
+          ix++
+        iy++
+      return
+
+    #depth = 2
+    #height = 2
+    #width = 2
+    #depthSegments = 2
+    #heightSegments = 2
+    #widthSegments = 2
+    #buildPlane 'z', 'y', 'x', -1, -1, depth, height, width, depthSegments, heightSegments
+    ## px
+    #buildPlane 'z', 'y', 'x', 1, -1, depth, height, -width, depthSegments, heightSegments
+    ## nx
+    #buildPlane 'x', 'z', 'y', 1, 1, width, depth, height, widthSegments, depthSegments
+    ## py
+    #buildPlane 'x', 'z', 'y', 1, -1, width, depth, -height, widthSegments, depthSegments
+    ## ny
+    #buildPlane 'x', 'y', 'z', 1, -1, width, height, depth, widthSegments, heightSegments
+    ## pz
+    #buildPlane 'x', 'y', 'z', -1, -1, width, height, -depth, widthSegments, heightSegments
+
+
+    # indexed from another code example. Problem: can't avoid diagonals because it's indexed
+    #@arrays =
+    #  position: [1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, -1, 1, 1, -1, 1, -1, -1, -1, -1, -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1, -1, 1, -1, 1, 1, -1, 1, -1, -1, -1, -1, -1],
+    #  normal: [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1],
+    #  indices: [0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23]
+
+
+    # code-generated indexed faces. Works but I can't skip the diagonal lines because it's indexed
+    #@arrays =
+    #  position: vertices,
+    #  normal: normals,
+    #  indices: indices
+    #@arrays.barycentric = @setUpBarycentricCoordinates(@arrays.position, @arrays.normal)
+
+    #console.dir @arrays
+
+    # can't get to avoid diagonals indexed: 72 positions (6 faces, 4 corners each to specify, 3 coordinates)
+    #@arrays =
+    #  indices: [0,1,2,1,3,2,4,5,6,5,7,6,8,9,10,9,11,10,12,13,14,13,15,14,16,17,18,17,19,18,20,21,22,21,23,22]
+    #  barycentric: [0,0,1,0,1,0,1,0,0,0,0,1,0,0,1,0,1,0,1,0,0,0,0,1,0,0,1,0,1,0,1,0,0,0,0,1,0,0,1,0,1,0,1,0,0,0,0,1,0,0,1,0,1,0,1,0,0,0,0,1,0,0,1,0,1,0,1,0,0,0,0,1]
+    #  position: [1,1,1,1,-1,1,1,1,-1,1,-1,-1,-1,1,-1,-1,-1,-1,-1,1,1,-1,-1,1,-1,1,-1,-1,1,1,1,1,-1,1,1,1,-1,-1,1,-1,-1,-1,1,-1,1,1,-1,-1,-1,1,1,-1,-1,1,1,1,1,1,-1,1,1,1,-1,1,-1,-1,-1,1,-1,-1,-1,-1]
+    #  normal: [1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1]
+    #@arrays.barycentric = @setUpBarycentricCoordinates(@arrays.position, @arrays.normal)
+    #@arrays.barycentric = @barycentricCoordinates(@arrays.position, true)
+
+    # ------ un-indexed, 108 positions (6 faces, 2 triangles each, 3 vertexes per triangle, 3 coordinates)
+    # this is the only way I can get it to avoid the diagonals, because handling the diagonals with indexes is
+    # tricky (potentially impossible?)
+    # The positions and the normals I just got by doing
+    #    new THREE.BoxBufferGeometry(1,1,1);
+    # and looking inside of that object.
     @arrays =
-      position: [1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, -1, 1, 1, -1, 1, -1, -1, -1, -1, -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1, -1, 1, -1, 1, 1, -1, 1, -1, -1, -1, -1, -1],
-      normal: [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1],
-      texcoord: [1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
-      indices: [0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23]
+      position: [0.5,0.5,0.5,0.5,-0.5,0.5,0.5,0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,0.5,0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5]
+      normal: [1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1]
+    @arrays.barycentric = @setUpBarycentricCoordinates(@arrays.position, @arrays.normal)
+
+
+    console.dir @arrays
 
     @bufferInfo = window.twgl.createBufferInfoFromArrays(@gl, @arrays)
     @tex = window.twgl.createTexture @gl,
@@ -161,6 +479,25 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
       u_shininess: 50
       u_specularFactor: 1
       u_diffuse: @tex
+      time: 0
+      fill: [255,0,0]
+      stroke: [0,0,255]
+      noiseA: false
+      noiseB: false
+      dualStroke: false
+      seeThrough: false
+      insideAltColor: true
+      thickness: 0.1
+      secondThickness: 0.05
+      dashEnabled: true
+      dashRepeats: 2.0
+      dashOverlap: false
+      dashLength: 0.55
+      dashAnimate: false
+      squeeze: false
+      squeezeMin: 0.1
+      squeezeMax: 1.0
+
 
 
   paintNewFrame: ->
@@ -181,7 +518,7 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
       if !@gl or !(new Point @glBuffer.width, @glBuffer.height).equals @extent().scaleBy ceilPixelRatio
         @initialiseWebGLStuff()
 
-    time = Date.now()/300
+    time = Date.now()/600
     #window.twgl.resizeCanvasToDisplaySize @gl.canvas
     # TODO this canvas should be resized when the widget resizes
     @gl.viewport 0, 0, @gl.canvas.width, @gl.canvas.height
@@ -199,7 +536,9 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
     camera = @m4.lookAt eye, target, up
     view = @m4.inverse camera
     viewProjection = @m4.multiply projection, view
-    world = @m4.rotationY time
+
+    world = @m4.multiply (@m4.rotationX time),(@m4.rotationZ time)
+
     @uniforms.u_viewInverse = camera
     @uniforms.u_world = world
     @uniforms.u_worldInverseTranspose = @m4.transpose @m4.inverse world
@@ -207,11 +546,13 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
     @gl.useProgram @programInfo.program
     @bufferInfo.addInstanceProperties = nil
     @bufferInfo.augmentWith = nil
+
     delete @bufferInfo.addInstanceProperties
     delete @bufferInfo.augmentWith
     window.twgl.setBuffersAndAttributes @gl, @programInfo, @bufferInfo
     window.twgl.setUniforms @programInfo, @uniforms
-    @gl.drawElements @gl.TRIANGLES, @bufferInfo.numElements, @gl.UNSIGNED_SHORT, 0
+
+    window.twgl.drawBufferInfo @gl, @bufferInfo
 
     # clear 2D canvas and paint it solid green first
     # (avoid this if you want to obtain a "paintover" effect)
