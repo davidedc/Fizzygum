@@ -65,7 +65,7 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
     @primitiveTypes.ball = numberOfPrimitives++
 
   step: ->
-#console.log "stepping FridgeMagnetsCanvasMorph"
+    #console.log "stepping FridgeMagnetsCanvasMorph"
     @paintNewFrame()
 
   initialiseWebGLStuff: ->
