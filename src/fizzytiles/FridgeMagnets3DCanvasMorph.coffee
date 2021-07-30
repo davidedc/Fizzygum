@@ -184,278 +184,168 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
     # make a new canvas of the new size
     @glBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
     @gl = @glBuffer.getContext "webgl"
+
+    # needed for fwidth function
     @gl.getExtension('OES_standard_derivatives')
 
     # TODO which of this code can actually be done only once
     # instead of each time a gl canvas/context is created?
 
 
+    # wireframe shader/setup from https://github.com/mattdesl/webgl-wireframes
     vs = """uniform mat4 u_worldViewProjection;
-    uniform vec3 u_lightWorldPos;
-    uniform mat4 u_world;
-    uniform mat4 u_viewInverse;
-    uniform mat4 u_worldInverseTranspose;
+      uniform vec3 u_lightWorldPos;
+      uniform mat4 u_world;
+      uniform mat4 u_viewInverse;
+      uniform mat4 u_worldInverseTranspose;
 
-    attribute vec4 position;
-    attribute vec3 normal;
+      attribute vec4 position;
+      attribute vec3 normal;
 
-    varying vec4 v_position;
-    varying vec3 v_normal;
-    varying vec3 v_surfaceToLight;
-    varying vec3 v_surfaceToView;
+      varying vec4 v_position;
+      varying vec3 v_normal;
+      varying vec3 v_surfaceToLight;
+      varying vec3 v_surfaceToView;
 
-    attribute vec3 barycentric;
-    attribute float even;
-    varying vec3 vBarycentric;
-    varying float vEven;
+      attribute vec3 barycentric;
+      attribute float even;
+      varying vec3 vBarycentric;
+      varying float vEven;
 
-    void main() {
-      vBarycentric = barycentric;
-      vEven = even;
+      void main() {
+        vBarycentric = barycentric;
+        vEven = even;
 
-      v_position = u_worldViewProjection * position;
-      v_normal = (u_worldInverseTranspose * vec4(normal, 0)).xyz;
-      v_surfaceToLight = u_lightWorldPos - (u_world * position).xyz;
-      v_surfaceToView = (u_viewInverse[3] - (u_world * position)).xyz;
-      gl_Position = v_position;
-    }"""
+        v_position = u_worldViewProjection * position;
+        v_normal = (u_worldInverseTranspose * vec4(normal, 0)).xyz;
+        v_surfaceToLight = u_lightWorldPos - (u_world * position).xyz;
+        v_surfaceToView = (u_viewInverse[3] - (u_world * position)).xyz;
+        gl_Position = v_position;
+      }"""
 
     fs = """#extension GL_OES_standard_derivatives : enable
-    precision mediump float;
-    varying vec3 vBarycentric;
-    varying float vEven;
-    varying vec2 v_normal;
-    varying vec4 v_position;
+      // line above needed for fwidth function
+      precision mediump float;
+      varying vec3 vBarycentric;
+      varying float vEven;
+      varying vec2 v_normal;
+      varying vec4 v_position;
 
-    uniform float time;
-    uniform float thickness;
-    uniform float secondThickness;
+      uniform float time;
+      uniform float thickness;
+      uniform float secondThickness;
 
-    uniform float dashRepeats;
-    uniform float dashLength;
-    uniform bool dashOverlap;
-    uniform bool dashEnabled;
-    uniform bool dashAnimate;
+      uniform float dashRepeats;
+      uniform float dashLength;
+      uniform bool dashOverlap;
+      uniform bool dashEnabled;
+      uniform bool dashAnimate;
 
-    uniform bool seeThrough;
-    uniform bool insideAltColor;
-    uniform bool dualStroke;
-    uniform bool noiseA;
-    uniform bool noiseB;
+      uniform bool seeThrough;
+      uniform bool insideAltColor;
+      uniform bool dualStroke;
+      uniform bool noiseA;
+      uniform bool noiseB;
 
-    uniform bool squeeze;
-    uniform float squeezeMin;
-    uniform float squeezeMax;
+      uniform bool squeeze;
+      uniform float squeezeMin;
+      uniform float squeezeMax;
 
-    uniform vec3 stroke;
-    uniform vec3 fill;
+      uniform vec3 stroke;
+      uniform vec3 fill;
 
-    // This is like
-    float aastep (float threshold, float dist) {
-      float afwidth = fwidth(dist) * 0.5;
-      return smoothstep(threshold - afwidth, threshold + afwidth, dist);
-    }
-
-    // This function is not currently used, but it can be useful
-    // to achieve a fixed width wireframe regardless of z-depth
-    //float computeScreenSpaceWireframe (vec3 barycentric, float lineWidth) {
-    //  vec3 dist = fwidth(barycentric);
-    //  vec3 smoothed = smoothstep(dist * ((lineWidth * 0.5) - 0.5), dist * ((lineWidth * 0.5) + 0.5), barycentric);
-    //  return 1.0 - min(min(smoothed.x, smoothed.y), smoothed.z);
-    //}
-
-    // This function returns the fragment color for our styled wireframe effect
-    // based on the barycentric coordinates for this fragment
-    vec4 getStyledWireframe (vec3 barycentric) {
-      // this will be our signed distance for the wireframe edge
-      float d = min(min(barycentric.x, barycentric.y), barycentric.z);
-
-
-      // for dashed rendering, we can use this to get the 0 .. 1 value of the line length
-      float positionAlong = max(barycentric.x, barycentric.y);
-      if (barycentric.y < barycentric.x && barycentric.y < barycentric.z) {
-        positionAlong = 1.0 - positionAlong;
+      // This is like
+      float aastep (float threshold, float dist) {
+        float afwidth = fwidth(dist) * 0.5;
+        return smoothstep(threshold - afwidth, threshold + afwidth, dist);
       }
 
-      // the thickness of the stroke
-      float computedThickness = thickness;
-
-      // if we want to shrink the thickness toward the center of the line segment
-      //if (squeeze) {
-      //  computedThickness *= mix(squeezeMin, squeezeMax, (1.0 - sin(positionAlong * PI)));
+      // This function is not currently used, but it can be useful
+      // to achieve a fixed width wireframe regardless of z-depth
+      //float computeScreenSpaceWireframe (vec3 barycentric, float lineWidth) {
+      //  vec3 dist = fwidth(barycentric);
+      //  vec3 smoothed = smoothstep(dist * ((lineWidth * 0.5) - 0.5), dist * ((lineWidth * 0.5) + 0.5), barycentric);
+      //  return 1.0 - min(min(smoothed.x, smoothed.y), smoothed.z);
       //}
 
-      // if we should create a dash pattern
-      if (dashEnabled) {
-        // here we offset the stroke position depending on whether it
-        // should overlap or not
-        float offset = 1.0 / dashRepeats * dashLength / 2.0;
-        if (!dashOverlap) {
-          offset += 1.0 / dashRepeats / 2.0;
+      // This function returns the fragment color for our styled wireframe effect
+      // based on the barycentric coordinates for this fragment
+      vec4 getStyledWireframe (vec3 barycentric) {
+        // this will be our signed distance for the wireframe edge
+        float d = min(min(barycentric.x, barycentric.y), barycentric.z);
+
+
+        // for dashed rendering, we can use this to get the 0 .. 1 value of the line length
+        float positionAlong = max(barycentric.x, barycentric.y);
+        if (barycentric.y < barycentric.x && barycentric.y < barycentric.z) {
+          positionAlong = 1.0 - positionAlong;
         }
 
-        // if we should animate the dash or not
-        if (dashAnimate) {
-          offset += time * 0.22;
+        // the thickness of the stroke
+        float computedThickness = thickness;
+
+        // if we want to shrink the thickness toward the center of the line segment
+        //if (squeeze) {
+        //  computedThickness *= mix(squeezeMin, squeezeMax, (1.0 - sin(positionAlong * PI)));
+        //}
+
+        // if we should create a dash pattern
+        if (dashEnabled) {
+          // here we offset the stroke position depending on whether it
+          // should overlap or not
+          float offset = 1.0 / dashRepeats * dashLength / 2.0;
+          if (!dashOverlap) {
+            offset += 1.0 / dashRepeats / 2.0;
+          }
+
+          // if we should animate the dash or not
+          if (dashAnimate) {
+            offset += time * 0.22;
+          }
+
+          // create the repeating dash pattern
+          //float pattern = fract((positionAlong + offset) * dashRepeats);
+          //computedThickness *= 1.0 - aastep(dashLength, pattern);
         }
 
-        // create the repeating dash pattern
-        //float pattern = fract((positionAlong + offset) * dashRepeats);
-        //computedThickness *= 1.0 - aastep(dashLength, pattern);
-      }
+        // compute the anti-aliased stroke edge
+        float edge = 1.0 - aastep(computedThickness, d);
+        //float edge = 1.0;
 
-      // compute the anti-aliased stroke edge
-      float edge = 1.0 - aastep(computedThickness, d);
-      //float edge = 1.0;
-
-      // now compute the final color of the mesh
-      vec4 outColor = vec4(0.0);
-      if (seeThrough) {
-        outColor = vec4(stroke, edge);
-        if (insideAltColor && !gl_FrontFacing) {
-          outColor.rgb = fill;
-        }
-      } else {
-        vec3 mainStroke = mix(fill, stroke, edge);
-        outColor.a = 1.0;
-        if (dualStroke) {
-          float inner = 1.0 - aastep(secondThickness, d);
-          //float inner = 1.0;
-          vec3 wireColor = mix(fill, stroke, abs(inner - edge));
-          outColor.rgb = wireColor;
+        // now compute the final color of the mesh
+        vec4 outColor = vec4(0.0);
+        if (seeThrough) {
+          outColor = vec4(stroke, edge);
+          if (insideAltColor && !gl_FrontFacing) {
+            outColor.rgb = fill;
+          }
         } else {
-          outColor.rgb = mainStroke;
+          vec3 mainStroke = mix(fill, stroke, edge);
+          outColor.a = 1.0;
+          if (dualStroke) {
+            float inner = 1.0 - aastep(secondThickness, d);
+            //float inner = 1.0;
+            vec3 wireColor = mix(fill, stroke, abs(inner - edge));
+            outColor.rgb = wireColor;
+          } else {
+            outColor.rgb = mainStroke;
+          }
         }
+
+        return outColor;
       }
 
-      return outColor;
-    }
-
-    void main () {
-      gl_FragColor = getStyledWireframe(vBarycentric);
-    }"""
+      void main () {
+        gl_FragColor = getStyledWireframe(vBarycentric);
+      }"""
 
     @programInfo = window.twgl.createProgramInfo @gl, [vs,fs]
 
-    indices = []
-    vertices = []
-    normals = []
-    uvs = []
-    numberOfVertices = 0
-    groupStart = 0
-    # build each side of the box geometry
-    # nz
-    # build geometry
-
-    # this is all very nice but it generates indexed buffers, and it's tricky to avoid
-    # painting the diagonals in that case
-    buildPlane = (u, v, w, udir, vdir, width = 1, height = 1, depth = 1, gridX = 1, gridY = 1) ->
-
-      segmentWidth = width / gridX
-      segmentHeight = height / gridY
-      widthHalf = width / 2
-      heightHalf = height / 2
-      depthHalf = depth / 2
-      gridX1 = gridX + 1
-      gridY1 = gridY + 1
-      vertexCounter = 0
-      groupCount = 0
-      vector = {}
-      # generate vertices, normals and uvs
-      iy = 0
-      while iy < gridY1
-        y = iy * segmentHeight - heightHalf
-        ix = 0
-        while ix < gridX1
-          x = ix * segmentWidth - widthHalf
-          # set values to correct vector component
-          vector[u] = x * udir
-          vector[v] = y * vdir
-          vector[w] = depthHalf
-          # now apply vector to vertex buffer
-          vertices.push vector.x, vector.y, vector.z
-          # set values to correct vector component
-          vector[u] = 0
-          vector[v] = 0
-          vector[w] = if depth > 0 then 1 else -1
-          # now apply vector to normal buffer
-          normals.push vector.x, vector.y, vector.z
-          # uvs
-          uvs.push ix / gridX
-          uvs.push 1 - (iy / gridY)
-          # counters
-          vertexCounter += 1
-          ix++
-        iy++
-      # indices
-      # 1. you need three indices to draw a single face
-      # 2. a single segment consists of two faces
-      # 3. so we need to generate six (2*3) indices per segment
-      iy = 0
-      while iy < gridY
-        ix = 0
-        while ix < gridX
-          a = numberOfVertices + ix + gridX1 * iy
-          b = numberOfVertices + ix + gridX1 * (iy + 1)
-          c = numberOfVertices + ix + 1 + gridX1 * (iy + 1)
-          d = numberOfVertices + ix + 1 + gridX1 * iy
-          # faces
-          indices.push a, b, d
-          indices.push b, c, d
-          # increase counter
-          groupCount += 6
-          ix++
-        iy++
-      return
-
-    #depth = 2
-    #height = 2
-    #width = 2
-    #depthSegments = 2
-    #heightSegments = 2
-    #widthSegments = 2
-    #buildPlane 'z', 'y', 'x', -1, -1, depth, height, width, depthSegments, heightSegments
-    ## px
-    #buildPlane 'z', 'y', 'x', 1, -1, depth, height, -width, depthSegments, heightSegments
-    ## nx
-    #buildPlane 'x', 'z', 'y', 1, 1, width, depth, height, widthSegments, depthSegments
-    ## py
-    #buildPlane 'x', 'z', 'y', 1, -1, width, depth, -height, widthSegments, depthSegments
-    ## ny
-    #buildPlane 'x', 'y', 'z', 1, -1, width, height, depth, widthSegments, heightSegments
-    ## pz
-    #buildPlane 'x', 'y', 'z', -1, -1, width, height, -depth, widthSegments, heightSegments
-
-
-    # indexed from another code example. Problem: can't avoid diagonals because it's indexed
-    #@arrays =
-    #  position: [1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, -1, 1, 1, -1, 1, -1, -1, -1, -1, -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1, -1, 1, -1, 1, 1, -1, 1, -1, -1, -1, -1, -1],
-    #  normal: [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1],
-    #  indices: [0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23]
-
-
-    # code-generated indexed faces. Works but I can't skip the diagonal lines because it's indexed
-    #@arrays =
-    #  position: vertices,
-    #  normal: normals,
-    #  indices: indices
-    #@arrays.barycentric = @setUpBarycentricCoordinates(@arrays.position, @arrays.normal)
-
-    #console.dir @arrays
-
-    # can't get to avoid diagonals indexed: 72 positions (6 faces, 4 corners each to specify, 3 coordinates)
-    #@arrays =
-    #  indices: [0,1,2,1,3,2,4,5,6,5,7,6,8,9,10,9,11,10,12,13,14,13,15,14,16,17,18,17,19,18,20,21,22,21,23,22]
-    #  barycentric: [0,0,1,0,1,0,1,0,0,0,0,1,0,0,1,0,1,0,1,0,0,0,0,1,0,0,1,0,1,0,1,0,0,0,0,1,0,0,1,0,1,0,1,0,0,0,0,1,0,0,1,0,1,0,1,0,0,0,0,1,0,0,1,0,1,0,1,0,0,0,0,1]
-    #  position: [1,1,1,1,-1,1,1,1,-1,1,-1,-1,-1,1,-1,-1,-1,-1,-1,1,1,-1,-1,1,-1,1,-1,-1,1,1,1,1,-1,1,1,1,-1,-1,1,-1,-1,-1,1,-1,1,1,-1,-1,-1,1,1,-1,-1,1,1,1,1,1,-1,1,1,1,-1,1,-1,-1,-1,1,-1,-1,-1,-1]
-    #  normal: [1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1]
-    #@arrays.barycentric = @setUpBarycentricCoordinates(@arrays.position, @arrays.normal)
-    #@arrays.barycentric = @barycentricCoordinates(@arrays.position, true)
-
     # ------ un-indexed, 108 positions (6 faces, 2 triangles each, 3 vertexes per triangle, 3 coordinates)
-    # this is the only way I can get it to avoid the diagonals, because handling the diagonals with indexes is
+    # this is the only way I can get it to avoid drawing the "inner" wires of the wireframes,
+    # because handling those with indexes was
     # tricky (potentially impossible?)
-    # The positions and the normals I just got by doing
+    # The un-indexed data (positions and normals) I just got by doing
     #    new THREE.BoxBufferGeometry(1,1,1);
     # and looking inside of that object.
     @arrays =
@@ -463,8 +353,6 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
       normal: [1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1]
     @arrays.barycentric = @setUpBarycentricCoordinates(@arrays.position, @arrays.normal)
 
-
-    console.dir @arrays
 
     @bufferInfo = window.twgl.createBufferInfoFromArrays(@gl, @arrays)
     @tex = window.twgl.createTexture @gl,
@@ -497,8 +385,6 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
       squeeze: false
       squeezeMin: 0.1
       squeezeMax: 1.0
-
-
 
   paintNewFrame: ->
     # we get the context already with the correct pixel scaling
