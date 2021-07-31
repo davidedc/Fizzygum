@@ -420,29 +420,56 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
     zNear = 0.5
     zFar = 10
     projection = @m4.perspective fov, aspect, zNear, zFar
-    eye = [1,4,-6]
-    target = [0,0,0]
-    up = [0,1,0]
-    camera = @m4.lookAt eye, target, up
-    view = @m4.inverse camera
-    viewProjection = @m4.multiply projection, view
 
-    world = @m4.multiply (@m4.rotationX time),(@m4.rotationZ time)
 
-    @uniforms.u_viewInverse = camera
-    @uniforms.u_world = world
-    @uniforms.u_worldInverseTranspose = @m4.transpose @m4.inverse world
-    @uniforms.u_worldViewProjection = @m4.multiply viewProjection, world
-    @gl.useProgram @programInfo.program
-    @bufferInfo.addInstanceProperties = nil
-    @bufferInfo.augmentWith = nil
+    lastUsedProgramInfo = nil
+    lastUsedBufferInfo = nil
 
-    delete @bufferInfo.addInstanceProperties
-    delete @bufferInfo.augmentWith
-    window.twgl.setBuffersAndAttributes @gl, @programInfo, @bufferInfo
-    window.twgl.setUniforms @programInfo, @uniforms
+    # "draw multiple things" in a reasonably optimised way
+    # and yet keeping things simple, using the mechanism suggested here:
+    #   https://webglfundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html
+    # There would be a more optimised way called "instanced drawing", see:
+    #   https://webglfundamentals.org/webgl/lessons/webgl-instanced-drawing.html
+    # which uses a webgl extension available practically everywhere (see drawArraysInstancedANGLE)
+    # however the benefit is unclear because it usually pays-off when a ton of stuff
+    # needs drawing, in which case the bottleneck is on the "fill" rather than here.
+    # see comment towards the end of the blogpost here:
+    #   https://blog.tojicode.com/2013/07/webgl-instancing-with.html
+    # We can still do that later if profiler shows there is a bottleneck here.
+    for i in [1...10]
+      setBuffersAndAttributes = false
 
-    window.twgl.drawBufferInfo @gl, @bufferInfo
+
+      if @programInfo != lastUsedProgramInfo
+        lastUsedProgramInfo = @programInfo
+        @gl.useProgram @programInfo.program
+        setBuffersAndAttributes = true
+
+      if setBuffersAndAttributes or lastUsedBufferInfo != @bufferInfo
+        lastUsedBufferInfo = @bufferInfo
+        @bufferInfo.addInstanceProperties = nil
+        @bufferInfo.augmentWith = nil
+        delete @bufferInfo.addInstanceProperties
+        delete @bufferInfo.augmentWith
+        window.twgl.setBuffersAndAttributes @gl, @programInfo, @bufferInfo
+
+
+      eye = [1,4,-6]
+      target = [0,0,0]
+      up = [0,1,0]
+      camera = @m4.lookAt eye, target, up
+      view = @m4.inverse camera
+      viewProjection = @m4.multiply projection, view
+
+      world = @m4.multiply (@m4.rotationX time*i/2),(@m4.rotationZ time*i/2)
+
+      @uniforms.u_viewInverse = camera
+      @uniforms.u_world = world
+      @uniforms.u_worldInverseTranspose = @m4.transpose @m4.inverse world
+      @uniforms.u_worldViewProjection = @m4.multiply viewProjection, world
+
+      window.twgl.setUniforms @programInfo, @uniforms
+      window.twgl.drawBufferInfo @gl, @bufferInfo
 
     # clear 2D canvas and paint it solid green first
     # (avoid this if you want to obtain a "paintover" effect)
