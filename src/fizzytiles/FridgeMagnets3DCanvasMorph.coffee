@@ -161,21 +161,6 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
       centers[h.face2vert2 + otherVert] = 0
     return centers
 
-  barycentricCoordinates: (bufferGeometry, removeEdge) ->
-    count = bufferGeometry.length / 9
-    barycentric = []
-    # for each triangle in the geometry, add the barycentric coordinates
-    i = 0
-    while i < count
-      even = i % 2 == 0
-      Q = if removeEdge then 1 else 0
-      if !even
-        barycentric.push 0, 0, 1, 0, 1, 0, 1, 0, Q
-      else
-        barycentric.push 0, 1, 0, 0, 0, 1, 1, 0, Q
-      i++
-    # add the attribute to the geometry
-    return barycentric
 
   initialiseWebGLStuff: ->
     @m4 = window.twgl.m4
