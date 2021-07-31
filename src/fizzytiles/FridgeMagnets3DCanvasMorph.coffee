@@ -193,6 +193,10 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
 
 
     # wireframe shader/setup from https://github.com/mattdesl/webgl-wireframes
+    # see also:
+    #   https://tchayen.github.io/posts/wireframes-with-barycentric-coordinates
+    #   https://catlikecoding.com/unity/tutorials/advanced-rendering/flat-and-wireframe-shading/
+    #   any search with "wireframe" and "barycentric"
     vs = """uniform mat4 u_worldViewProjection;
       uniform vec3 u_lightWorldPos;
       uniform mat4 u_world;
