@@ -70,49 +70,38 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
 
 
   # crafty function from https://github.com/search?q=setUpBarycentricCoordinates&type=code
+  # in theory this is the best way to set up barycentric coordinates and remove co-planar edges
+  # as it would seem to be the most generic,
+  # but it doesn't quite work, maybe it was developed for a range of cases
+  # that are not my cases...
   setUpBarycentricCoordinates: (positions, normals) ->
     # Build new attribute storing barycentric coordinates
     # for each vertex
     centers = []
-    # start with all edges disabled
     # Hash all the edges and remember which face they're associated with
     # (Adapted from THREE.EdgesHelper)
 
     sortFunction = (a, b) ->
-      if a[0] - (b[0]) != 0
-        a[0] - (b[0])
-      else if a[1] - (b[1]) != 0
-        a[1] - (b[1])
+      if a[0] - b[0] != 0
+        a[0] - b[0]
+      else if a[1] - b[1] != 0
+        a[1] - b[1]
       else
-        a[2] - (b[2])
+        a[2] - b[2]
 
-    f = 0
-    while f < positions.length
+    # start with all edges disabled
+    for f in [0...positions.length]
       centers[f] = 1
-      f++
+
     edge = [0,0]
     hash = {}
-    face = undefined
-    numEdges = 0
 
     for i in [0...positions.length / 9]
       a = i * 9
       face = [
-        [
-          positions[a + 0]
-          positions[a + 1]
-          positions[a + 2]
-        ]
-        [
-          positions[a + 3]
-          positions[a + 4]
-          positions[a + 5]
-        ]
-        [
-          positions[a + 6]
-          positions[a + 7]
-          positions[a + 8]
-        ]
+        [ positions[a + 0], positions[a + 1], positions[a + 2] ],
+        [ positions[a + 3], positions[a + 4], positions[a + 5] ],
+        [ positions[a + 6], positions[a + 7], positions[a + 8] ]
       ]
       for j in [0...3]
         console.log "considering an edge"
@@ -128,35 +117,34 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
             face1: a
             face1vert1: a + b
             face1vert2: a + c
-            face2: undefined
-            face2vert1: undefined
-            face2vert2: undefined
-          numEdges++
+            face2: nil
+            face2vert1: nil
+            face2vert2: nil
         else
           hash[key].face2 = a
           hash[key].face2vert1 = a + b
           hash[key].face2vert2 = a + c
           console.log "one edge in common with two triangles"
-    dot = (a, b) => a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n)
+
+    dot = (a, b) -> a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
+
     for key of hash
-      `key = key`
       h = hash[key]
       # ditch any edges that are bordered by two coplanar faces
-      normal1 = undefined
-      normal2 = undefined
-      if h.face2 != undefined
+      if h.face2?
         normal1 = [normals[h.face1 + 0], normals[h.face1 + 1], normals[h.face1 + 2]]
         normal2 = [normals[h.face2 + 0], normals[h.face2 + 1], normals[h.face2 + 2]]
         console.log "dot: " + dot(normal1, normal2)
         if dot(normal1, normal2) >= 0.9999
           console.log("skipping co-planar edge")
           continue
+
       # mark edge vertices as such by altering barycentric coordinates
-      otherVert = undefined
-      otherVert = 3 - (h.face1vert1 / 3 % 3) - (h.face1vert2 / 3 % 3)
+      otherVert = 3 - (h.face1vert1 / 3) % 3 - (h.face1vert2 / 3) % 3
       centers[h.face1vert1 + otherVert] = 0
       centers[h.face1vert2 + otherVert] = 0
-      otherVert = 3 - (h.face2vert1 / 3 % 3) - (h.face2vert2 / 3 % 3)
+
+      otherVert = 3 - (h.face2vert1 / 3) % 3 - (h.face2vert2 / 3) % 3
       centers[h.face2vert1 + otherVert] = 0
       centers[h.face2vert2 + otherVert] = 0
     return centers
@@ -374,6 +362,7 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
       squeeze: false
       squeezeMin: 0.1
       squeezeMax: 1.0
+
 
   paintNewFrame: ->
     # we get the context already with the correct pixel scaling
