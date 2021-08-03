@@ -70,86 +70,6 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
     @paintNewFrame()
 
 
-  # crafty function from https://github.com/search?q=setUpBarycentricCoordinates&type=code
-  # in theory this is the best way to set up barycentric coordinates and remove co-planar edges
-  # as it would seem to be the most generic,
-  # but it doesn't quite work, maybe it was developed for a range of cases
-  # that are not my cases...
-  setUpBarycentricCoordinates: (positions, normals) ->
-    # Build new attribute storing barycentric coordinates
-    # for each vertex
-    centers = []
-    # Hash all the edges and remember which face they're associated with
-    # (Adapted from THREE.EdgesHelper)
-
-    sortFunction = (a, b) ->
-      if a[0] - b[0] != 0
-        a[0] - b[0]
-      else if a[1] - b[1] != 0
-        a[1] - b[1]
-      else
-        a[2] - b[2]
-
-    # start with all edges disabled
-    for f in [0...positions.length]
-      centers[f] = 1
-
-    edge = [0,0]
-    hash = {}
-
-    for i in [0...positions.length / 9]
-      a = i * 9
-      face = [
-        [ positions[a + 0], positions[a + 1], positions[a + 2] ],
-        [ positions[a + 3], positions[a + 4], positions[a + 5] ],
-        [ positions[a + 6], positions[a + 7], positions[a + 8] ]
-      ]
-      for j in [0...3]
-        console.log "considering an edge"
-        k = (j + 1) % 3
-        b = j * 3
-        c = k * 3
-        edge[0] = face[j]
-        edge[1] = face[k]
-        edge.sort sortFunction
-        key = edge[0] + ' | ' + edge[1]
-        if !hash[key]?
-          hash[key] =
-            face1: a
-            face1vert1: a + b
-            face1vert2: a + c
-            face2: nil
-            face2vert1: nil
-            face2vert2: nil
-        else
-          hash[key].face2 = a
-          hash[key].face2vert1 = a + b
-          hash[key].face2vert2 = a + c
-          console.log "one edge in common with two triangles"
-
-    dot = (a, b) -> a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
-
-    for key of hash
-      h = hash[key]
-      # ditch any edges that are bordered by two coplanar faces
-      if h.face2?
-        normal1 = [normals[h.face1 + 0], normals[h.face1 + 1], normals[h.face1 + 2]]
-        normal2 = [normals[h.face2 + 0], normals[h.face2 + 1], normals[h.face2 + 2]]
-        console.log "dot: " + dot(normal1, normal2)
-        if dot(normal1, normal2) >= 0.9999
-          console.log("skipping co-planar edge")
-          continue
-
-      # mark edge vertices as such by altering barycentric coordinates
-      otherVert = 3 - (h.face1vert1 / 3) % 3 - (h.face1vert2 / 3) % 3
-      centers[h.face1vert1 + otherVert] = 0
-      centers[h.face1vert2 + otherVert] = 0
-
-      otherVert = 3 - (h.face2vert1 / 3) % 3 - (h.face2vert2 / 3) % 3
-      centers[h.face2vert1 + otherVert] = 0
-      centers[h.face2vert2 + otherVert] = 0
-    return centers
-
   unindexBufferGeometry: (bufferGeometry) ->
     # un-indices the geometry, copying all attributes like position and uv
     indexArray = bufferGeometry.indices
@@ -446,8 +366,8 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
     #   verts = window.twgl.primitives.createCubeVertices 1
     #   @unindexBufferGeometry verts
     #   verts.barycentric = @setUpBarycentricCoordinates(verts.position, verts.normal)
-    # however the setUpBarycentricCoordinates is specific just for this, so we removed it
-    # and just baked in here the result.
+    # however the setUpBarycentricCoordinates function is specific just for this, so we removed it
+    # on 3/8/2021 and just baked in here the result.
     verts.position = [0.5,0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5]
     verts.normal = [1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1]
     verts.barycentric = [1,1,0,0,1,0,0,1,1,1,0,1,0,1,1,0,0,1,1,1,0,0,1,0,0,1,1,1,0,1,0,1,1,0,0,1,1,1,0,0,1,0,0,1,1,1,0,1,0,1,1,0,0,1,1,1,0,0,1,0,0,1,1,1,0,1,0,1,1,0,0,1,1,1,0,0,1,0,0,1,1,1,0,1,0,1,1,0,0,1,1,1,0,0,1,0,0,1,1,1,0,1,0,1,1,0,0,1]
