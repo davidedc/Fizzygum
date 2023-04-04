@@ -1,4 +1,9 @@
 # I am a multi-line, word-wrapping String
+#
+# TODO Note that this class has problems with text that has multi-code characters, i.e. characters that for a cursor behave like a single character
+# (i.e. the cursor moves around them with one single arrow key press) BUT that, unintuitively, have .length property > 1 (e.g. "ä".length is 2)
+# this is because the code assumes that the .length property of a string is the number of characters in the string, which, as in the "ä"
+# example, is not true.
 
 class TextMorph extends StringMorph
 
