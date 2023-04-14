@@ -1336,12 +1336,16 @@ class WorldMorph extends PanelWdgt
     #   - opening inspector for a widget
     #   - opening inspector for a widget, changing a method, then
     #     clicking "save"
+    #   - scrolling via wheel till the end of a document (as it needs to
+    #     check status of scroll)
     #
     # Examples of functions:
     #   - moving an icon to the bin
     #   - closing the top window
     #   - opening the menu of a widget (by moving on it and right-clicking)
     #   - moving pointer to a specific entry of top menu and clicking it
+    #   - scrolling via vertical bar till the end of a document (no need to check
+    #     status, can just move the bar till the known end of its vertical extent)
     #
     # A macro should take care of "finishing" when the whole macro is executed
     # i.e. with all the intended actions completed and no inputs remaining in
