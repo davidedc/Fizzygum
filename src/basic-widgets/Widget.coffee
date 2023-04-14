@@ -3899,7 +3899,9 @@ class Widget extends TreeNode
   
   # Widget eval. Used by the Inspector and the TextMorph.
   evaluateString: (codeSource) ->
-    result = eval compileFGCode codeSource, true
+    JSCode = compileFGCode codeSource, true
+    #console.log JSCode
+    result = eval JSCode
     @reLayout()
     @changed()
   
