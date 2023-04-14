@@ -258,10 +258,10 @@ class WorldMorph extends PanelWdgt
   morphsThatMaybeChangedLayout: []
 
   # »>> this part is only needed for Macros
-  macroStepsWaitingTimer: nil
-  nextBlockToBeRun: nil
-  macroVars: nil
-  macroIsRunning: nil
+  msSinceLastExecutedMacroStep: nil
+  #macroVars: nil # a dedicated global space for macros. Unused so far.
+  aMacroIsRunning: nil
+  returnFromLastMacroStep: nil
   # this part is only needed for Macros <<«
 
   constructor: (
@@ -1298,37 +1298,38 @@ class WorldMorph extends PanelWdgt
 
     @syntheticEventsMouseMovePressDragRelease vBarCenterFromHere, vBarCenterToHere
 
-
   draftRunMacro: ->
     # When does it make sense to generate events "just via functions" vs.
     # needing a macro?
     #
-    # **Important Note:** a macro can call functions, while functions
-    # can never include macros!!!
+    # A function is completely executed on the spot (i.e. right at the moment
+    # of invocation, within a specific world cycle). So it can generate events
+    # in the future (as those are put in the events queue), but since it's
+    # completely executed on the spot, it can't see the
+    # state of the world in the future. E.g. a function can generate
+    # several mouse actions in the future, but it can't check the
+    # existence/position of a menu item in the future.
     #
-    # A macro is needed:
-    #   1. for generating (potentially via functions!) events spanning
-    #      multiple cycles. E.g. "opening the inspector for a widget",
-    #      which involves moving the mouse there, right-clicking on
-    #      the widget, wait a cycle for the menu to come up, then
-    #      navigating other menus, until finally finding and
-    #      clicking on a "inspect" entry,
-    #      and finally waiting a cycle for the inspector to come up.
-    #      Those things *together* can't be done using functions alone
-    #      (i.e. with no macros), because functions can only push
-    #      synthetic events (now or in the future) all at once.
-    #   2. so to have a convenient way to specify pauses between
-    #      events. This could also be done with functions, however
-    #      it's more convoluted.
+    # Conversely, a macro is executed in steps across multiple cycles,
+    # and can see the state of the world as it changes across cycles.
+    # E.g. a macro can open a menu, then check the existence and position
+    # of a menu item, then click on it.
     #
-    # For all other cases, macros are not needed, i.e. functions alone
-    # can suffice. Note that
-    # functions *can* specify events that
-    # happen over time e.g. multiple key strokes and events
-    # happening over a few seconds, as there are parameters that help
-    # to specify dates of events in the future. As mentioned though,
-    # functions alone cannot "see past the effects" of any event happening
-    # in the future.
+    # So, if one needs to generate events for the future and can do so
+    # "blindly" (e.g. a
+    # mouse drag/drop between two known position), then use a function
+    # (and not a macro). If, conversely, one needs to check the state
+    # of the world as the actions unfold, then use a macro.
+    #
+    # Note that behind the scenes the macros are implemented as generators,
+    # and the "cross-cycle" execution is done via yields/next()
+    #
+    # The implications:
+    #   * a macro can call functions, but functions can't call macros
+    #   * a macro should either call another macro or have a yield of some
+    #     sort. If it doesn't do either thing, something is off as it will
+    #     be executed one-shot in a single call (and single cycle)
+    #     so it should probably be a function.
     #
     # Examples of macros (potentially using functions):
     #   - opening a menu of a widget AND clicking on one of its items
@@ -1336,121 +1337,90 @@ class WorldMorph extends PanelWdgt
     #   - opening inspector for a widget, changing a method, then
     #     clicking "save"
     #
-    # Examples that don't need macros (functions alone are OK):
+    # Examples of functions:
     #   - moving an icon to the bin
     #   - closing the top window
-    #   - opening the menu of a widget
-    #   - moving pointer to entry of top menu and clicking it
+    #   - opening the menu of a widget (by moving on it and right-clicking)
+    #   - moving pointer to a specific entry of top menu and clicking it
+    #
+    # A macro should take care of "finishing" when the whole macro is executed
+    # i.e. with all the intended actions completed and no inputs remaining in
+    # the "future events" queue. Hence, the caller of a macro
+    # can assume that no further "waits" are needed after calling it.
 
     macroSubroutines = new Set
 
     macroSubroutines.add Macro.fromString """
-      Macro bringUpInspector whichWidget
-        ⤷clickMenuItemOfWidget whichWidget | "dev ➜"
-       ▶ when no inputs ongoing
+      bringUpInspectorMacro = (whichWidget) ->
+        clickMenuItemOfWidgetMacro whichWidget, "dev ➜"
         @moveToItemOfTopMenuAndClick "inspect"
+        yield "waitNoInputsOngoing"
     """
 
     macroSubroutines.add Macro.fromString """
-      Macro bringUpInspectorAndSelectListItem whichWidget | whichItem
-        ⤷bringUpInspector whichWidget
-       ▶ when no inputs ongoing
-        ⤷bringInViewAndClickOnListItemFromTopInspector whichItem
+      bringUpInspectorAndSelectListItemMacro  = (whichWidget, whichItem) ->
+        bringUpInspectorMacro whichWidget
+        bringInViewAndClickOnListItemFromTopInspectorMacro whichItem
     """
 
     macroSubroutines.add Macro.fromString """
-      Macro bringInViewAndClickOnListItemFromTopInspector whichItem
+      bringInViewAndClickOnListItemFromTopInspectorMacro = (whichItem) ->
         @bringListItemFromTopInspectorInView whichItem
-       ▶ when no inputs ongoing
+        yield "waitNoInputsOngoing" 
         @clickOnListItemFromTopInspector whichItem
+        yield "waitNoInputsOngoing" 
     """
 
     macroSubroutines.add Macro.fromString """
-      Macro clickMenuItemOfWidget whichWidget | whichItem
+      clickMenuItemOfWidgetMacro = (whichWidget, whichItem) ->
         @openMenuOf whichWidget
-       ▶ when no inputs ongoing
+        yield "waitNoInputsOngoing"
         @moveToItemOfTopMenuAndClick whichItem
+        yield "waitNoInputsOngoing" 
     """
 
     macroSubroutines.add Macro.fromString """
-      Macro printoutsMacro string1 | string2 | string3
-       ▶ ⌛ 1s
-        🖨️ string1
-       ▶ ⌛ 1s
-        🖨️ string2
-        💼aLocalVariableInACall = ""
-       ▶ ⌛ 1s
-        🖨️ string3
+      printoutsMacro = (string1, string2, string3) ->
+        yield 1000
+        console.log string1
+        yield 1000
+        console.log string2
+        yield 1000
+        console.log string3
     """
-
-    macroSubroutines.add Macro.fromString """
-      Macro macroWithNoParams
-        🖨️ "macro with no params"
-    """
-
-    macroSubroutines.add Macro.fromString """
-      Macro macroWithOneParam theParameter
-        🖨️ "macro with one param: " + theParameter
-    """
-
-    macroSubroutines.add Macro.fromString """
-      Macro macroWithOneParamButPassingNone theParameter
-        🖨️ "macro with one param but passing none, this should be undefined: " + theParameter
-    """
-
-    macroSubroutines.add Macro.fromString """
-      Macro macroWithTwoParamsButPassingOnlyOne param1 | param2
-        🖨️ "macro with two params but passing only one: param 1: " + param1 + " param 2 should be undefined: " + param2
-    """
-
-    # TODO check that these are handled too
-    # ▶ ⌛ 500 ms, when condition1()
-    # ▶ # ⌛ 500 ms, when conditionCommented()
 
     mainMacro = Macro.fromString """
-      Macro theTestMacro
+      theTestMacro = ->
         @syntheticEventsStringKeys "SoMeThInG"
-       ▶ ⌛ 1s
-       ▶ ⤷printoutsMacro "first console out" | "second console out" | "third console out"
-       ▶ ⌛ 1s
-        💼clock = @findTopWidgetByClassNameOrClass AnalogClockWdgt
-        @syntheticEventsMouseMove 💼clock
-       ▶ when no inputs ongoing
+        yield "waitNoInputsOngoing"
+        printoutsMacro "first console out", "second console out", "third console out"
+        yield 1000
+        clock = @findTopWidgetByClassNameOrClass AnalogClockWdgt
+        @syntheticEventsMouseMove clock
+        yield "waitNoInputsOngoing"
         @syntheticEventsMouseDown()
-       ▶ when no inputs ongoing
-        💼clockCenter = 💼clock.center()
-        @syntheticEventsMouseMoveWhileDragging ⦿(💼clockCenter.x - 4, 💼clockCenter.y + 4)
-       ▶ ⌛ 1s
-        @syntheticEventsMouseMoveWhileDragging ⦿(250,250)
-       ▶ when no inputs ongoing
+        yield "waitNoInputsOngoing" 
+        clockCenter = clock.center()
+        @syntheticEventsMouseMoveWhileDragging new Point(clockCenter.x - 4, clockCenter.y + 4)
+        yield 1000 
+        @syntheticEventsMouseMoveWhileDragging new Point(250,250)
+        yield "waitNoInputsOngoing"
         @syntheticEventsMouseUp()
-       ▶ when no inputs ongoing
-        @syntheticEventsMouseMovePressDragRelease ⦿(5, 5), ⦿(200,200)
-       ▶ when no inputs ongoing
-        🖨️ "finished the drag events"
-        ⤷printoutsMacro "fourth console out" | "fifth console out" | "sixth console out"
-       ▶ when no inputs ongoing
-        ⤷bringUpInspectorAndSelectListItem 💼clock | "drawSecondsHand"
-       ▶ when no inputs ongoing
+        yield "waitNoInputsOngoing"
+        @syntheticEventsMouseMovePressDragRelease new Point(5, 5), new Point(200,200)
+        yield "waitNoInputsOngoing"
+        console.log "finished the drag events"
+        printoutsMacro "fourth console out", "fifth console out", "sixth console out"
+        bringUpInspectorAndSelectListItemMacro clock, "drawSecondsHand"
         @bringcodeStringFromTopInspectorInView "context.restore()"
-       ▶ when no inputs ongoing
+        yield "waitNoInputsOngoing"
         @clickOnCodeBoxFromTopInspectorAtCodeString "@secondsHandAngle", 1, false
-       ▶ when no inputs ongoing
+        yield "waitNoInputsOngoing"
         @syntheticEventsStringKeys "-"
         @clickOnSaveButtonFromTopInspector()  # some comments here
-       ▶ when no inputs ongoing # also some comments here
-        ⤷macroWithNoParams
-        ⤷macroWithOneParam "here is the one param"
-        ⤷macroWithOneParamButPassingNone
-        ⤷macroWithTwoParamsButPassingOnlyOne "first parameter"
-        ⤷macroWithNoParams # comment1
-        ⤷macroWithOneParam "here is the one param" # comment2
-        ⤷macroWithOneParamButPassingNone # comment3
-        ⤷macroWithTwoParamsButPassingOnlyOne "first parameter" # comment4
+        yield "waitNoInputsOngoing" # also some comments here
         @bringUpTestMenu()
-
     """
-
 
     mainMacro.linkTo macroSubroutines
     mainMacro.start()
@@ -1505,10 +1475,10 @@ class WorldMorph extends PanelWdgt
       WorldMorph.dateOfPreviousCycleStart = new Date WorldMorph.dateOfCurrentCycleStart.getTime() - 30
 
     # »>> this part is only needed for Macros
-    if !@macroStepsWaitingTimer?
-      @macroStepsWaitingTimer = 0
+    if !@msSinceLastExecutedMacroStep?
+      @msSinceLastExecutedMacroStep = 0
     else
-      @macroStepsWaitingTimer += WorldMorph.dateOfCurrentCycleStart.getTime() - WorldMorph.dateOfPreviousCycleStart.getTime()
+      @msSinceLastExecutedMacroStep += WorldMorph.dateOfCurrentCycleStart.getTime() - WorldMorph.dateOfPreviousCycleStart.getTime()
     # this part is only needed for Macros <<«
 
   doOneCycle: ->
