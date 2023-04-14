@@ -185,7 +185,7 @@ class WorldMorph extends PanelWdgt
   # still captures the biggest.
   maxShadowSize: 6
 
-  eventsQueue: []
+  inputEventsQueue: nil
 
   widgetsReferencingOtherWidgets: new Set
   incrementalGcSessionId: 0
@@ -337,6 +337,7 @@ class WorldMorph extends PanelWdgt
     @cacheForImmutableBackBuffers = new LRUCache 1000, 1000*60*60*24
     @cacheForTextBreakingIntoLinesTopLevel = new LRUCache 10, 1000*60*60*24
 
+    @inputEventsQueue = new InputEventsQueue
 
     @changed()
 
@@ -1077,7 +1078,7 @@ class WorldMorph extends PanelWdgt
     true
 
   noInputsOngoing: ->
-    @eventsQueue.length == 0
+    @inputEventsQueue.isEmpty()
 
   # other useful tween functions here:
   # https://github.com/ashblue/simple-tween-js/blob/master/tween.js
@@ -1090,8 +1091,8 @@ class WorldMorph extends PanelWdgt
   syntheticEventsShortcutsAndSpecialKeys: (whichShortcutOrSpecialKey, millisecondsBetweenKeys = 35, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
       switch whichShortcutOrSpecialKey
         when "F2"
-          @eventsQueue.push new KeydownInputEvent "F2", "F2", false, false, false, false, true, startTime
-          @eventsQueue.push new KeyupInputEvent  "F2", "F2", false, false, false, false, true, startTime + millisecondsBetweenKeys
+          @inputEventsQueue.push new KeydownInputEvent "F2", "F2", false, false, false, false, true, startTime
+          @inputEventsQueue.push new KeyupInputEvent  "F2", "F2", false, false, false, false, true, startTime + millisecondsBetweenKeys
 
   syntheticEventsStringKeys: (theString, millisecondsBetweenKeys = 35, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     scheduledTimeOfEvent = startTime
@@ -1101,19 +1102,19 @@ class WorldMorph extends PanelWdgt
       isUpperCase = theString.charAt(i) == theString.charAt(i).toUpperCase()
 
       if isUpperCase
-        @eventsQueue.push new KeydownInputEvent "Shift", "ShiftLeft", true, false, false, false, true, scheduledTimeOfEvent
+        @inputEventsQueue.push new KeydownInputEvent "Shift", "ShiftLeft", true, false, false, false, true, scheduledTimeOfEvent
         scheduledTimeOfEvent += millisecondsBetweenKeys
 
       # note that the second parameter (code) we are making up, assuming a hypothetical "1:1" key->code layout
-      @eventsQueue.push new KeydownInputEvent theString.charAt(i), theString.charAt(i), isUpperCase, false, false, false, true, scheduledTimeOfEvent
+      @inputEventsQueue.push new KeydownInputEvent theString.charAt(i), theString.charAt(i), isUpperCase, false, false, false, true, scheduledTimeOfEvent
       scheduledTimeOfEvent += millisecondsBetweenKeys
 
       # note that the second parameter (code) we are making up, assuming a hypothetical "1:1" key->code layout
-      @eventsQueue.push new KeyupInputEvent theString.charAt(i), theString.charAt(i), isUpperCase, false, false, false, true, scheduledTimeOfEvent
+      @inputEventsQueue.push new KeyupInputEvent theString.charAt(i), theString.charAt(i), isUpperCase, false, false, false, true, scheduledTimeOfEvent
       scheduledTimeOfEvent += millisecondsBetweenKeys
 
       if isUpperCase
-        @eventsQueue.push new KeyupInputEvent "Shift", "ShiftLeft", false, false, false, false, true, scheduledTimeOfEvent
+        @inputEventsQueue.push new KeyupInputEvent "Shift", "ShiftLeft", false, false, false, false, true, scheduledTimeOfEvent
         scheduledTimeOfEvent += millisecondsBetweenKeys
 
   syntheticEventsMouseMovePressDragRelease: (orig, dest, millisecondsForDrag = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
@@ -1132,7 +1133,7 @@ class WorldMorph extends PanelWdgt
   # need to place the mouse in _some_ place to begin with
   # in order to do that.
   syntheticEventsMousePlace: (place = new Point(0,0), scheduledTimeOfEvent = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-    @eventsQueue.push new MousemoveInputEvent place.x, place.y, 0, 0, false, false, false, false, true, scheduledTimeOfEvent
+    @inputEventsQueue.push new MousemoveInputEvent place.x, place.y, 0, 0, false, false, false, false, true, scheduledTimeOfEvent
 
   syntheticEventsMouseMove: (dest, whichButton = "no button", milliseconds = 1000, orig = @hand.position(), startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
     if whichButton == "left button"
@@ -1163,7 +1164,7 @@ class WorldMorph extends PanelWdgt
         prevX = nextX
         prevY = nextY
         #console.log nextX + " " + nextY + " scheduled at: " + scheduledTimeOfEvent
-        @eventsQueue.push new MousemoveInputEvent nextX, nextY, button, buttons, false, false, false, false, true, scheduledTimeOfEvent
+        @inputEventsQueue.push new MousemoveInputEvent nextX, nextY, button, buttons, false, false, false, false, true, scheduledTimeOfEvent
 
   syntheticEventsMouseClick: (whichButton = "left button", milliseconds = 100, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @syntheticEventsMouseDown whichButton, startTime
@@ -1180,7 +1181,7 @@ class WorldMorph extends PanelWdgt
       debugger
       throw "syntheticEventsMouseDown: whichButton is unknown"
 
-    @eventsQueue.push new MousedownInputEvent button, buttons, false, false, false, false, true, startTime
+    @inputEventsQueue.push new MousedownInputEvent button, buttons, false, false, false, false, true, startTime
 
   syntheticEventsMouseUp: (whichButton = "left button", startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     if whichButton == "left button"
@@ -1193,7 +1194,7 @@ class WorldMorph extends PanelWdgt
       debugger
       throw "syntheticEventsMouseUp: whichButton is unknown"
 
-    @eventsQueue.push new MouseupInputEvent button, buttons, false, false, false, false, true, startTime
+    @inputEventsQueue.push new MouseupInputEvent button, buttons, false, false, false, false, true, startTime
 
   moveToAndClick: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @syntheticEventsMouseMove positionOrWidget, "no button", milliseconds, nil, startTime, nil
@@ -1437,7 +1438,7 @@ class WorldMorph extends PanelWdgt
 
       timeOfCurrentCycleStart = WorldMorph.dateOfCurrentCycleStart.getTime()
 
-      for event in @eventsQueue
+      for event in @inputEventsQueue
         if !event.time? then debugger
 
         # this happens when you consume synthetic events: you can inject
@@ -1445,7 +1446,7 @@ class WorldMorph extends PanelWdgt
         # so you want to consume only the ones that pertain to the current
         # frame and return
         if event.time > timeOfCurrentCycleStart
-          @eventsQueue.splice 0, @eventsQueue.indexOf(event)
+          @inputEventsQueue.removeEventsUpTo event
           return
 
         # currently not handled: DOM virtual keyboard events
@@ -1456,7 +1457,7 @@ class WorldMorph extends PanelWdgt
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError err
 
-    @eventsQueue = []
+    @inputEventsQueue.clear()
 
   # we keep the "pacing" promises in this
   # framePacedPromises array, (or, more precisely,
@@ -1700,7 +1701,7 @@ class WorldMorph extends PanelWdgt
     document.body.appendChild @inputDOMElementForVirtualKeyboard
 
     @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener = (event) =>
-      @eventsQueue.push InputDOMElementForVirtualKeyboardKeydownInputEvent.fromBrowserEvent event
+      @inputEventsQueue.push InputDOMElementForVirtualKeyboardKeydownInputEvent.fromBrowserEvent event
 
       # Default in several browsers
       # is for the backspace button to trigger
@@ -1718,7 +1719,7 @@ class WorldMorph extends PanelWdgt
       @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener, false
 
     @inputDOMElementForVirtualKeyboardKeyupBrowserEventListener = (event) =>
-      @eventsQueue.push InputDOMElementForVirtualKeyboardKeyupInputEvent.fromBrowserEvent event
+      @inputEventsQueue.push InputDOMElementForVirtualKeyboardKeyupInputEvent.fromBrowserEvent event
       event.preventDefault()
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keyup",
@@ -1726,7 +1727,7 @@ class WorldMorph extends PanelWdgt
 
     # Keypress events are deprecated in the JS specs and are not needed
     @inputDOMElementForVirtualKeyboardKeypressBrowserEventListener = (event) =>
-      #@eventsQueue.push event
+      #@inputEventsQueue.push event
       event.preventDefault()
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keypress",
@@ -1777,18 +1778,18 @@ class WorldMorph extends PanelWdgt
     #canvas.addEventListener "dblclick", @dblclickEventListener, false
 
     @mousedownBrowserEventListener = (event) =>
-      @eventsQueue.push MousedownInputEvent.fromBrowserEvent event
+      @inputEventsQueue.push MousedownInputEvent.fromBrowserEvent event
 
     canvas.addEventListener "mousedown", @mousedownBrowserEventListener, false
 
     
     @mouseupBrowserEventListener = (event) =>
-      @eventsQueue.push MouseupInputEvent.fromBrowserEvent event
+      @inputEventsQueue.push MouseupInputEvent.fromBrowserEvent event
 
     canvas.addEventListener "mouseup", @mouseupBrowserEventListener, false
         
     @mousemoveBrowserEventListener = (event) =>
-      @eventsQueue.push MousemoveInputEvent.fromBrowserEvent event
+      @inputEventsQueue.push MousemoveInputEvent.fromBrowserEvent event
 
     canvas.addEventListener "mousemove", @mousemoveBrowserEventListener, false
 
@@ -1796,19 +1797,19 @@ class WorldMorph extends PanelWdgt
     canvas = @worldCanvas
     
     @touchstartBrowserEventListener = (event) =>
-      @eventsQueue.push TouchstartInputEvent.fromBrowserEvent event
+      @inputEventsQueue.push TouchstartInputEvent.fromBrowserEvent event
       event.preventDefault() # (unsure that this one is needed)
 
     canvas.addEventListener "touchstart", @touchstartBrowserEventListener, false
 
     @touchendBrowserEventListener = (event) =>
-      @eventsQueue.push TouchendInputEvent.fromBrowserEvent event
+      @inputEventsQueue.push TouchendInputEvent.fromBrowserEvent event
       event.preventDefault() # prevent mouse events emulation
 
     canvas.addEventListener "touchend", @touchendBrowserEventListener, false
         
     @touchmoveBrowserEventListener = (event) =>
-      @eventsQueue.push TouchmoveInputEvent.fromBrowserEvent event
+      @inputEventsQueue.push TouchmoveInputEvent.fromBrowserEvent event
       event.preventDefault() # (unsure that this one is needed)
 
     canvas.addEventListener "touchmove", @touchmoveBrowserEventListener, false
@@ -1829,7 +1830,7 @@ class WorldMorph extends PanelWdgt
   initKeyboardEventListeners: ->
     canvas = @worldCanvas
     @keydownBrowserEventListener = (event) =>
-      @eventsQueue.push KeydownInputEvent.fromBrowserEvent event
+      @inputEventsQueue.push KeydownInputEvent.fromBrowserEvent event
 
       # this paragraph is to prevent the browser going
       # "back button" when the user presses delete backspace.
@@ -1873,7 +1874,7 @@ class WorldMorph extends PanelWdgt
     canvas.addEventListener "keydown", @keydownBrowserEventListener, false
 
     @keyupBrowserEventListener = (event) =>
-      @eventsQueue.push KeyupInputEvent.fromBrowserEvent event
+      @inputEventsQueue.push KeyupInputEvent.fromBrowserEvent event
 
     canvas.addEventListener "keyup", @keyupBrowserEventListener, false
 
@@ -1907,19 +1908,19 @@ class WorldMorph extends PanelWdgt
 
     @cutBrowserEventListener = (event) =>
       # TODO this should follow the fromBrowserEvent pattern
-      @eventsQueue.push CutInputEvent.fromBrowserEvent event
+      @inputEventsQueue.push CutInputEvent.fromBrowserEvent event
 
     document.body.addEventListener "cut", @cutBrowserEventListener, false
     
     @copyBrowserEventListener = (event) =>
       # TODO this should follow the fromBrowserEvent pattern
-      @eventsQueue.push CopyInputEvent.fromBrowserEvent event
+      @inputEventsQueue.push CopyInputEvent.fromBrowserEvent event
 
     document.body.addEventListener "copy", @copyBrowserEventListener, false
 
     @pasteBrowserEventListener = (event) =>
       # TODO this should follow the fromBrowserEvent pattern
-      @eventsQueue.push PasteInputEvent.fromBrowserEvent event
+      @inputEventsQueue.push PasteInputEvent.fromBrowserEvent event
 
     document.body.addEventListener "paste", @pasteBrowserEventListener, false
 
@@ -1997,7 +1998,7 @@ class WorldMorph extends PanelWdgt
     # Safari, Chrome
     
     @wheelBrowserEventListener = (event) =>
-      @eventsQueue.push WheelInputEvent.fromBrowserEvent event
+      @inputEventsQueue.push WheelInputEvent.fromBrowserEvent event
       event.preventDefault()
 
     canvas.addEventListener "wheel", @wheelBrowserEventListener, false
@@ -2025,7 +2026,7 @@ class WorldMorph extends PanelWdgt
     window.addEventListener "drop", @dropBrowserEventListener, false
 
     @resizeBrowserEventListener = =>
-      @eventsQueue.push ResizeInputEvent.fromBrowserEvent event
+      @inputEventsQueue.push ResizeInputEvent.fromBrowserEvent event
 
     # this is a DOM thing, little to do with other r e s i z e methods
     window.addEventListener "resize", @resizeBrowserEventListener, false
