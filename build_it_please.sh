@@ -142,7 +142,7 @@ fi
 # the first parameter "--homepage" specifies whether this
 # is a build for the homepage, in which case a lot of
 # legacy code and test-supporting code is left out.
-python ./buildSystem/build.py "${args[@]}"
+python3 ./buildSystem/build.py "${args[@]}"
 
 touch $SCRATCH_PATH/fizzygum-boot.coffee
 

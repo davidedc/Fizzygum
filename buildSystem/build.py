@@ -19,13 +19,6 @@ This script performs only some of the steps of the build:
 
 """
 
-# These are included in order to make the script compatible both
-# with Python 2 and 3.
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import absolute_import
-
 # standard library's imports
 from datetime import datetime
 from glob import glob
@@ -308,7 +301,7 @@ def main():
                 escaped_content = re.sub(MACROS_INCLUSION_PARTS, '', escaped_content)
 
             sourceFileName = ntpath.basename(filename).replace(".coffee","_coffeSource")
-            escaped_content_with_declaration = STRING_BLOCK % (unicode(sourceFileName), unicode(escaped_content))
+            escaped_content_with_declaration = STRING_BLOCK % (str(sourceFileName), str(escaped_content))
 
             with codecs.open("../Fizzygum-builds/latest/js/coffeescript-sources/"+sourceFileName+".js", "w", "utf-8") as f:
                 f.write(escaped_content_with_declaration)
@@ -319,7 +312,7 @@ def main():
             if len(batchedSources) > minimumSourcesBatchSize:
                 sourceFileName = ntpath.basename("sources_batch_"+str(numberOfSourceBatches))
                 with codecs.open("../Fizzygum-builds/latest/js/coffeescript-sources/"+sourceFileName+".js", "w", "utf-8") as f:
-                    f.write(unicode(batchedSources))
+                    f.write(str(batchedSources))
                 numberOfSourceBatches = numberOfSourceBatches + 1
                 batchedSources = ""
 
@@ -329,7 +322,7 @@ def main():
     # of the sources
     sourceFileName = ntpath.basename("sources_batch_"+str(numberOfSourceBatches))
     with codecs.open("../Fizzygum-builds/latest/js/coffeescript-sources/"+sourceFileName+".js", "w", "utf-8") as f:
-        f.write(unicode(batchedSources))
+        f.write(str(batchedSources))
     numberOfSourceBatches += 1
 
     with codecs.open("../Fizzygum-builds/latest/delete_me/numberOfSourceBatches.coffee", "w", "utf-8") as f:
