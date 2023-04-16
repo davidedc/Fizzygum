@@ -1085,16 +1085,16 @@ class WorldMorph extends PanelWdgt
   expoOut: (i, origin, distance, numberOfEvents) ->
     distance * (-Math.pow(2, -10 * i/numberOfEvents) + 1) + origin
 
-  bringUpTestMenu: (millisecondsBetweenKeys = 35, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-      @syntheticEventsShortcutsAndSpecialKeys "F2", millisecondsBetweenKeys, startTime
+  bringUpTestMenu_InputEvents: (millisecondsBetweenKeys = 35, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+      @syntheticEventsShortcutsAndSpecialKeys_InputEvents "F2", millisecondsBetweenKeys, startTime
 
-  syntheticEventsShortcutsAndSpecialKeys: (whichShortcutOrSpecialKey, millisecondsBetweenKeys = 35, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+  syntheticEventsShortcutsAndSpecialKeys_InputEvents: (whichShortcutOrSpecialKey, millisecondsBetweenKeys = 35, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
       switch whichShortcutOrSpecialKey
         when "F2"
           @inputEventsQueue.push new KeydownInputEvent "F2", "F2", false, false, false, false, true, startTime
           @inputEventsQueue.push new KeyupInputEvent  "F2", "F2", false, false, false, false, true, startTime + millisecondsBetweenKeys
 
-  syntheticEventsStringKeys: (theString, millisecondsBetweenKeys = 35, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+  syntheticEventsStringKeys_InputEvents: (theString, millisecondsBetweenKeys = 35, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     scheduledTimeOfEvent = startTime
 
     for i in [0...theString.length]
@@ -1117,25 +1117,25 @@ class WorldMorph extends PanelWdgt
         @inputEventsQueue.push new KeyupInputEvent "Shift", "ShiftLeft", false, false, false, false, true, scheduledTimeOfEvent
         scheduledTimeOfEvent += millisecondsBetweenKeys
 
-  syntheticEventsMouseMovePressDragRelease: (orig, dest, millisecondsForDrag = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
-    @syntheticEventsMouseMove orig, "left button", 100, nil, startTime, numberOfEventsPerMillisecond
-    @syntheticEventsMouseDown "left button", startTime + 100
-    @syntheticEventsMouseMove dest, "left button", millisecondsForDrag, orig, startTime + 100 + 100, numberOfEventsPerMillisecond
-    @syntheticEventsMouseUp "left button", startTime + 100 + 100 + millisecondsForDrag + 100
+  syntheticEventsMouseMovePressDragRelease_InputEvents: (orig, dest, millisecondsForDrag = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
+    @syntheticEventsMouseMove_InputEvents orig, "left button", 100, nil, startTime, numberOfEventsPerMillisecond
+    @syntheticEventsMouseDown_InputEvents "left button", startTime + 100
+    @syntheticEventsMouseMove_InputEvents dest, "left button", millisecondsForDrag, orig, startTime + 100 + 100, numberOfEventsPerMillisecond
+    @syntheticEventsMouseUp_InputEvents "left button", startTime + 100 + 100 + millisecondsForDrag + 100
 
   # This should be used if you want to drag from point A to B to C ...
   # If rather you want to just drag from point A to point B,
-  # then just use syntheticEventsMouseMovePressDragRelease
-  syntheticEventsMouseMoveWhileDragging: (dest, milliseconds = 1000, orig = @hand.position(), startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
-    @syntheticEventsMouseMove dest, "left button", milliseconds, orig, startTime, numberOfEventsPerMillisecond
+  # then just use syntheticEventsMouseMovePressDragRelease_InputEvents
+  syntheticEventsMouseMoveWhileDragging_InputEvents: (dest, milliseconds = 1000, orig = @hand.position(), startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
+    @syntheticEventsMouseMove_InputEvents dest, "left button", milliseconds, orig, startTime, numberOfEventsPerMillisecond
 
   # mouse moves need an origin and a destination, so we
   # need to place the mouse in _some_ place to begin with
   # in order to do that.
-  syntheticEventsMousePlace: (place = new Point(0,0), scheduledTimeOfEvent = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+  syntheticEventsMousePlace_InputEvents: (place = new Point(0,0), scheduledTimeOfEvent = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @inputEventsQueue.push new MousemoveInputEvent place.x, place.y, 0, 0, false, false, false, false, true, scheduledTimeOfEvent
 
-  syntheticEventsMouseMove: (dest, whichButton = "no button", milliseconds = 1000, orig = @hand.position(), startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
+  syntheticEventsMouseMove_InputEvents: (dest, whichButton = "no button", milliseconds = 1000, orig = @hand.position(), startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
     if whichButton == "left button"
       button = 0
       buttons = 1
@@ -1147,7 +1147,7 @@ class WorldMorph extends PanelWdgt
       buttons = 2
     else
       debugger
-      throw "syntheticEventsMouseMove: whichButton is unknown"
+      throw "syntheticEventsMouseMove_InputEvents: whichButton is unknown"
 
     if dest instanceof Widget
       dest = dest.center()
@@ -1166,11 +1166,11 @@ class WorldMorph extends PanelWdgt
         #console.log nextX + " " + nextY + " scheduled at: " + scheduledTimeOfEvent
         @inputEventsQueue.push new MousemoveInputEvent nextX, nextY, button, buttons, false, false, false, false, true, scheduledTimeOfEvent
 
-  syntheticEventsMouseClick: (whichButton = "left button", milliseconds = 100, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-    @syntheticEventsMouseDown whichButton, startTime
-    @syntheticEventsMouseUp whichButton, startTime + milliseconds
+  syntheticEventsMouseClick_InputEvents: (whichButton = "left button", milliseconds = 100, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    @syntheticEventsMouseDown_InputEvents whichButton, startTime
+    @syntheticEventsMouseUp_InputEvents whichButton, startTime + milliseconds
 
-  syntheticEventsMouseDown: (whichButton = "left button", startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+  syntheticEventsMouseDown_InputEvents: (whichButton = "left button", startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     if whichButton == "left button"
       button = 0
       buttons = 1
@@ -1179,11 +1179,11 @@ class WorldMorph extends PanelWdgt
       buttons = 2
     else
       debugger
-      throw "syntheticEventsMouseDown: whichButton is unknown"
+      throw "syntheticEventsMouseDown_InputEvents: whichButton is unknown"
 
     @inputEventsQueue.push new MousedownInputEvent button, buttons, false, false, false, false, true, startTime
 
-  syntheticEventsMouseUp: (whichButton = "left button", startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+  syntheticEventsMouseUp_InputEvents: (whichButton = "left button", startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     if whichButton == "left button"
       button = 0
       buttons = 0
@@ -1192,16 +1192,16 @@ class WorldMorph extends PanelWdgt
       buttons = 0
     else
       debugger
-      throw "syntheticEventsMouseUp: whichButton is unknown"
+      throw "syntheticEventsMouseUp_InputEvents: whichButton is unknown"
 
     @inputEventsQueue.push new MouseupInputEvent button, buttons, false, false, false, false, true, startTime
 
-  moveToAndClick: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-    @syntheticEventsMouseMove positionOrWidget, "no button", milliseconds, nil, startTime, nil
-    @syntheticEventsMouseClick whichButton, 100, startTime + milliseconds + 100
+  moveToAndClick_InputEvents: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, nil, startTime, nil
+    @syntheticEventsMouseClick_InputEvents whichButton, 100, startTime + milliseconds + 100
 
-  openMenuOf: (widget, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-    @moveToAndClick widget, "right button", milliseconds, startTime
+  openMenuOf_InputEvents: (widget, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    @moveToAndClick_InputEvents widget, "right button", milliseconds, startTime
 
   getMostRecentlyOpenedMenu: ->
     # gets the last element added to the "freshlyCreatedPopUps" set
@@ -1215,10 +1215,10 @@ class WorldMorph extends PanelWdgt
       else
         false
 
-  moveToItemOfTopMenuAndClick: (theLabel) ->
+  moveToItemOfTopMenuAndClick_InputEvents: (theLabel) ->
     theMenu = @getMostRecentlyOpenedMenu()
     theItem = @getTextMenuItemFromMenu theMenu, theLabel
-    @moveToAndClick theItem
+    @moveToAndClick_InputEvents theItem
 
   findTopWidgetByClassNameOrClass: (widgetNameOrClass) ->
     if typeof widgetNameOrClass == "string"
@@ -1243,7 +1243,7 @@ class WorldMorph extends PanelWdgt
 
     [vBarHandleCenter, vBarHandleCenter.translateBy new Point(0,handleCenterOffset)]
 
-  bringListItemFromTopInspectorInView: (listItemString) ->
+  bringListItemFromTopInspectorInView_InputEvents: (listItemString) ->
     inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
     list = inspectorNaked.list
     elements = list.elements
@@ -1253,9 +1253,9 @@ class WorldMorph extends PanelWdgt
     total = elements.length
     [vBarCenterFromHere, vBarCenterToHere] = @calculateVertBarMovement vBar, index, total
 
-    @syntheticEventsMouseMovePressDragRelease vBarCenterFromHere, vBarCenterToHere
+    @syntheticEventsMouseMovePressDragRelease_InputEvents vBarCenterFromHere, vBarCenterToHere
 
-  clickOnListItemFromTopInspector: (listItemString, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+  clickOnListItemFromTopInspector_InputEvents: (listItemString, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
 
     list = inspectorNaked.list
@@ -1267,24 +1267,24 @@ class WorldMorph extends PanelWdgt
         false
     entryTopLeft = entry.topLeft()
 
-    @moveToAndClick entryTopLeft.translateBy(new Point 10, 2), "left button", milliseconds, startTime
+    @moveToAndClick_InputEvents entryTopLeft.translateBy(new Point 10, 2), "left button", milliseconds, startTime
 
 
-  clickOnCodeBoxFromTopInspectorAtCodeString: (codeString, occurrenceNumber = 1, after = true,  milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+  clickOnCodeBoxFromTopInspectorAtCodeString_InputEvents: (codeString, occurrenceNumber = 1, after = true,  milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
 
     slotCoords = inspectorNaked.textMorph.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
 
     clickPosition = inspectorNaked.textMorph.slotCoordinates(slotCoords).translateBy new Point 3,3
 
-    @moveToAndClick clickPosition, "left button", milliseconds, startTime
+    @moveToAndClick_InputEvents clickPosition, "left button", milliseconds, startTime
 
-  clickOnSaveButtonFromTopInspector: (milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+  clickOnSaveButtonFromTopInspector_InputEvents: (milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
     saveButton = inspectorNaked.saveButton
-    @moveToAndClick saveButton, "left button", milliseconds, startTime
+    @moveToAndClick_InputEvents saveButton, "left button", milliseconds, startTime
 
-  bringcodeStringFromTopInspectorInView: (codeString, occurrenceNumber = 1, after = true) ->
+  bringcodeStringFromTopInspectorInView_InputEvents: (codeString, occurrenceNumber = 1, after = true) ->
     inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
 
     slotCoords = inspectorNaked.textMorph.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
@@ -1297,7 +1297,7 @@ class WorldMorph extends PanelWdgt
     total = textMorph.wrappedLines.length
     [vBarCenterFromHere, vBarCenterToHere] = @calculateVertBarMovement vBar, index, total
 
-    @syntheticEventsMouseMovePressDragRelease vBarCenterFromHere, vBarCenterToHere
+    @syntheticEventsMouseMovePressDragRelease_InputEvents vBarCenterFromHere, vBarCenterToHere
 
   draftRunMacro: ->
     # When does it make sense to generate events "just via functions" vs.
@@ -1356,36 +1356,36 @@ class WorldMorph extends PanelWdgt
     macroSubroutines = new Set
 
     macroSubroutines.add Macro.fromString """
-      bringUpInspectorMacro = (whichWidget) ->
-        clickMenuItemOfWidgetMacro whichWidget, "dev ➜"
-        @moveToItemOfTopMenuAndClick "inspect"
+      bringUpInspector_InputEvents_Macro = (whichWidget) ->
+        clickMenuItemOfWidget_InputEvents_Macro whichWidget, "dev ➜"
+        @moveToItemOfTopMenuAndClick_InputEvents "inspect"
         yield "waitNoInputsOngoing"
     """
 
     macroSubroutines.add Macro.fromString """
-      bringUpInspectorAndSelectListItemMacro  = (whichWidget, whichItem) ->
-        bringUpInspectorMacro whichWidget
-        bringInViewAndClickOnListItemFromTopInspectorMacro whichItem
+      bringUpInspectorAndSelectListItem_InputEvents_Macro  = (whichWidget, whichItem) ->
+        bringUpInspector_InputEvents_Macro whichWidget
+        bringInViewAndClickOnListItemFromTopInspector_InputEvents_Macro whichItem
     """
 
     macroSubroutines.add Macro.fromString """
-      bringInViewAndClickOnListItemFromTopInspectorMacro = (whichItem) ->
-        @bringListItemFromTopInspectorInView whichItem
+      bringInViewAndClickOnListItemFromTopInspector_InputEvents_Macro = (whichItem) ->
+        @bringListItemFromTopInspectorInView_InputEvents whichItem
         yield "waitNoInputsOngoing" 
-        @clickOnListItemFromTopInspector whichItem
+        @clickOnListItemFromTopInspector_InputEvents whichItem
         yield "waitNoInputsOngoing" 
     """
 
     macroSubroutines.add Macro.fromString """
-      clickMenuItemOfWidgetMacro = (whichWidget, whichItem) ->
-        @openMenuOf whichWidget
+      clickMenuItemOfWidget_InputEvents_Macro = (whichWidget, whichItem) ->
+        @openMenuOf_InputEvents whichWidget
         yield "waitNoInputsOngoing"
-        @moveToItemOfTopMenuAndClick whichItem
+        @moveToItemOfTopMenuAndClick_InputEvents whichItem
         yield "waitNoInputsOngoing" 
     """
 
     macroSubroutines.add Macro.fromString """
-      printoutsMacro = (string1, string2, string3) ->
+      printouts_InputEvents_Macro = (string1, string2, string3) ->
         yield 1000
         console.log string1
         yield 1000
@@ -1395,36 +1395,36 @@ class WorldMorph extends PanelWdgt
     """
 
     mainMacro = Macro.fromString """
-      theTestMacro = ->
-        @syntheticEventsStringKeys "SoMeThInG"
+      theTest_InputEvents_Macro = ->
+        @syntheticEventsStringKeys_InputEvents "SoMeThInG"
         yield "waitNoInputsOngoing"
-        printoutsMacro "first console out", "second console out", "third console out"
+        printouts_InputEvents_Macro "first console out", "second console out", "third console out"
         yield 1000
         clock = @findTopWidgetByClassNameOrClass AnalogClockWdgt
-        @syntheticEventsMouseMove clock
+        @syntheticEventsMouseMove_InputEvents clock
         yield "waitNoInputsOngoing"
-        @syntheticEventsMouseDown()
+        @syntheticEventsMouseDown_InputEvents()
         yield "waitNoInputsOngoing" 
         clockCenter = clock.center()
-        @syntheticEventsMouseMoveWhileDragging new Point(clockCenter.x - 4, clockCenter.y + 4)
+        @syntheticEventsMouseMoveWhileDragging_InputEvents new Point(clockCenter.x - 4, clockCenter.y + 4)
         yield 1000 
-        @syntheticEventsMouseMoveWhileDragging new Point(250,250)
+        @syntheticEventsMouseMoveWhileDragging_InputEvents new Point(250,250)
         yield "waitNoInputsOngoing"
-        @syntheticEventsMouseUp()
+        @syntheticEventsMouseUp_InputEvents()
         yield "waitNoInputsOngoing"
-        @syntheticEventsMouseMovePressDragRelease new Point(5, 5), new Point(200,200)
+        @syntheticEventsMouseMovePressDragRelease_InputEvents new Point(5, 5), new Point(200,200)
         yield "waitNoInputsOngoing"
         console.log "finished the drag events"
-        printoutsMacro "fourth console out", "fifth console out", "sixth console out"
-        bringUpInspectorAndSelectListItemMacro clock, "drawSecondsHand"
-        @bringcodeStringFromTopInspectorInView "context.restore()"
+        printouts_InputEvents_Macro "fourth console out", "fifth console out", "sixth console out"
+        bringUpInspectorAndSelectListItem_InputEvents_Macro clock, "drawSecondsHand"
+        @bringcodeStringFromTopInspectorInView_InputEvents "context.restore()"
         yield "waitNoInputsOngoing"
-        @clickOnCodeBoxFromTopInspectorAtCodeString "@secondsHandAngle", 1, false
+        @clickOnCodeBoxFromTopInspectorAtCodeString_InputEvents "@secondsHandAngle", 1, false
         yield "waitNoInputsOngoing"
-        @syntheticEventsStringKeys "-"
-        @clickOnSaveButtonFromTopInspector()  # some comments here
+        @syntheticEventsStringKeys_InputEvents "-"
+        @clickOnSaveButtonFromTopInspector_InputEvents()  # some comments here
         yield "waitNoInputsOngoing" # also some comments here
-        @bringUpTestMenu()
+        @bringUpTestMenu_InputEvents()
     """
 
     mainMacro.linkTo macroSubroutines

@@ -83,9 +83,9 @@ class Macro
       @progressOnMacroSteps = ->
         # we do this only once to initialise things
         if !@macroGenerator?
-          @syntheticEventsMousePlace()
+          @syntheticEventsMousePlace_InputEvents()
           @msSinceLastExecutedMacroStep = 0
-          @macroGenerator = theTestMacro.call @
+          @macroGenerator = theTest_InputEvents_Macro.call @
           return
 
         return unless @noCodeLoading()
