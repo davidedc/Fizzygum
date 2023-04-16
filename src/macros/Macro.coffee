@@ -42,7 +42,7 @@ class Macro
     # from the line of the form
     #   macroNameMacro =
     matches = macroString.match /([$a-zA-Z_][0-9a-zA-Z_$\(\).\[\]]*)Macro[ ]*=/, 'm'
-    macroName = matches[1]
+    macroName = matches[1] + "Macro"
     macroString = @_replaceMacroInvocationWithYieldingInvocations macroString
     return new @ macroName, macroString
 
