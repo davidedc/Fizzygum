@@ -80,7 +80,7 @@ class PreferencesAndSettings
     canvas = document.createElement "canvas"
     canvas.width = size
     canvas.height = size
-    ctx = canvas.getContext "2d"
+    ctx = canvas.getContext "2d", willReadFrequently: true
     ctx.font = "1px serif"
     maxX = Math.ceil ctx.measureText(str).width
     ctx.fillStyle = Color.BLACK.toString()
