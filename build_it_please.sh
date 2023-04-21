@@ -212,8 +212,11 @@ if $homepage ; then
   # and the code in those sections is completely dead,
   # so we can search/replace those checks with "if (false", so that terser can just eliminate
   # both the checks and the dead-code sections.
-  sed -i 's/if ((typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false/g' $BUILD_PATH/js/fizzygum-boot.js
-  sed -i 's/if (typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false)/g' $BUILD_PATH/js/fizzygum-boot.js
+  #
+  # notice that OSX sed is different from GNU sed, so we need to give the -i '' parameter which means
+  # "in-place editing, but don't make a backup file"
+  sed -i '' 's/if ((typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false/g' $BUILD_PATH/js/fizzygum-boot.js
+  sed -i '' 's/if (typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false)/g' $BUILD_PATH/js/fizzygum-boot.js
 fi
 
 terser --compress --mangle --output $BUILD_PATH/js/fizzygum-boot-min.js -- $BUILD_PATH/js/fizzygum-boot.js
@@ -357,8 +360,11 @@ if $homepage ; then
   # both the checks and the dead-code sections.
   # At the moment this was put in place, this line saves around 12kBs
   # (11990 bytes to be precise) in the final build.
-  sed -i 's/if ((typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false/g' $BUILD_PATH/js/pre-compiled.js
-  sed -i 's/if (typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false)/g' $BUILD_PATH/js/pre-compiled.js
+  #
+  # notice that OSX sed is different from GNU sed, so we need to give the -i '' parameter which means
+  # "in-place editing, but don't make a backup file"
+  sed -i '' 's/if ((typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false/g' $BUILD_PATH/js/pre-compiled.js
+  sed -i '' 's/if (typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false)/g' $BUILD_PATH/js/pre-compiled.js
 
   terser --compress --mangle --output $BUILD_PATH/js/pre-compiled-min.js -- $BUILD_PATH/js/pre-compiled.js
   mv $BUILD_PATH/js/pre-compiled.js $BUILD_PATH/js/pre-compiled-max.js
