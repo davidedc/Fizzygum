@@ -56,6 +56,8 @@ FILE_NOT_IN_FIZZYGUM_HOMEPAGE = re.compile(r"# this file is excluded from the fi
 MACROS_INCLUSION_PARTS = re.compile(r"[ ]*# »>> this part is only needed for Macros[^«]*«")
 FILE_ONLY_FOR_MACROS = re.compile(r"# this file is only needed for Macros")
 
+VIDEOPLAYER_INCLUSION_PARTS = re.compile(r"[ ]*# »>> this part is only needed for VideoPlayer[^«]*«")
+FILE_ONLY_FOR_VIDEOPLAYER = re.compile(r"# this file is only needed for VideoPlayer")
 
 # we just need to detect a switch
 # see https://stackoverflow.com/a/8259080
@@ -63,6 +65,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--homepage', action='store_true')
 parser.add_argument('--notests', action='store_true')
 parser.add_argument('--keepTestsDirectoryAsIs', action='store_true')
+parser.add_argument('--includeVideoPlayer', action='store_true')
+# doing nothing with this one yet
+parser.add_argument('--includeVideos', action='store_true')
+
 args = parser.parse_args()
 
 
@@ -193,7 +199,8 @@ def main():
     filenames = sorted(filenames + sorted(glob("src/fizzytiles" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/events-input" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/macros" + "/*.coffee")))
-
+    if args.includeVideoPlayer:
+        filenames = sorted(filenames + sorted(glob("src/video-player" + "/*.coffee")))
 
     # so here we need to take a .coffee file and generate a js that
     # , when run, puts its contents as string into a variable.
@@ -274,7 +281,7 @@ def main():
         # nor "FILE_ONLY_FOR_MACROS" directive in the source,
         # (since p -> q is identical to not p or q, you have what's in the
         # bracket).
-        if (not args.homepage or not (FILE_NOT_IN_FIZZYGUM_HOMEPAGE.search(content) or FILE_ONLY_FOR_MACROS.search(content))) and (is_class_file or is_mixin_file):
+        if (not args.homepage or not (FILE_NOT_IN_FIZZYGUM_HOMEPAGE.search(content) or FILE_ONLY_FOR_MACROS.search(content) or FILE_ONLY_FOR_VIDEOPLAYER.search(content))) and (is_class_file or is_mixin_file):
 
             # backslashes and quotes and newlines all need
             # to be escaped. Quotes need to be escaped otherwise
@@ -299,6 +306,7 @@ def main():
             if args.homepage:
                 escaped_content = re.sub(HOMEPAGE_EXCLUSION_PARTS, '', escaped_content)
                 escaped_content = re.sub(MACROS_INCLUSION_PARTS, '', escaped_content)
+                escaped_content = re.sub(VIDEOPLAYER_INCLUSION_PARTS, '', escaped_content)
 
             sourceFileName = ntpath.basename(filename).replace(".coffee","_coffeSource")
             escaped_content_with_declaration = STRING_BLOCK % (str(sourceFileName), str(escaped_content))

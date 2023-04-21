@@ -10,6 +10,8 @@
 #     removes tests, leaves in experimental parts of the code
 #   ./build_it_please --keepTestsDirectoryAsIs
 #     leaves in experimental parts of the code, leaves the whole "tests" directory AS IS, which saves a loooot of time
+#   ./build_it_please.sh --keepTestsDirectoryAsIs --includeVideoPlayer --includeVideos
+#     as before but also includes the video player and the videos
 #   ./build_it_please
 #     leaves in tests and experimental parts of the code
 
@@ -26,6 +28,8 @@ args=( "$@" )
 homepage=false
 keepTestsDirectoryAsIs=false
 notests=false
+includeVideoPlayer=false
+includeVideos=false
 
 # see https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash
 while test $# -gt 0; do
@@ -36,6 +40,14 @@ while test $# -gt 0; do
       ;;
     --keepTestsDirectoryAsIs)
       keepTestsDirectoryAsIs='true'
+      shift
+      ;;
+    --includeVideoPlayer)
+      includeVideoPlayer='true'
+      shift
+      ;;
+    --includeVideos)
+      includeVideos='true'
       shift
       ;;
     --notests)
@@ -114,6 +126,12 @@ if [ ! -d $BUILD_PATH/icons ]; then
   mkdir $BUILD_PATH/icons
 fi
 
+if $includeVideos ; then
+  if [ ! -d $BUILD_PATH/videos ]; then
+    mkdir $BUILD_PATH/videos
+  fi
+fi
+
 if [ ! -d $BUILD_PATH/js/libs ]; then
   mkdir $BUILD_PATH/js/libs
 fi
@@ -186,6 +204,11 @@ cat src/boot/extensions/String-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/extensions/HTMLCanvasElement-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+
+if $includeVideoPlayer ; then
+  printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+  cat src/boot/extensions/HTMLVideoElement-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+fi
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/extensions/Date-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
@@ -264,6 +287,11 @@ echo "... done"
 echo "copying icon files..."
 cp auxiliary\ files/additional-icons/*.png $BUILD_PATH/icons/
 cp auxiliary\ files/additional-icons/spinner.svg $BUILD_PATH/icons/
+
+if $includeVideos ; then
+  cp ../Fizzygum-videos-public/*.webm $BUILD_PATH/videos/
+fi
+
 echo "... done copying icon files"
 
 
