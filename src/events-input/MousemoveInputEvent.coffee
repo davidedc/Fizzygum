@@ -1,5 +1,3 @@
-# this file is only needed for Macros
-
 class MousemoveInputEvent extends MouseInputEvent
   pageX: nil
   pageY: nil

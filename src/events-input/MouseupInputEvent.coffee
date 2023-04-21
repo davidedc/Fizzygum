@@ -1,5 +1,3 @@
-# this file is only needed for Macros
-
 class MouseupInputEvent extends MouseInputEvent
 
   # TODO mouseup and mousedown currently don't take the pointer position
