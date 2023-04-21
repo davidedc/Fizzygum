@@ -301,6 +301,10 @@ class InspectorMorph2 extends Widget
     @propertyHeaderString.alignCenter()
     @add @propertyHeaderString
 
+    # TODO this resizer is actually not needed because the inspector is
+    # always created inside a window, and the window has its own resizer
+    # however I am leaving it here for now because the situation with
+    # the tests is delicate and I don't want to break any more tests
     # resizer
     @resizer = new HandleMorph @
 
