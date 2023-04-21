@@ -1432,6 +1432,16 @@ class WorldMorph extends PanelWdgt
 
   # this part is only needed for Macros <<«
 
+  # »>> this part is only needed for VideoPlayer
+  draftRunVideoPlayer: ->
+      videoPlayer = new WindowWdgt nil, nil, new VideoPlayerCanvasWdgt, true, true
+      world.add videoPlayer
+      videoPlayer.rawSetExtent new Point 200, 200
+      videoPlayer.fullRawMoveTo new Point 200, 200
+      videoPlayer.fullRawMoveWithin world
+
+  # this part is only needed for VideoPlayer <<«
+
 
   playQueuedEvents: ->
     try
