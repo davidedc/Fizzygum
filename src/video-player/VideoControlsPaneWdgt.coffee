@@ -1,17 +1,16 @@
-class VideoPlayerWdgt extends Widget
+class VideoControlsPaneWdgt extends RectangleMorph
 
-  videoPlayerCanvas: nil
-  videoControlsPane: nil
+  playPauseButton: nil
 
   externalPadding: 0
   internalPadding: 5
   padding: nil
 
   colloquialName: ->
-    "Video player"
+    "Video controls"
 
   constructor: ->
-    super new Point 300, 300
+    super new Point(20, 20), Color.BLACK
     @buildAndConnectChildren()
   
 
@@ -22,16 +21,19 @@ class VideoPlayerWdgt extends Widget
     # have been peeled away, they still live
     @fullDestroyChildren()
 
-    @videoPlayerCanvas = new VideoPlayerCanvasWdgt
-    @add @videoPlayerCanvas
+    @playPauseButton = new SimpleButtonMorph true, @, "pause", "▶"
 
-    # videoControlsPane is just a black rectangle for now
-    @videoControlsPane = new VideoControlsPaneWdgt
-    @add @videoControlsPane
+    @add @playPauseButton
 
     # update layout
     @invalidateLayout()
 
+  pause: ->
+    # pause the vide element in @parent.videoPlayerCanvas.video
+    @parent.videoPlayerCanvas.video.pause()
+  
+  # TODO you should use the newBoundsForThisLayout param
+  # and if it's nil then you should use the current bounds
   doLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
@@ -48,13 +50,8 @@ class VideoPlayerWdgt extends Widget
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    @videoPlayerCanvas.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding + 15 + @internalPadding
-    @videoPlayerCanvas.rawSetExtent new Point @width() - 2 * @externalPadding, @height()/2 - 2 * @externalPadding - 15 - @internalPadding
-
-    # put the videoControlsPane in the bottom part
-    @videoControlsPane.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding + 15 + @internalPadding + @height()/2
-    @videoControlsPane.rawSetExtent new Point @width() - 2 * @externalPadding, @height()/2 - 2 * @externalPadding - 15 - @internalPadding
-    @videoControlsPane.doLayout @videoControlsPane.boundingBox()
+    @playPauseButton.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding + @internalPadding
+    @playPauseButton.rawSetExtent new Point @width() - 2 * @externalPadding, @height() - 2 * @externalPadding - @internalPadding - 15
 
 
     world.maybeEnableTrackChanges()
