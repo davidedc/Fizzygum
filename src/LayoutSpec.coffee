@@ -3,6 +3,16 @@
 
 class LayoutSpec
 
+  # if a widget is attached as "free floating" it means that its extent
+  # either does not depend on the extent of its parent or, if it does depend
+  # on the extent of its parent, it's the parent's responsibility to
+  # update its extend in its doLayout method.
+  # In other words, the layouting system doesn't handle it specifically,
+  # rather the parent has to take care of it.
+  # TODO this should be split into two constants, one for the
+  # "ATTACHEDAS_CONSTANTSIZE" (I would assume very rarely used), and one for the
+  # "ATTACHEDAS_CUSTOM_SIZED_BY_PARENT" case (default),
+  # so it's clearer what it means.
   @ATTACHEDAS_FREEFLOATING: 100000
   # @ATTACHEDAS_INSET: 100001
   @ATTACHEDAS_VERTICAL_STACK_ELEMENT: 100002

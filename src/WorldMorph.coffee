@@ -841,9 +841,10 @@ class WorldMorph extends PanelWdgt
   recalculateLayouts: ->
 
     until @morphsThatMaybeChangedLayout.length == 0
-
+      # starting from the last element,
       # find the first Widget which has a broken layout,
-      # take out of queue all the others
+      # (and pop out of the queue all the Widgets we encounter
+      # on the way that have a valid layout)
       loop
         tryThisMorph = @morphsThatMaybeChangedLayout[@morphsThatMaybeChangedLayout.length - 1]
         if tryThisMorph.layoutIsValid
@@ -856,11 +857,23 @@ class WorldMorph extends PanelWdgt
       # now that you have a Widget with a broken layout
       # go up the chain of broken layouts as much as
       # possible
-      # QUESTION: would it be safer instead to start from the
-      # very top invalid morph, i.e. on the way to the top,
+      # TODO: it would be more correct to start from the
+      # top-most invalid morph, i.e. on the way to the top,
       # stop at the last morph with an invalid layout
       # instead of stopping at the first morph with a
       # valid layout...
+      # The reason is that a freefloating morph might
+      # still need to be resized according to the size
+      # of its parent, in which case you want the parent
+      # to do its layout first, and then the freefloating
+      # child to do its layout.
+      # Otherwise what happens is that the freefloating
+      # child will do its layout first according to the
+      # wrong size of the parent, and then the
+      # parent will have to re-layout it again, so the
+      # doLayout of the freefloating child is called twice,
+      # the first time wrongly.
+
       while tryThisMorph.parent?
         if tryThisMorph.layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING or tryThisMorph.parent.layoutIsValid
           break
