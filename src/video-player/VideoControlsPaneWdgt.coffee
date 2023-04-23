@@ -1,6 +1,8 @@
 class VideoControlsPaneWdgt extends RectangleMorph
 
-  playPauseButton: nil
+  playPausePlayButton: nil
+  playPausePauseButton: nil
+  playPauseToggle: nil
 
   externalPadding: 0
   internalPadding: 5
@@ -21,9 +23,10 @@ class VideoControlsPaneWdgt extends RectangleMorph
     # have been peeled away, they still live
     @fullDestroyChildren()
 
-    @playPauseButton = new SimpleButtonMorph true, @, "pause", "▶"
-
-    @add @playPauseButton
+    @playPausePlayButton = new SimpleButtonMorph true, @, "play", "▶"
+    @playPausePauseButton = new SimpleButtonMorph true, @, "pause", "❙ ❙"
+    @playPauseToggle = new ToggleButtonMorph @playPausePlayButton, @playPausePauseButton, 1
+    @add @playPauseToggle
 
     # update layout
     @invalidateLayout()
@@ -31,7 +34,11 @@ class VideoControlsPaneWdgt extends RectangleMorph
   pause: ->
     # pause the vide element in @parent.videoPlayerCanvas.video
     @parent.videoPlayerCanvas.video.pause()
-  
+
+  play: ->
+    # pause the vide element in @parent.videoPlayerCanvas.video
+    @parent.videoPlayerCanvas.video.play()
+
   # TODO you should use the newBoundsForThisLayout param
   # and if it's nil then you should use the current bounds
   doLayout: (newBoundsForThisLayout) ->
@@ -50,9 +57,9 @@ class VideoControlsPaneWdgt extends RectangleMorph
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    playPauseButtonBounds = new Rectangle new Point @left() + @externalPadding, @top() + @externalPadding + @internalPadding
-    playPauseButtonBounds = playPauseButtonBounds.setBoundsWidthAndHeight new Point @width() - 2 * @externalPadding, @height() - 2 * @externalPadding - @internalPadding - 15
-    @playPauseButton.doLayout playPauseButtonBounds
+    playPauseToggleBounds = new Rectangle new Point @left() + @externalPadding, @top() + @externalPadding + @internalPadding
+    playPauseToggleBounds = playPauseToggleBounds.setBoundsWidthAndHeight new Point @width() - 2 * @externalPadding, @height() - 2 * @externalPadding - @internalPadding - 15
+    @playPauseToggle.doLayout playPauseToggleBounds
 
 
     world.maybeEnableTrackChanges()
