@@ -4,6 +4,8 @@ class VideoControlsPaneWdgt extends RectangleMorph
   playPausePauseButton: nil
   playPauseToggle: nil
 
+  hbar: nil
+
   externalPadding: 0
   internalPadding: 5
   padding: nil
@@ -12,7 +14,7 @@ class VideoControlsPaneWdgt extends RectangleMorph
     "Video controls"
 
   constructor: ->
-    super new Point(20, 20), Color.BLACK
+    super new Point(20, 20), Color.TRANSPARENT
     @buildAndConnectChildren()
   
 
@@ -28,12 +30,23 @@ class VideoControlsPaneWdgt extends RectangleMorph
     @playPauseToggle = new ToggleButtonMorph @playPausePlayButton, @playPausePauseButton, 1
     @add @playPauseToggle
 
+    @hbar = new SliderMorph nil, nil, nil, nil, nil, true
+    @add @hbar
+    @hbar.setTargetAndActionWithOnesPickedFromMenu nil, nil, @, "setPlayAt"
+
     # update layout
     @invalidateLayout()
 
   pause: ->
     # pause the vide element in @parent.videoPlayerCanvas.video
     @parent.videoPlayerCanvas.video.pause()
+
+  setPlayAt: (sliderPercentage)->
+    # set the video to play at the "location"
+    # as set by the slider
+    if @parent?.videoPlayerCanvas?
+      @parent.videoPlayerCanvas.video.currentTime = @parent.videoPlayerCanvas.video.duration * sliderPercentage/100
+
 
   play: ->
     # pause the vide element in @parent.videoPlayerCanvas.video
@@ -58,8 +71,11 @@ class VideoControlsPaneWdgt extends RectangleMorph
     world.disableTrackChanges()
 
     playPauseToggleBounds = new Rectangle new Point @left() + @externalPadding, @top() + @externalPadding + @internalPadding
-    playPauseToggleBounds = playPauseToggleBounds.setBoundsWidthAndHeight new Point @width() - 2 * @externalPadding, @height() - 2 * @externalPadding - @internalPadding - 15
+    playPauseToggleBounds = playPauseToggleBounds.setBoundsWidthAndHeight new Point @width()/5 - 2 * @externalPadding, 24
     @playPauseToggle.doLayout playPauseToggleBounds
+
+    @hbar.fullRawMoveTo new Point @left() + @externalPadding + 15, @top() + @externalPadding
+    @hbar.rawSetExtent new Point 200, 24
 
 
     world.maybeEnableTrackChanges()
