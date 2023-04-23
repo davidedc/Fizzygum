@@ -50,8 +50,9 @@ class VideoControlsPaneWdgt extends RectangleMorph
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    @playPauseButton.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding + @internalPadding
-    @playPauseButton.rawSetExtent new Point @width() - 2 * @externalPadding, @height() - 2 * @externalPadding - @internalPadding - 15
+    playPauseButtonBounds = new Rectangle new Point @left() + @externalPadding, @top() + @externalPadding + @internalPadding
+    playPauseButtonBounds = playPauseButtonBounds.setBoundsWidthAndHeight new Point @width() - 2 * @externalPadding, @height() - 2 * @externalPadding - @internalPadding - 15
+    @playPauseButton.doLayout playPauseButtonBounds
 
 
     world.maybeEnableTrackChanges()
