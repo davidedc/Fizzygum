@@ -91,6 +91,21 @@ class SliderMorph extends CircleBoxMorph
     else
       return (@width() - @button.width()) / @rangeSize()
 
+  # it does what setValue does, but it doesn't update the
+  # target i.e. it doesn't "fire" as when the user
+  # moves the slider.
+  # This is useful when the slider needs to reflect the
+  # state of something that has been independently changed
+  # (i.e. changed by something else than the user moving the slider)
+  updateHandlePosition: (newvalue) ->
+    @value = Number(newvalue)
+    @reLayout()    
+    @button.reLayout()
+    @changed()
+
+  # TODO this should call updateHandlePosition above
+  # instead of duplicating code, however the tests are
+  # in a precarious condition and I don't want to break anything
   setValue: (newvalue, ignored, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     @value = Number(newvalue)

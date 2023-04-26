@@ -3,13 +3,29 @@ class VideoControlsPaneWdgt extends RectangleMorph
   playPausePlayButton: nil
   playPausePauseButton: nil
   playPauseToggle: nil
+
+  # labels
   playHeadTimeLabel: nil
+  durationTimeLabel: nil
 
   hbar: nil
 
   externalPadding: 0
   internalPadding: 5
   padding: nil
+
+  # these are used because there is some delay between
+  # when the user scrubs / clicks play/pause and the
+  # video element state catching up / reacting. So if we update
+  # the UI based on video state immediately after a user
+  # action, the UI will seem to "bounce back" to the
+  # previous play/pause state, or scrub time.
+  # So the solution is to wait a bit before updating
+  # the UI, so the video element state has time
+  # to catch up on the user action, and the UI
+  # then doesn't bounce.
+  timeWhenPlayPauseButtonWasLastClicked: nil
+  timeWhenScrubWasLastMoved: nil
 
   colloquialName: ->
     "Video controls"
@@ -28,6 +44,28 @@ class VideoControlsPaneWdgt extends RectangleMorph
 
   step: ->
     @_updatePlayHeadTimeLabel()
+    @_updateDurationTimeLabel()
+    @_updatePlayPauseToggle()
+    @_updateHbar()
+  
+  _updateHbar: ->
+    if @parent?.videoPlayerCanvas?
+      # only update the bar if it's not been moved by the user
+      # in the last 250ms
+      if (!@timeWhenScrubWasLastMoved?) or (Date.now() - @timeWhenScrubWasLastMoved) > 750
+        @hbar.updateHandlePosition 100 * @parent.videoPlayerCanvas.video.currentTime / @parent.videoPlayerCanvas.video.duration
+
+  _updatePlayPauseToggle: ->
+    if @parent?.videoPlayerCanvas?
+      # only update the toggle if it's not been clicked by the user
+      # in the last 250ms
+      if (!@timeWhenPlayPauseButtonWasLastClicked?) or (Date.now() - @timeWhenPlayPauseButtonWasLastClicked) > 250
+        if @parent.videoPlayerCanvas.video.paused
+          # show the play button
+          @playPauseToggle.setToggleState 1
+        else
+          # show the pause button
+          @playPauseToggle.setToggleState 0
 
   _formatTime: (time) ->
     hours = Math.floor(time / 3600)
@@ -39,6 +77,10 @@ class VideoControlsPaneWdgt extends RectangleMorph
   _updatePlayHeadTimeLabel: ->
     if @parent?.videoPlayerCanvas?
       @playHeadTimeLabel.setText @_formatTime @parent.videoPlayerCanvas.video.currentTime
+  
+  _updateDurationTimeLabel: ->
+    if @parent?.videoPlayerCanvas?
+      @durationTimeLabel.setText @_formatTime @parent.videoPlayerCanvas.video.duration
 
   buildAndConnectChildren: ->
     # remove all submorhs i.e. panes and buttons
@@ -47,9 +89,9 @@ class VideoControlsPaneWdgt extends RectangleMorph
     # have been peeled away, they still live
     @fullDestroyChildren()
 
-    @playPausePlayButton = new SimpleButtonMorph true, @, "play", "▶"
     @playPausePauseButton = new SimpleButtonMorph true, @, "pause", "❙ ❙"
-    @playPauseToggle = new ToggleButtonMorph @playPausePlayButton, @playPausePauseButton, 1
+    @playPausePlayButton = new SimpleButtonMorph true, @, "play", "▶"
+    @playPauseToggle = new ToggleButtonMorph @playPausePauseButton, @playPausePlayButton, 0
     @add @playPauseToggle
 
     @hbar = new SliderMorph nil, nil, nil, nil, nil, true
@@ -58,28 +100,35 @@ class VideoControlsPaneWdgt extends RectangleMorph
 
 
     @playHeadTimeLabel = new StringMorph2 "n/a", WorldMorph.preferencesAndSettings.textInButtonsFontSize
-    @playHeadTimeLabel.toggleHeaderLine()
     @playHeadTimeLabel.alignLeft()
     @add @playHeadTimeLabel
 
+    @durationTimeLabel = new StringMorph2 "n/a", WorldMorph.preferencesAndSettings.textInButtonsFontSize
+    @durationTimeLabel.alignRight()
+    @add @durationTimeLabel
 
     # update layout
     @invalidateLayout()
 
+  # TODO this is a private method, should have an underscore
   pause: ->
     # pause the vide element in @parent.videoPlayerCanvas.video
     @parent.videoPlayerCanvas.video.pause()
+    @timeWhenPlayPauseButtonWasLastClicked = Date.now()
 
+  # TODO this is a private method, should have an underscore
   setPlayAt: (sliderPercentage)->
     # set the video to play at the "location"
     # as set by the slider
     if @parent?.videoPlayerCanvas?
       @parent.videoPlayerCanvas.video.currentTime = @parent.videoPlayerCanvas.video.duration * sliderPercentage/100
+      @timeWhenScrubWasLastMoved = Date.now()
 
-
+  # TODO this is a private method, should have an underscore
   play: ->
     # pause the vide element in @parent.videoPlayerCanvas.video
     @parent.videoPlayerCanvas.video.play()
+    @timeWhenPlayPauseButtonWasLastClicked = Date.now()
 
   # TODO you should use the newBoundsForThisLayout param
   # and if it's nil then you should use the current bounds
@@ -107,8 +156,12 @@ class VideoControlsPaneWdgt extends RectangleMorph
     @hbar.rawSetExtent new Point 200, 24
 
     playHeadTimeLabelBounds = new Rectangle new Point @left() + @externalPadding + 15, @top() + @externalPadding
-    playHeadTimeLabelBounds = playHeadTimeLabelBounds.setBoundsWidthAndHeight @width() - 2 * @externalPadding , 15
+    playHeadTimeLabelBounds = playHeadTimeLabelBounds.setBoundsWidthAndHeight 80 , 15
     @playHeadTimeLabel.doLayout playHeadTimeLabelBounds
+
+    durationTimeLabelBounds = new Rectangle new Point @left() + @externalPadding + 15, @top() + @externalPadding + 15
+    durationTimeLabelBounds = durationTimeLabelBounds.setBoundsWidthAndHeight 80 , 15
+    @durationTimeLabel.doLayout durationTimeLabelBounds
 
 
     world.maybeEnableTrackChanges()

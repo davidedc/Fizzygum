@@ -22,6 +22,10 @@ class VideoPlayerCanvasWdgt extends CanvasMorph
     # @fps = 5 # you can do that
     world.steppingWdgts.add @
 
+  # might come useful, but never used nor tested
+  isPlaying: ->
+    !!(@video.currentTime > 0 && !@video.paused && !@video.ended && @video.readyState > 2)
+
   step: ->
     @paintNewFrame()
     @changed()
