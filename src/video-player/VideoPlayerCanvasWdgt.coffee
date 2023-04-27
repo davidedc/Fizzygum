@@ -23,6 +23,7 @@ class VideoPlayerCanvasWdgt extends CanvasMorph
     world.steppingWdgts.add @
 
   # might come useful, but never used nor tested
+  # see https://stackoverflow.com/questions/6877403/how-to-tell-if-a-video-element-is-currently-playing
   isPlaying: ->
     !!(@video.currentTime > 0 && !@video.paused && !@video.ended && @video.readyState > 2)
 
