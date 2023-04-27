@@ -8,11 +8,13 @@ class VideoControlsPaneWdgt extends RectangleMorph
   playHeadTimeLabel: nil
   durationTimeLabel: nil
 
-  hbar: nil
+  videoScrubber: nil
 
   externalPadding: 0
   internalPadding: 5
   padding: nil
+
+  videoPlayerCanvas: nil
 
   # these are used because there is some delay between
   # when the user scrubs / clicks play/pause and the
@@ -30,7 +32,7 @@ class VideoControlsPaneWdgt extends RectangleMorph
   colloquialName: ->
     "Video controls"
 
-  constructor: ->
+  constructor: (@videoPlayerCanvas) ->
     super new Point(20, 20), Color.TRANSPARENT
     @buildAndConnectChildren()
 
@@ -46,21 +48,13 @@ class VideoControlsPaneWdgt extends RectangleMorph
     @_updatePlayHeadTimeLabel()
     @_updateDurationTimeLabel()
     @_updatePlayPauseToggle()
-    @_updateHbar()
-  
-  _updateHbar: ->
-    if @parent?.videoPlayerCanvas?
-      # only update the bar if it's not been moved by the user
-      # in the last 250ms
-      if (!@timeWhenScrubWasLastMoved?) or (Date.now() - @timeWhenScrubWasLastMoved) > 750
-        @hbar.updateHandlePosition 100 * @parent.videoPlayerCanvas.video.currentTime / @parent.videoPlayerCanvas.video.duration
 
   _updatePlayPauseToggle: ->
-    if @parent?.videoPlayerCanvas?
+    if @videoPlayerCanvas?
       # only update the toggle if it's not been clicked by the user
       # in the last 250ms
       if (!@timeWhenPlayPauseButtonWasLastClicked?) or (Date.now() - @timeWhenPlayPauseButtonWasLastClicked) > 250
-        if @parent.videoPlayerCanvas.video.paused
+        if @videoPlayerCanvas.video.paused
           # show the play button
           @playPauseToggle.setToggleState 1
         else
@@ -75,12 +69,12 @@ class VideoControlsPaneWdgt extends RectangleMorph
     "#{hours.toString().padStart(2, '0')}:#{minutes.toString().padStart(2, '0')}:#{seconds.toString().padStart(2, '0')}"
 
   _updatePlayHeadTimeLabel: ->
-    if @parent?.videoPlayerCanvas?
-      @playHeadTimeLabel.setText @_formatTime @parent.videoPlayerCanvas.video.currentTime
+    if @videoPlayerCanvas?
+      @playHeadTimeLabel.setText @_formatTime @videoPlayerCanvas.video.currentTime
   
   _updateDurationTimeLabel: ->
-    if @parent?.videoPlayerCanvas?
-      @durationTimeLabel.setText @_formatTime @parent.videoPlayerCanvas.video.duration
+    if @videoPlayerCanvas?
+      @durationTimeLabel.setText @_formatTime @videoPlayerCanvas.video.duration
 
   buildAndConnectChildren: ->
     # remove all submorhs i.e. panes and buttons
@@ -94,9 +88,8 @@ class VideoControlsPaneWdgt extends RectangleMorph
     @playPauseToggle = new ToggleButtonMorph @playPausePauseButton, @playPausePlayButton, 0
     @add @playPauseToggle
 
-    @hbar = new SliderMorph nil, nil, nil, nil, nil, true
-    @add @hbar
-    @hbar.setTargetAndActionWithOnesPickedFromMenu nil, nil, @, "setPlayAt"
+    @videoScrubber = new VideoScrubberWdgt @videoPlayerCanvas
+    @add @videoScrubber
 
 
     @playHeadTimeLabel = new StringMorph2 "n/a", WorldMorph.preferencesAndSettings.textInButtonsFontSize
@@ -112,22 +105,14 @@ class VideoControlsPaneWdgt extends RectangleMorph
 
   # TODO this is a private method, should have an underscore
   pause: ->
-    # pause the vide element in @parent.videoPlayerCanvas.video
-    @parent.videoPlayerCanvas.video.pause()
+    # pause the vide element in @videoPlayerCanvas.video
+    @videoPlayerCanvas.video.pause()
     @timeWhenPlayPauseButtonWasLastClicked = Date.now()
 
   # TODO this is a private method, should have an underscore
-  setPlayAt: (sliderPercentage)->
-    # set the video to play at the "location"
-    # as set by the slider
-    if @parent?.videoPlayerCanvas?
-      @parent.videoPlayerCanvas.video.currentTime = @parent.videoPlayerCanvas.video.duration * sliderPercentage/100
-      @timeWhenScrubWasLastMoved = Date.now()
-
-  # TODO this is a private method, should have an underscore
   play: ->
-    # pause the vide element in @parent.videoPlayerCanvas.video
-    @parent.videoPlayerCanvas.video.play()
+    # pause the vide element in @videoPlayerCanvas.video
+    @videoPlayerCanvas.video.play()
     @timeWhenPlayPauseButtonWasLastClicked = Date.now()
 
   # TODO you should use the newBoundsForThisLayout param
@@ -152,8 +137,8 @@ class VideoControlsPaneWdgt extends RectangleMorph
     playPauseToggleBounds = playPauseToggleBounds.setBoundsWidthAndHeight new Point @width()/5 - 2 * @externalPadding, 24
     @playPauseToggle.doLayout playPauseToggleBounds
 
-    @hbar.fullRawMoveTo new Point @left() + @externalPadding + 15, @top() + @externalPadding
-    @hbar.rawSetExtent new Point 200, 24
+    @videoScrubber.fullRawMoveTo new Point @left() + @externalPadding + 15, @top() + @externalPadding
+    @videoScrubber.rawSetExtent new Point 200, 24
 
     playHeadTimeLabelBounds = new Rectangle new Point @left() + @externalPadding + 15, @top() + @externalPadding
     playHeadTimeLabelBounds = playHeadTimeLabelBounds.setBoundsWidthAndHeight 80 , 15

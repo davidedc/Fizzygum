@@ -26,7 +26,7 @@ class VideoPlayerWdgt extends Widget
     @add @videoPlayerCanvas
 
     # videoControlsPane is just a black rectangle for now
-    @videoControlsPane = new VideoControlsPaneWdgt
+    @videoControlsPane = new VideoControlsPaneWdgt @videoPlayerCanvas
     @add @videoControlsPane
 
     # update layout
