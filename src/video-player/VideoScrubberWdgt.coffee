@@ -38,6 +38,6 @@ class VideoScrubberWdgt extends SliderMorph
   setPlayAt: (sliderPercentage)->
     # set the video to play at the "location"
     # as set by the slider
-    if @videoPlayerCanvas?
+    if @videoPlayerCanvas?.video? and isFinite(@videoPlayerCanvas.video.duration)
       @videoPlayerCanvas.video.currentTime = @videoPlayerCanvas.video.duration * sliderPercentage/100
       @timeWhenScrubWasLastMoved = Date.now()
