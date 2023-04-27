@@ -1,7 +1,5 @@
 class VideoControlsPaneWdgt extends RectangleMorph
 
-  playPausePlayButton: nil
-  playPausePauseButton: nil
   playPauseToggle: nil
 
   # labels
@@ -47,19 +45,6 @@ class VideoControlsPaneWdgt extends RectangleMorph
   step: ->
     @_updatePlayHeadTimeLabel()
     @_updateDurationTimeLabel()
-    @_updatePlayPauseToggle()
-
-  _updatePlayPauseToggle: ->
-    if @videoPlayerCanvas?
-      # only update the toggle if it's not been clicked by the user
-      # in the last 250ms
-      if (!@timeWhenPlayPauseButtonWasLastClicked?) or (Date.now() - @timeWhenPlayPauseButtonWasLastClicked) > 250
-        if @videoPlayerCanvas.video.paused
-          # show the play button
-          @playPauseToggle.setToggleState 1
-        else
-          # show the pause button
-          @playPauseToggle.setToggleState 0
 
   _formatTime: (time) ->
     hours = Math.floor(time / 3600)
@@ -83,9 +68,7 @@ class VideoControlsPaneWdgt extends RectangleMorph
     # have been peeled away, they still live
     @fullDestroyChildren()
 
-    @playPausePauseButton = new SimpleButtonMorph true, @, "pause", "❙ ❙"
-    @playPausePlayButton = new SimpleButtonMorph true, @, "play", "▶"
-    @playPauseToggle = new ToggleButtonMorph @playPausePauseButton, @playPausePlayButton, 0
+    @playPauseToggle = new VideoPlayPauseToggle @videoPlayerCanvas
     @add @playPauseToggle
 
     @videoScrubber = new VideoScrubberWdgt @videoPlayerCanvas
@@ -103,17 +86,6 @@ class VideoControlsPaneWdgt extends RectangleMorph
     # update layout
     @invalidateLayout()
 
-  # TODO this is a private method, should have an underscore
-  pause: ->
-    # pause the vide element in @videoPlayerCanvas.video
-    @videoPlayerCanvas.video.pause()
-    @timeWhenPlayPauseButtonWasLastClicked = Date.now()
-
-  # TODO this is a private method, should have an underscore
-  play: ->
-    # pause the vide element in @videoPlayerCanvas.video
-    @videoPlayerCanvas.video.play()
-    @timeWhenPlayPauseButtonWasLastClicked = Date.now()
 
   # TODO you should use the newBoundsForThisLayout param
   # and if it's nil then you should use the current bounds
