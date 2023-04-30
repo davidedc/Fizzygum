@@ -48,12 +48,12 @@ class VideoPlayerWdgt extends Widget
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    @videoPlayerCanvas.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding + 15 + @internalPadding
-    @videoPlayerCanvas.rawSetExtent new Point @width() - 2 * @externalPadding, @height()/2 - 2 * @externalPadding - 15 - @internalPadding
+    @videoPlayerCanvas.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
+    @videoPlayerCanvas.rawSetExtent new Point @width() - 2 * @externalPadding, @height()/2 - 2 * @externalPadding
 
     # put the videoControlsPane in the bottom part
-    @videoControlsPane.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding + 15 + @internalPadding + @height()/2
-    @videoControlsPane.rawSetExtent new Point @width() - 2 * @externalPadding, @height()/2 - 2 * @externalPadding - 15 - @internalPadding
+    @videoControlsPane.fullRawMoveTo new Point @left() + @externalPadding, @top() + 2* @externalPadding + @internalPadding + @height()/2
+    @videoControlsPane.rawSetExtent new Point @width() - 2 * @externalPadding, 24
     @videoControlsPane.doLayout @videoControlsPane.boundingBox()
 
 

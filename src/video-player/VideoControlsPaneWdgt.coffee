@@ -63,19 +63,19 @@ class VideoControlsPaneWdgt extends RectangleMorph
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    playPauseToggleBounds = new Rectangle new Point @left() + @externalPadding, @top() + @externalPadding + @internalPadding
-    playPauseToggleBounds = playPauseToggleBounds.setBoundsWidthAndHeight new Point @width()/5 - 2 * @externalPadding, 24
+    playPauseToggleBounds = new Rectangle new Point @left() + @externalPadding, @top() + @externalPadding
+    playPauseToggleBounds = playPauseToggleBounds.setBoundsWidthAndHeight new Point @width()/15, 20
     @playPauseToggle.doLayout playPauseToggleBounds
 
-    @videoScrubber.fullRawMoveTo new Point @left() + @externalPadding + 15, @top() + @externalPadding
-    @videoScrubber.rawSetExtent new Point 200, 24
+    @videoScrubber.fullRawMoveTo new Point @left() + @externalPadding + 2 * @width()/15, @top() + @externalPadding
+    @videoScrubber.rawSetExtent new Point @width() - (3 * @width()/15 + @internalPadding), 20
 
-    playHeadTimeLabelBounds = new Rectangle new Point @left() + @externalPadding + 15, @top() + @externalPadding
-    playHeadTimeLabelBounds = playHeadTimeLabelBounds.setBoundsWidthAndHeight 80 , 15
+    playHeadTimeLabelBounds = new Rectangle new Point @left() + @externalPadding + @width()/15 + 2 * @internalPadding, @top() + @externalPadding + 2
+    playHeadTimeLabelBounds = playHeadTimeLabelBounds.setBoundsWidthAndHeight @width()/15 , 15
     @playHeadTimeLabel.doLayout playHeadTimeLabelBounds
 
-    durationTimeLabelBounds = new Rectangle new Point @left() + @externalPadding + 15, @top() + @externalPadding + 15
-    durationTimeLabelBounds = durationTimeLabelBounds.setBoundsWidthAndHeight 80 , 15
+    durationTimeLabelBounds = new Rectangle new Point @right() - @width()/15 + 2 * @internalPadding, @top() + @externalPadding + 2
+    durationTimeLabelBounds = durationTimeLabelBounds.setBoundsWidthAndHeight @width()/15 , 15
     @durationTimeLabel.doLayout durationTimeLabelBounds
 
 
