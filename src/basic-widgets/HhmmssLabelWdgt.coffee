@@ -1,7 +1,7 @@
 class HhmmssLabelWdgt extends StringMorph2
 
   colloquialName: ->
-    "HH:MM:SS"
+    "HH:MM:SS label"
 
   _formatTime: (time) ->
     hours = Math.floor(time / 3600)
