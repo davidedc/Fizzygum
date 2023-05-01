@@ -48,7 +48,7 @@ class VideoControlsPaneWdgt extends RectangleMorph
   # TODO you should use the newBoundsForThisLayout param
   # and if it's nil then you should use the current bounds
   #
-  # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
+  # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023 definition:
   # we currently have most of the doLayout methods
   # invoking super at the end of the method, and a few
   # at the beginning.
@@ -56,7 +56,10 @@ class VideoControlsPaneWdgt extends RectangleMorph
   # calling super at the end is actually wrong, bcause fixing the
   # layout of the children before fixing the layout of the
   # parent is problematic.
-  # BUT IN FACT, studying the matter a bit more, I found out that
+  #
+  # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023 definition:
+  # BUT IN FACT, studying the TODO id SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT 
+  # matter a bit more, I found out that
   # super is a bit of a smell, because that's the exact problem:
   # the implementors of doLayout now have to understand some
   # deep aspects that they shouldn't have to - see
