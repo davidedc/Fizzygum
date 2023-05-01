@@ -1447,11 +1447,10 @@ class WorldMorph extends PanelWdgt
 
   # »>> this part is only needed for VideoPlayer
   draftRunVideoPlayer: ->
-      videoPlayer = new WindowWdgt nil, nil, new VideoPlayerWdgt, true, true
+      videoPlayer = new WindowWdgt nil, nil, new VideoPlayerWithRecommendationsWdgt, true, true
       world.add videoPlayer
-      videoPlayer.rawSetExtent new Point 200, 200
-      videoPlayer.fullRawMoveTo new Point 200, 200
-      videoPlayer.fullRawMoveWithin world
+      videoPlayer.setExtent new Point 800, 800
+      videoPlayer.fullMoveTo new Point 200, 50
 
   # this part is only needed for VideoPlayer <<«
 

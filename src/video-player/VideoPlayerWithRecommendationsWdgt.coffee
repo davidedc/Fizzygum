@@ -1,14 +1,14 @@
-class VideoPlayerWdgt extends Widget
+class VideoPlayerWithRecommendationsWdgt extends Widget
 
-  videoPlayerCanvas: nil
-  videoControlsPane: nil
+  videoPlayer: nil
+  recommendationsPane: nil
 
   externalPadding: 0
   internalPadding: 5
   padding: nil
 
   colloquialName: ->
-    "Video player"
+    "Video player with recommendations"
 
   constructor: ->
     super new Point 300, 300
@@ -22,12 +22,11 @@ class VideoPlayerWdgt extends Widget
     # have been peeled away, they still live
     @fullDestroyChildren()
 
-    @videoPlayerCanvas = new VideoPlayerCanvasWdgt
-    @add @videoPlayerCanvas
+    @videoPlayer = new VideoPlayerWdgt
+    @add @videoPlayer
 
-    # videoControlsPane is just a black rectangle for now
-    @videoControlsPane = new VideoControlsPaneWdgt @videoPlayerCanvas
-    @add @videoControlsPane
+    @recommendationsPane = new RectangleMorph
+    @add @recommendationsPane
 
     # update layout
     @invalidateLayout()
@@ -48,7 +47,6 @@ class VideoPlayerWdgt extends Widget
     # call is for
     super newBoundsForThisLayout
 
-
     # here we are disabling all the broken
     # rectangles. The reason is that all the
     # submorphs of the inspector are within the
@@ -60,18 +58,14 @@ class VideoPlayerWdgt extends Widget
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    # like the above but use the bounding box
-    # to do the layout
-    videoPlayerCanvasBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() + @externalPadding
-    videoPlayerCanvasBounds = videoPlayerCanvasBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, newBoundsForThisLayout.height() - 24  - @internalPadding
-    @videoPlayerCanvas.doLayout videoPlayerCanvasBounds
+    videoPlayerBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() + @externalPadding
+    videoPlayerBounds = videoPlayerBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, newBoundsForThisLayout.height()/2 + 24
+    #console.log "videoPlayerBounds: " + videoPlayerBounds
+    @videoPlayer.doLayout videoPlayerBounds
 
-    # put the videoControlsPane in the bottom part
-    videoControlsBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.bottom() - 24 - @externalPadding
-    videoControlsBounds = videoControlsBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, 24
-    #console.log "videoControlsBounds: #{videoControlsBounds}"
-    @videoControlsPane.doLayout videoControlsBounds
-
+    recommendationPaneBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() + 2* @externalPadding + @internalPadding + newBoundsForThisLayout.height()/2 + 24
+    recommendationPaneBounds = recommendationPaneBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, newBoundsForThisLayout.height()/2 - 24
+    @recommendationsPane.doLayout recommendationPaneBounds
 
     world.maybeEnableTrackChanges()
     @fullChanged()

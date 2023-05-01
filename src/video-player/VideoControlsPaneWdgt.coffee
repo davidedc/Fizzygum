@@ -47,10 +47,45 @@ class VideoControlsPaneWdgt extends RectangleMorph
 
   # TODO you should use the newBoundsForThisLayout param
   # and if it's nil then you should use the current bounds
+  #
+  # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
+  # we currently have most of the doLayout methods
+  # invoking super at the end of the method, and a few
+  # at the beginning.
+  # This is because when creating the Video widget I found out that
+  # calling super at the end is actually wrong, bcause fixing the
+  # layout of the children before fixing the layout of the
+  # parent is problematic.
+  # BUT IN FACT, studying the matter a bit more, I found out that
+  # super is a bit of a smell, because that's the exact problem:
+  # the implementors of doLayout now have to understand some
+  # deep aspects that they shouldn't have to - see
+  # https://martinfowler.com/bliki/CallSuper.html
+  # What should really happen is that there should be
+  # a hook for just layouting the children
+  # (say "fixLayoutOfFreefloatingChildren") that are
+  # attached with free floating layout, and everything
+  # else should be done automatically by the
+  # doLayout implementation in Widget.
+  # So now implementing layouts should be a lot clearer
+  # by using that hook rather than understanding the
+  # super call (what it doesn, why is it called where it is).
+
   doLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
     if @_handleCollapsedStateShouldWeReturn() then return
+
+    if !newBoundsForThisLayout?
+      newBoundsForThisLayout = @boundingBox()
+
+    # this sets my bounds and the ones of the children
+    # that are attached with a special layout, and sets
+    # the layout as "fixed".
+    # For the ones that are attached with a free floating
+    # layout... that's what the code after this
+    # call is for
+    super newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -63,24 +98,24 @@ class VideoControlsPaneWdgt extends RectangleMorph
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    playPauseToggleBounds = new Rectangle new Point @left() + @externalPadding, @top() + @externalPadding
-    playPauseToggleBounds = playPauseToggleBounds.setBoundsWidthAndHeight new Point @width()/15, 20
+    #console.log "newBounds For VideoControlsPaneWdgt: " + newBoundsForThisLayout
+
+    playPauseToggleBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() + @externalPadding
+    playPauseToggleBounds = playPauseToggleBounds.setBoundsWidthAndHeight new Point newBoundsForThisLayout.width()/15, 20
+    #console.log "playPauseToggleBounds: " + playPauseToggleBounds
     @playPauseToggle.doLayout playPauseToggleBounds
 
-    @videoScrubber.fullRawMoveTo new Point @left() + @externalPadding + 2 * @width()/15, @top() + @externalPadding
-    @videoScrubber.rawSetExtent new Point @width() - (3 * @width()/15 + @internalPadding), 20
+    videoScrubberBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding + 2 * newBoundsForThisLayout.width()/15, newBoundsForThisLayout.top() + @externalPadding
+    videoScrubberBounds = videoScrubberBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - (3 * newBoundsForThisLayout.width()/15 + @internalPadding), 20
+    @videoScrubber.doLayout videoScrubberBounds
 
-    playHeadTimeLabelBounds = new Rectangle new Point @left() + @externalPadding + @width()/15 + 2 * @internalPadding, @top() + @externalPadding + 2
-    playHeadTimeLabelBounds = playHeadTimeLabelBounds.setBoundsWidthAndHeight @width()/15 , 15
+    playHeadTimeLabelBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding + newBoundsForThisLayout.width()/15 + 2 * @internalPadding, newBoundsForThisLayout.top() + @externalPadding + 2
+    playHeadTimeLabelBounds = playHeadTimeLabelBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width()/15 , 15
     @playHeadTimeLabel.doLayout playHeadTimeLabelBounds
 
-    durationTimeLabelBounds = new Rectangle new Point @right() - @width()/15 + 2 * @internalPadding, @top() + @externalPadding + 2
-    durationTimeLabelBounds = durationTimeLabelBounds.setBoundsWidthAndHeight @width()/15 , 15
+    durationTimeLabelBounds = new Rectangle new Point newBoundsForThisLayout.right() - newBoundsForThisLayout.width()/15 + 2 * @internalPadding, newBoundsForThisLayout.top() + @externalPadding + 2
+    durationTimeLabelBounds = durationTimeLabelBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width()/15 , 15
     @durationTimeLabel.doLayout durationTimeLabelBounds
-
 
     world.maybeEnableTrackChanges()
     @fullChanged()
-
-    super
-    @markLayoutAsFixed()
