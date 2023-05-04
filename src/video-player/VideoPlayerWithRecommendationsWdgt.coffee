@@ -7,6 +7,8 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
   internalPadding: 5
   padding: nil
 
+  thumb_1: nil
+
   colloquialName: ->
     "Video player with recommendations"
 
@@ -28,8 +30,25 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     @recommendationsPane = new RectangleMorph
     @add @recommendationsPane
 
+
+    rasterImageWdgt = new RasterImageWdgt "./videos/big-buck-bunny_trailer_thumbnail.png"
+    # TODO this is needed because RasterImageWdgt extends CanvasMorph which extends PanelWdgt
+    # which actually implements the mouseClickLeft handler and doesn'e escalate it.
+    # We hence hack this override to make it so the click is indeed escalated to the
+    # parent i.e. the SimpleButtonMorph.
+    rasterImageWdgt.mouseClickLeft = (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
+      @escalateEvent "mouseClickLeft", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
+
+    @thumb_1 = new SimpleButtonMorph true, @, "hi", rasterImageWdgt
+    # TODO is there a setPadding method?
+    @thumb_1.padding = 2
+    @recommendationsPane.add @thumb_1
+
     # update layout
     @invalidateLayout()
+
+  hi: ->
+    @inform "hi!"
 
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
   doLayout: (newBoundsForThisLayout) ->
@@ -67,6 +86,11 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     recommendationPaneBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() + 2* @externalPadding + @internalPadding + newBoundsForThisLayout.height()/2 + 24
     recommendationPaneBounds = recommendationPaneBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, newBoundsForThisLayout.height()/2 - 24
     @recommendationsPane.doLayout recommendationPaneBounds
+
+    # same bounds and layout but for the thumb_1
+    thumb_1Bounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding + 10, newBoundsForThisLayout.top() + 2* @externalPadding + @internalPadding + newBoundsForThisLayout.height()/2 + 24 + 10
+    thumb_1Bounds = thumb_1Bounds.setBoundsWidthAndHeight 200, 100
+    @thumb_1.doLayout thumb_1Bounds
 
     world.maybeEnableTrackChanges()
     @fullChanged()
