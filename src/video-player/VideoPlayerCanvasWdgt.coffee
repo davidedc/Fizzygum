@@ -9,12 +9,18 @@ class VideoPlayerCanvasWdgt extends CanvasMorph
 
   createRefreshOrGetBackBuffer: ->
     [@backBuffer, @backBufferContext] = super
+    # TODO we don't actually need to put the current video frame on the backbuffer
+    # every time this widget needs to draw itself (e.g. because something is being moved
+    # briefly over it). We should just draw the backbuffer as is.
     @paintNewFrame()
     return [@backBuffer, @backBufferContext]
 
   constructor: ->
     super
 
+    # note that while Image and Audio have their own classes
+    # with clean constructors, there is no Video class
+    # and the only way to create a video is via the DOM
     @video = document.createElement('video');
     @video.src = 'videos/big-buck-bunny_trailer.webm';
     @video.autoplay = true;
@@ -67,7 +73,7 @@ class VideoPlayerCanvasWdgt extends CanvasMorph
   # is not very efficient. You should console.out whenever that happens and see if it
   # happens too often, and avoid that from happening.
   #
-  # TODO copied from RectangularAppearance
+  # TODO copied from RectangularAppearance, and there are other copies of this
   isTransparentAt: (aPoint) ->
     if @boundingBoxTight().containsPoint aPoint
       return false

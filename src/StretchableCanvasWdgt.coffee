@@ -128,8 +128,14 @@ class StretchableCanvasWdgt extends CanvasMorph
     @behindTheScenesBackBufferContext.translate -@bounds.origin.x, -@bounds.origin.y
     return @behindTheScenesBackBufferContext
 
-  # don't need this at the moment, you'd need to
+  # TODO don't need this at the moment, you'd need to
   # paint on the "behind the scenes" backbuffer
+  #
+  # TODO id: DRAW_LINE_SHOULD_BE_IN_TURTLE_NOT_IN_CANVAS date: 3-May-2023 description:
+  # the turtle should implement this, not the canvas, because otherwise the
+  # canvas is also going to get all kinds of ther methods e.g. drawCircle
+  # which are not really needed by all Canvas subclasses, and rather seem
+  # specific to the turtle
   drawLine: (start, dest, lineWidth, color) ->
     throw new Error "not implemented yet"
 

@@ -1552,6 +1552,10 @@ class WorldMorph extends PanelWdgt
   runChildrensStepFunction: ->
 
 
+    # note that a widget can remove itself while stepping using the
+    # Set.delete method. This is fine, because the forEach method
+    # is not affected by the removal of elements while iterating.
+    #
     # TODO all these set modifications should be immutable...
     @steppingWdgts.forEach (eachSteppingMorph) =>
 

@@ -41,6 +41,8 @@ Array::chunk = (chunkSize) ->
 
 # removes the elements IN PLACE, i.e. the
 # array IS modified
+# Also note that the array changes length, so it
+# can be messy to use while iterating on it
 Array::remove = (theElement) ->
   index = @indexOf theElement
   if index isnt -1

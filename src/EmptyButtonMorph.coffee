@@ -80,6 +80,10 @@ class EmptyButtonMorph extends Widget
     # rather use super
     @rawSetBounds newBoundsForThisLayout
 
+    # TODO can we use the more standard way i.e.
+    # calculate the bounds and pass them as args in the doLayout method
+    # of the faceMorph?
+
     if @faceMorph?.parent == @
       @faceMorph.rawSetBounds newBoundsForThisLayout.insetBy @padding
 
