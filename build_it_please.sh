@@ -289,7 +289,7 @@ cp auxiliary\ files/additional-icons/*.png $BUILD_PATH/icons/
 cp auxiliary\ files/additional-icons/spinner.svg $BUILD_PATH/icons/
 
 if $includeVideos ; then
-  cp ../Fizzygum-videos-public/*.webm $BUILD_PATH/videos/
+  cp ../Fizzygum-videos-public/* $BUILD_PATH/videos/
 fi
 
 echo "... done copying icon files"
