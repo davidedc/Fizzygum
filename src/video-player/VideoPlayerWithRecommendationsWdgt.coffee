@@ -8,6 +8,7 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
   padding: nil
 
   thumb_1: nil
+  thumb_2: nil
 
   colloquialName: ->
     "Video player with recommendations"
@@ -30,14 +31,20 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     @recommendationsPane = new RectangleMorph
     @add @recommendationsPane
 
-    @thumb_1 = new SimpleRasterImageButtonWdgt "./videos/big-buck-bunny_trailer_thumbnail.png", @, "hi"
+    @thumb_1 = new SimpleRasterImageButtonWdgt "./videos/big-buck-bunny_trailer_thumbnail.png", @, "thumb1_pressed"
     @recommendationsPane.add @thumb_1
+
+    @thumb_2 = new SimpleRasterImageButtonWdgt "./videos/SUV-Iceland_thumbnail.png", @, "thumb2_pressed"
+    @recommendationsPane.add @thumb_2
 
     # update layout
     @invalidateLayout()
 
-  hi: ->
-    @inform "hi!"
+  thumb1_pressed: ->
+    @videoPlayer.videoPlayerCanvas._createVideoTagAndLoadVideo "./videos/big-buck-bunny_trailer.webm"
+
+  thumb2_pressed: ->
+    @videoPlayer.videoPlayerCanvas._createVideoTagAndLoadVideo "./videos/SUV-Iceland.webm"
 
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
   doLayout: (newBoundsForThisLayout) ->
@@ -76,10 +83,16 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     recommendationPaneBounds = recommendationPaneBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, newBoundsForThisLayout.height()/2 - 24
     @recommendationsPane.doLayout recommendationPaneBounds
 
-    # same bounds and layout but for the thumb_1
+    # bounds and layout but for the thumb_1
     thumb_1Bounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding + 10, newBoundsForThisLayout.top() + 2* @externalPadding + @internalPadding + newBoundsForThisLayout.height()/2 + 24 + 10
     thumb_1Bounds = thumb_1Bounds.setBoundsWidthAndHeight 200, 100
     @thumb_1.doLayout thumb_1Bounds
+
+    # thumb2 is to the right of thumb1
+    thumb_2Bounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding + 10 + 200 + 10, newBoundsForThisLayout.top() + 2* @externalPadding + @internalPadding + newBoundsForThisLayout.height()/2 + 24 + 10
+    thumb_2Bounds = thumb_2Bounds.setBoundsWidthAndHeight 200, 100
+    @thumb_2.doLayout thumb_2Bounds
+
 
     world.maybeEnableTrackChanges()
     @fullChanged()

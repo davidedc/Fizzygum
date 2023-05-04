@@ -15,18 +15,29 @@ class VideoPlayerCanvasWdgt extends CanvasMorph
     @paintNewFrame()
     return [@backBuffer, @backBufferContext]
 
-  constructor: ->
+  constructor: (videoPath = "videos/big-buck-bunny_trailer.webm") ->
     super
+
+    @_createVideoTagAndLoadVideo videoPath
+    # @fps = 5 # you can do that
+    world.steppingWdgts.add @
+
+  _createVideoTagAndLoadVideo: (videoPath) ->    
+    # how to safely dispose of a video
+    # https://stackoverflow.com/a/28060352
+    if @video?
+      @video.pause()
+      @video.removeAttribute 'src'
+      @video.load()
 
     # note that while Image and Audio have their own classes
     # with clean constructors, there is no Video class
     # and the only way to create a video is via the DOM
-    @video = document.createElement('video');
-    @video.src = 'videos/big-buck-bunny_trailer.webm';
-    @video.autoplay = true;
+    @video = document.createElement 'video'
+    @video.src = videoPath
+    @video.autoplay = true
+    @_extentWhenPreviousBackgroundWasPainted = nil
 
-    # @fps = 5 # you can do that
-    world.steppingWdgts.add @
 
   # might come useful, but never used nor tested
   # see https://stackoverflow.com/questions/6877403/how-to-tell-if-a-video-element-is-currently-playing
