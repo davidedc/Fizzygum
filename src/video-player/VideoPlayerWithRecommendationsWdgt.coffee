@@ -23,7 +23,36 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
   constructor: ->
     super new Point 300, 300
     @buildAndConnectChildren()
-  
+
+
+    script = document.createElement "script"
+    script.src = "./videos/Fizzygum-videos-private/privateVideosManifest.js"
+    script.async = true # should be the default
+
+    # triggers after the script was loaded and executed
+    # see https://javascript.info/onload-onerror#script-onload
+    script.onload = =>
+      console.log "loaded manifest"
+      @parseVideosIndex()
+
+    document.head.appendChild script
+
+    script.onerror = ->
+        reject(script)
+
+  parseVideosIndex: ->
+    # filter the names in privateVideos.files ending in .webm
+
+    filteredNames = privateVideos.files.filter (name) ->
+      name.endsWith ".webm"
+
+    # map the names in filteredNames so to remove the .webm extension
+    filteredNames = filteredNames.map (name) ->
+      name.replace ".webm", ""
+    
+    @videosIndex = filteredNames
+    console.log "videosIndex: " + @videosIndex
+
 
   buildAndConnectChildren: ->
     # remove all submorhs i.e. panes and buttons
