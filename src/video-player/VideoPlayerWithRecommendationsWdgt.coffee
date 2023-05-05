@@ -31,20 +31,21 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     @recommendationsPane = new RectangleMorph
     @add @recommendationsPane
 
-    @thumb_1 = new SimpleRasterImageButtonWdgt "./videos/big-buck-bunny_trailer_thumbnail.png", @, "thumb1_pressed"
+    @thumb_1 = new VideoThumbnailWdgt "./videos/big-buck-bunny_trailer_thumbnail.png", "./videos/big-buck-bunny_trailer.webm", @, "_onRecommendationClicked"
     @recommendationsPane.add @thumb_1
 
-    @thumb_2 = new SimpleRasterImageButtonWdgt "./videos/SUV-Iceland_thumbnail.png", @, "thumb2_pressed"
+    @thumb_2 = new VideoThumbnailWdgt "./videos/SUV-Iceland_thumbnail.png", "./videos/SUV-Iceland.webm", @, "_onRecommendationClicked"
     @recommendationsPane.add @thumb_2
 
     # update layout
     @invalidateLayout()
 
-  thumb1_pressed: ->
-    @videoPlayer.videoPlayerCanvas._createVideoTagAndLoadVideo "./videos/big-buck-bunny_trailer.webm"
+  _onRecommendationClicked: (unused1, unused2, videoPath) ->
+    @loadVideo videoPath
 
-  thumb2_pressed: ->
-    @videoPlayer.videoPlayerCanvas._createVideoTagAndLoadVideo "./videos/SUV-Iceland.webm"
+  loadVideo: (videoPath) ->
+    @videoPlayer.loadVideo videoPath
+    # TODO reshuffle the video recommandation thumbnails
 
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
   doLayout: (newBoundsForThisLayout) ->

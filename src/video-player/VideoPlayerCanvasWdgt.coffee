@@ -22,6 +22,9 @@ class VideoPlayerCanvasWdgt extends CanvasMorph
     # @fps = 5 # you can do that
     world.steppingWdgts.add @
 
+  loadVideo: (videoPath) ->    
+    @_createVideoTagAndLoadVideo videoPath
+
   _createVideoTagAndLoadVideo: (videoPath) ->    
     # how to safely dispose of a video
     # https://stackoverflow.com/a/28060352

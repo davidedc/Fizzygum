@@ -9,7 +9,8 @@ class SimpleRasterImageButtonWdgt extends SimpleButtonMorph
   constructor: (
       @imagePath,
       target,
-      action
+      action,
+      argumentToAction1
       ) ->
 
     # additional properties:
@@ -22,6 +23,4 @@ class SimpleRasterImageButtonWdgt extends SimpleButtonMorph
     rasterImageWdgt.mouseClickLeft = (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
       @escalateEvent "mouseClickLeft", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
 
-    super true, target, action, rasterImageWdgt
-    # TODO is there a setPadding method?
-    @padding = 2
+    super true, target, action, rasterImageWdgt, nil, nil, nil, nil, argumentToAction1,nil,nil,2
