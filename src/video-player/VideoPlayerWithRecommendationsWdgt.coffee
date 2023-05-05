@@ -7,8 +7,15 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
   internalPadding: 5
   padding: nil
 
-  thumb_1: nil
-  thumb_2: nil
+
+  thumbs: nil
+  thumbnailsRows: 4
+  thumbnailsColumns: 4
+
+  prevButton: nil
+  nextButton: nil
+
+  videosIndex: nil
 
   colloquialName: ->
     "Video player with recommendations"
@@ -31,12 +38,21 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     @recommendationsPane = new RectangleMorph
     @add @recommendationsPane
 
-    @thumb_1 = new VideoThumbnailWdgt "./videos/big-buck-bunny_trailer_thumbnail.png", "./videos/big-buck-bunny_trailer.webm", @, "_onRecommendationClicked"
-    @recommendationsPane.add @thumb_1
+    # a for loop that creates nxm thumbnails, stored in thumbs
 
-    @thumb_2 = new VideoThumbnailWdgt "./videos/SUV-Iceland_thumbnail.png", "./videos/SUV-Iceland.webm", @, "_onRecommendationClicked"
-    @recommendationsPane.add @thumb_2
+    @thumbs = []
+    for i in [0...@thumbnailsRows]
+      for j in [0...@thumbnailsColumns]
+        thumb = new VideoThumbnailWdgt "./videos/big-buck-bunny_trailer_thumbnail.png", "./videos/big-buck-bunny_trailer.webm", @, "_onRecommendationClicked"
+        @recommendationsPane.add thumb
+        @thumbs.push thumb
 
+    @prevButton = new SimpleButtonMorph true, @, "prev", "prev ❮"
+    @recommendationsPane.add @prevButton
+
+    @nextButton = new SimpleButtonMorph true, @, "next", "next ❯"
+    @recommendationsPane.add @nextButton
+    
     # update layout
     @invalidateLayout()
 
@@ -84,15 +100,33 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     recommendationPaneBounds = recommendationPaneBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, newBoundsForThisLayout.height()/2 - 24
     @recommendationsPane.doLayout recommendationPaneBounds
 
-    # bounds and layout but for the thumb_1
-    thumb_1Bounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding + 10, newBoundsForThisLayout.top() + 2* @externalPadding + @internalPadding + newBoundsForThisLayout.height()/2 + 24 + 10
-    thumb_1Bounds = thumb_1Bounds.setBoundsWidthAndHeight 200, 100
-    @thumb_1.doLayout thumb_1Bounds
 
-    # thumb2 is to the right of thumb1
-    thumb_2Bounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding + 10 + 200 + 10, newBoundsForThisLayout.top() + 2* @externalPadding + @internalPadding + newBoundsForThisLayout.height()/2 + 24 + 10
-    thumb_2Bounds = thumb_2Bounds.setBoundsWidthAndHeight 200, 100
-    @thumb_2.doLayout thumb_2Bounds
+    # a for loop that positions the @thumbnailsRows x @thumbnailsColumns
+    # stored in thumbs. The thumbnails are equally sized, and evenly positioned in the recommendationsPane
+    # of size @width() x @height()
+
+    internalPadding = 10
+    spaceForPrevNextButtons = 24
+    widthOfPrevNextButtons = 60
+    spaceBetweenButtons = 40
+    widthOfEachThumbnail = (recommendationPaneBounds.width() - (internalPadding * (@thumbnailsColumns - 1))) / @thumbnailsColumns
+    heightOfEachThumbnail = (recommendationPaneBounds.height() - spaceForPrevNextButtons - (internalPadding * (@thumbnailsRows - 1))) / @thumbnailsRows
+
+    for i in [0...@thumbnailsRows]
+      for j in [0...@thumbnailsColumns]
+        thumb = @thumbs[i*@thumbnailsColumns + j]
+        thumbBounds = new Rectangle new Point recommendationPaneBounds.left() + j * (widthOfEachThumbnail + internalPadding), recommendationPaneBounds.top() + i * (heightOfEachThumbnail + internalPadding)
+        thumbBounds = thumbBounds.setBoundsWidthAndHeight widthOfEachThumbnail, heightOfEachThumbnail
+        thumb.doLayout thumbBounds
+
+    # place the prev and next buttons on the bottom of the recommendationsPane
+    prevButtonBounds = new Rectangle new Point recommendationPaneBounds.left() + recommendationPaneBounds.width()/2 - spaceBetweenButtons/2 - widthOfPrevNextButtons, recommendationPaneBounds.bottom() - spaceForPrevNextButtons
+    prevButtonBounds = prevButtonBounds.setBoundsWidthAndHeight widthOfPrevNextButtons, spaceForPrevNextButtons
+    @prevButton.doLayout prevButtonBounds
+
+    nextButtonBounds = new Rectangle new Point recommendationPaneBounds.left() + recommendationPaneBounds.width()/2 + spaceBetweenButtons/2, recommendationPaneBounds.bottom() - spaceForPrevNextButtons
+    nextButtonBounds = nextButtonBounds.setBoundsWidthAndHeight widthOfPrevNextButtons, spaceForPrevNextButtons
+    @nextButton.doLayout nextButtonBounds
 
 
     world.maybeEnableTrackChanges()
