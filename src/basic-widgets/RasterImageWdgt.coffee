@@ -5,12 +5,21 @@
 # 
 # "container"/"contained" scenario going on.
 
+# Having both the image and the backbuffer around
+# might seem redundant, and in most cases it is, since
+# the image in most cases eventually gets painted on the main
+# canvas "as is", in which case we might as well just do that directly
+# without need for an intermediate buffer.
+# However consider that you might attach a turtle to this widget to
+# draw some lines on it, or might want to apply some kind of filter effect,
+# in which case you might want to keep the
+# source image and the backbuffer separate.
 class RasterImageWdgt extends CanvasMorph
 
   imagePath: nil
   imageLoaded: false
   img: nil
-  imagePaintedOnBackbuffer: false
+  lastPaintedImageSize: nil
 
   constructor: (@imagePath) ->
     super
@@ -19,19 +28,20 @@ class RasterImageWdgt extends CanvasMorph
     @img = new Image();
     @img.onload = =>
       @imageLoaded = true
-      @imagePaintedOnBackbuffer = false
+      @lastPaintedImageSize = nil
       world.steppingWdgts.add @
     @img.src = @imagePath
 
   createRefreshOrGetBackBuffer: ->
     [@backBuffer, @backBufferContext] = super
-    # TODO this doesn't repaint the image when the thumbnail is resized
-    # because the image is painted on the backbuffer only once...
-    # we should remember the size we last painted the image at and
-    # check that against the current size, and repaint the image if
+    # This is so we draw the image on the backbuffer every time the
+    # widget (and, consequently, the backbuffer) is resized.
+    # To do that, we remember the size of the backbuffer we last painted the image on,
+    # and if it's same as current size, and repaint the image if
     # the size has changed.
-    if !@imagePaintedOnBackbuffer
+    if !@lastPaintedImageSize? or !@lastPaintedImageSize.equals @extent()
       @paintImageOnBackBuffer()
+      @lastPaintedImageSize = @extent()
     return [@backBuffer, @backBufferContext]
 
 
@@ -57,9 +67,6 @@ class RasterImageWdgt extends CanvasMorph
       context.drawImage @img, 0, 0, @extent().x * ceilPixelRatio, @extent().y * ceilPixelRatio
       # you can't dispose the Image here, just in case the widget is resized
       # and the Image needs to be redrawn at a different size.
-
-    @imagePaintedOnBackbuffer = true
-    
 
   step: ->
     @paintImageOnBackBuffer()
