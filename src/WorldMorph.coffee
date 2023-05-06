@@ -462,6 +462,11 @@ class WorldMorph extends PanelWdgt
     menusHelper.createSampleDashboardOpener exampleDocsFolder
     menusHelper.createSampleDocOpener exampleDocsFolder
 
+    # »>> this part is only needed for VideoPlayer
+    world.draftRunVideoPlayer()
+    # this part is only needed for VideoPlayer <<«
+
+
   # »>> this part is excluded from the fizzygum homepage build
 
   getParameterPassedInURL: (name) ->
