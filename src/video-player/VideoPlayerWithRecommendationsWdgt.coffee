@@ -16,6 +16,9 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
   nextButton: nil
 
   videosIndex: nil
+  shuffledVideosIndex: nil
+
+  recommendationsPage: 0
 
   colloquialName: ->
     "Video player with recommendations"
@@ -34,11 +37,26 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     script.onload = =>
       console.log "loaded manifest"
       @parseVideosIndex()
+      # TODO id: NO_STEPPING_ONLY_ONCE_TO_HANDLE_CALLBACK date: 6-May-2023
+      world.steppingWdgts.add @
+      
 
     document.head.appendChild script
 
     script.onerror = ->
         reject(script)
+
+  setUpVideoThumbsPage: ->
+    for i in [0...@thumbs.length]
+      shuffledWithPath = "./videos/Fizzygum-videos-private/" + @shuffledVideosIndex[(i + @recommendationsPage * (@thumbnailsRows * @thumbnailsColumns)) % @shuffledVideosIndex.length]
+      @thumbs[i].setThumbnailAndVideoPath shuffledWithPath + ".webp", shuffledWithPath + ".webm"
+
+  # stepping is only enabled once when the video index is first loaded
+  # and parsed
+  # TODO id: NO_STEPPING_ONLY_ONCE_TO_HANDLE_CALLBACK date: 6-May-2023
+  step: ->
+    @setUpVideoThumbsPage()
+    world.steppingWdgts.delete @
 
   parseVideosIndex: ->
     # filter the names in privateVideos.files ending in .webm
@@ -53,6 +71,11 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     @videosIndex = filteredNames
     console.log "videosIndex: " + @videosIndex
 
+    @shuffledVideosIndex = @videosIndex.shallowCopy()
+    # TODO according to StackOverflow, this is a biased and slow way to shuffle an array :-(
+    @shuffledVideosIndex.sort (a, b) ->
+      Math.random() - 0.5
+
 
   buildAndConnectChildren: ->
     # remove all submorhs i.e. panes and buttons
@@ -64,11 +87,13 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     @videoPlayer = new VideoPlayerWdgt
     @add @videoPlayer
 
+    # TODO this should be something better than a RectangleMorph
     @recommendationsPane = new RectangleMorph
     @add @recommendationsPane
 
-    # a for loop that creates nxm thumbnails, stored in thumbs
-
+    # TODO this setup (and all the following handlings) of the thumbnails
+    # should really be done by the @recommendationsPane.
+    # Create nxm thumbnails, stored in thumbs
     @thumbs = []
     for i in [0...@thumbnailsRows]
       for j in [0...@thumbnailsColumns]
@@ -84,6 +109,17 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     
     # update layout
     @invalidateLayout()
+
+  prev: ->
+    #console.log "prev"
+    if @recommendationsPage > 0
+      @recommendationsPage--
+      @setUpVideoThumbsPage()
+  
+  next: ->
+    #console.log "next"
+    @recommendationsPage++
+    @setUpVideoThumbsPage()
 
   _onRecommendationClicked: (unused1, unused2, videoPath) ->
     @loadVideo videoPath
@@ -133,7 +169,12 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     # a for loop that positions the @thumbnailsRows x @thumbnailsColumns
     # stored in thumbs. The thumbnails are equally sized, and evenly positioned in the recommendationsPane
     # of size @width() x @height()
-
+    #
+    # TODO id: FACTOR_OUT_BOUNDS_WITHIN_BOUNDS_WITH_SPECIFIED_RATIO date: 6-May-2023 description:
+    # the thumbnails are now painted with a ratio that changes with the size of the recommendationPane
+    # rather, what should happen is that the thumbnails should be painted with a fixed ratio. This coould be
+    # done by using a new Rectangle function that takes a bound and creates a new bound completely inside it
+    # that has a specified ratio. Note that we do that in the VideoPlayerCanvasWdgt, so we can reuse that code.
     internalPadding = 10
     spaceForPrevNextButtons = 24
     widthOfPrevNextButtons = 60

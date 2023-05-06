@@ -25,10 +25,21 @@ class RasterImageWdgt extends CanvasMorph
     super
     @color = Color.BLACK
   
+    @loadImage @imagePath
+
+  loadImage: (@imagePath) ->
+    if @img?
+      @img.onload = null
+      @img.src = ''
+      @img = null
+
+    @imageLoaded = false
+
     @img = new Image();
     @img.onload = =>
       @imageLoaded = true
       @lastPaintedImageSize = nil
+      # TODO id: NO_STEPPING_ONLY_ONCE_TO_HANDLE_CALLBACK date: 6-May-2023
       world.steppingWdgts.add @
     @img.src = @imagePath
 
@@ -68,6 +79,20 @@ class RasterImageWdgt extends CanvasMorph
       # you can't dispose the Image here, just in case the widget is resized
       # and the Image needs to be redrawn at a different size.
 
+  # this is only called when the @img.onload callback fires
+  # and is only executed once.
+  #
+  # TODO id: NO_STEPPING_ONLY_ONCE_TO_HANDLE_CALLBACK date: 6-May-2023 description:
+  # This looks like a fishy pattern where the stepping is only started to do
+  # something after a callback fires (e.g. an image loads, a manifest loads, a piece
+  # of data loads etc. etc.) and then there is only once step and then the widget
+  # is removed from the stepping list immediately after. This is done so to
+  # the callback is executed like all other events i.e. we "do stuff" not
+  # at any random possible time, but rather within a frame cycle, in a controlled
+  # manner. HOWEVER this specific way of doing it surely is not elegant. Maybe
+  # there should be a way of registering events against this widget to be executed
+  # at the next frame cycle, e.g. "onNextFrameCycleCall(method, args...)" or
+  # something like that.
   step: ->
     @paintImageOnBackBuffer()
     @changed()
