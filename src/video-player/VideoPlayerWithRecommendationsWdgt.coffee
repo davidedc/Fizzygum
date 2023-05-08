@@ -35,7 +35,7 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     # triggers after the script was loaded and executed
     # see https://javascript.info/onload-onerror#script-onload
     script.onload = =>
-      console.log "loaded manifest"
+      #console.log "loaded manifest"
       @parseVideosIndex()
       # TODO id: NO_STEPPING_ONLY_ONCE_TO_HANDLE_CALLBACK date: 6-May-2023
       world.steppingWdgts.add @
@@ -69,7 +69,7 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
       name.replace ".webm", ""
     
     @videosIndex = filteredNames
-    console.log "videosIndex: " + @videosIndex
+    #console.log "videosIndex: " + @videosIndex
 
     @shuffledVideosIndex = @videosIndex.shallowCopy()
     # TODO according to StackOverflow, this is a biased and slow way to shuffle an array :-(
