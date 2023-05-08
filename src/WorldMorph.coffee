@@ -1455,8 +1455,10 @@ class WorldMorph extends PanelWdgt
   draftRunVideoPlayer: ->
       videoPlayer = new WindowWdgt nil, nil, new VideoPlayerWithRecommendationsWdgt, true, true
       world.add videoPlayer
-      videoPlayer.setExtent new Point 800, 800
-      videoPlayer.fullMoveTo new Point 200, 50
+      videoPlayer.setExtent new Point 934, 896
+      # it would be -28 instead of zero here below, but the system doesn't allow
+      # to put windows outside of the screen
+      videoPlayer.fullMoveTo new Point 174, 0
 
   # this part is only needed for VideoPlayer <<«
 
