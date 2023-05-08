@@ -72,10 +72,10 @@ class RasterImageWdgt extends CanvasMorph
       # if the image is not loaded then just draw a black rectangle
       #console.log "raster image not loaded yet, painting black"
       context.fillStyle = Color.BLACK.toString()
-      context.fillRect 0, 0, @extent().x * ceilPixelRatio, @extent().y * ceilPixelRatio
+      context.fillRect 0, 0, @extent().x, @extent().y
     else
-      context.drawImage @img, 0, 0, @extent().x * ceilPixelRatio, @extent().y * ceilPixelRatio
       #console.log "raster image loaded, painting it to backbuffer"
+      context.drawImage @img, 0, 0, @extent().x, @extent().y
       # you can't dispose the Image here, just in case the widget is resized
       # and the Image needs to be redrawn at a different size.
 
