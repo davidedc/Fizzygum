@@ -7,7 +7,8 @@ class KeyupInputEvent extends KeyboardInputEvent
     # so far the caret is the only keyboard
     # event handler and it has no keyup
     # handler
-    world.keyboardEventsReceiver?.processKeyUp? @key, @code, @shiftKey, @ctrlKey, @altKey, @metaKey
+    for eachKeyboardEventsReceiver from world.keyboardEventsReceivers
+      eachKeyboardEventsReceiver.processKeyUp? @key, @code, @shiftKey, @ctrlKey, @altKey, @metaKey
 
     # »>> this part is excluded from the fizzygum homepage build
     # catch the F2 key

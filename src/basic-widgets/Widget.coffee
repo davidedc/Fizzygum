@@ -502,6 +502,7 @@ class Widget extends TreeNode
     @parent?.childBeingDestroyed? @
     @unregisterThisInstance()
     world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
+    world.keyboardEventsReceivers.delete @
 
     @destroyed = true
     @parent?.invalidateLayout()
@@ -2294,6 +2295,12 @@ class Widget extends TreeNode
   alignCopiedMorphToSteppingStructures: (copiedMorph) ->
     if world.steppingWdgts.has @
       world.steppingWdgts.add copiedMorph
+
+  # in case we copy a morph, if the original was receiving
+  # keyboard events, then we have to add the copy too.
+  alignCopiedMorphToKeyboardEventsReceiversSet: (copiedMorph) ->
+    if world.keyboardEventsReceivers.has @ 
+      world.keyboardEventsReceivers.add copiedMorph
 
   # note that the entire copying mechanism
   # should also take care of inserting the copied

@@ -299,7 +299,7 @@ class WorldMorph extends PanelWdgt
     # additional properties:
     @isDevMode = false
     @hand = new ActivePointerWdgt
-    @keyboardEventsReceiver = nil
+    @keyboardEventsReceivers = new Set
     @lastEditedText = nil
     @caret = nil
     @temporaryHandlesAndLayoutAdjusters = new Set
@@ -2572,8 +2572,8 @@ class WorldMorph extends PanelWdgt
     # create the new Caret
     @caret = new CaretMorph aStringMorphOrTextMorph
     aStringMorphOrTextMorph.parent.add @caret
-    # this is the only place where the @keyboardEventsReceiver is set
-    @keyboardEventsReceiver = @caret
+    # the only place where the caret is added to the keyboardEventsReceivers
+    @keyboardEventsReceivers.add @caret
 
     if WorldMorph.preferencesAndSettings.isTouchDevice and WorldMorph.preferencesAndSettings.useVirtualKeyboard
       @initVirtualKeyboard()
@@ -2605,9 +2605,9 @@ class WorldMorph extends PanelWdgt
       @lastEditedText.clearSelection()
       @caret = @caret.fullDestroy()
 
-    # the only place where the @keyboardEventsReceiver is unset
+    # the only place where the caret is removed from the keyboardEventsReceivers
     # (and the hidden input is removed)
-    @keyboardEventsReceiver = nil
+    @keyboardEventsReceivers.delete @caret
     if @inputDOMElementForVirtualKeyboard
       @inputDOMElementForVirtualKeyboard.blur()
       document.body.removeChild @inputDOMElementForVirtualKeyboard

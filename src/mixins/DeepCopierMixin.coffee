@@ -83,6 +83,17 @@ DeepCopierMixin =
         if @alignCopiedMorphToReferenceTracker?
           @alignCopiedMorphToReferenceTracker cloneOfMe
 
+        # if we deep-copied a morph, check whether the original
+        # was in the data structure that keeps track of the
+        # widgets that want to receive keyboard events,
+        # and if so, add the copy there too.
+        # (since we deep-copy all kinds of data structures,
+        # not just morphs, check if we have the relevant alignment
+        # method to invoke).
+        if @alignCopiedMorphToKeyboardEventsReceiversSet?
+          @alignCopiedMorphToKeyboardEventsReceiversSet cloneOfMe
+
+
         # last chance for a morph to do other
         # cleanup, for example a button that is
         # highlighted might want to un-highlight
