@@ -503,6 +503,17 @@ class Widget extends TreeNode
     @unregisterThisInstance()
     world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
     world.keyboardEventsReceivers.delete @
+    # TODO note that there might be other data structures that
+    # reference this widget that should have that reference removed.
+    # The duplication method deals with a similar situation, so you
+    # should check that all the data structures that are updated
+    # in the duplication method are also updated here.
+    # Also, possibly you should have a similar pattern of updates
+    # See the methods:
+    #   alignCopiedMorphToBrokenInfoDataStructures
+    #   alignCopiedMorphToSteppingStructures
+    #   alignCopiedMorphToReferenceTracker
+    #   alignCopiedMorphToKeyboardEventsReceiversSet
 
     @destroyed = true
     @parent?.invalidateLayout()

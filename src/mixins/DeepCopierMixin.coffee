@@ -55,6 +55,9 @@ DeepCopierMixin =
         # see comment in the method
         cloneOfMe.rebuildDerivedValues @
 
+        # TODO these following alignment methods should have a uniform
+        # naming convention.
+
         # if we deep-copied a morph, check whether the original
         # was in data structures related to the broken rects
         # mechanism, and if so, add the copy there too.
