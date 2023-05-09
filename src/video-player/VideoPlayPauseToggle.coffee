@@ -50,13 +50,13 @@ class VideoPlayPauseToggle extends ToggleButtonMorph
 
   # TODO this is a private method, should have an underscore
   pause: ->
-    # pause the vide element in @videoPlayerCanvas.video
+    # pause the video element in @videoPlayerCanvas.video
     @videoPlayerCanvas.video.pause()
     @timeWhenPlayPauseButtonWasLastClicked = Date.now()
 
   # TODO this is a private method, should have an underscore
   play: ->
-    # pause the vide element in @videoPlayerCanvas.video
+    # pause the video element in @videoPlayerCanvas.video
     @videoPlayerCanvas.video.play()
     @timeWhenPlayPauseButtonWasLastClicked = Date.now()
 
