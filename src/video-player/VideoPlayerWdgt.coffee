@@ -23,8 +23,18 @@ class VideoPlayerWdgt extends Widget
     #   https://w3c.github.io/uievents/tools/key-event-viewer.html
 
     if key == " " and @isInForeground()
-        @videoPlayerCanvas.togglePlayPause()
+        @togglePlayPause()
 
+  play: ->
+    # pause the video element in @videoPlayerCanvas.video
+    @videoPlayerCanvas.play()
+
+  pause: ->
+    # pause the video element in @videoPlayerCanvas.video
+    @videoPlayerCanvas.pause()
+
+  togglePlayPause: ->
+    @videoPlayerCanvas.togglePlayPause()
 
   buildAndConnectChildren: ->
     # remove all submorhs i.e. panes and buttons
