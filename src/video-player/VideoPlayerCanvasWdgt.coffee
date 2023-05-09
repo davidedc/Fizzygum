@@ -47,6 +47,20 @@ class VideoPlayerCanvasWdgt extends CanvasMorph
   isPlaying: ->
     !!(@video.currentTime > 0 && !@video.paused && !@video.ended && @video.readyState > 2)
 
+  pause: ->
+    # pause the vide element in @videoPlayerCanvas.video
+    @video.pause()
+
+  play: ->
+    # pause the vide element in @videoPlayerCanvas.video
+    @video.play()
+
+  togglePlayPause: ->
+    if @video.paused
+      @video.play()
+    else
+      @video.pause()
+
   step: ->
     @paintNewFrame()
     @changed()
