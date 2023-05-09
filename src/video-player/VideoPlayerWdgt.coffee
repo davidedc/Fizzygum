@@ -13,7 +13,18 @@ class VideoPlayerWdgt extends Widget
   constructor: ->
     super new Point 300, 300
     @buildAndConnectChildren()
-  
+    world.keyboardEventsReceivers.add @
+
+  processKeyDown: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
+    # @inspectKeyEvent event
+
+    # see:
+    #   https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values
+    #   https://w3c.github.io/uievents/tools/key-event-viewer.html
+
+    if key == " " and @isInForeground()
+        @videoPlayerCanvas.togglePlayPause()
+
 
   buildAndConnectChildren: ->
     # remove all submorhs i.e. panes and buttons
