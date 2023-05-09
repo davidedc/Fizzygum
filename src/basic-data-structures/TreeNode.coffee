@@ -85,19 +85,40 @@ class TreeNode
     @addChild node, 0
   # this part is excluded from the fizzygum homepage build <<«
 
+
+  isLastChild: ->
+    if !@parent?
+      return false
+
+    # got a parent but I'm not one of the children
+    idx = @parent.children.indexOf @
+    if idx == -1
+      return false
+
+    # check if already last child
+    # i.e. topmost
+    if idx == @parent.children.length - 1
+      return true
+    return false
+
+
   # used from bringToForeground method
   # for example when you
   # click morphs around... they
   # pop to the foreground
   moveAsLastChild: ->
     return unless @parent?
+
+    # got a parent but I'm not one of the children
     idx = @parent.children.indexOf @
     if idx == -1
       return
+
     # check if already last child
     # i.e. topmost
-    if idx == @parent.children.length - 1
+    if @isLastChild()
       return
+
     @parent.children.splice idx, 1
     @parent.children.push @
     @parent.childMovedInFrontOfOthers? @

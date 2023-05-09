@@ -2620,6 +2620,9 @@ class Widget extends TreeNode
     @moveAsLastChild()
     @fullChanged()
 
+  isInForeground: ->
+    @rootForFocus()?.isLastChild()
+
   bringToForeground: ->
     @rootForFocus()?.moveAsLastChild()
     @rootForFocus()?.fullChanged()
