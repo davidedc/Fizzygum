@@ -49,7 +49,7 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
   setUpVideoThumbsPage: ->
     for i in [0...@thumbs.length]
       shuffledWithPath = "./videos/Fizzygum-videos-private/" + @shuffledVideosIndex[(i + @recommendationsPage * (@thumbnailsRows * @thumbnailsColumns)) % @shuffledVideosIndex.length]
-      @thumbs[i].setThumbnailAndVideoPath shuffledWithPath + ".webp", shuffledWithPath + ".webm"
+      @thumbs[i].setThumbnailAndVideoPath shuffledWithPath + "-mini-thumb.webp", shuffledWithPath + ".webm"
 
   # stepping is only enabled once when the video index is first loaded
   # and parsed
