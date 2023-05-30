@@ -12,6 +12,10 @@
 #     leaves in experimental parts of the code, leaves the whole "tests" directory AS IS, which saves a loooot of time
 #   ./build_it_please.sh --keepTestsDirectoryAsIs --includeVideoPlayer --includeVideos
 #     as before but also includes the video player and the videos
+#   ./build_it_please.sh --keepTestsDirectoryAsIs --includeVideoPlayer --includeVideos; cp -R /Volumes/Seagate\ 5tb/Fizzygum-videos-private ../Fizzygum-builds/latest/videos
+#     as before but also includes the video player and the videos, and copies the private videos
+#   ./build_it_please.sh --keepTestsDirectoryAsIs --includeVideoPlayer --includeVideos --keepPreviousPrivateVideos
+#     as before but instead of copying the private videos, keep the existing ones (as these can take a long time to copy otherwise)
 #   ./build_it_please
 #     leaves in tests and experimental parts of the code
 
@@ -30,6 +34,7 @@ keepTestsDirectoryAsIs=false
 notests=false
 includeVideoPlayer=false
 includeVideos=false
+keepPreviousPrivateVideos=false
 
 # see https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash
 while test $# -gt 0; do
@@ -48,6 +53,10 @@ while test $# -gt 0; do
       ;;
     --includeVideos)
       includeVideos='true'
+      shift
+      ;;
+    --keepPreviousPrivateVideos)
+      keepPreviousPrivateVideos='true'
       shift
       ;;
     --notests)
@@ -99,6 +108,11 @@ if [ ! -d $BUILD_PATH ]; then
 fi
 
 
+# ---------------------------------------- cleanup -------------------------------------------
+
+rm -rf $BUILD_PATH/*.html
+rm -rf $BUILD_PATH/icons
+
 if $keepTestsDirectoryAsIs ; then
   if [ ! -d $BUILD_PATH/js/tests ]; then
     echo
@@ -108,14 +122,35 @@ if $keepTestsDirectoryAsIs ; then
     echo
     exit
   else
-    find $BUILD_PATH/ -maxdepth 1 ! -path $BUILD_PATH/ -not -name "js" -exec rm -r {} \;
+    # delete everything in $BUILD_PATH/js apart from the $BUILD_PATH/js/tests directory
     find $BUILD_PATH/js/ -maxdepth 1 ! -path $BUILD_PATH/js/ -not -name "tests" -exec rm -r {} \;
-    # read -p "Delete everything old, press any key to continue... " -n1 -s
   fi
 else
-  # cleanup the contents of the build directory
-  rm -rf $BUILD_PATH/*
+  # remove the whole $BUILD_PATH/js directory
+  rm -rf $BUILD_PATH/js
 fi
+
+if $keepPreviousPrivateVideos ; then
+  if [ ! -d $BUILD_PATH/videos/Fizzygum-videos-private ]; then
+    echo
+    echo ----------- error -------------
+    echo You asked to keep the private videos but there
+    echo is such directory
+    echo
+    exit
+  else
+    # delete everything in $BUILD_PATH/videos apart from the $BUILD_PATH/videos/Fizzygum-videos-private directory
+    find $BUILD_PATH/videos -maxdepth 1 ! -path $BUILD_PATH/videos -not -name "Fizzygum-videos-private" -exec rm -r {} \;
+  fi
+else
+  # remove the whole $BUILD_PATH/videos directory
+  rm -rf $BUILD_PATH/videos
+fi
+
+# read -p "Directories should be clean, press key to continue... " -n1 -s
+
+
+# --------------------------------------------------------------------------------------------
 
 
 if [ ! -d $BUILD_PATH/js ]; then

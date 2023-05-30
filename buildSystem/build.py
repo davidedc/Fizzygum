@@ -66,8 +66,9 @@ parser.add_argument('--homepage', action='store_true')
 parser.add_argument('--notests', action='store_true')
 parser.add_argument('--keepTestsDirectoryAsIs', action='store_true')
 parser.add_argument('--includeVideoPlayer', action='store_true')
-# doing nothing with this one yet
+# doing nothing with these yet, but need to add them to the parser otherwise we get an error
 parser.add_argument('--includeVideos', action='store_true')
+parser.add_argument('--keepPreviousPrivateVideos', action='store_true')
 
 args = parser.parse_args()
 
