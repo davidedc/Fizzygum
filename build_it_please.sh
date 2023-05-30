@@ -99,7 +99,7 @@ if [ ! -d $BUILD_PATH ]; then
 fi
 
 
-if $keepTestsDirectoryAsIs || $keepTestsDirectoryAsIs ; then
+if $keepTestsDirectoryAsIs ; then
   if [ ! -d $BUILD_PATH/js/tests ]; then
     echo
     echo ----------- error -------------
@@ -367,7 +367,7 @@ if $homepage ; then
   echo "generating the pre-compiled file via the browser. this might take a few seconds..."
   . ./buildSystem/generate-pre-compiled-file-via-browser.sh
 
-  if ! $keepTestsDirectoryAsIs && ! $keepTestsDirectoryAsIs ; then
+  if ! $keepTestsDirectoryAsIs ; then
     rm -rdf $BUILD_PATH/js/tests
   fi
 
