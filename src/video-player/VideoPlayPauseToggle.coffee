@@ -22,7 +22,9 @@ class VideoPlayPauseToggle extends ToggleButtonMorph
 
   constructor: (@videoPlayerCanvas) ->
     @playPausePauseButton = new SimpleButtonMorph true, @, "pause", "❙ ❙"
+    @playPausePauseButton.faceMorph.alignMiddle()
     @playPausePlayButton = new SimpleButtonMorph true, @, "play", "▶"
+    @playPausePlayButton.faceMorph.alignMiddle()
     super @playPausePauseButton, @playPausePlayButton, 0
 
     # the label of the current time is updated via the stepping

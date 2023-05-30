@@ -104,20 +104,20 @@ class VideoControlsPaneWdgt extends RectangleMorph
     #console.log "newBounds For VideoControlsPaneWdgt: " + newBoundsForThisLayout
 
     playPauseToggleBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() + @externalPadding
-    playPauseToggleBounds = playPauseToggleBounds.setBoundsWidthAndHeight new Point newBoundsForThisLayout.width()/15, 20
+    playPauseToggleBounds = playPauseToggleBounds.setBoundsWidthAndHeight new Point newBoundsForThisLayout.width()/15, 23
     #console.log "playPauseToggleBounds: " + playPauseToggleBounds
     @playPauseToggle.doLayout playPauseToggleBounds
 
     videoScrubberBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding + 2 * newBoundsForThisLayout.width()/15, newBoundsForThisLayout.top() + @externalPadding
-    videoScrubberBounds = videoScrubberBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - (3 * newBoundsForThisLayout.width()/15 + @internalPadding), 20
+    videoScrubberBounds = videoScrubberBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - (3 * newBoundsForThisLayout.width()/15 + @internalPadding), 23
     @videoScrubber.doLayout videoScrubberBounds
 
     playHeadTimeLabelBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding + newBoundsForThisLayout.width()/15 + 2 * @internalPadding, newBoundsForThisLayout.top() + @externalPadding + 2
-    playHeadTimeLabelBounds = playHeadTimeLabelBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width()/15 , 15
+    playHeadTimeLabelBounds = playHeadTimeLabelBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width()/15 , 18
     @playHeadTimeLabel.doLayout playHeadTimeLabelBounds
 
     durationTimeLabelBounds = new Rectangle new Point newBoundsForThisLayout.right() - newBoundsForThisLayout.width()/15 + 2 * @internalPadding, newBoundsForThisLayout.top() + @externalPadding + 2
-    durationTimeLabelBounds = durationTimeLabelBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width()/15 , 15
+    durationTimeLabelBounds = durationTimeLabelBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width()/15 , 18
     @durationTimeLabel.doLayout durationTimeLabelBounds
 
     world.maybeEnableTrackChanges()

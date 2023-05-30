@@ -103,9 +103,11 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
         @thumbs.push thumb
 
     @prevButton = new SimpleButtonMorph true, @, "prev", "prev ❮"
+    @prevButton.faceMorph.alignMiddle()
     @recommendationsPane.add @prevButton
 
     @nextButton = new SimpleButtonMorph true, @, "next", "next ❯"
+    @nextButton.faceMorph.alignMiddle()
     @recommendationsPane.add @nextButton
     
     # update layout
@@ -157,13 +159,13 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    videoPlayerBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() + @externalPadding
-    videoPlayerBounds = videoPlayerBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, Math.floor newBoundsForThisLayout.height()/2 + 24 + newBoundsForThisLayout.height()*0.1125
+    videoPlayerBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() - 5
+    videoPlayerBounds = videoPlayerBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, @externalPadding + Math.floor newBoundsForThisLayout.height()/2 + 24 + newBoundsForThisLayout.height()*0.1125 + 5
     #console.log "videoPlayerBounds: " + videoPlayerBounds
     @videoPlayer.doLayout videoPlayerBounds
 
-    recommendationPaneBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() + 2* @externalPadding + @internalPadding + newBoundsForThisLayout.height()/2 + 24 + newBoundsForThisLayout.height()*0.1125
-    recommendationPaneBounds = recommendationPaneBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, Math.ceil newBoundsForThisLayout.height()/2 - 24 - newBoundsForThisLayout.height()*0.1125
+    recommendationPaneBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() + 2* @externalPadding + @internalPadding + newBoundsForThisLayout.height()/2 + 24 + newBoundsForThisLayout.height()*0.1125 - 10
+    recommendationPaneBounds = recommendationPaneBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, Math.ceil newBoundsForThisLayout.height()/2 - 24 - newBoundsForThisLayout.height()*0.1125 + 10
     @recommendationsPane.doLayout recommendationPaneBounds
 
 
@@ -177,7 +179,7 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     # done by using a new Rectangle function that takes a bound and creates a new bound completely inside it
     # that has a specified ratio. Note that we do that in the VideoPlayerCanvasWdgt, so we can reuse that code.
     internalPadding = 2
-    spaceForPrevNextButtons = 20
+    spaceForPrevNextButtons = 30
     widthOfPrevNextButtons = 60
     spaceBetweenButtons = 20
     widthOfEachThumbnail = Math.round((recommendationPaneBounds.width() - (internalPadding * (@thumbnailsColumns - 1))) / @thumbnailsColumns)
