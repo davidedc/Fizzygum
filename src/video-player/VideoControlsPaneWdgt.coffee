@@ -104,20 +104,20 @@ class VideoControlsPaneWdgt extends RectangleMorph
     #console.log "newBounds For VideoControlsPaneWdgt: " + newBoundsForThisLayout
 
     playPauseToggleBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() + @externalPadding
-    playPauseToggleBounds = playPauseToggleBounds.setBoundsWidthAndHeight new Point newBoundsForThisLayout.width()/15, 23
+    playPauseToggleBounds = playPauseToggleBounds.setBoundsWidthAndHeight new Point 44, 23 + 7 + 14
     #console.log "playPauseToggleBounds: " + playPauseToggleBounds
     @playPauseToggle.doLayout playPauseToggleBounds
 
-    videoScrubberBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding + 2 * newBoundsForThisLayout.width()/15, newBoundsForThisLayout.top() + @externalPadding
-    videoScrubberBounds = videoScrubberBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - (3 * newBoundsForThisLayout.width()/15 + @internalPadding), 23
+    videoScrubberBounds = new Rectangle new Point newBoundsForThisLayout.left() +  2 * (44 + @internalPadding), newBoundsForThisLayout.top() + @externalPadding
+    videoScrubberBounds = videoScrubberBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 3 * (44 + @internalPadding), 44
     @videoScrubber.doLayout videoScrubberBounds
 
-    playHeadTimeLabelBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding + newBoundsForThisLayout.width()/15 + 2 * @internalPadding, newBoundsForThisLayout.top() + @externalPadding + 2
-    playHeadTimeLabelBounds = playHeadTimeLabelBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width()/15 , 18
+    playHeadTimeLabelBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding + 44 + 2 * @internalPadding, newBoundsForThisLayout.top() + @externalPadding + 2 + 5 + 7
+    playHeadTimeLabelBounds = playHeadTimeLabelBounds.setBoundsWidthAndHeight 44 , 18
     @playHeadTimeLabel.doLayout playHeadTimeLabelBounds
 
-    durationTimeLabelBounds = new Rectangle new Point newBoundsForThisLayout.right() - newBoundsForThisLayout.width()/15 + 2 * @internalPadding, newBoundsForThisLayout.top() + @externalPadding + 2
-    durationTimeLabelBounds = durationTimeLabelBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width()/15 , 18
+    durationTimeLabelBounds = new Rectangle new Point newBoundsForThisLayout.right() - 44 + 2 * @internalPadding, newBoundsForThisLayout.top() + @externalPadding + 2 + 5 + 7
+    durationTimeLabelBounds = durationTimeLabelBounds.setBoundsWidthAndHeight 44 , 18
     @durationTimeLabel.doLayout durationTimeLabelBounds
 
     world.maybeEnableTrackChanges()
