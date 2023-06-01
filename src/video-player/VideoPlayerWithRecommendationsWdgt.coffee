@@ -49,7 +49,10 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
   setUpVideoThumbsPage: ->
     for i in [0...@thumbs.length]
       shuffledWithPath = "./videos/Fizzygum-videos-private/" + @shuffledVideosIndex[(i + @recommendationsPage * (@thumbnailsRows * @thumbnailsColumns)) % @shuffledVideosIndex.length]
-      @thumbs[i].setThumbnailAndVideoPath shuffledWithPath + "-mini-thumb.webp", shuffledWithPath + ".webm"
+      # because of the way we convert the videos to fullHD where needed,
+      # the video might have the "-fullHD" suffix, but the thumbnail would NOT have that suffix,
+      # so we remove it when pointing to the thumbnail file
+      @thumbs[i].setThumbnailAndVideoPath shuffledWithPath.replace("-fullHD","") + "-mini-thumb.webp", shuffledWithPath + ".webm"
 
   # stepping is only enabled once when the video index is first loaded
   # and parsed
