@@ -3,7 +3,8 @@
 # Create the privateVideosManifest.js file with the list of files
 echo "const privateVideos = {" > privateVideosManifest.js
 echo "    \"files\": [" >> privateVideosManifest.js
-all_files=$(ls -1 *.webm)
+
+all_files=$(ls -1 *.webm *.mp4)
 last_file=$(echo "$all_files" | tail -n 1)
 #echo "> $all_files < "
 echo "> $last_file < "
