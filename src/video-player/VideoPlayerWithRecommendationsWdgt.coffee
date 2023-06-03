@@ -52,7 +52,7 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
       # because of the way we convert the videos to fullHD where needed,
       # the video might have the "-fullHD" suffix, but the thumbnail would NOT have that suffix,
       # so we remove it when pointing to the thumbnail file
-      @thumbs[i].setThumbnailAndVideoPath shuffledWithPath.replace("-fullHD","") + "-mini-thumb.webp", shuffledWithPath + ".webm"
+      @thumbs[i].setThumbnailAndVideoPath shuffledWithPath.replace("-fullHD","").replace(".webm","").replace(".mp4","") + "-mini-thumb.webp", shuffledWithPath
 
   # stepping is only enabled once when the video index is first loaded
   # and parsed
@@ -62,14 +62,10 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     world.steppingWdgts.delete @
 
   parseVideosIndex: ->
-    # filter the names in privateVideos.files ending in .webm
+    # filter the names in privateVideos.files ending in .webm or .mp4
 
     filteredNames = privateVideos.files.filter (name) ->
-      name.endsWith ".webm"
-
-    # map the names in filteredNames so to remove the .webm extension
-    filteredNames = filteredNames.map (name) ->
-      name.replace ".webm", ""
+      (name.endsWith ".webm") or (name.endsWith ".mp4")
     
     @videosIndex = filteredNames
     #console.log "videosIndex: " + @videosIndex
