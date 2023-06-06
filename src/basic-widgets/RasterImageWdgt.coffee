@@ -14,6 +14,15 @@
 # draw some lines on it, or might want to apply some kind of filter effect,
 # in which case you might want to keep the
 # source image and the backbuffer separate.
+
+# Note also that you could get rid of the Image once it's loaded
+# and keep the Image content in a separate dedicated canvas.
+# This would have the advantage that you don't keep around
+# (and potentially need to deepcopy, with consequent extra code) an Image, which is
+# a special class for _loading_ images rather than keeping them around.
+# So you wouldn't be able to deepCopy this class while the Image is loading then,
+# which also would be odd.
+
 class RasterImageWdgt extends CanvasMorph
 
   imagePath: nil

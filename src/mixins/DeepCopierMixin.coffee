@@ -17,6 +17,8 @@ DeepCopierMixin =
       # structure related to the broken rectangles mechanism,
       # we should place the copied widget there.
       deepCopy: (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure)->
+        # TODO id: DUPLICATED_CODE_IN_DEEPCOPY date: 6-Jun-2023
+
         haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf @
         if haveIBeenCopiedAlready >= 0
           if doSerialize
