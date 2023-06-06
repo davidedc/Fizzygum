@@ -35,7 +35,7 @@ class RasterImageWdgt extends CanvasMorph
 
     @imageLoaded = false
 
-    @img = new Image();
+    @img = new Image()
     @img.onload = =>
       @imageLoaded = true
       @lastPaintedImageSize = nil
