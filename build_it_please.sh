@@ -243,6 +243,7 @@ cat src/boot/extensions/HTMLCanvasElement-extensions.coffee >> $SCRATCH_PATH/fiz
 if $includeVideoPlayer ; then
   printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
   cat src/boot/extensions/HTMLVideoElement-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+  cat src/boot/extensions/Image-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 fi
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
