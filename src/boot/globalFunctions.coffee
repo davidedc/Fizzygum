@@ -37,22 +37,24 @@ noOperation = ->
 # instead of callback style when loading a JS
 loadJSFilePromise = (fileName) ->
   return new Promise (resolve, reject) ->
-
-    script = document.createElement "script"
-    script.src = fileName
-    script.async = true # should be the default
-
-    # triggers after the script was loaded and executed
-    # see https://javascript.info/onload-onerror#script-onload
-    script.onload = ->
-      addLineToLogDiv? "loaded and executed " + this.src
-      if srcLoadCompileDebugWrites then console.log "loaded and executed " + this.src
-      resolve(script)
-
-    document.head.appendChild script
-
-    script.onerror = ->
-        reject(script)
+    # try to load the file 3 times, then give up and reject the promise
+    # load by creating a script tag and appending it to the head
+    numberOfAttemptsRemaining = 3
+    tryToLoadFile = ->
+      numberOfAttemptsRemaining--
+      if numberOfAttemptsRemaining < 0
+        reject "Could not load file #{fileName}, bailing out"
+      else
+        script = document.createElement 'script'
+        script.src = fileName
+        script.async = true # should be the default
+        script.type = "text/javascript"
+        script.onload = ->
+          resolve script
+        script.onerror = ->
+          tryToLoadFile()
+        document.head.appendChild script
+    tryToLoadFile()
 
 
 # there are two main ways of booting the world:
