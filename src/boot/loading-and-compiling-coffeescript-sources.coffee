@@ -1,26 +1,33 @@
-# useful function to pace "then" steps,
-# we use it in two modes:
+# Useful function to pace "then" steps,
+# used in two occasions:
+#    1. when loading the coffeescript sources batches
+#    2. when storing/compiling the coffeescript sources
 #
-# 1. in "pre-compiled" mode we load all the
-# sources and we pace those loads triggering
-# the "waits" on animationFrames, so that
-# we don't create too much gitter as the
-# world is going.
-# We achieve this by storing the "resolve"
-# method in an array that we check in
-# doOneCycle. So when there is a frame running
-# we see if we can resolve one such "gate" so
-# that the next source can be loaded.
+# Also, we use it in two modalities:
+#    1. in "pre-compiled" mode we load all the
+#       sources and we pace those loads triggering
+#       the "waits" on animationFrames, so that
+#       we don't create too much gitter as the
+#       world is going.
+#       We achieve this by storing the "resolve"
+#       method in an array that we check in
+#       doOneCycle. So when there is a frame running
+#       we see if we can resolve one such "gate" so
+#       that the next source can be loaded.
+#       Note that for now the array of promises
+#       can only have one element max, because we
+#       load the sources batches one at a time.
+#       So, an array is overkill at this time.
 #
-# 2. In non-precompiled mode
-#    a) we don't have a running world
-#       so there is no concept of doing things "on next frame"
-#       (because we still have to build it from the
-#       sources we are loading now),
-#       so we can just wait each compilation step on
-#       a timer.
-#    b) we don't care about the gitter again because
-#       there is no running world
+#    2. In non-precompiled mode
+#       a) we don't have a running world
+#          so there is no concept of doing things "on next frame"
+#          (because we still have to build it from the
+#          sources we are loading now),
+#          so we can just wait each compilation step on
+#          a timer.
+#       b) we don't care about the gitter again because
+#          there is no running world
 waitNextTurn = ->
   if window.preCompiled
     return waitNextWorldCycle()
@@ -31,6 +38,9 @@ waitNextWorldCycle = ->
   # this promise is stored in a queue, and each frame
   # one is popped out and resolved
   return new Promise (resolve, reject) ->
+    # at the moment using an array is overkill because
+    # we only use this when loading the coffeescript sources batches
+    # and we only load one batch at a time
     window.framePacedPromises.push resolve
 
 waitNextJSEventLoopCycle = ->
@@ -61,6 +71,7 @@ loadJSFilesWithCoffeescriptSourcesBatchesPromise = ->
   # being recompiled even though those are two of the few things that
   # we run from the start in the skeletal system.
   # It doesn't seem to cause problems though?
+  if srcLoadCompileDebugWrites then console.log "number of source batches: #{numberOfSourceBatches}"
   for i in [0...numberOfSourceBatches]
     # give a change to the main thread to breathe
     promiseChain = promiseChain.then -> waitNextTurn()
@@ -73,7 +84,6 @@ loadJSFilesWithCoffeescriptSourcesBatchesPromise = ->
     promiseChain = promiseChain.then createClosureForLoadingCoffeescriptSourceBatch i
   
   return promiseChain
-
 
 compileFGCode = (codeSource, bare) ->
   #t0 = performance.now()
@@ -96,8 +106,7 @@ storeSourcesAndPotentiallyCompileThemAndExecuteThem = (justIngestSources) ->
 
   emptyLogDiv()
 
-
-  if srcLoadCompileDebugWrites then console.log "--------------------------------"
+  if bootLoadingDebugWrites then console.log "------------ starting to read into the sources, ordering them and compiling them "
   loadOrder = findLoadOrder()
 
 

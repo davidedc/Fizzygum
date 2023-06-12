@@ -28,6 +28,8 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     @buildAndConnectChildren()
 
 
+    # TODO id: REDUNDANT_CODE_TO_LOAD_JS date: 10-Jun-2023 description:
+    # there is already code to load a .js file in globalFunctions.coffee
     script = document.createElement "script"
     script.src = "./videos/Fizzygum-videos-private/privateVideosManifest.js"
     script.async = true # should be the default

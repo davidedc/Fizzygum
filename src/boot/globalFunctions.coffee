@@ -14,6 +14,9 @@ nil = undefined
 # globals -------------------------------------------------
 world = nil
 
+# At the moment using an array is overkill because
+# we only use this when loading the coffeescript sources batches
+# and we only load one batch at a time
 framePacedPromises = []
 
 srcLoadCompileDebugWrites = false
@@ -34,7 +37,7 @@ noOperation = ->
 
 # -------------------------------------------
 
-# a helper function to use Promise style
+# Helper function to use Promise style
 # instead of callback style when loading a JS
 loadJSFilePromise = (fileName) ->
   return new Promise (resolve, reject) ->
@@ -44,6 +47,7 @@ loadJSFilePromise = (fileName) ->
     tryToLoadFile = ->
       numberOfAttemptsRemaining--
       if numberOfAttemptsRemaining < 0
+        if bootLoadingDebugWrites then console.log "Could not load file #{fileName}, bailing out"
         reject "Could not load file #{fileName}, bailing out"
       else
         script = document.createElement 'script'
@@ -51,8 +55,10 @@ loadJSFilePromise = (fileName) ->
         script.async = true # should be the default
         script.type = "text/javascript"
         script.onload = ->
+          if bootLoadingDebugWrites then console.log "loaded file #{fileName}"
           resolve script
         script.onerror = ->
+          if bootLoadingDebugWrites then console.log "Could not load file #{fileName}, retrying"
           tryToLoadFile()
         document.head.appendChild script
     tryToLoadFile()
@@ -238,6 +244,7 @@ boot = ->
 
   Promise.all bootLoadPromises
   .then ->
+    if bootLoadingDebugWrites then console.log "---- FileSaver, jszip, testsManifest, testsAssetsManifest, pre-compiled, coffeescript loaded"
     # this is the code path that we want to load/start fast.
     # All other situations (non-precompiled, or loading tests)
     # are not as important, they can take a few second more, we don't
@@ -254,16 +261,21 @@ boot = ->
       loadJSFilePromise("js/src/logging-div-min.js")
     ]
   .then ->
+    if bootLoadingDebugWrites then console.log "---- Class_coffeSource, Mixin_coffeSource, loading-and-compiling-coffeescript-sources-min, logging-div-min loaded"
     eval.call window, compileFGCode window["Mixin_coffeSource"], true
     eval.call window, compileFGCode window["Class_coffeSource"], true
   .then ->
+    if bootLoadingDebugWrites then console.log "---- compiled Mixin_coffeSource, Class_coffeSource"
     loadJSFilePromise("js/src/dependencies-finding-min.js")
   .then ->
+    if bootLoadingDebugWrites then console.log "---- dependencies-finding-min loaded"
     loadJSFilesWithCoffeescriptSourcesBatchesPromise()
   .then ->
     if bootLoadingDebugWrites then console.log "---- loaded all batches of coffeescript sources"
     if window.preCompiled
-      # the world has already started stepping
+      # the world has already started stepping.
+      # No need to compile the sources as we already got the pre-compiled code
+      # (and it's already running).
       (storeSourcesAndPotentiallyCompileThemAndExecuteThem true).then ->
         stillLoadingSources = false
         if Automator?
@@ -274,6 +286,8 @@ boot = ->
           world.nextStartupAction()
     else
       addLogDiv()
+      # there is no world to speak of yet, and no stepping: in this case
+      # we also compile all the sources to have something to build the world with!
       (storeSourcesAndPotentiallyCompileThemAndExecuteThem false).then ->
         stillLoadingSources = false
         if Automator?

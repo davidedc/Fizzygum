@@ -40,6 +40,7 @@ class FridgeMagnets3DCanvasMorph extends CanvasMorph
   constructor: ->
     super
 
+    # TODO id: REDUNDANT_CODE_TO_LOAD_JS date: 10-Jun-2023
     script = document.createElement "script"
     script.src = "js/libs/twgl-full.js"
     script.async = true # should be the default

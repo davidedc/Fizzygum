@@ -1493,6 +1493,9 @@ class WorldMorph extends PanelWdgt
   # framePacedPromises array, (or, more precisely,
   # we keep their resolving functions) and each frame
   # we resolve one, so we don't cause gitter.
+  # At the moment using an array is overkill because
+  # we only use this when loading the coffeescript sources batches
+  # and we only load one batch at a time.
   progressFramePacedActions: ->
     if window.framePacedPromises.length > 0
       resolvingFunction = window.framePacedPromises.shift()
