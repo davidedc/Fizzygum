@@ -17,6 +17,7 @@ world = nil
 framePacedPromises = []
 
 srcLoadCompileDebugWrites = false
+bootLoadingDebugWrites = false
 
 stillLoadingSources = nil
 
@@ -235,7 +236,8 @@ boot = ->
   # end of first batch
   # -----------------------------------------------------------
 
-  (Promise.all bootLoadPromises).then ->
+  Promise.all bootLoadPromises
+  .then ->
     # this is the code path that we want to load/start fast.
     # All other situations (non-precompiled, or loading tests)
     # are not as important, they can take a few second more, we don't
@@ -257,8 +259,9 @@ boot = ->
   .then ->
     loadJSFilePromise("js/src/dependencies-finding-min.js")
   .then ->
-    loadJSFilesWithCoffeescriptSourcesPromise()
+    loadJSFilesWithCoffeescriptSourcesBatchesPromise()
   .then ->
+    if bootLoadingDebugWrites then console.log "---- loaded all batches of coffeescript sources"
     if window.preCompiled
       # the world has already started stepping
       (storeSourcesAndPotentiallyCompileThemAndExecuteThem true).then ->

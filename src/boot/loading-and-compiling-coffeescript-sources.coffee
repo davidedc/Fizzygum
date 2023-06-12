@@ -30,22 +30,31 @@ waitNextTurn = ->
 waitNextWorldCycle = ->
   # this promise is stored in a queue, and each frame
   # one is popped out and resolved
-  () ->
-    return new Promise (resolve, reject) ->
-      window.framePacedPromises.push resolve
+  return new Promise (resolve, reject) ->
+    window.framePacedPromises.push resolve
 
 waitNextJSEventLoopCycle = ->
-  () ->
-    return new Promise (resolve, reject) ->
-      setTimeout () ->
-        resolve arguments
-      , 1
+  return new Promise (resolve, reject) ->
+    setTimeout () ->
+      resolve arguments
+    , 1
 
-loadJSFilesWithCoffeescriptSourcesPromise = ->
-  # start of the promise.
-  # It will "trigger" the chain immediately, however each element
-  # of the chain will wait for its turn to avoid requesting too many
-  # file loads all at the same time.
+
+createClosureForLoadingCoffeescriptSourceBatch = (batchNumber) ->
+  # this only creates the closure that will be run (later)
+  # if srcLoadCompileDebugWrites then console.log "creating closure for batch #{batchNumber}"
+  -> loadJSFilePromise "js/coffeescript-sources/sources_batch_" + batchNumber + ".js"
+
+  
+loadJSFilesWithCoffeescriptSourcesBatchesPromise = ->
+  # "Head" of the promise. We'll chain to it the loading of all the
+  # batches of sources.
+  # This head "triggers" the chain immediately, however each next element
+  # of the chain will wait for its turn.
+  # I.e. all the batches are loaded one at a time to avoid requesting too many
+  # concurrent file/network request. Not only that, but in fact they are loaded
+  # in number sequence, which is not strictly needed because we detect the
+  # dependencies later on anyways.
   promiseChain = Promise.resolve()
 
   # Note that the sources for "Class" and "Mixin" might end-up
@@ -53,9 +62,16 @@ loadJSFilesWithCoffeescriptSourcesPromise = ->
   # we run from the start in the skeletal system.
   # It doesn't seem to cause problems though?
   for i in [0...numberOfSourceBatches]
-    promiseChain = promiseChain.then waitNextTurn()
-    promiseChain = promiseChain.then loadJSFilePromise "js/coffeescript-sources/sources_batch_" + i + ".js"
-
+    # give a change to the main thread to breathe
+    promiseChain = promiseChain.then -> waitNextTurn()
+    # if srcLoadCompileDebugWrites then console.log "building promise chain for batch #{i}"
+    # This immediately creates the closure that will be run (later)
+    # and chains it to the promise chain.
+    # This is needed because it's the only ways to pass the
+    # correct value of i in the loadJSFilePromise function, because otherwise the value of i
+    # would be the one at the end of the loop, which is wrong.
+    promiseChain = promiseChain.then createClosureForLoadingCoffeescriptSourceBatch i
+  
   return promiseChain
 
 
@@ -116,7 +132,7 @@ storeSourcesAndPotentiallyCompileThemAndExecuteThem = (justIngestSources) ->
   for eachFile from loadOrder
     if eachFile == "Class" or eachFile == "Mixin" or eachFile == "globalFunctions"
       continue
-    promiseChain = promiseChain.then waitNextTurn()
+    promiseChain = promiseChain.then -> waitNextTurn()
     promiseChain = promiseChain.then \
       createStoreSourceAndPotentiallyCompileItAndExecuteItClosure eachFile, justIngestSources
 
