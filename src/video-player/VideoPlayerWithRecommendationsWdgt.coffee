@@ -27,27 +27,16 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     super new Point 300, 300
     @buildAndConnectChildren()
 
-
-    # TODO id: REDUNDANT_CODE_TO_LOAD_JS date: 10-Jun-2023 description:
-    # there is already code to load a .js file in globalFunctions.coffee
-    script = document.createElement "script"
-    script.src = "./videos/Fizzygum-videos-private/privateVideosManifest.js"
-    script.async = true # should be the default
-
-    # triggers after the script was loaded and executed
-    # see https://javascript.info/onload-onerror#script-onload
-    script.onload = =>
-      #console.log "loaded manifest"
-      @parseVideosIndex()
-      # TODO id: NO_STEPPING_ONLY_ONCE_TO_HANDLE_CALLBACK date: 6-May-2023
-      world.steppingWdgts.add @
-      
-
-    document.head.appendChild script
-
-    script.onerror = ->
-        reject(script)
-
+    (loadJSFilePromise "./videos/Fizzygum-videos-private/privateVideosManifest.js").then \
+      (result) =>
+        #console.log "loaded manifest"
+        @parseVideosIndex()
+        # TODO id: NO_STEPPING_ONLY_ONCE_TO_HANDLE_CALLBACK date: 6-May-2023
+        world.steppingWdgts.add @
+      , (error) ->
+        console.log "error loading manifest"
+        console.log error
+  
   setUpVideoThumbsPage: ->
     for i in [0...@thumbs.length]
       shuffledWithPath = "./videos/Fizzygum-videos-private/" + @shuffledVideosIndex[(i + @recommendationsPage * (@thumbnailsRows * @thumbnailsColumns)) % @shuffledVideosIndex.length]
