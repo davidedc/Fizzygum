@@ -2,6 +2,17 @@
 
 # "container"/"contained" scenario going on.
 
+# IMPORTANT - if you are using fizzygum / video player via webserver (instead of via filesystem)
+# then you need to use a webserver that supports range requests, otherwise the scrubbing
+# will not work. This is because the browser will use range requests when scrubbing, however there
+# doesn't seem to be a graceful handling when the server doesn't support range requests.
+# Ideally 1) the browser should attempt a range request 2) the server should say "not supported"
+# and 3) the browser should fall back to a non-range request. However, something (or many things)
+# are not working as expected, and the server serves the beginning of the file again, and the
+# browser shows the beginning of the video again.
+# Note that python3 -m http.server does not support range requests, but RangeHTTPServer does.
+# see https://github.com/danvk/RangeHTTPServer
+
 class VideoPlayerCanvasWdgt extends CanvasMorph
 
   video: nil
