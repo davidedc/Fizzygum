@@ -27,7 +27,7 @@ class VideoScrubberWdgt extends SliderMorph
     @_updateHbar()
   
   _updateHbar: ->
-    if @videoPlayerCanvas?
+    if @videoPlayerCanvas? and !@videoPlayerCanvas.seeking
       # only update the bar if it's not been moved by the user
       # in the last 250ms
       if (!@timeWhenScrubWasLastMoved?) or (Date.now() - @timeWhenScrubWasLastMoved) > 750
