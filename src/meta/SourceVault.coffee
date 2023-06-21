@@ -2,6 +2,8 @@
 
 class SourceVault
 
+  # Simply run from console:
+  #   SourceVault.runAllAnalyses()
   @runAllAnalyses: ->
     console.log "allSourcesContainingReLayoutCall -----------------"
     console.log @allSourcesContainingReLayoutCall()
@@ -20,6 +22,12 @@ class SourceVault
 
     console.log "allSourcesWithReLayoutMethod -----------------"
     console.log @allSourcesWithReLayoutMethod()
+
+    # private fields should not be accessed via dot notation
+    # they should rather be accessed only by "this" object
+    # i.e. like @_privateField
+    console.log "referencesToNonLocalPrivateFields -----------------"
+    console.log @referencesToNonLocalPrivateFields()
 
     console.log "allTrailingWhiteSpaces -----------------"
     @allTrailingWhiteSpaces()
@@ -110,7 +118,10 @@ class SourceVault
   @allTrailingWhiteSpaces: ->
     @highlightRegex [/[^\s#][ ]+$/gm],[/[^\s#]([ ]+)$/gm],["🡆$1🡄"]
 
-  @highlightRegex: (regexesArray, replaceWhatRegexesArray, replaceWithWhatStringsArray, testFunction) ->
+  @referencesToNonLocalPrivateFields: ->
+    @highlightRegex [/[^\.][\.]_/gm],[/([^\.][\.]_)/gm],["🡆$1🡄"], nil, ((matches) -> !(matches.includes("_proto") or matches.includes("_super")))
+
+  @highlightRegex: (regexesArray, replaceWhatRegexesArray, replaceWithWhatStringsArray, matchTestFunction, lineTestFunction) ->
     howManyLinesBeforeAndAfter = 5
     for eachSourceFileName in @allSourceFilesNames()
       theSource = @getSourceContent(eachSourceFileName)
@@ -122,12 +133,14 @@ class SourceVault
         for eachRegex in regexesArray
           regexNumber++
           if matches = eachLine.match regexesArray[regexNumber]
-            if !testFunction? or (testFunction? and testFunction matches)
-              theSourceByLine[lineNumber-1] = theSourceByLine[lineNumber-1].replace replaceWhatRegexesArray[regexNumber], replaceWithWhatStringsArray[regexNumber]
-              for aBitBeforeABitAfter in [-(howManyLinesBeforeAndAfter+1)...howManyLinesBeforeAndAfter]
-                if lineNumber + aBitBeforeABitAfter >= 0 and lineNumber + aBitBeforeABitAfter < theSourceByLine.length
-                  console.log eachSourceFileName + " line " + (lineNumber+aBitBeforeABitAfter) + " >" + theSourceByLine[lineNumber+aBitBeforeABitAfter]
-              console.log "-----------------------------------------------"
+            if !lineTestFunction? or (lineTestFunction? and lineTestFunction eachLine)
+              if !matchTestFunction? or (matchTestFunction? and matchTestFunction matches)
+                theSourceByLine[lineNumber-1] = theSourceByLine[lineNumber-1].replace replaceWhatRegexesArray[regexNumber], replaceWithWhatStringsArray[regexNumber]
+                for aBitBeforeABitAfter in [-(howManyLinesBeforeAndAfter+1)...howManyLinesBeforeAndAfter]
+                  if lineNumber + aBitBeforeABitAfter >= 0 and lineNumber + aBitBeforeABitAfter < theSourceByLine.length
+                    console.log eachSourceFileName + " line " + (lineNumber+aBitBeforeABitAfter) + " >" + theSourceByLine[lineNumber+aBitBeforeABitAfter]
+                console.log "-----------------------------------------------"
+    return # avoid returning a ton of junk
 
   @allTODOs: ->
     @highlightRegex [/^ *# *.*TODO/gi],[/(todo)/gi],["🡆$1🡄"]
