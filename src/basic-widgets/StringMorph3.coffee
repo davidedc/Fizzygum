@@ -87,7 +87,7 @@ class StringMorph3 extends Widget
   # Since we let the browser paint the text, we can't guarantee that
   # a specific font will be available to the user.
   # So we do what web designers do: we allow for a few families of
-  # very similar fonts (at least in style in not in shape),
+  # very similar fonts (at least in style if not in shape),
   # each specifying a list of fallbacks that
   # are chosen to be similar and, collectively, widely available.
   # On top of that we also add a justArialFontStack, since Arial
