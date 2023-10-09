@@ -43,13 +43,18 @@ Object::addInstanceProperties = (fromClass, obj) ->
 # of the image data, and compare it with "OK" pre-recorded
 # values and b) to generate keys for some caches.
 # adapted from http://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
+#
+# TODO search for "HashCalculator" to find a duplicate of this
+# TODO you can optimise for particular types of data, e.g. canvas image data, boolean arrays etc.
+# ...see how Java does it for arrays at
+# https://github.com/openjdk-mirror/jdk7u-jdk/blob/master/src/share/classes/java/util/Arrays.java#L2893
 
 Object::hashCode = ->
   stringToBeHashed = @toString()
-  hash = 0
-  return hash  if stringToBeHashed.length is 0
+  hash = 0|0
+  return hash|0  if stringToBeHashed.length is 0
   for i in [0...stringToBeHashed.length]
     char = stringToBeHashed.charCodeAt i
     hash = ((hash << 5) - hash) + char
-    hash = hash & hash # Convert to 32bit integer
-  hash
+    hash |= 0 # Convert to 32bit integer
+  hash|0
