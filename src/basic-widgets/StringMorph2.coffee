@@ -134,7 +134,7 @@ class StringMorph2 extends Widget
     @changed()
 
   # this font height is too thin.
-  # tall characters such as ⎲ƒ⎳⎷ ⎸⎹ are cut
+  # tall characters such as ⎲█ƒ⎳À⎷ ⎸⎹ are cut
   # but hey they look cut also in this text editor I'm using.
   fontHeight: (fontSize) ->
     minHeight = Math.max fontSize, WorldMorph.preferencesAndSettings.minimumFontHeight
