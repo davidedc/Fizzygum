@@ -116,6 +116,22 @@ class RectangularAppearance extends Appearance
     toBePainted = new Rectangle al, at, al + w, at + h
     toBePainted = toBePainted.intersect @morph.boundingBoxTight().scaleBy ceilPixelRatio
 
+    # Right now the stroke width is baked to 1, regardless of the ceilPixelRatio.
+    #
+    # Some notes / thoughts around that:
+    #  1) for a stroke width of 1, the stroke is inset by half a pixel. This is needed because lines
+    #     in HTML5 Canvas are centered on the coordinates, so we have to center them in the middle
+    #     of the pixel to fill the full width of precisely one pixel.
+    #  2) this means that the stroke is drawn inside the morph, so in rectangular morphs that clip at
+    #     their bounds, the stroke will NOT be clipped
+    #
+    #  IF you'll want to make the stroke width arbitrary then...
+    #
+    #  3) in case the stroke width is even (which might depend on the ceilPixelRatio, see a TODO further below
+    #     in the code), you don't need to inset by 0.5. TODO.
+    #  4) in case the stroke is > 1, the question is where do we draw it? All inside so that it's not clipped?
+    #     But then that eats into the morph's area... TODO.
+
     if @morph.strokeColor?
 
       aContext.beginPath()
