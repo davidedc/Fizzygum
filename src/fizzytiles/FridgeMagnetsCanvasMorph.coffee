@@ -45,6 +45,7 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
   step: ->
     #console.log "stepping FridgeMagnetsCanvasMorph"
     @paintNewFrame()
+    @changed()
 
   paintNewFrame: ->
     # we get the context already with the correct pixel scaling
