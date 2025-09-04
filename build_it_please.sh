@@ -100,6 +100,13 @@ then
     exit
 fi
 
+if ! command -v coffee &> /dev/null
+then
+    echo "CoffeeScript could not be found, please install it using:"
+    echo "npm install --global coffeescript"
+    exit
+fi
+
 echo coffeescript version -------------
 coffee --version
 
