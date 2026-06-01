@@ -2,3 +2,9 @@
 **/.DS_Store
 **/node_modules
 src/.idea/
+
+# Vendored SWCanvas backend — bulk bytes are fetched on demand from the pin
+# (vendor/swcanvas.pin), never committed. Same model as SWCanvas←BitmapText.
+vendor/swcanvas/
+# Vendored SWCanvas font atlases (downloaded from the release pin at build time).
+font-assets/

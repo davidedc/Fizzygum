@@ -53,6 +53,12 @@ HTMLCanvasElement.createOfPhysicalDimensions = (extentPoint) ->
   ext = extentPoint or
     x: 0
     y: 0
+  # The single backend switch: when the SWCanvas flag is on, every off-screen
+  # buffer (and the world render canvas) is an SWCanvasElement instead of a DOM
+  # canvas. SWCanvas surfaces must be >= 1px (a 0x0 measurement canvas becomes
+  # 1x1; measureText doesn't need area).
+  if window.FIZZYGUM_USE_SWCANVAS and window.SWCanvas?
+    return window.SWCanvas.createCanvas (Math.max 1, Math.ceil ext.x), (Math.max 1, Math.ceil ext.y)
   canvas = document.createElement "canvas"
   canvas.width = Math.ceil ext.x
   canvas.height = Math.ceil  ext.y

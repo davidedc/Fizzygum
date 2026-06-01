@@ -79,7 +79,9 @@ class ToolTipWdgt extends Widget
         false,
         true,
         "center")
-    else if @contents instanceof HTMLCanvasElement
+    # canvas-like (a DOM canvas OR an SWCanvasElement under the software backend);
+    # Widget / string contents are already handled by the branches above.
+    else if @contents? and typeof @contents.getContext is "function"
       @contentsMorph = new Widget
       @contentsMorph.silentRawSetWidth @contents.width
       @contentsMorph.silentRawSetHeight @contents.height

@@ -77,9 +77,8 @@ class PreferencesAndSettings
   getMinimumFontHeight: ->
     str = "I"
     size = 50
-    canvas = document.createElement "canvas"
-    canvas.width = size
-    canvas.height = size
+    # go through the factory so the SWCanvas backend switch reaches this probe
+    canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point size, size
     ctx = canvas.getContext "2d", willReadFrequently: true
     ctx.font = "1px serif"
     maxX = Math.ceil ctx.measureText(str).width

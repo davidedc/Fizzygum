@@ -110,6 +110,24 @@ fi
 echo coffeescript version -------------
 coffee --version
 
+# --- SWCanvas backend: ensure the vendored engine bundle is present ----------
+# Mirrors SWCanvas's own BitmapText auto-fetch gate. The bulk SWCanvas bytes are
+# gitignored; on a fresh clone we fetch them from the committed pin so that
+# "git clone && build" Just Works (needs GitHub access on the first build only).
+SWCANVAS_VENDOR=vendor/swcanvas
+SWCANVAS_PIN=vendor/swcanvas.pin
+if [ ! -f "$SWCANVAS_VENDOR/swcanvas.min.js" ] || [ ! -f "$SWCANVAS_VENDOR/VERSION" ]; then
+  echo "SWCanvas bundle missing — fetching from $SWCANVAS_PIN ..."
+  ./scripts/vendor-swcanvas.sh
+elif [ -f "$SWCANVAS_PIN" ]; then
+  PINNED_SHA=$(tr -d '[:space:]' < "$SWCANVAS_PIN")
+  VENDORED_SHA=$(tr -d '[:space:]' < "$SWCANVAS_VENDOR/VERSION")
+  if [ "$PINNED_SHA" != "$VENDORED_SHA" ]; then
+    echo "warning: vendor/swcanvas.pin ($PINNED_SHA) != vendored SWCanvas ($VENDORED_SHA)."
+    echo "         Run ./scripts/vendor-swcanvas.sh to refresh (not auto-refreshing to avoid a surprise long build)."
+  fi
+fi
+
 if [ ! -d $BUILD_PATH ]; then
   mkdir $BUILD_PATH
 fi
@@ -236,6 +254,9 @@ printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/extensions/CanvasGradient-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat src/boot/extensions/SWCanvasElement-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+
+printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/extensions/Math-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
@@ -293,6 +314,33 @@ if [ "$?" != "0" ]; then
   tput bel;
   echo "!!!!!!!!!!! error: coffeescript compilation failed!" 1>&2
   exit 1
+fi
+
+# Prepend the vendored SWCanvas engine to the boot bundle so window.SWCanvas is
+# defined before boot() runs. The minified Fizzygum bundle thus contains the
+# SWCanvas engine code (mirroring swcanvas.min.js containing BitmapText); font
+# atlases are never embedded — they are loaded at runtime. SWCanvas is always
+# bundled and only *used* when the runtime flag (?sw=1) is on.
+echo "prepending the SWCanvas engine to the boot bundle..."
+# IMPORTANT: swcanvas.min.js ends with a "//# sourceMappingURL=..." line comment
+# and no trailing newline. A bare cat would glue the boot code's first line onto
+# that comment (commenting out the `var ...,boot,...` declaration). The "\n;\n"
+# separator terminates the comment and defends against ASI.
+cat $SWCANVAS_VENDOR/swcanvas.min.js > $BUILD_PATH/js/fizzygum-boot-min.js.tmp
+printf '\n;\n' >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
+cat $BUILD_PATH/js/fizzygum-boot-min.js >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
+mv $BUILD_PATH/js/fizzygum-boot-min.js.tmp $BUILD_PATH/js/fizzygum-boot-min.js
+echo "... done prepending SWCanvas"
+
+# Copy the vendored SWCanvas font assets (metrics + positioning bundles, and
+# the wrapped atlas .js if vendored) so the SWCanvas text backend can load them
+# at runtime over file://. These are font DATA, never embedded in the bundle,
+# and only fetched when ?sw=1 is on. Populated by scripts/vendor-swcanvas-fonts.sh.
+if [ -d font-assets ]; then
+  echo "copying SWCanvas font assets..."
+  mkdir -p $BUILD_PATH/font-assets
+  cp -R font-assets/* $BUILD_PATH/font-assets/
+  echo "... done copying SWCanvas font assets"
 fi
 
 # copy the html files

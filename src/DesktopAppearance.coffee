@@ -22,9 +22,8 @@ class DesktopAppearance extends RectangularAppearance
 
     if @morph.patternName? && @morph.patternName != @currentPattern
       @currentPattern = @morph.patternName
-      @pattern = document.createElement "canvas"
-      @pattern.width = 5 * ceilPixelRatio
-      @pattern.height = 5 * ceilPixelRatio
+      # go through the factory so the pattern tile honours the backend switch
+      @pattern = HTMLCanvasElement.createOfPhysicalDimensions new Point 5 * ceilPixelRatio, 5 * ceilPixelRatio
       pctx = @pattern.getContext "2d"
       pctx.useLogicalPixelsUntilRestore()
 

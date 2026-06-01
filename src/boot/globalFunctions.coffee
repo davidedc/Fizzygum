@@ -164,7 +164,35 @@ boot = ->
   #   (e.g. place index and middle finger attached to each other and tap in a space).
   #   THEN our job is just to make the UI elements of the comfortable logical units.
 
-  window.ceilPixelRatio = Math.ceil window.devicePixelRatio
+  # --- SWCanvas software-rendering backend selection (optional) -------------
+  #   ?sw=1   (or a preset window.FIZZYGUM_USE_SWCANVAS) routes every canvas made
+  #           via HTMLCanvasElement.createOfPhysicalDimensions through SWCanvas
+  #           instead of the DOM. When off, behaviour is identical to before.
+  #   ?dpr=N  (or window.FIZZYGUM_FORCE_PIXEL_RATIO) forces ceilPixelRatio, so a
+  #           HiDPI (e.g. retina, dpr 2) run can be exercised on a standard screen.
+  #           This is exact for the SWCanvas backend (display-independent).
+  bootQueryParams = nil
+  try
+    bootQueryParams = new URLSearchParams window.location.search
+  catch err
+    bootQueryParams = nil
+
+  unless window.FIZZYGUM_USE_SWCANVAS?
+    window.FIZZYGUM_USE_SWCANVAS = bootQueryParams? and (bootQueryParams.get("sw") is "1")
+
+  forcedPixelRatio = nil
+  if window.FIZZYGUM_FORCE_PIXEL_RATIO? and window.FIZZYGUM_FORCE_PIXEL_RATIO > 0
+    forcedPixelRatio = window.FIZZYGUM_FORCE_PIXEL_RATIO
+  else if bootQueryParams? and bootQueryParams.get("dpr")?
+    parsedDpr = parseInt bootQueryParams.get("dpr"), 10
+    if parsedDpr > 0 then forcedPixelRatio = parsedDpr
+
+  window.ceilPixelRatio = if forcedPixelRatio? then forcedPixelRatio else Math.ceil window.devicePixelRatio
+
+  # SWCanvas's contexts/elements/gradients are not the native ones, so install
+  # Fizzygum's prototype extensions onto them (see SWCanvasElement-extensions).
+  if window.FIZZYGUM_USE_SWCANVAS and window.SWCanvas?
+    installSWCanvasExtensions()
 
   # First loaded batch ----------------------------------------
   #
@@ -294,50 +322,103 @@ boot = ->
           Automator.testsManifest = testsManifest
           Automator.testsAssetsManifest = testsAssetsManifest
       .then ->
+        # returns a promise (world creation is deferred under the SWCanvas
+        # backend), so chain the world-dependent code after it resolves.
         createWorldAndStartStepping()
+      .then ->
         # world.getParameterPassedInURL is not included in the homepage build
         if startupActions = world.getParameterPassedInURL? "startupActions"
           world.nextStartupAction()
 
 
+# Load the SWCanvas bitmap-font metrics + the positioning bundle for the active
+# density BEFORE the world is built. measureText (which drives ALL text layout)
+# returns null until the metrics bundle is loaded, so the world can't even boot
+# under the SWCanvas backend without this. Glyph atlases are loaded lazily later
+# (text shows placeholder boxes until then). Over file:// these load via
+# BitmapText's <script> injection.
+bootstrapSWCanvasFontsThen = (callback) ->
+  # Run the world-start callback exactly once, whether the fonts loaded or not.
+  callbackFired = false
+  finish = ->
+    return if callbackFired
+    callbackFired = true
+    callback()
+  try
+    raw = window.SWCanvas.fonts._raw
+    bitmapText = raw.BitmapText
+    bitmapText.setFontDirectory "font-assets/"
+    # SWCanvas is a software renderer, so atlases must be stored as ImageData
+    # (raw pixels it can composite), NOT as HTMLImageElements. Over file:// the
+    # loader decodes each wrapped-webp <img> to ImageData via a same-origin
+    # data: URL (so getImageData is untainted).
+    bitmapText.setAtlasFormat? "imageData"
+    Promise.all([
+      bitmapText.ensureMetricsBundleLoaded()
+      bitmapText.ensurePositioningBundleLoaded ceilPixelRatio
+    ]).then finish, (err) ->
+      # onRejected — do NOT also run finish() on a callback throw (that would
+      # double-fire). A genuine load failure still boots the world (text broken).
+      console.error "Fizzygum: SWCanvas font bootstrap failed (text may be broken):", err
+      finish()
+  catch err
+    console.error "Fizzygum: SWCanvas font bootstrap threw (text may be broken):", err
+    finish()
+
 createWorldAndStartStepping = ->
 
-  # "false" as second parameter below
-  #   fits the world in canvas as per dimensions
-  #   specified in the canvas element.
-  #   I.e. the user is here to record a system test so
-  #   don't fill entire page cause there are some
-  #   controls on the right side of the canvas.
-  # "true" will make the world fill the entire page.
-  # Also note that the first thing that this constructor does
-  # is to initialise the global "world" variable with... the world.
-  new WorldMorph worldCanvas, !(window.location.href.includes "worldWithSystemTestHarness")
-  world.isDevMode = true
+  # ALL world-dependent setup lives here, because under the SWCanvas backend the
+  # world is created asynchronously (after the font metrics load) — so nothing
+  # that touches `world` may run before this.
+  startWorld = ->
+    # "false" as second parameter below
+    #   fits the world in canvas as per dimensions
+    #   specified in the canvas element.
+    #   I.e. the user is here to record a system test so
+    #   don't fill entire page cause there are some
+    #   controls on the right side of the canvas.
+    # "true" will make the world fill the entire page.
+    # Also note that the first thing that this constructor does
+    # is to initialise the global "world" variable with... the world.
+    new WorldMorph worldCanvas, !(window.location.href.includes "worldWithSystemTestHarness")
+    world.isDevMode = true
 
-  # ref https://www.google.com/search?q=requestanimationframe
-  animloop = ->
-    world.doOneCycle()
-    window.requestAnimationFrame animloop
-  animloop()
+    # ref https://www.google.com/search?q=requestanimationframe
+    animloop = ->
+      world.doOneCycle()
+      window.requestAnimationFrame animloop
+    animloop()
 
-  # in case we want to set up the page
-  # for the System Tests, then add a panel
-  # to the right where helper commands can be
-  # clicked.
-  if window.location.href.includes "worldWithSystemTestHarness"
-    if SystemTestsControlPanelUpdater?
-      new SystemTestsControlPanelUpdater
+    # in case we want to set up the page
+    # for the System Tests, then add a panel
+    # to the right where helper commands can be
+    # clicked.
+    if window.location.href.includes "worldWithSystemTestHarness"
+      if SystemTestsControlPanelUpdater?
+        new SystemTestsControlPanelUpdater
 
-  window.menusHelper = new MenusHelper
-  world.removeSpinnerAndFakeDesktop()
+    window.menusHelper = new MenusHelper
+    world.removeSpinnerAndFakeDesktop()
 
-  world.basementWdgt = new BasementWdgt
+    world.basementWdgt = new BasementWdgt
 
-  #ProfilingDataCollector.enableProfiling()
-  #ProfilingDataCollector.enableBrokenRectsProfiling()
+    #ProfilingDataCollector.enableProfiling()
+    #ProfilingDataCollector.enableBrokenRectsProfiling()
 
-  if world.isIndexPage
-    world.createDesktop()
+    if world.isIndexPage
+      world.createDesktop()
+
+  # Under the SWCanvas backend, font metrics must be loaded before the world is
+  # built (see bootstrapSWCanvasFontsThen), so world creation is deferred. Return
+  # a promise so the boot chain waits for `world` to exist before using it.
+  if window.FIZZYGUM_USE_SWCANVAS and window.SWCanvas?
+    new Promise (resolve) ->
+      bootstrapSWCanvasFontsThen ->
+        startWorld()
+        resolve()
+  else
+    startWorld()
+    Promise.resolve()
 
 # This is a classic extension mechanism in JS,
 # also used by the CoffeeScript versions 1.x.

@@ -2048,7 +2048,10 @@ class Widget extends TreeNode
     fullExtentOfMorph = @fullBounds()
     destCanvas = HTMLCanvasElement.createOfPhysicalDimensions fullExtentOfMorph.extent().scaleBy ceilPixelRatio
     destCtx = destCanvas.getContext '2d'
-    destCtx.drawImage world.worldCanvas,
+    # Read from the render canvas, not the DOM canvas: under SWCanvas this is the
+    # pristine software surface (deterministic, non-premultiplied — avoids the DOM
+    # canvas's premultiplied round-trip). When the flag is off it IS the DOM canvas.
+    destCtx.drawImage world.worldRenderCanvas,
       fullExtentOfMorph.topLeft().x * ceilPixelRatio,
       fullExtentOfMorph.topLeft().y * ceilPixelRatio,
       fullExtentOfMorph.width() * ceilPixelRatio,
@@ -2371,13 +2374,22 @@ class Widget extends TreeNode
         ctx = theClone.getContext "2d"
 
         image = new Image
+        # Under the SWCanvas backend, drawImage rasterises an <img> by decoding
+        # it into a scratch canvas, which requires the image to be decoded first;
+        # drawing it before decode would throw. So paint on load instead (the
+        # clone starts blank and fills in within a frame). The native path below
+        # is left exactly as-is so flag-off output is unchanged.
+        if window.FIZZYGUM_USE_SWCANVAS
+          image.onload = ->
+            try ctx.drawImage image, 0, 0
         image.src = eachObject.data
-        # if something doesn't get painted here,
-        # it might be because the allocation of the image
-        # would actually be asynchronous, in theory
-        # you'd have to do the drawImage in a callback
-        # on onLoad of the image...
-        ctx.drawImage image, 0, 0
+        unless window.FIZZYGUM_USE_SWCANVAS
+          # if something doesn't get painted here,
+          # it might be because the allocation of the image
+          # would actually be asynchronous, in theory
+          # you'd have to do the drawImage in a callback
+          # on onLoad of the image...
+          ctx.drawImage image, 0, 0
 
       else if eachObject.constructor != Array
         theClone = Object.create window[eachObject.className].prototype

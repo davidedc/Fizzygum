@@ -318,7 +318,20 @@ class WorldMorph extends PanelWdgt
     if Automator?
       @automator = new Automator
 
-    @worldCanvasContext = @worldCanvas.getContext "2d"
+    # The DOM <canvas id="world"> (@worldCanvas) stays the event target. Under the
+    # SWCanvas backend all rendering goes to a separate software render canvas
+    # (@worldRenderCanvas), whose pixels are blitted onto the DOM canvas once per
+    # painted frame (see updateBroken / blitRenderCanvasToDOM). When the flag is
+    # off, the render canvas IS the DOM canvas and there is no blit, so behaviour
+    # is identical to before.
+    if window.FIZZYGUM_USE_SWCANVAS and window.SWCanvas?
+      @worldRenderCanvas = HTMLCanvasElement.createOfPhysicalDimensions new Point @worldCanvas.width, @worldCanvas.height
+      @domBlitContext = @worldCanvas.getContext "2d"
+    else
+      @worldRenderCanvas = @worldCanvas
+      @domBlitContext = nil
+    @worldCanvasContext = @worldRenderCanvas.getContext "2d"
+    @worldCanvasContext.textPixelDensity = ceilPixelRatio if @worldCanvasContext.textPixelDensity?
 
     @canvasForTextMeasurements = HTMLCanvasElement.createOfPhysicalDimensions()
     @canvasContextForTextMeasurements = @canvasForTextMeasurements.getContext "2d"
@@ -971,11 +984,47 @@ class WorldMorph extends PanelWdgt
     if @showRedraws
       @showBrokenRects @worldCanvasContext
 
+    # Under the SWCanvas backend, everything above painted into the software
+    # render surface; lift it onto the DOM <canvas id="world"> so it becomes
+    # visible. Only when something was actually painted this cycle.
+    if @domBlitContext? and @broken.length != 0
+      @blitRenderCanvasToDOM()
+
     @resetDataStructuresForBrokenRects()
 
     @healingRectanglesPhase = false
     if @trackChanges.length != 1 and @trackChanges[0] != true
       alert "trackChanges array should have only one element (true)"
+
+  # SWCanvas backend only: copy the whole software render surface onto the DOM
+  # <canvas id="world"> so the frame becomes visible. (Per-broken-rect partial
+  # blits via the putImageData dirty-rect overload are a future optimization.)
+  blitRenderCanvasToDOM: ->
+    w = @worldRenderCanvas.width
+    h = @worldRenderCanvas.height
+    return if w < 1 or h < 1
+    # @worldRenderCanvas.data is the SWCanvas surface's Uint8ClampedArray
+    # (non-premultiplied RGBA8); wrap it as a real ImageData with no copy.
+    @domBlitContext.putImageData (new ImageData @worldRenderCanvas.data, w, h), 0, 0
+
+  # SWCanvas backend only: keep the software render canvas the same physical size
+  # as the DOM world canvas after a resize. Setting the size recreates the
+  # SWCanvas surface (which resets textPixelDensity), so re-apply it.
+  syncRenderCanvasToWorldCanvas: ->
+    return unless @worldRenderCanvas? and @worldRenderCanvas isnt @worldCanvas
+    @worldRenderCanvas.width = @worldCanvas.width
+    @worldRenderCanvas.height = @worldCanvas.height
+    @worldCanvasContext = @worldRenderCanvas.getContext "2d"
+    @worldCanvasContext.textPixelDensity = ceilPixelRatio if @worldCanvasContext.textPixelDensity?
+
+  # True while any SWCanvas glyph atlas is still loading (text would still show
+  # placeholder boxes). The SystemTest screenshot gate waits on this so it never
+  # captures un-settled text. Always false under the native backend.
+  anyTextDirty: ->
+    if window.swCanvasAnyTextDirty?
+      window.swCanvasAnyTextDirty()
+    else
+      false
 
   findOutAllOtherOffendingWidgetsAndPaintWholeScreen: ->
     # we keep repainting the whole screen until there are no
@@ -1650,6 +1699,7 @@ class WorldMorph extends PanelWdgt
     @worldCanvas.height = Math.round(440 * ceilPixelRatio)
     @worldCanvas.style.width = "960px"
     @worldCanvas.style.height = "440px"
+    @syncRenderCanvasToWorldCanvas()
 
     bkground = document.getElementById("background")
     bkground.style.width = "960px"
@@ -1682,6 +1732,7 @@ class WorldMorph extends PanelWdgt
       @worldCanvas.style.width = clientWidth + "px"
       @worldCanvas.height = (clientHeight * ceilPixelRatio)
       @worldCanvas.style.height = clientHeight + "px"
+      @syncRenderCanvasToWorldCanvas()
       @rawSetExtent new Point clientWidth, clientHeight
       @desktopReLayout()
   
