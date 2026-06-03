@@ -295,8 +295,17 @@ class StringMorph2 extends Widget
 
     # minimum font size that we are gonna examine
     start = 0
-    # maximum font size that we are gonna examine
-    stop  = Math.round 200 * Math.pow 10,
+    # maximum font size that we are gonna examine. Normally 200, but under a
+    # backend that can only render up to a fixed size (SWCanvas clamps to its
+    # largest shipped atlas), cap the search there: a larger size would render
+    # no bigger, yet would still inflate fontHeight() — which is pure arithmetic
+    # on the requested size and is NOT clamped — so the caret/line height
+    # (derived from @fittingFontSize) would balloon while the glyphs stay capped.
+    # Capping the search keeps @fittingFontSize == the size actually painted.
+    maxExaminedFontSize = 200
+    if window.FIZZYGUM_USE_SWCANVAS and window.SWCANVAS_MAX_FONT_SIZE?
+      maxExaminedFontSize = Math.min maxExaminedFontSize, window.SWCANVAS_MAX_FONT_SIZE
+    stop  = Math.round maxExaminedFontSize * Math.pow 10,
             PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity
     
     if !@doesTextFitInExtent textToFit, start

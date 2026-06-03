@@ -20,6 +20,18 @@
 # The shipped family names are exactly "Arial", "Times New Roman", "Courier New"
 # (NOT "Times" / "Courier" — those have no metrics/atlases and measureText would
 # return null, which is fatal during boot).
+# The size range SWCanvas can actually render: it ships bitmap atlases for a
+# fixed band of sizes (see vendor-swcanvas-fonts.sh), so any requested size is
+# clamped into [MIN, MAX]. MAX matters beyond rendering: a size above it draws
+# NO bigger than MAX, so auto-fitting text (StringMorph2's font-size search)
+# must not pick a size larger than MAX — otherwise the chosen size, and the
+# caret/line height derived from it, run away above what is actually painted
+# (the "giant caret, normal-size text" bug). Exposed on window so that search
+# can read the cap from its single source of truth here.
+SWCANVAS_MIN_FONT_SIZE = 9
+SWCANVAS_MAX_FONT_SIZE = 96
+window.SWCANVAS_MAX_FONT_SIZE = SWCANVAS_MAX_FONT_SIZE
+
 mapFontStackToSWCanvasFamily = (stack) ->
   s = stack.toLowerCase()
   if s.indexOf("monospace") != -1 or s.indexOf("courier") != -1
@@ -38,8 +50,8 @@ normalizeFontForSWCanvas = (cssFont) ->
   size = parseFloat match[2]
   family = mapFontStackToSWCanvasFamily match[3].trim()
   snapped = Math.round(size * 2) / 2
-  snapped = 9 if snapped < 9
-  snapped = 96 if snapped > 96
+  snapped = SWCANVAS_MIN_FONT_SIZE if snapped < SWCANVAS_MIN_FONT_SIZE
+  snapped = SWCANVAS_MAX_FONT_SIZE if snapped > SWCANVAS_MAX_FONT_SIZE
   styleWeight = ""
   styleWeight += "bold " if /\bbold\b/.test prefix
   styleWeight += "italic " if /\bitalic\b/.test prefix
