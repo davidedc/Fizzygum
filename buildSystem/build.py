@@ -119,12 +119,21 @@ def generateTestsAssetsManifests(testsDirectory):
         filenames2 = []
         #print("Tests assets ----------------------------")
         for root, dirnames, fileNMS in os.walk("../Fizzygum-tests/tests/"):
-          for filename in fnmatch.filter(fileNMS, 'SystemTest_*[0123456789][0123456789][0123456789][0123456789][0123456789][0123456789].js'):
-              # the way to differentiate between files: the asset files contain a hash
-              # in the filename that we can use to filter them in/out.
-              # note that this is not a normal regexp but rather a unix bash regexp
-              # as explained here:
-              # http://fabiosantoscode.blogspot.co.uk/2012/12/wildcards-in-python-fnmatch-module.html
+          for filename in fileNMS:
+              # The asset (reference-image) files are exactly the .js files whose
+              # name carries a hash:
+              #   SystemTest_<name>_image_<N>-systemInfoHash<h>-dataHash<h>.js
+              # The test-STEP files (SystemTest_<name>.js and
+              # SystemTest_<name>_automationCommands.js) have no "-dataHash", so
+              # filtering on "-dataHash" cleanly selects only the asset refs.
+              #
+              # NOTE: this used to match filenames ending in six DIGITS, which
+              # silently dropped SWCanvas references whose dataHash is a 64-hex
+              # SHA-256 not ending in six digits (~94% of them). Matching on
+              # "-dataHash" is hash-format-agnostic; verified to leave the native
+              # (numeric-hash) set byte-for-byte unchanged while including every
+              # SWCanvas (hex-hash) reference.
+              if not (filename.startswith('SystemTest_') and filename.endswith('.js') and '-dataHash' in filename): continue
               filename = filename[:-3] # remove the last three chars i.e. the ".js" extension
               filenames2.append(os.path.join(root,filename).replace("../Fizzygum-tests/tests/",""))
               #print("%s" % (os.path.join(root,filename)))

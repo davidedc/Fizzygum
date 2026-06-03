@@ -423,7 +423,15 @@ if ! $notests && ! $homepage && ! $keepTestsDirectoryAsIs ; then
   # directory
   echo "moving all tests body into the same directory..."
   # we don't seem to need the escaping in Windows Subsystem for Linux, while in OSX we needed \{\}
-  find $BUILD_PATH/js/tests -iname '*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js' -exec mv {} $BUILD_PATH/js/tests \;
+  # The test-BODY files are the SystemTest_<name>.js metadata + ..._automationCommands.js;
+  # they are exactly the SystemTest_*.js files WITHOUT a "-dataHash" in the name. The
+  # reference-image files DO carry "-dataHash" and must be left under js/tests/assets/ for
+  # the next step to flatten there.
+  # NOTE: this used to match filenames ending in six NON-digits, which mis-filed any
+  # SWCanvas reference whose 64-hex SHA-256 ended in six hex letters (~0.28% of them) as a
+  # "body" file — moving it out of assets/ so the loader 404'd and the test falsely failed.
+  # The "-dataHash" discriminator is hash-format-agnostic and leaves the native set unchanged.
+  find $BUILD_PATH/js/tests -iname 'SystemTest_*.js' ! -iname '*-dataHash*' -exec mv {} $BUILD_PATH/js/tests \;
   echo "...done"
 
   # also all the assets are lumped-in into another directory

@@ -2044,7 +2044,12 @@ class Widget extends TreeNode
   # causing any repaints. If streaks are on the
   # screen due to bad painting, we capture them
   # exactly as the user sees them.
-  fullImageAsItAppearsOnScreen: ->
+  # Returns the canvas holding this morph's region exactly as it appears on
+  # screen (an SWCanvasElement under the software backend, else a DOM canvas).
+  # Both the screenshot data-URL (fullImageAsItAppearsOnScreen) and the SystemTest
+  # raw-pixel hash are derived from this single capture, so they never diverge and
+  # the region is only cropped once.
+  fullRenderCanvasAsItAppearsOnScreen: ->
     fullExtentOfMorph = @fullBounds()
     destCanvas = HTMLCanvasElement.createOfPhysicalDimensions fullExtentOfMorph.extent().scaleBy ceilPixelRatio
     destCtx = destCanvas.getContext '2d'
@@ -2061,7 +2066,10 @@ class Widget extends TreeNode
       fullExtentOfMorph.width() * ceilPixelRatio,
       fullExtentOfMorph.height() * ceilPixelRatio
 
-    return destCanvas.toDataURL "image/png"
+    return destCanvas
+
+  fullImageAsItAppearsOnScreen: ->
+    return @fullRenderCanvasAsItAppearsOnScreen().toDataURL "image/png"
 
   # unused code
   fullImageHashCode: ->
