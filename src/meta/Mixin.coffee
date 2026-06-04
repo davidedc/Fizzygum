@@ -1,3 +1,12 @@
+# BUILD-TIME SYNTAX GATE DEPENDENCY:
+# buildSystem/check-coffee-syntax.js loads THIS file in Node and drives every shipped
+# mixin source through `new Mixin(src, true, false)` (generate-precompiled mode: it
+# compiles the source but eval's nothing) to catch CoffeeScript syntax errors at build
+# time, before they would otherwise only surface at in-browser boot. That checker
+# shims the globals this class touches at construction time (compileFGCode,
+# JSSourcesContainer, srcLoadCompileDebugWrites). If you make the constructor read a
+# NEW global, add a matching stand-in to that shim or the gate will break.
+
 class Mixin
   @allMixines: []
   nonStaticPropertiesSources: nil

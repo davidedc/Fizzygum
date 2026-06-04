@@ -70,6 +70,15 @@ parser.add_argument('--includeVideoPlayer', action='store_true')
 parser.add_argument('--includeVideos', action='store_true')
 parser.add_argument('--keepPreviousPrivateVideos', action='store_true')
 
+# --noSyntaxCheck is consumed by build_it_please.sh, which forwards ALL of its args to
+# us; we accept it here as a no-op so argparse doesn't error on the forwarded flag.
+parser.add_argument('--noSyntaxCheck', action='store_true')
+# --list-shippable: print the source files that WOULD be shipped (one per line) and
+# exit WITHOUT building anything. This is the single source of truth for the build-time
+# syntax gate (buildSystem/check-coffee-syntax.js), so the gate's file set can never
+# drift from what the build actually wraps-as-text and compiles in-browser.
+parser.add_argument('--list-shippable', action='store_true')
+
 args = parser.parse_args()
 
 
@@ -211,6 +220,14 @@ def main():
     filenames = sorted(filenames + sorted(glob("src/macros" + "/*.coffee")))
     if args.includeVideoPlayer:
         filenames = sorted(filenames + sorted(glob("src/video-player" + "/*.coffee")))
+
+    # --list-shippable: emit the shipped-source file list and stop (see the argparse
+    # note above). One path per line, consumed by buildSystem/check-coffee-syntax.js.
+    # We return BEFORE any output files are written, so nothing is built.
+    if args.list_shippable:
+        for filename in filenames:
+            print(filename)
+        return
 
     # so here we need to take a .coffee file and generate a js that
     # , when run, puts its contents as string into a variable.

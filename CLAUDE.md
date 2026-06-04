@@ -15,7 +15,9 @@ Prerequisites are installed **globally, not via `npm`**: `coffee` (`npm i -g cof
   - `--homepage` — production build: strips tests + experimental code, ships a pre-compiled image.
   - `--notests` — drop tests, keep experimental code.
   - `--includeVideoPlayer --includeVideos` — bundle the video player + assets.
-- **Watch + rebuild on save:** `./build_as_soon_as_anything_changes.sh` (`fswatch` over `src/`).
+  - `--noSyntaxCheck` — skip the build-time CoffeeScript syntax gate (see Testing).
+- **Build + boot-smoke gate:** `./build_and_smoke.sh` builds (incl. the syntax gate) then headless-boots the world (native + SWCanvas), failing on any console error. One-time setup: `cd ../Fizzygum-tests && npm i` (Puppeteer).
+- **Watch + rebuild on save:** `./build_as_soon_as_anything_changes.sh` (`fswatch` over `src/`; the syntax gate runs on every save).
 - **Run:** open `../Fizzygum-builds/latest/index.html` in a browser. It loads over `file://`; no dev server needed.
 
 The build **requires** this sibling layout and aborts without it:
@@ -38,7 +40,11 @@ Fizzygum-all/
 
 ## Testing
 
-No unit-test runner. Tests are **SystemTests**: the Automator records real mouse/keyboard input against the running world, replays it, and compares canvas screenshots pixel-by-pixel against reference images. The Automator source and ~200 tests live in the sibling `Fizzygum-tests` repo (not here); any non-`--homepage` build copies them in.
+Two fast automated checks complement the (manual/browser) SystemTests:
+- **Build-time syntax gate** (`buildSystem/check-coffee-syntax.js`, run automatically by `build_it_please.sh`): since the ~470 class/mixin sources ship as text and compile in-browser, this is what catches CoffeeScript *parse* errors at build time. It LOADS the real `src/meta/Class.coffee`/`Mixin.coffee` and compiles each source the same *fragmented* way the browser does — a whole-file `CoffeeScript.compile(src,{bare:true})` is NOT faithful (it false-fails on most files). Skip with `--noSyntaxCheck`.
+- **Headless boot smoke** (`../Fizzygum-tests/scripts/smoke-boot-headless.js`, via `./build_and_smoke.sh` or `cd ../Fizzygum-tests && npm run smoke`): boots the built world headless (native + SWCanvas) and fails on any console/page error — catching the load-order/runtime faults the syntax gate cannot.
+
+Behavioural tests are **SystemTests**: the Automator records real mouse/keyboard input against the running world, replays it, and compares canvas screenshots pixel-by-pixel against reference images. The Automator source and ~200 tests live in the sibling `Fizzygum-tests` repo (not here); any non-`--homepage` build copies them in.
 - **Author:** `world.automator.recorder.startTestRecording('name')`, act, `addTakeScreenshotCommand()`, `stopTestRecording()`, `saveTest()`.
 - **Run one:** open the built `worldWithSystemTestHarness.html`, then `world.automator.loader.loadAndRunSingleTestFromName('SystemTest_name')`.
 

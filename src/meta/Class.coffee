@@ -1,3 +1,13 @@
+# BUILD-TIME SYNTAX GATE DEPENDENCY:
+# buildSystem/check-coffee-syntax.js loads THIS file in Node and drives every shipped
+# source through `new Class(src, true, false)` (generate-precompiled mode: it compiles
+# each fragment but eval's nothing) to catch CoffeeScript syntax errors at build time,
+# before they would otherwise only surface at in-browser boot. That checker provides a
+# tiny shim for the globals this class touches at construction time (window, nil,
+# compileFGCode, JSSourcesContainer, srcLoadCompileDebugWrites). If you make the
+# constructor / its helpers read a NEW global, add a matching stand-in to that shim or
+# the gate will break with an operational (exit 2) error.
+
 class Class
 
   @allClasses: []

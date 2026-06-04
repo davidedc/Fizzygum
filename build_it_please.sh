@@ -35,6 +35,8 @@ notests=false
 includeVideoPlayer=false
 includeVideos=false
 keepPreviousPrivateVideos=false
+# --noSyntaxCheck skips the build-time CoffeeScript syntax gate (default: gate runs).
+noSyntaxCheck=false
 
 # see https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash
 while test $# -gt 0; do
@@ -61,6 +63,12 @@ while test $# -gt 0; do
       ;;
     --notests)
       notests='true'
+      shift
+      ;;
+    --noSyntaxCheck)
+      # consumed here only; it is ALSO a no-op in build.py, so the forwarded
+      # "${args[@]}" (which still contains it) does not trip build.py's argparse.
+      noSyntaxCheck='true'
       shift
       ;;
     *)
@@ -104,6 +112,14 @@ if ! command -v coffee &> /dev/null
 then
     echo "CoffeeScript could not be found, please install it using:"
     echo "npm install --global coffeescript"
+    exit
+fi
+
+# node runs the build-time syntax gate (buildSystem/check-coffee-syntax.js).
+if ! $noSyntaxCheck && ! command -v node &> /dev/null
+then
+    echo "Node.js could not be found; it is needed for the CoffeeScript syntax gate."
+    echo "Install Node, or re-run with --noSyntaxCheck to skip the gate."
     exit
 fi
 
@@ -221,6 +237,25 @@ fi
 # is a build for the homepage, in which case a lot of
 # legacy code and test-supporting code is left out.
 python3 ./buildSystem/build.py "${args[@]}"
+
+# --- build-time CoffeeScript syntax gate ----------------------------------------
+# The ~470 class/mixin sources ship as TEXT and are compiled in-browser, so without
+# this a "green" build can still contain syntax errors that only blow up at boot.
+# The gate loads the REAL src/meta/Class.coffee + Mixin.coffee and drives every
+# shipped source through them (see buildSystem/check-coffee-syntax.js). We pass
+# "${args[@]}" so the gate checks exactly the files THIS build ships.
+# NOTE: this script has no `set -e`, so we MUST check $? explicitly to abort
+# (mirrors the terser error-check further below). --noSyntaxCheck is the escape hatch.
+if ! $noSyntaxCheck ; then
+  echo "checking CoffeeScript syntax of all shipped sources ..."
+  node ./buildSystem/check-coffee-syntax.js "${args[@]}"
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: CoffeeScript syntax check failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... CoffeeScript syntax OK"
+fi
 
 touch $SCRATCH_PATH/fizzygum-boot.coffee
 
