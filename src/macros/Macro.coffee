@@ -85,12 +85,16 @@ class Macro
         if !@macroGenerator?
           @syntheticEventsMousePlace_InputEvents()
           @msSinceLastExecutedMacroStep = 0
-          @macroGenerator = theTest_InputEvents_Macro.call @
+          @macroGenerator = #{@getName()}.call @
           return
 
         return unless @noCodeLoading()
         if @returnFromLastMacroStep is "waitNoInputsOngoing"
           return unless @noInputsOngoing()
+        else if @returnFromLastMacroStep is "waitForScreenshotReady"
+          # a macro's screenshot step: hold until the (SWCanvas) software surface
+          # is settled + warm so the captured pixels are deterministic.
+          return unless @readyForMacroScreenshot()
         else if @returnFromLastMacroStep? # it's the number of milliseconds
           return unless @msSinceLastExecutedMacroStep > @returnFromLastMacroStep
 
@@ -112,7 +116,6 @@ class Macro
       theWholeCode += "\n\n" + eachMacro._body
 
     @_linkedCode = @_addHeaderCode theWholeCode
-    console.log @_linkedCode
 
   start: ->
     world.msSinceLastExecutedMacroStep = 0
@@ -122,5 +125,4 @@ class Macro
     #world.macroVars = {} # a dedicated global space for macros. Unused so far.
     world.aMacroIsRunning = true
 
-    console.log @_linkedCode
     world.evaluateString @_linkedCode

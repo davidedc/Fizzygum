@@ -262,6 +262,10 @@ class WorldMorph extends PanelWdgt
   #macroVars: nil # a dedicated global space for macros. Unused so far.
   aMacroIsRunning: nil
   returnFromLastMacroStep: nil
+  # latches the frame on which we forced a warm-atlas repaint before a macro
+  # screenshot, so readyForMacroScreenshot waits exactly one cycle for it to
+  # flush. nil when no macro screenshot is settling.
+  macroScreenshotWarmRepaintFrame: nil
   # this part is only needed for Macros <<«
 
   constructor: (
@@ -1152,6 +1156,28 @@ class WorldMorph extends PanelWdgt
   noInputsOngoing: ->
     @inputEventsQueue.isEmpty()
 
+  # Used by a macro's screenshot step (the "waitForScreenshotReady" yield in
+  # Macro's pump): decide, across cycles, when the canvas is safe to capture
+  # deterministically. Native: capture immediately. SWCanvas: wait until glyph
+  # atlases have loaded (no text dirty), then force ONE warm-atlas repaint into
+  # the software surface and wait a single doOneCycle for updateBroken (which
+  # runs AFTER progressOnMacroSteps) to flush it — so the captured pixels are
+  # identical run-to-run. Mirrors the screenshot settle gate in
+  # AutomatorPlayer.replayTestCommands.
+  readyForMacroScreenshot: ->
+    return true unless window.FIZZYGUM_USE_SWCANVAS
+    if @anyTextDirty()
+      return false
+    if !@macroScreenshotWarmRepaintFrame?
+      @cacheForImmutableBackBuffers?.reset?()
+      @fullChanged()
+      @macroScreenshotWarmRepaintFrame = WorldMorph.frameCount
+      return false
+    if WorldMorph.frameCount <= @macroScreenshotWarmRepaintFrame
+      return false
+    @macroScreenshotWarmRepaintFrame = nil
+    return true
+
   # other useful tween functions here:
   # https://github.com/ashblue/simple-tween-js/blob/master/tween.js
   expoOut: (i, origin, distance, numberOfEvents) ->
@@ -1371,7 +1397,14 @@ class WorldMorph extends PanelWdgt
 
     @syntheticEventsMouseMovePressDragRelease_InputEvents vBarCenterFromHere, vBarCenterToHere
 
-  draftRunMacro: ->
+  # The reusable "verb" library for high-level macro tests: returns a Set of
+  # macro SUBROUTINES (bringUpInspector, clickMenuItemOfWidget, takeScreenshot,
+  # …) that any test's main macro can call by name. A macro test ships only its
+  # own main macro (as a string on its AutomatorEventCommandStartMacro command);
+  # that command links the main macro against THIS shared set, so the common
+  # navigation/assertion verbs aren't copied into every test. The verbs compose
+  # the @..._InputEvents primitives defined above.
+  standardMacroSubroutines: ->
     # When does it make sense to generate events "just via functions" vs.
     # needing a macro?
     #
@@ -1457,50 +1490,13 @@ class WorldMorph extends PanelWdgt
     """
 
     macroSubroutines.add Macro.fromString """
-      printouts_InputEvents_Macro = (string1, string2, string3) ->
-        yield 1000
-        console.log string1
-        yield 1000
-        console.log string2
-        yield 1000
-        console.log string3
+      takeScreenshot_InputEvents_Macro = (screenShotImageName) ->
+        yield "waitNoInputsOngoing"
+        yield "waitForScreenshotReady"
+        world.automator.player.compareScreenshots screenShotImageName
     """
 
-    mainMacro = Macro.fromString """
-      theTest_InputEvents_Macro = ->
-        @syntheticEventsStringKeys_InputEvents "SoMeThInG"
-        yield "waitNoInputsOngoing"
-        printouts_InputEvents_Macro "first console out", "second console out", "third console out"
-        yield 1000
-        clock = @findTopWidgetByClassNameOrClass AnalogClockWdgt
-        @syntheticEventsMouseMove_InputEvents clock
-        yield "waitNoInputsOngoing"
-        @syntheticEventsMouseDown_InputEvents()
-        yield "waitNoInputsOngoing" 
-        clockCenter = clock.center()
-        @syntheticEventsMouseMoveWhileDragging_InputEvents new Point(clockCenter.x - 4, clockCenter.y + 4)
-        yield 1000 
-        @syntheticEventsMouseMoveWhileDragging_InputEvents new Point(250,250)
-        yield "waitNoInputsOngoing"
-        @syntheticEventsMouseUp_InputEvents()
-        yield "waitNoInputsOngoing"
-        @syntheticEventsMouseMovePressDragRelease_InputEvents new Point(5, 5), new Point(200,200)
-        yield "waitNoInputsOngoing"
-        console.log "finished the drag events"
-        printouts_InputEvents_Macro "fourth console out", "fifth console out", "sixth console out"
-        bringUpInspectorAndSelectListItem_InputEvents_Macro clock, "drawSecondsHand"
-        @bringcodeStringFromTopInspectorInView_InputEvents "context.restore()"
-        yield "waitNoInputsOngoing"
-        @clickOnCodeBoxFromTopInspectorAtCodeString_InputEvents "@secondsHandAngle", 1, false
-        yield "waitNoInputsOngoing"
-        @syntheticEventsStringKeys_InputEvents "-"
-        @clickOnSaveButtonFromTopInspector_InputEvents()  # some comments here
-        yield "waitNoInputsOngoing" # also some comments here
-        @bringUpTestMenu_InputEvents()
-    """
-
-    mainMacro.linkTo macroSubroutines
-    mainMacro.start()
+    macroSubroutines
 
   # this part is only needed for Macros <<«
 
