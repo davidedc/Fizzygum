@@ -477,7 +477,11 @@ class WorldMorph extends PanelWdgt
     menusHelper.createSampleDocOpener exampleDocsFolder
 
     # »>> this part is only needed for VideoPlayer
-    world.draftRunVideoPlayer()
+    # Guard: VideoPlayerWithRecommendationsWdgt is only bundled with --includeVideoPlayer,
+    # so in a default build this boot-time auto-launch would throw "...is not defined".
+    # Only run it when the class is actually present. (Surfaced by the boot-smoke gate;
+    # see ../Fizzygum-tests/scripts/smoke-boot-headless.js.)
+    if window.VideoPlayerWithRecommendationsWdgt? then world.draftRunVideoPlayer()
     # this part is only needed for VideoPlayer <<«
 
 
