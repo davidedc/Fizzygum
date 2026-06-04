@@ -118,11 +118,11 @@ class Macro
     @_linkedCode = @_addHeaderCode theWholeCode
 
   start: ->
-    world.msSinceLastExecutedMacroStep = 0
-    world.macroGenerator = nil
-    world.returnFromLastMacroStep = nil
+    world.macroToolkit.msSinceLastExecutedMacroStep = 0
+    world.macroToolkit.macroGenerator = nil
+    world.macroToolkit.returnFromLastMacroStep = nil
 
     #world.macroVars = {} # a dedicated global space for macros. Unused so far.
-    world.aMacroIsRunning = true
+    world.macroToolkit.aMacroIsRunning = true
 
-    world.evaluateString @_linkedCode
+    world.macroToolkit.evaluateString @_linkedCode

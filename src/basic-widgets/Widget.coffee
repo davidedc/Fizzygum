@@ -3512,7 +3512,7 @@ class Widget extends TreeNode
     else
       menu.addMenuItem "delete", true, @, "close"
 
-    if world.isIndexPage or world.aMacroIsRunning?
+    if world.isIndexPage or world.macroToolkit?.aMacroIsRunning?
       menu.addLine()
       menu.addMenuItem "dev ➜", false, menusHelper, "popUpDevToolsMenu", "dev tools"
     else

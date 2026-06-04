@@ -36,7 +36,7 @@ Fizzygum-all/
 - **Class hierarchy:** `TreeNode` → `Widget` → `PanelWdgt` → … → `WorldMorph`, the global singleton `window.world`. Widgets form a tree, painted recursively; a Widget with no owner is never drawn.
 - **Meta classes.** `src/meta/Class.coffee` and `Mixin.coffee` parse each source at runtime, which is what enables live inspection/editing of any class from inside the running world.
 - **Rendering** is a *broken-rectangles* (dirty-region) repaint loop on the canvas. Call `changed()` to invalidate just this widget, `fullChanged()` for it + its subtree. Pluggable `*Appearance` objects do the drawing; widgets opting into `BackBufferMixin` cache themselves to an offscreen canvas.
-- **Mixins** are applied with `@augmentWith SomeMixin` (see `src/mixins/`). The whole widget tree can be serialized/deserialized via `DeepCopierMixin` — that is how SystemTests snapshot state.
+- **Mixins** are applied with `@augmentWith SomeMixin` (see `src/mixins/`). The whole widget tree can be serialized/deserialized via `DeepCopierMixin` — that is how SystemTests snapshot state. Mixins are being **phased out in favour of plain-OO delegation**; the first example is `MacroToolkit` (`world.macroToolkit`, in `src/macros/`), the macro-test helper toolkit split out of `WorldMorph`.
 
 ## Testing
 
@@ -47,6 +47,7 @@ Two fast automated checks complement the (manual/browser) SystemTests:
 Behavioural tests are **SystemTests**: the Automator records real mouse/keyboard input against the running world, replays it, and compares canvas screenshots pixel-by-pixel against reference images. The Automator source and ~200 tests live in the sibling `Fizzygum-tests` repo (not here); any non-`--homepage` build copies them in.
 - **Author:** `world.automator.recorder.startTestRecording('name')`, act, `addTakeScreenshotCommand()`, `stopTestRecording()`, `saveTest()`.
 - **Run one:** open the built `worldWithSystemTestHarness.html`, then `world.automator.loader.loadAndRunSingleTestFromName('SystemTest_name')`.
+- **High-level "macro" SystemTests** (a newer, layout-resilient style) share the harness; their framework-side helper toolkit lives in **`src/macros/`** (engine `Macro.coffee` + `MacroToolkit.coffee`, reached as `world.macroToolkit`) and is documented in **`src/macros/CLAUDE.md`**.
 
 ## Conventions & gotchas
 
