@@ -80,11 +80,33 @@ class MacroToolkit
   bringUpTestMenu_InputEvents: (millisecondsBetweenKeys = 35, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
       @syntheticEventsShortcutsAndSpecialKeys_InputEvents "F2", millisecondsBetweenKeys, startTime
 
+  # Synthesize a special key or modifier-combo keypress. Accepts a key name or a
+  # "+"-joined combo: "F2", "Enter", "Backspace", "Escape", "Tab",
+  # "ArrowLeft/Right/Up/Down", "Shift+ArrowRight" (select one right), "Ctrl+S",
+  # "Meta+a" (Cmd+A select-all), … The modifier state rides on the key event itself
+  # (the framework's keyboard handlers read the event's shift/ctrl/alt/meta flags).
+  # Plain typed text should go through syntheticEventsStringKeys_InputEvents instead.
   syntheticEventsShortcutsAndSpecialKeys_InputEvents: (whichShortcutOrSpecialKey, millisecondsBetweenKeys = 35, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-      switch whichShortcutOrSpecialKey
-        when "F2"
-          world.inputEventsQueue.push new KeydownInputEvent "F2", "F2", false, false, false, false, true, startTime
-          world.inputEventsQueue.push new KeyupInputEvent  "F2", "F2", false, false, false, false, true, startTime + millisecondsBetweenKeys
+    parts = whichShortcutOrSpecialKey.split "+"
+    key = parts.pop()
+    shiftKey = ("Shift" in parts)
+    ctrlKey  = ("Ctrl" in parts) or ("Control" in parts)
+    altKey   = ("Alt" in parts)
+    metaKey  = ("Meta" in parts) or ("Cmd" in parts)
+    # the "code" is the physical key; a 1:1 key->code is fine for synthetic events
+    # (Shift uses "ShiftLeft" to match syntheticEventsStringKeys_InputEvents).
+    code = if key == "Shift" then "ShiftLeft" else key
+    world.inputEventsQueue.push new KeydownInputEvent key, code, shiftKey, ctrlKey, altKey, metaKey, true, startTime
+    world.inputEventsQueue.push new KeyupInputEvent  key, code, shiftKey, ctrlKey, altKey, metaKey, true, startTime + millisecondsBetweenKeys
+
+  # Press a special key/combo `count` times, staggered in time so each press is a
+  # distinct event (e.g. "ArrowLeft" ×8 to walk the caret). Composes
+  # syntheticEventsShortcutsAndSpecialKeys_InputEvents.
+  repeatSpecialKey_InputEvents: (keyName, count, millisecondsBetweenKeys = 70, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    t = startTime
+    for i in [0...count]
+      @syntheticEventsShortcutsAndSpecialKeys_InputEvents keyName, 35, t
+      t += millisecondsBetweenKeys
 
   syntheticEventsStringKeys_InputEvents: (theString, millisecondsBetweenKeys = 35, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     scheduledTimeOfEvent = startTime
@@ -192,6 +214,21 @@ class MacroToolkit
     @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, nil, startTime, nil
     @syntheticEventsMouseClick_InputEvents whichButton, 100, startTime + milliseconds + 100
 
+  # Click a fractional point [fx, fy] inside a widget — located either by a widget
+  # reference or by a recorded text-description identifier [desc, occ, total]. Mirrors
+  # how a recorded MouseButtonChange replays (AutomatorEventCommandMouseButtonChange):
+  # the landing point is (left + round(width*fx), top + round(height*fy)) of the LIVE
+  # widget, so it follows the widget if it has moved/resized. The linchpin verb for
+  # migrating a recorded click whose target isn't a menu item.
+  moveToAndClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction, whichButton = "left button", milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    widget = if (typeof widgetOrIdentifier == "string") or (widgetOrIdentifier instanceof Array)
+      @findWidgetByTextDescription widgetOrIdentifier
+    else
+      widgetOrIdentifier
+    x = Math.round(widget.width() * fraction[0]) + widget.left()
+    y = Math.round(widget.height() * fraction[1]) + widget.top()
+    @moveToAndClick_InputEvents (new Point x, y), whichButton, milliseconds, startTime
+
   openMenuOf_InputEvents: (widget, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @moveToAndClick_InputEvents widget, "right button", milliseconds, startTime
 
@@ -219,6 +256,16 @@ class MacroToolkit
       world.topWdgtSuchThat (item) -> item.morphClassString() == widgetNameOrClass
     else
       world.topWdgtSuchThat (item) -> item instanceof widgetNameOrClass
+
+  # Topmost widget whose getTextDescription() matches a recorded identifier triple
+  # [textDescription, occurrenceIndex, totalOccurrences] — the SAME stable locator the
+  # old recorded tests use (world.getMorphViaTextLabel / Widget.identifyViaTextLabel).
+  # Accepts a bare string (treated as [string, 0, 1]). This is the linchpin for migrating
+  # recorded tests: every recorded click already stores this triple (as
+  # morphIdentifierViaTextLabel), so a migrated macro can re-find the very same widget.
+  findWidgetByTextDescription: (identifier) ->
+    identifier = [identifier, 0, 1] if typeof identifier == "string"
+    world.getMorphViaTextLabel identifier
 
   calculateVertBarMovement: (vBar, index, total) ->
     vBarHandle = vBar.children[0]

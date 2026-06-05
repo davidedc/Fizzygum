@@ -22,8 +22,13 @@ where things are *right now* and synthesises the real input events. Resilient to
 
 1. The test's `tests/SystemTest_<name>/<name>_automationCommands.js` is a tiny command sequence: `ResetWorld`,
    a few `TurnOn*` determinism toggles, then **one** `AutomatorEventCommandStartMacro` carrying the test's
-   macro as a string (`mainMacroSource`) + a declared `screenshotImageNames` list (and optional
-   `extraSubroutineSources`).
+   macro as a string (`mainMacroSource`, plus optional `extraSubroutineSources`). Screenshot reference names
+   are **not** listed — the loader extracts them from the macro source itself (every screenshot is a literal
+   `takeScreenshot_InputEvents_Macro "name"` call), so there's no list to drift. The test's per-test
+   self-documentation — four **mandatory** strings `intent`, `scenario`, `assertions`, `provenance` — lives
+   in the **metadata** file `SystemTest_<name>.js` (alongside `description`/`tags`) and is validated at
+   replay (a missing/empty one throws, by name). See `AutomatorEventCommandStartMacro`'s doc-comment — the
+   single source of truth for how macro tests work.
 2. `AutomatorEventCommandStartMacro.executeEventCommand` (harness) builds the macro: it calls
    **`world.macroToolkit.standardMacroSubroutines()`** to get the reusable verb library, adds any per-test
    `extraSubroutineSources`, `linkTo`s the test's `mainMacroSource`, and `start()`s it.
@@ -43,7 +48,7 @@ where things are *right now* and synthesises the real input events. Resilient to
    `AutomatorPlayer.replayTestCommands` pauses (doesn't advance/finish) until the generator reports done,
    then resumes and ends the test. Screenshots: a macro calls `world.automator.player.compareScreenshots`
    in-flow (the `takeScreenshot_InputEvents_Macro` verb); `AutomatorLoader.loadImagesOfTest` preloads the
-   references named in `screenshotImageNames`.
+   references whose names it extracts from the macro source (the `takeScreenshot_InputEvents_Macro "name"` calls).
 
 The one registered macro test (the regression anchor) is
 `Fizzygum-tests/tests/SystemTest_macroAnalogClockInspectEdit/`.
@@ -106,7 +111,12 @@ theTest_InputEvents_Macro = ->
   stagger with an interval, like the existing `syntheticEvents*_InputEvents`.
 - **L2 locator/action** — a plain method that reads the **live tree** (`world.topWdgtSuchThat …`,
   `world.freshlyCreatedPopUps`, a widget's children) and composes L1 primitives. No `yield`, no
-  `world.automator` (that's the harness's job).
+  `world.automator` (that's the harness's job). Key locators: `findWidgetByTextDescription([desc,occ,total])`
+  (re-find any widget by its stable `getTextDescription` — the recorded-test bridge; wraps
+  `world.getMorphViaTextLabel`), `moveToAndClickAtFractionOf_InputEvents(widgetOrIdentifier,[fx,fy],button)`
+  (click a fractional point inside a located widget), `findTopWidgetByClassNameOrClass`. Special keys/combos:
+  `syntheticEventsShortcutsAndSpecialKeys_InputEvents("Shift+ArrowRight" | "Meta+a" | "Enter" | …)` and
+  `repeatSpecialKey_InputEvents(key, count)`.
 - **L3 verb** — append a `macroSubroutines.add Macro.fromString """ …Macro = -> … """` block to
   `standardMacroSubroutines`. It's a generator SOURCE string: it may `yield` a sentinel
   (`"waitNoInputsOngoing"`, `"waitForScreenshotReady"`, or a number of ms), call toolkit helpers as `@…`, and
@@ -144,6 +154,20 @@ already exists for exactly this.
   `# »>> this part is only needed for Macros … # this part is only needed for Macros <<«` pairs (stripped).
   The `macroToolkit: nil` field and the `if MacroToolkit?` ctor init are **unmarked** (harmless in homepage:
   the field stays `nil`, the guard is false).
+
+## Migrating an old recorded test (the recorded-identity bridge)
+
+The old recorded SystemTests convert to macro tests almost mechanically, because every recorded click
+already stored WHAT it hit: `morphIdentifierViaTextLabel = [getTextDescription(), occurrence, total]` +
+a fractional in-widget position. That triple is exactly what `findWidgetByTextDescription` /
+`moveToAndClickAtFractionOf_InputEvents` consume — so a migrated macro re-finds the very same widget the
+recording targeted, and follows it if it has moved.
+
+The pipeline: `Fizzygum-tests/scripts/thin-systemtest.js` decimates a recording (82–92 % of it is
+mouse-move bloat) into a readable digest of meaningful steps; the `/migrate-systemtest` skill
+(`Fizzygum-tests/.claude/skills/migrate-systemtest/`) translates that digest into a macro, grounding on
+the old reference screenshots. Full recipe + digest format: `Fizzygum-tests/scripts/README-migration.md`.
+Proven on `SystemTest_basicWorldMenuAndBubble` (pixel-identical) and `SystemTest_addEditSaveRenameRemoveProperty`.
 
 ## Run / capture (from `../../../Fizzygum-tests`)
 
