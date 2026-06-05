@@ -258,6 +258,20 @@ class MacroToolkit
     world.hand.fullRawMoveTo (@pointAtFractionOf widgetOrIdentifier, fraction)
     world.hand.processWheel deltaX, deltaY, 0, false, nil, nil
 
+  # Click a SliderMorph's TRACK (its background, OUTSIDE the button) at a point a fraction along its
+  # length, to JUMP the slider button there. For a scroll panel's scrollbar — a ScrollPanelWdgt's @vBar
+  # / @hBar (both SliderMorphs) — this scrolls the content to that position: SliderMorph.mouseDownLeft,
+  # when the slider's parent is a ScrollPanelWdgt (or PromptMorph), non-float-drags the button to the
+  # click point (ActivePointerWdgt.nonFloatDragWdgtFarAwayToHere), and a click leaves it there. `fraction`
+  # is [fx, fy] of the slider's bounds — for a vertical scrollbar pass e.g. [0.5, 0.8] (80% down the
+  # track); for a horizontal one [0.8, 0.5]. Queues input events — follow with `yield
+  # "waitNoInputsOngoing"`. A slider NOT parented to a scroll panel ignores the track click (it escalates
+  # the event) — that is the negative companion behaviour (sliderNotOnScrollPanelBackground…). Composes
+  # moveToAndClickAtFractionOf_InputEvents; sliderOrIdentifier may be a widget reference (e.g. doc.vBar)
+  # or a recorded text-description identifier.
+  clickOnSliderTrackAtFraction_InputEvents: (sliderOrIdentifier, fraction, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    @moveToAndClickAtFractionOf_InputEvents sliderOrIdentifier, fraction, "left button", milliseconds, startTime
+
   # Clipboard CUT / COPY / PASTE for the active editing caret. Fizzygum keeps NO internal clipboard —
   # cut/copy/paste are normally driven by the browser's real clipboard EVENTS, which synthetic key
   # events can't fire (and Meta+x/c/v have no caret key-handler). So, exactly like the harness'
@@ -312,6 +326,16 @@ class MacroToolkit
   closeWindow_InputEvents: (windowWidget) ->
     @moveToAndClick_InputEvents windowWidget.closeButton
 
+  # Collapse or uncollapse a WindowWdgt by clicking the collapse/uncollapse control in its window bar.
+  # Every WindowWdgt builds a `.collapseUncollapseSwitchButton` (a SwitchButtonMorph that toggles between a
+  # CollapseIconButtonMorph and an UncollapseIconButtonMorph): clicking it when expanded collapses the
+  # window to just its bar (contents.collapse()), and clicking it again — the switch now shows the
+  # uncollapse icon — restores it. So this one verb both collapses and uncollapses, depending on the
+  # window's current state. The window-chrome sibling of closeWindow_InputEvents. Queues input events —
+  # follow with `yield "waitNoInputsOngoing"`.
+  collapseOrUncollapseWindow_InputEvents: (windowWidget) ->
+    @moveToAndClick_InputEvents windowWidget.collapseUncollapseSwitchButton
+
   getMostRecentlyOpenedMenu: ->
     # gets the last element added to the "freshlyCreatedPopUps" set
     # (Sets keep order of insertion)
@@ -324,10 +348,18 @@ class MacroToolkit
       else
         false
 
-  moveToItemOfTopMenuAndClick_InputEvents: (theLabel) ->
-    theMenu = @getMostRecentlyOpenedMenu()
+  # Move to and click a menu/prompt item by its label, in a SPECIFIC menu you already hold a reference
+  # to. Prefer this over moveToItemOfTopMenuAndClick_InputEvents whenever you interact with a popup more
+  # than once (e.g. click a slider/palette INSIDE a prompt, THEN click its "Ok"): getMostRecentlyOpenedMenu
+  # reads world.freshlyCreatedPopUps, which EVERY mouseUp clears (ActivePointerWdgt.processMouseUp), so it
+  # is only valid for the FIRST interaction after a popup opens. Capture the popup reference while it is
+  # still fresh (right after it opens) and drive its later items through this method.
+  moveToItemOfMenuAndClick_InputEvents: (theMenu, theLabel) ->
     theItem = @getTextMenuItemFromMenu theMenu, theLabel
     @moveToAndClick_InputEvents theItem
+
+  moveToItemOfTopMenuAndClick_InputEvents: (theLabel) ->
+    @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), theLabel
 
   # Assert the number of items in the most-recently-opened menu (separators counted too,
   # matching the recorded harness' testNumberOfItems). A macro-level ASSERTION: it pushes no

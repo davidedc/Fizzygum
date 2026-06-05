@@ -136,6 +136,24 @@ theTest_InputEvents_Macro = ->
   (its centre) — e.g. to drop a widget INTO a container that accepts drops. (A SimpleDocument's INNER content
   panel has `_acceptsDrops:true`, so a drop over its content area re-parents the widget as a flowing paragraph —
   no "enable editing" needed, even though the OUTER scroll panel's ctor calls `@disableDrops`.)
+  Slider/scrollbar: `clickOnSliderTrackAtFraction_InputEvents(sliderOrIdentifier,[fx,fy])` clicks a SliderMorph's
+  TRACK (its background, OUTSIDE the button) to JUMP the button there — for a ScrollPanelWdgt's `@vBar`/`@hBar`
+  this scrolls the content to that position (`SliderMorph.mouseDownLeft` non-float-drags the button to the click
+  when the slider's parent is a ScrollPanelWdgt **or PromptMorph**; a slider parented to neither ignores it —
+  the negative case). Click the TRACK, not the button: a click landing ON the button just grabs it (no jump), so
+  give the content enough overflow that the button is small. Window chrome: `collapseOrUncollapseWindow_InputEvents(windowWidget)`
+  clicks a WindowWdgt's `.collapseUncollapseSwitchButton` (a `SwitchButtonMorph` toggling Collapse/UncollapseIconButtonMorph)
+  — the same verb collapses OR uncollapses depending on the window's current state (sibling of `closeWindow_InputEvents`).
+  Menu items in a SPECIFIC menu: `moveToItemOfMenuAndClick_InputEvents(menu, label)` clicks a labelled item in a menu
+  you already hold a reference to; `moveToItemOfTopMenuAndClick_InputEvents(label)` is the same on
+  `getMostRecentlyOpenedMenu()`. **Use the former whenever you touch a popup more than once** (e.g. click a slider /
+  colour palette INSIDE a prompt, THEN its "Ok"): `getMostRecentlyOpenedMenu()` reads `world.freshlyCreatedPopUps`,
+  which **every mouseUp clears** (`ActivePointerWdgt.processMouseUp`), so capture the popup reference right after it
+  opens (while still fresh) and drive its later items through `moveToItemOfMenuAndClick_InputEvents`. (Colour picker
+  trap: a `ColorPickerMorph` holds both a hue×lightness `.colorPalette` and a thin `.grayPalette` — a
+  `GrayPaletteMorph`, which SUBCLASSES ColorPaletteMorph — so reach the colour one via the picker's `.colorPalette`
+  accessor, not an `instanceof ColorPaletteMorph` search. The palette is `hsl(h=360·fx, 100%, l=100−100·fy)`, so
+  `fy≈0.5` is a saturated colour.)
 - **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` (and future `assert…`) locate by meaning,
   then call `world.automator.player.recordMacroAssertion(passed, description, expected, found)` — the generic
   sink that fails the test like a screenshot mismatch (flips `allTestsPassedSoFar`, records the failing test,
