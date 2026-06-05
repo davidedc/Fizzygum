@@ -519,8 +519,6 @@ class WorldMorph extends PanelWdgt
 
     currentAction = startupActions.actions[WorldMorph.ongoingUrlActionNumber]
     if Automator? and currentAction.name == "runTests"
-      @automator.loader.selectTestsFromTagsOrTestNames(currentAction.testsToRun)
-
       if currentAction.numberOfGroups?
         @automator.numberOfGroups = currentAction.numberOfGroups
       else
@@ -539,7 +537,14 @@ class WorldMorph extends PanelWdgt
       if currentAction.forceRunningInBetweenMouseMoves?
         @automator.forceRunningInBetweenMouseMoves = true
 
-      @automator.player.runAllSystemTests()
+      # selectTestsFromTagsOrTestNames loads every test's metadata ASYNChronously and only THEN
+      # populates selectedTestsBasedOnTags. runAllSystemTests must WAIT for that — otherwise
+      # testsList() races: until the selection lands it falls back to the full manifest, so the
+      # wrong test's _automationCommands get read (window[...] undefined) and the run crashes. This
+      # only bit on a COLD cache (a reload appeared to "fix" it). So run the tests from the
+      # selection callback — mirroring the headless runner, which likewise waits for the selection.
+      @automator.loader.selectTestsFromTagsOrTestNames currentAction.testsToRun, =>
+        @automator.player.runAllSystemTests()
     WorldMorph.ongoingUrlActionNumber++
 
   getMorphViaTextLabel: ([textDescription, occurrenceNumber, numberOfOccurrences]) ->

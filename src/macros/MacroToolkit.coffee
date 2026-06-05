@@ -220,17 +220,97 @@ class MacroToolkit
   # the landing point is (left + round(width*fx), top + round(height*fy)) of the LIVE
   # widget, so it follows the widget if it has moved/resized. The linchpin verb for
   # migrating a recorded click whose target isn't a menu item.
-  moveToAndClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction, whichButton = "left button", milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+  # Resolve a [widget | text-description identifier | Point] + an [fx, fy] fraction to an
+  # absolute world Point inside that widget. Shared by the fractional click/double/triple verbs.
+  pointAtFractionOf: (widgetOrIdentifier, fraction) ->
     widget = if (typeof widgetOrIdentifier == "string") or (widgetOrIdentifier instanceof Array)
       @findWidgetByTextDescription widgetOrIdentifier
     else
       widgetOrIdentifier
-    x = Math.round(widget.width() * fraction[0]) + widget.left()
-    y = Math.round(widget.height() * fraction[1]) + widget.top()
-    @moveToAndClick_InputEvents (new Point x, y), whichButton, milliseconds, startTime
+    new Point (Math.round(widget.width() * fraction[0]) + widget.left()), (Math.round(widget.height() * fraction[1]) + widget.top())
+
+  moveToAndClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction, whichButton = "left button", milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    @moveToAndClick_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), whichButton, milliseconds, startTime
+
+  # Double- / triple-click at a fractional point inside a located widget. Mirrors
+  # AutomatorEventCommandMouse{Double,Triple}Click: it moves the hand and calls
+  # world.hand.process{Double,Triple}Click() DIRECTLY — double/triple clicks are recognised by
+  # the hand, NOT replayed as queued input events — so these take effect immediately (hence no
+  # `_InputEvents` suffix and no yield needed before a following screenshot, which waits anyway).
+  # Call after `yield "waitNoInputsOngoing"`. Effective only in turbo playback (macro tests use it).
+  doubleClickAtFractionOf: (widgetOrIdentifier, fraction = [0.5, 0.5]) ->
+    world.hand.fullRawMoveTo (@pointAtFractionOf widgetOrIdentifier, fraction)
+    world.hand.processDoubleClick()
+
+  tripleClickAtFractionOf: (widgetOrIdentifier, fraction = [0.5, 0.5]) ->
+    world.hand.fullRawMoveTo (@pointAtFractionOf widgetOrIdentifier, fraction)
+    world.hand.processTripleClick()
+
+  # Mouse-WHEEL scroll over a located widget (by widget reference or a recorded text-description
+  # identifier). Mirrors AutomatorEventCommandWheel: it moves the hand over the widget and calls
+  # world.hand.processWheel() DIRECTLY — a wheel is dispatched by the hand to the nearest widget under
+  # the pointer that owns a `wheel` method (e.g. a ScrollPanelWdgt), NOT replayed as a queued input
+  # event — so, like the multi-click verbs, this is a direct hand op (no `_InputEvents` suffix, no
+  # yield needed before a following screenshot, which waits anyway). A POSITIVE deltaY scrolls the
+  # content DOWN; deltaX scrolls horizontally. Effective only in turbo playback (macro tests use it);
+  # call after `yield "waitNoInputsOngoing"`.
+  wheelOn: (widgetOrIdentifier, deltaY, deltaX = 0, fraction = [0.5, 0.5]) ->
+    world.hand.fullRawMoveTo (@pointAtFractionOf widgetOrIdentifier, fraction)
+    world.hand.processWheel deltaX, deltaY, 0, false, nil, nil
+
+  # Clipboard CUT / COPY / PASTE for the active editing caret. Fizzygum keeps NO internal clipboard —
+  # cut/copy/paste are normally driven by the browser's real clipboard EVENTS, which synthetic key
+  # events can't fire (and Meta+x/c/v have no caret key-handler). So, exactly like the harness'
+  # AutomatorEventCommandCut/Copy/Paste, these call world.caret.process{Cut,Copy,Paste} DIRECTLY and
+  # carry the text in a macro-local variable (no OS clipboard involved). cutSelection / copySelection
+  # RETURN the currently-selected text (capture it, paste it back later); pasteText inserts text at the
+  # caret. Direct ops (no `_InputEvents` suffix): select first (Shift+Arrow) and `yield
+  # "waitNoInputsOngoing"` so the selection is realised before cutting/copying.
+  cutSelection: ->
+    text = world.caret?.target?.selection()
+    world.caret?.processCut text
+    text
+
+  copySelection: ->
+    text = world.caret?.target?.selection()
+    world.caret?.processCopy text
+    text
+
+  pasteText: (text) ->
+    world.caret?.processPaste text
+
+  # Drag a resize/move HANDLE (one of the handles shown after a widget's "resize/move..." menu
+  # item) from its centre to a destination Point. Handles resize/move the target via NON-float
+  # dragging (HandleMorph.nonFloatDragging → setExtent / fullMoveTo), so this is a real
+  # press-drag-release. handleType picks the handle: "resizeBothDimensionsHandle" (bottom-right
+  # corner — resizes both dimensions), "moveHandle", "resizeHorizontalHandle", "resizeVerticalHandle".
+  dragResizeMoveHandleTo_InputEvents: (handleType, destination, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    handle = world.topWdgtSuchThat (item) -> (item instanceof HandleMorph) and (item.type == handleType)
+    @syntheticEventsMouseMovePressDragRelease_InputEvents handle.center(), destination, milliseconds, startTime
+
+  # Float-DRAG a widget (by reference, or by a recorded text-description identifier) and drop it at a
+  # destination — a Point, or another widget / identifier (dropped on that target's centre). Presses at
+  # the widget's centre and drags past the grab threshold so the widget is picked up onto the hand, then
+  # releases over the destination. Use it to drop a widget INTO a container that accepts drops — e.g. a
+  # SimpleDocumentScrollPanel with editing enabled re-parents the dropped widget as a flowing paragraph.
+  dragWidgetTo_InputEvents: (widgetOrIdentifier, destination, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    source = if (typeof widgetOrIdentifier == "string") or (widgetOrIdentifier instanceof Array)
+      @findWidgetByTextDescription widgetOrIdentifier
+    else
+      widgetOrIdentifier
+    dropPoint = if destination instanceof Point then destination else @pointAtFractionOf destination, [0.5, 0.5]
+    @syntheticEventsMouseMovePressDragRelease_InputEvents source.center(), dropPoint, milliseconds, startTime
 
   openMenuOf_InputEvents: (widget, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @moveToAndClick_InputEvents widget, "right button", milliseconds, startTime
+
+  # Close a WindowWdgt by clicking the close button (the X) in its window bar. Every WindowWdgt builds
+  # a `.closeButton` (a CloseIconButtonMorph at its top-left); clicking it runs the button's actOnClick
+  # → the window's closeFromWindowBar()/close(). The reusable window-chrome pattern: get a window (by a
+  # kept reference, or by class + its `internal` flag) and close it through its real control button, as
+  # a user would. Queues input events — follow with `yield "waitNoInputsOngoing"`.
+  closeWindow_InputEvents: (windowWidget) ->
+    @moveToAndClick_InputEvents windowWidget.closeButton
 
   getMostRecentlyOpenedMenu: ->
     # gets the last element added to the "freshlyCreatedPopUps" set
@@ -248,6 +328,17 @@ class MacroToolkit
     theMenu = @getMostRecentlyOpenedMenu()
     theItem = @getTextMenuItemFromMenu theMenu, theLabel
     @moveToAndClick_InputEvents theItem
+
+  # Assert the number of items in the most-recently-opened menu (separators counted too,
+  # matching the recorded harness' testNumberOfItems). A macro-level ASSERTION: it pushes no
+  # input events and does not yield, so call it once the menu is open (`yield
+  # "waitNoInputsOngoing"` first). Locates the menu by MEANING (not by pointer position) and
+  # records PASS/FAIL via recordMacroAssertion, so a mismatch fails the test exactly as a
+  # screenshot mismatch would.
+  assertTopMenuItemCount: (expectedCount) ->
+    theMenu = @getMostRecentlyOpenedMenu()
+    found = theMenu?.testNumberOfItems()
+    world.automator.player.recordMacroAssertion (found == expectedCount), "top menu item count", expectedCount, found
 
   # Topmost widget matching either a class-name string (compared via
   # morphClassString) or a class object (compared via instanceof).

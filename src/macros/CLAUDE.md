@@ -116,7 +116,31 @@ theTest_InputEvents_Macro = ->
   `world.getMorphViaTextLabel`), `moveToAndClickAtFractionOf_InputEvents(widgetOrIdentifier,[fx,fy],button)`
   (click a fractional point inside a located widget), `findTopWidgetByClassNameOrClass`. Special keys/combos:
   `syntheticEventsShortcutsAndSpecialKeys_InputEvents("Shift+ArrowRight" | "Meta+a" | "Enter" | …)` and
-  `repeatSpecialKey_InputEvents(key, count)`.
+  `repeatSpecialKey_InputEvents(key, count)`. Fractional clicks share
+  `pointAtFractionOf(widgetOrIdentifier,[fx,fy])`. Multi-click: `doubleClickAtFractionOf` /
+  `tripleClickAtFractionOf(widgetOrIdentifier,[fx,fy])` — these call `world.hand.process{Double,Triple}Click()`
+  DIRECTLY (no `_InputEvents` suffix; multi-clicks are recognised by the hand, not queued). Resize/move:
+  `dragResizeMoveHandleTo_InputEvents(handleType, destPoint)` drags a "resize/move..." HandleMorph
+  (`"resizeBothDimensionsHandle"` | `"moveHandle"` | `"resizeHorizontalHandle"` | `"resizeVerticalHandle"`) —
+  a non-float drag (HandleMorph.nonFloatDragging resizes/moves the target). Mouse-wheel:
+  `wheelOn(widgetOrIdentifier, deltaY, deltaX, [fx,fy])` scrolls over a located widget — a DIRECT hand op
+  (`world.hand.processWheel`, like the multi-clicks; positive `deltaY` scrolls content DOWN), so no
+  `_InputEvents` suffix. Window chrome: `closeWindow_InputEvents(windowWidget)` clicks a WindowWdgt's
+  `.closeButton` (a `CloseIconButtonMorph`) — the pattern for reaching any window control button semantically
+  rather than by coordinates. Clipboard: `cutSelection()` / `copySelection()` RETURN the caret's selected text
+  (and cut/copy it) and `pasteText(text)` inserts text at the caret — DIRECT `world.caret.process{Cut,Copy,Paste}`
+  calls (Fizzygum keeps NO internal clipboard and synthetic Meta+x/c/v can't fire the browser's clipboard events;
+  carry the text in a macro-local var, exactly like the harness' `AutomatorEventCommandCut/Copy/Paste`).
+  Drag-and-drop: `dragWidgetTo_InputEvents(widgetOrIdentifier, destination)` float-drags a widget (press-drag
+  past the grab threshold so the hand picks it up) and drops it at a Point, or onto another widget / identifier
+  (its centre) — e.g. to drop a widget INTO a container that accepts drops. (A SimpleDocument's INNER content
+  panel has `_acceptsDrops:true`, so a drop over its content area re-parents the widget as a flowing paragraph —
+  no "enable editing" needed, even though the OUTER scroll panel's ctor calls `@disableDrops`.)
+- **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` (and future `assert…`) locate by meaning,
+  then call `world.automator.player.recordMacroAssertion(passed, description, expected, found)` — the generic
+  sink that fails the test like a screenshot mismatch (flips `allTestsPassedSoFar`, records the failing test,
+  logs expected-vs-found to the SystemTests console) but, unlike the recorded menu checks, does NOT stop the
+  macro. Lets a macro test assert non-visual facts (no screenshot needed).
 - **L3 verb** — append a `macroSubroutines.add Macro.fromString """ …Macro = -> … """` block to
   `standardMacroSubroutines`. It's a generator SOURCE string: it may `yield` a sentinel
   (`"waitNoInputsOngoing"`, `"waitForScreenshotReady"`, or a number of ms), call toolkit helpers as `@…`, and
