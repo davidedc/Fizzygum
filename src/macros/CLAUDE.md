@@ -146,14 +146,22 @@ theTest_InputEvents_Macro = ->
   — the same verb collapses OR uncollapses depending on the window's current state (sibling of `closeWindow_InputEvents`).
   Menu items in a SPECIFIC menu: `moveToItemOfMenuAndClick_InputEvents(menu, label)` clicks a labelled item in a menu
   you already hold a reference to; `moveToItemOfTopMenuAndClick_InputEvents(label)` is the same on
-  `getMostRecentlyOpenedMenu()`. **Use the former whenever you touch a popup more than once** (e.g. click a slider /
+  `getMostRecentlyOpenedMenu()`; `moveToItemStartingWithOfMenuAndClick_InputEvents(menu, prefix)` matches by label
+  PREFIX — for menus whose item labels carry a variable suffix (a HandleMorph/Widget's "attach..."→"choose target:"
+  menu labels each candidate `toString() + " ➜"`, e.g. "a RectangleMorph#1 ➜" — an instance number + a trailing
+  arrow — and also lists the World), so match the stable class-name head ("a RectangleMorph") to hit the intended
+  target rather than the first/Nth item. **Use a held-reference variant whenever you touch a popup more than once** (e.g. click a slider /
   colour palette INSIDE a prompt, THEN its "Ok"): `getMostRecentlyOpenedMenu()` reads `world.freshlyCreatedPopUps`,
   which **every mouseUp clears** (`ActivePointerWdgt.processMouseUp`), so capture the popup reference right after it
   opens (while still fresh) and drive its later items through `moveToItemOfMenuAndClick_InputEvents`. (Colour picker
   trap: a `ColorPickerMorph` holds both a hue×lightness `.colorPalette` and a thin `.grayPalette` — a
   `GrayPaletteMorph`, which SUBCLASSES ColorPaletteMorph — so reach the colour one via the picker's `.colorPalette`
   accessor, not an `instanceof ColorPaletteMorph` search. The palette is `hsl(h=360·fx, 100%, l=100−100·fy)`, so
-  `fy≈0.5` is a saturated colour.)
+  `fy≈0.5` is a saturated colour.) In-system EVAL: a macro runs arbitrary CoffeeScript against the live world with
+  `world.evaluateString "code"` **directly inline** (Widget.evaluateString — compile the snippet, run it with
+  `@`=world, then relayout/repaint) — the macro equivalent of the recorded `AutomatorEventCommandEvaluateString`.
+  Do NOT write `@evaluateString`: MacroToolkit has its own `evaluateString` (binds `@` to the toolkit; the engine
+  uses it to install the macro itself), a DIFFERENT method. No new verb is needed — it's a plain world call.
 - **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` (and future `assert…`) locate by meaning,
   then call `world.automator.player.recordMacroAssertion(passed, description, expected, found)` — the generic
   sink that fails the test like a screenshot mismatch (flips `allTestsPassedSoFar`, records the failing test,

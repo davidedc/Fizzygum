@@ -348,6 +348,18 @@ class MacroToolkit
       else
         false
 
+  # Like getTextMenuItemFromMenu but matches by label PREFIX. Use it when a menu item's full label
+  # carries a suffix you should not depend on — e.g. the "attach..." target menu labels each candidate
+  # `<morph>.toString() + " ➜"`, so a RectangleMorph reads "a RectangleMorph#1 ➜" (an instance number +
+  # a trailing arrow). Match the stable head ("a RectangleMorph") instead of the exact string, and only
+  # the intended target is hit even when the menu also lists the World and the morph's own handle.
+  getTextMenuItemFromMenuByPrefix: (theMenu, thePrefix) ->
+    theMenu.topWdgtSuchThat (item) ->
+      if item.labelString?
+        item.labelString.startsWith thePrefix
+      else
+        false
+
   # Move to and click a menu/prompt item by its label, in a SPECIFIC menu you already hold a reference
   # to. Prefer this over moveToItemOfTopMenuAndClick_InputEvents whenever you interact with a popup more
   # than once (e.g. click a slider/palette INSIDE a prompt, THEN click its "Ok"): getMostRecentlyOpenedMenu
@@ -360,6 +372,14 @@ class MacroToolkit
 
   moveToItemOfTopMenuAndClick_InputEvents: (theLabel) ->
     @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), theLabel
+
+  # Move to and click the menu item whose label STARTS WITH a prefix, in a menu you hold a reference to.
+  # The prefix sibling of moveToItemOfMenuAndClick_InputEvents — for menus whose item labels carry a
+  # variable suffix (the "attach..."/"choose target:" menu labels each target `toString() + " ➜"`), match
+  # the stable class-name head so you pick the intended target rather than the first/Nth item.
+  moveToItemStartingWithOfMenuAndClick_InputEvents: (theMenu, thePrefix) ->
+    theItem = @getTextMenuItemFromMenuByPrefix theMenu, thePrefix
+    @moveToAndClick_InputEvents theItem
 
   # Assert the number of items in the most-recently-opened menu (separators counted too,
   # matching the recorded harness' testNumberOfItems). A macro-level ASSERTION: it pushes no
