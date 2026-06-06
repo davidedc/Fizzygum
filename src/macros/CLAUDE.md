@@ -146,7 +146,14 @@ theTest_InputEvents_Macro = ->
   this scrolls the content to that position (`SliderMorph.mouseDownLeft` non-float-drags the button to the click
   when the slider's parent is a ScrollPanelWdgt **or PromptMorph**; a slider parented to neither ignores it —
   the negative case). Click the TRACK, not the button: a click landing ON the button just grabs it (no jump), so
-  give the content enough overflow that the button is small. Window chrome: `collapseOrUncollapseWindow_InputEvents(windowWidget)`
+  give the content enough overflow that the button is small. Slider as a CONTROLLER, by DRAGGING its button:
+  `dragSliderButtonToFraction_InputEvents(sliderOrIdentifier, [fx,fy])` does a press-drag-release ON the slider
+  BUTTON (not the track) to a fraction of the slider's bounds — a non-float child drag
+  (`SliderButtonMorph.nonFloatDragging` → `SliderMorph.updateValue` → `setValue` → `updateTarget`), so if the
+  slider has a controller target set it drives `target[setter](value)` LIVE the whole drag. Use this (not the
+  track-click verb) for a free-standing controller slider — its `mouseDownLeft` only jumps the button on a
+  ScrollPanelWdgt/PromptMorph slider; a free slider responds to dragging its button. (Larger fy = larger value
+  on a default slider, `smallestValueIsAtBottomEnd` false.) Window chrome: `collapseOrUncollapseWindow_InputEvents(windowWidget)`
   clicks a WindowWdgt's `.collapseUncollapseSwitchButton` (a `SwitchButtonMorph` toggling Collapse/UncollapseIconButtonMorph)
   — the same verb collapses OR uncollapses depending on the window's current state (sibling of `closeWindow_InputEvents`).
   Window chrome: `dragWindowResizerTo_InputEvents(windowWidget, destination)` drags a WindowWdgt's `.resizer` (its
@@ -243,7 +250,26 @@ theTest_InputEvents_Macro = ->
   widgets whose bounds INTERSECT the controller, so it must OVERLAP the target) → pick the target by class-name
   PREFIX → pick the property (e.g. "color"); thereafter acting on the controller (clicking a palette, dragging a
   slider) calls `target[setter](value)`. It captures each successive menu fresh from `getMostRecentlyOpenedMenu()`
-  (every mouseUp clears the fresh-popup set) — the reusable verb for the whole controller/target family.
+  (every mouseUp clears the fresh-popup set) — the reusable verb for the whole controller/target family. Its 4th
+  arg `controllerMenuFraction` (default `[0.5,0.5]`) is the fractional point right-clicked to open the controller's
+  menu: pass e.g. `[0.5,0.85]` for a SLIDER, whose button sits at the centre at value 50 — right-clicking the
+  button opens no menu, so target its LOWER TRACK instead. Its 5th arg `controllerHierarchyPrefix` (default nil)
+  handles a controller INSIDE a container: right-clicking a non-world-child opens the ancestor HIERARCHY menu, so
+  pass the controller's class-name prefix (e.g. `"a SliderMorph"`) to step into its own submenu before "set target"
+  (omit it for a world-child controller, which opens its menu directly). After wiring a slider, drive it live with
+  `dragSliderButtonToFraction_InputEvents`. (A slider's property menu lists only NUMERIC setters — font size /
+  alpha / width / height / padding — not colour channels; `setTargetAndAction` pushes the current value on binding,
+  so a slider wired to "text" sets the text to its numeric value immediately.) DUPLICATING a controller+target
+  composite (e.g. a panel holding a text + its sliders) deep-copies the bindings remapped to the COPY's target, so
+  the copy's controllers drive the copy's target independently — what the duplication-keeps-control-separate tests
+  verify. EDITING A BUTTON'S LABEL (no new verb): clicking a
+  button TRIGGERS it, so to edit its caption call `button.label.edit()` directly (= `world.edit label`, sets
+  `world.caret` on the label, no isEditable gate — what the "edit" menu item does), then reuse the caret verbs
+  (Meta+a via `syntheticEventsShortcutsAndSpecialKeys_InputEvents`, `syntheticEventsStringKeys_InputEvents`) and
+  `world.stopEditing()` to commit. Use an old-family label (a `TriggerMorph`/`MenuItemMorph` `TextMorph`, which
+  re-lays-out on setText) — a `SimpleButtonMorph`'s `StringMorph2` face crops rather than resizing — and, for a
+  standalone TriggerMorph, give it `centered=true` + a fixed `rawSetExtent` and `reLayout()` after each edit (it
+  doesn't size its own bg to its label; a parent menu normally does).
 
 ## The delegation model (this is the first one in the codebase)
 

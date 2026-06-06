@@ -290,6 +290,28 @@ class MacroToolkit
   clickOnSliderTrackAtFraction_InputEvents: (sliderOrIdentifier, fraction, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @moveToAndClickAtFractionOf_InputEvents sliderOrIdentifier, fraction, "left button", milliseconds, startTime
 
+  # DRAG a SliderMorph's button to a fractional position along its track — a press-drag-release ON THE
+  # BUTTON (not the track). The button is a NON-float-drag child of the slider (SliderButtonMorph.
+  # detachesWhenDragged returns false while its parent is a SliderMorph), so this moves the button within
+  # the track via SliderButtonMorph.nonFloatDragging, which calls SliderMorph.updateValue -> setValue ->
+  # updateTarget every frame the value changes — so if the slider has a controller target set (via
+  # "set target"), it drives target[setter](value) LIVE as it is dragged. This is the controller-DRAG
+  # sibling of clickOnSliderTrackAtFraction_InputEvents (which only JUMPS the button via a track click, and
+  # only when the slider is parented to a ScrollPanelWdgt/PromptMorph); a free-standing controller slider
+  # responds to dragging its button, not to track clicks. `fraction` is a [fx, fy] point of the SLIDER's
+  # bounds = the destination of the drag along the track (for a vertical slider, vary fy; default sliders
+  # have smallestValueIsAtBottomEnd false, so a larger fy = a larger value). Queues input events — follow
+  # with `yield "waitNoInputsOngoing"`. sliderOrIdentifier may be a widget reference or a recorded
+  # text-description identifier.
+  dragSliderButtonToFraction_InputEvents: (sliderOrIdentifier, fraction, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    slider = if (typeof sliderOrIdentifier == "string") or (sliderOrIdentifier instanceof Array)
+      @findWidgetByTextDescription sliderOrIdentifier
+    else
+      sliderOrIdentifier
+    buttonCentre = @pointAtFractionOf slider.button, [0.5, 0.5]
+    trackPoint = @pointAtFractionOf slider, fraction
+    @syntheticEventsMouseMovePressDragRelease_InputEvents buttonCentre, trackPoint, milliseconds, startTime
+
   # Clipboard CUT / COPY / PASTE for the active editing caret. Fizzygum keeps NO internal clipboard —
   # cut/copy/paste are normally driven by the browser's real clipboard EVENTS, which synthetic key
   # events can't fire (and Meta+x/c/v have no caret key-handler). So, exactly like the harness'
@@ -635,9 +657,16 @@ class MacroToolkit
     # target[setter](value). Each menu is captured fresh from getMostRecentlyOpenedMenu() right after it
     # opens (every mouseUp clears world.freshlyCreatedPopUps).
     macroSubroutines.add Macro.fromString """
-      setControllerTargetToWidgetProperty_InputEvents_Macro = (controllerWidget, targetClassNamePrefix, propertyLabel) ->
-        @openMenuOf_InputEvents controllerWidget
+      setControllerTargetToWidgetProperty_InputEvents_Macro = (controllerWidget, targetClassNamePrefix, propertyLabel, controllerMenuFraction = [0.5, 0.5], controllerHierarchyPrefix = nil) ->
+        @moveToAndClickAtFractionOf_InputEvents controllerWidget, controllerMenuFraction, "right button"
         yield "waitNoInputsOngoing"
+        # When the controller is INSIDE a container (its parent is not the world), right-clicking it opens the
+        # ancestor HIERARCHY menu ("a SliderMorph ➜", "a Panel ➜", …) rather than the controller's own menu —
+        # so first navigate into the controller's own submenu by its class-name prefix. (A world-child
+        # controller opens its menu directly, so this is skipped.)
+        if controllerHierarchyPrefix?
+          @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), controllerHierarchyPrefix
+          yield "waitNoInputsOngoing"
         @moveToItemOfTopMenuAndClick_InputEvents "set target"
         yield "waitNoInputsOngoing"
         @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), targetClassNamePrefix
