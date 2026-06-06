@@ -215,6 +215,19 @@ theTest_InputEvents_Macro = ->
   the turtle to the surface. Place the turtle with `pen.fullRawMoveTo …` (turtles move raw) and call a drawing method
   DIRECTLY, e.g. `pen.sierpinski 400, 40` (synchronous) — like soft-wrap/eval, drive the method, don't reconstruct
   the recorded inspector-work-area `this.sierpinski(400,40)`.
+  HIDE / SHOW + subtree (no new verb): `widget.hide()` / `widget.show()` flip `@isVisible`; the paint recursion
+  short-circuits at an invisible morph BEFORE descending to its children (`Widget.preliminaryCheckNothingToDraw`
+  returns true when `!@isVisible`), so hiding a mid-chain morph hides its WHOLE subtree, and `show()` restores it.
+  Drive them directly (like soft-wrap) — `hide()` is the method the "hide" context-menu item calls, and `show()`
+  MUST be programmatic because a hidden morph can't be right-clicked (the recordings un-hide via an inspector
+  `this.children[0].show()` eval). `show()` no-ops if the morph is already effectively visible (an ancestor-chain
+  AND), so a hide->show round-trip restores exactly (image-identical).
+  COMPOSITE DROP-SHADOW (no new verb): a morph's shadow is added by `Widget.add`, NOT by `attach` — a widget added
+  to the world (the desktop) gets the default shadow (`addShadow`, offset (4,4) alpha 0.2, `Widget.coffee:2199`),
+  and a widget re-parented to any non-world parent gets `removeShadow` (`:2210`). The shadow paints as the recursive
+  silhouette of the whole subtree, so `world.add parent` then `parent.add child` (attach) makes the parent's shadow
+  outline the WHOLE parent+child composite. To force a shadow on a morph that never routed through `world.add`,
+  call `widget.addShadow()` (default `new Point(4,4), 0.2`) explicitly.
 - **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` (and future `assert…`) locate by meaning,
   then call `world.automator.player.recordMacroAssertion(passed, description, expected, found)` — the generic
   sink that fails the test like a screenshot mismatch (flips `allTestsPassedSoFar`, records the failing test,
