@@ -235,6 +235,22 @@ theTest_InputEvents_Macro = ->
   silhouette of the whole subtree, so `world.add parent` then `parent.add child` (attach) makes the parent's shadow
   outline the WHOLE parent+child composite. To force a shadow on a morph that never routed through `world.add`,
   call `widget.addShadow()` (default `new Point(4,4), 0.2`) explicitly.
+  MENU CASCADE AUTO-CLOSE (on the mouse-DOWN): an open menu (and any submenu opened off it by clicking its parent
+  item) is dismissed by a mouse-DOWN on a NON-menu area. The hand's `cleanupMenuWdgts` runs on every mouse-down and
+  tears down the unpinned popups in `world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren` when the press lands
+  outside them — the inverse of `clickMenuHeaderToPin_InputEvents`. The dismissal is on the DOWN, not the up, so to
+  capture the dismissed state use the **`moveToAndMouseDown_InputEvents(positionOrWidget)`** verb (move then press,
+  NO release — scheduled after the move like `moveToAndClick_InputEvents`), then `yield "waitNoInputsOngoing"`, then
+  the screenshot (taken with the button still held), then `syntheticEventsMouseUp_InputEvents()`. The SAME
+  press-and-hold pattern captures a float-dragged morph being DROPPED (a mouse-down drops it). (A menu is also
+  dismissed by CLICKING one of its action items — which runs the action; e.g. "demo → rectangle" both dismisses the
+  cascade and attaches a new rectangle to the hand.) The cascade stays open for a settle-wait screenshot before the press.
+  TEXT ELLIPSISATION (no new verb): a `StringMorph2` does NOT grow to its text — when its bounds are too narrow it
+  crops to the longest fitting prefix plus "…" (its `fittingSpecWhenBoundsTooSmall` DEFAULTS to
+  `FittingSpecTextInSmallerBounds.CROP`; the alternative SCALEDOWN scales the text down instead, toggled by the
+  "crop to fit"/"shrink to fit" menu item). So `new StringMorph2 "long text", fontSize` (give it a `backgroundColor`
+  so the bounds/crop are visible) + `rawSetExtent` to a narrow width ellipsises it; a narrower extent crops more. The
+  screenshot's settle repaints and re-crops, so no explicit re-layout call is needed.
 - **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` (and future `assert…`) locate by meaning,
   then call `world.automator.player.recordMacroAssertion(passed, description, expected, found)` — the generic
   sink that fails the test like a screenshot mismatch (flips `allTestsPassedSoFar`, records the failing test,

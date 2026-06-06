@@ -223,6 +223,17 @@ class MacroToolkit
     @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, nil, startTime, nil
     @syntheticEventsMouseClick_InputEvents whichButton, 100, startTime + milliseconds + 100
 
+  # Move to a point/widget then MOUSE DOWN and HOLD — the press half of a click, scheduled AFTER the move
+  # completes (like moveToAndClick_InputEvents, but with no release). Use it when the press ITSELF produces
+  # the state to capture, so the screenshot must be taken before the release: a mouse-DOWN (not the full
+  # click) dismisses an unpinned menu cascade (ActivePointerWdgt.cleanupMenuWdgts), and a mouse-DOWN drops a
+  # float-dragged morph (processMouseDown -> drop). Pattern: `@moveToAndMouseDown_InputEvents target` ->
+  # `yield "waitNoInputsOngoing"` -> `takeScreenshot_InputEvents_Macro "…"` (captures with the button still
+  # held) -> `@syntheticEventsMouseUp_InputEvents()` -> `yield "waitNoInputsOngoing"`.
+  moveToAndMouseDown_InputEvents: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, nil, startTime, nil
+    @syntheticEventsMouseDown_InputEvents whichButton, startTime + milliseconds + 100
+
   # Click a fractional point [fx, fy] inside a widget — located either by a widget
   # reference or by a recorded text-description identifier [desc, occ, total]. Mirrors
   # how a recorded MouseButtonChange replays (AutomatorEventCommandMouseButtonChange):
