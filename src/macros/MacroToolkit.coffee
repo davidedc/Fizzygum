@@ -184,6 +184,15 @@ class MacroToolkit
     @syntheticEventsMouseDown_InputEvents whichButton, startTime
     @syntheticEventsMouseUp_InputEvents whichButton, startTime + milliseconds
 
+  # A SHIFT-modified left click: the same down+up as syntheticEventsMouseClick_InputEvents, but with the
+  # event's shiftKey flag set (the 4th boolean of Mouse{down,up}InputEvent — button, buttons, ctrlKey,
+  # shiftKey, altKey, metaKey, isFromAutomator, time). A click carrying shiftKey makes an editable
+  # StringMorph2/TextMorph2 EXTEND its selection to the click point (mouseClickLeft reads shiftKey) instead
+  # of just repositioning the caret. Left button only (down buttons=1, up buttons=0).
+  syntheticEventsMouseShiftClick_InputEvents: (milliseconds = 100, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    world.inputEventsQueue.push new MousedownInputEvent 0, 1, false, true, false, false, true, startTime
+    world.inputEventsQueue.push new MouseupInputEvent 0, 0, false, true, false, false, true, startTime + milliseconds
+
   syntheticEventsMouseDown_InputEvents: (whichButton = "left button", startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     if whichButton == "left button"
       button = 0
@@ -245,6 +254,15 @@ class MacroToolkit
   tripleClickAtFractionOf: (widgetOrIdentifier, fraction = [0.5, 0.5]) ->
     world.hand.fullRawMoveTo (@pointAtFractionOf widgetOrIdentifier, fraction)
     world.hand.processTripleClick()
+
+  # SHIFT+left-click at a fractional point inside a located widget — move the pointer there (no button),
+  # then click with Shift held. In editable text a plain click sets the caret while a shift-click EXTENDS the
+  # selection from the caret to the click point; so the pattern is a plain moveToAndClickAtFractionOf to drop
+  # the anchor caret, then one or more shiftClickAtFractionOf to grow the selection. The selection-extend
+  # sibling of the double-/triple-click verbs. Queues input events — follow with `yield "waitNoInputsOngoing"`.
+  shiftClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, nil, startTime, nil
+    @syntheticEventsMouseShiftClick_InputEvents 100, startTime + milliseconds + 100
 
   # Mouse-WHEEL scroll over a located widget (by widget reference or a recorded text-description
   # identifier). Mirrors AutomatorEventCommandWheel: it moves the hand over the widget and calls
@@ -335,6 +353,16 @@ class MacroToolkit
   # follow with `yield "waitNoInputsOngoing"`.
   collapseOrUncollapseWindow_InputEvents: (windowWidget) ->
     @moveToAndClick_InputEvents windowWidget.collapseUncollapseSwitchButton
+
+  # Resize a WindowWdgt by dragging its resize handle to a destination. Every WindowWdgt builds a `.resizer`
+  # (a HandleMorph laid out at its bottom-right corner); a NON-float press-drag-release on it resizes the
+  # window (HandleMorph.nonFloatDragging → setExtent on the window). The window-chrome sibling of close/
+  # collapse: reach the window's OWN resize control by reference (vs hunting a HandleMorph by coordinates —
+  # several windows each have one). destination may be a Point or another widget (dragged to its centre).
+  # Queues input events — follow with `yield "waitNoInputsOngoing"`.
+  dragWindowResizerTo_InputEvents: (windowWidget, destination, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    dropPoint = if destination instanceof Point then destination else @pointAtFractionOf destination, [0.5, 0.5]
+    @syntheticEventsMouseMovePressDragRelease_InputEvents windowWidget.resizer.center(), dropPoint, milliseconds, startTime
 
   getMostRecentlyOpenedMenu: ->
     # gets the last element added to the "freshlyCreatedPopUps" set

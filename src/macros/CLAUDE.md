@@ -119,7 +119,12 @@ theTest_InputEvents_Macro = ->
   `repeatSpecialKey_InputEvents(key, count)`. Fractional clicks share
   `pointAtFractionOf(widgetOrIdentifier,[fx,fy])`. Multi-click: `doubleClickAtFractionOf` /
   `tripleClickAtFractionOf(widgetOrIdentifier,[fx,fy])` — these call `world.hand.process{Double,Triple}Click()`
-  DIRECTLY (no `_InputEvents` suffix; multi-clicks are recognised by the hand, not queued). Resize/move:
+  DIRECTLY (no `_InputEvents` suffix; multi-clicks are recognised by the hand, not queued). Shift-click:
+  `shiftClickAtFractionOf_InputEvents(widgetOrIdentifier,[fx,fy])` moves the pointer then left-clicks with Shift
+  held (the L1 `syntheticEventsMouseShiftClick_InputEvents` sets the event's shiftKey — the 4th boolean of
+  Mouse{down,up}InputEvent) — in editable text a plain click sets the caret while a shift-click EXTENDS the
+  selection to the click point (StringMorph2/TextMorph2.mouseClickLeft reads shiftKey: startSelectionUpToSlot
+  then extendSelectionUpToSlot). The selection-extend sibling of the double-/triple-click verbs. Resize/move:
   `dragResizeMoveHandleTo_InputEvents(handleType, destPoint)` drags a "resize/move..." HandleMorph
   (`"resizeBothDimensionsHandle"` | `"moveHandle"` | `"resizeHorizontalHandle"` | `"resizeVerticalHandle"`) —
   a non-float drag (HandleMorph.nonFloatDragging resizes/moves the target). Mouse-wheel:
@@ -144,6 +149,11 @@ theTest_InputEvents_Macro = ->
   give the content enough overflow that the button is small. Window chrome: `collapseOrUncollapseWindow_InputEvents(windowWidget)`
   clicks a WindowWdgt's `.collapseUncollapseSwitchButton` (a `SwitchButtonMorph` toggling Collapse/UncollapseIconButtonMorph)
   — the same verb collapses OR uncollapses depending on the window's current state (sibling of `closeWindow_InputEvents`).
+  Window chrome: `dragWindowResizerTo_InputEvents(windowWidget, destination)` drags a WindowWdgt's `.resizer` (its
+  bottom-right HandleMorph) to a Point (or a widget's centre) — a non-float drag resizing the window
+  (HandleMorph.nonFloatDragging → setExtent); reach the window's OWN handle by reference rather than hunting a
+  HandleMorph by coordinates when several windows are present. The resize sibling of close/collapse, completing
+  the empty-window chrome trio.
   Menu items in a SPECIFIC menu: `moveToItemOfMenuAndClick_InputEvents(menu, label)` clicks a labelled item in a menu
   you already hold a reference to; `moveToItemOfTopMenuAndClick_InputEvents(label)` is the same on
   `getMostRecentlyOpenedMenu()`; `moveToItemStartingWithOfMenuAndClick_InputEvents(menu, prefix)` matches by label
