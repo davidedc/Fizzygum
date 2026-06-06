@@ -193,6 +193,28 @@ theTest_InputEvents_Macro = ->
   `@`=world, then relayout/repaint) — the macro equivalent of the recorded `AutomatorEventCommandEvaluateString`.
   Do NOT write `@evaluateString`: MacroToolkit has its own `evaluateString` (binds `@` to the toolkit; the engine
   uses it to install the macro itself), a DIFFERENT method. No new verb is needed — it's a plain world call.
+  BUTTON-TRIGGER discipline (no new verb): a button fires its action only when the mouse-down AND mouse-up land
+  on the SAME morph — the gate is in the hand (`ActivePointerWdgt.processMouseUp` fires the click only `when w ==
+  @mouseDownWdgt`), not in the button. To exercise "press then release elsewhere does NOT trigger", press on the
+  button and release at a point off it: `@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf
+  button, [0.5,0.5]), (new Point X, Y)`; a proper click that DOES trigger is the ordinary `@moveToAndClick_InputEvents
+  button` (e.g. `@closeWindow_InputEvents win`). Fixture gotcha: parent the observable button INSIDE a container (a
+  `WindowWdgt`/`PanelWdgt`), NOT bare on the world — `EmptyButtonMorph.rejectDrags` returns false only when the
+  parent is the world, so a button loose on the desktop would float-drag on the press instead of staying put.
+  PROPORTIONAL stack layout (no new verb): make a holder a horizontal stack by adding cells with
+  `holder.add cell, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED`, then give each cell a
+  share of the spare space with `cell.setMinAndMaxBoundsAndSpreadability(minPoint, desiredPoint,
+  k*LayoutSpec.SPREADABILITY_MEDIUM)` (k = its weight). Position the holder with `fullMoveTo` BEFORE `world.add`, then
+  `new HandleMorph holder` (it self-installs and snaps to the holder's bottom-right; one holder ⇒ one handle).
+  Resize it with `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", (new Point X, Y)` and the stack
+  redistributes the cells by their spreadability — this is the first holder of `Widget.setupTestScreen1` distilled.
+  CANVAS/PEN turtle drawing (no new verb): `canvas = new CanvasMorph; canvas.rawSetExtent (new Point W, H)`
+  (REQUIRED — CanvasMorph ships no default extent), `canvas.fullRawMoveTo …`, `world.add canvas`; then
+  `pen = new PenMorph; canvas.add pen` — a `PenMorph` draws on its PARENT when that parent is a `CanvasMorph`
+  (`PenMorph.forward → @parent.drawLine` into the canvas back-buffer), so attaching it to the canvas is what wires
+  the turtle to the surface. Place the turtle with `pen.fullRawMoveTo …` (turtles move raw) and call a drawing method
+  DIRECTLY, e.g. `pen.sierpinski 400, 40` (synchronous) — like soft-wrap/eval, drive the method, don't reconstruct
+  the recorded inspector-work-area `this.sierpinski(400,40)`.
 - **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` (and future `assert…`) locate by meaning,
   then call `world.automator.player.recordMacroAssertion(passed, description, expected, found)` — the generic
   sink that fails the test like a screenshot mismatch (flips `allTestsPassedSoFar`, records the failing test,
