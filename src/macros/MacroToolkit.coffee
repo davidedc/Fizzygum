@@ -409,6 +409,14 @@ class MacroToolkit
     theItem = @getTextMenuItemFromMenuByPrefix theMenu, thePrefix
     @moveToAndClick_InputEvents theItem
 
+  # Click a menu's title bar (its MenuHeader, reachable as menu.label) to PIN the menu open.
+  # MenuHeader.mouseClickLeft -> firstParentThatIsAPopUp().pinPopUp: a pinned menu clears its
+  # kill-on-click-outside flags and removes itself from world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren,
+  # so a subsequent click on the empty desktop no longer dismisses it (an UNpinned menu would vanish);
+  # the pinned menu also gets a tighter shadow. Pass a menu reference (e.g. getMostRecentlyOpenedMenu()).
+  clickMenuHeaderToPin_InputEvents: (theMenu) ->
+    @moveToAndClick_InputEvents theMenu.label
+
   # Assert the number of items in the most-recently-opened menu (separators counted too,
   # matching the recorded harness' testNumberOfItems). A macro-level ASSERTION: it pushes no
   # input events and does not yield, so call it once the menu is open (`yield
@@ -600,7 +608,28 @@ class MacroToolkit
         @openMenuOf_InputEvents whichWidget
         yield "waitNoInputsOngoing"
         @moveToItemOfTopMenuAndClick_InputEvents whichItem
-        yield "waitNoInputsOngoing" 
+        yield "waitNoInputsOngoing"
+    """
+
+    # Patch-programming "set target": wire a CONTROLLER widget (a ColorPaletteMorph, GrayPaletteMorph,
+    # SliderMorph, StringMorph2, … — anything augmented with ControllerMixin) to drive a property of
+    # another widget. Right-click the controller -> "set target" (openTargetSelector) opens a
+    # "choose target:" menu of the widgets whose bounds INTERSECT the controller (so the controller must
+    # OVERLAP the intended target), each labelled `target.toString() + " ➜"`; pick it by class-name PREFIX.
+    # That opens a "choose target property:" menu of the target's setters (e.g. "color"); pick the property.
+    # Afterwards, acting on the controller (clicking a palette, dragging a slider) calls
+    # target[setter](value). Each menu is captured fresh from getMostRecentlyOpenedMenu() right after it
+    # opens (every mouseUp clears world.freshlyCreatedPopUps).
+    macroSubroutines.add Macro.fromString """
+      setControllerTargetToWidgetProperty_InputEvents_Macro = (controllerWidget, targetClassNamePrefix, propertyLabel) ->
+        @openMenuOf_InputEvents controllerWidget
+        yield "waitNoInputsOngoing"
+        @moveToItemOfTopMenuAndClick_InputEvents "set target"
+        yield "waitNoInputsOngoing"
+        @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), targetClassNamePrefix
+        yield "waitNoInputsOngoing"
+        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), propertyLabel
+        yield "waitNoInputsOngoing"
     """
 
     macroSubroutines.add Macro.fromString """

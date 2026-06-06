@@ -167,7 +167,26 @@ theTest_InputEvents_Macro = ->
   trap: a `ColorPickerMorph` holds both a hue×lightness `.colorPalette` and a thin `.grayPalette` — a
   `GrayPaletteMorph`, which SUBCLASSES ColorPaletteMorph — so reach the colour one via the picker's `.colorPalette`
   accessor, not an `instanceof ColorPaletteMorph` search. The palette is `hsl(h=360·fx, 100%, l=100−100·fy)`, so
-  `fy≈0.5` is a saturated colour.) In-system EVAL: a macro runs arbitrary CoffeeScript against the live world with
+  `fy≈0.5` is a saturated colour.) Menu PINNING: `clickMenuHeaderToPin_InputEvents(menu)` clicks a menu's title
+  bar (its `.label`, a MenuHeader) to PIN it — `MenuHeader.mouseClickLeft → pinPopUp` drops the popup's
+  kill-on-click-outside flags (and tightens its shadow), so a later click on the empty desktop no longer dismisses
+  it (an unpinned menu would vanish); pass a held menu reference. Widget DUPLICATION (no new verb — pure reuse): a
+  normal widget's context menu carries a TOP-LEVEL "duplicate" item (`Widget.duplicateMenuActionAndPickItUp` =
+  `fullCopy().pickUp()`), so `clickMenuItemOfWidget_InputEvents_Macro widget, "duplicate"` makes the COPY ride the
+  hand (already painted on pickup); carry it with `syntheticEventsMouseMove_InputEvents` (a grabbed hand-child
+  follows even a no-button move — the hand's `fullRawMoveTo` carries its children) and DROP it with
+  `syntheticEventsMouseClick_InputEvents` (a mousedown drops a float-dragged morph). (A MenuMorph is NOT
+  right-clickable for a context menu, so the menu-duplication recordings can't migrate this way — duplicate a normal
+  widget instead.) Duplicating a COMPLEX / nested widget (e.g. the latest inspector, an `InspectorMorph2` inside a
+  `WindowWdgt`): right-clicking a nested widget shows the framework's ANCESTOR HIERARCHY (disambiguation) menu — one
+  "a X ➜" item per ancestor that has a menu (`Widget.buildContextMenu`/`buildHierarchyMenu`, labels are
+  `toString().replace("Wdgt","")` so a WindowWdgt reads "a Window ➜"). Navigate to the desired ancestor by class-name
+  PREFIX (`moveToItemStartingWithOfMenuAndClick_InputEvents menu, "a Window"`) to open ITS own menu, then click
+  "duplicate". MOVING a fixture (the broken-rectangles idiom): position widgets BEFORE `world.add` (a raw
+  `fullRawMoveTo` is fine — nothing is painted yet, as the framework's own `spawnInspector2` does); to move a widget
+  that is ALREADY in the world use the HIGH-LEVEL **`fullMoveTo`** (`invalidateLayout` → a proper broken-rect repaint
+  of both old and new regions), NOT `fullRawMoveTo` (which `fullChanged()`s only the OLD bounds before translating, so
+  the new position would not repaint until something else dirties it). In-system EVAL: a macro runs arbitrary CoffeeScript against the live world with
   `world.evaluateString "code"` **directly inline** (Widget.evaluateString — compile the snippet, run it with
   `@`=world, then relayout/repaint) — the macro equivalent of the recorded `AutomatorEventCommandEvaluateString`.
   Do NOT write `@evaluateString`: MacroToolkit has its own `evaluateString` (binds `@` to the toolkit; the engine
@@ -180,7 +199,14 @@ theTest_InputEvents_Macro = ->
 - **L3 verb** — append a `macroSubroutines.add Macro.fromString """ …Macro = -> … """` block to
   `standardMacroSubroutines`. It's a generator SOURCE string: it may `yield` a sentinel
   (`"waitNoInputsOngoing"`, `"waitForScreenshotReady"`, or a number of ms), call toolkit helpers as `@…`, and
-  call **other verbs by bare name** (the engine rewrites those into `yield from …`).
+  call **other verbs by bare name** (the engine rewrites those into `yield from …`). Example:
+  `setControllerTargetToWidgetProperty_InputEvents_Macro(controller, targetClassNamePrefix, propertyLabel)` — the
+  patch-programming "set target" verb: right-click a controller (a ColorPaletteMorph / GrayPaletteMorph /
+  SliderMorph / … — anything augmented with `ControllerMixin`) → "set target" (`openTargetSelector` lists only
+  widgets whose bounds INTERSECT the controller, so it must OVERLAP the target) → pick the target by class-name
+  PREFIX → pick the property (e.g. "color"); thereafter acting on the controller (clicking a palette, dragging a
+  slider) calls `target[setter](value)`. It captures each successive menu fresh from `getMostRecentlyOpenedMenu()`
+  (every mouseUp clears the fresh-popup set) — the reusable verb for the whole controller/target family.
 
 ## The delegation model (this is the first one in the codebase)
 
