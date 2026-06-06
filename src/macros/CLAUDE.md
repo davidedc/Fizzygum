@@ -160,7 +160,9 @@ theTest_InputEvents_Macro = ->
   PREFIX — for menus whose item labels carry a variable suffix (a HandleMorph/Widget's "attach..."→"choose target:"
   menu labels each candidate `toString() + " ➜"`, e.g. "a RectangleMorph#1 ➜" — an instance number + a trailing
   arrow — and also lists the World), so match the stable class-name head ("a RectangleMorph") to hit the intended
-  target rather than the first/Nth item. **Use a held-reference variant whenever you touch a popup more than once** (e.g. click a slider /
+  target rather than the first/Nth item; `moveToItemContainingOfMenuAndClick_InputEvents(menu, substring)` is the SUBSTRING
+  sibling — for items whose label carries a LEADING decoration the prefix can't match, e.g. a checkmark toggle
+  (`"soft wrap".tick()` renders "✓ soft wrap"; match "soft wrap"). **Use a held-reference variant whenever you touch a popup more than once** (e.g. click a slider /
   colour palette INSIDE a prompt, THEN its "Ok"): `getMostRecentlyOpenedMenu()` reads `world.freshlyCreatedPopUps`,
   which **every mouseUp clears** (`ActivePointerWdgt.processMouseUp`), so capture the popup reference right after it
   opens (while still fresh) and drive its later items through `moveToItemOfMenuAndClick_InputEvents`. (Colour picker
