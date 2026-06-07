@@ -378,6 +378,55 @@ theTest_InputEvents_Macro = ->
   (via `@dragWidgetTo_InputEvents text, window`), then `text.setText longerString` ⇒ the wrapping text grows taller and the
   window grows; `text.setText shorterString` ⇒ it shrinks — content-driven resize, the converse of the handle-driven
   window resize. (`setText` is enough; no caret editing needed.)
+  SUB-MENU NAVIGATION / HOPPING — KEEP THE COMMON CHAIN OPEN (no new verb): the world menu's arrow items OPEN a sub-menu
+  on CLICK (`TriggerMorph.trigger` runs the item's action — `popUpDemoMenu`/`testMenu`/…), popped AT THE HAND POSITION
+  (`PopUpWdgt.popUp` puts the new menu's top-left where you clicked). **The hop mechanic:** clicking ANY item in a menu of
+  an open chain KEEPS the menus in that menu's ASCENDING pop-up hierarchy (`PopUpWdgt.hierarchyOfPopUps`, walked via
+  `getParentPopUp`) and DISMISSES the DOWNSTREAM (descendant) sub-menus (the hand's `cleanupMenuWdgts`); then the clicked
+  trigger opens its own sub-menu. So you DON'T dismiss-and-reopen between branches — re-click the item you need IN THE
+  CHAIN and the chain is preserved UP TO it while the deeper menus vanish; the world menu (top of the chain) survives
+  every hop until one final desktop click clears it. Open the world menu (`@moveToAndClick_InputEvents (new Point 75,40),
+  "right button"`); find items by labelString PREFIX (`world.topWdgtSuchThat (w) -> w.labelString?.startsWith "demo"`;
+  arrow GLYPH never matters; inline `topWdgtSuchThat (w) -> …` predicates compile fine in macro source). **The one
+  subtlety — OCCLUSION:** a hop re-clicks a WORLD-menu sibling whose centre is covered by the sub-menu sitting over the
+  world menu (sub-menus pop at the clicked point). Click each world-menu sibling at its LEFT (`@moveToAndClickAtFractionOf_InputEvents
+  sibling, [0.3,0.5]`), going progressively FURTHER LEFT for each deeper hop (`[0.1,0.5]`) since that hop's sub-menu popped
+  a little further left; descend (clicking a sub-menu's own item) with a plain centre click since that sub-menu is
+  right-most. **Two more behaviours** the same shape gives for free: RE-POPPING a sub-menu (re-click its trigger at its
+  left → re-opens shifted, common chain still up) and ONE-CLICK-DISMISSES-THE-WHOLE-CASCADE (the final desktop click tears
+  down the world menu AND whatever sub-menu is still open). (Footgun banked: do NOT re-grab a hopped-to sub-menu via
+  `getMostRecentlyOpenedMenu()` — a hop's auto-close runs DEFERRED cleanup that re-clears `world.freshlyCreatedPopUps`,
+  so it returns `nil`; find items directly. Earlier attempts also used dismiss-and-reopen — correct behaviour but it does
+  NOT show that the common chain is preserved, which is the point.)
+  POP-UP (PROMPT/MENU) SHADOW ON DRAG (no new verb): a `PromptMorph` (extends `MenuMorph` extends `PopUpWdgt`) — opened by
+  a morph's "transparency..." item (`Widget.transparencyPopout`, an alpha entry-field + slider + Ok/Close) — casts a drop
+  shadow like every pop-up (`PopUpWdgt.popUp → addShadow`, offset (5,5) α0.2). Drag it by its TITLE BAR (the `MenuHeader`,
+  reachable as `prompt.label`) with `@syntheticEventsMouseMovePressDragRelease_InputEvents prompt.label.center(), dest` —
+  a press-then-drag GRABS and float-drags the whole pop-up, whereas a mere CLICK on the header would PIN it
+  (`MenuHeader.mouseClickLeft → pinPopUp`); read `prompt.label.center()` live so it tracks the moved prompt. On DROP in the
+  world `PopUpWdgt.justDropped` re-runs `updatePopUpShadow` (an unpinned prompt dropped on the desktop re-adds its normal
+  shadow), so the shadow renders correctly at every position — a pop-up's shadow "behaves like all other menus'". (Do NOT
+  drag from the prompt's CENTRE — that hits its inner field/slider, not the title.) Capture the prompt fresh right after
+  it opens (`prompt = @getMostRecentlyOpenedMenu()`, before the next mouseUp clears the fresh set).
+  UNPLUGGING AN INSPECTOR PART + DETACHED-CONTROLLER ASYMMETRY (no new verb): an inspector is built of ordinary widgets,
+  so a sub-part can be DETACHED and KEEPS working. Its property list (`inspector.list`, a `ListMorph`/`ScrollPanelWdgt`)
+  has a vertical scrollbar `inspector.list.vBar` (a `SliderMorph`; `target`=the list, `action`="adjustContentsBasedOnVBar";
+  knob `inspector.list.vBar.button`). **Open the OLD small `InspectorMorph` via the DIRECT "inspect" item**
+  (`clickMenuItemOfWidget_InputEvents_Macro str, "inspect"`, `Widget.coffee:3492`) — NOT `bringUpInspector_…_Macro`'s
+  "dev → inspect", which opens the big `InspectorMorph2`; the small one leaves room for the detached parts. **Capture
+  `scrollbar1 = inspector.list.vBar` BEFORE detaching** — the list does NOT rebuild a fresh vBar when one is picked up, so
+  the reference stays valid (and resolving by reference sidesteps the recorded which-of-six-slider-buttons ambiguity).
+  DETACH: right-click the knob → ancestor HIERARCHY menu → `@moveToItemStartingWithOfMenuAndClick_InputEvents
+  @getMostRecentlyOpenedMenu(), "a SliderMorph"` → `@moveToItemOfTopMenuAndClick_InputEvents "pick up"` (`Widget.pickUp`
+  keeps `target`/`action`) → carry (no-button move) and DROP (`syntheticEventsMouseClick_InputEvents()`) CLEAR of the
+  inspector. The detached scrollbar STILL drives the list: `@dragSliderButtonToFraction_InputEvents scrollbar1, [0.5, fy]`
+  scrolls it (`detachesWhenDragged` is false whenever the button's parent is a `SliderMorph`, so the knob moves in the
+  track even though the slider's own parent is now the world). DUPLICATE it (same path, "duplicate" instead of "pick up";
+  `fullCopy` copies the `target` reference so the copy `scrb2` ALSO drives the list) → `scrb2 = (world.children.filter (c)
+  -> (c instanceof SliderMorph) and (c isnt scrollbar1))[0]`. **THE ASYMMETRY (the point of the test):** dragging `scrb2`
+  scrolls the list, and the list updates its OWN `@vBar` (= `scrollbar1`) via `ScrollPanelWdgt.adjustScrollBars`, so the
+  first scrollbar FOLLOWS (round-trip list↔scrollbar1); but dragging `scrollbar1` scrolls the list while `scrb2` — which the
+  list has no back-reference to — stays put.
 - **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` (and future `assert…`) locate by meaning,
   then call `world.automator.player.recordMacroAssertion(passed, description, expected, found)` — the generic
   sink that fails the test like a screenshot mismatch (flips `allTestsPassedSoFar`, records the failing test,
