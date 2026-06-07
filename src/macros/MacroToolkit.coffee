@@ -686,6 +686,40 @@ class MacroToolkit
         yield "waitNoInputsOngoing"
     """
 
+    # Window-in-window fixture, SHARED by the window-content tests so the setup lives in ONE place (a fix is made
+    # once; both tests build the identical composite). buildExternalAndFreeInternalWindow_Macro constructs an empty
+    # EXTERNAL window (left) and a free INTERNAL window (right) at a canonical geometry and RETURNS both, so a caller
+    # can screenshot the separate state first (a macro subroutine can return a value — `x = aMacro()` is rewritten to
+    # `x = yield from aMacro.call this`, and yield-from propagates the generator's return value).
+    # dropInternalWindowIntoExternalWindow_InputEvents_Macro then carries the internal window on the hand (pickUp +
+    # a no-button move to the external window's content area + a click to drop) so it becomes the external window's
+    # fitted CONTENT, and RETURNS the (now composite) external window for the caller to screenshot/resize.
+    # NB: these shared verbs deliberately take NO screenshots — only a test's own mainMacroSource/extraSubroutineSources
+    # are scanned for reference-image names, so the per-test assertions stay in each test's main macro.
+    macroSubroutines.add Macro.fromString """
+      buildExternalAndFreeInternalWindow_Macro = ->
+        extWin = new WindowWdgt nil, nil, nil
+        extWin.rawSetExtent new Point 290, 240
+        extWin.fullRawMoveTo new Point 75, 90
+        world.add extWin
+        intWin = new WindowWdgt nil, nil, nil, true
+        intWin.rawSetExtent new Point 250, 160
+        intWin.fullRawMoveTo new Point 600, 200
+        world.add intWin
+        yield "waitNoInputsOngoing"
+        return [extWin, intWin]
+    """
+
+    macroSubroutines.add Macro.fromString """
+      dropInternalWindowIntoExternalWindow_InputEvents_Macro = (extWin, intWin) ->
+        intWin.pickUp()
+        @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf extWin, [0.5, 0.55]), "no button", 700
+        yield "waitNoInputsOngoing"
+        @syntheticEventsMouseClick_InputEvents()
+        yield "waitNoInputsOngoing"
+        return extWin
+    """
+
     macroSubroutines.add Macro.fromString """
       takeScreenshot_InputEvents_Macro = (screenShotImageName) ->
         yield "waitNoInputsOngoing"

@@ -54,6 +54,13 @@ class Macro
     #
     # the invocation via "call" is needed because generators otherwise will not pick
     # up the right context when next() is called
+    #
+    # This is what lets one macro INVOKE another macro (a reusable "verb"): the rewrite turns a bare call into
+    # a `yield from`, which (a) runs the callee inline so ITS yields — waits, screenshots — propagate to the
+    # driver, and (b) makes the call evaluate to the callee's RETURN value, so a verb can hand data back:
+    #   [extWin, intWin] = buildExternalAndFreeInternalWindow_Macro()
+    # That, in turn, is what makes a SHARED fixture verb possible (build once, return the widgets, reuse from
+    # several tests). Both the with-args form (`m a, b`) and the no-arg form (`m()`) are handled below.
 
     # first, replace all macro definitions like
     #   macroNameMacro =
@@ -62,16 +69,22 @@ class Macro
     # so they don't get in the way of the next two replacements
     macroString = macroString.replace /Macro[ ]*=/g, "DONTSUBSTITUTE ="
 
-    # case with no arguments i.e.
-    #   macroNameMacro()
-    # becomes
-    #   yield from macroNameMacro.call this 
-    macroString = macroString.replace /([^ ]*)Macro\(\)/g, (match, p1) ->
-      "yield from #{p1}Macro.call this"
-
+    # IMPORTANT: do the WITH-arguments case FIRST. Its pattern requires a non-"(" char right after
+    # "Macro" (the [^\(]), so it naturally skips the no-argument "Macro()" form. Doing it first means the
+    # no-argument rewrite below — which introduces a "Macro.call this" — is NOT re-scanned by this pass
+    # (which would otherwise match the new "Macro." and double-rewrite a no-arg call into
+    # "yield from yield from …Macro.call this, .call this").
+    #
     # case with arguments like example at the top
     macroString = macroString.replace /([^ ]*)Macro([^\(])/g, (match, p1, p2) ->
       "yield from #{p1}Macro.call this, #{p2}"
+
+    # case with no arguments i.e.
+    #   macroNameMacro()
+    # becomes
+    #   yield from macroNameMacro.call this
+    macroString = macroString.replace /([^ ]*)Macro\(\)/g, (match, p1) ->
+      "yield from #{p1}Macro.call this"
 
     # put back the macro definitions as they should be
     macroString = macroString.replace /DONTSUBSTITUTE/g, "Macro"

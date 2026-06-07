@@ -251,6 +251,37 @@ theTest_InputEvents_Macro = ->
   "crop to fit"/"shrink to fit" menu item). So `new StringMorph2 "long text", fontSize` (give it a `backgroundColor`
   so the bounds/crop are visible) + `rawSetExtent` to a narrow width ellipsises it; a narrower extent crops more. The
   screenshot's settle repaints and re-crops, so no explicit re-layout call is needed.
+  TEXT ALIGNMENT (no new verb): the converse of ellipsisation — a `StringMorph2` whose extent is LARGER than its text
+  does NOT grow the text either; `fittingSpecWhenBoundsTooLarge` DEFAULTS to `FittingSpecTextInLargerBounds.FLOAT`, so
+  the text floats within the bounds per two independent fields, `horizontalAlignment` (default LEFT) and
+  `verticalAlignment` (default TOP). Drive alignment DIRECTLY with `str.alignLeft()/alignCenter()/alignRight()` and
+  `str.alignTop()/alignMiddle()/alignBottom()` (each sets the field + `changed()`) — the exact methods the "align …"
+  menu items call; a synthetic right-click on a StringMorph2 does not open a usable menu in a macro (same TextMorph2-
+  family drift as soft-wrap). Give it a `backgroundColor` so the bounds, and so the float position, are visible.
+  SHAPE HIT-TEST / click-through (no new verb): the pointer resolves to a morph by SHAPE, not bounding box —
+  `ActivePointerWdgt.topWdgtUnderPointer` skips any morph that `isTransparentAt` the pointer and continues to the one
+  behind (`ActivePointerWdgt.coffee:48`). A `BoxMorph` with a large `cornerRadius` is transparent at its four corners
+  (`BoxyAppearance.isTransparentAt` is true outside the rounded arc), so a click on a corner passes THROUGH while a
+  click on the opaque body hits the box. Make it observable with z-order: a left-click raises whatever it lands on
+  (`Widget.mouseDownLeft → bringToForeground`), so put a `RectangleMorph` backdrop behind a rounded `BoxMorph` and click
+  the box's corner (the backdrop comes forward) vs its body (the box comes forward). `new BoxMorph radius` sets the
+  corner radius; `box.cornerRadius = 0; box.changed()` squares it (every corner becomes opaque).
+  INTERNAL vs EXTERNAL WINDOW DROP (no new verb): a `WindowWdgt`'s 4th ctor arg is `internal` (default false).
+  `WindowWdgt.rejectsBeingDropped` returns `!@internal`, and `ActivePointerWdgt.drop` forces the drop `target = world`
+  when the dropped widget rejectsBeingDropped (`ActivePointerWdgt.coffee:242`) — so an EXTERNAL window dropped over a
+  container lands on the desktop (NOT nested) while an INTERNAL window nests into the morph under the drop point (e.g. a
+  `PanelWdgt`, `_acceptsDrops:true`). Carry a window on the hand with `win.pickUp()` (centres it on the hand) + a
+  no-button `syntheticEventsMouseMove_InputEvents`, then drop with `syntheticEventsMouseClick_InputEvents()` (a
+  mouse-down while float-dragging drops — the duplication-drop path, which routes through `ActivePointerWdgt.drop`).
+  Prove the nesting by then moving the container (`panel.fullMoveTo …`): the nested internal window travels with it,
+  the external one stays put. Dropping an internal window into an empty WINDOW (not a panel) instead makes it that
+  window's CONTENT: `WindowWdgt.add` (`:179`) re-parents it `ATTACHEDAS_WINDOW_CONTENT`, `adjustContentsBounds`
+  (`:384`) COUPLES their bounds (a free-floating window sizes itself to WRAP the dropped content + chrome, so on the
+  drop it is the OUTER window that adapts, not the inner one), and the window relabels itself "window with an internal
+  window". Thereafter dragging the window's `.resizer` (`@dragWindowResizerTo_InputEvents win, point`) resizes the
+  outer window and `adjustContentsBounds` stretches the inner content to fill — so the inner window TRACKS the outer
+  on every resize; the resizer visually sits at the inner window's corner because the content fills the window
+  (`resizerCanOverlapContents`, `:437`).
 - **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` (and future `assert…`) locate by meaning,
   then call `world.automator.player.recordMacroAssertion(passed, description, expected, found)` — the generic
   sink that fails the test like a screenshot mismatch (flips `allTestsPassedSoFar`, records the failing test,
@@ -286,6 +317,46 @@ theTest_InputEvents_Macro = ->
   re-lays-out on setText) — a `SimpleButtonMorph`'s `StringMorph2` face crops rather than resizing — and, for a
   standalone TriggerMorph, give it `centered=true` + a fixed `rawSetExtent` and `reLayout()` after each edit (it
   doesn't size its own bg to its label; a parent menu normally does).
+- **Shared fixtures via verbs** — the window-in-window pair shares its whole setup through two verbs,
+  **`buildExternalAndFreeInternalWindow_Macro()`** (`return [extWin, intWin]`) and
+  **`dropInternalWindowIntoExternalWindow_InputEvents_Macro extWin, intWin`** (`return extWin` = the composite). See
+  **"Composing macros"** just below for the general capability (a macro invoking another macro, with arguments and
+  return values, including the no-arg form) and the DRY-for-code-AND-assets pattern these two verbs implement.
+
+## Composing macros: a macro invoking another macro (args, return values, DRY for code AND assets)
+
+A macro calls another macro (a "verb") by **bare name**, like an ordinary function — the engine
+(`Macro._replaceMacroInvocationWithYieldingInvocations`) rewrites every `someMacro args` into
+`yield from someMacro.call this, args`, so the callee runs inline and its own `yield`s (waits, screenshots) propagate
+up to the driver. Three capabilities follow:
+
+- **Arguments** — pass them positionally: `dropInternalWindowIntoExternalWindow_InputEvents_Macro extWin, intWin`.
+- **Return values** — a subroutine may `return` data and the caller captures it, because `yield from` evaluates to the
+  delegated generator's return value: `[extWin, intWin] = buildExternalAndFreeInternalWindow_Macro()`. Write an
+  explicit `return …` (don't rely on CoffeeScript's implicit return inside a generator).
+- **No-arg calls** — `someMacro()` works. (The rewriter runs its with-args pass FIRST; the with-args pattern's `[^\(]`
+  guard skips `Macro()`, so the no-arg rewrite that follows isn't re-scanned. Before this ordering fix the no-arg form
+  double-rewrote to `yield from yield from …` and errored at compile — it had simply never been used, because every
+  prior subroutine call passed arguments. It's the form that makes `x = build()` read naturally.)
+
+**DRY across two tests — for BOTH the code AND the screenshots.** When two tests share a setup, don't duplicate it:
+
+- **Code (the fixture):** put the shared setup in `standardMacroSubroutines` as verb(s) that **return** the built
+  widgets — NOT in a per-test `extraSubroutineSources` (those are embedded per test and can't be shared without copying
+  the string). A fix to the fixture is then made in one place. A shared verb must take **no screenshots**: only a test's
+  own `mainMacroSource`/`extraSubroutineSources` are scanned for reference-image names
+  (`AutomatorEventCommandStartMacro.screenshotImageNamesFromMacroSources`), so a `takeScreenshot_…` inside a global verb
+  would never get its reference preloaded. Keep the screenshots (the assertions) in each test's main macro.
+- **Assets (the screenshots):** references are stored **per test**, matched by `SystemTest_<test>_image_N`, with no
+  cross-test reference sharing or aliasing. So when two tests would capture the SAME state, have only ONE of them
+  screenshot it; the other still builds that state (via the shared verb) but skips the shot — so an identical reference
+  image is never stored under two names.
+
+Worked example (the window-in-window pair). The shared fixture is the two verbs above.
+`macroInternalWindowDroppedIntoWindowFits` calls both and screenshots the two-separate-windows state and the composite —
+it **owns** the composite shot. `macroResizeWindowContainingInternalWindow` calls the same two verbs, does **not**
+re-screenshot the composite, and goes straight to dragging the resizer (grow then shrink). Net: neither the setup code
+nor the composite screenshot is duplicated, across two still-separate, independently-named tests.
 
 ## The delegation model (this is the first one in the codebase)
 
