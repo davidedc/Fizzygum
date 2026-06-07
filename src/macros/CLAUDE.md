@@ -316,6 +316,40 @@ theTest_InputEvents_Macro = ->
   last line clamps it AFTER the last letter, and intermediate `(fx, fy)` hit per-line slots. Size the widget so the
   wrapped text FITS (a cropped one opens the "edit:" prompt). The caret is a thin vertical bar, frozen-visible during
   playback. (Distinct from caret SELECTION, which the double/triple-click and shift-click tests cover.)
+  CARET ARROW-KEY NAVIGATION (no new verb): once `world.caret` is editing a text, the ARROW KEYS walk it —
+  `CaretMorph.processKeyDown` (`:62-68`) maps ArrowLeft/Right/Up/Down to `goLeft/goRight/goUp/goDown`: Left/Right step one
+  slot along the text (wrapping over the soft line break), Up/Down move to the slot on the adjacent line nearest the
+  caret's column (clamping at the first/last line). Place the caret first (click an editable, fitting, multi-line
+  TextMorph2 — the same `isEditable = true` fixture as CARET PLACEMENT), then drive
+  `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "ArrowUp"` / `@repeatSpecialKey_InputEvents "ArrowDown", n` (the
+  generalized special-keys verbs send ANY key name as a `KeydownInputEvent` the caret routes — not just F2/Meta combos).
+  Screenshot between presses; each move shifts the thin caret bar to a new, distinct position. (The keyboard counterpart
+  of click-placement; distinct from caret SELECTION.)
+  ATTACH "NO TARGETS" MESSAGE (no new verb): the "attach..." context-menu item (`Widget.coffee:3491` → `Widget.attach`)
+  re-parents a morph onto another whose bounds INTERSECT it (`world.plausibleTargetAndDestinationMorphs`, excluding self
+  + current parent). When that list is EMPTY — a morph alone on the desktop, nothing overlapping — `attach` pops a
+  `MenuMorph` titled **"no morphs to attach to"** (`:3680`) at the hand instead of a "choose new parent:" target list;
+  that titled, item-less menu IS the user-facing message. Build a lone widget (clear of everything else),
+  `clickMenuItemOfWidget_InputEvents_Macro w, "attach..."`, screenshot. (The negative counterpart of a successful attach,
+  where the handle/morph OVERLAPS a target so the list is non-empty — see the attach/target verbs.)
+  LAYOUT SPACER / SPRING (no new verb): a `LayoutSpacerMorph` is a layout spring — `setMinAndMaxBoundsAndSpreadability`
+  computes `maxWidth = desired + spreadability*desired/100` (Widget.coffee:4050), and the spacer's ctor passes
+  spreadability `weight * LayoutSpec.SPREADABILITY_SPACERS` (= 1e8), giving it a ~1e6 max that dwarfs any cell's. In a
+  STACK, the holder's spare width is absorbed almost entirely by the springs, so the cells stay at their DESIRED size.
+  **Reuse the standard demo fixture for this rather than hand-rolling it: `Widget.setupTestScreen1()`** (a class method —
+  the demo's "layout tests → test screen 1") builds a size ruler + 8 resizable stack holders, several shaped
+  `[ spacer(w1) | adj | green | adj | blue | adj | yellow | adj | spacer(w2=2) ]` (two springs flanking three cells, the
+  weight-2 right spring putting a stretched block ~⅓ from the left). Locate the holders as the world's RectangleMorphs
+  with children (`world.children.filter (c) -> c instanceof RectangleMorph and c.children.length > 0`); each holder's
+  resize handle is a `HandleMorph` among ITS OWN corner children (`holder.children.filter (c) -> c instanceof HandleMorph`),
+  so move the holder with `fullMoveTo` (the handle travels with it) and drag the handle with
+  `@syntheticEventsMouseMovePressDragRelease_InputEvents handle.center(), point`. **DRIFT/footgun:** the CURRENT layout
+  settles a stretched stack's cells at their DESIRED width — so two holders look the same ONLY if their cells share a
+  desired size; pick the two desired-30 holders that differ in spreadability (one MEDIUM, one NONE) to show "they look the
+  same no matter the spreadability". (The recorded test's old reference shows the literal last two looking identical
+  because the OLDER layout settled cells at their MIN; don't expect that pair to match now.) Two holders ⇒ two handles, so
+  grab each by reference (`holder.children`-found), not the topmost-handle verb. (Converse of the proportional-cells test,
+  where with no spacer the cells DO split the spare space by their spreadability ratio.)
 - **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` (and future `assert…`) locate by meaning,
   then call `world.automator.player.recordMacroAssertion(passed, description, expected, found)` — the generic
   sink that fails the test like a screenshot mismatch (flips `allTestsPassedSoFar`, records the failing test,
