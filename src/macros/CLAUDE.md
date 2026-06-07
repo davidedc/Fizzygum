@@ -458,6 +458,48 @@ ends by pushing events; callers `yield "waitNoInputsOngoing"` to let them drain.
   scrolls the list, and the list updates its OWN `@vBar` (= `scrollbar1`) via `ScrollPanelWdgt.adjustScrollBars`, so the
   first scrollbar FOLLOWS (round-trip list↔scrollbar1); but dragging `scrollbar1` scrolls the list while `scrb2` — which the
   list has no back-reference to — stays put.
+  NESTED SCROLL-PANEL WHEEL ROUTING + LIMIT-ESCALATION (no new verb): the mouse wheel scrolls the INNERMOST scrollable
+  under the pointer, and ESCALATES to the containing one once the inner is maxed. `ActivePointerWdgt.processWheel`
+  hit-tests the topmost widget then walks UP to the nearest with a `wheel` handler; `ScrollPanelWdgt.wheel` scrolls
+  itself UNLESS already at the travel limit, in which case it `escalateEvent 'wheel'` to its parent. To show this with
+  the pointer HELD STILL: move once to near the top of the inner list (`@syntheticEventsMouseMove_InputEvents
+  (@pointAtFractionOf inner, [0.5,0.15]), "no button"`), then fire repeated wheels at that fixed point with the L1
+  `@syntheticEventsWheel_InputEvents 0, bigDelta` (NOT `wheelOn_InputEvents`, which re-moves each call) — the first wheel
+  bottoms the INNER (it absorbs the whole event while it has room, no escalation), the next escalates to the OUTER, which
+  bottoms too. Build the nesting with a `SimpleDocumentScrollPanelWdgt` (`outer.add inner` between two
+  `outer.addNormalParagraph "…"`) holding a fixed-height `ListMorph`: the vertical stack only constrains a child's WIDTH
+  (`rawResizeToWithoutSpacing` is a no-op for ListMorph), so the inner keeps its small height and overflows. FLANK the
+  inner above AND below so it stays VISIBLE when the outer is fully scrolled (content above the inner ≥ the outer's
+  overflow), so a final shot can show BOTH scrollbars at the bottom. (Complements the single-panel `macroListMorphWheelScroll`.)
+  RE-TARGETING A CONTROLLER (no new verb): a controller already wired by "set target" is RE-WIRED simply by running the
+  set-target flow AGAIN — `ControllerMixin.setTargetAndActionWithOnesPickedFromMenu` just OVERWRITES `@target`/`@action`, so
+  the previously-targeted widget keeps the value it already has but stops following. Reuse
+  `setControllerTargetToWidgetProperty_InputEvents_Macro` a second/third time on a DIFFERENT target. Put ONE palette over
+  TWO targets of DIFFERENT classes (a `PanelWdgt` + a `RectangleMorph`) so the bounds-intersection target list offers both,
+  picked unambiguously by class-name PREFIX ("a Panel" vs "a RectangleMorph"); re-target back and forth — each binding is
+  live only for the most-recently chosen target, prior targets' colours untouched. (Complements the bind-once
+  `macroPaletteSetTargetRecolorsPanel`.) The CONVERSE — TWO controllers SHARING one target (`macroTwoPalettesShareOneTarget`):
+  two `ColorPaletteMorph`s both set-target'd to the SAME panel's "color" (each overlapping the panel but NOT each other, so
+  each choose-target menu offers the one panel unambiguously); clicking EITHER palette repaints the panel, and both
+  bindings persist (most-recent click wins). One palette, many targets ⇒ re-targeting; many palettes, one target ⇒ shared control.
+  SLIDER-BUTTON STATE COLOURS (no new verb): a `SliderButtonMorph` paints itself `normalColor` / `highlightColor` /
+  `pressColor` per interaction state (`mouseEnter → setHiglightedColor`, `mouseDownLeft → setPressedColor`, `mouseLeave →
+  setNormalColor`; each early-returns while the hand is dragging). The demo "make sliders' buttons states bright" item
+  (`menusHelper.makeSlidersButtonsStatesBright()` — a global `MenusHelper`) recolours every EXISTING slider button to
+  BLACK / BLUE / LIME, so call it AFTER `world.add`-ing the slider. CAPTURE each state by HOLDING it: a no-button move onto
+  the button (`syntheticEventsMouseMove_InputEvents (@pointAtFractionOf slider.button, [0.5,0.5]), "no button"`) for
+  highlighted (persists until the pointer leaves), then `moveToAndMouseDown_InputEvents slider.button` → screenshot →
+  `syntheticEventsMouseUp_InputEvents()` for pressed (held; no move ⇒ no drag). GOTCHA: a SliderMorph defaults to
+  `alpha 0.1`, which mutes the state colours into greys — set `slider.button.alpha = 1` so the button shows its TRUE
+  black/blue/lime, vivid against the pale translucent track (don't set `slider.alpha = 1`: the track's own colour is BLACK,
+  so an opaque track swallows the black button). (Distinct from the menu-item hover-highlight test.) CROSS-SLIDER GRAB
+  BEHAVIOUR (two sliders, `macroSliderButtonStateColors`): while one handle is GRABBED (`@moveToAndMouseDown_InputEvents
+  slider1.button`, held — the hand is non-float-dragging it, so `world.hand.isThisPointerDraggingSomething()` is true),
+  (a) moving the hand OVER the OTHER handle does NOT highlight it (its `mouseEnter` early-returns while the hand is
+  dragging) — move with the button HELD: `@syntheticEventsMouseMove_InputEvents (@pointAtFractionOf slider2.button,
+  [0.5,0.5]), "left button"`; and (b) the GRABBED button follows the hand VERTICALLY anywhere on screen, clamped to its
+  OWN track (`SliderButtonMorph.nonFloatDragging`: `newY = clamp(hand.y, track)`, `newX = its own left`) — move the hand
+  far down with the button held and the button slides to the bottom of its track. Release with `@syntheticEventsMouseUp_InputEvents()`.
 - **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` (and future `assert…`) locate by meaning,
   then call `world.automator.player.recordMacroAssertion(passed, description, expected, found)` — the generic
   sink that fails the test like a screenshot mismatch (flips `allTestsPassedSoFar`, records the failing test,
