@@ -104,6 +104,33 @@ theTest_InputEvents_Macro = ->
 > `@hand` — a `@`-form there silently becomes `undefined` (the syntax gate won't catch it; the macro test
 > will). This was the #1 trap when the toolkit was split out of WorldMorph.
 
+## Drive INPUT through the event queue, never poke the hand directly (the fidelity rule)
+
+A macro simulates a USER, so every user input — moves, clicks, keys, the **mouse wheel**, **double/triple
+clicks**, **clipboard** cut/copy/paste — must be SYNTHESISED AS A REAL INPUT EVENT pushed onto
+`world.inputEventsQueue` and consumed by the normal pipeline, **not** by reaching into `world.hand` /
+`world.caret` and calling `process…` directly. The queue is the whole point of a macro: it exercises the
+real dispatch path (hit-testing, hover/`mouseEnter`, the playback "fake pointer" overlay, recording hooks),
+exactly as a person would. Poking the hand directly skips all of that — most visibly, the fake pointer never
+appears (it is only moved by `ActivePointerWdgt.processMouseMove`, which a queued move fires and a direct
+`fullRawMoveTo` does not). Every input-synthesising verb therefore carries the **`_InputEvents`** suffix and
+ends by pushing events; callers `yield "waitNoInputsOngoing"` to let them drain.
+
+- The browser itself feeds the queue: `WheelInputEvent`, `Cut/Copy/PasteInputEvent`, `Mouse{down,up,move}InputEvent`,
+  `Key{down,up}InputEvent` all exist precisely so real DOM events become queued `InputEvent`s. Macros reuse the
+  same classes (with `isSynthetic = true`) — see the L1 primitives `syntheticEventsWheel_InputEvents`,
+  `syntheticEventsConsecutiveLeftClicks_InputEvents`, the clipboard verbs, etc.
+- **The ONE subtlety — double/triple-click.** There is no double-click event; the HAND derives one from
+  consecutive queued clicks. But it DISABLES that recognition in fast playback (so fast separate clicks aren't
+  misread as double-clicks). So a queued double/triple-click is only recognised in SLOW playback: such a test
+  declares `supportsTurboPlayback:false` AND `requiresSlowPlayback:true` (a per-test metadata flag honoured by
+  `AutomatorPlayer.runningInSlowMode`, so just that test runs slow — recognition on — in any run). The click
+  events still go through the queue; only the pacing changes.
+- Legitimately NOT input (so no queue, by design): building a fixture (`new …; world.add`, `fullRawMoveTo` to
+  position it) and invoking a behaviour whose UI trigger is genuinely blocked or is an escape hatch
+  (`widget.hide()/show()`, `textBox.toggleSoftWrap()`, `world.evaluateString "…"`). These are method calls on
+  the model, not simulated input — keep them direct, but never use a direct call to STAND IN for a real input.
+
 ## How to add a …
 
 - **L1 primitive** — a plain method that pushes `*InputEvent`s with scheduled times onto
@@ -117,9 +144,12 @@ theTest_InputEvents_Macro = ->
   (click a fractional point inside a located widget), `findTopWidgetByClassNameOrClass`. Special keys/combos:
   `syntheticEventsShortcutsAndSpecialKeys_InputEvents("Shift+ArrowRight" | "Meta+a" | "Enter" | …)` and
   `repeatSpecialKey_InputEvents(key, count)`. Fractional clicks share
-  `pointAtFractionOf(widgetOrIdentifier,[fx,fy])`. Multi-click: `doubleClickAtFractionOf` /
-  `tripleClickAtFractionOf(widgetOrIdentifier,[fx,fy])` — these call `world.hand.process{Double,Triple}Click()`
-  DIRECTLY (no `_InputEvents` suffix; multi-clicks are recognised by the hand, not queued). Shift-click:
+  `pointAtFractionOf(widgetOrIdentifier,[fx,fy])`. Multi-click: `doubleClickAtFractionOf_InputEvents` /
+  `tripleClickAtFractionOf_InputEvents(widgetOrIdentifier,[fx,fy])` — enqueue a positioning move + 2/3
+  consecutive left click-pairs (`syntheticEventsConsecutiveLeftClicks_InputEvents`) that the HAND recognises as
+  a double/triple-click. That recognition is DISABLED in fast playback, so a test using these MUST run slow —
+  declare `supportsTurboPlayback:false` AND `requiresSlowPlayback:true` in its metadata (see the queue-fidelity
+  principle above). Shift-click:
   `shiftClickAtFractionOf_InputEvents(widgetOrIdentifier,[fx,fy])` moves the pointer then left-clicks with Shift
   held (the L1 `syntheticEventsMouseShiftClick_InputEvents` sets the event's shiftKey — the 4th boolean of
   Mouse{down,up}InputEvent) — in editable text a plain click sets the caret while a shift-click EXTENDS the
@@ -128,14 +158,15 @@ theTest_InputEvents_Macro = ->
   `dragResizeMoveHandleTo_InputEvents(handleType, destPoint)` drags a "resize/move..." HandleMorph
   (`"resizeBothDimensionsHandle"` | `"moveHandle"` | `"resizeHorizontalHandle"` | `"resizeVerticalHandle"`) —
   a non-float drag (HandleMorph.nonFloatDragging resizes/moves the target). Mouse-wheel:
-  `wheelOn(widgetOrIdentifier, deltaY, deltaX, [fx,fy])` scrolls over a located widget — a DIRECT hand op
-  (`world.hand.processWheel`, like the multi-clicks; positive `deltaY` scrolls content DOWN), so no
-  `_InputEvents` suffix. Window chrome: `closeWindow_InputEvents(windowWidget)` clicks a WindowWdgt's
+  `wheelOn_InputEvents(widgetOrIdentifier, deltaY, deltaX, [fx,fy])` enqueues a positioning move then a
+  `WheelInputEvent` (the L1 `syntheticEventsWheel_InputEvents`) — exactly how the browser delivers a wheel
+  (WorldMorph's onwheel pushes a `WheelInputEvent`); positive `deltaY` scrolls content DOWN. Window chrome: `closeWindow_InputEvents(windowWidget)` clicks a WindowWdgt's
   `.closeButton` (a `CloseIconButtonMorph`) — the pattern for reaching any window control button semantically
-  rather than by coordinates. Clipboard: `cutSelection()` / `copySelection()` RETURN the caret's selected text
-  (and cut/copy it) and `pasteText(text)` inserts text at the caret — DIRECT `world.caret.process{Cut,Copy,Paste}`
-  calls (Fizzygum keeps NO internal clipboard and synthetic Meta+x/c/v can't fire the browser's clipboard events;
-  carry the text in a macro-local var, exactly like the harness' `AutomatorEventCommandCut/Copy/Paste`).
+  rather than by coordinates. Clipboard: `cutSelection_InputEvents()` / `copySelection_InputEvents()` read +
+  RETURN the caret's selected text (synchronously) and enqueue a `Cut`/`CopyInputEvent` carrying it;
+  `pasteText_InputEvents(text)` enqueues a `PasteInputEvent` — exactly how the browser delivers clipboard events
+  (oncut/oncopy/onpaste → `ClipboardInputEvent` → queue → `caret.process{Cut,Copy,Paste}`). Fizzygum keeps NO
+  internal clipboard, so the text rides in the event itself (a macro-local var).
   Drag-and-drop: `dragWidgetTo_InputEvents(widgetOrIdentifier, destination)` float-drags a widget (press-drag
   past the grab threshold so the hand picks it up) and drops it at a Point, or onto another widget / identifier
   (its centre) — e.g. to drop a widget INTO a container that accepts drops. (A SimpleDocument's INNER content
@@ -290,7 +321,7 @@ theTest_InputEvents_Macro = ->
   edges in turn — on each it is cut off at that edge, proving the clip is the box's fixed rectangle on every side.
   LISTMORPH SCROLLING (no new verb): a `ListMorph` (`extends ScrollPanelWdgt`) is a column of selectable rows in a
   clipped viewport. Build a STANDALONE one — `new ListMorph nil, nil, [item strings]` — sized SHORTER than its content
-  (`rawSetExtent`) so it overflows and shows a vertical scrollbar; then `@wheelOn list, deltaY` scrolls it (the
+  (`rawSetExtent`) so it overflows and shows a vertical scrollbar; then `@wheelOn_InputEvents list, deltaY` scrolls it (the
   ScrollPanel wheel path). Tune the wheel delta to the overflow (small overflow ⇒ a big delta reaches the bottom in one
   wheel and later shots stop changing — drop the delta so each wheel advances ~⅓). The recorded list tests drive the
   property list INSIDE an InspectorMorph; a direct `new ListMorph` isolates the widget. (Clicking a row calls

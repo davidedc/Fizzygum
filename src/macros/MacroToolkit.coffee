@@ -252,19 +252,34 @@ class MacroToolkit
   moveToAndClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction, whichButton = "left button", milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @moveToAndClick_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), whichButton, milliseconds, startTime
 
-  # Double- / triple-click at a fractional point inside a located widget. Mirrors
-  # AutomatorEventCommandMouse{Double,Triple}Click: it moves the hand and calls
-  # world.hand.process{Double,Triple}Click() DIRECTLY — double/triple clicks are recognised by
-  # the hand, NOT replayed as queued input events — so these take effect immediately (hence no
-  # `_InputEvents` suffix and no yield needed before a following screenshot, which waits anyway).
-  # Call after `yield "waitNoInputsOngoing"`. Effective only in turbo playback (macro tests use it).
-  doubleClickAtFractionOf: (widgetOrIdentifier, fraction = [0.5, 0.5]) ->
-    world.hand.fullRawMoveTo (@pointAtFractionOf widgetOrIdentifier, fraction)
-    world.hand.processDoubleClick()
+  # Push N consecutive left click-pairs (down+up) at the CURRENT pointer position, spaced so the hand
+  # recognises them as a double-/triple-click. The hand only counts a fresh click as a double/triple while
+  # the previous one is still "remembered" — a 300ms window (ActivePointerWdgt.rememberDoubleClickWdgtsForAWhile)
+  # — so the click UPs must fall within that window of each other; we space them ~120ms apart. No move
+  # between the clicks (same widget, same point) — recognition also requires the clicks be on the same
+  # widget within grabDragThreshold.
+  syntheticEventsConsecutiveLeftClicks_InputEvents: (numberOfClicks = 2, startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), millisecondsBetweenClicks = 120, clickMilliseconds = 50) ->
+    for i in [0...numberOfClicks]
+      t = startTime + i * millisecondsBetweenClicks
+      @syntheticEventsMouseDown_InputEvents "left button", t
+      @syntheticEventsMouseUp_InputEvents "left button", t + clickMilliseconds
 
-  tripleClickAtFractionOf: (widgetOrIdentifier, fraction = [0.5, 0.5]) ->
-    world.hand.fullRawMoveTo (@pointAtFractionOf widgetOrIdentifier, fraction)
-    world.hand.processTripleClick()
+  # Double- / triple-click at a fractional point inside a located widget, driven through the INPUT-EVENT
+  # QUEUE like a real user — a positioning move (so the fake pointer shows) then two/three consecutive
+  # queued left clicks that the HAND recognises and turns into processDoubleClick/processTripleClick itself
+  # (ActivePointerWdgt). IMPORTANT: the hand DISABLES consecutive-click recognition in turbo/fast playback
+  # (ActivePointerWdgt: `disableConsecutiveClicksFromSingleClicksDueToFastTests`, gated on runningInSlowMode),
+  # so a test using these MUST run in slow mode — declare `supportsTurboPlayback: false` AND
+  # `requiresSlowPlayback: true` in its metadata (the latter makes AutomatorPlayer.runningInSlowMode true for
+  # just that test, so the recognition fires and the 300ms click window is real-time). Queues input events —
+  # follow with `yield "waitNoInputsOngoing"`.
+  doubleClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, nil, startTime, nil
+    @syntheticEventsConsecutiveLeftClicks_InputEvents 2, startTime + milliseconds + 100
+
+  tripleClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, nil, startTime, nil
+    @syntheticEventsConsecutiveLeftClicks_InputEvents 3, startTime + milliseconds + 100
 
   # SHIFT+left-click at a fractional point inside a located widget — move the pointer there (no button),
   # then click with Shift held. In editable text a plain click sets the caret while a shift-click EXTENDS the
@@ -275,17 +290,26 @@ class MacroToolkit
     @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, nil, startTime, nil
     @syntheticEventsMouseShiftClick_InputEvents 100, startTime + milliseconds + 100
 
+  # Push ONE synthetic WheelInputEvent onto the input queue — the queued primitive behind
+  # wheelOn_InputEvents. This is exactly how the browser delivers a real wheel: WorldMorph's onwheel
+  # handler does `@inputEventsQueue.push WheelInputEvent.fromBrowserEvent event`, and WheelInputEvent.
+  # processEvent calls world.hand.processWheel. The wheel is dispatched to whatever scrollable is under
+  # the pointer WHEN THE EVENT IS CONSUMED, so position the pointer first (a queued move). A POSITIVE
+  # deltaY scrolls content DOWN. isSynthetic=true so it is not re-recorded.
+  syntheticEventsWheel_InputEvents: (deltaX = 0, deltaY = 0, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    world.inputEventsQueue.push new WheelInputEvent deltaX, deltaY, 0, 0, 0, false, false, false, false, true, startTime
+
   # Mouse-WHEEL scroll over a located widget (by widget reference or a recorded text-description
-  # identifier). Mirrors AutomatorEventCommandWheel: it moves the hand over the widget and calls
-  # world.hand.processWheel() DIRECTLY — a wheel is dispatched by the hand to the nearest widget under
-  # the pointer that owns a `wheel` method (e.g. a ScrollPanelWdgt), NOT replayed as a queued input
-  # event — so, like the multi-click verbs, this is a direct hand op (no `_InputEvents` suffix, no
-  # yield needed before a following screenshot, which waits anyway). A POSITIVE deltaY scrolls the
-  # content DOWN; deltaX scrolls horizontally. Effective only in turbo playback (macro tests use it);
-  # call after `yield "waitNoInputsOngoing"`.
-  wheelOn: (widgetOrIdentifier, deltaY, deltaX = 0, fraction = [0.5, 0.5]) ->
-    world.hand.fullRawMoveTo (@pointAtFractionOf widgetOrIdentifier, fraction)
-    world.hand.processWheel deltaX, deltaY, 0, false, nil, nil
+  # identifier), driven entirely through the INPUT-EVENT QUEUE like a real wheel — NOT by poking the
+  # hand. First a no-button move positions the pointer over the widget (so the fake playback pointer
+  # shows and mouseEnter/hover fire, exactly as for a user), then a queued WheelInputEvent scrolls the
+  # nearest scrollable under the pointer (ActivePointerWdgt.processWheel walks up to the nearest `wheel`
+  # owner; ScrollPanelWdgt.wheel scrolls itself or escalates to its parent at the travel limit). A
+  # POSITIVE deltaY scrolls content DOWN; deltaX scrolls horizontally. Queues input events — follow with
+  # `yield "waitNoInputsOngoing"`.
+  wheelOn_InputEvents: (widgetOrIdentifier, deltaY, deltaX = 0, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, nil, startTime, nil
+    @syntheticEventsWheel_InputEvents deltaX, deltaY, startTime + milliseconds + 100
 
   # Click a SliderMorph's TRACK (its background, OUTSIDE the button) at a point a fraction along its
   # length, to JUMP the slider button there. For a scroll panel's scrollbar — a ScrollPanelWdgt's @vBar
@@ -323,26 +347,27 @@ class MacroToolkit
     trackPoint = @pointAtFractionOf slider, fraction
     @syntheticEventsMouseMovePressDragRelease_InputEvents buttonCentre, trackPoint, milliseconds, startTime
 
-  # Clipboard CUT / COPY / PASTE for the active editing caret. Fizzygum keeps NO internal clipboard —
-  # cut/copy/paste are normally driven by the browser's real clipboard EVENTS, which synthetic key
-  # events can't fire (and Meta+x/c/v have no caret key-handler). So, exactly like the harness'
-  # AutomatorEventCommandCut/Copy/Paste, these call world.caret.process{Cut,Copy,Paste} DIRECTLY and
-  # carry the text in a macro-local variable (no OS clipboard involved). cutSelection / copySelection
-  # RETURN the currently-selected text (capture it, paste it back later); pasteText inserts text at the
-  # caret. Direct ops (no `_InputEvents` suffix): select first (Shift+Arrow) and `yield
-  # "waitNoInputsOngoing"` so the selection is realised before cutting/copying.
-  cutSelection: ->
+  # Clipboard CUT / COPY / PASTE for the active editing caret, driven through the INPUT-EVENT QUEUE like
+  # the browser's real clipboard events (oncut/oncopy/onpaste → ClipboardInputEvent.fromBrowserEvent →
+  # queue → world.caret.process{Cut,Copy,Paste}). Fizzygum keeps NO internal clipboard and synthetic
+  # Meta+x/c/v can't fire the OS clipboard, so the TEXT is carried in the event itself (a macro-local
+  # variable): cutSelection_InputEvents / copySelection_InputEvents read the current selection, RETURN it
+  # (so you can paste it back later), and enqueue a Cut/CopyInputEvent carrying it; pasteText_InputEvents
+  # enqueues a PasteInputEvent. The selection is read SYNCHRONOUSLY (it still exists at call time); the
+  # cut/paste itself happens when the event is consumed. Select first (e.g. Shift+Arrow) and `yield
+  # "waitNoInputsOngoing"`, then call these and `yield "waitNoInputsOngoing"` again before a screenshot.
+  cutSelection_InputEvents: (startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     text = world.caret?.target?.selection()
-    world.caret?.processCut text
+    world.inputEventsQueue.push new CutInputEvent text, true, startTime
     text
 
-  copySelection: ->
+  copySelection_InputEvents: (startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     text = world.caret?.target?.selection()
-    world.caret?.processCopy text
+    world.inputEventsQueue.push new CopyInputEvent text, true, startTime
     text
 
-  pasteText: (text) ->
-    world.caret?.processPaste text
+  pasteText_InputEvents: (text, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+    world.inputEventsQueue.push new PasteInputEvent text, true, startTime
 
   # Drag a resize/move HANDLE (one of the handles shown after a widget's "resize/move..." menu
   # item) from its centre to a destination Point. Handles resize/move the target via NON-float
