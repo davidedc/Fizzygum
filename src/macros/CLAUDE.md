@@ -282,6 +282,40 @@ theTest_InputEvents_Macro = ->
   outer window and `adjustContentsBounds` stretches the inner content to fill — so the inner window TRACKS the outer
   on every resize; the resizer visually sits at the inner window's corner because the content fills the window
   (`resizerCanOverlapContents`, `:437`).
+  RECTANGULAR CLIPPING (no new verb): a `ClippingBoxMorph` is an ORDINARY `BoxMorph` that merely
+  `@augmentWith ClippingAtRectangularBoundsMixin` (`ClippingBoxMorph.coffee:1-7` is the whole class body) — that mixin
+  is what makes it CLIP its children to its own bounds, so a child that extends past the box is only drawn inside it.
+  Build `new ClippingBoxMorph` (setColor/rawSetExtent/fullRawMoveTo, `world.add`), then add a child (`clipBox.add
+  child`) and move it (`child.fullRawMoveTo …` — fine under SWCanvas, which full-renders) to STRADDLE each of the four
+  edges in turn — on each it is cut off at that edge, proving the clip is the box's fixed rectangle on every side.
+  LISTMORPH SCROLLING (no new verb): a `ListMorph` (`extends ScrollPanelWdgt`) is a column of selectable rows in a
+  clipped viewport. Build a STANDALONE one — `new ListMorph nil, nil, [item strings]` — sized SHORTER than its content
+  (`rawSetExtent`) so it overflows and shows a vertical scrollbar; then `@wheelOn list, deltaY` scrolls it (the
+  ScrollPanel wheel path). Tune the wheel delta to the overflow (small overflow ⇒ a big delta reaches the bottom in one
+  wheel and later shots stop changing — drop the delta so each wheel advances ~⅓). The recorded list tests drive the
+  property list INSIDE an InspectorMorph; a direct `new ListMorph` isolates the widget. (Clicking a row calls
+  `ListMorph.select` — `@selected`/`@active` — but the row highlight is not a reliable screenshot signal; scrolling is.)
+  EDGE AUTO-SCROLL while dragging (no new verb): a `ScrollPanelWdgt` auto-scrolls when a float-dragged morph it
+  `wantsDropOf` (= its `_acceptsDrops`, true for a plain list) is held near an edge band (`scrollBarsThickness*3` ≈ 30px
+  from a side, OUTSIDE the inner inset). `ActivePointerWdgt.processMouseMove` (`:1063`) calls `startAutoScrolling`,
+  whose per-cycle step calls `autoScroll` (`ScrollPanelWdgt.coffee:482`), scrolling toward whichever edge band the
+  pointer is in (top⇒up, left⇒left, right⇒right, bottom⇒down). Pattern: build a list overflowing BOTH ways (long item
+  labels ⇒ horizontal bar, many items ⇒ vertical bar), `pickUp` a rectangle (don't drop it), then
+  `@syntheticEventsMouseMove_InputEvents (a point in an edge band), "no button", …` and **yield a generous time** so it
+  scrolls. **TWO determinism musts:** (1) `autoScroll` has a 500ms `Date.now()` settle, so the test MUST set
+  **`supportsTurboPlayback: false`** in its metadata (real-time replay, like the recorded autoScrolling test) or the
+  settle never elapses; (2) hold long enough that the scroll CLAMPS at the limit, so the captured state is deterministic
+  (a mid-scroll capture is time-dependent). Make the overflow VISIBLE (labels well wider than the viewport) — a tiny
+  overflow scrolls invisibly.
+  CARET PLACEMENT (no new verb): clicking inside an EDITABLE TextMorph2/StringMorph2 places `world.caret` at the slot
+  nearest the click (`StringMorph2.mouseClickLeft`, `:1242`, gated on `@isEditable`). **A directly-constructed
+  StringMorph2/TextMorph2 has `isEditable = false`** (`:43`) — so a click does NOTHING; the demo widgets set
+  `isEditable = true` on creation (`WorldMorph.coffee`), so a direct fixture must do the same (`txt.isEditable = true`)
+  before clicking. With a MULTI-LINE (soft-wrapped) text, `@moveToAndClickAtFractionOf_InputEvents txt, [fx, fy]` places
+  the caret on the clicked line: `[0.02, firstLineFrac]` lands it BEFORE the first letter, a click PAST the end of the
+  last line clamps it AFTER the last letter, and intermediate `(fx, fy)` hit per-line slots. Size the widget so the
+  wrapped text FITS (a cropped one opens the "edit:" prompt). The caret is a thin vertical bar, frozen-visible during
+  playback. (Distinct from caret SELECTION, which the double/triple-click and shift-click tests cover.)
 - **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` (and future `assert…`) locate by meaning,
   then call `world.automator.player.recordMacroAssertion(passed, description, expected, found)` — the generic
   sink that fails the test like a screenshot mismatch (flips `allTestsPassedSoFar`, records the failing test,
