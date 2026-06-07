@@ -350,6 +350,34 @@ theTest_InputEvents_Macro = ->
   because the OLDER layout settled cells at their MIN; don't expect that pair to match now.) Two holders ⇒ two handles, so
   grab each by reference (`holder.children`-found), not the topmost-handle verb. (Converse of the proportional-cells test,
   where with no spacer the cells DO split the spare space by their spreadability ratio.)
+  HOVER-TO-HIGHLIGHT a target/attach candidate (no new verb): picking a controller's "set target" or a morph's
+  "attach..." opens a menu of candidate morphs (the ones whose bounds INTERSECT it). **Hovering** such an item highlights
+  the morph it represents — `MenuItemMorph.mouseEnter → morphToBeHighlighted.turnOnHighlight()` (`MenuItemMorph.coffee:78`)
+  adds it to `world.morphsToBeHighlighted`, and `WorldMorph.addHighlightingMorphs` (each cycle) paints a `HighlighterMorph`
+  over it (mouseLeave/`turnOffHighlight` removes it). The SAME feedback works for both the "choose target:" and "choose
+  new parent:" menus. Pattern: make a `ColorPaletteMorph` (a controller) OVERLAP a rectangle, `clickMenuItemOfWidget…
+  "set target"` (or `"attach..."`), grab the just-opened menu with `@getMostRecentlyOpenedMenu()`, find the candidate with
+  `@getTextMenuItemFromMenuByPrefix menu, "a RectangleMorph"`, then `@syntheticEventsMouseMove_InputEvents item.center(),
+  "no button", …` to HOVER it (no click) and screenshot — the represented morph shows its highlight tint. (The first
+  visual-feedback test; reuses the prefix-find + no-button move primitives.)
+  EMBED / REPOSITION A WIDGET IN A SIMPLEDOCUMENT (no new verb): a `SimpleDocumentScrollPanelWdgt`'s inner content panel
+  (`SimpleVerticalStackPanelWdgt`, `_acceptsDrops:true`) flows arbitrary widgets, not just text — dropping a widget over
+  the content area inserts it into the flow. So `@dragWidgetTo_InputEvents (new HeartIconMorph …), (a Point in the doc)`
+  embeds an ICON among the text (an `IconMorph` self-sizes from its appearance, so it needs no extent); dragging that
+  embedded icon to a new Y RE-INSERTS it (top → bottom). **Insertion index ↔ drop Y (the footgun):**
+  `SimpleVerticalStackPanelWdgt.add` (`:34-42`) inserts the widget AFTER the sibling whose vertical span (`top < y <
+  bottom`) contains the drop's `positionOnScreen.y` (= the hand position at drop, `ActivePointerWdgt:250`), and APPENDS to
+  the end if the Y is in a GAP between siblings or below everything — **index 0 (above the first sibling) is unreachable**.
+  So to drop "near the top" aim at a sibling's CENTRE (`(doc.contents.childrenNotHandlesNorCarets())[0].center()`,
+  guaranteed within its span ⇒ inserts right after it), and to drop "at the bottom" aim just below the last element
+  (`lastEl.bottom()+N` ⇒ appended). A drop that lands in the blank GAP between two paragraphs silently appends instead of
+  inserting there. Fill the doc with a paragraph first so "top" and "bottom" are far enough apart to read.
+  WINDOW RESIZES TO ITS CONTENT (no new verb): an empty `WindowWdgt` adopts a dropped widget as its content
+  (`WindowWdgt.add`, `ATTACHEDAS_WINDOW_CONTENT`) and a free-floating window sizes itself to WRAP that content, so when the
+  content's own size changes the window RE-FITS. Drop a wrapping `SimplePlainTextWdgt` into a `new WindowWdgt nil,nil,nil`
+  (via `@dragWidgetTo_InputEvents text, window`), then `text.setText longerString` ⇒ the wrapping text grows taller and the
+  window grows; `text.setText shorterString` ⇒ it shrinks — content-driven resize, the converse of the handle-driven
+  window resize. (`setText` is enough; no caret editing needed.)
 - **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` (and future `assert…`) locate by meaning,
   then call `world.automator.player.recordMacroAssertion(passed, description, expected, found)` — the generic
   sink that fails the test like a screenshot mismatch (flips `allTestsPassedSoFar`, records the failing test,
