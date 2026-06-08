@@ -758,6 +758,24 @@ class MacroToolkit
         return extWin
     """
 
+    # Overflowing-scroll-panel fixture, SHARED by the scroll-panel drag-behaviour tests (default → the panel MOVES;
+    # locked-to-desktop → the contents SCROLL; in a window → the WINDOW moves) so the setup lives in ONE place. Builds a
+    # ScrollPanelWdgt with a tall wrapping TextMorph so it OVERFLOWS (a vertical scrollbar shows), adds it to the world at
+    # topLeftPoint, and RETURNS the panel. Takes NO screenshots (only a test's own sources are scanned for reference names).
+    macroSubroutines.add Macro.fromString """
+      buildOverflowingScrollPanelWithText_Macro = (topLeftPoint) ->
+        panel = new ScrollPanelWdgt
+        panel.rawSetExtent new Point 270, 200
+        world.add panel
+        panel.fullRawMoveTo topLeftPoint
+        text = new TextMorph "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer rhoncus pharetra nulla, vel maximus lectus posuere a. Phasellus finibus blandit ex vitae varius. Vestibulum blandit velit elementum, ornare ipsum sollicitudin, blandit nunc. Mauris a sapien nibh. Nulla nec bibendum quam, eu condimentum nisl. Cras consequat efficitur nisi sed ornare. Pellentesque vitae urna vitae libero malesuada pharetra. Pellentesque commodo, nulla mattis vulputate porttitor, elit augue vestibulum est, nec congue ex dui a velit. Nullam lectus leo, lobortis eget erat ac, lobortis dignissim magna. Morbi ac odio in purus blandit dignissim. Maecenas at sagittis odio."
+        text.maxTextWidth = 185
+        panel.add text
+        text.fullRawMoveTo new Point (topLeftPoint.x + 12), (topLeftPoint.y + 12)
+        yield "waitNoInputsOngoing"
+        return panel
+    """
+
     macroSubroutines.add Macro.fromString """
       takeScreenshot_InputEvents_Macro = (screenShotImageName) ->
         yield "waitNoInputsOngoing"

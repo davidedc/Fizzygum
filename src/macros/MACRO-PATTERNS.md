@@ -67,6 +67,14 @@ are called directly. See `CLAUDE.md` for those rules.
   commit. Use an OLD-family label (a `TriggerMorph`/`MenuItemMorph` `TextMorph`, which re-lays-out on setText) — a
   `SimpleButtonMorph`'s `StringMorph2` face crops; for a standalone TriggerMorph give it `centered=true` + a fixed
   `rawSetExtent` and `reLayout()` after each edit.
+- **Caret brought into view only when MOVED** (`macroDocumentCaretBroughtIntoViewWhenMoved`): in a scrollable document the panel
+  scrolls to keep the caret visible — but ONLY on a caret MOVE, not on a wheel scroll. `ScrollPanelWdgt.scrollCaretIntoView` (`:504`)
+  repositions the contents so `world.caret` sits in the viewport; it is called from `CaretMorph.gotoSlot` (`:147`, gated on the caret
+  being directly inside a scrollable panel), which fires on a click-placement or an arrow key — not on a wheel. Fixture: a small `new
+  SimpleDocumentScrollPanelWdgt` + `doc.addNormalParagraph lorem` ×N so it OVERFLOWS; place the caret in the default (editable) paragraph
+  (`@moveToAndClickAtFractionOf_InputEvents (doc.contents.childrenNotHandlesNorCarets())[0], [fx,fy]`), then `@wheelOn_InputEvents doc,
+  bigDelta` scrolls the caret OUT of view (it STAYS out — the scroll did not recall it), and `@syntheticEventsShortcutsAndSpecialKeys_InputEvents
+  "ArrowRight"` MOVES it → the document scrolls back to reveal it. First caret-auto-scroll test.
 
 ## Menus & popups
 
@@ -245,6 +253,20 @@ are called directly. See `CLAUDE.md` for those rules.
   `@moveToItemOfMenuAndClick_InputEvents menu, "lock to desktop"` then later `"unlock"` (substring) — the "lock to/unlock from
   <desktop|panel>" items appear only when the morph's parent is a PanelWdgt (the world is one). A locked morph's drag grabs its
   PARENT (`grabsToParentWhenDragged → @isLockingToPanels`), so `@dragWidgetTo_InputEvents` leaves it put; unlock and it moves.
+- **Scroll-panel drag behaviour — default MOVES, locked SCROLLS, in-a-window moves the WINDOW** (`macroScrollPanelNotMovedViaNonFloatDragChild`
+  / `macroLockedScrollPanelScrollsWhenDragged` / `macroScrollPanelInWindowMovesWindowWhenDragged`): pressing+dragging a `ScrollPanelWdgt`'s
+  cream BACKGROUND resolves the grab via `Widget.findFirstLooseMorph` climbing `grabsToParentWhenDragged`. **DEFAULT desktop panel** (a plain
+  `new ScrollPanelWdgt` ships `canScrollByDraggingBackground=false` — never set true): the climb reaches the ScrollPanelWdgt, which
+  `detachesWhenDragged` → the whole panel **float-drags / MOVES** (it does NOT scroll — `ScrollPanelWdgt.mouseDownLeft`'s drag-scroll step is
+  gated on `!wdgtToGrab.detachesWhenDragged()`, false here). Dragging a plain child (a `TextMorph`) **DETACHES** it; dragging a
+  `nonFloatDragging` child (a `ColorPaletteMorph`) does NEITHER — it colour-picks (the `Widget.coffee:2549` short-circuit) — so the panel
+  can't be dragged via the palette (image_1==image_2) while a background drag moves it (contrast). **LOCKED** (`panel.lockToPanels()` →
+  `@isLockingToPanels=true`, `Widget.coffee:3714`): `grabsToParentWhenDragged` now returns true, the climb hits the unpickable world →
+  `findFirstLooseMorph`=nil → no float-drag → the scroll-step runs → a background drag **SCROLLS** the contents (frame fixed, thumb moves).
+  **IN A WINDOW** (`win.add panel`): a `WindowWdgt` isn't a `PanelWdgt`, so the climb falls through to the Window (detaches) → a content drag
+  **MOVES THE WHOLE WINDOW** (a design wart — the title bar is the expected move handle). DRY: all three build the panel via the shared
+  `buildOverflowingScrollPanelWithText_Macro(topLeft)` verb in `standardMacroSubroutines`. KEY: press a CLEAR background spot (right of the
+  text, left of the scrollbar/handle), not a draggable child; in Automator PLAYING the grab threshold is skipped so even small drags grab.
 
 ## Controllers (patch-programming)
 
@@ -303,6 +325,13 @@ are called directly. See `CLAUDE.md` for those rules.
   `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest`. KEY: once filled the text COVERS the panel, so bring up
   its handles via the text's "a SimpleVerticalStackPanel ➜" hierarchy submenu. Screenshot WITH the handles showing, then click
   empty desktop to exit. `world.add text` to detach the content and empty the stack.
+- **A lone centered widget stays centered** (`macroCenteredWidgetStaysCenteredWhenAlone`): a stack child's
+  `VerticalStackLayoutSpec.alignment` (`"left"|"center"|"right"`, default left) drives its horizontal placement; `setAlignmentToCenter`
+  is what the "a X ➜ → layout in stack → align center" menu item calls — `heart.layoutSpecDetails.setAlignmentToCenter()` is the direct
+  equivalent (sets the field AND relayouts). The centering SURVIVES the child becoming the only element: `ScrollPanelWdgt.adjustContentsBounds`
+  has dedicated lone-centered-child support (`:288-303`) that keeps it centered instead of snapping its left to the viewport. Drop a `new
+  HeartIconMorph (Color…)` into a `SimpleDocumentScrollPanelWdgt`, center it, then `@dragWidgetTo_InputEvents defaultText, (a desktop point)`
+  to remove the default text — the heart stays centered alone. GOTCHA: a widget has NO `.remove()`; drag it out (or re-parent via `world.add`).
 
 ## Sliders & popovers
 
