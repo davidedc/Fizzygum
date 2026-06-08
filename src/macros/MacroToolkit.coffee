@@ -500,6 +500,19 @@ class MacroToolkit
     found = theMenu?.testNumberOfItems()
     world.automator.player.recordMacroAssertion (found == expectedCount), "top menu item count", expectedCount, found
 
+  # Assert the item LABEL STRINGS of the most-recently-opened menu, in order (the macro counterpart of the
+  # recorded harness' CheckStringsOfItemsInMenu). Like assertTopMenuItemCount it pushes no input events and does
+  # not yield — call it once the menu is open. Reads each item's `labelString` via the menu's testItems() and
+  # records PASS/FAIL via recordMacroAssertion on the ordered comparison, logging the expected-vs-found strings.
+  # NB: this is a TOOLKIT method (called as `@assertTopMenuItemStrings […]`) precisely so the assertion sink
+  # `recordMacroAssertion` is NOT written in the macro source — a literal "Macro" mid-token there would be mangled
+  # by the macro invocation rewriter (which only allows "Macro" as a trailing suffix).
+  assertTopMenuItemStrings: (expectedLabels) ->
+    theMenu = @getMostRecentlyOpenedMenu()
+    found = theMenu?.testItems().map (item) -> item.labelString
+    passed = (found?) and (found.length == expectedLabels.length) and (expectedLabels.every (label, i) -> found[i] == label)
+    world.automator.player.recordMacroAssertion passed, "top menu item strings", expectedLabels.join(" | "), (if found? then found.join(" | ") else "no menu")
+
   # Topmost widget matching either a class-name string (compared via
   # morphClassString) or a class object (compared via instanceof).
   findTopWidgetByClassNameOrClass: (widgetNameOrClass) ->

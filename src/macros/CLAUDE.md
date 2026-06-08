@@ -531,11 +531,33 @@ ends by pushing events; callers `yield "waitNoInputsOngoing"` to let them drain.
   slider.button.center(), (a point far OUTSIDE the popover)`. The prompt commits its alpha only on "Ok", so during the drag only
   the slider's value FIELD changes — the proof is the value plus the popover staying open. The clean INVERSE of
   `macroMenusCloseOnMouseDownOutside` (a mouse-down outside DOES dismiss an unpinned menu).
-- **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` (and future `assert…`) locate by meaning,
-  then call `world.automator.player.recordMacroAssertion(passed, description, expected, found)` — the generic
-  sink that fails the test like a screenshot mismatch (flips `allTestsPassedSoFar`, records the failing test,
-  logs expected-vs-found to the SystemTests console) but, unlike the recorded menu checks, does NOT stop the
-  macro. Lets a macro test assert non-visual facts (no screenshot needed).
+  WINDOW CONTENT RESIZE — FREE vs FIXED-WIDTH (no new verb): a widget dropped into an empty `WindowWdgt` becomes its
+  `@contents`; on a window resize, `WindowWdgt.adjustContentsBounds` (`:384`) resizes the content per its
+  `WindowContentLayoutSpec`'s `canSetWidthFreely`/`canSetHeightFreely`. A `CircleBoxMorph` has BOTH free (the default spec)
+  so it fills the window in both dimensions; a `SliderMorph` keeps a FIXED width (`initialiseDefaultWindowContentLayoutSpec`
+  makes width un-free) so it stretches only in height, staying centred. Fixture: `new WindowWdgt nil,nil,nil` (external) +
+  the content widget; drop it in, then `@dragWindowResizerTo_InputEvents win, (new Point (win.right()+dx), (win.bottom()+dy))`
+  to widen the window — the circle box fills, the slider stays narrow. DROP GOTCHA: a `CircleBoxMorph` drops fine with
+  `@dragWidgetTo_InputEvents circle, win` (grabs its centre — it has no sub-widget), but a `SliderMorph` must be dropped with
+  `slider.pickUp()` + a no-button `@syntheticEventsMouseMove_InputEvents` + `@syntheticEventsMouseClick_InputEvents()` —
+  `@dragWidgetTo_InputEvents` would grab the slider's CENTRE = its BUTTON (at value 50) and move the button, not float-drag the
+  whole slider. (macroWindowContentResizesFreely / macroWindowContentKeepsFixedWidth — a deliberate free-vs-fixed pair.)
+  LONELY CONTROLLER TARGETS ONLY THE WORLD (assertion): a controller (SliderMorph / palette / … with ControllerMixin) with
+  NOTHING overlapping it can only target the WORLD. "set target" (`ControllerMixin.openTargetSelector`) lists
+  `world.plausibleTargetAndDestinationMorphs` (Widget.coffee:846) = widgets whose bounds INTERSECT the controller; the world
+  always qualifies (its bounds cover the desktop), so with nothing else overlapping it is the ONLY item, labelled "a WorldMorph ➜".
+  A NON-screenshot assertion test: right-click the slider's LOWER track (its button covers the centre at value 50) → "set target",
+  then `@assertTopMenuItemCount 1` + `@assertTopMenuItemStrings ["a WorldMorph ➜"]`. The negative/edge of the set-target family.
+  (macroLonelySliderTargetsWorldOnly.)
+- **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` and `assertTopMenuItemStrings([labels])`
+  (the strings counterpart, mapping the recorded `CheckStringsOfItemsInMenu` — reads each item's `labelString` via
+  the menu's `testItems()` and compares the ordered array) locate by meaning, then call
+  `world.automator.player.recordMacroAssertion(passed, description, expected, found)` — the generic sink that fails
+  the test like a screenshot mismatch (flips `allTestsPassedSoFar`, records the failing test, logs expected-vs-found
+  to the SystemTests console) but, unlike the recorded menu checks, does NOT stop the macro. These MUST be toolkit
+  methods called as `@assert…` — the assertion sink's name `recordMacroAssertion` contains "Macro" mid-token, so writing
+  it in the macro SOURCE would be mangled by the invocation rewriter (which only allows "Macro" as a trailing suffix);
+  inside a toolkit method it's plain compiled code, so it's safe. Lets a macro test assert non-visual facts.
 - **L3 verb** — append a `macroSubroutines.add Macro.fromString """ …Macro = -> … """` block to
   `standardMacroSubroutines`. It's a generator SOURCE string: it may `yield` a sentinel
   (`"waitNoInputsOngoing"`, `"waitForScreenshotReady"`, or a number of ms), call toolkit helpers as `@…`, and
