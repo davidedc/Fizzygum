@@ -500,6 +500,37 @@ ends by pushing events; callers `yield "waitNoInputsOngoing"` to let them drain.
   [0.5,0.5]), "left button"`; and (b) the GRABBED button follows the hand VERTICALLY anywhere on screen, clamped to its
   OWN track (`SliderButtonMorph.nonFloatDragging`: `newY = clamp(hand.y, track)`, `newX = its own left`) — move the hand
   far down with the button held and the button slides to the bottom of its track. Release with `@syntheticEventsMouseUp_InputEvents()`.
+  NON-WRAPPING TEXT SELF-RESIZE (no new verb): a `SimplePlainTextWdgt` (extends TextMorph2) resizes its OWN bounds to its
+  text. Its ctor sets `@maxTextWidth = true` (wrap to own width); setting `@maxTextWidth = nil` then `reLayout()` turns
+  wrapping OFF — exactly what the "soft wrap off" item does (`SimplePlainTextWdgt.coffee:111-115`). In that mode `setText`
+  re-lays-out SYNCHRONOUSLY (`:126-131 → reLayout :183`): width becomes the LONGEST line, height becomes lineCount × fontHeight,
+  so the box grows as text is added and shrinks as it is removed. Drive it with `setText` (the clean, deterministic equivalent
+  of caret typing — the typing input path itself is covered by the caret tests); give it a `backgroundColor` so the bounds are
+  visible; build multi-line strings with `String.fromCharCode(10)` (a literal newline can't sit in the backtick macro source).
+  The leaf-text counterpart of the window-resizes-to-content test (there a CONTAINER reacts; here the text widget resizes itself).
+  WIDTH-CONSTRAINING VERTICAL STACK GROWS WITH CONTENT (no new verb): a `SimpleVerticalStackPanelWdgt` (its `constrainContentWidth`
+  defaults true) stacks children vertically, constrains each child's WIDTH to the panel, and — being `tight` — grows its HEIGHT
+  to exactly the children. The reflow is `adjustContentsBounds` (`SimpleVerticalStackPanelWdgt.coffee:73-134`): it sets each
+  `SimplePlainTextWdgt` child's `maxTextWidth` to the available width (so a wide wrapping paragraph WRAPS to the panel, not past
+  it) and sums child heights into `rawSetHeight`. Reproduce the demo's widgets exactly: "vertical stack constrained contents width"
+  is `new SimpleVerticalStackPanelWdgt` at 370×325 (`Widget.createSimpleVerticalStackPanelWdgt`, Widget.coffee:3218), and "simple
+  plain text wrapping" is a `SimplePlainTextWdgt` carrying the demo's 2-paragraph Lorem ipsum + cream background
+  (`Widget.createNewWrappingSimplePlainTextWdgtWithBackground`, :3035). DROP each into the stack with `@dragWidgetTo_InputEvents
+  text, panel` (the real input path the recording uses — a drop fires `reactToDropOf → adjustContentsBounds`), so a second drop
+  ~doubles the stack height. (`panel.add child` + `panel.adjustContentsBounds()` is the direct equivalent when you don't need the
+  drop; note the panel is tight, so an EMPTY panel taller than one paragraph SHRINKS on the first add — start from substantial
+  content, or a thin strip, for monotonic growth.) The reusable fixture for the big `Width*VerticalStackPanel` family.
+  POP-UP STAYS OPEN WHILE ITS SLIDER IS DRAGGED OUT (no new verb): a pop-up normally closes on a mouse-DOWN outside it
+  (`ActivePointerWdgt.cleanupMenuWdgts`), but DRAGGING its slider keeps it open even when the pointer leaves its bounds. Pressing
+  a slider button whose slider's parent is a `PromptMorph` starts a NON-float drag (`SliderMorph.mouseDownLeft →
+  nonFloatDragWdgtFarAwayToHere`; `SliderButtonMorph.detachesWhenDragged` is false while parented to a slider), and on the mouse-UP
+  `cleanupMenuWdgts` is SKIPPED while a non-float drag is in progress (`if !@nonFloatDraggedWdgt? then cleanupMenuWdgts`) — so the
+  button clamps to its track end while the pointer travels far outside, and the popover survives. Open a `RectangleMorph`'s
+  "transparency..." popover (`clickMenuItemOfWidget_InputEvents_Macro rect, "transparency..."`), grab the live slider
+  (`prompt.children.filter (c) -> c instanceof SliderMorph`), and `@syntheticEventsMouseMovePressDragRelease_InputEvents
+  slider.button.center(), (a point far OUTSIDE the popover)`. The prompt commits its alpha only on "Ok", so during the drag only
+  the slider's value FIELD changes — the proof is the value plus the popover staying open. The clean INVERSE of
+  `macroMenusCloseOnMouseDownOutside` (a mouse-down outside DOES dismiss an unpinned menu).
 - **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` (and future `assert…`) locate by meaning,
   then call `world.automator.player.recordMacroAssertion(passed, description, expected, found)` — the generic
   sink that fails the test like a screenshot mismatch (flips `allTestsPassedSoFar`, records the failing test,
