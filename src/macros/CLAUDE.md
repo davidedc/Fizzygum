@@ -1,725 +1,204 @@
 # CLAUDE.md — `src/macros/` (the "macro" SystemTest subsystem)
 
-This directory is the **framework side of the high-level "macro" SystemTests**. It holds two files,
-both stripped from `--homepage` (each starts with `# this file is only needed for Macros`):
+The **framework side of the high-level "macro" SystemTests**. Two files, both stripped from `--homepage`
+(each starts with `# this file is only needed for Macros`):
 
-- **`Macro.coffee`** — the engine (L0): parses a generator-from-a-string, rewrites verb calls into
-  `yield`s, links subroutines, and installs the per-cycle pump.
-- **`MacroToolkit.coffee`** — the toolkit (L1–L4): ~25 input primitives, tree locators, the reusable
-  macro-verb library, and the macro-step driver/state. The world HAS-A one, as **`world.macroToolkit`**.
+- **`Macro.coffee`** — the engine (L0): parses a generator-from-a-string, rewrites verb calls into `yield`s,
+  links subroutines, installs the per-cycle pump.
+- **`MacroToolkit.coffee`** — the toolkit (L1–L4): input primitives, tree locators, the reusable macro-verb
+  library, and the macro-step driver/state. The world HAS-A one, as **`world.macroToolkit`**.
 
-> The L5 *harness* (the test runner: `Automator*`, `AutomatorEventCommand*`) lives in the **sibling
-> `Fizzygum-tests` repo**, not here. See `../../../Fizzygum-tests/CLAUDE.md`.
+This file is the **router**: architecture + the rules you must get right. Two companion docs hold the detail —
+**`MACRO-PATTERNS.md`** (the per-mechanic reuse-pattern catalogue, one entry per migrated test) and the verb
+**doc-comments in `MacroToolkit.coffee`** (full signatures + behaviour). The L5 *harness* (`Automator*`,
+`AutomatorEventCommand*`) and the migration *workflow* live in the sibling **`Fizzygum-tests`** repo (see
+`../../../Fizzygum-tests/CLAUDE.md` and the `migrate-systemtest` skill).
 
-## Why macros exist (vs the old recorded tests)
+## Why macros exist
 
-A recorded test replays a frozen stream of raw mouse/keyboard coordinates and diffs screenshots — fragile,
-it breaks the moment layout or a class changes. A **macro** test instead describes the test at a high level
-as a generator ("find the clock, open its inspector, edit a method, screenshot") that asks the **live world**
-where things are *right now* and synthesises the real input events. Resilient to layout change.
+A recorded test replays a frozen stream of raw mouse/keyboard coordinates and diffs screenshots — fragile, it
+breaks the moment layout or a class changes. A **macro** describes the test as a generator ("find the clock,
+open its inspector, edit a method, screenshot") that asks the **live world** where things are *now* and
+synthesises the real input events. Resilient to layout change.
 
 ## How a macro test runs, end to end
 
-1. The test's `tests/SystemTest_<name>/<name>_automationCommands.js` is a tiny command sequence: `ResetWorld`,
-   a few `TurnOn*` determinism toggles, then **one** `AutomatorEventCommandStartMacro` carrying the test's
-   macro as a string (`mainMacroSource`, plus optional `extraSubroutineSources`). Screenshot reference names
-   are **not** listed — the loader extracts them from the macro source itself (every screenshot is a literal
-   `takeScreenshot_InputEvents_Macro "name"` call), so there's no list to drift. The test's per-test
-   self-documentation — four **mandatory** strings `intent`, `scenario`, `assertions`, `provenance` — lives
-   in the **metadata** file `SystemTest_<name>.js` (alongside `description`/`tags`) and is validated at
-   replay (a missing/empty one throws, by name). See `AutomatorEventCommandStartMacro`'s doc-comment — the
-   single source of truth for how macro tests work.
-2. `AutomatorEventCommandStartMacro.executeEventCommand` (harness) builds the macro: it calls
-   **`world.macroToolkit.standardMacroSubroutines()`** to get the reusable verb library, adds any per-test
-   `extraSubroutineSources`, `linkTo`s the test's `mainMacroSource`, and `start()`s it.
-3. **`Macro`** does the work: `fromString` parses the generator and rewrites verb calls
-   `fooMacro args` → `yield from fooMacro.call this, args`; `linkTo` concatenates the subroutine sources and
-   prepends the pump header (`_addHeaderCode`); `start` seeds the macro state on `world.macroToolkit` and
-   evals the linked code via **`world.macroToolkit.evaluateString`** — so the whole macro runs with
-   **`@` = the MacroToolkit instance**.
-4. Each `WorldMorph.doOneCycle` calls `@macroToolkit?.progressOnMacroSteps()` — the pump the header installed
-   onto the instance — which advances the generator one step whenever the previous `yield` is satisfied:
-   - `yield "waitNoInputsOngoing"` — wait until the input-event queue drains (`world.inputEventsQueue`),
-   - `yield "waitForScreenshotReady"` — wait until the SWCanvas surface is settled + warm,
-   - `yield <number>` — wait that many ms.
-   Each step calls toolkit helpers that query the live tree and push timed synthetic events onto
-   `world.inputEventsQueue`; `playQueuedEvents` (also in `doOneCycle`) executes them.
-5. **Harness bridge:** while a macro runs, `world.macroToolkit.aMacroIsRunning` is true and
-   `AutomatorPlayer.replayTestCommands` pauses (doesn't advance/finish) until the generator reports done,
-   then resumes and ends the test. Screenshots: a macro calls `world.automator.player.compareScreenshots`
-   in-flow (the `takeScreenshot_InputEvents_Macro` verb); `AutomatorLoader.loadImagesOfTest` preloads the
-   references whose names it extracts from the macro source (the `takeScreenshot_InputEvents_Macro "name"` calls).
+1. `tests/SystemTest_<name>/<name>_automationCommands.js` is a tiny sequence: `ResetWorld`, a few `TurnOn*`
+   determinism toggles, then **one** `AutomatorEventCommandStartMacro` carrying the test's macro as a string
+   (`mainMacroSource`, plus optional `extraSubroutineSources`). Screenshot reference names are **not** listed —
+   the loader extracts them from the `takeScreenshot_InputEvents_Macro "name"` calls in the source. The four
+   **mandatory** self-doc strings — `intent`, `scenario`, `assertions`, `provenance` — live in the metadata
+   `SystemTest_<name>.js` and are validated at replay (a missing/empty one throws, by name). The
+   `AutomatorEventCommandStartMacro` doc-comment is the single source of truth for the format.
+2. `AutomatorEventCommandStartMacro.executeEventCommand` (harness) calls
+   **`world.macroToolkit.standardMacroSubroutines()`** for the reusable verb library, adds any per-test
+   `extraSubroutineSources`, `linkTo`s the `mainMacroSource`, and `start()`s it.
+3. **`Macro`** parses the generator and rewrites verb calls `fooMacro args` → `yield from fooMacro.call this,
+   args`; `linkTo` concatenates the subroutine sources + prepends the pump header; `start` evals the linked code
+   via **`world.macroToolkit.evaluateString`** — so the whole macro runs with **`@` = the MacroToolkit instance**.
+4. Each `WorldMorph.doOneCycle` calls `@macroToolkit?.progressOnMacroSteps()` — the pump — which advances the
+   generator whenever the previous `yield` is satisfied: `"waitNoInputsOngoing"` (the input queue drained),
+   `"waitForScreenshotReady"` (SWCanvas settled + warm), or `<number>` (ms). Each step pushes timed synthetic
+   events onto `world.inputEventsQueue`; `playQueuedEvents` (also in `doOneCycle`) executes them.
+5. **Harness bridge:** while a macro runs `world.macroToolkit.aMacroIsRunning` is true and
+   `AutomatorPlayer.replayTestCommands` pauses until the generator reports done, then ends the test. Screenshots:
+   the macro calls `world.automator.player.compareScreenshots` in-flow (the `takeScreenshot_InputEvents_Macro`
+   verb); `AutomatorLoader.loadImagesOfTest` preloads the references whose names it extracts from the source.
 
-The one registered macro test (the regression anchor) is
-`Fizzygum-tests/tests/SystemTest_macroAnalogClockInspectEdit/`.
+The one registered macro test (the regression anchor) is `Fizzygum-tests/tests/SystemTest_macroAnalogClockInspectEdit/`.
 
 ## The layers
 
-| Layer | What | Naming signal | Home | Ships in `--homepage`? |
-|---|---|---|---|---|
-| **L0** engine | `Macro.fromString` / `linkTo` / `_addHeaderCode` pump | `class Macro` | `Macro.coffee` | no |
-| **L1** input primitives | push timed raw events onto `world.inputEventsQueue` | `syntheticEvents…_InputEvents`, `expoOut` | `MacroToolkit` | no |
-| **L2** locators & one-shot actions | read the live widget tree, compose L1 | `…_InputEvents` (+ bare locator names) | `MacroToolkit` | no |
-| **L3** macro verbs (generators) | reusable `…_InputEvents_Macro` SOURCE strings from `standardMacroSubroutines()` | `…_InputEvents_Macro` | `MacroToolkit` | no |
-| **L4** driver + state | the pump stub, the `wait*` gates, the macro-step fields | (state / predicates) | `MacroToolkit` | no |
-| **L5** test runner (harness) | `Automator*`, `AutomatorEventCommand*` | `Automator…` | `Fizzygum-tests/` | no |
+| Layer | What | Naming signal | Home |
+|---|---|---|---|
+| **L0** engine | `Macro.fromString` / `linkTo` / `_addHeaderCode` pump | `class Macro` | `Macro.coffee` |
+| **L1** input primitives | push timed raw events onto `world.inputEventsQueue` | `syntheticEvents…_InputEvents` | `MacroToolkit` |
+| **L2** locators & one-shot actions | read the live tree, compose L1 | `…_InputEvents` (+ bare locator names) | `MacroToolkit` |
+| **L3** macro verbs (generators) | reusable `…_InputEvents_Macro` SOURCE strings from `standardMacroSubroutines()` | `…_InputEvents_Macro` | `MacroToolkit` |
+| **L4** driver + state | the pump stub, the `wait*` gates, the macro-step fields | (state / predicates) | `MacroToolkit` |
+| **L5** test runner (harness) | `Automator*`, `AutomatorEventCommand*` | `Automator…` | `Fizzygum-tests/` |
 
-## Naming conventions
+All of L0–L4 is stripped from `--homepage`.
 
-- `syntheticEvents…_InputEvents` → **L1** primitive (synthesises raw events).
-- `…_InputEvents` (no `syntheticEvents` prefix) → **L2** locator/action.
-- `…_InputEvents_Macro` → **L3** verb (a generator source string; the *only* layer that `yield`s).
-- `Automator…` → **L5** harness.
-- **Gotcha:** a verb/subroutine name may contain **"Macro" only as a trailing suffix**. A *mid-name* "Macro"
-  (e.g. `takeScreenshotForMacro_…`) breaks `Macro._replaceMacroInvocationWithYieldingInvocations`, whose regex
-  rewrites every `…Macro<not-`(`>` occurrence into a `yield from`.
+## The rules to get right
 
-## The `@`-vs-`world.` authoring rule (the thing to get right)
-
-A running macro has **`@` = the `MacroToolkit` instance**, not the world. So inside `MacroToolkit` methods
-**and inside macro source strings**:
-
-- `@x` → a **MacroToolkit** helper or macro-state field (`@syntheticEventsMouseClick_InputEvents`,
-  `@findTopWidgetByClassNameOrClass`, `@aMacroIsRunning`, …).
-- `world.x` → the **live world**: `world.add`, `world.inputEventsQueue`, `world.hand`,
-  `world.topWdgtSuchThat`, `world.freshlyCreatedPopUps`, `world.automator…`.
-
-Worked example (a test's `mainMacroSource`):
+**1. `@` vs `world.`** A running macro has **`@` = the `MacroToolkit` instance**, not the world. So inside
+MacroToolkit methods AND macro source strings: `@x` = a toolkit helper/field (`@syntheticEventsMouseClick_InputEvents`,
+`@findWidgetByTextDescription`, `@aMacroIsRunning`); `world.x` = the live world (`world.add`,
+`world.inputEventsQueue`, `world.hand`, `world.topWdgtSuchThat`, `world.freshlyCreatedPopUps`, `world.automator…`).
+**Watch default arguments:** `orig = world.hand.position()` in a signature is world state — a `@`-form there
+silently becomes `undefined` (the syntax gate won't catch it). This was the #1 trap when the toolkit split out of
+WorldMorph.
 
 ```coffee
 theTest_InputEvents_Macro = ->
   clock = new AnalogClockWdgt
-  world.add clock                              # world-tree op → world.
+  world.add clock                                 # world-tree op → world.
   yield "waitNoInputsOngoing"
   bringUpInspectorAndSelectListItem_InputEvents_Macro clock, "drawSecondsHand"  # bare verb call
-  @bringcodeStringFromTopInspectorInView_InputEvents "context.restore()"        # toolkit helper → @
-  yield "waitNoInputsOngoing"
-  @syntheticEventsStringKeys_InputEvents "-"   # toolkit helper → @
-  @clickOnSaveButtonFromTopInspector_InputEvents()
-  yield "waitNoInputsOngoing"
-  takeScreenshot_InputEvents_Macro "…_image_0"  # bare verb call
+  @syntheticEventsStringKeys_InputEvents "-"      # toolkit helper → @
+  takeScreenshot_InputEvents_Macro "…_image_0"    # bare verb call
 ```
 
-> Watch default arguments too: `orig = world.hand.position()` in a method signature is world state, not
-> `@hand` — a `@`-form there silently becomes `undefined` (the syntax gate won't catch it; the macro test
-> will). This was the #1 trap when the toolkit was split out of WorldMorph.
+**2. Drive INPUT through the event queue, never poke the hand.** Every user input — moves, clicks, keys, the
+wheel, double/triple-clicks, clipboard — must be SYNTHESISED AS A REAL `*InputEvent` pushed onto
+`world.inputEventsQueue` and consumed by the normal pipeline, NOT by reaching into `world.hand`/`world.caret` and
+calling `process…` directly. The queue is the whole point: it drives hit-testing, hover/`mouseEnter`, the
+playback fake-pointer overlay, recording hooks. Every input-synthesising verb carries the **`_InputEvents`** suffix
+and ends by pushing events; callers `yield "waitNoInputsOngoing"` to drain. *One subtlety:* a queued
+double/triple-click is only RECOGNISED in slow playback, so such a test declares `supportsTurboPlayback:false` +
+`requiresSlowPlayback:true`. *Legitimately NOT input* (keep direct): building a fixture (`new …; world.add`,
+positioning) and a behaviour whose UI trigger is genuinely blocked / is an escape hatch (`widget.hide()/show()`,
+`textBox.toggleSoftWrap()`, `world.evaluateString "…"`). Never use a direct call to STAND IN for a real input.
 
-## Drive INPUT through the event queue, never poke the hand directly (the fidelity rule)
+**3. "Macro" only as a trailing suffix** in any verb/subroutine name (or token in macro source). A *mid-name*
+"Macro" (`takeScreenshotForMacro_…`, or `recordMacroAssertion` written in macro source) is mangled by
+`Macro._replaceMacroInvocationWithYieldingInvocations`, whose regex rewrites every `…Macro` not immediately followed
+by `(` into a `yield from`. (So the assertion sink is reachable only from inside a toolkit `@assert…` method, never the source.)
 
-A macro simulates a USER, so every user input — moves, clicks, keys, the **mouse wheel**, **double/triple
-clicks**, **clipboard** cut/copy/paste — must be SYNTHESISED AS A REAL INPUT EVENT pushed onto
-`world.inputEventsQueue` and consumed by the normal pipeline, **not** by reaching into `world.hand` /
-`world.caret` and calling `process…` directly. The queue is the whole point of a macro: it exercises the
-real dispatch path (hit-testing, hover/`mouseEnter`, the playback "fake pointer" overlay, recording hooks),
-exactly as a person would. Poking the hand directly skips all of that — most visibly, the fake pointer never
-appears (it is only moved by `ActivePointerWdgt.processMouseMove`, which a queued move fires and a direct
-`fullRawMoveTo` does not). Every input-synthesising verb therefore carries the **`_InputEvents`** suffix and
-ends by pushing events; callers `yield "waitNoInputsOngoing"` to let them drain.
+## The verb library (index)
 
-- The browser itself feeds the queue: `WheelInputEvent`, `Cut/Copy/PasteInputEvent`, `Mouse{down,up,move}InputEvent`,
-  `Key{down,up}InputEvent` all exist precisely so real DOM events become queued `InputEvent`s. Macros reuse the
-  same classes (with `isSynthetic = true`) — see the L1 primitives `syntheticEventsWheel_InputEvents`,
-  `syntheticEventsConsecutiveLeftClicks_InputEvents`, the clipboard verbs, etc.
-- **The ONE subtlety — double/triple-click.** There is no double-click event; the HAND derives one from
-  consecutive queued clicks. But it DISABLES that recognition in fast playback (so fast separate clicks aren't
-  misread as double-clicks). So a queued double/triple-click is only recognised in SLOW playback: such a test
-  declares `supportsTurboPlayback:false` AND `requiresSlowPlayback:true` (a per-test metadata flag honoured by
-  `AutomatorPlayer.runningInSlowMode`, so just that test runs slow — recognition on — in any run). The click
-  events still go through the queue; only the pacing changes.
-- Legitimately NOT input (so no queue, by design): building a fixture (`new …; world.add`, `fullRawMoveTo` to
-  position it) and invoking a behaviour whose UI trigger is genuinely blocked or is an escape hatch
-  (`widget.hide()/show()`, `textBox.toggleSoftWrap()`, `world.evaluateString "…"`). These are method calls on
-  the model, not simulated input — keep them direct, but never use a direct call to STAND IN for a real input.
+Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; usage patterns are in
+**`MACRO-PATTERNS.md`**. The families:
 
-## How to add a …
+- **L1 primitives** (`syntheticEvents…_InputEvents`): `MouseMove`, `MouseClick`, `MouseShiftClick`,
+  `MouseMovePressDragRelease`, `MouseMoveWhileDragging`, `MouseUp`, `Wheel`, `ConsecutiveLeftClicks`, `StringKeys`,
+  `ShortcutsAndSpecialKeys` ("Shift+ArrowRight" | "Meta+a" | "Enter" | …); plus `repeatSpecialKey`, `moveToAndMouseDown`.
+- **L2 locators**: `findWidgetByTextDescription([desc,occ,total])` (the recorded-identity bridge — wraps
+  `world.getMorphViaTextLabel`), `findTopWidgetByClassNameOrClass`, `pointAtFractionOf`, `getMostRecentlyOpenedMenu`,
+  `getTextMenuItemFromMenu{,ByPrefix,ByContains}`.
+- **L2 actions**: clicks (`moveToAndClick`, `moveToAndClickAtFractionOf`, `doubleClickAtFractionOf`,
+  `tripleClickAtFractionOf`, `shiftClickAtFractionOf`); drag/resize (`dragWidgetTo`, `dragResizeMoveHandleTo`,
+  `wheelOn`, `clickOnSliderTrackAtFraction`, `dragSliderButtonToFraction`); menus (`openMenuOf`,
+  `moveToItemOf{Menu,TopMenu}AndClick`, `moveToItem{StartingWith,Containing}OfMenuAndClick`, `clickMenuHeaderToPin`);
+  clipboard (`cutSelection`/`copySelection`/`pasteText`); window chrome (`closeWindow`, `collapseOrUncollapseWindow`,
+  `dragWindowResizerTo`); assertions (`assertTopMenuItemCount`, `assertTopMenuItemStrings`). All `…_InputEvents`.
+- **L3 verbs** (generators, `…_InputEvents_Macro`): `takeScreenshot`, `clickMenuItemOfWidget`, `bringUpInspector`,
+  `bringUpInspectorAndSelectListItem`, `bringInViewAndClickOnListItemFromTopInspector`,
+  `setControllerTargetToWidgetProperty`, the window-in-window fixture pair.
 
-- **L1 primitive** — a plain method that pushes `*InputEvent`s with scheduled times onto
-  `world.inputEventsQueue`. Default the start time to `WorldMorph.dateOfCurrentCycleStart.getTime()` and
-  stagger with an interval, like the existing `syntheticEvents*_InputEvents`.
-- **L2 locator/action** — a plain method that reads the **live tree** (`world.topWdgtSuchThat …`,
-  `world.freshlyCreatedPopUps`, a widget's children) and composes L1 primitives. No `yield`, no
-  `world.automator` (that's the harness's job). Key locators: `findWidgetByTextDescription([desc,occ,total])`
-  (re-find any widget by its stable `getTextDescription` — the recorded-test bridge; wraps
-  `world.getMorphViaTextLabel`), `moveToAndClickAtFractionOf_InputEvents(widgetOrIdentifier,[fx,fy],button)`
-  (click a fractional point inside a located widget), `findTopWidgetByClassNameOrClass`. Special keys/combos:
-  `syntheticEventsShortcutsAndSpecialKeys_InputEvents("Shift+ArrowRight" | "Meta+a" | "Enter" | …)` and
-  `repeatSpecialKey_InputEvents(key, count)`. Fractional clicks share
-  `pointAtFractionOf(widgetOrIdentifier,[fx,fy])`. Multi-click: `doubleClickAtFractionOf_InputEvents` /
-  `tripleClickAtFractionOf_InputEvents(widgetOrIdentifier,[fx,fy])` — enqueue a positioning move + 2/3
-  consecutive left click-pairs (`syntheticEventsConsecutiveLeftClicks_InputEvents`) that the HAND recognises as
-  a double/triple-click. That recognition is DISABLED in fast playback, so a test using these MUST run slow —
-  declare `supportsTurboPlayback:false` AND `requiresSlowPlayback:true` in its metadata (see the queue-fidelity
-  principle above). Shift-click:
-  `shiftClickAtFractionOf_InputEvents(widgetOrIdentifier,[fx,fy])` moves the pointer then left-clicks with Shift
-  held (the L1 `syntheticEventsMouseShiftClick_InputEvents` sets the event's shiftKey — the 4th boolean of
-  Mouse{down,up}InputEvent) — in editable text a plain click sets the caret while a shift-click EXTENDS the
-  selection to the click point (StringMorph2/TextMorph2.mouseClickLeft reads shiftKey: startSelectionUpToSlot
-  then extendSelectionUpToSlot). The selection-extend sibling of the double-/triple-click verbs. Resize/move:
-  `dragResizeMoveHandleTo_InputEvents(handleType, destPoint)` drags a "resize/move..." HandleMorph
-  (`"resizeBothDimensionsHandle"` | `"moveHandle"` | `"resizeHorizontalHandle"` | `"resizeVerticalHandle"`) —
-  a non-float drag (HandleMorph.nonFloatDragging resizes/moves the target). Mouse-wheel:
-  `wheelOn_InputEvents(widgetOrIdentifier, deltaY, deltaX, [fx,fy])` enqueues a positioning move then a
-  `WheelInputEvent` (the L1 `syntheticEventsWheel_InputEvents`) — exactly how the browser delivers a wheel
-  (WorldMorph's onwheel pushes a `WheelInputEvent`); positive `deltaY` scrolls content DOWN. Window chrome: `closeWindow_InputEvents(windowWidget)` clicks a WindowWdgt's
-  `.closeButton` (a `CloseIconButtonMorph`) — the pattern for reaching any window control button semantically
-  rather than by coordinates. Clipboard: `cutSelection_InputEvents()` / `copySelection_InputEvents()` read +
-  RETURN the caret's selected text (synchronously) and enqueue a `Cut`/`CopyInputEvent` carrying it;
-  `pasteText_InputEvents(text)` enqueues a `PasteInputEvent` — exactly how the browser delivers clipboard events
-  (oncut/oncopy/onpaste → `ClipboardInputEvent` → queue → `caret.process{Cut,Copy,Paste}`). Fizzygum keeps NO
-  internal clipboard, so the text rides in the event itself (a macro-local var).
-  Drag-and-drop: `dragWidgetTo_InputEvents(widgetOrIdentifier, destination)` float-drags a widget (press-drag
-  past the grab threshold so the hand picks it up) and drops it at a Point, or onto another widget / identifier
-  (its centre) — e.g. to drop a widget INTO a container that accepts drops. (A SimpleDocument's INNER content
-  panel has `_acceptsDrops:true`, so a drop over its content area re-parents the widget as a flowing paragraph —
-  no "enable editing" needed, even though the OUTER scroll panel's ctor calls `@disableDrops`.)
-  Slider/scrollbar: `clickOnSliderTrackAtFraction_InputEvents(sliderOrIdentifier,[fx,fy])` clicks a SliderMorph's
-  TRACK (its background, OUTSIDE the button) to JUMP the button there — for a ScrollPanelWdgt's `@vBar`/`@hBar`
-  this scrolls the content to that position (`SliderMorph.mouseDownLeft` non-float-drags the button to the click
-  when the slider's parent is a ScrollPanelWdgt **or PromptMorph**; a slider parented to neither ignores it —
-  the negative case). Click the TRACK, not the button: a click landing ON the button just grabs it (no jump), so
-  give the content enough overflow that the button is small. Slider as a CONTROLLER, by DRAGGING its button:
-  `dragSliderButtonToFraction_InputEvents(sliderOrIdentifier, [fx,fy])` does a press-drag-release ON the slider
-  BUTTON (not the track) to a fraction of the slider's bounds — a non-float child drag
-  (`SliderButtonMorph.nonFloatDragging` → `SliderMorph.updateValue` → `setValue` → `updateTarget`), so if the
-  slider has a controller target set it drives `target[setter](value)` LIVE the whole drag. Use this (not the
-  track-click verb) for a free-standing controller slider — its `mouseDownLeft` only jumps the button on a
-  ScrollPanelWdgt/PromptMorph slider; a free slider responds to dragging its button. (Larger fy = larger value
-  on a default slider, `smallestValueIsAtBottomEnd` false.) Window chrome: `collapseOrUncollapseWindow_InputEvents(windowWidget)`
-  clicks a WindowWdgt's `.collapseUncollapseSwitchButton` (a `SwitchButtonMorph` toggling Collapse/UncollapseIconButtonMorph)
-  — the same verb collapses OR uncollapses depending on the window's current state (sibling of `closeWindow_InputEvents`).
-  Window chrome: `dragWindowResizerTo_InputEvents(windowWidget, destination)` drags a WindowWdgt's `.resizer` (its
-  bottom-right HandleMorph) to a Point (or a widget's centre) — a non-float drag resizing the window
-  (HandleMorph.nonFloatDragging → setExtent); reach the window's OWN handle by reference rather than hunting a
-  HandleMorph by coordinates when several windows are present. The resize sibling of close/collapse, completing
-  the empty-window chrome trio.
-  Menu items in a SPECIFIC menu: `moveToItemOfMenuAndClick_InputEvents(menu, label)` clicks a labelled item in a menu
-  you already hold a reference to; `moveToItemOfTopMenuAndClick_InputEvents(label)` is the same on
-  `getMostRecentlyOpenedMenu()`; `moveToItemStartingWithOfMenuAndClick_InputEvents(menu, prefix)` matches by label
-  PREFIX — for menus whose item labels carry a variable suffix (a HandleMorph/Widget's "attach..."→"choose target:"
-  menu labels each candidate `toString() + " ➜"`, e.g. "a RectangleMorph#1 ➜" — an instance number + a trailing
-  arrow — and also lists the World), so match the stable class-name head ("a RectangleMorph") to hit the intended
-  target rather than the first/Nth item; `moveToItemContainingOfMenuAndClick_InputEvents(menu, substring)` is the SUBSTRING
-  sibling — for items whose label carries a LEADING decoration the prefix can't match, e.g. a checkmark toggle
-  (`"soft wrap".tick()` renders "✓ soft wrap"; match "soft wrap"). **Use a held-reference variant whenever you touch a popup more than once** (e.g. click a slider /
-  colour palette INSIDE a prompt, THEN its "Ok"): `getMostRecentlyOpenedMenu()` reads `world.freshlyCreatedPopUps`,
-  which **every mouseUp clears** (`ActivePointerWdgt.processMouseUp`), so capture the popup reference right after it
-  opens (while still fresh) and drive its later items through `moveToItemOfMenuAndClick_InputEvents`. (Colour picker
-  trap: a `ColorPickerMorph` holds both a hue×lightness `.colorPalette` and a thin `.grayPalette` — a
-  `GrayPaletteMorph`, which SUBCLASSES ColorPaletteMorph — so reach the colour one via the picker's `.colorPalette`
-  accessor, not an `instanceof ColorPaletteMorph` search. The palette is `hsl(h=360·fx, 100%, l=100−100·fy)`, so
-  `fy≈0.5` is a saturated colour.) Menu PINNING: `clickMenuHeaderToPin_InputEvents(menu)` clicks a menu's title
-  bar (its `.label`, a MenuHeader) to PIN it — `MenuHeader.mouseClickLeft → pinPopUp` drops the popup's
-  kill-on-click-outside flags (and tightens its shadow), so a later click on the empty desktop no longer dismisses
-  it (an unpinned menu would vanish); pass a held menu reference. Widget DUPLICATION (no new verb — pure reuse): a
-  normal widget's context menu carries a TOP-LEVEL "duplicate" item (`Widget.duplicateMenuActionAndPickItUp` =
-  `fullCopy().pickUp()`), so `clickMenuItemOfWidget_InputEvents_Macro widget, "duplicate"` makes the COPY ride the
-  hand (already painted on pickup); carry it with `syntheticEventsMouseMove_InputEvents` (a grabbed hand-child
-  follows even a no-button move — the hand's `fullRawMoveTo` carries its children) and DROP it with
-  `syntheticEventsMouseClick_InputEvents` (a mousedown drops a float-dragged morph). (A MenuMorph is NOT
-  right-clickable for a context menu, so the menu-duplication recordings can't migrate this way — duplicate a normal
-  widget instead.) Duplicating a COMPLEX / nested widget (e.g. the latest inspector, an `InspectorMorph2` inside a
-  `WindowWdgt`): right-clicking a nested widget shows the framework's ANCESTOR HIERARCHY (disambiguation) menu — one
-  "a X ➜" item per ancestor that has a menu (`Widget.buildContextMenu`/`buildHierarchyMenu`, labels are
-  `toString().replace("Wdgt","")` so a WindowWdgt reads "a Window ➜"). Navigate to the desired ancestor by class-name
-  PREFIX (`moveToItemStartingWithOfMenuAndClick_InputEvents menu, "a Window"`) to open ITS own menu, then click
-  "duplicate". MOVING a fixture (the broken-rectangles idiom): position widgets BEFORE `world.add` (a raw
-  `fullRawMoveTo` is fine — nothing is painted yet, as the framework's own `spawnInspector2` does); to move a widget
-  that is ALREADY in the world use the HIGH-LEVEL **`fullMoveTo`** (`invalidateLayout` → a proper broken-rect repaint
-  of both old and new regions), NOT `fullRawMoveTo` (which `fullChanged()`s only the OLD bounds before translating, so
-  the new position would not repaint until something else dirties it). In-system EVAL: a macro runs arbitrary CoffeeScript against the live world with
-  `world.evaluateString "code"` **directly inline** (Widget.evaluateString — compile the snippet, run it with
-  `@`=world, then relayout/repaint) — the macro equivalent of the recorded `AutomatorEventCommandEvaluateString`.
-  Do NOT write `@evaluateString`: MacroToolkit has its own `evaluateString` (binds `@` to the toolkit; the engine
-  uses it to install the macro itself), a DIFFERENT method. No new verb is needed — it's a plain world call.
-  BUTTON-TRIGGER discipline (no new verb): a button fires its action only when the mouse-down AND mouse-up land
-  on the SAME morph — the gate is in the hand (`ActivePointerWdgt.processMouseUp` fires the click only `when w ==
-  @mouseDownWdgt`), not in the button. To exercise "press then release elsewhere does NOT trigger", press on the
-  button and release at a point off it: `@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf
-  button, [0.5,0.5]), (new Point X, Y)`; a proper click that DOES trigger is the ordinary `@moveToAndClick_InputEvents
-  button` (e.g. `@closeWindow_InputEvents win`). Fixture gotcha: parent the observable button INSIDE a container (a
-  `WindowWdgt`/`PanelWdgt`), NOT bare on the world — `EmptyButtonMorph.rejectDrags` returns false only when the
-  parent is the world, so a button loose on the desktop would float-drag on the press instead of staying put.
-  PROPORTIONAL stack layout (no new verb): make a holder a horizontal stack by adding cells with
-  `holder.add cell, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED`, then give each cell a
-  share of the spare space with `cell.setMinAndMaxBoundsAndSpreadability(minPoint, desiredPoint,
-  k*LayoutSpec.SPREADABILITY_MEDIUM)` (k = its weight). Position the holder with `fullMoveTo` BEFORE `world.add`, then
-  `new HandleMorph holder` (it self-installs and snaps to the holder's bottom-right; one holder ⇒ one handle).
-  Resize it with `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", (new Point X, Y)` and the stack
-  redistributes the cells by their spreadability — this is the first holder of `Widget.setupTestScreen1` distilled.
-  CANVAS/PEN turtle drawing (no new verb): `canvas = new CanvasMorph; canvas.rawSetExtent (new Point W, H)`
-  (REQUIRED — CanvasMorph ships no default extent), `canvas.fullRawMoveTo …`, `world.add canvas`; then
-  `pen = new PenMorph; canvas.add pen` — a `PenMorph` draws on its PARENT when that parent is a `CanvasMorph`
-  (`PenMorph.forward → @parent.drawLine` into the canvas back-buffer), so attaching it to the canvas is what wires
-  the turtle to the surface. Place the turtle with `pen.fullRawMoveTo …` (turtles move raw) and call a drawing method
-  DIRECTLY, e.g. `pen.sierpinski 400, 40` (synchronous) — like soft-wrap/eval, drive the method, don't reconstruct
-  the recorded inspector-work-area `this.sierpinski(400,40)`.
-  HIDE / SHOW + subtree (no new verb): `widget.hide()` / `widget.show()` flip `@isVisible`; the paint recursion
-  short-circuits at an invisible morph BEFORE descending to its children (`Widget.preliminaryCheckNothingToDraw`
-  returns true when `!@isVisible`), so hiding a mid-chain morph hides its WHOLE subtree, and `show()` restores it.
-  Drive them directly (like soft-wrap) — `hide()` is the method the "hide" context-menu item calls, and `show()`
-  MUST be programmatic because a hidden morph can't be right-clicked (the recordings un-hide via an inspector
-  `this.children[0].show()` eval). `show()` no-ops if the morph is already effectively visible (an ancestor-chain
-  AND), so a hide->show round-trip restores exactly (image-identical).
-  COMPOSITE DROP-SHADOW (no new verb): a morph's shadow is added by `Widget.add`, NOT by `attach` — a widget added
-  to the world (the desktop) gets the default shadow (`addShadow`, offset (4,4) alpha 0.2, `Widget.coffee:2199`),
-  and a widget re-parented to any non-world parent gets `removeShadow` (`:2210`). The shadow paints as the recursive
-  silhouette of the whole subtree, so `world.add parent` then `parent.add child` (attach) makes the parent's shadow
-  outline the WHOLE parent+child composite. To force a shadow on a morph that never routed through `world.add`,
-  call `widget.addShadow()` (default `new Point(4,4), 0.2`) explicitly.
-  MENU CASCADE AUTO-CLOSE (on the mouse-DOWN): an open menu (and any submenu opened off it by clicking its parent
-  item) is dismissed by a mouse-DOWN on a NON-menu area. The hand's `cleanupMenuWdgts` runs on every mouse-down and
-  tears down the unpinned popups in `world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren` when the press lands
-  outside them — the inverse of `clickMenuHeaderToPin_InputEvents`. The dismissal is on the DOWN, not the up, so to
-  capture the dismissed state use the **`moveToAndMouseDown_InputEvents(positionOrWidget)`** verb (move then press,
-  NO release — scheduled after the move like `moveToAndClick_InputEvents`), then `yield "waitNoInputsOngoing"`, then
-  the screenshot (taken with the button still held), then `syntheticEventsMouseUp_InputEvents()`. The SAME
-  press-and-hold pattern captures a float-dragged morph being DROPPED (a mouse-down drops it). (A menu is also
-  dismissed by CLICKING one of its action items — which runs the action; e.g. "demo → rectangle" both dismisses the
-  cascade and attaches a new rectangle to the hand.) The cascade stays open for a settle-wait screenshot before the press.
-  TEXT ELLIPSISATION (no new verb): a `StringMorph2` does NOT grow to its text — when its bounds are too narrow it
-  crops to the longest fitting prefix plus "…" (its `fittingSpecWhenBoundsTooSmall` DEFAULTS to
-  `FittingSpecTextInSmallerBounds.CROP`; the alternative SCALEDOWN scales the text down instead, toggled by the
-  "crop to fit"/"shrink to fit" menu item). So `new StringMorph2 "long text", fontSize` (give it a `backgroundColor`
-  so the bounds/crop are visible) + `rawSetExtent` to a narrow width ellipsises it; a narrower extent crops more. The
-  screenshot's settle repaints and re-crops, so no explicit re-layout call is needed.
-  TEXT ALIGNMENT (no new verb): the converse of ellipsisation — a `StringMorph2` whose extent is LARGER than its text
-  does NOT grow the text either; `fittingSpecWhenBoundsTooLarge` DEFAULTS to `FittingSpecTextInLargerBounds.FLOAT`, so
-  the text floats within the bounds per two independent fields, `horizontalAlignment` (default LEFT) and
-  `verticalAlignment` (default TOP). Drive alignment DIRECTLY with `str.alignLeft()/alignCenter()/alignRight()` and
-  `str.alignTop()/alignMiddle()/alignBottom()` (each sets the field + `changed()`) — the exact methods the "align …"
-  menu items call; a synthetic right-click on a StringMorph2 does not open a usable menu in a macro (same TextMorph2-
-  family drift as soft-wrap). Give it a `backgroundColor` so the bounds, and so the float position, are visible.
-  SHAPE HIT-TEST / click-through (no new verb): the pointer resolves to a morph by SHAPE, not bounding box —
-  `ActivePointerWdgt.topWdgtUnderPointer` skips any morph that `isTransparentAt` the pointer and continues to the one
-  behind (`ActivePointerWdgt.coffee:48`). A `BoxMorph` with a large `cornerRadius` is transparent at its four corners
-  (`BoxyAppearance.isTransparentAt` is true outside the rounded arc), so a click on a corner passes THROUGH while a
-  click on the opaque body hits the box. Make it observable with z-order: a left-click raises whatever it lands on
-  (`Widget.mouseDownLeft → bringToForeground`), so put a `RectangleMorph` backdrop behind a rounded `BoxMorph` and click
-  the box's corner (the backdrop comes forward) vs its body (the box comes forward). `new BoxMorph radius` sets the
-  corner radius; `box.cornerRadius = 0; box.changed()` squares it (every corner becomes opaque).
-  INTERNAL vs EXTERNAL WINDOW DROP (no new verb): a `WindowWdgt`'s 4th ctor arg is `internal` (default false).
-  `WindowWdgt.rejectsBeingDropped` returns `!@internal`, and `ActivePointerWdgt.drop` forces the drop `target = world`
-  when the dropped widget rejectsBeingDropped (`ActivePointerWdgt.coffee:242`) — so an EXTERNAL window dropped over a
-  container lands on the desktop (NOT nested) while an INTERNAL window nests into the morph under the drop point (e.g. a
-  `PanelWdgt`, `_acceptsDrops:true`). Carry a window on the hand with `win.pickUp()` (centres it on the hand) + a
-  no-button `syntheticEventsMouseMove_InputEvents`, then drop with `syntheticEventsMouseClick_InputEvents()` (a
-  mouse-down while float-dragging drops — the duplication-drop path, which routes through `ActivePointerWdgt.drop`).
-  Prove the nesting by then moving the container (`panel.fullMoveTo …`): the nested internal window travels with it,
-  the external one stays put. Dropping an internal window into an empty WINDOW (not a panel) instead makes it that
-  window's CONTENT: `WindowWdgt.add` (`:179`) re-parents it `ATTACHEDAS_WINDOW_CONTENT`, `adjustContentsBounds`
-  (`:384`) COUPLES their bounds (a free-floating window sizes itself to WRAP the dropped content + chrome, so on the
-  drop it is the OUTER window that adapts, not the inner one), and the window relabels itself "window with an internal
-  window". Thereafter dragging the window's `.resizer` (`@dragWindowResizerTo_InputEvents win, point`) resizes the
-  outer window and `adjustContentsBounds` stretches the inner content to fill — so the inner window TRACKS the outer
-  on every resize; the resizer visually sits at the inner window's corner because the content fills the window
-  (`resizerCanOverlapContents`, `:437`).
-  RECTANGULAR CLIPPING (no new verb): a `ClippingBoxMorph` is an ORDINARY `BoxMorph` that merely
-  `@augmentWith ClippingAtRectangularBoundsMixin` (`ClippingBoxMorph.coffee:1-7` is the whole class body) — that mixin
-  is what makes it CLIP its children to its own bounds, so a child that extends past the box is only drawn inside it.
-  Build `new ClippingBoxMorph` (setColor/rawSetExtent/fullRawMoveTo, `world.add`), then add a child (`clipBox.add
-  child`) and move it (`child.fullRawMoveTo …` — fine under SWCanvas, which full-renders) to STRADDLE each of the four
-  edges in turn — on each it is cut off at that edge, proving the clip is the box's fixed rectangle on every side.
-  LISTMORPH SCROLLING (no new verb): a `ListMorph` (`extends ScrollPanelWdgt`) is a column of selectable rows in a
-  clipped viewport. Build a STANDALONE one — `new ListMorph nil, nil, [item strings]` — sized SHORTER than its content
-  (`rawSetExtent`) so it overflows and shows a vertical scrollbar; then `@wheelOn_InputEvents list, deltaY` scrolls it (the
-  ScrollPanel wheel path). Tune the wheel delta to the overflow (small overflow ⇒ a big delta reaches the bottom in one
-  wheel and later shots stop changing — drop the delta so each wheel advances ~⅓). The recorded list tests drive the
-  property list INSIDE an InspectorMorph; a direct `new ListMorph` isolates the widget. (Clicking a row calls
-  `ListMorph.select` — `@selected`/`@active` — but the row highlight is not a reliable screenshot signal; scrolling is.)
-  EDGE AUTO-SCROLL while dragging (no new verb): a `ScrollPanelWdgt` auto-scrolls when a float-dragged morph it
-  `wantsDropOf` (= its `_acceptsDrops`, true for a plain list) is held near an edge band (`scrollBarsThickness*3` ≈ 30px
-  from a side, OUTSIDE the inner inset). `ActivePointerWdgt.processMouseMove` (`:1063`) calls `startAutoScrolling`,
-  whose per-cycle step calls `autoScroll` (`ScrollPanelWdgt.coffee:482`), scrolling toward whichever edge band the
-  pointer is in (top⇒up, left⇒left, right⇒right, bottom⇒down). Pattern: build a list overflowing BOTH ways (long item
-  labels ⇒ horizontal bar, many items ⇒ vertical bar), `pickUp` a rectangle (don't drop it), then
-  `@syntheticEventsMouseMove_InputEvents (a point in an edge band), "no button", …` and **yield a generous time** so it
-  scrolls. **TWO determinism musts:** (1) `autoScroll` has a 500ms `Date.now()` settle, so the test MUST set
-  **`supportsTurboPlayback: false`** in its metadata (real-time replay, like the recorded autoScrolling test) or the
-  settle never elapses; (2) hold long enough that the scroll CLAMPS at the limit, so the captured state is deterministic
-  (a mid-scroll capture is time-dependent). Make the overflow VISIBLE (labels well wider than the viewport) — a tiny
-  overflow scrolls invisibly.
-  CARET PLACEMENT (no new verb): clicking inside an EDITABLE TextMorph2/StringMorph2 places `world.caret` at the slot
-  nearest the click (`StringMorph2.mouseClickLeft`, `:1242`, gated on `@isEditable`). **A directly-constructed
-  StringMorph2/TextMorph2 has `isEditable = false`** (`:43`) — so a click does NOTHING; the demo widgets set
-  `isEditable = true` on creation (`WorldMorph.coffee`), so a direct fixture must do the same (`txt.isEditable = true`)
-  before clicking. With a MULTI-LINE (soft-wrapped) text, `@moveToAndClickAtFractionOf_InputEvents txt, [fx, fy]` places
-  the caret on the clicked line: `[0.02, firstLineFrac]` lands it BEFORE the first letter, a click PAST the end of the
-  last line clamps it AFTER the last letter, and intermediate `(fx, fy)` hit per-line slots. Size the widget so the
-  wrapped text FITS (a cropped one opens the "edit:" prompt). The caret is a thin vertical bar, frozen-visible during
-  playback. (Distinct from caret SELECTION, which the double/triple-click and shift-click tests cover.)
-  CARET ARROW-KEY NAVIGATION (no new verb): once `world.caret` is editing a text, the ARROW KEYS walk it —
-  `CaretMorph.processKeyDown` (`:62-68`) maps ArrowLeft/Right/Up/Down to `goLeft/goRight/goUp/goDown`: Left/Right step one
-  slot along the text (wrapping over the soft line break), Up/Down move to the slot on the adjacent line nearest the
-  caret's column (clamping at the first/last line). Place the caret first (click an editable, fitting, multi-line
-  TextMorph2 — the same `isEditable = true` fixture as CARET PLACEMENT), then drive
-  `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "ArrowUp"` / `@repeatSpecialKey_InputEvents "ArrowDown", n` (the
-  generalized special-keys verbs send ANY key name as a `KeydownInputEvent` the caret routes — not just F2/Meta combos).
-  Screenshot between presses; each move shifts the thin caret bar to a new, distinct position. (The keyboard counterpart
-  of click-placement; distinct from caret SELECTION.)
-  ATTACH "NO TARGETS" MESSAGE (no new verb): the "attach..." context-menu item (`Widget.coffee:3491` → `Widget.attach`)
-  re-parents a morph onto another whose bounds INTERSECT it (`world.plausibleTargetAndDestinationMorphs`, excluding self
-  + current parent). When that list is EMPTY — a morph alone on the desktop, nothing overlapping — `attach` pops a
-  `MenuMorph` titled **"no morphs to attach to"** (`:3680`) at the hand instead of a "choose new parent:" target list;
-  that titled, item-less menu IS the user-facing message. Build a lone widget (clear of everything else),
-  `clickMenuItemOfWidget_InputEvents_Macro w, "attach..."`, screenshot. (The negative counterpart of a successful attach,
-  where the handle/morph OVERLAPS a target so the list is non-empty — see the attach/target verbs.)
-  LAYOUT SPACER / SPRING (no new verb): a `LayoutSpacerMorph` is a layout spring — `setMinAndMaxBoundsAndSpreadability`
-  computes `maxWidth = desired + spreadability*desired/100` (Widget.coffee:4050), and the spacer's ctor passes
-  spreadability `weight * LayoutSpec.SPREADABILITY_SPACERS` (= 1e8), giving it a ~1e6 max that dwarfs any cell's. In a
-  STACK, the holder's spare width is absorbed almost entirely by the springs, so the cells stay at their DESIRED size.
-  **Reuse the standard demo fixture for this rather than hand-rolling it: `Widget.setupTestScreen1()`** (a class method —
-  the demo's "layout tests → test screen 1") builds a size ruler + 8 resizable stack holders, several shaped
-  `[ spacer(w1) | adj | green | adj | blue | adj | yellow | adj | spacer(w2=2) ]` (two springs flanking three cells, the
-  weight-2 right spring putting a stretched block ~⅓ from the left). Locate the holders as the world's RectangleMorphs
-  with children (`world.children.filter (c) -> c instanceof RectangleMorph and c.children.length > 0`); each holder's
-  resize handle is a `HandleMorph` among ITS OWN corner children (`holder.children.filter (c) -> c instanceof HandleMorph`),
-  so move the holder with `fullMoveTo` (the handle travels with it) and drag the handle with
-  `@syntheticEventsMouseMovePressDragRelease_InputEvents handle.center(), point`. **DRIFT/footgun:** the CURRENT layout
-  settles a stretched stack's cells at their DESIRED width — so two holders look the same ONLY if their cells share a
-  desired size; pick the two desired-30 holders that differ in spreadability (one MEDIUM, one NONE) to show "they look the
-  same no matter the spreadability". (The recorded test's old reference shows the literal last two looking identical
-  because the OLDER layout settled cells at their MIN; don't expect that pair to match now.) Two holders ⇒ two handles, so
-  grab each by reference (`holder.children`-found), not the topmost-handle verb. (Converse of the proportional-cells test,
-  where with no spacer the cells DO split the spare space by their spreadability ratio.)
-  HOVER-TO-HIGHLIGHT a target/attach candidate (no new verb): picking a controller's "set target" or a morph's
-  "attach..." opens a menu of candidate morphs (the ones whose bounds INTERSECT it). **Hovering** such an item highlights
-  the morph it represents — `MenuItemMorph.mouseEnter → morphToBeHighlighted.turnOnHighlight()` (`MenuItemMorph.coffee:78`)
-  adds it to `world.morphsToBeHighlighted`, and `WorldMorph.addHighlightingMorphs` (each cycle) paints a `HighlighterMorph`
-  over it (mouseLeave/`turnOffHighlight` removes it). The SAME feedback works for both the "choose target:" and "choose
-  new parent:" menus. Pattern: make a `ColorPaletteMorph` (a controller) OVERLAP a rectangle, `clickMenuItemOfWidget…
-  "set target"` (or `"attach..."`), grab the just-opened menu with `@getMostRecentlyOpenedMenu()`, find the candidate with
-  `@getTextMenuItemFromMenuByPrefix menu, "a RectangleMorph"`, then `@syntheticEventsMouseMove_InputEvents item.center(),
-  "no button", …` to HOVER it (no click) and screenshot — the represented morph shows its highlight tint. (The first
-  visual-feedback test; reuses the prefix-find + no-button move primitives.)
-  EMBED / REPOSITION A WIDGET IN A SIMPLEDOCUMENT (no new verb): a `SimpleDocumentScrollPanelWdgt`'s inner content panel
-  (`SimpleVerticalStackPanelWdgt`, `_acceptsDrops:true`) flows arbitrary widgets, not just text — dropping a widget over
-  the content area inserts it into the flow. So `@dragWidgetTo_InputEvents (new HeartIconMorph …), (a Point in the doc)`
-  embeds an ICON among the text (an `IconMorph` self-sizes from its appearance, so it needs no extent); dragging that
-  embedded icon to a new Y RE-INSERTS it (top → bottom). **Insertion index ↔ drop Y (the footgun):**
-  `SimpleVerticalStackPanelWdgt.add` (`:34-42`) inserts the widget AFTER the sibling whose vertical span (`top < y <
-  bottom`) contains the drop's `positionOnScreen.y` (= the hand position at drop, `ActivePointerWdgt:250`), and APPENDS to
-  the end if the Y is in a GAP between siblings or below everything — **index 0 (above the first sibling) is unreachable**.
-  So to drop "near the top" aim at a sibling's CENTRE (`(doc.contents.childrenNotHandlesNorCarets())[0].center()`,
-  guaranteed within its span ⇒ inserts right after it), and to drop "at the bottom" aim just below the last element
-  (`lastEl.bottom()+N` ⇒ appended). A drop that lands in the blank GAP between two paragraphs silently appends instead of
-  inserting there. Fill the doc with a paragraph first so "top" and "bottom" are far enough apart to read.
-  WINDOW RESIZES TO ITS CONTENT (no new verb): an empty `WindowWdgt` adopts a dropped widget as its content
-  (`WindowWdgt.add`, `ATTACHEDAS_WINDOW_CONTENT`) and a free-floating window sizes itself to WRAP that content, so when the
-  content's own size changes the window RE-FITS. Drop a wrapping `SimplePlainTextWdgt` into a `new WindowWdgt nil,nil,nil`
-  (via `@dragWidgetTo_InputEvents text, window`), then `text.setText longerString` ⇒ the wrapping text grows taller and the
-  window grows; `text.setText shorterString` ⇒ it shrinks — content-driven resize, the converse of the handle-driven
-  window resize. (`setText` is enough; no caret editing needed.)
-  SUB-MENU NAVIGATION / HOPPING — KEEP THE COMMON CHAIN OPEN (no new verb): the world menu's arrow items OPEN a sub-menu
-  on CLICK (`TriggerMorph.trigger` runs the item's action — `popUpDemoMenu`/`testMenu`/…), popped AT THE HAND POSITION
-  (`PopUpWdgt.popUp` puts the new menu's top-left where you clicked). **The hop mechanic:** clicking ANY item in a menu of
-  an open chain KEEPS the menus in that menu's ASCENDING pop-up hierarchy (`PopUpWdgt.hierarchyOfPopUps`, walked via
-  `getParentPopUp`) and DISMISSES the DOWNSTREAM (descendant) sub-menus (the hand's `cleanupMenuWdgts`); then the clicked
-  trigger opens its own sub-menu. So you DON'T dismiss-and-reopen between branches — re-click the item you need IN THE
-  CHAIN and the chain is preserved UP TO it while the deeper menus vanish; the world menu (top of the chain) survives
-  every hop until one final desktop click clears it. Open the world menu (`@moveToAndClick_InputEvents (new Point 75,40),
-  "right button"`); find items by labelString PREFIX (`world.topWdgtSuchThat (w) -> w.labelString?.startsWith "demo"`;
-  arrow GLYPH never matters; inline `topWdgtSuchThat (w) -> …` predicates compile fine in macro source). **The one
-  subtlety — OCCLUSION:** a hop re-clicks a WORLD-menu sibling whose centre is covered by the sub-menu sitting over the
-  world menu (sub-menus pop at the clicked point). Click each world-menu sibling at its LEFT (`@moveToAndClickAtFractionOf_InputEvents
-  sibling, [0.3,0.5]`), going progressively FURTHER LEFT for each deeper hop (`[0.1,0.5]`) since that hop's sub-menu popped
-  a little further left; descend (clicking a sub-menu's own item) with a plain centre click since that sub-menu is
-  right-most. **Two more behaviours** the same shape gives for free: RE-POPPING a sub-menu (re-click its trigger at its
-  left → re-opens shifted, common chain still up) and ONE-CLICK-DISMISSES-THE-WHOLE-CASCADE (the final desktop click tears
-  down the world menu AND whatever sub-menu is still open). (Footgun banked: do NOT re-grab a hopped-to sub-menu via
-  `getMostRecentlyOpenedMenu()` — a hop's auto-close runs DEFERRED cleanup that re-clears `world.freshlyCreatedPopUps`,
-  so it returns `nil`; find items directly. Earlier attempts also used dismiss-and-reopen — correct behaviour but it does
-  NOT show that the common chain is preserved, which is the point.)
-  POP-UP (PROMPT/MENU) SHADOW ON DRAG (no new verb): a `PromptMorph` (extends `MenuMorph` extends `PopUpWdgt`) — opened by
-  a morph's "transparency..." item (`Widget.transparencyPopout`, an alpha entry-field + slider + Ok/Close) — casts a drop
-  shadow like every pop-up (`PopUpWdgt.popUp → addShadow`, offset (5,5) α0.2). Drag it by its TITLE BAR (the `MenuHeader`,
-  reachable as `prompt.label`) with `@syntheticEventsMouseMovePressDragRelease_InputEvents prompt.label.center(), dest` —
-  a press-then-drag GRABS and float-drags the whole pop-up, whereas a mere CLICK on the header would PIN it
-  (`MenuHeader.mouseClickLeft → pinPopUp`); read `prompt.label.center()` live so it tracks the moved prompt. On DROP in the
-  world `PopUpWdgt.justDropped` re-runs `updatePopUpShadow` (an unpinned prompt dropped on the desktop re-adds its normal
-  shadow), so the shadow renders correctly at every position — a pop-up's shadow "behaves like all other menus'". (Do NOT
-  drag from the prompt's CENTRE — that hits its inner field/slider, not the title.) Capture the prompt fresh right after
-  it opens (`prompt = @getMostRecentlyOpenedMenu()`, before the next mouseUp clears the fresh set).
-  UNPLUGGING AN INSPECTOR PART + DETACHED-CONTROLLER ASYMMETRY (no new verb): an inspector is built of ordinary widgets,
-  so a sub-part can be DETACHED and KEEPS working. Its property list (`inspector.list`, a `ListMorph`/`ScrollPanelWdgt`)
-  has a vertical scrollbar `inspector.list.vBar` (a `SliderMorph`; `target`=the list, `action`="adjustContentsBasedOnVBar";
-  knob `inspector.list.vBar.button`). **Open the OLD small `InspectorMorph` via the DIRECT "inspect" item**
-  (`clickMenuItemOfWidget_InputEvents_Macro str, "inspect"`, `Widget.coffee:3492`) — NOT `bringUpInspector_…_Macro`'s
-  "dev → inspect", which opens the big `InspectorMorph2`; the small one leaves room for the detached parts. **Capture
-  `scrollbar1 = inspector.list.vBar` BEFORE detaching** — the list does NOT rebuild a fresh vBar when one is picked up, so
-  the reference stays valid (and resolving by reference sidesteps the recorded which-of-six-slider-buttons ambiguity).
-  DETACH: right-click the knob → ancestor HIERARCHY menu → `@moveToItemStartingWithOfMenuAndClick_InputEvents
-  @getMostRecentlyOpenedMenu(), "a SliderMorph"` → `@moveToItemOfTopMenuAndClick_InputEvents "pick up"` (`Widget.pickUp`
-  keeps `target`/`action`) → carry (no-button move) and DROP (`syntheticEventsMouseClick_InputEvents()`) CLEAR of the
-  inspector. The detached scrollbar STILL drives the list: `@dragSliderButtonToFraction_InputEvents scrollbar1, [0.5, fy]`
-  scrolls it (`detachesWhenDragged` is false whenever the button's parent is a `SliderMorph`, so the knob moves in the
-  track even though the slider's own parent is now the world). DUPLICATE it (same path, "duplicate" instead of "pick up";
-  `fullCopy` copies the `target` reference so the copy `scrb2` ALSO drives the list) → `scrb2 = (world.children.filter (c)
-  -> (c instanceof SliderMorph) and (c isnt scrollbar1))[0]`. **THE ASYMMETRY (the point of the test):** dragging `scrb2`
-  scrolls the list, and the list updates its OWN `@vBar` (= `scrollbar1`) via `ScrollPanelWdgt.adjustScrollBars`, so the
-  first scrollbar FOLLOWS (round-trip list↔scrollbar1); but dragging `scrollbar1` scrolls the list while `scrb2` — which the
-  list has no back-reference to — stays put.
-  NESTED SCROLL-PANEL WHEEL ROUTING + LIMIT-ESCALATION (no new verb): the mouse wheel scrolls the INNERMOST scrollable
-  under the pointer, and ESCALATES to the containing one once the inner is maxed. `ActivePointerWdgt.processWheel`
-  hit-tests the topmost widget then walks UP to the nearest with a `wheel` handler; `ScrollPanelWdgt.wheel` scrolls
-  itself UNLESS already at the travel limit, in which case it `escalateEvent 'wheel'` to its parent. To show this with
-  the pointer HELD STILL: move once to near the top of the inner list (`@syntheticEventsMouseMove_InputEvents
-  (@pointAtFractionOf inner, [0.5,0.15]), "no button"`), then fire repeated wheels at that fixed point with the L1
-  `@syntheticEventsWheel_InputEvents 0, bigDelta` (NOT `wheelOn_InputEvents`, which re-moves each call) — the first wheel
-  bottoms the INNER (it absorbs the whole event while it has room, no escalation), the next escalates to the OUTER, which
-  bottoms too. Build the nesting with a `SimpleDocumentScrollPanelWdgt` (`outer.add inner` between two
-  `outer.addNormalParagraph "…"`) holding a fixed-height `ListMorph`: the vertical stack only constrains a child's WIDTH
-  (`rawResizeToWithoutSpacing` is a no-op for ListMorph), so the inner keeps its small height and overflows. FLANK the
-  inner above AND below so it stays VISIBLE when the outer is fully scrolled (content above the inner ≥ the outer's
-  overflow), so a final shot can show BOTH scrollbars at the bottom. (Complements the single-panel `macroListMorphWheelScroll`.)
-  RE-TARGETING A CONTROLLER (no new verb): a controller already wired by "set target" is RE-WIRED simply by running the
-  set-target flow AGAIN — `ControllerMixin.setTargetAndActionWithOnesPickedFromMenu` just OVERWRITES `@target`/`@action`, so
-  the previously-targeted widget keeps the value it already has but stops following. Reuse
-  `setControllerTargetToWidgetProperty_InputEvents_Macro` a second/third time on a DIFFERENT target. Put ONE palette over
-  TWO targets of DIFFERENT classes (a `PanelWdgt` + a `RectangleMorph`) so the bounds-intersection target list offers both,
-  picked unambiguously by class-name PREFIX ("a Panel" vs "a RectangleMorph"); re-target back and forth — each binding is
-  live only for the most-recently chosen target, prior targets' colours untouched. (Complements the bind-once
-  `macroPaletteSetTargetRecolorsPanel`.) The CONVERSE — TWO controllers SHARING one target (`macroTwoPalettesShareOneTarget`):
-  two `ColorPaletteMorph`s both set-target'd to the SAME panel's "color" (each overlapping the panel but NOT each other, so
-  each choose-target menu offers the one panel unambiguously); clicking EITHER palette repaints the panel, and both
-  bindings persist (most-recent click wins). One palette, many targets ⇒ re-targeting; many palettes, one target ⇒ shared control.
-  SLIDER-BUTTON STATE COLOURS (no new verb): a `SliderButtonMorph` paints itself `normalColor` / `highlightColor` /
-  `pressColor` per interaction state (`mouseEnter → setHiglightedColor`, `mouseDownLeft → setPressedColor`, `mouseLeave →
-  setNormalColor`; each early-returns while the hand is dragging). The demo "make sliders' buttons states bright" item
-  (`menusHelper.makeSlidersButtonsStatesBright()` — a global `MenusHelper`) recolours every EXISTING slider button to
-  BLACK / BLUE / LIME, so call it AFTER `world.add`-ing the slider. CAPTURE each state by HOLDING it: a no-button move onto
-  the button (`syntheticEventsMouseMove_InputEvents (@pointAtFractionOf slider.button, [0.5,0.5]), "no button"`) for
-  highlighted (persists until the pointer leaves), then `moveToAndMouseDown_InputEvents slider.button` → screenshot →
-  `syntheticEventsMouseUp_InputEvents()` for pressed (held; no move ⇒ no drag). GOTCHA: a SliderMorph defaults to
-  `alpha 0.1`, which mutes the state colours into greys — set `slider.button.alpha = 1` so the button shows its TRUE
-  black/blue/lime, vivid against the pale translucent track (don't set `slider.alpha = 1`: the track's own colour is BLACK,
-  so an opaque track swallows the black button). (Distinct from the menu-item hover-highlight test.) CROSS-SLIDER GRAB
-  BEHAVIOUR (two sliders, `macroSliderButtonStateColors`): while one handle is GRABBED (`@moveToAndMouseDown_InputEvents
-  slider1.button`, held — the hand is non-float-dragging it, so `world.hand.isThisPointerDraggingSomething()` is true),
-  (a) moving the hand OVER the OTHER handle does NOT highlight it (its `mouseEnter` early-returns while the hand is
-  dragging) — move with the button HELD: `@syntheticEventsMouseMove_InputEvents (@pointAtFractionOf slider2.button,
-  [0.5,0.5]), "left button"`; and (b) the GRABBED button follows the hand VERTICALLY anywhere on screen, clamped to its
-  OWN track (`SliderButtonMorph.nonFloatDragging`: `newY = clamp(hand.y, track)`, `newX = its own left`) — move the hand
-  far down with the button held and the button slides to the bottom of its track. Release with `@syntheticEventsMouseUp_InputEvents()`.
-  NON-WRAPPING TEXT SELF-RESIZE (no new verb): a `SimplePlainTextWdgt` (extends TextMorph2) resizes its OWN bounds to its
-  text. Its ctor sets `@maxTextWidth = true` (wrap to own width); setting `@maxTextWidth = nil` then `reLayout()` turns
-  wrapping OFF — exactly what the "soft wrap off" item does (`SimplePlainTextWdgt.coffee:111-115`). In that mode `setText`
-  re-lays-out SYNCHRONOUSLY (`:126-131 → reLayout :183`): width becomes the LONGEST line, height becomes lineCount × fontHeight,
-  so the box grows as text is added and shrinks as it is removed. Drive it with `setText` (the clean, deterministic equivalent
-  of caret typing — the typing input path itself is covered by the caret tests); give it a `backgroundColor` so the bounds are
-  visible; build multi-line strings with `String.fromCharCode(10)` (a literal newline can't sit in the backtick macro source).
-  The leaf-text counterpart of the window-resizes-to-content test (there a CONTAINER reacts; here the text widget resizes itself).
-  WIDTH-CONSTRAINING VERTICAL STACK GROWS WITH CONTENT (no new verb): a `SimpleVerticalStackPanelWdgt` (its `constrainContentWidth`
-  defaults true) stacks children vertically, constrains each child's WIDTH to the panel, and — being `tight` — grows its HEIGHT
-  to exactly the children. The reflow is `adjustContentsBounds` (`SimpleVerticalStackPanelWdgt.coffee:73-134`): it sets each
-  `SimplePlainTextWdgt` child's `maxTextWidth` to the available width (so a wide wrapping paragraph WRAPS to the panel, not past
-  it) and sums child heights into `rawSetHeight`. Reproduce the demo's widgets exactly: "vertical stack constrained contents width"
-  is `new SimpleVerticalStackPanelWdgt` at 370×325 (`Widget.createSimpleVerticalStackPanelWdgt`, Widget.coffee:3218), and "simple
-  plain text wrapping" is a `SimplePlainTextWdgt` carrying the demo's 2-paragraph Lorem ipsum + cream background
-  (`Widget.createNewWrappingSimplePlainTextWdgtWithBackground`, :3035). DROP each into the stack with `@dragWidgetTo_InputEvents
-  text, panel` (the real input path the recording uses — a drop fires `reactToDropOf → adjustContentsBounds`), so a second drop
-  ~doubles the stack height. (`panel.add child` + `panel.adjustContentsBounds()` is the direct equivalent when you don't need the
-  drop; note the panel is tight, so an EMPTY panel taller than one paragraph SHRINKS on the first add — start from substantial
-  content, or a thin strip, for monotonic growth.) The reusable fixture for the big `Width*VerticalStackPanel` family.
-  POP-UP STAYS OPEN WHILE ITS SLIDER IS DRAGGED OUT (no new verb): a pop-up normally closes on a mouse-DOWN outside it
-  (`ActivePointerWdgt.cleanupMenuWdgts`), but DRAGGING its slider keeps it open even when the pointer leaves its bounds. Pressing
-  a slider button whose slider's parent is a `PromptMorph` starts a NON-float drag (`SliderMorph.mouseDownLeft →
-  nonFloatDragWdgtFarAwayToHere`; `SliderButtonMorph.detachesWhenDragged` is false while parented to a slider), and on the mouse-UP
-  `cleanupMenuWdgts` is SKIPPED while a non-float drag is in progress (`if !@nonFloatDraggedWdgt? then cleanupMenuWdgts`) — so the
-  button clamps to its track end while the pointer travels far outside, and the popover survives. Open a `RectangleMorph`'s
-  "transparency..." popover (`clickMenuItemOfWidget_InputEvents_Macro rect, "transparency..."`), grab the live slider
-  (`prompt.children.filter (c) -> c instanceof SliderMorph`), and `@syntheticEventsMouseMovePressDragRelease_InputEvents
-  slider.button.center(), (a point far OUTSIDE the popover)`. The prompt commits its alpha only on "Ok", so during the drag only
-  the slider's value FIELD changes — the proof is the value plus the popover staying open. The clean INVERSE of
-  `macroMenusCloseOnMouseDownOutside` (a mouse-down outside DOES dismiss an unpinned menu).
-  WINDOW CONTENT RESIZE — FREE vs FIXED-WIDTH (no new verb): a widget dropped into an empty `WindowWdgt` becomes its
-  `@contents`; on a window resize, `WindowWdgt.adjustContentsBounds` (`:384`) resizes the content per its
-  `WindowContentLayoutSpec`'s `canSetWidthFreely`/`canSetHeightFreely`. A `CircleBoxMorph` has BOTH free (the default spec)
-  so it fills the window in both dimensions; a `SliderMorph` keeps a FIXED width (`initialiseDefaultWindowContentLayoutSpec`
-  makes width un-free) so it stretches only in height, staying centred. Fixture: `new WindowWdgt nil,nil,nil` (external) +
-  the content widget; drop it in, then `@dragWindowResizerTo_InputEvents win, (new Point (win.right()+dx), (win.bottom()+dy))`
-  to widen the window — the circle box fills, the slider stays narrow. DROP GOTCHA: a `CircleBoxMorph` drops fine with
-  `@dragWidgetTo_InputEvents circle, win` (grabs its centre — it has no sub-widget), but a `SliderMorph` must be dropped with
-  `slider.pickUp()` + a no-button `@syntheticEventsMouseMove_InputEvents` + `@syntheticEventsMouseClick_InputEvents()` —
-  `@dragWidgetTo_InputEvents` would grab the slider's CENTRE = its BUTTON (at value 50) and move the button, not float-drag the
-  whole slider. (macroWindowContentResizesFreely / macroWindowContentKeepsFixedWidth — a deliberate free-vs-fixed pair.)
-  LONELY CONTROLLER TARGETS ONLY THE WORLD (assertion): a controller (SliderMorph / palette / … with ControllerMixin) with
-  NOTHING overlapping it can only target the WORLD. "set target" (`ControllerMixin.openTargetSelector`) lists
-  `world.plausibleTargetAndDestinationMorphs` (Widget.coffee:846) = widgets whose bounds INTERSECT the controller; the world
-  always qualifies (its bounds cover the desktop), so with nothing else overlapping it is the ONLY item, labelled "a WorldMorph ➜".
-  A NON-screenshot assertion test: right-click the slider's LOWER track (its button covers the centre at value 50) → "set target",
-  then `@assertTopMenuItemCount 1` + `@assertTopMenuItemStrings ["a WorldMorph ➜"]`. The negative/edge of the set-target family.
-  (macroLonelySliderTargetsWorldOnly.)
-  SCROLLBARS TRACK CONTENT — narrow a text to grow the vBar, move it to grow the hBar (no new verb): a `ScrollPanelWdgt`'s scrollbars
-  reflect the content inside it. `ScrollPanelWdgt.adjustScrollBars` (`:114`) shows the hBar only when `contents.width() >= width()+1`
-  and the vBar only when `contents.height() >= height()+1` (else hides it), sizes each thumb to the viewport/content ratio and positions
-  it by the scroll offset (`updateSpecs`). Fixture (faithful to the recording): add a wrapping `SimplePlainTextWdgt` (a lorem paragraph)
-  as a real SUBMORPH of the inner `@contents` with `panel.add text`; image_1 it fits (no bars). NARROW it — `text.rawSetWidth narrower`
-  re-wraps it (synchronously, via `SimplePlainTextWdgt.reLayout`, since `@maxTextWidth=true`) to more/taller lines → the vBar appears.
-  MOVE it toward the bottom-right — `text.fullRawMoveTo (near the panel's bottom-right)` pushes the content past both edges → the hBar
-  appears and the vBar thumb shrinks. Re-run `panel.adjustContentsBounds()` + `panel.adjustScrollBars()` after each. Because the text is
-  a true submorph, `adjustContentsBounds` sizes `@contents` to its `subMorphsMergedFullBounds` — so it does NOT have the trap of a
-  single-widget contents (`new ScrollPanelWdgt child`), whose childless `@contents` `adjustContentsBounds` re-fits back to the viewport
-  (undoing the overflow — there you'd call `adjustScrollBars()` only). First scrollbar-REACTION test (distinct from the wheel-ROUTING of
-  macroListMorphWheelScroll / macroNestedScrollPanelsRouteWheel, which scroll an already-overflowing panel). (macroScrollBarsTrackContentChange.)
-  DETACHED MORPH STAYS FLOAT-DRAGGABLE (no new verb): float-vs-non-float dragging is computed LIVE from the parent, not a stored
-  flag — `Widget.grabsToParentWhenDragged` (`:2513`) is false when the parent is the WORLD (the hand grabs the morph itself = float
-  drag) and true when the parent is another morph (dragging grabs the PARENT, so they move together). "attach..." re-parents the
-  morph under the chosen target (`Widget.attach → target.add`, `:3657/:3642`); "detaching" = pick it up and drop it on the desktop,
-  which resets the parent to the world. So after attach + detach the morph float-drags independently again — no flag to restore.
-  Fixture: two overlapping `RectangleMorph`s (distinct colours); attach b→a via `clickMenuItemOfWidget_InputEvents_Macro b,
-  "attach..."` then `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()), "a RectangleMorph"`; prove it
-  by dragging a (b follows); detach with `b.pickUp()` + carry + click-to-drop; then `@dragWidgetTo_InputEvents b, dest` moves b alone.
-  GOTCHA: "attach..." is a TOP-LEVEL context-menu item, but "pick up" lives in the morph's "a <Class> ➜" HIERARCHY submenu (NOT
-  top-level), so `clickMenuItemOfWidget_InputEvents_Macro …, "pick up"` finds nothing and crashes ("reading 'x' of undefined") — use
-  `pickUp()` directly (the documented equivalent) or navigate the submenu. (macroDetachedMorphStaysFloatDraggable.)
-  STACK PANEL LOOSE WHEN EMPTY, TIGHT WHEN FILLED — resized via its HANDLE (no new verb): a width-constraining
-  `SimpleVerticalStackPanelWdgt` resizes COMPLETELY FREELY (both dims) while EMPTY, but only in WIDTH once it holds content (its HEIGHT
-  is fixed to however the text wraps). `adjustContentsBounds` (`SimpleVerticalStackPanelWdgt.coffee:73`) sums child heights into newHeight,
-  then `if !@tight or childrenNotHandlesNorCarets.length == 0: newHeight = Math.max newHeight, @height()` (`:130-131`) keeps the
-  requested (dragged) height ONLY when loose or EMPTY; a tight non-empty panel takes the content height verbatim, and widening it
-  re-wraps the `SimplePlainTextWdgt` child to fewer/shorter lines (`maxTextWidth`, `:106-114`). FAITHFUL to the recording, resize with
-  the real HANDLE (brought up by "resize/move...", not shown by default): `@openMenuOf_InputEvents panel` → "resize/move..." →
-  `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest`. KEY: once the tight panel snaps to its content the text
-  COVERS the panel (no panel chrome to right-click), so bring up the panel's handles via the TEXT's "a SimpleVerticalStackPanel ➜"
-  HIERARCHY submenu: `@openMenuOf_InputEvents text` → `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()),
-  "a SimpleVerticalStackPanel"` → "resize/move..." → drag the handle (a right-click on a child whose parent ≠ world opens the ancestor
-  hierarchy menu, `Widget.buildHierarchyMenu`; it IS a registered MenuMorph). Fixture: empty stack → resize-handle big (free) → drop a
-  wrapping `SimplePlainTextWdgt` (snaps to content) → resize-handle big via the text submenu (width grows, height snaps back, text
-  re-wraps shorter) → `world.add text` to empty it → resize-handle big (free again). Take the screenshot WITH the handles showing
-  (resize mode), then click empty desktop to exit before the next step. Complements macroVerticalStackPanelGrowsWithContent (content
-  GROWTH) with the loose-vs-tight RESIZABILITY invariant. (macroStackPanelLooseWhenEmptyTightWhenFilled.)
-- **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` and `assertTopMenuItemStrings([labels])`
-  (the strings counterpart, mapping the recorded `CheckStringsOfItemsInMenu` — reads each item's `labelString` via
-  the menu's `testItems()` and compares the ordered array) locate by meaning, then call
-  `world.automator.player.recordMacroAssertion(passed, description, expected, found)` — the generic sink that fails
-  the test like a screenshot mismatch (flips `allTestsPassedSoFar`, records the failing test, logs expected-vs-found
-  to the SystemTests console) but, unlike the recorded menu checks, does NOT stop the macro. These MUST be toolkit
-  methods called as `@assert…` — the assertion sink's name `recordMacroAssertion` contains "Macro" mid-token, so writing
-  it in the macro SOURCE would be mangled by the invocation rewriter (which only allows "Macro" as a trailing suffix);
-  inside a toolkit method it's plain compiled code, so it's safe. Lets a macro test assert non-visual facts.
+## Adding to the toolkit
+
+- **L1 primitive** — a method that pushes `*InputEvent`s with scheduled times onto `world.inputEventsQueue`. Default
+  the start time to `WorldMorph.dateOfCurrentCycleStart.getTime()` and stagger with an interval.
+- **L2 locator/action** — a method that reads the live tree (`world.topWdgtSuchThat`, `world.freshlyCreatedPopUps`, a
+  widget's children) and composes L1. No `yield`, no `world.automator` (that's the harness's job).
+- **L2 assertion** (non-screenshot) — locate by meaning, then call `world.automator.player.recordMacroAssertion(passed,
+  desc, expected, found)` (fails the test like a screenshot mismatch but does NOT stop the macro). MUST be a toolkit
+  `@assert…` method (the sink's name has "Macro" mid-token — see rule 3).
 - **L3 verb** — append a `macroSubroutines.add Macro.fromString """ …Macro = -> … """` block to
-  `standardMacroSubroutines`. It's a generator SOURCE string: it may `yield` a sentinel
-  (`"waitNoInputsOngoing"`, `"waitForScreenshotReady"`, or a number of ms), call toolkit helpers as `@…`, and
-  call **other verbs by bare name** (the engine rewrites those into `yield from …`). Example:
-  `setControllerTargetToWidgetProperty_InputEvents_Macro(controller, targetClassNamePrefix, propertyLabel)` — the
-  patch-programming "set target" verb: right-click a controller (a ColorPaletteMorph / GrayPaletteMorph /
-  SliderMorph / … — anything augmented with `ControllerMixin`) → "set target" (`openTargetSelector` lists only
-  widgets whose bounds INTERSECT the controller, so it must OVERLAP the target) → pick the target by class-name
-  PREFIX → pick the property (e.g. "color"); thereafter acting on the controller (clicking a palette, dragging a
-  slider) calls `target[setter](value)`. It captures each successive menu fresh from `getMostRecentlyOpenedMenu()`
-  (every mouseUp clears the fresh-popup set) — the reusable verb for the whole controller/target family. Its 4th
-  arg `controllerMenuFraction` (default `[0.5,0.5]`) is the fractional point right-clicked to open the controller's
-  menu: pass e.g. `[0.5,0.85]` for a SLIDER, whose button sits at the centre at value 50 — right-clicking the
-  button opens no menu, so target its LOWER TRACK instead. Its 5th arg `controllerHierarchyPrefix` (default nil)
-  handles a controller INSIDE a container: right-clicking a non-world-child opens the ancestor HIERARCHY menu, so
-  pass the controller's class-name prefix (e.g. `"a SliderMorph"`) to step into its own submenu before "set target"
-  (omit it for a world-child controller, which opens its menu directly). After wiring a slider, drive it live with
-  `dragSliderButtonToFraction_InputEvents`. (A slider's property menu lists only NUMERIC setters — font size /
-  alpha / width / height / padding — not colour channels; `setTargetAndAction` pushes the current value on binding,
-  so a slider wired to "text" sets the text to its numeric value immediately.) DUPLICATING a controller+target
-  composite (e.g. a panel holding a text + its sliders) deep-copies the bindings remapped to the COPY's target, so
-  the copy's controllers drive the copy's target independently — what the duplication-keeps-control-separate tests
-  verify. EDITING A BUTTON'S LABEL (no new verb): clicking a
-  button TRIGGERS it, so to edit its caption call `button.label.edit()` directly (= `world.edit label`, sets
-  `world.caret` on the label, no isEditable gate — what the "edit" menu item does), then reuse the caret verbs
-  (Meta+a via `syntheticEventsShortcutsAndSpecialKeys_InputEvents`, `syntheticEventsStringKeys_InputEvents`) and
-  `world.stopEditing()` to commit. Use an old-family label (a `TriggerMorph`/`MenuItemMorph` `TextMorph`, which
-  re-lays-out on setText) — a `SimpleButtonMorph`'s `StringMorph2` face crops rather than resizing — and, for a
-  standalone TriggerMorph, give it `centered=true` + a fixed `rawSetExtent` and `reLayout()` after each edit (it
-  doesn't size its own bg to its label; a parent menu normally does).
-- **Shared fixtures via verbs** — the window-in-window pair shares its whole setup through two verbs,
-  **`buildExternalAndFreeInternalWindow_Macro()`** (`return [extWin, intWin]`) and
-  **`dropInternalWindowIntoExternalWindow_InputEvents_Macro extWin, intWin`** (`return extWin` = the composite). See
-  **"Composing macros"** just below for the general capability (a macro invoking another macro, with arguments and
-  return values, including the no-arg form) and the DRY-for-code-AND-assets pattern these two verbs implement.
+  `standardMacroSubroutines`. A generator SOURCE string: it may `yield` a sentinel, call toolkit helpers as `@…`, and
+  call other verbs by bare name (the engine rewrites those into `yield from`).
+- Document the new verb's **doc-comment in `MacroToolkit.coffee`**; add the SKILL's digest-kind→verb mapping row only
+  if it's a migration target. Reuse existing primitives — most "new" behaviours are pure composition (see MACRO-PATTERNS.md).
 
-## Composing macros: a macro invoking another macro (args, return values, DRY for code AND assets)
+## Authoring gotchas (fixture + menu)
 
-A macro calls another macro (a "verb") by **bare name**, like an ordinary function — the engine
-(`Macro._replaceMacroInvocationWithYieldingInvocations`) rewrites every `someMacro args` into
-`yield from someMacro.call this, args`, so the callee runs inline and its own `yield`s (waits, screenshots) propagate
-up to the driver. Three capabilities follow:
+- **Direct construction differs from the demo path.** A directly-built `StringMorph2`/`TextMorph2` has `isEditable =
+  false` (`:43`) — set `txt.isEditable = true` before clicking it. A `SliderMorph` defaults to `alpha 0.1`; a
+  `CanvasMorph` ships no default extent. A morph made via the demo menu (`world.create`, floats on the hand) is
+  initialised differently from `new …; world.add` and can inspect differently — reproduce the menu path when it's load-bearing.
+- **`fullMoveTo` vs `fullRawMoveTo`.** Before `world.add` (nothing painted yet) a raw `fullRawMoveTo` is fine; to move a
+  widget ALREADY in the world use **`fullMoveTo`** (a proper broken-rect repaint of both regions) — `fullRawMoveTo` only
+  dirties the OLD bounds.
+- **`getMostRecentlyOpenedMenu()` is fresh-only** — every mouseUp clears `world.freshlyCreatedPopUps`. Capture a popup
+  reference right after it opens and drive its later items via `@moveToItemOfMenuAndClick_InputEvents`.
+- **Right-clicking a non-world child opens the ANCESTOR hierarchy menu** ("a X ➜" per ancestor) — navigate by class-name
+  prefix to reach the desired ancestor's own menu (and note "pick up" lives in a morph's own hierarchy submenu, not top-level).
+- **Two inspectors:** context-menu "inspect" → old `InspectorMorph`; "dev ➜ → inspect" → `InspectorMorph2` (the
+  `*FromTopInspector*` helpers assume InspectorMorph2).
 
-- **Arguments** — pass them positionally: `dropInternalWindowIntoExternalWindow_InputEvents_Macro extWin, intWin`.
-- **Return values** — a subroutine may `return` data and the caller captures it, because `yield from` evaluates to the
-  delegated generator's return value: `[extWin, intWin] = buildExternalAndFreeInternalWindow_Macro()`. Write an
-  explicit `return …` (don't rely on CoffeeScript's implicit return inside a generator).
-- **No-arg calls** — `someMacro()` works. (The rewriter runs its with-args pass FIRST; the with-args pattern's `[^\(]`
-  guard skips `Macro()`, so the no-arg rewrite that follows isn't re-scanned. Before this ordering fix the no-arg form
-  double-rewrote to `yield from yield from …` and errored at compile — it had simply never been used, because every
-  prior subroutine call passed arguments. It's the form that makes `x = build()` read naturally.)
+## Composing macros (args, return values, DRY for code AND assets)
 
-**DRY across two tests — for BOTH the code AND the screenshots.** When two tests share a setup, don't duplicate it:
+A macro calls another by **bare name**; the engine rewrites `someMacro args` → `yield from someMacro.call this, args`,
+so the callee runs inline and its `yield`s propagate up. **Arguments** pass positionally. **Return values** work because
+`yield from` evaluates to the delegated generator's return value (`[a,b] = build_Macro()`) — write an explicit `return`
+(don't rely on CoffeeScript's implicit return in a generator). **No-arg calls** (`someMacro()`) work. **DRY across two
+tests:** put a shared fixture in `standardMacroSubroutines` as verb(s) that **return** the built widgets (NOT per-test
+`extraSubroutineSources`, which can't be shared); a shared verb must take **no screenshots** (only a test's own sources
+are scanned for reference names). References are stored **per test** with no aliasing, so when two tests reach the SAME
+state, have only ONE screenshot it; the other reuses the fixture and skips the shot. (Worked example: the window-in-window
+pair, `buildExternalAndFreeInternalWindow_Macro` + `dropInternalWindowIntoExternalWindow_InputEvents_Macro`.)
 
-- **Code (the fixture):** put the shared setup in `standardMacroSubroutines` as verb(s) that **return** the built
-  widgets — NOT in a per-test `extraSubroutineSources` (those are embedded per test and can't be shared without copying
-  the string). A fix to the fixture is then made in one place. A shared verb must take **no screenshots**: only a test's
-  own `mainMacroSource`/`extraSubroutineSources` are scanned for reference-image names
-  (`AutomatorEventCommandStartMacro.screenshotImageNamesFromMacroSources`), so a `takeScreenshot_…` inside a global verb
-  would never get its reference preloaded. Keep the screenshots (the assertions) in each test's main macro.
-- **Assets (the screenshots):** references are stored **per test**, matched by `SystemTest_<test>_image_N`, with no
-  cross-test reference sharing or aliasing. So when two tests would capture the SAME state, have only ONE of them
-  screenshot it; the other still builds that state (via the shared verb) but skips the shot — so an identical reference
-  image is never stored under two names.
+## The delegation model (the first in the codebase)
 
-Worked example (the window-in-window pair). The shared fixture is the two verbs above.
-`macroInternalWindowDroppedIntoWindowFits` calls both and screenshots the two-separate-windows state and the composite —
-it **owns** the composite shot. `macroResizeWindowContainingInternalWindow` calls the same two verbs, does **not**
-re-screenshot the composite, and goes straight to dragging the resizer (grow then shrink). Net: neither the setup code
-nor the composite screenshot is duplicated, across two still-separate, independently-named tests.
-
-## The delegation model (this is the first one in the codebase)
-
-The project is phasing out mixins in favour of plain OO delegation; `MacroToolkit` is the first example.
-
-- `world.macroToolkit` is the collaborator, created in the `WorldMorph` constructor next to the Automator:
-  `if MacroToolkit? then @macroToolkit = new MacroToolkit` (the guard self-disables under `--homepage`,
-  where the class is stripped — so no in-file macro marker is needed there). `world` keeps only the two
-  per-cycle hooks (`doOneCycle` → `@macroToolkit?.progressOnMacroSteps()`; `updateTimeReferences` →
-  `@macroToolkit.msSinceLastExecutedMacroStep` bookkeeping), both still inside their macro markers.
-- There is **no** `world.progressOnMacroSteps` / `world.standardMacroSubroutines` / `world.aMacroIsRunning`
-  any more — they are all `world.macroToolkit.*`.
-- The pump `progressOnMacroSteps` starts as an empty stub on the instance and is **overwritten at macro
-  start** by the string `Macro._addHeaderCode` emits (eval'd via `world.macroToolkit.evaluateString`, so its
-  `@…` bind to the instance), then reset to `noOperation` when the generator is done.
+The project is phasing out mixins for plain OO delegation; `MacroToolkit` is the first example. `world.macroToolkit` is
+created in the `WorldMorph` ctor: `if MacroToolkit? then @macroToolkit = new MacroToolkit` (the guard self-disables under
+`--homepage`, where the class is stripped). `world` keeps only the two per-cycle hooks (`doOneCycle` →
+`@macroToolkit?.progressOnMacroSteps()`; `updateTimeReferences` → bookkeeping). There is **no** `world.progressOnMacroSteps`
+/ `world.aMacroIsRunning` any more — all `world.macroToolkit.*`. The pump `progressOnMacroSteps` starts as an empty stub and
+is overwritten at macro start by the string `Macro._addHeaderCode` emits (eval'd via `world.macroToolkit.evaluateString`),
+then reset to `noOperation` when done.
 
 ## Framework-vs-harness rule
 
-Anything that touches `world.automator` is a **harness** (assertion) concern, not framework. Today the verb
-`takeScreenshot_InputEvents_Macro` lives in the framework verb set as a pragmatic stripped *source string*
-that calls `world.automator.player.compareScreenshots`. The **sanctioned future move** is for
-`AutomatorEventCommandStartMacro` to contribute that verb itself — the `extraSubroutineSources` merge-seam
-already exists for exactly this.
+Anything that touches `world.automator` is a **harness** (assertion) concern, not framework. Today
+`takeScreenshot_InputEvents_Macro` lives in the framework verb set as a pragmatic stripped source string that calls
+`world.automator.player.compareScreenshots`; the sanctioned future move is for `AutomatorEventCommandStartMacro` to
+contribute that verb via the `extraSubroutineSources` merge-seam.
 
 ## Build-strip contract (`--homepage`)
 
-- `Macro.coffee` and `MacroToolkit.coffee` each start with `# this file is only needed for Macros` →
-  `build.py` skips the whole file under `--homepage` (and `src/macros/*.coffee` is auto-globbed, so a new
-  file here needs no manifest entry).
-- In `WorldMorph.coffee`, the two cycle hooks sit inside in-file
-  `# »>> this part is only needed for Macros … # this part is only needed for Macros <<«` pairs (stripped).
-  The `macroToolkit: nil` field and the `if MacroToolkit?` ctor init are **unmarked** (harmless in homepage:
-  the field stays `nil`, the guard is false).
+- `Macro.coffee` and `MacroToolkit.coffee` each start with `# this file is only needed for Macros` → `build.py` skips
+  the whole file under `--homepage` (and `src/macros/*.coffee` is auto-globbed — a new file here needs no manifest entry).
+- In `WorldMorph.coffee` the two cycle hooks sit inside `# »>> … only needed for Macros … <<«` pairs (stripped); the
+  `macroToolkit: nil` field and the `if MacroToolkit?` ctor init are unmarked (harmless in homepage: field stays `nil`,
+  guard is false).
 
-## Migrating an old recorded test (the recorded-identity bridge)
+## Migrating an old recorded test
 
-The old recorded SystemTests convert to macro tests almost mechanically, because every recorded click
-already stored WHAT it hit: `morphIdentifierViaTextLabel = [getTextDescription(), occurrence, total]` +
-a fractional in-widget position. That triple is exactly what `findWidgetByTextDescription` /
-`moveToAndClickAtFractionOf_InputEvents` consume — so a migrated macro re-finds the very same widget the
-recording targeted, and follows it if it has moved.
-
-The pipeline: `Fizzygum-tests/scripts/thin-systemtest.js` decimates a recording (82–92 % of it is
-mouse-move bloat) into a readable digest of meaningful steps; the `/migrate-systemtest` skill
-(`Fizzygum-tests/.claude/skills/migrate-systemtest/`) translates that digest into a macro, grounding on
-the old reference screenshots. Full recipe + digest format: `Fizzygum-tests/scripts/README-migration.md`.
-Proven on `SystemTest_basicWorldMenuAndBubble` (pixel-identical) and `SystemTest_addEditSaveRenameRemoveProperty`.
+Conversion is almost mechanical: every recorded click already stored WHAT it hit —
+`morphIdentifierViaTextLabel = [getTextDescription(), occurrence, total]` + a fractional position — which is exactly what
+`findWidgetByTextDescription` / `moveToAndClickAtFractionOf_InputEvents` consume, so a migrated macro re-finds the very same
+widget and follows it if it moved. Pipeline: `Fizzygum-tests/scripts/thin-systemtest.js` decimates a recording into a
+digest; the **`/migrate-systemtest` skill** translates it into a macro, grounding on the old reference screenshots; reuse
+patterns are in **`MACRO-PATTERNS.md`**. Recipe + digest format: `Fizzygum-tests/scripts/README-migration.md`.
 
 ## Run / capture (from `../../../Fizzygum-tests`)
 
 - One-time: `npm i` (Puppeteer).
-- Run one macro test headless: `node scripts/run-macro-test-headless.js SystemTest_<name> [--dpr=N]`
-  (boots `worldWithSystemTestHarness.html?sw=1&dpr=N`, runs it, prints `TEST PASSED` / `failureImages`).
+- Run one headless: `node scripts/run-macro-test-headless.js SystemTest_<name> [--dpr=N]` (boots
+  `worldWithSystemTestHarness.html?sw=1&dpr=N`, prints `TEST PASSED` / `failureImages`).
 - (Re)capture SWCanvas references: `node scripts/capture-macro-test-references.js <name> [--clean] [--dprs=1,2]`.
 - In a browser: open the built `worldWithSystemTestHarness.html`, then
   `world.automator.loader.loadAndRunSingleTestFromName('SystemTest_<name>')`.
