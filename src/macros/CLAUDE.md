@@ -549,6 +549,45 @@ ends by pushing events; callers `yield "waitNoInputsOngoing"` to let them drain.
   A NON-screenshot assertion test: right-click the slider's LOWER track (its button covers the centre at value 50) → "set target",
   then `@assertTopMenuItemCount 1` + `@assertTopMenuItemStrings ["a WorldMorph ➜"]`. The negative/edge of the set-target family.
   (macroLonelySliderTargetsWorldOnly.)
+  SCROLLBARS TRACK CONTENT — narrow a text to grow the vBar, move it to grow the hBar (no new verb): a `ScrollPanelWdgt`'s scrollbars
+  reflect the content inside it. `ScrollPanelWdgt.adjustScrollBars` (`:114`) shows the hBar only when `contents.width() >= width()+1`
+  and the vBar only when `contents.height() >= height()+1` (else hides it), sizes each thumb to the viewport/content ratio and positions
+  it by the scroll offset (`updateSpecs`). Fixture (faithful to the recording): add a wrapping `SimplePlainTextWdgt` (a lorem paragraph)
+  as a real SUBMORPH of the inner `@contents` with `panel.add text`; image_1 it fits (no bars). NARROW it — `text.rawSetWidth narrower`
+  re-wraps it (synchronously, via `SimplePlainTextWdgt.reLayout`, since `@maxTextWidth=true`) to more/taller lines → the vBar appears.
+  MOVE it toward the bottom-right — `text.fullRawMoveTo (near the panel's bottom-right)` pushes the content past both edges → the hBar
+  appears and the vBar thumb shrinks. Re-run `panel.adjustContentsBounds()` + `panel.adjustScrollBars()` after each. Because the text is
+  a true submorph, `adjustContentsBounds` sizes `@contents` to its `subMorphsMergedFullBounds` — so it does NOT have the trap of a
+  single-widget contents (`new ScrollPanelWdgt child`), whose childless `@contents` `adjustContentsBounds` re-fits back to the viewport
+  (undoing the overflow — there you'd call `adjustScrollBars()` only). First scrollbar-REACTION test (distinct from the wheel-ROUTING of
+  macroListMorphWheelScroll / macroNestedScrollPanelsRouteWheel, which scroll an already-overflowing panel). (macroScrollBarsTrackContentChange.)
+  DETACHED MORPH STAYS FLOAT-DRAGGABLE (no new verb): float-vs-non-float dragging is computed LIVE from the parent, not a stored
+  flag — `Widget.grabsToParentWhenDragged` (`:2513`) is false when the parent is the WORLD (the hand grabs the morph itself = float
+  drag) and true when the parent is another morph (dragging grabs the PARENT, so they move together). "attach..." re-parents the
+  morph under the chosen target (`Widget.attach → target.add`, `:3657/:3642`); "detaching" = pick it up and drop it on the desktop,
+  which resets the parent to the world. So after attach + detach the morph float-drags independently again — no flag to restore.
+  Fixture: two overlapping `RectangleMorph`s (distinct colours); attach b→a via `clickMenuItemOfWidget_InputEvents_Macro b,
+  "attach..."` then `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()), "a RectangleMorph"`; prove it
+  by dragging a (b follows); detach with `b.pickUp()` + carry + click-to-drop; then `@dragWidgetTo_InputEvents b, dest` moves b alone.
+  GOTCHA: "attach..." is a TOP-LEVEL context-menu item, but "pick up" lives in the morph's "a <Class> ➜" HIERARCHY submenu (NOT
+  top-level), so `clickMenuItemOfWidget_InputEvents_Macro …, "pick up"` finds nothing and crashes ("reading 'x' of undefined") — use
+  `pickUp()` directly (the documented equivalent) or navigate the submenu. (macroDetachedMorphStaysFloatDraggable.)
+  STACK PANEL LOOSE WHEN EMPTY, TIGHT WHEN FILLED — resized via its HANDLE (no new verb): a width-constraining
+  `SimpleVerticalStackPanelWdgt` resizes COMPLETELY FREELY (both dims) while EMPTY, but only in WIDTH once it holds content (its HEIGHT
+  is fixed to however the text wraps). `adjustContentsBounds` (`SimpleVerticalStackPanelWdgt.coffee:73`) sums child heights into newHeight,
+  then `if !@tight or childrenNotHandlesNorCarets.length == 0: newHeight = Math.max newHeight, @height()` (`:130-131`) keeps the
+  requested (dragged) height ONLY when loose or EMPTY; a tight non-empty panel takes the content height verbatim, and widening it
+  re-wraps the `SimplePlainTextWdgt` child to fewer/shorter lines (`maxTextWidth`, `:106-114`). FAITHFUL to the recording, resize with
+  the real HANDLE (brought up by "resize/move...", not shown by default): `@openMenuOf_InputEvents panel` → "resize/move..." →
+  `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest`. KEY: once the tight panel snaps to its content the text
+  COVERS the panel (no panel chrome to right-click), so bring up the panel's handles via the TEXT's "a SimpleVerticalStackPanel ➜"
+  HIERARCHY submenu: `@openMenuOf_InputEvents text` → `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()),
+  "a SimpleVerticalStackPanel"` → "resize/move..." → drag the handle (a right-click on a child whose parent ≠ world opens the ancestor
+  hierarchy menu, `Widget.buildHierarchyMenu`; it IS a registered MenuMorph). Fixture: empty stack → resize-handle big (free) → drop a
+  wrapping `SimplePlainTextWdgt` (snaps to content) → resize-handle big via the text submenu (width grows, height snaps back, text
+  re-wraps shorter) → `world.add text` to empty it → resize-handle big (free again). Take the screenshot WITH the handles showing
+  (resize mode), then click empty desktop to exit before the next step. Complements macroVerticalStackPanelGrowsWithContent (content
+  GROWTH) with the loose-vs-tight RESIZABILITY invariant. (macroStackPanelLooseWhenEmptyTightWhenFilled.)
 - **L2 assertion (non-screenshot)** — `assertTopMenuItemCount(n)` and `assertTopMenuItemStrings([labels])`
   (the strings counterpart, mapping the recorded `CheckStringsOfItemsInMenu` — reads each item's `labelString` via
   the menu's `testItems()` and compares the ordered array) locate by meaning, then call
