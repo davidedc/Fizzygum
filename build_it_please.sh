@@ -356,16 +356,24 @@ fi
 # SWCanvas engine code (mirroring swcanvas.min.js containing BitmapText); font
 # atlases are never embedded — they are loaded at runtime. SWCanvas is always
 # bundled and only *used* when the runtime flag (?sw=1) is on.
-echo "prepending the SWCanvas engine to the boot bundle..."
-# IMPORTANT: swcanvas.min.js ends with a "//# sourceMappingURL=..." line comment
-# and no trailing newline. A bare cat would glue the boot code's first line onto
-# that comment (commenting out the `var ...,boot,...` declaration). The "\n;\n"
-# separator terminates the comment and defends against ASI.
-cat $SWCANVAS_VENDOR/swcanvas.min.js > $BUILD_PATH/js/fizzygum-boot-min.js.tmp
+echo "prepending the deterministic-trig shim + SWCanvas engine to the boot bundle..."
+# DETERMINISM: install engine-independent sin/cos/tan/atan2/asin/acos (a pure-arithmetic fdlibm
+# port — only +,-,*,/ and sqrt, all IEEE-754-exact) over Math.* BEFORE anything renders, so
+# SWCanvas's rotate()/arc()/round-joins rasterize bit-identically on every JS engine. Without it
+# the platform Math transcendentals differ by ~1 ULP across engines (e.g. Safari's JavaScriptCore
+# vs Chrome's V8 disagree on ~10-20% of values), which shifts curved/rotated SWCanvas output a
+# pixel or two and breaks the exact SHA-256 reference match (axis-aligned, trig-free content is
+# unaffected). Measured: it matches native V8 pixel-for-pixel across the suite, so it is a drop-in.
+# See runtime-prelude/deterministic-trig.js and src/macros/MACRO-PATTERNS.md.
+# IMPORTANT: swcanvas.min.js ends with a "//# sourceMappingURL=..." line comment and no trailing
+# newline; the "\n;\n" separators terminate it and defend against ASI between each concatenated unit.
+cat runtime-prelude/deterministic-trig.js > $BUILD_PATH/js/fizzygum-boot-min.js.tmp
+printf '\n;try { DetTrig.install(Math); } catch (e) {}\n;\n' >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
+cat $SWCANVAS_VENDOR/swcanvas.min.js >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
 printf '\n;\n' >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
 cat $BUILD_PATH/js/fizzygum-boot-min.js >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
 mv $BUILD_PATH/js/fizzygum-boot-min.js.tmp $BUILD_PATH/js/fizzygum-boot-min.js
-echo "... done prepending SWCanvas"
+echo "... done prepending deterministic-trig + SWCanvas"
 
 # Copy the vendored SWCanvas font assets (metrics + positioning bundles, and
 # the wrapped atlas .js if vendored) so the SWCanvas text backend can load them

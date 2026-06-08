@@ -179,6 +179,23 @@ are called directly. See `CLAUDE.md` for those rules.
   window's corner, `resizerCanOverlapContents`). Shared fixture verbs: `buildExternalAndFreeInternalWindow_Macro()` (`return
   [extWin, intWin]`) + `dropInternalWindowIntoExternalWindow_InputEvents_Macro extWin, intWin` (`return extWin`) — see
   "Composing macros" in CLAUDE.md (one test owns the composite screenshot, the other reuses the fixture without re-shooting).
+- **Close an inner (nested) window → the outer survives and stays reusable** (`macroClosingInnerWindowKeepsOuter`): the lifecycle
+  follow-on to the bullet above. Once an internal window is the outer window's `@contents`, `@closeWindow_InputEvents intWin`
+  (clicks the INNER window's own `.closeButton`) closes only it; the outer's `childBeingClosed(child)` (`WindowWdgt.coffee:204`)
+  detects `child == @contents` and calls `resetToDefaultContents` (`:246`) — re-enabling drops and restoring the
+  `WindowContentsPlaceholderText` ("Drop a widget in here") + the "empty window" label. The outer window is NEVER closed and stays
+  functional: a fresh `@dragWidgetTo_InputEvents clock2, extWin` is accepted as its new content (relabelled "analog clock"). Build via
+  the shared `buildExternalAndFreeInternalWindow_Macro()` and put an `AnalogClockWdgt` in the inner window with `intWin.add (new
+  AnalogClockWdgt)` BEFORE `dropInternalWindowIntoExternalWindow_InputEvents_Macro extWin, intWin`. Three checkpoints (nested → inner
+  closed, outer is a placeholder again → fresh clock dropped in) prove closing a CHILD window does not close its PARENT, which remains
+  reusable. **DETERMINISM (this test is the one that exposed the SWCanvas cross-engine trig bug):** its nested clocks rendered 1–3 px
+  differently between Safari's JavaScriptCore and Chrome's V8, because the platform `Math.sin/cos/atan2/acos` differ by ~1 ULP across JS
+  engines and SWCanvas feeds them into `rotate()`/`arc()` flattening + the `acos`-driven arc segment count (axis-aligned window chrome,
+  which avoids trig, matched byte-for-byte — the tell). FIXED at the framework level: the build installs `runtime-prelude/deterministic-
+  trig.js` (a pure-arithmetic fdlibm port, only `+−×÷`/`sqrt`) over `Math.*` before any rendering, so all curved/rotated SWCanvas output
+  is bit-identical on every engine (measured: matches native V8 pixel-for-pixel across the whole suite — a drop-in). So a dynamic
+  `AnalogClockWdgt` is safe as a screenshot fixture; no need to swap it for a static stand-in. (A brief detour DID swap the clock for a
+  static box; that masked the symptom — the right fix was making the engine deterministic, not avoiding curves.)
 - **Window resizes to its content** (`macroWindowResizesToTextContent`): an empty `new WindowWdgt nil,nil,nil` adopts a dropped
   widget as content and a free-floating window sizes itself to WRAP it. Drop a wrapping `SimplePlainTextWdgt` via
   `@dragWidgetTo_InputEvents text, window`, then `text.setText longerString` ⇒ window grows, `shorterString` ⇒ shrinks. No caret
@@ -301,6 +318,16 @@ are called directly. See `CLAUDE.md` for those rules.
   menu (locate it via `world.topWdgtSuchThat (w) -> (w instanceof MenuItemMorph) and (w.labelString == "demo ➜")` — the only menu
   item left once the menus close), then `@moveToItemOfTopMenuAndClick_InputEvents "rectangle"` makes a rectangle that rides the
   hand → drop on the world. image_2 = the detached item + the rectangle it produced (reproducing the recording's full arc).
+- **Duplicate an INSPECTOR → an independent second inspector (independent close)** (`macroDuplicatedInspectorsCloseIndependently`): the
+  duplication trio's third case (after a plain widget and a menu item). The OLD `InspectorMorph` (a BoxMorph spawned by the
+  context-menu top-level "inspect" — `clickMenuItemOfWidget_InputEvents_Macro string, "inspect"`; NOT the "dev ➜ → inspect"
+  `InspectorMorph2`; demo string is the OLD `StringMorph`, so NO right-click drift) does not block duplication: right-click it → its
+  child pane's ANCESTOR hierarchy menu → `"a InspectorMorph ➜"` → `"duplicate"` (= `fullCopy().pickUp()`, a DEEP copy) → carry +
+  `@syntheticEventsMouseClick_InputEvents()` to drop. The copy is a fully INDEPENDENT live inspector. KEY: an InspectorMorph is NOT a
+  `WindowWdgt`, so `@closeWindow_InputEvents` does NOT apply — close it via its OWN `@moveToAndClick_InputEvents inspector.buttonClose`
+  (a "close" TriggerMorph, `InspectorMorph.coffee:15`). Disambiguate the two by object identity — `insp2 = world.topWdgtSuchThat (w) ->
+  (w instanceof InspectorMorph) and w != insp1` — and lay them out with `fullMoveTo` for a clean shot. Closing one leaves the other
+  untouched (two → one → only the string), proving duplicated inspectors have independent lifecycles.
 - **Locking** (`macroLockToDesktopPreventsDrag` / `macroLockedCompositeWidgetPreventsDrag`):
   `@moveToItemOfMenuAndClick_InputEvents menu, "lock to desktop"` then later `"unlock"` (substring) — the "lock to/unlock from
   <desktop|panel>" items appear only when the morph's parent is a PanelWdgt (the world is one). A locked morph's drag grabs its
@@ -318,6 +345,17 @@ are called directly. See `CLAUDE.md` for those rules.
   CLIPPED at the doc edge (a scroll panel crops its contents), so a visible right-side OVERHANG is unambiguous proof the rejected
   box is a world child painted ON TOP, not clipped document content. (Without the overhang, a box dropped at the doc centre reads
   ambiguously as "maybe inside".)
+- **Dropped widgets keep their effective SIZE in a document** (`macroDocumentPreservesDroppedWidgetSizes`): the SimpleDocument does NOT
+  normalise the size of widgets dropped into it — each keeps the effective extent it had when dropped. On a drop,
+  `VerticalStackLayoutSpec.rememberInitialDimensions` (`VerticalStackLayoutSpec.coffee:18`) stores the widget's OWN width
+  (`widthOfElementWhenAdded`), and `getWidthInStack` (`:31`, default elasticity 1) returns that remembered width CAPPED at the content
+  width — it never stretches up; a plain `RectangleMorph` (no `rawSetWidthSizeHeightAccordingly` override) keeps that width AND its
+  constructed height. So three boxes built at distinct sizes, dropped in via `@dragWidgetTo_InputEvents box, (new Point doc.center().x,
+  doc.bottom()-40)` (aim low to append below the default text), stay at THREE DISTINCT sizes stacked vertically — the distinct sizes ARE
+  the assertion (a width-CONSTRAINING container would force one common width). Keep each box width BELOW the doc content width
+  (~content − padding − scrollbar) so none is capped. A clean directly-built fixture sidesteps the recording's ambiguous
+  duplicated-heart targets. The size-preserving sibling of the flow-in (`macroIconDroppedIntoDocumentFlows`) and reject
+  (`macroLockedDocumentRejectsDrop`) document-drop facets.
 - **Scroll-panel drag behaviour — default MOVES, locked SCROLLS, in-a-window moves the WINDOW** (`macroScrollPanelNotMovedViaNonFloatDragChild`
   / `macroLockedScrollPanelScrollsWhenDragged` / `macroScrollPanelInWindowMovesWindowWhenDragged`): pressing+dragging a `ScrollPanelWdgt`'s
   cream BACKGROUND resolves the grab via `Widget.findFirstLooseMorph` climbing `grabsToParentWhenDragged`. **DEFAULT desktop panel** (a plain
