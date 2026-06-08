@@ -93,6 +93,14 @@ are called directly. See `CLAUDE.md` for those rules.
   HIERARCHY menu (`Widget.buildContextMenu`/`buildHierarchyMenu`) — one "a X ➜" item per ancestor that has a menu (labels are
   `toString().replace("Wdgt","")` so a WindowWdgt reads "a Window ➜"). Navigate to the desired ancestor by class-name PREFIX
   to open ITS own menu (used to resize a content-covered panel, duplicate a nested widget, "pick up" an inspector part, …).
+- **A coalescing scroll panel SUPPRESSES its child's hierarchy menu** (`macroScrollPanelCoalescesChildMenu`): the inverse of the
+  rule above. A `SimplePlainTextScrollPanelWdgt` sets `takesOverAndCoalescesChildrensMenus = true` (`SimplePlainTextScrollPanelWdgt.coffee:25`),
+  so `Widget.buildContextMenu` (`:2905-2908`) finds that ancestor and returns the PANEL'S OWN menu — right-clicking the inner text
+  blurb produces no "a X ➜" disambiguation at all (the blurb is never offered as a separate target). A NEGATIVE assertion needs
+  the baseline visible: pair it with a plain `PanelWdgt` + `RectangleMorph` child whose right-click DOES build the 2-item hierarchy
+  menu (`@assertTopMenuItemStrings ["a RectangleMorph ➜", "a Panel ➜"]`) — same gesture, opposite menu. Build the panel directly:
+  `new SimplePlainTextScrollPanelWdgt "text", false, 5` (ctor `(textAsString, wraps, padding)` auto-builds the inner blurb).
+  image_1 (the panel's own coalesced menu) vs image_2 (the 2-item hierarchy menu) is the proof.
 - **Submenu hopping — keep the common chain open** (`macroHoppingBetweenSubMenus`): an arrow item opens a submenu AT the
   clicked point on click (`TriggerMorph.trigger`). Clicking ANY item KEEPS the menus in its ASCENDING hierarchy
   (`PopUpWdgt.hierarchyOfPopUps`) and DISMISSES the DOWNSTREAM submenus — so re-click a world-menu sibling IN THE CHAIN to
@@ -280,12 +288,36 @@ are called directly. See `CLAUDE.md` for those rules.
   with `@syntheticEventsMouseMove_InputEvents` (a grabbed hand-child follows even a no-button move) and DROP with
   `@syntheticEventsMouseClick_InputEvents()`. **image_1 is taken with NO pointer movement after the click** — the copy must be
   fully painted the instant it is grabbed. Duplicating a COMPLEX/nested widget: right-click it → ancestor hierarchy menu →
-  navigate by class-name PREFIX to the desired ancestor's own menu → "duplicate". (A MenuMorph is NOT right-clickable for a
-  context menu, so the menu-duplication recordings can't migrate this way — duplicate a normal widget instead.)
+  navigate by class-name PREFIX to the desired ancestor's own menu → "duplicate". (A MenuMorph CONTAINER is not right-clickable
+  for a context menu, but a MenuItemMorph — an individual item — IS: see the next bullet.)
+- **Duplicate a MENU ITEM into the bare world** (`macroMenuItemDuplicatesToStandaloneMorph`): a `MenuItemMorph` is an ordinary
+  duplicable Widget. Right-click an item of an open menu (e.g. the world menu's "demo ➜") → its ANCESTOR hierarchy menu; under the
+  determinism toggles the item's own entry is the clean `"a MenuItemMorph ➜"` (no instance number/bounds — `Widget.toString:467`
+  with `HidingOfMorphsNumberIDInLabels`), so an EXACT match is stable. Drill `"a MenuItemMorph ➜"` → `"duplicate"`: the copy rides
+  the hand; carry it with `@syntheticEventsMouseMove_InputEvents` and DROP with `@syntheticEventsMouseClick_InputEvents()` (the
+  mouse-DOWN releases the float-drag). Capture the "demo ➜" target item from `getMostRecentlyOpenedMenu()` WHILE the world menu is
+  still fresh (the next click clears `freshlyCreatedPopUps`). image_1 = a standalone "demo ➜" menu-item morph alone on the desktop.
+  **The detached copy stays FUNCTIONAL:** because "demo ➜" is a submenu-opener, left-clicking the standalone item opens the demo
+  menu (locate it via `world.topWdgtSuchThat (w) -> (w instanceof MenuItemMorph) and (w.labelString == "demo ➜")` — the only menu
+  item left once the menus close), then `@moveToItemOfTopMenuAndClick_InputEvents "rectangle"` makes a rectangle that rides the
+  hand → drop on the world. image_2 = the detached item + the rectangle it produced (reproducing the recording's full arc).
 - **Locking** (`macroLockToDesktopPreventsDrag` / `macroLockedCompositeWidgetPreventsDrag`):
   `@moveToItemOfMenuAndClick_InputEvents menu, "lock to desktop"` then later `"unlock"` (substring) — the "lock to/unlock from
   <desktop|panel>" items appear only when the morph's parent is a PanelWdgt (the world is one). A locked morph's drag grabs its
   PARENT (`grabsToParentWhenDragged → @isLockingToPanels`), so `@dragWidgetTo_InputEvents` leaves it put; unlock and it moves.
+- **Contents-lock REJECTS drops** (`macroLockedDocumentRejectsDrop`): the drop-side sibling of the drag-lock above. A
+  `SimpleDocumentScrollPanelWdgt` (ships its own default text; `new …; world.add`) accepts a dropped widget into its vertical
+  stack while editing is ENABLED. Its "disable editing" item → `disableDragsDropsAndEditing` (`SimpleVerticalStackScrollPanelWdgt.coffee:34`
+  → `ScrollPanelWdgt.coffee:630` → `disableDrops`) clears the inner content panel's `_acceptsDrops`; now
+  `ActivePointerWdgt.dropTargetFor` walks PAST the locked doc up to the WORLD, so the next drop lands as a world child ON TOP of the
+  doc, NOT in its flow. Reach "disable editing" by the hierarchy drill (right-click a doc blurb → `"a SimpleDocumentScrollPanel ➜"`
+  → `"disable editing"`). Make the negative meaningful with the accepted-vs-rejected contrast: a blue box dropped while enabled
+  flows into the stack (image_1), a red box dropped while locked floats over the doc (image_2). The accepted box uses
+  `@dragWidgetTo_InputEvents box1, doc` (drops at the centre, flows in); **drop the REJECTED box STRADDLING the doc's right edge**
+  (pass a Point, e.g. `@dragWidgetTo_InputEvents box2, (new Point 335, 170)` for a doc at x[50,370]) — an ACCEPTED in-flow widget is
+  CLIPPED at the doc edge (a scroll panel crops its contents), so a visible right-side OVERHANG is unambiguous proof the rejected
+  box is a world child painted ON TOP, not clipped document content. (Without the overhang, a box dropped at the doc centre reads
+  ambiguously as "maybe inside".)
 - **Scroll-panel drag behaviour — default MOVES, locked SCROLLS, in-a-window moves the WINDOW** (`macroScrollPanelNotMovedViaNonFloatDragChild`
   / `macroLockedScrollPanelScrollsWhenDragged` / `macroScrollPanelInWindowMovesWindowWhenDragged`): pressing+dragging a `ScrollPanelWdgt`'s
   cream BACKGROUND resolves the grab via `Widget.findFirstLooseMorph` climbing `grabsToParentWhenDragged`. **DEFAULT desktop panel** (a plain
