@@ -98,6 +98,14 @@ are called directly. See `CLAUDE.md` for those rules.
   `world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren`). The dismissal is on the DOWN, not the up, so capture it with
   `@moveToAndMouseDown_InputEvents (point)` (move + press, NO release) → `yield "waitNoInputsOngoing"` → screenshot →
   `@syntheticEventsMouseUp_InputEvents()`. (The same press-and-hold pattern captures a float-dragged morph being DROPPED.)
+- **Right-click an UPSTREAM menu item closes its DOWNSTREAM submenus** (`macroRightClickClosesDownstreamSubMenus`): the right-click
+  sibling of submenu-hopping. With a deep cascade open (world > test menu > others 2 > icons), a right-click (a mouse-DOWN) on an
+  item in an UPSTREAM menu runs `cleanupMenuWdgts`, which KEEPS the pop-ups in that item's ASCENDING hierarchy
+  (`PopUpWdgt.hierarchyOfPopUps`, walks `getParentPopUp` UP) and DISMISSES its DESCENDANTS — so the world menu + test menu stay
+  while others-2 + icons close; the SAME right-click also opens the item's own hierarchy context menu (a TextMorph / a MenuItemMorph
+  / a MenuMorph, `Widget.buildContextMenu`/`buildHierarchyMenu`). Descend by labelString prefix (reuse the hopping pattern), then
+  `@moveToAndClickAtFractionOf_InputEvents item, [0.35,0.5], "right button"` (LEFT-ish fraction — submenus pop at the clicked point).
+  Screenshot only; do NOT re-grab `getMostRecentlyOpenedMenu()` after the auto-close (deferred cleanup re-clears the fresh set).
 - **Pin a menu by its header** (`macroMenuPinnedByHeaderClick`): `@clickMenuHeaderToPin_InputEvents menu` clicks the menu's
   title bar (`.label` MenuHeader → `pinPopUp`) — drops the kill-on-click-outside flags (and tightens the shadow), so a later
   desktop click no longer dismisses it. The inverse of cascade auto-close.
@@ -146,6 +154,15 @@ are called directly. See `CLAUDE.md` for those rules.
   centred. DROP GOTCHA: a CircleBoxMorph drops fine with `@dragWidgetTo_InputEvents circle, win` (centre grab — no sub-widget),
   but a SliderMorph must be dropped with `slider.pickUp()` + a no-button move + `@syntheticEventsMouseClick_InputEvents()`
   (`@dragWidgetTo_InputEvents` would grab the slider's CENTRE = its BUTTON at value 50, moving the button not the slider).
+- **Window CONTENT resize — aspect-CONSTRAINED (stays square)** (`macroClockInWindowKeepsSquareOnResize`): the third window-content
+  case after free/fixed-width. An `AnalogClockWdgt` as window content keeps a SQUARE aspect at every window size — its
+  `initialiseDefaultWindowContentLayoutSpec` sets `canSetHeightFreely=false` (`AnalogClockWdgt.coffee:32`) and it overrides
+  `rawSetWidthSizeHeightAccordingly` to `@rawSetExtent new Point newWidth, newWidth` (`:36`) so width drives an EQUAL height; so
+  `WindowWdgt.adjustContentsBounds` sizes the content from the recommended WIDTH and SKIPS the free-height branch (`:466-468`, gated
+  on `contentsRecursivelyCanSetHeightFreely`). Build `new WindowWdgt nil,nil,nil` + `new AnalogClockWdgt` (self-sizes — no extent
+  needed), drop the clock in with `@dragWidgetTo_InputEvents clock, win` (centre grab — no sub-widget), then
+  `@dragWindowResizerTo_InputEvents win, …` OUT and IN — the clock stays circular/square both ways. Also the first DYNAMIC content
+  (the clock, frozen during playback like the anchor test) inside a container.
 
 ## Scroll & scrollbars
 
@@ -315,6 +332,17 @@ are called directly. See `CLAUDE.md` for those rules.
   (`Widget.mouseDownLeft → bringToForeground`), swapping the blend (image_1 green-over-magenta, image_2 magenta-over-green) with
   the text reading through both. Only TWO shots — the one variable that matters is the stacking order; a third would just repeat.
   (Transparency + colour set via a test-local helper in `extraSubroutineSources`.)
+- **Panel + transparency + CROP + shadow; alpha does NOT cascade to children** (`macroPanelInPanelTransparencyAndStroke`): a
+  `PanelWdgt` ships a cream fill + a dark 1px stroke (the `defaultPanels*` colours) and `@augmentWith
+  ClippingAtRectangularBoundsMixin`, which CROPS its children to its bounds and re-paints the stroke AFTER the children (border on
+  top of nested content). Nest a child inner panel AND a child box, each MOVED so part of it crosses the outer's RIGHT edge → both
+  are CROPPED there (the crop), right where the outer (a world child) casts its desktop drop-shadow. Each widget multiplies only its
+  OWN `@alpha` when painting (`RectangularAppearance`; stroke and fill share that one alpha — there is NO opaque-stroke-over-
+  transparent-fill, the original test name notwithstanding), and a parent's alpha is NOT propagated to children — so
+  `outer.setAlphaScaled 10` (the method the "transparency..." prompt's Ok calls) fades the outer (fill + border, desktop showing
+  through) while the CROPPED inner panel + box stay FULLY opaque (alpha-non-cascade). First PanelWdgt-rendering test (stroke + crop +
+  shadow + alpha-non-cascade; unlocks the panel-rendering family). GOTCHA: the children must STRADDLE the panel's edge (be moved so
+  part crosses it) for the crop to be visible — fully-inside children show no clipping.
 - **Composite drop-shadow** (`macroCompositeMorphsHaveCorrectShadow`): a shadow comes from `Widget.add`, NOT `attach` — `world.add
   widget` gives the desktop shadow (`addShadow`, offset (4,4) α0.2, `Widget.coffee:2199`), re-parenting to a non-world parent calls
   `removeShadow` (`:2210`). The shadow paints the recursive silhouette of the whole subtree, so `world.add parent` then
