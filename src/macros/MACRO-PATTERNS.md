@@ -130,6 +130,26 @@ are called directly. See `CLAUDE.md` for those rules.
   `instanceof ColorPaletteMorph` search. transparency: `"transparency..."` opens a `PromptMorph` —
   `@clickOnSliderTrackAtFraction_InputEvents prompt.topWdgtSuchThat((m)-> m instanceof SliderMorph), [fx,0.5]` then "Ok".
 
+- **Popup repositioned to stay on-screen** (`macroMenuRepositionsToStayOnScreen`): a popup is never clipped by the
+  world edge — it is shifted to stay fully visible. `PopUpWdgt.popUp` (`:143`) puts the popup's top-left at the requested
+  point, then `@fullRawMoveWithin world` (`:153` → `Widget.fullRawMoveWithin`, `:1337`) CLAMPS it into the world
+  rectangle (right/bottom shifted in first, top/left nudged last so a too-big popup still shows its top-left). It is
+  unconditional, self-protecting (can't end up off-screen), and universal to every PopUpWdgt. Demonstrate with the
+  bare-desktop right-click (the world menu) at three points via `@moveToAndClick_InputEvents pt, "right button"` using the
+  LIVE `world.right()`/`world.bottom()`: comfortable (menu at the pointer, the baseline), near the right edge (menu shifts
+  LEFT), near the bottom-right corner (menu shifts UP and LEFT). The shift away from the pointer is what proves it.
+  (Distinct from `macroMenuFromFramedItemNotClipped`, where a popup escapes a CONTAINER frame's clip — not the screen edge.)
+- **Menu from a framed item is not clipped by the frame** (`macroMenuFromFramedItemNotClipped`): a context menu opened
+  from a widget INSIDE a clipping frame overflows the frame and is drawn in FULL — a context menu is a WORLD-level popup
+  (`ActivePointerWdgt.openContextMenuAtPointer` `:104` → `buildContextMenu()` → `popUpAtHand()` → `PopUpWdgt.popUp(hand,
+  world)`, attached to the WORLD), and clipping (`ClippingAtRectangularBoundsMixin`) only crops a frame's own DESCENDANTS,
+  so a world-level sibling menu drawn over the frame is never clipped by it. Build a narrow `PanelWdgt` (a clipping frame)
+  with a child straddling an edge (cropped → proves the clip is active) and an inner item; `@moveToAndClickAtFractionOf_InputEvents
+  innerItem, [0.5,0.5], "right button"` opens the item's hierarchy menu ("a X ➜" — a non-world child →
+  `buildHierarchyMenu`), which overflows the frame's edge in full while the frame still crops its own child. The
+  frame-clip counterpart of macroMenuRepositionsToStayOnScreen (which is about the SCREEN edge). The recorded original
+  (poppingUpSubMenuNotClipped) used an inspector's clipped list column; a plain frame demonstrates the same point.
+
 ## Windows (chrome + content)
 
 - **Window-chrome buttons** (`macroWindowsEmptyClosing` / `…Collapsing…` / `…Resizing`): reach a window's OWN control by
@@ -234,6 +254,19 @@ are called directly. See `CLAUDE.md` for those rules.
 - **"Attach…" with no targets → a message** (`macroAttachShowsNoTargetsMessage`): a morph alone (nothing overlapping) → `attach`
   pops a `MenuMorph` titled **"no morphs to attach to"** (`:3680`) instead of a target list; that titled, item-less menu IS the
   message. The negative path of attach.
+- **Attach/target candidates EXCLUDE a clipped morph** (`macroAttachTargetExcludesClippedMorph`): both "attach..."
+  (`Widget.attach`) and a controller's "set target" (`ControllerMixin.openTargetSelector`) build their candidate menus
+  from `world.plausibleTargetAndDestinationMorphs` (`Widget.coffee:846`), but a `PanelWdgt` (which `@augmentWith
+  ClippingAtRectangularBoundsMixin`) OVERRIDES it (`ClippingAtRectangularBoundsMixin.coffee:17`) to recurse into its
+  children ONLY where the PANEL's own bounds intersect the probe. So a child whose raw bounds stick out past the panel
+  edge (clipped there) is UNREACHABLE as a candidate when the probe sits over the clipped-away part — the exclusion is a
+  logical-AND of two raw-bounds intersections (`panel∩probe` AND `child∩probe`), NOT a per-pixel hit-test. Build `new
+  PanelWdgt`, `panel.add rect`, `rect.fullMoveTo` to STRADDLE the right edge; drop a probe ENTIRELY right of the panel
+  (over the rect's clipped-away raw bounds): `clickMenuItemOfWidget… "attach..."` → `@assertTopMenuItemCount 0` ("no
+  morphs to attach to"); a slider's "set target" → `@assertTopMenuItemStrings ["a WorldMorph ➜"]`. KEY: the probe must
+  overlap ONLY the clipped-away part — if it also overlaps the panel, the recursion runs and the rect reappears (leave a
+  clear gap to the panel edge). Distinct from macroAttachShowsNoTargetsMessage (genuinely nothing overlapping) — here a
+  morph IS there, but clipped out of the candidate list.
 - **Detached morph stays float-draggable** (`macroDetachedMorphStaysFloatDraggable`): float-vs-non-float dragging is computed LIVE
   from the parent, not a stored flag — `Widget.grabsToParentWhenDragged` (`:2513`) is false when the parent is the WORLD (the hand
   grabs the morph itself = float drag) and true when the parent is another morph (dragging grabs the PARENT, so they move
@@ -267,6 +300,18 @@ are called directly. See `CLAUDE.md` for those rules.
   **MOVES THE WHOLE WINDOW** (a design wart — the title bar is the expected move handle). DRY: all three build the panel via the shared
   `buildOverflowingScrollPanelWithText_Macro(topLeft)` verb in `standardMacroSubroutines`. KEY: press a CLEAR background spot (right of the
   text, left of the scrollbar/handle), not a draggable child; in Automator PLAYING the grab threshold is skipped so even small drags grab.
+
+- **A HandleMorph is itself resizable** (`macroHandleMorphIsItselfResizable`): a HandleMorph is an ordinary resizable
+  Widget (`HandleMorph.coffee:4`), not just resize chrome on another morph — "resize/move..." on it adds its OWN four
+  sub-handles (a moveHandle at the top-left; resizers around it), so FIVE HandleMorphs coexist, and dragging the
+  bottom-right one resizes the handle itself (`HandleMorph.nonFloatDragging` `:219` → `@target.setExtent`). Build `new
+  HandleMorph` (exactly what the demo "handle" item does — `WorldMorph.createNewHandle`; give it a `rawSetExtent` so the
+  striped-triangle glyph is visible), `@moveToAndClickAtFractionOf_InputEvents handle, [0.72,0.75], "right button"` (it
+  sets `noticesTransparentClick`, so any point in its box works; the painted part is the bottom-right) → "resize/move..."
+  → `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest`; click empty desktop to leave the mode.
+  DISAMBIGUATION: the target handle ALSO has `type == "resizeBothDimensionsHandle"`, but `topWdgtSuchThat` tests the
+  sub-handle (a child, added later → frontmost) BEFORE the target, so the verb grabs the resizer, not the target.
+  Distinct from using a handle to resize ANOTHER widget (macroCanMoveAndResizeColorPaletteMorph).
 
 ## Controllers (patch-programming)
 
