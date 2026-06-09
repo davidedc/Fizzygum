@@ -497,6 +497,18 @@ are called directly. See `CLAUDE.md` for those rules.
   the POINTER position. CAPTURE GOTCHA (16 screenshots at dpr 2): building+returning all N large 2× reference images in ONE `page.evaluate`
   memory-blows the capture (and a refs-missing verify) to 30+ min — `run-macro-test-headless.js` extracts each ref in its OWN `page.evaluate`
   and frees it; a passing verify returns no failure images, so it stays fast. First composite-into-scroll-panel test. No new verb.
+- **An embedded "duplicate" button is self-replicating (copy-of-a-copy)** (`macroEmbeddedDuplicateButtonReduplicates`): a Panel's OWN
+  context-menu "duplicate" item, picked up out of the menu and dropped INTO the panel, becomes an in-panel `MenuItemMorph` (target = the panel,
+  action `"duplicateMenuActionAndPickItUp"`, `Widget.coffee:3489`). Clicking it deep-copies the whole panel (`fullCopy().pickUp()`,
+  `Widget.coffee:2299`); the deep copier rewires the COPIED button's target to the cloned panel (`DeepCopierMixin` parallel originals/clones
+  arrays), so clicking the COPY's embedded button duplicates the copy, not the original — the duplicator survives `fullCopy` and replicates
+  across generations (1 → 2 → 3 → 4). SETUP reuses the `macroMenuItemDuplicatesToStandaloneMorph` idiom: `@openMenuOf_InputEvents panel` →
+  `@getTextMenuItemFromMenu @getMostRecentlyOpenedMenu(), "duplicate"` → `@openMenuOf_InputEvents dupItem` (right-click the item → its ancestor
+  hierarchy menu) → `"a MenuItemMorph ➜"` → `"pick up"` → carry into the panel (no-button move) + `@syntheticEventsMouseClick_InputEvents()` to
+  drop. Clicking the embedded button puts the copy ON THE HAND, so a plain move-then-click carries-and-drops it (NOT a held-drag — that is only
+  for a free morph not already on the hand). Locate each generation's button by a LIVE-WORLD query — the new `PanelWdgt` not yet seen, then its
+  descendant `MenuItemMorph` with `labelString == "duplicate"` (`topWdgtSuchThat`) — never recorded coordinates. (`justBeenCopied`,
+  `TriggerMorph.coffee:219`, is only a cosmetic un-highlight, NOT the duplication mechanism.) No new verb.
 
 ## Controllers (patch-programming)
 
@@ -524,6 +536,35 @@ are called directly. See `CLAUDE.md` for those rules.
   `MenuItemMorph.coffee:78` → `world.morphsToBeHighlighted` → a `HighlighterMorph` each cycle). Overlap a ColorPaletteMorph with a
   rect, `clickMenuItemOfWidget… "set target"`, grab the menu, find the candidate by prefix, then
   `@syntheticEventsMouseMove_InputEvents item.center(), "no button", …` to HOVER (no click) and screenshot the highlight tint.
+- **A two-way slider↔text patch cycle, text as SOURCE, guarded** (`macroSliderTextTwoWayPatchCycle`): wire `slider.value → text
+  "text"` AND `text → slider "value"` so the two bind into a 2-node LOOP; driving either end chases the value to the other and
+  `world.makeNewConnectionsCalculationToken()` (minted in `SliderMorph.setValue`/`SimplePlainTextWdgt.setText`, propagated by
+  `updateTarget`, re-seen → early `return`) stops the loop after one hop. The TEXT is a controller SOURCE — TYPING into it moves the
+  slider (visible, not just an internal back-edge). KEY: both controllers are world children positioned to OVERLAP, so each "set
+  target" menu lists exactly ONE candidate of the wanted class (one text / one slider) and is unambiguous — **so NOTHING is
+  repositioned to wire, and nothing jumps.** The minimal form of the cycle. A naive 3-node `slider→text→slider` ring tempts you to
+  `fullMoveTo`-PARK a slider mid-wiring to disambiguate its `text→slider2` leg (the text hub overlaps BOTH sliders) — which reads on
+  screen as the slider "jumping around for no reason" (an API reposition = a teleport, the anti-pattern flagged for dropped morphs);
+  DON'T. Either use this 2-node cycle, or wire the full 3-node cycle WITHOUT moving anything by selecting the ambiguous leg BY MEANING
+  (see `macroSliderTextSliderPatchCycle` below). Drive: `@dragSliderButtonToFraction_InputEvents slider, [0.5,fy]` (slider→text), then edit the text via
+  `world.edit text` (escape hatch — left-clicking a short number in a wide box overshoots the empty-text `slotAt`, see
+  `macroInspectorWorkAreaEvaluatesCoffeeScript`) + `Meta+a` + typed digits (text→slider). FIXTURE gotchas: KEEP the ctor's
+  `maxTextWidth = true` (`nil` shrinks the box to its content, so it stops overlapping the slider and "set target" can't find it);
+  `SliderMorph`'s track AND `SliderButtonMorph.normalColor` are both `Color.BLACK`, so tint the track light (`slider.color = …`) to
+  make the button (= the value) visible. No new verb.
+- **The full 3-node slider→text→slider cycle — each component drives the other two, wired with NOTHING moved**
+  (`macroSliderTextSliderPatchCycle`): the 3-node sibling of the above. `slider1 → text "text"`, `text → slider2 "value"`,
+  `slider2 → slider1 "value"` close a ring, so dragging slider1, dragging slider2, OR typing the text each drives the other two (the
+  guard stops each lap). Wiring it IN PLACE needs two tricks: (1) place the two sliders ADJACENT with a ~1px bounding-box OVERLAP —
+  enough that `slider2`'s "set target" lists `slider1` (so `slider2→slider1` wires unambiguously) while their BUTTONS stay distinct
+  (give them different track colours too, so the two sliders are easy to tell apart); and (2) wire the one ambiguous leg —
+  `text→slider2`, since the text overlaps BOTH sliders — BY MEANING instead of the prefix verb: right-click the text → "set target",
+  then in the "choose target:" menu pick the item whose target IS slider2. **The reusable bit — selecting a target menu item by its
+  morph reference:** `ControllerMixin.openTargetSelector` passes each candidate target widget as the menu item's `argumentToAction1`
+  (via `MenuMorph.addMenuItem` → `MenuItemMorph`), so `slider2Item = menu.topWdgtSuchThat (item) -> (item instanceof MenuItemMorph) and
+  (item.argumentToAction1 == slider2)`, then `@moveToAndClick_InputEvents slider2Item` and `@moveToItemOfMenuAndClick_InputEvents
+  @getMostRecentlyOpenedMenu(), "value"`. The other two legs use the prefix verb (unambiguous). So when "set target" lists two
+  same-class candidates, NEVER park a widget to disambiguate — pick the menu item by its `argumentToAction1` target reference. No new verb.
 
 ## Layout
 
@@ -662,6 +703,16 @@ are called directly. See `CLAUDE.md` for those rules.
   INLINE (compile, run with `@`=world, relayout/repaint) — the macro form of the recorded `AutomatorEventCommandEvaluateString`.
   Do NOT write `@evaluateString` (MacroToolkit's own binds `@` to the toolkit). No new verb; no input events, so just `yield
   "waitNoInputsOngoing"` before a screenshot.
+- **Eval in the inspector work-area** (`macroInspectorWorkAreaEvaluatesCoffeeScript`): the (old) `InspectorMorph`'s lower "work" pane is a
+  live CoffeeScript eval bound to the inspected object. Open it via the world menu's top-level **"inspect"** (NOT "dev ➜ → inspect", which
+  opens InspectorMorph2 and a different pane), then reach the editable TextMorph as `inspector.work.contents.children[0]` (built with
+  `ev.setReceiver @target`, `InspectorMorph.coffee:176-186`, which also installs the evaluation menu as the pane's `overridingContextMenu`).
+  PLACE the code with `workArea.setText "@inform 'coffeescript!'"` (do NOT left-click an EMPTY old TextMorph to focus it — `slotAt` measures
+  `@lines[0][col]`, undefined past the end of empty text, `TextMorph.coffee:283`, which throws under SWCanvas and pops an Error-log over the
+  scene), then `@openMenuOf_InputEvents workArea` → `@moveToItemOfTopMenuAndClick_InputEvents "do all"`: `doAll` selects-all and runs
+  `@receiver.evaluateString @selection()` (`TextMorph.coffee:360-377`), so the snippet runs against the inspected World and pops an `@inform`
+  bubble. The eval-acts-on-the-receiver sibling of `macroEvaluateString` (which calls `world.evaluateString` directly). Single quotes inside
+  the snippet dodge double-quote escaping in the backtick source. No new verb.
 
 ## The verb-establishing pilots
 
