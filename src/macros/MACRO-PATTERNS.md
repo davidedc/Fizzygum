@@ -125,11 +125,37 @@ are called directly. See `CLAUDE.md` for those rules.
 - **Pin a menu by its header** (`macroMenuPinnedByHeaderClick`): `@clickMenuHeaderToPin_InputEvents menu` clicks the menu's
   title bar (`.label` MenuHeader → `pinPopUp`) — drops the kill-on-click-outside flags (and tightens the shadow), so a later
   desktop click no longer dismisses it. The inverse of cascade auto-close.
+- **A pop-up dropped INTO a panel auto-pins itself** (`macroSubMenuDroppedIntoPanelPinsItself`): the pin-on-drop sibling of the
+  header-click pin above. Float-drag an unpinned pop-up (here the world menu's "demo ➜" sub-menu, titled "make a morph") OUT of its
+  parent by its HEADER and release it INSIDE a `PanelWdgt`: `ActivePointerWdgt.drop` re-parents it under the panel (`_acceptsDrops:true`)
+  and fires `PopUpWdgt.justDropped(whereIn)` (`PopUpWdgt.coffee:105`), which — because `whereIn != world` — calls `pinPopUp()`, clearing
+  the menu's kill-on-click-outside flags. So the sub-menu becomes a PINNED child of the panel and SURVIVES the later dismissal of the
+  parent menu (a drop onto the bare world, `whereIn == world`, would NOT pin). Open the sub-menu with
+  `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()), "demo"` and capture `subMenu =
+  @getMostRecentlyOpenedMenu()` while fresh, HOLDING the reference (the next mouseUp clears `freshlyCreatedPopUps`). **The
+  FLOATING-vs-CLIPPED transition is the visible tell** (and is what the recording shows): grab by the HEADER and carry it on top of the
+  panel with the held-button idiom — `@moveToAndMouseDown_InputEvents subMenu.label.center()` (press the header — a press on the body
+  would hit a menu item; a press-then-MOVE is a grab, a CLICK would pin in place) → `@syntheticEventsMouseMove_InputEvents (panel point),
+  "left button"` → screenshot WHILE held (the floating sub-menu is a hand-child drawn UNCLIPPED, overflowing the panel's bottom edge) →
+  `@syntheticEventsMouseUp_InputEvents()` (drops INTO the panel, re-parented + pinned, now CLIPPED by the panel) → screenshot. image_1
+  sub-menu cascading beside the empty panel → image_2 MID-DRAG floating on top, unclipped/overflowing → image_3 dropped+pinned, now
+  clipped, world menu STILL up → image_4 world menu dismissed (only then), sub-menu survives. Drop high (~`[0.5,0.1]`) so the overflow
+  (floating) vs clip-at-the-edge (dropped) difference is pronounced.
 - **Pop-up (prompt/menu) shadow on drag** (`macroPromptShadowFollowsOnDrag`): a `PromptMorph` (extends MenuMorph extends
   PopUpWdgt) casts a drop shadow like every pop-up (`PopUpWdgt.popUp → addShadow`, offset (5,5) α0.2). Drag it by its TITLE
   BAR: `@syntheticEventsMouseMovePressDragRelease_InputEvents prompt.label.center(), dest` (a press-drag GRABS the whole
   pop-up; a CLICK on the header would PIN it; dragging the CENTRE hits the inner field/slider). On drop `PopUpWdgt.justDropped`
   re-runs `updatePopUpShadow`, so the shadow renders correctly at every position. Capture `prompt` fresh right after it opens.
+- **Menu shadow is correct WHILE dragging and AFTER drop** (`macroMenuShadowCorrectWhileAndAfterDrag`): the mid-drag companion of the
+  prompt-shadow entry above. A popped-up unpinned menu casts the at-rest pop-up shadow (`PopUpWdgt.addShadow` → offset (5,5) α0.2); while
+  it is FLOAT-DRAGGED the grab swaps in the lifted drag shadow (`ActivePointerWdgt.grab` → addShadow offset (6,6) α0.1 — larger and
+  fainter); on drop `PopUpWdgt.justDropped` restores the at-rest shadow. The difference is an OFFSET/ALPHA change on pickup, NOT clipping
+  at the screen corner (the positive down-right offset is never clipped at the top-left). CAPTURE THE MID-DRAG FRAME with the held-button
+  idiom: `@moveToAndMouseDown_InputEvents menu.label.center()` (press the header — a press-then-MOVE is a grab; a CLICK would PIN it) →
+  `@syntheticEventsMouseMove_InputEvents dest, "left button"` (move while held → grabs+carries the menu) → screenshot (button STILL held)
+  → `@syntheticEventsMouseUp_InputEvents()` → screenshot. image_2 (held, lifted shadow) and image_3 (dropped, rest shadow) sit at the SAME
+  position so ONLY the shadow differs — the three dataHashes differ, so the subtle shadow change is real and deterministic. (Held-button
+  screenshot idiom proven by `macroSliderButtonStateColors`, which captures a button mid-press/mid-drag.)
 - **Pick a colour / set transparency via a popup**: colour: `"color..."` opens a colour-picker menu — capture
   `picker = @getMostRecentlyOpenedMenu()`, click `picker.topWdgtSuchThat((m)-> m instanceof ColorPickerMorph).colorPalette`
   at `[fx,0.5]` (saturated; the palette is `hsl(360·fx,100%,50%)`), then `@moveToItemOfMenuAndClick_InputEvents picker, "Ok"`.
@@ -345,6 +371,21 @@ are called directly. See `CLAUDE.md` for those rules.
   CLIPPED at the doc edge (a scroll panel crops its contents), so a visible right-side OVERHANG is unambiguous proof the rejected
   box is a world child painted ON TOP, not clipped document content. (Without the overhang, a box dropped at the doc centre reads
   ambiguously as "maybe inside".)
+- **An inspector REJECTS a drop on ANY of its three panes** (`macroInspectorRejectsDrops`): the inspector counterpart of the contents-lock
+  reject above. An OLD `InspectorMorph` (a BoxMorph) overrides neither `wantsDropOf` nor `_acceptsDrops`, so the inherited
+  `Widget._acceptsDrops=false` (`Widget.coffee:104`) applies, AND each of its three panes — `@list` (left), `@detail` (upper-right),
+  `@work` (lower-right) — additionally calls `disableDrops()` (`InspectorMorph.coffee:143/164/177`). **A drop is resolved by the POINTER's
+  position over the destination**, so carry a second inspector and release it with the pointer over EACH pane in turn —
+  `insp1.detail.center()`, `insp1.work.center()`, `insp1.list.center()` (the recording's pane order). Every time
+  `ActivePointerWdgt.dropTargetFor` finds the pane refuses, walks PAST the inspector (also refuses) to the world (`WorldMorph extends
+  PanelWdgt`, `_acceptsDrops:true`), and `world.add` re-homes the dragged inspector as a world SIBLING painted FULL-SIZE on top.
+  **Full-size-on-top IS the per-shot visible proof of non-nesting** — a widget that had truly nested into a pane would be CLIPPED inside
+  that clipping scroll/list pane; a rejected one stays full-size and unclipped. Open two inspectors with
+  `clickMenuItemOfWidget_InputEvents_Macro s, "inspect"` twice on an OLD `new StringMorph` (move insp1 clear of the string before the
+  second right-click); disambiguate by identity (`w instanceof InspectorMorph and w != insp1`). GRAB an inspector by its title bar
+  `insp2.label.center()` (a NON-editable TextMorph) — its CENTRE is the editable detail/work text, which a press would edit instead;
+  carry+release with `@syntheticEventsMouseMovePressDragRelease_InputEvents insp2.label.center(), insp1.<pane>.center()`. image_1 two
+  apart → image_2/3/4 insp2 dropped over the detail/work/list pane in turn, each landing full-size on top — none of the three accept it.
 - **Dropped widgets keep their effective SIZE in a document** (`macroDocumentPreservesDroppedWidgetSizes`): the SimpleDocument does NOT
   normalise the size of widgets dropped into it — each keeps the effective extent it had when dropped. On a drop,
   `VerticalStackLayoutSpec.rememberInitialDimensions` (`VerticalStackLayoutSpec.coffee:18`) stores the widget's OWN width
