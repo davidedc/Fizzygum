@@ -191,6 +191,22 @@ are called directly. See `CLAUDE.md` for those rules.
   `@collapseOrUncollapseWindow_InputEvents win` (`.collapseUncollapseSwitchButton` — the SAME verb collapses or uncollapses
   per current state), `@dragWindowResizerTo_InputEvents win, (new Point win.right()+dx, win.bottom()+dy)` (`.resizer`, a
   bottom-right HandleMorph, non-float drag → setExtent; use deltas off the live bounds).
+- **Resizing a window WHILE collapsed reverts on uncollapse** (`macroCollapsedWindowBarResizeRevertsOnUncollapse`): the
+  collapsed-bar follow-on to the chrome-button entry above. Collapsing a `WindowWdgt` SAVES its pre-collapse size —
+  `childBeingCollapsed`/`childCollapsed` store `@widthWhenUnCollapsed`/`@extentWhenCollapsed` (`WindowWdgt.coffee:208-232`) and shrink
+  it to just its title bar at the SAME width; the `.resizer` stays present and draggable while collapsed (`adjustContentsBounds`
+  repositions it unconditionally, `:536-537`), so `@dragWindowResizerTo_InputEvents` NARROWS the bar's width (height pinned to the bar,
+  `:480-486`). But `childUnCollapsed` (`:234-244`) does `rawSetExtent @extentWhenCollapsed` then `rawSetWidth @widthWhenUnCollapsed` (the
+  width captured BEFORE collapsing), so uncollapse RESTORES the full pre-collapse extent and DISCARDS the resize-while-collapsed — a
+  round-trip REVERT for the EXPANDED size. But the COLLAPSED-bar size and the expanded size are tracked SEPARATELY, and the collapsed-bar
+  size is STICKY: a later re-collapse returns the bar to its last resized (narrowed) width. So resizing while collapsed changes ONLY the
+  collapsed-bar size (sticky across collapse cycles), never the expanded size. Reuse the empty-window fixture of
+  macroWindowsEmptyCollapsingUncollapsing (`new WindowWdgt nil,nil,nil` external / `…,true` internal) and run collapse → resize-narrow →
+  uncollapse → RE-collapse → uncollapse IN THAT ORDER. Park the pointer on a clear spot (`@syntheticEventsMouseMove_InputEvents pt, "no
+  button"`) before each shot so no collapse-button hover tooltip lands on a window. image_1 two full 300×300 windows → image_2 collapsed
+  FULL-WIDTH bars → image_3 NARROWED bars → image_4 back to full 300×300 (== image_1, expanded size preserved) → image_5 RE-collapsed =
+  NARROWED again (pixel-identical to image_3 — the collapsed size is sticky, the identical dataHash IS the proof) → image_6 uncollapsed =
+  full again (== image_4). Distinct from macroWindowsEmptyResizing (resizes while EXPANDED, which persists). No new verb.
 - **Internal vs external window drop** (`macroInternalVsExternalWindowDrop`): a `WindowWdgt`'s 4th ctor arg is `internal`
   (default false). `WindowWdgt.rejectsBeingDropped` returns `!@internal`, and `ActivePointerWdgt.drop` forces `target = world`
   for a widget that rejectsBeingDropped (`:242`) — so an EXTERNAL window dropped over a container lands on the desktop (NOT
@@ -283,6 +299,23 @@ are called directly. See `CLAUDE.md` for those rules.
   instead of "pick up"); `fullCopy` copies the `target` reference so the copy ALSO drives the list. ASYMMETRY: dragging the copy
   scrolls the list and `scrollbar1` FOLLOWS (the list updates its own @vBar via `adjustScrollBars`); dragging `scrollbar1`
   scrolls the list but the copy — which the list has no back-reference to — stays put.
+- **A document flows, clips and scrolls live non-text widgets** (`macroDocumentScrollsMixedTextAndClocks`): a
+  `SimpleDocumentScrollPanelWdgt` is a general widget container, not just a text flow. `doc.add widget` re-parents any widget into its
+  inner `SimpleVerticalStackPanelWdgt` content stack (`ScrollPanelWdgt.add → @contents.add`, `:186-194`), which `@augmentWith
+  ClippingAtRectangularBoundsMixin` clips to the panel box. On insert the stack re-squares an `AnalogClockWdgt` to its remembered width
+  (`VerticalStackLayoutSpec.rememberInitialDimensions` + `AnalogClockWdgt.rawSetWidthSizeHeightAccordingly`); getWidthInStack DISPLAYS
+  that remembered width CLAMPED to the current column — so clocks added at distinct sizes stay distinct, one wider than the column is shown
+  clamped (clipped at the panel edges as you scroll), and it GROWS BACK toward its remembered size when the document is WIDENED (the clamp
+  relaxes). Build the fixture DIRECTLY (`doc.addNormalParagraph "…"` + `doc.add clock`): the test targets the
+  SCROLL/FLOW/CLIP of mixed content, not the drop GESTURE (covered by macroIconDroppedIntoDocumentFlows — and dragging several
+  oversized clocks by hand is needless flakiness: a mis-grabbed big clock leaks onto the desktop). `@wheelOn_InputEvents doc, delta`
+  scrolls (positive = down; `ScrollPanelWdgt.scrollY` clamps at the travel limits, so the top/bottom shots are deterministic). The
+  clocks freeze (`new Date 2011,10,30`) during playback, so a LIVE dynamic widget is a safe screenshot fixture (precedent:
+  macroAnalogClockInspectEdit). Interleave a tall text paragraph BEFORE and AFTER the clocks so the narrow-document scroll positions
+  (top / oversized-clock-clipped / bottom-with-trailing-text) are distinct. Then `doc.rawSetExtent` to near-fullscreen (a fixture-state
+  change) + `adjustContentsBounds`/`adjustScrollBars`: the text reflows wider and the clamped clock grows back, and a wheel-scroll back UP
+  shows the reflowed content (image_4 widened+bottom / image_5 widened+mid / image_6 widened+top). First document-handles-a-dynamic-widget
+  test. No new verb.
 
 ## Drag/drop, attach/detach, duplicate
 
@@ -423,6 +456,26 @@ are called directly. See `CLAUDE.md` for those rules.
   DISAMBIGUATION: the target handle ALSO has `type == "resizeBothDimensionsHandle"`, but `topWdgtSuchThat` tests the
   sub-handle (a child, added later → frontmost) BEFORE the target, so the verb grabs the resizer, not the target.
   Distinct from using a handle to resize ANOTHER widget (macroCanMoveAndResizeColorPaletteMorph).
+- **A composite drags as one unit into/out of a scroll panel, clipped inside** (`macroCompositeDragsAsUnitIntoScrollPanel`): a
+  composite (boxes parented under one top box) crosses a clipping container's boundary as a single assembly. A child parented under a
+  non-world morph has `grabsToParentWhenDragged` true (`Widget.coffee:2513-2533`), so dragging any part climbs via `findFirstLooseMorph`
+  (`:2545`) to the top box and carries the WHOLE subtree (children keep their relative offsets). A plain `new ScrollPanelWdgt` already accepts drops (`_acceptsDrops:true` via PanelWdgt — no
+  enableDrops) and clips at its bounds; dropping the composite over it routes `ActivePointerWdgt.drop → ScrollPanelWdgt.add` (`:186`),
+  which re-homes the whole composite into `@contents` (clipped where it overhangs), and `Widget.add` REMOVES the desktop shadow on the
+  non-world re-parent (`:2210`) / RESTORES it on a world re-parent (`:2199`). So dragging ANY of the three boxes (each by its exposed
+  TOP-RIGHT corner — the part not overlapped by a sibling) carries the whole composite, demonstrated in THREE in/out cycles (grab the 1st,
+  then 2nd, then 3rd box). Per cycle the held-button choreography captures it floating over the panel (a hand-child, UNCLIPPED), dropped in
+  (re-parented + CLIPPED where the trailing boxes overhang an edge, shadow gone), picked back up (lifted/unclipped), dragging out, and
+  dropped on the desktop (intact, shadow restored). Drop near the bottom-right (trailing boxes clip the bottom) or the top-left (leading
+  boxes clip the left) — and keep the GRABBED box itself INSIDE the panel so it can be re-pressed for the out-grab. **The load-bearing
+  idiom for a HELD drag (and the #1 trap): `@moveToAndMouseDown_InputEvents pt` → `yield "waitNoInputsOngoing"` →
+  `@syntheticEventsMouseMove_InputEvents dest, "left button"`. The YIELD is MANDATORY — it drains the queued press so
+  `world.hand.position()` is actually AT `pt`; without it the move's default `orig` reads a STALE hand position and the grab offset throws
+  the morph far off-target (here off-canvas).** Build with `topBox.add child` (NOT the "attach…" menu — identical state, simpler; same
+  fixture style as macroCompositeMorphsHaveCorrectShadow); distinct box colours make "children keep their offsets" legible. Drop target =
+  the POINTER position. CAPTURE GOTCHA (16 screenshots at dpr 2): building+returning all N large 2× reference images in ONE `page.evaluate`
+  memory-blows the capture (and a refs-missing verify) to 30+ min — `run-macro-test-headless.js` extracts each ref in its OWN `page.evaluate`
+  and frees it; a passing verify returns no failure images, so it stays fast. First composite-into-scroll-panel test. No new verb.
 
 ## Controllers (patch-programming)
 
