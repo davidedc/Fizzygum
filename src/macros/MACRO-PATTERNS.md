@@ -75,6 +75,16 @@ are called directly. See `CLAUDE.md` for those rules.
   (`@moveToAndClickAtFractionOf_InputEvents (doc.contents.childrenNotHandlesNorCarets())[0], [fx,fy]`), then `@wheelOn_InputEvents doc,
   bigDelta` scrolls the caret OUT of view (it STAYS out — the scroll did not recall it), and `@syntheticEventsShortcutsAndSpecialKeys_InputEvents
   "ArrowRight"` MOVES it → the document scrolls back to reveal it. First caret-auto-scroll test.
+- **Evaluation menu reflects text selection** (`macroEvaluationMenuReflectsTextSelection`): a TextMorph2's right-click menu
+  depends on what is selected. `setReceiver obj` (`TextMorph2.coffee:657-659`) installs `evaluationMenu` as the widget's
+  `overridingContextMenu` (so `Widget.buildContextMenu` returns it directly); that menu prepends "do all"/"select all" when
+  `@text.length>0` (`:618`) and ALSO "do selection"/"show selection"/"inspect selection" ONLY when `@selection()` is non-empty
+  (`:625`). Fixture: a STANDALONE `new TextMorph2("3 + 4", nil,nil,nil,nil, nil, bg, 1)` (the inspector value panes are OLD
+  TextMorph — build the TextMorph2 directly to exercise THIS path), `isEditable=true` + `setReceiver world`, sized so the text
+  FITS (else a click opens the "edit:" prompt). Beats: click in → `@openMenuOf_InputEvents txt` (UNSELECTED shot) → dismiss with
+  a mouse-down on empty desktop, RE-CLICK in, `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "Meta+a"` → `@openMenuOf_InputEvents
+  txt` (SELECTED shot: text highlighted white-on-blue + the 3 extra items). GOTCHA: opening then dismissing the menu ENDS editing,
+  so you MUST re-click into the field before Meta+a, or select-all routes nowhere and the selected shot silently equals the unselected one.
 
 ## Menus & popups
 
@@ -183,6 +193,17 @@ are called directly. See `CLAUDE.md` for those rules.
   `buildHierarchyMenu`), which overflows the frame's edge in full while the frame still crops its own child. The
   frame-clip counterpart of macroMenuRepositionsToStayOnScreen (which is about the SCREEN edge). The recorded original
   (poppingUpSubMenuNotClipped) used an inspector's clipped list column; a plain frame demonstrates the same point.
+- **A duplicated menu is born pinned** (`macroDuplicatedMenuAutoPinsOnDesktop`): right-clicking a menu ITEM raises that item's
+  ancestor hierarchy menu ("a MenuItemMorph ➜" / "a MenuMorph ➜"); drilling "a MenuMorph ➜" → "duplicate" runs the MENU's own
+  duplicate. Under the harness `world.isIndexPage` is false (`WorldMorph.coffee:277-278`) so it is `Widget.duplicateMenuActionAndPickItUp`
+  (`:3489` → `fullCopy().pickUp()`) — the copy RIDES THE HAND (not the index page's +10,+10 plop). `PopUpWdgt.fullCopy` (`:92-97`)
+  clears the copy's kill-on-click-outside flags, so `isPopUpPinned()` (`:59`) is true the instant the copy exists — pinned BEFORE it
+  is dropped. Show the differential with an explicit unpinned FOIL: CARRY the hand-riding copy to the LEFT and drop it where the pointer
+  releases it (`@syntheticEventsMouseMove_InputEvents leftPt, "no button"` then `@syntheticEventsMouseClick_InputEvents()` — let the pointer
+  place it, do NOT API-reposition it), re-open a NORMAL world menu on the right (`@moveToAndClick_InputEvents pt, "right button"`), screenshot
+  the two menus, then ONE `@moveToAndClick_InputEvents emptyPt, "left button"` outside both — the unpinned foil closes, the pinned duplicate
+  survives. GOTCHA: the ORIGINAL world menu CLOSES during the duplicate navigation (eyeball-confirmed), so it can't be the contrast — open a
+  fresh foil. (Baseline of a normal menu closing on an outside click: macroMenusCloseOnMouseDownOutside.)
 
 ## Windows (chrome + content)
 
@@ -541,6 +562,21 @@ are called directly. See `CLAUDE.md` for those rules.
   has dedicated lone-centered-child support (`:288-303`) that keeps it centered instead of snapping its left to the viewport. Drop a `new
   HeartIconMorph (Color…)` into a `SimpleDocumentScrollPanelWdgt`, center it, then `@dragWidgetTo_InputEvents defaultText, (a desktop point)`
   to remove the default text — the heart stays centered alone. GOTCHA: a widget has NO `.remove()`; drag it out (or re-parent via `world.add`).
+- **Padding is real morph area — sliders + palette-reveal + drag-by-the-band** (`macroPaddingAreaIsPartOfMorph`): a RectangleMorph paints
+  two layers (`RectangularAppearance.coffee:71-88`) — `backgroundColor` over the FULL bounds, `color` over the padding-inset tight region
+  `boundingBoxTight()` (`Widget.coffee:679-680`, edges inset by paddingTop/Bottom/Left/Right `:658-668`). The padding band between them is part
+  of the morph, but while UNPAINTED it is click-through. Reproduce basicMorphPadding via PATCH-PROGRAMMING: build the rect + FIVE SliderMorphs
+  + a ColorPaletteMorph all OVERLAPPING it (REQUIRED — "set target" lists only widgets whose bounds intersect the controller), then
+  `setControllerTargetToWidgetProperty_InputEvents_Macro slider, "a RectangleMorph", "padding"|"padding top"|"…bottom"|"…left"|"…right", [0.5,0.85]`
+  (the centred slider button covers a centre right-click → right-click the LOWER TRACK; a world-child controller needs no hierarchy prefix) and
+  the palette → `"background color"`. `@dragSliderButtonToFraction_InputEvents slider,[0.5,frac]` insets the dark interior; a palette click
+  (`@moveToAndClickAtFractionOf_InputEvents palette,[0.62,0.4]`) paints the BACKGROUND blue → the band shows (the morph extends beyond its paint);
+  then DRAG the rect by that blue band to prove the padding area is a grabbable part of the morph. GOTCHAS: (a) wiring a slider applies its
+  CURRENT value on bind, so padding is already on before you drive; (b) a free morph is dragged with the HELD-DRAG idiom
+  (`@moveToAndMouseDown_InputEvents pt` → `yield "waitNoInputsOngoing"` → `@syntheticEventsMouseMove_InputEvents dest,"left button"` →
+  `@syntheticEventsMouseUp_InputEvents()`), NEVER a one-shot press-drag-release (the grab never registers); (c) the drag-by-band works ONLY after
+  the background is PAINTED — an unpainted band is click-through — so do the drag AFTER the palette click. Property labels read from the recording.
+  First padding test (renamed from macroPaddingInsetsInterior).
 
 ## Sliders & popovers
 
