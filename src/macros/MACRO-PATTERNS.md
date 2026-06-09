@@ -75,6 +75,24 @@ are called directly. See `CLAUDE.md` for those rules.
   (`@moveToAndClickAtFractionOf_InputEvents (doc.contents.childrenNotHandlesNorCarets())[0], [fx,fy]`), then `@wheelOn_InputEvents doc,
   bigDelta` scrolls the caret OUT of view (it STAYS out — the scroll did not recall it), and `@syntheticEventsShortcutsAndSpecialKeys_InputEvents
   "ArrowRight"` MOVES it → the document scrolls back to reveal it. First caret-auto-scroll test.
+- **Caret stays visible while EDITING in a scroll panel** (`macroEditingStringInScrollablePanelCaretAlwaysVisible`): the bare-`ScrollPanelWdgt`
+  sibling of the document caret-into-view above — the SAME `ScrollPanelWdgt.scrollCaretIntoView` (`:504`) / `CaretMorph.gotoSlot` (`:147`) path,
+  but a large-font string overflows a small panel and the caret is WALKED with ArrowRight so the panel auto-scrolls HORIZONTALLY to keep it in
+  view. Fixture: `panel = new ScrollPanelWdgt; panel.rawSetExtent (new Point 300,140); panel.add str` where `str = new StringMorph "Hello,
+  World!", 60` (the 2nd ctor arg is fontSize, ~5× the default → overflows the viewport) with `str.isEditable = true` (the OLD single-line
+  StringMorph defaults `isEditable=false`, `StringMorph.coffee:18`). Drive: `@moveToAndClickAtFractionOf_InputEvents str, [0.04,0.5]` (click
+  WITHIN the leading glyphs → inline caret at the start), then `@repeatSpecialKey_InputEvents "ArrowRight", n` walks the caret past the right
+  edge → the content scrolls left and the hBar shifts. GOTCHA: use the OLD `StringMorph` (not StringMorph2) — it is `isScrollable` (`:26`) and
+  has NO "edit:" prompt-on-crop and NO `slotAt` overshoot throw (those are TextMorph2/multi-line traits, `TextMorph.coffee:283`), so a click
+  always places an inline caret; drive the moves via the input-event verbs (never poke `world.caret`) so `scrollCaretIntoView` genuinely fires;
+  the caret is non-blinking only under the `TurnOnAnimationsPacingControl` preamble (`BlinkerMorph.coffee:21-24`). The VERTICAL sibling
+  (`macroScrollPanelCaretBroughtIntoViewWhenMoved`) exercises the SAME path via the V-branch (`:514-521`) and is the bare-`ScrollPanelWdgt`
+  counterpart of `macroDocumentCaretBroughtIntoViewWhenMoved`: an editable string at the TOP + a tall `RectangleMorph` below it overflow
+  VERTICALLY (a V-scrollbar); `@wheelOn_InputEvents panel, +Δ` scrolls the string+caret OUT of view above the viewport (the wheel alone does NOT
+  recall it — `scrollCaretIntoView` fires on a caret MOVE, not a scroll), then `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "ArrowRight"`
+  MOVES the caret → the panel auto-scrolls back UP to reveal it. (An ArrowRight is a HORIZONTAL move, but `gotoSlot` runs the FULL
+  `scrollCaretIntoView`, whose V-branch scrolls a caret that is above the viewport back into view.) Together the two tests cover the original
+  recording's H and V caret-follow.
 - **Evaluation menu reflects text selection** (`macroEvaluationMenuReflectsTextSelection`): a TextMorph2's right-click menu
   depends on what is selected. `setReceiver obj` (`TextMorph2.coffee:657-659`) installs `evaluationMenu` as the widget's
   `overridingContextMenu` (so `Widget.buildContextMenu` returns it directly); that menu prepends "do all"/"select all" when
@@ -440,6 +458,19 @@ are called directly. See `CLAUDE.md` for those rules.
   `insp2.label.center()` (a NON-editable TextMorph) — its CENTRE is the editable detail/work text, which a press would edit instead;
   carry+release with `@syntheticEventsMouseMovePressDragRelease_InputEvents insp2.label.center(), insp1.<pane>.center()`. image_1 two
   apart → image_2/3/4 insp2 dropped over the detail/work/list pane in turn, each landing full-size on top — none of the three accept it.
+- **Disassemble an inspector — pick its PARTS out onto the desktop** (`macroPickingUpPartsFromInspector`): the OLD `InspectorMorph` is built
+  from independent part widgets (a left `@list`, an upper `@detail` + lower `@work` ScrollPanelWdgt, a footer of `@buttonSubset/buttonInspect/
+  buttonEdit/buttonClose` TriggerMorphs — `InspectorMorph.coffee:135-214`), and each part's hierarchy-menu **"pick up" detaches the REAL part**:
+  `Widget.pickUp` (`Widget.coffee:2705`) runs `world.hand.grab @` on the receiver itself (contrast "duplicate" = `fullCopy().pickUp()`, which
+  grabs a COPY). So dropping a picked-up part on the bare desktop leaves a standalone widget and a GAP in the gutted inspector. Locate each part
+  by its STRUCTURAL ref (`insp.detail`/`insp.work`/`insp.buttonClose`/`insp.buttonEdit` — the digest's by-meaning «Panel» is ambiguous across
+  the 3 panes), captured UP FRONT (the inspector re-lays-out as parts leave). A per-test helper (in `extraSubroutineSources`) DRYs the gesture:
+  right-click the part (`@moveToAndClickAtFractionOf_InputEvents part, [0.5,0.5], "right button"`) → its hierarchy submenu BY MEANING
+  (`@moveToItemStartingWithOfMenuAndClick_InputEvents theMenu, "a ScrollPanel"|"a TriggerMorph"`) → `@moveToItemOfMenuAndClick_InputEvents
+  (@getMostRecentlyOpenedMenu()), "pick up"` → carry on a no-button move → drop with `@syntheticEventsMouseClick_InputEvents()` (a mouse-DOWN
+  releases a float-dragged morph). GOTCHA: the OLD InspectorMorph has NO `.closeButton` (it is a BoxMorph, not a WindowWdgt — `closeWindow_InputEvents`
+  would crash); "pick up" lives in the morph's HIERARCHY submenu, not top-level; the whole menu needs `world.isDevMode` (true under the harness).
+  First inspector-disassembly test. No new verb.
 - **Dropped widgets keep their effective SIZE in a document** (`macroDocumentPreservesDroppedWidgetSizes`): the SimpleDocument does NOT
   normalise the size of widgets dropped into it — each keeps the effective extent it had when dropped. On a drop,
   `VerticalStackLayoutSpec.rememberInitialDimensions` (`VerticalStackLayoutSpec.coffee:18`) stores the widget's OWN width
@@ -574,6 +605,20 @@ are called directly. See `CLAUDE.md` for those rules.
   `new HandleMorph holder` (self-installs at the bottom-right; lone holder ⇒ lone handle). Resize via
   `@dragResizeMoveHandleTo_InputEvents` and the cells redistribute by spreadability. Distilled from the first holder of
   `Widget.setupTestScreen1`.
+- **Re-proportion a stack LIVE by dragging the divider** (`macroStackDividerReproportionsCells`): the INTERACTIVE sibling of basic
+  proportions above — a `StackElementsSizeAdjustingMorph` placed BETWEEN two cells in the stack (`holder.add lime/divider/blue, nil,
+  LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED`; this is `setupTestScreen1`'s second holder, `Widget.coffee:4515`).
+  Dragging the divider runs its `nonFloatDragging` (`StackElementsSizeAdjustingMorph.coffee:28`), which shifts the max-size (spreadability)
+  allowance between the flanking cells — re-apportioning the split. Drive it with the HELD-DRAG idiom (a per-test helper): `p =
+  divider.center(); @moveToAndMouseDown_InputEvents p; yield "waitNoInputsOngoing"; @syntheticEventsMouseMove_InputEvents (new Point (p.x+Δ),
+  p.y), "left button"; @syntheticEventsMouseUp_InputEvents()`. GOTCHAS: a plain CLICK on the divider is a NO-OP (it early-returns on a nil drag
+  delta, `:32-33`) — you MUST move while held; the post-mouse-down `yield "waitNoInputsOngoing"` is mandatory (else the grab offset is stale and
+  it apportions by a bogus delta); the reachable range is BOUNDED — `setMaxDim` reverts a drag that would push a cell below its DESIRED width
+  (`:65-76`), so only two split states are reachable (the spreadability baseline and the opposite-dominant bound), and the apportioning scales
+  with the drag DISTANCE (one firm large move reaches the bound where several small moves do not). So drive ONE firm drag to the bound, not a
+  back-and-forth (the return leg would mostly revert and duplicate the baseline shot). Resize the holder via its lone HandleMorph
+  (`@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle"`) to show the dragged split survives a container resize. First
+  interactive-layout-re-proportioning test. No new verb.
 - **Layout spacer / spring** (`macroLayoutSpacerEatsSpareSpace`): a `LayoutSpacerMorph` is a spring (ctor passes spreadability
   `weight*LayoutSpec.SPREADABILITY_SPACERS` = 1e8, a ~1e6 max that dwarfs any cell's), so in a stack it absorbs almost all spare
   width and the cells stay at DESIRED size. Reuse `Widget.setupTestScreen1()` (8 holders, several `[spacer|adj|green|adj|blue|adj|yellow|adj|spacer(2)]`);
