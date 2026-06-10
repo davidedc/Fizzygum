@@ -103,6 +103,33 @@ are called directly. See `CLAUDE.md` for those rules.
   a mouse-down on empty desktop, RE-CLICK in, `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "Meta+a"` → `@openMenuOf_InputEvents
   txt` (SELECTED shot: text highlighted white-on-blue + the 3 extra items). GOTCHA: opening then dismissing the menu ENDS editing,
   so you MUST re-click into the field before Meta+a, or select-all routes nowhere and the selected shot silently equals the unselected one.
+- **Empty editable text omits "select all"** (`macroEmptyStringDoesntGiveSelectAllOption`): the negative/exclusion sibling of the
+  evaluation-menu entry above. `evaluationMenu` builds `@buildHierarchyMenu()` FIRST and only prepends "do all"/"select all" inside
+  `if @text.length>0` (`TextMorph2.coffee:618`), so on an EMPTY field the right-click menu is JUST the hierarchy item `a TextMorph2 ➜`
+  — neither item present. Same fixture as the selection sibling (`new TextMorph2("", …)` + `isEditable=true` + `setReceiver world`,
+  sized to fit) but START EMPTY: right-click → screenshot (no select-all), then click in + `@syntheticEventsStringKeys_InputEvents
+  "asdf"` (NON-empty, no selection) → right-click → screenshot ("do all"/"select all" now prepended above `a TextMorph2 ➜`). The two
+  shots (absent vs present) ARE the assertion. GOTCHAS: do NOT select the text (Meta+a) — that trips the SEPARATE `:625` selection gate
+  and adds the "…selection" items, muddying the empty-vs-filled contrast; re-click the field before typing (dismissing the first menu
+  ends editing); screenshot-only (an exact menu-strings assertion is brittle — `evaluationMenu` prepends separator RectangleMorphs with no `labelString`).
+- **Add an indented paragraph to a document via its layout menu** (`macroSimpleDocumentCanAddIndentedParagraph`): a
+  `SimpleDocumentScrollPanelWdgt` ships ONE editable default paragraph ("A small string … here another.") as its first content child
+  (`(doc.contents.childrenNotHandlesNorCarets())[0]`) — reformat THAT (add a Lorem paragraph below for reflow context). Drive its
+  `"a SimplePlainText ➜"` → `"layout in stack ➜"` submenu (`VerticalStackLayoutSpec.coffee:42-53`): `"base width..."` opens a PromptMorph
+  (narrows the box), `"align right"` (setAlignmentToRight) moves the box to the document's right edge; then click in, `Meta+a`, and type
+  the indented body PER LINE with an `"Enter"` between (`@syntheticEventsStringKeys_InputEvents` has NO newline handling), the two leading
+  spaces of `"  some code"` typed as literal space keys so the indent round-trips (Enter → `CaretMorph` inserts `"\n"`). TWO gotchas make
+  base-width actually bite — both were initially mistaken for "the layout menu doesn't work under synthetic input"; it DOES: (1) the
+  prompt's value lives in a `StringFieldMorph` that DEFAULTS to the current width, so CLICK the field to focus it
+  (`StringFieldMorph.mouseClickLeft → @text.edit()`; reach it as `basePrompt.tempPromptEntryField`), `Meta+a`, type "300", then "Ok" —
+  which reads the field's `getValue()` into `setWidthOfElementWhenAdded`. Typing WITHOUT focusing the field leaves the default, so Ok
+  re-applies the current width = no visible change. (If instead you drive the prompt's `SliderMorph` via
+  `@clickOnSliderTrackAtFraction_InputEvents`, pass a `[fx,fy]` POINT, NOT a scalar — a scalar indexes as `fraction[0]`=undefined → a NaN
+  click point → a non-finite base-width → a "Point x must be finite" paint crash.) (2) base-width only bites when the paragraph's remembered
+  `widthOfStackWhenAdded` equals the current available stack width; the SHIPPED default paragraph remembered it at CONSTRUCTION (before
+  `doc.rawSetExtent`), so with elasticity 1 the proportional-width calc (`availW·baseWidth/stackWhenAdded`) cancels to full width — re-anchor
+  the paragraph's initial dimensions to the resized stack in the FIXTURE: `target.layoutSpecDetails.rememberInitialDimensions target,
+  doc.contents`.
 
 ## Menus & popups
 
@@ -508,6 +535,23 @@ are called directly. See `CLAUDE.md` for those rules.
   DISAMBIGUATION: the target handle ALSO has `type == "resizeBothDimensionsHandle"`, but `topWdgtSuchThat` tests the
   sub-handle (a child, added later → frontmost) BEFORE the target, so the verb grabs the resizer, not the target.
   Distinct from using a handle to resize ANOTHER widget (macroCanMoveAndResizeColorPaletteMorph).
+- **Resizing a button via its handle does NOT trigger it** (`macroResizingButtonDoesntCauseItToClick`): dragging a widget's resize
+  handle runs `HandleMorph.nonFloatDragging → @target.setExtent`, never a click — `HandleMorph.mouseClickLeft` is EMPTY and its
+  `mouseDownLeft` doesn't propagate ("otherwise the handle on a button will trigger the button when resizing"), so resizing a
+  TriggerMorph cannot fire it. Fixture with a VISIBLE action: inspect an OLD StringMorph → OLD `InspectorMorph` (a BoxMorph;
+  `insp.buttonClose` is the footer "close" TriggerMorph whose action closes the inspector), pick the close button onto the desktop
+  (the PickingUpParts helper). Enter resize/move mode THROUGH THE MENU (manual mode throughout): a DETACHED widget's right-click opens an
+  ANCESTOR-HIERARCHY MenuMorph, so navigate `"a TriggerMorph ➜"` → `"resize/move..."` (NOT `clickMenuItemOfWidget … "resize/move..."`,
+  which searches a TOP menu that lacks the item — it's one level down the hierarchy). That adds the 4 resize/move handles; drag the
+  resizeBothDimensions one (`@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest`, selected by type) → inspector STILL
+  open (the negative assertion). GOTCHA: a click on the button WHILE in resize/move mode is CONSUMED by the mode (it never reaches the
+  button), so to fire "close" you must FIRST click an empty part of the desktop to LEAVE the mode (dismissing the handles), THEN click the
+  button → inspector closes (the positive contrast). Fully deterministic at dpr 1 & 2 — an earlier round mistook a CAPTURE-FLOW artifact
+  for nondeterminism: `--clean --no-build` removes the SOURCE refs but leaves STALE refs in the BUILD, and any image whose fresh (correct)
+  render happens to match a stale ref is scored PASS during capture and therefore NOT re-saved — so `--clean` leaves it reference-less and
+  verify then reports "no screenshots like this one". Use the capture script's own full flow (rebuild→drop refs, capture, rebuild→publish,
+  verify), not a manual `--clean --no-build` + separate rebuild. (The `systemInfoHash` in a reference's filename is just metadata; matching
+  is purely the raw-pixel `dataHash`.)
 - **A composite drags as one unit into/out of a scroll panel, clipped inside** (`macroCompositeDragsAsUnitIntoScrollPanel`): a
   composite (boxes parented under one top box) crosses a clipping container's boundary as a single assembly. A child parented under a
   non-world morph has `grabsToParentWhenDragged` true (`Widget.coffee:2513-2533`), so dragging any part climbs via `findFirstLooseMorph`
