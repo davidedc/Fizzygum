@@ -410,6 +410,17 @@ are called directly. See `CLAUDE.md` for those rules.
   widget as content and a free-floating window sizes itself to WRAP it. Drop a wrapping `SimplePlainTextWdgt` via
   `@dragWidgetTo_InputEvents text, window`, then `text.setText longerString` ⇒ window grows, `shorterString` ⇒ shrinks. No caret
   editing — `setText` is enough. The content-driven converse of the handle-driven window resize.
+- **Handle-resizing a wrapping-text window: width from the USER, height from the CONTENT**
+  (`macroWindowWithPlainWrappingTextResizingFollowsContentSize`): the HANDLE-driven axis of the entry above. With a wrapping
+  `SimplePlainTextWdgt` as window content, a `@dragWindowResizerTo_InputEvents` drag only decides the WIDTH: the text re-wraps to
+  the new measure and the window's height snaps to the re-wrapped content, IGNORING the release point's y — widen (+140) and the
+  window ends SHORTER than where the handle was released; narrow hard (to ~190) and it grows hundreds of pixels PAST the release
+  point (off the canvas bottom — keep that clipping, the original's last shot had it; the visible release-vs-bottom gap IS the
+  assertion). Fixture reuse: `world.createNewWrappingSimplePlainTextWdgtWithBackground()` builds the canonical two-paragraph
+  yellow lorem VERBATIM (the 'simple plain text wrapping' menu item's own creator — locate it after with
+  `@findTopWidgetByClassNameOrClass SimplePlainTextWdgt`); dropping the 500-wide lorem into a window wraps the window past the
+  canvas's right edge — recover with the real user gesture, a TITLE-bar drag (`win.label.center()` + press-drag-release), not a
+  programmatic move. No new verb.
 - **Window CONTENT resize — free vs fixed width** (`macroWindowContentResizesFreely` / `macroWindowContentKeepsFixedWidth`): a
   dropped widget becomes `@contents`; on a window resize `WindowWdgt.adjustContentsBounds` (`:384`) resizes it per its
   `WindowContentLayoutSpec`'s `canSetWidthFreely`/`canSetHeightFreely`. A `CircleBoxMorph` has BOTH free → fills both dims; a
@@ -426,6 +437,31 @@ are called directly. See `CLAUDE.md` for those rules.
   needed), drop the clock in with `@dragWidgetTo_InputEvents clock, win` (centre grab — no sub-widget), then
   `@dragWindowResizerTo_InputEvents win, …` OUT and IN — the clock stays circular/square both ways. Also the first DYNAMIC content
   (the clock, frozen during playback like the anchor test) inside a container.
+- **NESTED collapse/uncollapse cascades through window layers — the full resize matrix** (`macroWindowsNestedCollapsingUncollapsing`):
+  a window always WRAPS its content, so collapse state CASCADES through nesting. The switch collapses the window's CONTENT
+  (`CollapseIconButtonMorph.actOnClick` → `@parent.parent.contents.collapse()`), the window reacts via
+  `childBeingCollapsed`/`childCollapsed`/`childUnCollapsed` (`WindowWdgt.coffee:207-243`, store/restore extents) — with an
+  internal window AS the outer's content (wrapping lorem AS the inner's), collapsing the INNER drops the OUTER to bar-plus-bar.
+  The test resizes the EXTERNAL window in ALL FOUR (outer × inner) collapse combinations, each followed by the complete,
+  step-by-step uncollapsing (a reviewer-requested matrix; the recording itself resized in only two of the four). The two
+  regimes: a resize while the outer is UNCOLLAPSED (inner up or collapsed) is REAL — it persists through later uncollapses and
+  the text re-wraps to it, both heights following the content, not the drag; a resize while the outer is COLLAPSED touches only
+  the BAR (sticky across later collapses) and REVERTS on uncollapse — and what the revert restores depends on the INNER's state
+  when the outer collapsed: the full composite (inner was up) or the short bar-plus-bar composite (inner was collapsed), which
+  then needs the second, inner uncollapse step to re-inflate fully. (The single-EMPTY-window version of revert/stickiness is
+  macroCollapsedWindowBarResizeRevertsOnUncollapse's.) TWO determinism gotchas pinned here: (1) macro shots deterministically
+  include the LAST-CLICKED switch's hover + tooltip (the pointer rests on the icon that toggles into view under it — approved
+  convention since macroWindowsEmptyCollapsingUncollapsing), so anchor byte-equality pairs on states produced by the SAME last
+  click (no pointer-parking needed) — this test lands two such pairs (its step-by-step double restore == the earlier full state;
+  an extra outer round trip == the case-3 restore); (2) a switch icon's PRISTINE construction-time paint is the class-default
+  `Color.WHITE`, while any later repaint through `HighlightableMixin`'s state machine uses `color_normal` (245,244,245,
+  `HighlightableMixin.coffee:14`) — the shift comes with the bar's first REPAINT (collapse/resize cycles trigger it regardless
+  of the pointer), NOT with a pointer touch (verified: a restore shot byte-matched its partner even though one of them predated
+  the switch's first-ever click), and it is exactly the 92 switch-glyph pixels separating the original recording's
+  never-repainted fixture shot from its post-cycle restore — so geometry-restores byte-match each other but never the pristine
+  fixture shot. Fixture: the shared window-in-window verbs + ONE lorem paragraph (same text/colors as
+  `createNewWrappingSimplePlainTextWdgtWithBackground`) dropped into the inner window; drag the composite by its TITLE
+  (`extWin.label.center()` + press-drag-release) so taller re-wrapped states stay on-canvas. No new verb.
 
 ## Scroll & scrollbars
 
@@ -472,6 +508,22 @@ are called directly. See `CLAUDE.md` for those rules.
   distilled the same recording family to just the wheel-scroll core). GOTCHAS: size the list height ≈ its rows' height (so
   the attached rect lands just below the rows, not far down in dead viewport space → an ugly empty gap on scroll); place the
   rect's CENTRE on the part HANGING BELOW the list so the right-click lands cleanly on the rect, not the list. No new verb.
+- **A nested WINDOW's lifecycle re-syncs its scroll panel** (`macroScrollPanelUpdatesCorrectlyOnCollapsingAndUncollapsingAndClosingWindow`):
+  the window-lifecycle sibling of the two recompute entries above. A `WindowWdgt` nested INSIDE a ScrollPanelWdgt actively refreshes it:
+  `childCollapsed`/`childUnCollapsed` both END with `refreshScrollPanelWdgtOrVerticalStackIfIamInIt()` (`WindowWdgt.coffee:232/:244` →
+  the `Widget.coffee` helper calls the enclosing panel's `adjustContentsBounds()` + `adjustScrollBars()` when the widget sits directly
+  inside one) — so collapsing the nested window (content shrinks to its bar), uncollapsing (the stored pre-collapse extent re-overflows
+  the viewport), and closing it (panel empties) each snap the scrollbars to the new content extent with no manual recompute. Beats:
+  carry-drop an internal window (`pickUp` + no-button move + click — it nests, `macroInternalVsExternalWindowDrop`'s mechanic) so it
+  OVERFLOWS the panel's right edge → hBar appears; collapse → bar-only content, scrollbars track; move the bar by its TITLE + narrow it
+  via its resizer + park it inside the viewport → scrollbars RETRACT (the in-panel application of
+  macroCollapsedWindowBarResizeRevertsOnUncollapse — narrow is sticky for the BAR, the expanded extent untouched, which is exactly why
+  the next uncollapse re-overflows); close via the chrome button → empty panel, clean viewport. SEQUENCING GOTCHA: the nested bar's
+  resizer starts CLIPPED outside the viewport — drag the bar INTO view by its title FIRST, then narrow, then park (the recording's own
+  three-gesture order, decoded by pixel-diffing its references). Anchor a byte-equality on two shots produced by the SAME switch click
+  (here both UNCOLLAPSE clicks: image_7 == image_5) — the last-clicked switch's hover + tooltip are part of macro shots, so equality
+  pairs with different last gestures (the recording's bar-state pair) would differ by exactly that hover. Fixture: the demo
+  "scrollable panel" via the real menu path + carry-drop (same as macroMenuPinnedInScrollPanel). No new verb.
 - **Edge auto-scroll while dragging** (`macroListMorphAutoScrollsNearDraggedEdge`): a ScrollPanelWdgt auto-scrolls when a
   float-dragged morph it `wantsDropOf` is held near an edge band (≈`scrollBarsThickness*3`). Build a list overflowing BOTH ways,
   `pickUp` a rectangle (don't drop), then `@syntheticEventsMouseMove_InputEvents (a point in an edge band), "no button", …` and
