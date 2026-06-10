@@ -244,6 +244,15 @@ are called directly. See `CLAUDE.md` for those rules.
   / a MenuMorph, `Widget.buildContextMenu`/`buildHierarchyMenu`). Descend by labelString prefix (reuse the hopping pattern), then
   `@moveToAndClickAtFractionOf_InputEvents item, [0.35,0.5], "right button"` (LEFT-ish fraction — submenus pop at the clicked point).
   Screenshot only; do NOT re-grab `getMostRecentlyOpenedMenu()` after the auto-close (deferred cleanup re-clears the fresh set).
+- **Dragging MENUS keeps the cascade open; only a non-menu press closes it**
+  (`macroMenusAndSubMenusRemainOpenWhileDraggingMenusOnly`): the drag-side complement of cascade auto-close above. The
+  mouse-down cleanup spares a press that lands ON a menu of the chain, so grabbing any menu by its HEADER
+  (`@syntheticEventsMouseMovePressDragRelease_InputEvents menu.label.center(), dest` — press-then-move is a grab, a click
+  would pin) float-drags just that menu while the WHOLE cascade stays open — repeatable across several menus of the same
+  chain. The first press on an ordinary widget kills the entire chain at the DOWN and then float-drags that widget normally
+  (capture the menu-less held frame with moveToAndMouseDown → screenshot → held move → screenshot → mouseUp). Capture each
+  sub-menu reference fresh right after the item click that opens it (a straight DESCEND, unlike hopping, leaves
+  getMostRecentlyOpenedMenu valid). No new verb.
 - **Pin a menu by its header** (`macroMenuPinnedByHeaderClick`): `@clickMenuHeaderToPin_InputEvents menu` clicks the menu's
   title bar (`.label` MenuHeader → `pinPopUp`) — drops the kill-on-click-outside flags (and tightens the shadow), so a later
   desktop click no longer dismisses it. The inverse of cascade auto-close.
@@ -263,6 +272,17 @@ are called directly. See `CLAUDE.md` for those rules.
   sub-menu cascading beside the empty panel → image_2 MID-DRAG floating on top, unclipped/overflowing → image_3 dropped+pinned, now
   clipped, world menu STILL up → image_4 world menu dismissed (only then), sub-menu survives. Drop high (~`[0.5,0.1]`) so the overflow
   (floating) vs clip-at-the-edge (dropped) difference is pronounced.
+- **A menu pinned in a SCROLLABLE panel is live scrolling content** (`macroMenuPinnedInScrollPanel`): the ScrollPanelWdgt
+  sibling of the drop-pin entry above. Drop the demo sub-menu into the demo "scrollable panel" (350x250 `ScrollPanelWdgt`
+  via `world.create`; locate it with `@findTopWidgetByClassNameOrClass ScrollPanelWdgt` — its getTextDescription says
+  "Panel", so pass the CLASS, not the string) and the taller-than-viewport menu is CLIPPED and makes the panel's own
+  `panel.vBar` appear. Thereafter it behaves as ordinary content that is still a LIVE menu: move the panel by an empty
+  corner (`[0.93,0.05]` — the spare width right of the ~140px menu is the clean grab area; don't narrow the panel) and the
+  menu travels; `@dragSliderButtonToFraction_InputEvents panel.vBar, [0.5,0.85]` scrolls it (the header slides out past the
+  viewport top); and a click on one of its still-visible items (`@getTextMenuItemFromMenuByPrefix subMenu, "color palette"`
+  — the subMenu reference captured before the drop stays valid through re-parenting and scrolling) still fires, the created
+  palette riding the hand onto the desktop. Check the clicked item is INSIDE the viewport after the scroll (a clipped-away
+  item can't be hit). No new verb.
 - **Pop-up (prompt/menu) shadow on drag** (`macroPromptShadowFollowsOnDrag`): a `PromptMorph` (extends MenuMorph extends
   PopUpWdgt) casts a drop shadow like every pop-up (`PopUpWdgt.popUp → addShadow`, offset (5,5) α0.2). Drag it by its TITLE
   BAR: `@syntheticEventsMouseMovePressDragRelease_InputEvents prompt.label.center(), dest` (a press-drag GRABS the whole
@@ -278,6 +298,21 @@ are called directly. See `CLAUDE.md` for those rules.
   → `@syntheticEventsMouseUp_InputEvents()` → screenshot. image_2 (held, lifted shadow) and image_3 (dropped, rest shadow) sit at the SAME
   position so ONLY the shadow differs — the three dataHashes differ, so the subtle shadow change is real and deterministic. (Held-button
   screenshot idiom proven by `macroSliderButtonStateColors`, which captures a button mid-press/mid-drag.)
+- **A pinned menu's shadow is untouched by bringToForeground** (`macroPinnedMenuKeepsCorrectShadowWhenBroughtToForeground`):
+  completes the shadow trio (drag + prompt entries above). Raising a pinned menu must repaint the SAME tight pinned shadow,
+  not re-apply the loose unpinned one. The user raise is a click on the menu's HEADER: `Widget.mouseDownLeft` (`:2678`) calls
+  `bringToForeground` (`:2664`, `rootForFocus().moveAsLastChild()` — so any click on the menu raises the WHOLE menu), and the
+  click's `pinPopUp` re-run is idempotent (`PopUpWdgt.coffee:77` — flags already clear, `updatePopUpShadow` re-applies the
+  same shadow). Two observables: with NOTHING overlapping, the raise is a pixel-perfect NO-OP (before/after shots share a
+  dataHash — aim every header click at the header's CENTRE so the pointer ends identically placed, no parking moves needed);
+  then a rectangle made the user's way (a second world menu → "demo ➜" → "rectangle") is carry-dropped OVERLAPPING the menu,
+  and one more header click lifts the menu above it with the tight shadow painted over the rectangle. The on-menu drop is
+  safe twice over: a menu does not accept drops (`Widget._acceptsDrops:104` false; `dropTargetFor` walks up to the world, so
+  the rectangle lands as a world child ABOVE the menu), and the drop CONSUMES the mouse-down
+  (`ActivePointerWdgt.processMouseDown:372` → `drop()`, button nulled) so no `mouseDownLeft` reaches the menu to raise it
+  prematurely — while the same drop still dismisses the unpinned creation menus (the pinned one survives). The recording
+  drove the raise via a console eval of "@bringToForeground()" — the header click invokes the same method, minus the console
+  fixture noise. No new verb.
 - **Pick a colour / set transparency via a popup**: colour: `"color..."` opens a colour-picker menu — capture
   `picker = @getMostRecentlyOpenedMenu()`, click `picker.topWdgtSuchThat((m)-> m instanceof ColorPickerMorph).colorPalette`
   at `[fx,0.5]` (saturated; the palette is `hsl(360·fx,100%,50%)`), then `@moveToItemOfMenuAndClick_InputEvents picker, "Ok"`.
