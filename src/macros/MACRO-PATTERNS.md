@@ -490,6 +490,15 @@ are called directly. See `CLAUDE.md` for those rules.
 - **"Attach…" with no targets → a message** (`macroAttachShowsNoTargetsMessage`): a morph alone (nothing overlapping) → `attach`
   pops a `MenuMorph` titled **"no morphs to attach to"** (`:3680`) instead of a target list; that titled, item-less menu IS the
   message. The negative path of attach.
+- **Attach EXCLUDES the parent — a lonely widget attaches to NOTHING, not even the world**
+  (`macroLonelySliderCantBeAttachedToAnything`): `Widget.attach` (`Widget.coffee:3657`) filters its
+  `plausibleTargetAndDestinationMorphs` candidates by `each != @parent` — for a bare desktop widget the parent IS the world, so
+  the list is EMPTY and the "no morphs to attach to" menu pops with ZERO items, while "set target"
+  (`ControllerMixin.openTargetSelector`) on the SAME fixture keeps the world (re-attaching to your parent is a no-op; controlling
+  it is meaningful). Assert the zero-item shape with `@assertTopMenuItemCount 0` + `@assertTopMenuItemStrings []` — the menu's
+  title is NOT an item (`MenuMorph.testItems` excludes `@label`), so a titled-but-empty menu counts 0. Reuses
+  macroLonelySliderTargetsWorldOnly's lone-slider fixture verbatim (right-click the LOWER track), so the attach-vs-set-target
+  contrast is asserted on an identical scene. No new verb.
 - **Attach/target candidates EXCLUDE a clipped morph** (`macroAttachTargetExcludesClippedMorph`): both "attach..."
   (`Widget.attach`) and a controller's "set target" (`ControllerMixin.openTargetSelector`) build their candidate menus
   from `world.plausibleTargetAndDestinationMorphs` (`Widget.coffee:846`), but a `PanelWdgt` (which `@augmentWith
@@ -621,6 +630,14 @@ are called directly. See `CLAUDE.md` for those rules.
   DISAMBIGUATION: the target handle ALSO has `type == "resizeBothDimensionsHandle"`, but `topWdgtSuchThat` tests the
   sub-handle (a child, added later → frontmost) BEFORE the target, so the verb grabs the resizer, not the target.
   Distinct from using a handle to resize ANOTHER widget (macroCanMoveAndResizeColorPaletteMorph).
+- **A HandleMorph attached to NOTHING just float-moves** (`macroHandleAttachedToNothing`): a handle's resize powers come
+  entirely from its `@target` (`HandleMorph.nonFloatDragging` returns early `unless @target`); built bare (`new HandleMorph()`,
+  target `nil` — exactly what the demo "handle" item makes via `WorldMorph.createNewHandle`) and parented by the world,
+  `detachesWhenDragged` (`HandleMorph.coffee:34`) is TRUE, so a press-drag-release
+  (`@syntheticEventsMouseMovePressDragRelease_InputEvents` from a fraction of the handle to a desktop point) FLOAT-drags it
+  like any plain morph: it relocates, resizes nothing, and the rest of the desktop is untouched. GOTCHA: the release leaves
+  the pointer ON the dropped handle, whose `mouseEnter` (`:233`) renders it in its bluish HIGHLIGHTED state — park the pointer
+  on the empty desktop (a no-button move) before the screenshot to show the NORMAL white grip. No new verb.
 - **A pristine InspectorMorph resizes via its OWN built-in resizer** (`macroResizingPristineInspector`): an OLD
   `InspectorMorph` is a BoxMorph (not a WindowWdgt) that SHIPS its own bottom-right resizer, built in its ctor —
   `@resizer = new HandleMorph @` (`InspectorMorph.coffee:217`, default type `"resizeBothDimensionsHandle"`). So you
@@ -727,6 +744,18 @@ are called directly. See `CLAUDE.md` for those rules.
   `MenuItemMorph.coffee:78` → `world.morphsToBeHighlighted` → a `HighlighterMorph` each cycle). Overlap a ColorPaletteMorph with a
   rect, `clickMenuItemOfWidget… "set target"`, grab the menu, find the candidate by prefix, then
   `@syntheticEventsMouseMove_InputEvents item.center(), "no button", …` to HOVER (no click) and screenshot the highlight tint.
+- **A FORCED set-target choice is still PRESENTED — hand-rolled chain with screenshots between menus**
+  (`macroUniqueTargetAndPropertyAreStillPresented`): a lonely ColorPaletteMorph has exactly ONE plausible target (the world),
+  yet `openTargetSelector` still opens the one-item "choose target:" menu (no silent auto-pick); clicking it opens the
+  "choose target property:" menu (`ColorPaletteMorph.openTargetPropertySelector`, `ColorPaletteMorph.coffee:111`, from
+  `target.colorSetters()` — the world offers "background color" + "color"), and picking "color" yields a binding a palette
+  click then proves (the whole desktop recolours). To screenshot BETWEEN the menus, hand-roll the
+  `setControllerTargetToWidgetProperty…` chain and capture each popup fresh (`targetMenu = @getMostRecentlyOpenedMenu()` right
+  after "set target"; `propertyMenu = …` right after the target click), driving later clicks via the captured refs. GOTCHA:
+  clicking "a WorldMorph ➜" parks the pointer on a candidate item whose hover highlight-tints the morph it represents — the
+  WHOLE WORLD — and the property menu pops OVER the item so no mouseLeave fires; hover the property menu's "color" item
+  (`@getTextMenuItemFromMenuByPrefix propertyMenu, "color"` + a no-button move) before the shot to clear the tint (and match
+  the recording's hover-highlighted row). Prefix "color" is unambiguous: "background color" does not START with it. No new verb.
 - **A two-way slider↔text patch cycle, text as SOURCE, guarded** (`macroSliderTextTwoWayPatchCycle`): wire `slider.value → text
   "text"` AND `text → slider "value"` so the two bind into a 2-node LOOP; driving either end chases the value to the other and
   `world.makeNewConnectionsCalculationToken()` (minted in `SliderMorph.setValue`/`SimplePlainTextWdgt.setText`, propagated by
