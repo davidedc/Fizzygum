@@ -80,6 +80,22 @@ are called directly. See `CLAUDE.md` for those rules.
   landed on "condimentum" on the second-to-last line — eyeball which word the highlight covers; the exact word doesn't matter, a clean
   interior word does). Distinct from `macroDoubleAndTripleClickThroughCaretMorph` (double-clicks ON the caret of a tiny pre-typed
   TextMorph2 — pass-through); this proves word-granularity from a CLEAN state on a single-line StringMorph2 AND wrapped text. No new verb.
+- **Triple-click scoping: whole string · VISUAL line · LOGICAL line** (`macroTripleClickSelection`): WHAT a triple-click
+  selects, per class and wrap regime — the triple sibling of the word entry above. `StringMorph2.mouseTripleClick`
+  (`:1231-1234`) is `selectAll()` + caret to the text's END: on a single-line string ANY click point selects the whole
+  string. `TextMorph2.mouseTripleClick` (`:684-690`) overrides it: it `selectBetween()`s the clicked ROW's first and end
+  slots — "the whole line (if it's wrapped, just what sits on the very line)" — so in soft-wrapped text the unit is the
+  VISUAL line: a full-measure line, a short paragraph-closing line (the highlight stops mid-measure, plus the break slot),
+  or the EMPTY separator line (just its newline — a one-character sliver). With `softWrap` OFF the rows ARE the logical
+  lines, so the same gesture takes the WHOLE paragraph. Within one line the click x is IRRELEVANT (same selection, same
+  end-slot caret), and text morphs add no hover/tooltip pixels — so repeats from DIFFERENT click points are byte-EQUAL:
+  anchor equality pairs on them (unlike window-switch shots, which embed the last-clicked switch's hover). Fixture mirrors
+  `macroDoubleClickSelectsWord` (direct build, clean ASCII, `isEditable=true`) but keeps TWO paragraphs
+  (`String.fromCharCode 10`) — the break is load-bearing for the short-line/empty-line/no-wrap beats. The no-wrap finale
+  calls `toggleSoftWrap()` + `togglefittingSpecWhenBoundsTooSmall()` directly (the two menu items' methods; the
+  CROP→SCALEDOWN shrink is LOAD-BEARING — a cropped TextMorph2 opens the "edit:" prompt instead of the inline caret the
+  triple needs). MUSTS: `supportsTurboPlayback:false` + `requiresSlowPlayback:true`. Tune row fracs at capture — and
+  remember the SCALEDOWN no-wrap rows are THIN (target the first row a few px under the box top). No new verb.
 - **Clipboard cut/copy/paste** (`macroTextMorph2CutCopyPasteBasic`): after a Shift+Arrow selection,
   `clip = @cutSelection_InputEvents()` (or `@copySelection_InputEvents()`) reads + RETURNS the selection synchronously
   and enqueues a `Cut`/`CopyInputEvent`; later `@pasteText_InputEvents clip` enqueues a `PasteInputEvent`. Fizzygum has
@@ -122,12 +138,46 @@ are called directly. See `CLAUDE.md` for those rules.
   its menu (TextMorph2-family drift). Give it a `backgroundColor` so the float position is visible.
 - **Soft-wrap toggle** (`macroSoftWrapTogglesTextReflow`): `textBox.toggleSoftWrap()` DIRECTLY (the "✓ soft wrap" method) —
   a synthetic right-click on a TextMorph2 does NOT open a usable context menu in a macro (it does on plain widgets).
+  NB the box does NOT grow on toggle: the overflowing no-wrap line CROPS with an ellipsis at the unchanged box width
+  (the default CROP spec) — see the desktop-editing entry below for the SCALEDOWN/editing interplay.
+- **No-wrap desktop editing: caret-into-view slides the MORPH** (`macroSoftWrapping`): editing a no-wrap TextMorph2 on
+  the bare desktop composes three mechanics. (1) The morph's EXTENT is independent of its no-wrap text — logical lines
+  wider than the box just CLIP at its right edge (`breakTextIntoLines` uses an unbounded measure when `softWrap` is off,
+  `TextMorph2.coffee:314-317`; nothing resizes the box), with SCALEDOWN re-fitting the FONT on every text change. (2)
+  Backspace/Enter genuinely JOIN/SPLIT logical lines — no-wrap rows are real fragments. (3) There is no panel to scroll,
+  so `CaretMorph.gotoSlot` (`CaretMorph.coffee:128-142`, gated on `@target.isScrollable` — StringMorph2 default true)
+  SLIDES THE TARGET MORPH (`fullRawMoveLeftSideTo`) whenever the caret's new x falls outside the world's padded view:
+  send the caret to the END of a wider-than-the-canvas line and the box's left edge drags OFF-canvas while the caret
+  parks at the world's RIGHT edge — floating over the desktop BEYOND the box's painted width; land it near a line START
+  (Enter at the text's end → empty last line, col 0) and the whole morph slides back right. The scroll-panel branch
+  (`:147-148`) is the sibling the caret-into-view macros assert. AUTHORING RULES learned: after the first edit never
+  trust a y-fraction (the SCALEDOWN re-fit moves every row) — click only the FIRST line at a live point
+  (`txt.top() + 5`), drive everything else with keys; reach the tail's end with ArrowDown ON THE LAST LINE
+  (`TextMorph2.downFrom` clamps to the text end, `:564-569`; a click BELOW the text does the same via `slotAtRow`'s
+  row-overflow guard, `:521-524` — which is also how a stray low click can slide the morph when you didn't mean to);
+  size the tail line to overshoot the world's right edge but keep the slid box partly on-canvas (~340 chars at the
+  observed re-fit here — tune the split count at capture). Toggles direct, as in the soft-wrap entry above; the
+  CROP→SCALEDOWN shrink is load-bearing for inline-caret clicks. No new verb.
 - **Non-wrapping text self-resize** (`macroNonWrappingTextResizesToContent`): a `SimplePlainTextWdgt` (extends TextMorph2)
   resizes its OWN bounds to its text. Its ctor sets `@maxTextWidth = true` (wrap to own width); `@maxTextWidth = nil` then
   `reLayout()` turns wrapping OFF (what "soft wrap off" does, `:111-115`). In that mode `setText` re-lays-out SYNCHRONOUSLY
   (`:126-131 → reLayout :183`): width = LONGEST line, height = lineCount × fontHeight. Drive with `setText` (the clean
   deterministic equivalent of caret typing); multi-line strings via `String.fromCharCode(10)` (no literal newline in the
   backtick source).
+- **Text reflow under HANDLE resize — old TextMorph (width-from-user, height-from-content)**
+  (`macroTextRelayoutsCorrectlyOnResize`): the OLD `TextMorph` family's resize law, and the suite's only dedicated
+  old-TextMorph assertion. `TextMorph.rawSetExtent` keeps ONLY the requested x — it becomes `@maxTextWidth`
+  (`TextMorph.coffee:235`) — and `reLayout` re-breaks the text at that measure and `silentRawSetExtent`s the morph to
+  (maxTextWidth, lineCount × fontHeight) (`:118-131`): the drag's y is DISCARDED. So a corner-handle drag released far
+  ABOVE the content's eventual bottom yields a wide block SHORTER than the release point, and a hard narrow yields a
+  column far TALLER than it — both directions in one test. Fixture: the world menu's "demo ➜" → "text" (the Lorelei
+  `TextMorph` — `WorldMorph.createNewText`, isEditable, `maxTextWidth = 300`, rides the hand; drop with a click), then
+  the REAL resize path: `@openMenuOf_InputEvents textM` → `"resize/move..."` →
+  `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", (new Point textM.left()+675, textM.top()+30)` —
+  live-bounds deltas make the y-ignored proof explicit. The mode can stay on across BOTH drags (the handles follow the
+  morph and appear in the shots, as the recording's did). Distinct from `macroNonWrappingTextResizesToContent` (box
+  follows CONTENT change, no user drag) and from the WINDOW-chrome resize tests (the same law through WindowWdgt). No
+  new verb.
 - **Edit a button's text label in place** (`macroEditButtonLabelText`): clicking a button TRIGGERS it, so call
   `button.label.edit()` DIRECTLY (`= world.edit label`, sets `world.caret`, no isEditable gate — the "edit" item's method),
   then reuse the caret verbs (`"Meta+a"` → `@syntheticEventsStringKeys_InputEvents "new"`) and `world.stopEditing()` to
