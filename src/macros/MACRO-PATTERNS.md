@@ -426,6 +426,30 @@ are called directly. See `CLAUDE.md` for those rules.
   change) + `adjustContentsBounds`/`adjustScrollBars`: the text reflows wider and the clamped clock grows back, and a wheel-scroll back UP
   shows the reflowed content (image_4 widened+bottom / image_5 widened+mid / image_6 widened+top). First document-handles-a-dynamic-widget
   test. No new verb.
+- **No SPURIOUS scrollbars on resize** (`macroNoSpuriousScrollbarsOnScrollPanelResize`): the NEGATIVE of
+  `macroScrollBarsTrackContentChange` — a bar appears ONLY when content overflows, so moving content around inside a panel and
+  RESIZING it while the content still FITS must spawn NONE. Same `adjustScrollBars` gate (`ScrollPanelWdgt.coffee:114`; hBar
+  `:143-160` / vBar `:163-180`), re-evaluated on `rawSetExtent` (`:232-233`) AND on entering resize/move mode
+  (`showResizeAndMoveHandlesAndLayoutAdjusters` override, `:204-207`). Build `new ScrollPanelWdgt` + a default `new BoxMorph`
+  (Widget defaults: 50×40, dark, fits with room to spare) added via `panel.add box` (routes into `@contents`); move the box around
+  with `@dragWidgetTo_InputEvents box, pt` (re-drop re-parents into `@contents`, re-runs the gate — still fits, no bar); then
+  `@openMenuOf_InputEvents panel` → `@moveToItemOfTopMenuAndClick_InputEvents "resize/move..."` → `@dragResizeMoveHandleTo_InputEvents
+  "resizeBothDimensionsHandle", dest` SHRINKS the panel (the final shot is taken WITH the handles showing — do NOT click empty
+  desktop to leave the mode first, unlike `macroCanMoveAndResizeColorPaletteMorph`). MUST shrink not grow (growing the bottom-right
+  extends the world's scrollable extent → perturbs the SWCanvas frame; compute `dest` from `panel.bottomRight()` minus a positive
+  delta). No new verb.
+- **Free-width scroll-stack shows a HORIZONTAL scrollbar** (`macroFreeWidthScrollStackShowsHorizontalScrollbar`): the FIRST
+  horizontal-bar macro (every other scroll macro is vertical). `new SimpleVerticalStackScrollPanelWdgt false` (the
+  `isTextLineWrapping=false` ctor arg) sets the inner stack's `constrainContentWidth=false` (`SimpleVerticalStackScrollPanelWdgt.coffee:6-7`),
+  so a NON-wrapping child keeps its natural width (`SimpleVerticalStackPanelWdgt.coffee:92-104` left-aligns + skips the width clamp)
+  → `@contents.width()` exceeds the viewport → `adjustScrollBars` shows the hBar (`ScrollPanelWdgt.coffee:143-145`, the
+  `contents.width() >= width()+1` gate). Append a wide non-wrapping `SimplePlainTextWdgt` with `para.maxTextWidth = nil;
+  para.reLayout()` (the wrap-OFF idiom, `SimplePlainTextWdgt.reLayout:186-196`; cribbed from `macroNonWrappingTextResizesToContent`)
+  via `panel.add` — its long lines CLIP at the right edge. Scroll horizontally with `@wheelOn_InputEvents panel, 0, deltaX`
+  (deltaY=0, positive deltaX scrolls RIGHT — `wheelOn_InputEvents`'s 3rd positional arg) → the clipped-off right portion comes into
+  view, the horizontal thumb travels right. GOTCHAS: the free-width DEFAULT doc is already wider than a small viewport, so the hBar
+  is present from image_1 (faithful to the original — frame it as "bar present + scroll it", not "bar appears"); set `maxTextWidth=nil`
+  + `reLayout()` BEFORE `panel.add`; do NOT `setContents` (it wipes the default doc — use `add`). No new verb.
 
 ## Drag/drop, attach/detach, duplicate
 
@@ -751,6 +775,19 @@ are called directly. See `CLAUDE.md` for those rules.
   a 2-paragraph Lorem + cream bg); DROP each in with `@dragWidgetTo_InputEvents text, panel` (fires `reactToDropOf →
   adjustContentsBounds`), so a second drop ~doubles the height. (A tight EMPTY box taller than one child SHRINKS on the first add
   — start from substantial content.) The reusable fixture for the big `Width*VerticalStackPanel` family.
+- **Stack SHRINKS when a child is removed** (`macroVerticalStackPanelShrinksOnParagraphRemoval`): the SHRINK complement of the
+  grows entry above — a tight, width-constraining `SimpleVerticalStackPanelWdgt` tracks its height DOWN as well as up. Removing a
+  child fires `childRemoved → adjustContentsBounds` (`SimpleVerticalStackPanelWdgt.coffee:52-57`), which re-sums the (now fewer)
+  child heights with NO floor while tight & non-empty (`:130-131`) → the panel snaps down to hug the remaining paragraph. The
+  removal hook fires when the dragged-out child is re-parented to the world (`Widget.coffee:2249-2250`). Build like the grows
+  fixture (bare `new SimpleVerticalStackPanelWdgt`, two yellow wrapping `SimplePlainTextWdgt` dropped in via
+  `@dragWidgetTo_InputEvents text, panel`), then REMOVE the last. KEY GESTURE: a child of a TIGHT stack is NOT independently
+  float-draggable (a float-drag grabs the whole STACK — eyeball-caught: dragging the paragraph moved the entire stack), so detach
+  it through its hierarchy menu's "pick up", reusing `pickUpPartToDesktop_InputEvents_Macro part, "a SimplePlainText", dropPoint`
+  (right-click → "a SimplePlainText ➜" → "pick up" = `Widget.pickUp → world.hand.grab`, then carry + mouse-DOWN to drop; the
+  subroutine from `macroPickingUpPartsFromInspector`). GOTCHAS: keep paragraphs MODERATE so the whole stack stays on-screen (a
+  clean right-click on the last paragraph — tall paragraphs put its centre at the canvas edge); drop the removed paragraph well
+  inside the desktop, clear of the stack, so the world extent (hence the SWCanvas frame) stays put. No new verb.
 - **Stack loose when empty, tight when filled — via the resize HANDLE** (`macroStackPanelLooseWhenEmptyTightWhenFilled`): a
   width-constraining `SimpleVerticalStackPanelWdgt` resizes COMPLETELY FREELY (both dims) while EMPTY but only in WIDTH once
   filled (HEIGHT fixed to the wrapped text). `adjustContentsBounds` (`:73`) sums child heights, then `if !@tight or
