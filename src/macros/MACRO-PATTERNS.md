@@ -39,6 +39,17 @@ are called directly. See `CLAUDE.md` for those rules.
   change before the screenshot (the caret re-shows on the next paint via `gotoSlot`, blink frozen in playback). (Beware: TextMorph2
   has a SECOND, dead `@alignment`/`setAlignmentTo*` system unwired to any menu — drive `@horizontalAlignment` via the `align *`
   items, not that.) No new verb.
+- **Caret at and BELOW the last row** (`macroTextMorph2PointingAtLastRow`): the last-row/below-text edge of
+  caret-placement-by-click above. `TextMorph2.slotAt` (`:541`) scans wrapped rows by the click's y, then `slotAtRow`
+  (`:521`) resolves WITHIN a row per-column (x past the row's end clamps after its last character) — but when the
+  computed row is PAST the last wrapped line, the row-overflow guard returns `textPossiblyCroppedToFit.length`: the
+  slot after the very last character of the WHOLE text, the x IGNORED. So a click in the background strip below the
+  text at a small x produces the IDENTICAL caret (and reference dataHash) as a click far past the last row's end —
+  capture both shots and the byte-equality IS the assertion. Fixture: the direct-build caret fixture
+  (`isEditable = true`) PLUS `txt.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT` — a
+  directly-built TextMorph2 defaults to SCALEUP (`TextMorph2.coffee:52`), which would scale the text to fill the box
+  and make the below-text strip an unpredictable font-search leftover; FLOAT keeps the natural font so the strip is a
+  fixture constant. Author the row-targeting fracs from a first capture (rows ≈ extent/lineCount bands). No new verb.
 - **Caret arrow-key navigation** (`macroCaretArrowKeyNavigation`): once `world.caret` is editing, `CaretMorph.processKeyDown`
   (`:62-68`) maps Arrow* to `goLeft/goRight/goUp/goDown` (Left/Right step a slot, wrapping over the soft break;
   Up/Down keep the column, clamping at first/last line). Place the caret (same `isEditable=true` fixture), then
@@ -92,6 +103,18 @@ are called directly. See `CLAUDE.md` for those rules.
   (default), then `txt.setText "<words> <80+-char token> <words>"` (the clean deterministic equivalent of caret typing —
   same `@text`, same fitting result; as macroNonWrappingTextResizesToContent argues). image_1 normal font → image_2 whole
   text uniformly smaller. No clicks (so no "edit:" prompt trap; `isEditable` not needed). No new verb.
+- **SCALEUP tracks a TYPED growing token — no jumps** (`macroTextMorph2NoJumpsInLayoutOfLongLine`): the LIVE-typing
+  complement of shrink-to-fit above, on the OTHER branch: `fittingSpecWhenBoundsTooLarge = SCALEUP` is the TextMorph2
+  constructor DEFAULT (`TextMorph2.coffee:52` — the demo "TextMorph2 with background" ships it), and
+  `StringMorph2.fitToExtent`'s SCALEUP branch (`:554`) re-runs `searchLargestFittingFont` on EVERY content change. So
+  EMPTYING the text (click → `Meta+a` → `Backspace`, all queued input) maximises the font — the box shows a GIANT
+  caret — and growing an unbreakable token through queued keystrokes (`@syntheticEventsStringKeys_InputEvents "aaaaaa"`)
+  renders it giant on ONE line, stepping the whole line DOWN to the next largest fitting font exactly when one more
+  character no longer fits (one step ≈ each glyph ~8% narrower: 12 glyphs span what 11 did), never wrapping (a
+  space-less token can't split) and never jumping through a broken layout. Use the DEMO fixture (menu-create +
+  resize/move) — it carries the spec under test and is editable. Burst sizes are tuned at capture so one shot pair
+  straddles the first step-down. The recording's tail (at MINIMUM font the text finally crops and the "edit:" prompt
+  pops mid-typing) is a separate cropped-text mechanic — deliberately not asserted here. No new verb.
 - **Text alignment** (`macroStringMorph2Alignments`): the converse — a StringMorph2 LARGER than its text doesn't grow it
   either (`fittingSpecWhenBoundsTooLarge` defaults to `FLOAT`); the text floats per `horizontalAlignment` (default LEFT)
   and `verticalAlignment` (default TOP). Drive `str.alignLeft()/alignCenter()/alignRight()` and
@@ -427,6 +450,17 @@ are called directly. See `CLAUDE.md` for those rules.
   instead of "pick up"); `fullCopy` copies the `target` reference so the copy ALSO drives the list. ASYMMETRY: dragging the copy
   scrolls the list and `scrollbar1` FOLLOWS (the list updates its own @vBar via `adjustScrollBars`); dragging `scrollbar1`
   scrolls the list but the copy — which the list has no back-reference to — stays put.
+- **A vertical scrollbar IGNORES the sideways component of a button drag**
+  (`macroMovingSlidersSidewaysDoesntCauseContentToMoveSideways`): `SliderButtonMorph.nonFloatDragging` (`:68`) pins a
+  vertical slider's button to its own column (`newX = @left()` — the drag's x is DISCARDED) and clamps the y to the
+  track; `parent.updateValue()` fires only when the button actually MOVED, and `endOfNonFloatDrag` (`:90`) resets the
+  button's visual state on release. So a pure-sideways press-drag-release
+  (`@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf scrollbar.button, [0.5,0.5]), (new Point
+  (x-80), sameY)`) is a COMPLETE no-op — capture before/after shots and their byte-equality (same reference dataHash)
+  IS the assertion — while a diagonal drag scrolls by its vertical component only. Fixture: the old-inspector
+  scrollbar (`inspector.list.vBar`, the unplug entry above). PARK the pointer at one fixed empty-desktop spot before
+  EVERY shot (a no-button `@syntheticEventsMouseMove_InputEvents`) so hover state can never break the equality. No
+  new verb.
 - **A document flows, clips and scrolls live non-text widgets** (`macroDocumentScrollsMixedTextAndClocks`): a
   `SimpleDocumentScrollPanelWdgt` is a general widget container, not just a text flow. `doc.add widget` re-parents any widget into its
   inner `SimpleVerticalStackPanelWdgt` content stack (`ScrollPanelWdgt.add → @contents.add`, `:186-194`), which `@augmentWith
