@@ -62,6 +62,18 @@ are called directly. See `CLAUDE.md` for those rules.
   crops to the longest fitting prefix + "…" (`fittingSpecWhenBoundsTooSmall` defaults to `CROP`; SCALEDOWN scales instead,
   the "crop/shrink to fit" item). `new StringMorph2 "long text", fontSize` (give a `backgroundColor` so the bounds show) +
   `rawSetExtent` to a narrow width ellipsises; a narrower extent crops more. The screenshot's settle re-crops.
+- **Text shrink-to-fit (SCALEDOWN)** (`macroTextMorph2ShrinksToFitLongToken`): the SCALEDOWN counterpart of the CROP
+  ellipsisation above. When a wrapping `TextMorph2` holds a single UNBREAKABLE token wider than the box, the WHOLE text's
+  font is scaled DOWN uniformly until the token fits — `StringMorph2.fitToExtent` (`:537`, inherited) takes the SCALEDOWN
+  branch (`:563-567`): keeps the full text and returns `searchLargestFittingFont` (a deterministic binary search) →
+  `@fittingFontSize`. An unbreakable token forces it because TextMorph2's token-level wrapping is commented out
+  (`TextMorph2.coffee:107-150`), so a space-less token is one over-wide line that only a font shrink can fit. A TextMorph2
+  DEFAULTS to CROP (`TextMorph2.coffee:53`), so the fixture MUST set `txt.fittingSpecWhenBoundsTooSmall =
+  FittingSpecTextInSmallerBounds.SCALEDOWN` — LOAD-BEARING: without it image_2 ellipsises instead of shrinking (proving the
+  wrong mechanic). Build the TextMorph2 narrow (`rawSetExtent` width < the token's pixel width) with `softWrap` ON
+  (default), then `txt.setText "<words> <80+-char token> <words>"` (the clean deterministic equivalent of caret typing —
+  same `@text`, same fitting result; as macroNonWrappingTextResizesToContent argues). image_1 normal font → image_2 whole
+  text uniformly smaller. No clicks (so no "edit:" prompt trap; `isEditable` not needed). No new verb.
 - **Text alignment** (`macroStringMorph2Alignments`): the converse — a StringMorph2 LARGER than its text doesn't grow it
   either (`fittingSpecWhenBoundsTooLarge` defaults to `FLOAT`); the text floats per `horizontalAlignment` (default LEFT)
   and `verticalAlignment` (default TOP). Drive `str.alignLeft()/alignCenter()/alignRight()` and
@@ -366,6 +378,24 @@ are called directly. See `CLAUDE.md` for those rules.
   re-run `panel.adjustContentsBounds()` + `panel.adjustScrollBars()` after each. TRAP: a single-widget contents (`new
   ScrollPanelWdgt child`) has no submorphs, so `adjustContentsBounds` re-fits it back to the viewport (undoing the overflow) —
   use a real submorph, or call `adjustScrollBars()` only.
+- **Adding a child to a ListMorph recomputes its scroll** (`macroAddingMorphToListUpdatesScroll`): the recompute-on-ADD
+  sibling of the content-change entry above (which recomputes on child MUTATION). `ScrollPanelWdgt.add` (`:186-194`) routes
+  a non-handle widget into `@contents` and then AUTOMATICALLY calls `@adjustContentsBounds()` + `@adjustScrollBars()` — so
+  adding a tall morph to a `ListMorph` (extends ScrollPanelWdgt) that previously just fit its rows makes a vertical
+  scrollbar APPEAR, with NO manual recompute call (the recorded "attach...→a ListMorph" gesture IS exactly this `@add` +
+  recompute, `Widget.coffee:3640-3645`). Build a standalone `new ListMorph nil, nil, [rows]` sized to ≈ its rows' height
+  (so no scrollbar yet) + a distinct `RectangleMorph` positioned to PARTIALLY OVERLAP the list's lower edge and HANG BELOW
+  it, then ATTACH it through the REAL menu (the recording's gesture — drive the menu, NOT an opaque `list.add`; reuses the
+  `macroAttachResizingHandleToMorph` idiom): `@openMenuOf_InputEvents rect` → `@moveToItemOfTopMenuAndClick_InputEvents
+  "attach..."` → `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()), "a ListMorph"`
+  (class-name PREFIX). The OVERLAP is REQUIRED — `"attach..."` lists only bounds-intersecting targets
+  (`world.plausibleTargetAndDestinationMorphs`), so a non-overlapping rect would not be offered the list. Widget.attach →
+  list.add (ScrollPanelWdgt.add) re-parents the rect into `@contents` + auto-recomputes → image_2 shows the rect CLIPPED to
+  the list (its hanging part cropped — proof it is now a child) AND a scrollbar APPEARED; then `@wheelOn_InputEvents list,
+  delta` → rows + rect scroll together (image_3). Fills the gap `macroListMorphWheelScroll` explicitly LEFT OPEN (it
+  distilled the same recording family to just the wheel-scroll core). GOTCHAS: size the list height ≈ its rows' height (so
+  the attached rect lands just below the rows, not far down in dead viewport space → an ugly empty gap on scroll); place the
+  rect's CENTRE on the part HANGING BELOW the list so the right-click lands cleanly on the rect, not the list. No new verb.
 - **Edge auto-scroll while dragging** (`macroListMorphAutoScrollsNearDraggedEdge`): a ScrollPanelWdgt auto-scrolls when a
   float-dragged morph it `wantsDropOf` is held near an edge band (≈`scrollBarsThickness*3`). Build a list overflowing BOTH ways,
   `pickUp` a rectangle (don't drop), then `@syntheticEventsMouseMove_InputEvents (a point in an edge band), "no button", …` and
@@ -549,6 +579,19 @@ are called directly. See `CLAUDE.md` for those rules.
   DISAMBIGUATION: the target handle ALSO has `type == "resizeBothDimensionsHandle"`, but `topWdgtSuchThat` tests the
   sub-handle (a child, added later → frontmost) BEFORE the target, so the verb grabs the resizer, not the target.
   Distinct from using a handle to resize ANOTHER widget (macroCanMoveAndResizeColorPaletteMorph).
+- **A pristine InspectorMorph resizes via its OWN built-in resizer** (`macroResizingPristineInspector`): an OLD
+  `InspectorMorph` is a BoxMorph (not a WindowWdgt) that SHIPS its own bottom-right resizer, built in its ctor —
+  `@resizer = new HandleMorph @` (`InspectorMorph.coffee:217`, default type `"resizeBothDimensionsHandle"`). So you
+  resize it by dragging that handle DIRECTLY: `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest`
+  finds it via `topWdgtSuchThat instanceof HandleMorph` (it is the ONLY handle on screen — NO resize/move-mode menu
+  needed, unlike `macroCanMoveAndResizeColorPaletteMorph`). `HandleMorph.nonFloatDragging → @target.setExtent`
+  (`:212-221`) resizes the inspector and `InspectorMorph.doLayout` (`:344-446`) re-flows the three panes
+  (`@list`/`@detail`/`@work`) + footer — the visible proof. Fixture = the StringMorph-inspect idiom
+  (`clickMenuItemOfWidget_InputEvents_Macro s, "inspect"` → OLD InspectorMorph) but DO NOT park or pre-size it: the
+  "pristine / unmoved & unresized" base case is the whole point (this is the one inspector macro that does NOT
+  `insp.fullMoveTo`). SHRINK (compute the target from `insp.topLeft()`) so it stays in bounds and doesn't extend the
+  world's scrollable extent (the SWCanvas systemInfoHash). Distinct from every other inspector macro (unplug /
+  duplicate / reject-drop / eval / pick-up-parts / property-edit) — none resizes the inspector itself. No new verb.
 - **Resizing a button via its handle does NOT trigger it** (`macroResizingButtonDoesntCauseItToClick`): dragging a widget's resize
   handle runs `HandleMorph.nonFloatDragging → @target.setExtent`, never a click — `HandleMorph.mouseClickLeft` is EMPTY and its
   `mouseDownLeft` doesn't propagate ("otherwise the handle on a button will trigger the button when resizing"), so resizing a
