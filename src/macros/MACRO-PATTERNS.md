@@ -21,6 +21,24 @@ are called directly. See `CLAUDE.md` for those rules.
   (the demo widgets do). `@moveToAndClickAtFractionOf_InputEvents txt, [fx, fy]` places the caret on the clicked
   line: `[0.02, firstLineFrac]` before the first letter; a click past the last line's end clamps after the last
   letter. Size the widget so the wrapped text FITS (a cropped one opens the "edit:" prompt instead).
+- **Caret is alignment-INVARIANT and placement is alignment-AWARE** (`macroTextMorph2CaretPlacementUnderAlignments`): TWO
+  complementary halves (the alignment-aware sibling of caret-placement-by-click above, which is LEFT-only), both turning on the
+  per-line shift `textHorizontalPosition` (`StringMorph2.coffee:607-614`, switched on `@horizontalAlignment` LEFT/CENTER/RIGHT).
+  (1) **INVARIANCE:** once the caret is placed on a character, changing the alignment keeps it on the SAME character — it
+  re-renders at its slot with the new shift (`TextMorph2.coffee:515`) and the menu-driven alignment change does NOT stop editing
+  (clicking a menu item ABOUT the edited text is the carve-out at `ActivePointerWdgt.coffee:344-349`, so `world.caret` keeps its
+  slot). So change alignment via the menu WITHOUT re-clicking and the caret follows the shifting line (image_1..3). (2)
+  **AWARENESS:** the SAME fractional click lands on a DIFFERENT character once the line is shifted, because `slotAtSingleLineString`
+  SUBTRACTS the shift before resolving the slot (`:791`) — re-click the same `[0.40,0.5]` under right vs the original left placement
+  (image_4). Set alignment through the REAL context menu — for a `world.add`-ed widget in dev mode the morph menu is TOP-LEVEL (no
+  "a TextMorph2 ➜" wrapper, `Widget.buildContextMenu:2913-2922`); items carry a leading glyph (`"∸ align center"` / `"→ align
+  right"`) so match by SUBSTRING: `@openMenuOf_InputEvents txt` → `@moveToItemContainingOfMenuAndClick_InputEvents
+  (@getMostRecentlyOpenedMenu()), "align center"`. Build an editable multi-line TextMorph2 (`\n` via `String.fromCharCode 10`)
+  with DISTINCT per-line widths so the shift is obvious. GOTCHAS: `isEditable = true`; extent WIDE enough that the longest line
+  FITS (else a click opens the "edit:" prompt, not an inline caret); settle (`yield "waitNoInputsOngoing"`) after each alignment
+  change before the screenshot (the caret re-shows on the next paint via `gotoSlot`, blink frozen in playback). (Beware: TextMorph2
+  has a SECOND, dead `@alignment`/`setAlignmentTo*` system unwired to any menu — drive `@horizontalAlignment` via the `align *`
+  items, not that.) No new verb.
 - **Caret arrow-key navigation** (`macroCaretArrowKeyNavigation`): once `world.caret` is editing, `CaretMorph.processKeyDown`
   (`:62-68`) maps Arrow* to `goLeft/goRight/goUp/goDown` (Left/Right step a slot, wrapping over the soft break;
   Up/Down keep the column, clamping at first/last line). Place the caret (same `isEditable=true` fixture), then
@@ -838,6 +856,23 @@ are called directly. See `CLAUDE.md` for those rules.
   while a non-float drag is in progress. Open a RectangleMorph's "transparency..." popover, `prompt = @getMostRecentlyOpenedMenu()`,
   `slider = (prompt.children.filter (c) -> c instanceof SliderMorph)[0]`, then press-drag-release its button to a point far OUTSIDE
   the popover. The alpha commits on "Ok", so only the value FIELD changes live. The INVERSE of dismiss-on-mousedown-outside.
+- **A slider dragged across surfaces keeps its button** (`macroSliderDraggedAcrossSurfacesKeepsButton`): grabbing a slider by
+  its BACKGROUND (the track, NOT the button) and dragging it onto a plain panel, then a scroll panel, then the desktop never
+  pages its button — a slider sitting on a panel/scroll-panel is NOT that panel's scrollbar. A standalone slider's track-press
+  escalates (`SliderMorph.mouseDownLeft` gate at `:258` is false off a `ScrollPanelWdgt`/`PromptMorph` parent) and the float-drag
+  grabs the WHOLE slider (`Widget.detachesWhenDragged` true; `findFirstLooseMorph` returns the slider) — so the slider moves and
+  its button rides along, never calling `updateValue`. CRUX: dropping onto the scroll panel re-parents the slider into the panel's
+  inner `@contents` (`ScrollPanelWdgt.add :186-194`), NOT as the `@vBar`, so the paging gate STAYS false in every state and a later
+  track-grab still doesn't page. Grabbing the BUTTON instead would non-float-drag it and PAGE the value
+  (`SliderButtonMorph.nonFloatDragging`) — so grab a track point OFF the button. There is NO from-a-fraction drag verb
+  (`@dragWidgetTo_InputEvents` grabs at `center()` = the button), so compose the primitive:
+  `@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf slider, [0.5, 0.15]), dropPoint` (one held drag-move
+  is enough; the playback skips the grab threshold). Build a standalone vertical `new SliderMorph 1,100,50,10` + `slider.alpha = 1`
+  (ctor defaults `@alpha = 0.1` ≈ invisible, `:38`) + `rawSetExtent 22×130` (height>width ⇒ vertical) + a `PanelWdgt` + an EMPTY
+  `ScrollPanelWdgt` (empty ⇒ no bars ⇒ no extent growth). The button stays mid-track across all four shots = the proof. (The
+  recorded original's DIGEST mislabels the drag source as the panel; its 4 screenshots show the SLIDER is the moving object —
+  trust the screenshots. Don't over-distill to a bare track-CLICK no-op: the recording's real demonstration is this
+  drag-across-surfaces, the scroll-panel surface being the crux.) No new verb.
 
 ## Rendering & hit-testing
 
