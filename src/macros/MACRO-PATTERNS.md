@@ -37,6 +37,20 @@ are called directly. See `CLAUDE.md` for those rules.
   DISABLED in fast playback**, so the test MUST declare `supportsTurboPlayback:false` + `requiresSlowPlayback:true`.
   GOTCHA: a TextMorph2 opens an "edit:" PROMPT (not an inline caret) when its text is CROPPED, so ENLARGE the widget
   so the demo text fits → inline caret.
+- **Double-click selects the WORD under the cursor (clean StringMorph2 + wrapped TextMorph2)** (`macroDoubleClickSelectsWord`): the
+  distinct sibling of the through-the-caret entry above. `StringMorph2.mouseDoubleClick` (`:1212-1229`) reads the slot the prior click
+  placed (`world.caret.slot`) and expands left/right while `String.isLetter()` (`String-extensions.coffee:43-45`, `[a-z]` only —
+  spaces/punctuation/digits are boundaries) then `selectBetween()`s the contiguous letter run, so EXACTLY the word under the cursor
+  selects (white-on-blue, `drawSelection :738-747`). TextMorph2 inherits it verbatim (extends StringMorph2 with no own
+  `mouseDoubleClick`), resolving the slot per WRAPPED visual line. `@doubleClickAtFractionOf_InputEvents widget, [fx,fy]` is
+  self-sufficient — its FIRST click focuses + places `world.caret`, the SECOND is recognised as the double-click — so no separate prior
+  click is needed; double-clicking the TextMorph2 also CLEARS the StringMorph2's selection (focus moves). Fixture: a WIDE single-line
+  StringMorph2 + a wrapped multi-line TextMorph2, BOTH `isEditable=true` (the gate, `:1213,1242`), each sized to FIT (a cropped one
+  opens the "edit:" prompt, not an inline caret). MUSTS: `supportsTurboPlayback:false` + `requiresSlowPlayback:true` (consecutive-click
+  recognition is OFF in turbo — without them NO word selects). Tune the deep-word fraction to the LIVE wrap at capture (here `[0.25,0.87]`
+  landed on "condimentum" on the second-to-last line — eyeball which word the highlight covers; the exact word doesn't matter, a clean
+  interior word does). Distinct from `macroDoubleAndTripleClickThroughCaretMorph` (double-clicks ON the caret of a tiny pre-typed
+  TextMorph2 — pass-through); this proves word-granularity from a CLEAN state on a single-line StringMorph2 AND wrapped text. No new verb.
 - **Clipboard cut/copy/paste** (`macroTextMorph2CutCopyPasteBasic`): after a Shift+Arrow selection,
   `clip = @cutSelection_InputEvents()` (or `@copySelection_InputEvents()`) reads + RETURNS the selection synchronously
   and enqueues a `Cut`/`CopyInputEvent`; later `@pasteText_InputEvents clip` enqueues a `PasteInputEvent`. Fizzygum has
@@ -552,6 +566,23 @@ are called directly. See `CLAUDE.md` for those rules.
   verify then reports "no screenshots like this one". Use the capture script's own full flow (rebuild→drop refs, capture, rebuild→publish,
   verify), not a manual `--clean --no-build` + separate rebuild. (The `systemInfoHash` in a reference's filename is just metadata; matching
   is purely the raw-pixel `dataHash`.)
+- **A BARE button float-drags by its body and does NOT trigger mid-drag** (`macroBareButtonFloatDragsWithoutTriggering`): the third
+  button-negative sibling (after the resize-handle case above and the same-morph-mouseup case `macroButtonTriggersOnlyOnSameMorphMouseUp`).
+  `TriggerMorph.rejectDrags` returns false ONLY when the parent is the WORLD (`:191-195`), so a world-parented button does NOT arm its
+  trigger on press: `Widget.findFirstLooseMorph` (`:2545`) returns the button ITSELF as the grab root (`grabsToParentWhenDragged` is false
+  for a world child, `:2513-2536`), so the hand FLOAT-DRAGS it (`ActivePointerWdgt.determineGrabs → grab`). The action fires only via
+  `mouseClickLeft → trigger()` (`TriggerMorph.coffee:232-238,198-202`), gated on a same-morph mouse-up; a float-drag ends in a DROP
+  (`ActivePointerWdgt.processMouseUp:435-436`), never a click → no trigger. Build the button DIRECTLY wired to a VISIBLE action: `new
+  TriggerMorph true, world, "popUpDemoMenu", "demo", 24, "sans-serif", true` (the same action the world menu's "demo" item uses,
+  `WorldMorph.coffee:1940`; `popUpDemoMenu` self-pops at the hand, `:2241`) + `world.add` + `rawSetExtent` + `reLayout()` (a standalone
+  TriggerMorph doesn't size its face to its label). Held-button mid-drag idiom for the negative shots: `@moveToAndMouseDown_InputEvents
+  button.center()` → `@syntheticEventsMouseMove_InputEvents pt, "left button"` (lifts onto the hand — image_2) → carry →
+  `@syntheticEventsMouseUp_InputEvents()` (DROP, no menu — image_3) → then `@moveToAndClickAtFractionOf_InputEvents button, [0.5,0.5]` (a
+  REAL click) → `@moveToItemOfTopMenuAndClick_InputEvents "rectangle"` → carry+drop the new rectangle (image_4, the positive contrast). The
+  button reads GREY in the dropped shot (the pointer hovers it post-drop → STATE_HIGHLIGHTED) and white once the pointer leaves —
+  deterministic. Complement of `macroButtonTriggersOnlyOnSameMorphMouseUp` (a CONTAINER button with `rejectDrags=true` that AVOIDS
+  float-drag) and `macroResizingButtonDoesntCauseItToClick` (a resize handle, not a body drag): this covers the world-parented,
+  rejectDrags-false body-float-drag branch. Drop the "demo ➜" arrow glyph (absent from the SWCanvas bitmap font → a box) — plain "demo". No new verb.
 - **A composite drags as one unit into/out of a scroll panel, clipped inside** (`macroCompositeDragsAsUnitIntoScrollPanel`): a
   composite (boxes parented under one top box) crosses a clipping container's boundary as a single assembly. A child parented under a
   non-world morph has `grabsToParentWhenDragged` true (`Widget.coffee:2513-2533`), so dragging any part climbs via `findFirstLooseMorph`
@@ -752,6 +783,18 @@ are called directly. See `CLAUDE.md` for those rules.
   `removeShadow` (`:2210`). The shadow paints the recursive silhouette of the whole subtree, so `world.add parent` then
   `parent.add child` makes the parent's shadow outline the WHOLE composite. To force a shadow on a morph that never routed through
   `world.add`, call `widget.addShadow()` explicitly.
+- **A widget is painted correctly the INSTANT it is picked up** (`macroPanelPaintedOkAsSoonAsPickedUp`): the grab path produces a complete,
+  correct first frame WHILE the morph is held — synchronously, no settle. `ActivePointerWdgt.grab` does `@add aWdgt` (which FORCES the
+  morph's first paint — its comment: "the shadow needs the image of the widget"), then `addShadow new Point(6,6),0.1` (the floaty drag
+  shadow — larger+fainter than the at-rest (4,4)α0.2 desktop shadow), then `fullChanged()`. A `PanelWdgt` (cream fill + dark 1px stroke via
+  `RectangularAppearance`, painted synchronously; `defaultPanels*`, `PreferencesAndSettings.coffee:122-123`) overrides nothing in the grab
+  path, so its held frame is deterministic — no timer/animation/frame-race, and axis-aligned chrome (no trig → immune to the cross-engine
+  `Math.sin/cos` issue). Build `new PanelWdgt` + `rawSetExtent` + `world.add` + `fullRawMoveTo` (equivalent to the demo "panel" item, since
+  `WorldMorph.create` IS `pickUp()` and PanelWdgt overrides nothing in the grab path), then the held mid-drag idiom:
+  `@moveToAndMouseDown_InputEvents panel.center()` → `@syntheticEventsMouseMove_InputEvents pt, "left button"` (lifts onto the hand) →
+  `takeScreenshot…` (the held panel, fully painted with its drag shadow) → `@syntheticEventsMouseUp_InputEvents()`. The paint-on-pickup
+  sibling of `macroDuplicateSimpleWidgetRidesHand` (a DUPLICATE painted-OK the instant it's grabbed) and the held-shadow companion of
+  `macroCompositeMorphsHaveCorrectShadow`. No new verb.
 - **Shape hit-test / click-through** (`macroRoundedBoxCornerClickThrough`): the pointer resolves to a morph by SHAPE, not bounding
   box — `ActivePointerWdgt.topWdgtUnderPointer` skips any morph that `isTransparentAt` the pointer (`:48`). A `BoxMorph` with a
   large `cornerRadius` is transparent at its corners (`BoxyAppearance.isTransparentAt` outside the rounded arc). Put a
