@@ -655,6 +655,25 @@ are called directly. See `CLAUDE.md` for those rules.
   desktop to leave the mode first, unlike `macroCanMoveAndResizeColorPaletteMorph`). MUST shrink not grow (growing the bottom-right
   extends the world's scrollable extent → perturbs the SWCanvas frame; compute `dest` from `panel.bottomRight()` minus a positive
   delta). No new verb.
+- **A wheel-scroll DESTROYS the temporary resize/move handles** (`macroResizingScrollFrameThenImmediatelyScrollingTheHandlesDontStickToScrollPanelContent`):
+  the handles-vs-scroll guard — `ScrollPanelWdgt.wheel`'s FIRST act, before any scrolling or limit escalation, is
+  `world.hand.destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem @` (`ScrollPanelWdgt.coffee:540-542`; the src
+  comment names the regression: "if we don't destroy the resizing handles, they'll follow the contents being moved!"). The
+  handle life cycle: "resize/move..." runs `showResizeAndMoveHandlesAndLayoutAdjusters` (`Widget.coffee:2767-2790`) — a
+  FREEFLOATING widget gets the four handles into `world.temporaryHandlesAndLayoutAdjusters`, a non-freefloating one RECURSES to
+  its parent, so invoking it from a document's menu parks the handles on the freefloating scroll FRAME; `ScrollPanelWdgt.add`'s
+  HandleMorph carve-out (`:186-194`) keeps them direct children of the frame (NOT inside the scrolled `@contents`); any
+  mouse-DOWN on a non-handle also destroys them (`ActivePointerWdgt.coffee:378` — how a desktop click exits the mode). Fixture =
+  the document-drop idiom (a `createSimpleDocumentScrollPanelWdgt` doc + two `createNewWrappingSimplePlainTextWdgtWithBackground`
+  yellow texts dragged in with `@dragWidgetTo_InputEvents`; the stack inserts a drop AFTER the sibling whose vertical span
+  contains the drop point — crib `macroIconDroppedIntoDocumentFlows`). MENU GOTCHA: the doc's stack cells are width-constrained
+  to the FULL content width, so virtually any right-click inside the doc hits a CELL and opens the hierarchy/disambiguation
+  menu (the recording threaded the few-pixel inter-cell gap to hit the stack directly — do NOT try to reproduce that); navigate
+  it instead — `@openMenuOf_InputEvents firstElement` → `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()),
+  "a SimpleDocumentScrollPanel"` → `"resize/move..."` (the stack panel itself is EXCLUDED from the hierarchy menu as redundant,
+  `Widget.getHierarchyMenuMorphs:2955`). Assert by screenshot pair: handles parked on the frame, then `@wheelOn_InputEvents text, deltaY`
+  twice → handles GONE + content scrolled; pick deltas that overshoot so the view CLAMPS at the content bottom (robust to small
+  delta drift). No new verb.
 - **Free-width scroll-stack shows a HORIZONTAL scrollbar** (`macroFreeWidthScrollStackShowsHorizontalScrollbar`): the FIRST
   horizontal-bar macro (every other scroll macro is vertical). `new SimpleVerticalStackScrollPanelWdgt false` (the
   `isTextLineWrapping=false` ctor arg) sets the inner stack's `constrainContentWidth=false` (`SimpleVerticalStackScrollPanelWdgt.coffee:6-7`),
@@ -1012,6 +1031,24 @@ are called directly. See `CLAUDE.md` for those rules.
   `new HandleMorph holder` (self-installs at the bottom-right; lone holder ⇒ lone handle). Resize via
   `@dragResizeMoveHandleTo_InputEvents` and the cells redistribute by spreadability. Distilled from the first holder of
   `Widget.setupTestScreen1`.
+- **TEXT widgets as stack cells, via "attach with horizontal layout"** (`macroStringMorph2AndTextMorph2ResizingInLayout`): the
+  text-in-layout bridge — the layout macros above use plain rectangles as cells, the text-resize macros resize FREE text; this
+  one puts a `TextMorph2` and a `StringMorph2` INSIDE a stack and resizes the HOLDER. The menu mechanic: "attach with horizontal
+  layout" (`Widget.attachWithHorizLayout:3684`) pops a choose-new-parent menu of INTERSECTING morphs (labels are
+  `toString()`-based — match by prefix, "a RectangleMorph") whose pick runs `newParentChoiceWithHorizLayout` = `holder.add child,
+  nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED` — turning a plain demo RectangleMorph into a
+  horizontal stack that FITS to its cells when small and SPLITS its width between them when grown. Resizing through the real
+  resize/move handles re-wraps the TextMorph2's paragraphs to its CELL width (and re-fits the font SMALLER when the cell
+  narrows); the StringMorph2 cell honours its own menu — "∸ align center" (`StringMorph2.alignCenter:987`), "⍿ align middle"
+  (`.alignMiddle:995`), "→← shrink to fit" (`.togglefittingSpecWhenBoundsTooSmall:1007`, inherited by TextMorph2) — the labels
+  carry glyph decorations, so click via `@moveToItemContainingOfMenuAndClick_InputEvents`; and caret editing keeps working in a
+  cell (`@moveToAndClickAtFractionOf_InputEvents` → `@repeatSpecialKey_InputEvents "Shift+ArrowRight", 3` → overtype). FIXTURE
+  GOTCHAS: create the widgets through the REAL demo/test menus (`world.create` floats them on the hand, a mouse-down drops them;
+  the demo StringMorph2 is `isEditable=true` unlike direct construction) and author the drop spots so the texts OVERLAP the
+  rectangle (attach lists only intersecting morphs); reach the holder's menu from a CELL through the hierarchy menu ("a
+  RectangleMorph" prefix); scope the corner-handle lookup to the holder's subtree (`rect.topWdgtSuchThat ... resizeBothDimensionsHandle`
+  — mode handles attach to their TARGET); and `TextMorph2 extends StringMorph2`, so locate the string with an
+  instanceof-TextMorph2 EXCLUSION. No new verb.
 - **Re-proportion a stack LIVE by dragging the divider** (`macroStackDividerReproportionsCells`): the INTERACTIVE sibling of basic
   proportions above — a `StackElementsSizeAdjustingMorph` placed BETWEEN two cells in the stack (`holder.add lime/divider/blue, nil,
   LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED`; this is `setupTestScreen1`'s second holder, `Widget.coffee:4515`).
