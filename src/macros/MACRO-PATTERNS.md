@@ -208,7 +208,25 @@ are called directly. See `CLAUDE.md` for those rules.
   `reLayout()` turns wrapping OFF (what "soft wrap off" does, `:111-115`). In that mode `setText` re-lays-out SYNCHRONOUSLY
   (`:126-131 → reLayout :183`): width = LONGEST line, height = lineCount × fontHeight. Drive with `setText` (the clean
   deterministic equivalent of caret typing); multi-line strings via `String.fromCharCode(10)` (no literal newline in the
-  backtick source).
+  backtick source). The WRAP branch — width kept, height follows — is the next entry.
+- **Wrapping text self-resize — the WRAP branch: width KEPT, height follows**
+  (`macroWrappingSimplePlainTextResizesCorrectlyAsTextIsAddedAndRemoved`): the wrap-mode twin of the entry above and the
+  bare-desktop ground for the wrap-mode reLayout law: with `maxTextWidth` truthy, `reLayout`
+  (`SimplePlainTextWdgt.coffee:183-199`) breaks the text at the widget's CURRENT width and re-extends to
+  width = `@width()` — NEVER re-fit to content: gutting the lorem to four words leaves a ONE-LINE strip still the full
+  500 wide, where the no-wrap branch would shrink to the longest line (THE distinguishing shot between the branches) —
+  × height = lineCount × ceil(fontHeight(originallySetFontSize)). Every trigger converges there synchronously: `setText`
+  (`:126-131`) for the add/remove axes, `setFontSize` (`:165-168`) for the font axis — and the StringMorph2 super parses
+  a numeric `17` and the font prompt's string `"17"` to the IDENTICAL `originallySetFontSize`
+  (`StringMorph2.coffee:1098-1112`), proven in pixels: the macro's direct `setFontSize 17` shot reproduced the retired
+  prompt-driven recording's final shot hash-for-hash at both densities. Fixture:
+  `world.createNewWrappingSimplePlainTextWdgtWithBackground()` (the banked creator) +
+  `@findTopWidgetByClassNameOrClass SimplePlainTextWdgt`; drive with setText/setFontSize per the entry above (a bare
+  TextMorph2-family widget's synthetic right-click opens no usable menu — the scoped drift — so the recorded menu/prompt
+  routes are out of reach on the desktop anyway). Deterministic setText/setFontSize round trips are EXACT: the pristine,
+  the post-restore and the font-round-trip shots all carry the recordings' own pristine dataHash. Pick a font beat that
+  keeps the grown widget's BOTTOM EDGE in frame (17, not the recorded 20 that hung off the canvas — the moving bottom
+  edge IS the assertion). No new verb.
 - **Text reflow under HANDLE resize — old TextMorph (width-from-user, height-from-content)**
   (`macroTextRelayoutsCorrectlyOnResize`): the OLD `TextMorph` family's resize law, and the suite's only dedicated
   old-TextMorph assertion. `TextMorph.rawSetExtent` keeps ONLY the requested x — it becomes `@maxTextWidth`
