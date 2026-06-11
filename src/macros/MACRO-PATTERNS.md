@@ -1429,6 +1429,14 @@ are called directly. See `CLAUDE.md` for those rules.
   `@receiver.evaluateString @selection()` (`TextMorph.coffee:360-377`), so the snippet runs against the inspected World and pops an `@inform`
   bubble. The eval-acts-on-the-receiver sibling of `macroEvaluateString` (which calls `world.evaluateString` directly). Single quotes inside
   the snippet dodge double-quote escaping in the backtick source. No new verb.
+- **No-op invariants via pixel-identical references** (`macroResizeMoveModeIsLosslessAndReenterable`): to assert "X changes
+  NOTHING", screenshot the baseline, do X, screenshot again — SWCanvas + the event queue are deterministic, so the second
+  capture comes out with the SAME `dataHash` as the first, and ANY side effect of X breaks the second match. Shipped example:
+  a resize/move-mode enter/exit with no handle drag (right-click → "resize/move..." → click the empty desktop) is LOSSLESS
+  (image_2 ≡ image_1, equal dataHash at both dprs) and the mode is RE-ENTERABLE (three sessions on one rectangle — no-op,
+  grow, shrink — each entry building a fresh set of the four mode handles). Inherited from the recorded
+  fiddlingWithResizerHandles, whose own references already held the law (its image_4 ≡ image_3 byte-identical in all six
+  reference families: native/SWCanvas/Windows × dpr 1/2). No new verb.
 
 ## The verb-establishing pilots
 
