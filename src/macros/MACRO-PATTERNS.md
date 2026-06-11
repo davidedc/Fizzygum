@@ -1425,7 +1425,9 @@ are called directly. See `CLAUDE.md` for those rules.
   `ev.setReceiver @target`, `InspectorMorph.coffee:176-186`, which also installs the evaluation menu as the pane's `overridingContextMenu`).
   PLACE the code with `workArea.setText "@inform 'coffeescript!'"` (do NOT left-click an EMPTY old TextMorph to focus it — `slotAt` measures
   `@lines[0][col]`, undefined past the end of empty text, `TextMorph.coffee:283`, which throws under SWCanvas and pops an Error-log over the
-  scene), then `@openMenuOf_InputEvents workArea` → `@moveToItemOfTopMenuAndClick_InputEvents "do all"`: `doAll` selects-all and runs
+  scene; the trap GENERALISES to any click past the END of a line — a short inspector detail value like "1" clicked with the detail +14px
+  idiom dies the same way, so caret into a short text at slot 0: `valueText.topLeft().translateBy new Point 3, 8`, the idiom of
+  `macroDuplicatedInspectorDrivesCopiedTargetOnly`), then `@openMenuOf_InputEvents workArea` → `@moveToItemOfTopMenuAndClick_InputEvents "do all"`: `doAll` selects-all and runs
   `@receiver.evaluateString @selection()` (`TextMorph.coffee:360-377`), so the snippet runs against the inspected World and pops an `@inform`
   bubble. The eval-acts-on-the-receiver sibling of `macroEvaluateString` (which calls `world.evaluateString` directly). Single quotes inside
   the snippet dodge double-quote escaping in the backtick source. No new verb.
