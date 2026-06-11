@@ -210,6 +210,34 @@ are called directly. See `CLAUDE.md` for those rules.
   MOVES the caret → the panel auto-scrolls back UP to reveal it. (An ArrowRight is a HORIZONTAL move, but `gotoSlot` runs the FULL
   `scrollCaretIntoView`, whose V-branch scrolls a caret that is above the viewport back into view.) Together the two tests cover the original
   recording's H and V caret-follow.
+- **Typing multiline text AUTO-SCROLLS its input area** (`macroMultilineTextInputScrollsWell`): the growth variant of the
+  caret-into-view family above — those MOVE the caret through non-growing content; here the CONTENT GROWS under the caret.
+  Typing line after line (`@syntheticEventsStringKeys_InputEvents` + `"Enter"`) into an editable old `TextMorph` inside a
+  `ScrollPanelWdgt` makes every keystroke run `CaretMorph.gotoSlot`'s scroll-panel branch (`amIDirectlyInsideScrollPanelWdgt
+  → @parent.parent.scrollCaretIntoView`, `CaretMorph.coffee:147-148`), so once the text outgrows the pane the view tracks the
+  typed TAIL line by line while `adjustScrollBars` materialises the V-bar (button at the BOTTOM). The counter-beat:
+  `@dragSliderButtonToFraction_InputEvents pane.vBar, [0.5, 0.05]` drags the scrollbar button back to the top — the first
+  lines return WITHOUT recalling the caret (scrolling alone never does). Fixture: the OLD inspector's ~3-line WORK pane
+  (`insp.work`, an `isTextLineWrapping` ScrollPanelWdgt holding an empty editable old TextMorph, `InspectorMorph.coffee:176-186`).
+  GOTCHA (the empty-TextMorph click crash): focus the field with a DIRECT `workText.edit()` (`world.edit`, the button-label
+  idiom) — NEVER a click. The old `TextMorph.slotAt` has no row/col guard (`TextMorph.coffee:275-285`): on an EMPTY text any
+  click-x past the left edge walks `lines[row][col] = undefined` into `measureText`, and SWCanvas's measureText reads
+  `.length` of its argument → TypeError (native canvas coerces undefined to a string and survives — an SWCanvas-ONLY crash).
+  That crash is exactly why the recorded original sat on the `SWCanvasBrokenTests` list (native refs only); the edit()-focused
+  macro RESTORES SWCanvas coverage. Corollary: a deterministic crash SELF-VERIFIES — an Error-log window captured into the
+  references still "passes" capture+verify, so only the EYEBALL catches it. No new verb.
+- **Wrapping text FIELDS re-wrap on every container resize** (`macroWrappingTextFieldResizesOK`): the inspector's detail +
+  work panes are WRAPPING TEXT FIELDS — `ScrollPanelWdgt`s with `isTextLineWrapping = true`, each holding an (initially
+  empty, editable) old `TextMorph` (`InspectorMorph.coffee:163-186`). Text typed into them wraps to the pane width, and EVERY
+  inspector resize re-wraps it: a drag of the inspector's own ctor resizer → `InspectorMorph.doLayout` resizes the panes →
+  `ScrollPanelWdgt.rawSetExtent` (`ScrollPanelWdgt.coffee:222-233`) → `adjustContentsBounds` re-fits each contained TextMorph
+  to the new pane width (`rawSetWidth` + `maxTextWidth`, `:258-267` — width imposed by the pane, height following the
+  content) → `adjustScrollBars` shows the V-bar exactly when the re-wrapped text no longer fits. Probe the rule with a
+  silhouette progression (wide → taller-at-same-width → narrow+tall → tiny): WIDTH changes re-break the lines; a pure HEIGHT
+  change keeps the line breaks identical (wrap depends on width only) and just adds white space. After the edit dies, panes
+  sit scrolled to the TOP (no caret holds the tail in view). Focus the empty fields with `text.edit()` — the empty-TextMorph
+  click crash above. Distinct from `macroTextRelayoutsCorrectlyOnResize` (a STANDALONE old TextMorph, handles, no scroll
+  panel) and `macroScrollBarsTrackContentChange` (content changes, not container resizes). No new verb.
 - **Evaluation menu reflects text selection** (`macroEvaluationMenuReflectsTextSelection`): a TextMorph2's right-click menu
   depends on what is selected. `setReceiver obj` (`TextMorph2.coffee:657-659`) installs `evaluationMenu` as the widget's
   `overridingContextMenu` (so `Widget.buildContextMenu` returns it directly); that menu prepends "do all"/"select all" when
@@ -822,6 +850,25 @@ are called directly. See `CLAUDE.md` for those rules.
   `insp.fullMoveTo`). SHRINK (compute the target from `insp.topLeft()`) so it stays in bounds and doesn't extend the
   world's scrollable extent (the SWCanvas systemInfoHash). Distinct from every other inspector macro (unplug /
   duplicate / reject-drop / eval / pick-up-parts / property-edit) — none resizes the inspector itself. No new verb.
+- **A gutted inspector still resizes — and its detached parts still WORK** (`macroInspectorResizingOKEvenWhenTakenApart`):
+  the COMPOSITE of the pristine-resize entry above and the pick-up-parts entry — take an OLD `InspectorMorph` apart (close +
+  inspect buttons, detail pane, property list picked out to the desktop), then resize the gutted body AND the detached list,
+  and prove the wiring survives. Three mechanics: (1) `InspectorMorph.doLayout` lays out each named part ONLY behind an
+  `if part.parent == @` guard (`InspectorMorph.coffee:372,391,399,405,414,423,430,438`) — a gutted inspector re-flows just
+  its REMAINING parts, gaps stay gaps, nothing crashes; (2) the list→detail wiring runs on OBJECT REFERENCES — the list's
+  action `"selectionFromList"` fills `@detail` wherever it lives (`:323-340`), so a DETACHED list still drives the DETACHED
+  detail pane, before and after resizes; (3) `buttonClose`'s action `"close"` (`:210-214`) closes the body from anywhere —
+  the detached close button still kills the gutted inspector, leaving the other detached parts standing. THE HANDLE Z-ORDER
+  GOTCHA (cost a capture): resize/move-mode handles attach to their TARGET (`HandleMorph.makeHandleSolidWithParentMorph`,
+  `HandleMorph.coffee:32`), NOT to the world, and EVERY handle drag runs `@target.bringToForeground()` (`:208-210`) — so
+  after the body's own resizer has been dragged, the BODY sits ABOVE the detached list in the world's z-order and
+  `dragResizeMoveHandleTo`'s global topmost-first type lookup grabs (and drags!) the BODY's resizer instead of the list's
+  mode handle. Scope the lookup to the target's subtree: `cornerHandle = theList.topWdgtSuchThat (m) -> (m instanceof
+  HandleMorph) and m.type == "resizeBothDimensionsHandle"` + `@syntheticEventsMouseMovePressDragRelease_InputEvents
+  cornerHandle.center(), dest`. (The body-resizer drags may keep the global lookup — run them only while no mode is active,
+  when the ctor resizer is the only handle alive.) Click LIST ROWS near their LEFT edge (`row.topLeft() + (10,3)` — a row
+  TextMorph spans the content's full width, which a narrowed list CLIPS, so a centre-click can miss the visible pane;
+  the `clickOnListItemFromTopInspector` idiom). No new verb.
 - **Resizing a button via its handle does NOT trigger it** (`macroResizingButtonDoesntCauseItToClick`): dragging a widget's resize
   handle runs `HandleMorph.nonFloatDragging → @target.setExtent`, never a click — `HandleMorph.mouseClickLeft` is EMPTY and its
   `mouseDownLeft` doesn't propagate ("otherwise the handle on a button will trigger the button when resizing"), so resizing a
