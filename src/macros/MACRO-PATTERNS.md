@@ -657,6 +657,24 @@ are called directly. See `CLAUDE.md` for those rules.
   distilled the same recording family to just the wheel-scroll core). GOTCHAS: size the list height ≈ its rows' height (so
   the attached rect lands just below the rows, not far down in dead viewport space → an ugly empty gap on scroll); place the
   rect's CENTRE on the part HANGING BELOW the list so the right-click lands cleanly on the rect, not the list. No new verb.
+- **Add/remove at the document's END — the viewport stays ANCHORED to the end**
+  (`macroSimpleDocumentRemovingLastParagraphUpdatesScrollbarAndLeavesViewportAtEndOfDocument`): the anchoring sibling of the
+  two recompute entries above. Every paragraph DROP into / float-GRAB out of a `SimpleDocumentScrollPanelWdgt` re-runs
+  `adjustContentsBounds` + `adjustScrollBars` (`ScrollPanelWdgt.reactToDropOf`/`reactToGrabOf`, `:236/:240`);
+  `adjustContentsBounds` (`:244`) shrink-wraps the stack to its content (its `:277-290` comment NAMES the
+  remove-at-the-bottom scenario) and `keepContentsInScrollPanelWdgt` (`:328`) clamps the view: while content overflows the
+  BOTTOM-clamp keeps a fully-scrolled viewport pinned to the document's END (no vacant space in view); once content fits,
+  the stack is grown to viewport height (`:302`) and the TOP-clamp re-anchors at the top — and `adjustScrollBars` hides the
+  bar entirely. Fixture trick: use IDENTICAL lorem paragraphs (the Batch-47 document idiom — doc recipe at (35,30) 370×325
+  + staged 500×300 lorems dropped in) so the bottom-anchored viewport is pixel-INVARIANT under removing the last paragraph
+  (the window just slides up one identical paragraph): the only in-document delta is the SCROLLBAR — and an add-then-remove
+  round-trip at the end restores the document region (text AND thumb) exactly. Dropping INTO the last visible paragraph's
+  span while fully scrolled = append at the end JUST below the view (another scrollbar-only delta; wheel again to reach the
+  new end). A freed paragraph lands on the desktop still wrapped at the document's content width
+  (`macroDocumentPreservesDroppedWidgetSizes`'s mechanic, in reverse). Unlike a TIGHT-stack child (which needs the
+  "pick up" hierarchy-menu gesture), a document paragraph IS directly float-draggable — grab it with
+  `@dragWidgetTo_InputEvents` provided its centre is inside the visible clip. The Enter-typing growth-with-caret-follow
+  variant of this family is `scrollCaretIntoView` = `macroDocumentCaretBroughtIntoViewWhenMoved`'s mechanic. No new verb.
 - **A nested WINDOW's lifecycle re-syncs its scroll panel** (`macroScrollPanelUpdatesCorrectlyOnCollapsingAndUncollapsingAndClosingWindow`):
   the window-lifecycle sibling of the two recompute entries above. A `WindowWdgt` nested INSIDE a ScrollPanelWdgt actively refreshes it:
   `childCollapsed`/`childUnCollapsed` both END with `refreshScrollPanelWdgtOrVerticalStackIfIamInIt()` (`WindowWdgt.coffee:232/:244` →
@@ -1142,11 +1160,24 @@ are called directly. See `CLAUDE.md` for those rules.
   through the gap), keeps receiving its spreadability share when the holder is resized WHILE hidden, and `show()` paints it
   straight back into the kept slot with no fresh layout pass: a hide/show round-trip at a fixed size is BYTE-EQUAL (assert via
   matching dataHashes), and hide → resize → show ends pixel-identical to never having hidden at all. CONTRAST: `isCollapsed()`
-  zeroes the layout dims, so COLLAPSE really does redistribute where HIDE does not — that is the `layoutsAndCollapsing`
-  deep-dive's mechanic, and it can reuse this fixture verbatim (the green|divider|blue equal-spreadability holder —
-  `setupTestScreen1`'s second holder — plus its lone HandleMorph). The recording had to `show()` the cell back through an
+  zeroes the layout dims, so COLLAPSE really does redistribute where HIDE does not — `macroLayoutsAndCollapsing`, the next
+  entry, which reuses this fixture verbatim (the green|divider|blue equal-spreadability holder — `setupTestScreen1`'s second
+  holder — plus its lone HandleMorph). The recording had to `show()` the cell back through an
   INSPECTOR eval (a hidden morph can't be right-clicked); the macro drives `blue.hide()`/`blue.show()` directly, the
   `macroHideUnhideMorphChain` convention. No new verb.
+- **Collapsing a stack cell DOES redistribute — collapse is layout-aware** (`macroLayoutsAndCollapsing`): the contrast twin
+  of the visibility entry above, same fixture VERBATIM, opposite mechanic. `collapse()`/`unCollapse()`
+  (`Widget.coffee:1883/1895`) BOTH call `invalidateLayout()` (hide/show call neither), and the dimension getters the stack's
+  distribution loops read — `getDesiredDim`/`getMinDim`/`getMaxDim` — gate on `isCollapsed()` and return zero for a
+  collapsed cell (`:4089-4098`): the moment a cell collapses, `doLayout` re-runs and hands its WHOLE share to the siblings
+  by spreadability (the divider rides to the holder's edge; no gap), every resize-while-collapsed keeps distributing to the
+  others, and `unCollapse()` re-runs the same distribution off the UNTOUCHED `layoutSpecDetails` — a collapse/unCollapse
+  round-trip at a fixed size is BYTE-EQUAL, and collapse → resize → unCollapse ends as if never collapsed. Verified
+  cross-test: this macro's image_1/image_5 are byte-identical (same dataHash, both dprs) to `macroLayoutsAndVisibility`'s —
+  the two tests share their exact endpoints and differ ONLY in who holds the space in between. Drive
+  `blue.collapse()`/`blue.unCollapse()` DIRECTLY — they are the very methods the context "test menu"'s `collapse` /
+  `un-collapse` items call (`Widget.coffee:3284-3288`), and the un-collapse item is unreachable by right-click anyway (a
+  collapsed cell is zero-size; the recording used an inspector eval — scaffolding). No new verb.
 - **Layout spacer / spring** (`macroLayoutSpacerEatsSpareSpace`): a `LayoutSpacerMorph` is a spring (ctor passes spreadability
   `weight*LayoutSpec.SPREADABILITY_SPACERS` = 1e8, a ~1e6 max that dwarfs any cell's), so in a stack it absorbs almost all spare
   width and the cells stay at DESIRED size. Reuse `Widget.setupTestScreen1()` (8 holders, several `[spacer|adj|green|adj|blue|adj|yellow|adj|spacer(2)]`);
