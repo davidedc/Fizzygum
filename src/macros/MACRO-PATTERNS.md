@@ -1134,6 +1134,19 @@ are called directly. See `CLAUDE.md` for those rules.
   back-and-forth (the return leg would mostly revert and duplicate the baseline shot). Resize the holder via its lone HandleMorph
   (`@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle"`) to show the dragged split survives a container resize. First
   interactive-layout-re-proportioning test. No new verb.
+- **Hiding a stack cell does NOT redistribute — visibility is layout-blind** (`macroLayoutsAndVisibility`): `hide()`/`show()`
+  only flip paint state (`Widget.hide:1841`/`show:1860` touch `@isVisible` + the bounds caches; NEITHER calls
+  `invalidateLayout`), and `doLayout`'s three stack-distribution loops filter children by `layoutSpec` only
+  (`Widget.coffee:4334/4358/4392`) — `getDesiredDim`/`getMinDim` gate on `isCollapsed()`, never on visibility (`:4089-4098`).
+  So a HIDDEN cell keeps its allocated slot (the holder's own background — Widget default `Color.create 80,80,80` — shows
+  through the gap), keeps receiving its spreadability share when the holder is resized WHILE hidden, and `show()` paints it
+  straight back into the kept slot with no fresh layout pass: a hide/show round-trip at a fixed size is BYTE-EQUAL (assert via
+  matching dataHashes), and hide → resize → show ends pixel-identical to never having hidden at all. CONTRAST: `isCollapsed()`
+  zeroes the layout dims, so COLLAPSE really does redistribute where HIDE does not — that is the `layoutsAndCollapsing`
+  deep-dive's mechanic, and it can reuse this fixture verbatim (the green|divider|blue equal-spreadability holder —
+  `setupTestScreen1`'s second holder — plus its lone HandleMorph). The recording had to `show()` the cell back through an
+  INSPECTOR eval (a hidden morph can't be right-clicked); the macro drives `blue.hide()`/`blue.show()` directly, the
+  `macroHideUnhideMorphChain` convention. No new verb.
 - **Layout spacer / spring** (`macroLayoutSpacerEatsSpareSpace`): a `LayoutSpacerMorph` is a spring (ctor passes spreadability
   `weight*LayoutSpec.SPREADABILITY_SPACERS` = 1e8, a ~1e6 max that dwarfs any cell's), so in a stack it absorbs almost all spare
   width and the cells stay at DESIRED size. Reuse `Widget.setupTestScreen1()` (8 holders, several `[spacer|adj|green|adj|blue|adj|yellow|adj|spacer(2)]`);
@@ -1161,6 +1174,24 @@ are called directly. See `CLAUDE.md` for those rules.
   subroutine from `macroPickingUpPartsFromInspector`). GOTCHAS: keep paragraphs MODERATE so the whole stack stays on-screen (a
   clean right-click on the last paragraph — tall paragraphs put its centre at the canvas edge); drop the removed paragraph well
   inside the desktop, clear of the stack, so the world extent (hence the SWCanvas frame) stays put. No new verb.
+- **Font-size change REFLOWS the whole document — in place, and exactly reversibly**
+  (`macroSimpleDocumentAllReflowsCorrectlyAsIChangeFontSize`): `SimplePlainTextWdgt extends TextMorph2` (default
+  `originallySetFontSize = 12`, `SimplePlainTextWdgt.coffee:25`), so the real "font size..." prompt (Meta+a selects the value,
+  overtype, Ok — the Text-section prompt idiom) re-renders a paragraph IN the flow; the width-constraining stack re-wraps the
+  bigger glyphs to the document's width (at 90 the words wrap one per line), pushes the following siblings down, and the scroll
+  panel's content extent — hence its scrollbar — tracks the growth while the VIEWPORT STAYS PUT (the reflow happens in place).
+  The machinery is exactly reversible — assert the round-trips BY BYTE-EQUALITY: a wheel-down tour + wheel-back-to-top
+  reproduces the pre-tour shot's dataHash (the clamp lands exactly on offset 0), and setting the size back to the DEFAULT 12
+  reproduces the pre-change shot's dataHash pixel-for-pixel. FIXTURE: the document demo is just `new
+  SimpleDocumentScrollPanelWdgt` at (35,30) 370×325 (`Widget.createSimpleDocumentScrollPanelWdgt:3250` — it ships with the
+  default "A small string…" paragraph); drop-to-insert puts a dropped widget AFTER the sibling whose span contains the drop Y,
+  appending below everything (`SimpleVerticalStackPanelWdgt.add:17`) — three authored drops produce lorem/small/lorem,
+  including a REORDER of an existing paragraph by dropping it onto another paragraph's span (pick a drop Y inside that span
+  under BOTH the pre- and post-grab layouts — the flow tightens the moment the grabbed paragraph leaves it). GOTCHA: after the
+  font change a paragraph's CENTRE can lie below the viewport clip, so `@openMenuOf_InputEvents` (a centre right-click) would
+  miss the document entirely — right-click a VISIBLE fraction instead: `@moveToAndClickAtFractionOf_InputEvents para, [0.5,
+  0.04], "right button"`. A paragraph inside a document opens the HIERARCHY menu — descend via the "a SimplePlainText" prefix.
+  No new verb.
 - **Stack loose when empty, tight when filled — via the resize HANDLE** (`macroStackPanelLooseWhenEmptyTightWhenFilled`): a
   width-constraining `SimpleVerticalStackPanelWdgt` resizes COMPLETELY FREELY (both dims) while EMPTY but only in WIDTH once
   filled (HEIGHT fixed to the wrapped text). `adjustContentsBounds` (`:73`) sums child heights, then `if !@tight or
