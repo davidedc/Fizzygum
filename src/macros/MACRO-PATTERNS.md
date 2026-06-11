@@ -180,7 +180,9 @@ are called directly. See `CLAUDE.md` for those rules.
   `str.alignTop()/alignMiddle()/alignBottom()` DIRECTLY (the "align …" item methods); a synthetic right-click won't open
   its menu (TextMorph2-family drift). Give it a `backgroundColor` so the float position is visible.
 - **Soft-wrap toggle** (`macroSoftWrapTogglesTextReflow`): `textBox.toggleSoftWrap()` DIRECTLY (the "✓ soft wrap" method) —
-  a synthetic right-click on a TextMorph2 does NOT open a usable context menu in a macro (it does on plain widgets).
+  a synthetic right-click on a TextMorph2 does NOT open a usable context menu in a macro (it does on plain widgets; and
+  INSIDE a ScrollPanelWdgt the panel's COALESCED menu does open fine, with `SimplePlainTextWdgt`'s own `softWrapOff/On`
+  items — see the Scroll section's in-panel soft-wrap entry).
   NB the box does NOT grow on toggle: the overflowing no-wrap line CROPS with an ellipsis at the unchanged box width
   (the default CROP spec) — see the desktop-editing entry below for the SCALEDOWN/editing interplay.
 - **No-wrap desktop editing: caret-into-view slides the MORPH** (`macroSoftWrapping`): editing a no-wrap TextMorph2 on
@@ -674,7 +676,39 @@ are called directly. See `CLAUDE.md` for those rules.
   (`macroDocumentPreservesDroppedWidgetSizes`'s mechanic, in reverse). Unlike a TIGHT-stack child (which needs the
   "pick up" hierarchy-menu gesture), a document paragraph IS directly float-draggable — grab it with
   `@dragWidgetTo_InputEvents` provided its centre is inside the visible clip. The Enter-typing growth-with-caret-follow
-  variant of this family is `scrollCaretIntoView` = `macroDocumentCaretBroughtIntoViewWhenMoved`'s mechanic. No new verb.
+  variant of this family is `scrollCaretIntoView` = `macroDocumentCaretBroughtIntoViewWhenMoved`'s mechanic. The font-size
+  and wrap-toggle twins of this clamp resolution are the next two entries. No new verb.
+- **Font-size change under an END-SCROLLED viewport — the clamp re-anchors at the top**
+  (`macroWrappingSimpleTextScrollPanelResizesCorrectlyAsTexSizeIsChangedPartTwo`): the FONT-driven sibling of the
+  end-anchoring entry above, on a `SimplePlainTextScrollPanelWdgt`. `SimplePlainTextWdgt.setFontSize`
+  (`SimplePlainTextWdgt.coffee:165-168`) re-breaks the text (`reLayout :183-199`: wrapped height = lineCount × fontHeight)
+  and refreshes the enclosing panel, so the same `adjustContentsBounds` clamps resolve the new content extent: ENLARGING
+  under a top-anchored view just grows the content downward (the V-bar appears, thumb at the top, viewport unmoved);
+  SHRINKING back to the default WHILE FULLY SCROLLED DOWN makes the end offset impossible — the content fits again, so
+  grow-to-viewport + TOP-clamp re-anchor the view at the top and `adjustScrollBars` hides the bar, BYTE-identical to the
+  pristine fixture (the retired no-wrap flavour restored byte-for-byte too — the clamp path is wrap-agnostic). FIXTURE:
+  the 'simple plain text scrollpanel wrapping' demo recipe (`Widget.createWrappingSimplePlainTextScrollPanelWdgt:3089` —
+  (20,25) 390×305, padding 10, one wrapping lorem at the default font 12, which FITS: no bar at baseline). MENU
+  DISCOVERY: the text is `lockToPanels`'d and the panel sets `takesOverAndCoalescesChildrensMenus`
+  (`SimplePlainTextScrollPanelWdgt.coffee:25`), so a right-click opens ONE coalesced menu with 'font size...' at TOP
+  level — NO hierarchy descent (unlike a document paragraph); then the banked Meta+a-overtype prompt dance. While
+  end-scrolled the tall text's centre is above the viewport clip — right-click a bottom FRACTION (`[0.5, 0.95]`).
+  No new verb.
+- **Soft-wrap toggle INSIDE a scroll panel — `softWrapOff`/`softWrapOn`, NOT `toggleSoftWrap`**
+  (`macroSimplePlainTextScrollPanelUpdatesWellWhenWrappingUnwrappingFromTheBottomOfContent`): on a `SimplePlainTextWdgt`
+  inside its scroll panel the '☒/☐ soft wrap' items are the TEXT's OWN (`SimplePlainTextWdgt.coffee:90-98`, shown only
+  when it is the panel's LONE child) and call `softWrapOff` (`:111-117`: panel `isTextLineWrapping` false +
+  `maxTextWidth = nil`) / `softWrapOn` (`:103-109`: both back, plus re-homing the panel's contents to the panel origin) —
+  TextMorph2's `toggleSoftWrap` is NOT involved. The bare-TextMorph2 no-menu drift does NOT apply here either: the
+  coalesced in-panel menu OPENS for synthetic right-clicks, so drive the REAL items (match the decorated label by
+  SUBSTRING, `moveToItemContainingOfMenuAndClick`). Toggling OFF while scrolled at the END collapses the content to its
+  unbounded logical rows (width = LONGEST line, `reLayout :191-196`) → it fits vertically → the view re-anchors at the
+  TOP with the V-bar swapped for an H-bar (thumb at the LEFT: the x offset was never touched); toggling ON re-wraps tall
+  with the view at the top. Produce "at the bottom" via the CLIPBOARD: Meta+a + `copySelection_InputEvents` + ArrowRight
+  + 3× `pasteText_InputEvents` quadruples the text and each paste's caret-follow (`CaretMorph.gotoSlot`'s scroll-panel
+  branch) drags the view to the end — then drop the caret with a desktop click before the screenshot. Everything is
+  exactly reversible: the wheel-to-end after the toggle round trip is byte-identical to the pre-toggle end view (this
+  macro reproduced its recording's reference pixels hash-for-hash at both densities). No new verb.
 - **A nested WINDOW's lifecycle re-syncs its scroll panel** (`macroScrollPanelUpdatesCorrectlyOnCollapsingAndUncollapsingAndClosingWindow`):
   the window-lifecycle sibling of the two recompute entries above. A `WindowWdgt` nested INSIDE a ScrollPanelWdgt actively refreshes it:
   `childCollapsed`/`childUnCollapsed` both END with `refreshScrollPanelWdgtOrVerticalStackIfIamInIt()` (`WindowWdgt.coffee:232/:244` →
