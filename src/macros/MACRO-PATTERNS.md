@@ -39,6 +39,21 @@ are called directly. See `CLAUDE.md` for those rules.
   change before the screenshot (the caret re-shows on the next paint via `gotoSlot`, blink frozen in playback). (Beware: TextMorph2
   has a SECOND, dead `@alignment`/`setAlignmentTo*` system unwired to any menu — drive `@horizontalAlignment` via the `align *`
   items, not that.) No new verb.
+- **The caret stays GLUED to its slot through re-layouts — alignment AND style** (`macroTextMorph2CaretKeepsCorrectAlignment`):
+  the RE-LAYOUT sibling of the invariance entry above — there the alignment changes under a parked caret; here the TEXT moves
+  under it: in a CENTER+MIDDLE aligned TextMorph2 an Enter at the caret adds a line and re-centers the WHOLE block (everything
+  shifts up half a line), Backspace re-joins and shifts it back, and an "italic" flip changes the font metrics and re-wraps
+  every line — the caret must ride its logical slot through all three (any stale-pixel caret would detach visibly).
+  GEOMETRY-FAITHFUL FIXTURE TRICK (reusable): when a recording's count-based selection (here Shift+ArrowDown×13 +
+  Shift+ArrowLeft×9) depends on the wrap layout, reproduce the recorded box EXACTLY — `HandleMorph.nonFloatDragging` is
+  grab-offset-PRESERVING (`HandleMorph.coffee:212-220`, the new extent is computed from the pointer minus the within-handle
+  grab point), so press the recorded FRACTION of the handle (`@pointAtFractionOf cornerHandle, [0.733,0.667]`) and release at
+  the recorded destination, and the resulting extent matches the recording to the pixel. Also here: the "font size..." item
+  opens a `PromptMorph` (capture it fresh via `@getMostRecentlyOpenedMenu()`) whose field is focused with the caret at the
+  END — `@repeatSpecialKey_InputEvents "Shift+ArrowLeft", 2` selects the old 2-digit value, type the new one over it, then
+  click "Ok" on the captured prompt (the colour/transparency popup idiom). REP note: absorbs the style-axis sibling recording
+  (italic+bold flips under a LEFT-aligned caret) — the italic beat is folded in on the harder centered fixture; bold is the
+  same metrics-change rule. No new verb.
 - **Caret at and BELOW the last row** (`macroTextMorph2PointingAtLastRow`): the last-row/below-text edge of
   caret-placement-by-click above. `TextMorph2.slotAt` (`:541`) scans wrapped rows by the click's y, then `slotAtRow`
   (`:521`) resolves WITHIN a row per-column (x past the row's end clamps after its last character) — but when the
@@ -488,6 +503,21 @@ are called directly. See `CLAUDE.md` for those rules.
   widget as content and a free-floating window sizes itself to WRAP it. Drop a wrapping `SimplePlainTextWdgt` via
   `@dragWidgetTo_InputEvents text, window`, then `text.setText longerString` ⇒ window grows, `shorterString` ⇒ shrinks. No caret
   editing — `setText` is enough. The content-driven converse of the handle-driven window resize.
+- **Window with COMPOSITE (stack) content follows EVERY mutation; a SCROLL-panel content follows NONE**
+  (`macroWindowWithSimpleVerticalPanelResizesAsContentChanges`): with a `SimpleVerticalStackPanelWdgt` as window content the
+  chain is cell → stack wraps its cells → `adjustContentsBounds` wraps the window: dropping a wrapping lorem in resizes the
+  window AROUND the re-wrapped cell, dropping an icon ON a cell inserts it AFTER the cell whose span contains the drop point
+  (the document-stack insertion rule) and GROWS the window, Enter×3 at a caret inside a cell grows it again, and deleting the
+  cell through its hierarchy menu (right-click the nested cell → "a SimplePlainText ➜" → "delete") COLLAPSES the window
+  around what remains. The CONTRAST: a `SimpleVerticalStackScrollPanelWdgt` content (its ctor SEEDS a default "A small
+  string / here another." paragraph, calls `disableDrops()` on the panel so drops route to the inner stack, and sets the
+  inner stack `isLockingToPanels = true` so dragging it carries the WHOLE panel) absorbs overflow by CLIPPING — drop a big
+  lorem after the seeded paragraph and the window's bounds are IDENTICAL before/after (no scrollbar at rest; the windowed
+  scroll panel also adds the pencil/editing chrome to the titlebar). Fixture via the very creator methods the menu items
+  call: `world.createSimpleVerticalStackPanelWdgt()` ((35,30) 370×325), `world.createSimpleVerticalStackScrollPanelWdgt()`
+  ((430,25) 370×325), `world.createNewWrappingSimplePlainTextWdgtWithBackground()`, and `world.create new HeartIconMorph`
+  (carried on the hand exactly like the "Heart icon" menu item — drop it with a no-button move +
+  `@syntheticEventsMouseClick_InputEvents()`). No new verb.
 - **Handle-resizing a wrapping-text window: width from the USER, height from the CONTENT**
   (`macroWindowWithPlainWrappingTextResizingFollowsContentSize`): the HANDLE-driven axis of the entry above. With a wrapping
   `SimplePlainTextWdgt` as window content, a `@dragWindowResizerTo_InputEvents` drag only decides the WIDTH: the text re-wraps to
@@ -515,6 +545,19 @@ are called directly. See `CLAUDE.md` for those rules.
   needed), drop the clock in with `@dragWidgetTo_InputEvents clock, win` (centre grab — no sub-widget), then
   `@dragWindowResizerTo_InputEvents win, …` OUT and IN — the clock stays circular/square both ways. Also the first DYNAMIC content
   (the clock, frozen during playback like the anchor test) inside a container.
+- **Dropping INTO a NESTED window — and the square constraint through TWO layers**
+  (`macroWindowWithAClockInAWindowConstructionTwo`): a window's drop gate only closes once it has REAL content — the ctor
+  calls `disableDrops()` only when built WITH contents (`WindowWdgt.coffee:65-68`) and `reactToDropOf` does it on the first
+  real drop (`:264-268`) — so an internal window ALREADY adopted as an external window's content still ACCEPTS a drop while
+  empty: `@dragWidgetTo_InputEvents clock, intWin` (the nested inner's centre is its placeholder) makes the clock the INNER
+  window's content (the inner relabels "analog clock", the outer keeps "window with an internal window"), and the aspect
+  constraint then propagates through BOTH layers — `@dragWindowResizerTo_InputEvents extWin, …` re-fits the inner to the
+  outer's content area and the clock stays SQUARE within the inner (the clock-square entry above, one nesting deeper).
+  Fixture: the shared window-in-window verbs + a frozen `AnalogClockWdgt`. CONSTRUCTION-ORDER NOTE (REP): this is assembly
+  order TWO (nest the EMPTY inner first, then fill it in place); order ONE (fill the free inner first, then nest the loaded
+  composite) decomposes into beats already asserted — clock-into-a-free-window is the entry above, window-adopts-a-window is
+  macroInternalWindowDroppedIntoWindowFits, loaded-composite resizes are macroResizeWindowContainingInternalWindow — which is
+  why only order Two has a macro. No new verb.
 - **NESTED collapse/uncollapse cascades through window layers — the full resize matrix** (`macroWindowsNestedCollapsingUncollapsing`):
   a window always WRAPS its content, so collapse state CASCADES through nesting. The switch collapses the window's CONTENT
   (`CollapseIconButtonMorph.actOnClick` → `@parent.parent.contents.collapse()`), the window reacts via
