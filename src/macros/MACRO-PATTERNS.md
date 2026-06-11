@@ -971,6 +971,14 @@ are called directly. See `CLAUDE.md` for those rules.
   every round-trip (the deferred-layout owner-note beat). GOTCHA: while doc-mode is on, TWO `resizeBothDimensionsHandle`s are
   alive (the mode corner + the hosted inspector's ctor resizer, both in the doc subtree) — scope the lookup
   (`doc.topWdgtSuchThat`); the mode handles are created last and frontmost, so it returns the mode corner.
+- **The constraining stack CAPS oversized drops to its full width — it never stretches up**
+  (`macroConstrainingStackForcesDroppedWidgetsToFullWidth`): `SimpleVerticalStackPanelWdgt`'s default
+  (`constrainContentWidth = true`) runs `rawSetWidthSizeHeightAccordingly(getWidthInStack())` on every child, and
+  `getWidthInStack` returns the remembered DROP-time width capped at the content width — so small widgets keep their sizes
+  (`macroDocumentPreservesDroppedWidgetSizes`) and OVERSIZED ones come out at exactly ONE shared width (texts also get
+  `maxTextWidth` → rewrap). To show the cap, build the parade WIDER than the stack. GOTCHA: a bare `SliderMorph` cannot be
+  moved by a centre press — that lands on the value-50 BUTTON and non-float-drags it; grab a clear TRACK point
+  (`@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf slider, [0.08, 0.5]), dest`).
 - **Scroll-panel drag behaviour — default MOVES, locked SCROLLS, in-a-window moves the WINDOW** (`macroScrollPanelNotMovedViaNonFloatDragChild`
   / `macroLockedScrollPanelScrollsWhenDragged` / `macroScrollPanelInWindowMovesWindowWhenDragged`): pressing+dragging a `ScrollPanelWdgt`'s
   cream BACKGROUND resolves the grab via `Widget.findFirstLooseMorph` climbing `grabsToParentWhenDragged`. **DEFAULT desktop panel** (a plain
