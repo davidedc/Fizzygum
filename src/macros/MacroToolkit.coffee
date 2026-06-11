@@ -47,8 +47,14 @@ class MacroToolkit
   noCodeLoading: ->
     true
 
+  # "no inputs ongoing" = the queue is drained AND no scroll-momentum glide is
+  # still settling: a ScrollPanelWdgt's post-release glide is frame-cadence
+  # driven and outlives the input queue, so without this gate a screenshot
+  # races it (under the pacing control the glide is suppressed at the source —
+  # ScrollPanelWdgt.mouseDownLeft — and this set stays empty; the gate is
+  # defense-in-depth for any momentum that does run).
   noInputsOngoing: ->
-    world.inputEventsQueue.isEmpty()
+    world.inputEventsQueue.isEmpty() and !world.anyScrollMomentumOngoing()
 
   # Used by a macro's screenshot step (the "waitForScreenshotReady" yield in
   # Macro's pump): decide, across cycles, when the canvas is safe to capture
@@ -59,6 +65,9 @@ class MacroToolkit
   # identical run-to-run. Mirrors the screenshot settle gate in
   # AutomatorPlayer.replayTestCommands.
   readyForMacroScreenshot: ->
+    # never capture while a scroll-momentum glide is settling (matters for
+    # native captures too, hence before the SWCanvas-only early return)
+    return false if world.anyScrollMomentumOngoing()
     return true unless window.FIZZYGUM_USE_SWCANVAS
     if world.anyTextDirty()
       return false

@@ -170,6 +170,16 @@ class WorldMorph extends PanelWdgt
 
   steppingWdgts: new Set
 
+  # scroll panels whose post-release MOMENTUM glide is still running
+  # (ScrollPanelWdgt's drag-to-scroll step decaying its last delta by
+  # friction each frame). Wall-clock/frame-cadence driven, so the macro
+  # pump holds "waitNoInputsOngoing" and screenshots until this drains —
+  # the same idea as waiting for font atlases before a capture.
+  wdgtsWithOngoingScrollMomentum: new Set
+
+  anyScrollMomentumOngoing: ->
+    @wdgtsWithOngoingScrollMomentum.size > 0
+
   basementWdgt: nil
 
   # since the shadow is just a "rendering" effect

@@ -411,6 +411,7 @@ class ScrollPanelWdgt extends PanelWdgt
     deltaX = 0
     deltaY = 0
     friction = 0.8
+    wasScrollDragging = false
     world.steppingWdgts.add @
     @step = =>
       scrollbarJustChanged = false
@@ -425,6 +426,7 @@ class ScrollPanelWdgt extends PanelWdgt
         # wrong cue to the user, we just want to hold steady
         !world.hand.wdgtToGrab?.detachesWhenDragged() and
         @boundsContainPoint(world.hand.position())
+          wasScrollDragging = true
           newPos = world.hand.position()
           if @hBar.visibleBasedOnIsVisibleProperty() and
           !@hBar.isCollapsed()
@@ -438,30 +440,76 @@ class ScrollPanelWdgt extends PanelWdgt
               scrollbarJustChanged ||= @scrollY deltaY
           oldPos = newPos
       else
-        unless @hasVelocity
-          @step = noOperation
-          world.steppingWdgts.delete @
-        else
-          if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)
-            @step = noOperation
-            world.steppingWdgts.delete @
-          else
+        # final FLUSH: this step samples the hand once per FRAME, so the tail
+        # of the pointer's path that arrived in the same frame as the
+        # mouse-up was never scrolled — without this the scroll total
+        # truncates at the last pre-release frame sample, a frame-cadence
+        # artifact (it used to be partially masked by the momentum glide
+        # below). Scrolling the leftover here makes the total exactly
+        # release-point minus press-point — event-determined, identical
+        # across engines — and the leftover doubles as the glide's seed
+        # velocity. Only when this drag actually scroll-dragged (a float-move
+        # of the panel must not get a parting scroll), and only if released
+        # inside the panel (matching the per-frame gate above).
+        if wasScrollDragging
+          wasScrollDragging = false
+          releasePos = world.hand.position()
+          if @boundsContainPoint releasePos
             if @hBar.visibleBasedOnIsVisibleProperty() and
             !@hBar.isCollapsed()
-              deltaX = deltaX * friction
+              deltaX = releasePos.x - oldPos.x
               if deltaX isnt 0
-                scrollbarJustChanged ||= @scrollX Math.round deltaX
+                scrollbarJustChanged ||= @scrollX deltaX
             if @vBar.visibleBasedOnIsVisibleProperty() and
             !@vBar.isCollapsed()
-              deltaY = deltaY * friction
+              deltaY = releasePos.y - oldPos.y
               if deltaY isnt 0
-                scrollbarJustChanged ||= @scrollY Math.round deltaY
+                scrollbarJustChanged ||= @scrollY deltaY
+            oldPos = releasePos
+        # POST-RELEASE MOMENTUM (the glide): keep scrolling by the last
+        # frame's hand delta, decayed by friction each frame, until it fades.
+        # Both that last delta and the glide length are FRAME-CADENCE driven
+        # (how many queued events played back in the final frame), so under
+        # the test harness's animations pacing control the glide is
+        # SUPPRESSED outright — the content stops exactly at the event-
+        # determined release offset and screenshots are reproducible across
+        # engines. While a glide IS running (normal interactive use) it is
+        # tracked in world.wdgtsWithOngoingScrollMomentum so the macro pump
+        # can hold until it settles (the font-atlas-wait idea).
+        glideSuppressed = Automator? and
+          Automator.animationsPacingControl and
+          Automator.state != Automator.IDLE
+        if !@hasVelocity or glideSuppressed or
+        ((Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5))
+          @step = noOperation
+          world.steppingWdgts.delete @
+          world.wdgtsWithOngoingScrollMomentum.delete @
+        else
+          world.wdgtsWithOngoingScrollMomentum.add @
+          if @hBar.visibleBasedOnIsVisibleProperty() and
+          !@hBar.isCollapsed()
+            deltaX = deltaX * friction
+            if deltaX isnt 0
+              scrollbarJustChanged ||= @scrollX Math.round deltaX
+          if @vBar.visibleBasedOnIsVisibleProperty() and
+          !@vBar.isCollapsed()
+            deltaY = deltaY * friction
+            if deltaY isnt 0
+              scrollbarJustChanged ||= @scrollY Math.round deltaY
       if scrollbarJustChanged
         @adjustContentsBounds()
         @adjustScrollBars()
     super
   
   startAutoScrolling: ->
+    # the edge auto-scroll while float-dragging is WALL-CLOCK driven (the
+    # Date.now() trigger threshold below plus per-frame increments), so under
+    # the test harness's animations pacing control it is suppressed for
+    # determinism — same reasoning as the momentum glide in mouseDownLeft.
+    if Automator? and
+      Automator.animationsPacingControl and
+      Automator.state != Automator.IDLE
+        return nil
     inset = WorldMorph.preferencesAndSettings.scrollBarsThickness * 3
     if @isOrphan() then return nil
     hand = world.hand

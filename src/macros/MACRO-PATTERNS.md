@@ -979,6 +979,24 @@ are called directly. See `CLAUDE.md` for those rules.
   `maxTextWidth` → rewrap). To show the cap, build the parade WIDER than the stack. GOTCHA: a bare `SliderMorph` cannot be
   moved by a centre press — that lands on the value-50 BUTTON and non-float-drags it; grab a clear TRACK point
   (`@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf slider, [0.08, 0.5]), dest`).
+- **The drag-to-scroll FLAGS — background pans, foreground pans** (`macroScrollPanelDragToScrollFlags`): two dedicated
+  `ScrollPanelWdgt` flags, default false (`ScrollPanelWdgt.coffee:23-24`), distinct from the LOCK path:
+  `canScrollByDraggingBackground` makes a held BACKGROUND drag pan the contents (`PanelWdgt.coffee:143`), and
+  `canScrollByDraggingForeground` makes a held drag ON A CONTENT WIDGET pan too instead of float-dragging it out
+  (`Widget.coffee:2520`). GOTCHAS: both are gated on `anyScrollBarShowing()` — and bars hide the moment the content fits
+  again, so build the fixture content BIGGER than the viewport; pans CLAMP at the content edge — drag TOWARD the unseen
+  overflow or nothing visibly happens. Set the flags directly (the recording's inspector-eval route is covered ground).
+  DETERMINISM — three cadence couplings live in the drag-to-scroll step: (1) POST-RELEASE MOMENTUM (a per-frame glide,
+  friction 0.8 on the last frame's hand delta until <0.5px; its DISTANCE is cadence-dependent) and the `Date.now()`-driven
+  edge auto-scroll — both suppressed under `Automator.animationsPacingControl`, and live glides register in
+  `world.wdgtsWithOngoingScrollMomentum`, which gates the macro pump's `noInputsOngoing`/`readyForMacroScreenshot` (never
+  capture while momentum settles); (2) RELEASE TRUNCATION — the step samples the hand per FRAME, so the pointer-path tail
+  that plays in the mouse-up's frame was never scrolled; a final FLUSH in the step's release branch now makes the held-drag
+  total exactly release − press; (3) MID-RANGE PATH-DEPENDENCE — `scrollX`/`scrollY` clamp against the PREVIOUS frame's
+  contents union while `adjustContentsBounds` re-derives it each frame, so a mid-range pan endpoint shifts a few pixels with
+  event-into-frame batching. (3) is inherent: write drag-to-scroll macros by the SATURATION RULE — every pan axis either
+  SATURATES (drag well past the clamp; the saturated state is the clamp's unique fixed point) or is exactly ZERO. And press
+  the true background: the panel's bottom strip is the H-scrollbar, a press there silently does nothing.
 - **Scroll-panel drag behaviour — default MOVES, locked SCROLLS, in-a-window moves the WINDOW** (`macroScrollPanelNotMovedViaNonFloatDragChild`
   / `macroLockedScrollPanelScrollsWhenDragged` / `macroScrollPanelInWindowMovesWindowWhenDragged`): pressing+dragging a `ScrollPanelWdgt`'s
   cream BACKGROUND resolves the grab via `Widget.findFirstLooseMorph` climbing `grabsToParentWhenDragged`. **DEFAULT desktop panel** (a plain
