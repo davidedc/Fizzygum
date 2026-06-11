@@ -75,6 +75,21 @@ are called directly. See `CLAUDE.md` for those rules.
   Gotchas: TextMorph2 softWrap wraps to the WIDGET width (`@width()`, not `maxTextWidth`) so size it big with
   `rawSetExtent` (tall enough not to crop); a shift-click PAST a line's end clamps to the line-end slot, so two
   clicks past the end produce identical shots — land clicks WITHIN the line text.
+- **Keyboard selection — the anchor model in full** (`macroStringMorph2ImprovedSelection`): the KEYBOARD sibling of
+  shift-click above. The rules, all driven by the caret's `cmd` off one clicked anchor slot: Shift+ArrowLeft/Right GROW
+  a selection from the caret one slot at a time, and the moving end can cross THROUGH the anchor (the selection dies on
+  one side and is reborn on the other, no special-casing); a PLAIN Arrow with a selection COLLAPSES it to an EDGE —
+  Left/Up to the LEFT edge, Right/Down to the RIGHT edge — NOT to caret±1 and NOT to the text's extremities (mid-text
+  collapses disambiguate); with NO selection, bare Up/Down act as Home/End in a single-line StringMorph2 (and
+  Shift+Up/Down select to start/end); a selection grown then shrunk back to nothing is EXACTLY cancelled — typing
+  INSERTS, deleting nothing; `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "Meta+a"` selects all, leaving the
+  caret line drawn at its slot inside the highlight. ASSERT-BY-BYTE-EQUALITY trick (reusable): different key routes to
+  the SAME caret slot/selection produce byte-identical screenshots (same dataHash) — a no-op round-trip (ArrowLeft,
+  Shift+Left, Shift+Right, ArrowRight) shoots identical to its predecessor, and three routes to one slot
+  (type-at-caret / collapse-left / re-select-then-ArrowUp) all share one hash; state the equality in the metadata
+  `assertions` and check it in the captured filenames. Geometry note: count-based Shift+Arrow runs are relative to ONE
+  clicked slot — keep the recorded fixture geometry (handle-fraction resize + recorded click fraction + font size) and
+  the whole keyboard tail is geometry-free. No new verb.
 - **Double/triple-click selects word/line** (`macroDoubleAndTripleClickThroughCaretMorph`): `@doubleClickAtFractionOf_InputEvents`
   / `@tripleClickAtFractionOf_InputEvents widget, [fx,fy]` enqueue a move + 2/3 consecutive left click-pairs that
   the HAND turns into a double/triple-click; targeting `world.caret` selects word/line at its slot. **Recognition is
@@ -118,6 +133,19 @@ are called directly. See `CLAUDE.md` for those rules.
   the event (a macro-local var), exactly as oncut/oncopy/onpaste → queue → `caret.process{Cut,Copy,Paste}`.
 - **Undo** (`macroCaretResizesOKOnUndo`): `@repeatSpecialKey_InputEvents "Meta+z", 4` (the caret's `cmd` handles Meta+a
   and Meta+z). image-before and image-after-undo come out pixel-identical — the round-trip proof the caret resizes back.
+- **The caret resizes with the auto-fit font (SCALEUP)** (`macroTextMorph2CaretResizing`): the forward sibling of the
+  Undo entry above, and the SCALEUP counterpart of the SCALEDOWN shrink-to-fit entry below. A TextMorph2 made via the
+  demo menu EXPANDS its font to fill its bounds — the ctor overrides the inherited FLOAT default to SCALEUP
+  (`TextMorph2.coffee:52` vs `StringMorph2.coffee:73`; the `"←→ expand to fill"` / `"←☓→ don't expand to fill"` menu
+  pair is ONE toggle, `togglefittingSpecWhenBoundsTooLarge`, `StringMorph2.coffee:1001-1026`) — so whenever the text
+  fits at its set size, `fitToExtent` returns `searchLargestFittingFont` (`StringMorph2.coffee:286`, a deterministic
+  binary search bounded at 200px and, under SWCanvas, at the largest shipped atlas size so the painted glyphs and the
+  arithmetic `fontHeight` agree). DELETE a chunk and the font auto-GROWS to re-fill the box; the caret follows because
+  `CaretMorph.updateDimension` (`CaretMorph.coffee:38-42`) sizes it from `@target.actualFontSizeUsedInRendering()` on
+  every slot move/edit. Three Shift+Arrow-select + Backspace rounds make the growth monotone (~20→30→60→90px) with the
+  caret glued to its slot throughout. Geometry-faithful fixture (the handle-fraction trick of the caret-glued entry):
+  the wrap layout decides where the count-based selections end. A directly-built TextMorph2 also defaults to SCALEUP —
+  the below-text-strip entry above NEUTRALISES it with FLOAT for the opposite reason (a fixture constant). No new verb.
 - **Text ellipsisation** (`macroStringEllipsisation`): a `StringMorph2` does NOT grow to its text — when too narrow it
   crops to the longest fitting prefix + "…" (`fittingSpecWhenBoundsTooSmall` defaults to `CROP`; SCALEDOWN scales instead,
   the "crop/shrink to fit" item). `new StringMorph2 "long text", fontSize` (give a `backgroundColor` so the bounds show) +
