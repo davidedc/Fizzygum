@@ -963,6 +963,14 @@ are called directly. See `CLAUDE.md` for those rules.
   (~content − padding − scrollbar) so none is capped. A clean directly-built fixture sidesteps the recording's ambiguous
   duplicated-heart targets. The size-preserving sibling of the flow-in (`macroIconDroppedIntoDocumentFlows`) and reject
   (`macroLockedDocumentRejectsDrop`) document-drop facets.
+- **…but a DOC RESIZE re-flows the hosted content to the new width — both ways** (`macroSimpleDocumentHandlesOldInspector`): the
+  other half of the document's layout contract. A deferred-layout composite (the OLD InspectorMorph, dragged in by its TITLE — a
+  per-test `dragInspectorByTitleTo` helper; pressing a pane could pick the pane out) is hosted at its own size (oversized → CLIPPED
+  at the doc edge), but resizing the DOCUMENT via its resize/move mode re-lays-out the in-document inspector to the FULL new doc
+  width on a widen and squeezes it on a narrow; on exit it keeps the doc-imposed shape, and its own ctor resizer still works after
+  every round-trip (the deferred-layout owner-note beat). GOTCHA: while doc-mode is on, TWO `resizeBothDimensionsHandle`s are
+  alive (the mode corner + the hosted inspector's ctor resizer, both in the doc subtree) — scope the lookup
+  (`doc.topWdgtSuchThat`); the mode handles are created last and frontmost, so it returns the mode corner.
 - **Scroll-panel drag behaviour — default MOVES, locked SCROLLS, in-a-window moves the WINDOW** (`macroScrollPanelNotMovedViaNonFloatDragChild`
   / `macroLockedScrollPanelScrollsWhenDragged` / `macroScrollPanelInWindowMovesWindowWhenDragged`): pressing+dragging a `ScrollPanelWdgt`'s
   cream BACKGROUND resolves the grab via `Widget.findFirstLooseMorph` climbing `grabsToParentWhenDragged`. **DEFAULT desktop panel** (a plain
