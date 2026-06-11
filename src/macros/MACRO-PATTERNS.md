@@ -1122,6 +1122,13 @@ are called directly. See `CLAUDE.md` for those rules.
   `MenuItemMorph.coffee:78` → `world.morphsToBeHighlighted` → a `HighlighterMorph` each cycle). Overlap a ColorPaletteMorph with a
   rect, `clickMenuItemOfWidget… "set target"`, grab the menu, find the candidate by prefix, then
   `@syntheticEventsMouseMove_InputEvents item.center(), "no button", …` to HOVER (no click) and screenshot the highlight tint.
+- **The highlight covers the EXACT SUBTREE, tracks the hover, clears on leave** (`macroHierarchyMenuHoverHighlightsExactSubtree`):
+  the ancestor-HIERARCHY menu's ▪-marked items are `representsAMorph` too — same mouseEnter/mouseLeave path — and on a nested
+  composite (panel > box > rect) hovering an item floods exactly that ancestor's subtree, translucently, OVER the descendants'
+  own colors: deeper item → strictly smaller region; moving between items moves the flood; hover-off clears with NO trace
+  (final shot ≡ the menu-open baseline, the pixel-identical no-op idiom) while the menu stays open (menus dismiss on
+  mouse-DOWN outside, not hover-out). Give the deepest fixture morph its own color (`new RectangleMorph extent, color`) or it
+  hides dark-on-dark in the un-highlighted shots.
 - **A FORCED set-target choice is still PRESENTED — hand-rolled chain with screenshots between menus**
   (`macroUniqueTargetAndPropertyAreStillPresented`): a lonely ColorPaletteMorph has exactly ONE plausible target (the world),
   yet `openTargetSelector` still opens the one-item "choose target:" menu (no silent auto-pick); clicking it opens the
