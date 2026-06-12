@@ -146,6 +146,34 @@ are called directly. See `CLAUDE.md` for those rules.
   caret glued to its slot throughout. Geometry-faithful fixture (the handle-fraction trick of the caret-glued entry):
   the wrap layout decides where the count-based selections end. A directly-built TextMorph2 also defaults to SCALEUP —
   the below-text-strip entry above NEUTRALISES it with FLOAT for the opposite reason (a fixture constant). No new verb.
+- **Editing a CROPPED string defers to the "edit:" prompt** (`macroStringMorph2EditDefersToPromptWhenCropped`):
+  `StringMorph2.edit` (`:1145-1150`) compares the rendered text with the full transformed text — equal → `world.edit @`
+  (inline caret); different (the CROP spec ellipsised it) → `editPopup()` (`:873-882`), the "edit:" `PromptMorph` whose
+  field is preloaded with `@text` and whose "Ok" commits via `setText` ("Close" discards — anchor that byte-exactly: a
+  cancelled prompt leaves zero residue, same dataHash as the pre-prompt shot with the pointer parked). So the SAME click
+  yields a caret or a modal purely by whether the text currently fits; widen the box (`rawSetExtent`) and the click takes
+  the inline branch. Locate the prompt's field structurally (the prompt's editable `StringMorph`) and click it at the
+  banked `topLeft+(3,8)` slot-0 idiom; capture the prompt via `getMostRecentlyOpenedMenu()` right after the opening click.
+  This is the mechanic the NoJumps entry's tail deliberately skipped — now asserted. No new verb.
+- **Inline typing refits per fitting mode — and hands off to the prompt when it crops**
+  (`macroStringMorph2InlineTypingRefitsUnderFittingModes`): the StringMorph2 LIVE-TYPING matrix (every other auto-fit
+  macro is TextMorph2-based; a StringMorph2 DEFAULTS to FLOAT+CROP, `:73`). Three same-text same-box fixtures, one per
+  regime: under SCALEUP (toggled) each keystroke re-runs `searchLargestFittingFont` so the font steps DOWN live but keeps
+  filling the box; under SCALEDOWN (toggled) typing past the width shrinks the whole single line so everything stays
+  visible; under the defaults the SAME run ellipsises at the unchanged font — and the keystroke that makes the text no
+  longer fit HANDS EDITING OFF to the "edit:" prompt MID-TYPING (the `edit()` deferral re-evaluated live): the rest of
+  the typed run lands in the prompt's FIELD, not the morph; "Close" discards the tail and the morph keeps only its
+  pre-crop inline prefix. Same-input fixtures make the contrast the assertion (shrink vs ellipsis from identical
+  keystrokes). Bare `ArrowDown` = End (single-line) gives count-free end targeting. Also carries the caret-on-a-floated-
+  line shot: `alignBottom()` + click → the caret stands ON the bottom-floated line. No new verb.
+- **"Hide characters" masks the RENDERING, not the text** (`macroStringMorph2HideCharactersMasksTextNotEditing`):
+  `toggleIsPassword` (`:1046-1048`, the "hide characters"/"show characters" menu pair, gated at `:978`) flips a pure
+  draw-time transform — `transformTextOneToOne` (`:520-521`) renders every glyph as "*" while `@text` is untouched. The
+  masked string still edits INLINE (the masked render equals the transformed text, so the deferral rule is satisfied);
+  keyboard selection works on real slots; `copySelection_InputEvents` returns the REAL characters (`selection()` slices
+  `@text`, `:1152-1155`) even though the screen shows asterisks; pastes grow the masked run; toggling back reveals the
+  blind edits exactly. Both toggles `world.stopEditing()` (the fitting-toggle precedent) — reveal shots carry no caret.
+  Keep the box wide enough that the text NEVER crops, or clicks deflect into the edit prompt (the deferral entry). No new verb.
 - **Text ellipsisation** (`macroStringEllipsisation`): a `StringMorph2` does NOT grow to its text — when too narrow it
   crops to the longest fitting prefix + "…" (`fittingSpecWhenBoundsTooSmall` defaults to `CROP`; SCALEDOWN scales instead,
   the "crop/shrink to fit" item). `new StringMorph2 "long text", fontSize` (give a `backgroundColor` so the bounds show) +
