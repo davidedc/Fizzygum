@@ -444,6 +444,16 @@ are called directly. See `CLAUDE.md` for those rules.
   — the subMenu reference captured before the drop stays valid through re-parenting and scrolling) still fires, the created
   palette riding the hand onto the desktop. Check the clicked item is INSIDE the viewport after the scroll (a clipped-away
   item can't be hit). No new verb.
+- **A menu in a WINDOW in a scroll-STACK is still a live menu** (`macroMenuInWindowInScrollStackStaysLive`): the
+  double-wrapping composition of the pin-on-drop and in-panel-liveness entries. Drop the demo sub-menu by its HEADER into an
+  empty internal window: the placeholder accepts it, `reactToDropOf` adopts + retitles, `justDropped` pins — and the window
+  WRAPS down around the menu's natural narrow-tall shape (the wrap law applies to menus too; the preset extent is discarded).
+  Drag that window by its TITLE BAR into a constrained scroll-stack: the cell's BAR takes the full stack width while the menu
+  keeps its natural width inside; the tall cell overflows the viewport (scrollbar appears), a wheel slides the whole cell —
+  bar and menu — under the viewport top, and a click on a still-visible item (`getTextMenuItemFromMenuByPrefix` on the subMenu
+  reference captured BEFORE the drop — it survives both re-parentings) still FIRES, the made morph riding the hand to the
+  desktop. GOTCHA: the header-drag's RELEASE point must be clear of every menu of the still-open world-menu cascade — a release
+  over the cascade silently re-absorbs the dragged sub-menu (unpinned) and the later dismissal click destroys it. No new verb.
 - **Pop-up (prompt/menu) shadow on drag** (`macroPromptShadowFollowsOnDrag`): a `PromptMorph` (extends MenuMorph extends
   PopUpWdgt) casts a drop shadow like every pop-up (`PopUpWdgt.popUp → addShadow`, offset (5,5) α0.2). Drag it by its TITLE
   BAR: `@syntheticEventsMouseMovePressDragRelease_InputEvents prompt.label.center(), dest` (a press-drag GRABS the whole
@@ -536,6 +546,15 @@ are called directly. See `CLAUDE.md` for those rules.
   FULL-WIDTH bars → image_3 NARROWED bars → image_4 back to full 300×300 (== image_1, expanded size preserved) → image_5 RE-collapsed =
   NARROWED again (pixel-identical to image_3 — the collapsed size is sticky, the identical dataHash IS the proof) → image_6 uncollapsed =
   full again (== image_4). Distinct from macroWindowsEmptyResizing (resizes while EXPANDED, which persists). No new verb.
+- **Duplicating a COLLAPSED window keeps state, extent and content** (`macroDuplicatedCollapsedWindowKeepsStateAndContent`):
+  the chrome-state axis of the duplicate family (menu duplicates: the born-pinned entry; composite duplicates keep wiring: the
+  slider/inspector entries). A collapsed `WindowWdgt` stores its pre-collapse geometry (`@widthWhenUnCollapsed` /
+  `@extentWhenCollapsed`, `WindowWdgt.coffee:208-232`) and keeps its adopted `@contents` attached — `fullCopy` deep-copies all
+  of it, so the duplicate is BORN COLLAPSED (same content-derived title) and uncollapsing the COPY restores the COPIED stored
+  extent (the CONTENT-WRAPPED one — the window shrank around its rectangle on adoption) and reveals the copied content, leaving
+  the original bar untouched. Reach "duplicate" through the ancestor HIERARCHY menu: a right-click on the bar lands on a chrome
+  CHILD (label/background), so descend `"a Window"` by prefix first; then the standard carry-drop (no-button move + click).
+  Locate the copy STRUCTURALLY (`world.topWdgtSuchThat` on class + position) — original and copy share their title. No new verb.
 - **Internal vs external window drop** (`macroInternalVsExternalWindowDrop`): a `WindowWdgt`'s 4th ctor arg is `internal`
   (default false). `WindowWdgt.rejectsBeingDropped` returns `!@internal`, and `ActivePointerWdgt.drop` forces `target = world`
   for a widget that rejectsBeingDropped (`:242`) — so an EXTERNAL window dropped over a container lands on the desktop (NOT
@@ -763,6 +782,22 @@ are called directly. See `CLAUDE.md` for those rules.
   (here both UNCOLLAPSE clicks: image_7 == image_5) — the last-clicked switch's hover + tooltip are part of macro shots, so equality
   pairs with different last gestures (the recording's bar-state pair) would differ by exactly that hover. Fixture: the demo
   "scrollable panel" via the real menu path + carry-drop (same as macroMenuPinnedInScrollPanel). No new verb.
+- **Window CELLS in a constrained scroll-STACK: collapse/close reflow + live width tracking**
+  (`macroWindowCellsInConstrainedScrollStackReflow`): the STACK-branch sibling of the entry above.
+  `refreshScrollPanelWdgtOrVerticalStackIfIamInIt` (`Widget.coffee:1485-1490`) has TWO branches — directly-in-a-scroll-panel
+  (the entry above) and `parent instanceof SimpleVerticalStackPanelWdgt`, where it calls the STACK's `adjustContentsBounds()`:
+  collapsing/uncollapsing/closing a window CELL slides the cells below up/down and re-derives the enclosing panel's scrollbars.
+  Fixture: a `SimpleVerticalStackScrollPanelWdgt` (a ScrollPanelWdgt whose contents is a constraining stack with
+  `isLockingToPanels` — grabbing its interior grabs the WHOLE composite, which is how it drops into an outer window; clear its
+  default `SimplePlainTextWdgt` first) + internal windows that adopt COLOURED RECTANGLES — the rectangles carry the width,
+  because an adopting window WRAPS to its content (a preset extent is discarded), and they must be WIDER than the stack so the
+  cap binds (it never stretches up). STAGE one drop at a time: grabs target widget CENTRES and the desktop is too small to park
+  everything without something covering someone else's centre. Squeeze/widen via `dragWindowResizerTo_InputEvents` with DELTAS
+  off `win.resizer.center()` (the verb releases the handle centre AT the destination — absolute corner targets shift the window
+  by the handle-centre offset): the cells re-cap against the LIVE stack width both ways, and the round trip is byte-identical.
+  The collapse round trip byte-anchor needs a SECOND round trip (post-repaint states match each other; the FIRST restore differs
+  from the pristine shot by exactly the `HighlightableMixin` pristine-vs-repaint glyph rule of the nested-collapse entry). Park
+  the pointer on one clear spot before every shot. No new verb.
 - **Edge auto-scroll while dragging** (`macroListMorphAutoScrollsNearDraggedEdge`): a ScrollPanelWdgt auto-scrolls when a
   float-dragged morph it `wantsDropOf` is held near an edge band (≈`scrollBarsThickness*3`). Build a list overflowing BOTH ways,
   `pickUp` a rectangle (don't drop), then `@syntheticEventsMouseMove_InputEvents (a point in an edge band), "no button", …` and
