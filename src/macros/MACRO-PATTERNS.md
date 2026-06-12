@@ -11,6 +11,12 @@ call is an L3 verb. Drive every USER input through the event queue (`_InputEvent
 construction and genuinely-blocked UI triggers (`hide()/show()`, `toggleSoftWrap()`, `world.evaluateString`)
 are called directly. See `CLAUDE.md` for those rules.
 
+Byte-equality pairs (the no-op / round-trip idiom many entries below lean on) are ASSERTED IN-RUN, not just
+claimed: every within-test "image_A is byte-identical to image_B" MUST call
+`@assertScreenshotsIdentical "…_image_A", "…_image_B"` right after the later shot (full image names, earlier
+first). The shared reference dataHash in the filenames is corroborating evidence, not the check — without the
+assertion a recapture after a regression silently stores two different hashes and the claim evaporates.
+
 ---
 
 ## Text & caret
@@ -87,7 +93,7 @@ are called directly. See `CLAUDE.md` for those rules.
   the SAME caret slot/selection produce byte-identical screenshots (same dataHash) — a no-op round-trip (ArrowLeft,
   Shift+Left, Shift+Right, ArrowRight) shoots identical to its predecessor, and three routes to one slot
   (type-at-caret / collapse-left / re-select-then-ArrowUp) all share one hash; state the equality in the metadata
-  `assertions` and check it in the captured filenames. Geometry note: count-based Shift+Arrow runs are relative to ONE
+  `assertions` and assert it in-run with `@assertScreenshotsIdentical` (see the preamble). Geometry note: count-based Shift+Arrow runs are relative to ONE
   clicked slot — keep the recorded fixture geometry (handle-fraction resize + recorded click fraction + font size) and
   the whole keyboard tail is geometry-free. No new verb.
 - **Double/triple-click selects word/line** (`macroDoubleAndTripleClickThroughCaretMorph`): `@doubleClickAtFractionOf_InputEvents`
@@ -132,7 +138,8 @@ are called directly. See `CLAUDE.md` for those rules.
   NO internal clipboard — synthetic Meta+x/c/v can't fire the browser's real clipboard EVENTS — so the text rides IN
   the event (a macro-local var), exactly as oncut/oncopy/onpaste → queue → `caret.process{Cut,Copy,Paste}`.
 - **Undo** (`macroCaretResizesOKOnUndo`): `@repeatSpecialKey_InputEvents "Meta+z", 4` (the caret's `cmd` handles Meta+a
-  and Meta+z). image-before and image-after-undo come out pixel-identical — the round-trip proof the caret resizes back.
+  and Meta+z). image-before and image-after-undo come out pixel-identical — the round-trip proof the caret resizes back;
+  assert the pair with `@assertScreenshotsIdentical` (preamble).
 - **The caret resizes with the auto-fit font (SCALEUP)** (`macroTextMorph2CaretResizing`): the forward sibling of the
   Undo entry above, and the SCALEUP counterpart of the SCALEDOWN shrink-to-fit entry below. A TextMorph2 made via the
   demo menu EXPANDS its font to fill its bounds — the ctor overrides the inherited FLOAT default to SCALEUP

@@ -522,6 +522,32 @@ class MacroToolkit
     passed = (found?) and (found.length == expectedLabels.length) and (expectedLabels.every (label, i) -> found[i] == label)
     world.automator.player.recordMacroAssertion passed, "top menu item strings", expectedLabels.join(" | "), (if found? then found.join(" | ") else "no menu")
 
+  # Assert that two screenshots ALREADY TAKEN in this test are byte-identical — the explicit
+  # form of the no-op / round-trip idiom (undo restores the pre-edit pixels, collapse →
+  # uncollapse restores the window, a cancelled prompt leaves zero residue, …). Pass the two
+  # FULL image names exactly as given to takeScreenshot_InputEvents_Macro, earlier shot
+  # first, and call it right AFTER the later shot. Compares the LIVE fingerprints the player
+  # recorded when it took each shot (AutomatorPlayer.liveScreenshotFingerprints — SWCanvas:
+  # the raw-pixel SHA-256; native: the PNG data-URL string), so the identity is checked
+  # IN-RUN rather than enforced transitively by the two committed references happening to
+  # share a dataHash — which also means a `--clean` recapture after a regression can no
+  # longer silently dissolve the pair (the capture script's legs replay in PLAYING state,
+  # so a broken identity fails them loudly). A missing fingerprint (typo'd name, or the
+  # assertion placed before the shot) FAILS, never silently passes. Like the other @assert…
+  # methods it pushes no input events and reports via recordMacroAssertion.
+  assertScreenshotsIdentical: (earlierImageName, laterImageName) ->
+    fingerprints = world.automator.player.liveScreenshotFingerprints ? {}
+    earlier = fingerprints[earlierImageName]
+    later = fingerprints[laterImageName]
+    description = "screenshots " + earlierImageName + " and " + laterImageName + " are byte-identical"
+    if not earlier? or not later?
+      missing = (name for name in [earlierImageName, laterImageName] when not fingerprints[name]?)
+      world.automator.player.recordMacroAssertion false, description, "a live fingerprint for both screenshots", "no screenshot taken under: " + missing.join(", ")
+      return
+    # native fingerprints are whole PNG data-URLs — don't dump megabytes into the console
+    shorten = (fp) -> if fp.length > 70 then fp.slice(0, 64) + "… (" + fp.length + " chars)" else fp
+    world.automator.player.recordMacroAssertion (earlier == later), description, (shorten earlier), (shorten later)
+
   # Topmost widget matching either a class-name string (compared via
   # morphClassString) or a class object (compared via instanceof).
   findTopWidgetByClassNameOrClass: (widgetNameOrClass) ->

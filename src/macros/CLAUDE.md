@@ -112,7 +112,9 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `wheelOn`, `clickOnSliderTrackAtFraction`, `dragSliderButtonToFraction`); menus (`openMenuOf`,
   `moveToItemOf{Menu,TopMenu}AndClick`, `moveToItem{StartingWith,Containing}OfMenuAndClick`, `clickMenuHeaderToPin`);
   clipboard (`cutSelection`/`copySelection`/`pasteText`); window chrome (`closeWindow`, `collapseOrUncollapseWindow`,
-  `dragWindowResizerTo`); assertions (`assertTopMenuItemCount`, `assertTopMenuItemStrings`). All `…_InputEvents`.
+  `dragWindowResizerTo`); assertions (`assertTopMenuItemCount`, `assertTopMenuItemStrings`,
+  `assertScreenshotsIdentical` — MANDATORY for every within-test byte-equality claim: call it right after the
+  later shot with both full image names, earlier first). All `…_InputEvents`.
 - **L3 verbs** (generators, `…_InputEvents_Macro`): `takeScreenshot`, `clickMenuItemOfWidget`, `bringUpInspector`,
   `bringUpInspectorAndSelectListItem`, `bringInViewAndClickOnListItemFromTopInspector`,
   `setControllerTargetToWidgetProperty`, the window-in-window fixture pair.
