@@ -406,13 +406,6 @@ terser --compress --output $BUILD_PATH/js/src/loading-and-compiling-coffeescript
 coffee -b -c -o $BUILD_PATH/js/src/ src/boot/logging-div.coffee
 terser --compress --output $BUILD_PATH/js/src/logging-div-min.js -- $BUILD_PATH/js/src/logging-div.js
 
-if ! $notests && ! $homepage ; then
-  coffee -b -c -o $BUILD_PATH/js/libs auxiliary\ files/Mousetrap/Mousetrap.coffee
-  echo "minifying..."
-  terser --compress --mangle --output $BUILD_PATH/js/libs/Mousetrap.min.js -- $BUILD_PATH/js/libs/Mousetrap.js
-  echo "... done minifying"
-fi
-
 echo "copying pre-compiled file"
 cp auxiliary\ files/pre-compiled.js $BUILD_PATH/js/pre-compiled.js
 echo "... done"

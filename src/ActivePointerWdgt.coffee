@@ -142,15 +142,6 @@ class ActivePointerWdgt extends Widget
     oldParent = aWdgt.parent
     if !@isThisPointerFloatDraggingSomething()
 
-      if Automator?
-        world.automator.recorder.addGrabCommand()
-        if Automator.state == Automator.RECORDING
-          action = "grab"
-          arr = world.automator.tagsCollectedWhileRecordingTest
-          if action not in arr
-            arr.push action
-
-
       world.stopEditing()
 
       # this paragraph deals with how to resize/reposition the widget
@@ -228,14 +219,6 @@ class ActivePointerWdgt extends Widget
 
   drop: ->
     if @isThisPointerFloatDraggingSomething()
-
-      if Automator?
-        world.automator.recorder.addDropCommand()
-        if Automator.state == Automator.RECORDING
-          action = "drop"
-          arr = world.automator.tagsCollectedWhileRecordingTest
-          if action not in arr
-            arr.push action
 
       wdgtToDrop = @children[0]
 
@@ -427,7 +410,6 @@ class ActivePointerWdgt extends Widget
 
     w = @topWdgtUnderPointer()
 
-    alreadyRecordedLeftOrRightClickOnMenuItem = false
     world.destroyToolTips()
     world.freshlyCreatedPopUps.clear()
 
@@ -445,49 +427,11 @@ class ActivePointerWdgt extends Widget
         @nonFloatDraggedWdgt.endOfNonFloatDrag?()
 
       @previousNonFloatDraggingPos = nil
-      # let's check if the user clicked on a menu item,
-      # in which case we add a special dedicated command
-      # [TODO] you need to do some of this only if you
-      # are recording a test, it's worth saving
-      # these steps...
-      #debugger
-      ignored = nil
-      toDestructure = w.parentThatIsA MenuItemMorph
-      if toDestructure?
-        [menuItemMorph, ignored]= toDestructure
-        if menuItemMorph
-          # we check whether the menuitem is actually part
-          # of an activeMenu. Keep in mind you could have
-          # detached a menuItem and placed it on any other
-          # widget so you need to ascertain that you'll
-          # find it in the activeMenu later on...
-          mostRecentlyCreatedPopUp = world.mostRecentlyCreatedPopUp()
-          if mostRecentlyCreatedPopUp == menuItemMorph.parent
-            labelString = menuItemMorph.labelString
-            occurrenceNumber = menuItemMorph.howManySiblingsBeforeMeSuchThat (m) ->
-              m.labelString == labelString
-            # this method below is also going to remove
-            # the mouse down/up commands that have
-            # recently/just been added.
-            if Automator?
-              world.automator.recorder.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
-            alreadyRecordedLeftOrRightClickOnMenuItem = true
 
-      # TODO check if there is any other
-      # possibility other than mouseButton being "left"
-      # or "right". If it can only be one of those
-      # that you can simplify this nested if below
-      # and avoid using actionAlreadyProcessed
       if @mouseButton is "left"
         expectedClick = "mouseClickLeft"
       else
         expectedClick = "mouseClickRight"
-        if @mouseButton
-          if !alreadyRecordedLeftOrRightClickOnMenuItem
-            # this being a right click, pop
-            # up a menu as needed.
-            if Automator?
-              world.automator.recorder.addOpenContextMenuCommand w.uniqueIDString()
 
       # trigger the action
       until w[expectedClick]
@@ -499,14 +443,8 @@ class ActivePointerWdgt extends Widget
 
           switch expectedClick
             when "mouseClickLeft"
-              pointerAndWdgtInfo = world.getPointerAndWdgtInfo()
-              if Automator?
-                world.automator.recorder.addMouseClickCommand 0, nil, pointerAndWdgtInfo...
               w.mouseUpLeft? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
             when "mouseClickRight"
-              pointerAndWdgtInfo = world.getPointerAndWdgtInfo()
-              if Automator?
-                world.automator.recorder.addMouseClickCommand 2, nil, pointerAndWdgtInfo...
               w.mouseUpRight? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
           # also send doubleclick if the
@@ -701,10 +639,6 @@ class ActivePointerWdgt extends Widget
             eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren[eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren, eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
 
   processDoubleClick: (w = @topWdgtUnderPointer()) ->
-    pointerAndWdgtInfo = world.getPointerAndWdgtInfo w
-    if Automator?
-      world.automator.recorder.addMouseDoubleClickCommand nil, pointerAndWdgtInfo...
-
     world.destroyToolTips()
     if @isThisPointerFloatDraggingSomething()
       @drop()
@@ -714,10 +648,6 @@ class ActivePointerWdgt extends Widget
     @mouseButton = nil
 
   processTripleClick: (w = @topWdgtUnderPointer()) ->
-    pointerAndWdgtInfo = world.getPointerAndWdgtInfo w
-    if Automator?
-      world.automator.recorder.addMouseTripleClickCommand nil, pointerAndWdgtInfo...
-
     world.destroyToolTips()
     if @isThisPointerFloatDraggingSomething()
       @drop()

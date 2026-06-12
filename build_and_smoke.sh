@@ -18,8 +18,8 @@
 # always operate from the Fizzygum/ repo root (build_it_please.sh assumes this)
 cd "$(dirname "$0")" || exit 2
 
-# A tests-stripped build has no Mousetrap, so the SWCanvas boot leg would crash;
-# fall back to a native-only smoke in that case.
+# A tests-stripped build can't boot the SWCanvas leg cleanly (it lacks the test
+# harness/assets the SWCanvas smoke relies on); fall back to a native-only smoke.
 SMOKE_ARGS=""
 case " $* " in
   *" --homepage "*|*" --notests "*)

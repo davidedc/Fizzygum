@@ -62,8 +62,8 @@ class MacroToolkit
   # atlases have loaded (no text dirty), then force ONE warm-atlas repaint into
   # the software surface and wait a single doOneCycle for updateBroken (which
   # runs AFTER progressOnMacroSteps) to flush it — so the captured pixels are
-  # identical run-to-run. Mirrors the screenshot settle gate in
-  # AutomatorPlayer.replayTestCommands.
+  # identical run-to-run. This is the single SWCanvas screenshot settle gate
+  # (the old command-keyed gate in AutomatorPlayer was removed with the recorder).
   readyForMacroScreenshot: ->
     # never capture while a scroll-momentum glide is settling (matters for
     # native captures too, hence before the SWCanvas-only early return)

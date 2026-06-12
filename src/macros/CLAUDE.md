@@ -9,15 +9,15 @@ The **framework side of the high-level "macro" SystemTests**. Two files, both st
   library, and the macro-step driver/state. The world HAS-A one, as **`world.macroToolkit`**.
 
 This file is the **router**: architecture + the rules you must get right. Two companion docs hold the detail —
-**`MACRO-PATTERNS.md`** (the per-mechanic reuse-pattern catalogue, one entry per migrated test) and the verb
+**`MACRO-PATTERNS.md`** (the per-mechanic reuse-pattern catalogue, one entry per test) and the verb
 **doc-comments in `MacroToolkit.coffee`** (full signatures + behaviour). The L5 *harness* (`Automator*`,
-`AutomatorEventCommand*`) and the migration *workflow* live in the sibling **`Fizzygum-tests`** repo (see
-`../../../Fizzygum-tests/CLAUDE.md` and the `migrate-systemtest` skill).
+`AutomatorEventCommand*`) lives in the sibling **`Fizzygum-tests`** repo (see
+`../../../Fizzygum-tests/CLAUDE.md` and the `/author-macro-test` skill).
 
 ## Why macros exist
 
-A recorded test replays a frozen stream of raw mouse/keyboard coordinates and diffs screenshots — fragile, it
-breaks the moment layout or a class changes. A **macro** describes the test as a generator ("find the clock,
+The old recorded tests (now removed) replayed a frozen stream of raw mouse/keyboard coordinates and diffed
+screenshots — fragile, they broke the moment layout or a class changed. A **macro** describes the test as a generator ("find the clock,
 open its inspector, edit a method, screenshot") that asks the **live world** where things are *now* and
 synthesises the real input events. Resilient to layout change.
 
@@ -83,8 +83,8 @@ theTest_InputEvents_Macro = ->
 **2. Drive INPUT through the event queue, never poke the hand.** Every user input — moves, clicks, keys, the
 wheel, double/triple-clicks, clipboard — must be SYNTHESISED AS A REAL `*InputEvent` pushed onto
 `world.inputEventsQueue` and consumed by the normal pipeline, NOT by reaching into `world.hand`/`world.caret` and
-calling `process…` directly. The queue is the whole point: it drives hit-testing, hover/`mouseEnter`, the
-playback fake-pointer overlay, recording hooks. Every input-synthesising verb carries the **`_InputEvents`** suffix
+calling `process…` directly. The queue is the whole point: it drives hit-testing, hover/`mouseEnter`, and the
+playback fake-pointer overlay. Every input-synthesising verb carries the **`_InputEvents`** suffix
 and ends by pushing events; callers `yield "waitNoInputsOngoing"` to drain. *One subtlety:* a queued
 double/triple-click is only RECOGNISED in slow playback, so such a test declares `supportsTurboPlayback:false` +
 `requiresSlowPlayback:true`. *Legitimately NOT input* (keep direct): building a fixture (`new …; world.add`,
@@ -187,14 +187,14 @@ contribute that verb via the `extraSubroutineSources` merge-seam.
   `macroToolkit: nil` field and the `if MacroToolkit?` ctor init are unmarked (harmless in homepage: field stays `nil`,
   guard is false).
 
-## Migrating an old recorded test
+## History: the recorded→macro migration (closed)
 
-Conversion is almost mechanical: every recorded click already stored WHAT it hit —
+Every old recorded test was migrated to a macro and the recorder + migration tooling have been removed; this
+section is kept only as background. The conversion was almost mechanical: every recorded click had stored WHAT it hit —
 `morphIdentifierViaTextLabel = [getTextDescription(), occurrence, total]` + a fractional position — which is exactly what
 `findWidgetByTextDescription` / `moveToAndClickAtFractionOf_InputEvents` consume, so a migrated macro re-finds the very same
-widget and follows it if it moved. Pipeline: `Fizzygum-tests/scripts/thin-systemtest.js` decimates a recording into a
-digest; the **`/migrate-systemtest` skill** translates it into a macro, grounding on the old reference screenshots; reuse
-patterns are in **`MACRO-PATTERNS.md`**. Recipe + digest format: `Fizzygum-tests/scripts/README-migration.md`.
+widget and follows it if it moved. New tests are authored as macros directly (`/author-macro-test` skill); reuse patterns
+are in **`MACRO-PATTERNS.md`**.
 
 ## Run / capture (from `../../../Fizzygum-tests`)
 

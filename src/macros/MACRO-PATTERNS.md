@@ -1,9 +1,9 @@
 # Macro reuse patterns (the per-mechanic catalogue)
 
-Worked patterns distilled from the migrated macro tests — **what** framework behaviour each exercises,
+Worked patterns distilled from the macro tests — **what** framework behaviour each exercises,
 **which verbs** drive it, the **test** that demonstrates it, and the **gotchas**. This is the detailed
-reference; the lean router is `CLAUDE.md`, the migration *workflow* is the `migrate-systemtest` skill
-(`../../../Fizzygum-tests/.claude/skills/migrate-systemtest/`), and the verb *signatures* are the
+reference; the lean router is `CLAUDE.md`, the authoring *workflow* is the `/author-macro-test` skill
+(`../../../Fizzygum-tests/.claude/skills/author-macro-test/`), and the verb *signatures* are the
 doc-comments in `MacroToolkit.coffee`. "No new verb" means the pattern is pure reuse of existing verbs.
 
 Conventions used below: `@x` = a MacroToolkit helper; `world.x` = the live world; a bare `…_InputEvents_Macro`
@@ -1548,7 +1548,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (@pointAtFractionOf button, [0.5,0.5]), (new Point X, Y)`. Parent the button INSIDE a container (window/panel), NOT bare on the
   world (`EmptyButtonMorph.rejectDrags` is false only when the parent is the world, so a loose button float-drags on the press).
 - **In-system eval** (`macroEvaluateString`): `world.evaluateString "code"` runs arbitrary CoffeeScript against the live world
-  INLINE (compile, run with `@`=world, relayout/repaint) — the macro form of the recorded `AutomatorEventCommandEvaluateString`.
+  INLINE (compile, run with `@`=world, relayout/repaint) — this is what the old recorded `AutomatorEventCommandEvaluateString` command did (that command no longer exists).
   Do NOT write `@evaluateString` (MacroToolkit's own binds `@` to the toolkit). No new verb; no input events, so just `yield
   "waitNoInputsOngoing"` before a screenshot.
 - **Eval in the inspector work-area** (`macroInspectorWorkAreaEvaluatesCoffeeScript`): the (old) `InspectorMorph`'s lower "work" pane is a

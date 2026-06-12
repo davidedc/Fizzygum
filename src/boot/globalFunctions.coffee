@@ -255,12 +255,6 @@ boot = ->
     loadJSFilePromise "js/libs/coffee-script_2.0.3.js"
   ]
 
-  # TODO rather than relying on this test to load these .js at boot,
-  # we should really just dynamically load these when needed
-  # (i.e. when tests are run, or when pre-compiled generation is invoked)
-  if BUILDFLAG_LOAD_TESTS
-    bootLoadPromises.push loadJSFilePromise "js/libs/Mousetrap.min.js"
-
   if BUILDFLAG_LOAD_TESTS or (window.location.href.includes "generatePreCompiled")
     bootLoadPromises.push loadJSFilePromise "js/libs/FileSaver.min.js"
     bootLoadPromises.push loadJSFilePromise "js/libs/jszip.min.js"

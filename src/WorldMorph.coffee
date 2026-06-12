@@ -55,19 +55,6 @@ class WorldMorph extends PanelWdgt
   inputDOMElementForVirtualKeyboardKeyupBrowserEventListener: nil
   inputDOMElementForVirtualKeyboardKeypressBrowserEventListener: nil
 
-  # »>> this part is excluded from the fizzygum homepage build
-  keyComboResetWorldEventListener: nil
-  keyComboTurnOnAnimationsPacingControl: nil
-  keyComboTurnOffAnimationsPacingControl: nil
-  keyComboTakeScreenshotEventListener: nil
-  keyComboStopTestRecordingEventListener: nil
-  keyComboTakeScreenshotEventListener: nil
-  keyComboCheckStringsOfItemsInMenuOrderImportant: nil
-  keyComboCheckStringsOfItemsInMenuOrderUnimportant: nil
-  keyComboAddTestCommentEventListener: nil
-  keyComboCheckNumberOfMenuItemsEventListener: nil
-  # this part is excluded from the fizzygum homepage build <<«
-
   dragoverEventListener: nil
   resizeBrowserEventListener: nil
   otherTasksToBeRunOnStep: []
@@ -542,10 +529,6 @@ class WorldMorph extends PanelWdgt
         @automator.forceSlowTestPlaying = true
       if currentAction.forceTurbo?
         @automator.forceTurbo = true
-      if currentAction.forceSkippingInBetweenMouseMoves?
-        @automator.forceSkippingInBetweenMouseMoves = true
-      if currentAction.forceRunningInBetweenMouseMoves?
-        @automator.forceRunningInBetweenMouseMoves = true
 
       # selectTestsFromTagsOrTestNames loads every test's metadata ASYNChronously and only THEN
       # populates selectedTestsBasedOnTags. runAllSystemTests must WAIT for that — otherwise
@@ -1478,22 +1461,6 @@ class WorldMorph extends PanelWdgt
       @inputDOMElementForVirtualKeyboardKeypressBrowserEventListener, false
   # this part is excluded from the fizzygum homepage build <<«
 
-  getPointerAndWdgtInfo:  (topWdgtUnderPointer = @hand.topWdgtUnderPointer()) ->
-    # we might eliminate this command afterwards if
-    # we find out user is clicking on a menu item
-    # or right-clicking on a morph
-    absoluteBoundsOfMorphRelativeToWorld = topWdgtUnderPointer.boundingBox().asArray_xywh()
-    morphIdentifierViaTextLabel = topWdgtUnderPointer.identifyViaTextLabel()
-    morphPathRelativeToWorld = topWdgtUnderPointer.pathOfChildrenPositionsRelativeToWorld()
-    pointerPositionFractionalInMorph = @hand.positionFractionalInMorph topWdgtUnderPointer
-    pointerPositionPixelsInMorph = @hand.positionPixelsInMorph topWdgtUnderPointer
-    # note that this pointer position is in world
-    # coordinates not in page coordinates
-    pointerPositionPixelsInWorld = @hand.position()
-    isPartOfListMorph = (topWdgtUnderPointer.parentThatIsA ListMorph)?
-    return [ topWdgtUnderPointer.uniqueIDString(), morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph]
-
-
   # -----------------------------------------------------
   # clipboard events processing
   # -----------------------------------------------------
@@ -1668,68 +1635,6 @@ class WorldMorph extends PanelWdgt
 
     document.body.addEventListener "paste", @pasteBrowserEventListener, false
 
-  initKeyCombosEventListeners: ->
-
-    # »>> this part is excluded from the fizzygum homepage build
-
-    #console.log "binding via mousetrap"
-
-    @keyComboResetWorldEventListener = (event) =>
-      if AutomatorRecorder?
-        @automator.recorder.resetWorld()
-      false
-    Mousetrap.bind ["alt+d"], @keyComboResetWorldEventListener
-
-    @keyComboTurnOnAnimationsPacingControl = (event) =>
-      if Automator?
-        @automator.recorder.turnOnAnimationsPacingControl()
-      false
-    Mousetrap.bind ["alt+e"], @keyComboTurnOnAnimationsPacingControl
-
-    @keyComboTurnOffAnimationsPacingControl = (event) =>
-      if Automator?
-        @automator.recorder.turnOffAnimationsPacingControl()
-      false
-    Mousetrap.bind ["alt+u"], @keyComboTurnOffAnimationsPacingControl
-
-    @keyComboTakeScreenshotEventListener = (event) =>
-      if AutomatorRecorder?
-        @automator.recorder.addTakeScreenshotCommand()
-      false
-    Mousetrap.bind ["alt+c"], @keyComboTakeScreenshotEventListener
-
-    @keyComboStopTestRecordingEventListener = (event) =>
-      if Automator?
-        @automator.recorder.stopTestRecording()
-      false
-    Mousetrap.bind ["alt+t"], @keyComboStopTestRecordingEventListener
-
-    @keyComboAddTestCommentEventListener = (event) =>
-      if Automator?
-        @automator.recorder.addTestComment()
-      false
-    Mousetrap.bind ["alt+m"], @keyComboAddTestCommentEventListener
-
-    @keyComboCheckNumberOfMenuItemsEventListener = (event) =>
-      if AutomatorRecorder?
-        @automator.recorder.addCheckNumberOfItemsInMenuCommand()
-      false
-    Mousetrap.bind ["alt+k"], @keyComboCheckNumberOfMenuItemsEventListener
-
-    @keyComboCheckStringsOfItemsInMenuOrderImportant = (event) =>
-      if AutomatorRecorder?
-        @automator.recorder.addCheckStringsOfItemsInMenuOrderImportantCommand()
-      false
-    Mousetrap.bind ["alt+a"], @keyComboCheckStringsOfItemsInMenuOrderImportant
-
-    @keyComboCheckStringsOfItemsInMenuOrderUnimportant = (event) =>
-      if AutomatorRecorder?
-        @automator.recorder.addCheckStringsOfItemsInMenuOrderUnimportantCommand()
-      false
-    Mousetrap.bind ["alt+z"], @keyComboCheckStringsOfItemsInMenuOrderUnimportant
-
-    # this part is excluded from the fizzygum homepage build <<«
-
   initOtherMiscEventListeners: ->
     canvas = @worldCanvas
 
@@ -1782,7 +1687,6 @@ class WorldMorph extends PanelWdgt
     @initTouchEventListeners()
     @initKeyboardEventListeners()
     @initClipboardEventListeners()
-    @initKeyCombosEventListeners()
     @initOtherMiscEventListeners()
 
   # »>> this part is excluded from the fizzygum homepage build
@@ -1810,8 +1714,6 @@ class WorldMorph extends PanelWdgt
     canvas.removeEventListener 'cut', @cutBrowserEventListener
     canvas.removeEventListener 'copy', @copyBrowserEventListener
     canvas.removeEventListener 'paste', @pasteBrowserEventListener
-
-    Mousetrap.reset()
 
     canvas.removeEventListener 'dragover', @dragoverEventListener
     canvas.removeEventListener 'resize', @resizeBrowserEventListener
@@ -1875,7 +1777,6 @@ class WorldMorph extends PanelWdgt
     # some tests might change the background
     # color of the world so let's reset it.
     @setColor Color.create 205, 205, 205
-    SystemTestsControlPanelUpdater.blinkLink SystemTestsControlPanelUpdater.resetWorldLink
     # make sure thw window is scrolled to top
     # so we can see the test results while tests
     # are running.
@@ -1910,10 +1811,10 @@ class WorldMorph extends PanelWdgt
 
     # »>> this part is excluded from the fizzygum homepage build
     if Automator?
-      @automator.recorder.turnOffAnimationsPacingControl()
-      @automator.recorder.turnOffAlignmentOfMorphIDsMechanism()
-      @automator.recorder.turnOffHidingOfMorphsContentExtractInLabels()
-      @automator.recorder.turnOffHidingOfMorphsNumberIDInLabels()
+      Automator.animationsPacingControl = false
+      Automator.alignmentOfMorphIDsMechanism = false
+      Automator.hidingOfMorphsContentExtractInLabels = false
+      Automator.hidingOfMorphsNumberIDInLabels = false
     # this part is excluded from the fizzygum homepage build <<«
 
     super()
@@ -2053,18 +1954,8 @@ class WorldMorph extends PanelWdgt
 
     menu.addMenuItem "run system tests", true, @automator.player, "runAllSystemTests", "runs all the system tests"
     menu.addMenuItem "run system tests force slow", true, @automator.player, "runAllSystemTestsForceSlow", "runs all the system tests"
-    menu.addMenuItem "run system tests force fast skip in-between mouse moves", true, @automator.player, "runAllSystemTestsForceFastSkipInbetweenMouseMoves", "runs all the system tests"
-    menu.addMenuItem "run system tests force fast run in-between mouse moves", true, @automator.player, "runAllSystemTestsForceFastRunInbetweenMouseMoves", "runs all the system tests"
-
-    menu.addMenuItem "start test recording", true, @automator.recorder, "startTestRecording", "start recording a test"
-    menu.addMenuItem "stop test recording", true, @automator.recorder, "stopTestRecording", "stop recording the test"
-
-    menu.addMenuItem "(re)play recorded test slow", true, @automator.player, "startTestPlayingSlow", "start playing the test"
-    menu.addMenuItem "(re)play recorded test fast skip in-between mouse moves", true, @automator.player, "startTestPlayingFastSkipInbetweenMouseMoves", "start playing the test"
-    menu.addMenuItem "(re)play recorded test  fast run in-between mouse moves", true, @automator.player, "startTestPlayingFastRunInbetweenMouseMoves", "start playing the test"
 
     menu.addMenuItem "show test source", true, @automator, "showTestSource", "opens a window with the source of the latest test"
-    menu.addMenuItem "save recorded test", true, @automator.recorder, "saveTest", "save the recorded test"
     menu.addMenuItem "save failed screenshots", true, @automator.player, "saveFailedScreenshots", "save failed screenshots"
 
     menu.popUpAtHand()

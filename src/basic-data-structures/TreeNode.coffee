@@ -381,8 +381,7 @@ class TreeNode
       # to find the state of affairs that caused
       # the problem.
       console.log "failed to find morph in test: " + world.automator.name
-      console.log "trying to find item with text label: " +  world.automator.player.getCommandBeingPlayed().textLabelOfClickedItem
-      console.log "...you can likely fix the test by correcting the label above in the test"
+      console.log "...the macro is looking for a widget/menu item that isn't present in the current world state"
       debugger
     # this part is excluded from the fizzygum homepage build <<«
 
