@@ -174,6 +174,26 @@ are called directly. See `CLAUDE.md` for those rules.
   resize/move) — it carries the spec under test and is editable. Burst sizes are tuned at capture so one shot pair
   straddles the first step-down. The recording's tail (at MINIMUM font the text finally crops and the "edit:" prompt
   pops mid-typing) is a separate cropped-text mechanic — deliberately not asserted here. No new verb.
+- **Fill-mode SWITCHING mid-session, bold round-trip, paste-over-selection**
+  (`macroTextMorph2FillModesWeightAndPasteOverSelection`): the residue laws of the retired endurance recording, in one
+  9-shot fixture (a 320×360 editable TextMorph2, three short words — SCALEUP fits one giant word per line, so every
+  transition is unmistakable). (1) `txt.togglefittingSpecWhenBoundsTooLarge()` (the "←☓→ don't expand to fill" item's
+  method, `StringMorph2.coffee:1024-1027`) flips SCALEUP→FLOAT with content in place: the auto-grown font SNAPS back to
+  the natural set size (the entries above assert each MODE; this asserts the live SWITCH). NB both fitting toggles call
+  `world.stopEditing()` — the caret is gone after them, which is exactly what makes the next law shootable: (2)
+  `txt.toggleWeight()` twice (bold → normal weight, `:1034-1036`) is a perfect round-trip — the pre-bold and post-normal
+  shots share ONE reference dataHash (the no-op pixel-identical idiom; also the suite's only asserted BOLD pixels —
+  italic is the caret-glued entry's). (3) a paste with a LIVE selection REPLACES it (`CaretMorph.processPaste` →
+  `insert` → `@target.deleteSelection()` first): dblClick a word, `clip = @copySelection_InputEvents()`,
+  `@pasteText_InputEvents clip` → text UNCHANGED, caret after the word; paste again → duplicates (the clipboard entry
+  above pastes only at a bare caret). (4) `txt.alignBottom()` asserts the TextMorph2 BLOCK vertical-alignment axis
+  (the alignment entry below is the StringMorph2 3×3). Finale: arm `txt.togglefittingSpecWhenBoundsTooSmall()`
+  (CROP→SCALEDOWN) BEFORE pasting a ~650-char lorem over a dblClick-selected word — the replacement overflows the box
+  HEIGHT and the whole text shrinks uniformly (the shrink-to-fit entry above is the WIDTH/long-token axis). Arming
+  SCALEDOWN first is LOAD-BEARING twice: under default CROP the overflow would ellipsise AND the next click would open
+  the "edit:" prompt instead of an inline caret (that prompt is exactly the retired recording's image_21 accident —
+  its 18th paste overflowed under CROP). Double-click ⇒ `supportsTurboPlayback:false` + `requiresSlowPlayback:true`.
+  No new verb.
 - **Text alignment** (`macroStringMorph2Alignments`): the converse — a StringMorph2 LARGER than its text doesn't grow it
   either (`fittingSpecWhenBoundsTooLarge` defaults to `FLOAT`); the text floats per `horizontalAlignment` (default LEFT)
   and `verticalAlignment` (default TOP). Drive `str.alignLeft()/alignCenter()/alignRight()` and
