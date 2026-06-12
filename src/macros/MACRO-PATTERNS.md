@@ -1077,10 +1077,11 @@ assertion a recapture after a regression silently stores two different hashes an
   again, so build the fixture content BIGGER than the viewport; pans CLAMP at the content edge — drag TOWARD the unseen
   overflow or nothing visibly happens. Set the flags directly (the recording's inspector-eval route is covered ground).
   DETERMINISM — three cadence couplings live in the drag-to-scroll step: (1) POST-RELEASE MOMENTUM (a per-frame glide,
-  friction 0.8 on the last frame's hand delta until <0.5px; its DISTANCE is cadence-dependent) and the `Date.now()`-driven
-  edge auto-scroll — both suppressed under `Automator.animationsPacingControl`, and live glides register in
-  `world.wdgtsWithOngoingScrollMomentum`, which gates the macro pump's `noInputsOngoing`/`readyForMacroScreenshot` (never
-  capture while momentum settles); (2) RELEASE TRUNCATION — the step samples the hand per FRAME, so the pointer-path tail
+  friction 0.8 on the last frame's hand delta until <0.5px; its DISTANCE is cadence-dependent) — suppressed under
+  `Automator.animationsPacingControl`, and live glides register in `world.wdgtsWithOngoingScrollMomentum`, which gates
+  the macro pump's `noInputsOngoing`/`readyForMacroScreenshot` (never capture while momentum settles). The `Date.now()`-
+  driven EDGE AUTO-SCROLL is NOT suppressed — it is load-bearing with its own test (the edge-auto-scroll entry above):
+  its contract is the same saturation rule as (3); (2) RELEASE TRUNCATION — the step samples the hand per FRAME, so the pointer-path tail
   that plays in the mouse-up's frame was never scrolled; a final FLUSH in the step's release branch now makes the held-drag
   total exactly release − press; (3) MID-RANGE PATH-DEPENDENCE — `scrollX`/`scrollY` clamp against the PREVIOUS frame's
   contents union while `adjustContentsBounds` re-derives it each frame, so a mid-range pan endpoint shifts a few pixels with

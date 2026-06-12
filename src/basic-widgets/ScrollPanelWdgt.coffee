@@ -502,14 +502,15 @@ class ScrollPanelWdgt extends PanelWdgt
     super
   
   startAutoScrolling: ->
-    # the edge auto-scroll while float-dragging is WALL-CLOCK driven (the
-    # Date.now() trigger threshold below plus per-frame increments), so under
-    # the test harness's animations pacing control it is suppressed for
-    # determinism — same reasoning as the momentum glide in mouseDownLeft.
-    if Automator? and
-      Automator.animationsPacingControl and
-      Automator.state != Automator.IDLE
-        return nil
+    # The edge auto-scroll is wall-clock driven (the Date.now() settle below
+    # plus per-frame increments), but unlike the momentum glide in
+    # mouseDownLeft it is NOT suppressed under the test harness's pacing
+    # control: it is a load-bearing interaction with its own SystemTest
+    # (macroListMorphAutoScrollsNearDraggedEdge). Its determinism contract is
+    # SATURATION instead — a macro holds the drag in the edge band long
+    # enough that the scroll CLAMPS, so the screenshotted endpoint is
+    # frame-cadence-independent even though the path there isn't (see the
+    # edge-auto-scroll entry in src/macros/MACRO-PATTERNS.md).
     inset = WorldMorph.preferencesAndSettings.scrollBarsThickness * 3
     if @isOrphan() then return nil
     hand = world.hand
