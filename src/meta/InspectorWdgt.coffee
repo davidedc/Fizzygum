@@ -1,4 +1,4 @@
-class InspectorMorph2 extends Widget
+class InspectorWdgt extends Widget
 
   target: nil
   currentProperty: nil
@@ -331,7 +331,7 @@ class InspectorMorph2 extends Widget
     @add @showOwnPropsOnlyToggle
 
   openClassInspector: (ignored,ignored2,className) ->
-    classInspector = new ClassInspectorMorph window[className].prototype
+    classInspector = new ClassInspectorWdgt window[className].prototype
     wm = new WindowWdgt nil, nil, classInspector
     wm.setExtent new Point 560, 410
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
@@ -535,7 +535,7 @@ class InspectorMorph2 extends Widget
   notifyInstancesOfSourceChange: (propertiesArray)->
     @target.sourceChanged()
   
-  #InspectorMorph2 editing ops:
+  #InspectorWdgt editing ops:
   save: ->
     if !@list.selected? then return
     txt = @detail.contents.children[0].text.toString()

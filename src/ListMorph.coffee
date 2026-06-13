@@ -40,7 +40,7 @@ class ListMorph extends ScrollPanelWdgt
     #    If no condition is met, the default format (color black, non-bold,
     #    non-italic) will be assigned.
     #    
-    #    An example of how to use formats can be found in the InspectorMorph's
+    #    An example of how to use formats can be found in the InspectorWdgt's
     #    "markOwnProperties" mechanism.
     #
     #debugger

@@ -1,4 +1,4 @@
-class ClassInspectorMorph extends InspectorMorph2
+class ClassInspectorWdgt extends InspectorWdgt
 
   notifyInstancesOfSourceChange: (propertiesArray)->
     @target.constructor.class.notifyInstancesOfSourceChange propertiesArray

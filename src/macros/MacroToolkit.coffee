@@ -776,7 +776,7 @@ class MacroToolkit
     [vBarHandleCenter, vBarHandleCenter.translateBy new Point(0,handleCenterOffset)]
 
   bringListItemFromTopInspectorInView_InputEvents: (listItemString) ->
-    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
+    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorWdgt
     list = inspectorNaked.list
     elements = list.elements
 
@@ -788,7 +788,7 @@ class MacroToolkit
     @syntheticEventsMouseMovePressDragRelease_InputEvents vBarCenterFromHere, vBarCenterToHere
 
   clickOnListItemFromTopInspector_InputEvents: (listItemString, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
+    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorWdgt
 
     list = inspectorNaked.list
 
@@ -803,7 +803,7 @@ class MacroToolkit
 
 
   clickOnCodeBoxFromTopInspectorAtCodeString_InputEvents: (codeString, occurrenceNumber = 1, after = true,  milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
+    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorWdgt
 
     slotCoords = inspectorNaked.textMorph.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
 
@@ -812,12 +812,12 @@ class MacroToolkit
     @moveToAndClick_InputEvents clickPosition, "left button", milliseconds, startTime
 
   clickOnSaveButtonFromTopInspector_InputEvents: (milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
+    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorWdgt
     saveButton = inspectorNaked.saveButton
     @moveToAndClick_InputEvents saveButton, "left button", milliseconds, startTime
 
   bringcodeStringFromTopInspectorInView_InputEvents: (codeString, occurrenceNumber = 1, after = true) ->
-    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorMorph2
+    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorWdgt
 
     slotCoords = inspectorNaked.textMorph.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
 

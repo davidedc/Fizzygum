@@ -2848,18 +2848,23 @@ class Widget extends TreeNode
     @spawnInspector @
 
   spawnInspector: (inspectee) ->
-    inspector = new InspectorMorph inspectee
-    inspector.fullRawMoveTo world.hand.position()
-    inspector.fullRawMoveWithin world
-    world.add inspector
-    inspector.changed()
+    # the InspectorWdgt is built to live inside a window (it fills the window's
+    # content area and the window provides the chrome + resizer); opening it
+    # "naked" leaves its panes badly cramped. So every inspect path is windowed
+    # (same presentation as spawnInspector2 / the "dev -> inspect" path).
+    inspector = new InspectorWdgt inspectee
+    wm = new WindowWdgt nil, nil, inspector
+    wm.setExtent new Point 560, 410
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    world.add wm
   # this part is excluded from the fizzygum homepage build <<«
 
   inspect2: ->
     @spawnInspector2 @
 
   spawnInspector2: (inspectee) ->
-    inspector = new InspectorMorph2 inspectee
+    inspector = new InspectorWdgt inspectee
     wm = new WindowWdgt nil, nil, inspector
     wm.setExtent new Point 560, 410
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100

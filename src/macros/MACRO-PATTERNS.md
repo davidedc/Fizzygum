@@ -336,27 +336,23 @@ assertion a recapture after a regression silently stores two different hashes an
   → @parent.parent.scrollCaretIntoView`, `CaretMorph.coffee:147-148`), so once the text outgrows the pane the view tracks the
   typed TAIL line by line while `adjustScrollBars` materialises the V-bar (button at the BOTTOM). The counter-beat:
   `@dragSliderButtonToFraction_InputEvents pane.vBar, [0.5, 0.05]` drags the scrollbar button back to the top — the first
-  lines return WITHOUT recalling the caret (scrolling alone never does). Fixture: the OLD inspector's ~3-line WORK pane
-  (`insp.work`, an `isTextLineWrapping` ScrollPanelWdgt holding an empty editable old TextMorph, `InspectorMorph.coffee:176-186`).
-  GOTCHA (the empty-TextMorph click crash): focus the field with a DIRECT `workText.edit()` (`world.edit`, the button-label
-  idiom) — NEVER a click. The old `TextMorph.slotAt` has no row/col guard (`TextMorph.coffee:275-285`): on an EMPTY text any
-  click-x past the left edge walks `lines[row][col] = undefined` into `measureText`, and SWCanvas's measureText reads
-  `.length` of its argument → TypeError (native canvas coerces undefined to a string and survives — an SWCanvas-ONLY crash).
-  That crash is exactly why the recorded original sat on the `SWCanvasBrokenTests` list (native refs only); the edit()-focused
-  macro RESTORES SWCanvas coverage. Corollary: a deterministic crash SELF-VERIFIES — an Error-log window captured into the
-  references still "passes" capture+verify, so only the EYEBALL catches it. No new verb.
-- **Wrapping text FIELDS re-wrap on every container resize** (`macroWrappingTextFieldResizesOK`): the inspector's detail +
-  work panes are WRAPPING TEXT FIELDS — `ScrollPanelWdgt`s with `isTextLineWrapping = true`, each holding an (initially
-  empty, editable) old `TextMorph` (`InspectorMorph.coffee:163-186`). Text typed into them wraps to the pane width, and EVERY
-  inspector resize re-wraps it: a drag of the inspector's own ctor resizer → `InspectorMorph.doLayout` resizes the panes →
-  `ScrollPanelWdgt.rawSetExtent` (`ScrollPanelWdgt.coffee:222-233`) → `adjustContentsBounds` re-fits each contained TextMorph
-  to the new pane width (`rawSetWidth` + `maxTextWidth`, `:258-267` — width imposed by the pane, height following the
-  content) → `adjustScrollBars` shows the V-bar exactly when the re-wrapped text no longer fits. Probe the rule with a
-  silhouette progression (wide → taller-at-same-width → narrow+tall → tiny): WIDTH changes re-break the lines; a pure HEIGHT
-  change keeps the line breaks identical (wrap depends on width only) and just adds white space. After the edit dies, panes
-  sit scrolled to the TOP (no caret holds the tail in view). Focus the empty fields with `text.edit()` — the empty-TextMorph
-  click crash above. Distinct from `macroTextRelayoutsCorrectlyOnResize` (a STANDALONE old TextMorph, handles, no scroll
-  panel) and `macroScrollBarsTrackContentChange` (content changes, not container resizes). No new verb.
+  lines return WITHOUT recalling the caret (scrolling alone never does). Fixture: the `InspectorWdgt`'s editable `@detail` pane
+  (a `ScrollPanelWdgt` holding a `SimplePlainTextWdgt`). The detail is editable only AFTER a list-row is selected, so select any
+  property (first row by position), then clear it (`detailText.setText ""`) and focus it with a DIRECT `detailText.edit()`
+  (`world.edit`, the established idiom for focusing a pane without a click); type ~18 short lines (the detail is taller than the
+  old ~3-line work pane, so more lines are needed to overflow it). (Re-authored from the old-inspector work-pane version; the
+  recorded original sat on `SWCanvasBrokenTests` because clicking an EMPTY old `TextMorph` crashed SWCanvas's `measureText` —
+  the new `TextMorph2` detail focused via `edit()` avoids that and RESTORES SWCanvas coverage.) No new verb.
+- **A wrapping text FIELD re-wraps on every container resize** (`macroWrappingTextFieldResizesOK`): the `InspectorWdgt`'s editable
+  `@detail` pane is a `ScrollPanelWdgt` holding a `SimplePlainTextWdgt` (a `TextMorph2`). It defaults to NON-wrapping (long lines
+  scroll horizontally); call `detailText.softWrapOn()` (sets the detail scroll panel's `isTextLineWrapping = true`,
+  `SimplePlainTextWdgt.coffee:103-109` — the method the "soft wrap" menu item calls; driven directly because a synthetic right-click
+  on a `TextMorph2` can't open that menu) so the typed text wraps to the pane width. Then EVERY resize of the inspector WINDOW
+  re-wraps it: drag the window resizer → `InspectorWdgt.doLayout` resizes the pane → `ScrollPanelWdgt.adjustContentsBounds` re-fits
+  the wrapping text to the new pane width → `adjustScrollBars` shows the V-bar when it no longer fits. Probe with a wide → narrow+tall
+  progression: WIDTH changes re-break the lines. To type into the detail it must first be EDITABLE — select a property to arm it,
+  clear it (`setText ""`) and focus with `detailText.edit()`; drop the caret with `world.stopEditing()` before the shots. (Re-authored
+  from the old two-pane naked version: the new inspector has ONE editable detail pane and needs `softWrapOn`.) No new verb.
 - **Evaluation menu reflects text selection** (`macroEvaluationMenuReflectsTextSelection`): a TextMorph2's right-click menu
   depends on what is selected. `setReceiver obj` (`TextMorph2.coffee:657-659`) installs `evaluationMenu` as the widget's
   `overridingContextMenu` (so `Widget.buildContextMenu` returns it directly); that menu prepends "do all"/"select all" when
@@ -839,9 +835,9 @@ assertion a recapture after a regression silently stores two different hashes an
   `pickUp` a rectangle (don't drop), then `@syntheticEventsMouseMove_InputEvents (a point in an edge band), "no button", …` and
   yield generously. MUST hold long enough that the `autoScroll` 500ms `Date.now()` settle elapses and the scroll CLAMPS — via a
   NON-scaled numeric `yield N` (real-time settle, speed-independent), so it's deterministic at every speed and needs no speed metadata.
-- **Unplug an inspector scrollbar + the duplicate ASYMMETRY** (`macroInspectorScrollbarUnplugged`): open the OLD small
-  `InspectorMorph` via the DIRECT "inspect" item (NOT `bringUpInspector_…_Macro`'s "dev → inspect", which opens InspectorMorph2).
-  Capture `scrollbar1 = inspector.list.vBar` BEFORE detaching (the list doesn't rebuild it). Right-click its knob → hierarchy
+- **Unplug an inspector scrollbar + the duplicate ASYMMETRY** (`macroInspectorScrollbarUnplugged`): inspect a string
+  (`clickMenuItemOfWidget_InputEvents_Macro str, "inspect"`) → an `InspectorWdgt` window; park the window left so the strip
+  to its right is clear for the detached scrollbars. Capture `scrollbar1 = inspector.list.vBar` BEFORE detaching (the list doesn't rebuild it). Right-click its knob → hierarchy
   "a SliderMorph" → "pick up" → carry + drop CLEAR. It STILL drives the list: `@dragSliderButtonToFraction_InputEvents
   scrollbar1, [0.5, fy]` (`detachesWhenDragged` is false when the button's parent is a SliderMorph). DUPLICATE it ("duplicate"
   instead of "pick up"); `fullCopy` copies the `target` reference so the copy ALSO drives the list. ASYMMETRY: dragging the copy
@@ -854,7 +850,7 @@ assertion a recapture after a regression silently stores two different hashes an
   button's visual state on release. So a pure-sideways press-drag-release
   (`@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf scrollbar.button, [0.5,0.5]), (new Point
   (x-80), sameY)`) is a COMPLETE no-op — capture before/after shots and their byte-equality (same reference dataHash)
-  IS the assertion — while a diagonal drag scrolls by its vertical component only. Fixture: the old-inspector
+  IS the assertion — while a diagonal drag scrolls by its vertical component only. Fixture: the inspector window's list
   scrollbar (`inspector.list.vBar`, the unplug entry above). PARK the pointer at one fixed empty-desktop spot before
   EVERY shot (a no-button `@syntheticEventsMouseMove_InputEvents`) so hover state can never break the equality. No
   new verb.
@@ -988,16 +984,17 @@ assertion a recapture after a regression silently stores two different hashes an
   menu (locate it via `world.topWdgtSuchThat (w) -> (w instanceof MenuItemMorph) and (w.labelString == "demo ➜")` — the only menu
   item left once the menus close), then `@moveToItemOfTopMenuAndClick_InputEvents "rectangle"` makes a rectangle that rides the
   hand → drop on the world. image_2 = the detached item + the rectangle it produced (reproducing the recording's full arc).
-- **Duplicate an INSPECTOR → an independent second inspector (independent close)** (`macroDuplicatedInspectorsCloseIndependently`): the
-  duplication trio's third case (after a plain widget and a menu item). The OLD `InspectorMorph` (a BoxMorph spawned by the
-  context-menu top-level "inspect" — `clickMenuItemOfWidget_InputEvents_Macro string, "inspect"`; NOT the "dev ➜ → inspect"
-  `InspectorMorph2`; demo string is the OLD `StringMorph`, so NO right-click drift) does not block duplication: right-click it → its
-  child pane's ANCESTOR hierarchy menu → `"a InspectorMorph ➜"` → `"duplicate"` (= `fullCopy().pickUp()`, a DEEP copy) → carry +
-  `@syntheticEventsMouseClick_InputEvents()` to drop. The copy is a fully INDEPENDENT live inspector. KEY: an InspectorMorph is NOT a
-  `WindowWdgt`, so `@closeWindow_InputEvents` does NOT apply — close it via its OWN `@moveToAndClick_InputEvents inspector.buttonClose`
-  (a "close" TriggerMorph, `InspectorMorph.coffee:15`). Disambiguate the two by object identity — `insp2 = world.topWdgtSuchThat (w) ->
-  (w instanceof InspectorMorph) and w != insp1` — and lay them out with `fullMoveTo` for a clean shot. Closing one leaves the other
-  untouched (two → one → only the string), proving duplicated inspectors have independent lifecycles.
+- **Duplicate an INSPECTOR WINDOW → an independent second inspector (independent close)** (`macroDuplicatedInspectorsCloseIndependently`): the
+  duplication trio's third case (after a plain widget and a menu item). The inspector is always windowed — inspect a string
+  (`clickMenuItemOfWidget_InputEvents_Macro string, "inspect"`; demo string is the OLD `StringMorph`, so NO right-click drift) → an
+  `InspectorWdgt` in a `WindowWdgt`; find the window with `@findTopWidgetByClassNameOrClass WindowWdgt`. A window does not block
+  duplication: right-click its TITLE bar → ancestor hierarchy menu → `"a Window ➜"` → `"duplicate"` (= `fullCopy().pickUp()`, a DEEP copy)
+  → carry + `@syntheticEventsMouseClick_InputEvents()` to drop (a test-local `duplicateWindowedWidget_InputEvents_Macro` DRYs this).
+  The copy is a fully INDEPENDENT live inspector window. Close each via its WINDOW'S own button — `@closeWindow_InputEvents win` (the
+  inspector is now a `WindowWdgt`, so this DOES apply — the old naked-`buttonClose` path is gone). Disambiguate by object identity —
+  `win2 = (world.children.filter (w) -> (w instanceof WindowWdgt) and w isnt win1)[0]`. The two 560×410 windows don't fit fully side by
+  side in a 960-wide canvas — cascade them (offset, overlapping) with both close buttons visible. Closing one leaves the other untouched
+  (two → one → only the string), proving duplicated inspector windows have independent lifecycles.
 - **Locking** (`macroLockToDesktopPreventsDrag` / `macroLockedCompositeWidgetPreventsDrag`):
   `@moveToItemOfMenuAndClick_InputEvents menu, "lock to desktop"` then later `"unlock"` (substring) — the "lock to/unlock from
   <desktop|panel>" items appear only when the morph's parent is a PanelWdgt (the world is one). A locked morph's drag grabs its
@@ -1015,34 +1012,27 @@ assertion a recapture after a regression silently stores two different hashes an
   CLIPPED at the doc edge (a scroll panel crops its contents), so a visible right-side OVERHANG is unambiguous proof the rejected
   box is a world child painted ON TOP, not clipped document content. (Without the overhang, a box dropped at the doc centre reads
   ambiguously as "maybe inside".)
-- **An inspector REJECTS a drop on ANY of its three panes** (`macroInspectorRejectsDrops`): the inspector counterpart of the contents-lock
-  reject above. An OLD `InspectorMorph` (a BoxMorph) overrides neither `wantsDropOf` nor `_acceptsDrops`, so the inherited
-  `Widget._acceptsDrops=false` (`Widget.coffee:104`) applies, AND each of its three panes — `@list` (left), `@detail` (upper-right),
-  `@work` (lower-right) — additionally calls `disableDrops()` (`InspectorMorph.coffee:143/164/177`). **A drop is resolved by the POINTER's
-  position over the destination**, so carry a second inspector and release it with the pointer over EACH pane in turn —
-  `insp1.detail.center()`, `insp1.work.center()`, `insp1.list.center()` (the recording's pane order). Every time
-  `ActivePointerWdgt.dropTargetFor` finds the pane refuses, walks PAST the inspector (also refuses) to the world (`WorldMorph extends
-  PanelWdgt`, `_acceptsDrops:true`), and `world.add` re-homes the dragged inspector as a world SIBLING painted FULL-SIZE on top.
-  **Full-size-on-top IS the per-shot visible proof of non-nesting** — a widget that had truly nested into a pane would be CLIPPED inside
-  that clipping scroll/list pane; a rejected one stays full-size and unclipped. Open two inspectors with
-  `clickMenuItemOfWidget_InputEvents_Macro s, "inspect"` twice on an OLD `new StringMorph` (move insp1 clear of the string before the
-  second right-click); disambiguate by identity (`w instanceof InspectorMorph and w != insp1`). GRAB an inspector by its title bar
-  `insp2.label.center()` (a NON-editable TextMorph) — its CENTRE is the editable detail/work text, which a press would edit instead;
-  carry+release with `@syntheticEventsMouseMovePressDragRelease_InputEvents insp2.label.center(), insp1.<pane>.center()`. image_1 two
-  apart → image_2/3/4 insp2 dropped over the detail/work/list pane in turn, each landing full-size on top — none of the three accept it.
-- **Disassemble an inspector — pick its PARTS out onto the desktop** (`macroPickingUpPartsFromInspector`): the OLD `InspectorMorph` is built
-  from independent part widgets (a left `@list`, an upper `@detail` + lower `@work` ScrollPanelWdgt, a footer of `@buttonSubset/buttonInspect/
-  buttonEdit/buttonClose` TriggerMorphs — `InspectorMorph.coffee:135-214`), and each part's hierarchy-menu **"pick up" detaches the REAL part**:
-  `Widget.pickUp` (`Widget.coffee:2705`) runs `world.hand.grab @` on the receiver itself (contrast "duplicate" = `fullCopy().pickUp()`, which
-  grabs a COPY). So dropping a picked-up part on the bare desktop leaves a standalone widget and a GAP in the gutted inspector. Locate each part
-  by its STRUCTURAL ref (`insp.detail`/`insp.work`/`insp.buttonClose`/`insp.buttonEdit` — the digest's by-meaning «Panel» is ambiguous across
-  the 3 panes), captured UP FRONT (the inspector re-lays-out as parts leave). A per-test helper (in `extraSubroutineSources`) DRYs the gesture:
-  right-click the part (`@moveToAndClickAtFractionOf_InputEvents part, [0.5,0.5], "right button"`) → its hierarchy submenu BY MEANING
-  (`@moveToItemStartingWithOfMenuAndClick_InputEvents theMenu, "a ScrollPanel"|"a TriggerMorph"`) → `@moveToItemOfMenuAndClick_InputEvents
-  (@getMostRecentlyOpenedMenu()), "pick up"` → carry on a no-button move → drop with `@syntheticEventsMouseClick_InputEvents()` (a mouse-DOWN
-  releases a float-dragged morph). GOTCHA: the OLD InspectorMorph has NO `.closeButton` (it is a BoxMorph, not a WindowWdgt — `closeWindow_InputEvents`
-  would crash); "pick up" lives in the morph's HIERARCHY submenu, not top-level; the whole menu needs `world.isDevMode` (true under the harness).
-  First inspector-disassembly test. No new verb.
+- **An inspector pane REJECTS a drop** (`macroInspectorRejectsDrops`): the inspector counterpart of the contents-lock reject above. The
+  `InspectorWdgt`'s two content panes — `@list` (left) and `@detail` (right) — each call `disableDrops()` (`InspectorWdgt.coffee:245,266-267`),
+  so neither pane adopts a dropped widget. **A drop is resolved by the POINTER's position over the destination**, so drag a box and release it
+  with the pointer over each pane in turn. Every time `ActivePointerWdgt.dropTargetFor` finds the pane refuses, walks PAST the inspector and its
+  window (also refusing) to the world (`WorldMorph extends PanelWdgt`, `_acceptsDrops:true`), and `world.add` re-homes the box as a world SIBLING
+  painted FULL-SIZE on top. **Make non-nesting unambiguous by dropping the box STRADDLING a pane's edge** (release at `inspector.detail.right()-8`
+  / `inspector.list.left()+8`): a world sibling shows WHOLE (overhanging the pane), whereas a widget truly nested into the pane would be CLIPPED at
+  its bounds (the panes are clipping scroll/list morphs). (Re-authored from the original two-naked-inspectors version: two 560×410 windows don't
+  fit side by side, so a single inspector window + a dropped box shows the same pane-rejects-drops law more cleanly; the old `@work` pane is gone.)
+  image_1 inspector + box apart → image_2/3 box dropped straddling the detail/list pane edge, each landing full-size + overhanging.
+- **Disassemble an inspector — pick its PANES out onto the desktop** (`macroPickingUpPartsFromInspector`): the `InspectorWdgt` is built from
+  independent part widgets (a left `@list`, a right `@detail` ScrollPanelWdgt, plus hierarchy buttons, toggles and an add/rename/remove/save
+  footer). `Widget.pickUp` (`world.hand.grab @` on the receiver itself — what the part's hierarchy-menu "pick up" item calls; contrast "duplicate"
+  = `fullCopy().pickUp()`, which grabs a COPY) detaches the REAL part. So dropping a picked-up part on the bare desktop leaves a standalone widget
+  and a GAP in the gutted inspector, which re-flows its REMAINING parts (`doLayout` guards each with `if part.parent == @`). Pull the two big
+  PANES (`insp.detail`, `insp.list`, captured UP FRONT — the inspector re-lays-out as parts leave); a per-test helper calls `part.pickUp()`
+  directly (the documented equivalent of the menu's "pick up" — driven directly because a synthetic right-click on the `TextMorph2`-based detail
+  pane can't open that submenu in a macro), then carries on a no-button move and drops with `@syntheticEventsMouseClick_InputEvents()` (a mouse-DOWN
+  releases a float-dragged morph). GOTCHA: do NOT pull the FOOTER BUTTONS — picking a button up makes the inspector rebuild its children, so it
+  leaves no clean gap; the two panes show the disassembly cleanly. (Re-authored from the old naked-inspector version, whose `@work` pane and
+  `buttonClose`/`buttonEdit` no longer exist.) First inspector-disassembly test. No new verb.
 - **Dropped widgets keep their effective SIZE in a document** (`macroDocumentPreservesDroppedWidgetSizes`): the SimpleDocument does NOT
   normalise the size of widgets dropped into it — each keeps the effective extent it had when dropped. On a drop,
   `VerticalStackLayoutSpec.rememberInitialDimensions` (`VerticalStackLayoutSpec.coffee:18`) stores the widget's OWN width
@@ -1054,14 +1044,13 @@ assertion a recapture after a regression silently stores two different hashes an
   (~content − padding − scrollbar) so none is capped. A clean directly-built fixture sidesteps the recording's ambiguous
   duplicated-heart targets. The size-preserving sibling of the flow-in (`macroIconDroppedIntoDocumentFlows`) and reject
   (`macroLockedDocumentRejectsDrop`) document-drop facets.
-- **…but a DOC RESIZE re-flows the hosted content to the new width — both ways** (`macroSimpleDocumentHandlesOldInspector`): the
-  other half of the document's layout contract. A deferred-layout composite (the OLD InspectorMorph, dragged in by its TITLE — a
-  per-test `dragInspectorByTitleTo` helper; pressing a pane could pick the pane out) is hosted at its own size (oversized → CLIPPED
-  at the doc edge), but resizing the DOCUMENT via its resize/move mode re-lays-out the in-document inspector to the FULL new doc
-  width on a widen and squeezes it on a narrow; on exit it keeps the doc-imposed shape, and its own ctor resizer still works after
-  every round-trip (the deferred-layout owner-note beat). GOTCHA: while doc-mode is on, TWO `resizeBothDimensionsHandle`s are
-  alive (the mode corner + the hosted inspector's ctor resizer, both in the doc subtree) — scope the lookup
-  (`doc.topWdgtSuchThat`); the mode handles are created last and frontmost, so it returns the mode corner.
+- **A document HOSTS the inspector as flowing content** (`macroSimpleDocumentHandlesOldInspector`): a `SimpleDocumentScrollPanelWdgt` can host
+  the inspector window. KEY: the inspector is an EXTERNAL `WindowWdgt`, which REFUSES to nest (`rejectsBeingDropped = !@internal` forces a drop to
+  the world) — so first `win.makeInternal()` (the genuine internal/external toggle affordance, `WindowWdgt.coffee:106-109`). An INTERNAL window
+  dropped into the doc (drag it by its TITLE — a per-test `dragWindowByTitleTo` helper; pressing a pane would grab the pane) becomes flowing content
+  below the default text, kept at its own size and CLIPPED at the doc's right edge if oversized; dragged back out by its title it returns to a
+  free-floating window. (Re-authored from the old naked-inspector version: the naked inspector was a plain nestable widget, so the windowed one
+  needs `makeInternal`; the original's ctor-resizer-grows and doc-resize-reflow beats were dropped — the embed/release is the core law.)
 - **The constraining stack CAPS oversized drops to its full width — it never stretches up**
   (`macroConstrainingStackForcesDroppedWidgetsToFullWidth`): `SimpleVerticalStackPanelWdgt`'s default
   (`constrainContentWidth = true`) runs `rawSetWidthSizeHeightAccordingly(getWidthInStack())` on every child, and
@@ -1123,50 +1112,39 @@ assertion a recapture after a regression silently stores two different hashes an
   like any plain morph: it relocates, resizes nothing, and the rest of the desktop is untouched. GOTCHA: the release leaves
   the pointer ON the dropped handle, whose `mouseEnter` (`:233`) renders it in its bluish HIGHLIGHTED state — park the pointer
   on the empty desktop (a no-button move) before the screenshot to show the NORMAL white grip. No new verb.
-- **A pristine InspectorMorph resizes via its OWN built-in resizer** (`macroResizingPristineInspector`): an OLD
-  `InspectorMorph` is a BoxMorph (not a WindowWdgt) that SHIPS its own bottom-right resizer, built in its ctor —
-  `@resizer = new HandleMorph @` (`InspectorMorph.coffee:217`, default type `"resizeBothDimensionsHandle"`). So you
-  resize it by dragging that handle DIRECTLY: `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest`
-  finds it via `topWdgtSuchThat instanceof HandleMorph` (it is the ONLY handle on screen — NO resize/move-mode menu
-  needed, unlike `macroCanMoveAndResizeColorPaletteMorph`). `HandleMorph.nonFloatDragging → @target.setExtent`
-  (`:212-221`) resizes the inspector and `InspectorMorph.doLayout` (`:344-446`) re-flows the three panes
-  (`@list`/`@detail`/`@work`) + footer — the visible proof. Fixture = the StringMorph-inspect idiom
-  (`clickMenuItemOfWidget_InputEvents_Macro s, "inspect"` → OLD InspectorMorph) but DO NOT park or pre-size it: the
-  "pristine / unmoved & unresized" base case is the whole point (this is the one inspector macro that does NOT
-  `insp.fullMoveTo`). SHRINK (compute the target from `insp.topLeft()`) so it stays in bounds and doesn't extend the
-  world's scrollable extent (the SWCanvas systemInfoHash). Distinct from every other inspector macro (unplug /
-  duplicate / reject-drop / eval / pick-up-parts / property-edit) — none resizes the inspector itself. No new verb.
-- **A gutted inspector still resizes — and its detached parts still WORK** (`macroInspectorResizingOKEvenWhenTakenApart`):
-  the COMPOSITE of the pristine-resize entry above and the pick-up-parts entry — take an OLD `InspectorMorph` apart (close +
-  inspect buttons, detail pane, property list picked out to the desktop), then resize the gutted body AND the detached list,
-  and prove the wiring survives. Three mechanics: (1) `InspectorMorph.doLayout` lays out each named part ONLY behind an
-  `if part.parent == @` guard (`InspectorMorph.coffee:372,391,399,405,414,423,430,438`) — a gutted inspector re-flows just
-  its REMAINING parts, gaps stay gaps, nothing crashes; (2) the list→detail wiring runs on OBJECT REFERENCES — the list's
-  action `"selectionFromList"` fills `@detail` wherever it lives (`:323-340`), so a DETACHED list still drives the DETACHED
-  detail pane, before and after resizes; (3) `buttonClose`'s action `"close"` (`:210-214`) closes the body from anywhere —
-  the detached close button still kills the gutted inspector, leaving the other detached parts standing. THE HANDLE Z-ORDER
-  GOTCHA (cost a capture): resize/move-mode handles attach to their TARGET (`HandleMorph.makeHandleSolidWithParentMorph`,
-  `HandleMorph.coffee:32`), NOT to the world, and EVERY handle drag runs `@target.bringToForeground()` (`:208-210`) — so
-  after the body's own resizer has been dragged, the BODY sits ABOVE the detached list in the world's z-order and
-  `dragResizeMoveHandleTo`'s global topmost-first type lookup grabs (and drags!) the BODY's resizer instead of the list's
-  mode handle. Scope the lookup to the target's subtree: `cornerHandle = theList.topWdgtSuchThat (m) -> (m instanceof
-  HandleMorph) and m.type == "resizeBothDimensionsHandle"` + `@syntheticEventsMouseMovePressDragRelease_InputEvents
-  cornerHandle.center(), dest`. (The body-resizer drags may keep the global lookup — run them only while no mode is active,
-  when the ctor resizer is the only handle alive.) Click LIST ROWS near their LEFT edge (`row.topLeft() + (10,3)` — a row
-  TextMorph spans the content's full width, which a narrowed list CLIPS, so a centre-click can miss the visible pane;
-  the `clickOnListItemFromTopInspector` idiom). No new verb.
+- **A pristine inspector window resizes via its resizer** (`macroResizingPristineInspector`): the `InspectorWdgt` is always
+  presented inside a `WindowWdgt`, and the WINDOW ships the bottom-right resizer. Inspect a string
+  (`bringUpInspector_InputEvents_Macro s` → an `InspectorWdgt` window), park it near the top-left (the 560×410 window only just
+  fits the 960×440 canvas, so the resizer stays on-canvas), then SHRINK it via `@dragWindowResizerTo_InputEvents win, dest`
+  (compute `dest` off `win.topLeft()` so it stays in bounds and doesn't extend the world's scrollable extent — the SWCanvas
+  systemInfoHash). The drag runs the window resize → `adjustContentsBounds` → `InspectorWdgt.doLayout` re-flows its two panes
+  (`@list`/`@detail`) + the hierarchy buttons, toggles and add/rename/remove/save footer — the visible proof. Move the pointer
+  CLEAR before the post-resize shot (the drag ends on the window — a hover highlight would otherwise vary). (Re-authored from the
+  old naked-inspector version, which dragged the inspector's OWN ctor resizer.) No new verb.
+- **A gutted inspector still resizes — and its detached panes still WORK** (`macroInspectorResizingOKEvenWhenTakenApart`):
+  the COMPOSITE of the pristine-resize entry above and the pick-up-parts entry — pull the `InspectorWdgt`'s two PANES
+  (`@detail`, `@list`, via `part.pickUp()`) out onto the desktop, then resize the gutted WINDOW body, and prove the wiring
+  survives. Two mechanics: (1) `InspectorWdgt.doLayout` lays out each part ONLY behind an `if part.parent == @` guard — a
+  gutted inspector re-flows just its REMAINING parts, gaps stay gaps, nothing crashes; (2) the list→detail wiring runs on
+  OBJECT REFERENCES — the list's action `"selectionFromList"` fills `@detail.textWdgt` wherever it lives, so a DETACHED list
+  still drives the DETACHED detail pane, before AND after the resize. Resize the gutted body with
+  `@dragWindowResizerTo_InputEvents win, dest`. Select rows in the DETACHED list by POSITION (`row.topLeft() + (12,8)` near
+  the top) — the inspector hides inherited props so a specific name isn't reliably present; click two different rows and
+  watch the detached detail show two different values. Move the pointer CLEAR before each shot. (Re-authored from the old
+  naked version, whose close/inspect footer buttons and `@work` pane are gone; closing is via the WINDOW, not a detached
+  button.) No new verb.
 - **Resizing a button via its handle does NOT trigger it** (`macroResizingButtonDoesntCauseItToClick`): dragging a widget's resize
   handle runs `HandleMorph.nonFloatDragging → @target.setExtent`, never a click — `HandleMorph.mouseClickLeft` is EMPTY and its
   `mouseDownLeft` doesn't propagate ("otherwise the handle on a button will trigger the button when resizing"), so resizing a
-  TriggerMorph cannot fire it. Fixture with a VISIBLE action: inspect an OLD StringMorph → OLD `InspectorMorph` (a BoxMorph;
-  `insp.buttonClose` is the footer "close" TriggerMorph whose action closes the inspector), pick the close button onto the desktop
-  (the PickingUpParts helper). Enter resize/move mode THROUGH THE MENU (manual mode throughout): a DETACHED widget's right-click opens an
-  ANCESTOR-HIERARCHY MenuMorph, so navigate `"a TriggerMorph ➜"` → `"resize/move..."` (NOT `clickMenuItemOfWidget … "resize/move..."`,
-  which searches a TOP menu that lacks the item — it's one level down the hierarchy). That adds the 4 resize/move handles; drag the
-  resizeBothDimensions one (`@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest`, selected by type) → inspector STILL
-  open (the negative assertion). GOTCHA: a click on the button WHILE in resize/move mode is CONSUMED by the mode (it never reaches the
-  button), so to fire "close" you must FIRST click an empty part of the desktop to LEAVE the mode (dismissing the handles), THEN click the
-  button → inspector closes (the positive contrast). Fully deterministic at dpr 1 & 2 — an earlier round mistook a CAPTURE-FLOW artifact
+  TriggerMorph cannot fire it. Fixture with a VISIBLE action: a standalone `new SimpleButtonMorph true, box, "hide", "hide the box"`
+  wired to a target box's `hide()`. Give the button a resize handle programmatically (`new HandleMorph button` — the same kind the
+  resize/move menu adds; done directly because a small button offers no usable resize/move menu via synthetic right-click), then GROW
+  it via `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest` (selected by type) → the BOX is STILL visible (the
+  negative assertion: resizing didn't fire `hide`). Then an ordinary `@moveToAndClickAtFractionOf_InputEvents button, [0.5,0.5]` → the
+  box is hidden (the positive contrast). (Re-authored from the old version that picked the inspector's `buttonClose` onto the desktop:
+  the new inspector has no such footer close button, and detaching the WINDOW's close button + clicking it to close the window triggers a
+  SWCanvas "source rectangle outside image bounds" paint fault — a standalone button wired to `box.hide()` tests the exact same behaviour
+  cleanly.) Fully deterministic at dpr 1 & 2 — an earlier round mistook a CAPTURE-FLOW artifact
   for nondeterminism: `--clean --no-build` removes the SOURCE refs but leaves STALE refs in the BUILD, and any image whose fresh (correct)
   render happens to match a stale ref is scored PASS during capture and therefore NOT re-saved — so `--clean` leaves it reference-less and
   verify then reports "no screenshots like this one". Use the capture script's own full flow (rebuild→drop refs, capture, rebuild→publish,
@@ -1552,18 +1530,15 @@ assertion a recapture after a regression silently stores two different hashes an
   INLINE (compile, run with `@`=world, relayout/repaint) — this is what the old recorded `AutomatorEventCommandEvaluateString` command did (that command no longer exists).
   Do NOT write `@evaluateString` (MacroToolkit's own binds `@` to the toolkit). No new verb; no input events, so just `yield
   "waitNoInputsOngoing"` before a screenshot.
-- **Eval in the inspector work-area** (`macroInspectorWorkAreaEvaluatesCoffeeScript`): the (old) `InspectorMorph`'s lower "work" pane is a
-  live CoffeeScript eval bound to the inspected object. Open it via the world menu's top-level **"inspect"** (NOT "dev ➜ → inspect", which
-  opens InspectorMorph2 and a different pane), then reach the editable TextMorph as `inspector.work.contents.children[0]` (built with
-  `ev.setReceiver @target`, `InspectorMorph.coffee:176-186`, which also installs the evaluation menu as the pane's `overridingContextMenu`).
-  PLACE the code with `workArea.setText "@inform 'coffeescript!'"` (do NOT left-click an EMPTY old TextMorph to focus it — `slotAt` measures
-  `@lines[0][col]`, undefined past the end of empty text, `TextMorph.coffee:283`, which throws under SWCanvas and pops an Error-log over the
-  scene; the trap GENERALISES to any click past the END of a line — a short inspector detail value like "1" clicked with the detail +14px
-  idiom dies the same way, so caret into a short text at slot 0: `valueText.topLeft().translateBy new Point 3, 8`, the idiom of
-  `macroDuplicatedInspectorDrivesCopiedTargetOnly`), then `@openMenuOf_InputEvents workArea` → `@moveToItemOfTopMenuAndClick_InputEvents "do all"`: `doAll` selects-all and runs
-  `@receiver.evaluateString @selection()` (`TextMorph.coffee:360-377`), so the snippet runs against the inspected World and pops an `@inform`
-  bubble. The eval-acts-on-the-receiver sibling of `macroEvaluateString` (which calls `world.evaluateString` directly). Single quotes inside
-  the snippet dodge double-quote escaping in the backtick source. No new verb.
+- **Eval a snippet against the inspected object via the CONSOLE** (`macroInspectorWorkAreaEvaluatesCoffeeScript`): the new `InspectorWdgt`
+  has no work/execution pane, but each widget's **"dev → console"** menu opens a `ConsoleWdgt` — an editable code area (`@textMorph`) plus
+  "run selection" / "run all" buttons. **"run all" → `ConsoleWdgt.doAll`** compiles the code area's text and runs it with `@` = the console's
+  target (`ConsoleWdgt.coffee:66-70`) — the direct equivalent of the old inspector work-pane's "do all". So open the console on a string
+  (`clickMenuItemOfWidget_InputEvents_Macro s, "dev ➜"` → `@moveToItemOfTopMenuAndClick_InputEvents "console"`), find it
+  (`@findTopWidgetByClassNameOrClass ConsoleWdgt`), set the code with `consoleWdgt.textMorph.setText "@inform 'coffeescript!'"` (a fixture
+  convenience — the EVAL is driven by the real UI button), then click `consoleWdgt.runAllButton` → the snippet runs against the string and
+  pops an `@inform` bubble. The console run-all sibling of `macroEvaluateString` (which calls `world.evaluateString` directly). Single quotes
+  inside the snippet dodge double-quote escaping in the backtick source. No new verb.
 - **No-op invariants via pixel-identical references** (`macroResizeMoveModeIsLosslessAndReenterable`): to assert "X changes
   NOTHING", screenshot the baseline, do X, screenshot again — SWCanvas + the event queue are deterministic, so the second
   capture comes out with the SAME `dataHash` as the first, and ANY side effect of X breaks the second match. Shipped example:
@@ -1576,11 +1551,16 @@ assertion a recapture after a regression silently stores two different hashes an
 ## The verb-establishing pilots
 
 - **`macroBasicWorldMenuAndBubble`** (from 89 cmds): open the world menu, hover "demo", `yield <ms>` for the help bubble, screenshot.
-- **`macroAddEditSaveRenameRemoveProperty`** (from 1057 cmds, 5 shots): demo-menu a string, inspect it, then add / set-value+save /
-  rename / remove a property via the inspector. INSPECTOR gotchas: context-menu "inspect" opens the OLD `InspectorMorph`; "dev ➜ →
-  inspect" opens `InspectorMorph2` (the `*FromTopInspector*` helpers assume InspectorMorph2). A value/detail pane's text (e.g.
-  "nil") is a `TextMorph` in a scroll-panel, NOT a text-described StringMorph — locate it by structure (`inspector.detail`) + click
-  near its top-left, and `yield ~300` to let a freshly-updated pane lay out before clicking (its `center()` can be undefined).
+- **`macroAddEditSaveRenameRemoveProperty`** (from 1057 cmds, 5 shots): inspect a string → an `InspectorWdgt` window, then add /
+  set-value+save / rename / remove a property via the inspector's DIRECT footer BUTTONS — `addPropertyButton` ("add..." → a "new
+  property name:" prompt), `saveButton` ("save" → `@target.injectProperty selectedName, detailText`), `renamePropertyButton`,
+  `removePropertyButton`. INSPECTOR gotchas: the inspector HIDES inherited props by default and a property like `alpha`/`blanksColor`
+  sorts below the first rows, so SCROLL the list to the row by name before clicking it (a per-test `selectInspectorRow` helper:
+  `@calculateVertBarMovement` + a vBar drag); a value/detail pane's text is a `TextMorph2` in a scroll-panel — set it with
+  `detailText.setText`, not a click. The original asserted a byte-identical add→remove round-trip (image_1≡image_5); the new inspector's
+  list sub-row scroll rendering leaves an invisible sub-pixel difference, so the round-trip is shown VISUALLY (re-select the same base
+  property) rather than via `@assertScreenshotsIdentical`. (Re-authored when the old `InspectorMorph` was removed and the inspect path
+  was made windowed; the old "edit..." menu became these direct buttons.)
 - **`macroCanMoveAndResizeColorPaletteMorph`** (from 523 cmds): enter resize/move mode (`@openMenuOf_InputEvents` → "resize/move...")
   then drag a corner handle; click empty desktop to exit before the screenshot.
 - **`macroSimpleDocumentProgrammaticBuildAndScroll` / `…ManualBuildAndScroll`**: build the SAME scrollable `SimpleDocumentScrollPanelWdgt`
