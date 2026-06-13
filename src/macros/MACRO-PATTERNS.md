@@ -98,8 +98,9 @@ assertion a recapture after a regression silently stores two different hashes an
   the whole keyboard tail is geometry-free. No new verb.
 - **Double/triple-click selects word/line** (`macroDoubleAndTripleClickThroughCaretMorph`): `@doubleClickAtFractionOf_InputEvents`
   / `@tripleClickAtFractionOf_InputEvents widget, [fx,fy]` enqueue a move + 2/3 consecutive left click-pairs that
-  the HAND turns into a double/triple-click; targeting `world.caret` selects word/line at its slot. **Recognition is
-  DISABLED in fast playback**, so the test MUST declare `supportsTurboPlayback:false` + `requiresSlowPlayback:true`.
+  the HAND turns into a double/triple-click; targeting `world.caret` selects word/line at its slot. Recognition is
+  proximity + the hand's real 300ms window (no speed gate; the verb spaces its clicks inside it), so it works at every
+  global speed level — the test carries NO speed metadata.
   GOTCHA: a TextMorph2 opens an "edit:" PROMPT (not an inline caret) when its text is CROPPED, so ENLARGE the widget
   so the demo text fits → inline caret.
 - **Double-click selects the WORD under the cursor (clean StringMorph2 + wrapped TextMorph2)** (`macroDoubleClickSelectsWord`): the
@@ -111,8 +112,8 @@ assertion a recapture after a regression silently stores two different hashes an
   self-sufficient — its FIRST click focuses + places `world.caret`, the SECOND is recognised as the double-click — so no separate prior
   click is needed; double-clicking the TextMorph2 also CLEARS the StringMorph2's selection (focus moves). Fixture: a WIDE single-line
   StringMorph2 + a wrapped multi-line TextMorph2, BOTH `isEditable=true` (the gate, `:1213,1242`), each sized to FIT (a cropped one
-  opens the "edit:" prompt, not an inline caret). MUSTS: `supportsTurboPlayback:false` + `requiresSlowPlayback:true` (consecutive-click
-  recognition is OFF in turbo — without them NO word selects). Tune the deep-word fraction to the LIVE wrap at capture (here `[0.25,0.87]`
+  opens the "edit:" prompt, not an inline caret). No speed metadata — the double-click verb is recognised at every speed.
+  Tune the deep-word fraction to the LIVE wrap at capture (here `[0.25,0.87]`
   landed on "condimentum" on the second-to-last line — eyeball which word the highlight covers; the exact word doesn't matter, a clean
   interior word does). Distinct from `macroDoubleAndTripleClickThroughCaretMorph` (double-clicks ON the caret of a tiny pre-typed
   TextMorph2 — pass-through); this proves word-granularity from a CLEAN state on a single-line StringMorph2 AND wrapped text. No new verb.
@@ -130,7 +131,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (`String.fromCharCode 10`) — the break is load-bearing for the short-line/empty-line/no-wrap beats. The no-wrap finale
   calls `toggleSoftWrap()` + `togglefittingSpecWhenBoundsTooSmall()` directly (the two menu items' methods; the
   CROP→SCALEDOWN shrink is LOAD-BEARING — a cropped TextMorph2 opens the "edit:" prompt instead of the inline caret the
-  triple needs). MUSTS: `supportsTurboPlayback:false` + `requiresSlowPlayback:true`. Tune row fracs at capture — and
+  triple needs). No speed metadata — the triple-click verb is recognised at every speed. Tune row fracs at capture — and
   remember the SCALEDOWN no-wrap rows are THIN (target the first row a few px under the box top). No new verb.
 - **Clipboard cut/copy/paste** (`macroTextMorph2CutCopyPasteBasic`): after a Shift+Arrow selection,
   `clip = @cutSelection_InputEvents()` (or `@copySelection_InputEvents()`) reads + RETURNS the selection synchronously
@@ -227,7 +228,7 @@ assertion a recapture after a regression silently stores two different hashes an
   HEIGHT and the whole text shrinks uniformly (the shrink-to-fit entry above is the WIDTH/long-token axis). Arming
   SCALEDOWN first is LOAD-BEARING twice: under default CROP the overflow would ellipsise AND the next click would open
   the "edit:" prompt instead of an inline caret (that prompt is exactly the retired recording's image_21 accident —
-  its 18th paste overflowed under CROP). Double-click ⇒ `supportsTurboPlayback:false` + `requiresSlowPlayback:true`.
+  its 18th paste overflowed under CROP). The double-click verb is recognised at every speed — no speed metadata.
   No new verb.
 - **Text alignment** (`macroStringMorph2Alignments`): the converse — a StringMorph2 LARGER than its text doesn't grow it
   either (`fittingSpecWhenBoundsTooLarge` defaults to `FLOAT`); the text floats per `horizontalAlignment` (default LEFT)
@@ -836,8 +837,8 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Edge auto-scroll while dragging** (`macroListMorphAutoScrollsNearDraggedEdge`): a ScrollPanelWdgt auto-scrolls when a
   float-dragged morph it `wantsDropOf` is held near an edge band (≈`scrollBarsThickness*3`). Build a list overflowing BOTH ways,
   `pickUp` a rectangle (don't drop), then `@syntheticEventsMouseMove_InputEvents (a point in an edge band), "no button", …` and
-  yield generously. MUSTS: `supportsTurboPlayback:false` (the `autoScroll` 500ms `Date.now()` settle needs real time) and hold
-  long enough that the scroll CLAMPS (deterministic).
+  yield generously. MUST hold long enough that the `autoScroll` 500ms `Date.now()` settle elapses and the scroll CLAMPS — via a
+  NON-scaled numeric `yield N` (real-time settle, speed-independent), so it's deterministic at every speed and needs no speed metadata.
 - **Unplug an inspector scrollbar + the duplicate ASYMMETRY** (`macroInspectorScrollbarUnplugged`): open the OLD small
   `InspectorMorph` via the DIRECT "inspect" item (NOT `bringUpInspector_…_Macro`'s "dev → inspect", which opens InspectorMorph2).
   Capture `scrollbar1 = inspector.list.vBar` BEFORE detaching (the list doesn't rebuild it). Right-click its knob → hierarchy

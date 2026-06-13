@@ -85,9 +85,9 @@ wheel, double/triple-clicks, clipboard — must be SYNTHESISED AS A REAL `*Input
 `world.inputEventsQueue` and consumed by the normal pipeline, NOT by reaching into `world.hand`/`world.caret` and
 calling `process…` directly. The queue is the whole point: it drives hit-testing, hover/`mouseEnter`, and the
 playback fake-pointer overlay. Every input-synthesising verb carries the **`_InputEvents`** suffix
-and ends by pushing events; callers `yield "waitNoInputsOngoing"` to drain. *One subtlety:* a queued
-double/triple-click is only RECOGNISED in slow playback, so such a test declares `supportsTurboPlayback:false` +
-`requiresSlowPlayback:true`. *Legitimately NOT input* (keep direct): building a fixture (`new …; world.add`,
+and ends by pushing events; callers `yield "waitNoInputsOngoing"` to drain. Double/triple-clicks just work at
+every speed (recognition is proximity + the hand's real 300ms window; the verb spaces its clicks inside it) — see
+"Playback speed" below; tests carry NO speed metadata. *Legitimately NOT input* (keep direct): building a fixture (`new …; world.add`,
 positioning) and a behaviour whose UI trigger is genuinely blocked / is an escape hatch (`widget.hide()/show()`,
 `textBox.toggleSoftWrap()`, `world.evaluateString "…"`). Never use a direct call to STAND IN for a real input.
 
@@ -95,6 +95,35 @@ positioning) and a behaviour whose UI trigger is genuinely blocked / is an escap
 "Macro" (`takeScreenshotForMacro_…`, or `recordMacroAssertion` written in macro source) is mangled by
 `Macro._replaceMacroInvocationWithYieldingInvocations`, whose regex rewrites every `…Macro` not immediately followed
 by `(` into a `yield from`. (So the assertion sink is reachable only from inside a toolkit `@assert…` method, never the source.)
+
+## Playback speed (one global level — tests say NOTHING about it)
+
+A single global level **`MacroToolkit.speed ∈ {human, brisk, fastest}`** controls how fast the event generators
+play. It is set once at boot from **`?speed=`** (parsed in `src/boot/globalFunctions.coffee` like `?sw`/`?dpr`):
+a browser run defaults to **`human`** (watchable); the headless runner requests **`fastest`** (a full-suite sweep
+drops from ~33 min to ~15 min). There is **no per-test speed metadata** — the old `supportsTurboPlayback` /
+`requiresSlowPlayback` / `skipInbetweenMouseMoves` flags and the turbo/force-slow plumbing were removed; references
+are **speed-INVARIANT** (the SAME committed images pass at all three levels), so they are captured once (at fastest).
+
+Two independent axes the generators honour (`MacroToolkit.spanFactor` + the single push chokepoint `queueInputEvent`):
+- **SPAN** = each gesture's time-offsets × `spanFactor` → wall-clock speed (the only real lever; events drain over
+  ~their timestamp span of real wall-clock — see `WorldMorph.playQueuedEvents`). `human` = 1.0 (byte-identical to
+  the old timing), `brisk` ≈ 0.3, `fastest` ≈ 0.03.
+- **COUNT** = events-per-millisecond → path sampling. **Deliberately NOT thinned**: it stays full at every level, so
+  a gesture emits the SAME deduped pixel path (and final pixel) at every speed — only the timestamps move.
+
+**Non-scaled timings (the real-time SETTLE channel) live OUTSIDE the span axis** — never scaled, so a settle keeps
+its real duration at every speed: a numeric **`yield N`** in a macro waits N ms of REAL wall-clock (the pump accrues
+real cycle deltas), and `readyForMacroScreenshot` waits for atlas/momentum settle. Use `yield N` for a load-bearing
+real-time settle (hold a drag in an auto-scroll edge band until the framework's `Date.now` timer clamps; wait for a
+hover bubble). Use the verb's gesture `milliseconds` (scaled) for cosmetic gesture duration.
+
+**Per-verb floors** keep a few frame-cadence-sensitive handlers correct at `fastest` (the verbs apply them; tests
+need do nothing): a press-drag-release floors its drag SPAN (`@dragFloorMs`, count held constant) so a per-frame
+sampler (`ScrollPanelWdgt` scroll-on-drag; drag-enter/leave) sees several frames; a single click floors its
+down→up HOLD (`@clickHoldFloorMs`) so a held-button frame is sampled (a slider track-click's hover resolves on it).
+Multi-click recognition is purely proximity + the hand's real 300ms window (a generation guard on the forget-timer
++ a non-scaled minimum gap between distinct same-spot click gestures keep separate clicks from folding).
 
 ## The verb library (index)
 
