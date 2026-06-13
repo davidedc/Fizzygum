@@ -98,17 +98,17 @@ by `(` into a `yield from`. (So the assertion sink is reachable only from inside
 
 ## Playback speed (one global level — tests say NOTHING about it)
 
-A single global level **`MacroToolkit.speed ∈ {human, brisk, fastest}`** controls how fast the event generators
+A single global level **`MacroToolkit.speed ∈ {normal, fast, fastest}`** controls how fast the event generators
 play. It is set once at boot from **`?speed=`** (parsed in `src/boot/globalFunctions.coffee` like `?sw`/`?dpr`):
-a browser run defaults to **`human`** (watchable); the headless runner requests **`fastest`** (a full-suite sweep
+a browser run defaults to **`normal`** (watchable); the headless runner requests **`fastest`** (a full-suite sweep
 drops from ~33 min to ~15 min). There is **no per-test speed metadata** — the old `supportsTurboPlayback` /
 `requiresSlowPlayback` / `skipInbetweenMouseMoves` flags and the turbo/force-slow plumbing were removed; references
 are **speed-INVARIANT** (the SAME committed images pass at all three levels), so they are captured once (at fastest).
 
 Two independent axes the generators honour (`MacroToolkit.spanFactor` + the single push chokepoint `queueInputEvent`):
 - **SPAN** = each gesture's time-offsets × `spanFactor` → wall-clock speed (the only real lever; events drain over
-  ~their timestamp span of real wall-clock — see `WorldMorph.playQueuedEvents`). `human` = 1.0 (byte-identical to
-  the old timing), `brisk` ≈ 0.3, `fastest` ≈ 0.03.
+  ~their timestamp span of real wall-clock — see `WorldMorph.playQueuedEvents`). `normal` = 1.0 (byte-identical to
+  the old timing), `fast` ≈ 0.3, `fastest` ≈ 0.03.
 - **COUNT** = events-per-millisecond → path sampling. **Deliberately NOT thinned**: it stays full at every level, so
   a gesture emits the SAME deduped pixel path (and final pixel) at every speed — only the timestamps move.
 

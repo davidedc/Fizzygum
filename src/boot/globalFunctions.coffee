@@ -189,13 +189,13 @@ boot = ->
 
   window.ceilPixelRatio = if forcedPixelRatio? then forcedPixelRatio else Math.ceil window.devicePixelRatio
 
-  # ?speed=human|brisk|fastest — the global macro PLAYBACK SPEED level, parsed here
+  # ?speed=normal|fast|fastest — the global macro PLAYBACK SPEED level, parsed here
   # as a plain query param alongside ?sw / ?dpr (NOT via ?startupActions). The macro
   # event generators (MacroToolkit) honour it: a higher level compresses gesture
   # time-spans (→ faster wall-clock) and thins event counts where path-safe. Browser
-  # default is "human" (a watchable run); the headless runner requests "fastest".
+  # default is "normal" (a watchable run); the headless runner requests "fastest".
   # We only stash the raw string here — MacroToolkit validates it (the class isn't
-  # loaded yet) and defaults to "human" for an absent/invalid value.
+  # loaded yet) and defaults to "normal" for an absent/invalid value.
   if bootQueryParams? and bootQueryParams.get("speed")?
     window.FIZZYGUM_MACRO_SPEED = bootQueryParams.get("speed")
 

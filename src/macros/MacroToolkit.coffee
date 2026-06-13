@@ -47,9 +47,9 @@ class MacroToolkit
 
   # ─── Global playback SPEED ──────────────────────────────────────────────────
   # ONE global, three-level speed control the macro EVENT GENERATORS honour.
-  # Set once at boot from ?speed=human|brisk|fastest (parsed in
+  # Set once at boot from ?speed=normal|fast|fastest (parsed in
   # src/boot/globalFunctions.coffee → window.FIZZYGUM_MACRO_SPEED); browser
-  # default "human" (watchable), the headless runner requests "fastest".
+  # default "normal" (watchable), the headless runner requests "fastest".
   #
   # There are TWO independent axes (do not conflate — see src/macros/CLAUDE.md):
   #   • SPAN  = a verb's gesture `milliseconds` × spanFactor. Because synthetic
@@ -66,18 +66,18 @@ class MacroToolkit
   # The default level when ?speed= is absent/invalid. The EFFECTIVE level is
   # resolved lazily (see @currentSpeed) — deliberately NOT in a static value
   # initializer, so nothing but a plain literal runs at class-definition time.
-  @defaultSpeed: "human"
+  @defaultSpeed: "normal"
 
   # spanFactor per level — multiplies EVERY gesture's time-offset from the cycle
   # start (→ wall-clock speed; applied at the single push chokepoint queueInputEvent).
-  # "human" = 1.0 reproduces the historical timing exactly, byte-for-byte. COUNT
+  # "normal" = 1.0 reproduces the historical timing exactly, byte-for-byte. COUNT
   # (intra-gesture path sampling) is deliberately NOT thinned: it stays full at
   # every level, so the deduped pixel SET a gesture emits is speed-INVARIANT and
   # only the timestamps (hence drain rate) change. That invariance is what lets ONE
   # set of committed references pass at all three speeds.
   @spanFactors:
-    human:   1.0
-    brisk:   0.3
+    normal:  1.0
+    fast:    0.3
     fastest: 0.03
 
   # NON-scaled guard window, comfortably wider than the hand's real 300ms double-click
@@ -98,20 +98,20 @@ class MacroToolkit
   # in DIFFERENT world cycles so a per-cycle re-check runs WHILE the button is held — some
   # widgets read that mid-press frame (e.g. a SliderMorph track-click jumps its button
   # under the pointer, and the hover highlight is resolved on a held-button frame; with no
-  # such frame the button highlights spuriously after release). At human a click already
-  # holds 100ms; this only floors the COMPRESSED hold at brisk/fastest. Timing only — the
+  # such frame the button highlights spuriously after release). At normal a click already
+  # holds 100ms; this only floors the COMPRESSED hold at fast/fastest. Timing only — the
   # click's effect is unchanged, so no reference moves.
   @clickHoldFloorMs: 100
 
   # The active speed level (a key of @spanFactors). Read LAZILY from
   # window.FIZZYGUM_MACRO_SPEED (set at boot from ?speed=), validated against
   # @spanFactors, falling back to @defaultSpeed — so an absent/invalid value is
-  # "human" and a console tweak to the global also takes effect.
+  # "normal" and a console tweak to the global also takes effect.
   @currentSpeed: ->
     requested = window.FIZZYGUM_MACRO_SPEED
     if requested? and MacroToolkit.spanFactors[requested]? then requested else MacroToolkit.defaultSpeed
 
-  # The active spanFactor (falls back to human=1.0 for an unknown level).
+  # The active spanFactor (falls back to normal=1.0 for an unknown level).
   spanFactor: ->
     MacroToolkit.spanFactors[MacroToolkit.currentSpeed()] ? 1.0
 
@@ -126,7 +126,7 @@ class MacroToolkit
   # chain with `startTime + milliseconds + 100` therefore need NO change: their
   # unscaled offsets are all compressed here, together, so the pieces stay adjacent in
   # scaled time. Only the timestamps move; the (deduped) pixel SET each gesture emits
-  # is untouched — so references are speed-invariant. At "human" (spanFactor 1) the
+  # is untouched — so references are speed-invariant. At "normal" (spanFactor 1) the
   # time is left exactly as-is, so playback stays byte-for-byte identical to before.
   queueInputEvent: (event, nonScaled = false) ->
     sf = @spanFactor()
@@ -139,7 +139,7 @@ class MacroToolkit
   # i.e. the timestamp queueInputEvent would stamp it as. The click verbs use this to
   # compute their FINAL (scaled) absolute times up front, then push NON-scaled, so the
   # false-double-click guard can reason in real ms and delay a click by a non-scaled
-  # amount. At human (spanFactor 1) this returns t unchanged.
+  # amount. At normal (spanFactor 1) this returns t unchanged.
   scaledAbs: (t) ->
     base = WorldMorph.dateOfCurrentCycleStart.getTime()
     base + (t - base) * @spanFactor()
@@ -150,7 +150,7 @@ class MacroToolkit
   # double-click. Absolute virtual times == real drain times (base is wall-clock), so the
   # virtual gap ≈ the real gap the hand's 300ms setTimeout measures. Returns the (possibly
   # delayed) down time. Position-aware so distinct-spot clicks (the common case) are never
-  # delayed; at human, deliberate clicks are already far apart so this never fires.
+  # delayed; at normal, deliberate clicks are already far apart so this never fires.
   guardedClickStart: (downAbs, position) ->
     if @lastClickGestureUpTime? and @lastClickGesturePosition? and position? and
        (position.distanceTo(@lastClickGesturePosition) < WorldMorph.preferencesAndSettings.grabDragThreshold) and
@@ -167,7 +167,7 @@ class MacroToolkit
   # Return the REQUESTED drag milliseconds, raised so that AFTER the chokepoint compresses
   # it (× spanFactor) the drag still spans ≥ @dragFloorMs of real time — i.e. several
   # frames — for the per-frame scroll-on-drag / drag-enter-leave samplers. Never alters the
-  # human baseline (spanFactor 1): there the requested span is returned untouched. The
+  # normal baseline (spanFactor 1): there the requested span is returned untouched. The
   # inflated requested ms dedups to the same pixel path, so only the drag's DURATION grows,
   # not its trajectory — the gesture's result stays identical across speeds.
   dragSpanWithFloor: (requestedMs) ->
@@ -361,7 +361,7 @@ class MacroToolkit
   # Schedules the down/up in ABSOLUTE (already-spanFactor-scaled) time and pushes them
   # NON-scaled, so a LEFT click can be pushed past the hand's real double-click window
   # of a previous same-spot click (the false-double-click guard). Right clicks don't fold,
-  # so they skip the guard. At human (spanFactor 1) this is byte-identical to before.
+  # so they skip the guard. At normal (spanFactor 1) this is byte-identical to before.
   syntheticEventsMouseClick_InputEvents: (whichButton = "left button", milliseconds = 100, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     isLeft = (whichButton == "left button")
     downAbs = if isLeft then (@guardedClickStart (@scaledAbs startTime), @currentPointerTarget) else (@scaledAbs startTime)

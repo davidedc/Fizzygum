@@ -484,7 +484,7 @@ class ActivePointerWdgt extends Widget
               # gesture left a stale candidate (which fast macro playback makes possible,
               # since gestures then fall <300ms apart), this click would be wasted and a
               # deliberate double/triple-click would silently degrade (its first click
-              # eaten). At human speed the 300ms forget timer has already cleared any prior
+              # eaten). At normal speed the 300ms forget timer has already cleared any prior
               # candidate before the next gesture, so this branch isn't reached and
               # behaviour is unchanged. A non-left click just clears the (left) candidate.
               if @mouseButton == "left"
