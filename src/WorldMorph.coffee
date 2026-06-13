@@ -1947,8 +1947,9 @@ class WorldMorph extends PanelWdgt
   popUpSystemTestsMenu: ->
     menu = new MenuMorph @, false, @, true, true, "system tests"
 
-    menu.addMenuItem "run system tests", true, @automator.player, "runAllSystemTests", "runs all the system tests"
-    menu.addMenuItem "run system tests force slow", true, @automator.player, "runAllSystemTestsForceSlow", "runs all the system tests at the slowest (human) speed level"
+    menu.addMenuItem "run system tests (normal)", true, @automator.player, "runAllSystemTestsNormalSpeed", "runs all the system tests at the normal (slowest, watchable) speed level"
+    menu.addMenuItem "run system tests (fast)", true, @automator.player, "runAllSystemTestsFastSpeed", "runs all the system tests at the fast (intermediate) speed level"
+    menu.addMenuItem "run system tests (fastest)", true, @automator.player, "runAllSystemTestsFastestSpeed", "runs all the system tests at the fastest speed level"
 
     menu.addMenuItem "show test source", true, @automator, "showTestSource", "opens a window with the source of the latest test"
     menu.addMenuItem "save failed screenshots", true, @automator.player, "saveFailedScreenshots", "save failed screenshots"
