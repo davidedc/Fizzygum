@@ -257,6 +257,25 @@ if ! $noSyntaxCheck ; then
   echo "... CoffeeScript syntax OK"
 fi
 
+# --- build-time test-.js syntax gate (only when tests are part of this build) ---------
+# Each SystemTest's _automationCommands.js carries its macro inside a backtick-delimited JS
+# template literal; a stray backtick silently corrupts the file so the test never loads (with
+# corrupted/missing screenshots, not an obvious error). This runs `node --check` over every
+# tests/*.js (see ../Fizzygum-tests/scripts/check-tests-syntax.js) to catch that — and any JS
+# syntax error — BEFORE the build copies them in. Same --noSyntaxCheck escape hatch and explicit
+# $? check as the CoffeeScript gate above; skipped under --homepage/--notests (no tests shipped)
+# or when the sibling Fizzygum-tests repo is absent.
+if ! $noSyntaxCheck && ! $homepage && ! $notests && [ -d ../Fizzygum-tests ] ; then
+  echo "checking JS syntax of all shipped test sources ..."
+  node ../Fizzygum-tests/scripts/check-tests-syntax.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: test .js syntax check failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... test .js syntax OK"
+fi
+
 touch $SCRATCH_PATH/fizzygum-boot.coffee
 
 if $notests || $homepage ; then
