@@ -109,6 +109,14 @@ class Macro
           # is settled + warm so the captured pixels are deterministic.
           return unless @readyForMacroScreenshot()
         else if @returnFromLastMacroStep? # it's the number of milliseconds
+          # numeric `yield N` = wait N ms of REAL wall-clock (msSinceLastExecutedMacroStep
+          # accrues real per-cycle deltas). This is the NON-scaled real-time SETTLE channel,
+          # deliberately independent of the global speed level: the macro EVENT GENERATORS
+          # compress gesture time-spans (MacroToolkit.spanFactor), but a `yield N` settle —
+          # e.g. holding a drag in an auto-scroll edge band until the framework's Date.now
+          # timer clamps, or waiting for a hover bubble — must keep its real duration at every
+          # speed. (readyForMacroScreenshot is the other non-scaled gate.) So a yield's N is
+          # NOT a gesture span and is never scaled; see src/macros/CLAUDE.md.
           return unless @msSinceLastExecutedMacroStep > @returnFromLastMacroStep
 
         next = @macroGenerator.next()

@@ -34,6 +34,158 @@ class MacroToolkit
   # in Macro._addHeaderCode, cleared (nil) between macros.
   macroGenerator: nil
 
+  # False-double-click guard state (see guardedClickStart). The most recent scheduled
+  # CLICK gesture's last-release ABSOLUTE virtual time + the pointer position it landed
+  # on; and currentPointerTarget = the last scheduled move's destination (= where the
+  # next click lands). Used so two distinct same-spot single clicks can be pushed past
+  # the hand's real 300ms double-click window, now that fast-test recognition is ungated.
+  # nil until the first move/click of a macro (fresh per test — ResetWorld rebuilds the
+  # toolkit).
+  lastClickGestureUpTime: nil
+  lastClickGesturePosition: nil
+  currentPointerTarget: nil
+
+  # ─── Global playback SPEED ──────────────────────────────────────────────────
+  # ONE global, three-level speed control the macro EVENT GENERATORS honour.
+  # Set once at boot from ?speed=human|brisk|fastest (parsed in
+  # src/boot/globalFunctions.coffee → window.FIZZYGUM_MACRO_SPEED); browser
+  # default "human" (watchable), the headless runner requests "fastest".
+  #
+  # There are TWO independent axes (do not conflate — see src/macros/CLAUDE.md):
+  #   • SPAN  = a verb's gesture `milliseconds` × spanFactor. Because synthetic
+  #     events drain over ~their timestamp span of REAL wall-clock (the per-cycle
+  #     virtual clock IS wall-clock; see WorldMorph.playQueuedEvents), span is the
+  #     ONLY real speed lever — compressing it is what makes a headless sweep fast.
+  #   • COUNT = events-per-millisecond → intra-gesture path smoothness / sampling
+  #     fidelity. Thinning count is PATH-RISKY (a drag that must pass over a drop
+  #     target, a hover-highlight along a path, the auto-scroll edge band can be
+  #     skipped), so path-dependent verbs floor their own count.
+  # Non-scaled timings (the real-time settle channel) live OUTSIDE this: a numeric
+  # `yield N` in a macro waits N ms of real wall-clock and reads no speed level,
+  # and readyForMacroScreenshot gates on atlas/momentum settle — both unaffected.
+  # The default level when ?speed= is absent/invalid. The EFFECTIVE level is
+  # resolved lazily (see @currentSpeed) — deliberately NOT in a static value
+  # initializer, so nothing but a plain literal runs at class-definition time.
+  @defaultSpeed: "human"
+
+  # spanFactor per level — multiplies EVERY gesture's time-offset from the cycle
+  # start (→ wall-clock speed; applied at the single push chokepoint queueInputEvent).
+  # "human" = 1.0 reproduces the historical timing exactly, byte-for-byte. COUNT
+  # (intra-gesture path sampling) is deliberately NOT thinned: it stays full at
+  # every level, so the deduped pixel SET a gesture emits is speed-INVARIANT and
+  # only the timestamps (hence drain rate) change. That invariance is what lets ONE
+  # set of committed references pass at all three speeds.
+  @spanFactors:
+    human:   1.0
+    brisk:   0.3
+    fastest: 0.03
+
+  # NON-scaled guard window, comfortably wider than the hand's real 300ms double-click
+  # recognition window (ActivePointerWdgt.rememberDoubleClickWdgtsForAWhile). Two distinct
+  # same-spot click gestures are spaced at least this far apart so they never fold into a
+  # false double-click — the replacement for the removed fast-test recognition gate.
+  @clickGuardWindowMs: 350
+
+  # NON-scaled FLOOR on a press-drag-release's drag span. Some handlers sample the hand
+  # once per FRAME (ScrollPanelWdgt's scroll-on-drag; drag-enter/leave on drop targets),
+  # so a drag whose compressed span drains in <2 frames mis-scrolls / skips its target.
+  # Flooring the drag span keeps it spanning several real frames at every speed; the
+  # event path (and dedup) is unchanged so the gesture's RESULT is identical to a slow
+  # drag (and to the committed reference). Plain moves/clicks aren't floored.
+  @dragFloorMs: 300
+
+  # NON-scaled FLOOR on a single click's HOLD (down→up). A click's down and up must land
+  # in DIFFERENT world cycles so a per-cycle re-check runs WHILE the button is held — some
+  # widgets read that mid-press frame (e.g. a SliderMorph track-click jumps its button
+  # under the pointer, and the hover highlight is resolved on a held-button frame; with no
+  # such frame the button highlights spuriously after release). At human a click already
+  # holds 100ms; this only floors the COMPRESSED hold at brisk/fastest. Timing only — the
+  # click's effect is unchanged, so no reference moves.
+  @clickHoldFloorMs: 100
+
+  # The active speed level (a key of @spanFactors). Read LAZILY from
+  # window.FIZZYGUM_MACRO_SPEED (set at boot from ?speed=), validated against
+  # @spanFactors, falling back to @defaultSpeed — so an absent/invalid value is
+  # "human" and a console tweak to the global also takes effect.
+  @currentSpeed: ->
+    requested = window.FIZZYGUM_MACRO_SPEED
+    if requested? and MacroToolkit.spanFactors[requested]? then requested else MacroToolkit.defaultSpeed
+
+  # The active spanFactor (falls back to human=1.0 for an unknown level).
+  spanFactor: ->
+    MacroToolkit.spanFactors[MacroToolkit.currentSpeed()] ? 1.0
+
+  # The SINGLE push chokepoint for every synthetic input event the toolkit queues.
+  # It compresses the event's time-OFFSET from the current cycle start by the active
+  # spanFactor (the wall-clock speed lever) and then enqueues it. WHY this works as a
+  # single uniform point: every verb schedules relative to
+  # WorldMorph.dateOfCurrentCycleStart.getTime() (its default startTime), and a whole
+  # macro step runs synchronously inside ONE cycle — so that value is a stable BASE for
+  # the step, and scaling (time − base) compresses the entire step's timeline at once
+  # while preserving event ORDER and the final pointer position. Composite verbs that
+  # chain with `startTime + milliseconds + 100` therefore need NO change: their
+  # unscaled offsets are all compressed here, together, so the pieces stay adjacent in
+  # scaled time. Only the timestamps move; the (deduped) pixel SET each gesture emits
+  # is untouched — so references are speed-invariant. At "human" (spanFactor 1) the
+  # time is left exactly as-is, so playback stays byte-for-byte identical to before.
+  queueInputEvent: (event, nonScaled = false) ->
+    sf = @spanFactor()
+    if (not nonScaled) and sf != 1 and event.time?
+      base = WorldMorph.dateOfCurrentCycleStart.getTime()
+      event.time = base + (event.time - base) * sf
+    world.inputEventsQueue.push event
+
+  # Absolute virtual time that a startTime OFFSET maps to under the active spanFactor —
+  # i.e. the timestamp queueInputEvent would stamp it as. The click verbs use this to
+  # compute their FINAL (scaled) absolute times up front, then push NON-scaled, so the
+  # false-double-click guard can reason in real ms and delay a click by a non-scaled
+  # amount. At human (spanFactor 1) this returns t unchanged.
+  scaledAbs: (t) ->
+    base = WorldMorph.dateOfCurrentCycleStart.getTime()
+    base + (t - base) * @spanFactor()
+
+  # If a click scheduled at absolute time `downAbs` on `position` would land within the
+  # hand's real double-click window of the PREVIOUS distinct click gesture at the same
+  # spot, push it out past @clickGuardWindowMs so the two never fold into a false
+  # double-click. Absolute virtual times == real drain times (base is wall-clock), so the
+  # virtual gap ≈ the real gap the hand's 300ms setTimeout measures. Returns the (possibly
+  # delayed) down time. Position-aware so distinct-spot clicks (the common case) are never
+  # delayed; at human, deliberate clicks are already far apart so this never fires.
+  guardedClickStart: (downAbs, position) ->
+    if @lastClickGestureUpTime? and @lastClickGesturePosition? and position? and
+       (position.distanceTo(@lastClickGesturePosition) < WorldMorph.preferencesAndSettings.grabDragThreshold) and
+       ((downAbs - @lastClickGestureUpTime) < MacroToolkit.clickGuardWindowMs)
+      return @lastClickGestureUpTime + MacroToolkit.clickGuardWindowMs
+    downAbs
+
+  # Remember a just-scheduled LEFT click gesture's last-release time + position for the
+  # guard above (only left clicks fold into double/triple-clicks).
+  rememberClickGesture: (upAbs, position) ->
+    @lastClickGestureUpTime = upAbs
+    @lastClickGesturePosition = position
+
+  # Return the REQUESTED drag milliseconds, raised so that AFTER the chokepoint compresses
+  # it (× spanFactor) the drag still spans ≥ @dragFloorMs of real time — i.e. several
+  # frames — for the per-frame scroll-on-drag / drag-enter-leave samplers. Never alters the
+  # human baseline (spanFactor 1): there the requested span is returned untouched. The
+  # inflated requested ms dedups to the same pixel path, so only the drag's DURATION grows,
+  # not its trajectory — the gesture's result stays identical across speeds.
+  dragSpanWithFloor: (requestedMs) ->
+    sf = @spanFactor()
+    return requestedMs if sf >= 1
+    Math.max requestedMs, Math.ceil(MacroToolkit.dragFloorMs / sf)
+
+  # The scaled down→up hold for a single click, floored to @clickHoldFloorMs of REAL time
+  # so the down and up land in different world cycles (a per-cycle re-check then runs while
+  # the button is held — see @clickHoldFloorMs). Returns an absolute ms gap (already
+  # scaled), so callers add it directly to the down's absolute time. Human is unchanged
+  # (the hold is already ≥ the floor at spanFactor 1).
+  clickHoldWithFloor: (requestedMs) ->
+    sf = @spanFactor()
+    scaled = requestedMs * sf
+    return scaled if sf >= 1
+    Math.max scaled, MacroToolkit.clickHoldFloorMs
+
   # Install the linked macro code (pump header + linked verbs) with `@` = this
   # MacroToolkit instance, so the generator and the verbs it calls resolve their
   # @helpers against this collaborator. Mirrors Widget.evaluateString's
@@ -105,8 +257,8 @@ class MacroToolkit
     # the "code" is the physical key; a 1:1 key->code is fine for synthetic events
     # (Shift uses "ShiftLeft" to match syntheticEventsStringKeys_InputEvents).
     code = if key == "Shift" then "ShiftLeft" else key
-    world.inputEventsQueue.push new KeydownInputEvent key, code, shiftKey, ctrlKey, altKey, metaKey, true, startTime
-    world.inputEventsQueue.push new KeyupInputEvent  key, code, shiftKey, ctrlKey, altKey, metaKey, true, startTime + millisecondsBetweenKeys
+    @queueInputEvent new KeydownInputEvent key, code, shiftKey, ctrlKey, altKey, metaKey, true, startTime
+    @queueInputEvent new KeyupInputEvent  key, code, shiftKey, ctrlKey, altKey, metaKey, true, startTime + millisecondsBetweenKeys
 
   # Press a special key/combo `count` times, staggered in time so each press is a
   # distinct event (e.g. "ArrowLeft" ×8 to walk the caret). Composes
@@ -125,38 +277,48 @@ class MacroToolkit
       isUpperCase = theString.charAt(i) == theString.charAt(i).toUpperCase()
 
       if isUpperCase
-        world.inputEventsQueue.push new KeydownInputEvent "Shift", "ShiftLeft", true, false, false, false, true, scheduledTimeOfEvent
+        @queueInputEvent new KeydownInputEvent "Shift", "ShiftLeft", true, false, false, false, true, scheduledTimeOfEvent
         scheduledTimeOfEvent += millisecondsBetweenKeys
 
       # note that the second parameter (code) we are making up, assuming a hypothetical "1:1" key->code layout
-      world.inputEventsQueue.push new KeydownInputEvent theString.charAt(i), theString.charAt(i), isUpperCase, false, false, false, true, scheduledTimeOfEvent
+      @queueInputEvent new KeydownInputEvent theString.charAt(i), theString.charAt(i), isUpperCase, false, false, false, true, scheduledTimeOfEvent
       scheduledTimeOfEvent += millisecondsBetweenKeys
 
       # note that the second parameter (code) we are making up, assuming a hypothetical "1:1" key->code layout
-      world.inputEventsQueue.push new KeyupInputEvent theString.charAt(i), theString.charAt(i), isUpperCase, false, false, false, true, scheduledTimeOfEvent
+      @queueInputEvent new KeyupInputEvent theString.charAt(i), theString.charAt(i), isUpperCase, false, false, false, true, scheduledTimeOfEvent
       scheduledTimeOfEvent += millisecondsBetweenKeys
 
       if isUpperCase
-        world.inputEventsQueue.push new KeyupInputEvent "Shift", "ShiftLeft", false, false, false, false, true, scheduledTimeOfEvent
+        @queueInputEvent new KeyupInputEvent "Shift", "ShiftLeft", false, false, false, false, true, scheduledTimeOfEvent
         scheduledTimeOfEvent += millisecondsBetweenKeys
 
   syntheticEventsMouseMovePressDragRelease_InputEvents: (orig, dest, millisecondsForDrag = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
+    # Floor the drag SPAN (so it spans enough real frames — see @dragFloorMs) while keeping
+    # the event COUNT identical (drop events-per-ms by the same ratio): a floored drag must
+    # follow the SAME deduped pixel path and land on the SAME final pixel, or the dropped
+    # widget would shift ~1px (macroPromptShadowFollowsOnDrag). Only the duration grows.
+    flooredDrag = @dragSpanWithFloor millisecondsForDrag
+    dragEventsPerMs = numberOfEventsPerMillisecond * millisecondsForDrag / flooredDrag
     @syntheticEventsMouseMove_InputEvents orig, "left button", 100, nil, startTime, numberOfEventsPerMillisecond
     @syntheticEventsMouseDown_InputEvents "left button", startTime + 100
-    @syntheticEventsMouseMove_InputEvents dest, "left button", millisecondsForDrag, orig, startTime + 100 + 100, numberOfEventsPerMillisecond
-    @syntheticEventsMouseUp_InputEvents "left button", startTime + 100 + 100 + millisecondsForDrag + 100
+    @syntheticEventsMouseMove_InputEvents dest, "left button", flooredDrag, orig, startTime + 100 + 100, dragEventsPerMs
+    @syntheticEventsMouseUp_InputEvents "left button", startTime + 100 + 100 + flooredDrag + 100
 
   # This should be used if you want to drag from point A to B to C ...
   # If rather you want to just drag from point A to point B,
   # then just use syntheticEventsMouseMovePressDragRelease_InputEvents
   syntheticEventsMouseMoveWhileDragging_InputEvents: (dest, milliseconds = 1000, orig = world.hand.position(), startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
-    @syntheticEventsMouseMove_InputEvents dest, "left button", milliseconds, orig, startTime, numberOfEventsPerMillisecond
+    # floor the span, keep the count constant (see syntheticEventsMouseMovePressDragRelease)
+    flooredMs = @dragSpanWithFloor milliseconds
+    dragEventsPerMs = numberOfEventsPerMillisecond * milliseconds / flooredMs
+    @syntheticEventsMouseMove_InputEvents dest, "left button", flooredMs, orig, startTime, dragEventsPerMs
 
   # mouse moves need an origin and a destination, so we
   # need to place the mouse in _some_ place to begin with
   # in order to do that.
   syntheticEventsMousePlace_InputEvents: (place = new Point(0,0), scheduledTimeOfEvent = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-    world.inputEventsQueue.push new MousemoveInputEvent place.x, place.y, 0, 0, false, false, false, false, true, scheduledTimeOfEvent
+    @currentPointerTarget = place
+    @queueInputEvent new MousemoveInputEvent place.x, place.y, 0, 0, false, false, false, false, true, scheduledTimeOfEvent
 
   syntheticEventsMouseMove_InputEvents: (dest, whichButton = "no button", milliseconds = 1000, orig = world.hand.position(), startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
     if whichButton == "left button"
@@ -178,7 +340,14 @@ class MacroToolkit
     if orig instanceof Widget
       orig = orig.center()
 
-    numberOfEvents = milliseconds * numberOfEventsPerMillisecond
+    # where the pointer ends up — read by the click verbs as the click position for the
+    # false-double-click guard (a click lands wherever the last move left the pointer)
+    @currentPointerTarget = dest
+
+    # Math.round so a drag's span-floored fractional events-per-ms still yields EXACTLY the
+    # un-floored integer sample count (so expoOut samples the identical path). A no-op for
+    # the ordinary whole-number cases.
+    numberOfEvents = Math.round(milliseconds * numberOfEventsPerMillisecond)
     for i in [0...numberOfEvents]
       scheduledTimeOfEvent = startTime + i/numberOfEventsPerMillisecond
       nextX = Math.round @expoOut i, orig.x, (dest.x-orig.x), numberOfEvents
@@ -187,11 +356,19 @@ class MacroToolkit
         prevX = nextX
         prevY = nextY
         #console.log nextX + " " + nextY + " scheduled at: " + scheduledTimeOfEvent
-        world.inputEventsQueue.push new MousemoveInputEvent nextX, nextY, button, buttons, false, false, false, false, true, scheduledTimeOfEvent
+        @queueInputEvent new MousemoveInputEvent nextX, nextY, button, buttons, false, false, false, false, true, scheduledTimeOfEvent
 
+  # Schedules the down/up in ABSOLUTE (already-spanFactor-scaled) time and pushes them
+  # NON-scaled, so a LEFT click can be pushed past the hand's real double-click window
+  # of a previous same-spot click (the false-double-click guard). Right clicks don't fold,
+  # so they skip the guard. At human (spanFactor 1) this is byte-identical to before.
   syntheticEventsMouseClick_InputEvents: (whichButton = "left button", milliseconds = 100, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-    @syntheticEventsMouseDown_InputEvents whichButton, startTime
-    @syntheticEventsMouseUp_InputEvents whichButton, startTime + milliseconds
+    isLeft = (whichButton == "left button")
+    downAbs = if isLeft then (@guardedClickStart (@scaledAbs startTime), @currentPointerTarget) else (@scaledAbs startTime)
+    upAbs = downAbs + @clickHoldWithFloor milliseconds
+    if isLeft then @rememberClickGesture upAbs, @currentPointerTarget
+    @syntheticEventsMouseDown_InputEvents whichButton, downAbs, true
+    @syntheticEventsMouseUp_InputEvents whichButton, upAbs, true
 
   # A SHIFT-modified left click: the same down+up as syntheticEventsMouseClick_InputEvents, but with the
   # event's shiftKey flag set (the 4th boolean of Mouse{down,up}InputEvent — button, buttons, ctrlKey,
@@ -199,10 +376,19 @@ class MacroToolkit
   # StringMorph2/TextMorph2 EXTEND its selection to the click point (mouseClickLeft reads shiftKey) instead
   # of just repositioning the caret. Left button only (down buttons=1, up buttons=0).
   syntheticEventsMouseShiftClick_InputEvents: (milliseconds = 100, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-    world.inputEventsQueue.push new MousedownInputEvent 0, 1, false, true, false, false, true, startTime
-    world.inputEventsQueue.push new MouseupInputEvent 0, 0, false, true, false, false, true, startTime + milliseconds
+    # absolute (scaled) times + guard + non-scaled push, like syntheticEventsMouseClick —
+    # a shift-click is still a left-button click and would otherwise fold into a false
+    # double-click with a prior same-spot click once recognition is ungated.
+    downAbs = @guardedClickStart (@scaledAbs startTime), @currentPointerTarget
+    upAbs = downAbs + milliseconds * @spanFactor()
+    @rememberClickGesture upAbs, @currentPointerTarget
+    @queueInputEvent (new MousedownInputEvent 0, 1, false, true, false, false, true, downAbs), true
+    @queueInputEvent (new MouseupInputEvent 0, 0, false, true, false, false, true, upAbs), true
 
-  syntheticEventsMouseDown_InputEvents: (whichButton = "left button", startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+  # nonScaled (default false): when true the startTime is already an absolute, scaled
+  # time (the click verbs pre-compute it so the false-double-click guard can shift it),
+  # so queueInputEvent must NOT scale it again.
+  syntheticEventsMouseDown_InputEvents: (whichButton = "left button", startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), nonScaled = false) ->
     if whichButton == "left button"
       button = 0
       buttons = 1
@@ -213,9 +399,9 @@ class MacroToolkit
       debugger
       throw "syntheticEventsMouseDown_InputEvents: whichButton is unknown"
 
-    world.inputEventsQueue.push new MousedownInputEvent button, buttons, false, false, false, false, true, startTime
+    @queueInputEvent (new MousedownInputEvent button, buttons, false, false, false, false, true, startTime), nonScaled
 
-  syntheticEventsMouseUp_InputEvents: (whichButton = "left button", startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
+  syntheticEventsMouseUp_InputEvents: (whichButton = "left button", startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), nonScaled = false) ->
     if whichButton == "left button"
       button = 0
       buttons = 0
@@ -226,7 +412,7 @@ class MacroToolkit
       debugger
       throw "syntheticEventsMouseUp_InputEvents: whichButton is unknown"
 
-    world.inputEventsQueue.push new MouseupInputEvent button, buttons, false, false, false, false, true, startTime
+    @queueInputEvent (new MouseupInputEvent button, buttons, false, false, false, false, true, startTime), nonScaled
 
   moveToAndClick_InputEvents: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, nil, startTime, nil
@@ -263,25 +449,31 @@ class MacroToolkit
 
   # Push N consecutive left click-pairs (down+up) at the CURRENT pointer position, spaced so the hand
   # recognises them as a double-/triple-click. The hand only counts a fresh click as a double/triple while
-  # the previous one is still "remembered" — a 300ms window (ActivePointerWdgt.rememberDoubleClickWdgtsForAWhile)
+  # the previous one is still "remembered" — a real 300ms window (ActivePointerWdgt.rememberDoubleClickWdgtsForAWhile)
   # — so the click UPs must fall within that window of each other; we space them ~120ms apart. No move
   # between the clicks (same widget, same point) — recognition also requires the clicks be on the same
   # widget within grabDragThreshold.
+  # The APPROACH (startTime) is scaled by the speed level (it follows the scaled positioning move), but the
+  # inter-click 120ms / 50ms spacing is kept NON-scaled so the clicks always land inside the real 300ms
+  # window at every speed. The false-double-click guard is applied ONCE to the first click (vs a prior
+  # distinct gesture); clicks 2..N are the DELIBERATE repeats that MUST fold, so they skip it.
   syntheticEventsConsecutiveLeftClicks_InputEvents: (numberOfClicks = 2, startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), millisecondsBetweenClicks = 120, clickMilliseconds = 50) ->
+    firstDownAbs = @guardedClickStart (@scaledAbs startTime), @currentPointerTarget
     for i in [0...numberOfClicks]
-      t = startTime + i * millisecondsBetweenClicks
-      @syntheticEventsMouseDown_InputEvents "left button", t
-      @syntheticEventsMouseUp_InputEvents "left button", t + clickMilliseconds
+      t = firstDownAbs + i * millisecondsBetweenClicks
+      @syntheticEventsMouseDown_InputEvents "left button", t, true
+      @syntheticEventsMouseUp_InputEvents "left button", t + clickMilliseconds, true
+    @rememberClickGesture (firstDownAbs + (numberOfClicks - 1) * millisecondsBetweenClicks + clickMilliseconds), @currentPointerTarget
 
   # Double- / triple-click at a fractional point inside a located widget, driven through the INPUT-EVENT
   # QUEUE like a real user — a positioning move (so the fake pointer shows) then two/three consecutive
   # queued left clicks that the HAND recognises and turns into processDoubleClick/processTripleClick itself
-  # (ActivePointerWdgt). IMPORTANT: the hand DISABLES consecutive-click recognition in turbo/fast playback
-  # (ActivePointerWdgt: `disableConsecutiveClicksFromSingleClicksDueToFastTests`, gated on runningInSlowMode),
-  # so a test using these MUST run in slow mode — declare `supportsTurboPlayback: false` AND
-  # `requiresSlowPlayback: true` in its metadata (the latter makes AutomatorPlayer.runningInSlowMode true for
-  # just that test, so the recognition fires and the 300ms click window is real-time). Queues input events —
-  # follow with `yield "waitNoInputsOngoing"`.
+  # (ActivePointerWdgt). Recognition is purely proximity + the hand's real 300ms window now (the old
+  # fast-test recognition gate is gone): the consecutive-click verb deliberately spaces its clicks ~120ms
+  # apart (NON-scaled, inside that window) so the hand folds them at EVERY global speed level — the test
+  # carries no speed metadata. (A non-scaled minimum gap between DISTINCT click gestures, plus a generation
+  # guard on the hand's forget-timer, keep two separate clicks from folding into a false double-click.)
+  # Queues input events — follow with `yield "waitNoInputsOngoing"`.
   doubleClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, nil, startTime, nil
     @syntheticEventsConsecutiveLeftClicks_InputEvents 2, startTime + milliseconds + 100
@@ -306,7 +498,7 @@ class MacroToolkit
   # the pointer WHEN THE EVENT IS CONSUMED, so position the pointer first (a queued move). A POSITIVE
   # deltaY scrolls content DOWN. isSynthetic=true so it is not re-recorded.
   syntheticEventsWheel_InputEvents: (deltaX = 0, deltaY = 0, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-    world.inputEventsQueue.push new WheelInputEvent deltaX, deltaY, 0, 0, 0, false, false, false, false, true, startTime
+    @queueInputEvent new WheelInputEvent deltaX, deltaY, 0, 0, 0, false, false, false, false, true, startTime
 
   # Mouse-WHEEL scroll over a located widget (by widget reference or a recorded text-description
   # identifier), driven entirely through the INPUT-EVENT QUEUE like a real wheel — NOT by poking the
@@ -367,16 +559,16 @@ class MacroToolkit
   # "waitNoInputsOngoing"`, then call these and `yield "waitNoInputsOngoing"` again before a screenshot.
   cutSelection_InputEvents: (startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     text = world.caret?.target?.selection()
-    world.inputEventsQueue.push new CutInputEvent text, true, startTime
+    @queueInputEvent new CutInputEvent text, true, startTime
     text
 
   copySelection_InputEvents: (startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     text = world.caret?.target?.selection()
-    world.inputEventsQueue.push new CopyInputEvent text, true, startTime
+    @queueInputEvent new CopyInputEvent text, true, startTime
     text
 
   pasteText_InputEvents: (text, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-    world.inputEventsQueue.push new PasteInputEvent text, true, startTime
+    @queueInputEvent new PasteInputEvent text, true, startTime
 
   # Drag a resize/move HANDLE (one of the handles shown after a widget's "resize/move..." menu
   # item) from its centre to a destination Point. Handles resize/move the target via NON-float

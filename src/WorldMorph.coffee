@@ -525,11 +525,6 @@ class WorldMorph extends PanelWdgt
       else
         @automator.groupToBeRun = 0
 
-      if currentAction.forceSlowTestPlaying?
-        @automator.forceSlowTestPlaying = true
-      if currentAction.forceTurbo?
-        @automator.forceTurbo = true
-
       # selectTestsFromTagsOrTestNames loads every test's metadata ASYNChronously and only THEN
       # populates selectedTestsBasedOnTags. runAllSystemTests must WAIT for that — otherwise
       # testsList() races: until the selection lands it falls back to the full manifest, so the
@@ -1953,7 +1948,7 @@ class WorldMorph extends PanelWdgt
     menu = new MenuMorph @, false, @, true, true, "system tests"
 
     menu.addMenuItem "run system tests", true, @automator.player, "runAllSystemTests", "runs all the system tests"
-    menu.addMenuItem "run system tests force slow", true, @automator.player, "runAllSystemTestsForceSlow", "runs all the system tests"
+    menu.addMenuItem "run system tests force slow", true, @automator.player, "runAllSystemTestsForceSlow", "runs all the system tests at the slowest (human) speed level"
 
     menu.addMenuItem "show test source", true, @automator, "showTestSource", "opens a window with the source of the latest test"
     menu.addMenuItem "save failed screenshots", true, @automator.player, "saveFailedScreenshots", "save failed screenshots"

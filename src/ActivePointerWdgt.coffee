@@ -462,24 +462,35 @@ class ActivePointerWdgt extends Widget
               #console.log "@doubleClickPosition.distanceTo @position():" + @doubleClickPosition.distanceTo @position()
               #console.log "WorldMorph.preferencesAndSettings.grabDragThreshold:" + WorldMorph.preferencesAndSettings.grabDragThreshold
               @doubleClickWdgt = nil
-              disableConsecutiveClicksFromSingleClicksDueToFastTests = false
-              if Automator? and Automator.state == Automator.PLAYING
-                if !world.automator.player.runningInSlowMode()
-                  disableConsecutiveClicksFromSingleClicksDueToFastTests = true
-              if !disableConsecutiveClicksFromSingleClicksDueToFastTests
-                # remember we are going to send a double click
-                # but let's do it after. That's because we first
-                # want to send the normal click AND we want to tell
-                # in the normal click that that normal click is part
-                # of a double click
-                doubleClickInvocation = true
-                # triple-click detection starts here, it's just
-                # like chaining a second double-click detection
-                # once this double-click has just been detected
-                # right here.
-                @rememberTripleClickWdgtsForAWhile w
+              # remember we are going to send a double click
+              # but let's do it after. That's because we first
+              # want to send the normal click AND we want to tell
+              # in the normal click that that normal click is part
+              # of a double click. Recognition is purely proximity + the real 300ms
+              # window now: synthetic macro clicks deliberately space their two clicks
+              # ~120ms apart (inside the window) and keep a non-scaled minimum gap
+              # between DISTINCT click gestures (MacroToolkit), so the old fast-test
+              # recognition gate is gone.
+              doubleClickInvocation = true
+              # triple-click detection starts here, it's just
+              # like chaining a second double-click detection
+              # once this double-click has just been detected
+              # right here.
+              @rememberTripleClickWdgtsForAWhile w
             else
-              @forgetDoubleClickWdgts()
+              # This click does NOT complete a double-click with the remembered widget
+              # (different widget/position). Treat a LEFT click as the START of a fresh
+              # double-click sequence rather than discarding it — otherwise, when a prior
+              # gesture left a stale candidate (which fast macro playback makes possible,
+              # since gestures then fall <300ms apart), this click would be wasted and a
+              # deliberate double/triple-click would silently degrade (its first click
+              # eaten). At human speed the 300ms forget timer has already cleared any prior
+              # candidate before the next gesture, so this branch isn't reached and
+              # behaviour is unchanged. A non-left click just clears the (left) candidate.
+              if @mouseButton == "left"
+                @rememberDoubleClickWdgtsForAWhile w
+              else
+                @forgetDoubleClickWdgts()
           else
             @rememberDoubleClickWdgtsForAWhile w
 
@@ -500,17 +511,13 @@ class ActivePointerWdgt extends Widget
               #debugger
               if @tripleClickWdgt == w
                 @tripleClickWdgt = nil
-                disableConsecutiveClicksFromSingleClicksDueToFastTests = false
-                if Automator? and Automator.state == Automator.PLAYING
-                  if !world.automator.player.runningInSlowMode()
-                    disableConsecutiveClicksFromSingleClicksDueToFastTests = true
-                if !disableConsecutiveClicksFromSingleClicksDueToFastTests
-                  # remember we are going to send a triple click
-                  # but let's do it after. That's because we first
-                  # want to send the normal click AND we want to tell
-                  # in the normal click that that normal click is part
-                  # of a triple click
-                  tripleClickInvocation = true
+                # remember we are going to send a triple click
+                # but let's do it after. That's because we first
+                # want to send the normal click AND we want to tell
+                # in the normal click that that normal click is part
+                # of a triple click. (Recognition is proximity + the real 300ms window
+                # only — see the double-click branch above.)
+                tripleClickInvocation = true
               else
                 @forgetTripleClickWdgts()
 
@@ -549,10 +556,18 @@ class ActivePointerWdgt extends Widget
   rememberDoubleClickWdgtsForAWhile: (w) ->
     @doubleClickWdgt = w
     @doubleClickPosition = @position()
+    # Generation token so a STALE forget-timer can't clobber a newer remembered widget.
+    # The 300ms forget is a real-wall-clock setTimeout; when two DISTINCT click gestures
+    # fall within one 300ms window (which fast macro playback can cause — the gestures'
+    # synthetic events drain close together in real time), the earlier gesture's timer
+    # would otherwise fire AFTER the later gesture re-armed this state and wipe it,
+    # silently killing the later double-click. Only the latest timer (matching generation)
+    # is allowed to forget.
+    myGeneration = (@doubleClickGeneration ? 0) + 1
+    @doubleClickGeneration = myGeneration
     setTimeout (=>
-      #if @doubleClickWdgt?
-      #  console.log "single click"
-      @forgetDoubleClickWdgts()
+      if @doubleClickGeneration == myGeneration
+        @forgetDoubleClickWdgts()
       return false
     ), 300
 
@@ -564,10 +579,13 @@ class ActivePointerWdgt extends Widget
   rememberTripleClickWdgtsForAWhile: (w) ->
     @tripleClickWdgt = w
     @tripleClickPosition = @position()
+    # same stale-timer guard as rememberDoubleClickWdgtsForAWhile (a prior gesture's
+    # 300ms timer must not wipe a newer gesture's remembered triple-click widget)
+    myGeneration = (@tripleClickGeneration ? 0) + 1
+    @tripleClickGeneration = myGeneration
     setTimeout (=>
-      #if @tripleClickWdgt?
-      #  console.log "not a triple click, just a double click"
-      @forgetTripleClickWdgts()
+      if @tripleClickGeneration == myGeneration
+        @forgetTripleClickWdgts()
       return false
     ), 300
 
