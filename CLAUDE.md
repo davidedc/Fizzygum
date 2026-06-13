@@ -16,7 +16,8 @@ Prerequisites are installed **globally, not via `npm`**: `coffee` (`npm i -g cof
   - `--notests` — drop tests, keep experimental code.
   - `--includeVideoPlayer --includeVideos` — bundle the video player + assets.
   - `--noSyntaxCheck` — skip the build-time CoffeeScript syntax gate (see Testing).
-- **Build + boot-smoke gate:** `./build_and_smoke.sh` builds (incl. the syntax gate) then headless-boots the world (native + SWCanvas), failing on any console error. One-time setup: `cd ../Fizzygum-tests && npm i` (Puppeteer).
+- **✅ Test a change — PREFERRED / DEFAULT:** `./build_and_test.sh` — full build **+** the whole SystemTest suite run **headless, in parallel shards, at `speed=fastest`, dpr 1** (~1 min on a many-core box). This is the standard way to verify a behaviour change; don't watch the suite in a browser (~15 min) or run tests one-by-one unless debugging a single test. One-time setup: `cd ../Fizzygum-tests && npm i` (Puppeteer).
+- **Build + boot-smoke gate:** `./build_and_smoke.sh` builds (incl. the syntax gate) then headless-boots the world (native + SWCanvas), failing on any console error — a lighter boot-only check (use when a full suite run is overkill).
 - **Watch + rebuild on save:** `./build_as_soon_as_anything_changes.sh` (`fswatch` over `src/`; the syntax gate runs on every save).
 - **Run:** open `../Fizzygum-builds/latest/index.html` in a browser. It loads over `file://`; no dev server needed.
 
@@ -46,8 +47,8 @@ Two fast automated checks complement the (manual/browser) SystemTests:
 
 Behavioural tests are **SystemTests**: each one drives the running world from a high-level **macro** (a generator that asks the live world where things are and synthesises real input events), then compares canvas screenshots pixel-by-pixel against reference images. The Automator source and 160 tests live in the sibling `Fizzygum-tests` repo (not here); any non-`--homepage` build copies them in. (Macros are the only authoring path — the old input *recorder* has been removed.)
 - **Author:** write the test directly as a macro — the framework-side helper toolkit lives in **`src/macros/`** (engine `Macro.coffee` + `MacroToolkit.coffee`, reached as `world.macroToolkit`) and is documented in **`src/macros/CLAUDE.md`**; see also the `/author-macro-test` skill in `Fizzygum-tests`.
-- **Run one:** open the built `worldWithSystemTestHarness.html`, then `world.automator.loader.loadAndRunSingleTestFromName('SystemTest_name')`.
-- **Run the whole suite headless:** `cd ../Fizzygum-tests && npm run test:all:parallel` (`scripts/run-all-headless.js`) — parallel headless shards with the per-test intro slide skipped (`?intro=0`); ~2 min on a many-core box. `npm run test:all` is the single-process variant.
+- **✅ Run the whole suite — PREFERRED / DEFAULT:** `./build_and_test.sh` (build + suite), or against an existing build `cd ../Fizzygum-tests && npm test` (= `scripts/run-all-headless.js`). Runs all 160 tests **headless, in parallel shards, at `speed=fastest`, dpr 1** — ~1 min on a many-core box (vs ~15 min watching a browser). `npm run test:all` is the single-process variant. This is the default way to verify a change.
+- **Run one (debugging a single test):** open the built `worldWithSystemTestHarness.html`, then `world.automator.loader.loadAndRunSingleTestFromName('SystemTest_name')`; or headless `node scripts/run-macro-test-headless.js SystemTest_<name>`.
 
 ## Conventions & gotchas
 
