@@ -234,7 +234,10 @@ are in **`MACRO-PATTERNS.md`**.
 
 - One-time: `npm i` (Puppeteer).
 - Run one headless: `node scripts/run-macro-test-headless.js SystemTest_<name> [--dpr=N]` (boots
-  `worldWithSystemTestHarness.html?sw=1&dpr=N`, prints `TEST PASSED` / `failureImages`).
+  `worldWithSystemTestHarness.html?sw=1&dpr=N`, prints `TEST PASSED` / `failureImages`). Add
+  `--browser=webkit` to run the same test under Safari's engine (Playwright) as a scripted cross-engine
+  determinism check — it reuses the existing references unchanged (SWCanvas + the build's deterministic-trig
+  shim make pixels V8≡JSC identical); capture stays chrome-only. See `../../../Fizzygum-tests/CLAUDE.md`.
 - (Re)capture SWCanvas references: `node scripts/capture-macro-test-references.js <name> [--clean] [--dprs=1,2]`.
   Run that FULL flow (no `--no-build`). A verify `FAIL - no screenshots like this one` is almost always a
   stale/missing-reference artifact of a hand-rolled `--clean --no-build`, NOT nondeterminism — SWCanvas + the

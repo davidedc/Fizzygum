@@ -15,6 +15,10 @@
 # test recopy when you only changed framework source, --noSyntaxCheck).
 # PREREQUISITE: install Puppeteer once: cd ../Fizzygum-tests && npm i
 #
+# Default browser is Chrome (Puppeteer). Set FIZZYGUM_TEST_BROWSER=webkit to instead run
+# the suite under Safari's engine (Playwright) as a cross-engine check — one-time setup:
+# cd ../Fizzygum-tests && npm i && npx playwright install webkit.
+#
 # Like the sibling scripts, NO `set -e`; $? is checked explicitly.
 
 # always operate from the Fizzygum/ repo root (build_it_please.sh assumes this)
@@ -35,8 +39,14 @@ if [ "$?" != "0" ]; then
 fi
 
 echo ""
-echo "==> headless SystemTest suite (parallel shards, speed=fastest, dpr 1) ..."
-( cd ../Fizzygum-tests && npm run --silent test:all:parallel )
+BROWSER_ARG=""
+if [ "$FIZZYGUM_TEST_BROWSER" != "" ]; then
+  BROWSER_ARG="--browser=$FIZZYGUM_TEST_BROWSER"
+  echo "==> headless SystemTest suite ($BROWSER_ARG, parallel shards, speed=fastest, dpr 1) ..."
+else
+  echo "==> headless SystemTest suite (parallel shards, speed=fastest, dpr 1) ..."
+fi
+( cd ../Fizzygum-tests && node scripts/run-all-headless.js $BROWSER_ARG )
 if [ "$?" != "0" ]; then
   echo "build_and_test: TEST stage failed." 1>&2
   exit 1
