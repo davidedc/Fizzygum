@@ -47,6 +47,7 @@ Two fast automated checks complement the (manual/browser) SystemTests:
 Behavioural tests are **SystemTests**: each one drives the running world from a high-level **macro** (a generator that asks the live world where things are and synthesises real input events), then compares canvas screenshots pixel-by-pixel against reference images. The Automator source and 160 tests live in the sibling `Fizzygum-tests` repo (not here); any non-`--homepage` build copies them in. (Macros are the only authoring path — the old input *recorder* has been removed.)
 - **Author:** write the test directly as a macro — the framework-side helper toolkit lives in **`src/macros/`** (engine `Macro.coffee` + `MacroToolkit.coffee`, reached as `world.macroToolkit`) and is documented in **`src/macros/CLAUDE.md`**; see also the `/author-macro-test` skill in `Fizzygum-tests`.
 - **Run one:** open the built `worldWithSystemTestHarness.html`, then `world.automator.loader.loadAndRunSingleTestFromName('SystemTest_name')`.
+- **Run the whole suite headless:** `cd ../Fizzygum-tests && npm run test:all:parallel` (`scripts/run-all-headless.js`) — parallel headless shards with the per-test intro slide skipped (`?intro=0`); ~2 min on a many-core box. `npm run test:all` is the single-process variant.
 
 ## Conventions & gotchas
 

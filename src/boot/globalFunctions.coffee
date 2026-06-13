@@ -199,6 +199,21 @@ boot = ->
   if bootQueryParams? and bootQueryParams.get("speed")?
     window.FIZZYGUM_MACRO_SPEED = bootQueryParams.get("speed")
 
+  # ?intro=0|off — suppress the per-test faded TITLE/DESCRIPTION slide the test
+  # player shows BEFORE each SystemTest (AutomatorPlayer.setUpIntroSlide). That
+  # slide is purely for a HUMAN watching a run; it costs a fixed ~2.5s of real
+  # wall-clock per test (a 2s dwell + a 0.5s fade), unaffected by ?speed=, so for
+  # a headless/CI sweep it is ~half the total runtime and pure waste. It is
+  # orthogonal to ?speed (speed compresses the gestures; this drops the preamble),
+  # touches only DOM (not the world cycle, the command sequence, or the screenshot
+  # pixels), so skipping it leaves every test's result byte-identical. Browser
+  # default is SHOWN (watchable); the headless runners pass ?intro=0. Absent ⇒ true.
+  window.FIZZYGUM_SHOW_TEST_INTRO = true
+  if bootQueryParams? and bootQueryParams.get("intro")?
+    introParam = bootQueryParams.get("intro")
+    if introParam == "0" or introParam == "off" or introParam == "false"
+      window.FIZZYGUM_SHOW_TEST_INTRO = false
+
   # SWCanvas's contexts/elements/gradients are not the native ones, so install
   # Fizzygum's prototype extensions onto them (see SWCanvasElement-extensions).
   if window.FIZZYGUM_USE_SWCANVAS and window.SWCanvas?
