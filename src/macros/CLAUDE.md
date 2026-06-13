@@ -102,8 +102,10 @@ A single global level **`MacroToolkit.speed ∈ {normal, fast, fastest}`** contr
 play. It is set once at boot from **`?speed=`** (parsed in `src/boot/globalFunctions.coffee` like `?sw`/`?dpr`):
 a browser run defaults to **`normal`** (watchable); the headless runner requests **`fastest`**. `fastest` alone
 brings a single-process full-suite sweep from ~33 min to ~15 min; the headless runner then ALSO drops the per-test
-intro slide (`?intro=0`, ~−2.5 s/test → ~8 min) and shards across parallel browsers (`scripts/run-all-headless.js`
-→ ~2 min). `?intro` is ORTHOGONAL to speed (speed compresses the gestures; intro drops the human-only preamble).
+intro slide (`?intro=0`, ~−2.5 s/test) and the per-test fixed image-load wait (AutomatorLoader now proceeds on the
+reference scripts' onload, ~−1 s/test) → ~5 min single-process, and shards across parallel browsers
+(`scripts/run-all-headless.js` → ~1 min). `?intro` is ORTHOGONAL to speed (speed compresses the gestures; intro
+drops the human-only preamble).
 There is **no per-test speed metadata** — the old `supportsTurboPlayback` /
 `requiresSlowPlayback` / `skipInbetweenMouseMoves` flags and the turbo/force-slow plumbing were removed; references
 are **speed-INVARIANT** (the SAME committed images pass at all three levels), so they are captured once (at fastest).
