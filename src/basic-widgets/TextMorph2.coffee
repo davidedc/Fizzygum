@@ -353,6 +353,26 @@ class TextMorph2 extends StringMorph2
 
     return @heightOfPossiblyCroppedText
 
+  # multi-line variant of the StringMorph2 helper: size the box to the NATURAL,
+  # un-soft-wrapped text — the widest hard-newline-separated line × the line
+  # count — reproducing the old TextMorph.reLayout (maxTextWidth == 0 case:
+  # width = maxLineWidth, height = lines × fontHeight). softWrap is turned OFF so
+  # the text never re-wraps to the container; the box just hugs the text. See
+  # StringMorph2::sizeToTextAndDisableFitting for the full rationale.
+  sizeToTextAndDisableFitting: ->
+    @softWrap = false
+    @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
+    @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
+    # softWrap == false → breakTextIntoLines uses an unbounded width, so lines
+    # split only on hard "\n" and maxLineWidth is the natural text width.
+    [lines, lineSlots, naturalWidth, naturalHeight] =
+      @breakTextIntoLines (@transformTextOneToOne @text), @originallySetFontSize
+    widthOfText = Math.max naturalWidth, 1
+    heightOfText = Math.max naturalHeight, (@fontHeight @originallySetFontSize)
+    @silentRawSetExtent new Point widthOfText, heightOfText
+    @reflowText()
+    @
+
   createBufferCacheKey: ->
     return super() +  "-" + @softWrap
 

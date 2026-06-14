@@ -72,13 +72,18 @@ class ToolTipWdgt extends Widget
     if @contents instanceof Widget
       @contentsMorph = @contents
     else if Utils.isString @contents
-      @contentsMorph = new TextMorph(
+      # "sans-serif" passed explicitly: the old TextMorph defaulted a nil font
+      # to "sans-serif", whereas TextMorph2's default is 'Arial, sans-serif'.
+      # Color.BLACK passed explicitly: old TextMorph forced black, TextMorph2
+      # defaults to (37,37,37).
+      @contentsMorph = new TextMorph2(
         @contents,
         WorldMorph.preferencesAndSettings.bubbleHelpFontSize,
-        nil,
+        "sans-serif",
         false,
         true,
-        "center")
+        Color.BLACK)
+      @contentsMorph.alignCenter()
     # canvas-like (a DOM canvas OR an SWCanvasElement under the software backend);
     # Widget / string contents are already handled by the branches above.
     else if @contents? and typeof @contents.getContext is "function"
@@ -88,14 +93,19 @@ class ToolTipWdgt extends Widget
       @contentsMorph.backBuffer = @contents
       @contentsMorph.backBufferContext = @contentsMorph.backBuffer.getContext "2d"
     else
-      @contentsMorph = new TextMorph(
+      @contentsMorph = new TextMorph2(
         @contents.toString(),
         WorldMorph.preferencesAndSettings.bubbleHelpFontSize,
-        nil,
+        "sans-serif",
         false,
         true,
-        "center")
+        Color.BLACK)
+      @contentsMorph.alignCenter()
     @add @contentsMorph
+
+    # the modern family does not self-size; make the tooltip text hug its
+    # content before we read its width/height to size the bubble around it.
+    @contentsMorph.sizeToTextAndDisableFitting() if @contentsMorph instanceof TextMorph2
 
     # adjust my layout
     @silentRawSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @cornerRadius * 2))

@@ -24,6 +24,12 @@ class CaretMorph extends BlinkerMorph
     # font could be really small I guess?
     @minimumExtent = new Point 1,1
 
+    # The OLD TextMorph cannot manage the caret under non-left string alignment,
+    # so it is forced left while editing. The modern TextMorph2 DOES handle the
+    # caret correctly under every AlignmentSpecHorizontal (its slotCoordinates /
+    # slotAtSingleLineString account for the per-line shift), so it must NOT be
+    # forced left — see SystemTest_macroTextMorph2CaretPlacementUnderAlignments
+    # and SystemTest_macroTextMorph2CaretKeepsCorrectAlignment.
     if (@target instanceof TextMorph) and (@target.alignment != 'left')
       @target.setAlignmentToLeft()
     @adjustAccordingToTargetText()

@@ -54,6 +54,13 @@ class StringMorph2 extends Widget
   # used, say, on a text in a ScrollPanelWdgt.
   isScrollable: true
 
+  # When true, the box re-sizes itself to its text on every setText (the OLD
+  # StringMorph/TextMorph "box hugs text" behaviour). Set by
+  # sizeToTextAndDisableFitting; OFF by default so a generic StringMorph2 in a
+  # layout still fits its text into its FIXED box (the modern model). See
+  # sizeToTextAndDisableFitting for why the chrome labels need this.
+  autoSizeBoxToText: false
+
   # startMark and endMark contain the slot of the
   # slot first selected IN TIME, not "in space".
   # i.e. startMark might be higher than endMark if
@@ -1114,6 +1121,38 @@ class StringMorph2 extends Widget
     @synchroniseTextAndActualText()
     @setFittingFontSize @fitToExtent()
 
+  # Reproduce the OLD StringMorph/TextMorph "the BOX sizes itself to the TEXT"
+  # behaviour for chrome labels (menu items, menu headers, tooltips, plain
+  # buttons) that were ported off the now-deleted StringMorph/TextMorph family
+  # onto this modern one. The modern family does the OPPOSITE — it fits the
+  # TEXT into a FIXED box and never resizes its own extent (see the FITTING
+  # MODEL comment above) — so a freshly-built label is the 50×40 Widget default,
+  # not the width of its text. Chrome layout reads @label.extent() right after
+  # construction to size its container, so each such label must instead make its
+  # OWN extent track the text. This helper does that:
+  #   - pin fittingSpecWhenBoundsTooLarge = FLOAT  → never grow the font;
+  #   - pin fittingSpecWhenBoundsTooSmall = SCALEDOWN → never ellipsise the text
+  #     and never pop the "edit:" PromptMorph (that is gated on == CROP, see
+  #     slotCoordinates) and, since the box ends up == the text, never shrink it;
+  #   - measure the text at its set font size and resize the box to it.
+  # With box == text the "bounds too small" branch is unreachable, so neither
+  # cropping, the edit-prompt, nor any font scaling ever fires — i.e. it draws
+  # the text at its exact set size, just like the old family did.
+  # (TextMorph2 overrides this with a multi-line, soft-wrap-off variant.)
+  sizeToTextAndDisableFitting: ->
+    # remember the box-hugs-text mode so a later setText (e.g. editing a button
+    # label in place, where the OLD family reLayout'd on every setText) keeps the
+    # box tracking the text instead of cramming the new text into the stale box.
+    @autoSizeBoxToText = true
+    @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
+    @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
+    measuredWidth = @calculateTextWidth (@transformTextOneToOne @text), @originallySetFontSize
+    widthOfText = Math.max (Math.ceil measuredWidth), 1
+    heightOfText = @fontHeight @originallySetFontSize
+    @silentRawSetExtent new Point widthOfText, heightOfText
+    @reflowText()
+    @
+
   # This is also invoked for example when you take a slider
   # and set it to target this.
   setText: (theTextContent, stringFieldMorph, connectionsCalculationToken, superCall) ->
@@ -1133,6 +1172,12 @@ class StringMorph2 extends Widget
       @text = theNewText
       @checkIfTextContentWasModifiedFromTextAtStart()
       @synchroniseTextAndActualText()
+      # chrome labels (menu items, button captions, …) keep their box hugging the
+      # text on every edit, the way the OLD family reLayout'd on setText; without
+      # this the new text would be crammed/scaled into the box sized to the OLD
+      # text. Generic StringMorph2s leave the flag off and keep their fixed box.
+      if @autoSizeBoxToText
+        @sizeToTextAndDisableFitting()
       @changed()
 
     @updateTarget()

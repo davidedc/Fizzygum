@@ -29,21 +29,26 @@ class MenuItemMorph extends TriggerMorph
   toggleTick: ->
     if @label.text.isTicked()
       @label.text = @label.text.toggleTick()
-      @label.reLayout()
+      # reLayout is a base no-op on the modern TextMorph2, so it would leave the
+      # ticked/unticked label at a stale width; re-measure and re-size instead.
+      @label.sizeToTextAndDisableFitting()
       @label.changed()
     else if @label.text.isUnticked()
       @label.text = @label.text.toggleTick()
-      @label.reLayout()
+      @label.sizeToTextAndDisableFitting()
       @label.changed()
 
 
   createLabel: ->
     # console.log "menuitem createLabel"
-    @label = new TextMorph @labelString, @fontSize, @fontStyle
+    @label = new TextMorph2 @labelString, @fontSize, @fontStyle
     @label.setColor @labelColor
 
     @add @label
-  
+    # the modern family does not self-size; make the label hug its text before
+    # we read @label.extent() below to size this menu item around it.
+    @label.sizeToTextAndDisableFitting()
+
     w = @width()
     @silentRawSetExtent @label.extent().add new Point 8, 0
     @silentRawSetWidth w

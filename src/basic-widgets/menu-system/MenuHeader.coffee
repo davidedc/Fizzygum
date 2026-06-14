@@ -6,18 +6,20 @@ class MenuHeader extends BoxMorph
     super 3
     @color = WorldMorph.preferencesAndSettings.menuHeaderColor
 
-    @text = new TextMorph(
+    @text = new TextMorph2(
       textContents,
       @fontSize or WorldMorph.preferencesAndSettings.menuHeaderFontSize,
       WorldMorph.preferencesAndSettings.menuFontName,
       WorldMorph.preferencesAndSettings.menuHeaderBold,
-      false,
-      "center")
-    @text.alignment = "center"
+      false)
     @text.color = Color.WHITE
     @text.backgroundColor = @color
+    @text.alignCenter()
 
     @add @text
+    # the modern family does not self-size; make the label hug its text so the
+    # header below can size itself to it (see sizeToTextAndDisableFitting).
+    @text.sizeToTextAndDisableFitting()
     @rawSetExtent @text.extent().add 2
 
   rawSetWidth: (theWidth) ->

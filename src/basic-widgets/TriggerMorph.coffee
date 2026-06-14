@@ -167,18 +167,22 @@ class TriggerMorph extends Widget
     # bold
     # italic
     # numeric
-    # shadow offset
-    # shadow color
-    @label = new StringMorph(
+    # NB the modern StringMorph2 signature inserts isHeaderLine before isNumeric,
+    # hence the TWO falses; @fontStyle maps to the fontName slot.
+    @label = new StringMorph2(
       @labelString or "",
       @fontSize,
       @fontStyle,
       @labelBold,
       @labelItalic,
-      false,
+      false, # isHeaderLine
+      false, # isNumeric
       @labelColor
     )
     @add @label
+    # the modern family does not self-size; make the label hug its text so
+    # reLayout's centring math (which reads @label.extent()) works.
+    @label.sizeToTextAndDisableFitting()
     
   # you shouldn't be able to drag a compound
   # morphs containing a button by dragging the button
