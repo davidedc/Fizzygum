@@ -995,8 +995,16 @@ class MacroToolkit
         panel.rawSetExtent new Point 270, 200
         world.add panel
         panel.fullRawMoveTo topLeftPoint
-        text = new TextMorph "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer rhoncus pharetra nulla, vel maximus lectus posuere a. Phasellus finibus blandit ex vitae varius. Vestibulum blandit velit elementum, ornare ipsum sollicitudin, blandit nunc. Mauris a sapien nibh. Nulla nec bibendum quam, eu condimentum nisl. Cras consequat efficitur nisi sed ornare. Pellentesque vitae urna vitae libero malesuada pharetra. Pellentesque commodo, nulla mattis vulputate porttitor, elit augue vestibulum est, nec congue ex dui a velit. Nullam lectus leo, lobortis eget erat ac, lobortis dignissim magna. Morbi ac odio in purus blandit dignissim. Maecenas at sagittis odio."
-        text.maxTextWidth = 185
+        text = new TextMorph2 "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer rhoncus pharetra nulla, vel maximus lectus posuere a. Phasellus finibus blandit ex vitae varius. Vestibulum blandit velit elementum, ornare ipsum sollicitudin, blandit nunc. Mauris a sapien nibh. Nulla nec bibendum quam, eu condimentum nisl. Cras consequat efficitur nisi sed ornare. Pellentesque vitae urna vitae libero malesuada pharetra. Pellentesque commodo, nulla mattis vulputate porttitor, elit augue vestibulum est, nec congue ex dui a velit. Nullam lectus leo, lobortis eget erat ac, lobortis dignissim magna. Morbi ac odio in purus blandit dignissim. Maecenas at sagittis odio."
+        # TextMorph2 has no maxTextWidth knob and does not self-size: wrap it to
+        # 185px and grow the box to the wrapped content height (measured at the
+        # original font size BEFORE constraining the box, so the default CROP fit
+        # can't shrink it) so the text OVERFLOWS the 200px panel → scrollbar.
+        text.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
+        text.silentRawSetWidth 185
+        [wrappedLines, wrappedSlots, wrappedWidth, wrappedHeight] = text.breakTextIntoLines (text.transformTextOneToOne text.text), text.originallySetFontSize
+        text.silentRawSetHeight wrappedHeight
+        text.reflowText()
         panel.add text
         text.fullRawMoveTo new Point (topLeftPoint.x + 12), (topLeftPoint.y + 12)
         yield "waitNoInputsOngoing"

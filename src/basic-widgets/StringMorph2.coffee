@@ -1206,8 +1206,14 @@ class StringMorph2 extends Widget
 
     if newSize != @originallySetFontSize
       @originallySetFontSize = newSize
+      # a box-hugs-text widget (chrome label, or an old-family-style demo target)
+      # tracked its text size on a font change too, the way the old family
+      # reLayout'd on setFontSize; otherwise the bigger/smaller font would just be
+      # fitted into the box sized for the old font.
+      if @autoSizeBoxToText
+        @sizeToTextAndDisableFitting()
       @changed()
-  
+
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     [menuEntriesStrings, functionNamesStrings] = theTarget.stringSetters()
     menu = new MenuMorph @, false, @, true, true, "choose target property:"

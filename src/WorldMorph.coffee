@@ -1992,11 +1992,11 @@ class WorldMorph extends PanelWdgt
   createNewHandle: ->
     @create new HandleMorph
   createNewString: ->
-    newWdgt = new StringMorph "Hello, World!"
+    newWdgt = new StringMorph2 "Hello, World!"
     newWdgt.isEditable = true
     @create newWdgt
   createNewText: ->
-    newWdgt = new TextMorph("Ich weiß nicht, was soll es bedeuten, dass ich so " +
+    newWdgt = new TextMorph2("Ich weiß nicht, was soll es bedeuten, dass ich so " +
       "traurig bin, ein Märchen aus uralten Zeiten, das " +
       "kommt mir nicht aus dem Sinn. Die Luft ist kühl " +
       "und es dunkelt, und ruhig fließt der Rhein; der " +
@@ -2012,7 +2012,8 @@ class WorldMorph extends PanelWdgt
       "am Ende Schiffer und Kahn, und das hat mit ihrem " +
       "Singen, die Loreley getan.")
     newWdgt.isEditable = true
-    newWdgt.maxTextWidth = 300
+    # (maxTextWidth was an old-TextMorph-only knob; TextMorph2 wraps to its own
+    # width via softWrap, like the createNewTextMorph2WithBackground demo.)
     @create newWdgt
   createNewSpeechBubbleWdgt: ->
     newWdgt = new SpeechBubbleWdgt

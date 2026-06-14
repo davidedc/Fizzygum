@@ -187,7 +187,9 @@ class InspectorWdgt extends Widget
 
       counter++
 
-    @lastLabelInHierarchy = new TextMorph "this object"
+    # single-line label; the layout below gives it a fixed 150×15 box, so it
+    # needs no self-sizing — a StringMorph2 fits "this object" left-aligned.
+    @lastLabelInHierarchy = new StringMorph2 "this object"
     @add @lastLabelInHierarchy
     @lastArrowInHierarchy = new AngledArrowUpLeftIconMorph Color.BLACK
     @add @lastArrowInHierarchy
