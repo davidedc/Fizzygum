@@ -1,4 +1,4 @@
-class WindowContentsPlaceholderText extends TextMorph2
+class WindowContentsPlaceholderText extends TextWdgt
 
   constructor: ->
 

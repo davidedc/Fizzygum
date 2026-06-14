@@ -17,7 +17,7 @@
 # this is because the code assumes that the .length property of a string is the number of characters in the string, which, as in the "ä"
 # example, is not true.
 
-class StringMorph2 extends Widget
+class StringWdgt extends Widget
 
   @augmentWith BackBufferMixin
   @augmentWith ControllerMixin
@@ -56,7 +56,7 @@ class StringMorph2 extends Widget
 
   # When true, the box re-sizes itself to its text on every setText (the OLD
   # StringMorph/TextMorph "box hugs text" behaviour). Set by
-  # sizeToTextAndDisableFitting; OFF by default so a generic StringMorph2 in a
+  # sizeToTextAndDisableFitting; OFF by default so a generic StringWdgt in a
   # layout still fits its text into its FIXED box (the modern model). See
   # sizeToTextAndDisableFitting for why the chrome labels need this.
   autoSizeBoxToText: false
@@ -165,7 +165,7 @@ class StringMorph2 extends Widget
   redoHistory: nil
 
   constructor: (
-      @text = (if text is "" then "" else "StringMorph2"),
+      @text = (if text is "" then "" else "StringWdgt"),
       @originallySetFontSize = WorldMorph.preferencesAndSettings.normalTextFontSize,
       @fontName = @justArialFontStack,
       @isBold = false,
@@ -297,7 +297,7 @@ class StringMorph2 extends Widget
     @
   
   toString: ->
-    # e.g. 'a StringMorph2("Hello World")'
+    # e.g. 'a StringWdgt("Hello World")'
     firstPart = super()
     if Automator? and Automator.state != Automator.IDLE and
     Automator.hidingOfMorphsContentExtractInLabels
@@ -806,7 +806,7 @@ class StringMorph2 extends Widget
       backBufferContext.fillText c, p.x, p.y + Math.ceil @fontHeight @fittingFontSize
     
   
-  # StringMorph2 measuring:
+  # StringWdgt measuring:
   slotCoordinates: (slot) ->
     
     # this makes it so when you type and the string becomes too big
@@ -1138,7 +1138,7 @@ class StringMorph2 extends Widget
   # With box == text the "bounds too small" branch is unreachable, so neither
   # cropping, the edit-prompt, nor any font scaling ever fires — i.e. it draws
   # the text at its exact set size, just like the old family did.
-  # (TextMorph2 overrides this with a multi-line, soft-wrap-off variant.)
+  # (TextWdgt overrides this with a multi-line, soft-wrap-off variant.)
   sizeToTextAndDisableFitting: ->
     # remember the box-hugs-text mode so a later setText (e.g. editing a button
     # label in place, where the OLD family reLayout'd on every setText) keeps the
@@ -1175,7 +1175,7 @@ class StringMorph2 extends Widget
       # chrome labels (menu items, button captions, …) keep their box hugging the
       # text on every edit, the way the OLD family reLayout'd on setText; without
       # this the new text would be crammed/scaled into the box sized to the OLD
-      # text. Generic StringMorph2s leave the flag off and keep their fixed box.
+      # text. Generic StringWdgts leave the flag off and keep their fixed box.
       if @autoSizeBoxToText
         @sizeToTextAndDisableFitting()
       @changed()
@@ -1244,7 +1244,7 @@ class StringMorph2 extends Widget
     @updateTarget()
 
   
-  # StringMorph2 editing:
+  # StringWdgt editing:
   edit: ->
     if @textPossiblyCroppedToFit == @transformTextOneToOne @text
       world.edit @
@@ -1390,7 +1390,7 @@ class StringMorph2 extends Widget
   disableSelecting: ->
     # re-establish the original definition of the method
     @clearSelection()
-    @mouseDownLeft = StringMorph2::mouseDownLeft
+    @mouseDownLeft = StringWdgt::mouseDownLeft
     delete @mouseMove
 
 

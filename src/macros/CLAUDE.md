@@ -170,7 +170,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
 
 ## Authoring gotchas (fixture + menu)
 
-- **Direct construction differs from the demo path.** A directly-built `StringMorph2`/`TextMorph2` has `isEditable =
+- **Direct construction differs from the demo path.** A directly-built `StringWdgt`/`TextWdgt` has `isEditable =
   false` (`:43`) — set `txt.isEditable = true` before clicking it. A `SliderMorph` defaults to `alpha 0.1`; a
   `CanvasMorph` ships no default extent. A morph made via the demo menu (`world.create`, floats on the hand) is
   initialised differently from `new …; world.add` and can inspect differently — reproduce the menu path when it's load-bearing.
@@ -181,6 +181,10 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   reference right after it opens and drive its later items via `@moveToItemOfMenuAndClick_InputEvents`.
 - **Right-clicking a non-world child opens the ANCESTOR hierarchy menu** ("a X ➜" per ancestor) — navigate by class-name
   prefix to reach the desired ancestor's own menu (and note "pick up" lives in a morph's own hierarchy submenu, not top-level).
+- **Menu/target labels STRIP "Wdgt" from the class name** (`toString()/getTextDescription()` do `.replace("Wdgt","")`), so a
+  `WindowWdgt` reads `a Window ➜`, a `StringWdgt` reads `a String ➜`, a `TextWdgt` reads `a Text ➜`. Navigate hierarchy /
+  "set target" menus by the **Wdgt-stripped** name (`"a Text"`, not `"a TextWdgt"`). `findTopWidgetByClassNameOrClass` and
+  `instanceof`, by contrast, use the REAL class name (`"TextWdgt"`); and the inspector HIERARCHY diagram shows the real name too.
 - **One inspector, always windowed, one entry point:** there is a single `InspectorWdgt` (the old `InspectorMorph` was
   deleted; `InspectorMorph2`→`InspectorWdgt`), opened by the single method `Widget.spawnInspector` (the duplicate
   `spawnInspector2`/`inspect2` was removed in the inspect-consolidation arc — the "dev ➜ → inspect" item now routes
@@ -188,7 +192,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   (560×410); it renders badly opened naked. Find it with `@findTopWidgetByClassNameOrClass InspectorWdgt`; the
   `*FromTopInspector*` helpers target it. Gotchas for re-authoring its tests: it has NO "work"/eval pane — eval is via each widget's
   **"dev → console"** menu, which opens a `ConsoleWdgt` (an editable code area + a "run all" button → `doAll`, runs the text with
-  `@`=the console's target); its detail pane is a `SimplePlainTextWdgt` (a `TextMorph2`) — a synthetic right-click
+  `@`=the console's target); its detail pane is a `SimplePlainTextWdgt` (a `TextWdgt`) — a synthetic right-click
   can't open its "do all"/context menu, it defaults to NON-wrapping (call `detailText.softWrapOn()` to wrap), and
   it is only editable after a list-row is selected; it HIDES inherited properties by default (toggle
   `showInheritedToggle`, and scroll the list to a row by name since e.g. `alpha` sorts below the first rows);

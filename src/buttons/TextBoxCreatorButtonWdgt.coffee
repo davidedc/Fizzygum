@@ -6,7 +6,7 @@ class TextBoxCreatorButtonWdgt extends CreatorButtonWdgt
     @toolTipMessage = "text box"
 
   createWidgetToBeHandled: ->
-    switcheroo = new TextMorph2 "insert text here"
+    switcheroo = new TextWdgt "insert text here"
     switcheroo.isEditable = true
     switcheroo.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
     switcheroo.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN

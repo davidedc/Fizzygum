@@ -5,7 +5,7 @@
 # this is because the code assumes that the .length property of a string is the number of characters in the string, which, as in the "ä"
 # example, is not true.
 
-class TextMorph2 extends StringMorph2
+class TextWdgt extends StringWdgt
 
   wrappedLines: []
   wrappedLineSlots: []
@@ -20,7 +20,7 @@ class TextMorph2 extends StringMorph2
   widthOfPossiblyCroppedText: nil
 
   constructor: (
-   @text = "TextMorph2",
+   @text = "TextWdgt",
    @originallySetFontSize = WorldMorph.preferencesAndSettings.normalTextFontSize,
    @fontName = @justArialFontStack,
    @isBold = false,
@@ -353,12 +353,12 @@ class TextMorph2 extends StringMorph2
 
     return @heightOfPossiblyCroppedText
 
-  # multi-line variant of the StringMorph2 helper: size the box to the NATURAL,
+  # multi-line variant of the StringWdgt helper: size the box to the NATURAL,
   # un-soft-wrapped text — the widest hard-newline-separated line × the line
   # count — reproducing the old TextMorph.reLayout (maxTextWidth == 0 case:
   # width = maxLineWidth, height = lines × fontHeight). softWrap is turned OFF so
   # the text never re-wraps to the container; the box just hugs the text. See
-  # StringMorph2::sizeToTextAndDisableFitting for the full rationale.
+  # StringWdgt::sizeToTextAndDisableFitting for the full rationale.
   sizeToTextAndDisableFitting: ->
     @softWrap = false
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
@@ -649,7 +649,7 @@ class TextMorph2 extends StringMorph2
       menu.prependMenuItem "do selection", true, @, "doSelection", "evaluate the\nselected expression"
     menu
 
-  # StringMorph2 editing:
+  # StringWdgt editing:
   edit: ->
     # when you edit a TextMorph, potentially
     # you need to change the alignment of the

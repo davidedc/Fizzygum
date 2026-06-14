@@ -29,7 +29,7 @@ class SimpleLinkWdgt extends Widget
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
-    @tempPromptEntryField = new StringMorph2 @descriptionString
+    @tempPromptEntryField = new StringWdgt @descriptionString
     @tempPromptEntryField.isEditable = true
     @tempPromptEntryField.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
     @tempPromptEntryField.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
@@ -37,7 +37,7 @@ class SimpleLinkWdgt extends Widget
     @tempPromptEntryField.alignRight()
     @add @tempPromptEntryField
 
-    @outputTextArea = new StringMorph2 @linkString
+    @outputTextArea = new StringWdgt @linkString
     @outputTextArea.isEditable = true
     @outputTextArea.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
     @outputTextArea.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN

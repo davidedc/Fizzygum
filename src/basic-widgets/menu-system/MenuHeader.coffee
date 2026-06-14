@@ -6,7 +6,7 @@ class MenuHeader extends BoxMorph
     super 3
     @color = WorldMorph.preferencesAndSettings.menuHeaderColor
 
-    @text = new TextMorph2(
+    @text = new TextWdgt(
       textContents,
       @fontSize or WorldMorph.preferencesAndSettings.menuHeaderFontSize,
       WorldMorph.preferencesAndSettings.menuFontName,

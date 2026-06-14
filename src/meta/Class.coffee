@@ -329,7 +329,7 @@ class Class
         constructorDeclaration = compileFGCode constructorDeclaration, true
 
       if window.srcLoadCompileDebugWrites then console.log "constructor declaration JS: " + constructorDeclaration
-      #if @name == "StringMorph2" then debugger
+      #if @name == "StringWdgt" then debugger
       JS_string_definitions += constructorDeclaration + "\n"
 
       # if you declare a constructor (i.e. a Function) like this then you don't
@@ -382,7 +382,7 @@ class Class
           fieldDeclaration = "window." + @name + ".prototype." + fieldName + " = " + fieldDeclaration
 
           if window.srcLoadCompileDebugWrites then console.log "field declaration: " + fieldDeclaration
-          #if @name == "StringMorph2" then debugger
+          #if @name == "StringWdgt" then debugger
           JS_string_definitions += fieldDeclaration + "\n"
 
       JS_staticConstantsBuiltWithClassItself_definitions = ""

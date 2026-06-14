@@ -263,7 +263,7 @@ class ScrollPanelWdgt extends PanelWdgt
           # to redraw the vertical slider.
           morph.rawSetWidth @contents.width() - totalPadding
           # SimplePlainTextWdgt just needs maxTextWidth to be non-null as a wrap
-          # flag (bare-TextMorph2 content wraps via softWrap — deferred pass).
+          # flag (bare-TextWdgt content wraps via softWrap — deferred pass).
           morph.maxTextWidth = @contents.width() - totalPadding
           @contents.rawSetHeight (Math.max morph.height(), @height()) - totalPadding
 

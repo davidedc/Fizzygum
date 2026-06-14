@@ -80,22 +80,22 @@ class FridgeMagnetsMorph extends Widget
     # ----------------------------------------------
 
     # headers --------------------------------------
-    @dragTheTilesHereHeader = new StringMorph2 "drag tiles here"
+    @dragTheTilesHereHeader = new StringWdgt "drag tiles here"
     @dragTheTilesHereHeader.toggleHeaderLine()
     @dragTheTilesHereHeader.alignCenter()
     @add @dragTheTilesHereHeader
 
-    @tilesBinHeader = new StringMorph2 "tiles bin"
+    @tilesBinHeader = new StringWdgt "tiles bin"
     @tilesBinHeader.toggleHeaderLine()
     @tilesBinHeader.alignCenter()
     @add @tilesBinHeader
 
-    @liveCodeLangOutputHeader = new StringMorph2 "LiveCodeLang output"
+    @liveCodeLangOutputHeader = new StringWdgt "LiveCodeLang output"
     @liveCodeLangOutputHeader.toggleHeaderLine()
     @liveCodeLangOutputHeader.alignCenter()
     @add @liveCodeLangOutputHeader
 
-    @outputAnimationHeader = new StringMorph2 "output animation"
+    @outputAnimationHeader = new StringWdgt "output animation"
     @outputAnimationHeader.toggleHeaderLine()
     @outputAnimationHeader.alignCenter()
     @add @outputAnimationHeader

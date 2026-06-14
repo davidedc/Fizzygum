@@ -109,7 +109,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
         morph.rawSetWidthSizeHeightAccordingly recommendedElementWidth
 
         # SimplePlainTextWdgt just needs maxTextWidth to be non-null as a wrap flag
-        # (bare-TextMorph2 content wraps via softWrap — deferred content-text pass).
+        # (bare-TextWdgt content wraps via softWrap — deferred content-text pass).
         if morph instanceof SimplePlainTextWdgt
           morph.maxTextWidth = recommendedElementWidth
 

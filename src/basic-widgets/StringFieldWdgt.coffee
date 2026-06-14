@@ -1,8 +1,8 @@
 # The single string-input field (was StringFieldMorph + StringFieldWdgt2).
-# Like the old StringFieldMorph, but backed by the modern StringMorph2.
+# Like the old StringFieldMorph, but backed by the modern StringWdgt.
 # The field BOX follows @width() (flexible, set by the containing menu/prompt layout);
-# the inner StringMorph2 is given a generous fixed width + SCALEDOWN so short values never
-# render "cropped" — that keeps StringMorph2.edit on its INLINE branch (the old StringMorph
+# the inner StringWdgt is given a generous fixed width + SCALEDOWN so short values never
+# render "cropped" — that keeps StringWdgt.edit on its INLINE branch (the old StringMorph
 # had no crop-deferral; e.g. PromptMorph.reactToSliderAction calls @text.edit() on every
 # slider step and must NOT pop the "edit:" prompt).
 # A stringMorph that can "scroll" as the cursor moves along the text
@@ -40,8 +40,8 @@ class StringFieldWdgt extends PanelWdgt
 
   calculateAndUpdateExtent: ->
     txt = (if @text then @getValue() else @defaultContents)
-    # note: StringMorph2 takes isHeaderLine as its 6th arg, so isNumeric is the 7th
-    text = new StringMorph2 txt, @fontSize, @fontStyle, @isBold, @isItalic, false, @isNumeric
+    # note: StringWdgt takes isHeaderLine as its 6th arg, so isNumeric is the 7th
+    text = new StringWdgt txt, @fontSize, @fontStyle, @isBold, @isItalic, false, @isNumeric
     text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
     #console.log "text morph extent: " + text.text + " : " + text.extent()
     @rawSetWidth Math.max @minTextWidth, text.width()
@@ -51,7 +51,7 @@ class StringFieldWdgt extends PanelWdgt
     super()
     txt = (if @text then @getValue() else @defaultContents)
     if !@text?
-      @text = new StringMorph2(txt, @fontSize, @fontStyle, @isBold, @isItalic, false, @isNumeric)
+      @text = new StringWdgt(txt, @fontSize, @fontStyle, @isBold, @isItalic, false, @isNumeric)
       @text.isNumeric = @isNumeric # for whichever reason...
       @text.isEditable = @isEditable
       @text.enableSelecting()

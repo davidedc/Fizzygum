@@ -62,7 +62,7 @@ class EmptyButtonMorph extends Widget
     if @faceMorph?
 
       if (typeof @faceMorph) == "string"
-        @faceMorph = (new StringMorph2 @faceMorph, WorldMorph.preferencesAndSettings.textInButtonsFontSize).alignCenter()
+        @faceMorph = (new StringWdgt @faceMorph, WorldMorph.preferencesAndSettings.textInButtonsFontSize).alignCenter()
       @add @faceMorph
       @invalidateLayout()
   

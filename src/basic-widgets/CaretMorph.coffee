@@ -26,7 +26,7 @@ class CaretMorph extends BlinkerMorph
 
     # (The deleted old TextMorph had to be forced left-aligned while editing
     # because it couldn't manage the caret under non-left string alignment. The
-    # modern TextMorph2 handles the caret correctly under every
+    # modern TextWdgt handles the caret correctly under every
     # AlignmentSpecHorizontal — its slotCoordinates / slotAtSingleLineString
     # account for the per-line shift — so no force-left is needed; see
     # SystemTest_macroTextMorph2CaretPlacementUnderAlignments and
@@ -89,10 +89,10 @@ class CaretMorph extends BlinkerMorph
               else
                 return @target.tab @target
         when "Enter"
-          # we can't check the class using instanceof because a TextMorph2 is an
-          # instance of StringMorph2 but wants Enter to insert a carriage return
-          # (multi-line), whereas a single-line StringMorph2 wants Enter to accept.
-          if @target.constructor.name == "StringMorph2"
+          # we can't check the class using instanceof because a TextWdgt is an
+          # instance of StringWdgt but wants Enter to insert a carriage return
+          # (multi-line), whereas a single-line StringWdgt wants Enter to accept.
+          if @target.constructor.name == "StringWdgt"
             @accept()
           else
             @insert "\n"

@@ -30,7 +30,7 @@ class SpeechBubbleWdgt extends Widget
     "speech bubble"
   
   buildAndConnectChildren: ->
-    @contentsMorph = new TextMorph2(
+    @contentsMorph = new TextWdgt(
       @contents,
       WorldMorph.preferencesAndSettings.bubbleHelpFontSize,
       nil,

@@ -175,7 +175,7 @@ class InspectorWdgt extends Widget
 
     counter = 0
     for eachNamedClass in @classesNames
-      classButton = new SimpleButtonMorph true, @, "openClassInspector", (new StringMorph2 eachNamedClass, WorldMorph.preferencesAndSettings.textInButtonsFontSize),nil,nil,nil,nil,eachNamedClass,nil,nil,@classNamesTextPadding
+      classButton = new SimpleButtonMorph true, @, "openClassInspector", (new StringWdgt eachNamedClass, WorldMorph.preferencesAndSettings.textInButtonsFontSize),nil,nil,nil,nil,eachNamedClass,nil,nil,@classNamesTextPadding
       @classesButtons.push classButton
       @add classButton
 
@@ -188,8 +188,8 @@ class InspectorWdgt extends Widget
       counter++
 
     # single-line label; the layout below gives it a fixed 150×15 box, so it
-    # needs no self-sizing — a StringMorph2 fits "this object" left-aligned.
-    @lastLabelInHierarchy = new StringMorph2 "this object"
+    # needs no self-sizing — a StringWdgt fits "this object" left-aligned.
+    @lastLabelInHierarchy = new StringWdgt "this object"
     @add @lastLabelInHierarchy
     @lastArrowInHierarchy = new AngledArrowUpLeftIconMorph Color.BLACK
     @add @lastArrowInHierarchy
@@ -218,7 +218,7 @@ class InspectorWdgt extends Widget
     @removePropertyButton = new SimpleButtonMorph true, @, "removeProperty", "remove"
     @add @removePropertyButton
 
-    @saveTextWdgt = (new StringMorph2 "save", WorldMorph.preferencesAndSettings.textInButtonsFontSize).alignCenter()
+    @saveTextWdgt = (new StringWdgt "save", WorldMorph.preferencesAndSettings.textInButtonsFontSize).alignCenter()
     @saveButton = new SimpleButtonMorph true, @, "save", @saveTextWdgt
     @add @saveButton
 
@@ -292,13 +292,13 @@ class InspectorWdgt extends Widget
 
 
 
-    @hierarchyHeaderString = new StringMorph2 "Hierarchy", WorldMorph.preferencesAndSettings.textInButtonsFontSize
+    @hierarchyHeaderString = new StringWdgt "Hierarchy", WorldMorph.preferencesAndSettings.textInButtonsFontSize
     @hierarchyHeaderString.toggleHeaderLine()
     @hierarchyHeaderString.alignCenter()
     @add @hierarchyHeaderString
 
 
-    @propertyHeaderString = new StringMorph2 "Properties", WorldMorph.preferencesAndSettings.textInButtonsFontSize
+    @propertyHeaderString = new StringWdgt "Properties", WorldMorph.preferencesAndSettings.textInButtonsFontSize
     @propertyHeaderString.toggleHeaderLine()
     @propertyHeaderString.alignCenter()
     @add @propertyHeaderString

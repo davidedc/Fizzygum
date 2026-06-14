@@ -73,10 +73,10 @@ class ToolTipWdgt extends Widget
       @contentsMorph = @contents
     else if Utils.isString @contents
       # "sans-serif" passed explicitly: the old TextMorph defaulted a nil font
-      # to "sans-serif", whereas TextMorph2's default is 'Arial, sans-serif'.
-      # Color.BLACK passed explicitly: old TextMorph forced black, TextMorph2
+      # to "sans-serif", whereas TextWdgt's default is 'Arial, sans-serif'.
+      # Color.BLACK passed explicitly: old TextMorph forced black, TextWdgt
       # defaults to (37,37,37).
-      @contentsMorph = new TextMorph2(
+      @contentsMorph = new TextWdgt(
         @contents,
         WorldMorph.preferencesAndSettings.bubbleHelpFontSize,
         "sans-serif",
@@ -93,7 +93,7 @@ class ToolTipWdgt extends Widget
       @contentsMorph.backBuffer = @contents
       @contentsMorph.backBufferContext = @contentsMorph.backBuffer.getContext "2d"
     else
-      @contentsMorph = new TextMorph2(
+      @contentsMorph = new TextWdgt(
         @contents.toString(),
         WorldMorph.preferencesAndSettings.bubbleHelpFontSize,
         "sans-serif",
@@ -105,7 +105,7 @@ class ToolTipWdgt extends Widget
 
     # the modern family does not self-size; make the tooltip text hug its
     # content before we read its width/height to size the bubble around it.
-    @contentsMorph.sizeToTextAndDisableFitting() if @contentsMorph instanceof TextMorph2
+    @contentsMorph.sizeToTextAndDisableFitting() if @contentsMorph instanceof TextWdgt
 
     # adjust my layout
     @silentRawSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @cornerRadius * 2))

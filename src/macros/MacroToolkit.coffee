@@ -373,7 +373,7 @@ class MacroToolkit
   # A SHIFT-modified left click: the same down+up as syntheticEventsMouseClick_InputEvents, but with the
   # event's shiftKey flag set (the 4th boolean of Mouse{down,up}InputEvent — button, buttons, ctrlKey,
   # shiftKey, altKey, metaKey, isFromAutomator, time). A click carrying shiftKey makes an editable
-  # StringMorph2/TextMorph2 EXTEND its selection to the click point (mouseClickLeft reads shiftKey) instead
+  # StringWdgt/TextWdgt EXTEND its selection to the click point (mouseClickLeft reads shiftKey) instead
   # of just repositioning the caret. Left button only (down buttons=1, up buttons=0).
   syntheticEventsMouseShiftClick_InputEvents: (milliseconds = 100, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     # absolute (scaled) times + guard + non-scaled push, like syntheticEventsMouseClick —
@@ -924,7 +924,7 @@ class MacroToolkit
     """
 
     # Patch-programming "set target": wire a CONTROLLER widget (a ColorPaletteMorph, GrayPaletteMorph,
-    # SliderMorph, StringMorph2, … — anything augmented with ControllerMixin) to drive a property of
+    # SliderMorph, StringWdgt, … — anything augmented with ControllerMixin) to drive a property of
     # another widget. Right-click the controller -> "set target" (openTargetSelector) opens a
     # "choose target:" menu of the widgets whose bounds INTERSECT the controller (so the controller must
     # OVERLAP the intended target), each labelled `target.toString() + " ➜"`; pick it by class-name PREFIX.
@@ -987,7 +987,7 @@ class MacroToolkit
 
     # Overflowing-scroll-panel fixture, SHARED by the scroll-panel drag-behaviour tests (default → the panel MOVES;
     # locked-to-desktop → the contents SCROLL; in a window → the WINDOW moves) so the setup lives in ONE place. Builds a
-    # ScrollPanelWdgt with a tall wrapping TextMorph2 so it OVERFLOWS (a vertical scrollbar shows), adds it to the world at
+    # ScrollPanelWdgt with a tall wrapping TextWdgt so it OVERFLOWS (a vertical scrollbar shows), adds it to the world at
     # topLeftPoint, and RETURNS the panel. Takes NO screenshots (only a test's own sources are scanned for reference names).
     macroSubroutines.add Macro.fromString """
       buildOverflowingScrollPanelWithText_Macro = (topLeftPoint) ->
@@ -995,8 +995,8 @@ class MacroToolkit
         panel.rawSetExtent new Point 270, 200
         world.add panel
         panel.fullRawMoveTo topLeftPoint
-        text = new TextMorph2 "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer rhoncus pharetra nulla, vel maximus lectus posuere a. Phasellus finibus blandit ex vitae varius. Vestibulum blandit velit elementum, ornare ipsum sollicitudin, blandit nunc. Mauris a sapien nibh. Nulla nec bibendum quam, eu condimentum nisl. Cras consequat efficitur nisi sed ornare. Pellentesque vitae urna vitae libero malesuada pharetra. Pellentesque commodo, nulla mattis vulputate porttitor, elit augue vestibulum est, nec congue ex dui a velit. Nullam lectus leo, lobortis eget erat ac, lobortis dignissim magna. Morbi ac odio in purus blandit dignissim. Maecenas at sagittis odio."
-        # TextMorph2 has no maxTextWidth knob and does not self-size: wrap it to
+        text = new TextWdgt "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer rhoncus pharetra nulla, vel maximus lectus posuere a. Phasellus finibus blandit ex vitae varius. Vestibulum blandit velit elementum, ornare ipsum sollicitudin, blandit nunc. Mauris a sapien nibh. Nulla nec bibendum quam, eu condimentum nisl. Cras consequat efficitur nisi sed ornare. Pellentesque vitae urna vitae libero malesuada pharetra. Pellentesque commodo, nulla mattis vulputate porttitor, elit augue vestibulum est, nec congue ex dui a velit. Nullam lectus leo, lobortis eget erat ac, lobortis dignissim magna. Morbi ac odio in purus blandit dignissim. Maecenas at sagittis odio."
+        # TextWdgt has no maxTextWidth knob and does not self-size: wrap it to
         # 185px and grow the box to the wrapped content height (measured at the
         # original font size BEFORE constraining the box, so the default CROP fit
         # can't shrink it) so the text OVERFLOWS the 200px panel → scrollbar.

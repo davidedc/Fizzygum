@@ -306,7 +306,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     # label
     @label?.fullDestroy()
-    @label = new StringMorph2 @labelContent, WorldMorph.preferencesAndSettings.titleBarTextFontSize
+    @label = new StringWdgt @labelContent, WorldMorph.preferencesAndSettings.titleBarTextFontSize
 
     # as of March 2018, Safari 10.1.1 on OSX 10.12.5 :
     # safari's rendering of bright text on dark background is atrocious
@@ -468,7 +468,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
           @contents.rawSetHeight desiredHeight
 
       # SimplePlainTextWdgt just needs maxTextWidth to be non-null as a wrap flag.
-      # (TODO: a bare TextMorph2 content wraps via softWrap + @width() and ignores
+      # (TODO: a bare TextWdgt content wraps via softWrap + @width() and ignores
       # maxTextWidth — wiring that up is the deferred content-text-layout pass.)
       if @contents instanceof SimplePlainTextWdgt
         @contents.maxTextWidth = recommendedElementWidth

@@ -2988,19 +2988,19 @@ class Widget extends TreeNode
       true
 
   # »>> this part is excluded from the fizzygum homepage build
-  createNewStringMorph2WithBackground: ->
-    #newWdgt = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, Color.create(255, 255, 54), 0.5
-    newWdgt = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, Color.create(230, 230, 130), 1
+  createNewStringWdgtWithBackground: ->
+    #newWdgt = new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, Color.create(255, 255, 54), 0.5
+    newWdgt = new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, Color.create(230, 230, 130), 1
     newWdgt.isEditable = true
     world.create newWdgt
 
-  createNewStringMorph2WithoutBackground: ->
-    newWdgt = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa"
+  createNewStringWdgtWithoutBackground: ->
+    newWdgt = new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa"
     newWdgt.isEditable = true
     world.create newWdgt
 
-  createNewTextMorph2WithBackground: ->
-    newWdgt = new TextMorph2(
+  createNewTextWdgtWithBackground: ->
+    newWdgt = new TextWdgt(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "lectus posuere a. Phasellus finibus blandit ex vitae " +
@@ -3230,9 +3230,9 @@ class Widget extends TreeNode
     menu.addMenuItem "make spacers opaque", true, @, "makeSpacersOpaque"
     menu.addMenuItem "show adders", true, @, "showAdders"
     menu.addMenuItem "remove adders", true, @, "removeAdders"
-    menu.addMenuItem "StringMorph2 without background", true, @, "createNewStringMorph2WithoutBackground"
-    menu.addMenuItem "StringMorph2 with background", true, @, "createNewStringMorph2WithBackground"
-    menu.addMenuItem "TextMorph2 with background", true, @, "createNewTextMorph2WithBackground"
+    menu.addMenuItem "StringWdgt without background", true, @, "createNewStringWdgtWithoutBackground"
+    menu.addMenuItem "StringWdgt with background", true, @, "createNewStringWdgtWithBackground"
+    menu.addMenuItem "TextWdgt with background", true, @, "createNewTextWdgtWithBackground"
     if world.morphsToBePinouted.has targetMorph
       menu.addMenuItem "remove output pins", true, @, "removeOutputPins"
     else
@@ -3411,9 +3411,9 @@ class Widget extends TreeNode
     menu.addMenuItem "make spacers opaque", true, @, "makeSpacersOpaque"
     menu.addMenuItem "show adders", true, @, "showAdders"
     menu.addMenuItem "remove adders", true, @, "removeAdders"
-    menu.addMenuItem "StringMorph2 without background", true, @, "createNewStringMorph2WithoutBackground"
-    menu.addMenuItem "StringMorph2 with background", true, @, "createNewStringMorph2WithBackground"
-    menu.addMenuItem "TextMorph2 with background", true, @, "createNewTextMorph2WithBackground"
+    menu.addMenuItem "StringWdgt without background", true, @, "createNewStringWdgtWithoutBackground"
+    menu.addMenuItem "StringWdgt with background", true, @, "createNewStringWdgtWithBackground"
+    menu.addMenuItem "TextWdgt with background", true, @, "createNewTextWdgtWithBackground"
     
     menu.addMenuItem "others ➜", false, @, "popUpFirstMenu", "others"
     menu.addMenuItem "others 2 ➜", false, @, "popUpSecondMenu", "others"
@@ -3817,7 +3817,7 @@ class Widget extends TreeNode
   allEntryFields: ->
     @collectAllChildrenBottomToTopSuchThat (each) ->
       each.isEditable and
-      (each instanceof StringMorph2 or
+      (each instanceof StringWdgt or
         each instanceof SimplePlainTextWdgt
         )
   

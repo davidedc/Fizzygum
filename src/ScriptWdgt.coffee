@@ -84,7 +84,7 @@ class ScriptWdgt extends Widget
     @runItButton = new SimpleButtonMorph true, @, "tryIt", "try it"
     @add @runItButton
 
-    @saveTextWdgt = new StringMorph2 "save + close", WorldMorph.preferencesAndSettings.textInButtonsFontSize
+    @saveTextWdgt = new StringWdgt "save + close", WorldMorph.preferencesAndSettings.textInButtonsFontSize
     @saveTextWdgt.alignCenter()
     @saveButton = new SimpleButtonMorph true, @, "saveScriptAndClose", @saveTextWdgt
     @add @saveButton

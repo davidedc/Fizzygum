@@ -1100,7 +1100,7 @@ class WorldMorph extends PanelWdgt
 
     @morphsToBePinouted.forEach (eachMorphNeedingPinout) =>
       unless @morphsBeingPinouted.has eachMorphNeedingPinout
-        hM = new StringMorph2 eachMorphNeedingPinout.toString()
+        hM = new StringWdgt eachMorphNeedingPinout.toString()
         @add hM
         hM.wdgtThisWdgtIsPinouting = eachMorphNeedingPinout
         peekThroughBox = eachMorphNeedingPinout.clippedThroughBounds()
@@ -1991,11 +1991,11 @@ class WorldMorph extends PanelWdgt
   createNewHandle: ->
     @create new HandleMorph
   createNewString: ->
-    newWdgt = new StringMorph2 "Hello, World!"
+    newWdgt = new StringWdgt "Hello, World!"
     newWdgt.isEditable = true
     @create newWdgt
   createNewText: ->
-    newWdgt = new TextMorph2("Ich weiß nicht, was soll es bedeuten, dass ich so " +
+    newWdgt = new TextWdgt("Ich weiß nicht, was soll es bedeuten, dass ich so " +
       "traurig bin, ein Märchen aus uralten Zeiten, das " +
       "kommt mir nicht aus dem Sinn. Die Luft ist kühl " +
       "und es dunkelt, und ruhig fließt der Rhein; der " +
@@ -2011,8 +2011,8 @@ class WorldMorph extends PanelWdgt
       "am Ende Schiffer und Kahn, und das hat mit ihrem " +
       "Singen, die Loreley getan.")
     newWdgt.isEditable = true
-    # (maxTextWidth was an old-TextMorph-only knob; TextMorph2 wraps to its own
-    # width via softWrap, like the createNewTextMorph2WithBackground demo.)
+    # (maxTextWidth was an old-TextMorph-only knob; TextWdgt wraps to its own
+    # width via softWrap, like the createNewTextWdgtWithBackground demo.)
     @create newWdgt
   createNewSpeechBubbleWdgt: ->
     newWdgt = new SpeechBubbleWdgt

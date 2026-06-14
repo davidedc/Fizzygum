@@ -63,9 +63,9 @@ class PromptMorph extends MenuMorph
 
   reactToSliderAction: (num) ->
     @tempPromptEntryField.changed()
-    # the field's inner text is now a StringMorph2 (was the old StringMorph). Use setText
+    # the field's inner text is now a StringWdgt (was the old StringMorph). Use setText
     # -- which re-runs synchroniseTextAndActualText so textPossiblyCroppedToFit tracks the new
-    # value -- instead of poking .text + reLayout (StringMorph2 has no reLayout that refits).
+    # value -- instead of poking .text + reLayout (StringWdgt has no reLayout that refits).
     # Otherwise edit() below sees a stale cropped text and defers to the "edit:" prompt.
     @tempPromptEntryField.text.setText Math.round(num).toString()
     @tempPromptEntryField.text.changed()

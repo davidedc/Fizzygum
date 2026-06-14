@@ -25,7 +25,7 @@ class AxisWdgt extends Widget
       @ticksRectangles[i].minimumExtent = new Point 1,1
       @add @ticksRectangles[i]
 
-      @labelsTextBoxes[i] = new StringMorph2 ""
+      @labelsTextBoxes[i] = new StringWdgt ""
       @labelsTextBoxes[i].fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
       @labelsTextBoxes[i].fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
       @add @labelsTextBoxes[i]

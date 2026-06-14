@@ -22,32 +22,32 @@ assertion a recapture after a regression silently stores two different hashes an
 ## Text & caret
 
 - **Caret placement by click** (`macroTextMorph2CaretPlacementByClick`): clicking inside an EDITABLE text places
-  `world.caret` at the nearest slot (`StringMorph2.mouseClickLeft`, `:1242`, gated on `@isEditable`). A
-  directly-built StringMorph2/TextMorph2 has **`isEditable = false`** (`:43`) — set `txt.isEditable = true` first
+  `world.caret` at the nearest slot (`StringWdgt.mouseClickLeft`, `:1242`, gated on `@isEditable`). A
+  directly-built StringWdgt/TextWdgt has **`isEditable = false`** (`:43`) — set `txt.isEditable = true` first
   (the demo widgets do). `@moveToAndClickAtFractionOf_InputEvents txt, [fx, fy]` places the caret on the clicked
   line: `[0.02, firstLineFrac]` before the first letter; a click past the last line's end clamps after the last
   letter. Size the widget so the wrapped text FITS (a cropped one opens the "edit:" prompt instead).
 - **Caret is alignment-INVARIANT and placement is alignment-AWARE** (`macroTextMorph2CaretPlacementUnderAlignments`): TWO
   complementary halves (the alignment-aware sibling of caret-placement-by-click above, which is LEFT-only), both turning on the
-  per-line shift `textHorizontalPosition` (`StringMorph2.coffee:607-614`, switched on `@horizontalAlignment` LEFT/CENTER/RIGHT).
+  per-line shift `textHorizontalPosition` (`StringWdgt.coffee:607-614`, switched on `@horizontalAlignment` LEFT/CENTER/RIGHT).
   (1) **INVARIANCE:** once the caret is placed on a character, changing the alignment keeps it on the SAME character — it
-  re-renders at its slot with the new shift (`TextMorph2.coffee:515`) and the menu-driven alignment change does NOT stop editing
+  re-renders at its slot with the new shift (`TextWdgt.coffee:515`) and the menu-driven alignment change does NOT stop editing
   (clicking a menu item ABOUT the edited text is the carve-out at `ActivePointerWdgt.coffee:344-349`, so `world.caret` keeps its
   slot). So change alignment via the menu WITHOUT re-clicking and the caret follows the shifting line (image_1..3). (2)
   **AWARENESS:** the SAME fractional click lands on a DIFFERENT character once the line is shifted, because `slotAtSingleLineString`
   SUBTRACTS the shift before resolving the slot (`:791`) — re-click the same `[0.40,0.5]` under right vs the original left placement
   (image_4). Set alignment through the REAL context menu — for a `world.add`-ed widget in dev mode the morph menu is TOP-LEVEL (no
-  "a TextMorph2 ➜" wrapper, `Widget.buildContextMenu:2913-2922`); items carry a leading glyph (`"∸ align center"` / `"→ align
+  "a Text ➜" wrapper, `Widget.buildContextMenu:2913-2922`); items carry a leading glyph (`"∸ align center"` / `"→ align
   right"`) so match by SUBSTRING: `@openMenuOf_InputEvents txt` → `@moveToItemContainingOfMenuAndClick_InputEvents
-  (@getMostRecentlyOpenedMenu()), "align center"`. Build an editable multi-line TextMorph2 (`\n` via `String.fromCharCode 10`)
+  (@getMostRecentlyOpenedMenu()), "align center"`. Build an editable multi-line TextWdgt (`\n` via `String.fromCharCode 10`)
   with DISTINCT per-line widths so the shift is obvious. GOTCHAS: `isEditable = true`; extent WIDE enough that the longest line
   FITS (else a click opens the "edit:" prompt, not an inline caret); settle (`yield "waitNoInputsOngoing"`) after each alignment
-  change before the screenshot (the caret re-shows on the next paint via `gotoSlot`, blink frozen in playback). (Beware: TextMorph2
+  change before the screenshot (the caret re-shows on the next paint via `gotoSlot`, blink frozen in playback). (Beware: TextWdgt
   has a SECOND, dead `@alignment`/`setAlignmentTo*` system unwired to any menu — drive `@horizontalAlignment` via the `align *`
   items, not that.) No new verb.
 - **The caret stays GLUED to its slot through re-layouts — alignment AND style** (`macroTextMorph2CaretKeepsCorrectAlignment`):
   the RE-LAYOUT sibling of the invariance entry above — there the alignment changes under a parked caret; here the TEXT moves
-  under it: in a CENTER+MIDDLE aligned TextMorph2 an Enter at the caret adds a line and re-centers the WHOLE block (everything
+  under it: in a CENTER+MIDDLE aligned TextWdgt an Enter at the caret adds a line and re-centers the WHOLE block (everything
   shifts up half a line), Backspace re-joins and shifts it back, and an "italic" flip changes the font metrics and re-wraps
   every line — the caret must ride its logical slot through all three (any stale-pixel caret would detach visibly).
   GEOMETRY-FAITHFUL FIXTURE TRICK (reusable): when a recording's count-based selection (here Shift+ArrowDown×13 +
@@ -61,14 +61,14 @@ assertion a recapture after a regression silently stores two different hashes an
   (italic+bold flips under a LEFT-aligned caret) — the italic beat is folded in on the harder centered fixture; bold is the
   same metrics-change rule. No new verb.
 - **Caret at and BELOW the last row** (`macroTextMorph2PointingAtLastRow`): the last-row/below-text edge of
-  caret-placement-by-click above. `TextMorph2.slotAt` (`:541`) scans wrapped rows by the click's y, then `slotAtRow`
+  caret-placement-by-click above. `TextWdgt.slotAt` (`:541`) scans wrapped rows by the click's y, then `slotAtRow`
   (`:521`) resolves WITHIN a row per-column (x past the row's end clamps after its last character) — but when the
   computed row is PAST the last wrapped line, the row-overflow guard returns `textPossiblyCroppedToFit.length`: the
   slot after the very last character of the WHOLE text, the x IGNORED. So a click in the background strip below the
   text at a small x produces the IDENTICAL caret (and reference dataHash) as a click far past the last row's end —
   capture both shots and the byte-equality IS the assertion. Fixture: the direct-build caret fixture
   (`isEditable = true`) PLUS `txt.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT` — a
-  directly-built TextMorph2 defaults to SCALEUP (`TextMorph2.coffee:52`), which would scale the text to fill the box
+  directly-built TextWdgt defaults to SCALEUP (`TextWdgt.coffee:52`), which would scale the text to fill the box
   and make the below-text strip an unpredictable font-search leftover; FLOAT keeps the natural font so the strip is a
   fixture constant. Author the row-targeting fracs from a first capture (rows ≈ extent/lineCount bands). No new verb.
 - **Caret arrow-key navigation** (`macroCaretArrowKeyNavigation`): once `world.caret` is editing, `CaretMorph.processKeyDown`
@@ -77,8 +77,8 @@ assertion a recapture after a regression silently stores two different hashes an
   `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "ArrowUp"` / `@repeatSpecialKey_InputEvents "ArrowDown", n`.
 - **Shift-click extends a selection** (`macroShiftClickExtendsSelection`): a plain click drops a FIXED anchor caret;
   each `@shiftClickAtFractionOf_InputEvents txt, [fx,fy]` grows the selection from the anchor to the click point
-  (StringMorph2/TextMorph2.mouseClickLeft reads shiftKey → `startSelectionUpToSlot`/`extendSelectionUpToSlot`).
-  Gotchas: TextMorph2 softWrap wraps to the WIDGET width (`@width()`, not `maxTextWidth`) so size it big with
+  (StringWdgt/TextWdgt.mouseClickLeft reads shiftKey → `startSelectionUpToSlot`/`extendSelectionUpToSlot`).
+  Gotchas: TextWdgt softWrap wraps to the WIDGET width (`@width()`, not `maxTextWidth`) so size it big with
   `rawSetExtent` (tall enough not to crop); a shift-click PAST a line's end clamps to the line-end slot, so two
   clicks past the end produce identical shots — land clicks WITHIN the line text.
 - **Keyboard selection — the anchor model in full** (`macroStringMorph2ImprovedSelection`): the KEYBOARD sibling of
@@ -86,7 +86,7 @@ assertion a recapture after a regression silently stores two different hashes an
   a selection from the caret one slot at a time, and the moving end can cross THROUGH the anchor (the selection dies on
   one side and is reborn on the other, no special-casing); a PLAIN Arrow with a selection COLLAPSES it to an EDGE —
   Left/Up to the LEFT edge, Right/Down to the RIGHT edge — NOT to caret±1 and NOT to the text's extremities (mid-text
-  collapses disambiguate); with NO selection, bare Up/Down act as Home/End in a single-line StringMorph2 (and
+  collapses disambiguate); with NO selection, bare Up/Down act as Home/End in a single-line StringWdgt (and
   Shift+Up/Down select to start/end); a selection grown then shrunk back to nothing is EXACTLY cancelled — typing
   INSERTS, deleting nothing; `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "Meta+a"` selects all, leaving the
   caret line drawn at its slot inside the highlight. ASSERT-BY-BYTE-EQUALITY trick (reusable): different key routes to
@@ -101,26 +101,26 @@ assertion a recapture after a regression silently stores two different hashes an
   the HAND turns into a double/triple-click; targeting `world.caret` selects word/line at its slot. Recognition is
   proximity + the hand's real 300ms window (no speed gate; the verb spaces its clicks inside it), so it works at every
   global speed level — the test carries NO speed metadata.
-  GOTCHA: a TextMorph2 opens an "edit:" PROMPT (not an inline caret) when its text is CROPPED, so ENLARGE the widget
+  GOTCHA: a TextWdgt opens an "edit:" PROMPT (not an inline caret) when its text is CROPPED, so ENLARGE the widget
   so the demo text fits → inline caret.
-- **Double-click selects the WORD under the cursor (clean StringMorph2 + wrapped TextMorph2)** (`macroDoubleClickSelectsWord`): the
-  distinct sibling of the through-the-caret entry above. `StringMorph2.mouseDoubleClick` (`:1212-1229`) reads the slot the prior click
+- **Double-click selects the WORD under the cursor (clean StringWdgt + wrapped TextWdgt)** (`macroDoubleClickSelectsWord`): the
+  distinct sibling of the through-the-caret entry above. `StringWdgt.mouseDoubleClick` (`:1212-1229`) reads the slot the prior click
   placed (`world.caret.slot`) and expands left/right while `String.isLetter()` (`String-extensions.coffee:43-45`, `[a-z]` only —
   spaces/punctuation/digits are boundaries) then `selectBetween()`s the contiguous letter run, so EXACTLY the word under the cursor
-  selects (white-on-blue, `drawSelection :738-747`). TextMorph2 inherits it verbatim (extends StringMorph2 with no own
+  selects (white-on-blue, `drawSelection :738-747`). TextWdgt inherits it verbatim (extends StringWdgt with no own
   `mouseDoubleClick`), resolving the slot per WRAPPED visual line. `@doubleClickAtFractionOf_InputEvents widget, [fx,fy]` is
   self-sufficient — its FIRST click focuses + places `world.caret`, the SECOND is recognised as the double-click — so no separate prior
-  click is needed; double-clicking the TextMorph2 also CLEARS the StringMorph2's selection (focus moves). Fixture: a WIDE single-line
-  StringMorph2 + a wrapped multi-line TextMorph2, BOTH `isEditable=true` (the gate, `:1213,1242`), each sized to FIT (a cropped one
+  click is needed; double-clicking the TextWdgt also CLEARS the StringWdgt's selection (focus moves). Fixture: a WIDE single-line
+  StringWdgt + a wrapped multi-line TextWdgt, BOTH `isEditable=true` (the gate, `:1213,1242`), each sized to FIT (a cropped one
   opens the "edit:" prompt, not an inline caret). No speed metadata — the double-click verb is recognised at every speed.
   Tune the deep-word fraction to the LIVE wrap at capture (here `[0.25,0.87]`
   landed on "condimentum" on the second-to-last line — eyeball which word the highlight covers; the exact word doesn't matter, a clean
   interior word does). Distinct from `macroDoubleAndTripleClickThroughCaretMorph` (double-clicks ON the caret of a tiny pre-typed
-  TextMorph2 — pass-through); this proves word-granularity from a CLEAN state on a single-line StringMorph2 AND wrapped text. No new verb.
+  TextWdgt — pass-through); this proves word-granularity from a CLEAN state on a single-line StringWdgt AND wrapped text. No new verb.
 - **Triple-click scoping: whole string · VISUAL line · LOGICAL line** (`macroTripleClickSelection`): WHAT a triple-click
-  selects, per class and wrap regime — the triple sibling of the word entry above. `StringMorph2.mouseTripleClick`
+  selects, per class and wrap regime — the triple sibling of the word entry above. `StringWdgt.mouseTripleClick`
   (`:1231-1234`) is `selectAll()` + caret to the text's END: on a single-line string ANY click point selects the whole
-  string. `TextMorph2.mouseTripleClick` (`:684-690`) overrides it: it `selectBetween()`s the clicked ROW's first and end
+  string. `TextWdgt.mouseTripleClick` (`:684-690`) overrides it: it `selectBetween()`s the clicked ROW's first and end
   slots — "the whole line (if it's wrapped, just what sits on the very line)" — so in soft-wrapped text the unit is the
   VISUAL line: a full-measure line, a short paragraph-closing line (the highlight stops mid-measure, plus the break slot),
   or the EMPTY separator line (just its newline — a one-character sliver). With `softWrap` OFF the rows ARE the logical
@@ -130,7 +130,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `macroDoubleClickSelectsWord` (direct build, clean ASCII, `isEditable=true`) but keeps TWO paragraphs
   (`String.fromCharCode 10`) — the break is load-bearing for the short-line/empty-line/no-wrap beats. The no-wrap finale
   calls `toggleSoftWrap()` + `togglefittingSpecWhenBoundsTooSmall()` directly (the two menu items' methods; the
-  CROP→SCALEDOWN shrink is LOAD-BEARING — a cropped TextMorph2 opens the "edit:" prompt instead of the inline caret the
+  CROP→SCALEDOWN shrink is LOAD-BEARING — a cropped TextWdgt opens the "edit:" prompt instead of the inline caret the
   triple needs). No speed metadata — the triple-click verb is recognised at every speed. Tune row fracs at capture — and
   remember the SCALEDOWN no-wrap rows are THIN (target the first row a few px under the box top). No new verb.
 - **Clipboard cut/copy/paste** (`macroTextMorph2CutCopyPasteBasic`): after a Shift+Arrow selection,
@@ -142,20 +142,20 @@ assertion a recapture after a regression silently stores two different hashes an
   and Meta+z). image-before and image-after-undo come out pixel-identical — the round-trip proof the caret resizes back;
   assert the pair with `@assertScreenshotsIdentical` (preamble).
 - **The caret resizes with the auto-fit font (SCALEUP)** (`macroTextMorph2CaretResizing`): the forward sibling of the
-  Undo entry above, and the SCALEUP counterpart of the SCALEDOWN shrink-to-fit entry below. A TextMorph2 made via the
+  Undo entry above, and the SCALEUP counterpart of the SCALEDOWN shrink-to-fit entry below. A TextWdgt made via the
   demo menu EXPANDS its font to fill its bounds — the ctor overrides the inherited FLOAT default to SCALEUP
-  (`TextMorph2.coffee:52` vs `StringMorph2.coffee:73`; the `"←→ expand to fill"` / `"←☓→ don't expand to fill"` menu
-  pair is ONE toggle, `togglefittingSpecWhenBoundsTooLarge`, `StringMorph2.coffee:1001-1026`) — so whenever the text
-  fits at its set size, `fitToExtent` returns `searchLargestFittingFont` (`StringMorph2.coffee:286`, a deterministic
+  (`TextWdgt.coffee:52` vs `StringWdgt.coffee:73`; the `"←→ expand to fill"` / `"←☓→ don't expand to fill"` menu
+  pair is ONE toggle, `togglefittingSpecWhenBoundsTooLarge`, `StringWdgt.coffee:1001-1026`) — so whenever the text
+  fits at its set size, `fitToExtent` returns `searchLargestFittingFont` (`StringWdgt.coffee:286`, a deterministic
   binary search bounded at 200px and, under SWCanvas, at the largest shipped atlas size so the painted glyphs and the
   arithmetic `fontHeight` agree). DELETE a chunk and the font auto-GROWS to re-fill the box; the caret follows because
   `CaretMorph.updateDimension` (`CaretMorph.coffee:38-42`) sizes it from `@target.actualFontSizeUsedInRendering()` on
   every slot move/edit. Three Shift+Arrow-select + Backspace rounds make the growth monotone (~20→30→60→90px) with the
   caret glued to its slot throughout. Geometry-faithful fixture (the handle-fraction trick of the caret-glued entry):
-  the wrap layout decides where the count-based selections end. A directly-built TextMorph2 also defaults to SCALEUP —
+  the wrap layout decides where the count-based selections end. A directly-built TextWdgt also defaults to SCALEUP —
   the below-text-strip entry above NEUTRALISES it with FLOAT for the opposite reason (a fixture constant). No new verb.
 - **Editing a CROPPED string defers to the "edit:" prompt** (`macroStringMorph2EditDefersToPromptWhenCropped`):
-  `StringMorph2.edit` (`:1145-1150`) compares the rendered text with the full transformed text — equal → `world.edit @`
+  `StringWdgt.edit` (`:1145-1150`) compares the rendered text with the full transformed text — equal → `world.edit @`
   (inline caret); different (the CROP spec ellipsised it) → `editPopup()` (`:873-882`), the "edit:" `PromptMorph` whose
   field is preloaded with `@text` and whose "Ok" commits via `setText` ("Close" discards — anchor that byte-exactly: a
   cancelled prompt leaves zero residue, same dataHash as the pre-prompt shot with the pointer parked). So the SAME click
@@ -164,8 +164,8 @@ assertion a recapture after a regression silently stores two different hashes an
   banked `topLeft+(3,8)` slot-0 idiom; capture the prompt via `getMostRecentlyOpenedMenu()` right after the opening click.
   This is the mechanic the NoJumps entry's tail deliberately skipped — now asserted. No new verb.
 - **Inline typing refits per fitting mode — and hands off to the prompt when it crops**
-  (`macroStringMorph2InlineTypingRefitsUnderFittingModes`): the StringMorph2 LIVE-TYPING matrix (every other auto-fit
-  macro is TextMorph2-based; a StringMorph2 DEFAULTS to FLOAT+CROP, `:73`). Three same-text same-box fixtures, one per
+  (`macroStringMorph2InlineTypingRefitsUnderFittingModes`): the StringWdgt LIVE-TYPING matrix (every other auto-fit
+  macro is TextWdgt-based; a StringWdgt DEFAULTS to FLOAT+CROP, `:73`). Three same-text same-box fixtures, one per
   regime: under SCALEUP (toggled) each keystroke re-runs `searchLargestFittingFont` so the font steps DOWN live but keeps
   filling the box; under SCALEDOWN (toggled) typing past the width shrinks the whole single line so everything stays
   visible; under the defaults the SAME run ellipsises at the unchanged font — and the keystroke that makes the text no
@@ -182,26 +182,26 @@ assertion a recapture after a regression silently stores two different hashes an
   `@text`, `:1152-1155`) even though the screen shows asterisks; pastes grow the masked run; toggling back reveals the
   blind edits exactly. Both toggles `world.stopEditing()` (the fitting-toggle precedent) — reveal shots carry no caret.
   Keep the box wide enough that the text NEVER crops, or clicks deflect into the edit prompt (the deferral entry). No new verb.
-- **Text ellipsisation** (`macroStringEllipsisation`): a `StringMorph2` does NOT grow to its text — when too narrow it
+- **Text ellipsisation** (`macroStringEllipsisation`): a `StringWdgt` does NOT grow to its text — when too narrow it
   crops to the longest fitting prefix + "…" (`fittingSpecWhenBoundsTooSmall` defaults to `CROP`; SCALEDOWN scales instead,
-  the "crop/shrink to fit" item). `new StringMorph2 "long text", fontSize` (give a `backgroundColor` so the bounds show) +
+  the "crop/shrink to fit" item). `new StringWdgt "long text", fontSize` (give a `backgroundColor` so the bounds show) +
   `rawSetExtent` to a narrow width ellipsises; a narrower extent crops more. The screenshot's settle re-crops.
 - **Text shrink-to-fit (SCALEDOWN)** (`macroTextMorph2ShrinksToFitLongToken`): the SCALEDOWN counterpart of the CROP
-  ellipsisation above. When a wrapping `TextMorph2` holds a single UNBREAKABLE token wider than the box, the WHOLE text's
-  font is scaled DOWN uniformly until the token fits — `StringMorph2.fitToExtent` (`:537`, inherited) takes the SCALEDOWN
+  ellipsisation above. When a wrapping `TextWdgt` holds a single UNBREAKABLE token wider than the box, the WHOLE text's
+  font is scaled DOWN uniformly until the token fits — `StringWdgt.fitToExtent` (`:537`, inherited) takes the SCALEDOWN
   branch (`:563-567`): keeps the full text and returns `searchLargestFittingFont` (a deterministic binary search) →
-  `@fittingFontSize`. An unbreakable token forces it because TextMorph2's token-level wrapping is commented out
-  (`TextMorph2.coffee:107-150`), so a space-less token is one over-wide line that only a font shrink can fit. A TextMorph2
-  DEFAULTS to CROP (`TextMorph2.coffee:53`), so the fixture MUST set `txt.fittingSpecWhenBoundsTooSmall =
+  `@fittingFontSize`. An unbreakable token forces it because TextWdgt's token-level wrapping is commented out
+  (`TextWdgt.coffee:107-150`), so a space-less token is one over-wide line that only a font shrink can fit. A TextWdgt
+  DEFAULTS to CROP (`TextWdgt.coffee:53`), so the fixture MUST set `txt.fittingSpecWhenBoundsTooSmall =
   FittingSpecTextInSmallerBounds.SCALEDOWN` — LOAD-BEARING: without it image_2 ellipsises instead of shrinking (proving the
-  wrong mechanic). Build the TextMorph2 narrow (`rawSetExtent` width < the token's pixel width) with `softWrap` ON
+  wrong mechanic). Build the TextWdgt narrow (`rawSetExtent` width < the token's pixel width) with `softWrap` ON
   (default), then `txt.setText "<words> <80+-char token> <words>"` (the clean deterministic equivalent of caret typing —
   same `@text`, same fitting result; as macroNonWrappingTextResizesToContent argues). image_1 normal font → image_2 whole
   text uniformly smaller. No clicks (so no "edit:" prompt trap; `isEditable` not needed). No new verb.
 - **SCALEUP tracks a TYPED growing token — no jumps** (`macroTextMorph2NoJumpsInLayoutOfLongLine`): the LIVE-typing
-  complement of shrink-to-fit above, on the OTHER branch: `fittingSpecWhenBoundsTooLarge = SCALEUP` is the TextMorph2
-  constructor DEFAULT (`TextMorph2.coffee:52` — the demo "TextMorph2 with background" ships it), and
-  `StringMorph2.fitToExtent`'s SCALEUP branch (`:554`) re-runs `searchLargestFittingFont` on EVERY content change. So
+  complement of shrink-to-fit above, on the OTHER branch: `fittingSpecWhenBoundsTooLarge = SCALEUP` is the TextWdgt
+  constructor DEFAULT (`TextWdgt.coffee:52` — the demo "TextWdgt with background" ships it), and
+  `StringWdgt.fitToExtent`'s SCALEUP branch (`:554`) re-runs `searchLargestFittingFont` on EVERY content change. So
   EMPTYING the text (click → `Meta+a` → `Backspace`, all queued input) maximises the font — the box shows a GIANT
   caret — and growing an unbreakable token through queued keystrokes (`@syntheticEventsStringKeys_InputEvents "aaaaaa"`)
   renders it giant on ONE line, stepping the whole line DOWN to the next largest fitting font exactly when one more
@@ -212,9 +212,9 @@ assertion a recapture after a regression silently stores two different hashes an
   pops mid-typing) is a separate cropped-text mechanic — deliberately not asserted here. No new verb.
 - **Fill-mode SWITCHING mid-session, bold round-trip, paste-over-selection**
   (`macroTextMorph2FillModesWeightAndPasteOverSelection`): the residue laws of the retired endurance recording, in one
-  9-shot fixture (a 320×360 editable TextMorph2, three short words — SCALEUP fits one giant word per line, so every
+  9-shot fixture (a 320×360 editable TextWdgt, three short words — SCALEUP fits one giant word per line, so every
   transition is unmistakable). (1) `txt.togglefittingSpecWhenBoundsTooLarge()` (the "←☓→ don't expand to fill" item's
-  method, `StringMorph2.coffee:1024-1027`) flips SCALEUP→FLOAT with content in place: the auto-grown font SNAPS back to
+  method, `StringWdgt.coffee:1024-1027`) flips SCALEUP→FLOAT with content in place: the auto-grown font SNAPS back to
   the natural set size (the entries above assert each MODE; this asserts the live SWITCH). NB both fitting toggles call
   `world.stopEditing()` — the caret is gone after them, which is exactly what makes the next law shootable: (2)
   `txt.toggleWeight()` twice (bold → normal weight, `:1034-1036`) is a perfect round-trip — the pre-bold and post-normal
@@ -222,31 +222,31 @@ assertion a recapture after a regression silently stores two different hashes an
   italic is the caret-glued entry's). (3) a paste with a LIVE selection REPLACES it (`CaretMorph.processPaste` →
   `insert` → `@target.deleteSelection()` first): dblClick a word, `clip = @copySelection_InputEvents()`,
   `@pasteText_InputEvents clip` → text UNCHANGED, caret after the word; paste again → duplicates (the clipboard entry
-  above pastes only at a bare caret). (4) `txt.alignBottom()` asserts the TextMorph2 BLOCK vertical-alignment axis
-  (the alignment entry below is the StringMorph2 3×3). Finale: arm `txt.togglefittingSpecWhenBoundsTooSmall()`
+  above pastes only at a bare caret). (4) `txt.alignBottom()` asserts the TextWdgt BLOCK vertical-alignment axis
+  (the alignment entry below is the StringWdgt 3×3). Finale: arm `txt.togglefittingSpecWhenBoundsTooSmall()`
   (CROP→SCALEDOWN) BEFORE pasting a ~650-char lorem over a dblClick-selected word — the replacement overflows the box
   HEIGHT and the whole text shrinks uniformly (the shrink-to-fit entry above is the WIDTH/long-token axis). Arming
   SCALEDOWN first is LOAD-BEARING twice: under default CROP the overflow would ellipsise AND the next click would open
   the "edit:" prompt instead of an inline caret (that prompt is exactly the retired recording's image_21 accident —
   its 18th paste overflowed under CROP). The double-click verb is recognised at every speed — no speed metadata.
   No new verb.
-- **Text alignment** (`macroStringMorph2Alignments`): the converse — a StringMorph2 LARGER than its text doesn't grow it
+- **Text alignment** (`macroStringMorph2Alignments`): the converse — a StringWdgt LARGER than its text doesn't grow it
   either (`fittingSpecWhenBoundsTooLarge` defaults to `FLOAT`); the text floats per `horizontalAlignment` (default LEFT)
   and `verticalAlignment` (default TOP). Drive `str.alignLeft()/alignCenter()/alignRight()` and
   `str.alignTop()/alignMiddle()/alignBottom()` DIRECTLY (the "align …" item methods); a synthetic right-click won't open
-  its menu (TextMorph2-family drift). Give it a `backgroundColor` so the float position is visible.
+  its menu (TextWdgt-family drift). Give it a `backgroundColor` so the float position is visible.
 - **Soft-wrap toggle** (`macroSoftWrapTogglesTextReflow`): `textBox.toggleSoftWrap()` DIRECTLY (the "✓ soft wrap" method) —
-  a synthetic right-click on a TextMorph2 does NOT open a usable context menu in a macro (it does on plain widgets; and
+  a synthetic right-click on a TextWdgt does NOT open a usable context menu in a macro (it does on plain widgets; and
   INSIDE a ScrollPanelWdgt the panel's COALESCED menu does open fine, with `SimplePlainTextWdgt`'s own `softWrapOff/On`
   items — see the Scroll section's in-panel soft-wrap entry).
   NB the box does NOT grow on toggle: the overflowing no-wrap line CROPS with an ellipsis at the unchanged box width
   (the default CROP spec) — see the desktop-editing entry below for the SCALEDOWN/editing interplay.
-- **No-wrap desktop editing: caret-into-view slides the MORPH** (`macroSoftWrapping`): editing a no-wrap TextMorph2 on
+- **No-wrap desktop editing: caret-into-view slides the MORPH** (`macroSoftWrapping`): editing a no-wrap TextWdgt on
   the bare desktop composes three mechanics. (1) The morph's EXTENT is independent of its no-wrap text — logical lines
   wider than the box just CLIP at its right edge (`breakTextIntoLines` uses an unbounded measure when `softWrap` is off,
-  `TextMorph2.coffee:314-317`; nothing resizes the box), with SCALEDOWN re-fitting the FONT on every text change. (2)
+  `TextWdgt.coffee:314-317`; nothing resizes the box), with SCALEDOWN re-fitting the FONT on every text change. (2)
   Backspace/Enter genuinely JOIN/SPLIT logical lines — no-wrap rows are real fragments. (3) There is no panel to scroll,
-  so `CaretMorph.gotoSlot` (`CaretMorph.coffee:128-142`, gated on `@target.isScrollable` — StringMorph2 default true)
+  so `CaretMorph.gotoSlot` (`CaretMorph.coffee:128-142`, gated on `@target.isScrollable` — StringWdgt default true)
   SLIDES THE TARGET MORPH (`fullRawMoveLeftSideTo`) whenever the caret's new x falls outside the world's padded view:
   send the caret to the END of a wider-than-the-canvas line and the box's left edge drags OFF-canvas while the caret
   parks at the world's RIGHT edge — floating over the desktop BEYOND the box's painted width; land it near a line START
@@ -254,12 +254,12 @@ assertion a recapture after a regression silently stores two different hashes an
   (`:147-148`) is the sibling the caret-into-view macros assert. AUTHORING RULES learned: after the first edit never
   trust a y-fraction (the SCALEDOWN re-fit moves every row) — click only the FIRST line at a live point
   (`txt.top() + 5`), drive everything else with keys; reach the tail's end with ArrowDown ON THE LAST LINE
-  (`TextMorph2.downFrom` clamps to the text end, `:564-569`; a click BELOW the text does the same via `slotAtRow`'s
+  (`TextWdgt.downFrom` clamps to the text end, `:564-569`; a click BELOW the text does the same via `slotAtRow`'s
   row-overflow guard, `:521-524` — which is also how a stray low click can slide the morph when you didn't mean to);
   size the tail line to overshoot the world's right edge but keep the slid box partly on-canvas (~340 chars at the
   observed re-fit here — tune the split count at capture). Toggles direct, as in the soft-wrap entry above; the
   CROP→SCALEDOWN shrink is load-bearing for inline-caret clicks. No new verb.
-- **Non-wrapping text self-resize** (`macroNonWrappingTextResizesToContent`): a `SimplePlainTextWdgt` (extends TextMorph2)
+- **Non-wrapping text self-resize** (`macroNonWrappingTextResizesToContent`): a `SimplePlainTextWdgt` (extends TextWdgt)
   resizes its OWN bounds to its text. Its ctor sets `@maxTextWidth = true` (wrap to own width); `@maxTextWidth = nil` then
   `reLayout()` turns wrapping OFF (what "soft wrap off" does, `:111-115`). In that mode `setText` re-lays-out SYNCHRONOUSLY
   (`:126-131 → reLayout :183`): width = LONGEST line, height = lineCount × fontHeight. Drive with `setText` (the clean
@@ -272,13 +272,13 @@ assertion a recapture after a regression silently stores two different hashes an
   width = `@width()` — NEVER re-fit to content: gutting the lorem to four words leaves a ONE-LINE strip still the full
   500 wide, where the no-wrap branch would shrink to the longest line (THE distinguishing shot between the branches) —
   × height = lineCount × ceil(fontHeight(originallySetFontSize)). Every trigger converges there synchronously: `setText`
-  (`:126-131`) for the add/remove axes, `setFontSize` (`:165-168`) for the font axis — and the StringMorph2 super parses
+  (`:126-131`) for the add/remove axes, `setFontSize` (`:165-168`) for the font axis — and the StringWdgt super parses
   a numeric `17` and the font prompt's string `"17"` to the IDENTICAL `originallySetFontSize`
-  (`StringMorph2.coffee:1098-1112`), proven in pixels: the macro's direct `setFontSize 17` shot reproduced the retired
+  (`StringWdgt.coffee:1098-1112`), proven in pixels: the macro's direct `setFontSize 17` shot reproduced the retired
   prompt-driven recording's final shot hash-for-hash at both densities. Fixture:
   `world.createNewWrappingSimplePlainTextWdgtWithBackground()` (the banked creator) +
   `@findTopWidgetByClassNameOrClass SimplePlainTextWdgt`; drive with setText/setFontSize per the entry above (a bare
-  TextMorph2-family widget's synthetic right-click opens no usable menu — the scoped drift — so the recorded menu/prompt
+  TextWdgt-family widget's synthetic right-click opens no usable menu — the scoped drift — so the recorded menu/prompt
   routes are out of reach on the desktop anyway). Deterministic setText/setFontSize round trips are EXACT: the pristine,
   the post-restore and the font-round-trip shots all carry the recordings' own pristine dataHash. Pick a font beat that
   keeps the grown widget's BOTTOM EDGE in frame (17, not the recorded 20 that hung off the canvas — the moving bottom
@@ -301,7 +301,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `button.label.edit()` DIRECTLY (`= world.edit label`, sets `world.caret`, no isEditable gate — the "edit" item's method),
   then reuse the caret verbs (`"Meta+a"` → `@syntheticEventsStringKeys_InputEvents "new"`) and `world.stopEditing()` to
   commit. Use an OLD-family label (a `TriggerMorph`/`MenuItemMorph` `TextMorph`, which re-lays-out on setText) — a
-  `SimpleButtonMorph`'s `StringMorph2` face crops; for a standalone TriggerMorph give it `centered=true` + a fixed
+  `SimpleButtonMorph`'s `StringWdgt` face crops; for a standalone TriggerMorph give it `centered=true` + a fixed
   `rawSetExtent` and `reLayout()` after each edit.
 - **Caret brought into view only when MOVED** (`macroDocumentCaretBroughtIntoViewWhenMoved`): in a scrollable document the panel
   scrolls to keep the caret visible — but ONLY on a caret MOVE, not on a wheel scroll. `ScrollPanelWdgt.scrollCaretIntoView` (`:504`)
@@ -318,8 +318,8 @@ assertion a recapture after a regression silently stores two different hashes an
   World!", 60` (the 2nd ctor arg is fontSize, ~5× the default → overflows the viewport) with `str.isEditable = true` (the OLD single-line
   StringMorph defaults `isEditable=false`, `StringMorph.coffee:18`). Drive: `@moveToAndClickAtFractionOf_InputEvents str, [0.04,0.5]` (click
   WITHIN the leading glyphs → inline caret at the start), then `@repeatSpecialKey_InputEvents "ArrowRight", n` walks the caret past the right
-  edge → the content scrolls left and the hBar shifts. GOTCHA: use the OLD `StringMorph` (not StringMorph2) — it is `isScrollable` (`:26`) and
-  has NO "edit:" prompt-on-crop and NO `slotAt` overshoot throw (those are TextMorph2/multi-line traits, `TextMorph.coffee:283`), so a click
+  edge → the content scrolls left and the hBar shifts. GOTCHA: use the OLD `StringMorph` (not StringWdgt) — it is `isScrollable` (`:26`) and
+  has NO "edit:" prompt-on-crop and NO `slotAt` overshoot throw (those are TextWdgt/multi-line traits, `TextMorph.coffee:283`), so a click
   always places an inline caret; drive the moves via the input-event verbs (never poke `world.caret`) so `scrollCaretIntoView` genuinely fires;
   the caret is non-blinking only under the `TurnOnAnimationsPacingControl` preamble (`BlinkerMorph.coffee:21-24`). The VERTICAL sibling
   (`macroScrollPanelCaretBroughtIntoViewWhenMoved`) exercises the SAME path via the V-branch (`:514-521`) and is the bare-`ScrollPanelWdgt`
@@ -342,33 +342,33 @@ assertion a recapture after a regression silently stores two different hashes an
   (`world.edit`, the established idiom for focusing a pane without a click); type ~18 short lines (the detail is taller than the
   old ~3-line work pane, so more lines are needed to overflow it). (Re-authored from the old-inspector work-pane version; the
   recorded original sat on `SWCanvasBrokenTests` because clicking an EMPTY old `TextMorph` crashed SWCanvas's `measureText` —
-  the new `TextMorph2` detail focused via `edit()` avoids that and RESTORES SWCanvas coverage.) No new verb.
+  the new `TextWdgt` detail focused via `edit()` avoids that and RESTORES SWCanvas coverage.) No new verb.
 - **A wrapping text FIELD re-wraps on every container resize** (`macroWrappingTextFieldResizesOK`): the `InspectorWdgt`'s editable
-  `@detail` pane is a `ScrollPanelWdgt` holding a `SimplePlainTextWdgt` (a `TextMorph2`). It defaults to NON-wrapping (long lines
+  `@detail` pane is a `ScrollPanelWdgt` holding a `SimplePlainTextWdgt` (a `TextWdgt`). It defaults to NON-wrapping (long lines
   scroll horizontally); call `detailText.softWrapOn()` (sets the detail scroll panel's `isTextLineWrapping = true`,
   `SimplePlainTextWdgt.coffee:103-109` — the method the "soft wrap" menu item calls; driven directly because a synthetic right-click
-  on a `TextMorph2` can't open that menu) so the typed text wraps to the pane width. Then EVERY resize of the inspector WINDOW
+  on a `TextWdgt` can't open that menu) so the typed text wraps to the pane width. Then EVERY resize of the inspector WINDOW
   re-wraps it: drag the window resizer → `InspectorWdgt.doLayout` resizes the pane → `ScrollPanelWdgt.adjustContentsBounds` re-fits
   the wrapping text to the new pane width → `adjustScrollBars` shows the V-bar when it no longer fits. Probe with a wide → narrow+tall
   progression: WIDTH changes re-break the lines. To type into the detail it must first be EDITABLE — select a property to arm it,
   clear it (`setText ""`) and focus with `detailText.edit()`; drop the caret with `world.stopEditing()` before the shots. (Re-authored
   from the old two-pane naked version: the new inspector has ONE editable detail pane and needs `softWrapOn`.) No new verb.
-- **Evaluation menu reflects text selection** (`macroEvaluationMenuReflectsTextSelection`): a TextMorph2's right-click menu
-  depends on what is selected. `setReceiver obj` (`TextMorph2.coffee:657-659`) installs `evaluationMenu` as the widget's
+- **Evaluation menu reflects text selection** (`macroEvaluationMenuReflectsTextSelection`): a TextWdgt's right-click menu
+  depends on what is selected. `setReceiver obj` (`TextWdgt.coffee:657-659`) installs `evaluationMenu` as the widget's
   `overridingContextMenu` (so `Widget.buildContextMenu` returns it directly); that menu prepends "do all"/"select all" when
   `@text.length>0` (`:618`) and ALSO "do selection"/"show selection"/"inspect selection" ONLY when `@selection()` is non-empty
-  (`:625`). Fixture: a STANDALONE `new TextMorph2("3 + 4", nil,nil,nil,nil, nil, bg, 1)` (the inspector value panes are OLD
-  TextMorph — build the TextMorph2 directly to exercise THIS path), `isEditable=true` + `setReceiver world`, sized so the text
+  (`:625`). Fixture: a STANDALONE `new TextWdgt("3 + 4", nil,nil,nil,nil, nil, bg, 1)` (the inspector value panes are OLD
+  TextMorph — build the TextWdgt directly to exercise THIS path), `isEditable=true` + `setReceiver world`, sized so the text
   FITS (else a click opens the "edit:" prompt). Beats: click in → `@openMenuOf_InputEvents txt` (UNSELECTED shot) → dismiss with
   a mouse-down on empty desktop, RE-CLICK in, `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "Meta+a"` → `@openMenuOf_InputEvents
   txt` (SELECTED shot: text highlighted white-on-blue + the 3 extra items). GOTCHA: opening then dismissing the menu ENDS editing,
   so you MUST re-click into the field before Meta+a, or select-all routes nowhere and the selected shot silently equals the unselected one.
 - **Empty editable text omits "select all"** (`macroEmptyStringDoesntGiveSelectAllOption`): the negative/exclusion sibling of the
   evaluation-menu entry above. `evaluationMenu` builds `@buildHierarchyMenu()` FIRST and only prepends "do all"/"select all" inside
-  `if @text.length>0` (`TextMorph2.coffee:618`), so on an EMPTY field the right-click menu is JUST the hierarchy item `a TextMorph2 ➜`
-  — neither item present. Same fixture as the selection sibling (`new TextMorph2("", …)` + `isEditable=true` + `setReceiver world`,
+  `if @text.length>0` (`TextWdgt.coffee:618`), so on an EMPTY field the right-click menu is JUST the hierarchy item `a Text ➜`
+  — neither item present. Same fixture as the selection sibling (`new TextWdgt("", …)` + `isEditable=true` + `setReceiver world`,
   sized to fit) but START EMPTY: right-click → screenshot (no select-all), then click in + `@syntheticEventsStringKeys_InputEvents
-  "asdf"` (NON-empty, no selection) → right-click → screenshot ("do all"/"select all" now prepended above `a TextMorph2 ➜`). The two
+  "asdf"` (NON-empty, no selection) → right-click → screenshot ("do all"/"select all" now prepended above `a Text ➜`). The two
   shots (absent vs present) ARE the assertion. GOTCHAS: do NOT select the text (Meta+a) — that trips the SEPARATE `:625` selection gate
   and adds the "…selection" items, muddying the empty-vs-filled contrast; re-click the field before typing (dismissing the first menu
   ends editing); screenshot-only (an exact menu-strings assertion is brittle — `evaluationMenu` prepends separator RectangleMorphs with no `labelString`).
@@ -380,7 +380,7 @@ assertion a recapture after a regression silently stores two different hashes an
   the indented body PER LINE with an `"Enter"` between (`@syntheticEventsStringKeys_InputEvents` has NO newline handling), the two leading
   spaces of `"  some code"` typed as literal space keys so the indent round-trips (Enter → `CaretMorph` inserts `"\n"`). TWO gotchas make
   base-width actually bite — both were initially mistaken for "the layout menu doesn't work under synthetic input"; it DOES: (1) the
-  prompt's value lives in a `StringFieldWdgt` (the single prompt entry field — was `StringFieldMorph`, now `StringMorph2`-backed)
+  prompt's value lives in a `StringFieldWdgt` (the single prompt entry field — was `StringFieldMorph`, now `StringWdgt`-backed)
   that DEFAULTS to the current width, so CLICK the field to focus it
   (`StringFieldWdgt.mouseClickLeft → @text.edit()`; reach it as `basePrompt.tempPromptEntryField`), `Meta+a`, type "300", then "Ok" —
   which reads the field's `getValue()` into `setWidthOfElementWhenAdded`. Typing WITHOUT focusing the field leaves the default, so Ok
@@ -789,7 +789,7 @@ assertion a recapture after a regression silently stores two different hashes an
   inside its scroll panel the '☒/☐ soft wrap' items are the TEXT's OWN (`SimplePlainTextWdgt.coffee:90-98`, shown only
   when it is the panel's LONE child) and call `softWrapOff` (`:111-117`: panel `isTextLineWrapping` false +
   `maxTextWidth = nil`) / `softWrapOn` (`:103-109`: both back, plus re-homing the panel's contents to the panel origin) —
-  TextMorph2's `toggleSoftWrap` is NOT involved. The bare-TextMorph2 no-menu drift does NOT apply here either: the
+  TextWdgt's `toggleSoftWrap` is NOT involved. The bare-TextWdgt no-menu drift does NOT apply here either: the
   coalesced in-panel menu OPENS for synthetic right-clicks, so drive the REAL items (match the decorated label by
   SUBSTRING, `moveToItemContainingOfMenuAndClick`). Toggling OFF while scrolled at the END collapses the content to its
   unbounded logical rows (width = LONGEST line, `reLayout :191-196`) → it fits vertically → the view re-anchors at the
@@ -1029,7 +1029,7 @@ assertion a recapture after a regression silently stores two different hashes an
   = `fullCopy().pickUp()`, which grabs a COPY) detaches the REAL part. So dropping a picked-up part on the bare desktop leaves a standalone widget
   and a GAP in the gutted inspector, which re-flows its REMAINING parts (`doLayout` guards each with `if part.parent == @`). Pull the two big
   PANES (`insp.detail`, `insp.list`, captured UP FRONT — the inspector re-lays-out as parts leave); a per-test helper calls `part.pickUp()`
-  directly (the documented equivalent of the menu's "pick up" — driven directly because a synthetic right-click on the `TextMorph2`-based detail
+  directly (the documented equivalent of the menu's "pick up" — driven directly because a synthetic right-click on the `TextWdgt`-based detail
   pane can't open that submenu in a macro), then carries on a no-button move and drops with `@syntheticEventsMouseClick_InputEvents()` (a mouse-DOWN
   releases a float-dragged morph). GOTCHA: do NOT pull the FOOTER BUTTONS — picking a button up makes the inspector rebuild its children, so it
   leaves no clean gap; the two panes show the disassembly cleanly. (Re-authored from the old naked-inspector version, whose `@work` pane and
@@ -1286,22 +1286,22 @@ assertion a recapture after a regression silently stores two different hashes an
   `Widget.setupTestScreen1`.
 - **TEXT widgets as stack cells, via "attach with horizontal layout"** (`macroStringMorph2AndTextMorph2ResizingInLayout`): the
   text-in-layout bridge — the layout macros above use plain rectangles as cells, the text-resize macros resize FREE text; this
-  one puts a `TextMorph2` and a `StringMorph2` INSIDE a stack and resizes the HOLDER. The menu mechanic: "attach with horizontal
+  one puts a `TextWdgt` and a `StringWdgt` INSIDE a stack and resizes the HOLDER. The menu mechanic: "attach with horizontal
   layout" (`Widget.attachWithHorizLayout:3684`) pops a choose-new-parent menu of INTERSECTING morphs (labels are
   `toString()`-based — match by prefix, "a RectangleMorph") whose pick runs `newParentChoiceWithHorizLayout` = `holder.add child,
   nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED` — turning a plain demo RectangleMorph into a
   horizontal stack that FITS to its cells when small and SPLITS its width between them when grown. Resizing through the real
-  resize/move handles re-wraps the TextMorph2's paragraphs to its CELL width (and re-fits the font SMALLER when the cell
-  narrows); the StringMorph2 cell honours its own menu — "∸ align center" (`StringMorph2.alignCenter:987`), "⍿ align middle"
-  (`.alignMiddle:995`), "→← shrink to fit" (`.togglefittingSpecWhenBoundsTooSmall:1007`, inherited by TextMorph2) — the labels
+  resize/move handles re-wraps the TextWdgt's paragraphs to its CELL width (and re-fits the font SMALLER when the cell
+  narrows); the StringWdgt cell honours its own menu — "∸ align center" (`StringWdgt.alignCenter:987`), "⍿ align middle"
+  (`.alignMiddle:995`), "→← shrink to fit" (`.togglefittingSpecWhenBoundsTooSmall:1007`, inherited by TextWdgt) — the labels
   carry glyph decorations, so click via `@moveToItemContainingOfMenuAndClick_InputEvents`; and caret editing keeps working in a
   cell (`@moveToAndClickAtFractionOf_InputEvents` → `@repeatSpecialKey_InputEvents "Shift+ArrowRight", 3` → overtype). FIXTURE
   GOTCHAS: create the widgets through the REAL demo/test menus (`world.create` floats them on the hand, a mouse-down drops them;
-  the demo StringMorph2 is `isEditable=true` unlike direct construction) and author the drop spots so the texts OVERLAP the
+  the demo StringWdgt is `isEditable=true` unlike direct construction) and author the drop spots so the texts OVERLAP the
   rectangle (attach lists only intersecting morphs); reach the holder's menu from a CELL through the hierarchy menu ("a
   RectangleMorph" prefix); scope the corner-handle lookup to the holder's subtree (`rect.topWdgtSuchThat ... resizeBothDimensionsHandle`
-  — mode handles attach to their TARGET); and `TextMorph2 extends StringMorph2`, so locate the string with an
-  instanceof-TextMorph2 EXCLUSION. No new verb.
+  — mode handles attach to their TARGET); and `TextWdgt extends StringWdgt`, so locate the string with an
+  instanceof-TextWdgt EXCLUSION. No new verb.
 - **Re-proportion a stack LIVE by dragging the divider** (`macroStackDividerReproportionsCells`): the INTERACTIVE sibling of basic
   proportions above — a `StackElementsSizeAdjustingMorph` placed BETWEEN two cells in the stack (`holder.add lime/divider/blue, nil,
   LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED`; this is `setupTestScreen1`'s second holder, `Widget.coffee:4515`).
@@ -1370,7 +1370,7 @@ assertion a recapture after a regression silently stores two different hashes an
   clean right-click on the last paragraph — tall paragraphs put its centre at the canvas edge); drop the removed paragraph well
   inside the desktop, clear of the stack, so the world extent (hence the SWCanvas frame) stays put. No new verb.
 - **Font-size change REFLOWS the whole document — in place, and exactly reversibly**
-  (`macroSimpleDocumentAllReflowsCorrectlyAsIChangeFontSize`): `SimplePlainTextWdgt extends TextMorph2` (default
+  (`macroSimpleDocumentAllReflowsCorrectlyAsIChangeFontSize`): `SimplePlainTextWdgt extends TextWdgt` (default
   `originallySetFontSize = 12`, `SimplePlainTextWdgt.coffee:25`), so the real "font size..." prompt (Meta+a selects the value,
   overtype, Ok — the Text-section prompt idiom) re-renders a paragraph IN the flow; the width-constraining stack re-wraps the
   bigger glyphs to the document's width (at 90 the words wrap one per line), pushes the following siblings down, and the scroll
@@ -1557,7 +1557,7 @@ assertion a recapture after a regression silently stores two different hashes an
   property name:" prompt), `saveButton` ("save" → `@target.injectProperty selectedName, detailText`), `renamePropertyButton`,
   `removePropertyButton`. INSPECTOR gotchas: the inspector HIDES inherited props by default and a property like `alpha`/`blanksColor`
   sorts below the first rows, so SCROLL the list to the row by name before clicking it (a per-test `selectInspectorRow` helper:
-  `@calculateVertBarMovement` + a vBar drag); a value/detail pane's text is a `TextMorph2` in a scroll-panel — set it with
+  `@calculateVertBarMovement` + a vBar drag); a value/detail pane's text is a `TextWdgt` in a scroll-panel — set it with
   `detailText.setText`, not a click. The original asserted a byte-identical add→remove round-trip (image_1≡image_5); the new inspector's
   list sub-row scroll rendering leaves an invisible sub-pixel difference, so the round-trip is shown VISUALLY (re-select the same base
   property) rather than via `@assertScreenshotsIdentical`. (Re-authored when the old `InspectorMorph` was removed and the inspect path

@@ -29,7 +29,7 @@ class MenuItemMorph extends TriggerMorph
   toggleTick: ->
     if @label.text.isTicked()
       @label.text = @label.text.toggleTick()
-      # reLayout is a base no-op on the modern TextMorph2, so it would leave the
+      # reLayout is a base no-op on the modern TextWdgt, so it would leave the
       # ticked/unticked label at a stale width; re-measure and re-size instead.
       @label.sizeToTextAndDisableFitting()
       @label.changed()
@@ -41,7 +41,7 @@ class MenuItemMorph extends TriggerMorph
 
   createLabel: ->
     # console.log "menuitem createLabel"
-    @label = new TextMorph2 @labelString, @fontSize, @fontStyle
+    @label = new TextWdgt @labelString, @fontSize, @fontStyle
     @label.setColor @labelColor
 
     @add @label

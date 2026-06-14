@@ -111,20 +111,21 @@ shots either prove a no-op/round-trip (intended) or mean a step silently did not
   (`new SimpleButtonMorph true, target, "action", "label"`) wired to a visible effect (e.g. `box.hide()`)
   rather than borrowing chrome.
 
-**Lists & text panes (`ListMorph`, `TextMorph2`/`SimplePlainTextWdgt`)**
+**Lists & text panes (`ListMorph`, `TextWdgt`/`SimplePlainTextWdgt`)**
 - **Select a list row by SCROLLING to it first**, not by clicking a by-text match. A row that sorts below the
   visible area exists as a (clipped, off-pane) morph; clicking its `topLeft` lands outside the pane and selects
   the *wrong* visible row (this silently no-op'd a `save`). Scroll with the toolkit idiom
   (`@calculateVertBarMovement list.vBar, idx, list.elements.length` → `@syntheticEventsMouseMovePressDragRelease…`)
   then click the now-visible row at `row.topLeft() + (10,2)`.
-- A **`TextMorph2`'s context menu can't be opened by a synthetic right-click** in a macro. So its "do all" /
+- A **`TextWdgt`'s context menu can't be opened by a synthetic right-click** in a macro. So its "do all" /
   evaluation menu, soft-wrap toggle, etc. are not reachable that way — call the underlying method directly
   (`detailText.softWrapOn()`, `textBox.toggleSoftWrap()`) or use the dedicated UI affordance (see "eval" below).
 - A `SimplePlainTextWdgt` detail/console pane **defaults to NON-wrapping** (long lines scroll horizontally).
   Call `detailText.softWrapOn()` (sets the scroll panel's `isTextLineWrapping`) to make it wrap, then container
   resizes re-wrap it.
 - To focus an editable pane for typing without a click, call `pane.edit()` (`world.edit`) — the established
-  idiom; never click an *empty* old `TextMorph` (its `slotAt` crashes under SWCanvas).
+  idiom. (The old `StringMorph`/`TextMorph`, whose empty-field `slotAt` crashed under SWCanvas, are now deleted;
+  the modern `StringWdgt`/`TextWdgt` are safe to click empty.)
 
 **Eval / "run a snippet against this object"**
 - Eval lives behind each widget's **"dev → console"** menu → a `ConsoleWdgt`: an editable code area +
@@ -192,6 +193,23 @@ Keep *historical* prose accurate ("the old `Foo` was removed") — that's not a 
 
 The convention is "don't mass-rename existing `*Morph` files", so modernize deliberately, one collaborator at a
 time, when there's a reason (a duplicate to delete, a class surfacing in tests). Candidates surfaced during the
-inspector arc: `ListMorph`, `TextMorph`/`TextMorph2`, `RectangleMorph`, `SimpleButtonMorph`. Also a deferred
-**menu/method consolidation**: `inspect`/`spawnInspector` (naked, now windowed) and `inspect2`/`spawnInspector2`
-both build `InspectorWdgt` — they can be collapsed into one entry point.
+inspector arc: `ListMorph`, `RectangleMorph`, `SimpleButtonMorph`.
+
+**DONE (2026-06): the String/Text arc.** Deleted the legacy `StringMorph`/`TextMorph` and renamed
+`StringMorph2`→`StringWdgt`, `TextMorph2`→`TextWdgt`. The dominant cost was that the deprecated `TriggerMorph`
+menu/button/tooltip chrome built its labels from the old family; re-pointing it onto the modern family (which
+sizes the TEXT to a fixed box rather than the box to the text) needed a shared `StringWdgt#sizeToTextAndDisableFitting`
+helper + the `autoSizeBoxToText` flag, and shifted the menu/header/tooltip pixels of ~76 tests (recaptured). New
+lessons that bit hard and are now folded into §4 above:
+- **Menu/target labels strip `Wdgt`** — a `TextWdgt` shows/navigates as `a Text ➜` (not `a TextWdgt`); the
+  inspector hierarchy diagram and `findTopWidgetByClassNameOrClass`, by contrast, use the REAL class name. So the
+  rename DID move pixels (inspector/menu displays) and DID need menu-nav-string edits — it was NOT pixel-free.
+- **Renaming a class with a digit (`*Morph2`) via a word-boundary/lookbehind sweep**: a compound TEST NAME like
+  `macroStringMorph2AndTextMorph2ResizingInLayout` has a SECOND class token not preceded by `macro`, so a naive
+  `(?<!macro)` guard renames it and breaks the metadata var↔dir match (`reading 'testDuration' of undefined`).
+  After any test-name-adjacent sweep, assert every `var SystemTest_<name>` matches its directory.
+- A self-sizing chrome label needs to re-hug its text on **setText AND setFontSize** (the old family reLayout'd on
+  both), else an edited/font-driven caption is crammed into the stale box.
+
+Still deferred: the **content-text `maxTextWidth`→`softWrap` pass** for bare `TextWdgt` content inside
+window/panel/scroll layouts (those sites currently special-case only `SimplePlainTextWdgt`).

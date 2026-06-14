@@ -5,19 +5,19 @@
 # one... scrolls.
 #
 # SimplePlainTextWdgt is a compatibility layer that lets us use the new
-# TextMorph2 with the current ScrollPanelWdgt and the current layout mechanism (which
+# TextWdgt with the current ScrollPanelWdgt and the current layout mechanism (which
 # we'd want to change with a more generic one but it's a complex process).
 #
-# This Widget can do stuff that the TextMorph2 is not quite ready to do (i.e. can
+# This Widget can do stuff that the TextWdgt is not quite ready to do (i.e. can
 # adjust its vertical size to fit its contents in the given width, which is what
 # "normal" text editing looks like.
 #
-# TextMorph2 could also be used to do that, but it could do that within a larger
-# layout rework that has not been done yet. Note that TextMorph2 can do a bunch more
+# TextWdgt could also be used to do that, but it could do that within a larger
+# layout rework that has not been done yet. Note that TextWdgt can do a bunch more
 # stuff (e.g. lets you edit in "centered" text, can fit the text to any given
 # bound etc...)
 
-class SimplePlainTextWdgt extends TextMorph2
+class SimplePlainTextWdgt extends TextWdgt
 
   @augmentWith ControllerMixin
 

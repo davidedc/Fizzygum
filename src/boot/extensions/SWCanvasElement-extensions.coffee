@@ -23,7 +23,7 @@
 # The size range SWCanvas can actually render: it ships bitmap atlases for a
 # fixed band of sizes (see vendor-swcanvas-fonts.sh), so any requested size is
 # clamped into [MIN, MAX]. MAX matters beyond rendering: a size above it draws
-# NO bigger than MAX, so auto-fitting text (StringMorph2's font-size search)
+# NO bigger than MAX, so auto-fitting text (StringWdgt's font-size search)
 # must not pick a size larger than MAX — otherwise the chosen size, and the
 # caret/line height derived from it, run away above what is actually painted
 # (the "giant caret, normal-size text" bug). Exposed on window so that search

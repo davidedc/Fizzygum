@@ -1,4 +1,4 @@
-class HhmmssLabelWdgt extends StringMorph2
+class HhmmssLabelWdgt extends StringWdgt
 
   colloquialName: ->
     "HH:MM:SS label"

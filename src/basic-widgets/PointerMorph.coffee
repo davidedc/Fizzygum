@@ -12,7 +12,7 @@ class PointerMorph extends BoxMorph
     @noticesTransparentClick = true
 
     lmContent1 = new CollapsedStateIconMorph
-    lmContent2 = new StringMorph2(
+    lmContent2 = new StringWdgt(
       @target.toString(),
       nil, #@originallySetFontSize,
       nil, #@fontStyle,

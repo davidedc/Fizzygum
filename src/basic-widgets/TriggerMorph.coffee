@@ -167,9 +167,9 @@ class TriggerMorph extends Widget
     # bold
     # italic
     # numeric
-    # NB the modern StringMorph2 signature inserts isHeaderLine before isNumeric,
+    # NB the modern StringWdgt signature inserts isHeaderLine before isNumeric,
     # hence the TWO falses; @fontStyle maps to the fontName slot.
-    @label = new StringMorph2(
+    @label = new StringWdgt(
       @labelString or "",
       @fontSize,
       @fontStyle,

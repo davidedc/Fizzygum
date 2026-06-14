@@ -56,7 +56,7 @@ class CodePromptMorph extends Widget
     @add @cancelButton
 
     
-    @saveTextWdgt = new StringMorph2 "save", WorldMorph.preferencesAndSettings.textInButtonsFontSize
+    @saveTextWdgt = new StringWdgt "save", WorldMorph.preferencesAndSettings.textInButtonsFontSize
     @saveTextWdgt.alignCenter()
     @saveButton = new SimpleButtonMorph true, @, "informTarget", @saveTextWdgt
     @add @saveButton

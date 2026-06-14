@@ -46,7 +46,7 @@ class MenusHelper
 
   createSwitchButtonMorph: ->
     button1 = new SimpleRectangularButtonMorph true, @, nil, new IconMorph(nil)
-    button2 = new SimpleRectangularButtonMorph true, @, nil, new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
+    button2 = new SimpleRectangularButtonMorph true, @, nil, new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
     world.create new SwitchButtonMorph [button1, button2]
 
   createNewClippingBoxMorph: ->
@@ -872,7 +872,7 @@ class MenusHelper
 
     windowWithScrollingPanel.contents.disableDragsDropsAndEditing()
 
-    mapCaption = new TextMorph2 "The City of New York, often called New York City or simply New York, is the most populous city in the United States. With an estimated 2017 population of 8,622,698 distributed over a land area of about 302.6 square miles (784 km2), New York City is also the most densely populated major city in the United States."
+    mapCaption = new TextWdgt "The City of New York, often called New York City or simply New York, is the most populous city in the United States. With an estimated 2017 population of 8,622,698 distributed over a land area of about 302.6 square miles (784 km2), New York City is also the most densely populated major city in the United States."
     mapCaption.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
     mapCaption.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
 
@@ -1005,7 +1005,7 @@ class MenusHelper
     container.add speechBubble2
     speechBubble2.rememberFractionalSituationInHoldingPanel()
 
-    dashboardTitle = new TextMorph2 "Example dashboard with interactive 3D plot"
+    dashboardTitle = new TextWdgt "Example dashboard with interactive 3D plot"
     dashboardTitle.alignCenter()
     dashboardTitle.alignMiddle()
     dashboardTitle.fullRawMoveTo container.position().add new Point 161, 6
@@ -1071,13 +1071,13 @@ class MenusHelper
     container.add slider2
     slider2.rememberFractionalSituationInHoldingPanel()
 
-    cText = new TextMorph2 "0"
+    cText = new TextWdgt "0"
     cText.fullRawMoveTo container.position().add new Point 104, 253
     cText.rawSetExtent new Point 150, 75
     container.add cText
     cText.rememberFractionalSituationInHoldingPanel()
 
-    fText = new TextMorph2 "0"
+    fText = new TextWdgt "0"
     fText.fullRawMoveTo container.position().add new Point 344, 255
     fText.alignRight()
     fText.rawSetExtent new Point 150, 75
@@ -1106,13 +1106,13 @@ class MenusHelper
 
 
 
-    cLabel = new TextMorph2 "°C"
+    cLabel = new TextWdgt "°C"
     cLabel.fullRawMoveTo container.position().add new Point 0+xCorrection, 102+yCorrection
     cLabel.rawSetExtent new Point 90, 90
     container.add cLabel
     cLabel.rememberFractionalSituationInHoldingPanel()
 
-    fLabel = new TextMorph2 "°F"
+    fLabel = new TextWdgt "°F"
     fLabel.fullRawMoveTo container.position().add new Point 422+xCorrection, 102+yCorrection
     fLabel.rawSetExtent new Point 90, 90
     container.add fLabel
