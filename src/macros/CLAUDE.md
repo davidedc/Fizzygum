@@ -181,11 +181,12 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   reference right after it opens and drive its later items via `@moveToItemOfMenuAndClick_InputEvents`.
 - **Right-clicking a non-world child opens the ANCESTOR hierarchy menu** ("a X ➜" per ancestor) — navigate by class-name
   prefix to reach the desired ancestor's own menu (and note "pick up" lives in a morph's own hierarchy submenu, not top-level).
-- **One inspector, always windowed:** there is a single `InspectorWdgt` (the old `InspectorMorph` was deleted;
-  `InspectorMorph2`→`InspectorWdgt`). EVERY inspect path is windowed — both context-menu "inspect"
-  (`Widget.spawnInspector`) and "dev ➜ → inspect" (`spawnInspector2`) wrap it in a `WindowWdgt` (560×410); it
-  renders badly opened naked. Find it with `@findTopWidgetByClassNameOrClass InspectorWdgt`; the `*FromTopInspector*`
-  helpers target it. Gotchas for re-authoring its tests: it has NO "work"/eval pane — eval is via each widget's
+- **One inspector, always windowed, one entry point:** there is a single `InspectorWdgt` (the old `InspectorMorph` was
+  deleted; `InspectorMorph2`→`InspectorWdgt`), opened by the single method `Widget.spawnInspector` (the duplicate
+  `spawnInspector2`/`inspect2` was removed in the inspect-consolidation arc — the "dev ➜ → inspect" item now routes
+  through `inspect`/`spawnInspector` too). EVERY inspect path is windowed — `spawnInspector` wraps it in a `WindowWdgt`
+  (560×410); it renders badly opened naked. Find it with `@findTopWidgetByClassNameOrClass InspectorWdgt`; the
+  `*FromTopInspector*` helpers target it. Gotchas for re-authoring its tests: it has NO "work"/eval pane — eval is via each widget's
   **"dev → console"** menu, which opens a `ConsoleWdgt` (an editable code area + a "run all" button → `doAll`, runs the text with
   `@`=the console's target); its detail pane is a `SimplePlainTextWdgt` (a `TextMorph2`) — a synthetic right-click
   can't open its "do all"/context menu, it defaults to NON-wrapping (call `detailText.softWrapOn()` to wrap), and

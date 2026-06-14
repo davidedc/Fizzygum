@@ -9,7 +9,7 @@ class MenusHelper
 
   popUpDevToolsMenu: (morphOpeningThePopUp, widgetThisMenuIsAbout) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Dev Tools"
-    menu.addMenuItem "inspect", true, widgetThisMenuIsAbout, "inspect2", "open a window\non all properties"
+    menu.addMenuItem "inspect", true, widgetThisMenuIsAbout, "inspect", "open a window\non all properties"
     menu.addMenuItem "console", true, widgetThisMenuIsAbout, "createConsole", "console"
 
     menu.popUpAtHand()
