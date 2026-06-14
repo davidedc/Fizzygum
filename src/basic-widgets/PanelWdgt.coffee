@@ -75,8 +75,7 @@ class PanelWdgt extends Widget
         !(m instanceof CaretMorph)
       if childrenNotCarets.length == 1
         item = @firstChildSuchThat (m) ->
-          ((m instanceof TextMorph) or
-          (m instanceof SimplePlainTextWdgt)) and m.isEditable
+          (m instanceof SimplePlainTextWdgt) and m.isEditable
         item?.mouseClickLeft item.bottomRight(), ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey
 
 

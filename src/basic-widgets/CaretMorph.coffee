@@ -24,14 +24,13 @@ class CaretMorph extends BlinkerMorph
     # font could be really small I guess?
     @minimumExtent = new Point 1,1
 
-    # The OLD TextMorph cannot manage the caret under non-left string alignment,
-    # so it is forced left while editing. The modern TextMorph2 DOES handle the
-    # caret correctly under every AlignmentSpecHorizontal (its slotCoordinates /
-    # slotAtSingleLineString account for the per-line shift), so it must NOT be
-    # forced left — see SystemTest_macroTextMorph2CaretPlacementUnderAlignments
-    # and SystemTest_macroTextMorph2CaretKeepsCorrectAlignment.
-    if (@target instanceof TextMorph) and (@target.alignment != 'left')
-      @target.setAlignmentToLeft()
+    # (The deleted old TextMorph had to be forced left-aligned while editing
+    # because it couldn't manage the caret under non-left string alignment. The
+    # modern TextMorph2 handles the caret correctly under every
+    # AlignmentSpecHorizontal — its slotCoordinates / slotAtSingleLineString
+    # account for the per-line shift — so no force-left is needed; see
+    # SystemTest_macroTextMorph2CaretPlacementUnderAlignments and
+    # SystemTest_macroTextMorph2CaretKeepsCorrectAlignment.)
     @adjustAccordingToTargetText()
 
   adjustAccordingToTargetText: ->
@@ -90,10 +89,10 @@ class CaretMorph extends BlinkerMorph
               else
                 return @target.tab @target
         when "Enter"
-          # we can't check the class using instanceof
-          # because TextMorphs are instances of StringMorphs
-          # but they want the enter to insert a carriage return.
-          if @target.constructor.name == "StringMorph" or @target.constructor.name == "StringMorph2"
+          # we can't check the class using instanceof because a TextMorph2 is an
+          # instance of StringMorph2 but wants Enter to insert a carriage return
+          # (multi-line), whereas a single-line StringMorph2 wants Enter to accept.
+          if @target.constructor.name == "StringMorph2"
             @accept()
           else
             @insert "\n"

@@ -1204,7 +1204,6 @@ class WorldMorph extends PanelWdgt
 
   doOneCycle: ->
     @updateTimeReferences()
-    #console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
 
     @showErrorsHappenedInRepaintingStepInPreviousCycle()
 

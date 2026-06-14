@@ -3817,9 +3817,7 @@ class Widget extends TreeNode
   allEntryFields: ->
     @collectAllChildrenBottomToTopSuchThat (each) ->
       each.isEditable and
-      (each instanceof StringMorph or
-        each instanceof StringMorph2 or
-        each instanceof TextMorph or
+      (each instanceof StringMorph2 or
         each instanceof SimplePlainTextWdgt
         )
   
@@ -4234,7 +4232,7 @@ class Widget extends TreeNode
     # bad kludge here but I think there will be more
     # of these as we move over to the new layouts, we'll
     # probably have split Widgets for the new layouts mechanism
-    if (@ instanceof TextMorph) or (@ instanceof SimplePlainTextWdgt)
+    if @ instanceof SimplePlainTextWdgt
       @rawSetBounds newBoundsForThisLayout
     else
       @rawSetExtent newBoundsForThisLayout.extent()

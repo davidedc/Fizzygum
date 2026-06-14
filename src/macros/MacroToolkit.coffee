@@ -987,7 +987,7 @@ class MacroToolkit
 
     # Overflowing-scroll-panel fixture, SHARED by the scroll-panel drag-behaviour tests (default → the panel MOVES;
     # locked-to-desktop → the contents SCROLL; in a window → the WINDOW moves) so the setup lives in ONE place. Builds a
-    # ScrollPanelWdgt with a tall wrapping TextMorph so it OVERFLOWS (a vertical scrollbar shows), adds it to the world at
+    # ScrollPanelWdgt with a tall wrapping TextMorph2 so it OVERFLOWS (a vertical scrollbar shows), adds it to the world at
     # topLeftPoint, and RETURNS the panel. Takes NO screenshots (only a test's own sources are scanned for reference names).
     macroSubroutines.add Macro.fromString """
       buildOverflowingScrollPanelWithText_Macro = (topLeftPoint) ->

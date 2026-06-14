@@ -467,9 +467,10 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
           desiredHeight = Math.round @height() - partOfHeightUsedUp
           @contents.rawSetHeight desiredHeight
 
-      # the SimplePlainTextWdgt just needs this to be different from null
-      # while the TextMorph actually uses this number
-      if (@contents instanceof TextMorph) or (@contents instanceof SimplePlainTextWdgt)
+      # SimplePlainTextWdgt just needs maxTextWidth to be non-null as a wrap flag.
+      # (TODO: a bare TextMorph2 content wraps via softWrap + @width() and ignores
+      # maxTextWidth — wiring that up is the deferred content-text-layout pass.)
+      if @contents instanceof SimplePlainTextWdgt
         @contents.maxTextWidth = recommendedElementWidth
 
       leftPosition = @left() + Math.floor (@width() - recommendedElementWidth) / 2

@@ -108,9 +108,9 @@ class SimpleVerticalStackPanelWdgt extends Widget
         # this re-layouts each widget to fit the width.
         morph.rawSetWidthSizeHeightAccordingly recommendedElementWidth
 
-        # the SimplePlainTextWdgt just needs this to be different from null
-        # while the TextMorph actually uses this number
-        if (morph instanceof TextMorph) or (morph instanceof SimplePlainTextWdgt)
+        # SimplePlainTextWdgt just needs maxTextWidth to be non-null as a wrap flag
+        # (bare-TextMorph2 content wraps via softWrap — deferred content-text pass).
+        if morph instanceof SimplePlainTextWdgt
           morph.maxTextWidth = recommendedElementWidth
 
         if morph.layoutSpecDetails.alignment == 'right'
