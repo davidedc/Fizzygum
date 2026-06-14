@@ -380,8 +380,9 @@ assertion a recapture after a regression silently stores two different hashes an
   the indented body PER LINE with an `"Enter"` between (`@syntheticEventsStringKeys_InputEvents` has NO newline handling), the two leading
   spaces of `"  some code"` typed as literal space keys so the indent round-trips (Enter → `CaretMorph` inserts `"\n"`). TWO gotchas make
   base-width actually bite — both were initially mistaken for "the layout menu doesn't work under synthetic input"; it DOES: (1) the
-  prompt's value lives in a `StringFieldMorph` that DEFAULTS to the current width, so CLICK the field to focus it
-  (`StringFieldMorph.mouseClickLeft → @text.edit()`; reach it as `basePrompt.tempPromptEntryField`), `Meta+a`, type "300", then "Ok" —
+  prompt's value lives in a `StringFieldWdgt` (the single prompt entry field — was `StringFieldMorph`, now `StringMorph2`-backed)
+  that DEFAULTS to the current width, so CLICK the field to focus it
+  (`StringFieldWdgt.mouseClickLeft → @text.edit()`; reach it as `basePrompt.tempPromptEntryField`), `Meta+a`, type "300", then "Ok" —
   which reads the field's `getValue()` into `setWidthOfElementWhenAdded`. Typing WITHOUT focusing the field leaves the default, so Ok
   re-applies the current width = no visible change. (If instead you drive the prompt's `SliderMorph` via
   `@clickOnSliderTrackAtFraction_InputEvents`, pass a `[fx,fy]` POINT, NOT a scalar — a scalar indexes as `fraction[0]`=undefined → a NaN

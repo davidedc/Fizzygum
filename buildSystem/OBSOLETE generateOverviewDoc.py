@@ -41,7 +41,6 @@ COMMON_FILES = [
 'src/MenuItemMorph.coffee',
 'src/CaretMorph.coffee',
 'src/Color.coffee',
-'src/StringFieldMorph.coffee',
 'src/GrayPaletteMorph.coffee',
 'src/ColorPickerMorph.coffee',
 'src/ColorPaletteMorph.coffee',

@@ -13,7 +13,7 @@ class SaveShortcutPromptWdgt extends MenuMorph
     if !@defaultContents
       @defaultContents = world.getNextUntitledShortcutName()
 
-    @tempPromptEntryField = new StringFieldWdgt2(
+    @tempPromptEntryField = new StringFieldWdgt(
       @defaultContents,
       150,
       WorldMorph.preferencesAndSettings.prompterFontSize,
