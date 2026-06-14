@@ -70,6 +70,58 @@ class StringMorph2 extends Widget
   horizontalAlignment: AlignmentSpecHorizontal.LEFT
   verticalAlignment: AlignmentSpecVertical.TOP
 
+  # ===========================================================================
+  # FITTING MODEL — current state, and how to add the missing "fit box to text"
+  # axis PROPERLY (the abandoned StringMorph3 experiment, done right)
+  #
+  # Today this widget implements ONE fitting mode: "fit the TEXT into a FIXED
+  # box". The box extent is whatever the layout/user sets; the two specs below
+  # decide what the text does INSIDE it (they only ever change
+  # @textPossiblyCroppedToFit and @fittingFontSize, NEVER @extent()):
+  #   - fittingSpecWhenBoundsTooLarge: FLOAT (keep the set font size, the text
+  #     just floats per horizontal/verticalAlignment) | SCALEUP (grow the font
+  #     via searchLargestFittingFont to fill the box).
+  #   - fittingSpecWhenBoundsTooSmall: CROP (ellipsise via
+  #     searchLongestFittingTextByMultiCroppingIt, keep the font) | SCALEDOWN
+  #     (shrink the font so the whole text fits).
+  # Both are consumed only in fitToExtent() (below).
+  #
+  # The deleted StringMorph3 sketched the COMPLEMENTARY mode — "fit the BOX to
+  # the TEXT" (resize the morph's OWN extent to its content) — with two extra
+  # sub-axes: tight-vs-loose (how much padding around the text) and which-
+  # dimension-adjusts (HEIGHT_ADJUSTS_TO_WIDTH vs the converse). It was a dead
+  # end because it lived ONLY in the menu: the "fit text to box / fit box to
+  # text" items just toggled ticks ("TODO actually do something that changes the
+  # fitting mode of the morph"), its tight/loose items were wired to the WRONG
+  # toggle, and NO code ever read the mode to actually resize the morph. Don't
+  # resurrect that copy — its handlers are the part NOT to reuse — rebuild the
+  # feature HERE, where the determinism (SWCanvas font cap), ControllerMixin and
+  # undo/redo machinery already live.
+  #
+  # To add "fit box to text" properly:
+  #  1. Add a top-level mode (e.g. fittingSpec ∈ {FIT_TEXT_TO_BOX (default),
+  #     FIT_BOX_TO_TEXT}) plus the two sub-axis specs (tight/loose, which-
+  #     dimension-adjusts). Make them real properties AND add them to
+  #     createBufferCacheKey() so the cached back-buffer re-renders on change.
+  #  2. Put the BEHAVIOUR in reflowText()/fitToExtent(), NOT in the menu: when
+  #     mode == FIT_BOX_TO_TEXT, compute the content size (calculateTextWidth ×
+  #     fontHeight, + padding if loose) and @silentRawSetExtent the morph to it,
+  #     honouring which-dimension-adjusts. Working precedents to mirror:
+  #     SimplePlainTextWdgt.reLayout (wrap case: width kept, height =
+  #     lineCount × fontHeight) and the old TextMorph.reLayout/rawSetExtent
+  #     (non-wrap: width from user → maxTextWidth, height from content). This is
+  #     a single-line widget, so the box-to-text case reduces to
+  #     height = fontHeight(originallySetFontSize), width = measured text width
+  #     (+ padding).
+  #  3. A self-resizing widget MUST tell its container to reflow — call
+  #     @invalidateLayout() (or the parent's adjustContentsBounds) after the
+  #     silentRawSetExtent, the way SimplePlainTextWdgt does on setText —
+  #     otherwise it grows/shrinks without the surrounding layout noticing.
+  #  4. ONLY THEN wire the menu: real items → real toggle methods that set the
+  #     mode/sub-axes and @changed(), keeping the tick state in sync. (See the
+  #     deleted StringMorph3 in git history for the intended menu SHAPE — but
+  #     reuse none of its no-op handlers.)
+  # ===========================================================================
   fittingSpecWhenBoundsTooLarge: FittingSpecTextInLargerBounds.FLOAT
   fittingSpecWhenBoundsTooSmall: FittingSpecTextInSmallerBounds.CROP
 
