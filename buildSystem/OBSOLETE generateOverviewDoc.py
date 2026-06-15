@@ -37,7 +37,6 @@ COMMON_FILES = [
 'src/Point.coffee',
 'src/PenMorph.coffee',
 'src/MorphsListMorph.coffee',
-'src/TriggerMorph.coffee',
 'src/MenuItemMorph.coffee',
 'src/CaretMorph.coffee',
 'src/Color.coffee',

@@ -185,6 +185,13 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `WindowWdgt` reads `a Window ➜`, a `StringWdgt` reads `a String ➜`, a `TextWdgt` reads `a Text ➜`. Navigate hierarchy /
   "set target" menus by the **Wdgt-stripped** name (`"a Text"`, not `"a TextWdgt"`). `findTopWidgetByClassNameOrClass` and
   `instanceof`, by contrast, use the REAL class name (`"TextWdgt"`); and the inspector HIERARCHY diagram shows the real name too.
+- **Menu items / magnets are now in the modern button family** — the deprecated `TriggerMorph` was deleted; `MenuItemMorph`
+  now `extends EmptyButtonMorph` (so it inherits the `target`/`action`/`trigger` machinery and the `HighlightableMixin` state
+  constants) but KEEPS the flat menu-row look via its own retained paint + state handlers, so menus render exactly as before.
+  `MenuItemMorph` is NOT renamed, so `instanceof MenuItemMorph` and the `"a MenuItemMorph ➜"` hierarchy nav strings are
+  unchanged. `MagnetMorph extends MenuItemMorph`. For a STANDALONE button fixture use `SimpleButtonMorph` (the modern button;
+  its `StringWdgt` face crops on `setText`) — but for an editable-label button use `MenuItemMorph` (its `TextWdgt` label
+  re-measures on `setText`); see `macroBareButtonFloatDragsWithoutTriggering` / `macroEditButtonLabelText`.
 - **One inspector, always windowed, one entry point:** there is a single `InspectorWdgt` (the old `InspectorMorph` was
   deleted; `InspectorMorph2`→`InspectorWdgt`), opened by the single method `Widget.spawnInspector` (the duplicate
   `spawnInspector2`/`inspect2` was removed in the inspect-consolidation arc — the "dev ➜ → inspect" item now routes
