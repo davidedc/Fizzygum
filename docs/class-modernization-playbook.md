@@ -217,8 +217,41 @@ lessons that bit hard and are now folded into §4 above:
 - A self-sizing chrome label needs to re-hug its text on **setText AND setFontSize** (the old family reLayout'd on
   both), else an edited/font-driven caption is crammed into the stale box.
 
-Still deferred: the **content-text `maxTextWidth`→`softWrap` pass** for bare `TextWdgt` content inside
-window/panel/scroll layouts (those sites currently special-case only `SimplePlainTextWdgt`).
+(The content-text reflow follow-up it deferred is now DONE — see the FIT_BOX_TO_TEXT arc below.)
+
+**DONE (2026-06-15): the content-text reflow / FIT_BOX_TO_TEXT arc (roadmap #1, the FIRST non-rename
+technical cleanup).** Made a bare `TextWdgt` re-wrap + auto-grow/shrink its height as window/panel/scroll
+CONTENT, like `SimplePlainTextWdgt` already did — done PROPERLY (not the cheap "widen `instanceof
+SimplePlainTextWdgt` + propagate `maxTextWidth`"). Retired the dead-`TextMorph` `maxTextWidth` knob; WIRED the
+pre-scaffolded `FittingSpecText` enums (`fittingSpec` mode + tight/loose + which-dimension sub-axes) into
+`reflowText`/`TextWdgt::reLayout`/`createBufferCacheKey`; removed the 3 `instanceof SimplePlainTextWdgt` render
+leaks (→ `fittingSpec == FIT_BOX_TO_TEXT`); moved the contained-reflow engine onto `TextWdgt::reLayout` gated by
+the mode, leaving `SimplePlainTextWdgt` a thin mode-specialization; re-pointed the 3 content sites
+(`WindowWdgt`/`SimpleVerticalStackPanelWdgt`/`ScrollPanelWdgt`) to RESPECT the mode. New lessons:
+- **Wiring a mode that one subclass already half-implemented hides INCOMPLETE wiring — the new general-case
+  tests expose it.** Two gaps only a *bare* `TextWdgt` hit (a `SimplePlainTextWdgt` dodged both via its ctor):
+  (a) `reflowText` must SHORT-CIRCUIT `fitToExtent` for the box-to-text mode and render at the set font size —
+  otherwise `SCALEUP`'s `searchLargestFittingFont` + the mode's "always measure at the set size" render leaks
+  agree that *every* font size fits, so it picks the MAX (a giant font); SPTW's ctor pins `FLOAT`, so it never
+  ran the scale-up search. (b) `WindowWdgt.contentsRecursivelyCanSetHeightFreely` must return false for the
+  mode (height is content-driven) or the window follows the dragged height and won't auto-SHRINK on widen;
+  SPTW pins `layoutSpecDetails.canSetHeightFreely = false`. Both fixes are byte-identical for SPTW (it already
+  reached the same state) — so the "160/160 zero-recapture" invariant held for the refactor, and these were
+  caught by the NEW capability tests, which is exactly why the owner asked for them.
+- **Imposing the mode on `instanceof TextWdgt` at the layout sites catches the empty-window placeholder**
+  (`WindowContentsPlaceholderText extends TextWdgt`) and breaks every empty/placeholder window. The sites must
+  RESPECT the mode (`if morph.fittingSpec == FIT_BOX_TO_TEXT`), not impose it — a TextWdgt opts in itself
+  (SPTW via ctor; a bare one via the caller), the placeholder stays `FIT_TEXT_TO_BOX`.
+- **Adding properties to a base class is NOT pixel-free for inspector tests that introspect it.** The 3
+  `fittingSpec*` props on `StringWdgt` made the Object Inspector's StringWdgt property LIST 3 rows taller, so 3
+  inspector tests recaptured (the only churn; confirmed NOT load-order — a literal-default build rendered
+  byte-identically — so it is inherent to the class gaining own props). Diff confined to the list column.
+- **A drop-state vs a resize-state are different sizing paths** — a window-content round-trip asserts
+  byte-equality between TWO resizes to the SAME absolute width, not drop-vs-resize-back.
+- Result: **162/162 (Chrome + WebKit), `--homepage` boots** (the enums were de-excluded from the homepage
+  strip — a base class now references them in production). New tests:
+  `macroBareTextWdgtAsWindowContentReflowsOnResize`, `macroBareTextWdgtInVerticalStackReflows`; 6 existing
+  macros migrated `maxTextWidth`→`softWrap`.
 
 **DONE (2026-06): the TriggerMorph / button-family arc.** Deleted the deprecated `TriggerMorph`; re-based its
 subclasses onto the modern button family and migrated that family's base to `*Wdgt`. Final hierarchy:

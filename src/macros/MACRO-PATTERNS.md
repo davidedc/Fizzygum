@@ -260,15 +260,16 @@ assertion a recapture after a regression silently stores two different hashes an
   observed re-fit here — tune the split count at capture). Toggles direct, as in the soft-wrap entry above; the
   CROP→SCALEDOWN shrink is load-bearing for inline-caret clicks. No new verb.
 - **Non-wrapping text self-resize** (`macroNonWrappingTextResizesToContent`): a `SimplePlainTextWdgt` (extends TextWdgt)
-  resizes its OWN bounds to its text. Its ctor sets `@maxTextWidth = true` (wrap to own width); `@maxTextWidth = nil` then
-  `reLayout()` turns wrapping OFF (what "soft wrap off" does, `:111-115`). In that mode `setText` re-lays-out SYNCHRONOUSLY
-  (`:126-131 → reLayout :183`): width = LONGEST line, height = lineCount × fontHeight. Drive with `setText` (the clean
-  deterministic equivalent of caret typing); multi-line strings via `String.fromCharCode(10)` (no literal newline in the
-  backtick source). The WRAP branch — width kept, height follows — is the next entry.
+  resizes its OWN bounds to its text. Its ctor opts into `FIT_BOX_TO_TEXT` (`softWrap` defaults true = wrap to its own
+  width); `softWrap = false` then `reLayout()` turns wrapping OFF (what "soft wrap off" does, `softWrapOff`) — `softWrap`
+  REPLACED the retired `maxTextWidth` knob in the FIT_BOX_TO_TEXT arc. In that mode `setText` re-lays-out SYNCHRONOUSLY
+  (`SimplePlainTextWdgt.setText → the inherited TextWdgt::reLayout`): width = LONGEST line, height = lineCount × fontHeight.
+  Drive with `setText` (the clean deterministic equivalent of caret typing); multi-line strings via `String.fromCharCode(10)`
+  (no literal newline in the backtick source). The WRAP branch — width kept, height follows — is the next entry.
 - **Wrapping text self-resize — the WRAP branch: width KEPT, height follows**
   (`macroWrappingSimplePlainTextResizesCorrectlyAsTextIsAddedAndRemoved`): the wrap-mode twin of the entry above and the
-  bare-desktop ground for the wrap-mode reLayout law: with `maxTextWidth` truthy, `reLayout`
-  (`SimplePlainTextWdgt.coffee:183-199`) breaks the text at the widget's CURRENT width and re-extends to
+  bare-desktop ground for the wrap-mode reLayout law: with `softWrap` ON, the FIT_BOX_TO_TEXT `reLayout`
+  (`TextWdgt::reLayout`) breaks the text at the widget's CURRENT width and re-extends to
   width = `@width()` — NEVER re-fit to content: gutting the lorem to four words leaves a ONE-LINE strip still the full
   500 wide, where the no-wrap branch would shrink to the longest line (THE distinguishing shot between the branches) —
   × height = lineCount × ceil(fontHeight(originallySetFontSize)). Every trigger converges there synchronously: `setText`
@@ -728,7 +729,7 @@ assertion a recapture after a regression silently stores two different hashes an
   only when `contents.width() >= width()+1` and the vBar only when `contents.height() >= height()+1`, sizing each thumb to the
   viewport/content ratio and positioning it by the scroll offset. Add a wrapping `SimplePlainTextWdgt` as a real SUBMORPH of the
   inner `@contents` (`panel.add text`); NARROW it (`text.rawSetWidth narrower` re-wraps it taller, synchronously, since
-  `@maxTextWidth=true`) → vBar appears; MOVE it toward the bottom-right (`text.fullRawMoveTo`) → hBar appears + vBar thumb shrinks;
+  it is `FIT_BOX_TO_TEXT` with `softWrap` on) → vBar appears; MOVE it toward the bottom-right (`text.fullRawMoveTo`) → hBar appears + vBar thumb shrinks;
   re-run `panel.adjustContentsBounds()` + `panel.adjustScrollBars()` after each. TRAP: a single-widget contents (`new
   ScrollPanelWdgt child`) has no submorphs, so `adjustContentsBounds` re-fits it back to the viewport (undoing the overflow) —
   use a real submorph, or call `adjustScrollBars()` only.
@@ -788,8 +789,8 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Soft-wrap toggle INSIDE a scroll panel — `softWrapOff`/`softWrapOn`, NOT `toggleSoftWrap`**
   (`macroSimplePlainTextScrollPanelUpdatesWellWhenWrappingUnwrappingFromTheBottomOfContent`): on a `SimplePlainTextWdgt`
   inside its scroll panel the '☒/☐ soft wrap' items are the TEXT's OWN (`SimplePlainTextWdgt.coffee:90-98`, shown only
-  when it is the panel's LONE child) and call `softWrapOff` (`:111-117`: panel `isTextLineWrapping` false +
-  `maxTextWidth = nil`) / `softWrapOn` (`:103-109`: both back, plus re-homing the panel's contents to the panel origin) —
+  when it is the panel's LONE child) and call `softWrapOff` (panel `isTextLineWrapping` false +
+  `softWrap = false` — `softWrap` replaced the retired `maxTextWidth`) / `softWrapOn` (both back, plus re-homing the panel's contents to the panel origin) —
   TextWdgt's `toggleSoftWrap` is NOT involved. The bare-TextWdgt no-menu drift does NOT apply here either: the
   coalesced in-panel menu OPENS for synthetic right-clicks, so drive the REAL items (match the decorated label by
   SUBSTRING, `moveToItemContainingOfMenuAndClick`). Toggling OFF while scrolled at the END collapses the content to its
@@ -909,12 +910,12 @@ assertion a recapture after a regression silently stores two different hashes an
   `isTextLineWrapping=false` ctor arg) sets the inner stack's `constrainContentWidth=false` (`SimpleVerticalStackScrollPanelWdgt.coffee:6-7`),
   so a NON-wrapping child keeps its natural width (`SimpleVerticalStackPanelWdgt.coffee:92-104` left-aligns + skips the width clamp)
   → `@contents.width()` exceeds the viewport → `adjustScrollBars` shows the hBar (`ScrollPanelWdgt.coffee:143-145`, the
-  `contents.width() >= width()+1` gate). Append a wide non-wrapping `SimplePlainTextWdgt` with `para.maxTextWidth = nil;
-  para.reLayout()` (the wrap-OFF idiom, `SimplePlainTextWdgt.reLayout:186-196`; cribbed from `macroNonWrappingTextResizesToContent`)
+  `contents.width() >= width()+1` gate). Append a wide non-wrapping `SimplePlainTextWdgt` with `para.softWrap = false;
+  para.reLayout()` (the wrap-OFF idiom — `softWrap` replaced the retired `maxTextWidth`, engine now `TextWdgt::reLayout`; cribbed from `macroNonWrappingTextResizesToContent`)
   via `panel.add` — its long lines CLIP at the right edge. Scroll horizontally with `@wheelOn_InputEvents panel, 0, deltaX`
   (deltaY=0, positive deltaX scrolls RIGHT — `wheelOn_InputEvents`'s 3rd positional arg) → the clipped-off right portion comes into
   view, the horizontal thumb travels right. GOTCHAS: the free-width DEFAULT doc is already wider than a small viewport, so the hBar
-  is present from image_1 (faithful to the original — frame it as "bar present + scroll it", not "bar appears"); set `maxTextWidth=nil`
+  is present from image_1 (faithful to the original — frame it as "bar present + scroll it", not "bar appears"); set `softWrap=false`
   + `reLayout()` BEFORE `panel.add`; do NOT `setContents` (it wipes the default doc — use `add`). No new verb.
 
 ## Drag/drop, attach/detach, duplicate
@@ -1058,7 +1059,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (`constrainContentWidth = true`) runs `rawSetWidthSizeHeightAccordingly(getWidthInStack())` on every child, and
   `getWidthInStack` returns the remembered DROP-time width capped at the content width — so small widgets keep their sizes
   (`macroDocumentPreservesDroppedWidgetSizes`) and OVERSIZED ones come out at exactly ONE shared width (texts also get
-  `maxTextWidth` → rewrap). To show the cap, build the parade WIDER than the stack. GOTCHA: a bare `SliderMorph` cannot be
+  re-wrapped via `softWrap`, the retired `maxTextWidth`'s replacement). To show the cap, build the parade WIDER than the stack. GOTCHA: a bare `SliderMorph` cannot be
   moved by a centre press — that lands on the value-50 BUTTON and non-float-drags it; grab a clear TRACK point
   (`@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf slider, [0.08, 0.5]), dest`).
 - **The drag-to-scroll FLAGS — background pans, foreground pans** (`macroScrollPanelDragToScrollFlags`): two dedicated
@@ -1263,7 +1264,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (see `macroSliderTextSliderPatchCycle` below). Drive: `@dragSliderButtonToFraction_InputEvents slider, [0.5,fy]` (slider→text), then edit the text via
   `world.edit text` (escape hatch — left-clicking a short number in a wide box overshoots the empty-text `slotAt`, see
   `macroInspectorWorkAreaEvaluatesCoffeeScript`) + `Meta+a` + typed digits (text→slider). FIXTURE gotchas: KEEP the ctor's
-  `maxTextWidth = true` (`nil` shrinks the box to its content, so it stops overlapping the slider and "set target" can't find it);
+  wrap-to-own-width (`softWrap` on, the default — `softWrap = false` shrinks the box to its natural content width, so it stops overlapping the slider and "set target" can't find it);
   `SliderMorph`'s track AND `SliderButtonMorph.normalColor` are both `Color.BLACK`, so tint the track light (`slider.color = …`) to
   make the button (= the value) visible. No new verb.
 - **The full 3-node slider→text→slider cycle — each component drives the other two, wired with NOTHING moved**
@@ -1354,8 +1355,8 @@ assertion a recapture after a regression silently stores two different hashes an
   match ONLY if their cells share a desired size — pick the two desired-30 holders differing in spreadability (MEDIUM vs NONE).
 - **Stack grows with content** (`macroVerticalStackPanelGrowsWithContent`): a `SimpleVerticalStackPanelWdgt`
   (`constrainContentWidth` defaults true) stacks children, constrains each child's WIDTH to the panel, and — being `tight` —
-  grows its HEIGHT to the children (`adjustContentsBounds`, `SimpleVerticalStackPanelWdgt.coffee:73-134`: sets each text child's
-  `maxTextWidth` to the available width, sums child heights into `rawSetHeight`). Reproduce the demo widgets exactly (`new
+  grows its HEIGHT to the children (`adjustContentsBounds`, `SimpleVerticalStackPanelWdgt.coffee`: re-wraps each
+  FIT_BOX_TO_TEXT text child to the available width via `softWrap` — the retired `maxTextWidth`'s replacement — sums child heights into `rawSetHeight`). Reproduce the demo widgets exactly (`new
   SimpleVerticalStackPanelWdgt` at 370×325 = `Widget.createSimpleVerticalStackPanelWdgt`; each text = `Widget.createNewWrappingSimplePlainTextWdgtWithBackground`,
   a 2-paragraph Lorem + cream bg); DROP each in with `@dragWidgetTo_InputEvents text, panel` (fires `reactToDropOf →
   adjustContentsBounds`), so a second drop ~doubles the height. (A tight EMPTY box taller than one child SHRINKS on the first add
