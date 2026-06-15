@@ -263,7 +263,8 @@ assertion a recapture after a regression silently stores two different hashes an
   resizes its OWN bounds to its text. Its ctor opts into `FIT_BOX_TO_TEXT` (`softWrap` defaults true = wrap to its own
   width); `softWrap = false` then `reLayout()` turns wrapping OFF (what "soft wrap off" does, `softWrapOff`) — `softWrap`
   REPLACED the retired `maxTextWidth` knob in the FIT_BOX_TO_TEXT arc. In that mode `setText` re-lays-out SYNCHRONOUSLY
-  (`SimplePlainTextWdgt.setText → the inherited TextWdgt::reLayout`): width = LONGEST line, height = lineCount × fontHeight.
+  (`setText → TextWdgt::setText → reLayout`; a 2026-06-15 follow-up moved this trigger off `SimplePlainTextWdgt` onto the
+  base, mode-gated, so ANY FIT_BOX_TO_TEXT TextWdgt re-flows on its own setText): width = LONGEST line, height = lineCount × fontHeight.
   Drive with `setText` (the clean deterministic equivalent of caret typing); multi-line strings via `String.fromCharCode(10)`
   (no literal newline in the backtick source). The WRAP branch — width kept, height follows — is the next entry.
 - **Wrapping text self-resize — the WRAP branch: width KEPT, height follows**
@@ -272,8 +273,9 @@ assertion a recapture after a regression silently stores two different hashes an
   (`TextWdgt::reLayout`) breaks the text at the widget's CURRENT width and re-extends to
   width = `@width()` — NEVER re-fit to content: gutting the lorem to four words leaves a ONE-LINE strip still the full
   500 wide, where the no-wrap branch would shrink to the longest line (THE distinguishing shot between the branches) —
-  × height = lineCount × ceil(fontHeight(originallySetFontSize)). Every trigger converges there synchronously: `setText`
-  (`:126-131`) for the add/remove axes, `setFontSize` (`:165-168`) for the font axis — and the StringWdgt super parses
+  × height = lineCount × ceil(fontHeight(originallySetFontSize)). Every trigger converges there synchronously, now via the base `TextWdgt` (the 2026-06-15 follow-up moved the
+  FIT_BOX_TO_TEXT edit triggers off `SimplePlainTextWdgt`): `setText` for the add/remove axes, `setFontSize` for the
+  font axis (`SimplePlainTextWdgt` keeps only `setText`, for controller plumbing, delegating the reflow via super) — and the StringWdgt super parses
   a numeric `17` and the font prompt's string `"17"` to the IDENTICAL `originallySetFontSize`
   (`StringWdgt.coffee:1098-1112`), proven in pixels: the macro's direct `setFontSize 17` shot reproduced the retired
   prompt-driven recording's final shot hash-for-hash at both densities. Fixture:

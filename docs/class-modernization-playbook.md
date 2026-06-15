@@ -252,6 +252,21 @@ the mode, leaving `SimplePlainTextWdgt` a thin mode-specialization; re-pointed t
   strip — a base class now references them in production). New tests:
   `macroBareTextWdgtAsWindowContentReflowsOnResize`, `macroBareTextWdgtInVerticalStackReflows`; 6 existing
   macros migrated `maxTextWidth`→`softWrap`.
+- **FOLLOW-UP (2026-06-15): bare-TextWdgt setText-reflow parity (closed the documented scope boundary).** The
+  arc left a gap: a bare FIT_BOX_TO_TEXT TextWdgt reflowed on a container RESIZE (`rawSetExtent`→`reLayout`) but
+  NOT on its OWN `setText` (that reLayout+refresh trigger still lived on `SimplePlainTextWdgt`). Moved it up: a
+  new gated helper `TextWdgt::reLayoutAndRefreshContainerIfContainedText` (`if fittingSpec == FIT_BOX_TO_TEXT`
+  then `reLayout` + `refreshScrollPanelWdgtOrVerticalStackIfIamInIt`), and `TextWdgt` now overrides the 7 edit
+  methods (`setText`/`setFontSize`/`setFontName`/`toggleShowBlanks`/`toggleWeight`/`toggleItalic`/`toggleIsPassword`)
+  as `super` + the helper. `SimplePlainTextWdgt` deleted its 6 pure-trigger overrides and keeps only `setText`,
+  and only for the ControllerMixin plumbing (the `connectionsCalculationToken` guard + `updateTarget`) — it
+  delegates the reflow to the base via `super`. Lessons reaffirmed: **(a)** keep the behaviour byte-identical for
+  the subclass by having its retained override `super` into the moved-up logic (traced: same call order, same
+  double-`updateTarget`) — its existing tests stayed green, suite **163/163 (Chrome + WebKit), `--homepage`
+  boots**; **(b)** gate the moved-up trigger on the MODE, not the type, so the other FIT_TEXT_TO_BOX subclasses
+  (`WindowContentsPlaceholderText`, `FizzytilesCodeMorph`) get a clean no-op (the "respect the mode" rule). New
+  test `macroBareTextWdgtReflowsOnSetText` (desktop bare FBT TextWdgt; setText changes the line count → box
+  height reflows; round-trip byte-asserted).
 
 **DONE (2026-06): the TriggerMorph / button-family arc.** Deleted the deprecated `TriggerMorph`; re-based its
 subclasses onto the modern button family and migrated that family's base to `*Wdgt`. Final hierarchy:

@@ -430,6 +430,53 @@ class TextWdgt extends StringWdgt
     super
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT then @reLayout()
 
+  # ── Edit triggers for CONTAINED (FIT_BOX_TO_TEXT) text ──────────────────────
+  # When a FIT_BOX_TO_TEXT TextWdgt's text content / font / style changes, the box
+  # must re-flow to the new measure (reLayout) AND the surrounding layout must
+  # follow (refreshScrollPanelWdgtOrVerticalStackIfIamInIt). These triggers used to
+  # live on SimplePlainTextWdgt's setText/setFontSize/setFontName/toggle* overrides;
+  # they now live here, gated by the mode, so ANY contained TextWdgt (not just a
+  # SimplePlainTextWdgt) re-flows on its OWN edit — full parity, so a bare
+  # FIT_BOX_TO_TEXT TextWdgt is a drop-in for SimplePlainTextWdgt (the container
+  # RESIZE path is the rawSetExtent override above; this is the content-CHANGE path).
+  # For a free-floating FIT_TEXT_TO_BOX TextWdgt (the default — e.g. the empty-window
+  # placeholder WindowContentsPlaceholderText, or FizzytilesCodeMorph) this is a
+  # no-op: the box is fixed, so we must NOT reflow it or poke the container (the
+  # Arc-6 "respect the mode, don't impose it" rule — see the FITTING MODEL comment
+  # in StringWdgt).
+  reLayoutAndRefreshContainerIfContainedText: ->
+    if @fittingSpec != FittingSpecText.FIT_BOX_TO_TEXT then return
+    @reLayout()
+    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+
+  setText: (theTextContent, stringFieldMorph, connectionsCalculationToken, superCall) ->
+    super
+    @reLayoutAndRefreshContainerIfContainedText()
+
+  setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
+    super
+    @reLayoutAndRefreshContainerIfContainedText()
+
+  setFontName: (menuItem, ignored2, theNewFontName) ->
+    super
+    @reLayoutAndRefreshContainerIfContainedText()
+
+  toggleShowBlanks: ->
+    super
+    @reLayoutAndRefreshContainerIfContainedText()
+
+  toggleWeight: ->
+    super
+    @reLayoutAndRefreshContainerIfContainedText()
+
+  toggleItalic: ->
+    super
+    @reLayoutAndRefreshContainerIfContainedText()
+
+  toggleIsPassword: ->
+    super
+    @reLayoutAndRefreshContainerIfContainedText()
+
   createBufferCacheKey: ->
     return super() +  "-" + @softWrap
 

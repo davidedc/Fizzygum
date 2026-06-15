@@ -13,13 +13,17 @@
 # larger layout rework". That rework is the FIT_BOX_TO_TEXT arc: it retired
 # maxTextWidth + the leaks and moved the contained-reflow engine onto the base
 # gated by the mode, so ANY TextWdgt (not just this one) can now be contained text.
-# What's left specific to THIS class is its chrome: pinning
+# A follow-up then moved the EDIT triggers up too: the reLayout +
+# refreshScrollPanelWdgtOrVerticalStackIfIamInIt that re-flow the box and nudge the
+# container on setText/setFontSize/setFontName/toggle* now live on the base
+# (TextWdgt::reLayoutAndRefreshContainerIfContainedText, gated by the mode), so a
+# bare FIT_BOX_TO_TEXT TextWdgt re-flows on its OWN setText too and is a full
+# drop-in for this class.
+# What's left specific to THIS class is its CONTROLLER chrome: pinning
 # layoutSpecDetails.canSetHeightFreely = false (height is content-driven), the
-# scroll-panel soft-wrap toggle (softWrapOn/Off), the "set target" controller menu,
-# and the reLayout + refreshScrollPanelWdgtOrVerticalStackIfIamInIt triggers on
-# setText/setFontSize/toggle* (so an EDIT re-flows it AND nudges the container — a
-# bare TextWdgt re-flows on a container RESIZE but not yet on its own setText, so
-# use this class when the text content itself changes).
+# scroll-panel soft-wrap toggle (softWrapOn/Off), the "set target" controller menu +
+# the dataflow plumbing (setText's connectionsCalculationToken guard + updateTarget,
+# bang), and the panel-colour blend helpers.
 
 class SimplePlainTextWdgt extends TextWdgt
 
@@ -129,13 +133,13 @@ class SimplePlainTextWdgt extends TextWdgt
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     @updateTarget()
 
-  # This is also invoked for example when you take a slider
-  # and set it to target this.
+  # This is also invoked for example when you take a slider and set it to target
+  # this. Only the controller plumbing (the connectionsCalculationToken guard +
+  # updateTarget) is SPTW-specific now; the box re-flow on a text change is the
+  # inherited TextWdgt::setText (gated by FIT_BOX_TO_TEXT), reached via super.
   setText: (theTextContent, stringFieldMorph, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     super theTextContent, stringFieldMorph, connectionsCalculationToken, true
-    @reLayout()
-    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
     @updateTarget()
 
   updateTarget: ->
@@ -146,35 +150,11 @@ class SimplePlainTextWdgt extends TextWdgt
   reactToTargetConnection: ->
     @updateTarget()
 
-  toggleShowBlanks: ->
-    super
-    @reLayout()
-    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
-  
-  toggleWeight: ->
-    super
-    @reLayout()
-    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
-  
-  toggleItalic: ->
-    super
-    @reLayout()
-    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
-
-  toggleIsPassword: ->
-    super
-    @reLayout()
-    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
-
-  setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
-    super
-    @reLayout()
-    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
-
-  setFontName: (ignored1, ignored2, theNewFontName) ->
-    super
-    @reLayout()
-    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+  # setText (above) + the inherited setFontSize / setFontName / toggleShowBlanks /
+  # toggleWeight / toggleItalic / toggleIsPassword all re-flow the box AND nudge the
+  # container via TextWdgt::reLayoutAndRefreshContainerIfContainedText now (gated by
+  # FIT_BOX_TO_TEXT), so this class no longer overrides them. softWrapOn/Off (above)
+  # stay — they are scroll-panel-specific (they flip @parent.parent.isTextLineWrapping).
 
   blendInWithPanelColor: ->
     if @backgroundColor.equals WorldMorph.preferencesAndSettings.editableItemBackgroundColor
@@ -189,4 +169,8 @@ class SimplePlainTextWdgt extends TextWdgt
   # not wrapping) — now lives on the base TextWdgt::reLayout, gated by
   # fittingSpec == FIT_BOX_TO_TEXT (set in this ctor). It reads @softWrap where it
   # used to read @maxTextWidth. Likewise rawSetExtent (re-layout on a container
-  # resize) is the inherited base override. So this class no longer needs either.
+  # resize) and the setText/setFontSize/setFontName/toggle* edit triggers (reLayout +
+  # refreshScrollPanelWdgtOrVerticalStackIfIamInIt, via
+  # TextWdgt::reLayoutAndRefreshContainerIfContainedText) are inherited base overrides.
+  # setText is still overridden above, but only for the controller plumbing (the
+  # token guard + updateTarget) — it delegates the re-flow to the base via super.
