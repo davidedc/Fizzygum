@@ -1,103 +1,114 @@
 You are picking up a series of "bring a class to latest" modernizations in the Fizzygum CoffeeScript GUI framework (workspace: /Users/davidedellacasa/code/Fizzygum-all/, with sibling git repos Fizzygum/ = source, Fizzygum-tests/ = the 160 macro SystemTests). You have NO prior context, so start by reading these, in order:
 
- 1. The PLAYBOOK distilled from these arcs (process + gotchas, written to be reused): Fizzygum/docs/class-modernization-playbook.md — read it in full first.
- 2. The prior approved plans (read them — together they show a clean rename arc, a "rejected target → pivot to the tractable one" arc, and a dead-code-deletion arc):
+ 1. The PLAYBOOK distilled from these arcs (process + gotchas, written to be reused): Fizzygum/docs/class-modernization-playbook.md — read it in full first (its §7 records the String/Text arc that just closed, with lessons).
+ 2. The prior approved plans (read them — together they show a clean rename arc, a "rejected target → pivot to the tractable one" arc, a dead-code-deletion arc, and the just-finished prerequisite-first chrome-migrate-then-delete-and-rename arc):
     - /Users/davidedellacasa/.claude/plans/add-an-option-or-typed-squirrel.md (filename is stale — its CONTENTS are the InspectorMorph cleanup).
-    - /Users/davidedellacasa/.claude/plans/you-are-picking-up-sparkling-galaxy.md (filename is stale — its CONTENTS are the inspect/inspect2 consolidation; its "Why this, and not StringMorph" and "Potential follow-ups" sections record StringMorph/Text findings you should NOT re-derive).
-    - /Users/davidedellacasa/.claude/plans/stringmorph3-dead-code-deletion.md (the StringMorph3 deletion arc; its "Why this, and NOT the String + Text arc" section records the menu/button-family BLOCKER — the central finding below).
- 3. The macro-test subsystem docs: Fizzygum/src/macros/CLAUDE.md and Fizzygum/src/macros/MACRO-PATTERNS.md, plus the /author-macro-test skill in Fizzygum-tests. (An auto-memory note "InspectorWdgt windowed cleanup" should also surface — it summarizes the prior arcs' key findings.)
+    - /Users/davidedellacasa/.claude/plans/you-are-picking-up-sparkling-galaxy.md (filename is stale — its CONTENTS are the inspect/inspect2 consolidation).
+    - /Users/davidedellacasa/.claude/plans/stringmorph3-dead-code-deletion.md (the StringMorph3 deletion arc).
+    - /Users/davidedellacasa/.claude/plans/you-are-picking-up-streamed-yeti.md (filename is stale — its CONTENTS are the String/Text arc: migrate the menu/button/tooltip CHROME onto the modern text family, THEN delete StringMorph/TextMorph and rename StringMorph2 -> StringWdgt / TextMorph2 -> TextWdgt. This is the template for the route now recommended below — read its phasing and its owner-decision-up-front handling of menu pixel churn.)
+ 3. The macro-test subsystem docs: Fizzygum/src/macros/CLAUDE.md and Fizzygum/src/macros/MACRO-PATTERNS.md, plus the /author-macro-test skill in Fizzygum-tests. (Two auto-memory notes should also surface: "String/Text Wdgt modernization" — the arc just closed — and "InspectorWdgt windowed cleanup" — the earlier arcs. They summarize the key findings so you don't re-derive them.)
 
  WHAT IS ALREADY DONE (committed + pushed; do NOT redo):
  - Arc 1: DELETED legacy InspectorMorph, renamed InspectorMorph2 -> InspectorWdgt (+ ClassInspectorMorph -> ClassInspectorWdgt), made it windowed everywhere, re-authored its ~14 macro tests.
- - Arc 2: CONSOLIDATED the two inspector entry points — deleted the duplicate inspect2/spawnInspector2, kept inspect/spawnInspector as the single windowed entry point (repointed the "dev -> inspect" menu item), and dropped its homepage-exclusion guard so the one inspector ships in --homepage. Suite 160/160.
- - Arc 3: DELETED the dead StringMorph3 "Morph3" experiment (a stale, feature-stripped FORK of StringMorph2 — same ~1050 lines minus ControllerMixin / undo-redo / text-modification-tracking / the SWCanvas font-size cap, plus an unfinished, half-wired "fit text to box / fit box to text" submenu whose toggles were no-ops). Also removed the sibling dangling demo plumbing for TextMorph3 — a class that never existed (createNewTextMorph3WithBackground + its menu items referenced an undefined global). Recaptured 4 legitimately-changed tests (3 submenu tests whose photographed "test menu" lost the two dead items; macroDuplicatedInspectorDrivesCopiedTargetOnly whose inspector method-list lost the two deleted Widget demo methods). Suite 160/160. As part of this arc, a block comment was added at StringMorph2.coffee's fitting-spec properties documenting how to add the "fit box to text (tight/loose · which-dimension-adjusts)" axis PROPERLY (behaviour in reflowText/fitToExtent via silentRawSetExtent, invalidateLayout for container reflow, cache-key wiring, menu last) — so the abandoned StringMorph3 experiment's INTENT survives without its broken code.
+ - Arc 2: CONSOLIDATED the two inspector entry points — deleted the duplicate inspect2/spawnInspector2, kept inspect/spawnInspector as the single windowed entry point, dropped its homepage-exclusion guard so the one inspector ships in --homepage. Suite 160/160.
+ - Arc 3: DELETED the dead StringMorph3 "Morph3" experiment (a stale, feature-stripped FORK of StringMorph2) and the sibling dangling TextMorph3 demo plumbing (a class that never existed). Recaptured 4 legitimately-changed tests. Suite 160/160. A block comment was left at the modern widget's fitting-spec properties documenting how to add the "fit box to text" axis PROPERLY, so the abandoned experiment's INTENT survives without its broken code.
+ - Arc 4 (THE String/Text arc — the one that used to be "the standing goal" of this very prompt; now CLOSED): DELETED legacy StringMorph and TextMorph; renamed StringMorph2 -> StringWdgt and TextMorph2 -> TextWdgt; and FIRST migrated the menu/button/tooltip CHROME onto the modern family so the delete was unblocked. Landed in two pushes (chrome migration, then delete+rename), suite 160/160 at dpr 1 and (after a bug fix, below) dpr 2. Verified current reality (file:line):
+     * StringWdgt extends Widget; TextWdgt extends StringWdgt (StringWdgt.coffee / TextWdgt.coffee). Old StringMorph/TextMorph/StringMorph2/TextMorph2/StringMorph3 are all GONE — a `\b`-bounded grep of Fizzygum/src finds the old names only in historical COMMENTS, no live extends/new/instanceof.
+     * The chrome now builds its labels from the modern family + a new fitting helper: TriggerMorph `new StringWdgt(...)` + `@label.sizeToTextAndDisableFitting()` (TriggerMorph.coffee:172,185); MenuItemMorph `new TextWdgt @labelString,…` + helper (MenuItemMorph.coffee:44,50); MenuHeader `new TextWdgt(...)` + helper (MenuHeader.coffee:9,22); ToolTipWdgt `new TextWdgt(...)` ×2 + helper (ToolTipWdgt.coffee:79,96,108). The helper `StringWdgt#sizeToTextAndDisableFitting` (FLOAT+SCALEDOWN, measure, silentRawSetExtent) + the `autoSizeBoxToText` flag re-hug the box on every later setText/setFontSize — the modern family otherwise sizes TEXT to a FIXED box, the opposite of the old box-hugs-text law.
+     * CaretMorph was reconciled: the old-TextMorph force-left-while-editing block is gone (modern TextWdgt handles the caret under every alignment) — CaretMorph.coffee:27-33 is now just the explanatory comment; Enter-accept keys on `@target.constructor.name == "StringWdgt"` (single-line accepts; multi-line TextWdgt inserts a newline) at CaretMorph.coffee:95; SimplePlainTextWdgt is special-cased at :87.
+     * Subclasses present and on the modern base: SimplePlainTextWdgt, WindowContentsPlaceholderText, FizzytilesCodeMorph (← TextWdgt); HhmmssLabelWdgt (← StringWdgt).
+     * MENU/TARGET/HIERARCHY LABELS STRIP "Wdgt": `toString()/getTextDescription()` do `.replace("Wdgt","")`, so a TextWdgt navigates/displays as "a Text", a StringWdgt as "a String", a WindowWdgt as "a Window". `findTopWidgetByClassNameOrClass` and `instanceof` use the REAL name; the inspector HIERARCHY diagram shows the real name. (This made the rename NOT pixel-free and is documented in src/macros/CLAUDE.md.)
+     * The three tests that USED to "deliberately depend on the old classes" (macroEditingStringInScrollablePanelCaretAlwaysVisible, macroScrollPanelCaretBroughtIntoViewWhenMoved, macroTextRelayoutsCorrectlyOnResize) still exist by those names but were RE-AUTHORED onto the modern family during the arc (the old classes they targeted no longer exist; macroTextRelayoutsCorrectlyOnResize now asserts the TextWdgt resize law — box = dragged extent in BOTH dims, text re-wraps to width).
+   - Follow-on bug fix shipped during Arc 4 validation (Fizzygum commit e78acaa6 + recaptured ref): ScrollPanelWdgt scroll-on-drag was dropping to ZERO under frame-cadence collapse, so a locked-panel drag scrolled at dpr 1 but not dpr 2; fixed with a `collapsedScrollDrag` release-flush. Unrelated to class modernization — mentioned only so you don't trip over it in git log.
 
  ====================================================================
- THE STANDING GOAL NOW: find a path to DEPRECATE/DELETE StringMorph AND TextMorph
- in favour of their successors StringMorph2 and TextMorph2.
+ THE STANDING GOAL NOW: DELETE the deprecated TriggerMorph and re-base its subclasses
+ (MenuItemMorph and MagnetMorph) onto the modern button family (EmptyButtonMorph /
+ SimpleButtonMorph) — completing the menu/button modernization that Arc 4 began.
  ====================================================================
- These two are the LAST legacy text widgets and the last big obstacle to a coherent String/Text family
- (every other clean modernization candidate is now either DONE or genuinely blocked — see "candidates exhausted"
- below). The successors already exist and are in production use; the job is no longer "is there a successor?" but
- "how do we get there safely?". Treat this as the priority, and plan the PATH — do not keep deferring it.
+ Arc 4 modernized the LABELS inside the chrome (they're StringWdgt/TextWdgt now). What remains is the BASE
+ CLASS: TriggerMorph itself is still flagged deprecated ("use the SimpleButton instead", TriggerMorph.coffee:1-4)
+ and is still the base of every menu item and of MagnetMorph. The modern successor already exists and is already
+ on the modern text family — so, exactly as in the String/Text arc, the job is no longer "is there a successor?"
+ but "how do we get there safely?". Treat this as the priority; plan the PATH, do not defer it.
 
- KEY FINDINGS (do not re-investigate from scratch — these are established):
+ KEY FINDINGS (verified file:line — do not re-investigate from scratch):
 
- 1. THE REAL BLOCKER (the central reason this hasn't happened yet): the OLD StringMorph/TextMorph are
-    LOAD-BEARING in the core UI chrome — the menu/button/tooltip system — which is the SAME deprecated
-    TriggerMorph family. Verified (file:line):
-      - MenuItemMorph EXTENDS TriggerMorph (MenuItemMorph.coffee:3) and builds its label with `new TextMorph` (:42) → every menu item.
-      - TriggerMorph (header: "now deprecated, use SimpleButton") builds its label with `new StringMorph(…, false, @labelColor)` (TriggerMorph.coffee:172).
-      - MenuHeader builds `new TextMorph(textContents, …, "center")` (MenuHeader.coffee:9) — passing the OLD family's STRING alignment.
-      - ToolTipWdgt builds `new TextMorph(@contents, …, "center")` twice (ToolTipWdgt.coffee:75,91).
-    So you CANNOT delete StringMorph/TextMorph without first re-pointing TriggerMorph + MenuItemMorph + MenuHeader
-    + ToolTipWdgt onto StringMorph2/TextMorph2 — which is the blocked button/menu-family refactor. The two families
-    have DIFFERENT fitting/alignment/back-buffer engines (old: string alignment + BackBufferMixin; new:
-    AlignmentSpec* enums + fitToExtent/searchLargestFittingFont + ControllerMixin), so swapping them risks shifting
-    the rendered pixels of EVERY menu item / menu header / tooltip — and re-baselining the LARGE fraction of the 160
-    SystemTests that open a menu or show a tooltip. That suite-wide reference churn is the cost to plan for.
-    (Window title bars and EmptyButtonMorph/SimpleButtonMorph ALREADY use StringMorph2 — they are not blockers.)
+ 1. WHO STILL DEPENDS ON TriggerMorph (the whole touch surface of subclassers):
+      - `class MenuItemMorph extends TriggerMorph` (MenuItemMorph.coffee:3) — every menu item.
+      - `class MagnetMorph extends TriggerMorph` (fizzytiles/MagnetMorph.coffee:3) — a fizzytiles demo widget.
+    Nothing else extends/`new`s/`instanceof`-checks TriggerMorph in Fizzygum/src (confirm with a `\b`-bounded
+    grep). TriggerMorph itself `extends Widget` (TriggerMorph.coffee:13).
 
- 2. THE PER-CLASS DIVERGENCES (must be reconciled, not silently ported): incompatible constructor signatures
-    (different arg order/count — StringMorph2 takes originallySetFontSize/fontName/isHeaderLine/backgroundColor…,
-    old TextMorph takes alignment/maxTextWidth/shadowOffset/shadowColor); StringMorph2 opens an "edit:" prompt when
-    cropped (StringMorph does not); `currentlySelecting` is a METHOD on StringMorph2 but a PROPERTY on the old
-    StringMorph; the caret path differs (gotoSlot vs gotoPos — and CaretMorph.coffee:27 special-cases
-    `instanceof TextMorph` for the old string-alignment, CaretMorph.coffee:90 keys Enter-accept on
-    constructor.name == "StringMorph"/"StringMorph2"); old TextMorph supports text SHADOWS (shadowOffset/shadowColor)
-    that TextMorph2 lacks (the chrome sites don't pass shadows — verified — so this one is free); fitting specs /
-    alignment / softWrap / undo. See plan #2's "Why this, and not StringMorph" for specifics.
+ 2. THE SUCCESSOR ALREADY EXISTS AND IS MODERN: `class EmptyButtonMorph extends Widget` builds its face with
+    `new StringWdgt …` (EmptyButtonMorph.coffee:9,65); `class SimpleButtonMorph extends EmptyButtonMorph`
+    (SimpleButtonMorph.coffee:5). Window title bars and these buttons were never blockers. So the route is to
+    move MenuItemMorph (and MagnetMorph) onto this family and delete TriggerMorph.
 
- 3. TESTS THAT DELIBERATELY DEPEND ON THE OLD CLASSES (need explicit per-test handling, not a blind swap):
-      - macroEditingStringInScrollablePanelCaretAlwaysVisible and macroScrollPanelCaretBroughtIntoViewWhenMoved
-        pick the OLD StringMorph ON PURPOSE (isScrollable, NO edit-prompt-on-crop, NO slotAt overshoot).
-      - macroTextRelayoutsCorrectlyOnResize asserts the OLD TextMorph resize law (rawSetExtent keeps only x →
-        maxTextWidth, height from content) — TextMorph2 does NOT reproduce it. It's the suite's only dedicated
-        old-TextMorph behavioural assertion.
-    Also: TextMorph extends StringMorph and TextMorph2 extends StringMorph2, so the families move together;
-    HhmmssLabelWdgt (→ VideoTimeLabelWdgt/VideoDurationLabelWdgt) already sits on the modern StringMorph2 base;
-    TextMorph2's subclasses are SimplePlainTextWdgt, WindowContentsPlaceholderText, FizzytilesCodeMorph.
+ 3. THE REAL WORK / DIVERGENCE TO RECONCILE (this is what the plan must pin down — NOT yet investigated in
+    depth, do it in the plan): TriggerMorph provides the "trigger" machinery (dataSourceMorphForTarget / target /
+    action — see its class comment) that MenuItemMorph relies on. The EmptyButtonMorph/SimpleButtonMorph family
+    has its own action model. The central question is how MenuItemMorph's trigger/target/action behaviour maps
+    onto the button family without changing menu behaviour — and whether TriggerMorph's logic should be folded
+    INTO MenuItemMorph, or MenuItemMorph re-based on SimpleButtonMorph with the trigger bits ported. Treat the
+    mapping of trigger→action as the load-bearing design decision, the analogue of Arc 4's string-alignment→enum.
 
- CANDIDATES EXHAUSTED (so the String+Text problem can no longer be side-stepped): StringMorph3 deletion = DONE
- (Arc 3); inspect/inspect2 consolidation = DONE (Arc 2); ListMorph -> ListWdgt is a pure nomenclature rename with
- no legacy to delete (lower value, against the "don't mass-rename *Morph" convention without a reason); the button
- family is exactly the blocker in finding #1. There is no cheaper arc left to pick instead.
+ 4. PIXEL-CHURN RISK (smaller than Arc 4's, but still present): menu items ARE the chrome, so a LARGE fraction
+    of the 160 SystemTests open a menu. Arc 4 already moved the menu-item LABEL pixels onto the modern text
+    family (and re-baselined accordingly), so a base-class swap that preserves geometry MAY be close to
+    pixel-neutral — but any change to padding/hit-area/highlight/press visuals from the button family will shift
+    menu pixels and re-baseline the menu-opening tests. Surface, as an explicit owner decision UP FRONT, whether
+    menu/button pixels are ALLOWED to change; that decision sizes the arc (per the streamed-yeti plan's model).
 
- YOUR TASK: produce a PLAN (do not implement yet) for the PATH to deprecate/delete StringMorph and TextMorph,
- applying the playbook. The plan must engage the blocker directly rather than defer it. Decide and lay out a route,
- e.g. one of:
-   (a) PREREQUISITE-FIRST: a phased arc that FIRST migrates the menu/button/tooltip chrome (TriggerMorph,
-       MenuItemMorph, MenuHeader, ToolTipWdgt) onto StringMorph2/TextMorph2 — reconciling string-alignment→enum and
-       the fitting/back-buffer differences, and triaging the menu/tooltip reference churn — and ONLY THEN deletes
-       StringMorph/TextMorph and renames StringMorph2 -> StringWdgt / TextMorph2 -> TextWdgt. Surface, as an explicit
-       owner decision up front, whether the menu/tooltip pixels are ALLOWED to change (they almost certainly will);
-       that decision sizes the whole arc.
-   (b) STAGED DEPRECATION: turn the old classes into thin compatibility shims / mark them deprecated, migrate call
-       sites incrementally across several landings (chrome last, since it's the riskiest), then delete. Spell out
-       what each landing verifies.
- Recommend ONE route, justify it against the other, and structure it in PHASES with continuous verification (per the
- owner-workflow memory note: run straight through, ONE end-of-arc review).
+ SECONDARY DEFERRED FOLLOW-UPS from Arc 4 (smaller than a full arc — fold in or schedule separately, your call
+ in the plan):
+   - Bare-TextWdgt CONTENT layout: the window/panel/scroll content-layout sites special-case only
+     SimplePlainTextWdgt for the maxTextWidth→softWrap reflow (WindowWdgt, SimpleVerticalStackPanelWdgt,
+     ScrollPanelWdgt, PanelWdgt). A bare TextWdgt dropped as content doesn't get that wiring. Decide whether to
+     generalize it to TextWdgt.
+   - TextWdgt has NO text SHADOWS (the old TextMorph's shadowOffset/shadowColor were dropped; the chrome sites
+     never passed shadows, so it was free). Re-add only if a concrete site needs it.
+
+ CANDIDATES EXHAUSTED ELSEWHERE (so the menu/button arc is the right next pick): InspectorMorph cleanup, the
+ inspect/inspect2 consolidation, the StringMorph3 deletion, and the whole String/Text family are all DONE.
+ ListMorph -> ListWdgt remains a pure nomenclature rename with no legacy to delete (lower value, and against the
+ "don't mass-rename *Morph without a reason" convention). The deprecated TriggerMorph is the clear remaining
+ deprecated-class-with-a-living-successor, and Arc 4 already set it up.
+
+ YOUR TASK: produce a PLAN (do not implement yet) for the PATH to delete TriggerMorph and modernize MenuItemMorph
+ (and MagnetMorph), applying the playbook. Engage finding #3 (the trigger→action mapping) directly rather than
+ defer it. Decide and lay out a route, e.g. one of:
+   (a) FOLD-IN: absorb TriggerMorph's trigger/target/action machinery directly INTO MenuItemMorph (and give
+       MagnetMorph the small piece it needs), then delete TriggerMorph. Lowest pixel risk if geometry is held
+       fixed; spell out exactly what moves where.
+   (b) RE-BASE: re-base MenuItemMorph on SimpleButtonMorph/EmptyButtonMorph, porting the trigger bits onto the
+       button action model, then delete TriggerMorph. Cleaner long-term (one button family) but more likely to
+       shift menu visuals — name what changes and what re-baselines.
+ Recommend ONE route, justify it against the other, and structure it in PHASES with continuous verification (per
+ the owner-workflow memory note: run straight through, ONE end-of-arc review; commit/push only after that review).
 
  In the plan, specifically:
- - Use Explore/Plan agents to (re)confirm the touch-list (the prior arc already mapped most of it — reconfirm, don't
-   re-derive): every bare-identifier reference to StringMorph/StringMorph2/TextMorph/TextMorph2 across Fizzygum/src
-   (extends/new/instanceof/findTopWidgetByClassNameOrClass — use \b word boundaries, StringMorph is a substring of
-   StringMorph2; StringMorph3 is now GONE), the build hooks, serialization (constructor.name string checks, e.g.
-   CaretMorph:90), the menu-demo string literals, and the homepage/precompiled paths — confirm the eventual rename
-   is name-extraction-only (no manifest), per playbook §1. Pay special attention to the chrome call sites in finding #1.
- - PRESENTATION/BEHAVIOUR CHECK (playbook §2): for each legacy call site — ESPECIALLY the chrome (menu item, menu
-   header, tooltip, deprecated-button label) — open the modern widget the way that site does and LOOK at it; surface
-   every behaviour/appearance divergence (string-alignment→enum, edit-prompt-on-crop, currentlySelecting, caret API,
-   missing shadows) as an explicit owner decision BEFORE any test work, not a silent port.
- - Enumerate EVERY macro SystemTest that FUNCTIONALLY uses any of the four classes (not just prose) and classify each:
-   relabel-only vs. constructor-swap-only-then-recapture vs. genuine re-author vs. "expected reference churn because it
-   photographs a menu/tooltip/inspector-method-list that the chrome migration changes". Note the three tests in finding
-   #3 need special handling.
- - Call out the playbook-§4 gotchas likely to bite for a text/string widget (TextMorph2 right-click menus not
-   macro-drivable, editable-only-after-focus, softWrap, empty-text click crash, caret/selection, hover/determinism,
-   menu/tooltip/inspector-method-list shots changing when a class or method set changes, the --clean --no-build trap)
-   and how each affected test will handle them.
- - Make the plan SELF-CONTAINED for a future no-context session (Orientation + Glossary like the prior plans), list the
-   source touch-list and the test list per phase, give the verification steps (build_and_smoke, per-test capture at
-   dpr 1&2, build_and_test = 160/160, a --homepage build+boot since the chrome ships in homepage), and a "Potential
-   follow-ups" section.
+ - Use Explore/Plan agents to confirm the touch-list (reconfirm, don't re-derive): every bare-identifier
+   reference to TriggerMorph / MenuItemMorph / MagnetMorph across Fizzygum/src (extends / new / instanceof /
+   findTopWidgetByClassNameOrClass — use `\b` word boundaries; note MenuItemMorph is a distinct token but watch
+   for substring traps), the build hooks, serialization (constructor.name string checks), any menu-demo string
+   literals, and the homepage/precompiled paths — confirm the deletion is name-extraction-only (no manifest),
+   per playbook §1. The chrome ships in --homepage, so include a --homepage build+boot in verification.
+ - PRESENTATION/BEHAVIOUR CHECK (playbook §2): open a real menu, a real button, and a MagnetMorph the way each
+   site builds them and LOOK — surface every behaviour/appearance divergence between TriggerMorph's trigger
+   model and the button family's action model (target/action wiring, highlight/press visuals, padding/hit-area,
+   keyboard/hover) as an explicit owner decision BEFORE any test work, not a silent port.
+ - Enumerate EVERY macro SystemTest that FUNCTIONALLY exercises a menu item, a TriggerMorph-derived button, or a
+   MagnetMorph, and classify each: pixel-neutral (passes unchanged) vs. constructor/geometry-swap-then-recapture
+   vs. genuine re-author vs. "expected reference churn because it photographs a menu the base-class swap
+   changes". Remember menus strip "Wdgt" from class names in nav/labels (Arc 4 finding) — menu-navigation
+   strings already target "a Text"/"a String"; a base-class rename of MenuItemMorph would move the
+   "a MenuItemMorph"/"a MenuItem" hierarchy labels too — account for it.
+ - Call out the playbook-§4 gotchas likely to bite a menu/button arc (menu hierarchy/context-menu shots changing
+   when a class or its ancestor chain changes; getMostRecentlyOpenedMenu being fresh-only; right-click opening
+   the ANCESTOR hierarchy menu; hover/determinism; the menus-strip-"Wdgt" naming; the capture `--clean`
+   deletes-both-densities trap; run-macro-test-headless not rebuilding) and how each affected test handles them.
+ - Make the plan SELF-CONTAINED for a future no-context session (Orientation + Glossary like the prior plans),
+   list the source touch-list and the test list per phase, and give verification steps: build_and_smoke, per-test
+   capture at dpr 1 AND dpr 2, build_and_test = 160/160, and a --homepage build+boot (the chrome ships in
+   homepage). Add a "Potential follow-ups" section (carry the two Arc-4 deferred items above, and any new ones).
