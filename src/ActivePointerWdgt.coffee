@@ -982,6 +982,19 @@ class ActivePointerWdgt extends Widget
     # adjusting scrollpanel etc.
     @determineGrabs pos, wdgtFarAway, mouseOverNew
 
+    # The teleported widget is now under the (stationary) pointer. Resolve the
+    # mouseEnter/mouseLeave consequence of that geometry change NOW, while the
+    # non-float drag is active, so the widget's mouseEnter is consumed under the
+    # drag guard (e.g. SliderButtonMorph.mouseEnter early-returns while the hand
+    # is dragging) and the widget is recorded in @mouseOverList. Otherwise the
+    # next per-cycle reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges
+    # (WorldMorph.doOneCycle) can fire that mouseEnter AFTER mouse-up has already
+    # un-dragged the widget — spuriously HIGHLIGHTing it. Deferring this caused a
+    # dpr-2-only flake in SystemTest_macroSliderTrackClickMovesButton: a heavy
+    # SWCanvas cycle drains the down+up together, so no held-button frame ever
+    # interposes to absorb the enter. Resolving it here is cadence/density-independent.
+    @dispatchEventsFollowingMouseMove mouseOverNew
+
   reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges: ->
     topWdgt = @topWdgtUnderPointer()
     # allParentsTopToButton makes more logical sense but
