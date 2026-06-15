@@ -9,7 +9,7 @@
 # i.e. this is currently the simplest way to change the color
 # of a non-rectangular button.
 
-class UncollapseIconButtonMorph extends EmptyButtonMorph
+class UncollapseIconButtonMorph extends ButtonWdgt
 
   constructor: (@target) ->
     # can't set the parent as the target directly because this morph

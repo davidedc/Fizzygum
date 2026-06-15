@@ -1,73 +1,18 @@
 # I automatically determine my bounds
 
-# MenuItemMorph is now part of the modern button family: it extends
-# EmptyButtonMorph (which owns the trigger/target/action machinery and the
-# HighlightableMixin state constants). The deprecated TriggerMorph it used to
-# extend has been deleted; its menu-row look (a flat rectangle that fills the
-# menu background normally, SILVER on hover, GRAY on press) does NOT exist in
-# the button family (EmptyButtonMorph paints nothing, SimpleButtonMorph paints
-# a rounded box), so that flat paint + its state handlers are kept here as
-# overrides — menus look exactly as before.
+# A menu row. It extends LabelButtonWdgt (the flat label-bearing button base, on
+# the modern ButtonWdgt family) and adds the menu-specific behaviour: a
+# self-sizing multi-line TextWdgt label, tick toggling, list-row selection, and
+# the "represents a morph" hover-highlight. (It used to extend the deprecated
+# TriggerMorph, whose generic flat-button machinery now lives in LabelButtonWdgt.)
 
-class MenuItemMorph extends EmptyButtonMorph
-
-  # label fields (the button family carries a faceMorph instead; a menu item
-  # draws its own @label, sized to its text)
-  label: nil
-  labelString: nil
-  labelColor: nil
-  labelBold: nil
-  labelItalic: nil
-  fontSize: nil
-  fontStyle: nil
-
-  # the flat menu-row look (formerly TriggerMorph's)
-  highlightColor: Color.SILVER
-  pressColor: Color.GRAY
-  centered: false
+class MenuItemMorph extends LabelButtonWdgt
 
   # labelString can also be a Widget or a Canvas or a tuple: [icon, string]
-  constructor: (
-      ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true,
-      target = nil,
-      action = nil,
-      labelString = nil,
-      fontSize = WorldMorph.preferencesAndSettings.menuFontSize,
-      fontStyle = "sans-serif",
-      centered = false,
-      environment = nil,
-      morphEnv,
-      toolTipMessage = nil,
-      color = WorldMorph.preferencesAndSettings.menuButtonsLabelColor,
-      bold = false,
-      italic = false,
-      doubleClickAction = nil,
-      argumentToAction1 = nil,
-      argumentToAction2 = nil,
-      representsAMorph = false
-      ) ->
+  constructor: (ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, toolTipMessage, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph) ->
     #console.log "menuitem constructing"
-
-    # EmptyButtonMorph owns the trigger machinery; map our menu-item args onto
-    # its constructor. We pass NO faceMorph (we draw our own @label), and our
-    # "environment" arg is EmptyButtonMorph's dataSourceMorphForTarget.
-    super ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, nil, environment, morphEnv, toolTipMessage, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph
-
-    @labelString = labelString
-    @fontSize = fontSize
-    @fontStyle = fontStyle
-    @centered = centered
-    @labelColor = color
-    @labelBold = bold
-    @labelItalic = italic
-
-    # the flat menu-row background (EmptyButtonMorph defaults to white)
-    @color = WorldMorph.preferencesAndSettings.menuBackgroundColor
-
+    super ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, toolTipMessage, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph
     @actionableAsThumbnail = true
-
-    if @labelString?
-      @reLayout()
 
   getTextDescription: ->
     if @textDescription?
@@ -84,97 +29,9 @@ class MenuItemMorph extends EmptyButtonMorph
   #reLayout: ->
   #  @label.setExtent @extent().subtract (@label.bounds.origin.subtract @.bounds.origin)
 
-  reLayout: ->
-    if not @label?
-      @createLabel()
-    if @centered
-      @label.fullRawMoveTo @center().subtract @label.extent().floorDivideBy 2
-
-  # a menu item has no faceMorph; use the base Widget layout (the pre-rebase
-  # inherited behaviour) rather than EmptyButtonMorph's faceMorph-centric one.
-  doLayout: (newBoundsForThisLayout) ->
-    Widget::doLayout.call @, newBoundsForThisLayout
-
-  # »>> this part is excluded from the fizzygum homepage build
-  setLabel: (@labelString) ->
-    # just recreated the label
-    # from scratch
-    if @label?
-      @label = @label.fullDestroy()
-    @reLayout()
-  # this part is excluded from the fizzygum homepage build <<«
-
-  alignCenter: ->
-    if !@centered
-      @centered = true
-      @reLayout()
-
-  alignLeft: ->
-    if @centered
-      @centered = false
-      @reLayout()
-
-  # This method only paints this very morph's "image",
-  # it doesn't descend the children
-  # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
-  # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this morph might paint something on the screen even if
-  # it's not a "leaf".
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
-
-    if !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
-      return nil
-
-    [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
-    return nil if w < 1 or h < 1 or area.isEmpty()
-
-    if appliedShadow?
-      color = Color.BLACK
-    else
-      color = switch @state
-        when @STATE_NORMAL
-          @color
-        when @STATE_HIGHLIGHTED
-          @highlightColor
-        when @STATE_PRESSED
-          @pressColor
-
-    # paintRectangle is usually made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, so it's generally used
-    # outside the effect of the scaling because
-    # of the ceilPixelRatio
-    @paintRectangle \
-      aContext,
-      al, at, w, h,
-      color,
-      @alpha,
-      true, # push and pop the context
-      appliedShadow
-
-    # paintHighlight is usually made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, so it's generally used
-    # outside the effect of the scaling because
-    # of the ceilPixelRatio
-    @paintHighlight aContext, al, at, w, h
-
-  isTicked: ->
-    @label.text.isTicked()
-
-  toggleTick: ->
-    if @label.text.isTicked()
-      @label.text = @label.text.toggleTick()
-      # reLayout is a base no-op on the modern TextWdgt, so it would leave the
-      # ticked/unticked label at a stale width; re-measure and re-size instead.
-      @label.sizeToTextAndDisableFitting()
-      @label.changed()
-    else if @label.text.isUnticked()
-      @label.text = @label.text.toggleTick()
-      @label.sizeToTextAndDisableFitting()
-      @label.changed()
-
-
+  # MenuItemMorph hugs its box to its (multi-line, modern TextWdgt) label -- the
+  # opposite of LabelButtonWdgt's default single-line StringWdgt label, which
+  # leaves the box alone.
   createLabel: ->
     # console.log "menuitem createLabel"
     @label = new TextWdgt @labelString, @fontSize, @fontStyle
@@ -191,6 +48,21 @@ class MenuItemMorph extends EmptyButtonMorph
     np = @position().add new Point 4, 0
     @label.silentFullRawMoveTo np
 
+  isTicked: ->
+    @label.text.isTicked()
+
+  toggleTick: ->
+    if @label.text.isTicked()
+      @label.text = @label.text.toggleTick()
+      # reLayout is a base no-op on the modern TextWdgt, so it would leave the
+      # ticked/unticked label at a stale width; re-measure and re-size instead.
+      @label.sizeToTextAndDisableFitting()
+      @label.changed()
+    else if @label.text.isUnticked()
+      @label.text = @label.text.toggleTick()
+      @label.sizeToTextAndDisableFitting()
+      @label.changed()
+
   shrinkToTextSize: ->
     # '5' is to add some padding between
     # the text and the button edge
@@ -198,11 +70,6 @@ class MenuItemMorph extends EmptyButtonMorph
 
   widthOfLabel: ->
     @label.width()
-
-  # a copied menu item usually wants to un-highlight itself. This happens for
-  # example when you duplicate by clicking on a "duplicate" button INSIDE it.
-  justBeenCopied: ->
-    @mouseLeave()
 
   # MenuItemMorph events:
   mouseEnter: ->
@@ -247,27 +114,8 @@ class MenuItemMorph extends EmptyButtonMorph
     if @isListItem()
       @parent.unselectAllItems()
       @escalateEvent "mouseDownLeft", pos
-    @state = @STATE_PRESSED
-    @changed()
-    # replicate Widget.mouseDownLeft inline (bringToForeground + escalate)
-    # rather than calling super: EmptyButtonMorph's HighlightableMixin
-    # mouseDownLeft would run updateColor (clobbering @color, our normal fill).
-    @bringToForeground()
-    @escalateEvent "mouseDownLeft", pos
-
-  # HighlightableMixin (via EmptyButtonMorph) would reset @state to NORMAL on
-  # mouse-up; a menu item must NOT do that — a selected list row keeps its
-  # STATE_PRESSED highlight (see isSelectedListItem), and TriggerMorph (our old
-  # base) had no mouseUpLeft handler. So neutralise it.
-  mouseUpLeft: ->
-
-  mouseClickLeft: ->
-    @bringToForeground()
-    @state = @STATE_HIGHLIGHTED
-    @changed()
-    if @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
-      @propagateKillPopUps()
-    @trigger()
+    # LabelButtonWdgt.mouseDownLeft sets STATE_PRESSED + bringToForeground + escalate
+    super
 
   isListItem: ->
     return @parent.isListContents  if @parent

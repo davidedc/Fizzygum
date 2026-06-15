@@ -2,7 +2,7 @@
 # takes a rounded box shape, and can host
 # a morph to be used as "face"
 
-class SimpleButtonMorph extends EmptyButtonMorph
+class SimpleButtonWdgt extends ButtonWdgt
 
   constructor: (
       @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true,

@@ -21,9 +21,9 @@ class VideoPlayPauseToggle extends ToggleButtonMorph
     "Play/pause button"
 
   constructor: (@videoPlayerCanvas) ->
-    @playPausePauseButton = new SimpleButtonMorph true, @, "pause", "❙ ❙"
+    @playPausePauseButton = new SimpleButtonWdgt true, @, "pause", "❙ ❙"
     @playPausePauseButton.faceMorph.alignMiddle()
-    @playPausePlayButton = new SimpleButtonMorph true, @, "play", "▶"
+    @playPausePlayButton = new SimpleButtonWdgt true, @, "play", "▶"
     @playPausePlayButton.faceMorph.alignMiddle()
     super @playPausePauseButton, @playPausePlayButton, 0
 

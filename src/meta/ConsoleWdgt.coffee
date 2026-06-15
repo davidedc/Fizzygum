@@ -47,11 +47,11 @@ class ConsoleWdgt extends Widget
     # "do" buttons -------------------------------
     # NOTE that you can also "doAll" or "doSelection" via
     # the context menu entries in the text panel!
-    @runSelectionButton = new SimpleButtonMorph true, @, "doSelection", "run selection"
+    @runSelectionButton = new SimpleButtonWdgt true, @, "doSelection", "run selection"
     @runSelectionButton.editorContentPropertyChangerButton = true
     @add @runSelectionButton
 
-    @runAllButton = new SimpleButtonMorph true, @, "doAll", "run all"
+    @runAllButton = new SimpleButtonWdgt true, @, "doAll", "run all"
     @add @runAllButton
     # ---------------------------------------
 

@@ -300,7 +300,7 @@ class ActivePointerWdgt extends Widget
       # button and you don't want to stopEditing in that case
       # either...
       if actionedWdgt.parent? and
-       (actionedWdgt.parent instanceof SimpleButtonMorph) and
+       (actionedWdgt.parent instanceof SimpleButtonWdgt) and
        actionedWdgt.parent.editorContentPropertyChangerButton? and
        actionedWdgt.parent.editorContentPropertyChangerButton
         return

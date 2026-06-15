@@ -9,7 +9,7 @@
 # i.e. this is currently the simplest way to change the color
 # of a non-rectangular button.
 
-class CloseIconButtonMorph extends EmptyButtonMorph
+class CloseIconButtonMorph extends ButtonWdgt
 
 
   constructor: (@target) ->

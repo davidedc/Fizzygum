@@ -175,7 +175,7 @@ class InspectorWdgt extends Widget
 
     counter = 0
     for eachNamedClass in @classesNames
-      classButton = new SimpleButtonMorph true, @, "openClassInspector", (new StringWdgt eachNamedClass, WorldMorph.preferencesAndSettings.textInButtonsFontSize),nil,nil,nil,nil,eachNamedClass,nil,nil,@classNamesTextPadding
+      classButton = new SimpleButtonWdgt true, @, "openClassInspector", (new StringWdgt eachNamedClass, WorldMorph.preferencesAndSettings.textInButtonsFontSize),nil,nil,nil,nil,eachNamedClass,nil,nil,@classNamesTextPadding
       @classesButtons.push classButton
       @add classButton
 
@@ -194,32 +194,32 @@ class InspectorWdgt extends Widget
     @lastArrowInHierarchy = new AngledArrowUpLeftIconMorph Color.BLACK
     @add @lastArrowInHierarchy
 
-    @showMethodsOnButton = new SimpleButtonMorph true, @, "hideMethods", "methods: on"
-    @showMethodsOffButton = new SimpleButtonMorph true, @, "showMethods", "methods: off"
+    @showMethodsOnButton = new SimpleButtonWdgt true, @, "hideMethods", "methods: on"
+    @showMethodsOffButton = new SimpleButtonWdgt true, @, "showMethods", "methods: off"
     @showMethodsToggle = new ToggleButtonMorph @showMethodsOnButton, @showMethodsOffButton, if @showingMethods then 0 else 1
     @add @showMethodsToggle
 
-    @showFieldsOnButton = new SimpleButtonMorph true, @, "hideFields", "fields: on"
-    @showFieldsOffButton = new SimpleButtonMorph true, @, "showFields", "fields: off"
+    @showFieldsOnButton = new SimpleButtonWdgt true, @, "hideFields", "fields: on"
+    @showFieldsOffButton = new SimpleButtonWdgt true, @, "showFields", "fields: off"
     @showFieldsToggle = new ToggleButtonMorph @showFieldsOnButton, @showFieldsOffButton, if @showingFields then 0 else 1
     @add @showFieldsToggle
 
-    @showInheritedOnButton = new SimpleButtonMorph true, @, "hideInherited", "inherited: on"
-    @showInheritedOffButton = new SimpleButtonMorph true, @, "showInherited", "inherited: off"
+    @showInheritedOnButton = new SimpleButtonWdgt true, @, "hideInherited", "inherited: on"
+    @showInheritedOffButton = new SimpleButtonWdgt true, @, "showInherited", "inherited: off"
     @showInheritedToggle = new ToggleButtonMorph @showInheritedOnButton, @showInheritedOffButton, if @showingInherited then 0 else 1
     @add @showInheritedToggle
 
     @buildAndConnectObjOwnPropsButton()
 
-    @addPropertyButton = new SimpleButtonMorph true, @, "addPropertyPopout", "add..."
+    @addPropertyButton = new SimpleButtonWdgt true, @, "addPropertyPopout", "add..."
     @add @addPropertyButton
-    @renamePropertyButton = new SimpleButtonMorph true, @, "renamePropertyPopout", "rename..."
+    @renamePropertyButton = new SimpleButtonWdgt true, @, "renamePropertyPopout", "rename..."
     @add @renamePropertyButton
-    @removePropertyButton = new SimpleButtonMorph true, @, "removeProperty", "remove"
+    @removePropertyButton = new SimpleButtonWdgt true, @, "removeProperty", "remove"
     @add @removePropertyButton
 
     @saveTextWdgt = (new StringWdgt "save", WorldMorph.preferencesAndSettings.textInButtonsFontSize).alignCenter()
-    @saveButton = new SimpleButtonMorph true, @, "save", @saveTextWdgt
+    @saveButton = new SimpleButtonWdgt true, @, "save", @saveTextWdgt
     @add @saveButton
 
 
@@ -327,8 +327,8 @@ class InspectorWdgt extends Widget
 
 
   buildAndConnectObjOwnPropsButton: ->
-    @showOwnPropsOnlyOnButton = new SimpleButtonMorph true, @, "hideOwnPropsOnly", "obj own props only: on"
-    @showOwnPropsOnlyOffButton = new SimpleButtonMorph true, @, "showOwnPropsOnly", "obj own props only: off"
+    @showOwnPropsOnlyOnButton = new SimpleButtonWdgt true, @, "hideOwnPropsOnly", "obj own props only: on"
+    @showOwnPropsOnlyOffButton = new SimpleButtonWdgt true, @, "showOwnPropsOnly", "obj own props only: off"
     @showOwnPropsOnlyToggle = new ToggleButtonMorph @showOwnPropsOnlyOnButton, @showOwnPropsOnlyOffButton, if @showingOwnPropsOnly then 0 else 1
     @add @showOwnPropsOnlyToggle
 

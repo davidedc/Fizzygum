@@ -6,7 +6,7 @@
 # and actions in the constructor when what we could simply
 # do is to extend this button and override the mouse events?
 
-class EmptyButtonMorph extends Widget
+class ButtonWdgt extends Widget
 
   @augmentWith HighlightableMixin, @name
 

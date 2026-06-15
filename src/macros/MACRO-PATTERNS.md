@@ -301,9 +301,9 @@ assertion a recapture after a regression silently stores two different hashes an
   `button.label.edit()` DIRECTLY (`= world.edit label`, sets `world.caret`, no isEditable gate — the "edit" item's method),
   then reuse the caret verbs (`"Meta+a"` → `@syntheticEventsStringKeys_InputEvents "new"`) and `world.stopEditing()` to
   commit. Use a `MenuItemMorph`: its label is a self-sizing modern `TextWdgt` that re-measures on setText (a
-  `SimpleButtonMorph`'s `StringWdgt` face crops instead); give the standalone item `centered=true` + a fixed
+  `SimpleButtonWdgt`'s `StringWdgt` face crops instead); give the standalone item `centered=true` + a fixed
   `rawSetExtent` and `reLayout()` after each edit. (`MenuItemMorph` is the button-family widget that carries an
-  editable label; the deprecated `TriggerMorph` it once extended was deleted and folded into `EmptyButtonMorph`.)
+  editable label; the deprecated `TriggerMorph` it once extended was deleted and folded into `ButtonWdgt`.)
 - **Caret brought into view only when MOVED** (`macroDocumentCaretBroughtIntoViewWhenMoved`): in a scrollable document the panel
   scrolls to keep the caret visible — but ONLY on a caret MOVE, not on a wheel scroll. `ScrollPanelWdgt.scrollCaretIntoView` (`:504`)
   repositions the contents so `world.caret` sits in the viewport; it is called from `CaretMorph.gotoSlot` (`:147`, gated on the caret
@@ -419,7 +419,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `new SimplePlainTextScrollPanelWdgt "text", false, 5` (ctor `(textAsString, wraps, padding)` auto-builds the inner blurb).
   image_1 (the panel's own coalesced menu) vs image_2 (the 2-item hierarchy menu) is the proof.
 - **Submenu hopping — keep the common chain open** (`macroHoppingBetweenSubMenus`): an arrow item opens a submenu AT the
-  clicked point on click (the menu item's `trigger`, inherited from the `EmptyButtonMorph` family). Clicking ANY item KEEPS the menus in its ASCENDING hierarchy
+  clicked point on click (the menu item's `trigger`, inherited from the `ButtonWdgt` family). Clicking ANY item KEEPS the menus in its ASCENDING hierarchy
   (`PopUpWdgt.hierarchyOfPopUps`) and DISMISSES the DOWNSTREAM submenus — so re-click a world-menu sibling IN THE CHAIN to
   swap the branch under it; the world menu survives every hop until one final desktop click. **OCCLUSION:** a submenu pops at
   the clicked point and covers the sibling triggers, so click each world-menu sibling at its LEFT
@@ -1138,7 +1138,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Resizing a button via its handle does NOT trigger it** (`macroResizingButtonDoesntCauseItToClick`): dragging a widget's resize
   handle runs `HandleMorph.nonFloatDragging → @target.setExtent`, never a click — `HandleMorph.mouseClickLeft` is EMPTY and its
   `mouseDownLeft` doesn't propagate ("otherwise the handle on a button will trigger the button when resizing"), so resizing a
-  button cannot fire it. Fixture with a VISIBLE action: a standalone `new SimpleButtonMorph true, box, "hide", "hide the box"`
+  button cannot fire it. Fixture with a VISIBLE action: a standalone `new SimpleButtonWdgt true, box, "hide", "hide the box"`
   wired to a target box's `hide()`. Give the button a resize handle programmatically (`new HandleMorph button` — the same kind the
   resize/move menu adds; done directly because a small button offers no usable resize/move menu via synthetic right-click), then GROW
   it via `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest` (selected by type) → the BOX is STILL visible (the
@@ -1154,16 +1154,16 @@ assertion a recapture after a regression silently stores two different hashes an
   is purely the raw-pixel `dataHash`.)
 - **A BARE button float-drags by its body and does NOT trigger mid-drag** (`macroBareButtonFloatDragsWithoutTriggering`): the third
   button-negative sibling (after the resize-handle case above and the same-morph-mouseup case `macroButtonTriggersOnlyOnSameMorphMouseUp`).
-  `EmptyButtonMorph.rejectDrags` returns false ONLY when the parent is the WORLD (`:128-132`), so a world-parented button does NOT arm its
+  `ButtonWdgt.rejectDrags` returns false ONLY when the parent is the WORLD (`:128-132`), so a world-parented button does NOT arm its
   trigger on press: `Widget.findFirstLooseMorph` (`:2545`) returns the button ITSELF as the grab root (`grabsToParentWhenDragged` is false
   for a world child, `:2513-2536`), so the hand FLOAT-DRAGS it (`ActivePointerWdgt.determineGrabs → grab`). The action fires only via
-  `mouseClickLeft → trigger()` (MenuItemMorph's `mouseClickLeft`; `trigger` inherited from `EmptyButtonMorph.coffee:98-102`), gated on a same-morph mouse-up; a float-drag ends in a DROP
+  `mouseClickLeft → trigger()` (MenuItemMorph's `mouseClickLeft`; `trigger` inherited from `ButtonWdgt.coffee:98-102`), gated on a same-morph mouse-up; a float-drag ends in a DROP
   (`ActivePointerWdgt.processMouseUp:435-436`), never a click → no trigger. Build the button DIRECTLY wired to a VISIBLE action: `new
   MenuItemMorph true, world, "popUpDemoMenu", "demo", 24, "sans-serif", true` (the same action the world menu's "demo" item uses,
   `WorldMorph.coffee:1940`; `popUpDemoMenu` self-pops at the hand, `:2241`) + `world.add` + `rawSetExtent` + `reLayout()` (a standalone
   item doesn't size its box to its label, so set the extent + re-centre the big 24pt label — matches the original torn-off menu item).
   (Was a `TriggerMorph`; that deprecated class is gone — its label-bearing button role is now `MenuItemMorph`, identical float-drag/trigger
-  semantics. For a STANDALONE button with NO editable label, `SimpleButtonMorph` is the modern idiom; here we need the flat big centred
+  semantics. For a STANDALONE button with NO editable label, `SimpleButtonWdgt` is the modern idiom; here we need the flat big centred
   label, so MenuItemMorph.) Held-button mid-drag idiom for the negative shots: `@moveToAndMouseDown_InputEvents
   button.center()` → `@syntheticEventsMouseMove_InputEvents pt, "left button"` (lifts onto the hand — image_2) → carry →
   `@syntheticEventsMouseUp_InputEvents()` (DROP, no menu — image_3) → then `@moveToAndClickAtFractionOf_InputEvents button, [0.5,0.5]` (a
@@ -1530,7 +1530,7 @@ assertion a recapture after a regression silently stores two different hashes an
   land on the SAME morph (`ActivePointerWdgt.processMouseUp` fires only `when w == @mouseDownWdgt`). To show "press then release
   elsewhere does NOT trigger", press on the button and release off it: `@syntheticEventsMouseMovePressDragRelease_InputEvents
   (@pointAtFractionOf button, [0.5,0.5]), (new Point X, Y)`. Parent the button INSIDE a container (window/panel), NOT bare on the
-  world (`EmptyButtonMorph.rejectDrags` is false only when the parent is the world, so a loose button float-drags on the press).
+  world (`ButtonWdgt.rejectDrags` is false only when the parent is the world, so a loose button float-drags on the press).
 - **In-system eval** (`macroEvaluateString`): `world.evaluateString "code"` runs arbitrary CoffeeScript against the live world
   INLINE (compile, run with `@`=world, relayout/repaint) — this is what the old recorded `AutomatorEventCommandEvaluateString` command did (that command no longer exists).
   Do NOT write `@evaluateString` (MacroToolkit's own binds `@` to the toolkit). No new verb; no input events, so just `yield

@@ -57,22 +57,22 @@ class FridgeMagnetsMorph extends Widget
 
 
     # sample magnets -------------------------------
-    @scale = new MagnetMorph true, @
+    @scale = new MagnetWdgt true, @
     @scale.setLabel "scale"
     @scale.alignCenter()
     @magnetsBox.add @scale
 
-    @rotate = new MagnetMorph true, @
+    @rotate = new MagnetWdgt true, @
     @rotate.setLabel "rotate"
     @rotate.alignCenter()
     @magnetsBox.add @rotate
 
-    @box = new MagnetMorph true, @
+    @box = new MagnetWdgt true, @
     @box.setLabel "box"
     @box.alignCenter()
     @magnetsBox.add @box
 
-    @move = new MagnetMorph true, @
+    @move = new MagnetWdgt true, @
     @move.setLabel "move"
     @move.alignCenter()
     @magnetsBox.add @move

@@ -9,7 +9,7 @@
 # i.e. this is currently the simplest way to change the color
 # of a non-rectangular button.
 
-class EditIconButtonWdgt extends EmptyButtonMorph
+class EditIconButtonWdgt extends ButtonWdgt
 
 
   constructor: (@target) ->

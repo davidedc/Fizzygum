@@ -75,16 +75,16 @@ class ErrorsLogViewerMorph extends Widget
     @add @tempPromptEntryField
 
     # buttons -------------------------------
-    @clearButton = new SimpleButtonMorph true, @, "clearTextPane", "clear"
+    @clearButton = new SimpleButtonWdgt true, @, "clearTextPane", "clear"
     @add @clearButton
 
 
-    pauseButton = new SimpleButtonMorph true, @, "pauseErrors", "pause"
-    unpauseButton = new SimpleButtonMorph true, @, "unpauseErrors", "un-pause"
+    pauseButton = new SimpleButtonWdgt true, @, "pauseErrors", "pause"
+    unpauseButton = new SimpleButtonWdgt true, @, "unpauseErrors", "un-pause"
     @pauseToggle = new ToggleButtonMorph pauseButton, unpauseButton, if @paused then 1 else 0
     @add @pauseToggle
 
-    @okButton = new SimpleButtonMorph true, @, "closeFromContainerWindow", "ok"
+    @okButton = new SimpleButtonWdgt true, @, "closeFromContainerWindow", "ok"
     @add @okButton
 
     @invalidateLayout()
