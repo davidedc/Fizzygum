@@ -412,9 +412,14 @@ class ScrollPanelWdgt extends PanelWdgt
     deltaY = 0
     friction = 0.8
     wasScrollDragging = false
+    # Did ANY frame of this gesture see a float-drag in progress? A float-drag means
+    # the gesture is MOVING a (detachable) widget, not scrolling, so it must never get
+    # a parting scroll — even if its frames collapse (see the flush's collapse branch).
+    everFloatDragged = false
     world.steppingWdgts.add @
     @step = =>
       scrollbarJustChanged = false
+      everFloatDragged ||= world.hand.isThisPointerFloatDraggingSomething()
       if world.hand.mouseButton and
         !world.hand.isThisPointerFloatDraggingSomething() and
         # if the Widget at hand is float draggable then
@@ -451,7 +456,23 @@ class ScrollPanelWdgt extends PanelWdgt
         # velocity. Only when this drag actually scroll-dragged (a float-move
         # of the panel must not get a parting scroll), and only if released
         # inside the panel (matching the per-frame gate above).
-        if wasScrollDragging
+        #
+        # CADENCE COLLAPSE: under the harness's pacing control (or just a slow / HiDPI
+        # frame) the whole press->drag->release can drain inside ONE cycle, so the FIRST
+        # @step already sees the button up and NO button-down frame ever set
+        # wasScrollDragging. That used to drop the scroll ENTIRELY (total -> 0), making
+        # the outcome depend on frame cadence — it scrolled at dpr 1 but not at dpr 2,
+        # the same gesture giving different pixels. Recover it here: when the gesture
+        # never float-dragged anything and the hand isn't poised to detach a widget
+        # (so it IS a scroll-drag, not a float-move) and the press is inside the panel,
+        # treat it as a scroll-drag. oldPos is still the press point, so the flush below
+        # scrolls exactly release-minus-press — the SAME event-determined total the
+        # multi-frame path lands on, now identical at every dpr / speed / engine.
+        collapsedScrollDrag = !wasScrollDragging and
+          !everFloatDragged and
+          !world.hand.wdgtToGrab?.detachesWhenDragged() and
+          @boundsContainPoint(oldPos)
+        if wasScrollDragging or collapsedScrollDrag
           wasScrollDragging = false
           releasePos = world.hand.position()
           if @boundsContainPoint releasePos
