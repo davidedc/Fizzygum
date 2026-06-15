@@ -276,6 +276,24 @@ if ! $noSyntaxCheck && ! $homepage && ! $notests && [ -d ../Fizzygum-tests ] ; t
   echo "... test .js syntax OK"
 fi
 
+# --- build-time SWCanvas reference-image gate (only when tests are part of this build) ---------
+# build.py sweeps EVERY ref file in tests/ into the asset manifest, so a STRAY/duplicate ref (e.g.
+# left by a capture undone with `git checkout`, which leaves the new-hash file untracked) would
+# enter the build and let a WRONG render false-PASS (compareScreenshots matches ANY candidate).
+# check-refs.js fails on >1 dataHash per (test,image,dpr,OS) or an orphaned .js/.png BEFORE the
+# build ships them. Structural only (no pixel decode), so no PNG optimizer needed. Same
+# --noSyntaxCheck escape hatch / $? check / homepage-notests-sibling guard as the gates above.
+if ! $noSyntaxCheck && ! $homepage && ! $notests && [ -d ../Fizzygum-tests ] ; then
+  echo "checking SWCanvas reference images for strays/duplicates ..."
+  node ../Fizzygum-tests/scripts/check-refs.js --quiet
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: SWCanvas reference check failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... SWCanvas references OK"
+fi
+
 touch $SCRATCH_PATH/fizzygum-boot.coffee
 
 if $notests || $homepage ; then
