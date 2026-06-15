@@ -1,5 +1,3 @@
-DEFERRED FOLLOW-UP (from the FIT_BOX_TO_TEXT arc, Arc 6 — pick up if/when you want it; not blocking): A bare FBT TextWdgt reflows on a container resize but not on its own setText — that trigger stays on SimplePlainTextWdgt (noted in its header + the auto-memory `textwdgt-fit-box-to-text`). A clean follow-up if you ever want full parity.
-
 You are picking up a series of "bring a class to latest" modernizations in the Fizzygum CoffeeScript GUI framework (workspace: /Users/davidedellacasa/code/Fizzygum-all/, with sibling git repos Fizzygum/ = source, Fizzygum-tests/ = the 160 macro SystemTests). You have NO prior context, so start by reading these, in order:
 
  1. The PLAYBOOK distilled from these arcs (process + gotchas, written to be reused): Fizzygum/docs/class-modernization-playbook.md — read it in full first (its §7 records the arcs that have closed).
@@ -36,6 +34,7 @@ You are picking up a series of "bring a class to latest" modernizations in the F
 
  ROADMAP (in order; renaming LAST):
    1. Content-text reflow — generalize `maxTextWidth`/`softWrap` to bare `TextWdgt` content.   ✅ DONE (Arc 6, above).
+   ▸ TOP TO-DO (small follow-up left by Arc 6, optional): a bare FIT_BOX_TO_TEXT `TextWdgt` reflows on a container RESIZE but NOT on its own `setText` — that reLayout+refresh trigger still lives on `SimplePlainTextWdgt`'s overrides (its header + the auto-memory `textwdgt-fit-box-to-text` note it). For full parity (so a bare `TextWdgt` is a drop-in for SimplePlainTextWdgt), move those `setText`/`setFontSize`/`toggle*` triggers onto the base `TextWdgt` gated by the mode and simplify `SimplePlainTextWdgt`. Quick; can precede #2.
    2. Naked-inspector fix — make InspectorWdgt render/function/RESIZE correctly WITHOUT a window (keep+wire its `@resizer`; add a naked-inspector test); + unify the two `save` paths.   ← THE STANDING GOAL (next arc)
    3. (TextWdgt text shadows — ONLY if a concrete caller appears; none today, so not an arc yet.)
    — then the renaming / migration phase, LAST —
