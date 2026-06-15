@@ -1,3 +1,5 @@
+DEFERRED FOLLOW-UP (from the FIT_BOX_TO_TEXT arc, Arc 6 — pick up if/when you want it; not blocking): A bare FBT TextWdgt reflows on a container resize but not on its own setText — that trigger stays on SimplePlainTextWdgt (noted in its header + the auto-memory `textwdgt-fit-box-to-text`). A clean follow-up if you ever want full parity.
+
 You are picking up a series of "bring a class to latest" modernizations in the Fizzygum CoffeeScript GUI framework (workspace: /Users/davidedellacasa/code/Fizzygum-all/, with sibling git repos Fizzygum/ = source, Fizzygum-tests/ = the 160 macro SystemTests). You have NO prior context, so start by reading these, in order:
 
  1. The PLAYBOOK distilled from these arcs (process + gotchas, written to be reused): Fizzygum/docs/class-modernization-playbook.md — read it in full first (its §7 records the arcs that have closed).
