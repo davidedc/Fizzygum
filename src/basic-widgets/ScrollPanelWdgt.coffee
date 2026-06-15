@@ -257,14 +257,16 @@ class ScrollPanelWdgt extends PanelWdgt
       @contents.adjustContentsBounds()
     else if @isTextLineWrapping and @contents instanceof PanelWdgt
       @contents.children.forEach (morph) =>
-        if morph instanceof SimplePlainTextWdgt
-          # this re-layouts the text to fit the width.
-          # The new height of the text will then be used
-          # to redraw the vertical slider.
+        if morph.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
+          # contained text that OPTED INTO FIT_BOX_TO_TEXT (a SimplePlainTextWdgt or
+          # a bare TextWdgt put into that mode) fits its BOX to the TEXT: reassert
+          # soft-wrap, then feed it the width — rawSetWidth re-lays-out the text to
+          # that width (height = wrapped line count), and that new height drives the
+          # vertical slider below. We RESPECT the mode (a non-text child or a
+          # FIT_TEXT_TO_BOX widget is skipped). Was SimplePlainTextWdgt-only, via
+          # the maxTextWidth wrap flag.
+          morph.softWrap = true
           morph.rawSetWidth @contents.width() - totalPadding
-          # SimplePlainTextWdgt just needs maxTextWidth to be non-null as a wrap
-          # flag (bare-TextWdgt content wraps via softWrap — deferred pass).
-          morph.maxTextWidth = @contents.width() - totalPadding
           @contents.rawSetHeight (Math.max morph.height(), @height()) - totalPadding
 
     subBounds = @contents.subMorphsMergedFullBounds()?.ceil()

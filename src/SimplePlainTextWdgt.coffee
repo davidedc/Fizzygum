@@ -1,21 +1,25 @@
-# A multi-line, optionally word-wrapping string.
-# It's not "contained": it will literally blurt itself out allover the
-# screen. For "contained" text (the only practical solution for long
-# text) use the SimplePlainTextWdgtScrollPanelWdgt, since that
-# one... scrolls.
+# A multi-line word-wrapping text that is "CONTAINED": it fits its BOX to its
+# TEXT (FIT_BOX_TO_TEXT) — it wraps to the width it is laid out at and its height
+# follows the wrapped content, which is what "normal" text editing / a text
+# document paragraph looks like. (A bare TextWdgt is FIT_TEXT_TO_BOX by default and
+# just blurts itself out across the screen; for one-off long text scroll it in a
+# SimplePlainTextScrollPanelWdgt.)
 #
-# SimplePlainTextWdgt is a compatibility layer that lets us use the new
-# TextWdgt with the current ScrollPanelWdgt and the current layout mechanism (which
-# we'd want to change with a more generic one but it's a complex process).
-#
-# This Widget can do stuff that the TextWdgt is not quite ready to do (i.e. can
-# adjust its vertical size to fit its contents in the given width, which is what
-# "normal" text editing looks like.
-#
-# TextWdgt could also be used to do that, but it could do that within a larger
-# layout rework that has not been done yet. Note that TextWdgt can do a bunch more
-# stuff (e.g. lets you edit in "centered" text, can fit the text to any given
-# bound etc...)
+# SimplePlainTextWdgt is now a THIN specialization of TextWdgt: its ctor just opts
+# into FIT_BOX_TO_TEXT (the contained-text mode) — see TextWdgt::reLayout and the
+# FITTING MODEL comment in StringWdgt. It USED to be a "compatibility layer" that
+# hard-coded this behaviour through the dead-TextMorph `maxTextWidth` knob and
+# three `instanceof SimplePlainTextWdgt` leaks in the base, with a TODO to do "a
+# larger layout rework". That rework is the FIT_BOX_TO_TEXT arc: it retired
+# maxTextWidth + the leaks and moved the contained-reflow engine onto the base
+# gated by the mode, so ANY TextWdgt (not just this one) can now be contained text.
+# What's left specific to THIS class is its chrome: pinning
+# layoutSpecDetails.canSetHeightFreely = false (height is content-driven), the
+# scroll-panel soft-wrap toggle (softWrapOn/Off), the "set target" controller menu,
+# and the reLayout + refreshScrollPanelWdgtOrVerticalStackIfIamInIt triggers on
+# setText/setFontSize/toggle* (so an EDIT re-flows it AND nudges the container — a
+# bare TextWdgt re-flows on a container RESIZE but not yet on its own setText, so
+# use this class when the text content itself changes).
 
 class SimplePlainTextWdgt extends TextWdgt
 
@@ -37,7 +41,11 @@ class SimplePlainTextWdgt extends TextWdgt
     @silentRawSetBounds new Rectangle 0,0,400,40
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
     @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
-    @maxTextWidth = true
+    # this widget IS the contained-text case: fit the BOX to the TEXT (width from
+    # the layout, height from the wrapped content). The sizing now lives on the
+    # base TextWdgt::reLayout, driven by this mode; softWrap (true by default on
+    # TextWdgt = wrap to the given width) is what used to be @maxTextWidth = true.
+    @fittingSpec = FittingSpecText.FIT_BOX_TO_TEXT
     @reLayout()
 
 
@@ -102,7 +110,7 @@ class SimplePlainTextWdgt extends TextWdgt
 
   softWrapOn: ->
     @parent.parent.isTextLineWrapping = true
-    @maxTextWidth = true
+    @softWrap = true
 
     @parent.fullRawMoveTo @parent.parent.position()
     @parent.rawSetExtent @parent.parent.extent()
@@ -110,7 +118,7 @@ class SimplePlainTextWdgt extends TextWdgt
 
   softWrapOff: ->
     @parent.parent.isTextLineWrapping = false
-    @maxTextWidth = nil
+    @softWrap = false
 
     @reLayout()
 
@@ -158,10 +166,6 @@ class SimplePlainTextWdgt extends TextWdgt
     @reLayout()
     @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
-  rawSetExtent: (aPoint) ->
-    super
-    @reLayout()
-
   setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
     super
     @reLayout()
@@ -180,22 +184,9 @@ class SimplePlainTextWdgt extends TextWdgt
     if @backgroundColor.equals Color.create 249, 249, 249
       @setBackgroundColor WorldMorph.preferencesAndSettings.editableItemBackgroundColor
 
-  reLayout: ->
-    super()
-
-    if @maxTextWidth? and @maxTextWidth != 0
-      @softWrap = true
-      [@wrappedLines,@wrappedLineSlots,@widthOfPossiblyCroppedText,@heightOfPossiblyCroppedText] =
-        @breakTextIntoLines @text, @originallySetFontSize, @extent()
-      width = @width()
-    else
-      @softWrap = false
-      veryWideExtent = new Point 10000000, 10000000
-      [@wrappedLines,@wrappedLineSlots,@widthOfPossiblyCroppedText,@heightOfPossiblyCroppedText] =
-        @breakTextIntoLines @text, @originallySetFontSize, veryWideExtent
-      width = @widthOfPossiblyCroppedText
-
-    height = @wrappedLines.length *  Math.ceil @fontHeight @originallySetFontSize
-    @silentRawSetExtent new Point width, height
-
-    @changed()
+  # NOTE: the reLayout that used to live here — the contained-text sizing (wrap to
+  # the given width, height = lineCount × fontHeight; or hug the natural width when
+  # not wrapping) — now lives on the base TextWdgt::reLayout, gated by
+  # fittingSpec == FIT_BOX_TO_TEXT (set in this ctor). It reads @softWrap where it
+  # used to read @maxTextWidth. Likewise rawSetExtent (re-layout on a container
+  # resize) is the inherited base override. So this class no longer needs either.

@@ -3023,7 +3023,6 @@ class Widget extends TreeNode
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
       "nisi.",nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     newWdgt.isEditable = true
-    #newWdgt.maxTextWidth = 300
     world.create newWdgt
 
   createNewWrappingSimplePlainTextWdgtWithBackground: ->
@@ -3050,7 +3049,6 @@ class Widget extends TreeNode
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
       "nisi.",nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     newWdgt.isEditable = true
-    #newWdgt.maxTextWidth = 300
 
     world.add newWdgt
     newWdgt.fullRawMoveTo new Point 25, 40
@@ -3069,8 +3067,8 @@ class Widget extends TreeNode
       "erat ac, lobortis dignissim " +
       "magna.",nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     newWdgt.isEditable = true
-    newWdgt.maxTextWidth = nil
-    #newWdgt.maxTextWidth = 300
+    # non-wrapping ("code view"): hug the natural text width (was maxTextWidth = nil).
+    newWdgt.softWrap = false
 
     world.add newWdgt
     newWdgt.fullRawMoveTo new Point 540, 40
@@ -4231,8 +4229,13 @@ class Widget extends TreeNode
     
     # bad kludge here but I think there will be more
     # of these as we move over to the new layouts, we'll
-    # probably have split Widgets for the new layouts mechanism
-    if @ instanceof SimplePlainTextWdgt
+    # probably have split Widgets for the new layouts mechanism.
+    # FIT_BOX_TO_TEXT content re-sizes its OWN height to its text, so hand it the
+    # full bounds (origin + extent) in one shot; everything else just takes the
+    # new extent (its origin was already set by the fullRawMoveTo above). Was
+    # `instanceof SimplePlainTextWdgt` — now ANY contained TextWdgt qualifies (a
+    # non-text widget has no fittingSpec, so it falls through to the else).
+    if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
       @rawSetBounds newBoundsForThisLayout
     else
       @rawSetExtent newBoundsForThisLayout.extent()

@@ -996,15 +996,18 @@ class MacroToolkit
         world.add panel
         panel.fullRawMoveTo topLeftPoint
         text = new TextWdgt "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer rhoncus pharetra nulla, vel maximus lectus posuere a. Phasellus finibus blandit ex vitae varius. Vestibulum blandit velit elementum, ornare ipsum sollicitudin, blandit nunc. Mauris a sapien nibh. Nulla nec bibendum quam, eu condimentum nisl. Cras consequat efficitur nisi sed ornare. Pellentesque vitae urna vitae libero malesuada pharetra. Pellentesque commodo, nulla mattis vulputate porttitor, elit augue vestibulum est, nec congue ex dui a velit. Nullam lectus leo, lobortis eget erat ac, lobortis dignissim magna. Morbi ac odio in purus blandit dignissim. Maecenas at sagittis odio."
-        # TextWdgt has no maxTextWidth knob and does not self-size: wrap it to
-        # 185px and grow the box to the wrapped content height (measured at the
-        # original font size BEFORE constraining the box, so the default CROP fit
-        # can't shrink it) so the text OVERFLOWS the 200px panel → scrollbar.
+        # a bare TextWdgt now SELF-SIZES as contained text: put it in
+        # FIT_BOX_TO_TEXT and it wraps to its own width and grows its HEIGHT to the
+        # wrapped content (FLOAT/SCALEDOWN = render at the set font size, never
+        # crop). Wrap it to 185px so the tall result OVERFLOWS the 200px panel → a
+        # vertical scrollbar shows. (This used to hand-roll the measure + set-height
+        # because TextWdgt couldn't self-size; the FIT_BOX_TO_TEXT arc fixed that.)
+        text.fittingSpec = FittingSpecText.FIT_BOX_TO_TEXT
         text.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
+        text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
+        text.softWrap = true
         text.silentRawSetWidth 185
-        [wrappedLines, wrappedSlots, wrappedWidth, wrappedHeight] = text.breakTextIntoLines (text.transformTextOneToOne text.text), text.originallySetFontSize
-        text.silentRawSetHeight wrappedHeight
-        text.reflowText()
+        text.reLayout()
         panel.add text
         text.fullRawMoveTo new Point (topLeftPoint.x + 12), (topLeftPoint.y + 12)
         yield "waitNoInputsOngoing"

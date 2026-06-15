@@ -108,10 +108,13 @@ class SimpleVerticalStackPanelWdgt extends Widget
         # this re-layouts each widget to fit the width.
         morph.rawSetWidthSizeHeightAccordingly recommendedElementWidth
 
-        # SimplePlainTextWdgt just needs maxTextWidth to be non-null as a wrap flag
-        # (bare-TextWdgt content wraps via softWrap — deferred content-text pass).
-        if morph instanceof SimplePlainTextWdgt
-          morph.maxTextWidth = recommendedElementWidth
+        # contained text that OPTED INTO FIT_BOX_TO_TEXT (a SimplePlainTextWdgt or a
+        # bare TextWdgt put into that mode) fits its BOX to the TEXT: wrap to the
+        # width set above, height follows the wrapped content. We RESPECT the mode
+        # (so a FIT_TEXT_TO_BOX placeholder is left alone); reassert soft-wrap, the
+        # way the old SimplePlainTextWdgt-only maxTextWidth wrap flag did.
+        if morph.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
+          morph.softWrap = true
 
         if morph.layoutSpecDetails.alignment == 'right'
           leftPosition = @left() + @width() - @padding - recommendedElementWidth

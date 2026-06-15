@@ -31,7 +31,9 @@ class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
       textAsString,nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     @textWdgt.isEditable = true
     if !wraps
-      @textWdgt.maxTextWidth = 0
+      # non-wrapping ("code view"): the box hugs the natural, un-wrapped text width
+      # and scrolls horizontally (was @textWdgt.maxTextWidth = 0).
+      @textWdgt.softWrap = false
     @textWdgt.enableSelecting()
     @setContents @textWdgt, padding
     @textWdgt.lockToPanels()

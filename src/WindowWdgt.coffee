@@ -147,6 +147,13 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
   contentsRecursivelyCanSetHeightFreely: ->
     if !(@contents instanceof WindowWdgt)
+      # FIT_BOX_TO_TEXT content drives its OWN height from its wrapped text, so the
+      # window must FOLLOW that height (shrinking when a widen re-wraps to fewer
+      # lines), not stretch the content to fill a freely-dragged height. A
+      # SimplePlainTextWdgt already forces this via layoutSpecDetails.canSetHeightFreely
+      # = false in its ctor; keying off the mode generalizes it to any contained
+      # TextWdgt (a non-text content has no fittingSpec, so this is a no-op for it).
+      if @contents.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT then return false
       return (@contents.layoutSpecDetails.canSetHeightFreely and !@contents.isCollapsed()) and !@reInflating
     return @contents.contentsRecursivelyCanSetHeightFreely()
 
@@ -467,11 +474,16 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
           desiredHeight = Math.round @height() - partOfHeightUsedUp
           @contents.rawSetHeight desiredHeight
 
-      # SimplePlainTextWdgt just needs maxTextWidth to be non-null as a wrap flag.
-      # (TODO: a bare TextWdgt content wraps via softWrap + @width() and ignores
-      # maxTextWidth — wiring that up is the deferred content-text-layout pass.)
-      if @contents instanceof SimplePlainTextWdgt
-        @contents.maxTextWidth = recommendedElementWidth
+      # contained text that has OPTED INTO FIT_BOX_TO_TEXT (a SimplePlainTextWdgt,
+      # or any bare TextWdgt put into that mode) fits its BOX to the TEXT: it wraps
+      # to the width we set generically above and its height follows the wrapped
+      # content. We RESPECT the mode rather than imposing it, so the empty-window
+      # placeholder — a TextWdgt that stays FIT_TEXT_TO_BOX — is left alone. Here we
+      # only (re)assert soft-wrap, the way the old SimplePlainTextWdgt-only
+      # `maxTextWidth = …` wrap flag did (the actual reflow is driven by the generic
+      # width-set above → the widget's own FIT_BOX_TO_TEXT reLayout).
+      if @contents.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
+        @contents.softWrap = true
 
       leftPosition = @left() + Math.floor (@width() - recommendedElementWidth) / 2
 
