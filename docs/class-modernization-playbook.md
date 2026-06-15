@@ -191,9 +191,15 @@ Keep *historical* prose accurate ("the old `Foo` was removed") — that's not a 
 
 ## 7. Candidate next classes
 
-The convention is "don't mass-rename existing `*Morph` files", so modernize deliberately, one collaborator at a
-time, when there's a reason (a duplicate to delete, a class surfacing in tests). Candidates surfaced during the
-inspector arc: `ListMorph`, `RectangleMorph`, `SimpleButtonMorph`.
+The end state is **all-`*Wdgt`** — `Morph` is legacy and the `*Morph`→`*Wdgt` migration is WANTED. Do it
+**deliberately and incrementally**: rename a coherent group (a class + its family) when there's a reason — a
+duplicate to delete, a class surfacing in tests, or finishing a family a prior arc started — **not in one sweep**.
+Two reasons it's incremental, not big-bang: (a) a rename here is not always pixel-free — the menu/hierarchy labels
+strip `Wdgt`, so renaming a class whose colloquial name is *drawn* (e.g. a menu item, shown as `"a MenuItem ➜"`
+instead of `"a MenuItemMorph ➜"`) shifts that label and forces screenshot recapture; verify per class — and (b)
+each rename is a whole-tree identifier+file+serialization sweep, best done one verifiable batch at a time.
+Candidates surfaced during the inspector arc: `ListMorph`, `RectangleMorph` (the `SimpleButton*` / button family
+was migrated to `*Wdgt` in the TriggerMorph arc, below).
 
 **DONE (2026-06): the String/Text arc.** Deleted the legacy `StringMorph`/`TextMorph` and renamed
 `StringMorph2`→`StringWdgt`, `TextMorph2`→`TextWdgt`. The dominant cost was that the deprecated `TriggerMorph`
@@ -213,3 +219,23 @@ lessons that bit hard and are now folded into §4 above:
 
 Still deferred: the **content-text `maxTextWidth`→`softWrap` pass** for bare `TextWdgt` content inside
 window/panel/scroll layouts (those sites currently special-case only `SimplePlainTextWdgt`).
+
+**DONE (2026-06): the TriggerMorph / button-family arc.** Deleted the deprecated `TriggerMorph`; re-based its
+subclasses onto the modern button family and migrated that family's base to `*Wdgt`. Final hierarchy:
+`Widget → ButtonWdgt → { SimpleButtonWdgt, LabelButtonWdgt → { MenuItemMorph, MagnetWdgt } }` (renames:
+`EmptyButtonMorph`→`ButtonWdgt`, `SimpleButtonMorph`→`SimpleButtonWdgt`, `MagnetMorph`→`MagnetWdgt`). The deprecated
+class's flat-label-button role was re-homed in a NEW shared base `LabelButtonWdgt` (non-deprecated, on the modern
+family). Lessons folded in above and new ones:
+- **Re-basing onto a class that `@augmentWith`s a behaviour mixin can silently change behaviour through the mixin.**
+  `ButtonWdgt` augments `HighlightableMixin`; a naive re-base inherited its `updateColor` (which `setColor`s — would
+  clobber the retained flat fill), its `mouseUpLeft` (resets `state`→NORMAL — breaks list-row selection that reads
+  `STATE_PRESSED`), and its `doLayout` (lays out a `faceMorph` a label button hasn't). Each needed an explicit
+  override; `mouseDownLeft` had to replicate `Widget`'s INLINE rather than `super` (which hits the mixin). Audit the
+  new base's mixins before assuming a re-base is behaviour-preserving.
+- **Keep the look by RETAINING paint, not adopting the new family's.** The button family draws no flat fill
+  (`ButtonWdgt` is transparent, `SimpleButtonWdgt` is a rounded box), so menus stayed pixel-identical only because
+  the flat `paintIntoAreaOrBlitFromBackBuffer` + state machine moved onto `LabelButtonWdgt` unchanged.
+- **`MenuItemMorph` deliberately NOT renamed** — it's drawn in hierarchy nav labels (`"a MenuItemMorph ➜"`), so the
+  menus-strip-`Wdgt` rule makes its rename a pixel/recapture event; left for a later batch (the incremental rule above).
+- Result: suite 160/160, **zero reference-image churn** (the renames were pixel-neutral identifier swaps; the only 2
+  changed tests build `new MenuItemMorph` and render byte-identical to their originals).

@@ -53,7 +53,7 @@ Behavioural tests are **SystemTests**: each one drives the running world from a 
 ## Conventions & gotchas
 
 - **One class per file; filename must equal the class name** (`Widget.coffee` ↔ `class Widget`). `build.py` keys off this.
-- **`Wdgt` is the current name for the legacy `Morph`** (both extend `Widget`). Prefer `*Wdgt.coffee` for new widgets; don't mass-rename existing `*Morph` files.
+- **`Wdgt` is the modern name for the legacy `Morph`** (both extend `Widget`). **The intended end state is all-`Wdgt`** — `Morph` is legacy. New widgets are `*Wdgt` from the start, and existing `*Morph` classes ARE meant to migrate to `*Wdgt` over time. Do it **incrementally, not in one sweep**: rename a coherent group (a class + its family) when you're already touching it, with a reason, because (a) a rename here is *not* always pixel-free — menu/hierarchy labels strip `Wdgt`, so renaming a class whose colloquial name is drawn (e.g. menu items) shifts that label and forces SystemTest screenshot recapture; verify per class — and (b) each rename is a whole-tree identifier+file+serialization sweep, best done one verifiable batch at a time.
 - **`nil` means `undefined`** (defined in `src/boot/globalFunctions.coffee`); the codebase uses it instead of `null`/`undefined`.
 - Edit only `src/**/*.coffee`. Never edit `../Fizzygum-builds/**` — it is regenerated every build.
 - `# … excluded from the fizzygum homepage build` comments and `if Automator?` guards mark test/experimental code that `--homepage` strips as dead code — keep them intact.
