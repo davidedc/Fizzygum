@@ -17,6 +17,17 @@ class ActivePointerWdgt extends Widget
   mouseOverList: nil
   doubleClickWdgt: nil
   tripleClickWdgt: nil
+  # The EVENT-TIME (not wall-clock) at which each candidate above was armed, so
+  # processMouseUp can forget a candidate older than doubleClickWindowMs of event
+  # time — deterministically, independent of when the wall-clock forget-timer fires.
+  doubleClickArmedAtEventTime: nil
+  tripleClickArmedAtEventTime: nil
+  # The multi-click recognition window: two same-spot left clicks fold into a double-
+  # / triple-click only if they land within this many ms of each other. Used BOTH as
+  # the authoritative EVENT-TIME forget gate in processMouseUp AND as the (secondary,
+  # best-effort) wall-clock setTimeout idle cleanup in the remember* methods, so the
+  # two can never drift apart.
+  doubleClickWindowMs: 300
   nonFloatDraggedWdgt: nil
   nonFloatDragPositionWithinWdgtAtStart: nil
   # this is useful during nonFloatDrags to pass the widget
@@ -451,6 +462,22 @@ class ActivePointerWdgt extends Widget
           # two clicks happen on the same widget
           doubleClickInvocation = false
 
+          # Forget a STALE candidate on an EVENT-TIME gap BEFORE matching: if the
+          # remembered double-click candidate was armed more than doubleClickWindowMs
+          # of EVENT time ago it belongs to a PREVIOUS gesture, so drop it now and let
+          # this click start fresh. This is the authoritative, deterministic recognition
+          # gate — it does NOT depend on the wall-clock setTimeout (in
+          # rememberDoubleClickWdgtsForAWhile) having fired, which can be deferred well
+          # past 300ms under heavy-cycle load (e.g. a dpr-2 SWCanvas render under parallel
+          # test shards), the race this replaces. Event times are the macro's deterministic
+          # schedule (and real browser timestamps for users), so two distinct same-spot
+          # gestures — spaced > the window apart — never fold, while a gesture's own clicks
+          # (~120ms apart, < the window) still do.
+          if @doubleClickWdgt? and @doubleClickArmedAtEventTime? and
+           WorldMorph.timeOfEventBeingProcessed? and
+           (WorldMorph.timeOfEventBeingProcessed - @doubleClickArmedAtEventTime) > @doubleClickWindowMs
+            @forgetDoubleClickWdgts()
+
           if @doubleClickWdgt?
             # three conditions:
             #  - both clicks are left-button clicks
@@ -466,11 +493,11 @@ class ActivePointerWdgt extends Widget
               # but let's do it after. That's because we first
               # want to send the normal click AND we want to tell
               # in the normal click that that normal click is part
-              # of a double click. Recognition is purely proximity + the real 300ms
-              # window now: synthetic macro clicks deliberately space their two clicks
-              # ~120ms apart (inside the window) and keep a non-scaled minimum gap
-              # between DISTINCT click gestures (MacroToolkit), so the old fast-test
-              # recognition gate is gone.
+              # of a double click. Recognition is proximity + a doubleClickWindowMs
+              # EVENT-TIME window (the forget gate above; deterministic, NOT wall-clock):
+              # synthetic macro clicks deliberately space their two clicks ~120ms apart
+              # (inside the window) and keep a non-scaled minimum gap between DISTINCT
+              # click gestures (MacroToolkit), so the old fast-test recognition gate is gone.
               doubleClickInvocation = true
               # triple-click detection starts here, it's just
               # like chaining a second double-click detection
@@ -479,14 +506,12 @@ class ActivePointerWdgt extends Widget
               @rememberTripleClickWdgtsForAWhile w
             else
               # This click does NOT complete a double-click with the remembered widget
-              # (different widget/position). Treat a LEFT click as the START of a fresh
-              # double-click sequence rather than discarding it — otherwise, when a prior
-              # gesture left a stale candidate (which fast macro playback makes possible,
-              # since gestures then fall <300ms apart), this click would be wasted and a
-              # deliberate double/triple-click would silently degrade (its first click
-              # eaten). At normal speed the 300ms forget timer has already cleared any prior
-              # candidate before the next gesture, so this branch isn't reached and
-              # behaviour is unchanged. A non-left click just clears the (left) candidate.
+              # (different widget/position — a SAME-spot stale candidate from a previous
+              # gesture is already cleared by the event-time gate above). Treat a LEFT click
+              # as the START of a fresh double-click sequence rather than discarding it,
+              # otherwise a deliberate double/triple-click on a freshly-targeted widget would
+              # silently degrade (its first click eaten). A non-left click just clears the
+              # (left) candidate.
               if @mouseButton == "left"
                 @rememberDoubleClickWdgtsForAWhile w
               else
@@ -495,6 +520,14 @@ class ActivePointerWdgt extends Widget
             @rememberDoubleClickWdgtsForAWhile w
 
           tripleClickInvocation = false
+
+          # event-time forget for the triple-click candidate (same rationale as the
+          # double-click gate above): a triple candidate armed more than doubleClickWindowMs
+          # of event time ago belongs to a previous gesture — drop it before matching.
+          if @tripleClickWdgt? and @tripleClickArmedAtEventTime? and
+           WorldMorph.timeOfEventBeingProcessed? and
+           (WorldMorph.timeOfEventBeingProcessed - @tripleClickArmedAtEventTime) > @doubleClickWindowMs
+            @forgetTripleClickWdgts()
 
           # also send tripleclick if the
           # three clicks happen on the same widget
@@ -515,8 +548,8 @@ class ActivePointerWdgt extends Widget
                 # but let's do it after. That's because we first
                 # want to send the normal click AND we want to tell
                 # in the normal click that that normal click is part
-                # of a triple click. (Recognition is proximity + the real 300ms window
-                # only — see the double-click branch above.)
+                # of a triple click. (Recognition is proximity + the doubleClickWindowMs
+                # EVENT-TIME window — see the double-click branch above.)
                 tripleClickInvocation = true
               else
                 @forgetTripleClickWdgts()
@@ -552,42 +585,50 @@ class ActivePointerWdgt extends Widget
   forgetDoubleClickWdgts: ->
     @doubleClickWdgt = nil
     @doubleClickPosition = nil
+    @doubleClickArmedAtEventTime = nil
 
   rememberDoubleClickWdgtsForAWhile: (w) ->
     @doubleClickWdgt = w
     @doubleClickPosition = @position()
-    # Generation token so a STALE forget-timer can't clobber a newer remembered widget.
-    # The 300ms forget is a real-wall-clock setTimeout; when two DISTINCT click gestures
-    # fall within one 300ms window (which fast macro playback can cause — the gestures'
-    # synthetic events drain close together in real time), the earlier gesture's timer
-    # would otherwise fire AFTER the later gesture re-armed this state and wipe it,
-    # silently killing the later double-click. Only the latest timer (matching generation)
-    # is allowed to forget.
+    # Record the EVENT-TIME this candidate was armed: processMouseUp forgets it on an
+    # event-time gap > doubleClickWindowMs, which is the AUTHORITATIVE, deterministic
+    # recognition gate (independent of the wall-clock timer below).
+    @doubleClickArmedAtEventTime = WorldMorph.timeOfEventBeingProcessed
+    # Belt-and-braces wall-clock cleanup, kept as a SECONDARY safety net (clears the
+    # candidate during genuine idle, e.g. a real user who clicks once and leaves).
+    # Recognition no longer DEPENDS on this firing on time — under heavy-cycle load it
+    # can be deferred well past the window, which used to mis-fold a fresh gesture onto
+    # a stale candidate; the event-time gate now handles that. The generation token still
+    # ensures a stale timer can't clobber a newer remembered widget.
     myGeneration = (@doubleClickGeneration ? 0) + 1
     @doubleClickGeneration = myGeneration
     setTimeout (=>
       if @doubleClickGeneration == myGeneration
         @forgetDoubleClickWdgts()
       return false
-    ), 300
+    ), @doubleClickWindowMs
 
   # basically the same as rememberDoubleClickWdgtsForAWhile
   forgetTripleClickWdgts: ->
     @tripleClickWdgt = nil
     @tripleClickPosition = nil
+    @tripleClickArmedAtEventTime = nil
 
   rememberTripleClickWdgtsForAWhile: (w) ->
     @tripleClickWdgt = w
     @tripleClickPosition = @position()
-    # same stale-timer guard as rememberDoubleClickWdgtsForAWhile (a prior gesture's
-    # 300ms timer must not wipe a newer gesture's remembered triple-click widget)
+    # event-time arm + secondary wall-clock cleanup, exactly as
+    # rememberDoubleClickWdgtsForAWhile — the event-time gate in processMouseUp is the
+    # authoritative forget; the setTimeout is a best-effort idle cleanup; the generation
+    # token stops a stale timer from wiping a newer gesture's remembered triple-click.
+    @tripleClickArmedAtEventTime = WorldMorph.timeOfEventBeingProcessed
     myGeneration = (@tripleClickGeneration ? 0) + 1
     @tripleClickGeneration = myGeneration
     setTimeout (=>
       if @tripleClickGeneration == myGeneration
         @forgetTripleClickWdgts()
       return false
-    ), 300
+    ), @doubleClickWindowMs
 
   cleanupMenuWdgts: (expectedClick, w, alsoKillFreshMenus)->
 

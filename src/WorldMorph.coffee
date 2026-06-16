@@ -71,6 +71,14 @@ class WorldMorph extends PanelWdgt
   @dateOfPreviousCycleStart: nil
   @dateOfCurrentCycleStart: nil
 
+  # The .time of the input event currently being dispatched by playQueuedEvents
+  # (a deterministic scheduled ms for macro playback; a real ms for browser users).
+  # Exposed so event handlers can reason in EVENT time rather than wall-clock time —
+  # used by the hand's multi-click recognition to forget a stale double/triple-click
+  # candidate on an event-time gap (deterministic), instead of depending on a
+  # wall-clock setTimeout that can fire late under heavy-cycle load.
+  @timeOfEventBeingProcessed: nil
+
   showRedraws: false
   doubleCheckCachedMethodsResults: false
 
@@ -1161,6 +1169,12 @@ class WorldMorph extends PanelWdgt
         if event.time > timeOfCurrentCycleStart
           @inputEventsQueue.removeEventsUpTo event
           return
+
+        # Expose THIS event's own timestamp to its handlers (see
+        # WorldMorph.timeOfEventBeingProcessed): the hand's multi-click recognition
+        # reads it to forget a stale double/triple-click candidate on an event-time
+        # gap, deterministically — rather than depending on a wall-clock setTimeout.
+        WorldMorph.timeOfEventBeingProcessed = event.time
 
         # currently not handled: DOM virtual keyboard events
         event.processEvent()

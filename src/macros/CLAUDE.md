@@ -86,7 +86,8 @@ wheel, double/triple-clicks, clipboard — must be SYNTHESISED AS A REAL `*Input
 calling `process…` directly. The queue is the whole point: it drives hit-testing, hover/`mouseEnter`, and the
 playback fake-pointer overlay. Every input-synthesising verb carries the **`_InputEvents`** suffix
 and ends by pushing events; callers `yield "waitNoInputsOngoing"` to drain. Double/triple-clicks just work at
-every speed (recognition is proximity + the hand's real 300ms window; the verb spaces its clicks inside it) — see
+every speed (recognition is proximity + the hand's 300ms EVENT-TIME window — deterministic, not a wall-clock
+timer; the verb spaces its clicks inside it) — see
 "Playback speed" below; tests carry NO speed metadata. *Legitimately NOT input* (keep direct): building a fixture (`new …; world.add`,
 positioning) and a behaviour whose UI trigger is genuinely blocked / is an escape hatch (`widget.hide()/show()`,
 `textBox.toggleSoftWrap()`, `world.evaluateString "…"`). Never use a direct call to STAND IN for a real input.
@@ -127,8 +128,11 @@ hover bubble). Use the verb's gesture `milliseconds` (scaled) for cosmetic gestu
 need do nothing): a press-drag-release floors its drag SPAN (`@dragFloorMs`, count held constant) so a per-frame
 sampler (`ScrollPanelWdgt` scroll-on-drag; drag-enter/leave) sees several frames; a single click floors its
 down→up HOLD (`@clickHoldFloorMs`) so a held-button frame is sampled (a slider track-click's hover resolves on it).
-Multi-click recognition is purely proximity + the hand's real 300ms window (a generation guard on the forget-timer
-+ a non-scaled minimum gap between distinct same-spot click gestures keep separate clicks from folding).
+Multi-click recognition is purely proximity + the hand's 300ms EVENT-TIME window: each click candidate is
+forgotten when the next click's `event.time` is > the window past it (deterministic — `ActivePointerWdgt`
+keys off `WorldMorph.timeOfEventBeingProcessed`, NOT a wall-clock `setTimeout` that can fire late under
+heavy-cycle load). A non-scaled minimum gap between distinct same-spot click gestures (`MacroToolkit`,
+> the window) keeps separate gestures from folding; a gesture's own ~120ms-spaced clicks (< the window) fold.
 
 ## The verb library (index)
 
@@ -194,12 +198,22 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   unchanged. For a STANDALONE button fixture use `SimpleButtonWdgt` (rounded modern button; its `StringWdgt` face crops on
   `setText`) — but for an editable-label or flat-centred-label button use `MenuItemMorph` (its `TextWdgt` label re-measures
   on `setText`); see `macroBareButtonFloatDragsWithoutTriggering` / `macroEditButtonLabelText`.
-- **One inspector, always windowed, one entry point:** there is a single `InspectorWdgt` (the old `InspectorMorph` was
-  deleted; `InspectorMorph2`→`InspectorWdgt`), opened by the single method `Widget.spawnInspector` (the duplicate
-  `spawnInspector2`/`inspect2` was removed in the inspect-consolidation arc — the "dev ➜ → inspect" item now routes
-  through `inspect`/`spawnInspector` too). EVERY inspect path is windowed — `spawnInspector` wraps it in a `WindowWdgt`
-  (560×410); it renders badly opened naked. Find it with `@findTopWidgetByClassNameOrClass InspectorWdgt`; the
-  `*FromTopInspector*` helpers target it. Gotchas for re-authoring its tests: it has NO "work"/eval pane — eval is via each widget's
+- **One inspector — windowed by default, but ALSO a first-class NAKED widget:** there is a single `InspectorWdgt` (the
+  old `InspectorMorph` was deleted; `InspectorMorph2`→`InspectorWdgt`), opened by the single method `Widget.spawnInspector`
+  (the duplicate `spawnInspector2`/`inspect2` was removed in the inspect-consolidation arc — the "dev ➜ → inspect" item now
+  routes through `inspect`/`spawnInspector` too). The menu/inspect paths wrap it WINDOWED — `spawnInspector` puts it in a
+  `WindowWdgt` (560×410) — but it now ALSO renders + functions + self-resizes **NAKED**: `world.add new InspectorWdgt
+  target` paints its own opaque background (a `RectangularAppearance`, dropped when it becomes window content via
+  `setLayoutSpec`, so the windowed render stays byte-identical) and shows its own `@resizer` HandleMorph (visible only when
+  free-floating). To drive a naked resize, press THAT handle: `@syntheticEventsMouseMovePressDragRelease_InputEvents
+  insp.resizer.center(), dest` — NOT `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", …`, which grabs the
+  TOPMOST handle by type (a save raises the desktop's own resizer above the inspector's). Two naked gotchas (learned in
+  `SystemTest_macroNakedInspectorRendersResizesAndEdits`): (1) a degenerate vBar drag — scrolling a pane that already FITS
+  (e.g. `@bringcodeStringFromTopInspectorInView` when the source fits the tall naked detail) — float-drags the free-floating
+  inspector instead of scrolling, so only scroll a pane that genuinely overflows; (2) shrinking the HEIGHT so a pane newly
+  overflows makes its alpha-blended scroll thumb + re-scroll render nondeterministically at dpr 2, so shrink the WIDTH (keep
+  the detail fitting) for a deterministic resize shot. Find the inspector with `@findTopWidgetByClassNameOrClass
+  InspectorWdgt`; the `*FromTopInspector*` helpers target it (windowed or naked). Gotchas for re-authoring its tests: it has NO "work"/eval pane — eval is via each widget's
   **"dev → console"** menu, which opens a `ConsoleWdgt` (an editable code area + a "run all" button → `doAll`, runs the text with
   `@`=the console's target); its detail pane is a `SimplePlainTextWdgt` (a `TextWdgt`) — a synthetic right-click
   can't open its "do all"/context menu, it defaults to NON-wrapping (call `detailText.softWrapOn()` to wrap), and

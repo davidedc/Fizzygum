@@ -99,8 +99,9 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Double/triple-click selects word/line** (`macroDoubleAndTripleClickThroughCaretMorph`): `@doubleClickAtFractionOf_InputEvents`
   / `@tripleClickAtFractionOf_InputEvents widget, [fx,fy]` enqueue a move + 2/3 consecutive left click-pairs that
   the HAND turns into a double/triple-click; targeting `world.caret` selects word/line at its slot. Recognition is
-  proximity + the hand's real 300ms window (no speed gate; the verb spaces its clicks inside it), so it works at every
-  global speed level — the test carries NO speed metadata.
+  proximity + the hand's 300ms EVENT-TIME window (deterministic, not a wall-clock timer — so it can't mis-fold under
+  heavy-cycle load; no speed gate; the verb spaces its clicks inside it), so it works at every global speed level —
+  the test carries NO speed metadata.
   GOTCHA: a TextWdgt opens an "edit:" PROMPT (not an inline caret) when its text is CROPPED, so ENLARGE the widget
   so the demo text fits → inline caret.
 - **Double-click selects the WORD under the cursor (clean StringWdgt + wrapped TextWdgt)** (`macroDoubleClickSelectsWord`): the
@@ -1056,6 +1057,18 @@ assertion a recapture after a regression silently stores two different hashes an
   below the default text, kept at its own size and CLIPPED at the doc's right edge if oversized; dragged back out by its title it returns to a
   free-floating window. (Re-authored from the old naked-inspector version: the naked inspector was a plain nestable widget, so the windowed one
   needs `makeInternal`; the original's ctor-resizer-grows and doc-resize-reflow beats were dropped — the embed/release is the core law.)
+- **The NAKED (chrome-less) inspector renders, edits and self-resizes** (`macroNakedInspectorRendersResizesAndEdits`): a bare
+  `world.add new InspectorWdgt target` (no `WindowWdgt`) is now a first-class widget. When free-floating it paints its own opaque background
+  (`InspectorWdgt` sets a `RectangularAppearance`, dropped on becoming window content via `setLayoutSpec`, so the windowed path stays
+  byte-identical) and shows its own `@resizer` HandleMorph (`HandleMorph.updateVisibility` shows it only when free-floating). Drive its resize
+  by pressing THAT handle specifically — `@syntheticEventsMouseMovePressDragRelease_InputEvents insp.resizer.center(), dest` — NOT
+  `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", …` (a `save` raises the desktop's OWN resizer above the inspector's, so the
+  topmost-by-type lookup grabs the wrong handle). The `*FromTopInspector*` verbs + the inspect→select→edit→save flow work naked exactly as
+  windowed (the edit mirrors `macroAnalogClockInspectEdit`). TWO naked-specific traps: (1) DON'T scroll a pane that already FITS — a degenerate
+  vBar drag (e.g. `@bringcodeStringFromTopInspectorInView` when the method source fits the tall naked detail) float-drags the free-floating
+  inspector instead of scrolling, so click the already-visible code directly; (2) SHRINK the WIDTH, not the height — dropping the height so the
+  detail newly overflows makes its alpha-blended scroll thumb + re-scroll render nondeterministically at dpr 2 (the known SWCanvas thumb flake),
+  whereas a width shrink keeps the detail fitting and the resize shot deterministic. No new verb.
 - **The constraining stack CAPS oversized drops to its full width — it never stretches up**
   (`macroConstrainingStackForcesDroppedWidgetsToFullWidth`): `SimpleVerticalStackPanelWdgt`'s default
   (`constrainContentWidth = true`) runs `rawSetWidthSizeHeightAccordingly(getWidthInStack())` on every child, and
