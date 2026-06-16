@@ -682,3 +682,14 @@ names" consistency pass, separate from this `*Morph`→`*Wdgt` phase). **165/165
 recapture.** 1 rename + 5 src refs; 0 tests, 0 docs. Plan `~/.claude/plans/batch17-editablemark-rename.md`. Remaining long-tail families:
 `ErrorsLogViewerMorph`, `MenuMorph`/`PromptMorph`/`CodePromptMorph` (high-recapture), …, `WorldMorph` last. (Non-`*Morph` naming-consistency
 leftovers like `UpperRightTriangleIconicButton` are a SEPARATE possible pass.)
+
+**DONE (2026-06-17): BATCH 18 — `ErrorsLogViewerMorph` → `ErrorsLogViewerWdgt`.** The errors-log viewer dev tool (`extends Widget`,
+0 subclasses) — pops up only when injected code fails to compile, constructed inside a `WindowWdgt` by `WorldMorph.createErrorConsole`.
+**The most trivial rename of the phase: exactly 2 src refs** — the `class` decl + ONE `new ErrorsLogViewerMorph` in `WorldMorph.coffee:437`;
+**0** string-literals, **0** `findTop…`/`instanceof`/`createNew*`, **0** test files, **0** nav strings → **ZERO recapture** (predicted; suite
+confirmed). The lowercase local `errorsLogViewerMorph` (case-distinct — `\bErrorsLogViewerMorph\b` won't match it) and the property `textMorph`
+left as-is (separate non-`Morph` consistency pass). Unlike BATCH 16's experimental fizzytiles, this class DOES ship in the homepage build, so the
+`--homepage` boot leg was a relevant net (boots clean). **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots, ZERO recapture.**
+1 rename + 2 src refs; 0 tests, 0 docs. Plan `~/.claude/plans/batch18-errorslogviewer-rename.md`. Remaining long-tail: `MenuMorph`/`PromptMorph`/
+`CodePromptMorph` (high-recapture — the first big-recapture batch since RectangleMorph), …, `WorldMorph` last. (Non-`*Morph` naming-consistency
+leftovers like `UpperRightTriangleIconicButton` remain a SEPARATE possible pass.)

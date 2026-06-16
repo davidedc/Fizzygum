@@ -434,7 +434,7 @@ class WorldMorph extends PanelWdgt
     ++@lastUsedConnectionsCalculationToken
 
   createErrorConsole: ->
-    errorsLogViewerMorph = new ErrorsLogViewerMorph "Errors", @, "modifyCodeToBeInjected", ""
+    errorsLogViewerMorph = new ErrorsLogViewerWdgt "Errors", @, "modifyCodeToBeInjected", ""
     wm = new WindowWdgt nil, nil, errorsLogViewerMorph
     wm.setExtent new Point 460, 400
     @add wm
