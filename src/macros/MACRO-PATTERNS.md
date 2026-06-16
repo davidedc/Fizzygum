@@ -328,7 +328,7 @@ assertion a recapture after a regression silently stores two different hashes an
   always places an inline caret; drive the moves via the input-event verbs (never poke `world.caret`) so `scrollCaretIntoView` genuinely fires;
   the caret is non-blinking only under the `TurnOnAnimationsPacingControl` preamble (`BlinkerMorph.coffee:21-24`). The VERTICAL sibling
   (`macroScrollPanelCaretBroughtIntoViewWhenMoved`) exercises the SAME path via the V-branch (`:514-521`) and is the bare-`ScrollPanelWdgt`
-  counterpart of `macroDocumentCaretBroughtIntoViewWhenMoved`: an editable string at the TOP + a tall `RectangleMorph` below it overflow
+  counterpart of `macroDocumentCaretBroughtIntoViewWhenMoved`: an editable string at the TOP + a tall `RectangleWdgt` below it overflow
   VERTICALLY (a V-scrollbar); `@wheelOn_InputEvents panel, +Δ` scrolls the string+caret OUT of view above the viewport (the wheel alone does NOT
   recall it — `scrollCaretIntoView` fires on a caret MOVE, not a scroll), then `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "ArrowRight"`
   MOVES the caret → the panel auto-scrolls back UP to reveal it. (An ArrowRight is a HORIZONTAL move, but `gotoSlot` runs the FULL
@@ -376,7 +376,7 @@ assertion a recapture after a regression silently stores two different hashes an
   "asdf"` (NON-empty, no selection) → right-click → screenshot ("do all"/"select all" now prepended above `a Text ➜`). The two
   shots (absent vs present) ARE the assertion. GOTCHAS: do NOT select the text (Meta+a) — that trips the SEPARATE `:625` selection gate
   and adds the "…selection" items, muddying the empty-vs-filled contrast; re-click the field before typing (dismissing the first menu
-  ends editing); screenshot-only (an exact menu-strings assertion is brittle — `evaluationMenu` prepends separator RectangleMorphs with no `labelString`).
+  ends editing); screenshot-only (an exact menu-strings assertion is brittle — `evaluationMenu` prepends separator RectangleWdgts with no `labelString`).
 - **Add an indented paragraph to a document via its layout menu** (`macroSimpleDocumentCanAddIndentedParagraph`): a
   `SimpleDocumentScrollPanelWdgt` ships ONE editable default paragraph ("A small string … here another.") as its first content child
   (`(doc.contents.childrenNotHandlesNorCarets())[0]`) — reformat THAT (add a Lorem paragraph below for reflow context). Drive its
@@ -408,7 +408,7 @@ assertion a recapture after a regression silently stores two different hashes an
   slider/palette INSIDE a prompt, THEN its "Ok").
 - **Item-label matching variants**: exact (`moveToItemOfMenuAndClick_InputEvents`), **PREFIX**
   (`moveToItemStartingWithOfMenuAndClick_InputEvents` — for labels with a variable suffix, e.g. the "attach…"/"choose
-  target:" labels are `toString() + " ➜"` like "a RectangleMorph#1 ➜"; match the stable class-name head), **SUBSTRING**
+  target:" labels are `toString() + " ➜"` like "a Rectangle#1 ➜"; match the stable class-name head), **SUBSTRING**
   (`moveToItemContainingOfMenuAndClick_InputEvents` — for a leading decoration, e.g. `"soft wrap".tick()` renders "✓ soft wrap").
 - **Hierarchy menu (a non-world child)**: right-clicking a widget whose parent ≠ world opens the framework's ANCESTOR
   HIERARCHY menu (`Widget.buildContextMenu`/`buildHierarchyMenu`) — one "a X ➜" item per ancestor that has a menu (labels are
@@ -418,8 +418,8 @@ assertion a recapture after a regression silently stores two different hashes an
   rule above. A `SimplePlainTextScrollPanelWdgt` sets `takesOverAndCoalescesChildrensMenus = true` (`SimplePlainTextScrollPanelWdgt.coffee:25`),
   so `Widget.buildContextMenu` (`:2905-2908`) finds that ancestor and returns the PANEL'S OWN menu — right-clicking the inner text
   blurb produces no "a X ➜" disambiguation at all (the blurb is never offered as a separate target). A NEGATIVE assertion needs
-  the baseline visible: pair it with a plain `PanelWdgt` + `RectangleMorph` child whose right-click DOES build the 2-item hierarchy
-  menu (`@assertTopMenuItemStrings ["a RectangleMorph ➜", "a Panel ➜"]`) — same gesture, opposite menu. Build the panel directly:
+  the baseline visible: pair it with a plain `PanelWdgt` + `RectangleWdgt` child whose right-click DOES build the 2-item hierarchy
+  menu (`@assertTopMenuItemStrings ["a Rectangle ➜", "a Panel ➜"]`) — same gesture, opposite menu. Build the panel directly:
   `new SimplePlainTextScrollPanelWdgt "text", false, 5` (ctor `(textAsString, wraps, padding)` auto-builds the inner blurb).
   image_1 (the panel's own coalesced menu) vs image_2 (the 2-item hierarchy menu) is the proof.
 - **Submenu hopping — keep the common chain open** (`macroHoppingBetweenSubMenus`): an arrow item opens a submenu AT the
@@ -742,7 +742,7 @@ assertion a recapture after a regression silently stores two different hashes an
   adding a tall morph to a `ListWdgt` (extends ScrollPanelWdgt) that previously just fit its rows makes a vertical
   scrollbar APPEAR, with NO manual recompute call (the recorded "attach...→a List" gesture IS exactly this `@add` +
   recompute, `Widget.coffee:3640-3645`). Build a standalone `new ListWdgt nil, nil, [rows]` sized to ≈ its rows' height
-  (so no scrollbar yet) + a distinct `RectangleMorph` positioned to PARTIALLY OVERLAP the list's lower edge and HANG BELOW
+  (so no scrollbar yet) + a distinct `RectangleWdgt` positioned to PARTIALLY OVERLAP the list's lower edge and HANG BELOW
   it, then ATTACH it through the REAL menu (the recording's gesture — drive the menu, NOT an opaque `list.add`; reuses the
   `macroAttachResizingHandleToMorph` idiom): `@openMenuOf_InputEvents rect` → `@moveToItemOfTopMenuAndClick_InputEvents
   "attach..."` → `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()), "a List"`
@@ -933,11 +933,11 @@ assertion a recapture after a regression silently stores two different hashes an
 - **`@dragWidgetTo_InputEvents` grabs the CENTRE — which may be a sub-widget.** For a SliderMorph (button at the centre at value 50)
   it grabs/moves the BUTTON, not the slider (the drop silently does nothing). Drop such a widget programmatically: `widget.pickUp()`
   + a no-button `@syntheticEventsMouseMove_InputEvents` + `@syntheticEventsMouseClick_InputEvents()`. A plain shape
-  (BoxMorph/CircleBoxMorph/RectangleMorph) has no sub-widget, so `@dragWidgetTo_InputEvents` is fine.
+  (BoxMorph/CircleBoxMorph/RectangleWdgt) has no sub-widget, so `@dragWidgetTo_InputEvents` is fine.
 - **Attach to a target** (`macroAttachResizingHandleToMorph`): drop the morph so it OVERLAPS the target (required —
   `Widget.attach` lists only morphs whose bounds INTERSECT it, `world.plausibleTargetAndDestinationMorphs`, excluding self +
   current parent), then `clickMenuItemOfWidget_InputEvents_Macro morph, "attach..."` → capture the "choose target:" menu →
-  `@moveToItemStartingWithOfMenuAndClick_InputEvents menu, "a RectangleMorph"` (class-name PREFIX; the menu also lists the World).
+  `@moveToItemStartingWithOfMenuAndClick_InputEvents menu, "a Rectangle"` (class-name PREFIX; the menu also lists the World).
   A HandleMorph so attached becomes the target's resize handle → drag it with `@dragResizeMoveHandleTo_InputEvents`.
 - **"Attach…" with no targets → a message** (`macroAttachShowsNoTargetsMessage`): a morph alone (nothing overlapping) → `attach`
   pops a `MenuMorph` titled **"no morphs to attach to"** (`:3680`) instead of a target list; that titled, item-less menu IS the
@@ -1043,7 +1043,7 @@ assertion a recapture after a regression silently stores two different hashes an
   normalise the size of widgets dropped into it — each keeps the effective extent it had when dropped. On a drop,
   `VerticalStackLayoutSpec.rememberInitialDimensions` (`VerticalStackLayoutSpec.coffee:18`) stores the widget's OWN width
   (`widthOfElementWhenAdded`), and `getWidthInStack` (`:31`, default elasticity 1) returns that remembered width CAPPED at the content
-  width — it never stretches up; a plain `RectangleMorph` (no `rawSetWidthSizeHeightAccordingly` override) keeps that width AND its
+  width — it never stretches up; a plain `RectangleWdgt` (no `rawSetWidthSizeHeightAccordingly` override) keeps that width AND its
   constructed height. So three boxes built at distinct sizes, dropped in via `@dragWidgetTo_InputEvents box, (new Point doc.center().x,
   doc.bottom()-40)` (aim low to append below the default text), stay at THREE DISTINCT sizes stacked vertically — the distinct sizes ARE
   the assertion (a width-CONSTRAINING container would force one common width). Keep each box width BELOW the doc content width
@@ -1232,7 +1232,7 @@ assertion a recapture after a regression silently stores two different hashes an
   a container (right-clicking a non-world child opens the ancestor hierarchy menu); omit for a world-child.
 - **Re-target** (`macroPaletteRetargetsToNewWidget`): run set-target AGAIN — `setTargetAndActionWithOnesPickedFromMenu` OVERWRITES
   `@target`/`@action`; the old target keeps its value but stops following. Put ONE palette over TWO targets of DIFFERENT classes
-  (PanelWdgt + RectangleMorph) so each is picked unambiguously by class-name PREFIX; re-target back and forth.
+  (PanelWdgt + RectangleWdgt) so each is picked unambiguously by class-name PREFIX; re-target back and forth.
 - **Two controllers share one target** (`macroTwoPalettesShareOneTarget`): two ColorPaletteMorphs both set-target'd to the SAME
   panel's "color" (each overlapping the panel but NOT each other); clicking EITHER repaints, both bindings persist (most-recent
   click wins). One palette/many targets ⇒ re-targeting; many palettes/one target ⇒ shared control.
@@ -1244,7 +1244,7 @@ assertion a recapture after a regression silently stores two different hashes an
   controller+target composite (a panel holding a text + its sliders) deep-copies the bindings remapped to the COPY's target.
 - **Hover-to-highlight a candidate** (`macroTargetingHighlightsCandidateMorph`): hovering a "choose target:"/"choose new parent:"
   item highlights the morph it represents (`MenuItemWdgt.mouseEnter → morphToBeHighlighted.turnOnHighlight()`,
-  `MenuItemWdgt.coffee:78` → `world.morphsToBeHighlighted` → a `HighlighterMorph` each cycle). Overlap a ColorPaletteMorph with a
+  `MenuItemWdgt.coffee:78` → `world.morphsToBeHighlighted` → a `HighlighterWdgt` each cycle). Overlap a ColorPaletteMorph with a
   rect, `clickMenuItemOfWidget… "set target"`, grab the menu, find the candidate by prefix, then
   `@syntheticEventsMouseMove_InputEvents item.center(), "no button", …` to HOVER (no click) and screenshot the highlight tint.
 - **The highlight covers the EXACT SUBTREE, tracks the hover, clears on leave** (`macroHierarchyMenuHoverHighlightsExactSubtree`):
@@ -1252,7 +1252,7 @@ assertion a recapture after a regression silently stores two different hashes an
   composite (panel > box > rect) hovering an item floods exactly that ancestor's subtree, translucently, OVER the descendants'
   own colors: deeper item → strictly smaller region; moving between items moves the flood; hover-off clears with NO trace
   (final shot ≡ the menu-open baseline, the pixel-identical no-op idiom) while the menu stays open (menus dismiss on
-  mouse-DOWN outside, not hover-out). Give the deepest fixture morph its own color (`new RectangleMorph extent, color`) or it
+  mouse-DOWN outside, not hover-out). Give the deepest fixture morph its own color (`new RectangleWdgt extent, color`) or it
   hides dark-on-dark in the un-highlighted shots.
 - **A FORCED set-target choice is still PRESENTED — hand-rolled chain with screenshots between menus**
   (`macroUniqueTargetAndPropertyAreStillPresented`): a lonely ColorPaletteMorph has exactly ONE plausible target (the world),
@@ -1308,8 +1308,8 @@ assertion a recapture after a regression silently stores two different hashes an
   text-in-layout bridge — the layout macros above use plain rectangles as cells, the text-resize macros resize FREE text; this
   one puts a `TextWdgt` and a `StringWdgt` INSIDE a stack and resizes the HOLDER. The menu mechanic: "attach with horizontal
   layout" (`Widget.attachWithHorizLayout:3684`) pops a choose-new-parent menu of INTERSECTING morphs (labels are
-  `toString()`-based — match by prefix, "a RectangleMorph") whose pick runs `newParentChoiceWithHorizLayout` = `holder.add child,
-  nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED` — turning a plain demo RectangleMorph into a
+  `toString()`-based — match by prefix, "a Rectangle") whose pick runs `newParentChoiceWithHorizLayout` = `holder.add child,
+  nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED` — turning a plain demo RectangleWdgt into a
   horizontal stack that FITS to its cells when small and SPLITS its width between them when grown. Resizing through the real
   resize/move handles re-wraps the TextWdgt's paragraphs to its CELL width (and re-fits the font SMALLER when the cell
   narrows); the StringWdgt cell honours its own menu — "∸ align center" (`StringWdgt.alignCenter:987`), "⍿ align middle"
@@ -1319,7 +1319,7 @@ assertion a recapture after a regression silently stores two different hashes an
   GOTCHAS: create the widgets through the REAL demo/test menus (`world.create` floats them on the hand, a mouse-down drops them;
   the demo StringWdgt is `isEditable=true` unlike direct construction) and author the drop spots so the texts OVERLAP the
   rectangle (attach lists only intersecting morphs); reach the holder's menu from a CELL through the hierarchy menu ("a
-  RectangleMorph" prefix); scope the corner-handle lookup to the holder's subtree (`rect.topWdgtSuchThat ... resizeBothDimensionsHandle`
+  Rectangle" prefix); scope the corner-handle lookup to the holder's subtree (`rect.topWdgtSuchThat ... resizeBothDimensionsHandle`
   — mode handles attach to their TARGET); and `TextWdgt extends StringWdgt`, so locate the string with an
   instanceof-TextWdgt EXCLUSION. No new verb.
 - **Re-proportion a stack LIVE by dragging the divider** (`macroStackDividerReproportionsCells`): the INTERACTIVE sibling of basic
@@ -1365,7 +1365,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Layout spacer / spring** (`macroLayoutSpacerEatsSpareSpace`): a `LayoutSpacerMorph` is a spring (ctor passes spreadability
   `weight*LayoutSpec.SPREADABILITY_SPACERS` = 1e8, a ~1e6 max that dwarfs any cell's), so in a stack it absorbs almost all spare
   width and the cells stay at DESIRED size. Reuse `Widget.setupTestScreen1()` (8 holders, several `[spacer|adj|green|adj|blue|adj|yellow|adj|spacer(2)]`);
-  locate holders as `world.children.filter (c) -> c instanceof RectangleMorph and c.children.length > 0`, each handle a HandleMorph
+  locate holders as `world.children.filter (c) -> c instanceof RectangleWdgt and c.children.length > 0`, each handle a HandleMorph
   among the holder's OWN children. DRIFT: the current layout settles a stretched stack's cells at DESIRED width, so two holders
   match ONLY if their cells share a desired size — pick the two desired-30 holders differing in spreadability (MEDIUM vs NONE).
 - **Stack grows with content** (`macroVerticalStackPanelGrowsWithContent`): a `SimpleVerticalStackPanelWdgt`
@@ -1422,12 +1422,12 @@ assertion a recapture after a regression silently stores two different hashes an
   has dedicated lone-centered-child support (`:288-303`) that keeps it centered instead of snapping its left to the viewport. Drop a `new
   HeartIconMorph (Color…)` into a `SimpleDocumentScrollPanelWdgt`, center it, then `@dragWidgetTo_InputEvents defaultText, (a desktop point)`
   to remove the default text — the heart stays centered alone. GOTCHA: a widget has NO `.remove()`; drag it out (or re-parent via `world.add`).
-- **Padding is real morph area — sliders + palette-reveal + drag-by-the-band** (`macroPaddingAreaIsPartOfMorph`): a RectangleMorph paints
+- **Padding is real morph area — sliders + palette-reveal + drag-by-the-band** (`macroPaddingAreaIsPartOfMorph`): a RectangleWdgt paints
   two layers (`RectangularAppearance.coffee:71-88`) — `backgroundColor` over the FULL bounds, `color` over the padding-inset tight region
   `boundingBoxTight()` (`Widget.coffee:679-680`, edges inset by paddingTop/Bottom/Left/Right `:658-668`). The padding band between them is part
   of the morph, but while UNPAINTED it is click-through. Reproduce basicMorphPadding via PATCH-PROGRAMMING: build the rect + FIVE SliderMorphs
   + a ColorPaletteMorph all OVERLAPPING it (REQUIRED — "set target" lists only widgets whose bounds intersect the controller), then
-  `setControllerTargetToWidgetProperty_InputEvents_Macro slider, "a RectangleMorph", "padding"|"padding top"|"…bottom"|"…left"|"…right", [0.5,0.85]`
+  `setControllerTargetToWidgetProperty_InputEvents_Macro slider, "a Rectangle", "padding"|"padding top"|"…bottom"|"…left"|"…right", [0.5,0.85]`
   (the centred slider button covers a centre right-click → right-click the LOWER TRACK; a world-child controller needs no hierarchy prefix) and
   the palette → `"background color"`. `@dragSliderButtonToFraction_InputEvents slider,[0.5,frac]` insets the dark interior; a palette click
   (`@moveToAndClickAtFractionOf_InputEvents palette,[0.62,0.4]`) paints the BACKGROUND blue → the band shows (the morph extends beyond its paint);
@@ -1454,7 +1454,7 @@ assertion a recapture after a regression silently stores two different hashes an
   on a mouse-DOWN outside it, but DRAGGING its slider keeps it open even when the pointer leaves its bounds. Pressing a slider
   button whose slider's parent is a `PromptMorph` starts a NON-float drag (`SliderMorph.mouseDownLeft → nonFloatDragWdgtFarAwayToHere`;
   `SliderButtonMorph.detachesWhenDragged` is false while parented to a slider), and on the mouse-UP `cleanupMenuWdgts` is SKIPPED
-  while a non-float drag is in progress. Open a RectangleMorph's "transparency..." popover, `prompt = @getMostRecentlyOpenedMenu()`,
+  while a non-float drag is in progress. Open a RectangleWdgt's "transparency..." popover, `prompt = @getMostRecentlyOpenedMenu()`,
   `slider = (prompt.children.filter (c) -> c instanceof SliderMorph)[0]`, then press-drag-release its button to a point far OUTSIDE
   the popover. The alpha commits on "Ok", so only the value FIELD changes live. The INVERSE of dismiss-on-mousedown-outside.
 - **A slider dragged across surfaces keeps its button** (`macroSliderDraggedAcrossSurfacesKeepsButton`): grabbing a slider by
@@ -1524,7 +1524,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Shape hit-test / click-through** (`macroRoundedBoxCornerClickThrough`): the pointer resolves to a morph by SHAPE, not bounding
   box — `ActivePointerWdgt.topWdgtUnderPointer` skips any morph that `isTransparentAt` the pointer (`:48`). A `BoxMorph` with a
   large `cornerRadius` is transparent at its corners (`BoxyAppearance.isTransparentAt` outside the rounded arc). Put a
-  RectangleMorph backdrop behind a `new BoxMorph 55`, then `@moveToAndClickAtFractionOf_InputEvents box, [0.96,0.96]` (a corner —
+  RectangleWdgt backdrop behind a `new BoxMorph 55`, then `@moveToAndClickAtFractionOf_InputEvents box, [0.96,0.96]` (a corner —
   click passes THROUGH, backdrop comes forward) vs `[0.1,0.4]` (the body — box comes forward). The z-order flip on left-click
   (`bringToForeground`) is the observable.
 - **Rectangular clipping** (`macroClippingBoxClipsChildAtBounds`): a `ClippingBoxMorph` is an ORDINARY BoxMorph that merely

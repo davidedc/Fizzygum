@@ -1,4 +1,4 @@
-class VideoControlsPaneWdgt extends RectangleMorph
+class VideoControlsPaneWdgt extends RectangleWdgt
 
   playPauseToggle: nil
 

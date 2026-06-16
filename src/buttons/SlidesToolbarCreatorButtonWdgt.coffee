@@ -17,7 +17,7 @@ class SlidesToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
       new WorldMapCreatorButtonWdgt
       new USAMapCreatorButtonWdgt
 
-      new RectangleMorph
+      new RectangleWdgt
 
       new MapPinIconWdgt
 

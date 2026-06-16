@@ -402,7 +402,7 @@ class Widget extends TreeNode
   # useful for example when hovering over references
   # to morphs. Can only modify the rendering of a morph,
   # so any highlighting is only visible in the measure that
-  # the morph is visible (as opposed to HighlighterMorph being
+  # the morph is visible (as opposed to HighlighterWdgt being
   # used to highlight a morph)
   paintHighlight: (aContext, al, at, w, h) ->
     @appearance?.paintHighlight aContext, al, at, w, h
@@ -2204,7 +2204,7 @@ class Widget extends TreeNode
   # For most morphs the two things coincide, and the
   # high-level just calls the low-level.
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
-    if (aWdgt not instanceof HighlighterMorph) and (aWdgt not instanceof CaretMorph)
+    if (aWdgt not instanceof HighlighterWdgt) and (aWdgt not instanceof CaretMorph)
       if @ == world
         aWdgt.addShadow()
         # when any morph is added to the world, all scheduled tooltips
@@ -4475,7 +4475,7 @@ class Widget extends TreeNode
     ## draw some reference patterns to see the sizes
 
     for i in [0..5]
-      lmHolder = new RectangleMorph
+      lmHolder = new RectangleWdgt
       lmHolder.setExtent new Point 10 + i*10,10 + i*10
       lmHolder.fullMoveTo new Point 10 + 60 * i, 10 + 50 * 0
 
@@ -4483,10 +4483,10 @@ class Widget extends TreeNode
 
     # ----------------------------------------------
 
-    lmHolder = new RectangleMorph
-    lmContent1 = new RectangleMorph
+    lmHolder = new RectangleWdgt
+    lmContent1 = new RectangleWdgt
     lmAdj = new StackElementsSizeAdjustingMorph
-    lmContent2 = new RectangleMorph
+    lmContent2 = new RectangleWdgt
 
     lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4505,10 +4505,10 @@ class Widget extends TreeNode
 
     # ----------------------------------------------
 
-    lmHolder = new RectangleMorph
-    lmContent1 = new RectangleMorph
+    lmHolder = new RectangleWdgt
+    lmContent1 = new RectangleWdgt
     lmAdj = new StackElementsSizeAdjustingMorph
-    lmContent2 = new RectangleMorph
+    lmContent2 = new RectangleWdgt
 
     lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4527,11 +4527,11 @@ class Widget extends TreeNode
 
     # ----------------------------------------------
 
-    lmHolder = new RectangleMorph
-    lmContent1 = new RectangleMorph
+    lmHolder = new RectangleWdgt
+    lmContent1 = new RectangleWdgt
     lmAdj = new StackElementsSizeAdjustingMorph
-    lmContent2 = new RectangleMorph
-    lmContent3 = new RectangleMorph
+    lmContent2 = new RectangleWdgt
+    lmContent3 = new RectangleWdgt
 
     lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4553,12 +4553,12 @@ class Widget extends TreeNode
 
     # ----------------------------------------------
 
-    lmHolder = new RectangleMorph
-    lmContent1 = new RectangleMorph
+    lmHolder = new RectangleWdgt
+    lmContent1 = new RectangleWdgt
     lmAdj = new StackElementsSizeAdjustingMorph
-    lmContent2 = new RectangleMorph
+    lmContent2 = new RectangleWdgt
     lmAdj2 = new StackElementsSizeAdjustingMorph
-    lmContent3 = new RectangleMorph
+    lmContent3 = new RectangleWdgt
 
     lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4581,15 +4581,15 @@ class Widget extends TreeNode
 
     # ----------------------------------------------
 
-    lmHolder = new RectangleMorph
+    lmHolder = new RectangleWdgt
 
     lmSpacer1 = new LayoutSpacerMorph
     lmAdj = new StackElementsSizeAdjustingMorph
-    lmContent1 = new RectangleMorph
+    lmContent1 = new RectangleWdgt
     lmAdj2 = new StackElementsSizeAdjustingMorph
-    lmContent2 = new RectangleMorph
+    lmContent2 = new RectangleWdgt
     lmAdj3 = new StackElementsSizeAdjustingMorph
-    lmContent3 = new RectangleMorph
+    lmContent3 = new RectangleWdgt
     lmAdj4 = new StackElementsSizeAdjustingMorph
     lmSpacer2 = new LayoutSpacerMorph
 
@@ -4618,15 +4618,15 @@ class Widget extends TreeNode
 
     # ----------------------------------------------
 
-    lmHolder = new RectangleMorph
+    lmHolder = new RectangleWdgt
 
     lmSpacer1 = new LayoutSpacerMorph
     lmAdj = new StackElementsSizeAdjustingMorph
-    lmContent1 = new RectangleMorph
+    lmContent1 = new RectangleWdgt
     lmAdj2 = new StackElementsSizeAdjustingMorph
-    lmContent2 = new RectangleMorph
+    lmContent2 = new RectangleWdgt
     lmAdj3 = new StackElementsSizeAdjustingMorph
-    lmContent3 = new RectangleMorph
+    lmContent3 = new RectangleWdgt
     lmAdj4 = new StackElementsSizeAdjustingMorph
     lmSpacer2 = new LayoutSpacerMorph 2
 
@@ -4655,15 +4655,15 @@ class Widget extends TreeNode
 
     # ----------------------------------------------
 
-    lmHolder = new RectangleMorph
+    lmHolder = new RectangleWdgt
 
     lmSpacer1 = new LayoutSpacerMorph
     lmAdj = new StackElementsSizeAdjustingMorph
-    lmContent1 = new RectangleMorph
+    lmContent1 = new RectangleWdgt
     lmAdj2 = new StackElementsSizeAdjustingMorph
-    lmContent2 = new RectangleMorph
+    lmContent2 = new RectangleWdgt
     lmAdj3 = new StackElementsSizeAdjustingMorph
-    lmContent3 = new RectangleMorph
+    lmContent3 = new RectangleWdgt
     lmAdj4 = new StackElementsSizeAdjustingMorph
     lmSpacer2 = new LayoutSpacerMorph 2
 
@@ -4692,15 +4692,15 @@ class Widget extends TreeNode
 
     # ----------------------------------------------
 
-    lmHolder = new RectangleMorph
+    lmHolder = new RectangleWdgt
 
     lmSpacer1 = new LayoutSpacerMorph
     lmAdj = new StackElementsSizeAdjustingMorph
-    lmContent1 = new RectangleMorph
+    lmContent1 = new RectangleWdgt
     lmAdj2 = new StackElementsSizeAdjustingMorph
-    lmContent2 = new RectangleMorph
+    lmContent2 = new RectangleWdgt
     lmAdj3 = new StackElementsSizeAdjustingMorph
-    lmContent3 = new RectangleMorph
+    lmContent3 = new RectangleWdgt
     lmAdj4 = new StackElementsSizeAdjustingMorph
     lmSpacer2 = new LayoutSpacerMorph 2
 

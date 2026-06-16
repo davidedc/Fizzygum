@@ -14,14 +14,14 @@ class AxisWdgt extends Widget
 
   buildAndConnectChildren: ->
 
-    @majorDimLine = new RectangleMorph
+    @majorDimLine = new RectangleWdgt
     @majorDimLine.minimumExtent = new Point 1,1
 
     @add @majorDimLine
 
     numberOfTicks = @max - @min + 1
     for i in [0 ... numberOfTicks]
-      @ticksRectangles[i] = new RectangleMorph
+      @ticksRectangles[i] = new RectangleWdgt
       @ticksRectangles[i].minimumExtent = new Point 1,1
       @add @ticksRectangles[i]
 

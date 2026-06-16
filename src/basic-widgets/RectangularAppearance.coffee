@@ -21,7 +21,7 @@ class RectangularAppearance extends Appearance
   # useful for example when hovering over references
   # to morphs. Can only modify the rendering of a morph,
   # so any highlighting is only visible in the measure that
-  # the morph is visible (as opposed to HighlighterMorph being
+  # the morph is visible (as opposed to HighlighterWdgt being
   # used to highlight a morph)
   paintHighlight: (aContext, al, at, w, h) ->
     return

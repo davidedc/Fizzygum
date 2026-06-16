@@ -204,7 +204,7 @@ class InspectorWdgt extends Widget
         @classesNames.push goingUpTargetProtChain.constructor.name
         goingUpTargetProtChain = goingUpTargetProtChain.__proto__
 
-    @hierarchyBackgroundPanel = new RectangleMorph
+    @hierarchyBackgroundPanel = new RectangleWdgt
     @hierarchyBackgroundPanel.setColor Color.create 255,255,255,.2
     @add @hierarchyBackgroundPanel
 

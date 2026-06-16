@@ -299,7 +299,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # HOWEVER a bunch of tests would fail if I do the proper
     # thing so we are doing this for the time being.
     if @internal
-      @titlebarBackground = new RectangleMorph
+      @titlebarBackground = new RectangleWdgt
     else
       @titlebarBackground = new BoxMorph
 

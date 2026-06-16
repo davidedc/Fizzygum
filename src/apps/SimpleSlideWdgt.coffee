@@ -20,7 +20,7 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
       @toolsPanel.add new WorldMapCreatorButtonWdgt
       @toolsPanel.add new USAMapCreatorButtonWdgt
 
-      @toolsPanel.add new RectangleMorph
+      @toolsPanel.add new RectangleWdgt
 
       @toolsPanel.add new MapPinIconWdgt
 
@@ -60,7 +60,7 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
       new WorldMapCreatorButtonWdgt
       new USAMapCreatorButtonWdgt
 
-      new RectangleMorph
+      new RectangleWdgt
 
       new MapPinIconWdgt
 

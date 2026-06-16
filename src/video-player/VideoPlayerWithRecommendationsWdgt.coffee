@@ -77,8 +77,8 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     @videoPlayer = new VideoPlayerWdgt
     @add @videoPlayer
 
-    # TODO this should be something better than a RectangleMorph
-    @recommendationsPane = new RectangleMorph
+    # TODO this should be something better than a RectangleWdgt
+    @recommendationsPane = new RectangleWdgt
     @add @recommendationsPane
     @recommendationsPane.setColor Color.TRANSPARENT
 

@@ -388,3 +388,45 @@ not to descend from `ButtonWdgt` and DEFERRED to BATCH 7 (owner decision UP FRON
   (`macroRightClickClosesDownstreamSubMenus`, eyeballed: the hierarchy nav now reads `a MenuItem` between an unchanged
   `a Text` and an unchanged `a MenuMorph`). 22 test files edited (content only; test identifiers kept), no test
   added/removed.
+
+**DONE (2026-06-16): the `RectangleMorph`→`RectangleWdgt` rename (BATCH 6) — the FIRST batch whose renamed class is
+genuinely PHOTOGRAPHED.** Renamed the base `RectangleMorph`→`RectangleWdgt` AND its `*Morph` subclass
+`HighlighterMorph`→`HighlighterWdgt` (the hover-highlight overlay; zero test refs, pixel-neutral), and re-pointed the
+already-`*Wdgt` subclass `VideoControlsPaneWdgt`'s `extends`. A pure `\b`-sweep: ~44 `new` (31 in `Widget.coffee` layout-
+demo methods) + 2 `extends` + 2 `instanceof` (`MenuMorph` separator lines) + 2 file renames; **`buildSystem` clean, zero
+string-literals in src.** `WorldMorph.createNewRectangleMorph` (the method + its `addMenuItem … "createNewRectangleMorph"`
+action strings) is `\b`-protected and deliberately KEPT (out of scope, like BATCH 5's `macroListMorph…` test ids). New
+lessons that bit (and are the reason this batch mattered):
+- **The recapture oracle beat BOTH predictions — a THIRD proof.** `RectangleMorph` is the go-to generic *fixture* (a plain
+  coloured rectangle) AND the test *subject*, so its name is drawn wherever a test names the rect. The coarse menu agent
+  predicted **8** tests "photograph the label"; a precise per-screenshot pass cut that to **2** "menu open in a shot". The
+  byte-exact suite then went RED on **8** — neither prediction. So: do NOT pre-classify; rename, run the suite, the RED set
+  IS the recapture set. (Owner accepted ~2 up front; the actual 8 are the same KIND of change — all benign label shifts —
+  so no re-decision needed, but ALWAYS surface that the empirical set was wider.)
+- **The 8 reds exercise BOTH label regimes at once** (reconfirming the String/Text-arc split): **(a) menu strip-`Wdgt`** —
+  hierarchy / set-target / attach / context menus show `a Rectangle` (was `a RectangleMorph`): `macroHierarchyMenuHoverHighlightsExactSubtree`,
+  `macroTargetingHighlightsCandidateMorph`, `macroScrollPanelCoalescesChildMenu`, `macroMenuFromFramedItemNotClipped`,
+  `macroAttachShowsNoTargetsMessage` (the rect's context-menu header shifts where the popped message lands); **(b) PromptMorph
+  title strip-`Wdgt`** — the transparency popover titled `<morph> alpha value:` → `Rectangle alpha value:`
+  (`macroPromptShadowFollowsOnDrag`, `macroPopoverStaysOpenWhenSliderDraggedOut`); **(c) the Object Inspector hierarchy
+  DIAGRAM uses the REAL name** → `TreeNode → Widget → RectangleWdgt → this object` (NOT stripped — `macroDuplicatedInspectorDrivesCopiedTargetOnly`).
+  EYEBALL caught all three as benign (right content, right highlight, no Error window); none was a regression (a pure rename,
+  boot-smoke green, nav strings resolve via the `"a Rectangle"` PREFIX).
+- **The plural-boundary gotcha bites FILE SELECTION, not just substitution.** `rg -l '\bRectangleMorph\b'` does NOT list a
+  file whose only hit is the plural `RectangleMorphs` (no `\b` between `h` and `s`), so a plural-only file (`macroEmptyStringDoesntGiveSelectAllOption.js`,
+  "separator RectangleMorphs") was silently left out of the sweep set. FIX: make the sweep AND its verify plural-aware —
+  `s/\bRectangleMorph(s?)\b/RectangleWdgt$1/g`, and a final catch-all `rg -o 'RectangleMorph\w*' | sort -u` to prove only the
+  `createNewRectangleMorph` substring survives.
+- **`visualisation.html` is git-TRACKED and generated** — it embeds each test's metadata + drawn-label prose, so the `.js`
+  sweep leaves it stale. Regenerate every touched dir with `make-visualisation.js <name>` (37 here) or the `tests/` grep-clean
+  fails on the stale HTML. (Same two-pass as the `.js`: class-noun→`RectangleWdgt`, drawn-label→`a Rectangle`; the
+  `@assertTopMenuItemStrings ["a RectangleMorph ➜", …]` in `macroScrollPanelCoalescesChildMenu` is a FUNCTION-CRITICAL drawn
+  label — it ERRORS, not just pixel-diffs, if left unstripped — and a wrapped `("a\nRectangleMorph" prefix)` comment evades a
+  line-based `"a RectangleWdgt"` grep, so finish with `rg 'a RectangleWdgt'` AND `rg 'RectangleWdgt"'`.)
+- **Doc deliverable also caught a prior-batch miss:** the `/author-macro-test` SKILL.md still said build a button as `MenuItemMorph`
+  / `MenuItemMorph.mouseEnter` (BATCH 4 renamed it to `MenuItemWdgt`) — an author would copy a dead class name. Fixed it here
+  and noted it (a doc-accuracy fix is in-scope wherever the stale wording lives; cf. §5).
+- Result: **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots, 8 reference recaptures** (the 8 RED above,
+  ≈26 PNGs across both densities), ~38 test files edited (content only; test identifiers kept) + 37 visualisations regenerated,
+  no test added/removed. The pre-recorded BATCH-6 plan touch-list matched the live greps (the only surprises were the *recapture
+  count* and the plural-only file — both caught by the suite/catch-all, exactly as the "suite is the oracle" rule predicts).

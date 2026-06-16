@@ -1132,7 +1132,7 @@ class WorldMorph extends PanelWdgt
 
     @morphsToBeHighlighted.forEach (eachMorphNeedingHighlight) =>
       unless @morphsBeingHighlighted.has eachMorphNeedingHighlight
-        hM = new HighlighterMorph
+        hM = new HighlighterWdgt
         @add hM
         hM.wdgtThisWdgtIsHighlighting = eachMorphNeedingHighlight
         hM.rawSetBounds eachMorphNeedingHighlight.clippedThroughBounds()
@@ -1981,7 +1981,7 @@ class WorldMorph extends PanelWdgt
     @create new LayoutElementAdderOrDropletMorph
 
   createNewRectangleMorph: ->
-    @create new RectangleMorph
+    @create new RectangleWdgt
   createNewBoxMorph: ->
     @create new BoxMorph
   createNewCircleBoxMorph: ->

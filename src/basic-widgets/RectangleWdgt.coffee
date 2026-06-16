@@ -9,7 +9,7 @@
 # are painted over the border, which would look bad.
 
 
-class RectangleMorph extends Widget
+class RectangleWdgt extends Widget
 
   constructor: (extent, color) ->
     super()

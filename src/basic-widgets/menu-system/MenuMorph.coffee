@@ -44,7 +44,7 @@ class MenuMorph extends PopUpWdgt
 
 
   createLine: (height = 1) ->
-    item = new RectangleMorph
+    item = new RectangleWdgt
     item.setMinimumExtent new Point 5,1
     item.color = Color.create 230,230,230
     item.rawSetHeight height + 2
@@ -100,9 +100,9 @@ class MenuMorph extends PopUpWdgt
     # while looping over it
     destroyNextLines = false
     for item in @children.slice()
-      if destroyNextLines and item instanceof RectangleMorph
+      if destroyNextLines and item instanceof RectangleWdgt
         item.fullDestroy()
-      if item instanceof RectangleMorph
+      if item instanceof RectangleWdgt
         destroyNextLines = true
         continue
       else

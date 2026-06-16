@@ -144,7 +144,7 @@ ClippingAtRectangularBoundsMixin =
         # This is why as well it's good to use PanelWdgts whenever
         # it's clear that there is a "container" case. Think
         # for example that you could stick a small
-        # RectangleMorph (not a Frame) on the desktop and then
+        # RectangleWdgt (not a Frame) on the desktop and then
         # attach a thousand
         # CircleBoxMorphs on it.
         # Say that the circles are all inside the rectangle,
@@ -158,7 +158,7 @@ ClippingAtRectangularBoundsMixin =
         # efficiently calculated anyways) is the whole screen.
         # So the children could be anywhere and need to be all
         # checked for damaged areas to repaint.
-        # If the RectangleMorph is made into a Panel, one can
+        # If the RectangleWdgt is made into a Panel, one can
         # avoid the traversal for any broken rectangle not
         # overlapping it.
 

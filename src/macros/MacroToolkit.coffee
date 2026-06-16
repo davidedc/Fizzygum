@@ -637,8 +637,8 @@ class MacroToolkit
 
   # Like getTextMenuItemFromMenu but matches by label PREFIX. Use it when a menu item's full label
   # carries a suffix you should not depend on — e.g. the "attach..." target menu labels each candidate
-  # `<morph>.toString() + " ➜"`, so a RectangleMorph reads "a RectangleMorph#1 ➜" (an instance number +
-  # a trailing arrow). Match the stable head ("a RectangleMorph") instead of the exact string, and only
+  # `<morph>.toString() + " ➜"`, so a RectangleWdgt reads "a RectangleWdgt#1 ➜" (an instance number +
+  # a trailing arrow). Match the stable head ("a RectangleWdgt") instead of the exact string, and only
   # the intended target is hit even when the menu also lists the World and the morph's own handle.
   getTextMenuItemFromMenuByPrefix: (theMenu, thePrefix) ->
     theMenu.topWdgtSuchThat (item) ->
