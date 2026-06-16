@@ -561,3 +561,26 @@ Icon's 77). Src: ~17 refs, **0** string-literals, **0** `findTop…`, **1** `ins
   shots, both densities).** 3 renames + ~17 src refs; 9 test files (content-only, identifiers kept) + 9 visualisations regenerated
   + 2 docs (`MACRO-PATTERNS.md`, `author-macro-test/SKILL.md`). Plan `~/.claude/plans/batch10-color-family-rename.md`. Remaining
   long-tail families: Switch/Toggle, HandleMorph, …, `WorldMorph` last.
+
+**DONE (2026-06-16): BATCH 11 — the Switch/Toggle/Radio button family (`SwitchButtonMorph`/`ToggleButtonMorph`/`RadioButtonsHolderMorph`
+→ `*Wdgt`; re-point `VideoPlayPauseToggle`).** Finished the toggle-state button lineage DEFERRED from BATCH 4. Family:
+`Widget → SwitchButtonWdgt → ToggleButtonWdgt → VideoPlayPauseToggle` + standalone `Widget → RadioButtonsHolderWdgt` (holds toggle
+buttons). **The cleanest batch yet — pixel-neutral, ZERO recapture.** ~21 src refs, **0** string-literals, **0** `findTop…`, **0**
+`instanceof`, **0** `createNew*` methods; the 3 tokens mutually `\b`-distinct.
+- **THE headline lesson — usage BREADTH ≠ recapture; only a DRAWN or NAVIGATED class name recaptures.** These toggles are heavily-used
+  CHROME — every `WindowWdgt` builds a `.collapseUncollapseSwitchButton`, the `InspectorWdgt` builds 4 (`new ToggleButtonMorph` for
+  show methods/fields/inherited/own-props), plus `ReconfigurablePaintWdgt`'s 4 tool buttons, `ErrorsLogViewerMorph` pause, `BasementWdgt`,
+  `MenusHelper` — so they RENDER in many tests (inspector shots, window shots, …). Yet recapture was ZERO: rendering is pixel-neutral
+  (a rename changes no pixels), the class names appear in NO nav string, and they're icon-buttons (no class-name label in the UI) that no
+  test inspects-by-name. **Don't equate "this class is everywhere on screen" with "expensive recapture" — measure the DRAWN/NAVIGATED
+  surface, not the construction/ render surface.** (Only 1 test even references the family: `macroWindowsEmptyCollapsingUncollapsing`'s
+  METADATA — intent prose + a `"SwitchButtonMorph"` keyword tag — swept to `…Wdgt`, not a macro command or drawn label.)
+- KEPT (`\b`-protected, substrings not class names): the factory method `createSwitchButtonMorph` (`Widget`, `MenusHelper`) and property
+  names `collapseUncollapseSwitchButton` / `internalExternalSwitchButton` / `resetSwitchButton` — per the `createNew*Morph`-keep convention.
+- EXCLUDED `EditableMarkMorph` — it `extends UpperRightTriangleIconicButton`, a SEPARATE lineage (a later batch with
+  `UpperRightTriangleIconicButton`), NOT the SwitchButton lineage.
+- Result: **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots, ZERO reference recapture.** 3 renames + 1 `extends` re-point
+  + ~21 src refs; 1 test file (metadata-only) + its visualisation regenerated; 0 docs (none mentioned the classes). Plan
+  `~/.claude/plans/batch11-switch-toggle-radio-rename.md`. Remaining long-tail families: `HandleMorph`, the
+  `UpperRightTriangleIconicButton`/`EditableMarkMorph` mark lineage, Canvas/Pen, Caret/Blinker, the layout `*Morph`s, the Fizzytiles app,
+  `MenuMorph`/`PromptMorph` (high-recapture), …, `WorldMorph` last.

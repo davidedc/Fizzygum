@@ -1,4 +1,4 @@
-class VideoPlayPauseToggle extends ToggleButtonMorph
+class VideoPlayPauseToggle extends ToggleButtonWdgt
 
   playPausePlayButton: nil
   playPausePauseButton: nil

@@ -336,7 +336,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     if !@collapseUncollapseSwitchButton?
       collapseButton = new CollapseIconButtonWdgt
       uncollapseButton = new UncollapseIconButtonWdgt
-      @collapseUncollapseSwitchButton = new SwitchButtonMorph [collapseButton, uncollapseButton]
+      @collapseUncollapseSwitchButton = new SwitchButtonWdgt [collapseButton, uncollapseButton]
     @add @collapseUncollapseSwitchButton, nil, nil, nil, true
 
 
@@ -356,7 +356,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
         listOfButtons = [internalButton, externalButton]
       else
         listOfButtons = [externalButton, internalButton]
-      @internalExternalSwitchButton = new SwitchButtonMorph listOfButtons
+      @internalExternalSwitchButton = new SwitchButtonWdgt listOfButtons
       @add @internalExternalSwitchButton, nil, nil, nil, true
 
   makePencilYellow: ->

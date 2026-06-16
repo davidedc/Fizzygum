@@ -604,7 +604,7 @@ class MacroToolkit
     @moveToAndClick_InputEvents windowWidget.closeButton
 
   # Collapse or uncollapse a WindowWdgt by clicking the collapse/uncollapse control in its window bar.
-  # Every WindowWdgt builds a `.collapseUncollapseSwitchButton` (a SwitchButtonMorph that toggles between a
+  # Every WindowWdgt builds a `.collapseUncollapseSwitchButton` (a SwitchButtonWdgt that toggles between a
   # CollapseIconButtonWdgt and an UncollapseIconButtonWdgt): clicking it when expanded collapses the
   # window to just its bar (contents.collapse()), and clicking it again — the switch now shows the
   # uncollapse icon — restores it. So this one verb both collapses and uncollapses, depending on the

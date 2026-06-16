@@ -1,4 +1,4 @@
-class SwitchButtonMorph extends Widget
+class SwitchButtonWdgt extends Widget
 
   buttons: nil
  

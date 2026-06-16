@@ -47,7 +47,7 @@ class MenusHelper
   createSwitchButtonMorph: ->
     button1 = new SimpleRectangularButtonWdgt true, @, nil, new IconWdgt(nil)
     button2 = new SimpleRectangularButtonWdgt true, @, nil, new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
-    world.create new SwitchButtonMorph [button1, button2]
+    world.create new SwitchButtonWdgt [button1, button2]
 
   createNewClippingBoxMorph: ->
     world.create new ClippingBoxWdgt

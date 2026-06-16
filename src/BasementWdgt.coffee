@@ -41,7 +41,7 @@ class BasementWdgt extends BoxWdgt
 
     @hideUsedWdgtsOnButton = new SimpleButtonWdgt true, @, "showAllWidgets", "☒ only show lost items"
     @hideUsedWdgtsOffButton = new SimpleButtonWdgt true, @, "hideUsedWidgets", "☐ only show lost items"
-    @hideUsedWdgtsToggle = new ToggleButtonMorph @hideUsedWdgtsOffButton, @hideUsedWdgtsOnButton, 0
+    @hideUsedWdgtsToggle = new ToggleButtonWdgt @hideUsedWdgtsOffButton, @hideUsedWdgtsOnButton, 0
     @add @hideUsedWdgtsToggle
 
 

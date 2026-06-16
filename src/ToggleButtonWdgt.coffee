@@ -1,4 +1,4 @@
-class ToggleButtonMorph extends SwitchButtonMorph
+class ToggleButtonWdgt extends SwitchButtonWdgt
 
 
   constructor: (button1, button2, startingButton = 0) ->
@@ -13,7 +13,7 @@ class ToggleButtonMorph extends SwitchButtonMorph
   # state of something that has been independently changed
   # (i.e. changed by something else than the user clicking this toggle)
   # TODO this probably needs a better name, and also
-  # TODO this should probably be in SwitchButtonMorph
+  # TODO this should probably be in SwitchButtonWdgt
   setToggleState: (whichOne) ->
     if @buttonShown != whichOne
       @buttonShown = whichOne

@@ -231,17 +231,17 @@ class InspectorWdgt extends Widget
 
     @showMethodsOnButton = new SimpleButtonWdgt true, @, "hideMethods", "methods: on"
     @showMethodsOffButton = new SimpleButtonWdgt true, @, "showMethods", "methods: off"
-    @showMethodsToggle = new ToggleButtonMorph @showMethodsOnButton, @showMethodsOffButton, if @showingMethods then 0 else 1
+    @showMethodsToggle = new ToggleButtonWdgt @showMethodsOnButton, @showMethodsOffButton, if @showingMethods then 0 else 1
     @add @showMethodsToggle
 
     @showFieldsOnButton = new SimpleButtonWdgt true, @, "hideFields", "fields: on"
     @showFieldsOffButton = new SimpleButtonWdgt true, @, "showFields", "fields: off"
-    @showFieldsToggle = new ToggleButtonMorph @showFieldsOnButton, @showFieldsOffButton, if @showingFields then 0 else 1
+    @showFieldsToggle = new ToggleButtonWdgt @showFieldsOnButton, @showFieldsOffButton, if @showingFields then 0 else 1
     @add @showFieldsToggle
 
     @showInheritedOnButton = new SimpleButtonWdgt true, @, "hideInherited", "inherited: on"
     @showInheritedOffButton = new SimpleButtonWdgt true, @, "showInherited", "inherited: off"
-    @showInheritedToggle = new ToggleButtonMorph @showInheritedOnButton, @showInheritedOffButton, if @showingInherited then 0 else 1
+    @showInheritedToggle = new ToggleButtonWdgt @showInheritedOnButton, @showInheritedOffButton, if @showingInherited then 0 else 1
     @add @showInheritedToggle
 
     @buildAndConnectObjOwnPropsButton()
@@ -365,7 +365,7 @@ class InspectorWdgt extends Widget
   buildAndConnectObjOwnPropsButton: ->
     @showOwnPropsOnlyOnButton = new SimpleButtonWdgt true, @, "hideOwnPropsOnly", "obj own props only: on"
     @showOwnPropsOnlyOffButton = new SimpleButtonWdgt true, @, "showOwnPropsOnly", "obj own props only: off"
-    @showOwnPropsOnlyToggle = new ToggleButtonMorph @showOwnPropsOnlyOnButton, @showOwnPropsOnlyOffButton, if @showingOwnPropsOnly then 0 else 1
+    @showOwnPropsOnlyToggle = new ToggleButtonWdgt @showOwnPropsOnlyOnButton, @showOwnPropsOnlyOffButton, if @showingOwnPropsOnly then 0 else 1
     @add @showOwnPropsOnlyToggle
 
   openClassInspector: (ignored,ignored2,className) ->

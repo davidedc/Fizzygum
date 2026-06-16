@@ -81,7 +81,7 @@ class ErrorsLogViewerMorph extends Widget
 
     pauseButton = new SimpleButtonWdgt true, @, "pauseErrors", "pause"
     unpauseButton = new SimpleButtonWdgt true, @, "unpauseErrors", "un-pause"
-    @pauseToggle = new ToggleButtonMorph pauseButton, unpauseButton, if @paused then 1 else 0
+    @pauseToggle = new ToggleButtonWdgt pauseButton, unpauseButton, if @paused then 1 else 0
     @add @pauseToggle
 
     @okButton = new SimpleButtonWdgt true, @, "closeFromContainerWindow", "ok"

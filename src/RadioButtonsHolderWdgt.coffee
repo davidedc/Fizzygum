@@ -1,4 +1,4 @@
-class RadioButtonsHolderMorph extends Widget
+class RadioButtonsHolderWdgt extends Widget
 
   wantsButtonsToBehaveLikeRadioButtons: true
   allowsRadioButtonsToBeAllDisabled: true
