@@ -673,3 +673,12 @@ TextWdgt — no internal hierarchy, 0 subclasses); finishes what BATCH 15 starte
   docs. Plan `~/.claude/plans/batch16-fizzytiles-app-rename.md`. Remaining long-tail families: the
   `UpperRightTriangleIconicButton`/`EditableMarkMorph` mark lineage, `ErrorsLogViewerMorph`, `MenuMorph`/`PromptMorph`/`CodePromptMorph`
   (high-recapture), …, `WorldMorph` last.
+
+**DONE (2026-06-16): BATCH 17 — `EditableMarkMorph` → `EditableMarkWdgt`.** The editable-mark leaf (the deferred-from-BATCH-4 "mark";
+`extends UpperRightTriangleIconicButton`, 0 subclasses). 5 src refs (its decl + 4 `new EditableMarkMorph` in `apps/ReconfigurablePaintWdgt`),
+**0** string-literals, **0** test files → **ZERO recapture.** Its base `UpperRightTriangleIconicButton` is already non-`*Morph` — an
+INCONSISTENT name (neither `Morph` nor `Wdgt`), but NOT a `*Morph` rename target, so left as-is (candidate for a future "non-`Morph`-suffixed
+names" consistency pass, separate from this `*Morph`→`*Wdgt` phase). **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots, ZERO
+recapture.** 1 rename + 5 src refs; 0 tests, 0 docs. Plan `~/.claude/plans/batch17-editablemark-rename.md`. Remaining long-tail families:
+`ErrorsLogViewerMorph`, `MenuMorph`/`PromptMorph`/`CodePromptMorph` (high-recapture), …, `WorldMorph` last. (Non-`*Morph` naming-consistency
+leftovers like `UpperRightTriangleIconicButton` are a SEPARATE possible pass.)

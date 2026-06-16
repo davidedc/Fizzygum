@@ -420,13 +420,13 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     @eraserToolButton = new ToggleButtonWdgt eraserToolButtonOff, eraserToolButtonOn
 
     # pencilAnnotation
-    new EditableMarkMorph @pencilToolButton, pencilButtonOff, "editInjectableSource"
+    new EditableMarkWdgt @pencilToolButton, pencilButtonOff, "editInjectableSource"
     # brushAnnotation
-    new EditableMarkMorph @brushToolButton, brushToolButtonOff, "editInjectableSource"
+    new EditableMarkWdgt @brushToolButton, brushToolButtonOff, "editInjectableSource"
     # toothpasteAnnotation
-    new EditableMarkMorph @toothpasteToolButton, toothpasteToolButtonOff, "editInjectableSource"
+    new EditableMarkWdgt @toothpasteToolButton, toothpasteToolButtonOff, "editInjectableSource"
     # eraserAnnotation
-    new EditableMarkMorph @eraserToolButton, eraserToolButtonOff, "editInjectableSource"
+    new EditableMarkWdgt @eraserToolButton, eraserToolButtonOff, "editInjectableSource"
 
     @toolsPanel.add @pencilToolButton
     @toolsPanel.add @brushToolButton
