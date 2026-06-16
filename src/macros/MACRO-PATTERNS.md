@@ -1323,9 +1323,9 @@ assertion a recapture after a regression silently stores two different hashes an
   — mode handles attach to their TARGET); and `TextWdgt extends StringWdgt`, so locate the string with an
   instanceof-TextWdgt EXCLUSION. No new verb.
 - **Re-proportion a stack LIVE by dragging the divider** (`macroStackDividerReproportionsCells`): the INTERACTIVE sibling of basic
-  proportions above — a `StackElementsSizeAdjustingMorph` placed BETWEEN two cells in the stack (`holder.add lime/divider/blue, nil,
+  proportions above — a `StackElementsSizeAdjustingWdgt` placed BETWEEN two cells in the stack (`holder.add lime/divider/blue, nil,
   LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED`; this is `setupTestScreen1`'s second holder, `Widget.coffee:4515`).
-  Dragging the divider runs its `nonFloatDragging` (`StackElementsSizeAdjustingMorph.coffee:28`), which shifts the max-size (spreadability)
+  Dragging the divider runs its `nonFloatDragging` (`StackElementsSizeAdjustingWdgt.coffee:28`), which shifts the max-size (spreadability)
   allowance between the flanking cells — re-apportioning the split. Drive it with the HELD-DRAG idiom (a per-test helper): `p =
   divider.center(); @moveToAndMouseDown_InputEvents p; yield "waitNoInputsOngoing"; @syntheticEventsMouseMove_InputEvents (new Point (p.x+Δ),
   p.y), "left button"; @syntheticEventsMouseUp_InputEvents()`. GOTCHAS: a plain CLICK on the divider is a NO-OP (it early-returns on a nil drag
@@ -1362,7 +1362,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `blue.collapse()`/`blue.unCollapse()` DIRECTLY — they are the very methods the context "test menu"'s `collapse` /
   `un-collapse` items call (`Widget.coffee:3284-3288`), and the un-collapse item is unreachable by right-click anyway (a
   collapsed cell is zero-size; the recording used an inspector eval — scaffolding). No new verb.
-- **Layout spacer / spring** (`macroLayoutSpacerEatsSpareSpace`): a `LayoutSpacerMorph` is a spring (ctor passes spreadability
+- **Layout spacer / spring** (`macroLayoutSpacerEatsSpareSpace`): a `LayoutSpacerWdgt` is a spring (ctor passes spreadability
   `weight*LayoutSpec.SPREADABILITY_SPACERS` = 1e8, a ~1e6 max that dwarfs any cell's), so in a stack it absorbs almost all spare
   width and the cells stay at DESIRED size. Reuse `Widget.setupTestScreen1()` (8 holders, several `[spacer|adj|green|adj|blue|adj|yellow|adj|spacer(2)]`);
   locate holders as `world.children.filter (c) -> c instanceof RectangleWdgt and c.children.length > 0`, each handle a HandleWdgt

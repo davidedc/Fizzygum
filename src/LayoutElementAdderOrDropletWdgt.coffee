@@ -1,6 +1,6 @@
 # this file is excluded from the fizzygum homepage build
 
-class LayoutElementAdderOrDropletMorph extends Widget
+class LayoutElementAdderOrDropletWdgt extends Widget
   _acceptsDrops: true
 
   constructor: ->
@@ -129,7 +129,7 @@ class LayoutElementAdderOrDropletMorph extends Widget
       newWdgt.showAdders()
 
     @addAsSiblingAfterMe \
-      (new LayoutElementAdderOrDropletMorph),
+      (new LayoutElementAdderOrDropletWdgt),
       nil,
       LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 

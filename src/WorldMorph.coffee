@@ -1975,10 +1975,10 @@ class WorldMorph extends PanelWdgt
 
   # »>> this part is excluded from the fizzygum homepage build
   createNewStackElementsSizeAdjustingMorph: ->
-    @create new StackElementsSizeAdjustingMorph
+    @create new StackElementsSizeAdjustingWdgt
 
   createNewLayoutElementAdderOrDropletMorph: ->
-    @create new LayoutElementAdderOrDropletMorph
+    @create new LayoutElementAdderOrDropletWdgt
 
   createNewRectangleMorph: ->
     @create new RectangleWdgt

@@ -1,6 +1,6 @@
 # this file is excluded from the fizzygum homepage build
 
-class LayoutSpacerMorph extends Widget
+class LayoutSpacerWdgt extends Widget
   thisSpacerIsTransparent: false
 
   constructor: (spacerWeight = 1) ->

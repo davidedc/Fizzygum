@@ -624,3 +624,17 @@ constructed once (`WorldMorph:2184 @caret = new CaretMorph …`), reached via th
   Plan `~/.claude/plans/batch13-caret-blinker-rename.md`. Remaining long-tail families: the
   `UpperRightTriangleIconicButton`/`EditableMarkMorph` mark lineage, Canvas/Pen, the layout `*Morph`s, the Fizzytiles app,
   `MenuMorph`/`PromptMorph` (high-recapture), …, `WorldMorph` last.
+
+**DONE (2026-06-16): BATCH 14 — the layout-helpers trio (`LayoutElementAdderOrDropletMorph`/`LayoutSpacerMorph`/`StackElementsSizeAdjustingMorph`
+→ `*Wdgt`).** Three independent layout-machinery widgets (each `extends Widget`; 0 subclasses, 0 orphans; a coherent "layout helpers"
+group): the spring (`LayoutSpacerWdgt`), the stack cell divider/reproportioner (`StackElementsSizeAdjustingWdgt`, the heaviest at ~27 refs,
+deep in stack-layout code), and the add-element/droplet affordance (`LayoutElementAdderOrDropletWdgt`). ~48 src refs, **0** string-literals,
+**0** `findTop…`; KEPT (`\b`-protected): `createNewStackElementsSizeAdjustingMorph` + `createNewLayoutElementAdderOrDropletMorph` (`WorldMorph`).
+**ZERO recapture** — these are dragged (spacer/divider) and laid out in 8 layout test files (several via `Widget.setupTestScreen1`), all
+pixel-neutral; 0 nav strings, no inspected-in-shot name. (By BATCH 14 the usage-breadth-≠-recapture rule is routine — construction/drag/
+render/layout surfaces never recapture; only a drawn/navigated/inspected NAME does. Five of the last six batches were zero-churn.)
+Result: **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots, ZERO recapture.** 3 renames + ~48 src refs; 8 test files
+(content-only) + 5 visualisations regenerated + 2 docs (`MACRO-PATTERNS.md`, `author-macro-test/SKILL.md`). Plan
+`~/.claude/plans/batch14-layout-helpers-rename.md`. Remaining long-tail families: the `UpperRightTriangleIconicButton`/`EditableMarkMorph`
+mark lineage, Canvas/Pen, the Fizzytiles app, `ErrorsLogViewerMorph`, `MenuMorph`/`PromptMorph`/`CodePromptMorph` (high-recapture), …,
+`WorldMorph` last.

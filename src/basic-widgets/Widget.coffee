@@ -2781,19 +2781,19 @@ class Widget extends TreeNode
       world.temporaryHandlesAndLayoutAdjusters.add new HandleWdgt(@, "moveHandle")
       world.temporaryHandlesAndLayoutAdjusters.add new HandleWdgt(@, "resizeBothDimensionsHandle")
     else
-      if (@lastSiblingBeforeMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingBeforeMeIsA(StackElementsSizeAdjustingMorph)
+      if (@lastSiblingBeforeMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingBeforeMeIsA(StackElementsSizeAdjustingWdgt)
         world.temporaryHandlesAndLayoutAdjusters.add \
           @addAsSiblingBeforeMe \
-            new StackElementsSizeAdjustingMorph,
+            new StackElementsSizeAdjustingWdgt,
             nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
       #console.log "@: " + @.toString() + " amITheLastSibling: " + @amITheLastSibling()
 
-      if (@firstSiblingAfterMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingAfterMeIsA(StackElementsSizeAdjustingMorph)
+      if (@firstSiblingAfterMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingAfterMeIsA(StackElementsSizeAdjustingWdgt)
         world.temporaryHandlesAndLayoutAdjusters.add \
           @addAsSiblingAfterMe \
-            new StackElementsSizeAdjustingMorph,
+            new StackElementsSizeAdjustingWdgt,
             nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
       if @parent?
@@ -4397,7 +4397,7 @@ class Widget extends TreeNode
     @_showsAdders = true
     if @children.length == 0
       @add \
-        new LayoutElementAdderOrDropletMorph,
+        new LayoutElementAdderOrDropletWdgt,
         nil,
         LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     @invalidateLayout()
@@ -4408,14 +4408,14 @@ class Widget extends TreeNode
       allAddersToBeDestroyed =
         @collectAllChildrenBottomToTopSuchThat (m) ->
           m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED and
-          m instanceof LayoutElementAdderOrDropletMorph
+          m instanceof LayoutElementAdderOrDropletWdgt
       for C in allAddersToBeDestroyed
         C.fullDestroy()
       return
 
     if @children.length == 0
       @add \
-        new LayoutElementAdderOrDropletMorph,
+        new LayoutElementAdderOrDropletWdgt,
         nil,
         LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
@@ -4423,7 +4423,7 @@ class Widget extends TreeNode
       leftToDo = @firstChildSuchThat (m) ->
           if m.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
             return false
-          if m instanceof LayoutElementAdderOrDropletMorph
+          if m instanceof LayoutElementAdderOrDropletWdgt
             return false
           kkk = m.lastSiblingBeforeMeSuchThat(
               (mm) ->
@@ -4431,13 +4431,13 @@ class Widget extends TreeNode
             )
           if !kkk?
             return true
-          if kkk instanceof LayoutElementAdderOrDropletMorph
+          if kkk instanceof LayoutElementAdderOrDropletWdgt
             return false
           return true
       if !leftToDo?
         break
       leftToDo.addAsSiblingBeforeMe \
-            new LayoutElementAdderOrDropletMorph,
+            new LayoutElementAdderOrDropletWdgt,
             nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
@@ -4448,7 +4448,7 @@ class Widget extends TreeNode
       leftToDo = @firstChildSuchThat (m) ->
           if m.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
             return false
-          if m instanceof LayoutElementAdderOrDropletMorph
+          if m instanceof LayoutElementAdderOrDropletWdgt
             return false
           kkk = m.firstSiblingAfterMeSuchThat(
               (mm) ->
@@ -4456,13 +4456,13 @@ class Widget extends TreeNode
             )
           if !kkk?
             return true
-          if kkk instanceof LayoutElementAdderOrDropletMorph
+          if kkk instanceof LayoutElementAdderOrDropletWdgt
             return false
           return true
       if !leftToDo?
         break
       leftToDo.addAsSiblingAfterMe \
-            new LayoutElementAdderOrDropletMorph,
+            new LayoutElementAdderOrDropletWdgt,
             nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
   # this part is excluded from the fizzygum homepage build <<«
@@ -4485,7 +4485,7 @@ class Widget extends TreeNode
 
     lmHolder = new RectangleWdgt
     lmContent1 = new RectangleWdgt
-    lmAdj = new StackElementsSizeAdjustingMorph
+    lmAdj = new StackElementsSizeAdjustingWdgt
     lmContent2 = new RectangleWdgt
 
     lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4507,7 +4507,7 @@ class Widget extends TreeNode
 
     lmHolder = new RectangleWdgt
     lmContent1 = new RectangleWdgt
-    lmAdj = new StackElementsSizeAdjustingMorph
+    lmAdj = new StackElementsSizeAdjustingWdgt
     lmContent2 = new RectangleWdgt
 
     lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4529,7 +4529,7 @@ class Widget extends TreeNode
 
     lmHolder = new RectangleWdgt
     lmContent1 = new RectangleWdgt
-    lmAdj = new StackElementsSizeAdjustingMorph
+    lmAdj = new StackElementsSizeAdjustingWdgt
     lmContent2 = new RectangleWdgt
     lmContent3 = new RectangleWdgt
 
@@ -4555,9 +4555,9 @@ class Widget extends TreeNode
 
     lmHolder = new RectangleWdgt
     lmContent1 = new RectangleWdgt
-    lmAdj = new StackElementsSizeAdjustingMorph
+    lmAdj = new StackElementsSizeAdjustingWdgt
     lmContent2 = new RectangleWdgt
-    lmAdj2 = new StackElementsSizeAdjustingMorph
+    lmAdj2 = new StackElementsSizeAdjustingWdgt
     lmContent3 = new RectangleWdgt
 
     lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4583,15 +4583,15 @@ class Widget extends TreeNode
 
     lmHolder = new RectangleWdgt
 
-    lmSpacer1 = new LayoutSpacerMorph
-    lmAdj = new StackElementsSizeAdjustingMorph
+    lmSpacer1 = new LayoutSpacerWdgt
+    lmAdj = new StackElementsSizeAdjustingWdgt
     lmContent1 = new RectangleWdgt
-    lmAdj2 = new StackElementsSizeAdjustingMorph
+    lmAdj2 = new StackElementsSizeAdjustingWdgt
     lmContent2 = new RectangleWdgt
-    lmAdj3 = new StackElementsSizeAdjustingMorph
+    lmAdj3 = new StackElementsSizeAdjustingWdgt
     lmContent3 = new RectangleWdgt
-    lmAdj4 = new StackElementsSizeAdjustingMorph
-    lmSpacer2 = new LayoutSpacerMorph
+    lmAdj4 = new StackElementsSizeAdjustingWdgt
+    lmSpacer2 = new LayoutSpacerWdgt
 
     lmHolder.add lmSpacer1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4620,15 +4620,15 @@ class Widget extends TreeNode
 
     lmHolder = new RectangleWdgt
 
-    lmSpacer1 = new LayoutSpacerMorph
-    lmAdj = new StackElementsSizeAdjustingMorph
+    lmSpacer1 = new LayoutSpacerWdgt
+    lmAdj = new StackElementsSizeAdjustingWdgt
     lmContent1 = new RectangleWdgt
-    lmAdj2 = new StackElementsSizeAdjustingMorph
+    lmAdj2 = new StackElementsSizeAdjustingWdgt
     lmContent2 = new RectangleWdgt
-    lmAdj3 = new StackElementsSizeAdjustingMorph
+    lmAdj3 = new StackElementsSizeAdjustingWdgt
     lmContent3 = new RectangleWdgt
-    lmAdj4 = new StackElementsSizeAdjustingMorph
-    lmSpacer2 = new LayoutSpacerMorph 2
+    lmAdj4 = new StackElementsSizeAdjustingWdgt
+    lmSpacer2 = new LayoutSpacerWdgt 2
 
     lmHolder.add lmSpacer1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4657,15 +4657,15 @@ class Widget extends TreeNode
 
     lmHolder = new RectangleWdgt
 
-    lmSpacer1 = new LayoutSpacerMorph
-    lmAdj = new StackElementsSizeAdjustingMorph
+    lmSpacer1 = new LayoutSpacerWdgt
+    lmAdj = new StackElementsSizeAdjustingWdgt
     lmContent1 = new RectangleWdgt
-    lmAdj2 = new StackElementsSizeAdjustingMorph
+    lmAdj2 = new StackElementsSizeAdjustingWdgt
     lmContent2 = new RectangleWdgt
-    lmAdj3 = new StackElementsSizeAdjustingMorph
+    lmAdj3 = new StackElementsSizeAdjustingWdgt
     lmContent3 = new RectangleWdgt
-    lmAdj4 = new StackElementsSizeAdjustingMorph
-    lmSpacer2 = new LayoutSpacerMorph 2
+    lmAdj4 = new StackElementsSizeAdjustingWdgt
+    lmSpacer2 = new LayoutSpacerWdgt 2
 
     lmHolder.add lmSpacer1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4694,15 +4694,15 @@ class Widget extends TreeNode
 
     lmHolder = new RectangleWdgt
 
-    lmSpacer1 = new LayoutSpacerMorph
-    lmAdj = new StackElementsSizeAdjustingMorph
+    lmSpacer1 = new LayoutSpacerWdgt
+    lmAdj = new StackElementsSizeAdjustingWdgt
     lmContent1 = new RectangleWdgt
-    lmAdj2 = new StackElementsSizeAdjustingMorph
+    lmAdj2 = new StackElementsSizeAdjustingWdgt
     lmContent2 = new RectangleWdgt
-    lmAdj3 = new StackElementsSizeAdjustingMorph
+    lmAdj3 = new StackElementsSizeAdjustingWdgt
     lmContent3 = new RectangleWdgt
-    lmAdj4 = new StackElementsSizeAdjustingMorph
-    lmSpacer2 = new LayoutSpacerMorph 2
+    lmAdj4 = new StackElementsSizeAdjustingWdgt
+    lmSpacer2 = new LayoutSpacerWdgt 2
 
     lmHolder.add lmSpacer1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED

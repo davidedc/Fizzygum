@@ -1,6 +1,6 @@
 # this file is excluded from the fizzygum homepage build
 
-class StackElementsSizeAdjustingMorph extends Widget
+class StackElementsSizeAdjustingWdgt extends Widget
 
 
   hand: nil
