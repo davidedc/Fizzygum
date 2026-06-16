@@ -466,5 +466,30 @@ UnderCarpet IconMorph`), and re-pointed **all 93** `extends IconMorph`→`extend
   ~78 `extends`/`new`-only) + 4 test dirs (content-only, test identifiers kept) + 4 visualisations regenerated + 3 docs
   (`MACRO-PATTERNS.md`, `author-macro-test/SKILL.md` class-noun refs). No test added/removed. The pre-recorded BATCH-7 Icon plan
   touch-list matched the live greps exactly — the only "surprise", the 93-vs-16 family size, was caught at planning by the `extends`
-  cross-check (the "size a base by `extends`" lesson above). Remaining long-tail families (BoxMorph, CircleBox/Slider, Color palette,
+  cross-check (the "size a base by `extends`" lesson above). Remaining long-tail families (CircleBox/Slider, Color palette,
   Switch/Toggle, HandleMorph, …, `WorldMorph` last) follow one coherent family at a time.
+
+**DONE (2026-06-16): BATCH 8 — the Box family (`BoxMorph`→`BoxWdgt` + `ClippingBoxMorph`/`MouseSensorMorph`/`PointerMorph` → `*Wdgt`;
+re-point 3 children).** The thematic successor to BATCH 6's `RectangleWdgt` — finishing the basic box/rect primitives. A small, clean
+inheritance family: renamed the base + its 3 `*Morph` children, re-pointed the 3 already-non-`*Morph` children (`GlassBoxBottomWdgt`,
+`BasementWdgt`, `MenuHeader`); 5 `new` sites; 0 `instanceof`/`findTop`/string-literals. Lessons (mostly reaffirming Icon/Rectangle):
+- **The `extends`-lens (Icon's lesson) paid off again:** `rg 'extends BoxMorph'` = 6 children (3 `*Morph` to rename + 3 non-`*Morph` to
+  re-point), not just the 3 `*Morph` names — sized correctly up front; the 3 leaves have no further subclasses.
+- **`\bBoxMorph\b` is safe vs the SEPARATE `CircleBoxMorph` family** (the slider base, `extends Widget`): `CircleBoxMorph` *contains* the
+  substring `BoxMorph` but the word boundary protects it — verified untouched in src + tests + docs after the sweep (it is a later batch).
+  (Likewise `\bBoxMorph\b` doesn't touch `ClippingBoxMorph`; its own `\bClippingBoxMorph\b` sub does.)
+- **The recapture oracle surfaced BOTH label regimes again — 2 reds, one UNPREDICTED:** `macroHierarchyMenuHoverHighlightsExactSubtree`
+  (predicted — the hierarchy MENU middle line `"a BoxMorph"`→`"a Box"`, strip regime, incl. its function-critical
+  `getTextMenuItemFromMenuByPrefix … "a Box"` nav) AND `macroDuplicateComplexWidgetRidesHand` (UNPREDICTED — it opens an Object Inspector
+  on a `BoxWdgt`, whose hierarchy DIAGRAM uses the REAL name → `BoxWdgt`, the third regime — exactly BATCH 6's
+  `macroDuplicatedInspectorDrivesCopiedTargetOnly` case). Both EYEBALLED benign (menu reads `a Rectangle / a Box / a Panel`; the inspector
+  diagram reads `TreeNode → Widget → BoxWdgt → this object` and the duplicate rode the hand fully-painted), recaptured dpr 1+2. Confirms
+  (4th time): don't pre-classify; the byte-exact suite RED set IS the recapture set; ALWAYS eyeball each red to tell a benign label shift
+  from a regression — here the unpredicted red was an inspector-on-the-renamed-class, the standard "any test that inspects the class
+  re-baselines its diagram" case.
+- KEPT (`\b`-protected): `createNewBoxMorph` / `createNewClippingBoxMorph` / `createPointerMorph` method names. LEFT: `buildSystem/OBSOLETE
+  generateOverviewDoc.py` provenance.
+- Result: **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots, 2 reference recaptures** (≈14 PNGs across both densities). 4
+  source renames + 6 `extends` re-points + 5 `new` sites + 26 test files (content-only, identifiers kept) + 16 visualisations regenerated +
+  2 docs (`MACRO-PATTERNS.md`, `author-macro-test/SKILL.md`). Plan `~/.claude/plans/batch8-box-family-rename.md`. Remaining long-tail
+  families: CircleBox/Slider, Color palette, Switch/Toggle, HandleMorph, …, `WorldMorph` last.

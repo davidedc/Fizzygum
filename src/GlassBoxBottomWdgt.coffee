@@ -6,7 +6,7 @@
 # visually contrasting background and it gives
 # a larger target to grab the widget.
 
-class GlassBoxBottomWdgt extends BoxMorph
+class GlassBoxBottomWdgt extends BoxWdgt
 
   constructor: ->
     super

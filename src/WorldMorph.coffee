@@ -1983,7 +1983,7 @@ class WorldMorph extends PanelWdgt
   createNewRectangleMorph: ->
     @create new RectangleWdgt
   createNewBoxMorph: ->
-    @create new BoxMorph
+    @create new BoxWdgt
   createNewCircleBoxMorph: ->
     @create new CircleBoxMorph
   createNewSliderMorph: ->
@@ -2053,7 +2053,7 @@ class WorldMorph extends PanelWdgt
   createNewColorPickerMorph: ->
     @create new ColorPickerMorph
   createNewSensorDemo: ->
-    newWdgt = new MouseSensorMorph
+    newWdgt = new MouseSensorWdgt
     newWdgt.setColor Color.create 230, 200, 100
     newWdgt.cornerRadius = 35
     newWdgt.alpha = 0.2

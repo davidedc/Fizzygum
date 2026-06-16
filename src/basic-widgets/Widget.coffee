@@ -1942,7 +1942,7 @@ class Widget extends TreeNode
   # »>> this part is excluded from the fizzygum homepage build
   createPointerMorph: ->
     myPosition = @positionAmongSiblings()
-    morphToAdd = new PointerMorph @
+    morphToAdd = new PointerWdgt @
     @parent.add morphToAdd, myPosition
     morphToAdd.fullMoveTo @position()
     morphToAdd.setExtent new Point 150, 20

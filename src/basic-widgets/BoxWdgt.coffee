@@ -1,6 +1,6 @@
 # I can have an optionally rounded border
 
-class BoxMorph extends Widget
+class BoxWdgt extends Widget
 
   cornerRadius: nil
 

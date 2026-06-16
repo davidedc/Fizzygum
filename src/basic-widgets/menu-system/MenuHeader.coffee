@@ -1,4 +1,4 @@
-class MenuHeader extends BoxMorph
+class MenuHeader extends BoxWdgt
 
   text: nil
 

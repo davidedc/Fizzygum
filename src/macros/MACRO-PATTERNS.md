@@ -881,7 +881,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `macroScrollBarsTrackContentChange` — a bar appears ONLY when content overflows, so moving content around inside a panel and
   RESIZING it while the content still FITS must spawn NONE. Same `adjustScrollBars` gate (`ScrollPanelWdgt.coffee:114`; hBar
   `:143-160` / vBar `:163-180`), re-evaluated on `rawSetExtent` (`:232-233`) AND on entering resize/move mode
-  (`showResizeAndMoveHandlesAndLayoutAdjusters` override, `:204-207`). Build `new ScrollPanelWdgt` + a default `new BoxMorph`
+  (`showResizeAndMoveHandlesAndLayoutAdjusters` override, `:204-207`). Build `new ScrollPanelWdgt` + a default `new BoxWdgt`
   (Widget defaults: 50×40, dark, fits with room to spare) added via `panel.add box` (routes into `@contents`); move the box around
   with `@dragWidgetTo_InputEvents box, pt` (re-drop re-parents into `@contents`, re-runs the gate — still fits, no bar); then
   `@openMenuOf_InputEvents panel` → `@moveToItemOfTopMenuAndClick_InputEvents "resize/move..."` → `@dragResizeMoveHandleTo_InputEvents
@@ -933,7 +933,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **`@dragWidgetTo_InputEvents` grabs the CENTRE — which may be a sub-widget.** For a SliderMorph (button at the centre at value 50)
   it grabs/moves the BUTTON, not the slider (the drop silently does nothing). Drop such a widget programmatically: `widget.pickUp()`
   + a no-button `@syntheticEventsMouseMove_InputEvents` + `@syntheticEventsMouseClick_InputEvents()`. A plain shape
-  (BoxMorph/CircleBoxMorph/RectangleWdgt) has no sub-widget, so `@dragWidgetTo_InputEvents` is fine.
+  (BoxWdgt/CircleBoxMorph/RectangleWdgt) has no sub-widget, so `@dragWidgetTo_InputEvents` is fine.
 - **Attach to a target** (`macroAttachResizingHandleToMorph`): drop the morph so it OVERLAPS the target (required —
   `Widget.attach` lists only morphs whose bounds INTERSECT it, `world.plausibleTargetAndDestinationMorphs`, excluding self +
   current parent), then `clickMenuItemOfWidget_InputEvents_Macro morph, "attach..."` → capture the "choose target:" menu →
@@ -1522,14 +1522,14 @@ assertion a recapture after a regression silently stores two different hashes an
   rest -> lifted -> rest three-shot follows `macroMenuShadowCorrectWhileAndAfterDrag`. Three distinct dataHashes (the shadow
   genuinely changes); no `@assertScreenshotsIdentical` (the states must DIFFER). No new verb.
 - **Shape hit-test / click-through** (`macroRoundedBoxCornerClickThrough`): the pointer resolves to a morph by SHAPE, not bounding
-  box — `ActivePointerWdgt.topWdgtUnderPointer` skips any morph that `isTransparentAt` the pointer (`:48`). A `BoxMorph` with a
+  box — `ActivePointerWdgt.topWdgtUnderPointer` skips any morph that `isTransparentAt` the pointer (`:48`). A `BoxWdgt` with a
   large `cornerRadius` is transparent at its corners (`BoxyAppearance.isTransparentAt` outside the rounded arc). Put a
-  RectangleWdgt backdrop behind a `new BoxMorph 55`, then `@moveToAndClickAtFractionOf_InputEvents box, [0.96,0.96]` (a corner —
+  RectangleWdgt backdrop behind a `new BoxWdgt 55`, then `@moveToAndClickAtFractionOf_InputEvents box, [0.96,0.96]` (a corner —
   click passes THROUGH, backdrop comes forward) vs `[0.1,0.4]` (the body — box comes forward). The z-order flip on left-click
   (`bringToForeground`) is the observable.
-- **Rectangular clipping** (`macroClippingBoxClipsChildAtBounds`): a `ClippingBoxMorph` is an ORDINARY BoxMorph that merely
+- **Rectangular clipping** (`macroClippingBoxClipsChildAtBounds`): a `ClippingBoxWdgt` is an ORDINARY BoxWdgt that merely
   `@augmentWith ClippingAtRectangularBoundsMixin` (the whole class body) — the mixin clips children to its bounds. `new
-  ClippingBoxMorph` (setColor/rawSetExtent/fullRawMoveTo/world.add), `clipBox.add child`, then move the child
+  ClippingBoxWdgt` (setColor/rawSetExtent/fullRawMoveTo/world.add), `clipBox.add child`, then move the child
   (`child.fullRawMoveTo …`) to STRADDLE each edge in turn — it's cut off at that edge, proving the clip is the box's fixed
   rectangle on every side.
 - **Hide / show + subtree** (`macroHideUnhideMorphChain`): `widget.hide()` / `widget.show()` flip `@isVisible`; the paint

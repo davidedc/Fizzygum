@@ -50,7 +50,7 @@ class MenusHelper
     world.create new SwitchButtonMorph [button1, button2]
 
   createNewClippingBoxMorph: ->
-    world.create new ClippingBoxMorph
+    world.create new ClippingBoxWdgt
 
   makeSlidersButtonsStatesBright: ->
     world.forAllChildrenBottomToTop (child) ->

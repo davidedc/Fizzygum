@@ -301,7 +301,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     if @internal
       @titlebarBackground = new RectangleWdgt
     else
-      @titlebarBackground = new BoxMorph
+      @titlebarBackground = new BoxWdgt
 
     @setAppearanceAndColorOfTitleBackground()
     @add @titlebarBackground, nil, nil, nil, true

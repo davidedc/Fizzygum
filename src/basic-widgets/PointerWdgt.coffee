@@ -1,9 +1,9 @@
 # this file is excluded from the fizzygum homepage build
 
-# Points to a Widget. There can be multiple PointerMorph(s) for any
+# Points to a Widget. There can be multiple PointerWdgt(s) for any
 # Widget.
 
-class PointerMorph extends BoxMorph
+class PointerWdgt extends BoxWdgt
 
   constructor: (@target) ->
     super()

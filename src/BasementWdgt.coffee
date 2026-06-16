@@ -1,4 +1,4 @@
-class BasementWdgt extends BoxMorph
+class BasementWdgt extends BoxWdgt
 
   # panes:
   scrollPanel: nil
