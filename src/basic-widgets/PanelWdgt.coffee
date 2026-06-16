@@ -72,7 +72,7 @@ class PanelWdgt extends Widget
     # a mouse event?
     if @parent? and @parent instanceof ScrollPanelWdgt
       childrenNotCarets = @children.filter (m) ->
-        !(m instanceof CaretMorph)
+        !(m instanceof CaretWdgt)
       if childrenNotCarets.length == 1
         item = @firstChildSuchThat (m) ->
           (m instanceof SimplePlainTextWdgt) and m.isEditable

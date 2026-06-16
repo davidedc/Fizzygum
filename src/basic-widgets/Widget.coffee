@@ -982,7 +982,7 @@ class Widget extends TreeNode
         # calculate their size when they are resized
         # (remember that the resizing handle of ScrollPanelWdgts
         # actually end up in the Panel inside them.)
-        if !(child instanceof HandleWdgt) and !(child instanceof CaretMorph)
+        if !(child instanceof HandleWdgt) and !(child instanceof CaretWdgt)
           # if a morph implements deferred layout, then
           # really we can't consider the sizes and positions
           # of its children, so stick to the parent bounds
@@ -2204,7 +2204,7 @@ class Widget extends TreeNode
   # For most morphs the two things coincide, and the
   # high-level just calls the low-level.
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
-    if (aWdgt not instanceof HighlighterWdgt) and (aWdgt not instanceof CaretMorph)
+    if (aWdgt not instanceof HighlighterWdgt) and (aWdgt not instanceof CaretWdgt)
       if @ == world
         aWdgt.addShadow()
         # when any morph is added to the world, all scheduled tooltips

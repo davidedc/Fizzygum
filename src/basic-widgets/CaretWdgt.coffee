@@ -1,6 +1,6 @@
 # I mark where the caret is in a String/Text while editing
 
-class CaretMorph extends BlinkerMorph
+class CaretWdgt extends BlinkerWdgt
 
   target: nil
   slot: nil
@@ -46,7 +46,7 @@ class CaretMorph extends BlinkerMorph
       @currentCaretFontSize = ls
       @rawSetExtent new Point Math.max(Math.floor(ls / 20), 1), ls
   
-  # CaretMorph event processing:
+  # CaretWdgt event processing:
 
   processKeyDown: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
     # @inspectKeyEvent event
@@ -232,7 +232,7 @@ class CaretMorph extends BlinkerMorph
     else
       @target.clearSelection()
   
-  # CaretMorph editing.
+  # CaretWdgt editing.
 
   # User presses enter on a stringMorph
   accept: ->
@@ -355,7 +355,7 @@ class CaretMorph extends BlinkerMorph
     @clearSelectionIfStartAndEndMeet false
   
   # »>> this part is excluded from the fizzygum homepage build
-  # CaretMorph utilities:
+  # CaretWdgt utilities:
   inspectKeyEvent: (event) ->
     # private
     @inform "Key pressed: " + event.key + "\n------------------------" + "\nkey: " + event.key + "\ncode: " + event.code + "\naltKey: " + event.altKey + "\nctrlKey: " + event.ctrlKey  + "\ncmdKey: " + event.metaKey

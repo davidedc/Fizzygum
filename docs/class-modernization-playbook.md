@@ -605,3 +605,22 @@ token (untouched).
   `author-macro-test/SKILL.md`). Plan `~/.claude/plans/batch12-handle-rename.md`. Remaining long-tail families: the
   `UpperRightTriangleIconicButton`/`EditableMarkMorph` mark lineage, Canvas/Pen, Caret/Blinker, the layout `*Morph`s, the Fizzytiles app,
   `MenuMorph`/`PromptMorph` (high-recapture), …, `WorldMorph` last.
+
+**DONE (2026-06-16): BATCH 13 — the Caret/Blinker family (`BlinkerMorph`/`CaretMorph` → `*Wdgt`).** The text-cursor lineage:
+`Widget → BlinkerWdgt → CaretWdgt` (`CaretMorph` is the only `BlinkerMorph` subclass; 0 orphans). `CaretMorph` = the text caret,
+constructed once (`WorldMorph:2184 @caret = new CaretMorph …`), reached via the `world.caret` PROPERTY (not the class token — untouched) +
+~7 `instanceof CaretMorph` layout/drag/hit-test exclusion checks. ~15 src refs, **0** string-literals, **0** `findTop…`, **0** `createNew*`.
+**ZERO recapture** — a 4th zero-churn rename in the last five batches (only Color moved pixels, indirectly).
+- **Reinforces the usage-breadth-≠-recapture lesson from the caret-RENDER angle.** The caret is DRAWN (the blinking cursor) and exercised in
+  24 text-editing test files — typing, selection, multi-click word/line select, scroll-into-view — every one photographing the text+caret
+  RENDER. Yet ZERO re-baselined: the rename is pixel-neutral and the class name `CaretMorph`/`BlinkerMorph` is never a drawn label, a nav
+  string, or an inspected-in-shot diagram. (Even a class that is literally on screen as a blinking glyph in dozens of shots recaptures
+  nothing, as long as its NAME isn't what's drawn.) 0 `"a Caret…"/"a Blinker…"` nav strings → no strips, no hang.
+- The caret is determinism-/timing-sensitive (blink + the multi-click event-time selection logic, see DETERMINISM.md) but the rename is a
+  pure identifier swap — no behaviour change; the suite stayed byte-exact at dpr 1 + 2 + WebKit. Test-NAME identifiers
+  (`macroDoubleAndTripleClickThroughCaretMorph`, `macroCaret*`) `\b`-protected (preceded by a word char) and KEPT.
+- Result: **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots, ZERO reference recapture.** 2 renames + ~15 src refs; 24 test
+  files swept (content-only, identifiers kept) + 16 visualisations regenerated + 2 docs (`MACRO-PATTERNS.md`, `author-macro-test/SKILL.md`).
+  Plan `~/.claude/plans/batch13-caret-blinker-rename.md`. Remaining long-tail families: the
+  `UpperRightTriangleIconicButton`/`EditableMarkMorph` mark lineage, Canvas/Pen, the layout `*Morph`s, the Fizzytiles app,
+  `MenuMorph`/`PromptMorph` (high-recapture), …, `WorldMorph` last.

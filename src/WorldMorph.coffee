@@ -2181,7 +2181,7 @@ class WorldMorph extends PanelWdgt
       @caret = @caret.fullDestroy()
 
     # create the new Caret
-    @caret = new CaretMorph aStringMorphOrTextMorph
+    @caret = new CaretWdgt aStringMorphOrTextMorph
     aStringMorphOrTextMorph.parent.add @caret
     # the only place where the caret is added to the keyboardEventsReceivers
     @keyboardEventsReceivers.add @caret

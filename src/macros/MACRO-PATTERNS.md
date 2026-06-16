@@ -71,7 +71,7 @@ assertion a recapture after a regression silently stores two different hashes an
   directly-built TextWdgt defaults to SCALEUP (`TextWdgt.coffee:52`), which would scale the text to fill the box
   and make the below-text strip an unpredictable font-search leftover; FLOAT keeps the natural font so the strip is a
   fixture constant. Author the row-targeting fracs from a first capture (rows ≈ extent/lineCount bands). No new verb.
-- **Caret arrow-key navigation** (`macroCaretArrowKeyNavigation`): once `world.caret` is editing, `CaretMorph.processKeyDown`
+- **Caret arrow-key navigation** (`macroCaretArrowKeyNavigation`): once `world.caret` is editing, `CaretWdgt.processKeyDown`
   (`:62-68`) maps Arrow* to `goLeft/goRight/goUp/goDown` (Left/Right step a slot, wrapping over the soft break;
   Up/Down keep the column, clamping at first/last line). Place the caret (same `isEditable=true` fixture), then
   `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "ArrowUp"` / `@repeatSpecialKey_InputEvents "ArrowDown", n`.
@@ -150,7 +150,7 @@ assertion a recapture after a regression silently stores two different hashes an
   fits at its set size, `fitToExtent` returns `searchLargestFittingFont` (`StringWdgt.coffee:286`, a deterministic
   binary search bounded at 200px and, under SWCanvas, at the largest shipped atlas size so the painted glyphs and the
   arithmetic `fontHeight` agree). DELETE a chunk and the font auto-GROWS to re-fill the box; the caret follows because
-  `CaretMorph.updateDimension` (`CaretMorph.coffee:38-42`) sizes it from `@target.actualFontSizeUsedInRendering()` on
+  `CaretWdgt.updateDimension` (`CaretWdgt.coffee:38-42`) sizes it from `@target.actualFontSizeUsedInRendering()` on
   every slot move/edit. Three Shift+Arrow-select + Backspace rounds make the growth monotone (~20→30→60→90px) with the
   caret glued to its slot throughout. Geometry-faithful fixture (the handle-fraction trick of the caret-glued entry):
   the wrap layout decides where the count-based selections end. A directly-built TextWdgt also defaults to SCALEUP —
@@ -220,7 +220,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `world.stopEditing()` — the caret is gone after them, which is exactly what makes the next law shootable: (2)
   `txt.toggleWeight()` twice (bold → normal weight, `:1034-1036`) is a perfect round-trip — the pre-bold and post-normal
   shots share ONE reference dataHash (the no-op pixel-identical idiom; also the suite's only asserted BOLD pixels —
-  italic is the caret-glued entry's). (3) a paste with a LIVE selection REPLACES it (`CaretMorph.processPaste` →
+  italic is the caret-glued entry's). (3) a paste with a LIVE selection REPLACES it (`CaretWdgt.processPaste` →
   `insert` → `@target.deleteSelection()` first): dblClick a word, `clip = @copySelection_InputEvents()`,
   `@pasteText_InputEvents clip` → text UNCHANGED, caret after the word; paste again → duplicates (the clipboard entry
   above pastes only at a bare caret). (4) `txt.alignBottom()` asserts the TextWdgt BLOCK vertical-alignment axis
@@ -247,7 +247,7 @@ assertion a recapture after a regression silently stores two different hashes an
   wider than the box just CLIP at its right edge (`breakTextIntoLines` uses an unbounded measure when `softWrap` is off,
   `TextWdgt.coffee:314-317`; nothing resizes the box), with SCALEDOWN re-fitting the FONT on every text change. (2)
   Backspace/Enter genuinely JOIN/SPLIT logical lines — no-wrap rows are real fragments. (3) There is no panel to scroll,
-  so `CaretMorph.gotoSlot` (`CaretMorph.coffee:128-142`, gated on `@target.isScrollable` — StringWdgt default true)
+  so `CaretWdgt.gotoSlot` (`CaretWdgt.coffee:128-142`, gated on `@target.isScrollable` — StringWdgt default true)
   SLIDES THE TARGET MORPH (`fullRawMoveLeftSideTo`) whenever the caret's new x falls outside the world's padded view:
   send the caret to the END of a wider-than-the-canvas line and the box's left edge drags OFF-canvas while the caret
   parks at the world's RIGHT edge — floating over the desktop BEYOND the box's painted width; land it near a line START
@@ -310,14 +310,14 @@ assertion a recapture after a regression silently stores two different hashes an
   editable label; the deprecated `TriggerMorph` it once extended was deleted and folded into `ButtonWdgt`.)
 - **Caret brought into view only when MOVED** (`macroDocumentCaretBroughtIntoViewWhenMoved`): in a scrollable document the panel
   scrolls to keep the caret visible — but ONLY on a caret MOVE, not on a wheel scroll. `ScrollPanelWdgt.scrollCaretIntoView` (`:504`)
-  repositions the contents so `world.caret` sits in the viewport; it is called from `CaretMorph.gotoSlot` (`:147`, gated on the caret
+  repositions the contents so `world.caret` sits in the viewport; it is called from `CaretWdgt.gotoSlot` (`:147`, gated on the caret
   being directly inside a scrollable panel), which fires on a click-placement or an arrow key — not on a wheel. Fixture: a small `new
   SimpleDocumentScrollPanelWdgt` + `doc.addNormalParagraph lorem` ×N so it OVERFLOWS; place the caret in the default (editable) paragraph
   (`@moveToAndClickAtFractionOf_InputEvents (doc.contents.childrenNotHandlesNorCarets())[0], [fx,fy]`), then `@wheelOn_InputEvents doc,
   bigDelta` scrolls the caret OUT of view (it STAYS out — the scroll did not recall it), and `@syntheticEventsShortcutsAndSpecialKeys_InputEvents
   "ArrowRight"` MOVES it → the document scrolls back to reveal it. First caret-auto-scroll test.
 - **Caret stays visible while EDITING in a scroll panel** (`macroEditingStringInScrollablePanelCaretAlwaysVisible`): the bare-`ScrollPanelWdgt`
-  sibling of the document caret-into-view above — the SAME `ScrollPanelWdgt.scrollCaretIntoView` (`:504`) / `CaretMorph.gotoSlot` (`:147`) path,
+  sibling of the document caret-into-view above — the SAME `ScrollPanelWdgt.scrollCaretIntoView` (`:504`) / `CaretWdgt.gotoSlot` (`:147`) path,
   but a large-font string overflows a small panel and the caret is WALKED with ArrowRight so the panel auto-scrolls HORIZONTALLY to keep it in
   view. Fixture: `panel = new ScrollPanelWdgt; panel.rawSetExtent (new Point 300,140); panel.add str` where `str = new StringMorph "Hello,
   World!", 60` (the 2nd ctor arg is fontSize, ~5× the default → overflows the viewport) with `str.isEditable = true` (the OLD single-line
@@ -326,7 +326,7 @@ assertion a recapture after a regression silently stores two different hashes an
   edge → the content scrolls left and the hBar shifts. GOTCHA: use the OLD `StringMorph` (not StringWdgt) — it is `isScrollable` (`:26`) and
   has NO "edit:" prompt-on-crop and NO `slotAt` overshoot throw (those are TextWdgt/multi-line traits, `TextMorph.coffee:283`), so a click
   always places an inline caret; drive the moves via the input-event verbs (never poke `world.caret`) so `scrollCaretIntoView` genuinely fires;
-  the caret is non-blinking only under the `TurnOnAnimationsPacingControl` preamble (`BlinkerMorph.coffee:21-24`). The VERTICAL sibling
+  the caret is non-blinking only under the `TurnOnAnimationsPacingControl` preamble (`BlinkerWdgt.coffee:21-24`). The VERTICAL sibling
   (`macroScrollPanelCaretBroughtIntoViewWhenMoved`) exercises the SAME path via the V-branch (`:514-521`) and is the bare-`ScrollPanelWdgt`
   counterpart of `macroDocumentCaretBroughtIntoViewWhenMoved`: an editable string at the TOP + a tall `RectangleWdgt` below it overflow
   VERTICALLY (a V-scrollbar); `@wheelOn_InputEvents panel, +Δ` scrolls the string+caret OUT of view above the viewport (the wheel alone does NOT
@@ -337,8 +337,8 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Typing multiline text AUTO-SCROLLS its input area** (`macroMultilineTextInputScrollsWell`): the growth variant of the
   caret-into-view family above — those MOVE the caret through non-growing content; here the CONTENT GROWS under the caret.
   Typing line after line (`@syntheticEventsStringKeys_InputEvents` + `"Enter"`) into an editable old `TextMorph` inside a
-  `ScrollPanelWdgt` makes every keystroke run `CaretMorph.gotoSlot`'s scroll-panel branch (`amIDirectlyInsideScrollPanelWdgt
-  → @parent.parent.scrollCaretIntoView`, `CaretMorph.coffee:147-148`), so once the text outgrows the pane the view tracks the
+  `ScrollPanelWdgt` makes every keystroke run `CaretWdgt.gotoSlot`'s scroll-panel branch (`amIDirectlyInsideScrollPanelWdgt
+  → @parent.parent.scrollCaretIntoView`, `CaretWdgt.coffee:147-148`), so once the text outgrows the pane the view tracks the
   typed TAIL line by line while `adjustScrollBars` materialises the V-bar (button at the BOTTOM). The counter-beat:
   `@dragSliderButtonToFraction_InputEvents pane.vBar, [0.5, 0.05]` drags the scrollbar button back to the top — the first
   lines return WITHOUT recalling the caret (scrolling alone never does). Fixture: the `InspectorWdgt`'s editable `@detail` pane
@@ -383,7 +383,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `"a SimplePlainText ➜"` → `"layout in stack ➜"` submenu (`VerticalStackLayoutSpec.coffee:42-53`): `"base width..."` opens a PromptMorph
   (narrows the box), `"align right"` (setAlignmentToRight) moves the box to the document's right edge; then click in, `Meta+a`, and type
   the indented body PER LINE with an `"Enter"` between (`@syntheticEventsStringKeys_InputEvents` has NO newline handling), the two leading
-  spaces of `"  some code"` typed as literal space keys so the indent round-trips (Enter → `CaretMorph` inserts `"\n"`). TWO gotchas make
+  spaces of `"  some code"` typed as literal space keys so the indent round-trips (Enter → `CaretWdgt` inserts `"\n"`). TWO gotchas make
   base-width actually bite — both were initially mistaken for "the layout menu doesn't work under synthetic input"; it DOES: (1) the
   prompt's value lives in a `StringFieldWdgt` (the single prompt entry field — was `StringFieldMorph`, now `StringWdgt`-backed)
   that DEFAULTS to the current width, so CLICK the field to focus it
@@ -800,7 +800,7 @@ assertion a recapture after a regression silently stores two different hashes an
   unbounded logical rows (width = LONGEST line, `reLayout :191-196`) → it fits vertically → the view re-anchors at the
   TOP with the V-bar swapped for an H-bar (thumb at the LEFT: the x offset was never touched); toggling ON re-wraps tall
   with the view at the top. Produce "at the bottom" via the CLIPBOARD: Meta+a + `copySelection_InputEvents` + ArrowRight
-  + 3× `pasteText_InputEvents` quadruples the text and each paste's caret-follow (`CaretMorph.gotoSlot`'s scroll-panel
+  + 3× `pasteText_InputEvents` quadruples the text and each paste's caret-follow (`CaretWdgt.gotoSlot`'s scroll-panel
   branch) drags the view to the end — then drop the caret with a desktop click before the screenshot. Everything is
   exactly reversible: the wheel-to-end after the toggle round trip is byte-identical to the pre-toggle end view (this
   macro reproduced its recording's reference pixels hash-for-hash at both densities). No new verb.

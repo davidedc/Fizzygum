@@ -101,7 +101,7 @@ class SimplePlainTextWdgt extends TextWdgt
 
     if @amIDirectlyInsideScrollPanelWdgt()
       childrenNotCarets = @parent.children.filter (m) ->
-        !(m instanceof CaretMorph)
+        !(m instanceof CaretWdgt)
       if childrenNotCarets.length == 1
         menu.addLine()
         if @parent.parent.isTextLineWrapping

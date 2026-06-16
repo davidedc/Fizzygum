@@ -1,6 +1,6 @@
 # can be used for text caret
 
-class BlinkerMorph extends Widget
+class BlinkerWdgt extends Widget
 
   constructor: (@fps = 2) ->
     world.steppingWdgts.add @
@@ -8,7 +8,7 @@ class BlinkerMorph extends Widget
     @appearance = new RectangularAppearance @
     @color = Color.BLACK
   
-  # BlinkerMorph stepping:
+  # BlinkerWdgt stepping:
   step: ->
     # if we are recording or playing a test
     # then there is a flag we need to check that allows

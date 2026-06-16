@@ -184,7 +184,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       return "window"
 
   add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
-    unless notContent or (aWdgt instanceof CaretMorph) or (aWdgt instanceof HandleWdgt)
+    unless notContent or (aWdgt instanceof CaretWdgt) or (aWdgt instanceof HandleWdgt)
       @contentNeverSetInPlaceYet = true
       titleToBeSet = aWdgt.colloquialName()
       if titleToBeSet == "window"

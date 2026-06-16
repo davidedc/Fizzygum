@@ -63,7 +63,7 @@ class ActivePointerWdgt extends Widget
         # I drafted an alternative implementation where we manage
         # those situations without being radical in this filtering-out
         # but it was quite a bit more complicated.
-        (m not instanceof CaretMorph) and
+        (m not instanceof CaretWdgt) and
         # exclude widgets we use for highlighting
         # other widgets
         !m.wdgtThisWdgtIsHighlighting? and
