@@ -1602,12 +1602,12 @@ class Widget extends TreeNode
 
   # There are three fundamental methods for rendering and displaying anything.
   # * updateBackBuffer: this one creates/updates the local canvas of this morph only
-  #   i.e. not the children. For example: a ColorPickerMorph is a Widget which
+  #   i.e. not the children. For example: a ColorPickerWdgt is a Widget which
   #   contains three children Widgets (a color palette, a greyscale palette and
-  #   a feedback). The updateBackBuffer method of ColorPickerMorph only creates
+  #   a feedback). The updateBackBuffer method of ColorPickerWdgt only creates
   #   a canvas for the container Widget. So that's just a canvas with a
   #   solid color. As the
-  #   ColorPickerMorph constructor runs, the three childredn Widgets will
+  #   ColorPickerWdgt constructor runs, the three childredn Widgets will
   #   run their own updateBackBuffer method, so each child will have its own
   #   canvas with their own contents.
   #   Note that updateBackBuffer should be called sparingly. A morph should repaint
@@ -2510,8 +2510,8 @@ class Widget extends TreeNode
   # If going up the chain of "grabbing" Widgets a Widget rejects being
   # dragged then the drag will be prevented. This rejection happens
   # via the "rejectDrags" method. In that way, for example
-  # for the ColorPaletteMorph, you can avoid grabs (because drags on
-  # a ColorPaletteMorph are expected to pick colors).
+  # for the ColorPaletteWdgt, you can avoid grabs (because drags on
+  # a ColorPaletteWdgt are expected to pick colors).
   #
   # So in the case above if B returns true in rejectDrags, then B
   # can be dragged and none of the children of B can be dragged either
@@ -2838,7 +2838,7 @@ class Widget extends TreeNode
 
   
   pickColor: (msg, callback, defaultContents) ->
-    colorPicker = new ColorPickerMorph defaultContents
+    colorPicker = new ColorPickerWdgt defaultContents
     menu = new MenuMorph @, false, @, true, true, msg or "", colorPicker
     menu.silentAdd colorPicker
     menu.addLine 2

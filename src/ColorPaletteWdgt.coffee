@@ -1,4 +1,4 @@
-class ColorPaletteMorph extends Widget
+class ColorPaletteWdgt extends Widget
 
   @augmentWith ControllerMixin
   @augmentWith BackBufferMixin
@@ -98,7 +98,7 @@ class ColorPaletteMorph extends Widget
 
   reactToTargetConnection: ->
 
-  # ColorPaletteMorph menu:
+  # ColorPaletteWdgt menu:
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
     menu.addLine()

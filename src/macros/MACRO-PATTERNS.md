@@ -523,11 +523,11 @@ assertion a recapture after a regression silently stores two different hashes an
   drove the raise via a console eval of "@bringToForeground()" — the header click invokes the same method, minus the console
   fixture noise. No new verb.
 - **Pick a colour / set transparency via a popup**: colour: `"color..."` opens a colour-picker menu — capture
-  `picker = @getMostRecentlyOpenedMenu()`, click `picker.topWdgtSuchThat((m)-> m instanceof ColorPickerMorph).colorPalette`
+  `picker = @getMostRecentlyOpenedMenu()`, click `picker.topWdgtSuchThat((m)-> m instanceof ColorPickerWdgt).colorPalette`
   at `[fx,0.5]` (saturated; the palette is `hsl(360·fx,100%,50%)`), then `@moveToItemOfMenuAndClick_InputEvents picker, "Ok"`.
-  COLOUR-PICKER TRAP: a `ColorPickerMorph` holds both a hue×lightness `.colorPalette` and a thin `.grayPalette` (a
-  GrayPaletteMorph, which SUBCLASSES ColorPaletteMorph) — reach the colour one via the `.colorPalette` accessor, NOT an
-  `instanceof ColorPaletteMorph` search. transparency: `"transparency..."` opens a `PromptMorph` —
+  COLOUR-PICKER TRAP: a `ColorPickerWdgt` holds both a hue×lightness `.colorPalette` and a thin `.grayPalette` (a
+  GrayPaletteWdgt, which SUBCLASSES ColorPaletteWdgt) — reach the colour one via the `.colorPalette` accessor, NOT an
+  `instanceof ColorPaletteWdgt` search. transparency: `"transparency..."` opens a `PromptMorph` —
   `@clickOnSliderTrackAtFraction_InputEvents prompt.topWdgtSuchThat((m)-> m instanceof SliderWdgt), [fx,0.5]` then "Ok".
 
 - **Popup repositioned to stay on-screen** (`macroMenuRepositionsToStayOnScreen`): a popup is never clipped by the
@@ -1102,7 +1102,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `new ScrollPanelWdgt` ships `canScrollByDraggingBackground=false` — never set true): the climb reaches the ScrollPanelWdgt, which
   `detachesWhenDragged` → the whole panel **float-drags / MOVES** (it does NOT scroll — `ScrollPanelWdgt.mouseDownLeft`'s drag-scroll step is
   gated on `!wdgtToGrab.detachesWhenDragged()`, false here). Dragging a plain child (a `TextMorph`) **DETACHES** it; dragging a
-  `nonFloatDragging` child (a `ColorPaletteMorph`) does NEITHER — it colour-picks (the `Widget.coffee:2549` short-circuit) — so the panel
+  `nonFloatDragging` child (a `ColorPaletteWdgt`) does NEITHER — it colour-picks (the `Widget.coffee:2549` short-circuit) — so the panel
   can't be dragged via the palette (image_1==image_2) while a background drag moves it (contrast). **LOCKED** (`panel.lockToPanels()` →
   `@isLockingToPanels=true`, `Widget.coffee:3714`): `grabsToParentWhenDragged` now returns true, the climb hits the unpickable world →
   `findFirstLooseMorph`=nil → no float-drag → the scroll-step runs → a background drag **SCROLLS** the contents (frame fixed, thumb moves).
@@ -1224,7 +1224,7 @@ assertion a recapture after a regression silently stores two different hashes an
 ## Controllers (patch-programming)
 
 - **Set target** (`macroPaletteSetTargetRecolorsPanel`): `setControllerTargetToWidgetProperty_InputEvents_Macro controller,
-  "a Panel", "color"` — right-click the controller (a ColorPaletteMorph / GrayPaletteMorph / SliderWdgt / … with
+  "a Panel", "color"` — right-click the controller (a ColorPaletteWdgt / GrayPaletteWdgt / SliderWdgt / … with
   `ControllerMixin`) → "set target" (`openTargetSelector` lists only bounds-INTERSECTING widgets, so it MUST OVERLAP the target)
   → pick the target by class-name PREFIX → pick the property; thereafter acting on the controller calls `target[setter](value)`.
   4th arg `controllerMenuFraction` (default `[0.5,0.5]`): pass `[0.5,0.85]` for a SLIDER (its button covers the centre at value
@@ -1233,7 +1233,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Re-target** (`macroPaletteRetargetsToNewWidget`): run set-target AGAIN — `setTargetAndActionWithOnesPickedFromMenu` OVERWRITES
   `@target`/`@action`; the old target keeps its value but stops following. Put ONE palette over TWO targets of DIFFERENT classes
   (PanelWdgt + RectangleWdgt) so each is picked unambiguously by class-name PREFIX; re-target back and forth.
-- **Two controllers share one target** (`macroTwoPalettesShareOneTarget`): two ColorPaletteMorphs both set-target'd to the SAME
+- **Two controllers share one target** (`macroTwoPalettesShareOneTarget`): two ColorPaletteWdgts both set-target'd to the SAME
   panel's "color" (each overlapping the panel but NOT each other); clicking EITHER repaints, both bindings persist (most-recent
   click wins). One palette/many targets ⇒ re-targeting; many palettes/one target ⇒ shared control.
 - **Slider drives a target live** (`macroSlidersControlTextMorph`): wire with the 4th/5th args above, then
@@ -1244,7 +1244,7 @@ assertion a recapture after a regression silently stores two different hashes an
   controller+target composite (a panel holding a text + its sliders) deep-copies the bindings remapped to the COPY's target.
 - **Hover-to-highlight a candidate** (`macroTargetingHighlightsCandidateMorph`): hovering a "choose target:"/"choose new parent:"
   item highlights the morph it represents (`MenuItemWdgt.mouseEnter → morphToBeHighlighted.turnOnHighlight()`,
-  `MenuItemWdgt.coffee:78` → `world.morphsToBeHighlighted` → a `HighlighterWdgt` each cycle). Overlap a ColorPaletteMorph with a
+  `MenuItemWdgt.coffee:78` → `world.morphsToBeHighlighted` → a `HighlighterWdgt` each cycle). Overlap a ColorPaletteWdgt with a
   rect, `clickMenuItemOfWidget… "set target"`, grab the menu, find the candidate by prefix, then
   `@syntheticEventsMouseMove_InputEvents item.center(), "no button", …` to HOVER (no click) and screenshot the highlight tint.
 - **The highlight covers the EXACT SUBTREE, tracks the hover, clears on leave** (`macroHierarchyMenuHoverHighlightsExactSubtree`):
@@ -1255,9 +1255,9 @@ assertion a recapture after a regression silently stores two different hashes an
   mouse-DOWN outside, not hover-out). Give the deepest fixture morph its own color (`new RectangleWdgt extent, color`) or it
   hides dark-on-dark in the un-highlighted shots.
 - **A FORCED set-target choice is still PRESENTED — hand-rolled chain with screenshots between menus**
-  (`macroUniqueTargetAndPropertyAreStillPresented`): a lonely ColorPaletteMorph has exactly ONE plausible target (the world),
+  (`macroUniqueTargetAndPropertyAreStillPresented`): a lonely ColorPaletteWdgt has exactly ONE plausible target (the world),
   yet `openTargetSelector` still opens the one-item "choose target:" menu (no silent auto-pick); clicking it opens the
-  "choose target property:" menu (`ColorPaletteMorph.openTargetPropertySelector`, `ColorPaletteMorph.coffee:111`, from
+  "choose target property:" menu (`ColorPaletteWdgt.openTargetPropertySelector`, `ColorPaletteWdgt.coffee:111`, from
   `target.colorSetters()` — the world offers "background color" + "color"), and picking "color" yields a binding a palette
   click then proves (the whole desktop recolours). To screenshot BETWEEN the menus, hand-roll the
   `setControllerTargetToWidgetProperty…` chain and capture each popup fresh (`targetMenu = @getMostRecentlyOpenedMenu()` right
@@ -1426,7 +1426,7 @@ assertion a recapture after a regression silently stores two different hashes an
   two layers (`RectangularAppearance.coffee:71-88`) — `backgroundColor` over the FULL bounds, `color` over the padding-inset tight region
   `boundingBoxTight()` (`Widget.coffee:679-680`, edges inset by paddingTop/Bottom/Left/Right `:658-668`). The padding band between them is part
   of the morph, but while UNPAINTED it is click-through. Reproduce basicMorphPadding via PATCH-PROGRAMMING: build the rect + FIVE SliderWdgts
-  + a ColorPaletteMorph all OVERLAPPING it (REQUIRED — "set target" lists only widgets whose bounds intersect the controller), then
+  + a ColorPaletteWdgt all OVERLAPPING it (REQUIRED — "set target" lists only widgets whose bounds intersect the controller), then
   `setControllerTargetToWidgetProperty_InputEvents_Macro slider, "a Rectangle", "padding"|"padding top"|"…bottom"|"…left"|"…right", [0.5,0.85]`
   (the centred slider button covers a centre right-click → right-click the LOWER TRACK; a world-child controller needs no hierarchy prefix) and
   the palette → `"background color"`. `@dragSliderButtonToFraction_InputEvents slider,[0.5,frac]` insets the dark interior; a palette click

@@ -1,7 +1,7 @@
 # Note that the ColorPicker has no "set target..." from
 # the menu.
 
-class ColorPickerMorph extends Widget
+class ColorPickerWdgt extends Widget
 
   # pattern: all the children should be declared here
   # the reason is that when you duplicate a morph
@@ -29,8 +29,8 @@ class ColorPickerMorph extends Widget
 
   buildSubmorphs: ->
     @feedback = new RectangleWdgt new Point(20, 20), @choice
-    @colorPalette = new ColorPaletteMorph @feedback, new Point @width(), 50
-    @grayPalette = new GrayPaletteMorph @feedback, new Point @width(), 5
+    @colorPalette = new ColorPaletteWdgt @feedback, new Point @width(), 50
+    @grayPalette = new GrayPaletteWdgt @feedback, new Point @width(), 5
     @add @colorPalette
     @add @grayPalette
     @add @feedback

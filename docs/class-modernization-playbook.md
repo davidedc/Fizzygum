@@ -528,3 +528,36 @@ heavily constructed but the rename is pixel-neutral. **THE headline lesson — a
   ~36 src refs; ~36 test files (content-only, identifiers kept) incl. 3 nav-ambiguity fixes + 19 visualisations regenerated + 3 docs. Plan
   `~/.claude/plans/batch9-circlebox-slider-rename.md`. Remaining long-tail families: Color palette, Switch/Toggle, HandleMorph, …,
   `WorldMorph` last.
+
+**DONE (2026-06-16): BATCH 10 — the Color family (`ColorPaletteMorph`/`GrayPaletteMorph`/`ColorPickerMorph` → `*Wdgt`).**
+The cohesive, self-contained colour-picking UI: `Widget → ColorPaletteWdgt → GrayPaletteWdgt` + sibling `ColorPickerWdgt` (which
+COMPOSES a `ColorPalette` + a `GrayPalette` + a feedback widget). The cleanest batch since BATCH 5 — a pixel-neutral identifier
+swap with **0** nav-string edits and **0** hang risk. extends-lens: the ONLY subclass edge is `GrayPaletteMorph extends
+ColorPaletteMorph` (both in-scope); nothing already-`*Wdgt` extends any of the three → **0 re-point children, 0 orphans** (contrast
+Icon's 77). Src: ~17 refs, **0** string-literals, **0** `findTop…`, **1** `instanceof` (`ColorPickerMorph` at `MenuMorph:210`); the
+5 `createNew*Morph` factory methods (`WorldMorph`) KEPT (`\b`-protected).
+- **THE headline lesson — a rename can move pixels with NO label visibly changed, via a DEPENDENT menu's POSITION.** Two
+  set-target tests (`macroTargetingHighlightsCandidateMorph`, `macroUniqueTargetAndPropertyAreStillPresented`) re-baselined even
+  though the menus they photograph show only the CANDIDATES (`"a WorldMorph"`, `"a Rectangle"`) — never the palette's own name.
+  Cause: the palette's CONTEXT menu (the parent), whose width derives from its now-shorter colloquial `"a ColorPalette"` (was
+  `"a ColorPaletteMorph"` — menus strip `Wdgt`, not `Morph`), is narrower, so the selector menu that pops FROM it shifts ~11px. The
+  menu CONTENT is identical (every `@assertTopMenuItemStrings`/`Count` passed); only its position moved. **So a "menu-strip
+  recapture" can be INDIRECT — a layout knock-on of the shorter modern name, invisible at the label itself.**
+- **Diagnosis when the RED shot shows no changed label: don't bless blind.** `run-macro-test-headless --dump-failures` + a PIL
+  diff (committed-ref vs live-dump) localized every changed pixel to the menu bbox (e.g. `image_1 x[239..350] y[331..372]`; the
+  highlighted rectangle + desktop byte-identical), proving a benign position shift, not a regression — THEN captured.
+- **The theoretical prefix-collision was NEVER exercised (so no BATCH-9 hang).** After stripping, `"a ColorPalette"` IS a prefix
+  of `"a ColorPaletteNodeCreatorButton"` (the patch-programming button) — but NO test navigates by the palette label (set-target
+  tests navigate to the TARGET, e.g. `"a Rectangle"`/`"a WorldMorph"`; the picker is found BY MEANING via `instanceof
+  ColorPickerWdgt`). Confirms the converse of the BATCH-9 rule: a prefix collision only bites if a test actually navigates by the
+  shorter prefix — audit, but don't pre-emptively rewrite navs that don't use it.
+- **A string-literal class lookup lived in a TEST, not src.** `macroCanMoveAndResizeColorPaletteMorph` does
+  `@findTopWidgetByClassNameOrClass "ColorPaletteMorph"` — the `\b`-sweep correctly rewrote the quoted string to
+  `"ColorPaletteWdgt"` (resolves to the renamed global). Its test-NAME identifier `macroCanMoveAndResizeColorPaletteMorph` is
+  `\b`-protected (preceded by `Resize`) and KEPT, per convention.
+- KEPT (`\b`-distinct, untouched): the lookalikes `ColorPaletteNodeCreatorButtonWdgt` / `GrayscalePaletteNodeCreatorButtonWdgt` /
+  `ColorPalettePatchProgrammingIcon*` — the sweep updated only their `new ColorPaletteWdgt` refs, never their names.
+- Result: **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots; exactly 2 tests recaptured (their menu-bearing
+  shots, both densities).** 3 renames + ~17 src refs; 9 test files (content-only, identifiers kept) + 9 visualisations regenerated
+  + 2 docs (`MACRO-PATTERNS.md`, `author-macro-test/SKILL.md`). Plan `~/.claude/plans/batch10-color-family-rename.md`. Remaining
+  long-tail families: Switch/Toggle, HandleMorph, …, `WorldMorph` last.

@@ -1,4 +1,4 @@
-class GrayPaletteMorph extends ColorPaletteMorph
+class GrayPaletteWdgt extends ColorPaletteWdgt
 
   constructor: (@target = nil, sizePoint) ->
     super @target, sizePoint or new Point 80, 10

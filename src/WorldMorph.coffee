@@ -2035,23 +2035,23 @@ class WorldMorph extends PanelWdgt
     newWdgt = new ToolTipWdgt
     @create newWdgt
   createNewGrayPaletteMorph: ->
-    @create new GrayPaletteMorph
+    @create new GrayPaletteWdgt
   createNewColorPaletteMorph: ->
-    @create new ColorPaletteMorph
+    @create new ColorPaletteWdgt
   createNewGrayPaletteMorphInWindow: ->
-    gP = new GrayPaletteMorph
+    gP = new GrayPaletteWdgt
     wm = new WindowWdgt nil, nil, gP
     @add wm
     wm.rawSetExtent new Point 130, 70
     wm.fullRawMoveTo @hand.position().subtract new Point 50, 100
   createNewColorPaletteMorphInWindow: ->
-    cP = new ColorPaletteMorph
+    cP = new ColorPaletteWdgt
     wm = new WindowWdgt nil, nil, cP
     @add wm
     wm.rawSetExtent new Point 130, 100
     wm.fullRawMoveTo @hand.position().subtract new Point 50, 100
   createNewColorPickerMorph: ->
-    @create new ColorPickerMorph
+    @create new ColorPickerWdgt
   createNewSensorDemo: ->
     newWdgt = new MouseSensorWdgt
     newWdgt.setColor Color.create 230, 200, 100

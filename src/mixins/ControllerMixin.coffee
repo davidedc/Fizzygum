@@ -1,6 +1,6 @@
 # //////////////////////////////////////////////////////////
 
-# some morphs (for example ColorPaletteMorph
+# some morphs (for example ColorPaletteWdgt
 # or SliderWdgt) can control a target
 # and they have the same function to attach
 # targets. Not worth having this in the

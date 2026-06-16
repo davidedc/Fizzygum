@@ -923,7 +923,7 @@ class MacroToolkit
         yield "waitNoInputsOngoing"
     """
 
-    # Patch-programming "set target": wire a CONTROLLER widget (a ColorPaletteMorph, GrayPaletteMorph,
+    # Patch-programming "set target": wire a CONTROLLER widget (a ColorPaletteWdgt, GrayPaletteWdgt,
     # SliderWdgt, StringWdgt, … — anything augmented with ControllerMixin) to drive a property of
     # another widget. Right-click the controller -> "set target" (openTargetSelector) opens a
     # "choose target:" menu of the widgets whose bounds INTERSECT the controller (so the controller must

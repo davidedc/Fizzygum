@@ -207,7 +207,7 @@ class MenuMorph extends PopUpWdgt
         if !item.children[0]? then debugger
         w = Math.max(w, item.children[0].width() + 8)
       else if (item instanceof StringFieldWdgt) or
-        (item instanceof ColorPickerMorph) or
+        (item instanceof ColorPickerWdgt) or
         (item instanceof SliderWdgt)
           w = Math.max w, item.width()
       #console.log "maxWidthOfMenuEntries: width of item " + item + " : " + w
