@@ -1,6 +1,6 @@
 # The mouse cursor. Note that it's not a child of the WorldMorph, this widget
 # is never added to any other widget. [TODO] Find out why and write explanation.
-# Not to be confused with the HandleMorph
+# Not to be confused with the HandleWdgt
 
 class ActivePointerWdgt extends Widget
 

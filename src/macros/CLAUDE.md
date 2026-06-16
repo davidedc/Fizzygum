@@ -205,7 +205,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   routes through `inspect`/`spawnInspector` too). The menu/inspect paths wrap it WINDOWED — `spawnInspector` puts it in a
   `WindowWdgt` (560×410) — but it now ALSO renders + functions + self-resizes **NAKED**: `world.add new InspectorWdgt
   target` paints its own opaque background (a `RectangularAppearance`, dropped when it becomes window content via
-  `setLayoutSpec`, so the windowed render stays byte-identical) and shows its own `@resizer` HandleMorph (visible only when
+  `setLayoutSpec`, so the windowed render stays byte-identical) and shows its own `@resizer` HandleWdgt (visible only when
   free-floating). To drive a naked resize, press THAT handle: `@syntheticEventsMouseMovePressDragRelease_InputEvents
   insp.resizer.center(), dest` — NOT `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", …`, which grabs the
   TOPMOST handle by type (a save raises the desktop's own resizer above the inspector's). Two naked gotchas (learned in

@@ -1,7 +1,7 @@
 # not to be confused with the ActivePointerWdgt
 # I am a resize / move handle that can be attached to any Widget
 
-class HandleMorph extends Widget
+class HandleWdgt extends Widget
 
   target: nil
   inset: nil
@@ -37,11 +37,11 @@ class HandleMorph extends Widget
     else
       return false
 
-  # HandleMorphs are one of the few morphs that
+  # HandleWdgts are one of the few morphs that
   # by default don't stick to their parents.
   # Also SliderButtonWdgts tend do the same (if
   # they are attached to a SliderWdgt)
-  # The "move" HandleMorph COULD grab to its
+  # The "move" HandleWdgt COULD grab to its
   # parent, in fact it would be easier, however for
   # uniformity we don't do that
   grabsToParentWhenDragged: ->
@@ -229,7 +229,7 @@ class HandleMorph extends Widget
         @target.setHeight newHeight
   
   
-  # HandleMorph events:
+  # HandleWdgt events:
   mouseEnter: ->
     #console.log "<<<<<< handle mousenter"
     @state = @STATE_HIGHLIGHTED
@@ -255,7 +255,7 @@ class HandleMorph extends Widget
       @noticesTransparentClick = true
 
     
-  # HandleMorph menu:
+  # HandleWdgt menu:
   attach: ->
     choices = world.plausibleTargetAndDestinationMorphs @
     menu = new MenuMorph @, false, @, true, true, "choose target:"

@@ -11,7 +11,7 @@ ClippingAtRectangularBoundsMixin =
       # used for example:
       # - to determine which morphs you can attach a morph to
       # - for a SliderWdgt's "set target" so you can change properties of another Widget
-      # - by the HandleMorph when you attach it to some other morph
+      # - by the HandleWdgt when you attach it to some other morph
       # Note that this method has a slightly different
       # version in Widget (because it doesn't clip)
       plausibleTargetAndDestinationMorphs: (theMorph) ->

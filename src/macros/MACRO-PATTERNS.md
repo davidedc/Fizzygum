@@ -51,8 +51,8 @@ assertion a recapture after a regression silently stores two different hashes an
   shifts up half a line), Backspace re-joins and shifts it back, and an "italic" flip changes the font metrics and re-wraps
   every line — the caret must ride its logical slot through all three (any stale-pixel caret would detach visibly).
   GEOMETRY-FAITHFUL FIXTURE TRICK (reusable): when a recording's count-based selection (here Shift+ArrowDown×13 +
-  Shift+ArrowLeft×9) depends on the wrap layout, reproduce the recorded box EXACTLY — `HandleMorph.nonFloatDragging` is
-  grab-offset-PRESERVING (`HandleMorph.coffee:212-220`, the new extent is computed from the pointer minus the within-handle
+  Shift+ArrowLeft×9) depends on the wrap layout, reproduce the recorded box EXACTLY — `HandleWdgt.nonFloatDragging` is
+  grab-offset-PRESERVING (`HandleWdgt.coffee:212-220`, the new extent is computed from the pointer minus the within-handle
   grab point), so press the recorded FRACTION of the handle (`@pointAtFractionOf cornerHandle, [0.733,0.667]`) and release at
   the recorded destination, and the resulting extent matches the recording to the pixel. Also here: the "font size..." item
   opens a `PromptMorph` (capture it fresh via `@getMostRecentlyOpenedMenu()`) whose field is focused with the caret at the
@@ -567,7 +567,7 @@ assertion a recapture after a regression silently stores two different hashes an
   reference, not by hunting coordinates — `@closeWindow_InputEvents win` (`.closeButton`, a CloseIconButtonWdgt),
   `@collapseOrUncollapseWindow_InputEvents win` (`.collapseUncollapseSwitchButton` — the SAME verb collapses or uncollapses
   per current state), `@dragWindowResizerTo_InputEvents win, (new Point win.right()+dx, win.bottom()+dy)` (`.resizer`, a
-  bottom-right HandleMorph, non-float drag → setExtent; use deltas off the live bounds).
+  bottom-right HandleWdgt, non-float drag → setExtent; use deltas off the live bounds).
 - **Resizing a window WHILE collapsed reverts on uncollapse** (`macroCollapsedWindowBarResizeRevertsOnUncollapse`): the
   collapsed-bar follow-on to the chrome-button entry above. Collapsing a `WindowWdgt` SAVES its pre-collapse size —
   `childBeingCollapsed`/`childCollapsed` store `@widthWhenUnCollapsed`/`@extentWhenCollapsed` (`WindowWdgt.coffee:208-232`) and shrink
@@ -896,7 +896,7 @@ assertion a recapture after a regression silently stores two different hashes an
   handle life cycle: "resize/move..." runs `showResizeAndMoveHandlesAndLayoutAdjusters` (`Widget.coffee:2767-2790`) — a
   FREEFLOATING widget gets the four handles into `world.temporaryHandlesAndLayoutAdjusters`, a non-freefloating one RECURSES to
   its parent, so invoking it from a document's menu parks the handles on the freefloating scroll FRAME; `ScrollPanelWdgt.add`'s
-  HandleMorph carve-out (`:186-194`) keeps them direct children of the frame (NOT inside the scrolled `@contents`); any
+  HandleWdgt carve-out (`:186-194`) keeps them direct children of the frame (NOT inside the scrolled `@contents`); any
   mouse-DOWN on a non-handle also destroys them (`ActivePointerWdgt.coffee:378` — how a desktop click exits the mode). Fixture =
   the document-drop idiom (a `createSimpleDocumentScrollPanelWdgt` doc + two `createNewWrappingSimplePlainTextWdgtWithBackground`
   yellow texts dragged in with `@dragWidgetTo_InputEvents`; the stack inserts a drop AFTER the sibling whose vertical span
@@ -938,7 +938,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `Widget.attach` lists only morphs whose bounds INTERSECT it, `world.plausibleTargetAndDestinationMorphs`, excluding self +
   current parent), then `clickMenuItemOfWidget_InputEvents_Macro morph, "attach..."` → capture the "choose target:" menu →
   `@moveToItemStartingWithOfMenuAndClick_InputEvents menu, "a Rectangle"` (class-name PREFIX; the menu also lists the World).
-  A HandleMorph so attached becomes the target's resize handle → drag it with `@dragResizeMoveHandleTo_InputEvents`.
+  A HandleWdgt so attached becomes the target's resize handle → drag it with `@dragResizeMoveHandleTo_InputEvents`.
 - **"Attach…" with no targets → a message** (`macroAttachShowsNoTargetsMessage`): a morph alone (nothing overlapping) → `attach`
   pops a `MenuMorph` titled **"no morphs to attach to"** (`:3680`) instead of a target list; that titled, item-less menu IS the
   message. The negative path of attach.
@@ -1060,7 +1060,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **The NAKED (chrome-less) inspector renders, edits and self-resizes** (`macroNakedInspectorRendersResizesAndEdits`): a bare
   `world.add new InspectorWdgt target` (no `WindowWdgt`) is now a first-class widget. When free-floating it paints its own opaque background
   (`InspectorWdgt` sets a `RectangularAppearance`, dropped on becoming window content via `setLayoutSpec`, so the windowed path stays
-  byte-identical) and shows its own `@resizer` HandleMorph (`HandleMorph.updateVisibility` shows it only when free-floating). Drive its resize
+  byte-identical) and shows its own `@resizer` HandleWdgt (`HandleWdgt.updateVisibility` shows it only when free-floating). Drive its resize
   by pressing THAT handle specifically — `@syntheticEventsMouseMovePressDragRelease_InputEvents insp.resizer.center(), dest` — NOT
   `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", …` (a `save` raises the desktop's OWN resizer above the inspector's, so the
   topmost-by-type lookup grabs the wrong handle). The `*FromTopInspector*` verbs + the inspect→select→edit→save flow work naked exactly as
@@ -1111,21 +1111,21 @@ assertion a recapture after a regression silently stores two different hashes an
   `buildOverflowingScrollPanelWithText_Macro(topLeft)` verb in `standardMacroSubroutines`. KEY: press a CLEAR background spot (right of the
   text, left of the scrollbar/handle), not a draggable child; in Automator PLAYING the grab threshold is skipped so even small drags grab.
 
-- **A HandleMorph is itself resizable** (`macroHandleMorphIsItselfResizable`): a HandleMorph is an ordinary resizable
-  Widget (`HandleMorph.coffee:4`), not just resize chrome on another morph — "resize/move..." on it adds its OWN four
-  sub-handles (a moveHandle at the top-left; resizers around it), so FIVE HandleMorphs coexist, and dragging the
-  bottom-right one resizes the handle itself (`HandleMorph.nonFloatDragging` `:219` → `@target.setExtent`). Build `new
-  HandleMorph` (exactly what the demo "handle" item does — `WorldMorph.createNewHandle`; give it a `rawSetExtent` so the
+- **A HandleWdgt is itself resizable** (`macroHandleMorphIsItselfResizable`): a HandleWdgt is an ordinary resizable
+  Widget (`HandleWdgt.coffee:4`), not just resize chrome on another morph — "resize/move..." on it adds its OWN four
+  sub-handles (a moveHandle at the top-left; resizers around it), so FIVE HandleWdgts coexist, and dragging the
+  bottom-right one resizes the handle itself (`HandleWdgt.nonFloatDragging` `:219` → `@target.setExtent`). Build `new
+  HandleWdgt` (exactly what the demo "handle" item does — `WorldMorph.createNewHandle`; give it a `rawSetExtent` so the
   striped-triangle glyph is visible), `@moveToAndClickAtFractionOf_InputEvents handle, [0.72,0.75], "right button"` (it
   sets `noticesTransparentClick`, so any point in its box works; the painted part is the bottom-right) → "resize/move..."
   → `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest`; click empty desktop to leave the mode.
   DISAMBIGUATION: the target handle ALSO has `type == "resizeBothDimensionsHandle"`, but `topWdgtSuchThat` tests the
   sub-handle (a child, added later → frontmost) BEFORE the target, so the verb grabs the resizer, not the target.
   Distinct from using a handle to resize ANOTHER widget (macroCanMoveAndResizeColorPaletteMorph).
-- **A HandleMorph attached to NOTHING just float-moves** (`macroHandleAttachedToNothing`): a handle's resize powers come
-  entirely from its `@target` (`HandleMorph.nonFloatDragging` returns early `unless @target`); built bare (`new HandleMorph()`,
+- **A HandleWdgt attached to NOTHING just float-moves** (`macroHandleAttachedToNothing`): a handle's resize powers come
+  entirely from its `@target` (`HandleWdgt.nonFloatDragging` returns early `unless @target`); built bare (`new HandleWdgt()`,
   target `nil` — exactly what the demo "handle" item makes via `WorldMorph.createNewHandle`) and parented by the world,
-  `detachesWhenDragged` (`HandleMorph.coffee:34`) is TRUE, so a press-drag-release
+  `detachesWhenDragged` (`HandleWdgt.coffee:34`) is TRUE, so a press-drag-release
   (`@syntheticEventsMouseMovePressDragRelease_InputEvents` from a fraction of the handle to a desktop point) FLOAT-drags it
   like any plain morph: it relocates, resizes nothing, and the rest of the desktop is untouched. GOTCHA: the release leaves
   the pointer ON the dropped handle, whose `mouseEnter` (`:233`) renders it in its bluish HIGHLIGHTED state — park the pointer
@@ -1152,10 +1152,10 @@ assertion a recapture after a regression silently stores two different hashes an
   naked version, whose close/inspect footer buttons and `@work` pane are gone; closing is via the WINDOW, not a detached
   button.) No new verb.
 - **Resizing a button via its handle does NOT trigger it** (`macroResizingButtonDoesntCauseItToClick`): dragging a widget's resize
-  handle runs `HandleMorph.nonFloatDragging → @target.setExtent`, never a click — `HandleMorph.mouseClickLeft` is EMPTY and its
+  handle runs `HandleWdgt.nonFloatDragging → @target.setExtent`, never a click — `HandleWdgt.mouseClickLeft` is EMPTY and its
   `mouseDownLeft` doesn't propagate ("otherwise the handle on a button will trigger the button when resizing"), so resizing a
   button cannot fire it. Fixture with a VISIBLE action: a standalone `new SimpleButtonWdgt true, box, "hide", "hide the box"`
-  wired to a target box's `hide()`. Give the button a resize handle programmatically (`new HandleMorph button` — the same kind the
+  wired to a target box's `hide()`. Give the button a resize handle programmatically (`new HandleWdgt button` — the same kind the
   resize/move menu adds; done directly because a small button offers no usable resize/move menu via synthetic right-click), then GROW
   it via `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest` (selected by type) → the BOX is STILL visible (the
   negative assertion: resizing didn't fire `hide`). Then an ordinary `@moveToAndClickAtFractionOf_InputEvents button, [0.5,0.5]` → the
@@ -1301,7 +1301,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Proportional stack cells** (`macroLayoutBasicProportions`): make a holder a horizontal stack —
   `holder.add cell, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED` per cell + `cell.setMinAndMaxBoundsAndSpreadability(min,
   desired, k*LayoutSpec.SPREADABILITY_MEDIUM)` (k = its share of spare space). Position with `fullMoveTo` BEFORE `world.add`, then
-  `new HandleMorph holder` (self-installs at the bottom-right; lone holder ⇒ lone handle). Resize via
+  `new HandleWdgt holder` (self-installs at the bottom-right; lone holder ⇒ lone handle). Resize via
   `@dragResizeMoveHandleTo_InputEvents` and the cells redistribute by spreadability. Distilled from the first holder of
   `Widget.setupTestScreen1`.
 - **TEXT widgets as stack cells, via "attach with horizontal layout"** (`macroStringMorph2AndTextMorph2ResizingInLayout`): the
@@ -1333,7 +1333,7 @@ assertion a recapture after a regression silently stores two different hashes an
   it apportions by a bogus delta); the reachable range is BOUNDED — `setMaxDim` reverts a drag that would push a cell below its DESIRED width
   (`:65-76`), so only two split states are reachable (the spreadability baseline and the opposite-dominant bound), and the apportioning scales
   with the drag DISTANCE (one firm large move reaches the bound where several small moves do not). So drive ONE firm drag to the bound, not a
-  back-and-forth (the return leg would mostly revert and duplicate the baseline shot). Resize the holder via its lone HandleMorph
+  back-and-forth (the return leg would mostly revert and duplicate the baseline shot). Resize the holder via its lone HandleWdgt
   (`@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle"`) to show the dragged split survives a container resize. First
   interactive-layout-re-proportioning test. No new verb.
 - **Hiding a stack cell does NOT redistribute — visibility is layout-blind** (`macroLayoutsAndVisibility`): `hide()`/`show()`
@@ -1346,7 +1346,7 @@ assertion a recapture after a regression silently stores two different hashes an
   matching dataHashes), and hide → resize → show ends pixel-identical to never having hidden at all. CONTRAST: `isCollapsed()`
   zeroes the layout dims, so COLLAPSE really does redistribute where HIDE does not — `macroLayoutsAndCollapsing`, the next
   entry, which reuses this fixture verbatim (the green|divider|blue equal-spreadability holder — `setupTestScreen1`'s second
-  holder — plus its lone HandleMorph). The recording had to `show()` the cell back through an
+  holder — plus its lone HandleWdgt). The recording had to `show()` the cell back through an
   INSPECTOR eval (a hidden morph can't be right-clicked); the macro drives `blue.hide()`/`blue.show()` directly, the
   `macroHideUnhideMorphChain` convention. No new verb.
 - **Collapsing a stack cell DOES redistribute — collapse is layout-aware** (`macroLayoutsAndCollapsing`): the contrast twin
@@ -1365,7 +1365,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Layout spacer / spring** (`macroLayoutSpacerEatsSpareSpace`): a `LayoutSpacerMorph` is a spring (ctor passes spreadability
   `weight*LayoutSpec.SPREADABILITY_SPACERS` = 1e8, a ~1e6 max that dwarfs any cell's), so in a stack it absorbs almost all spare
   width and the cells stay at DESIRED size. Reuse `Widget.setupTestScreen1()` (8 holders, several `[spacer|adj|green|adj|blue|adj|yellow|adj|spacer(2)]`);
-  locate holders as `world.children.filter (c) -> c instanceof RectangleWdgt and c.children.length > 0`, each handle a HandleMorph
+  locate holders as `world.children.filter (c) -> c instanceof RectangleWdgt and c.children.length > 0`, each handle a HandleWdgt
   among the holder's OWN children. DRIFT: the current layout settles a stretched stack's cells at DESIRED width, so two holders
   match ONLY if their cells share a desired size — pick the two desired-30 holders differing in spreadability (MEDIUM vs NONE).
 - **Stack grows with content** (`macroVerticalStackPanelGrowsWithContent`): a `SimpleVerticalStackPanelWdgt`

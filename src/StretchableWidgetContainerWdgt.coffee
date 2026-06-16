@@ -32,7 +32,7 @@ class StretchableWidgetContainerWdgt extends Widget
   # ends up in the Panel inside it
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
     if !@contents? or (aWdgt instanceof ModifiedTextTriangleAnnotationWdgt) or
-     (aWdgt instanceof HandleMorph)
+     (aWdgt instanceof HandleWdgt)
       super
     else
       @contents.add aWdgt, position, layoutSpec, beingDropped

@@ -572,11 +572,11 @@ class MacroToolkit
 
   # Drag a resize/move HANDLE (one of the handles shown after a widget's "resize/move..." menu
   # item) from its centre to a destination Point. Handles resize/move the target via NON-float
-  # dragging (HandleMorph.nonFloatDragging → setExtent / fullMoveTo), so this is a real
+  # dragging (HandleWdgt.nonFloatDragging → setExtent / fullMoveTo), so this is a real
   # press-drag-release. handleType picks the handle: "resizeBothDimensionsHandle" (bottom-right
   # corner — resizes both dimensions), "moveHandle", "resizeHorizontalHandle", "resizeVerticalHandle".
   dragResizeMoveHandleTo_InputEvents: (handleType, destination, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
-    handle = world.topWdgtSuchThat (item) -> (item instanceof HandleMorph) and (item.type == handleType)
+    handle = world.topWdgtSuchThat (item) -> (item instanceof HandleWdgt) and (item.type == handleType)
     @syntheticEventsMouseMovePressDragRelease_InputEvents handle.center(), destination, milliseconds, startTime
 
   # Float-DRAG a widget (by reference, or by a recorded text-description identifier) and drop it at a
@@ -614,9 +614,9 @@ class MacroToolkit
     @moveToAndClick_InputEvents windowWidget.collapseUncollapseSwitchButton
 
   # Resize a WindowWdgt by dragging its resize handle to a destination. Every WindowWdgt builds a `.resizer`
-  # (a HandleMorph laid out at its bottom-right corner); a NON-float press-drag-release on it resizes the
-  # window (HandleMorph.nonFloatDragging → setExtent on the window). The window-chrome sibling of close/
-  # collapse: reach the window's OWN resize control by reference (vs hunting a HandleMorph by coordinates —
+  # (a HandleWdgt laid out at its bottom-right corner); a NON-float press-drag-release on it resizes the
+  # window (HandleWdgt.nonFloatDragging → setExtent on the window). The window-chrome sibling of close/
+  # collapse: reach the window's OWN resize control by reference (vs hunting a HandleWdgt by coordinates —
   # several windows each have one). destination may be a Point or another widget (dragged to its centre).
   # Queues input events — follow with `yield "waitNoInputsOngoing"`.
   dragWindowResizerTo_InputEvents: (windowWidget, destination, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->

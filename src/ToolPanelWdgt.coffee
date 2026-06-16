@@ -14,7 +14,7 @@ class ToolPanelWdgt extends PanelWdgt
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen, dontLayout) ->
 
     if (aWdgt instanceof ModifiedTextTriangleAnnotationWdgt) or
-     (aWdgt instanceof HandleMorph)
+     (aWdgt instanceof HandleWdgt)
       super
     else
       # if aWdgt specifies a non-default switcharoo then it

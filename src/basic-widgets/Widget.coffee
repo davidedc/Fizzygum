@@ -605,7 +605,7 @@ class Widget extends TreeNode
     # layout change ??? What if there are multiple handles or they are
     # nested deeper?
     isThereAnHandle = @firstChildSuchThat (m) ->
-      m instanceof HandleMorph
+      m instanceof HandleWdgt
     isThereAnHandle?.updateVisibility()
 
 
@@ -837,7 +837,7 @@ class Widget extends TreeNode
   # used for example:
   # - to determine which morphs you can attach a morph to
   # - for a SliderWdgt's "set target" so you can change properties of another Widget
-  # - by the HandleMorph when you attach it to some other morph
+  # - by the HandleWdgt when you attach it to some other morph
   # Note that this method has a slightly different
   # version in PanelWdgt (because it clips, so we need
   # to check that we don't consider overlaps with
@@ -977,12 +977,12 @@ class Widget extends TreeNode
     if @children.length
       result = @children[0].bounds
       @children.forEach (child) ->
-        # we exclude the HandleMorphs because they
+        # we exclude the HandleWdgts because they
         # mangle how the Panel inside ScrollPanelWdgts
         # calculate their size when they are resized
         # (remember that the resizing handle of ScrollPanelWdgts
         # actually end up in the Panel inside them.)
-        if !(child instanceof HandleMorph) and !(child instanceof CaretMorph)
+        if !(child instanceof HandleWdgt) and !(child instanceof CaretMorph)
           # if a morph implements deferred layout, then
           # really we can't consider the sizes and positions
           # of its children, so stick to the parent bounds
@@ -1245,7 +1245,7 @@ class Widget extends TreeNode
         # relative position to be remembered, so resizing
         # the stretchable panel will get them to the
         # correct positions
-        if morphStartingTheChange? and @parent? and (morphStartingTheChange instanceof HandleMorph)
+        if morphStartingTheChange? and @parent? and (morphStartingTheChange instanceof HandleWdgt)
           @rememberFractionalPositionInHoldingPanel()
 
 
@@ -1438,7 +1438,7 @@ class Widget extends TreeNode
         # relative size to be remembered, so resizing
         # the stretchable panel will get them to the
         # correct dimensions
-        if morphStartingTheChange? and @parent? and (morphStartingTheChange instanceof HandleMorph)
+        if morphStartingTheChange? and @parent? and (morphStartingTheChange instanceof HandleWdgt)
           @extentFractionalInHoldingPanel = @extentFractionalInMorph @parent
 
   
@@ -2776,10 +2776,10 @@ class Widget extends TreeNode
   
   showResizeAndMoveHandlesAndLayoutAdjusters: ->
     if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
-      world.temporaryHandlesAndLayoutAdjusters.add new HandleMorph(@, "resizeHorizontalHandle")
-      world.temporaryHandlesAndLayoutAdjusters.add new HandleMorph(@, "resizeVerticalHandle")
-      world.temporaryHandlesAndLayoutAdjusters.add new HandleMorph(@, "moveHandle")
-      world.temporaryHandlesAndLayoutAdjusters.add new HandleMorph(@, "resizeBothDimensionsHandle")
+      world.temporaryHandlesAndLayoutAdjusters.add new HandleWdgt(@, "resizeHorizontalHandle")
+      world.temporaryHandlesAndLayoutAdjusters.add new HandleWdgt(@, "resizeVerticalHandle")
+      world.temporaryHandlesAndLayoutAdjusters.add new HandleWdgt(@, "moveHandle")
+      world.temporaryHandlesAndLayoutAdjusters.add new HandleWdgt(@, "resizeBothDimensionsHandle")
     else
       if (@lastSiblingBeforeMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingBeforeMeIsA(StackElementsSizeAdjustingMorph)
         world.temporaryHandlesAndLayoutAdjusters.add \
@@ -2802,7 +2802,7 @@ class Widget extends TreeNode
   # »>> this part is excluded from the fizzygum homepage build
   # currently unused
   showMoveHandle: ->
-    world.temporaryHandlesAndLayoutAdjusters.add new HandleMorph @, "moveHandle"
+    world.temporaryHandlesAndLayoutAdjusters.add new HandleWdgt @, "moveHandle"
   # this part is excluded from the fizzygum homepage build <<«
   
   inform: (msg) ->
@@ -4501,7 +4501,7 @@ class Widget extends TreeNode
     lmHolder.fullMoveTo new Point 10 + 60 * 0, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleMorph lmHolder
+    new HandleWdgt lmHolder
 
     # ----------------------------------------------
 
@@ -4523,7 +4523,7 @@ class Widget extends TreeNode
     lmHolder.fullMoveTo new Point 10 + 60 * 1, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleMorph lmHolder
+    new HandleWdgt lmHolder
 
     # ----------------------------------------------
 
@@ -4549,7 +4549,7 @@ class Widget extends TreeNode
     lmHolder.fullMoveTo new Point 10 + 60 * 2, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleMorph lmHolder
+    new HandleWdgt lmHolder
 
     # ----------------------------------------------
 
@@ -4577,7 +4577,7 @@ class Widget extends TreeNode
     lmHolder.fullMoveTo new Point 10 + 60 * 3, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleMorph lmHolder
+    new HandleWdgt lmHolder
 
     # ----------------------------------------------
 
@@ -4614,7 +4614,7 @@ class Widget extends TreeNode
     lmHolder.fullMoveTo new Point 10 + 60 * 4, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleMorph lmHolder
+    new HandleWdgt lmHolder
 
     # ----------------------------------------------
 
@@ -4651,7 +4651,7 @@ class Widget extends TreeNode
     lmHolder.fullMoveTo new Point 10 + 60 * 5, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleMorph lmHolder
+    new HandleWdgt lmHolder
 
     # ----------------------------------------------
 
@@ -4688,7 +4688,7 @@ class Widget extends TreeNode
     lmHolder.fullMoveTo new Point 10 + 60 * 6, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleMorph lmHolder
+    new HandleWdgt lmHolder
 
     # ----------------------------------------------
 
@@ -4725,5 +4725,5 @@ class Widget extends TreeNode
     lmHolder.fullMoveTo new Point 10 + 60 * 7, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleMorph lmHolder
+    new HandleWdgt lmHolder
   # this part is excluded from the fizzygum homepage build <<«

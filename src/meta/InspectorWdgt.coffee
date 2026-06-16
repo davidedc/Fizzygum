@@ -131,7 +131,7 @@ class InspectorWdgt extends Widget
   # Paint our own opaque background ONLY when free-floating (naked); as
   # WindowWdgt content the window provides it, so drop the appearance then
   # (keeping the windowed inspector byte-identical). This mirrors how the
-  # @resizer HandleMorph shows only when free-floating — both are driven off
+  # @resizer HandleWdgt shows only when free-floating — both are driven off
   # the same layout-spec change in Widget::setLayoutSpec.
   setLayoutSpec: (newLayoutSpec) ->
     super
@@ -340,11 +340,11 @@ class InspectorWdgt extends Widget
 
     # The inspector's own resize handle. It is shown ONLY when the inspector
     # is free-floating (naked on the desktop) and hidden when it is WindowWdgt
-    # content (HandleMorph::updateVisibility, driven by Widget::setLayoutSpec),
+    # content (HandleWdgt::updateVisibility, driven by Widget::setLayoutSpec),
     # so a naked inspector is self-resizable while a windowed one defers to the
     # window's resizer. Covered by
     # SystemTest_macroNakedInspectorRendersResizesAndEdits.
-    @resizer = new HandleMorph @
+    @resizer = new HandleWdgt @
 
     # update layout
     @invalidateLayout()

@@ -46,7 +46,7 @@ class BasementWdgt extends BoxWdgt
 
 
     # resizer
-    @resizer = new HandleMorph @
+    @resizer = new HandleWdgt @
 
     @invalidateLayout()
 

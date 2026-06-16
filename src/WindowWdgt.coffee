@@ -184,7 +184,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       return "window"
 
   add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
-    unless notContent or (aWdgt instanceof CaretMorph) or (aWdgt instanceof HandleMorph)
+    unless notContent or (aWdgt instanceof CaretMorph) or (aWdgt instanceof HandleWdgt)
       @contentNeverSetInPlaceYet = true
       titleToBeSet = aWdgt.colloquialName()
       if titleToBeSet == "window"
@@ -346,7 +346,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @add @contents
 
     if !@resizer?
-      @resizer = new HandleMorph @
+      @resizer = new HandleWdgt @
 
   createAndAddInternalExternalSwitchButton: ->
     if (@contents?.providesAmenitiesForEditing or @alwaysShowInternalExternalButton) and !@internalExternalSwitchButton?

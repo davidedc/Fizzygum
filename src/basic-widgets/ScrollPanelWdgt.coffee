@@ -186,7 +186,7 @@ class ScrollPanelWdgt extends PanelWdgt
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
     # TODO this check below should probably just be testing if layoutSpec
     # is a corner or edge internal layout
-    if aWdgt instanceof ModifiedTextTriangleAnnotationWdgt or aWdgt instanceof HandleMorph
+    if aWdgt instanceof ModifiedTextTriangleAnnotationWdgt or aWdgt instanceof HandleWdgt
       super
     else
       @contents.add aWdgt, position, layoutSpec, beingDropped, nil, positionOnScreen

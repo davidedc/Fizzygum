@@ -584,3 +584,24 @@ buttons). **The cleanest batch yet — pixel-neutral, ZERO recapture.** ~21 src 
   `~/.claude/plans/batch11-switch-toggle-radio-rename.md`. Remaining long-tail families: `HandleMorph`, the
   `UpperRightTriangleIconicButton`/`EditableMarkMorph` mark lineage, Canvas/Pen, Caret/Blinker, the layout `*Morph`s, the Fizzytiles app,
   `MenuMorph`/`PromptMorph` (high-recapture), …, `WorldMorph` last.
+
+**DONE (2026-06-16): BATCH 12 — `HandleMorph` → `HandleWdgt` (the resize/move handle).** `extends Widget`, leaf (0 subclasses). The
+single most widely-USED widget renamed so far — the `@resizer` of every `WindowWdgt`/`InspectorWdgt`/`BasementWdgt`, the world's
+temporary resize/move handles, and 8 layout-element handles in `Widget`; ~11 `instanceof HandleMorph` layout/drag-exclusion checks across
+the framework. **Yet ZERO recapture.** ~41 src refs, **0** string-literals, **0** `findTop…`; the factory `createNewHandle` has no `Morph`
+token (untouched).
+- **THE headline lesson — a THIRD, decisive confirmation that usage BREADTH ≠ recapture** (cf. BATCH 11). HandleMorph touches **40 test
+  files** (17 executable: `instanceof`/`new`/the by-meaning resize helper `world.topWdgtSuchThat (i)-> i instanceof HandleMorph and
+  i.type==…`; 23 metadata prose/tags), and dozens of tests literally DRAG a handle to resize — but the suite went RED on **none**. The
+  pre-execution guess was "moderate inspector-DIAGRAM recapture" (handle-bearing hierarchy shots); WRONG — the inspector tests photograph
+  the inspector's RENDER and property EDITS, not a hierarchy diagram that names a handle, and a handle is never inspected-by-name. **A
+  class can be everywhere — constructed, dragged, type-checked framework-wide — and still ZERO-recapture, because recapture keys ONLY on a
+  DRAWN label / NAVIGATED nav string / inspected-in-shot DIAGRAM, never the construction/render/drag surface.** Predicting a count remains
+  futile (4th time the byte-exact suite overturned the guess) — settle the KIND, run the oracle.
+- 0 `"a Handle…"` nav strings → no strips, no prefix-hang. Test-NAME identifiers (`macroHandleMorphIsItselfResizable`) `\b`-protected (preceded
+  by `macro`) and KEPT.
+- Result: **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots, ZERO reference recapture.** 1 rename + ~41 src refs; 40 test
+  files swept (content-only, identifiers kept) + 24 visualisations regenerated + 3 docs (`MACRO-PATTERNS.md`, `macros/CLAUDE.md`,
+  `author-macro-test/SKILL.md`). Plan `~/.claude/plans/batch12-handle-rename.md`. Remaining long-tail families: the
+  `UpperRightTriangleIconicButton`/`EditableMarkMorph` mark lineage, Canvas/Pen, Caret/Blinker, the layout `*Morph`s, the Fizzytiles app,
+  `MenuMorph`/`PromptMorph` (high-recapture), …, `WorldMorph` last.

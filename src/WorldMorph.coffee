@@ -2003,7 +2003,7 @@ class WorldMorph extends PanelWdgt
     newWdgt.rawSetExtent new Point 350, 250
     @create newWdgt
   createNewHandle: ->
-    @create new HandleMorph
+    @create new HandleWdgt
   createNewString: ->
     newWdgt = new StringWdgt "Hello, World!"
     newWdgt.isEditable = true
