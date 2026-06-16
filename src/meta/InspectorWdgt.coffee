@@ -271,7 +271,7 @@ class InspectorWdgt extends Widget
       world.add inspector
       inspector.changed()
 
-    @list = new ListMorph(
+    @list = new ListWdgt(
       @, # target
       "selectionFromList", #action
       (if @target instanceof Array then attribs else attribs.sort()), #elements
@@ -286,7 +286,7 @@ class InspectorWdgt extends Widget
     # prevents the recursion to children. We could have disabled that from the
     # constructor of MenuMorph, but who knows, maybe someone might intend to use a MenuMorph
     # with some animated content? We know that in this specific case it won't need animation so
-    # we set that here. Note that the ListMorph itself does require animation because of the
+    # we set that here. Note that the ListWdgt itself does require animation because of the
     # scrollbars, but the MenuMorph (which contains the actual list contents)
     # in this context doesn't.
     world.steppingWdgts.delete @list.listContents

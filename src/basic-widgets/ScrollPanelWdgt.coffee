@@ -119,7 +119,7 @@ class ScrollPanelWdgt extends PanelWdgt
     hWidth = @width() - spaceToLeaveOnOneSide
     vHeight = @height() - spaceToLeaveOnOneSide
 
-    unless @parent instanceof ListMorph
+    unless @parent instanceof ListWdgt
       @changed()
 
     # this check is to see whether the bar actually belongs to this

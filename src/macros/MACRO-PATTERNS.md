@@ -711,8 +711,8 @@ assertion a recapture after a regression silently stores two different hashes an
 
 ## Scroll & scrollbars
 
-- **ListMorph wheel scroll** (`macroListMorphWheelScroll`): a `ListMorph` (extends ScrollPanelWdgt) is a clipped column of rows.
-  Build standalone — `new ListMorph nil, nil, [item strings]` — `rawSetExtent` SHORTER than its content so it overflows + shows
+- **ListWdgt wheel scroll** (`macroListMorphWheelScroll`): a `ListWdgt` (extends ScrollPanelWdgt) is a clipped column of rows.
+  Build standalone — `new ListWdgt nil, nil, [item strings]` — `rawSetExtent` SHORTER than its content so it overflows + shows
   a scrollbar; `@wheelOn_InputEvents list, deltaY` scrolls it (positive deltaY = DOWN). Tune the delta to the overflow (drop it
   if two later shots stop changing). Row-click highlight is NOT a reliable screenshot signal; scrolling is.
 - **Slider/scrollbar TRACK click** (`macroSliderTrackClickMovesButton`): `@clickOnSliderTrackAtFraction_InputEvents doc.vBar,
@@ -726,7 +726,7 @@ assertion a recapture after a regression silently stores two different hashes an
   Hold the pointer STILL near the inner's top (one `@syntheticEventsMouseMove_InputEvents (@pointAtFractionOf inner, [0.5,0.15]),
   "no button"`) then fire repeated `@syntheticEventsWheel_InputEvents 0, bigDelta` (the L1 primitive, NOT `wheelOn` which re-moves):
   the 1st bottoms the INNER, the next escalates to the OUTER. Build with a `SimpleDocumentScrollPanelWdgt` (`outer.add inner`
-  between two `outer.addNormalParagraph "…"`) holding a fixed-height `ListMorph` (the stack constrains only WIDTH, so the inner
+  between two `outer.addNormalParagraph "…"`) holding a fixed-height `ListWdgt` (the stack constrains only WIDTH, so the inner
   keeps its height and overflows). FLANK the inner above AND below so it stays VISIBLE when the outer is fully scrolled.
 - **Scrollbars track content** (`macroScrollBarsTrackContentChange`): `ScrollPanelWdgt.adjustScrollBars` (`:114`) shows the hBar
   only when `contents.width() >= width()+1` and the vBar only when `contents.height() >= height()+1`, sizing each thumb to the
@@ -736,16 +736,16 @@ assertion a recapture after a regression silently stores two different hashes an
   re-run `panel.adjustContentsBounds()` + `panel.adjustScrollBars()` after each. TRAP: a single-widget contents (`new
   ScrollPanelWdgt child`) has no submorphs, so `adjustContentsBounds` re-fits it back to the viewport (undoing the overflow) —
   use a real submorph, or call `adjustScrollBars()` only.
-- **Adding a child to a ListMorph recomputes its scroll** (`macroAddingMorphToListUpdatesScroll`): the recompute-on-ADD
+- **Adding a child to a ListWdgt recomputes its scroll** (`macroAddingMorphToListUpdatesScroll`): the recompute-on-ADD
   sibling of the content-change entry above (which recomputes on child MUTATION). `ScrollPanelWdgt.add` (`:186-194`) routes
   a non-handle widget into `@contents` and then AUTOMATICALLY calls `@adjustContentsBounds()` + `@adjustScrollBars()` — so
-  adding a tall morph to a `ListMorph` (extends ScrollPanelWdgt) that previously just fit its rows makes a vertical
-  scrollbar APPEAR, with NO manual recompute call (the recorded "attach...→a ListMorph" gesture IS exactly this `@add` +
-  recompute, `Widget.coffee:3640-3645`). Build a standalone `new ListMorph nil, nil, [rows]` sized to ≈ its rows' height
+  adding a tall morph to a `ListWdgt` (extends ScrollPanelWdgt) that previously just fit its rows makes a vertical
+  scrollbar APPEAR, with NO manual recompute call (the recorded "attach...→a List" gesture IS exactly this `@add` +
+  recompute, `Widget.coffee:3640-3645`). Build a standalone `new ListWdgt nil, nil, [rows]` sized to ≈ its rows' height
   (so no scrollbar yet) + a distinct `RectangleMorph` positioned to PARTIALLY OVERLAP the list's lower edge and HANG BELOW
   it, then ATTACH it through the REAL menu (the recording's gesture — drive the menu, NOT an opaque `list.add`; reuses the
   `macroAttachResizingHandleToMorph` idiom): `@openMenuOf_InputEvents rect` → `@moveToItemOfTopMenuAndClick_InputEvents
-  "attach..."` → `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()), "a ListMorph"`
+  "attach..."` → `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()), "a List"`
   (class-name PREFIX). The OVERLAP is REQUIRED — `"attach..."` lists only bounds-intersecting targets
   (`world.plausibleTargetAndDestinationMorphs`), so a non-overlapping rect would not be offered the list. Widget.attach →
   list.add (ScrollPanelWdgt.add) re-parents the rect into `@contents` + auto-recomputes → image_2 shows the rect CLIPPED to

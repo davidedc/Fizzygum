@@ -111,7 +111,7 @@ shots either prove a no-op/round-trip (intended) or mean a step silently did not
   (`new SimpleButtonMorph true, target, "action", "label"`) wired to a visible effect (e.g. `box.hide()`)
   rather than borrowing chrome.
 
-**Lists & text panes (`ListMorph`, `TextWdgt`/`SimplePlainTextWdgt`)**
+**Lists & text panes (`ListWdgt`, `TextWdgt`/`SimplePlainTextWdgt`)**
 - **Select a list row by SCROLLING to it first**, not by clicking a by-text match. A row that sorts below the
   visible area exists as a (clipped, off-pane) morph; clicking its `topLeft` lands outside the pane and selects
   the *wrong* visible row (this silently no-op'd a `save`). Scroll with the toolkit idiom
@@ -198,7 +198,7 @@ Two reasons it's incremental, not big-bang: (a) a rename here is not always pixe
 strip `Wdgt`, so renaming a class whose colloquial name is *drawn* (e.g. a menu item, shown as `"a MenuItem ➜"`
 instead of `"a MenuItemMorph ➜"`) shifts that label and forces screenshot recapture; verify per class — and (b)
 each rename is a whole-tree identifier+file+serialization sweep, best done one verifiable batch at a time.
-Candidates surfaced during the inspector arc: `ListMorph`, `RectangleMorph` (the `SimpleButton*` / button family
+Candidates surfaced during the inspector arc: `RectangleMorph` (the `SimpleButton*` / button family
 was migrated to `*Wdgt` in the TriggerMorph arc, below).
 
 **DONE (2026-06): the String/Text arc.** Deleted the legacy `StringMorph`/`TextMorph` and renamed
@@ -316,3 +316,41 @@ lessons, generally reusable:
 - Result: **165/165 (Chrome + WebKit), dpr 1 + 2, ZERO reference churn on the existing 164** (the only source edits
   were comments — pixel-neutral). New test `macroBareTextWidgetDropShadowRestAndDrag` (rest -> lifted -> rest, three
   distinct dataHashes). No framework behaviour change.
+
+**DONE (2026-06-16): the ListMorph → ListWdgt rename (BATCH 5 — the lowest-risk rename batch).** A pure
+`*Morph`→`*Wdgt` identifier rename of a single **leaf** class (`class ListMorph extends ScrollPanelWdgt`, no
+subclasses, no legacy/modern split) — the cheapest shape in §1. The whole source change was 6 bare-identifier refs
++ the filename: `git mv ListMorph.coffee ListWdgt.coffee`, the `class` line, **3** `instanceof ListMorph`
+(`ScrollPanelWdgt.coffee:122`, `Widget.coffee:2587`/`:2593`), **1** `new ListMorph` (`InspectorWdgt.coffee:274`),
+1 comment. ZERO string-literals (serialization follows `constructor.name`/`window[]` automatically). `MenuMorph` /
+`MenuItemMorph` are COMPOSED inside a list (`@listContents = new MenuMorph`), NOT subclasses — out of scope (and
+`MenuItemMorph` is the deliberately-deferred BATCH-4 item anyway). New lessons, generally reusable:
+- **"Label-shifting" ≠ "recapture" — only a PHOTOGRAPHED label forces recapture.** ListWdgt's colloquial name IS
+  drawn (the hierarchy / "choose target:" attach menus strip `Wdgt`, so the menu item shifts `"a ListMorph"` →
+  `"a List"`), which §2/§7 flag as the recapture trigger. But the ONLY test that opens that menu
+  (`macroAddingMorphToListUpdatesScroll`) screenshots the BEFORE / AFTER-ATTACH / AFTER-WHEEL states — the menu is
+  already closed by every shot — so the shifted label is never captured. Net: a label-shifting rename with **ZERO
+  reference churn**. Don't pre-classify recapture from "is the name drawn?"; the byte-exact suite IS the oracle —
+  rename, run it, and the RED set is the exact recapture set (here: empty).
+- **The menu-nav macro string changes to the Wdgt-STRIPPED colloquial, not the new class name:** `"a ListMorph"` →
+  `"a List"` (NOT `"a ListWdgt"`). Bonus: `"a List"` is a prefix of BOTH the stripped (`"a List"`) and an unstripped
+  (`"a ListWdgt"`) label, so a `moveToItemStartingWith` match is robust regardless of which labeller the menu uses —
+  and it correctly stops matching the now-gone `"a ListMorph"`.
+- **Test IDENTIFIERS are kept; only test CONTENT is renamed.** The directories/vars `macroListMorphWheelScroll`,
+  `macroListMorphAutoScrollsNearDraggedEdge`, … stay (stable test-name convention, cf. the String/Text arc's
+  "protect compound test names from the sweep" lesson). The `\b`-bounded grep that finds every real ref naturally
+  EXCLUDES them (`ListMorph` isn't word-bounded inside `macroListMorph…`) — the same property that makes the sweep
+  safe. Only the `new ListWdgt` fixtures + prose/tags were edited.
+- **Distinguish class-noun refs from drawn-label refs when editing test prose.** In the one attach-menu test the
+  metadata mixes both: "a ListMorph (extends ScrollPanelWdgt)" → `ListWdgt` (class noun) but the quoted menu choice
+  "pick 'a ListMorph'" → `'a List'` (drawn label). A blind `ListMorph`→`ListWdgt` would have written a wrong macro
+  string. The other 7 tests had only class-noun refs (bulk `perl -i 's/\bListMorph\b/ListWdgt/g'`); only this one
+  was hand-edited.
+- **Historical provenance left untouched** (per §5): `Fizzygum-tests/MIGRATION-PLAN.md` (the closed recorded→macro
+  record), the `buildSystem/OBSOLETE generateOverviewDoc.py` frozen file-list (already names dozens of deleted
+  classes), and provenance strings citing old recorded-test names (`SystemTest_autoScrollingForListMorphs`, …) — all
+  provenance, not stale refs.
+- Result: **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots, ZERO reference-image churn.** 8 tests
+  touched (4 `new ListWdgt` fixtures + 1 menu-nav string in `macroAddingMorphToListUpdatesScroll` + prose/tags); no
+  test added or removed. The pre-recorded BATCH-5 touch-list in `class-modernization-planning-starting-prompt.md`
+  matched the live greps exactly.

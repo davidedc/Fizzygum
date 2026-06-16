@@ -2584,13 +2584,13 @@ class Widget extends TreeNode
     if @parent?
       if (@parent instanceof PanelWdgt) or (@parent instanceof SimpleVerticalStackPanelWdgt)
         if @parent.parent?
-          if (@parent.parent instanceof ScrollPanelWdgt) and !(@parent.parent instanceof ListMorph)
+          if (@parent.parent instanceof ScrollPanelWdgt) and !(@parent.parent instanceof ListWdgt)
             return true
     return false
 
   amIPanelOfScrollPanelWdgt: ->
     if @parent?
-      if (@parent instanceof ScrollPanelWdgt) and !(@parent instanceof ListMorph)
+      if (@parent instanceof ScrollPanelWdgt) and !(@parent instanceof ListWdgt)
         return true
     return false
 

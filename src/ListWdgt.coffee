@@ -1,4 +1,4 @@
-class ListMorph extends ScrollPanelWdgt
+class ListWdgt extends ScrollPanelWdgt
   
   elements: nil
   labelGetter: nil
