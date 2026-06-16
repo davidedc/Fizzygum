@@ -329,13 +329,13 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # upper-left button, often a close button
     # but it can be anything
     if !@closeButton?
-      @closeButton = new CloseIconButtonMorph
+      @closeButton = new CloseIconButtonWdgt
     @add @closeButton, nil, nil, nil, true
 
 
     if !@collapseUncollapseSwitchButton?
-      collapseButton = new CollapseIconButtonMorph
-      uncollapseButton = new UncollapseIconButtonMorph
+      collapseButton = new CollapseIconButtonWdgt
+      uncollapseButton = new UncollapseIconButtonWdgt
       @collapseUncollapseSwitchButton = new SwitchButtonMorph [collapseButton, uncollapseButton]
     @add @collapseUncollapseSwitchButton, nil, nil, nil, true
 

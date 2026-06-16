@@ -304,9 +304,9 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Edit a button's text label in place** (`macroEditButtonLabelText`): clicking a button TRIGGERS it, so call
   `button.label.edit()` DIRECTLY (`= world.edit label`, sets `world.caret`, no isEditable gate — the "edit" item's method),
   then reuse the caret verbs (`"Meta+a"` → `@syntheticEventsStringKeys_InputEvents "new"`) and `world.stopEditing()` to
-  commit. Use a `MenuItemMorph`: its label is a self-sizing modern `TextWdgt` that re-measures on setText (a
+  commit. Use a `MenuItemWdgt`: its label is a self-sizing modern `TextWdgt` that re-measures on setText (a
   `SimpleButtonWdgt`'s `StringWdgt` face crops instead); give the standalone item `centered=true` + a fixed
-  `rawSetExtent` and `reLayout()` after each edit. (`MenuItemMorph` is the button-family widget that carries an
+  `rawSetExtent` and `reLayout()` after each edit. (`MenuItemWdgt` is the button-family widget that carries an
   editable label; the deprecated `TriggerMorph` it once extended was deleted and folded into `ButtonWdgt`.)
 - **Caret brought into view only when MOVED** (`macroDocumentCaretBroughtIntoViewWhenMoved`): in a scrollable document the panel
   scrolls to keep the caret visible — but ONLY on a caret MOVE, not on a wheel scroll. `ScrollPanelWdgt.scrollCaretIntoView` (`:504`)
@@ -439,7 +439,7 @@ assertion a recapture after a regression silently stores two different hashes an
   sibling of submenu-hopping. With a deep cascade open (world > test menu > others 2 > icons), a right-click (a mouse-DOWN) on an
   item in an UPSTREAM menu runs `cleanupMenuWdgts`, which KEEPS the pop-ups in that item's ASCENDING hierarchy
   (`PopUpWdgt.hierarchyOfPopUps`, walks `getParentPopUp` UP) and DISMISSES its DESCENDANTS — so the world menu + test menu stay
-  while others-2 + icons close; the SAME right-click also opens the item's own hierarchy context menu (a TextMorph / a MenuItemMorph
+  while others-2 + icons close; the SAME right-click also opens the item's own hierarchy context menu (a Text / a MenuItem
   / a MenuMorph, `Widget.buildContextMenu`/`buildHierarchyMenu`). Descend by labelString prefix (reuse the hopping pattern), then
   `@moveToAndClickAtFractionOf_InputEvents item, [0.35,0.5], "right button"` (LEFT-ish fraction — submenus pop at the clicked point).
   Screenshot only; do NOT re-grab `getMostRecentlyOpenedMenu()` after the auto-close (deferred cleanup re-clears the fresh set).
@@ -550,7 +550,7 @@ assertion a recapture after a regression silently stores two different hashes an
   frame-clip counterpart of macroMenuRepositionsToStayOnScreen (which is about the SCREEN edge). The recorded original
   (poppingUpSubMenuNotClipped) used an inspector's clipped list column; a plain frame demonstrates the same point.
 - **A duplicated menu is born pinned** (`macroDuplicatedMenuAutoPinsOnDesktop`): right-clicking a menu ITEM raises that item's
-  ancestor hierarchy menu ("a MenuItemMorph ➜" / "a MenuMorph ➜"); drilling "a MenuMorph ➜" → "duplicate" runs the MENU's own
+  ancestor hierarchy menu ("a MenuItem ➜" / "a MenuMorph ➜"); drilling "a MenuMorph ➜" → "duplicate" runs the MENU's own
   duplicate. Under the harness `world.isIndexPage` is false (`WorldMorph.coffee:277-278`) so it is `Widget.duplicateMenuActionAndPickItUp`
   (`:3489` → `fullCopy().pickUp()`) — the copy RIDES THE HAND (not the index page's +10,+10 plop). `PopUpWdgt.fullCopy` (`:92-97`)
   clears the copy's kill-on-click-outside flags, so `isPopUpPinned()` (`:59`) is true the instant the copy exists — pinned BEFORE it
@@ -564,7 +564,7 @@ assertion a recapture after a regression silently stores two different hashes an
 ## Windows (chrome + content)
 
 - **Window-chrome buttons** (`macroWindowsEmptyClosing` / `…Collapsing…` / `…Resizing`): reach a window's OWN control by
-  reference, not by hunting coordinates — `@closeWindow_InputEvents win` (`.closeButton`, a CloseIconButtonMorph),
+  reference, not by hunting coordinates — `@closeWindow_InputEvents win` (`.closeButton`, a CloseIconButtonWdgt),
   `@collapseOrUncollapseWindow_InputEvents win` (`.collapseUncollapseSwitchButton` — the SAME verb collapses or uncollapses
   per current state), `@dragWindowResizerTo_InputEvents win, (new Point win.right()+dx, win.bottom()+dy)` (`.resizer`, a
   bottom-right HandleMorph, non-float drag → setExtent; use deltas off the live bounds).
@@ -685,7 +685,7 @@ assertion a recapture after a regression silently stores two different hashes an
   why only order Two has a macro. No new verb.
 - **NESTED collapse/uncollapse cascades through window layers — the full resize matrix** (`macroWindowsNestedCollapsingUncollapsing`):
   a window always WRAPS its content, so collapse state CASCADES through nesting. The switch collapses the window's CONTENT
-  (`CollapseIconButtonMorph.actOnClick` → `@parent.parent.contents.collapse()`), the window reacts via
+  (`CollapseIconButtonWdgt.actOnClick` → `@parent.parent.contents.collapse()`), the window reacts via
   `childBeingCollapsed`/`childCollapsed`/`childUnCollapsed` (`WindowWdgt.coffee:207-243`, store/restore extents) — with an
   internal window AS the outer's content (wrapping lorem AS the inner's), collapsing the INNER drops the OUTER to bar-plus-bar.
   The test resizes the EXTERNAL window in ALL FOUR (outer × inner) collapse combinations, each followed by the complete,
@@ -978,16 +978,16 @@ assertion a recapture after a regression silently stores two different hashes an
   `@syntheticEventsMouseClick_InputEvents()`. **image_1 is taken with NO pointer movement after the click** — the copy must be
   fully painted the instant it is grabbed. Duplicating a COMPLEX/nested widget: right-click it → ancestor hierarchy menu →
   navigate by class-name PREFIX to the desired ancestor's own menu → "duplicate". (A MenuMorph CONTAINER is not right-clickable
-  for a context menu, but a MenuItemMorph — an individual item — IS: see the next bullet.)
-- **Duplicate a MENU ITEM into the bare world** (`macroMenuItemDuplicatesToStandaloneMorph`): a `MenuItemMorph` is an ordinary
+  for a context menu, but a MenuItemWdgt — an individual item — IS: see the next bullet.)
+- **Duplicate a MENU ITEM into the bare world** (`macroMenuItemDuplicatesToStandaloneMorph`): a `MenuItemWdgt` is an ordinary
   duplicable Widget. Right-click an item of an open menu (e.g. the world menu's "demo ➜") → its ANCESTOR hierarchy menu; under the
-  determinism toggles the item's own entry is the clean `"a MenuItemMorph ➜"` (no instance number/bounds — `Widget.toString:467`
-  with `HidingOfMorphsNumberIDInLabels`), so an EXACT match is stable. Drill `"a MenuItemMorph ➜"` → `"duplicate"`: the copy rides
+  determinism toggles the item's own entry is the clean `"a MenuItem ➜"` (no instance number/bounds — `Widget.toString:467`
+  with `HidingOfMorphsNumberIDInLabels`), so an EXACT match is stable. Drill `"a MenuItem ➜"` → `"duplicate"`: the copy rides
   the hand; carry it with `@syntheticEventsMouseMove_InputEvents` and DROP with `@syntheticEventsMouseClick_InputEvents()` (the
   mouse-DOWN releases the float-drag). Capture the "demo ➜" target item from `getMostRecentlyOpenedMenu()` WHILE the world menu is
   still fresh (the next click clears `freshlyCreatedPopUps`). image_1 = a standalone "demo ➜" menu-item morph alone on the desktop.
   **The detached copy stays FUNCTIONAL:** because "demo ➜" is a submenu-opener, left-clicking the standalone item opens the demo
-  menu (locate it via `world.topWdgtSuchThat (w) -> (w instanceof MenuItemMorph) and (w.labelString == "demo ➜")` — the only menu
+  menu (locate it via `world.topWdgtSuchThat (w) -> (w instanceof MenuItemWdgt) and (w.labelString == "demo ➜")` — the only menu
   item left once the menus close), then `@moveToItemOfTopMenuAndClick_InputEvents "rectangle"` makes a rectangle that rides the
   hand → drop on the world. image_2 = the detached item + the rectangle it produced (reproducing the recording's full arc).
 - **Duplicate an INSPECTOR WINDOW → an independent second inspector (independent close)** (`macroDuplicatedInspectorsCloseIndependently`): the
@@ -1173,14 +1173,14 @@ assertion a recapture after a regression silently stores two different hashes an
   `ButtonWdgt.rejectDrags` returns false ONLY when the parent is the WORLD (`:128-132`), so a world-parented button does NOT arm its
   trigger on press: `Widget.findFirstLooseMorph` (`:2545`) returns the button ITSELF as the grab root (`grabsToParentWhenDragged` is false
   for a world child, `:2513-2536`), so the hand FLOAT-DRAGS it (`ActivePointerWdgt.determineGrabs → grab`). The action fires only via
-  `mouseClickLeft → trigger()` (MenuItemMorph's `mouseClickLeft`; `trigger` inherited from `ButtonWdgt.coffee:98-102`), gated on a same-morph mouse-up; a float-drag ends in a DROP
+  `mouseClickLeft → trigger()` (MenuItemWdgt's `mouseClickLeft`; `trigger` inherited from `ButtonWdgt.coffee:98-102`), gated on a same-morph mouse-up; a float-drag ends in a DROP
   (`ActivePointerWdgt.processMouseUp:435-436`), never a click → no trigger. Build the button DIRECTLY wired to a VISIBLE action: `new
-  MenuItemMorph true, world, "popUpDemoMenu", "demo", 24, "sans-serif", true` (the same action the world menu's "demo" item uses,
+  MenuItemWdgt true, world, "popUpDemoMenu", "demo", 24, "sans-serif", true` (the same action the world menu's "demo" item uses,
   `WorldMorph.coffee:1940`; `popUpDemoMenu` self-pops at the hand, `:2241`) + `world.add` + `rawSetExtent` + `reLayout()` (a standalone
   item doesn't size its box to its label, so set the extent + re-centre the big 24pt label — matches the original torn-off menu item).
-  (Was a `TriggerMorph`; that deprecated class is gone — its label-bearing button role is now `MenuItemMorph`, identical float-drag/trigger
+  (Was a `TriggerMorph`; that deprecated class is gone — its label-bearing button role is now `MenuItemWdgt`, identical float-drag/trigger
   semantics. For a STANDALONE button with NO editable label, `SimpleButtonWdgt` is the modern idiom; here we need the flat big centred
-  label, so MenuItemMorph.) Held-button mid-drag idiom for the negative shots: `@moveToAndMouseDown_InputEvents
+  label, so MenuItemWdgt.) Held-button mid-drag idiom for the negative shots: `@moveToAndMouseDown_InputEvents
   button.center()` → `@syntheticEventsMouseMove_InputEvents pt, "left button"` (lifts onto the hand — image_2) → carry →
   `@syntheticEventsMouseUp_InputEvents()` (DROP, no menu — image_3) → then `@moveToAndClickAtFractionOf_InputEvents button, [0.5,0.5]` (a
   REAL click) → `@moveToItemOfTopMenuAndClick_InputEvents "rectangle"` → carry+drop the new rectangle (image_4, the positive contrast). The
@@ -1209,17 +1209,17 @@ assertion a recapture after a regression silently stores two different hashes an
   memory-blows the capture (and a refs-missing verify) to 30+ min — `run-macro-test-headless.js` extracts each ref in its OWN `page.evaluate`
   and frees it; a passing verify returns no failure images, so it stays fast. First composite-into-scroll-panel test. No new verb.
 - **An embedded "duplicate" button is self-replicating (copy-of-a-copy)** (`macroEmbeddedDuplicateButtonReduplicates`): a Panel's OWN
-  context-menu "duplicate" item, picked up out of the menu and dropped INTO the panel, becomes an in-panel `MenuItemMorph` (target = the panel,
+  context-menu "duplicate" item, picked up out of the menu and dropped INTO the panel, becomes an in-panel `MenuItemWdgt` (target = the panel,
   action `"duplicateMenuActionAndPickItUp"`, `Widget.coffee:3489`). Clicking it deep-copies the whole panel (`fullCopy().pickUp()`,
   `Widget.coffee:2299`); the deep copier rewires the COPIED button's target to the cloned panel (`DeepCopierMixin` parallel originals/clones
   arrays), so clicking the COPY's embedded button duplicates the copy, not the original — the duplicator survives `fullCopy` and replicates
   across generations (1 → 2 → 3 → 4). SETUP reuses the `macroMenuItemDuplicatesToStandaloneMorph` idiom: `@openMenuOf_InputEvents panel` →
   `@getTextMenuItemFromMenu @getMostRecentlyOpenedMenu(), "duplicate"` → `@openMenuOf_InputEvents dupItem` (right-click the item → its ancestor
-  hierarchy menu) → `"a MenuItemMorph ➜"` → `"pick up"` → carry into the panel (no-button move) + `@syntheticEventsMouseClick_InputEvents()` to
+  hierarchy menu) → `"a MenuItem ➜"` → `"pick up"` → carry into the panel (no-button move) + `@syntheticEventsMouseClick_InputEvents()` to
   drop. Clicking the embedded button puts the copy ON THE HAND, so a plain move-then-click carries-and-drops it (NOT a held-drag — that is only
   for a free morph not already on the hand). Locate each generation's button by a LIVE-WORLD query — the new `PanelWdgt` not yet seen, then its
-  descendant `MenuItemMorph` with `labelString == "duplicate"` (`topWdgtSuchThat`) — never recorded coordinates. (`justBeenCopied`,
-  now on `MenuItemMorph`, is only a cosmetic un-highlight, NOT the duplication mechanism.) No new verb.
+  descendant `MenuItemWdgt` with `labelString == "duplicate"` (`topWdgtSuchThat`) — never recorded coordinates. (`justBeenCopied`,
+  now on `MenuItemWdgt`, is only a cosmetic un-highlight, NOT the duplication mechanism.) No new verb.
 
 ## Controllers (patch-programming)
 
@@ -1243,8 +1243,8 @@ assertion a recapture after a regression silently stores two different hashes an
   current value on binding. Use the BUTTON-drag verb (not the track-click) for a free-standing controller slider. DUPLICATING a
   controller+target composite (a panel holding a text + its sliders) deep-copies the bindings remapped to the COPY's target.
 - **Hover-to-highlight a candidate** (`macroTargetingHighlightsCandidateMorph`): hovering a "choose target:"/"choose new parent:"
-  item highlights the morph it represents (`MenuItemMorph.mouseEnter → morphToBeHighlighted.turnOnHighlight()`,
-  `MenuItemMorph.coffee:78` → `world.morphsToBeHighlighted` → a `HighlighterMorph` each cycle). Overlap a ColorPaletteMorph with a
+  item highlights the morph it represents (`MenuItemWdgt.mouseEnter → morphToBeHighlighted.turnOnHighlight()`,
+  `MenuItemWdgt.coffee:78` → `world.morphsToBeHighlighted` → a `HighlighterMorph` each cycle). Overlap a ColorPaletteMorph with a
   rect, `clickMenuItemOfWidget… "set target"`, grab the menu, find the candidate by prefix, then
   `@syntheticEventsMouseMove_InputEvents item.center(), "no button", …` to HOVER (no click) and screenshot the highlight tint.
 - **The highlight covers the EXACT SUBTREE, tracks the hover, clears on leave** (`macroHierarchyMenuHoverHighlightsExactSubtree`):
@@ -1291,7 +1291,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `text→slider2`, since the text overlaps BOTH sliders — BY MEANING instead of the prefix verb: right-click the text → "set target",
   then in the "choose target:" menu pick the item whose target IS slider2. **The reusable bit — selecting a target menu item by its
   morph reference:** `ControllerMixin.openTargetSelector` passes each candidate target widget as the menu item's `argumentToAction1`
-  (via `MenuMorph.addMenuItem` → `MenuItemMorph`), so `slider2Item = menu.topWdgtSuchThat (item) -> (item instanceof MenuItemMorph) and
+  (via `MenuMorph.addMenuItem` → `MenuItemWdgt`), so `slider2Item = menu.topWdgtSuchThat (item) -> (item instanceof MenuItemWdgt) and
   (item.argumentToAction1 == slider2)`, then `@moveToAndClick_InputEvents slider2Item` and `@moveToItemOfMenuAndClick_InputEvents
   @getMostRecentlyOpenedMenu(), "value"`. The other two legs use the prefix verb (unambiguous). So when "set target" lists two
   same-class candidates, NEVER park a widget to disambiguate — pick the menu item by its `argumentToAction1` target reference. No new verb.

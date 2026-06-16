@@ -33,7 +33,7 @@ class GlassBoxBottomWdgt extends BoxMorph
 
     for w in childrenNotHandlesNorCarets
 
-      if (w instanceof MenuItemMorph)
+      if (w instanceof MenuItemWdgt)
         w.fullRawMoveTo @topLeft().add((new Point 0 ,(@height() - w.height())/2 ).round())
       else
         if w.idealRatioWidthToHeight?

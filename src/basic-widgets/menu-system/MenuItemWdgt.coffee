@@ -6,7 +6,7 @@
 # the "represents a morph" hover-highlight. (It used to extend the deprecated
 # TriggerMorph, whose generic flat-button machinery now lives in LabelButtonWdgt.)
 
-class MenuItemMorph extends LabelButtonWdgt
+class MenuItemWdgt extends LabelButtonWdgt
 
   # labelString can also be a Widget or a Canvas or a tuple: [icon, string]
   constructor: (ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, toolTipMessage, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph) ->
@@ -29,7 +29,7 @@ class MenuItemMorph extends LabelButtonWdgt
   #reLayout: ->
   #  @label.setExtent @extent().subtract (@label.bounds.origin.subtract @.bounds.origin)
 
-  # MenuItemMorph hugs its box to its (multi-line, modern TextWdgt) label -- the
+  # MenuItemWdgt hugs its box to its (multi-line, modern TextWdgt) label -- the
   # opposite of LabelButtonWdgt's default single-line StringWdgt label, which
   # leaves the box alone.
   createLabel: ->
@@ -71,7 +71,7 @@ class MenuItemMorph extends LabelButtonWdgt
   widthOfLabel: ->
     @label.width()
 
-  # MenuItemMorph events:
+  # MenuItemWdgt events:
   mouseEnter: ->
     #console.log "@target: " + @target + " @morphEnv: " + @morphEnv
 

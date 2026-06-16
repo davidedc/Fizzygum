@@ -596,7 +596,7 @@ class MacroToolkit
     @moveToAndClick_InputEvents widget, "right button", milliseconds, startTime
 
   # Close a WindowWdgt by clicking the close button (the X) in its window bar. Every WindowWdgt builds
-  # a `.closeButton` (a CloseIconButtonMorph at its top-left); clicking it runs the button's actOnClick
+  # a `.closeButton` (a CloseIconButtonWdgt at its top-left); clicking it runs the button's actOnClick
   # → the window's closeFromWindowBar()/close(). The reusable window-chrome pattern: get a window (by a
   # kept reference, or by class + its `internal` flag) and close it through its real control button, as
   # a user would. Queues input events — follow with `yield "waitNoInputsOngoing"`.
@@ -605,7 +605,7 @@ class MacroToolkit
 
   # Collapse or uncollapse a WindowWdgt by clicking the collapse/uncollapse control in its window bar.
   # Every WindowWdgt builds a `.collapseUncollapseSwitchButton` (a SwitchButtonMorph that toggles between a
-  # CollapseIconButtonMorph and an UncollapseIconButtonMorph): clicking it when expanded collapses the
+  # CollapseIconButtonWdgt and an UncollapseIconButtonWdgt): clicking it when expanded collapses the
   # window to just its bar (contents.collapse()), and clicking it again — the switch now shows the
   # uncollapse icon — restores it. So this one verb both collapses and uncollapses, depending on the
   # window's current state. The window-chrome sibling of closeWindow_InputEvents. Queues input events —

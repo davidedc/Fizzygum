@@ -354,3 +354,37 @@ subclasses, no legacy/modern split) — the cheapest shape in §1. The whole sou
   touched (4 `new ListWdgt` fixtures + 1 menu-nav string in `macroAddingMorphToListUpdatesScroll` + prose/tags); no
   test added or removed. The pre-recorded BATCH-5 touch-list in `class-modernization-planning-starting-prompt.md`
   matched the live greps exactly.
+
+**DONE (2026-06-16): the button-family rename completion (BATCH 4) — 6 `*Morph`→`*Wdgt` at once.** Renamed the last
+`ButtonWdgt`-rooted `*Morph` leftovers: `MenuItemMorph`→`MenuItemWdgt` (`extends LabelButtonWdgt`),
+`SimpleRectangularButtonMorph`→`…Wdgt` + its child `CodeInjectingSimpleRectangularButtonMorph`→`…Wdgt`, and the three
+window-chrome icon buttons `Close`/`Collapse`/`UncollapseIconButtonMorph`→`…Wdgt` (`extends ButtonWdgt`). A PURE rename
+— these already sat correctly in the modern hierarchy (unlike the TriggerMorph arc, which re-PARENTED), so it was
+mechanically BATCH 5 ×6. The `*Button*`-named SEPARATE lineages (`SwitchButtonMorph`/`ToggleButtonMorph`,
+`SliderButtonMorph extends CircleBoxMorph`, `RadioButtonsHolderMorph`, `UpperRightTriangleIconicButton`) were CONFIRMED
+not to descend from `ButtonWdgt` and DEFERRED to BATCH 7 (owner decision UP FRONT). New lessons:
+- **The recapture oracle beat the prediction — and the predicted movers were NOT the actual mover.** Scoping flagged
+  the 2 tests whose MACRO string-matches the nav label (`"a MenuItemMorph ➜"`) as the likely recaptures. The suite
+  found a DIFFERENT single test red — `macroRightClickClosesDownstreamSubMenus` — which PHOTOGRAPHS a hierarchy menu
+  containing `a MenuItem` WITHOUT its macro ever naming the class; meanwhile the 2 predicted tests did NOT recapture
+  (their menu closes before every shot). Exactly the BATCH 5 rule, now doubly proven: do not predict recapture from
+  "which macro references the class" — rename, run the byte-exact suite, the RED set IS the recapture set (here: 1).
+- **A multi-class rename is a safe bulk `\b`-sweep when there are zero string-literals** (verified for all 6). One
+  `perl -i 's/\bOldN\b/NewN/g'` per class over `src/**/*.coffee` (CodeInjecting ordered BEFORE SimpleRectangular so the
+  substring is `\b`-protected) handles decl+extends+new+instanceof in one pass; `git mv` the 6 files; a `.coffee`-only
+  re-grep is the completeness check. The SAME two-pass split as BATCH 5 applies to tests AND to `MACRO-PATTERNS.md`:
+  the drawn hierarchy-nav label `"a MenuItemMorph ➜"`→`"a MenuItem ➜"` (Wdgt STRIPPED) is a SEPARATE pass from the
+  class-ref `\bMenuItemMorph\b`→`MenuItemWdgt` — a blind class-sweep would wrongly write `"a MenuItemWdgt ➜"`. After the
+  doc sweep, grep the docs for the wrong `a <Name>Wdgt` (no ➜) to catch drawn-labels the class-pass over-converted
+  (caught two in `MACRO-PATTERNS.md`, incl. a pre-existing stale `a TextMorph` on the same line).
+- **The doc deliverable includes UN-deferring a prior arc's note.** `src/macros/CLAUDE.md` still carried the
+  TriggerMorph-arc line "`MenuItemMorph` is NOT renamed, so `instanceof MenuItemMorph` and `"a MenuItemMorph ➜"` are
+  unchanged" — now actively MISLEADING (a current author would copy a dead nav string). Rewrote it to the new reality.
+  (The §7 historical entries above that say "deliberately NOT renamed / deferred to BATCH 4" are left intact —
+  chronological provenance.)
+- **`git add -A` discipline carried from BATCH 5:** stage specific files; the previous arc swept in a stray generated
+  `before-after-comparison.html` (now gitignored). Commit messages with backticks/arrows via `git commit -F`.
+- Result: **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots, exactly 1 reference recapture**
+  (`macroRightClickClosesDownstreamSubMenus`, eyeballed: the hierarchy nav now reads `a MenuItem` between an unchanged
+  `a Text` and an unchanged `a MenuMorph`). 22 test files edited (content only; test identifiers kept), no test
+  added/removed.

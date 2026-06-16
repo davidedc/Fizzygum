@@ -62,8 +62,8 @@ class MenuMorph extends PopUpWdgt
     @label = new MenuHeader @title
 
   createMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true, target, action, toolTipMessage, color, bold = false, italic = false,doubleClickAction, arg1, arg2,representsAMorph = false)->
-    # console.log "menu creating MenuItemMorph "
-    item = new MenuItemMorph(
+    # console.log "menu creating MenuItemWdgt "
+    item = new MenuItemWdgt(
       ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, # closes unpinned menus
       target, # target
       action, # action
@@ -109,12 +109,12 @@ class MenuMorph extends PopUpWdgt
         destroyNextLines = false
 
   addMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph)->
-    # console.log "menu creating MenuItemMorph "
+    # console.log "menu creating MenuItemWdgt "
     item = @createMenuItem label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph
     @silentAdd item
 
   prependMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph)->
-    # console.log "menu creating MenuItemMorph "
+    # console.log "menu creating MenuItemWdgt "
     item = @createMenuItem label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph
     @silentAdd item, nil, 0
 
@@ -203,7 +203,7 @@ class MenuMorph extends PopUpWdgt
     #  if @parent.scrollPanel instanceof ScrollPanelWdgt
     #    w = @parent.scrollPanel.width()
     @children.forEach (item) ->
-      if item instanceof MenuItemMorph
+      if item instanceof MenuItemWdgt
         if !item.children[0]? then debugger
         w = Math.max(w, item.children[0].width() + 8)
       else if (item instanceof StringFieldWdgt) or
@@ -231,7 +231,7 @@ class MenuMorph extends PopUpWdgt
   
   unselectAllItems: ->
     @children.forEach (item) ->
-      if item instanceof MenuItemMorph
+      if item instanceof MenuItemWdgt
         item.state = item.STATE_NORMAL
 
     @changed()

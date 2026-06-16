@@ -9,17 +9,23 @@
 # i.e. this is currently the simplest way to change the color
 # of a non-rectangular button.
 
-class CollapseIconButtonMorph extends ButtonWdgt
+class CloseIconButtonWdgt extends ButtonWdgt
+
 
   constructor: (@target) ->
     # can't set the parent as the target directly because this morph
     # might not have a parent yet.
     super true, @, 'actOnClick', new Widget
-    @color_hover = Color.create 255,153,0
+    @color_hover = Color.RED
     @color_pressed = @color_hover
-    @appearance = new CollapseIconAppearance @
-    @toolTipMessage = "collapse window"
+    @appearance = new CloseIconAppearance @
+    @toolTipMessage = "close window"
 
 
   actOnClick: ->
-    @parent.parent.contents.collapse()
+    if @parent?
+      if (@parent instanceof WindowWdgt) and @parent.contents?
+        @parent.closeFromWindowBar()
+      else
+        @parent.close()
+

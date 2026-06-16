@@ -5,7 +5,7 @@
 # but supplies its OWN flat paint -- the button family draws no flat fill
 # (ButtonWdgt is transparent, SimpleButtonWdgt is a rounded box).
 #
-# This is the shared base of MenuItemMorph (menu rows) and MagnetWdgt
+# This is the shared base of MenuItemWdgt (menu rows) and MagnetWdgt
 # (fizzytiles word tiles) -- the role the deprecated TriggerMorph used to fill,
 # now on the modern button family.
 
@@ -67,7 +67,7 @@ class LabelButtonWdgt extends ButtonWdgt
 
   # the default label: a self-sized single-line StringWdgt that does NOT resize
   # the button's box. Subclasses that need the box to hug the label (e.g.
-  # MenuItemMorph) override this.
+  # MenuItemWdgt) override this.
   createLabel: ->
     @label = new StringWdgt(
       @labelString or "",

@@ -42,11 +42,11 @@ class MenusHelper
     world.add wm
 
   createSimpleButton: ->
-    world.create new SimpleRectangularButtonMorph true, @, nil, new IconMorph(nil)
+    world.create new SimpleRectangularButtonWdgt true, @, nil, new IconMorph(nil)
 
   createSwitchButtonMorph: ->
-    button1 = new SimpleRectangularButtonMorph true, @, nil, new IconMorph(nil)
-    button2 = new SimpleRectangularButtonMorph true, @, nil, new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
+    button1 = new SimpleRectangularButtonWdgt true, @, nil, new IconMorph(nil)
+    button2 = new SimpleRectangularButtonWdgt true, @, nil, new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
     world.create new SwitchButtonMorph [button1, button2]
 
   createNewClippingBoxMorph: ->
@@ -86,7 +86,7 @@ class MenusHelper
     world.create new CollapsedStateIconMorph
 
   createCloseIconButtonMorph: ->
-    world.create new CloseIconButtonMorph
+    world.create new CloseIconButtonWdgt
 
   createScratchAreaIconMorph: ->
     world.create new ScratchAreaIconMorph

@@ -1,7 +1,7 @@
-# like a SimpleRectangularButtonMorph but it contains code that can be
+# like a SimpleRectangularButtonWdgt but it contains code that can be
 # injected into another morph
 
-class CodeInjectingSimpleRectangularButtonMorph extends SimpleRectangularButtonMorph
+class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWdgt
 
   # Why don't we store just a Function, why are we dealing with strings here?
   # 1) because the user inputs a string

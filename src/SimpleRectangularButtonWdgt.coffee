@@ -2,7 +2,7 @@
 # takes a rectangular shape, and can host
 # a morph to be used as "face"
 
-class SimpleRectangularButtonMorph extends ButtonWdgt
+class SimpleRectangularButtonWdgt extends ButtonWdgt
 
   constructor: (
       @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true,

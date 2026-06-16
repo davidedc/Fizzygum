@@ -191,12 +191,13 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `instanceof`, by contrast, use the REAL class name (`"TextWdgt"`); and the inspector HIERARCHY diagram shows the real name too.
 - **Menu items / magnets are now in the modern button family** — the deprecated `TriggerMorph` was deleted and replaced by
   a clean base **`LabelButtonWdgt`** (a flat label-bearing button) on the modern family: `Widget → ButtonWdgt` (was
-  `EmptyButtonMorph`) `→ LabelButtonWdgt → {MenuItemMorph, MagnetWdgt}`. `LabelButtonWdgt` inherits the
+  `EmptyButtonMorph`) `→ LabelButtonWdgt → {MenuItemWdgt, MagnetWdgt}`. `LabelButtonWdgt` inherits the
   `target`/`action`/`trigger` machinery + `HighlightableMixin` state constants from `ButtonWdgt` but KEEPS the flat
   fill (SILVER hover / GRAY press) via its own retained paint + state handlers, so menus render exactly as before.
-  `MenuItemMorph` is NOT renamed, so `instanceof MenuItemMorph` and the `"a MenuItemMorph ➜"` hierarchy nav strings are
-  unchanged. For a STANDALONE button fixture use `SimpleButtonWdgt` (rounded modern button; its `StringWdgt` face crops on
-  `setText`) — but for an editable-label or flat-centred-label button use `MenuItemMorph` (its `TextWdgt` label re-measures
+  `MenuItemMorph`→`MenuItemWdgt` (BATCH 4 — the button-family rename), so use `instanceof MenuItemWdgt` and the
+  Wdgt-stripped hierarchy nav string `"a MenuItem ➜"` (NOT `"a MenuItemWdgt ➜"`). For a STANDALONE button fixture use
+  `SimpleButtonWdgt` (rounded modern button; its `StringWdgt` face crops on
+  `setText`) — but for an editable-label or flat-centred-label button use `MenuItemWdgt` (its `TextWdgt` label re-measures
   on `setText`); see `macroBareButtonFloatDragsWithoutTriggering` / `macroEditButtonLabelText`.
 - **One inspector — windowed by default, but ALSO a first-class NAKED widget:** there is a single `InspectorWdgt` (the
   old `InspectorMorph` was deleted; `InspectorMorph2`→`InspectorWdgt`), opened by the single method `Widget.spawnInspector`
