@@ -45,6 +45,11 @@ class InspectorWdgt extends Widget
   saveButton: nil
   saveTextWdgt: nil
 
+  # opaque background appearance, painted ONLY while the inspector is
+  # free-floating (naked); dropped while it is WindowWdgt content (the
+  # window supplies the background) — see the constructor + setLayoutSpec
+  inspectorBackgroundAppearance: nil
+
   externalPadding: 0
   internalPadding: 5
   padding: nil
@@ -103,8 +108,38 @@ class InspectorWdgt extends Widget
     @classesButtons = []
     @classesNames = []
     @angledArrows = []
-    super new Point 300, 300
+    super()
+
+    # A naked (chrome-less) inspector must establish its OWN usable extent.
+    # Without a WindowWdgt to size it, doLayout would divide the Widget-default
+    # ~50x40 across three panes and collapse them. The windowed path
+    # (Widget::spawnInspector) overrides this via the window's setExtent, so
+    # setting it here is windowed-pixel-neutral. (The previous
+    # `super new Point 300,300` was a no-op — Widget::constructor takes no args.)
+    @silentRawSetExtent new Point 560, 410
+
+    # When free-floating (naked on the desktop) the inspector paints its own
+    # opaque background; inside a WindowWdgt the window supplies it. The
+    # appearance is toggled off when the inspector becomes window content
+    # (setLayoutSpec, below) so the windowed render stays byte-identical.
+    @color = Color.create 248, 248, 248
+    @inspectorBackgroundAppearance = new RectangularAppearance @
+    @appearance = @inspectorBackgroundAppearance
+
     @buildAndConnectChildren()
+
+  # Paint our own opaque background ONLY when free-floating (naked); as
+  # WindowWdgt content the window provides it, so drop the appearance then
+  # (keeping the windowed inspector byte-identical). This mirrors how the
+  # @resizer HandleMorph shows only when free-floating — both are driven off
+  # the same layout-spec change in Widget::setLayoutSpec.
+  setLayoutSpec: (newLayoutSpec) ->
+    super
+    @appearance =
+      if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
+        @inspectorBackgroundAppearance
+      else
+        nil
   
   buildAndConnectChildren: ->
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
@@ -303,11 +338,12 @@ class InspectorWdgt extends Widget
     @propertyHeaderString.alignCenter()
     @add @propertyHeaderString
 
-    # TODO this resizer is actually not needed because the inspector is
-    # always created inside a window, and the window has its own resizer
-    # however I am leaving it here for now because the situation with
-    # the tests is delicate and I don't want to break any more tests
-    # resizer
+    # The inspector's own resize handle. It is shown ONLY when the inspector
+    # is free-floating (naked on the desktop) and hidden when it is WindowWdgt
+    # content (HandleMorph::updateVisibility, driven by Widget::setLayoutSpec),
+    # so a naked inspector is self-resizable while a windowed one defers to the
+    # window's resizer. Covered by
+    # SystemTest_macroNakedInspectorRendersResizesAndEdits.
     @resizer = new HandleMorph @
 
     # update layout
@@ -538,12 +574,14 @@ class InspectorWdgt extends Widget
     @target.sourceChanged()
   
   #InspectorWdgt editing ops:
+  # Shared save scaffolding: object inspectors inject the property, class
+  # inspectors evaluate an assignment — the only differing step is isolated in
+  # the overridable applyPropertyEdit hook (ClassInspectorWdgt overrides it).
   save: ->
     if !@list.selected? then return
     txt = @detail.contents.children[0].text.toString()
     propertyName = @list.selected.labelString
-    # inject code will also break the layout and the morph
-    @target.injectProperty propertyName, txt
+    @applyPropertyEdit propertyName, txt
 
     @detail.textWdgt.considerCurrentTextAsReferenceText()
     @detail.checkIfTextContentWasModifiedFromTextAtStart()
@@ -554,6 +592,13 @@ class InspectorWdgt extends Widget
     for eachWidget in world.widgetsGivingErrorWhileRepainting
       eachWidget.show()
     world.widgetsGivingErrorWhileRepainting = []
+
+  # the one differing step between object- and class-inspector save: an object
+  # inspector injects the property onto the instance (ClassInspectorWdgt
+  # overrides this to evaluate an assignment against the class prototype).
+  applyPropertyEdit: (propertyName, txt) ->
+    # inject code will also break the layout and the morph
+    @target.injectProperty propertyName, txt
 
 
   # TODO should have a removeProperty method in Widget (and in the classes somehow)

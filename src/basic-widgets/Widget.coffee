@@ -2848,10 +2848,13 @@ class Widget extends TreeNode
 
   # the single inspector entry point. Every inspect path routes here:
   # the world menu and widget context-menu "inspect" items, the "dev -> inspect"
-  # item (MenusHelper), and a text editor's "inspect selection". The InspectorWdgt
-  # is built to live inside a window (it fills the window's content area and the
-  # window provides the chrome + resizer); opening it "naked" leaves its panes
-  # badly cramped, so it is always windowed.
+  # item (MenusHelper), and a text editor's "inspect selection". This is the
+  # convenience wrapper that opens the inspector WINDOWED — its content fills a
+  # 560x410 WindowWdgt that supplies the chrome + background + resizer. The
+  # InspectorWdgt also renders and resizes correctly on its OWN now
+  # (`world.add new InspectorWdgt target`): when free-floating it paints its own
+  # background and is resized via its @resizer handle. This wrapper stays the
+  # default for the menu/inspect paths; the naked path is the additional mode.
   spawnInspector: (inspectee) ->
     inspector = new InspectorWdgt inspectee
     wm = new WindowWdgt nil, nil, inspector

@@ -36,7 +36,7 @@ You are picking up a series of "bring a class to latest" modernizations in the F
  ROADMAP (in order; renaming LAST):
    1. Content-text reflow — generalize `maxTextWidth`/`softWrap` to bare `TextWdgt` content.   ✅ DONE (Arc 6, above).
    ▸ TOP TO-DO (small follow-up left by Arc 6) — ✅ DONE (2026-06-15, the "Arc 6 FOLLOW-UP" entry above): a bare FIT_BOX_TO_TEXT `TextWdgt` now reflows on its own `setText`, not just on a container RESIZE. The reLayout+refresh triggers (`setText`/`setFontSize`/`setFontName`/`toggle*`) were moved off `SimplePlainTextWdgt`'s overrides onto the base `TextWdgt` (`reLayoutAndRefreshContainerIfContainedText`, mode-gated); `SimplePlainTextWdgt` simplified to keep only its `setText` (for controller plumbing, delegating the reflow via `super`). A bare `TextWdgt` is now a full drop-in for SimplePlainTextWdgt. New test `macroBareTextWdgtReflowsOnSetText`; 163/163 (Chrome + WebKit), `--homepage` boots.
-   2. Naked-inspector fix — make InspectorWdgt render/function/RESIZE correctly WITHOUT a window (keep+wire its `@resizer`; add a naked-inspector test); + unify the two `save` paths.   ← THE STANDING GOAL (next arc)
+   2. che 
    3. (TextWdgt text shadows — ONLY if a concrete caller appears; none today, so not an arc yet.)
    — then the renaming / migration phase, LAST —
    4. Button-family `*Morph` -> `*Wdgt` completion (icon/rect buttons ± MenuItemMorph).

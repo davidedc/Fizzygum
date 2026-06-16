@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/davidedc/Fizzygum#readme",
   "devDependencies": {
-    "coffeescript": "",
+    "coffeescript": "^2.7.0",
     "terser": "^5.0.0"
   }
 }

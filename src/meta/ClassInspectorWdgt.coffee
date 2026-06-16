@@ -33,10 +33,11 @@ class ClassInspectorWdgt extends InspectorWdgt
   # inject code in the objects themselves.
   # We'd have to do the same here, add a way to inject code in
   # object classes.
-  save: ->
-    txt = @detail.contents.children[0].text.toString()
-    propertyName = @list.selected.labelString
-
+  # The shared save scaffolding lives in InspectorWdgt::save; a class inspector
+  # differs only in HOW it applies the edit: it evaluates the assignment against
+  # the class prototype (and keeps the source for functions so CoffeeScript
+  # stays editable).
+  applyPropertyEdit: (propertyName, txt) ->
     # this.target[propertyName] = evaluate txt
     @target.evaluateString "@" + propertyName + " = " + txt
     # if we are saving a function, we'd like to
@@ -45,13 +46,3 @@ class ClassInspectorWdgt extends InspectorWdgt
     if Utils.isFunction @target[propertyName]
       @target[propertyName + "_source"] = txt
     @notifyInstancesOfSourceChange([propertyName])
-
-    @detail.textWdgt.considerCurrentTextAsReferenceText()
-    @detail.checkIfTextContentWasModifiedFromTextAtStart()
-
-    # it's possible that the user might have fixed
-    # a "painting" error, so give another chance to all
-    # "banned" widgets (banned from repainting)
-    for eachWidget in world.widgetsGivingErrorWhileRepainting
-      eachWidget.show()
-    world.widgetsGivingErrorWhileRepainting = []
