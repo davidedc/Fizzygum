@@ -45,13 +45,13 @@ class ScrollPanelWdgt extends PanelWdgt
     #@setColor = @contents.setColor
     #@setAlphaScaled = @contents.setAlphaScaled
 
-    @hBar = new SliderMorph nil, nil, nil, nil, @sliderColor
+    @hBar = new SliderWdgt nil, nil, nil, nil, @sliderColor
     @hBar.rawSetHeight @scrollBarsThickness
 
     @hBar.target = @
     @addRaw @hBar
 
-    @vBar = new SliderMorph nil, nil, nil, nil, @sliderColor
+    @vBar = new SliderWdgt nil, nil, nil, nil, @sliderColor
     @vBar.rawSetWidth @scrollBarsThickness
     @vBar.target = @
     @addRaw @vBar

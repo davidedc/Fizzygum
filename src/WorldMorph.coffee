@@ -672,7 +672,7 @@ class WorldMorph extends PanelWdgt
   checkARectWithHierarchy: (aRect, brokenMorph, isSrc) ->
     brokenMorphAncestor = brokenMorph
 
-    #if brokenMorph instanceof SliderMorph
+    #if brokenMorph instanceof SliderWdgt
     #  debugger
 
     while brokenMorphAncestor.parent?
@@ -1985,9 +1985,9 @@ class WorldMorph extends PanelWdgt
   createNewBoxMorph: ->
     @create new BoxWdgt
   createNewCircleBoxMorph: ->
-    @create new CircleBoxMorph
+    @create new CircleBoxWdgt
   createNewSliderMorph: ->
-    @create new SliderMorph
+    @create new SliderWdgt
   createNewPanelWdgt: ->
     newWdgt = new PanelWdgt
     newWdgt.rawSetExtent new Point 350, 250

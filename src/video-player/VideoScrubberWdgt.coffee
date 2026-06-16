@@ -1,4 +1,4 @@
-class VideoScrubberWdgt extends SliderMorph
+class VideoScrubberWdgt extends SliderWdgt
 
   videoPlayerCanvas: nil
 

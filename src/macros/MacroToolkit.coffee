@@ -96,7 +96,7 @@ class MacroToolkit
 
   # NON-scaled FLOOR on a single click's HOLD (down→up). A click's down and up must land
   # in DIFFERENT world cycles so a per-cycle re-check runs WHILE the button is held — some
-  # widgets read that mid-press frame (e.g. a SliderMorph track-click jumps its button
+  # widgets read that mid-press frame (e.g. a SliderWdgt track-click jumps its button
   # under the pointer, and the hover highlight is resolved on a held-button frame; with no
   # such frame the button highlights spuriously after release). At normal a click already
   # holds 100ms; this only floors the COMPRESSED hold at fast/fastest. Timing only — the
@@ -512,9 +512,9 @@ class MacroToolkit
     @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, nil, startTime, nil
     @syntheticEventsWheel_InputEvents deltaX, deltaY, startTime + milliseconds + 100
 
-  # Click a SliderMorph's TRACK (its background, OUTSIDE the button) at a point a fraction along its
+  # Click a SliderWdgt's TRACK (its background, OUTSIDE the button) at a point a fraction along its
   # length, to JUMP the slider button there. For a scroll panel's scrollbar — a ScrollPanelWdgt's @vBar
-  # / @hBar (both SliderMorphs) — this scrolls the content to that position: SliderMorph.mouseDownLeft,
+  # / @hBar (both SliderWdgts) — this scrolls the content to that position: SliderWdgt.mouseDownLeft,
   # when the slider's parent is a ScrollPanelWdgt (or PromptMorph), non-float-drags the button to the
   # click point (ActivePointerWdgt.nonFloatDragWdgtFarAwayToHere), and a click leaves it there. `fraction`
   # is [fx, fy] of the slider's bounds — for a vertical scrollbar pass e.g. [0.5, 0.8] (80% down the
@@ -526,10 +526,10 @@ class MacroToolkit
   clickOnSliderTrackAtFraction_InputEvents: (sliderOrIdentifier, fraction, milliseconds = 1000, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @moveToAndClickAtFractionOf_InputEvents sliderOrIdentifier, fraction, "left button", milliseconds, startTime
 
-  # DRAG a SliderMorph's button to a fractional position along its track — a press-drag-release ON THE
-  # BUTTON (not the track). The button is a NON-float-drag child of the slider (SliderButtonMorph.
-  # detachesWhenDragged returns false while its parent is a SliderMorph), so this moves the button within
-  # the track via SliderButtonMorph.nonFloatDragging, which calls SliderMorph.updateValue -> setValue ->
+  # DRAG a SliderWdgt's button to a fractional position along its track — a press-drag-release ON THE
+  # BUTTON (not the track). The button is a NON-float-drag child of the slider (SliderButtonWdgt.
+  # detachesWhenDragged returns false while its parent is a SliderWdgt), so this moves the button within
+  # the track via SliderButtonWdgt.nonFloatDragging, which calls SliderWdgt.updateValue -> setValue ->
   # updateTarget every frame the value changes — so if the slider has a controller target set (via
   # "set target"), it drives target[setter](value) LIVE as it is dragged. This is the controller-DRAG
   # sibling of clickOnSliderTrackAtFraction_InputEvents (which only JUMPS the button via a track click, and
@@ -924,7 +924,7 @@ class MacroToolkit
     """
 
     # Patch-programming "set target": wire a CONTROLLER widget (a ColorPaletteMorph, GrayPaletteMorph,
-    # SliderMorph, StringWdgt, … — anything augmented with ControllerMixin) to drive a property of
+    # SliderWdgt, StringWdgt, … — anything augmented with ControllerMixin) to drive a property of
     # another widget. Right-click the controller -> "set target" (openTargetSelector) opens a
     # "choose target:" menu of the widgets whose bounds INTERSECT the controller (so the controller must
     # OVERLAP the intended target), each labelled `target.toString() + " ➜"`; pick it by class-name PREFIX.
@@ -937,7 +937,7 @@ class MacroToolkit
         @moveToAndClickAtFractionOf_InputEvents controllerWidget, controllerMenuFraction, "right button"
         yield "waitNoInputsOngoing"
         # When the controller is INSIDE a container (its parent is not the world), right-clicking it opens the
-        # ancestor HIERARCHY menu ("a SliderMorph ➜", "a Panel ➜", …) rather than the controller's own menu —
+        # ancestor HIERARCHY menu ("a Slider ➜", "a Panel ➜", …) rather than the controller's own menu —
         # so first navigate into the controller's own submenu by its class-name prefix. (A world-child
         # controller opens its menu directly, so this is skipped.)
         if controllerHierarchyPrefix?

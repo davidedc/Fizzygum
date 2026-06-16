@@ -208,7 +208,7 @@ class MenuMorph extends PopUpWdgt
         w = Math.max(w, item.children[0].width() + 8)
       else if (item instanceof StringFieldWdgt) or
         (item instanceof ColorPickerMorph) or
-        (item instanceof SliderMorph)
+        (item instanceof SliderWdgt)
           w = Math.max w, item.width()
       #console.log "maxWidthOfMenuEntries: width of item " + item + " : " + w
 

@@ -34,7 +34,7 @@ class PromptMorph extends MenuMorph
 
     @silentAdd @tempPromptEntryField
     if @ceilingNum or WorldMorph.preferencesAndSettings.useSliderForInput
-      slider = new SliderMorph(
+      slider = new SliderWdgt(
         @floorNum or 0,
         @ceilingNum,
         parseFloat(@defaultContents),

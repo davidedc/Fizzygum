@@ -389,7 +389,7 @@ assertion a recapture after a regression silently stores two different hashes an
   that DEFAULTS to the current width, so CLICK the field to focus it
   (`StringFieldWdgt.mouseClickLeft → @text.edit()`; reach it as `basePrompt.tempPromptEntryField`), `Meta+a`, type "300", then "Ok" —
   which reads the field's `getValue()` into `setWidthOfElementWhenAdded`. Typing WITHOUT focusing the field leaves the default, so Ok
-  re-applies the current width = no visible change. (If instead you drive the prompt's `SliderMorph` via
+  re-applies the current width = no visible change. (If instead you drive the prompt's `SliderWdgt` via
   `@clickOnSliderTrackAtFraction_InputEvents`, pass a `[fx,fy]` POINT, NOT a scalar — a scalar indexes as `fraction[0]`=undefined → a NaN
   click point → a non-finite base-width → a "Point x must be finite" paint crash.) (2) base-width only bites when the paragraph's remembered
   `widthOfStackWhenAdded` equals the current available stack width; the SHIPPED default paragraph remembered it at CONSTRUCTION (before
@@ -528,7 +528,7 @@ assertion a recapture after a regression silently stores two different hashes an
   COLOUR-PICKER TRAP: a `ColorPickerMorph` holds both a hue×lightness `.colorPalette` and a thin `.grayPalette` (a
   GrayPaletteMorph, which SUBCLASSES ColorPaletteMorph) — reach the colour one via the `.colorPalette` accessor, NOT an
   `instanceof ColorPaletteMorph` search. transparency: `"transparency..."` opens a `PromptMorph` —
-  `@clickOnSliderTrackAtFraction_InputEvents prompt.topWdgtSuchThat((m)-> m instanceof SliderMorph), [fx,0.5]` then "Ok".
+  `@clickOnSliderTrackAtFraction_InputEvents prompt.topWdgtSuchThat((m)-> m instanceof SliderWdgt), [fx,0.5]` then "Ok".
 
 - **Popup repositioned to stay on-screen** (`macroMenuRepositionsToStayOnScreen`): a popup is never clipped by the
   world edge — it is shifted to stay fully visible. `PopUpWdgt.popUp` (`:143`) puts the popup's top-left at the requested
@@ -656,10 +656,10 @@ assertion a recapture after a regression silently stores two different hashes an
   programmatic move. No new verb.
 - **Window CONTENT resize — free vs fixed width** (`macroWindowContentResizesFreely` / `macroWindowContentKeepsFixedWidth`): a
   dropped widget becomes `@contents`; on a window resize `WindowWdgt.adjustContentsBounds` (`:384`) resizes it per its
-  `WindowContentLayoutSpec`'s `canSetWidthFreely`/`canSetHeightFreely`. A `CircleBoxMorph` has BOTH free → fills both dims; a
-  `SliderMorph` keeps a FIXED width (`initialiseDefaultWindowContentLayoutSpec` makes width un-free) → stretches only in height,
-  centred. DROP GOTCHA: a CircleBoxMorph drops fine with `@dragWidgetTo_InputEvents circle, win` (centre grab — no sub-widget),
-  but a SliderMorph must be dropped with `slider.pickUp()` + a no-button move + `@syntheticEventsMouseClick_InputEvents()`
+  `WindowContentLayoutSpec`'s `canSetWidthFreely`/`canSetHeightFreely`. A `CircleBoxWdgt` has BOTH free → fills both dims; a
+  `SliderWdgt` keeps a FIXED width (`initialiseDefaultWindowContentLayoutSpec` makes width un-free) → stretches only in height,
+  centred. DROP GOTCHA: a CircleBoxWdgt drops fine with `@dragWidgetTo_InputEvents circle, win` (centre grab — no sub-widget),
+  but a SliderWdgt must be dropped with `slider.pickUp()` + a no-button move + `@syntheticEventsMouseClick_InputEvents()`
   (`@dragWidgetTo_InputEvents` would grab the slider's CENTRE = its BUTTON at value 50, moving the button not the slider).
 - **Window CONTENT resize — aspect-CONSTRAINED (stays square)** (`macroClockInWindowKeepsSquareOnResize`): the third window-content
   case after free/fixed-width. An `AnalogClockWdgt` as window content keeps a SQUARE aspect at every window size — its
@@ -716,8 +716,8 @@ assertion a recapture after a regression silently stores two different hashes an
   a scrollbar; `@wheelOn_InputEvents list, deltaY` scrolls it (positive deltaY = DOWN). Tune the delta to the overflow (drop it
   if two later shots stop changing). Row-click highlight is NOT a reliable screenshot signal; scrolling is.
 - **Slider/scrollbar TRACK click** (`macroSliderTrackClickMovesButton`): `@clickOnSliderTrackAtFraction_InputEvents doc.vBar,
-  [0.5, fy]` clicks a SliderMorph's TRACK (background, OUTSIDE the button) to JUMP the button there — for a ScrollPanelWdgt's
-  `@vBar`/`@hBar` this scrolls the content (`SliderMorph.mouseDownLeft` non-float-drags the button to the click when the
+  [0.5, fy]` clicks a SliderWdgt's TRACK (background, OUTSIDE the button) to JUMP the button there — for a ScrollPanelWdgt's
+  `@vBar`/`@hBar` this scrolls the content (`SliderWdgt.mouseDownLeft` non-float-drags the button to the click when the
   slider's parent is a ScrollPanelWdgt OR PromptMorph; a slider parented to neither IGNORES it — the negative case). Click the
   TRACK not the button (a click ON the button just grabs it) — give enough overflow that the button is small.
 - **Nested scroll-panel wheel routing + limit escalation** (`macroNestedScrollPanelsRouteWheel`): the wheel scrolls the INNERMOST
@@ -844,13 +844,13 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Unplug an inspector scrollbar + the duplicate ASYMMETRY** (`macroInspectorScrollbarUnplugged`): inspect a string
   (`clickMenuItemOfWidget_InputEvents_Macro str, "inspect"`) → an `InspectorWdgt` window; park the window left so the strip
   to its right is clear for the detached scrollbars. Capture `scrollbar1 = inspector.list.vBar` BEFORE detaching (the list doesn't rebuild it). Right-click its knob → hierarchy
-  "a SliderMorph" → "pick up" → carry + drop CLEAR. It STILL drives the list: `@dragSliderButtonToFraction_InputEvents
-  scrollbar1, [0.5, fy]` (`detachesWhenDragged` is false when the button's parent is a SliderMorph). DUPLICATE it ("duplicate"
+  "a Slider ➜" → "pick up" → carry + drop CLEAR. It STILL drives the list: `@dragSliderButtonToFraction_InputEvents
+  scrollbar1, [0.5, fy]` (`detachesWhenDragged` is false when the button's parent is a SliderWdgt). DUPLICATE it ("duplicate"
   instead of "pick up"); `fullCopy` copies the `target` reference so the copy ALSO drives the list. ASYMMETRY: dragging the copy
   scrolls the list and `scrollbar1` FOLLOWS (the list updates its own @vBar via `adjustScrollBars`); dragging `scrollbar1`
   scrolls the list but the copy — which the list has no back-reference to — stays put.
 - **A vertical scrollbar IGNORES the sideways component of a button drag**
-  (`macroMovingSlidersSidewaysDoesntCauseContentToMoveSideways`): `SliderButtonMorph.nonFloatDragging` (`:68`) pins a
+  (`macroMovingSlidersSidewaysDoesntCauseContentToMoveSideways`): `SliderButtonWdgt.nonFloatDragging` (`:68`) pins a
   vertical slider's button to its own column (`newX = @left()` — the drag's x is DISCARDED) and clamps the y to the
   track; `parent.updateValue()` fires only when the button actually MOVED, and `endOfNonFloatDrag` (`:90`) resets the
   button's visual state on release. So a pure-sideways press-drag-release
@@ -930,10 +930,10 @@ assertion a recapture after a regression silently stores two different hashes an
   no "enable editing" needed (the OUTER scroll panel's `@disableDrops` only gates its chrome). INSERTION INDEX ↔ drop Y:
   `SimpleVerticalStackPanelWdgt.add` (`:34-42`) inserts AFTER the sibling whose vertical span contains the drop Y, APPENDS if the
   Y is in a gap/below all — **index 0 is unreachable**; aim at a sibling's `.center()` for "after it", `lastEl.bottom()+N` to append.
-- **`@dragWidgetTo_InputEvents` grabs the CENTRE — which may be a sub-widget.** For a SliderMorph (button at the centre at value 50)
+- **`@dragWidgetTo_InputEvents` grabs the CENTRE — which may be a sub-widget.** For a SliderWdgt (button at the centre at value 50)
   it grabs/moves the BUTTON, not the slider (the drop silently does nothing). Drop such a widget programmatically: `widget.pickUp()`
   + a no-button `@syntheticEventsMouseMove_InputEvents` + `@syntheticEventsMouseClick_InputEvents()`. A plain shape
-  (BoxWdgt/CircleBoxMorph/RectangleWdgt) has no sub-widget, so `@dragWidgetTo_InputEvents` is fine.
+  (BoxWdgt/CircleBoxWdgt/RectangleWdgt) has no sub-widget, so `@dragWidgetTo_InputEvents` is fine.
 - **Attach to a target** (`macroAttachResizingHandleToMorph`): drop the morph so it OVERLAPS the target (required —
   `Widget.attach` lists only morphs whose bounds INTERSECT it, `world.plausibleTargetAndDestinationMorphs`, excluding self +
   current parent), then `clickMenuItemOfWidget_InputEvents_Macro morph, "attach..."` → capture the "choose target:" menu →
@@ -1074,7 +1074,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (`constrainContentWidth = true`) runs `rawSetWidthSizeHeightAccordingly(getWidthInStack())` on every child, and
   `getWidthInStack` returns the remembered DROP-time width capped at the content width — so small widgets keep their sizes
   (`macroDocumentPreservesDroppedWidgetSizes`) and OVERSIZED ones come out at exactly ONE shared width (texts also get
-  re-wrapped via `softWrap`, the retired `maxTextWidth`'s replacement). To show the cap, build the parade WIDER than the stack. GOTCHA: a bare `SliderMorph` cannot be
+  re-wrapped via `softWrap`, the retired `maxTextWidth`'s replacement). To show the cap, build the parade WIDER than the stack. GOTCHA: a bare `SliderWdgt` cannot be
   moved by a centre press — that lands on the value-50 BUTTON and non-float-drags it; grab a clear TRACK point
   (`@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf slider, [0.08, 0.5]), dest`).
 - **The drag-to-scroll FLAGS — background pans, foreground pans** (`macroScrollPanelDragToScrollFlags`): two dedicated
@@ -1224,7 +1224,7 @@ assertion a recapture after a regression silently stores two different hashes an
 ## Controllers (patch-programming)
 
 - **Set target** (`macroPaletteSetTargetRecolorsPanel`): `setControllerTargetToWidgetProperty_InputEvents_Macro controller,
-  "a Panel", "color"` — right-click the controller (a ColorPaletteMorph / GrayPaletteMorph / SliderMorph / … with
+  "a Panel", "color"` — right-click the controller (a ColorPaletteMorph / GrayPaletteMorph / SliderWdgt / … with
   `ControllerMixin`) → "set target" (`openTargetSelector` lists only bounds-INTERSECTING widgets, so it MUST OVERLAP the target)
   → pick the target by class-name PREFIX → pick the property; thereafter acting on the controller calls `target[setter](value)`.
   4th arg `controllerMenuFraction` (default `[0.5,0.5]`): pass `[0.5,0.85]` for a SLIDER (its button covers the centre at value
@@ -1238,7 +1238,7 @@ assertion a recapture after a regression silently stores two different hashes an
   click wins). One palette/many targets ⇒ re-targeting; many palettes/one target ⇒ shared control.
 - **Slider drives a target live** (`macroSlidersControlTextMorph`): wire with the 4th/5th args above, then
   `@dragSliderButtonToFraction_InputEvents slider, [0.5, fy]` does a press-drag-release ON the BUTTON (a non-float child drag →
-  `SliderButtonMorph.nonFloatDragging → SliderMorph.updateValue → setValue → updateTarget`), driving `target[setter](value)` LIVE
+  `SliderButtonWdgt.nonFloatDragging → SliderWdgt.updateValue → setValue → updateTarget`), driving `target[setter](value)` LIVE
   the whole drag (larger fy = larger value). A slider's property menu lists only NUMERIC setters; `setTargetAndAction` pushes the
   current value on binding. Use the BUTTON-drag verb (not the track-click) for a free-standing controller slider. DUPLICATING a
   controller+target composite (a panel holding a text + its sliders) deep-copies the bindings remapped to the COPY's target.
@@ -1268,7 +1268,7 @@ assertion a recapture after a regression silently stores two different hashes an
   the recording's hover-highlighted row). Prefix "color" is unambiguous: "background color" does not START with it. No new verb.
 - **A two-way slider↔text patch cycle, text as SOURCE, guarded** (`macroSliderTextTwoWayPatchCycle`): wire `slider.value → text
   "text"` AND `text → slider "value"` so the two bind into a 2-node LOOP; driving either end chases the value to the other and
-  `world.makeNewConnectionsCalculationToken()` (minted in `SliderMorph.setValue`/`SimplePlainTextWdgt.setText`, propagated by
+  `world.makeNewConnectionsCalculationToken()` (minted in `SliderWdgt.setValue`/`SimplePlainTextWdgt.setText`, propagated by
   `updateTarget`, re-seen → early `return`) stops the loop after one hop. The TEXT is a controller SOURCE — TYPING into it moves the
   slider (visible, not just an internal back-edge). KEY: both controllers are world children positioned to OVERLAP, so each "set
   target" menu lists exactly ONE candidate of the wanted class (one text / one slider) and is unambiguous — **so NOTHING is
@@ -1280,7 +1280,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `world.edit text` (escape hatch — left-clicking a short number in a wide box overshoots the empty-text `slotAt`, see
   `macroInspectorWorkAreaEvaluatesCoffeeScript`) + `Meta+a` + typed digits (text→slider). FIXTURE gotchas: KEEP the ctor's
   wrap-to-own-width (`softWrap` on, the default — `softWrap = false` shrinks the box to its natural content width, so it stops overlapping the slider and "set target" can't find it);
-  `SliderMorph`'s track AND `SliderButtonMorph.normalColor` are both `Color.BLACK`, so tint the track light (`slider.color = …`) to
+  `SliderWdgt`'s track AND `SliderButtonWdgt.normalColor` are both `Color.BLACK`, so tint the track light (`slider.color = …`) to
   make the button (= the value) visible. No new verb.
 - **The full 3-node slider→text→slider cycle — each component drives the other two, wired with NOTHING moved**
   (`macroSliderTextSliderPatchCycle`): the 3-node sibling of the above. `slider1 → text "text"`, `text → slider2 "value"`,
@@ -1425,7 +1425,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Padding is real morph area — sliders + palette-reveal + drag-by-the-band** (`macroPaddingAreaIsPartOfMorph`): a RectangleWdgt paints
   two layers (`RectangularAppearance.coffee:71-88`) — `backgroundColor` over the FULL bounds, `color` over the padding-inset tight region
   `boundingBoxTight()` (`Widget.coffee:679-680`, edges inset by paddingTop/Bottom/Left/Right `:658-668`). The padding band between them is part
-  of the morph, but while UNPAINTED it is click-through. Reproduce basicMorphPadding via PATCH-PROGRAMMING: build the rect + FIVE SliderMorphs
+  of the morph, but while UNPAINTED it is click-through. Reproduce basicMorphPadding via PATCH-PROGRAMMING: build the rect + FIVE SliderWdgts
   + a ColorPaletteMorph all OVERLAPPING it (REQUIRED — "set target" lists only widgets whose bounds intersect the controller), then
   `setControllerTargetToWidgetProperty_InputEvents_Macro slider, "a Rectangle", "padding"|"padding top"|"…bottom"|"…left"|"…right", [0.5,0.85]`
   (the centred slider button covers a centre right-click → right-click the LOWER TRACK; a world-child controller needs no hierarchy prefix) and
@@ -1440,35 +1440,35 @@ assertion a recapture after a regression silently stores two different hashes an
 
 ## Sliders & popovers
 
-- **Slider-button state colours + cross-slider grab** (`macroSliderButtonStateColors`): a `SliderButtonMorph` paints `@color` =
+- **Slider-button state colours + cross-slider grab** (`macroSliderButtonStateColors`): a `SliderButtonWdgt` paints `@color` =
   `normalColor`/`highlightColor`/`pressColor` per state (`mouseEnter → setHiglightedColor`, `mouseDownLeft → setPressedColor`,
   `mouseLeave → setNormalColor`; each early-returns while the hand is dragging). `menusHelper.makeSlidersButtonsStatesBright()`
   (a global MenusHelper) recolours every EXISTING slider button BLACK/BLUE/LIME — call it AFTER `world.add`. HOLD each state:
   hover via a no-button move onto the button (highlighted, persists), then `@moveToAndMouseDown_InputEvents slider.button`
-  (pressed, held). GOTCHA: a SliderMorph defaults to `alpha 0.1`, which mutes the colours into greys — set
+  (pressed, held). GOTCHA: a SliderWdgt defaults to `alpha 0.1`, which mutes the colours into greys — set
   `slider.button.alpha = 1` (NOT `slider.alpha = 1`: the track's own colour is BLACK, so an opaque track swallows the black
   button). CROSS-SLIDER GRAB (two sliders): while one is GRABBED, a move with the button HELD (`…, "left button"`) over the OTHER
   handle does NOT highlight it (its mouseEnter early-returns while dragging), and the grabbed button FOLLOWS the hand vertically
   clamped to its own track.
 - **Popover stays open while its slider is dragged out** (`macroPopoverStaysOpenWhenSliderDraggedOut`): a pop-up normally closes
   on a mouse-DOWN outside it, but DRAGGING its slider keeps it open even when the pointer leaves its bounds. Pressing a slider
-  button whose slider's parent is a `PromptMorph` starts a NON-float drag (`SliderMorph.mouseDownLeft → nonFloatDragWdgtFarAwayToHere`;
-  `SliderButtonMorph.detachesWhenDragged` is false while parented to a slider), and on the mouse-UP `cleanupMenuWdgts` is SKIPPED
+  button whose slider's parent is a `PromptMorph` starts a NON-float drag (`SliderWdgt.mouseDownLeft → nonFloatDragWdgtFarAwayToHere`;
+  `SliderButtonWdgt.detachesWhenDragged` is false while parented to a slider), and on the mouse-UP `cleanupMenuWdgts` is SKIPPED
   while a non-float drag is in progress. Open a RectangleWdgt's "transparency..." popover, `prompt = @getMostRecentlyOpenedMenu()`,
-  `slider = (prompt.children.filter (c) -> c instanceof SliderMorph)[0]`, then press-drag-release its button to a point far OUTSIDE
+  `slider = (prompt.children.filter (c) -> c instanceof SliderWdgt)[0]`, then press-drag-release its button to a point far OUTSIDE
   the popover. The alpha commits on "Ok", so only the value FIELD changes live. The INVERSE of dismiss-on-mousedown-outside.
 - **A slider dragged across surfaces keeps its button** (`macroSliderDraggedAcrossSurfacesKeepsButton`): grabbing a slider by
   its BACKGROUND (the track, NOT the button) and dragging it onto a plain panel, then a scroll panel, then the desktop never
   pages its button — a slider sitting on a panel/scroll-panel is NOT that panel's scrollbar. A standalone slider's track-press
-  escalates (`SliderMorph.mouseDownLeft` gate at `:258` is false off a `ScrollPanelWdgt`/`PromptMorph` parent) and the float-drag
+  escalates (`SliderWdgt.mouseDownLeft` gate at `:258` is false off a `ScrollPanelWdgt`/`PromptMorph` parent) and the float-drag
   grabs the WHOLE slider (`Widget.detachesWhenDragged` true; `findFirstLooseMorph` returns the slider) — so the slider moves and
   its button rides along, never calling `updateValue`. CRUX: dropping onto the scroll panel re-parents the slider into the panel's
   inner `@contents` (`ScrollPanelWdgt.add :186-194`), NOT as the `@vBar`, so the paging gate STAYS false in every state and a later
   track-grab still doesn't page. Grabbing the BUTTON instead would non-float-drag it and PAGE the value
-  (`SliderButtonMorph.nonFloatDragging`) — so grab a track point OFF the button. There is NO from-a-fraction drag verb
+  (`SliderButtonWdgt.nonFloatDragging`) — so grab a track point OFF the button. There is NO from-a-fraction drag verb
   (`@dragWidgetTo_InputEvents` grabs at `center()` = the button), so compose the primitive:
   `@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf slider, [0.5, 0.15]), dropPoint` (one held drag-move
-  is enough; the playback skips the grab threshold). Build a standalone vertical `new SliderMorph 1,100,50,10` + `slider.alpha = 1`
+  is enough; the playback skips the grab threshold). Build a standalone vertical `new SliderWdgt 1,100,50,10` + `slider.alpha = 1`
   (ctor defaults `@alpha = 0.1` ≈ invisible, `:38`) + `rawSetExtent 22×130` (height>width ⇒ vertical) + a `PanelWdgt` + an EMPTY
   `ScrollPanelWdgt` (empty ⇒ no bars ⇒ no extent growth). The button stays mid-track across all four shots = the proof. (The
   recorded original's DIGEST mislabels the drag source as the panel; its 4 screenshots show the SLIDER is the moving object —

@@ -2,7 +2,7 @@
 # Sliders (and hence this button)
 # are also used in the ScrollPanelWdgts.
 
-class SliderButtonMorph extends CircleBoxMorph
+class SliderButtonWdgt extends CircleBoxWdgt
 
   highlightColor: Color.create 110, 110, 110
   pressColor: Color.create 100, 100, 100
@@ -21,7 +21,7 @@ class SliderButtonMorph extends CircleBoxMorph
     @alpha = 0.4
 
   detachesWhenDragged: ->
-    if @parent instanceof SliderMorph
+    if @parent instanceof SliderWdgt
       return false
     else
       return true
@@ -61,7 +61,7 @@ class SliderButtonMorph extends CircleBoxMorph
       @silentFullRawMoveTo new Point(posX, posY).add @parent.position()
 
   grabsToParentWhenDragged: ->
-    if @parent instanceof SliderMorph
+    if @parent instanceof SliderWdgt
       return false
     return super
 
@@ -122,7 +122,7 @@ class SliderButtonMorph extends CircleBoxMorph
       return
     @setHiglightedColor()
   
-  #SliderButtonMorph events:
+  #SliderButtonWdgt events:
   mouseEnter: ->
     if world.hand.isThisPointerDraggingSomething()
       return

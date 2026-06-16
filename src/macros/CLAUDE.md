@@ -175,7 +175,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
 ## Authoring gotchas (fixture + menu)
 
 - **Direct construction differs from the demo path.** A directly-built `StringWdgt`/`TextWdgt` has `isEditable =
-  false` (`:43`) — set `txt.isEditable = true` before clicking it. A `SliderMorph` defaults to `alpha 0.1`; a
+  false` (`:43`) — set `txt.isEditable = true` before clicking it. A `SliderWdgt` defaults to `alpha 0.1`; a
   `CanvasMorph` ships no default extent. A morph made via the demo menu (`world.create`, floats on the hand) is
   initialised differently from `new …; world.add` and can inspect differently — reproduce the menu path when it's load-bearing.
 - **`fullMoveTo` vs `fullRawMoveTo`.** Before `world.add` (nothing painted yet) a raw `fullRawMoveTo` is fine; to move a

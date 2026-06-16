@@ -836,7 +836,7 @@ class Widget extends TreeNode
 
   # used for example:
   # - to determine which morphs you can attach a morph to
-  # - for a SliderMorph's "set target" so you can change properties of another Widget
+  # - for a SliderWdgt's "set target" so you can change properties of another Widget
   # - by the HandleMorph when you attach it to some other morph
   # Note that this method has a slightly different
   # version in PanelWdgt (because it clips, so we need

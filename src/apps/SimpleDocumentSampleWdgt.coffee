@@ -31,7 +31,7 @@ class SimpleDocumentSampleWdgt extends SimpleDocumentWdgt
 
     sdspw.addNormalParagraph "Connected widgets can be added too, for example this slider below controls the data points of the graph above:\n"
 
-    slider1 = new SliderMorph nil, nil, nil, nil, nil, true
+    slider1 = new SliderWdgt nil, nil, nil, nil, nil, true
     slider1.rawSetExtent new Point 400, 24
     sdspw.add slider1
     slider1.setTargetAndActionWithOnesPickedFromMenu nil, nil, plot3D.contents, "setParameter"

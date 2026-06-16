@@ -10,7 +10,7 @@ ClippingAtRectangularBoundsMixin =
 
       # used for example:
       # - to determine which morphs you can attach a morph to
-      # - for a SliderMorph's "set target" so you can change properties of another Widget
+      # - for a SliderWdgt's "set target" so you can change properties of another Widget
       # - by the HandleMorph when you attach it to some other morph
       # Note that this method has a slightly different
       # version in Widget (because it doesn't clip)
@@ -146,7 +146,7 @@ ClippingAtRectangularBoundsMixin =
         # for example that you could stick a small
         # RectangleWdgt (not a Frame) on the desktop and then
         # attach a thousand
-        # CircleBoxMorphs on it.
+        # CircleBoxWdgts on it.
         # Say that the circles are all inside the rectangle,
         # apart from four that are at the corners of the world.
         # that's a nightmare scenegraph

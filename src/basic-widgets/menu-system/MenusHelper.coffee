@@ -54,7 +54,7 @@ class MenusHelper
 
   makeSlidersButtonsStatesBright: ->
     world.forAllChildrenBottomToTop (child) ->
-      if child instanceof SliderButtonMorph
+      if child instanceof SliderButtonWdgt
        child.pressColor = Color.LIME
        child.highlightColor = Color.BLUE
        child.normalColor = Color.BLACK
@@ -462,7 +462,7 @@ class MenusHelper
     world.add wm
 
   createSliderWithSmallestValueAtBottomEnd: ->
-    world.create new SliderMorph nil, nil, nil, nil, nil, true
+    world.create new SliderWdgt nil, nil, nil, nil, nil, true
 
   createRegexSubstitutionPatchNodeWdgt: ->
     regexSubstitutionPatchNodeWdgt = new RegexSubstitutionPatchNodeWdgt
@@ -1014,7 +1014,7 @@ class MenusHelper
     dashboardTitle.rememberFractionalSituationInHoldingPanel()
 
 
-    slider1 = new SliderMorph nil, nil, nil, nil, nil, true
+    slider1 = new SliderWdgt nil, nil, nil, nil, nil, true
     slider1.fullRawMoveTo container.position().add new Point 491, 484
     slider1.rawSetExtent new Point 201, 24
     container.add slider1
@@ -1059,13 +1059,13 @@ class MenusHelper
     container = patchProgrammingWdgt.stretchableWidgetContainer.contents
     container.rawSetExtent new Point 584,552
 
-    slider1 = new SliderMorph nil, nil, nil, nil, nil, true
+    slider1 = new SliderWdgt nil, nil, nil, nil, nil, true
     slider1.fullRawMoveTo container.position().add new Point 43+xCorrection, 195+yCorrection
     slider1.rawSetExtent new Point 20, 100
     container.add slider1
     slider1.rememberFractionalSituationInHoldingPanel()
 
-    slider2 = new SliderMorph nil, nil, nil, nil, nil, true
+    slider2 = new SliderWdgt nil, nil, nil, nil, nil, true
     slider2.fullRawMoveTo container.position().add new Point 472+xCorrection, 203+yCorrection
     slider2.rawSetExtent new Point 20, 100
     container.add slider2

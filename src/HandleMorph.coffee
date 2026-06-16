@@ -39,8 +39,8 @@ class HandleMorph extends Widget
 
   # HandleMorphs are one of the few morphs that
   # by default don't stick to their parents.
-  # Also SliderButtonMorphs tend do the same (if
-  # they are attached to a SliderMorph)
+  # Also SliderButtonWdgts tend do the same (if
+  # they are attached to a SliderWdgt)
   # The "move" HandleMorph COULD grab to its
   # parent, in fact it would be easier, however for
   # uniformity we don't do that

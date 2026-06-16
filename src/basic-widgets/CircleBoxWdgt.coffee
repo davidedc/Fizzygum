@@ -1,6 +1,6 @@
 # I can be used for sliders
 
-class CircleBoxMorph extends Widget
+class CircleBoxWdgt extends Widget
 
 
   constructor: ->

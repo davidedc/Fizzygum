@@ -492,4 +492,39 @@ inheritance family: renamed the base + its 3 `*Morph` children, re-pointed the 3
 - Result: **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots, 2 reference recaptures** (≈14 PNGs across both densities). 4
   source renames + 6 `extends` re-points + 5 `new` sites + 26 test files (content-only, identifiers kept) + 16 visualisations regenerated +
   2 docs (`MACRO-PATTERNS.md`, `author-macro-test/SKILL.md`). Plan `~/.claude/plans/batch8-box-family-rename.md`. Remaining long-tail
-  families: CircleBox/Slider, Color palette, Switch/Toggle, HandleMorph, …, `WorldMorph` last.
+  families: Color palette, Switch/Toggle, HandleMorph, …, `WorldMorph` last.
+
+**DONE (2026-06-16): BATCH 9 — the CircleBox/Slider family (`CircleBoxMorph`/`SliderMorph`/`SliderButtonMorph` → `*Wdgt`; re-point
+`VideoScrubberWdgt`).** Completed the basic shape-primitive trio (`RectangleWdgt` B6, `BoxWdgt` B8, now `CircleBoxWdgt`) and finished a
+deferred BATCH-4 slider lineage. `SliderMorph` is the scrollbar thumb (`ScrollPanelWdgt` hBar/vBar) + the `PromptMorph` popover slider —
+heavily constructed but the rename is pixel-neutral. **THE headline lesson — a NEW recapture-independent failure mode:**
+- **A rename's `Wdgt`-stripped colloquial can become a PREFIX of a SIBLING's, breaking `moveToItemStartingWith` nav strings — a HANG/crash,
+  not a pixel-diff.** `SliderMorph`→`SliderWdgt` makes the menu label `"a Slider"`, which is a PREFIX of `"a SliderButton"` (the renamed
+  `SliderButtonWdgt`'s stripped label). The OLD `"a SliderMorph"` was NOT a prefix of `"a SliderButtonMorph"` — the `Morph` suffix had
+  ACCIDENTALLY disambiguated them. So 3 tests whose nav matched `"a SliderMorph"` broke once both became `"a Slider…"`: the prefix now
+  matched the button (or nothing) → `moveToAndClick undefined` → `TypeError: …reading 'x'` (a shard STALL / an isolated crash), NOT a
+  screenshot mismatch. **Whenever a rename makes one family member's stripped label a prefix of another's, audit every
+  `moveToItemStartingWith`/`getTextMenuItemFromMenuByPrefix`/controller-target nav that used the longer old name.**
+- **Two fix idioms (both already in the suite's vocabulary):** (a) for a **set-target** menu, pick the target BY MEANING —
+  `menu.topWdgtSuchThat (item) -> item instanceof MenuItemWdgt and item.argumentToAction1 == theWidget` (the test author already used this
+  for its other ambiguous leg) — used in `macroSliderTextSliderPatchCycle` + `macroSliderTextTwoWayPatchCycle`; (b) for an **ancestor
+  hierarchy** menu (right-clicking the slider's KNOB lists `"a SliderButton ➜"` THEN `"a Slider ➜"`), use the disambiguating prefix
+  `"a Slider ➜"` (the trailing ` ➜` excludes `"a SliderButton ➜"`) — used in `macroInspectorScrollbarUnplugged`. The ancestor-prefix
+  usage that right-clicks the slider's TRACK (`macroSlidersControlTextMorph`) stayed unambiguous (the knob, a CHILD, isn't in the slider's
+  own ancestor menu) — left as `"a Slider"`.
+- **Diagnosis process:** a STALL on a JUST-EDITED test is a real hang to INVESTIGATE, not auto-dismiss as parallel-load contention —
+  confirmed by an isolated `run-macro-test-headless` (it crashed with the TypeError, deterministically). (Genuine contention also appeared
+  this batch — a dpr-2 shard `DISCONNECTED` with 0 played; re-run with `--shards=4` → clean 165/165. Tell them apart: a stall/crash naming
+  ONE test that reproduces solo = real; a shard that played 0/DISCONNECTED = infra.)
+- **Recapture: ZERO — the batch is fully pixel-neutral** (sliders/scrollbars render identically; every nav menu CLOSES before each
+  screenshot; no test inspects-and-photographs a slider). The owner had accepted this as the "heaviest recapture" family; in fact the cost
+  was entirely the 3 nav-ambiguity fixes, not reference churn. (So "heaviest recapture" was wrong — but the suite, run + solo, was still the
+  oracle: it surfaced the hang.)
+- **Plural-boundary gotcha bit src COMMENTS** (`SliderMorphs`/`CircleBoxMorphs`/`SliderButtonMorphs`) — the `\bFooMorph\b` sweep skipped
+  them; caught by the `rg -o '\w*FooMorph\w*' | sort -u` catch-all, fixed with a `(s?)` pass. Also fixed a drawn-label-in-COMMENT
+  (`MacroToolkit` "a Slider ➜") the class-sweep over-converted, and a pre-existing stale `"a TextMorph"` in `author-macro-test/SKILL.md`.
+- KEPT (`\b`-protected): `createNewSliderMorph` / `createNewCircleBoxMorph` method names. LEFT: OBSOLETE-script provenance.
+- Result: **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots, ZERO reference recapture.** 3 renames + 1 `extends` re-point +
+  ~36 src refs; ~36 test files (content-only, identifiers kept) incl. 3 nav-ambiguity fixes + 19 visualisations regenerated + 3 docs. Plan
+  `~/.claude/plans/batch9-circlebox-slider-rename.md`. Remaining long-tail families: Color palette, Switch/Toggle, HandleMorph, …,
+  `WorldMorph` last.

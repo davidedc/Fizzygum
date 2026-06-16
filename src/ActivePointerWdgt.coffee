@@ -995,7 +995,7 @@ class ActivePointerWdgt extends Widget
     @nonFloatDragPositionWithinWdgtAtStart = (new Point wdgtFarAway.width()/2, wdgtFarAway.height()/2).round()
     @nonFloatDraggedWdgt = wdgtFarAway
     # this one calls the wdgtFarAway's nonFloatDragging method,
-    # for example in case of a SliderMorph invoking this on its
+    # for example in case of a SliderWdgt invoking this on its
     # button, this causes the movement of the button
     # and adjusting of the Slider values and potentially
     # adjusting scrollpanel etc.
@@ -1004,7 +1004,7 @@ class ActivePointerWdgt extends Widget
     # The teleported widget is now under the (stationary) pointer. Resolve the
     # mouseEnter/mouseLeave consequence of that geometry change NOW, while the
     # non-float drag is active, so the widget's mouseEnter is consumed under the
-    # drag guard (e.g. SliderButtonMorph.mouseEnter early-returns while the hand
+    # drag guard (e.g. SliderButtonWdgt.mouseEnter early-returns while the hand
     # is dragging) and the widget is recorded in @mouseOverList. Otherwise the
     # next per-cycle reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges
     # (WorldMorph.doOneCycle) can fire that mouseEnter AFTER mouse-up has already

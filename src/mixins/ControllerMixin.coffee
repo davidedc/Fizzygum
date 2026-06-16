@@ -1,7 +1,7 @@
 # //////////////////////////////////////////////////////////
 
 # some morphs (for example ColorPaletteMorph
-# or SliderMorph) can control a target
+# or SliderWdgt) can control a target
 # and they have the same function to attach
 # targets. Not worth having this in the
 # whole Widget hierarchy, so... ideal use

@@ -6,7 +6,7 @@
 # more wide than tall. Simplified that code because it doesn't
 # look like a common need.
 
-class SliderMorph extends CircleBoxMorph
+class SliderWdgt extends CircleBoxWdgt
 
   @augmentWith ControllerMixin
 
@@ -33,7 +33,7 @@ class SliderMorph extends CircleBoxMorph
     @color = Color.BLACK,
     @smallestValueIsAtBottomEnd = false
     ) ->
-    @button = new SliderButtonMorph
+    @button = new SliderButtonWdgt
     super # if nil, then a vertical one will be created
     @alpha = 0.1
     @silentRawSetExtent new Point 20, 100
@@ -54,7 +54,7 @@ class SliderMorph extends CircleBoxMorph
     # might happen in phase of deserialization that
     # the button reference here is still a string
     # so skip in that case
-    if @button? and @button instanceof SliderButtonMorph
+    if @button? and @button instanceof SliderButtonWdgt
       @button.reLayout()
       
     @changed()
@@ -84,7 +84,7 @@ class SliderMorph extends CircleBoxMorph
     # might happen in phase of deserialization that
     # the button reference here is still a string
     # so skip in that case
-    if !(@button? and @button instanceof SliderButtonMorph)
+    if !(@button? and @button instanceof SliderButtonWdgt)
       return 1
     if @autoOrientation() is "vertical"
       return (@height() - @button.height()) / @rangeSize()
@@ -144,7 +144,7 @@ class SliderMorph extends CircleBoxMorph
   reactToTargetConnection: ->
     @updateTarget()
 
-  # SliderMorph menu:
+  # SliderWdgt menu:
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
     menu.addLine()
