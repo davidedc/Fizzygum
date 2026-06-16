@@ -451,6 +451,20 @@ class InspectorWdgt extends Widget
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
+    # Establish THIS layout pass's final bounds on OURSELVES first, before positioning the
+    # children below. The base Widget::doLayout (our `super` at the end) is what normally
+    # applies newBoundsForThisLayout to @bounds — but we lay the children out manually from
+    # @left()/@width()/@bottom() BEFORE calling super, so without this they'd be sized to the
+    # PREVIOUS pass's extent and lag the inspector by one layout. During a resize that lag
+    # equals the last drag STEP, whose size depends on how many frames the drag spanned — so
+    # under variable cycle cadence (dpr2 + parallel test load) the centered headers + the
+    # detail scrollbar settle to a nondeterministic 1px offset (the macroNakedInspector dpr2
+    # flake). Applying the bounds here makes the child layout read the FINAL extent, so the
+    # render is identical regardless of cadence. `super` re-applies the same bounds (idempotent).
+    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
+    @fullRawMoveTo newBoundsForThisLayout.origin
+    @rawSetExtent newBoundsForThisLayout.extent()
+
     # here we are disabling all the broken
     # rectangles. The reason is that all the
     # submorphs of the inspector are within the
