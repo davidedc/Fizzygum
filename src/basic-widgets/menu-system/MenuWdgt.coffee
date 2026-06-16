@@ -1,6 +1,6 @@
-# MenuMorphs is a Pop-up with basically a vertical stack of buttons
+# MenuWdgts is a Pop-up with basically a vertical stack of buttons
 
-class MenuMorph extends PopUpWdgt
+class MenuWdgt extends PopUpWdgt
 
   target: nil
   title: nil

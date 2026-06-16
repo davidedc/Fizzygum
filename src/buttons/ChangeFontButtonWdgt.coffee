@@ -24,7 +24,7 @@ class ChangeFontButtonWdgt extends IconWdgt
      !@simpleDocument.fontSelectionMenu.destroyed
       @simpleDocument.fontSelectionMenu.popUp @position().subtract(new Point 80,0), world
     else
-      menu = new MenuMorph @, false, @, true, true, "Fonts"
+      menu = new MenuWdgt @, false, @, true, true, "Fonts"
       menu.addMenuItem "Arial", true, @, "setFontName", nil, nil, nil, nil, nil, "justArialFontStack"
       menu.addMenuItem "Times", true, @, "setFontName", nil, nil, nil, nil, nil, "timesFontStack"
       menu.addMenuItem "Georgia", true, @, "setFontName", nil, nil, nil, nil, nil, "georgiaFontStack"

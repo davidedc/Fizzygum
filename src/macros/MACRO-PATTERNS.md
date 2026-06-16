@@ -55,7 +55,7 @@ assertion a recapture after a regression silently stores two different hashes an
   grab-offset-PRESERVING (`HandleWdgt.coffee:212-220`, the new extent is computed from the pointer minus the within-handle
   grab point), so press the recorded FRACTION of the handle (`@pointAtFractionOf cornerHandle, [0.733,0.667]`) and release at
   the recorded destination, and the resulting extent matches the recording to the pixel. Also here: the "font size..." item
-  opens a `PromptMorph` (capture it fresh via `@getMostRecentlyOpenedMenu()`) whose field is focused with the caret at the
+  opens a `PromptWdgt` (capture it fresh via `@getMostRecentlyOpenedMenu()`) whose field is focused with the caret at the
   END — `@repeatSpecialKey_InputEvents "Shift+ArrowLeft", 2` selects the old 2-digit value, type the new one over it, then
   click "Ok" on the captured prompt (the colour/transparency popup idiom). REP note: absorbs the style-axis sibling recording
   (italic+bold flips under a LEFT-aligned caret) — the italic beat is folded in on the harder centered fixture; bold is the
@@ -157,7 +157,7 @@ assertion a recapture after a regression silently stores two different hashes an
   the below-text-strip entry above NEUTRALISES it with FLOAT for the opposite reason (a fixture constant). No new verb.
 - **Editing a CROPPED string defers to the "edit:" prompt** (`macroStringMorph2EditDefersToPromptWhenCropped`):
   `StringWdgt.edit` (`:1145-1150`) compares the rendered text with the full transformed text — equal → `world.edit @`
-  (inline caret); different (the CROP spec ellipsised it) → `editPopup()` (`:873-882`), the "edit:" `PromptMorph` whose
+  (inline caret); different (the CROP spec ellipsised it) → `editPopup()` (`:873-882`), the "edit:" `PromptWdgt` whose
   field is preloaded with `@text` and whose "Ok" commits via `setText` ("Close" discards — anchor that byte-exactly: a
   cancelled prompt leaves zero residue, same dataHash as the pre-prompt shot with the pointer parked). So the SAME click
   yields a caret or a modal purely by whether the text currently fits; widen the box (`rawSetExtent`) and the click takes
@@ -380,7 +380,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Add an indented paragraph to a document via its layout menu** (`macroSimpleDocumentCanAddIndentedParagraph`): a
   `SimpleDocumentScrollPanelWdgt` ships ONE editable default paragraph ("A small string … here another.") as its first content child
   (`(doc.contents.childrenNotHandlesNorCarets())[0]`) — reformat THAT (add a Lorem paragraph below for reflow context). Drive its
-  `"a SimplePlainText ➜"` → `"layout in stack ➜"` submenu (`VerticalStackLayoutSpec.coffee:42-53`): `"base width..."` opens a PromptMorph
+  `"a SimplePlainText ➜"` → `"layout in stack ➜"` submenu (`VerticalStackLayoutSpec.coffee:42-53`): `"base width..."` opens a PromptWdgt
   (narrows the box), `"align right"` (setAlignmentToRight) moves the box to the document's right edge; then click in, `Meta+a`, and type
   the indented body PER LINE with an `"Enter"` between (`@syntheticEventsStringKeys_InputEvents` has NO newline handling), the two leading
   spaces of `"  some code"` typed as literal space keys so the indent round-trips (Enter → `CaretWdgt` inserts `"\n"`). TWO gotchas make
@@ -440,7 +440,7 @@ assertion a recapture after a regression silently stores two different hashes an
   item in an UPSTREAM menu runs `cleanupMenuWdgts`, which KEEPS the pop-ups in that item's ASCENDING hierarchy
   (`PopUpWdgt.hierarchyOfPopUps`, walks `getParentPopUp` UP) and DISMISSES its DESCENDANTS — so the world menu + test menu stay
   while others-2 + icons close; the SAME right-click also opens the item's own hierarchy context menu (a Text / a MenuItem
-  / a MenuMorph, `Widget.buildContextMenu`/`buildHierarchyMenu`). Descend by labelString prefix (reuse the hopping pattern), then
+  / a MenuWdgt, `Widget.buildContextMenu`/`buildHierarchyMenu`). Descend by labelString prefix (reuse the hopping pattern), then
   `@moveToAndClickAtFractionOf_InputEvents item, [0.35,0.5], "right button"` (LEFT-ish fraction — submenus pop at the clicked point).
   Screenshot only; do NOT re-grab `getMostRecentlyOpenedMenu()` after the auto-close (deferred cleanup re-clears the fresh set).
 - **Dragging MENUS keeps the cascade open; only a non-menu press closes it**
@@ -492,7 +492,7 @@ assertion a recapture after a regression silently stores two different hashes an
   reference captured BEFORE the drop — it survives both re-parentings) still FIRES, the made morph riding the hand to the
   desktop. GOTCHA: the header-drag's RELEASE point must be clear of every menu of the still-open world-menu cascade — a release
   over the cascade silently re-absorbs the dragged sub-menu (unpinned) and the later dismissal click destroys it. No new verb.
-- **Pop-up (prompt/menu) shadow on drag** (`macroPromptShadowFollowsOnDrag`): a `PromptMorph` (extends MenuMorph extends
+- **Pop-up (prompt/menu) shadow on drag** (`macroPromptShadowFollowsOnDrag`): a `PromptWdgt` (extends MenuWdgt extends
   PopUpWdgt) casts a drop shadow like every pop-up (`PopUpWdgt.popUp → addShadow`, offset (5,5) α0.2). Drag it by its TITLE
   BAR: `@syntheticEventsMouseMovePressDragRelease_InputEvents prompt.label.center(), dest` (a press-drag GRABS the whole
   pop-up; a CLICK on the header would PIN it; dragging the CENTRE hits the inner field/slider). On drop `PopUpWdgt.justDropped`
@@ -527,7 +527,7 @@ assertion a recapture after a regression silently stores two different hashes an
   at `[fx,0.5]` (saturated; the palette is `hsl(360·fx,100%,50%)`), then `@moveToItemOfMenuAndClick_InputEvents picker, "Ok"`.
   COLOUR-PICKER TRAP: a `ColorPickerWdgt` holds both a hue×lightness `.colorPalette` and a thin `.grayPalette` (a
   GrayPaletteWdgt, which SUBCLASSES ColorPaletteWdgt) — reach the colour one via the `.colorPalette` accessor, NOT an
-  `instanceof ColorPaletteWdgt` search. transparency: `"transparency..."` opens a `PromptMorph` —
+  `instanceof ColorPaletteWdgt` search. transparency: `"transparency..."` opens a `PromptWdgt` —
   `@clickOnSliderTrackAtFraction_InputEvents prompt.topWdgtSuchThat((m)-> m instanceof SliderWdgt), [fx,0.5]` then "Ok".
 
 - **Popup repositioned to stay on-screen** (`macroMenuRepositionsToStayOnScreen`): a popup is never clipped by the
@@ -550,7 +550,7 @@ assertion a recapture after a regression silently stores two different hashes an
   frame-clip counterpart of macroMenuRepositionsToStayOnScreen (which is about the SCREEN edge). The recorded original
   (poppingUpSubMenuNotClipped) used an inspector's clipped list column; a plain frame demonstrates the same point.
 - **A duplicated menu is born pinned** (`macroDuplicatedMenuAutoPinsOnDesktop`): right-clicking a menu ITEM raises that item's
-  ancestor hierarchy menu ("a MenuItem ➜" / "a MenuMorph ➜"); drilling "a MenuMorph ➜" → "duplicate" runs the MENU's own
+  ancestor hierarchy menu ("a MenuItem ➜" / "a Menu ➜"); drilling "a Menu ➜" → "duplicate" runs the MENU's own
   duplicate. Under the harness `world.isIndexPage` is false (`WorldMorph.coffee:277-278`) so it is `Widget.duplicateMenuActionAndPickItUp`
   (`:3489` → `fullCopy().pickUp()`) — the copy RIDES THE HAND (not the index page's +10,+10 plop). `PopUpWdgt.fullCopy` (`:92-97`)
   clears the copy's kill-on-click-outside flags, so `isPopUpPinned()` (`:59`) is true the instant the copy exists — pinned BEFORE it
@@ -718,7 +718,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Slider/scrollbar TRACK click** (`macroSliderTrackClickMovesButton`): `@clickOnSliderTrackAtFraction_InputEvents doc.vBar,
   [0.5, fy]` clicks a SliderWdgt's TRACK (background, OUTSIDE the button) to JUMP the button there — for a ScrollPanelWdgt's
   `@vBar`/`@hBar` this scrolls the content (`SliderWdgt.mouseDownLeft` non-float-drags the button to the click when the
-  slider's parent is a ScrollPanelWdgt OR PromptMorph; a slider parented to neither IGNORES it — the negative case). Click the
+  slider's parent is a ScrollPanelWdgt OR PromptWdgt; a slider parented to neither IGNORES it — the negative case). Click the
   TRACK not the button (a click ON the button just grabs it) — give enough overflow that the button is small.
 - **Nested scroll-panel wheel routing + limit escalation** (`macroNestedScrollPanelsRouteWheel`): the wheel scrolls the INNERMOST
   scrollable under the pointer and ESCALATES to the container once the inner is maxed (`ActivePointerWdgt.processWheel` walks up
@@ -940,7 +940,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `@moveToItemStartingWithOfMenuAndClick_InputEvents menu, "a Rectangle"` (class-name PREFIX; the menu also lists the World).
   A HandleWdgt so attached becomes the target's resize handle → drag it with `@dragResizeMoveHandleTo_InputEvents`.
 - **"Attach…" with no targets → a message** (`macroAttachShowsNoTargetsMessage`): a morph alone (nothing overlapping) → `attach`
-  pops a `MenuMorph` titled **"no morphs to attach to"** (`:3680`) instead of a target list; that titled, item-less menu IS the
+  pops a `MenuWdgt` titled **"no morphs to attach to"** (`:3680`) instead of a target list; that titled, item-less menu IS the
   message. The negative path of attach.
 - **Attach EXCLUDES the parent — a lonely widget attaches to NOTHING, not even the world**
   (`macroLonelySliderCantBeAttachedToAnything`): `Widget.attach` (`Widget.coffee:3657`) filters its
@@ -948,7 +948,7 @@ assertion a recapture after a regression silently stores two different hashes an
   the list is EMPTY and the "no morphs to attach to" menu pops with ZERO items, while "set target"
   (`ControllerMixin.openTargetSelector`) on the SAME fixture keeps the world (re-attaching to your parent is a no-op; controlling
   it is meaningful). Assert the zero-item shape with `@assertTopMenuItemCount 0` + `@assertTopMenuItemStrings []` — the menu's
-  title is NOT an item (`MenuMorph.testItems` excludes `@label`), so a titled-but-empty menu counts 0. Reuses
+  title is NOT an item (`MenuWdgt.testItems` excludes `@label`), so a titled-but-empty menu counts 0. Reuses
   macroLonelySliderTargetsWorldOnly's lone-slider fixture verbatim (right-click the LOWER track), so the attach-vs-set-target
   contrast is asserted on an identical scene. No new verb.
 - **Attach/target candidates EXCLUDE a clipped morph** (`macroAttachTargetExcludesClippedMorph`): both "attach..."
@@ -977,7 +977,7 @@ assertion a recapture after a regression silently stores two different hashes an
   with `@syntheticEventsMouseMove_InputEvents` (a grabbed hand-child follows even a no-button move) and DROP with
   `@syntheticEventsMouseClick_InputEvents()`. **image_1 is taken with NO pointer movement after the click** — the copy must be
   fully painted the instant it is grabbed. Duplicating a COMPLEX/nested widget: right-click it → ancestor hierarchy menu →
-  navigate by class-name PREFIX to the desired ancestor's own menu → "duplicate". (A MenuMorph CONTAINER is not right-clickable
+  navigate by class-name PREFIX to the desired ancestor's own menu → "duplicate". (A MenuWdgt CONTAINER is not right-clickable
   for a context menu, but a MenuItemWdgt — an individual item — IS: see the next bullet.)
 - **Duplicate a MENU ITEM into the bare world** (`macroMenuItemDuplicatesToStandaloneMorph`): a `MenuItemWdgt` is an ordinary
   duplicable Widget. Right-click an item of an open menu (e.g. the world menu's "demo ➜") → its ANCESTOR hierarchy menu; under the
@@ -1291,7 +1291,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `text→slider2`, since the text overlaps BOTH sliders — BY MEANING instead of the prefix verb: right-click the text → "set target",
   then in the "choose target:" menu pick the item whose target IS slider2. **The reusable bit — selecting a target menu item by its
   morph reference:** `ControllerMixin.openTargetSelector` passes each candidate target widget as the menu item's `argumentToAction1`
-  (via `MenuMorph.addMenuItem` → `MenuItemWdgt`), so `slider2Item = menu.topWdgtSuchThat (item) -> (item instanceof MenuItemWdgt) and
+  (via `MenuWdgt.addMenuItem` → `MenuItemWdgt`), so `slider2Item = menu.topWdgtSuchThat (item) -> (item instanceof MenuItemWdgt) and
   (item.argumentToAction1 == slider2)`, then `@moveToAndClick_InputEvents slider2Item` and `@moveToItemOfMenuAndClick_InputEvents
   @getMostRecentlyOpenedMenu(), "value"`. The other two legs use the prefix verb (unambiguous). So when "set target" lists two
   same-class candidates, NEVER park a widget to disambiguate — pick the menu item by its `argumentToAction1` target reference. No new verb.
@@ -1452,7 +1452,7 @@ assertion a recapture after a regression silently stores two different hashes an
   clamped to its own track.
 - **Popover stays open while its slider is dragged out** (`macroPopoverStaysOpenWhenSliderDraggedOut`): a pop-up normally closes
   on a mouse-DOWN outside it, but DRAGGING its slider keeps it open even when the pointer leaves its bounds. Pressing a slider
-  button whose slider's parent is a `PromptMorph` starts a NON-float drag (`SliderWdgt.mouseDownLeft → nonFloatDragWdgtFarAwayToHere`;
+  button whose slider's parent is a `PromptWdgt` starts a NON-float drag (`SliderWdgt.mouseDownLeft → nonFloatDragWdgtFarAwayToHere`;
   `SliderButtonWdgt.detachesWhenDragged` is false while parented to a slider), and on the mouse-UP `cleanupMenuWdgts` is SKIPPED
   while a non-float drag is in progress. Open a RectangleWdgt's "transparency..." popover, `prompt = @getMostRecentlyOpenedMenu()`,
   `slider = (prompt.children.filter (c) -> c instanceof SliderWdgt)[0]`, then press-drag-release its button to a point far OUTSIDE
@@ -1460,7 +1460,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **A slider dragged across surfaces keeps its button** (`macroSliderDraggedAcrossSurfacesKeepsButton`): grabbing a slider by
   its BACKGROUND (the track, NOT the button) and dragging it onto a plain panel, then a scroll panel, then the desktop never
   pages its button — a slider sitting on a panel/scroll-panel is NOT that panel's scrollbar. A standalone slider's track-press
-  escalates (`SliderWdgt.mouseDownLeft` gate at `:258` is false off a `ScrollPanelWdgt`/`PromptMorph` parent) and the float-drag
+  escalates (`SliderWdgt.mouseDownLeft` gate at `:258` is false off a `ScrollPanelWdgt`/`PromptWdgt` parent) and the float-drag
   grabs the WHOLE slider (`Widget.detachesWhenDragged` true; `findFirstLooseMorph` returns the slider) — so the slider moves and
   its button rides along, never calling `updateValue`. CRUX: dropping onto the scroll panel re-parents the slider into the panel's
   inner `@contents` (`ScrollPanelWdgt.add :186-194`), NOT as the `@vBar`, so the paging gate STAYS false in every state and a later

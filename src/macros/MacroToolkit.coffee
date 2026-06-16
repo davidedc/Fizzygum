@@ -515,7 +515,7 @@ class MacroToolkit
   # Click a SliderWdgt's TRACK (its background, OUTSIDE the button) at a point a fraction along its
   # length, to JUMP the slider button there. For a scroll panel's scrollbar — a ScrollPanelWdgt's @vBar
   # / @hBar (both SliderWdgts) — this scrolls the content to that position: SliderWdgt.mouseDownLeft,
-  # when the slider's parent is a ScrollPanelWdgt (or PromptMorph), non-float-drags the button to the
+  # when the slider's parent is a ScrollPanelWdgt (or PromptWdgt), non-float-drags the button to the
   # click point (ActivePointerWdgt.nonFloatDragWdgtFarAwayToHere), and a click leaves it there. `fraction`
   # is [fx, fy] of the slider's bounds — for a vertical scrollbar pass e.g. [0.5, 0.8] (80% down the
   # track); for a horizontal one [0.8, 0.5]. Queues input events — follow with `yield
@@ -533,7 +533,7 @@ class MacroToolkit
   # updateTarget every frame the value changes — so if the slider has a controller target set (via
   # "set target"), it drives target[setter](value) LIVE as it is dragged. This is the controller-DRAG
   # sibling of clickOnSliderTrackAtFraction_InputEvents (which only JUMPS the button via a track click, and
-  # only when the slider is parented to a ScrollPanelWdgt/PromptMorph); a free-standing controller slider
+  # only when the slider is parented to a ScrollPanelWdgt/PromptWdgt); a free-standing controller slider
   # responds to dragging its button, not to track clicks. `fraction` is a [fx, fy] point of the SLIDER's
   # bounds = the destination of the drag along the track (for a vertical slider, vary fy; default sliders
   # have smallestValueIsAtBottomEnd false, so a larger fy = a larger value). Queues input events — follow

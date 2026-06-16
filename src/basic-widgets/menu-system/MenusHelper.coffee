@@ -8,7 +8,7 @@ class MenusHelper
   @augmentWith DeepCopierMixin
 
   popUpDevToolsMenu: (morphOpeningThePopUp, widgetThisMenuIsAbout) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Dev Tools"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Dev Tools"
     menu.addMenuItem "inspect", true, widgetThisMenuIsAbout, "inspect", "open a window\non all properties"
     menu.addMenuItem "console", true, widgetThisMenuIsAbout, "createConsole", "console"
 
@@ -498,7 +498,7 @@ class MenusHelper
 
 
   popUpMore1IconsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "More Icons 1"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "More Icons 1"
     menu.addMenuItem "Pencil 1 icon", true, menusHelper, "createPencil1IconMorph"
     menu.addMenuItem "Pencil 2 icon", true, menusHelper, "createPencil2IconMorph"
     menu.addMenuItem "Brush icon", true, menusHelper, "createBrushIconMorph"
@@ -515,7 +515,7 @@ class MenusHelper
     menu.popUpAtHand()
 
   popUpMore2IconsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "More Icons 2"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "More Icons 2"
     menu.addMenuItem "Format as code icon", true, menusHelper, "createFormatAsCodeIconWdgt"
     menu.addMenuItem "Ch. X icon", true, menusHelper, "createChXIconWdgt"
     menu.addMenuItem "Ch. X.X icon", true, menusHelper, "createChXXIconWdgt"
@@ -537,7 +537,7 @@ class MenusHelper
     menu.popUpAtHand()
 
   popUpMore3IconsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "More Icons 2"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "More Icons 2"
     menu.addMenuItem "Fizzygum logo", true, menusHelper, "createFizzygumLogoIconWdgt"
     menu.addMenuItem "Fizzygum logo with text", true, menusHelper, "createFizzygumLogoWithTextIconWdgt"
     menu.addMenuItem "Vaporwave sun", true, menusHelper, "createVaporwaveSunIconWdgt"
@@ -590,7 +590,7 @@ class MenusHelper
     world.create new SaveIconWdgt
 
   popUpArrowsIconsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Arrows"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Arrows"
     menu.addMenuItem "Arrow N icon", true, menusHelper, "createArrowNIconWdgt"
     menu.addMenuItem "Arrow S icon", true, menusHelper, "createArrowSIconWdgt"
     menu.addMenuItem "Arrow W icon", true, menusHelper, "createArrowWIconWdgt"
@@ -729,14 +729,14 @@ class MenusHelper
     world.create example3DPlot
 
   popUpMapsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Maps"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Maps"
     menu.addMenuItem "world map", true, menusHelper, "createWorldMapIconMorph", "others"
     menu.addMenuItem "USA map", true, menusHelper, "createUSAMapIconMorph", "others"
 
     menu.popUpAtHand()
 
   popUpGraphsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "graphs"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "graphs"
     menu.addMenuItem "axis", true, menusHelper, "create2DAxis"
     menu.addMenuItem "scatter plot", true, menusHelper, "createExampleScatterPlot"
     menu.addMenuItem "scatter plot with axes", true, menusHelper, "createExampleScatterPlotWithAxes"
@@ -747,7 +747,7 @@ class MenusHelper
     menu.popUpAtHand()
 
   popUpSupportDocsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Support Docs"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Support Docs"
     menu.addMenuItem "welcome message", true, @, "createWelcomeMessageWindowAndShortcut", "welcome message"
 
     menu.popUpAtHand()

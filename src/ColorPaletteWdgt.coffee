@@ -111,9 +111,9 @@ class ColorPaletteWdgt extends Widget
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     [menuEntriesStrings, functionNamesStrings] = theTarget.colorSetters()
-    menu = new MenuMorph @, false, @, true, true, "choose target property:"
+    menu = new MenuWdgt @, false, @, true, true, "choose target property:"
     for i in [0...menuEntriesStrings.length]
       menu.addMenuItem menuEntriesStrings[i], true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil, theTarget, functionNamesStrings[i]
     if menuEntriesStrings.length == 0
-      menu = new MenuMorph @, false, @, true, true, "no target properties available"
+      menu = new MenuWdgt @, false, @, true, true, "no target properties available"
     menu.popUpAtHand()

@@ -44,7 +44,7 @@ class VerticalStackLayoutSpec
     menu.addMenuItem "layout in stack ➜", false, @, "vertStackMenu", ""
 
   vertStackMenu: (morphOpeningThePopUp,targetMorph,a,b,c)->
-    menu = new MenuMorph morphOpeningThePopUp,  false, targetMorph, true, true, nil
+    menu = new MenuWdgt morphOpeningThePopUp,  false, targetMorph, true, true, nil
     menu.addMenuItem "base width...", true, @, "baseWidthPopout", ""
     menu.addMenuItem "elasticity...", true, @, "elasticityPopout", ""
     menu.addMenuItem "align left", true, @, "setAlignmentToLeft"  if @alignment isnt "left"

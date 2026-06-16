@@ -1843,16 +1843,16 @@ class WorldMorph extends PanelWdgt
   buildContextMenu: ->
 
     if @isIndexPage
-      menu = new MenuMorph @, false, @, true, true, "Desktop"
+      menu = new MenuWdgt @, false, @, true, true, "Desktop"
       menu.addMenuItem "wallpapers ➜", false, @, "wallpapersMenu", "choose a wallpaper for the Desktop"
       menu.addMenuItem "new folder", true, @, "makeFolder"
       return menu
 
     if @isDevMode
-      menu = new MenuMorph(@, false,
+      menu = new MenuWdgt(@, false,
         @, true, true, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     else
-      menu = new MenuMorph @, false, @, true, true, "Widgetic"
+      menu = new MenuWdgt @, false, @, true, true, "Widgetic"
 
     # »>> this part is excluded from the fizzygum homepage build
     if @isDevMode
@@ -1891,7 +1891,7 @@ class WorldMorph extends PanelWdgt
     menu
 
   wallpapersMenu: (a,targetMorph)->
-    menu = new MenuMorph @, false, targetMorph, true, true, "Wallpapers"
+    menu = new MenuWdgt @, false, targetMorph, true, true, "Wallpapers"
 
     # we add the "untick" prefix to all entries
     # so we allocate the right amount of space for
@@ -1916,7 +1916,7 @@ class WorldMorph extends PanelWdgt
     @patternName = thePatternName
     @changed()
 
-    if menuItem?.parent? and (menuItem.parent instanceof MenuMorph)
+    if menuItem?.parent? and (menuItem.parent instanceof MenuWdgt)
       @updatePatternsMenuEntriesTicks menuItem.parent
 
 
@@ -1958,7 +1958,7 @@ class WorldMorph extends PanelWdgt
 
   # »>> this part is excluded from the fizzygum homepage build
   popUpSystemTestsMenu: ->
-    menu = new MenuMorph @, false, @, true, true, "system tests"
+    menu = new MenuWdgt @, false, @, true, true, "system tests"
 
     menu.addMenuItem "run system tests (normal)", true, @automator.player, "runAllSystemTestsNormalSpeed", "runs all the system tests at the normal (slowest, watchable) speed level"
     menu.addMenuItem "run system tests (fast)", true, @automator.player, "runAllSystemTestsFastSpeed", "runs all the system tests at the fast (intermediate) speed level"
@@ -2108,7 +2108,7 @@ class WorldMorph extends PanelWdgt
 
   popUpDemoMenu: (morphOpeningThePopUp,b,c,d) ->
     if @isIndexPage
-      menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "parts bin"
+      menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "parts bin"
       menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"
       menu.addMenuItem "box", true, @, "createNewBoxMorph"
       menu.addMenuItem "circle box", true, @, "createNewCircleBoxMorph"
@@ -2120,7 +2120,7 @@ class WorldMorph extends PanelWdgt
       menu.addLine()
       menu.addMenuItem "analog clock", true, @, "analogClock"
     else
-      menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "make a morph"
+      menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "make a morph"
       menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"
       menu.addMenuItem "box", true, @, "createNewBoxMorph"
       menu.addMenuItem "circle box", true, @, "createNewCircleBoxMorph"
@@ -2152,7 +2152,7 @@ class WorldMorph extends PanelWdgt
     menu.popUpAtHand()
 
   layoutTestsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Layout tests"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Layout tests"
     menu.addMenuItem "adjuster morph", true, @, "createNewStackElementsSizeAdjustingMorph"
     menu.addMenuItem "adder/droplet", true, @, "createNewLayoutElementAdderOrDropletMorph"
     menu.addMenuItem "test screen 1", true, Widget, "setupTestScreen1"
@@ -2203,7 +2203,7 @@ class WorldMorph extends PanelWdgt
     # in the way, so commenting this out for the time being
     #
     #if WorldMorph.preferencesAndSettings.useSliderForInput
-    #  if !aStringMorphOrTextMorph.parentThatIsA MenuMorph
+    #  if !aStringMorphOrTextMorph.parentThatIsA MenuWdgt
     #    @slide aStringMorphOrTextMorph
   
   # Editing can stop because of three reasons:

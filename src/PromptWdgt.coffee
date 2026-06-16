@@ -1,4 +1,4 @@
-class PromptMorph extends MenuMorph
+class PromptWdgt extends MenuWdgt
 
   # pattern: all the children should be declared here
   # the reason is that when you duplicate a morph

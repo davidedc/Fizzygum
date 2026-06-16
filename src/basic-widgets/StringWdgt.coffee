@@ -967,12 +967,12 @@ class StringWdgt extends Widget
       @fontName = theNewFontName
       @changed()
 
-      if menuItem?.parent? and (menuItem.parent instanceof MenuMorph)
+      if menuItem?.parent? and (menuItem.parent instanceof MenuWdgt)
         @updateFontsMenuEntriesTicks menuItem.parent
 
 
   fontsMenu: (a,targetMorph)->
-    menu = new MenuMorph @, false, targetMorph, true, true, "Fonts"
+    menu = new MenuWdgt @, false, targetMorph, true, true, "Fonts"
 
     menu.addMenuItem untick + "Arial", true, @, "setFontName", nil, nil, nil, nil, nil, @justArialFontStack
     menu.addMenuItem untick + "Times", true, @, "setFontName", nil, nil, nil, nil, nil, @timesFontStack
@@ -1167,7 +1167,7 @@ class StringWdgt extends Widget
   # OWN extent track the text. This helper does that:
   #   - pin fittingSpecWhenBoundsTooLarge = FLOAT  → never grow the font;
   #   - pin fittingSpecWhenBoundsTooSmall = SCALEDOWN → never ellipsise the text
-  #     and never pop the "edit:" PromptMorph (that is gated on == CROP, see
+  #     and never pop the "edit:" PromptWdgt (that is gated on == CROP, see
   #     slotCoordinates) and, since the box ends up == the text, never shrink it;
   #   - measure the text at its set font size and resize the box to it.
   # With box == text the "bounds too small" branch is unreachable, so neither
@@ -1251,11 +1251,11 @@ class StringWdgt extends Widget
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     [menuEntriesStrings, functionNamesStrings] = theTarget.stringSetters()
-    menu = new MenuMorph @, false, @, true, true, "choose target property:"
+    menu = new MenuWdgt @, false, @, true, true, "choose target property:"
     for i in [0...menuEntriesStrings.length]
       menu.addMenuItem menuEntriesStrings[i], true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil, theTarget, functionNamesStrings[i]
     if menuEntriesStrings.length == 0
-      menu = new MenuMorph @, false, @, true, true, "no target properties available"
+      menu = new MenuWdgt @, false, @, true, true, "no target properties available"
     menu.popUpAtHand()
   
   numericalSetters: (menuEntriesStrings, functionNamesStrings) ->

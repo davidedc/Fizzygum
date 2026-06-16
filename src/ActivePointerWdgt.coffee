@@ -80,7 +80,7 @@ class ActivePointerWdgt extends Widget
         m.visibleBasedOnIsVisibleProperty() and
         !m.isCollapsed() and
         (m.noticesTransparentClick or
-        (not m.isTransparentAt(@position()))) and (m instanceof MenuMorph)
+        (not m.isTransparentAt(@position()))) and (m instanceof MenuWdgt)
     return result
   # this part is excluded from the fizzygum homepage build <<«
 
@@ -379,7 +379,7 @@ class ActivePointerWdgt extends Widget
       # been freshly created or not. This came about because
       # small movements of the mouse while clicking on the
       # desktop would not dismiss menus.
-      if !(w.firstParentThatIsAPopUp() instanceof MenuMorph)
+      if !(w.firstParentThatIsAPopUp() instanceof MenuWdgt)
         @cleanupMenuWdgts nil, w, true
 
       @wdgtToGrab = w.findRootForGrab()

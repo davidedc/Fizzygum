@@ -3,7 +3,7 @@ class ListWdgt extends ScrollPanelWdgt
   elements: nil
   labelGetter: nil
   format: nil
-  listContents: nil # a MenuMorph with the contents of the list
+  listContents: nil # a MenuWdgt with the contents of the list
   selected: nil # actual element currently selected
   active: nil # menu item representing the selected element
   action: nil
@@ -54,7 +54,7 @@ class ListWdgt extends ScrollPanelWdgt
   
   # builds the list contents
   buildAndConnectChildren: ->
-    @listContents = new MenuMorph @, true, @, false, false, nil, nil
+    @listContents = new MenuWdgt @, true, @, false, false, nil, nil
     @listContents.isLockingToPanels = true
     @elements = ["(empty)"]  if !@elements.length
     world.disableTrackChanges()

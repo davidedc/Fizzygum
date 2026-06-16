@@ -1,4 +1,4 @@
-class SaveShortcutPromptWdgt extends MenuMorph
+class SaveShortcutPromptWdgt extends MenuWdgt
 
   # bad hack to set the prompt to a
   # decent width

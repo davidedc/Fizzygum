@@ -284,10 +284,10 @@ class InspectorWdgt extends Widget
     # we know that the content of this list in this pane is not going to need the
     # step function, so we disable that from here by setting it to nil, which
     # prevents the recursion to children. We could have disabled that from the
-    # constructor of MenuMorph, but who knows, maybe someone might intend to use a MenuMorph
+    # constructor of MenuWdgt, but who knows, maybe someone might intend to use a MenuWdgt
     # with some animated content? We know that in this specific case it won't need animation so
     # we set that here. Note that the ListWdgt itself does require animation because of the
-    # scrollbars, but the MenuMorph (which contains the actual list contents)
+    # scrollbars, but the MenuWdgt (which contains the actual list contents)
     # in this context doesn't.
     world.steppingWdgts.delete @list.listContents
     @add @list

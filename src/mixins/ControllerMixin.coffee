@@ -17,13 +17,13 @@ ControllerMixin =
       openTargetSelector: ->
         choices = world.plausibleTargetAndDestinationMorphs @
         if choices.length > 0
-          menu = new MenuMorph @, false, @, true, true, "choose target:"
+          menu = new MenuWdgt @, false, @, true, true, "choose target:"
           #choices.push @world()
           choices.forEach (each) =>
             if !(each instanceof FanoutPinWdgt)
               menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ➜", false, @, "openTargetPropertySelector", nil, nil, nil, nil, nil, each, nil, true
         else
-          menu = new MenuMorph @, false, @, true, true, "no targets available"
+          menu = new MenuWdgt @, false, @, true, true, "no targets available"
         menu.popUpAtHand()
 
       setTargetAndActionWithOnesPickedFromMenu: (ignored, ignored2, theTarget, each) ->

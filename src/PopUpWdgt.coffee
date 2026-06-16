@@ -157,7 +157,7 @@ class PopUpWdgt extends Widget
     # has been placed somewhere because
     # otherwise there is no visible image
     # to base the shadow on
-    # P.S. this is the thing that causes the MenuMorph buffer
+    # P.S. this is the thing that causes the MenuWdgt buffer
     # to be painted after the creation.
     @addShadow()
     @fullChanged()

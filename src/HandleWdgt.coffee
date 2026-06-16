@@ -258,7 +258,7 @@ class HandleWdgt extends Widget
   # HandleWdgt menu:
   attach: ->
     choices = world.plausibleTargetAndDestinationMorphs @
-    menu = new MenuMorph @, false, @, true, true, "choose target:"
+    menu = new MenuWdgt @, false, @, true, true, "choose target:"
     if choices.length > 0
       choices.forEach (each) =>
         menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ➜", true, @, 'makeHandleSolidWithParentMorph', nil, nil, nil, nil, nil, each, nil, true
@@ -271,5 +271,5 @@ class HandleWdgt extends Widget
       # this list if the user invokes the
       # command, and if there are no good
       # morphs then show some kind of message.
-      menu = new MenuMorph @, false, @, true, true, "no morphs to attach to"
+      menu = new MenuWdgt @, false, @, true, true, "no morphs to attach to"
     menu.popUpAtHand() if choices.length

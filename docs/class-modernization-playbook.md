@@ -693,3 +693,24 @@ left as-is (separate non-`Morph` consistency pass). Unlike BATCH 16's experiment
 1 rename + 2 src refs; 0 tests, 0 docs. Plan `~/.claude/plans/batch18-errorslogviewer-rename.md`. Remaining long-tail: `MenuMorph`/`PromptMorph`/
 `CodePromptMorph` (high-recapture — the first big-recapture batch since RectangleMorph), …, `WorldMorph` last. (Non-`*Morph` naming-consistency
 leftovers like `UpperRightTriangleIconicButton` remain a SEPARATE possible pass.)
+
+**DONE (2026-06-17): BATCH 19 — the Menu/Prompt family (`MenuMorph`→`MenuWdgt`, `PromptMorph`→`PromptWdgt`, `CodePromptMorph`→`CodePromptWdgt`).**
+The first genuinely high-recapture family since RectangleMorph (B6) — but it collapsed to ONE recapture. Hierarchy: `MenuWdgt extends PopUpWdgt`
+(base, in `src/basic-widgets/menu-system/`) with 2 subclasses — `PromptWdgt` + the already-`*Wdgt` `SaveShortcutPromptWdgt` (its `extends`
+re-pointed, not renamed); `PromptWdgt extends MenuWdgt`; `CodePromptWdgt extends Widget` (standalone despite the name). 75 MenuMorph src hits/23
+files (incl. 4 active `instanceof`), 7 PromptMorph, 2 CodePromptMorph; **0** string-literals, **0** `findTop`. KEPT (`\b`-protected compound
+identifiers, out of scope): the `getHierarchyMenuMorphs`/`hierarchyMenuMorphs` methods.
+- **Behavioral nav fix (1 test):** `macroDuplicatedMenuAutoPinsOnDesktop` drills a hierarchy menu by `"a MenuMorph ➜"`; after the rename the drawn
+  label strips to `"a Menu ➜"`. **Collision-safe** (the B9 hazard): that menu also holds `"a MenuItem ➜"`, and `"a Menu ➜"` diverges at index 6
+  (space vs `I`) so it is NOT a prefix — the `➜` disambiguates (same shape as B9's `"a Slider ➜"`). No menu/prompt `@assertTopMenuItemStrings` exist
+  (only `"a WorldMorph ➜"` — BATCH 20).
+- **Recapture = exactly 1 test** (`macroRightClickClosesDownstreamSubMenus`, image_2 only) — the same test that recaptured in B4 for MenuItemMorph;
+  it photographs a hierarchy submenu whose item shifted `"a MenuMorph"`→`"a Menu"` (eyeballed: only that label changed; the now-narrower submenu
+  reveals a touch more of the menu behind it — benign). The duplicate-menu test photographs world menus (ACTION items, no class name) → nav-fix only,
+  ZERO recapture; a prompt draws its caller-set TITLE, not the class name; no inspector test names a menu/prompt in a diagram. **So the "high-recapture
+  family" collapsed to 1: breadth (menus drawn everywhere) again ≠ recapture — only the ONE photographed hierarchy-menu-that-names-a-menu re-baselined.**
+- **Test-side mechanic:** blind `\b`-perl over test `.js` (3 tokens) handled tags + prose + comments, THEN a targeted strip of the drawn-label nav
+  `"a MenuWdgt ➜"`→`"a Menu ➜"` (the sweep over-converts the drawn label to the class name; strip it back to the menu form). 30 test dirs
+  content-touched + viz regenerated. **165/165 (Chrome dpr 1+2, WebKit), `--homepage` builds + boots, 1 recapture.** Plan
+  `~/.claude/plans/batch19-menu-prompt-rename.md`. Remaining: **`WorldMorph` LAST** (the `window.world` singleton; `"a WorldMorph ➜"` is drawn AND
+  asserted via `@assertTopMenuItemStrings` in several tests → genuine recapture).

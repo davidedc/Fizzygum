@@ -1746,7 +1746,7 @@ class Widget extends TreeNode
       @fullClippedBoundsWhenLastPainted = @fullClippedBounds()
       #if (@ != world) and (@fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
       #  debugger
-      #if (@ instanceof MenuMorph) and (@fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
+      #if (@ instanceof MenuWdgt) and (@fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
       #  debugger
 
   # in general, the children of a Widget could be outside the
@@ -2273,7 +2273,7 @@ class Widget extends TreeNode
   # need to figure out their whole
   # layout (which depends on the children)
   # before painting themselves
-  # e.g. the MenuMorph
+  # e.g. the MenuWdgt
   reLayout: ->
 
   calculateAndUpdateExtent: ->
@@ -2811,14 +2811,14 @@ class Widget extends TreeNode
       text = msg.toString()  if msg.toString
     else
       text = "NULL"
-    m = new MenuMorph @, false, @, true, true, text
+    m = new MenuWdgt @, false, @, true, true, text
     m.addMenuItem "Ok"
     m.popUpCenteredAtHand world
 
   prompt: (msg, target, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded) ->
 
-    prompt = new PromptMorph(@, msg, target, callback, defaultContents, width, floorNum,
+    prompt = new PromptWdgt(@, msg, target, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded)
 
     prompt.popUpAtHand()
@@ -2827,7 +2827,7 @@ class Widget extends TreeNode
   textPrompt: (msg, target, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded) ->
 
-    prompt = new CodePromptMorph(msg, target, callback, defaultContents, width, floorNum,
+    prompt = new CodePromptWdgt(msg, target, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded)
     wm = new WindowWdgt nil, nil, prompt
     wm.setExtent new Point 460, 400
@@ -2839,7 +2839,7 @@ class Widget extends TreeNode
   
   pickColor: (msg, callback, defaultContents) ->
     colorPicker = new ColorPickerWdgt defaultContents
-    menu = new MenuMorph @, false, @, true, true, msg or "", colorPicker
+    menu = new MenuWdgt @, false, @, true, true, msg or "", colorPicker
     menu.silentAdd colorPicker
     menu.addLine 2
 
@@ -2975,7 +2975,7 @@ class Widget extends TreeNode
   buildHierarchyMenu: (morphsHierarchy) ->
     if !morphsHierarchy?
       morphsHierarchy = @getHierarchyMenuMorphs()
-    menu = new MenuMorph @, false, @, true, true, nil
+    menu = new MenuWdgt @, false, @, true, true, nil
     morphsHierarchy.forEach (each) ->
       textLabelForMorph = each.toString().slice 0, 50
       textLabelForMorph = textLabelForMorph.replace "Wdgt", ""
@@ -3232,7 +3232,7 @@ class Widget extends TreeNode
     world.morphsToBePinouted.delete b
 
   testMenu: (morphOpeningThePopUp,targetMorph)->
-    menu = new MenuMorph morphOpeningThePopUp,  false, targetMorph, true, true, nil
+    menu = new MenuWdgt morphOpeningThePopUp,  false, targetMorph, true, true, nil
     menu.addMenuItem "serialise morph to memory", true, targetMorph, "serialiseToMemory"
     menu.addMenuItem "deserialize from memory and attach to world", true, targetMorph, "deserialiseFromMemoryAndAttachToWorld"
     menu.addMenuItem "deserialize from memory and attach to hand", true, targetMorph, "deserialiseFromMemoryAndAttachToHand"
@@ -3267,7 +3267,7 @@ class Widget extends TreeNode
     world.create new AnalogClockWdgt
 
   popUpIconsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "icons"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "icons"
     menu.addMenuItem "Destroy icon", true, menusHelper, "createDestroyIconMorph"
     menu.addMenuItem "Under the carpet icon", true, menusHelper, "createUnderCarpetIconMorph"
     menu.addMenuItem "Collapsed state icon", true, menusHelper, "createCollapsedStateIconMorph"
@@ -3287,7 +3287,7 @@ class Widget extends TreeNode
     menu.popUpAtHand()
 
   popUpVerticalStackMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Vertical stack"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Vertical stack"
     menu.addMenuItem "vertical stack constrained contents width", true, @, "createSimpleVerticalStackPanelWdgt"
     menu.addMenuItem "vertical stack scrollpanel constrained contents width", true, @, "createSimpleVerticalStackScrollPanelWdgt"
     menu.addMenuItem "vertical stack panel and scrollpanel constrained contents width", true, @, "createSimpleVerticalStackPanelWdgtAndScrollPanel"
@@ -3298,20 +3298,20 @@ class Widget extends TreeNode
     menu.popUpAtHand()
 
   popUpDocumentMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Document"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Document"
     menu.addMenuItem "simple document scrollpanel", true, @, "createSimpleDocumentScrollPanelWdgt"
     menu.addMenuItem "simple document", true, menusHelper, "createSimpleDocumentWdgt"
     menu.popUpAtHand()
 
   popUpWindowsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Windows"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Windows"
     menu.addMenuItem "empty window", true, @, "createEmptyWindow"
     menu.addMenuItem "empty internal window", true, @, "createEmptyInternalWindow"
 
     menu.popUpAtHand()
 
   popUpShortcutsAndScriptsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Shortcuts & Scripts"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Shortcuts & Scripts"
     menu.addMenuItem "basement shortcut", true, menusHelper, "basementIconAndText"
     menu.addMenuItem "new script", true, menusHelper, "newScriptWindow"
     menu.addMenuItem "Fizzypaint launcher", true, menusHelper, "createFizzyPaintLauncher"
@@ -3322,7 +3322,7 @@ class Widget extends TreeNode
     menu.popUpAtHand()
 
   popUpPatchProgrammingMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Patch Programming"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Patch Programming"
     menu.addMenuItem "fanout", true, menusHelper, "createFanout"
     menu.addMenuItem "calculating node", true, menusHelper, "createCalculatingPatchNode"
     menu.addMenuItem "diffing node", true, menusHelper, "createDiffingPatchNode"
@@ -3346,7 +3346,7 @@ class Widget extends TreeNode
 
 
   popUpSimplePlainTextWdgtMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Simple plain text"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Simple plain text"
     menu.addMenuItem "simple plain text wrapping", true, @, "createNewWrappingSimplePlainTextWdgtWithBackground"
     menu.addMenuItem "simple plain text not wrapping", true, @, "createNewNonWrappingSimplePlainTextWdgtWithBackground"
     menu.addMenuItem "simple plain text (wrapping / not wrapping)", true, @, "createNewWrappingAndNonWrappingSimplePlainTextWdgtWithBackground"
@@ -3360,7 +3360,7 @@ class Widget extends TreeNode
     menu.popUpAtHand()
 
   popUpFirstMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "others"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "others"
     menu.addMenuItem "make sliders' buttons states bright", true, menusHelper, "makeSlidersButtonsStatesBright"
     menu.addMenuItem "make pointer", true, @, "createPointerMorph"
     menu.addMenuItem "icon with text", true, menusHelper, "makeIconWithText"
@@ -3381,7 +3381,7 @@ class Widget extends TreeNode
     menu.popUpAtHand()
 
   popUpSecondMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "others"
+    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "others"
     menu.addMenuItem "icons ➜", false, @, "popUpIconsMenu", "icons"
     menu.addMenuItem "simple plain text ➜", false, @, "popUpSimplePlainTextWdgtMenu", "icons"
     menu.addMenuItem "vertical stack ➜", false, @, "popUpVerticalStackMenu", "icons"
@@ -3413,7 +3413,7 @@ class Widget extends TreeNode
 
   # »>> this part is only needed for Macros
   testMenuForMacros: ->
-    menu = new MenuMorph @, false, @, true, true, "Tests"
+    menu = new MenuWdgt @, false, @, true, true, "Tests"
     menu.addMenuItem "create desktop", true, world, "createDesktop"
 
 
@@ -3435,7 +3435,7 @@ class Widget extends TreeNode
 
   buildBaseMorphClassContextMenu: (morphOpeningThePopUp) ->
 
-    menu = new MenuMorph(morphOpeningThePopUp, false,
+    menu = new MenuWdgt(morphOpeningThePopUp, false,
       @,
       true,
       true,
@@ -3633,7 +3633,7 @@ class Widget extends TreeNode
         choicesExcludingParent.push each
 
     if choicesExcludingParent.length > 0
-      menu = new MenuMorph @, false, @, true, true, "choose new parent:"
+      menu = new MenuWdgt @, false, @, true, true, "choose new parent:"
       choicesExcludingParent.forEach (each) =>
         menu.addMenuItem each.toString().slice(0, 50), true, each, "newParentChoice", nil, nil, nil, nil, nil, nil, nil, true
     else
@@ -3645,7 +3645,7 @@ class Widget extends TreeNode
       # this list if the user invokes the
       # command, and if there are no good
       # morphs then show some kind of message.
-      menu = new MenuMorph @, false, @, true, true, "no morphs to attach to"
+      menu = new MenuWdgt @, false, @, true, true, "no morphs to attach to"
     menu.popUpAtHand()
 
   # »>> this part is excluded from the fizzygum homepage build
@@ -3660,7 +3660,7 @@ class Widget extends TreeNode
         choicesExcludingParent.push each
 
     if choicesExcludingParent.length > 0
-      menu = new MenuMorph @, false, @, true, true, "choose new parent:"
+      menu = new MenuWdgt @, false, @, true, true, "choose new parent:"
       choicesExcludingParent.forEach (each) =>
         menu.addMenuItem each.toString().slice(0, 50), true, each, "newParentChoiceWithHorizLayout", nil, nil, nil, nil, nil, nil, nil, true
     else
@@ -3672,7 +3672,7 @@ class Widget extends TreeNode
       # this list if the user invokes the
       # command, and if there are no good
       # morphs then show some kind of message.
-      menu = new MenuMorph @, false, @, true, true, "no morphs to attach to"
+      menu = new MenuWdgt @, false, @, true, true, "no morphs to attach to"
     menu.popUpAtHand()
   # this part is excluded from the fizzygum homepage build <<«
   

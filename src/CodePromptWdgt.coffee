@@ -1,4 +1,4 @@
-class CodePromptMorph extends Widget
+class CodePromptWdgt extends Widget
 
   tempPromptEntryField: nil
   defaultContents: ""
