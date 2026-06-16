@@ -1,6 +1,6 @@
 # this file is excluded from the fizzygum homepage build
 
-class FizzytilesCodeMorph extends TextWdgt
+class FizzytilesCodeWdgt extends TextWdgt
 
   fridgeMagnetsCanvas: nil
 

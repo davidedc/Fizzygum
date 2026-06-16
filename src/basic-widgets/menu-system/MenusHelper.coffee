@@ -17,7 +17,7 @@ class MenusHelper
 
   # »>> this part is excluded from the fizzygum homepage build
   createFridgeMagnets: ->
-    fmm = new FridgeMagnetsMorph
+    fmm = new FridgeMagnetsWdgt
     wm = new WindowWdgt nil, nil, fmm
     wm.setExtent new Point 570, 400
     wm.fullRawMoveTo world.hand.position()

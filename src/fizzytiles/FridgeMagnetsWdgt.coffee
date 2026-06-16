@@ -1,5 +1,5 @@
 # this file is excluded from the fizzygum homepage build
-class FridgeMagnetsMorph extends Widget
+class FridgeMagnetsWdgt extends Widget
 
   # panes:
   fridge: nil
@@ -32,13 +32,13 @@ class FridgeMagnetsMorph extends Widget
     #super
 
     # visual output
-    #@visualOutput = new FridgeMagnetsCanvasMorph
-    @visualOutput = new FridgeMagnets3DCanvasMorph
+    #@visualOutput = new FridgeMagnetsCanvasWdgt
+    @visualOutput = new FridgeMagnets3DCanvasWdgt
     @visualOutput.disableDrops()
     @add @visualOutput
     
     # source code output pane
-    @codeOutput = new FizzytilesCodeMorph "",nil,nil,nil,nil,nil,(Color.create 255, 250, 245), 1
+    @codeOutput = new FizzytilesCodeWdgt "",nil,nil,nil,nil,nil,(Color.create 255, 250, 245), 1
     @codeOutput.fridgeMagnetsCanvas = @visualOutput
     @codeOutput.isEditable = true
     @codeOutput.enableSelecting()
@@ -46,7 +46,7 @@ class FridgeMagnetsMorph extends Widget
     @add @codeOutput
 
     # fridge
-    @fridge = new FridgeMorph
+    @fridge = new FridgeWdgt
     @fridge.fridgeMagnetsCanvas = @visualOutput
     @fridge.sourceCodeHolder = @codeOutput
     @add @fridge

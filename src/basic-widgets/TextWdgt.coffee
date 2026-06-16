@@ -440,7 +440,7 @@ class TextWdgt extends StringWdgt
   # FIT_BOX_TO_TEXT TextWdgt is a drop-in for SimplePlainTextWdgt (the container
   # RESIZE path is the rawSetExtent override above; this is the content-CHANGE path).
   # For a free-floating FIT_TEXT_TO_BOX TextWdgt (the default — e.g. the empty-window
-  # placeholder WindowContentsPlaceholderText, or FizzytilesCodeMorph) this is a
+  # placeholder WindowContentsPlaceholderText, or FizzytilesCodeWdgt) this is a
   # no-op: the box is fixed, so we must NOT reflow it or poke the container (the
   # Arc-6 "respect the mode, don't impose it" rule — see the FITTING MODEL comment
   # in StringWdgt).

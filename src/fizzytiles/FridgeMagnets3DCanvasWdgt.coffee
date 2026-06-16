@@ -2,7 +2,7 @@
 
 # "container"/"contained" scenario going on.
 
-class FridgeMagnets3DCanvasMorph extends CanvasWdgt
+class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
 
   primitiveTypes: {}
   # TODO this type of construction in the fields is bad for
@@ -67,7 +67,7 @@ class FridgeMagnets3DCanvasMorph extends CanvasWdgt
     @primitiveTypes.ball = numberOfPrimitives++
 
   step: ->
-    #console.log "stepping FridgeMagnetsCanvasMorph"
+    #console.log "stepping FridgeMagnetsCanvasWdgt"
     @paintNewFrame()
     @changed()
 

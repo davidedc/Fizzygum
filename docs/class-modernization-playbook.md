@@ -658,3 +658,18 @@ children). ~15 src refs, **0** string-literals, **0** `findTop…`. **ZERO recap
   Remaining long-tail families: the Fizzytiles app (`Fridge*` + `FizzytilesCodeMorph`, incl. the 2 already-re-pointed canvas children), the
   `UpperRightTriangleIconicButton`/`EditableMarkMorph` mark lineage, `ErrorsLogViewerMorph`, `MenuMorph`/`PromptMorph`/`CodePromptMorph`
   (high-recapture), …, `WorldMorph` last.
+
+**DONE (2026-06-16): BATCH 16 — the Fizzytiles app (`FridgeMorph`/`FridgeMagnetsMorph`/`FridgeMagnetsCanvasMorph`/`FridgeMagnets3DCanvasMorph`/`FizzytilesCodeMorph`
+→ `*Wdgt`).** Five leaf classes of the self-contained fridge-magnets demo app (`extends` PanelWdgt / Widget / CanvasWdgt / CanvasWdgt /
+TextWdgt — no internal hierarchy, 0 subclasses); finishes what BATCH 15 started (which re-pointed the 2 canvas children to `CanvasWdgt`).
+~13 src refs, **0** string-literals, **0** `findTop…`, **0** test files. **ZERO recapture (guaranteed).**
+- **The cleanest possible batch — EXPERIMENTAL, homepage-stripped, untested.** Every `src/fizzytiles/` file carries
+  `# this file is excluded from the fizzygum homepage build` (+ `if Automator?` guards), so `--homepage` strips it (the homepage build never
+  contains these — renaming can't affect it) and no SystemTest references the app → no possible recapture. **The verification net for such a
+  batch is the NORMAL `build_and_smoke`/`build_and_test` (which DO compile fizzytiles), NOT the homepage boot leg** (which never sees it).
+- 5 tokens mutually `\b`-distinct (`FridgeMorph` ⊄ `FridgeMagnets…`; `FridgeMagnetsMorph` ⊄ `FridgeMagnetsCanvasMorph`; etc.) — one sweep,
+  order-irrelevant. No `createNew*Morph` methods for these.
+- Result: **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots, ZERO recapture.** 5 renames + ~13 src refs; 0 test files, 0
+  docs. Plan `~/.claude/plans/batch16-fizzytiles-app-rename.md`. Remaining long-tail families: the
+  `UpperRightTriangleIconicButton`/`EditableMarkMorph` mark lineage, `ErrorsLogViewerMorph`, `MenuMorph`/`PromptMorph`/`CodePromptMorph`
+  (high-recapture), …, `WorldMorph` last.

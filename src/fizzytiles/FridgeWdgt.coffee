@@ -1,6 +1,6 @@
 # this file is excluded from the fizzygum homepage build
 
-class FridgeMorph extends PanelWdgt
+class FridgeWdgt extends PanelWdgt
 
   tabs: []
   sourceCodeHolder: nil
