@@ -1766,6 +1766,16 @@ class Widget extends TreeNode
   # and then you draw the contents. See methods below.
   #
   # How the shadow painting works -----------------
+  # IMPORTANT: a widget NEVER bakes its own shadow into its back-buffer. The ONLY
+  # shadow mechanism is this unified recursive re-paint: a widget that has a shadow
+  # (@shadowInfo) re-paints its WHOLE subtree once more, faintly and offset, BEHIND
+  # the normal paint. It is NOT a hard "silhouette"/outline — each widget is
+  # re-painted with its actual (possibly semi-transparent) pixels at
+  # appliedShadow.alpha, so a transparent text widget casts a faint copy of its
+  # GLYPHS and a semi-transparent panel-with-text casts a faint copy of fill AND
+  # content together. (There is no per-glyph / per-widget baked shadow: the old
+  # StringMorph/TextMorph shadowOffset/shadowColor route was removed and is
+  # deliberately not reintroduced.)
   # If appliedShadow is defined, it means that we are painting the whole
   # of the widget recursively AS SHADOW. Since there are no shadows of a shadow
   # so we can skip the "just shadow" part, and we paint the widget as shadow.

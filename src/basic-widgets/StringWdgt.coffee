@@ -765,6 +765,11 @@ class StringWdgt extends Widget
     textVerticalPosition = @textVerticalPosition(@fontHeight @fittingFontSize) + @fontHeight(@fittingFontSize)
     textHorizontalPosition = @textHorizontalPosition widthOfText
 
+    # NB: no SHADOW is baked into this buffer. hasDarkOutline below is an OUTLINE
+    # (offset black glyph copies, for legibility against busy backgrounds), NOT a
+    # shadow. A text widget's shadow is the unified widget drop-shadow (see
+    # Widget.coffee "How the shadow painting works" + addShadow); the old per-glyph
+    # shadowOffset/shadowColor route was removed and is deliberately not reintroduced.
     if @hasDarkOutline
       backBufferContext.fillStyle = Color.BLACK.toString()
       backBufferContext.fillText text, textHorizontalPosition+0, textVerticalPosition+0

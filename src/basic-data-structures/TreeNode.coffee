@@ -25,12 +25,14 @@ class TreeNode
   # so first the "parent" morph is drawn, then the children,
   # where first child is re-painted first.
   #
-  # The slight exception is the shadow, which, when it exists,
-  # is the first
-  # child, but includes the shadow of the parent morph.
-  # So, the shadow is drawn AFTER the parent morph, but it's
-  # drawn with a special blending mode, such that it can be
-  # painted over and it still looks like it's at the back.
+  # The slight exception is the shadow, which, when it exists, is NOT
+  # a child morph — it is a "property" object (@shadowInfo) rendered as
+  # a pure drawing effect: a widget that has a shadow re-paints its WHOLE
+  # subtree once, faintly and offset, FIRST (before the normal
+  # back-to-front paint of itself + its children), so the shadow sits
+  # behind everything. Widgets never bake a shadow into their own
+  # back-buffer — this unified recursive re-paint is the only shadow
+  # mechanism (see Widget.coffee "How the shadow painting works").
   #
   # This makes intuitive sense if you think for example
   # at a textMorph being added to a box morph: it is

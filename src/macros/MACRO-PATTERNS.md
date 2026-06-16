@@ -1496,9 +1496,10 @@ assertion a recapture after a regression silently stores two different hashes an
   part crosses it) for the crop to be visible — fully-inside children show no clipping.
 - **Composite drop-shadow** (`macroCompositeMorphsHaveCorrectShadow`): a shadow comes from `Widget.add`, NOT `attach` — `world.add
   widget` gives the desktop shadow (`addShadow`, offset (4,4) α0.2, `Widget.coffee:2199`), re-parenting to a non-world parent calls
-  `removeShadow` (`:2210`). The shadow paints the recursive silhouette of the whole subtree, so `world.add parent` then
-  `parent.add child` makes the parent's shadow outline the WHOLE composite. To force a shadow on a morph that never routed through
-  `world.add`, call `widget.addShadow()` explicitly.
+  `removeShadow` (`:2210`). The shadow is the whole subtree RE-PAINTED faintly at the offset (every descendant's actual pixels —
+  fill and content — not just an edge/silhouette), so `world.add parent` then `parent.add child` makes the parent's shadow show
+  the WHOLE composite faintly. A widget never bakes its own shadow into its back-buffer — this unified recursive re-paint is the
+  only shadow. To force a shadow on a morph that never routed through `world.add`, call `widget.addShadow()` explicitly.
 - **A widget is painted correctly the INSTANT it is picked up** (`macroPanelPaintedOkAsSoonAsPickedUp`): the grab path produces a complete,
   correct first frame WHILE the morph is held — synchronously, no settle. `ActivePointerWdgt.grab` does `@add aWdgt` (which FORCES the
   morph's first paint — its comment: "the shadow needs the image of the widget"), then `addShadow new Point(6,6),0.1` (the floaty drag
@@ -1511,6 +1512,15 @@ assertion a recapture after a regression silently stores two different hashes an
   `takeScreenshot…` (the held panel, fully painted with its drag shadow) → `@syntheticEventsMouseUp_InputEvents()`. The paint-on-pickup
   sibling of `macroDuplicateSimpleWidgetRidesHand` (a DUPLICATE painted-OK the instant it's grabbed) and the held-shadow companion of
   `macroCompositeMorphsHaveCorrectShadow`. No new verb.
+- **Bare text widget casts the unified drop-shadow, lifted while dragged** (`macroBareTextWidgetDropShadowRestAndDrag`): a
+  `StringWdgt` + a `TextWdgt` added straight to the world (transparent, so the shadow is the GLYPHS, not a box) each get the
+  at-rest desktop shadow via `Widget.add` -> `addShadow` (offset (4,4) α0.2, `Widget.coffee:2199`); float-dragging the TextWdgt
+  by its body swaps in the lifted shadow (`ActivePointerWdgt.grab` -> (6,6) α0.1), and dropping restores the at-rest one. Proves
+  a text widget's shadow IS the ONE unified widget drop-shadow — there is NO per-glyph shadow baked into its back-buffer
+  (roadmap #3 closed-SUBSUMED; the deleted `StringMorph`/`TextMorph` `shadowOffset`/`shadowColor` is not reintroduced). The
+  bare-world-child float-drag + held-button mid-drag idiom follow `macroBareButtonFloatDragsWithoutTriggering`; the
+  rest -> lifted -> rest three-shot follows `macroMenuShadowCorrectWhileAndAfterDrag`. Three distinct dataHashes (the shadow
+  genuinely changes); no `@assertScreenshotsIdentical` (the states must DIFFER). No new verb.
 - **Shape hit-test / click-through** (`macroRoundedBoxCornerClickThrough`): the pointer resolves to a morph by SHAPE, not bounding
   box — `ActivePointerWdgt.topWdgtUnderPointer` skips any morph that `isTransparentAt` the pointer (`:48`). A `BoxMorph` with a
   large `cornerRadius` is transparent at its corners (`BoxyAppearance.isTransparentAt` outside the rounded arc). Put a

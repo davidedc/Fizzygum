@@ -287,3 +287,32 @@ family). Lessons folded in above and new ones:
   menus-strip-`Wdgt` rule makes its rename a pixel/recapture event; left for a later batch (the incremental rule above).
 - Result: suite 160/160, **zero reference-image churn** (the renames were pixel-neutral identifier swaps; the only 2
   changed tests build `new MenuItemMorph` and render byte-identical to their originals).
+
+**DONE (2026-06-16): the TextWdgt-shadows arc (roadmap #3) — closed as SUBSUMED, a "don't build it; prove + document
+the existing mechanism" arc.** A class-modernization arc is not always "add code": #3 asked to restore the deleted
+`TextMorph` per-glyph `shadowOffset`/`shadowColor`, but investigation showed that was the WRONG thing to build. New
+lessons, generally reusable:
+- **Disambiguate the feature against what already exists BEFORE planning to build it.** "Shadow" meant two unrelated
+  things: (a) the unified **widget drop-shadow** — a widget with `@shadowInfo` re-paints its whole subtree faintly +
+  offset (`Widget.coffee:1777-1828`); `Widget.add` gives a free-floating world child offset (4,4)/α0.2 (`:2199`),
+  `ActivePointerWdgt.grab` lifts it to (6,6)/α0.1 while dragged (`:209`), clipping panels clip it to their rect
+  (`ClippingAtRectangularBoundsMixin`) — and `BackBufferMixin.coffee:114` blits each widget's buffer at
+  `appliedShadow.alpha`, so a *transparent* text widget's drop-shadow already IS a faint copy of its glyphs; vs (b) the
+  deleted **per-glyph baked emboss** (offset coloured glyph copies in the text's own back-buffer, always-on). The owner
+  wanted (a)'s behaviour; (b) is redundant with it. Net: nothing to build — just a TEST + a doc fix.
+- **Owner principle worth recording:** *no widget bakes its own shadow into its back-buffer* — the one unified
+  mechanism casts every shadow (hand/pointer + the shadow pass itself excepted). A per-glyph "text style" shadow is a
+  separate concept, deliberately not (re)introduced.
+- **The existing suite already protects an "incidental" rendering** — ≥7 tests `world.add` a bare string/text, so the
+  at-rest glyph drop-shadow was already captured + byte-locked; the only GAP was the *lifted* shadow on a bare text
+  widget while dragged (every drag-shadow test used menus/prompts/panels). The new test fills exactly that gap.
+- **A "tweak the docs" deliverable means hunting the MISLEADING wording, not every mention.** Audited shadow comments
+  repo-wide; fixed only the genuinely-wrong ones — "silhouette"/"outline" (the shadow is a faint re-paint of the whole
+  subtree's *actual pixels*, fill AND content, not an edge) and the stale `TreeNode` "shadow is the first child"
+  (shadows became property objects in `3df93e5c`) — and ADDED the never-baked invariant at the canonical sites
+  (`Widget.coffee` shadow doc-block, `TreeNode.coffee`, `StringWdgt.coffee` next to `hasDarkOutline` where #3's code
+  used to live, `MACRO-PATTERNS.md`). Left historical provenance (`Fizzygum-tests/MIGRATION-PLAN.md`) and unrelated
+  uses (icon "floppy silhouette") untouched — historical prose is provenance, not a stale reference (cf. §5).
+- Result: **165/165 (Chrome + WebKit), dpr 1 + 2, ZERO reference churn on the existing 164** (the only source edits
+  were comments — pixel-neutral). New test `macroBareTextWidgetDropShadowRestAndDrag` (rest -> lifted -> rest, three
+  distinct dataHashes). No framework behaviour change.
