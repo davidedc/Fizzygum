@@ -176,7 +176,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
 
 - **Direct construction differs from the demo path.** A directly-built `StringWdgt`/`TextWdgt` has `isEditable =
   false` (`:43`) — set `txt.isEditable = true` before clicking it. A `SliderWdgt` defaults to `alpha 0.1`; a
-  `CanvasMorph` ships no default extent. A morph made via the demo menu (`world.create`, floats on the hand) is
+  `CanvasWdgt` ships no default extent. A morph made via the demo menu (`world.create`, floats on the hand) is
   initialised differently from `new …; world.add` and can inspect differently — reproduce the menu path when it's load-bearing.
 - **`fullMoveTo` vs `fullRawMoveTo`.** Before `world.add` (nothing painted yet) a raw `fullRawMoveTo` is fine; to move a
   widget ALREADY in the world use **`fullMoveTo`** (a proper broken-rect repaint of both regions) — `fullRawMoveTo` only

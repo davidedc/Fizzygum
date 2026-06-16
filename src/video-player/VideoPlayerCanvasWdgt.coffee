@@ -13,7 +13,7 @@
 # Note that python3 -m http.server does not support range requests, but RangeHTTPServer does.
 # see https://github.com/danvk/RangeHTTPServer
 
-class VideoPlayerCanvasWdgt extends CanvasMorph
+class VideoPlayerCanvasWdgt extends CanvasWdgt
 
   video: nil
   _extentWhenPreviousBackgroundWasPainted: nil

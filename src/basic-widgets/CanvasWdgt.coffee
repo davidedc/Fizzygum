@@ -5,7 +5,7 @@
 # 
 # "container"/"contained" scenario going on.
 
-class CanvasMorph extends PanelWdgt
+class CanvasWdgt extends PanelWdgt
   @augmentWith BackBufferMixin
 
   constructor: ->

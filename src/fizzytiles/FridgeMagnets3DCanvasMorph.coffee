@@ -2,7 +2,7 @@
 
 # "container"/"contained" scenario going on.
 
-class FridgeMagnets3DCanvasMorph extends CanvasMorph
+class FridgeMagnets3DCanvasMorph extends CanvasWdgt
 
   primitiveTypes: {}
   # TODO this type of construction in the fields is bad for

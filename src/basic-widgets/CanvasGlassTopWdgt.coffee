@@ -1,4 +1,4 @@
-class CanvasGlassTopWdgt extends CanvasMorph
+class CanvasGlassTopWdgt extends CanvasWdgt
 
   underlyingCanvasMorph: nil
   defaultRejectDrags: true

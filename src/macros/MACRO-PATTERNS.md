@@ -1537,9 +1537,9 @@ assertion a recapture after a regression silently stores two different hashes an
   mid-chain morph hides its WHOLE subtree, and `show()` restores it. Drive them DIRECTLY — `hide()` is the "hide" item's method,
   and `show()` MUST be programmatic (a hidden morph can't be right-clicked; recordings un-hide via an inspector `show()` eval).
   `show()` no-ops if the morph is already effectively visible (ancestor-chain AND), so a hide→show round-trip is image-identical.
-- **Canvas / pen turtle drawing** (`macroSierpinskiInCanvas`): `canvas = new CanvasMorph; canvas.rawSetExtent (new Point W, H)`
-  (REQUIRED — CanvasMorph ships no default extent), `canvas.fullRawMoveTo …; world.add canvas`; `pen = new PenMorph; canvas.add
-  pen` — a PenMorph draws on its PARENT when that parent is a CanvasMorph (`PenMorph.forward → @parent.drawLine`), so attaching it
+- **Canvas / pen turtle drawing** (`macroSierpinskiInCanvas`): `canvas = new CanvasWdgt; canvas.rawSetExtent (new Point W, H)`
+  (REQUIRED — CanvasWdgt ships no default extent), `canvas.fullRawMoveTo …; world.add canvas`; `pen = new PenWdgt; canvas.add
+  pen` — a PenWdgt draws on its PARENT when that parent is a CanvasWdgt (`PenWdgt.forward → @parent.drawLine`), so attaching it
   to the canvas wires the turtle to the surface. Place with `pen.fullRawMoveTo …` and call a drawing method DIRECTLY, e.g.
   `pen.sierpinski 400, 40` (synchronous).
 

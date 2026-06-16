@@ -638,3 +638,23 @@ Result: **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots, ZERO 
 `~/.claude/plans/batch14-layout-helpers-rename.md`. Remaining long-tail families: the `UpperRightTriangleIconicButton`/`EditableMarkMorph`
 mark lineage, Canvas/Pen, the Fizzytiles app, `ErrorsLogViewerMorph`, `MenuMorph`/`PromptMorph`/`CodePromptMorph` (high-recapture), …,
 `WorldMorph` last.
+
+**DONE (2026-06-16): BATCH 15 — Canvas + Pen (`CanvasMorph` → `CanvasWdgt` (base, re-point 6 children) + `PenMorph` → `PenWdgt`).** Two
+drawing widgets: `CanvasMorph` (a `PanelWdgt` subclass — the raw-canvas base) and the standalone turtle `PenMorph` (`extends Widget`, 0
+children). ~15 src refs, **0** string-literals, **0** `findTop…`. **ZERO recapture.**
+- **A base-with-children (Icon-family pattern), correctly sized via the extends-lens.** `CanvasMorph` has **6 subclasses** —
+  `VideoPlayerCanvasWdgt`, `StretchableCanvasWdgt`, `CanvasGlassTopWdgt`, `RasterImageWdgt` (4 already-`*Wdgt`) + `FridgeMagnetsCanvasMorph`,
+  `FridgeMagnets3DCanvasMorph` (2 Fizzytiles `*Morph`). The single `\bCanvasMorph\b` sweep does it all: renames the base AND flips all 6
+  `extends CanvasMorph` → `extends CanvasWdgt` — and is `\b`-SAFE against the `…CanvasMorph` SUFFIX in `FridgeMagnets[3D]CanvasMorph` (preceded
+  by a word char), so those child NAMES are untouched. POST-SWEEP CHECK: `rg 'extends CanvasWdgt' src` = 6 (a base rename's whole risk is a
+  missed `extends` — verify the count explicitly).
+- **Scope decision (settled): deferred the whole Fizzytiles app to its own next batch.** The 2 Fizzytiles `*Morph` canvases keep their names
+  here, just re-pointed to `extends CanvasWdgt` (a transient `*Morph`-extends-`*Wdgt` — harmless, the build keys off the literal `extends`
+  token). The next batch renames all 5 Fizzytiles `*Morph` together. Avoids splitting the Fizzytiles app or renaming a class twice.
+- KEPT (out of scope, like method names): the property `underlyingCanvasMorph` (`ReconfigurablePaintWdgt`, `CanvasGlassTopWdgt`) and
+  `createNewPenMorph`/`createNewCanvas`/`createPencil*IconMorph` factory methods (all `\b`-protected or no `Morph` token).
+- Result: **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots, ZERO recapture.** 2 renames + 6 `extends` re-points + ~15 src
+  refs; 2 test files (`macroSierpinskiInCanvas`) + 1 visualisation regenerated + 3 docs. Plan `~/.claude/plans/batch15-canvas-pen-rename.md`.
+  Remaining long-tail families: the Fizzytiles app (`Fridge*` + `FizzytilesCodeMorph`, incl. the 2 already-re-pointed canvas children), the
+  `UpperRightTriangleIconicButton`/`EditableMarkMorph` mark lineage, `ErrorsLogViewerMorph`, `MenuMorph`/`PromptMorph`/`CodePromptMorph`
+  (high-recapture), …, `WorldMorph` last.

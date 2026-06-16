@@ -24,7 +24,7 @@
 # resized-up (previous content will be blurry but new
 # content will be sharp).
 
-class StretchableCanvasWdgt extends CanvasMorph
+class StretchableCanvasWdgt extends CanvasWdgt
 
   anythingPaintedYet: false
   extentWhenCanvasGotDirty: nil

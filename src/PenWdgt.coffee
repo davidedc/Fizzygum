@@ -9,7 +9,7 @@
 # example code to run:
 #   this.sierpinski(400,40);
 
-class PenMorph extends Widget
+class PenWdgt extends Widget
   
   heading: 0
   penSize: nil
@@ -25,7 +25,7 @@ class PenMorph extends Widget
     @penSize = 1
 
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
-    if !(whereTo instanceof ActivePointerWdgt or whereTo instanceof CanvasMorph)
+    if !(whereTo instanceof ActivePointerWdgt or whereTo instanceof CanvasWdgt)
       @inform "a pen will only\nwork on a canvas..."
 
   # NOTE: here we are painting the turtle/pen,
@@ -98,13 +98,13 @@ class PenMorph extends Widget
 
   
   
-  # PenMorph access:
+  # PenWdgt access:
   setHeading: (degrees) ->
     @heading = parseFloat(degrees) % 360
     @changed()
     
   
-  # PenMorph turtle ops:
+  # PenWdgt turtle ops:
   turn: (degrees) ->
     @setHeading @heading + parseFloat degrees
   
@@ -137,7 +137,7 @@ class PenMorph extends Widget
     @parent.clear()
     
   
-  # PenMorph demo ops:
+  # PenWdgt demo ops:
   sierpinski: (length, min) ->
     if length > min
       for i in [0...3]

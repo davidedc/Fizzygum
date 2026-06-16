@@ -17,7 +17,7 @@ class SimpleRasterImageButtonWdgt extends SimpleButtonWdgt
     # additional properties:
 
     @rasterImageWdgt = new RasterImageWdgt @imagePath
-    # TODO this is needed because RasterImageWdgt extends CanvasMorph which extends PanelWdgt
+    # TODO this is needed because RasterImageWdgt extends CanvasWdgt which extends PanelWdgt
     # which actually implements the mouseClickLeft handler and doesn'e escalate it.
     # We hence hack this override to make it so the click is indeed escalated to the
     # parent i.e. the SimpleButtonWdgt.

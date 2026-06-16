@@ -1999,7 +1999,7 @@ class WorldMorph extends PanelWdgt
     newWdgt.rawSetExtent new Point 350, 250
     @create newWdgt
   createNewCanvas: ->
-    newWdgt = new CanvasMorph
+    newWdgt = new CanvasWdgt
     newWdgt.rawSetExtent new Point 350, 250
     @create newWdgt
   createNewHandle: ->
@@ -2100,7 +2100,7 @@ class WorldMorph extends PanelWdgt
     foo.add bar
     @create foo
   createNewPenMorph: ->
-    @create new PenMorph
+    @create new PenWdgt
   underTheCarpet: ->
     newWdgt = new BasementWdgt
     @create newWdgt
