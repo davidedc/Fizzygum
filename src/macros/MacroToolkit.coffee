@@ -38,7 +38,7 @@ class MacroToolkit
   # CLICK gesture's last-release ABSOLUTE virtual time + the pointer position it landed
   # on; and currentPointerTarget = the last scheduled move's destination (= where the
   # next click lands). Used so two distinct same-spot single clicks can be pushed past
-  # the hand's real 300ms double-click window, now that fast-test recognition is ungated.
+  # the hand's 300ms EVENT-TIME double-click window, now that fast-test recognition is ungated.
   # nil until the first move/click of a macro (fresh per test — ResetWorld rebuilds the
   # toolkit).
   lastClickGestureUpTime: nil
@@ -80,8 +80,8 @@ class MacroToolkit
     fast:    0.3
     fastest: 0.03
 
-  # NON-scaled guard window, comfortably wider than the hand's real 300ms double-click
-  # recognition window (ActivePointerWdgt.rememberDoubleClickWdgtsForAWhile). Two distinct
+  # NON-scaled guard window, comfortably wider than the hand's 300ms EVENT-TIME double-click
+  # recognition window (the forget gate in ActivePointerWdgt.processMouseUp). Two distinct
   # same-spot click gestures are spaced at least this far apart so they never fold into a
   # false double-click — the replacement for the removed fast-test recognition gate.
   @clickGuardWindowMs: 350
@@ -145,10 +145,10 @@ class MacroToolkit
     base + (t - base) * @spanFactor()
 
   # If a click scheduled at absolute time `downAbs` on `position` would land within the
-  # hand's real double-click window of the PREVIOUS distinct click gesture at the same
+  # hand's double-click window of the PREVIOUS distinct click gesture at the same
   # spot, push it out past @clickGuardWindowMs so the two never fold into a false
-  # double-click. Absolute virtual times == real drain times (base is wall-clock), so the
-  # virtual gap ≈ the real gap the hand's 300ms setTimeout measures. Returns the (possibly
+  # double-click. The absolute virtual time IS the event's `.time`, which is exactly what
+  # the hand's 300ms event-time forget gate measures the gap against. Returns the (possibly
   # delayed) down time. Position-aware so distinct-spot clicks (the common case) are never
   # delayed; at normal, deliberate clicks are already far apart so this never fires.
   guardedClickStart: (downAbs, position) ->
@@ -449,13 +449,13 @@ class MacroToolkit
 
   # Push N consecutive left click-pairs (down+up) at the CURRENT pointer position, spaced so the hand
   # recognises them as a double-/triple-click. The hand only counts a fresh click as a double/triple while
-  # the previous one is still "remembered" — a real 300ms window (ActivePointerWdgt.rememberDoubleClickWdgtsForAWhile)
-  # — so the click UPs must fall within that window of each other; we space them ~120ms apart. No move
+  # the previous one is still "remembered" — a 300ms EVENT-TIME window (the forget gate in
+  # ActivePointerWdgt.processMouseUp) — so the click UPs must fall within that window of each other; we space them ~120ms apart. No move
   # between the clicks (same widget, same point) — recognition also requires the clicks be on the same
   # widget within grabDragThreshold.
   # The APPROACH (startTime) is scaled by the speed level (it follows the scaled positioning move), but the
-  # inter-click 120ms / 50ms spacing is kept NON-scaled so the clicks always land inside the real 300ms
-  # window at every speed. The false-double-click guard is applied ONCE to the first click (vs a prior
+  # inter-click 120ms / 50ms spacing is kept NON-scaled so the clicks always land inside the 300ms
+  # event-time window at every speed. The false-double-click guard is applied ONCE to the first click (vs a prior
   # distinct gesture); clicks 2..N are the DELIBERATE repeats that MUST fold, so they skip it.
   syntheticEventsConsecutiveLeftClicks_InputEvents: (numberOfClicks = 2, startTime = WorldMorph.dateOfCurrentCycleStart.getTime(), millisecondsBetweenClicks = 120, clickMilliseconds = 50) ->
     firstDownAbs = @guardedClickStart (@scaledAbs startTime), @currentPointerTarget
@@ -468,11 +468,11 @@ class MacroToolkit
   # Double- / triple-click at a fractional point inside a located widget, driven through the INPUT-EVENT
   # QUEUE like a real user — a positioning move (so the fake pointer shows) then two/three consecutive
   # queued left clicks that the HAND recognises and turns into processDoubleClick/processTripleClick itself
-  # (ActivePointerWdgt). Recognition is purely proximity + the hand's real 300ms window now (the old
+  # (ActivePointerWdgt). Recognition is purely proximity + the hand's 300ms EVENT-TIME window (the old
   # fast-test recognition gate is gone): the consecutive-click verb deliberately spaces its clicks ~120ms
   # apart (NON-scaled, inside that window) so the hand folds them at EVERY global speed level — the test
-  # carries no speed metadata. (A non-scaled minimum gap between DISTINCT click gestures, plus a generation
-  # guard on the hand's forget-timer, keep two separate clicks from folding into a false double-click.)
+  # carries no speed metadata. (A non-scaled minimum gap between DISTINCT click gestures, plus the hand's
+  # event-time forget gate, keep two separate clicks from folding into a false double-click.)
   # Queues input events — follow with `yield "waitNoInputsOngoing"`.
   doubleClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldMorph.dateOfCurrentCycleStart.getTime()) ->
     @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, nil, startTime, nil
