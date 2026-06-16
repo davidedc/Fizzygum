@@ -1,4 +1,4 @@
-class Plot3DIconWdgt extends IconMorph
+class Plot3DIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

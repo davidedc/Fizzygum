@@ -1,4 +1,4 @@
-class MapPinIconWdgt extends IconMorph
+class MapPinIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

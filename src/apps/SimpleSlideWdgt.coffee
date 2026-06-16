@@ -26,11 +26,11 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
 
       @toolsPanel.add new SpeechBubbleWdgt
 
-      @toolsPanel.add new DestroyIconMorph
-      @toolsPanel.add new ScratchAreaIconMorph
-      @toolsPanel.add new FloraIconMorph
-      @toolsPanel.add new ScooterIconMorph
-      @toolsPanel.add new HeartIconMorph
+      @toolsPanel.add new DestroyIconWdgt
+      @toolsPanel.add new ScratchAreaIconWdgt
+      @toolsPanel.add new FloraIconWdgt
+      @toolsPanel.add new ScooterIconWdgt
+      @toolsPanel.add new HeartIconWdgt
 
       @toolsPanel.add new FizzygumLogoIconWdgt
       @toolsPanel.add new FizzygumLogoWithTextIconWdgt
@@ -66,11 +66,11 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
 
       new SpeechBubbleWdgt
 
-      new DestroyIconMorph
-      new ScratchAreaIconMorph
-      new FloraIconMorph
-      new ScooterIconMorph
-      new HeartIconMorph
+      new DestroyIconWdgt
+      new ScratchAreaIconWdgt
+      new FloraIconWdgt
+      new ScooterIconWdgt
+      new HeartIconWdgt
 
       new FizzygumLogoIconWdgt
       new FizzygumLogoWithTextIconWdgt

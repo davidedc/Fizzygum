@@ -1,4 +1,4 @@
-class FizzygumLogoWithTextIconWdgt extends IconMorph
+class FizzygumLogoWithTextIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

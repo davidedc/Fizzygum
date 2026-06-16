@@ -1,4 +1,4 @@
-class BrushIconMorph extends IconMorph
+class BrushIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

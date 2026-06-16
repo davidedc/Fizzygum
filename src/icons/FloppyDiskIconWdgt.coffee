@@ -1,4 +1,4 @@
-class FloppyDiskIconWdgt extends IconMorph
+class FloppyDiskIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

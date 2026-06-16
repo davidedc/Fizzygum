@@ -1,4 +1,4 @@
-class ExternalLinkIconWdgt extends IconMorph
+class ExternalLinkIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

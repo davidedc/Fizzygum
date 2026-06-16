@@ -1,4 +1,4 @@
-class DecreaseFontSizeButtonWdgt extends IconMorph
+class DecreaseFontSizeButtonWdgt extends IconWdgt
 
   @augmentWith HighlightableMixin, @name
   @augmentWith ParentStainerMixin, @name

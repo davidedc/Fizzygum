@@ -1,4 +1,4 @@
-class TemplatesButtonWdgt extends IconMorph
+class TemplatesButtonWdgt extends IconWdgt
 
   @augmentWith HighlightableMixin, @name
   @augmentWith ParentStainerMixin, @name

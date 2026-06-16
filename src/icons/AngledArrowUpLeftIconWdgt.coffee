@@ -1,4 +1,4 @@
-class AngledArrowUpLeftIconMorph extends IconMorph
+class AngledArrowUpLeftIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

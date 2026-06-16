@@ -1,4 +1,4 @@
-class PatchProgrammingComponentsIconWdgt extends IconMorph
+class PatchProgrammingComponentsIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

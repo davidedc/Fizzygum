@@ -1,4 +1,4 @@
-class EraserIconMorph extends IconMorph
+class EraserIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

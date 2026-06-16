@@ -1,4 +1,4 @@
-class ToothpasteIconMorph extends IconMorph
+class ToothpasteIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

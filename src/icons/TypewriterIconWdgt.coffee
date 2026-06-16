@@ -1,4 +1,4 @@
-class TypewriterIconWdgt extends IconMorph
+class TypewriterIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

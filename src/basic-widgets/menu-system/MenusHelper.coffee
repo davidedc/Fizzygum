@@ -42,10 +42,10 @@ class MenusHelper
     world.add wm
 
   createSimpleButton: ->
-    world.create new SimpleRectangularButtonWdgt true, @, nil, new IconMorph(nil)
+    world.create new SimpleRectangularButtonWdgt true, @, nil, new IconWdgt(nil)
 
   createSwitchButtonMorph: ->
-    button1 = new SimpleRectangularButtonWdgt true, @, nil, new IconMorph(nil)
+    button1 = new SimpleRectangularButtonWdgt true, @, nil, new IconWdgt(nil)
     button2 = new SimpleRectangularButtonWdgt true, @, nil, new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
     world.create new SwitchButtonMorph [button1, button2]
 
@@ -62,7 +62,7 @@ class MenusHelper
   # Icons --------------------------------------------------------------
 
   makeIconWithText: ->
-    world.create new WidgetHolderWithCaptionWdgt "hey there", new BrushIconMorph
+    world.create new WidgetHolderWithCaptionWdgt "hey there", new BrushIconWdgt
 
   makeEmptyIconWithText: ->
     world.create new WidgetHolderWithCaptionWdgt "hey there"
@@ -74,47 +74,47 @@ class MenusHelper
     world.create new BouncerWdgt
 
   createDestroyIconMorph: ->
-    world.create new DestroyIconMorph
+    world.create new DestroyIconWdgt
 
   createUnderCarpetIconMorph: ->
-    world.create new UnderCarpetIconMorph
+    world.create new UnderCarpetIconWdgt
 
   createUncollapsedStateIconMorph: ->
-    world.create new UncollapsedStateIconMorph
+    world.create new UncollapsedStateIconWdgt
 
   createCollapsedStateIconMorph: ->
-    world.create new CollapsedStateIconMorph
+    world.create new CollapsedStateIconWdgt
 
   createCloseIconButtonMorph: ->
     world.create new CloseIconButtonWdgt
 
   createScratchAreaIconMorph: ->
-    world.create new ScratchAreaIconMorph
+    world.create new ScratchAreaIconWdgt
 
   createFloraIconMorph: ->
-    world.create new FloraIconMorph
+    world.create new FloraIconWdgt
 
   createScooterIconMorph: ->
-    world.create new ScooterIconMorph
+    world.create new ScooterIconWdgt
 
   createHeartIconMorph: ->
-    world.create new HeartIconMorph
+    world.create new HeartIconWdgt
 
 
   createPencil1IconMorph: ->
-    world.create new PencilIconMorph
+    world.create new PencilIconWdgt
 
   createPencil2IconMorph: ->
-    world.create new Pencil2IconMorph
+    world.create new Pencil2IconWdgt
 
   createBrushIconMorph: ->
-    world.create new BrushIconMorph
+    world.create new BrushIconWdgt
 
   createToothpasteIconMorph: ->
-    world.create new ToothpasteIconMorph
+    world.create new ToothpasteIconWdgt
 
   createEraserIconMorph: ->
-    world.create new EraserIconMorph
+    world.create new EraserIconWdgt
 
 
   createTrashcanIconWdgt: ->

@@ -11,7 +11,7 @@ class PointerMorph extends BoxMorph
     @color = Color.create 160, 160, 160
     @noticesTransparentClick = true
 
-    lmContent1 = new CollapsedStateIconMorph
+    lmContent1 = new CollapsedStateIconWdgt
     lmContent2 = new StringWdgt(
       @target.toString(),
       nil, #@originallySetFontSize,

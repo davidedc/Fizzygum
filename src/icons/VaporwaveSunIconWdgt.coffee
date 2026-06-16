@@ -1,4 +1,4 @@
-class VaporwaveSunIconWdgt extends IconMorph
+class VaporwaveSunIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

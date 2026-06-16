@@ -1,4 +1,4 @@
-class ChangeFontButtonWdgt extends IconMorph
+class ChangeFontButtonWdgt extends IconWdgt
 
   @augmentWith HighlightableMixin, @name
   @augmentWith ParentStainerMixin, @name

@@ -1,4 +1,4 @@
-class DashboardsIconWdgt extends IconMorph
+class DashboardsIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

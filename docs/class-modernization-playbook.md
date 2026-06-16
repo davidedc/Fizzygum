@@ -430,3 +430,41 @@ lessons that bit (and are the reason this batch mattered):
   ≈26 PNGs across both densities), ~38 test files edited (content only; test identifiers kept) + 37 visualisations regenerated,
   no test added/removed. The pre-recorded BATCH-6 plan touch-list matched the live greps (the only surprises were the *recapture
   count* and the plural-only file — both caught by the suite/catch-all, exactly as the "suite is the oracle" rule predicts).
+
+**DONE (2026-06-16): BATCH 7 — the Icon family (`IconMorph`→`IconWdgt` + 16 `*Morph` leaf icons; re-point 77 already-`*Wdgt`
+children).** The first family of the BATCH-7 "long tail", and the first rename of a **heavily-subclassed BASE**. Renamed the base
+`IconMorph`→`IconWdgt` + the 16 still-`*Morph` leaf icons in `src/icons/` (`AngledArrowUpLeft / Brush / CollapsedState / Destroy /
+Eraser / External / Flora / Heart / Internal / Pencil2 / Pencil / Scooter / ScratchArea / Toothpaste / UncollapsedState /
+UnderCarpet IconMorph`), and re-pointed **all 93** `extends IconMorph`→`extends IconWdgt`. New lessons, the first one load-bearing:
+- **A `*Morph` BASE's family ≠ the count of `*Morph`-named classes — size it by `extends <Base>`, never by the surface
+  `class \w+Morph` grep.** `class \w+Morph` showed 16 icon leaves; `rg 'extends IconMorph'` showed **93** — the other **77 children
+  had been renamed to `*Wdgt` long ago but still pointed `extends` at the un-renamed base** (69 in `src/icons/`, 6 `*ButtonWdgt` in
+  `src/buttons/`, 2 `*MapIconWdgt` in `src/maps/`). The family is **atomic**: renaming the base forces touching all 93 `extends`, and
+  the 16 leaves can't be coherently split from the base. The initial "17-class" scoping was a ~5× under-count; a cross-check
+  `rg -c 'extends IconMorph' | wc -l` (returned "93", which looked like an artifact) caught it BEFORE planning — **always run that
+  `extends`-cross-check when a base class is in scope, and reconfirm the real size with the owner.**
+- **Predicted ~0 recapture (BATCH-5-shaped: label-shifting-but-not-photographed) — and ACTUAL was 0**, despite a ~95-file diff. The
+  robust negatives that made it safe: **zero** of the 77 already-`*Wdgt` icons is named in ANY test (toolbar/window icons appear only
+  as rendered glyphs, never by class name); **no test inspects an icon** (so the base name never reaches a photographed Object-Inspector
+  hierarchy DIAGRAM — the one regime that draws the REAL `IconWdgt`); the only leaf in tests (`HeartIconMorph`, 4 dirs) is bare-`new`
+  fixtures whose colloquial is never in a shot; and the base is abstract (the only direct instances are blank `new IconMorph(nil)`
+  placeholder faces). A big diff with ZERO reference churn — a base rename can be the cheapest KIND while having the largest blast radius.
+- **The boot-smoke is the load-order net for a base rename.** 93 children `extends IconWdgt` — a single missed `extends` → that child
+  cannot load → boot error. `build_and_smoke.sh` (native + SWCanvas) is what proved all 93 resolve, BEFORE the suite. Treat a clean
+  boot as the green light when renaming a heavily-subclassed base.
+- **Mechanics:** 17 `git mv` + ONE combined 17-substitution `\b`-sweep (`s/\bIconMorph\b/IconWdgt/g` + the 16 leaves) over
+  `$(rg -l 'IconMorph' src --glob '*.coffee')` — order-independent (tokens are `\b`-distinct; the file list is a harmless superset, the
+  subs no-op elsewhere). The catch-all `rg -o '\w*IconMorph\w*' | sort -u` proved only the keepers survive: the **`create…IconMorph`
+  factory-method names** (incl. `createWorldMapIconMorph` / `createUSAMapIconMorph` / `createPencil1IconMorph`, which have NO matching
+  class) + the camelCase var `pencilIconMorph` — all `\b`-protected (no word boundary before the class token inside them), kept exactly
+  like BATCH 6's `createNewRectangleMorph`. ZERO dangerous string-literals, ZERO `instanceof`/`findTopWidgetByClassNameOrClass`, ZERO
+  `buildSystem` refs.
+- **Two pre-existing `filename != classname` anomalies left untouched** (out of scope; already-`*Wdgt`): `src/icons/SliderNodeCalculatingNodeIconWdgt.coffee`
+  declares `class SliderNodeIconWdgt`; `src/icons/DegreesConverterNodeIconWdgt.coffee` declares `class DegreesConverterIconWdgt`. Only
+  their `extends` line changed; they build fine (the gate predates this batch).
+- Result: **165/165 (Chrome dpr 1 + 2, WebKit), `--homepage` builds + boots, ZERO reference recapture.** ~95 src files (17 renamed +
+  ~78 `extends`/`new`-only) + 4 test dirs (content-only, test identifiers kept) + 4 visualisations regenerated + 3 docs
+  (`MACRO-PATTERNS.md`, `author-macro-test/SKILL.md` class-noun refs). No test added/removed. The pre-recorded BATCH-7 Icon plan
+  touch-list matched the live greps exactly — the only "surprise", the 93-vs-16 family size, was caught at planning by the `extends`
+  cross-check (the "size a base by `extends`" lesson above). Remaining long-tail families (BoxMorph, CircleBox/Slider, Color palette,
+  Switch/Toggle, HandleMorph, …, `WorldMorph` last) follow one coherent family at a time.

@@ -1,4 +1,4 @@
-class EmptyWindowIconWdgt extends IconMorph
+class EmptyWindowIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

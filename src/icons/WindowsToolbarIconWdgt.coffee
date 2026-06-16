@@ -1,4 +1,4 @@
-class WindowsToolbarIconWdgt extends IconMorph
+class WindowsToolbarIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

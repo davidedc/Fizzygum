@@ -1,6 +1,6 @@
 # this file is excluded from the fizzygum homepage build
 
-class ChapterXIconWdgt extends IconMorph
+class ChapterXIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

@@ -1,4 +1,4 @@
-class ScooterIconMorph extends IconMorph
+class ScooterIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

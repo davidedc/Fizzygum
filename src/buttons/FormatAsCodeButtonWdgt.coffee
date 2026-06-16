@@ -1,4 +1,4 @@
-class FormatAsCodeButtonWdgt extends IconMorph
+class FormatAsCodeButtonWdgt extends IconWdgt
 
   @augmentWith HighlightableMixin, @name
   @augmentWith ParentStainerMixin, @name

@@ -1,4 +1,4 @@
-class IconMorph extends Widget
+class IconWdgt extends Widget
 
   @augmentWith KeepsRatioWhenInVerticalStackMixin, @name
 

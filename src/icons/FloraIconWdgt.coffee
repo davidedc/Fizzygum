@@ -1,4 +1,4 @@
-class FloraIconMorph extends IconMorph
+class FloraIconWdgt extends IconWdgt
 
   colloquialName: ->
     "Flora icon"

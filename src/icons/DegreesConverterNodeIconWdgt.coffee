@@ -1,4 +1,4 @@
-class DegreesConverterIconWdgt extends IconMorph
+class DegreesConverterIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

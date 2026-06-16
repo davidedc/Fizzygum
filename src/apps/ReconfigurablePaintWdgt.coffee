@@ -74,7 +74,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     @toolsPanel = new RadioButtonsHolderMorph
     @add @toolsPanel
 
-    pencilButtonOff = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new Pencil2IconMorph
+    pencilButtonOff = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new Pencil2IconWdgt
     pencilButtonOff.alpha = 0.1
     pencilButtonOff.sourceCodeToBeInjected = """
         mouseMove = (pos, mouseButton) ->
@@ -114,7 +114,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             @changed()
         """
 
-    pencilButtonOn = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new Pencil2IconMorph @highlightedToolIconColor
+    pencilButtonOn = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new Pencil2IconWdgt @highlightedToolIconColor
     pencilButtonOn.alpha = 0.1
     pencilButtonOn.sourceCodeToBeInjected = "mouseMove = -> return"
 
@@ -123,7 +123,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
 
 
 
-    brushToolButtonOff = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new BrushIconMorph
+    brushToolButtonOff = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new BrushIconWdgt
     brushToolButtonOff.alpha = 0.1
 
     brushToolButtonOff.sourceCodeToBeInjected = """
@@ -217,13 +217,13 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             @changed()
         """
 
-    brushToolButtonOn = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new BrushIconMorph @highlightedToolIconColor
+    brushToolButtonOn = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new BrushIconWdgt @highlightedToolIconColor
     brushToolButtonOn.alpha = 0.1
     brushToolButtonOn.sourceCodeToBeInjected = "mouseMove = -> return"
     @brushToolButton = new ToggleButtonMorph brushToolButtonOff, brushToolButtonOn
 
 
-    toothpasteToolButtonOff = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new ToothpasteIconMorph
+    toothpasteToolButtonOff = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new ToothpasteIconWdgt
     toothpasteToolButtonOff.alpha = 0.1
 
     toothpasteToolButtonOff.sourceCodeToBeInjected = """
@@ -371,13 +371,13 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             @changed()
         """
 
-    toothpasteToolButtonOn = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new ToothpasteIconMorph @highlightedToolIconColor
+    toothpasteToolButtonOn = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new ToothpasteIconWdgt @highlightedToolIconColor
     toothpasteToolButtonOn.alpha = 0.1
     toothpasteToolButtonOn.sourceCodeToBeInjected = "mouseMove = -> return"
     @toothpasteToolButton = new ToggleButtonMorph toothpasteToolButtonOff, toothpasteToolButtonOn
 
 
-    eraserToolButtonOff = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new EraserIconMorph
+    eraserToolButtonOff = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new EraserIconWdgt
     eraserToolButtonOff.alpha = 0.1
 
     eraserToolButtonOff.sourceCodeToBeInjected = """
@@ -414,7 +414,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             @changed()
         """
 
-    eraserToolButtonOn = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new EraserIconMorph @highlightedToolIconColor
+    eraserToolButtonOn = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new EraserIconWdgt @highlightedToolIconColor
     eraserToolButtonOn.alpha = 0.1
     eraserToolButtonOn.sourceCodeToBeInjected = "mouseMove = -> return"
     @eraserToolButton = new ToggleButtonMorph eraserToolButtonOff, eraserToolButtonOn

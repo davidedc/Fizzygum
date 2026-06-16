@@ -1,4 +1,4 @@
-class ArrowEIconWdgt extends IconMorph
+class ArrowEIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

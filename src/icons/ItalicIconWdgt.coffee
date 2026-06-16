@@ -1,4 +1,4 @@
-class ItalicIconWdgt extends IconMorph
+class ItalicIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

@@ -1,4 +1,4 @@
-class TextToolbarIconWdgt extends IconMorph
+class TextToolbarIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

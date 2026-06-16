@@ -216,7 +216,7 @@ class InspectorWdgt extends Widget
 
       # the top class doesn't get an arrow pointing upwards
       if counter > 0
-        angledArrow = new AngledArrowUpLeftIconMorph Color.BLACK
+        angledArrow = new AngledArrowUpLeftIconWdgt Color.BLACK
         @angledArrows.push angledArrow
         @add angledArrow
 
@@ -226,7 +226,7 @@ class InspectorWdgt extends Widget
     # needs no self-sizing — a StringWdgt fits "this object" left-aligned.
     @lastLabelInHierarchy = new StringWdgt "this object"
     @add @lastLabelInHierarchy
-    @lastArrowInHierarchy = new AngledArrowUpLeftIconMorph Color.BLACK
+    @lastArrowInHierarchy = new AngledArrowUpLeftIconWdgt Color.BLACK
     @add @lastArrowInHierarchy
 
     @showMethodsOnButton = new SimpleButtonWdgt true, @, "hideMethods", "methods: on"

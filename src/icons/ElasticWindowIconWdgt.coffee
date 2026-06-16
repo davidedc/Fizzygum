@@ -1,4 +1,4 @@
-class ElasticWindowIconWdgt extends IconMorph
+class ElasticWindowIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

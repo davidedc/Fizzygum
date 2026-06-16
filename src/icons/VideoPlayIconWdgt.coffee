@@ -1,4 +1,4 @@
-class VideoPlayIconWdgt extends IconMorph
+class VideoPlayIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

@@ -1,6 +1,6 @@
 # this file is excluded from the fizzygum homepage build
 
-class SaveIconWdgt extends IconMorph
+class SaveIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

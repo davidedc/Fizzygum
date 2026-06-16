@@ -1,4 +1,4 @@
-class FormatAsCodeIconWdgt extends IconMorph
+class FormatAsCodeIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

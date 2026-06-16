@@ -1,4 +1,4 @@
-class SlidesToolbarIconWdgt extends IconMorph
+class SlidesToolbarIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

@@ -1,4 +1,4 @@
-class CollapsedStateIconMorph extends IconMorph
+class CollapsedStateIconWdgt extends IconWdgt
 
   colloquialName: ->
     "\"Collapsed state\" icon"

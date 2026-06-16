@@ -1,4 +1,4 @@
-class ExternalIconMorph extends IconMorph
+class ExternalIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

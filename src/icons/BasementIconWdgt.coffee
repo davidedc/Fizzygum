@@ -1,4 +1,4 @@
-class BasementIconWdgt extends IconMorph
+class BasementIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

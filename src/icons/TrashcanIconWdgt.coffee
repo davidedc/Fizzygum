@@ -1,6 +1,6 @@
 # this file is excluded from the fizzygum homepage build
 
-class TrashcanIconWdgt extends IconMorph
+class TrashcanIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

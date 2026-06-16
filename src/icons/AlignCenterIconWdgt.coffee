@@ -1,4 +1,4 @@
-class AlignCenterIconWdgt extends IconMorph
+class AlignCenterIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

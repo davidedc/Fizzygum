@@ -1,4 +1,4 @@
-class AllPlotsIconWdgt extends IconMorph
+class AllPlotsIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

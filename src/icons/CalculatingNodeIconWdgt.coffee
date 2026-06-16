@@ -1,4 +1,4 @@
-class CalculatingNodeIconWdgt extends IconMorph
+class CalculatingNodeIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

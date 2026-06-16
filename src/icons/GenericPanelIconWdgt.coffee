@@ -1,4 +1,4 @@
-class GenericPanelIconWdgt extends IconMorph
+class GenericPanelIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

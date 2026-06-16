@@ -1,4 +1,4 @@
-class TemplatesIconWdgt extends IconMorph
+class TemplatesIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

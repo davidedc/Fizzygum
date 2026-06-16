@@ -1,4 +1,4 @@
-class WindowWithCroppingPanelIconWdgt extends IconMorph
+class WindowWithCroppingPanelIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

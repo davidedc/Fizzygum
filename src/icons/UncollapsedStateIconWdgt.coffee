@@ -1,4 +1,4 @@
-class UncollapsedStateIconMorph extends IconMorph
+class UncollapsedStateIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

@@ -1,4 +1,4 @@
-class FolderIconWdgt extends IconMorph
+class FolderIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

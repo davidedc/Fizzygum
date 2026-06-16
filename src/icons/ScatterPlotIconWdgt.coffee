@@ -1,4 +1,4 @@
-class ScatterPlotIconWdgt extends IconMorph
+class ScatterPlotIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

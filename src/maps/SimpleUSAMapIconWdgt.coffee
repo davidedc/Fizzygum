@@ -1,4 +1,4 @@
-class SimpleUSAMapIconWdgt extends IconMorph
+class SimpleUSAMapIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

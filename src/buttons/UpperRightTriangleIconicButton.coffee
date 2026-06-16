@@ -13,7 +13,7 @@ class UpperRightTriangleIconicButton extends UpperRightTriangle
 
   constructor: (parent = nil) ->
     super
-    @pencilIconMorph = new PencilIconMorph Color.BLACK
+    @pencilIconMorph = new PencilIconWdgt Color.BLACK
 
     @add @pencilIconMorph, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
     @pencilIconMorph.layoutSpec_cornerInternal_proportionOfParent = 1/2

@@ -1,4 +1,4 @@
-class PencilIconMorph extends IconMorph
+class PencilIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

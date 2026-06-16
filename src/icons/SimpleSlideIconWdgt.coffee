@@ -1,4 +1,4 @@
-class SimpleSlideIconWdgt extends IconMorph
+class SimpleSlideIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

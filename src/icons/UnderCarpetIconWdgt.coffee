@@ -1,6 +1,6 @@
 # this file is excluded from the fizzygum homepage build
 
-class UnderCarpetIconMorph extends IconMorph
+class UnderCarpetIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

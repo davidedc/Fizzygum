@@ -1,4 +1,4 @@
-class PaintBucketIconWdgt extends IconMorph
+class PaintBucketIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

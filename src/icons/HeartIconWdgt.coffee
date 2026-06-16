@@ -1,4 +1,4 @@
-class HeartIconMorph extends IconMorph
+class HeartIconWdgt extends IconWdgt
 
   colloquialName: ->
     "Heart icon"

@@ -640,7 +640,7 @@ assertion a recapture after a regression silently stores two different hashes an
   lorem after the seeded paragraph and the window's bounds are IDENTICAL before/after (no scrollbar at rest; the windowed
   scroll panel also adds the pencil/editing chrome to the titlebar). Fixture via the very creator methods the menu items
   call: `world.createSimpleVerticalStackPanelWdgt()` ((35,30) 370×325), `world.createSimpleVerticalStackScrollPanelWdgt()`
-  ((430,25) 370×325), `world.createNewWrappingSimplePlainTextWdgtWithBackground()`, and `world.create new HeartIconMorph`
+  ((430,25) 370×325), `world.createNewWrappingSimplePlainTextWdgtWithBackground()`, and `world.create new HeartIconWdgt`
   (carried on the hand exactly like the "Heart icon" menu item — drop it with a no-button move +
   `@syntheticEventsMouseClick_InputEvents()`). No new verb.
 - **Handle-resizing a wrapping-text window: width from the USER, height from the CONTENT**
@@ -1420,7 +1420,7 @@ assertion a recapture after a regression silently stores two different hashes an
   is what the "a X ➜ → layout in stack → align center" menu item calls — `heart.layoutSpecDetails.setAlignmentToCenter()` is the direct
   equivalent (sets the field AND relayouts). The centering SURVIVES the child becoming the only element: `ScrollPanelWdgt.adjustContentsBounds`
   has dedicated lone-centered-child support (`:288-303`) that keeps it centered instead of snapping its left to the viewport. Drop a `new
-  HeartIconMorph (Color…)` into a `SimpleDocumentScrollPanelWdgt`, center it, then `@dragWidgetTo_InputEvents defaultText, (a desktop point)`
+  HeartIconWdgt (Color…)` into a `SimpleDocumentScrollPanelWdgt`, center it, then `@dragWidgetTo_InputEvents defaultText, (a desktop point)`
   to remove the default text — the heart stays centered alone. GOTCHA: a widget has NO `.remove()`; drag it out (or re-parent via `world.add`).
 - **Padding is real morph area — sliders + palette-reveal + drag-by-the-band** (`macroPaddingAreaIsPartOfMorph`): a RectangleWdgt paints
   two layers (`RectangularAppearance.coffee:71-88`) — `backgroundColor` over the FULL bounds, `color` over the padding-inset tight region

@@ -1,4 +1,4 @@
-class DestroyIconMorph extends IconMorph
+class DestroyIconWdgt extends IconWdgt
 
   colloquialName: ->
     "\"Destroy\" icon"

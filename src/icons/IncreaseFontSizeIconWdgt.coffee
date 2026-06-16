@@ -1,4 +1,4 @@
-class IncreaseFontSizeIconWdgt extends IconMorph
+class IncreaseFontSizeIconWdgt extends IconWdgt
 
   constructor: (@color) ->
     super

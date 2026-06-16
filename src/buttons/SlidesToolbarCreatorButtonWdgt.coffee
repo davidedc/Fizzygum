@@ -23,11 +23,11 @@ class SlidesToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
       new SpeechBubbleWdgt
 
-      new DestroyIconMorph
-      new ScratchAreaIconMorph
-      new FloraIconMorph
-      new ScooterIconMorph
-      new HeartIconMorph
+      new DestroyIconWdgt
+      new ScratchAreaIconWdgt
+      new FloraIconWdgt
+      new ScooterIconWdgt
+      new HeartIconWdgt
 
       new FizzygumLogoIconWdgt
       new FizzygumLogoWithTextIconWdgt
