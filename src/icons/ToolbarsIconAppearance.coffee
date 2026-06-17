@@ -8,7 +8,7 @@ class ToolbarsIconAppearance extends IconAppearance
   paintFunction: (context) ->
     #// Color Declarations
     if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
-    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
+    outlineColorString = WorldWdgt.preferencesAndSettings.outlineColorString
     toolbarsHeaderLineColorString = Color.WHITE.toString()
     toolbarsHeaderBackgroundColorString = 'rgb(170, 170, 170)'
 

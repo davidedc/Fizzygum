@@ -8,7 +8,7 @@ class FizzygumLogoIconAppearance extends IconAppearance
   paintFunction: (context) ->
     #// Color Declarations
     whiteColorString = Color.WHITE.toString()
-    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
+    outlineColorString = WorldWdgt.preferencesAndSettings.outlineColorString
 
     #// bubble outline Drawing
     context.beginPath()

@@ -8,7 +8,7 @@ class SimpleDocumentSampleWdgt extends SimpleDocumentWdgt
     sdspw.rawSetExtent new Point 365, 405
 
     startingContent = new SimplePlainTextWdgt(
-      "Sample Doc",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "Sample Doc",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22
     startingContent.isEditable = true

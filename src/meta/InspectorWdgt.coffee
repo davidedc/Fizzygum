@@ -210,7 +210,7 @@ class InspectorWdgt extends Widget
 
     counter = 0
     for eachNamedClass in @classesNames
-      classButton = new SimpleButtonWdgt true, @, "openClassInspector", (new StringWdgt eachNamedClass, WorldMorph.preferencesAndSettings.textInButtonsFontSize),nil,nil,nil,nil,eachNamedClass,nil,nil,@classNamesTextPadding
+      classButton = new SimpleButtonWdgt true, @, "openClassInspector", (new StringWdgt eachNamedClass, WorldWdgt.preferencesAndSettings.textInButtonsFontSize),nil,nil,nil,nil,eachNamedClass,nil,nil,@classNamesTextPadding
       @classesButtons.push classButton
       @add classButton
 
@@ -253,7 +253,7 @@ class InspectorWdgt extends Widget
     @removePropertyButton = new SimpleButtonWdgt true, @, "removeProperty", "remove"
     @add @removePropertyButton
 
-    @saveTextWdgt = (new StringWdgt "save", WorldMorph.preferencesAndSettings.textInButtonsFontSize).alignCenter()
+    @saveTextWdgt = (new StringWdgt "save", WorldWdgt.preferencesAndSettings.textInButtonsFontSize).alignCenter()
     @saveButton = new SimpleButtonWdgt true, @, "save", @saveTextWdgt
     @add @saveButton
 
@@ -327,13 +327,13 @@ class InspectorWdgt extends Widget
 
 
 
-    @hierarchyHeaderString = new StringWdgt "Hierarchy", WorldMorph.preferencesAndSettings.textInButtonsFontSize
+    @hierarchyHeaderString = new StringWdgt "Hierarchy", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @hierarchyHeaderString.toggleHeaderLine()
     @hierarchyHeaderString.alignCenter()
     @add @hierarchyHeaderString
 
 
-    @propertyHeaderString = new StringWdgt "Properties", WorldMorph.preferencesAndSettings.textInButtonsFontSize
+    @propertyHeaderString = new StringWdgt "Properties", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @propertyHeaderString.toggleHeaderLine()
     @propertyHeaderString.alignCenter()
     @add @propertyHeaderString
@@ -542,7 +542,7 @@ class InspectorWdgt extends Widget
     buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
     @removePropertyButton.doLayout buttonBounds
 
-    buttonBounds = new Rectangle new Point Math.round(@right() - @width()/4 - @externalPadding - @internalPadding - WorldMorph.preferencesAndSettings.handleSize), @bottom() - 15 - @externalPadding
+    buttonBounds = new Rectangle new Point Math.round(@right() - @width()/4 - @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize), @bottom() - 15 - @externalPadding
     buttonBounds = buttonBounds.setBoundsWidthAndHeight Math.round(@width()/4), 15
     @saveButton.doLayout buttonBounds
 

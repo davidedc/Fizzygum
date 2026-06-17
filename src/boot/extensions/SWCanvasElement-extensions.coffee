@@ -136,7 +136,7 @@ swCanvasEnsureAtlasForFont = (coreFont, density) ->
 swCanvasAnyTextDirty = ->
   swCanvasAtlasPending > 0
 
-# Expose for WorldMorph.anyTextDirty() / the SystemTest screenshot settle-gate.
+# Expose for WorldWdgt.anyTextDirty() / the SystemTest screenshot settle-gate.
 window.swCanvasAnyTextDirty = swCanvasAnyTextDirty
 
 installSWCanvasExtensions = ->

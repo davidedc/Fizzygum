@@ -16,8 +16,8 @@ class SaveShortcutPromptWdgt extends MenuWdgt
     @tempPromptEntryField = new StringFieldWdgt(
       @defaultContents,
       150,
-      WorldMorph.preferencesAndSettings.prompterFontSize,
-      WorldMorph.preferencesAndSettings.prompterFontName,
+      WorldWdgt.preferencesAndSettings.prompterFontSize,
+      WorldWdgt.preferencesAndSettings.prompterFontName,
       false,
       false,
       false

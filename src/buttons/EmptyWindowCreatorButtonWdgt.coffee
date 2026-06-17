@@ -2,7 +2,7 @@ class EmptyWindowCreatorButtonWdgt extends CreatorButtonWdgt
 
   constructor: ->
     super
-    @appearance = new EmptyWindowIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new EmptyWindowIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "empty window"
 
   createWidgetToBeHandled: ->

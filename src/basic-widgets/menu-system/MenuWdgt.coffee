@@ -20,7 +20,7 @@ class MenuWdgt extends PopUpWdgt
     super @morphOpeningThePopUp, @killThisPopUpIfClickOutsideDescendants, @killThisPopUpIfClickOnDescendantsTriggers
     @isLockingToPanels = false
     @appearance = new MenuAppearance @
-    @strokeColor = WorldMorph.preferencesAndSettings.menuStrokeColor
+    @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
 
 
     if @isListContents
@@ -68,8 +68,8 @@ class MenuWdgt extends PopUpWdgt
       target, # target
       action, # action
       (label or "close"), # label
-      @fontSize or WorldMorph.preferencesAndSettings.menuFontSize,
-      WorldMorph.preferencesAndSettings.menuFontName,
+      @fontSize or WorldWdgt.preferencesAndSettings.menuFontSize,
+      WorldWdgt.preferencesAndSettings.menuFontName,
       false,
       @target, # environment
       @environment, # environment2
@@ -162,7 +162,7 @@ class MenuWdgt extends PopUpWdgt
     #@children = []
 
     unless @isListContents
-      @cornerRadius = if WorldMorph.preferencesAndSettings.isFlat then 0 else 5
+      @cornerRadius = if WorldWdgt.preferencesAndSettings.isFlat then 0 else 5
     @color = Color.create 238, 238, 238
     @silentRawSetExtent new Point 0, 0
     y = @top()

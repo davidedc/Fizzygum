@@ -9,7 +9,7 @@ class TemplatesButtonWdgt extends IconWdgt
 
   constructor: ->
     super
-    @appearance = new TemplatesIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new TemplatesIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true

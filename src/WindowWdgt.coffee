@@ -281,11 +281,11 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @titlebarBackground.appearance = new BoxyAppearance @titlebarBackground
 
     if @internal
-      @titlebarBackground.setColor WorldMorph.preferencesAndSettings.internalWindowBarBackgroundColor
-      @titlebarBackground.strokeColor = WorldMorph.preferencesAndSettings.internalWindowBarStrokeColor
+      @titlebarBackground.setColor WorldWdgt.preferencesAndSettings.internalWindowBarBackgroundColor
+      @titlebarBackground.strokeColor = WorldWdgt.preferencesAndSettings.internalWindowBarStrokeColor
     else
-      @titlebarBackground.setColor WorldMorph.preferencesAndSettings.externalWindowBarBackgroundColor
-      @titlebarBackground.strokeColor = WorldMorph.preferencesAndSettings.externalWindowBarStrokeColor
+      @titlebarBackground.setColor WorldWdgt.preferencesAndSettings.externalWindowBarBackgroundColor
+      @titlebarBackground.strokeColor = WorldWdgt.preferencesAndSettings.externalWindowBarStrokeColor
 
 
   buildTitlebarBackground: ->
@@ -313,7 +313,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     # label
     @label?.fullDestroy()
-    @label = new StringWdgt @labelContent, WorldMorph.preferencesAndSettings.titleBarTextFontSize
+    @label = new StringWdgt @labelContent, WorldWdgt.preferencesAndSettings.titleBarTextFontSize
 
     # as of March 2018, Safari 10.1.1 on OSX 10.12.5 :
     # safari's rendering of bright text on dark background is atrocious
@@ -321,7 +321,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     if /^((?!chrome|android).)*safari/i.test navigator.userAgent
       @label.isBold = true
     else
-      @label.isBold = WorldMorph.preferencesAndSettings.titleBarBoldText
+      @label.isBold = WorldWdgt.preferencesAndSettings.titleBarBoldText
 
     @label.color = Color.WHITE
     @add @label, nil, nil, nil, true
@@ -444,7 +444,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       if @contents.layoutSpecDetails.resizerCanOverlapContents
         partOfHeightUsedUp = Math.round (closeIconSize + @padding + @padding) + 2 * @padding
       else
-        partOfHeightUsedUp = Math.round (closeIconSize + @padding + @padding) + 3 * @padding + WorldMorph.preferencesAndSettings.handleSize
+        partOfHeightUsedUp = Math.round (closeIconSize + @padding + @padding) + 3 * @padding + WorldWdgt.preferencesAndSettings.handleSize
 
       # this re-layouts each widget to fit the width.
       if @contentNeverSetInPlaceYet
@@ -526,7 +526,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       labelWidth = labelRight - labelLeft
 
       labelBounds = new Rectangle new Point labelLeft, labelTop
-      labelBounds = labelBounds.setBoundsWidthAndHeight labelWidth, WorldMorph.preferencesAndSettings.titleBarTextHeight
+      labelBounds = labelBounds.setBoundsWidthAndHeight labelWidth, WorldWdgt.preferencesAndSettings.titleBarTextHeight
       @label.rawSetBounds labelBounds
 
     # edit button
@@ -547,6 +547,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # corner or edge internal layout, like handles. This should work the same way i.e.
     # this code should not be here.
     if @resizer?.parent == @
-      @resizer.silentFullRawMoveTo new Point @right() - WorldMorph.preferencesAndSettings.handleSize - @padding, @bottom() - WorldMorph.preferencesAndSettings.handleSize - @padding
+      @resizer.silentFullRawMoveTo new Point @right() - WorldWdgt.preferencesAndSettings.handleSize - @padding, @bottom() - WorldWdgt.preferencesAndSettings.handleSize - @padding
 
     @_adjustingContentsBounds = false

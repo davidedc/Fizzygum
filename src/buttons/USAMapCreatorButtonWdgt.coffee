@@ -2,7 +2,7 @@ class USAMapCreatorButtonWdgt extends CreatorButtonWdgt
 
   constructor: ->
     super
-    @appearance = new LittleUSAIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new LittleUSAIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "USA map"
 
   createWidgetToBeHandled: ->

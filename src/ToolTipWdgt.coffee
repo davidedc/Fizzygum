@@ -17,12 +17,12 @@ class ToolTipWdgt extends Widget
   constructor: (
    @contents="text here",
    @morphInvokingThis,
-   @color = WorldMorph.preferencesAndSettings.menuBackgroundColor,
+   @color = WorldWdgt.preferencesAndSettings.menuBackgroundColor,
    cornerRadius,
    @padding = 0) ->
     # console.log "bubble super"
     super()
-    @strokeColor = WorldMorph.preferencesAndSettings.menuStrokeColor
+    @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
     @cornerRadius = cornerRadius or 6
     @appearance = new BubblyAppearance @
     # console.log @color
@@ -78,7 +78,7 @@ class ToolTipWdgt extends Widget
       # defaults to (37,37,37).
       @contentsMorph = new TextWdgt(
         @contents,
-        WorldMorph.preferencesAndSettings.bubbleHelpFontSize,
+        WorldWdgt.preferencesAndSettings.bubbleHelpFontSize,
         "sans-serif",
         false,
         true,
@@ -95,7 +95,7 @@ class ToolTipWdgt extends Widget
     else
       @contentsMorph = new TextWdgt(
         @contents.toString(),
-        WorldMorph.preferencesAndSettings.bubbleHelpFontSize,
+        WorldWdgt.preferencesAndSettings.bubbleHelpFontSize,
         "sans-serif",
         false,
         true,

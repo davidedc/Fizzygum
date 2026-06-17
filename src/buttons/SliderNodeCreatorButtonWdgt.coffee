@@ -2,7 +2,7 @@ class SliderNodeCreatorButtonWdgt extends CreatorButtonWdgt
 
   constructor: ->
     super
-    @appearance = new SliderNodeIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new SliderNodeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "slider node"
 
   createWidgetToBeHandled: ->

@@ -31,13 +31,13 @@ class LabelButtonWdgt extends ButtonWdgt
       target = nil,
       action = nil,
       labelString = nil,
-      fontSize = WorldMorph.preferencesAndSettings.menuFontSize,
+      fontSize = WorldWdgt.preferencesAndSettings.menuFontSize,
       fontStyle = "sans-serif",
       centered = false,
       environment = nil,
       morphEnv,
       toolTipMessage = nil,
-      color = WorldMorph.preferencesAndSettings.menuButtonsLabelColor,
+      color = WorldWdgt.preferencesAndSettings.menuButtonsLabelColor,
       bold = false,
       italic = false,
       doubleClickAction = nil,
@@ -60,7 +60,7 @@ class LabelButtonWdgt extends ButtonWdgt
     @labelItalic = italic
 
     # the flat fill (ButtonWdgt defaults to white)
-    @color = WorldMorph.preferencesAndSettings.menuBackgroundColor
+    @color = WorldWdgt.preferencesAndSettings.menuBackgroundColor
 
     if @labelString?
       @reLayout()

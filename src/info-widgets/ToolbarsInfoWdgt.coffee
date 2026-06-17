@@ -18,7 +18,7 @@ class ToolbarsInfoWdgt extends SimpleDocumentWdgt
     startingContent.layoutSpecDetails.setAlignmentToCenter()
 
     startingContent = new SimplePlainTextWdgt(
-      "Super Toolbar",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "Super Toolbar",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22
     startingContent.isEditable = true

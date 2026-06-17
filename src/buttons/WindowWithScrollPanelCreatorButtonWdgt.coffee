@@ -2,7 +2,7 @@ class WindowWithScrollPanelCreatorButtonWdgt extends CreatorButtonWdgt
 
   constructor: ->
     super
-    @appearance = new WindowWithScrollingPanelIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new WindowWithScrollingPanelIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "scroll panel"
 
   createWidgetToBeHandled: ->

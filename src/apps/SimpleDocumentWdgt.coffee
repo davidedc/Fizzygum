@@ -67,7 +67,7 @@ class SimpleDocumentWdgt extends Widget
     @simpleDocumentScrollPanel = new SimpleDocumentScrollPanelWdgt
 
     startingContent = new SimplePlainTextWdgt(
-      @startingText,nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      @startingText,nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     @simpleDocumentScrollPanel.setContents startingContent, 5
     startingContent.isEditable = true
     startingContent.enableSelecting()

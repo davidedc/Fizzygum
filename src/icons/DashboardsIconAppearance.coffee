@@ -8,7 +8,7 @@ class DashboardsIconAppearance extends IconAppearance
   paintFunction: (context) ->
     #// Color Declarations
     if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
-    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
+    outlineColorString = WorldWdgt.preferencesAndSettings.outlineColorString
 
     #// Group 6
     #// outline Drawing

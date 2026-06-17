@@ -12,7 +12,7 @@ class AnalogClockWdgt extends Widget
     @synchronisedStepping = true
     # you could be constructing this widget at boot,
     # in which case you just put a mock a date here
-    @dateLastTicked = WorldMorph.dateOfCurrentCycleStart or new Date
+    @dateLastTicked = WorldWdgt.dateOfCurrentCycleStart or new Date
     world.steppingWdgts.add @
 
     super()
@@ -83,7 +83,7 @@ class AnalogClockWdgt extends Widget
       @paintHighlight aContext, al, at, w, h
 
   step: ->
-    @dateLastTicked = WorldMorph.dateOfCurrentCycleStart
+    @dateLastTicked = WorldWdgt.dateOfCurrentCycleStart
     @changed()
 
   calculateHandsAngles: ->

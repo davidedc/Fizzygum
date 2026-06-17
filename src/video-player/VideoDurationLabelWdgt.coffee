@@ -6,7 +6,7 @@ class VideoDurationLabelWdgt extends HhmmssLabelWdgt
     "Video duration"
 
   constructor: (@videoPlayerCanvas) ->
-    super "n/a", WorldMorph.preferencesAndSettings.textInButtonsFontSize
+    super "n/a", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @alignLeft()
 
     # the label of the is updated via the stepping

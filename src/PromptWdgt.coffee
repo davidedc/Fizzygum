@@ -23,8 +23,8 @@ class PromptWdgt extends MenuWdgt
     @tempPromptEntryField = new StringFieldWdgt(
       @defaultContents or "",
       @intendedWidth or 100,
-      WorldMorph.preferencesAndSettings.prompterFontSize,
-      WorldMorph.preferencesAndSettings.prompterFontName,
+      WorldWdgt.preferencesAndSettings.prompterFontSize,
+      WorldWdgt.preferencesAndSettings.prompterFontName,
       false,
       false,
       isNumeric)
@@ -33,7 +33,7 @@ class PromptWdgt extends MenuWdgt
 
 
     @silentAdd @tempPromptEntryField
-    if @ceilingNum or WorldMorph.preferencesAndSettings.useSliderForInput
+    if @ceilingNum or WorldWdgt.preferencesAndSettings.useSliderForInput
       slider = new SliderWdgt(
         @floorNum or 0,
         @ceilingNum,
@@ -44,7 +44,7 @@ class PromptWdgt extends MenuWdgt
       slider.button.color = Color.create 60,60,60
       slider.button.highlightColor = slider.button.color.bluerBy 100
       slider.button.pressColor = slider.button.color.bluerBy 150
-      slider.silentRawSetHeight WorldMorph.preferencesAndSettings.prompterSliderSize
+      slider.silentRawSetHeight WorldWdgt.preferencesAndSettings.prompterSliderSize
       slider.target = @
       slider.argumentToAction = @
       slider.action = "reactToSliderAction"

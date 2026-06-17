@@ -1,5 +1,5 @@
-# The WorldMorph takes over the canvas on the page
-class WorldMorph extends PanelWdgt
+# The WorldWdgt takes over the canvas on the page
+class WorldWdgt extends PanelWdgt
 
   @augmentWith GridPositioningOfAddedShortcutsMixin, @name
   @augmentWith KeepIconicDesktopSystemLinksBackMixin, @name
@@ -62,7 +62,7 @@ class WorldMorph extends PanelWdgt
   dropBrowserEventListener: nil
   # this part is excluded from the fizzygum homepage build <<«
 
-  # these variables shouldn't be static to the WorldMorph, because
+  # these variables shouldn't be static to the WorldWdgt, because
   # in pure theory you could have multiple worlds in the same
   # page with different settings
   # (but anyways, it was global before, so it's not any worse than before)
@@ -269,7 +269,7 @@ class WorldMorph extends PanelWdgt
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
       ) ->
 
-    # The WorldMorph is the very first morph to
+    # The WorldWdgt is the very first morph to
     # be created.
 
     # world at the moment is a global variable, there is only one
@@ -284,13 +284,13 @@ class WorldMorph extends PanelWdgt
     else
       @isIndexPage = true
 
-    WorldMorph.preferencesAndSettings = new PreferencesAndSettings
+    WorldWdgt.preferencesAndSettings = new PreferencesAndSettings
 
     super()
     @patternName = @pattern1
     @appearance = new DesktopAppearance @
 
-    #console.log WorldMorph.preferencesAndSettings.menuFontName
+    #console.log WorldWdgt.preferencesAndSettings.menuFontName
     @color = Color.create 205, 205, 205 # (130, 130, 130)
     @strokeColor = nil
 
@@ -378,26 +378,26 @@ class WorldMorph extends PanelWdgt
     "Desktop"
 
   makePrettier: ->
-    WorldMorph.preferencesAndSettings.menuFontSize = 14
-    WorldMorph.preferencesAndSettings.menuHeaderFontSize = 13
-    WorldMorph.preferencesAndSettings.menuHeaderColor = Color.create 125, 125, 125
-    WorldMorph.preferencesAndSettings.menuHeaderBold = false
-    WorldMorph.preferencesAndSettings.menuStrokeColor = Color.create 186, 186, 186
-    WorldMorph.preferencesAndSettings.menuBackgroundColor = Color.create 250, 250, 250
-    WorldMorph.preferencesAndSettings.menuButtonsLabelColor = Color.create 50, 50, 50
+    WorldWdgt.preferencesAndSettings.menuFontSize = 14
+    WorldWdgt.preferencesAndSettings.menuHeaderFontSize = 13
+    WorldWdgt.preferencesAndSettings.menuHeaderColor = Color.create 125, 125, 125
+    WorldWdgt.preferencesAndSettings.menuHeaderBold = false
+    WorldWdgt.preferencesAndSettings.menuStrokeColor = Color.create 186, 186, 186
+    WorldWdgt.preferencesAndSettings.menuBackgroundColor = Color.create 250, 250, 250
+    WorldWdgt.preferencesAndSettings.menuButtonsLabelColor = Color.create 50, 50, 50
 
-    WorldMorph.preferencesAndSettings.normalTextFontSize = 13
-    WorldMorph.preferencesAndSettings.titleBarTextFontSize = 13
-    WorldMorph.preferencesAndSettings.titleBarTextHeight = 16
-    WorldMorph.preferencesAndSettings.titleBarBoldText = false
-    WorldMorph.preferencesAndSettings.bubbleHelpFontSize = 12
-
-
-    WorldMorph.preferencesAndSettings.iconDarkLineColor = Color.create 37, 37, 37
+    WorldWdgt.preferencesAndSettings.normalTextFontSize = 13
+    WorldWdgt.preferencesAndSettings.titleBarTextFontSize = 13
+    WorldWdgt.preferencesAndSettings.titleBarTextHeight = 16
+    WorldWdgt.preferencesAndSettings.titleBarBoldText = false
+    WorldWdgt.preferencesAndSettings.bubbleHelpFontSize = 12
 
 
-    WorldMorph.preferencesAndSettings.defaultPanelsBackgroundColor = Color.create 249, 249, 249
-    WorldMorph.preferencesAndSettings.defaultPanelsStrokeColor = Color.create 198, 198, 198
+    WorldWdgt.preferencesAndSettings.iconDarkLineColor = Color.create 37, 37, 37
+
+
+    WorldWdgt.preferencesAndSettings.defaultPanelsBackgroundColor = Color.create 249, 249, 249
+    WorldWdgt.preferencesAndSettings.defaultPanelsStrokeColor = Color.create 198, 198, 198
 
     @setPattern nil, nil, "dots"
 
@@ -511,8 +511,8 @@ class WorldMorph extends PanelWdgt
     if (@getParameterPassedInURL "startupActions")?
       startupActions = JSON.parse @getParameterPassedInURL "startupActions"
 
-    if (!startupActions?) or (WorldMorph.ongoingUrlActionNumber == startupActions.actions.length)
-      WorldMorph.ongoingUrlActionNumber = 0
+    if (!startupActions?) or (WorldWdgt.ongoingUrlActionNumber == startupActions.actions.length)
+      WorldWdgt.ongoingUrlActionNumber = 0
       if Automator?
         if window.location.href.includes("worldWithSystemTestHarness")
           if @automator.atLeastOneTestHasBeenRun
@@ -520,9 +520,9 @@ class WorldMorph extends PanelWdgt
               document.getElementById("background").style.background = Color.GREEN.toString()
       return
 
-    if !@isIndexPage then console.log "nextStartupAction " + (WorldMorph.ongoingUrlActionNumber+1) + " / " + startupActions.actions.length
+    if !@isIndexPage then console.log "nextStartupAction " + (WorldWdgt.ongoingUrlActionNumber+1) + " / " + startupActions.actions.length
 
-    currentAction = startupActions.actions[WorldMorph.ongoingUrlActionNumber]
+    currentAction = startupActions.actions[WorldWdgt.ongoingUrlActionNumber]
     if Automator? and currentAction.name == "runTests"
       if currentAction.numberOfGroups?
         @automator.numberOfGroups = currentAction.numberOfGroups
@@ -541,7 +541,7 @@ class WorldMorph extends PanelWdgt
       # selection callback — mirroring the headless runner, which likewise waits for the selection.
       @automator.loader.selectTestsFromTagsOrTestNames currentAction.testsToRun, =>
         @automator.player.runAllSystemTests()
-    WorldMorph.ongoingUrlActionNumber++
+    WorldWdgt.ongoingUrlActionNumber++
 
   getMorphViaTextLabel: ([textDescription, occurrenceNumber, numberOfOccurrences]) ->
     allCandidateMorphsWithSameTextDescription =
@@ -622,11 +622,11 @@ class WorldMorph extends PanelWdgt
     super aContext, aRect
 
     # the mouse cursor is always drawn on top of everything
-    # and it's not attached to the WorldMorph.
+    # and it's not attached to the WorldWdgt.
     @hand.fullPaintIntoAreaOrBlitFromBackBuffer aContext, aRect
 
   clippedThroughBounds: ->
-    @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    @checkClippedThroughBoundsCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
     @clippedThroughBoundsCache = @boundingBox()
     return @clippedThroughBoundsCache
 
@@ -634,7 +634,7 @@ class WorldMorph extends PanelWdgt
   # doesn't seem that this is ever used
   # TODO investigate and see whether this is needed
   clipThrough: ->
-    @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    @checkClipThroughCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
     @clipThroughCache = @boundingBox()
     return @clipThroughCache
 
@@ -1157,7 +1157,7 @@ class WorldMorph extends PanelWdgt
   playQueuedEvents: ->
     try
 
-      timeOfCurrentCycleStart = WorldMorph.dateOfCurrentCycleStart.getTime()
+      timeOfCurrentCycleStart = WorldWdgt.dateOfCurrentCycleStart.getTime()
 
       for event in @inputEventsQueue
         if !event.time? then debugger
@@ -1171,10 +1171,10 @@ class WorldMorph extends PanelWdgt
           return
 
         # Expose THIS event's own timestamp to its handlers (see
-        # WorldMorph.timeOfEventBeingProcessed): the hand's multi-click recognition
+        # WorldWdgt.timeOfEventBeingProcessed): the hand's multi-click recognition
         # reads it to forget a stale double/triple-click candidate on an event-time
         # gap, deterministically — rather than depending on a wall-clock setTimeout.
-        WorldMorph.timeOfEventBeingProcessed = event.time
+        WorldWdgt.timeOfEventBeingProcessed = event.time
 
         # currently not handled: DOM virtual keyboard events
         event.processEvent()
@@ -1205,15 +1205,15 @@ class WorldMorph extends PanelWdgt
 
 
   updateTimeReferences: ->
-    WorldMorph.dateOfCurrentCycleStart = new Date
-    if !WorldMorph.dateOfPreviousCycleStart?
-      WorldMorph.dateOfPreviousCycleStart = new Date WorldMorph.dateOfCurrentCycleStart.getTime() - 30
+    WorldWdgt.dateOfCurrentCycleStart = new Date
+    if !WorldWdgt.dateOfPreviousCycleStart?
+      WorldWdgt.dateOfPreviousCycleStart = new Date WorldWdgt.dateOfCurrentCycleStart.getTime() - 30
 
     # »>> this part is only needed for Macros
     if !@macroToolkit.msSinceLastExecutedMacroStep?
       @macroToolkit.msSinceLastExecutedMacroStep = 0
     else
-      @macroToolkit.msSinceLastExecutedMacroStep += WorldMorph.dateOfCurrentCycleStart.getTime() - WorldMorph.dateOfPreviousCycleStart.getTime()
+      @macroToolkit.msSinceLastExecutedMacroStep += WorldWdgt.dateOfCurrentCycleStart.getTime() - WorldWdgt.dateOfPreviousCycleStart.getTime()
     # this part is only needed for Macros <<«
 
   doOneCycle: ->
@@ -1250,10 +1250,10 @@ class WorldMorph extends PanelWdgt
     # here is where the repainting on screen happens
     @updateBroken()
 
-    WorldMorph.frameCount++
+    WorldWdgt.frameCount++
 
-    WorldMorph.dateOfPreviousCycleStart = WorldMorph.dateOfCurrentCycleStart
-    WorldMorph.dateOfCurrentCycleStart = nil
+    WorldWdgt.dateOfPreviousCycleStart = WorldWdgt.dateOfCurrentCycleStart
+    WorldWdgt.dateOfCurrentCycleStart = nil
 
   # Widget stepping:
   runChildrensStepFunction: ->
@@ -1272,7 +1272,7 @@ class WorldMorph extends PanelWdgt
       # for objects where @fps is defined, check which ones are due to be stepped
       # and which ones want to wait.
       millisBetweenSteps = Math.round(1000 / eachSteppingMorph.fps)
-      timeOfCurrentCycleStart = WorldMorph.dateOfCurrentCycleStart.getTime()
+      timeOfCurrentCycleStart = WorldWdgt.dateOfCurrentCycleStart.getTime()
 
       if eachSteppingMorph.fps <= 0
         # if fps 0 or negative, then just run as fast as possible,
@@ -1412,14 +1412,14 @@ class WorldMorph extends PanelWdgt
         if !child.wasPositionedSlightlyOutsidePanel
           child.fullRawMoveWithin @
   
-  # WorldMorph events:
+  # WorldWdgt events:
 
   # »>> this part is excluded from the fizzygum homepage build
   initVirtualKeyboard: ->
     if @inputDOMElementForVirtualKeyboard
       document.body.removeChild @inputDOMElementForVirtualKeyboard
       @inputDOMElementForVirtualKeyboard = nil
-    unless (WorldMorph.preferencesAndSettings.isTouchDevice and WorldMorph.preferencesAndSettings.useVirtualKeyboard)
+    unless (WorldWdgt.preferencesAndSettings.isTouchDevice and WorldWdgt.preferencesAndSettings.useVirtualKeyboard)
       return
     @inputDOMElementForVirtualKeyboard = document.createElement "input"
     @inputDOMElementForVirtualKeyboard.type = "text"
@@ -1745,7 +1745,7 @@ class WorldMorph extends PanelWdgt
     nil
   # this part is excluded from the fizzygum homepage build <<«
 
-  # WorldMorph text field tabbing:
+  # WorldWdgt text field tabbing:
   nextTab: (editField) ->
     next = @nextEntryField editField
     if next
@@ -1810,7 +1810,7 @@ class WorldMorph extends PanelWdgt
       i.includes(theWordWdgt, i.length - theWordWdgt.length) or
       i.includes(theWordWidget, i.length - theWordWidget.length)
     for eachMorphClass in ListOfMorphs
-      if eachMorphClass != "WorldMorph"
+      if eachMorphClass != "WorldWdgt"
         #console.log "resetting " + eachMorphClass + " from " + window[eachMorphClass].instancesCounter
         # the actual count is in another variable "instancesCounter"
         # but all labels are built using instanceNumericID
@@ -1871,10 +1871,10 @@ class WorldMorph extends PanelWdgt
       menu.addMenuItem "color...", true, @, "popUpColorSetter", "choose the World's\nbackground color"
       menu.addMenuItem "wallpapers ➜", false, @, "wallpapersMenu", "choose a wallpaper for the Desktop"
 
-      if WorldMorph.preferencesAndSettings.inputMode is PreferencesAndSettings.INPUT_MODE_MOUSE
-        menu.addMenuItem "touch screen settings", true, WorldMorph.preferencesAndSettings, "toggleInputMode", "bigger menu fonts\nand sliders"
+      if WorldWdgt.preferencesAndSettings.inputMode is PreferencesAndSettings.INPUT_MODE_MOUSE
+        menu.addMenuItem "touch screen settings", true, WorldWdgt.preferencesAndSettings, "toggleInputMode", "bigger menu fonts\nand sliders"
       else
-        menu.addMenuItem "standard settings", true, WorldMorph.preferencesAndSettings, "toggleInputMode", "smaller menu fonts\nand sliders"
+        menu.addMenuItem "standard settings", true, WorldWdgt.preferencesAndSettings, "toggleInputMode", "smaller menu fonts\nand sliders"
       menu.addLine()
     # this part is excluded from the fizzygum homepage build <<«
     
@@ -2186,7 +2186,7 @@ class WorldMorph extends PanelWdgt
     # the only place where the caret is added to the keyboardEventsReceivers
     @keyboardEventsReceivers.add @caret
 
-    if WorldMorph.preferencesAndSettings.isTouchDevice and WorldMorph.preferencesAndSettings.useVirtualKeyboard
+    if WorldWdgt.preferencesAndSettings.isTouchDevice and WorldWdgt.preferencesAndSettings.useVirtualKeyboard
       @initVirtualKeyboard()
       # For touch devices, giving focus on the textbox causes
       # the keyboard to slide up, and since the page viewport
@@ -2202,7 +2202,7 @@ class WorldMorph extends PanelWdgt
     # Widgetic.js provides the "slide" method but I must have lost it
     # in the way, so commenting this out for the time being
     #
-    #if WorldMorph.preferencesAndSettings.useSliderForInput
+    #if WorldWdgt.preferencesAndSettings.useSliderForInput
     #  if !aStringMorphOrTextMorph.parentThatIsA MenuWdgt
     #    @slide aStringMorphOrTextMorph
   

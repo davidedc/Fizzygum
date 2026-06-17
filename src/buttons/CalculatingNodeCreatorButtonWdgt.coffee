@@ -2,7 +2,7 @@ class CalculatingNodeCreatorButtonWdgt extends CreatorButtonWdgt
 
   constructor: ->
     super
-    @appearance = new CalculatingNodeIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new CalculatingNodeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "calculating node"
 
   createWidgetToBeHandled: ->

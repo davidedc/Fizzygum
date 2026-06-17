@@ -10,7 +10,7 @@ class SimpleDocumentScrollPanelWdgt extends SimpleVerticalStackScrollPanelWdgt
 
   getNormalParagraph: (text) ->
     paragraph = new SimplePlainTextWdgt(
-      text,nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      text,nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     paragraph.isEditable = true
     paragraph.enableSelecting()
     return paragraph

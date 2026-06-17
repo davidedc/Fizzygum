@@ -9,7 +9,7 @@ class IncreaseFontSizeButtonWdgt extends IconWdgt
 
   constructor: ->
     super
-    @appearance = new IncreaseFontSizeIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new IncreaseFontSizeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
     @toolTipMessage = "increase font size"

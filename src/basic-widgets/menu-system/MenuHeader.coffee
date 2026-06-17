@@ -4,13 +4,13 @@ class MenuHeader extends BoxWdgt
 
   constructor: (textContents) ->
     super 3
-    @color = WorldMorph.preferencesAndSettings.menuHeaderColor
+    @color = WorldWdgt.preferencesAndSettings.menuHeaderColor
 
     @text = new TextWdgt(
       textContents,
-      @fontSize or WorldMorph.preferencesAndSettings.menuHeaderFontSize,
-      WorldMorph.preferencesAndSettings.menuFontName,
-      WorldMorph.preferencesAndSettings.menuHeaderBold,
+      @fontSize or WorldWdgt.preferencesAndSettings.menuHeaderFontSize,
+      WorldWdgt.preferencesAndSettings.menuFontName,
+      WorldWdgt.preferencesAndSettings.menuHeaderBold,
       false)
     @text.color = Color.WHITE
     @text.backgroundColor = @color

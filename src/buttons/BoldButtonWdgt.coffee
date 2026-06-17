@@ -9,7 +9,7 @@ class BoldButtonWdgt extends Widget
 
   constructor: ->
     super
-    @appearance = new BoldIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new BoldIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
     @toolTipMessage = "bold"

@@ -12,6 +12,6 @@ class UpperRightTriangle extends Widget
     # within tha shape
     @noticesTransparentClick = false
 
-    size = WorldMorph.preferencesAndSettings.handleSize
+    size = WorldWdgt.preferencesAndSettings.handleSize
     @silentRawSetExtent new Point size, size
     parent?.add @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT

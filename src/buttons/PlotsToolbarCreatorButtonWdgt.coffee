@@ -2,7 +2,7 @@ class PlotsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   constructor: ->
     super
-    @appearance = new AllPlotsIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new AllPlotsIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "plots/graphs"
 
   createWidgetToBeHandled: ->

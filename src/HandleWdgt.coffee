@@ -26,13 +26,13 @@ class HandleWdgt extends Widget
     @noticesTransparentClick = true
 
     @layoutSpec_cornerInternal_proportionOfParent = 0
-    @layoutSpec_cornerInternal_fixedSize = WorldMorph.preferencesAndSettings.handleSize
+    @layoutSpec_cornerInternal_fixedSize = WorldWdgt.preferencesAndSettings.handleSize
     @layoutSpec_cornerInternal_inset = @inset
 
     @makeHandleSolidWithParentMorph nil, nil, @target
 
   detachesWhenDragged: ->
-    if (@parent instanceof WorldMorph)
+    if (@parent instanceof WorldWdgt)
       return true
     else
       return false

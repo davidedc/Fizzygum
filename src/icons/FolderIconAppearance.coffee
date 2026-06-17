@@ -8,7 +8,7 @@ class FolderIconAppearance extends IconAppearance
   paintFunction: (context) ->
     # Color Declarations
     if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
-    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
+    outlineColorString = WorldWdgt.preferencesAndSettings.outlineColorString
     # outline Drawing
     context.beginPath()
     context.moveTo 89.18, 21.7

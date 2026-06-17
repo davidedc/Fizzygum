@@ -7,7 +7,7 @@ class FormatAsCodeIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
+    outlineColorString = WorldWdgt.preferencesAndSettings.outlineColorString
     if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
     #// Group
     #// cket 2 Drawing

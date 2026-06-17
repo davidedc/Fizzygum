@@ -84,7 +84,7 @@ class ScriptWdgt extends Widget
     @runItButton = new SimpleButtonWdgt true, @, "tryIt", "try it"
     @add @runItButton
 
-    @saveTextWdgt = new StringWdgt "save + close", WorldMorph.preferencesAndSettings.textInButtonsFontSize
+    @saveTextWdgt = new StringWdgt "save + close", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @saveTextWdgt.alignCenter()
     @saveButton = new SimpleButtonWdgt true, @, "saveScriptAndClose", @saveTextWdgt
     @add @saveButton
@@ -140,7 +140,7 @@ class ScriptWdgt extends Widget
     textHeight = @height() - 2 * @externalPadding - @internalPadding - 15
     textBottom = @top() + @externalPadding + textHeight
     textWidth = @width() - 2 * @externalPadding
-    buttonsWidth = Math.round((textWidth - 2 * @internalPadding - WorldMorph.preferencesAndSettings.handleSize)/2)
+    buttonsWidth = Math.round((textWidth - 2 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize)/2)
 
     if @tempPromptEntryField.parent == @
       @tempPromptEntryField.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding

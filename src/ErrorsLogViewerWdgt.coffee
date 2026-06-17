@@ -130,7 +130,7 @@ class ErrorsLogViewerWdgt extends Widget
     world.disableTrackChanges()
 
 
-    mainCanvasHeight = @height() - 2 * @externalPadding - @internalPadding - WorldMorph.preferencesAndSettings.handleSize
+    mainCanvasHeight = @height() - 2 * @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize
     mainCanvasBottom = @top() + @externalPadding + mainCanvasHeight
 
     if @tempPromptEntryField.parent == @
@@ -141,7 +141,7 @@ class ErrorsLogViewerWdgt extends Widget
     # buttons -------------------------------
     
 
-    eachButtonWidth = (@width() - 2* @externalPadding - 3 * @internalPadding - WorldMorph.preferencesAndSettings.handleSize) / 3
+    eachButtonWidth = (@width() - 2* @externalPadding - 3 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize) / 3
 
     if @clearButton.parent == @
       buttonBounds = new Rectangle new Point @left() + @externalPadding + 0*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding

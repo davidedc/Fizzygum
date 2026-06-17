@@ -165,7 +165,7 @@ class BasementWdgt extends BoxWdgt
     y = @top() + 2
     w = @width() - @cornerRadius
     w -= @cornerRadius
-    b = @bottom() - (2 * @cornerRadius) - WorldMorph.preferencesAndSettings.handleSize
+    b = @bottom() - (2 * @cornerRadius) - WorldWdgt.preferencesAndSettings.handleSize
     h = b - y
     @scrollPanel.fullRawMoveTo new Point x, y
     @scrollPanel.rawSetExtent new Point w, h
@@ -173,7 +173,7 @@ class BasementWdgt extends BoxWdgt
     # hideUsedWdgts toggle button
     x = @scrollPanel.left()
     y = @scrollPanel.bottom() + @cornerRadius
-    h = WorldMorph.preferencesAndSettings.handleSize
+    h = WorldWdgt.preferencesAndSettings.handleSize
     w = @scrollPanel.width() - h - @cornerRadius
     @hideUsedWdgtsToggle.doLayout (new Rectangle  0,0,w,h).translateBy new Point x, y
     world.maybeEnableTrackChanges()

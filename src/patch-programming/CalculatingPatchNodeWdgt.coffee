@@ -199,12 +199,12 @@ class CalculatingPatchNodeWdgt extends Widget
     @add @outputTextArea
 
 
-    @formulaTextBoxLabel = new StringWdgt "Formula", WorldMorph.preferencesAndSettings.textInButtonsFontSize
+    @formulaTextBoxLabel = new StringWdgt "Formula", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @formulaTextBoxLabel.toggleHeaderLine()
     #@formulaTextBoxLabel.alignCenter()
     @add @formulaTextBoxLabel
 
-    @outputTextBoxLabel = new StringWdgt "Output", WorldMorph.preferencesAndSettings.textInButtonsFontSize
+    @outputTextBoxLabel = new StringWdgt "Output", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @outputTextBoxLabel.toggleHeaderLine()
     #@outputTextBoxLabel.alignCenter()
     @add @outputTextBoxLabel

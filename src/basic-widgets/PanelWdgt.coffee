@@ -19,8 +19,8 @@ class PanelWdgt extends Widget
     @dragsDropsAndEditingEnabled = true
     @appearance = new RectangularAppearance @
 
-    @color = WorldMorph.preferencesAndSettings.defaultPanelsBackgroundColor
-    @strokeColor = WorldMorph.preferencesAndSettings.defaultPanelsStrokeColor
+    @color = WorldWdgt.preferencesAndSettings.defaultPanelsBackgroundColor
+    @strokeColor = WorldWdgt.preferencesAndSettings.defaultPanelsStrokeColor
 
     if @scrollPanel
       @noticesTransparentClick = false

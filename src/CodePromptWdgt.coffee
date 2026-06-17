@@ -56,7 +56,7 @@ class CodePromptWdgt extends Widget
     @add @cancelButton
 
     
-    @saveTextWdgt = new StringWdgt "save", WorldMorph.preferencesAndSettings.textInButtonsFontSize
+    @saveTextWdgt = new StringWdgt "save", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @saveTextWdgt.alignCenter()
     @saveButton = new SimpleButtonWdgt true, @, "informTarget", @saveTextWdgt
     @add @saveButton
@@ -117,7 +117,7 @@ class CodePromptWdgt extends Widget
     # buttons -------------------------------
     
 
-    eachButtonWidth = (@width() - 2 * @externalPadding - 3 * @internalPadding - WorldMorph.preferencesAndSettings.handleSize) / 3
+    eachButtonWidth = (@width() - 2 * @externalPadding - 3 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize) / 3
 
     if @cancelButton.parent == @
       buttonBounds = new Rectangle new Point @left() + @externalPadding + 0*(eachButtonWidth + @internalPadding), textBottom + @internalPadding

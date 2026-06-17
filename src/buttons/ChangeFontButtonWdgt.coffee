@@ -11,7 +11,7 @@ class ChangeFontButtonWdgt extends IconWdgt
 
   constructor: (@simpleDocument) ->
     super nil
-    @appearance = new ChangeFontIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new ChangeFontIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true

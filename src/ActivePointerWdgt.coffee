@@ -1,4 +1,4 @@
-# The mouse cursor. Note that it's not a child of the WorldMorph, this widget
+# The mouse cursor. Note that it's not a child of the WorldWdgt, this widget
 # is never added to any other widget. [TODO] Find out why and write explanation.
 # Not to be confused with the HandleWdgt
 
@@ -39,12 +39,12 @@ class ActivePointerWdgt extends Widget
     @silentRawSetBounds Rectangle.EMPTY
 
   clippedThroughBounds: ->
-    @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    @checkClippedThroughBoundsCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
     @clippedThroughBoundsCache = @boundingBox()
     return @clippedThroughBoundsCache
 
   clipThrough: ->
-    @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    @checkClipThroughCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
     @clipThroughCache = @boundingBox()
     return @clipThroughCache
   
@@ -147,7 +147,7 @@ class ActivePointerWdgt extends Widget
     target
   
   grab: (aWdgt, displacementDueToGrabDragThreshold,  switcherooHappened) ->
-    return nil  if aWdgt instanceof WorldMorph
+    return nil  if aWdgt instanceof WorldWdgt
     oldParent = aWdgt.parent
     if !@isThisPointerFloatDraggingSomething()
 
@@ -471,8 +471,8 @@ class ActivePointerWdgt extends Widget
           # gestures — spaced > the window apart — never fold, while a gesture's own clicks
           # (~120ms apart, < the window) still do.
           if @doubleClickWdgt? and @doubleClickArmedAtEventTime? and
-           WorldMorph.timeOfEventBeingProcessed? and
-           (WorldMorph.timeOfEventBeingProcessed - @doubleClickArmedAtEventTime) > @doubleClickWindowMs
+           WorldWdgt.timeOfEventBeingProcessed? and
+           (WorldWdgt.timeOfEventBeingProcessed - @doubleClickArmedAtEventTime) > @doubleClickWindowMs
             @forgetDoubleClickWdgts()
 
           if @doubleClickWdgt?
@@ -482,9 +482,9 @@ class ActivePointerWdgt extends Widget
             #  - both clicks nearby
             if @mouseButton == "left" and
              @doubleClickWdgt == w and
-             ((@doubleClickPosition.distanceTo @position()) < WorldMorph.preferencesAndSettings.grabDragThreshold)
+             ((@doubleClickPosition.distanceTo @position()) < WorldWdgt.preferencesAndSettings.grabDragThreshold)
               #console.log "@doubleClickPosition.distanceTo @position():" + @doubleClickPosition.distanceTo @position()
-              #console.log "WorldMorph.preferencesAndSettings.grabDragThreshold:" + WorldMorph.preferencesAndSettings.grabDragThreshold
+              #console.log "WorldWdgt.preferencesAndSettings.grabDragThreshold:" + WorldWdgt.preferencesAndSettings.grabDragThreshold
               @doubleClickWdgt = nil
               # remember we are going to send a double click
               # but let's do it after. That's because we first
@@ -522,8 +522,8 @@ class ActivePointerWdgt extends Widget
           # double-click gate above): a triple candidate armed more than doubleClickWindowMs
           # of event time ago belongs to a previous gesture — drop it before matching.
           if @tripleClickWdgt? and @tripleClickArmedAtEventTime? and
-           WorldMorph.timeOfEventBeingProcessed? and
-           (WorldMorph.timeOfEventBeingProcessed - @tripleClickArmedAtEventTime) > @doubleClickWindowMs
+           WorldWdgt.timeOfEventBeingProcessed? and
+           (WorldWdgt.timeOfEventBeingProcessed - @tripleClickArmedAtEventTime) > @doubleClickWindowMs
             @forgetTripleClickWdgts()
 
           # also send tripleclick if the
@@ -537,7 +537,7 @@ class ActivePointerWdgt extends Widget
             # same three conditions as double click
             if @mouseButton == "left" and
              @tripleClickWdgt == w and
-             ((@tripleClickPosition.distanceTo @position()) < WorldMorph.preferencesAndSettings.grabDragThreshold)
+             ((@tripleClickPosition.distanceTo @position()) < WorldWdgt.preferencesAndSettings.grabDragThreshold)
               #debugger
               if @tripleClickWdgt == w
                 @tripleClickWdgt = nil
@@ -593,7 +593,7 @@ class ActivePointerWdgt extends Widget
     # deterministically, load-immune. No wall-clock timer is needed; a candidate that
     # lingers during idle is harmless (consulted only on the next click, where the gate +
     # the widget/position identity checks prevent any wrong fold).
-    @doubleClickArmedAtEventTime = WorldMorph.timeOfEventBeingProcessed
+    @doubleClickArmedAtEventTime = WorldWdgt.timeOfEventBeingProcessed
 
   # basically the same as rememberDoubleClickWdgtsForAWhile
   forgetTripleClickWdgts: ->
@@ -606,7 +606,7 @@ class ActivePointerWdgt extends Widget
     @tripleClickPosition = @position()
     # event-time arm, exactly as rememberDoubleClickWdgtsForAWhile — the event-time gate in
     # processMouseUp is the authoritative, deterministic forget; no wall-clock timer needed.
-    @tripleClickArmedAtEventTime = WorldMorph.timeOfEventBeingProcessed
+    @tripleClickArmedAtEventTime = WorldWdgt.timeOfEventBeingProcessed
 
   cleanupMenuWdgts: (expectedClick, w, alsoKillFreshMenus)->
 
@@ -793,7 +793,7 @@ class ActivePointerWdgt extends Widget
   #
   #  if files.length
   #    for file in files
-  #      if file.type.includes("svg") && !WorldMorph.preferencesAndSettings.rasterizeSVGs
+  #      if file.type.includes("svg") && !WorldWdgt.preferencesAndSettings.rasterizeSVGs
   #        readSVG file
   #      else if file.type.startsWith "image"
   #        readImage file
@@ -901,7 +901,7 @@ class ActivePointerWdgt extends Widget
 
     if !skipGrabDragThreshold
       if @wdgtToGrab.parent != world or (!@wdgtToGrab.isEditable? or @wdgtToGrab.isEditable )
-        if (@mouseDownPosition.distanceTo @position()) < WorldMorph.preferencesAndSettings.grabDragThreshold
+        if (@mouseDownPosition.distanceTo @position()) < WorldWdgt.preferencesAndSettings.grabDragThreshold
           return [true,nil]
       displacementDueToGrabDragThreshold = @position().subtract @mouseDownPosition
 
@@ -1007,7 +1007,7 @@ class ActivePointerWdgt extends Widget
     # drag guard (e.g. SliderButtonWdgt.mouseEnter early-returns while the hand
     # is dragging) and the widget is recorded in @mouseOverList. Otherwise the
     # next per-cycle reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges
-    # (WorldMorph.doOneCycle) can fire that mouseEnter AFTER mouse-up has already
+    # (WorldWdgt.doOneCycle) can fire that mouseEnter AFTER mouse-up has already
     # un-dragged the widget — spuriously HIGHLIGHTing it. Deferring this caused a
     # dpr-2-only flake in SystemTest_macroSliderTrackClickMovesButton: a heavy
     # SWCanvas cycle drains the down+up together, so no held-button frame ever
@@ -1049,7 +1049,7 @@ class ActivePointerWdgt extends Widget
           if newWdgt instanceof ScrollPanelWdgt
             if newWdgt.wantsDropOf widgetBeingFloatDragged
               if !newWdgt.boundingBox().insetBy(
-                WorldMorph.preferencesAndSettings.scrollBarsThickness * 3
+                WorldWdgt.preferencesAndSettings.scrollBarsThickness * 3
                 ).containsPoint @position()
                   newWdgt.startAutoScrolling()
 

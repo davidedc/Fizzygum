@@ -7,7 +7,7 @@ class WelcomeIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
-    outlineColorString = WorldMorph.preferencesAndSettings.outlineColorString
+    outlineColorString = WorldWdgt.preferencesAndSettings.outlineColorString
     #// outline
     #// body and hat outline Drawing
     context.beginPath()

@@ -15,7 +15,7 @@ class HowToSaveMessageInfoWdg extends SimpleDocumentWdgt
     startingContent.layoutSpecDetails.setAlignmentToCenter()
 
     startingContent = new SimplePlainTextWdgt(
-      "How to save?",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "How to save?",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 24
     startingContent.isEditable = true
@@ -38,7 +38,7 @@ class HowToSaveMessageInfoWdg extends SimpleDocumentWdgt
     sdspw.addSpacer()
 
     startingContent = new SimplePlainTextWdgt(
-      "Footnotes",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "Footnotes",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.toggleWeight()
     startingContent.isEditable = true
     startingContent.enableSelecting()

@@ -12,7 +12,7 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
     @disableDrops()
 
     ostmA = new SimplePlainTextWdgt(
-      "A small string\n\n\nhere another.",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "A small string\n\n\nhere another.",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     ostmA.isEditable = true
     ostmA.enableSelecting()
     @setContents ostmA, 5

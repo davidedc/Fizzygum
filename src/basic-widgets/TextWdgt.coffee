@@ -21,7 +21,7 @@ class TextWdgt extends StringWdgt
 
   constructor: (
    @text = "TextWdgt",
-   @originallySetFontSize = WorldMorph.preferencesAndSettings.normalTextFontSize,
+   @originallySetFontSize = WorldWdgt.preferencesAndSettings.normalTextFontSize,
    @fontName = @justArialFontStack,
    @isBold = false,
    @isItalic = false,

@@ -72,7 +72,7 @@ class TreeNode
   
   # TreeNode accessing:
   addChild: (node, position = nil) ->
-    WorldMorph.numberOfAddsAndRemoves++
+    WorldWdgt.numberOfAddsAndRemoves++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
     if !position?
@@ -132,7 +132,7 @@ class TreeNode
   removeChild: (node) ->
     # remove the array element from the
     # array
-    WorldMorph.numberOfAddsAndRemoves++
+    WorldWdgt.numberOfAddsAndRemoves++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
     @children.remove node
@@ -193,7 +193,7 @@ class TreeNode
 
   # TreeNode functions:
   root: ->
-    if @rootCacheChecker == WorldMorph.numberOfAddsAndRemoves
+    if @rootCacheChecker == WorldWdgt.numberOfAddsAndRemoves
       #console.log "cache hit root"
       result = @rootCache
     else
@@ -202,7 +202,7 @@ class TreeNode
       if @parent?
         theRoot = @parent.root()
 
-      @rootCacheChecker = WorldMorph.numberOfAddsAndRemoves
+      @rootCacheChecker = WorldWdgt.numberOfAddsAndRemoves
       @rootCache = theRoot
       result = @rootCache
 
@@ -534,7 +534,7 @@ class TreeNode
       return nil
 
   firstParentClippingAtBounds: (morphToStartFrom = @) ->
-    if @checkFirstParentClippingAtBoundsCache == WorldMorph.numberOfAddsAndRemoves
+    if @checkFirstParentClippingAtBoundsCache == WorldWdgt.numberOfAddsAndRemoves
       if world.doubleCheckCachedMethodsResults
         if @cachedFirstParentClippingAtBounds != @SLOWfirstParentClippingAtBounds morphToStartFrom
           debugger
@@ -553,7 +553,7 @@ class TreeNode
         debugger
         alert "firstParentClippingAtBounds is broken (uncached)"
 
-    @checkFirstParentClippingAtBoundsCache = WorldMorph.numberOfAddsAndRemoves
+    @checkFirstParentClippingAtBoundsCache = WorldWdgt.numberOfAddsAndRemoves
     @cachedFirstParentClippingAtBounds = result
 
 

@@ -17,7 +17,7 @@ class PenWdgt extends Widget
   penPoint: 'tip' # or 'center'
   
   constructor: ->
-    @penSize = WorldMorph.preferencesAndSettings.handleSize * 4
+    @penSize = WorldWdgt.preferencesAndSettings.handleSize * 4
     super()
     @rawSetExtent new Point @penSize, @penSize
     # TODO we need to change the size two times, for getting the right size

@@ -9,7 +9,7 @@ class FormatAsCodeButtonWdgt extends IconWdgt
 
   constructor: ->
     super
-    @appearance = new FormatAsCodeIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new FormatAsCodeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
     @toolTipMessage = "format as code"

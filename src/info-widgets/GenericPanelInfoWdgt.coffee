@@ -22,7 +22,7 @@ class GenericPanelInfoWdgt extends SimpleDocumentWdgt
     # ---------------------
 
     startingContent = new SimplePlainTextWdgt(
-      "Generic Panel",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "Generic Panel",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22
     startingContent.isEditable = true

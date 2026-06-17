@@ -157,12 +157,12 @@ class SimplePlainTextWdgt extends TextWdgt
   # stay — they are scroll-panel-specific (they flip @parent.parent.isTextLineWrapping).
 
   blendInWithPanelColor: ->
-    if @backgroundColor.equals WorldMorph.preferencesAndSettings.editableItemBackgroundColor
+    if @backgroundColor.equals WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
       @setBackgroundColor Color.create 249, 249, 249
 
   contrastOutFromPanelColor: ->
     if @backgroundColor.equals Color.create 249, 249, 249
-      @setBackgroundColor WorldMorph.preferencesAndSettings.editableItemBackgroundColor
+      @setBackgroundColor WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
 
   # NOTE: the reLayout that used to live here — the contained-text sizing (wrap to
   # the given width, height = lineCount × fontHeight; or hug the natural width when

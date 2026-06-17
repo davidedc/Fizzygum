@@ -2,7 +2,7 @@ class FunctionPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
 
   constructor: ->
     super
-    @appearance = new FunctionPlotIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new FunctionPlotIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "function plot"
 
   createWidgetToBeHandled: ->

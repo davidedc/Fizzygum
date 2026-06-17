@@ -36,7 +36,7 @@ synthesises the real input events. Resilient to layout change.
 3. **`Macro`** parses the generator and rewrites verb calls `fooMacro args` → `yield from fooMacro.call this,
    args`; `linkTo` concatenates the subroutine sources + prepends the pump header; `start` evals the linked code
    via **`world.macroToolkit.evaluateString`** — so the whole macro runs with **`@` = the MacroToolkit instance**.
-4. Each `WorldMorph.doOneCycle` calls `@macroToolkit?.progressOnMacroSteps()` — the pump — which advances the
+4. Each `WorldWdgt.doOneCycle` calls `@macroToolkit?.progressOnMacroSteps()` — the pump — which advances the
    generator whenever the previous `yield` is satisfied: `"waitNoInputsOngoing"` (the input queue drained),
    `"waitForScreenshotReady"` (SWCanvas settled + warm), or `<number>` (ms). Each step pushes timed synthetic
    events onto `world.inputEventsQueue`; `playQueuedEvents` (also in `doOneCycle`) executes them.
@@ -68,7 +68,7 @@ MacroToolkit methods AND macro source strings: `@x` = a toolkit helper/field (`@
 `world.inputEventsQueue`, `world.hand`, `world.topWdgtSuchThat`, `world.freshlyCreatedPopUps`, `world.automator…`).
 **Watch default arguments:** `orig = world.hand.position()` in a signature is world state — a `@`-form there
 silently becomes `undefined` (the syntax gate won't catch it). This was the #1 trap when the toolkit split out of
-WorldMorph.
+WorldWdgt.
 
 ```coffee
 theTest_InputEvents_Macro = ->
@@ -113,7 +113,7 @@ are **speed-INVARIANT** (the SAME committed images pass at all three levels), so
 
 Two independent axes the generators honour (`MacroToolkit.spanFactor` + the single push chokepoint `queueInputEvent`):
 - **SPAN** = each gesture's time-offsets × `spanFactor` → wall-clock speed (the only real lever; events drain over
-  ~their timestamp span of real wall-clock — see `WorldMorph.playQueuedEvents`). `normal` = 1.0 (byte-identical to
+  ~their timestamp span of real wall-clock — see `WorldWdgt.playQueuedEvents`). `normal` = 1.0 (byte-identical to
   the old timing), `fast` ≈ 0.3, `fastest` ≈ 0.03.
 - **COUNT** = events-per-millisecond → path sampling. **Deliberately NOT thinned**: it stays full at every level, so
   a gesture emits the SAME deduped pixel path (and final pixel) at every speed — only the timestamps move.
@@ -130,7 +130,7 @@ sampler (`ScrollPanelWdgt` scroll-on-drag; drag-enter/leave) sees several frames
 down→up HOLD (`@clickHoldFloorMs`) so a held-button frame is sampled (a slider track-click's hover resolves on it).
 Multi-click recognition is purely proximity + the hand's 300ms EVENT-TIME window: each click candidate is
 forgotten when the next click's `event.time` is > the window past it (deterministic — `ActivePointerWdgt`
-keys off `WorldMorph.timeOfEventBeingProcessed`, NOT a wall-clock `setTimeout` that can fire late under
+keys off `WorldWdgt.timeOfEventBeingProcessed`, NOT a wall-clock `setTimeout` that can fire late under
 heavy-cycle load). A non-scaled minimum gap between distinct same-spot click gestures (`MacroToolkit`,
 > the window) keeps separate gestures from folding; a gesture's own ~120ms-spaced clicks (< the window) fold.
 
@@ -160,7 +160,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
 ## Adding to the toolkit
 
 - **L1 primitive** — a method that pushes `*InputEvent`s with scheduled times onto `world.inputEventsQueue`. Default
-  the start time to `WorldMorph.dateOfCurrentCycleStart.getTime()` and stagger with an interval.
+  the start time to `WorldWdgt.dateOfCurrentCycleStart.getTime()` and stagger with an interval.
 - **L2 locator/action** — a method that reads the live tree (`world.topWdgtSuchThat`, `world.freshlyCreatedPopUps`, a
   widget's children) and composes L1. No `yield`, no `world.automator` (that's the harness's job).
 - **L2 assertion** (non-screenshot) — locate by meaning, then call `world.automator.player.recordMacroAssertion(passed,
@@ -239,7 +239,7 @@ pair, `buildExternalAndFreeInternalWindow_Macro` + `dropInternalWindowIntoExtern
 ## The delegation model (the first in the codebase)
 
 The project is phasing out mixins for plain OO delegation; `MacroToolkit` is the first example. `world.macroToolkit` is
-created in the `WorldMorph` ctor: `if MacroToolkit? then @macroToolkit = new MacroToolkit` (the guard self-disables under
+created in the `WorldWdgt` ctor: `if MacroToolkit? then @macroToolkit = new MacroToolkit` (the guard self-disables under
 `--homepage`, where the class is stripped). `world` keeps only the two per-cycle hooks (`doOneCycle` →
 `@macroToolkit?.progressOnMacroSteps()`; `updateTimeReferences` → bookkeeping). There is **no** `world.progressOnMacroSteps`
 / `world.aMacroIsRunning` any more — all `world.macroToolkit.*`. The pump `progressOnMacroSteps` starts as an empty stub and
@@ -257,7 +257,7 @@ contribute that verb via the `extraSubroutineSources` merge-seam.
 
 - `Macro.coffee` and `MacroToolkit.coffee` each start with `# this file is only needed for Macros` → `build.py` skips
   the whole file under `--homepage` (and `src/macros/*.coffee` is auto-globbed — a new file here needs no manifest entry).
-- In `WorldMorph.coffee` the two cycle hooks sit inside `# »>> … only needed for Macros … <<«` pairs (stripped); the
+- In `WorldWdgt.coffee` the two cycle hooks sit inside `# »>> … only needed for Macros … <<«` pairs (stripped); the
   `macroToolkit: nil` field and the `if MacroToolkit?` ctor init are unmarked (harmless in homepage: field stays `nil`,
   guard is false).
 

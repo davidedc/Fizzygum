@@ -399,7 +399,7 @@ createWorldAndStartStepping = ->
     # "true" will make the world fill the entire page.
     # Also note that the first thing that this constructor does
     # is to initialise the global "world" variable with... the world.
-    new WorldMorph worldCanvas, !(window.location.href.includes "worldWithSystemTestHarness")
+    new WorldWdgt worldCanvas, !(window.location.href.includes "worldWithSystemTestHarness")
     world.isDevMode = true
 
     # ref https://www.google.com/search?q=requestanimationframe

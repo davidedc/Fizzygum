@@ -71,7 +71,7 @@ class ExampleBarPlotWdgt extends GraphsPlotsChartsWdgt
       @simpleShadow context, color, appliedShadow
       return
 
-    context.fillStyle = WorldMorph.preferencesAndSettings.editableItemBackgroundColor.toString()
+    context.fillStyle = WorldWdgt.preferencesAndSettings.editableItemBackgroundColor.toString()
     context.fillRect 0, 0, width, height
 
     availableHeight = height

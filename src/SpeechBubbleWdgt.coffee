@@ -14,9 +14,9 @@ class SpeechBubbleWdgt extends Widget
   constructor: (@contents="hello") ->
     # console.log "bubble super"
     super()
-    @color = WorldMorph.preferencesAndSettings.menuBackgroundColor
+    @color = WorldWdgt.preferencesAndSettings.menuBackgroundColor
     @padding = 0
-    @strokeColor = WorldMorph.preferencesAndSettings.menuStrokeColor
+    @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
     @cornerRadius = 6
     @appearance = new BubblyAppearance @
     @toolTipMessage = "speech bubble"
@@ -32,7 +32,7 @@ class SpeechBubbleWdgt extends Widget
   buildAndConnectChildren: ->
     @contentsMorph = new TextWdgt(
       @contents,
-      WorldMorph.preferencesAndSettings.bubbleHelpFontSize,
+      WorldWdgt.preferencesAndSettings.bubbleHelpFontSize,
       nil,
       false,
       true,

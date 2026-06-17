@@ -62,7 +62,7 @@ class ButtonWdgt extends Widget
     if @faceMorph?
 
       if (typeof @faceMorph) == "string"
-        @faceMorph = (new StringWdgt @faceMorph, WorldMorph.preferencesAndSettings.textInButtonsFontSize).alignCenter()
+        @faceMorph = (new StringWdgt @faceMorph, WorldWdgt.preferencesAndSettings.textInButtonsFontSize).alignCenter()
       @add @faceMorph
       @invalidateLayout()
   
@@ -126,7 +126,7 @@ class ButtonWdgt extends Widget
   # and you shouldn't be able to drag the button away either
   # so the drag is entirely rejected
   rejectDrags: ->
-    if @parent instanceof WorldMorph
+    if @parent instanceof WorldWdgt
       return false
     else
       return @defaultRejectDrags

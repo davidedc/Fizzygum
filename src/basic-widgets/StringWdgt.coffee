@@ -179,7 +179,7 @@ class StringWdgt extends Widget
 
   constructor: (
       @text = (if text is "" then "" else "StringWdgt"),
-      @originallySetFontSize = WorldMorph.preferencesAndSettings.normalTextFontSize,
+      @originallySetFontSize = WorldWdgt.preferencesAndSettings.normalTextFontSize,
       @fontName = @justArialFontStack,
       @isBold = false,
       @isItalic = false,
@@ -209,7 +209,7 @@ class StringWdgt extends Widget
   # tall characters such as ⎲█ƒ⎳À⎷ ⎸⎹ are cut
   # but hey they look cut also in this text editor I'm using.
   fontHeight: (fontSize) ->
-    minHeight = Math.max fontSize, WorldMorph.preferencesAndSettings.minimumFontHeight
+    minHeight = Math.max fontSize, WorldWdgt.preferencesAndSettings.minimumFontHeight
     Math.ceil minHeight * 1.2 # assuming 1/5 font size for ascenders
 
   # the actual font size used might be

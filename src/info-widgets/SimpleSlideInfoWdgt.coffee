@@ -22,7 +22,7 @@ class SimpleSlideInfoWdgt extends SimpleDocumentWdgt
     # ---------------------
 
     startingContent = new SimplePlainTextWdgt(
-      "Slides Maker",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "Slides Maker",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22
     startingContent.isEditable = true

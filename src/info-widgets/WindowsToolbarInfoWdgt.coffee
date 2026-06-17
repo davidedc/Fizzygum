@@ -18,7 +18,7 @@ class WindowsToolbarInfoWdgt extends SimpleDocumentWdgt
     startingContent.layoutSpecDetails.setAlignmentToCenter()
 
     startingContent = new SimplePlainTextWdgt(
-      "Types of windows",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "Types of windows",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22
     startingContent.isEditable = true

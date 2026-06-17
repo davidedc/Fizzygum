@@ -9,7 +9,7 @@ class AlignRightButtonWdgt extends Widget
 
   constructor: (@color) ->
     super
-    @appearance = new AlignRightIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new AlignRightIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @actionableAsThumbnail = true
     @editorContentPropertyChangerButton = true
     @toolTipMessage = "align right"

@@ -2,7 +2,7 @@ class GrayscalePaletteNodeCreatorButtonWdgt extends CreatorButtonWdgt
 
   constructor: ->
     super
-    @appearance = new GrayscalePalettePatchProgrammingIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new GrayscalePalettePatchProgrammingIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "grayscale palette"
 
   createWidgetToBeHandled: ->

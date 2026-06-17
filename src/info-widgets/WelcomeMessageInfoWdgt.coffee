@@ -16,7 +16,7 @@ class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
 
 
     startingContent = new SimplePlainTextWdgt(
-      "Welcome to Fizzygum",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "Welcome to Fizzygum",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 24
     startingContent.isEditable = true
@@ -24,7 +24,7 @@ class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
     sdspw.add startingContent
 
     startingContent = new SimplePlainTextWdgt(
-      "version 1.1.12",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "version 1.1.12",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 9
     startingContent.isEditable = true
@@ -40,7 +40,7 @@ class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
     sdspw.addSpacer()
 
     startingContent = new SimplePlainTextWdgt(
-      "What it can do for you",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "What it can do for you",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22
     startingContent.isEditable = true
@@ -62,7 +62,7 @@ class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
     sdspw.addSpacer()
 
     startingContent = new SimplePlainTextWdgt(
-      "New here?",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "New here?",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22
     startingContent.isEditable = true
@@ -98,7 +98,7 @@ class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
     sdspw.addSpacer(2)
 
     startingContent = new SimplePlainTextWdgt(
-      "Get in touch",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "Get in touch",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22
     startingContent.isEditable = true

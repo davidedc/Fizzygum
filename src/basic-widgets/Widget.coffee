@@ -518,7 +518,7 @@ class Widget extends TreeNode
     @destroyed = true
     @parent?.invalidateLayout()
     @breakNumberOfRawMovesAndResizesCaches()
-    WorldMorph.numberOfAddsAndRemoves++
+    WorldWdgt.numberOfAddsAndRemoves++
 
     world.steppingWdgts.delete @
 
@@ -559,7 +559,7 @@ class Widget extends TreeNode
   # from the bottom (leaf widgets, drawn on top
   # of everything) to the top
   fullDestroy: ->
-    WorldMorph.numberOfAddsAndRemoves++
+    WorldWdgt.numberOfAddsAndRemoves++
     # we can't use a normal iterator because
     # we are iterating over an array that changes
     # its length as we are deleting its contents
@@ -570,7 +570,7 @@ class Widget extends TreeNode
     return nil
 
   closeChildren: ->
-    WorldMorph.numberOfAddsAndRemoves++
+    WorldWdgt.numberOfAddsAndRemoves++
     # we can't use a normal iterator because
     # we are iterating over an array that changes
     # its length as we are deleting its contents
@@ -583,7 +583,7 @@ class Widget extends TreeNode
     if @children.length == 0
       return
 
-    WorldMorph.numberOfAddsAndRemoves++
+    WorldWdgt.numberOfAddsAndRemoves++
     # we can't use a normal iterator because
     # we are iterating over an array that changes
     # its length as we are deleting its contents
@@ -901,19 +901,19 @@ class Widget extends TreeNode
     if !@isVisible
       # I'm not sure updating the cache here does
       # anything but it's two lines so let's do it
-      @checkVisibleBasedOnIsVisiblePropertyCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges
+      @checkVisibleBasedOnIsVisiblePropertyCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges
       @visibleBasedOnIsVisiblePropertyCache = false
       result = @visibleBasedOnIsVisiblePropertyCache
     else # @isVisible is true
       if !@parent?
         result = true
       else
-        if @checkVisibleBasedOnIsVisiblePropertyCache == WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges
+        if @checkVisibleBasedOnIsVisiblePropertyCache == WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges
           #console.log "cache hit visibleBasedOnIsVisibleProperty"
           result = @visibleBasedOnIsVisiblePropertyCache
         else
           #console.log "cache miss visibleBasedOnIsVisibleProperty"
-          @checkVisibleBasedOnIsVisiblePropertyCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges
+          @checkVisibleBasedOnIsVisiblePropertyCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges
           @visibleBasedOnIsVisiblePropertyCache = @parent.visibleBasedOnIsVisibleProperty()
           result = @visibleBasedOnIsVisiblePropertyCache
 
@@ -1025,7 +1025,7 @@ class Widget extends TreeNode
     if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
       result = Rectangle.EMPTY
     else
-      if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+      if @checkFullClippedBoundsCache == WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
         if world.doubleCheckCachedMethodsResults
           if !@cachedFullClippedBounds.equals @SLOWfullClippedBounds()
             debugger
@@ -1047,7 +1047,7 @@ class Widget extends TreeNode
         debugger
         alert "fullClippedBounds is broken"
 
-    @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    @checkFullClippedBoundsCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
     @cachedFullClippedBounds = result
   
   # this one does take into account orphanage and
@@ -1059,20 +1059,20 @@ class Widget extends TreeNode
   # visibility.
   clippedThroughBounds: ->
 
-    if @checkClippedThroughBoundsCache == WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    if @checkClippedThroughBoundsCache == WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
       #console.log "cache hit @checkClippedThroughBoundsCache"
       return @clippedThroughBoundsCache
     #else
     #  console.log "cache miss @checkClippedThroughBoundsCache"
-    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes) + " cache: " + @checkClippedThroughBoundsCache
+    #  #console.log (WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes) + " cache: " + @checkClippedThroughBoundsCache
     #  #debugger
 
     if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
-      @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+      @checkClippedThroughBoundsCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
       @clippedThroughBoundsCache = Rectangle.EMPTY
       return @clippedThroughBoundsCache
 
-    @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    @checkClippedThroughBoundsCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
     @clippedThroughBoundsCache = @boundingBox().intersect @clipThrough()
     return @clippedThroughBoundsCache
   
@@ -1088,16 +1088,16 @@ class Widget extends TreeNode
     if @ == Window
       debugger
 
-    if @checkClipThroughCache == WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    if @checkClipThroughCache == WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
       #console.log "cache hit @checkClipThroughCache"
       return @clipThroughCache
     #else
     #  console.log "cache miss @checkClipThroughCache"
-    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes) + " cache: " + @checkClipThroughCache
+    #  #console.log (WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes) + " cache: " + @checkClipThroughCache
     #  #debugger
 
     if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
-      @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+      @checkClipThroughCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
       @clipThroughCache = Rectangle.EMPTY
       return @clipThroughCache
 
@@ -1105,7 +1105,7 @@ class Widget extends TreeNode
     if !firstParentClippingAtBounds?
       firstParentClippingAtBounds = world
     firstParentClippingAtBoundsClipThroughBounds = firstParentClippingAtBounds.clipThrough()
-    @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    @checkClipThroughCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
     if @clipsAtRectangularBounds
       @clipThroughCache = @boundingBox().intersect firstParentClippingAtBoundsClipThroughBounds
     else
@@ -1166,7 +1166,7 @@ class Widget extends TreeNode
     if @ instanceof ActivePointerWdgt
       if @children.length == 0
         return
-    WorldMorph.numberOfRawMovesAndResizes++
+    WorldWdgt.numberOfRawMovesAndResizes++
 
   # moving to fractional position within the desktop is
   # different from the case below because the desktop can be
@@ -1738,8 +1738,8 @@ class Widget extends TreeNode
     return false
 
   recordDrawnAreaForNextBrokenRects: ->
-    if @childrenBoundsUpdatedAt < WorldMorph.frameCount
-      @childrenBoundsUpdatedAt = WorldMorph.frameCount
+    if @childrenBoundsUpdatedAt < WorldWdgt.frameCount
+      @childrenBoundsUpdatedAt = WorldWdgt.frameCount
       @clippedBoundsWhenLastPainted = @clippedThroughBounds()
       #if (@ != world) and (@clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
       #  debugger
@@ -1844,7 +1844,7 @@ class Widget extends TreeNode
     if !@isVisible
       return
     @isVisible = false
-    WorldMorph.numberOfVisibilityFlagsChanges++
+    WorldWdgt.numberOfVisibilityFlagsChanges++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
 
@@ -1873,7 +1873,7 @@ class Widget extends TreeNode
     if @visibleBasedOnIsVisibleProperty() == true
       return
     @isVisible = true
-    WorldMorph.numberOfVisibilityFlagsChanges++
+    WorldWdgt.numberOfVisibilityFlagsChanges++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
 
@@ -1885,7 +1885,7 @@ class Widget extends TreeNode
   
   toggleVisibility: ->
     @isVisible = not @isVisible
-    WorldMorph.numberOfVisibilityFlagsChanges++
+    WorldWdgt.numberOfVisibilityFlagsChanges++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
     @fullChanged()
@@ -1895,7 +1895,7 @@ class Widget extends TreeNode
       return
     @parent?.childBeingCollapsed? @
     @collapsed = true
-    WorldMorph.numberOfCollapseFlagsChanges++
+    WorldWdgt.numberOfCollapseFlagsChanges++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
     @invalidateLayout()
@@ -1909,7 +1909,7 @@ class Widget extends TreeNode
       return
     @parent?.childBeingUnCollapsed? @
     @collapsed = false
-    WorldMorph.numberOfCollapseFlagsChanges++
+    WorldWdgt.numberOfCollapseFlagsChanges++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
     @invalidateLayout()
@@ -1929,7 +1929,7 @@ class Widget extends TreeNode
   removeFromTree: ->
     @parent?.invalidateLayout()
     @breakNumberOfRawMovesAndResizesCaches()
-    WorldMorph.numberOfAddsAndRemoves++
+    WorldWdgt.numberOfAddsAndRemoves++
     @parent.removeChild @
     @fullChanged()
 
@@ -2497,7 +2497,7 @@ class Widget extends TreeNode
   # will be the top of the drag, and the whole TREE under that morph
   # will be dragged.
   #
-  # If the morphs grab each other up to the WorldMorph, then the World
+  # If the morphs grab each other up to the WorldWdgt, then the World
   # can't be dragged, so there is no drag happening.
   #
   # Usually though at some point up the chain a morph won't
@@ -2523,7 +2523,7 @@ class Widget extends TreeNode
   grabsToParentWhenDragged: ->
     if @parent?
 
-      if @parent instanceof WorldMorph
+      if @parent instanceof WorldWdgt
         return @isLockingToPanels
 
       if @amIDirectlyInsideScrollPanelWdgt()
@@ -2660,7 +2660,7 @@ class Widget extends TreeNode
 
   rootForFocus: ->
     if !@parent? or
-      @parent instanceof WorldMorph
+      @parent instanceof WorldWdgt
         return @
     @parent.rootForFocus()
 
@@ -3463,7 +3463,7 @@ class Widget extends TreeNode
       menu.addLine()
 
     if (@parent instanceof PanelWdgt) and !(@parent instanceof ScrollPanelWdgt)
-      if @parent instanceof WorldMorph
+      if @parent instanceof WorldWdgt
         whereToOrFrom = "desktop"
       else
         whereToOrFrom = "panel"

@@ -2,7 +2,7 @@ class WindowContentsPlaceholderText extends TextWdgt
 
   constructor: ->
 
-    super "Drop a widget in here",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1
+    super "Drop a widget in here",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1
 
     @alignCenter()
     @alignMiddle()

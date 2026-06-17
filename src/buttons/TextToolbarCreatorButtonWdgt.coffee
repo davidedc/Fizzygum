@@ -2,7 +2,7 @@ class TextToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   constructor: ->
     super
-    @appearance = new TextToolbarIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new TextToolbarIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "Text tools"
 
   createWidgetToBeHandled: ->

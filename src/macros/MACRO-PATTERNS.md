@@ -294,7 +294,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (maxTextWidth, lineCount × fontHeight) (`:118-131`): the drag's y is DISCARDED. So a corner-handle drag released far
   ABOVE the content's eventual bottom yields a wide block SHORTER than the release point, and a hard narrow yields a
   column far TALLER than it — both directions in one test. Fixture: the world menu's "demo ➜" → "text" (the Lorelei
-  `TextMorph` — `WorldMorph.createNewText`, isEditable, `maxTextWidth = 300`, rides the hand; drop with a click), then
+  `TextMorph` — `WorldWdgt.createNewText`, isEditable, `maxTextWidth = 300`, rides the hand; drop with a click), then
   the REAL resize path: `@openMenuOf_InputEvents textM` → `"resize/move..."` →
   `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", (new Point textM.left()+675, textM.top()+30)` —
   live-bounds deltas make the y-ignored proof explicit. The mode can stay on across BOTH drags (the handles follow the
@@ -551,7 +551,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (poppingUpSubMenuNotClipped) used an inspector's clipped list column; a plain frame demonstrates the same point.
 - **A duplicated menu is born pinned** (`macroDuplicatedMenuAutoPinsOnDesktop`): right-clicking a menu ITEM raises that item's
   ancestor hierarchy menu ("a MenuItem ➜" / "a Menu ➜"); drilling "a Menu ➜" → "duplicate" runs the MENU's own
-  duplicate. Under the harness `world.isIndexPage` is false (`WorldMorph.coffee:277-278`) so it is `Widget.duplicateMenuActionAndPickItUp`
+  duplicate. Under the harness `world.isIndexPage` is false (`WorldWdgt.coffee:277-278`) so it is `Widget.duplicateMenuActionAndPickItUp`
   (`:3489` → `fullCopy().pickUp()`) — the copy RIDES THE HAND (not the index page's +10,+10 plop). `PopUpWdgt.fullCopy` (`:92-97`)
   clears the copy's kill-on-click-outside flags, so `isPopUpPinned()` (`:59`) is true the instant the copy exists — pinned BEFORE it
   is dropped. Show the differential with an explicit unpinned FOIL: CARRY the hand-riding copy to the LEFT and drop it where the pointer
@@ -960,7 +960,7 @@ assertion a recapture after a regression silently stores two different hashes an
   logical-AND of two raw-bounds intersections (`panel∩probe` AND `child∩probe`), NOT a per-pixel hit-test. Build `new
   PanelWdgt`, `panel.add rect`, `rect.fullMoveTo` to STRADDLE the right edge; drop a probe ENTIRELY right of the panel
   (over the rect's clipped-away raw bounds): `clickMenuItemOfWidget… "attach..."` → `@assertTopMenuItemCount 0` ("no
-  morphs to attach to"); a slider's "set target" → `@assertTopMenuItemStrings ["a WorldMorph ➜"]`. KEY: the probe must
+  morphs to attach to"); a slider's "set target" → `@assertTopMenuItemStrings ["a World ➜"]`. KEY: the probe must
   overlap ONLY the clipped-away part — if it also overlaps the panel, the recursion runs and the rect reappears (leave a
   clear gap to the panel edge). Distinct from macroAttachShowsNoTargetsMessage (genuinely nothing overlapping) — here a
   morph IS there, but clipped out of the candidate list.
@@ -1022,7 +1022,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `InspectorWdgt`'s two content panes — `@list` (left) and `@detail` (right) — each call `disableDrops()` (`InspectorWdgt.coffee:245,266-267`),
   so neither pane adopts a dropped widget. **A drop is resolved by the POINTER's position over the destination**, so drag a box and release it
   with the pointer over each pane in turn. Every time `ActivePointerWdgt.dropTargetFor` finds the pane refuses, walks PAST the inspector and its
-  window (also refusing) to the world (`WorldMorph extends PanelWdgt`, `_acceptsDrops:true`), and `world.add` re-homes the box as a world SIBLING
+  window (also refusing) to the world (`WorldWdgt extends PanelWdgt`, `_acceptsDrops:true`), and `world.add` re-homes the box as a world SIBLING
   painted FULL-SIZE on top. **Make non-nesting unambiguous by dropping the box STRADDLING a pane's edge** (release at `inspector.detail.right()-8`
   / `inspector.list.left()+8`): a world sibling shows WHOLE (overhanging the pane), whereas a widget truly nested into the pane would be CLIPPED at
   its bounds (the panes are clipping scroll/list morphs). (Re-authored from the original two-naked-inspectors version: two 560×410 windows don't
@@ -1115,7 +1115,7 @@ assertion a recapture after a regression silently stores two different hashes an
   Widget (`HandleWdgt.coffee:4`), not just resize chrome on another morph — "resize/move..." on it adds its OWN four
   sub-handles (a moveHandle at the top-left; resizers around it), so FIVE HandleWdgts coexist, and dragging the
   bottom-right one resizes the handle itself (`HandleWdgt.nonFloatDragging` `:219` → `@target.setExtent`). Build `new
-  HandleWdgt` (exactly what the demo "handle" item does — `WorldMorph.createNewHandle`; give it a `rawSetExtent` so the
+  HandleWdgt` (exactly what the demo "handle" item does — `WorldWdgt.createNewHandle`; give it a `rawSetExtent` so the
   striped-triangle glyph is visible), `@moveToAndClickAtFractionOf_InputEvents handle, [0.72,0.75], "right button"` (it
   sets `noticesTransparentClick`, so any point in its box works; the painted part is the bottom-right) → "resize/move..."
   → `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest`; click empty desktop to leave the mode.
@@ -1124,7 +1124,7 @@ assertion a recapture after a regression silently stores two different hashes an
   Distinct from using a handle to resize ANOTHER widget (macroCanMoveAndResizeColorPaletteMorph).
 - **A HandleWdgt attached to NOTHING just float-moves** (`macroHandleAttachedToNothing`): a handle's resize powers come
   entirely from its `@target` (`HandleWdgt.nonFloatDragging` returns early `unless @target`); built bare (`new HandleWdgt()`,
-  target `nil` — exactly what the demo "handle" item makes via `WorldMorph.createNewHandle`) and parented by the world,
+  target `nil` — exactly what the demo "handle" item makes via `WorldWdgt.createNewHandle`) and parented by the world,
   `detachesWhenDragged` (`HandleWdgt.coffee:34`) is TRUE, so a press-drag-release
   (`@syntheticEventsMouseMovePressDragRelease_InputEvents` from a fraction of the handle to a desktop point) FLOAT-drags it
   like any plain morph: it relocates, resizes nothing, and the rest of the desktop is untouched. GOTCHA: the release leaves
@@ -1176,7 +1176,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `mouseClickLeft → trigger()` (MenuItemWdgt's `mouseClickLeft`; `trigger` inherited from `ButtonWdgt.coffee:98-102`), gated on a same-morph mouse-up; a float-drag ends in a DROP
   (`ActivePointerWdgt.processMouseUp:435-436`), never a click → no trigger. Build the button DIRECTLY wired to a VISIBLE action: `new
   MenuItemWdgt true, world, "popUpDemoMenu", "demo", 24, "sans-serif", true` (the same action the world menu's "demo" item uses,
-  `WorldMorph.coffee:1940`; `popUpDemoMenu` self-pops at the hand, `:2241`) + `world.add` + `rawSetExtent` + `reLayout()` (a standalone
+  `WorldWdgt.coffee:1940`; `popUpDemoMenu` self-pops at the hand, `:2241`) + `world.add` + `rawSetExtent` + `reLayout()` (a standalone
   item doesn't size its box to its label, so set the extent + re-centre the big 24pt label — matches the original torn-off menu item).
   (Was a `TriggerMorph`; that deprecated class is gone — its label-bearing button role is now `MenuItemWdgt`, identical float-drag/trigger
   semantics. For a STANDALONE button with NO editable label, `SimpleButtonWdgt` is the modern idiom; here we need the flat big centred
@@ -1262,7 +1262,7 @@ assertion a recapture after a regression silently stores two different hashes an
   click then proves (the whole desktop recolours). To screenshot BETWEEN the menus, hand-roll the
   `setControllerTargetToWidgetProperty…` chain and capture each popup fresh (`targetMenu = @getMostRecentlyOpenedMenu()` right
   after "set target"; `propertyMenu = …` right after the target click), driving later clicks via the captured refs. GOTCHA:
-  clicking "a WorldMorph ➜" parks the pointer on a candidate item whose hover highlight-tints the morph it represents — the
+  clicking "a World ➜" parks the pointer on a candidate item whose hover highlight-tints the morph it represents — the
   WHOLE WORLD — and the property menu pops OVER the item so no mouseLeave fires; hover the property menu's "color" item
   (`@getTextMenuItemFromMenuByPrefix propertyMenu, "color"` + a no-button move) before the shot to clear the tint (and match
   the recording's hover-highlighted row). Prefix "color" is unambiguous: "background color" does not START with it. No new verb.
@@ -1507,7 +1507,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `RectangularAppearance`, painted synchronously; `defaultPanels*`, `PreferencesAndSettings.coffee:122-123`) overrides nothing in the grab
   path, so its held frame is deterministic — no timer/animation/frame-race, and axis-aligned chrome (no trig → immune to the cross-engine
   `Math.sin/cos` issue). Build `new PanelWdgt` + `rawSetExtent` + `world.add` + `fullRawMoveTo` (equivalent to the demo "panel" item, since
-  `WorldMorph.create` IS `pickUp()` and PanelWdgt overrides nothing in the grab path), then the held mid-drag idiom:
+  `WorldWdgt.create` IS `pickUp()` and PanelWdgt overrides nothing in the grab path), then the held mid-drag idiom:
   `@moveToAndMouseDown_InputEvents panel.center()` → `@syntheticEventsMouseMove_InputEvents pt, "left button"` (lifts onto the hand) →
   `takeScreenshot…` (the held panel, fully painted with its drag shadow) → `@syntheticEventsMouseUp_InputEvents()`. The paint-on-pickup
   sibling of `macroDuplicateSimpleWidgetRidesHand` (a DUPLICATE painted-OK the instant it's grabbed) and the held-shadow companion of
@@ -1551,7 +1551,7 @@ assertion a recapture after a regression silently stores two different hashes an
   generic sink: flips `allTestsPassedSoFar`, records the failing test, logs expected-vs-found, but does NOT stop the macro). These
   MUST be `@assert…` toolkit methods — `recordMacroAssertion` has "Macro" mid-token, which the invocation rewriter would mangle in
   macro SOURCE. `macroLonelySliderTargetsWorldOnly`: a lone controller can only target the WORLD — `openTargetSelector` lists
-  bounds-intersecting widgets + always the world (Widget.coffee:846); with nothing overlapping, "a WorldMorph ➜" is the only item.
+  bounds-intersecting widgets + always the world (Widget.coffee:846); with nothing overlapping, "a World ➜" is the only item.
 - **Button-trigger discipline** (`macroButtonTriggersOnlyOnSameMorphMouseUp`): a button fires only when mouse-down AND mouse-up
   land on the SAME morph (`ActivePointerWdgt.processMouseUp` fires only `when w == @mouseDownWdgt`). To show "press then release
   elsewhere does NOT trigger", press on the button and release off it: `@syntheticEventsMouseMovePressDragRelease_InputEvents

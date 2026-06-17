@@ -2,7 +2,7 @@ class TextBoxCreatorButtonWdgt extends CreatorButtonWdgt
 
   constructor: ->
     super
-    @appearance = new TextIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new TextIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "text box"
 
   createWidgetToBeHandled: ->

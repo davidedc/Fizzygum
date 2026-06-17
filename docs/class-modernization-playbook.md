@@ -694,6 +694,12 @@ left as-is (separate non-`Morph` consistency pass). Unlike BATCH 16's experiment
 `CodePromptMorph` (high-recapture — the first big-recapture batch since RectangleMorph), …, `WorldMorph` last. (Non-`*Morph` naming-consistency
 leftovers like `UpperRightTriangleIconicButton` remain a SEPARATE possible pass.)
 
+> **★ THE `*Morph`→`*Wdgt` RENAME PHASE IS COMPLETE (2026-06-17, BATCH 20 = `WorldMorph`).** `rg 'class \w+Morph' src` = NONE; no `*Morph.coffee`
+> files remain; the all-`*Wdgt` end state is reached. The ONLY remaining `*Morph` substrings live inside `\b`-protected COMPOUND identifiers that
+> were deliberately kept throughout (method names `createNew*Morph` / `getHierarchyMenuMorphs` / `hierarchyMenuMorphs`, property `underlyingCanvasMorph`,
+> lowercase locals `errorsLogViewerMorph`, and the already-non-`Morph`-but-inconsistent `UpperRightTriangleIconicButton`) — a SEPARATE, optional
+> "naming-consistency" pass, NOT part of this now-closed class-RENAME phase.
+
 **DONE (2026-06-17): BATCH 19 — the Menu/Prompt family (`MenuMorph`→`MenuWdgt`, `PromptMorph`→`PromptWdgt`, `CodePromptMorph`→`CodePromptWdgt`).**
 The first genuinely high-recapture family since RectangleMorph (B6) — but it collapsed to ONE recapture. Hierarchy: `MenuWdgt extends PopUpWdgt`
 (base, in `src/basic-widgets/menu-system/`) with 2 subclasses — `PromptWdgt` + the already-`*Wdgt` `SaveShortcutPromptWdgt` (its `extends`
@@ -714,3 +720,28 @@ identifiers, out of scope): the `getHierarchyMenuMorphs`/`hierarchyMenuMorphs` m
   content-touched + viz regenerated. **165/165 (Chrome dpr 1+2, WebKit), `--homepage` builds + boots, 1 recapture.** Plan
   `~/.claude/plans/batch19-menu-prompt-rename.md`. Remaining: **`WorldMorph` LAST** (the `window.world` singleton; `"a WorldMorph ➜"` is drawn AND
   asserted via `@assertTopMenuItemStrings` in several tests → genuine recapture).
+
+**DONE (2026-06-17): BATCH 20 — `WorldMorph` → `WorldWdgt` (THE FINALE — closes the rename phase).** The global singleton root (`window.world`;
+`class WorldWdgt extends PanelWdgt`, **0 subclasses** — a LEAF, just the widest: **330 src hits / 128 files** incl. 6 `instanceof` + the
+`new WorldWdgt` singleton instantiation at `src/boot/globalFunctions.coffee:402`). 0 compound identifiers (catch-all = bare token only). Two
+NON-`*.coffee` refs the `src/*.coffee` sweep misses, handled separately: the `src/index.html:34` COMMENT, and the one in-class string-literal
+`WorldWdgt.coffee:1813 if eachMorphClass != "WorldWdgt"` (compares a global class-NAME string in `fullDestroyChildren`; the `\b`-perl converts it
+correctly — `WorldWdgt` still ends in `Wdgt` so the reset-exclusion still fires; verified context). `buildSystem/OBSOLETE generateOverviewDoc.py`'s
+path string left as-is (dead/historical, not run by the build).
+- **Two DISTINCT drawn surfaces, BOTH benign (eyeballed):** (1) a menu HEADER/title shows the widget's FULL class name → `WorldMorph`→`WorldWdgt`
+  (does NOT strip `Wdgt`; e.g. `macroBasicWorldMenuAndBubble`'s world-menu header); (2) hierarchy/targeting menu ITEMS strip `Wdgt` →
+  `"a WorldMorph"`→`"a World"` (e.g. `macroTargetingHighlightsCandidateMorph`'s "choose target:" item). **The header-keeps-full-name vs
+  item-strips-Wdgt split is the key WorldMorph-specific lesson** (earlier batches only ever exercised the item surface).
+- **Behavioral test fixes:** 3× `@assertTopMenuItemStrings ["a WorldMorph ➜"]`→`["a World ➜"]` + 1× nav `"a WorldMorph"`→`"a World"` (collision-safe:
+  no other `"a World…"` label). Proof the assert strips were right: the 2 assert-tests-with-screenshots went RED only on the SCREENSHOT (not the
+  assertion), and the assert-ONLY `macroLonelySliderTargetsWorldOnly` wasn't RED at all.
+- **Recapture = 14 tests** (the largest of the phase) — every test photographing the world-menu header, a targeting/hierarchy item naming the world, or
+  an inspector diagram; all the two benign surfaces above. (`macroRightClickClosesDownstreamSubMenus` recaptured AGAIN — its header
+  `WorldMorph`→`WorldWdgt` — after B19 had recaptured its submenu item.) Bulk-recaptured via the SAFE BATCHED flow (clean ALL SWCanvas refs → build
+  once → `--capture-ref` ×28 → build once → verify) instead of 14× the single-test script (which rebuilds ~3× each) — replicating its
+  clean-rebuild-FIRST / publish-rebuild-BEFORE-verify bracketing across all 14 at once.
+- **Test-side mechanic:** blind `\b`-perl over test `.js` (tags+prose+comments), THEN strip ONLY the QUOTED drawn-label forms anchored on the quote
+  `s/(["'])a WorldWdgt/${1}a World/` — leaving the class.method ref `WorldWdgt.createNewHandle` intact (a `via WorldWdgt` false-positive an
+  UNanchored strip would have broken). 28 test dirs content/ref-touched + viz regenerated.
+- **165/165 (Chrome dpr 1+2, WebKit), `--homepage` builds + boots, 14 recaptures.** Plan `~/.claude/plans/batch20-worldmorph-rename.md`. **★ With this,
+  the `*Morph`→`*Wdgt` rename phase is COMPLETE** (see the banner above the BATCH-19 entry).

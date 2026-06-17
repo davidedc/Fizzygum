@@ -22,7 +22,7 @@ class PatchProgrammingInfoWdgt extends SimpleDocumentWdgt
     # ---------------------
 
     startingContent = new SimplePlainTextWdgt(
-      "Patch Programming",nil,nil,nil,nil,nil,WorldMorph.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "Patch Programming",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22
     startingContent.isEditable = true

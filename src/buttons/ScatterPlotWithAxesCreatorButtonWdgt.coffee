@@ -2,7 +2,7 @@ class ScatterPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
 
   constructor: ->
     super
-    @appearance = new ScatterPlotIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new ScatterPlotIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "scatter plot"
 
   createWidgetToBeHandled: ->

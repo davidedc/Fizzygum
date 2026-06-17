@@ -2,7 +2,7 @@ class BarPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
 
   constructor: ->
     super
-    @appearance = new BarPlotIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new BarPlotIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "bar plot"
 
   createWidgetToBeHandled: ->

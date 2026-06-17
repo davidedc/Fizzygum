@@ -2,7 +2,7 @@ class UsefulTextSnippetsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdg
 
   constructor: ->
     super
-    @appearance = new TemplatesIconAppearance @, WorldMorph.preferencesAndSettings.iconDarkLineColor
+    @appearance = new TemplatesIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
     @toolTipMessage = "Useful text snippets"
 
   createWidgetToBeHandled: ->

@@ -25,7 +25,7 @@ class ScrollPanelWdgt extends PanelWdgt
 
   constructor: (
     @contents,
-    @scrollBarsThickness = (WorldMorph.preferencesAndSettings.scrollBarsThickness),
+    @scrollBarsThickness = (WorldWdgt.preferencesAndSettings.scrollBarsThickness),
     @sliderColor
     ) ->
     # super() paints the ScrollPanel, which we don't want,
@@ -115,7 +115,7 @@ class ScrollPanelWdgt extends PanelWdgt
     # one typically has both scrollbars in view, plus a resizer
     # in bottom right corner, so adjust the width/height of the
     # scrollbars so that there is no overlap between the three things
-    spaceToLeaveOnOneSide = Math.max(@scrollBarsThickness, WorldMorph.preferencesAndSettings.handleSize) + 2 * @padding
+    spaceToLeaveOnOneSide = Math.max(@scrollBarsThickness, WorldWdgt.preferencesAndSettings.handleSize) + 2 * @padding
     hWidth = @width() - spaceToLeaveOnOneSide
     vHeight = @height() - spaceToLeaveOnOneSide
 
@@ -534,7 +534,7 @@ class ScrollPanelWdgt extends PanelWdgt
     # enough that the scroll CLAMPS, so the screenshotted endpoint is
     # frame-cadence-independent even though the path there isn't (see the
     # edge-auto-scroll entry in src/macros/MACRO-PATTERNS.md).
-    inset = WorldMorph.preferencesAndSettings.scrollBarsThickness * 3
+    inset = WorldWdgt.preferencesAndSettings.scrollBarsThickness * 3
     if @isOrphan() then return nil
     hand = world.hand
     @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
@@ -553,7 +553,7 @@ class ScrollPanelWdgt extends PanelWdgt
   
   autoScroll: (pos) ->
     return nil  if Date.now() - @autoScrollTrigger < 500
-    inset = WorldMorph.preferencesAndSettings.scrollBarsThickness * 3
+    inset = WorldWdgt.preferencesAndSettings.scrollBarsThickness * 3
     area = @topLeft().extent new Point @width(), inset
     scrollbarJustChanged = false
     if area.containsPoint(pos)
@@ -625,12 +625,12 @@ class ScrollPanelWdgt extends PanelWdgt
     if Math.abs(x) < Math.abs(y)
       x = 0
 
-    if WorldMorph.preferencesAndSettings.invertWheelX
+    if WorldWdgt.preferencesAndSettings.invertWheelX
       x *= -1
-    if WorldMorph.preferencesAndSettings.invertWheelY
+    if WorldWdgt.preferencesAndSettings.invertWheelY
       y *= -1
     # unused
-    if WorldMorph.preferencesAndSettings.invertWheelZ
+    if WorldWdgt.preferencesAndSettings.invertWheelZ
       z *= -1
 
     if y != 0
@@ -657,7 +657,7 @@ class ScrollPanelWdgt extends PanelWdgt
         @escalateEvent 'wheel', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
       else
         scrollbarJustChanged = true
-        @scrollY y * WorldMorph.preferencesAndSettings.wheelScaleY
+        @scrollY y * WorldWdgt.preferencesAndSettings.wheelScaleY
     if x != 0
       # similar to the vertical case, escalate the scroll in case
       # we are in a nested ScrollPanel situation
@@ -666,7 +666,7 @@ class ScrollPanelWdgt extends PanelWdgt
         @escalateEvent 'wheel', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
       else
         scrollbarJustChanged = true
-        @scrollX x * WorldMorph.preferencesAndSettings.wheelScaleX
+        @scrollX x * WorldWdgt.preferencesAndSettings.wheelScaleX
 
     if scrollbarJustChanged
       @adjustContentsBounds()
