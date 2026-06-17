@@ -137,11 +137,20 @@ clusters (after 5a/5b + the exemplar):
   grandparent scroll panel owns the relationship via a protocol method (the pair could become a
   `descendantGeometryChanged` notify-hook on `ScrollPanelWdgt`, but the text-wrapping distinction
   must be preserved). The pair itself is now named once as
-  `ScrollPanelWdgt.reLayOutAfterContainedPanelChange` — reuse it when this cluster lands. **Study —
-  medium/hard; entangled with Phase 6.**
-- **C — self-is-scroll-panel.** `Widget:~3607,~3616` `if @ instanceof ScrollPanelWdgt then
-  @adjustContentsBounds(); @adjustScrollBars()` (in the attach-selected-widget paths) →
-  **override-hook**: a base no-op `afterAttaching…()` that `ScrollPanelWdgt` overrides.
+  `ScrollPanelWdgt.refitContentsAndScrollBars` (extracted in Cluster C) — reuse it when this cluster
+  lands. **Study — medium/hard; entangled with Phase 6.**
+- **C — self-is-scroll-panel — DONE 2026-06-17.** `Widget`'s two `if @ instanceof ScrollPanelWdgt
+  then @adjustContentsBounds(); @adjustScrollBars()` (the `newParentChoice` /
+  `newParentChoiceWithHorizLayout` attach-selected-widget paths, ~3601/~3610) became
+  `@refitContentsAndScrollBars?()`. Extracted the pair into a new
+  `ScrollPanelWdgt.refitContentsAndScrollBars` (inherited by `ListWdgt` and all scroll-panel
+  subclasses, NO opt-out) and dispatched via `?()` so **nothing lands on `Widget`** (zero recapture
+  — this is why an override-hook with a base no-op on `Widget`, which WOULD recapture the inspector,
+  was avoided). Faithfulness note that *forced a separate method* (NOT reusing Cluster A's
+  `reLayOutAfterContainedPanelChange`): here `instanceof ScrollPanelWdgt` INCLUDES `ListWdgt`, whereas
+  Cluster A EXCLUDED it — so Cluster C must hit a hook `ListWdgt` does NOT opt out of.
+  `reLayOutAfterContainedPanelChange` now delegates to `refitContentsAndScrollBars`. 165/165 Chrome
+  dpr1+dpr2 + WebKit + `--homepage`.
 - **D — WindowWdgt (polish on 5b).** `Widget:480` (content-close closes its window) and `:3477`
   (close-vs-delete menu label) already use `isWindow?()` (5b). Optional upgrade to behaviour-moves
   (e.g. `:3477` → an `addDestroyMenuItem(menu)` overridden by `WindowWdgt`). Low priority.
@@ -162,12 +171,9 @@ clusters (after 5a/5b + the exemplar):
   LayoutSpec value type, different hierarchy); the value-coercion `instanceof` in `Point`/`Rectangle`/
   `Color`; serialization `.className` round-trips; reflection/test-harness class lookups.
 
-**Suggested sequence:** ~~A~~ **DONE** → **C next** (override-hook, mechanical: `Widget:~3607/~3616`
-`if @ instanceof ScrollPanelWdgt then @adjustContentsBounds(); @adjustScrollBars()` → a base no-op
-`afterAttachingSelectedWidget?()` that `ScrollPanelWdgt` overrides to do that pair — note it can reuse
-`reLayOutAfterContainedPanelChange`) → E → B → G → D-polish → F. F and parts of B/E may be folded into
-Phase 6 rather than done standalone. One cluster per step; verify (full recipe) and commit per
-cluster, like 5a/5b/exemplar.
+**Suggested sequence:** ~~A~~ **DONE** → ~~C~~ **DONE** → **E next** (lock-to-panels) → B → G →
+D-polish → F. F and parts of B/E may be folded into Phase 6 rather than done standalone. One cluster
+per step; verify (full recipe) and commit per cluster, like 5a/5b/exemplar.
 
 ---
 

@@ -241,18 +241,26 @@ class ScrollPanelWdgt extends PanelWdgt
     @adjustContentsBounds()
     @adjustScrollBars()
 
-  # A contained panel (e.g. a vertical stack acting as my @contents) tells me
-  # its set of children changed, so I re-fit my contents area and scrollbars.
-  # I return true so the panel knows I took over its re-layout (my
-  # adjustContentsBounds already re-lays my contents out) and needn't do its
-  # own. This is the polymorphic replacement for SimpleVerticalStackPanelWdgt
-  # testing `@amIPanelOfScrollPanelWdgt()`: the stack just notifies its parent,
-  # and only a scroll panel reacts. NB kept SEPARATE from reactToDropOf/
-  # reactToGrabOf on purpose -- a ListWdgt opts OUT of THIS hook (see ListWdgt)
-  # yet still adjusts on its own drops/grabs.
-  reLayOutAfterContainedPanelChange: ->
+  # Re-fit my contents area and my scrollbars: the named "re-fit me" pair, shared
+  # by every trigger that changes what I contain (drops, grabs, attaches, a
+  # contained panel's notification). Inherited by ListWdgt and the other scroll
+  # panels -- they all re-fit the same way (the ListWdgt opt-out below is ONLY
+  # for the contained-panel notification, not for this pair).
+  refitContentsAndScrollBars: ->
     @adjustContentsBounds()
     @adjustScrollBars()
+
+  # A contained panel (e.g. a vertical stack acting as my @contents) tells me
+  # its set of children changed, so I re-fit. I return true so the panel knows I
+  # took over its re-layout (my adjustContentsBounds already re-lays my contents
+  # out) and needn't do its own. This is the polymorphic replacement for
+  # SimpleVerticalStackPanelWdgt testing `@amIPanelOfScrollPanelWdgt()`: the
+  # stack just notifies its parent, and only a scroll panel reacts. NB kept
+  # SEPARATE from refitContentsAndScrollBars / reactToDropOf / reactToGrabOf on
+  # purpose -- a ListWdgt opts OUT of THIS notification (see ListWdgt) yet still
+  # re-fits on its own drops/grabs/attaches.
+  reLayOutAfterContainedPanelChange: ->
+    @refitContentsAndScrollBars()
     return true
 
   adjustContentsBounds: ->

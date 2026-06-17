@@ -3598,18 +3598,24 @@ class Widget extends TreeNode
     # this is what happens when "each" is
     # selected: we attach the selected widget
     @add theWidgetToBeAttached
-    if @ instanceof ScrollPanelWdgt
-      @adjustContentsBounds()
-      @adjustScrollBars()
+    # I just attached the selected widget to myself; if I am a scroll panel my
+    # contents changed, so re-fit them + my scrollbars. Polymorphic dispatch
+    # (?()-soak so nothing lands on Widget): only ScrollPanelWdgt and its
+    # subclasses (incl. ListWdgt) define refitContentsAndScrollBars; on any
+    # other widget this is a no-op -- replacing `if @ instanceof ScrollPanelWdgt`.
+    @refitContentsAndScrollBars?()
 
   # »>> this part is excluded from the fizzygum homepage build
   newParentChoiceWithHorizLayout: (ignored, theWidgetToBeAttached) ->
     # this is what happens when "each" is
     # selected: we attach the selected widget
     @add theWidgetToBeAttached, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    if @ instanceof ScrollPanelWdgt
-      @adjustContentsBounds()
-      @adjustScrollBars()
+    # I just attached the selected widget to myself; if I am a scroll panel my
+    # contents changed, so re-fit them + my scrollbars. Polymorphic dispatch
+    # (?()-soak so nothing lands on Widget): only ScrollPanelWdgt and its
+    # subclasses (incl. ListWdgt) define refitContentsAndScrollBars; on any
+    # other widget this is a no-op -- replacing `if @ instanceof ScrollPanelWdgt`.
+    @refitContentsAndScrollBars?()
   # this part is excluded from the fizzygum homepage build <<«
 
   attach: ->
