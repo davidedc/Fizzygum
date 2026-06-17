@@ -10,6 +10,55 @@ class GraphsPlotsChartsWdgt extends Widget
     @rawSetExtent new Point 200, 200
 
 
+  # This method only paints this very widget's "image",
+  # it doesn't descend the children
+  # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
+  # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
+  # Note that this widget might paint something on the screen even if
+  # it's not a "leaf".
+  #
+  # The whole plot/chart family shares this identical paint scaffold; each
+  # concrete plot supplies only its renderingHelper (the drawing tail) plus its
+  # backgroundColor / backgroundTransparency. (Example3DPlotWdgt keeps its own
+  # copy because it extends Widget directly, not this base.)
+  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
+
+    if @preliminaryCheckNothingToDraw clippingRectangle, aContext
+      return
+
+    [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
+    return nil if w < 1 or h < 1 or area.isEmpty()
+
+    aContext.save()
+
+    # clip out the dirty rectangle as we are
+    # going to paint the whole of the box
+    aContext.clipToRectangle al,at,w,h
+
+    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @backgroundTransparency
+
+    # paintRectangle here is made to work with
+    # al, at, w, h which are actual pixels
+    # rather than logical pixels, this is why
+    # it's called before the scaling.
+    @paintRectangle aContext, al, at, w, h, @backgroundColor
+    aContext.useLogicalPixelsUntilRestore()
+
+    widgetPosition = @position()
+    aContext.translate widgetPosition.x, widgetPosition.y
+
+    @renderingHelper aContext, Color.WHITE, appliedShadow
+
+    aContext.restore()
+
+    # paintHighlight here is made to work with
+    # al, at, w, h which are actual pixels
+    # rather than logical pixels, this is why
+    # it's called outside the effect of the scaling
+    # (after the restore).
+    @paintHighlight aContext, al, at, w, h
+
+
   # see https://stackoverflow.com/a/19303725
   seededRandom: ->
     x = Math.sin(@seed++) * 10000

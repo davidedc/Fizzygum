@@ -155,6 +155,12 @@ class Example3DPlotWdgt extends Widget
   # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
   # Note that this widget might paint something on the screen even if
   # it's not a "leaf".
+  #
+  # NB: this is the SAME paint scaffold the plot family shares on
+  # GraphsPlotsChartsWdgt, but Example3DPlotWdgt extends Widget directly --
+  # reparenting it onto that base would also pull in that base's constructor +
+  # KeepsRatioWhenInVerticalStackMixin (a behaviour change), so this copy is
+  # kept deliberately rather than deduplicated.
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
     if @preliminaryCheckNothingToDraw clippingRectangle, aContext

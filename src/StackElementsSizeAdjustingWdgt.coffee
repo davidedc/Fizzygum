@@ -1,6 +1,6 @@
 # this file is excluded from the fizzygum homepage build
 
-class StackElementsSizeAdjustingWdgt extends Widget
+class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
 
 
   hand: nil
@@ -102,36 +102,10 @@ class StackElementsSizeAdjustingWdgt extends Widget
   #  else
   #    Cursor.resizeTop()
 
-  # This method only paints this very widget's "image",
-  # it doesn't descend the children
-  # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
-  # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this widget might paint something on the screen even if
-  # it's not a "leaf".
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
-    if @preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return
-
-    [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
-    return nil if w < 1 or h < 1 or area.isEmpty()
-
-    aContext.save()
-
-    # clip out the dirty rectangle as we are
-    # going to paint the whole of the box
-    aContext.clipToRectangle al,at,w,h
-
-    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
-
-    # paintRectangle here is made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, this is why
-    # it's called before the scaling.
-    @paintRectangle aContext, al, at, w, h, @color
-    aContext.useLogicalPixelsUntilRestore()
-
-    widgetPosition = @position()
-    aContext.translate widgetPosition.x, widgetPosition.y
+  # The size-adjuster's glyph: a grey filled circle. (The shared background
+  # fill + clip + translate live in
+  # LayoutChromeWdgt.paintIntoAreaOrBlitFromBackBuffer.)
+  drawLayoutChrome: (aContext) ->
     aContext.fillStyle = @color.toString()
     
     centerX = @bounds.width() / 2
@@ -143,13 +117,4 @@ class StackElementsSizeAdjustingWdgt extends Widget
     aContext.fillStyle = Color.GRAY.toString()
     aContext.fill()
     aContext.closePath()
-
-    aContext.restore()
-
-    # paintHighlight is usually made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, so it's generally used
-    # outside the effect of the scaling because
-    # of the ceilPixelRatio (i.e. after the restore)
-    @paintHighlight aContext, al, at, w, h
 

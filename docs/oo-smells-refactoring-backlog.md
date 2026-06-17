@@ -23,7 +23,8 @@ rationale. You should not need the original audit conversation to act on any pha
 | 2 — thin the ~85 `IconWdgt` shells | ✅ DONE 2026-06-17 | `IconWdgt` got a `createAppearance` hook (method, not `@appearanceClass` field — keeps the dependency-finder edge); 89 shells de-constructored, incl. the `ExternalLink`→`VideoPlay` sub-lineage + 6 tooltip shells (which keep a slim ctor) |
 | 0 — dead code (pixel-neutral subset) | ✅ DONE 2026-06-17 | removed the 118-line commented `processDrop` block + orphaned `droppedImage/SVG` stubs + `popUpCenteredInWorld` + video `isPlaying` (134 lines); see Phase 0 notes below for kept/deferred |
 | 4 — `MenuItemSpec` parameter object | ✅ DONE 2026-06-17 | new `MenuItemSpec` value object kills the 17-arg `MenuItemWdgt` ctor (→6) + the `createMenuItem` comment wall (12 args →1); `addMenuItem`/`prependMenuItem` KEEP their positional public API (356 callers untouched — the "~25 call sites" estimate was for the wrong method) and build the spec internally; `maxWidthOfMenuEntries` `instanceof` chain → existence-guarded polymorphic `menuEntryPreferredWidth?()` on the 4 entry types (no `Widget` base method → no inspector recapture). 2 SystemTests that build `MenuItemWdgt` directly updated. |
-| 3, 5–8 | ☐ not started | |
+| 3 — paint-preamble dedup (TARGETED, scope-reduced) | ✅ DONE 2026-06-17 | Investigation found the "uniform 14–18-copy preamble" premise false (4 skeletons + ~6 outliers, 2 hierarchies); per owner decision did the clean dedups only: lifted the byte-identical plot paint method onto `GraphsPlotsChartsWdgt` (Bar/Scatter/Function inherit; 3D kept — reparenting would change behaviour), and extracted a `LayoutChromeWdgt` base (paint scaffold + `drawLayoutChrome` hook) for the spacer/adder/adjuster trio. Left Shape-A/D + outliers as-is. 165/165 dpr1+dpr2+WebKit + --homepage, zero recapture. |
+| 5–8 | ☐ not started | |
 
 All Phase 1 verified: **165/165 Chrome dpr1 + dpr2 + WebKit, `--homepage` boots, zero reference recapture.**
 
@@ -276,6 +277,36 @@ it ranks below the pixel-neutral non-render dedup and must be verified byte-exac
 **Volume:** ~200 L. **Risk:** MEDIUM (must be byte-exact). **[DET]:** yes — read
 `../Fizzygum-tests/DETERMINISM.md`; confirm dpr 2 + WebKit. **Recapture:** ZERO if faithful (any diff
 is a bug, not a baseline shift).
+
+**✅ As built (2026-06-17) — SCOPE REDUCED after investigation (owner-approved):** Reading
+`DETERMINISM.md` + mapping all 19 `paintIntoAreaOrBlitFromBackBuffer` sites showed the "uniform
+14–18-copy preamble → one `drawContents` hook" premise does NOT hold: there are **4 distinct
+skeletons + ~6 outliers across 2 class hierarchies** (Widget subclasses use `@alpha`/`@position()`;
+Appearances use `@widget.alpha`/`@widget.position()`; preliminary-check is bare `return` vs `return
+nil`; alpha multiplicand is `@alpha`/`@widget.alpha`/`@backgroundTransparency`; some pre-fill, some
+don't, some don't even `save`/`clip`/translate). A single Template Method would need ~5 hooks and
+still miss 6 outliers — negative bang-for-buck for the riskiest `[DET]` phase. Per owner decision,
+did only the **clean, blatant-duplication dedups**:
+- **Plot family** — the byte-identical paint method lifted onto `GraphsPlotsChartsWdgt`; `ExampleBar/
+  Scatter/FunctionPlotWdgt` inherit it (each keeps its `renderingHelper`). `Example3DPlotWdgt` keeps
+  its copy: it `extends Widget` directly and reparenting onto the base would also pull in that base's
+  constructor + `KeepsRatioWhenInVerticalStackMixin` (a behaviour change). NB: the plot widgets are
+  in NO SystemTest, so the suite is silent on them — this is a pure mechanical lift (identical body
+  onto an already-extended base) backed by the boot-smoke, not the pixel oracle.
+- **Spacer family** — new `LayoutChromeWdgt` base (homepage-stripped, like its leaves) holds the
+  Shape-B scaffold (bg-box fill → logical px → translate → `drawLayoutChrome` hook) + the
+  `thisSpacerIsTransparent` early-out; `LayoutSpacerWdgt`/`LayoutElementAdderOrDropletWdgt` use the
+  base default `drawLayoutChrome` (their `spacerWidgetRenderingHelper`),
+  `StackElementsSizeAdjustingWdgt` overrides it. These ARE suite-covered.
+
+**Left as-is (documented not-worth-it):** Shape-A appearances (Boxy/CircleBoxy/UpperRightTriangle +
+Handle), Shape-D (RectangularAppearance/DesktopAppearance), and the outliers (LabelButtonWdgt,
+AnalogClock, PenWdgt, the icon scale-variant). Forcing them into a shared template is negative
+bang-for-buck, and `CircleBoxyAppearance` carries a truncated-source `@paintHighlight … w,` defect
+(missing the final `h` arg) best not disturbed under a dedup. The `effectiveAlpha` helper (×19 idiom)
+was also skipped — the multiplicand varies, and putting it on Widget would risk the inspector
+"inherited: on" recapture trap (cf. Phase 0 / Phase 4). Verified **165/165 Chrome dpr1+dpr2 + WebKit
++ `--homepage` boot, zero recapture.**
 
 ---
 

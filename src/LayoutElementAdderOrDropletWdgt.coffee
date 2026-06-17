@@ -1,6 +1,6 @@
 # this file is excluded from the fizzygum homepage build
 
-class LayoutElementAdderOrDropletWdgt extends Widget
+class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
   _acceptsDrops: true
 
   constructor: ->
@@ -8,48 +8,9 @@ class LayoutElementAdderOrDropletWdgt extends Widget
     @setColor Color.BLACK
     @setMinAndMaxBoundsAndSpreadability (new Point 15,15) , (new Point 15,15), LayoutSpec.SPREADABILITY_HANDLES
 
-  # This method only paints this very widget's "image",
-  # it doesn't descend the children
-  # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
-  # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this widget might paint something on the screen even if
-  # it's not a "leaf".
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
-
-    if @preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return
-
-    [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
-    return nil if w < 1 or h < 1 or area.isEmpty()
-
-    aContext.save()
-
-    # clip out the dirty rectangle as we are
-    # going to paint the whole of the box
-    aContext.clipToRectangle al,at,w,h
-
-    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
-
-    # paintRectangle here is made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, this is why
-    # it's called before the scaling.
-    @paintRectangle aContext, al, at, w, h, @color
-    aContext.useLogicalPixelsUntilRestore()
-
-    widgetPosition = @position()
-    aContext.translate widgetPosition.x, widgetPosition.y
-
-    @spacerWidgetRenderingHelper aContext, Color.WHITE, Color.create 200, 200, 255
-
-    aContext.restore()
-
-    # paintHighlight here is made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, this is why
-    # it's called outside the effect of the scaling
-    # (after the restore).
-    @paintHighlight aContext, al, at, w, h
+  # paintIntoAreaOrBlitFromBackBuffer is inherited from LayoutChromeWdgt; this
+  # class supplies only its drawLayoutChrome tail (the base default, via
+  # spacerWidgetRenderingHelper below).
 
   drawHandle: (context) ->
     height = @height()
