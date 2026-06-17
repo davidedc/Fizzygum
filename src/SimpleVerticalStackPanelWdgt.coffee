@@ -111,8 +111,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
         # contained text that OPTED INTO FIT_BOX_TO_TEXT (a SimplePlainTextWdgt or a
         # bare TextWdgt put into that mode) fits its BOX to the TEXT: wrap to the
         # width set above, height follows the wrapped content. We RESPECT the mode
-        # (so a FIT_TEXT_TO_BOX placeholder is left alone); reassert soft-wrap, the
-        # way the old SimplePlainTextWdgt-only maxTextWidth wrap flag did.
+        # (so a FIT_TEXT_TO_BOX placeholder is left alone); reassert soft-wrap.
         if widget.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
           widget.softWrap = true
 

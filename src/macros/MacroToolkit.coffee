@@ -83,7 +83,7 @@ class MacroToolkit
   # NON-scaled guard window, comfortably wider than the hand's 300ms EVENT-TIME double-click
   # recognition window (the forget gate in ActivePointerWdgt.processMouseUp). Two distinct
   # same-spot click gestures are spaced at least this far apart so they never fold into a
-  # false double-click — the replacement for the removed fast-test recognition gate.
+  # false double-click.
   @clickGuardWindowMs: 350
 
   # NON-scaled FLOOR on a press-drag-release's drag span. Some handlers sample the hand
@@ -214,8 +214,7 @@ class MacroToolkit
   # atlases have loaded (no text dirty), then force ONE warm-atlas repaint into
   # the software surface and wait a single doOneCycle for updateBroken (which
   # runs AFTER progressOnMacroSteps) to flush it — so the captured pixels are
-  # identical run-to-run. This is the single SWCanvas screenshot settle gate
-  # (the old command-keyed gate in AutomatorPlayer was removed with the recorder).
+  # identical run-to-run. This is the single SWCanvas screenshot settle gate.
   readyForMacroScreenshot: ->
     # never capture while a scroll-momentum glide is settling (matters for
     # native captures too, hence before the SWCanvas-only early return)
@@ -430,11 +429,9 @@ class MacroToolkit
     @syntheticEventsMouseDown_InputEvents whichButton, startTime + milliseconds + 100
 
   # Click a fractional point [fx, fy] inside a widget — located either by a widget
-  # reference or by a recorded text-description identifier [desc, occ, total]. Mirrors
-  # how a recorded MouseButtonChange replays (AutomatorEventCommandMouseButtonChange):
-  # the landing point is (left + round(width*fx), top + round(height*fy)) of the LIVE
-  # widget, so it follows the widget if it has moved/resized. The linchpin verb for
-  # migrating a recorded click whose target isn't a menu item.
+  # reference or by a text-description identifier [desc, occ, total]. The landing point
+  # is (left + round(width*fx), top + round(height*fy)) of the LIVE widget, so it
+  # follows the widget if it has moved/resized.
   # Resolve a [widget | text-description identifier | Point] + an [fx, fy] fraction to an
   # absolute world Point inside that widget. Shared by the fractional click/double/triple verbs.
   pointAtFractionOf: (widgetOrIdentifier, fraction) ->
@@ -468,8 +465,8 @@ class MacroToolkit
   # Double- / triple-click at a fractional point inside a located widget, driven through the INPUT-EVENT
   # QUEUE like a real user — a positioning move (so the fake pointer shows) then two/three consecutive
   # queued left clicks that the HAND recognises and turns into processDoubleClick/processTripleClick itself
-  # (ActivePointerWdgt). Recognition is purely proximity + the hand's 300ms EVENT-TIME window (the old
-  # fast-test recognition gate is gone): the consecutive-click verb deliberately spaces its clicks ~120ms
+  # (ActivePointerWdgt). Recognition is purely proximity + the hand's 300ms EVENT-TIME window: the
+  # consecutive-click verb deliberately spaces its clicks ~120ms
   # apart (NON-scaled, inside that window) so the hand folds them at EVERY global speed level — the test
   # carries no speed metadata. (A non-scaled minimum gap between DISTINCT click gestures, plus the hand's
   # event-time forget gate, keep two separate clicks from folding into a false double-click.)
@@ -691,7 +688,7 @@ class MacroToolkit
     @moveToAndClick_InputEvents theMenu.label
 
   # Assert the number of items in the most-recently-opened menu (separators counted too,
-  # matching the recorded harness' testNumberOfItems). A macro-level ASSERTION: it pushes no
+  # via testNumberOfItems). A macro-level ASSERTION: it pushes no
   # input events and does not yield, so call it once the menu is open (`yield
   # "waitNoInputsOngoing"` first). Locates the menu by MEANING (not by pointer position) and
   # records PASS/FAIL via recordMacroAssertion, so a mismatch fails the test exactly as a
@@ -701,8 +698,8 @@ class MacroToolkit
     found = theMenu?.testNumberOfItems()
     world.automator.player.recordMacroAssertion (found == expectedCount), "top menu item count", expectedCount, found
 
-  # Assert the item LABEL STRINGS of the most-recently-opened menu, in order (the macro counterpart of the
-  # recorded harness' CheckStringsOfItemsInMenu). Like assertTopMenuItemCount it pushes no input events and does
+  # Assert the item LABEL STRINGS of the most-recently-opened menu, in order.
+  # Like assertTopMenuItemCount it pushes no input events and does
   # not yield — call it once the menu is open. Reads each item's `labelString` via the menu's testItems() and
   # records PASS/FAIL via recordMacroAssertion on the ordered comparison, logging the expected-vs-found strings.
   # NB: this is a TOOLKIT method (called as `@assertTopMenuItemStrings […]`) precisely so the assertion sink
@@ -748,12 +745,10 @@ class MacroToolkit
     else
       world.topWdgtSuchThat (item) -> item instanceof widgetNameOrClass
 
-  # Topmost widget whose getTextDescription() matches a recorded identifier triple
-  # [textDescription, occurrenceIndex, totalOccurrences] — the SAME stable locator the
-  # old recorded tests use (world.getWidgetViaTextLabel / Widget.identifyViaTextLabel).
-  # Accepts a bare string (treated as [string, 0, 1]). This is the linchpin for migrating
-  # recorded tests: every recorded click already stores this triple (as
-  # widgetIdentifierViaTextLabel), so a migrated macro can re-find the very same widget.
+  # Topmost widget whose getTextDescription() matches an identifier triple
+  # [textDescription, occurrenceIndex, totalOccurrences] — a stable locator
+  # (world.getWidgetViaTextLabel / Widget.identifyViaTextLabel).
+  # Accepts a bare string (treated as [string, 0, 1]).
   findWidgetByTextDescription: (identifier) ->
     identifier = [identifier, 0, 1] if typeof identifier == "string"
     world.getWidgetViaTextLabel identifier
@@ -996,12 +991,11 @@ class MacroToolkit
         world.add panel
         panel.fullRawMoveTo topLeftPoint
         text = new TextWdgt "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer rhoncus pharetra nulla, vel maximus lectus posuere a. Phasellus finibus blandit ex vitae varius. Vestibulum blandit velit elementum, ornare ipsum sollicitudin, blandit nunc. Mauris a sapien nibh. Nulla nec bibendum quam, eu condimentum nisl. Cras consequat efficitur nisi sed ornare. Pellentesque vitae urna vitae libero malesuada pharetra. Pellentesque commodo, nulla mattis vulputate porttitor, elit augue vestibulum est, nec congue ex dui a velit. Nullam lectus leo, lobortis eget erat ac, lobortis dignissim magna. Morbi ac odio in purus blandit dignissim. Maecenas at sagittis odio."
-        # a bare TextWdgt now SELF-SIZES as contained text: put it in
+        # a bare TextWdgt SELF-SIZES as contained text: put it in
         # FIT_BOX_TO_TEXT and it wraps to its own width and grows its HEIGHT to the
         # wrapped content (FLOAT/SCALEDOWN = render at the set font size, never
         # crop). Wrap it to 185px so the tall result OVERFLOWS the 200px panel → a
-        # vertical scrollbar shows. (This used to hand-roll the measure + set-height
-        # because TextWdgt couldn't self-size; the FIT_BOX_TO_TEXT arc fixed that.)
+        # vertical scrollbar shows.
         text.fittingSpec = FittingSpecText.FIT_BOX_TO_TEXT
         text.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
         text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN

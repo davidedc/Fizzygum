@@ -1773,9 +1773,8 @@ class Widget extends TreeNode
   # re-painted with its actual (possibly semi-transparent) pixels at
   # appliedShadow.alpha, so a transparent text widget casts a faint copy of its
   # GLYPHS and a semi-transparent panel-with-text casts a faint copy of fill AND
-  # content together. (There is no per-glyph / per-widget baked shadow: the old
-  # string/text widget shadowOffset/shadowColor route was removed and is
-  # deliberately not reintroduced.)
+  # content together. (There is no per-glyph / per-widget baked shadow: a
+  # per-glyph shadowOffset/shadowColor route is deliberately not reintroduced.)
   # If appliedShadow is defined, it means that we are painting the whole
   # of the widget recursively AS SHADOW. Since there are no shadows of a shadow
   # so we can skip the "just shadow" part, and we paint the widget as shadow.
@@ -3080,7 +3079,7 @@ class Widget extends TreeNode
       "erat ac, lobortis dignissim " +
       "magna.",nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     newWdgt.isEditable = true
-    # non-wrapping ("code view"): hug the natural text width (was maxTextWidth = nil).
+    # non-wrapping ("code view"): hug the natural text width.
     newWdgt.softWrap = false
 
     world.add newWdgt
@@ -4245,9 +4244,9 @@ class Widget extends TreeNode
     # probably have split Widgets for the new layouts mechanism.
     # FIT_BOX_TO_TEXT content re-sizes its OWN height to its text, so hand it the
     # full bounds (origin + extent) in one shot; everything else just takes the
-    # new extent (its origin was already set by the fullRawMoveTo above). Was
-    # `instanceof SimplePlainTextWdgt` — now ANY contained TextWdgt qualifies (a
-    # non-text widget has no fittingSpec, so it falls through to the else).
+    # new extent (its origin was already set by the fullRawMoveTo above). ANY
+    # contained TextWdgt qualifies (a non-text widget has no fittingSpec, so it
+    # falls through to the else).
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
       @rawSetBounds newBoundsForThisLayout
     else

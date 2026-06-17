@@ -479,8 +479,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # to the width we set generically above and its height follows the wrapped
       # content. We RESPECT the mode rather than imposing it, so the empty-window
       # placeholder — a TextWdgt that stays FIT_TEXT_TO_BOX — is left alone. Here we
-      # only (re)assert soft-wrap, the way the old SimplePlainTextWdgt-only
-      # `maxTextWidth = …` wrap flag did (the actual reflow is driven by the generic
+      # only (re)assert soft-wrap (the actual reflow is driven by the generic
       # width-set above → the widget's own FIT_BOX_TO_TEXT reLayout).
       if @contents.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
         @contents.softWrap = true

@@ -65,7 +65,6 @@ class WorldWdgt extends PanelWdgt
   # these variables shouldn't be static to the WorldWdgt, because
   # in pure theory you could have multiple worlds in the same
   # page with different settings
-  # (but anyways, it was global before, so it's not any worse than before)
   @preferencesAndSettings: nil
 
   @dateOfPreviousCycleStart: nil
@@ -2021,8 +2020,8 @@ class WorldWdgt extends PanelWdgt
       "am Ende Schiffer und Kahn, und das hat mit ihrem " +
       "Singen, die Loreley getan.")
     newWdgt.isEditable = true
-    # (maxTextWidth was an old-text widget-only knob; TextWdgt wraps to its own
-    # width via softWrap, like the createNewTextWdgtWithBackground demo.)
+    # TextWdgt wraps to its own width via softWrap, like the
+    # createNewTextWdgtWithBackground demo.
     @create newWdgt
   createNewSpeechBubbleWdgt: ->
     newWdgt = new SpeechBubbleWdgt

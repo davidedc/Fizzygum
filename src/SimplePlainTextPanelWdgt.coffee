@@ -26,7 +26,7 @@ class SimplePlainTextPanelWdgt extends PanelWdgt
       textAsString,nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     ostmA.isEditable = true
     if !wraps
-      # non-wrapping ("code view"): hug the natural text width (was maxTextWidth = 0).
+      # non-wrapping ("code view"): hug the natural text width.
       ostmA.softWrap = false
     ostmA.enableSelecting()
     @add ostmA

@@ -24,13 +24,11 @@ class CaretWdgt extends BlinkerWdgt
     # font could be really small I guess?
     @minimumExtent = new Point 1,1
 
-    # (The deleted old text widget had to be forced left-aligned while editing
-    # because it couldn't manage the caret under non-left string alignment. The
-    # modern TextWdgt handles the caret correctly under every
+    # TextWdgt handles the caret correctly under every
     # AlignmentSpecHorizontal — its slotCoordinates / slotAtSingleLineString
     # account for the per-line shift — so no force-left is needed; see
     # SystemTest_macroTextWdgtCaretPlacementUnderAlignments and
-    # SystemTest_macroTextWdgtCaretKeepsCorrectAlignment.)
+    # SystemTest_macroTextWdgtCaretKeepsCorrectAlignment.
     @adjustAccordingToTargetText()
 
   adjustAccordingToTargetText: ->

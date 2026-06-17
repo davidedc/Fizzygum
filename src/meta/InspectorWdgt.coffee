@@ -114,8 +114,7 @@ class InspectorWdgt extends Widget
     # Without a WindowWdgt to size it, doLayout would divide the Widget-default
     # ~50x40 across three panes and collapse them. The windowed path
     # (Widget::spawnInspector) overrides this via the window's setExtent, so
-    # setting it here is windowed-pixel-neutral. (The previous
-    # `super new Point 300,300` was a no-op — Widget::constructor takes no args.)
+    # setting it here is windowed-pixel-neutral.
     @silentRawSetExtent new Point 560, 410
 
     # When free-floating (naked on the desktop) the inspector paints its own

@@ -149,16 +149,16 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
       even = i % 2 == 0
       pos = bufferGeometry
 
-      # in the previous implementation there were artifacts at the "top" and "bottom"
+      # This flag only enables edge removal when we are on a triangle that is
+      # co-planar with the one before or the one after (because to remove an edge
+      # you need to treat *both* triangles along an edge, otherwise you still see
+      # half an edge). Without it there are artifacts at the "top" and "bottom"
       # of spheres, where triangles don't define quads "in pairs", and some
-      # edges would be missing. I added this additional flag to only enable
-      # edge removal when we are on a triangle that is co-planar with the one
-      # before or the one after (because to remove an edge you need to treat *both*
-      # triangles along an edge, otherwise you still see half an edge)
+      # edges would be missing.
       # This is sort of a hack because it only works when geometry is generated in a
       # specific way where quads are made of consecutive triangles - while this is
       # not generally true, it works when Three.js generates the geometry, which is what
-      # this algorithm was assuming before anyways.
+      # this algorithm assumes.
       consecutiveCoPlanarFaces = false
       if i > 0 and i < count - 1
         consecutiveCoPlanarFacesBefore = (@coPlanar pos[i*9 + 0], pos[i*9 + 1], pos[i*9 + 2], pos[i*9 + 3], pos[i*9 + 4], pos[i*9 + 5], pos[i*9 + 6], pos[i*9 + 7], pos[i*9 + 8], pos[(i-1)*9 + 0], pos[(i-1)*9 + 1], pos[(i-1)*9 + 2]) and
@@ -368,8 +368,8 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
     #   verts = window.twgl.primitives.createCubeVertices 1
     #   @unindexBufferGeometry verts
     #   verts.barycentric = @setUpBarycentricCoordinates(verts.position, verts.normal)
-    # however the setUpBarycentricCoordinates function is specific just for this, so we removed it
-    # on 3/8/2021 and just baked in here the result.
+    # however the setUpBarycentricCoordinates function would be specific just for
+    # this, so instead the result is baked in here.
     verts.position = [0.5,0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5]
     verts.normal = [1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1]
     verts.barycentric = [1,1,0,0,1,0,0,1,1,1,0,1,0,1,1,0,0,1,1,1,0,0,1,0,0,1,1,1,0,1,0,1,1,0,0,1,1,1,0,0,1,0,0,1,1,1,0,1,0,1,1,0,0,1,1,1,0,0,1,0,0,1,1,1,0,1,0,1,1,0,0,1,1,1,0,0,1,0,0,1,1,1,0,1,0,1,1,0,0,1,1,1,0,0,1,0,0,1,1,1,0,1,0,1,1,0,0,1]

@@ -54,11 +54,11 @@ class StringWdgt extends Widget
   # used, say, on a text in a ScrollPanelWdgt.
   isScrollable: true
 
-  # When true, the box re-sizes itself to its text on every setText (the OLD
-  # string/text widget "box hugs text" behaviour). Set by
-  # sizeToTextAndDisableFitting; OFF by default so a generic StringWdgt in a
-  # layout still fits its text into its FIXED box (the modern model). See
-  # sizeToTextAndDisableFitting for why the chrome labels need this.
+  # When true, the box re-sizes itself to its text on every setText ("box hugs
+  # text" behaviour). Set by sizeToTextAndDisableFitting; OFF by default so a
+  # generic StringWdgt in a layout still fits its text into its FIXED box (the
+  # modern model). See sizeToTextAndDisableFitting for why the chrome labels
+  # need this.
   autoSizeBoxToText: false
 
   # startMark and endMark contain the slot of the
@@ -119,15 +119,12 @@ class StringWdgt extends Widget
   # empty-window placeholder text — a FIT_TEXT_TO_BOX TextWdgt — is left alone),
   # and a FIT_BOX_TO_TEXT widget notifies its container via
   # refreshScrollPanelWdgtOrVerticalStackIfIamInIt so the surrounding layout
-  # follows. (This retired the old SimplePlainTextWdgt-only `maxTextWidth` knob, a
-  # dead-text widget vestige, and three `instanceof SimplePlainTextWdgt` leaks.)
+  # follows.
   #
-  # HISTORY: an abandoned early string-widget experiment experiment once sketched FIT_BOX_TO_TEXT but
-  # was a dead end — it lived ONLY in the menu (items toggled ticks with a "TODO
-  # actually do something", tight/loose were wired to the wrong toggle, and no code
-  # read the mode to resize the widget). The feature was rebuilt HERE instead (where
-  # the SWCanvas font cap, ControllerMixin and undo/redo already live); do NOT
-  # resurrect that copy's no-op handlers.
+  # Keep FIT_BOX_TO_TEXT implemented HERE (where the SWCanvas font cap,
+  # ControllerMixin and undo/redo already live); do NOT re-introduce a menu-only
+  # version whose toggle items are no-op handlers that don't actually resize the
+  # widget — that approach was tried and is a dead end.
   # ===========================================================================
   fittingSpecWhenBoundsTooLarge: FittingSpecTextInLargerBounds.FLOAT
   fittingSpecWhenBoundsTooSmall: FittingSpecTextInSmallerBounds.CROP
@@ -768,8 +765,8 @@ class StringWdgt extends Widget
     # NB: no SHADOW is baked into this buffer. hasDarkOutline below is an OUTLINE
     # (offset black glyph copies, for legibility against busy backgrounds), NOT a
     # shadow. A text widget's shadow is the unified widget drop-shadow (see
-    # Widget.coffee "How the shadow painting works" + addShadow); the old per-glyph
-    # shadowOffset/shadowColor route was removed and is deliberately not reintroduced.
+    # Widget.coffee "How the shadow painting works" + addShadow); a per-glyph
+    # shadowOffset/shadowColor route is deliberately not used here.
     if @hasDarkOutline
       backBufferContext.fillStyle = Color.BLACK.toString()
       backBufferContext.fillText text, textHorizontalPosition+0, textVerticalPosition+0
@@ -1146,25 +1143,21 @@ class StringWdgt extends Widget
     # scale-up/scale-down search is broken FOR this mode: the FIT_BOX_TO_TEXT
     # render leaks force every fit-measurement to @originallySetFontSize, so
     # searchLargestFittingFont sees "every candidate size fits" and returns the
-    # MAXIMUM (a giant font). SimplePlainTextWdgt avoided this only because its
-    # ctor pins fittingSpecWhenBoundsTooLarge = FLOAT (no scale-up search); a bare
+    # MAXIMUM (a giant font). SimplePlainTextWdgt sidesteps this because its ctor
+    # pins fittingSpecWhenBoundsTooLarge = FLOAT (no scale-up search); a bare
     # TextWdgt defaults to SCALEUP, so the mode itself must force the set size.
-    # (This yields the identical @originallySetFontSize SimplePlainTextWdgt's FLOAT
-    # path already returned — so it is behaviour-preserving for existing content.)
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
       @setFittingFontSize @originallySetFontSize
     else
       @setFittingFontSize @fitToExtent()
 
-  # Reproduce the OLD string/text widget "the BOX sizes itself to the TEXT"
-  # behaviour for chrome labels (menu items, menu headers, tooltips, plain
-  # buttons) that were ported off the now-deleted string/text widget family
-  # onto this modern one. The modern family does the OPPOSITE — it fits the
-  # TEXT into a FIXED box and never resizes its own extent (see the FITTING
-  # MODEL comment above) — so a freshly-built label is the 50×40 Widget default,
-  # not the width of its text. Chrome layout reads @label.extent() right after
-  # construction to size its container, so each such label must instead make its
-  # OWN extent track the text. This helper does that:
+  # Make "the BOX sizes itself to the TEXT" behaviour for chrome labels (menu
+  # items, menu headers, tooltips, plain buttons). The default model does the
+  # OPPOSITE — it fits the TEXT into a FIXED box and never resizes its own extent
+  # (see the FITTING MODEL comment above) — so a freshly-built label is the 50×40
+  # Widget default, not the width of its text. Chrome layout reads @label.extent()
+  # right after construction to size its container, so each such label must
+  # instead make its OWN extent track the text. This helper does that:
   #   - pin fittingSpecWhenBoundsTooLarge = FLOAT  → never grow the font;
   #   - pin fittingSpecWhenBoundsTooSmall = SCALEDOWN → never ellipsise the text
   #     and never pop the "edit:" PromptWdgt (that is gated on == CROP, see
@@ -1172,12 +1165,12 @@ class StringWdgt extends Widget
   #   - measure the text at its set font size and resize the box to it.
   # With box == text the "bounds too small" branch is unreachable, so neither
   # cropping, the edit-prompt, nor any font scaling ever fires — i.e. it draws
-  # the text at its exact set size, just like the old family did.
+  # the text at its exact set size.
   # (TextWdgt overrides this with a multi-line, soft-wrap-off variant.)
   sizeToTextAndDisableFitting: ->
     # remember the box-hugs-text mode so a later setText (e.g. editing a button
-    # label in place, where the OLD family reLayout'd on every setText) keeps the
-    # box tracking the text instead of cramming the new text into the stale box.
+    # label in place) keeps the box tracking the text instead of cramming the new
+    # text into the stale box.
     @autoSizeBoxToText = true
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
     @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
@@ -1208,9 +1201,9 @@ class StringWdgt extends Widget
       @checkIfTextContentWasModifiedFromTextAtStart()
       @synchroniseTextAndActualText()
       # chrome labels (menu items, button captions, …) keep their box hugging the
-      # text on every edit, the way the OLD family reLayout'd on setText; without
-      # this the new text would be crammed/scaled into the box sized to the OLD
-      # text. Generic StringWdgts leave the flag off and keep their fixed box.
+      # text on every edit; without this the new text would be crammed/scaled into
+      # the box sized to the OLD text. Generic StringWdgts leave the flag off and
+      # keep their fixed box.
       if @autoSizeBoxToText
         @sizeToTextAndDisableFitting()
       @changed()
@@ -1241,10 +1234,9 @@ class StringWdgt extends Widget
 
     if newSize != @originallySetFontSize
       @originallySetFontSize = newSize
-      # a box-hugs-text widget (chrome label, or an old-family-style demo target)
-      # tracked its text size on a font change too, the way the old family
-      # reLayout'd on setFontSize; otherwise the bigger/smaller font would just be
-      # fitted into the box sized for the old font.
+      # a box-hugs-text widget (e.g. a chrome label) must track its text size on a
+      # font change too; otherwise the bigger/smaller font would just be fitted
+      # into the box sized for the old font.
       if @autoSizeBoxToText
         @sizeToTextAndDisableFitting()
       @changed()

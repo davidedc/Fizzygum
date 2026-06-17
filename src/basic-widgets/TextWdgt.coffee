@@ -201,9 +201,8 @@ class TextWdgt extends StringWdgt
   getTextWrappingData: (overrideFontSize, maxTextWidth, text, paragraphs, justCheckIfItFitsInThisExtent) ->
     # FIT_BOX_TO_TEXT renders at the SET font size and grows the box to the text
     # (it never scales the font or crops to fit), so never take the fit-check
-    # fast-path and always measure at @originallySetFontSize. (This used to be
-    # `if @ instanceof SimplePlainTextWdgt` — the behaviour now follows the mode,
-    # not the subclass, so a bare contained TextWdgt gets it too.)
+    # fast-path and always measure at @originallySetFontSize. The behaviour
+    # follows the mode, not the subclass, so a bare contained TextWdgt gets it too.
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
       justCheckIfItFitsInThisExtent = null
       overrideFontSize = @originallySetFontSize
@@ -308,7 +307,7 @@ class TextWdgt extends StringWdgt
   breakTextIntoLines: (text = (@transformTextOneToOne @text), overrideFontSize, justCheckIfItFitsInThisExtent) ->
 
     # FIT_BOX_TO_TEXT always breaks the text at the SET font size (the box is what
-    # grows; the font is never scaled). Was `if @ instanceof SimplePlainTextWdgt`.
+    # grows; the font is never scaled).
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
       overrideFontSize = @originallySetFontSize
 
@@ -362,10 +361,9 @@ class TextWdgt extends StringWdgt
 
   # multi-line variant of the StringWdgt helper: size the box to the NATURAL,
   # un-soft-wrapped text — the widest hard-newline-separated line × the line
-  # count — reproducing the old text widget.reLayout (maxTextWidth == 0 case:
-  # width = maxLineWidth, height = lines × fontHeight). softWrap is turned OFF so
-  # the text never re-wraps to the container; the box just hugs the text. See
-  # StringWdgt::sizeToTextAndDisableFitting for the full rationale.
+  # count (width = maxLineWidth, height = lines × fontHeight). softWrap is turned
+  # OFF so the text never re-wraps to the container; the box just hugs the text.
+  # See StringWdgt::sizeToTextAndDisableFitting for the full rationale.
   sizeToTextAndDisableFitting: ->
     @softWrap = false
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
@@ -381,12 +379,11 @@ class TextWdgt extends StringWdgt
     @
 
   # FIT_BOX_TO_TEXT layout pass: resize our OWN extent to hug the text. This is
-  # the contained-text engine — it used to live on SimplePlainTextWdgt.reLayout
-  # (and, before that, the deleted text widget.reLayout); it now lives on the base
-  # gated by the mode, so ANY TextWdgt used as window / panel / scroll content
-  # (not just a SimplePlainTextWdgt) re-wraps + auto-heights. It belongs in this
-  # LAYOUT pass, NOT in reflowText / the paint path (createRefreshOrGetBackBuffer
-  # must not change the extent — it only recomputes the paint height).
+  # the contained-text engine — gated by the mode, so ANY TextWdgt used as window
+  # / panel / scroll content (not just a SimplePlainTextWdgt) re-wraps +
+  # auto-heights. It belongs in this LAYOUT pass, NOT in reflowText / the paint
+  # path (createRefreshOrGetBackBuffer must not change the extent — it only
+  # recomputes the paint height).
   #   - softWrap ON  → HEIGHT_ADJUSTS_TO_WIDTH: keep the width (the container
   #     feeds it), wrap the text to it, the height follows the line count.
   #   - softWrap OFF → the box hugs the NATURAL (un-wrapped) text width — the
@@ -423,9 +420,9 @@ class TextWdgt extends StringWdgt
     @changed()
 
   # a FIT_BOX_TO_TEXT widget re-wraps + re-heights to the new measure whenever its
-  # extent is set by the layout (a container resize feeds it the width). Was an
-  # override on SimplePlainTextWdgt; now on the base, gated by the mode, so it is
-  # a no-op for a normal free-floating (FIT_TEXT_TO_BOX) TextWdgt.
+  # extent is set by the layout (a container resize feeds it the width). Gated by
+  # the mode, so it is a no-op for a normal free-floating (FIT_TEXT_TO_BOX)
+  # TextWdgt.
   rawSetExtent: (aPoint) ->
     super
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT then @reLayout()
@@ -433,16 +430,15 @@ class TextWdgt extends StringWdgt
   # ── Edit triggers for CONTAINED (FIT_BOX_TO_TEXT) text ──────────────────────
   # When a FIT_BOX_TO_TEXT TextWdgt's text content / font / style changes, the box
   # must re-flow to the new measure (reLayout) AND the surrounding layout must
-  # follow (refreshScrollPanelWdgtOrVerticalStackIfIamInIt). These triggers used to
-  # live on SimplePlainTextWdgt's setText/setFontSize/setFontName/toggle* overrides;
-  # they now live here, gated by the mode, so ANY contained TextWdgt (not just a
-  # SimplePlainTextWdgt) re-flows on its OWN edit — full parity, so a bare
-  # FIT_BOX_TO_TEXT TextWdgt is a drop-in for SimplePlainTextWdgt (the container
-  # RESIZE path is the rawSetExtent override above; this is the content-CHANGE path).
+  # follow (refreshScrollPanelWdgtOrVerticalStackIfIamInIt). Gated by the mode, so
+  # ANY contained TextWdgt (not just a SimplePlainTextWdgt) re-flows on its OWN
+  # edit — a bare FIT_BOX_TO_TEXT TextWdgt is a drop-in for SimplePlainTextWdgt
+  # (the container RESIZE path is the rawSetExtent override above; this is the
+  # content-CHANGE path).
   # For a free-floating FIT_TEXT_TO_BOX TextWdgt (the default — e.g. the empty-window
   # placeholder WindowContentsPlaceholderText, or FizzytilesCodeWdgt) this is a
   # no-op: the box is fixed, so we must NOT reflow it or poke the container (the
-  # Arc-6 "respect the mode, don't impose it" rule — see the FITTING MODEL comment
+  # "respect the mode, don't impose it" rule — see the FITTING MODEL comment
   # in StringWdgt).
   reLayoutAndRefreshContainerIfContainedText: ->
     if @fittingSpec != FittingSpecText.FIT_BOX_TO_TEXT then return
@@ -503,7 +499,6 @@ class TextWdgt extends StringWdgt
     # FIT_BOX_TO_TEXT paints exactly lineCount × fontHeight tall at the SET font
     # size (the box was already grown to this by reLayout; here we only recompute
     # the paint height, we do NOT resize — see the "no extent changes" note above).
-    # Was `if @ instanceof SimplePlainTextWdgt`.
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
       contentHeight = @wrappedLines.length *  Math.ceil @fontHeight @originallySetFontSize
 

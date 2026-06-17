@@ -6,8 +6,7 @@
 # (ButtonWdgt is transparent, SimpleButtonWdgt is a rounded box).
 #
 # This is the shared base of MenuItemWdgt (menu rows) and MagnetWdgt
-# (fizzytiles word tiles) -- the role the deprecated trigger button used to fill,
-# now on the modern button family.
+# (fizzytiles word tiles).
 
 class LabelButtonWdgt extends ButtonWdgt
 
@@ -21,7 +20,7 @@ class LabelButtonWdgt extends ButtonWdgt
   fontSize: nil
   fontStyle: nil
 
-  # the flat state-fill look (formerly trigger button's)
+  # the flat state-fill look
   highlightColor: Color.SILVER
   pressColor: Color.GRAY
   centered: false
@@ -171,8 +170,8 @@ class LabelButtonWdgt extends ButtonWdgt
     @escalateEvent "mouseDownLeft", pos
 
   # HighlightableMixin would reset @state to NORMAL on mouse-up; a label button
-  # must NOT (a selected list row keeps its STATE_PRESSED highlight, and
-  # trigger button -- our old base -- had no mouseUpLeft). So neutralise it.
+  # must NOT (a selected list row keeps its STATE_PRESSED highlight). So
+  # neutralise it.
   mouseUpLeft: ->
 
   mouseClickLeft: ->

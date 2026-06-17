@@ -1,11 +1,11 @@
 # this file is excluded from the fizzygum homepage build
 
 # A draggable "fridge magnet" tile: a flat labeled button (LabelButtonWdgt) that
-# is draggable (rejectDrags=false) rather than a menu row. It used to extend the
-# deprecated trigger button; the generic flat-label-button machinery it relies on
-# (label, flat paint, centring) now lives in LabelButtonWdgt, so it needs no
-# label/paint code of its own -- the base's single-line StringWdgt createLabel is
-# exactly what a magnet wants (a self-sized label, no box resize).
+# is draggable (rejectDrags=false) rather than a menu row. The generic
+# flat-label-button machinery it relies on (label, flat paint, centring) lives in
+# LabelButtonWdgt, so it needs no label/paint code of its own -- the base's
+# single-line StringWdgt createLabel is exactly what a magnet wants (a self-sized
+# label, no box resize).
 
 class MagnetWdgt extends LabelButtonWdgt
 

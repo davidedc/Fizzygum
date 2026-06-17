@@ -5,20 +5,13 @@
 # just blurts itself out across the screen; for one-off long text scroll it in a
 # SimplePlainTextScrollPanelWdgt.)
 #
-# SimplePlainTextWdgt is now a THIN specialization of TextWdgt: its ctor just opts
+# SimplePlainTextWdgt is a THIN specialization of TextWdgt: its ctor just opts
 # into FIT_BOX_TO_TEXT (the contained-text mode) — see TextWdgt::reLayout and the
-# FITTING MODEL comment in StringWdgt. It USED to be a "compatibility layer" that
-# hard-coded this behaviour through the dead-text widget `maxTextWidth` knob and
-# three `instanceof SimplePlainTextWdgt` leaks in the base, with a TODO to do "a
-# larger layout rework". That rework is the FIT_BOX_TO_TEXT arc: it retired
-# maxTextWidth + the leaks and moved the contained-reflow engine onto the base
-# gated by the mode, so ANY TextWdgt (not just this one) can now be contained text.
-# A follow-up then moved the EDIT triggers up too: the reLayout +
-# refreshScrollPanelWdgtOrVerticalStackIfIamInIt that re-flow the box and nudge the
-# container on setText/setFontSize/setFontName/toggle* now live on the base
-# (TextWdgt::reLayoutAndRefreshContainerIfContainedText, gated by the mode), so a
-# bare FIT_BOX_TO_TEXT TextWdgt re-flows on its OWN setText too and is a full
-# drop-in for this class.
+# FITTING MODEL comment in StringWdgt. The contained-reflow engine and the EDIT
+# triggers (the reLayout + refreshScrollPanelWdgtOrVerticalStackIfIamInIt that
+# re-flow the box and nudge the container on setText/setFontSize/setFontName/toggle*)
+# live on the base (TextWdgt::reLayoutAndRefreshContainerIfContainedText, gated by
+# the mode), so ANY TextWdgt (not just this one) can be contained text.
 # What's left specific to THIS class is its CONTROLLER chrome: pinning
 # layoutSpecDetails.canSetHeightFreely = false (height is content-driven), the
 # scroll-panel soft-wrap toggle (softWrapOn/Off), the "set target" controller menu +
@@ -46,9 +39,9 @@ class SimplePlainTextWdgt extends TextWdgt
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
     @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
     # this widget IS the contained-text case: fit the BOX to the TEXT (width from
-    # the layout, height from the wrapped content). The sizing now lives on the
+    # the layout, height from the wrapped content). The sizing lives on the
     # base TextWdgt::reLayout, driven by this mode; softWrap (true by default on
-    # TextWdgt = wrap to the given width) is what used to be @maxTextWidth = true.
+    # TextWdgt) wraps to the given width.
     @fittingSpec = FittingSpecText.FIT_BOX_TO_TEXT
     @reLayout()
 
@@ -152,9 +145,9 @@ class SimplePlainTextWdgt extends TextWdgt
 
   # setText (above) + the inherited setFontSize / setFontName / toggleShowBlanks /
   # toggleWeight / toggleItalic / toggleIsPassword all re-flow the box AND nudge the
-  # container via TextWdgt::reLayoutAndRefreshContainerIfContainedText now (gated by
-  # FIT_BOX_TO_TEXT), so this class no longer overrides them. softWrapOn/Off (above)
-  # stay — they are scroll-panel-specific (they flip @parent.parent.isTextLineWrapping).
+  # container via TextWdgt::reLayoutAndRefreshContainerIfContainedText (gated by
+  # FIT_BOX_TO_TEXT). softWrapOn/Off (above) are scroll-panel-specific (they flip
+  # @parent.parent.isTextLineWrapping).
 
   blendInWithPanelColor: ->
     if @backgroundColor.equals WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
@@ -163,14 +156,3 @@ class SimplePlainTextWdgt extends TextWdgt
   contrastOutFromPanelColor: ->
     if @backgroundColor.equals Color.create 249, 249, 249
       @setBackgroundColor WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
-
-  # NOTE: the reLayout that used to live here — the contained-text sizing (wrap to
-  # the given width, height = lineCount × fontHeight; or hug the natural width when
-  # not wrapping) — now lives on the base TextWdgt::reLayout, gated by
-  # fittingSpec == FIT_BOX_TO_TEXT (set in this ctor). It reads @softWrap where it
-  # used to read @maxTextWidth. Likewise rawSetExtent (re-layout on a container
-  # resize) and the setText/setFontSize/setFontName/toggle* edit triggers (reLayout +
-  # refreshScrollPanelWdgtOrVerticalStackIfIamInIt, via
-  # TextWdgt::reLayoutAndRefreshContainerIfContainedText) are inherited base overrides.
-  # setText is still overridden above, but only for the controller plumbing (the
-  # token guard + updateTarget) — it delegates the re-flow to the base via super.

@@ -3,8 +3,7 @@
 # A menu row. It extends LabelButtonWdgt (the flat label-bearing button base, on
 # the modern ButtonWdgt family) and adds the menu-specific behaviour: a
 # self-sizing multi-line TextWdgt label, tick toggling, list-row selection, and
-# the "represents a widget" hover-highlight. (It used to extend the deprecated
-# trigger button, whose generic flat-button machinery now lives in LabelButtonWdgt.)
+# the "represents a widget" hover-highlight.
 
 class MenuItemWdgt extends LabelButtonWdgt
 

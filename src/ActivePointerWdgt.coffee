@@ -494,7 +494,7 @@ class ActivePointerWdgt extends Widget
               # EVENT-TIME window (the forget gate above; deterministic, NOT wall-clock):
               # synthetic macro clicks deliberately space their two clicks ~120ms apart
               # (inside the window) and keep a non-scaled minimum gap between DISTINCT
-              # click gestures (MacroToolkit), so the old fast-test recognition gate is gone.
+              # click gestures (MacroToolkit).
               doubleClickInvocation = true
               # triple-click detection starts here, it's just
               # like chaining a second double-click detection

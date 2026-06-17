@@ -263,8 +263,7 @@ class ScrollPanelWdgt extends PanelWdgt
           # soft-wrap, then feed it the width — rawSetWidth re-lays-out the text to
           # that width (height = wrapped line count), and that new height drives the
           # vertical slider below. We RESPECT the mode (a non-text child or a
-          # FIT_TEXT_TO_BOX widget is skipped). Was SimplePlainTextWdgt-only, via
-          # the maxTextWidth wrap flag.
+          # FIT_TEXT_TO_BOX widget is skipped).
           widget.softWrap = true
           widget.rawSetWidth @contents.width() - totalPadding
           @contents.rawSetHeight (Math.max widget.height(), @height()) - totalPadding
@@ -451,8 +450,7 @@ class ScrollPanelWdgt extends PanelWdgt
         # of the pointer's path that arrived in the same frame as the
         # mouse-up was never scrolled — without this the scroll total
         # truncates at the last pre-release frame sample, a frame-cadence
-        # artifact (it used to be partially masked by the momentum glide
-        # below). Scrolling the leftover here makes the total exactly
+        # artifact. Scrolling the leftover here makes the total exactly
         # release-point minus press-point — event-determined, identical
         # across engines — and the leftover doubles as the glide's seed
         # velocity. Only when this drag actually scroll-dragged (a float-move

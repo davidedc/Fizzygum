@@ -1,28 +1,8 @@
 # this file is only needed for Macros
 # IMMUTABLE
 
-# In the first macro implementation there were some nice shortcuts/symbols
-# to make things more readable. However I'm concerned that this might
-# hinder help from LLMs...
-#
-# However, for reference, the "shortcuts" were:
-#    1s -> 1*1000
-#    macroString = macroString.replace /([ \d])s([\s,])/mg, "$1*1000$2"
-#
-#    2ms -> 2
-#    macroString = macroString.replace /([ \d])ms([\s,])/mg, "$1$2"
-#
-#    🌎var1 -> @macroVars.var1
-#    macroString = macroString.replace /🌎/g, "@macroVars."    
-#
-#    🖨️var1 -> console.log var1
-#    macroString = macroString.replace /🖨️/g, "console.log"
-#
-#    ⦿(x,y) -> new Point(x,y)
-#    macroString = macroString.replace /⦿/g, "new Point"
-#
-#    ⌛1s -> yield 1*1000
-#    macroString = macroString.replace /⌛/g, "yield"
+# We deliberately avoid cute symbol/shortcut sugar to make macros more readable,
+# out of a concern that it might hinder help from LLMs.
 
 class Macro
   _body: nil

@@ -63,7 +63,7 @@ class PromptWdgt extends MenuWdgt
 
   reactToSliderAction: (num) ->
     @tempPromptEntryField.changed()
-    # the field's inner text is now a StringWdgt (was the old string widget). Use setText
+    # the field's inner text is a StringWdgt. Use setText
     # -- which re-runs synchroniseTextAndActualText so textPossiblyCroppedToFit tracks the new
     # value -- instead of poking .text + reLayout (StringWdgt has no reLayout that refits).
     # Otherwise edit() below sees a stale cropped text and defers to the "edit:" prompt.
