@@ -29,8 +29,8 @@ class CaretWdgt extends BlinkerWdgt
     # modern TextWdgt handles the caret correctly under every
     # AlignmentSpecHorizontal — its slotCoordinates / slotAtSingleLineString
     # account for the per-line shift — so no force-left is needed; see
-    # SystemTest_macroTextMorph2CaretPlacementUnderAlignments and
-    # SystemTest_macroTextMorph2CaretKeepsCorrectAlignment.)
+    # SystemTest_macroTextWdgtCaretPlacementUnderAlignments and
+    # SystemTest_macroTextWdgtCaretKeepsCorrectAlignment.)
     @adjustAccordingToTargetText()
 
   adjustAccordingToTargetText: ->

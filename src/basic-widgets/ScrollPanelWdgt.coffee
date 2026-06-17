@@ -529,7 +529,7 @@ class ScrollPanelWdgt extends PanelWdgt
     # plus per-frame increments), but unlike the momentum glide in
     # mouseDownLeft it is NOT suppressed under the test harness's pacing
     # control: it is a load-bearing interaction with its own SystemTest
-    # (macroListMorphAutoScrollsNearDraggedEdge). Its determinism contract is
+    # (macroListWdgtAutoScrollsNearDraggedEdge). Its determinism contract is
     # SATURATION instead — a macro holds the drag in the edge band long
     # enough that the scroll CLAMPS, so the screenshotted endpoint is
     # frame-cadence-independent even though the path there isn't (see the

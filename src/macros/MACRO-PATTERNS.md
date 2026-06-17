@@ -21,13 +21,13 @@ assertion a recapture after a regression silently stores two different hashes an
 
 ## Text & caret
 
-- **Caret placement by click** (`macroTextMorph2CaretPlacementByClick`): clicking inside an EDITABLE text places
+- **Caret placement by click** (`macroTextWdgtCaretPlacementByClick`): clicking inside an EDITABLE text places
   `world.caret` at the nearest slot (`StringWdgt.mouseClickLeft`, `:1242`, gated on `@isEditable`). A
   directly-built StringWdgt/TextWdgt has **`isEditable = false`** (`:43`) — set `txt.isEditable = true` first
   (the demo widgets do). `@moveToAndClickAtFractionOf_InputEvents txt, [fx, fy]` places the caret on the clicked
   line: `[0.02, firstLineFrac]` before the first letter; a click past the last line's end clamps after the last
   letter. Size the widget so the wrapped text FITS (a cropped one opens the "edit:" prompt instead).
-- **Caret is alignment-INVARIANT and placement is alignment-AWARE** (`macroTextMorph2CaretPlacementUnderAlignments`): TWO
+- **Caret is alignment-INVARIANT and placement is alignment-AWARE** (`macroTextWdgtCaretPlacementUnderAlignments`): TWO
   complementary halves (the alignment-aware sibling of caret-placement-by-click above, which is LEFT-only), both turning on the
   per-line shift `textHorizontalPosition` (`StringWdgt.coffee:607-614`, switched on `@horizontalAlignment` LEFT/CENTER/RIGHT).
   (1) **INVARIANCE:** once the caret is placed on a character, changing the alignment keeps it on the SAME character — it
@@ -45,7 +45,7 @@ assertion a recapture after a regression silently stores two different hashes an
   change before the screenshot (the caret re-shows on the next paint via `gotoSlot`, blink frozen in playback). (Beware: TextWdgt
   has a SECOND, dead `@alignment`/`setAlignmentTo*` system unwired to any menu — drive `@horizontalAlignment` via the `align *`
   items, not that.) No new verb.
-- **The caret stays GLUED to its slot through re-layouts — alignment AND style** (`macroTextMorph2CaretKeepsCorrectAlignment`):
+- **The caret stays GLUED to its slot through re-layouts — alignment AND style** (`macroTextWdgtCaretKeepsCorrectAlignment`):
   the RE-LAYOUT sibling of the invariance entry above — there the alignment changes under a parked caret; here the TEXT moves
   under it: in a CENTER+MIDDLE aligned TextWdgt an Enter at the caret adds a line and re-centers the WHOLE block (everything
   shifts up half a line), Backspace re-joins and shifts it back, and an "italic" flip changes the font metrics and re-wraps
@@ -60,7 +60,7 @@ assertion a recapture after a regression silently stores two different hashes an
   click "Ok" on the captured prompt (the colour/transparency popup idiom). REP note: absorbs the style-axis sibling recording
   (italic+bold flips under a LEFT-aligned caret) — the italic beat is folded in on the harder centered fixture; bold is the
   same metrics-change rule. No new verb.
-- **Caret at and BELOW the last row** (`macroTextMorph2PointingAtLastRow`): the last-row/below-text edge of
+- **Caret at and BELOW the last row** (`macroTextWdgtPointingAtLastRow`): the last-row/below-text edge of
   caret-placement-by-click above. `TextWdgt.slotAt` (`:541`) scans wrapped rows by the click's y, then `slotAtRow`
   (`:521`) resolves WITHIN a row per-column (x past the row's end clamps after its last character) — but when the
   computed row is PAST the last wrapped line, the row-overflow guard returns `textPossiblyCroppedToFit.length`: the
@@ -81,7 +81,7 @@ assertion a recapture after a regression silently stores two different hashes an
   Gotchas: TextWdgt softWrap wraps to the WIDGET width (`@width()`, not `maxTextWidth`) so size it big with
   `rawSetExtent` (tall enough not to crop); a shift-click PAST a line's end clamps to the line-end slot, so two
   clicks past the end produce identical shots — land clicks WITHIN the line text.
-- **Keyboard selection — the anchor model in full** (`macroStringMorph2ImprovedSelection`): the KEYBOARD sibling of
+- **Keyboard selection — the anchor model in full** (`macroStringWdgtImprovedSelection`): the KEYBOARD sibling of
   shift-click above. The rules, all driven by the caret's `cmd` off one clicked anchor slot: Shift+ArrowLeft/Right GROW
   a selection from the caret one slot at a time, and the moving end can cross THROUGH the anchor (the selection dies on
   one side and is reborn on the other, no special-casing); a PLAIN Arrow with a selection COLLAPSES it to an EDGE —
@@ -96,7 +96,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `assertions` and assert it in-run with `@assertScreenshotsIdentical` (see the preamble). Geometry note: count-based Shift+Arrow runs are relative to ONE
   clicked slot — keep the recorded fixture geometry (handle-fraction resize + recorded click fraction + font size) and
   the whole keyboard tail is geometry-free. No new verb.
-- **Double/triple-click selects word/line** (`macroDoubleAndTripleClickThroughCaretMorph`): `@doubleClickAtFractionOf_InputEvents`
+- **Double/triple-click selects word/line** (`macroDoubleAndTripleClickThroughCaretWdgt`): `@doubleClickAtFractionOf_InputEvents`
   / `@tripleClickAtFractionOf_InputEvents widget, [fx,fy]` enqueue a move + 2/3 consecutive left click-pairs that
   the HAND turns into a double/triple-click; targeting `world.caret` selects word/line at its slot. Recognition is
   proximity + the hand's 300ms EVENT-TIME window (deterministic, not a wall-clock timer — so it can't mis-fold under
@@ -116,7 +116,7 @@ assertion a recapture after a regression silently stores two different hashes an
   opens the "edit:" prompt, not an inline caret). No speed metadata — the double-click verb is recognised at every speed.
   Tune the deep-word fraction to the LIVE wrap at capture (here `[0.25,0.87]`
   landed on "condimentum" on the second-to-last line — eyeball which word the highlight covers; the exact word doesn't matter, a clean
-  interior word does). Distinct from `macroDoubleAndTripleClickThroughCaretMorph` (double-clicks ON the caret of a tiny pre-typed
+  interior word does). Distinct from `macroDoubleAndTripleClickThroughCaretWdgt` (double-clicks ON the caret of a tiny pre-typed
   TextWdgt — pass-through); this proves word-granularity from a CLEAN state on a single-line StringWdgt AND wrapped text. No new verb.
 - **Triple-click scoping: whole string · VISUAL line · LOGICAL line** (`macroTripleClickSelection`): WHAT a triple-click
   selects, per class and wrap regime — the triple sibling of the word entry above. `StringWdgt.mouseTripleClick`
@@ -134,7 +134,7 @@ assertion a recapture after a regression silently stores two different hashes an
   CROP→SCALEDOWN shrink is LOAD-BEARING — a cropped TextWdgt opens the "edit:" prompt instead of the inline caret the
   triple needs). No speed metadata — the triple-click verb is recognised at every speed. Tune row fracs at capture — and
   remember the SCALEDOWN no-wrap rows are THIN (target the first row a few px under the box top). No new verb.
-- **Clipboard cut/copy/paste** (`macroTextMorph2CutCopyPasteBasic`): after a Shift+Arrow selection,
+- **Clipboard cut/copy/paste** (`macroTextWdgtCutCopyPasteBasic`): after a Shift+Arrow selection,
   `clip = @cutSelection_InputEvents()` (or `@copySelection_InputEvents()`) reads + RETURNS the selection synchronously
   and enqueues a `Cut`/`CopyInputEvent`; later `@pasteText_InputEvents clip` enqueues a `PasteInputEvent`. Fizzygum has
   NO internal clipboard — synthetic Meta+x/c/v can't fire the browser's real clipboard EVENTS — so the text rides IN
@@ -142,7 +142,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Undo** (`macroCaretResizesOKOnUndo`): `@repeatSpecialKey_InputEvents "Meta+z", 4` (the caret's `cmd` handles Meta+a
   and Meta+z). image-before and image-after-undo come out pixel-identical — the round-trip proof the caret resizes back;
   assert the pair with `@assertScreenshotsIdentical` (preamble).
-- **The caret resizes with the auto-fit font (SCALEUP)** (`macroTextMorph2CaretResizing`): the forward sibling of the
+- **The caret resizes with the auto-fit font (SCALEUP)** (`macroTextWdgtCaretResizing`): the forward sibling of the
   Undo entry above, and the SCALEUP counterpart of the SCALEDOWN shrink-to-fit entry below. A TextWdgt made via the
   demo menu EXPANDS its font to fill its bounds — the ctor overrides the inherited FLOAT default to SCALEUP
   (`TextWdgt.coffee:52` vs `StringWdgt.coffee:73`; the `"←→ expand to fill"` / `"←☓→ don't expand to fill"` menu
@@ -155,7 +155,7 @@ assertion a recapture after a regression silently stores two different hashes an
   caret glued to its slot throughout. Geometry-faithful fixture (the handle-fraction trick of the caret-glued entry):
   the wrap layout decides where the count-based selections end. A directly-built TextWdgt also defaults to SCALEUP —
   the below-text-strip entry above NEUTRALISES it with FLOAT for the opposite reason (a fixture constant). No new verb.
-- **Editing a CROPPED string defers to the "edit:" prompt** (`macroStringMorph2EditDefersToPromptWhenCropped`):
+- **Editing a CROPPED string defers to the "edit:" prompt** (`macroStringWdgtEditDefersToPromptWhenCropped`):
   `StringWdgt.edit` (`:1145-1150`) compares the rendered text with the full transformed text — equal → `world.edit @`
   (inline caret); different (the CROP spec ellipsised it) → `editPopup()` (`:873-882`), the "edit:" `PromptWdgt` whose
   field is preloaded with `@text` and whose "Ok" commits via `setText` ("Close" discards — anchor that byte-exactly: a
@@ -165,7 +165,7 @@ assertion a recapture after a regression silently stores two different hashes an
   banked `topLeft+(3,8)` slot-0 idiom; capture the prompt via `getMostRecentlyOpenedMenu()` right after the opening click.
   This is the mechanic the NoJumps entry's tail deliberately skipped — now asserted. No new verb.
 - **Inline typing refits per fitting mode — and hands off to the prompt when it crops**
-  (`macroStringMorph2InlineTypingRefitsUnderFittingModes`): the StringWdgt LIVE-TYPING matrix (every other auto-fit
+  (`macroStringWdgtInlineTypingRefitsUnderFittingModes`): the StringWdgt LIVE-TYPING matrix (every other auto-fit
   macro is TextWdgt-based; a StringWdgt DEFAULTS to FLOAT+CROP, `:73`). Three same-text same-box fixtures, one per
   regime: under SCALEUP (toggled) each keystroke re-runs `searchLargestFittingFont` so the font steps DOWN live but keeps
   filling the box; under SCALEDOWN (toggled) typing past the width shrinks the whole single line so everything stays
@@ -175,7 +175,7 @@ assertion a recapture after a regression silently stores two different hashes an
   pre-crop inline prefix. Same-input fixtures make the contrast the assertion (shrink vs ellipsis from identical
   keystrokes). Bare `ArrowDown` = End (single-line) gives count-free end targeting. Also carries the caret-on-a-floated-
   line shot: `alignBottom()` + click → the caret stands ON the bottom-floated line. No new verb.
-- **"Hide characters" masks the RENDERING, not the text** (`macroStringMorph2HideCharactersMasksTextNotEditing`):
+- **"Hide characters" masks the RENDERING, not the text** (`macroStringWdgtHideCharactersMasksTextNotEditing`):
   `toggleIsPassword` (`:1046-1048`, the "hide characters"/"show characters" menu pair, gated at `:978`) flips a pure
   draw-time transform — `transformTextOneToOne` (`:520-521`) renders every glyph as "*" while `@text` is untouched. The
   masked string still edits INLINE (the masked render equals the transformed text, so the deferral rule is satisfied);
@@ -187,7 +187,7 @@ assertion a recapture after a regression silently stores two different hashes an
   crops to the longest fitting prefix + "…" (`fittingSpecWhenBoundsTooSmall` defaults to `CROP`; SCALEDOWN scales instead,
   the "crop/shrink to fit" item). `new StringWdgt "long text", fontSize` (give a `backgroundColor` so the bounds show) +
   `rawSetExtent` to a narrow width ellipsises; a narrower extent crops more. The screenshot's settle re-crops.
-- **Text shrink-to-fit (SCALEDOWN)** (`macroTextMorph2ShrinksToFitLongToken`): the SCALEDOWN counterpart of the CROP
+- **Text shrink-to-fit (SCALEDOWN)** (`macroTextWdgtShrinksToFitLongToken`): the SCALEDOWN counterpart of the CROP
   ellipsisation above. When a wrapping `TextWdgt` holds a single UNBREAKABLE token wider than the box, the WHOLE text's
   font is scaled DOWN uniformly until the token fits — `StringWdgt.fitToExtent` (`:537`, inherited) takes the SCALEDOWN
   branch (`:563-567`): keeps the full text and returns `searchLargestFittingFont` (a deterministic binary search) →
@@ -199,7 +199,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (default), then `txt.setText "<words> <80+-char token> <words>"` (the clean deterministic equivalent of caret typing —
   same `@text`, same fitting result; as macroNonWrappingTextResizesToContent argues). image_1 normal font → image_2 whole
   text uniformly smaller. No clicks (so no "edit:" prompt trap; `isEditable` not needed). No new verb.
-- **SCALEUP tracks a TYPED growing token — no jumps** (`macroTextMorph2NoJumpsInLayoutOfLongLine`): the LIVE-typing
+- **SCALEUP tracks a TYPED growing token — no jumps** (`macroTextWdgtNoJumpsInLayoutOfLongLine`): the LIVE-typing
   complement of shrink-to-fit above, on the OTHER branch: `fittingSpecWhenBoundsTooLarge = SCALEUP` is the TextWdgt
   constructor DEFAULT (`TextWdgt.coffee:52` — the demo "TextWdgt with background" ships it), and
   `StringWdgt.fitToExtent`'s SCALEUP branch (`:554`) re-runs `searchLargestFittingFont` on EVERY content change. So
@@ -212,7 +212,7 @@ assertion a recapture after a regression silently stores two different hashes an
   straddles the first step-down. The recording's tail (at MINIMUM font the text finally crops and the "edit:" prompt
   pops mid-typing) is a separate cropped-text mechanic — deliberately not asserted here. No new verb.
 - **Fill-mode SWITCHING mid-session, bold round-trip, paste-over-selection**
-  (`macroTextMorph2FillModesWeightAndPasteOverSelection`): the residue laws of the retired endurance recording, in one
+  (`macroTextWdgtFillModesWeightAndPasteOverSelection`): the residue laws of the retired endurance recording, in one
   9-shot fixture (a 320×360 editable TextWdgt, three short words — SCALEUP fits one giant word per line, so every
   transition is unmistakable). (1) `txt.togglefittingSpecWhenBoundsTooLarge()` (the "←☓→ don't expand to fill" item's
   method, `StringWdgt.coffee:1024-1027`) flips SCALEUP→FLOAT with content in place: the auto-grown font SNAPS back to
@@ -231,7 +231,7 @@ assertion a recapture after a regression silently stores two different hashes an
   the "edit:" prompt instead of an inline caret (that prompt is exactly the retired recording's image_21 accident —
   its 18th paste overflowed under CROP). The double-click verb is recognised at every speed — no speed metadata.
   No new verb.
-- **Text alignment** (`macroStringMorph2Alignments`): the converse — a StringWdgt LARGER than its text doesn't grow it
+- **Text alignment** (`macroStringWdgtAlignments`): the converse — a StringWdgt LARGER than its text doesn't grow it
   either (`fittingSpecWhenBoundsTooLarge` defaults to `FLOAT`); the text floats per `horizontalAlignment` (default LEFT)
   and `verticalAlignment` (default TOP). Drive `str.alignLeft()/alignCenter()/alignRight()` and
   `str.alignTop()/alignMiddle()/alignBottom()` DIRECTLY (the "align …" item methods); a synthetic right-click won't open
@@ -711,7 +711,7 @@ assertion a recapture after a regression silently stores two different hashes an
 
 ## Scroll & scrollbars
 
-- **ListWdgt wheel scroll** (`macroListMorphWheelScroll`): a `ListWdgt` (extends ScrollPanelWdgt) is a clipped column of rows.
+- **ListWdgt wheel scroll** (`macroListWdgtWheelScroll`): a `ListWdgt` (extends ScrollPanelWdgt) is a clipped column of rows.
   Build standalone — `new ListWdgt nil, nil, [item strings]` — `rawSetExtent` SHORTER than its content so it overflows + shows
   a scrollbar; `@wheelOn_InputEvents list, deltaY` scrolls it (positive deltaY = DOWN). Tune the delta to the overflow (drop it
   if two later shots stop changing). Row-click highlight is NOT a reliable screenshot signal; scrolling is.
@@ -736,7 +736,7 @@ assertion a recapture after a regression silently stores two different hashes an
   re-run `panel.adjustContentsBounds()` + `panel.adjustScrollBars()` after each. TRAP: a single-widget contents (`new
   ScrollPanelWdgt child`) has no submorphs, so `adjustContentsBounds` re-fits it back to the viewport (undoing the overflow) —
   use a real submorph, or call `adjustScrollBars()` only.
-- **Adding a child to a ListWdgt recomputes its scroll** (`macroAddingMorphToListUpdatesScroll`): the recompute-on-ADD
+- **Adding a child to a ListWdgt recomputes its scroll** (`macroAddingWidgetToListUpdatesScroll`): the recompute-on-ADD
   sibling of the content-change entry above (which recomputes on child MUTATION). `ScrollPanelWdgt.add` (`:186-194`) routes
   a non-handle widget into `@contents` and then AUTOMATICALLY calls `@adjustContentsBounds()` + `@adjustScrollBars()` — so
   adding a tall morph to a `ListWdgt` (extends ScrollPanelWdgt) that previously just fit its rows makes a vertical
@@ -744,13 +744,13 @@ assertion a recapture after a regression silently stores two different hashes an
   recompute, `Widget.coffee:3640-3645`). Build a standalone `new ListWdgt nil, nil, [rows]` sized to ≈ its rows' height
   (so no scrollbar yet) + a distinct `RectangleWdgt` positioned to PARTIALLY OVERLAP the list's lower edge and HANG BELOW
   it, then ATTACH it through the REAL menu (the recording's gesture — drive the menu, NOT an opaque `list.add`; reuses the
-  `macroAttachResizingHandleToMorph` idiom): `@openMenuOf_InputEvents rect` → `@moveToItemOfTopMenuAndClick_InputEvents
+  `macroAttachResizingHandleToWidget` idiom): `@openMenuOf_InputEvents rect` → `@moveToItemOfTopMenuAndClick_InputEvents
   "attach..."` → `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()), "a List"`
   (class-name PREFIX). The OVERLAP is REQUIRED — `"attach..."` lists only bounds-intersecting targets
   (`world.plausibleTargetAndDestinationWidgets`), so a non-overlapping rect would not be offered the list. Widget.attach →
   list.add (ScrollPanelWdgt.add) re-parents the rect into `@contents` + auto-recomputes → image_2 shows the rect CLIPPED to
   the list (its hanging part cropped — proof it is now a child) AND a scrollbar APPEARED; then `@wheelOn_InputEvents list,
-  delta` → rows + rect scroll together (image_3). Fills the gap `macroListMorphWheelScroll` explicitly LEFT OPEN (it
+  delta` → rows + rect scroll together (image_3). Fills the gap `macroListWdgtWheelScroll` explicitly LEFT OPEN (it
   distilled the same recording family to just the wheel-scroll core). GOTCHAS: size the list height ≈ its rows' height (so
   the attached rect lands just below the rows, not far down in dead viewport space → an ugly empty gap on scroll); place the
   rect's CENTRE on the part HANGING BELOW the list so the right-click lands cleanly on the rect, not the list. No new verb.
@@ -836,7 +836,7 @@ assertion a recapture after a regression silently stores two different hashes an
   The collapse round trip byte-anchor needs a SECOND round trip (post-repaint states match each other; the FIRST restore differs
   from the pristine shot by exactly the `HighlightableMixin` pristine-vs-repaint glyph rule of the nested-collapse entry). Park
   the pointer on one clear spot before every shot. No new verb.
-- **Edge auto-scroll while dragging** (`macroListMorphAutoScrollsNearDraggedEdge`): a ScrollPanelWdgt auto-scrolls when a
+- **Edge auto-scroll while dragging** (`macroListWdgtAutoScrollsNearDraggedEdge`): a ScrollPanelWdgt auto-scrolls when a
   float-dragged morph it `wantsDropOf` is held near an edge band (≈`scrollBarsThickness*3`). Build a list overflowing BOTH ways,
   `pickUp` a rectangle (don't drop), then `@syntheticEventsMouseMove_InputEvents (a point in an edge band), "no button", …` and
   yield generously. MUST hold long enough that the `autoScroll` 500ms `Date.now()` settle elapses and the scroll CLAMPS — via a
@@ -886,7 +886,7 @@ assertion a recapture after a regression silently stores two different hashes an
   with `@dragWidgetTo_InputEvents box, pt` (re-drop re-parents into `@contents`, re-runs the gate — still fits, no bar); then
   `@openMenuOf_InputEvents panel` → `@moveToItemOfTopMenuAndClick_InputEvents "resize/move..."` → `@dragResizeMoveHandleTo_InputEvents
   "resizeBothDimensionsHandle", dest` SHRINKS the panel (the final shot is taken WITH the handles showing — do NOT click empty
-  desktop to leave the mode first, unlike `macroCanMoveAndResizeColorPaletteMorph`). MUST shrink not grow (growing the bottom-right
+  desktop to leave the mode first, unlike `macroCanMoveAndResizeColorPaletteWdgt`). MUST shrink not grow (growing the bottom-right
   extends the world's scrollable extent → perturbs the SWCanvas frame; compute `dest` from `panel.bottomRight()` minus a positive
   delta). No new verb.
 - **A wheel-scroll DESTROYS the temporary resize/move handles** (`macroResizingScrollFrameThenImmediatelyScrollingTheHandlesDontStickToScrollPanelContent`):
@@ -934,7 +934,7 @@ assertion a recapture after a regression silently stores two different hashes an
   it grabs/moves the BUTTON, not the slider (the drop silently does nothing). Drop such a widget programmatically: `widget.pickUp()`
   + a no-button `@syntheticEventsMouseMove_InputEvents` + `@syntheticEventsMouseClick_InputEvents()`. A plain shape
   (BoxWdgt/CircleBoxWdgt/RectangleWdgt) has no sub-widget, so `@dragWidgetTo_InputEvents` is fine.
-- **Attach to a target** (`macroAttachResizingHandleToMorph`): drop the morph so it OVERLAPS the target (required —
+- **Attach to a target** (`macroAttachResizingHandleToWidget`): drop the morph so it OVERLAPS the target (required —
   `Widget.attach` lists only morphs whose bounds INTERSECT it, `world.plausibleTargetAndDestinationWidgets`, excluding self +
   current parent), then `clickMenuItemOfWidget_InputEvents_Macro morph, "attach..."` → capture the "choose target:" menu →
   `@moveToItemStartingWithOfMenuAndClick_InputEvents menu, "a Rectangle"` (class-name PREFIX; the menu also lists the World).
@@ -951,7 +951,7 @@ assertion a recapture after a regression silently stores two different hashes an
   title is NOT an item (`MenuWdgt.testItems` excludes `@label`), so a titled-but-empty menu counts 0. Reuses
   macroLonelySliderTargetsWorldOnly's lone-slider fixture verbatim (right-click the LOWER track), so the attach-vs-set-target
   contrast is asserted on an identical scene. No new verb.
-- **Attach/target candidates EXCLUDE a clipped morph** (`macroAttachTargetExcludesClippedMorph`): both "attach..."
+- **Attach/target candidates EXCLUDE a clipped morph** (`macroAttachTargetExcludesClippedWidget`): both "attach..."
   (`Widget.attach`) and a controller's "set target" (`ControllerMixin.openTargetSelector`) build their candidate menus
   from `world.plausibleTargetAndDestinationWidgets` (`Widget.coffee:846`), but a `PanelWdgt` (which `@augmentWith
   ClippingAtRectangularBoundsMixin`) OVERRIDES it (`ClippingAtRectangularBoundsMixin.coffee:17`) to recurse into its
@@ -964,7 +964,7 @@ assertion a recapture after a regression silently stores two different hashes an
   overlap ONLY the clipped-away part — if it also overlaps the panel, the recursion runs and the rect reappears (leave a
   clear gap to the panel edge). Distinct from macroAttachShowsNoTargetsMessage (genuinely nothing overlapping) — here a
   morph IS there, but clipped out of the candidate list.
-- **Detached morph stays float-draggable** (`macroDetachedMorphStaysFloatDraggable`): float-vs-non-float dragging is computed LIVE
+- **Detached morph stays float-draggable** (`macroDetachedWidgetStaysFloatDraggable`): float-vs-non-float dragging is computed LIVE
   from the parent, not a stored flag — `Widget.grabsToParentWhenDragged` (`:2513`) is false when the parent is the WORLD (the hand
   grabs the morph itself = float drag) and true when the parent is another morph (dragging grabs the PARENT, so they move
   together). "attach…" re-parents under the chosen target (`Widget.attach → target.add`, `:3657/:3642`); "detaching" = pick up +
@@ -979,7 +979,7 @@ assertion a recapture after a regression silently stores two different hashes an
   fully painted the instant it is grabbed. Duplicating a COMPLEX/nested widget: right-click it → ancestor hierarchy menu →
   navigate by class-name PREFIX to the desired ancestor's own menu → "duplicate". (A MenuWdgt CONTAINER is not right-clickable
   for a context menu, but a MenuItemWdgt — an individual item — IS: see the next bullet.)
-- **Duplicate a MENU ITEM into the bare world** (`macroMenuItemDuplicatesToStandaloneMorph`): a `MenuItemWdgt` is an ordinary
+- **Duplicate a MENU ITEM into the bare world** (`macroMenuItemDuplicatesToStandaloneWidget`): a `MenuItemWdgt` is an ordinary
   duplicable Widget. Right-click an item of an open menu (e.g. the world menu's "demo ➜") → its ANCESTOR hierarchy menu; under the
   determinism toggles the item's own entry is the clean `"a MenuItem ➜"` (no instance number/bounds — `Widget.toString:467`
   with `HidingOfWidgetsNumberIDInLabels`), so an EXACT match is stable. Drill `"a MenuItem ➜"` → `"duplicate"`: the copy rides
@@ -1111,7 +1111,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `buildOverflowingScrollPanelWithText_Macro(topLeft)` verb in `standardMacroSubroutines`. KEY: press a CLEAR background spot (right of the
   text, left of the scrollbar/handle), not a draggable child; in Automator PLAYING the grab threshold is skipped so even small drags grab.
 
-- **A HandleWdgt is itself resizable** (`macroHandleMorphIsItselfResizable`): a HandleWdgt is an ordinary resizable
+- **A HandleWdgt is itself resizable** (`macroHandleWdgtIsItselfResizable`): a HandleWdgt is an ordinary resizable
   Widget (`HandleWdgt.coffee:4`), not just resize chrome on another morph — "resize/move..." on it adds its OWN four
   sub-handles (a moveHandle at the top-left; resizers around it), so FIVE HandleWdgts coexist, and dragging the
   bottom-right one resizes the handle itself (`HandleWdgt.nonFloatDragging` `:219` → `@target.setExtent`). Build `new
@@ -1121,7 +1121,7 @@ assertion a recapture after a regression silently stores two different hashes an
   → `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest`; click empty desktop to leave the mode.
   DISAMBIGUATION: the target handle ALSO has `type == "resizeBothDimensionsHandle"`, but `topWdgtSuchThat` tests the
   sub-handle (a child, added later → frontmost) BEFORE the target, so the verb grabs the resizer, not the target.
-  Distinct from using a handle to resize ANOTHER widget (macroCanMoveAndResizeColorPaletteMorph).
+  Distinct from using a handle to resize ANOTHER widget (macroCanMoveAndResizeColorPaletteWdgt).
 - **A HandleWdgt attached to NOTHING just float-moves** (`macroHandleAttachedToNothing`): a handle's resize powers come
   entirely from its `@target` (`HandleWdgt.nonFloatDragging` returns early `unless @target`); built bare (`new HandleWdgt()`,
   target `nil` — exactly what the demo "handle" item makes via `WorldWdgt.createNewHandle`) and parented by the world,
@@ -1169,7 +1169,7 @@ assertion a recapture after a regression silently stores two different hashes an
   verify), not a manual `--clean --no-build` + separate rebuild. (The `systemInfoHash` in a reference's filename is just metadata; matching
   is purely the raw-pixel `dataHash`.)
 - **A BARE button float-drags by its body and does NOT trigger mid-drag** (`macroBareButtonFloatDragsWithoutTriggering`): the third
-  button-negative sibling (after the resize-handle case above and the same-morph-mouseup case `macroButtonTriggersOnlyOnSameMorphMouseUp`).
+  button-negative sibling (after the resize-handle case above and the same-morph-mouseup case `macroButtonTriggersOnlyOnSameWidgetMouseUp`).
   `ButtonWdgt.rejectDrags` returns false ONLY when the parent is the WORLD (`:128-132`), so a world-parented button does NOT arm its
   trigger on press: `Widget.findFirstLooseWidget` (`:2545`) returns the button ITSELF as the grab root (`grabsToParentWhenDragged` is false
   for a world child, `:2513-2536`), so the hand FLOAT-DRAGS it (`ActivePointerWdgt.determineGrabs → grab`). The action fires only via
@@ -1185,7 +1185,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `@syntheticEventsMouseUp_InputEvents()` (DROP, no menu — image_3) → then `@moveToAndClickAtFractionOf_InputEvents button, [0.5,0.5]` (a
   REAL click) → `@moveToItemOfTopMenuAndClick_InputEvents "rectangle"` → carry+drop the new rectangle (image_4, the positive contrast). The
   button reads GREY in the dropped shot (the pointer hovers it post-drop → STATE_HIGHLIGHTED) and white once the pointer leaves —
-  deterministic. Complement of `macroButtonTriggersOnlyOnSameMorphMouseUp` (a CONTAINER button with `rejectDrags=true` that AVOIDS
+  deterministic. Complement of `macroButtonTriggersOnlyOnSameWidgetMouseUp` (a CONTAINER button with `rejectDrags=true` that AVOIDS
   float-drag) and `macroResizingButtonDoesntCauseItToClick` (a resize handle, not a body drag): this covers the world-parented,
   rejectDrags-false body-float-drag branch. Drop the "demo ➜" arrow glyph (absent from the SWCanvas bitmap font → a box) — plain "demo". No new verb.
 - **A composite drags as one unit into/out of a scroll panel, clipped inside** (`macroCompositeDragsAsUnitIntoScrollPanel`): a
@@ -1204,7 +1204,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `@syntheticEventsMouseMove_InputEvents dest, "left button"`. The YIELD is MANDATORY — it drains the queued press so
   `world.hand.position()` is actually AT `pt`; without it the move's default `orig` reads a STALE hand position and the grab offset throws
   the morph far off-target (here off-canvas).** Build with `topBox.add child` (NOT the "attach…" menu — identical state, simpler; same
-  fixture style as macroCompositeMorphsHaveCorrectShadow); distinct box colours make "children keep their offsets" legible. Drop target =
+  fixture style as macroCompositeWidgetsHaveCorrectShadow); distinct box colours make "children keep their offsets" legible. Drop target =
   the POINTER position. CAPTURE GOTCHA (16 screenshots at dpr 2): building+returning all N large 2× reference images in ONE `page.evaluate`
   memory-blows the capture (and a refs-missing verify) to 30+ min — `run-macro-test-headless.js` extracts each ref in its OWN `page.evaluate`
   and frees it; a passing verify returns no failure images, so it stays fast. First composite-into-scroll-panel test. No new verb.
@@ -1213,7 +1213,7 @@ assertion a recapture after a regression silently stores two different hashes an
   action `"duplicateMenuActionAndPickItUp"`, `Widget.coffee:3489`). Clicking it deep-copies the whole panel (`fullCopy().pickUp()`,
   `Widget.coffee:2299`); the deep copier rewires the COPIED button's target to the cloned panel (`DeepCopierMixin` parallel originals/clones
   arrays), so clicking the COPY's embedded button duplicates the copy, not the original — the duplicator survives `fullCopy` and replicates
-  across generations (1 → 2 → 3 → 4). SETUP reuses the `macroMenuItemDuplicatesToStandaloneMorph` idiom: `@openMenuOf_InputEvents panel` →
+  across generations (1 → 2 → 3 → 4). SETUP reuses the `macroMenuItemDuplicatesToStandaloneWidget` idiom: `@openMenuOf_InputEvents panel` →
   `@getTextMenuItemFromMenu @getMostRecentlyOpenedMenu(), "duplicate"` → `@openMenuOf_InputEvents dupItem` (right-click the item → its ancestor
   hierarchy menu) → `"a MenuItem ➜"` → `"pick up"` → carry into the panel (no-button move) + `@syntheticEventsMouseClick_InputEvents()` to
   drop. Clicking the embedded button puts the copy ON THE HAND, so a plain move-then-click carries-and-drops it (NOT a held-drag — that is only
@@ -1236,13 +1236,13 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Two controllers share one target** (`macroTwoPalettesShareOneTarget`): two ColorPaletteWdgts both set-target'd to the SAME
   panel's "color" (each overlapping the panel but NOT each other); clicking EITHER repaints, both bindings persist (most-recent
   click wins). One palette/many targets ⇒ re-targeting; many palettes/one target ⇒ shared control.
-- **Slider drives a target live** (`macroSlidersControlTextMorph`): wire with the 4th/5th args above, then
+- **Slider drives a target live** (`macroSlidersControlTextWidget`): wire with the 4th/5th args above, then
   `@dragSliderButtonToFraction_InputEvents slider, [0.5, fy]` does a press-drag-release ON the BUTTON (a non-float child drag →
   `SliderButtonWdgt.nonFloatDragging → SliderWdgt.updateValue → setValue → updateTarget`), driving `target[setter](value)` LIVE
   the whole drag (larger fy = larger value). A slider's property menu lists only NUMERIC setters; `setTargetAndAction` pushes the
   current value on binding. Use the BUTTON-drag verb (not the track-click) for a free-standing controller slider. DUPLICATING a
   controller+target composite (a panel holding a text + its sliders) deep-copies the bindings remapped to the COPY's target.
-- **Hover-to-highlight a candidate** (`macroTargetingHighlightsCandidateMorph`): hovering a "choose target:"/"choose new parent:"
+- **Hover-to-highlight a candidate** (`macroTargetingHighlightsCandidateWidget`): hovering a "choose target:"/"choose new parent:"
   item highlights the morph it represents (`MenuItemWdgt.mouseEnter → widgetToBeHighlighted.turnOnHighlight()`,
   `MenuItemWdgt.coffee:78` → `world.widgetsToBeHighlighted` → a `HighlighterWdgt` each cycle). Overlap a ColorPaletteWdgt with a
   rect, `clickMenuItemOfWidget… "set target"`, grab the menu, find the candidate by prefix, then
@@ -1304,7 +1304,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `new HandleWdgt holder` (self-installs at the bottom-right; lone holder ⇒ lone handle). Resize via
   `@dragResizeMoveHandleTo_InputEvents` and the cells redistribute by spreadability. Distilled from the first holder of
   `Widget.setupTestScreen1`.
-- **TEXT widgets as stack cells, via "attach with horizontal layout"** (`macroStringMorph2AndTextMorph2ResizingInLayout`): the
+- **TEXT widgets as stack cells, via "attach with horizontal layout"** (`macroStringWdgtAndTextWdgtResizingInLayout`): the
   text-in-layout bridge — the layout macros above use plain rectangles as cells, the text-resize macros resize FREE text; this
   one puts a `TextWdgt` and a `StringWdgt` INSIDE a stack and resizes the HOLDER. The menu mechanic: "attach with horizontal
   layout" (`Widget.attachWithHorizLayout:3684`) pops a choose-new-parent menu of INTERSECTING morphs (labels are
@@ -1348,7 +1348,7 @@ assertion a recapture after a regression silently stores two different hashes an
   entry, which reuses this fixture verbatim (the green|divider|blue equal-spreadability holder — `setupTestScreen1`'s second
   holder — plus its lone HandleWdgt). The recording had to `show()` the cell back through an
   INSPECTOR eval (a hidden morph can't be right-clicked); the macro drives `blue.hide()`/`blue.show()` directly, the
-  `macroHideUnhideMorphChain` convention. No new verb.
+  `macroHideUnhideWidgetChain` convention. No new verb.
 - **Collapsing a stack cell DOES redistribute — collapse is layout-aware** (`macroLayoutsAndCollapsing`): the contrast twin
   of the visibility entry above, same fixture VERBATIM, opposite mechanic. `collapse()`/`unCollapse()`
   (`Widget.coffee:1883/1895`) BOTH call `invalidateLayout()` (hide/show call neither), and the dimension getters the stack's
@@ -1422,7 +1422,7 @@ assertion a recapture after a regression silently stores two different hashes an
   has dedicated lone-centered-child support (`:288-303`) that keeps it centered instead of snapping its left to the viewport. Drop a `new
   HeartIconWdgt (Color…)` into a `SimpleDocumentScrollPanelWdgt`, center it, then `@dragWidgetTo_InputEvents defaultText, (a desktop point)`
   to remove the default text — the heart stays centered alone. GOTCHA: a widget has NO `.remove()`; drag it out (or re-parent via `world.add`).
-- **Padding is real morph area — sliders + palette-reveal + drag-by-the-band** (`macroPaddingAreaIsPartOfMorph`): a RectangleWdgt paints
+- **Padding is real morph area — sliders + palette-reveal + drag-by-the-band** (`macroPaddingAreaIsPartOfWidget`): a RectangleWdgt paints
   two layers (`RectangularAppearance.coffee:71-88`) — `backgroundColor` over the FULL bounds, `color` over the padding-inset tight region
   `boundingBoxTight()` (`Widget.coffee:679-680`, edges inset by paddingTop/Bottom/Left/Right `:658-668`). The padding band between them is part
   of the morph, but while UNPAINTED it is click-through. Reproduce basicMorphPadding via PATCH-PROGRAMMING: build the rect + FIVE SliderWdgts
@@ -1494,7 +1494,7 @@ assertion a recapture after a regression silently stores two different hashes an
   through) while the CROPPED inner panel + box stay FULLY opaque (alpha-non-cascade). First PanelWdgt-rendering test (stroke + crop +
   shadow + alpha-non-cascade; unlocks the panel-rendering family). GOTCHA: the children must STRADDLE the panel's edge (be moved so
   part crosses it) for the crop to be visible — fully-inside children show no clipping.
-- **Composite drop-shadow** (`macroCompositeMorphsHaveCorrectShadow`): a shadow comes from `Widget.add`, NOT `attach` — `world.add
+- **Composite drop-shadow** (`macroCompositeWidgetsHaveCorrectShadow`): a shadow comes from `Widget.add`, NOT `attach` — `world.add
   widget` gives the desktop shadow (`addShadow`, offset (4,4) α0.2, `Widget.coffee:2199`), re-parenting to a non-world parent calls
   `removeShadow` (`:2210`). The shadow is the whole subtree RE-PAINTED faintly at the offset (every descendant's actual pixels —
   fill and content — not just an edge/silhouette), so `world.add parent` then `parent.add child` makes the parent's shadow show
@@ -1511,7 +1511,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `@moveToAndMouseDown_InputEvents panel.center()` → `@syntheticEventsMouseMove_InputEvents pt, "left button"` (lifts onto the hand) →
   `takeScreenshot…` (the held panel, fully painted with its drag shadow) → `@syntheticEventsMouseUp_InputEvents()`. The paint-on-pickup
   sibling of `macroDuplicateSimpleWidgetRidesHand` (a DUPLICATE painted-OK the instant it's grabbed) and the held-shadow companion of
-  `macroCompositeMorphsHaveCorrectShadow`. No new verb.
+  `macroCompositeWidgetsHaveCorrectShadow`. No new verb.
 - **Bare text widget casts the unified drop-shadow, lifted while dragged** (`macroBareTextWidgetDropShadowRestAndDrag`): a
   `StringWdgt` + a `TextWdgt` added straight to the world (transparent, so the shadow is the GLYPHS, not a box) each get the
   at-rest desktop shadow via `Widget.add` -> `addShadow` (offset (4,4) α0.2, `Widget.coffee:2199`); float-dragging the TextWdgt
@@ -1532,7 +1532,7 @@ assertion a recapture after a regression silently stores two different hashes an
   ClippingBoxWdgt` (setColor/rawSetExtent/fullRawMoveTo/world.add), `clipBox.add child`, then move the child
   (`child.fullRawMoveTo …`) to STRADDLE each edge in turn — it's cut off at that edge, proving the clip is the box's fixed
   rectangle on every side.
-- **Hide / show + subtree** (`macroHideUnhideMorphChain`): `widget.hide()` / `widget.show()` flip `@isVisible`; the paint
+- **Hide / show + subtree** (`macroHideUnhideWidgetChain`): `widget.hide()` / `widget.show()` flip `@isVisible`; the paint
   recursion short-circuits at an invisible morph BEFORE its children (`Widget.preliminaryCheckNothingToDraw`), so hiding a
   mid-chain morph hides its WHOLE subtree, and `show()` restores it. Drive them DIRECTLY — `hide()` is the "hide" item's method,
   and `show()` MUST be programmatic (a hidden morph can't be right-clicked; recordings un-hide via an inspector `show()` eval).
@@ -1552,7 +1552,7 @@ assertion a recapture after a regression silently stores two different hashes an
   MUST be `@assert…` toolkit methods — `recordMacroAssertion` has "Macro" mid-token, which the invocation rewriter would mangle in
   macro SOURCE. `macroLonelySliderTargetsWorldOnly`: a lone controller can only target the WORLD — `openTargetSelector` lists
   bounds-intersecting widgets + always the world (Widget.coffee:846); with nothing overlapping, "a World ➜" is the only item.
-- **Button-trigger discipline** (`macroButtonTriggersOnlyOnSameMorphMouseUp`): a button fires only when mouse-down AND mouse-up
+- **Button-trigger discipline** (`macroButtonTriggersOnlyOnSameWidgetMouseUp`): a button fires only when mouse-down AND mouse-up
   land on the SAME morph (`ActivePointerWdgt.processMouseUp` fires only `when w == @mouseDownWdgt`). To show "press then release
   elsewhere does NOT trigger", press on the button and release off it: `@syntheticEventsMouseMovePressDragRelease_InputEvents
   (@pointAtFractionOf button, [0.5,0.5]), (new Point X, Y)`. Parent the button INSIDE a container (window/panel), NOT bare on the
@@ -1592,7 +1592,7 @@ assertion a recapture after a regression silently stores two different hashes an
   list sub-row scroll rendering leaves an invisible sub-pixel difference, so the round-trip is shown VISUALLY (re-select the same base
   property) rather than via `@assertScreenshotsIdentical`. (Re-authored when the old `InspectorMorph` was removed and the inspect path
   was made windowed; the old "edit..." menu became these direct buttons.)
-- **`macroCanMoveAndResizeColorPaletteMorph`** (from 523 cmds): enter resize/move mode (`@openMenuOf_InputEvents` → "resize/move...")
+- **`macroCanMoveAndResizeColorPaletteWdgt`** (from 523 cmds): enter resize/move mode (`@openMenuOf_InputEvents` → "resize/move...")
   then drag a corner handle; click empty desktop to exit before the screenshot.
 - **`macroSimpleDocumentProgrammaticBuildAndScroll` / `…ManualBuildAndScroll`**: build the SAME scrollable `SimpleDocumentScrollPanelWdgt`
   — one fills it via `doc.add`, the other by DRAGGING two desktop text widgets in (`@dragWidgetTo_InputEvents`) — then wheel-scroll.
