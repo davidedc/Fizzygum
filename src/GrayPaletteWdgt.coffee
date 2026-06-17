@@ -1,35 +1,18 @@
-class GrayPaletteWdgt extends ColorPaletteWdgt
+# A draggable black->white gradient: drag across it to pick a shade of gray,
+# pushed to a target widget's colour property. See PaletteWdgt — a gray palette
+# is a SIBLING of (not a) ColorPaletteWdgt; it supplies only its gradient fill,
+# its shorter default size, and its colloquial name.
 
-  constructor: (@target = nil, sizePoint) ->
-    super @target, sizePoint or new Point 80, 10
+class GrayPaletteWdgt extends PaletteWdgt
 
-  initialiseDefaultWindowContentLayoutSpec: ->
-    @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.DONT_MIND , PreferredSize.DONT_MIND, 1
+  defaultSize: -> new Point 80, 10
 
   colloquialName: ->
     "shades of gray"
-  
-  # no changes of position or extent should be
-  # performed in here
-  createRefreshOrGetBackBuffer: ->
 
-    cacheKey =
-      @constructor.name + "-" + @extent().toString()
-
-    cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
-    if cacheHit? then return cacheHit
-
-    extent = @extent()
-    backBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
-    backBufferContext = backBuffer.getContext "2d"
-    backBufferContext.useLogicalPixelsUntilRestore()
-    @choice = Color.BLACK
+  fillPaletteBuffer: (backBufferContext, extent) ->
     gradient = backBufferContext.createLinearGradient 0, extent.y, extent.x, extent.y
     gradient.addColorStop 0, Color.BLACK.toString()
     gradient.addColorStop 1, Color.WHITE.toString()
     backBufferContext.fillStyle = gradient
     backBufferContext.fillRect 0, 0, extent.x, extent.y
-
-    cacheEntry = [backBuffer, backBufferContext]
-    world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
-    return cacheEntry

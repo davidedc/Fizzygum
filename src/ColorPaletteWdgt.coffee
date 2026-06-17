@@ -1,40 +1,14 @@
-class ColorPaletteWdgt extends Widget
+# A draggable HSL colour field: drag across it to pick a colour, which is pushed
+# to a target widget's colour property. See PaletteWdgt for the shared plumbing;
+# this subclass supplies only the HSL pixel fill + its colloquial name (the
+# default 80x50 size comes from the base).
 
-  @augmentWith ControllerMixin
-  @augmentWith BackBufferMixin
-
-  target: nil
-  action: nil
-  argumentToAction: nil
-  choice: nil
-
-  constructor: (@target = nil, sizePoint) ->
-    super()
-    @silentRawSetExtent sizePoint or new Point 80, 50
+class ColorPaletteWdgt extends PaletteWdgt
 
   colloquialName: ->
     "color palette"
 
-  initialiseDefaultWindowContentLayoutSpec: ->
-    @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.DONT_MIND , PreferredSize.DONT_MIND, 1
-  
-  detachesWhenDragged: ->
-    false
-
-  # no changes of position or extent should be
-  # performed in here
-  createRefreshOrGetBackBuffer: ->
-    cacheKey =
-      @constructor.name + "-" + @extent().toString()
-
-    cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
-    if cacheHit? then return cacheHit
-
-    extent = @extent()
-    backBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
-    backBufferContext = backBuffer.getContext "2d"
-    backBufferContext.useLogicalPixelsUntilRestore()
-    @choice = Color.BLACK
+  fillPaletteBuffer: (backBufferContext, extent) ->
     for x in [0..extent.x]
       h = 360 * x / extent.x
       y = 0
@@ -47,73 +21,3 @@ class ColorPaletteWdgt extends Widget
         # http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
         backBufferContext.fillStyle = "hsl(" + h + ",100%," + l + "%)"
         backBufferContext.fillRect x, y, 1, 1
-
-    cacheEntry = [backBuffer, backBufferContext]
-    world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
-    return cacheEntry
-  
-  nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
-    @choice = @getPixelColor pos.add (deltaDragFromPreviousCall or new Point 0, 0)
-    @connectionsCalculationToken = world.makeNewConnectionsCalculationToken()
-    @updateTarget()
-  
-  mouseDownLeft: (pos) ->
-    @choice = @getPixelColor pos
-    @connectionsCalculationToken = world.makeNewConnectionsCalculationToken()
-    @updateTarget()
-
-  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "bang!"
-    functionNamesStrings.push "bang"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
-
-  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "bang!"
-    functionNamesStrings.push "bang"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
-
-  colorSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "bang!"
-    functionNamesStrings.push "bang"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
-
-
-  # the bang makes the node fire the current output value
-  bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !@choice? then return
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
-    @updateTarget()
-  
-  updateTarget: ->
-    if !@target? then return
-
-    if !@action?
-      @action = "setColor"
-
-    @target[@action].call @target, @choice, nil, @connectionsCalculationToken
-    return
-
-  reactToTargetConnection: ->
-
-  # ColorPaletteWdgt menu:
-  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
-    super
-    menu.addLine()
-    if world.isIndexPage
-      menu.addMenuItem "connect to ➜", true, @, "openTargetSelector", "connect to\nanother widget"
-    else
-      menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another widget\nwhose color property\n will be" + " controlled by this one"
-  
-  # openTargetSelector: -> taken form the ControllerMixin
-
-  openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    [menuEntriesStrings, functionNamesStrings] = theTarget.colorSetters()
-    menu = new MenuWdgt @, false, @, true, true, "choose target property:"
-    for i in [0...menuEntriesStrings.length]
-      menu.addMenuItem menuEntriesStrings[i], true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil, theTarget, functionNamesStrings[i]
-    if menuEntriesStrings.length == 0
-      menu = new MenuWdgt @, false, @, true, true, "no target properties available"
-    menu.popUpAtHand()
