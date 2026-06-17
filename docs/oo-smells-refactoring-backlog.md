@@ -21,7 +21,8 @@ rationale. You should not need the original audit conversation to act on any pha
 | 1c — `CreatorButtonWdgt` parameterized | ✅ DONE 2026-06-17 | 24 creator/toolbar buttons; `createWidgetToBeHandled` left per-leaf |
 | 1d — `PaletteWdgt` base | ✅ DONE 2026-06-17 | `GrayPaletteWdgt` refused-bequest fixed (now a sibling); setters collapsed |
 | 2 — thin the ~85 `IconWdgt` shells | ✅ DONE 2026-06-17 | `IconWdgt` got a `createAppearance` hook (method, not `@appearanceClass` field — keeps the dependency-finder edge); 89 shells de-constructored, incl. the `ExternalLink`→`VideoPlay` sub-lineage + 6 tooltip shells (which keep a slim ctor) |
-| 0, 3–8 | ☐ not started | |
+| 0 — dead code (pixel-neutral subset) | ✅ DONE 2026-06-17 | removed the 118-line commented `processDrop` block + orphaned `droppedImage/SVG` stubs + `popUpCenteredInWorld` + video `isPlaying` (134 lines); see Phase 0 notes below for kept/deferred |
+| 3–8 | ☐ not started | |
 
 All Phase 1 verified: **165/165 Chrome dpr1 + dpr2 + WebKit, `--homepage` boots, zero reference recapture.**
 
@@ -30,6 +31,20 @@ All Phase 1 verified: **165/165 Chrome dpr1 + dpr2 + WebKit, `--homepage` boots,
   variations across leaves make a shared helper messy for little gain.
 - 1d: merging the two `{Color,Grayscale}PalettePatchProgrammingIconAppearance` files — pixel-sensitive
   drawing code that would risk a recapture.
+
+**Phase 0 — kept / deferred (findings from verifying every "unused" claim against BOTH repos before deleting):**
+- `Widget.setupTestScreen1` is NOT dead — `SystemTest_macroLayoutSpacerEatsSpareSpace` calls it. KEPT (the
+  audit's headline 183-line removal was wrong; a method called by-name from a test, invisible to a `src` grep).
+- `Widget` methods `isTouching` / `overlappingImage` / `drawCachedTexture` / `showMoveHandle` ARE dead, but the
+  inspector with **"inherited: on"** lists inherited Widget methods, so removing them recaptures
+  `macroDuplicatedInspectorDrivesCopiedTargetOnly` (one test; benign — the list is just 4 shorter). DEFERRED to a
+  pass that owns the inspector recapture (Phase 6 re-baselines inspector tests anyway). Confirmed via the dumped
+  failure: panes identical, only the property-list scroll extent shifts.
+- `prepareBeforeSerialization` (Point/Rectangle/Color) is a live dynamic hook (`@[property].prepareBeforeSerialization?`),
+  not unused — KEPT.
+- Constant-naming (`ICON_SPECIFICATION_SIZE = Point 100,100` ×153, default-extent + macro-timing constants) —
+  DEFERRED as its own focused sweep ("Phase 0b").
+- `escalateEvent`'s `arg1..arg9` splat and the `unused`/`dontLayout` params — DEFERRED (signature changes → Phase 8).
 
 ---
 

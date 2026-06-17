@@ -1734,13 +1734,6 @@ class WorldWdgt extends PanelWdgt
   mouseDownRight: ->
     noOperation
       
-  # »>> this part is excluded from the fizzygum homepage build
-  droppedImage: ->
-    nil
-
-  droppedSVG: ->
-    nil
-  # this part is excluded from the fizzygum homepage build <<«
 
   # WorldWdgt text field tabbing:
   nextTab: (editField) ->
