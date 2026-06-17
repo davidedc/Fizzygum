@@ -171,9 +171,13 @@ clusters (after 5a/5b + the exemplar):
   LayoutSpec value type, different hierarchy); the value-coercion `instanceof` in `Point`/`Rectangle`/
   `Color`; serialization `.className` round-trips; reflection/test-harness class lookups.
 
-**Suggested sequence:** ~~A~~ **DONE** → ~~C~~ **DONE** → **E next** (lock-to-panels) → B → G →
-D-polish → F. F and parts of B/E may be folded into Phase 6 rather than done standalone. One cluster
-per step; verify (full recipe) and commit per cluster, like 5a/5b/exemplar.
+**Suggested sequence:** ~~A~~ **DONE** → ~~C~~ **DONE**. **Remaining clusters E, B, F, G, D are now
+FOLDED INTO Phase 6** (owner decision 2026-06-17): after A/C, no clean behaviour-moves remain — E/B/F
+are scroll-structure topology that *dissolves* under the God-class split, and G are leaf-role filters
+convertible only to pattern-3 capability-queries (the "renamed type-test" we avoid). The clean
+true-polymorphism wins (5a/5b/exemplar/A/C) are THIS endeavour's deliverable; the remainder is tracked,
+with a per-check dissolution map, in **`god-class-decomposition-plan.md`**. One cluster per step;
+verify (full recipe) and commit per cluster, like 5a/5b/exemplar.
 
 ---
 
