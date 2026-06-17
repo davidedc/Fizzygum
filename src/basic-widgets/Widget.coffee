@@ -1142,8 +1142,7 @@ class Widget extends TreeNode
     if @amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
       @parent.parent.adjustContentsBounds()
       @parent.parent.adjustScrollBars()
-    if @parent instanceof SimpleVerticalStackPanelWdgt
-      @parent.adjustContentsBounds()
+    @parent?.childGeometryChanged?()
 
     @children.forEach (child) ->
       child.silentFullRawMoveBy delta
@@ -1478,16 +1477,14 @@ class Widget extends TreeNode
       if @amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
         @parent.parent.adjustContentsBounds()
         @parent.parent.adjustScrollBars()
-      if @parent instanceof SimpleVerticalStackPanelWdgt
-        @parent.adjustContentsBounds()
+      @parent?.childGeometryChanged?()
 
 
   refreshScrollPanelWdgtOrVerticalStackIfIamInIt: ->
     if @amIDirectlyInsideScrollPanelWdgt()
       @parent.parent.adjustContentsBounds()
       @parent.parent.adjustScrollBars()
-    if @parent instanceof SimpleVerticalStackPanelWdgt
-      @parent.adjustContentsBounds()
+    @parent?.childGeometryChanged?()
 
 
   rawSetWidth: (width) ->

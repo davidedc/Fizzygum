@@ -63,6 +63,15 @@ class SimpleVerticalStackPanelWdgt extends Widget
       return
     @adjustContentsBounds()
 
+  # A subwidget notifies me (its container) that its geometry changed, so I
+  # re-lay-out my stack. This is the polymorphic replacement for Widget testing
+  # `@parent instanceof SimpleVerticalStackPanelWdgt`: a child just calls
+  # @parent?.childGeometryChanged?(), and only the container types that care
+  # (vertical stacks) react -- Widget no longer names this subclass. Inherited
+  # by WindowWdgt, matching the old instanceof's is-a reach.
+  childGeometryChanged: ->
+    @adjustContentsBounds()
+
   initialiseDefaultWindowContentLayoutSpec: ->
     super
     @layoutSpecDetails.canSetHeightFreely = false
