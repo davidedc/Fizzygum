@@ -24,7 +24,8 @@ rationale. You should not need the original audit conversation to act on any pha
 | 0 — dead code (pixel-neutral subset) | ✅ DONE 2026-06-17 | removed the 118-line commented `processDrop` block + orphaned `droppedImage/SVG` stubs + `popUpCenteredInWorld` + video `isPlaying` (134 lines); see Phase 0 notes below for kept/deferred |
 | 4 — `MenuItemSpec` parameter object | ✅ DONE 2026-06-17 | new `MenuItemSpec` value object kills the 17-arg `MenuItemWdgt` ctor (→6) + the `createMenuItem` comment wall (12 args →1); `addMenuItem`/`prependMenuItem` KEEP their positional public API (356 callers untouched — the "~25 call sites" estimate was for the wrong method) and build the spec internally; `maxWidthOfMenuEntries` `instanceof` chain → existence-guarded polymorphic `menuEntryPreferredWidth?()` on the 4 entry types (no `Widget` base method → no inspector recapture). 2 SystemTests that build `MenuItemWdgt` directly updated. |
 | 3 — paint-preamble dedup (TARGETED, scope-reduced) | ✅ DONE 2026-06-17 | Investigation found the "uniform 14–18-copy preamble" premise false (4 skeletons + ~6 outliers, 2 hierarchies); per owner decision did the clean dedups only: lifted the byte-identical plot paint method onto `GraphsPlotsChartsWdgt` (Bar/Scatter/Function inherit; 3D kept — reparenting would change behaviour), and extracted a `LayoutChromeWdgt` base (paint scaffold + `drawLayoutChrome` hook) for the spacer/adder/adjuster trio. Left Shape-A/D + outliers as-is. 165/165 dpr1+dpr2+WebKit + --homepage, zero recapture. |
-| 5–8 | ☐ not started | |
+| 5 — decouple `Widget` from subclasses *(polymorphism-first)* | ◐ IN PROGRESS | **5a DONE 2026-06-17:** the smart-placer (`WidgetCreatorAndSmartPlacerOnClickMixin`) — two `instanceof` chains (4-type capability find + 3-vs-1 placement branch) collapsed into polymorphic `acceptsSmartPlacedWidgets`/`smartPlace` on `StretchableEditableWdgt` (covers `PatchProgramming`/`SimpleSlide` subclasses) & `SimpleDocumentWdgt`, dispatched via `?()` so nothing lands on `Widget` (no inspector recapture). 165/165 dpr1+dpr2+WebKit, zero recapture. |
+| 6–8 | ☐ not started | |
 
 All Phase 1 verified: **165/165 Chrome dpr1 + dpr2 + WebKit, `--homepage` boots, zero reference recapture.**
 
@@ -356,8 +357,18 @@ hard-reference ~25 concrete leaves, you cannot lift their responsibilities witho
 knowledge along. It also independently fixes seed example #3 (`instanceof` = missed polymorphism) and
 the base-knows-subclasses smell.
 
-Replace each *genuine* `instanceof` cluster with an overridable predicate/method on the relevant
-subclass (default on the base), then delete the branch:
+**Approach (owner-refined 2026-06-17): prefer TRUE polymorphism over predicates.** An `instanceof`
+is usually *missed polymorphism*, so first try to MOVE THE BEHAVIOUR inside the branch onto the type
+(`x.doIt()` overridden per class → the branch disappears) rather than just swapping in a capability
+query (`x.isFoo()` — that drops the base→subclass coupling but keeps the branch: `instanceof` in a
+nicer hat). Fall back to a query ONLY where the behaviour genuinely can't move — e.g. *filtering*
+chrome out of a child-iteration, which is a property of the iteration, not behaviour you can push
+into the widget. **Dispatch via an existential call (`x.method?()`) so the new methods live on the
+relevant SUBCLASSES, not as a default on `Widget`** — that keeps the God-class method-list unchanged
+and dodges the inspector "inherited: on" recapture trap (the Phase 0 / Phase 4 lesson). [5a applied
+exactly this.]
+
+With that lens, replace each *genuine* `instanceof` cluster, then delete the branch:
 - `ScrollPanelWdgt:67-74` (drop-accept + display name) → `containerWantsDrops()` /
   `colloquialNameForContainer()` on the contents.
 - `WidgetCreatorAndSmartPlacerOnClickMixin:18-30` (4-class chain, twice) → `smartPlace(widget)` on the

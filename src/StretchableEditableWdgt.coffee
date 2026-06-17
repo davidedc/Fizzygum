@@ -30,6 +30,21 @@ class StretchableEditableWdgt extends Widget
   representativeIcon: ->
     new GenericPanelIconWdgt
 
+  # Smart-placement protocol, called polymorphically by
+  # WidgetCreatorAndSmartPlacerOnClickMixin (replacing an instanceof chain that
+  # used to live in the mixin). A content widget that accepts a click-created
+  # widget answers acceptsSmartPlacedWidgets and implements smartPlace.
+  # Inherited by PatchProgrammingWdgt / SimpleSlideWdgt.
+  acceptsSmartPlacedWidgets: ->
+    @dragsDropsAndEditingEnabled
+
+  smartPlace: (widgetToBePlaced, creator) ->
+    widgetToBePlaced.fullRawMoveTo @stretchableWidgetContainer.center().round().subtract widgetToBePlaced.extent().floorDivideBy 2
+    @stretchableWidgetContainer.add widgetToBePlaced
+    widgetToBePlaced.rememberFractionalSituationInHoldingPanel()
+    @stretchableWidgetContainer.bringToForeground()
+    creator.bringToForeground()
+
 
   createToolsPanel: ->
 

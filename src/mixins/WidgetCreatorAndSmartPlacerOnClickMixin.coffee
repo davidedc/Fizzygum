@@ -15,30 +15,16 @@ WidgetCreatorAndSmartPlacerOnClickMixin =
         #  - empty window with drop-in placeholder
         #  - window with panel
         #  - window with scrollpanel
+        # find the topmost editing-enabled window whose contents knows how to
+        # accept a smart-placed widget, then let that content widget place it.
+        # The contents-type branching that used to be here is now polymorphic:
+        # acceptsSmartPlacedWidgets / smartPlace live on the content widgets
+        # (StretchableEditableWdgt + subclasses, SimpleDocumentWdgt).
         where = world.topmostChildSuchThat (w) ->
-          (w instanceof WindowWdgt) and
-          (w.contents?) and
-          ((w.contents instanceof StretchableEditableWdgt) or
-           (w.contents instanceof SimpleDocumentWdgt) or
-           (w.contents instanceof PatchProgrammingWdgt) or
-           (w.contents instanceof SimpleSlideWdgt)) and
-          (w.contents.dragsDropsAndEditingEnabled)
+          (w instanceof WindowWdgt) and w.contents?.acceptsSmartPlacedWidgets?()
 
         if where?
-          if (where.contents instanceof StretchableEditableWdgt) or
-           (where.contents instanceof PatchProgrammingWdgt) or
-           (where.contents instanceof SimpleSlideWdgt)
-            widgetToBePlaced.fullRawMoveTo where.contents.stretchableWidgetContainer.center().round().subtract widgetToBePlaced.extent().floorDivideBy 2
-            where.contents.stretchableWidgetContainer.add widgetToBePlaced
-            widgetToBePlaced.rememberFractionalSituationInHoldingPanel()
-            where.contents.stretchableWidgetContainer.bringToForeground()
-            @bringToForeground()
-          else
-            # this is in case of the simpleDocument
-            where.contents.simpleDocumentScrollPanel.add widgetToBePlaced
-            where.contents.simpleDocumentScrollPanel.scrollToBottom()
-            where.contents.simpleDocumentScrollPanel.bringToForeground()
-            @bringToForeground()
+          where.contents.smartPlace widgetToBePlaced, @
         else
           widgetToBePlaced.fullRawMoveTo @topRight().add new Point 20,-40
           widgetToBePlaced.fullRawMoveWithin world

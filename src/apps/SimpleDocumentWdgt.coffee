@@ -39,6 +39,17 @@ class SimpleDocumentWdgt extends Widget
   representativeIcon: ->
     new TypewriterIconWdgt
 
+  # Smart-placement protocol (see WidgetCreatorAndSmartPlacerOnClickMixin): a
+  # SimpleDocument appends the click-created widget to its scroll panel.
+  acceptsSmartPlacedWidgets: ->
+    @dragsDropsAndEditingEnabled
+
+  smartPlace: (widgetToBePlaced, creator) ->
+    @simpleDocumentScrollPanel.add widgetToBePlaced
+    @simpleDocumentScrollPanel.scrollToBottom()
+    @simpleDocumentScrollPanel.bringToForeground()
+    creator.bringToForeground()
+
   hasStartingContentBeenChangedByUser: ->
     !(
       @simpleDocumentScrollPanel.contents.children.length == 1 and
