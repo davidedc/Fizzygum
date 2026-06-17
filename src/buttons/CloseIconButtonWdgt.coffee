@@ -1,26 +1,12 @@
-# sends a message to a target object when pressed.
-# Takes the shape of an icon, and can also host
-# a widget to be used as "face"
-#
-# You could achieve something similar by having
-# an empty button containing an icon, but changing
-# the color of a face belonging to a button is
-# not yet supported.
-# i.e. this is currently the simplest way to change the color
-# of a non-rectangular button.
+# Closes the window (or its container) this button sits in.
+# See IconButtonWdgt for the shared icon-button family contract.
 
-class CloseIconButtonWdgt extends ButtonWdgt
+class CloseIconButtonWdgt extends IconButtonWdgt
 
+  iconHoverColor: Color.RED
+  iconToolTipMessage: "close window"
 
-  constructor: (@target) ->
-    # can't set the parent as the target directly because this widget
-    # might not have a parent yet.
-    super true, @, 'actOnClick', new Widget
-    @color_hover = Color.RED
-    @color_pressed = @color_hover
-    @appearance = new CloseIconAppearance @
-    @toolTipMessage = "close window"
-
+  createAppearance: -> new CloseIconAppearance @
 
   actOnClick: ->
     if @parent?
@@ -28,4 +14,3 @@ class CloseIconButtonWdgt extends ButtonWdgt
         @parent.closeFromWindowBar()
       else
         @parent.close()
-

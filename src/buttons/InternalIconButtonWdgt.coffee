@@ -1,29 +1,13 @@
-# sends a message to a target object when pressed.
-# Takes the shape of an icon, and can also host
-# a widget to be used as "face"
-#
-# You could achieve something similar by having
-# an empty button containing an icon, but changing
-# the color of a face belonging to a button is
-# not yet supported.
-# i.e. this is currently the simplest way to change the color
-# of a non-rectangular button.
+# Pops the window out of documents, making it un-droppable into other documents.
+# See IconButtonWdgt for the shared icon-button family contract.
 
-class InternalIconButtonWdgt extends ButtonWdgt
+class InternalIconButtonWdgt extends IconButtonWdgt
 
+  iconToolTipMessage: "pop-out window from documents,\nmake it un-droppable\ninto other documents"
 
-  constructor: (@target) ->
-    # can't set the parent as the target directly because this widget
-    # might not have a parent yet.
-    super true, @, 'actOnClick', new Widget
-    @color_hover = Color.create 255,153,0
-    @color_pressed = @color_hover
-    @appearance = new InternalIconAppearance @
-    @toolTipMessage = "pop-out window from documents,\nmake it un-droppable\ninto other documents"
-
+  createAppearance: -> new InternalIconAppearance @
 
   actOnClick: ->
     if @parent?.parent?
       if (@parent.parent instanceof WindowWdgt)
         @parent.parent.makeExternal()
-
