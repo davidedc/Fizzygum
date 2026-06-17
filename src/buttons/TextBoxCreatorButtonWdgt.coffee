@@ -1,9 +1,8 @@
 class TextBoxCreatorButtonWdgt extends CreatorButtonWdgt
 
-  constructor: ->
-    super
-    @appearance = new TextIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
-    @toolTipMessage = "text box"
+  iconToolTipMessage: "text box"
+
+  createAppearance: -> new TextIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
     switcheroo = new TextWdgt "insert text here"

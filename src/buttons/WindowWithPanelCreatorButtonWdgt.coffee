@@ -1,9 +1,8 @@
 class WindowWithPanelCreatorButtonWdgt extends CreatorButtonWdgt
 
-  constructor: ->
-    super
-    @appearance = new WindowWithCroppingPanelIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
-    @toolTipMessage = "cropping panel"
+  iconToolTipMessage: "cropping panel"
+
+  createAppearance: -> new WindowWithCroppingPanelIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
     switcherooWm = new WindowWdgt nil, nil, new PanelWdgt, true, true

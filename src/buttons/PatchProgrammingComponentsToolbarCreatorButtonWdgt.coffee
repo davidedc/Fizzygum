@@ -1,9 +1,8 @@
 class PatchProgrammingComponentsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
-  constructor: ->
-    super
-    @appearance = new PatchProgrammingComponentsIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
-    @toolTipMessage = "components that can be connected"
+  iconToolTipMessage: "components that can be connected"
+
+  createAppearance: -> new PatchProgrammingComponentsIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
 

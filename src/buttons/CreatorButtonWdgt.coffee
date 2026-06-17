@@ -8,10 +8,17 @@ class CreatorButtonWdgt extends Widget
   color_pressed: Color.GRAY
   color_normal: Color.create 230, 230, 230
 
+  actionableAsThumbnail: true
+  editorContentPropertyChangerButton: true
+
+  iconToolTipMessage: nil
+
+  # subclasses supply createAppearance (the icon) + iconToolTipMessage (hover
+  # text); the appearance is set here after super, as the original ctors did.
   constructor: ->
     super
-    @actionableAsThumbnail = true
-    @editorContentPropertyChangerButton = true
+    @appearance = @createAppearance()
+    @toolTipMessage = @iconToolTipMessage
 
   grabbedWidgetSwitcheroo: ->
     return @createWidgetToBeHandled()

@@ -1,9 +1,8 @@
 class Plot3DCreatorButtonWdgt extends CreatorButtonWdgt
 
-  constructor: ->
-    super
-    @appearance = new Plot3DIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
-    @toolTipMessage = "3D plot"
+  iconToolTipMessage: "3D plot"
+
+  createAppearance: -> new Plot3DIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
     switcherooWm = new WindowWdgt nil, nil, new Example3DPlotWdgt, true, true

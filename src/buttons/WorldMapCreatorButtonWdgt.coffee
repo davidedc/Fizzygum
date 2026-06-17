@@ -1,9 +1,8 @@
 class WorldMapCreatorButtonWdgt extends CreatorButtonWdgt
 
-  constructor: ->
-    super
-    @appearance = new LittleWorldIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
-    @toolTipMessage = "world map"
+  iconToolTipMessage: "world map"
+
+  createAppearance: -> new LittleWorldIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
     switcheroo = new SimpleWorldMapIconWdgt

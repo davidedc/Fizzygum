@@ -1,9 +1,8 @@
 class ColorPaletteNodeCreatorButtonWdgt extends CreatorButtonWdgt
 
-  constructor: ->
-    super
-    @appearance = new ColorPalettePatchProgrammingIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
-    @toolTipMessage = "color palette"
+  iconToolTipMessage: "color palette"
+
+  createAppearance: -> new ColorPalettePatchProgrammingIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
     switcherooWm = new WindowWdgt nil, nil, new ColorPaletteWdgt, true

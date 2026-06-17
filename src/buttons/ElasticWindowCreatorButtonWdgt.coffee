@@ -2,10 +2,9 @@
 
 class ElasticWindowCreatorButtonWdgt extends CreatorButtonWdgt
 
-  constructor: ->
-    super
-    @appearance = new ElasticWindowIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
-    @toolTipMessage = "elastic panel"
+  iconToolTipMessage: "elastic panel"
+
+  createAppearance: -> new ElasticWindowIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
     genericPanel = new StretchableEditableWdgt

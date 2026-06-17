@@ -1,9 +1,8 @@
 class WindowsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
-  constructor: ->
-    super
-    @appearance = new WindowsToolbarIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
-    @toolTipMessage = "many types of\npre-made windows"
+  iconToolTipMessage: "many types of\npre-made windows"
+
+  createAppearance: -> new WindowsToolbarIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
 
