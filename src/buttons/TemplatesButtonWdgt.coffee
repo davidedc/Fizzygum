@@ -1,19 +1,11 @@
-class TemplatesButtonWdgt extends IconWdgt
+# Opens / re-focuses the editor's "useful snippets" templates window.
+# See EditorContentPropertyChangerButtonWdgt for the shared family contract.
 
-  @augmentWith HighlightableMixin, @name
-  @augmentWith ParentStainerMixin, @name
+class TemplatesButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
-  color_hover: Color.create 90, 90, 90
-  color_pressed: Color.GRAY
-  color_normal: Color.create 230, 230, 230
+  iconToolTipMessage: "useful snippets"
 
-  constructor: ->
-    super
-    @appearance = new TemplatesIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
-
-    @actionableAsThumbnail = true
-    @editorContentPropertyChangerButton = true
-    @toolTipMessage = "useful snippets"
+  createAppearance: -> new TemplatesIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   bringTemplatesWindowIntoView: ->
     world.simpleEditorTemplates.bringToForeground()
@@ -39,5 +31,3 @@ class TemplatesButtonWdgt extends IconWdgt
     templatesWindow.fullRawMoveWithin world
     world.add templatesWindow
     world.simpleEditorTemplates = templatesWindow
-
-

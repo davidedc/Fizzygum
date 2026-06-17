@@ -1,18 +1,11 @@
-class DecreaseFontSizeButtonWdgt extends IconWdgt
+# Steps the last-clicked widget's font size down through a fixed ladder.
+# See EditorContentPropertyChangerButtonWdgt for the shared family contract.
 
-  @augmentWith HighlightableMixin, @name
-  @augmentWith ParentStainerMixin, @name
+class DecreaseFontSizeButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
-  color_hover: Color.create 90, 90, 90
-  color_pressed: Color.GRAY
-  color_normal: Color.create 230, 230, 230
+  iconToolTipMessage: "decrease font size"
 
-  constructor: ->
-    super
-    @appearance = new DecreaseFontSizeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
-    @actionableAsThumbnail = true
-    @editorContentPropertyChangerButton = true
-    @toolTipMessage = "decrease font size"
+  createAppearance: -> new DecreaseFontSizeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   mouseClickLeft: ->
     if world.lastNonTextPropertyChangerButtonClickedOrDropped?.originallySetFontSize?
@@ -33,4 +26,3 @@ class DecreaseFontSizeButtonWdgt extends IconWdgt
         widgetClickedLast.setFontSize widgetClickedLast.originallySetFontSize - 2
       else
         widgetClickedLast.setFontSize widgetClickedLast.originallySetFontSize - 1
-

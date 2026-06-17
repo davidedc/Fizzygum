@@ -1,21 +1,17 @@
-class ChangeFontButtonWdgt extends IconWdgt
+# Opens (or re-focuses) the editor's font-selection menu and applies the chosen
+# font to the last-clicked widget.
+# See EditorContentPropertyChangerButtonWdgt for the shared family contract.
 
-  @augmentWith HighlightableMixin, @name
-  @augmentWith ParentStainerMixin, @name
-
-  color_hover: Color.create 90, 90, 90
-  color_pressed: Color.GRAY
-  color_normal: Color.create 230, 230, 230
+class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   simpleDocument: nil
 
-  constructor: (@simpleDocument) ->
-    super nil
-    @appearance = new ChangeFontIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
+  iconToolTipMessage: "change font"
 
-    @actionableAsThumbnail = true
-    @editorContentPropertyChangerButton = true
-    @toolTipMessage = "change font"
+  constructor: (@simpleDocument) ->
+    super nil  # nil keeps @color = nil as before; icon line-colour set in createAppearance
+
+  createAppearance: -> new ChangeFontIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   mouseClickLeft: ->
     # if there is already a font selection menu for the editor,
@@ -47,6 +43,3 @@ class ChangeFontButtonWdgt extends IconWdgt
     if world.lastNonTextPropertyChangerButtonClickedOrDropped?.setFontName?
       widgetClickedLast = world.lastNonTextPropertyChangerButtonClickedOrDropped
       widgetClickedLast.setFontName(nil, ignored2, widgetClickedLast[theNewFontName])
-
-
-

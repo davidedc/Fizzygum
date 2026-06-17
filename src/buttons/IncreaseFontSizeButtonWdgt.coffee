@@ -1,21 +1,13 @@
-class IncreaseFontSizeButtonWdgt extends IconWdgt
+# Steps the last-clicked widget's font size up through a fixed ladder.
+# See EditorContentPropertyChangerButtonWdgt for the shared family contract.
 
-  @augmentWith HighlightableMixin, @name
-  @augmentWith ParentStainerMixin, @name
+class IncreaseFontSizeButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
-  color_hover: Color.create 90, 90, 90
-  color_pressed: Color.GRAY
-  color_normal: Color.create 230, 230, 230
+  iconToolTipMessage: "increase font size"
 
-  constructor: ->
-    super
-    @appearance = new IncreaseFontSizeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
-    @actionableAsThumbnail = true
-    @editorContentPropertyChangerButton = true
-    @toolTipMessage = "increase font size"
+  createAppearance: -> new IncreaseFontSizeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   mouseClickLeft: ->
-
     if world.lastNonTextPropertyChangerButtonClickedOrDropped?.originallySetFontSize?
       widgetClickedLast = world.lastNonTextPropertyChangerButtonClickedOrDropped
       if widgetClickedLast.originallySetFontSize < 12
@@ -32,6 +24,3 @@ class IncreaseFontSizeButtonWdgt extends IconWdgt
         widgetClickedLast.setFontSize 80
       else
         widgetClickedLast.setFontSize widgetClickedLast.originallySetFontSize + 10
-
-
-

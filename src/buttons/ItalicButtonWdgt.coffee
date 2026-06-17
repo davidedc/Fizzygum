@@ -1,18 +1,11 @@
-class ItalicButtonWdgt extends Widget
+# Toggles italic on the last-clicked widget.
+# See EditorContentPropertyChangerButtonWdgt for the shared family contract.
 
-  @augmentWith HighlightableMixin, @name
-  @augmentWith ParentStainerMixin, @name
+class ItalicButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
-  color_hover: Color.create 90, 90, 90
-  color_pressed: Color.GRAY
-  color_normal: Color.create 230, 230, 230
+  iconToolTipMessage: "italic"
 
-  constructor: (@color) ->
-    super
-    @appearance = new ItalicIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
-    @actionableAsThumbnail = true
-    @editorContentPropertyChangerButton = true
-    @toolTipMessage = "italic"
+  createAppearance: -> new ItalicIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   mouseClickLeft: ->
     if world.lastNonTextPropertyChangerButtonClickedOrDropped?.toggleItalic?

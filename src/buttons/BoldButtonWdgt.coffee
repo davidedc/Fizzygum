@@ -1,18 +1,11 @@
-class BoldButtonWdgt extends Widget
+# Toggles bold on the last-clicked widget.
+# See EditorContentPropertyChangerButtonWdgt for the shared family contract.
 
-  @augmentWith HighlightableMixin, @name
-  @augmentWith ParentStainerMixin, @name
+class BoldButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
-  color_hover: Color.create 90, 90, 90
-  color_pressed: Color.GRAY
-  color_normal: Color.create 230, 230, 230
+  iconToolTipMessage: "bold"
 
-  constructor: ->
-    super
-    @appearance = new BoldIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
-    @actionableAsThumbnail = true
-    @editorContentPropertyChangerButton = true
-    @toolTipMessage = "bold"
+  createAppearance: -> new BoldIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   mouseClickLeft: ->
     if world.lastNonTextPropertyChangerButtonClickedOrDropped?.toggleWeight?

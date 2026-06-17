@@ -1,18 +1,11 @@
-class FormatAsCodeButtonWdgt extends IconWdgt
+# Toggles the last-clicked widget's font between monospace and Arial.
+# See EditorContentPropertyChangerButtonWdgt for the shared family contract.
 
-  @augmentWith HighlightableMixin, @name
-  @augmentWith ParentStainerMixin, @name
+class FormatAsCodeButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
-  color_hover: Color.create 90, 90, 90
-  color_pressed: Color.GRAY
-  color_normal: Color.create 230, 230, 230
+  iconToolTipMessage: "format as code"
 
-  constructor: ->
-    super
-    @appearance = new FormatAsCodeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
-    @actionableAsThumbnail = true
-    @editorContentPropertyChangerButton = true
-    @toolTipMessage = "format as code"
+  createAppearance: -> new FormatAsCodeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   mouseClickLeft: ->
     if world.lastNonTextPropertyChangerButtonClickedOrDropped?.setFontName?
@@ -21,4 +14,3 @@ class FormatAsCodeButtonWdgt extends IconWdgt
         widgetClickedLast.setFontName nil, nil, widgetClickedLast.monoFontStack
       else
         widgetClickedLast.setFontName nil, nil, widgetClickedLast.justArialFontStack
-
