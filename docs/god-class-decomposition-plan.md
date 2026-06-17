@@ -221,8 +221,15 @@ together and rebinding its `(menusHelper, "create…")` call sites:
     as `noteShortcutCreated`; `colloquialName` correctly left in place). **Zero recapture
     confirmed** — no SystemTest inspects the World, so a WorldWdgt method-move is clean
     (answers the open question for Tier 2; the recapture tax is a `Widget`-base concern).
-    · 6a.2 WidgetFactory · 6a.3 menu/wallpaper builders · 6a.4 popup/tooltip lifecycle
-    (stateful — check serialization) · 6a.5 `anyReferenceToWdgt`.
+    · **6a.2 WidgetFactory — DONE 2026-06-17** (23 `createNew*`/`underTheCarpet` demo
+    builders → `world.widgetFactory`, a whole-file homepage-stripped collaborator,
+    guarded `if WidgetFactory?` ctor; the `create` pickUp helper STAYS on world as
+    public API; 27 `createNew*` + 1 `underTheCarpet` demo-menu string-action targets
+    rebound `@`→`@widgetFactory` via a replace-all that caught 2 items in a *second*
+    menu (`layoutTestsMenu`) a manual sweep would have missed; the German Loreley
+    text in `createNewText` verified byte-exact vs HEAD before the move; zero
+    recapture) · 6a.3 menu/wallpaper builders · 6a.4 popup/tooltip lifecycle (stateful
+    — check serialization) · 6a.5 `anyReferenceToWdgt`.
   Verify: full recipe; recapture only if a test inspects the World (check first).
 
 **Tier 3 — `Widget` liftable rim (6b, non-DET).** Each moves methods off Widget →

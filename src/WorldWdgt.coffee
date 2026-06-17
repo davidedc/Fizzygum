@@ -222,6 +222,7 @@ class WorldWdgt extends PanelWdgt
   pattern7: "bricks"
 
   untitledNamingService: nil
+  widgetFactory: nil
 
   lastUsedConnectionsCalculationToken: 0
 
@@ -318,6 +319,11 @@ class WorldWdgt extends PanelWdgt
     if MacroToolkit?
       @macroToolkit = new MacroToolkit
     @untitledNamingService = new UntitledNamingService
+    # WidgetFactory is dev/demo scaffolding (homepage-excluded), so guard like
+    # the other test/dev collaborators above -- under --homepage the class is
+    # stripped and the demo menus that use it are stripped too.
+    if WidgetFactory?
+      @widgetFactory = new WidgetFactory
 
     # The DOM <canvas id="world"> (@worldCanvas) stays the event target. Under the
     # SWCanvas backend all rendering goes to a separate software render canvas
@@ -1943,187 +1949,55 @@ class WorldWdgt extends PanelWdgt
     aWdgt.pickUp()
 
   # »>> this part is excluded from the fizzygum homepage build
-  createNewStackElementsSizeAdjustingWdgt: ->
-    @create new StackElementsSizeAdjustingWdgt
-
-  createNewLayoutElementAdderOrDropletWdgt: ->
-    @create new LayoutElementAdderOrDropletWdgt
-
-  createNewRectangleWdgt: ->
-    @create new RectangleWdgt
-  createNewBoxWdgt: ->
-    @create new BoxWdgt
-  createNewCircleBoxWdgt: ->
-    @create new CircleBoxWdgt
-  createNewSliderWdgt: ->
-    @create new SliderWdgt
-  createNewPanelWdgt: ->
-    newWdgt = new PanelWdgt
-    newWdgt.rawSetExtent new Point 350, 250
-    @create newWdgt
-  createNewScrollPanelWdgt: ->
-    newWdgt = new ScrollPanelWdgt
-    newWdgt.adjustContentsBounds()
-    newWdgt.adjustScrollBars()
-    newWdgt.rawSetExtent new Point 350, 250
-    @create newWdgt
-  createNewCanvas: ->
-    newWdgt = new CanvasWdgt
-    newWdgt.rawSetExtent new Point 350, 250
-    @create newWdgt
-  createNewHandle: ->
-    @create new HandleWdgt
-  createNewString: ->
-    newWdgt = new StringWdgt "Hello, World!"
-    newWdgt.isEditable = true
-    @create newWdgt
-  createNewText: ->
-    newWdgt = new TextWdgt("Ich weiß nicht, was soll es bedeuten, dass ich so " +
-      "traurig bin, ein Märchen aus uralten Zeiten, das " +
-      "kommt mir nicht aus dem Sinn. Die Luft ist kühl " +
-      "und es dunkelt, und ruhig fließt der Rhein; der " +
-      "Gipfel des Berges funkelt im Abendsonnenschein. " +
-      "Die schönste Jungfrau sitzet dort oben wunderbar, " +
-      "ihr gold'nes Geschmeide blitzet, sie kämmt ihr " +
-      "goldenes Haar, sie kämmt es mit goldenem Kamme, " +
-      "und singt ein Lied dabei; das hat eine wundersame, " +
-      "gewalt'ge Melodei. Den Schiffer im kleinen " +
-      "Schiffe, ergreift es mit wildem Weh; er schaut " +
-      "nicht die Felsenriffe, er schaut nur hinauf in " +
-      "die Höh'. Ich glaube, die Wellen verschlingen " +
-      "am Ende Schiffer und Kahn, und das hat mit ihrem " +
-      "Singen, die Loreley getan.")
-    newWdgt.isEditable = true
-    # TextWdgt wraps to its own width via softWrap, like the
-    # createNewTextWdgtWithBackground demo.
-    @create newWdgt
-  createNewSpeechBubbleWdgt: ->
-    newWdgt = new SpeechBubbleWdgt
-    @create newWdgt
-  createNewToolTipWdgt: ->
-    newWdgt = new ToolTipWdgt
-    @create newWdgt
-  createNewGrayPaletteWdgt: ->
-    @create new GrayPaletteWdgt
-  createNewColorPaletteWdgt: ->
-    @create new ColorPaletteWdgt
-  createNewGrayPaletteWdgtInWindow: ->
-    gP = new GrayPaletteWdgt
-    wm = new WindowWdgt nil, nil, gP
-    @add wm
-    wm.rawSetExtent new Point 130, 70
-    wm.fullRawMoveTo @hand.position().subtract new Point 50, 100
-  createNewColorPaletteWdgtInWindow: ->
-    cP = new ColorPaletteWdgt
-    wm = new WindowWdgt nil, nil, cP
-    @add wm
-    wm.rawSetExtent new Point 130, 100
-    wm.fullRawMoveTo @hand.position().subtract new Point 50, 100
-  createNewColorPickerWdgt: ->
-    @create new ColorPickerWdgt
-  createNewSensorDemo: ->
-    newWdgt = new MouseSensorWdgt
-    newWdgt.setColor Color.create 230, 200, 100
-    newWdgt.cornerRadius = 35
-    newWdgt.alpha = 0.2
-    newWdgt.rawSetExtent new Point 100, 100
-    @create newWdgt
-  createNewAnimationDemo: ->
-    foo = new BouncerWdgt
-    foo.fullRawMoveTo new Point 50, 20
-    foo.rawSetExtent new Point 300, 200
-    foo.alpha = 0.9
-    foo.speed = 3
-    bar = new BouncerWdgt
-    bar.setColor Color.create 50, 50, 50
-    bar.fullRawMoveTo new Point 80, 80
-    bar.rawSetExtent new Point 80, 250
-    bar.type = "horizontal"
-    bar.direction = "right"
-    bar.alpha = 0.9
-    bar.speed = 5
-    baz = new BouncerWdgt
-    baz.setColor Color.create 20, 20, 20
-    baz.fullRawMoveTo new Point 90, 140
-    baz.rawSetExtent new Point 40, 30
-    baz.type = "horizontal"
-    baz.direction = "right"
-    baz.speed = 3
-    garply = new BouncerWdgt
-    garply.setColor Color.create 200, 20, 20
-    garply.fullRawMoveTo new Point 90, 140
-    garply.rawSetExtent new Point 20, 20
-    garply.type = "vertical"
-    garply.direction = "up"
-    garply.speed = 8
-    fred = new BouncerWdgt
-    fred.setColor Color.create 20, 200, 20
-    fred.fullRawMoveTo new Point 120, 140
-    fred.rawSetExtent new Point 20, 20
-    fred.type = "vertical"
-    fred.direction = "down"
-    fred.speed = 4
-    bar.add garply
-    bar.add baz
-    foo.add fred
-    foo.add bar
-    @create foo
-  createNewPenWdgt: ->
-    @create new PenWdgt
-  underTheCarpet: ->
-    newWdgt = new BasementWdgt
-    @create newWdgt
-
-
   popUpDemoMenu: (widgetOpeningThePopUp,b,c,d) ->
     if @isIndexPage
       menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "parts bin"
-      menu.addMenuItem "rectangle", true, @, "createNewRectangleWdgt"
-      menu.addMenuItem "box", true, @, "createNewBoxWdgt"
-      menu.addMenuItem "circle box", true, @, "createNewCircleBoxWdgt"
-      menu.addMenuItem "slider", true, @, "createNewSliderWdgt"
-      menu.addMenuItem "speech bubble", true, @, "createNewSpeechBubbleWdgt"
+      menu.addMenuItem "rectangle", true, @widgetFactory, "createNewRectangleWdgt"
+      menu.addMenuItem "box", true, @widgetFactory, "createNewBoxWdgt"
+      menu.addMenuItem "circle box", true, @widgetFactory, "createNewCircleBoxWdgt"
+      menu.addMenuItem "slider", true, @widgetFactory, "createNewSliderWdgt"
+      menu.addMenuItem "speech bubble", true, @widgetFactory, "createNewSpeechBubbleWdgt"
       menu.addLine()
-      menu.addMenuItem "gray scale palette", true, @, "createNewGrayPaletteWdgtInWindow"
-      menu.addMenuItem "color palette", true, @, "createNewColorPaletteWdgtInWindow"
+      menu.addMenuItem "gray scale palette", true, @widgetFactory, "createNewGrayPaletteWdgtInWindow"
+      menu.addMenuItem "color palette", true, @widgetFactory, "createNewColorPaletteWdgtInWindow"
       menu.addLine()
       menu.addMenuItem "analog clock", true, @, "analogClock"
     else
       menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "make a widget"
-      menu.addMenuItem "rectangle", true, @, "createNewRectangleWdgt"
-      menu.addMenuItem "box", true, @, "createNewBoxWdgt"
-      menu.addMenuItem "circle box", true, @, "createNewCircleBoxWdgt"
+      menu.addMenuItem "rectangle", true, @widgetFactory, "createNewRectangleWdgt"
+      menu.addMenuItem "box", true, @widgetFactory, "createNewBoxWdgt"
+      menu.addMenuItem "circle box", true, @widgetFactory, "createNewCircleBoxWdgt"
       menu.addLine()
-      menu.addMenuItem "slider", true, @, "createNewSliderWdgt"
-      menu.addMenuItem "panel", true, @, "createNewPanelWdgt"
-      menu.addMenuItem "scrollable panel", true, @, "createNewScrollPanelWdgt"
-      menu.addMenuItem "canvas", true, @, "createNewCanvas"
-      menu.addMenuItem "handle", true, @, "createNewHandle"
+      menu.addMenuItem "slider", true, @widgetFactory, "createNewSliderWdgt"
+      menu.addMenuItem "panel", true, @widgetFactory, "createNewPanelWdgt"
+      menu.addMenuItem "scrollable panel", true, @widgetFactory, "createNewScrollPanelWdgt"
+      menu.addMenuItem "canvas", true, @widgetFactory, "createNewCanvas"
+      menu.addMenuItem "handle", true, @widgetFactory, "createNewHandle"
       menu.addLine()
-      menu.addMenuItem "string", true, @, "createNewString"
-      menu.addMenuItem "text", true, @, "createNewText"
-      menu.addMenuItem "tool tip", true, @, "createNewToolTipWdgt"
-      menu.addMenuItem "speech bubble", true, @, "createNewSpeechBubbleWdgt"
+      menu.addMenuItem "string", true, @widgetFactory, "createNewString"
+      menu.addMenuItem "text", true, @widgetFactory, "createNewText"
+      menu.addMenuItem "tool tip", true, @widgetFactory, "createNewToolTipWdgt"
+      menu.addMenuItem "speech bubble", true, @widgetFactory, "createNewSpeechBubbleWdgt"
       menu.addLine()
-      menu.addMenuItem "gray scale palette", true, @, "createNewGrayPaletteWdgt"
-      menu.addMenuItem "color palette", true, @, "createNewColorPaletteWdgt"
-      menu.addMenuItem "color picker", true, @, "createNewColorPickerWdgt"
+      menu.addMenuItem "gray scale palette", true, @widgetFactory, "createNewGrayPaletteWdgt"
+      menu.addMenuItem "color palette", true, @widgetFactory, "createNewColorPaletteWdgt"
+      menu.addMenuItem "color picker", true, @widgetFactory, "createNewColorPickerWdgt"
       menu.addLine()
-      menu.addMenuItem "sensor demo", true, @, "createNewSensorDemo"
-      menu.addMenuItem "animation demo", true, @, "createNewAnimationDemo"
-      menu.addMenuItem "pen", true, @, "createNewPenWdgt"
+      menu.addMenuItem "sensor demo", true, @widgetFactory, "createNewSensorDemo"
+      menu.addMenuItem "animation demo", true, @widgetFactory, "createNewAnimationDemo"
+      menu.addMenuItem "pen", true, @widgetFactory, "createNewPenWdgt"
         
       menu.addLine()
       menu.addMenuItem "layout tests ➜", false, @, "layoutTestsMenu", "sample widgets"
       menu.addLine()
-      menu.addMenuItem "under the carpet", true, @, "underTheCarpet"
+      menu.addMenuItem "under the carpet", true, @widgetFactory, "underTheCarpet"
 
     menu.popUpAtHand()
 
   layoutTestsMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Layout tests"
-    menu.addMenuItem "adjuster widget", true, @, "createNewStackElementsSizeAdjustingWdgt"
-    menu.addMenuItem "adder/droplet", true, @, "createNewLayoutElementAdderOrDropletWdgt"
+    menu.addMenuItem "adjuster widget", true, @widgetFactory, "createNewStackElementsSizeAdjustingWdgt"
+    menu.addMenuItem "adder/droplet", true, @widgetFactory, "createNewLayoutElementAdderOrDropletWdgt"
     menu.addMenuItem "test screen 1", true, Widget, "setupTestScreen1"
     menu.popUpAtHand()
     
