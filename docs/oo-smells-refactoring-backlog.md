@@ -1,0 +1,406 @@
+# OO code-smell refactoring backlog
+
+A prioritized, dependency-aware backlog of object-oriented design cleanups for the Fizzygum
+`src/` tree, distilled from a full smell audit (2026-06-17). It is the natural **next phase after
+the `*Morph`→`*Wdgt` rename campaign** (which closed with `WorldMorph`→`WorldWdgt`; see
+`class-modernization-playbook.md`): renaming made names consistent, this makes the *structure*
+consistent.
+
+This file is meant to be executable cold. It embeds the catalogue, the per-item touch-lists
+(`file:line`), the volume/risk/determinism assessment, the verification recipe, and the ordering
+rationale. You should not need the original audit conversation to act on any phase.
+
+---
+
+## How items are ordered ("bang for the buck")
+
+Priority = **volume of correction ÷ risk**, with two overrides:
+
+1. **Dependency overrides bang-for-buck.** A subtle/risky change that *unblocks* a big payoff is
+   slotted before that payoff even if its own ratio is poor. There is exactly one such case here:
+   **Phase 5 (decouple `Widget` from its subclasses) must precede Phase 6 (God-Class split)** — you
+   cannot cleanly lift `Widget`'s responsibilities while the base still hard-references ~25 of its
+   own leaf classes. Everything in Phases 0–4 is independent of it.
+2. **Risk is dominated by two things in this codebase:**
+   - *Does the change alter rendered pixels?* If no → the byte-exact SystemTest suite is a free,
+     total safety net and the change is low-risk regardless of size. If yes → a reference recapture
+     is required and the change is a behaviour decision (flagged explicitly below).
+   - *Does the change touch the rendering loop, `doLayout`, or `ActivePointerWdgt` input
+     recognition?* Those are **determinism-sensitive** (`../Fizzygum-tests/DETERMINISM.md`): a
+     refactor that is logically correct can still introduce a dpr-2/parallel-load pixel flake if it
+     makes output depend on cycle/frame counts or wall-clock timers. Such items are pushed late and
+     marked **[DET]**.
+
+Result: voluminous + pixel-neutral + no-`[DET]` work goes first; behaviour- and determinism-
+sensitive work goes last; the single architectural prerequisite is slotted by dependency.
+
+---
+
+## Verification recipe (run after every phase; per-item notes only call out deltas)
+
+From `Fizzygum/` unless noted (commands and rationale in `Fizzygum/CLAUDE.md`):
+
+1. `./build_it_please.sh` — CoffeeScript syntax gate (the build ships source-as-text; this is the
+   parse-error net).
+2. `./build_and_smoke.sh` — headless boot (native + SWCanvas); catches load-order / missing-class
+   faults a base-class rename or a new `extends` edge can introduce. **Required net for any new
+   base class or moved `new X`** — the dependency finder regex-scans for `extends X`/`@augmentWith
+   X`/`new X`, so use those literal forms.
+3. `./build_and_test.sh` — the whole macro SystemTest suite (currently **165 tests**), headless,
+   parallel, `speed=fastest`, dpr 1 (~1 min). The default behavioural check.
+4. **dpr 2 + WebKit** — the standing green bar for this project is *165/165 at Chrome dpr1+dpr2 +
+   WebKit*. Always confirm dpr 2 and `npm run test:webkit` (one-time `npx playwright install
+   webkit`) for any `[DET]` item before declaring done.
+5. `--homepage` boot leg, as a **3-step cd sequence** (build in `Fizzygum/`, smoke in
+   `Fizzygum-tests/`, restore): `./build_it_please.sh --homepage` → `cd ../Fizzygum-tests && node
+   scripts/smoke-boot-headless.js --native-only` → restore the normal build. (Skips test +
+   experimental code; the net for homepage-shipped classes. Experimental code — `fizzytiles/`,
+   video player — is *stripped* here, so its net is the normal build, not this leg.)
+
+**Recapture rule:** the suite asserts raw-pixel `dataHash` equality, so it *is* the oracle for
+whether a refactor changed pixels — never pre-classify "this won't move pixels" and bless blind. A
+behaviour-preserving extraction should yield **ZERO recapture**; if a test goes red, localize with
+`node scripts/run-macro-test-headless.js SystemTest_<name> --dump-failures` before deciding whether
+it's a benign shift (recapture) or a regression (fix).
+
+---
+
+## The catalogue (smells found, by family)
+
+Condensed from the audit; each maps to phases below.
+
+- **God Class** — `Widget.coffee` (4728 L / 314 methods, ≥10 responsibilities), `WorldWdgt.coffee`
+  (2230 L / 112), `MenusHelper.coffee` (1170 L / 132, a per-demo-window dumping ground),
+  `StringWdgt` (1423), `InspectorWdgt` (658).
+- **Base knows its subclasses** — `Widget.coffee` does `instanceof`/`new` on ~25 descendants
+  (`:480,608,985,1145,2206,2778,3477…`); `WorldWdgt:1972-2099` is a 20-type factory.
+- **Type-check instead of polymorphism** — 178 `instanceof`; ~10 genuine clusters (containers/
+  buttons interrogating contents/parent by class). No type-`switch` smell exists (all `switch` is on
+  data).
+- **Missing intermediate abstraction** — ~85 empty `XIconWdgt extends IconWdgt` shells; 6
+  `*IconButtonWdgt` with no `IconButtonWdgt` base; 10 format/align buttons (split across `Widget`
+  and `IconWdgt` bases); 17 `*CreatorButtonWdgt`.
+- **Refused bequest** — `GrayPaletteWdgt extends ColorPaletteWdgt` (overrides the defining method,
+  sole subclass, has a dead override).
+- **Duplicated code** — the `paintIntoAreaOrBlitFromBackBuffer` preamble (14–18 copies, ~13 L each);
+  `*CreatorButtonWdgt` ctor/factory shell (×17); `*IconButtonWdgt` ctor + stale comment (×6);
+  format-button preamble (×10); `ColorPaletteWdgt` setters (×3 identical); palette patch-prog
+  appearances (×2, ~40 L).
+- **Long parameter list / comment-deodorant** — `MenuItemWdgt` ctor (17 params, `:11`),
+  `createMenuItem` (12, `MenuWdgt:64,111,116`) annotated with a trailing comment per arg;
+  `escalateEvent (functionName, arg1..arg9)` (`Widget:3899`).
+- **Primitive obsession** — `(al,at,w,h)` 4-number tuples thread the paint pipeline instead of
+  `Rectangle` (`Widget:1693`, `Appearance:31`, +call sites re-exploding a Rectangle); two clashing
+  mouse-button string vocabularies (`"left button"` MacroToolkit vs `"left"` ActivePointerWdgt).
+- **Flag arguments** — `doSerialize` (14+ branches), `doubleClickInvocation` (6 files),
+  `beingDropped` on `add` (~12 widgets).
+- **Temporary field** — `ActivePointerWdgt` drag/click scratch (`@wdgtToGrab`,
+  `@nonFloatDraggedWdgt`, `@doubleClickWdgt`/`Position`, `@grabOrigin`); `InspectorWdgt.@currentProperty`.
+- **Inappropriate intimacy / feature envy** — `CaretWdgt` ↔ `TextWdgt`/`StringWdgt` (71 `@target.*`,
+  bidirectional writes); `SimplePlainTextWdgt:100-117` writes `@parent.parent.isTextLineWrapping`.
+- **Message chains / LoD** — `world.basementWdgt.scrollPanel.contents.…` (`Widget:487`),
+  `.contents.contents.add` (~8×).
+- **Magic numbers** — `new Point 100,100` ×153 (icon sizes), the `globalAlpha = (if appliedShadow?…)
+  * @alpha` idiom ×19, drifted shadow offsets `(4,4)/(5,5)/(7,7)/(6,6)`.
+- **Speculative generality / dead code** — commented-out `processDrop` (~110 L,
+  `ActivePointerWdgt:713-823`) + orphaned nil stubs; 24 single-child bases; confirmed-unused methods;
+  `arg1..arg9`/`unused`/`dontLayout` params.
+
+---
+
+## Phase 0 — Surface reduction: delete dead code + name pixel-neutral constants
+
+**Why first:** highest bang-for-buck — large line reduction, ~zero risk (deleting unreferenced code
+and naming a constant to its *current* value changes no pixels), and it shrinks the surface every
+later phase has to reason about.
+
+Tasks:
+- **Delete commented-out code blocks:** `ActivePointerWdgt.coffee:713-823` (the ~110-line dead
+  `processDrop`) **together with** its orphaned no-op stubs `WorldWdgt.coffee:1738,1741`
+  (`droppedImage:/droppedSVG: -> nil`); `TextWdgt.coffee:121-150`; `Widget.coffee:4041-4049`;
+  `fizzytiles/LCLCodePreprocessor.coffee:496-510,1214-1241`.
+- **Delete grep-verified unused methods** (confirm 1 hit = the definition, then remove):
+  `Widget.coffee:3919 isTouching`, `:3926 overlappingImage`, `:1630 drawCachedTexture`,
+  `:2802 showMoveHandle`; `PopUpWdgt.coffee:136 popUpCenteredInWorld`;
+  `video-player/VideoPlayerCanvasWdgt.coffee:56 isPlaying`; the 3 identical
+  `prepareBeforeSerialization` (`Point:35`, `Rectangle:87`, `Color:214`).
+- **Remove the dev fixture off the base class:** `Widget.coffee:4472 @setupTestScreen1` (183 lines of
+  test scaffolding that does not belong on the universal base). Grep-verify the caller; relocate to a
+  dev/test location or delete.
+- **Delete declared-unused params** named `unused`/`dontLayout` (`ToolPanelWdgt.coffee:14`,
+  `HorizontalMenuPanelWdgt:18`, `SimpleVerticalStackPanelWdgt:17`, `ScrollPanelWdgt:186`) — sweep all
+  override signatures together (positional args).
+- **Name pixel-neutral constants** (value unchanged → zero recapture), into `PreferencesAndSettings`:
+  `ICON_SPECIFICATION_SIZE = Point 100,100` (×153 across `icons/*Appearance`), default-extent
+  constants (`460×400` ×14, `300×300` ×11, `75×75` ×18, `560×410` ×3), macro timing defaults
+  (`1000` ×15, etc. in `MacroToolkit`).
+
+**Volume:** ~400+ lines removed/clarified, ~200 literals named. **Risk:** LOW. **[DET]:** no.
+**Recapture:** ZERO. **Explicitly NOT here:** shadow-offset reconciliation (changes pixels → Phase 8)
+and the `arg1..arg9` splat (a signature change, not dead code → Phase 8).
+
+---
+
+## Phase 1 — Sibling-family base extraction & dedup *(contains the two seed examples)*
+
+**Why here:** large mechanical dedup across leaf widget families; pixel-neutral (these are chrome
+whose *rendering* is unchanged); the rename batches proved the button/palette families re-baseline
+zero tests when their behaviour is preserved. Delivers the two originally-cited smells first.
+
+- **1a — `IconButtonWdgt extends ButtonWdgt` base** (seed example #1). Pull the byte-identical
+  constructor (`super true, @, 'actOnClick', new Widget`) + the orange `color_hover`/`color_pressed`
+  pair + the (corrected, de-duplicated) header comment up into a new base; leaves keep only
+  `actOnClick` + their appearance class + tooltip. Files: `buttons/{Close,Collapse,Uncollapse,Edit,
+  External,Internal}IconButtonWdgt.coffee:12`. Drops ~110 L (incl. the stale 72-line comment copied
+  ×6). *Note the genuine difference to preserve:* Close uses `Color.RED`, the others
+  `Color.create 255,153,0`.
+- **1b — `EditorContentPropertyChangerButtonWdgt` base** for the format/align family. Captures the
+  `@augmentWith HighlightableMixin/ParentStainerMixin` lines, the three `color_*` fields, and the
+  `@actionableAsThumbnail`/`@editorContentPropertyChangerButton` flags; **resolves the base
+  inconsistency** (`Bold/Italic/AlignLeft/Center/Right` extend `Widget`; `ChangeFont/DecreaseFontSize/
+  FormatAsCode/IncreaseFontSize/Templates` extend `IconWdgt` — pick one). Parameterize the Align
+  trio's identical `mouseClickLeft` (`AlignLeftButtonWdgt:17` / Center / Right) on its
+  `(alignMethod, layoutAlignSetter)`. ~130 L.
+- **1c — Parameterize `CreatorButtonWdgt`.** Give the base a ctor reading class-level
+  `@appearanceClass`/`@toolTip`, and a `wrapInWindow(content, extent = Point 200,200)` helper; 17
+  leaves collapse to ~2 lines each. Add `ToolbarCreatorButtonWdgt.makeToolbarWindow(children,
+  extent)` for the 5 toolbar variants. ~140 L.
+- **1d — `PaletteWdgt` base** (seed example #2 — fixes the refused bequest). Extract a `PaletteWdgt`
+  holding the drag-to-pick-pixel + target/menu plumbing + the shared `createRefreshOrGetBackBuffer`
+  cache shell (cache-key → alloc → store) with an overridable `fillPaletteBuffer(ctx, extent)` hook;
+  make `ColorPaletteWdgt` and `GrayPaletteWdgt` **siblings**, each supplying only its fill. Delete
+  `GrayPaletteWdgt`'s dead `initialiseDefaultWindowContentLayoutSpec` override (identical to
+  inherited). Collapse `ColorPaletteWdgt:65-81`'s 3 identical setter methods into one helper. Merge
+  the 2 near-identical `icons/{Color,Grayscale}PalettePatchProgrammingIconAppearance.coffee` (~40 L
+  shared) via a `gradientColorStops(g)` hook.
+
+**⚠ Button-family internals to preserve (1a/1b/1c are all `ButtonWdgt`-rooted).** Current hierarchy:
+`Widget → ButtonWdgt → { SimpleButtonWdgt, LabelButtonWdgt → { MenuItemWdgt, MagnetWdgt } }`. Four
+traps recur for any new button base (learned the hard way in the Arc-5 `LabelButtonWdgt` extraction,
+which stayed pixel-identical): (1) `HighlightableMixin.updateColor` calls `setColor`, which clobbers
+`@color` (the normal fill) — inline `Widget`'s `mouseDownLeft` (`bringToForeground` + `escalateEvent`)
+rather than `super`-ing into the mixin; (2) the mixin's `mouseUpLeft` resets `state→NORMAL`, breaking
+any `STATE_PRESSED`-based selection — override to a no-op where that matters; (3) `ButtonWdgt.doLayout`
+lays out a `faceMorph` — a button without one must call `Widget::doLayout.call @, …` directly (the 6
+icon buttons pass `new Widget` as the faceMorph in `super true, @, 'actOnClick', new Widget` — preserve
+that arg when lifting the ctor); (4) `ButtonWdgt`'s ctor takes `faceMorph` in slot 4 — mind the arg
+mapping when the base forwards `super`. The metric to defend: menus/buttons stay **pixel-identical**.
+
+**Volume:** ~520 L de-duplicated, 3 new base classes. **Risk:** LOW. **[DET]:** no. **Recapture:**
+predict ZERO. *Watch:* the two palette set-target tests (`macroTargetingHighlightsCandidateMorph`,
+`macroUniqueTargetAndPropertyAreStillPresented`) once re-baselined on a menu *label-width* change —
+but a behaviour-preserving refactor doesn't change any drawn label, so still ZERO; confirm with the
+suite. New bases ⇒ run `build_and_smoke` (load-order net). Phase 1 and Phase 2 are order-independent;
+1 goes first only because it ships the seed examples at the lowest risk.
+
+---
+
+## Phase 2 — Thin the ~85 `XIconWdgt` shells (highest single-pattern volume)
+
+**Why here:** the single biggest line/class reduction available, and it is **low-risk in the
+keep-the-classes form** (behaviour identical → pixel-neutral). The ~85 `icons/*IconWdgt.coffee`
+classes are each a 5-line shell whose whole body is
+`constructor: (@color) -> super; @appearance = new XIconAppearance @`.
+
+- **Low-risk form (recommended):** give `IconWdgt` a constructor that reads a class-level
+  `@appearanceClass` (`@appearance = new @constructor.appearanceClass @`); each former shell becomes
+  a bodyless `class BoldIconWdgt extends IconWdgt` + `@appearanceClass: BoldIconAppearance`. **Keeps
+  the classes** → every `new BoldIconWdgt …` call site and all type identity are unchanged; only the
+  ~85 duplicated constructor bodies disappear. Pairs naturally with Phase 0's
+  `ICON_SPECIFICATION_SIZE` (defaulted on the base appearance).
+- **Aggressive form (deferred / optional — do NOT bundle):** collapse the classes entirely to a
+  registry/factory (`IconWdgt.named 'Bold'`). This removes the 85 declarations but forces a call-site
+  migration and loses type identity; only worth it if a future need (e.g. data-driven icon menus)
+  appears. Flag for an owner decision.
+
+**Volume:** ~85 constructor bodies removed. **Risk:** LOW–MEDIUM (icons render in many tests, but
+output is identical). **[DET]:** no. **Recapture:** ZERO. Depends on nothing hard (Phase 0 icon
+constant is a nicety, not a prerequisite).
+
+---
+
+## Phase 3 — Paint-preamble Template Method **[DET]**
+
+**Why here:** high volume (~180–230 L across 14–18 files) but it touches the **rendering path**, so
+it ranks below the pixel-neutral non-render dedup and must be verified byte-exact at dpr 2 + WebKit.
+
+- Add a `Widget`/`Appearance` `paintIntoAreaOrBlitFromBackBuffer` that runs the shared preamble
+  (`calculateKeyValues` → `clipToRectangle` → `globalAlpha` → `useLogicalPixelsUntilRestore` →
+  translate), calls an overridable `drawContents(aContext)` hook, then the postamble (`restore` +
+  `paintHighlight`). Each leaf keeps only its draw tail. Sites include `icons/IconAppearance.coffee:69`,
+  `UpperRightTriangleAppearance:14`, `HandleWdgt:65`, `LabelButtonWdgt:115`, `PenWdgt`,
+  `basic-widgets/{Boxy,CircleBoxy}Appearance`, `LayoutSpacerWdgt`, `StackElementsSizeAdjustingWdgt`,
+  `LayoutElementAdderOrDropletWdgt`, `apps/AnalogClockWdgt`, `graphs-plots-charts/Example{Bar,Scatter,
+  Function,3D}PlotWdgt`. (`IconAppearance` already does this for *its* sub-family — lift the pattern
+  one level up.)
+- Fold the `globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha` idiom (×19)
+  into a single `effectiveAlpha(appliedShadow)` helper while here.
+
+**Volume:** ~200 L. **Risk:** MEDIUM (must be byte-exact). **[DET]:** yes — read
+`../Fizzygum-tests/DETERMINISM.md`; confirm dpr 2 + WebKit. **Recapture:** ZERO if faithful (any diff
+is a bug, not a baseline shift).
+
+---
+
+## Phase 4 — `MenuItemSpec` parameter object (kills the worst signatures + comment-deodorant)
+
+**Why here:** medium volume, pixel-neutral (menu *rendering* is unchanged), but menus are heavily
+photographed so it sits after the no-photograph chrome dedup.
+
+- Introduce a `MenuItemSpec` value object (label, click/env handlers, target, action, tooltip, color,
+  bold, italic, doubleClickAction, args, representsAWidget) and thread it through
+  `MenuWdgt.coffee:64 createMenuItem`, `:111 addMenuItem`, `:116 prependMenuItem`, and the 17-arg
+  `MenuItemWdgt.coffee:11` constructor. This deletes the per-argument trailing comments at
+  `MenuWdgt:64-89` (comments that exist *only* because the positional call is unreadable).
+- Same-file polymorphism fix: `MenuWdgt:206-211 maxWidthOfMenuEntries` branches on `instanceof
+  MenuItemWdgt / StringFieldWdgt / ColorPickerWdgt / SliderWdgt` → add `menuEntryPreferredWidth()` to
+  each entry type and take `Math.max` over it.
+
+**Volume:** 4 signatures + ~25 call sites; deletes the comment wall. **Risk:** MEDIUM (menu surface).
+**[DET]:** no. **Recapture:** predict ZERO.
+
+---
+
+## Phase 5 — Decouple `Widget` from its subclasses (seed example #3) — **prerequisite for Phase 6**
+
+**Why slotted here (the dependency override):** its own bang-for-buck is medium and it is subtler
+than Phases 0–4, but it is the **gate on the God-Class split**: while `Widget` (and `WorldWdgt`)
+hard-reference ~25 concrete leaves, you cannot lift their responsibilities without dragging the leaf
+knowledge along. It also independently fixes seed example #3 (`instanceof` = missed polymorphism) and
+the base-knows-subclasses smell.
+
+Replace each *genuine* `instanceof` cluster with an overridable predicate/method on the relevant
+subclass (default on the base), then delete the branch:
+- `ScrollPanelWdgt:67-74` (drop-accept + display name) → `containerWantsDrops()` /
+  `colloquialNameForContainer()` on the contents.
+- `WidgetCreatorAndSmartPlacerOnClickMixin:18-30` (4-class chain, twice) → `smartPlace(widget)` on the
+  content widgets (also kills the feature-envy at `:28-41`).
+- `CaretWdgt:85,93` (`instanceof SimplePlainTextWdgt`; `constructor.name == "StringWdgt"`) →
+  `tabInsertsSpaces()` / `enterKeyAccepts()`.
+- The ~20 "exclude the chrome" guards (`instanceof HandleWdgt/CaretWdgt/…` when iterating children,
+  across `Widget.coffee:608,985,2206`, `TreeNode:504`, `ScrollPanelWdgt:189`, etc.) → one
+  `isLayoutDecoration()` predicate.
+- `Widget:480,3477` etc. `instanceof WindowWdgt` → `isWindow()`; resize-handle guards →
+  `acceptsResizeHandles()`; the scattered `instanceof FanoutPinWdgt` → `selectableAsTarget()`; the
+  `Example3DPlotWdgt`/`KeepsRatioWhenInVerticalStackMixin` duplicate
+  `instanceof SimpleVerticalStackPanelWdgt and not WindowWdgt` → `parentParticipatesInVerticalStackRatio()`;
+  the 5 title-bar buttons' `instanceof WindowWdgt` (`buttons/*IconButtonWdgt:27`) → an `owningWindow()`
+  helper.
+- Begin moving the base's `new MenuWdgt`/halo/`new HandleWdgt` construction into collaborators (prep
+  for 6b).
+- **Leave alone** (legitimate, *not* in scope): the value-coercion `instanceof` in
+  `Point`/`Rectangle`/`Color`, the serialization `.className` round-trip, and the
+  reflection/test-harness class lookups (`MacroToolkit`, `InspectorWdgt`).
+
+**Volume:** ~40 sites → predicates. **Risk:** MEDIUM (broad, base-level; predicates must return
+exactly the booleans the `instanceof` did). **[DET]:** low (no timer surface) but broad — full suite.
+**Recapture:** ZERO (logic-equivalent).
+
+---
+
+## Phase 6 — God-Class decomposition (the capstone; multi-sub-arc) **[DET on layout]**
+
+**Why last of the "big" work:** highest architectural payoff but highest effort and blast radius; do
+it only after Phase 5 has cut the base→leaf knowledge, and run it in small, individually-verified
+sub-batches (not one mega-commit). Follow the **mixins→plain-OO-delegation** direction the codebase
+already set: `MacroToolkit` was split out of `WorldWdgt` as the model (see `Fizzygum/CLAUDE.md`).
+
+- **6a — `WorldWdgt` (2230 L → thinner):** extract a popup manager (`closePopUpsMarkedForClosure`,
+  `mostRecentlyCreatedPopUp`, `freshlyCreatedPopUps`), a startup/URL service
+  (`getParameterPassedInURL`, `nextStartupAction`, `createErrorConsole`), and a naming service
+  (`getNextUntitled*ShortcutName`, `colloquialName`) as delegated collaborators à la `MacroToolkit`.
+- **6b — `Widget` (4728 L → thinner):** peel cohesive clusters into mixins/collaborators in
+  risk-ascending order — serialization/copy (finish the move into `DeepCopierMixin`), identity/inspect
+  (`spawnInspector`, `uniqueID*`), animation — then last the **`doLayout` (`:4216`, 99 L) / geometry**
+  cluster, which is **[DET]** (read `DETERMINISM.md`; layout output must stay a pure function of final
+  geometry, not of intermediate passes). The dev fixture was already removed in Phase 0.
+- **6c — `MenusHelper` (1170 L / 132 methods):** turn each per-demo-window builder
+  (`createNewTemplatesWindow`, `createSampleDashboardWindow…`, the `degreesConverter` window, etc.)
+  into its own `*Window` class/factory; the helper stops being a Divergent-Change magnet.
+
+**Volume:** the largest by far. **Risk:** HIGH (broad; `doLayout` is determinism-sensitive). **[DET]:**
+yes for the layout/geometry sub-step. **Recapture:** ZERO for pure moves; verify dpr 2 + WebKit on
+each sub-batch, especially 6b's layout step.
+
+---
+
+## Phase 7 — Coupling cleanups (behaviour-sensitive → late) **[DET on input/text]**
+
+**Why last:** these change *behaviour-adjacent* code (text editing, selection, input recognition) that
+is both photographed in many tests and historically a determinism flake source — low bang-for-buck
+relative to risk, so they tail the backlog.
+
+- **7a — `CaretWdgt` ↔ `TextWdgt`/`StringWdgt` intimacy + feature envy** (the densest coupling: 71
+  `@target.*` accesses with bidirectional writes — `CaretWdgt:22,166,222`; `StringWdgt:1392`). Give
+  `TextWdgt` a caret/selection API (`beginEditSession`, `setCaretHint`, extend the existing
+  `selectBetween`); move the slot-arithmetic/selection logic off the caret; stop the caret writing
+  `@target.undoHistory`/`caretHorizPositionForVertMovement` directly. Photographed in 24+ tests →
+  verify carefully.
+- **7b — `ActivePointerWdgt` temporary fields → a per-gesture `DragGesture`/`ClickState` object**
+  (`@wdgtToGrab`, `@nonFloatDraggedWdgt`, `@doubleClickWdgt`/`Position`, `@tripleClick*`,
+  `@grabOrigin`). **[DET]-CRITICAL:** this class owns input/click recognition and is the source of
+  three past dpr-2 flakes (multi-click event-time, scroll-thumb). Preserve the **event-time** gating
+  (recognition must key off `event.time`, never wall-clock timers). Read `DETERMINISM.md` first;
+  dpr 2 + WebKit mandatory.
+- **7c — `SimplePlainTextWdgt:100-117`** grandparent writes → `setTextLineWrapping(bool)` on the
+  container (which resizes its own content).
+- **7d — `PromptWdgt:43-46`** sets `slider.button.{color,highlightColor,pressColor}` →
+  `SliderButtonWdgt.setColorScheme(base)`.
+- **7e — Demeter accessors:** `BasementWdgt.addLostWidget(w)` for the
+  `world.basementWdgt.scrollPanel.contents.…` chain (`Widget:487`, `TemplatesButtonWdgt:28`); an
+  `innerContents()` for the `.contents.contents` double-hop (`MenusHelper:863`,
+  `IconicDesktopSystemFolderShortcutWdgt:7`).
+- **7f — (optional)** `GlassBoxTopWdgt` mild Middle-Man — only if its sole role is event-blocking.
+
+**Risk:** MEDIUM–HIGH. **[DET]:** 7a, 7b. **Recapture:** possible for caret/selection visuals;
+expect to recapture deliberately and confirm the assertion content is identical.
+
+---
+
+## Phase 8 — Opportunistic / lower-bang (do as you pass through)
+
+Independent, smaller-ratio items; pick up when already editing the relevant file.
+
+- **Single-child base collapses** (24 classes): the `Video*` chains (`VideoThumbnailWdgt →
+  SimpleRasterImageButtonWdgt → …`, `VideoScrubberWdgt → SliderWdgt → CircleBoxWdgt`,
+  `VideoPlayPauseToggle → ToggleButtonWdgt → SwitchButtonWdgt`), `PopUpWdgt→MenuWdgt`,
+  `BlinkerWdgt→CaretWdgt`, `UpperRightTriangleWdgt → …IconicButton → EditableMarkWdgt`. Collapse the
+  base into the child (or vice-versa) unless a 2nd subclass is imminent; delete empty hooks
+  (`ClassInspectorWdgt:30`, `SwitchButtonWdgt:60`).
+- **Long-method extraction:** `ReconfigurablePaintWdgt:73 createToolsPanel` (276 L → split per tool
+  group); `SystemInfo:29 constructor` (193 → `detect*` helpers); `WindowWdgt:391 adjustContentsBounds`
+  (103); `InspectorWdgt:143 buildAndConnectChildren` (108 → per-pane builders).
+- **Flag-argument splits:** `doubleClickInvocation` → a separate `mouseDoubleClickLeft` handler;
+  `beingDropped` → distinct `drop`/`add` entry points; `doSerialize` → split clone vs serialize paths
+  (touches `DeepCopierMixin` + every `*-extensions.coffee` — care); `escalateEvent`'s `arg1..arg9` →
+  a splat / event object.
+- **`MouseButton` enum** reconciling the `"left button"` (MacroToolkit) vs `"left"`
+  (ActivePointerWdgt) vocabularies and the runtime `throw`-on-typo string compares — coordinate the
+  test-harness side; dpr 2 verify.
+- **Shadow constant reconciliation** *(intentional pixel change → recapture expected)*: the drifted
+  offsets `Widget:2090 (4,4)`, `PopUpWdgt:123 (5,5)`, `ShadowInfo:10 (7,7)`,
+  `ActivePointerWdgt:209 (6,6)` likely should share one `SHADOW_OFFSET`/`SHADOW_ALPHA`. **Owner
+  decision** on the canonical value; then recapture the affected references.
+- **Filename/class mismatch:** `info-widgets/HowToSaveMessageInfoWdgt.coffee` declares
+  `class HowToSaveMessageInfoWdg` — violates the one-class-per-file rule `build.py` depends on; fix the
+  name.
+
+---
+
+## At-a-glance ordering
+
+| Phase | Theme | Volume | Risk | [DET] | Recapture | Gated by |
+|---|---|---|---|---|---|---|
+| 0 | Dead code + constant naming | High | Low | no | none | — |
+| 1 | Sibling-family base extraction *(seeds #1, #2)* | High | Low | no | none | — |
+| 2 | Thin ~85 `IconWdgt` shells | Highest | Low–Med | no | none | — |
+| 3 | Paint-preamble Template Method | High | Med | **yes** | none if faithful | — |
+| 4 | `MenuItemSpec` param object | Med | Med | no | none | — |
+| 5 | Decouple `Widget` from subclasses *(seed #3)* | Med | Med | broad | none | — |
+| 6 | God-Class split (World/Widget/Menus) | Highest | High | **layout** | none if pure moves | **Phase 5** |
+| 7 | Coupling (Caret↔Text, pointer state, LoD) | Med | Med–High | **7a/7b** | some | — |
+| 8 | Opportunistic (single-child, long methods, flags, shadows) | Low–Med | Low–Med | mixed | shadows only | — |
+
+**Start with Phase 0, then 1 (ships your two seed examples at the lowest risk), then 2.** Those three
+are pure bang-for-buck and independent. The only hard ordering constraint in the whole backlog is
+**5 before 6**.
