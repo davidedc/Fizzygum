@@ -22,7 +22,8 @@ rationale. You should not need the original audit conversation to act on any pha
 | 1d — `PaletteWdgt` base | ✅ DONE 2026-06-17 | `GrayPaletteWdgt` refused-bequest fixed (now a sibling); setters collapsed |
 | 2 — thin the ~85 `IconWdgt` shells | ✅ DONE 2026-06-17 | `IconWdgt` got a `createAppearance` hook (method, not `@appearanceClass` field — keeps the dependency-finder edge); 89 shells de-constructored, incl. the `ExternalLink`→`VideoPlay` sub-lineage + 6 tooltip shells (which keep a slim ctor) |
 | 0 — dead code (pixel-neutral subset) | ✅ DONE 2026-06-17 | removed the 118-line commented `processDrop` block + orphaned `droppedImage/SVG` stubs + `popUpCenteredInWorld` + video `isPlaying` (134 lines); see Phase 0 notes below for kept/deferred |
-| 3–8 | ☐ not started | |
+| 4 — `MenuItemSpec` parameter object | ✅ DONE 2026-06-17 | new `MenuItemSpec` value object kills the 17-arg `MenuItemWdgt` ctor (→6) + the `createMenuItem` comment wall (12 args →1); `addMenuItem`/`prependMenuItem` KEEP their positional public API (356 callers untouched — the "~25 call sites" estimate was for the wrong method) and build the spec internally; `maxWidthOfMenuEntries` `instanceof` chain → existence-guarded polymorphic `menuEntryPreferredWidth?()` on the 4 entry types (no `Widget` base method → no inspector recapture). 2 SystemTests that build `MenuItemWdgt` directly updated. |
+| 3, 5–8 | ☐ not started | |
 
 All Phase 1 verified: **165/165 Chrome dpr1 + dpr2 + WebKit, `--homepage` boots, zero reference recapture.**
 
@@ -294,6 +295,25 @@ photographed so it sits after the no-photograph chrome dedup.
 
 **Volume:** 4 signatures + ~25 call sites; deletes the comment wall. **Risk:** MEDIUM (menu surface).
 **[DET]:** no. **Recapture:** predict ZERO.
+
+**✅ As built (2026-06-17):** `MenuItemSpec` (`src/basic-widgets/menu-system/MenuItemSpec.coffee`)
+holds the 12 per-item fields; menu-level context (font, the menu's environment) stays a
+MenuWdgt-supplied constructor argument, NOT on the spec (it is identical for every row).
+`MenuItemWdgt`'s ctor went 17→6 params; `createMenuItem` went 12→1 and lost its per-argument
+comment wall. **Scope correction:** `addMenuItem` has **356** call sites (not the "~25" guessed
+above — that was a mis-estimate), so churning them all would be the opposite of bang-for-buck;
+its positional public API was deliberately KEPT and it builds the spec internally (the spec's
+constructor defaults reproduce the old `createMenuItem` defaults exactly, so behaviour is
+unchanged). The `maxWidthOfMenuEntries` polymorphism fix uses an **existence-guarded**
+`item.menuEntryPreferredWidth?()` with the method added to the 4 entry types only
+(`MenuItemWdgt` → `children[0].width()+8`; `StringFieldWdgt`/`ColorPickerWdgt`/`SliderWdgt` →
+`@width()`) — deliberately **no `Widget` base default**, to avoid the inspector "inherited: on"
+method-list recapture trap (cf. Phase 0). Two SystemTests build `MenuItemWdgt` directly
+(`macroBareButtonFloatDragsWithoutTriggering`, `macroEditButtonLabelText`) — a test-API-by-name
+caller invisible to a `src` grep — and were rewritten to the `(new MenuItemSpec …), font…` form
+(byte-identical widget). Verified **165/165 Chrome dpr1+dpr2 + WebKit + `--homepage` boot, zero
+recapture.** (`LabelButtonWdgt`'s own 17-arg ctor is the base-button contract and was left as-is
+— out of scope.)
 
 ---
 

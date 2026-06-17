@@ -32,6 +32,10 @@ class StringFieldWdgt extends PanelWdgt
     super()
     @color = Color.WHITE
 
+  # As a menu entry, prefer my own current width (MenuWdgt.maxWidthOfMenuEntries
+  # calls this polymorphically instead of type-checking the entry).
+  menuEntryPreferredWidth: -> @width()
+
   rawSetWidth: (newWidth)->
     super
     @text.rawSetWidth 300

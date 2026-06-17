@@ -61,27 +61,15 @@ class MenuWdgt extends PopUpWdgt
   createLabel: ->
     @label = new MenuHeader @title
 
-  createMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true, target, action, toolTipMessage, color, bold = false, italic = false,doubleClickAction, arg1, arg2,representsAWidget = false)->
+  # Builds a MenuItemWdgt from a MenuItemSpec (the per-item fields) and this
+  # menu's context: the font (this menu's @fontSize, or the global default) and
+  # -- note the historical mapping -- this menu's @target as the item's
+  # "environment" and this menu's @environment as the item's widgetEnv. The
+  # spec's named fields replace what used to be a 17-argument positional call
+  # carrying a per-argument trailing comment on every line.
+  createMenuItem: (menuItemSpec) ->
     # console.log "menu creating MenuItemWdgt "
-    item = new MenuItemWdgt(
-      ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, # closes unpinned menus
-      target, # target
-      action, # action
-      (label or "close"), # label
-      @fontSize or WorldWdgt.preferencesAndSettings.menuFontSize,
-      WorldWdgt.preferencesAndSettings.menuFontName,
-      false,
-      @target, # environment
-      @environment, # environment2
-      toolTipMessage, # bubble help toolTipMessage
-      color, # color
-      bold, # bold
-      italic, # italic
-      doubleClickAction,  # doubleclick action
-      arg1,  # argument to action 1
-      arg2,  # argument to action 2
-      representsAWidget  # does it represent a Widget?
-      )
+    item = new MenuItemWdgt menuItemSpec, (@fontSize or WorldWdgt.preferencesAndSettings.menuFontSize), WorldWdgt.preferencesAndSettings.menuFontName, false, @target, @environment
     if !@environment?
       item.dataSourceWidgetForTarget = item
       item.widgetEnv = @target
@@ -108,14 +96,20 @@ class MenuWdgt extends PopUpWdgt
       else
         destroyNextLines = false
 
-  addMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAWidget)->
+  # NOTE: the positional (label, closes-unpinned, target, action, ...) signature
+  # is the public menu API used by hundreds of call sites, so it is deliberately
+  # NOT changed. We just bundle the arguments into a MenuItemSpec internally; the
+  # spec's constructor defaults reproduce the old createMenuItem defaults exactly.
+  addMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic, doubleClickAction, arg1, arg2, representsAWidget)->
     # console.log "menu creating MenuItemWdgt "
-    item = @createMenuItem label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAWidget
+    menuItemSpec = new MenuItemSpec label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic, doubleClickAction, arg1, arg2, representsAWidget
+    item = @createMenuItem menuItemSpec
     @silentAdd item
 
-  prependMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAWidget)->
+  prependMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic, doubleClickAction, arg1, arg2, representsAWidget)->
     # console.log "menu creating MenuItemWdgt "
-    item = @createMenuItem label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAWidget
+    menuItemSpec = new MenuItemSpec label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic, doubleClickAction, arg1, arg2, representsAWidget
+    item = @createMenuItem menuItemSpec
     @silentAdd item, nil, 0
 
   # »>> this part is excluded from the fizzygum homepage build
@@ -202,14 +196,13 @@ class MenuWdgt extends PopUpWdgt
     #if @parent instanceof PanelWdgt
     #  if @parent.scrollPanel instanceof ScrollPanelWdgt
     #    w = @parent.scrollPanel.width()
+    # Each entry that contributes a width answers menuEntryPreferredWidth()
+    # (MenuItemWdgt / StringFieldWdgt / ColorPickerWdgt / SliderWdgt define it);
+    # divider lines and the header don't, and are skipped -- exactly the set the
+    # old `instanceof` chain matched.
     @children.forEach (item) ->
-      if item instanceof MenuItemWdgt
-        if !item.children[0]? then debugger
-        w = Math.max(w, item.children[0].width() + 8)
-      else if (item instanceof StringFieldWdgt) or
-        (item instanceof ColorPickerWdgt) or
-        (item instanceof SliderWdgt)
-          w = Math.max w, item.width()
+      if item.menuEntryPreferredWidth?
+        w = Math.max w, item.menuEntryPreferredWidth()
       #console.log "maxWidthOfMenuEntries: width of item " + item + " : " + w
 
     if @label

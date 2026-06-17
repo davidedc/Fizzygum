@@ -27,6 +27,10 @@ class ColorPickerWdgt extends Widget
   colloquialName: ->
     "color picker"
 
+  # As a menu entry, prefer my own current width (MenuWdgt.maxWidthOfMenuEntries
+  # calls this polymorphically instead of type-checking the entry).
+  menuEntryPreferredWidth: -> @width()
+
   buildSubwidgets: ->
     @feedback = new RectangleWdgt new Point(20, 20), @choice
     @colorPalette = new ColorPaletteWdgt @feedback, new Point @width(), 50

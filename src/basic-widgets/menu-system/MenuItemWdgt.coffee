@@ -7,10 +7,16 @@
 
 class MenuItemWdgt extends LabelButtonWdgt
 
-  # labelString can also be a Widget or a Canvas or a tuple: [icon, string]
-  constructor: (ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, widgetEnv, toolTipMessage, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAWidget) ->
+  # Built from a MenuItemSpec (the per-item fields) plus the menu-level context
+  # the owning MenuWdgt supplies: the font (size / style), whether the label is
+  # centered, and the menu's environment (which maps onto the button family's
+  # "environment" / widgetEnv slots). We unpack the spec onto LabelButtonWdgt's
+  # positional constructor here; an absent spec.label falls back to "close" (the
+  # historical default). (spec.label may itself be a Widget, a Canvas, or an
+  # [icon, string] tuple.)
+  constructor: (menuItemSpec, fontSize, fontStyle, centered, environment, widgetEnv) ->
     #console.log "menuitem constructing"
-    super ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, widgetEnv, toolTipMessage, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAWidget
+    super menuItemSpec.ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, menuItemSpec.target, menuItemSpec.action, (menuItemSpec.label or "close"), fontSize, fontStyle, centered, environment, widgetEnv, menuItemSpec.toolTipMessage, menuItemSpec.color, menuItemSpec.bold, menuItemSpec.italic, menuItemSpec.doubleClickAction, menuItemSpec.argumentToAction1, menuItemSpec.argumentToAction2, menuItemSpec.representsAWidget
     @actionableAsThumbnail = true
 
   getTextDescription: ->
@@ -69,6 +75,14 @@ class MenuItemWdgt extends LabelButtonWdgt
 
   widthOfLabel: ->
     @label.width()
+
+  # As a menu entry, prefer my (multi-line TextWdgt) label's width plus a little
+  # padding. MenuWdgt.maxWidthOfMenuEntries calls this polymorphically rather
+  # than type-checking the entry. (The label is @children[0]; the guard catches
+  # a row somehow built without one.)
+  menuEntryPreferredWidth: ->
+    if !@children[0]? then debugger
+    @children[0].width() + 8
 
   # MenuItemWdgt events:
   mouseEnter: ->

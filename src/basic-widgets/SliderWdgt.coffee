@@ -42,6 +42,10 @@ class SliderWdgt extends CircleBoxWdgt
   colloquialName: ->
     "slider"
 
+  # As a menu entry, prefer my own current width (MenuWdgt.maxWidthOfMenuEntries
+  # calls this polymorphically instead of type-checking the entry).
+  menuEntryPreferredWidth: -> @width()
+
 
   initialiseDefaultVerticalStackLayoutSpec: ->
     # use the existing VerticalStackLayoutSpec (if it's there)
