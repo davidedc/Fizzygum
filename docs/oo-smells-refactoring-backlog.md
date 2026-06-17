@@ -12,6 +12,26 @@ rationale. You should not need the original audit conversation to act on any pha
 
 ---
 
+## Progress
+
+| Phase | Status | Notes |
+|---|---|---|
+| 1a — `IconButtonWdgt` base | ✅ DONE 2026-06-17 | 6 icon buttons (Close/Collapse/Uncollapse/Edit/Internal/External) |
+| 1b — `EditorContentPropertyChangerButtonWdgt` (+ `AlignButtonWdgt`) | ✅ DONE 2026-06-17 | 10 editor-toolbar buttons; base inconsistency resolved onto `IconWdgt` |
+| 1c — `CreatorButtonWdgt` parameterized | ✅ DONE 2026-06-17 | 24 creator/toolbar buttons; `createWidgetToBeHandled` left per-leaf |
+| 1d — `PaletteWdgt` base | ✅ DONE 2026-06-17 | `GrayPaletteWdgt` refused-bequest fixed (now a sibling); setters collapsed |
+| 0, 2–8 | ☐ not started | |
+
+All Phase 1 verified: **165/165 Chrome dpr1 + dpr2 + WebKit, `--homepage` boots, zero reference recapture.**
+
+**Deferred from Phase 1** (lower-value / higher-risk — revisit later):
+- 1c: the `wrapInWindow` + toolbar-scaffold helpers — the `WindowWdgt`-arg and extent-order
+  variations across leaves make a shared helper messy for little gain.
+- 1d: merging the two `{Color,Grayscale}PalettePatchProgrammingIconAppearance` files — pixel-sensitive
+  drawing code that would risk a recapture.
+
+---
+
 ## How items are ordered ("bang for the buck")
 
 Priority = **volume of correction ÷ risk**, with two overrides:
