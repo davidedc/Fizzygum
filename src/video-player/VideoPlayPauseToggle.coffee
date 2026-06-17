@@ -22,9 +22,9 @@ class VideoPlayPauseToggle extends ToggleButtonWdgt
 
   constructor: (@videoPlayerCanvas) ->
     @playPausePauseButton = new SimpleButtonWdgt true, @, "pause", "❙ ❙"
-    @playPausePauseButton.faceMorph.alignMiddle()
+    @playPausePauseButton.faceWidget.alignMiddle()
     @playPausePlayButton = new SimpleButtonWdgt true, @, "play", "▶"
-    @playPausePlayButton.faceMorph.alignMiddle()
+    @playPausePlayButton.faceWidget.alignMiddle()
     super @playPausePauseButton, @playPausePlayButton, 0
 
     # the label of the current time is updated via the stepping

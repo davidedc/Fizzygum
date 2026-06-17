@@ -14,18 +14,18 @@ ClippingAtRectangularBoundsMixin =
       # - by the HandleWdgt when you attach it to some other morph
       # Note that this method has a slightly different
       # version in Widget (because it doesn't clip)
-      plausibleTargetAndDestinationMorphs: (theMorph) ->
-        # find if I intersect theMorph,
+      plausibleTargetAndDestinationMorphs: (theWidget) ->
+        # find if I intersect theWidget,
         # then check my children recursively
-        # exclude me if I'm a child of theMorph
+        # exclude me if I'm a child of theWidget
         # (cause it's usually odd to attach a Widget
         # to one of its submorphs or for it to
         # control the properties of one of its submorphs)
         result = []
         if @visibleBasedOnIsVisibleProperty() and
             !@isCollapsed() and
-            !theMorph.isAncestorOf(@) and
-            @areBoundsIntersecting(theMorph) and
+            !theWidget.isAncestorOf(@) and
+            @areBoundsIntersecting(theWidget) and
             !@anyParentPopUpMarkedForClosure()
           result = [@]
 
@@ -33,12 +33,12 @@ ClippingAtRectangularBoundsMixin =
         # at its boundary, hence we need
         # to check that we don't consider overlaps with
         # morphs contained in this Panel that are clipped and
-        # hence *actually* not overlapping with theMorph.
+        # hence *actually* not overlapping with theWidget.
         # So continue checking the children only if the
         # Panel itself actually overlaps.
-        if @areBoundsIntersecting theMorph
+        if @areBoundsIntersecting theWidget
           @children.forEach (child) ->
-            result = result.concat child.plausibleTargetAndDestinationMorphs theMorph
+            result = result.concat child.plausibleTargetAndDestinationMorphs theWidget
 
         return result
 

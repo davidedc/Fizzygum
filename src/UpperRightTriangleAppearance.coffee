@@ -75,9 +75,9 @@ class UpperRightTriangleAppearance extends Appearance
     if !@morph.boundsContainPoint aPoint
       return true
  
-    thisMorphPosition = @morph.position()
+    thisWidgetPosition = @morph.position()
  
-    relativePoint = new Point aPoint.x - thisMorphPosition.x, aPoint.y - thisMorphPosition.y
+    relativePoint = new Point aPoint.x - thisWidgetPosition.x, aPoint.y - thisWidgetPosition.y
 
     if relativePoint.x / relativePoint.y < @morph.width()/@morph.height()
       return true

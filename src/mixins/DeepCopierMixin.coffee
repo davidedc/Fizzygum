@@ -16,7 +16,7 @@ DeepCopierMixin =
       # For example, if the widget appeared in a data
       # structure related to the broken rectangles mechanism,
       # we should place the copied widget there.
-      deepCopy: (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure)->
+      deepCopy: (doSerialize, objOriginalsClonedAlready, objectClones, allWidgetsInStructure)->
         # TODO id: DUPLICATED_CODE_IN_DEEPCOPY date: 6-Jun-2023
 
         haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf @
@@ -25,7 +25,7 @@ DeepCopierMixin =
             return "$" + haveIBeenCopiedAlready
           else
             return objectClones[haveIBeenCopiedAlready]
-        if (@ instanceof Widget) and (@ not in allMorphsInStructure)
+        if (@ instanceof Widget) and (@ not in allWidgetsInStructure)
           if doSerialize
             return "$EXTERNAL" + @uniqueIDString()
           else
@@ -47,7 +47,7 @@ DeepCopierMixin =
 
         # cloneOfMe at this point is just an "empty shell" copy
 
-        @recursivelyCloneContent cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
+        @recursivelyCloneContent cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allWidgetsInStructure
 
         # cloneOfMe at this point is a full deep copy
 
@@ -66,8 +66,8 @@ DeepCopierMixin =
         # (since we deep-copy all kinds of data structures,
         # not just morphs, check if we have the relevant alignment
         # method to invoke).
-        if @alignCopiedMorphToBrokenInfoDataStructures?
-          @alignCopiedMorphToBrokenInfoDataStructures cloneOfMe
+        if @alignCopiedWidgetToBrokenInfoDataStructures?
+          @alignCopiedWidgetToBrokenInfoDataStructures cloneOfMe
 
         # if we deep-copied a morph, check whether the original
         # was in data structures related to stepping
@@ -75,8 +75,8 @@ DeepCopierMixin =
         # (since we deep-copy all kinds of data structures,
         # not just morphs, check if we have the relevant alignment
         # method to invoke).
-        if @alignCopiedMorphToSteppingStructures?
-          @alignCopiedMorphToSteppingStructures cloneOfMe
+        if @alignCopiedWidgetToSteppingStructures?
+          @alignCopiedWidgetToSteppingStructures cloneOfMe
 
         # if we deep-copied a morph, check whether the original
         # was in the data structure that keeps track of the
@@ -85,8 +85,8 @@ DeepCopierMixin =
         # (since we deep-copy all kinds of data structures,
         # not just morphs, check if we have the relevant alignment
         # method to invoke).
-        if @alignCopiedMorphToReferenceTracker?
-          @alignCopiedMorphToReferenceTracker cloneOfMe
+        if @alignCopiedWidgetToReferenceTracker?
+          @alignCopiedWidgetToReferenceTracker cloneOfMe
 
         # if we deep-copied a morph, check whether the original
         # was in the data structure that keeps track of the
@@ -95,8 +95,8 @@ DeepCopierMixin =
         # (since we deep-copy all kinds of data structures,
         # not just morphs, check if we have the relevant alignment
         # method to invoke).
-        if @alignCopiedMorphToKeyboardEventsReceiversSet?
-          @alignCopiedMorphToKeyboardEventsReceiversSet cloneOfMe
+        if @alignCopiedWidgetToKeyboardEventsReceiversSet?
+          @alignCopiedWidgetToKeyboardEventsReceiversSet cloneOfMe
 
 
         # last chance for a morph to do other
@@ -122,7 +122,7 @@ DeepCopierMixin =
             if theOriginal[property]?.rebuildDerivedValue?
               theOriginal[property].rebuildDerivedValue(@, property)
 
-      recursivelyCloneContent: (cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure)->
+      recursivelyCloneContent: (cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allWidgetsInStructure)->
         # these are all the properties that are NOT static
         # AND that are "attached" to the object.
         # Which means basically inherited and non-inherited, non-static properties that
@@ -151,7 +151,7 @@ DeepCopierMixin =
                 console.dir @
                 console.log property
                 debugger
-              cloneOfMe[property] = @[property].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
+              cloneOfMe[property] = @[property].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allWidgetsInStructure
           else
             # boolean, number, bigint, string, symbol and function
             if property != "instanceNumericID"

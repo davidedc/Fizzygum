@@ -313,7 +313,7 @@ class StringWdgt extends Widget
     # e.g. 'a StringWdgt("Hello World")'
     firstPart = super()
     if Automator? and Automator.state != Automator.IDLE and
-    Automator.hidingOfMorphsContentExtractInLabels
+    Automator.hidingOfWidgetsContentExtractInLabels
       return firstPart
     else
       return firstPart + " (\"" + @text.slice(0, 30).replace(/(?:\r\n|\r|\n)/g, '↵') + "...\")"
@@ -971,8 +971,8 @@ class StringWdgt extends Widget
         @updateFontsMenuEntriesTicks menuItem.parent
 
 
-  fontsMenu: (a,targetMorph)->
-    menu = new MenuWdgt @, false, targetMorph, true, true, "Fonts"
+  fontsMenu: (a,targetWidget)->
+    menu = new MenuWdgt @, false, targetWidget, true, true, "Fonts"
 
     menu.addMenuItem untick + "Arial", true, @, "setFontName", nil, nil, nil, nil, nil, @justArialFontStack
     menu.addMenuItem untick + "Times", true, @, "setFontName", nil, nil, nil, nil, nil, @timesFontStack
@@ -1190,13 +1190,13 @@ class StringWdgt extends Widget
 
   # This is also invoked for example when you take a slider
   # and set it to target this.
-  setText: (theTextContent, stringFieldMorph, connectionsCalculationToken, superCall) ->
+  setText: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
-    if stringFieldMorph?
-      # in this case, the stringFieldMorph has a
+    if stringFieldWidget?
+      # in this case, the stringFieldWidget has a
       # StringMorph in "text". The StringMorph has the
       # "text" inside it.
-      theTextContent = stringFieldMorph.text.text
+      theTextContent = stringFieldWidget.text.text
 
     theNewText = theTextContent + ""
     if @text != theNewText
@@ -1227,11 +1227,11 @@ class StringWdgt extends Widget
       else
         @widgetToBeNotifiedOfTextModificationChange.textContentModified?()
   
-  setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
+  setFontSize: (sizeOrWidgetGivingSize, morphGivingSize) ->
     if morphGivingSize?.getValue?
       size = morphGivingSize.getValue()
     else
-      size = sizeOrMorphGivingSize
+      size = sizeOrWidgetGivingSize
 
     if typeof size is "number"
       newSize = Math.round Math.min Math.max(size, 4), 500

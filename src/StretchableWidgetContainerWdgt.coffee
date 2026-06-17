@@ -165,8 +165,8 @@ class StretchableWidgetContainerWdgt extends Widget
     super
     @markLayoutAsFixed()
 
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
+      world.alignIDsOfNextWidgetsInSystemTests()
 
   # same as simpledocumentscrollpanel, you can lock the contents.
   # worth factoring it out as a mixin?

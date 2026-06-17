@@ -14,7 +14,7 @@ class BoxWdgt extends Widget
   # »>> this part is excluded from the fizzygum homepage build
   # there is another method almost equal to this
   # TODO refactor
-  choiceOfMorphToBePicked: (ignored, morphPickingUp) ->
+  choiceOfWidgetToBePicked: (ignored, morphPickingUp) ->
     # this is what happens when "each" is
     # selected: we attach the selected morph
     if @ instanceof ScrollPanelWdgt
@@ -23,11 +23,11 @@ class BoxWdgt extends Widget
   # this part is excluded from the fizzygum homepage build <<«
 
 
-  setCornerRadius: (radiusOrMorphGivingRadius, morphGivingRadius) ->
+  setCornerRadius: (radiusOrWidgetGivingRadius, morphGivingRadius) ->
     if morphGivingRadius?.getValue?
       radius = morphGivingRadius.getValue()
     else
-      radius = radiusOrMorphGivingRadius
+      radius = radiusOrWidgetGivingRadius
 
     if typeof radius is "number"
       @cornerRadius = Math.max radius, 0

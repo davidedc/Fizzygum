@@ -142,8 +142,8 @@ class InspectorWdgt extends Widget
         nil
   
   buildAndConnectChildren: ->
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
+      world.alignIDsOfNextWidgetsInSystemTests()
 
     # remove all submorhs i.e. panes and buttons
     # THE ONES THAT ARE STILL
@@ -294,8 +294,8 @@ class InspectorWdgt extends Widget
 
     # we add a Widget alignment here because adjusting IDs whenever
     # we add or remove methods is a pain...
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
+      world.alignIDsOfNextWidgetsInSystemTests()
 
 
     # details pane
@@ -552,8 +552,8 @@ class InspectorWdgt extends Widget
     super
     @markLayoutAsFixed()
 
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
+      world.alignIDsOfNextWidgetsInSystemTests()
 
   layoutOwnPropsOnlyToggle: (height, listWidth, detailWidth) ->
 

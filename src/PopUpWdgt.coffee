@@ -90,11 +90,11 @@ class PopUpWdgt extends Widget
 
 
   fullCopy: ->
-    copiedMorph = super
-    copiedMorph.onClickOutsideMeOrAnyOfMyChildren nil
-    copiedMorph.killThisPopUpIfClickOnDescendantsTriggers = false
-    copiedMorph.killThisPopUpIfClickOutsideDescendants = false
-    return copiedMorph
+    copiedWidget = super
+    copiedWidget.onClickOutsideMeOrAnyOfMyChildren nil
+    copiedWidget.killThisPopUpIfClickOnDescendantsTriggers = false
+    copiedWidget.killThisPopUpIfClickOutsideDescendants = false
+    return copiedWidget
 
 
   addMorphSpecificMenuEntries: (unused_morphOpeningThePopUp, menu) ->
@@ -151,8 +151,8 @@ class PopUpWdgt extends Widget
     # nopainting happening and the morph doesn't
     # know its extent.
     @fullRawMoveWithin world
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
+      world.alignIDsOfNextWidgetsInSystemTests()
     # shadow must be added after the morph
     # has been placed somewhere because
     # otherwise there is no visible image

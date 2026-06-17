@@ -15,10 +15,10 @@ class BoxyAppearance extends Appearance
     if !@morph.boundsContainPoint aPoint
       return true
  
-    thisMorphPosition = @morph.position()
+    thisWidgetPosition = @morph.position()
     radius = Math.max @getCornerRadius(), 0
  
-    relativePoint = new Point aPoint.x - thisMorphPosition.x, aPoint.y - thisMorphPosition.y
+    relativePoint = new Point aPoint.x - thisWidgetPosition.x, aPoint.y - thisWidgetPosition.y
 
     # top left corner
     if relativePoint.x < radius and relativePoint.y < radius

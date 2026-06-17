@@ -26,8 +26,8 @@ class SimpleLinkWdgt extends Widget
     "Simple link"
 
   buildAndConnectChildren: ->
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
+      world.alignIDsOfNextWidgetsInSystemTests()
 
     @tempPromptEntryField = new StringWdgt @descriptionString
     @tempPromptEntryField.isEditable = true
@@ -95,8 +95,8 @@ class SimpleLinkWdgt extends Widget
 
     world.maybeEnableTrackChanges()
     @fullChanged()
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
+      world.alignIDsOfNextWidgetsInSystemTests()
 
     super
     @markLayoutAsFixed()

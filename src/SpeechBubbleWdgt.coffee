@@ -30,7 +30,7 @@ class SpeechBubbleWdgt extends Widget
     "speech bubble"
   
   buildAndConnectChildren: ->
-    @contentsMorph = new TextWdgt(
+    @contentsWidget = new TextWdgt(
       @contents,
       WorldWdgt.preferencesAndSettings.bubbleHelpFontSize,
       nil,
@@ -38,14 +38,14 @@ class SpeechBubbleWdgt extends Widget
       true,
       "center")
 
-    @contentsMorph.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
-    @contentsMorph.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
-    @contentsMorph.alignMiddle()
-    @contentsMorph.alignCenter()
-    @contentsMorph.isEditable = true
+    @contentsWidget.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
+    @contentsWidget.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
+    @contentsWidget.alignMiddle()
+    @contentsWidget.alignCenter()
+    @contentsWidget.isEditable = true
 
 
-    @add @contentsMorph
+    @add @contentsWidget
     @invalidateLayout()
 
 
@@ -75,7 +75,7 @@ class SpeechBubbleWdgt extends Widget
     @rawSetHeight newBoundsForThisLayout.height()
 
     # adjust layout of my contents
-    @contentsMorph.doLayout (
+    @contentsWidget.doLayout (
       (new Rectangle 0, 0,
         (newBoundsForThisLayout.width() - (2 * @cornerRadius)),
         (newBoundsForThisLayout.height() - (2 * @cornerRadius) - newBoundsForThisLayout.height()/5))
@@ -88,7 +88,7 @@ class SpeechBubbleWdgt extends Widget
     super
     @markLayoutAsFixed()
 
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
+      world.alignIDsOfNextWidgetsInSystemTests()
 
 

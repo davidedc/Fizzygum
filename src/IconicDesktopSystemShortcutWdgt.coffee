@@ -35,6 +35,6 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
     super
     world.widgetsReferencingOtherWidgets.delete @
 
-  alignCopiedMorphToReferenceTracker: (cloneOfMe) ->
+  alignCopiedWidgetToReferenceTracker: (cloneOfMe) ->
     world.widgetsReferencingOtherWidgets.add cloneOfMe
 

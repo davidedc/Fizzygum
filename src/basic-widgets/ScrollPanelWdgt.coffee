@@ -86,23 +86,23 @@ class ScrollPanelWdgt extends PanelWdgt
     @adjustContentsBounds()
     @adjustScrollBars()
 
-  setColor: (aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
+  setColor: (aColorOrAWidgetGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
 
-    aColor = super aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, true
+    aColor = super aColorOrAWidgetGivingAColor, morphGivingColor, connectionsCalculationToken, true
     # keep in sync the color of the content.
     # Note that the container ScrollPanel.
     # is actually not painted.
-    @contents.setColor aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken
+    @contents.setColor aColorOrAWidgetGivingAColor, morphGivingColor, connectionsCalculationToken
     return aColor
 
-  setAlphaScaled: (alphaOrMorphGivingAlpha, morphGivingAlpha) ->
+  setAlphaScaled: (alphaOrWidgetGivingAlpha, morphGivingAlpha) ->
     alpha = super
     # update the alpha of the ScrollPanel - note
     # that we are never going to paint the ScrollPanel
     # we are updating the alpha so that its value is the same as the
     # contained Panel
-    @contents.setAlphaScaled alphaOrMorphGivingAlpha, morphGivingAlpha
+    @contents.setAlphaScaled alphaOrWidgetGivingAlpha, morphGivingAlpha
     return alpha
 
   anyScrollBarShowing: ->
@@ -573,8 +573,8 @@ class ScrollPanelWdgt extends PanelWdgt
   
   # ScrollPanelWdgt scrolling when editing text
   # so to bring the caret fully into view.
-  scrollCaretIntoView: (caretMorph) ->
-    txt = caretMorph.target
+  scrollCaretIntoView: (caretWidget) ->
+    txt = caretWidget.target
     ft = @top() + @padding
     fb = @bottom() - @padding
     fl = @left() + @padding
@@ -583,22 +583,22 @@ class ScrollPanelWdgt extends PanelWdgt
     marginAroundCaret = @padding
     if @extraPadding?
       marginAroundCaret += @extraPadding
-    if caretMorph.top() < ft
-      newT = @contents.top() + ft - caretMorph.top()
+    if caretWidget.top() < ft
+      newT = @contents.top() + ft - caretWidget.top()
       @contents.fullRawMoveTopSideTo newT + marginAroundCaret
-      caretMorph.fullRawMoveTopSideTo ft
-    else if caretMorph.bottom() > fb
-      newB = @contents.bottom() + fb - caretMorph.bottom()
+      caretWidget.fullRawMoveTopSideTo ft
+    else if caretWidget.bottom() > fb
+      newB = @contents.bottom() + fb - caretWidget.bottom()
       @contents.fullRawMoveBottomSideTo newB - marginAroundCaret
-      caretMorph.fullRawMoveBottomSideTo fb
-    if caretMorph.left() < fl
-      newL = @contents.left() + fl - caretMorph.left()
+      caretWidget.fullRawMoveBottomSideTo fb
+    if caretWidget.left() < fl
+      newL = @contents.left() + fl - caretWidget.left()
       @contents.fullRawMoveLeftSideTo newL + marginAroundCaret
-      caretMorph.fullRawMoveLeftSideTo fl
-    else if caretMorph.right() > fr
-      newR = @contents.right() + fr - caretMorph.right()
+      caretWidget.fullRawMoveLeftSideTo fl
+    else if caretWidget.right() > fr
+      newR = @contents.right() + fr - caretWidget.right()
       @contents.fullRawMoveRightSideTo newR - marginAroundCaret
-      caretMorph.fullRawMoveRightSideTo fr
+      caretWidget.fullRawMoveRightSideTo fr
     @adjustContentsBounds()
     @adjustScrollBars()
 

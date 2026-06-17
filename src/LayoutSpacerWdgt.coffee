@@ -57,7 +57,7 @@ class LayoutSpacerWdgt extends Widget
     morphPosition = @position()
     aContext.translate morphPosition.x, morphPosition.y
 
-    @spacerMorphRenderingHelper aContext, Color.WHITE, Color.create 200, 200, 255
+    @spacerWidgetRenderingHelper aContext, Color.WHITE, Color.create 200, 200, 255
 
     aContext.restore()
 
@@ -102,7 +102,7 @@ class LayoutSpacerWdgt extends Widget
     context.closePath()
     context.stroke()
 
-  drawReplacerMorph: (context) ->
+  drawReplacerWidget: (context) ->
     p0 = @bottomLeft().subtract @position()
     p0 = p0.subtract new Point 0, Math.ceil @height()/2
     
@@ -116,7 +116,7 @@ class LayoutSpacerWdgt extends Widget
     @doPath(context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown)
 
 
-  spacerMorphRenderingHelper: (context, color, shadowColor) ->
+  spacerWidgetRenderingHelper: (context, color, shadowColor) ->
     context.lineWidth = 1
     context.lineCap = "round"
 
@@ -127,8 +127,8 @@ class LayoutSpacerWdgt extends Widget
     # darker color.
     context.save()
     context.strokeStyle = shadowColor.toString()
-    @drawReplacerMorph context
+    @drawReplacerWidget context
     context.restore()
 
     context.strokeStyle = color.toString()
-    @drawReplacerMorph context
+    @drawReplacerWidget context

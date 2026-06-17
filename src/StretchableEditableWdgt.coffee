@@ -68,8 +68,8 @@ class StretchableEditableWdgt extends Widget
 
 
     world.maybeEnableTrackChanges()
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
+      world.alignIDsOfNextWidgetsInSystemTests()
 
     @markLayoutAsFixed()
 
@@ -162,8 +162,8 @@ class StretchableEditableWdgt extends Widget
     @invalidateLayout()
 
   buildAndConnectChildren: ->
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
+      world.alignIDsOfNextWidgetsInSystemTests()
 
     @createNewStretchablePanel()
     @createToolsPanel()

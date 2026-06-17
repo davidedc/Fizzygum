@@ -6,8 +6,8 @@ class FridgeWdgt extends PanelWdgt
   sourceCodeHolder: nil
   fridgeMagnetsCanvas: nil
 
-  topMostMagnet: (setOfMorphs = @children) ->
-    filtered = setOfMorphs.filter (m) ->
+  topMostMagnet: (setOfWidgets = @children) ->
+    filtered = setOfWidgets.filter (m) ->
       m.putIntoWords? and !m.putIntoWords
 
     calculated = filtered.map (m) ->

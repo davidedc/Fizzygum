@@ -234,7 +234,7 @@ class CaretWdgt extends BlinkerWdgt
   
   # CaretWdgt editing.
 
-  # User presses enter on a stringMorph
+  # User presses enter on a stringWidget
   accept: ->
     world.stopEditing()
     @escalateEvent "accept", nil

@@ -247,7 +247,7 @@ class TextWdgt extends StringWdgt
       ## the single bitmaps per paragraph would be easy
       ## to cache and could be created
       ## only on demand if they ever get damaged.
-      ## GET THE stringMorph2 to cache the actual bitmap that they
+      ## GET THE stringWidget2 to cache the actual bitmap that they
       ## generate so you can use that too from here, cause there
       ## might be a lot of reuse rather than re-painting the
       ## text all the times or even a paragraph.
@@ -449,11 +449,11 @@ class TextWdgt extends StringWdgt
     @reLayout()
     @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
-  setText: (theTextContent, stringFieldMorph, connectionsCalculationToken, superCall) ->
+  setText: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall) ->
     super
     @reLayoutAndRefreshContainerIfContainedText()
 
-  setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
+  setFontSize: (sizeOrWidgetGivingSize, morphGivingSize) ->
     super
     @reLayoutAndRefreshContainerIfContainedText()
 

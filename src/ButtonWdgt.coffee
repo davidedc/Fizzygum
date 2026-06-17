@@ -12,7 +12,7 @@ class ButtonWdgt extends Widget
 
   target: nil
   action: nil
-  dataSourceMorphForTarget: nil
+  dataSourceWidgetForTarget: nil
   morphEnv: nil
  
  
@@ -39,9 +39,9 @@ class ButtonWdgt extends Widget
       @target = nil,
       @action = nil,
 
-      @faceMorph = nil,
+      @faceWidget = nil,
 
-      @dataSourceMorphForTarget = nil,
+      @dataSourceWidgetForTarget = nil,
       @morphEnv,
       @toolTipMessage = nil,
 
@@ -59,11 +59,11 @@ class ButtonWdgt extends Widget
 
     #@color = Color.create 255, 152, 152
     #@color = Color.WHITE
-    if @faceMorph?
+    if @faceWidget?
 
-      if (typeof @faceMorph) == "string"
-        @faceMorph = (new StringWdgt @faceMorph, WorldWdgt.preferencesAndSettings.textInButtonsFontSize).alignCenter()
-      @add @faceMorph
+      if (typeof @faceWidget) == "string"
+        @faceWidget = (new StringWdgt @faceWidget, WorldWdgt.preferencesAndSettings.textInButtonsFontSize).alignCenter()
+      @add @faceWidget
       @invalidateLayout()
   
 
@@ -82,10 +82,10 @@ class ButtonWdgt extends Widget
 
     # TODO can we use the more standard way i.e.
     # calculate the bounds and pass them as args in the doLayout method
-    # of the faceMorph?
+    # of the faceWidget?
 
-    if @faceMorph?.parent == @
-      @faceMorph.rawSetBounds newBoundsForThisLayout.insetBy @padding
+    if @faceWidget?.parent == @
+      @faceWidget.rawSetBounds newBoundsForThisLayout.insetBy @padding
 
     super
     @markLayoutAsFixed()
@@ -98,7 +98,7 @@ class ButtonWdgt extends Widget
   trigger: ->
     if @action? and @action != ""
       #console.log "@target: " + @target + " @morphEnv: " + @morphEnv
-      @target[@action].call @target, @dataSourceMorphForTarget, @morphEnv, @argumentToAction1, @argumentToAction2
+      @target[@action].call @target, @dataSourceWidgetForTarget, @morphEnv, @argumentToAction1, @argumentToAction2
     return
 
   triggerDoubleClick: ->

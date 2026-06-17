@@ -40,7 +40,7 @@ class LayoutElementAdderOrDropletWdgt extends Widget
     morphPosition = @position()
     aContext.translate morphPosition.x, morphPosition.y
 
-    @spacerMorphRenderingHelper aContext, Color.WHITE, Color.create 200, 200, 255
+    @spacerWidgetRenderingHelper aContext, Color.WHITE, Color.create 200, 200, 255
 
     aContext.restore()
 
@@ -99,7 +99,7 @@ class LayoutElementAdderOrDropletWdgt extends Widget
     context.stroke()
 
 
-  spacerMorphRenderingHelper: (context, color, shadowColor) ->
+  spacerWidgetRenderingHelper: (context, color, shadowColor) ->
     context.lineWidth = 1
     context.lineCap = "round"
 

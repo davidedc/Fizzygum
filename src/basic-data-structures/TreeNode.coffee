@@ -390,12 +390,12 @@ class TreeNode
     # test the morph itself
     if morph is @
       return true
-    examinedMorph = morph
+    examinedWidget = morph
     # could use recursion, but
     # a loop will do too
-    while examinedMorph.parent?
-      examinedMorph = examinedMorph.parent
-      if examinedMorph is @
+    while examinedWidget.parent?
+      examinedWidget = examinedWidget.parent
+      if examinedWidget is @
         return true
     return false
 
@@ -478,16 +478,16 @@ class TreeNode
 
   lastSiblingBeforeMeSuchThat: (predicate) ->
     theCount = 0
-    indexOfMorph = nil
+    indexOfWidget = nil
     for eachSibling in @parent.children
       if eachSibling == @
         break
       if predicate.call nil, eachSibling
-        indexOfMorph = theCount
+        indexOfWidget = theCount
       theCount++
 
-    if indexOfMorph?
-      return @parent.children[indexOfMorph]
+    if indexOfWidget?
+      return @parent.children[indexOfWidget]
     else
       return nil
 
@@ -574,12 +574,12 @@ class TreeNode
   # directly or indirectly, of a specified
   # supposed ancestor morph
   # currently unused
-  isADescendantOf: (theSupposedAncestorMorph) ->
-    if @ == theSupposedAncestorMorph
+  isADescendantOf: (theSupposedAncestorWidget) ->
+    if @ == theSupposedAncestorWidget
       return true
     if !@parent?
       return false
-    return @parent.isADescendantOf theSupposedAncestorMorph
+    return @parent.isADescendantOf theSupposedAncestorWidget
   # this part is excluded from the fizzygum homepage build <<«
   
 
@@ -608,9 +608,9 @@ class TreeNode
     # over.
     for morphNumber in [@children.length-1..0] by -1
       morph = @children[morphNumber]
-      foundMorph = morph.topWdgtSuchThat predicate
-      if foundMorph?
-        return foundMorph
+      foundWidget = morph.topWdgtSuchThat predicate
+      if foundWidget?
+        return foundWidget
     # now that all children are tested, test myself
     if predicate.call nil, @
       return @

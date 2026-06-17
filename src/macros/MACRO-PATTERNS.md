@@ -1597,7 +1597,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **`macroSimpleDocumentProgrammaticBuildAndScroll` / `…ManualBuildAndScroll`**: build the SAME scrollable `SimpleDocumentScrollPanelWdgt`
   — one fills it via `doc.add`, the other by DRAGGING two desktop text widgets in (`@dragWidgetTo_InputEvents`) — then wheel-scroll.
   GOTCHA: `SimplePlainTextWdgt` width floors ~330px, so narrow the doc and place draggables SIDE BY SIDE (stacking overlaps them).
-- **`macroDemoMenuCatalogueParade`** (from the recorded buildAllMorphs, 70 steps → 1 shot): the whole-catalogue construction smoke —
+- **`macroDemoMenuCatalogueParade`** (from the recorded buildAllWidgets, 70 steps → 1 shot): the whole-catalogue construction smoke —
   every STATIC "demo ➜" item built via the real menu (a per-test `makeDemoWidget itemLabel, dropPoint` helper: right-click a
   RESERVED bare menu-home spot → "demo ➜" → item → the fresh widget rides the hand → a click at the authored grid spot drops it
   centered), one reference asserting every catalogue widget's constructor, defaults and first paint at once. When a new demo item

@@ -14,7 +14,7 @@
 #      maybe even if it's tied to a canvas you can get to the
 #            copy canvas and create the copy gradient from that?
 
-CanvasGradient::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
+CanvasGradient::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allWidgetsInStructure) ->
   # TODO id: DUPLICATED_CODE_IN_DEEPCOPY date: 6-Jun-2023
 
   haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf @

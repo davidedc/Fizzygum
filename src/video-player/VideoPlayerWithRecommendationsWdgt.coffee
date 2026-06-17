@@ -93,11 +93,11 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
         @thumbs.push thumb
 
     @prevButton = new SimpleButtonWdgt true, @, "prev", "❮"
-    @prevButton.faceMorph.alignMiddle()
+    @prevButton.faceWidget.alignMiddle()
     @recommendationsPane.add @prevButton
 
     @nextButton = new SimpleButtonWdgt true, @, "next", "❯"
-    @nextButton.faceMorph.alignMiddle()
+    @nextButton.faceWidget.alignMiddle()
     @recommendationsPane.add @nextButton
     
     # update layout

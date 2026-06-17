@@ -76,8 +76,8 @@ class PatchProgrammingWdgt extends StretchableEditableWdgt
 
 
     world.maybeEnableTrackChanges()
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
+      world.alignIDsOfNextWidgetsInSystemTests()
 
     @markLayoutAsFixed()
 

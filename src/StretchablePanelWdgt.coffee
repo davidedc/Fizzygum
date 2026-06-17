@@ -81,8 +81,8 @@ class StretchablePanelWdgt extends PanelWdgt
     super
     @markLayoutAsFixed()
 
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
+    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
+      world.alignIDsOfNextWidgetsInSystemTests()
 
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super

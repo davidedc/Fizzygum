@@ -29,7 +29,7 @@ class HandleWdgt extends Widget
     @layoutSpec_cornerInternal_fixedSize = WorldWdgt.preferencesAndSettings.handleSize
     @layoutSpec_cornerInternal_inset = @inset
 
-    @makeHandleSolidWithParentMorph nil, nil, @target
+    @makeHandleSolidWithParentWidget nil, nil, @target
 
   detachesWhenDragged: ->
     if (@parent instanceof WorldWdgt)
@@ -89,9 +89,9 @@ class HandleWdgt extends Widget
     aContext.translate morphPosition.x, morphPosition.y
 
     if @state == @STATE_NORMAL
-      @handleMorphRenderingHelper aContext, @color, Color.create 150, 150, 150
+      @handleWidgetRenderingHelper aContext, @color, Color.create 150, 150, 150
     if @state == @STATE_HIGHLIGHTED
-      @handleMorphRenderingHelper aContext, Color.WHITE, Color.create 200, 200, 255
+      @handleWidgetRenderingHelper aContext, Color.WHITE, Color.create 200, 200, 255
 
     aContext.restore()
 
@@ -173,7 +173,7 @@ class HandleWdgt extends Widget
         context.stroke()
 
 
-  handleMorphRenderingHelper: (context, color, shadowColor) ->
+  handleWidgetRenderingHelper: (context, color, shadowColor) ->
     context.lineWidth = 0.5
     context.lineCap = "round"
 
@@ -240,7 +240,7 @@ class HandleWdgt extends Widget
     @state = @STATE_NORMAL
     @changed()
 
-  makeHandleSolidWithParentMorph: (ignored, ignored2, morphAttachedTo)->
+  makeHandleSolidWithParentWidget: (ignored, ignored2, morphAttachedTo)->
     if morphAttachedTo?
       @target = morphAttachedTo
       switch @type
@@ -261,7 +261,7 @@ class HandleWdgt extends Widget
     menu = new MenuWdgt @, false, @, true, true, "choose target:"
     if choices.length > 0
       choices.forEach (each) =>
-        menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ➜", true, @, 'makeHandleSolidWithParentMorph', nil, nil, nil, nil, nil, each, nil, true
+        menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ➜", true, @, 'makeHandleSolidWithParentWidget', nil, nil, nil, nil, nil, each, nil, true
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the

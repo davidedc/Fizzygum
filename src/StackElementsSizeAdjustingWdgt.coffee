@@ -15,7 +15,7 @@ class StackElementsSizeAdjustingWdgt extends Widget
     @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_HANDLES
     @minimumExtent = new Point 0,0
 
-  @includeInNewMorphMenu: ->
+  @includeInNewWidgetMenu: ->
     # Return true for all classes that can be instantiated from the menu
     return false
 

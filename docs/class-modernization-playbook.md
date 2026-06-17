@@ -766,3 +766,27 @@ just-the-class / class-echo / full-eradication / skip). Plan `~/.claude/plans/ba
   regenerated (content-only; the rename-phase's src-only sweeps had missed test prose).
 - **165/165 (Chrome dpr 1+2, WebKit), `--homepage` builds + boots, ZERO recapture.** Remaining (optional, deferred): the FULL-eradication scope — the
   generic `Morph`=widget vocabulary (hundreds of identifiers across ~every file incl. serialization/mixin internals).
+
+**DONE (2026-06-17): BATCH 22 — generic `Morph`=widget vocabulary → `Widget` (SRC-VOCABULARY scope).** Owner chose "src vocabulary only" (of
+full/src-only/stop). **269 distinct generic identifiers / 849 occurrences** across ~every src file → `Widget` (full word — `eachWidget`/`theWidget`
+already existed; NOT the class-name abbreviation `Wdgt`). Plan `~/.claude/plans/batch22-generic-vocabulary-eradication.md`.
+- **Method:** a per-line **sentinel-protected substring sweep** (`s/Morph/Widget/g`, so `Morphs`→`Widgets`), protecting (`\b`-bounded) `Morphic`,
+  `theWordMorph` (+ collision with the existing `theWordWidget`), the quoted `"Morph"` suffix-detection/strip logic strings, ALL capitalized standalone
+  `*Morph` comment class-refs (`TriggerMorph`/`StringMorph`/`TextMorph`/…), and `macro*`/`SystemTest_*` test-name refs. A uniform substring sweep keeps
+  def+all-callsites in sync. Pre-fixed a latent class-echo bug found during sizing: `new BouncerMorph` ×5 (class is `BouncerWdgt`) → `new BouncerWdgt`.
+- **Harness (`Automator-and-test-harness-src/`):** targeted `\b` rename of ONLY the 4 mechanism props the 6 Automator commands set
+  (`hidingOfMorphs…`/`alignmentOfMorphIDsMechanism`/`alignIDsOfNextMorphsInSystemTests` → `…Widgets…`) so they stay in sync with the src readers;
+  KEPT the 6 Automator command CLASS names → **165 test files untouched**.
+- **THE TRAP that bit (RED suite → fixed):** the test macros **call ~11 src widget methods/properties BY NAME** (`plausibleTargetAndDestinationMorphs`
+  ×21, `findFirstLooseMorph`, `textMorph`, `subMorphsMergedFullBounds`, `representsAMorph`, `addMorphSpecificMenuEntries`, `addHighlightingMorphs`,
+  `getHierarchyMenuMorphs`, `rightMorph`, `leftMorph`, `basicMorphPadding`) — de-facto test-facing API. Renaming them broke ~9 tests + STALLED one; the
+  cross-repo residual sweep (test sources, excl. assets/test-names) located them; **reverted exactly those in src** (kept their `Morph` names, like the
+  Automator commands) → suite green. LESSON: "src vocabulary only, tests untouched" still requires keeping any src method a test macro calls by name —
+  enumerate them with `rg -oI '\b\w*Morphs?\w*\b' tests -g'!**/automation-assets/**'` minus test-names/commands.
+- **Recapture = exactly 1** (`macroDuplicateComplexWidgetRidesHand`, image_1+2): it photographs the Object-Inspector method list, which introspects +
+  displays method names → the renamed `choiceOfMorphToBePicked`→`choiceOfWidgetToBePicked` shows there (benign; eyeballed). Generic-vocab renames are
+  otherwise invisible (identifiers, not drawn) — only the inspector's live introspection surfaces one.
+- **165/165 (Chrome dpr 1+2, WebKit), `--homepage` builds + boots, 1 recapture.** **What remains in src** (deliberately kept): the ~11 test-API
+  `*Morph` methods, the prep-object generics (`makeHandleSolidWithParentMorph`/`create…In/OnMorph`), `theWordMorph`+logic strings, capitalized
+  comment class-refs, `Morphic`. Fully removing the test-API `*Morph` methods + the 6 Automator command names would require touching the 165 tests —
+  the "full eradication incl. test-facing API" the owner declined.

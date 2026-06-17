@@ -39,7 +39,7 @@ BackBufferMixin =
       # note that image contains only the CURRENT morph, not the composition of this
       # morph with all of the submorphs. I.e. for an inspector, this will only
       # contain the background of the window pane. Not any of its contents.
-      # for the worldMorph, this only contains the background
+      # for the worldWidget, this only contains the background
       backBuffer: nil
       backBufferContext: nil
 

@@ -214,12 +214,12 @@ class SliderWdgt extends CircleBoxWdgt
     else
       @parent.fullChanged()
   
-  setStart: (numOrMorphGivingNum) ->
+  setStart: (numOrWidgetGivingNum) ->
 
-    if numOrMorphGivingNum.getValue?
-      num = numOrMorphGivingNum.getValue()
+    if numOrWidgetGivingNum.getValue?
+      num = numOrWidgetGivingNum.getValue()
     else
-      num = numOrMorphGivingNum
+      num = numOrWidgetGivingNum
 
     if typeof num is "number"
       @start = Math.min Math.max(num, 0), @stop - @size
@@ -234,12 +234,12 @@ class SliderWdgt extends CircleBoxWdgt
     
     @changed()
   
-  setStop: (numOrMorphGivingNum) ->
+  setStop: (numOrWidgetGivingNum) ->
 
-    if numOrMorphGivingNum.getValue?
-      num = numOrMorphGivingNum.getValue()
+    if numOrWidgetGivingNum.getValue?
+      num = numOrWidgetGivingNum.getValue()
     else
-      num = numOrMorphGivingNum
+      num = numOrWidgetGivingNum
 
     if typeof num is "number"
       @stop = Math.max num, @start + @size
@@ -266,11 +266,11 @@ class SliderWdgt extends CircleBoxWdgt
       @escalateEvent "mouseDownLeft", pos
     
 
-  setSize: (sizeOrMorphGivingSize) ->
-    if sizeOrMorphGivingSize.getValue?
-      size = sizeOrMorphGivingSize.getValue()
+  setSize: (sizeOrWidgetGivingSize) ->
+    if sizeOrWidgetGivingSize.getValue?
+      size = sizeOrWidgetGivingSize.getValue()
     else
-      size = sizeOrMorphGivingSize
+      size = sizeOrWidgetGivingSize
 
     if typeof size is "number"
       @size = Math.min Math.max(size, 1), @stop - @start

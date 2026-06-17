@@ -5,7 +5,7 @@
 Array::shallowCopy = ->
   @concat()
 
-Array::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
+Array::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allWidgetsInStructure) ->
   # TODO id: DUPLICATED_CODE_IN_DEEPCOPY date: 6-Jun-2023
 
   haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf @
@@ -27,7 +27,7 @@ Array::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allMorp
       if !@[i].deepCopy?
         # this should never happen
         debugger
-      cloneOfMe[i] = @[i].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
+      cloneOfMe[i] = @[i].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allWidgetsInStructure
     else
       cloneOfMe[i] = @[i]
 

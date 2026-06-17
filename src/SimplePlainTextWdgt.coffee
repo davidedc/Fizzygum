@@ -137,9 +137,9 @@ class SimplePlainTextWdgt extends TextWdgt
   # this. Only the controller plumbing (the connectionsCalculationToken guard +
   # updateTarget) is SPTW-specific now; the box re-flow on a text change is the
   # inherited TextWdgt::setText (gated by FIT_BOX_TO_TEXT), reached via super.
-  setText: (theTextContent, stringFieldMorph, connectionsCalculationToken, superCall) ->
+  setText: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
-    super theTextContent, stringFieldMorph, connectionsCalculationToken, true
+    super theTextContent, stringFieldWidget, connectionsCalculationToken, true
     @updateTarget()
 
   updateTarget: ->

@@ -9,9 +9,9 @@ class SimpleButtonWdgt extends ButtonWdgt
       @target = nil,
       @action = nil,
 
-      @faceMorph = nil,
+      @faceWidget = nil,
 
-      @dataSourceMorphForTarget = nil,
+      @dataSourceWidgetForTarget = nil,
       @morphEnv,
       @toolTipMessage = nil,
 

@@ -37,10 +37,10 @@ class PanelWdgt extends Widget
     world.howManyUntitledShortcuts++
     return newFolderWindow
 
-  setColor: (aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
+  setColor: (aColorOrAWidgetGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
 
-    aColor = super aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, true
+    aColor = super aColorOrAWidgetGivingAColor, morphGivingColor, connectionsCalculationToken, true
     # keep in sync the value of the container scrollPanel
     # if there is one. Note that the container scrollPanel
     # is actually not painted.
@@ -53,8 +53,8 @@ class PanelWdgt extends Widget
     return aColor
 
 
-  setAlphaScaled: (alphaOrMorphGivingAlpha, morphGivingAlpha) ->
-    alpha = super(alphaOrMorphGivingAlpha, morphGivingAlpha)
+  setAlphaScaled: (alphaOrWidgetGivingAlpha, morphGivingAlpha) ->
+    alpha = super(alphaOrWidgetGivingAlpha, morphGivingAlpha)
     if @scrollPanel
       unless @scrollPanel.alpha == alpha
         @scrollPanel.alpha = alpha

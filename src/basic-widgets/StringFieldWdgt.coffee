@@ -5,7 +5,7 @@
 # render "cropped" — that keeps StringWdgt.edit on its INLINE branch (the old StringMorph
 # had no crop-deferral; e.g. PromptWdgt.reactToSliderAction calls @text.edit() on every
 # slider step and must NOT pop the "edit:" prompt).
-# A stringMorph that can "scroll" as the cursor moves along the text
+# A stringWidget that can "scroll" as the cursor moves along the text
 # but note that there are no scrollbars, since the container
 # is just a Panel not a ScrollPanel.
 

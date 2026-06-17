@@ -11,7 +11,7 @@
 
 class LabelButtonWdgt extends ButtonWdgt
 
-  # label fields (the button family carries a faceMorph instead; a label button
+  # label fields (the button family carries a faceWidget instead; a label button
   # draws its own @label)
   label: nil
   labelString: nil
@@ -47,8 +47,8 @@ class LabelButtonWdgt extends ButtonWdgt
       ) ->
 
     # ButtonWdgt owns the trigger machinery; map our label-button args onto its
-    # constructor. We pass NO faceMorph (we draw our own @label), and our
-    # "environment" arg is ButtonWdgt's dataSourceMorphForTarget.
+    # constructor. We pass NO faceWidget (we draw our own @label), and our
+    # "environment" arg is ButtonWdgt's dataSourceWidgetForTarget.
     super ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, nil, environment, morphEnv, toolTipMessage, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph
 
     @labelString = labelString
@@ -90,8 +90,8 @@ class LabelButtonWdgt extends ButtonWdgt
     if @centered
       @label.fullRawMoveTo @center().subtract @label.extent().floorDivideBy 2
 
-  # a label button has no faceMorph; use the base Widget layout rather than
-  # ButtonWdgt's faceMorph-centric override.
+  # a label button has no faceWidget; use the base Widget layout rather than
+  # ButtonWdgt's faceWidget-centric override.
   doLayout: (newBoundsForThisLayout) ->
     Widget::doLayout.call @, newBoundsForThisLayout
 

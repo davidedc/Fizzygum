@@ -154,12 +154,12 @@ class WorldWdgt extends PanelWdgt
   numberOfMergedSourceAndDestination: 0
 
   morphsToBeHighlighted: new Set
-  currentHighlightingMorphs: new Set
+  currentHighlightingWidgets: new Set
   morphsBeingHighlighted: new Set
 
   # »>> this part is excluded from the fizzygum homepage build
   morphsToBePinouted: new Set
-  currentPinoutingMorphs: new Set
+  currentPinoutingWidgets: new Set
   morphsBeingPinouted: new Set
   # this part is excluded from the fizzygum homepage build <<«
 
@@ -543,12 +543,12 @@ class WorldWdgt extends PanelWdgt
         @automator.player.runAllSystemTests()
     WorldWdgt.ongoingUrlActionNumber++
 
-  getMorphViaTextLabel: ([textDescription, occurrenceNumber, numberOfOccurrences]) ->
-    allCandidateMorphsWithSameTextDescription =
+  getWidgetViaTextLabel: ([textDescription, occurrenceNumber, numberOfOccurrences]) ->
+    allCandidateWidgetsWithSameTextDescription =
       @allChildrenTopToBottomSuchThat (m) ->
         m.getTextDescription() == textDescription
 
-    return allCandidateMorphsWithSameTextDescription[occurrenceNumber]
+    return allCandidateWidgetsWithSameTextDescription[occurrenceNumber]
   # this part is excluded from the fizzygum homepage build <<«
 
   mostRecentlyCreatedPopUp: ->
@@ -573,25 +573,25 @@ class WorldWdgt extends PanelWdgt
   # see roundNumericIDsToNextThousand method in
   # Widget for an explanation of why we need this
   # method.
-  alignIDsOfNextMorphsInSystemTests: ->
+  alignIDsOfNextWidgetsInSystemTests: ->
     if Automator? and Automator.state != Automator.IDLE
       # Check which objects end with the word Widget
       theWordMorph = "Morph"
       theWordWdgt = "Wdgt"
       theWordWidget = "Widget"
-      listOfMorphsClasses = (Object.keys(window)).filter (i) ->
+      listOfWidgetsClasses = (Object.keys(window)).filter (i) ->
         i.includes(theWordMorph, i.length - theWordMorph.length) or
         i.includes(theWordWdgt, i.length - theWordWdgt.length) or
         i.includes(theWordWidget, i.length - theWordWidget.length)
-      for eachMorphClass in listOfMorphsClasses
-        #console.log "bumping up ID of class: " + eachMorphClass
-        window[eachMorphClass].roundNumericIDsToNextThousand?()
+      for eachWidgetClass in listOfWidgetsClasses
+        #console.log "bumping up ID of class: " + eachWidgetClass
+        window[eachWidgetClass].roundNumericIDsToNextThousand?()
   # this part is excluded from the fizzygum homepage build <<«
 
   # used to close temporary menus
   closePopUpsMarkedForClosure: ->
-    @popUpsMarkedForClosure.forEach (eachMorph) =>
-      eachMorph.close()
+    @popUpsMarkedForClosure.forEach (eachWidget) =>
+      eachWidget.close()
     @popUpsMarkedForClosure.clear()
   
   # »>> this part is excluded from the fizzygum homepage build
@@ -638,14 +638,14 @@ class WorldWdgt extends PanelWdgt
     @clipThroughCache = @boundingBox()
     return @clipThroughCache
 
-  pushBrokenRect: (brokenMorph, theRect, isSrc) ->
+  pushBrokenRect: (brokenWidget, theRect, isSrc) ->
     if @duplicatedBrokenRectsTracker[theRect.toString()]?
       @numberOfDuplicatedBrokenRects++
     else
       if isSrc
-        brokenMorph.srcBrokenRect = @broken.length
+        brokenWidget.srcBrokenRect = @broken.length
       else
-        brokenMorph.dstBrokenRect = @broken.length
+        brokenWidget.dstBrokenRect = @broken.length
       if !theRect?
         debugger
       # if @broken.length == 0
@@ -656,80 +656,80 @@ class WorldWdgt extends PanelWdgt
   # using the code coverage tool from Chrome, it
   # doesn't seem that this is ever used
   # TODO investigate and see whether this is needed
-  mergeBrokenRectsIfCloseOrPushBoth: (brokenMorph, sourceBroken, destinationBroken) ->
+  mergeBrokenRectsIfCloseOrPushBoth: (brokenWidget, sourceBroken, destinationBroken) ->
     mergedBrokenRect = sourceBroken.merge destinationBroken
     mergedBrokenRectArea = mergedBrokenRect.area()
     sumArea = sourceBroken.area() + destinationBroken.area()
     #console.log "mergedBrokenRectArea: " + mergedBrokenRectArea + " (sumArea + sumArea/10): " + (sumArea + sumArea/10)
     if mergedBrokenRectArea < sumArea + sumArea/10
-      @pushBrokenRect brokenMorph, mergedBrokenRect, true
+      @pushBrokenRect brokenWidget, mergedBrokenRect, true
       @numberOfMergedSourceAndDestination++
     else
-      @pushBrokenRect brokenMorph, sourceBroken, true
-      @pushBrokenRect brokenMorph, destinationBroken, false
+      @pushBrokenRect brokenWidget, sourceBroken, true
+      @pushBrokenRect brokenWidget, destinationBroken, false
 
 
-  checkARectWithHierarchy: (aRect, brokenMorph, isSrc) ->
-    brokenMorphAncestor = brokenMorph
+  checkARectWithHierarchy: (aRect, brokenWidget, isSrc) ->
+    brokenWidgetAncestor = brokenWidget
 
-    #if brokenMorph instanceof SliderWdgt
+    #if brokenWidget instanceof SliderWdgt
     #  debugger
 
-    while brokenMorphAncestor.parent?
-      brokenMorphAncestor = brokenMorphAncestor.parent
-      if brokenMorphAncestor.srcBrokenRect?
-        if !@broken[brokenMorphAncestor.srcBrokenRect]?
+    while brokenWidgetAncestor.parent?
+      brokenWidgetAncestor = brokenWidgetAncestor.parent
+      if brokenWidgetAncestor.srcBrokenRect?
+        if !@broken[brokenWidgetAncestor.srcBrokenRect]?
           debugger
-        if @broken[brokenMorphAncestor.srcBrokenRect].containsRectangle aRect
+        if @broken[brokenWidgetAncestor.srcBrokenRect].containsRectangle aRect
           if isSrc
-            @broken[brokenMorph.srcBrokenRect] = nil
-            brokenMorph.srcBrokenRect = nil
+            @broken[brokenWidget.srcBrokenRect] = nil
+            brokenWidget.srcBrokenRect = nil
           else
-            @broken[brokenMorph.dstBrokenRect] = nil
-            brokenMorph.dstBrokenRect = nil
-        else if aRect.containsRectangle @broken[brokenMorphAncestor.srcBrokenRect]
-          @broken[brokenMorphAncestor.srcBrokenRect] = nil
-          brokenMorphAncestor.srcBrokenRect = nil
+            @broken[brokenWidget.dstBrokenRect] = nil
+            brokenWidget.dstBrokenRect = nil
+        else if aRect.containsRectangle @broken[brokenWidgetAncestor.srcBrokenRect]
+          @broken[brokenWidgetAncestor.srcBrokenRect] = nil
+          brokenWidgetAncestor.srcBrokenRect = nil
 
-      if brokenMorphAncestor.dstBrokenRect?
-        if !@broken[brokenMorphAncestor.dstBrokenRect]?
+      if brokenWidgetAncestor.dstBrokenRect?
+        if !@broken[brokenWidgetAncestor.dstBrokenRect]?
           debugger
-        if @broken[brokenMorphAncestor.dstBrokenRect].containsRectangle aRect
+        if @broken[brokenWidgetAncestor.dstBrokenRect].containsRectangle aRect
           if isSrc
-            @broken[brokenMorph.srcBrokenRect] = nil
-            brokenMorph.srcBrokenRect = nil
+            @broken[brokenWidget.srcBrokenRect] = nil
+            brokenWidget.srcBrokenRect = nil
           else
-            @broken[brokenMorph.dstBrokenRect] = nil
-            brokenMorph.dstBrokenRect = nil
-        else if aRect.containsRectangle @broken[brokenMorphAncestor.dstBrokenRect]
-          @broken[brokenMorphAncestor.dstBrokenRect] = nil
-          brokenMorphAncestor.dstBrokenRect = nil
+            @broken[brokenWidget.dstBrokenRect] = nil
+            brokenWidget.dstBrokenRect = nil
+        else if aRect.containsRectangle @broken[brokenWidgetAncestor.dstBrokenRect]
+          @broken[brokenWidgetAncestor.dstBrokenRect] = nil
+          brokenWidgetAncestor.dstBrokenRect = nil
 
 
-  rectAlreadyIncludedInParentBrokenMorph: ->
-    for brokenMorph in @morphsThatMaybeChangedGeometryOrPosition
-        if brokenMorph.srcBrokenRect?
-          aRect = @broken[brokenMorph.srcBrokenRect]
-          @checkARectWithHierarchy aRect, brokenMorph, true
-        if brokenMorph.dstBrokenRect?
-          aRect = @broken[brokenMorph.dstBrokenRect]
-          @checkARectWithHierarchy aRect, brokenMorph, false
+  rectAlreadyIncludedInParentBrokenWidget: ->
+    for brokenWidget in @morphsThatMaybeChangedGeometryOrPosition
+        if brokenWidget.srcBrokenRect?
+          aRect = @broken[brokenWidget.srcBrokenRect]
+          @checkARectWithHierarchy aRect, brokenWidget, true
+        if brokenWidget.dstBrokenRect?
+          aRect = @broken[brokenWidget.dstBrokenRect]
+          @checkARectWithHierarchy aRect, brokenWidget, false
 
-    for brokenMorph in @morphsThatMaybeChangedFullGeometryOrPosition
-        if brokenMorph.srcBrokenRect?
-          aRect = @broken[brokenMorph.srcBrokenRect]
-          @checkARectWithHierarchy aRect, brokenMorph
-        if brokenMorph.dstBrokenRect?
-          aRect = @broken[brokenMorph.dstBrokenRect]
-          @checkARectWithHierarchy aRect, brokenMorph
+    for brokenWidget in @morphsThatMaybeChangedFullGeometryOrPosition
+        if brokenWidget.srcBrokenRect?
+          aRect = @broken[brokenWidget.srcBrokenRect]
+          @checkARectWithHierarchy aRect, brokenWidget
+        if brokenWidget.dstBrokenRect?
+          aRect = @broken[brokenWidget.dstBrokenRect]
+          @checkARectWithHierarchy aRect, brokenWidget
 
-  cleanupSrcAndDestRectsOfMorphs: ->
-    for brokenMorph in @morphsThatMaybeChangedGeometryOrPosition
-      brokenMorph.srcBrokenRect = nil
-      brokenMorph.dstBrokenRect = nil
-    for brokenMorph in @morphsThatMaybeChangedFullGeometryOrPosition
-      brokenMorph.srcBrokenRect = nil
-      brokenMorph.dstBrokenRect = nil
+  cleanupSrcAndDestRectsOfWidgets: ->
+    for brokenWidget in @morphsThatMaybeChangedGeometryOrPosition
+      brokenWidget.srcBrokenRect = nil
+      brokenWidget.dstBrokenRect = nil
+    for brokenWidget in @morphsThatMaybeChangedFullGeometryOrPosition
+      brokenWidget.srcBrokenRect = nil
+      brokenWidget.dstBrokenRect = nil
 
 
   fleshOutBroken: ->
@@ -740,46 +740,46 @@ class WorldWdgt extends PanelWdgt
     destinationBroken = nil
 
 
-    for brokenMorph in @morphsThatMaybeChangedGeometryOrPosition
+    for brokenWidget in @morphsThatMaybeChangedGeometryOrPosition
 
       # let's see if this Widget that marked itself as broken
       # was actually painted in the past frame.
       # If it was then we have to clean up the "before" area
       # even if the Widget is not visible anymore
-      if brokenMorph.clippedBoundsWhenLastPainted?
-        if brokenMorph.clippedBoundsWhenLastPainted.isNotEmpty()
-          sourceBroken = brokenMorph.clippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
+      if brokenWidget.clippedBoundsWhenLastPainted?
+        if brokenWidget.clippedBoundsWhenLastPainted.isNotEmpty()
+          sourceBroken = brokenWidget.clippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
 
-        #if brokenMorph!= world and (brokenMorph.clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
+        #if brokenWidget!= world and (brokenWidget.clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
         #  debugger
 
       # for the "destination" broken rectangle we can actually
       # check whether the Widget is still visible because we
       # can skip the destination rectangle in that case
       # (not the source one!)
-      unless brokenMorph.surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage()
+      unless brokenWidget.surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage()
         # @clippedThroughBounds() should be smaller area
         # than bounds because it clips
         # the bounds based on the clipping morphs up the
         # hierarchy
-        boundsToBeChanged = brokenMorph.clippedThroughBounds()
+        boundsToBeChanged = brokenWidget.clippedThroughBounds()
 
         if boundsToBeChanged.isNotEmpty()
           destinationBroken = boundsToBeChanged.spread().expandBy(1).growBy @maxShadowSize
-          #if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint new Point 10, 10)
+          #if brokenWidget!= world and (boundsToBeChanged.spread().containsPoint new Point 10, 10)
           #  debugger
 
 
       if sourceBroken? and destinationBroken?
-        @mergeBrokenRectsIfCloseOrPushBoth brokenMorph, sourceBroken, destinationBroken
+        @mergeBrokenRectsIfCloseOrPushBoth brokenWidget, sourceBroken, destinationBroken
       else if sourceBroken? or destinationBroken?
         if sourceBroken?
-          @pushBrokenRect brokenMorph, sourceBroken, true
+          @pushBrokenRect brokenWidget, sourceBroken, true
         else
-          @pushBrokenRect brokenMorph, destinationBroken, true
+          @pushBrokenRect brokenWidget, destinationBroken, true
 
-      brokenMorph.geometryOrPositionPossiblyChanged = false
-      brokenMorph.clippedBoundsWhenLastPainted = nil
+      brokenWidget.geometryOrPositionPossiblyChanged = false
+      brokenWidget.clippedBoundsWhenLastPainted = nil
 
     
 
@@ -790,38 +790,38 @@ class WorldWdgt extends PanelWdgt
     sourceBroken = nil
     destinationBroken = nil
 
-    for brokenMorph in @morphsThatMaybeChangedFullGeometryOrPosition
+    for brokenWidget in @morphsThatMaybeChangedFullGeometryOrPosition
 
-      #console.log "fleshOutFullBroken: " + brokenMorph
+      #console.log "fleshOutFullBroken: " + brokenWidget
 
-      if brokenMorph.fullClippedBoundsWhenLastPainted?
-        if brokenMorph.fullClippedBoundsWhenLastPainted.isNotEmpty()
-          sourceBroken = brokenMorph.fullClippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
+      if brokenWidget.fullClippedBoundsWhenLastPainted?
+        if brokenWidget.fullClippedBoundsWhenLastPainted.isNotEmpty()
+          sourceBroken = brokenWidget.fullClippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
 
       # for the "destination" broken rectangle we can actually
       # check whether the Widget is still visible because we
       # can skip the destination rectangle in that case
       # (not the source one!)
-      unless brokenMorph.surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage()
+      unless brokenWidget.surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage()
 
-        boundsToBeChanged = brokenMorph.fullClippedBounds()
+        boundsToBeChanged = brokenWidget.fullClippedBounds()
 
         if boundsToBeChanged.isNotEmpty()
           destinationBroken = boundsToBeChanged.spread().expandBy(1).growBy @maxShadowSize
-          #if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
+          #if brokenWidget!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
           #  debugger
       
    
       if sourceBroken? and destinationBroken?
-        @mergeBrokenRectsIfCloseOrPushBoth brokenMorph, sourceBroken, destinationBroken
+        @mergeBrokenRectsIfCloseOrPushBoth brokenWidget, sourceBroken, destinationBroken
       else if sourceBroken? or destinationBroken?
         if sourceBroken?
-          @pushBrokenRect brokenMorph, sourceBroken, true
+          @pushBrokenRect brokenWidget, sourceBroken, true
         else
-          @pushBrokenRect brokenMorph, destinationBroken, true
+          @pushBrokenRect brokenWidget, destinationBroken, true
 
-      brokenMorph.fullGeometryOrPositionPossiblyChanged = false
-      brokenMorph.fullClippedBoundsWhenLastPainted = nil
+      brokenWidget.fullGeometryOrPositionPossiblyChanged = false
+      brokenWidget.fullClippedBoundsWhenLastPainted = nil
 
 
   # »>> this part is excluded from the fizzygum homepage build
@@ -867,8 +867,8 @@ class WorldWdgt extends PanelWdgt
       # (and pop out of the queue all the Widgets we encounter
       # on the way that have a valid layout)
       loop
-        tryThisMorph = @morphsThatMaybeChangedLayout[@morphsThatMaybeChangedLayout.length - 1]
-        if tryThisMorph.layoutIsValid
+        tryThisWidget = @morphsThatMaybeChangedLayout[@morphsThatMaybeChangedLayout.length - 1]
+        if tryThisWidget.layoutIsValid
           @morphsThatMaybeChangedLayout.pop()
           if @morphsThatMaybeChangedLayout.length == 0
             return
@@ -895,17 +895,17 @@ class WorldWdgt extends PanelWdgt
       # doLayout of the freefloating child is called twice,
       # the first time wrongly.
 
-      while tryThisMorph.parent?
-        if tryThisMorph.layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING or tryThisMorph.parent.layoutIsValid
+      while tryThisWidget.parent?
+        if tryThisWidget.layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING or tryThisWidget.parent.layoutIsValid
           break
-        tryThisMorph = tryThisMorph.parent
+        tryThisWidget = tryThisWidget.parent
 
       try
         # so now you have a "top" element up a chain
         # of morphs with broken layout. Go do a
         # doLayout on it, so it might fix a bunch of those
         # on the chain (but not all)
-        tryThisMorph.doLayout()
+        tryThisWidget.doLayout()
       catch err
         @softResetWorld()
         if !@errorConsole? then @createErrorConsole()
@@ -935,8 +935,8 @@ class WorldWdgt extends PanelWdgt
 
     @fleshOutFullBroken()
     @fleshOutBroken()
-    @rectAlreadyIncludedInParentBrokenMorph()
-    @cleanupSrcAndDestRectsOfMorphs()
+    @rectAlreadyIncludedInParentBrokenWidget()
+    @cleanupSrcAndDestRectsOfWidgets()
 
     @clearGeometryOrPositionPossiblyChangedFlags()
     @clearFullGeometryOrPositionPossiblyChangedFlags()
@@ -1092,54 +1092,54 @@ class WorldWdgt extends PanelWdgt
     @numberOfMergedSourceAndDestination = 0
 
   # »>> this part is excluded from the fizzygum homepage build
-  addPinoutingMorphs: ->
-    @currentPinoutingMorphs.forEach (eachPinoutingMorph) =>
-      if @morphsToBePinouted.has eachPinoutingMorph.wdgtThisWdgtIsPinouting
-        if eachPinoutingMorph.wdgtThisWdgtIsPinouting.hasMaybeChangedGeometryOrPosition()
+  addPinoutingWidgets: ->
+    @currentPinoutingWidgets.forEach (eachPinoutingWidget) =>
+      if @morphsToBePinouted.has eachPinoutingWidget.wdgtThisWdgtIsPinouting
+        if eachPinoutingWidget.wdgtThisWdgtIsPinouting.hasMaybeChangedGeometryOrPosition()
           # reposition the pinout morph if needed
-          peekThroughBox = eachPinoutingMorph.wdgtThisWdgtIsPinouting.clippedThroughBounds()
-          eachPinoutingMorph.fullRawMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
+          peekThroughBox = eachPinoutingWidget.wdgtThisWdgtIsPinouting.clippedThroughBounds()
+          eachPinoutingWidget.fullRawMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
 
       else
-        @currentPinoutingMorphs.delete eachPinoutingMorph
-        @morphsBeingPinouted.delete eachPinoutingMorph.wdgtThisWdgtIsPinouting
-        eachPinoutingMorph.wdgtThisWdgtIsPinouting = nil
-        eachPinoutingMorph.fullDestroy()
+        @currentPinoutingWidgets.delete eachPinoutingWidget
+        @morphsBeingPinouted.delete eachPinoutingWidget.wdgtThisWdgtIsPinouting
+        eachPinoutingWidget.wdgtThisWdgtIsPinouting = nil
+        eachPinoutingWidget.fullDestroy()
 
-    @morphsToBePinouted.forEach (eachMorphNeedingPinout) =>
-      unless @morphsBeingPinouted.has eachMorphNeedingPinout
-        hM = new StringWdgt eachMorphNeedingPinout.toString()
+    @morphsToBePinouted.forEach (eachWidgetNeedingPinout) =>
+      unless @morphsBeingPinouted.has eachWidgetNeedingPinout
+        hM = new StringWdgt eachWidgetNeedingPinout.toString()
         @add hM
-        hM.wdgtThisWdgtIsPinouting = eachMorphNeedingPinout
-        peekThroughBox = eachMorphNeedingPinout.clippedThroughBounds()
+        hM.wdgtThisWdgtIsPinouting = eachWidgetNeedingPinout
+        peekThroughBox = eachWidgetNeedingPinout.clippedThroughBounds()
         hM.fullRawMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
         hM.setColor Color.BLUE
         hM.setWidth 400
-        @currentPinoutingMorphs.add hM
-        @morphsBeingPinouted.add eachMorphNeedingPinout
+        @currentPinoutingWidgets.add hM
+        @morphsBeingPinouted.add eachWidgetNeedingPinout
   # this part is excluded from the fizzygum homepage build <<«
   
   addHighlightingMorphs: ->
-    @currentHighlightingMorphs.forEach (eachHighlightingMorph) =>
-      if @morphsToBeHighlighted.has eachHighlightingMorph.wdgtThisWdgtIsHighlighting
-        if eachHighlightingMorph.wdgtThisWdgtIsHighlighting.hasMaybeChangedGeometryOrPosition()
-          eachHighlightingMorph.rawSetBounds eachHighlightingMorph.wdgtThisWdgtIsHighlighting.clippedThroughBounds()
+    @currentHighlightingWidgets.forEach (eachHighlightingWidget) =>
+      if @morphsToBeHighlighted.has eachHighlightingWidget.wdgtThisWdgtIsHighlighting
+        if eachHighlightingWidget.wdgtThisWdgtIsHighlighting.hasMaybeChangedGeometryOrPosition()
+          eachHighlightingWidget.rawSetBounds eachHighlightingWidget.wdgtThisWdgtIsHighlighting.clippedThroughBounds()
       else
-        @currentHighlightingMorphs.delete eachHighlightingMorph
-        @morphsBeingHighlighted.delete eachHighlightingMorph.wdgtThisWdgtIsHighlighting
-        eachHighlightingMorph.wdgtThisWdgtIsHighlighting = nil
-        eachHighlightingMorph.fullDestroy()
+        @currentHighlightingWidgets.delete eachHighlightingWidget
+        @morphsBeingHighlighted.delete eachHighlightingWidget.wdgtThisWdgtIsHighlighting
+        eachHighlightingWidget.wdgtThisWdgtIsHighlighting = nil
+        eachHighlightingWidget.fullDestroy()
 
-    @morphsToBeHighlighted.forEach (eachMorphNeedingHighlight) =>
-      unless @morphsBeingHighlighted.has eachMorphNeedingHighlight
+    @morphsToBeHighlighted.forEach (eachWidgetNeedingHighlight) =>
+      unless @morphsBeingHighlighted.has eachWidgetNeedingHighlight
         hM = new HighlighterWdgt
         @add hM
-        hM.wdgtThisWdgtIsHighlighting = eachMorphNeedingHighlight
-        hM.rawSetBounds eachMorphNeedingHighlight.clippedThroughBounds()
+        hM.wdgtThisWdgtIsHighlighting = eachWidgetNeedingHighlight
+        hM.rawSetBounds eachWidgetNeedingHighlight.clippedThroughBounds()
         hM.setColor Color.BLUE
         hM.setAlphaScaled 50
-        @currentHighlightingMorphs.add hM
-        @morphsBeingHighlighted.add eachMorphNeedingHighlight
+        @currentHighlightingWidgets.add hM
+        @morphsBeingHighlighted.add eachWidgetNeedingHighlight
 
 
   # »>> this part is only needed for VideoPlayer
@@ -1243,7 +1243,7 @@ class WorldWdgt extends PanelWdgt
     @recalculateLayouts()
     window.recalculatingLayouts = false
     # »>> this part is excluded from the fizzygum homepage build
-    @addPinoutingMorphs()
+    @addPinoutingWidgets()
     # this part is excluded from the fizzygum homepage build <<«
     @addHighlightingMorphs()
 
@@ -1264,34 +1264,34 @@ class WorldWdgt extends PanelWdgt
     # is not affected by the removal of elements while iterating.
     #
     # TODO all these set modifications should be immutable...
-    @steppingWdgts.forEach (eachSteppingMorph) =>
+    @steppingWdgts.forEach (eachSteppingWidget) =>
 
-      #if eachSteppingMorph.isBeingFloatDragged()
+      #if eachSteppingWidget.isBeingFloatDragged()
       #  continue
 
       # for objects where @fps is defined, check which ones are due to be stepped
       # and which ones want to wait.
-      millisBetweenSteps = Math.round(1000 / eachSteppingMorph.fps)
+      millisBetweenSteps = Math.round(1000 / eachSteppingWidget.fps)
       timeOfCurrentCycleStart = WorldWdgt.dateOfCurrentCycleStart.getTime()
 
-      if eachSteppingMorph.fps <= 0
+      if eachSteppingWidget.fps <= 0
         # if fps 0 or negative, then just run as fast as possible,
         # so 0 milliseconds remaining to the next invocation
         millisecondsRemainingToWaitedFrame = 0
       else
-        if eachSteppingMorph.synchronisedStepping
+        if eachSteppingWidget.synchronisedStepping
           millisecondsRemainingToWaitedFrame = millisBetweenSteps - (timeOfCurrentCycleStart % millisBetweenSteps)
-          if eachSteppingMorph.previousMillisecondsRemainingToWaitedFrame != 0 and millisecondsRemainingToWaitedFrame > eachSteppingMorph.previousMillisecondsRemainingToWaitedFrame
+          if eachSteppingWidget.previousMillisecondsRemainingToWaitedFrame != 0 and millisecondsRemainingToWaitedFrame > eachSteppingWidget.previousMillisecondsRemainingToWaitedFrame
             millisecondsRemainingToWaitedFrame = 0
-          eachSteppingMorph.previousMillisecondsRemainingToWaitedFrame = millisecondsRemainingToWaitedFrame
+          eachSteppingWidget.previousMillisecondsRemainingToWaitedFrame = millisecondsRemainingToWaitedFrame
           #console.log millisBetweenSteps + " " + millisecondsRemainingToWaitedFrame
         else
-          elapsedMilliseconds = timeOfCurrentCycleStart - eachSteppingMorph.lastTime
+          elapsedMilliseconds = timeOfCurrentCycleStart - eachSteppingWidget.lastTime
           millisecondsRemainingToWaitedFrame = millisBetweenSteps - elapsedMilliseconds
       
       # when the firing time comes (or as soon as it's past):
       if millisecondsRemainingToWaitedFrame <= 0
-        @stepWidget eachSteppingMorph
+        @stepWidget eachSteppingWidget
 
         # Increment "lastTime" by millisBetweenSteps. Two notes:
         # 1) We don't just set it to timeOfCurrentCycleStart so that there is no drifting
@@ -1306,8 +1306,8 @@ class WorldWdgt extends PanelWdgt
         # widgets would animate frantically (every frame) catching up on
         # all the steps they missed. We don't want that.
         #
-        # while eachSteppingMorph.lastTime + millisBetweenSteps < timeOfCurrentCycleStart
-        #   eachSteppingMorph.lastTime += millisBetweenSteps
+        # while eachSteppingWidget.lastTime + millisBetweenSteps < timeOfCurrentCycleStart
+        #   eachSteppingWidget.lastTime += millisBetweenSteps
         #
         # 3) and finally, here is the equivalent of the loop above, but done
         # in one shot using remainders.
@@ -1315,7 +1315,7 @@ class WorldWdgt extends PanelWdgt
         #      lastTime + k * millisBetweenSteps
         # is less than timeOfCurrentCycleStart.
 
-        eachSteppingMorph.lastTime = timeOfCurrentCycleStart - ((timeOfCurrentCycleStart - eachSteppingMorph.lastTime) % millisBetweenSteps)
+        eachSteppingWidget.lastTime = timeOfCurrentCycleStart - ((timeOfCurrentCycleStart - eachSteppingWidget.lastTime) % millisBetweenSteps)
 
 
 
@@ -1805,24 +1805,24 @@ class WorldWdgt extends PanelWdgt
     theWordMorph = "Morph"
     theWordWdgt = "Wdgt"
     theWordWidget = "Widget"
-    ListOfMorphs = (Object.keys(window)).filter (i) ->
+    ListOfWidgets = (Object.keys(window)).filter (i) ->
       i.includes(theWordMorph, i.length - theWordMorph.length) or
       i.includes(theWordWdgt, i.length - theWordWdgt.length) or
       i.includes(theWordWidget, i.length - theWordWidget.length)
-    for eachMorphClass in ListOfMorphs
-      if eachMorphClass != "WorldWdgt"
-        #console.log "resetting " + eachMorphClass + " from " + window[eachMorphClass].instancesCounter
+    for eachWidgetClass in ListOfWidgets
+      if eachWidgetClass != "WorldWdgt"
+        #console.log "resetting " + eachWidgetClass + " from " + window[eachWidgetClass].instancesCounter
         # the actual count is in another variable "instancesCounter"
         # but all labels are built using instanceNumericID
         # which is set based on lastBuiltInstanceNumericID
-        window[eachMorphClass].lastBuiltInstanceNumericID = 0
+        window[eachWidgetClass].lastBuiltInstanceNumericID = 0
 
     # »>> this part is excluded from the fizzygum homepage build
     if Automator?
       Automator.animationsPacingControl = false
-      Automator.alignmentOfMorphIDsMechanism = false
-      Automator.hidingOfMorphsContentExtractInLabels = false
-      Automator.hidingOfMorphsNumberIDInLabels = false
+      Automator.alignmentOfWidgetIDsMechanism = false
+      Automator.hidingOfWidgetsContentExtractInLabels = false
+      Automator.hidingOfWidgetsNumberIDInLabels = false
     # this part is excluded from the fizzygum homepage build <<«
 
     super()
@@ -1890,8 +1890,8 @@ class WorldWdgt extends PanelWdgt
     menu.addMenuItem "about Fizzygum...", true, @, "about"
     menu
 
-  wallpapersMenu: (a,targetMorph)->
-    menu = new MenuWdgt @, false, targetMorph, true, true, "Wallpapers"
+  wallpapersMenu: (a,targetWidget)->
+    menu = new MenuWdgt @, false, targetWidget, true, true, "Wallpapers"
 
     # we add the "untick" prefix to all entries
     # so we allocate the right amount of space for
@@ -2060,12 +2060,12 @@ class WorldWdgt extends PanelWdgt
     newWdgt.rawSetExtent new Point 100, 100
     @create newWdgt
   createNewAnimationDemo: ->
-    foo = new BouncerMorph
+    foo = new BouncerWdgt
     foo.fullRawMoveTo new Point 50, 20
     foo.rawSetExtent new Point 300, 200
     foo.alpha = 0.9
     foo.speed = 3
-    bar = new BouncerMorph
+    bar = new BouncerWdgt
     bar.setColor Color.create 50, 50, 50
     bar.fullRawMoveTo new Point 80, 80
     bar.rawSetExtent new Point 80, 250
@@ -2073,21 +2073,21 @@ class WorldWdgt extends PanelWdgt
     bar.direction = "right"
     bar.alpha = 0.9
     bar.speed = 5
-    baz = new BouncerMorph
+    baz = new BouncerWdgt
     baz.setColor Color.create 20, 20, 20
     baz.fullRawMoveTo new Point 90, 140
     baz.rawSetExtent new Point 40, 30
     baz.type = "horizontal"
     baz.direction = "right"
     baz.speed = 3
-    garply = new BouncerMorph
+    garply = new BouncerWdgt
     garply.setColor Color.create 200, 20, 20
     garply.fullRawMoveTo new Point 90, 140
     garply.rawSetExtent new Point 20, 20
     garply.type = "vertical"
     garply.direction = "up"
     garply.speed = 8
-    fred = new BouncerMorph
+    fred = new BouncerWdgt
     fred.setColor Color.create 20, 200, 20
     fred.fullRawMoveTo new Point 120, 140
     fred.rawSetExtent new Point 20, 20
@@ -2164,10 +2164,10 @@ class WorldWdgt extends PanelWdgt
   # this part is excluded from the fizzygum homepage build <<«
 
   
-  edit: (aStringMorphOrTextMorph) ->
+  edit: (aStringWidgetOrTextWidget) ->
     # first off, if the Widget is not editable
     # then there is nothing to do
-    # return nil  unless aStringMorphOrTextMorph.isEditable
+    # return nil  unless aStringWidgetOrTextWidget.isEditable
 
     # there is only one caret in the World, so destroy
     # the previous one if there was one.
@@ -2181,8 +2181,8 @@ class WorldWdgt extends PanelWdgt
       @caret = @caret.fullDestroy()
 
     # create the new Caret
-    @caret = new CaretWdgt aStringMorphOrTextMorph
-    aStringMorphOrTextMorph.parent.add @caret
+    @caret = new CaretWdgt aStringWidgetOrTextWidget
+    aStringWidgetOrTextWidget.parent.add @caret
     # the only place where the caret is added to the keyboardEventsReceivers
     @keyboardEventsReceivers.add @caret
 
@@ -2203,8 +2203,8 @@ class WorldWdgt extends PanelWdgt
     # in the way, so commenting this out for the time being
     #
     #if WorldWdgt.preferencesAndSettings.useSliderForInput
-    #  if !aStringMorphOrTextMorph.parentThatIsA MenuWdgt
-    #    @slide aStringMorphOrTextMorph
+    #  if !aStringWidgetOrTextWidget.parentThatIsA MenuWdgt
+    #    @slide aStringWidgetOrTextWidget
   
   # Editing can stop because of three reasons:
   #   cancel (user hits ESC)

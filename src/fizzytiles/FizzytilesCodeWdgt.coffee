@@ -8,8 +8,8 @@ class FizzytilesCodeWdgt extends TextWdgt
   showCompiledCode: (theTextContent) ->
     @setText theTextContent, nil, nil, nil, true
 
-  setText: (theTextContent, stringFieldMorph, connectionsCalculationToken, superCall, skipCompilation) ->
-    super theTextContent, stringFieldMorph, connectionsCalculationToken, true
+  setText: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall, skipCompilation) ->
+    super theTextContent, stringFieldWidget, connectionsCalculationToken, true
     if !skipCompilation?
       @fridgeMagnetsCanvas?.newGraphicsCode @text
 

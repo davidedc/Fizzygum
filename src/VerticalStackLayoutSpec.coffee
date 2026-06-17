@@ -43,8 +43,8 @@ class VerticalStackLayoutSpec
     menu.addLine()
     menu.addMenuItem "layout in stack ➜", false, @, "vertStackMenu", ""
 
-  vertStackMenu: (morphOpeningThePopUp,targetMorph,a,b,c)->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, targetMorph, true, true, nil
+  vertStackMenu: (morphOpeningThePopUp,targetWidget,a,b,c)->
+    menu = new MenuWdgt morphOpeningThePopUp,  false, targetWidget, true, true, nil
     menu.addMenuItem "base width...", true, @, "baseWidthPopout", ""
     menu.addMenuItem "elasticity...", true, @, "elasticityPopout", ""
     menu.addMenuItem "align left", true, @, "setAlignmentToLeft"  if @alignment isnt "left"
@@ -77,11 +77,11 @@ class VerticalStackLayoutSpec
       100,
       true
 
-  setElasticity: (elasticityOrMorphGivingElasticity, morphGivingElasticity) ->
+  setElasticity: (elasticityOrWidgetGivingElasticity, morphGivingElasticity) ->
     if morphGivingElasticity?.getValue?
       elasticity = morphGivingElasticity.getValue()
     else
-      elasticity = elasticityOrMorphGivingElasticity
+      elasticity = elasticityOrWidgetGivingElasticity
 
     elasticity = Number(elasticity)
 
@@ -100,11 +100,11 @@ class VerticalStackLayoutSpec
       1000,
       true
 
-  setWidthOfElementWhenAdded: (widthOfElementWhenAddedOrMorphGivingWidthOfElementWhenAdded, morphGivingWidthOfElementWhenAdded) ->
+  setWidthOfElementWhenAdded: (widthOfElementWhenAddedOrWidgetGivingWidthOfElementWhenAdded, morphGivingWidthOfElementWhenAdded) ->
     if morphGivingWidthOfElementWhenAdded?.getValue?
       widthOfElementWhenAdded = morphGivingWidthOfElementWhenAdded.getValue()
     else
-      widthOfElementWhenAdded = widthOfElementWhenAddedOrMorphGivingWidthOfElementWhenAdded
+      widthOfElementWhenAdded = widthOfElementWhenAddedOrWidgetGivingWidthOfElementWhenAdded
 
     widthOfElementWhenAdded = Math.round(widthOfElementWhenAdded)
 

@@ -58,8 +58,8 @@ class ErrorsLogViewerWdgt extends Widget
   buildAndConnectChildren: ->
     if Automator? and
      Automator.state != Automator.IDLE and
-     Automator.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
+     Automator.alignmentOfWidgetIDsMechanism
+      world.alignIDsOfNextWidgetsInSystemTests()
 
     @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
     @tempPromptEntryField.disableDrops()
@@ -164,8 +164,8 @@ class ErrorsLogViewerWdgt extends Widget
     world.maybeEnableTrackChanges()
     if Automator? and
      Automator.state != Automator.IDLE and
-     Automator.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
+     Automator.alignmentOfWidgetIDsMechanism
+      world.alignIDsOfNextWidgetsInSystemTests()
 
 
     super

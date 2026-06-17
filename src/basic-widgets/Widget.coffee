@@ -287,13 +287,13 @@ class Widget extends TreeNode
 
   identifyViaTextLabel: ->
     myTextDescription = @getTextDescription()
-    allCandidateMorphsWithSameTextDescription =
+    allCandidateWidgetsWithSameTextDescription =
       world.allChildrenTopToBottomSuchThat (m) ->
         m.getTextDescription() == myTextDescription
 
-    position = allCandidateMorphsWithSameTextDescription.indexOf @
+    position = allCandidateWidgetsWithSameTextDescription.indexOf @
 
-    theLength = allCandidateMorphsWithSameTextDescription.length
+    theLength = allCandidateWidgetsWithSameTextDescription.length
     #console.log [myTextDescription, position, theLength]
     return [myTextDescription, position, theLength]
 
@@ -342,7 +342,7 @@ class Widget extends TreeNode
   # this part is excluded from the fizzygum homepage build <<«
 
   startCountdownForBubbleHelp: (contents) ->
-    ToolTipWdgt.createInAWhileIfHandStillContainedInMorph @, contents
+    ToolTipWdgt.createInAWhileIfHandStillContainedInWidget @, contents
 
   constructor: ->
     super()
@@ -467,7 +467,7 @@ class Widget extends TreeNode
   toString: ->
     firstPart = "a "
 
-    if Automator? and Automator.state != Automator.IDLE and Automator.hidingOfMorphsNumberIDInLabels
+    if Automator? and Automator.state != Automator.IDLE and Automator.hidingOfWidgetsNumberIDInLabels
       return firstPart + @morphClassString()
     else
       return firstPart + @uniqueIDString()
@@ -510,10 +510,10 @@ class Widget extends TreeNode
     # in the duplication method are also updated here.
     # Also, possibly you should have a similar pattern of updates
     # See the methods:
-    #   alignCopiedMorphToBrokenInfoDataStructures
-    #   alignCopiedMorphToSteppingStructures
-    #   alignCopiedMorphToReferenceTracker
-    #   alignCopiedMorphToKeyboardEventsReceiversSet
+    #   alignCopiedWidgetToBrokenInfoDataStructures
+    #   alignCopiedWidgetToSteppingStructures
+    #   alignCopiedWidgetToReferenceTracker
+    #   alignCopiedWidgetToKeyboardEventsReceiversSet
 
     @destroyed = true
     @parent?.invalidateLayout()
@@ -766,21 +766,21 @@ class Widget extends TreeNode
   position: ->
     @bounds.origin
 
-  positionFractionalInMorph: (theMorph) ->
-    [relativeXPos, relativeYPos] = @positionPixelsInMorph theMorph
-    fractionalXPos = relativeXPos / theMorph.width()
-    fractionalYPos = relativeYPos / theMorph.height()
+  positionFractionalInWidget: (theWidget) ->
+    [relativeXPos, relativeYPos] = @positionPixelsInWidget theWidget
+    fractionalXPos = relativeXPos / theWidget.width()
+    fractionalYPos = relativeYPos / theWidget.height()
     return [fractionalXPos, fractionalYPos]
 
-  extentFractionalInMorph: (theMorph) ->
+  extentFractionalInWidget: (theWidget) ->
     width = @width()
     height = @height()
-    fractionalWidth = width / theMorph.width()
-    fractionalHeight = height / theMorph.height()
+    fractionalWidth = width / theWidget.width()
+    fractionalHeight = height / theWidget.height()
     return [fractionalWidth, fractionalHeight]
 
-  positionPixelsInMorph: (theMorph) ->
-    relativePos = @position().toLocalCoordinatesOf theMorph
+  positionPixelsInWidget: (theWidget) ->
+    relativePos = @position().toLocalCoordinatesOf theWidget
     return [relativePos.x, relativePos.y]
   
   extent: ->
@@ -843,23 +843,23 @@ class Widget extends TreeNode
   # to check that we don't consider overlaps with
   # morphs contained in a Panel that are clipped and
   # hence *actually* not overlapping).
-  plausibleTargetAndDestinationMorphs: (theMorph) ->
-    # find if I intersect theMorph,
+  plausibleTargetAndDestinationMorphs: (theWidget) ->
+    # find if I intersect theWidget,
     # then check my children recursively
-    # exclude me if I'm a child of theMorph
+    # exclude me if I'm a child of theWidget
     # (cause it's usually odd to attach a Widget
     # to one of its submorphs or for it to
     # control the properties of one of its submorphs)
     result = []
     if @visibleBasedOnIsVisibleProperty() and
         !@isCollapsed() and
-        !theMorph.isAncestorOf(@) and
-        @areBoundsIntersecting(theMorph) and
+        !theWidget.isAncestorOf(@) and
+        @areBoundsIntersecting(theWidget) and
         !@anyParentPopUpMarkedForClosure()
       result = [@]
 
     @children.forEach (child) ->
-      result = result.concat(child.plausibleTargetAndDestinationMorphs(theMorph))
+      result = result.concat(child.plausibleTargetAndDestinationMorphs(theWidget))
 
     return result
 
@@ -1250,10 +1250,10 @@ class Widget extends TreeNode
 
 
   rememberFractionalPositionInHoldingPanel: ->
-    @positionFractionalInHoldingPanel = @positionFractionalInMorph @parent
+    @positionFractionalInHoldingPanel = @positionFractionalInWidget @parent
 
   rememberFractionalExtentInHoldingPanel: ->
-    @extentFractionalInHoldingPanel = @extentFractionalInMorph @parent
+    @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
 
   # TODO this is used a lot, where I suspect all we need to do
   # is to do this automatically ALSO when a widget is added/moved
@@ -1439,7 +1439,7 @@ class Widget extends TreeNode
         # the stretchable panel will get them to the
         # correct dimensions
         if morphStartingTheChange? and @parent? and (morphStartingTheChange instanceof HandleWdgt)
-          @extentFractionalInHoldingPanel = @extentFractionalInMorph @parent
+          @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
 
   
   silentRawSetExtent: (aPoint) ->
@@ -1564,13 +1564,13 @@ class Widget extends TreeNode
     h = Math.max Math.round(height or 0), 0
     @bounds = new Rectangle @bounds.origin, new Point @bounds.corner.x, @bounds.origin.y + h
   
-  setColor: (aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
+  setColor: (aColorOrAWidgetGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
 
     if morphGivingColor?.getColor?
       aColor = morphGivingColor.getColor()
     else
-      aColor = aColorOrAMorphGivingAColor
+      aColor = aColorOrAWidgetGivingAColor
 
     if aColor
       if @color?.equals aColor
@@ -1581,13 +1581,13 @@ class Widget extends TreeNode
         
     return aColor
   
-  setBackgroundColor: (aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
+  setBackgroundColor: (aColorOrAWidgetGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
 
     if morphGivingColor?.getColor?
       aColor = morphGivingColor.getColor()
     else
-      aColor = aColorOrAMorphGivingAColor
+      aColor = aColorOrAWidgetGivingAColor
     if aColor
 
       if @backgroundColor?.equals aColor
@@ -2060,21 +2060,21 @@ class Widget extends TreeNode
   # raw-pixel hash are derived from this single capture, so they never diverge and
   # the region is only cropped once.
   fullRenderCanvasAsItAppearsOnScreen: ->
-    fullExtentOfMorph = @fullBounds()
-    destCanvas = HTMLCanvasElement.createOfPhysicalDimensions fullExtentOfMorph.extent().scaleBy ceilPixelRatio
+    fullExtentOfWidget = @fullBounds()
+    destCanvas = HTMLCanvasElement.createOfPhysicalDimensions fullExtentOfWidget.extent().scaleBy ceilPixelRatio
     destCtx = destCanvas.getContext '2d'
     # Read from the render canvas, not the DOM canvas: under SWCanvas this is the
     # pristine software surface (deterministic, non-premultiplied — avoids the DOM
     # canvas's premultiplied round-trip). When the flag is off it IS the DOM canvas.
     destCtx.drawImage world.worldRenderCanvas,
-      fullExtentOfMorph.topLeft().x * ceilPixelRatio,
-      fullExtentOfMorph.topLeft().y * ceilPixelRatio,
-      fullExtentOfMorph.width() * ceilPixelRatio,
-      fullExtentOfMorph.height() * ceilPixelRatio,
+      fullExtentOfWidget.topLeft().x * ceilPixelRatio,
+      fullExtentOfWidget.topLeft().y * ceilPixelRatio,
+      fullExtentOfWidget.width() * ceilPixelRatio,
+      fullExtentOfWidget.height() * ceilPixelRatio,
       0,
       0,
-      fullExtentOfMorph.width() * ceilPixelRatio,
-      fullExtentOfMorph.height() * ceilPixelRatio
+      fullExtentOfWidget.width() * ceilPixelRatio,
+      fullExtentOfWidget.height() * ceilPixelRatio
 
     return destCanvas
 
@@ -2313,26 +2313,26 @@ class Widget extends TreeNode
   # in case we copy a morph, if the original was in some
   # data structures related to broken morphs, then
   # we have to add the copy too.
-  alignCopiedMorphToBrokenInfoDataStructures: (copiedMorph) ->
+  alignCopiedWidgetToBrokenInfoDataStructures: (copiedWidget) ->
     if world.morphsThatMaybeChangedGeometryOrPosition.includes(@) and
-     !world.morphsThatMaybeChangedGeometryOrPosition.includes(copiedMorph)
-      world.morphsThatMaybeChangedGeometryOrPosition.push copiedMorph
+     !world.morphsThatMaybeChangedGeometryOrPosition.includes(copiedWidget)
+      world.morphsThatMaybeChangedGeometryOrPosition.push copiedWidget
 
     if world.morphsThatMaybeChangedFullGeometryOrPosition.includes(@) and
-     !world.morphsThatMaybeChangedFullGeometryOrPosition.includes(copiedMorph)
-      world.morphsThatMaybeChangedFullGeometryOrPosition.push copiedMorph
+     !world.morphsThatMaybeChangedFullGeometryOrPosition.includes(copiedWidget)
+      world.morphsThatMaybeChangedFullGeometryOrPosition.push copiedWidget
 
   # in case we copy a morph, if the original was in some
   # stepping structures, then we have to add the copy too.
-  alignCopiedMorphToSteppingStructures: (copiedMorph) ->
+  alignCopiedWidgetToSteppingStructures: (copiedWidget) ->
     if world.steppingWdgts.has @
-      world.steppingWdgts.add copiedMorph
+      world.steppingWdgts.add copiedWidget
 
   # in case we copy a morph, if the original was receiving
   # keyboard events, then we have to add the copy too.
-  alignCopiedMorphToKeyboardEventsReceiversSet: (copiedMorph) ->
+  alignCopiedWidgetToKeyboardEventsReceiversSet: (copiedWidget) ->
     if world.keyboardEventsReceivers.has @ 
-      world.keyboardEventsReceivers.add copiedMorph
+      world.keyboardEventsReceivers.add copiedWidget
 
   # note that the entire copying mechanism
   # should also take care of inserting the copied
@@ -2345,16 +2345,16 @@ class Widget extends TreeNode
     if @destroyed
       @inform "The item you are\ntrying to copy\nis dead!"
       return nil
-    allMorphsInStructure = @allChildrenBottomToTop()
-    copiedMorph = @deepCopy false, [], [], allMorphsInStructure
-    return copiedMorph
+    allWidgetsInStructure = @allChildrenBottomToTop()
+    copiedWidget = @deepCopy false, [], [], allWidgetsInStructure
+    return copiedWidget
 
   # »>> this part is excluded from the fizzygum homepage build
   serialize: ->
-    allMorphsInStructure = @allChildrenBottomToTop()
+    allWidgetsInStructure = @allChildrenBottomToTop()
     arr1 = []
     arr2 = []
-    @deepCopy true, arr1, arr2, allMorphsInStructure
+    @deepCopy true, arr1, arr2, allWidgetsInStructure
     totalJSON = ""
 
     for element in arr2
@@ -2382,10 +2382,10 @@ class Widget extends TreeNode
     for eachSerialization in objectsSerializations
       createdObjects.push JSON.parse eachSerialization
 
-    clonedMorphs = []
+    clonedWidgets = []
     for eachObject in createdObjects
       # note that the constructor method is not run!
-      #console.log "cloning:" + eachMorph.className
+      #console.log "cloning:" + eachWidget.className
       #console.log "with:" + window[eachObject.className].prototype
       if eachObject.className == "Canvas"
         theClone = HTMLCanvasElement.createOfPhysicalDimensions new Point eachObject.width, eachObject.height
@@ -2415,36 +2415,36 @@ class Widget extends TreeNode
           theClone.assignUniqueID()
       else
         theClone = []
-      clonedMorphs.push theClone
+      clonedWidgets.push theClone
       #theClone.constructor()
 
-    for i in [0... clonedMorphs.length]
-      eachClonedMorph = clonedMorphs[i]
-      if eachClonedMorph.constructor == HTMLCanvasElement
+    for i in [0... clonedWidgets.length]
+      eachClonedWidget = clonedWidgets[i]
+      if eachClonedWidget.constructor == HTMLCanvasElement
         # do nothing
-      else if eachClonedMorph.constructor != Array
+      else if eachClonedWidget.constructor != Array
         for property of createdObjects[i]
           # also includes the "parent" property
           if createdObjects[i].hasOwnProperty property
             console.log "looking at property: " + property
-            clonedMorphs[i][property] = createdObjects[i][property]
-            if typeof clonedMorphs[i][property] is "string"
-              if clonedMorphs[i][property].startsWith "$"
-                referenceNumberAsString = clonedMorphs[i][property].substring(1)
+            clonedWidgets[i][property] = createdObjects[i][property]
+            if typeof clonedWidgets[i][property] is "string"
+              if clonedWidgets[i][property].startsWith "$"
+                referenceNumberAsString = clonedWidgets[i][property].substring(1)
                 referenceNumber = parseInt referenceNumberAsString
-                clonedMorphs[i][property] = clonedMorphs[referenceNumber]
+                clonedWidgets[i][property] = clonedWidgets[referenceNumber]
       else
         for j in [0... createdObjects[i].length]
           eachArrayElement = createdObjects[i][j]
-          clonedMorphs[i][j] = createdObjects[i][j]
+          clonedWidgets[i][j] = createdObjects[i][j]
           if typeof eachArrayElement is "string"
             if eachArrayElement.startsWith "$"
               referenceNumberAsString = eachArrayElement.substring(1)
               referenceNumber = parseInt referenceNumberAsString
-              clonedMorphs[i][j] = clonedMorphs[referenceNumber]
+              clonedWidgets[i][j] = clonedWidgets[referenceNumber]
 
 
-    return clonedMorphs[0]
+    return clonedWidgets[0]
   # this part is excluded from the fizzygum homepage build <<«
 
   # Injecting code /////////////////////////////////////////
@@ -2562,18 +2562,18 @@ class Widget extends TreeNode
     if !@grabsToParentWhenDragged()
       return @
 
-    scanningMorphs = @
-    while scanningMorphs.parent?
-      scanningMorphs = scanningMorphs.parent
+    scanningWidgets = @
+    while scanningWidgets.parent?
+      scanningWidgets = scanningWidgets.parent
 
-      if scanningMorphs.rejectDrags()
+      if scanningWidgets.rejectDrags()
         return nil
 
-      if scanningMorphs.nonFloatDragging?
-        return scanningMorphs
+      if scanningWidgets.nonFloatDragging?
+        return scanningWidgets
 
-      if !scanningMorphs.grabsToParentWhenDragged()
-        return scanningMorphs
+      if !scanningWidgets.grabsToParentWhenDragged()
+        return scanningWidgets
 
     return nil
 
@@ -2607,16 +2607,16 @@ class Widget extends TreeNode
     if @hasShadow()
       return @
 
-    scanningMorphs = @
-    while scanningMorphs.parent?
-      scanningMorphs = scanningMorphs.parent
+    scanningWidgets = @
+    while scanningWidgets.parent?
+      scanningWidgets = scanningWidgets.parent
       # TODO actually stop at the first
       # CLIPPING morph (more generic), not
       # just a PanelWdgt
-      if scanningMorphs.clipsAtRectangularBounds
+      if scanningWidgets.clipsAtRectangularBounds
         return nil
-      if scanningMorphs.hasShadow()
-        return scanningMorphs
+      if scanningWidgets.hasShadow()
+        return scanningWidgets
 
     return nil
 
@@ -2918,7 +2918,7 @@ class Widget extends TreeNode
       return morphToAskMenuTo.overridingContextMenu()
 
     if world.isDevMode
-      hierarchyMenuMorphs = morphToAskMenuTo.getHierarchyMenuMorphs()
+      hierarchyMenuWidgets = morphToAskMenuTo.getHierarchyMenuMorphs()
       # if the morph is attached to the world then there is no
       # disambiguation to do, just build the context menu.
       # Same if there would be one only entry in the hierarchyMenu
@@ -2926,14 +2926,14 @@ class Widget extends TreeNode
       # Otherwise we actually have to build the spacial
       # demultiplexing menu.
       if morphToAskMenuTo.parent is world
-        return morphToAskMenuTo.buildMorphContextMenu()
-      else if hierarchyMenuMorphs.length < 2
-        return hierarchyMenuMorphs[0].buildMorphContextMenu()
+        return morphToAskMenuTo.buildWidgetContextMenu()
+      else if hierarchyMenuWidgets.length < 2
+        return hierarchyMenuWidgets[0].buildWidgetContextMenu()
       else
-        return morphToAskMenuTo.buildHierarchyMenu hierarchyMenuMorphs
+        return morphToAskMenuTo.buildHierarchyMenu hierarchyMenuWidgets
 
   getHierarchyMenuMorphs: ->
-    hierarchyMenuMorphs = []
+    hierarchyMenuWidgets = []
     # Spacial multiplexing
     # (search "multiplexing" for the other parts of
     # code where this matters)
@@ -2949,7 +2949,7 @@ class Widget extends TreeNode
       # only add morphs that have a menu, and
       # leave out the world itself and the morphs that are about
       # to be destroyed
-      if (each.buildMorphContextMenu) and (each isnt world) and (!each.anyParentPopUpMarkedForClosure())
+      if (each.buildWidgetContextMenu) and (each isnt world) and (!each.anyParentPopUpMarkedForClosure())
         # * leave out SimpleVerticalStackPanelWdgt when
         #   inside a SimpleVerticalStackScrollPanelWdgt
         # * also leave out PanelWdgt when
@@ -2962,9 +2962,9 @@ class Widget extends TreeNode
         if (!((each instanceof SimpleVerticalStackPanelWdgt) and (each.parent instanceof SimpleVerticalStackScrollPanelWdgt))) and
          (!((each instanceof PanelWdgt) and (each.parent instanceof ScrollPanelWdgt))) and
          (!((each instanceof ScrollPanelWdgt) and (each.parent instanceof FolderWindowWdgt)))
-          hierarchyMenuMorphs.push each
+          hierarchyMenuWidgets.push each
 
-    hierarchyMenuMorphs
+    hierarchyMenuWidgets
   
   # When user right-clicks on a morph that is a child of other morphs,
   # then it's ambiguous which of the morphs she wants to operate on.
@@ -2977,14 +2977,14 @@ class Widget extends TreeNode
       morphsHierarchy = @getHierarchyMenuMorphs()
     menu = new MenuWdgt @, false, @, true, true, nil
     morphsHierarchy.forEach (each) ->
-      textLabelForMorph = each.toString().slice 0, 50
-      textLabelForMorph = textLabelForMorph.replace "Wdgt", ""
-      menu.addMenuItem textLabelForMorph + " ➜", false, each, "popupDeveloperMenu", nil, nil, nil, nil, nil, nil, nil, true
+      textLabelForWidget = each.toString().slice 0, 50
+      textLabelForWidget = textLabelForWidget.replace "Wdgt", ""
+      menu.addMenuItem textLabelForWidget + " ➜", false, each, "popupDeveloperMenu", nil, nil, nil, nil, nil, nil, nil, true
 
     menu
 
   popupDeveloperMenu: (morphOpeningThePopUp)->
-    @buildMorphContextMenu(morphOpeningThePopUp).popUpAtHand()
+    @buildWidgetContextMenu(morphOpeningThePopUp).popUpAtHand()
 
   popUpColorSetter: ->
     @pickColor "color:", "setColor", Color.BLACK
@@ -3231,11 +3231,11 @@ class Widget extends TreeNode
   removeOutputPins: (a,b,c,d) ->
     world.morphsToBePinouted.delete b
 
-  testMenu: (morphOpeningThePopUp,targetMorph)->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, targetMorph, true, true, nil
-    menu.addMenuItem "serialise morph to memory", true, targetMorph, "serialiseToMemory"
-    menu.addMenuItem "deserialize from memory and attach to world", true, targetMorph, "deserialiseFromMemoryAndAttachToWorld"
-    menu.addMenuItem "deserialize from memory and attach to hand", true, targetMorph, "deserialiseFromMemoryAndAttachToHand"
+  testMenu: (morphOpeningThePopUp,targetWidget)->
+    menu = new MenuWdgt morphOpeningThePopUp,  false, targetWidget, true, true, nil
+    menu.addMenuItem "serialise morph to memory", true, targetWidget, "serialiseToMemory"
+    menu.addMenuItem "deserialize from memory and attach to world", true, targetWidget, "deserialiseFromMemoryAndAttachToWorld"
+    menu.addMenuItem "deserialize from memory and attach to hand", true, targetWidget, "deserialiseFromMemoryAndAttachToHand"
     menu.addMenuItem "attach with horizontal layout", true, @, "attachWithHorizLayout"
     menu.addMenuItem "make spacers transparent", true, @, "makeSpacersTransparent"
     menu.addMenuItem "make spacers opaque", true, @, "makeSpacersOpaque"
@@ -3244,15 +3244,15 @@ class Widget extends TreeNode
     menu.addMenuItem "StringWdgt without background", true, @, "createNewStringWdgtWithoutBackground"
     menu.addMenuItem "StringWdgt with background", true, @, "createNewStringWdgtWithBackground"
     menu.addMenuItem "TextWdgt with background", true, @, "createNewTextWdgtWithBackground"
-    if world.morphsToBePinouted.has targetMorph
+    if world.morphsToBePinouted.has targetWidget
       menu.addMenuItem "remove output pins", true, @, "removeOutputPins"
     else
       menu.addMenuItem "show output pins", true, @, "showOutputPins"
     
     # unclear whether the "un-collapse" entry would ever be
     # visible.
-    if targetMorph?
-      if targetMorph.collapsed
+    if targetWidget?
+      if targetWidget.collapsed
         menu.addMenuItem "un-collapse", true, @, "unCollapse"
       else
         menu.addMenuItem "collapse", true, @, "collapse"
@@ -3433,7 +3433,7 @@ class Widget extends TreeNode
     menu.popUpAtHand()
   # this part is only needed for Macros <<«
 
-  buildBaseMorphClassContextMenu: (morphOpeningThePopUp) ->
+  buildBaseWidgetClassContextMenu: (morphOpeningThePopUp) ->
 
     menu = new MenuWdgt(morphOpeningThePopUp, false,
       @,
@@ -3499,8 +3499,8 @@ class Widget extends TreeNode
       if @parent?.constrainContentWidth
         @layoutSpecDetails.addMorphSpecificMenuEntries morphOpeningThePopUp, menu
 
-  buildMorphContextMenu: (morphOpeningThePopUp) ->
-    menu = @buildBaseMorphClassContextMenu morphOpeningThePopUp
+  buildWidgetContextMenu: (morphOpeningThePopUp) ->
+    menu = @buildBaseWidgetClassContextMenu morphOpeningThePopUp
     @addMorphSpecificMenuEntries morphOpeningThePopUp, menu
 
     if @addShapeSpecificMenuItems?
@@ -3519,11 +3519,11 @@ class Widget extends TreeNode
         return Math.min Math.max(unscaled, 0.1), 1
 
   # »>> this part is excluded from the fizzygum homepage build
-  setPadding: (paddingOrMorphGivingPadding, morphGivingPadding) ->
+  setPadding: (paddingOrWidgetGivingPadding, morphGivingPadding) ->
     if morphGivingPadding?.getValue?
       padding = morphGivingPadding.getValue()
     else
-      padding = paddingOrMorphGivingPadding
+      padding = paddingOrWidgetGivingPadding
 
     #console.log " >>>>>>>>>>>>> padding: " + padding
     #if padding == 1
@@ -3537,11 +3537,11 @@ class Widget extends TreeNode
 
     return padding
 
-  setPaddingTop: (paddingOrMorphGivingPadding, morphGivingPadding) ->
+  setPaddingTop: (paddingOrWidgetGivingPadding, morphGivingPadding) ->
     if morphGivingPadding?.getValue?
       padding = morphGivingPadding.getValue()
     else
-      padding = paddingOrMorphGivingPadding
+      padding = paddingOrWidgetGivingPadding
 
     if padding
       unless @paddingTop == padding
@@ -3550,11 +3550,11 @@ class Widget extends TreeNode
 
     return padding
 
-  setPaddingBottom: (paddingOrMorphGivingPadding, morphGivingPadding) ->
+  setPaddingBottom: (paddingOrWidgetGivingPadding, morphGivingPadding) ->
     if morphGivingPadding?.getValue?
       padding = morphGivingPadding.getValue()
     else
-      padding = paddingOrMorphGivingPadding
+      padding = paddingOrWidgetGivingPadding
 
     if padding
       unless @paddingBottom == padding
@@ -3563,11 +3563,11 @@ class Widget extends TreeNode
 
     return padding
 
-  setPaddingLeft: (paddingOrMorphGivingPadding, morphGivingPadding) ->
+  setPaddingLeft: (paddingOrWidgetGivingPadding, morphGivingPadding) ->
     if morphGivingPadding?.getValue?
       padding = morphGivingPadding.getValue()
     else
-      padding = paddingOrMorphGivingPadding
+      padding = paddingOrWidgetGivingPadding
 
     if padding
       unless @paddingLeft == padding
@@ -3576,11 +3576,11 @@ class Widget extends TreeNode
 
     return padding
 
-  setPaddingRight: (paddingOrMorphGivingPadding, morphGivingPadding) ->
+  setPaddingRight: (paddingOrWidgetGivingPadding, morphGivingPadding) ->
     if morphGivingPadding?.getValue?
       padding = morphGivingPadding.getValue()
     else
-      padding = paddingOrMorphGivingPadding
+      padding = paddingOrWidgetGivingPadding
 
     if padding
       unless @paddingRight == padding
@@ -3590,11 +3590,11 @@ class Widget extends TreeNode
     return padding
   # this part is excluded from the fizzygum homepage build <<«
 
-  setAlphaScaled: (alphaOrMorphGivingAlpha, morphGivingAlpha) ->
+  setAlphaScaled: (alphaOrWidgetGivingAlpha, morphGivingAlpha) ->
     if morphGivingAlpha?.getValue?
       alpha = morphGivingAlpha.getValue()
     else
-      alpha = alphaOrMorphGivingAlpha
+      alpha = alphaOrWidgetGivingAlpha
 
     if alpha
       alpha = @calculateAlphaScaled alpha
@@ -3604,19 +3604,19 @@ class Widget extends TreeNode
 
     return alpha
 
-  newParentChoice: (ignored, theMorphToBeAttached) ->
+  newParentChoice: (ignored, theWidgetToBeAttached) ->
     # this is what happens when "each" is
     # selected: we attach the selected morph
-    @add theMorphToBeAttached
+    @add theWidgetToBeAttached
     if @ instanceof ScrollPanelWdgt
       @adjustContentsBounds()
       @adjustScrollBars()
 
   # »>> this part is excluded from the fizzygum homepage build
-  newParentChoiceWithHorizLayout: (ignored, theMorphToBeAttached) ->
+  newParentChoiceWithHorizLayout: (ignored, theWidgetToBeAttached) ->
     # this is what happens when "each" is
     # selected: we attach the selected morph
-    @add theMorphToBeAttached, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    @add theWidgetToBeAttached, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     if @ instanceof ScrollPanelWdgt
       @adjustContentsBounds()
       @adjustScrollBars()
@@ -3917,16 +3917,16 @@ class Widget extends TreeNode
 
   # Widget collision detection - not used anywhere at the moment ////////////////////////
   
-  isTouching: (otherMorph) ->
-    oImg = @overlappingImage otherMorph
+  isTouching: (otherWidget) ->
+    oImg = @overlappingImage otherWidget
     data = oImg.getContext("2d").getImageData(1, 1, oImg.width, oImg.height).data
     detect(data, (each) ->
       each isnt 0
     )?
   
-  overlappingImage: (otherMorph) ->
+  overlappingImage: (otherWidget) ->
     fb = @fullBounds()
-    otherFb = otherMorph.fullBounds()
+    otherFb = otherWidget.fullBounds()
     oRect = fb.intersect(otherFb)
     oImg = HTMLCanvasElement.createOfPhysicalDimensions oRect.extent().scaleBy ceilPixelRatio
     ctx = oImg.getContext "2d"
@@ -3937,7 +3937,7 @@ class Widget extends TreeNode
       Math.round(oRect.origin.x - fb.origin.x),
       Math.round(oRect.origin.y - fb.origin.y)
     ctx.globalCompositeOperation = "source-in"
-    ctx.drawImage otherMorph.fullImage(),
+    ctx.drawImage otherWidget.fullImage(),
       Math.round(otherFb.origin.x - oRect.origin.x),
       Math.round(otherFb.origin.y - oRect.origin.y)
     oImg

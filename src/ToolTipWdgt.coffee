@@ -1,5 +1,5 @@
 # when invoked using...
-#    createInAWhileIfHandStillContainedInMorph / openAt
+#    createInAWhileIfHandStillContainedInWidget / openAt
 #	... I can temporarily display any widget.
 # (is you just use the default constructor it will just sit there
 # and basically _not_ behave like a tool tip)
@@ -27,8 +27,8 @@ class ToolTipWdgt extends Widget
     @appearance = new BubblyAppearance @
     # console.log @color
   
-  @createBubbleHelpIfHandStillOnMorph: (contents, morphInvokingThis) ->
-    # console.log "bubble createBubbleHelpIfHandStillOnMorph"
+  @createBubbleHelpIfHandStillOnWidget: (contents, morphInvokingThis) ->
+    # console.log "bubble createBubbleHelpIfHandStillOnWidget"
     # let's check that the item that the
     # bubble is about is still actually there
     # and the mouse is still over it, otherwise
@@ -42,14 +42,14 @@ class ToolTipWdgt extends Widget
       clearTimeout eachTimeout
     @ongoingTimeouts.clear()
 
-  @createInAWhileIfHandStillContainedInMorph: (morphInvokingThis, contents, delay = 500) ->
-    # console.log "bubble createInAWhileIfHandStillContainedInMorph"
+  @createInAWhileIfHandStillContainedInWidget: (morphInvokingThis, contents, delay = 500) ->
+    # console.log "bubble createInAWhileIfHandStillContainedInWidget"
     if Automator? and Automator.animationsPacingControl and
      Automator.state != Automator.IDLE
-        @createBubbleHelpIfHandStillOnMorph contents, morphInvokingThis
+        @createBubbleHelpIfHandStillOnWidget contents, morphInvokingThis
     else
       @ongoingTimeouts.add setTimeout (=>
-        @createBubbleHelpIfHandStillOnMorph contents, morphInvokingThis
+        @createBubbleHelpIfHandStillOnWidget contents, morphInvokingThis
         )
         , delay
   
@@ -67,52 +67,52 @@ class ToolTipWdgt extends Widget
   buildAndConnectChildren: ->
     # console.log "bubble buildAndConnectChildren"
     # re-build my contents
-    if @contentsMorph
-      @contentsMorph = @contentsMorph.destroy()
+    if @contentsWidget
+      @contentsWidget = @contentsWidget.destroy()
     if @contents instanceof Widget
-      @contentsMorph = @contents
+      @contentsWidget = @contents
     else if Utils.isString @contents
       # "sans-serif" passed explicitly: the old TextMorph defaulted a nil font
       # to "sans-serif", whereas TextWdgt's default is 'Arial, sans-serif'.
       # Color.BLACK passed explicitly: old TextMorph forced black, TextWdgt
       # defaults to (37,37,37).
-      @contentsMorph = new TextWdgt(
+      @contentsWidget = new TextWdgt(
         @contents,
         WorldWdgt.preferencesAndSettings.bubbleHelpFontSize,
         "sans-serif",
         false,
         true,
         Color.BLACK)
-      @contentsMorph.alignCenter()
+      @contentsWidget.alignCenter()
     # canvas-like (a DOM canvas OR an SWCanvasElement under the software backend);
     # Widget / string contents are already handled by the branches above.
     else if @contents? and typeof @contents.getContext is "function"
-      @contentsMorph = new Widget
-      @contentsMorph.silentRawSetWidth @contents.width
-      @contentsMorph.silentRawSetHeight @contents.height
-      @contentsMorph.backBuffer = @contents
-      @contentsMorph.backBufferContext = @contentsMorph.backBuffer.getContext "2d"
+      @contentsWidget = new Widget
+      @contentsWidget.silentRawSetWidth @contents.width
+      @contentsWidget.silentRawSetHeight @contents.height
+      @contentsWidget.backBuffer = @contents
+      @contentsWidget.backBufferContext = @contentsWidget.backBuffer.getContext "2d"
     else
-      @contentsMorph = new TextWdgt(
+      @contentsWidget = new TextWdgt(
         @contents.toString(),
         WorldWdgt.preferencesAndSettings.bubbleHelpFontSize,
         "sans-serif",
         false,
         true,
         Color.BLACK)
-      @contentsMorph.alignCenter()
-    @add @contentsMorph
+      @contentsWidget.alignCenter()
+    @add @contentsWidget
 
     # the modern family does not self-size; make the tooltip text hug its
     # content before we read its width/height to size the bubble around it.
-    @contentsMorph.sizeToTextAndDisableFitting() if @contentsMorph instanceof TextWdgt
+    @contentsWidget.sizeToTextAndDisableFitting() if @contentsWidget instanceof TextWdgt
 
     # adjust my layout
-    @silentRawSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @cornerRadius * 2))
-    @silentRawSetHeight @contentsMorph.height() + @cornerRadius + @padding * 2 + 2
+    @silentRawSetWidth @contentsWidget.width() + ((if @padding then @padding * 2 else @cornerRadius * 2))
+    @silentRawSetHeight @contentsWidget.height() + @cornerRadius + @padding * 2 + 2
 
     # position my contents
-    @contentsMorph.fullRawMoveTo @position().add(
+    @contentsWidget.fullRawMoveTo @position().add(
       new Point(@padding or @cornerRadius, @padding + 1))
 
 

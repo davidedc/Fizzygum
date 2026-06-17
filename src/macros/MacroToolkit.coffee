@@ -750,13 +750,13 @@ class MacroToolkit
 
   # Topmost widget whose getTextDescription() matches a recorded identifier triple
   # [textDescription, occurrenceIndex, totalOccurrences] — the SAME stable locator the
-  # old recorded tests use (world.getMorphViaTextLabel / Widget.identifyViaTextLabel).
+  # old recorded tests use (world.getWidgetViaTextLabel / Widget.identifyViaTextLabel).
   # Accepts a bare string (treated as [string, 0, 1]). This is the linchpin for migrating
   # recorded tests: every recorded click already stores this triple (as
   # morphIdentifierViaTextLabel), so a migrated macro can re-find the very same widget.
   findWidgetByTextDescription: (identifier) ->
     identifier = [identifier, 0, 1] if typeof identifier == "string"
-    world.getMorphViaTextLabel identifier
+    world.getWidgetViaTextLabel identifier
 
   calculateVertBarMovement: (vBar, index, total) ->
     vBarHandle = vBar.children[0]

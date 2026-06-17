@@ -143,7 +143,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `MouseMovePressDragRelease`, `MouseMoveWhileDragging`, `MouseUp`, `Wheel`, `ConsecutiveLeftClicks`, `StringKeys`,
   `ShortcutsAndSpecialKeys` ("Shift+ArrowRight" | "Meta+a" | "Enter" | …); plus `repeatSpecialKey`, `moveToAndMouseDown`.
 - **L2 locators**: `findWidgetByTextDescription([desc,occ,total])` (the recorded-identity bridge — wraps
-  `world.getMorphViaTextLabel`), `findTopWidgetByClassNameOrClass`, `pointAtFractionOf`, `getMostRecentlyOpenedMenu`,
+  `world.getWidgetViaTextLabel`), `findTopWidgetByClassNameOrClass`, `pointAtFractionOf`, `getMostRecentlyOpenedMenu`,
   `getTextMenuItemFromMenu{,ByPrefix,ByContains}`.
 - **L2 actions**: clicks (`moveToAndClick`, `moveToAndClickAtFractionOf`, `doubleClickAtFractionOf`,
   `tripleClickAtFractionOf`, `shiftClickAtFractionOf`); drag/resize (`dragWidgetTo`, `dragResizeMoveHandleTo`,
