@@ -503,7 +503,7 @@ class TreeNode
 
   childrenNotHandlesNorCarets: (whereToAct = @) ->
     whereToAct.children.filter (w) ->
-      !((w instanceof HandleWdgt) or (w instanceof CaretWdgt))
+      !w.isLayoutDecoration?()
 
   # find the nth child satisfying
   # a property.

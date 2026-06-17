@@ -31,6 +31,11 @@ class CaretWdgt extends BlinkerWdgt
     # SystemTest_macroTextWdgtCaretKeepsCorrectAlignment.
     @adjustAccordingToTargetText()
 
+  # CaretWdgt is overlay chrome (the text-editing caret), not a content child, so
+  # it is excluded from content-bounds and real-children calculations (see
+  # Widget.fullBounds and TreeNode.childrenNotHandlesNorCarets).
+  isLayoutDecoration: -> true
+
   adjustAccordingToTargetText: ->
     @updateDimension()
     @gotoSlot @slot

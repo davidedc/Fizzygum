@@ -31,6 +31,12 @@ class HandleWdgt extends Widget
 
     @makeHandleSolidWithParentWidget nil, nil, @target
 
+  # HandleWdgt is overlay chrome (a resize/move handle), not a content child, so
+  # it is excluded from content-bounds and real-children calculations (see
+  # Widget.fullBounds and TreeNode.childrenNotHandlesNorCarets). Answered via
+  # `?()` at the call sites, so no default lands on the Widget base.
+  isLayoutDecoration: -> true
+
   detachesWhenDragged: ->
     if (@parent instanceof WorldWdgt)
       return true

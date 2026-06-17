@@ -177,6 +177,12 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       @label.setText "empty window"
 
+  # Polymorphic replacement for `instanceof WindowWdgt`: lets Widget / TreeNode
+  # ask "are you a window?" without naming this subclass. Dispatched via `?()`
+  # at the call sites, so no default is needed on the Widget base (which would
+  # grow every inspected widget's inherited-method list).
+  isWindow: -> true
+
   colloquialName: ->
     if @internal
       return "internal window"

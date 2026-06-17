@@ -477,7 +477,7 @@ class Widget extends TreeNode
     # closing window content: also close the window
     # UNLESS we are an internal window, in such case
     # leave the parent one as is
-    if !(@ instanceof WindowWdgt) and @parent? and @parent instanceof WindowWdgt
+    if !@isWindow?() and @parent?.isWindow?()
       @parent.close()
       return
 
@@ -982,7 +982,7 @@ class Widget extends TreeNode
         # calculate their size when they are resized
         # (remember that the resizing handle of ScrollPanelWdgts
         # actually end up in the Panel inside them.)
-        if !(child instanceof HandleWdgt) and !(child instanceof CaretWdgt)
+        if !child.isLayoutDecoration?()
           # if a widget implements deferred layout, then
           # really we can't consider the sizes and positions
           # of its children, so stick to the parent bounds
@@ -3474,7 +3474,7 @@ class Widget extends TreeNode
     if !world.isIndexPage
       menu.addMenuItem "hide", true, @, "hide"
 
-    if @ instanceof WindowWdgt
+    if @isWindow?()
       menu.addMenuItem "close", true, @, "close"
     else
       menu.addMenuItem "delete", true, @, "close"
