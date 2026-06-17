@@ -1,6 +1,7 @@
 class ToothpasteIconWdgt extends IconWdgt
 
+  createAppearance: -> new ToothpasteIconAppearance @
+
   constructor: (@color) ->
     super
-    @appearance = new ToothpasteIconAppearance @
     @toolTipMessage = "toothpaste"

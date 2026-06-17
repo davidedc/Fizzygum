@@ -2,8 +2,6 @@
 
 class ChapterXXIconWdgt extends IconWdgt
 
-  constructor: (@color) ->
-    super
-    @appearance = new ChapterXXIconAppearance @
+  createAppearance: -> new ChapterXXIconAppearance @
 
 

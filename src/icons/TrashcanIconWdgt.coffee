@@ -2,8 +2,6 @@
 
 class TrashcanIconWdgt extends IconWdgt
 
-  constructor: (@color) ->
-    super
-    @appearance = new TrashcanIconAppearance @
+  createAppearance: -> new TrashcanIconAppearance @
 
 

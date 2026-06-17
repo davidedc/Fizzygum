@@ -2,8 +2,6 @@
 
 class InformationIconWdgt extends IconWdgt
 
-  constructor: (@color) ->
-    super
-    @appearance = new InformationIconAppearance @
+  createAppearance: -> new InformationIconAppearance @
 
 

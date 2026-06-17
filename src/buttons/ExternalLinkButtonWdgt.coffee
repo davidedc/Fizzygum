@@ -1,8 +1,6 @@
 class ExternalLinkButtonWdgt extends IconWdgt
 
-  constructor: (@color) ->
-    super
-    @appearance = new ExternalLinkIconAppearance @
+  createAppearance: -> new ExternalLinkIconAppearance @
 
   mouseClickLeft: ->
     if @parent? and (@parent instanceof SimpleLinkWdgt)

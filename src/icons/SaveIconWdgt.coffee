@@ -2,7 +2,5 @@
 
 class SaveIconWdgt extends IconWdgt
 
-  constructor: (@color) ->
-    super
-    @appearance = new SaveIconAppearance @
+  createAppearance: -> new SaveIconAppearance @
 

@@ -2,8 +2,6 @@
 
 class RasterPicIconWdgt extends IconWdgt
 
-  constructor: (@color) ->
-    super
-    @appearance = new RasterPicIconAppearance @
+  createAppearance: -> new RasterPicIconAppearance @
 
 

@@ -1,7 +1,5 @@
 class FunctionPlotIconWdgt extends IconWdgt
 
-  constructor: (@color) ->
-    super
-    @appearance = new FunctionPlotIconAppearance @
+  createAppearance: -> new FunctionPlotIconAppearance @
 
 

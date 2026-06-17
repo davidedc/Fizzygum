@@ -2,7 +2,5 @@
 
 class UnderCarpetIconWdgt extends IconWdgt
 
-  constructor: (@color) ->
-    super
-    @appearance = new UnderCarpetIconAppearance @
+  createAppearance: -> new UnderCarpetIconAppearance @
 

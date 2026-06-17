@@ -1,7 +1,5 @@
 class SliderNodeIconWdgt extends IconWdgt
 
-  constructor: (@color) ->
-    super
-    @appearance = new SliderNodeIconAppearance @
+  createAppearance: -> new SliderNodeIconAppearance @
 
 

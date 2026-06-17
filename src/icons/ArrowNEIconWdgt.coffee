@@ -1,7 +1,5 @@
 class ArrowNEIconWdgt extends IconWdgt
 
-  constructor: (@color) ->
-    super
-    @appearance = new ArrowNEIconAppearance @
+  createAppearance: -> new ArrowNEIconAppearance @
 
 

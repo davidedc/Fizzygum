@@ -1,6 +1,4 @@
 class ColorPalettePatchProgrammingIconWdgt extends IconWdgt
 
-  constructor: (@color) ->
-    super
-    @appearance = new ColorPalettePatchProgrammingIconAppearance @
+  createAppearance: -> new ColorPalettePatchProgrammingIconAppearance @
 

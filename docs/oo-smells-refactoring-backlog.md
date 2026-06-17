@@ -20,7 +20,8 @@ rationale. You should not need the original audit conversation to act on any pha
 | 1b — `EditorContentPropertyChangerButtonWdgt` (+ `AlignButtonWdgt`) | ✅ DONE 2026-06-17 | 10 editor-toolbar buttons; base inconsistency resolved onto `IconWdgt` |
 | 1c — `CreatorButtonWdgt` parameterized | ✅ DONE 2026-06-17 | 24 creator/toolbar buttons; `createWidgetToBeHandled` left per-leaf |
 | 1d — `PaletteWdgt` base | ✅ DONE 2026-06-17 | `GrayPaletteWdgt` refused-bequest fixed (now a sibling); setters collapsed |
-| 0, 2–8 | ☐ not started | |
+| 2 — thin the ~85 `IconWdgt` shells | ✅ DONE 2026-06-17 | `IconWdgt` got a `createAppearance` hook (method, not `@appearanceClass` field — keeps the dependency-finder edge); 89 shells de-constructored, incl. the `ExternalLink`→`VideoPlay` sub-lineage + 6 tooltip shells (which keep a slim ctor) |
+| 0, 3–8 | ☐ not started | |
 
 All Phase 1 verified: **165/165 Chrome dpr1 + dpr2 + WebKit, `--homepage` boots, zero reference recapture.**
 

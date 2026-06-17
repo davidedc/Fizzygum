@@ -3,7 +3,8 @@ class DestroyIconWdgt extends IconWdgt
   colloquialName: ->
     "\"Destroy\" icon"
 
+  createAppearance: -> new DestroyIconAppearance @
+
   constructor: (@color) ->
     super
-    @appearance = new DestroyIconAppearance @
     @toolTipMessage = "explosion"

@@ -1,7 +1,5 @@
 class WelcomeIconWdgt extends IconWdgt
 
-  constructor: (@color) ->
-    super
-    @appearance = new WelcomeIconAppearance @
+  createAppearance: -> new WelcomeIconAppearance @
 
 

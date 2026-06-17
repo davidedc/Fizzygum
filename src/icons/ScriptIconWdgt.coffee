@@ -2,8 +2,6 @@
 
 class ScriptIconWdgt extends IconWdgt
 
-  constructor: (@color) ->
-    super
-    @appearance = new ScriptIconAppearance @
+  createAppearance: -> new ScriptIconAppearance @
 
 

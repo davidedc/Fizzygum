@@ -1,7 +1,5 @@
 class TextToolbarIconWdgt extends IconWdgt
 
-  constructor: (@color) ->
-    super
-    @appearance = new TextToolbarIconAppearance @
+  createAppearance: -> new TextToolbarIconAppearance @
 
 

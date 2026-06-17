@@ -1,6 +1,7 @@
 class MapPinIconWdgt extends IconWdgt
 
+  createAppearance: -> new MapPinIconAppearance @
+
   constructor: (@color) ->
     super
-    @appearance = new MapPinIconAppearance @
     @toolTipMessage = "map pin"

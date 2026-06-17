@@ -1,6 +1,7 @@
 class BrushIconWdgt extends IconWdgt
 
+  createAppearance: -> new BrushIconAppearance @
+
   constructor: (@color) ->
     super
-    @appearance = new BrushIconAppearance @
     @toolTipMessage = "brush"

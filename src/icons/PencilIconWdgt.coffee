@@ -1,5 +1,3 @@
 class PencilIconWdgt extends IconWdgt
 
-  constructor: (@color) ->
-    super
-    @appearance = new PencilIconAppearance @
+  createAppearance: -> new PencilIconAppearance @
