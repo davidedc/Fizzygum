@@ -47,7 +47,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
 
     # overlayCanvas
     @overlayCanvas = new CanvasGlassTopWdgt
-    @overlayCanvas.underlyingCanvasMorph = @mainCanvas
+    @overlayCanvas.underlyingCanvasWdgt = @mainCanvas
     @overlayCanvas.disableDrops()
     @mainCanvas.add @overlayCanvas
 
@@ -97,7 +97,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             context.lineWidth="2"
 
             if mouseButton == 'left'
-                contextMain = @underlyingCanvasMorph.getContextForPainting()
+                contextMain = @underlyingCanvasWdgt.getContextForPainting()
                 contextMain.translate pos.x, pos.y
 
                 contextMain.beginPath()
@@ -105,7 +105,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
                 contextMain.fillStyle = Color.BLACK.toString()
                 contextMain.rect(-2,-2,4,4)
                 contextMain.fill()
-                @underlyingCanvasMorph.changed()
+                @underlyingCanvasWdgt.changed()
 
             else
                 context.strokeStyle=Color.RED.toString()
@@ -143,7 +143,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             if mouseButton == 'left'
                 context.fillStyle = Color.RED.toString()
 
-                contextMain = @underlyingCanvasMorph.getContextForPainting()
+                contextMain = @underlyingCanvasWdgt.getContextForPainting()
                 contextMain.translate pos.x, pos.y
                 contextMain.fillStyle = Color.BLACK.toString()
 
@@ -208,7 +208,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
                 contextMain.fill()
 
 
-                @underlyingCanvasMorph.changed()
+                @underlyingCanvasWdgt.changed()
 
             else
                 context.strokeStyle=Color.GREEN.toString()
@@ -309,7 +309,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             if world.hand.isThisPointerDraggingSomething() then return
             if @queue?
                 # draining the queue
-                contextMain = @underlyingCanvasMorph.getContextForPainting()
+                contextMain = @underlyingCanvasWdgt.getContextForPainting()
                 
                 until @queue.length == 0
                     previousPos = @queue[0]
@@ -340,7 +340,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
                 @queue.push pos
                 context.fillStyle = Color.RED.toString()
 
-                contextMain = @underlyingCanvasMorph.getContextForPainting()
+                contextMain = @underlyingCanvasWdgt.getContextForPainting()
                 
                 contextMain.save()
                 contextMain.translate pos.x, pos.y
@@ -362,7 +362,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
                     contextMain.restore()
 
 
-                @underlyingCanvasMorph.changed()
+                @underlyingCanvasWdgt.changed()
 
             else
                 context.strokeStyle=Color.GREEN.toString()
@@ -397,7 +397,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             if mouseButton == 'left'
                 context.fillStyle = Color.RED.toString()
 
-                contextMain = @underlyingCanvasMorph.getContextForPainting()
+                contextMain = @underlyingCanvasWdgt.getContextForPainting()
                 contextMain.translate pos.x, pos.y
 
                 contextMain.beginPath()
@@ -405,7 +405,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
                 contextMain.fillStyle = Color.WHITE.toString()
                 contextMain.rect(-5,-5,10,10)
                 contextMain.fill()
-                @underlyingCanvasMorph.changed()
+                @underlyingCanvasWdgt.changed()
 
             else
                 context.strokeStyle=Color.GREEN.toString()

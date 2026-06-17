@@ -434,8 +434,8 @@ class WorldWdgt extends PanelWdgt
     ++@lastUsedConnectionsCalculationToken
 
   createErrorConsole: ->
-    errorsLogViewerMorph = new ErrorsLogViewerWdgt "Errors", @, "modifyCodeToBeInjected", ""
-    wm = new WindowWdgt nil, nil, errorsLogViewerMorph
+    errorsLogViewerWdgt = new ErrorsLogViewerWdgt "Errors", @, "modifyCodeToBeInjected", ""
+    wm = new WindowWdgt nil, nil, errorsLogViewerWdgt
     wm.setExtent new Point 460, 400
     @add wm
 
@@ -1974,19 +1974,19 @@ class WorldWdgt extends PanelWdgt
     aWdgt.pickUp()
 
   # »>> this part is excluded from the fizzygum homepage build
-  createNewStackElementsSizeAdjustingMorph: ->
+  createNewStackElementsSizeAdjustingWdgt: ->
     @create new StackElementsSizeAdjustingWdgt
 
-  createNewLayoutElementAdderOrDropletMorph: ->
+  createNewLayoutElementAdderOrDropletWdgt: ->
     @create new LayoutElementAdderOrDropletWdgt
 
-  createNewRectangleMorph: ->
+  createNewRectangleWdgt: ->
     @create new RectangleWdgt
-  createNewBoxMorph: ->
+  createNewBoxWdgt: ->
     @create new BoxWdgt
-  createNewCircleBoxMorph: ->
+  createNewCircleBoxWdgt: ->
     @create new CircleBoxWdgt
-  createNewSliderMorph: ->
+  createNewSliderWdgt: ->
     @create new SliderWdgt
   createNewPanelWdgt: ->
     newWdgt = new PanelWdgt
@@ -2034,23 +2034,23 @@ class WorldWdgt extends PanelWdgt
   createNewToolTipWdgt: ->
     newWdgt = new ToolTipWdgt
     @create newWdgt
-  createNewGrayPaletteMorph: ->
+  createNewGrayPaletteWdgt: ->
     @create new GrayPaletteWdgt
-  createNewColorPaletteMorph: ->
+  createNewColorPaletteWdgt: ->
     @create new ColorPaletteWdgt
-  createNewGrayPaletteMorphInWindow: ->
+  createNewGrayPaletteWdgtInWindow: ->
     gP = new GrayPaletteWdgt
     wm = new WindowWdgt nil, nil, gP
     @add wm
     wm.rawSetExtent new Point 130, 70
     wm.fullRawMoveTo @hand.position().subtract new Point 50, 100
-  createNewColorPaletteMorphInWindow: ->
+  createNewColorPaletteWdgtInWindow: ->
     cP = new ColorPaletteWdgt
     wm = new WindowWdgt nil, nil, cP
     @add wm
     wm.rawSetExtent new Point 130, 100
     wm.fullRawMoveTo @hand.position().subtract new Point 50, 100
-  createNewColorPickerMorph: ->
+  createNewColorPickerWdgt: ->
     @create new ColorPickerWdgt
   createNewSensorDemo: ->
     newWdgt = new MouseSensorWdgt
@@ -2099,7 +2099,7 @@ class WorldWdgt extends PanelWdgt
     foo.add fred
     foo.add bar
     @create foo
-  createNewPenMorph: ->
+  createNewPenWdgt: ->
     @create new PenWdgt
   underTheCarpet: ->
     newWdgt = new BasementWdgt
@@ -2109,23 +2109,23 @@ class WorldWdgt extends PanelWdgt
   popUpDemoMenu: (morphOpeningThePopUp,b,c,d) ->
     if @isIndexPage
       menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "parts bin"
-      menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"
-      menu.addMenuItem "box", true, @, "createNewBoxMorph"
-      menu.addMenuItem "circle box", true, @, "createNewCircleBoxMorph"
-      menu.addMenuItem "slider", true, @, "createNewSliderMorph"
+      menu.addMenuItem "rectangle", true, @, "createNewRectangleWdgt"
+      menu.addMenuItem "box", true, @, "createNewBoxWdgt"
+      menu.addMenuItem "circle box", true, @, "createNewCircleBoxWdgt"
+      menu.addMenuItem "slider", true, @, "createNewSliderWdgt"
       menu.addMenuItem "speech bubble", true, @, "createNewSpeechBubbleWdgt"
       menu.addLine()
-      menu.addMenuItem "gray scale palette", true, @, "createNewGrayPaletteMorphInWindow"
-      menu.addMenuItem "color palette", true, @, "createNewColorPaletteMorphInWindow"
+      menu.addMenuItem "gray scale palette", true, @, "createNewGrayPaletteWdgtInWindow"
+      menu.addMenuItem "color palette", true, @, "createNewColorPaletteWdgtInWindow"
       menu.addLine()
       menu.addMenuItem "analog clock", true, @, "analogClock"
     else
       menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "make a morph"
-      menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"
-      menu.addMenuItem "box", true, @, "createNewBoxMorph"
-      menu.addMenuItem "circle box", true, @, "createNewCircleBoxMorph"
+      menu.addMenuItem "rectangle", true, @, "createNewRectangleWdgt"
+      menu.addMenuItem "box", true, @, "createNewBoxWdgt"
+      menu.addMenuItem "circle box", true, @, "createNewCircleBoxWdgt"
       menu.addLine()
-      menu.addMenuItem "slider", true, @, "createNewSliderMorph"
+      menu.addMenuItem "slider", true, @, "createNewSliderWdgt"
       menu.addMenuItem "panel", true, @, "createNewPanelWdgt"
       menu.addMenuItem "scrollable panel", true, @, "createNewScrollPanelWdgt"
       menu.addMenuItem "canvas", true, @, "createNewCanvas"
@@ -2136,13 +2136,13 @@ class WorldWdgt extends PanelWdgt
       menu.addMenuItem "tool tip", true, @, "createNewToolTipWdgt"
       menu.addMenuItem "speech bubble", true, @, "createNewSpeechBubbleWdgt"
       menu.addLine()
-      menu.addMenuItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
-      menu.addMenuItem "color palette", true, @, "createNewColorPaletteMorph"
-      menu.addMenuItem "color picker", true, @, "createNewColorPickerMorph"
+      menu.addMenuItem "gray scale palette", true, @, "createNewGrayPaletteWdgt"
+      menu.addMenuItem "color palette", true, @, "createNewColorPaletteWdgt"
+      menu.addMenuItem "color picker", true, @, "createNewColorPickerWdgt"
       menu.addLine()
       menu.addMenuItem "sensor demo", true, @, "createNewSensorDemo"
       menu.addMenuItem "animation demo", true, @, "createNewAnimationDemo"
-      menu.addMenuItem "pen", true, @, "createNewPenMorph"
+      menu.addMenuItem "pen", true, @, "createNewPenWdgt"
         
       menu.addLine()
       menu.addMenuItem "layout tests ➜", false, @, "layoutTestsMenu", "sample morphs"
@@ -2153,8 +2153,8 @@ class WorldWdgt extends PanelWdgt
 
   layoutTestsMenu: (morphOpeningThePopUp) ->
     menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Layout tests"
-    menu.addMenuItem "adjuster morph", true, @, "createNewStackElementsSizeAdjustingMorph"
-    menu.addMenuItem "adder/droplet", true, @, "createNewLayoutElementAdderOrDropletMorph"
+    menu.addMenuItem "adjuster morph", true, @, "createNewStackElementsSizeAdjustingWdgt"
+    menu.addMenuItem "adder/droplet", true, @, "createNewLayoutElementAdderOrDropletWdgt"
     menu.addMenuItem "test screen 1", true, Widget, "setupTestScreen1"
     menu.popUpAtHand()
     

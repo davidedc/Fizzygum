@@ -1,4 +1,4 @@
-class EditableMarkWdgt extends UpperRightTriangleIconicButton
+class EditableMarkWdgt extends UpperRightTriangleIconicButtonWdgt
 
   editObject: nil
   editMethodAsString: ""

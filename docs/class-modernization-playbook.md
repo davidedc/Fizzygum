@@ -745,3 +745,24 @@ path string left as-is (dead/historical, not run by the build).
   UNanchored strip would have broken). 28 test dirs content/ref-touched + viz regenerated.
 - **165/165 (Chrome dpr 1+2, WebKit), `--homepage` builds + boots, 14 recaptures.** Plan `~/.claude/plans/batch20-worldmorph-rename.md`. **★ With this,
   the `*Morph`→`*Wdgt` rename phase is COMPLETE** (see the banner above the BATCH-19 entry).
+
+**DONE (2026-06-17): BATCH 21 — the naming-consistency pass (CLASS-ECHO scope).** SEPARATE from the (closed) class-RENAME phase: renames the
+`\b`-protected COMPOUND identifiers that ECHO a now-renamed class, while DELIBERATELY LEAVING the generic `Morph`=widget vocabulary (`brokenMorph`,
+`theMorph`, `faceMorph`, `allMorphsInStructure`, `*Morph` params — hundreds; the Morphic heritage noun). Owner picked the "class-echo" scope (of 4:
+just-the-class / class-echo / full-eradication / skip). Plan `~/.claude/plans/batch21-naming-consistency-classecho.md`.
+- **Renamed (all src-only → ZERO recapture):** (1) ~31 `create…Morph` factory/creator methods → `…Wdgt` — the def + every `\b` ref + its `"…"` string
+  menu-action move together (a `\bNAME\b` sub matches inside quotes too) — incl. 16 `create…IconMorph` (echo `…IconWdgt`) + the 2 mid-`Morph`
+  `create…PaletteMorphInWindow`; (2) 3 named echoes `underlyingCanvasMorph`/`errorsLogViewerMorph`/`pencilIconMorph` → `…Wdgt`; (3) the inconsistent
+  CLASS lineage `UpperRightTriangle`→`UpperRightTriangleWdgt` + `UpperRightTriangleIconicButton`→`…Wdgt` (the BASE was INCLUDED beyond the owner's
+  literal "the IconicButton class" — else a `*Wdgt` would `extend` a non-`Wdgt`; `EditableMarkWdgt` re-pointed; `UpperRightTriangleAppearance` LEFT —
+  it's a drawing-object `*Appearance`, not a widget).
+- **KEY: NOT a blind `create\w*Morph` sweep** — that wrongly catches the 3 GENERICS where `Morph` is a preposition-object
+  (`createInAWhileIfHandStillContainedInMorph`, `createBubbleHelpIfHandStillOnMorph`, `makeHandleSolidWithParentMorph`); used an EXPLICIT per-name list.
+  Generics + `getHierarchyMenuMorphs`/`hierarchyMenuMorphs` (generic "menu morphs") KEPT.
+- **The trap (unlike class renames):** factory methods are invoked BY STRING (`menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"`), so
+  def & action must stay in sync — the per-name `\b` sweep does both at once; `build_and_smoke` does NOT click menus so it can't catch a desync,
+  `build_and_test` (demo/creation tests click "rectangle"/"box"/…) IS the net. Tests reference NO factory by name (they click LABELS) → src-only
+  EXCEPT test PROSE (provenance/intent/comments in 3 tests named `createNewRectangleMorph`/`createHeartIconMorph`) — swept for consistency + 3 viz
+  regenerated (content-only; the rename-phase's src-only sweeps had missed test prose).
+- **165/165 (Chrome dpr 1+2, WebKit), `--homepage` builds + boots, ZERO recapture.** Remaining (optional, deferred): the FULL-eradication scope — the
+  generic `Morph`=widget vocabulary (hundreds of identifiers across ~every file incl. serialization/mixin internals).

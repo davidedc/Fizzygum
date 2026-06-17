@@ -1,6 +1,6 @@
 class CanvasGlassTopWdgt extends CanvasWdgt
 
-  underlyingCanvasMorph: nil
+  underlyingCanvasWdgt: nil
   defaultRejectDrags: true
 
   constructor: ->

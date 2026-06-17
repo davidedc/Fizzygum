@@ -57,7 +57,7 @@ class PointerWdgt extends BoxWdgt
       return
 
     if !@target.isOrphan()
-      @target.createPointerMorph()
+      @target.createPointerWdgt()
     myPosition = @positionAmongSiblings()
     @parent.add @target, myPosition
     @target.fullMoveTo @position()

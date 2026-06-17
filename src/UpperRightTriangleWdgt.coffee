@@ -1,4 +1,4 @@
-class UpperRightTriangle extends Widget
+class UpperRightTriangleWdgt extends Widget
 
   @augmentWith CornerInternalHaloMixin, @name
 

@@ -1940,7 +1940,7 @@ class Widget extends TreeNode
     new WidgetIconWdgt
 
   # »>> this part is excluded from the fizzygum homepage build
-  createPointerMorph: ->
+  createPointerWdgt: ->
     myPosition = @positionAmongSiblings()
     morphToAdd = new PointerWdgt @
     @parent.add morphToAdd, myPosition
@@ -3268,15 +3268,15 @@ class Widget extends TreeNode
 
   popUpIconsMenu: (morphOpeningThePopUp) ->
     menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "icons"
-    menu.addMenuItem "Destroy icon", true, menusHelper, "createDestroyIconMorph"
-    menu.addMenuItem "Under the carpet icon", true, menusHelper, "createUnderCarpetIconMorph"
-    menu.addMenuItem "Collapsed state icon", true, menusHelper, "createCollapsedStateIconMorph"
-    menu.addMenuItem "Uncollapsed state icon", true, menusHelper, "createUncollapsedStateIconMorph"
-    menu.addMenuItem "Close icon", true, menusHelper, "createCloseIconButtonMorph"
-    menu.addMenuItem "Scratch area icon", true, menusHelper, "createScratchAreaIconMorph"
-    menu.addMenuItem "Flora icon", true, menusHelper, "createFloraIconMorph"
-    menu.addMenuItem "Scooter icon", true, menusHelper, "createScooterIconMorph"
-    menu.addMenuItem "Heart icon", true, menusHelper, "createHeartIconMorph"
+    menu.addMenuItem "Destroy icon", true, menusHelper, "createDestroyIconWdgt"
+    menu.addMenuItem "Under the carpet icon", true, menusHelper, "createUnderCarpetIconWdgt"
+    menu.addMenuItem "Collapsed state icon", true, menusHelper, "createCollapsedStateIconWdgt"
+    menu.addMenuItem "Uncollapsed state icon", true, menusHelper, "createUncollapsedStateIconWdgt"
+    menu.addMenuItem "Close icon", true, menusHelper, "createCloseIconButtonWdgt"
+    menu.addMenuItem "Scratch area icon", true, menusHelper, "createScratchAreaIconWdgt"
+    menu.addMenuItem "Flora icon", true, menusHelper, "createFloraIconWdgt"
+    menu.addMenuItem "Scooter icon", true, menusHelper, "createScooterIconWdgt"
+    menu.addMenuItem "Heart icon", true, menusHelper, "createHeartIconWdgt"
 
     menu.addMenuItem "more 1 ➜", false, menusHelper, "popUpMore1IconsMenu", "others"
     menu.addMenuItem "more 2 ➜", false, menusHelper, "popUpMore2IconsMenu", "others"
@@ -3362,7 +3362,7 @@ class Widget extends TreeNode
   popUpFirstMenu: (morphOpeningThePopUp) ->
     menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "others"
     menu.addMenuItem "make sliders' buttons states bright", true, menusHelper, "makeSlidersButtonsStatesBright"
-    menu.addMenuItem "make pointer", true, @, "createPointerMorph"
+    menu.addMenuItem "make pointer", true, @, "createPointerWdgt"
     menu.addMenuItem "icon with text", true, menusHelper, "makeIconWithText"
     menu.addMenuItem "empty icon with text", true, menusHelper, "makeEmptyIconWithText"
     menu.addMenuItem "generic reference icon", true, menusHelper, "makeGenericReferenceIcon"
@@ -3393,8 +3393,8 @@ class Widget extends TreeNode
     menu.addMenuItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
     menu.addMenuItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
     menu.addMenuItem "simple button", true, menusHelper, "createSimpleButton"
-    menu.addMenuItem "switch button", true, menusHelper, "createSwitchButtonMorph"
-    menu.addMenuItem "clipping box", true, menusHelper, "createNewClippingBoxMorph"
+    menu.addMenuItem "switch button", true, menusHelper, "createSwitchButtonWdgt"
+    menu.addMenuItem "clipping box", true, menusHelper, "createNewClippingBoxWdgt"
 
     menu.popUpAtHand()
 

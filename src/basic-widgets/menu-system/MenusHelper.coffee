@@ -44,12 +44,12 @@ class MenusHelper
   createSimpleButton: ->
     world.create new SimpleRectangularButtonWdgt true, @, nil, new IconWdgt(nil)
 
-  createSwitchButtonMorph: ->
+  createSwitchButtonWdgt: ->
     button1 = new SimpleRectangularButtonWdgt true, @, nil, new IconWdgt(nil)
     button2 = new SimpleRectangularButtonWdgt true, @, nil, new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
     world.create new SwitchButtonWdgt [button1, button2]
 
-  createNewClippingBoxMorph: ->
+  createNewClippingBoxWdgt: ->
     world.create new ClippingBoxWdgt
 
   makeSlidersButtonsStatesBright: ->
@@ -73,47 +73,47 @@ class MenusHelper
   makeBouncingParticle: ->
     world.create new BouncerWdgt
 
-  createDestroyIconMorph: ->
+  createDestroyIconWdgt: ->
     world.create new DestroyIconWdgt
 
-  createUnderCarpetIconMorph: ->
+  createUnderCarpetIconWdgt: ->
     world.create new UnderCarpetIconWdgt
 
-  createUncollapsedStateIconMorph: ->
+  createUncollapsedStateIconWdgt: ->
     world.create new UncollapsedStateIconWdgt
 
-  createCollapsedStateIconMorph: ->
+  createCollapsedStateIconWdgt: ->
     world.create new CollapsedStateIconWdgt
 
-  createCloseIconButtonMorph: ->
+  createCloseIconButtonWdgt: ->
     world.create new CloseIconButtonWdgt
 
-  createScratchAreaIconMorph: ->
+  createScratchAreaIconWdgt: ->
     world.create new ScratchAreaIconWdgt
 
-  createFloraIconMorph: ->
+  createFloraIconWdgt: ->
     world.create new FloraIconWdgt
 
-  createScooterIconMorph: ->
+  createScooterIconWdgt: ->
     world.create new ScooterIconWdgt
 
-  createHeartIconMorph: ->
+  createHeartIconWdgt: ->
     world.create new HeartIconWdgt
 
 
-  createPencil1IconMorph: ->
+  createPencil1IconWdgt: ->
     world.create new PencilIconWdgt
 
-  createPencil2IconMorph: ->
+  createPencil2IconWdgt: ->
     world.create new Pencil2IconWdgt
 
-  createBrushIconMorph: ->
+  createBrushIconWdgt: ->
     world.create new BrushIconWdgt
 
-  createToothpasteIconMorph: ->
+  createToothpasteIconWdgt: ->
     world.create new ToothpasteIconWdgt
 
-  createEraserIconMorph: ->
+  createEraserIconWdgt: ->
     world.create new EraserIconWdgt
 
 
@@ -499,11 +499,11 @@ class MenusHelper
 
   popUpMore1IconsMenu: (morphOpeningThePopUp) ->
     menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "More Icons 1"
-    menu.addMenuItem "Pencil 1 icon", true, menusHelper, "createPencil1IconMorph"
-    menu.addMenuItem "Pencil 2 icon", true, menusHelper, "createPencil2IconMorph"
-    menu.addMenuItem "Brush icon", true, menusHelper, "createBrushIconMorph"
-    menu.addMenuItem "Toothpaste icon", true, menusHelper, "createToothpasteIconMorph"
-    menu.addMenuItem "Eraser icon", true, menusHelper, "createEraserIconMorph"
+    menu.addMenuItem "Pencil 1 icon", true, menusHelper, "createPencil1IconWdgt"
+    menu.addMenuItem "Pencil 2 icon", true, menusHelper, "createPencil2IconWdgt"
+    menu.addMenuItem "Brush icon", true, menusHelper, "createBrushIconWdgt"
+    menu.addMenuItem "Toothpaste icon", true, menusHelper, "createToothpasteIconWdgt"
+    menu.addMenuItem "Eraser icon", true, menusHelper, "createEraserIconWdgt"
     menu.addMenuItem "Trashcan icon", true, menusHelper, "createTrashcanIconWdgt"
     menu.addMenuItem "Shortcut arrow icon", true, menusHelper, "createShortcutArrowIconWdgt"
     menu.addMenuItem "Raster pic icon", true, menusHelper, "createRasterPicIconWdgt"
@@ -658,10 +658,10 @@ class MenusHelper
   createAlignLeftIconWdgt: ->
     world.create new AlignLeftIconWdgt
 
-  createWorldMapIconMorph: ->
+  createWorldMapIconWdgt: ->
     world.create new SimpleWorldMapIconWdgt
 
-  createUSAMapIconMorph: ->
+  createUSAMapIconWdgt: ->
     world.create new SimpleUSAMapIconWdgt
 
   createBoldIconWdgt: ->
@@ -730,8 +730,8 @@ class MenusHelper
 
   popUpMapsMenu: (morphOpeningThePopUp) ->
     menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Maps"
-    menu.addMenuItem "world map", true, menusHelper, "createWorldMapIconMorph", "others"
-    menu.addMenuItem "USA map", true, menusHelper, "createUSAMapIconMorph", "others"
+    menu.addMenuItem "world map", true, menusHelper, "createWorldMapIconWdgt", "others"
+    menu.addMenuItem "USA map", true, menusHelper, "createUSAMapIconWdgt", "others"
 
     menu.popUpAtHand()
 
