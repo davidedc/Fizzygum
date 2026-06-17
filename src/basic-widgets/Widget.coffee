@@ -2584,12 +2584,6 @@ class Widget extends TreeNode
             return true
     return false
 
-  amIPanelOfScrollPanelWdgt: ->
-    if @parent?
-      if (@parent instanceof ScrollPanelWdgt) and !(@parent instanceof ListWdgt)
-        return true
-    return false
-
   amIDirectlyInsideNonTextWrappingScrollPanelWdgt: ->
     if @amIDirectlyInsideScrollPanelWdgt()
       if !@parent.parent.isTextLineWrapping

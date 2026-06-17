@@ -98,7 +98,15 @@ class ListWdgt extends ScrollPanelWdgt
     @listContents.reLayout()
     
     @add @listContents
-  
+
+  # A ListWdgt is excluded from the "scroll panel re-fits its contained stack
+  # panel" notification (the old amIPanelOfScrollPanelWdgt returned false for
+  # lists): opt OUT so a contained panel re-lays out itself, as before. This
+  # does NOT affect a list's own reactToDropOf/reactToGrabOf, which still
+  # adjust -- which is exactly why this hook is kept separate from those.
+  reLayOutAfterContainedPanelChange: ->
+    nil
+
   select: (item, trigger) ->
     @selected = item
     @active = trigger

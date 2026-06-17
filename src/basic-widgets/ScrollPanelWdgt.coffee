@@ -241,6 +241,20 @@ class ScrollPanelWdgt extends PanelWdgt
     @adjustContentsBounds()
     @adjustScrollBars()
 
+  # A contained panel (e.g. a vertical stack acting as my @contents) tells me
+  # its set of children changed, so I re-fit my contents area and scrollbars.
+  # I return true so the panel knows I took over its re-layout (my
+  # adjustContentsBounds already re-lays my contents out) and needn't do its
+  # own. This is the polymorphic replacement for SimpleVerticalStackPanelWdgt
+  # testing `@amIPanelOfScrollPanelWdgt()`: the stack just notifies its parent,
+  # and only a scroll panel reacts. NB kept SEPARATE from reactToDropOf/
+  # reactToGrabOf on purpose -- a ListWdgt opts OUT of THIS hook (see ListWdgt)
+  # yet still adjusts on its own drops/grabs.
+  reLayOutAfterContainedPanelChange: ->
+    @adjustContentsBounds()
+    @adjustScrollBars()
+    return true
+
   adjustContentsBounds: ->
     # avoid recursively re-entering this function
     if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true

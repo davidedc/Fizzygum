@@ -49,18 +49,19 @@ class SimpleVerticalStackPanelWdgt extends Widget
     @silentRawSetExtent(extent) if extent?
     @color = color if color?
 
+  # When my membership changes, tell my container its contained panel changed.
+  # If the container absorbs that (a scroll panel re-fits me + its scrollbars,
+  # returning true), I'm done; otherwise I re-lay-out myself. This is the
+  # polymorphic replacement for `if @amIPanelOfScrollPanelWdgt()` -- the stack
+  # no longer asks where it sits in the scroll structure; it just notifies, and
+  # only a (non-List) scroll panel reacts. See
+  # ScrollPanelWdgt.reLayOutAfterContainedPanelChange.
   childRemoved: ->
-    if @amIPanelOfScrollPanelWdgt()
-      @parent.adjustContentsBounds()
-      @parent.adjustScrollBars()
-      return
+    return if @parent?.reLayOutAfterContainedPanelChange?()
     @adjustContentsBounds()
 
   reactToDropOf: ->
-    if @amIPanelOfScrollPanelWdgt()
-      @parent.adjustContentsBounds()
-      @parent.adjustScrollBars()
-      return
+    return if @parent?.reLayOutAfterContainedPanelChange?()
     @adjustContentsBounds()
 
   # A subwidget notifies me (its container) that its geometry changed, so I

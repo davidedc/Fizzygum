@@ -35,6 +35,17 @@ polymorphic moves here; for the ones that only resolve cleanly under the split, 
   per-step recapture tax** for introducing hook methods, as long as the conversion is
   behaviour-faithful. (The earlier worry — that methods on `Panel`/`World`/etc. would recapture the
   inspector "inherited: on" pane — was disproven by that probe.)
+- **DELETING an inspector-visible `Widget` method DOES force a (localized, expected) recapture** —
+  the asymmetric counterpart to the above. Confirmed in Cluster A (2026-06-17): removing the
+  now-dead `amIPanelOfScrollPanelWdgt` flipped exactly ONE test,
+  `SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly`, whose macro opens an Object Inspector
+  whose "methods" pane lists Widget's methods alphabetically — "no screenshots like this one". The
+  pixel delta was verified (live-vs-committed PNG) to be *only* that one method's row vanishing (the
+  list shifts up by one); no behaviour change. So: ADD = free; DELETE-of-an-inspector-visible-method
+  = a one-test recapture you must regenerate
+  (`node scripts/capture-macro-test-references.js <name> --clean --dprs=1,2`) and then re-verify the
+  full recipe. This is exactly the cost behind Phase 0's "dead Widget-method removal needs a
+  recapture"; do such deletions deliberately, isolate them, and confirm the diff before regenerating.
 - **A faithful conversion ⇒ zero recapture.** The byte-exact SystemTest suite is the oracle.
 - **Predicates are a dead end here.** The reverted 5c sweep (instanceof → `?.isX?()` predicates over
   ~18 Widget sites) both (a) failed the owner's design bar and (b) shipped a real behaviour
@@ -94,19 +105,40 @@ aggregated at the end) + `node scripts/run-macro-test-headless.js SystemTest_<na
 Re-grep `rg -n 'instanceof' src/basic-widgets/Widget.coffee` for the live list; sites drift. Current
 clusters (after 5a/5b + the exemplar):
 
-- **A — layout/scroll notification (continue the exemplar).** The notification of "my geometry
-  changed, container please re-lay-out" is inconsistent across the tree: `PanelWdgt` already
-  duck-types `@parent.adjustContentsBounds?()` (reactToDropOf/childRemoved/addInPseudoRandomPosition/
-  reactToGrabOf), `SimpleVerticalStackPanelWdgt`/`ListWdgt` gate on `amIPanelOfScrollPanelWdgt()`, and
-  `Widget` used `instanceof` (now the exemplar's `childGeometryChanged`). **Unify** these onto the
-  notify-hook family (`childGeometryChanged` / a sibling for the scroll-bar case). Faithful per call
-  site. *Highest value, most mechanical now that the hook exists.*
-- **B — scroll-panel structural self/parent queries.** `amIDirectlyInsideScrollPanelWdgt`
-  (`Widget:~2581`), `amIPanelOfScrollPanelWdgt` (`~2590`), `amIDirectlyInsideNonTextWrappingScrollPanelWdgt`
-  — each `instanceof Panel/VStack/ScrollPanel/List`. These ASK "where am I in the scroll structure"
-  to decide reactions. Deeper fix: the scroll panel owns/declares the relationship, or the content
-  asks via a protocol method; several callers may collapse into Cluster A's notify-hook. **Study —
-  medium/hard.**
+- **A — layout/scroll notification — DONE 2026-06-17.** Study finding that *corrects the original
+  premise:* the notification idioms are NOT one notification and must NOT be merged into a single
+  hook. `PanelWdgt`'s duck-typed `@parent.adjustContentsBounds?()` fires for parent ∈ {ScrollPanel,
+  List, SVStack, Window} (anything that defines the method), whereas `SimpleVerticalStackPanelWdgt`'s
+  `amIPanelOfScrollPanelWdgt()` fires for {ScrollPanel} **minus** {List}; they differ on List parents
+  AND on SVStack/Window parents, so a shared hook would be unfaithful. Also: only
+  `SimpleVerticalStackPanelWdgt` used `amIPanelOfScrollPanelWdgt` — NOT `ListWdgt`, as the original
+  note guessed. **What shipped:** a new `reLayOutAfterContainedPanelChange` notify-hook on
+  `ScrollPanelWdgt` (does the `adjustContentsBounds()`+`adjustScrollBars()` pair, returns `true` =
+  "I absorbed it"), with a `ListWdgt` opt-out override (returns `nil`) — faithfully reproducing
+  `instanceof ScrollPanelWdgt and not instanceof ListWdgt`. Kept deliberately SEPARATE from
+  `reactToDropOf`/`reactToGrabOf` because `ListWdgt` inherits those and must keep adjusting on its own
+  drops while opting OUT of the contained-panel notification (folding the hook into them would
+  silently stop a list adjusting — unfaithful). `SimpleVerticalStackPanelWdgt`'s two
+  `amIPanelOfScrollPanelWdgt()` sites became `return if @parent?.reLayOutAfterContainedPanelChange?()`
+  then self-adjust (inherited by `WindowWdgt`, incl. via its `reactToDropOf` `super`). With its only
+  callers gone, `amIPanelOfScrollPanelWdgt` was **deleted** from `Widget` (owner call: accept the
+  recapture); that caused the single inspector recapture in Established facts — regenerated +
+  re-verified. `PanelWdgt`'s 4 duck-typed sites were left AS-IS (already decoupled; routing them
+  through the hook would be unfaithful per the List/SVStack-parent finding); `Widget`'s grandparent
+  block stays in Cluster B. 165/165 Chrome dpr1+dpr2 + WebKit + `--homepage`.
+- **B — scroll-panel structural self/parent queries.** `amIPanelOfScrollPanelWdgt` is GONE (deleted
+  in Cluster A). Remaining: `amIDirectlyInsideScrollPanelWdgt` (`Widget:~2579`) and
+  `amIDirectlyInsideNonTextWrappingScrollPanelWdgt` (`~2593`, defined via the former) — each
+  `instanceof Panel/VStack/ScrollPanel/List`. Both gate `Widget`'s Group-1 grandparent block
+  (`@parent.parent.adjustContentsBounds()`+`@parent.parent.adjustScrollBars()` in `fullRawMoveBy`
+  ~1142, the rawSetExtent path ~1477, and `refreshScrollPanelWdgtOrVerticalStackIfIamInIt` ~1484 —
+  the first two use the NonTextWrapping variant, the third the plain one, so their firing sets differ
+  and can't be collapsed naively). These ASK "where am I in the scroll structure". Deeper fix: the
+  grandparent scroll panel owns the relationship via a protocol method (the pair could become a
+  `descendantGeometryChanged` notify-hook on `ScrollPanelWdgt`, but the text-wrapping distinction
+  must be preserved). The pair itself is now named once as
+  `ScrollPanelWdgt.reLayOutAfterContainedPanelChange` — reuse it when this cluster lands. **Study —
+  medium/hard; entangled with Phase 6.**
 - **C — self-is-scroll-panel.** `Widget:~3607,~3616` `if @ instanceof ScrollPanelWdgt then
   @adjustContentsBounds(); @adjustScrollBars()` (in the attach-selected-widget paths) →
   **override-hook**: a base no-op `afterAttaching…()` that `ScrollPanelWdgt` overrides.
@@ -130,9 +162,12 @@ clusters (after 5a/5b + the exemplar):
   LayoutSpec value type, different hierarchy); the value-coercion `instanceof` in `Point`/`Rectangle`/
   `Color`; serialization `.className` round-trips; reflection/test-harness class lookups.
 
-**Suggested sequence:** A (finish notification unification) → C (override-hook, mechanical) → E →
-B → G → D-polish → F. F and parts of B/E may be folded into Phase 6 rather than done standalone.
-One cluster per step; verify (full recipe) and commit per cluster, like 5a/5b/exemplar.
+**Suggested sequence:** ~~A~~ **DONE** → **C next** (override-hook, mechanical: `Widget:~3607/~3616`
+`if @ instanceof ScrollPanelWdgt then @adjustContentsBounds(); @adjustScrollBars()` → a base no-op
+`afterAttachingSelectedWidget?()` that `ScrollPanelWdgt` overrides to do that pair — note it can reuse
+`reLayOutAfterContainedPanelChange`) → E → B → G → D-polish → F. F and parts of B/E may be folded into
+Phase 6 rather than done standalone. One cluster per step; verify (full recipe) and commit per
+cluster, like 5a/5b/exemplar.
 
 ---
 
