@@ -221,8 +221,7 @@ class WorldWdgt extends PanelWdgt
   pattern6: "zigzag"
   pattern7: "bricks"
 
-  howManyUntitledShortcuts: 0
-  howManyUntitledFoldersShortcuts: 0
+  untitledNamingService: nil
 
   lastUsedConnectionsCalculationToken: 0
 
@@ -318,6 +317,7 @@ class WorldWdgt extends PanelWdgt
       @automator = new Automator
     if MacroToolkit?
       @macroToolkit = new MacroToolkit
+    @untitledNamingService = new UntitledNamingService
 
     # The DOM <canvas id="world"> (@worldCanvas) stays the event target. Under the
     # SWCanvas backend all rendering goes to a separate software render canvas
@@ -401,25 +401,6 @@ class WorldWdgt extends PanelWdgt
     @setPattern nil, nil, "dots"
 
     @changed()
-
-  getNextUntitledShortcutName: ->
-    name = "Untitled"
-    if @howManyUntitledShortcuts > 0
-      name += " " + (@howManyUntitledShortcuts + 1)
-
-    @howManyUntitledShortcuts++
-
-    return name
-
-  getNextUntitledFolderShortcutName: ->
-    name = "new folder"
-    if @howManyUntitledFoldersShortcuts > 0
-      name += " " + (@howManyUntitledFoldersShortcuts + 1)
-
-    @howManyUntitledFoldersShortcuts++
-
-    return name
-
 
   wantsDropOf: (aWdgt) ->
     return @_acceptsDrops

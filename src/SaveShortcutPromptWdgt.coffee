@@ -11,7 +11,7 @@ class SaveShortcutPromptWdgt extends MenuWdgt
   constructor: (widgetOpeningThePopUp, @target, @defaultContents, @intendedWidth = 100, @wdgtWhereReferenceWillGo) ->
     
     if !@defaultContents
-      @defaultContents = world.getNextUntitledShortcutName()
+      @defaultContents = world.untitledNamingService.getNextUntitledShortcutName()
 
     @tempPromptEntryField = new StringFieldWdgt(
       @defaultContents,

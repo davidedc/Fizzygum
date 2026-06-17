@@ -33,8 +33,8 @@ class PanelWdgt extends Widget
   makeFolder: (ignored, ignored2, name) ->
     newFolderWindow = new FolderWindowWdgt
     newFolderWindow.close()
-    newFolderWindow.createReference (name or world.getNextUntitledFolderShortcutName()), @
-    world.howManyUntitledShortcuts++
+    newFolderWindow.createReference (name or world.untitledNamingService.getNextUntitledFolderShortcutName()), @
+    world.untitledNamingService.noteShortcutCreated()
     return newFolderWindow
 
   setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, superCall) ->
