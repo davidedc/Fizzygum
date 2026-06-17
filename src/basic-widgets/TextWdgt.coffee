@@ -319,15 +319,15 @@ class TextWdgt extends StringWdgt
     # Also testing if it fits in an extent can be made
     # really easy.
     if @softWrap
-      morphWidth = @width()
+      widgetWidth = @width()
     else
-      morphWidth = Number.MAX_VALUE
+      widgetWidth = Number.MAX_VALUE
 
-    cacheKey = text.hashCode() + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + morphWidth + "-" + justCheckIfItFitsInThisExtent
+    cacheKey = text.hashCode() + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + widgetWidth + "-" + justCheckIfItFitsInThisExtent
     textWrappingData = world.cacheForTextBreakingIntoLinesTopLevel.get cacheKey
     if textWrappingData? then return textWrappingData
 
-    #console.log "breakTextIntoLines // " + " morphWidth: " + morphWidth + " overrideFontSize: " + overrideFontSize
+    #console.log "breakTextIntoLines // " + " widgetWidth: " + widgetWidth + " overrideFontSize: " + overrideFontSize
 
     
     ## // this section only needs to be re-done when @text changes ////
@@ -339,7 +339,7 @@ class TextWdgt extends StringWdgt
 
     paragraphs = @getParagraphs text
 
-    textWrappingData = @getTextWrappingData overrideFontSize, morphWidth, text, paragraphs, justCheckIfItFitsInThisExtent
+    textWrappingData = @getTextWrappingData overrideFontSize, widgetWidth, text, paragraphs, justCheckIfItFitsInThisExtent
 
 
     world.cacheForTextBreakingIntoLinesTopLevel.set cacheKey, textWrappingData
@@ -362,7 +362,7 @@ class TextWdgt extends StringWdgt
 
   # multi-line variant of the StringWdgt helper: size the box to the NATURAL,
   # un-soft-wrapped text — the widest hard-newline-separated line × the line
-  # count — reproducing the old TextMorph.reLayout (maxTextWidth == 0 case:
+  # count — reproducing the old text widget.reLayout (maxTextWidth == 0 case:
   # width = maxLineWidth, height = lines × fontHeight). softWrap is turned OFF so
   # the text never re-wraps to the container; the box just hugs the text. See
   # StringWdgt::sizeToTextAndDisableFitting for the full rationale.
@@ -382,7 +382,7 @@ class TextWdgt extends StringWdgt
 
   # FIT_BOX_TO_TEXT layout pass: resize our OWN extent to hug the text. This is
   # the contained-text engine — it used to live on SimplePlainTextWdgt.reLayout
-  # (and, before that, the deleted TextMorph.reLayout); it now lives on the base
+  # (and, before that, the deleted text widget.reLayout); it now lives on the base
   # gated by the mode, so ANY TextWdgt used as window / panel / scroll content
   # (not just a SimplePlainTextWdgt) re-wraps + auto-heights. It belongs in this
   # LAYOUT pass, NOT in reflowText / the paint path (createRefreshOrGetBackBuffer
@@ -453,7 +453,7 @@ class TextWdgt extends StringWdgt
     super
     @reLayoutAndRefreshContainerIfContainedText()
 
-  setFontSize: (sizeOrWidgetGivingSize, morphGivingSize) ->
+  setFontSize: (sizeOrWidgetGivingSize, widgetGivingSize) ->
     super
     @reLayoutAndRefreshContainerIfContainedText()
 
@@ -586,7 +586,7 @@ class TextWdgt extends StringWdgt
     return cacheEntry
 
 
-  # TextMorph measuring ////
+  # text widget measuring ////
 
   # answer the logical position point of the given index ("slot")
   # i.e. the row and the column where a particular character is.
@@ -709,7 +709,7 @@ class TextWdgt extends StringWdgt
     @changed()
     world.stopEditing()
 
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
     if @softWrap
@@ -737,7 +737,7 @@ class TextWdgt extends StringWdgt
     @alignment = "center"
     @changed()
   
-  # TextMorph evaluation. This menu is placed as the
+  # text widget evaluation. This menu is placed as the
   # "overridingContextMenu" in the Inspector panes, where
   # the text contents is executed against the target Widget
   evaluationMenu: ->
@@ -759,7 +759,7 @@ class TextWdgt extends StringWdgt
 
   # StringWdgt editing:
   edit: ->
-    # when you edit a TextMorph, potentially
+    # when you edit a text widget, potentially
     # you need to change the alignment of the
     # text, because managing the caret with
     # alignments other than the top-left
@@ -776,7 +776,7 @@ class TextWdgt extends StringWdgt
   doAll: ->
     @receiver.evaluateString @text
    
-  # this is set by the inspector. It tells the TextMorph
+  # this is set by the inspector. It tells the text widget
   # that any following doSelection/showSelection/inspectSelection
   # action needs to be done apropos a particular obj,
   # and also replaces the normal context menu with the evaluation Menu

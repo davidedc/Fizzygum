@@ -1,7 +1,7 @@
 class BrushIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
-    fillColor = @morph.color
+    fillColor = @widget.color
 
     context.save()
     context.translate 102.19, 100.77

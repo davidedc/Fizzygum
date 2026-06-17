@@ -92,12 +92,12 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       placeToDropItIn = world
 
     if @contents? and (@contents instanceof ScriptWdgt)
-      morphToAdd = new IconicDesktopSystemScriptShortcutWdgt @, referenceName
+      widgetToAdd = new IconicDesktopSystemScriptShortcutWdgt @, referenceName
       # this "add" is going to try to position the reference
       # in some smart way (i.e. according to a grid)
-      placeToDropItIn.add morphToAdd
-      morphToAdd.setExtent new Point 75, 75
-      morphToAdd.fullChanged()
+      placeToDropItIn.add widgetToAdd
+      widgetToAdd.setExtent new Point 75, 75
+      widgetToAdd.fullChanged()
       @bringToForeground()
     else
       super
@@ -294,7 +294,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     # TODO we should really just instantiate a Widget,
     # and give it the shape, there is no reason to create
-    # the dedicated shape morph and then change the appearance
+    # the dedicated shape widget and then change the appearance
     # as the window changes from internal to external and vice versa
     # HOWEVER a bunch of tests would fail if I do the proper
     # thing so we are doing this for the time being.

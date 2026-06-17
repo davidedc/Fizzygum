@@ -1,8 +1,8 @@
 class UncollapseIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
-    fillColor = @morph.color
-    strokeColor = @morph.color
+    fillColor = @widget.color
+    strokeColor = @widget.color
 
     # The circle
     context.beginPath()

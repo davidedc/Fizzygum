@@ -1,6 +1,6 @@
 class MapPinIconAppearance extends IconAppearance
 
-  constructor: (@morph) ->
+  constructor: (@widget) ->
     super
     @preferredSize = new Point 70, 100
     @specificationSize = new Point 70, 100

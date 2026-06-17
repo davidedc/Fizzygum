@@ -422,7 +422,7 @@ class MacroToolkit
   # completes (like moveToAndClick_InputEvents, but with no release). Use it when the press ITSELF produces
   # the state to capture, so the screenshot must be taken before the release: a mouse-DOWN (not the full
   # click) dismisses an unpinned menu cascade (ActivePointerWdgt.cleanupMenuWdgts), and a mouse-DOWN drops a
-  # float-dragged morph (processMouseDown -> drop). Pattern: `@moveToAndMouseDown_InputEvents target` ->
+  # float-dragged widget (processMouseDown -> drop). Pattern: `@moveToAndMouseDown_InputEvents target` ->
   # `yield "waitNoInputsOngoing"` -> `takeScreenshot_InputEvents_Macro "…"` (captures with the button still
   # held) -> `@syntheticEventsMouseUp_InputEvents()` -> `yield "waitNoInputsOngoing"`.
   moveToAndMouseDown_InputEvents: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
@@ -637,9 +637,9 @@ class MacroToolkit
 
   # Like getTextMenuItemFromMenu but matches by label PREFIX. Use it when a menu item's full label
   # carries a suffix you should not depend on — e.g. the "attach..." target menu labels each candidate
-  # `<morph>.toString() + " ➜"`, so a RectangleWdgt reads "a RectangleWdgt#1 ➜" (an instance number +
+  # `<widget>.toString() + " ➜"`, so a RectangleWdgt reads "a RectangleWdgt#1 ➜" (an instance number +
   # a trailing arrow). Match the stable head ("a RectangleWdgt") instead of the exact string, and only
-  # the intended target is hit even when the menu also lists the World and the morph's own handle.
+  # the intended target is hit even when the menu also lists the World and the widget's own handle.
   getTextMenuItemFromMenuByPrefix: (theMenu, thePrefix) ->
     theMenu.topWdgtSuchThat (item) ->
       if item.labelString?
@@ -741,10 +741,10 @@ class MacroToolkit
     world.automator.player.recordMacroAssertion (earlier == later), description, (shorten earlier), (shorten later)
 
   # Topmost widget matching either a class-name string (compared via
-  # morphClassString) or a class object (compared via instanceof).
+  # widgetClassString) or a class object (compared via instanceof).
   findTopWidgetByClassNameOrClass: (widgetNameOrClass) ->
     if typeof widgetNameOrClass == "string"
-      world.topWdgtSuchThat (item) -> item.morphClassString() == widgetNameOrClass
+      world.topWdgtSuchThat (item) -> item.widgetClassString() == widgetNameOrClass
     else
       world.topWdgtSuchThat (item) -> item instanceof widgetNameOrClass
 
@@ -753,7 +753,7 @@ class MacroToolkit
   # old recorded tests use (world.getWidgetViaTextLabel / Widget.identifyViaTextLabel).
   # Accepts a bare string (treated as [string, 0, 1]). This is the linchpin for migrating
   # recorded tests: every recorded click already stores this triple (as
-  # morphIdentifierViaTextLabel), so a migrated macro can re-find the very same widget.
+  # widgetIdentifierViaTextLabel), so a migrated macro can re-find the very same widget.
   findWidgetByTextDescription: (identifier) ->
     identifier = [identifier, 0, 1] if typeof identifier == "string"
     world.getWidgetViaTextLabel identifier
@@ -805,9 +805,9 @@ class MacroToolkit
   clickOnCodeBoxFromTopInspectorAtCodeString_InputEvents: (codeString, occurrenceNumber = 1, after = true,  milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     inspectorNaked = @findTopWidgetByClassNameOrClass InspectorWdgt
 
-    slotCoords = inspectorNaked.textMorph.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
+    slotCoords = inspectorNaked.textWidget.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
 
-    clickPosition = inspectorNaked.textMorph.slotCoordinates(slotCoords).translateBy new Point 3,3
+    clickPosition = inspectorNaked.textWidget.slotCoordinates(slotCoords).translateBy new Point 3,3
 
     @moveToAndClick_InputEvents clickPosition, "left button", milliseconds, startTime
 
@@ -819,14 +819,14 @@ class MacroToolkit
   bringcodeStringFromTopInspectorInView_InputEvents: (codeString, occurrenceNumber = 1, after = true) ->
     inspectorNaked = @findTopWidgetByClassNameOrClass InspectorWdgt
 
-    slotCoords = inspectorNaked.textMorph.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
+    slotCoords = inspectorNaked.textWidget.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
 
-    textScrollPane = inspectorNaked.topWdgtSuchThat (item) -> item.morphClassString() == "SimplePlainTextScrollPanelWdgt"
-    textMorph = inspectorNaked.textMorph
+    textScrollPane = inspectorNaked.topWdgtSuchThat (item) -> item.widgetClassString() == "SimplePlainTextScrollPanelWdgt"
+    textWidget = inspectorNaked.textWidget
 
     vBar = textScrollPane.vBar
-    index = textMorph.slotRowAndColumn(slotCoords)[0]
-    total = textMorph.wrappedLines.length
+    index = textWidget.slotRowAndColumn(slotCoords)[0]
+    total = textWidget.wrappedLines.length
     [vBarCenterFromHere, vBarCenterToHere] = @calculateVertBarMovement vBar, index, total
 
     @syntheticEventsMouseMovePressDragRelease_InputEvents vBarCenterFromHere, vBarCenterToHere

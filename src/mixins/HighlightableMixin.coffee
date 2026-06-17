@@ -1,4 +1,4 @@
-# changes the color of a morph based on whether pointer is
+# changes the color of a widget based on whether pointer is
 # hovering over or pressing on it
 
 HighlightableMixin =

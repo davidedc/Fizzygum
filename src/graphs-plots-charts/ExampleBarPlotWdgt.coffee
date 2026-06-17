@@ -12,11 +12,11 @@ class ExampleBarPlotWdgt extends GraphsPlotsChartsWdgt
     "Bar plot"
 
 
-  # This method only paints this very morph's "image",
+  # This method only paints this very widget's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
   # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this morph might paint something on the screen even if
+  # Note that this widget might paint something on the screen even if
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
@@ -41,8 +41,8 @@ class ExampleBarPlotWdgt extends GraphsPlotsChartsWdgt
     @paintRectangle aContext, al, at, w, h, @backgroundColor
     aContext.useLogicalPixelsUntilRestore()
 
-    morphPosition = @position()
-    aContext.translate morphPosition.x, morphPosition.y
+    widgetPosition = @position()
+    aContext.translate widgetPosition.x, widgetPosition.y
 
     @renderingHelper aContext, Color.WHITE, appliedShadow
 

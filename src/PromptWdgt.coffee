@@ -1,8 +1,8 @@
 class PromptWdgt extends MenuWdgt
 
   # pattern: all the children should be declared here
-  # the reason is that when you duplicate a morph
-  # , the duplicated morph needs to have the handles
+  # the reason is that when you duplicate a widget
+  # , the duplicated widget needs to have the handles
   # that will be duplicated. If you don't list them
   # here, then they need to be initialised in the
   # constructor. But actually they might not be
@@ -16,7 +16,7 @@ class PromptWdgt extends MenuWdgt
 
   tempPromptEntryField: nil
 
-  constructor: (morphOpeningThePopUp, @msg, @target, @callback, @defaultContents, @intendedWidth, @floorNum,
+  constructor: (widgetOpeningThePopUp, @msg, @target, @callback, @defaultContents, @intendedWidth, @floorNum,
     @ceilingNum, @isRounded) ->
 
     isNumeric = true  if @ceilingNum
@@ -29,7 +29,7 @@ class PromptWdgt extends MenuWdgt
       false,
       isNumeric)
 
-    super morphOpeningThePopUp, false, @target, true, true, @msg or "", @tempPromptEntryField
+    super widgetOpeningThePopUp, false, @target, true, true, @msg or "", @tempPromptEntryField
 
 
     @silentAdd @tempPromptEntryField
@@ -63,7 +63,7 @@ class PromptWdgt extends MenuWdgt
 
   reactToSliderAction: (num) ->
     @tempPromptEntryField.changed()
-    # the field's inner text is now a StringWdgt (was the old StringMorph). Use setText
+    # the field's inner text is now a StringWdgt (was the old string widget). Use setText
     # -- which re-runs synchroniseTextAndActualText so textPossiblyCroppedToFit tracks the new
     # value -- instead of poking .text + reLayout (StringWdgt has no reLayout that refits).
     # Otherwise edit() below sees a stale cropped text and defers to the "edit:" prompt.
@@ -73,9 +73,9 @@ class PromptWdgt extends MenuWdgt
 
   reLayout: ->
     super()
-    @buildSubmorphs()
+    @buildSubwidgets()
 
-  buildSubmorphs: ->
+  buildSubwidgets: ->
 
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
   

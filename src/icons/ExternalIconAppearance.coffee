@@ -1,11 +1,11 @@
 class ExternalIconAppearance extends IconAppearance
 
-  constructor: (@morph) ->
+  constructor: (@widget) ->
     super
     @specificationSize = new Point 100, 100
 
   paintFunction: (context) ->
-    fillColor = @morph.color
+    fillColor = @widget.color
 
     #// box Drawing
     context.beginPath()

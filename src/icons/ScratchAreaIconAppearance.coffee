@@ -1,7 +1,7 @@
 # based on https://thenounproject.com/term/organization/153374/
 class ScratchAreaIconAppearance extends IconAppearance
 
-  constructor: (@morph) ->
+  constructor: (@widget) ->
     super
     @preferredSize = new Point 100, 100
 

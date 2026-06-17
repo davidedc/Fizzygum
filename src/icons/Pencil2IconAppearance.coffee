@@ -1,7 +1,7 @@
 class Pencil2IconAppearance extends IconAppearance
 
   paintFunction: (context) ->
-    fillColor = @morph.color
+    fillColor = @widget.color
 
     context.beginPath()
     context.moveTo 130.06, 5.85

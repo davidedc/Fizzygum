@@ -1,8 +1,8 @@
-# The single string-input field (was StringFieldMorph + StringFieldWdgt2).
-# Like the old StringFieldMorph, but backed by the modern StringWdgt.
+# The single string-input field (was string-field widget + StringFieldWdgt2).
+# Like the old string-field widget, but backed by the modern StringWdgt.
 # The field BOX follows @width() (flexible, set by the containing menu/prompt layout);
 # the inner StringWdgt is given a generous fixed width + SCALEDOWN so short values never
-# render "cropped" — that keeps StringWdgt.edit on its INLINE branch (the old StringMorph
+# render "cropped" — that keeps StringWdgt.edit on its INLINE branch (the old string widget
 # had no crop-deferral; e.g. PromptWdgt.reactToSliderAction calls @text.edit() on every
 # slider step and must NOT pop the "edit:" prompt).
 # A stringWidget that can "scroll" as the cursor moves along the text
@@ -43,9 +43,9 @@ class StringFieldWdgt extends PanelWdgt
     # note: StringWdgt takes isHeaderLine as its 6th arg, so isNumeric is the 7th
     text = new StringWdgt txt, @fontSize, @fontStyle, @isBold, @isItalic, false, @isNumeric
     text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
-    #console.log "text morph extent: " + text.text + " : " + text.extent()
+    #console.log "text widget extent: " + text.text + " : " + text.extent()
     @rawSetWidth Math.max @minTextWidth, text.width()
-    #console.log "string field morph extent: " + @extent()
+    #console.log "string field widget extent: " + @extent()
 
   reLayout: ->
     super()

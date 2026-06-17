@@ -14,7 +14,7 @@ HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClo
 
   positionInObjClonesArray = objOriginalsClonedAlready.length
   objOriginalsClonedAlready.push @
-  # with and height here are not the morph's,
+  # with and height here are not the widget's,
   # which would be in logical units and hence would need ceilPixelRatio
   # correction,
   # but in actual physical units i.e. the actual buffer size
@@ -40,11 +40,11 @@ HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClo
 
 # HTMLCanvasElement.createOfPhysicalDimensions takes physical size, i.e. actual buffer pixels.
 # On non-retina displays, that's just the amount of logical pixels,
-# which are used for all other measures of morphs.
+# which are used for all other measures of widgets.
 # On retina displays, that's twice the amount of logical pixels.
 # If the dimensions come from a canvas size, then those are
 # already physical pixels.
-# If the dimensions come form other measurements of the morphs,
+# If the dimensions come form other measurements of the widgets,
 # then those are in logical coordinates and need to be
 # corrected with ceilPixelRatio before being passed here.
 HTMLCanvasElement.createOfPhysicalDimensions = (extentPoint) ->

@@ -1,4 +1,4 @@
-# I clip my submorphs at my bounds. Which potentially saves a lot of redrawing
+# I clip my subwidgets at my bounds. Which potentially saves a lot of redrawing
 # and event handling.
 # Also I always use a canvas to retain my graphical representation and respond
 # to the HTML5 commands.

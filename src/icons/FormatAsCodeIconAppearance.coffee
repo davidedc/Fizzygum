@@ -1,6 +1,6 @@
 class FormatAsCodeIconAppearance extends IconAppearance
 
-  constructor: (@morph) ->
+  constructor: (@widget) ->
     super
     @preferredSize = new Point 100, 100
     @specificationSize = new Point 100, 100
@@ -8,7 +8,7 @@ class FormatAsCodeIconAppearance extends IconAppearance
   paintFunction: (context) ->
     #// Color Declarations
     outlineColorString = WorldWdgt.preferencesAndSettings.outlineColorString
-    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @widget.color.toString()
     #// Group
     #// cket 2 Drawing
     context.beginPath()

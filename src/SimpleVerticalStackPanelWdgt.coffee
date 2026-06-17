@@ -80,13 +80,13 @@ class SimpleVerticalStackPanelWdgt extends Widget
 
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
-    childrenNotHandlesNorCarets.forEach (morph) =>
-      if morph.layoutSpec != LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
-        morph.initialiseDefaultVerticalStackLayoutSpec()
-        morph.layoutSpecDetails.rememberInitialDimensions morph, @
-        morph.setLayoutSpec LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
+    childrenNotHandlesNorCarets.forEach (widget) =>
+      if widget.layoutSpec != LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
+        widget.initialiseDefaultVerticalStackLayoutSpec()
+        widget.layoutSpecDetails.rememberInitialDimensions widget, @
+        widget.setLayoutSpec LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
 
-    childrenNotHandlesNorCarets.forEach (morph) =>
+    childrenNotHandlesNorCarets.forEach (widget) =>
       verticalPadding += @padding
 
       if !@constrainContentWidth
@@ -103,30 +103,30 @@ class SimpleVerticalStackPanelWdgt extends Widget
         # it looks left-aligned
         leftPosition = @left() + @padding
       else
-        recommendedElementWidth = morph.layoutSpecDetails.getWidthInStack()
+        recommendedElementWidth = widget.layoutSpecDetails.getWidthInStack()
 
         # this re-layouts each widget to fit the width.
-        morph.rawSetWidthSizeHeightAccordingly recommendedElementWidth
+        widget.rawSetWidthSizeHeightAccordingly recommendedElementWidth
 
         # contained text that OPTED INTO FIT_BOX_TO_TEXT (a SimplePlainTextWdgt or a
         # bare TextWdgt put into that mode) fits its BOX to the TEXT: wrap to the
         # width set above, height follows the wrapped content. We RESPECT the mode
         # (so a FIT_TEXT_TO_BOX placeholder is left alone); reassert soft-wrap, the
         # way the old SimplePlainTextWdgt-only maxTextWidth wrap flag did.
-        if morph.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
-          morph.softWrap = true
+        if widget.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
+          widget.softWrap = true
 
-        if morph.layoutSpecDetails.alignment == 'right'
+        if widget.layoutSpecDetails.alignment == 'right'
           leftPosition = @left() + @width() - @padding - recommendedElementWidth
-        else if morph.layoutSpecDetails.alignment == 'center'
+        else if widget.layoutSpecDetails.alignment == 'center'
           leftPosition = @left() + Math.floor (@width() - recommendedElementWidth) / 2
         else
-          # we hope here that  morph.layoutSpecDetails.alignment == 'left'
+          # we hope here that  widget.layoutSpecDetails.alignment == 'left'
           leftPosition = @left() + @padding
 
 
-      morph.fullRawMoveTo new Point leftPosition, @top() + verticalPadding + stackHeight
-      stackHeight += morph.height()
+      widget.fullRawMoveTo new Point leftPosition, @top() + verticalPadding + stackHeight
+      stackHeight += widget.height()
 
     newHeight = stackHeight + verticalPadding + @padding
 

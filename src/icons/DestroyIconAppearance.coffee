@@ -1,16 +1,16 @@
 class DestroyIconAppearance extends IconAppearance
 
-  constructor: (@morph) ->
+  constructor: (@widget) ->
     super
     @preferredSize = new Point 100, 100
     @specificationSize = new Point 100, 100
 
   paintFunction: (context) ->
     # colors
-    fillColorString = @morph.color.toString()
+    fillColorString = @widget.color.toString()
 
-    if @morph.strokeColor?
-      strokeColorString = @morph.strokeColor.toString()
+    if @widget.strokeColor?
+      strokeColorString = @widget.strokeColor.toString()
 
     # the drawing
     # icon adapted from

@@ -1,6 +1,6 @@
 # sends a message to a target object when pressed.
 # Takes the shape of an icon, and can also host
-# a morph to be used as "face"
+# a widget to be used as "face"
 #
 # You could achieve something similar by having
 # an empty button containing an icon, but changing
@@ -13,7 +13,7 @@ class InternalIconButtonWdgt extends ButtonWdgt
 
 
   constructor: (@target) ->
-    # can't set the parent as the target directly because this morph
+    # can't set the parent as the target directly because this widget
     # might not have a parent yet.
     super true, @, 'actOnClick', new Widget
     @color_hover = Color.create 255,153,0

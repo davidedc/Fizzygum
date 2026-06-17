@@ -747,7 +747,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `macroAttachResizingHandleToMorph` idiom): `@openMenuOf_InputEvents rect` → `@moveToItemOfTopMenuAndClick_InputEvents
   "attach..."` → `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()), "a List"`
   (class-name PREFIX). The OVERLAP is REQUIRED — `"attach..."` lists only bounds-intersecting targets
-  (`world.plausibleTargetAndDestinationMorphs`), so a non-overlapping rect would not be offered the list. Widget.attach →
+  (`world.plausibleTargetAndDestinationWidgets`), so a non-overlapping rect would not be offered the list. Widget.attach →
   list.add (ScrollPanelWdgt.add) re-parents the rect into `@contents` + auto-recomputes → image_2 shows the rect CLIPPED to
   the list (its hanging part cropped — proof it is now a child) AND a scrollbar APPEARED; then `@wheelOn_InputEvents list,
   delta` → rows + rect scroll together (image_3). Fills the gap `macroListMorphWheelScroll` explicitly LEFT OPEN (it
@@ -905,7 +905,7 @@ assertion a recapture after a regression silently stores two different hashes an
   menu (the recording threaded the few-pixel inter-cell gap to hit the stack directly — do NOT try to reproduce that); navigate
   it instead — `@openMenuOf_InputEvents firstElement` → `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()),
   "a SimpleDocumentScrollPanel"` → `"resize/move..."` (the stack panel itself is EXCLUDED from the hierarchy menu as redundant,
-  `Widget.getHierarchyMenuMorphs:2955`). Assert by screenshot pair: handles parked on the frame, then `@wheelOn_InputEvents text, deltaY`
+  `Widget.getHierarchyMenuWidgets:2955`). Assert by screenshot pair: handles parked on the frame, then `@wheelOn_InputEvents text, deltaY`
   twice → handles GONE + content scrolled; pick deltas that overshoot so the view CLAMPS at the content bottom (robust to small
   delta drift). No new verb.
 - **Free-width scroll-stack shows a HORIZONTAL scrollbar** (`macroFreeWidthScrollStackShowsHorizontalScrollbar`): the FIRST
@@ -935,7 +935,7 @@ assertion a recapture after a regression silently stores two different hashes an
   + a no-button `@syntheticEventsMouseMove_InputEvents` + `@syntheticEventsMouseClick_InputEvents()`. A plain shape
   (BoxWdgt/CircleBoxWdgt/RectangleWdgt) has no sub-widget, so `@dragWidgetTo_InputEvents` is fine.
 - **Attach to a target** (`macroAttachResizingHandleToMorph`): drop the morph so it OVERLAPS the target (required —
-  `Widget.attach` lists only morphs whose bounds INTERSECT it, `world.plausibleTargetAndDestinationMorphs`, excluding self +
+  `Widget.attach` lists only morphs whose bounds INTERSECT it, `world.plausibleTargetAndDestinationWidgets`, excluding self +
   current parent), then `clickMenuItemOfWidget_InputEvents_Macro morph, "attach..."` → capture the "choose target:" menu →
   `@moveToItemStartingWithOfMenuAndClick_InputEvents menu, "a Rectangle"` (class-name PREFIX; the menu also lists the World).
   A HandleWdgt so attached becomes the target's resize handle → drag it with `@dragResizeMoveHandleTo_InputEvents`.
@@ -944,7 +944,7 @@ assertion a recapture after a regression silently stores two different hashes an
   message. The negative path of attach.
 - **Attach EXCLUDES the parent — a lonely widget attaches to NOTHING, not even the world**
   (`macroLonelySliderCantBeAttachedToAnything`): `Widget.attach` (`Widget.coffee:3657`) filters its
-  `plausibleTargetAndDestinationMorphs` candidates by `each != @parent` — for a bare desktop widget the parent IS the world, so
+  `plausibleTargetAndDestinationWidgets` candidates by `each != @parent` — for a bare desktop widget the parent IS the world, so
   the list is EMPTY and the "no morphs to attach to" menu pops with ZERO items, while "set target"
   (`ControllerMixin.openTargetSelector`) on the SAME fixture keeps the world (re-attaching to your parent is a no-op; controlling
   it is meaningful). Assert the zero-item shape with `@assertTopMenuItemCount 0` + `@assertTopMenuItemStrings []` — the menu's
@@ -953,7 +953,7 @@ assertion a recapture after a regression silently stores two different hashes an
   contrast is asserted on an identical scene. No new verb.
 - **Attach/target candidates EXCLUDE a clipped morph** (`macroAttachTargetExcludesClippedMorph`): both "attach..."
   (`Widget.attach`) and a controller's "set target" (`ControllerMixin.openTargetSelector`) build their candidate menus
-  from `world.plausibleTargetAndDestinationMorphs` (`Widget.coffee:846`), but a `PanelWdgt` (which `@augmentWith
+  from `world.plausibleTargetAndDestinationWidgets` (`Widget.coffee:846`), but a `PanelWdgt` (which `@augmentWith
   ClippingAtRectangularBoundsMixin`) OVERRIDES it (`ClippingAtRectangularBoundsMixin.coffee:17`) to recurse into its
   children ONLY where the PANEL's own bounds intersect the probe. So a child whose raw bounds stick out past the panel
   edge (clipped there) is UNREACHABLE as a candidate when the probe sits over the clipped-away part — the exclusion is a
@@ -982,7 +982,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Duplicate a MENU ITEM into the bare world** (`macroMenuItemDuplicatesToStandaloneMorph`): a `MenuItemWdgt` is an ordinary
   duplicable Widget. Right-click an item of an open menu (e.g. the world menu's "demo ➜") → its ANCESTOR hierarchy menu; under the
   determinism toggles the item's own entry is the clean `"a MenuItem ➜"` (no instance number/bounds — `Widget.toString:467`
-  with `HidingOfMorphsNumberIDInLabels`), so an EXACT match is stable. Drill `"a MenuItem ➜"` → `"duplicate"`: the copy rides
+  with `HidingOfWidgetsNumberIDInLabels`), so an EXACT match is stable. Drill `"a MenuItem ➜"` → `"duplicate"`: the copy rides
   the hand; carry it with `@syntheticEventsMouseMove_InputEvents` and DROP with `@syntheticEventsMouseClick_InputEvents()` (the
   mouse-DOWN releases the float-drag). Capture the "demo ➜" target item from `getMostRecentlyOpenedMenu()` WHILE the world menu is
   still fresh (the next click clears `freshlyCreatedPopUps`). image_1 = a standalone "demo ➜" menu-item morph alone on the desktop.
@@ -1098,14 +1098,14 @@ assertion a recapture after a regression silently stores two different hashes an
   the true background: the panel's bottom strip is the H-scrollbar, a press there silently does nothing.
 - **Scroll-panel drag behaviour — default MOVES, locked SCROLLS, in-a-window moves the WINDOW** (`macroScrollPanelNotMovedViaNonFloatDragChild`
   / `macroLockedScrollPanelScrollsWhenDragged` / `macroScrollPanelInWindowMovesWindowWhenDragged`): pressing+dragging a `ScrollPanelWdgt`'s
-  cream BACKGROUND resolves the grab via `Widget.findFirstLooseMorph` climbing `grabsToParentWhenDragged`. **DEFAULT desktop panel** (a plain
+  cream BACKGROUND resolves the grab via `Widget.findFirstLooseWidget` climbing `grabsToParentWhenDragged`. **DEFAULT desktop panel** (a plain
   `new ScrollPanelWdgt` ships `canScrollByDraggingBackground=false` — never set true): the climb reaches the ScrollPanelWdgt, which
   `detachesWhenDragged` → the whole panel **float-drags / MOVES** (it does NOT scroll — `ScrollPanelWdgt.mouseDownLeft`'s drag-scroll step is
   gated on `!wdgtToGrab.detachesWhenDragged()`, false here). Dragging a plain child (a `TextMorph`) **DETACHES** it; dragging a
   `nonFloatDragging` child (a `ColorPaletteWdgt`) does NEITHER — it colour-picks (the `Widget.coffee:2549` short-circuit) — so the panel
   can't be dragged via the palette (image_1==image_2) while a background drag moves it (contrast). **LOCKED** (`panel.lockToPanels()` →
   `@isLockingToPanels=true`, `Widget.coffee:3714`): `grabsToParentWhenDragged` now returns true, the climb hits the unpickable world →
-  `findFirstLooseMorph`=nil → no float-drag → the scroll-step runs → a background drag **SCROLLS** the contents (frame fixed, thumb moves).
+  `findFirstLooseWidget`=nil → no float-drag → the scroll-step runs → a background drag **SCROLLS** the contents (frame fixed, thumb moves).
   **IN A WINDOW** (`win.add panel`): a `WindowWdgt` isn't a `PanelWdgt`, so the climb falls through to the Window (detaches) → a content drag
   **MOVES THE WHOLE WINDOW** (a design wart — the title bar is the expected move handle). DRY: all three build the panel via the shared
   `buildOverflowingScrollPanelWithText_Macro(topLeft)` verb in `standardMacroSubroutines`. KEY: press a CLEAR background spot (right of the
@@ -1171,7 +1171,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **A BARE button float-drags by its body and does NOT trigger mid-drag** (`macroBareButtonFloatDragsWithoutTriggering`): the third
   button-negative sibling (after the resize-handle case above and the same-morph-mouseup case `macroButtonTriggersOnlyOnSameMorphMouseUp`).
   `ButtonWdgt.rejectDrags` returns false ONLY when the parent is the WORLD (`:128-132`), so a world-parented button does NOT arm its
-  trigger on press: `Widget.findFirstLooseMorph` (`:2545`) returns the button ITSELF as the grab root (`grabsToParentWhenDragged` is false
+  trigger on press: `Widget.findFirstLooseWidget` (`:2545`) returns the button ITSELF as the grab root (`grabsToParentWhenDragged` is false
   for a world child, `:2513-2536`), so the hand FLOAT-DRAGS it (`ActivePointerWdgt.determineGrabs → grab`). The action fires only via
   `mouseClickLeft → trigger()` (MenuItemWdgt's `mouseClickLeft`; `trigger` inherited from `ButtonWdgt.coffee:98-102`), gated on a same-morph mouse-up; a float-drag ends in a DROP
   (`ActivePointerWdgt.processMouseUp:435-436`), never a click → no trigger. Build the button DIRECTLY wired to a VISIBLE action: `new
@@ -1190,7 +1190,7 @@ assertion a recapture after a regression silently stores two different hashes an
   rejectDrags-false body-float-drag branch. Drop the "demo ➜" arrow glyph (absent from the SWCanvas bitmap font → a box) — plain "demo". No new verb.
 - **A composite drags as one unit into/out of a scroll panel, clipped inside** (`macroCompositeDragsAsUnitIntoScrollPanel`): a
   composite (boxes parented under one top box) crosses a clipping container's boundary as a single assembly. A child parented under a
-  non-world morph has `grabsToParentWhenDragged` true (`Widget.coffee:2513-2533`), so dragging any part climbs via `findFirstLooseMorph`
+  non-world morph has `grabsToParentWhenDragged` true (`Widget.coffee:2513-2533`), so dragging any part climbs via `findFirstLooseWidget`
   (`:2545`) to the top box and carries the WHOLE subtree (children keep their relative offsets). A plain `new ScrollPanelWdgt` already accepts drops (`_acceptsDrops:true` via PanelWdgt — no
   enableDrops) and clips at its bounds; dropping the composite over it routes `ActivePointerWdgt.drop → ScrollPanelWdgt.add` (`:186`),
   which re-homes the whole composite into `@contents` (clipped where it overhangs), and `Widget.add` REMOVES the desktop shadow on the
@@ -1243,8 +1243,8 @@ assertion a recapture after a regression silently stores two different hashes an
   current value on binding. Use the BUTTON-drag verb (not the track-click) for a free-standing controller slider. DUPLICATING a
   controller+target composite (a panel holding a text + its sliders) deep-copies the bindings remapped to the COPY's target.
 - **Hover-to-highlight a candidate** (`macroTargetingHighlightsCandidateMorph`): hovering a "choose target:"/"choose new parent:"
-  item highlights the morph it represents (`MenuItemWdgt.mouseEnter → morphToBeHighlighted.turnOnHighlight()`,
-  `MenuItemWdgt.coffee:78` → `world.morphsToBeHighlighted` → a `HighlighterWdgt` each cycle). Overlap a ColorPaletteWdgt with a
+  item highlights the morph it represents (`MenuItemWdgt.mouseEnter → widgetToBeHighlighted.turnOnHighlight()`,
+  `MenuItemWdgt.coffee:78` → `world.widgetsToBeHighlighted` → a `HighlighterWdgt` each cycle). Overlap a ColorPaletteWdgt with a
   rect, `clickMenuItemOfWidget… "set target"`, grab the menu, find the candidate by prefix, then
   `@syntheticEventsMouseMove_InputEvents item.center(), "no button", …` to HOVER (no click) and screenshot the highlight tint.
 - **The highlight covers the EXACT SUBTREE, tracks the hover, clears on leave** (`macroHierarchyMenuHoverHighlightsExactSubtree`):
@@ -1461,7 +1461,7 @@ assertion a recapture after a regression silently stores two different hashes an
   its BACKGROUND (the track, NOT the button) and dragging it onto a plain panel, then a scroll panel, then the desktop never
   pages its button — a slider sitting on a panel/scroll-panel is NOT that panel's scrollbar. A standalone slider's track-press
   escalates (`SliderWdgt.mouseDownLeft` gate at `:258` is false off a `ScrollPanelWdgt`/`PromptWdgt` parent) and the float-drag
-  grabs the WHOLE slider (`Widget.detachesWhenDragged` true; `findFirstLooseMorph` returns the slider) — so the slider moves and
+  grabs the WHOLE slider (`Widget.detachesWhenDragged` true; `findFirstLooseWidget` returns the slider) — so the slider moves and
   its button rides along, never calling `updateValue`. CRUX: dropping onto the scroll panel re-parents the slider into the panel's
   inner `@contents` (`ScrollPanelWdgt.add :186-194`), NOT as the `@vBar`, so the paging gate STAYS false in every state and a later
   track-grab still doesn't page. Grabbing the BUTTON instead would non-float-drag it and PAGE the value
@@ -1562,11 +1562,11 @@ assertion a recapture after a regression silently stores two different hashes an
   Do NOT write `@evaluateString` (MacroToolkit's own binds `@` to the toolkit). No new verb; no input events, so just `yield
   "waitNoInputsOngoing"` before a screenshot.
 - **Eval a snippet against the inspected object via the CONSOLE** (`macroInspectorWorkAreaEvaluatesCoffeeScript`): the new `InspectorWdgt`
-  has no work/execution pane, but each widget's **"dev → console"** menu opens a `ConsoleWdgt` — an editable code area (`@textMorph`) plus
+  has no work/execution pane, but each widget's **"dev → console"** menu opens a `ConsoleWdgt` — an editable code area (`@textWidget`) plus
   "run selection" / "run all" buttons. **"run all" → `ConsoleWdgt.doAll`** compiles the code area's text and runs it with `@` = the console's
   target (`ConsoleWdgt.coffee:66-70`) — the direct equivalent of the old inspector work-pane's "do all". So open the console on a string
   (`clickMenuItemOfWidget_InputEvents_Macro s, "dev ➜"` → `@moveToItemOfTopMenuAndClick_InputEvents "console"`), find it
-  (`@findTopWidgetByClassNameOrClass ConsoleWdgt`), set the code with `consoleWdgt.textMorph.setText "@inform 'coffeescript!'"` (a fixture
+  (`@findTopWidgetByClassNameOrClass ConsoleWdgt`), set the code with `consoleWdgt.textWidget.setText "@inform 'coffeescript!'"` (a fixture
   convenience — the EVAL is driven by the real UI button), then click `consoleWdgt.runAllButton` → the snippet runs against the string and
   pops an `@inform` bubble. The console run-all sibling of `macroEvaluateString` (which calls `world.evaluateString` directly). Single quotes
   inside the snippet dodge double-quote escaping in the backtick source. No new verb.

@@ -39,12 +39,12 @@ class VerticalStackLayoutSpec
     return Math.min width, availableWidthInStack
 
 
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     menu.addLine()
     menu.addMenuItem "layout in stack ➜", false, @, "vertStackMenu", ""
 
-  vertStackMenu: (morphOpeningThePopUp,targetWidget,a,b,c)->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, targetWidget, true, true, nil
+  vertStackMenu: (widgetOpeningThePopUp,targetWidget,a,b,c)->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, targetWidget, true, true, nil
     menu.addMenuItem "base width...", true, @, "baseWidthPopout", ""
     menu.addMenuItem "elasticity...", true, @, "elasticityPopout", ""
     menu.addMenuItem "align left", true, @, "setAlignmentToLeft"  if @alignment isnt "left"
@@ -77,9 +77,9 @@ class VerticalStackLayoutSpec
       100,
       true
 
-  setElasticity: (elasticityOrWidgetGivingElasticity, morphGivingElasticity) ->
-    if morphGivingElasticity?.getValue?
-      elasticity = morphGivingElasticity.getValue()
+  setElasticity: (elasticityOrWidgetGivingElasticity, widgetGivingElasticity) ->
+    if widgetGivingElasticity?.getValue?
+      elasticity = widgetGivingElasticity.getValue()
     else
       elasticity = elasticityOrWidgetGivingElasticity
 
@@ -100,9 +100,9 @@ class VerticalStackLayoutSpec
       1000,
       true
 
-  setWidthOfElementWhenAdded: (widthOfElementWhenAddedOrWidgetGivingWidthOfElementWhenAdded, morphGivingWidthOfElementWhenAdded) ->
-    if morphGivingWidthOfElementWhenAdded?.getValue?
-      widthOfElementWhenAdded = morphGivingWidthOfElementWhenAdded.getValue()
+  setWidthOfElementWhenAdded: (widthOfElementWhenAddedOrWidgetGivingWidthOfElementWhenAdded, widgetGivingWidthOfElementWhenAdded) ->
+    if widgetGivingWidthOfElementWhenAdded?.getValue?
+      widthOfElementWhenAdded = widgetGivingWidthOfElementWhenAdded.getValue()
     else
       widthOfElementWhenAdded = widthOfElementWhenAddedOrWidgetGivingWidthOfElementWhenAdded
 

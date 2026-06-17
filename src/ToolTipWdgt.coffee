@@ -12,11 +12,11 @@ class ToolTipWdgt extends Widget
 
   contents: nil
   padding: nil # additional vertical pixels
-  morphInvokingThis: nil
+  widgetInvokingThis: nil
 
   constructor: (
    @contents="text here",
-   @morphInvokingThis,
+   @widgetInvokingThis,
    @color = WorldWdgt.preferencesAndSettings.menuBackgroundColor,
    cornerRadius,
    @padding = 0) ->
@@ -27,29 +27,29 @@ class ToolTipWdgt extends Widget
     @appearance = new BubblyAppearance @
     # console.log @color
   
-  @createBubbleHelpIfHandStillOnWidget: (contents, morphInvokingThis) ->
+  @createBubbleHelpIfHandStillOnWidget: (contents, widgetInvokingThis) ->
     # console.log "bubble createBubbleHelpIfHandStillOnWidget"
     # let's check that the item that the
     # bubble is about is still actually there
     # and the mouse is still over it, otherwise
     # do nothing.
-    if morphInvokingThis.root() == world and morphInvokingThis.boundsContainPoint world.hand.position()
-      theBubble = new @ contents, morphInvokingThis
-      theBubble.openAt morphInvokingThis.topRight()
+    if widgetInvokingThis.root() == world and widgetInvokingThis.boundsContainPoint world.hand.position()
+      theBubble = new @ contents, widgetInvokingThis
+      theBubble.openAt widgetInvokingThis.topRight()
 
   @cancelAllScheduledToolTips: ->
     @ongoingTimeouts.forEach (eachTimeout) =>
       clearTimeout eachTimeout
     @ongoingTimeouts.clear()
 
-  @createInAWhileIfHandStillContainedInWidget: (morphInvokingThis, contents, delay = 500) ->
+  @createInAWhileIfHandStillContainedInWidget: (widgetInvokingThis, contents, delay = 500) ->
     # console.log "bubble createInAWhileIfHandStillContainedInWidget"
     if Automator? and Automator.animationsPacingControl and
      Automator.state != Automator.IDLE
-        @createBubbleHelpIfHandStillOnWidget contents, morphInvokingThis
+        @createBubbleHelpIfHandStillOnWidget contents, widgetInvokingThis
     else
       @ongoingTimeouts.add setTimeout (=>
-        @createBubbleHelpIfHandStillOnWidget contents, morphInvokingThis
+        @createBubbleHelpIfHandStillOnWidget contents, widgetInvokingThis
         )
         , delay
   
@@ -72,9 +72,9 @@ class ToolTipWdgt extends Widget
     if @contents instanceof Widget
       @contentsWidget = @contents
     else if Utils.isString @contents
-      # "sans-serif" passed explicitly: the old TextMorph defaulted a nil font
+      # "sans-serif" passed explicitly: the old text widget defaulted a nil font
       # to "sans-serif", whereas TextWdgt's default is 'Arial, sans-serif'.
-      # Color.BLACK passed explicitly: old TextMorph forced black, TextWdgt
+      # Color.BLACK passed explicitly: old text widget forced black, TextWdgt
       # defaults to (37,37,37).
       @contentsWidget = new TextWdgt(
         @contents,

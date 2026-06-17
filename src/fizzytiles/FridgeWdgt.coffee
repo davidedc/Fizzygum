@@ -18,8 +18,8 @@ class FridgeWdgt extends PanelWdgt
     return filtered[calcIndex]
 
   magnetToLeftOf: (aMagnet) ->
-    # first, filter all the morphs that are roughly at the same level
-    # of the passed morph
+    # first, filter all the widgets that are roughly at the same level
+    # of the passed widget
     correctHeight = @children.filter (m) ->
       m.putIntoWords? and !m.putIntoWords and
       (
@@ -27,13 +27,13 @@ class FridgeWdgt extends PanelWdgt
         (m.top() <= aMagnet.bottom() and m.bottom() >= aMagnet.bottom())
       )
     
-    # then filter all the morphs that are on the left
+    # then filter all the widgets that are on the left
     correctSide = correctHeight.filter (m) ->
       m.right() < aMagnet.right()
 
-    # then pick the morph that minimises the distance of its right-center point
-    # with the left-center point of the passed morph
-    # (i.e. the "closest" morph to the left side)
+    # then pick the widget that minimises the distance of its right-center point
+    # with the left-center point of the passed widget
+    # (i.e. the "closest" widget to the left side)
     calculated = correctSide.map (m) ->
       m.rightCenter().distanceTo(aMagnet.leftCenter())
     calcIndex = calculated.indexOf(Math.min(calculated...))
@@ -97,7 +97,7 @@ class FridgeWdgt extends PanelWdgt
   # and then we filter through the ones on the left
   # of it and we keep doing that recursively until
   # all the ones on the left are all COMPLETELY below
-  # the top morph.
+  # the top widget.
   topLeftMostMagnet: ->
     bag = @children.filter (m) ->
       m.putIntoWords? and !m.putIntoWords

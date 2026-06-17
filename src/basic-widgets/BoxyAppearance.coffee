@@ -1,21 +1,21 @@
 class BoxyAppearance extends Appearance
 
   getCornerRadius: ->
-    if @morph.cornerRadius?
-      return @morph.cornerRadius
+    if @widget.cornerRadius?
+      return @widget.cornerRadius
     else
       return 4
 
-  constructor: (morph) ->
-    super morph
+  constructor: (widget) ->
+    super widget
 
   isTransparentAt: (aPoint) ->
     # first quickly check if the point is even
     # within the bounding box
-    if !@morph.boundsContainPoint aPoint
+    if !@widget.boundsContainPoint aPoint
       return true
  
-    thisWidgetPosition = @morph.position()
+    thisWidgetPosition = @widget.position()
     radius = Math.max @getCornerRadius(), 0
  
     relativePoint = new Point aPoint.x - thisWidgetPosition.x, aPoint.y - thisWidgetPosition.y
@@ -26,35 +26,35 @@ class BoxyAppearance extends Appearance
         return true
 
     # top right corner
-    else if relativePoint.x > @morph.width() - radius and relativePoint.y < radius
-      if relativePoint.distanceTo(new Point @morph.width() - radius,radius) > radius
+    else if relativePoint.x > @widget.width() - radius and relativePoint.y < radius
+      if relativePoint.distanceTo(new Point @widget.width() - radius,radius) > radius
         return true
 
     # bottom left corner
-    else if relativePoint.x < radius and relativePoint.y > @morph.height() - radius
-      if relativePoint.distanceTo(new Point radius, @morph.height() - radius) > radius
+    else if relativePoint.x < radius and relativePoint.y > @widget.height() - radius
+      if relativePoint.distanceTo(new Point radius, @widget.height() - radius) > radius
         return true
 
     # bottom right corner
-    else if relativePoint.x > @morph.width() - radius and relativePoint.y > @morph.height() - radius
-      if relativePoint.distanceTo(new Point @morph.width() - radius, @morph.height() - radius) > radius
+    else if relativePoint.x > @widget.width() - radius and relativePoint.y > @widget.height() - radius
+      if relativePoint.distanceTo(new Point @widget.width() - radius, @widget.height() - radius) > radius
         return true
 
 
     return false
   
-  # This method only paints this very morph's "image",
+  # This method only paints this very widget's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
   # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this morph might paint something on the screen even if
+  # Note that this widget might paint something on the screen even if
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
-    if @morph.preliminaryCheckNothingToDraw clippingRectangle, aContext
+    if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
       return nil
 
-    [area,sl,st,al,at,w,h] = @morph.calculateKeyValues aContext, clippingRectangle
+    [area,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
     return nil if w < 1 or h < 1 or area.isEmpty()
 
     aContext.save()
@@ -63,13 +63,13 @@ class BoxyAppearance extends Appearance
     # going to paint the whole of the box
     aContext.clipToRectangle al,at,w,h
 
-    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
+    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
 
     aContext.useLogicalPixelsUntilRestore()
-    morphPosition = @morph.position()
-    aContext.translate morphPosition.x, morphPosition.y
-    if !@morph.color? then debugger
-    aContext.fillStyle = @morph.color.toString()
+    widgetPosition = @widget.position()
+    aContext.translate widgetPosition.x, widgetPosition.y
+    if !@widget.color? then debugger
+    aContext.fillStyle = @widget.color.toString()
     
     if appliedShadow?
       aContext.fillStyle = Color.BLACK.toString()
@@ -79,9 +79,9 @@ class BoxyAppearance extends Appearance
     aContext.closePath()
     aContext.fill()
 
-    if @morph.strokeColor? and !appliedShadow?
+    if @widget.strokeColor? and !appliedShadow?
       aContext.lineWidth = 1 # TODO might look better if * ceilPixelRatio
-      aContext.strokeStyle = @morph.strokeColor.toString()
+      aContext.strokeStyle = @widget.strokeColor.toString()
       aContext.beginPath()
       @outlinePath aContext, @getCornerRadius(), true
       aContext.closePath()
@@ -113,8 +113,8 @@ class BoxyAppearance extends Appearance
     # circle or just manually pixel-painting the curve).
     if isStroke
       offset += 0.5
-    w = @morph.width()
-    h = @morph.height()
+    w = @widget.width()
+    h = @widget.height()
     # top left (from -180 to -90 degrees):
     context.arc offset, offset, radius, -Math.PI, -Math.PI/2
     # top right (from -90 to 0 degrees):
@@ -125,10 +125,10 @@ class BoxyAppearance extends Appearance
     context.arc offset, h - offset, radius, Math.PI/2, Math.PI
 
   cornerRadiusPopout: (menuItem)->
-    @morph.prompt menuItem.parent.title + "\ncorner\nradius:",
-      @morph,
+    @widget.prompt menuItem.parent.title + "\ncorner\nradius:",
+      @widget,
       "setCornerRadius",
-      @morph.cornerRadius.toString(),
+      @widget.cornerRadius.toString(),
       nil,
       0,
       100,
@@ -139,7 +139,7 @@ class BoxyAppearance extends Appearance
     menu.addLine()
     menu.addMenuItem "corner radius...", true, @, "cornerRadiusPopout", "set the corner's\nradius"
     # »>> this part is excluded from the fizzygum homepage build
-    menu.addMenuItem "pick inset...", true, @morph, "doNothingInsetsFunctionalityHasBeenRemoved", "put a morph as inset"
+    menu.addMenuItem "pick inset...", true, @widget, "doNothingInsetsFunctionalityHasBeenRemoved", "put a widget as inset"
     # this part is excluded from the fizzygum homepage build <<«
     menu
   

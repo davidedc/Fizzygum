@@ -1,13 +1,13 @@
 class WindowsToolbarIconAppearance extends IconAppearance
 
-  constructor: (@morph) ->
+  constructor: (@widget) ->
     super
     @preferredSize = new Point 100, 100
     @specificationSize = new Point 100, 100
 
   paintFunction: (context) ->
     #// Color Declarations
-    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @widget.color.toString()
 
     #// Oval Drawing
     @oval context, 11, 11, 6, 6

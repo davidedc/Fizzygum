@@ -72,7 +72,7 @@ swCanvasRefreshScheduled = false
 
 # When a cold atlas was drawn its glyphs went into a CACHED back buffer as
 # placeholder boxes. A plain repaint just re-blits that cache, so once the atlas
-# is warm we must reset the immutable-back-buffer cache (forcing the text morphs
+# is warm we must reset the immutable-back-buffer cache (forcing the text widgets
 # to re-run fillText) and repaint. We coalesce this across all atlas loads that
 # land in the same frame, so the warm-up does a handful of re-renders rather than
 # one per atlas. (No loop: once warm, hasAtlas() is true so we never re-request.)

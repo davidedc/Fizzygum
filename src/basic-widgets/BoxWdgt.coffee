@@ -14,18 +14,18 @@ class BoxWdgt extends Widget
   # »>> this part is excluded from the fizzygum homepage build
   # there is another method almost equal to this
   # TODO refactor
-  choiceOfWidgetToBePicked: (ignored, morphPickingUp) ->
+  choiceOfWidgetToBePicked: (ignored, widgetPickingUp) ->
     # this is what happens when "each" is
-    # selected: we attach the selected morph
+    # selected: we attach the selected widget
     if @ instanceof ScrollPanelWdgt
       @adjustContentsBounds()
       @adjustScrollBars()
   # this part is excluded from the fizzygum homepage build <<«
 
 
-  setCornerRadius: (radiusOrWidgetGivingRadius, morphGivingRadius) ->
-    if morphGivingRadius?.getValue?
-      radius = morphGivingRadius.getValue()
+  setCornerRadius: (radiusOrWidgetGivingRadius, widgetGivingRadius) ->
+    if widgetGivingRadius?.getValue?
+      radius = widgetGivingRadius.getValue()
     else
       radius = radiusOrWidgetGivingRadius
 

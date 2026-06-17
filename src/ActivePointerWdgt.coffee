@@ -984,7 +984,7 @@ class ActivePointerWdgt extends Widget
         @nonFloatDraggedWdgt.nonFloatDragging?(@nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall)
     
 
-  # this is used by the ScrollMorph: clicking on the slider
+  # this is used by the scroll panel: clicking on the slider
   # (but OUTSIDE of the button), the (center of the) button
   # is immediately non-float dragged to where clicked.
   nonFloatDragWdgtFarAwayToHere: (wdgtFarAway, pos) ->

@@ -61,9 +61,9 @@ class WidgetHolderWithCaptionWdgt extends Widget
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
-    # submorphs of the inspector are within the
+    # subwidgets of the inspector are within the
     # bounds of the parent Widget. This means that
-    # if only the parent morph breaks its rectangle
+    # if only the parent widget breaks its rectangle
     # then everything is OK.
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
@@ -78,11 +78,11 @@ class WidgetHolderWithCaptionWdgt extends Widget
      # p0 is the origin, the origin being in the bottom-left corner
     p0 = @topLeft()
 
-    # now the origin if on the left edge, in the middle height of the morph
+    # now the origin if on the left edge, in the middle height of the widget
     p0 = p0.add new Point width/2, height/2
     
-    # now the origin is in the middle height of the morph,
-    # on the left edge of the square inscribed in the morph
+    # now the origin is in the middle height of the widget,
+    # on the left edge of the square inscribed in the widget
     p0 = p0.subtract new Point squareDim/2, squareDim/2
 
     @icon.setExtent (new Point squareDim, squareDim*8/10).round()

@@ -8,8 +8,8 @@
 # colors, passwords etc.
 # If there is a chance that the text might span more
 # than one line (e.g. most button captions) then do
-# use a TextMorph instead.
-# It's like StringMorph BUT it fits any given size, so to
+# use a text widget instead.
+# It's like string widget BUT it fits any given size, so to
 # behave well in layouts.
 #
 # TODO Note that this class has problems with text that has multi-code characters, i.e. characters that for a cursor behave like a single character
@@ -55,7 +55,7 @@ class StringWdgt extends Widget
   isScrollable: true
 
   # When true, the box re-sizes itself to its text on every setText (the OLD
-  # StringMorph/TextMorph "box hugs text" behaviour). Set by
+  # string/text widget "box hugs text" behaviour). Set by
   # sizeToTextAndDisableFitting; OFF by default so a generic StringWdgt in a
   # layout still fits its text into its FIXED box (the modern model). See
   # sizeToTextAndDisableFitting for why the chrome labels need this.
@@ -120,12 +120,12 @@ class StringWdgt extends Widget
   # and a FIT_BOX_TO_TEXT widget notifies its container via
   # refreshScrollPanelWdgtOrVerticalStackIfIamInIt so the surrounding layout
   # follows. (This retired the old SimplePlainTextWdgt-only `maxTextWidth` knob, a
-  # dead-TextMorph vestige, and three `instanceof SimplePlainTextWdgt` leaks.)
+  # dead-text widget vestige, and three `instanceof SimplePlainTextWdgt` leaks.)
   #
-  # HISTORY: an abandoned StringMorph3 experiment once sketched FIT_BOX_TO_TEXT but
+  # HISTORY: an abandoned early string-widget experiment experiment once sketched FIT_BOX_TO_TEXT but
   # was a dead end — it lived ONLY in the menu (items toggled ticks with a "TODO
   # actually do something", tight/loose were wired to the wrong toggle, and no code
-  # read the mode to resize the morph). The feature was rebuilt HERE instead (where
+  # read the mode to resize the widget). The feature was rebuilt HERE instead (where
   # the SWCanvas font cap, ControllerMixin and undo/redo already live); do NOT
   # resurrect that copy's no-op handlers.
   # ===========================================================================
@@ -214,7 +214,7 @@ class StringWdgt extends Widget
 
   # the actual font size used might be
   # different than the one specified originally
-  # because this morph has to be able to fit
+  # because this widget has to be able to fit
   # any extent by shrinking.
   actualFontSizeUsedInRendering: ->
     @reflowText()
@@ -318,9 +318,9 @@ class StringWdgt extends Widget
     else
       return firstPart + " (\"" + @text.slice(0, 30).replace(/(?:\r\n|\r|\n)/g, '↵') + "...\")"
 
-  # used to identify morphs in macros/tests.
-  # identifying morphs this way resists more
-  # to tampering such as adding/removing morphs and
+  # used to identify widgets in macros/tests.
+  # identifying widgets this way resists more
+  # to tampering such as adding/removing widgets and
   # changing their locations.
   getTextDescription: ->
     if @textDescription?
@@ -716,14 +716,14 @@ class StringWdgt extends Widget
     text = @textPossiblyCroppedToFit
     # Initialize my surface property.
     # If don't have to paint the background then the surface is just as
-    # big as the text - which is likely to be smaller than the whole morph
+    # big as the text - which is likely to be smaller than the whole widget
     # (because it needs to fit in both height and width, it's likely that
     # it's gonna be smaller in one of the two dimensions).
     # If, on the other hand, we have to paint the background then the surface is
-    # as big as the whole morph,
+    # as big as the whole widget,
     # so potentially we could be wasting some space as the string might
     # be really small so to fit, say, the width, while a lot of height of
-    # the morph could be "wasted" in memory.
+    # the widget could be "wasted" in memory.
     widthOfText = @calculateTextWidth text
     heightOfText = @fontHeight @fittingFontSize
     if @backgroundColor? or
@@ -1031,7 +1031,7 @@ class StringWdgt extends Widget
     menu.children[9].label.setText monoFontStackTick + "Mono"
 
 
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
     menu.addMenuItem "edit...", true, @, "editPopup", "set this String's\ncontent"
@@ -1093,7 +1093,7 @@ class StringWdgt extends Widget
       if world.isIndexPage
         menu.addMenuItem "connect to ➜", true, @, "openTargetSelector", "connect to\nanother widget"
       else
-        menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another morph\nwhose numerical property\n will be" + " controlled by this one"
+        menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another widget\nwhose numerical property\n will be" + " controlled by this one"
 
 
   togglefittingSpecWhenBoundsTooSmall: ->
@@ -1156,9 +1156,9 @@ class StringWdgt extends Widget
     else
       @setFittingFontSize @fitToExtent()
 
-  # Reproduce the OLD StringMorph/TextMorph "the BOX sizes itself to the TEXT"
+  # Reproduce the OLD string/text widget "the BOX sizes itself to the TEXT"
   # behaviour for chrome labels (menu items, menu headers, tooltips, plain
-  # buttons) that were ported off the now-deleted StringMorph/TextMorph family
+  # buttons) that were ported off the now-deleted string/text widget family
   # onto this modern one. The modern family does the OPPOSITE — it fits the
   # TEXT into a FIXED box and never resizes its own extent (see the FITTING
   # MODEL comment above) — so a freshly-built label is the 50×40 Widget default,
@@ -1194,13 +1194,13 @@ class StringWdgt extends Widget
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     if stringFieldWidget?
       # in this case, the stringFieldWidget has a
-      # StringMorph in "text". The StringMorph has the
+      # string widget in "text". The string widget has the
       # "text" inside it.
       theTextContent = stringFieldWidget.text.text
 
     theNewText = theTextContent + ""
     if @text != theNewText
-      # other morphs might send something like a
+      # other widgets might send something like a
       # number or a color so let's make sure we
       # convert to a string.
       @clearSelection()
@@ -1227,9 +1227,9 @@ class StringWdgt extends Widget
       else
         @widgetToBeNotifiedOfTextModificationChange.textContentModified?()
   
-  setFontSize: (sizeOrWidgetGivingSize, morphGivingSize) ->
-    if morphGivingSize?.getValue?
-      size = morphGivingSize.getValue()
+  setFontSize: (sizeOrWidgetGivingSize, widgetGivingSize) ->
+    if widgetGivingSize?.getValue?
+      size = widgetGivingSize.getValue()
     else
       size = sizeOrWidgetGivingSize
 

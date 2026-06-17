@@ -1,6 +1,6 @@
 # sends a message to a target object when pressed.
 # takes a rounded box shape, and can host
-# a morph to be used as "face"
+# a widget to be used as "face"
 
 class SimpleButtonWdgt extends ButtonWdgt
 
@@ -12,13 +12,13 @@ class SimpleButtonWdgt extends ButtonWdgt
       @faceWidget = nil,
 
       @dataSourceWidgetForTarget = nil,
-      @morphEnv,
+      @widgetEnv,
       @toolTipMessage = nil,
 
       @doubleClickAction = nil,
       @argumentToAction1 = nil,
       @argumentToAction2 = nil,
-      @representsAMorph = false,
+      @representsAWidget = false,
       @padding = 0
       ) ->
 

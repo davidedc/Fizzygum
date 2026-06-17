@@ -1,12 +1,12 @@
 class SimpleUSAMapIconAppearance extends IconAppearance
 
-  constructor: (@morph) ->
+  constructor: (@widget) ->
     super
     @preferredSize = new Point 500, 313
     @specificationSize = new Point 1000, 626
 
   paintFunction: (context) ->
-    fillColor = @morph.color
+    fillColor = @widget.color
     fillColorString = fillColor.toString()
 
     #// Massachussets Drawing

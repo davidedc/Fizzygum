@@ -5,7 +5,7 @@
 # can be found at http://wiki.squeak.org/squeak/30 )
 
 # Widgets exist in a tree, rooted at a World or at the Hand.
-# The morphs owns submorphs. Widgets are drawn recursively;
+# The widgets owns subwidgets. Widgets are drawn recursively;
 # if a Widget has no owner it never gets drawn
 # (but note that there are other ways to hide a Widget).
 
@@ -59,16 +59,16 @@ class Widget extends TreeNode
   # 1: fully opaque, 0: fully transparent
   alpha: 1
 
-  # the padding area of a morph is INSIDE a morph and
+  # the padding area of a widget is INSIDE a widget and
   # responds to mouse events.
   # The padding area should be empty, not drawn, except
   # for debugging or "interim painting" purposes such
   # as highlights.
-  # The padding's purpose is to give the option to morphs
+  # The padding's purpose is to give the option to widgets
   # to accommodate for spacing between their contents and
-  # their bounds, so to enable consecutive morphs to
+  # their bounds, so to enable consecutive widgets to
   # have some spacing in between them.
-  # Note that paddings of consecutive morphs do add up.
+  # Note that paddings of consecutive widgets do add up.
   # The padding area reacts to mouse events ONLY IF
   # it's filled with color. Otherwise, it doesn't.
   # This is consistent with the concept that Widgets only
@@ -79,24 +79,24 @@ class Widget extends TreeNode
   paddingRight: 0
 
   # backgroundColor and backgroundTransparency fill the
-  # entire rectangular bounds of the morph.
+  # entire rectangular bounds of the widget.
   # I.e. they area they fill is not affected by the
-  # padding or the actual design of the morph.
+  # padding or the actual design of the widget.
   backgroundColor: nil
   backgroundTransparency: 1
 
   # for a Widget, being visible and collapsed
   # are two separate things.
-  # isVisible means that the morph is meant to show
-  #  as empty or without any surface. BUT the morph
+  # isVisible means that the widget is meant to show
+  #  as empty or without any surface. BUT the widget
   #  will still take the usual space.
-  # Collapsed means that the morph, whatever its
+  # Collapsed means that the widget, whatever its
   #  content or appearance or design, is not drawn
   #  on the desktop AND it doesn't occupy any space.
   isVisible: true
   collapsed: false
 
-  # if a morph is a "template" it means that
+  # if a widget is a "template" it means that
   # when you floatDrag it, it creates a copy of itself.
   # it's a nice shortcut instead of doing
   # right click and then "duplicate..."
@@ -108,7 +108,7 @@ class Widget extends TreeNode
   # usually Widgets can be detached from Panels
   # by grabbing them (there are exceptions, for example
   # buttons don't stick to the world but stick to Panels,
-  # morph that "select" based on dragging such as the ColorPanelMorph).
+  # widget that "select" based on dragging such as the colour palette).
   # However you can get them to stick to Panels (and the desktop)
   # by toggling this flag
   isLockingToPanels: false
@@ -126,7 +126,7 @@ class Widget extends TreeNode
   # "drag away" from a button to avoid actioning it when one
   # mousedowns on it). (Note however that buttons on the desktop
   # are draggable).
-  # Another example are morphs like the ColorPanelMorph where
+  # Another example are widgets like the colour palette where
   # users can drag the mouse on them to pick a color: it would be
   # weird if that caused a drag of anything.
   defaultRejectDrags: false
@@ -142,7 +142,7 @@ class Widget extends TreeNode
 
   # menu coalescing is useful when you want a "parent"
   # menu to take over the menus of their children.
-  # This assumes that for certain morphs is OK to just exist
+  # This assumes that for certain widgets is OK to just exist
   # "in their whole" without letting the user obviously take it
   # apart or mess with its parts.
   #
@@ -152,8 +152,8 @@ class Widget extends TreeNode
   #
   # Otherwise, without coalescing, there would FIRST be a
   # multiple-selection menu to spacially demultiplex which
-  # morph is the one of interest
-  # (the TextMorph, or the Panel, or the ScrollPanelWdgt?). And
+  # widget is the one of interest
+  # (the text widget, or the Panel, or the ScrollPanelWdgt?). And
   # if the user wanted to resize the scroll text, which Widget
   # would the user have to pick? It would be very confusing.
   #
@@ -163,7 +163,7 @@ class Widget extends TreeNode
   #
   # Note that, on the other side, for this to work the menu of
   # the ScrollPanelWdgt has to give menu entries "peeking" them
-  # from the TextMorph it contains, e.g. to change the font size
+  # from the text widget it contains, e.g. to change the font size
   #
   # Note that this mechanism could be overridden for "advanced"
   # users who want to mangle with the sub-components of a scrollable
@@ -176,11 +176,11 @@ class Widget extends TreeNode
 
   textDescription: nil
 
-  # note that not all the changed morphs have this flag set
+  # note that not all the changed widgets have this flag set
   # because if a parent does a fullChanged, we don't set this
   # flag in the children. This is intentionally so,
   # as we don't want to navigate the children too many times.
-  # If you want to know whether a morph has changed its
+  # If you want to know whether a widget has changed its
   # position, use the hasMaybeChangedGeometryOrPosition:
   # method instead, which looks at this flag (and another one).
   # See comment below on fullGeometryOrPositionPossiblyChanged
@@ -189,25 +189,25 @@ class Widget extends TreeNode
   clippedBoundsWhenLastPainted: nil
 
   # you'd be tempted to check this flag to figure out
-  # whether any morph has possibly changed position but
+  # whether any widget has possibly changed position but
   # you can't. If a PARENT has done a fullChanged, the
   # children are NOT set this flag. This flag is set
-  # only for the parent morph, and it's important that
+  # only for the parent widget, and it's important that
   # it stays that way for how the mechanism for fleshing out
   # the broken rectangles works. We flesh out the rectangles
-  # of the "fully broken" morphs separately looking at this
-  # flag, and we remove the rectangles of the sub-morphs that
+  # of the "fully broken" widgets separately looking at this
+  # flag, and we remove the rectangles of the sub-widgets that
   # have a parent with this flag since we know that they are
   # already covered.
-  # If you want to figure out whether a morph has changed,
+  # If you want to figure out whether a widget has changed,
   # use the hasMaybeChangedGeometryOrPosition: method,
   # which checks recursively with the parents both the
   # fullGeometryOrPositionPossiblyChanged flag and the
   # geometryOrPositionPossiblyChanged flag.
   # Another way of doing this is to mark with a special flag
-  # all the morph that touch their bounds or positions, but
+  # all the widget that touch their bounds or positions, but
   # then it's sort of costly to un-set such flag in all such
-  # morphs, as we'd have to keep the "changed" morphs in a special
+  # widgets, as we'd have to keep the "changed" widgets in a special
   # array to do that. Seems quite a bit more work and complication,
   # so just use the method.
   fullGeometryOrPositionPossiblyChanged: false
@@ -238,16 +238,16 @@ class Widget extends TreeNode
   _showsAdders: false
 
   highlighted: false
-  # if this morph has the purpose of highlighting
-  # another morph, then this field points to the
-  # morph that this morph is supposed to highlight
+  # if this widget has the purpose of highlighting
+  # another widget, then this field points to the
+  # widget that this widget is supposed to highlight
   wdgtThisWdgtIsHighlighting: nil
 
   destroyed: false
 
   shadowInfo: nil
 
-  # some morphs such as references are given a
+  # some widgets such as references are given a
   # default "computed" position on the screen.
   # As long as the user didn't manually
   # reposition them, then we keep giving them a
@@ -279,8 +279,8 @@ class Widget extends TreeNode
 
   getTextDescription: ->
     if @textDescription?
-      #console.log "got name: " + @textDescription + "" + @constructor.name + " (adhoc description of morph)"
-      return @textDescription + "" + (@constructor.name.replace "Wdgt", "") + " (adhoc description of morph)"
+      #console.log "got name: " + @textDescription + "" + @constructor.name + " (adhoc description of widget)"
+      return @textDescription + "" + (@constructor.name.replace "Wdgt", "") + " (adhoc description of widget)"
     else
       #console.log "got name: " + @constructor.name + " (class name)"
       return (@constructor.name.replace "Wdgt", "") + " (class name)"
@@ -302,13 +302,13 @@ class Widget extends TreeNode
   # this part is excluded from the fizzygum homepage build <<«
 
   uniqueIDString: ->
-    @morphClassString() + "#" + @instanceNumericID
+    @widgetClassString() + "#" + @instanceNumericID
 
-  morphClassString: ->
+  widgetClassString: ->
     @constructor.name or @constructor.toString().split(" ")[1].split("(")[0]
 
   # »>> this part is excluded from the fizzygum homepage build
-  @morphFromUniqueIDString: (theUniqueID) ->
+  @widgetFromUniqueIDString: (theUniqueID) ->
     result = world.topWdgtSuchThat (m) =>
       m.uniqueIDString() is theUniqueID
     if not result?
@@ -322,12 +322,12 @@ class Widget extends TreeNode
     @instanceNumericID = @constructor.lastBuiltInstanceNumericID
 
   # »>> this part is excluded from the fizzygum homepage build
-  # some test commands specify morphs via
+  # some test commands specify widgets via
   # their uniqueIDString. This means that
-  # if there is one more TextMorph anywhere during
+  # if there is one more text widget anywhere during
   # the playback, for example because
   # one new menu item is added, then
-  # all the subsequent IDs for the TextMorph will be off.
+  # all the subsequent IDs for the text widget will be off.
   # In order to sort that out, we occasionally re-align
   # the counts to the next 1000, so the next Widgets
   # being created will all be aligned and
@@ -357,10 +357,10 @@ class Widget extends TreeNode
 
     @lastTime = Date.now()
     # Note that we don't call
-    # that's because the actual extending morph will probably
+    # that's because the actual extending widget will probably
     # set more details of how it should look (e.g. size),
     # so we wait and we let the actual extending
-    # morph to draw itself.
+    # widget to draw itself.
 
     # »>> this part is excluded from the fizzygum homepage build
     @setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
@@ -400,10 +400,10 @@ class Widget extends TreeNode
     @appearance?.isTransparentAt aPoint
 
   # useful for example when hovering over references
-  # to morphs. Can only modify the rendering of a morph,
+  # to widgets. Can only modify the rendering of a widget,
   # so any highlighting is only visible in the measure that
-  # the morph is visible (as opposed to HighlighterWdgt being
-  # used to highlight a morph)
+  # the widget is visible (as opposed to HighlighterWdgt being
+  # used to highlight a widget)
   paintHighlight: (aContext, al, at, w, h) ->
     @appearance?.paintHighlight aContext, al, at, w, h
 
@@ -411,8 +411,8 @@ class Widget extends TreeNode
     @appearance?.paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
 
   # painting strokes is a little delicate because they need to
-  # be painted INSIDE the morph (otherwise a) adjacent morphs, of morphs
-  # within a layout would make a mess and b) clipping morph would
+  # be painted INSIDE the widget (otherwise a) adjacent widgets, of widgets
+  # within a layout would make a mess and b) clipping widget would
   # present a problem).
   # Also, Panels are tricky
   # because they need to paint the strokes after they paint their
@@ -455,12 +455,12 @@ class Widget extends TreeNode
   #	that determines whether the World's damage list ('broken' rectangles)
   #	tracks changes. By default the switch is always on. If set to false,
   #	changes are not stored. This can be very useful for housekeeping of
-  #	the damage list in situations where a large number of (sub-) morphs
+  #	the damage list in situations where a large number of (sub-) widgets
   #	are changed more or less at once. Instead of keeping track of every
-  #	single submorph's changes tremendous performance improvements can be
+  #	single subwidget's changes tremendous performance improvements can be
   #	achieved by setting the world.trackChanges flag to false before propagating
   #	the layout changes, setting it to true again and then storing the full
-  #	bounds of the surrounding morph.
+  #	bounds of the surrounding widget.
   
   
   # Widget string representation: e.g. 'a Widget' or 'a Widget#2'
@@ -468,7 +468,7 @@ class Widget extends TreeNode
     firstPart = "a "
 
     if Automator? and Automator.state != Automator.IDLE and Automator.hidingOfWidgetsNumberIDInLabels
-      return firstPart + @morphClassString()
+      return firstPart + @widgetClassString()
     else
       return firstPart + @uniqueIDString()
 
@@ -535,9 +535,9 @@ class Widget extends TreeNode
 
     if @parent?
       previousParent = @parent
-      # if the morph contributes to a shadow, unfortunately
+      # if the widget contributes to a shadow, unfortunately
       # we have to walk towards the top to
-      # break the morph that has the shadow.
+      # break the widget that has the shadow.
       firstParentOwningMyShadow = @firstParentOwningMyShadow()
       if firstParentOwningMyShadow?
         firstParentOwningMyShadow.fullChanged()
@@ -619,7 +619,7 @@ class Widget extends TreeNode
         @nextSteps lst
   # this part is excluded from the fizzygum homepage build <<«
   
-  # leaving this function as step means that the morph wants to do nothing
+  # leaving this function as step means that the widget wants to do nothing
   # but the children *are* traversed and their step function is invoked.
   # If a Widget wants to do nothing and wants to prevent the children to be
   # traversed, then this function should be set to nil.
@@ -687,7 +687,7 @@ class Widget extends TreeNode
       @invalidateLayout()
   
   # note that using this one, the children
-  # morphs attached as floating don't move
+  # widgets attached as floating don't move
   rawSetBounds: (newBounds) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
@@ -708,7 +708,7 @@ class Widget extends TreeNode
   # you don't actually change the geometry right away,
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
-  setBounds: (aRectangle, morphStartingTheChange = nil) ->
+  setBounds: (aRectangle, widgetStartingTheChange = nil) ->
     #if window.recalculatingLayouts
     #  debugger
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
@@ -835,21 +835,21 @@ class Widget extends TreeNode
 
 
   # used for example:
-  # - to determine which morphs you can attach a morph to
+  # - to determine which widgets you can attach a widget to
   # - for a SliderWdgt's "set target" so you can change properties of another Widget
-  # - by the HandleWdgt when you attach it to some other morph
+  # - by the HandleWdgt when you attach it to some other widget
   # Note that this method has a slightly different
   # version in PanelWdgt (because it clips, so we need
   # to check that we don't consider overlaps with
-  # morphs contained in a Panel that are clipped and
+  # widgets contained in a Panel that are clipped and
   # hence *actually* not overlapping).
-  plausibleTargetAndDestinationMorphs: (theWidget) ->
+  plausibleTargetAndDestinationWidgets: (theWidget) ->
     # find if I intersect theWidget,
     # then check my children recursively
     # exclude me if I'm a child of theWidget
     # (cause it's usually odd to attach a Widget
-    # to one of its submorphs or for it to
-    # control the properties of one of its submorphs)
+    # to one of its subwidgets or for it to
+    # control the properties of one of its subwidgets)
     result = []
     if @visibleBasedOnIsVisibleProperty() and
         !@isCollapsed() and
@@ -859,7 +859,7 @@ class Widget extends TreeNode
       result = [@]
 
     @children.forEach (child) ->
-      result = result.concat(child.plausibleTargetAndDestinationMorphs(theWidget))
+      result = result.concat(child.plausibleTargetAndDestinationWidgets(theWidget))
 
     return result
 
@@ -868,7 +868,7 @@ class Widget extends TreeNode
   # are cached
   # used in the method fleshOutBroken
   # to skip the "destination" broken rects
-  # for morphs that marked themselves
+  # for widgets that marked themselves
   # as broken but at moment of destination
   # might be invisible
   # TODO for sure this should also check for the .destroyed flag
@@ -926,14 +926,14 @@ class Widget extends TreeNode
 
 
   # Note that in a case of a fullMove*
-  # you should also invalidate all the morphs in
+  # you should also invalidate all the widgets in
   # the subtree as well.
   # This happens indirectly as the fullMove* methods
   # move all the children too, so *that*
   # invalidates them. Note that things might change
   # if you use a different coordinate system, in which
   # case you have to invalidate the caches in all the
-  # submorphs manually or use some other cache
+  # subwidgets manually or use some other cache
   # invalidation mechanism.
   invalidateFullBoundsCache: ->
     if !@cachedFullBounds?
@@ -972,7 +972,7 @@ class Widget extends TreeNode
     result
 
   # for PanelWdgt scrolling support
-  subMorphsMergedFullBounds: ->
+  subWidgetsMergedFullBounds: ->
     result = nil
     if @children.length
       result = @children[0].bounds
@@ -983,7 +983,7 @@ class Widget extends TreeNode
         # (remember that the resizing handle of ScrollPanelWdgts
         # actually end up in the Panel inside them.)
         if !(child instanceof HandleWdgt) and !(child instanceof CaretWdgt)
-          # if a morph implements deferred layout, then
+          # if a widget implements deferred layout, then
           # really we can't consider the sizes and positions
           # of its children, so stick to the parent bounds
           # only
@@ -1128,7 +1128,7 @@ class Widget extends TreeNode
     @fullChanged()
     @bounds = @bounds.translateBy delta
 
-    # note that if I am a submorph of a morph directly
+    # note that if I am a subwidget of a widget directly
     # inside a non-text-wrapping ScrollPanelWdgt then this
     # is not going to work. So if I'm a box attached to a
     # box inside a non-text-wrapping ScrollPanelWdgt then
@@ -1224,7 +1224,7 @@ class Widget extends TreeNode
   # you don't actually change the geometry right away,
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
-  fullMoveTo: (aPoint, morphStartingTheChange = nil) ->
+  fullMoveTo: (aPoint, widgetStartingTheChange = nil) ->
     #if window.recalculatingLayouts
     #  debugger
 
@@ -1245,7 +1245,7 @@ class Widget extends TreeNode
         # relative position to be remembered, so resizing
         # the stretchable panel will get them to the
         # correct positions
-        if morphStartingTheChange? and @parent? and (morphStartingTheChange instanceof HandleWdgt)
+        if widgetStartingTheChange? and @parent? and (widgetStartingTheChange instanceof HandleWdgt)
           @rememberFractionalPositionInHoldingPanel()
 
 
@@ -1395,17 +1395,17 @@ class Widget extends TreeNode
   setMinimumExtent: (@minimumExtent) ->
 
   # Widget accessing - dimensional changes requiring a complete redraw
-  rawSetExtent: (aPoint, morphStartingTheChange = nil) ->
+  rawSetExtent: (aPoint, widgetStartingTheChange = nil) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
       debugger
 
     #console.log "move 8"
-    if @ == morphStartingTheChange
+    if @ == widgetStartingTheChange
       return
-    if !morphStartingTheChange?
-      morphStartingTheChange = @
+    if !widgetStartingTheChange?
+      widgetStartingTheChange = @
     # check whether we are actually changing the extent.
     unless aPoint.equals @extent()
       @breakNumberOfRawMovesAndResizesCaches()
@@ -1418,7 +1418,7 @@ class Widget extends TreeNode
   # you don't actually change the geometry right away,
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
-  setExtent: (aPoint, morphStartingTheChange = nil) ->
+  setExtent: (aPoint, widgetStartingTheChange = nil) ->
     #if window.recalculatingLayouts
     #  debugger
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
@@ -1438,7 +1438,7 @@ class Widget extends TreeNode
         # relative size to be remembered, so resizing
         # the stretchable panel will get them to the
         # correct dimensions
-        if morphStartingTheChange? and @parent? and (morphStartingTheChange instanceof HandleWdgt)
+        if widgetStartingTheChange? and @parent? and (widgetStartingTheChange instanceof HandleWdgt)
           @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
 
   
@@ -1464,7 +1464,7 @@ class Widget extends TreeNode
       @bounds = newBounds
       @breakNumberOfRawMovesAndResizesCaches()
 
-      # note that if I am a submorph of a morph directly
+      # note that if I am a subwidget of a widget directly
       # inside a non-text-wrapping ScrollPanelWdgt then this
       # is not going to work. So if I'm a box attached to a
       # box inside a non-text-wrapping ScrollPanelWdgt then
@@ -1564,11 +1564,11 @@ class Widget extends TreeNode
     h = Math.max Math.round(height or 0), 0
     @bounds = new Rectangle @bounds.origin, new Point @bounds.corner.x, @bounds.origin.y + h
   
-  setColor: (aColorOrAWidgetGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
+  setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
 
-    if morphGivingColor?.getColor?
-      aColor = morphGivingColor.getColor()
+    if widgetGivingColor?.getColor?
+      aColor = widgetGivingColor.getColor()
     else
       aColor = aColorOrAWidgetGivingAColor
 
@@ -1581,11 +1581,11 @@ class Widget extends TreeNode
         
     return aColor
   
-  setBackgroundColor: (aColorOrAWidgetGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
+  setBackgroundColor: (aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
 
-    if morphGivingColor?.getColor?
-      aColor = morphGivingColor.getColor()
+    if widgetGivingColor?.getColor?
+      aColor = widgetGivingColor.getColor()
     else
       aColor = aColorOrAWidgetGivingAColor
     if aColor
@@ -1601,7 +1601,7 @@ class Widget extends TreeNode
   # Widget displaying ---------------------------------------------------------
 
   # There are three fundamental methods for rendering and displaying anything.
-  # * updateBackBuffer: this one creates/updates the local canvas of this morph only
+  # * updateBackBuffer: this one creates/updates the local canvas of this widget only
   #   i.e. not the children. For example: a ColorPickerWdgt is a Widget which
   #   contains three children Widgets (a color palette, a greyscale palette and
   #   a feedback). The updateBackBuffer method of ColorPickerWdgt only creates
@@ -1610,7 +1610,7 @@ class Widget extends TreeNode
   #   ColorPickerWdgt constructor runs, the three childredn Widgets will
   #   run their own updateBackBuffer method, so each child will have its own
   #   canvas with their own contents.
-  #   Note that updateBackBuffer should be called sparingly. A morph should repaint
+  #   Note that updateBackBuffer should be called sparingly. A widget should repaint
   #   its buffer pretty much only *after* it's been added to its first parent and
   #   whenever it changes dimensions. Things like changing parent and updating
   #   the position shouldn't normally trigger an update of the buffer.
@@ -1619,8 +1619,8 @@ class Widget extends TreeNode
   #   extensions after they painted the text for the first time...
   # * paintIntoAreaOrBlitFromBackBuffer: takes the local canvas and paints it to a specific area in a passed
   #   canvas. The local canvas doesn't contain any rendering of the children of
-  #   this morph.
-  # * fullPaintIntoAreaOrBlitFromBackBuffer: recursively draws all the local canvas of this morph and all
+  #   this widget.
+  # * fullPaintIntoAreaOrBlitFromBackBuffer: recursively draws all the local canvas of this widget and all
   #   its children into a specific area of a passed canvas.
 
   # »>> this part is excluded from the fizzygum homepage build
@@ -1664,13 +1664,13 @@ class Widget extends TreeNode
   turnOnHighlight: ->
     if !@highlighted
       @highlighted = true
-      world.morphsToBeHighlighted.add @
+      world.widgetsToBeHighlighted.add @
       @changed()
 
   turnOffHighlight: ->
     if @highlighted
       @highlighted = false
-      world.morphsToBeHighlighted.delete @
+      world.widgetsToBeHighlighted.delete @
       @changed()
 
 
@@ -1774,7 +1774,7 @@ class Widget extends TreeNode
   # appliedShadow.alpha, so a transparent text widget casts a faint copy of its
   # GLYPHS and a semi-transparent panel-with-text casts a faint copy of fill AND
   # content together. (There is no per-glyph / per-widget baked shadow: the old
-  # StringMorph/TextMorph shadowOffset/shadowColor route was removed and is
+  # string/text widget shadowOffset/shadowColor route was removed and is
   # deliberately not reintroduced.)
   # If appliedShadow is defined, it means that we are painting the whole
   # of the widget recursively AS SHADOW. Since there are no shadows of a shadow
@@ -1855,9 +1855,9 @@ class Widget extends TreeNode
     @silentHide()
 
     # TODO refactor this, it appears more than one time
-    # if the morph contributes to a shadow, unfortunately
+    # if the widget contributes to a shadow, unfortunately
     # we have to walk towards the top to
-    # break the morph that has the shadow.
+    # break the widget that has the shadow.
     # ALSO there are many other "@fullChanged" that really
     # should do this instead.
     firstParentOwningMyShadow = @firstParentOwningMyShadow()
@@ -1942,11 +1942,11 @@ class Widget extends TreeNode
   # »>> this part is excluded from the fizzygum homepage build
   createPointerWdgt: ->
     myPosition = @positionAmongSiblings()
-    morphToAdd = new PointerWdgt @
-    @parent.add morphToAdd, myPosition
-    morphToAdd.fullMoveTo @position()
-    morphToAdd.setExtent new Point 150, 20
-    morphToAdd.fullChanged()
+    widgetToAdd = new PointerWdgt @
+    @parent.add widgetToAdd, myPosition
+    widgetToAdd.fullMoveTo @position()
+    widgetToAdd.setExtent new Point 150, 20
+    widgetToAdd.fullChanged()
     @removeFromTree()
   # this part is excluded from the fizzygum homepage build <<«
 
@@ -1964,12 +1964,12 @@ class Widget extends TreeNode
       if (w instanceof IconicDesktopSystemShortcutWdgt) and w.target == @
         return
 
-    morphToAdd = new IconicDesktopSystemDocumentShortcutWdgt @, referenceName
+    widgetToAdd = new IconicDesktopSystemDocumentShortcutWdgt @, referenceName
     # this "add" is going to try to position the
     # new icon into a grid
-    placeToDropItIn.add morphToAdd
-    morphToAdd.setExtent new Point 75, 75
-    morphToAdd.fullChanged()
+    placeToDropItIn.add widgetToAdd
+    widgetToAdd.setExtent new Point 75, 75
+    widgetToAdd.fullChanged()
     @bringToForeground()
 
   createReferenceAndClose: (referenceName, placeToDropItIn = world) ->
@@ -2011,10 +2011,10 @@ class Widget extends TreeNode
     img = HTMLCanvasElement.createOfPhysicalDimensions bounds.extent().scaleBy ceilPixelRatio
     ctx = img.getContext "2d"
     # ctx.useLogicalPixelsUntilRestore()
-    # we are going to draw this morph and its children into "img".
+    # we are going to draw this widget and its children into "img".
     # note that the children are not necessarily geometrically
-    # contained in the morph (in which case it would be ok to
-    # translate the context so that the origin of *this* morph is
+    # contained in the widget (in which case it would be ok to
+    # translate the context so that the origin of *this* widget is
     # at the top-left of the "img" canvas).
     # Hence we have to translate the context
     # so that the origin of the entire bounds is at the
@@ -2042,19 +2042,19 @@ class Widget extends TreeNode
 
   # the way we take a picture here is different
   # than the way we usually take a picture.
-  # Usually we ask the morph and submorphs to
+  # Usually we ask the widget and subwidgets to
   # paint themselves anew into a new canvas.
   # This is different: we take the area of the
   # screen *as it is* and we crop the part of
   # interest where the extent of our selected
-  # morph is. This means that the morph might
+  # widget is. This means that the widget might
   # be occluded by other things.
   # The advantage here is that we capture
   # the screen absolutely as is, without
   # causing any repaints. If streaks are on the
   # screen due to bad painting, we capture them
   # exactly as the user sees them.
-  # Returns the canvas holding this morph's region exactly as it appears on
+  # Returns the canvas holding this widget's region exactly as it appears on
   # screen (an SWCanvasElement under the software backend, else a DOM canvas).
   # Both the screenshot data-URL (fullImageAsItAppearsOnScreen) and the SystemTest
   # raw-pixel hash are derived from this single capture, so they never diverge and
@@ -2086,7 +2086,7 @@ class Widget extends TreeNode
     return @fullImageData().hashCode()
   # this part is excluded from the fizzygum homepage build <<«
   
-  # shadow is added to a morph by
+  # shadow is added to a widget by
   # the ActivePointerWdgt while floatDragging
   addShadow: (offset = new Point(4, 4), alpha = 0.2) ->
     @silentAddShadow offset, alpha
@@ -2111,13 +2111,13 @@ class Widget extends TreeNode
     # use the world.trackChanges flag, perhaps things
     # should just be a bit slower (but probably not
     # significantly). This is because there is no
-    # harm into changing children of a morph
+    # harm into changing children of a widget
     # that is fullChanged, the checks should
     # simplify the situation.
     # I tested this was OK in December 2017
     if world.trackChanges[world.trackChanges.length - 1]
 
-      # if the morph is attached to a hand then
+      # if the widget is attached to a hand then
       # there is also a shadow to change, so we
       # change everything that is attached
       # to the hand, which means we issue a
@@ -2129,13 +2129,13 @@ class Widget extends TreeNode
       # you could check directly if it's in the array
       # but we use a flag because it's faster.
       if !@geometryOrPositionPossiblyChanged
-        # if we already issued a fullChanged on this morph
+        # if we already issued a fullChanged on this widget
         # then there is no point issuing a change too.
         if !@fullGeometryOrPositionPossiblyChanged
-          world.morphsThatMaybeChangedGeometryOrPosition.push @
+          world.widgetsThatMaybeChangedGeometryOrPosition.push @
           @geometryOrPositionPossiblyChanged = true
 
-  # to actually make sure if a morph has changed
+  # to actually make sure if a widget has changed
   # position, you need to check it and all its
   # parents.
   # See comment on the fullGeometryOrPositionPossiblyChanged
@@ -2156,14 +2156,14 @@ class Widget extends TreeNode
     # use the world.trackChanges flag, perhaps things
     # should just be a bit slower (but probably not
     # significantly). This is because there is no
-    # harm into changing children of a morph
+    # harm into changing children of a widget
     # that is fullChanged, the checks should
     # simplify the situation.
     # I tested this was OK in December 2017
     if world.trackChanges[world.trackChanges.length - 1]
-      # check if we already issued a fullChanged on this morph
+      # check if we already issued a fullChanged on this widget
       if !@fullGeometryOrPositionPossiblyChanged
-        world.morphsThatMaybeChangedFullGeometryOrPosition.push @
+        world.widgetsThatMaybeChangedFullGeometryOrPosition.push @
         @fullGeometryOrPositionPossiblyChanged = true
   
   # Widget accessing - structure //////////////////////////////////////////////
@@ -2175,7 +2175,7 @@ class Widget extends TreeNode
   #           versions below
   # “raw”: lower level. This is what the re-layout routines use. Usually call the
   #        silent version below.
-  # “silent”: doesn't mark the morph as changed
+  # “silent”: doesn't mark the widget as changed
   #
   # It's important that lower-level functions don't ever call the higher-level
   # functions, as that's architecturally incorrect and can cause infinite loops in
@@ -2201,13 +2201,13 @@ class Widget extends TreeNode
   # add of things in a different way, as it actually adds
   # stuff to a Panel inside it. Hence a need to have
   # both a high-level and a low-level.
-  # For most morphs the two things coincide, and the
+  # For most widgets the two things coincide, and the
   # high-level just calls the low-level.
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
     if (aWdgt not instanceof HighlighterWdgt) and (aWdgt not instanceof CaretWdgt)
       if @ == world
         aWdgt.addShadow()
-        # when any morph is added to the world, all scheduled tooltips
+        # when any widget is added to the world, all scheduled tooltips
         # are cancelled. To avoid that a tooltip appears over what the
         # button has just opened. This would happen for example in the
         # "snippets" button in the Simple Document. You go over that
@@ -2223,7 +2223,7 @@ class Widget extends TreeNode
     if @ == world
       aWdgt.rememberFractionalPositionInHoldingPanel()
   
-  # attaches submorph on top
+  # attaches subwidget on top
   # ??? TODO you should handle the case of Widget
   #     being added to itself and the case of
   # ??? TODO a Widget being added to one of its
@@ -2240,9 +2240,9 @@ class Widget extends TreeNode
     previousParent = aWdgt.parent
     aWdgt.parent?.invalidateLayout()
 
-    # if the morph contributes to a shadow, unfortunately
+    # if the widget contributes to a shadow, unfortunately
     # we have to walk towards the top to
-    # break the morph that has the shadow.
+    # break the widget that has the shadow.
     firstParentOwningMyShadow = aWdgt.firstParentOwningMyShadow()
     if firstParentOwningMyShadow?
       firstParentOwningMyShadow.fullChanged()
@@ -2269,7 +2269,7 @@ class Widget extends TreeNode
     @changed?()
 
   # this is done before the updating of the
-  # backing store in some morphs that
+  # backing store in some widgets that
   # need to figure out their whole
   # layout (which depends on the children)
   # before painting themselves
@@ -2279,9 +2279,9 @@ class Widget extends TreeNode
   calculateAndUpdateExtent: ->
 
   silentAdd: (aWdgt, avoidExtentCalculation, position = nil) ->
-    # the morph that is being
+    # the widget that is being
     # attached might be attached to
-    # a clipping morph. So we
+    # a clipping widget. So we
     # need to do a "changed" here
     # to make sure that anything that
     # is outside the clipping Widget gets
@@ -2310,25 +2310,25 @@ class Widget extends TreeNode
     aFullCopy = @fullCopy()
     aFullCopy?.pickUp()
 
-  # in case we copy a morph, if the original was in some
-  # data structures related to broken morphs, then
+  # in case we copy a widget, if the original was in some
+  # data structures related to broken widgets, then
   # we have to add the copy too.
   alignCopiedWidgetToBrokenInfoDataStructures: (copiedWidget) ->
-    if world.morphsThatMaybeChangedGeometryOrPosition.includes(@) and
-     !world.morphsThatMaybeChangedGeometryOrPosition.includes(copiedWidget)
-      world.morphsThatMaybeChangedGeometryOrPosition.push copiedWidget
+    if world.widgetsThatMaybeChangedGeometryOrPosition.includes(@) and
+     !world.widgetsThatMaybeChangedGeometryOrPosition.includes(copiedWidget)
+      world.widgetsThatMaybeChangedGeometryOrPosition.push copiedWidget
 
-    if world.morphsThatMaybeChangedFullGeometryOrPosition.includes(@) and
-     !world.morphsThatMaybeChangedFullGeometryOrPosition.includes(copiedWidget)
-      world.morphsThatMaybeChangedFullGeometryOrPosition.push copiedWidget
+    if world.widgetsThatMaybeChangedFullGeometryOrPosition.includes(@) and
+     !world.widgetsThatMaybeChangedFullGeometryOrPosition.includes(copiedWidget)
+      world.widgetsThatMaybeChangedFullGeometryOrPosition.push copiedWidget
 
-  # in case we copy a morph, if the original was in some
+  # in case we copy a widget, if the original was in some
   # stepping structures, then we have to add the copy too.
   alignCopiedWidgetToSteppingStructures: (copiedWidget) ->
     if world.steppingWdgts.has @
       world.steppingWdgts.add copiedWidget
 
-  # in case we copy a morph, if the original was receiving
+  # in case we copy a widget, if the original was receiving
   # keyboard events, then we have to add the copy too.
   alignCopiedWidgetToKeyboardEventsReceiversSet: (copiedWidget) ->
     if world.keyboardEventsReceivers.has @ 
@@ -2336,11 +2336,11 @@ class Widget extends TreeNode
 
   # note that the entire copying mechanism
   # should also take care of inserting the copied
-  # morph in whatever other data structures where the
-  # original morph was.
+  # widget in whatever other data structures where the
+  # original widget was.
   # For example, if the Widget appeared in a data
   # structure related to the broken rectangles mechanism,
-  # we should place the copied morph there.
+  # we should place the copied widget there.
   fullCopy: ->
     if @destroyed
       @inform "The item you are\ntrying to copy\nis dead!"
@@ -2494,13 +2494,13 @@ class Widget extends TreeNode
   # "top of the drag" is starting from any Widget.
   # The process of finding the top of the drag involves going up
   # the chain and finding the first Widget that is loose. Then that
-  # will be the top of the drag, and the whole TREE under that morph
+  # will be the top of the drag, and the whole TREE under that widget
   # will be dragged.
   #
-  # If the morphs grab each other up to the WorldWdgt, then the World
+  # If the widgets grab each other up to the WorldWdgt, then the World
   # can't be dragged, so there is no drag happening.
   #
-  # Usually though at some point up the chain a morph won't
+  # Usually though at some point up the chain a widget won't
   # grab to its parent, so a dragging top is indeed found.
   #
   # Example chain: A grabs to parent B doesn't grab to parent C.
@@ -2537,7 +2537,7 @@ class Widget extends TreeNode
 
       # not attached to desktop, not inside a scrollable Panel
       # and not inside a Panel.
-      # So, for example, when this morph is attached to another morph
+      # So, for example, when this widget is attached to another widget
       # attached to the world (because then it should remain solid
       # with the parent)
       return true
@@ -2548,11 +2548,11 @@ class Widget extends TreeNode
   rejectDrags: ->
     @defaultRejectDrags
 
-  # finds the first morph (including this one)
+  # finds the first widget (including this one)
   # that doesn't grab to its parent
   # returns nil if going up the grabbing chain
-  # a morph rejects the drag
-  findFirstLooseMorph: ->
+  # a widget rejects the drag
+  findFirstLooseWidget: ->
     if @rejectDrags()
       return nil
 
@@ -2578,7 +2578,7 @@ class Widget extends TreeNode
     return nil
 
   findRootForGrab: ->
-    return @findFirstLooseMorph()
+    return @findFirstLooseWidget()
 
   amIDirectlyInsideScrollPanelWdgt: ->
     if @parent?
@@ -2601,8 +2601,8 @@ class Widget extends TreeNode
     return false
 
   # the only trick here is that we stop at the first
-  # clipping morph, because if a morph is inside a clipping
-  # morph, it doesn't contribute to any shadow.
+  # clipping widget, because if a widget is inside a clipping
+  # widget, it doesn't contribute to any shadow.
   firstParentOwningMyShadow: ->
     if @hasShadow()
       return @
@@ -2611,7 +2611,7 @@ class Widget extends TreeNode
     while scanningWidgets.parent?
       scanningWidgets = scanningWidgets.parent
       # TODO actually stop at the first
-      # CLIPPING morph (more generic), not
+      # CLIPPING widget (more generic), not
       # just a PanelWdgt
       if scanningWidgets.clipsAtRectangularBounds
         return nil
@@ -2679,7 +2679,7 @@ class Widget extends TreeNode
   # note that "propagateKillPopUps" doesn't necessarily
   # go up the "parent" trail, for pop ups this method goes up
   # another trail of pop up ownership named via the
-  # "morphOpeningThePopUp" property, that is
+  # "widgetOpeningThePopUp" property, that is
   # independent of the parent trail
   propagateKillPopUps: ->
     if @parent?
@@ -2731,7 +2731,7 @@ class Widget extends TreeNode
   # »>> this part is excluded from the fizzygum homepage build
   # note how this checks whether
   # at *any point* up in the
-  # morphs hierarchy there is an ActivePointerWdgt
+  # widgets hierarchy there is an ActivePointerWdgt
   # unused code
   isPickedUp: ->
     @parentThatIsA(ActivePointerWdgt)?
@@ -2881,11 +2881,11 @@ class Widget extends TreeNode
     wm.fullRawMoveWithin world
     world.add wm
 
-  spawnNextTo: (morphToBeNextTo, whereToAddIt) ->
+  spawnNextTo: (widgetToBeNextTo, whereToAddIt) ->
     if !whereToAddIt?
-      whereToAddIt = morphToBeNextTo.parent
+      whereToAddIt = widgetToBeNextTo.parent
     whereToAddIt.add @
-    @fullRawMoveTo morphToBeNextTo.center()
+    @fullRawMoveTo widgetToBeNextTo.center()
     @fullRawMoveWithin whereToAddIt
     
   
@@ -2894,7 +2894,7 @@ class Widget extends TreeNode
   # context Menus are whatever appears when one right-clicks
   # on something. It could be a custom menu, or the standard
   # menu on the desktop, or a menu to disambiguate which
-  # morph it's being selected...
+  # widget it's being selected...
   buildContextMenu: ->
     # commented-out addendum for the implementation of 1):
     #show the normal menu in case there is text selected,
@@ -2903,7 +2903,7 @@ class Widget extends TreeNode
     #  if @world().hand.allWdgtsAtPointer().length > 2
     #    return @buildHierarchyMenu()
 
-    morphToAskMenuTo = @
+    widgetToAskMenuTo = @
 
     # check if a parent wants to take over my menu (and hopefully
     # coalesce some of my entries!). In such case let it open the
@@ -2912,42 +2912,42 @@ class Widget extends TreeNode
     anyParentsTakingOverMyMenu = @allParentsTopToBottomSuchThat (m) ->
       (m instanceof ScrollPanelWdgt) and m.takesOverAndCoalescesChildrensMenus
     if anyParentsTakingOverMyMenu? and anyParentsTakingOverMyMenu.length > 0
-      morphToAskMenuTo = anyParentsTakingOverMyMenu[0]
+      widgetToAskMenuTo = anyParentsTakingOverMyMenu[0]
 
-    if morphToAskMenuTo.overridingContextMenu
-      return morphToAskMenuTo.overridingContextMenu()
+    if widgetToAskMenuTo.overridingContextMenu
+      return widgetToAskMenuTo.overridingContextMenu()
 
     if world.isDevMode
-      hierarchyMenuWidgets = morphToAskMenuTo.getHierarchyMenuMorphs()
-      # if the morph is attached to the world then there is no
+      hierarchyMenuWidgets = widgetToAskMenuTo.getHierarchyMenuWidgets()
+      # if the widget is attached to the world then there is no
       # disambiguation to do, just build the context menu.
       # Same if there would be one only entry in the hierarchyMenu
       # then again just build the context menu for that entry.
       # Otherwise we actually have to build the spacial
       # demultiplexing menu.
-      if morphToAskMenuTo.parent is world
-        return morphToAskMenuTo.buildWidgetContextMenu()
+      if widgetToAskMenuTo.parent is world
+        return widgetToAskMenuTo.buildWidgetContextMenu()
       else if hierarchyMenuWidgets.length < 2
         return hierarchyMenuWidgets[0].buildWidgetContextMenu()
       else
-        return morphToAskMenuTo.buildHierarchyMenu hierarchyMenuWidgets
+        return widgetToAskMenuTo.buildHierarchyMenu hierarchyMenuWidgets
 
-  getHierarchyMenuMorphs: ->
+  getHierarchyMenuWidgets: ->
     hierarchyMenuWidgets = []
     # Spacial multiplexing
     # (search "multiplexing" for the other parts of
     # code where this matters)
     # There are two interpretations of what this
     # list should be:
-    #   1) all morphs "pierced through" by the pointer
-    #   2) all morphs parents of the topmost morph under the pointer
+    #   1) all widgets "pierced through" by the pointer
+    #   2) all widgets parents of the topmost widget under the pointer
     # 2 is what is used in Cuis
     # commented-out addendum for the implementation of 1):
     # parents = @world().hand.allWdgtsAtPointer().reverse()
     parents = @allParentsTopToBottom()
     parents.forEach (each) ->
-      # only add morphs that have a menu, and
-      # leave out the world itself and the morphs that are about
+      # only add widgets that have a menu, and
+      # leave out the world itself and the widgets that are about
       # to be destroyed
       if (each.buildWidgetContextMenu) and (each isnt world) and (!each.anyParentPopUpMarkedForClosure())
         # * leave out SimpleVerticalStackPanelWdgt when
@@ -2966,25 +2966,25 @@ class Widget extends TreeNode
 
     hierarchyMenuWidgets
   
-  # When user right-clicks on a morph that is a child of other morphs,
-  # then it's ambiguous which of the morphs she wants to operate on.
+  # When user right-clicks on a widget that is a child of other widgets,
+  # then it's ambiguous which of the widgets she wants to operate on.
   # An example is right-clicking on a ToolTipWdgt: did she
-  # mean to operate on the BubbleMorph or did she mean to operate on
-  # the TextMorph contained in it?
+  # mean to operate on the speech bubble or did she mean to operate on
+  # the text widget contained in it?
   # This menu lets her disambiguate.
-  buildHierarchyMenu: (morphsHierarchy) ->
-    if !morphsHierarchy?
-      morphsHierarchy = @getHierarchyMenuMorphs()
+  buildHierarchyMenu: (widgetsHierarchy) ->
+    if !widgetsHierarchy?
+      widgetsHierarchy = @getHierarchyMenuWidgets()
     menu = new MenuWdgt @, false, @, true, true, nil
-    morphsHierarchy.forEach (each) ->
+    widgetsHierarchy.forEach (each) ->
       textLabelForWidget = each.toString().slice 0, 50
       textLabelForWidget = textLabelForWidget.replace "Wdgt", ""
       menu.addMenuItem textLabelForWidget + " ➜", false, each, "popupDeveloperMenu", nil, nil, nil, nil, nil, nil, nil, true
 
     menu
 
-  popupDeveloperMenu: (morphOpeningThePopUp)->
-    @buildWidgetContextMenu(morphOpeningThePopUp).popUpAtHand()
+  popupDeveloperMenu: (widgetOpeningThePopUp)->
+    @buildWidgetContextMenu(widgetOpeningThePopUp).popUpAtHand()
 
   popUpColorSetter: ->
     @pickColor "color:", "setColor", Color.BLACK
@@ -3226,14 +3226,14 @@ class Widget extends TreeNode
     sdspw.rawSetExtent new Point 370, 325
 
   showOutputPins: (a,b,c,d) ->
-    world.morphsToBePinouted.add b
+    world.widgetsToBePinouted.add b
 
   removeOutputPins: (a,b,c,d) ->
-    world.morphsToBePinouted.delete b
+    world.widgetsToBePinouted.delete b
 
-  testMenu: (morphOpeningThePopUp,targetWidget)->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, targetWidget, true, true, nil
-    menu.addMenuItem "serialise morph to memory", true, targetWidget, "serialiseToMemory"
+  testMenu: (widgetOpeningThePopUp,targetWidget)->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, targetWidget, true, true, nil
+    menu.addMenuItem "serialise widget to memory", true, targetWidget, "serialiseToMemory"
     menu.addMenuItem "deserialize from memory and attach to world", true, targetWidget, "deserialiseFromMemoryAndAttachToWorld"
     menu.addMenuItem "deserialize from memory and attach to hand", true, targetWidget, "deserialiseFromMemoryAndAttachToHand"
     menu.addMenuItem "attach with horizontal layout", true, @, "attachWithHorizLayout"
@@ -3244,7 +3244,7 @@ class Widget extends TreeNode
     menu.addMenuItem "StringWdgt without background", true, @, "createNewStringWdgtWithoutBackground"
     menu.addMenuItem "StringWdgt with background", true, @, "createNewStringWdgtWithBackground"
     menu.addMenuItem "TextWdgt with background", true, @, "createNewTextWdgtWithBackground"
-    if world.morphsToBePinouted.has targetWidget
+    if world.widgetsToBePinouted.has targetWidget
       menu.addMenuItem "remove output pins", true, @, "removeOutputPins"
     else
       menu.addMenuItem "show output pins", true, @, "showOutputPins"
@@ -3266,8 +3266,8 @@ class Widget extends TreeNode
   analogClock: ->
     world.create new AnalogClockWdgt
 
-  popUpIconsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "icons"
+  popUpIconsMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "icons"
     menu.addMenuItem "Destroy icon", true, menusHelper, "createDestroyIconWdgt"
     menu.addMenuItem "Under the carpet icon", true, menusHelper, "createUnderCarpetIconWdgt"
     menu.addMenuItem "Collapsed state icon", true, menusHelper, "createCollapsedStateIconWdgt"
@@ -3286,8 +3286,8 @@ class Widget extends TreeNode
 
     menu.popUpAtHand()
 
-  popUpVerticalStackMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Vertical stack"
+  popUpVerticalStackMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Vertical stack"
     menu.addMenuItem "vertical stack constrained contents width", true, @, "createSimpleVerticalStackPanelWdgt"
     menu.addMenuItem "vertical stack scrollpanel constrained contents width", true, @, "createSimpleVerticalStackScrollPanelWdgt"
     menu.addMenuItem "vertical stack panel and scrollpanel constrained contents width", true, @, "createSimpleVerticalStackPanelWdgtAndScrollPanel"
@@ -3297,21 +3297,21 @@ class Widget extends TreeNode
 
     menu.popUpAtHand()
 
-  popUpDocumentMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Document"
+  popUpDocumentMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Document"
     menu.addMenuItem "simple document scrollpanel", true, @, "createSimpleDocumentScrollPanelWdgt"
     menu.addMenuItem "simple document", true, menusHelper, "createSimpleDocumentWdgt"
     menu.popUpAtHand()
 
-  popUpWindowsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Windows"
+  popUpWindowsMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Windows"
     menu.addMenuItem "empty window", true, @, "createEmptyWindow"
     menu.addMenuItem "empty internal window", true, @, "createEmptyInternalWindow"
 
     menu.popUpAtHand()
 
-  popUpShortcutsAndScriptsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Shortcuts & Scripts"
+  popUpShortcutsAndScriptsMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Shortcuts & Scripts"
     menu.addMenuItem "basement shortcut", true, menusHelper, "basementIconAndText"
     menu.addMenuItem "new script", true, menusHelper, "newScriptWindow"
     menu.addMenuItem "Fizzypaint launcher", true, menusHelper, "createFizzyPaintLauncher"
@@ -3321,8 +3321,8 @@ class Widget extends TreeNode
     menu.addMenuItem "Video link", true, menusHelper, "createSimpleVideoLinkWdgt"
     menu.popUpAtHand()
 
-  popUpPatchProgrammingMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Patch Programming"
+  popUpPatchProgrammingMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Patch Programming"
     menu.addMenuItem "fanout", true, menusHelper, "createFanout"
     menu.addMenuItem "calculating node", true, menusHelper, "createCalculatingPatchNode"
     menu.addMenuItem "diffing node", true, menusHelper, "createDiffingPatchNode"
@@ -3345,8 +3345,8 @@ class Widget extends TreeNode
 
 
 
-  popUpSimplePlainTextWdgtMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Simple plain text"
+  popUpSimplePlainTextWdgtMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Simple plain text"
     menu.addMenuItem "simple plain text wrapping", true, @, "createNewWrappingSimplePlainTextWdgtWithBackground"
     menu.addMenuItem "simple plain text not wrapping", true, @, "createNewNonWrappingSimplePlainTextWdgtWithBackground"
     menu.addMenuItem "simple plain text (wrapping / not wrapping)", true, @, "createNewWrappingAndNonWrappingSimplePlainTextWdgtWithBackground"
@@ -3359,8 +3359,8 @@ class Widget extends TreeNode
 
     menu.popUpAtHand()
 
-  popUpFirstMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "others"
+  popUpFirstMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "others"
     menu.addMenuItem "make sliders' buttons states bright", true, menusHelper, "makeSlidersButtonsStatesBright"
     menu.addMenuItem "make pointer", true, @, "createPointerWdgt"
     menu.addMenuItem "icon with text", true, menusHelper, "makeIconWithText"
@@ -3380,8 +3380,8 @@ class Widget extends TreeNode
 
     menu.popUpAtHand()
 
-  popUpSecondMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "others"
+  popUpSecondMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "others"
     menu.addMenuItem "icons ➜", false, @, "popUpIconsMenu", "icons"
     menu.addMenuItem "simple plain text ➜", false, @, "popUpSimplePlainTextWdgtMenu", "icons"
     menu.addMenuItem "vertical stack ➜", false, @, "popUpVerticalStackMenu", "icons"
@@ -3433,30 +3433,30 @@ class Widget extends TreeNode
     menu.popUpAtHand()
   # this part is only needed for Macros <<«
 
-  buildBaseWidgetClassContextMenu: (morphOpeningThePopUp) ->
+  buildBaseWidgetClassContextMenu: (widgetOpeningThePopUp) ->
 
-    menu = new MenuWdgt(morphOpeningThePopUp, false,
+    menu = new MenuWdgt(widgetOpeningThePopUp, false,
       @,
       true,
       true,
       (@constructor.name.replace "Wdgt", "") or (@constructor.toString().replace "Wdgt", "").split(" ")[1].split("(")[0])
 
     if world.isIndexPage
-      menu.addMenuItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
-      menu.addMenuItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
-      menu.addMenuItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
+      menu.addMenuItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this widget"
+      menu.addMenuItem "transparency...", true, @, "transparencyPopout", "set this widget's\nalpha value"
+      menu.addMenuItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this widget's" + " extent"
       menu.addLine()
       menu.addMenuItem "duplicate", true, @, "duplicateMenuAction" , "make a copy"
       menu.addMenuItem "create shortcut", true, @, "createReference", "creates a reference to this wdgt and leaves it on the desktop"
       menu.addMenuItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
     else
-      menu.addMenuItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
-      menu.addMenuItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
-      menu.addMenuItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
+      menu.addMenuItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this widget"
+      menu.addMenuItem "transparency...", true, @, "transparencyPopout", "set this widget's\nalpha value"
+      menu.addMenuItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this widget's" + " extent"
       menu.addLine()
       menu.addMenuItem "duplicate", true, @, "duplicateMenuActionAndPickItUp" , "make a copy\nand pick it up"
       menu.addMenuItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
-      menu.addMenuItem "attach...", true, @, "attach", "stick this morph\nto another one"
+      menu.addMenuItem "attach...", true, @, "attach", "stick this widget\nto another one"
       menu.addMenuItem "inspect", true, @, "inspect", "open a window\non all properties"
       menu.addMenuItem "create shortcut", true, @, "createReference", "creates a reference to this wdgt and leaves it on the desktop"
       menu.addMenuItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
@@ -3468,9 +3468,9 @@ class Widget extends TreeNode
       else
         whereToOrFrom = "panel"
       if @isLockingToPanels
-        menu.addMenuItem "unlock from " + whereToOrFrom, true, @, "toggleIsLockingToPanels", "make this morph\nunmovable"
+        menu.addMenuItem "unlock from " + whereToOrFrom, true, @, "toggleIsLockingToPanels", "make this widget\nunmovable"
       else
-        menu.addMenuItem "lock to " + whereToOrFrom, true, @, "toggleIsLockingToPanels", "make this morph\nmovable"
+        menu.addMenuItem "lock to " + whereToOrFrom, true, @, "toggleIsLockingToPanels", "make this widget\nmovable"
 
     if !world.isIndexPage
       menu.addMenuItem "hide", true, @, "hide"
@@ -3490,18 +3490,18 @@ class Widget extends TreeNode
 
   # Widget-specific menu entries are basically the ones
   # beyond the generic entries above.
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     if @layoutSpec == LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
       # it could be possible to figure out layouts when the vertical
       # stack doesn't contrain the content widths but it's rather
       # more complicated so we are not doing it for the time
       # being
       if @parent?.constrainContentWidth
-        @layoutSpecDetails.addMorphSpecificMenuEntries morphOpeningThePopUp, menu
+        @layoutSpecDetails.addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
 
-  buildWidgetContextMenu: (morphOpeningThePopUp) ->
-    menu = @buildBaseWidgetClassContextMenu morphOpeningThePopUp
-    @addMorphSpecificMenuEntries morphOpeningThePopUp, menu
+  buildWidgetContextMenu: (widgetOpeningThePopUp) ->
+    menu = @buildBaseWidgetClassContextMenu widgetOpeningThePopUp
+    @addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
 
     if @addShapeSpecificMenuItems?
       menu = @addShapeSpecificMenuItems menu
@@ -3519,9 +3519,9 @@ class Widget extends TreeNode
         return Math.min Math.max(unscaled, 0.1), 1
 
   # »>> this part is excluded from the fizzygum homepage build
-  setPadding: (paddingOrWidgetGivingPadding, morphGivingPadding) ->
-    if morphGivingPadding?.getValue?
-      padding = morphGivingPadding.getValue()
+  setPadding: (paddingOrWidgetGivingPadding, widgetGivingPadding) ->
+    if widgetGivingPadding?.getValue?
+      padding = widgetGivingPadding.getValue()
     else
       padding = paddingOrWidgetGivingPadding
 
@@ -3537,9 +3537,9 @@ class Widget extends TreeNode
 
     return padding
 
-  setPaddingTop: (paddingOrWidgetGivingPadding, morphGivingPadding) ->
-    if morphGivingPadding?.getValue?
-      padding = morphGivingPadding.getValue()
+  setPaddingTop: (paddingOrWidgetGivingPadding, widgetGivingPadding) ->
+    if widgetGivingPadding?.getValue?
+      padding = widgetGivingPadding.getValue()
     else
       padding = paddingOrWidgetGivingPadding
 
@@ -3550,9 +3550,9 @@ class Widget extends TreeNode
 
     return padding
 
-  setPaddingBottom: (paddingOrWidgetGivingPadding, morphGivingPadding) ->
-    if morphGivingPadding?.getValue?
-      padding = morphGivingPadding.getValue()
+  setPaddingBottom: (paddingOrWidgetGivingPadding, widgetGivingPadding) ->
+    if widgetGivingPadding?.getValue?
+      padding = widgetGivingPadding.getValue()
     else
       padding = paddingOrWidgetGivingPadding
 
@@ -3563,9 +3563,9 @@ class Widget extends TreeNode
 
     return padding
 
-  setPaddingLeft: (paddingOrWidgetGivingPadding, morphGivingPadding) ->
-    if morphGivingPadding?.getValue?
-      padding = morphGivingPadding.getValue()
+  setPaddingLeft: (paddingOrWidgetGivingPadding, widgetGivingPadding) ->
+    if widgetGivingPadding?.getValue?
+      padding = widgetGivingPadding.getValue()
     else
       padding = paddingOrWidgetGivingPadding
 
@@ -3576,9 +3576,9 @@ class Widget extends TreeNode
 
     return padding
 
-  setPaddingRight: (paddingOrWidgetGivingPadding, morphGivingPadding) ->
-    if morphGivingPadding?.getValue?
-      padding = morphGivingPadding.getValue()
+  setPaddingRight: (paddingOrWidgetGivingPadding, widgetGivingPadding) ->
+    if widgetGivingPadding?.getValue?
+      padding = widgetGivingPadding.getValue()
     else
       padding = paddingOrWidgetGivingPadding
 
@@ -3590,9 +3590,9 @@ class Widget extends TreeNode
     return padding
   # this part is excluded from the fizzygum homepage build <<«
 
-  setAlphaScaled: (alphaOrWidgetGivingAlpha, morphGivingAlpha) ->
-    if morphGivingAlpha?.getValue?
-      alpha = morphGivingAlpha.getValue()
+  setAlphaScaled: (alphaOrWidgetGivingAlpha, widgetGivingAlpha) ->
+    if widgetGivingAlpha?.getValue?
+      alpha = widgetGivingAlpha.getValue()
     else
       alpha = alphaOrWidgetGivingAlpha
 
@@ -3606,7 +3606,7 @@ class Widget extends TreeNode
 
   newParentChoice: (ignored, theWidgetToBeAttached) ->
     # this is what happens when "each" is
-    # selected: we attach the selected morph
+    # selected: we attach the selected widget
     @add theWidgetToBeAttached
     if @ instanceof ScrollPanelWdgt
       @adjustContentsBounds()
@@ -3615,7 +3615,7 @@ class Widget extends TreeNode
   # »>> this part is excluded from the fizzygum homepage build
   newParentChoiceWithHorizLayout: (ignored, theWidgetToBeAttached) ->
     # this is what happens when "each" is
-    # selected: we attach the selected morph
+    # selected: we attach the selected widget
     @add theWidgetToBeAttached, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     if @ instanceof ScrollPanelWdgt
       @adjustContentsBounds()
@@ -3623,7 +3623,7 @@ class Widget extends TreeNode
   # this part is excluded from the fizzygum homepage build <<«
 
   attach: ->
-    choices = world.plausibleTargetAndDestinationMorphs @
+    choices = world.plausibleTargetAndDestinationWidgets @
 
     # my direct parent might be in the
     # options which is silly, leave that one out
@@ -3640,17 +3640,17 @@ class Widget extends TreeNode
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
       # time being it's quite costly to
-      # find the eligible morphs to attach
+      # find the eligible widgets to attach
       # to, so for now let's just calculate
       # this list if the user invokes the
       # command, and if there are no good
-      # morphs then show some kind of message.
-      menu = new MenuWdgt @, false, @, true, true, "no morphs to attach to"
+      # widgets then show some kind of message.
+      menu = new MenuWdgt @, false, @, true, true, "no widgets to attach to"
     menu.popUpAtHand()
 
   # »>> this part is excluded from the fizzygum homepage build
   attachWithHorizLayout: ->
-    choices = world.plausibleTargetAndDestinationMorphs @
+    choices = world.plausibleTargetAndDestinationWidgets @
 
     # my direct parent might be in the
     # options which is silly, leave that one out
@@ -3667,12 +3667,12 @@ class Widget extends TreeNode
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
       # time being it's quite costly to
-      # find the eligible morphs to attach
+      # find the eligible widgets to attach
       # to, so for now let's just calculate
       # this list if the user invokes the
       # command, and if there are no good
-      # morphs then show some kind of message.
-      menu = new MenuWdgt @, false, @, true, true, "no morphs to attach to"
+      # widgets then show some kind of message.
+      menu = new MenuWdgt @, false, @, true, true, "no widgets to attach to"
     menu.popUpAtHand()
   # this part is excluded from the fizzygum homepage build <<«
   
@@ -3904,7 +3904,7 @@ class Widget extends TreeNode
       handler[functionName] arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9  if handler[functionName]
   
   
-  # Widget eval. Used by the Inspector and the TextMorph.
+  # Widget eval. Used by the Inspector and the text widget.
   evaluateString: (codeSource) ->
     JSCode = compileFGCode codeSource, true
     #console.log JSCode
@@ -3948,10 +3948,10 @@ class Widget extends TreeNode
   # Layouts
   # ------------------------------------------------------------------------------------
   # So layouts in Fizzygum work the following way:
-  #  1) Any Widget can contain a number of other morphs
+  #  1) Any Widget can contain a number of other widgets
   #     according to a number of layouts *simultaneously*
-  #     e.g. you can have two morphs being horizontally stacked
-  #     and two other morphs being inset for example
+  #     e.g. you can have two widgets being horizontally stacked
+  #     and two other widgets being inset for example
   #  2) There is no need for an explicit special container. Any
   #     Widget can be a container when needed.
   #  3) The default attaching of Widgets to a Widget puts them
@@ -4000,7 +4000,7 @@ class Widget extends TreeNode
 
   invalidateLayout: ->
     if @layoutIsValid
-      world.morphsThatMaybeChangedLayout.push @
+      world.widgetsThatMaybeChangedLayout.push @
     @layoutIsValid = false
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING and @parent?
       @parent.invalidateLayout()
@@ -4180,7 +4180,7 @@ class Widget extends TreeNode
     return count
   # this part is excluded from the fizzygum homepage build <<«
 
-  # it's useful to know when a morph defers its layout
+  # it's useful to know when a widget defers its layout
   # because it means that its current size is indicative
   # (particularly the children's sizes and position)
   implementsDeferredLayout: ->
@@ -4224,7 +4224,7 @@ class Widget extends TreeNode
     # freefloating layouts never need
     # adjusting. We marked the @layoutIsValid
     # to false because it's an important breadcrumb
-    # for finding the morphs that actually have a
+    # for finding the widgets that actually have a
     # layout to be recalculated but this Widget
     # now needs to do nothing.
     #if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
@@ -4237,7 +4237,7 @@ class Widget extends TreeNode
 
     # the fullRawMoveTo makes sure that all children
     # that are float-attached move together with the
-    # morph.
+    # widget.
     @fullRawMoveTo newBoundsForThisLayout.origin
     
     # bad kludge here but I think there will be more

@@ -49,11 +49,11 @@ class PointerWdgt extends BoxWdgt
 
   mouseClickLeft: (pos) ->
     if @target.destroyed
-      @inform "The pointed morph\nis dead!"
+      @inform "The pointed widget\nis dead!"
       return
 
     if @target.isAncestorOf @
-      @inform "The pointed morph is\nalready open and containing\nwhat you just clicked on!"
+      @inform "The pointed widget is\nalready open and containing\nwhat you just clicked on!"
       return
 
     if !@target.isOrphan()
@@ -71,7 +71,7 @@ class PointerWdgt extends BoxWdgt
     @target.close()
     @close()
 
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     menu.addLine 1
     menu.addMenuItem "close this button", true, @, "closeThis"
-    menu.addMenuItem "close target morph", true, @, "closeThisAndTarget"
+    menu.addMenuItem "close target widget", true, @, "closeThisAndTarget"

@@ -13,21 +13,21 @@ class PopUpWdgt extends Widget
   killThisPopUpIfClickOnDescendantsTriggers: true
   killThisPopUpIfClickOutsideDescendants: true
   isPopUpMarkedForClosure: false
-  # the morphOpeningThePopUp is only useful to get the "parent" pop-up.
+  # the widgetOpeningThePopUp is only useful to get the "parent" pop-up.
   # the "parent" pop-up is the menu that this menu is attached to,
   # but we need this extra property because it's not the
   # actual parent. The reason is that menus are actually attached
-  # to the world morph. This is for a couple of reasons:
+  # to the world widget. This is for a couple of reasons:
   # 1) they can still appear at the top even if the "parent menu"
   #    or the parent object are not in the foreground. This is
   #    what happens for example in OSX, you can right-click on a
-  #    morph that is not in the background but the menu that comes up
+  #    widget that is not in the background but the menu that comes up
   #    will be in the foreground.
-  # 2) they can appear unoccluded if the "parent morph" or "parent object"
-  #    are in a morph that clips at its boundaries.
-  morphOpeningThePopUp: nil
+  # 2) they can appear unoccluded if the "parent widget" or "parent object"
+  #    are in a widget that clips at its boundaries.
+  widgetOpeningThePopUp: nil
 
-  constructor: (@morphOpeningThePopUp, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true) ->
+  constructor: (@widgetOpeningThePopUp, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true) ->
     super()
     @isLockingToPanels = false
     world.freshlyCreatedPopUps.add @
@@ -63,15 +63,15 @@ class PopUpWdgt extends Widget
     if @isPopUpPinned()
       return @parent
     else
-      if @morphOpeningThePopUp?
-        return @morphOpeningThePopUp.firstParentThatIsAPopUp()
+      if @widgetOpeningThePopUp?
+        return @widgetOpeningThePopUp.firstParentThatIsAPopUp()
     return nil
 
   firstParentThatIsAPopUp: ->
     if !@isPopUpMarkedForClosure or !@parent? then return @
     return @parent.firstParentThatIsAPopUp()
 
-  # this is invoked on the menu morph to be
+  # this is invoked on the menu widget to be
   # pinned. The triggering menu item is the first
   # parameter.
   pinPopUp: (pinMenuItem)->
@@ -97,7 +97,7 @@ class PopUpWdgt extends Widget
     return copiedWidget
 
 
-  addMorphSpecificMenuEntries: (unused_morphOpeningThePopUp, menu) ->
+  addWidgetSpecificMenuEntries: (unused_widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
     menu.addMenuItem "pin", false, @, "pin"
@@ -118,7 +118,7 @@ class PopUpWdgt extends Widget
     else
       @addShadow()
 
-  # shadow is added to a morph by
+  # shadow is added to a widget by
   # the ActivePointerWdgt while floatDragging
   addShadow: (offset = new Point(5, 5), alpha = 0.2, color) ->
 
@@ -140,20 +140,20 @@ class PopUpWdgt extends Widget
   popUpAtHand: ->
     @popUp world.hand.position(), world
 
-  popUp: (pos, morphToAttachTo) ->
+  popUp: (pos, widgetToAttachTo) ->
     # console.log "menu popup"
     @silentFullRawMoveTo pos
-    morphToAttachTo.add @
+    widgetToAttachTo.add @
     # the @fullRawMoveWithin method
-    # needs to know the extent of the morph
-    # so it must be called after the morphToAttachTo.add
+    # needs to know the extent of the widget
+    # so it must be called after the widgetToAttachTo.add
     # method. If you call before, there is
-    # nopainting happening and the morph doesn't
+    # nopainting happening and the widget doesn't
     # know its extent.
     @fullRawMoveWithin world
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
       world.alignIDsOfNextWidgetsInSystemTests()
-    # shadow must be added after the morph
+    # shadow must be added after the widget
     # has been placed somewhere because
     # otherwise there is no visible image
     # to base the shadow on

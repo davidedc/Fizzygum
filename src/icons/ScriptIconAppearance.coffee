@@ -2,7 +2,7 @@
 
 class ScriptIconAppearance extends IconAppearance
 
-  constructor: (@morph) ->
+  constructor: (@widget) ->
     super
     @preferredSize = new Point 100, 100
     @specificationSize = new Point 100, 100
@@ -10,7 +10,7 @@ class ScriptIconAppearance extends IconAppearance
   paintFunction: (context) ->
 
     # Color Declarations
-    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @widget.color.toString()
     outlineColorString = WorldWdgt.preferencesAndSettings.outlineColorString
 
     # paper outline

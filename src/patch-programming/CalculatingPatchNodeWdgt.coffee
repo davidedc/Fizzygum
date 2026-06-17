@@ -4,7 +4,7 @@ class CalculatingPatchNodeWdgt extends Widget
 
   tempPromptEntryField: nil
   defaultFormulaBoxContents: nil
-  textMorph: nil
+  textWidget: nil
 
   formulaTextBoxLabel: nil
   outputTextBoxLabel: nil
@@ -145,8 +145,8 @@ class CalculatingPatchNodeWdgt extends Widget
     @fireOutputToTarget world.makeNewConnectionsCalculationToken()
 
   recalculateOutput: ->
-    if @textMorph.text != ""
-      @evaluateString "@functionFromCompiledCode = " + @textMorph.text
+    if @textWidget.text != ""
+      @evaluateString "@functionFromCompiledCode = " + @textWidget.text
       # now we have the user-defined function in @functionFromCompiledCode
       @output = @functionFromCompiledCode?.call world, @input1, @input2, @input3, @input4
       @outputTextAreaText.setText @output + ""
@@ -164,13 +164,13 @@ class CalculatingPatchNodeWdgt extends Widget
     functionNamesStrings.push "bang", "setInput1", "setInput2", "setInput3", "setInput4"
     return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
 
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
     if world.isIndexPage
       menu.addMenuItem "connect to ➜", true, @, "openTargetSelector", "connect to\nanother widget"
     else
-      menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another morph\nwhose numerical property\n will be" + " controlled by this one"
+      menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another widget\nwhose numerical property\n will be" + " controlled by this one"
 
 
   buildAndConnectChildren: ->
@@ -181,11 +181,11 @@ class CalculatingPatchNodeWdgt extends Widget
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
     @tempPromptEntryField.color = Color.WHITE
-    @textMorph = @tempPromptEntryField.textWdgt
-    @textMorph.backgroundColor = Color.TRANSPARENT
-    @textMorph.setFontName nil, nil, @textMorph.monoFontStack
-    @textMorph.isEditable = true
-    @textMorph.enableSelecting()
+    @textWidget = @tempPromptEntryField.textWdgt
+    @textWidget.backgroundColor = Color.TRANSPARENT
+    @textWidget.setFontName nil, nil, @textWidget.monoFontStack
+    @textWidget.isEditable = true
+    @textWidget.enableSelecting()
     @add @tempPromptEntryField
 
     @outputTextArea = new SimplePlainTextScrollPanelWdgt "", false, 5
@@ -221,9 +221,9 @@ class CalculatingPatchNodeWdgt extends Widget
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
-    # submorphs of the inspector are within the
+    # subwidgets of the inspector are within the
     # bounds of the parent Widget. This means that
-    # if only the parent morph breaks its rectangle
+    # if only the parent widget breaks its rectangle
     # then everything is OK.
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still

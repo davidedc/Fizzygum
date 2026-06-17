@@ -6,7 +6,7 @@
 # (ButtonWdgt is transparent, SimpleButtonWdgt is a rounded box).
 #
 # This is the shared base of MenuItemWdgt (menu rows) and MagnetWdgt
-# (fizzytiles word tiles) -- the role the deprecated TriggerMorph used to fill,
+# (fizzytiles word tiles) -- the role the deprecated trigger button used to fill,
 # now on the modern button family.
 
 class LabelButtonWdgt extends ButtonWdgt
@@ -21,7 +21,7 @@ class LabelButtonWdgt extends ButtonWdgt
   fontSize: nil
   fontStyle: nil
 
-  # the flat state-fill look (formerly TriggerMorph's)
+  # the flat state-fill look (formerly trigger button's)
   highlightColor: Color.SILVER
   pressColor: Color.GRAY
   centered: false
@@ -35,7 +35,7 @@ class LabelButtonWdgt extends ButtonWdgt
       fontStyle = "sans-serif",
       centered = false,
       environment = nil,
-      morphEnv,
+      widgetEnv,
       toolTipMessage = nil,
       color = WorldWdgt.preferencesAndSettings.menuButtonsLabelColor,
       bold = false,
@@ -43,13 +43,13 @@ class LabelButtonWdgt extends ButtonWdgt
       doubleClickAction = nil,
       argumentToAction1 = nil,
       argumentToAction2 = nil,
-      representsAMorph = false
+      representsAWidget = false
       ) ->
 
     # ButtonWdgt owns the trigger machinery; map our label-button args onto its
     # constructor. We pass NO faceWidget (we draw our own @label), and our
     # "environment" arg is ButtonWdgt's dataSourceWidgetForTarget.
-    super ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, nil, environment, morphEnv, toolTipMessage, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph
+    super ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, nil, environment, widgetEnv, toolTipMessage, doubleClickAction, argumentToAction1, argumentToAction2, representsAWidget
 
     @labelString = labelString
     @fontSize = fontSize
@@ -113,7 +113,7 @@ class LabelButtonWdgt extends ButtonWdgt
       @centered = false
       @reLayout()
 
-  # This method only paints this very morph's "image"; it doesn't descend the
+  # This method only paints this very widget's "image"; it doesn't descend the
   # children recursively (that's fullPaintIntoAreaOrBlitFromBackBuffer's job).
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
@@ -172,7 +172,7 @@ class LabelButtonWdgt extends ButtonWdgt
 
   # HighlightableMixin would reset @state to NORMAL on mouse-up; a label button
   # must NOT (a selected list row keeps its STATE_PRESSED highlight, and
-  # TriggerMorph -- our old base -- had no mouseUpLeft). So neutralise it.
+  # trigger button -- our old base -- had no mouseUpLeft). So neutralise it.
   mouseUpLeft: ->
 
   mouseClickLeft: ->

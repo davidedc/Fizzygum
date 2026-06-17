@@ -1,13 +1,13 @@
 class ToolbarsIconAppearance extends IconAppearance
 
-  constructor: (@morph) ->
+  constructor: (@widget) ->
     super
     @preferredSize = new Point 100, 100
     @specificationSize = new Point 100, 100
 
   paintFunction: (context) ->
     #// Color Declarations
-    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @morph.color.toString()
+    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @widget.color.toString()
     outlineColorString = WorldWdgt.preferencesAndSettings.outlineColorString
     toolbarsHeaderLineColorString = Color.WHITE.toString()
     toolbarsHeaderBackgroundColorString = 'rgb(170, 170, 170)'

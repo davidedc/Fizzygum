@@ -1,4 +1,4 @@
-# I clip my submorphs at my bounds. Which potentially saves a lot of redrawing
+# I clip my subwidgets at my bounds. Which potentially saves a lot of redrawing
 # and event handling.
 # Also I always use a canvas to retain my graphical representation and respond
 # to the HTML5 commands.
@@ -17,10 +17,10 @@ class CanvasWdgt extends PanelWdgt
   # No changes of position or extent should be
   # performed in here.
   # There is really little hope to cache this buffer
-  # cross-morph, unless you key the buffer with the
+  # cross-widget, unless you key the buffer with the
   # order of all the primitives and their
   # parameters. So if user wants a cache it will have to specify
-  # a dedicated one in here. See textMorph for an example.
+  # a dedicated one in here. See textWidget for an example.
   createRefreshOrGetBackBuffer: ->
 
     extent = @extent()

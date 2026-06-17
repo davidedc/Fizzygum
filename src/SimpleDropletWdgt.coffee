@@ -20,16 +20,16 @@ class SimpleDropletWdgt extends Widget
     @appearance = new SimpleDropletAppearance @
     @setColor Color.BLACK
 
-  reactToDropOf: (morphBeingDropped) ->
+  reactToDropOf: (widgetBeingDropped) ->
     # TODO we add as FREEFLOATING if we don't pass
     # the third parameter, certainly that's not always
     # the case?
-    @parent?[@parentFieldToAttachingTheWidgetToAsString] = morphBeingDropped
+    @parent?[@parentFieldToAttachingTheWidgetToAsString] = widgetBeingDropped
     @addAsSiblingAfterMe \
-      morphBeingDropped,
+      widgetBeingDropped,
       nil,
       nil
-    morphBeingDropped.setBounds @bounds
+    widgetBeingDropped.setBounds @bounds
     @fullDestroy()
 
 

@@ -1,7 +1,7 @@
 class ToothpasteIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
-    fillColor = @morph.color
+    fillColor = @widget.color
 
     # the toothpaste
     context.beginPath()

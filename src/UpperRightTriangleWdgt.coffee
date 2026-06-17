@@ -7,7 +7,7 @@ class UpperRightTriangleWdgt extends Widget
     @layoutSpec_cornerInternal_fixedSize = 0
     @appearance = new UpperRightTriangleAppearance @
 
-    # this morph has triangular shape and we want it
+    # this widget has triangular shape and we want it
     # to only react to pointer events happening
     # within tha shape
     @noticesTransparentClick = false

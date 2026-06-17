@@ -9,7 +9,7 @@ class SpeechBubbleWdgt extends Widget
 
   contents: nil
   padding: nil # additional vertical pixels
-  morphInvokingThis: nil
+  widgetInvokingThis: nil
 
   constructor: (@contents="hello") ->
     # console.log "bubble super"
@@ -61,9 +61,9 @@ class SpeechBubbleWdgt extends Widget
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
-    # submorphs of the inspector are within the
+    # subwidgets of the inspector are within the
     # bounds of the parent Widget. This means that
-    # if only the parent morph breaks its rectangle
+    # if only the parent widget breaks its rectangle
     # then everything is OK.
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still

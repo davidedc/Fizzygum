@@ -1,7 +1,7 @@
 class ConsoleWdgt extends Widget
 
   tempPromptEntryField: nil
-  textMorph: nil
+  textWidget: nil
 
   runSelectionButton: nil
   runAllButton: nil
@@ -36,11 +36,11 @@ class ConsoleWdgt extends Widget
     @tempPromptEntryField.contents.disableDrops()
     @tempPromptEntryField.color = Color.WHITE
 
-    @textMorph = @tempPromptEntryField.textWdgt
-    @textMorph.backgroundColor = Color.TRANSPARENT
-    @textMorph.setFontName nil, nil, @textMorph.monoFontStack
-    @textMorph.isEditable = true
-    @textMorph.enableSelecting()
+    @textWidget = @tempPromptEntryField.textWdgt
+    @textWidget.backgroundColor = Color.TRANSPARENT
+    @textWidget.setFontName nil, nil, @textWidget.monoFontStack
+    @textWidget.isEditable = true
+    @textWidget.enableSelecting()
 
     @add @tempPromptEntryField
 
@@ -58,13 +58,13 @@ class ConsoleWdgt extends Widget
     @invalidateLayout()
 
   doSelection: ->
-    savedScript = @textMorph.selection()
+    savedScript = @textWidget.selection()
     compiled = compileFGCode savedScript, true
     functionFromCompiledCode = new Function compiled
     functionFromCompiledCode.call @target
 
   doAll: ->
-    savedScript = @textMorph.text
+    savedScript = @textWidget.text
     compiled = compileFGCode savedScript, true
     functionFromCompiledCode = new Function compiled
     functionFromCompiledCode.call @target
@@ -78,9 +78,9 @@ class ConsoleWdgt extends Widget
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
-    # submorphs of the inspector are within the
+    # subwidgets of the inspector are within the
     # bounds of the parent Widget. This means that
-    # if only the parent morph breaks its rectangle
+    # if only the parent widget breaks its rectangle
     # then everything is OK.
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still

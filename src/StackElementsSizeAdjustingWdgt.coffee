@@ -32,19 +32,19 @@ class StackElementsSizeAdjustingWdgt extends Widget
     if !deltaDragFromPreviousCall?
       return
 
-    leftMorph = @lastSiblingBeforeMeSuchThat (m) ->
+    leftWidget = @lastSiblingBeforeMeSuchThat (m) ->
       m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
-    rightMorph = @firstSiblingAfterMeSuchThat (m) ->
+    rightWidget = @firstSiblingAfterMeSuchThat (m) ->
       m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
-    if leftMorph? and rightMorph?
-      lmdd = leftMorph.getMaxDim()
-      rmdd = rightMorph.getMaxDim()
+    if leftWidget? and rightWidget?
+      lmdd = leftWidget.getMaxDim()
+      rmdd = rightWidget.getMaxDim()
  
       #if (lmdd.x + deltaDragFromPreviousCall.x > 0) and (rmdd.x - deltaDragFromPreviousCall.x > 0)
-      #  leftMorph.setDesiredDim new Point((lmdd.x + deltaDragFromPreviousCall.x), lmdd.y)
-      #  rightMorph.setDesiredDim new Point((rmdd.x - deltaDragFromPreviousCall.x), rmdd.y)
+      #  leftWidget.setDesiredDim new Point((lmdd.x + deltaDragFromPreviousCall.x), lmdd.y)
+      #  rightWidget.setDesiredDim new Point((rmdd.x - deltaDragFromPreviousCall.x), rmdd.y)
 
       
 
@@ -67,18 +67,18 @@ class StackElementsSizeAdjustingWdgt extends Widget
 
       #console.log " deltax 4 : " + deltaX
 
-      prev = leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x
-      leftMorph.setMaxDim new Point lmdd.x + deltaX, lmdd.y
-      rightMorph.setMaxDim new Point rmdd.x - deltaX, rmdd.y
-      newone = leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x
+      prev = leftWidget.getMaxDim().x - leftWidget.getDesiredDim().x + rightWidget.getMaxDim().x - rightWidget.getDesiredDim().x
+      leftWidget.setMaxDim new Point lmdd.x + deltaX, lmdd.y
+      rightWidget.setMaxDim new Point rmdd.x - deltaX, rmdd.y
+      newone = leftWidget.getMaxDim().x - leftWidget.getDesiredDim().x + rightWidget.getMaxDim().x - rightWidget.getDesiredDim().x
       if prev != newone
-        leftMorph.setMaxDim lmdd
-        rightMorph.setMaxDim rmdd
-      #console.log "leftMorph.getMaxDim().x : " + leftMorph.getMaxDim().x
-      #console.log "leftMorph.getDesiredDim().x: " + leftMorph.getDesiredDim().x
-      #console.log "rightMorph.getMaxDim().x: " + rightMorph.getMaxDim().x
-      #console.log "rightMorph.getDesiredDim().x: " + rightMorph.getDesiredDim().x
-      #console.log "should be constant: " + (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
+        leftWidget.setMaxDim lmdd
+        rightWidget.setMaxDim rmdd
+      #console.log "leftWidget.getMaxDim().x : " + leftWidget.getMaxDim().x
+      #console.log "leftWidget.getDesiredDim().x: " + leftWidget.getDesiredDim().x
+      #console.log "rightWidget.getMaxDim().x: " + rightWidget.getMaxDim().x
+      #console.log "rightWidget.getDesiredDim().x: " + rightWidget.getDesiredDim().x
+      #console.log "should be constant: " + (leftWidget.getMaxDim().x - leftWidget.getDesiredDim().x + rightWidget.getMaxDim().x - rightWidget.getDesiredDim().x)
 
 
   # TODO: this mechanism to show the right cursor is 90%
@@ -102,11 +102,11 @@ class StackElementsSizeAdjustingWdgt extends Widget
   #  else
   #    Cursor.resizeTop()
 
-  # This method only paints this very morph's "image",
+  # This method only paints this very widget's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
   # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this morph might paint something on the screen even if
+  # Note that this widget might paint something on the screen even if
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     if @preliminaryCheckNothingToDraw clippingRectangle, aContext
@@ -130,8 +130,8 @@ class StackElementsSizeAdjustingWdgt extends Widget
     @paintRectangle aContext, al, at, w, h, @color
     aContext.useLogicalPixelsUntilRestore()
 
-    morphPosition = @position()
-    aContext.translate morphPosition.x, morphPosition.y
+    widgetPosition = @position()
+    aContext.translate widgetPosition.x, widgetPosition.y
     aContext.fillStyle = @color.toString()
     
     centerX = @bounds.width() / 2

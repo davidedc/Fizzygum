@@ -3,15 +3,15 @@
 # A menu row. It extends LabelButtonWdgt (the flat label-bearing button base, on
 # the modern ButtonWdgt family) and adds the menu-specific behaviour: a
 # self-sizing multi-line TextWdgt label, tick toggling, list-row selection, and
-# the "represents a morph" hover-highlight. (It used to extend the deprecated
-# TriggerMorph, whose generic flat-button machinery now lives in LabelButtonWdgt.)
+# the "represents a widget" hover-highlight. (It used to extend the deprecated
+# trigger button, whose generic flat-button machinery now lives in LabelButtonWdgt.)
 
 class MenuItemWdgt extends LabelButtonWdgt
 
   # labelString can also be a Widget or a Canvas or a tuple: [icon, string]
-  constructor: (ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, toolTipMessage, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph) ->
+  constructor: (ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, widgetEnv, toolTipMessage, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAWidget) ->
     #console.log "menuitem constructing"
-    super ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, toolTipMessage, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph
+    super ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, widgetEnv, toolTipMessage, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAWidget
     @actionableAsThumbnail = true
 
   getTextDescription: ->
@@ -73,22 +73,22 @@ class MenuItemWdgt extends LabelButtonWdgt
 
   # MenuItemWdgt events:
   mouseEnter: ->
-    #console.log "@target: " + @target + " @morphEnv: " + @morphEnv
+    #console.log "@target: " + @target + " @widgetEnv: " + @widgetEnv
 
     # this could be a way to catch menu entries that should cause
     # an highlighting but don't
-    #if @labelString.startsWith("a ") and !@representsAMorph
+    #if @labelString.startsWith("a ") and !@representsAWidget
     #  debugger
 
-    if @representsAMorph
+    if @representsAWidget
       if @argumentToAction1?
-        # this first case handles when you pick a morph
+        # this first case handles when you pick a widget
         # as a target
-        morphToBeHighlighted = @argumentToAction1
+        widgetToBeHighlighted = @argumentToAction1
       else
-        # this second case handles when you attach to a morph
-        morphToBeHighlighted = @target
-      morphToBeHighlighted.turnOnHighlight()
+        # this second case handles when you attach to a widget
+        widgetToBeHighlighted = @target
+      widgetToBeHighlighted.turnOnHighlight()
     unless @isListItem()
       @state = @STATE_HIGHLIGHTED
       @changed()
@@ -96,15 +96,15 @@ class MenuItemWdgt extends LabelButtonWdgt
       @startCountdownForBubbleHelp @toolTipMessage
 
   mouseLeave: ->
-    if @representsAMorph
+    if @representsAWidget
       if @argumentToAction1?
-        # this first case handles when you pick a morph
+        # this first case handles when you pick a widget
         # as a target
-        morphToBeHighlighted = @argumentToAction1
+        widgetToBeHighlighted = @argumentToAction1
       else
-        # this second case handles when you attach to a morph
-        morphToBeHighlighted = @target
-      morphToBeHighlighted.turnOffHighlight()
+        # this second case handles when you attach to a widget
+        widgetToBeHighlighted = @target
+      widgetToBeHighlighted.turnOffHighlight()
     unless @isListItem()
       @state = @STATE_NORMAL
       @changed()

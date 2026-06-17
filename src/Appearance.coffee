@@ -2,7 +2,7 @@ class Appearance
 
   @augmentWith DeepCopierMixin
 
-  morph: nil
+  widget: nil
   # the ownColorInsteadOfWidgetColor is used for buttons
   # with icons on a glass bottom: the glass bottom has
   # to change the color on hover, so the icon_button on it
@@ -10,7 +10,7 @@ class Appearance
   # they are not visible anymore.
   ownColorInsteadOfWidgetColor: nil
 
-  constructor: (@morph, @ownColorInsteadOfWidgetColor) ->
+  constructor: (@widget, @ownColorInsteadOfWidgetColor) ->
 
   isTransparentAt: (aPoint) ->
 
@@ -24,17 +24,17 @@ class Appearance
   # Mostly, the first pattern is used.
   #
   # useful for example when hovering over references
-  # to morphs. Can only modify the rendering of a morph,
+  # to widgets. Can only modify the rendering of a widget,
   # so any highlighting is only visible in the measure that
-  # the morph is visible (as opposed to HighlighterWdgt being
-  # used to highlight a morph)
+  # the widget is visible (as opposed to HighlighterWdgt being
+  # used to highlight a widget)
   paintHighlight: (aContext, al, at, w, h) ->
 
 
-  # This method only paints this very morph
+  # This method only paints this very widget
   # i.e. it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer,
   # which eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this morph might paint something on the screen even if
+  # Note that this widget might paint something on the screen even if
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->

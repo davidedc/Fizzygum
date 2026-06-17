@@ -1,4 +1,4 @@
-# I clip my submorphs at my bounds. Which potentially saves a lot of redrawing
+# I clip my subwidgets at my bounds. Which potentially saves a lot of redrawing
 # and event handling.
 # It's a good idea to use me whenever it's clear that there is a
 # "container"/"contained" scenario going on.
@@ -37,10 +37,10 @@ class PanelWdgt extends Widget
     world.howManyUntitledShortcuts++
     return newFolderWindow
 
-  setColor: (aColorOrAWidgetGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
+  setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
 
-    aColor = super aColorOrAWidgetGivingAColor, morphGivingColor, connectionsCalculationToken, true
+    aColor = super aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, true
     # keep in sync the value of the container scrollPanel
     # if there is one. Note that the container scrollPanel
     # is actually not painted.
@@ -53,8 +53,8 @@ class PanelWdgt extends Widget
     return aColor
 
 
-  setAlphaScaled: (alphaOrWidgetGivingAlpha, morphGivingAlpha) ->
-    alpha = super(alphaOrWidgetGivingAlpha, morphGivingAlpha)
+  setAlphaScaled: (alphaOrWidgetGivingAlpha, widgetGivingAlpha) ->
+    alpha = super(alphaOrWidgetGivingAlpha, widgetGivingAlpha)
     if @scrollPanel
       unless @scrollPanel.alpha == alpha
         @scrollPanel.alpha = alpha
@@ -103,7 +103,7 @@ class PanelWdgt extends Widget
         if @parent.parent.childAddedInScrollPanel?
           @parent.parent.childAddedInScrollPanel child
 
-  # puts the morph in the ScrollPanel
+  # puts the widget in the ScrollPanel
   # in some sparse manner and keeping it
   # "in view"
   addInPseudoRandomPosition: (aWdgt) ->
@@ -156,13 +156,13 @@ class PanelWdgt extends Widget
         @parent.adjustScrollBars?()
 
   # PanelWdgt menus:
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     if @children.length
       menu.addLine()
-      menu.addMenuItem "move all inside", true, @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
+      menu.addMenuItem "move all inside", true, @, "keepAllSubwidgetsWithin", "keep all subwidgets\nwithin and visible"
   
-  keepAllSubmorphsWithin: ->
+  keepAllSubwidgetsWithin: ->
     @children.forEach (m) =>
       m.fullRawMoveWithin @
 

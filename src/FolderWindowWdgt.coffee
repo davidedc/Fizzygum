@@ -16,9 +16,9 @@ class FolderWindowWdgt extends WindowWdgt
     else
       @close()
 
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
-    @contents.contents.addMorphSpecificMenuEntries morphOpeningThePopUp, menu
+    @contents.contents.addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
 
   createReference: (referenceName, whichFolderPanelToAddTo) ->
     # this function can also be called as a callback
@@ -28,11 +28,11 @@ class FolderWindowWdgt extends WindowWdgt
     if referenceName? and typeof(referenceName) != "string"
       referenceName = nil
 
-    morphToAdd = new IconicDesktopSystemFolderShortcutWdgt @, referenceName
+    widgetToAdd = new IconicDesktopSystemFolderShortcutWdgt @, referenceName
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
-    whichFolderPanelToAddTo.add morphToAdd
-    morphToAdd.setExtent new Point 75, 75
-    morphToAdd.fullChanged()
+    whichFolderPanelToAddTo.add widgetToAdd
+    widgetToAdd.setExtent new Point 75, 75
+    widgetToAdd.fullChanged()
     @bringToForeground()
 

@@ -36,10 +36,10 @@ class StretchableCanvasWdgt extends CanvasWdgt
   # No changes of position or extent should be
   # performed in here.
   # There is really little hope to cache this buffer
-  # cross-morph, unless you key the buffer with the
+  # cross-widget, unless you key the buffer with the
   # order of all the primitives and their
   # parameters. So if user wants a cache it will have to specify
-  # a dedicated one in here. See textMorph for an example.
+  # a dedicated one in here. See textWidget for an example.
   createRefreshOrGetBackBuffer: ->
 
     extent = @extent()
@@ -186,9 +186,9 @@ class StretchableCanvasWdgt extends CanvasWdgt
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
-    # submorphs of the inspector are within the
+    # subwidgets of the inspector are within the
     # bounds of the parent Widget. This means that
-    # if only the parent morph breaks its rectangle
+    # if only the parent widget breaks its rectangle
     # then everything is OK.
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still

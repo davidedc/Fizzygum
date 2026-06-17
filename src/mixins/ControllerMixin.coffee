@@ -1,6 +1,6 @@
 # //////////////////////////////////////////////////////////
 
-# some morphs (for example ColorPaletteWdgt
+# some widgets (for example ColorPaletteWdgt
 # or SliderWdgt) can control a target
 # and they have the same function to attach
 # targets. Not worth having this in the
@@ -15,7 +15,7 @@ ControllerMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
       openTargetSelector: ->
-        choices = world.plausibleTargetAndDestinationMorphs @
+        choices = world.plausibleTargetAndDestinationWidgets @
         if choices.length > 0
           menu = new MenuWdgt @, false, @, true, true, "choose target:"
           #choices.push @world()

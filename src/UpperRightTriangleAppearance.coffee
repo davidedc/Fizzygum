@@ -2,21 +2,21 @@ class UpperRightTriangleAppearance extends Appearance
 
   positionWithinParent: nil
 
-  constructor: (morph, @positionWithinParent = "topRight") ->
-    super morph
+  constructor: (widget, @positionWithinParent = "topRight") ->
+    super widget
 
-  # This method only paints this very morph's "image",
+  # This method only paints this very widget's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
   # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this morph might paint something on the screen even if
+  # Note that this widget might paint something on the screen even if
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
-    if @morph.preliminaryCheckNothingToDraw clippingRectangle, aContext
+    if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
       return nil
 
-    [area,sl,st,al,at,w,h] = @morph.calculateKeyValues aContext, clippingRectangle
+    [area,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
     return nil if w < 1 or h < 1 or area.isEmpty()
 
     aContext.save()
@@ -25,13 +25,13 @@ class UpperRightTriangleAppearance extends Appearance
     # going to paint the whole of the box
     aContext.clipToRectangle al,at,w,h
 
-    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
+    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
 
     aContext.useLogicalPixelsUntilRestore()
-    morphPosition = @morph.position()
-    aContext.translate morphPosition.x, morphPosition.y
+    widgetPosition = @widget.position()
+    aContext.translate widgetPosition.x, widgetPosition.y
 
-    @renderingHelper aContext, @morph.color
+    @renderingHelper aContext, @widget.color
 
     aContext.restore()
 
@@ -58,12 +58,12 @@ class UpperRightTriangleAppearance extends Appearance
     context.beginPath()
     if @positionWithinParent == "topRight"
       context.moveTo 0, 0
-      context.lineTo @morph.width(), @morph.height()
-      context.lineTo @morph.width(), 0
+      context.lineTo @widget.width(), @widget.height()
+      context.lineTo @widget.width(), 0
     else if @positionWithinParent == "topLeft"
       context.moveTo 0, 0
-      context.lineTo 0, @morph.height()
-      context.lineTo @morph.width(), 0
+      context.lineTo 0, @widget.height()
+      context.lineTo @widget.width(), 0
     context.closePath()
     context.fill()
 
@@ -72,14 +72,14 @@ class UpperRightTriangleAppearance extends Appearance
   isTransparentAt: (aPoint) ->
     # first quickly check if the point is even
     # within the bounding box
-    if !@morph.boundsContainPoint aPoint
+    if !@widget.boundsContainPoint aPoint
       return true
  
-    thisWidgetPosition = @morph.position()
+    thisWidgetPosition = @widget.position()
  
     relativePoint = new Point aPoint.x - thisWidgetPosition.x, aPoint.y - thisWidgetPosition.y
 
-    if relativePoint.x / relativePoint.y < @morph.width()/@morph.height()
+    if relativePoint.x / relativePoint.y < @widget.width()/@widget.height()
       return true
 
 

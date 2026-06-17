@@ -147,7 +147,7 @@ class InspectorWdgt extends Widget
 
     # remove all submorhs i.e. panes and buttons
     # THE ONES THAT ARE STILL
-    # submorphs of the inspector. If they
+    # subwidgets of the inspector. If they
     # have been peeled away, they still live
     @fullDestroyChildren()
 
@@ -318,10 +318,10 @@ class InspectorWdgt extends Widget
     # so we can enable/disable the "save" button
     @detail.widgetToBeNotifiedOfTextModificationChange = @
 
-    @textMorph = @detail.textWdgt
-    @textMorph.backgroundColor = Color.TRANSPARENT
-    @textMorph.setFontName nil, nil, @textMorph.monoFontStack
-    @textMorph.isEditable = false
+    @textWidget = @detail.textWdgt
+    @textWidget.backgroundColor = Color.TRANSPARENT
+    @textWidget.setFontName nil, nil, @textWidget.monoFontStack
+    @textWidget.isEditable = false
 
     @add @detail
 
@@ -467,9 +467,9 @@ class InspectorWdgt extends Widget
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
-    # submorphs of the inspector are within the
+    # subwidgets of the inspector are within the
     # bounds of the parent Widget. This means that
-    # if only the parent morph breaks its rectangle
+    # if only the parent widget breaks its rectangle
     # then everything is OK.
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
@@ -611,14 +611,14 @@ class InspectorWdgt extends Widget
   # inspector injects the property onto the instance (ClassInspectorWdgt
   # overrides this to evaluate an assignment against the class prototype).
   applyPropertyEdit: (propertyName, txt) ->
-    # inject code will also break the layout and the morph
+    # inject code will also break the layout and the widget
     @target.injectProperty propertyName, txt
 
 
   # TODO should have a removeProperty method in Widget (and in the classes somehow)
   # rather than here
-  addProperty: (ignoringThis, morphWithProperty) ->
-    prop = morphWithProperty.text.text
+  addProperty: (ignoringThis, widgetWithProperty) ->
+    prop = widgetWithProperty.text.text
     if prop?
       if prop.getValue?
         prop = prop.getValue()
@@ -631,9 +631,9 @@ class InspectorWdgt extends Widget
 
   # TODO should have a removeProperty method in Widget (and in the classes somehow)
   # rather than here
-  renameProperty: (ignoringThis, morphWithProperty) ->
+  renameProperty: (ignoringThis, widgetWithProperty) ->
     propertyName = @list.selected.labelString
-    prop = morphWithProperty.text.text
+    prop = widgetWithProperty.text.text
     if prop.getValue?
       prop = prop.getValue()
     

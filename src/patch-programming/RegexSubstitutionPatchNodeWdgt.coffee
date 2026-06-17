@@ -6,7 +6,7 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
 
   regexEntryField: nil
   defaultContents: nil
-  textMorph: nil
+  textWidget: nil
 
   substitutionTextArea: nil
   substitutionTextAreaText: nil
@@ -147,16 +147,16 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     @fireOutputToTarget world.makeNewConnectionsCalculationToken()
 
   recalculateOutput: ->
-    if @textMorph.text != ""
+    if @textWidget.text != ""
 
       # from: https://stackoverflow.com/a/22763959
-      regParts = @textMorph.text.match(/^\/(.*?)\/([gim]*)$/)
+      regParts = @textWidget.text.match(/^\/(.*?)\/([gim]*)$/)
       if regParts
         # the parsed pattern had delimiters and modifiers. handle them.
         regexp = new RegExp(regParts[1], regParts[2])
       else
         # we got pattern string without delimiters
-        regexp = new RegExp(@textMorph.text)
+        regexp = new RegExp(@textWidget.text)
 
       @output = @input1.replace regexp, @substitutionTextAreaText.text
       @outputTextAreaText.setText @output
@@ -174,13 +174,13 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     functionNamesStrings.push "bang", "setInput1", "setInput2", "setInput3", "setInput4"
     return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
 
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
     if world.isIndexPage
       menu.addMenuItem "connect to ➜", true, @, "openTargetSelector", "connect to\nanother widget"
     else
-      menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another morph\nwhose numerical property\n will be" + " controlled by this one"
+      menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another widget\nwhose numerical property\n will be" + " controlled by this one"
 
 
   buildAndConnectChildren: ->
@@ -191,11 +191,11 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     @regexEntryField.disableDrops()
     @regexEntryField.contents.disableDrops()
     @regexEntryField.color = Color.WHITE
-    @textMorph = @regexEntryField.textWdgt
-    @textMorph.backgroundColor = Color.TRANSPARENT
-    @textMorph.setFontName nil, nil, @textMorph.monoFontStack
-    @textMorph.isEditable = true
-    @textMorph.enableSelecting()
+    @textWidget = @regexEntryField.textWdgt
+    @textWidget.backgroundColor = Color.TRANSPARENT
+    @textWidget.setFontName nil, nil, @textWidget.monoFontStack
+    @textWidget.isEditable = true
+    @textWidget.enableSelecting()
     @add @regexEntryField
 
     @substitutionTextArea = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
@@ -231,9 +231,9 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
-    # submorphs of the inspector are within the
+    # subwidgets of the inspector are within the
     # bounds of the parent Widget. This means that
-    # if only the parent morph breaks its rectangle
+    # if only the parent widget breaks its rectangle
     # then everything is OK.
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still

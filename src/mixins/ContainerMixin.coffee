@@ -6,7 +6,7 @@
 
 #   1) a container has potentially a background and
 #   2) some padding
-#   3) it resizes itself so to *at least contain* all the morphs attached to it (i.e. it could be bigger).
+#   3) it resizes itself so to *at least contain* all the widgets attached to it (i.e. it could be bigger).
 # It doesn't need to be rectangular.
 # TODO Also it can draw a border of its own cause of the padding, you can add enough padding so the border is drawn correctly, maybe the padding can be automatically determined based on the border color.
 
@@ -18,7 +18,7 @@ ContainerMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
       openTargetSelector: ->
-        choices = world.plausibleTargetAndDestinationMorphs @
+        choices = world.plausibleTargetAndDestinationWidgets @
         if choices.length > 0
           menu = new MenuWdgt @, false, @, true, true, "choose target:"
           #choices.push @world()
@@ -30,7 +30,7 @@ ContainerMixin =
         menu.popUpAtHand()
 
       adjustBounds: ->
-        newBounds = @subMorphsMergedFullBounds()
+        newBounds = @subWidgetsMergedFullBounds()
         if newBounds
           if @padding?
             newBounds = newBounds.expandBy @padding

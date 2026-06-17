@@ -3,32 +3,32 @@ class DesktopAppearance extends RectangularAppearance
 
   currentPattern: nil
 
-  # This method only paints this very morph
+  # This method only paints this very widget
   # i.e. it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer,
   # which eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this morph might paint something on the screen even if
+  # Note that this widget might paint something on the screen even if
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
-    if @morph.preliminaryCheckNothingToDraw clippingRectangle, aContext
+    if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
       return nil
 
 
     # set up a pattern
-    if @morph.patternName? && @morph.patternName == @morph.pattern1
-      @currentPattern = @morph.patternName
+    if @widget.patternName? && @widget.patternName == @widget.pattern1
+      @currentPattern = @widget.patternName
       @pattern = nil
 
-    if @morph.patternName? && @morph.patternName != @currentPattern
-      @currentPattern = @morph.patternName
+    if @widget.patternName? && @widget.patternName != @currentPattern
+      @currentPattern = @widget.patternName
       # go through the factory so the pattern tile honours the backend switch
       @pattern = HTMLCanvasElement.createOfPhysicalDimensions new Point 5 * ceilPixelRatio, 5 * ceilPixelRatio
       pctx = @pattern.getContext "2d"
       pctx.useLogicalPixelsUntilRestore()
 
-      switch @morph.patternName
-        when @morph.pattern2
+      switch @widget.patternName
+        when @widget.pattern2
           pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
           pctx.lineWidth = 0.25
@@ -36,28 +36,28 @@ class DesktopAppearance extends RectangularAppearance
           pctx.arc 2,2,2,0,2*Math.PI
           pctx.fillStyle = 'rgb(220, 219, 220)'
           pctx.fill()
-        when @morph.pattern3
+        when @widget.pattern3
           pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
           pctx.moveTo 1,0
           pctx.lineTo 1,5
           pctx.strokeStyle = 'rgb(225, 224, 225)'
           pctx.stroke()
-        when @morph.pattern4
+        when @widget.pattern4
           pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
           pctx.moveTo 0,5
           pctx.lineTo 5,0
           pctx.strokeStyle = 'rgb(225, 224, 225)'
           pctx.stroke()
-        when @morph.pattern5
+        when @widget.pattern5
           pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
           pctx.moveTo 2,2
           pctx.lineTo 4,4
           pctx.strokeStyle = 'rgb(225, 224, 225)'
           pctx.stroke()
-        when @morph.pattern6
+        when @widget.pattern6
           pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
           pctx.moveTo 0,0
@@ -65,7 +65,7 @@ class DesktopAppearance extends RectangularAppearance
           pctx.lineTo 5,0
           pctx.strokeStyle = 'rgb(225, 224, 225)'
           pctx.stroke()
-        when @morph.pattern7
+        when @widget.pattern7
           pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
           pctx.moveTo 0,5
@@ -80,15 +80,15 @@ class DesktopAppearance extends RectangularAppearance
 
 
 
-    [area,sl,st,al,at,w,h] = @morph.calculateKeyValues aContext, clippingRectangle
+    [area,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
     return nil if w < 1 or h < 1 or area.isEmpty()
 
-    @morph.justBeforeBeingPainted?()
+    @widget.justBeforeBeingPainted?()
 
     aContext.save()
-    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
-    if !@morph.color? then debugger
-    aContext.fillStyle = @morph.color.toString()
+    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
+    if !@widget.color? then debugger
+    aContext.fillStyle = @widget.color.toString()
 
     # paintRectangle is usually made to work with
     # al, at, w, h which are actual pixels
@@ -99,22 +99,22 @@ class DesktopAppearance extends RectangularAppearance
     # paint the background
     toBePainted = new Rectangle al, at, al + w, at + h
 
-    if @morph.backgroundColor?
-      color = @morph.backgroundColor
+    if @widget.backgroundColor?
+      color = @widget.backgroundColor
       if appliedShadow?
         color = Color.BLACK
-      @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
+      @widget.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
 
 
-    # now paint the actual morph, which is a rectangle
+    # now paint the actual widget, which is a rectangle
     # (potentially inset because of the padding)
-    toBePainted = toBePainted.intersect @morph.boundingBoxTight().scaleBy ceilPixelRatio
+    toBePainted = toBePainted.intersect @widget.boundingBoxTight().scaleBy ceilPixelRatio
 
-    color = @morph.color
+    color = @widget.color
     if appliedShadow?
       color = Color.BLACK
 
-    @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
+    @widget.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
 
     @drawAdditionalPartsOnBaseShape? false, false, appliedShadow, aContext, al, at, w, h
 

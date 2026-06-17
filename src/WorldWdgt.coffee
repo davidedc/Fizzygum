@@ -39,7 +39,7 @@ class WorldWdgt extends PanelWdgt
   pasteBrowserEventListener: nil
   errorConsole: nil
 
-  # the string for the last serialised morph
+  # the string for the last serialised widget
   # is kept in here, to make serialization
   # and deserialization tests easier.
   # The alternative would be to refresh and
@@ -153,14 +153,14 @@ class WorldWdgt extends PanelWdgt
   numberOfDuplicatedBrokenRects: 0
   numberOfMergedSourceAndDestination: 0
 
-  morphsToBeHighlighted: new Set
+  widgetsToBeHighlighted: new Set
   currentHighlightingWidgets: new Set
-  morphsBeingHighlighted: new Set
+  widgetsBeingHighlighted: new Set
 
   # »>> this part is excluded from the fizzygum homepage build
-  morphsToBePinouted: new Set
+  widgetsToBePinouted: new Set
   currentPinoutingWidgets: new Set
-  morphsBeingPinouted: new Set
+  widgetsBeingPinouted: new Set
   # this part is excluded from the fizzygum homepage build <<«
 
   steppingWdgts: new Set
@@ -178,12 +178,12 @@ class WorldWdgt extends PanelWdgt
   basementWdgt: nil
 
   # since the shadow is just a "rendering" effect
-  # there is no morph for it, we need to just clean up
+  # there is no widget for it, we need to just clean up
   # the shadow area ad-hoc. We do that by just growing any
   # broken rectangle by the maximum shadow offset.
   # We could be more surgical and remember the offset of the
   # shadow (if any) in the start and end location of the
-  # morph, just like we do with the position, but it
+  # widget, just like we do with the position, but it
   # would complicate things and probably be overkill.
   # The downside of this is that if we change the
   # shadow sizes, we have to check that this max size
@@ -258,9 +258,9 @@ class WorldWdgt extends PanelWdgt
   # changes" correctly.
   trackChanges: [true]
 
-  morphsThatMaybeChangedGeometryOrPosition: []
-  morphsThatMaybeChangedFullGeometryOrPosition: []
-  morphsThatMaybeChangedLayout: []
+  widgetsThatMaybeChangedGeometryOrPosition: []
+  widgetsThatMaybeChangedFullGeometryOrPosition: []
+  widgetsThatMaybeChangedLayout: []
 
   macroToolkit: nil
 
@@ -269,7 +269,7 @@ class WorldWdgt extends PanelWdgt
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
       ) ->
 
-    # The WorldWdgt is the very first morph to
+    # The WorldWdgt is the very first widget to
     # be created.
 
     # world at the moment is a global variable, there is only one
@@ -576,11 +576,9 @@ class WorldWdgt extends PanelWdgt
   alignIDsOfNextWidgetsInSystemTests: ->
     if Automator? and Automator.state != Automator.IDLE
       # Check which objects end with the word Widget
-      theWordMorph = "Morph"
       theWordWdgt = "Wdgt"
       theWordWidget = "Widget"
       listOfWidgetsClasses = (Object.keys(window)).filter (i) ->
-        i.includes(theWordMorph, i.length - theWordMorph.length) or
         i.includes(theWordWdgt, i.length - theWordWdgt.length) or
         i.includes(theWordWidget, i.length - theWordWidget.length)
       for eachWidgetClass in listOfWidgetsClasses
@@ -606,7 +604,7 @@ class WorldWdgt extends PanelWdgt
   
   
   # fullPaintIntoAreaOrBlitFromBackBuffer results into actual painting of pieces of
-  # morphs done
+  # widgets done
   # by the paintIntoAreaOrBlitFromBackBuffer function.
   # The paintIntoAreaOrBlitFromBackBuffer function is defined in Widget.
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, aRect) ->
@@ -707,7 +705,7 @@ class WorldWdgt extends PanelWdgt
 
 
   rectAlreadyIncludedInParentBrokenWidget: ->
-    for brokenWidget in @morphsThatMaybeChangedGeometryOrPosition
+    for brokenWidget in @widgetsThatMaybeChangedGeometryOrPosition
         if brokenWidget.srcBrokenRect?
           aRect = @broken[brokenWidget.srcBrokenRect]
           @checkARectWithHierarchy aRect, brokenWidget, true
@@ -715,7 +713,7 @@ class WorldWdgt extends PanelWdgt
           aRect = @broken[brokenWidget.dstBrokenRect]
           @checkARectWithHierarchy aRect, brokenWidget, false
 
-    for brokenWidget in @morphsThatMaybeChangedFullGeometryOrPosition
+    for brokenWidget in @widgetsThatMaybeChangedFullGeometryOrPosition
         if brokenWidget.srcBrokenRect?
           aRect = @broken[brokenWidget.srcBrokenRect]
           @checkARectWithHierarchy aRect, brokenWidget
@@ -724,23 +722,23 @@ class WorldWdgt extends PanelWdgt
           @checkARectWithHierarchy aRect, brokenWidget
 
   cleanupSrcAndDestRectsOfWidgets: ->
-    for brokenWidget in @morphsThatMaybeChangedGeometryOrPosition
+    for brokenWidget in @widgetsThatMaybeChangedGeometryOrPosition
       brokenWidget.srcBrokenRect = nil
       brokenWidget.dstBrokenRect = nil
-    for brokenWidget in @morphsThatMaybeChangedFullGeometryOrPosition
+    for brokenWidget in @widgetsThatMaybeChangedFullGeometryOrPosition
       brokenWidget.srcBrokenRect = nil
       brokenWidget.dstBrokenRect = nil
 
 
   fleshOutBroken: ->
-    #if @morphsThatMaybeChangedGeometryOrPosition.length > 0
+    #if @widgetsThatMaybeChangedGeometryOrPosition.length > 0
     #  debugger
 
     sourceBroken = nil
     destinationBroken = nil
 
 
-    for brokenWidget in @morphsThatMaybeChangedGeometryOrPosition
+    for brokenWidget in @widgetsThatMaybeChangedGeometryOrPosition
 
       # let's see if this Widget that marked itself as broken
       # was actually painted in the past frame.
@@ -760,7 +758,7 @@ class WorldWdgt extends PanelWdgt
       unless brokenWidget.surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage()
         # @clippedThroughBounds() should be smaller area
         # than bounds because it clips
-        # the bounds based on the clipping morphs up the
+        # the bounds based on the clipping widgets up the
         # hierarchy
         boundsToBeChanged = brokenWidget.clippedThroughBounds()
 
@@ -784,13 +782,13 @@ class WorldWdgt extends PanelWdgt
     
 
   fleshOutFullBroken: ->
-    #if @morphsThatMaybeChangedFullGeometryOrPosition.length > 0
+    #if @widgetsThatMaybeChangedFullGeometryOrPosition.length > 0
     #  debugger
 
     sourceBroken = nil
     destinationBroken = nil
 
-    for brokenWidget in @morphsThatMaybeChangedFullGeometryOrPosition
+    for brokenWidget in @widgetsThatMaybeChangedFullGeometryOrPosition
 
       #console.log "fleshOutFullBroken: " + brokenWidget
 
@@ -851,7 +849,7 @@ class WorldWdgt extends PanelWdgt
   # So take the head of any subtree and re-layout it
   # The relayout might or might not visit all the subnodes
   # of the subtree, because you might have a subtree
-  # that lives inside a floating morph, in which
+  # that lives inside a floating widget, in which
   # case it's not re-layout.
   # So, a subtree might not be healed in one go,
   # rather we keep track of what's left to heal and
@@ -861,16 +859,16 @@ class WorldWdgt extends PanelWdgt
   # to heal.
   recalculateLayouts: ->
 
-    until @morphsThatMaybeChangedLayout.length == 0
+    until @widgetsThatMaybeChangedLayout.length == 0
       # starting from the last element,
       # find the first Widget which has a broken layout,
       # (and pop out of the queue all the Widgets we encounter
       # on the way that have a valid layout)
       loop
-        tryThisWidget = @morphsThatMaybeChangedLayout[@morphsThatMaybeChangedLayout.length - 1]
+        tryThisWidget = @widgetsThatMaybeChangedLayout[@widgetsThatMaybeChangedLayout.length - 1]
         if tryThisWidget.layoutIsValid
-          @morphsThatMaybeChangedLayout.pop()
-          if @morphsThatMaybeChangedLayout.length == 0
+          @widgetsThatMaybeChangedLayout.pop()
+          if @widgetsThatMaybeChangedLayout.length == 0
             return
         else
           break
@@ -879,11 +877,11 @@ class WorldWdgt extends PanelWdgt
       # go up the chain of broken layouts as much as
       # possible
       # TODO: it would be more correct to start from the
-      # top-most invalid morph, i.e. on the way to the top,
-      # stop at the last morph with an invalid layout
-      # instead of stopping at the first morph with a
+      # top-most invalid widget, i.e. on the way to the top,
+      # stop at the last widget with an invalid layout
+      # instead of stopping at the first widget with a
       # valid layout...
-      # The reason is that a freefloating morph might
+      # The reason is that a freefloating widget might
       # still need to be resized according to the size
       # of its parent, in which case you want the parent
       # to do its layout first, and then the freefloating
@@ -902,7 +900,7 @@ class WorldWdgt extends PanelWdgt
 
       try
         # so now you have a "top" element up a chain
-        # of morphs with broken layout. Go do a
+        # of widgets with broken layout. Go do a
         # doLayout on it, so it might fix a bunch of those
         # on the chain (but not all)
         tryThisWidget.doLayout()
@@ -913,11 +911,11 @@ class WorldWdgt extends PanelWdgt
 
 
   clearGeometryOrPositionPossiblyChangedFlags: ->
-    for m in @morphsThatMaybeChangedGeometryOrPosition
+    for m in @widgetsThatMaybeChangedGeometryOrPosition
       m.geometryOrPositionPossiblyChanged = false
 
   clearFullGeometryOrPositionPossiblyChangedFlags: ->
-    for m in @morphsThatMaybeChangedFullGeometryOrPosition
+    for m in @widgetsThatMaybeChangedFullGeometryOrPosition
       m.fullGeometryOrPositionPossiblyChanged = false
 
   disableTrackChanges: ->
@@ -941,8 +939,8 @@ class WorldWdgt extends PanelWdgt
     @clearGeometryOrPositionPossiblyChangedFlags()
     @clearFullGeometryOrPositionPossiblyChangedFlags()
 
-    @morphsThatMaybeChangedGeometryOrPosition = []
-    @morphsThatMaybeChangedFullGeometryOrPosition = []
+    @widgetsThatMaybeChangedGeometryOrPosition = []
+    @widgetsThatMaybeChangedFullGeometryOrPosition = []
     # »>> this part is excluded from the fizzygum homepage build
     #ProfilingDataCollector.profileBrokenRects @broken, @numberOfDuplicatedBrokenRects, @numberOfMergedSourceAndDestination
     # this part is excluded from the fizzygum homepage build <<«
@@ -1094,20 +1092,20 @@ class WorldWdgt extends PanelWdgt
   # »>> this part is excluded from the fizzygum homepage build
   addPinoutingWidgets: ->
     @currentPinoutingWidgets.forEach (eachPinoutingWidget) =>
-      if @morphsToBePinouted.has eachPinoutingWidget.wdgtThisWdgtIsPinouting
+      if @widgetsToBePinouted.has eachPinoutingWidget.wdgtThisWdgtIsPinouting
         if eachPinoutingWidget.wdgtThisWdgtIsPinouting.hasMaybeChangedGeometryOrPosition()
-          # reposition the pinout morph if needed
+          # reposition the pinout widget if needed
           peekThroughBox = eachPinoutingWidget.wdgtThisWdgtIsPinouting.clippedThroughBounds()
           eachPinoutingWidget.fullRawMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
 
       else
         @currentPinoutingWidgets.delete eachPinoutingWidget
-        @morphsBeingPinouted.delete eachPinoutingWidget.wdgtThisWdgtIsPinouting
+        @widgetsBeingPinouted.delete eachPinoutingWidget.wdgtThisWdgtIsPinouting
         eachPinoutingWidget.wdgtThisWdgtIsPinouting = nil
         eachPinoutingWidget.fullDestroy()
 
-    @morphsToBePinouted.forEach (eachWidgetNeedingPinout) =>
-      unless @morphsBeingPinouted.has eachWidgetNeedingPinout
+    @widgetsToBePinouted.forEach (eachWidgetNeedingPinout) =>
+      unless @widgetsBeingPinouted.has eachWidgetNeedingPinout
         hM = new StringWdgt eachWidgetNeedingPinout.toString()
         @add hM
         hM.wdgtThisWdgtIsPinouting = eachWidgetNeedingPinout
@@ -1116,22 +1114,22 @@ class WorldWdgt extends PanelWdgt
         hM.setColor Color.BLUE
         hM.setWidth 400
         @currentPinoutingWidgets.add hM
-        @morphsBeingPinouted.add eachWidgetNeedingPinout
+        @widgetsBeingPinouted.add eachWidgetNeedingPinout
   # this part is excluded from the fizzygum homepage build <<«
   
-  addHighlightingMorphs: ->
+  addHighlightingWidgets: ->
     @currentHighlightingWidgets.forEach (eachHighlightingWidget) =>
-      if @morphsToBeHighlighted.has eachHighlightingWidget.wdgtThisWdgtIsHighlighting
+      if @widgetsToBeHighlighted.has eachHighlightingWidget.wdgtThisWdgtIsHighlighting
         if eachHighlightingWidget.wdgtThisWdgtIsHighlighting.hasMaybeChangedGeometryOrPosition()
           eachHighlightingWidget.rawSetBounds eachHighlightingWidget.wdgtThisWdgtIsHighlighting.clippedThroughBounds()
       else
         @currentHighlightingWidgets.delete eachHighlightingWidget
-        @morphsBeingHighlighted.delete eachHighlightingWidget.wdgtThisWdgtIsHighlighting
+        @widgetsBeingHighlighted.delete eachHighlightingWidget.wdgtThisWdgtIsHighlighting
         eachHighlightingWidget.wdgtThisWdgtIsHighlighting = nil
         eachHighlightingWidget.fullDestroy()
 
-    @morphsToBeHighlighted.forEach (eachWidgetNeedingHighlight) =>
-      unless @morphsBeingHighlighted.has eachWidgetNeedingHighlight
+    @widgetsToBeHighlighted.forEach (eachWidgetNeedingHighlight) =>
+      unless @widgetsBeingHighlighted.has eachWidgetNeedingHighlight
         hM = new HighlighterWdgt
         @add hM
         hM.wdgtThisWdgtIsHighlighting = eachWidgetNeedingHighlight
@@ -1139,7 +1137,7 @@ class WorldWdgt extends PanelWdgt
         hM.setColor Color.BLUE
         hM.setAlphaScaled 50
         @currentHighlightingWidgets.add hM
-        @morphsBeingHighlighted.add eachWidgetNeedingHighlight
+        @widgetsBeingHighlighted.add eachWidgetNeedingHighlight
 
 
   # »>> this part is only needed for VideoPlayer
@@ -1245,7 +1243,7 @@ class WorldWdgt extends PanelWdgt
     # »>> this part is excluded from the fizzygum homepage build
     @addPinoutingWidgets()
     # this part is excluded from the fizzygum homepage build <<«
-    @addHighlightingMorphs()
+    @addHighlightingWidgets()
 
     # here is where the repainting on screen happens
     @updateBroken()
@@ -1480,7 +1478,7 @@ class WorldWdgt extends PanelWdgt
     # but we reproduce it internally.
     # The reason is that we do so for "click"
     # because we want to check that the mouse
-    # button was released in the same morph
+    # button was released in the same widget
     # where it was pressed (cause in the DOM you'd
     # be pressing and releasing on the same
     # element i.e. the canvas anyways
@@ -1764,7 +1762,7 @@ class WorldWdgt extends PanelWdgt
 
   # if an error is thrown, the state of the world might
   # be messy, for example the pointer might be
-  # dragging an invisible morph, etc.
+  # dragging an invisible widget, etc.
   # So, try to clean-up things as much as possible.
   softResetWorld: ->
     @hand.drop()
@@ -1794,19 +1792,17 @@ class WorldWdgt extends PanelWdgt
   # There is something special about the
   # "world" version of fullDestroyChildren:
   # it resets the counter used to count
-  # how many morphs exist of each Widget class.
+  # how many widgets exist of each Widget class.
   # That counter is also used to determine the
   # unique ID of a Widget. So, destroying
-  # all morphs from the world causes the
+  # all widgets from the world causes the
   # counts and IDs of all the subsequent
-  # morphs to start from scratch again.
+  # widgets to start from scratch again.
   fullDestroyChildren: ->
     # Check which objects end with the word Widget
-    theWordMorph = "Morph"
     theWordWdgt = "Wdgt"
     theWordWidget = "Widget"
     ListOfWidgets = (Object.keys(window)).filter (i) ->
-      i.includes(theWordMorph, i.length - theWordMorph.length) or
       i.includes(theWordWdgt, i.length - theWordWdgt.length) or
       i.includes(theWordWidget, i.length - theWordWidget.length)
     for eachWidgetClass in ListOfWidgets
@@ -1856,13 +1852,13 @@ class WorldWdgt extends PanelWdgt
 
     # »>> this part is excluded from the fizzygum homepage build
     if @isDevMode
-      menu.addMenuItem "demo ➜", false, @, "popUpDemoMenu", "sample morphs"
+      menu.addMenuItem "demo ➜", false, @, "popUpDemoMenu", "sample widgets"
       menu.addLine()
       # TODO remove these two, they do nothing now
       menu.addMenuItem "show all", true, @, "noOperation"
       menu.addMenuItem "hide all", true, @, "noOperation"
       menu.addMenuItem "delete all", true, @, "closeChildren"
-      menu.addMenuItem "move all inside", true, @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
+      menu.addMenuItem "move all inside", true, @, "keepAllSubwidgetsWithin", "keep all subwidgets\nwithin and visible"
       menu.addMenuItem "inspect", true, @, "inspect", "open a window on\nall properties"
       menu.addMenuItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
       menu.addLine()
@@ -2025,7 +2021,7 @@ class WorldWdgt extends PanelWdgt
       "am Ende Schiffer und Kahn, und das hat mit ihrem " +
       "Singen, die Loreley getan.")
     newWdgt.isEditable = true
-    # (maxTextWidth was an old-TextMorph-only knob; TextWdgt wraps to its own
+    # (maxTextWidth was an old-text widget-only knob; TextWdgt wraps to its own
     # width via softWrap, like the createNewTextWdgtWithBackground demo.)
     @create newWdgt
   createNewSpeechBubbleWdgt: ->
@@ -2106,9 +2102,9 @@ class WorldWdgt extends PanelWdgt
     @create newWdgt
 
 
-  popUpDemoMenu: (morphOpeningThePopUp,b,c,d) ->
+  popUpDemoMenu: (widgetOpeningThePopUp,b,c,d) ->
     if @isIndexPage
-      menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "parts bin"
+      menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "parts bin"
       menu.addMenuItem "rectangle", true, @, "createNewRectangleWdgt"
       menu.addMenuItem "box", true, @, "createNewBoxWdgt"
       menu.addMenuItem "circle box", true, @, "createNewCircleBoxWdgt"
@@ -2120,7 +2116,7 @@ class WorldWdgt extends PanelWdgt
       menu.addLine()
       menu.addMenuItem "analog clock", true, @, "analogClock"
     else
-      menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "make a morph"
+      menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "make a widget"
       menu.addMenuItem "rectangle", true, @, "createNewRectangleWdgt"
       menu.addMenuItem "box", true, @, "createNewBoxWdgt"
       menu.addMenuItem "circle box", true, @, "createNewCircleBoxWdgt"
@@ -2145,15 +2141,15 @@ class WorldWdgt extends PanelWdgt
       menu.addMenuItem "pen", true, @, "createNewPenWdgt"
         
       menu.addLine()
-      menu.addMenuItem "layout tests ➜", false, @, "layoutTestsMenu", "sample morphs"
+      menu.addMenuItem "layout tests ➜", false, @, "layoutTestsMenu", "sample widgets"
       menu.addLine()
       menu.addMenuItem "under the carpet", true, @, "underTheCarpet"
 
     menu.popUpAtHand()
 
-  layoutTestsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Layout tests"
-    menu.addMenuItem "adjuster morph", true, @, "createNewStackElementsSizeAdjustingWdgt"
+  layoutTestsMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Layout tests"
+    menu.addMenuItem "adjuster widget", true, @, "createNewStackElementsSizeAdjustingWdgt"
     menu.addMenuItem "adder/droplet", true, @, "createNewLayoutElementAdderOrDropletWdgt"
     menu.addMenuItem "test screen 1", true, Widget, "setupTestScreen1"
     menu.popUpAtHand()
@@ -2208,8 +2204,8 @@ class WorldWdgt extends PanelWdgt
   
   # Editing can stop because of three reasons:
   #   cancel (user hits ESC)
-  #   accept (on stringmorph, user hits enter)
-  #   user clicks/floatDrags another morph
+  #   accept (on string widget, user hits enter)
+  #   user clicks/floatDrags another widget
   stopEditing: ->
     if @caret
       @lastEditedText = @caret.target

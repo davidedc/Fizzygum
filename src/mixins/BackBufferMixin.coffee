@@ -1,20 +1,20 @@
 # //////////////////////////////////////////////////////////
 
-# A BackBuffer is a canvas that a morph can keep for
+# A BackBuffer is a canvas that a widget can keep for
 # two reasons:
 #   1) as a cache
-#   2) because the morph has inherently a "raster" nature
+#   2) because the widget has inherently a "raster" nature
 #      such as the canvas where you can run a turtle to
 #      draw stuff, or a Widget where you want to have
 #      pixel-based filters.
 #
-# The cache use is useful for morphs that ideally
+# The cache use is useful for widgets that ideally
 #  * have a small extent
 #  * have an expensive painting process
 #  * are repainted often
 #
 # (Note that the cache for the time being is only
-# for the very morph, not for the whole of the
+# for the very widget, not for the whole of the
 # hierarchy.)
 #
 # Ideal use of a cache is text because painting text
@@ -36,8 +36,8 @@ BackBufferMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
 
-      # note that image contains only the CURRENT morph, not the composition of this
-      # morph with all of the submorphs. I.e. for an inspector, this will only
+      # note that image contains only the CURRENT widget, not the composition of this
+      # widget with all of the subwidgets. I.e. for an inspector, this will only
       # contain the background of the window pane. Not any of its contents.
       # for the worldWidget, this only contains the background
       backBuffer: nil
@@ -89,11 +89,11 @@ BackBufferMixin =
         Color.create data.data[0], data.data[1], data.data[2], data.data[3]
 
 
-      # This method only paints this very morph's "image",
+      # This method only paints this very widget's "image",
       # it doesn't descend the children
       # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
       # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-      # Note that this morph might paint something on the screen even if
+      # Note that this widget might paint something on the screen even if
       # it's not a "leaf".
       paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
         @justBeforeBeingPainted?()

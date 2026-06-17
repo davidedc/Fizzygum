@@ -7,7 +7,7 @@ class ModifiedTextTriangleAnnotationWdgt extends Widget
     super()
     @appearance = new UpperRightTriangleAppearance @, @positionWithinParent
 
-    # this morph has triangular shape and we want it
+    # this widget has triangular shape and we want it
     # to only react to pointer events happening
     # within tha shape
     @noticesTransparentClick = false

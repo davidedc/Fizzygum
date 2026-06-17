@@ -60,46 +60,46 @@ DeepCopierMixin =
         # TODO these following alignment methods should have a uniform
         # naming convention.
 
-        # if we deep-copied a morph, check whether the original
+        # if we deep-copied a widget, check whether the original
         # was in data structures related to the broken rects
         # mechanism, and if so, add the copy there too.
         # (since we deep-copy all kinds of data structures,
-        # not just morphs, check if we have the relevant alignment
+        # not just widgets, check if we have the relevant alignment
         # method to invoke).
         if @alignCopiedWidgetToBrokenInfoDataStructures?
           @alignCopiedWidgetToBrokenInfoDataStructures cloneOfMe
 
-        # if we deep-copied a morph, check whether the original
+        # if we deep-copied a widget, check whether the original
         # was in data structures related to stepping
         # mechanism, and if so, add the copy there too.
         # (since we deep-copy all kinds of data structures,
-        # not just morphs, check if we have the relevant alignment
+        # not just widgets, check if we have the relevant alignment
         # method to invoke).
         if @alignCopiedWidgetToSteppingStructures?
           @alignCopiedWidgetToSteppingStructures cloneOfMe
 
-        # if we deep-copied a morph, check whether the original
+        # if we deep-copied a widget, check whether the original
         # was in the data structure that keeps track of the
         # widgets that reference other widgets,
         # and if so, add the copy there too.
         # (since we deep-copy all kinds of data structures,
-        # not just morphs, check if we have the relevant alignment
+        # not just widgets, check if we have the relevant alignment
         # method to invoke).
         if @alignCopiedWidgetToReferenceTracker?
           @alignCopiedWidgetToReferenceTracker cloneOfMe
 
-        # if we deep-copied a morph, check whether the original
+        # if we deep-copied a widget, check whether the original
         # was in the data structure that keeps track of the
         # widgets that want to receive keyboard events,
         # and if so, add the copy there too.
         # (since we deep-copy all kinds of data structures,
-        # not just morphs, check if we have the relevant alignment
+        # not just widgets, check if we have the relevant alignment
         # method to invoke).
         if @alignCopiedWidgetToKeyboardEventsReceiversSet?
           @alignCopiedWidgetToKeyboardEventsReceiversSet cloneOfMe
 
 
-        # last chance for a morph to do other
+        # last chance for a widget to do other
         # cleanup, for example a button that is
         # highlighted might want to un-highlight
         # itself

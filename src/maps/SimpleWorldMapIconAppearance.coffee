@@ -1,12 +1,12 @@
 class SimpleWorldMapIconAppearance extends IconAppearance
 
-  constructor: (@morph) ->
+  constructor: (@widget) ->
     super
     @preferredSize = new Point 500, 265
     @specificationSize = new Point 1000, 530
 
   paintFunction: (context) ->
-    fillColor = @morph.color
+    fillColor = @widget.color
     fillColorString = fillColor.toString()
 
     #// October revol + Bolshevik Islands Drawing

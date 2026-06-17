@@ -24,7 +24,7 @@ class FolderPanelWdgt extends PanelWdgt
   @augmentWith KeepIconicDesktopSystemLinksBackMixin, @name
   @augmentWith CreateShortcutOfDroppedItemsMixin, @name
 
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
     menu.addMenuItem "new folder", true, @, "makeFolder", "make a new folder"

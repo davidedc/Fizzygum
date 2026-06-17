@@ -1,7 +1,7 @@
 class EraserIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
-    fillColor = @morph.color
+    fillColor = @widget.color
 
     context.beginPath()
     context.moveTo 191.45, 32.27

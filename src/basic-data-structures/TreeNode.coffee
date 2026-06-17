@@ -1,7 +1,7 @@
 # Widgetic node class only cares about the
 # parent/child connection between
-# morphs. It's good to connect/disconnect
-# morphs and to find parents or children
+# widgets. It's good to connect/disconnect
+# widgets and to find parents or children
 # who satisfy particular properties.
 # OUT OF SCOPE:
 # It's important to note that this layer
@@ -22,11 +22,11 @@ class TreeNode
   # top.
   #
   # The repaint mechanism in Fizzygum is back-to-front,
-  # so first the "parent" morph is drawn, then the children,
+  # so first the "parent" widget is drawn, then the children,
   # where first child is re-painted first.
   #
   # The slight exception is the shadow, which, when it exists, is NOT
-  # a child morph — it is a "property" object (@shadowInfo) rendered as
+  # a child widget — it is a "property" object (@shadowInfo) rendered as
   # a pure drawing effect: a widget that has a shadow re-paints its WHOLE
   # subtree once, faintly and offset, FIRST (before the normal
   # back-to-front paint of itself + its children), so the shadow sits
@@ -35,11 +35,11 @@ class TreeNode
   # mechanism (see Widget.coffee "How the shadow painting works").
   #
   # This makes intuitive sense if you think for example
-  # at a textMorph being added to a box morph: it is
-  # added to the children list of the box morph, at the end,
+  # at a textWidget being added to a box widget: it is
+  # added to the children list of the box widget, at the end,
   # and it's painted on top (otherwise it wouldn't be visible).
   #
-  # Note that when you add a morph A to a morph B, it doesn't
+  # Note that when you add a widget A to a widget B, it doesn't
   # mean that A is contained in B. The two potentially might
   # not even overlap.
   children: nil
@@ -106,7 +106,7 @@ class TreeNode
 
   # used from bringToForeground method
   # for example when you
-  # click morphs around... they
+  # click widgets around... they
   # pop to the foreground
   moveAsLastChild: ->
     return unless @parent?
@@ -213,12 +213,12 @@ class TreeNode
 
     return result
 
-  # returns the path of this morph in terms
+  # returns the path of this widget in terms
   # of children positions relative to the world.
-  # Meaning that if the morph is not attached to the
+  # Meaning that if the widget is not attached to the
   # world or if it's attached to the hand, then
   # nil is returned.
-  # Example: [0, 2, 1] means that this morph is
+  # Example: [0, 2, 1] means that this widget is
   # at
   #  world.children[0].children[2].children[1]
   pathOfChildrenPositionsRelativeToWorld: (pathSoFar) ->
@@ -249,7 +249,7 @@ class TreeNode
   
   # Returns all the internal AND terminal nodes in the subtree starting
   # at this node - including this node.
-  # Remember that the @children property already sorts morphs
+  # Remember that the @children property already sorts widgets
   # from bottom to top
 
   allChildrenBottomToTop: ->
@@ -277,9 +277,9 @@ class TreeNode
     # one (i.e. the last in the array) towards the bottom
     # one and concatenate their respective
     # top-to-bottom lists
-    for morphNumber in [@children.length-1..0] by -1
-      morph = @children[morphNumber]
-      collected = collected.concat morph.allChildrenTopToBottomSuchThat predicate
+    for widgetNumber in [@children.length-1..0] by -1
+      widget = @children[widgetNumber]
+      collected = collected.concat widget.allChildrenTopToBottomSuchThat predicate
 
     # base case: after we checked all the
     # children, we add ourselves to the last position
@@ -294,7 +294,7 @@ class TreeNode
   # A shorthand to run a function on all the internal/terminal nodes in the subtree
   # starting at this node - including this node.
   # Note that the function first runs on this node
-  # (which is, when painted, the very bottom-est morph of them all)
+  # (which is, when painted, the very bottom-est widget of them all)
   # and the proceeds by visiting the first child
   # which is the most "bottom" of the children
   # (i.e. when painted, the first child in the "children" array
@@ -306,7 +306,7 @@ class TreeNode
   # all the intermediary arrays with also all the unneeded node elements,
   # there is no need for that.
   # This is the simplest and cheapest way to visit all Widgets in
-  # a tree of morphs.
+  # a tree of widgets.
   forAllChildrenBottomToTop: (aFunction) ->
     aFunction.call nil, @
     if @children.length
@@ -372,25 +372,25 @@ class TreeNode
   # but rather just loops up the chain
   # and lets us return as soon as
   # we find a match
-  isAncestorOf: (morph) ->
+  isAncestorOf: (widget) ->
 
     # »>> this part is excluded from the fizzygum homepage build
-    if Automator? and !morph?
+    if Automator? and !widget?
       # this happens when in a test, you select
       # a menu entry that doesn't exist.
       # so it's a good thing that we block the test
       # and let the user navigate through the world
       # to find the state of affairs that caused
       # the problem.
-      console.log "failed to find morph in test: " + world.automator.name
+      console.log "failed to find widget in test: " + world.automator.name
       console.log "...the macro is looking for a widget/menu item that isn't present in the current world state"
       debugger
     # this part is excluded from the fizzygum homepage build <<«
 
-    # test the morph itself
-    if morph is @
+    # test the widget itself
+    if widget is @
       return true
-    examinedWidget = morph
+    examinedWidget = widget
     # could use recursion, but
     # a loop will do too
     while examinedWidget.parent?
@@ -524,32 +524,32 @@ class TreeNode
   firstChildSuchThat: (predicate) ->
     @nthChildSuchThat 1, predicate
 
-  SLOWfirstParentClippingAtBounds: (morphToStartFrom = @) ->
-    if morphToStartFrom.parent?
-      if morphToStartFrom.parent.clipsAtRectangularBounds
-        return morphToStartFrom.parent
+  SLOWfirstParentClippingAtBounds: (widgetToStartFrom = @) ->
+    if widgetToStartFrom.parent?
+      if widgetToStartFrom.parent.clipsAtRectangularBounds
+        return widgetToStartFrom.parent
       else
-        return morphToStartFrom.parent.SLOWfirstParentClippingAtBounds()
+        return widgetToStartFrom.parent.SLOWfirstParentClippingAtBounds()
     else
       return nil
 
-  firstParentClippingAtBounds: (morphToStartFrom = @) ->
+  firstParentClippingAtBounds: (widgetToStartFrom = @) ->
     if @checkFirstParentClippingAtBoundsCache == WorldWdgt.numberOfAddsAndRemoves
       if world.doubleCheckCachedMethodsResults
-        if @cachedFirstParentClippingAtBounds != @SLOWfirstParentClippingAtBounds morphToStartFrom
+        if @cachedFirstParentClippingAtBounds != @SLOWfirstParentClippingAtBounds widgetToStartFrom
           debugger
           alert "firstParentClippingAtBounds is broken (cached)"
 
-    if morphToStartFrom.parent?
-      if morphToStartFrom.parent.clipsAtRectangularBounds
-        result = morphToStartFrom.parent
+    if widgetToStartFrom.parent?
+      if widgetToStartFrom.parent.clipsAtRectangularBounds
+        result = widgetToStartFrom.parent
       else
-        result = morphToStartFrom.parent.firstParentClippingAtBounds()
+        result = widgetToStartFrom.parent.firstParentClippingAtBounds()
     else
       result =  nil
 
     if world.doubleCheckCachedMethodsResults
-      if result != @SLOWfirstParentClippingAtBounds morphToStartFrom
+      if result != @SLOWfirstParentClippingAtBounds widgetToStartFrom
         debugger
         alert "firstParentClippingAtBounds is broken (uncached)"
 
@@ -570,9 +570,9 @@ class TreeNode
     @parent.parentThatIsA constructors...
 
   # »>> this part is excluded from the fizzygum homepage build
-  # checks whether the morph is a child,
+  # checks whether the widget is a child,
   # directly or indirectly, of a specified
-  # supposed ancestor morph
+  # supposed ancestor widget
   # currently unused
   isADescendantOf: (theSupposedAncestorWidget) ->
     if @ == theSupposedAncestorWidget
@@ -590,7 +590,7 @@ class TreeNode
   # need to create that entire list to start with, we
   # just navigate through the children arrays depth-first
   # (in reverse order though, see below)
-  # and stop at the first morph that satisfies the test.
+  # and stop at the first widget that satisfies the test.
   topWdgtSuchThat: (predicate) ->
     # base case - I am a leaf child, so I just test
     # the predicate on myself and return myself
@@ -604,11 +604,11 @@ class TreeNode
     # the top one (the last one in the array)
     # and proceed to test "towards the back" i.e.
     # testing elements of the array towards 0
-    # If you find any morph satisfying, the search is
+    # If you find any widget satisfying, the search is
     # over.
-    for morphNumber in [@children.length-1..0] by -1
-      morph = @children[morphNumber]
-      foundWidget = morph.topWdgtSuchThat predicate
+    for widgetNumber in [@children.length-1..0] by -1
+      widget = @children[widgetNumber]
+      foundWidget = widget.topWdgtSuchThat predicate
       if foundWidget?
         return foundWidget
     # now that all children are tested, test myself
@@ -626,10 +626,10 @@ class TreeNode
     # testing elements of the array towards 0
     # If you find any child that satisfies, the search is
     # over.
-    for morphNumber in [@children.length-1..0] by -1
-      morph = @children[morphNumber]
-      if predicate.call nil, morph
-        return morph
+    for widgetNumber in [@children.length-1..0] by -1
+      widget = @children[widgetNumber]
+      if predicate.call nil, widget
+        return widget
     # ok none of my children test positive,
     # so return nil.
     return nil

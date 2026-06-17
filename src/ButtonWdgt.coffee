@@ -1,6 +1,6 @@
 # sends a message to a target object when pressed.
 # Doesn't have any particular shape, but can host
-# a morph to be used as "face"
+# a widget to be used as "face"
 
 # TODO it's unclear to me why we pass a number of targets
 # and actions in the constructor when what we could simply
@@ -13,7 +13,7 @@ class ButtonWdgt extends Widget
   target: nil
   action: nil
   dataSourceWidgetForTarget: nil
-  morphEnv: nil
+  widgetEnv: nil
  
  
   doubleClickAction: nil
@@ -24,9 +24,9 @@ class ButtonWdgt extends Widget
  
   ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked: true
   
-  # tells if the button represents a morph, in which
+  # tells if the button represents a widget, in which
   # case we are going to highlight the Widget on hover
-  representsAMorph: false
+  representsAWidget: false
 
   padding: 0
 
@@ -42,13 +42,13 @@ class ButtonWdgt extends Widget
       @faceWidget = nil,
 
       @dataSourceWidgetForTarget = nil,
-      @morphEnv,
+      @widgetEnv,
       @toolTipMessage = nil,
 
       @doubleClickAction = nil,
       @argumentToAction1 = nil,
       @argumentToAction2 = nil,
-      @representsAMorph = false,
+      @representsAWidget = false,
       @padding = 0
       ) ->
 
@@ -94,11 +94,11 @@ class ButtonWdgt extends Widget
   getTextDescription: ->
 
     
-  # TriggerMorph action:
+  # trigger button action:
   trigger: ->
     if @action? and @action != ""
-      #console.log "@target: " + @target + " @morphEnv: " + @morphEnv
-      @target[@action].call @target, @dataSourceWidgetForTarget, @morphEnv, @argumentToAction1, @argumentToAction2
+      #console.log "@target: " + @target + " @widgetEnv: " + @widgetEnv
+      @target[@action].call @target, @dataSourceWidgetForTarget, @widgetEnv, @argumentToAction1, @argumentToAction2
     return
 
   triggerDoubleClick: ->
@@ -118,7 +118,7 @@ class ButtonWdgt extends Widget
     @triggerDoubleClick()
 
   # you shouldn't be able to drag a compound
-  # morphs containing a button by dragging the button
+  # widgets containing a button by dragging the button
   # (because you expect buttons attached to anything but the
   # world to be "slippery", i.e.
   # you can "skid" your drag over it in case you change

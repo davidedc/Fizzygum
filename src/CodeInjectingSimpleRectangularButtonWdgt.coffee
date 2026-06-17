@@ -1,5 +1,5 @@
 # like a SimpleRectangularButtonWdgt but it contains code that can be
-# injected into another morph
+# injected into another widget
 
 class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWdgt
 
@@ -25,6 +25,6 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
   injectCodeIntoTarget: ->
     @wdgtWhereToInject.injectProperties @sourceCodeToBeInjected
 
-  modifyCodeToBeInjected: (unused,textMorph) ->
-    @sourceCodeToBeInjected = textMorph.text
+  modifyCodeToBeInjected: (unused,textWidget) ->
+    @sourceCodeToBeInjected = textWidget.text
     @wdgtToBeNotifiedForNewCode.newCodeToInjectFromButton? @

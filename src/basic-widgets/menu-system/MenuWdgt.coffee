@@ -9,7 +9,7 @@ class MenuWdgt extends PopUpWdgt
   label: nil
   isListContents: false
 
-  constructor: (@morphOpeningThePopUp, @isListContents = false, @target, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true, @title = nil, @environment = nil, @fontSize = nil) ->
+  constructor: (@widgetOpeningThePopUp, @isListContents = false, @target, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true, @title = nil, @environment = nil, @fontSize = nil) ->
     # console.log "menu constructor"
     # console.log "menu super"
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
@@ -17,7 +17,7 @@ class MenuWdgt extends PopUpWdgt
     if !@isListContents
       if @killThisPopUpIfClickOutsideDescendants
         @onClickOutsideMeOrAnyOfMyChildren "close"
-    super @morphOpeningThePopUp, @killThisPopUpIfClickOutsideDescendants, @killThisPopUpIfClickOnDescendantsTriggers
+    super @widgetOpeningThePopUp, @killThisPopUpIfClickOutsideDescendants, @killThisPopUpIfClickOnDescendantsTriggers
     @isLockingToPanels = false
     @appearance = new MenuAppearance @
     @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
@@ -61,7 +61,7 @@ class MenuWdgt extends PopUpWdgt
   createLabel: ->
     @label = new MenuHeader @title
 
-  createMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true, target, action, toolTipMessage, color, bold = false, italic = false,doubleClickAction, arg1, arg2,representsAMorph = false)->
+  createMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true, target, action, toolTipMessage, color, bold = false, italic = false,doubleClickAction, arg1, arg2,representsAWidget = false)->
     # console.log "menu creating MenuItemWdgt "
     item = new MenuItemWdgt(
       ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, # closes unpinned menus
@@ -80,11 +80,11 @@ class MenuWdgt extends PopUpWdgt
       doubleClickAction,  # doubleclick action
       arg1,  # argument to action 1
       arg2,  # argument to action 2
-      representsAMorph  # does it represent a Widget?
+      representsAWidget  # does it represent a Widget?
       )
     if !@environment?
       item.dataSourceWidgetForTarget = item
-      item.morphEnv = @target
+      item.widgetEnv = @target
 
     item
 
@@ -108,14 +108,14 @@ class MenuWdgt extends PopUpWdgt
       else
         destroyNextLines = false
 
-  addMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph)->
+  addMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAWidget)->
     # console.log "menu creating MenuItemWdgt "
-    item = @createMenuItem label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph
+    item = @createMenuItem label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAWidget
     @silentAdd item
 
-  prependMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph)->
+  prependMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAWidget)->
     # console.log "menu creating MenuItemWdgt "
-    item = @createMenuItem label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph
+    item = @createMenuItem label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic,doubleClickAction, arg1, arg2,representsAWidget
     @silentAdd item, nil, 0
 
   # »>> this part is excluded from the fizzygum homepage build

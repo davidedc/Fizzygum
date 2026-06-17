@@ -8,11 +8,11 @@ class LayoutElementAdderOrDropletWdgt extends Widget
     @setColor Color.BLACK
     @setMinAndMaxBoundsAndSpreadability (new Point 15,15) , (new Point 15,15), LayoutSpec.SPREADABILITY_HANDLES
 
-  # This method only paints this very morph's "image",
+  # This method only paints this very widget's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
   # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this morph might paint something on the screen even if
+  # Note that this widget might paint something on the screen even if
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
@@ -37,8 +37,8 @@ class LayoutElementAdderOrDropletWdgt extends Widget
     @paintRectangle aContext, al, at, w, h, @color
     aContext.useLogicalPixelsUntilRestore()
 
-    morphPosition = @position()
-    aContext.translate morphPosition.x, morphPosition.y
+    widgetPosition = @position()
+    aContext.translate widgetPosition.x, widgetPosition.y
 
     @spacerWidgetRenderingHelper aContext, Color.WHITE, Color.create 200, 200, 255
 
@@ -60,11 +60,11 @@ class LayoutElementAdderOrDropletWdgt extends Widget
     # p0 is the origin, the origin being in the bottom-left corner
     p0 = @bottomLeft().subtract(@position())
 
-    # now the origin if on the left edge, in the top 2/3 of the morph
+    # now the origin if on the left edge, in the top 2/3 of the widget
     p0 = p0.subtract new Point 0, Math.ceil 2 * height/3
     
-    # now the origin is in the middle height of the morph,
-    # on the left edge of the square inscribed in the morph
+    # now the origin is in the middle height of the widget,
+    # on the left edge of the square inscribed in the widget
     p0 = p0.add new Point (width -  squareDim)/2, 0
 
     
@@ -79,7 +79,7 @@ class LayoutElementAdderOrDropletWdgt extends Widget
     context.moveTo 0.5 + plusSignTop.x, 0.5 + plusSignTop.y
     context.lineTo 0.5 + plusSignBottom.x, 0.5 + plusSignBottom.y
 
-    # now the new origin is in the lower part of the morph, so
+    # now the new origin is in the lower part of the widget, so
     # we can put an arrow there.
     p0 = p0.add new Point 0, Math.ceil 1*height/3
     arrowFlapSize = Math.ceil squareDim/8
@@ -119,7 +119,7 @@ class LayoutElementAdderOrDropletWdgt extends Widget
   mouseClickLeft: ->
     @bringToForeground()
     # if the adder/droplet is on its own, free floating, then
-    # put a supporting morph underneath it and put the adder/droplet
+    # put a supporting widget underneath it and put the adder/droplet
     # in a layout.
     if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
       newWdgt = new Widget
@@ -133,9 +133,9 @@ class LayoutElementAdderOrDropletWdgt extends Widget
       nil,
       LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
-  reactToDropOf: (morphBeingDropped) ->
+  reactToDropOf: (widgetBeingDropped) ->
     @addAsSiblingAfterMe \
-      morphBeingDropped,
+      widgetBeingDropped,
       nil,
       LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     @fullDestroy()

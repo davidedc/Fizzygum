@@ -176,9 +176,9 @@ storeSourceAndPotentiallyCompileItAndExecuteIt = (fileName, justIngestSources) -
     if justIngestSources
       # registers the class, its superclasses, its augmentations and the
       # source code
-      morphClass = new Class fileContents, false, false
+      widgetClass = new Class fileContents, false, false
     else
-      morphClass = new Class fileContents, true, true
+      widgetClass = new Class fileContents, true, true
   # Loaded Mixins here:
   else if /^  onceAddedClassProperties:/m.test fileContents
     if justIngestSources

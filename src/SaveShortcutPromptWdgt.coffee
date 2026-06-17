@@ -8,7 +8,7 @@ class SaveShortcutPromptWdgt extends MenuWdgt
 
   tempPromptEntryField: nil
 
-  constructor: (morphOpeningThePopUp, @target, @defaultContents, @intendedWidth = 100, @wdgtWhereReferenceWillGo) ->
+  constructor: (widgetOpeningThePopUp, @target, @defaultContents, @intendedWidth = 100, @wdgtWhereReferenceWillGo) ->
     
     if !@defaultContents
       @defaultContents = world.getNextUntitledShortcutName()
@@ -23,7 +23,7 @@ class SaveShortcutPromptWdgt extends MenuWdgt
       false
     )
 
-    super morphOpeningThePopUp, false, @target, true, true, @msg, @tempPromptEntryField
+    super widgetOpeningThePopUp, false, @target, true, true, @msg, @tempPromptEntryField
 
     @silentAdd @tempPromptEntryField
 
@@ -39,9 +39,9 @@ class SaveShortcutPromptWdgt extends MenuWdgt
 
   reLayout: ->
     super()
-    @buildSubmorphs()
+    @buildSubwidgets()
 
-  buildSubmorphs: ->
+  buildSubwidgets: ->
 
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
   

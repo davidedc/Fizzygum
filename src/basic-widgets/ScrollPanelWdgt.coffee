@@ -86,23 +86,23 @@ class ScrollPanelWdgt extends PanelWdgt
     @adjustContentsBounds()
     @adjustScrollBars()
 
-  setColor: (aColorOrAWidgetGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
+  setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
 
-    aColor = super aColorOrAWidgetGivingAColor, morphGivingColor, connectionsCalculationToken, true
+    aColor = super aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, true
     # keep in sync the color of the content.
     # Note that the container ScrollPanel.
     # is actually not painted.
-    @contents.setColor aColorOrAWidgetGivingAColor, morphGivingColor, connectionsCalculationToken
+    @contents.setColor aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken
     return aColor
 
-  setAlphaScaled: (alphaOrWidgetGivingAlpha, morphGivingAlpha) ->
+  setAlphaScaled: (alphaOrWidgetGivingAlpha, widgetGivingAlpha) ->
     alpha = super
     # update the alpha of the ScrollPanel - note
     # that we are never going to paint the ScrollPanel
     # we are updating the alpha so that its value is the same as the
     # contained Panel
-    @contents.setAlphaScaled alphaOrWidgetGivingAlpha, morphGivingAlpha
+    @contents.setAlphaScaled alphaOrWidgetGivingAlpha, widgetGivingAlpha
     return alpha
 
   anyScrollBarShowing: ->
@@ -246,7 +246,7 @@ class ScrollPanelWdgt extends PanelWdgt
     if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true
 
     # if PanelWdgt is of type isTextLineWrapping
-    # it means that you don't want the TextMorph to
+    # it means that you don't want the text widget to
     # extend indefinitely as you are typing. Rather,
     # the width will be constrained and the text will
     # wrap.
@@ -256,8 +256,8 @@ class ScrollPanelWdgt extends PanelWdgt
     if @contents instanceof SimpleVerticalStackPanelWdgt
       @contents.adjustContentsBounds()
     else if @isTextLineWrapping and @contents instanceof PanelWdgt
-      @contents.children.forEach (morph) =>
-        if morph.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
+      @contents.children.forEach (widget) =>
+        if widget.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
           # contained text that OPTED INTO FIT_BOX_TO_TEXT (a SimplePlainTextWdgt or
           # a bare TextWdgt put into that mode) fits its BOX to the TEXT: reassert
           # soft-wrap, then feed it the width — rawSetWidth re-lays-out the text to
@@ -265,11 +265,11 @@ class ScrollPanelWdgt extends PanelWdgt
           # vertical slider below. We RESPECT the mode (a non-text child or a
           # FIT_TEXT_TO_BOX widget is skipped). Was SimplePlainTextWdgt-only, via
           # the maxTextWidth wrap flag.
-          morph.softWrap = true
-          morph.rawSetWidth @contents.width() - totalPadding
-          @contents.rawSetHeight (Math.max morph.height(), @height()) - totalPadding
+          widget.softWrap = true
+          widget.rawSetWidth @contents.width() - totalPadding
+          @contents.rawSetHeight (Math.max widget.height(), @height()) - totalPadding
 
-    subBounds = @contents.subMorphsMergedFullBounds()?.ceil()
+    subBounds = @contents.subWidgetsMergedFullBounds()?.ceil()
     if subBounds
 
       # add-in the content's own external padding
@@ -427,7 +427,7 @@ class ScrollPanelWdgt extends PanelWdgt
         # if the Widget at hand is float draggable then
         # we are probably about to detach it, so
         # we shouldn't move anything, because user might
-        # just float-drag the morph as soon as the threshold is
+        # just float-drag the widget as soon as the threshold is
         # reached, and we don't want to scroll until that happens
         # that would be strange because it would be giving the
         # wrong cue to the user, we just want to hold steady
@@ -673,12 +673,12 @@ class ScrollPanelWdgt extends PanelWdgt
       @adjustScrollBars()
   
 
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     if @takesOverAndCoalescesChildrensMenus
       if @contents
         childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets @contents
       if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length == 1
-        childrenNotHandlesNorCarets[0].addMorphSpecificMenuEntries morphOpeningThePopUp, menu
+        childrenNotHandlesNorCarets[0].addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
     else
       super
   

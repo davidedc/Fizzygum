@@ -4,8 +4,8 @@
 class ColorPickerWdgt extends Widget
 
   # pattern: all the children should be declared here
-  # the reason is that when you duplicate a morph
-  # , the duplicated morph needs to have the handles
+  # the reason is that when you duplicate a widget
+  # , the duplicated widget needs to have the handles
   # that will be duplicated. If you don't list them
   # here, then they need to be initialised in the
   # constructor. But actually they might not be
@@ -22,12 +22,12 @@ class ColorPickerWdgt extends Widget
     @appearance = new RectangularAppearance @
     @color = Color.WHITE
     @rawSetExtent new Point 80, 80
-    @buildSubmorphs()
+    @buildSubwidgets()
 
   colloquialName: ->
     "color picker"
 
-  buildSubmorphs: ->
+  buildSubwidgets: ->
     @feedback = new RectangleWdgt new Point(20, 20), @choice
     @colorPalette = new ColorPaletteWdgt @feedback, new Point @width(), 50
     @grayPalette = new GrayPaletteWdgt @feedback, new Point @width(), 5
@@ -57,9 +57,9 @@ class ColorPickerWdgt extends Widget
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
-    # submorphs of the inspector are within the
+    # subwidgets of the inspector are within the
     # bounds of the parent Widget. This means that
-    # if only the parent morph breaks its rectangle
+    # if only the parent widget breaks its rectangle
     # then everything is OK.
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still

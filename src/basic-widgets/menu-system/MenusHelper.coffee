@@ -7,8 +7,8 @@ class MenusHelper
 
   @augmentWith DeepCopierMixin
 
-  popUpDevToolsMenu: (morphOpeningThePopUp, widgetThisMenuIsAbout) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Dev Tools"
+  popUpDevToolsMenu: (widgetOpeningThePopUp, widgetThisMenuIsAbout) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Dev Tools"
     menu.addMenuItem "inspect", true, widgetThisMenuIsAbout, "inspect", "open a window\non all properties"
     menu.addMenuItem "console", true, widgetThisMenuIsAbout, "createConsole", "console"
 
@@ -497,8 +497,8 @@ class MenusHelper
     world.add wm
 
 
-  popUpMore1IconsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "More Icons 1"
+  popUpMore1IconsMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "More Icons 1"
     menu.addMenuItem "Pencil 1 icon", true, menusHelper, "createPencil1IconWdgt"
     menu.addMenuItem "Pencil 2 icon", true, menusHelper, "createPencil2IconWdgt"
     menu.addMenuItem "Brush icon", true, menusHelper, "createBrushIconWdgt"
@@ -514,8 +514,8 @@ class MenusHelper
     menu.addMenuItem "Widget icon", true, menusHelper, "createWidgetIconWdgt"
     menu.popUpAtHand()
 
-  popUpMore2IconsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "More Icons 2"
+  popUpMore2IconsMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "More Icons 2"
     menu.addMenuItem "Format as code icon", true, menusHelper, "createFormatAsCodeIconWdgt"
     menu.addMenuItem "Ch. X icon", true, menusHelper, "createChXIconWdgt"
     menu.addMenuItem "Ch. X.X icon", true, menusHelper, "createChXXIconWdgt"
@@ -536,8 +536,8 @@ class MenusHelper
 
     menu.popUpAtHand()
 
-  popUpMore3IconsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "More Icons 2"
+  popUpMore3IconsMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "More Icons 2"
     menu.addMenuItem "Fizzygum logo", true, menusHelper, "createFizzygumLogoIconWdgt"
     menu.addMenuItem "Fizzygum logo with text", true, menusHelper, "createFizzygumLogoWithTextIconWdgt"
     menu.addMenuItem "Vaporwave sun", true, menusHelper, "createVaporwaveSunIconWdgt"
@@ -589,8 +589,8 @@ class MenusHelper
   createSaveIconWdgt : ->
     world.create new SaveIconWdgt
 
-  popUpArrowsIconsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Arrows"
+  popUpArrowsIconsMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Arrows"
     menu.addMenuItem "Arrow N icon", true, menusHelper, "createArrowNIconWdgt"
     menu.addMenuItem "Arrow S icon", true, menusHelper, "createArrowSIconWdgt"
     menu.addMenuItem "Arrow W icon", true, menusHelper, "createArrowWIconWdgt"
@@ -728,15 +728,15 @@ class MenusHelper
     example3DPlot.setExtent new Point 300, 300
     world.create example3DPlot
 
-  popUpMapsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Maps"
+  popUpMapsMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Maps"
     menu.addMenuItem "world map", true, menusHelper, "createWorldMapIconWdgt", "others"
     menu.addMenuItem "USA map", true, menusHelper, "createUSAMapIconWdgt", "others"
 
     menu.popUpAtHand()
 
-  popUpGraphsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "graphs"
+  popUpGraphsMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "graphs"
     menu.addMenuItem "axis", true, menusHelper, "create2DAxis"
     menu.addMenuItem "scatter plot", true, menusHelper, "createExampleScatterPlot"
     menu.addMenuItem "scatter plot with axes", true, menusHelper, "createExampleScatterPlotWithAxes"
@@ -746,8 +746,8 @@ class MenusHelper
 
     menu.popUpAtHand()
 
-  popUpSupportDocsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuWdgt morphOpeningThePopUp,  false, @, true, true, "Support Docs"
+  popUpSupportDocsMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Support Docs"
     menu.addMenuItem "welcome message", true, @, "createWelcomeMessageWindowAndShortcut", "welcome message"
 
     menu.popUpAtHand()

@@ -25,7 +25,7 @@ class IconicDesktopSystemScriptShortcutWdgt extends IconicDesktopSystemShortcutW
     @target.contents.doAll()
 
 
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     menu.addLine()
     menu.addMenuItem "edit script...", true, @, "editScript"
     menu

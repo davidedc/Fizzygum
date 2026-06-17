@@ -11,9 +11,9 @@ class RadioButtonsHolderWdgt extends Widget
 
   # TODO gross pattern break - usually mouseClickLeft has 9 params
   # none of which is a widget
-  mouseClickLeft: (morphThatFired) ->
+  mouseClickLeft: (widgetThatFired) ->
     for w in @children
-      if w != morphThatFired
+      if w != widgetThatFired
         w.resetSwitchButton?()
 
   whichButtonSelected: ->

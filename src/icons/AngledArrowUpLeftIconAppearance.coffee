@@ -1,7 +1,7 @@
 class AngledArrowUpLeftIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
-    fillColor = @morph.color
+    fillColor = @widget.color
 
     context.save()
     context.translate 90, 37

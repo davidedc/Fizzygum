@@ -6,7 +6,7 @@ class ErrorsLogViewerWdgt extends Widget
 
   tempPromptEntryField: nil
   defaultContents: ""
-  textMorph: nil
+  textWidget: nil
 
   clearButton: nil
   pauseToggle: nil
@@ -28,12 +28,12 @@ class ErrorsLogViewerWdgt extends Widget
     @parent.hide()
 
   addText: (newLog) ->
-    if @textMorph.text.length != 0
-      existingLog = @textMorph.text
+    if @textWidget.text.length != 0
+      existingLog = @textWidget.text
     else
       existingLog = ""
 
-    @textMorph.setText existingLog + "\n\n-----------------------------------------\n\n" + newLog
+    @textWidget.setText existingLog + "\n\n-----------------------------------------\n\n" + newLog
 
 
   showUpWithError: (err) ->
@@ -66,11 +66,11 @@ class ErrorsLogViewerWdgt extends Widget
     @tempPromptEntryField.contents.disableDrops()
     @tempPromptEntryField.color = Color.WHITE
 
-    @textMorph = @tempPromptEntryField.textWdgt
-    @textMorph.backgroundColor = Color.TRANSPARENT
-    @textMorph.setFontName nil, nil, @textMorph.monoFontStack
-    @textMorph.isEditable = true
-    @textMorph.enableSelecting()
+    @textWidget = @tempPromptEntryField.textWdgt
+    @textWidget.backgroundColor = Color.TRANSPARENT
+    @textWidget.setFontName nil, nil, @textWidget.monoFontStack
+    @textWidget.isEditable = true
+    @textWidget.enableSelecting()
 
     @add @tempPromptEntryField
 
@@ -96,10 +96,10 @@ class ErrorsLogViewerWdgt extends Widget
     @paused = false
 
   clearTextPane: ->
-    @textMorph.setText ""
+    @textWidget.setText ""
 
   informTarget: ->
-    @target[@callback].call @target, nil, @textMorph
+    @target[@callback].call @target, nil, @textWidget
 
   notifyTargetAndClose: ->
     @informTarget()
@@ -120,9 +120,9 @@ class ErrorsLogViewerWdgt extends Widget
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
-    # submorphs of the inspector are within the
+    # subwidgets of the inspector are within the
     # bounds of the parent Widget. This means that
-    # if only the parent morph breaks its rectangle
+    # if only the parent widget breaks its rectangle
     # then everything is OK.
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still

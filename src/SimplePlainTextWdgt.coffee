@@ -8,7 +8,7 @@
 # SimplePlainTextWdgt is now a THIN specialization of TextWdgt: its ctor just opts
 # into FIT_BOX_TO_TEXT (the contained-text mode) — see TextWdgt::reLayout and the
 # FITTING MODEL comment in StringWdgt. It USED to be a "compatibility layer" that
-# hard-coded this behaviour through the dead-TextMorph `maxTextWidth` knob and
+# hard-coded this behaviour through the dead-text widget `maxTextWidth` knob and
 # three `instanceof SimplePlainTextWdgt` leaks in the base, with a TODO to do "a
 # larger layout rework". That rework is the FIT_BOX_TO_TEXT arc: it retired
 # maxTextWidth + the leaks and moved the contained-reflow engine onto the base
@@ -75,7 +75,7 @@ class SimplePlainTextWdgt extends TextWdgt
     functionNamesStrings.push "bang", "setText"
     return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
 
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.removeMenuItem "soft wrap"
     menu.removeMenuItem "soft wrap".tick()
@@ -97,7 +97,7 @@ class SimplePlainTextWdgt extends TextWdgt
     if world.isIndexPage
       menu.addMenuItem "connect to ➜", true, @, "openTargetSelector", "connect to\nanother widget"
     else
-      menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another morph\nwhose numerical property\n will be" + " controlled by this one"
+      menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another widget\nwhose numerical property\n will be" + " controlled by this one"
 
     if @amIDirectlyInsideScrollPanelWdgt()
       childrenNotCarets = @parent.children.filter (m) ->

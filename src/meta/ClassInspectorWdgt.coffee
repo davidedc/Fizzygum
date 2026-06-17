@@ -9,7 +9,7 @@ class ClassInspectorWdgt extends InspectorWdgt
     #@label.setText "class " + @target.constructor.name
 
   colloquialName: ->
-    "Class Inspector (" + @target.constructor.name.replace("Morph", "").replace("Wdgt", "") + ")"
+    "Class Inspector (" + @target.constructor.name.replace("Wdgt", "") + ")"
 
   layoutOwnPropsOnlyToggle: (height) ->
 

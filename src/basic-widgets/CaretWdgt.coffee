@@ -24,7 +24,7 @@ class CaretWdgt extends BlinkerWdgt
     # font could be really small I guess?
     @minimumExtent = new Point 1,1
 
-    # (The deleted old TextMorph had to be forced left-aligned while editing
+    # (The deleted old text widget had to be forced left-aligned while editing
     # because it couldn't manage the caret under non-left string alignment. The
     # modern TextWdgt handles the caret correctly under every
     # AlignmentSpecHorizontal — its slotCoordinates / slotAtSingleLineString

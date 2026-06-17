@@ -33,19 +33,19 @@ class SimpleDropletAppearance extends RectangularAppearance
     if appliedShadow?
       return
 
-    height = @morph.height()
-    width = @morph.width()
+    height = @widget.height()
+    width = @widget.width()
 
     squareDim = Math.min width/2, height/2
 
     # p0 is the origin, the origin being in the bottom-left corner
-    p0 = @morph.bottomLeft()
+    p0 = @widget.bottomLeft()
 
-    # now the origin if on the left edge, in the middle height of the morph
+    # now the origin if on the left edge, in the middle height of the widget
     p0 = p0.subtract new Point 0, Math.ceil height/2
     
-    # now the origin is in the middle height of the morph,
-    # on the left edge of the square inscribed in the morph
+    # now the origin is in the middle height of the widget,
+    # on the left edge of the square inscribed in the widget
     p0 = p0.add new Point (width -  squareDim)/2, 0
 
     

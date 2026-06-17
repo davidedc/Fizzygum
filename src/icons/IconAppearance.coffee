@@ -31,8 +31,8 @@ class IconAppearance extends Appearance
 
 
   calculateRectangleOfIcon: ->
-    height = @morph.height()
-    width = @morph.width()
+    height = @widget.height()
+    width = @widget.width()
 
     scaleW = Math.abs(width / @preferredSize.width())
     scaleH = Math.abs(height / @preferredSize.height())
@@ -57,8 +57,8 @@ class IconAppearance extends Appearance
     result = new Rectangle(Math.min(0, @preferredSize.width()), Math.min(0, @preferredSize.height()), Math.abs(@preferredSize.width()), Math.abs(@preferredSize.height()))
     result2W = result.width() * scaleW
     result2H = result.height() * scaleH
-    result2X = @morph.left() + (width - (result2W)) / 2
-    result2Y = @morph.top() + (height - (result2H)) / 2
+    result2X = @widget.left() + (width - (result2W)) / 2
+    result2Y = @widget.top() + (height - (result2H)) / 2
 
     result = new Rectangle result2X, result2Y, result2X + result2W, result2Y + result2H
     return result.round()
@@ -66,17 +66,17 @@ class IconAppearance extends Appearance
   widthWithoutSpacing: ->
     @calculateRectangleOfIcon().width()
 
-  # This method only paints this very morph's "image",
+  # This method only paints this very widget's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
   # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this morph might paint something on the screen even if
+  # Note that this widget might paint something on the screen even if
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
-    if @morph.preliminaryCheckNothingToDraw clippingRectangle, aContext
+    if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
       return
 
-    [area,sl,st,al,at,w,h] = @morph.calculateKeyValues aContext, clippingRectangle
+    [area,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
     return nil if w < 1 or h < 1 or area.isEmpty()
 
     aContext.save()
@@ -85,12 +85,12 @@ class IconAppearance extends Appearance
     # going to paint the whole of the box
     aContext.clipToRectangle al,at,w,h
 
-    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
+    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
 
     aContext.useLogicalPixelsUntilRestore()
 
-    #morphPosition = @morph.position()
-    #aContext.translate morphPosition.x, morphPosition.y
+    #widgetPosition = @widget.position()
+    #aContext.translate widgetPosition.x, widgetPosition.y
     #debugger
 
     result = @calculateRectangleOfIcon()
@@ -102,7 +102,7 @@ class IconAppearance extends Appearance
 
     ## at this point, you draw in a squareSize x squareSize
     ## canvas, and it gets painted in a square that fits
-    ## the morph, right in the middle.
+    ## the widget, right in the middle.
     @paintFunction aContext
 
     aContext.restore()

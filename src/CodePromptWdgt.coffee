@@ -2,7 +2,7 @@ class CodePromptWdgt extends Widget
 
   tempPromptEntryField: nil
   defaultContents: ""
-  textMorph: nil
+  textWidget: nil
 
   cancelButton: nil
   saveButton: nil
@@ -43,11 +43,11 @@ class CodePromptWdgt extends Widget
     # so we can enable/disable the "save" button
     @tempPromptEntryField.widgetToBeNotifiedOfTextModificationChange = @
 
-    @textMorph = @tempPromptEntryField.textWdgt
-    @textMorph.backgroundColor = Color.TRANSPARENT
-    @textMorph.setFontName nil, nil, @textMorph.monoFontStack
-    @textMorph.isEditable = true
-    @textMorph.enableSelecting()
+    @textWidget = @tempPromptEntryField.textWdgt
+    @textWidget.backgroundColor = Color.TRANSPARENT
+    @textWidget.setFontName nil, nil, @textWidget.monoFontStack
+    @textWidget.isEditable = true
+    @textWidget.enableSelecting()
 
     @add @tempPromptEntryField
 
@@ -80,8 +80,8 @@ class CodePromptWdgt extends Widget
 
 
   informTarget: ->
-    @target[@callback].call @target, nil, @textMorph
-    @textMorph.considerCurrentTextAsReferenceText()
+    @target[@callback].call @target, nil, @textWidget
+    @textWidget.considerCurrentTextAsReferenceText()
     @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
 
   notifyTargetAndClose: ->
@@ -97,9 +97,9 @@ class CodePromptWdgt extends Widget
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
-    # submorphs of the inspector are within the
+    # subwidgets of the inspector are within the
     # bounds of the parent Widget. This means that
-    # if only the parent morph breaks its rectangle
+    # if only the parent widget breaks its rectangle
     # then everything is OK.
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still

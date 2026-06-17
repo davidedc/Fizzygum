@@ -1,14 +1,14 @@
 class BubblyAppearance extends BoxyAppearance
 
-  constructor: (morph) ->
-    super morph
+  constructor: (widget) ->
+    super widget
 
   outlinePath: (context, radius) ->
     # console.log "bubble outlinePath"
 
     padding = radius
-    w = @morph.width()
-    h = @morph.height()
+    w = @widget.width()
+    h = @widget.height()
 
     spikeHeight = h/5
     spikeDistanceFromClosestSide = h/5

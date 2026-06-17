@@ -1,4 +1,4 @@
-# Sliders (and hence slider button morphs)
+# Sliders (and hence slider button widgets)
 # are also used in the ScrollPanelWdgts .
 
 # In previous versions the user could force an orientation, so
@@ -145,7 +145,7 @@ class SliderWdgt extends CircleBoxWdgt
     @updateTarget()
 
   # SliderWdgt menu:
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
     menu.addMenuItem "show value", true, @, "showValue", "display a dialog box\nshowing the selected number"
@@ -180,7 +180,7 @@ class SliderWdgt extends CircleBoxWdgt
     if world.isIndexPage
       menu.addMenuItem "connect to ➜", true, @, "openTargetSelector", "connect to\nanother widget"
     else
-      menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another morph\nwhose numerical property\n will be" + " controlled by this one"
+      menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another widget\nwhose numerical property\n will be" + " controlled by this one"
   
   showValue: ->
     @inform @value

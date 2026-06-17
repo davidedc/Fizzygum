@@ -37,7 +37,7 @@ class HandleWdgt extends Widget
     else
       return false
 
-  # HandleWdgts are one of the few morphs that
+  # HandleWdgts are one of the few widgets that
   # by default don't stick to their parents.
   # Also SliderButtonWdgts tend do the same (if
   # they are attached to a SliderWdgt)
@@ -62,11 +62,11 @@ class HandleWdgt extends Widget
       @hide()
 
 
-  # This method only paints this very morph's "image",
+  # This method only paints this very widget's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
   # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this morph might paint something on the screen even if
+  # Note that this widget might paint something on the screen even if
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
@@ -85,8 +85,8 @@ class HandleWdgt extends Widget
     aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
 
     aContext.useLogicalPixelsUntilRestore()
-    morphPosition = @position()
-    aContext.translate morphPosition.x, morphPosition.y
+    widgetPosition = @position()
+    aContext.translate widgetPosition.x, widgetPosition.y
 
     if @state == @STATE_NORMAL
       @handleWidgetRenderingHelper aContext, @color, Color.create 150, 150, 150
@@ -240,9 +240,9 @@ class HandleWdgt extends Widget
     @state = @STATE_NORMAL
     @changed()
 
-  makeHandleSolidWithParentWidget: (ignored, ignored2, morphAttachedTo)->
-    if morphAttachedTo?
-      @target = morphAttachedTo
+  makeHandleSolidWithParentWidget: (ignored, ignored2, widgetAttachedTo)->
+    if widgetAttachedTo?
+      @target = widgetAttachedTo
       switch @type
         when "resizeBothDimensionsHandle"
           @target.add @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT
@@ -257,7 +257,7 @@ class HandleWdgt extends Widget
     
   # HandleWdgt menu:
   attach: ->
-    choices = world.plausibleTargetAndDestinationMorphs @
+    choices = world.plausibleTargetAndDestinationWidgets @
     menu = new MenuWdgt @, false, @, true, true, "choose target:"
     if choices.length > 0
       choices.forEach (each) =>
@@ -266,10 +266,10 @@ class HandleWdgt extends Widget
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
       # time being it's quite costly to
-      # find the eligible morphs to attach
+      # find the eligible widgets to attach
       # to, so for now let's just calculate
       # this list if the user invokes the
       # command, and if there are no good
-      # morphs then show some kind of message.
-      menu = new MenuWdgt @, false, @, true, true, "no morphs to attach to"
+      # widgets then show some kind of message.
+      menu = new MenuWdgt @, false, @, true, true, "no widgets to attach to"
     menu.popUpAtHand() if choices.length
