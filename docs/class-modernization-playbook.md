@@ -789,4 +789,27 @@ already existed; NOT the class-name abbreviation `Wdgt`). Plan `~/.claude/plans/
 - **165/165 (Chrome dpr 1+2, WebKit), `--homepage` builds + boots, 1 recapture.** **What remains in src** (deliberately kept): the ~11 test-API
   `*Morph` methods, the prep-object generics (`makeHandleSolidWithParentMorph`/`create…In/OnMorph`), `theWordMorph`+logic strings, capitalized
   comment class-refs, `Morphic`. Fully removing the test-API `*Morph` methods + the 6 Automator command names would require touching the 165 tests —
-  the "full eradication incl. test-facing API" the owner declined.
+  the "full eradication incl. test-facing API" the owner declined (then RE-OPENED + completed in BATCH 23 below).
+
+**DONE (2026-06-17): BATCH 23 — FULL source de-Morph (every `Morph`/`morph` → `Widget`/`widget`), 7 phases.** The owner reviewed an exhaustive
+re-audit and found B22 had UNDERCOUNTED ~4× — both B22 and that audit shared a **capital-`M` blind spot**, leaving the entire LOWERCASE `morph*`
+vocabulary plus the test-facing API, Automator command names, user-visible UI strings, and old-class comment refs. True scope: **1411 occ / 70 ids /
+206 src files**. Owner directive: "do it all, multiple steps OK, no mid-work surprises." Plan `~/.claude/plans/batch23-FULL-source-demorph.md`.
+RECOMMENDED ORDER = coupled/drawn/Automator/comment items FIRST so the final big uniform sweep only had to protect `Morphic`:
+- **Phase 1 — executable test-API methods** (8 the macros call by name as CODE: `plausibleTargetAndDestinationMorphs`→`…Widgets`, `findFirstLooseMorph`,
+  `textMorph`→`textWidget`, `subMorphsMergedFullBounds`, `getHierarchyMenuMorphs`, `addHighlightingMorphs`, `morph[s]ToBeHighlighted`) — src + lockstep `_autoCmd`.
+- **Phase 2 — the 6 Automator command classes** (`HidingOfMorphs`→`HidingOfWidgets`, `AlignmentOfMorphIDs`→`AlignmentOfWidgetIDs`): resolved via
+  `window[automatorEventCommandName]` (AutomatorPlayer.coffee:133), so the class name MUST equal the serialized string in all **165** `_automationCommands.js` preambles.
+- **Phases 3–5 — removed the now-dead `theWordMorph` suffix branch** (no global ends in "Morph" anymore) + `ClassInspector`'s `.replace("Morph","")`;
+  old-class comment refs → concept ("text widget", etc.); the **big uniform sweep** `@morph`→`@widget` (base `Appearance` + ~180 subclasses) + all `morph*`
+  camelCase + `submorph`→`subwidget` + user-visible UI strings. **21 benign drawn-text recaptures** (UI strings like "no widgets to attach to" + the inspector's
+  introspected method/property names) at dpr1+dpr2.
+- **Phase 6 — the 31 Morph-named test DIRECTORIES** (659 files): generic-noun→`Widget`, old class-generation refs→modern `Wdgt` (`StringMorph2`→`StringWdgt`,
+  `TextMorph2`→`TextWdgt`, `ListMorph`→`ListWdgt`, `Caret`/`Handle`/`ColorPaletteMorph`→`*Wdgt`). testsManifest regenerates from dir names; names aren't
+  drawn/executed → **ZERO pixel recapture**.
+- **Phase 7 — swept test PROSE** (intent/scenario/assertions/provenance + visualisation.html + autoCmd comments): lowercase `morph`→`widget`, capital
+  old-class names→concept, stale method-name citations→current; the `"Create morph"` typed fixture→`"Create widget"` (1 benign recapture). **KEPT as
+  historical record** (owner: "keep docs historical"): the migrated-from `SystemTest_<recorded-original>` provenance citations + the playbook/MEMORY/starting-prompt changelog.
+- **KEPT as deliberate keepers:** `Morphic` (heritage), the `AtomMorph` Squeak citation, the `Widget.coffee:1` rationale line ("Widget is a more understandable name for the concept of Morph").
+- **LESSONS:** (a) `\bmorph` (lowercase) misses capital `Morph` mid-identifier AND is blocked by a preceding `_`/word-char (`SystemTest_macroX`, `unused_morphOpeningThePopUp`) — for filename/qualified tokens sweep WITHOUT `\b` (unique full tokens are substring-safe). (b) `run-macro-test-headless --capture-ref` ADDS the new-hash ref but does NOT remove the superseded old one (it lacks `capture-macro-test-references.js --clean`'s cleanup) → the build's dedup check fails on two hashes per image; delete the superseded TRACKED old ref (the new is untracked) per `(image,dpr)` prefix. (c) zsh does NOT word-split an unquoted `$VAR` in `for x in $VAR` (a literal space-separated list DOES split) — use `while read` or a literal list. (d) breadth-vs-recapture again: only DRAWN surfaces recaptured (UI strings + inspector introspection); the 206-file `@morph` rename + 659-file test-dir rename were pixel-neutral.
+- **Verification:** per-phase `build_and_test`; full matrix `build_and_test` (dpr1) + `npm test --dpr=2` + `npm run test:webkit` + `--homepage` boot — all green. **★ `rg '\b\w*Morph\w*\b' Fizzygum/src` (excl `Morphic`/`AtomMorph`/the rationale line) = NONE; the SOURCE is Morph-free.** Pushed: Fizzygum `039d7cd0`+`f20a7db4`, tests `a719f30d3`+`527476b00`.
