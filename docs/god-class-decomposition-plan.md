@@ -284,12 +284,30 @@ Non-launcher builders reached by a direct code call (Templates) still become a s
     / "How to save?"), re-launch reuses it, and `fullCopy` keeps the app by reference. Zero
     recapture. (`WelcomeMessageInfoWdgt` is NOT an app -- it builds a document *shortcut*,
     is menu-invoked, and its bootstrap call is commented out -- so it is left as-is.)
-  - **Remaining:** the 7 fresh-window desktop launchers (Family 1 -- `buildWindow`
-    builds+adds the window, `windowOpened` does `*InfoWdgt.createNextTo`: Draw/FizzyPaint,
-    Docs Maker, Slides Maker, Dashboards, Patch progr., Generic panel, Super Toolbar); then
-    the a5/a6 demo+icon factories (bulk, mostly homepage-stripped, L18-150/442-755) and the
-    `popUp*Menu` builders (NOT apps -- separate). Each rebinds its `WorldWdgt` bootstrap
-    call(s) in lockstep and verifies with the recipe + a targeted check.
+  - **6c.4 the 7 fresh-window desktop launchers -- DONE.** `FizzyPaintApp` (Draw),
+    `SimpleDocumentApp` (Docs Maker), `SimpleSlideApp` (Slides Maker), `DashboardsApp`,
+    `PatchProgrammingApp`, `GenericPanelApp`, `ToolbarsApp` (all `src/apps/`), each a
+    slot-less subclass: `buildWindow` builds the window, `windowOpened` does
+    `*InfoWdgt.createNextTo`. **GENERALISED the window-build (owner ask):** the uniform
+    6-line wrap (`new WindowWdgt; setExtent; fullRawMoveTo; fullRawMoveWithin world;
+    world.add; return`) became a reusable `openWindowWith(content, extent, position)`
+    helper on the base, so each fresh app's `buildWindow` is a one-liner (Toolbars builds
+    its `toolsPanel` -- byte-verified -- then calls it). Singletons keep bespoke
+    `buildWindow` (they need `rawSetExtent` + a title, a genuinely different wrap -- not
+    forced into a flag-laden helper). 14 methods removed from MenusHelper (642 -> 489).
+    **Reflection blast radius:** beyond the 7 `WorldWdgt:449-455` bootstrap calls, 3 dev-menu
+    items in `Widget.coffee` (`popUpShortcutsAndScriptsMenu`) targeted `createXLauncher` by
+    reflection -- caught by the grep-to-zero and rebound to `(new XApp), "createOpener"` (the
+    app's `keptByReferenceOnDeepCopy` covers the menu-target deep-copy). 165/165
+    dpr1+dpr2+WebKit + `--homepage`; targeted check confirms each app wraps the right content,
+    `windowOpened` runs (the `world.infoDoc_<key>_created` guard flag flips), launches fresh
+    (no slot), and `fullCopy` holds. Zero recapture.
+  - **Remaining (6c.5/6c.6, NOT apps):** the a5/a6 demo+icon factories (bulk, mostly
+    homepage-stripped, the L18-150 / ~166 onward dev blocks) and the `popUp*Menu` builders.
+    With 6c.4 done, MenusHelper has **no windowed-app launch methods left** -- only these
+    demo/icon factories, the `popUp*Menu` builders, and a few helpers
+    (`basementIconAndText`, `newScriptWindow`, `createWelcomeMessageWindowAndShortcut`,
+    `makeSlidersButtonsStatesBright`, ...).
   Verify: full recipe. **REFINEMENT (found in 6c.1):** the suite + boot-smoke do NOT
   exercise the window-builder paths — **zero** SystemTests touch them (only one test
   references `menusHelper` at all, for `makeSlidersButtonsStatesBright`), and these

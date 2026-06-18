@@ -54,3 +54,15 @@ class IconicDesktopSystemWindowedApp
       world[@slot] = @buildWindow()
     else
       @windowOpened @buildWindow()
+
+  # Convenience for buildWindow: wrap a content widget in a window, size and place it,
+  # and add it to the world -- the uniform "fresh window" build shared by the launcher
+  # apps. Returns the window. (Singleton apps that need a title / rawSetExtent build
+  # their window directly instead.)
+  openWindowWith: (contentWidget, extent, position) ->
+    wm = new WindowWdgt nil, nil, contentWidget
+    wm.setExtent extent
+    wm.fullRawMoveTo position
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm

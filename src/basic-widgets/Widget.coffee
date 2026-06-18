@@ -3304,9 +3304,9 @@ class Widget extends TreeNode
     menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Shortcuts & Scripts"
     menu.addMenuItem "basement shortcut", true, menusHelper, "basementIconAndText"
     menu.addMenuItem "new script", true, menusHelper, "newScriptWindow"
-    menu.addMenuItem "Fizzypaint launcher", true, menusHelper, "createFizzyPaintLauncher"
-    menu.addMenuItem "Simple doc launcher", true, menusHelper, "createSimpleDocumentLauncher"
-    menu.addMenuItem "Simple slide launcher", true, menusHelper, "createSimpleSlideLauncher"
+    menu.addMenuItem "Fizzypaint launcher", true, (new FizzyPaintApp), "createOpener"
+    menu.addMenuItem "Simple doc launcher", true, (new SimpleDocumentApp), "createOpener"
+    menu.addMenuItem "Simple slide launcher", true, (new SimpleSlideApp), "createOpener"
     menu.addMenuItem "Link", true, menusHelper, "createSimpleLinkWdgt"
     menu.addMenuItem "Video link", true, menusHelper, "createSimpleVideoLinkWdgt"
     menu.popUpAtHand()

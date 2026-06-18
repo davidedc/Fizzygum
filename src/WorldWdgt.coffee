@@ -446,13 +446,13 @@ class WorldWdgt extends PanelWdgt
     # menusHelper.createWelcomeMessageWindowAndShortcut()
     (new HowToSaveMessageApp).createOpener()
     menusHelper.basementIconAndText()
-    menusHelper.createSimpleDocumentLauncher()
-    menusHelper.createFizzyPaintLauncher()
-    menusHelper.createSimpleSlideLauncher()
-    menusHelper.createDashboardsLauncher()
-    menusHelper.createPatchProgrammingLauncher()
-    menusHelper.createGenericPanelLauncher()
-    menusHelper.createToolbarsOpener()
+    (new SimpleDocumentApp).createOpener()
+    (new FizzyPaintApp).createOpener()
+    (new SimpleSlideApp).createOpener()
+    (new DashboardsApp).createOpener()
+    (new PatchProgrammingApp).createOpener()
+    (new GenericPanelApp).createOpener()
+    (new ToolbarsApp).createOpener()
     exampleDocsFolder = @makeFolder nil, nil, "examples"
     (new DegreesConverterApp).createOpener exampleDocsFolder
     (new SampleSlideApp).createOpener exampleDocsFolder
