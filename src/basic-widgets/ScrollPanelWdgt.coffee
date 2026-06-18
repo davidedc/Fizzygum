@@ -708,6 +708,15 @@ class ScrollPanelWdgt extends PanelWdgt
     @isTextLineWrapping = not @isTextLineWrapping
   # this part is excluded from the fizzygum homepage build <<«
 
+  # Set this scroll panel's text-line-wrapping state; turning wrapping ON fills
+  # the content to the panel's bounds. (Called by SimplePlainTextWdgt's soft-wrap
+  # toggle, which used to write this flag + resize the content from outside.)
+  setTextLineWrapping: (wraps) ->
+    @isTextLineWrapping = wraps
+    if wraps
+      @contents.fullRawMoveTo @position()
+      @contents.rawSetExtent @extent()
+
   enableDragsDropsAndEditing: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled

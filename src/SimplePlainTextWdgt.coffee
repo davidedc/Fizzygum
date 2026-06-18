@@ -105,20 +105,19 @@ class SimplePlainTextWdgt extends TextWdgt
     menu.removeConsecutiveLines()
 
 
-  softWrapOn: ->
-    @parent.parent.isTextLineWrapping = true
-    @softWrap = true
+  softWrapOn:  -> @setSoftWrap true
+  softWrapOff: -> @setSoftWrap false
 
-    @parent.fullRawMoveTo @parent.parent.position()
-    @parent.rawSetExtent @parent.parent.extent()
-    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
-
-  softWrapOff: ->
-    @parent.parent.isTextLineWrapping = false
-    @softWrap = false
-
-    @reLayout()
-
+  # Toggle soft-wrap for a text inside a scroll panel. The directions are
+  # deliberately ASYMMETRIC: wrap ON re-constrains the content to the viewport
+  # (inside setTextLineWrapping) and lets the layout re-wrap; wrap OFF must
+  # reLayout the text to its NATURAL un-wrapped width so the panel scrolls
+  # horizontally -- because TextWdgt::reLayout wraps to the current extent when
+  # @softWrap, but measures the full natural width when not.
+  setSoftWrap: (wrap) ->
+    @softWrap = wrap
+    @parent.parent.setTextLineWrapping wrap
+    @reLayout() unless wrap
     @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   # the bang makes the node fire the current output value
