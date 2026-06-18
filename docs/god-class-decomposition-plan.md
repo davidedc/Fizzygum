@@ -10,13 +10,17 @@ It is meant to be executable cold: it embeds the history, the guardrails (esp. a
 recapture reality that *corrects the backlog*), the study findings with `file:line`,
 the risk-ascending sub-arc, and which deferred Phase-5 checks each step dissolves.
 
-**Status (2026-06-18): PHASE 6 PAUSED at a clean milestone.** DONE + pushed:
-**Tier 1 (MenusHelper windowed-app decomposition)** — 6c.1–6c.4 (MenusHelper 1170→489 L,
-its one "doesn't-belong-here" responsibility fully out); **Tier 2 (WorldWdgt clean rim)** —
-6a.1–6a.3. **6a.4/6a.5 deliberately NOT extracted** — world-owned registries (see Tier 2).
-**Remaining = a higher-risk class; resume needs explicit owner go-ahead: Tier 3 (Widget
-rim, recapture-bearing) + Tier 4 (DET capstone).** Cadence per step is unchanged:
-explain → owner-approve → verify (recipe + targeted check) → commit individually.
+**Status (2026-06-18): PHASE 6 — Tier 3 IN PROGRESS (design pass done, slice 1 landed).**
+DONE + pushed: **Tier 1 (MenusHelper windowed-app decomposition)** — 6c.1–6c.4 (MenusHelper
+1170→489 L); **Tier 2 (WorldWdgt clean rim)** — 6a.1–6a.3 (**6a.4/6a.5 deliberately NOT
+extracted** — world-owned registries, see Tier 2). **Tier 3 (Widget liftable rim): DESIGN
+PASS DONE 2026-06-18 (see Tier 3 below) — only C22 (dev/demo menus) is a clean lift, to
+`menusHelper`; C20/C23/C25/C19 LEAVE (evidence below), C21 deferred. Slice 1 DONE + pushed**
+(`popUpPatchProgrammingMenu` → menusHelper; Fizzygum `6f44841b` / Fizzygum-tests `15f50402d`).
+**NEXT (owner-sequenced 2026-06-18): the `world.openWindowWith` unification FIRST (6b.0),
+then the C22 relocation (slice 2+, 6b.1).** Tier 4 (DET capstone) still deferred to its own
+mini-plan. Cadence per step is unchanged: explain → owner-approve → verify (recipe + targeted
+check) → commit individually.
 
 ---
 
@@ -362,17 +366,69 @@ Non-launcher builders reached by a direct code call (Templates) still become a s
   separable responsibility — leave them on WorldWdgt.
   Verify: full recipe; recapture only if a test inspects the World (check first).
 
-**Tier 3 — `Widget` liftable rim (6b, non-DET).** Each moves methods off Widget →
-**expect the inspector recapture** (guardrail 1); handle per Cluster A. **CAVEAT
-(2026-06-18): trickier than this table suggests — re-study before starting.** Most of
-these (e.g. `colorSetters`, `spawnInspector`, `evaluateString`) are *per-widget behaviour*
-invoked on a widget instance, NOT world concerns, so they do NOT become clean `world.*`
-collaborators the way Tier 2 did; a genuine 6b needs a different shape (a mixin, or a
-helper the widget delegates to) and its own design pass.
-  - 6b.1 C22 demo/factory + `@setupTestScreen1` (huge, mostly homepage-excluded; also
-    finishes 6c's call-site story) · 6b.2 C20 setter-introspection · 6b.3 C23
-    inspector/prompt spawning · 6b.4 C25 eval · 6b.5 C21 menu construction (Wdgt-label
-    hazard — verify) — dissolves F · 6b.6 C19 entry-field nav — dissolves G(text).
+**Tier 3 — `Widget` liftable rim (6b, non-DET). DESIGN PASS DONE 2026-06-18** (supersedes
+the earlier "re-study before starting" caveat). Studied all six rim clusters on disk + their
+call sites. Headline: the old table's "C20 ~110 L pure, cleanest first bite" was WRONG, and
+most of the rim is correctly per-widget. The honest lift-vs-leave verdicts, with evidence:
+
+| Cluster | Verdict | Why (evidence) |
+|---|---|---|
+| **C20** setter-introspection (`colorSetters`/`stringSetters`/`numericalSetters`/`allSetters`) | **LEAVE** | NOT pure — it is the base of an **11-class polymorphic protocol** (overridden in StringWdgt, SliderWdgt, PaletteWdgt, SimplePlainTextWdgt, Example3DPlotWdgt, BoxyAppearance + 5 patch-programming widgets), each chaining `@deduplicateSettersAndSortByMenuEntryString` (24 call sites) and soaking `@addShapeSpecificNumericalSetters`→`@appearance`. Moving the base off Widget would *de-polymorphize* correct OO. |
+| **C23** dialog API (`inform`/`prompt`/`pickColor`/`inspect`/`spawnInspector`/`createConsole`) | **LEAVE the methods** (but thin via the unification below) | Per-widget dialog API, `@`=anchor; ~70 call sites (inform 20/10 files, prompt 34/14, inspect 13/6). Relocation = mass call-site churn, no cohesion gain. Its window-wrap *bodies* dedup via `world.openWindowWith` (thin in place, don't move). |
+| **C25** eval (`evaluateString`/`injectProperty`) | **LEAVE** | `evaluateString` does `eval` of source that references `@` → must run in the widget's `this`. MacroToolkit already keeps its own mirror copy for exactly this reason. Un-liftable by construction. |
+| **C19** entry-field nav (`allEntryFields`/`next`/`previousEntryField`/`tab`/`backTab`) | **LEAVE** | ~25 L; walks the widget's own subtree + propagates up `@parent`. Intrinsic per-widget. |
+| **C21** context-menu construction (`buildContextMenu`/`getHierarchyMenuWidgets`/`buildHierarchyMenu`/`buildBaseWidgetClassContextMenu`) | **DEFER (careful)** | Relocatable to menusHelper (only 2 base builders + the `overridingContextMenu` hook, barely overridden) BUT `buildContextMenu` is on the `ActivePointerWdgt` right-click path (`:113/:116`) → `[DET]`-adjacent, and carries the `Wdgt`-label-strip screenshot hazard. Medium value, real risk — not before C22. |
+| **C22** demo/factory menus + `create*` (+ `setupTestScreen1`) | **LIFT — the one clean target** | Conceptually doesn't belong on base Widget; ~900 L (mostly homepage-excluded); zero external reflective callers; its siblings (`popUpDevToolsMenu`/`popUpGraphsMenu`/`popUpSupportDocsMenu`) already live on `menusHelper`. → relocate to `menusHelper`. |
+
+**The C22 relocation rule (the uniform mechanic).** A `popUp*Menu` builder moves to
+`menusHelper` **together with the factory methods it `@`-targets**, as one block. Inside the
+moved builder: **factory items** retarget `@→menusHelper` (the explicit-`menusHelper` style
+its new siblings already use — they never use `@`); **widget-op items** retarget
+`@→widgetOpeningThePopUp` (the widget the builder already receives). The parent's reference to
+the moved builder flips `@→menusHelper`. **The C22 rim splits two ways:** demo *factories*
+(build a widget via `world`/global calls, or self-delegate to sibling factories — `new X;
+world.add; moveTo; setExtent`, or `world.create new X`) move cleanly; genuine per-widget
+*operations* (`attachWithHorizLayout`, `makeSpacers*`, `showAdders`/`removeAdders`,
+`createPointerWdgt`, `collapse`/`unCollapse`, `showOutputPins`/`removeOutputPins`) act on `@`
+and **STAY on Widget** (their menu items just retarget to `widgetOpeningThePopUp`). NB a crude
+`@`-grep over short methods over-flags (it overruns method boundaries) — classify by READING
+bodies, not grep.
+
+**NO `placeDemoWidget` helper (false unification).** menusHelper's existing demos have no
+single skeleton — they split hand-placed (`world.create`, the existing shared primitive 6a.2
+kept on world), windowed, and fixed-position; forcing one helper would mismatch the kin and
+blur placement semantics. Relocate faithfully; the unification is the shared *home* +
+`world.create`.
+
+**THE genuine cross-cutting unification — `world.openWindowWith` (do FIRST, owner-sequenced
+2026-06-18).** The windowed-wrap `new WindowWdgt nil,nil,content; setExtent; fullRawMoveTo
+position; fullRawMoveWithin world; world.add` is **triplicated**:
+`IconicDesktopSystemWindowedApp.openWindowWith` (Tier 1), menusHelper's windowed demos
+(`createSimpleSlideWdgt`/`createReconfigurablePaint`/`createToolsPanel`), and Widget's C23
+spawners (`spawnInspector`/`createConsole`/`textPrompt`). All identical bar the position arg.
+→ hoist a world-level **`world.openWindowWith(content, extent, position)`** (the windowed
+sibling of `world.create`); the three sites delegate to it. **Zero inspector recapture** (C23
+bodies thin but the methods STAY on Widget; ADD-to-WorldWdgt is inspector-safe — no test
+inspects the world, per 6a.1). Wrinkle: internal windows (`…,true` in `createToolsPanel`/
+`createEmptyInternalWindow`) need an optional flag or stay bespoke — check `openWindowWith`'s
+current signature first.
+
+**Sub-arc (owner-sequenced 2026-06-18):**
+  - **6b.0 `world.openWindowWith` unification — NEXT.** Dedup the window-wrap across the 3
+    subsystems; zero recapture.
+  - **6b.1 C22 relocation (the rule above), in coherent slices to bound recaptures:**
+    **slice 1 DONE** (`popUpPatchProgrammingMenu`; Fizzygum `6f44841b` / Fizzygum-tests
+    `15f50402d` — body byte-identical, one parent rebind, 1 inspector recapture); slice 2 =
+    `popUpVerticalStackMenu` + its 6 stack factories; slice 3 = the other demo-leaf builders
+    (`popUpSimplePlainTextWdgtMenu`/`popUpDocumentMenu`/`popUpWindowsMenu`/`popUpIconsMenu`/
+    `popUpShortcutsAndScriptsMenu` + factories); slice 4 = the roots (`popUpFirstMenu`/
+    `popUpSecondMenu`/`testMenu`/`testMenuForMacros`; widget-op items → `widgetOpeningThePopUp`,
+    ops stay). Dissolves the G shortcut-dedup filter once the `setupTestScreen1`/factory bulk
+    leaves.
+  - C20/C23/C25/C19 = **leave** (above); C21 **deferred**; `setupTestScreen1` rides with the
+    C22 factory bulk. **ROI note:** C22 is dev/macro scaffolding (mostly homepage-excluded) —
+    genuine Widget-thinning toward the menu-owning collaborator, but ships nothing new and each
+    slice-batch costs one inspector regen; honest to stop after any slice.
 
 **Tier 4 — the DET capstone (6b late + 6a DET core).** HIGHEST risk; its own
 mini-plan when reached. Read DETERMINISM.md; dpr2+WebKit mandatory; recapture expected.
