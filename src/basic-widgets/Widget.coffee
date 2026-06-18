@@ -3311,15 +3311,6 @@ class Widget extends TreeNode
     menu.addMenuItem "Video link", true, menusHelper, "createSimpleVideoLinkWdgt"
     menu.popUpAtHand()
 
-  popUpPatchProgrammingMenu: (widgetOpeningThePopUp) ->
-    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Patch Programming"
-    menu.addMenuItem "fanout", true, menusHelper, "createFanout"
-    menu.addMenuItem "calculating node", true, menusHelper, "createCalculatingPatchNode"
-    menu.addMenuItem "diffing node", true, menusHelper, "createDiffingPatchNode"
-    menu.addMenuItem "slider", true, menusHelper, "createSliderWithSmallestValueAtBottomEnd"
-    menu.addMenuItem "regex subst. node", true, menusHelper, "createRegexSubstitutionPatchNodeWdgt"
-    menu.popUpAtHand()
-
 
   createEmptyInternalWindow: ->
     wm = new WindowWdgt nil, nil, nil, true
@@ -3364,7 +3355,7 @@ class Widget extends TreeNode
     menu.addMenuItem "tools panel", true, menusHelper, "createToolsPanel"
     menu.addMenuItem "horiz. menu panel", true, menusHelper, "createHorizontalMenuPanelPanel"
     menu.addMenuItem "Simple slide", true, menusHelper, "createSimpleSlideWdgt"
-    menu.addMenuItem "patch programming ➜", false, @, "popUpPatchProgrammingMenu", "icons"
+    menu.addMenuItem "patch programming ➜", false, menusHelper, "popUpPatchProgrammingMenu", "icons"
     menu.addMenuItem "graphs ➜", false, menusHelper, "popUpGraphsMenu", "graphs"
     menu.addMenuItem "support docs ➜", false, menusHelper, "popUpSupportDocsMenu", "support docs"
 
