@@ -3,8 +3,8 @@
 # block (headings, paragraphs, a quote, links, spacers, dividers, the special-
 # characters paragraph) turned into draggable templates, wrapped in a WindowWdgt.
 # Lifted verbatim out of MenusHelper.createNewTemplatesWindow as a per-app
-# window-builder class -- the *.create() factory pattern already used by
-# SimpleDocumentSampleWdgt / WelcomeMessageInfoWdgt: the heavy builder becomes a
+# window-builder class -- the *.create() factory pattern also used by
+# WelcomeMessageInfoWdgt: the heavy builder becomes a
 # static @create factory and its two callers (the templates toolbar buttons) call
 # TemplatesWindowWdgt.create() directly. Ships in the homepage build (it is
 # reached from the toolbars), so it is NOT homepage-excluded. OO-backlog Phase 6

@@ -1,6 +1,20 @@
-class HowToSaveMessageInfoWdg extends SimpleDocumentWdgt
+# HowToSaveMessageApp -- the "How to save?" desktop app (a SimpleDocument explaining
+# how to save). One of the per-app IconicDesktopSystemWindowedApp subclasses (Phase 6
+# step 6c.3): it declares its launcher title/icon and the singleton world slot and
+# builds its window inline in buildWindow; the base owns the launcher/opener + the
+# bring-up-or-create launch logic. Its opener is on the DESKTOP (no folder), so the
+# WorldWdgt bootstrap calls createOpener() with no argument. The window body was folded
+# in verbatim from the former HowToSaveMessageInfoWdg.create (a single-use factory-
+# namespace class, now removed -- which also fixes its filename/classname mismatch).
 
-  @create: ->
+class HowToSaveMessageApp extends IconicDesktopSystemWindowedApp
+
+  title: "How to save?"
+  slot:  "howToSaveDocWindow"
+
+  buildIcon: -> new FloppyDiskIconWdgt
+
+  buildWindow: ->
     simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 

@@ -268,15 +268,28 @@ Non-launcher builders reached by a direct code call (Templates) still become a s
     `--homepage`; a targeted headless check confirms launch builds `world.sampleSlideWindow`
     ("Sample slide"), re-launch reuses it, `launcher.target`=app / callback `"launch"`, and
     `fullCopy` keeps the app by reference (no throw). Zero recapture.
-  - **Remaining (port onto the base, in batches):** the 4 examples-folder singletons
-    SampleDashboard / SampleDoc / DegreesConverter / HowToSave (SampleDoc & HowToSave
-    already have extracted builders, so their `buildWindow` just calls
-    `SimpleDocumentSampleWdgt.create()` / `HowToSaveMessageInfoWdg.create()`); then the 7
-    fresh-window desktop launchers (Family 1 -- `buildWindow` builds+adds the window,
-    `windowOpened` does `*InfoWdgt.createNextTo`); then the a5/a6 demo+icon factories (bulk,
-    mostly homepage-stripped, L18-150/442-755) and the `popUp*Menu` builders (NOT apps --
-    separate treatment). Each batch rebinds its `WorldWdgt:447-460` bootstrap calls in
-    lockstep and verifies with the recipe + a targeted check.
+  - **6c.3 the 4 examples-folder singletons -- DONE.** `SampleDashboardApp`,
+    `DegreesConverterApp`, `SampleDocApp`, `HowToSaveMessageApp` (all `src/apps/`), each an
+    `IconicDesktopSystemWindowedApp` subclass with an **inline `buildWindow`**. **UNIFIED the
+    two sub-shapes onto inline `buildWindow` (owner ask):** SampleDashboard/DegreesConverter
+    bodies lifted verbatim from MenusHelper (byte-verified; DegreesConverter's Unicode title
+    `°C ↔ °F` + body preserved); SampleDoc/HowToSave **folded in** the bodies of their
+    single-use factory-namespace classes `SimpleDocumentSampleWdgt` /
+    `HowToSaveMessageInfoWdg`, which were then **DELETED** -- one mechanism for all, and the
+    fold removes the latter's filename/classname `t` mismatch by deletion. 12 methods removed
+    from MenusHelper (955 -> 642); `WorldWdgt:447/457/459/460` rewired to
+    `(new XApp).createOpener …` (HowToSave is desktop -> `createOpener()` with no folder).
+    165/165 dpr1+dpr2+WebKit + `--homepage`; targeted check confirms each app's launch builds
+    the right-titled window ("Sample dashboard" / "°C ↔ °F converter" / "Sample text document"
+    / "How to save?"), re-launch reuses it, and `fullCopy` keeps the app by reference. Zero
+    recapture. (`WelcomeMessageInfoWdgt` is NOT an app -- it builds a document *shortcut*,
+    is menu-invoked, and its bootstrap call is commented out -- so it is left as-is.)
+  - **Remaining:** the 7 fresh-window desktop launchers (Family 1 -- `buildWindow`
+    builds+adds the window, `windowOpened` does `*InfoWdgt.createNextTo`: Draw/FizzyPaint,
+    Docs Maker, Slides Maker, Dashboards, Patch progr., Generic panel, Super Toolbar); then
+    the a5/a6 demo+icon factories (bulk, mostly homepage-stripped, L18-150/442-755) and the
+    `popUp*Menu` builders (NOT apps -- separate). Each rebinds its `WorldWdgt` bootstrap
+    call(s) in lockstep and verifies with the recipe + a targeted check.
   Verify: full recipe. **REFINEMENT (found in 6c.1):** the suite + boot-smoke do NOT
   exercise the window-builder paths — **zero** SystemTests touch them (only one test
   references `menusHelper` at all, for `makeSlidersButtonsStatesBright`), and these

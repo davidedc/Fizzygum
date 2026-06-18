@@ -444,7 +444,7 @@ class WorldWdgt extends PanelWdgt
 
     # TODO find a way to put this back
     # menusHelper.createWelcomeMessageWindowAndShortcut()
-    menusHelper.createHowToSaveMessageOpener()
+    (new HowToSaveMessageApp).createOpener()
     menusHelper.basementIconAndText()
     menusHelper.createSimpleDocumentLauncher()
     menusHelper.createFizzyPaintLauncher()
@@ -454,10 +454,10 @@ class WorldWdgt extends PanelWdgt
     menusHelper.createGenericPanelLauncher()
     menusHelper.createToolbarsOpener()
     exampleDocsFolder = @makeFolder nil, nil, "examples"
-    menusHelper.createDegreesConverterOpener exampleDocsFolder
+    (new DegreesConverterApp).createOpener exampleDocsFolder
     (new SampleSlideApp).createOpener exampleDocsFolder
-    menusHelper.createSampleDashboardOpener exampleDocsFolder
-    menusHelper.createSampleDocOpener exampleDocsFolder
+    (new SampleDashboardApp).createOpener exampleDocsFolder
+    (new SampleDocApp).createOpener exampleDocsFolder
 
     # »>> this part is only needed for VideoPlayer
     # Guard: VideoPlayerWithRecommendationsWdgt is only bundled with --includeVideoPlayer,
