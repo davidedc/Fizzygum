@@ -41,9 +41,7 @@ class PromptWdgt extends MenuWdgt
         Math.floor((@ceilingNum - @floorNum) / 4))
       slider.alpha = 1
       slider.color = Color.create 225, 225, 225
-      slider.button.color = Color.create 60,60,60
-      slider.button.highlightColor = slider.button.color.bluerBy 100
-      slider.button.pressColor = slider.button.color.bluerBy 150
+      slider.button.setColorScheme Color.create 60, 60, 60
       slider.silentRawSetHeight WorldWdgt.preferencesAndSettings.prompterSliderSize
       slider.target = @
       slider.argumentToAction = @

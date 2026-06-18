@@ -20,6 +20,13 @@ class SliderButtonWdgt extends CircleBoxWdgt
     @noticesTransparentClick = true
     @alpha = 0.4
 
+  # Derive the button's colour states from one base colour: resting = base,
+  # highlight/press progressively bluer. (Used by the prompter slider.)
+  setColorScheme: (base) ->
+    @color = base
+    @highlightColor = base.bluerBy 100
+    @pressColor = base.bluerBy 150
+
   detachesWhenDragged: ->
     if @parent instanceof SliderWdgt
       return false
