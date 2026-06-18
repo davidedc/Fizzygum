@@ -455,7 +455,7 @@ class WorldWdgt extends PanelWdgt
     menusHelper.createToolbarsOpener()
     exampleDocsFolder = @makeFolder nil, nil, "examples"
     menusHelper.createDegreesConverterOpener exampleDocsFolder
-    menusHelper.createSampleSlideOpener exampleDocsFolder
+    (new SampleSlideApp).createOpener exampleDocsFolder
     menusHelper.createSampleDashboardOpener exampleDocsFolder
     menusHelper.createSampleDocOpener exampleDocsFolder
 

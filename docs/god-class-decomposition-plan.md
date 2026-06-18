@@ -233,7 +233,20 @@ that calls `SimpleDocumentSampleWdgt.create()` (`src/apps/`), and `WelcomeMessag
 was already done to Sample Doc." **Keep the thin launch/opener/singleton-guard glue on
 `menusHelper`** (it's tiny and reflection-bound): then the reflection string-action
 targets and the launcher `@target` do NOT move → no rebind, no deep-copy change for the
-sample-window steps. One sub-step per app/group:
+sample-window steps. **EVOLVED 2026-06-18 (owner chose the richer abstraction):** the
+launch/opener/bring-up apparatus was found duplicated across **12 desktop apps** in two
+families (7 fresh-window desktop launchers that build a new window per click + spawn a
+`*InfoWdgt`; 5 examples-folder singletons that bring-up-or-create via a `world.<slot>`).
+So rather than leave thin glue on `menusHelper`, a base class
+**`IconicDesktopSystemWindowedApp`** (`src/IconicDesktopSystemWindowedApp.coffee`) now OWNS
+the apparatus -- `createOpener(folder)` (a single `if folder?` branch is byte-faithful to
+both the in-folder and desktop opener variants) and `launch()` (slot set => bring-up-or-
+create; else build + `windowOpened` hook) -- and each app is a small subclass declaring
+`title`/`slot`/`toolTip` + `buildIcon`/`buildWindow`/`windowOpened`. The launcher's
+reflection target moves `menusHelper` => the app instance (uniform action `"launch"`); the
+app sets `keptByReferenceOnDeepCopy: true` (guardrail #7, proven via a `fullCopy` probe).
+Non-launcher builders reached by a direct code call (Templates) still become a standalone
+`*Wdgt.create()`. One sub-step per app/group:
   - **6c.1 Templates — DONE.** Lifted `MenusHelper.createNewTemplatesWindow` (~119 L,
     a *pure* builder: no `@`, no `world`) verbatim into a new
     `src/apps/TemplatesWindowWdgt.coffee` (`class … extends WindowWdgt` with a static
@@ -245,16 +258,25 @@ sample-window steps. One sub-step per app/group:
     verified byte-identical to HEAD before deletion (the Unicode special-chars paragraph
     + the Malraux curly-quote line). 165/165 dpr1+dpr2+WebKit + `--homepage` boot, zero
     recapture.
-    · 6c.2 SampleSlide · 6c.3 SampleDashboard · 6c.4 DegreesConverter — each: lift the
-    heavy `createXxxWindowOrBringItUpIfAlreadyCreated` builder body into a `*Wdgt.create()`
-    (mirroring Sample Doc), leaving the singleton-guard + `launchXxx` + `createXxxOpener`
-    glue on `menusHelper` → no reflection/launcher rebind. · 6c.5 the 7 launch-apps
-    (FizzyPaint/SimpleDocument/SimpleSlide/Dashboards/PatchProgramming/GenericPanel/
-    Toolbars) + their launcher/opener triples — **here the launcher stores `@target` and
-    is a deep-copyable desktop widget**, so if a target moves off `menusHelper` apply
-    guardrail #7 (or keep `@target = menusHelper`). · 6c.6 the a5/a6 demo+icon factories
-    (bulk, mechanical; mostly homepage-stripped, L18-150/442-755) · 6c.7 the `popUp*Menu`
-    builders.
+  - **6c.2 SampleSlide -- DONE (Stage 1 of the app framework).** Created the base
+    `IconicDesktopSystemWindowedApp` + the first subclass `src/apps/SampleSlideApp.coffee`
+    (singleton, slot `sampleSlideWindow`; the NYC-slide `buildWindow` body lifted verbatim
+    from MenusHelper L719-781, byte-verified, ending `return wm` -- the old final
+    `world.<slot> = wm` is now done by the base's `launch`). Removed the 3 SampleSlide
+    methods from MenusHelper (-92 L, now 955); rewired `WorldWdgt:458` to
+    `(new SampleSlideApp).createOpener exampleDocsFolder`. 165/165 dpr1+dpr2+WebKit +
+    `--homepage`; a targeted headless check confirms launch builds `world.sampleSlideWindow`
+    ("Sample slide"), re-launch reuses it, `launcher.target`=app / callback `"launch"`, and
+    `fullCopy` keeps the app by reference (no throw). Zero recapture.
+  - **Remaining (port onto the base, in batches):** the 4 examples-folder singletons
+    SampleDashboard / SampleDoc / DegreesConverter / HowToSave (SampleDoc & HowToSave
+    already have extracted builders, so their `buildWindow` just calls
+    `SimpleDocumentSampleWdgt.create()` / `HowToSaveMessageInfoWdg.create()`); then the 7
+    fresh-window desktop launchers (Family 1 -- `buildWindow` builds+adds the window,
+    `windowOpened` does `*InfoWdgt.createNextTo`); then the a5/a6 demo+icon factories (bulk,
+    mostly homepage-stripped, L18-150/442-755) and the `popUp*Menu` builders (NOT apps --
+    separate treatment). Each batch rebinds its `WorldWdgt:447-460` bootstrap calls in
+    lockstep and verifies with the recipe + a targeted check.
   Verify: full recipe. **REFINEMENT (found in 6c.1):** the suite + boot-smoke do NOT
   exercise the window-builder paths — **zero** SystemTests touch them (only one test
   references `menusHelper` at all, for `makeSlidersButtonsStatesBright`), and these
@@ -321,5 +343,9 @@ mini-plan when reached. Read DETERMINISM.md; dpr2+WebKit mandatory; recapture ex
    from scroll identity) is in-scope now or deferred to a dedicated later effort.
 4. **MenusHelper home: DECIDED — per-app `*Wdgt` classes with a static `@create`
    factory** (mirroring the existing `SimpleDocumentSampleWdgt`/`WelcomeMessageInfoWdgt`
-   precedent), NOT a grouped `WindowFactory`; the thin launch/opener/guard glue stays on
-   `menusHelper`. See Tier 1 above. (First applied in 6c.1 `TemplatesWindowWdgt`.)
+   precedent), NOT a grouped `WindowFactory`. **EVOLVED 2026-06-18:** for the launcher
+   apps the launch/opener/bring-up apparatus is owned by a base class
+   `IconicDesktopSystemWindowedApp` with one small subclass per app, NOT left as glue on
+   `menusHelper`. See Tier 1 above. (Non-launcher builders reached by a direct code call,
+   like Templates, stay standalone `*Wdgt.create()`: 6c.1 `TemplatesWindowWdgt`; 6c.2
+   `SampleSlideApp` + the base.)
