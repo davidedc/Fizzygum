@@ -484,7 +484,7 @@ class Widget extends TreeNode
     world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
     @parent?.childBeingClosed? @
     if world.basementWdgt?
-      world.basementWdgt.scrollPanel.contents.addInPseudoRandomPosition @
+      world.basementWdgt.addLostWidget @
     else
       world.inform "There is no\nbasement to go in!"
 

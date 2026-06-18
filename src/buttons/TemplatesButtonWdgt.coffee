@@ -17,7 +17,7 @@ class TemplatesButtonWdgt extends EditorContentPropertyChangerButtonWdgt
       if world.simpleEditorTemplates.destroyed or !world.simpleEditorTemplates.parent?
         templatesWindow = TemplatesWindowWdgt.create()
         @positionTemplatesWindowAndRegisterIt templatesWindow
-      else if world.simpleEditorTemplates.parent? and world.simpleEditorTemplates.parent == world.basementWdgt.scrollPanel.contents
+      else if world.basementWdgt.holds world.simpleEditorTemplates
         world.add world.simpleEditorTemplates
         @bringTemplatesWindowIntoView()
       else if !world.simpleEditorTemplates.destroyed and world.simpleEditorTemplates.parent == world

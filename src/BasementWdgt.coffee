@@ -130,6 +130,14 @@ class BasementWdgt extends BoxWdgt
     for w in @scrollPanel.contents.children
       w.show()
 
+  # a closed/lost widget is scattered into the basement's contents
+  addLostWidget: (w) ->
+    @scrollPanel.contents.addInPseudoRandomPosition w
+
+  # is w currently sitting in the basement's contents?
+  holds: (w) ->
+    w.parent? and w.parent == @scrollPanel.contents
+
   # if a child has been added to the scrollPanel,
   # the scrollPanel checks its parent to see if it
   # has this callback. We use this callback because
