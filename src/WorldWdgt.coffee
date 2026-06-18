@@ -1941,7 +1941,7 @@ class WorldWdgt extends PanelWdgt
     menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Layout tests"
     menu.addMenuItem "adjuster widget", true, @widgetFactory, "createNewStackElementsSizeAdjustingWdgt"
     menu.addMenuItem "adder/droplet", true, @widgetFactory, "createNewLayoutElementAdderOrDropletWdgt"
-    menu.addMenuItem "test screen 1", true, Widget, "setupTestScreen1"
+    menu.addMenuItem "test screen 1", true, @widgetFactory, "setupTestScreen1"
     menu.popUpAtHand()
     
   
