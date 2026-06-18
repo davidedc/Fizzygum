@@ -83,6 +83,23 @@ the risk-ascending sub-arc, and which deferred Phase-5 checks each step dissolve
 6. **The fragmenter** rejects a method placed before a class-level `@augmentWith`
    and a one-line `constructor: -> super …`; keep new methods in the methods region
    and constructors multi-line. Commit messages: plain identifiers, no backticks.
+7. **A collaborator that becomes a menu string-action TARGET must survive deep-copy
+   as a kept singleton** (the deep-copy guardrail; found in 6a.3). Menu items store
+   `(target, "methodNameString")`, and duplicating a menu (`Widget.fullCopy` →
+   `DeepCopierMixin`) deep-copies each item's `target`. The copier keeps EXTERNAL
+   *Widget* references by reference (returns `@`) but tries to `.deepCopy()` any
+   other object — so a plain collaborator with no `deepCopy` THROWS
+   (`this[property].deepCopy is not a function`). Hit in 6a.3: duplicating the world
+   menu, whose "wallpapers" item now targets `world.wallpaper`, crashed
+   `SystemTest_macroDuplicatedMenuAutoPinsOnDesktop`. **FIX (declarative flag):** the
+   collaborator declares `keptByReferenceOnDeepCopy: true`, and `DeepCopierMixin`
+   (`recursivelyCloneContent`) honors it — keeping the reference instead of cloning,
+   and emitting a `$EXTERNAL` token on serialize — right next to its external-Widget
+   rule. One self-documenting boolean per class; the mechanics live once, in the
+   copier that owns copy-policy. Applied to BOTH `Wallpaper` and `WidgetFactory` (the
+   latter's latent 6a.2 exposure — its demo-menu items target `world.widgetFactory` —
+   hardened at the same time). Any future world-collaborator used as a menu target
+   should set the same flag.
 
 ---
 
@@ -228,8 +245,20 @@ together and rebinding its `(menusHelper, "create…")` call sites:
     rebound `@`→`@widgetFactory` via a replace-all that caught 2 items in a *second*
     menu (`layoutTestsMenu`) a manual sweep would have missed; the German Loreley
     text in `createNewText` verified byte-exact vs HEAD before the move; zero
-    recapture) · 6a.3 menu/wallpaper builders · 6a.4 popup/tooltip lifecycle (stateful
-    — check serialization) · 6a.5 `anyReferenceToWdgt`.
+    recapture) · **6a.3 Wallpaper — DONE 2026-06-17** (NARROWED per study: only the wallpaper
+    cluster — `wallpapersMenu`/`setPattern`/`updatePatternsMenuEntriesTicks` + the 8
+    `pattern*` fields + `patternName` → a core `Wallpaper` collaborator
+    `world.wallpaper`; `DesktopAppearance` now reads `@widget.wallpaper.pattern*`;
+    named `Wallpaper` not `WallpaperManager` per owner. Context-menu builders LEFT on
+    WorldWdgt — see note below. **Surfaced + fixed a deep-copy hazard**, guardrail #7.)
+    · 6a.4 popup/tooltip lifecycle (stateful — check serialization) · 6a.5
+    `anyReferenceToWdgt`.
+- **The world's CONTEXT-MENU builders are NOT clean extraction targets** (finding
+  from 6a.3): `buildContextMenu` + the dev `popUp*Menu`/`layoutTestsMenu` dispatch by
+  reflection string-action to `@`=world's own AND *inherited* Widget methods
+  (`makeFolder`, `testMenu`, `popUpColorSetter`, `noOperation`). Moving them to a
+  plain collaborator breaks every such target; they are the world's own UI, not a
+  separable responsibility — leave them on WorldWdgt.
   Verify: full recipe; recapture only if a test inspects the World (check first).
 
 **Tier 3 — `Widget` liftable rim (6b, non-DET).** Each moves methods off Widget →

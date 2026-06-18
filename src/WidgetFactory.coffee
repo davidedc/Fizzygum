@@ -12,6 +12,13 @@
 # OO-backlog Phase 6 step 6a.2.
 class WidgetFactory
 
+  # world.widgetFactory is a shared, per-world singleton used as a menu-item target
+  # (the demo menus). When a menu that targets it is duplicated, the copy must KEEP
+  # THE REFERENCE, not clone the factory -- this flag tells DeepCopierMixin to do so
+  # (the way it already keeps external Widgets). Without it, duplicating such a menu
+  # would throw (the deep-copy hazard found in OO-backlog Phase 6 step 6a.3).
+  keptByReferenceOnDeepCopy: true
+
   createNewStackElementsSizeAdjustingWdgt: ->
     world.create new StackElementsSizeAdjustingWdgt
 

@@ -146,6 +146,19 @@ DeepCopierMixin =
             # rebuild it
             if @[property].rebuildDerivedValue?
               cloneOfMe[property] = nil
+            else if @[property].keptByReferenceOnDeepCopy
+              # A shared, world-level singleton (e.g. world.wallpaper,
+              # world.widgetFactory): it is NOT part of the sub-structure being
+              # copied, so a deep copy KEEPS THE REFERENCE rather than cloning it --
+              # exactly as the external-Widget branch of deepCopy (above) returns @
+              # for a Widget not in allWidgetsInStructure. Without this the copier
+              # would try to call a missing deepCopy on the plain collaborator and
+              # throw (e.g. when duplicating a menu whose item targets it). Serialize
+              # emits an external-reference token, the same convention as widgets.
+              if doSerialize
+                cloneOfMe[property] = "$EXTERNAL"
+              else
+                cloneOfMe[property] = @[property]
             else
               if !@[property].deepCopy?
                 console.dir @

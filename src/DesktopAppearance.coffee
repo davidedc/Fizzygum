@@ -16,19 +16,19 @@ class DesktopAppearance extends RectangularAppearance
 
 
     # set up a pattern
-    if @widget.patternName? && @widget.patternName == @widget.pattern1
-      @currentPattern = @widget.patternName
+    if @widget.wallpaper.patternName? && @widget.wallpaper.patternName == @widget.wallpaper.pattern1
+      @currentPattern = @widget.wallpaper.patternName
       @pattern = nil
 
-    if @widget.patternName? && @widget.patternName != @currentPattern
-      @currentPattern = @widget.patternName
+    if @widget.wallpaper.patternName? && @widget.wallpaper.patternName != @currentPattern
+      @currentPattern = @widget.wallpaper.patternName
       # go through the factory so the pattern tile honours the backend switch
       @pattern = HTMLCanvasElement.createOfPhysicalDimensions new Point 5 * ceilPixelRatio, 5 * ceilPixelRatio
       pctx = @pattern.getContext "2d"
       pctx.useLogicalPixelsUntilRestore()
 
-      switch @widget.patternName
-        when @widget.pattern2
+      switch @widget.wallpaper.patternName
+        when @widget.wallpaper.pattern2
           pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
           pctx.lineWidth = 0.25
@@ -36,28 +36,28 @@ class DesktopAppearance extends RectangularAppearance
           pctx.arc 2,2,2,0,2*Math.PI
           pctx.fillStyle = 'rgb(220, 219, 220)'
           pctx.fill()
-        when @widget.pattern3
+        when @widget.wallpaper.pattern3
           pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
           pctx.moveTo 1,0
           pctx.lineTo 1,5
           pctx.strokeStyle = 'rgb(225, 224, 225)'
           pctx.stroke()
-        when @widget.pattern4
+        when @widget.wallpaper.pattern4
           pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
           pctx.moveTo 0,5
           pctx.lineTo 5,0
           pctx.strokeStyle = 'rgb(225, 224, 225)'
           pctx.stroke()
-        when @widget.pattern5
+        when @widget.wallpaper.pattern5
           pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
           pctx.moveTo 2,2
           pctx.lineTo 4,4
           pctx.strokeStyle = 'rgb(225, 224, 225)'
           pctx.stroke()
-        when @widget.pattern6
+        when @widget.wallpaper.pattern6
           pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
           pctx.moveTo 0,0
@@ -65,7 +65,7 @@ class DesktopAppearance extends RectangularAppearance
           pctx.lineTo 5,0
           pctx.strokeStyle = 'rgb(225, 224, 225)'
           pctx.stroke()
-        when @widget.pattern7
+        when @widget.wallpaper.pattern7
           pctx.fillStyle = 'rgb(244, 243, 244)'
           pctx.fillRect 0,0,5,5
           pctx.moveTo 0,5

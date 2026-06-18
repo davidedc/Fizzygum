@@ -212,14 +212,7 @@ class WorldWdgt extends PanelWdgt
   # of widgets.
   lastNonTextPropertyChangerButtonClickedOrDropped: nil
 
-  patternName: nil
-  pattern1: "plain"
-  pattern2: "circles"
-  pattern3: "vert. stripes"
-  pattern4: "oblique stripes"
-  pattern5: "dots"
-  pattern6: "zigzag"
-  pattern7: "bricks"
+  wallpaper: nil
 
   untitledNamingService: nil
   widgetFactory: nil
@@ -286,7 +279,9 @@ class WorldWdgt extends PanelWdgt
     WorldWdgt.preferencesAndSettings = new PreferencesAndSettings
 
     super()
-    @patternName = @pattern1
+    # the desktop's wallpaper (available patterns + current choice + picker menu),
+    # constructed before @appearance, which paints the desktop reading from it.
+    @wallpaper = new Wallpaper
     @appearance = new DesktopAppearance @
 
     #console.log WorldWdgt.preferencesAndSettings.menuFontName
@@ -404,7 +399,7 @@ class WorldWdgt extends PanelWdgt
     WorldWdgt.preferencesAndSettings.defaultPanelsBackgroundColor = Color.create 249, 249, 249
     WorldWdgt.preferencesAndSettings.defaultPanelsStrokeColor = Color.create 198, 198, 198
 
-    @setPattern nil, nil, "dots"
+    @wallpaper.setPattern nil, nil, "dots"
 
     @changed()
 
@@ -1819,7 +1814,7 @@ class WorldWdgt extends PanelWdgt
 
     if @isIndexPage
       menu = new MenuWdgt @, false, @, true, true, "Desktop"
-      menu.addMenuItem "wallpapers ➜", false, @, "wallpapersMenu", "choose a wallpaper for the Desktop"
+      menu.addMenuItem "wallpapers ➜", false, @wallpaper, "wallpapersMenu", "choose a wallpaper for the Desktop"
       menu.addMenuItem "new folder", true, @, "makeFolder"
       return menu
 
@@ -1844,7 +1839,7 @@ class WorldWdgt extends PanelWdgt
       menu.addMenuItem "restore display", true, @, "changed", "redraw the\nscreen once"
       menu.addMenuItem "fit whole page", true, @, "stretchWorldToFillEntirePage", "let the World automatically\nadjust to browser resizings"
       menu.addMenuItem "color...", true, @, "popUpColorSetter", "choose the World's\nbackground color"
-      menu.addMenuItem "wallpapers ➜", false, @, "wallpapersMenu", "choose a wallpaper for the Desktop"
+      menu.addMenuItem "wallpapers ➜", false, @wallpaper, "wallpapersMenu", "choose a wallpaper for the Desktop"
 
       if WorldWdgt.preferencesAndSettings.inputMode is PreferencesAndSettings.INPUT_MODE_MOUSE
         menu.addMenuItem "touch screen settings", true, WorldWdgt.preferencesAndSettings, "toggleInputMode", "bigger menu fonts\nand sliders"
@@ -1865,70 +1860,6 @@ class WorldWdgt extends PanelWdgt
     menu.addMenuItem "about Fizzygum...", true, @, "about"
     menu
 
-  wallpapersMenu: (a,targetWidget)->
-    menu = new MenuWdgt @, false, targetWidget, true, true, "Wallpapers"
-
-    # we add the "untick" prefix to all entries
-    # so we allocate the right amount of space for
-    # the labels, we are going to put the
-    # right ticks soon after
-    menu.addMenuItem untick + @pattern1, true, @, "setPattern", nil, nil, nil, nil, nil, @pattern1
-    menu.addMenuItem untick + @pattern2, true, @, "setPattern", nil, nil, nil, nil, nil, @pattern2
-    menu.addMenuItem untick + @pattern3, true, @, "setPattern", nil, nil, nil, nil, nil, @pattern3
-    menu.addMenuItem untick + @pattern4, true, @, "setPattern", nil, nil, nil, nil, nil, @pattern4
-    menu.addMenuItem untick + @pattern5, true, @, "setPattern", nil, nil, nil, nil, nil, @pattern5
-    menu.addMenuItem untick + @pattern6, true, @, "setPattern", nil, nil, nil, nil, nil, @pattern6
-    menu.addMenuItem untick + @pattern7, true, @, "setPattern", nil, nil, nil, nil, nil, @pattern7
-
-    @updatePatternsMenuEntriesTicks menu
-
-    menu.popUpAtHand()
-
-  setPattern: (menuItem, ignored2, thePatternName) ->
-    if @patternName == thePatternName
-      return
-
-    @patternName = thePatternName
-    @changed()
-
-    if menuItem?.parent? and (menuItem.parent instanceof MenuWdgt)
-      @updatePatternsMenuEntriesTicks menuItem.parent
-
-
-  # cheap way to keep menu consistency when pinned
-  # note that there is no consistency in case
-  # there are multiple copies of this menu changing
-  # the wallpaper, since there is no real subscription
-  # of a menu to react to wallpaper change coming
-  # from other menus or other means (e.g. API)...
-  updatePatternsMenuEntriesTicks: (menu) ->
-    pattern1Tick = pattern2Tick = pattern3Tick =
-    pattern4Tick = pattern5Tick = pattern6Tick =
-    pattern7Tick = untick
-
-    switch @patternName
-      when @pattern1
-        pattern1Tick = tick
-      when @pattern2
-        pattern2Tick = tick
-      when @pattern3
-        pattern3Tick = tick
-      when @pattern4
-        pattern4Tick = tick
-      when @pattern5
-        pattern5Tick = tick
-      when @pattern6
-        pattern6Tick = tick
-      when @pattern7
-        pattern7Tick = tick
-
-    menu.children[1].label.setText pattern1Tick + @pattern1
-    menu.children[2].label.setText pattern2Tick + @pattern2
-    menu.children[3].label.setText pattern3Tick + @pattern3
-    menu.children[4].label.setText pattern4Tick + @pattern4
-    menu.children[5].label.setText pattern5Tick + @pattern5
-    menu.children[6].label.setText pattern6Tick + @pattern6
-    menu.children[7].label.setText pattern7Tick + @pattern7
 
 
   # »>> this part is excluded from the fizzygum homepage build
