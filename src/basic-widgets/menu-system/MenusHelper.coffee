@@ -465,6 +465,49 @@ class MenusHelper
     menu.addMenuItem "regex subst. node", true, menusHelper, "createRegexSubstitutionPatchNodeWdgt"
     menu.popUpAtHand()
 
+  popUpVerticalStackMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Vertical stack"
+    menu.addMenuItem "vertical stack constrained contents width", true, menusHelper, "createSimpleVerticalStackPanelWdgt"
+    menu.addMenuItem "vertical stack scrollpanel constrained contents width", true, menusHelper, "createSimpleVerticalStackScrollPanelWdgt"
+    menu.addMenuItem "vertical stack panel and scrollpanel constrained contents width", true, menusHelper, "createSimpleVerticalStackPanelWdgtAndScrollPanel"
+    menu.addMenuItem "vertical stack free contents width", true, menusHelper, "createSimpleVerticalStackPanelWdgtFreeContentsWidth"
+    menu.addMenuItem "vertical stack scrollpanel free contents width", true, menusHelper, "createSimpleVerticalStackScrollPanelWdgtFreeContentsWidth"
+    menu.addMenuItem "vertical stack panel and scrollpanel free contents width", true, menusHelper, "createSimpleVerticalStackPanelWdgtAndScrollPanelFreeContentsWidth"
+
+    menu.popUpAtHand()
+
+  createSimpleVerticalStackPanelWdgt: ->
+    svspw = new SimpleVerticalStackPanelWdgt
+    world.add svspw
+    svspw.fullRawMoveTo new Point 35, 30
+    svspw.rawSetExtent new Point 370, 325
+
+  createSimpleVerticalStackScrollPanelWdgt: ->
+    svsspw = new SimpleVerticalStackScrollPanelWdgt
+    world.add svsspw
+    svsspw.fullRawMoveTo new Point 430, 25
+    svsspw.rawSetExtent new Point 370, 325
+
+  createSimpleVerticalStackPanelWdgtAndScrollPanel: ->
+    @createSimpleVerticalStackPanelWdgt()
+    @createSimpleVerticalStackScrollPanelWdgt()
+
+  createSimpleVerticalStackPanelWdgtFreeContentsWidth: ->
+    svspw = new SimpleVerticalStackPanelWdgt null, null, null, false
+    world.add svspw
+    svspw.fullRawMoveTo new Point 35, 30
+    svspw.rawSetExtent new Point 370, 325
+
+  createSimpleVerticalStackScrollPanelWdgtFreeContentsWidth: ->
+    svsspw = new SimpleVerticalStackScrollPanelWdgt false
+    world.add svsspw
+    svsspw.fullRawMoveTo new Point 430, 25
+    svsspw.rawSetExtent new Point 370, 325
+
+  createSimpleVerticalStackPanelWdgtAndScrollPanelFreeContentsWidth: ->
+    @createSimpleVerticalStackPanelWdgt()
+    @createSimpleVerticalStackScrollPanelWdgt()
+
   # this part is excluded from the fizzygum homepage build <<«
 
   createWelcomeMessageWindowAndShortcut: ->

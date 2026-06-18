@@ -3165,38 +3165,6 @@ class Widget extends TreeNode
     @createNonWrappingSimplePlainTextPanelWdgt()
 
 
-  createSimpleVerticalStackPanelWdgt: ->
-    svspw = new SimpleVerticalStackPanelWdgt
-    world.add svspw
-    svspw.fullRawMoveTo new Point 35, 30
-    svspw.rawSetExtent new Point 370, 325
-
-  createSimpleVerticalStackScrollPanelWdgt: ->
-    svsspw = new SimpleVerticalStackScrollPanelWdgt
-    world.add svsspw
-    svsspw.fullRawMoveTo new Point 430, 25
-    svsspw.rawSetExtent new Point 370, 325
-
-  createSimpleVerticalStackPanelWdgtAndScrollPanel: ->
-    @createSimpleVerticalStackPanelWdgt()
-    @createSimpleVerticalStackScrollPanelWdgt()
-
-  createSimpleVerticalStackPanelWdgtFreeContentsWidth: ->
-    svspw = new SimpleVerticalStackPanelWdgt null, null, null, false
-    world.add svspw
-    svspw.fullRawMoveTo new Point 35, 30
-    svspw.rawSetExtent new Point 370, 325
-
-  createSimpleVerticalStackScrollPanelWdgtFreeContentsWidth: ->
-    svsspw = new SimpleVerticalStackScrollPanelWdgt false
-    world.add svsspw
-    svsspw.fullRawMoveTo new Point 430, 25
-    svsspw.rawSetExtent new Point 370, 325
-
-  createSimpleVerticalStackPanelWdgtAndScrollPanelFreeContentsWidth: ->
-    @createSimpleVerticalStackPanelWdgt()
-    @createSimpleVerticalStackScrollPanelWdgt()
-
   createSimpleDocumentScrollPanelWdgt: ->
     sdspw = new SimpleDocumentScrollPanelWdgt
     world.add sdspw
@@ -3261,17 +3229,6 @@ class Widget extends TreeNode
     menu.addMenuItem "arrows ➜", false, menusHelper, "popUpArrowsIconsMenu", "others"
     menu.addMenuItem "maps ➜", false, menusHelper, "popUpMapsMenu", "maps"
     menu.addMenuItem "more 3 ➜", false, menusHelper, "popUpMore3IconsMenu", "maps"
-
-    menu.popUpAtHand()
-
-  popUpVerticalStackMenu: (widgetOpeningThePopUp) ->
-    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Vertical stack"
-    menu.addMenuItem "vertical stack constrained contents width", true, @, "createSimpleVerticalStackPanelWdgt"
-    menu.addMenuItem "vertical stack scrollpanel constrained contents width", true, @, "createSimpleVerticalStackScrollPanelWdgt"
-    menu.addMenuItem "vertical stack panel and scrollpanel constrained contents width", true, @, "createSimpleVerticalStackPanelWdgtAndScrollPanel"
-    menu.addMenuItem "vertical stack free contents width", true, @, "createSimpleVerticalStackPanelWdgtFreeContentsWidth"
-    menu.addMenuItem "vertical stack scrollpanel free contents width", true, @, "createSimpleVerticalStackScrollPanelWdgtFreeContentsWidth"
-    menu.addMenuItem "vertical stack panel and scrollpanel free contents width", true, @, "createSimpleVerticalStackPanelWdgtAndScrollPanelFreeContentsWidth"
 
     menu.popUpAtHand()
 
@@ -3353,7 +3310,7 @@ class Widget extends TreeNode
     menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "others"
     menu.addMenuItem "icons ➜", false, @, "popUpIconsMenu", "icons"
     menu.addMenuItem "simple plain text ➜", false, @, "popUpSimplePlainTextWdgtMenu", "icons"
-    menu.addMenuItem "vertical stack ➜", false, @, "popUpVerticalStackMenu", "icons"
+    menu.addMenuItem "vertical stack ➜", false, menusHelper, "popUpVerticalStackMenu", "icons"
     menu.addMenuItem "document ➜", false, @, "popUpDocumentMenu", "icons"
     menu.addMenuItem "windows ➜", false, @, "popUpWindowsMenu", "icons"
     menu.addMenuItem "shortcuts & scripts ➜", false, @, "popUpShortcutsAndScriptsMenu", "Shortcuts & Scripts"
