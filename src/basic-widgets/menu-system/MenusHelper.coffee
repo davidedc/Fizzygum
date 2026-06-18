@@ -733,7 +733,140 @@ class MenusHelper
 
     menu.popUpAtHand()
 
+  createNewStringWdgtWithBackground: ->
+    #newWdgt = new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, Color.create(255, 255, 54), 0.5
+    newWdgt = new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, Color.create(230, 230, 130), 1
+    newWdgt.isEditable = true
+    world.create newWdgt
+
+  createNewStringWdgtWithoutBackground: ->
+    newWdgt = new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa"
+    newWdgt.isEditable = true
+    world.create newWdgt
+
+  createNewTextWdgtWithBackground: ->
+    newWdgt = new TextWdgt(
+      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+      "elit. Integer rhoncus pharetra nulla, vel maximus " +
+      "lectus posuere a. Phasellus finibus blandit ex vitae " +
+      "varius. Vestibulum blandit velit elementum, ornare " +
+      "ipsum sollicitudin, blandit nunc. Mauris a sapien " +
+      "nibh. Nulla nec bibendum quam, eu condimentum nisl. " +
+      "Cras consequat efficitur nisi sed ornare. " +
+      "Pellentesque vitae urna vitae libero malesuada " +
+      "pharetra." +
+      "\n\n" +
+      "Pellentesque commodo, nulla mattis vulputate " +
+      "porttitor, elit augue vestibulum est, nec congue " +
+      "ex dui a velit. Nullam lectus leo, lobortis eget " +
+      "erat ac, lobortis dignissim magna. Morbi ac odio " +
+      "in purus blandit dignissim. Maecenas at sagittis " +
+      "odio. Suspendisse tempus mattis erat id euismod. " +
+      "Duis semper mauris nec odio sagittis vulputate. " +
+      "Praesent varius ac erat id fringilla. Suspendisse " +
+      "porta sollicitudin bibendum. Pellentesque imperdiet " +
+      "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
+      "nisi.",nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
+    newWdgt.isEditable = true
+    world.create newWdgt
+
+  analogClock: ->
+    world.create new AnalogClockWdgt
+
+  testMenu: (widgetOpeningThePopUp,targetWidget)->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, targetWidget, true, true, nil
+    menu.addMenuItem "serialise widget to memory", true, targetWidget, "serialiseToMemory"
+    menu.addMenuItem "deserialize from memory and attach to world", true, targetWidget, "deserialiseFromMemoryAndAttachToWorld"
+    menu.addMenuItem "deserialize from memory and attach to hand", true, targetWidget, "deserialiseFromMemoryAndAttachToHand"
+    menu.addMenuItem "attach with horizontal layout", true, targetWidget, "attachWithHorizLayout"
+    menu.addMenuItem "make spacers transparent", true, targetWidget, "makeSpacersTransparent"
+    menu.addMenuItem "make spacers opaque", true, targetWidget, "makeSpacersOpaque"
+    menu.addMenuItem "show adders", true, targetWidget, "showAdders"
+    menu.addMenuItem "remove adders", true, targetWidget, "removeAdders"
+    menu.addMenuItem "StringWdgt without background", true, menusHelper, "createNewStringWdgtWithoutBackground"
+    menu.addMenuItem "StringWdgt with background", true, menusHelper, "createNewStringWdgtWithBackground"
+    menu.addMenuItem "TextWdgt with background", true, menusHelper, "createNewTextWdgtWithBackground"
+    if world.widgetsToBePinouted.has targetWidget
+      menu.addMenuItem "remove output pins", true, targetWidget, "removeOutputPins"
+    else
+      menu.addMenuItem "show output pins", true, targetWidget, "showOutputPins"
+
+    # unclear whether the "un-collapse" entry would ever be
+    # visible.
+    if targetWidget?
+      if targetWidget.collapsed
+        menu.addMenuItem "un-collapse", true, targetWidget, "unCollapse"
+      else
+        menu.addMenuItem "collapse", true, targetWidget, "collapse"
+
+    menu.addMenuItem "others ➜", false, menusHelper, "popUpFirstMenu", "others"
+    menu.addMenuItem "others 2 ➜", false, menusHelper, "popUpSecondMenu", "others"
+
+
+    menu.popUpAtHand()
+
+  popUpFirstMenu: (widgetOpeningThePopUp, widgetThisMenuIsAbout) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "others"
+    menu.addMenuItem "make sliders' buttons states bright", true, menusHelper, "makeSlidersButtonsStatesBright"
+    menu.addMenuItem "make pointer", true, widgetThisMenuIsAbout, "createPointerWdgt"
+    menu.addMenuItem "icon with text", true, menusHelper, "makeIconWithText"
+    menu.addMenuItem "empty icon with text", true, menusHelper, "makeEmptyIconWithText"
+    menu.addMenuItem "generic reference icon", true, menusHelper, "makeGenericReferenceIcon"
+    menu.addMenuItem "generic object icon", true, menusHelper, "makeGenericObjectIcon"
+    menu.addMenuItem "folder window", true, menusHelper, "makeFolderWindow"
+    menu.addMenuItem "bouncing particle", true, menusHelper, "makeBouncingParticle"
+    menu.addMenuItem "throw an error", true, menusHelper, "throwAnError"
+    menu.addMenuItem "stretchable panel", true, menusHelper, "createStretchablePanel"
+    menu.addMenuItem "tools panel", true, menusHelper, "createToolsPanel"
+    menu.addMenuItem "horiz. menu panel", true, menusHelper, "createHorizontalMenuPanelPanel"
+    menu.addMenuItem "Simple slide", true, menusHelper, "createSimpleSlideWdgt"
+    menu.addMenuItem "patch programming ➜", false, menusHelper, "popUpPatchProgrammingMenu", "icons"
+    menu.addMenuItem "graphs ➜", false, menusHelper, "popUpGraphsMenu", "graphs"
+    menu.addMenuItem "support docs ➜", false, menusHelper, "popUpSupportDocsMenu", "support docs"
+
+    menu.popUpAtHand()
+
+  popUpSecondMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "others"
+    menu.addMenuItem "icons ➜", false, menusHelper, "popUpIconsMenu", "icons"
+    menu.addMenuItem "simple plain text ➜", false, menusHelper, "popUpSimplePlainTextWdgtMenu", "icons"
+    menu.addMenuItem "vertical stack ➜", false, menusHelper, "popUpVerticalStackMenu", "icons"
+    menu.addMenuItem "document ➜", false, menusHelper, "popUpDocumentMenu", "icons"
+    menu.addMenuItem "windows ➜", false, menusHelper, "popUpWindowsMenu", "icons"
+    menu.addMenuItem "shortcuts & scripts ➜", false, menusHelper, "popUpShortcutsAndScriptsMenu", "Shortcuts & Scripts"
+    menu.addMenuItem "analog clock", true, menusHelper, "analogClock"
+    menu.addMenuItem "dev tools ➜", false, menusHelper, "popUpDevToolsMenu", "icons"
+    menu.addMenuItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
+    menu.addMenuItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
+    menu.addMenuItem "simple button", true, menusHelper, "createSimpleButton"
+    menu.addMenuItem "switch button", true, menusHelper, "createSwitchButtonWdgt"
+    menu.addMenuItem "clipping box", true, menusHelper, "createNewClippingBoxWdgt"
+
+    menu.popUpAtHand()
+
   # this part is excluded from the fizzygum homepage build <<«
+
+  # »>> this part is only needed for Macros
+  testMenuForMacros: ->
+    menu = new MenuWdgt world, false, world, true, true, "Tests"
+    menu.addMenuItem "create desktop", true, world, "createDesktop"
+
+
+    menu.addMenuItem "attach with horizontal layout", true, world, "attachWithHorizLayout"
+    menu.addMenuItem "make spacers transparent", true, world, "makeSpacersTransparent"
+    menu.addMenuItem "make spacers opaque", true, world, "makeSpacersOpaque"
+    menu.addMenuItem "show adders", true, world, "showAdders"
+    menu.addMenuItem "remove adders", true, world, "removeAdders"
+    menu.addMenuItem "StringWdgt without background", true, menusHelper, "createNewStringWdgtWithoutBackground"
+    menu.addMenuItem "StringWdgt with background", true, menusHelper, "createNewStringWdgtWithBackground"
+    menu.addMenuItem "TextWdgt with background", true, menusHelper, "createNewTextWdgtWithBackground"
+
+    menu.addMenuItem "others ➜", false, menusHelper, "popUpFirstMenu", "others"
+    menu.addMenuItem "others 2 ➜", false, menusHelper, "popUpSecondMenu", "others"
+
+
+    menu.popUpAtHand()
+  # this part is only needed for Macros <<«
 
   createWelcomeMessageWindowAndShortcut: ->
     wm = WelcomeMessageInfoWdgt.create()

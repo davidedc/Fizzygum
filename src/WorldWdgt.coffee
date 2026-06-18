@@ -1834,7 +1834,7 @@ class WorldWdgt extends PanelWdgt
       menu.addMenuItem "delete all", true, @, "closeChildren"
       menu.addMenuItem "move all inside", true, @, "keepAllSubwidgetsWithin", "keep all subwidgets\nwithin and visible"
       menu.addMenuItem "inspect", true, @, "inspect", "open a window on\nall properties"
-      menu.addMenuItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
+      menu.addMenuItem "test menu ➜", false, menusHelper, "testMenu", "debugging and testing operations"
       menu.addLine()
       menu.addMenuItem "restore display", true, @, "changed", "redraw the\nscreen once"
       menu.addMenuItem "fit whole page", true, @, "stretchWorldToFillEntirePage", "let the World automatically\nadjust to browser resizings"
@@ -1904,7 +1904,7 @@ class WorldWdgt extends PanelWdgt
       menu.addMenuItem "gray scale palette", true, @widgetFactory, "createNewGrayPaletteWdgtInWindow"
       menu.addMenuItem "color palette", true, @widgetFactory, "createNewColorPaletteWdgtInWindow"
       menu.addLine()
-      menu.addMenuItem "analog clock", true, @, "analogClock"
+      menu.addMenuItem "analog clock", true, menusHelper, "analogClock"
     else
       menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "make a widget"
       menu.addMenuItem "rectangle", true, @widgetFactory, "createNewRectangleWdgt"

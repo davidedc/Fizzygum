@@ -13,5 +13,5 @@ class KeyupInputEvent extends KeyboardInputEvent
     # »>> this part is excluded from the fizzygum homepage build
     # catch the F2 key
     if @key == "F2" and !@shiftKey and !@ctrlKey and !@altKey and !@metaKey
-      world.testMenuForMacros()
+      menusHelper.testMenuForMacros()
     # this part is excluded from the fizzygum homepage build <<«

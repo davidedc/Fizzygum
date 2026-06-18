@@ -10,15 +10,15 @@ It is meant to be executable cold: it embeds the history, the guardrails (esp. a
 recapture reality that *corrects the backlog*), the study findings with `file:line`,
 the risk-ascending sub-arc, and which deferred Phase-5 checks each step dissolves.
 
-**Status (2026-06-18): PHASE 6 — Tier 3 IN PROGRESS (design pass done, slice 1 landed).**
+**Status (2026-06-18): PHASE 6 — Tier 3 ESSENTIALLY COMPLETE (C22 demo/factory menus fully relocated).**
 DONE + pushed: **Tier 1 (MenusHelper windowed-app decomposition)** — 6c.1–6c.4 (MenusHelper
 1170→489 L); **Tier 2 (WorldWdgt clean rim)** — 6a.1–6a.3 (**6a.4/6a.5 deliberately NOT
 extracted** — world-owned registries, see Tier 2). **Tier 3 (Widget liftable rim): DESIGN
 PASS DONE 2026-06-18 (see Tier 3 below) — only C22 (dev/demo menus) is a clean lift, to
-`menusHelper`; C20/C23/C25/C19 LEAVE (evidence below), C21 deferred. Slice 1 DONE + pushed**
-(`popUpPatchProgrammingMenu` → menusHelper; Fizzygum `6f44841b` / Fizzygum-tests `15f50402d`).
-**NEXT (owner-sequenced 2026-06-18): the `world.openWindowWith` unification FIRST (6b.0),
-then the C22 relocation (slice 2+, 6b.1).** Tier 4 (DET capstone) still deferred to its own
+`menusHelper`; C20/C23/C25/C19 LEAVE (evidence below), C21 deferred. 6b.0 + 6b.1 slices 1–4 DONE**
+(the whole C22 `popUp*Menu` + `create*` demo/factory rim now lives on `menusHelper`; slice 4
+pushed-pending). The only C22-table item left on Widget is the `@setupTestScreen1` class-method
+tail (4 test callers, no inspector impact — optional slice 5). Tier 4 (DET capstone) still deferred to its own
 mini-plan. Cadence per step is unchanged: explain → owner-approve → verify (recipe + targeted
 check) → commit individually.
 
@@ -413,22 +413,18 @@ inspects the world, per 6a.1). Wrinkle: internal windows (`…,true` in `createT
 `createEmptyInternalWindow`) need an optional flag or stay bespoke — check `openWindowWith`'s
 current signature first.
 
-**Sub-arc (owner-sequenced 2026-06-18):**
-  - **6b.0 `world.openWindowWith` unification — NEXT.** Dedup the window-wrap across the 3
-    subsystems; zero recapture.
-  - **6b.1 C22 relocation (the rule above), in coherent slices to bound recaptures:**
-    **slice 1 DONE** (`popUpPatchProgrammingMenu`; Fizzygum `6f44841b` / Fizzygum-tests
-    `15f50402d` — body byte-identical, one parent rebind, 1 inspector recapture); slice 2 =
-    `popUpVerticalStackMenu` + its 6 stack factories; slice 3 = the other demo-leaf builders
-    (`popUpSimplePlainTextWdgtMenu`/`popUpDocumentMenu`/`popUpWindowsMenu`/`popUpIconsMenu`/
-    `popUpShortcutsAndScriptsMenu` + factories); slice 4 = the roots (`popUpFirstMenu`/
-    `popUpSecondMenu`/`testMenu`/`testMenuForMacros`; widget-op items → `widgetOpeningThePopUp`,
-    ops stay). Dissolves the G shortcut-dedup filter once the `setupTestScreen1`/factory bulk
-    leaves.
-  - C20/C23/C25/C19 = **leave** (above); C21 **deferred**; `setupTestScreen1` rides with the
-    C22 factory bulk. **ROI note:** C22 is dev/macro scaffolding (mostly homepage-excluded) —
-    genuine Widget-thinning toward the menu-owning collaborator, but ships nothing new and each
-    slice-batch costs one inspector regen; honest to stop after any slice.
+**Sub-arc (owner-sequenced 2026-06-18) — 6b.0 + 6b.1 slices 1–4 ALL DONE + verified (165/165 dpr1+dpr2+WebKit, `--homepage` boots clean):**
+  - **6b.0 `world.openWindowWith` unification — DONE** (Fizzygum `f64af5dc`). Hoisted the
+    triplicated window-wrap to a world primitive (windowed sibling of `world.create`); the app
+    `openWindowWith` forwarder removed (Middle Man); zero recapture.
+  - **6b.1 C22 relocation (the rule above), in coherent slices:**
+    - **slice 1 DONE** `popUpPatchProgrammingMenu` — body byte-identical, 1 parent rebind, 1 inspector recapture (Fizzygum `6f44841b` / Fizzygum-tests `15f50402d`).
+    - **slice 2 DONE** `popUpVerticalStackMenu` + its 6 stack factories (Fizzygum `ce2f3f40` / Fizzygum-tests `55bc1056f`). Fallout: 1 macro-fixture repoint `world.<f>`→`menusHelper.<f>` (the grep-`.js` lesson).
+    - **slice 3a DONE** the low-risk demo-leaf builders (Fizzygum `8a282c0f` / Fizzygum-tests `d4992f520`).
+    - **slice 3b DONE** `popUpDocumentMenu` + `popUpSimplePlainTextWdgtMenu` + 10 factories; 7 fixture repoints across 4 tests (Fizzygum `85c95265` / Fizzygum-tests `75cc7a736`).
+    - **slice 4 DONE** the roots `testMenu`/`popUpFirstMenu`/`popUpSecondMenu`/`testMenuForMacros` + the 4 pure factories (`createNew{String,String,Text}Wdgt*`, `analogClock`). NO fixture repoints (the 9 tests that navigate these menus are LABEL-driven → render-only). 4 source call-sites flipped `@→menusHelper` (WorldWdgt ×2, the deferred-C21 `buildBaseWidgetClassContextMenu` ×1, `KeyupInputEvent` F2 ×1). 1 inspector recapture. *(pushed-pending)*
+  - **PROVEN retarget mechanism (corrects the earlier loose "ops → `widgetOpeningThePopUp`" note).** `MenuWdgt.createMenuItem` sets `item.dataSourceWidgetForTarget = item` and `item.widgetEnv = @target`; `ButtonWdgt` invokes `target.action(dataSourceWidgetForTarget, widgetEnv, …)`. So a submenu builder's **arg1 (`widgetOpeningThePopUp`) is the menu-ITEM widget** (positioning) and **arg2 (`widgetThisMenuIsAbout`/`targetWidget`) is the widget the menu is ABOUT**. ⇒ widget-op items retarget to **arg2**, NOT arg1 (`popUpDevToolsMenu` is the template; `@target = menusHelper` is screenshot-safe). Applied: `testMenu` ops → `targetWidget`; `popUpFirstMenu` gained a `widgetThisMenuIsAbout` arg for `createPointerWdgt`; `popUpSecondMenu`'s `analogClock` → `menusHelper` (factory); `testMenuForMacros` is `world`-bound (called as `world.testMenuForMacros()` on F2) so its `@`→`world`. `testMenuForMacros` lives in MenusHelper in its OWN `# »>> only needed for Macros` block OUTSIDE the homepage-excluded region (build.py's `[^«]*«` marker regexes cannot nest).
+  - C20/C23/C25/C19 = **leave** (above); C21 **deferred**. **C22 TAIL REMAINING (optional slice 5):** `@setupTestScreen1` (a class-method test-screen builder at `:4043`, ~256 L, called by 4 SystemTests) — a clean relocation (class method ⇒ NO inspector recapture) needing 4 `setupTestScreen1` fixture repoints; low Widget-thinning value (static test helper, off the inspector instance pane). **ROI note:** C22 is dev/macro scaffolding (mostly homepage-excluded) — genuine Widget-thinning toward the menu-owning collaborator, but ships nothing new and each slice-batch costs one inspector regen; honest to stop here.
 
 **Tier 4 — the DET capstone (6b late + 6a DET core).** HIGHEST risk; its own
 mini-plan when reached. Read DETERMINISM.md; dpr2+WebKit mandatory; recapture expected.

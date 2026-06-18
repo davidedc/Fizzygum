@@ -2979,122 +2979,11 @@ class Widget extends TreeNode
       true
 
   # »>> this part is excluded from the fizzygum homepage build
-  createNewStringWdgtWithBackground: ->
-    #newWdgt = new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, Color.create(255, 255, 54), 0.5
-    newWdgt = new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, Color.create(230, 230, 130), 1
-    newWdgt.isEditable = true
-    world.create newWdgt
-
-  createNewStringWdgtWithoutBackground: ->
-    newWdgt = new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa"
-    newWdgt.isEditable = true
-    world.create newWdgt
-
-  createNewTextWdgtWithBackground: ->
-    newWdgt = new TextWdgt(
-      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
-      "elit. Integer rhoncus pharetra nulla, vel maximus " +
-      "lectus posuere a. Phasellus finibus blandit ex vitae " +
-      "varius. Vestibulum blandit velit elementum, ornare " +
-      "ipsum sollicitudin, blandit nunc. Mauris a sapien " +
-      "nibh. Nulla nec bibendum quam, eu condimentum nisl. " +
-      "Cras consequat efficitur nisi sed ornare. " +
-      "Pellentesque vitae urna vitae libero malesuada " +
-      "pharetra." +
-      "\n\n" +
-      "Pellentesque commodo, nulla mattis vulputate " +
-      "porttitor, elit augue vestibulum est, nec congue " +
-      "ex dui a velit. Nullam lectus leo, lobortis eget " +
-      "erat ac, lobortis dignissim magna. Morbi ac odio " +
-      "in purus blandit dignissim. Maecenas at sagittis " +
-      "odio. Suspendisse tempus mattis erat id euismod. " +
-      "Duis semper mauris nec odio sagittis vulputate. " +
-      "Praesent varius ac erat id fringilla. Suspendisse " +
-      "porta sollicitudin bibendum. Pellentesque imperdiet " +
-      "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
-      "nisi.",nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
-    newWdgt.isEditable = true
-    world.create newWdgt
-
   showOutputPins: (a,b,c,d) ->
     world.widgetsToBePinouted.add b
 
   removeOutputPins: (a,b,c,d) ->
     world.widgetsToBePinouted.delete b
-
-  testMenu: (widgetOpeningThePopUp,targetWidget)->
-    menu = new MenuWdgt widgetOpeningThePopUp,  false, targetWidget, true, true, nil
-    menu.addMenuItem "serialise widget to memory", true, targetWidget, "serialiseToMemory"
-    menu.addMenuItem "deserialize from memory and attach to world", true, targetWidget, "deserialiseFromMemoryAndAttachToWorld"
-    menu.addMenuItem "deserialize from memory and attach to hand", true, targetWidget, "deserialiseFromMemoryAndAttachToHand"
-    menu.addMenuItem "attach with horizontal layout", true, @, "attachWithHorizLayout"
-    menu.addMenuItem "make spacers transparent", true, @, "makeSpacersTransparent"
-    menu.addMenuItem "make spacers opaque", true, @, "makeSpacersOpaque"
-    menu.addMenuItem "show adders", true, @, "showAdders"
-    menu.addMenuItem "remove adders", true, @, "removeAdders"
-    menu.addMenuItem "StringWdgt without background", true, @, "createNewStringWdgtWithoutBackground"
-    menu.addMenuItem "StringWdgt with background", true, @, "createNewStringWdgtWithBackground"
-    menu.addMenuItem "TextWdgt with background", true, @, "createNewTextWdgtWithBackground"
-    if world.widgetsToBePinouted.has targetWidget
-      menu.addMenuItem "remove output pins", true, @, "removeOutputPins"
-    else
-      menu.addMenuItem "show output pins", true, @, "showOutputPins"
-    
-    # unclear whether the "un-collapse" entry would ever be
-    # visible.
-    if targetWidget?
-      if targetWidget.collapsed
-        menu.addMenuItem "un-collapse", true, @, "unCollapse"
-      else
-        menu.addMenuItem "collapse", true, @, "collapse"
-
-    menu.addMenuItem "others ➜", false, @, "popUpFirstMenu", "others"
-    menu.addMenuItem "others 2 ➜", false, @, "popUpSecondMenu", "others"
-
-
-    menu.popUpAtHand()
-
-  analogClock: ->
-    world.create new AnalogClockWdgt
-
-  popUpFirstMenu: (widgetOpeningThePopUp) ->
-    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "others"
-    menu.addMenuItem "make sliders' buttons states bright", true, menusHelper, "makeSlidersButtonsStatesBright"
-    menu.addMenuItem "make pointer", true, @, "createPointerWdgt"
-    menu.addMenuItem "icon with text", true, menusHelper, "makeIconWithText"
-    menu.addMenuItem "empty icon with text", true, menusHelper, "makeEmptyIconWithText"
-    menu.addMenuItem "generic reference icon", true, menusHelper, "makeGenericReferenceIcon"
-    menu.addMenuItem "generic object icon", true, menusHelper, "makeGenericObjectIcon"
-    menu.addMenuItem "folder window", true, menusHelper, "makeFolderWindow"
-    menu.addMenuItem "bouncing particle", true, menusHelper, "makeBouncingParticle"
-    menu.addMenuItem "throw an error", true, menusHelper, "throwAnError"
-    menu.addMenuItem "stretchable panel", true, menusHelper, "createStretchablePanel"
-    menu.addMenuItem "tools panel", true, menusHelper, "createToolsPanel"
-    menu.addMenuItem "horiz. menu panel", true, menusHelper, "createHorizontalMenuPanelPanel"
-    menu.addMenuItem "Simple slide", true, menusHelper, "createSimpleSlideWdgt"
-    menu.addMenuItem "patch programming ➜", false, menusHelper, "popUpPatchProgrammingMenu", "icons"
-    menu.addMenuItem "graphs ➜", false, menusHelper, "popUpGraphsMenu", "graphs"
-    menu.addMenuItem "support docs ➜", false, menusHelper, "popUpSupportDocsMenu", "support docs"
-
-    menu.popUpAtHand()
-
-  popUpSecondMenu: (widgetOpeningThePopUp) ->
-    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "others"
-    menu.addMenuItem "icons ➜", false, menusHelper, "popUpIconsMenu", "icons"
-    menu.addMenuItem "simple plain text ➜", false, menusHelper, "popUpSimplePlainTextWdgtMenu", "icons"
-    menu.addMenuItem "vertical stack ➜", false, menusHelper, "popUpVerticalStackMenu", "icons"
-    menu.addMenuItem "document ➜", false, menusHelper, "popUpDocumentMenu", "icons"
-    menu.addMenuItem "windows ➜", false, menusHelper, "popUpWindowsMenu", "icons"
-    menu.addMenuItem "shortcuts & scripts ➜", false, menusHelper, "popUpShortcutsAndScriptsMenu", "Shortcuts & Scripts"
-    menu.addMenuItem "analog clock", true, @, "analogClock"
-    menu.addMenuItem "dev tools ➜", false, menusHelper, "popUpDevToolsMenu", "icons"
-    menu.addMenuItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
-    menu.addMenuItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
-    menu.addMenuItem "simple button", true, menusHelper, "createSimpleButton"
-    menu.addMenuItem "switch button", true, menusHelper, "createSwitchButtonWdgt"
-    menu.addMenuItem "clipping box", true, menusHelper, "createNewClippingBoxWdgt"
-
-    menu.popUpAtHand()
 
   serialiseToMemory: ->
     world.lastSerializationString = @serialize()
@@ -3107,29 +2996,6 @@ class Widget extends TreeNode
     derezzedObject = world.deserialize world.lastSerializationString
     world.add derezzedObject
   # this part is excluded from the fizzygum homepage build <<«
-
-
-  # »>> this part is only needed for Macros
-  testMenuForMacros: ->
-    menu = new MenuWdgt @, false, @, true, true, "Tests"
-    menu.addMenuItem "create desktop", true, world, "createDesktop"
-
-
-    menu.addMenuItem "attach with horizontal layout", true, @, "attachWithHorizLayout"
-    menu.addMenuItem "make spacers transparent", true, @, "makeSpacersTransparent"
-    menu.addMenuItem "make spacers opaque", true, @, "makeSpacersOpaque"
-    menu.addMenuItem "show adders", true, @, "showAdders"
-    menu.addMenuItem "remove adders", true, @, "removeAdders"
-    menu.addMenuItem "StringWdgt without background", true, @, "createNewStringWdgtWithoutBackground"
-    menu.addMenuItem "StringWdgt with background", true, @, "createNewStringWdgtWithBackground"
-    menu.addMenuItem "TextWdgt with background", true, @, "createNewTextWdgtWithBackground"
-    
-    menu.addMenuItem "others ➜", false, @, "popUpFirstMenu", "others"
-    menu.addMenuItem "others 2 ➜", false, @, "popUpSecondMenu", "others"
-
-
-    menu.popUpAtHand()
-  # this part is only needed for Macros <<«
 
   buildBaseWidgetClassContextMenu: (widgetOpeningThePopUp) ->
 
@@ -3157,7 +3023,7 @@ class Widget extends TreeNode
       menu.addMenuItem "attach...", true, @, "attach", "stick this widget\nto another one"
       menu.addMenuItem "inspect", true, @, "inspect", "open a window\non all properties"
       menu.addMenuItem "create shortcut", true, @, "createReference", "creates a reference to this wdgt and leaves it on the desktop"
-      menu.addMenuItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
+      menu.addMenuItem "test menu ➜", false, menusHelper, "testMenu", "debugging and testing operations"
       menu.addLine()
 
     if (@parent instanceof PanelWdgt) and !(@parent instanceof ScrollPanelWdgt)
