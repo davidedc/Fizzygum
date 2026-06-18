@@ -558,6 +558,181 @@ class MenusHelper
     wm.fullRawMoveWithin world
     world.add wm
 
+  createNewWrappingSimplePlainTextWdgtWithBackground: ->
+    newWdgt = new SimplePlainTextWdgt(
+      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+      "elit. Integer rhoncus pharetra nulla, vel maximus " +
+      "lectus posuere a. Phasellus finibus blandit ex vitae " +
+      "varius. Vestibulum blandit velit elementum, ornare " +
+      "ipsum sollicitudin, blandit nunc. Mauris a sapien " +
+      "nibh. Nulla nec bibendum quam, eu condimentum nisl. " +
+      "Cras consequat efficitur nisi sed ornare. " +
+      "Pellentesque vitae urna vitae libero malesuada " +
+      "pharetra." +
+      "\n\n" +
+      "Pellentesque commodo, nulla mattis vulputate " +
+      "porttitor, elit augue vestibulum est, nec congue " +
+      "ex dui a velit. Nullam lectus leo, lobortis eget " +
+      "erat ac, lobortis dignissim magna. Morbi ac odio " +
+      "in purus blandit dignissim. Maecenas at sagittis " +
+      "odio. Suspendisse tempus mattis erat id euismod. " +
+      "Duis semper mauris nec odio sagittis vulputate. " +
+      "Praesent varius ac erat id fringilla. Suspendisse " +
+      "porta sollicitudin bibendum. Pellentesque imperdiet " +
+      "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
+      "nisi.",nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
+    newWdgt.isEditable = true
+
+    world.add newWdgt
+    newWdgt.fullRawMoveTo new Point 25, 40
+    newWdgt.rawSetExtent new Point 500, 300
+
+  createNewNonWrappingSimplePlainTextWdgtWithBackground: ->
+    newWdgt = new SimplePlainTextWdgt(
+      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+      "elit. Integer rhoncus pharetra nulla, vel maximus " +
+      "lectus posuere a. Phasellus finibus blandit ex vitae " +
+      "varius." +
+      "\n\n" +
+      "Pellentesque commodo, nulla mattis vulputate " +
+      "porttitor, elit augue vestibulum est, nec congue " +
+      "ex dui a velit. Nullam lectus leo, lobortis eget " +
+      "erat ac, lobortis dignissim " +
+      "magna.",nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
+    newWdgt.isEditable = true
+    # non-wrapping ("code view"): hug the natural text width.
+    newWdgt.softWrap = false
+
+    world.add newWdgt
+    newWdgt.fullRawMoveTo new Point 540, 40
+    newWdgt.rawSetExtent new Point 500, 300
+
+  createNewWrappingAndNonWrappingSimplePlainTextWdgtWithBackground: ->
+    @createNewWrappingSimplePlainTextWdgtWithBackground()
+    @createNewNonWrappingSimplePlainTextWdgtWithBackground()
+
+  createWrappingSimplePlainTextScrollPanelWdgt: ->
+    SfA = new SimplePlainTextScrollPanelWdgt(
+      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+      "elit. Integer rhoncus pharetra nulla, vel maximus " +
+      "lectus posuere a. Phasellus finibus blandit ex vitae " +
+      "varius. Vestibulum blandit velit elementum, ornare " +
+      "ipsum sollicitudin, blandit nunc. Mauris a sapien " +
+      "nibh. Nulla nec bibendum quam, eu condimentum nisl. " +
+      "Cras consequat efficitur nisi sed ornare. " +
+      "Pellentesque vitae urna vitae libero malesuada " +
+      "pharetra." +
+      "\n\n" +
+      "Pellentesque commodo, nulla mattis vulputate " +
+      "porttitor, elit augue vestibulum est, nec congue " +
+      "ex dui a velit. Nullam lectus leo, lobortis eget " +
+      "erat ac, lobortis dignissim magna. Morbi ac odio " +
+      "in purus blandit dignissim. Maecenas at sagittis " +
+      "odio. Suspendisse tempus mattis erat id euismod. " +
+      "Duis semper mauris nec odio sagittis vulputate. " +
+      "Praesent varius ac erat id fringilla. Suspendisse " +
+      "porta sollicitudin bibendum. Pellentesque imperdiet " +
+      "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
+      "nisi.",true, 10)
+    world.add SfA
+    SfA.fullRawMoveTo new Point 20, 25
+    SfA.rawSetExtent new Point 390, 305
+
+  createNonWrappingSimplePlainTextScrollPanelWdgt: ->
+    SfB = new SimplePlainTextScrollPanelWdgt(
+      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+      "elit. Integer rhoncus pharetra nulla, vel maximus " +
+      "\n\n" +
+      "Pellentesque commodo, nulla mattis vulputate " +
+      "porttitor, elit augue vestibulum est, nec congue " +
+      "nisi.",false, 10)
+    world.add SfB
+    SfB.fullRawMoveTo new Point 430, 25
+    SfB.rawSetExtent new Point 390, 305
+
+  createWrappingAndNonWrappingSimplePlainTextScrollPanelWdgt: ->
+    @createWrappingSimplePlainTextScrollPanelWdgt()
+    @createNonWrappingSimplePlainTextScrollPanelWdgt()
+
+  # this is provided for completeness, however see the
+  # note in SimplePlainTextPanelWdgt about how this is
+  # incomplete and why this widget is not useful anyways
+  createWrappingSimplePlainTextPanelWdgt: ->
+    SfA = new SimplePlainTextPanelWdgt(
+      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+      "elit. Integer rhoncus pharetra nulla, vel maximus " +
+      "lectus posuere a. Phasellus finibus blandit ex vitae " +
+      "varius. Vestibulum blandit velit elementum, ornare " +
+      "ipsum sollicitudin, blandit nunc. Mauris a sapien " +
+      "nibh. Nulla nec bibendum quam, eu condimentum nisl. " +
+      "Cras consequat efficitur nisi sed ornare. " +
+      "Pellentesque vitae urna vitae libero malesuada " +
+      "pharetra." +
+      "\n\n" +
+      "Pellentesque commodo, nulla mattis vulputate " +
+      "porttitor, elit augue vestibulum est, nec congue " +
+      "ex dui a velit. Nullam lectus leo, lobortis eget " +
+      "erat ac, lobortis dignissim magna. Morbi ac odio " +
+      "in purus blandit dignissim. Maecenas at sagittis " +
+      "odio. Suspendisse tempus mattis erat id euismod. " +
+      "Duis semper mauris nec odio sagittis vulputate. " +
+      "Praesent varius ac erat id fringilla. Suspendisse " +
+      "porta sollicitudin bibendum. Pellentesque imperdiet " +
+      "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
+      "nisi.",true, 10)
+    world.add SfA
+    SfA.fullRawMoveTo new Point 20, 25
+    SfA.rawSetExtent new Point 390, 305
+
+  # this is provided for completeness, however see the
+  # note in SimplePlainTextPanelWdgt about how this is
+  # incomplete and why this widget is not useful anyways
+  createNonWrappingSimplePlainTextPanelWdgt: ->
+    SfB = new SimplePlainTextPanelWdgt(
+      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+      "elit. Integer rhoncus pharetra nulla, vel maximus " +
+      "\n\n" +
+      "Pellentesque commodo, nulla mattis vulputate " +
+      "porttitor, elit augue vestibulum est, nec congue " +
+      "nisi.",false, 10)
+    world.add SfB
+    SfB.fullRawMoveTo new Point 430, 25
+    SfB.rawSetExtent new Point 390, 305
+
+  # this is provided for completeness, however see the
+  # note in SimplePlainTextPanelWdgt about how this is
+  # incomplete and why this widget is not useful anyways
+  createWrappingAndNonWrappingSimplePlainTextPanelWdgt: ->
+    @createWrappingSimplePlainTextPanelWdgt()
+    @createNonWrappingSimplePlainTextPanelWdgt()
+
+
+  createSimpleDocumentScrollPanelWdgt: ->
+    sdspw = new SimpleDocumentScrollPanelWdgt
+    world.add sdspw
+    sdspw.fullRawMoveTo new Point 35, 30
+    sdspw.rawSetExtent new Point 370, 325
+
+  popUpDocumentMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Document"
+    menu.addMenuItem "simple document scrollpanel", true, menusHelper, "createSimpleDocumentScrollPanelWdgt"
+    menu.addMenuItem "simple document", true, menusHelper, "createSimpleDocumentWdgt"
+    menu.popUpAtHand()
+
+  popUpSimplePlainTextWdgtMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Simple plain text"
+    menu.addMenuItem "simple plain text wrapping", true, menusHelper, "createNewWrappingSimplePlainTextWdgtWithBackground"
+    menu.addMenuItem "simple plain text not wrapping", true, menusHelper, "createNewNonWrappingSimplePlainTextWdgtWithBackground"
+    menu.addMenuItem "simple plain text (wrapping / not wrapping)", true, menusHelper, "createNewWrappingAndNonWrappingSimplePlainTextWdgtWithBackground"
+    menu.addMenuItem "simple plain text panel wrapping", true, menusHelper, "createWrappingSimplePlainTextPanelWdgt"
+    menu.addMenuItem "simple plain text panel not wrapping", true, menusHelper, "createNonWrappingSimplePlainTextPanelWdgt"
+    menu.addMenuItem "simple plain text panel (wrapping / not wrapping)", true, menusHelper, "createWrappingAndNonWrappingSimplePlainTextPanelWdgt"
+    menu.addMenuItem "simple plain text scrollpanel wrapping", true, menusHelper, "createWrappingSimplePlainTextScrollPanelWdgt"
+    menu.addMenuItem "simple plain text scrollpanel not wrapping", true, menusHelper, "createNonWrappingSimplePlainTextScrollPanelWdgt"
+    menu.addMenuItem "simple plain text scrollpanel (wrapping / not wrapping)", true, menusHelper, "createWrappingAndNonWrappingSimplePlainTextScrollPanelWdgt"
+
+    menu.popUpAtHand()
+
   # this part is excluded from the fizzygum homepage build <<«
 
   createWelcomeMessageWindowAndShortcut: ->
