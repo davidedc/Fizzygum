@@ -4,5 +4,5 @@ class GenericPanelApp extends IconicDesktopSystemWindowedApp
 
   title: "Generic panel"
   buildIcon:    -> new GenericPanelIconWdgt
-  buildWindow:  -> @openWindowWith (new StretchableEditableWdgt), (new Point 460, 400), world.hand.position()
+  buildWindow:  -> world.openWindowWith (new StretchableEditableWdgt), (new Point 460, 400), world.hand.position()
   windowOpened: (wm) -> GenericPanelInfoWdgt.createNextTo wm

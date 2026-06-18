@@ -369,11 +369,7 @@ class InspectorWdgt extends Widget
 
   openClassInspector: (ignored,ignored2,className) ->
     classInspector = new ClassInspectorWdgt window[className].prototype
-    wm = new WindowWdgt nil, nil, classInspector
-    wm.setExtent new Point 560, 410
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.fullRawMoveWithin world
-    world.add wm
+    world.openWindowWith classInspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
 
   filterProperties: (targetOwnMethods)->
     if @markOwnershipOfProperties

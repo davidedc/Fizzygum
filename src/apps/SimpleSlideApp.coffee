@@ -5,5 +5,5 @@ class SimpleSlideApp extends IconicDesktopSystemWindowedApp
 
   title: "Slides Maker"
   buildIcon:    -> new SimpleSlideIconWdgt
-  buildWindow:  -> @openWindowWith (new SimpleSlideWdgt), (new Point 460, 400), (new Point 168, 134)
+  buildWindow:  -> world.openWindowWith (new SimpleSlideWdgt), (new Point 460, 400), (new Point 168, 134)
   windowOpened: (wm) -> SimpleSlideInfoWdgt.createNextTo wm

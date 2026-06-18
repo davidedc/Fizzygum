@@ -18,28 +18,16 @@ class MenusHelper
   # »>> this part is excluded from the fizzygum homepage build
   createFridgeMagnets: ->
     fmm = new FridgeMagnetsWdgt
-    wm = new WindowWdgt nil, nil, fmm
-    wm.setExtent new Point 570, 400
-    wm.fullRawMoveTo world.hand.position()
-    wm.fullRawMoveWithin world
-    world.add wm
+    world.openWindowWith fmm, (new Point 570, 400), world.hand.position()
 
 
   createReconfigurablePaint: ->
     reconfPaint = new ReconfigurablePaintWdgt
-    wm = new WindowWdgt nil, nil, reconfPaint
-    wm.setExtent new Point 460, 400
-    wm.fullRawMoveTo world.hand.position()
-    wm.fullRawMoveWithin world
-    world.add wm
+    world.openWindowWith reconfPaint, (new Point 460, 400), world.hand.position()
 
   createSimpleSlideWdgt: ->
     simpleSlide = new SimpleSlideWdgt
-    wm = new WindowWdgt nil, nil, simpleSlide
-    wm.setExtent new Point 460, 400
-    wm.fullRawMoveTo world.hand.position()
-    wm.fullRawMoveWithin world
-    world.add wm
+    world.openWindowWith simpleSlide, (new Point 460, 400), world.hand.position()
 
   createSimpleButton: ->
     world.create new SimpleRectangularButtonWdgt true, @, nil, new IconWdgt(nil)
@@ -156,11 +144,7 @@ class MenusHelper
   # »>> this part is excluded from the fizzygum homepage build
   newScriptWindow: ->
     scriptWdgt = new ScriptWdgt
-    wm = new WindowWdgt nil, nil, scriptWdgt
-    wm.setExtent new Point 460, 400
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.fullRawMoveWithin world
-    world.add wm
+    world.openWindowWith scriptWdgt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
   # this part is excluded from the fizzygum homepage build <<«
 
   # »>> this part is excluded from the fizzygum homepage build
@@ -405,11 +389,7 @@ class MenusHelper
 
   createSimpleDocumentWdgt: ->
     simpleDocument = new SimpleDocumentWdgt
-    wm = new WindowWdgt nil, nil, simpleDocument
-    wm.setExtent new Point 368, 335
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.fullRawMoveWithin world
-    world.add wm
+    world.openWindowWith simpleDocument, (new Point 368, 335), world.hand.position().subtract(new Point 50, 100)
 
   createSimpleLinkWdgt: ->
     simpleLinkWdgt = new SimpleLinkWdgt

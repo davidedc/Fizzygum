@@ -2819,11 +2819,7 @@ class Widget extends TreeNode
 
     prompt = new CodePromptWdgt(msg, target, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded)
-    wm = new WindowWdgt nil, nil, prompt
-    wm.setExtent new Point 460, 400
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.fullRawMoveWithin world
-    world.add wm
+    world.openWindowWith prompt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
 
 
   
@@ -2857,19 +2853,11 @@ class Widget extends TreeNode
   # default for the menu/inspect paths; the naked path is the additional mode.
   spawnInspector: (inspectee) ->
     inspector = new InspectorWdgt inspectee
-    wm = new WindowWdgt nil, nil, inspector
-    wm.setExtent new Point 560, 410
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.fullRawMoveWithin world
-    world.add wm
+    world.openWindowWith inspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
 
   createConsole: ->
     inspector = new ConsoleWdgt @
-    wm = new WindowWdgt nil, nil, inspector
-    wm.setExtent new Point 285, 290
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
-    wm.fullRawMoveWithin world
-    world.add wm
+    world.openWindowWith inspector, (new Point 285, 290), world.hand.position().subtract(new Point 50, 100)
 
   spawnNextTo: (widgetToBeNextTo, whereToAddIt) ->
     if !whereToAddIt?

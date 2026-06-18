@@ -1879,6 +1879,18 @@ class WorldWdgt extends PanelWdgt
   create: (aWdgt) ->
     aWdgt.pickUp()
 
+  # Wrap a content widget in a window, size and place it, add it to the world --
+  # the windowed sibling of `create`. Returns the window. The single home for the
+  # "fresh window" wrap (windowed apps' buildWindow, menusHelper's window demos, the
+  # inspector/console/prompt spawners). Titled / rawSetExtent windows build directly.
+  openWindowWith: (contentWidget, extent, position) ->
+    wm = new WindowWdgt nil, nil, contentWidget
+    wm.setExtent extent
+    wm.fullRawMoveTo position
+    wm.fullRawMoveWithin @
+    @add wm
+    wm
+
   # »>> this part is excluded from the fizzygum homepage build
   popUpDemoMenu: (widgetOpeningThePopUp,b,c,d) ->
     if @isIndexPage
