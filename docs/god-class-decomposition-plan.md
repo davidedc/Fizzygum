@@ -10,7 +10,13 @@ It is meant to be executable cold: it embeds the history, the guardrails (esp. a
 recapture reality that *corrects the backlog*), the study findings with `file:line`,
 the risk-ascending sub-arc, and which deferred Phase-5 checks each step dissolves.
 
-**Status: PLAN ONLY — no code yet.** Phase 6 needs explicit owner go-ahead per step.
+**Status (2026-06-18): PHASE 6 PAUSED at a clean milestone.** DONE + pushed:
+**Tier 1 (MenusHelper windowed-app decomposition)** — 6c.1–6c.4 (MenusHelper 1170→489 L,
+its one "doesn't-belong-here" responsibility fully out); **Tier 2 (WorldWdgt clean rim)** —
+6a.1–6a.3. **6a.4/6a.5 deliberately NOT extracted** — world-owned registries (see Tier 2).
+**Remaining = a higher-risk class; resume needs explicit owner go-ahead: Tier 3 (Widget
+rim, recapture-bearing) + Tier 4 (DET capstone).** Cadence per step is unchanged:
+explain → owner-approve → verify (recipe + targeted check) → commit individually.
 
 ---
 
@@ -160,8 +166,8 @@ render loop (`updateBroken` `:926` + ~17 helpers, ~440 L), repaint error recover
 | **Untitled-naming service** | `getNextUntitledShortcutName` (405), `getNextUntitledFolderShortcutName` (414); counters `howManyUntitled*` L224-225 | ~30 | PURE-MOVE, self-contained — the cleanest first World move. NB `colloquialName` (376) is NOT part of this — it's a polymorphic LABEL override (base `Widget:1932`, 65 overrides) and STAYS. Call sites to rewire: `SaveShortcutPromptWdgt:14`, `PanelWdgt:36`, and the raw field-bump `PanelWdgt:37` `world.howManyUntitledShortcuts++` (encapsulate as a method). |
 | **Widget factory ("parts bin")** | `create` (1961) + ~24 `createNew*` (1965-2091), `underTheCarpet`, `draftRunVideoPlayer` | ~310 | PURE-MOVE, uniform (`@create new XxxWdgt` → `pickUp`); low coupling (`@hand`,`@add`) |
 | **Menu/wallpaper UI builders** | `buildContextMenu` (1831), `popUp*Menu` (1948-2150), `wallpapersMenu`/`setPattern`/`makePrettier` (379-1917) | ~305 | PURE-MOVE but cross-reference each other + many *inherited* methods; mostly homepage-excluded |
-| **Popup/tooltip lifecycle** | `mostRecentlyCreatedPopUp` (553), `closePopUpsMarkedForClosure` (589), `destroyToolTips` (1818) + the Sets L132-138 | ~55 | BEHAVIOUR-TOUCHING (external callers mutate the Sets) |
-| GC cross-ref | `anyReferenceToWdgt` (2216) | ~10 | PURE-MOVE |
+| **Popup/tooltip lifecycle** | `mostRecentlyCreatedPopUp` (553), `closePopUpsMarkedForClosure` (589), `destroyToolTips` (1818) + the Sets L132-138 | ~55 | **LEAVE (2026-06-18): world-global registry — written by ToolTipWdgt/PopUpWdgt, read by ActivePointerWdgt input path → `[DET]`-adjacent + serialization-sensitive** |
+| GC cross-ref | `anyReferenceToWdgt` (2216) | ~10 | **LEAVE (2026-06-18): thin query over `widgetsReferencingOtherWidgets`, a world registry written by IconicDesktopSystemShortcutWdgt + iterated by BasementWdgt ×3** |
 
 **Shared seams to decide explicitly:** `createErrorConsole` (startup vs error-recovery),
 `initVirtualKeyboard` (listener-wiring vs caret-focus), `syncRenderCanvasToWorldCanvas`
@@ -336,8 +342,18 @@ Non-launcher builders reached by a direct code call (Templates) still become a s
     `world.wallpaper`; `DesktopAppearance` now reads `@widget.wallpaper.pattern*`;
     named `Wallpaper` not `WallpaperManager` per owner. Context-menu builders LEFT on
     WorldWdgt — see note below. **Surfaced + fixed a deep-copy hazard**, guardrail #7.)
-    · 6a.4 popup/tooltip lifecycle (stateful — check serialization) · 6a.5
-    `anyReferenceToWdgt`.
+    · **6a.4 popup/tooltip lifecycle + 6a.5 `anyReferenceToWdgt` — NOT EXTRACTED (finding
+    2026-06-18, owner-confirmed leave).** On inspection both are **world-global registries
+    with many external readers/writers**, not MacroToolkit-style self-contained clusters:
+    `widgetsReferencingOtherWidgets` is written by `IconicDesktopSystemShortcutWdgt`
+    (add/delete/clone) and iterated by `BasementWdgt` (×3), `anyReferenceToWdgt` being just
+    one of several readers; the popup/tooltip Sets are written by `ToolTipWdgt`/`PopUpWdgt`
+    and read by **`ActivePointerWdgt`'s input-recognition path** (`mostRecentlyCreatedPopUp`
+    in `mouseClickLeft`, `closePopUpsMarkedForClosure`) → `[DET]`-adjacent + serialization-
+    sensitive. The world is the natural owner of these global registries; extracting them
+    would scatter a world concern across a collaborator + ~5 call sites for ~zero benefit
+    (the popups belong with the DET capstone, if anywhere). **Tier 2's clean rim is
+    COMPLETE at 6a.1–6a.3.**
 - **The world's CONTEXT-MENU builders are NOT clean extraction targets** (finding
   from 6a.3): `buildContextMenu` + the dev `popUp*Menu`/`layoutTestsMenu` dispatch by
   reflection string-action to `@`=world's own AND *inherited* Widget methods
@@ -347,7 +363,12 @@ Non-launcher builders reached by a direct code call (Templates) still become a s
   Verify: full recipe; recapture only if a test inspects the World (check first).
 
 **Tier 3 — `Widget` liftable rim (6b, non-DET).** Each moves methods off Widget →
-**expect the inspector recapture** (guardrail 1); handle per Cluster A.
+**expect the inspector recapture** (guardrail 1); handle per Cluster A. **CAVEAT
+(2026-06-18): trickier than this table suggests — re-study before starting.** Most of
+these (e.g. `colorSetters`, `spawnInspector`, `evaluateString`) are *per-widget behaviour*
+invoked on a widget instance, NOT world concerns, so they do NOT become clean `world.*`
+collaborators the way Tier 2 did; a genuine 6b needs a different shape (a mixin, or a
+helper the widget delegates to) and its own design pass.
   - 6b.1 C22 demo/factory + `@setupTestScreen1` (huge, mostly homepage-excluded; also
     finishes 6c's call-site story) · 6b.2 C20 setter-introspection · 6b.3 C23
     inspector/prompt spawning · 6b.4 C25 eval · 6b.5 C21 menu construction (Wdgt-label
