@@ -10,7 +10,7 @@ It is meant to be executable cold: it embeds the history, the guardrails (esp. a
 recapture reality that *corrects the backlog*), the study findings with `file:line`,
 the risk-ascending sub-arc, and which deferred Phase-5 checks each step dissolves.
 
-**Status (2026-06-18): PHASE 6 — Tier 3 (Widget liftable rim) COMPLETE — C22 fully relocated off Widget.**
+**Status (2026-06-18): PHASE 6 (God-class decomposition) COMPLETE — liftable rims extracted (Tiers 1–3); Tier 4 DET core assessed = LEAVE.**
 DONE + pushed: **Tier 1 (MenusHelper windowed-app decomposition)** — 6c.1–6c.4 (MenusHelper
 1170→489 L); **Tier 2 (WorldWdgt clean rim)** — 6a.1–6a.3 (**6a.4/6a.5 deliberately NOT
 extracted** — world-owned registries, see Tier 2). **Tier 3 (Widget liftable rim): DESIGN
@@ -18,8 +18,7 @@ PASS DONE 2026-06-18 (see Tier 3 below) — only C22 (dev/demo menus) was a clea
 C20/C23/C25/C19 LEAVE (evidence below), C21 deferred. 6b.0 + 6b.1 slices 1–5 DONE**
 (the whole C22 `popUp*Menu` + `create*` demo/factory rim is now off Widget: the menu builders +
 factories on `menusHelper`, and the `setupTestScreen1` demo-scene builder on `WidgetFactory`
-— slice 5; slice 4/5 pushed-pending). Widget 4725→~4038 L. Only Tier 4 (DET capstone) remains, deferred to its own
-mini-plan. Cadence per step is unchanged: explain → owner-approve → verify (recipe + targeted
+— slice 5; slice 4/5 pushed-pending). Widget 4725→~4038 L. **Tier 4 (DET capstone) ASSESSED 2026-06-18 = LEAVE** (design pass below — no clean determinism-safe seam): **PHASE 6 (God-class decomposition) is COMPLETE.** Cadence per step is unchanged: explain → owner-approve → verify (recipe + targeted
 check) → commit individually.
 
 ---
@@ -427,12 +426,11 @@ current signature first.
   - **PROVEN retarget mechanism (corrects the earlier loose "ops → `widgetOpeningThePopUp`" note).** `MenuWdgt.createMenuItem` sets `item.dataSourceWidgetForTarget = item` and `item.widgetEnv = @target`; `ButtonWdgt` invokes `target.action(dataSourceWidgetForTarget, widgetEnv, …)`. So a submenu builder's **arg1 (`widgetOpeningThePopUp`) is the menu-ITEM widget** (positioning) and **arg2 (`widgetThisMenuIsAbout`/`targetWidget`) is the widget the menu is ABOUT**. ⇒ widget-op items retarget to **arg2**, NOT arg1 (`popUpDevToolsMenu` is the template; `@target = menusHelper` is screenshot-safe). Applied: `testMenu` ops → `targetWidget`; `popUpFirstMenu` gained a `widgetThisMenuIsAbout` arg for `createPointerWdgt`; `popUpSecondMenu`'s `analogClock` → `menusHelper` (factory); `testMenuForMacros` is `world`-bound (called as `world.testMenuForMacros()` on F2) so its `@`→`world`. `testMenuForMacros` lives in MenusHelper in its OWN `# »>> only needed for Macros` block OUTSIDE the homepage-excluded region (build.py's `[^«]*«` marker regexes cannot nest).
   - C20/C23/C25/C19 = **leave** (above); C21 **deferred**. **C22 is now FULLY relocated off Widget** (slice 5 moved the `setupTestScreen1` tail). NB only ONE of the 4 test dirs that *mention* `setupTestScreen1` actually CALLS it (`macroLayoutSpacerEatsSpareSpace`); the other 3 reference it in prose only (they build fixtures directly) — those prose mentions are left as historical provenance. **ROI note:** C22 was dev/macro scaffolding (mostly homepage-excluded) — genuine Widget-thinning toward the demo/menu collaborators, shipping nothing user-facing. **Tier 3 (Widget liftable rim) is COMPLETE; only Tier 4 (DET capstone) remains.**
 
-**Tier 4 — the DET capstone (6b late + 6a DET core).** HIGHEST risk; its own
-mini-plan when reached. Read DETERMINISM.md; dpr2+WebKit mandatory; recapture expected.
-  - scroll/drag coordination off Widget (dissolves B/E) · layout-adder management off
-    the layout engine (dissolves the adder filter) · (optionally) factor the WorldWdgt
-    render/input machine into a renderer/input-loop object — only if a clean seam exists
-    without perturbing event-time/broken-rect determinism.
+**Tier 4 — the DET capstone — ASSESSED 2026-06-18 = LEAVE (no clean determinism-safe seam; PHASE 6 COMPLETE).** A read-only design pass studied the three candidate clusters on disk against DETERMINISM.md. Verdict per cluster:
+  - **Scroll/drag coordination (B/E) — LEAVE.** `grabsToParentWhenDragged` (`:2519`) is ALREADY a correct polymorphic protocol (overridden in HandleWdgt / StackElementsSizeAdjustingWdgt / SliderButtonWdgt / PanelWdgt / CreatorButtonWdgt) — moving the base off Widget would *de-polymorphize* it (the C20 argument). `amIDirectlyInside*ScrollPanelWdgt` (`:2579`/`:2587`) are topology `instanceof` queries woven into the geometry mutators (C3 `:1142`/`:1477`/`:1484`), the drag path (`:2525`), and the caret (`CaretWdgt:155`) — relocation = a rejected predicate (cf. the reverted Phase-5c) or parent-side hooks, on the exact hot path the 3 historical flakes hit; the author's own comment (`:1138`) flags it as awaiting *"proper layouts."* The drag *machine* is already in `@hand`/ActivePointerWdgt.
+  - **Layout-adder management — LEAVE.** `addOrRemoveAdders` (`:3975`) is called only from `doLayout` (`:3853`) and mutates the child set *during* the DET-critical layout pass; it operates entirely on `@`'s tree, so extraction is a feature-envy inversion with no cohesion gain + real DET risk.
+  - **WorldWdgt render/input machine — LEAVE.** `doOneCycle`/`playQueuedEvents`/`updateBroken` are the determinism machine (event-time gating + broken-rectangles); no clean seam without perturbing it. The drag/macro/input machines (`@hand`, `@macroToolkit`, `@inputEventsQueue`, `@caret`) are already delegated.
+  - **Conclusion:** the DET core is the *essential* behaviour of Widget/WorldWdgt, correctly placed — not a liftable rim. The genuine residual (decoupling Widget from scroll-structure topology, B/E) is NOT a God-class extraction but Phase-5-style notify/override-hook polymorphism — see `widget-identity-decoupling-plan.md` (Clusters A/C dissolved adjacent cases); a separate incremental effort if/when the determinism risk is judged worth it.
 
 ---
 
