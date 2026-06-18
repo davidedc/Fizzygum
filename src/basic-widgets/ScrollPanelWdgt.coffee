@@ -708,13 +708,16 @@ class ScrollPanelWdgt extends PanelWdgt
   #
   # The resize here is DELIBERATELY IMMEDIATE (raw geometry), not the framework's
   # ideal DEFERRED pattern (set a flag + invalidateLayout(), let recalculateLayouts
-  # -> doLayout derive the geometry). That deviation is intentional FOR NOW, not an
-  # oversight: the content panel + text are ATTACHEDAS_FREEFLOATING, so
-  # invalidateLayout() on them does NOT climb up to this scroll panel, and the wrap
-  # geometry lives in adjustContentsBounds -- which the doLayout cycle never reaches
-  # for a wrap toggle. A deferred conversion stays the ideal but is non-trivial; see
-  # docs/softwrap-deferred-layout-conversion-plan.md for the obstacle map + what
-  # revisiting it would take.
+  # -> doLayout derive the geometry). This is INTERMEDIATE state, not an oversight:
+  # the deferred mechanism is half-built by construction (the geometry accessors read
+  # applied @bounds only, so handler-level raw geometry is a symptom of that
+  # incompleteness, not a one-off). Soft-wrap has an EXTRA blocker on top: the content
+  # panel + text are ATTACHEDAS_FREEFLOATING, so invalidateLayout() on them does NOT
+  # climb up to this scroll panel, and the wrap geometry lives in adjustContentsBounds
+  # -- which the doLayout cycle never reaches for a wrap toggle. Completing the
+  # deferred model (and this case) is deliberate, sequenced work; see
+  # docs/softwrap-deferred-layout-conversion-plan.md for the model finding, the
+  # obstacle map, and what a conversion would take.
   setTextLineWrapping: (wraps) ->
     @isTextLineWrapping = wraps
     if wraps

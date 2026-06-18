@@ -117,13 +117,15 @@ class SimplePlainTextWdgt extends TextWdgt
   #
   # This runs synchronously in a click handler and does IMMEDIATE layout work (the
   # raw resize inside setTextLineWrapping + an explicit reLayout) rather than the
-  # framework's deferred invalidateLayout() pattern. That deviation is deliberate
-  # FOR NOW, not an oversight: a deferred conversion is blocked because the
-  # content/text are ATTACHEDAS_FREEFLOATING (so invalidateLayout() never climbs to
-  # the scroll panel) and the wrap geometry lives in adjustContentsBounds, off the
-  # doLayout cycle. The deferred pattern stays the ideal -- see
-  # docs/softwrap-deferred-layout-conversion-plan.md for the obstacle map + what a
-  # future conversion would take.
+  # framework's deferred invalidateLayout() pattern. This is INTERMEDIATE state, not
+  # an oversight: the deferred mechanism is half-built by construction (the geometry
+  # accessors read applied @bounds only, so handler-level raw geometry is a symptom of
+  # that incompleteness). Soft-wrap also has an EXTRA blocker: the content/text are
+  # ATTACHEDAS_FREEFLOATING (so invalidateLayout() never climbs to the scroll panel)
+  # and the wrap geometry lives in adjustContentsBounds, off the doLayout cycle.
+  # Completing the deferred model stays the goal -- see
+  # docs/softwrap-deferred-layout-conversion-plan.md for the model finding, the
+  # obstacle map, and what a conversion would take.
   setSoftWrap: (wrap) ->
     return if @parent.parent.isTextLineWrapping == wrap   # already in this state -- skip the relayout + repaint
     @softWrap = wrap
