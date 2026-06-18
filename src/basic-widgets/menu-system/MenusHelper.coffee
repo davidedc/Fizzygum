@@ -508,6 +508,56 @@ class MenusHelper
     @createSimpleVerticalStackPanelWdgt()
     @createSimpleVerticalStackScrollPanelWdgt()
 
+  popUpIconsMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "icons"
+    menu.addMenuItem "Destroy icon", true, menusHelper, "createDestroyIconWdgt"
+    menu.addMenuItem "Under the carpet icon", true, menusHelper, "createUnderCarpetIconWdgt"
+    menu.addMenuItem "Collapsed state icon", true, menusHelper, "createCollapsedStateIconWdgt"
+    menu.addMenuItem "Uncollapsed state icon", true, menusHelper, "createUncollapsedStateIconWdgt"
+    menu.addMenuItem "Close icon", true, menusHelper, "createCloseIconButtonWdgt"
+    menu.addMenuItem "Scratch area icon", true, menusHelper, "createScratchAreaIconWdgt"
+    menu.addMenuItem "Flora icon", true, menusHelper, "createFloraIconWdgt"
+    menu.addMenuItem "Scooter icon", true, menusHelper, "createScooterIconWdgt"
+    menu.addMenuItem "Heart icon", true, menusHelper, "createHeartIconWdgt"
+
+    menu.addMenuItem "more 1 ➜", false, menusHelper, "popUpMore1IconsMenu", "others"
+    menu.addMenuItem "more 2 ➜", false, menusHelper, "popUpMore2IconsMenu", "others"
+    menu.addMenuItem "arrows ➜", false, menusHelper, "popUpArrowsIconsMenu", "others"
+    menu.addMenuItem "maps ➜", false, menusHelper, "popUpMapsMenu", "maps"
+    menu.addMenuItem "more 3 ➜", false, menusHelper, "popUpMore3IconsMenu", "maps"
+
+    menu.popUpAtHand()
+
+  popUpWindowsMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Windows"
+    menu.addMenuItem "empty window", true, menusHelper, "createEmptyWindow"
+    menu.addMenuItem "empty internal window", true, menusHelper, "createEmptyInternalWindow"
+
+    menu.popUpAtHand()
+
+  popUpShortcutsAndScriptsMenu: (widgetOpeningThePopUp) ->
+    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Shortcuts & Scripts"
+    menu.addMenuItem "basement shortcut", true, menusHelper, "basementIconAndText"
+    menu.addMenuItem "new script", true, menusHelper, "newScriptWindow"
+    menu.addMenuItem "Fizzypaint launcher", true, (new FizzyPaintApp), "createOpener"
+    menu.addMenuItem "Simple doc launcher", true, (new SimpleDocumentApp), "createOpener"
+    menu.addMenuItem "Simple slide launcher", true, (new SimpleSlideApp), "createOpener"
+    menu.addMenuItem "Link", true, menusHelper, "createSimpleLinkWdgt"
+    menu.addMenuItem "Video link", true, menusHelper, "createSimpleVideoLinkWdgt"
+    menu.popUpAtHand()
+
+  createEmptyInternalWindow: ->
+    wm = new WindowWdgt nil, nil, nil, true
+    wm.fullRawMoveTo world.hand.position()
+    wm.fullRawMoveWithin world
+    world.add wm
+
+  createEmptyWindow: ->
+    wm = new WindowWdgt nil, nil, nil
+    wm.fullRawMoveTo world.hand.position()
+    wm.fullRawMoveWithin world
+    world.add wm
+
   # this part is excluded from the fizzygum homepage build <<«
 
   createWelcomeMessageWindowAndShortcut: ->

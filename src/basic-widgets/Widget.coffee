@@ -3212,64 +3212,11 @@ class Widget extends TreeNode
   analogClock: ->
     world.create new AnalogClockWdgt
 
-  popUpIconsMenu: (widgetOpeningThePopUp) ->
-    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "icons"
-    menu.addMenuItem "Destroy icon", true, menusHelper, "createDestroyIconWdgt"
-    menu.addMenuItem "Under the carpet icon", true, menusHelper, "createUnderCarpetIconWdgt"
-    menu.addMenuItem "Collapsed state icon", true, menusHelper, "createCollapsedStateIconWdgt"
-    menu.addMenuItem "Uncollapsed state icon", true, menusHelper, "createUncollapsedStateIconWdgt"
-    menu.addMenuItem "Close icon", true, menusHelper, "createCloseIconButtonWdgt"
-    menu.addMenuItem "Scratch area icon", true, menusHelper, "createScratchAreaIconWdgt"
-    menu.addMenuItem "Flora icon", true, menusHelper, "createFloraIconWdgt"
-    menu.addMenuItem "Scooter icon", true, menusHelper, "createScooterIconWdgt"
-    menu.addMenuItem "Heart icon", true, menusHelper, "createHeartIconWdgt"
-
-    menu.addMenuItem "more 1 ➜", false, menusHelper, "popUpMore1IconsMenu", "others"
-    menu.addMenuItem "more 2 ➜", false, menusHelper, "popUpMore2IconsMenu", "others"
-    menu.addMenuItem "arrows ➜", false, menusHelper, "popUpArrowsIconsMenu", "others"
-    menu.addMenuItem "maps ➜", false, menusHelper, "popUpMapsMenu", "maps"
-    menu.addMenuItem "more 3 ➜", false, menusHelper, "popUpMore3IconsMenu", "maps"
-
-    menu.popUpAtHand()
-
   popUpDocumentMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Document"
     menu.addMenuItem "simple document scrollpanel", true, @, "createSimpleDocumentScrollPanelWdgt"
     menu.addMenuItem "simple document", true, menusHelper, "createSimpleDocumentWdgt"
     menu.popUpAtHand()
-
-  popUpWindowsMenu: (widgetOpeningThePopUp) ->
-    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Windows"
-    menu.addMenuItem "empty window", true, @, "createEmptyWindow"
-    menu.addMenuItem "empty internal window", true, @, "createEmptyInternalWindow"
-
-    menu.popUpAtHand()
-
-  popUpShortcutsAndScriptsMenu: (widgetOpeningThePopUp) ->
-    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Shortcuts & Scripts"
-    menu.addMenuItem "basement shortcut", true, menusHelper, "basementIconAndText"
-    menu.addMenuItem "new script", true, menusHelper, "newScriptWindow"
-    menu.addMenuItem "Fizzypaint launcher", true, (new FizzyPaintApp), "createOpener"
-    menu.addMenuItem "Simple doc launcher", true, (new SimpleDocumentApp), "createOpener"
-    menu.addMenuItem "Simple slide launcher", true, (new SimpleSlideApp), "createOpener"
-    menu.addMenuItem "Link", true, menusHelper, "createSimpleLinkWdgt"
-    menu.addMenuItem "Video link", true, menusHelper, "createSimpleVideoLinkWdgt"
-    menu.popUpAtHand()
-
-
-  createEmptyInternalWindow: ->
-    wm = new WindowWdgt nil, nil, nil, true
-    wm.fullRawMoveTo world.hand.position()
-    wm.fullRawMoveWithin world
-    world.add wm
-
-  createEmptyWindow: ->
-    wm = new WindowWdgt nil, nil, nil
-    wm.fullRawMoveTo world.hand.position()
-    wm.fullRawMoveWithin world
-    world.add wm
-
-
 
   popUpSimplePlainTextWdgtMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Simple plain text"
@@ -3308,12 +3255,12 @@ class Widget extends TreeNode
 
   popUpSecondMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "others"
-    menu.addMenuItem "icons ➜", false, @, "popUpIconsMenu", "icons"
+    menu.addMenuItem "icons ➜", false, menusHelper, "popUpIconsMenu", "icons"
     menu.addMenuItem "simple plain text ➜", false, @, "popUpSimplePlainTextWdgtMenu", "icons"
     menu.addMenuItem "vertical stack ➜", false, menusHelper, "popUpVerticalStackMenu", "icons"
     menu.addMenuItem "document ➜", false, @, "popUpDocumentMenu", "icons"
-    menu.addMenuItem "windows ➜", false, @, "popUpWindowsMenu", "icons"
-    menu.addMenuItem "shortcuts & scripts ➜", false, @, "popUpShortcutsAndScriptsMenu", "Shortcuts & Scripts"
+    menu.addMenuItem "windows ➜", false, menusHelper, "popUpWindowsMenu", "icons"
+    menu.addMenuItem "shortcuts & scripts ➜", false, menusHelper, "popUpShortcutsAndScriptsMenu", "Shortcuts & Scripts"
     menu.addMenuItem "analog clock", true, @, "analogClock"
     menu.addMenuItem "dev tools ➜", false, menusHelper, "popUpDevToolsMenu", "icons"
     menu.addMenuItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
