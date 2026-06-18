@@ -15,7 +15,7 @@ class TemplatesButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   mouseClickLeft: ->
     if world.simpleEditorTemplates?
       if world.simpleEditorTemplates.destroyed or !world.simpleEditorTemplates.parent?
-        templatesWindow = menusHelper.createNewTemplatesWindow()
+        templatesWindow = TemplatesWindowWdgt.create()
         @positionTemplatesWindowAndRegisterIt templatesWindow
       else if world.simpleEditorTemplates.parent? and world.simpleEditorTemplates.parent == world.basementWdgt.scrollPanel.contents
         world.add world.simpleEditorTemplates
@@ -23,7 +23,7 @@ class TemplatesButtonWdgt extends EditorContentPropertyChangerButtonWdgt
       else if !world.simpleEditorTemplates.destroyed and world.simpleEditorTemplates.parent == world
         @bringTemplatesWindowIntoView()
     else
-      templatesWindow = menusHelper.createNewTemplatesWindow()
+      templatesWindow = TemplatesWindowWdgt.create()
       @positionTemplatesWindowAndRegisterIt templatesWindow
 
   positionTemplatesWindowAndRegisterIt: (templatesWindow) ->

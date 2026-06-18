@@ -5,4 +5,4 @@ class UsefulTextSnippetsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdg
   createAppearance: -> new TemplatesIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-    return menusHelper.createNewTemplatesWindow()
+    return TemplatesWindowWdgt.create()

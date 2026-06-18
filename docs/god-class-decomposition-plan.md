@@ -222,15 +222,47 @@ therefore gated on that capstone — it should likely get its own mini-plan when
 
 ## Proposed sub-arc — risk-ascending (each = one collaborator/app, one commit)
 
-**Tier 1 — MenusHelper → per-app `*Window` factory classes (6c).** Safest on
-recapture (separate singleton; ~zero inspector churn); the work is the reflection
-rebind. One sub-step per app/group, moving each launcher+launch+window-builder triple
-together and rebinding its `(menusHelper, "create…")` call sites:
-  - 6c.1 Templates · 6c.2 SampleSlide · 6c.3 SampleDashboard · 6c.4 DegreesConverter
-    · 6c.5 the 7 launch-apps (FizzyPaint/SimpleDocument/SimpleSlide/Dashboards/
-    PatchProgramming/GenericPanel/Toolbars) + their launcher/opener triples · 6c.6 the
-    a5/a6 demo+icon factories (bulk, mechanical) · 6c.7 the `popUp*Menu` builders.
-  Verify: full recipe; expect ~zero recapture (confirm), suite catches missed rebinds.
+**Tier 1 — MenusHelper → per-app window-builder classes (6c).** Safest on
+recapture (separate singleton; ~zero inspector churn). **ARCHITECTURE DECIDED (open
+decision #4): per-app `*Wdgt` classes hosting the heavy builder as a static `@create`
+factory — NOT a grouped `WindowFactory` (which would just relocate the God-class-ness
+and re-introduce a deep-copy/menu target).** This is already the house pattern:
+`menusHelper.createSampleDocWindowOrBringItUpIfAlreadyCreated` is just a singleton-guard
+that calls `SimpleDocumentSampleWdgt.create()` (`src/apps/`), and `WelcomeMessageInfoWdgt`
+/ `HowToSaveMessageInfoWdg` are the same shape — so 6c is "do to the other windows what
+was already done to Sample Doc." **Keep the thin launch/opener/singleton-guard glue on
+`menusHelper`** (it's tiny and reflection-bound): then the reflection string-action
+targets and the launcher `@target` do NOT move → no rebind, no deep-copy change for the
+sample-window steps. One sub-step per app/group:
+  - **6c.1 Templates — DONE.** Lifted `MenusHelper.createNewTemplatesWindow` (~119 L,
+    a *pure* builder: no `@`, no `world`) verbatim into a new
+    `src/apps/TemplatesWindowWdgt.coffee` (`class … extends WindowWdgt` with a static
+    `@create: ->`, factory-namespace like `SimpleDocumentSampleWdgt`). It is the
+    degenerate case — **NOT a menu/launcher target** (its 3 callers are direct *code*
+    calls: `UsefulTextSnippetsToolbarCreatorButtonWdgt:8`, `TemplatesButtonWdgt:18,26`,
+    all repointed to `TemplatesWindowWdgt.create()`), so no reflection rebind and **no
+    deep-copy guardrail (#7) needed**. Core/homepage-shipped (no strip-marker move). Body
+    verified byte-identical to HEAD before deletion (the Unicode special-chars paragraph
+    + the Malraux curly-quote line). 165/165 dpr1+dpr2+WebKit + `--homepage` boot, zero
+    recapture.
+    · 6c.2 SampleSlide · 6c.3 SampleDashboard · 6c.4 DegreesConverter — each: lift the
+    heavy `createXxxWindowOrBringItUpIfAlreadyCreated` builder body into a `*Wdgt.create()`
+    (mirroring Sample Doc), leaving the singleton-guard + `launchXxx` + `createXxxOpener`
+    glue on `menusHelper` → no reflection/launcher rebind. · 6c.5 the 7 launch-apps
+    (FizzyPaint/SimpleDocument/SimpleSlide/Dashboards/PatchProgramming/GenericPanel/
+    Toolbars) + their launcher/opener triples — **here the launcher stores `@target` and
+    is a deep-copyable desktop widget**, so if a target moves off `menusHelper` apply
+    guardrail #7 (or keep `@target = menusHelper`). · 6c.6 the a5/a6 demo+icon factories
+    (bulk, mechanical; mostly homepage-stripped, L18-150/442-755) · 6c.7 the `popUp*Menu`
+    builders.
+  Verify: full recipe. **REFINEMENT (found in 6c.1):** the suite + boot-smoke do NOT
+  exercise the window-builder paths — **zero** SystemTests touch them (only one test
+  references `menusHelper` at all, for `makeSlidersButtonsStatesBright`), and these
+  windows aren't built at boot (the openers are, at `WorldWdgt:447-460`, so boot covers
+  *opener* construction only). So the plan's earlier "suite catches missed rebinds" is
+  **overstated for window-builder bodies** — add a **targeted headless check** per step
+  (boot the build, invoke the moved factory, assert the right window + no console error),
+  as done for 6c.1. Expect ~zero recapture (confirmed for 6c.1).
 
 **Tier 2 — `WorldWdgt` clean rim (6a).** One collaborator per sub-step, MacroToolkit-style:
   - **6a.1 NamingService — DONE 2026-06-17** (`UntitledNamingService`; 2 methods +
@@ -287,5 +319,7 @@ mini-plan when reached. Read DETERMINISM.md; dpr2+WebKit mandatory; recapture ex
    Widget moves so the inspector recaptures once.
 3. **DET capstone scope:** whether Tier 4 (and thus "completely" decoupling Widget
    from scroll identity) is in-scope now or deferred to a dedicated later effort.
-4. **MenusHelper home:** one `*Window` class per app (richer) vs a thinner
-   `WindowFactory` collaborator grouping them (fewer files). Affects file count.
+4. **MenusHelper home: DECIDED — per-app `*Wdgt` classes with a static `@create`
+   factory** (mirroring the existing `SimpleDocumentSampleWdgt`/`WelcomeMessageInfoWdgt`
+   precedent), NOT a grouped `WindowFactory`; the thin launch/opener/guard glue stays on
+   `menusHelper`. See Tier 1 above. (First applied in 6c.1 `TemplatesWindowWdgt`.)
