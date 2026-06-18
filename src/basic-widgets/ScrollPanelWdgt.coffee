@@ -702,15 +702,19 @@ class ScrollPanelWdgt extends PanelWdgt
     else
       super
   
-  # »>> this part is excluded from the fizzygum homepage build
-  # unused code
-  toggleTextLineWrapping: ->
-    @isTextLineWrapping = not @isTextLineWrapping
-  # this part is excluded from the fizzygum homepage build <<«
-
   # Set this scroll panel's text-line-wrapping state; turning wrapping ON fills
   # the content to the panel's bounds. (Called by SimplePlainTextWdgt's soft-wrap
   # toggle, which used to write this flag + resize the content from outside.)
+  #
+  # The resize here is DELIBERATELY IMMEDIATE (raw geometry), not the framework's
+  # ideal DEFERRED pattern (set a flag + invalidateLayout(), let recalculateLayouts
+  # -> doLayout derive the geometry). That deviation is intentional FOR NOW, not an
+  # oversight: the content panel + text are ATTACHEDAS_FREEFLOATING, so
+  # invalidateLayout() on them does NOT climb up to this scroll panel, and the wrap
+  # geometry lives in adjustContentsBounds -- which the doLayout cycle never reaches
+  # for a wrap toggle. A deferred conversion stays the ideal but is non-trivial; see
+  # docs/softwrap-deferred-layout-conversion-plan.md for the obstacle map + what
+  # revisiting it would take.
   setTextLineWrapping: (wraps) ->
     @isTextLineWrapping = wraps
     if wraps

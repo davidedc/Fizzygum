@@ -453,8 +453,18 @@ relative to risk, so they tail the backlog.
   three past dpr-2 flakes (multi-click event-time, scroll-thumb). Preserve the **event-time** gating
   (recognition must key off `event.time`, never wall-clock timers). Read `DETERMINISM.md` first;
   dpr 2 + WebKit mandatory.
-- **7c — `SimplePlainTextWdgt:100-117`** grandparent writes → `setTextLineWrapping(bool)` on the
-  container (which resizes its own content).
+- **7c — `SimplePlainTextWdgt`** grandparent writes → `setTextLineWrapping(bool)` on the
+  container (which resizes its own content). **Encapsulation DONE (commit `9d3e1234`).** The spun-off
+  *immediate→deferred* layout follow-up (make the toggle just set the flag + `invalidateLayout()` and
+  let the cycle derive geometry) is **ASSESSED 2026-06-18 = DEFERRED FOR NOW — revisit-able, NOT a
+  closed LEAVE:** no clean determinism-safe seam today. The content/text are `ATTACHEDAS_FREEFLOATING`
+  so `invalidateLayout()` never climbs to the scroll panel, and the wrap geometry in
+  `adjustContentsBounds` is off the `doLayout` cycle; wiring it in flips `implementsDeferredLayout` for
+  every scroll panel (nested-scroll merged-bounds ripple, `Widget:990`) and risks a `softWrap`-overwrite
+  ordering flake (`[DET]`). Same DET-core as Phase-6 Tier 4 (= LEAVE). Full obstacle map + the
+  "what it'd take" revisit checklist: **`docs/softwrap-deferred-layout-conversion-plan.md`**. (This
+  assessment also deleted the dead `ScrollPanelWdgt.toggleTextLineWrapping` and added WHY-immediate
+  comments — both byte-exact.)
 - **7d — `PromptWdgt:43-46`** sets `slider.button.{color,highlightColor,pressColor}` →
   `SliderButtonWdgt.setColorScheme(base)`.
 - **7e — Demeter accessors:** `BasementWdgt.addLostWidget(w)` for the
