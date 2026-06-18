@@ -1,385 +1,336 @@
-# Plan: convert SimplePlainTextWdgt soft-wrap from IMMEDIATE (raw) to DEFERRED (invalidateLayout) layout
+# Deferred-layout: the model is INTERMEDIATE — completing it (soft-wrap is the originating case)
 
-**Status: ASSESSED 2026-06-18 — DEFERRED FOR NOW (revisit-able). NOT a closed "LEAVE".**
-The deferred-layout pattern remains the *ideal target*; this session verified the current code,
-**corrected a wrong premise in the original plan**, and concluded the full conversion is not worth
-doing *yet* because there is no clean determinism-safe seam today. We recorded exactly *why* it is
-blocked and *what a future conversion would have to solve* (see §0 and §6), and made two tiny safe
-cleanups (see §13), so a later session can pick this up without re-deriving anything.
+**Status: investigation complete 2026-06-18. This supersedes the earlier "deferred for now / LEAVE"
+framing, which was BIASED (see §6) — the conclusions below are de-biased.**
 
-This file is intended to be executable *cold* (no prior conversation context). Read it top to bottom.
+This started as a narrow plan to convert `SimplePlainTextWdgt`'s soft-wrap toggle from IMMEDIATE
+(raw) to DEFERRED (`invalidateLayout`) layout. Investigating it surfaced a bigger, more useful truth:
+**Fizzygum's deferred-layout mechanism is half-built by construction, and the handler-level raw
+geometry (soft-wrap and ~a dozen siblings) is a *symptom* of that, not a set of independently
+"legitimately immediate" sites.** This doc records the state of the model, why handler raw geometry is
+currently forced, and the two paths — applied **case by case** — to complete it.
 
----
-
-## 0. Assessment outcome (2026-06-18) — read this first
-
-**Decision: deferred for now, revisit-able.** The toggle stays IMMEDIATE; we keep the door open.
-
-**The original plan's "Blocker #1" was FACTUALLY WRONG and is corrected here.** It claimed the
-high-level `setExtent` can't be used on the scroll panel's content because the content panel is
-"layout-managed, not freefloating." In fact the content `PanelWdgt` **is**
-`LayoutSpec.ATTACHEDAS_FREEFLOATING` (verified: `ScrollPanelWdgt` ctor `@addRaw @contents` →
-`Widget.addRaw` defaults `layoutSpec = ATTACHEDAS_FREEFLOATING`; the class default agrees; no override
-anywhere). So `setExtent`'s freefloating gate would *pass*. `setExtent` being unusable is **not** why
-the code uses raw geometry.
-
-**The REAL obstacle (decisive, verified):** *the deferred cycle never reaches the wrap geometry.*
-1. The content panel + the text are both `ATTACHEDAS_FREEFLOATING`. `invalidateLayout` only propagates
-   **up** the tree when `@layoutSpec != ATTACHEDAS_FREEFLOATING` (`Widget.coffee` ~`:3575`). So
-   `invalidateLayout()` on the text/content marks **only itself** dirty — it does **not** climb to the
-   `ScrollPanelWdgt`.
-2. The wrap geometry (content sized to viewport, each `FIT_BOX_TO_TEXT` child constrained to content
-   width) lives in `ScrollPanelWdgt.adjustContentsBounds`, which is **not on the
-   `recalculateLayouts → doLayout` path**: `ScrollPanelWdgt` defines no `doLayout`, and no `doLayout`
-   in the codebase calls `adjustContentsBounds`. Even forcing the scroll panel dirty doesn't help — its
-   `rawSetExtent` (the only place `doLayout` would reach `adjustContentsBounds`, inline) is guarded
-   `unless aPoint.equals @extent()`, and a wrap toggle does **not** change the viewport extent, so that
-   block is skipped.
-3. So a deferred toggle would re-`reLayout` the **text alone** (via
-   `doLayout → rawSetBounds → TextWdgt::rawSetExtent → reLayout`) and never run the panel-level wrap
-   recompute. To fix that you must wire `adjustContentsBounds` into the cycle — which trips the two
-   hazards below.
-
-**Why wiring it in is hazardous (the "tricky" part):**
-- **Global ripple.** `implementsDeferredLayout()` is literally `@doLayout != Widget::doLayout`
-  (`Widget.coffee` ~`:3756`). Giving `ScrollPanelWdgt` a `doLayout` flips this predicate `false → true`
-  for **every** scroll panel + `ListWdgt` + the `Simple*ScrollPanelWdgt` family. It's consulted in
-  `subWidgetsMergedFullBounds` (`Widget.coffee` ~`:990`, called from inside `adjustContentsBounds`):
-  a child that `implementsDeferredLayout()` contributes `child.bounds` instead of `child.fullBounds()`
-  to the merge — so **nested** scroll panels would silently change merged-bounds → geometry shifts in
-  cases far from soft-wrap. Large, hard-to-bound blast radius.
-- **Determinism (`[DET]`).** `adjustContentsBounds` hard-writes `widget.softWrap = true` in its
-  wrapping branch (~`:289`). A deferred text `reLayout` reads the text's *current* `@softWrap`; routed
-  through the cycle, the final wrapped width then depends on the **order** the dirty queue happens to
-  interleave the text's `doLayout` and the panel's `adjustContentsBounds`. That is precisely the
-  "render must not depend on an intermediate layout pass" rule in `Fizzygum-tests/DETERMINISM.md`, and
-  it's the class of bug that surfaces at **dpr2 under parallel load**.
-
-**ROI / framing.** Soft-wrap is a discrete, rare user action — no batching benefit. The only win is
-*consistency* with the framework's layout pattern + removing a raw mutation from a click handler; it
-ships nothing user-facing. This sits in the same DET-core territory as Phase-6 **Tier 4** (the
-layout/scroll capstone, assessed = LEAVE). Given the global ripple + the determinism hazard + ~41
-SystemTests exposed (§10), the risk/reward is negative **today**. Hence: *deferred for now, not never.*
+> **Author's note (the system's author, 2026-06-18):** the deferred system was *started* and added
+> **accretively on top of the original immediate system**, pushed as far as it could be pushed without
+> finishing the job. It is intentionally **intermediate**. That is *why* the accessors still read
+> applied `@bounds`, `@desired*` is consulted in only a few places, and many handlers still mutate
+> geometry immediately. None of this is an accident to be "left" — it is unfinished work to be
+> completed deliberately.
 
 ---
 
-## 1. Orientation — read these first (cold start)
+## 0. The finding (lead with the honest conclusion)
 
-- **`Fizzygum-tests/DETERMINISM.md`** — the byte-exact screenshot contract. MANDATORY before
-  touching render/layout/input code. The one-line rule: *render must be a pure function of the
-  event stream + final geometry, never of wall-clock time, frame/cycle count, or an
-  intermediate layout pass.*
-- **`Fizzygum/CLAUDE.md`** + **`Fizzygum-tests/CLAUDE.md`** — build/run/test mechanics.
-- This conversion came out of the OO-smell campaign **Phase 7** (coupling cleanups). The
-  campaign tracker is **`Fizzygum/docs/oo-smells-refactoring-backlog.md`**; the God-class arc
-  (Phase 6, COMPLETE) is **`Fizzygum/docs/god-class-decomposition-plan.md`**. Phase-6 **Tier 4**
-  (the layout/scroll DET capstone) was assessed **= LEAVE** (no clean determinism-safe seam) —
-  this soft-wrap conversion sits in the **same DET-core territory**, so that verdict is the precedent.
+1. **Deferral is within-frame — there is NO cross-frame lag.** Verified order inside
+   `WorldWdgt.doOneCycle` (`:1198`): `@playQueuedEvents()` (`:1207`, events incl. hand move) →
+   `@runChildrensStepFunction()` (`:1219`) → `@recalculateLayouts()` (`:1222`) → `@updateBroken()`
+   (`:1230`, "here is where the repainting happens"). A deferred `setExtent`/`fullMoveTo` called during
+   event handling sets `@desired*` + `invalidateLayout()`, and `recalculateLayouts` applies it **later
+   in the same cycle, before paint.** The determinism contract (`Fizzygum-tests/DETERMINISM.md`)
+   actually *favours* this — "never depend on an intermediate layout pass"; a single `doLayout`/cycle
+   is the clean path and raw mutation in a handler is the intermediate state.
 
-### What Fizzygum is (one paragraph)
-A CoffeeScript GUI framework ("web OS") rendered on a single HTML5 `<canvas>`, descended from
-Morphic.js. No module system — every class is a global compiled in-browser; reference a class
-by naming it. `nil` means `undefined`. Widgets form a tree (`TreeNode → Widget → PanelWdgt → …
-→ WorldWdgt` = the global `window.world`), painted recursively via a broken-rectangles repaint
-loop. Behaviour is verified by **SystemTests**: macros drive the live world and compare canvas
-screenshots by **raw-pixel SHA-256** against committed references (SWCanvas software backend,
-deterministic). So any layout change that shifts pixels forces a deliberate reference recapture.
+2. **The accessors read APPLIED geometry only — that is the incompleteness.** `position()` →
+   `@bounds.origin`, `extent()` → `@bounds.extent()`, `left/top/width/height()` → `@bounds.*`
+   (`Widget.coffee:630-800`). `@desiredExtent`/`@desiredPosition` hold the *pending* value but are
+   consulted in exactly three places: `__calculateNewBoundsWhenDoingLayout` (`:1344-1352`), `doLayout`
+   (`:3761-3772`), and **`pickUp` (`:2710-2713`)** — the lone pending-aware read ("into the
+   `desiredExtent` as the true extent has yet [to settle]"). The pattern exists; it was never
+   generalized to the accessors.
 
-### What "soft wrap" is
-A `SimplePlainTextWdgt` (an editable plain-text widget that fits its box to its text) placed
-inside a scroll panel can be toggled between two layout modes via a right-click menu item:
-- **soft wrap ON** — the text wraps to the viewport width; no horizontal scrolling.
-- **soft wrap OFF ("code view")** — the text keeps its natural un-wrapped width and the panel
-  scrolls horizontally.
-The toggle is `softWrapOn`/`softWrapOff` on `SimplePlainTextWdgt` (menu items in its
-`addWidgetSpecificMenuEntries`, shown only when `@amIDirectlyInsideScrollPanelWdgt()`).
+3. **So handler raw geometry is FORCED by a synchronous read-back of applied-only geometry.** A handler
+   that mutates geometry and then, *in the same cycle before `recalculateLayouts`*, reads it back —
+   a clamp, a derived value, hit-testing, a coordination flag — must apply immediately, because the
+   accessor won't surface the pending value. That is the real reason `raw*` is used in handlers. It is
+   **not** "cross-frame lag" and **not** a determinism minefield (a wrong conversion would read stale
+   geometry and fail *deterministically* — tests go red — not flakily). Both of those were this doc's
+   earlier bias (§6).
+
+**Net:** the raw-in-handler smell (soft-wrap + ~a dozen siblings, §5) is a symptom of the half-built
+model. Reigning it in is real, coherent work — completing the deferred model — not a marginal cleanup
+to leave.
 
 ---
 
-## 2. The current code (verbatim — line numbers approximate; the tree shifts)
+## 1. The two paths to complete it — applied CASE BY CASE
 
-### `SimplePlainTextWdgt.coffee` (the toggle)
+Whether a given handler can go deferred depends on **whether the same event also entails a relayout /
+constraint resolution.** This is the crux distinction:
+
+### Path A — defer + pending-aware read (when NO relayout/constraint: `desired == actual`)
+For an **unconstrained freefloating transport** — pick a widget up, move it, drop it; *most
+drag-and-drops* — the requested position IS the position it gets. Here you can either make the
+accessors pending-aware (generalize the `pickUp` trick) or have the specific read-back consult
+`@desired*`, and the move defers cleanly (settling at `recalculateLayouts`, before paint). This is the
+**broad, systematic** fix and unblocks the largest class at once.
+- Caveat (breadth): the accessors are the most-called methods in the system, and the hand/input root
+  drives spatial queries (hit-testing, spatial-multiplexing, drop detection) that read *applied*
+  positions of the whole sub-tree mid-cycle. So "pending-aware accessors" must be applied coherently
+  enough that those queries see the right thing. The in-flight window is intra-cycle (paint runs after
+  `recalc`, so rendering is unaffected), which contains the risk — but this is a **core
+  geometry-model change**, to be done with a deliberate invariant/determinism pass, not a one-liner.
+
+### Path B — case by case (when the event entails a relayout/constraint: `desired ≠ actual`)
+When constraints transform the request, `@desired*` is the **request**, not the **result**, so a
+pending-aware read would return the *wrong* (pre-constraint) value. **Author's example:** dragging a
+**vertical** slider thumb **sideways** — the desired delta may be horizontal, but the thumb is
+constrained to its track (and clamped to the slider's length), so where it *ends up* ≠ what was
+requested. `SliderWdgt.updateValue` needs the **constrained** position (it reads `@button.top()`),
+which only exists after the constraint resolves. Here you cannot just read desired; you must either
+**eliminate the read-back** (compute the constrained result locally — e.g. the slider derives the
+value from its own clamped `newPosition`, then `setValue` + let `reLayout` reposition the thumb) or
+**order the work** so the constraint resolves before the read. Per-site.
+
+**Therefore: classify each handler by "does this event also trigger a relayout / hit a constraint?"**
+No-relayout freefloating transports → **A**. Constraint-entangled (sliders, vertical-stack elements,
+ratio locks, clamps via `fullRawMoveWithin`, `FIT_BOX_TO_TEXT` wrap) → **B**. It is genuinely a mix;
+neither path is universal.
+
+---
+
+## 2. The handler sites today (the symptoms), mapped to A / B
+
+A codebase-wide audit (~430 raw-geometry call sites classified by enclosing method) found that ~420 are
+legitimate **construction** (initial geometry before the first cycle) or **layout machinery** (inside
+`doLayout`/`reLayout`/`adjustContentsBounds`/raw-override delegation). The genuine handler smells — raw
+geometry in response to a discrete event — are the following. Each is annotated with the read-back that
+forces immediacy today and its likely path:
+
+| Site | Read-back that forces immediate today | Path |
+|---|---|---|
+| **Hand move** `ActivePointerWdgt:731` (`@fullRawMoveTo pos`) | hit-tests mouse-over from the hand's new position (`:740+`); `reCheckMouseEntersAndMouseLeaves` at `WorldWdgt:1220` runs *before* `recalc :1222`. Hand transport is unconstrained, but the read-back is pervasive (spatial queries over the dragged sub-tree). | **A** (the case that exercises A's full breadth) |
+| **Generic drag-drop transport** of a freefloating widget | the dragged widget follows the hand via the tree (`fullRawMoveBy` recurses to children); spatial/drop queries read applied positions. | **A** |
+| **Slider thumb** `SliderButtonWdgt:95` | `@parent.updateValue()` reads `@button.top()/.left()` (the *constrained* track position). | **B** |
+| **Scrollbar drag** `ScrollPanelWdgt:80/85` | `@adjustContentsBounds()` + `@adjustScrollBars()` read `@contents.position()` (clamped scroll offset). | **B** |
+| **Grab-anchor** `KeepsRatioWhenInVerticalStackMixin:27-29`, `Example3DPlotWdgt:104-106` | `@parent.fullRawMoveWithin world` clamps by reading the just-set position; `rawSetExtent` applies a ratio constraint. | **B** |
+| **Ratio-on-drop** `Example3DPlotWdgt:87/110`, `KeepsRatio:12` (`constrainToRatio`) | dropped INTO a vertical stack → stack-attached (non-FREEFLOATING); the stack's `doLayout` reads the child's ratio-derived `@height()`. | **B** |
+| **Window collapse/uncollapse** `WindowWdgt:243/250-253` | inline `@adjustContentsBounds()` runs while `@reInflating = true` (set `:249`, reset `:255`); the layout reads `@reInflating`. | **B** |
+| **Spawn-at-hand / smart-place** `InspectorWdgt:268`, `StretchableEditableWdgt.smartPlace:42` | `fullRawMoveWithin` clamps the just-set position before `add`. | **B** (or A if the clamp is a no-op) |
+
+(The ratio pair `KeepsRatioWhenInVerticalStackMixin` ⇄ `Example3DPlotWdgt` is a known duplicate —
+`Example3DPlotWdgt.coffee:158-163`.) **Most handler smells are Path B (constraint-entangled). The
+clean Path-A win is unconstrained drag-drop transport**, which is also the broadest payoff.
+
+---
+
+## 2b. Adhering flows — the success cases (pattern-match against these to finish the job)
+
+The deferred pattern is not hypothetical here: parts of the system already do it correctly — including in
+the *exact same real-time-drag shape* as the smells. These are the templates.
+
+### A. `HandleWdgt.nonFloatDragging` (`HandleWdgt:218-235`) — THE gold standard
+Dragging a resize/move handle is a real-time drag (the *same* `nonFloatDragging` entry point the slider
+thumb uses), yet it is fully deferred and even documents the discipline:
 ```coffee
-  softWrapOn:  -> @setSoftWrap true        # ~:108
-  softWrapOff: -> @setSoftWrap false       # ~:109
-
-  setSoftWrap: (wrap) ->                    # ~:117 (now preceded by a WHY-immediate comment, §13)
-    return if @parent.parent.isTextLineWrapping == wrap   # idempotence guard
-    @softWrap = wrap
-    @parent.parent.setTextLineWrapping wrap
-    @reLayout() unless wrap
-    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
+  newPos = pos.subtract nonFloatDragPositionWithinWdgtAtStart
+  switch @type
+    # 1. all these changes applied to the target are all deferred
+    # 2. the position of this handle will be changed when the doLayout method of
+    #    the parent of the handle will be called ...i.e. *after* the parent has
+    #    re-layouted (in the deferred layout phase).
+    when "resizeBothDimensionsHandle"
+      newExt = newPos.add(@extent().add(@inset)).subtract @target.position()
+      @target.setExtent newExt, @                                  # DEFERRED
+    when "moveHandle"
+      @target.fullMoveTo (newPos.subtract @inset), @               # DEFERRED
+    when "resizeHorizontalHandle"
+      @target.setWidth  newPos.x + @extent().x + @inset.x - @target.left()
+    when "resizeVerticalHandle"
+      @target.setHeight newPos.y + @extent().y + @inset.y - @target.top()
 ```
-Topology when these run: `ScrollPanelWdgt` (`@parent.parent`, owns `isTextLineWrapping`) →
-content `PanelWdgt` (`@parent`, == the scroll panel's `@contents`) → the `SimplePlainTextWdgt`
-(`@`). Guaranteed by `@amIDirectlyInsideScrollPanelWdgt()`.
+**Why it works — and why the slider/scrollbar don't:** it computes the new geometry from the **event data**
+(`newPos`) + its own geometry, sets it via the deferred API, and **never reads the target's just-set
+geometry back.** The handle's own position is re-derived by the parent's `doLayout` next, in the deferred
+phase. This is structurally identical to `SliderButtonWdgt.nonFloatDragging` — except the slider does
+`@fullRawMoveTo newPosition; @parent.updateValue()`, and `updateValue` reads `@button.top()` back. The
+Path-B fix for the slider is literally *"make it look like `HandleWdgt`"*: it already computes the clamped
+`newPosition` (`SliderButtonWdgt:82-93`); derive the value from THAT and `setValue`, instead of moving raw
+then reading the thumb back. (`@target.setExtent newExt, @` passes the handle as `widgetStartingTheChange`
+— the hook by which "all the resizes via the handles arrive here", `setExtent` comment ~`Widget:1433`.)
 
-### `ScrollPanelWdgt.coffee` (the panel's wrap setter — added in Phase-7 "7c")
+### B. `ActivePointerWdgt.grab` inflate/center (`ActivePointerWdgt:161/170/171`) — deferred, beside the raw tracking
+When a grabbed widget is created-on-the-fly or inflates out of a glassbox, the grab centres it with the
+deferred API — in the very class that does the raw hand-tracking:
 ```coffee
-  setTextLineWrapping: (wraps) ->          # ~:714 (now preceded by a WHY-immediate comment, §13)
-    @isTextLineWrapping = wraps
-    if wraps
-      @contents.fullRawMoveTo @position()  # <-- the load-bearing IMMEDIATE bit:
-      @contents.rawSetExtent @extent()     #     force the content to the viewport size
+aWdgt.setExtent aWdgt.extentToGetWhenDraggedFromGlassBox            # DEFERRED
+aWdgt.fullMoveTo @position().subtract aWdgt.extent().floorDivideBy 2 # DEFERRED
+aWdgt.fullRawMoveWithin world   # TODO no fullMoveWithin ?   <-- the MISSING deferred clamp primitive
 ```
-`isTextLineWrapping` default + field: `ScrollPanelWdgt.coffee:6` (`isTextLineWrapping: false`);
-also set in ctors of `SimplePlainTextScrollPanelWdgt:28`, `SimplePlainTextPanelWdgt:23`,
-`SimpleVerticalStackScrollPanelWdgt:3`. (The unused `toggleTextLineWrapping` was DELETED — §13.)
+The `# TODO no fullMoveWithin ?` (`:162`) is a real artifact of the half-built model — there is no
+*deferred* clamp, so the code falls back to `fullRawMoveWithin`. **Adding a deferred `fullMoveWithin` is a
+concrete Path-A infrastructure item** that would unblock the clamp read-backs in several Path-B sites
+(grab-anchor, spawn-at-hand).
 
-### `Widget.coffee` (the shared tail both directions call)
+### C. Content change → `invalidateLayout()` → `doLayout` re-derives size
+Widgets that change their content mark themselves dirty and let the cycle resize them, no raw geometry in
+the handler: the patch-programming nodes (`CalculatingPatchNodeWdgt`/`RegexSubstitutionPatchNodeWdgt`:
+`setInput`/recompute set text only; the resize happens in `doLayout`), and the `rawSetExtent` overrides
+that end in `super` + `invalidateLayout` (`FanoutWdgt:58-60`, `AxisWdgt`, `PlotWithAxesWdgt`). This is the
+canonical adhering shape for the "constraint resolves in the cycle" case.
+
+### The suggestion: pattern-match each smell (§2) against A / B / C
+The transformation is mechanical and proven: **compute the target geometry from the event + your own
+geometry, apply it via the deferred setter, and never read the target's just-set geometry back.** For a
+constrained Path-B site, compute the constrained result *locally* — exactly as `HandleWdgt` computes
+`newExt` — instead of reading it back post-layout. Each smell in §2 has a `HandleWdgt`-shaped rewrite; that
+rewrite is the unit of work. Where a deferred primitive is missing (the clamp, §B), add it once and reuse.
+
+---
+
+## 3. The deferred mechanism (verified reference)
+
+- **DEFERRED (high-level):** `setExtent` (`Widget.coffee:1420`), `setWidth`, `setHeight`, `fullMoveTo`
+  (`:1226`) — set `@desired*` + `invalidateLayout()`; **NO-OP unless `@layoutSpec ==
+  LayoutSpec.ATTACHEDAS_FREEFLOATING`.**
+- **IMMEDIATE (low-level/raw):** `rawSetExtent` (`:1397`, comment `:1398`: *"in theory the low-level
+  APIs should only be in the recalculateLayouts phase"*), `silentRawSetExtent` (`:1444`), `rawSetWidth`
+  (`:1490`), `rawSetHeight` (`:1527`), `rawSetBounds` (`:691`), `fullRawMoveTo` (`:1208`), … — change
+  `@bounds` now. `rawSetBounds` routes extent through `rawSetExtent`; `TextWdgt` overrides
+  `rawSetExtent` (`TextWdgt.coffee:426-428`: `super; if FIT_BOX_TO_TEXT then @reLayout()`).
+- **`invalidateLayout`** (`Widget.coffee:3571`): pushes to `world.widgetsThatMaybeChangedLayout`, marks
+  `@layoutIsValid = false`, and propagates to the parent **only if `@layoutSpec != FREEFLOATING`** (so
+  an invalidate on a freefloating widget does NOT climb to its parent — relevant to soft-wrap, §6).
+- **The cycle:** `recalculateLayouts` (`WorldWdgt.coffee:841`) tail-drains the dirty list, climbs to
+  the topmost-still-invalid ancestor, and calls `doLayout()`. `doLayout` consumes `@desired*` via
+  `__calculateNewBoundsWhenDoingLayout` and applies constraints to produce `@bounds`. Runs once per
+  `doOneCycle`, before paint (§0.1).
+
+**Corrected fact (the original "Blocker #1" was WRONG):** the scroll panel's content `PanelWdgt` IS
+`ATTACHEDAS_FREEFLOATING` (`ScrollPanelWdgt.coffee:37` `@addRaw @contents` → `addRaw` default
+FREEFLOATING `Widget.coffee:2227`; class default `:235`). So `setExtent`'s gate would *pass*; the
+original claim that `setExtent` is unusable on the content was false.
+
+---
+
+## 4. The geometry accessors read applied `@bounds` (verified)
+
 ```coffee
-  refreshScrollPanelWdgtOrVerticalStackIfIamInIt: ->   # ~:1483
-    if @amIDirectlyInsideScrollPanelWdgt()
-      @parent.parent.adjustContentsBounds()
-      @parent.parent.adjustScrollBars()
-    @parent?.childGeometryChanged?()
+position: -> @bounds.origin        extent: -> @bounds.extent()
+left:  -> @bounds.left()           width:  -> @bounds.width()
+top:   -> @bounds.top()            height: -> @bounds.height()   # …all via @bounds
 ```
-
-### `TextWdgt.coffee` (why the two directions differ — the width source)
-```coffee
-  reLayout: ->                             # ~:394  (only acts when @fittingSpec == FIT_BOX_TO_TEXT)
-    if @softWrap
-      … = @breakTextIntoLines @text, @originallySetFontSize, @extent()   # wrap to CURRENT extent
-      width = @width()                                                    # keep current width
-    else
-      veryWideExtent = new Point 10000000, 10000000
-      … = @breakTextIntoLines @text, @originallySetFontSize, veryWideExtent  # DON'T wrap
-      width = @widthOfPossiblyCroppedText                                 # grow to NATURAL width
-    height = @wrappedLines.length * Math.ceil @fontHeight @originallySetFontSize
-    @silentRawSetExtent new Point width, height
-    @changed()
-```
-Note `TextWdgt` also overrides `rawSetExtent` (~`:426`): `super; if FIT_BOX_TO_TEXT then @reLayout()`.
-This is the hook by which the deferred cycle (`doLayout → rawSetBounds → rawSetExtent`) would re-wrap
-a dirty text widget — see §0 point 3.
+`@desiredExtent`/`@desiredPosition` (`Widget.coffee:56-57`, default `nil`) are SET by
+`setExtent`/`fullMoveTo` and READ only by the layout machinery (`:1344-1352`, `:3761-3772`) and
+`pickUp` (`:2712`). **This split — request in `@desired*`, applied in `@bounds`, accessors expose only
+`@bounds` — is the half-built-ness.** Path A is "teach the accessors the `pickUp` trick (pending if
+set, else applied)." Path B exists precisely because, under a constraint, the pending request is *not*
+the applied result, so the trick gives the wrong answer.
 
 ---
 
-## 3. The framework's two-tier geometry API + the deferred cycle (the mechanism we want to use)
+## 5. The soft-wrap case (the originating, Path-B specific)
 
-Fizzygum already encodes the deferred pattern as **two tiers of geometry API** on `Widget`:
+Soft-wrap is constraint-entangled (it entails a re-wrap relayout; content→viewport and text→content
+width are constraints), so it is a **Path-B** case — *and* it has an extra structural blocker beyond
+the accessor issue:
 
-- **IMMEDIATE / low-level** — `rawSetExtent` (`Widget.coffee:1397`), `fullRawMoveTo`,
-  `silentRawSetExtent`, `rawSetWidth/Height`. Change geometry *right now*. The code's own
-  comment (`:1398`): *"in theory the low-level APIs should only be in the 'recalculateLayouts'
-  phase."* `rawSetExtent` ends by calling `@changed()` + `@reLayout()` synchronously.
-- **DEFERRED / high-level** — `setExtent` (`Widget.coffee:1420`), `fullMoveTo`, etc. Body: sets
-  `@desiredExtent` + calls `@invalidateLayout()`. **Guard (`:1423`): returns early unless
-  `@layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING`.** NOTE (corrected): the scroll panel's content
-  panel IS freefloating, so this guard would NOT block it — see §0.
+- The content + text are FREEFLOATING, so `invalidateLayout()` on them does **not** climb to the scroll
+  panel (`Widget:3575`).
+- The wrap geometry lives in `ScrollPanelWdgt.adjustContentsBounds`, which is **NOT on the `doLayout`
+  path**: `ScrollPanelWdgt` has no `doLayout`; no `doLayout` in the tree calls `adjustContentsBounds`;
+  and even a forced-dirty scroll panel skips it because `ScrollPanelWdgt.rawSetExtent` is guarded
+  `unless aPoint.equals @extent()` (`:222`) and a toggle doesn't change the viewport.
+- So even *with* pending-aware accessors, the cycle would re-`reLayout` the text alone and never
+  re-derive the wrap geometry. Soft-wrap needs **both** model-completion **and** its own
+  `adjustContentsBounds`-reachability fix (e.g. give `ScrollPanelWdgt` a `doLayout`). That second step
+  has its own cost: `implementsDeferredLayout()` is `@doLayout != Widget::doLayout` (`Widget:3756`),
+  consulted in `subWidgetsMergedFullBounds` (`Widget:990`), so adding a `doLayout` flips every scroll
+  panel's merged-bounds contribution — a nested-scroll geometry change to verify.
+- The `adjustContentsBounds:289` `widget.softWrap = true` overwrite is a **single-pass code-ORDER**
+  correctness issue (one authority must own the wrap geometry, in a fixed order), **deterministic and
+  caught by tests** — NOT the flaky dpr2 "ordering hazard" this doc earlier claimed (de-biased).
 
-- **`invalidateLayout`** (`Widget.coffee:3571`):
-  ```coffee
-  invalidateLayout: ->
-    if @layoutIsValid
-      world.widgetsThatMaybeChangedLayout.push @     # enqueue in the world's dirty list
-    @layoutIsValid = false                            # mark dirty
-    if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING and @parent?
-      @parent.invalidateLayout()                      # propagate up — BUT NOT past a freefloating widget
-  ```
-- **The cycle** — `WorldWdgt.recalculateLayouts` (`WorldWdgt.coffee:841`) tail-drains the dirty
-  widgets (`layoutIsValid == false`), climbs to the topmost-still-invalid ancestor, and calls
-  `doLayout()` on it. It runs **once per `doOneCycle`** (`WorldWdgt.coffee:1221-1223`,
-  method `doOneCycle` `:1198`), wrapped by `window.recalculatingLayouts = true/false`.
-- `Widget.layoutIsValid` default `true` (`:234`). Base `Widget.reLayout` is a NO-OP (`:2273`);
-  subclasses override (`TextWdgt:394`, etc.).
-
-So the intended deferred flow is: a state change calls `invalidateLayout()` → the next
-`doOneCycle` runs `recalculateLayouts` → `doLayout()` re-derives geometry from the final state,
-**once**. The catch for soft-wrap is that this flow never reaches `adjustContentsBounds` (§0).
+So soft-wrap is real but is one of the *harder* cases (Path B + extra reachability work), not the place
+to start. The clean first win is Path A (unconstrained drag-drop transport, §2).
 
 ---
 
-## 4. Why soft-wrap is a smell
+## 6. What this doc said before, and why it was biased (kept for honesty)
 
-`setSoftWrap` runs in a **menu-click handler** (outside the `recalculatingLayouts` phase) and
-does **immediate** layout work: `rawSetExtent`/`fullRawMoveTo` on the content + an explicit
-`reLayout` + `adjustContentsBounds`/`adjustScrollBars`. That contradicts the framework's stated
-intent ("low-level APIs should only be in the recalculate phase") and bypasses the deferred
-cycle. The "ideal" shape would be: set the `isTextLineWrapping` flag, `invalidateLayout()`, and
-let the cycle's `doLayout` produce the geometry. (Why that's blocked today: §0.)
-
----
-
-## 5. Investigation (verified facts — start here, do not re-derive)
-
-### 5a. The ON/OFF asymmetry is intentional, and *why*
-From `TextWdgt::reLayout` (§2): with `@softWrap` it wraps to the box's **current extent**;
-without, it measures the **natural un-wrapped width**. Therefore:
-- **wrap OFF** is self-contained: `@reLayout()` alone grows the box to its natural width (panel
-  then scrolls horizontally).
-- **wrap ON** can't just `@reLayout()` — that would wrap to the *current* (possibly wide) width and
-  change nothing visible. The box must first be **re-constrained to the viewport width**; that's the
-  `@contents.rawSetExtent @extent()` in `setTextLineWrapping(true)`.
-
-### 5b. `adjustContentsBounds` ALREADY derives most of the wrap geometry — but not all
-`ScrollPanelWdgt.adjustContentsBounds` (`:266`) contains, when
-`@isTextLineWrapping and @contents instanceof PanelWdgt`, for each `FIT_BOX_TO_TEXT` child:
-```coffee
-  widget.softWrap = true
-  widget.rawSetWidth @contents.width() - totalPadding   # constrain text width to the CONTENT width
-  @contents.rawSetHeight (Math.max widget.height(), @height()) - totalPadding
-```
-So it already: (1) reasserts `softWrap=true`, (2) constrains the text width to `@contents.width()`,
-(3) sets the content height. **What it does NOT do:** set `@contents.width()` to the *scroll-panel*
-(viewport) width (it only READS `@contents.width()` here, and grows `@contents` to `@width()` only as
-a minimum FLOOR via `growBy`). That single missing step — "content width := viewport width when
-wrapping" — is exactly what `setTextLineWrapping(true)` does explicitly via `@contents.rawSetExtent`.
-The re-entrancy guard `_adjustingContentsBounds` (`:268`/reset `:349`) brackets the method.
-
-### 5c. ~~Blocker #1 — `setExtent` is FREEFLOATING-only~~ — CORRECTED: NOT a blocker
-The original plan said you couldn't swap `@contents.rawSetExtent` → `@contents.setExtent` because
-`setExtent` is freefloating-only and the content panel is layout-managed. **This is wrong.** The
-content `PanelWdgt` IS `ATTACHEDAS_FREEFLOATING` (verified — §0). The freefloating gate would pass.
-The real reason the code uses the raw API is that `setExtent` is **deferred**: the toggle wants the
-geometry applied *synchronously* so its immediate `adjustContentsBounds` wraps correctly in the same
-turn. (And, because the content is freefloating, a deferred `invalidateLayout` wouldn't reach the
-panel at all — 5d/§0.)
-
-### 5d. Blocker #2 (CONFIRMED, and the real one) — the wrap geometry is NOT on the cycle
-`ScrollPanelWdgt` defines no `doLayout`. No `doLayout` in the codebase calls `adjustContentsBounds`.
-The content/text are freefloating, so `invalidateLayout` on them does not climb to the panel
-(`Widget:3575`). Even a forced-dirty panel skips the inline `adjustContentsBounds` because
-`ScrollPanelWdgt.rawSetExtent` is guarded `unless aPoint.equals @extent()` and a toggle doesn't change
-the viewport. **So merely calling `invalidateLayout()` re-lays-out the text alone and never re-derives
-the panel's wrap geometry.** Connecting the two is a real layout-engine change with the §0 hazards.
+Earlier revisions concluded "deferred for now / LEAVE," justified by: (a) "deferring a drag-follow lags
+it across frames" — **false**, deferral is within-frame (§0.1); (b) "[DET]-scary, dpr2-under-load
+flake class" — **misapplied**, a wrong conversion fails *deterministically* (§0.3); (c) "marginal ROI,
+ships nothing user-facing." Those were a LEAVE bias talking. (a) and (b) are retracted. On (c): the ROI
+is **architectural** — completing a half-built core mechanism and enabling the broad Path-A
+simplification of drag-and-drop — not a single user-facing feature, but not marginal either.
 
 ---
 
-## 6. What a FUTURE deferred conversion must solve (the revisit checklist)
+## 7. Sequencing / what completing this would take
 
-The ideal end state is unchanged: `softWrapOn/Off` set `isTextLineWrapping` (+ the text's `@softWrap`)
-and call `invalidateLayout()`; the layout cycle re-derives everything. To get there, ALL of these must
-be solved *together* (solving any subset leaves it broken or non-deterministic):
+**Method:** pattern-match each site against the adhering flows (§2b) — `HandleWdgt.nonFloatDragging` is the
+worked template (compute from the event, set via the deferred API, no read-back). Each rewrite is one unit.
 
-1. **Move `content.width := viewport.width` into the layout pipeline** (out of
-   `setTextLineWrapping(true)`'s `@contents.rawSetExtent @extent()`), e.g. into
-   `adjustContentsBounds` gated on `@isTextLineWrapping`, BEFORE the per-child `rawSetWidth`. (Locally
-   plausible; but `adjustContentsBounds` runs from ~42 sites, so prove byte-exactness across the whole
-   reflow family, not just soft-wrap.)
-2. **Make the cycle reach `adjustContentsBounds` for a wrap toggle WITHOUT flipping
-   `implementsDeferredLayout` globally.** A naive `ScrollPanelWdgt.doLayout` trips the
-   `Widget:990` nested-scroll merged-bounds change (§0). Needs a seam that connects the panel's wrap
-   recompute to the dirty-drain without changing `@doLayout != Widget::doLayout` for all scroll panels
-   — or a deliberate, separately-verified acceptance of that ripple.
-3. **Reproduce the OFF / natural-width path in the cycle.** Today OFF works via the synchronous
-   `@reLayout()` while `@softWrap == false`. Deferred, it must come from
-   `doLayout → rawSetBounds → TextWdgt::rawSetExtent → reLayout` reading the final `@softWrap`.
-4. **Eliminate the `softWrap`-overwrite ordering hazard** (`adjustContentsBounds:289` writes
-   `widget.softWrap = true`). The final `@softWrap` + wrapped width must be a pure function of the
-   toggle regardless of dirty-queue interleaving: a *single authority* computes wrap geometry once per
-   cycle with fixed child ordering, and `TextWdgt.doLayout` must not independently re-wrap a wrapping
-   scroll-panel child. This is the determinism-critical piece (DETERMINISM.md), and the reason this
-   amounts to redrawing the wrap-ownership seam between `TextWdgt`, the content `PanelWdgt`, and
-   `ScrollPanelWdgt` — i.e. the Phase-6 Tier-4 territory.
+1. **Pilot Path A on the cleanest constrained-free case to prove the mechanism** — e.g. a single
+   freefloating-transport handler, or a self-contained Path-B de-read-back (the slider: derive the
+   value from the clamped `newPosition` instead of reading `@button.top()` back). Small, verifiable.
+2. **Path A proper — pending-aware accessors** (generalize `pickUp`): the systematic enabler for the
+   no-relayout transport class. Core-model change; needs an invariant + determinism pass and the full
+   gauntlet. Its own design doc.
+3. **Path B — per constraint-entangled site**, classified in §2 (sliders, scroll, ratio, window
+   collapse). Each eliminates its specific read-back or re-orders the constraint resolution.
+4. **Soft-wrap specifically** (§5): Path B *plus* wiring `adjustContentsBounds` into the cycle without
+   the `implementsDeferredLayout` nested-scroll regression.
 
-If a future session finds a seam that satisfies all four without the global ripple, the payoff is the
-consistency win in §0; until then, the immediate shape is correct and intentional.
+These can land independently and incrementally; none requires the others first, except soft-wrap which
+wants its reachability fix regardless.
 
 ---
 
-## 7. Open questions — now RESOLVED
+## 8. Risk & honest framing (de-biased)
 
-1. **Content panel `layoutSpec`?** → `LayoutSpec.ATTACHEDAS_FREEFLOATING` (verified). Corrects 5c.
-2. **Does `recalculateLayouts → doLayout` reach `adjustContentsBounds` for a scroll panel?** → **NO**
-   (verified: no `doLayout` calls it; scroll panel has none; the inline edge in `rawSetExtent` is
-   skipped for an unchanged viewport). This is the real blocker (5d/§0).
-3. **Where does OFF sizing happen in the cycle if `setSoftWrap` didn't call `@reLayout()`?** →
-   `doLayout → rawSetBounds → TextWdgt::rawSetExtent → reLayout` (the `TextWdgt` override ~`:426`),
-   but with the ordering hazard of §6.4.
-4. **Re-entrancy** — `adjustContentsBounds` guards with `_adjustingContentsBounds` (`:268`); routing it
-   through the cycle creates a `doLayout ↔ adjustContentsBounds ↔ rawSet*` cluster whose guard
-   interaction must be proven not to skip the first (correctness-bearing) pass.
-5. **`childGeometryChanged` + `adjustScrollBars`** — the refresh tail also calls these; a deferred path
-   must still update the scrollbars and notify the parent stack.
-6. **Other `isTextLineWrapping` writers** — the three ctors set it at construction (before the first
-   cycle); confirmed they still produce correct initial geometry.
+- **Failure mode is deterministic, not flaky.** Reading stale/pre-constraint geometry yields the same
+  wrong pixels every run → the SystemTests catch it immediately. This is *not* the dpr2-flake class.
+- **Path A's risk is breadth** (accessors are everywhere; the hand drives spatial queries), not
+  subtlety. Contained to the intra-cycle in-flight window (paint runs after `recalc`).
+- **Path B's risk is per-site correctness** — get each constrained read right; low blast radius each.
+- **Determinism still mandatory** for any change here: ~41 SystemTests touch wrap/scroll/reflow; run
+  dpr1 + dpr2 + WebKit + `--homepage`. A real behaviour-preserving step shifts ZERO pixels; a deliberate
+  behavioural change recaptures deliberately and confirms faithfulness.
 
 ---
 
-## 8. Touch-list (file:line — verify lines, the tree shifts; lines drifted slightly after §13 edits)
+## 9. Test exposure
 
-- `Fizzygum/src/SimplePlainTextWdgt.coffee` — `softWrapOn/Off`, `setSoftWrap`.
-- `Fizzygum/src/basic-widgets/ScrollPanelWdgt.coffee` — `setTextLineWrapping`, `adjustContentsBounds`
-  (`:266`), `isTextLineWrapping` field (`:6`), `rawSetExtent` (`:221`, the viewport-guard).
-- `Fizzygum/src/basic-widgets/Widget.coffee` — `refreshScrollPanelWdgtOrVerticalStackIfIamInIt`,
-  `rawSetExtent` (`:1397`), `setExtent` + guard (`:1420`/`:1423`), `invalidateLayout` (`:3571`, upward
-  gate `:3575`), `implementsDeferredLayout` (~`:3756`), `subWidgetsMergedFullBounds` (~`:990`),
-  `layoutIsValid` (`:234`), `amIDirectlyInsideScrollPanelWdgt`, base `reLayout` (`:2273`),
-  `addRaw` default freefloating (~`:2227`).
-- `Fizzygum/src/basic-widgets/TextWdgt.coffee` — `reLayout` (`:394`), `rawSetExtent` override (~`:426`).
-- `Fizzygum/src/WorldWdgt.coffee` — `recalculateLayouts` (`:841`), cycle invocation (`:1221-1223`,
-  `doOneCycle` `:1198`), `widgetsThatMaybeChangedLayout` (declared `:255`).
-
----
-
-## 9. Risk, ROI, and the honest framing
-
-- **Risk: MEDIUM–HIGH, `[DET]`.** Render/layout code photographed by ~41 wrap-touching SystemTests
-  (§10). Going immediate→deferred changes *when* layout computes and can shift pixels or, at
-  dpr2-under-load, expose the §6.4 ordering bug. dpr2 + WebKit are MANDATORY; re-read DETERMINISM.md.
-- **ROI: marginal.** Soft-wrap is a discrete, rare user action — no batching benefit. The win is
-  *consistency* + removing a raw mutation from a click handler. It ships nothing user-facing.
-- **Overlaps Phase-6 Tier 4 (= LEAVE).** Same DET-core area, no clean determinism-safe seam.
-- **Verdict 2026-06-18: deferred for now (not never).** Do not force a risky re-architecture for a
-  marginal consistency gain. Revisit if/when a seam satisfying all of §6 appears (e.g. during a
-  broader layout-engine pass that already touches `doLayout`/`adjustContentsBounds`).
-
----
-
-## 10. Test classification (soft-wrap / wrapping-scroll-panel exposure)
-
-~41 SystemTests touch wrap-related terms (12 directly mention `SoftWrap`). Directly about the toggle /
-wrap-mode reflow (watch these closest): `macroSoftWrapping`, `macroSoftWrapTogglesTextReflow`,
+~41 SystemTests touch wrap-related terms (12 mention `SoftWrap`). Closest to soft-wrap:
+`macroSoftWrapping`, `macroSoftWrapTogglesTextReflow`,
 `macroSimplePlainTextScrollPanelUpdatesWellWhenWrappingUnwrappingFromTheBottomOfContent`,
 `macroWrappingSimplePlainTextResizesCorrectlyAsTextIsAddedAndRemoved`,
 `macroWrappingSimpleTextScrollPanelResizesCorrectlyAsTexSizeIsChangedPartTwo`,
 `macroNonWrappingTextResizesToContent`, `macroFreeWidthScrollStackShowsHorizontalScrollbar`,
-`macroWrappingTextFieldResizesOK`, `macroTextRelayoutsCorrectlyOnResize`. Broader (same pipeline): the
-`macroSimpleDocument*` family, `macroWindowWithPlainWrappingTextResizingFollowsContentSize`,
-`macroBareTextWdgt*Reflows*`, `macroVerticalStackPanelGrowsWithContent`,
-`macroResizingScrollFrameThenImmediatelyScrollingTheHandlesDontStickToScrollPanelContent`.
+`macroWrappingTextFieldResizesOK`, `macroTextRelayoutsCorrectlyOnResize`. Drag-drop transport (Path A)
+additionally exercises the grab/drop + scroll-panel tests broadly.
 
 ---
 
-## 11. Verification recipe + definition of done (if/when this is revisited)
+## 10. Verification recipe (when any conversion is attempted)
 
-Per-change verification (from the campaign):
-1. `cd Fizzygum && ./build_it_please.sh` (the build runs the CoffeeScript syntax gate).
-2. **Separate cd** → `cd Fizzygum-tests && node scripts/run-all-headless.js --shards=5` (dpr1),
-   then `--dpr=2 --shards=5`, then `--browser=webkit --shards=5`. Expect 165/165.
-3. The `--homepage` 3-step, as THREE separate `cd` commands (chaining build+smoke across the two repos
-   → MODULE_NOT_FOUND): (a) `cd Fizzygum && ./build_it_please.sh --homepage`;
-   (b) `cd Fizzygum-tests && node scripts/smoke-boot-headless.js --native-only`;
-   (c) `cd Fizzygum && ./build_it_please.sh` (restore).
-4. If pixels legitimately shift, recapture deliberately and CONFIRM the new references are correct:
-   `cd Fizzygum-tests && node scripts/capture-macro-test-references.js SystemTest_<name> --clean --dprs=1,2`.
-
-**Done (for the eventual conversion) when:** soft-wrap marks via `invalidateLayout()` and the cycle
-derives the geometry, with §6.1–§6.4 all solved; 165/165 across dpr1 + dpr2 + WebKit + `--homepage`
-boot (recaptures justified as faithful); and a `scripts/torture-headless.js` pass over the soft-wrap
-tests shows no dpr2-under-load nondeterminism.
+Each repo in a SEPARATE `cd` (chaining build+smoke across repos → MODULE_NOT_FOUND):
+1. `cd Fizzygum && ./build_it_please.sh` (CoffeeScript syntax gate).
+2. `cd Fizzygum-tests && node scripts/run-all-headless.js --shards=5` (dpr1), then `--dpr=2 --shards=5`,
+   then `--browser=webkit --shards=5`. Expect 165/165.
+3. `--homepage` 3-step: (a) `cd Fizzygum && ./build_it_please.sh --homepage`; (b) `cd Fizzygum-tests &&
+   node scripts/smoke-boot-headless.js --native-only`; (c) `cd Fizzygum && ./build_it_please.sh`.
+4. Path A / hand-touching changes: a `scripts/torture-headless.js` soak at dpr2 over the drag/scroll
+   tests (the spatial-query breadth is where to look).
 
 ---
 
-## 12. Context: what shipped before this (so the toggle code makes sense)
+## 11. Cleanups already shipped (2026-06-18, commit `d01c7f3f`, byte-exact)
 
-Phase-7 item **7c** (Fizzygum commit `9d3e1234`): moved the grandparent write +
-content-resize into `ScrollPanelWdgt.setTextLineWrapping` (encapsulation); unified `softWrapOn/Off`
-into `setSoftWrap(wrap)` (ON/OFF asymmetry made explicit); added the `setSoftWrap` idempotence guard.
-All byte-identical / behaviour-preserving. THIS plan was the *next* step (immediate→deferred), assessed
-2026-06-18 as deferred-for-now (§0).
+1. Deleted the dead `ScrollPanelWdgt.toggleTextLineWrapping` (zero call sites; already homepage-excluded).
+2. Added WHY-immediate comments on `ScrollPanelWdgt.setTextLineWrapping` and
+   `SimplePlainTextWdgt.setSoftWrap` pointing here. **TODO:** those comments still lean on the
+   "deferred would not reach `adjustContentsBounds`" framing (true, §5) but predate the §0/§1 model
+   finding — refresh them to "this is intermediate per the half-built deferred model; see this doc."
 
 ---
 
-## 13. What this assessment session changed (2026-06-18) — byte-exact cleanups
+## 12. Context
 
-While assessing, two tiny safe wins were taken (provably pixel-free — no recapture):
-1. **Deleted the dead `ScrollPanelWdgt.toggleTextLineWrapping`** (zero call sites; already inside the
-   homepage-exclusion markers; not serialized geometry). It was a misleading second "wrapping" entry
-   point that — unlike `setTextLineWrapping` — did NOT do the viewport resize.
-2. **Upgraded the WHY comments** on `ScrollPanelWdgt.setTextLineWrapping` and
-   `SimplePlainTextWdgt.setSoftWrap` to record that the immediate shape is deliberate FOR NOW and to
-   point here for the obstacle map.
-
-No behavioural change; the architecture decision is "deferred for now, revisit-able" per §0.
+Spun off from Phase-7 item **7c** (commit `9d3e1234`), which encapsulated the grandparent write +
+content-resize into `ScrollPanelWdgt.setTextLineWrapping` and unified `softWrapOn/Off` into
+`setSoftWrap` (byte-identical). The campaign tracker is `docs/oo-smells-refactoring-backlog.md`; the
+deferred-pattern audit summary lives under its Phase 7. The God-class arc (Phase 6, COMPLETE) is
+`docs/god-class-decomposition-plan.md`. The byte-exact contract is `Fizzygum-tests/DETERMINISM.md`.

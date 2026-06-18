@@ -455,16 +455,16 @@ relative to risk, so they tail the backlog.
   dpr 2 + WebKit mandatory.
 - **7c — `SimplePlainTextWdgt`** grandparent writes → `setTextLineWrapping(bool)` on the
   container (which resizes its own content). **Encapsulation DONE (commit `9d3e1234`).** The spun-off
-  *immediate→deferred* layout follow-up (make the toggle just set the flag + `invalidateLayout()` and
-  let the cycle derive geometry) is **ASSESSED 2026-06-18 = DEFERRED FOR NOW — revisit-able, NOT a
-  closed LEAVE:** no clean determinism-safe seam today. The content/text are `ATTACHEDAS_FREEFLOATING`
-  so `invalidateLayout()` never climbs to the scroll panel, and the wrap geometry in
-  `adjustContentsBounds` is off the `doLayout` cycle; wiring it in flips `implementsDeferredLayout` for
-  every scroll panel (nested-scroll merged-bounds ripple, `Widget:990`) and risks a `softWrap`-overwrite
-  ordering flake (`[DET]`). Same DET-core as Phase-6 Tier 4 (= LEAVE). Full obstacle map + the
-  "what it'd take" revisit checklist: **`docs/softwrap-deferred-layout-conversion-plan.md`**. (This
-  assessment also deleted the dead `ScrollPanelWdgt.toggleTextLineWrapping` and added WHY-immediate
-  comments — both byte-exact.)
+  *immediate→deferred* follow-up turned out to be one instance of a bigger finding: the deferred-layout
+  model is **intermediate / half-built** (see the audit note below + the design doc). Soft-wrap is a
+  **Path-B** case (it entails a constrained re-wrap, so `@desired*` ≠ the constrained result) **plus** an
+  extra reachability fix: content/text are `ATTACHEDAS_FREEFLOATING` so `invalidateLayout()` doesn't climb
+  to the scroll panel, and the wrap geometry in `adjustContentsBounds` is off the `doLayout` path — wiring
+  it in flips `implementsDeferredLayout` for every scroll panel (`Widget:990`). The `softWrap`-overwrite is
+  a single-pass code-ORDER correctness issue (deterministic, test-caught), not a flaky hazard. Full
+  treatment: **`docs/softwrap-deferred-layout-conversion-plan.md`**. (This assessment also deleted the dead
+  `ScrollPanelWdgt.toggleTextLineWrapping` and added WHY-immediate comments — both byte-exact, shipped in
+  `d01c7f3f`.)
 - **7d — `PromptWdgt:43-46`** sets `slider.button.{color,highlightColor,pressColor}` →
   `SliderButtonWdgt.setColorScheme(base)`.
 - **7e — Demeter accessors:** `BasementWdgt.addLostWidget(w)` for the
@@ -475,6 +475,45 @@ relative to risk, so they tail the backlog.
 
 **Risk:** MEDIUM–HIGH. **[DET]:** 7a, 7b. **Recapture:** possible for caret/selection visuals;
 expect to recapture deliberately and confirm the assertion content is identical.
+
+### Deferred-layout model is INTERMEDIATE (2026-06-18) — generalises the 7c soft-wrap question
+
+The 7c soft-wrap assessment generalised: the whole `src/` tree was audited for the *same* smell — raw
+geometry (`rawSetExtent`/`fullRawMoveTo`/…) in interaction handlers instead of the deferred API
+(`setExtent`/`fullMoveTo` → `invalidateLayout()`, derived by `recalculateLayouts`→`doLayout`). **~430 sites
+classified; ~420 are legit construction or layout machinery. The ~dozen handler smells are NOT independently
+"legitimately immediate" — they are SYMPTOMS of a half-built deferred model** (per the system's author, the
+deferred system was added *accretively on top of* the original immediate system and is intentionally
+intermediate). Full write-up + the A/B path catalog: **`docs/softwrap-deferred-layout-conversion-plan.md`**.
+
+Two earlier framings were BIAS and are RETRACTED: (a) "deferring a drag-follow lags it across frames" — false,
+deferral is within-frame (`doOneCycle`: events `:1207` → `recalculateLayouts` `:1222` → paint `:1230`); (b)
+"[DET]-scary dpr2 flake class" — misapplied; a wrong conversion reads stale geometry and fails
+*deterministically* (tests go red), not flakily. The real reason handlers use raw today: a **synchronous
+read-back** of the just-mutated geometry within the same cycle (a clamp, a derived value, hit-testing, a
+coordination flag), and the accessors (`position()`/`extent()`/…) expose only applied `@bounds`, never the
+pending `@desired*` (which only the layout machinery + `pickUp:2712` consult). That split IS the
+incompleteness.
+
+**Two paths to complete it, applied CASE BY CASE** (gated on: does the event also entail a relayout/constraint?):
+- **Path A — defer + pending-aware accessors** (generalise the `pickUp` trick): for **no-relayout
+  freefloating transport** (most drag-and-drops) `desired == actual`, so the move defers cleanly. Broad,
+  systematic; a core geometry-model change (accessors are everywhere; the hand drives spatial queries) — its
+  own design doc. The clean first win.
+- **Path B — per-site** (eliminate the read-back / re-order the constraint): when the event hits a constraint,
+  `@desired*` (the *request*) ≠ `@bounds` (the *constrained result*) — e.g. a **vertical** slider eats a
+  **sideways** drag, stack elements, ratio locks, clamps, `FIT_BOX_TO_TEXT` wrap. A pending-aware read would
+  return the wrong pre-constraint value, so it must be done case by case. `SliderButtonWdgt:~95` (thumb),
+  `ScrollPanelWdgt:~80/85` (scrollbar), `KeepsRatio`/`Example3DPlotWdgt` (grab/ratio), `WindowWdgt:~243/250-253`
+  (collapse/`@reInflating`). **Soft-wrap** (`ScrollPanelWdgt:~721/722`) is Path B *plus* an extra reachability
+  fix (its wrap geometry in `adjustContentsBounds` is off the `doLayout` path; wiring it in flips
+  `implementsDeferredLayout` for all scroll panels — `Widget:990`).
+
+**Bottom line:** this is unfinished core-mechanism work, not a "leave." The pattern is already done right in
+places — **`HandleWdgt.nonFloatDragging` is the adhering template** (real-time drag → deferred
+`setExtent`/`fullMoveTo`, computing from the event, no read-back); pattern-match each smell against it. Also
+note the `# TODO no fullMoveWithin ?` (`ActivePointerWdgt:162`) — a missing deferred clamp primitive worth
+adding once. Sequencing + the adhering catalog: design doc §2b/§7.
 
 ---
 
