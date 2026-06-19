@@ -247,6 +247,30 @@ class ScrollPanelWdgt extends PanelWdgt
     @_adjustContentsBounds()
     @_adjustScrollBars()
 
+  # ===== Phase 3b (Slice 1): re-fit on the doLayout cycle =====
+  # A scroll panel re-fits its contents+scrollbars during recalculateLayouts (deferred),
+  # not only via the inline _reFitToContents triggers. super (Widget::doLayout) applies
+  # MY OWN new bounds FIRST -- consuming @desired* and, on a real resize, re-fitting via the
+  # rawSetExtent override -- and THEN we re-fit to the (now-applied) viewport. Establishing
+  # own bounds before re-fitting the contents is the DETERMINISM.md case-3c discipline (a
+  # custom doLayout must apply its own bounds before laying out what it contains). On a pure
+  # resize the re-fit here is redundant with the rawSetExtent override and idempotent; on a
+  # content-only change (Phase 3b Slice 2, when the inline triggers become invalidateLayout)
+  # it is the one that runs.
+  doLayout: (newBoundsForThisLayout) ->
+    super
+    @_reFitToContents()
+
+  # implementsDeferredLayout is `@doLayout != Widget::doLayout`, so the doLayout above would
+  # otherwise flip it true and change TWO read sites: (A) rawSetWidthSizeHeightAccordingly
+  # (invalidate-on-resize) and, the load-bearing one, (B) subWidgetsMergedFullBounds -- a
+  # deferred-layout child contributes only its viewport rect, not its scrolled subtree, which
+  # would shrink a NESTED scroll panel's reported content size and regress nested-scroll
+  # (the proven 16->18 Path-A trap). We pin it to false so the doLayout drives the re-fit
+  # while our merged-bounds/resize classification stays exactly as before we had a doLayout.
+  implementsDeferredLayout: ->
+    false
+
   _refitContentsAndScrollBars: ->
     @_reFitToContents()
 

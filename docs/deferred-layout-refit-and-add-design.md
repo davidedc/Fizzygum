@@ -50,8 +50,24 @@ leaves a consistent world by itself. Concretely:
   touching them. See "Phase 3a — what actually shipped" below. Verified: boot-smoke clean, lint A/B/C/D 0,
   suite 165/165 at dpr1+dpr2+WebKit, 12 apps launch, 1 benign inspector recapture (`_addCore` joins the
   member list).
-- **Phase 3b:** move the chokepoint onto the `doLayout` cycle (solve `implementsDeferredLayout`). Hard;
-  determinism-sensitive; own review.
+- **Phase 3b — Slice 1:** ✅ DONE 2026-06-19. The byte-safe foundation: `ScrollPanelWdgt` now has a
+  `doLayout` (`super` applies own bounds first — DETERMINISM.md case-3c — then `@_reFitToContents()`), and
+  `implementsDeferredLayout` is pinned to `false` so giving it a `doLayout` does NOT flip the two read sites
+  (resize-invalidate + the load-bearing `subWidgetsMergedFullBounds` nested-scroll contribution). This solves
+  the `implementsDeferredLayout` blocker and puts the scroll-panel re-fit on the cycle for RESIZES; the
+  re-fit is idempotent on top of the still-present inline triggers, so it removed none of them. Verified
+  byte-safe at dpr1/dpr2/WebKit (165/165) + boot clean. (`ScrollPanelWdgt.coffee`, +24 lines.)
+- **Phase 3b — Slice 2 (DEFERRED, own future phase):** flip the ~20 inline `_reFitToContents` content-change
+  triggers to `invalidateLayout` (mark-dirty → re-fit in `doLayout`). Censusing it showed it is larger than
+  the Slice-1 foundation implied: the triggers span **5 files / 3 classes** (ScrollPanel,
+  SimpleVerticalStackPanel, Window) — stack/window re-fits would each need their OWN `doLayout` — and several
+  sites carry a synchronous read-back (`justDropped` right after `reactToDropOf`) or content that resizes
+  DURING the cycle (stacks, `FIT_BOX_TO_TEXT` text), which is the genuine determinism exposure (the re-fit
+  reads `@contents.subWidgetsMergedFullBounds()`, so the panel's `doLayout` must run AFTER the contents
+  settle). The trigger sites are interconnected (a content GRAB re-fits via `PanelWdgt.childRemoved`, not
+  `reactToGrabOf`), so a partial flip is incoherent. Reward is architectural (closes the deeper-nesting gap +
+  removes the inline triggers); no test fails today. Do it as a dedicated, per-site-analysed effort with a
+  torture soak. Canaries: see the test oracle below.
 
 ---
 
