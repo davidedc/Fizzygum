@@ -1385,6 +1385,33 @@ class Widget extends TreeNode
 
     return
 
+  # Deferred twin of fullRawMoveWithin: make sure I end up completely within
+  # aWdgt's bounds, but DON'T bake the move now -- compute the clamped position
+  # and DEFER it via fullMoveTo, so it settles in the recalculateLayouts ->
+  # doLayout phase (before paint), together with any other pending change.
+  # Pending-aware like fullRawMoveWithin (it clamps the not-yet-applied
+  # @desired* geometry when present); but, being deferred, it leaves
+  # @desiredExtent for the cycle to apply rather than baking it now.
+  fullMoveWithin: (aWdgt) ->
+    # use the desired (not-yet-applied) geometry if present, else the applied one
+    ext = if @desiredExtent?   then @desiredExtent   else @extent()
+    pos = if @desiredPosition? then @desiredPosition else @position()
+
+    newX = pos.x
+    newY = pos.y
+
+    # adjust the right and bottom first, the left and top LAST, so the control
+    # buttons in window bars stay visible/reachable (mirrors fullRawMoveWithin)
+    rightOff = (newX + ext.x) - aWdgt.right()
+    if rightOff > 0 then newX = newX - rightOff
+    if newX < aWdgt.left() then newX = aWdgt.left()
+
+    bottomOff = (newY + ext.y) - aWdgt.bottom()
+    if bottomOff > 0 then newY = newY - bottomOff
+    if newY < aWdgt.top() then newY = aWdgt.top()
+
+    @fullMoveTo new Point newX, newY
+
   # more complex Widgets, e.g. layouts, might
   # do a more complex calculation to get the
   # minimum extent

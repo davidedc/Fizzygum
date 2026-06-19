@@ -159,7 +159,7 @@ class ActivePointerWdgt extends Widget
         # in this case the widget being grabbed is created on the fly
         # so just like the next case it's OK to center it under the pointer
         aWdgt.fullMoveTo @position().subtract aWdgt.extent().floorDivideBy 2
-        aWdgt.fullRawMoveWithin world # TODO no fullMoveWithin ?
+        aWdgt.fullRawMoveWithin world # raw flush+clamp here; a deferred fullMoveWithin now exists, but switching this real-time grab to it is a Path-A determinism call
       else if aWdgt.extentToGetWhenDraggedFromGlassBox? and (oldParent instanceof GlassBoxBottomWdgt)
         # in this case the widget is "inflating". So, all
         # visual references that the user might have around the

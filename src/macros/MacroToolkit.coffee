@@ -959,12 +959,12 @@ class MacroToolkit
     macroSubroutines.add Macro.fromString """
       buildExternalAndFreeInternalWindow_Macro = ->
         extWin = new WindowWdgt nil, nil, nil
-        extWin.rawSetExtent new Point 290, 240
-        extWin.fullRawMoveTo new Point 75, 90
+        extWin.setExtent new Point 290, 240
+        extWin.fullMoveTo new Point 75, 90
         world.add extWin
         intWin = new WindowWdgt nil, nil, nil, true
-        intWin.rawSetExtent new Point 250, 160
-        intWin.fullRawMoveTo new Point 600, 200
+        intWin.setExtent new Point 250, 160
+        intWin.fullMoveTo new Point 600, 200
         world.add intWin
         yield "waitNoInputsOngoing"
         return [extWin, intWin]
