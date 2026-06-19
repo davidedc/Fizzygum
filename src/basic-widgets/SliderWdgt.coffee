@@ -120,14 +120,33 @@ class SliderWdgt extends CircleBoxWdgt
     
     @changed()
     
-  updateValue: ->
+  # `constrainedButtonPosition`, when supplied, is the button's already-clamped
+  # new top-left (passed by SliderButtonWdgt.nonFloatDragging right after it moves
+  # the thumb there). Deriving the value from it — instead of reading the just-moved
+  # @button.top()/.left()/.bottom() back — decouples value-derivation from the thumb's
+  # APPLIED geometry, which is the precondition for ever deferring the thumb's move.
+  # It is byte-identical to the old read-back: the raw move at SliderButtonWdgt:95
+  # runs synchronously BEFORE this call, so @button.top() ≡ arg.y, @button.left() ≡
+  # arg.x, @button.bottom() ≡ arg.y + @button.height() at that instant. No argument ⇒
+  # fall back to the applied button geometry (safe for any other/serialization caller).
+  # See docs/softwrap-deferred-layout-conversion-plan.md §6a.
+  updateValue: (constrainedButtonPosition = nil) ->
+    if constrainedButtonPosition?
+      buttonTop = constrainedButtonPosition.y
+      buttonLeft = constrainedButtonPosition.x
+      buttonBottom = constrainedButtonPosition.y + @button.height()
+    else
+      buttonTop = @button.top()
+      buttonLeft = @button.left()
+      buttonBottom = @button.bottom()
+
     if @autoOrientation() is "vertical"
       if @smallestValueIsAtBottomEnd
-        relPos = @bottom() - @button.bottom()
+        relPos = @bottom() - buttonBottom
       else
-        relPos = @button.top() - @top()
+        relPos = buttonTop - @top()
     else
-      relPos = @button.left() - @left()
+      relPos = buttonLeft - @left()
 
     newvalue = Math.round relPos / @unitSize() + @start
 
