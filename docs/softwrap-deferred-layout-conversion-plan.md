@@ -16,6 +16,21 @@ currently forced, and the two paths — applied **case by case** — to complete
 > applied `@bounds`, `@desired*` is consulted in only a few places, and many handlers still mutate
 > geometry immediately. It is unfinished work to be completed deliberately.
 
+> **Status — 2026-06-19 (progress + a key Path-A finding):**
+> - **Macro raw-API cleanup SHIPPED** (`Fizzygum-tests` `51b064fc0`, `Fizzygum` `7c720908`): 117 of 133
+>   SystemTest macro command files now use the deferred API (`setExtent`/`fullMoveTo`/`setWidth`) instead
+>   of raw, byte-identical (165/165 at dpr1 + dpr2 + WebKit). The remaining **16 keep raw** — they read
+>   geometry back *synchronously during construction* (`panel.center()`, explicit `adjustContentsBounds()`,
+>   reads inside `add`) before the first settle, so a deferred value would be read stale. The deferred
+>   clamp primitive **`fullMoveWithin`** now exists (Widget.coffee); the MacroToolkit window verb is deferred.
+> - **Path A was attempted and the blanket "pending-aware accessors" approach EMPIRICALLY DIVERGES** (16 →
+>   17 → 18 failures as accessors, then `subWidgetsMergedFullBounds`, then `fullBounds` were made
+>   pending-aware). Root cause: the geometry read surface has *conflicting* needs — `adjustContentsBounds`/
+>   `add` want the PENDING value, but canvas pixel-buffers, the inspector, and dirty-rect repaint want the
+>   APPLIED value; one accessor cannot serve both. So Path A is a **per-reader audit**, not a blanket
+>   change — the full plan is in **`docs/deferred-layout-path-a-design.md`**, which supersedes the
+>   "Path A = pending-aware accessors" framing in §1/§6 below.
+
 ---
 
 ## 0. The finding
@@ -266,7 +281,10 @@ worked template (compute from the event, set via the deferred API, no read-back)
 2. **Path A proper — pending-aware accessors** (generalize `pickUp` **and** `fullRawMoveWithin`, and
    survive the `setBounds` writer + `StretchablePanelWdgt`'s external `@desired*` clear, §4): the
    systematic enabler for the no-relayout transport class. Core-model change; needs an invariant +
-   determinism pass and the full gauntlet. Its own design doc.
+   determinism pass and the full gauntlet. Its own design doc — **now written:
+   `docs/deferred-layout-path-a-design.md`. NB: the blanket "pending-aware accessors" form of this was
+   tried (2026-06-19) and EMPIRICALLY DIVERGES (conflicting pending-vs-applied read semantics); that
+   design doc has the per-reader plan that supersedes this bullet.**
 3. **Path B — per constraint-entangled site**, classified in §2 (sliders, scroll, ratio, window
    collapse). Each eliminates its specific read-back or re-orders the constraint resolution.
 4. **Soft-wrap specifically** (§5): Path B *plus* wiring `adjustContentsBounds` into the cycle without
@@ -317,8 +335,10 @@ sub-unit drags. Do not bundle it into the byte-safe pilot.
 
 - **Failure mode is deterministic, not flaky.** Reading stale/pre-constraint geometry yields the same
   wrong pixels every run → the SystemTests catch it immediately. This is *not* the dpr2-flake class.
-- **Path A's risk is breadth** (accessors are everywhere; the hand drives spatial queries), not
-  subtlety. Contained to the intra-cycle in-flight window (paint runs after `recalc`).
+- **Path A's risk is breadth AND conflicting read semantics** (accessors are everywhere; the hand drives
+  spatial queries). As the 2026-06-19 attempt showed, a *blanket* pending-aware accessor change DIVERGES
+  because some readers need PENDING and others need APPLIED geometry — it must be a per-reader audit. See
+  `docs/deferred-layout-path-a-design.md`.
 - **Path B's risk is per-site correctness** — get each constrained read right; low blast radius each.
 - **Determinism still mandatory** for any change here: ~41 SystemTests touch wrap/scroll/reflow; run
   dpr1 + dpr2 + WebKit + `--homepage`. A real behaviour-preserving step shifts ZERO pixels; a deliberate
@@ -360,6 +380,13 @@ Each repo in a SEPARATE `cd` (chaining build+smoke across repos → MODULE_NOT_F
    `SimplePlainTextWdgt.setSoftWrap` pointing here — framing the immediacy as a symptom of the
    half-built model (accessors read applied `@bounds` only), with soft-wrap's
    `adjustContentsBounds`-reachability as an extra blocker on top. Comment-only ⇒ byte-exact.
+3. **(2026-06-19, `Fizzygum` `7c720908`)** Added the deferred clamp primitive `fullMoveWithin`
+   (`Widget.coffee`), the twin of `fullRawMoveWithin` (the "missing primitive"); converted the
+   `MacroToolkit` window-in-window verb to the deferred API; refreshed the `ActivePointerWdgt` grab TODO.
+4. **(2026-06-19, `Fizzygum-tests` `51b064fc0`)** Macro raw-API cleanup: 117/133 SystemTest macro command
+   files moved to the deferred geometry API (366 call-sites), byte-identical (165/165 at dpr1 + dpr2 +
+   WebKit). 16 keep raw (synchronous construction read-backs). See the §"Status — 2026-06-19" note and
+   `deferred-layout-path-a-design.md`.
 
 ---
 

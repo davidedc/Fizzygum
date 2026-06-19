@@ -486,6 +486,13 @@ classified; ~420 are legit construction or layout machinery. The ~dozen handler 
 deferred system was added *accretively on top of* the original immediate system and is intentionally
 intermediate). Full write-up + the A/B path catalog: **`docs/softwrap-deferred-layout-conversion-plan.md`**.
 
+**PROGRESS (2026-06-19):** (1) Macro raw-API cleanup SHIPPED — 117/133 SystemTest macro command files moved
+off raw to the deferred API, byte-identical (165/165 dpr1+dpr2+WebKit); 16 keep raw (synchronous
+construction read-backs). Added the deferred clamp primitive `fullMoveWithin`. (2) **Path A's blanket
+"pending-aware accessors" form was tried and EMPIRICALLY DIVERGES** (16→17→18) — the read surface has
+conflicting pending-vs-applied needs, so Path A must be a **per-reader audit**: see the new
+**`docs/deferred-layout-path-a-design.md`** (supersedes the "Path A = pending-aware accessors" framing here).
+
 Two earlier framings were BIAS and are RETRACTED: (a) "deferring a drag-follow lags it across frames" — false,
 deferral is within-frame (`doOneCycle`: events `:1207` → `recalculateLayouts` `:1222` → paint `:1230`); (b)
 "[DET]-scary dpr2 flake class" — misapplied; a wrong conversion reads stale geometry and fails
