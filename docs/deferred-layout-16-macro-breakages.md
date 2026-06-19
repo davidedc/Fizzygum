@@ -36,9 +36,34 @@ below are now on the deferred API and pass.
 **Known residual:** the hard throw can still fire on an untested *interaction* (a drag/menu inside an
 app) that reaches a private→public in a method the lint doesn't recognize by name — convert-as-found.
 
-**Open (Step 1+):** internalize `adjustContentsBounds`/`adjustScrollBars` and strip the now-redundant
-explicit calls from macros; deliberately decide the public-mutator surface (`add`/`hide`/`show`); run
-the full dpr2/WebKit/torture gauntlet before further commits.
+**Step 1 — DONE (2026-06-19, Fizzygum-tests).** Macros no longer call ANY scroll-panel re-fit method
+(`adjustContentsBounds` / `adjustScrollBars` / `refitContentsAndScrollBars`). It turned out **no
+framework change was needed**: the self-settling deferred API already re-fits an enclosing scroll panel
+when a freefloating child's `setExtent`/`fullMoveTo` settles — `doLayout` applies the change via
+`fullRawMoveTo` (→ `fullRawMoveBy`) and `rawSetExtent`, both of which carry the auto-refit hook
+`if @amIDirectlyInsideNonTextWrappingScrollPanelWdgt() then @parent.parent.adjustContentsBounds();
+@parent.parent.adjustScrollBars()` — so the explicit macro calls were simply redundant. 7 macros,
+test-only (+3/−22), byte-identical at dpr1 / dpr2 / WebKit. **Caveat (pre-existing):** that hook is
+GATED to a widget *directly* inside a *non-text-wrapping* scroll panel (see the `Widget.coffee:1160`
+comment — "this whole mechanism should go away with proper layouts"); a deeper-nested child would not
+auto-refit. The 7 macros all use direct children, so they're covered; closing the gap generally is part
+of the full deferred-layout migration.
+
+**Privates-hygiene backlog (owner-requested 2026-06-19).** The notification + auto-refit hooks grew
+organically and want a consistent treatment — to be sequenced into the migration:
+1. **Reorg + privatize the hooks.** `childGeometryChanged`, `reactToDropOf` / `reactToGrabOf`,
+   `reLayOutAfterContainedPanelChange`, `refreshScrollPanelWdgtOrVerticalStackIfIamInIt`,
+   `childAdded` / `childRemoved` / `grandChild*`, `amIDirectlyInside*` follow different conventions and
+   invocation paths — unify them onto one standard and make them all private.
+2. **`refitContentsAndScrollBars` + `adjustContentsBounds` + `adjustScrollBars` are private too.**
+3. **Register all of the above in the layering lint** (`buildSystem/check-layering.js`) as private/low-level.
+4. **Extend the lint to scan the macro test sources** (`Fizzygum-tests/tests/**/*_automationCommands.js`)
+   so a macro can no longer call a private method (this gate would have caught the original 16-macro mess).
+5. **Adopt a consistent private-naming scheme** (leading `_`) and apply it during the reorg — this
+   subsumes the standalone `_`-rename weighed earlier (deferred *into* this arc, not done alone).
+
+**Step 2 (pending):** deliberately decide the public-mutator surface (`add` / `hide` / `show`); run the
+full dpr2/WebKit/torture gauntlet before further commits.
 
 ---
 
