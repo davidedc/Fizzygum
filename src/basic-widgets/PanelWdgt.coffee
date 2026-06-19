@@ -80,17 +80,12 @@ class PanelWdgt extends Widget
 
 
   reactToDropOf: ->
-    if @parent?
-      if @parent.adjustContentsBounds?
-        @parent.adjustContentsBounds()
-        @parent.adjustScrollBars?()
+    @parent?._reFitToContents?()
 
   childRemoved: (child) ->
     if @parent?
       @parent.grandChildRemoved?()
-      if @parent.adjustContentsBounds?
-        @parent.adjustContentsBounds()
-        @parent.adjustScrollBars?()
+      @parent._reFitToContents?()
 
   childAdded: (child) ->
     # the BasementWdgt has a filter that can
@@ -117,10 +112,7 @@ class PanelWdgt extends Widget
     @add aWdgt
     aWdgt.fullRawMoveTo position
 
-    if @parent?
-      if @parent.adjustContentsBounds?
-        @parent.adjustContentsBounds()
-        @parent.adjustScrollBars()
+    @parent?._reFitToContents?()
 
 
   detachesWhenDragged: ->
@@ -150,10 +142,7 @@ class PanelWdgt extends Widget
     return false
   
   reactToGrabOf: ->
-    if @parent?
-      if @parent.adjustContentsBounds?
-        @parent.adjustContentsBounds()
-        @parent.adjustScrollBars?()
+    @parent?._reFitToContents?()
 
   # PanelWdgt menus:
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->

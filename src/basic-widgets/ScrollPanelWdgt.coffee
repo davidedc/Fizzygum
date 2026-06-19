@@ -10,7 +10,7 @@ class ScrollPanelWdgt extends PanelWdgt
   vBar: nil
   hBar: nil
   # used to avoid recursively re-entering the
-  # adjustContentsBounds function
+  # _adjustContentsBounds function
   _adjustingContentsBounds: false
 
   # there are several ways in which we allow
@@ -61,7 +61,7 @@ class ScrollPanelWdgt extends PanelWdgt
     @vBar.target = @
     @vBar.action = "adjustContentsBasedOnVBar"
 
-    @adjustScrollBars()
+    @_adjustScrollBars()
 
   wantsDropOf: (aWdgt) ->
     if @contents instanceof FolderPanelWdgt
@@ -78,13 +78,13 @@ class ScrollPanelWdgt extends PanelWdgt
 
   adjustContentsBasedOnHBar: (num) ->
     @contents.fullRawMoveTo new Point @left() - num, @contents.position().y
-    @adjustContentsBounds()
-    @adjustScrollBars()
+    @_adjustContentsBounds()
+    @_adjustScrollBars()
 
   adjustContentsBasedOnVBar: (num) ->
     @contents.fullRawMoveTo new Point @contents.position().x, @top() - num
-    @adjustContentsBounds()
-    @adjustScrollBars()
+    @_adjustContentsBounds()
+    @_adjustScrollBars()
 
   setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
@@ -111,7 +111,7 @@ class ScrollPanelWdgt extends PanelWdgt
       return true
     return false
 
-  adjustScrollBars: ->
+  _adjustScrollBars: ->
     # one typically has both scrollbars in view, plus a resizer
     # in bottom right corner, so adjust the width/height of the
     # scrollbars so that there is no overlap between the three things
@@ -190,21 +190,18 @@ class ScrollPanelWdgt extends PanelWdgt
       super
     else
       @contents.add aWdgt, position, layoutSpec, beingDropped, nil, positionOnScreen
-      @adjustContentsBounds()
-      @adjustScrollBars()
+      @_reFitToContents()
 
   # see SimpleSlideWdgt for performance improvements
   # of this over the non-
   addMany: (widgetsToBeAdded) ->
     @contents.addMany widgetsToBeAdded
-    @adjustContentsBounds()
-    @adjustScrollBars()
+    @_reFitToContents()
 
 
   showResizeAndMoveHandlesAndLayoutAdjusters: ->
     super
-    @adjustContentsBounds()
-    @adjustScrollBars()
+    @_reFitToContents()
 
   
   setContents: (aWdgt, extraPadding) ->
@@ -229,41 +226,41 @@ class ScrollPanelWdgt extends PanelWdgt
         @contents.fullRawMoveTo @position()
       super aPoint
       @contents.rawSetExtent aPoint
-      @adjustContentsBounds()
-      @adjustScrollBars()
+      @_reFitToContents()
 
 
   reactToDropOf: ->
-    @adjustContentsBounds()
-    @adjustScrollBars()
+    @_reFitToContents()
   
   reactToGrabOf: ->
-    @adjustContentsBounds()
-    @adjustScrollBars()
+    @_reFitToContents()
 
   # Re-fit my contents area and my scrollbars: the named "re-fit me" pair, shared
   # by every trigger that changes what I contain (drops, grabs, attaches, a
   # contained panel's notification). Inherited by ListWdgt and the other scroll
   # panels -- they all re-fit the same way (the ListWdgt opt-out below is ONLY
   # for the contained-panel notification, not for this pair).
-  refitContentsAndScrollBars: ->
-    @adjustContentsBounds()
-    @adjustScrollBars()
+  _reFitToContents: ->
+    @_adjustContentsBounds()
+    @_adjustScrollBars()
+
+  _refitContentsAndScrollBars: ->
+    @_reFitToContents()
 
   # A contained panel (e.g. a vertical stack acting as my @contents) tells me
   # its set of children changed, so I re-fit. I return true so the panel knows I
-  # took over its re-layout (my adjustContentsBounds already re-lays my contents
+  # took over its re-layout (my _adjustContentsBounds already re-lays my contents
   # out) and needn't do its own. This is the polymorphic replacement for
   # SimpleVerticalStackPanelWdgt testing `@amIPanelOfScrollPanelWdgt()`: the
   # stack just notifies its parent, and only a scroll panel reacts. NB kept
-  # SEPARATE from refitContentsAndScrollBars / reactToDropOf / reactToGrabOf on
+  # SEPARATE from _refitContentsAndScrollBars / reactToDropOf / reactToGrabOf on
   # purpose -- a ListWdgt opts OUT of THIS notification (see ListWdgt) yet still
   # re-fits on its own drops/grabs/attaches.
   reLayOutAfterContainedPanelChange: ->
-    @refitContentsAndScrollBars()
+    @_refitContentsAndScrollBars()
     return true
 
-  adjustContentsBounds: ->
+  _adjustContentsBounds: ->
     # avoid recursively re-entering this function
     if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true
 
@@ -276,7 +273,7 @@ class ScrollPanelWdgt extends PanelWdgt
     totalPadding = 2*padding
 
     if @contents instanceof SimpleVerticalStackPanelWdgt
-      @contents.adjustContentsBounds()
+      @contents._adjustContentsBounds()
     else if @isTextLineWrapping and @contents instanceof PanelWdgt
       @contents.children.forEach (widget) =>
         if widget.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
@@ -384,12 +381,12 @@ class ScrollPanelWdgt extends PanelWdgt
   scrollTo: (whereTo) ->
     @contents.fullRawMoveLeftSideTo -whereTo.x
     @contents.fullRawMoveTopSideTo -whereTo.y
-    @adjustScrollBars()
+    @_adjustScrollBars()
 
 
   scrollToBottom: ->
     @scrollY -100000
-    @adjustScrollBars()
+    @_adjustScrollBars()
   
   scrollY: (steps) ->
     ct = @contents.top()
@@ -540,8 +537,8 @@ class ScrollPanelWdgt extends PanelWdgt
             if deltaY isnt 0
               scrollbarJustChanged ||= @scrollY Math.round deltaY
       if scrollbarJustChanged
-        @adjustContentsBounds()
-        @adjustScrollBars()
+        @_adjustContentsBounds()
+        @_adjustScrollBars()
     super
   
   startAutoScrolling: ->
@@ -588,8 +585,8 @@ class ScrollPanelWdgt extends PanelWdgt
     if area.containsPoint(pos)
       scrollbarJustChanged ||= @scrollY -(inset - (@bottom() - pos.y))
     if scrollbarJustChanged
-      @adjustContentsBounds()
-      @adjustScrollBars()
+      @_adjustContentsBounds()
+      @_adjustScrollBars()
   
   # ScrollPanelWdgt scrolling when editing text
   # so to bring the caret fully into view.
@@ -599,7 +596,7 @@ class ScrollPanelWdgt extends PanelWdgt
     fb = @bottom() - @padding
     fl = @left() + @padding
     fr = @right() - @padding
-    @adjustContentsBounds()
+    @_adjustContentsBounds()
     marginAroundCaret = @padding
     if @extraPadding?
       marginAroundCaret += @extraPadding
@@ -619,8 +616,8 @@ class ScrollPanelWdgt extends PanelWdgt
       newR = @contents.right() + fr - caretWidget.right()
       @contents.fullRawMoveRightSideTo newR - marginAroundCaret
       caretWidget.fullRawMoveRightSideTo fr
-    @adjustContentsBounds()
-    @adjustScrollBars()
+    @_adjustContentsBounds()
+    @_adjustScrollBars()
 
   # ScrollPanelWdgt events.
   wheel: (xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg) ->
@@ -689,8 +686,8 @@ class ScrollPanelWdgt extends PanelWdgt
         @scrollX x * WorldWdgt.preferencesAndSettings.wheelScaleX
 
     if scrollbarJustChanged
-      @adjustContentsBounds()
-      @adjustScrollBars()
+      @_adjustContentsBounds()
+      @_adjustScrollBars()
   
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
@@ -713,7 +710,7 @@ class ScrollPanelWdgt extends PanelWdgt
   # applied @bounds only, so handler-level raw geometry is a symptom of that
   # incompleteness, not a one-off). Soft-wrap has an EXTRA blocker on top: the content
   # panel + text are ATTACHEDAS_FREEFLOATING, so invalidateLayout() on them does NOT
-  # climb up to this scroll panel, and the wrap geometry lives in adjustContentsBounds
+  # climb up to this scroll panel, and the wrap geometry lives in _adjustContentsBounds
   # -- which the doLayout cycle never reaches for a wrap toggle. Completing the
   # deferred model (and this case) is deliberate, sequenced work; see
   # docs/softwrap-deferred-layout-conversion-plan.md for the model finding, the

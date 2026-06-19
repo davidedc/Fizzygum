@@ -18,8 +18,8 @@ class BoxWdgt extends Widget
     # this is what happens when "each" is
     # selected: we attach the selected widget
     if @ instanceof ScrollPanelWdgt
-      @adjustContentsBounds()
-      @adjustScrollBars()
+      @_adjustContentsBounds()
+      @_adjustScrollBars()
   # this part is excluded from the fizzygum homepage build <<«
 
 

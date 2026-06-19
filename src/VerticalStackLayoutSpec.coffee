@@ -55,17 +55,17 @@ class VerticalStackLayoutSpec
   setAlignmentToLeft: ->
     if @alignment isnt "left"
       @alignment = "left"
-      @element.refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+      @element._refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   setAlignmentToRight: ->
     if @alignment isnt "right"
       @alignment = "right"
-      @element.refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+      @element._refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   setAlignmentToCenter: ->
     if @alignment isnt "enter"
       @alignment = "center"
-      @element.refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+      @element._refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   elasticityPopout: (menuItem,a,b,c,d,e,f)->
     @element.prompt menuItem.parent.title + "\nelasticity:",
@@ -88,7 +88,7 @@ class VerticalStackLayoutSpec
     elasticity = elasticity/100
     unless @elasticity == elasticity
       @elasticity = elasticity
-      @element.refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+      @element._refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   baseWidthPopout: (menuItem,a,b,c,d,e,f)->
     @element.prompt menuItem.parent.title + "\nbase width:",
@@ -111,5 +111,5 @@ class VerticalStackLayoutSpec
     if widthOfElementWhenAdded
       unless @widthOfElementWhenAdded == widthOfElementWhenAdded
         @widthOfElementWhenAdded = widthOfElementWhenAdded
-        @element.refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+        @element._refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 

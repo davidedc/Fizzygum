@@ -28,7 +28,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   titlebarBackground: nil
   contentNeverSetInPlaceYet: true
   # used to avoid recursively re-entering the
-  # adjustContentsBounds function
+  # _adjustContentsBounds function
   _adjustingContentsBounds: false
   internal: false
   defaultContents: nil
@@ -189,6 +189,11 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       return "window"
 
+  # The re-fit chokepoint for a window (no scrollbars): re-fit chrome + content.
+  # See Widget._reFitToContents.
+  _reFitToContents: ->
+    @_adjustContentsBounds()
+
   add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
     unless notContent or (aWdgt instanceof CaretWdgt) or (aWdgt instanceof HandleWdgt)
       @contentNeverSetInPlaceYet = true
@@ -200,7 +205,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @label.setText titleToBeSet
       @removeChild @contents
       @contents = aWdgt
-      @adjustContentsBounds()
+      @_reFitToContents()
       super aWdgt, position, LayoutSpec.ATTACHEDAS_WINDOW_CONTENT, beingDropped
     else
       super aWdgt, position, layoutSpec, beingDropped
@@ -241,8 +246,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     if child == @contents
       if @widthWhenCollapsed?
         @rawSetWidth @widthWhenCollapsed
-      @adjustContentsBounds()
-      @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+      @_reFitToContents()
+      @_refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   childUnCollapsed: (child) ->
     if child == @contents
@@ -251,10 +256,10 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @contents.rawSetExtent @contentsExtentWhenCollapsed
       if @widthWhenUnCollapsed?
         @rawSetWidth @widthWhenUnCollapsed
-      @adjustContentsBounds()
+      @_reFitToContents()
       @reInflating = false
       @rememberFractionalSituationInHoldingPanel()
-      @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+      @_refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   resetToDefaultContents: ->
     @enableDrops()
@@ -394,7 +399,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @layoutSpecDetails.canSetHeightFreely = false
 
   # should this just be the doLayout function? Why do we need this extra one?
-  adjustContentsBounds: ->
+  _adjustContentsBounds: ->
     # avoid recursively re-entering this function
     # TODO nasty check this one, can we make this go away?
     if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true

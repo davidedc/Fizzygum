@@ -8,7 +8,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   tight: true
   constrainContentWidth: true
   # used to avoid recursively re-entering the
-  # adjustContentsBounds function
+  # _adjustContentsBounds function
   _adjustingContentsBounds: false
 
   colloquialName: ->
@@ -49,6 +49,11 @@ class SimpleVerticalStackPanelWdgt extends Widget
     @silentRawSetExtent(extent) if extent?
     @color = color if color?
 
+  # The re-fit chokepoint for a stack (no scrollbars): re-lay-out my stacked
+  # contents. See Widget._reFitToContents.
+  _reFitToContents: ->
+    @_adjustContentsBounds()
+
   # When my membership changes, tell my container its contained panel changed.
   # If the container absorbs that (a scroll panel re-fits me + its scrollbars,
   # returning true), I'm done; otherwise I re-lay-out myself. This is the
@@ -58,11 +63,11 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # ScrollPanelWdgt.reLayOutAfterContainedPanelChange.
   childRemoved: ->
     return if @parent?.reLayOutAfterContainedPanelChange?()
-    @adjustContentsBounds()
+    @_reFitToContents()
 
   reactToDropOf: ->
     return if @parent?.reLayOutAfterContainedPanelChange?()
-    @adjustContentsBounds()
+    @_reFitToContents()
 
   # A subwidget notifies me (its container) that its geometry changed, so I
   # re-lay-out my stack. This is the polymorphic replacement for Widget testing
@@ -71,7 +76,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # (vertical stacks) react -- Widget no longer names this subclass. Inherited
   # by WindowWdgt, matching the old instanceof's is-a reach.
   childGeometryChanged: ->
-    @adjustContentsBounds()
+    @_reFitToContents()
 
   initialiseDefaultWindowContentLayoutSpec: ->
     super
@@ -80,7 +85,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   availableWidthForContents: ->
     @width() - 2 * @padding
 
-  adjustContentsBounds: ->
+  _adjustContentsBounds: ->
     # avoid recursively re-entering this function
     if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true
     @padding = 5
@@ -150,4 +155,4 @@ class SimpleVerticalStackPanelWdgt extends Widget
       #console.log "move 15"
       @breakNumberOfRawMovesAndResizesCaches()
       super aPoint
-      @adjustContentsBounds()
+      @_reFitToContents()

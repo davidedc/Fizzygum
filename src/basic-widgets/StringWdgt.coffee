@@ -118,7 +118,7 @@ class StringWdgt extends Widget
   # by setting `fittingSpec` (they RESPECT the mode rather than impose it, so the
   # empty-window placeholder text — a FIT_TEXT_TO_BOX TextWdgt — is left alone),
   # and a FIT_BOX_TO_TEXT widget notifies its container via
-  # refreshScrollPanelWdgtOrVerticalStackIfIamInIt so the surrounding layout
+  # _refreshScrollPanelWdgtOrVerticalStackIfIamInIt so the surrounding layout
   # follows.
   #
   # Keep FIT_BOX_TO_TEXT implemented HERE (where the SWCanvas font cap,

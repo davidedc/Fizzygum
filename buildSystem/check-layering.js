@@ -46,9 +46,23 @@ const PUBLIC_SET = new Set(PUBLIC_SETTERS);
 const RECALC_WHITELIST = new Set(['doOneCycle', 'mutateGeometryThenSettle']);
 
 const isLowLevel = (name) =>
-  /^raw[A-Z]/.test(name) || /^silent/.test(name) || /^__/.test(name) || /Core$/.test(name) ||
-  /Layout$/.test(name) ||   // doLayout, reLayout, desktopReLayout, __calculate…Layout — internal layout passes
-  name === 'adjustContentsBounds' || name === 'adjustScrollBars';
+  /^raw[A-Z]/.test(name) || /^silent/.test(name) ||
+  /^_/.test(name) ||        // leading-underscore = private (incl. __ and the re-fit machinery
+                            // _adjustContentsBounds / _adjustScrollBars / _refitContentsAndScrollBars /
+                            // _reFitToContents / _refreshScrollPanelWdgtOrVerticalStackIfIamInIt / _amIDirectlyInside*)
+  /Core$/.test(name) ||
+  /Layout$/.test(name);     // doLayout, reLayout, desktopReLayout — internal layout passes
+
+// [D] macro hygiene: a SystemTest macro must not reach into the framework's PRIVATE surface.
+// Forbid calls to _private methods (the re-fit machinery -- _adjustContentsBounds / _adjustScrollBars /
+// _reFitToContents / _refreshScrollPanelWdgtOrVerticalStackIfIamInIt / _amIDirectlyInside* -- and any
+// future _-method). This is the gate that would have caught the original 16-macro mess.
+// NOT (yet) forbidden: the immediate raw/silent geometry API (rawSet*/fullRaw*/silent*, used for
+// legitimate construction-time measure-and-size read-back) and reLayout() (force a re-wrap after a
+// property change). Per owner: these are "needed now"; at the END of the deferred-layout plan they get
+// public self-settling alternatives and this rule tightens to forbid them too (raw|silent|fullRaw|/Layout$/).
+const MACROS_DIR = path.join(__dirname, '..', '..', 'Fizzygum-tests', 'tests');
+const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*)\b/;
 
 // Strip string literals and trailing `#` comments from one line, carrying multi-line
 // string state across lines. Returns { code, state }.
@@ -132,6 +146,29 @@ function checkFile(file, violations) {
   }
 }
 
+function collectMacros(dir, out) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) collectMacros(p, out);
+    else if (e.name.endsWith('_automationCommands.js')) out.push(p);
+  }
+  return out;
+}
+
+// Scan a macro test source for forbidden private/low-level calls (rule D). The macro CoffeeScript
+// lives in a backtick string inside this .js; a per-line `#`-comment strip is enough to avoid the
+// narrative comments (which legitimately mention e.g. adjustContentsBounds / @fullRawMoveWithin).
+function checkMacroFile(file, violations) {
+  const rel = path.relative(path.join(__dirname, '..', '..'), file);
+  const lines = fs.readFileSync(file, 'utf8').split('\n');
+  for (let n = 0; n < lines.length; n++) {
+    const hash = lines[n].indexOf('#');
+    const code = hash >= 0 ? lines[n].slice(0, hash) : lines[n];
+    const m = code.match(MACRO_FORBIDDEN_CALL);
+    if (m) violations.push(`[D] macro calls private/low-level .${m[1]}()  — ${rel}:${n + 1}`);
+  }
+}
+
 function main() {
   let files;
   try {
@@ -145,13 +182,25 @@ function main() {
     try { checkFile(f, violations); }
     catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
   }
+  let macroCount = 0;
+  if (fs.existsSync(MACROS_DIR)) {           // absent in a --homepage/--notests build — skip [D] then
+    let macros;
+    try { macros = collectMacros(MACROS_DIR, []); }
+    catch (e) { console.error('check-layering: operational error collecting macros:', e.message); process.exit(2); }
+    macroCount = macros.length;
+    for (const f of macros) {
+      try { checkMacroFile(f, violations); }
+      catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
+    }
+  }
   if (violations.length) {
     console.error(`\n!!! layering gate FAILED — ${violations.length} violation(s):\n`);
     for (const v of violations) console.error('  ' + v);
-    console.error('\nSee docs/deferred-layout-16-macro-breakages.md for the layering rules (A/B/C).');
+    console.error('\nSee docs/deferred-layout-refit-and-add-design.md (D: macros must not call private/low-level methods)');
+    console.error('and docs/deferred-layout-16-macro-breakages.md (A/B/C).');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) — 0 violations (A/B/C)`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D)`);
   process.exit(0);
 }
 

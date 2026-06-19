@@ -152,7 +152,7 @@ class CaretWdgt extends BlinkerWdgt
       @show()
       @fullRawMoveTo pos.floor()
 
-      if @amIDirectlyInsideScrollPanelWdgt() and @target.isScrollable
+      if @_amIDirectlyInsideScrollPanelWdgt() and @target.isScrollable
         @parent.parent.scrollCaretIntoView @
 
     if becauseOfMouseClick and @target.undoHistory?.length == 0

@@ -103,7 +103,7 @@ class ListWdgt extends ScrollPanelWdgt
   # panel" notification (the old amIPanelOfScrollPanelWdgt returned false for
   # lists): opt OUT so a contained panel re-lays out itself, as before. This
   # opt-out is NARROW -- a list still re-fits on its own drops/grabs/attaches
-  # (reactToDropOf/reactToGrabOf and the inherited refitContentsAndScrollBars),
+  # (reactToDropOf/reactToGrabOf and the inherited _refitContentsAndScrollBars),
   # which is exactly why those are kept separate from this notification.
   reLayOutAfterContainedPanelChange: ->
     nil

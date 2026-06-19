@@ -850,7 +850,7 @@ class WorldWdgt extends PanelWdgt
   recalculateLayouts: ->
     # re-entrancy guard: recalculateLayouts must not run inside itself. This fires if a
     # public geometry setter (which flushes via recalculateLayouts) is reached from a
-    # layout pass (doLayout/adjustContentsBounds). Internal layout must use the raw/silent
+    # layout pass (doLayout/_adjustContentsBounds). Internal layout must use the raw/silent
     # setters, never the public deferred API. (prototype 2026-06-19)
     if @_recalculatingLayouts
       throw new Error "Fizzygum: re-entrant recalculateLayouts() -- a public geometry setter was called from within a layout pass. Internal layout code must use the raw/silent setters, not the public deferred API."

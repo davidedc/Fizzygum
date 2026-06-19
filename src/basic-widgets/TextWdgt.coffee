@@ -430,7 +430,7 @@ class TextWdgt extends StringWdgt
   # ── Edit triggers for CONTAINED (FIT_BOX_TO_TEXT) text ──────────────────────
   # When a FIT_BOX_TO_TEXT TextWdgt's text content / font / style changes, the box
   # must re-flow to the new measure (reLayout) AND the surrounding layout must
-  # follow (refreshScrollPanelWdgtOrVerticalStackIfIamInIt). Gated by the mode, so
+  # follow (_refreshScrollPanelWdgtOrVerticalStackIfIamInIt). Gated by the mode, so
   # ANY contained TextWdgt (not just a SimplePlainTextWdgt) re-flows on its OWN
   # edit — a bare FIT_BOX_TO_TEXT TextWdgt is a drop-in for SimplePlainTextWdgt
   # (the container RESIZE path is the rawSetExtent override above; this is the
@@ -443,7 +443,7 @@ class TextWdgt extends StringWdgt
   reLayoutAndRefreshContainerIfContainedText: ->
     if @fittingSpec != FittingSpecText.FIT_BOX_TO_TEXT then return
     @reLayout()
-    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+    @_refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   setText: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall) ->
     super

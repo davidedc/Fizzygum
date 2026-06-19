@@ -39,8 +39,8 @@ class WidgetFactory
     world.create newWdgt
   createNewScrollPanelWdgt: ->
     newWdgt = new ScrollPanelWdgt
-    newWdgt.adjustContentsBounds()
-    newWdgt.adjustScrollBars()
+    newWdgt._adjustContentsBounds()
+    newWdgt._adjustScrollBars()
     newWdgt.rawSetExtent new Point 350, 250
     world.create newWdgt
   createNewCanvas: ->

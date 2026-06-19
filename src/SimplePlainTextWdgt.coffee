@@ -8,7 +8,7 @@
 # SimplePlainTextWdgt is a THIN specialization of TextWdgt: its ctor just opts
 # into FIT_BOX_TO_TEXT (the contained-text mode) — see TextWdgt::reLayout and the
 # FITTING MODEL comment in StringWdgt. The contained-reflow engine and the EDIT
-# triggers (the reLayout + refreshScrollPanelWdgtOrVerticalStackIfIamInIt that
+# triggers (the reLayout + _refreshScrollPanelWdgtOrVerticalStackIfIamInIt that
 # re-flow the box and nudge the container on setText/setFontSize/setFontName/toggle*)
 # live on the base (TextWdgt::reLayoutAndRefreshContainerIfContainedText, gated by
 # the mode), so ANY TextWdgt (not just this one) can be contained text.
@@ -92,7 +92,7 @@ class SimplePlainTextWdgt extends TextWdgt
     else
       menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another widget\nwhose numerical property\n will be" + " controlled by this one"
 
-    if @amIDirectlyInsideScrollPanelWdgt()
+    if @_amIDirectlyInsideScrollPanelWdgt()
       childrenNotCarets = @parent.children.filter (m) ->
         !(m instanceof CaretWdgt)
       if childrenNotCarets.length == 1
@@ -122,7 +122,7 @@ class SimplePlainTextWdgt extends TextWdgt
   # accessors read applied @bounds only, so handler-level raw geometry is a symptom of
   # that incompleteness). Soft-wrap also has an EXTRA blocker: the content/text are
   # ATTACHEDAS_FREEFLOATING (so invalidateLayout() never climbs to the scroll panel)
-  # and the wrap geometry lives in adjustContentsBounds, off the doLayout cycle.
+  # and the wrap geometry lives in _adjustContentsBounds, off the doLayout cycle.
   # Completing the deferred model stays the goal -- see
   # docs/softwrap-deferred-layout-conversion-plan.md for the model finding, the
   # obstacle map, and what a conversion would take.
@@ -131,7 +131,7 @@ class SimplePlainTextWdgt extends TextWdgt
     @softWrap = wrap
     @parent.parent.setTextLineWrapping wrap
     @reLayout() unless wrap
-    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+    @_refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->

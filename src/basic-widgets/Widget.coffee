@@ -1168,9 +1168,8 @@ class Widget extends TreeNode
     # there might be performance implications, so I'd probably
     # have to introduce caching, and this whole mechanism should
     # go away with proper layouts...
-    if @amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
-      @parent.parent.adjustContentsBounds()
-      @parent.parent.adjustScrollBars()
+    if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
+      @parent.parent._reFitToContents?()
     @parent?.childGeometryChanged?()
 
     @children.forEach (child) ->
@@ -1527,16 +1526,14 @@ class Widget extends TreeNode
       # there might be performance implications, so I'd probably
       # have to introduce caching, and this whole mechanism should
       # go away with proper layouts...
-      if @amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
-        @parent.parent.adjustContentsBounds()
-        @parent.parent.adjustScrollBars()
+      if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
+        @parent.parent._reFitToContents?()
       @parent?.childGeometryChanged?()
 
 
-  refreshScrollPanelWdgtOrVerticalStackIfIamInIt: ->
-    if @amIDirectlyInsideScrollPanelWdgt()
-      @parent.parent.adjustContentsBounds()
-      @parent.parent.adjustScrollBars()
+  _refreshScrollPanelWdgtOrVerticalStackIfIamInIt: ->
+    if @_amIDirectlyInsideScrollPanelWdgt()
+      @parent.parent._reFitToContents?()
     @parent?.childGeometryChanged?()
 
 
@@ -2573,7 +2570,7 @@ class Widget extends TreeNode
       if @parent instanceof WorldWdgt
         return @isLockingToPanels
 
-      if @amIDirectlyInsideScrollPanelWdgt()
+      if @_amIDirectlyInsideScrollPanelWdgt()
         if @parent.parent.canScrollByDraggingForeground and @parent.parent.anyScrollBarShowing()
           return true
         else
@@ -2627,7 +2624,7 @@ class Widget extends TreeNode
   findRootForGrab: ->
     return @findFirstLooseWidget()
 
-  amIDirectlyInsideScrollPanelWdgt: ->
+  _amIDirectlyInsideScrollPanelWdgt: ->
     if @parent?
       if (@parent instanceof PanelWdgt) or (@parent instanceof SimpleVerticalStackPanelWdgt)
         if @parent.parent?
@@ -2635,8 +2632,8 @@ class Widget extends TreeNode
             return true
     return false
 
-  amIDirectlyInsideNonTextWrappingScrollPanelWdgt: ->
-    if @amIDirectlyInsideScrollPanelWdgt()
+  _amIDirectlyInsideNonTextWrappingScrollPanelWdgt: ->
+    if @_amIDirectlyInsideScrollPanelWdgt()
       if !@parent.parent.isTextLineWrapping
         return true
     return false
@@ -3226,9 +3223,9 @@ class Widget extends TreeNode
     # I just attached the selected widget to myself; if I am a scroll panel my
     # contents changed, so re-fit them + my scrollbars. Polymorphic dispatch
     # (?()-soak so nothing lands on Widget): only ScrollPanelWdgt and its
-    # subclasses (incl. ListWdgt) define refitContentsAndScrollBars; on any
+    # subclasses (incl. ListWdgt) define _refitContentsAndScrollBars; on any
     # other widget this is a no-op -- replacing `if @ instanceof ScrollPanelWdgt`.
-    @refitContentsAndScrollBars?()
+    @_refitContentsAndScrollBars?()
 
   # »>> this part is excluded from the fizzygum homepage build
   newParentChoiceWithHorizLayout: (ignored, theWidgetToBeAttached) ->
@@ -3238,9 +3235,9 @@ class Widget extends TreeNode
     # I just attached the selected widget to myself; if I am a scroll panel my
     # contents changed, so re-fit them + my scrollbars. Polymorphic dispatch
     # (?()-soak so nothing lands on Widget): only ScrollPanelWdgt and its
-    # subclasses (incl. ListWdgt) define refitContentsAndScrollBars; on any
+    # subclasses (incl. ListWdgt) define _refitContentsAndScrollBars; on any
     # other widget this is a no-op -- replacing `if @ instanceof ScrollPanelWdgt`.
-    @refitContentsAndScrollBars?()
+    @_refitContentsAndScrollBars?()
   # this part is excluded from the fizzygum homepage build <<«
 
   attach: ->
