@@ -54,6 +54,22 @@ class SimpleVerticalStackPanelWdgt extends Widget
   _reFitToContents: ->
     @_adjustContentsBounds()
 
+  # ===== Phase 3b (Slice 2): re-fit on the doLayout cycle =====
+  # Mirror of ScrollPanelWdgt's Slice-1 pair (see there). super applies my own bounds first
+  # (DETERMINISM.md case-3c), then I re-lay-out my stacked contents. Inherited by WindowWdgt.
+  # This is a fixed point ONLY because _adjustContentsBounds sizes its (deferred-layout)
+  # children via rawSetWidthSizeHeightAccordingly, which -- when called during a layout pass --
+  # settles them in place (synchronous doLayout, no invalidate-climb); see that method + the
+  # design doc's "Phase 3b -- Slice 2".
+  # implementsDeferredLayout pinned false so adding this doLayout doesn't flip the two read
+  # sites (rawSetWidthSizeHeightAccordingly invalidate + subWidgetsMergedFullBounds).
+  doLayout: (newBoundsForThisLayout) ->
+    super
+    @_reFitToContents()
+
+  implementsDeferredLayout: ->
+    false
+
   # When my membership changes, tell my container its contained panel changed.
   # If the container absorbs that (a scroll panel re-fits me + its scrollbars,
   # returning true), I'm done; otherwise I re-lay-out myself. This is the
@@ -120,7 +136,10 @@ class SimpleVerticalStackPanelWdgt extends Widget
       else
         recommendedElementWidth = widget.layoutSpecDetails.getWidthInStack()
 
-        # this re-layouts each widget to fit the width.
+        # this re-layouts each widget to fit the width. When this runs FROM doLayout (on the
+        # recalculateLayouts cycle) rawSetWidthSizeHeightAccordingly settles a deferred-layout
+        # child IN PLACE (synchronous doLayout, no invalidate-climb), so this
+        # _adjustContentsBounds is a fixed point -- see Widget.rawSetWidthSizeHeightAccordingly.
         widget.rawSetWidthSizeHeightAccordingly recommendedElementWidth
 
         # contained text that OPTED INTO FIT_BOX_TO_TEXT (a SimplePlainTextWdgt or a

@@ -317,7 +317,17 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @setAppearanceAndColorOfTitleBackground()
     @add @titlebarBackground, nil, nil, nil, true
   
+  # Batch the whole rebuild into ONE layout settle. When a window is rebuilt WHILE in the
+  # world (resetToDefaultContents on a destroyed content, reactToDropOf adopting content),
+  # each self-settling @add would otherwise re-fit the HALF-built window mid-loop -- and the
+  # deferred re-fit reads @contents.layoutSpecDetails.getWidthInStack() before @stack is
+  # wired, crashing (then masked by the createErrorConsole recovery loop into a freeze). One
+  # settle after the build is complete is also O(1) relayouts instead of O(children). During
+  # construction the window is orphan, so settleLayoutsOnceAfter no-ops the flush anyway. (Phase 3b.)
   buildAndConnectChildren: ->
+    @settleLayoutsOnceAfter => @_buildAndConnectChildrenCore()
+
+  _buildAndConnectChildrenCore: ->
 
     if !@titlebarBackground?
       @buildTitlebarBackground()

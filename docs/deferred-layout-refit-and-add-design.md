@@ -57,7 +57,7 @@ leaves a consistent world by itself. Concretely:
   the `implementsDeferredLayout` blocker and puts the scroll-panel re-fit on the cycle for RESIZES; the
   re-fit is idempotent on top of the still-present inline triggers, so it removed none of them. Verified
   byte-safe at dpr1/dpr2/WebKit (165/165) + boot clean. (`ScrollPanelWdgt.coffee`, +24 lines.)
-- **Phase 3b — Slice 2 (DEFERRED, own future phase):** flip the ~20 inline `_reFitToContents` content-change
+- **Phase 3b — Slice 2 (✅ RESOLVED in working tree 2026-06-19; pending torture soak + `--homepage` boot check + commit):** flip the ~20 inline `_reFitToContents` content-change
   triggers to `invalidateLayout` (mark-dirty → re-fit in `doLayout`). Censusing it showed it is larger than
   the Slice-1 foundation implied: the triggers span **5 files / 3 classes** (ScrollPanel,
   SimpleVerticalStackPanel, Window) — stack/window re-fits would each need their OWN `doLayout` — and several
@@ -68,6 +68,76 @@ leaves a consistent world by itself. Concretely:
   `reactToGrabOf`), so a partial flip is incoherent. Reward is architectural (closes the deeper-nesting gap +
   removes the inline triggers); no test fails today. Do it as a dedicated, per-site-analysed effort with a
   torture soak. Canaries: see the test oracle below.
+  - **DIAGNOSED 2026-06-19 (the real blocker — why stack/window can't take the Slice-1 `doLayout`):** giving
+    `SimpleVerticalStackPanelWdgt`/`WindowWdgt` the same `doLayout = super; @_reFitToContents()` as the scroll
+    panel **hangs** (suite stalled, 5 stack/text/inspector tests). Root-caused by stack-trace instrumentation
+    (a perl-`alarm` timeout — `timeout(1)` is absent in this shell, so earlier `timeout …` probes silently
+    no-op'd): it is **NOT** an add-relayout quadratic and **NOT** a `recalculateLayouts` until-loop — it's a
+    **non-convergent single recalc pass**. Exact cycle:
+    `window.doLayout → _reFitToContents → WindowWdgt._adjustContentsBounds → @contents.rawSetWidthSizeHeightAccordingly`
+    and `rawSetWidthSizeHeightAccordingly` (Widget:684) does `@invalidateLayout()` **when the contents
+    `implementsDeferredLayout()`** (e.g. an `InspectorWdgt`/document) → the contents (non-freefloating) climb
+    `invalidateLayout` back to the window → the window is re-dirtied **during its own `doLayout`** → the
+    until-loop reprocesses it forever (`WindowWdgt._adjustContentsBounds` ran 15000×/pass). **Why Slice 1's
+    scroll panel is immune:** `ScrollPanelWdgt._adjustContentsBounds` sizes its contents with **SILENT**
+    setters (`@contents.silentRawSetBounds` + `@contents.reLayout()`) that DON'T invalidate — so its
+    `doLayout` is a fixed point. **The fix for Slice 2:** make `SimpleVerticalStackPanelWdgt`/`WindowWdgt`
+    `_adjustContentsBounds` size their (deferred-layout) children the scroll-panel way — silently +
+    synchronously re-laid-out — instead of via the invalidating `rawSetWidthSizeHeightAccordingly`, so their
+    `doLayout` becomes a fixed point too. That is a determinism-sensitive change to core child-sizing (needs
+    the reLayout-vs-doLayout semantics per child type right, then the full gauntlet + a torture soak); it is
+    the prerequisite for the trigger flip. Owner-gated.
+  - **✅ RESOLVED (2026-06-19) — Path A landed cleanly; full record: `docs/deferred-layout-slice2-completion-plan.md`.**
+    Slice 2 now ships three orthogonal pieces, all in the working tree (uncommitted, pending the soak/boot/commit):
+    (1) **the trigger flip** — `SimpleVerticalStackPanelWdgt` got `doLayout: super; @_reFitToContents()` +
+    `implementsDeferredLayout: -> false` (WindowWdgt inherits both), so the stack/window content re-fit runs on
+    the `recalculateLayouts` cycle; (2) **convergence** — instead of a separate `rawSetWidthAndReLayoutSynchronously`
+    (the first attempt; it BROKE polymorphism — see below), the **base** `rawSetWidthSizeHeightAccordingly` is now
+    context-aware: when it would `@invalidateLayout()` a deferred-layout child AND a layout pass is already running
+    (`world._recalculatingLayouts`, set across the whole `recalculateLayouts` until-loop), it instead settles the
+    child synchronously with `@doLayout()` — no upward climb, so the container's `doLayout` is a **fixed point**;
+    (3) **teardown-crash fix** — `WindowWdgt.buildAndConnectChildren` is wrapped in a new BATCH primitive
+    `settleLayoutsOnceAfter` (one settle after the rebuild completes; stops a mid-build self-settling `add` from
+    re-fitting a half-wired window whose `layoutSpec.stack` isn't set yet → `getWidthInStack` null-crash during the
+    inter-test `resetWorld`; also collapses the per-build O(N)-relayouts to 1).
+    - **The regression's real root cause (why the first attempt's "fresh-height read-back" theory was wrong):**
+      it was a **POLYMORPHISM break**, not fit math. `rawSetWidthSizeHeightAccordingly` has **8 overrides**
+      (`AnalogClockWdgt` → square, `KeepsRatioWhenInVerticalStackMixin` → ratio, `WidgetHolderWithCaptionWdgt`,
+      `StretchableWidgetContainerWdgt`, `GenericShortcut/ObjectIconWdgt`, `StretchableEditableWdgt`,
+      `Example3DPlotWdgt`). The new `rawSetWidthAndReLayoutSynchronously` was defined only on base `Widget`, so a
+      clock routed through it got `rawSetWidth` ONLY (width set, height left stale → no longer square → window
+      mis-fit). Folding the synchronous behaviour back into the BASE `rawSetWidthSizeHeightAccordingly` (and
+      deleting the parallel method + reverting the 3 call-sites) lets every override keep winning automatically,
+      and confines the change to the one place that ever needed it. Robust (a future container that sizes children
+      from its `doLayout` gets the fixed point for free) and a smaller diff. NB `settleLayoutsOnceAfter` must be
+      non-underscore — lint rule A forbids `_`-methods from calling `recalculateLayouts`, which it legitimately does.
+    - **Verified:** build syntax 0 + lint A/B/C/D 0; suite **165/165 at dpr1, dpr2, and WebKit**; one **benign
+      recapture** (`macroDuplicatedInspectorDrivesCopiedTargetOnly` — `settleLayoutsOnceAfter` joins the inspector
+      member list → scrollbar-thumb proportion shifts; image_1 byte-identical, image_2/3 re-captured both
+      densities; pixel-diff confirmed it's the list thumb only). The clock family
+      (`macroClockInWindowKeepsSquareOnResize`, `macroDocumentScrollsMixedTextAndClocks`,
+      `macroWindowWithAClockInAWindowConstructionTwo`) all PASS. **Still UNCOMMITTED** until soak + boot pass.
+    - Also surfaced (NOT fixed; worth doing independently): the `createErrorConsole` recovery loop turns any
+      in-recalc `doLayout` throw into a FREEZE that masks the primary error. ZOMBIE GOTCHA: leftover Chromes
+      starve the box — `pkill` before every suite run. TOOL GOTCHA: no `timeout(1)` — use `perl -e 'alarm N; exec @ARGV'`.
+  - **(historical, superseded by the bullet above) ATTEMPTED + the deeper wall (2026-06-19):** implemented exactly that silent/synchronous-sizing fix —
+    a `rawSetWidthAndReLayoutSynchronously` (= `rawSetWidth` + a synchronous `@doLayout()` instead of
+    `@invalidateLayout()`), used by stack + window `_adjustContentsBounds`, plus the stack/window `doLayout`.
+    Result: it **converges in ISOLATION** — all the originally-stalling tests
+    (`macroWrappingTextFieldResizesOK`, `macroSimpleDocumentHandlesOldInspector`, `macroMovingSliders…`,
+    `macroDuplicateComplexWidgetRidesHand`, `macroAddEditSaveRenameRemoveProperty`) pass byte-exact, ~6s
+    each — **but it HANGS under PARALLEL LOAD.** The full suite freezes shards on
+    `macroAddingWidgetToListUpdatesScroll` / `macroSimpleDocumentManualBuildAndScroll` /
+    `macroMultilineTextInputScrollsWell` / `macroPinnedMenu…` etc. — each of which runs in ~6s *isolated* but
+    makes **no progress for 5 min** under even **2-shard** load (a 50× gap = not slowness — a
+    **cadence-dependent non-convergence**: under heavy cycles `playQueuedEvents` drains several events before
+    a repaint, so multiple synchronous re-fits compound into a loop that the one-event-per-cycle isolation
+    cadence never hits). This is the determinism-flake class (DETERMINISM.md §2B) manifesting as a HANG. So
+    the synchronous-sizing fix is **necessary but not sufficient**: a viable Slice 2 needs **load-invariant
+    convergence** (the re-fit must reach a fixed point regardless of how many events drained this cycle) —
+    the genuine deferred-layout model-completion, a dedicated determinism-expert effort with a torture soak,
+    not a localized fix. The fix attempt was REVERTED; Slice 1 remains the banked foundation. (One real
+    pixel diff was also seen, `macroWindowWithAClockInAWindowConstructionTwo` — moot until convergence.)
 
 ---
 

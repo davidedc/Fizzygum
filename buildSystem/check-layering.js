@@ -43,7 +43,7 @@ const PUBLIC_SETTERS = ['setExtent', 'fullMoveTo', 'setBounds', 'setWidth', 'set
 const PUB_CALL = new RegExp('[@.]\\s*(' + PUBLIC_SETTERS.join('|') + ')\\b');
 const RECALC_CALL = /[@.]\s*recalculateLayouts\b/;            // @recalculateLayouts / world.recalculateLayouts
 const PUBLIC_SET = new Set(PUBLIC_SETTERS);
-const RECALC_WHITELIST = new Set(['doOneCycle', 'mutateGeometryThenSettle']);
+const RECALC_WHITELIST = new Set(['doOneCycle', 'mutateGeometryThenSettle', 'settleLayoutsOnceAfter']);
 
 const isLowLevel = (name) =>
   /^raw[A-Z]/.test(name) || /^silent/.test(name) ||

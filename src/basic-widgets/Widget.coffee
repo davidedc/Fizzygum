@@ -681,11 +681,28 @@ class Widget extends TreeNode
 
   rawResizeToWithoutSpacing: ->
 
+  # Set my width and re-fit my height / children to it. The width->height POLICY is
+  # POLYMORPHIC: shape-keepers override this WHOLE method (AnalogClockWdgt -> square,
+  # KeepsRatioWhenInVerticalStackMixin -> ratio, the icons / Stretchable* -> their own
+  # extent rule). The base just sets the width and lets a deferred-layout widget re-fit its
+  # children. HOW that re-fit is triggered depends on WHETHER A LAYOUT PASS IS ALREADY RUNNING:
+  #  - normally (from an event handler / the public-setter flush): @invalidateLayout() --
+  #    schedule the re-fit for the current frame's recalculateLayouts (the deferred path).
+  #  - WHILE recalculateLayouts is running (a CONTAINER sizing this child from inside its own
+  #    doLayout / _adjustContentsBounds -- Phase 3b's window/stack re-fit on the cycle):
+  #    invalidateLayout would, for a non-freefloating deferred-layout child, CLIMB back and
+  #    re-dirty the container in the SAME pass -> the until-loop never converges. So settle
+  #    this child IN PLACE with a synchronous @doLayout() (no invalidate, no climb), making
+  #    the container's doLayout a FIXED POINT -- the same outcome ScrollPanelWdgt reaches via
+  #    silent setters. (See docs/deferred-layout-refit-and-add-design.md, "Phase 3b -- Slice 2".)
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
     @rawSetWidth newWidth
     if @implementsDeferredLayout()
-      @invalidateLayout()
-  
+      if world?._recalculatingLayouts
+        @doLayout()
+      else
+        @invalidateLayout()
+
   # note that using this one, the children
   # widgets attached as floating don't move
   rawSetBounds: (newBounds) ->
@@ -745,6 +762,13 @@ class Widget extends TreeNode
     # would have crashed or been a no-op.) See docs/deferred-layout-refit-and-add-design.md (D3).
     if @isOrphan()
       return coreThunk()
+    # BATCH guard: inside settleLayoutsOnceAfter, DEFER the per-mutation flush -- the batch
+    # does ONE settle at the end. This turns O(N) relayouts (building N children, each add
+    # self-settling) into 1, and -- crucially -- stops a mid-build settle from re-fitting a
+    # HALF-WIRED widget (e.g. a window whose contents' layoutSpec.stack isn't set yet, which
+    # crashes the deferred re-fit in getWidthInStack). See settleLayoutsOnceAfter. (Phase 3b.)
+    if world._batchingLayoutSettling
+      return coreThunk()
     world._inLayoutMutation = true
     try
       result = coreThunk()
@@ -752,6 +776,31 @@ class Widget extends TreeNode
       return result
     finally
       world._inLayoutMutation = false
+
+  # Run several geometry/structural mutations as a BATCH that settles layouts only ONCE, at
+  # the end, instead of each public add()/setExtent() self-settling. Use it for multi-add
+  # builders (buildAndConnectChildren) and bulk content insertion: it makes O(N) relayouts
+  # into 1, and keeps the re-fit from running on a half-built widget mid-batch (the
+  # getWidthInStack-on-unset-@stack crash during an in-world rebuild). Nestable -- an inner
+  # batch is absorbed by the outer; mirrors mutateGeometryThenSettle's orphan/re-entrancy
+  # guards for the final flush. Returns the thunk's value. (Phase 3b.)
+  settleLayoutsOnceAfter: (thunk) ->
+    unless world?
+      return thunk()
+    if world._batchingLayoutSettling
+      return thunk()
+    world._batchingLayoutSettling = true
+    try
+      result = thunk()
+    finally
+      world._batchingLayoutSettling = false
+    unless @isOrphan() or world._inLayoutMutation or world._recalculatingLayouts
+      world._inLayoutMutation = true
+      try
+        world.recalculateLayouts()
+      finally
+        world._inLayoutMutation = false
+    result
 
   setBounds: (aRectangle, widgetStartingTheChange = nil) ->
     @mutateGeometryThenSettle =>
