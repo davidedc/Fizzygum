@@ -708,23 +708,52 @@ class Widget extends TreeNode
   # you don't actually change the geometry right away,
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
-  setBounds: (aRectangle, widgetStartingTheChange = nil) ->
-    #if window.recalculatingLayouts
-    #  debugger
-    if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
+  # ===== self-settling public geometry API (prototype, 2026-06-19) =====
+  # A public geometry setter records the DESIRED change (@desired* + invalidateLayout)
+  # and then FLUSHES the layout (world.recalculateLayouts) before returning, so the
+  # world's geometry is consistent between public calls -- the caller never needs a
+  # "settle"/yield. (See docs/deferred-layout-16-macro-breakages.md.) Re-entrancy is
+  # forbidden and THROWS: a public setter must not be called from within another
+  # public setter (or a layout pass), which would flush more than once per logical
+  # mutation. Calling several public setters in SEQUENCE is fine -- each completes,
+  # flushing once, before the next begins.
+  mutateGeometryThenSettle: (coreThunk) ->
+    # early world bootstrap: the `world` singleton isn't wired up yet, so there's
+    # nothing to flush to -- just record the desired change; the first frame settles it.
+    unless world?
+      coreThunk()
       return
-    else
-      aRectangle = aRectangle.round()
+    # A public geometry setter reached while a flush or a layout pass is already in
+    # progress is a flow-soundness violation: internal layout (doLayout / reLayout / ...)
+    # must use the raw/silent setters, never the public deferred API -- otherwise
+    # recalculateLayouts would re-enter. THROW so the violation is found and fixed. The
+    # static gate buildSystem/check-layering.js catches the name-recognized internal
+    # methods at BUILD time; this is the runtime backstop for anything that slips through.
+    if world._inLayoutMutation or world._recalculatingLayouts
+      throw new Error "Fizzygum: a public geometry setter was reached during a layout flush/pass -- internal layout code (doLayout / reLayout / ...) must use the raw/silent setters, not the public deferred API (see buildSystem/check-layering.js)."
+    world._inLayoutMutation = true
+    try
+      coreThunk()
+      world.recalculateLayouts()
+    finally
+      world._inLayoutMutation = false
 
-      newExtent = new Point aRectangle.width(), aRectangle.height()
-      unless @extent().equals newExtent
-        @desiredExtent = newExtent
-        @invalidateLayout()
+  setBounds: (aRectangle, widgetStartingTheChange = nil) ->
+    @mutateGeometryThenSettle =>
+      if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
+        return
+      else
+        aRectangle = aRectangle.round()
 
-      newPos = aRectangle.origin.copy()
-      unless @position().equals newPos
-        @desiredPosition = newPos
-        @invalidateLayout()
+        newExtent = new Point aRectangle.width(), aRectangle.height()
+        unless @extent().equals newExtent
+          @desiredExtent = newExtent
+          @invalidateLayout()
+
+        newPos = aRectangle.origin.copy()
+        unless @position().equals newPos
+          @desiredPosition = newPos
+          @invalidateLayout()
 
   silentRawSetBounds: (newBounds) ->
     # TODO in theory the low-level APIs should only be
@@ -1224,28 +1253,26 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   fullMoveTo: (aPoint, widgetStartingTheChange = nil) ->
-    #if window.recalculatingLayouts
-    #  debugger
-
-    if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
-      return
-    else
-      aPoint = aPoint.round()
-      newX = Math.max aPoint.x, 0
-      newY = Math.max aPoint.y, 0
-      newPos = new Point newX, newY
-      unless @position().equals newPos
-        @desiredPosition = newPos
-        @invalidateLayout()
-        # all the moves via the handles arrive here,
-        # where we remember the fractional position in the
-        # holding panel. That is so for example moving
-        # items inside a StretchablePanel causes their
-        # relative position to be remembered, so resizing
-        # the stretchable panel will get them to the
-        # correct positions
-        if widgetStartingTheChange? and @parent? and (widgetStartingTheChange instanceof HandleWdgt)
-          @rememberFractionalPositionInHoldingPanel()
+    @mutateGeometryThenSettle =>
+      if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
+        return
+      else
+        aPoint = aPoint.round()
+        newX = Math.max aPoint.x, 0
+        newY = Math.max aPoint.y, 0
+        newPos = new Point newX, newY
+        unless @position().equals newPos
+          @desiredPosition = newPos
+          @invalidateLayout()
+          # all the moves via the handles arrive here,
+          # where we remember the fractional position in the
+          # holding panel. That is so for example moving
+          # items inside a StretchablePanel causes their
+          # relative position to be remembered, so resizing
+          # the stretchable panel will get them to the
+          # correct positions
+          if widgetStartingTheChange? and @parent? and (widgetStartingTheChange instanceof HandleWdgt)
+            @rememberFractionalPositionInHoldingPanel()
 
 
   rememberFractionalPositionInHoldingPanel: ->
@@ -1445,27 +1472,26 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setExtent: (aPoint, widgetStartingTheChange = nil) ->
-    #if window.recalculatingLayouts
-    #  debugger
-    if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
-      return
-    else
-      aPoint = aPoint.round()
-      newWidth = Math.max aPoint.x, 0
-      newHeight = Math.max aPoint.y, 0
-      newExtent = new Point newWidth, newHeight
-      unless @extent().equals newExtent
-        @desiredExtent = newExtent
-        @invalidateLayout()
-        # all the resizes via the handles arrive here,
-        # where we remember the fractional size in the
-        # holding panel. That is so for example resizing
-        # items inside a StretchablePanel causes their
-        # relative size to be remembered, so resizing
-        # the stretchable panel will get them to the
-        # correct dimensions
-        if widgetStartingTheChange? and @parent? and (widgetStartingTheChange instanceof HandleWdgt)
-          @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
+    @mutateGeometryThenSettle =>
+      if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
+        return
+      else
+        aPoint = aPoint.round()
+        newWidth = Math.max aPoint.x, 0
+        newHeight = Math.max aPoint.y, 0
+        newExtent = new Point newWidth, newHeight
+        unless @extent().equals newExtent
+          @desiredExtent = newExtent
+          @invalidateLayout()
+          # all the resizes via the handles arrive here,
+          # where we remember the fractional size in the
+          # holding panel. That is so for example resizing
+          # items inside a StretchablePanel causes their
+          # relative size to be remembered, so resizing
+          # the stretchable panel will get them to the
+          # correct dimensions
+          if widgetStartingTheChange? and @parent? and (widgetStartingTheChange instanceof HandleWdgt)
+            @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
 
   
   silentRawSetExtent: (aPoint) ->
@@ -1529,16 +1555,15 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setWidth: (width) ->
-    #if window.recalculatingLayouts
-    #  debugger
-    if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
-      return
-    else
-      newWidth = Math.max width, 0
-      newExtent = new Point newWidth, @height()
-      unless @extent().equals newExtent
-        @desiredExtent = newExtent
-        @invalidateLayout()
+    @mutateGeometryThenSettle =>
+      if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
+        return
+      else
+        newWidth = Math.max width, 0
+        newExtent = new Point newWidth, @height()
+        unless @extent().equals newExtent
+          @desiredExtent = newExtent
+          @invalidateLayout()
   
   silentRawSetWidth: (width) ->
     # TODO in theory the low-level APIs should only be
@@ -1566,16 +1591,15 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setHeight: (height) ->
-    #if window.recalculatingLayouts
-    #  debugger
-    if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
-      return
-    else
-      newHeight = Math.max 0, height
-      newExtent = new Point @width(), newHeight
-      unless @extent().equals newExtent
-        @desiredExtent = newExtent
-        @invalidateLayout()
+    @mutateGeometryThenSettle =>
+      if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
+        return
+      else
+        newHeight = Math.max 0, height
+        newExtent = new Point @width(), newHeight
+        unless @extent().equals newExtent
+          @desiredExtent = newExtent
+          @invalidateLayout()
   
   silentRawSetHeight: (height) ->
     # TODO in theory the low-level APIs should only be

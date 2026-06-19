@@ -100,10 +100,10 @@ class FanoutWdgt extends Widget
 
     pinSize = (new Point 22 * squareDim/100, 22*squareDim/100).round()
 
-    @pinUp.setExtent pinSize
-    @pinDown.setExtent pinSize
-    @pinLeft.setExtent pinSize
-    @pinRight.setExtent pinSize
+    @pinUp.rawSetExtent pinSize
+    @pinDown.rawSetExtent pinSize
+    @pinLeft.rawSetExtent pinSize
+    @pinRight.rawSetExtent pinSize
 
     @pinUp.fullRawMoveTo (p0.add new Point 39 * squareDim/100, 1 * squareDim/100).round()
     @pinDown.fullRawMoveTo (p0.add new Point 39 * squareDim/100, 77 * squareDim/100).round()

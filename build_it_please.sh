@@ -257,6 +257,24 @@ if ! $noSyntaxCheck ; then
   echo "... CoffeeScript syntax OK"
 fi
 
+# --- build-time layering / flow-soundness gate (self-settling public geometry API) -----
+# Enforces the call-graph layering the self-settling API relies on: a low-level method
+# (raw*/silent*/__*/*Core, doLayout/adjustContentsBounds/adjustScrollBars) must NOT call a
+# public geometry setter or recalculateLayouts; recalculateLayouts() is called ONLY by
+# doOneCycle and the public-setter flush (mutateGeometryThenSettle); and no public setter
+# calls another. (buildSystem/check-layering.js — same --noSyntaxCheck escape hatch and
+# explicit $? check as the syntax gates around it; scans src/ directly so needs no args.)
+if ! $noSyntaxCheck ; then
+  echo "checking public-API layering of all shipped sources ..."
+  node ./buildSystem/check-layering.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: layering gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... layering OK"
+fi
+
 # --- build-time test-.js syntax gate (only when tests are part of this build) ---------
 # Each SystemTest's _automationCommands.js carries its macro inside a backtick-delimited JS
 # template literal; a stray backtick silently corrupts the file so the test never loads (with

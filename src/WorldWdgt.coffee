@@ -254,6 +254,15 @@ class WorldWdgt extends PanelWdgt
   widgetsThatMaybeChangedFullGeometryOrPosition: []
   widgetsThatMaybeChangedLayout: []
 
+  # self-settling public geometry API (prototype 2026-06-19): re-entrancy guards.
+  # _inLayoutMutation is set while a public geometry setter is running its
+  # core+flush; _recalculatingLayouts is set while recalculateLayouts runs. Both
+  # exist to THROW on re-entry, so a public setter calling another (or a layout
+  # pass calling a public setter) -- which would flush more than once per logical
+  # mutation -- is found and removed rather than silently tolerated.
+  _inLayoutMutation: false
+  _recalculatingLayouts: false
+
   macroToolkit: nil
 
   constructor: (
@@ -839,6 +848,19 @@ class WorldWdgt extends PanelWdgt
   # and we continue doing so until there is nothing else
   # to heal.
   recalculateLayouts: ->
+    # re-entrancy guard: recalculateLayouts must not run inside itself. This fires if a
+    # public geometry setter (which flushes via recalculateLayouts) is reached from a
+    # layout pass (doLayout/adjustContentsBounds). Internal layout must use the raw/silent
+    # setters, never the public deferred API. (prototype 2026-06-19)
+    if @_recalculatingLayouts
+      throw new Error "Fizzygum: re-entrant recalculateLayouts() -- a public geometry setter was called from within a layout pass. Internal layout code must use the raw/silent setters, not the public deferred API."
+    @_recalculatingLayouts = true
+    try
+      @_recalculateLayoutsCore()
+    finally
+      @_recalculatingLayouts = false
+
+  _recalculateLayoutsCore: ->
 
     until @widgetsThatMaybeChangedLayout.length == 0
       # starting from the last element,
@@ -1372,7 +1394,7 @@ class WorldWdgt extends PanelWdgt
         if !basementOpenerWdgt.wasPositionedSlightlyOutsidePanel
           basementOpenerWdgt.fullRawMoveWithin @
       else
-        basementOpenerWdgt.fullMoveTo @bottomRight().subtract (new Point 75, 75).add @desktopSidesPadding
+        basementOpenerWdgt.fullRawMoveTo @bottomRight().subtract (new Point 75, 75).add @desktopSidesPadding
 
     analogClockWdgt = @firstChildSuchThat (w) ->
       w instanceof AnalogClockWdgt
@@ -1382,7 +1404,7 @@ class WorldWdgt extends PanelWdgt
         if !analogClockWdgt.wasPositionedSlightlyOutsidePanel
           analogClockWdgt.fullRawMoveWithin @
       else
-        analogClockWdgt.fullMoveTo new Point @right() - 80 - @desktopSidesPadding, @top() + @desktopSidesPadding
+        analogClockWdgt.fullRawMoveTo new Point @right() - 80 - @desktopSidesPadding, @top() + @desktopSidesPadding
 
     @children.forEach (child) =>
       if child != basementOpenerWdgt and child != analogClockWdgt and  !(child instanceof WidgetHolderWithCaptionWdgt)

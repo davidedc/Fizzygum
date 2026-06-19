@@ -74,11 +74,11 @@ class GenericShortcutIconWdgt extends Widget
     # square centered in the widget
     p0 = p0.subtract new Point squareDim/2, squareDim/2
 
-    @icon.setExtent (new Point squareDim, squareDim).round()
+    @icon.rawSetExtent (new Point squareDim, squareDim).round()
     @icon.fullRawMoveTo p0.round()
 
 
-    @referenceArrowIcon.setExtent (new Point squareDim*3/10, squareDim*3/10).round()
+    @referenceArrowIcon.rawSetExtent (new Point squareDim*3/10, squareDim*3/10).round()
     @referenceArrowIcon.fullRawMoveTo (p0.add new Point 0, squareDim*7/10).round()
 
 

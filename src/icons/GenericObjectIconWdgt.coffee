@@ -75,11 +75,11 @@ class GenericObjectIconWdgt extends Widget
     # square centered in the widget
     p0 = p0.subtract new Point squareDim/2, squareDim/2
 
-    @icon.setExtent (new Point squareDim*50/100, squareDim*50/100).round()
+    @icon.rawSetExtent (new Point squareDim*50/100, squareDim*50/100).round()
     @icon.fullRawMoveTo (centerPoint.subtract new Point squareDim*25/100, squareDim*25/100).round()
 
 
-    @objectIcon.setExtent (new Point squareDim, squareDim).round()
+    @objectIcon.rawSetExtent (new Point squareDim, squareDim).round()
     @objectIcon.fullRawMoveTo p0
 
 

@@ -500,7 +500,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
 
     if @stretchableWidgetContainer.parent == @
       @stretchableWidgetContainer.fullRawMoveTo new Point stretchableWidgetContainerLeft, labelBottom
-      @stretchableWidgetContainer.setExtent new Point stretchableWidgetContainerWidth, stretchableWidgetContainerHeight
+      @stretchableWidgetContainer.rawSetExtent new Point stretchableWidgetContainerWidth, stretchableWidgetContainerHeight
 
 
     world.maybeEnableTrackChanges()

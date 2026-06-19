@@ -93,29 +93,29 @@ class AxisWdgt extends Widget
 
     if height > width
       @majorDimLine.fullRawMoveTo new Point @right() - 5, @top() + tickHeight
-      @majorDimLine.setExtent new Point thickness, heightOfTheDrawnBar
+      @majorDimLine.rawSetExtent new Point thickness, heightOfTheDrawnBar
     else
       @majorDimLine.fullRawMoveTo new Point @left() + tickHeight, @top() + 5
-      @majorDimLine.setExtent new Point heightOfTheDrawnBar, thickness
+      @majorDimLine.rawSetExtent new Point heightOfTheDrawnBar, thickness
 
     for i in [0 ... numberOfTicks]
       if height > width
         @ticksRectangles[i].fullRawMoveTo new Point @right()-10, @top() + tickHeight + Math.round(i * tickHeight)
-        @ticksRectangles[i].setExtent new Point 5 + thickness, thickness
+        @ticksRectangles[i].rawSetExtent new Point 5 + thickness, thickness
 
         @labelsTextBoxes[i].setText "" + (@max - i)
         @labelsTextBoxes[i].fullRawMoveTo new Point @left(), @top() + tickHeight + Math.round(i * tickHeight) - labelSpace/2
-        @labelsTextBoxes[i].setExtent new Point width - 10, labelSpace
+        @labelsTextBoxes[i].rawSetExtent new Point width - 10, labelSpace
         @labelsTextBoxes[i].alignMiddle()
         @labelsTextBoxes[i].alignRight()
 
       else
         @ticksRectangles[i].fullRawMoveTo new Point @left() + tickHeight + Math.round(i * tickHeight), @top() + 5
-        @ticksRectangles[i].setExtent new Point thickness, 5 + thickness
+        @ticksRectangles[i].rawSetExtent new Point thickness, 5 + thickness
 
         @labelsTextBoxes[i].setText "" + (@min + i)
         @labelsTextBoxes[i].fullRawMoveTo new Point @left() + tickHeight + Math.round(i * tickHeight) - labelSpace/2, @top() + 5 + 5
-        @labelsTextBoxes[i].setExtent new Point labelSpace, height - 10
+        @labelsTextBoxes[i].rawSetExtent new Point labelSpace, height - 10
         @labelsTextBoxes[i].alignTop()
         @labelsTextBoxes[i].alignCenter()
 

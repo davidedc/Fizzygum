@@ -85,9 +85,9 @@ class WidgetHolderWithCaptionWdgt extends Widget
     # on the left edge of the square inscribed in the widget
     p0 = p0.subtract new Point squareDim/2, squareDim/2
 
-    @icon.setExtent (new Point squareDim, squareDim*8/10).round()
+    @icon.rawSetExtent (new Point squareDim, squareDim*8/10).round()
     @icon.fullRawMoveTo p0.round()
-    @label.setExtent (new Point squareDim, squareDim*2/10).round()
+    @label.rawSetExtent (new Point squareDim, squareDim*2/10).round()
     @label.fullRawMoveTo (p0.add new Point 0, squareDim*8/10).round()
 
 
