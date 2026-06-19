@@ -78,7 +78,9 @@ class LabelButtonWdgt extends ButtonWdgt
       false, # isNumeric
       @labelColor
     )
-    @add @label
+    # _addCore (NOT add): createLabel is driven by reLayout (a layout pass), so a
+    # self-settle here would re-enter the flush guard and throw.
+    @_addCore @label
     # the modern family does not self-size; make the label hug its text so
     # reLayout's centring math (which reads @label.extent()) works.
     @label.sizeToTextAndDisableFitting()

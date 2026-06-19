@@ -717,12 +717,14 @@ class Widget extends TreeNode
   # public setter (or a layout pass), which would flush more than once per logical
   # mutation. Calling several public setters in SEQUENCE is fine -- each completes,
   # flushing once, before the next begins.
+  # The same wrapper also backs the public STRUCTURAL mutators add()/addRaw() (a tree
+  # change re-fits layouts too), so it RETURNS the thunk's value -- those need to hand
+  # back the added widget (see docs/deferred-layout-refit-and-add-design.md, D3).
   mutateGeometryThenSettle: (coreThunk) ->
     # early world bootstrap: the `world` singleton isn't wired up yet, so there's
     # nothing to flush to -- just record the desired change; the first frame settles it.
     unless world?
-      coreThunk()
-      return
+      return coreThunk()
     # A public geometry setter reached while a flush or a layout pass is already in
     # progress is a flow-soundness violation: internal layout (doLayout / reLayout / ...)
     # must use the raw/silent setters, never the public deferred API -- otherwise
@@ -731,10 +733,23 @@ class Widget extends TreeNode
     # methods at BUILD time; this is the runtime backstop for anything that slips through.
     if world._inLayoutMutation or world._recalculatingLayouts
       throw new Error "Fizzygum: a public geometry setter was reached during a layout flush/pass -- internal layout code (doLayout / reLayout / ...) must use the raw/silent setters, not the public deferred API (see buildSystem/check-layering.js)."
+    # ORPHAN guard: a widget that is attached to neither the world nor the hand has no
+    # world-managed layout to flush -- and flushing one would try to lay it out via the
+    # global recalculateLayouts queue while it is still HALF-BUILT inside its own
+    # constructor (its already-added children point back at it through .parent), which
+    # crashes its doLayout. So we just record the change and return; it settles for real
+    # when the finished widget is added to the world. (isOrphan() is false for the world
+    # itself and for anything on the hand, so world.add / dragged-widget mutations still
+    # flush. The pre-self-settling convention -- constructors use raw setters -- means no
+    # existing path relied on flushing an orphan, so this only ever SKIPS a flush that
+    # would have crashed or been a no-op.) See docs/deferred-layout-refit-and-add-design.md (D3).
+    if @isOrphan()
+      return coreThunk()
     world._inLayoutMutation = true
     try
-      coreThunk()
+      result = coreThunk()
       world.recalculateLayouts()
+      return result
     finally
       world._inLayoutMutation = false
 
@@ -2229,50 +2244,69 @@ class Widget extends TreeNode
     @reLayout()
 
   # »>> this part is excluded from the fizzygum homepage build
+  # _addCore (NOT add): these run from addOrRemoveAdders during a layout pass, so a
+  # self-settle would re-enter the flush guard; for the other caller
+  # (showResizeAndMoveHandlesAndLayoutAdjusters, a menu action) it is byte-identical
+  # because the frame settles anyway.
   addAsSiblingAfterMe: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
     myPosition = @positionAmongSiblings()
-    @parent.add aWdgt, (myPosition + 1), layoutSpec
+    @parent._addCore aWdgt, (myPosition + 1), layoutSpec
 
   addAsSiblingBeforeMe: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
     myPosition = @positionAmongSiblings()
-    @parent.add aWdgt, myPosition, layoutSpec
+    @parent._addCore aWdgt, myPosition, layoutSpec
   # this part is excluded from the fizzygum homepage build <<«
 
-  # this level of indirection is needed because
-  # you have a "raw" "tree" need of adding stuff
-  # and a higher level way to "add".
-  # For example, a ScrollPanelWdgt does a "high-level"
-  # add of things in a different way, as it actually adds
-  # stuff to a Panel inside it. Hence a need to have
-  # both a high-level and a low-level.
-  # For most widgets the two things coincide, and the
-  # high-level just calls the low-level.
+  # this level of indirection is needed because you have a "raw" "tree" need of
+  # adding stuff and a higher level way to "add". For example, a ScrollPanelWdgt does
+  # a "high-level" add of things in a different way, as it actually adds stuff to a
+  # Panel inside it. Hence a need for both a high-level entry and a low-level core.
+  # ===== public structural mutators: add / addRaw (self-settling) =====
+  # Both are PUBLIC and SELF-SETTLING: they link the widget in through the private,
+  # NON-settling core _addCore and then flush layouts once (mutateGeometryThenSettle),
+  # so a top-level caller (app / macro / event handler) is left with a consistent world
+  # -- no manual settle/yield. Neither calls the other (public->public is banned, see
+  # check-layering.js); both wrap _addCore. Internal callers that run INSIDE a layout
+  # pass (doLayout / reLayout) -- or that build their own innards during construction --
+  # must call _addCore directly (it does not settle, so it neither re-enters the flush
+  # guard nor triggers a redundant relayout). See docs/deferred-layout-refit-and-add-design.md (D3).
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
-    if (aWdgt not instanceof HighlighterWdgt) and (aWdgt not instanceof CaretWdgt)
-      if @ == world
-        aWdgt.addShadow()
-        # when any widget is added to the world, all scheduled tooltips
-        # are cancelled. To avoid that a tooltip appears over what the
-        # button has just opened. This would happen for example in the
-        # "snippets" button in the Simple Document. You go over that
-        # button, you click it, the snippets windows come up, then
-        # the tooltip with "snippets windows" message pops up
-        # over it.
-        if !(aWdgt instanceof ToolTipWdgt)
-          ToolTipWdgt.cancelAllScheduledToolTips()
-      else
-        aWdgt.removeShadow()
+    @mutateGeometryThenSettle =>
+      if (aWdgt not instanceof HighlighterWdgt) and (aWdgt not instanceof CaretWdgt)
+        if @ == world
+          aWdgt.addShadow()
+          # when any widget is added to the world, all scheduled tooltips
+          # are cancelled. To avoid that a tooltip appears over what the
+          # button has just opened. This would happen for example in the
+          # "snippets" button in the Simple Document. You go over that
+          # button, you click it, the snippets windows come up, then
+          # the tooltip with "snippets windows" message pops up
+          # over it.
+          if !(aWdgt instanceof ToolTipWdgt)
+            ToolTipWdgt.cancelAllScheduledToolTips()
+        else
+          aWdgt.removeShadow()
 
-    @addRaw arguments...
-    if @ == world
-      aWdgt.rememberFractionalPositionInHoldingPanel()
-  
-  # attaches subwidget on top
+      @_addCore aWdgt, position, layoutSpec, beingDropped
+      if @ == world
+        aWdgt.rememberFractionalPositionInHoldingPanel()
+      aWdgt
+
+  addRaw: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
+    @mutateGeometryThenSettle =>
+      @_addCore aWdgt, position, layoutSpec, beingDropped
+
+  # attaches subwidget on top -- the NON-settling structural core shared by add/addRaw
+  # and called directly by internal layout-time / construction-time adders (it must NOT
+  # flush layouts: it runs inside another mutation's settle or during construction).
+  # Full semantics: invalidate + iHaveBeenAddedTo / childAdded / childRemoved callbacks,
+  # but never recalculateLayouts. This was the body of addRaw before the self-settling
+  # split (2026-06-19, Phase 3a).
   # ??? TODO you should handle the case of Widget
   #     being added to itself and the case of
   # ??? TODO a Widget being added to one of its
   #     children
-  addRaw: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
+  _addCore: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
 
     # let's check if we are trying to add
     # an ancestor of me below me.
@@ -4014,7 +4048,7 @@ class Widget extends TreeNode
   showAdders: ->
     @_showsAdders = true
     if @children.length == 0
-      @add \
+      @_addCore \
         new LayoutElementAdderOrDropletWdgt,
         nil,
         LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4032,7 +4066,7 @@ class Widget extends TreeNode
       return
 
     if @children.length == 0
-      @add \
+      @_addCore \
         new LayoutElementAdderOrDropletWdgt,
         nil,
         LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED

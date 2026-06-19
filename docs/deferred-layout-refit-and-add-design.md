@@ -37,7 +37,19 @@ leaves a consistent world by itself. Concretely:
     →`reflowText`, in macroBareTextWidgetDropShadowRestAndDrag / macroBoxTransparencyAndColorChanging /
     macroTextRelayoutsCorrectlyOnResize). At plan-end, give these public self-settling alternatives and
     extend rule D's `MACRO_FORBIDDEN_CALL` to also forbid `raw*`/`silent*`/`fullRaw*`/`/Layout$/`.
-- **Phase 3a:** `add` + `addRaw` public & self-settling, over a private non-settling core. No blocker.
+- **Phase 3a:** ✅ DONE 2026-06-19. `add`/`addRaw` public & self-settling over a private non-settling
+  `_addCore` (= the old `addRaw` body); `mutateGeometryThenSettle` now RETURNS its thunk's value. The
+  load-bearing discovery: the design's premise that construction-time settles are "byte-safe idempotent
+  relayouts" is **WRONG** — a half-built widget IS reachable (its already-added children point back via
+  `.parent`), so settling during its constructor lays it out half-built and **crashes** (boot died in
+  `new BasementWdgt → buildAndConnectChildren → @add → recalculateLayouts → doLayout(half-built)`). Fixed
+  at the root with ONE guard in `mutateGeometryThenSettle`: **skip the flush when `@isOrphan()`** (a widget
+  attached to neither the world nor the hand has no world-managed layout to flush; it settles for real when
+  added to the world). `isOrphan()` is false for the world itself and for anything on the hand, so
+  `world.add` / dragged-widget mutations still flush. This covers ALL ~150 construction `add` sites without
+  touching them. See "Phase 3a — what actually shipped" below. Verified: boot-smoke clean, lint A/B/C/D 0,
+  suite 165/165 at dpr1+dpr2+WebKit, 12 apps launch, 1 benign inspector recapture (`_addCore` joins the
+  member list).
 - **Phase 3b:** move the chokepoint onto the `doLayout` cycle (solve `implementsDeferredLayout`). Hard;
   determinism-sensitive; own review.
 
@@ -156,6 +168,52 @@ point**, so there is a single seam Phase 3b can later flip onto the cycle.
   `unless aPoint.equals @extent()` no-op guard (`:222`), and the soft-wrap pure-move reachability gap
   (`softwrap-…:254`). Ordering of `super` vs. the re-fit is the pixel-sensitive part.
 - **Avoid** touching the `subWidgetsMergedFullBounds:1019` branch itself (proven regressor).
+
+---
+
+## Phase 3a — what actually shipped (corrects D3)
+
+The split is as D3 described — `_addCore` (old `addRaw` body, non-settling, low-level per the lint:
+`/^_/` + `/Core$/`), public `add` = `mutateGeometryThenSettle => shadow-bookkeeping + _addCore + remember`,
+public `addRaw` = `mutateGeometryThenSettle => _addCore`, `mutateGeometryThenSettle` returns the thunk
+value. But the **call-site routing in D3 was wrong on two counts**, corrected during implementation:
+
+1. **The orphan guard replaces "route the 15 layout sites."** D3 assumed construction settles are harmless
+   and only ~15 *layout-time* sites needed `_addCore`. False: construction settles CRASH (half-built widget
+   reachable via children's `.parent`). The fix is the single `@isOrphan()` short-circuit in
+   `mutateGeometryThenSettle` (above) — it neutralizes every construction `add`/setter at once. So almost
+   nothing needed per-site routing.
+
+2. **The drop / reactToDropOf family must STAY public `add` (do NOT route to `_addCore`).** Two reasons the
+   survey missed: (a) `add`'s shadow bookkeeping is **load-bearing on drop** — for a non-world target it does
+   `aWdgt.removeShadow()` (strips the drag shadow); for a world target `aWdgt.addShadow()` (the resting
+   shadow). `_addCore` skips both, so routing a drop to it leaves the drag shadow stuck on the dropped
+   widget. (b) `ActivePointerWdgt.drop` calls `target.add` **polymorphically** — `WindowWdgt.add` /
+   `ScrollPanelWdgt.add` do essential work (retitle, contents delegation, re-fit); `_addCore` is only the
+   base core and would bypass them. Drop/grab/`reactToDropOf`/`addInPseudoRandomPosition`/`addPinouting`/
+   `addHighlighting` are all **event- or post-settle-frame handlers** (proven: they already call public
+   `setExtent`/`setWidth` today, which would throw inside a layout pass), so their settles are fine and
+   byte-safe (screenshots are taken after a frame yield). `addPinoutingWidgets`/`addHighlightingWidgets`
+   run in `doOneCycle` AFTER `recalculateLayouts` (post-settle, pre-paint) — settling there is safe.
+
+**The sites that genuinely needed `_addCore`** (all run INSIDE a `recalculateLayouts`/`doLayout` pass):
+`Widget.addAsSiblingBeforeMe`/`addAsSiblingAfterMe` (→ `@parent._addCore`; reached from `addOrRemoveAdders`
+during layout), `Widget.showAdders`/`addOrRemoveAdders` (the `@_addCore new LayoutElementAdderOrDropletWdgt`),
+`StringFieldWdgt.reLayout` (`@_addCore @text`), `LabelButtonWdgt.createLabel` + `MenuItemWdgt.createLabel`
+(`@_addCore @label`; createLabel is driven by reLayout), and the `ScrollPanelWdgt` constructor's three
+`@addRaw @contents/@hBar/@vBar` (→ `@_addCore`; build innards during construction). Plus ONE callback fix:
+`BasementOpenerWdgt.iHaveBeenAddedTo` did `@fullMoveTo` — and `iHaveBeenAddedTo` is fired by `_addCore`
+INSIDE the add's settle, so it became `@fullRawMoveTo` (byte-equivalent: the outer settle re-lays-out a
+freefloating position idempotently). The ~20 `reLayout` overrides reachable via the base
+`iHaveBeenAddedTo → @reLayout()` are already lint-clean (rule A forbids a `/Layout$/` method calling a
+public setter), so that indirect channel needed nothing.
+
+**Latent issue noted, NOT fixed here (only fires on an error):** `WorldWdgt._recalculateLayoutsCore` wraps
+`doLayout()` in try/catch and on a throw calls `createErrorConsole()` — which is full of public setters
+(`wm.setExtent`, `@add`, `@errorConsole.fullMoveTo`) and runs INSIDE `recalculateLayouts`, so it would
+itself throw (re-entrancy), masking the real `doLayout` error. Harmless for a clean run (the catch never
+fires), but the error-recovery path is fragile under the self-settling regime; converting
+`createErrorConsole` to raw setters is a small follow-up worth doing when next in that file.
 
 ---
 

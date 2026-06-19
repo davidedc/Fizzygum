@@ -42,7 +42,9 @@ class MenuItemWdgt extends LabelButtonWdgt
     @label = new TextWdgt @labelString, @fontSize, @fontStyle
     @label.setColor @labelColor
 
-    @add @label
+    # _addCore (NOT add): createLabel is driven by reLayout (a layout pass), so a
+    # self-settle here would re-enter the flush guard and throw.
+    @_addCore @label
     # the modern family does not self-size; make the label hug its text before
     # we read @label.extent() below to size this menu item around it.
     @label.sizeToTextAndDisableFitting()
