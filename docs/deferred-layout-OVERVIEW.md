@@ -102,6 +102,17 @@ REACT-case `_reFitToContents` a true in-pass fixed point, and C3 deletes the inl
 every container re-fit then happens only inside `recalculateLayouts` (end of `doOneCycle`) or a public-method
 flush = the all-deferred end state.
 
+**C1 result (2026-06-20, after the de-read-back) — 3 of 4 cases defer; the LAST blocker is C2.** Making the seam
+defer outside a pass was tried: **smoke-apps OK (no freeze), DRIVE ✓, REACT ✓ (the scroll arm now defers — the
+§6b "scroll arm stays synchronous / C3 unachievable" verdict is OUTDATED), single-window clock ✓.** The ONLY
+regression is the **nested-window clock resize** (`macroWindowWithAClockInAWindowConstructionTwo` 4-6: the clock
+goes huge): the clock↔inner-window↔outer-window clamp needs cross-widget ITERATION, which the synchronous seam did
+eagerly but a single deferred pass does not (the `_adjustContentsBounds` re-entrancy guard blocks in-pass
+re-iteration + no re-invalidation; the §6b height-clamp hypothesis was tried and did NOT fix it — the available
+height is itself stale under deferral). **So the next step is C2 — make the window's `_reFitToContents` a true
+in-pass fixed point for the cross-widget clamp** — the last thing standing between the deferred seam and C3
+(removing it). C1 was reverted pending C2; the de-read-back (`fa0d7961`) stays.
+
 ## 6. Doc map
 - **`deferred-layout-OVERVIEW.md`** — THIS doc (entry point: aim, state, paths, next step).
 - **`deferred-layout-path-a-design.md`** — Path A (the next step): why blanket pending-aware accessors fail, the

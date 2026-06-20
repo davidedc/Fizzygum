@@ -471,6 +471,16 @@ Seam + refined phases:
   **C3 stays unachievable → no enforcement payoff**. C2 is therefore NOT worth pursuing; **the arc concludes at C0**
   (the synchronous seam), which is correct, safe, and the documented stable end state. The DRIVE mechanism is proven
   and recorded here should the deferred-model ever be completed wholesale (Path A pending-aware accessors first).
+  > **SUPERSEDED 2026-06-20 — the "scroll/REACT arm stays synchronous" premise no longer holds.** After the Path-B
+  > window-fit de-read-back (`fa0d7961`), C1 was re-attempted (defer BOTH arms outside-pass): **smoke-apps OK (no
+  > freeze), DRIVE ✓, REACT ✓ (the scroll arm DOES defer cleanly now — `macroScrollBarsTrackContentChange` green),
+  > single-window clock ✓.** So the seam IS removable in principle; C2 is back ON the table. The ONLY remaining
+  > regression is the **nested-window clock resize** (`…ClockInAWindowConstructionTwo` 4-6, clock huge): the
+  > clock↔inner-window↔outer-window clamp needs cross-widget ITERATION that a single deferred pass doesn't provide
+  > (the `_adjustContentsBounds` re-entrancy guard blocks in-pass re-iteration + no re-invalidation). The height-clamp
+  > hypothesis above was TRIED and did NOT fix it (the available height is itself stale under deferral). **NEXT = C2:
+  > make the window's `_reFitToContents` a true in-pass FIXED POINT for the cross-widget clamp** — the last blocker
+  > before C3. C1 reverted pending C2; the de-read-back stays. (Path A is dead — see path-a-design §11.)
 - **C3 — remove + enforce.** Once the Path-A/B work + C2 make the seam redundant, delete it (and the `_refresh…`
   sibling) and extend lint [E] to forbid `childGeometryChanged`/`_reFitToContents` from immediate mutators.
 
