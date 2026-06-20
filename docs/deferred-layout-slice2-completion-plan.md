@@ -13,7 +13,9 @@ content re-fit onto the **`recalculateLayouts`/`doLayout` cycle**. **Everything 
 pushed to master.** The capstone (Phase 3b Slice 2 — stack/window re-fit on the cycle) shipped, briefly froze
 9/12 desktop apps, and was fixed by a clean architectural rule — **a low-level geometry mutator (`raw*`/`silent*`/
 `fullRaw*`) must only MUTATE geometry, never SCHEDULE a (re-)layout.** That rule is now migrated, runtime-guarded,
-and build-time-lint-enforced. The remaining work is small follow-ups (Section 7), recommended next = **#18**.
+and build-time-lint-enforced. **Task #18 — fixing the `createErrorConsole` freeze-amplifier and turning the
+flow-rule guard into a fail-fast `throw` — is now also shipped (see §1).** The remaining work is small
+follow-ups (§6); recommended next = the `childGeometryChanged` flow-rule extension.
 
 ---
 
@@ -29,6 +31,7 @@ and build-time-lint-enforced. The remaining work is small follow-ups (Section 7)
 | Phase 3b Slice 2 | `SimpleVerticalStackPanelWdgt`/`WindowWdgt` get `doLayout` + `implementsDeferredLayout: -> false` (re-fit on the cycle) | `6c7060e5` | `46a0acd0f` (1 benign inspector recapture) |
 | **Slice 2 app-freeze FIX** | the flow rule — removed `@invalidateLayout()` from all raw setters | **`c45113ac`** | — |
 | **flow-rule lint + cleanup** | `check-layering.js` rule [E]; deleted 6 vestigial `rawSetExtent: -> super` overrides | **`b89c9141`** | — |
+| **#18 freeze-amplifier fix + guard→throw** | `createErrorConsole` recovery deferred outside the flush; recalc catch made non-flushing + convergent (+ iteration backstop); `invalidateLayout` guard log+no-op → hard `throw` | **`4c78c9cb`** | — |
 
 **Phase 3b is COMPLETE.** Net effect: top-level callers (macros, apps, event handlers) never call a layout/re-fit
 method; a public mutation leaves a consistent world by itself; scroll/stack/window content re-fit runs on the cycle.
@@ -71,24 +74,43 @@ Removed `@invalidateLayout()` from every raw setter that had it (~17 sites, all 
       @doLayout()        # APPLY now (raw = immediate); never @invalidateLayout()
   ```
 
-### 2b. Runtime backstop (`Widget.invalidateLayout`, ~src/basic-widgets/Widget.coffee:3699)
+### 2b. Runtime invariant — fail fast (`Widget.invalidateLayout`, ~src/basic-widgets/Widget.coffee:3701)
 ```coffee
 invalidateLayout: ->
-  # FLOW-RULE ASSERTION + BACKSTOP — see the big comment in-source.
+  # FLOW-RULE INVARIANT (fail fast) — see the big comment in-source.
   if world?._recalculatingLayouts
-    unless world.__loggedInvalidateViolation
-      world.__loggedInvalidateViolation = true
-      console.error "FLOWRULE_VIOLATION: invalidateLayout during a layout pass by " + (@constructor?.name) + " ..."
-    return                # no-op so the pass still converges
+    throw new Error "FLOWRULE_VIOLATION: invalidateLayout() during a layout pass by " + (@constructor?.name) + " ..."
   if @layoutIsValid
     world.widgetsThatMaybeChangedLayout.push @
   @layoutIsValid = false
   if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING and @parent?
     @parent.invalidateLayout()
 ```
-After the migration this NEVER fires (verified). It exists so a future regression is **visible** (the log fails the
-apps-smoke gate, which treats `console.error` as failure) instead of re-freezing. `world._recalculatingLayouts` is
-set across the whole `recalculateLayouts` until-loop (`WorldWdgt.coffee` ~:857).
+After the migration this NEVER fires (verified). The `throw` is **safe** (not a re-freeze risk) because of the #18
+work below: a violation throws out of the offending `doLayout`, is caught by the recalc catch — which is now
+**strictly non-flushing** — reported via the layout-error path, and the world keeps running. It is the runtime
+tripwire for anything that slips past the build-time lint (rule [E]) — e.g. a dynamic/duck-typed call the lint can't
+see. `world._recalculatingLayouts` is set across the whole `recalculateLayouts` until-loop (`WorldWdgt.coffee` ~:857).
+
+### 2d. The #18 freeze-amplifier fix (`WorldWdgt.coffee`)
+A `doLayout` that threw DURING the `recalculateLayouts` flush used to **freeze** the world and mask the real error:
+the recalc catch (`_recalculateLayoutsCore`, ~:926) built the error console via **public, self-flushing** setters →
+re-entered `recalculateLayouts` → threw the re-entrancy guard BEFORE `@errorConsole` was assigned; and because the
+throwing `doLayout` never reached its trailing `markLayoutAsFixed()`, the until-loop never converged. Fixed by
+splitting recovery across the flush boundary:
+- **Inside the flush (the catch):** do ONLY the minimum, *non-flushing/non-invalidating* work — `markLayoutAsFixed()`
+  + `silentHide()` the offender (so the loop converges and the offender is banned from paint) and push the error to a
+  new `@layoutErrorsToReport` queue. Nothing here can flush or invalidate, so the §2b `throw` can never escape it.
+- **Next cycle, outside the flush (`showLayoutErrorsFromPreviousCycle`, called first in `doOneCycle`):** drain the
+  queue — `softResetWorld()` (its `hand.drop → add` may flush; safe here), build the console (public setters; safe),
+  show each error in-world AND emit a loud `console.error` (so CI / the smoke-apps gate still catch a genuinely broken
+  app — which no longer freezes). Mirrors the existing repaint-error deferral (`errorsWhileRepainting`).
+- **Defensive backstop:** a `recalcIterationsCap` (100000) in the until-loop bails loudly (`RECALC_NONCONVERGENCE`)
+  instead of hanging if convergence ever fails. Never fires in normal operation.
+
+Verified by a deliberate-throw headless probe: a `doLayout` that throws mid-flush → world keeps cycling, error
+surfaced in-world + as one `console.error`, queue converges, no re-entrancy/backstop; and `invalidateLayout`
+during a pass now throws `FLOWRULE_VIOLATION`.
 
 ### 2c. Build-time enforcement (`buildSystem/check-layering.js` rule [E], commit `b89c9141`)
 ```js
@@ -143,11 +165,11 @@ cd Fizzygum && ./build_it_please.sh            # restore the normal test build
   accrue and starve the box, causing spurious stalls.
 - **The runners buffer page console until completion** — a hung test prints nothing; a freeze is the symptom. If you
   ever freeze, it's a masked `doLayout` throw (see #18).
-- **`createErrorConsole` is a freeze-amplifier (task #18, not yet fixed):** when a `doLayout` throws inside
-  `recalculateLayouts`, the catch builds the error console via PUBLIC setters → re-entrancy throw → never recovers →
-  freeze that MASKS the primary error. To diagnose a freeze, temporarily replace the recalc catch
-  (`WorldWdgt.coffee` ~:910) with `console.error err.stack; throw err`, and/or add a counter guard in
-  `_recalculateLayoutsCore`'s `until` loop that throws after ~8000 iters with the offending widget's class/spec.
+- **Layout errors no longer freeze the world (task #18, FIXED).** A `doLayout` that throws during the
+  `recalculateLayouts` flush is now caught, the offender settled+banned, and the error reported next cycle OUTSIDE
+  the flush — both in-world AND as a loud `console.error` (`LAYOUT_ERROR: …`). So a broken app surfaces a real error
+  (caught by the smoke-apps gate) instead of hanging. If you ever DO see a hang, look for `RECALC_NONCONVERGENCE`
+  (the defensive iteration backstop) — it names the offending widget's class/spec.
 - **Recapture gotcha:** `capture-macro-test-references.js --clean --dprs=1,2 SystemTest_<name>` writes new refs AND
   deletes stale ones; run its FULL flow (no `--no-build`).
 - **Separate `cd` per repo** (build in `Fizzygum/`, run/smoke in `Fizzygum-tests/`). Commit messages via
@@ -157,7 +179,7 @@ cd Fizzygum && ./build_it_please.sh            # restore the normal test build
 
 ## 5. Key files & sites (reference)
 
-- **Flow rule:** `Widget.invalidateLayout` (~`src/basic-widgets/Widget.coffee:3699`); `Widget.rawSetWidthSizeHeightAccordingly`
+- **Flow rule:** `Widget.invalidateLayout` (~`src/basic-widgets/Widget.coffee:3701`, now a fail-fast `throw` during recalc); `Widget.rawSetWidthSizeHeightAccordingly`
   (~:698); base `rawSetExtent`/`silentRawSetExtent`/`rawSetWidth` (~:1514/:1560/:1604).
 - **Lint:** `buildSystem/check-layering.js` (rules A/B/C in `checkFile`, D in `checkMacroFile`, E = `isImmediateMutator`).
 - **Slice-2 doLayout:** `SimpleVerticalStackPanelWdgt.coffee` (`doLayout`, `_adjustContentsBounds`, `implementsDeferredLayout: -> false`);
@@ -165,30 +187,29 @@ cd Fizzygum && ./build_it_please.sh            # restore the normal test build
 - **`world._recalculatingLayouts`** set/reset in `WorldWdgt.recalculateLayouts` (~:850-861); the until-loop is
   `_recalculateLayoutsCore` (~:863).
 - **createErrorConsole** `WorldWdgt.coffee:426`; recovery callers ~:912/:1185/:1204/:1335.
+- **#18 sites:** the now-non-flushing recalc catch in `_recalculateLayoutsCore` (~:926); the `@layoutErrorsToReport`
+  queue field (~:206); the drain `showLayoutErrorsFromPreviousCycle` (~:1234), called first in `doOneCycle` (~:1270);
+  the `recalcIterationsCap` backstop at the top of the `_recalculateLayoutsCore` until-loop (~:871).
 
 ---
 
-## 6. NEXT STEPS (ordered; recommended next = the createErrorConsole fix)
+## 6. NEXT STEPS (ordered; recommended next = the `childGeometryChanged` flow-rule extension)
 
-1. **#18 — fix the `createErrorConsole` freeze-amplifier, THEN upgrade the guard to a throw (RECOMMENDED NEXT).**
-   - Part 1: make `createErrorConsole` (`WorldWdgt.coffee:426`) build its `WindowWdgt`/contents with **raw** setters
-     (or defer construction outside the flush) so it can't re-enter `recalculateLayouts`. Then a `doLayout` error
-     surfaces as a real error, not a freeze. Verify: deliberately throw in a `doLayout`, confirm a clean error +
-     visible error console (not a hang).
-   - Part 2 (after Part 1): in `Widget.invalidateLayout`, change the `world._recalculatingLayouts` branch from
-     log+no-op to a **hard `throw`** — the flow rule becomes a fail-fast invariant (like the existing re-entrancy
-     throws). Safe ONLY once Part 1 lands. Re-run the gauntlet (incl. smoke-apps).
-2. **Extend the flow rule to the other re-fit triggers (small).** `silentRawSetExtent` still calls
-   `@parent?.childGeometryChanged?()` (a re-fit trigger from a SILENT method — same smell). Audit whether it can be
-   dropped/moved to the public tier; if so, extend rule [E] to also forbid `childGeometryChanged`/`_reFitToContents`
-   from immediate mutators. Gate with smoke-apps + soak.
-3. **#15 — end-of-plan rule-D tightening.** Give the construction-time raw/silent read-back idiom + `reLayout()`
+1. **Extend the flow rule to the other re-fit triggers (small, RECOMMENDED NEXT).** `silentRawSetExtent` still calls
+   `@parent?.childGeometryChanged?()` — a re-fit trigger fired from a SILENT (immediate) method, the same smell the
+   flow rule forbids. Audit whether it can be dropped/moved to the public tier; if so, extend lint rule [E] to also
+   forbid `childGeometryChanged`/`_reFitToContents` from immediate mutators (`isImmediateMutator`). Gate with
+   smoke-apps + soak.
+2. **#15 — end-of-plan rule-D tightening.** Give the construction-time raw/silent read-back idiom + `reLayout()`
    public self-settling alternatives, then extend lint rule D (`MACRO_FORBIDDEN_CALL`) to forbid
    `raw*`/`silent*`/`fullRaw*`/`/Layout$/` in macro sources too.
-4. **#16 — base-declared polymorphic conversion of the duck-typed hooks** (`childGeometryChanged` /
+3. **#16 — base-declared polymorphic conversion of the duck-typed hooks** (`childGeometryChanged` /
    `reLayOutAfterContainedPanelChange` / `reactToDropOf` / `childAdded` …): owner-deferred to plan-end. Adding a
    base method is inspector-SAFE (zero recapture); deleting an inspector-visible Widget method recaptures the one
    inspector test (`macroDuplicatedInspectorDrivesCopiedTargetOnly`).
+
+**DONE since this plan was first written:** #18 — the `createErrorConsole` freeze-amplifier fix + the guard→`throw`
+upgrade (see §1, §2b, §2d). Verified via a deliberate-throw probe + the full gauntlet.
 
 Each step: build (lint) → dpr1 suite → **smoke-apps** → (for behavioural/determinism changes) dpr2 + WebKit + soak +
 `--homepage`. Ask before commit/push; commit Fizzygum + tests separately.

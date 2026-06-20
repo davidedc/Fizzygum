@@ -121,9 +121,10 @@ leaves a consistent world by itself. Concretely:
       densities; pixel-diff confirmed it's the list thumb only). The clock family
       (`macroClockInWindowKeepsSquareOnResize`, `macroDocumentScrollsMixedTextAndClocks`,
       `macroWindowWithAClockInAWindowConstructionTwo`) all PASS. **Still UNCOMMITTED** until soak + boot pass.
-    - Also surfaced (NOT fixed; worth doing independently): the `createErrorConsole` recovery loop turns any
-      in-recalc `doLayout` throw into a FREEZE that masks the primary error. ZOMBIE GOTCHA: leftover Chromes
-      starve the box — `pkill` before every suite run. TOOL GOTCHA: no `timeout(1)` — use `perl -e 'alarm N; exec @ARGV'`.
+    - Also surfaced (FIXED in #18): the `createErrorConsole` recovery loop turned any in-recalc `doLayout` throw
+      into a FREEZE that masked the primary error — now the recalc catch is non-flushing + convergent and recovery
+      is deferred outside the flush (see the slice2 plan §2d). ZOMBIE GOTCHA: leftover Chromes starve the box —
+      `pkill` before every suite run. TOOL GOTCHA: no `timeout(1)` — use `perl -e 'alarm N; exec @ARGV'`.
   - **(historical, superseded by the bullet above) ATTEMPTED + the deeper wall (2026-06-19):** implemented exactly that silent/synchronous-sizing fix —
     a `rawSetWidthAndReLayoutSynchronously` (= `rawSetWidth` + a synchronous `@doLayout()` instead of
     `@invalidateLayout()`), used by stack + window `_adjustContentsBounds`, plus the stack/window `doLayout`.
@@ -298,12 +299,13 @@ freefloating position idempotently). The ~20 `reLayout` overrides reachable via 
 `iHaveBeenAddedTo → @reLayout()` are already lint-clean (rule A forbids a `/Layout$/` method calling a
 public setter), so that indirect channel needed nothing.
 
-**Latent issue noted, NOT fixed here (only fires on an error):** `WorldWdgt._recalculateLayoutsCore` wraps
-`doLayout()` in try/catch and on a throw calls `createErrorConsole()` — which is full of public setters
-(`wm.setExtent`, `@add`, `@errorConsole.fullMoveTo`) and runs INSIDE `recalculateLayouts`, so it would
-itself throw (re-entrancy), masking the real `doLayout` error. Harmless for a clean run (the catch never
-fires), but the error-recovery path is fragile under the self-settling regime; converting
-`createErrorConsole` to raw setters is a small follow-up worth doing when next in that file.
+**Latent issue noted here, FIXED in #18:** `WorldWdgt._recalculateLayoutsCore` wraps `doLayout()` in try/catch
+and on a throw called `createErrorConsole()` — full of public setters (`wm.setExtent`, `@add`,
+`@errorConsole.fullMoveTo`) and running INSIDE `recalculateLayouts`, so it threw (re-entrancy) and masked the
+real `doLayout` error → freeze. Fixed not by converting `createErrorConsole` to raw setters but by the cleaner
+documented alternative: the recalc catch now does only non-flushing convergence work and DEFERS recovery (the
+console build + softReset + a loud `console.error`) to a next-cycle drain outside the flush; the
+`Widget.invalidateLayout` guard is now a hard `throw`. See the slice2 plan §2b/§2d.
 
 ---
 
