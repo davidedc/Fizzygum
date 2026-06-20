@@ -698,10 +698,9 @@ class Widget extends TreeNode
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
     @rawSetWidth newWidth
     if @implementsDeferredLayout()
-      if world?._recalculatingLayouts
-        @doLayout()
-      else
-        @invalidateLayout()
+      # raw setter: APPLY the re-fit now (synchronous doLayout), never SCHEDULE it
+      # (no invalidateLayout). See task #17 -- low-level mutators must not schedule layout.
+      @doLayout()
 
   # note that using this one, the children
   # widgets attached as floating don't move
@@ -3700,6 +3699,21 @@ class Widget extends TreeNode
   # this part is excluded from the fizzygum homepage build <<«
 
   invalidateLayout: ->
+    # FLOW-RULE ASSERTION + BACKSTOP: the low-level geometry mutators (raw*/silent*/fullRaw*)
+    # must not SCHEDULE layout -- they only mutate; scheduling a (re-)layout is the public
+    # self-settling tier's job. If an invalidate still reaches here while recalculateLayouts is
+    # running, a raw setter is (re-)scheduling layout mid-pass -- the Phase 3b Slice 2 app-freeze
+    # (a container resizing its children climbed an invalidate back into itself, so the until-loop
+    # never converged). The raw setters were migrated to honour this; LOG the first offender (with
+    # its call stack) so any regression is VISIBLE -- this also fails the apps-smoke gate, which
+    # treats console.error as failure -- then no-op it as a backstop so the pass still converges.
+    # (A build-time lint will also enforce this statically; once createErrorConsole no longer
+    # re-enters the flush -- task #18 -- this can be upgraded to a hard throw.)
+    if world?._recalculatingLayouts
+      unless world.__loggedInvalidateViolation
+        world.__loggedInvalidateViolation = true
+        console.error "FLOWRULE_VIOLATION: invalidateLayout during a layout pass by " + (@constructor?.name) + " -- a raw setter scheduled layout (must not; task #17)\n" + (new Error("flowrule-violation")).stack
+      return
     if @layoutIsValid
       world.widgetsThatMaybeChangedLayout.push @
     @layoutIsValid = false

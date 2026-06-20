@@ -24,7 +24,6 @@ class GenericShortcutIconWdgt extends Widget
 
   rawResizeToWithoutSpacing: ->
     @rawSetExtent new Point @widthWithoutSpacing(), @widthWithoutSpacing()
-    @invalidateLayout()
 
   initialiseDefaultWindowContentLayoutSpec: ->
     super
@@ -33,7 +32,7 @@ class GenericShortcutIconWdgt extends Widget
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
     @rawResizeToWithoutSpacing()
     @rawSetExtent new Point newWidth, newWidth
-    @invalidateLayout()
+    @doLayout()
 
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023

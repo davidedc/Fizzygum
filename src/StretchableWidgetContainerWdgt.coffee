@@ -76,7 +76,6 @@ class StretchableWidgetContainerWdgt extends Widget
   rawResizeToWithoutSpacing: ->
     if @ratio?
       @rawSetExtent new Point @widthWithoutSpacing(), Math.round(@widthWithoutSpacing()/@ratio)
-      @invalidateLayout()
 
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets @contents
@@ -86,10 +85,8 @@ class StretchableWidgetContainerWdgt extends Widget
         @ratio = @width() / @height()
         @layoutSpecDetails?.canSetHeightFreely = false
       @rawSetExtent new Point newWidth, Math.round(newWidth/@ratio)
-      @invalidateLayout()
     else
       @rawSetExtent new Point newWidth, @height()
-      @invalidateLayout()
 
 
   rawSetExtent: (extent) ->

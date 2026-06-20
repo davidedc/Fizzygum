@@ -34,7 +34,6 @@ class AxisWdgt extends Widget
 
   rawSetExtent: (aPoint) ->
     super
-    @invalidateLayout()
 
   # TODO some duplication of code here with
   # the method below
