@@ -1,5 +1,7 @@
 # Deferred-layout Path A — the per-reader design (why "pending-aware accessors" fails, what to do instead)
 
+> **Overall aim, current state & next step: see [`deferred-layout-OVERVIEW.md`](deferred-layout-OVERVIEW.md) (the entry point).** This doc is THE next step (Path A).
+
 **Companion to `docs/softwrap-deferred-layout-conversion-plan.md`.** That doc establishes the model
 (deferral is within-frame; accessors read applied `@bounds`; handler raw geometry is a *symptom* of the
 half-built model) and names **Path A** as "make the geometry accessors pending-aware." This doc records

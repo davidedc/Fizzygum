@@ -1,5 +1,7 @@
 # Deferred-layout migration — state after Phase 3b + next steps
 
+> **Overall aim, current state & next step: see [`deferred-layout-OVERVIEW.md`](deferred-layout-OVERVIEW.md) (the entry point).** This doc is the Phase-3b-era state record (history); the OVERVIEW supersedes it as the entry point.
+
 **Self-contained. Last updated 2026-06-20. Read top-to-bottom and you can continue cold.**
 Companion / design-of-record: `deferred-layout-refit-and-add-design.md` (the phase map + rationale).
 Determinism contract: `Fizzygum-tests/DETERMINISM.md`. Originating case: `softwrap-deferred-layout-conversion-plan.md`.

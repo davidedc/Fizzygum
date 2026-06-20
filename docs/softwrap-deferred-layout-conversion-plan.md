@@ -1,5 +1,7 @@
 # Deferred-layout: the model is INTERMEDIATE — completing it (soft-wrap is the originating case)
 
+> **Overall aim, current state & next step: see [`deferred-layout-OVERVIEW.md`](deferred-layout-OVERVIEW.md) (the entry point).**
+
 This started as a narrow plan to convert `SimplePlainTextWdgt`'s soft-wrap toggle from IMMEDIATE
 (raw) to DEFERRED (`invalidateLayout`) layout. Investigating it surfaced a bigger, more useful truth:
 **Fizzygum's deferred-layout mechanism is half-built by construction, and the handler-level raw
