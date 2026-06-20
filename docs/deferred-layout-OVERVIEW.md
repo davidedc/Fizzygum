@@ -4,7 +4,7 @@
 current state (shipped + learned), the paths, and the next step. The detailed per-area docs are linked in
 the Doc map (§6); each is self-contained too. Last updated 2026-06-20.
 
-master: **Fizzygum `ceff7616`** / **Fizzygum-tests `544166856`** — all green (165/165 dpr1+dpr2+WebKit,
+master: **Fizzygum `0671ad25`** / **Fizzygum-tests `544166856`** — all green (165/165 dpr1+dpr2+WebKit,
 smoke-apps 12/12, lint A–E 0).
 
 ---
@@ -38,6 +38,7 @@ back raw geometry.
 | What | commit |
 |---|---|
 | Self-settling public geometry API (`mutateGeometryThenSettle`) | `817c2ce4` |
+| **The 16 read-back construction macros** converted to the deferred API (rode the self-settling-API ship — this is why they pass today; it was NOT Path A that fixed them) | tests `a256ccfe6` |
 | Phase 1/2 — `_reFitToContents` re-fit chokepoint + lint A/B/C/D | `ad2000cc` |
 | Phase 3a — `add`/`addRaw` public & self-settling | `b8165920` |
 | Phase 3b — scroll/stack/window content re-fit on the `doLayout` cycle | `00cea256` / `6c7060e5` |
@@ -62,7 +63,10 @@ ROOT (read-back) is fixed. That fix is **Path A**.
 - **Path A — pending-aware READS (the systematic enabler; THE NEXT STEP).** Keep base accessors applied-only;
   add **opt-in** `effective*` reads; convert the audited *pending-needers* (the container content-sizing path)
   to read pending geometry. Lets intra-cycle readers measure where content is HEADING in one deferred pass —
-  unblocking both the 16 construction macros AND the container re-fit convergence (the C2 wall).
+  unblocking the container re-fit convergence (the C2 wall). **NB the 16 construction macros are ALREADY green**
+  (fixed by the self-settling API, tests `a256ccfe6` — see §3 Shipped); they are now Path A's GREEN REGRESSION
+  GUARD, not a red→green target, so the container-path conversion is **byte-identical groundwork** (the
+  convergence loop already reaches the same final pixels) verified by "stay 165/165 + canaries hold".
   → **`deferred-layout-path-a-design.md`** (why blanket fails, the per-reader design, the reader audit, §9 sequencing).
 - **Path B — per-site de-read-back** (constraint-entangled handlers: slider [DONE], scrollbar, grab-anchor/ratio,
   window-collapse). Each derives its value from the local clamped input instead of reading the moved geometry back.
@@ -77,14 +81,20 @@ ROOT (read-back) is fixed. That fix is **Path A**.
 Per `deferred-layout-path-a-design.md` §9 (the doc has the full design; this is the summary):
 1. **Add the `effective*` reads** (`effectiveExtent/Position/BoundingBox/FullBounds`; the `effectiveBounds`
    helper is in path-a §10) — additive, no behavioural change on their own.
-2. **Convert the container-sizing pending-needers** to call them: `adjustContentsBounds` (Panel/ScrollPanel/
-   Stack/Window overrides), `subWidgetsMergedFullBounds` (→ an uncached `effectiveFullBounds`), and `add`'s
-   fractional read.
-3. **Convert the 16 construction macros** to the deferred API (apply the macro-authoring discipline, path-a §6,
-   for their in-construction read-backs).
-4. **Verify:** 165/165 dpr1/dpr2/WebKit, **ZERO recaptures**. Failure is *deterministic* (a mis-classified
-   reader fails every run) — oracle = the 16 acceptance macros + 3 canaries (`macroSierpinskiInCanvas`,
-   `macroDuplicatedInspectorDrivesCopiedTargetOnly`, `macroScrollBarsTrackContentChange`). No soak needed for
+2. **Convert the AUDITED container-sizing pending-needers** to call them (the audit refines path-a §3's
+   over-broad "all overrides" list — see path-a §3/§5): the real one is `subWidgetsMergedFullBounds`
+   (→ an opt-in pending variant + uncached `effectiveFullBounds`), called by `ScrollPanelWdgt._adjustContentsBounds`;
+   the lone other override read is `WindowWdgt._adjustContentsBounds`'s `@contents.width()` preferred-width
+   read; plus `add`'s fractional read. (`SimpleVerticalStackPanelWdgt._adjustContentsBounds` *drives* its
+   children via raw synchronous sizing → its child reads are already applied → NOT a pending-needer.)
+3. ~~Convert the 16 construction macros~~ — **DONE** (tests `a256ccfe6`, via the self-settling API, NOT Path A;
+   see §3). They are now a green regression guard.
+4. **Verify:** 165/165 dpr1/dpr2/WebKit. Failure is *deterministic* (a mis-classified reader fails every run)
+   — oracle = the (already-green) 16 acceptance macros + 3 canaries (`macroSierpinskiInCanvas`,
+   `macroDuplicatedInspectorDrivesCopiedTargetOnly`, `macroScrollBarsTrackContentChange`). **ZERO recaptures,
+   with ONE sanctioned-benign exception:** adding the `effective*` methods to `Widget` grows the inspected
+   member list in `macroDuplicatedInspectorDrivesCopiedTargetOnly` → a thumb-proportion recapture (member text
+   identical), the exact mechanism + precedent of the C0 seam recapture (tests `544166856`). No soak needed for
    the container path.
 
 **Why this unlocks the whole aim:** once the container-sizing path reads PENDING geometry, containers converge

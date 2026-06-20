@@ -22,6 +22,18 @@ that still use raw because they read geometry back synchronously during scene co
 After the settle, `@desired*` is cleared and applied == requested, so **the entire concern is the
 intra-cycle in-flight window**; rendering (which runs after the settle) is never affected.
 
+> **RECONCILED 2026-06-20 — the 16 macros are already GREEN (this changes Path A's framing, not its
+> design).** When this doc was written the 16 still used raw. They were subsequently converted to the
+> deferred API and made green by the **self-settling public geometry API** (Fizzygum `817c2ce4` / tests
+> `a256ccfe6`) — each public setter self-flushes, so a *top-level* (macro) caller sees the applied value
+> on the next line. So Path A no longer needs to flip the 16 red→green; they are its **green regression
+> guard**. Path A's *remaining* value is the harder case the self-settling API does NOT cover: an
+> **in-pass** reader (a container re-fitting during one settle, a batched builder, or a future framework
+> handler that mutates-then-reads in a single synchronous pass) still sees stale `@bounds`. Making the
+> audited container-sizing path read PENDING in-pass is the prerequisite for removing the synchronous
+> re-fit seam (C2/C3). Today that conversion is **byte-identical groundwork** (the convergence loop
+> already reaches the same final pixels); its load-bearing verification arrives with the seam removal.
+
 ## 2. Why the blanket "pending-aware accessors" approach DIVERGES (empirical, 2026-06-19)
 
 The experiment: add `effectiveBounds()` = (`@desiredPosition ? @bounds.origin`, `@desiredExtent ?
@@ -45,12 +57,24 @@ paths.
 ## 3. The core distinction: pending-needers vs applied-needers
 
 **PENDING-needers** (want `@desired*` when set) — all are *intra-cycle, pre-settle* reads whose job is
-to compute a derived layout from where things are going:
-- `Widget.adjustContentsBounds` (and the `PanelWdgt` / `ScrollPanelWdgt` / `SimpleVerticalStackPanelWdgt`
-  overrides): container content-sizing reads `@contents` + each child's `width/height/left/top/boundingBox`.
-- `Widget.subWidgetsMergedFullBounds`: reads `child.bounds` / `child.fullBounds()` to merge child extents.
+to compute a derived layout from where things are going. (The names below are the post-Phase-2
+privatized `_adjustContentsBounds`; **AUDIT-REFINED 2026-06-20** — the original "all overrides" claim was
+too broad, the per-override reality is annotated:)
+- `_adjustContentsBounds` overrides — **only the SCROLL PANEL reads pending.** `ScrollPanelWdgt._adjustContentsBounds`
+  (`:317`) sizes itself to `@contents.subWidgetsMergedFullBounds()` (it REACTS to content extent) → pending.
+  `WindowWdgt._adjustContentsBounds` reads `@contents.width()` (`:442`) as a freshly-added content's
+  preferred width (one pending candidate); its `@contents.height()` reads are *after* a raw width re-fit →
+  applied. `SimpleVerticalStackPanelWdgt._adjustContentsBounds` **DRIVES** its children (sizes via raw
+  `rawSetWidthSizeHeightAccordingly`, positions via raw `fullRawMoveTo`, reads `widget.height()` only
+  *after* the raw size) → its child reads are already applied → **NOT a pending-needer.**
+- `Widget.subWidgetsMergedFullBounds` (`:1067`): reads `child.bounds` / `child.fullBounds()` to merge child
+  extents → the core pending-needer (used by the scroll panel above). Convert via an **opt-in pending
+  variant** (`effectiveSubWidgetsMergedFullBounds`), not by mutating the base method (it has an
+  applied-needer caller, `ContainerMixin.adjustBounds`).
 - `Widget.add` → `rememberFractionalPositionInHoldingPanel` → `positionFractionalInWidget` /
-  `positionPixelsInWidget`: reads the child's `@position()` at add-time.
+  `positionPixelsInWidget`: reads the child's `@position()` at add-time (the `@ == world` arm only).
+  Convert via an **opt-in** add-time effective read; do NOT change the shared
+  `positionFractionalInWidget`/`positionPixelsInWidget` (general-purpose, applied-needers).
 - **Macro-side construction reads** (in test code, NOT framework): e.g.
   `box.fullMoveTo (panel.center()...)` — `panel.center()` must reflect the panel's just-requested extent.
 
@@ -128,7 +152,8 @@ next settle.*
 
 ## 7. Acceptance tests & canaries
 
-**Acceptance (must go GREEN once converted to deferred):** the 16 macros that today keep raw —
+**Acceptance — now a GREEN REGRESSION GUARD (already converted, tests `a256ccfe6`; must STAY green):**
+the 16 macros (formerly "keep raw", now on the deferred API) —
 `macroAttachTargetExcludesClippedWidget`, `macroCompositeDragsAsUnitIntoScrollPanel`,
 `macroCompositeWidgetsHaveCorrectShadow`, `macroDocumentScrollsMixedTextAndClocks`,
 `macroEditingStringInScrollablePanelCaretAlwaysVisible`, `macroEmbeddedDuplicateButtonReduplicates`,
@@ -142,6 +167,14 @@ next settle.*
 `macroDuplicatedInspectorDrivesCopiedTargetOnly` (inspector), `macroScrollBarsTrackContentChange`
 (scrollbar). In the blanket experiment these three broke first — treat them as the early-warning that a
 pending read leaked into an applied-needer.
+
+**One sanctioned-benign exception to "canaries must not regress":** `macroDuplicatedInspectorDrivesCopiedTargetOnly`
+inspects a `RectangleWdgt` with inherited methods shown, so ADDING the `effective*` methods to `Widget`
+(step 1, define-only) grows its member list → a scrollbar-thumb-proportion shift in `image_2`/`image_3`
+(member *text* byte-identical). This is the exact mechanism + precedent of the C0 seam recapture (tests
+`544166856`) and is recaptured as a benign member-list growth — NOT a semantic regression (a define-only
+method cannot leak a pending value into the inspector's applied read). Distinguish the two by pixel-diff:
+benign = only the thumb region differs; a real leak would change the inspected geometry/visualisation.
 
 ## 8. Verification protocol
 
@@ -159,9 +192,12 @@ suite is a reliable oracle — no soak needed for the container path:
 1. Add the `effective*` reads (§4) — additive, no behavioural change on their own.
 2. Convert the **container path** pending-needers (`adjustContentsBounds`, `subWidgetsMergedFullBounds`/
    `effectiveFullBounds`, `add`'s fractional read).
-3. Apply the **macro-authoring discipline** (§6) to the in-construction reads of the 16, then convert
-   those 16 macros to the deferred API. Re-run §8.
-4. Iterate the audit (§5) on any remaining red test until the 16 are green and the canaries hold.
+3. ~~Apply the macro-authoring discipline (§6) … convert those 16 macros~~ — **DONE** (tests `a256ccfe6`,
+   via the self-settling API, not Path A). The §6 discipline + the macro list remain as reference for any
+   *future* macro that reads geometry mid-construction.
+4. After steps 1–2, re-run §8: the 16 (now green) + the canaries must HOLD; the only expected pixel change
+   is the §7 sanctioned-benign inspector recapture. A mis-classified reader fails deterministically and
+   pinpoints itself.
 5. (Separate, later) the deferred **hand/grab transport** case — its own design + torture soak.
 
 ## 10. Reference: the experiment's reusable helper
@@ -184,3 +220,66 @@ effectiveBounds: ->
 The deferred clamp primitive **`fullMoveWithin`** (shipped 2026-06-19, `Widget.coffee`) is the deferred
 twin of `fullRawMoveWithin` and is the clamp that the grab/spawn sites will use once their read-backs are
 resolved (it already does its own pending-aware check, so it is correct independent of this design).
+
+## 11. RESULT 2026-06-20 — the container content-sizing conversion (step 2) is NOT byte-safe (REVERTED)
+
+The `effective*` reads (§4/§10) were added to `Widget` (`effectivePosition`/`effectiveExtent`/
+`effectiveBoundingBox`/`effectiveFullBounds`/`effectiveSubWidgetsMergedFullBounds`) and verified additive
+(suite green; the only delta was the §7 sanctioned inspector recapture — see the note below). Then the
+**container content-sizing conversion was attempted and REVERTED** because it is **not byte-safe**:
+
+- Routing `ScrollPanelWdgt._adjustContentsBounds`'s `@contents.subWidgetsMergedFullBounds()` →
+  `effectiveSubWidgetsMergedFullBounds()` (and `WindowWdgt._adjustContentsBounds`'s `@contents.width()`
+  → `effectiveExtent().x`) changed the **settled scrollbar thumb** in **2 tests** —
+  `macroNestedScrollPanelsRouteWheel` (all 3 images) and `macroSimpleDocumentHandlesOldInspector`
+  (image_2/3). The outer thumb became **shorter** (content sized **larger**) though the *visible* content
+  was pixel-identical — i.e. only the panel's internal content-size bookkeeping diverged.
+- Refining the merge to keep the original's **applied-viewport** semantic for *deferred-layout* children
+  (the nested-scroll case — the `child.bounds` branch + ScrollPanelWdgt's `implementsDeferredLayout:false`
+  pin) fixed one image, but the **non-deferred** branch (`effectiveFullBounds`) still diverged → reverted.
+
+**Root cause / the load-bearing insight.** `_adjustContentsBounds` **BAKES** its computed content size via
+`@contents.silentRawSetBounds` (a *non-invalidating raw* set). The applied read is correct because the
+**synchronous re-fit is RE-TRIGGERED** as each child applies its `@desired*` (the inline
+`_reFitContainerAfterRawGeometryChange` seam fires on a child's raw geometry change), so a *later* re-fit
+re-reads the children's **final applied** geometry and bakes the converged size. A **pending** read bakes
+where children are *heading*, but a child's pending extent is frequently **further adjusted during its own
+settle** (a deferred-layout child's viewport is driven by *this* container; a soft-wrapping text child's
+height changes on reflow), so **pending ≠ final-applied**, and the baked transient persists (the silent
+set doesn't re-invalidate). **Therefore the synchronous re-fit + convergence loop is LOAD-BEARING
+precisely because it re-reads APPLIED geometry after children settle.** Path A's premise — *pending-aware
+reads let a container converge in one deferred pass, making the seam (C2/C3) removable* — **does not hold
+for the scroll-panel content path**: the convergence is doing real fixed-point work that one pending read
+does not replicate, so the seam cannot be removed merely by making the container read pending.
+
+**The correctness verdict (instrumented 2026-06-20 — the pending read is WRONG, not merely different).**
+A probe hooked `compareScreenshots` to log, per screenshot, the outer `SimpleDocumentScrollPanelWdgt`'s
+baked `@contents.height()` vs the true settled `@contents.subWidgetsMergedFullBounds().height()` vs the
+viewport, with `correctH = max(trueMerged + 2·padding, viewport)`:
+
+| build | baked `contentsH` | `trueMergedH` | `correctH` | **slack** |
+|---|---|---|---|---|
+| reference (applied read) | 325 | 315 | 325 | **0 ✓** |
+| pending-read conversion | 368 → 333 (after scroll) | 315 | 325 | **+43 → +8 ✗** |
+
+The reference sizes the content **exactly** to its true bounds (slack 0). The pending read **over-sizes
+by 43px** — it bakes a mid-construction transient (the content's pending extent *before* its own settle
+shrank it) into `@contents` via the non-invalidating `silentRawSetBounds`, leaving phantom empty scroll
+space that the synchronous convergence loop (which re-reads APPLIED geometry after children settle) would
+otherwise correct. So the conversion is not just non-byte-safe, it is **incorrect**; reverting (not
+recapturing) was right. This is hard confirmation that the synchronous re-fit/convergence is load-bearing,
+and that a future seam removal must converge the re-fit on a *fixed point* of pending geometry, never bake
+a single pending read into a silent set. NEXT-STEP implication: a real seam removal (C2/C3) must make the container re-fit
+**converge on pending without baking a non-final transient** (e.g. re-fit on the cycle reading pending
+*and* re-running until the pending-derived size is a fixed point), or keep the applied-read convergence —
+not a single pending read into a silent set. This reframes the C2 wall.
+
+**Inspector recapture footnote (the §7 benign case turned out non-vacuous).** Adding the `effective*`
+methods grew `macroDuplicatedInspectorDrivesCopiedTargetOnly`'s inherited-method list and shifted its
+`editInspectorAlpha` scroll-to-row math — which revealed the committed reference was **vacuously passing**
+(neither inspector's alpha edit applied; both rects stayed opaque, contradicting the test's own "left
+faded" comment). The longer list happens to land the 'alpha' row in the clickable pane, so the edits now
+apply and the rects fade as intended. Per owner decision (2026-06-20) the references were **recaptured to
+the corrected state** (not the test hardened — its scroll-into-view stays fragile to list-length changes;
+hardening deferred). This recapture's fate is tied to whether the `effective*` methods are kept (see the
+landing decision).
