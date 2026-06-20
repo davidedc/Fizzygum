@@ -391,6 +391,41 @@ recapture ONLY the named tests):
 scripts/run-macro-test-headless.js SystemTest_<name>`; `grep INSTR19 /tmp/x.log`. Empirical removal test: delete the
 `silentRawSetExtent` trigger, run the dpr1 suite → exactly the 3 tests above fail.
 
+### 6b.1 Deep design + phase status (2026-06-20)
+
+Read the re-fit machinery end-to-end — the grounding for the phases:
+- **The deferred re-fit path ALREADY exists.** Every container (`ScrollPanelWdgt` / `SimpleVerticalStackPanelWdgt` /
+  `WindowWdgt`) re-fits via `_reFitToContents` (= `_adjustContentsBounds` [+ `_adjustScrollBars`]), reached from MANY
+  entry points — public `add`/`addMany`/`setContents`, `reactToDropOf`/`reactToGrabOf`, the `rawSetExtent` resize
+  override, the contained-panel notify (`reLayOutAfterContainedPanelChange`/`childGeometryChanged`), AND the Slice-1/2
+  `doLayout` (`doLayout: -> super; @_reFitToContents()`). So a container re-fits ON THE CYCLE whenever its layout is
+  invalidated.
+- **The only gap:** a content widget's geometry change via the silent/raw path does NOT invalidate its container
+  (freefloating ⇒ `invalidateLayout` doesn't climb, §4; silent ⇒ no invalidate), so the cycle never re-fits it — which
+  the inline synchronous trigger fills.
+- **Text-wrapping vs not.** A text-wrapping scroll panel's `_adjustContentsBounds` itself re-wraps the content
+  (`widget.rawSetWidth @contents.width()…`, `ScrollPanelWdgt:304-315`) — a one-pass fixed point, so its content needn't
+  notify (hence the trigger's `NonTextWrapping` guard). A NON-wrapping panel (test 1) does NOT drive the re-wrap —
+  content re-wraps independently, so the panel must react.
+
+Seam + refined phases:
+- **C0 — DONE (2026-06-20).** The two identical immediate-mutator triggers (`silentRawSetExtent`/`fullRawMoveBy`) are
+  collapsed into one private seam `Widget._reFitContainerAfterRawGeometryChange` — the single site every later phase
+  edits. Behaviour-identical; cost = ONE benign inspector recapture (`macroDuplicatedInspectorDrivesCopiedTargetOnly`,
+  dpr1+dpr2) because the new method enters the inspector's reflected member list. **NB: adding a Widget method is NOT
+  inspector-free** (contra an earlier note) — every C1–C3 method-add re-shifts + recaptures this same one test (benign,
+  expected). Verified: lint 0; suite 165/165 dpr1+dpr2; smoke-apps 12/12.
+- **C1 — outside-pass deferral.** Make the seam context-aware: when NOT in `recalculateLayouts`, INVALIDATE the
+  container directly (`@parent.parent.invalidateLayout()` for the scroll panel; the stack/window for the
+  `childGeometryChanged` arm) instead of synchronously re-fitting — the container then re-fits on the cycle. The seam is
+  non-immediate, so lint [E] permits the invalidate. Covers test 3's mostly-outside-pass triggers + the freefloating
+  stack→window climb. Verify byte-identical at settle; recapture only what settle-timing shifts.
+- **C2 — in-pass convergence (the hard core).** Keep the in-pass branch synchronous until each container's
+  `_reFitToContents` is a true fixed point: after sizing content that itself re-lays-out (wrapping text / square clock /
+  nested window) re-measure WITHIN the pass, so no child callback is needed (tests 1, 2; soft-wrap §5 is the same shape).
+- **C3 — remove + enforce.** Once C1+C2 make the seam redundant, delete it (and the `_refresh…` sibling) and extend lint
+  [E] to forbid `childGeometryChanged`/`_reFitToContents` from immediate mutators.
+
 ---
 
 ## 7. Risk & framing

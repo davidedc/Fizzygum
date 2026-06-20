@@ -1231,9 +1231,7 @@ class Widget extends TreeNode
     # there might be performance implications, so I'd probably
     # have to introduce caching, and this whole mechanism should
     # go away with proper layouts...
-    if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
-      @parent.parent._reFitToContents?()
-    @parent?.childGeometryChanged?()
+    @_reFitContainerAfterRawGeometryChange()
 
     @children.forEach (child) ->
       child.silentFullRawMoveBy delta
@@ -1589,13 +1587,25 @@ class Widget extends TreeNode
       # there might be performance implications, so I'd probably
       # have to introduce caching, and this whole mechanism should
       # go away with proper layouts...
-      if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
-        @parent.parent._reFitToContents?()
-      @parent?.childGeometryChanged?()
+      @_reFitContainerAfterRawGeometryChange()
 
 
   _refreshScrollPanelWdgtOrVerticalStackIfIamInIt: ->
     if @_amIDirectlyInsideScrollPanelWdgt()
+      @parent.parent._reFitToContents?()
+    @parent?.childGeometryChanged?()
+
+  # The single seam (task #20, phase C0): an IMMEDIATE geometry mutator (silentRawSetExtent /
+  # fullRawMoveBy) synchronously re-fits the container that tracks my geometry -- a NON-text-
+  # wrapping scroll panel (text-wrapping panels drive their own content re-wrap in
+  # _adjustContentsBounds, so they are excluded here) re-fits its contents+scrollbars, and a
+  # stack/window container re-fits via childGeometryChanged. This is the deliberately-intermediate
+  # synchronous re-fit (softwrap-deferred-layout-conversion-plan.md §6b): SAFE -- a synchronous
+  # APPLY, never a schedule -- but the layering smell the deferred-model conversion will replace.
+  # Centralized here so that conversion (C1 outside-pass scheduling / C2 in-pass convergence /
+  # C3 remove + extend lint [E]) becomes a single-site change instead of two duplicated blocks.
+  _reFitContainerAfterRawGeometryChange: ->
+    if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
       @parent.parent._reFitToContents?()
     @parent?.childGeometryChanged?()
 
