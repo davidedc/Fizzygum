@@ -1,296 +1,194 @@
-# Phase 3b Slice 2 — completion plan (Path A: make the cycle-driven re-fit pixel-correct)
+# Deferred-layout migration — state after Phase 3b + next steps
 
-**Written 2026-06-19. Executable cold — read this top-to-bottom and you have everything.**
-Companion / parents (read for depth, not required): `deferred-layout-refit-and-add-design.md` (the
-design-of-record for the whole migration — its "Phase map" + "Phase 3b — Slice 2 … DIAGNOSED" bullet),
-`Fizzygum-tests/DETERMINISM.md` (byte-exact contract + the dpr2-under-load flake class),
-`softwrap-deferred-layout-conversion-plan.md` (the originating soft-wrap case).
+**Self-contained. Last updated 2026-06-20. Read top-to-bottom and you can continue cold.**
+Companion / design-of-record: `deferred-layout-refit-and-add-design.md` (the phase map + rationale).
+Determinism contract: `Fizzygum-tests/DETERMINISM.md`. Originating case: `softwrap-deferred-layout-conversion-plan.md`.
 
 ---
 
-## ✅ RESOLUTION (2026-06-19) — Path A landed; read this first
+## 0. TL;DR
 
-**Slice 2 is done in the working tree** (uncommitted, pending soak + `--homepage` boot + commit). The regression
-in §4 turned out to be a **POLYMORPHISM break, not a fit-math problem**, so §5's "instrument the height
-read-back" plan was not needed — the fix was found by reading.
-
-**Root cause.** The WIP added a NEW method `rawSetWidthAndReLayoutSynchronously` defined **only on base `Widget`**
-and pointed `WindowWdgt`/`SimpleVerticalStackPanelWdgt._adjustContentsBounds` at it. But
-`rawSetWidthSizeHeightAccordingly` has **8 overrides** — `AnalogClockWdgt` (→ square), `KeepsRatioWhenInVerticalStackMixin`
-(→ ratio), `WidgetHolderWithCaptionWdgt`, `StretchableWidgetContainerWdgt`, `GenericShortcutIconWdgt`,
-`GenericObjectIconWdgt`, `StretchableEditableWdgt`, `Example3DPlotWdgt`. The new method carried **none** of them,
-so a clock routed through it got `@rawSetWidth` only — width set, height left stale → no longer square → the
-window mis-fit. Four of those overriders (`WidgetHolderWithCaptionWdgt`, `StretchableWidgetContainerWdgt`, the two
-icons) ALSO `implementsDeferredLayout()`, so an `if @implementsDeferredLayout()` discriminator would have bypassed
-their shape overrides too — a latent bug beyond the clock. All three content-fit failures shared this one cause.
-
-**The fix (Option 1 — clean, smaller diff than the WIP).**
-1. **Deleted** `rawSetWidthAndReLayoutSynchronously`; **reverted** the 3 call-sites in `WindowWdgt` (the two `else`
-   branches of `_adjustContentsBounds`) and `SimpleVerticalStackPanelWdgt` (its `_adjustContentsBounds`) back to
-   `rawSetWidthSizeHeightAccordingly`.
-2. Made the **base** `Widget.rawSetWidthSizeHeightAccordingly` context-aware:
-   ```coffee
-   rawSetWidthSizeHeightAccordingly: (newWidth) ->
-     @rawSetWidth newWidth
-     if @implementsDeferredLayout()
-       if world?._recalculatingLayouts then @doLayout() else @invalidateLayout()
-   ```
-   Every override replaces the WHOLE method, so they all keep winning (clock stays square) automatically. The ONLY
-   behaviour that ever needed to change is the base body's reflow trigger, and ONLY when a container sizes a child
-   from inside its own `doLayout` (i.e. during recalc) — there `@invalidateLayout()` would climb back and re-dirty
-   the container (the non-convergence of §3.1); `@doLayout()` settles in place → **fixed point**.
-   `world._recalculatingLayouts` (WorldWdgt:857) wraps the whole `recalculateLayouts` until-loop, so it is exactly
-   "are we inside a layout pass." No new public API, no call-site churn, robust against a future container
-   forgetting to opt in.
-
-**KEPT from the WIP (orthogonal, correct):** `SimpleVerticalStackPanelWdgt.doLayout`+`implementsDeferredLayout: -> false`
-(the Slice-2 trigger flip; WindowWdgt inherits); `WindowWdgt.buildAndConnectChildren` batched via
-`settleLayoutsOnceAfter` (the §3.2 teardown-crash fix); `settleLayoutsOnceAfter` + the `_batchingLayoutSettling`
-guard in `mutateGeometryThenSettle`; `check-layering.js` whitelist += `settleLayoutsOnceAfter`. (NB
-`settleLayoutsOnceAfter` MUST be non-underscore — lint rule A forbids `_`-methods calling `recalculateLayouts`.)
-
-**Verified:** build syntax 0 + lint A/B/C/D 0; suite **165/165 at dpr1, dpr2, AND WebKit**; clock family all pass;
-**one benign recapture** — `macroDuplicatedInspectorDrivesCopiedTargetOnly` (`settleLayoutsOnceAfter` joins the
-inspector member list → the list scrollbar-thumb proportion shifts; image_1 byte-identical, image_2/3 recaptured at
-both densities; pixel-diff confirmed 1723 px confined to the list's thumb region, member text identical). Same
-recapture precedent as Phase 3a (`585b295d3`).
-
-**Remaining before commit:** torture soak (running dpr2/fastest/s8), `--homepage` boot check, delete the 2
-untracked diagnostic scripts, then review + commit (ask owner; Fizzygum + tests separately; consider committing
-`settleLayoutsOnceAfter` as its own commit). **The sections below (0–7) are the pre-resolution execution plan, kept
-as the diagnosis record; `rawSetWidthAndReLayoutSynchronously` they describe no longer exists.**
+The deferred-layout migration moves geometry/structural mutation onto a **self-settling public API** and the
+content re-fit onto the **`recalculateLayouts`/`doLayout` cycle**. **Everything through Phase 3b is DONE and
+pushed to master.** The capstone (Phase 3b Slice 2 — stack/window re-fit on the cycle) shipped, briefly froze
+9/12 desktop apps, and was fixed by a clean architectural rule — **a low-level geometry mutator (`raw*`/`silent*`/
+`fullRaw*`) must only MUTATE geometry, never SCHEDULE a (re-)layout.** That rule is now migrated, runtime-guarded,
+and build-time-lint-enforced. The remaining work is small follow-ups (Section 7), recommended next = **#18**.
 
 ---
 
-## 0. TL;DR — where we are, in one paragraph
+## 1. What's SHIPPED (all on master)
 
-The deferred-layout migration moves geometry/structural mutation onto a self-settling public API. **Phase 3a**
-(public `add`/`addRaw` self-settling over a private `_addCore`, guarded by an `isOrphan()` skip in
-`mutateGeometryThenSettle`) and **Phase 3b Slice 1** (`ScrollPanelWdgt.doLayout` + `implementsDeferredLayout: -> false`)
-are **DONE, committed, pushed** (Fizzygum `b8165920` for 3a, `00cea256` for Slice 1; tests `585b295d3`).
-**Phase 3b Slice 2** = give `SimpleVerticalStackPanelWdgt`/`WindowWdgt` the same `doLayout` so their content
-re-fit runs on the `recalculateLayouts` cycle (the architectural goal: re-fit via the cycle, not via ~25
-scattered inline triggers). This is the determinism-sensitive capstone. **There is uncommitted WIP in the
-working tree (Section 2) that FIXES the two hard blockers (non-convergence + a teardown crash → the suite no
-longer freezes), but introduces a real LAYOUT REGRESSION (Section 4): a window with ratio-keeping content
-(an analog clock) no longer fits its content after a resize.** Path A = make that cycle-driven re-fit
-pixel-correct. The owner chose Path A. **Do NOT commit the WIP to master as-is — it red-fails 4 tests.**
+| Phase | What | Fizzygum commit | tests commit |
+|---|---|---|---|
+| self-settling public geometry API | `setExtent`/`setWidth`/`setHeight`/`setBounds`/`fullMoveTo` self-flush via `mutateGeometryThenSettle` | `817c2ce4` | `a256ccfe6` |
+| Step 1 | macros stop calling scroll-panel re-fit methods | (in 817c2ce4 era) | `271511906` |
+| Phase 1 / 2 | design pass; `_reFitToContents` chokepoint + privatize re-fit machinery to `_`; lint rules A/B/C/D | `ad2000cc` | `48cb05fd9` |
+| Phase 3a | `add`/`addRaw` public + self-settling over private `_addCore`; `isOrphan()` flush-skip | `b8165920` | `585b295d3` |
+| Phase 3b Slice 1 | `ScrollPanelWdgt.doLayout` (+ `implementsDeferredLayout: -> false`); silent content sizing → fixed point | `00cea256` | — |
+| Phase 3b Slice 2 | `SimpleVerticalStackPanelWdgt`/`WindowWdgt` get `doLayout` + `implementsDeferredLayout: -> false` (re-fit on the cycle) | `6c7060e5` | `46a0acd0f` (1 benign inspector recapture) |
+| **Slice 2 app-freeze FIX** | the flow rule — removed `@invalidateLayout()` from all raw setters | **`c45113ac`** | — |
+| **flow-rule lint + cleanup** | `check-layering.js` rule [E]; deleted 6 vestigial `rawSetExtent: -> super` overrides | **`b89c9141`** | — |
 
----
-
-## 1. State of the world — COMMITTED (pushed to master)
-
-- **Phase 3a** (Fizzygum `b8165920`, tests `585b295d3`): `add`/`addRaw` are public + self-settling over a
-  private non-settling `_addCore` (the old `addRaw` body). `mutateGeometryThenSettle` returns its thunk's
-  value and SKIPS the flush when `@isOrphan()` (a widget attached to neither world nor hand — e.g. one being
-  built in its constructor — has no world-managed layout to flush; settling a half-built widget crashes).
-  `BasementOpenerWdgt.iHaveBeenAddedTo` uses `fullRawMoveTo` (fired by `_addCore` inside the settle).
-- **Phase 3b Slice 1** (Fizzygum `00cea256`): `ScrollPanelWdgt` got `doLayout: (nb) -> super; @_reFitToContents()`
-  and `implementsDeferredLayout: -> false`. The scroll panel re-fits on the cycle for RESIZES; byte-safe
-  because `ScrollPanelWdgt._adjustContentsBounds` sizes its contents with **silent** setters
-  (`@contents.silentRawSetBounds` + `@contents.reLayout()`) that don't invalidate, so its `doLayout` is a
-  fixed point.
-- Lint (`buildSystem/check-layering.js`) rules A/B/C/D all pass. `RECALC_WHITELIST` =
-  `{doOneCycle, mutateGeometryThenSettle, settleLayoutsOnceAfter}` (the last added by the WIP, Section 2).
-
-**HEAD of Fizzygum = `00cea256`. The WIP below is uncommitted on top of it.**
+**Phase 3b is COMPLETE.** Net effect: top-level callers (macros, apps, event handlers) never call a layout/re-fit
+method; a public mutation leaves a consistent world by itself; scroll/stack/window content re-fit runs on the cycle.
 
 ---
 
-## 2. State of the working tree — UNCOMMITTED Slice-2 WIP (preserve / reconstruct from here)
+## 2. The FLOW RULE (the load-bearing principle — Phase 3b Slice 2's real fix)
 
-`git -C Fizzygum diff` shows 5 files (`check-layering.js`, the design doc, `SimpleVerticalStackPanelWdgt.coffee`,
-`WindowWdgt.coffee`, `Widget.coffee`). `git -C Fizzygum-tests status` shows 2 untracked diagnostic scripts
-(`scripts/repro-2x.js`, `scripts/repro-profile.js`). The exact changes (reconstruct if the tree is ever lost):
+**A low-level immediate geometry mutator (`raw*` / `silent*` / `fullRaw*`) must only MUTATE geometry, never
+SCHEDULE a (re-)layout** (`invalidateLayout`, and by extension the re-fit triggers `childGeometryChanged` /
+`_reFitToContents` / `recalculateLayouts` / public setters). Three tiers:
 
-### 2a. `Widget.coffee` — two new methods + a batch guard
-- **`rawSetWidthAndReLayoutSynchronously: (newWidth) ->`** (after `rawSetWidthSizeHeightAccordingly`, ~:684).
-  The synchronous twin of `rawSetWidthSizeHeightAccordingly` — `@rawSetWidth newWidth; if @implementsDeferredLayout() then @doLayout()`
-  (the deferred form does `@invalidateLayout()` instead). WHY: a container that sizes a deferred-layout child
-  via the *invalidating* form, when run ON the cycle, makes the child's `invalidateLayout` climb back to
-  re-dirty the container in the same pass → the `recalculateLayouts` until-loop never converges (15000+
-  `_adjustContentsBounds`/pass). The synchronous `@doLayout()` settles the child in place, no climb → fixed point.
-- **`settleLayoutsOnceAfter: (thunk) ->`** (right after `mutateGeometryThenSettle`, ~:785). The BATCH
-  primitive: sets `world._batchingLayoutSettling = true`, runs the thunk, clears it, then does ONE
-  `world.recalculateLayouts()` (guarded `unless @isOrphan() or world._inLayoutMutation or world._recalculatingLayouts`,
-  wrapping it in `world._inLayoutMutation = true … finally false`). Nestable (inner batch absorbed by outer).
-  Returns the thunk's value.
-- **`mutateGeometryThenSettle`** got a new guard after the `@isOrphan()` guard:
-  `if world._batchingLayoutSettling then return coreThunk()` — defers the per-mutation flush to the batch's
-  single end-settle.
+| Tier | Methods | Job | May schedule layout? |
+|---|---|---|---|
+| **Public** | `setExtent`/`setWidth`/`setHeight`/`setBounds`/`fullMoveTo`/`add`/`addRaw` | record `@desired*` → `invalidateLayout` → flush (`recalculateLayouts`) | **YES — only here** |
+| **Layout machinery** | `doLayout` / `_adjustContentsBounds` / `recalculateLayouts` | APPLY a computed layout, using tier-3 primitives | no |
+| **Low-level** | `raw*` / `silent*` / `fullRaw*` | mutate geometry NOW, quietly | **NO** |
 
-### 2b. `SimpleVerticalStackPanelWdgt.coffee`
-- Added `doLayout: (nb) -> super; @_reFitToContents()` and `implementsDeferredLayout: -> false` (mirror of
-  Slice 1; WindowWdgt inherits both, since `WindowWdgt extends SimpleVerticalStackPanelWdgt`).
-- `_adjustContentsBounds` line ~124: `widget.rawSetWidthSizeHeightAccordingly recommendedElementWidth`
-  → `widget.rawSetWidthAndReLayoutSynchronously recommendedElementWidth`.
+**Why it matters (the bug it prevents):** the layout machinery (tier 2) applies a child's geometry via raw setters
+(tier 3). If a raw setter ALSO schedules layout (tier 1 `invalidateLayout`), the child's invalidate **climbs back**
+to re-dirty the container **during the container's own `doLayout`**, so `recalculateLayouts`'s until-loop never
+converges → freeze. That is exactly what hung 9/12 desktop apps after Slice 2 (e.g. `DashboardsApp.windowOpened →
+createNextTo → add`: a freefloating `SimpleVerticalStackPanelWdgt` inside a `SimpleDocumentScrollPanelWdgt`, queue
+grew unbounded). The owner's framing: *`rawSetExtent` is used to FIX a layout, so it must not also BREAK one.*
 
-### 2c. `WindowWdgt.coffee`
-- `_adjustContentsBounds` two sites (~:475 the `@contentNeverSetInPlaceYet` else-branch, ~:481 the
-  "content already there" branch): `@contents.rawSetWidthSizeHeightAccordingly recommendedElementWidth`
-  → `@contents.rawSetWidthAndReLayoutSynchronously recommendedElementWidth`.
-- `buildAndConnectChildren` wrapped in the batch: renamed the body to `_buildAndConnectChildrenCore`, and
-  `buildAndConnectChildren: -> @settleLayoutsOnceAfter => @_buildAndConnectChildrenCore()`. THIS is the fix
-  for the teardown crash (Section 3.2).
+### 2a. The migration (commit `c45113ac`) — what changed in the source
+Removed `@invalidateLayout()` from every raw setter that had it (~17 sites, all verified by the lint):
+- **6 `rawSetExtent` overrides** were just `super; @invalidateLayout()` — deleted entirely in `b89c9141`
+  (`SimpleLinkWdgt`, `ToolPanelWdgt`, `ColorPickerWdgt`, `FanoutWdgt`, `AxisWdgt`, `PlotWithAxesWdgt`); calls now
+  go straight to the base `rawSetExtent`.
+- **`rawResizeToWithoutSpacing`** (`WidgetHolderWithCaptionWdgt`, `StretchableWidgetContainerWdgt`,
+  `GenericShortcutIconWdgt`, `GenericObjectIconWdgt`) → mutate-only.
+- **`rawSetWidthSizeHeightAccordingly`** (base `Widget` + the icon/caption overrides) → now APPLIES the re-fit with
+  a **synchronous `@doLayout()`** instead of scheduling it. (`StretchableWidgetContainerWdgt` already applied via its
+  own `rawSetExtent: -> super; @doLayout @bounds`.) The base is now simply:
+  ```coffee
+  rawSetWidthSizeHeightAccordingly: (newWidth) ->
+    @rawSetWidth newWidth
+    if @implementsDeferredLayout()
+      @doLayout()        # APPLY now (raw = immediate); never @invalidateLayout()
+  ```
 
-### 2d. `buildSystem/check-layering.js`
-- `RECALC_WHITELIST` gained `'settleLayoutsOnceAfter'` (it legitimately calls `recalculateLayouts`, same role
-  as `mutateGeometryThenSettle`; rule B otherwise fails the build).
+### 2b. Runtime backstop (`Widget.invalidateLayout`, ~src/basic-widgets/Widget.coffee:3699)
+```coffee
+invalidateLayout: ->
+  # FLOW-RULE ASSERTION + BACKSTOP — see the big comment in-source.
+  if world?._recalculatingLayouts
+    unless world.__loggedInvalidateViolation
+      world.__loggedInvalidateViolation = true
+      console.error "FLOWRULE_VIOLATION: invalidateLayout during a layout pass by " + (@constructor?.name) + " ..."
+    return                # no-op so the pass still converges
+  if @layoutIsValid
+    world.widgetsThatMaybeChangedLayout.push @
+  @layoutIsValid = false
+  if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING and @parent?
+    @parent.invalidateLayout()
+```
+After the migration this NEVER fires (verified). It exists so a future regression is **visible** (the log fails the
+apps-smoke gate, which treats `console.error` as failure) instead of re-freezing. `world._recalculatingLayouts` is
+set across the whole `recalculateLayouts` until-loop (`WorldWdgt.coffee` ~:857).
 
-### 2e. Diagnostic scaffolding to DELETE before committing (not part of the fix)
-- `Fizzygum-tests/scripts/repro-2x.js` — runs a test N× in one page, prints per-run time + leak indicators
-  (used to rule out the leak/quadratic theory). Useful; delete or keep as a tool.
-- `Fizzygum-tests/scripts/repro-profile.js` — drives the whole suite in one page, CDP-CPU-profiles the stall.
-  Useful; delete or keep.
-- `run-macro-test-headless.js` is CLEAN (the earlier LOOPDIAG streaming patch was reverted).
-
----
-
-## 3. The diagnosis journey + EVIDENCE (so you don't re-derive it)
-
-Slice 2's naive form (`SimpleVerticalStackPanelWdgt.doLayout = super; @_reFitToContents()`, like Slice 1)
-**froze the suite**. Three layers, each diagnosed with hard evidence:
-
-1. **Non-convergence (FIXED by 2a `rawSetWidthAndReLayoutSynchronously`).** Stack-trace under a `perl alarm`
-   timeout (NB: `timeout(1)` is ABSENT in this shell — a bare `timeout … node … | grep` silently no-ops; use
-   `perl -e 'alarm N; exec @ARGV' node …`): `window.doLayout → _reFitToContents → WindowWdgt._adjustContentsBounds
-   → @contents.rawSetWidthSizeHeightAccordingly → (contents implementsDeferredLayout, e.g. InspectorWdgt) →
-   invalidateLayout → climbs to the window (contents is non-freefloating) → re-dirties the window during its
-   own doLayout → until-loop reprocesses forever`. Scroll panel is immune (silent sizing). Fix = size
-   deferred children synchronously.
-2. **Teardown crash (FIXED by 2c batching of `buildAndConnectChildren`).** With (1) fixed, the suite still
-   froze in the multi-test run (NOT single-test). Primary error (surfaced by temporarily suppressing the
-   `createErrorConsole` recovery + logging `err.stack` in the `recalculateLayouts`/`playQueuedEvents`
-   catches): `TypeError: Cannot read 'availableWidthForContents' of undefined  at getWidthInStack ←
-   WindowWdgt._adjustContentsBounds ← _reFitToContents ← doLayout ← recalculateLayouts ←
-   mutateGeometryThenSettle ← add ← buildAndConnectChildren ← resetToDefaultContents ← childBeingDestroyed
-   ← destroy ← fullDestroyChildren ← resetWorld`. I.e. during the inter-test `resetWorld`, a window's content
-   is destroyed → `resetToDefaultContents` → `buildAndConnectChildren` → a self-settling `add` mid-build →
-   recalc → window `doLayout` → `_adjustContentsBounds` → `VerticalStackLayoutSpec.getWidthInStack` reads
-   `@stack.availableWidthForContents()` but `@stack` isn't wired yet (set by `rememberInitialDimensions`).
-   Batching the rebuild → ONE settle AFTER it's complete → `@stack` set → no crash. (Single-test runs pass
-   because there's nothing to tear down → `resetToDefaultContents` never fires.)
-3. **The `createErrorConsole` recovery loop (the freeze AMPLIFIER — pre-existing, not yet fixed).** When any
-   `doLayout` throws inside `recalculateLayouts`, `WorldWdgt._recalculateLayoutsCore`'s catch (and the
-   `playQueuedEvents` catch) call `createErrorConsole`, which constructs a `SimplePlainTextScrollPanelWdgt`
-   that reaches a PUBLIC setter → re-entrancy throw → `@errorConsole` never set → retried every cycle →
-   FREEZE. So ANY primary `doLayout` error became a hang, not a visible error. **Worth fixing independently**
-   (convert `createErrorConsole`'s setters to raw, or build the console outside the flush) — it would have
-   made all of the above a clean red test instead of a 5-min freeze. Callers: `WorldWdgt.coffee` ~:912, ~:1185,
-   ~:1204, ~:1335.
-
-**Also confirmed (ruled OUT):** no memory leak and no quadratic-compounding-across-tests — `repro-2x.js`
-showed the List test 4× in one page at 4.7s→0.0s→0.0s→0.0s with flat leak indicators (`treeWidgets:21,
-dirtyLayout:0` every run). And **82 zombie Chrome processes** had accrued from the session's many runs and
-were starving the box (even `--shards=1` froze atop them) — ALWAYS `pkill -9 -f "Chrome for Testing|chrome-headless|puppeteer"`
-before a suite run, and re-check `pgrep -fl …| wc -l`.
-
-### Current test result WITH the WIP (clean, no diagnostics, zombies cleared)
-`cd Fizzygum-tests && node scripts/run-all-headless.js --shards=5` → **completes in ~1.3 min, all 5 shards,
-NO freeze**, with **4 deterministic failures**:
-`macroClockInWindowKeepsSquareOnResize`, `macroDocumentScrollsMixedTextAndClocks`,
-`macroWindowWithAClockInAWindowConstructionTwo`, `macroDuplicatedInspectorDrivesCopiedTargetOnly`.
+### 2c. Build-time enforcement (`buildSystem/check-layering.js` rule [E], commit `b89c9141`)
+```js
+const INVALIDATE_CALL = /[@.]\s*invalidateLayout\b/;
+const isImmediateMutator = (name) => /^(raw[A-Z]|silent|fullRaw)/.test(name);   // narrower than isLowLevel
+// in checkFile: if (isImmediateMutator(method) && invalidate) violations.push("[E] ...");
+```
+Rule [E] is intentionally **narrower than `isLowLevel`** (which also matches `_private`/`*Core`/`*Layout`): a
+`_private`/`*Core`/`*Layout` method legitimately drives layout and may invalidate other widgets, so it is NOT
+covered. The lint runs in `build_it_please.sh`; success prints `0 violations (A/B/C/D/E)`. Negative-tested.
 
 ---
 
-## 4. The REMAINING problem (Path A's target): a content-fit LAYOUT regression
+## 3. How to verify (the gauntlet) — exact commands
 
-`macroClockInWindowKeepsSquareOnResize` is a confirmed **real regression** (visually inspected image_3,
-dpr1 SWCanvas): the reference shows a window resized to FIT the clock (tall window, large square clock
-filling it); the WIP renders a **wide-short window with a small square clock floating in empty space**.
-image_1/image_2 (pre-resize) MATCH; image_3/image_4 (post-resize) differ. So the clock stays square but the
-**window↔content fit on resize is wrong**.
+Run each from the repo it belongs to (separate `cd` per repo). **ALWAYS `pkill` zombie browsers first.**
+```sh
+# build (runs the CoffeeScript syntax gate + the A/B/C/D/E layering lint)
+cd Fizzygum && ./build_it_please.sh            # full build (recopies tests); --keepTestsDirectoryAsIs to skip test copy
+node ./buildSystem/check-layering.js           # run the lint alone (fast)
 
-**Hypothesised cause (verify first):** moving the window/stack re-fit onto the `doLayout` cycle changes the
-content-fit math vs the old inline path, specifically for **ratio-keeping content**
-(`KeepsRatioWhenInVerticalStackMixin`, used by the analog clock). Two suspects, in order of likelihood:
-  (a) `rawSetWidthAndReLayoutSynchronously` reads the child's **fresh** height (the synchronous `@doLayout()`)
-      where the old `rawSetWidthSizeHeightAccordingly` left a **stale** height (deferred) — and
-      `WindowWdgt._adjustContentsBounds` reads `@contents.height()` right after (~:476, ~:482) to compute the
-      window's height. Fresh-vs-stale height → different window extent. (The owner anticipated this: "reads
-      the fresh height — arguably more correct but changes the baseline.")
-  (b) `super` (Widget::doLayout, which applies the window's own new extent) runs BEFORE `@_reFitToContents()`,
-      vs the old inline re-fit ordering — so the content is fit against a different window extent.
+# the screenshot suite (byte-exact SWCanvas) — pkill first, every time
+cd Fizzygum-tests
+pkill -9 -f "Chrome for Testing|chrome-headless|puppeteer|webkit"
+node scripts/run-all-headless.js --shards=5                 # dpr1   (~1.3 min)
+node scripts/run-all-headless.js --shards=5 --dpr=2         # dpr2   (~1.7 min)
+node scripts/run-all-headless.js --shards=5 --browser=webkit  # WebKit cross-engine
 
-The other 3 failures are unt­riaged but almost certainly: `macroDuplicatedInspectorDrivesCopiedTargetOnly` =
-**benign** (the WIP added 2 new methods to `Widget` → every widget's inspector member-list grew by 2 rows →
-sanctioned recapture, same as Phase 3a's `_addCore`; verify image_1 is byte-identical and only post-"show
-inherited" frames moved). `macroDocumentScrollsMixedTextAndClocks` + `macroWindowWithAClockInAWindowConstructionTwo`
-= same content-fit family as the clock one (both involve clocks/windows) — triage after fixing (a)/(b).
+# THE APP-LAUNCH GATE — the suite does NOT cover app launch; this is the only guard
+node scripts/smoke-apps-headless.js            # launches all 12 desktop apps; fails on any console.error
 
----
+# determinism soak (mandated for layout-cycle changes) — prefix caffeinate on macOS
+caffeinate -i node scripts/torture-headless.js --dprs=2 --speeds=fastest --shards=8 --minutes=25
 
-## 5. NEXT STEPS — Path A, in order
-
-1. **Reproduce + instrument the content-fit math.** `cd Fizzygum-tests && pkill -9 … ; node scripts/run-macro-test-headless.js
-   SystemTest_macroClockInWindowKeepsSquareOnResize --dump-failures` (it passes image_1/2, dumps image_3/4 to
-   `.scratch/…`). Add temporary logging in `WindowWdgt._adjustContentsBounds` of: `@contents.height()` right
-   after the sizing call, `recommendedElementWidth`, the computed window width/height, and whether the
-   `@contentNeverSetInPlaceYet` vs else branch ran. Compare a WIP run to the committed-Slice-1 baseline (stash
-   the WIP, capture the numbers, unstash) at the resize step — the divergent number is the cause (this is the
-   DETERMINISM.md §"Step 3 — instrument the suspect state" playbook). Capture page console with `--all-logs`
-   (it dumps at end; or stream via a small `perl alarm` wrapper if a run hangs — it shouldn't anymore).
-2. **Fix the divergence so the layout is pixel-correct.** If (a): the window must compute its height from the
-   content height the SAME way it did inline. Options: read the height the old way (don't rely on the
-   synchronous re-fit for the height the window reads back), or make the window-fit math tolerant of the fresh
-   height. If (b): reorder so the content is fit against the right window extent (mind DETERMINISM.md case-3c:
-   a custom `doLayout` must apply its OWN bounds before laying out children — `super` first is correct, so the
-   fix is more likely in the fit math than the order). Keep `_reFitToContents` a FIXED POINT (no
-   invalidate-climb) — that's why (2a) `rawSetWidthAndReLayoutSynchronously` exists.
-3. **Re-run dpr1** (`run-all-headless.js --shards=5`). Iterate 1–2 until only the **benign inspector** diff
-   remains (and any genuinely-improved layouts you decide to recapture — get owner sign-off on recaptures per
-   `byte-identical-not-sacred-for-benign-inspector-recapture`; a clock NOT filling its window is a regression,
-   not a recapture).
-4. **Triage + recapture the benign ones.** `node scripts/capture-macro-test-references.js <name> --dprs=1,2`,
-   then DELETE the stale old `.js`+`.png` per image+density (the capture script leaves them → the build's
-   duplicate-ref gate aborts otherwise — see the recapture gotcha).
-5. **Cross-engine + determinism gauntlet.** dpr2 (`--dpr=2`) + WebKit (`--browser=webkit`) → 165/165. Then a
-   **torture soak** (the design mandates it for 3b): `node scripts/torture-headless.js --dprs=2 --speeds=fastest
-   --shards=8 --minutes=N` (prefix `caffeinate -i`). Canaries: `macroNestedScrollPanelsRouteWheel`,
-   `macroScrollBarsTrackContentChange`, the scroll/stack/document/window family.
-6. **`--homepage` boot check** (3-step, separate `cd`s — see the homepage-boot-check memory): build `--homepage`
-   in `Fizzygum/`, then `cd Fizzygum-tests && node scripts/smoke-boot-headless.js --native-only`, then restore.
-7. **Clean up diagnostics** (Section 2e) and **review + commit** (ask the owner first; commit Fizzygum + tests
-   separately; `git commit -F` heredoc, NO backticks/`$()` in the message). Consider committing the
-   `settleLayoutsOnceAfter` batch primitive as its own earlier commit (it's independently valuable).
-8. **OPTIONAL but recommended:** fix the `createErrorConsole` recovery-loop fragility (Section 3.3) so future
-   `doLayout` errors surface as errors, not freezes.
+# --homepage production boot check — 3 EXPLICIT cd steps (chaining build+smoke in one && runs smoke from the wrong dir)
+cd Fizzygum && ./build_it_please.sh --homepage
+cd Fizzygum-tests && node scripts/smoke-boot-headless.js --native-only
+cd Fizzygum && ./build_it_please.sh            # restore the normal test build
+```
+**Last full-gauntlet result (at `b89c9141`):** lint A/B/C/D/E 0; suite 165/165 dpr1 + dpr2 + WebKit; smoke-apps
+12/12; torture 20× dpr2-fastest-s8 (~3,300 execs) 0 flaky; `--homepage` boot OK; zero `FLOWRULE_VIOLATION`.
 
 ---
 
-## 6. Reference facts (signatures, sites, gotchas)
+## 4. Gotchas / lessons (durable)
 
-- **Re-fit chokepoint:** `_reFitToContents` (private, `?()`-soaked) = `_adjustContentsBounds` (+`_adjustScrollBars`
-  on scroll panels). Defined on `ScrollPanelWdgt:246`, `SimpleVerticalStackPanelWdgt:54`, `WindowWdgt:194`.
-- **The crash method:** `VerticalStackLayoutSpec.getWidthInStack` (`:31`) → `@stack.availableWidthForContents()`;
-  `@stack` set by `rememberInitialDimensions(@element, @stack)` (`:18`). `availableWidthForContents` =
-  `SimpleVerticalStackPanelWdgt:85` (`@width() - 2*@padding`).
-- **`WindowWdgt._adjustContentsBounds`** (`:402`): sets up chrome (closeButton/collapse/edit via direct
-  `child.doLayout`), then sizes `@contents` and reads `@contents.height()` back (~:476/:482) — the read-back
-  that (a) is about.
-- **`implementsDeferredLayout`** = `@doLayout != Widget::doLayout` (`Widget:~3838`); read at
-  `rawSetWidthSizeHeightAccordingly` (`:684`, invalidate-on-resize) and `subWidgetsMergedFullBounds` (`:~1019`,
-  a deferred-layout child contributes only `child.bounds`, not `fullBounds()` — the nested-scroll content-size;
-  DO NOT touch this branch, proven Path-A regressor). Pinned `false` on ScrollPanel + Stack(+Window) so the
-  `doLayout` doesn't flip either read site.
-- **Failing tests:** `macroClockInWindowKeepsSquareOnResize` (regression, image_3/4), `macroDocumentScrollsMixedTextAndClocks`,
-  `macroWindowWithAClockInAWindowConstructionTwo`, `macroDuplicatedInspectorDrivesCopiedTargetOnly` (benign member-list).
-- **Tooling gotchas:** (1) NO `timeout(1)` — use `perl -e 'alarm N; exec @ARGV' node …`. (2) ALWAYS `pkill -9 -f
-  "Chrome for Testing|chrome-headless|puppeteer"` before a suite run; zombies accrue and starve the box →
-  spurious stalls. (3) run-all-headless / run-macro-test-headless buffer page console until completion → a
-  hung test shows nothing; the `createErrorConsole` loop is the freeze source — if you ever see a freeze, it's
-  a masked `doLayout` throw, surface it by suppressing `createErrorConsole` + logging `err.stack` in the
-  catches. (4) Separate `cd` per repo (build in `Fizzygum/`, run/smoke in `Fizzygum-tests/`).
-- **Verification recipe:** `cd Fizzygum && ./build_it_please.sh` (syntax + layering A/B/C/D gates) →
-  `./build_and_smoke.sh` (boot) → `cd Fizzygum-tests && node scripts/run-all-headless.js --shards=5`
-  (dpr1) → `--dpr=2` → `--browser=webkit` → torture soak.
+- **The screenshot suite has NO app-launch coverage.** Apps are built/laid-out only when a human clicks a launcher;
+  `scripts/smoke-apps-headless.js` is the ONLY automated guard. **Run it for ANY layout-cycle change.** (This is how
+  the Slice-2 freeze slipped past a 165/165 suite.)
+- **No `timeout(1)` in this shell** — use `perl -e 'alarm N; exec @ARGV' node …` to bound a headless run.
+- **`pkill -9 -f "Chrome for Testing|chrome-headless|puppeteer|webkit"` before every suite/app run** — zombie Chromes
+  accrue and starve the box, causing spurious stalls.
+- **The runners buffer page console until completion** — a hung test prints nothing; a freeze is the symptom. If you
+  ever freeze, it's a masked `doLayout` throw (see #18).
+- **`createErrorConsole` is a freeze-amplifier (task #18, not yet fixed):** when a `doLayout` throws inside
+  `recalculateLayouts`, the catch builds the error console via PUBLIC setters → re-entrancy throw → never recovers →
+  freeze that MASKS the primary error. To diagnose a freeze, temporarily replace the recalc catch
+  (`WorldWdgt.coffee` ~:910) with `console.error err.stack; throw err`, and/or add a counter guard in
+  `_recalculateLayoutsCore`'s `until` loop that throws after ~8000 iters with the offending widget's class/spec.
+- **Recapture gotcha:** `capture-macro-test-references.js --clean --dprs=1,2 SystemTest_<name>` writes new refs AND
+  deletes stale ones; run its FULL flow (no `--no-build`).
+- **Separate `cd` per repo** (build in `Fizzygum/`, run/smoke in `Fizzygum-tests/`). Commit messages via
+  `git commit -F <file>` — never backticks/`$()` in `-m` (the Bash tool command-substitutes them).
 
 ---
 
-## 7. Fallback (if Path A proves intractable in the next session)
+## 5. Key files & sites (reference)
 
-Path B = revert the Slice-2 WIP (`git -C Fizzygum checkout src/SimpleVerticalStackPanelWdgt.coffee
-src/WindowWdgt.coffee src/basic-widgets/Widget.coffee buildSystem/check-layering.js`), keep Slice 1 as the
-banked foundation, and land the `settleLayoutsOnceAfter` batch primitive + the `createErrorConsole` raw-setter
-fix as independent improvements. The diagnosis here means a future attempt starts from full understanding.
-But the OWNER CHOSE PATH A — exhaust it first.
+- **Flow rule:** `Widget.invalidateLayout` (~`src/basic-widgets/Widget.coffee:3699`); `Widget.rawSetWidthSizeHeightAccordingly`
+  (~:698); base `rawSetExtent`/`silentRawSetExtent`/`rawSetWidth` (~:1514/:1560/:1604).
+- **Lint:** `buildSystem/check-layering.js` (rules A/B/C in `checkFile`, D in `checkMacroFile`, E = `isImmediateMutator`).
+- **Slice-2 doLayout:** `SimpleVerticalStackPanelWdgt.coffee` (`doLayout`, `_adjustContentsBounds`, `implementsDeferredLayout: -> false`);
+  `WindowWdgt.coffee` extends it (`_adjustContentsBounds`, `buildAndConnectChildren` batched via `settleLayoutsOnceAfter`).
+- **`world._recalculatingLayouts`** set/reset in `WorldWdgt.recalculateLayouts` (~:850-861); the until-loop is
+  `_recalculateLayoutsCore` (~:863).
+- **createErrorConsole** `WorldWdgt.coffee:426`; recovery callers ~:912/:1185/:1204/:1335.
+
+---
+
+## 6. NEXT STEPS (ordered; recommended next = the createErrorConsole fix)
+
+1. **#18 — fix the `createErrorConsole` freeze-amplifier, THEN upgrade the guard to a throw (RECOMMENDED NEXT).**
+   - Part 1: make `createErrorConsole` (`WorldWdgt.coffee:426`) build its `WindowWdgt`/contents with **raw** setters
+     (or defer construction outside the flush) so it can't re-enter `recalculateLayouts`. Then a `doLayout` error
+     surfaces as a real error, not a freeze. Verify: deliberately throw in a `doLayout`, confirm a clean error +
+     visible error console (not a hang).
+   - Part 2 (after Part 1): in `Widget.invalidateLayout`, change the `world._recalculatingLayouts` branch from
+     log+no-op to a **hard `throw`** — the flow rule becomes a fail-fast invariant (like the existing re-entrancy
+     throws). Safe ONLY once Part 1 lands. Re-run the gauntlet (incl. smoke-apps).
+2. **Extend the flow rule to the other re-fit triggers (small).** `silentRawSetExtent` still calls
+   `@parent?.childGeometryChanged?()` (a re-fit trigger from a SILENT method — same smell). Audit whether it can be
+   dropped/moved to the public tier; if so, extend rule [E] to also forbid `childGeometryChanged`/`_reFitToContents`
+   from immediate mutators. Gate with smoke-apps + soak.
+3. **#15 — end-of-plan rule-D tightening.** Give the construction-time raw/silent read-back idiom + `reLayout()`
+   public self-settling alternatives, then extend lint rule D (`MACRO_FORBIDDEN_CALL`) to forbid
+   `raw*`/`silent*`/`fullRaw*`/`/Layout$/` in macro sources too.
+4. **#16 — base-declared polymorphic conversion of the duck-typed hooks** (`childGeometryChanged` /
+   `reLayOutAfterContainedPanelChange` / `reactToDropOf` / `childAdded` …): owner-deferred to plan-end. Adding a
+   base method is inspector-SAFE (zero recapture); deleting an inspector-visible Widget method recaptures the one
+   inspector test (`macroDuplicatedInspectorDrivesCopiedTargetOnly`).
+
+Each step: build (lint) → dpr1 suite → **smoke-apps** → (for behavioural/determinism changes) dpr2 + WebKit + soak +
+`--homepage`. Ask before commit/push; commit Fizzygum + tests separately.

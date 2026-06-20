@@ -57,7 +57,7 @@ leaves a consistent world by itself. Concretely:
   the `implementsDeferredLayout` blocker and puts the scroll-panel re-fit on the cycle for RESIZES; the
   re-fit is idempotent on top of the still-present inline triggers, so it removed none of them. Verified
   byte-safe at dpr1/dpr2/WebKit (165/165) + boot clean. (`ScrollPanelWdgt.coffee`, +24 lines.)
-- **Phase 3b — Slice 2 (✅ RESOLVED in working tree 2026-06-19; pending torture soak + `--homepage` boot check + commit):** flip the ~20 inline `_reFitToContents` content-change
+- **Phase 3b — Slice 2 (✅ SHIPPED 2026-06-20 — `6c7060e5` (doLayout) + the flow-rule app-freeze fix `c45113ac` + lint `b89c9141`). CURRENT SELF-CONTAINED RECORD + NEXT STEPS: `docs/deferred-layout-slice2-completion-plan.md` — read that; the bullets below are historical (the "context-aware rawSetWidthSizeHeightAccordingly" they describe was SUPERSEDED by the flow rule).** flip the ~20 inline `_reFitToContents` content-change
   triggers to `invalidateLayout` (mark-dirty → re-fit in `doLayout`). Censusing it showed it is larger than
   the Slice-1 foundation implied: the triggers span **5 files / 3 classes** (ScrollPanel,
   SimpleVerticalStackPanel, Window) — stack/window re-fits would each need their OWN `doLayout` — and several
@@ -87,8 +87,12 @@ leaves a consistent world by itself. Concretely:
     `doLayout` becomes a fixed point too. That is a determinism-sensitive change to core child-sizing (needs
     the reLayout-vs-doLayout semantics per child type right, then the full gauntlet + a torture soak); it is
     the prerequisite for the trigger flip. Owner-gated.
-  - **✅ RESOLVED (2026-06-19) — Path A landed cleanly; full record: `docs/deferred-layout-slice2-completion-plan.md`.**
-    Slice 2 now ships three orthogonal pieces, all in the working tree (uncommitted, pending the soak/boot/commit):
+  - **⚠️ SUPERSEDED HISTORY (2026-06-19) — what follows describes the FIRST fix attempt (a context-aware
+    `rawSetWidthSizeHeightAccordingly`). It shipped as `6c7060e5` and passed the screenshot gauntlet but FROZE 9/12
+    desktop apps (the suite has no app-launch coverage). The real fix was the FLOW RULE (raw setters must not
+    schedule layout), `c45113ac` + `b89c9141` — see `docs/deferred-layout-slice2-completion-plan.md` §2. Kept below
+    for the diagnosis trail only.**
+    Slice 2 ships three orthogonal pieces:
     (1) **the trigger flip** — `SimpleVerticalStackPanelWdgt` got `doLayout: super; @_reFitToContents()` +
     `implementsDeferredLayout: -> false` (WindowWdgt inherits both), so the stack/window content re-fit runs on
     the `recalculateLayouts` cycle; (2) **convergence** — instead of a separate `rawSetWidthAndReLayoutSynchronously`
