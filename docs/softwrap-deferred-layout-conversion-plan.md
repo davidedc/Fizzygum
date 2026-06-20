@@ -483,9 +483,23 @@ Seam + refined phases:
   > `world._reFittingContents` (bumped around each container `_reFitToContents`) so the seam stays SYNCHRONOUS
   > inside a cross-widget cascade (= C0, converges) and only DEFERS a PRIMARY change outside any re-fit. Suite
   > 165/165 dpr1+dpr2+WebKit byte-identical, smoke-apps 12/12, clock/DRIVE/REACT green. This is **C1 done** (primary
-  > changes defer; cascade arm still synchronous, so the seam is NOT yet removed). **NEXT = true C2:** make the
-  > cross-widget cascade converge IN-PASS without the synchronous seam (entangled with deferring the resize itself),
-  > then C3 (delete the seam) + lint [E]. (Path A is dead — see path-a-design §11.)
+  > changes defer; cascade arm still synchronous, so the seam is NOT yet removed).
+  > **FINAL — true C2/C3 is a WALL (probed 2026-06-20); the arc concludes at C1.** A feasibility probe stubbing the
+  > seam's in-pass re-fire to a no-op broke **7 tests** across all three families (5 scroll/REACT incl.
+  > `macroScrollBarsTrackContentChange`/`macroNoSpuriousScrollbars…`/2 caret/`…NotMovedViaNonFloatDrag`; 2 stack/window:
+  > the clock + DRIVE). So the in-pass re-fire is load-bearing, NOT redundant. The scroll/REACT arm breaks
+  > INDEPENDENTLY of the clock — so the "scroll/REACT arm stays synchronous → C3 unachievable" conclusion above was
+  > CORRECT for the in-pass case all along (the "SUPERSEDED" note was over-optimistic; it only held for the
+  > OUTSIDE-pass case that C1 already deferred). Root cause: the freefloating-content→container notification has no
+  > clean deferred home — freefloating doesn't climb invalidate (Widget:3756); the `recalculateLayouts` walk-up stops
+  > at freefloating (WorldWdgt:924-927); `invalidateLayout` throws mid-pass (Widget:3751). And the in-pass seam re-fit
+  > already happens within `recalculateLayouts`/a public-op settle. **BUT the wall is the NAIVE no-op removal — not
+  > in-pass convergence itself.** **NEXT STEP = the DEFERRED RE-QUEUE** (the C2 in-pass-convergence mechanism, untested):
+  > replace the seam's synchronous re-fit with a mid-pass-legal enqueue of the container into the until-loop
+  > (`layoutIsValid=false` + push `widgetsThatMaybeChangedLayout`; no throw, no climb), so the relayout runs in the loop
+  > not the mutator. Verify convergence/termination + byte-identity under the torture soak; if it holds, the seam + the
+  > twin `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` come out + lint [E] tightens. Full design + risks:
+  > `deferred-layout-c2-execution-plan.md` (RESULT + NEXT STEP). (Path A is dead — see path-a-design §11.)
 - **C3 — remove + enforce.** Once the Path-A/B work + C2 make the seam redundant, delete it (and the `_refresh…`
   sibling) and extend lint [E] to forbid `childGeometryChanged`/`_reFitToContents` from immediate mutators.
 
