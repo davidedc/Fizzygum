@@ -15,7 +15,8 @@ pushed to master.** The capstone (Phase 3b Slice 2 — stack/window re-fit on th
 `fullRaw*`) must only MUTATE geometry, never SCHEDULE a (re-)layout.** That rule is now migrated, runtime-guarded,
 and build-time-lint-enforced. **Task #18 — fixing the `createErrorConsole` freeze-amplifier and turning the
 flow-rule guard into a fail-fast `throw` — is now also shipped (see §1).** The remaining work is small
-follow-ups (§6); recommended next = the `childGeometryChanged` flow-rule extension.
+follow-ups (§6); recommended next = **#15** (the `childGeometryChanged` extension once flagged here turned out, on
+audit, to be the larger deferred-model conversion arc — see §6 and `softwrap-deferred-layout-conversion-plan.md` §6b).
 
 ---
 
@@ -193,20 +194,24 @@ cd Fizzygum && ./build_it_please.sh            # restore the normal test build
 
 ---
 
-## 6. NEXT STEPS (ordered; recommended next = the `childGeometryChanged` flow-rule extension)
+## 6. NEXT STEPS (ordered; recommended next = #15)
 
-1. **Extend the flow rule to the other re-fit triggers (small, RECOMMENDED NEXT).** `silentRawSetExtent` still calls
-   `@parent?.childGeometryChanged?()` — a re-fit trigger fired from a SILENT (immediate) method, the same smell the
-   flow rule forbids. Audit whether it can be dropped/moved to the public tier; if so, extend lint rule [E] to also
-   forbid `childGeometryChanged`/`_reFitToContents` from immediate mutators (`isImmediateMutator`). Gate with
-   smoke-apps + soak.
-2. **#15 — end-of-plan rule-D tightening.** Give the construction-time raw/silent read-back idiom + `reLayout()`
-   public self-settling alternatives, then extend lint rule D (`MACRO_FORBIDDEN_CALL`) to forbid
-   `raw*`/`silent*`/`fullRaw*`/`/Layout$/` in macro sources too.
-3. **#16 — base-declared polymorphic conversion of the duck-typed hooks** (`childGeometryChanged` /
+1. **#15 — end-of-plan rule-D tightening (RECOMMENDED NEXT; small IF macros are already clean).** Give the
+   construction-time raw/silent read-back idiom + `reLayout()` public self-settling alternatives, then extend lint
+   rule D (`MACRO_FORBIDDEN_CALL`) to forbid `raw*`/`silent*`/`fullRaw*`/`/Layout$/` in macro sources too. First
+   confirm no macro source currently calls those (then it is a byte-safe, lint-only add); fix any that do.
+2. **#16 — base-declared polymorphic conversion of the duck-typed hooks** (`childGeometryChanged` /
    `reLayOutAfterContainedPanelChange` / `reactToDropOf` / `childAdded` …): owner-deferred to plan-end. Adding a
    base method is inspector-SAFE (zero recapture); deleting an inspector-visible Widget method recaptures the one
    inspector test (`macroDuplicatedInspectorDrivesCopiedTargetOnly`).
+
+**Deferred to its own arc — the inline re-fit triggers (`childGeometryChanged`/`_reFitToContents` from immediate
+mutators).** Once scoped here as a "small" flow-rule extension; an audit (2026-06-20) found it is the deferred-model
+conversion arc instead: the triggers are a SAFE synchronous re-fit (NOT the freeze smell — they never schedule, proven
+under the #18 throw) but load-bearing (removing `silentRawSetExtent`'s trigger reds exactly 3 SystemTests), and tests
+1/2 re-fit IN-PASS so they need fixed-point convergence, not a reroute. **Do NOT extend lint [E] to forbid them yet.**
+Full audit + phased plan (C1 outside-pass → C2 in-pass convergence → C3 remove + lint): see
+`softwrap-deferred-layout-conversion-plan.md` §6b.
 
 **DONE since this plan was first written:** #18 — the `createErrorConsole` freeze-amplifier fix + the guard→`throw`
 upgrade (see §1, §2b, §2d). Verified via a deliberate-throw probe + the full gauntlet.

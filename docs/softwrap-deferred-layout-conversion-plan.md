@@ -329,6 +329,68 @@ change) the thumb would snap to value-quantized positions instead of smoothly fo
 within the frame — a deliberate visual change requiring recapture of any slider test that exercises
 sub-unit drags. Do not bundle it into the byte-safe pilot.
 
+### 6b. The inline re-fit triggers → deferred conversion (the `childGeometryChanged`/`_reFitToContents`-from-immediate-mutators arc)
+
+This is the home of what was first scoped as flow-rule task #19 ("forbid `childGeometryChanged`/`_reFitToContents`
+from immediate mutators"). An audit (2026-06-20) showed it is **not** a small lint add but a Path-C arc — recorded
+here so it's picked up deliberately.
+
+**What these triggers are.** Three immediate mutators carry an inline, *synchronous* container re-fit:
+`Widget.silentRawSetExtent` (`~:1592-1594`), `Widget.fullRawMoveBy` (`~:1234-1236`), and the shared helper
+`Widget._refreshScrollPanelWdgtOrVerticalStackIfIamInIt` (`~:1597-1600`). On any silent resize/move they call
+`@parent.parent._reFitToContents?()` (when directly inside a scroll panel) and/or `@parent?.childGeometryChanged?()`
+(stack/window), which synchronously re-fit the container (`_reFitToContents → _adjustContentsBounds`, itself guarded
+by `@_adjustingContentsBounds`). This is the §2b-C pattern's *synchronous* (pre-deferred) ancestor.
+
+**Audit — they are SAFE but load-bearing.**
+- *Not the flow-rule freeze smell.* They APPLY a re-fit synchronously; they never `invalidateLayout` nor re-enter
+  `recalculateLayouts`. Proven: the full gauntlet passes with the #18 `invalidateLayout`-during-recalc `throw`
+  active — no re-fit cascade trips it. So it is a LAYERING smell only, not a convergence hazard. **Do NOT extend
+  lint [E] to forbid them until C3 below** — that would flag legitimate current code.
+- *Load-bearing.* Removing the trigger from `silentRawSetExtent` alone reds **exactly 3 SystemTests**:
+  `macroScrollBarsTrackContentChange`, `macroWindowWithAClockInAWindowConstructionTwo`,
+  `macroWindowWithSimpleVerticalPanelResizesAsContentChanges`. (`silentRawSetExtent` has 22+ callers;
+  `_refresh…` is driven by `VerticalStackLayoutSpec`, `TextWdgt`, `SimplePlainTextWdgt`.)
+
+**Instrumentation that dictates the work** (gated `window.__INSTR19` log at the trigger — class/spec/parent/
+grandparent/`_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()`/`world._recalculatingLayouts`/stack):
+
+| Test | trigger path | inside `recalculateLayouts`? |
+|---|---|---|
+| `macroScrollBarsTrackContentChange` | text → `ScrollPanelWdgt` (`_reFitToContents`) | **100% in-pass** — the text re-wraps inside its own `doLayout` (`doLayout(text)→rawSetExtent→reLayout→silentRawSetExtent`) and must re-fit the panel mid-pass |
+| `…ClockInAWindowConstructionTwo` | nested `WindowWdgt`/clock/box → `WindowWdgt` (`childGeometryChanged`) | **~99% in-pass** — square-on-resize converges during the pass |
+| `…SimpleVerticalPanelResizesAsContentChanges` | text→stack, stack→`WindowWdgt` | **mostly outside-pass** — content-change (drop/type) re-fit |
+
+**The obstacles (why it is not a small reroute):**
+1. **In-pass (tests 1, 2) cannot `invalidateLayout`** — that now throws (#18). The right form is the container's
+   re-fit *self-converging to a fixed point* within its own `doLayout` when its (freefloating) content re-lays-out
+   and changes size — not a child callback.
+2. **The lint blocks the obvious site.** The reroute cannot live in `silentRawSetExtent`/`fullRawMoveBy` (rule [E]
+   forbids an immediate mutator scheduling); it must move to the content-change operations or to `_refresh…`
+   (a non-immediate method, lint-legal to `invalidateLayout`).
+3. **Freefloating content does not climb** (§4, §5): scroll-panel / window content is `ATTACHEDAS_FREEFLOATING`,
+   so `invalidateLayout()` on it does not reach the container — the container must be invalidated directly.
+
+**Phased plan** (each phase: build → dpr1 suite → **smoke-apps** → dpr2/WebKit/soak; behaviour-changing phases
+recapture ONLY the named tests):
+- **C1 — outside-pass first (test 3 class).** At the content-change operations resizing via the silent path
+  (stack-element resize, cell add/remove, text grow), route the re-fit through §2b-C: invalidate the container
+  directly (handling the freefloating stack→window climb), then drop the inline trigger for those paths. Aim
+  byte-identical; recapture only if settle-timing shifts pixels.
+- **C2 — in-pass convergence (tests 1, 2 class).** Make `ScrollPanelWdgt`/`WindowWdgt`/`SimpleVerticalStackPanelWdgt`
+  `_reFitToContents` converge to a fixed point: after sizing content that itself re-lays-out (wrapping text; square
+  clock; nested window), re-measure/re-fit until stable *within the pass*, so no child callback is needed. This is
+  the hard core; the soft-wrap reachability case (§5) is the same shape.
+- **C3 — remove triggers + extend lint [E].** Once C1+C2 make the triggers redundant, delete them from
+  `silentRawSetExtent`/`fullRawMoveBy`/`_refresh…` and extend rule [E] (`isImmediateMutator`) to also forbid
+  `childGeometryChanged`/`_reFitToContents` from immediate mutators — the original #19 enforcement, now correctly
+  the LAST step.
+
+**Reproduce the audit:** instrument the trigger (`if window.__INSTR19 then console.log "INSTR19|"+…`), build
+`--keepTestsDirectoryAsIs`, then `PRELUDE_JS=<file with window.__INSTR19=true> LOG_FILE=/tmp/x.log node
+scripts/run-macro-test-headless.js SystemTest_<name>`; `grep INSTR19 /tmp/x.log`. Empirical removal test: delete the
+`silentRawSetExtent` trigger, run the dpr1 suite → exactly the 3 tests above fail.
+
 ---
 
 ## 7. Risk & framing
