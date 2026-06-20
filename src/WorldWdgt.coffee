@@ -203,6 +203,12 @@ class WorldWdgt extends PanelWdgt
   paintingWidget: nil
   widgetsGivingErrorWhileRepainting: []
 
+  # errors thrown by a doLayout() DURING the recalculateLayouts flush. We can't build the
+  # error console there: createErrorConsole uses the public, self-flushing geometry setters,
+  # which would re-enter recalculateLayouts and throw. So we stash them here and report them
+  # next cycle, outside the flush -- exactly like errorsWhileRepainting. (task #18)
+  layoutErrorsToReport: []
+
   # this one is so we can left/center/right align in
   # a document editor the last widget that the user "touched"
   # TODO this could be extended so we keep a "list" of
@@ -862,7 +868,19 @@ class WorldWdgt extends PanelWdgt
 
   _recalculateLayoutsCore: ->
 
+    # Defensive backstop: this loop is structurally convergent -- each doLayout() either ends
+    # in markLayoutAsFixed() (so the widget is popped) or, on throw, is settled + banned by the
+    # catch below. If it ever fails to converge anyway, bail loudly instead of hanging the world
+    # (the freeze that masked the real error before task #18). Never fires in normal operation.
+    recalcIterationsCap = 100000
+    recalcIterations = 0
+
     until @widgetsThatMaybeChangedLayout.length == 0
+      recalcIterations++
+      if recalcIterations > recalcIterationsCap
+        console.error "RECALC_NONCONVERGENCE: recalculateLayouts did not converge after " + recalcIterationsCap + " iterations; bailing to avoid a freeze. Last widget: " + (tryThisWidget?.constructor?.name) + " spec=" + (tryThisWidget?.layoutSpec)
+        @widgetsThatMaybeChangedLayout = []
+        return
       # starting from the last element,
       # find the first Widget which has a broken layout,
       # (and pop out of the queue all the Widgets we encounter
@@ -908,9 +926,18 @@ class WorldWdgt extends PanelWdgt
         # on the chain (but not all)
         tryThisWidget.doLayout()
       catch err
-        @softResetWorld()
-        if !@errorConsole? then @createErrorConsole()
-        @errorConsole.contents.showUpWithError err
+        # We are INSIDE the recalculateLayouts flush here (_recalculatingLayouts is true), so this
+        # block must do the ABSOLUTE MINIMUM and stay strictly non-flushing / non-invalidating:
+        #   - createErrorConsole uses public, self-flushing setters -> it would re-enter
+        #     recalculateLayouts and throw BEFORE @errorConsole is assigned (masking the real error);
+        #   - even softResetWorld is unsafe here (its hand.drop -> target.add can flush too).
+        # And because the throwing doLayout() never reached its trailing markLayoutAsFixed(),
+        # tryThisWidget is still layoutIsValid==false, so unless we settle it here this until-loop
+        # would spin forever. So: settle + ban the offender (both layout-clean), then defer the
+        # softReset + reporting to the next cycle's drain, outside the flush. (task #18)
+        tryThisWidget.markLayoutAsFixed()   # it threw before doing this itself; do it now so the loop converges
+        tryThisWidget.silentHide()          # ban from paint -- silent: nils caches only, no invalidateLayout/flush
+        @layoutErrorsToReport.push err
 
 
   clearGeometryOrPositionPossiblyChangedFlags: ->
@@ -1204,6 +1231,25 @@ class WorldWdgt extends PanelWdgt
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError eachErr
 
+  # Drains layout errors stashed during the previous cycle's recalculateLayouts flush (see the
+  # catch in _recalculateLayoutsCore). Runs at cycle start, OUTSIDE the flush, so building the
+  # error console via the public setters is safe here. (task #18)
+  showLayoutErrorsFromPreviousCycle: ->
+    if @layoutErrorsToReport.length == 0 then return
+    errorsToShow = @layoutErrorsToReport
+    @layoutErrorsToReport = []
+    # We run at cycle start, OUTSIDE the recalculateLayouts flush, so the operations that were
+    # unsafe in the catch are safe here: softResetWorld (its hand.drop -> add may flush) and
+    # createErrorConsole (public setters). This is the deferred tail of that catch. (task #18)
+    @softResetWorld()
+    for eachErr in errorsToShow
+      # Loud in the browser console too -- not only in the in-world error console. A doLayout()
+      # that throws is a real bug, and CI / the smoke-apps app-launch gate key off console.error;
+      # without this a broken app would no longer freeze (good) but would also go undetected (bad).
+      console.error "LAYOUT_ERROR: a doLayout() threw during recalculateLayouts: " + (eachErr?.stack ? eachErr)
+      if !@errorConsole? then @createErrorConsole()
+      @errorConsole.contents.showUpWithError eachErr
+
 
   updateTimeReferences: ->
     WorldWdgt.dateOfCurrentCycleStart = new Date
@@ -1221,6 +1267,7 @@ class WorldWdgt extends PanelWdgt
     @updateTimeReferences()
 
     @showErrorsHappenedInRepaintingStepInPreviousCycle()
+    @showLayoutErrorsFromPreviousCycle()
 
     # »>> this part is only needed for Macros
     @macroToolkit?.progressOnMacroSteps()

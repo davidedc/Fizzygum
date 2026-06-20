@@ -3699,21 +3699,19 @@ class Widget extends TreeNode
   # this part is excluded from the fizzygum homepage build <<«
 
   invalidateLayout: ->
-    # FLOW-RULE ASSERTION + BACKSTOP: the low-level geometry mutators (raw*/silent*/fullRaw*)
+    # FLOW-RULE INVARIANT (fail fast): the low-level geometry mutators (raw*/silent*/fullRaw*)
     # must not SCHEDULE layout -- they only mutate; scheduling a (re-)layout is the public
-    # self-settling tier's job. If an invalidate still reaches here while recalculateLayouts is
-    # running, a raw setter is (re-)scheduling layout mid-pass -- the Phase 3b Slice 2 app-freeze
-    # (a container resizing its children climbed an invalidate back into itself, so the until-loop
-    # never converged). The raw setters were migrated to honour this; LOG the first offender (with
-    # its call stack) so any regression is VISIBLE -- this also fails the apps-smoke gate, which
-    # treats console.error as failure -- then no-op it as a backstop so the pass still converges.
-    # (A build-time lint will also enforce this statically; once createErrorConsole no longer
-    # re-enters the flush -- task #18 -- this can be upgraded to a hard throw.)
+    # self-settling tier's job. If an invalidate reaches here while recalculateLayouts is running,
+    # a raw setter is (re-)scheduling layout mid-pass -- the Phase 3b Slice 2 app-freeze (a
+    # container resizing its children climbed an invalidate back into itself, so the until-loop
+    # never converged). The raw setters were migrated to honour this and a build-time lint (rule
+    # [E]) enforces it statically; this throw is the RUNTIME tripwire for anything that slips past
+    # the lint (e.g. a dynamic/duck-typed call it can't see). The throw is safe to be hard now
+    # (task #18): the recalculateLayouts catch is strictly non-flushing and defers recovery outside
+    # the flush, so this throw is caught there, reported via the layout-error path (loud
+    # console.error + in-world console), and the world keeps running -- never a freeze.
     if world?._recalculatingLayouts
-      unless world.__loggedInvalidateViolation
-        world.__loggedInvalidateViolation = true
-        console.error "FLOWRULE_VIOLATION: invalidateLayout during a layout pass by " + (@constructor?.name) + " -- a raw setter scheduled layout (must not; task #17)\n" + (new Error("flowrule-violation")).stack
-      return
+      throw new Error "FLOWRULE_VIOLATION: invalidateLayout() during a layout pass by " + (@constructor?.name) + " -- a raw/silent/fullRaw setter must not schedule layout (task #17)"
     if @layoutIsValid
       world.widgetsThatMaybeChangedLayout.push @
     @layoutIsValid = false
