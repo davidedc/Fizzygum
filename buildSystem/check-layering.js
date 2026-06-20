@@ -42,6 +42,7 @@ const PUBLIC_SETTERS = ['setExtent', 'fullMoveTo', 'setBounds', 'setWidth', 'set
 // those have `raw`/`silent` between the @/. and the capitalised `Set*`/`*MoveTo`).
 const PUB_CALL = new RegExp('[@.]\\s*(' + PUBLIC_SETTERS.join('|') + ')\\b');
 const RECALC_CALL = /[@.]\s*recalculateLayouts\b/;            // @recalculateLayouts / world.recalculateLayouts
+const INVALIDATE_CALL = /[@.]\s*invalidateLayout\b/;         // @invalidateLayout / x.invalidateLayout
 const PUBLIC_SET = new Set(PUBLIC_SETTERS);
 const RECALC_WHITELIST = new Set(['doOneCycle', 'mutateGeometryThenSettle', 'settleLayoutsOnceAfter']);
 
@@ -52,6 +53,15 @@ const isLowLevel = (name) =>
                             // _reFitToContents / _refreshScrollPanelWdgtOrVerticalStackIfIamInIt / _amIDirectlyInside*)
   /Core$/.test(name) ||
   /Layout$/.test(name);     // doLayout, reLayout, desktopReLayout — internal layout passes
+
+// [E] the flow rule (task #17): an IMMEDIATE geometry mutator (raw*/silent*/fullRaw*) must only
+// MUTATE geometry, never SCHEDULE a (re-)layout. Scheduling (invalidateLayout) is the public
+// self-settling tier's job; a raw setter that invalidates lets "applying a layout" re-trigger
+// "scheduling a layout", re-dirtying a container DURING its own layout pass -> the recalculate-
+// Layouts until-loop never converges (the Phase 3b Slice 2 freeze that hung 9/12 desktop apps).
+// NB this is NARROWER than isLowLevel on purpose: a _private / *Core / *Layout method legitimately
+// drives layout (and may invalidate other widgets), so it is NOT covered by rule E.
+const isImmediateMutator = (name) => /^(raw[A-Z]|silent|fullRaw)/.test(name);
 
 // [D] macro hygiene: a SystemTest macro must not reach into the framework's PRIVATE surface.
 // Forbid calls to _private methods (the re-fit machinery -- _adjustContentsBounds / _adjustScrollBars /
@@ -133,9 +143,13 @@ function checkFile(file, violations) {
     const at = `${rel}:${n + 1}`;
     const pub = code.match(PUB_CALL);
     const recalc = RECALC_CALL.test(code);
+    const invalidate = INVALIDATE_CALL.test(code);
     if (isLowLevel(method)) {
       if (pub) violations.push(`[A] low-level ${method}() calls public setter .${pub[1]}()  — ${at}`);
       if (recalc) violations.push(`[A] low-level ${method}() calls recalculateLayouts()  — ${at}`);
+    }
+    if (isImmediateMutator(method) && invalidate) {
+      violations.push(`[E] immediate mutator ${method}() calls invalidateLayout() — raw/silent/fullRaw setters must only MUTATE, never SCHEDULE layout (task #17)  — ${at}`);
     }
     if (recalc && !RECALC_WHITELIST.has(method)) {
       violations.push(`[B] recalculateLayouts() called from ${method}() (only doOneCycle / mutateGeometryThenSettle may)  — ${at}`);
@@ -196,11 +210,11 @@ function main() {
   if (violations.length) {
     console.error(`\n!!! layering gate FAILED — ${violations.length} violation(s):\n`);
     for (const v of violations) console.error('  ' + v);
-    console.error('\nSee docs/deferred-layout-refit-and-add-design.md (D: macros must not call private/low-level methods)');
-    console.error('and docs/deferred-layout-16-macro-breakages.md (A/B/C).');
+    console.error('\nSee docs/deferred-layout-refit-and-add-design.md (D: macros must not call private/low-level methods;');
+    console.error('E: raw/silent/fullRaw mutators must not call invalidateLayout) and docs/deferred-layout-16-macro-breakages.md (A/B/C).');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D)`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E)`);
   process.exit(0);
 }
 

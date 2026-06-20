@@ -69,13 +69,6 @@ class ToolPanelWdgt extends PanelWdgt
       unless dontLayout
         @invalidateLayout()
 
-  # TODO this is an anti-pattern where a lower-level function calls an higher-level
-  # one. doLayout should be calling this rawSetExtent.
-  # If we don't do this, the toolbar won't relayout its content when resized, but this
-  # is not the right way to go about it
-  rawSetExtent: (aPoint) ->
-    super
-
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
   doLayout: ->

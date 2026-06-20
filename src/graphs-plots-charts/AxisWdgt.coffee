@@ -32,9 +32,6 @@ class AxisWdgt extends Widget
 
     @invalidateLayout()
 
-  rawSetExtent: (aPoint) ->
-    super
-
   # TODO some duplication of code here with
   # the method below
   distanceOfAxisOriginFromEdge: ->
