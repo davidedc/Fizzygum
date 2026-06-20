@@ -436,9 +436,23 @@ Seam + refined phases:
   (Path A pending-aware accessors `deferred-layout-path-a-design.md`; Path B per-site, e.g. the §6a slider de-read-back is DONE (89ee825f); next the
   clock-square / resize handlers). Only AFTER a content widget can change geometry without a synchronous read-back does
   deferring its container re-fit become safe.
-- **C2 — in-pass convergence (the hard core, downstream of the Path-B work).** Make each container's `_reFitToContents`
-  a true fixed point: after sizing content that itself re-lays-out (wrapping text / square clock / nested window)
-  re-measure WITHIN the pass, so no child callback is needed (tests 1, 2; soft-wrap §5 is the same shape).
+- **C2 — in-pass convergence (the hard core).** Make each container's `_reFitToContents` a true fixed point: after
+  sizing content that itself re-lays-out (wrapping text / square clock / nested window) re-measure WITHIN the pass,
+  so no child callback is needed. **VERIFY-FIRST finding (2026-06-20, instrumented re-fit counts via `window.__INSTR_C2`):**
+  the design's "drive content layout then measure" cleanly fits only **DRIVE** containers (a container that SETS its
+  content's size). The three target tests split into THREE different shapes, not one:
+  - **DRIVE — `macroWindowWithSimpleVerticalPanelResizesAsContentChanges`** (Stack→Window): the stack/window size their
+    cells, so a fixed-point loop fits. The tractable case (~58 stack/window re-fits across the run).
+  - **REACT — `macroScrollBarsTrackContentChange`** (non-wrapping ScrollPanel): the panel does NOT control its content's
+    width (the macro narrows the text externally); the panel only reacts to the re-wrapped result. "Drive then measure"
+    does NOT apply — it needs the harder convergence/ordering. (Re-classified from "tractable".)
+  - **CROSS-WIDGET CLAMP — `macroWindowWithAClockInAWindowConstructionTwo`**: heavily iterative (the clock drove **3,935
+    Window re-fits** across the run); the fit spans clock ↔ inner window ↔ outer-window clamp. Hardest; broke C1.
+
+  **Consequence:** the seam is cleanly convertible only for the DRIVE case; the REACT + CROSS-WIDGET cases must keep
+  the seam → **C3 (remove seam + tighten lint) is NOT achievable**, so a full C2 has no enforcement payoff. The seam
+  (C0) is therefore the documented STABLE INTERMEDIATE. C2 is being attempted ONLY as a DRIVE-case proof (Stack→Window)
+  to confirm the mechanism; it is not expected to enable C3.
 - **C3 — remove + enforce.** Once the Path-A/B work + C2 make the seam redundant, delete it (and the `_refresh…`
   sibling) and extend lint [E] to forbid `childGeometryChanged`/`_reFitToContents` from immediate mutators.
 
