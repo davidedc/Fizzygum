@@ -108,6 +108,7 @@ class Example3DPlotWdgt extends Widget
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
     if @ratio?
       @rawSetExtent new Point newWidth, Math.round(newWidth / @ratio)
+      @height()  # Path B: hand the resulting height back. See Widget.rawSetWidthSizeHeightAccordingly.
     else
       super
   # -----------------------------------------------------------------

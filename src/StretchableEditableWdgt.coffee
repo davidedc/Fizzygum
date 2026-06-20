@@ -149,18 +149,16 @@ class StretchableEditableWdgt extends Widget
   #    to the given width, which is what looks natural.
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
     if @layoutSpecDetails?.canSetHeightFreely
-     super
-     return
+     return super  # Path B: propagate the resulting height. See Widget.rawSetWidthSizeHeightAccordingly.
 
     if !@stretchableWidgetContainer?
-     super
-     return
+     return super
 
     if !@stretchableWidgetContainer.ratio?
-     super
-     return
+     return super
 
     @rawSetExtent new Point newWidth, Math.round(newWidth / @stretchableWidgetContainer.ratio)
+    @height()
 
 
   disableDragsDropsAndEditing: (triggeringWidget) ->

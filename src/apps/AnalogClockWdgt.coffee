@@ -35,6 +35,7 @@ class AnalogClockWdgt extends Widget
 
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
     @rawSetExtent new Point newWidth, newWidth
+    @height()  # Path B: hand the (square) height back so a container needn't read it off me. See Widget.
 
 
   # This method only paints this very widget's "image",

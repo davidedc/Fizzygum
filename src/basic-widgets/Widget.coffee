@@ -695,12 +695,21 @@ class Widget extends TreeNode
   #    this child IN PLACE with a synchronous @doLayout() (no invalidate, no climb), making
   #    the container's doLayout a FIXED POINT -- the same outcome ScrollPanelWdgt reaches via
   #    silent setters. (See docs/deferred-layout-refit-and-add-design.md, "Phase 3b -- Slice 2".)
+  # RETURNS the RESULTING height (Path B de-read-back). A container re-fit that sizes a child this way
+  # (WindowWdgt / SimpleVerticalStackPanelWdgt _adjustContentsBounds) must NOT then read the child's
+  # geometry back to learn its new height -- that synchronous mutate-then-read-back is exactly what forces
+  # the container re-fit to stay on the synchronous seam (it broke C1; see
+  # docs/softwrap-deferred-layout-conversion-plan.md §6b + docs/deferred-layout-OVERVIEW.md §5). Instead it
+  # HANDS the height forward: read once HERE, at the source, immediately after the synchronous mutation (so
+  # byte-equal to the caller's old `child.height()`), and returned. EVERY override must likewise return its
+  # resulting height (the 8 overrides are the historical break point -- keep them in sync).
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
     @rawSetWidth newWidth
     if @implementsDeferredLayout()
       # raw setter: APPLY the re-fit now (synchronous doLayout), never SCHEDULE it
       # (no invalidateLayout). See task #17 -- low-level mutators must not schedule layout.
       @doLayout()
+    @height()
 
   # note that using this one, the children
   # widgets attached as floating don't move

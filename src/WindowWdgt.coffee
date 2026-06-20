@@ -482,14 +482,14 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
           desiredHeight = Math.round @height() - partOfHeightUsedUp
           @contents.rawSetHeight desiredHeight
         else
-          @contents.rawSetWidthSizeHeightAccordingly recommendedElementWidth
-          desiredHeight = @contents.height()
+          # Path B: the sizing HANDS its resulting height back -- no read-back of @contents.height().
+          desiredHeight = @contents.rawSetWidthSizeHeightAccordingly recommendedElementWidth
 
         @contentNeverSetInPlaceYet = false
       else
         # the content was already there
-        @contents.rawSetWidthSizeHeightAccordingly recommendedElementWidth
-        desiredHeight = @contents.height()
+        # Path B: take the resulting height from the sizing call, not a read-back of @contents.height().
+        desiredHeight = @contents.rawSetWidthSizeHeightAccordingly recommendedElementWidth
 
         if @contentsRecursivelyCanSetHeightFreely()
           desiredHeight = Math.round @height() - partOfHeightUsedUp

@@ -60,48 +60,47 @@ ROOT (read-back) is fixed. That fix is **Path A**.
 
 ## 4. The paths
 
-- **Path A — pending-aware READS (the systematic enabler; THE NEXT STEP).** Keep base accessors applied-only;
-  add **opt-in** `effective*` reads; convert the audited *pending-needers* (the container content-sizing path)
-  to read pending geometry. Lets intra-cycle readers measure where content is HEADING in one deferred pass —
-  unblocking the container re-fit convergence (the C2 wall). **NB the 16 construction macros are ALREADY green**
-  (fixed by the self-settling API, tests `a256ccfe6` — see §3 Shipped); they are now Path A's GREEN REGRESSION
-  GUARD, not a red→green target, so the container-path conversion is **byte-identical groundwork** (the
-  convergence loop already reaches the same final pixels) verified by "stay 165/165 + canaries hold".
-  → **`deferred-layout-path-a-design.md`** (why blanket fails, the per-reader design, the reader audit, §9 sequencing).
-- **Path B — per-site de-read-back** (constraint-entangled handlers: slider [DONE], scrollbar, grab-anchor/ratio,
-  window-collapse). Each derives its value from the local clamped input instead of reading the moved geometry back.
-  → **`softwrap-deferred-layout-conversion-plan.md`** §1/§2/§6a.
-- **The inline re-fit trigger arc (C0–C3)** — the synchronous container re-fit seam. C0 done; C2/C3 gated on Path A.
+- **Path A — pending-aware READS — FALSIFIED for the container path (2026-06-20), do NOT pursue.** The idea
+  (opt-in `effective*` reads; convert the container content-sizing path to read pending geometry) was built and
+  tested: it is not merely non-byte-safe but **incorrect** — `_adjustContentsBounds` bakes its size via a
+  non-invalidating `silentRawSetBounds`, so reading pending bakes a mid-settle transient (over-sized the scroll
+  content by 43px; slack +43 vs the applied read's 0). The synchronous re-fit/convergence is **load-bearing**
+  precisely because it re-reads APPLIED geometry after children settle. Reverted to docs-only.
+  → **`deferred-layout-path-a-design.md` §11** (the instrumented finding).
+- **Path B — per-site de-read-back — THE NEXT STEP** (constraint-entangled handlers: slider [DONE `89ee825f`],
+  then the clock-square / window-fit resize handlers, then scrollbar / grab-anchor / window-collapse). Each
+  derives/hands its value forward instead of reading the moved geometry back. This is the ONLY surviving enabler
+  for deferring the seam (Path A can't substitute — a fixed-point re-fit must read applied, not pending).
+  → **`softwrap-deferred-layout-conversion-plan.md`** §1/§2/§6a/§6b (C1 UNSOUND ⇒ #20 gated on Path B).
+- **The inline re-fit trigger arc (C0–C3)** — the synchronous container re-fit seam. C0 done; C1/C2/C3 gated on
+  **Path B** (de-read-back the constraint handlers first, then the seam can be deferred to the cycle).
   → **`softwrap-deferred-layout-conversion-plan.md`** §6b/§6b.1.
 - **Transport (deferred drags)** — the hand/grab case; cadence-sensitive (needs the torture soak); a separate
   later pass. The deferred clamp `fullMoveWithin` already exists. → **path-a-design.md** §9 step 5.
 
-## 5. THE NEXT STEP — Path A, container path
+## 5. THE NEXT STEP — Path B, de-read-back the container-fits-content chain (clock-square first)
 
-Per `deferred-layout-path-a-design.md` §9 (the doc has the full design; this is the summary):
-1. **Add the `effective*` reads** (`effectiveExtent/Position/BoundingBox/FullBounds`; the `effectiveBounds`
-   helper is in path-a §10) — additive, no behavioural change on their own.
-2. **Convert the AUDITED container-sizing pending-needers** to call them (the audit refines path-a §3's
-   over-broad "all overrides" list — see path-a §3/§5): the real one is `subWidgetsMergedFullBounds`
-   (→ an opt-in pending variant + uncached `effectiveFullBounds`), called by `ScrollPanelWdgt._adjustContentsBounds`;
-   the lone other override read is `WindowWdgt._adjustContentsBounds`'s `@contents.width()` preferred-width
-   read; plus `add`'s fractional read. (`SimpleVerticalStackPanelWdgt._adjustContentsBounds` *drives* its
-   children via raw synchronous sizing → its child reads are already applied → NOT a pending-needer.)
-3. ~~Convert the 16 construction macros~~ — **DONE** (tests `a256ccfe6`, via the self-settling API, NOT Path A;
-   see §3). They are now a green regression guard.
-4. **Verify:** 165/165 dpr1/dpr2/WebKit. Failure is *deterministic* (a mis-classified reader fails every run)
-   — oracle = the (already-green) 16 acceptance macros + 3 canaries (`macroSierpinskiInCanvas`,
-   `macroDuplicatedInspectorDrivesCopiedTargetOnly`, `macroScrollBarsTrackContentChange`). **ZERO recaptures,
-   with ONE sanctioned-benign exception:** adding the `effective*` methods to `Widget` grows the inspected
-   member list in `macroDuplicatedInspectorDrivesCopiedTargetOnly` → a thumb-proportion recapture (member text
-   identical), the exact mechanism + precedent of the C0 seam recapture (tests `544166856`). No soak needed for
-   the container path.
+Path A is falsified (§4); the seam can only be deferred once no content widget / container re-fit reads geometry
+back synchronously. So the next step is **Path B per-site de-read-back**, continuing from the slider pilot
+(§6a, `89ee825f`).
 
-**Why this unlocks the whole aim:** once the container-sizing path reads PENDING geometry, containers converge
-in one deferred pass (no synchronous iteration, no child→parent callback) → the synchronous seam becomes
-**removable** (finally enabling C3 + tightening lint [E]) → handlers/construction stop reading back raw → the
-all-deferred end state. It's a core-model arc (high-risk) but the per-reader/opt-in design + the deterministic
-oracle de-risk it.
+1. **De-read-back the content-sizing chokepoint.** `rawSetWidthSizeHeightAccordingly` HANDS its resulting height
+   forward (returns it; the clock its square side, the ratio widgets their ratio'd height); the container re-fits
+   that currently *mutate-then-read-back* — `WindowWdgt._adjustContentsBounds` (`desiredHeight = @contents.height()`
+   after the sizing) and `SimpleVerticalStackPanelWdgt` (`stackHeight += widget.height()`) — use the RETURN value
+   instead. Byte-identical (the return is the height read at the source, immediately after the synchronous
+   mutation). This is the slider pattern generalised to the square/ratio constraint handlers that broke C1 (the
+   clock↔inner-window↔outer-window clamp).
+2. **Then the remaining read-back handlers** one at a time (scrollbar, grab-anchor/ratio, window-collapse).
+3. **Verify:** full suite 165/165 dpr1/dpr2/WebKit + smoke-apps, ZERO recaptures; **plus the torture soak** — this
+   is the cadence-sensitive clock/window clamp class. Oracle: `macroWindowWithAClockInAWindowConstructionTwo`,
+   `macroClockInWindowKeepsSquareOnResize`, `macroDocumentScrollsMixedTextAndClocks`.
+
+**Why this unlocks the whole aim:** once a content widget can resize without a synchronous geometry read-back, C1
+(defer the seam outside a pass → invalidate the container → re-fit on the cycle) becomes SOUND, C2 makes the
+REACT-case `_reFitToContents` a true in-pass fixed point, and C3 deletes the inline seam (+ tightens lint [E]) →
+every container re-fit then happens only inside `recalculateLayouts` (end of `doOneCycle`) or a public-method
+flush = the all-deferred end state.
 
 ## 6. Doc map
 - **`deferred-layout-OVERVIEW.md`** — THIS doc (entry point: aim, state, paths, next step).

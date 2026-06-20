@@ -87,6 +87,7 @@ class StretchableWidgetContainerWdgt extends Widget
       @rawSetExtent new Point newWidth, Math.round(newWidth/@ratio)
     else
       @rawSetExtent new Point newWidth, @height()
+    @height()  # Path B: hand the resulting height back. See Widget.rawSetWidthSizeHeightAccordingly.
 
 
   rawSetExtent: (extent) ->
