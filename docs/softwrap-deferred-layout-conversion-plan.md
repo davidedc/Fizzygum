@@ -453,6 +453,22 @@ Seam + refined phases:
   the seam → **C3 (remove seam + tighten lint) is NOT achievable**, so a full C2 has no enforcement payoff. The seam
   (C0) is therefore the documented STABLE INTERMEDIATE. C2 is being attempted ONLY as a DRIVE-case proof (Stack→Window)
   to confirm the mechanism; it is not expected to enable C3.
+
+  **DRIVE-case proof RESULT (2026-06-20):** CONFIRMED — deferring the `childGeometryChanged` arm of the seam
+  outside-recalc (`@parent.invalidateLayout()` instead of synchronous `@parent.childGeometryChanged()`; scroll arm
+  left synchronous) makes **test 3 (DRIVE) PASS** (the stack/window's own `_adjustContentsBounds` drives+measures its
+  cells, so its `doLayout` converges in one deferred pass) and leaves **test 1 (REACT) PASS** (scroll arm untouched).
+  But it **re-breaks test 2 (clock)** — the clock shares that same `childGeometryChanged` arm and needs the cross-widget
+  iteration (a single deferred pass sizes the clock to the content WIDTH → huge square; the window's
+  `_adjustContentsBounds` "content already there" path, WindowWdgt.coffee:489-496, clamps the content height only
+  `if @contentsRecursivelyCanSetHeightFreely()`, which is FALSE for the clock — so aspect-locked content in a *nested*
+  window is never clamped to the available height; a concrete clock-fix hypothesis is to extend the
+  `!@recursivelyAttachedAsFreeFloating()` height clamp from the `contentNeverSetInPlaceYet` path (:475-476) to the
+  "content already there" path). **DEFINITIVE CONCLUSION:** even a successful clock fix would convert only the
+  `childGeometryChanged` arm — the **scroll/REACT arm stays synchronous** (test 1), so the seam can't be removed and
+  **C3 stays unachievable → no enforcement payoff**. C2 is therefore NOT worth pursuing; **the arc concludes at C0**
+  (the synchronous seam), which is correct, safe, and the documented stable end state. The DRIVE mechanism is proven
+  and recorded here should the deferred-model ever be completed wholesale (Path A pending-aware accessors first).
 - **C3 — remove + enforce.** Once the Path-A/B work + C2 make the seam redundant, delete it (and the `_refresh…`
   sibling) and extend lint [E] to forbid `childGeometryChanged`/`_reFitToContents` from immediate mutators.
 
