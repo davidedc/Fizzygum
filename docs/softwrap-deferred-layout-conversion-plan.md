@@ -415,16 +415,26 @@ Seam + refined phases:
   dpr1+dpr2) because the new method enters the inspector's reflected member list. **NB: adding a Widget method is NOT
   inspector-free** (contra an earlier note) — every C1–C3 method-add re-shifts + recaptures this same one test (benign,
   expected). Verified: lint 0; suite 165/165 dpr1+dpr2; smoke-apps 12/12.
-- **C1 — outside-pass deferral.** Make the seam context-aware: when NOT in `recalculateLayouts`, INVALIDATE the
-  container directly (`@parent.parent.invalidateLayout()` for the scroll panel; the stack/window for the
-  `childGeometryChanged` arm) instead of synchronously re-fitting — the container then re-fits on the cycle. The seam is
-  non-immediate, so lint [E] permits the invalidate. Covers test 3's mostly-outside-pass triggers + the freefloating
-  stack→window climb. Verify byte-identical at settle; recapture only what settle-timing shifts.
-- **C2 — in-pass convergence (the hard core).** Keep the in-pass branch synchronous until each container's
-  `_reFitToContents` is a true fixed point: after sizing content that itself re-lays-out (wrapping text / square clock /
-  nested window) re-measure WITHIN the pass, so no child callback is needed (tests 1, 2; soft-wrap §5 is the same shape).
-- **C3 — remove + enforce.** Once C1+C2 make the seam redundant, delete it (and the `_refresh…` sibling) and extend lint
-  [E] to forbid `childGeometryChanged`/`_reFitToContents` from immediate mutators.
+- **C1 — outside-pass deferral: ATTEMPTED 2026-06-20, UNSOUND, REVERTED.** Made the seam context-aware (outside
+  `recalculateLayouts`, invalidate the container directly instead of a synchronous re-fit; `@parent.parent.invalidateLayout()`
+  for the scroll panel, `@parent.invalidateLayout()` for the `childGeometryChanged` arm). It FIXED the outside-pass
+  content-change test (`macroWindowWithSimpleVerticalPanelResizesAsContentChanges`) and left in-pass test 1 green, **but
+  BROKE `macroWindowWithAClockInAWindowConstructionTwo`**: dropping the clock into the nested inner window left the clock
+  HUGE / overflowing (images 4-6 collapsed to one identical frame — the subsequent resizes had no effect), because the
+  square-keeping chain (`AnalogClockWdgt` width-drives-height, `canSetHeightFreely=false`) **reads geometry back
+  synchronously** — a mutate-then-read-back constraint (this is Path B, §0/§1). A blanket seam-level deferral breaks
+  EVERY such read-back chain, and the shared seam CANNOT distinguish read-back-dependent re-fits (resize-keeps-square)
+  from fire-and-forget ones (content drops/types). **LESSON: the conversion axis is NOT in-pass/outside-pass; it is
+  read-back-dependent (Path B, per-site de-read-back) vs not** — and the seam can't tell them apart. So the seam stays
+  synchronous (C0) and #20 is GATED on first de-read-backing the constraint handlers per-site via the §6 main sequence
+  (Path A pending-aware accessors `deferred-layout-path-a-design.md`; Path B per-site, e.g. the §6a slider pilot, the
+  clock-square / resize handlers). Only AFTER a content widget can change geometry without a synchronous read-back does
+  deferring its container re-fit become safe.
+- **C2 — in-pass convergence (the hard core, downstream of the Path-B work).** Make each container's `_reFitToContents`
+  a true fixed point: after sizing content that itself re-lays-out (wrapping text / square clock / nested window)
+  re-measure WITHIN the pass, so no child callback is needed (tests 1, 2; soft-wrap §5 is the same shape).
+- **C3 — remove + enforce.** Once the Path-A/B work + C2 make the seam redundant, delete it (and the `_refresh…`
+  sibling) and extend lint [E] to forbid `childGeometryChanged`/`_reFitToContents` from immediate mutators.
 
 ---
 
