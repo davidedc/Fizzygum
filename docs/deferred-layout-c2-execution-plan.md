@@ -4,7 +4,7 @@
 > `deferred-layout-OVERVIEW.md`. Companion docs: `deferred-layout-path-a-design.md` (§11 Path-A falsified),
 > `softwrap-deferred-layout-conversion-plan.md` (§6b the C0–C3 arc).
 
-## RESULT (2026-06-20) — the NAIVE seam removal is a WALL; the DEFERRED RE-QUEUE is the next step. No code ships; C1 stands. (Plan below is the record.)
+## RESULT — the NAIVE seam removal is a wall, BUT the DEFERRED RE-QUEUE WORKS and is SHIPPED (2026-06-21). (Plan below is the record.)
 
 **The Phase-1 feasibility probe (the decision gate) returned a hard NO.** Stubbing the seam's IN-PASS/cascade
 synchronous re-fire to a no-op (keeping the outside-pass `invalidateLayout` arm; build green, lint 0) broke **7
@@ -53,11 +53,11 @@ should remain.
 removed the in-pass re-fire *with no replacement*. That obviously can't converge (nothing notifies the container).
 What C2 always called for is an in-pass CONVERGENCE MECHANISM; the probe only ruled out "no mechanism."
 
-## NEXT STEP toward the aim — the DEFERRED RE-QUEUE (identified, NOT yet tested)
+## SHIPPED — the DEFERRED RE-QUEUE (the in-pass cascade arm, now deferred)
 
 The aim is for every relayout to run at a settle point (end of `doOneCycle` / end of a public method), driven by
-the `recalculateLayouts` until-loop — not synchronously inside an immediate mutator. The seam is the last
-synchronous relayout. The next experiment to remove it WITHOUT losing convergence:
+the `recalculateLayouts` until-loop — not synchronously inside an immediate mutator. The in-pass cascade arm of the
+seam was the dominant synchronous relayout (~99% of cascade re-fits). It is now DEFERRED:
 
 **Replace the seam's synchronous in-pass re-fit with a mid-pass-legal RE-QUEUE into the until-loop.** When a
 freefloating content widget changes geometry mid-pass, instead of `@parent…_reFitToContents()` / `childGeometryChanged()`
@@ -85,9 +85,23 @@ does NOT converge (or diverges under load), THAT is the deeper wall: the until-l
 (the walk-up that stops at freefloating, WorldWdgt:924-927) would itself need reworking — a much larger,
 determinism-core change to weigh separately.
 
-**This arc's outcome: no code ships** (the framework source is byte-identical to `7ee0b871`; the no-op probe is
-reverted; suite dpr1 165/165, lint 0). C1 stands as the shipped state; the deferred re-queue above is the next step
-to attempt.
+**SHIPPED 2026-06-21 (`Widget._reFitContainerAfterRawGeometryChange`).** Implemented exactly as above: in a layout
+pass (`world._recalculatingLayouts`) the seam now enqueues the affected container(s) via a local closure
+(`enqueueReFitDuringPass` — guards `_reFitToContents?` + skips a container mid-`_adjustContentsBounds`, then
+`layoutIsValid=false` + push `widgetsThatMaybeChangedLayout`; no throw, no climb). The `_reFittingContents`-only
+(public-op/drop settle, not a pass) branch keeps the synchronous re-fit (aim-sanctioned: end of a public method);
+the outside-both branch keeps the C1 `invalidateLayout` defer. Used a local closure (not a new method) so NO class
+member is added → byte-identical, zero recaptures.
+
+**Verification:** all 7 probe-failing tests now PASS; suite **165/165 at dpr1, dpr2, AND WebKit**; smoke-apps OK;
+lint 0; byte-identical (no recapture). **Soak: SHORT — 3 runs / ~495 execs at dpr2-fastest-s8, 0 flaky, stopped
+early at the owner's request** (the standard ≥20-min / ~1,900-exec soak was NOT completed; a full soak is advisable
+when convenient, since this reorders synchronous→deferred and is the determinism-sensitive class).
+
+**Remaining toward the all-deferred aim (separate later arcs, each its own soak):** (1) the twin
+`_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` (Widget:1602) — same 3-way re-queue — then lint [E] can forbid
+synchronous `_reFitToContents`/`childGeometryChanged` from immediate mutators (can't tighten until BOTH the seam's
+public-op branch and the twin are converted); (2) the transport/deferred-drag pass (OVERVIEW §4).
 
 ---
 

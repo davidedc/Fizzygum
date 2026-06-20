@@ -1626,7 +1626,30 @@ class Widget extends TreeNode
   #    that the container-fits-content read-back is gone (Path B, fa0d7961): no one reads the re-fit result
   #    back synchronously before the settle. (softwrap-deferred-layout-conversion-plan.md §6b.)
   _reFitContainerAfterRawGeometryChange: ->
-    if world?._recalculatingLayouts or world?._reFittingContents
+    if world?._recalculatingLayouts
+      # In a layout pass: DEFER the container re-fit to the recalculateLayouts until-loop (the
+      # C2 "deferred re-queue") instead of re-fitting synchronously now -- so the relayout runs
+      # in the loop, not inside this immediate mutator (the all-deferred aim). Enqueuing is legal
+      # mid-pass: unlike invalidateLayout it does NOT throw and does NOT climb to ancestors (it
+      # enqueues only the directly-affected container). A container mid its OWN _adjustContentsBounds
+      # is driving this child top-down and already accounts for it, so we SKIP it (enqueuing then
+      # would re-fire on every pass and never converge -- the @_adjustingContentsBounds re-entrancy
+      # guard's deferred-mode analogue). If the deferred re-fit later changes the container's own
+      # geometry, ITS seam re-fires and enqueues ITS parent, so up-propagation is preserved -- just
+      # routed lazily through the queue. (deferred-layout-c2-execution-plan.md -- the re-queue step.)
+      enqueueReFitDuringPass = (container) ->
+        return unless container?._reFitToContents?
+        return if container._adjustingContentsBounds
+        if container.layoutIsValid
+          world.widgetsThatMaybeChangedLayout.push container
+        container.layoutIsValid = false
+      if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
+        enqueueReFitDuringPass @parent.parent
+      enqueueReFitDuringPass @parent
+    else if world?._reFittingContents
+      # Inside a public-op re-fit cascade but NOT a layout pass (a drop/nest settle): keep the
+      # synchronous re-fit so the cascade completes within the public method -- already an
+      # aim-sanctioned settle point (the end of a public method). This is the C1 behaviour.
       if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
         @parent.parent._reFitToContents?()
       @parent?.childGeometryChanged?()

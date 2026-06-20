@@ -5,7 +5,7 @@ current state (shipped + learned), the paths, and the next step. The detailed pe
 the Doc map (§6); each is self-contained too. Last updated 2026-06-20.
 
 master: **Fizzygum `7ee0b871`** / **Fizzygum-tests `544166856`** — all green (165/165 dpr1+dpr2+WebKit,
-smoke-apps 12/12, lint A–E 0). (C1 shipped; **true C2 is the next step** — see §5.)
+smoke-apps 12/12, lint A–E 0). (C1 + the in-pass **deferred re-queue** shipped; next = the twin + lint — see §5.)
 
 ---
 
@@ -72,14 +72,14 @@ ROOT (read-back) is fixed. That fix is **Path A**.
   derives/hands its value forward instead of reading the moved geometry back. This is the ONLY surviving enabler
   for deferring the seam (Path A can't substitute — a fixed-point re-fit must read applied, not pending).
   → **`softwrap-deferred-layout-conversion-plan.md`** §1/§2/§6a/§6b (C1 UNSOUND ⇒ #20 gated on Path B).
-- **The inline re-fit trigger arc (C0–C3)** — the synchronous container re-fit seam. **C0 + C1 done.** Naive no-op
-  removal is a wall (probe broke 7 tests); **next step = the DEFERRED RE-QUEUE** (enqueue the container into the
-  until-loop instead of synchronous re-fit) — untested, needs the soak. → **`deferred-layout-c2-execution-plan.md`**
-  (RESULT + NEXT STEP) + `softwrap…` §6b.1.
+- **The inline re-fit trigger arc (C0–C3)** — the synchronous container re-fit seam. **C0 + C1 done; the in-pass
+  cascade arm is now DEFERRED via the RE-QUEUE (shipped 2026-06-21).** Naive no-op removal was a wall (probe broke 7
+  tests); the re-queue (enqueue the container into the until-loop) converges byte-identically. Remaining: the twin +
+  lint [E], then transport. → **`deferred-layout-c2-execution-plan.md`** (RESULT + SHIPPED) + `softwrap…` §6b.1.
 - **Transport (deferred drags)** — the hand/grab case; cadence-sensitive (needs the torture soak); a separate
   later pass. The deferred clamp `fullMoveWithin` already exists. → **path-a-design.md** §9 step 5.
 
-## 5. STATE — Path B de-read-back DONE; C1 is the shipped state; next step = the deferred re-queue (see the C1 note below)
+## 5. STATE — Path B + C1 + the in-pass DEFERRED RE-QUEUE shipped; next = the twin + lint, then transport (see the C1 note below)
 
 Path A is falsified (§4); the seam can only be deferred once no content widget / container re-fit reads geometry
 back synchronously. So the next step is **Path B per-site de-read-back**, continuing from the slider pilot
@@ -118,13 +118,13 @@ scroll/REACT, 2 stack/window) — so the in-pass re-fire is load-bearing: the fr
 notification has no clean deferred home (a freefloating child's invalidate doesn't climb; the `recalculateLayouts`
 walk-up stops at freefloating widgets, WorldWdgt:924-927; `invalidateLayout` throws mid-pass). The scroll/REACT arm
 broke INDEPENDENTLY of the clock, so a clock-only "one-shot constraint solve" could never enable C3. **BUT the wall
-is the NAIVE no-op removal, not in-pass convergence itself.** **NEXT STEP toward the aim = the DEFERRED RE-QUEUE**
-(untested): replace the seam's synchronous in-pass re-fit with a mid-pass-legal enqueue of the container into the
-until-loop (`layoutIsValid=false` + push; no throw, no climb), so the relayout runs in the loop, not in the mutator.
-Verify convergence/termination + byte-identity under the **torture soak** (determinism-sensitive). If it converges,
-the seam + its twin `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` come out + lint [E] tightens = the aim met;
-if not, the deeper wall is the until-loop's freefloating-content handling. Full design + risks:
-`deferred-layout-c2-execution-plan.md` (RESULT + NEXT STEP).
+is the NAIVE no-op removal, not in-pass convergence itself — and the fix WORKS: the DEFERRED RE-QUEUE is SHIPPED
+(2026-06-21).** The seam's in-pass synchronous re-fit now enqueues the affected container into the `recalculateLayouts`
+until-loop (`layoutIsValid=false` + push; no throw, no climb; skips a container mid-`_adjustContentsBounds`) so the
+relayout runs in the loop, not in the mutator = the aim. All 7 probe tests pass; 165/165 dpr1+dpr2+WebKit, smoke-apps
+OK, byte-identical (zero recapture). Soak short (3 runs, 0 flaky, stopped early — full soak advisable). **Remaining:**
+the twin `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` (same re-queue) + then lint [E]; then the transport pass.
+Full design + verification: `deferred-layout-c2-execution-plan.md` (RESULT + SHIPPED).
 
 ## 6. Doc map
 - **`deferred-layout-OVERVIEW.md`** — THIS doc (entry point: aim, state, paths, next step).

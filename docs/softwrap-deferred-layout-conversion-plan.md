@@ -494,12 +494,13 @@ Seam + refined phases:
   > clean deferred home — freefloating doesn't climb invalidate (Widget:3756); the `recalculateLayouts` walk-up stops
   > at freefloating (WorldWdgt:924-927); `invalidateLayout` throws mid-pass (Widget:3751). And the in-pass seam re-fit
   > already happens within `recalculateLayouts`/a public-op settle. **BUT the wall is the NAIVE no-op removal — not
-  > in-pass convergence itself.** **NEXT STEP = the DEFERRED RE-QUEUE** (the C2 in-pass-convergence mechanism, untested):
-  > replace the seam's synchronous re-fit with a mid-pass-legal enqueue of the container into the until-loop
-  > (`layoutIsValid=false` + push `widgetsThatMaybeChangedLayout`; no throw, no climb), so the relayout runs in the loop
-  > not the mutator. Verify convergence/termination + byte-identity under the torture soak; if it holds, the seam + the
-  > twin `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` come out + lint [E] tightens. Full design + risks:
-  > `deferred-layout-c2-execution-plan.md` (RESULT + NEXT STEP). (Path A is dead — see path-a-design §11.)
+  > in-pass convergence itself — and the fix is SHIPPED: the DEFERRED RE-QUEUE (2026-06-21).** The seam's in-pass
+  > synchronous re-fit now enqueues the affected container into the until-loop (`layoutIsValid=false` + push
+  > `widgetsThatMaybeChangedLayout`; no throw, no climb; skips a container mid-`_adjustContentsBounds`), so the relayout
+  > runs in the loop not the mutator. Converges byte-identically: all 7 probe tests pass, 165/165 dpr1+dpr2+WebKit,
+  > smoke-apps OK, zero recapture (soak short — 3 runs, 0 flaky, stopped early). Remaining toward the aim: the twin
+  > `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` (same re-queue) → then lint [E] tightens; then transport. Full
+  > design + verification: `deferred-layout-c2-execution-plan.md` (RESULT + SHIPPED). (Path A is dead — path-a-design §11.)
 - **C3 — remove + enforce.** Once the Path-A/B work + C2 make the seam redundant, delete it (and the `_refresh…`
   sibling) and extend lint [E] to forbid `childGeometryChanged`/`_reFitToContents` from immediate mutators.
 
