@@ -293,7 +293,13 @@ worked template (compute from the event, set via the deferred API, no read-back)
 These can land independently and incrementally; none requires the others first, except soft-wrap which
 wants its reachability fix regardless.
 
-### 6a. The slider de-read-back pilot — ready to execute cold (BYTE-SAFE, item 1 above)
+### 6a. The slider de-read-back pilot — DONE (Fizzygum `89ee825f`, BYTE-SAFE; item 1 above)
+
+**STATUS 2026-06-20: SHIPPED (Step 1).** `SliderWdgt.updateValue(constrainedButtonPosition = nil)` now sources
+`buttonTop/Left/Bottom` from the passed clamped position (fallback = the applied `@button` geometry), and
+`SliderButtonWdgt.nonFloatDragging` passes `newPosition` — the read-back is gone, byte-identical, suite green
+(~10 slider macros). The Step-2 deferred-thumb follow-on (below) is still open (owner-gated, NOT byte-safe).
+The original write-up follows as the record of what shipped.
 
 The smallest verifiable forward step (a self-contained Path-B de-read-back; the structural twin of
 `HandleWdgt`).
@@ -427,7 +433,7 @@ Seam + refined phases:
   from fire-and-forget ones (content drops/types). **LESSON: the conversion axis is NOT in-pass/outside-pass; it is
   read-back-dependent (Path B, per-site de-read-back) vs not** — and the seam can't tell them apart. So the seam stays
   synchronous (C0) and #20 is GATED on first de-read-backing the constraint handlers per-site via the §6 main sequence
-  (Path A pending-aware accessors `deferred-layout-path-a-design.md`; Path B per-site, e.g. the §6a slider pilot, the
+  (Path A pending-aware accessors `deferred-layout-path-a-design.md`; Path B per-site, e.g. the §6a slider de-read-back is DONE (89ee825f); next the
   clock-square / resize handlers). Only AFTER a content widget can change geometry without a synchronous read-back does
   deferring its container re-fit become safe.
 - **C2 — in-pass convergence (the hard core, downstream of the Path-B work).** Make each container's `_reFitToContents`
