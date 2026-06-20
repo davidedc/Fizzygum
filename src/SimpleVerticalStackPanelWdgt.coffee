@@ -52,7 +52,11 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # The re-fit chokepoint for a stack (no scrollbars): re-lay-out my stacked
   # contents. See Widget._reFitToContents.
   _reFitToContents: ->
-    @_adjustContentsBounds()
+    world._reFittingContents += 1   # C2: mark the cross-widget cascade so the seam re-fits synchronously
+    try
+      @_adjustContentsBounds()
+    finally
+      world._reFittingContents -= 1
 
   # ===== Phase 3b (Slice 2): re-fit on the doLayout cycle =====
   # Mirror of ScrollPanelWdgt's Slice-1 pair (see there). super applies my own bounds first

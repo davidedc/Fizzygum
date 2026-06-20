@@ -1613,10 +1613,27 @@ class Widget extends TreeNode
   # APPLY, never a schedule -- but the layering smell the deferred-model conversion will replace.
   # Centralized here so that conversion (C1 outside-pass scheduling / C2 in-pass convergence /
   # C3 remove + extend lint [E]) becomes a single-site change instead of two duplicated blocks.
+  #
+  # C1+C2 (task #20): the container re-fit is DEFERRED for a PRIMARY geometry change, SYNCHRONOUS within a
+  # cascade. Three states:
+  #  - INSIDE recalculateLayouts: synchronous (the until-loop is the iterator; invalidateLayout THROWS in a
+  #    pass -- the Slice-2 climb-back freeze).
+  #  - INSIDE a container re-fit, outside recalc (world._reFittingContents > 0): synchronous. The raw change
+  #    is part of the cross-widget cascade (clock <-> inner-window <-> outer-window); it must complete + iterate
+  #    synchronously, EXACTLY as the C0 seam did, or a single deferred pass leaves it unconverged (C2).
+  #  - a PRIMARY change, outside both: DEFER. Just invalidate the container so the next settle (end of
+  #    doOneCycle / the enclosing public-method flush) re-fits it on the cycle -- the deferred model. Sound now
+  #    that the container-fits-content read-back is gone (Path B, fa0d7961): no one reads the re-fit result
+  #    back synchronously before the settle. (softwrap-deferred-layout-conversion-plan.md §6b.)
   _reFitContainerAfterRawGeometryChange: ->
-    if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
-      @parent.parent._reFitToContents?()
-    @parent?.childGeometryChanged?()
+    if world?._recalculatingLayouts or world?._reFittingContents
+      if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
+        @parent.parent._reFitToContents?()
+      @parent?.childGeometryChanged?()
+    else
+      if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
+        @parent.parent.invalidateLayout?()
+      @parent?.invalidateLayout?()
 
 
   rawSetWidth: (width) ->

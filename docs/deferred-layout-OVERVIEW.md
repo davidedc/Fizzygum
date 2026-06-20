@@ -102,16 +102,19 @@ REACT-case `_reFitToContents` a true in-pass fixed point, and C3 deletes the inl
 every container re-fit then happens only inside `recalculateLayouts` (end of `doOneCycle`) or a public-method
 flush = the all-deferred end state.
 
-**C1 result (2026-06-20, after the de-read-back) — 3 of 4 cases defer; the LAST blocker is C2.** Making the seam
-defer outside a pass was tried: **smoke-apps OK (no freeze), DRIVE ✓, REACT ✓ (the scroll arm now defers — the
-§6b "scroll arm stays synchronous / C3 unachievable" verdict is OUTDATED), single-window clock ✓.** The ONLY
-regression is the **nested-window clock resize** (`macroWindowWithAClockInAWindowConstructionTwo` 4-6: the clock
-goes huge): the clock↔inner-window↔outer-window clamp needs cross-widget ITERATION, which the synchronous seam did
-eagerly but a single deferred pass does not (the `_adjustContentsBounds` re-entrancy guard blocks in-pass
-re-iteration + no re-invalidation; the §6b height-clamp hypothesis was tried and did NOT fix it — the available
-height is itself stale under deferral). **So the next step is C2 — make the window's `_reFitToContents` a true
-in-pass fixed point for the cross-widget clamp** — the last thing standing between the deferred seam and C3
-(removing it). C1 was reverted pending C2; the de-read-back (`fa0d7961`) stays.
+**C1 SHIPPED (2026-06-20) — the seam now DEFERS primary changes; the cross-widget cascade stays synchronous.**
+The naive "defer the seam outside a pass" broke the nested-window clock resize
+(`macroWindowWithAClockInAWindowConstructionTwo` 4-6 went huge) because it deferred the seam MID-cascade — the
+clock↔inner-window↔outer-window clamp needs the seam's synchronous *iteration*, which a single deferred pass loses.
+**Fix: a world counter `world._reFittingContents`** (bumped around each container `_reFitToContents`) marks "inside
+a re-fit cascade". The seam now has three states — inside `recalculateLayouts` → synchronous; inside a cascade
+(`_reFittingContents > 0`) → synchronous (= the C0 behaviour, so it still converges); a **PRIMARY change outside
+both → DEFER** (`invalidate` → next cycle). So primary geometry changes defer to the cycle (real progress) while
+cascades stay synchronous (byte-identical AND the nested clock converges). Verified byte-identical: suite 165/165
+dpr1+dpr2+WebKit, smoke-apps 12/12, the clock/DRIVE/REACT oracle all green. **This is C1 done — NOT yet C3:** the
+cascade arm is still synchronous, so the seam isn't removed. **NEXT = true C2** — make the cross-widget cascade
+converge IN-PASS without the synchronous seam (entangled with deferring the resize/transport itself) — then C3
+(delete the seam) + tighten lint [E]. The §6b "scroll arm stays synchronous / C3 unachievable" verdict is OUTDATED.
 
 ## 6. Doc map
 - **`deferred-layout-OVERVIEW.md`** — THIS doc (entry point: aim, state, paths, next step).

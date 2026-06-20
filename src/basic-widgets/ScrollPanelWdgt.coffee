@@ -244,8 +244,12 @@ class ScrollPanelWdgt extends PanelWdgt
   # panels -- they all re-fit the same way (the ListWdgt opt-out below is ONLY
   # for the contained-panel notification, not for this pair).
   _reFitToContents: ->
-    @_adjustContentsBounds()
-    @_adjustScrollBars()
+    world._reFittingContents += 1   # C2: mark the cross-widget cascade so the seam re-fits synchronously
+    try
+      @_adjustContentsBounds()
+      @_adjustScrollBars()
+    finally
+      world._reFittingContents -= 1
 
   # ===== Phase 3b (Slice 1): re-fit on the doLayout cycle =====
   # A scroll panel re-fits its contents+scrollbars during recalculateLayouts (deferred),

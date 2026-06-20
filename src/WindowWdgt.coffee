@@ -192,7 +192,11 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # The re-fit chokepoint for a window (no scrollbars): re-fit chrome + content.
   # See Widget._reFitToContents.
   _reFitToContents: ->
-    @_adjustContentsBounds()
+    world._reFittingContents += 1   # C2: mark the cross-widget cascade so the seam re-fits synchronously
+    try
+      @_adjustContentsBounds()
+    finally
+      world._reFittingContents -= 1
 
   add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
     unless notContent or (aWdgt instanceof CaretWdgt) or (aWdgt instanceof HandleWdgt)

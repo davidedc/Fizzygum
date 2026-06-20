@@ -478,9 +478,14 @@ Seam + refined phases:
   > regression is the **nested-window clock resize** (`…ClockInAWindowConstructionTwo` 4-6, clock huge): the
   > clock↔inner-window↔outer-window clamp needs cross-widget ITERATION that a single deferred pass doesn't provide
   > (the `_adjustContentsBounds` re-entrancy guard blocks in-pass re-iteration + no re-invalidation). The height-clamp
-  > hypothesis above was TRIED and did NOT fix it (the available height is itself stale under deferral). **NEXT = C2:
-  > make the window's `_reFitToContents` a true in-pass FIXED POINT for the cross-widget clamp** — the last blocker
-  > before C3. C1 reverted pending C2; the de-read-back stays. (Path A is dead — see path-a-design §11.)
+  > hypothesis above was TRIED and did NOT fix it (the available height is itself stale under deferral).
+  > **RESOLVED — C1 SHIPPED.** The naive C1 deferred the seam MID-cascade; the fix is a world counter
+  > `world._reFittingContents` (bumped around each container `_reFitToContents`) so the seam stays SYNCHRONOUS
+  > inside a cross-widget cascade (= C0, converges) and only DEFERS a PRIMARY change outside any re-fit. Suite
+  > 165/165 dpr1+dpr2+WebKit byte-identical, smoke-apps 12/12, clock/DRIVE/REACT green. This is **C1 done** (primary
+  > changes defer; cascade arm still synchronous, so the seam is NOT yet removed). **NEXT = true C2:** make the
+  > cross-widget cascade converge IN-PASS without the synchronous seam (entangled with deferring the resize itself),
+  > then C3 (delete the seam) + lint [E]. (Path A is dead — see path-a-design §11.)
 - **C3 — remove + enforce.** Once the Path-A/B work + C2 make the seam redundant, delete it (and the `_refresh…`
   sibling) and extend lint [E] to forbid `childGeometryChanged`/`_reFitToContents` from immediate mutators.
 
