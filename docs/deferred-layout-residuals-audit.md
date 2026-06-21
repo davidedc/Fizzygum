@@ -102,10 +102,17 @@ conversion will remove."
    via `Widget.collapse`/`unCollapse`. **REMAINING:** the `reInflating`-coupled direct `@_reFitToContents()` (must stay
    synchronous — `contentsRecursivelyCanSetHeightFreely` reads `@reInflating` while it runs; deferring would break it).
 
-5. **Content-edit / soft-wrap** (the twin-mediated part is **DONE — `1caea690`**). `TextWdgt.reLayoutAndRefreshContainerIfContainedText`
-   (from `setText`/`setFontSize`/`toggle*`) and `SimplePlainTextWdgt.setSoftWrap` (a click handler that self-documents
-   bypassing the deferred model). **REMAINING:** the widget's own `@reLayout()` re-wrap — soft-wrap is the dedicated
-   hard arc (`softwrap-deferred-layout-conversion-plan.md`).
+5. **Content-edit / soft-wrap — VERDICT: LEAVE SYNCHRONOUS (assessed 2026-06-21).** The twin-mediated container re-fit
+   is **DONE — `1caea690`**. The widget's own `@reLayout()` re-wrap was given a full design pass (mapping Workflow +
+   read-audit + adversarial verify) → **leave synchronous in its entirety**: (a) `TextWdgt.rawSetExtent`'s re-wrap is
+   the in-pass APPLY the base `doLayout` depends on (family-8; converting throws); (b) `setSoftWrap` wrap-OFF `@reLayout()`
+   is the sole producer of the natural-width collapse (no cycle path replaces it); (c) `reLayoutAndRefreshContainerIfContainedText`'s
+   `@reLayout()` is redundant ONLY in a text-wrapping scroll panel, and **that case is blocked by a same-cycle caret
+   read** (`CaretWdgt.insert` `:318 setText` → `:319 gotoSlot → slotCoordinates` reads the wrapped geometry before the
+   settle; `scrollCaretIntoView` is a second reader) → deterministic red; the other topologies are non-redundant. No
+   `TextWdgt.doLayout` (no-go — flips `implementsDeferredLayout`, fires a redundant re-wrap, buys nothing). Reward is
+   thin (deferring soft-wrap does NOT unlock lint [E] — co-gated on family-8). Full closure = a large owner-gated
+   determinism-sensitive sub-arc. See `softwrap-deferred-layout-conversion-plan.md` §5 VERDICT.
 
 6. **Slider family — VERDICT: LEAVE SYNCHRONOUS (assessed 2026-06-21).** `SliderWdgt.setValue` (:117/119, **mid-drag**
    via `SliderButtonWdgt.nonFloatDragging`), `updateHandlePosition` (:106/107), `setStart`/`setStop`/`setSize`/`updateSpecs`

@@ -134,7 +134,11 @@ is at a natural stop-and-report point.** Status of the 8 families (2–5 + the `
   no-op; the button reLayout repositions only its own thumb). Family 7 is already compliant in substance (own-label
   re-center from a discrete menu action). None blocks the capstone (they're event/menu handlers, not immediate mutators).
 - **`BoxWdgt.choiceOfWidgetToBePicked`: dead code** (`BoxWdgt` is never a `ScrollPanelWdgt` ancestor) — leave it.
-- **Soft-wrap `reLayout` (family 5 remainder): its own dedicated hard arc** — `softwrap-deferred-layout-conversion-plan.md`.
+- **Soft-wrap `reLayout` (family 5): assessed 2026-06-21 = LEAVE SYNCHRONOUS.** The one byte-safe slice (a redundant
+  re-wrap in a text-wrapping scroll panel) is blocked by a same-cycle caret geometry read (`CaretWdgt.insert`
+  `setText`→`gotoSlot`→`slotCoordinates`); the other sites are load-bearing/non-redundant; a `TextWdgt.doLayout` is a
+  no-go; and deferral wins NO lint [E] (co-gated on family-8). Full closure is a large owner-gated sub-arc.
+  `softwrap-deferred-layout-conversion-plan.md` §5 VERDICT.
 - **The capstone — family 8 (`rawSetExtent→reLayout` structural root, base `Widget.coffee` ~:1520) + retire
   `world._reFittingContents` + tighten lint [E]: genuinely LAST and BLOCKED.** Not a separable "cheap first half": the
   counter's synchronous arm stays load-bearing because `WindowWdgt.add` re-fits BEFORE its flush and `childUnCollapsed`'s
@@ -146,7 +150,7 @@ is at a natural stop-and-report point.** Status of the 8 families (2–5 + the `
 **Left deliberately synchronous (correct, do not "fix"):** the above families 1/6/7; `SimpleVerticalStackPanelWdgt.childGeometryChanged`
 (the cascade SINK the seams call); `ScrollPanelWdgt.reLayOutAfterContainedPanelChange`/`_refitContentsAndScrollBars`
 (absorb the return-value contract); `WindowWdgt.childUnCollapsed`'s `reInflating`-coupled re-fit; and the soft-wrap `reLayout`
-(its own dedicated hard arc — `softwrap-deferred-layout-conversion-plan.md`).
+(assessed 2026-06-21 = leave-synchronous, blocked by a same-cycle caret read — `softwrap-deferred-layout-conversion-plan.md` §5).
 
 ## 6. The dead end (do not revive)
 
@@ -221,8 +225,8 @@ what the soak hunts. Read `../Fizzygum-tests/DETERMINISM.md` before touching the
 - **`deferred-layout-c2-execution-plan.md`** — the C2 arc RECORD: the DAG model of the clock/window cascade, the
   feasibility-probe finding (naive removal is a wall), and the shipped deferred re-queue. **Live (reference).**
 - **`softwrap-deferred-layout-conversion-plan.md`** — the originating soft-wrap case + the "model is intermediate"
-  finding + the Path-A/B taxonomy + the C0–C3 inline-trigger arc history (§6b). **Reference (soft-wrap is the last,
-  hardest family).**
+  finding + the Path-A/B taxonomy + the C0–C3 inline-trigger arc history (§6b). **Reference. Soft-wrap was the last
+  open family; §5's VERDICT (2026-06-21) = LEAVE SYNCHRONOUS (proof inline).**
 - **`deferred-layout-path-a-design.md`** — Path A (pending-aware accessors), **FALSIFIED** — §11 is the instrumented
   why-it-fails. **Historical (do not revive).**
 - **`deferred-layout-slice2-completion-plan.md`** — state after Phase 3b + the flow rule; the full gauntlet commands.

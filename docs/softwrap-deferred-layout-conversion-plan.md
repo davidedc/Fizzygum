@@ -1,8 +1,11 @@
 # Deferred-layout: the model is INTERMEDIATE — completing it (soft-wrap is the originating case)
 
-> **STATUS: REFERENCE (mostly historical).** Canonical current state + the shipped re-queue mechanism:
-> [`deferred-layout-OVERVIEW.md`](deferred-layout-OVERVIEW.md) (it supersedes this doc on any conflict). What's STILL
-> LIVE here: **soft-wrap (§5)** is the last, hardest remaining family (its own `@reLayout()` re-wrap). What's HISTORICAL:
+> **STATUS: REFERENCE (historical) — soft-wrap ASSESSED 2026-06-21 = LEAVE SYNCHRONOUS (see §5).** Canonical current
+> state + the shipped re-queue mechanism: [`deferred-layout-OVERVIEW.md`](deferred-layout-OVERVIEW.md) (it supersedes
+> this doc on any conflict). The soft-wrap family (§5) — once "the last, hardest remaining family" — was given a full
+> read-only design pass (mapping Workflow + read-audit + adversarial verify) and the verdict is **LEAVE SYNCHRONOUS in
+> its entirety** (no code change): the one byte-safe candidate is blocked by a same-cycle caret geometry read, the rest
+> are load-bearing/non-redundant, and deferral wins NO lint enforcement. Proof + scope in §5's VERDICT block. What's HISTORICAL:
 > **§6/§6b/§6b.1** are a chronological record of the C0→C3 inline-trigger arc — their intermediate conclusions ("C3
 > unachievable", "C2 not worth pursuing") were **SUPERSEDED**: the deferred re-queue shipped (`5fc152c7`/`7303fc5d`/
 > `1caea690`/`1e5d3745`). The **Path A** ("pending-aware accessors") that §1/§2/§4/§6 weigh is **FALSIFIED** — see
@@ -253,6 +256,44 @@ request is *not* the applied result, so the trick gives the wrong answer.
 ---
 
 ## 5. The soft-wrap case (the originating, Path-B specific)
+
+> ### VERDICT (2026-06-21): LEAVE SYNCHRONOUS — no code change. (design-pass Workflow + read-audit + adversarial verify)
+>
+> A full read-only design pass mapped the four `@reLayout()`/re-wrap sites by (trigger × topology) against the CURRENT
+> machinery (the twin already defers; ScrollPanelWdgt has a `doLayout`; the re-queue shipped). All four are
+> leave-synchronous:
+>
+> 1. **`TextWdgt.rawSetExtent` (~:428, `if FIT_BOX_TO_TEXT then @reLayout()`)** — the in-pass synchronous APPLY the base
+>    `Widget.doLayout` depends on (FIT_BOX_TO_TEXT routes `rawSetBounds`→`rawSetExtent`→this→`reLayout`). Converting to
+>    `invalidateLayout` THROWS mid-pass. This is the family-8 `rawSetExtent→reLayout` root — correctly out of scope.
+> 2. **`SimplePlainTextWdgt.setSoftWrap` wrap-OFF arm (`@reLayout() unless wrap`)** — the SOLE producer of the
+>    natural-width collapse: `setTextLineWrapping(false)` does no geometry and the container's width-feed re-wrap is
+>    gated on `@isTextLineWrapping` (now false), so nothing on the cycle re-wraps to natural width. Deferring → the
+>    asserted collapse is lost → deterministic red.
+> 3. **`TextWdgt.reLayoutAndRefreshContainerIfContainedText` (`@reLayout()`, content-edit path)** — topology-split. The
+>    `@reLayout()` is REDUNDANT with the already-deferred twin's container re-fit ONLY inside a text-wrapping
+>    `ScrollPanelWdgt` (the panel's `doLayout`→`_adjustContentsBounds` re-feeds width → re-wrap). **But that one
+>    byte-safe candidate is BLOCKED by a same-cycle reader:** in `CaretWdgt.insert`, `:318 @target.setText` (re-wraps
+>    today) is immediately followed by `:319 @goRight → gotoSlot → @target.slotCoordinates`, which reads the text's
+>    wrapped geometry (`@wrappedLines`, `@left()`/`@top()`) to position the caret — synchronously, before any deferred
+>    settle. (`scrollCaretIntoView` is a second such reader.) Deferring the re-wrap feeds the caret stale geometry →
+>    deterministic red in `macroWrappingSimplePlainTextResizesCorrectlyAsTextIsAddedAndRemoved` et al. For the other
+>    topologies (bare-in-world, vertical-stack at constant width, non-wrapping "code-view") the re-wrap is genuinely
+>    non-redundant (no container feeds a changed width; the stack sums a stale `widget.height()`).
+> 4. **"Give `FIT_BOX_TO_TEXT` a `doLayout`"** — NO-GO. Base `doLayout` already re-wraps it; adding one flips
+>    `implementsDeferredLayout` true for all ~17 TextWdgts and fires a redundant second re-wrap in
+>    `rawSetWidthSizeHeightAccordingly`, buying nothing (a TextWdgt is a leaf, so the `subWidgetsMergedFullBounds`
+>    nested-scroll trap can't even occur — there's no offsetting gain).
+>
+> **Reward is thin:** deferring soft-wrap does NOT unlock lint rule [E] (`reLayout` is not an immediate mutator;
+> `check-layering.js` [E] is co-gated on the separate family-8 `rawSetExtent→reLayout` root, which must stay synchronous
+> by construction). **Full closure** would need NEW cycle re-wrap paths for the two "LOSE" classes (a wrap-OFF arm in
+> `_adjustContentsBounds` feeding the natural width; a constant-width re-height trigger) AND decoupling the caret's
+> synchronous geometry read — a large, determinism-sensitive, owner-gated sub-arc with high reversal density (C1
+> reverted, a probe broke 7 tests, Path A dead). Not worth it for last-family uniformity with no enforcement win.
+>
+> The original §5 analysis below is RETAINED as the historical framing (several of its stated blockers — e.g. "give
+> ScrollPanelWdgt a doLayout" — have since shipped; the verdict above is the current, verified conclusion).
 
 Soft-wrap is constraint-entangled (it entails a re-wrap relayout; content→viewport and text→content
 width are constraints), so it is a **Path-B** case — *and* it has an extra structural blocker beyond
