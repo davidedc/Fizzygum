@@ -176,12 +176,15 @@ through:
   (reverted).** Slice 1 (defer the `WindowWdgt.add` pre-fit) reached 164/165 after fixing two init-ordering null-derefs,
   but the nested-clock cross-widget cascade **DRIFTS +1px/frame under deferral** (root-caused: `VerticalStackLayoutSpec.rememberInitialDimensions`
   reads a stale `availableWidthInStack` → records the clock as stretchy `elasticity=1` → it inflates to fill). The
-  synchronous pre-fit / counter is doing **real load-bearing convergence work** (it iterates to a fixed point in one
-  frame; the deferred re-fit, not idempotent, drifts). Part B (lint) is **cosmetic** (the two `rawSetExtent→_reFitToContents`
-  sites are a legitimate apply identical to sanctioned family-8 `rawSetExtent→reLayout`). **NEXT STEP / prerequisite:
-  make the cross-widget window-content re-fit READ-BACK-FREE / idempotent** (a Path-B de-read-back of the stack-proportion
-  + window-fit sizing — find the +1px drift first), after which the deferred re-queue converges and the counter can be
-  retired. Full mechanism + arc: `deferred-layout-capstone-execution-plan.md` (RESULT banner).
+  synchronous pre-fit / counter is doing **real load-bearing convergence work**. The drift was instrumented to ONE
+  value (`widthOfStackWhenAdded` = 543 synchronously vs 170 deferred → clock proportion becomes 1:1 → stretchy), and the
+  obvious **de-read-back fix (pass the pre-shrink entry width into `rememberInitialDimensions`) was TRIED and FALSIFIED —
+  it broke 9 window-content tests**, proving the correct value is the stack's POST-CONVERGENCE settled width, not
+  capturable pre-shrink. Part B (lint) is **cosmetic** (the two `rawSetExtent→_reFitToContents` sites are a legitimate
+  apply identical to sanctioned family-8 `rawSetExtent→reLayout`). **NEXT STEP (deferred to a future session): RE-ARCHITECT
+  the stack-proportion model** so an element's recorded proportion derives from STABLE intent-level inputs, not the
+  applied container width sampled mid-cascade — a standalone arc (own design pass + likely recapture). Full mechanism +
+  the falsified attempt + the next step: `deferred-layout-capstone-execution-plan.md` (RESULT banner).
 
 **Bottom line:** the campaign has banked its correctness payoff. What's left is (a) deliberately-left-synchronous
 borderline-compliant handlers (1/6/7 — do not "fix"), (b) the soft-wrap hard arc, and (c) the last + hardest +

@@ -42,24 +42,45 @@ structurally identical to the SANCTIONED family-8 pattern (`TextWdgt.rawSetExten
 allowing the other is an arbitrary name-based line; the "conversion" (inline `_adjustContentsBounds`) does the identical
 apply. The real enforcement (forbid SCHEDULES from immediate mutators) is already rule [E].
 
-## THE NEXT STEP to reach the all-deferred aim (the prerequisite)
+## The drift diagnosed to ONE value, then the targeted de-read-back ATTEMPTED → FALSIFIED (2026-06-21)
 
-The aim — every synchronous relayout deferred to a settle point — is blocked on exactly ONE thing: **the cross-widget
-window-content re-fit must become a pure function of settled inputs (READ-BACK-FREE), so it is IDEMPOTENT and the
-deferred re-queue converges in one pass.** Concretely, the next arc is a **Path-B de-read-back of the cross-widget
-sizing model**, building on the shipped slider (`89ee825f`) + window-fit-height (`fa0d7961`) de-read-backs:
-- Find the source of the **+1px/frame drift** first (a single instrumented nested-window re-fit: why is re-fitting an
-  already-settled window non-idempotent? rounding? padding accumulation? `THIS_ONE_I_HAVE_NOW` reading back the
-  prior transient width?). Making the re-fit idempotent is the local, tractable framing of "make the cascade converge".
-- De-read-back `rememberInitialDimensions`/`getWidthInStack` (the `availableWidthInStack` comparison + the proportion)
-  and `WindowWdgt._adjustContentsBounds`'s `THIS_ONE_I_HAVE_NOW`/height reads — compute from settled/intent geometry or
-  hand the value forward, never read APPLIED geometry mid-cascade.
-- ONLY once the window-content re-fit is idempotent/read-back-free does deferring the `WindowWdgt.add` pre-fit (and
-  retiring the counter) become safe — the deferred re-queue then reaches the same fixed point as the synchronous cascade.
+Pursuing the prerequisite, the nested-clock failure was instrumented and reduced to **one mis-recorded value**, then
+the obvious fix was tried and **empirically broke 9 tests** — which revealed the constraint is deeper than a read-back.
 
-This is the deepest Path-B work (the cross-widget sizing model is the last and hardest read-back), and it is the true
-gateway to completing the deferred model. The init-robustness fixes from slice 1 (order-independent `layoutSpecDetails`
-init) are a recorded byproduct — only needed if the pre-fit is ever removed, so NOT shipped standalone.
+**The precise diagnosis (instrumented `getWidthInStack` / `rememberInitialDimensions`):** the clock inflates because
+its stored proportion `widthOfElementWhenAdded / widthOfStackWhenAdded` is wrong. `widthOfStackWhenAdded` is recorded as
+**543 synchronously (correct) but 170 deferred (wrong)**:
+- `getWidthInStack` is FAITHFUL (`out = availW · wEl/wStk`, elasticity-blended) — not the bug.
+- Synchronous: `wEl=170, wStk=543` → clock `= 543·170/543 = 170` (stays small). Deferred: `wEl=170, wStk=170` →
+  `543·170/170 = 543` (stretches to fill). The window-growth "+1px/frame" was a RED HERRING (the test's resize drag).
+
+**The targeted fix tried (and reverted):** thread an `availableWidthOverride` into `rememberInitialDimensions` and pass
+the window's available width captured at `_adjustContentsBounds` ENTRY (before the `THIS_ONE_I_HAVE_NOW` content-fit
+shrinks the window to the dropped element). Hypothesis: entry-width = the settled 543, so deferred would match
+synchronous, byte-identically. **RESULT: FALSIFIED — broke 9 window-content tests** (incl. the clock test it aimed to
+fix): `macroClockInWindowKeepsSquareOnResize`, `macroClosingInnerWindowKeepsOuter`, `macroDuplicatedCollapsedWindowKeepsStateAndContent`,
+`macroInternalWindowDroppedIntoWindowFits`, `macroResizeWindowContainingInternalWindow`, `macroScrollPanelInWindowMovesWindowWhenDragged`,
+`macroWindowContentResizesFreely`, `macroWindowWithAClockInAWindowConstructionTwo`, `macroWindowsNestedCollapsingUncollapsing`.
+
+**What that proves:** the synchronous-correct `widthOfStackWhenAdded` is NOT the entry width — it is a value the
+synchronous cascade produces at a specific **converged** moment, and many tests are tightly coupled to it. So
+`rememberInitialDimensions` fundamentally records a proportion **relative to the stack's SETTLED width**, and that
+settled width only exists once the cross-widget cascade has converged — exactly what the synchronous pre-fit/counter
+provides and what deferral removes. There is no pre-shrink value to capture; the correct value is post-convergence.
+
+## THE NEXT STEP (deferred to a future session, owner-decided 2026-06-21): RE-ARCHITECT the stack-proportion model
+
+The capstone is blocked on a deeper prerequisite than a read-back: **re-architect the stack-proportion model
+(`VerticalStackLayoutSpec` / `WindowContentLayoutSpec` `rememberInitialDimensions` + `getWidthInStack`, and the
+`WindowWdgt._adjustContentsBounds` content-fit) so an element's recorded proportion does NOT depend on the stack's
+CONVERGED width.** I.e. capture/define an element's "size relative to its container" from STABLE, intent-level inputs
+(the element's own natural size, an explicit base width, the container's natural/desired width) rather than the
+applied container width sampled mid-cascade. Once the proportion is convergence-independent, the window-content re-fit
+becomes idempotent, the deferred re-queue converges in one pass, the `WindowWdgt.add` pre-fit can be deferred, and
+`world._reFittingContents` can be retired — completing the all-deferred aim. This is a standalone arc (its own design
+pass + likely sanctioned reference recapture, since it changes how proportions are computed), **to be done in a next
+session** — NOT a targeted inline fix (that path is now empirically closed). The init-robustness fixes from slice 1
+(order-independent `layoutSpecDetails` init) are a recorded byproduct, needed only if the pre-fit is removed.
 
 ---
 

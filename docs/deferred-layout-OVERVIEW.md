@@ -145,13 +145,19 @@ is at a natural stop-and-report point.** Status of the 8 families (2–5 + the `
   the nested aspect-locked clock HUGE because the cross-widget cascade **DRIFTS +1px/frame under deferral instead of
   converging** — root-caused to a stale geometry read-back: `VerticalStackLayoutSpec.rememberInitialDimensions` reads a
   stale `availableWidthInStack` and records the clock as stretchy (`elasticity=1`). So the counter / the synchronous
-  pre-fit is doing **real load-bearing convergence work** (the synchronous cascade iterates to a fixed point in one
-  frame; the deferred re-queue, one re-fit/frame, drifts because the re-fit is not idempotent). Part B (lint) is
-  separately **cosmetic** (it would forbid a `rawSetExtent→_reFitToContents` apply identical to the sanctioned family-8
-  `rawSetExtent→reLayout`). **NEXT STEP toward the all-deferred aim (the prerequisite): make the cross-widget
-  window-content re-fit READ-BACK-FREE / idempotent** — a Path-B de-read-back of the stack-proportion + window-fit
-  sizing model (find the +1px drift source first), after which the deferred re-queue converges and the counter can be
-  retired. Full mechanism + the next-step arc: `deferred-layout-capstone-execution-plan.md` (RESULT banner).
+  pre-fit is doing **real load-bearing convergence work**. The drift was instrumented down to ONE value —
+  `widthOfStackWhenAdded` recorded as 543 synchronously but 170 deferred (so the clock's proportion becomes 1:1 →
+  stretchy) — and the obvious **de-read-back fix was TRIED (pass the pre-shrink entry width into `rememberInitialDimensions`)
+  and FALSIFIED: it broke 9 window-content tests**, proving the correct `widthOfStackWhenAdded` is the stack's
+  **post-convergence settled width**, not the entry width — it cannot be captured pre-shrink. Part B (lint) is separately
+  **cosmetic** (it would forbid a `rawSetExtent→_reFitToContents` apply identical to the sanctioned family-8
+  `rawSetExtent→reLayout`). **NEXT STEP (deferred to a future session): RE-ARCHITECT the stack-proportion model**
+  (`VerticalStackLayoutSpec`/`WindowContentLayoutSpec` `rememberInitialDimensions`+`getWidthInStack` + the
+  `WindowWdgt._adjustContentsBounds` content-fit) so an element's recorded proportion derives from STABLE intent-level
+  inputs (own natural size / explicit base width / container desired width), NOT the applied container width sampled
+  mid-cascade. Once convergence-independent, the re-fit is idempotent → the deferred re-queue converges → the
+  `WindowWdgt.add` pre-fit can be deferred → the counter retired. A standalone arc (own design pass + likely sanctioned
+  recapture). Full record: `deferred-layout-capstone-execution-plan.md` (RESULT banner + NEXT STEP).
 
 **Left deliberately synchronous (correct, do not "fix"):** the above families 1/6/7; `SimpleVerticalStackPanelWdgt.childGeometryChanged`
 (the cascade SINK the seams call); `ScrollPanelWdgt.reLayOutAfterContainedPanelChange`/`_refitContentsAndScrollBars`
