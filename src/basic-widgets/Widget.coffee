@@ -3392,24 +3392,37 @@ class Widget extends TreeNode
     # this is what happens when "each" is
     # selected: we attach the selected widget
     @add theWidgetToBeAttached
-    # I just attached the selected widget to myself; if I am a scroll panel my
-    # contents changed, so re-fit them + my scrollbars. Polymorphic dispatch
-    # (?()-soak so nothing lands on Widget): only ScrollPanelWdgt and its
-    # subclasses (incl. ListWdgt) define _refitContentsAndScrollBars; on any
-    # other widget this is a no-op -- replacing `if @ instanceof ScrollPanelWdgt`.
-    @_refitContentsAndScrollBars?()
+    # I just attached the selected widget to myself; if I am a scroll panel my contents changed,
+    # so re-fit my contents + scrollbars -- but DEFER it (the deferred-layout aim) rather than the
+    # old synchronous @_refitContentsAndScrollBars?(). @add already self-settled and this menu
+    # action runs OUTSIDE any layout pass, so I just invalidate myself: my doLayout is
+    # 'super; @_reFitToContents' and _refitContentsAndScrollBars IS @_reFitToContents, so the next
+    # doOneCycle re-fits me identically before paint -- the shipped gesture-seam pattern
+    # (ScrollPanelWdgt.reactToDropOf). The existence check does the old ?()-soak's job (only
+    # ScrollPanelWdgt + subclasses incl. ListWdgt define _refitContentsAndScrollBars -> re-fit; any
+    # other widget: no-op -- replacing `if @ instanceof ScrollPanelWdgt`). The pass/cascade arm keeps
+    # the synchronous re-fit for safety, though a menu action never runs mid-pass.
+    if @_refitContentsAndScrollBars?
+      if world?._recalculatingLayouts or world?._reFittingContents
+        @_refitContentsAndScrollBars()
+      else
+        @invalidateLayout()
 
   # »>> this part is excluded from the fizzygum homepage build
   newParentChoiceWithHorizLayout: (ignored, theWidgetToBeAttached) ->
     # this is what happens when "each" is
     # selected: we attach the selected widget
     @add theWidgetToBeAttached, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    # I just attached the selected widget to myself; if I am a scroll panel my
-    # contents changed, so re-fit them + my scrollbars. Polymorphic dispatch
-    # (?()-soak so nothing lands on Widget): only ScrollPanelWdgt and its
-    # subclasses (incl. ListWdgt) define _refitContentsAndScrollBars; on any
-    # other widget this is a no-op -- replacing `if @ instanceof ScrollPanelWdgt`.
-    @_refitContentsAndScrollBars?()
+    # DEFER my contents/scrollbar re-fit, exactly as newParentChoice above (the deferred-layout aim):
+    # @add self-settled and this menu action runs outside any pass, so I invalidate myself and the
+    # next doOneCycle re-fits me identically before paint (doLayout's 'super; @_reFitToContents' ==
+    # _refitContentsAndScrollBars). The existence check is the old ?()-soak's job (no-op off a scroll
+    # panel); the pass/cascade arm keeps the synchronous re-fit for safety.
+    if @_refitContentsAndScrollBars?
+      if world?._recalculatingLayouts or world?._reFittingContents
+        @_refitContentsAndScrollBars()
+      else
+        @invalidateLayout()
   # this part is excluded from the fizzygum homepage build <<«
 
   attach: ->
