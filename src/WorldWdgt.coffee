@@ -268,13 +268,6 @@ class WorldWdgt extends PanelWdgt
   # mutation -- is found and removed rather than silently tolerated.
   _inLayoutMutation: false
   _recalculatingLayouts: false
-  # C2 (task #20): COUNTER of container re-fits (_reFitToContents) currently on the stack. The deferred
-  # seam (Widget._reFitContainerAfterRawGeometryChange) re-fits SYNCHRONOUSLY while this is > 0 -- a raw
-  # geometry change that happens DURING a container's own re-fit is part of the cross-widget cascade
-  # (clock <-> inner-window <-> outer-window) and must complete synchronously, exactly as the C0 seam did;
-  # it only DEFERS (invalidate -> next cycle) for a PRIMARY change outside any re-fit. A counter, not a
-  # flag, because re-fits NEST (an outer window's re-fit sizes an inner one, which re-fits in turn).
-  _reFittingContents: 0
 
   macroToolkit: nil
 

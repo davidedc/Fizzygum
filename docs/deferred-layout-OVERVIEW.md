@@ -116,6 +116,13 @@ the mutator HANDS its result forward. `rawSetWidthSizeHeightAccordingly` RETURNS
 | **Drag/drop** — gesture re-fits (`reactToDropOf`/`reactToGrabOf`/stack `childRemoved`) defer | `1e5d3745` |
 | **Family-3 leftover** — the two `newParentChoice*` dev-menu re-fits defer (2-way; the high-value phase's final conversion) | `55c80ea6` |
 
+### This session (2026-06-21 cont.) — THE CAPSTONE (counter retired)
+| What | commit |
+|---|---|
+| **A-minimal proportion fix** — aspect content (`AnalogClockWdgt`/`IconWdgt`) `elasticity 0` ⇒ `getWidthInStack = min(wEl, availW)`, convergence-independent; 2 clock-resize tests recaptured | *pending* |
+| **Defer the `WindowWdgt.add` pre-fit** + order-independent content-spec init (prior 164/165 HUGE-clock → 165/165) | *pending* |
+| **Retire `world._reFittingContents`** — declaration + 3 `_reFitToContents` bumps removed; seam/twin/gesture/menu reads collapsed 3-way → deferred 2-state | *pending* |
+
 **Net: every synchronous re-fit triggered by an IMMEDIATE MUTATOR or an ad-hoc gesture/menu/collapse handler now
 defers.** The C2 "wall" was specifically the *naive* removal (stub the in-pass re-fit with no replacement → 7 tests
 break, because the freefloating→container notification has no home); the re-queue is the replacement that converges
@@ -139,25 +146,26 @@ is at a natural stop-and-report point.** Status of the 8 families (2–5 + the `
   `setText`→`gotoSlot`→`slotCoordinates`); the other sites are load-bearing/non-redundant; a `TextWdgt.doLayout` is a
   no-go; and deferral wins NO lint [E] (co-gated on family-8). Full closure is a large owner-gated sub-arc.
   `softwrap-deferred-layout-conversion-plan.md` §5 VERDICT.
-- **The capstone — retire `world._reFittingContents` + tighten lint [E]: ATTEMPTED 2026-06-21, BLOCKED at the C2
-  cross-widget-convergence wall (reverted to clean).** Slice 1 (defer the `WindowWdgt.add` pre-fit) was executed: after
-  fixing two init-ordering null-derefs it reached 164/165, but `macroWindowWithAClockInAWindowConstructionTwo` renders
-  the nested aspect-locked clock HUGE because the cross-widget cascade **DRIFTS +1px/frame under deferral instead of
-  converging** — root-caused to a stale geometry read-back: `VerticalStackLayoutSpec.rememberInitialDimensions` reads a
-  stale `availableWidthInStack` and records the clock as stretchy (`elasticity=1`). So the counter / the synchronous
-  pre-fit is doing **real load-bearing convergence work**. The drift was instrumented down to ONE value —
-  `widthOfStackWhenAdded` recorded as 543 synchronously but 170 deferred (so the clock's proportion becomes 1:1 →
-  stretchy) — and the obvious **de-read-back fix was TRIED (pass the pre-shrink entry width into `rememberInitialDimensions`)
-  and FALSIFIED: it broke 9 window-content tests**, proving the correct `widthOfStackWhenAdded` is the stack's
-  **post-convergence settled width**, not the entry width — it cannot be captured pre-shrink. Part B (lint) is separately
-  **cosmetic** (it would forbid a `rawSetExtent→_reFitToContents` apply identical to the sanctioned family-8
-  `rawSetExtent→reLayout`). **NEXT STEP (deferred to a future session): RE-ARCHITECT the stack-proportion model**
-  (`VerticalStackLayoutSpec`/`WindowContentLayoutSpec` `rememberInitialDimensions`+`getWidthInStack` + the
-  `WindowWdgt._adjustContentsBounds` content-fit) so an element's recorded proportion derives from STABLE intent-level
-  inputs (own natural size / explicit base width / container desired width), NOT the applied container width sampled
-  mid-cascade. Once convergence-independent, the re-fit is idempotent → the deferred re-queue converges → the
-  `WindowWdgt.add` pre-fit can be deferred → the counter retired. A standalone arc (own design pass + likely sanctioned
-  recapture). Full record: `deferred-layout-capstone-execution-plan.md` (RESULT banner + NEXT STEP).
+- **The capstone — retire `world._reFittingContents`: ✅ ACHIEVED 2026-06-21 (full gauntlet dpr1/dpr2/WebKit + smoke +
+  20-min torture soak green; net −14 lines, a SIMPLIFICATION).** The C2 wall was root-caused NOT to the geometry
+  cascade per se but to the **stack-proportion model** — and specifically: the ONLY content whose width genuinely
+  depends on the converged container width is **nested aspect-locked content (a clock in a window-in-window)**. THREE
+  convergence-independent reformulations of the proportion FORMULA were each empirically FALSIFIED: (B) lazy GET-time
+  capture broke the console fill (desyncs `wEl`/`wStk`); blanket-A and explicit-FILL/FIXED (A-refined) both broke the
+  **base-width menu** (`macroSimpleDocumentCanAddIndentedParagraph`) and context-dependent text. So the stored
+  `wEl/wStk` fraction is **irreducibly load-bearing** (it powers `setWidthOfElementWhenAdded`, `DONT_MIND` fill, and
+  per-instance text). **The surgical fix (A-minimal):** give aspect content (clock/icon) **elasticity 0** (like
+  `SliderWdgt`/`MenuWdgt` already do). At `e=0`, `getWidthInStack = min(wEl, availW)` — the `widthOfStackWhenAdded`
+  term is multiplied out, so the clock is **convergence-independent with the rest of the proportion model UNTOUCHED**.
+  Behaviour change (owner-approved): the in-window clock keeps its NATURAL size on resize instead of scaling
+  proportionally (proportional scaling inherently needs the converged width — the irreducible part); recaptured the 2
+  clock-resize tests (`macroWindowWithAClockInAWindowConstructionTwo`, `macroClockInWindowKeepsSquareOnResize`). With
+  the clock fixed, the `WindowWdgt.add` pre-fit DEFERS and converges (prior **164/165 HUGE-clock → 165/165**), and the
+  cross-widget geometry cascade converges through the **pure deferred re-queue** — so the counter is **RETIRED**
+  (`WorldWdgt` declaration + the 3 `_reFitToContents` bumps removed; seam/twin/gesture/menu reads collapsed from 3-way
+  to the deferred 2-state: enqueue in-pass / invalidate out-of-pass). **Part B (tighten lint [E]) NOT done** — it needs
+  the two `rawSetExtent→_reFitToContents` overrides converted to an inline apply first (a separate, optional slice);
+  deferred. Full record: `deferred-layout-capstone-execution-plan.md` (RESULT-2).
 
 **Left deliberately synchronous (correct, do not "fix"):** the above families 1/6/7; `SimpleVerticalStackPanelWdgt.childGeometryChanged`
 (the cascade SINK the seams call); `ScrollPanelWdgt.reLayOutAfterContainedPanelChange`/`_refitContentsAndScrollBars`

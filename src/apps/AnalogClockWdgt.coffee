@@ -32,6 +32,14 @@ class AnalogClockWdgt extends Widget
   initialiseDefaultWindowContentLayoutSpec: ->
     super
     @layoutSpecDetails.canSetHeightFreely = false
+    # FIXED (elasticity 0): the clock keeps its own square size as window content; it does NOT
+    # stretch to fill a larger (e.g. nested) window. This makes its width CONVERGENCE-INDEPENDENT:
+    # at elasticity 0, getWidthInStack = wEl + 0*(availW*wEl/widthOfStackWhenAdded - wEl) =
+    # min(wEl, availW) -- the widthOfStackWhenAdded term is multiplied out, so the clock no longer
+    # depends on the stack width sampled at RECORD time (which, for a clock nested in a
+    # window-in-window, was the ancestor-cascade-converged width and drove the deferred-layout
+    # runaway). The clock's square aspect is preserved by rawSetWidthSizeHeightAccordingly.
+    @layoutSpecDetails.elasticity = 0
 
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
     @rawSetExtent new Point newWidth, newWidth

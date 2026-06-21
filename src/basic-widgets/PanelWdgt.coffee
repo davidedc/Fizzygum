@@ -85,7 +85,7 @@ class PanelWdgt extends Widget
   # original "only a tracking container reacts" semantics. (fam 2 -- deferred-layout-residuals-audit.md)
   reactToDropOf: ->
     return unless @parent?._reFitToContents?
-    if world?._recalculatingLayouts or world?._reFittingContents
+    if world?._recalculatingLayouts
       @parent._reFitToContents()
     else
       @parent.invalidateLayout()
@@ -151,7 +151,7 @@ class PanelWdgt extends Widget
   
   reactToGrabOf: ->
     return unless @parent?._reFitToContents?
-    if world?._recalculatingLayouts or world?._reFittingContents
+    if world?._recalculatingLayouts
       @parent._reFitToContents()
     else
       @parent.invalidateLayout()

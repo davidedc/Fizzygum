@@ -20,5 +20,8 @@ class IconWdgt extends Widget
   initialiseDefaultWindowContentLayoutSpec: ->
     super
     @layoutSpecDetails.canSetHeightFreely = false
+    # FIXED (elasticity 0): an icon keeps its own natural size as window content rather than
+    # stretching to fill the window -- an aspect/natural-size object, like the clock. (Also makes
+    # its width convergence-independent: at elasticity 0 getWidthInStack = min(wEl, availW).)
+    @layoutSpecDetails.elasticity = 0
 
-   

@@ -52,11 +52,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # The re-fit chokepoint for a stack (no scrollbars): re-lay-out my stacked
   # contents. See Widget._reFitToContents.
   _reFitToContents: ->
-    world._reFittingContents += 1   # C2: mark the cross-widget cascade so the seam re-fits synchronously
-    try
-      @_adjustContentsBounds()
-    finally
-      world._reFittingContents -= 1
+    @_adjustContentsBounds()
 
   # ===== Phase 3b (Slice 2): re-fit on the doLayout cycle =====
   # Mirror of ScrollPanelWdgt's Slice-1 pair (see there). super applies my own bounds first
@@ -85,17 +81,17 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # its truthy answer decides whether I skip my own re-fit (return-value contract). If not absorbed, my
   # own re-fit DEFERS to the cycle (else arm; my doLayout is 'super; @_reFitToContents'). These run
   # outside a pass (drop gesture / destroy / add-flush re-parent -- where invalidate is legal); the
-  # pass/cascade arm keeps the synchronous re-fit. (fam 2 -- deferred-layout-residuals-audit.md)
+  # in-pass arm keeps the synchronous re-fit. (fam 2 -- deferred-layout-residuals-audit.md)
   childRemoved: ->
     return if @parent?.reLayOutAfterContainedPanelChange?()
-    if world?._recalculatingLayouts or world?._reFittingContents
+    if world?._recalculatingLayouts
       @_reFitToContents()
     else
       @invalidateLayout()
 
   reactToDropOf: ->
     return if @parent?.reLayOutAfterContainedPanelChange?()
-    if world?._recalculatingLayouts or world?._reFittingContents
+    if world?._recalculatingLayouts
       @_reFitToContents()
     else
       @invalidateLayout()

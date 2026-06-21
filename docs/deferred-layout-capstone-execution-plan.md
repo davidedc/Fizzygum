@@ -1,6 +1,59 @@
 # Deferred-layout CAPSTONE — retire `world._reFittingContents` + tighten lint [E]
 
-> **STATUS: ATTEMPTED → BLOCKED at the C2 cross-widget-convergence wall (2026-06-21). NOT shipped; reverted to clean.**
+> **STATUS: ✅ ACHIEVED 2026-06-21 (Part A — counter retired). Read RESULT-2 first; the original RESULT below is the
+> superseded BLOCKED finding kept for history.** Part B (tighten lint [E]) deferred (needs the `rawSetExtent` overrides
+> converted to an inline apply first). Canonical overview: `deferred-layout-OVERVIEW.md` §5.
+
+## RESULT-2 — ✅ CAPSTONE ACHIEVED via the A-minimal proportion fix (2026-06-21, later same day)
+
+**The earlier RESULT (below) concluded the proportion model needed a full re-architecture, and that the counter was
+load-bearing for cross-widget GEOMETRY convergence. The first half was over-broad; the second half was the real key —
+and both were resolved by a SURGICAL fix, not a re-architecture.**
+
+**What the deeper investigation found (this session):** the stored `wEl/wStk` fraction in `VerticalStackLayoutSpec` is
+**irreducibly load-bearing** — THREE convergence-independent reformulations of `getWidthInStack` were each empirically
+FALSIFIED against the suite:
+- **(B) lazy GET-time `wStk` capture** → byte-identical in theory, but desyncs `wEl` (record-time) from `wStk`
+  (first-GET): the `ConsoleWdgt` (THIS_ONE_I_HAVE_NOW, `wEl=50`) FILLS its 290px window only because `wEl==wStk` at
+  record; lazy capture makes it render 50px. Regression.
+- **(blanket-A / A-refined: delete `wStk`, `width = wEl + e·(availW−wEl)`)** → breaks the **base-width menu**
+  (`setWidthOfElementWhenAdded`, tested by `macroSimpleDocumentCanAddIndentedParagraph`): at `e=1` the formula ignores
+  `wEl`, so a paragraph narrowed to 300px fills instead. The fraction `availW·wEl/wStk` is what respects a custom base
+  width. Also breaks context-dependent text (`macroStackPanelLooseWhenEmptyTightWhenFilled` fails at BOTH `e=0` and `e=1`).
+
+A full-suite instrumented census confirmed: **zero widgets intend proportional "fraction" growth** (every former
+`wEl<wStk` case keeps its size — clock = square, dropped boxes/icons = dropped size), and **the only content whose width
+depends on the converged container width is nested aspect-locked content (the clock-in-window-in-window)** — because its
+window is sized top-down by an ancestor. Everything else is either FILL (`wEl==wStk` ⇒ proportion 1.0 ⇒ `availW` at
+GET-time, already settle-stable) or in a stable-width container (a document, not ancestor-resized).
+
+**The fix (A-minimal):** set aspect content (`AnalogClockWdgt`, `IconWdgt`) **elasticity 0** — reusing the EXISTING
+`SliderWdgt`/`MenuWdgt` mechanism. At `e=0`, `getWidthInStack = wEl + 0·(availW·wEl/widthOfStackWhenAdded − wEl) =
+min(wEl, availW)` — the `widthOfStackWhenAdded` term is multiplied OUT, so the clock no longer depends on the
+mid-cascade stack width. The entire `wEl/wStk` model (base-width menu, `DONT_MIND` fill, text) is **untouched**.
+*Behaviour change (owner-approved):* the in-window clock keeps its NATURAL size when the window is resized wider
+(empty space around it) instead of scaling proportionally — proportional scaling is exactly the irreducible part that
+needs the converged width. Recaptured the 2 clock-resize fixtures (renders verified: correct square).
+
+**The capstone then fell out:** with the clock convergence-independent, deferring the `WindowWdgt.add` pre-fit (+ an
+order-independent content-spec init for the two null-derefs the prior slice 1 hit) reaches **165/165** (the prior
+164/165 HUGE-clock is gone), and the cross-widget geometry cascade converges through the **pure deferred re-queue**.
+So `world._reFittingContents` was **RETIRED**: `WorldWdgt` declaration + the 3 `_reFitToContents` `+=1/-=1` bumps
+removed; the seam (`_reFitContainerAfterRawGeometryChange`), twin (`_refreshScrollPanelWdgtOrVerticalStackIfIamInIt`),
+gesture (`reactToDropOf`/`reactToGrabOf`/`childRemoved`) and menu (`newParentChoice*`) reads collapsed from 3-way to
+the deferred 2-state (enqueue in-pass / invalidate out-of-pass). **Net −14 lines.**
+
+**Verified:** dpr1 165/165 · dpr2 165/165 · WebKit 165/165 · smoke-apps APPS OK · 20-min torture soak
+(`dpr2·fastest·8-shards`, 15 runs / ~2,475 test-executions) ZERO nondeterminism.
+
+**NOT done — Part B (tighten lint [E]):** forbidding `_reFitToContents` from immediate mutators would flag the two
+`rawSetExtent→_reFitToContents` overrides (`ScrollPanelWdgt`/`SimpleVerticalStackPanelWdgt`), which still apply
+synchronously. Converting them to an inline `@_adjustContentsBounds()`+`@_adjustScrollBars()` apply (capstone-plan
+Slice 2 below) is the prerequisite; it's a separate, optional enforcement slice — deferred.
+
+---
+
+> **(SUPERSEDED) STATUS: ATTEMPTED → BLOCKED at the C2 cross-widget-convergence wall (2026-06-21). NOT shipped; reverted to clean.**
 > Canonical overview: `deferred-layout-OVERVIEW.md`. The plan below (from a read-only design pass) was EXECUTED on
 > slice 1 and hit a genuine wall — see the RESULT banner. Read the RESULT first; the slice plan is retained as the
 > record + the starting point for whoever takes the prerequisite (the **next step**, §RESULT).

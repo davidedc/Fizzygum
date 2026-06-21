@@ -235,17 +235,17 @@ class ScrollPanelWdgt extends PanelWdgt
   # Gesture-driven container re-fit (a widget was dropped into / grabbed out of me): DEFER it to
   # the cycle. These are dispatched from ActivePointerWdgt.drop/grab AFTER a self-settling add, so
   # they run OUTSIDE any layout pass -- the else arm (invalidate self; my doLayout is
-  # 'super; @_reFitToContents', so the cycle re-fits me identically) is what runs. The pass/cascade
+  # 'super; @_reFitToContents', so the cycle re-fits me identically) is what runs. The in-pass
   # arm keeps the synchronous re-fit (the pre-existing behaviour) for safety. (No recalc-enqueue arm:
   # unlike the seams, these are never dispatched mid-pass. See deferred-layout-residuals-audit.md fam 2.)
   reactToDropOf: ->
-    if world?._recalculatingLayouts or world?._reFittingContents
+    if world?._recalculatingLayouts
       @_reFitToContents()
     else
       @invalidateLayout()
 
   reactToGrabOf: ->
-    if world?._recalculatingLayouts or world?._reFittingContents
+    if world?._recalculatingLayouts
       @_reFitToContents()
     else
       @invalidateLayout()
@@ -256,12 +256,8 @@ class ScrollPanelWdgt extends PanelWdgt
   # panels -- they all re-fit the same way (the ListWdgt opt-out below is ONLY
   # for the contained-panel notification, not for this pair).
   _reFitToContents: ->
-    world._reFittingContents += 1   # C2: mark the cross-widget cascade so the seam re-fits synchronously
-    try
-      @_adjustContentsBounds()
-      @_adjustScrollBars()
-    finally
-      world._reFittingContents -= 1
+    @_adjustContentsBounds()
+    @_adjustScrollBars()
 
   # ===== Phase 3b (Slice 1): re-fit on the doLayout cycle =====
   # A scroll panel re-fits its contents+scrollbars during recalculateLayouts (deferred),

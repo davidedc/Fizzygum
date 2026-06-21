@@ -1599,10 +1599,12 @@ class Widget extends TreeNode
       @_reFitContainerAfterRawGeometryChange()
 
 
-  # The SECOND synchronous re-fit "seam" (cf. _reFitContainerAfterRawGeometryChange): a content
-  # widget tells the scroll-panel / vertical-stack it sits in to re-fit, after a layout-affecting
-  # property change (VerticalStackLayoutSpec alignment/elasticity/base-width, SimplePlainTextWdgt
-  # soft-wrap, a contained-text edit, collapse). Same freefloating-non-climb reason it exists.
+  # The SECOND re-fit "seam" (cf. _reFitContainerAfterRawGeometryChange): a content widget tells the
+  # scroll-panel / vertical-stack it sits in to re-fit, after a layout-affecting property change
+  # (VerticalStackLayoutSpec alignment/elasticity/base-width, SimplePlainTextWdgt soft-wrap, a
+  # contained-text edit, collapse). Same freefloating-non-climb reason it exists, and the same
+  # fully-deferred TWO-state shape as the main seam (enqueue in a pass, else invalidate -- the
+  # synchronous world._reFittingContents middle arm is gone; see _reFitContainerAfterRawGeometryChange).
   _refreshScrollPanelWdgtOrVerticalStackIfIamInIt: ->
     if world?._recalculatingLayouts
       # In a layout pass: DEFER via the re-queue -- enqueue the affected container for the
@@ -1618,12 +1620,6 @@ class Widget extends TreeNode
       if @_amIDirectlyInsideScrollPanelWdgt()
         enqueueReFitDuringPass @parent.parent
       enqueueReFitDuringPass @parent
-    else if world?._reFittingContents
-      # Inside a public-op re-fit cascade (not a pass): keep the synchronous re-fit so the
-      # cascade completes within the public op (matches the seam's middle branch).
-      if @_amIDirectlyInsideScrollPanelWdgt()
-        @parent.parent._reFitToContents?()
-      @parent?.childGeometryChanged?()
     else
       # Outside any pass/cascade -- the property-change callers (VerticalStackLayoutSpec
       # alignment/elasticity/base-width, content-edit, soft-wrap, collapse): DEFER the container
@@ -1635,27 +1631,23 @@ class Widget extends TreeNode
         @parent.parent.invalidateLayout?()
       @parent?.invalidateLayout?()
 
-  # The single seam (task #20, phase C0): an IMMEDIATE geometry mutator (silentRawSetExtent /
-  # fullRawMoveBy) synchronously re-fits the container that tracks my geometry -- a NON-text-
-  # wrapping scroll panel (text-wrapping panels drive their own content re-wrap in
-  # _adjustContentsBounds, so they are excluded here) re-fits its contents+scrollbars, and a
-  # stack/window container re-fits via childGeometryChanged. This is the deliberately-intermediate
-  # synchronous re-fit (softwrap-deferred-layout-conversion-plan.md §6b): SAFE -- a synchronous
-  # APPLY, never a schedule -- but the layering smell the deferred-model conversion will replace.
-  # Centralized here so that conversion (C1 outside-pass scheduling / C2 in-pass convergence /
-  # C3 remove + extend lint [E]) becomes a single-site change instead of two duplicated blocks.
-  #
-  # C1+C2 (task #20): the container re-fit is DEFERRED for a PRIMARY geometry change, SYNCHRONOUS within a
-  # cascade. Three states:
-  #  - INSIDE recalculateLayouts: synchronous (the until-loop is the iterator; invalidateLayout THROWS in a
-  #    pass -- the Slice-2 climb-back freeze).
-  #  - INSIDE a container re-fit, outside recalc (world._reFittingContents > 0): synchronous. The raw change
-  #    is part of the cross-widget cascade (clock <-> inner-window <-> outer-window); it must complete + iterate
-  #    synchronously, EXACTLY as the C0 seam did, or a single deferred pass leaves it unconverged (C2).
-  #  - a PRIMARY change, outside both: DEFER. Just invalidate the container so the next settle (end of
-  #    doOneCycle / the enclosing public-method flush) re-fits it on the cycle -- the deferred model. Sound now
-  #    that the container-fits-content read-back is gone (Path B, fa0d7961): no one reads the re-fit result
-  #    back synchronously before the settle. (softwrap-deferred-layout-conversion-plan.md §6b.)
+  # The single seam: an IMMEDIATE geometry mutator (silentRawSetExtent / fullRawMoveBy) notifies the
+  # container that tracks my geometry to re-fit -- a NON-text-wrapping scroll panel (text-wrapping panels
+  # drive their own content re-wrap in _adjustContentsBounds, so they are excluded here) re-fits its
+  # contents+scrollbars, and a stack/window container re-fits via childGeometryChanged. A freefloating
+  # child's invalidateLayout does NOT climb to its container, which is why the container is notified
+  # explicitly here. The re-fit is now FULLY DEFERRED (the all-deferred aim) -- TWO states:
+  #  - INSIDE recalculateLayouts: enqueue the container into the until-loop (the "deferred re-queue");
+  #    enqueuing is legal mid-pass (unlike invalidateLayout it does NOT throw and does NOT climb).
+  #  - OUTSIDE a pass (a primary change, or a drop/nest/collapse settle): invalidate the container so the
+  #    next settle (end of doOneCycle / the enclosing public-method flush) re-fits it on the cycle.
+  # The old synchronous MIDDLE arm -- a world._reFittingContents counter that kept the cross-widget cascade
+  # (clock <-> inner-window <-> outer-window) synchronous within a public op -- was RETIRED once the
+  # proportion model became convergence-independent: aspect content (clock/icon) is elasticity 0, so its
+  # width is min(intrinsicWidth, availW) with NO dependence on the stack width sampled mid-cascade. The
+  # cascade then converges in ONE top-down deferred pass, so no synchronous re-fire is needed. Sound also
+  # because the container-fits-content read-back is gone (Path B, fa0d7961): no one reads the re-fit result
+  # back synchronously before the settle. (softwrap-deferred-layout-conversion-plan.md §6b.)
   _reFitContainerAfterRawGeometryChange: ->
     if world?._recalculatingLayouts
       # In a layout pass: DEFER the container re-fit to the recalculateLayouts until-loop (the
@@ -1677,13 +1669,6 @@ class Widget extends TreeNode
       if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
         enqueueReFitDuringPass @parent.parent
       enqueueReFitDuringPass @parent
-    else if world?._reFittingContents
-      # Inside a public-op re-fit cascade but NOT a layout pass (a drop/nest settle): keep the
-      # synchronous re-fit so the cascade completes within the public method -- already an
-      # aim-sanctioned settle point (the end of a public method). This is the C1 behaviour.
-      if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
-        @parent.parent._reFitToContents?()
-      @parent?.childGeometryChanged?()
     else
       if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
         @parent.parent.invalidateLayout?()
@@ -3400,10 +3385,10 @@ class Widget extends TreeNode
     # doOneCycle re-fits me identically before paint -- the shipped gesture-seam pattern
     # (ScrollPanelWdgt.reactToDropOf). The existence check does the old ?()-soak's job (only
     # ScrollPanelWdgt + subclasses incl. ListWdgt define _refitContentsAndScrollBars -> re-fit; any
-    # other widget: no-op -- replacing `if @ instanceof ScrollPanelWdgt`). The pass/cascade arm keeps
+    # other widget: no-op -- replacing `if @ instanceof ScrollPanelWdgt`). The in-pass arm keeps
     # the synchronous re-fit for safety, though a menu action never runs mid-pass.
     if @_refitContentsAndScrollBars?
-      if world?._recalculatingLayouts or world?._reFittingContents
+      if world?._recalculatingLayouts
         @_refitContentsAndScrollBars()
       else
         @invalidateLayout()
@@ -3417,9 +3402,9 @@ class Widget extends TreeNode
     # @add self-settled and this menu action runs outside any pass, so I invalidate myself and the
     # next doOneCycle re-fits me identically before paint (doLayout's 'super; @_reFitToContents' ==
     # _refitContentsAndScrollBars). The existence check is the old ?()-soak's job (no-op off a scroll
-    # panel); the pass/cascade arm keeps the synchronous re-fit for safety.
+    # panel); the in-pass arm keeps the synchronous re-fit for safety.
     if @_refitContentsAndScrollBars?
-      if world?._recalculatingLayouts or world?._reFittingContents
+      if world?._recalculatingLayouts
         @_refitContentsAndScrollBars()
       else
         @invalidateLayout()

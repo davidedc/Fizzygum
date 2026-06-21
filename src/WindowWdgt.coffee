@@ -192,11 +192,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # The re-fit chokepoint for a window (no scrollbars): re-fit chrome + content.
   # See Widget._reFitToContents.
   _reFitToContents: ->
-    world._reFittingContents += 1   # C2: mark the cross-widget cascade so the seam re-fits synchronously
-    try
-      @_adjustContentsBounds()
-    finally
-      world._reFittingContents -= 1
+    @_adjustContentsBounds()
 
   add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
     unless notContent or (aWdgt instanceof CaretWdgt) or (aWdgt instanceof HandleWdgt)
@@ -209,7 +205,12 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @label.setText titleToBeSet
       @removeChild @contents
       @contents = aWdgt
-      @_reFitToContents()
+      # Deferred-layout (capstone probe): the window-content re-fit now DEFERS to the settle cycle
+      # (super -> _addCore invalidates the window; the inherited doLayout runs @_reFitToContents on
+      # the recalculateLayouts pass). The old synchronous pre-fit (@_reFitToContents here) is removed.
+      # Init the content's WindowContentLayoutSpec up-front -- the pre-fit used to do this implicitly
+      # via _adjustContentsBounds, so without it the deferred re-fit would deref an uninitialised spec.
+      aWdgt.initialiseDefaultWindowContentLayoutSpec() unless aWdgt.layoutSpecDetails instanceof WindowContentLayoutSpec
       super aWdgt, position, LayoutSpec.ATTACHEDAS_WINDOW_CONTENT, beingDropped
     else
       super aWdgt, position, layoutSpec, beingDropped
@@ -435,7 +436,11 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     stackHeight = 0
 
     if @contents? and !@contents.collapsed
-      if @contents.layoutSpec != LayoutSpec.ATTACHEDAS_WINDOW_CONTENT
+      # Order-independent spec init: also (re)init when the content lacks a WindowContentLayoutSpec,
+      # not only when its layoutSpec tag is unset. With the on-add pre-fit removed (deferred layout),
+      # super sets the layoutSpec tag to ATTACHEDAS_WINDOW_CONTENT BEFORE this deferred re-fit runs,
+      # so the old tag-only gate would skip init and this would deref an uninitialised/stack-typed spec.
+      if @contents.layoutSpec != LayoutSpec.ATTACHEDAS_WINDOW_CONTENT or !(@contents.layoutSpecDetails instanceof WindowContentLayoutSpec)
         @contents.initialiseDefaultWindowContentLayoutSpec()
         @contents.setLayoutSpec LayoutSpec.ATTACHEDAS_WINDOW_CONTENT
 
