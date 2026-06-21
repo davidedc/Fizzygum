@@ -4,11 +4,12 @@
 able to pick the work up cold from this one doc. The other docs (§9 Doc map) are detail/history. Last updated
 2026-06-21.
 
-**master:** Fizzygum **`1e5d3745`** / Fizzygum-tests **`544166856`** — all green (suite 165/165 at dpr1+dpr2+WebKit,
-smoke-apps 12/12, lint A–E 0).
+**master:** Fizzygum **`55c80ea6`** / Fizzygum-tests **`6785d94ad`** — all green (suite 165/165 at dpr1+dpr2+WebKit,
+smoke-apps 12/12, lint A–E 0). The high-value deferred-layout phase is **COMPLETE** (see §5 — the campaign is at a
+natural stop-and-report point: the remaining families are deliberately left synchronous or are the last+blocked capstone).
 
 > **This doc is canonical — it supersedes every other deferred-layout doc on any conflict.** Line numbers below are
-> **approximate (as of `1e5d3745`) — the METHOD NAME is authoritative; `grep` it.** (Each shipped edit shifts lines.)
+> **approximate (as of `55c80ea6`) — the METHOD NAME is authoritative; `grep` it.** (Each shipped edit shifts lines.)
 
 ---
 
@@ -113,6 +114,7 @@ the mutator HANDS its result forward. `rawSetWidthSizeHeightAccordingly` RETURNS
 | **Twin in-pass re-queue** + the residuals audit | `7303fc5d` |
 | **Menu/collapse/content-edit** — twin's outside-pass branch defers (invalidate the container) | `1caea690` |
 | **Drag/drop** — gesture re-fits (`reactToDropOf`/`reactToGrabOf`/stack `childRemoved`) defer | `1e5d3745` |
+| **Family-3 leftover** — the two `newParentChoice*` dev-menu re-fits defer (2-way; the high-value phase's final conversion) | `55c80ea6` |
 
 **Net: every synchronous re-fit triggered by an IMMEDIATE MUTATOR or an ad-hoc gesture/menu/collapse handler now
 defers.** The C2 "wall" was specifically the *naive* removal (stub the in-pass re-fit with no replacement → 7 tests
@@ -121,20 +123,29 @@ byte-identically. See `deferred-layout-c2-execution-plan.md` for the full findin
 
 ## 5. What's left — the residuals campaign
 
-`deferred-layout-residuals-audit.md` is the map: ~40 synchronous relayouts still at non-flush points, in 8 families.
-Status: **families 2–5's seam/gesture-mediated re-fits are now deferred** (the table in §4). Remaining families
-(numbered as in the audit — **2–5 are DONE, hence the gaps**), each its own arc (own soak):
+`deferred-layout-residuals-audit.md` is the map, and it now records a **2026-06-21 reassessment** (a read-only mapping
+Workflow + adversarial verification) of everything that was "next." **The high-value phase is COMPLETE — the campaign
+is at a natural stop-and-report point.** Status of the 8 families (2–5 + the `newParentChoice*` leftover deferred; see §4):
 
-1. **Scroll-input handlers** (ScrollPanelWdgt `wheel`/momentum/`autoScroll`/`scrollCaretIntoView`/scrollbar drag) — synchronous `_adjustContentsBounds`/`_adjustScrollBars`.
-6/7. **Slider / LabelButton** — synchronous `reLayout` from config setters / menu (Slider's `setValue` is mid-drag).
-8. **The structural root — `rawSetExtent` runs `reLayout`** (base `Widget.coffee` ~:1537 = `silentRawSetExtent` + `changed` + `@reLayout()`); intended as the in-pass synchronous APPLY, but an off-settle residual at off-pass call sites. Hardest.
-- Then **retire the now-mostly-redundant `world._reFittingContents` machinery** and **tighten lint [E]** (forbid synchronous `_reFitToContents`/`childGeometryChanged` from immediate mutators) — the capstone, only possible once the seams' public-op branches + the above are converted.
+- **Families 1 (scroll-input), 6 (Slider), 7 (LabelButton): assessed LEAVE SYNCHRONOUS — do NOT "fix".** Family 1 is
+  the highest-determinism-risk residual (timer/momentum/known dpr2 scroll-thumb-flake path) for ZERO correctness gain,
+  and is the wrong problem class (the panel adjusts its OWN contents — not a freefloating-child→container notification —
+  so the re-queue machinery doesn't apply). Family 6 has no pattern surface (`SliderWdgt.reLayout` is the empty base
+  no-op; the button reLayout repositions only its own thumb). Family 7 is already compliant in substance (own-label
+  re-center from a discrete menu action). None blocks the capstone (they're event/menu handlers, not immediate mutators).
+- **`BoxWdgt.choiceOfWidgetToBePicked`: dead code** (`BoxWdgt` is never a `ScrollPanelWdgt` ancestor) — leave it.
+- **Soft-wrap `reLayout` (family 5 remainder): its own dedicated hard arc** — `softwrap-deferred-layout-conversion-plan.md`.
+- **The capstone — family 8 (`rawSetExtent→reLayout` structural root, base `Widget.coffee` ~:1520) + retire
+  `world._reFittingContents` + tighten lint [E]: genuinely LAST and BLOCKED.** Not a separable "cheap first half": the
+  counter's synchronous arm stays load-bearing because `WindowWdgt.add` re-fits BEFORE its flush and `childUnCollapsed`'s
+  `reInflating`-coupled re-fit is un-deferrable, plus the `reLayOutAfterContainedPanelChange` return-value contract and
+  the family-8 root. It carries the high-severity until-loop NON-CONVERGENCE/freeze risk (a naive in-pass seam removal
+  already broke 7 tests — the C2 wall), so it must be ONE large determinism-sensitive arc (per-root dpr1 + dpr2-soak +
+  WebKit), pursued only on a deliberate decision — not opportunistically.
 
-**Honest framing:** the high-value violations (immediate-mutator-triggered re-fits) are done. Most of what's left fires
-at the END of a public method (alignment/collapse/edit/scroll handlers) — *borderline-compliant* under the aim — so the
-remainder is lower-reward purity + lint enforceability. **Left deliberately synchronous (correct, do not "fix"):**
-`SimpleVerticalStackPanelWdgt.childGeometryChanged` (the cascade SINK the seams call), `ScrollPanelWdgt.reLayOutAfterContainedPanelChange`/`_refitContentsAndScrollBars`
-(absorb return-value contract), `WindowWdgt.childUnCollapsed`'s `reInflating`-coupled re-fit, and the soft-wrap `reLayout`
+**Left deliberately synchronous (correct, do not "fix"):** the above families 1/6/7; `SimpleVerticalStackPanelWdgt.childGeometryChanged`
+(the cascade SINK the seams call); `ScrollPanelWdgt.reLayOutAfterContainedPanelChange`/`_refitContentsAndScrollBars`
+(absorb the return-value contract); `WindowWdgt.childUnCollapsed`'s `reInflating`-coupled re-fit; and the soft-wrap `reLayout`
 (its own dedicated hard arc — `softwrap-deferred-layout-conversion-plan.md`).
 
 ## 6. The dead end (do not revive)
