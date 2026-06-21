@@ -179,21 +179,19 @@ through:
   Family 7 is already compliant in substance. None blocks the capstone.
 - **`BoxWdgt.choiceOfWidgetToBePicked`: dead code** — leave it.
 - **Soft-wrap `reLayout` (family 5 remainder): its own dedicated hard arc** — `softwrap-deferred-layout-conversion-plan.md`.
-- **The capstone — retire `_reFittingContents` + tighten lint [E]: ATTEMPTED 2026-06-21, BLOCKED at the C2 wall
-  (reverted).** Slice 1 (defer the `WindowWdgt.add` pre-fit) reached 164/165 after fixing two init-ordering null-derefs,
-  but the nested-clock cross-widget cascade **DRIFTS +1px/frame under deferral** (root-caused: `VerticalStackLayoutSpec.rememberInitialDimensions`
-  reads a stale `availableWidthInStack` → records the clock as stretchy `elasticity=1` → it inflates to fill). The
-  synchronous pre-fit / counter is doing **real load-bearing convergence work**. The drift was instrumented to ONE
-  value (`widthOfStackWhenAdded` = 543 synchronously vs 170 deferred → clock proportion becomes 1:1 → stretchy), and the
-  obvious **de-read-back fix (pass the pre-shrink entry width into `rememberInitialDimensions`) was TRIED and FALSIFIED —
-  it broke 9 window-content tests**, proving the correct value is the stack's POST-CONVERGENCE settled width, not
-  capturable pre-shrink. Part B (lint) is **cosmetic** (the two `rawSetExtent→_reFitToContents` sites are a legitimate
-  apply identical to sanctioned family-8 `rawSetExtent→reLayout`). **NEXT STEP (deferred to a future session): RE-ARCHITECT
-  the stack-proportion model** so an element's recorded proportion derives from STABLE intent-level inputs, not the
-  applied container width sampled mid-cascade — a standalone arc (own design pass + likely recapture). Full mechanism +
-  the falsified attempt + the next step: `deferred-layout-capstone-execution-plan.md` (RESULT banner).
+- **The capstone — retire `_reFittingContents` + lint [E]: ✅ COMPLETE 2026-06-21 (`a7463bbc` + `66a41a57`).** The C2
+  wall (the nested-clock cross-widget cascade drifting under deferral) was root-caused to the STACK-PROPORTION model and
+  fixed SURGICALLY, not by re-architecture: aspect content (`AnalogClockWdgt`/`IconWdgt`) is now `elasticity 0`, which
+  zeroes the `widthOfStackWhenAdded` term in `getWidthInStack` → the clock is convergence-independent with the rest of
+  the `wEl/wStk` model UNTOUCHED. The `WindowWdgt.add` pre-fit then defers and converges (165/165), so the counter was
+  RETIRED. Part B (lint [E]) was then RESOLVED by ASSESSMENT — no lint added: Part A's deferred seam had already
+  eliminated the CLIMB vector and orphaned `childGeometryChanged` (deleted); the two `rawSetExtent→_reFitToContents`
+  sites are TERMINAL applies identical to the sanctioned `reLayout`/`doLayout`, so forbidding the name was declined as
+  cosmetic. Full record: `deferred-layout-capstone-execution-plan.md` (RESULT-2 + Part B).
 
-**Bottom line:** the campaign has banked its correctness payoff. What's left is (a) deliberately-left-synchronous
-borderline-compliant handlers (1/6/7 — do not "fix"), (b) the soft-wrap hard arc, and (c) the last + hardest +
-highest-risk lint-enforcement capstone. Absent a specific reason to pursue (c) or (b), this campaign is at a natural
-**stop-and-report** point.
+**Bottom line:** the campaign has banked its correctness payoff AND the capstone is COMPLETE (counter retired + lint
+[E] boundary documented). What remains is only (a) deliberately-left-synchronous borderline-compliant handlers (1/6/7
+— do not "fix"; they are self-container event handlers, not child→container notifications), and (b) the soft-wrap hard
+arc (family 5 remainder), an owner-gated determinism-sensitive sub-arc blocked by a same-cycle caret read (so it is
+gated on first deferring the Caret↔Text geometry read — the OO-smells Phase 7 work). Absent a specific reason to
+pursue (b), this campaign is at a natural **DONE / stop-and-report** point.
