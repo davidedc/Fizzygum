@@ -184,10 +184,14 @@ what the soak hunts. Read `../Fizzygum-tests/DETERMINISM.md` before touching the
 
 ## 8. Gotchas (learned the hard way)
 
-- **ABSOLUTE `cd` before every build/script.** The Bash cwd resets to `Fizzygum-all/`; a bare `./build_it_please.sh`
-  from there silently no-ops and `build | grep | tail && suite` then runs the suite on a STALE build (green
-  vacuously). Always `cd /abs/.../Fizzygum && ./build_it_please.sh`; confirm `done!!!`; heed the torture `⚠ STALE`
-  canary; when unsure, grep the built `js/coffeescript-sources/` for your change.
+- **Stale builds are now structurally guarded (you don't have to remember).** `build_it_please.sh` self-locates
+  (`cd "$(dirname "$0")"`) so cwd can't misdirect it, and it touches `Fizzygum-builds/latest/.build-stamp` ONLY on a
+  successful completion. Every headless test runner (`run-all-headless` / `smoke-apps-headless` / `run-macro-test-headless`
+  / `torture-headless`) calls `scripts/lib/assert-build-fresh.js` at startup and **REFUSES to run (exit 2, loud
+  message) if any `src/**/*.coffee` is newer than the stamp, or the stamp is missing** — so a build that didn't run /
+  failed / ran from the wrong cwd can never be tested as if fresh. Deliberate override: `FIZZYGUM_ALLOW_STALE_BUILD=1`.
+  (Still prefer `cd /abs/.../Fizzygum && ./build_it_please.sh`, or the pre-baked `./build_and_test.sh` / `./build_and_smoke.sh`
+  which self-locate and build-then-test.)
 - **Separate `cd` per repo** (chaining build in `Fizzygum/` + node in `Fizzygum-tests/` → MODULE_NOT_FOUND).
 - **No `timeout` in this shell** — use `perl -e 'alarm N; exec @ARGV' node …`.
 - **pkill zombie browsers** before every suite/soak run (they starve the box and cause infra hiccups).

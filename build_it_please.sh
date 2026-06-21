@@ -19,6 +19,12 @@
 #   ./build_it_please
 #     leaves in tests and experimental parts of the code
 
+# SELF-LOCATE: always run from this script's own directory (Fizzygum/), regardless of the caller's cwd.
+# The Bash cwd often resets to the umbrella Fizzygum-all/ between calls, and every path below is relative
+# to Fizzygum/ -- without this, a bare `./build_it_please.sh` from the wrong dir is "no such file" and a
+# `path/to/build_it_please.sh` would build against the wrong tree. Fail loudly if we cannot cd.
+cd "$(dirname "$0")" || { echo "build_it_please.sh: FATAL — cannot cd to my own directory ($(dirname "$0"))" >&2; exit 1; }
+
 BUILD_PATH=../Fizzygum-builds/latest
 SCRATCH_PATH=$BUILD_PATH/delete_me
 
@@ -588,6 +594,12 @@ if $homepage ; then
   mv $BUILD_PATH/js/pre-compiled.js $BUILD_PATH/js/pre-compiled-max.js
   mv $BUILD_PATH/js/pre-compiled-min.js $BUILD_PATH/js/pre-compiled.js
 fi
+
+# BUILD STAMP: touched ONLY here, at the very end of a successful build, so its mtime == build-completion
+# time. The headless test runners refuse to run if any source .coffee is newer than this stamp (or it is
+# missing) -- so a build that didn't run / failed / ran from the wrong cwd can never be tested as if fresh.
+# See Fizzygum-tests/scripts/lib/assert-build-fresh.js.
+touch "$BUILD_PATH/.build-stamp"
 
 # for OSX: say build done
 tput bel
