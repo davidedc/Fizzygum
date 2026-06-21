@@ -98,10 +98,16 @@ lint 0; byte-identical (no recapture). **Soak: SHORT — 3 runs / ~495 execs at 
 early at the owner's request** (the standard ≥20-min / ~1,900-exec soak was NOT completed; a full soak is advisable
 when convenient, since this reorders synchronous→deferred and is the determinism-sensitive class).
 
-**Remaining toward the all-deferred aim (separate later arcs, each its own soak):** (1) the twin
-`_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` (Widget:1602) — same 3-way re-queue — then lint [E] can forbid
-synchronous `_reFitToContents`/`childGeometryChanged` from immediate mutators (can't tighten until BOTH the seam's
-public-op branch and the twin are converted); (2) the transport/deferred-drag pass (OVERVIEW §4).
+**Twin SHIPPED too (2026-06-21).** `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` (Widget:1602) got the same
+in-pass re-queue (its outside-pass branch — reached from menu/edit/collapse handlers — stays synchronous, a public-
+method settle). Verified: 165/165 dpr1+dpr2+WebKit, smoke-apps OK, byte-identical; soak 6 runs ~990 execs 0 flaky.
+
+**Remaining toward the all-deferred aim — see `deferred-layout-residuals-audit.md`** (a full inventory of the ~40
+synchronous relayouts still at non-flush points). In brief: scroll-input handlers (wheel/momentum/autoScroll/caret/
+scrollbar), drag/drop re-fit cascades (reactToDropOf/reactToGrabOf), menu actions (alignment/elasticity/parent-choice),
+collapse/uncollapse, content-edit/soft-wrap, the Slider/LabelButton reLayout family, and the structural root
+`rawSetExtent`→`reLayout` (a `raw*` setter that runs layout). Each is a separate determinism-sensitive arc (own soak);
+lint [E] can only tighten once the seam's public-op branch + the twin's outside-pass branch are also converted.
 
 ---
 

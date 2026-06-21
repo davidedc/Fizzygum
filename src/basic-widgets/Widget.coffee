@@ -1599,10 +1599,32 @@ class Widget extends TreeNode
       @_reFitContainerAfterRawGeometryChange()
 
 
+  # The SECOND synchronous re-fit "seam" (cf. _reFitContainerAfterRawGeometryChange): a content
+  # widget tells the scroll-panel / vertical-stack it sits in to re-fit, after a layout-affecting
+  # property change (VerticalStackLayoutSpec alignment/elasticity/base-width, SimplePlainTextWdgt
+  # soft-wrap, a contained-text edit, collapse). Same freefloating-non-climb reason it exists.
   _refreshScrollPanelWdgtOrVerticalStackIfIamInIt: ->
-    if @_amIDirectlyInsideScrollPanelWdgt()
-      @parent.parent._reFitToContents?()
-    @parent?.childGeometryChanged?()
+    if world?._recalculatingLayouts
+      # In a layout pass: DEFER via the re-queue -- enqueue the affected container for the
+      # recalculateLayouts until-loop instead of re-fitting synchronously now (same mechanism +
+      # @_adjustingContentsBounds guard as the seam's in-pass arm; closure duplicated rather than
+      # shared to avoid adding a Widget method that would grow every inspected widget's member list).
+      enqueueReFitDuringPass = (container) ->
+        return unless container?._reFitToContents?
+        return if container._adjustingContentsBounds
+        if container.layoutIsValid
+          world.widgetsThatMaybeChangedLayout.push container
+        container.layoutIsValid = false
+      if @_amIDirectlyInsideScrollPanelWdgt()
+        enqueueReFitDuringPass @parent.parent
+      enqueueReFitDuringPass @parent
+    else
+      # Outside a layout pass: a public-method settle (the property-change callers above) or a
+      # public-op re-fit cascade -- a synchronous re-fit here is already an aim-sanctioned settle
+      # point (the end of a public method). Unchanged.
+      if @_amIDirectlyInsideScrollPanelWdgt()
+        @parent.parent._reFitToContents?()
+      @parent?.childGeometryChanged?()
 
   # The single seam (task #20, phase C0): an IMMEDIATE geometry mutator (silentRawSetExtent /
   # fullRawMoveBy) synchronously re-fits the container that tracks my geometry -- a NON-text-

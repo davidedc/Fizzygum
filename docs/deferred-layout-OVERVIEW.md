@@ -122,15 +122,19 @@ is the NAIVE no-op removal, not in-pass convergence itself — and the fix WORKS
 (2026-06-21).** The seam's in-pass synchronous re-fit now enqueues the affected container into the `recalculateLayouts`
 until-loop (`layoutIsValid=false` + push; no throw, no climb; skips a container mid-`_adjustContentsBounds`) so the
 relayout runs in the loop, not in the mutator = the aim. All 7 probe tests pass; 165/165 dpr1+dpr2+WebKit, smoke-apps
-OK, byte-identical (zero recapture). Soak short (3 runs, 0 flaky, stopped early — full soak advisable). **Remaining:**
-the twin `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` (same re-queue) + then lint [E]; then the transport pass.
-Full design + verification: `deferred-layout-c2-execution-plan.md` (RESULT + SHIPPED).
+OK, byte-identical (zero recapture). The twin `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` got the same in-pass
+re-queue (2026-06-21; soak 6 runs 0 flaky). **Remaining toward all-deferred = the ~40 residuals mapped in
+`deferred-layout-residuals-audit.md`** (scroll-input, drag/drop, menu, collapse, content-edit, Slider/LabelButton,
+the `rawSetExtent`→`reLayout` root), then lint [E]. Full design + verification:
+`deferred-layout-c2-execution-plan.md` (RESULT + SHIPPED).
 
 ## 6. Doc map
 - **`deferred-layout-OVERVIEW.md`** — THIS doc (entry point: aim, state, paths, next step).
-- **`deferred-layout-c2-execution-plan.md`** — the owner-approved execution plan for **true C2** (the next step):
-  the DAG model of the clock/window cascade, the trigger inventory, the second seam, the feasibility-probe decision
-  gate, the conditional fix, and C3 (seam removal + lint).
+- **`deferred-layout-c2-execution-plan.md`** — the C2 arc: the DAG model of the clock/window cascade, the
+  feasibility-probe finding (naive removal is a wall), and the SHIPPED deferred re-queue (seam + twin in-pass).
+- **`deferred-layout-residuals-audit.md`** — the full inventory (2026-06-21) of the ~40 synchronous relayouts still
+  at non-flush points (scroll-input, drag/drop, menu, collapse, content-edit, Slider/LabelButton, and the structural
+  `rawSetExtent`→`reLayout` root) — the map of the remaining campaign toward all-deferred, with a suggested order.
 - **`deferred-layout-path-a-design.md`** — Path A (the next step): why blanket pending-aware accessors fail, the
   per-reader design, the pending-vs-applied reader audit, sequencing, acceptance/canary tests, the helper.
 - **`softwrap-deferred-layout-conversion-plan.md`** — the originating case (soft-wrap) + the "model is
