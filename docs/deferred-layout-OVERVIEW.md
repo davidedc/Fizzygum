@@ -1,166 +1,230 @@
-# Deferred-layout: OVERVIEW — the overall aim, where we are, the next step
+# Deferred-layout: OVERVIEW — aim, model, mechanism, state, what's next
 
-**Read this first.** This is the entry point for the whole deferred-layout effort. It states the aim, the
-current state (shipped + learned), the paths, and the next step. The detailed per-area docs are linked in
-the Doc map (§6); each is self-contained too. Last updated 2026-06-20.
+**Read this first — it is the self-contained entry point for the whole deferred-layout effort.** You should be
+able to pick the work up cold from this one doc. The other docs (§9 Doc map) are detail/history. Last updated
+2026-06-21.
 
-master: **Fizzygum `7ee0b871`** / **Fizzygum-tests `544166856`** — all green (165/165 dpr1+dpr2+WebKit,
-smoke-apps 12/12, lint A–E 0). (C1 + the in-pass **deferred re-queue** shipped; next = the twin + lint — see §5.)
+**master:** Fizzygum **`1e5d3745`** / Fizzygum-tests **`544166856`** — all green (suite 165/165 at dpr1+dpr2+WebKit,
+smoke-apps 12/12, lint A–E 0).
+
+> **This doc is canonical — it supersedes every other deferred-layout doc on any conflict.** Line numbers below are
+> **approximate (as of `1e5d3745`) — the METHOD NAME is authoritative; `grep` it.** (Each shipped edit shifts lines.)
 
 ---
 
-## 1. The overall aim
+## 1. The aim
 
-**Turn EVERY synchronous re-layout into a DEFERRED re-layout.** A deferred re-layout settles at exactly one
-of two points, never mid-handler or mid-raw-setter:
+**Turn EVERY synchronous re-layout into a DEFERRED one.** A relayout (a `doLayout`/`reLayout`/container `_reFitToContents`)
+must run at exactly one of two SETTLE POINTS, never mid-handler and never from a low-level mutator:
 
-- **at the end of a geometry-changing PUBLIC method** — the self-settling flush (`mutateGeometryThenSettle`);
-  *modulo batching*, where a batch of mutations settles once at the end (`settleLayoutsOnceAfter`); or
-- **at the end of `doOneCycle`** — the `recalculateLayouts → doLayout` pass, which runs before paint.
+- **(a) the end of a geometry-changing PUBLIC method** — the self-settling flush `Widget.mutateGeometryThenSettle`
+  (records intent, then runs `recalculateLayouts`); *modulo batching*, where a batch settles once via
+  `settleLayoutsOnceAfter`; or
+- **(b) the end of `doOneCycle`** — the `recalculateLayouts → doLayout` pass that runs before paint.
 
-The payoff: one predictable settle model, no scattered synchronous re-fits, and no handler forced to read
-back raw geometry.
+Low-level mutators (`raw*`/`silent*`/`fullRaw*`) must only MUTATE geometry, never schedule/run layout.
 
-## 2. The model + the ROOT blocker
+## 2. The model (how deferred layout already works)
 
-- **The deferred mechanism already EXISTS.** Public setters (`setExtent`/`setWidth`/`setHeight`/`setBounds`/
-  `fullMoveTo`/`add`) record intent (`@desiredExtent`/`@desiredPosition`) + `invalidateLayout()`, settled the
-  SAME cycle by `recalculateLayouts → doLayout` before paint (`WorldWdgt.doOneCycle`). Deferral is
-  within-frame — no cross-frame lag.
-- **The ROOT blocker is READ-BACK.** The geometry accessors (`position/extent/width/height/left/top/center/
-  boundingBox/…`) read the APPLIED `@bounds` only. So any code that reads a widget's geometry **between a
-  deferred set and the settle** sees the STALE applied value, and is therefore *forced* to use the immediate
-  `raw*` API + synchronous re-fits. **Every remaining synchronous re-layout is a symptom of this one root.**
+- **Public geometry setters self-settle.** The 7 public mutators — `setExtent`, `setWidth`, `setHeight`,
+  `setBounds`, `fullMoveTo`, `add`, `addRaw` (all in `src/basic-widgets/Widget.coffee`) — wrap
+  `mutateGeometryThenSettle`: they record desired state (`@desiredExtent`/`@desiredPosition` + `@invalidateLayout()`)
+  and then run `world.recalculateLayouts()` once before returning. So a top-level caller always sees a consistent
+  world; deferral is **within-frame** (no cross-frame lag).
+- **The until-loop is the single settle engine.** `WorldWdgt._recalculateLayoutsCore` (`src/WorldWdgt.coffee`
+  ~:876, the loop ~:885) drains `world.widgetsThatMaybeChangedLayout`, calling `doLayout()` on the top-most invalid
+  widget of each broken chain, until the queue is empty. `WorldWdgt.doOneCycle` runs it every frame before paint.
+- **`invalidateLayout` is how you enqueue** (`Widget.coffee` ~:3791): `if @layoutIsValid then push @ onto
+  world.widgetsThatMaybeChangedLayout; @layoutIsValid = false; climb to @parent (unless ATTACHEDAS_FREEFLOATING)`.
+  It **THROWS if called while `world._recalculatingLayouts`** (the flow-rule guard, ~:3804) — a raw/handler must not
+  schedule layout mid-pass (this caused the "Slice-2" app-freeze historically).
+- **THE ROOT CONSTRAINT — accessors read APPLIED geometry only.** `position`/`extent`/`width`/`height`/`left`/`top`/
+  `center`/`boundingBox` all read the *applied* `@bounds`. So any code that reads a widget's geometry **between a
+  deferred set and the settle** sees the STALE value. This is *why* low-level code historically used the immediate
+  `raw*` API + synchronous re-fits: a handler that mutates and reads geometry back in the same pass can't see the
+  pending value. **Every remaining synchronous re-layout is a symptom of this one root.**
 
-## 3. Where we are
+## 3. The mechanism that completes it — the DEFERRED RE-QUEUE (the key technique)
 
-### Shipped (all on master)
+The hard case is a **freefloating content widget** (scroll content / window content / a stacked cell / a square
+clock) that changes its own geometry: its container must re-fit, but **there is no clean deferred path** for that
+notification because — (a) a freefloating child's `invalidateLayout` does NOT climb to its container
+(`Widget.coffee` ~:3808); (b) the until-loop's walk-up **deliberately stops at freefloating widgets**
+(`WorldWdgt.coffee` ~:925), so the loop never re-fits a container in response to a freefloating child; and
+(c) `invalidateLayout` throws mid-pass. So the container is notified by **"seam" methods**. The seams used to re-fit
+the container **synchronously**; they now **DEFER** via the re-queue:
+
+```coffee
+# In a layout pass, schedule the container into the until-loop instead of re-fitting it NOW.
+# Legal mid-pass: no throw (unlike invalidateLayout), no climb. Skip a container that is mid its
+# own _adjustContentsBounds (it is driving this child top-down and already accounts for it -- enqueuing
+# then would re-fire every pass and never converge).
+enqueueReFitDuringPass = (container) ->
+  return unless container?._reFitToContents?
+  return if container._adjustingContentsBounds
+  if container.layoutIsValid
+    world.widgetsThatMaybeChangedLayout.push container
+  container.layoutIsValid = false
+```
+
+Because every container's `doLayout` is `super; @_reFitToContents()` (ScrollPanelWdgt ~:276, SimpleVerticalStackPanelWdgt ~:70,
+WindowWdgt inherits), **enqueuing a container makes the until-loop re-fit it on the same cycle, identically.**
+
+The seams + their conversion state (all in `Widget.coffee` unless noted):
+
+| Seam | fired from | shape now |
+|---|---|---|
+| `_reFitContainerAfterRawGeometryChange` (~:1659) | the immediate mutators `silentRawSetExtent` (~:1566) + `fullRawMoveBy` (~:1220) | **3-way**: `_recalculatingLayouts` → enqueue · `_reFittingContents` → synchronous · else → `invalidateLayout` |
+| `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` (~:1606) | property setters (`VerticalStackLayoutSpec` align/elasticity/base-width), collapse, content-edit/soft-wrap | **3-way** (same) |
+| `reactToDropOf`/`reactToGrabOf` (ScrollPanelWdgt/PanelWdgt/SimpleVerticalStackPanelWdgt) + the stack's `childRemoved` | `ActivePointerWdgt.drop`/`grab` (after a self-settling `add`) | **2-way**: pass/cascade → synchronous · else → `invalidateLayout` (no recalc-enqueue arm — these are never dispatched mid-pass) |
+
+**`world._reFittingContents`** (`WorldWdgt.coffee:277`) is a COUNTER, bumped inside each container `_reFitToContents`
+(ScrollPanelWdgt ~:258, SimpleVerticalStackPanelWdgt ~:54, WindowWdgt ~:194). It marks "inside a cross-widget re-fit
+cascade" (e.g. clock ↔ inner-window ↔ outer-window). Inside such a cascade the seams stay **synchronous** so the
+cascade completes/iterates within the public op; only a PRIMARY change outside it defers. This is what made deferral
+sound where a naive blanket deferral was not.
+
+**Path-B de-read-back** is the companion technique for constraint handlers: instead of mutate-then-read-geometry-back,
+the mutator HANDS its result forward. `rawSetWidthSizeHeightAccordingly` RETURNS its resulting height (base
+`Widget.coffee:706` + 8 overrides); `WindowWdgt._adjustContentsBounds` uses the return instead of reading
+`@contents.height()` back. (`SliderWdgt.updateValue` was the pilot.)
+
+## 4. What's shipped
+
+### Pre-session foundation (all on master)
 | What | commit |
 |---|---|
 | Self-settling public geometry API (`mutateGeometryThenSettle`) | `817c2ce4` |
-| **The 16 read-back construction macros** converted to the deferred API (rode the self-settling-API ship — this is why they pass today; it was NOT Path A that fixed them) | tests `a256ccfe6` |
-| Phase 1/2 — `_reFitToContents` re-fit chokepoint + lint A/B/C/D | `ad2000cc` |
-| Phase 3a — `add`/`addRaw` public & self-settling | `b8165920` |
-| Phase 3b — scroll/stack/window content re-fit on the `doLayout` cycle | `00cea256` / `6c7060e5` |
-| **Flow rule (#17)** — raw/silent/fullRaw setters must only MUTATE, never SCHEDULE layout (migrated + runtime throw guard + lint [E]) | `c45113ac` / `b89c9141` |
-| **#18** — `createErrorConsole` freeze-amplifier fixed; `invalidateLayout` guard log→throw | `4c78c9cb` |
-| **C0** — the inline re-fit triggers consolidated into one seam `Widget._reFitContainerAfterRawGeometryChange` | `c8bb8a87` |
-| **Slider Path-B de-read-back** — `SliderWdgt.updateValue` derives the value from the clamped button position | `89ee825f` |
+| Re-fit chokepoint `_reFitToContents` + lint A/B/C/D | `ad2000cc` |
+| `add`/`addRaw` public & self-settling over private `_addCore` | `b8165920` |
+| Stack/window content re-fit on the `doLayout` cycle (Phase 3b) | `00cea256` / `6c7060e5` |
+| **Flow rule** — raw/silent/fullRaw must MUTATE, never SCHEDULE (runtime throw + lint [E]) | `c45113ac` / `b89c9141` |
+| `createErrorConsole` freeze-amplifier fixed; `invalidateLayout` guard log→throw | `4c78c9cb` |
+| **C0** — inline re-fit triggers consolidated into the single seam | `c8bb8a87` |
+| Slider Path-B de-read-back | `89ee825f` |
+| Path-B window-fit de-read-back (`rawSetWidthSizeHeightAccordingly` returns its height) | `fa0d7961` |
+| **C1** — seam defers PRIMARY changes; cascade stays synchronous via `world._reFittingContents` | `7ee0b871` |
 
-### Learned (the walls — all recorded in the path docs)
-- **C1** (blanket "defer the seam outside-recalc") is **UNSOUND** — broke the clock's cross-widget read-back (`ef6fbe07`).
-- **C2/C3** (in-pass convergence / remove the seam) are **blocked while read-back persists**: the DRIVE case
-  converts but shares the seam arm with the clock, and the REACT (scroll) arm stays synchronous → C3
-  unachievable, no enforcement payoff. **The seam (C0) is the stable INTERMEDIATE.** (`ceff7616`)
-- **Blanket pending-aware accessors DIVERGED** (16→18 failures): the same accessor serves both
-  "where it's heading" (pending) and "where it is now" (applied) readers — one accessor can't be both.
+### This session (2026-06-21) — the re-queue rollout
+| What | commit |
+|---|---|
+| **C2 finding** — naive in-pass seam removal is a WALL; the deferred re-queue is the fix (docs) | `8deb1d55` |
+| **Seam in-pass re-queue** — `_reFitContainerAfterRawGeometryChange` enqueues in a pass (the dominant ~99% case) | `5fc152c7` |
+| **Twin in-pass re-queue** + the residuals audit | `7303fc5d` |
+| **Menu/collapse/content-edit** — twin's outside-pass branch defers (invalidate the container) | `1caea690` |
+| **Drag/drop** — gesture re-fits (`reactToDropOf`/`reactToGrabOf`/stack `childRemoved`) defer | `1e5d3745` |
 
-**The insight tying it together:** the symptom (synchronous re-fits / the seam) cannot be removed until the
-ROOT (read-back) is fixed. That fix is **Path A**.
+**Net: every synchronous re-fit triggered by an IMMEDIATE MUTATOR or an ad-hoc gesture/menu/collapse handler now
+defers.** The C2 "wall" was specifically the *naive* removal (stub the in-pass re-fit with no replacement → 7 tests
+break, because the freefloating→container notification has no home); the re-queue is the replacement that converges
+byte-identically. See `deferred-layout-c2-execution-plan.md` for the full finding + evidence.
 
-## 4. The paths
+## 5. What's left — the residuals campaign
 
-- **Path A — pending-aware READS — FALSIFIED for the container path (2026-06-20), do NOT pursue.** The idea
-  (opt-in `effective*` reads; convert the container content-sizing path to read pending geometry) was built and
-  tested: it is not merely non-byte-safe but **incorrect** — `_adjustContentsBounds` bakes its size via a
-  non-invalidating `silentRawSetBounds`, so reading pending bakes a mid-settle transient (over-sized the scroll
-  content by 43px; slack +43 vs the applied read's 0). The synchronous re-fit/convergence is **load-bearing**
-  precisely because it re-reads APPLIED geometry after children settle. Reverted to docs-only.
-  → **`deferred-layout-path-a-design.md` §11** (the instrumented finding).
-- **Path B — per-site de-read-back — THE NEXT STEP** (constraint-entangled handlers: slider [DONE `89ee825f`],
-  then the clock-square / window-fit resize handlers, then scrollbar / grab-anchor / window-collapse). Each
-  derives/hands its value forward instead of reading the moved geometry back. This is the ONLY surviving enabler
-  for deferring the seam (Path A can't substitute — a fixed-point re-fit must read applied, not pending).
-  → **`softwrap-deferred-layout-conversion-plan.md`** §1/§2/§6a/§6b (C1 UNSOUND ⇒ #20 gated on Path B).
-- **The inline re-fit trigger arc (C0–C3)** — the synchronous container re-fit seam. **C0 + C1 done; the in-pass
-  cascade arm is now DEFERRED via the RE-QUEUE (shipped 2026-06-21).** Naive no-op removal was a wall (probe broke 7
-  tests); the re-queue (enqueue the container into the until-loop) converges byte-identically. Remaining: the twin +
-  lint [E], then transport. → **`deferred-layout-c2-execution-plan.md`** (RESULT + SHIPPED) + `softwrap…` §6b.1.
-- **Transport (deferred drags)** — the hand/grab case; cadence-sensitive (needs the torture soak); a separate
-  later pass. The deferred clamp `fullMoveWithin` already exists. → **path-a-design.md** §9 step 5.
+`deferred-layout-residuals-audit.md` is the map: ~40 synchronous relayouts still at non-flush points, in 8 families.
+Status: **families 2–5's seam/gesture-mediated re-fits are now deferred** (the table in §4). Remaining families
+(numbered as in the audit — **2–5 are DONE, hence the gaps**), each its own arc (own soak):
 
-## 5. STATE — Path B + C1 + the in-pass DEFERRED RE-QUEUE shipped; next = the twin + lint, then transport (see the C1 note below)
+1. **Scroll-input handlers** (ScrollPanelWdgt `wheel`/momentum/`autoScroll`/`scrollCaretIntoView`/scrollbar drag) — synchronous `_adjustContentsBounds`/`_adjustScrollBars`.
+6/7. **Slider / LabelButton** — synchronous `reLayout` from config setters / menu (Slider's `setValue` is mid-drag).
+8. **The structural root — `rawSetExtent` runs `reLayout`** (base `Widget.coffee` ~:1537 = `silentRawSetExtent` + `changed` + `@reLayout()`); intended as the in-pass synchronous APPLY, but an off-settle residual at off-pass call sites. Hardest.
+- Then **retire the now-mostly-redundant `world._reFittingContents` machinery** and **tighten lint [E]** (forbid synchronous `_reFitToContents`/`childGeometryChanged` from immediate mutators) — the capstone, only possible once the seams' public-op branches + the above are converted.
 
-Path A is falsified (§4); the seam can only be deferred once no content widget / container re-fit reads geometry
-back synchronously. So the next step is **Path B per-site de-read-back**, continuing from the slider pilot
-(§6a, `89ee825f`).
+**Honest framing:** the high-value violations (immediate-mutator-triggered re-fits) are done. Most of what's left fires
+at the END of a public method (alignment/collapse/edit/scroll handlers) — *borderline-compliant* under the aim — so the
+remainder is lower-reward purity + lint enforceability. **Left deliberately synchronous (correct, do not "fix"):**
+`SimpleVerticalStackPanelWdgt.childGeometryChanged` (the cascade SINK the seams call), `ScrollPanelWdgt.reLayOutAfterContainedPanelChange`/`_refitContentsAndScrollBars`
+(absorb return-value contract), `WindowWdgt.childUnCollapsed`'s `reInflating`-coupled re-fit, and the soft-wrap `reLayout`
+(its own dedicated hard arc — `softwrap-deferred-layout-conversion-plan.md`).
 
-1. **De-read-back the content-sizing chokepoint — SHIPPED (`fa0d7961`).** `rawSetWidthSizeHeightAccordingly` HANDS
-   its resulting height forward (returns it; the clock its square side, the ratio widgets their ratio'd height); the
-   container re-fits that *mutate-then-read-back* — `WindowWdgt._adjustContentsBounds` (`desiredHeight = @contents.height()`
-   after the sizing) — now use the RETURN value instead (base Widget + 8 overrides). Byte-identical (the return is the
-   height read at the source, immediately after the synchronous mutation). This is the slider pattern generalised to
-   the square/ratio constraint handlers. (`SimpleVerticalStackPanelWdgt`'s `stackHeight += widget.height()` left as a
-   parallel byte-safe follow-up — not needed for the seam.)
-2. **Then the remaining read-back handlers** one at a time (scrollbar, grab-anchor/ratio, window-collapse).
-3. **Verify:** full suite 165/165 dpr1/dpr2/WebKit + smoke-apps, ZERO recaptures; **plus the torture soak** — this
-   is the cadence-sensitive clock/window clamp class. Oracle: `macroWindowWithAClockInAWindowConstructionTwo`,
-   `macroClockInWindowKeepsSquareOnResize`, `macroDocumentScrollsMixedTextAndClocks`.
+## 6. The dead end (do not revive)
 
-**Why this unlocks the whole aim:** once a content widget can resize without a synchronous geometry read-back, C1
-(defer the seam outside a pass → invalidate the container → re-fit on the cycle) becomes SOUND, C2 makes the
-REACT-case `_reFitToContents` a true in-pass fixed point, and C3 deletes the inline seam (+ tightens lint [E]) →
-every container re-fit then happens only inside `recalculateLayouts` (end of `doOneCycle`) or a public-method
-flush = the all-deferred end state.
+**Path A — "pending-aware accessors"** (add `effective*` reads that return where geometry is HEADING) is **FALSIFIED**.
+A blanket version diverges (one accessor can't serve both pending-needers and the applied-needers: canvas buffers,
+inspector, dirty-rects). The targeted container-path version is not just non-byte-safe but *incorrect*: `_adjustContentsBounds`
+bakes its size via the non-invalidating `silentRawSetBounds`, so reading pending bakes a mid-settle transient
+(over-sized scroll content by 43px). The synchronous re-fit/convergence that re-reads APPLIED geometry is load-bearing.
+→ `deferred-layout-path-a-design.md` §11.
 
-**C1 SHIPPED (2026-06-20) — the seam now DEFERS primary changes; the cross-widget cascade stays synchronous.**
-The naive "defer the seam outside a pass" broke the nested-window clock resize
-(`macroWindowWithAClockInAWindowConstructionTwo` 4-6 went huge) because it deferred the seam MID-cascade — the
-clock↔inner-window↔outer-window clamp needs the seam's synchronous *iteration*, which a single deferred pass loses.
-**Fix: a world counter `world._reFittingContents`** (bumped around each container `_reFitToContents`) marks "inside
-a re-fit cascade". The seam now has three states — inside `recalculateLayouts` → synchronous; inside a cascade
-(`_reFittingContents > 0`) → synchronous (= the C0 behaviour, so it still converges); a **PRIMARY change outside
-both → DEFER** (`invalidate` → next cycle). So primary geometry changes defer to the cycle (real progress) while
-cascades stay synchronous (byte-identical AND the nested clock converges). Verified byte-identical: suite 165/165
-dpr1+dpr2+WebKit, smoke-apps 12/12, the clock/DRIVE/REACT oracle all green. **This is C1 done.** A feasibility probe
-(2026-06-20) stubbing the seam's in-pass re-fire to a **no-op** broke 7 SystemTests across all three families (5
-scroll/REACT, 2 stack/window) — so the in-pass re-fire is load-bearing: the freefloating-content→container re-fit
-notification has no clean deferred home (a freefloating child's invalidate doesn't climb; the `recalculateLayouts`
-walk-up stops at freefloating widgets, WorldWdgt:924-927; `invalidateLayout` throws mid-pass). The scroll/REACT arm
-broke INDEPENDENTLY of the clock, so a clock-only "one-shot constraint solve" could never enable C3. **BUT the wall
-is the NAIVE no-op removal, not in-pass convergence itself — and the fix WORKS: the DEFERRED RE-QUEUE is SHIPPED
-(2026-06-21).** The seam's in-pass synchronous re-fit now enqueues the affected container into the `recalculateLayouts`
-until-loop (`layoutIsValid=false` + push; no throw, no climb; skips a container mid-`_adjustContentsBounds`) so the
-relayout runs in the loop, not in the mutator = the aim. All 7 probe tests pass; 165/165 dpr1+dpr2+WebKit, smoke-apps
-OK, byte-identical (zero recapture). The twin `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` got the same in-pass
-re-queue (2026-06-21; soak 6 runs 0 flaky). **Remaining toward all-deferred = the ~40 residuals mapped in
-`deferred-layout-residuals-audit.md`** (scroll-input, drag/drop, menu, collapse, content-edit, Slider/LabelButton,
-the `rawSetExtent`→`reLayout` root), then lint [E]. Full design + verification:
-`deferred-layout-c2-execution-plan.md` (RESULT + SHIPPED).
+## 7. Verification — the gauntlet (self-contained commands)
 
-## 6. Doc map
-- **`deferred-layout-OVERVIEW.md`** — THIS doc (entry point: aim, state, paths, next step).
-- **`deferred-layout-c2-execution-plan.md`** — the C2 arc: the DAG model of the clock/window cascade, the
-  feasibility-probe finding (naive removal is a wall), and the SHIPPED deferred re-queue (seam + twin in-pass).
-- **`deferred-layout-residuals-audit.md`** — the full inventory (2026-06-21) of the ~40 synchronous relayouts still
-  at non-flush points (scroll-input, drag/drop, menu, collapse, content-edit, Slider/LabelButton, and the structural
-  `rawSetExtent`→`reLayout` root) — the map of the remaining campaign toward all-deferred, with a suggested order.
-- **`deferred-layout-path-a-design.md`** — Path A (the next step): why blanket pending-aware accessors fail, the
-  per-reader design, the pending-vs-applied reader audit, sequencing, acceptance/canary tests, the helper.
-- **`softwrap-deferred-layout-conversion-plan.md`** — the originating case (soft-wrap) + the "model is
-  intermediate" finding + the Path A/B taxonomy + the inline-trigger arc (§6b/§6b.1: C0–C3 + the verify-first
-  & DRIVE-case findings) + the slider pilot (§6a, done).
-- **`deferred-layout-slice2-completion-plan.md`** — state after Phase 3b + the flow rule (#17) + #18; the full
-  gauntlet commands (historical "primary state" doc, now superseded as entry point by THIS overview).
-- **`deferred-layout-refit-and-add-design.md`** — the Phase-1 design-of-record / phase map.
-- **`deferred-layout-16-macro-breakages.md`** — the 16-macro breakage catalogue + root-cause map (Path A's
-  acceptance set).
+**Paths are absolute on purpose** (the Bash cwd resets to the umbrella `Fizzygum-all/` between calls — a bare
+`./build_it_please.sh` silently fails and you then test a STALE build; see §8).
 
-## 7. Commands + gotchas (self-contained)
-- **Build:** `cd Fizzygum && ./build_it_please.sh` (runs the lint; expect `0 violations (A/B/C/D/E)`).
-  `--keepTestsDirectoryAsIs` while iterating; full build needed before running the suite (recopies tests).
-- **Suite:** `cd Fizzygum-tests && pkill -9 -f "Chrome for Testing|chrome-headless|puppeteer|webkit"; node
-  scripts/run-all-headless.js --shards=5` (dpr1); `--dpr=2`; `--browser=webkit`. Single test:
-  `node scripts/run-macro-test-headless.js SystemTest_<name>` (`PRELUDE_JS=…`/`LOG_FILE=…` for instrumentation).
-- **App-launch gate (mandatory for any layout change):** `node scripts/smoke-apps-headless.js`.
-- **Soak (cadence-sensitive changes only, e.g. transport):** `caffeinate -i node scripts/torture-headless.js
-  --dprs=2 --speeds=fastest --shards=8 --minutes=20`.
-- **Recapture (sanctioned benign shifts):** `node scripts/capture-macro-test-references.js SystemTest_<name>
-  --clean --dprs=1,2` (full flow).
-- **Gotchas:** separate `cd` per repo (chaining build+test across repos → MODULE_NOT_FOUND); no `timeout` in
-  this shell (use `perl -e 'alarm N; exec @ARGV' node …`); pkill zombie browsers before every suite run; commit
-  via `git commit -F <file>` (never backticks/`$()` in `-m`); **ask before commit/push**.
-- **Key code:** accessors read `@bounds` (`src/basic-widgets/Widget.coffee`); `invalidateLayout` (~:3701; throws
-  during recalc — the flow-rule guard); the seam `_reFitContainerAfterRawGeometryChange` (~:1607);
-  `recalculateLayouts`/`_recalculateLayoutsCore` (`src/WorldWdgt.coffee` ~:850); container re-fit
-  `_adjustContentsBounds`/`_reFitToContents` (`ScrollPanelWdgt`/`SimpleVerticalStackPanelWdgt`/`WindowWdgt`).
+```sh
+# Build (lint gate; expect "0 violations (A/B/C/D/E)" and a final "done!!!!!!!!!!!!")
+cd /Users/davidedellacasa/code/Fizzygum-all/Fizzygum && ./build_it_please.sh
+#   --keepTestsDirectoryAsIs   (faster while iterating; does NOT recopy tests)
+#   VERIFY the build took: confirm "done!!!" printed, OR grep the artifact for a marker of your change:
+#   grep -rl '<your unique edit string>' /Users/.../Fizzygum-builds/latest/js/coffeescript-sources/
+
+# Full suite (165/165). Always pkill zombie browsers first. No `timeout` in this shell -> perl alarm.
+cd /Users/davidedellacasa/code/Fizzygum-all/Fizzygum-tests \
+  && pkill -9 -f "Chrome for Testing|chrome-headless|puppeteer|webkit"; sleep 1 \
+  && perl -e 'alarm 600; exec @ARGV' node scripts/run-all-headless.js --shards=5
+#   add --dpr=2   (HiDPI; the cadence-sensitive divergence point)
+#   add --browser=webkit   (cross-engine; reuses the same SWCanvas references)
+
+# App-launch smoke gate (MANDATORY for any layout-cycle change — the suite has no app coverage)
+cd /Users/davidedellacasa/code/Fizzygum-all/Fizzygum-tests && node scripts/smoke-apps-headless.js   # -> "APPS OK"
+
+# Torture soak (MANDATORY for cadence-sensitive changes, esp. anything in the transport/drag path).
+# Heed the report's "build under test: ... ⚠ STALE (... is newer)" canary -> rebuild if you see it.
+cd /Users/davidedellacasa/code/Fizzygum-all/Fizzygum-tests \
+  && caffeinate -i node scripts/torture-headless.js --dprs=2 --speeds=fastest --shards=8 --minutes=20
+#   verdict: cat .scratch/torture/REPORT.md  (empty failures/ dir = nothing flaked)
+
+# Single test (debugging): node scripts/run-macro-test-headless.js SystemTest_<name>  (PRELUDE_JS=/LOG_FILE= to instrument)
+# Recapture sanctioned benign shifts: node scripts/capture-macro-test-references.js SystemTest_<name> --clean --dprs=1,2
+```
+
+Determinism: SystemTests assert byte-exact SWCanvas pixels. A wrong conversion fails **deterministically** at dpr1
+(stale geometry → red every run). Synchronous→deferred *timing* changes surface as **dpr2-under-load flakes** — that's
+what the soak hunts. Read `../Fizzygum-tests/DETERMINISM.md` before touching the render/layout/input loop.
+
+## 8. Gotchas (learned the hard way)
+
+- **ABSOLUTE `cd` before every build/script.** The Bash cwd resets to `Fizzygum-all/`; a bare `./build_it_please.sh`
+  from there silently no-ops and `build | grep | tail && suite` then runs the suite on a STALE build (green
+  vacuously). Always `cd /abs/.../Fizzygum && ./build_it_please.sh`; confirm `done!!!`; heed the torture `⚠ STALE`
+  canary; when unsure, grep the built `js/coffeescript-sources/` for your change.
+- **Separate `cd` per repo** (chaining build in `Fizzygum/` + node in `Fizzygum-tests/` → MODULE_NOT_FOUND).
+- **No `timeout` in this shell** — use `perl -e 'alarm N; exec @ARGV' node …`.
+- **pkill zombie browsers** before every suite/soak run (they starve the box and cause infra hiccups).
+- **Commit via `git commit -F <file>`** — never backticks/`$()` in `-m` (bash command-substitutes them). **Ask before
+  commit/push** (review-driven project).
+- **Adding a method to base `Widget` recaptures the inspector test** (`macroDuplicatedInspectorDrivesCopiedTargetOnly`
+  — it lists `@target`'s inherited members). The re-queue closures are duplicated INLINE per seam precisely to avoid
+  this; do the same, or accept the (sanctioned, benign) recapture.
+- **`nil` means `undefined`.** Edit only `src/**/*.coffee`; never `../Fizzygum-builds/**` (regenerated each build).
+
+## 9. Doc map (what each doc is)
+
+- **`deferred-layout-OVERVIEW.md`** — THIS doc (the self-contained entry point).
+- **`deferred-layout-residuals-audit.md`** — the campaign MAP: the ~40 remaining synchronous relayouts in 8 families,
+  what's done vs left, the suggested order, the leave-synchronous list, the hazards. **Live.**
+- **`deferred-layout-c2-execution-plan.md`** — the C2 arc RECORD: the DAG model of the clock/window cascade, the
+  feasibility-probe finding (naive removal is a wall), and the shipped deferred re-queue. **Live (reference).**
+- **`softwrap-deferred-layout-conversion-plan.md`** — the originating soft-wrap case + the "model is intermediate"
+  finding + the Path-A/B taxonomy + the C0–C3 inline-trigger arc history (§6b). **Reference (soft-wrap is the last,
+  hardest family).**
+- **`deferred-layout-path-a-design.md`** — Path A (pending-aware accessors), **FALSIFIED** — §11 is the instrumented
+  why-it-fails. **Historical (do not revive).**
+- **`deferred-layout-slice2-completion-plan.md`** — state after Phase 3b + the flow rule; the full gauntlet commands.
+  **Historical.**
+- **`deferred-layout-refit-and-add-design.md`** — the Phase-1 design-of-record (re-fit chokepoint + public `add`).
+  **Historical.**
+- **`deferred-layout-16-macro-breakages.md`** — the 16 construction-macro breakages catalogue (fixed by the
+  self-settling API). **Historical.**
+
+## 10. Key code locations (approx. as of `1e5d3745` — grep the method name, it's authoritative)
+- `src/basic-widgets/Widget.coffee`: `rawSetWidthSizeHeightAccordingly` ~:706 · `mutateGeometryThenSettle` ~:748 ·
+  `settleLayoutsOnceAfter` ~:795 · `fullRawMoveBy` ~:1220 · `rawSetExtent` ~:1520 · `silentRawSetExtent` ~:1566 ·
+  twin `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` ~:1606 · seam `_reFitContainerAfterRawGeometryChange` ~:1659 ·
+  `invalidateLayout` ~:3791 (mid-pass throw ~:3804; freefloating-doesn't-climb ~:3808). Accessors read `@bounds`.
+- `src/WorldWdgt.coffee`: `recalculateLayouts` ~:863 / `_recalculateLayoutsCore` ~:876 (until-loop ~:885; the walk-up
+  that STOPS at freefloating ~:925); `world._reFittingContents` :277.
+- `src/basic-widgets/ScrollPanelWdgt.coffee`: `_reFitToContents` ~:258 (bumps `_reFittingContents`) · `doLayout`
+  (`super; @_reFitToContents`) ~:276 · gesture seams `reactToDropOf` ~:241 / `reactToGrabOf` ~:247.
+- `src/SimpleVerticalStackPanelWdgt.coffee`: `_reFitToContents` ~:54 · `doLayout` ~:70 · `childGeometryChanged` (the
+  cascade SINK — left synchronous). Plus `src/basic-widgets/PanelWdgt.coffee` + `src/WindowWdgt.coffee` (`_reFitToContents` ~:194).

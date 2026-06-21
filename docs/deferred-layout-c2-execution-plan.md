@@ -1,8 +1,12 @@
-# True C2 — converge the container re-fit cascade IN-PASS, remove the synchronous seam
+# C2 — converge the container re-fit cascade IN-PASS (the deferred re-queue) — RECORD
 
-> Execution plan (durable copy of the owner-approved plan, 2026-06-20). Entry point:
-> `deferred-layout-OVERVIEW.md`. Companion docs: `deferred-layout-path-a-design.md` (§11 Path-A falsified),
-> `softwrap-deferred-layout-conversion-plan.md` (§6b the C0–C3 arc).
+> **STATUS: SHIPPED RECORD of the C2 arc (2026-06-20→21).** This is the technical heart of the effort: the DAG model
+> of the clock/window cascade, the feasibility-probe finding (a NAIVE in-pass seam removal is a WALL — 7 tests break),
+> and the **deferred re-queue** that fixes it (shipped `5fc152c7`/`7303fc5d`/`1caea690`/`1e5d3745`). Entry point + the
+> current consolidated state: [`deferred-layout-OVERVIEW.md`](deferred-layout-OVERVIEW.md) (§3 has the mechanism with
+> code). Companions: `deferred-layout-path-a-design.md` (§11 Path-A falsified), `softwrap-deferred-layout-conversion-plan.md`
+> (§6b the C0–C3 arc history), `deferred-layout-residuals-audit.md` (what's left). The plan body below is kept as the
+> reasoning record; the RESULT/SHIPPED sections are the summary.
 
 ## RESULT — the NAIVE seam removal is a wall, BUT the DEFERRED RE-QUEUE WORKS and is SHIPPED (2026-06-21). (Plan below is the record.)
 
@@ -111,15 +115,20 @@ lint [E] can only tighten once the seam's public-op branch + the twin's outside-
 
 ---
 
+> **⚠ EVERYTHING BELOW IS THE HISTORICAL PLANNING/REASONING RECORD** (written in the imperative future tense before
+> the work). The outcome is in the RESULT/SHIPPED sections above: the deferred re-queue shipped. Commit anchors and
+> line numbers below are START-OF-ARC (master was `7ee0b871`; it is now `1e5d3745`) — current state is the OVERVIEW.
+
 ## Context (why this, why now)
 
 **The overall aim:** turn EVERY synchronous re-layout in Fizzygum into a DEFERRED one — settling at exactly
 one of two points: the end of a geometry-changing PUBLIC method (the `mutateGeometryThenSettle` flush, modulo
 batching), or the end of `doOneCycle` (the `recalculateLayouts → doLayout` pass before paint). The last
 synchronous re-layout left is the container re-fit **seam** `Widget._reFitContainerAfterRawGeometryChange`
-(src/basic-widgets/Widget.coffee:1628). Removing it (C3) + tightening lint [E] is the end state.
+(src/basic-widgets/Widget.coffee — then :1628, now ~:1659). Removing it (C3) + tightening lint [E] was the
+hypothesised end state — but the seam was instead CONVERTED to defer (the re-queue), not removed.
 
-**Where the arc stands** (all on master, Fizzygum `7ee0b871` / Fizzygum-tests `544166856`, both clean+synced):
+**Where the arc stood at the START** (master was Fizzygum `7ee0b871`; now `1e5d3745`):
 - **C0** (`c8bb8a87`): the two inline immediate-mutator re-fit triggers collapsed into the single seam.
 - **Path-B window-fit de-read-back** (`fa0d7961`): `rawSetWidthSizeHeightAccordingly` now RETURNS its resulting
   height (base Widget:706 + 8 overrides); `WindowWdgt._adjustContentsBounds` takes the return instead of reading

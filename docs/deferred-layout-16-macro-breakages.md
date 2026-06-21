@@ -1,5 +1,11 @@
 # The 16 macro breakages under the deferred geometry API — catalogue & root-cause map
 
+> **STATUS: HISTORICAL.** These 16 construction macros broke when the public geometry API first became deferred and
+> were RESOLVED by the self-settling API (`817c2ce4` + tests `a256ccfe6`) — they are now a green regression guard, not
+> an open issue. The aim, the current model + mechanism, and what's next are in
+> [`deferred-layout-OVERVIEW.md`](deferred-layout-OVERVIEW.md) (the self-contained entry point). Kept as the
+> breakage-class catalogue + root-cause map.
+
 **Companion to `softwrap-deferred-layout-conversion-plan.md` and `deferred-layout-path-a-design.md`.**
 Written 2026-06-19.
 

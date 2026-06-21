@@ -1,5 +1,10 @@
 # Deferred-layout — re-fit chokepoint + public `add`/`addRaw` — design (Phase 1 output)
 
+> **STATUS: HISTORICAL (Phase-1 design-of-record; shipped — `ad2000cc`/`b8165920`).** The aim, the current model +
+> mechanism (the deferred re-queue), the shipped history, and what's next are all in
+> [`deferred-layout-OVERVIEW.md`](deferred-layout-OVERVIEW.md) (the self-contained entry point). Kept as the design
+> rationale for the `_reFitToContents` chokepoint + the public self-settling `add`/`addRaw` over private `_addCore`.
+
 **Written 2026-06-19.** Companion to `softwrap-deferred-layout-conversion-plan.md`,
 `deferred-layout-16-macro-breakages.md` (RESOLUTION + privates-hygiene backlog), and
 `deferred-layout-path-a-design.md`. This is the design-of-record for the remaining phases of the

@@ -1,6 +1,13 @@
 # Deferred-layout: the model is INTERMEDIATE — completing it (soft-wrap is the originating case)
 
-> **Overall aim, current state & next step: see [`deferred-layout-OVERVIEW.md`](deferred-layout-OVERVIEW.md) (the entry point).**
+> **STATUS: REFERENCE (mostly historical).** Canonical current state + the shipped re-queue mechanism:
+> [`deferred-layout-OVERVIEW.md`](deferred-layout-OVERVIEW.md) (it supersedes this doc on any conflict). What's STILL
+> LIVE here: **soft-wrap (§5)** is the last, hardest remaining family (its own `@reLayout()` re-wrap). What's HISTORICAL:
+> **§6/§6b/§6b.1** are a chronological record of the C0→C3 inline-trigger arc — their intermediate conclusions ("C3
+> unachievable", "C2 not worth pursuing") were **SUPERSEDED**: the deferred re-queue shipped (`5fc152c7`/`7303fc5d`/
+> `1caea690`/`1e5d3745`). The **Path A** ("pending-aware accessors") that §1/§2/§4/§6 weigh is **FALSIFIED** — see
+> `deferred-layout-path-a-design.md` §11; do not revive it. Line numbers here are PRE-re-queue (2026-06-18/20) and have
+> drifted; grep method names (or see the OVERVIEW for current locations).
 
 This started as a narrow plan to convert `SimplePlainTextWdgt`'s soft-wrap toggle from IMMEDIATE
 (raw) to DEFERRED (`invalidateLayout`) layout. Investigating it surfaced a bigger, more useful truth:
@@ -338,6 +345,13 @@ within the frame — a deliberate visual change requiring recapture of any slide
 sub-unit drags. Do not bundle it into the byte-safe pilot.
 
 ### 6b. The inline re-fit triggers → deferred conversion (the `childGeometryChanged`/`_reFitToContents`-from-immediate-mutators arc)
+
+> **⚠ HISTORICAL ARC RECORD (§6b + §6b.1).** This is the chronological C0→C3 story, with several reversals. Its
+> intermediate conclusions — "C1 unsound", "C2/C3 a wall", "C3 unachievable / not worth pursuing" — were all
+> **SUPERSEDED**: the resolution is the **deferred re-queue** (the seam/twin enqueue the container into the until-loop
+> in a pass; defer/invalidate outside one), SHIPPED across `5fc152c7`/`7303fc5d`/`1caea690`/`1e5d3745`. The clean
+> current statement is `deferred-layout-OVERVIEW.md` §3–§5 + `deferred-layout-c2-execution-plan.md`. Read the below as
+> "how we got there", not as live guidance.
 
 This is the home of what was first scoped as flow-rule task #19 ("forbid `childGeometryChanged`/`_reFitToContents`
 from immediate mutators"). An audit (2026-06-20) showed it is **not** a small lint add but a Path-C arc — recorded

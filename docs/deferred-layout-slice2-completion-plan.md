@@ -1,8 +1,11 @@
-# Deferred-layout migration — state after Phase 3b + next steps
+# Deferred-layout migration — state after Phase 3b (HISTORICAL record)
 
-> **Overall aim, current state & next step: see [`deferred-layout-OVERVIEW.md`](deferred-layout-OVERVIEW.md) (the entry point).** This doc is the Phase-3b-era state record (history); the OVERVIEW supersedes it as the entry point.
+> **STATUS: HISTORICAL (Phase-3b-era state record).** Canonical current state, the shipped re-queue mechanism, and the
+> actual next steps: [`deferred-layout-OVERVIEW.md`](deferred-layout-OVERVIEW.md) (it supersedes this doc). Any
+> "recommended next" / "#15 next" below is the framing AS OF 2026-06-20 — that arc (the inline-trigger → re-queue
+> conversion) has since SHIPPED through master `1e5d3745` (OVERVIEW §4).
 
-**Self-contained. Last updated 2026-06-20. Read top-to-bottom and you can continue cold.**
+**Last updated 2026-06-20 (a historical snapshot — see the STATUS note above for what shipped since).**
 Companion / design-of-record: `deferred-layout-refit-and-add-design.md` (the phase map + rationale).
 Determinism contract: `Fizzygum-tests/DETERMINISM.md`. Originating case: `softwrap-deferred-layout-conversion-plan.md`.
 

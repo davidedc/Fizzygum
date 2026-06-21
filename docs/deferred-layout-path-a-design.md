@@ -1,6 +1,11 @@
 # Deferred-layout Path A — the per-reader design (why "pending-aware accessors" fails, what to do instead)
 
-> **Overall aim, current state & next step: see [`deferred-layout-OVERVIEW.md`](deferred-layout-OVERVIEW.md) (the entry point).** This doc is THE next step (Path A).
+> **STATUS: HISTORICAL — Path A is FALSIFIED, do NOT revive.** Path A ("pending-aware accessors": add `effective*`
+> reads that return where geometry is HEADING) is incorrect for the container path — `_adjustContentsBounds` bakes
+> via the non-invalidating `silentRawSetBounds`, so a pending read bakes a mid-settle transient (§11 has the
+> instrumented proof: scroll content over-sized 43px). The deferred-layout effort instead uses the **deferred
+> re-queue** + **Path-B de-read-back** (see [`deferred-layout-OVERVIEW.md`](deferred-layout-OVERVIEW.md) §3/§6, the
+> self-contained entry point). Kept for the why-it-fails record (§11) and the pending-vs-applied reader taxonomy.
 
 **Companion to `docs/softwrap-deferred-layout-conversion-plan.md`.** That doc establishes the model
 (deferral is within-frame; accessors read applied `@bounds`; handler raw geometry is a *symptom* of the
@@ -273,6 +278,12 @@ a single pending read into a silent set. NEXT-STEP implication: a real seam remo
 **converge on pending without baking a non-final transient** (e.g. re-fit on the cycle reading pending
 *and* re-running until the pending-derived size is a fixed point), or keep the applied-read convergence —
 not a single pending read into a silent set. This reframes the C2 wall.
+
+> **[RESOLVED 2026-06-21 — this paragraph called it right.** The seam was NOT removed and NOT made to read pending; it
+> was **converted to DEFER via the `recalculateLayouts` re-queue** — it enqueues the container into the until-loop,
+> which re-fits it on the **applied-read convergence loop** (exactly the "keep the applied-read convergence" option
+> argued here). C2 is therefore NOT a wall — only the *naive no-op* removal was. Shipped `5fc152c7`/`7303fc5d`/
+> `1caea690`/`1e5d3745`; see `deferred-layout-OVERVIEW.md` §3 + `deferred-layout-c2-execution-plan.md`.]**
 
 **Inspector recapture footnote (the §7 benign case turned out non-vacuous).** Adding the `effective*`
 methods grew `macroDuplicatedInspectorDrivesCopiedTargetOnly`'s inherited-method list and shifted its
