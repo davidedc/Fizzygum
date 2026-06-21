@@ -27,6 +27,15 @@ mid-pass, Widget.coffee:3751) — but they MAY APPLY layout synchronously during
 - **The hand's own move** — `ActivePointerWdgt.fullRawMoveBy` → seam → DEFER (invalidate). Not residual.
 - **Construction re-fits** — on orphan widgets, `invalidateLayout` is a no-op until the widget is added (~36 sites).
 - **~26 `invalidateLayout` calls from public setters/structural mutators** — legal deferred scheduling.
+- **The twin's outside-pass container re-fit now DEFERS (2026-06-21).** `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt`
+  is now a 3-way (recalc→enqueue, `_reFittingContents`→synchronous cascade, **else→invalidate the container**). The
+  twin's callers are the `VerticalStackLayoutSpec` alignment/elasticity/base-width setters (part of 3), collapse (4),
+  and content-edit/soft-wrap (5) — for all of them the shared synchronous container re-fit (the
+  `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` call) is now deferred. Byte-identical (165/165 dpr1+dpr2+WebKit,
+  smoke-apps OK). STILL SYNCHRONOUS (not twin-mediated, untouched): `BoxWdgt.choiceOfWidgetToBePicked` and
+  `Widget.newParentChoice*` (direct `_adjustContentsBounds`/`_refitContentsAndScrollBars`) in 3; the `reInflating`-coupled
+  direct `_reFitToContents` in collapse (4, must stay synchronous); the `@reLayout()` in content-edit + soft-wrap (5,
+  the soft-wrap one is the dedicated hard arc). See those families below.
 
 ## Residual families — the remaining campaign (~40 synchronous relayouts at non-flush points)
 

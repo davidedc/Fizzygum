@@ -1618,13 +1618,22 @@ class Widget extends TreeNode
       if @_amIDirectlyInsideScrollPanelWdgt()
         enqueueReFitDuringPass @parent.parent
       enqueueReFitDuringPass @parent
-    else
-      # Outside a layout pass: a public-method settle (the property-change callers above) or a
-      # public-op re-fit cascade -- a synchronous re-fit here is already an aim-sanctioned settle
-      # point (the end of a public method). Unchanged.
+    else if world?._reFittingContents
+      # Inside a public-op re-fit cascade (not a pass): keep the synchronous re-fit so the
+      # cascade completes within the public op (matches the seam's middle branch).
       if @_amIDirectlyInsideScrollPanelWdgt()
         @parent.parent._reFitToContents?()
       @parent?.childGeometryChanged?()
+    else
+      # Outside any pass/cascade -- the property-change callers (VerticalStackLayoutSpec
+      # alignment/elasticity/base-width, content-edit, soft-wrap, collapse): DEFER the container
+      # re-fit to the next cycle by invalidating the container directly (the freefloating content
+      # does not climb, so invalidate the container, not the content). The relayout then settles in
+      # recalculateLayouts (end of doOneCycle) instead of an ad-hoc synchronous re-fit at the
+      # handler -- the all-deferred aim. (Matches the seam's outside-pass arm.)
+      if @_amIDirectlyInsideScrollPanelWdgt()
+        @parent.parent.invalidateLayout?()
+      @parent?.invalidateLayout?()
 
   # The single seam (task #20, phase C0): an IMMEDIATE geometry mutator (silentRawSetExtent /
   # fullRawMoveBy) synchronously re-fits the container that tracks my geometry -- a NON-text-
