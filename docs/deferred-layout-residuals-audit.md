@@ -172,12 +172,16 @@ through:
   Family 7 is already compliant in substance. None blocks the capstone.
 - **`BoxWdgt.choiceOfWidgetToBePicked`: dead code** — leave it.
 - **Soft-wrap `reLayout` (family 5 remainder): its own dedicated hard arc** — `softwrap-deferred-layout-conversion-plan.md`.
-- **The capstone — family 8 (`rawSetExtent→reLayout` structural root) + retire `_reFittingContents` + tighten lint [E]:
-  genuinely LAST, and BLOCKED** (see the lint clarification above). It is not a separable cheap first half: the
-  un-deferrable `childUnCollapsed` re-fit + the pre-flush `WindowWdgt.add` re-fit + the return-value contract keep the
-  counter's synchronous arm load-bearing, and a naive removal already broke 7 tests (the C2 wall). It carries the
-  high-severity until-loop non-convergence/freeze risk and must be scoped as ONE large determinism-sensitive arc (per
-  root: dpr1 byte-exact + dpr2-under-load + WebKit soak), NOT pursued opportunistically.
+- **The capstone — retire `_reFittingContents` + tighten lint [E]: ATTEMPTED 2026-06-21, BLOCKED at the C2 wall
+  (reverted).** Slice 1 (defer the `WindowWdgt.add` pre-fit) reached 164/165 after fixing two init-ordering null-derefs,
+  but the nested-clock cross-widget cascade **DRIFTS +1px/frame under deferral** (root-caused: `VerticalStackLayoutSpec.rememberInitialDimensions`
+  reads a stale `availableWidthInStack` → records the clock as stretchy `elasticity=1` → it inflates to fill). The
+  synchronous pre-fit / counter is doing **real load-bearing convergence work** (it iterates to a fixed point in one
+  frame; the deferred re-fit, not idempotent, drifts). Part B (lint) is **cosmetic** (the two `rawSetExtent→_reFitToContents`
+  sites are a legitimate apply identical to sanctioned family-8 `rawSetExtent→reLayout`). **NEXT STEP / prerequisite:
+  make the cross-widget window-content re-fit READ-BACK-FREE / idempotent** (a Path-B de-read-back of the stack-proportion
+  + window-fit sizing — find the +1px drift first), after which the deferred re-queue converges and the counter can be
+  retired. Full mechanism + arc: `deferred-layout-capstone-execution-plan.md` (RESULT banner).
 
 **Bottom line:** the campaign has banked its correctness payoff. What's left is (a) deliberately-left-synchronous
 borderline-compliant handlers (1/6/7 — do not "fix"), (b) the soft-wrap hard arc, and (c) the last + hardest +

@@ -139,13 +139,19 @@ is at a natural stop-and-report point.** Status of the 8 families (2–5 + the `
   `setText`→`gotoSlot`→`slotCoordinates`); the other sites are load-bearing/non-redundant; a `TextWdgt.doLayout` is a
   no-go; and deferral wins NO lint [E] (co-gated on family-8). Full closure is a large owner-gated sub-arc.
   `softwrap-deferred-layout-conversion-plan.md` §5 VERDICT.
-- **The capstone — family 8 (`rawSetExtent→reLayout` structural root, base `Widget.coffee` ~:1520) + retire
-  `world._reFittingContents` + tighten lint [E]: genuinely LAST and BLOCKED.** Not a separable "cheap first half": the
-  counter's synchronous arm stays load-bearing because `WindowWdgt.add` re-fits BEFORE its flush and `childUnCollapsed`'s
-  `reInflating`-coupled re-fit is un-deferrable, plus the `reLayOutAfterContainedPanelChange` return-value contract and
-  the family-8 root. It carries the high-severity until-loop NON-CONVERGENCE/freeze risk (a naive in-pass seam removal
-  already broke 7 tests — the C2 wall), so it must be ONE large determinism-sensitive arc (per-root dpr1 + dpr2-soak +
-  WebKit), pursued only on a deliberate decision — not opportunistically.
+- **The capstone — retire `world._reFittingContents` + tighten lint [E]: ATTEMPTED 2026-06-21, BLOCKED at the C2
+  cross-widget-convergence wall (reverted to clean).** Slice 1 (defer the `WindowWdgt.add` pre-fit) was executed: after
+  fixing two init-ordering null-derefs it reached 164/165, but `macroWindowWithAClockInAWindowConstructionTwo` renders
+  the nested aspect-locked clock HUGE because the cross-widget cascade **DRIFTS +1px/frame under deferral instead of
+  converging** — root-caused to a stale geometry read-back: `VerticalStackLayoutSpec.rememberInitialDimensions` reads a
+  stale `availableWidthInStack` and records the clock as stretchy (`elasticity=1`). So the counter / the synchronous
+  pre-fit is doing **real load-bearing convergence work** (the synchronous cascade iterates to a fixed point in one
+  frame; the deferred re-queue, one re-fit/frame, drifts because the re-fit is not idempotent). Part B (lint) is
+  separately **cosmetic** (it would forbid a `rawSetExtent→_reFitToContents` apply identical to the sanctioned family-8
+  `rawSetExtent→reLayout`). **NEXT STEP toward the all-deferred aim (the prerequisite): make the cross-widget
+  window-content re-fit READ-BACK-FREE / idempotent** — a Path-B de-read-back of the stack-proportion + window-fit
+  sizing model (find the +1px drift source first), after which the deferred re-queue converges and the counter can be
+  retired. Full mechanism + the next-step arc: `deferred-layout-capstone-execution-plan.md` (RESULT banner).
 
 **Left deliberately synchronous (correct, do not "fix"):** the above families 1/6/7; `SimpleVerticalStackPanelWdgt.childGeometryChanged`
 (the cascade SINK the seams call); `ScrollPanelWdgt.reLayOutAfterContainedPanelChange`/`_refitContentsAndScrollBars`
@@ -224,6 +230,10 @@ what the soak hunts. Read `../Fizzygum-tests/DETERMINISM.md` before touching the
   what's done vs left, the suggested order, the leave-synchronous list, the hazards. **Live.**
 - **`deferred-layout-c2-execution-plan.md`** — the C2 arc RECORD: the DAG model of the clock/window cascade, the
   feasibility-probe finding (naive removal is a wall), and the shipped deferred re-queue. **Live (reference).**
+- **`deferred-layout-capstone-execution-plan.md`** — the CAPSTONE arc: the slice plan to retire `world._reFittingContents`
+  + tighten lint [E], the EXECUTION RESULT (slice 1 hit the C2 cross-widget-convergence wall — the `rememberInitialDimensions`
+  stale-read drift), and **the NEXT STEP toward the all-deferred aim** (de-read-back the cross-widget sizing → idempotent
+  re-fit). **Live (the forward path).**
 - **`softwrap-deferred-layout-conversion-plan.md`** — the originating soft-wrap case + the "model is intermediate"
   finding + the Path-A/B taxonomy + the C0–C3 inline-trigger arc history (§6b). **Reference. Soft-wrap was the last
   open family; §5's VERDICT (2026-06-21) = LEAVE SYNCHRONOUS (proof inline).**
