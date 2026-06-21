@@ -189,9 +189,11 @@ through:
   sites are TERMINAL applies identical to the sanctioned `reLayout`/`doLayout`, so forbidding the name was declined as
   cosmetic. Full record: `deferred-layout-capstone-execution-plan.md` (RESULT-2 + Part B).
 
-**Bottom line:** the campaign has banked its correctness payoff AND the capstone is COMPLETE (counter retired + lint
-[E] boundary documented). What remains is only (a) deliberately-left-synchronous borderline-compliant handlers (1/6/7
-— do not "fix"; they are self-container event handlers, not child→container notifications), and (b) the soft-wrap hard
-arc (family 5 remainder), an owner-gated determinism-sensitive sub-arc blocked by a same-cycle caret read (so it is
-gated on first deferring the Caret↔Text geometry read — the OO-smells Phase 7 work). Absent a specific reason to
-pursue (b), this campaign is at a natural **DONE / stop-and-report** point.
+**Bottom line:** the campaign is **COMPLETE**. The correctness payoff is banked, the capstone shipped (counter retired
++ lint [E] boundary documented), and the last residual — (b) the soft-wrap arc (family 5) — had its prerequisite
+(deferring the Caret↔Text read) **PROBED and REJECTED 2026-06-21**: a disable-the-mechanism probe broke 7 tests (the
+scroll-follow tripwires) because `CaretWdgt.gotoSlot`'s `scrollCaretIntoView` mutates contents geometry that must
+settle IN-CYCLE, and a byte-exact alternative would need the `isLayoutDecoration` caret to participate in the settle
+loop (freeze-class risk) for ZERO reward (full record: `softwrap-deferred-layout-conversion-plan.md` §5 PROBE box). So
+family 5 is **LEFT SYNCHRONOUS**, like the borderline handlers (a) families 1/6/7. **Nothing further to do** — every
+synchronous relayout that can defer without cost now does.

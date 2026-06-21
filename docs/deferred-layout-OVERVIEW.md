@@ -131,8 +131,9 @@ byte-identically. See `deferred-layout-c2-execution-plan.md` for the full findin
 ## 5. What's left — the residuals campaign
 
 `deferred-layout-residuals-audit.md` is the map, and it now records a **2026-06-21 reassessment** (a read-only mapping
-Workflow + adversarial verification) of everything that was "next." **The high-value phase is COMPLETE — the campaign
-is at a natural stop-and-report point.** Status of the 8 families (2–5 + the `newParentChoice*` leftover deferred; see §4):
+Workflow + adversarial verification) of everything that was "next." **The campaign is COMPLETE — every synchronous
+relayout that can defer WITHOUT cost now does; the last residual (soft-wrap, family 5) was PROBED and confirmed
+LEAVE-SYNCHRONOUS (below).** Status of the 8 families (2–5 + the `newParentChoice*` leftover deferred; see §4):
 
 - **Families 1 (scroll-input), 6 (Slider), 7 (LabelButton): assessed LEAVE SYNCHRONOUS — do NOT "fix".** Family 1 is
   the highest-determinism-risk residual (timer/momentum/known dpr2 scroll-thumb-flake path) for ZERO correctness gain,
@@ -141,11 +142,15 @@ is at a natural stop-and-report point.** Status of the 8 families (2–5 + the `
   no-op; the button reLayout repositions only its own thumb). Family 7 is already compliant in substance (own-label
   re-center from a discrete menu action). None blocks the capstone (they're event/menu handlers, not immediate mutators).
 - **`BoxWdgt.choiceOfWidgetToBePicked`: dead code** (`BoxWdgt` is never a `ScrollPanelWdgt` ancestor) — leave it.
-- **Soft-wrap `reLayout` (family 5): assessed 2026-06-21 = LEAVE SYNCHRONOUS.** The one byte-safe slice (a redundant
-  re-wrap in a text-wrapping scroll panel) is blocked by a same-cycle caret geometry read (`CaretWdgt.insert`
-  `setText`→`gotoSlot`→`slotCoordinates`); the other sites are load-bearing/non-redundant; a `TextWdgt.doLayout` is a
-  no-go; and deferral wins NO lint [E] (co-gated on family-8). Full closure is a large owner-gated sub-arc.
-  `softwrap-deferred-layout-conversion-plan.md` §5 VERDICT.
+- **Soft-wrap `reLayout` (family 5): LEAVE SYNCHRONOUS — PROBED & rejected 2026-06-21.** Its prerequisite (making the
+  Caret↔Text geometry read settle-correct so the re-wrap can defer) was tested by a disable-the-mechanism probe
+  (neutralise the edit-time caret placement+scroll, rely on the existing paint-time `gotoSlot`): **7 tests red**, incl.
+  the scroll-follow tripwires. ROOT CAUSE: `CaretWdgt.gotoSlot`'s `scrollCaretIntoView` MUTATES contents geometry that
+  must settle IN-CYCLE (it runs at edit-time, before `recalculateLayouts`); deferring the caret read past the settle
+  pass — REQUIRED to defer the re-wrap — can't re-settle it. A byte-exact alternative needs the `isLayoutDecoration`
+  caret to participate in the settle loop (scroll re-dirties the panel mid-pass = freeze-class risk) for ZERO reward
+  (no lint [E] unlock; caret already byte-correct; the re-wrap is already redundant with the deferred container re-fit).
+  Full record: `softwrap-deferred-layout-conversion-plan.md` §5 (VERDICT + PROBE box).
 - **The capstone — retire `world._reFittingContents`: ✅ ACHIEVED 2026-06-21 (full gauntlet dpr1/dpr2/WebKit + smoke +
   20-min torture soak green; net −14 lines, a SIMPLIFICATION).** The C2 wall was root-caused NOT to the geometry
   cascade per se but to the **stack-proportion model** — and specifically: the ONLY content whose width genuinely

@@ -257,7 +257,32 @@ request is *not* the applied result, so the trick gives the wrong answer.
 
 ## 5. The soft-wrap case (the originating, Path-B specific)
 
-> ### VERDICT (2026-06-21): LEAVE SYNCHRONOUS — no code change. (design-pass Workflow + read-audit + adversarial verify)
+> ### VERDICT (2026-06-21): LEAVE SYNCHRONOUS — no code change. (design-pass Workflow + read-audit + adversarial verify;
+> RECONFIRMED 2026-06-21 by a disable-the-mechanism PROBE — see the PROBE box immediately below.)
+>
+> ### PROBE (2026-06-21, throwaway, reverted) — empirical reconfirmation of item 3's caret blocker; campaign CLOSED
+>
+> To test whether the caret read could be made settle-correct (the PREREQUISITE to deferring the re-wrap), a fresh
+> Caret↔Text mapping (5-agent read-only Workflow) found the caret stores only a logical `@slot` and ALREADY recomputes
+> its pixel position + scroll at PAINT (`CaretWdgt.justBeforeBeingPainted → gotoSlot`, which runs post-`recalculateLayouts`),
+> and that `ScrollPanelWdgt` now HAS a `doLayout` (the old §5 "`_adjustContentsBounds` unreachable" blocker is GONE). That
+> suggested a clean path: drop the edit-time caret read, rely on the paint-time one. **A disable-the-mechanism probe
+> falsified it:** neutralising the edit-time caret placement+scroll (rely on paint-time `gotoSlot`) turned **7 SystemTests
+> red**, decisively including the scroll-follow tripwires (`macroDocumentCaretBroughtIntoViewWhenMoved`,
+> `macroScrollPanelCaretBroughtIntoViewWhenMoved`, `macroMultilineTextInputScrollsWell`).
+>
+> **ROOT CAUSE (structural):** `CaretWdgt.gotoSlot`'s `ScrollPanelWdgt.scrollCaretIntoView` (CaretWdgt:155-156) **mutates
+> the contents geometry**, which today settles in-cycle ONLY because it runs at EDIT-time (before the cycle's
+> `recalculateLayouts`). Deferring the caret read past the settle pass — REQUIRED to defer the re-wrap, since the read
+> immediately follows `setText` on the same handler — cannot let that scroll mutation re-settle in the same cycle (paint
+> is `updateBroken`, after `recalculateLayouts`). The ONLY byte-exact alternative is to make the `isLayoutDecoration:true`
+> caret a PARTICIPANT in the settle loop, where its scroll re-dirties the panel mid-pass — the re-entrancy/convergence
+> (freeze) class this whole campaign fought — for **ZERO reward**: it does NOT unlock lint [E] (co-gated on the family-8
+> apply root, which must stay synchronous), the caret is already byte-correct, and the soft-wrap re-wrap is already
+> redundant with the deferred container re-fit. (NB the probe deferred ALL edit-time caret placement, broader than a
+> soft-wrap-only change, so ~3 of the 7 reds — `macroStringWdgtImprovedSelection`, `macroPopoverStaysOpenWhenSliderDraggedOut`,
+> `macroPromptShadowFollowsOnDrag` — were collateral single-line/popover cases; the scroll-follow reds are structural and
+> independent of that breadth.) **CONCLUSION: family 5 LEFT SYNCHRONOUS; the deferred-layout campaign is COMPLETE.**
 >
 > A full read-only design pass mapped the four `@reLayout()`/re-wrap sites by (trigger × topology) against the CURRENT
 > machinery (the twin already defers; ScrollPanelWdgt has a `doLayout`; the re-queue shipped). All four are
