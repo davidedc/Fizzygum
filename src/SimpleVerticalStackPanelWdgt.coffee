@@ -81,13 +81,24 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # no longer asks where it sits in the scroll structure; it just notifies, and
   # only a (non-List) scroll panel reacts. See
   # ScrollPanelWdgt.reLayOutAfterContainedPanelChange.
+  # Membership-change re-fit. The absorb query (reLayOutAfterContainedPanelChange) STAYS synchronous --
+  # its truthy answer decides whether I skip my own re-fit (return-value contract). If not absorbed, my
+  # own re-fit DEFERS to the cycle (else arm; my doLayout is 'super; @_reFitToContents'). These run
+  # outside a pass (drop gesture / destroy / add-flush re-parent -- where invalidate is legal); the
+  # pass/cascade arm keeps the synchronous re-fit. (fam 2 -- deferred-layout-residuals-audit.md)
   childRemoved: ->
     return if @parent?.reLayOutAfterContainedPanelChange?()
-    @_reFitToContents()
+    if world?._recalculatingLayouts or world?._reFittingContents
+      @_reFitToContents()
+    else
+      @invalidateLayout()
 
   reactToDropOf: ->
     return if @parent?.reLayOutAfterContainedPanelChange?()
-    @_reFitToContents()
+    if world?._recalculatingLayouts or world?._reFittingContents
+      @_reFitToContents()
+    else
+      @invalidateLayout()
 
   # A subwidget notifies me (its container) that its geometry changed, so I
   # re-lay-out my stack. This is the polymorphic replacement for Widget testing

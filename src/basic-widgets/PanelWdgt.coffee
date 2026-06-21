@@ -79,8 +79,16 @@ class PanelWdgt extends Widget
         item?.mouseClickLeft item.bottomRight(), ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey
 
 
+  # Gesture-driven re-fit of my enclosing container (@parent): DEFER to the cycle. Dispatched from
+  # ActivePointerWdgt.drop AFTER a self-settling add (outside any pass) -> the else arm invalidates the
+  # container so its doLayout re-fits on the cycle. Gated on @parent?._reFitToContents? to preserve the
+  # original "only a tracking container reacts" semantics. (fam 2 -- deferred-layout-residuals-audit.md)
   reactToDropOf: ->
-    @parent?._reFitToContents?()
+    return unless @parent?._reFitToContents?
+    if world?._recalculatingLayouts or world?._reFittingContents
+      @parent._reFitToContents()
+    else
+      @parent.invalidateLayout()
 
   childRemoved: (child) ->
     if @parent?
@@ -142,7 +150,11 @@ class PanelWdgt extends Widget
     return false
   
   reactToGrabOf: ->
-    @parent?._reFitToContents?()
+    return unless @parent?._reFitToContents?
+    if world?._recalculatingLayouts or world?._reFittingContents
+      @parent._reFitToContents()
+    else
+      @parent.invalidateLayout()
 
   # PanelWdgt menus:
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->

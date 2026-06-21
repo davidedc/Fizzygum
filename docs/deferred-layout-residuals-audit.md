@@ -36,6 +36,15 @@ mid-pass, Widget.coffee:3751) — but they MAY APPLY layout synchronously during
   `Widget.newParentChoice*` (direct `_adjustContentsBounds`/`_refitContentsAndScrollBars`) in 3; the `reInflating`-coupled
   direct `_reFitToContents` in collapse (4, must stay synchronous); the `@reLayout()` in content-edit + soft-wrap (5,
   the soft-wrap one is the dedicated hard arc). See those families below.
+- **The drag/drop gesture re-fits now DEFER (2026-06-21) — family 2 below.** The four gesture seams
+  `ScrollPanelWdgt`/`PanelWdgt`/`SimpleVerticalStackPanelWdgt` `reactToDropOf`/`reactToGrabOf` + the stack's
+  `childRemoved` are now 2-way (in a pass/cascade → synchronous; **else → invalidate the container**). They dispatch
+  from `ActivePointerWdgt.drop`/`grab` AFTER a self-settling `add` (outside any pass), so the re-fit settles on the
+  next `doOneCycle` (each container's `doLayout` is `super; @_reFitToContents`). Byte-identical (165/165
+  dpr1+dpr2+WebKit, smoke OK). LEFT synchronous (correct, per the mapping Workflow): `childGeometryChanged` (the
+  cascade SINK the two prior seams call), `reLayOutAfterContainedPanelChange`/`_refitContentsAndScrollBars` (absorb
+  return-value contract), `PanelWdgt.childRemoved` + `addInPseudoRandomPosition` (later slice / verify-and-drop), and
+  `WindowWdgt.reactToDropOf` (no direct re-fit — covered by `super`, verified byte-identical).
 
 ## Residual families — the remaining campaign (~40 synchronous relayouts at non-flush points)
 
