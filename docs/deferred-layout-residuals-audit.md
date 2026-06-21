@@ -43,8 +43,9 @@ mid-pass, Widget.coffee ~:3804) — but they MAY APPLY layout synchronously duri
   `childRemoved` are now 2-way (in a pass/cascade → synchronous; **else → invalidate the container**). They dispatch
   from `ActivePointerWdgt.drop`/`grab` AFTER a self-settling `add` (outside any pass), so the re-fit settles on the
   next `doOneCycle` (each container's `doLayout` is `super; @_reFitToContents`). Byte-identical (165/165
-  dpr1+dpr2+WebKit, smoke OK). LEFT synchronous (correct, per the mapping Workflow): `childGeometryChanged` (the
-  cascade SINK the two prior seams call), `reLayOutAfterContainedPanelChange`/`_refitContentsAndScrollBars` (absorb
+  dpr1+dpr2+WebKit, smoke OK). LEFT synchronous (correct, per the mapping Workflow): the cascade SINK is each
+  container's deferred `doLayout` → `_reFitToContents` (the synchronous `childGeometryChanged` climb arm was retired by
+  the capstone and that orphaned method deleted), `reLayOutAfterContainedPanelChange`/`_refitContentsAndScrollBars` (absorb
   return-value contract), `PanelWdgt.childRemoved` + `addInPseudoRandomPosition` (later slice / verify-and-drop), and
   `WindowWdgt.reactToDropOf` (no direct re-fit — covered by `super`, verified byte-identical).
 - **The `newParentChoice*` dev-menu re-fits now DEFER (2026-06-21) — family 3 leftover.** `Widget.newParentChoice`
@@ -85,8 +86,9 @@ conversion will remove."
 2. **Drag/drop re-fit cascades — DONE (DEFERRED 2026-06-21, `1e5d3745`; see "Already compliant" above).** The gesture
    seams `reactToDropOf`/`reactToGrabOf` (ScrollPanelWdgt/PanelWdgt/SimpleVerticalStackPanelWdgt) + the stack's
    `childRemoved` now defer (2-way: pass/cascade → synchronous; else → invalidate the container). What REMAINS here is
-   left synchronous BY DESIGN: the cascade SINK `childGeometryChanged`, `reLayOutAfterContainedPanelChange` /
-   `_refitContentsAndScrollBars` (the absorb return-value contract), and `PanelWdgt.childRemoved` +
+   left synchronous BY DESIGN: the cascade SINK (each container's deferred `doLayout` → `_reFitToContents`; the
+   synchronous `childGeometryChanged` climb arm was later retired by the capstone and the orphaned method deleted),
+   `reLayOutAfterContainedPanelChange` / `_refitContentsAndScrollBars` (the absorb return-value contract), and `PanelWdgt.childRemoved` +
    `addInPseudoRandomPosition` (a later verify-and-drop slice).
 
 3. **Menu actions** (the twin-mediated part is **DONE — deferred `1caea690`**). `VerticalStackLayoutSpec.setAlignmentToLeft/Right/Center`/`setElasticity`/`setWidthOfElementWhenAdded`
@@ -144,8 +146,13 @@ conversion will remove."
   (family 2) and the hand's `rawSetExtent`→`reLayout` (a no-op for the hand). The deferred clamp `fullMoveWithin`
   EXISTS but is deliberately NOT used in `grab` (a conscious determinism call to keep the real-time grab raw —
   ActivePointerWdgt.coffee:162).
-- **lint [E] tightening + retiring `world._reFittingContents` is the END of the campaign — and it is genuinely LAST,
-  not a separable "cheap first half" (verified 2026-06-21).** `check-layering.js` rule [E] currently polices only
+- **lint [E] tightening + retiring `world._reFittingContents` — ✅ BOTH RESOLVED 2026-06-21 (capstone `a7463bbc`). The
+  analysis below was the PRE-capstone belief and is SUPERSEDED:** the counter was retired via the A-minimal proportion
+  fix (NOT via the family-8 conversion this bullet assumed was the blocker), and the lint [E] tightening was then
+  assessed and **DECLINED as cosmetic** — the CLIMB vector it targeted was eliminated by deferring the re-fit seam (the
+  synchronous `childGeometryChanged` arm retired + the orphaned method deleted), leaving only TERMINAL `_reFitToContents`
+  applies that are sanctioned like `reLayout`/`doLayout`. See `deferred-layout-capstone-execution-plan.md` (RESULT-2 +
+  Part B). _(Original pre-capstone reasoning retained below for history.)_ `check-layering.js` rule [E] currently polices only
   `invalidateLayout` from `raw*`/`silent*`/`fullRaw*`; tightening it to also forbid synchronous `_reFitToContents`/
   `childGeometryChanged`/`reLayout` needs **family 8** (the `rawSetExtent→reLayout` structural root) converted first —
   it is the load-bearing blocker. Retiring the `_reFittingContents` counter is blocked independently: the counter's

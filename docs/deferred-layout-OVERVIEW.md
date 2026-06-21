@@ -119,9 +119,9 @@ the mutator HANDS its result forward. `rawSetWidthSizeHeightAccordingly` RETURNS
 ### This session (2026-06-21 cont.) — THE CAPSTONE (counter retired)
 | What | commit |
 |---|---|
-| **A-minimal proportion fix** — aspect content (`AnalogClockWdgt`/`IconWdgt`) `elasticity 0` ⇒ `getWidthInStack = min(wEl, availW)`, convergence-independent; 2 clock-resize tests recaptured | *pending* |
-| **Defer the `WindowWdgt.add` pre-fit** + order-independent content-spec init (prior 164/165 HUGE-clock → 165/165) | *pending* |
-| **Retire `world._reFittingContents`** — declaration + 3 `_reFitToContents` bumps removed; seam/twin/gesture/menu reads collapsed 3-way → deferred 2-state | *pending* |
+| **A-minimal proportion fix** — aspect content (`AnalogClockWdgt`/`IconWdgt`) `elasticity 0` ⇒ `getWidthInStack = min(wEl, availW)`, convergence-independent; 2 clock-resize tests recaptured | `a7463bbc` |
+| **Defer the `WindowWdgt.add` pre-fit** + order-independent content-spec init (prior 164/165 HUGE-clock → 165/165) | `a7463bbc` |
+| **Retire `world._reFittingContents`** — declaration + 3 `_reFitToContents` bumps removed; seam/twin/gesture/menu reads collapsed 3-way → deferred 2-state | `a7463bbc` |
 
 **Net: every synchronous re-fit triggered by an IMMEDIATE MUTATOR or an ad-hoc gesture/menu/collapse handler now
 defers.** The C2 "wall" was specifically the *naive* removal (stub the in-pass re-fit with no replacement → 7 tests
@@ -163,12 +163,17 @@ is at a natural stop-and-report point.** Status of the 8 families (2–5 + the `
   the clock fixed, the `WindowWdgt.add` pre-fit DEFERS and converges (prior **164/165 HUGE-clock → 165/165**), and the
   cross-widget geometry cascade converges through the **pure deferred re-queue** — so the counter is **RETIRED**
   (`WorldWdgt` declaration + the 3 `_reFitToContents` bumps removed; seam/twin/gesture/menu reads collapsed from 3-way
-  to the deferred 2-state: enqueue in-pass / invalidate out-of-pass). **Part B (tighten lint [E]) NOT done** — it needs
-  the two `rawSetExtent→_reFitToContents` overrides converted to an inline apply first (a separate, optional slice);
-  deferred. Full record: `deferred-layout-capstone-execution-plan.md` (RESULT-2).
+  to the deferred 2-state: enqueue in-pass / invalidate out-of-pass). **Part B (tighten lint [E]) — RESOLVED 2026-06-21
+  (assessed → no lint to add).** The freeze vector Part B targeted — an immediate mutator triggering a CLIMB — was
+  already eliminated by the capstone's deferred re-fit seam, which retired the synchronous `childGeometryChanged` climb
+  arm; that now-orphaned method has been **deleted** (zero callers). The two `rawSetExtent→_reFitToContents` calls are
+  TERMINAL single-container applies (no climb), identical in kind to the sanctioned `TextWdgt.rawSetExtent→reLayout`;
+  forbidding `_reFitToContents` by name was **declined as cosmetic** (it would force a DRY-breaking inline for zero real
+  protection). Instead the two applies are marked sanctioned in code and lint [E]'s header documents the now-complete
+  boundary. Full record: `deferred-layout-capstone-execution-plan.md` (RESULT-2 + Part B).
 
-**Left deliberately synchronous (correct, do not "fix"):** the above families 1/6/7; `SimpleVerticalStackPanelWdgt.childGeometryChanged`
-(the cascade SINK the seams call); `ScrollPanelWdgt.reLayOutAfterContainedPanelChange`/`_refitContentsAndScrollBars`
+**Left deliberately synchronous (correct, do not "fix"):** the above families 1/6/7;
+`ScrollPanelWdgt.reLayOutAfterContainedPanelChange`/`_refitContentsAndScrollBars`
 (absorb the return-value contract); `WindowWdgt.childUnCollapsed`'s `reInflating`-coupled re-fit; and the soft-wrap `reLayout`
 (assessed 2026-06-21 = leave-synchronous, blocked by a same-cycle caret read — `softwrap-deferred-layout-conversion-plan.md` §5).
 

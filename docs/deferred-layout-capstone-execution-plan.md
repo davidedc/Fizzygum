@@ -1,8 +1,10 @@
 # Deferred-layout CAPSTONE — retire `world._reFittingContents` + tighten lint [E]
 
-> **STATUS: ✅ ACHIEVED 2026-06-21 (Part A — counter retired). Read RESULT-2 first; the original RESULT below is the
-> superseded BLOCKED finding kept for history.** Part B (tighten lint [E]) deferred (needs the `rawSetExtent` overrides
-> converted to an inline apply first). Canonical overview: `deferred-layout-OVERVIEW.md` §5.
+> **STATUS: ✅ CAPSTONE COMPLETE 2026-06-21 — Part A (counter retired) + Part B (lint [E]) both done. Read RESULT-2
+> first; the original RESULT below is the superseded BLOCKED finding kept for history.** Part B was RESOLVED by
+> ASSESSMENT — NO lint added: the climb vector was eliminated by Part A's deferred seam, the orphaned
+> `childGeometryChanged` deleted, and forbidding `_reFitToContents` by name declined as cosmetic. Canonical overview:
+> `deferred-layout-OVERVIEW.md` §5.
 
 ## RESULT-2 — ✅ CAPSTONE ACHIEVED via the A-minimal proportion fix (2026-06-21, later same day)
 
@@ -46,10 +48,20 @@ the deferred 2-state (enqueue in-pass / invalidate out-of-pass). **Net −14 lin
 **Verified:** dpr1 165/165 · dpr2 165/165 · WebKit 165/165 · smoke-apps APPS OK · 20-min torture soak
 (`dpr2·fastest·8-shards`, 15 runs / ~2,475 test-executions) ZERO nondeterminism.
 
-**NOT done — Part B (tighten lint [E]):** forbidding `_reFitToContents` from immediate mutators would flag the two
-`rawSetExtent→_reFitToContents` overrides (`ScrollPanelWdgt`/`SimpleVerticalStackPanelWdgt`), which still apply
-synchronously. Converting them to an inline `@_adjustContentsBounds()`+`@_adjustScrollBars()` apply (capstone-plan
-Slice 2 below) is the prerequisite; it's a separate, optional enforcement slice — deferred.
+**Part B (tighten lint [E]) — ✅ RESOLVED 2026-06-21 (assessed → NO lint to add).** The vector Part B set out to
+barrier — an immediate mutator triggering a CLIMB (re-fitting ancestors up the tree) — was ALREADY eliminated by this
+capstone: the re-fit seam (`_reFitContainerAfterRawGeometryChange`) became fully deferred (enqueue/invalidate),
+retiring the synchronous `childGeometryChanged` climb arm. That left `childGeometryChanged` orphaned (zero callers in
+either repo — `-S "childGeometryChanged?()"` shows the capstone `a7463bbc` removed the call), so it has been **deleted**.
+The two `rawSetExtent→_reFitToContents` overrides are TERMINAL single-container applies (no climb, no schedule) —
+identical in kind to the SANCTIONED `TextWdgt.rawSetExtent→@reLayout` / `StretchablePanelWdgt.rawSetExtent→@doLayout`.
+Forbidding the `_reFitToContents` apply *by name* was **DECLINED as cosmetic**: it does the identical work to the
+blessed `reLayout`/`doLayout` applies, so a name-based ban would only force a DRY-breaking inline for zero real
+protection (the real enforcement — forbid SCHEDULES from immediate mutators — is already rule [E]). Instead: the two
+applies are marked SANCTIONED in code (a comment mirroring `rawSetWidthSizeHeightAccordingly`), and lint [E]'s header
+documents the now-complete boundary. **Part B diff:** `childGeometryChanged` deleted + 2 sanctioning comments + 1
+seam-comment fix + lint-header doc — byte-identical (no runtime-path change). The "Original sliced plan" Slices 2/3
+below are SUPERSEDED by this resolution.
 
 ---
 

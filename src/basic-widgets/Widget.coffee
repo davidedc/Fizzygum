@@ -1634,7 +1634,7 @@ class Widget extends TreeNode
   # The single seam: an IMMEDIATE geometry mutator (silentRawSetExtent / fullRawMoveBy) notifies the
   # container that tracks my geometry to re-fit -- a NON-text-wrapping scroll panel (text-wrapping panels
   # drive their own content re-wrap in _adjustContentsBounds, so they are excluded here) re-fits its
-  # contents+scrollbars, and a stack/window container re-fits via childGeometryChanged. A freefloating
+  # contents+scrollbars, and a stack/window container re-fits its contents on its deferred doLayout. A freefloating
   # child's invalidateLayout does NOT climb to its container, which is why the container is notified
   # explicitly here. The re-fit is now FULLY DEFERRED (the all-deferred aim) -- TWO states:
   #  - INSIDE recalculateLayouts: enqueue the container into the until-loop (the "deferred re-queue");

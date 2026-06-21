@@ -96,15 +96,6 @@ class SimpleVerticalStackPanelWdgt extends Widget
     else
       @invalidateLayout()
 
-  # A subwidget notifies me (its container) that its geometry changed, so I
-  # re-lay-out my stack. This is the polymorphic replacement for Widget testing
-  # `@parent instanceof SimpleVerticalStackPanelWdgt`: a child just calls
-  # @parent?.childGeometryChanged?(), and only the container types that care
-  # (vertical stacks) react -- Widget no longer names this subclass. Inherited
-  # by WindowWdgt, matching the old instanceof's is-a reach.
-  childGeometryChanged: ->
-    @_reFitToContents()
-
   initialiseDefaultWindowContentLayoutSpec: ->
     super
     @layoutSpecDetails.canSetHeightFreely = false
@@ -185,4 +176,9 @@ class SimpleVerticalStackPanelWdgt extends Widget
       #console.log "move 15"
       @breakNumberOfRawMovesAndResizesCaches()
       super aPoint
+      # raw setter: APPLY the re-fit NOW -- synchronous, single-container, TERMINAL
+      # (_reFitToContents -> _adjustContentsBounds, which does not climb to my parent).
+      # Never SCHEDULE it (no invalidateLayout): the sanctioned immediate-mutator apply,
+      # exactly like TextWdgt.rawSetExtent -> @reLayout and rawSetWidthSizeHeightAccordingly
+      # -> @doLayout (task #17). check-layering.js rule [E] forbids the SCHEDULE, not this APPLY.
       @_reFitToContents()

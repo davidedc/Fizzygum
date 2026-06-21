@@ -61,6 +61,19 @@ const isLowLevel = (name) =>
 // Layouts until-loop never converges (the Phase 3b Slice 2 freeze that hung 9/12 desktop apps).
 // NB this is NARROWER than isLowLevel on purpose: a _private / *Core / *Layout method legitimately
 // drives layout (and may invalidate other widgets), so it is NOT covered by rule E.
+//
+// COMPLETENESS (deferred-layout capstone, 2026-06-21): the immediate-mutator boundary is now fully
+// closed, and this SCHEDULE rule is the whole of what needs LINTING. The other freeze vector -- an
+// immediate mutator triggering a CLIMB (re-fitting its ancestors up the tree) -- was eliminated not by
+// a lint but by deferring the re-fit seam (_reFitContainerAfterRawGeometryChange enqueues/invalidates
+// the container; its synchronous childGeometryChanged climb arm was retired and that orphaned method
+// deleted). What an immediate mutator legitimately MAY do is APPLY a re-fit synchronously IN PLACE -- a
+// TERMINAL, single-container apply (TextWdgt.rawSetExtent->@reLayout, StretchablePanelWdgt.rawSetExtent
+// ->@doLayout, ScrollPanelWdgt/SimpleVerticalStackPanelWdgt.rawSetExtent->@_reFitToContents). Those
+// applies are SANCTIONED (see those overrides' comments) -- only the SCHEDULE below is forbidden.
+// Forbidding the _reFitToContents apply by name was assessed and DECLINED as cosmetic: it does the
+// identical work to the blessed reLayout/doLayout applies, so a name-based ban would just force a
+// DRY-breaking inline. (deferred-layout-capstone-execution-plan.md, Part B.)
 const isImmediateMutator = (name) => /^(raw[A-Z]|silent|fullRaw)/.test(name);
 
 // [D] macro hygiene: a SystemTest macro must not reach into the framework's PRIVATE surface.

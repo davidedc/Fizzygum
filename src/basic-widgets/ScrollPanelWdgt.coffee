@@ -229,6 +229,10 @@ class ScrollPanelWdgt extends PanelWdgt
         @contents.fullRawMoveTo @position()
       super aPoint
       @contents.rawSetExtent aPoint
+      # raw setter: APPLY the re-fit NOW -- synchronous, single-container, TERMINAL
+      # (_reFitToContents -> _adjustContentsBounds + _adjustScrollBars, neither climbs to my
+      # parent). Never SCHEDULE it (no invalidateLayout): the sanctioned immediate-mutator
+      # apply, like TextWdgt.rawSetExtent -> @reLayout (task #17). Rule [E] forbids the SCHEDULE.
       @_reFitToContents()
 
 
