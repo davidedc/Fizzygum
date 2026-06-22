@@ -357,8 +357,11 @@ hard-reference ~25 concrete leaves, you cannot lift their responsibilities witho
 knowledge along. It also independently fixes seed example #3 (`instanceof` = missed polymorphism) and
 the base-knows-subclasses smell.
 
-**⤳ SUPERSEDED by the dedicated plan `docs/widget-identity-decoupling-plan.md`** (the predicate
-sweep was reverted; do TRUE polymorphism via notify/override hooks, one cluster per step).
+**⤳ SUPERSEDED by `docs/type-test-elimination-plan.md`** (the codebase-wide umbrella; absorbs the
+Widget-scoped `widget-identity-decoupling-plan.md`). Owner decision 2026-06-22 — **capability-first**: move
+behaviour via notify/override hooks first, but capability-NAMED queries are legitimate where behaviour can't
+move; this *overrides* the earlier blanket "predicates are a dead end" (the reverted 5c failed on faithfulness +
+type-naming, not the query concept). One cluster per step.
 **CORRECTION:** adding methods to common base classes is inspector-SAFE (a probe confirmed it), so
 the `?()`-dispatch noted below is about not bloating the God base *by design*, NOT about avoiding
 recapture. The rest of this note is kept as rationale.

@@ -1,5 +1,12 @@
 # Decoupling Widget from subclass identity — a true-polymorphism plan
 
+> **ABSORBED (2026-06-22) into the codebase-wide `type-test-elimination-plan.md`.** That doc is now the live
+> backlog; it carries this Widget-scoped catalogue forward across ALL files and records the owner's
+> **capability-first** framework (2026-06-22), which *overrides* the over-broad "predicates are a dead end" verdict
+> below: move-behaviour first, but **capability-NAMED queries are legitimate** where behaviour can't move (the 5c
+> regression was a faithfulness bug + type-naming, not the query concept). This doc is kept for its history,
+> established facts, and the worked exemplar. The DONE clusters (5a/5b/exemplar/A/C) stand.
+
 A dedicated, case-by-case plan to stop `Widget` (and the other God classes) from
 **deciding behaviour by interrogating subclass identity**. It is the detailed execution of
 the *true-polymorphism* part of Phase 5 in `oo-smells-refactoring-backlog.md`, and it is meant
