@@ -182,12 +182,19 @@ class StretchableWidgetContainerWdgt extends Widget
 
     menu.removeConsecutiveLines()
 
+  # I coordinate drags/drops/editing for my StretchablePanelWdgt child, which delegates
+  # its enable/disable up to me (it replaced `@parent instanceof
+  # StretchableWidgetContainerWdgt` with this query). I am in turn an editable child of
+  # a slide, so I bubble my own enable/disable up the same way. (type-test-elimination campaign)
+  coordinatesDragsDropsAndEditingForChildren: ->
+    true
+
   enableDragsDropsAndEditing: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
     @parent?.makePencilYellow?()
-    if @parent? and @parent != triggeringWidget and @parent instanceof SimpleSlideWdgt
+    if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
       @parent.enableDragsDropsAndEditing @
     else
       super @
@@ -197,7 +204,7 @@ class StretchableWidgetContainerWdgt extends Widget
     if !@dragsDropsAndEditingEnabled
       return
     @parent?.makePencilClear?()
-    if @parent? and @parent != triggeringWidget and @parent instanceof SimpleSlideWdgt
+    if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
       @parent.disableDragsDropsAndEditing @
     else
       super @

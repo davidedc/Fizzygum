@@ -37,12 +37,17 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
 
     menu.removeConsecutiveLines()
 
+  # Bubble enable/disable-editing up to my editing-coordinating parent if it is one
+  # (was `@parent instanceof SimpleDocumentWdgt`), otherwise do the local Widget work
+  # via super. Widget defines a base enableDragsDropsAndEditing, so a bare
+  # `@parent.enableDragsDropsAndEditing?()` would bubble to ANY parent -- the capability
+  # query keeps it to the coordinator. (type-test-elimination campaign)
   enableDragsDropsAndEditing: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
     @parent?.makePencilYellow?()
-    if @parent? and @parent != triggeringWidget and @parent instanceof SimpleDocumentWdgt
+    if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
       @parent.enableDragsDropsAndEditing @
     else
       super @
@@ -52,7 +57,7 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
     if !@dragsDropsAndEditingEnabled
       return
     @parent?.makePencilClear?()
-    if @parent? and @parent != triggeringWidget and @parent instanceof SimpleDocumentWdgt
+    if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
       @parent.disableDragsDropsAndEditing @
     else
       super @

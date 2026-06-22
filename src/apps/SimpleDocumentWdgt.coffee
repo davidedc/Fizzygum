@@ -118,6 +118,12 @@ class SimpleDocumentWdgt extends Widget
     else
       @enableDragsDropsAndEditing @
 
+  # I coordinate drags/drops/editing for my scroll panel, which delegates its
+  # enable/disable up to me (replacing its `@parent instanceof SimpleDocumentWdgt`
+  # test with this query). (type-test-elimination campaign)
+  coordinatesDragsDropsAndEditingForChildren: ->
+    true
+
   enableDragsDropsAndEditing: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled

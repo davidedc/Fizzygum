@@ -99,6 +99,12 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
     @stretchableWidgetContainer = new StretchableWidgetContainerWdgt
     @add @stretchableWidgetContainer
 
+  # I coordinate drags/drops/editing for my stretchable container, which delegates its
+  # enable/disable up to me (replacing its `@parent instanceof SimpleSlideWdgt` test
+  # with this query). (type-test-elimination campaign)
+  coordinatesDragsDropsAndEditingForChildren: ->
+    true
+
 
   _reLayoutSelf: ->
     # here we are disabling all the broken

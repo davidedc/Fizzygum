@@ -98,12 +98,17 @@ class StretchablePanelWdgt extends PanelWdgt
 
     menu.removeConsecutiveLines()
 
+  # Bubble enable/disable-editing up to my editing-coordinating parent if it is one
+  # (was `@parent instanceof StretchableWidgetContainerWdgt`), otherwise do the local
+  # Widget work via super -- the capability query keeps the bubble to the coordinator
+  # rather than to any parent (Widget has a base enableDragsDropsAndEditing).
+  # (type-test-elimination campaign)
   enableDragsDropsAndEditing: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
     @parent?.makePencilYellow?()
-    if @parent? and @parent != triggeringWidget and @parent instanceof StretchableWidgetContainerWdgt
+    if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
       @parent.enableDragsDropsAndEditing @
     else
       super @
@@ -113,7 +118,7 @@ class StretchablePanelWdgt extends PanelWdgt
     if !@dragsDropsAndEditingEnabled
       return
     @parent?.makePencilClear?()
-    if @parent? and @parent != triggeringWidget and @parent instanceof StretchableWidgetContainerWdgt
+    if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
       @parent.disableDragsDropsAndEditing @
     else
       super @
