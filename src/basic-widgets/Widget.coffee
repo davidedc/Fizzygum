@@ -1340,7 +1340,7 @@ class Widget extends TreeNode
           # relative position to be remembered, so resizing
           # the stretchable panel will get them to the
           # correct positions
-          if widgetStartingTheChange? and @parent? and (widgetStartingTheChange instanceof HandleWdgt)
+          if widgetStartingTheChange?.changeShouldRememberFractionalGeometry?() and @parent?
             @rememberFractionalPositionInHoldingPanel()
 
 
@@ -1559,7 +1559,7 @@ class Widget extends TreeNode
           # relative size to be remembered, so resizing
           # the stretchable panel will get them to the
           # correct dimensions
-          if widgetStartingTheChange? and @parent? and (widgetStartingTheChange instanceof HandleWdgt)
+          if widgetStartingTheChange?.changeShouldRememberFractionalGeometry?() and @parent?
             @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
 
   

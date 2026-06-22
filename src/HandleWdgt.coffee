@@ -11,6 +11,13 @@ class HandleWdgt extends Widget
   STATE_NORMAL: 0
   STATE_HIGHLIGHTED: 1
 
+  # Capability query (replaces `widgetStartingTheChange instanceof HandleWdgt` in Widget's raw move/resize
+  # paths): a geometry change INITIATED by a handle makes the moved/resized child remember its fractional
+  # position/extent in its holding panel. True here only; dispatched via ?() (nothing on Widget).
+  # (type-test-elimination campaign)
+  changeShouldRememberFractionalGeometry: ->
+    true
+
   constructor: (@target = nil, @type = "resizeBothDimensionsHandle") ->
 
     # some minimum padding with whatever edge we
