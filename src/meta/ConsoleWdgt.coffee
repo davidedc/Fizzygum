@@ -69,6 +69,15 @@ class ConsoleWdgt extends Widget
     functionFromCompiledCode = new Function compiled
     functionFromCompiledCode.call @target
 
+  # I contribute my own "run" entries to the context menu of the text I contain (run the
+  # selection if any, then run all), targeting my doSelection/doAll. The text calls this
+  # instead of reaching up three levels and testing `instanceof ConsoleWdgt`; a text not in a
+  # console adds its own plain "run contents" instead. (type-test-elimination campaign)
+  addRunMenuEntriesForText: (menu, textWidget) ->
+    if textWidget.currentlySelecting()
+      menu.addMenuItem "run selection", true, @, "doSelection"
+    menu.addMenuItem "run contents", true, @, "doAll"
+
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
   _reLayout: (newBoundsForThisLayout) ->

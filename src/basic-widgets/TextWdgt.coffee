@@ -713,10 +713,12 @@ class TextWdgt extends StringWdgt
       menu.addMenuItem "soft wrap", true, @, "toggleSoftWrap"
     menu.addLine()
 
-    if @parent?.parent?.parent? and (@parent.parent.parent instanceof ConsoleWdgt)
-      if @currentlySelecting()
-        menu.addMenuItem "run selection", true, @parent.parent.parent, "doSelection"
-      menu.addMenuItem "run contents", true, @parent.parent.parent, "doAll"
+    # a console contributes its own run-menu entries (run selection / run all); a text not in a
+    # console runs its own contents. Was a 3-level `instanceof ConsoleWdgt` reach-through.
+    # (type-test-elimination campaign)
+    console = @parent?.parent?.parent
+    if console?.addRunMenuEntriesForText?
+      console.addRunMenuEntriesForText menu, @
     else
       menu.addMenuItem "run contents", true, @, "doContents"
   
