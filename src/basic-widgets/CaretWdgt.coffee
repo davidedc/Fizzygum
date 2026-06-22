@@ -36,6 +36,10 @@ class CaretWdgt extends BlinkerWdgt
   # Widget.fullBounds and TreeNode.childrenNotHandlesNorCarets).
   isLayoutDecoration: -> true
 
+  # I am a transient overlay, so I am skipped by the add-time drop-shadow management in
+  # Widget.add (was `instanceof CaretWdgt` there). (type-test-elimination campaign)
+  skipsAddShadowManagement: -> true
+
   adjustAccordingToTargetText: ->
     @updateDimension()
     @gotoSlot @slot

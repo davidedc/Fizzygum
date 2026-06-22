@@ -69,7 +69,8 @@ class ActivePointerWdgt extends Widget
         # I drafted an alternative implementation where we manage
         # those situations without being radical in this filtering-out
         # but it was quite a bit more complicated.
-        (m not instanceof CaretWdgt) and
+        # the caret is a world singleton; was `m not instanceof CaretWdgt` (type-test-elimination campaign)
+        (m != world.caret) and
         # exclude widgets we use for highlighting
         # other widgets
         !m.wdgtThisWdgtIsHighlighting? and

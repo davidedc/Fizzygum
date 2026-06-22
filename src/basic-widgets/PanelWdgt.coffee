@@ -71,8 +71,9 @@ class PanelWdgt extends Widget
     # the text should happen via API rather than via spoofing
     # a mouse event?
     if @parent? and @parent instanceof ScrollPanelWdgt
+      # the caret is a world singleton; was `!(m instanceof CaretWdgt)` (type-test-elimination campaign)
       childrenNotCarets = @children.filter (m) ->
-        !(m instanceof CaretWdgt)
+        m != world.caret
       if childrenNotCarets.length == 1
         item = @firstChildSuchThat (m) ->
           (m instanceof SimplePlainTextWdgt) and m.isEditable

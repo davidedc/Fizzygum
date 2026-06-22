@@ -98,8 +98,9 @@ class SimplePlainTextWdgt extends TextWdgt
       menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another widget\nwhose numerical property\n will be" + " controlled by this one"
 
     if @_amIDirectlyInsideScrollPanelWdgt()
+      # the caret is a world singleton; was `!(m instanceof CaretWdgt)` (type-test-elimination campaign)
       childrenNotCarets = @parent.children.filter (m) ->
-        !(m instanceof CaretWdgt)
+        m != world.caret
       if childrenNotCarets.length == 1
         menu.addLine()
         if @parent.parent.isTextLineWrapping

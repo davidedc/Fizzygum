@@ -20,3 +20,8 @@
 
 class HighlighterWdgt extends RectangleWdgt
 
+  # I am a transient highlight overlay (see above: I deliberately cast no shadow), so I am
+  # skipped by the add-time drop-shadow management in Widget.add (was `instanceof HighlighterWdgt`
+  # there). (type-test-elimination campaign)
+  skipsAddShadowManagement: -> true
+

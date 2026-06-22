@@ -220,7 +220,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @_positionAndResizeChildren()
 
   add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
-    unless notContent or (aWdgt instanceof CaretWdgt) or (aWdgt instanceof HandleWdgt)
+    # caret + handle are the layout decorations (was their two instanceof) (type-test-elimination campaign)
+    unless notContent or aWdgt.isLayoutDecoration?()
       @contentNeverSetInPlaceYet = true
       titleToBeSet = aWdgt.colloquialName()
       if titleToBeSet == "window"

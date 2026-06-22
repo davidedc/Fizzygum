@@ -13,8 +13,9 @@ class ToolPanelWdgt extends PanelWdgt
 
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen, dontLayout) ->
 
-    if (aWdgt instanceof ModifiedTextTriangleAnnotationWdgt) or
-     (aWdgt instanceof HandleWdgt)
+    # annotation + handle both attach to the scroll frame directly (was their two instanceof)
+    # (type-test-elimination campaign)
+    if aWdgt.attachesToScrollFrameDirectly?()
       super
     else
       # if aWdgt specifies a non-default switcharoo then it

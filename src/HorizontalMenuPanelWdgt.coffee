@@ -23,8 +23,9 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
 
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
 
-    if (aWdgt instanceof ModifiedTextTriangleAnnotationWdgt) or
-     (aWdgt instanceof HandleWdgt)
+    # annotation + handle both attach to the scroll frame directly (was their two instanceof)
+    # (type-test-elimination campaign)
+    if aWdgt.attachesToScrollFrameDirectly?()
       super
     else
       aWdgt.isTemplate = true

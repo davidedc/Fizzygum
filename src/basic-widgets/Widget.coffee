@@ -2364,7 +2364,9 @@ class Widget extends TreeNode
   # guard nor triggers a redundant relayout). See docs/deferred-layout-refit-and-add-design.md (D3).
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
     @mutateGeometryThenSettle =>
-      if (aWdgt not instanceof HighlighterWdgt) and (aWdgt not instanceof CaretWdgt)
+      # transient overlays (highlighter, caret) skip add-time shadow management (was their two
+      # instanceof). (type-test-elimination campaign)
+      unless aWdgt.skipsAddShadowManagement?()
         if @ == world
           aWdgt.addShadow()
           # when any widget is added to the world, all scheduled tooltips
