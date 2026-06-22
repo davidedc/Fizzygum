@@ -3,8 +3,9 @@ class ExternalLinkButtonWdgt extends IconWdgt
   createAppearance: -> new ExternalLinkIconAppearance @
 
   mouseClickLeft: ->
-    if @parent? and (@parent instanceof SimpleLinkWdgt)
-      window.open @parent.outputTextArea.text
+    # ask my containing link to open its URL (was `@parent instanceof SimpleLinkWdgt`
+    # plus reaching into @parent.outputTextArea). (type-test-elimination campaign)
+    @parent?.openExternalURL?()
 
   mouseEnter: ->
     world.worldCanvas.style.cursor = 'pointer'

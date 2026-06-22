@@ -25,6 +25,12 @@ class SimpleLinkWdgt extends Widget
   colloquialName: ->
     "Simple link"
 
+  # open my link's URL in a new browser tab. The external-link button calls this instead of
+  # testing `@parent instanceof SimpleLinkWdgt` and reaching into my outputTextArea.
+  # (type-test-elimination campaign)
+  openExternalURL: ->
+    window.open @outputTextArea.text
+
   buildAndConnectChildren: ->
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
       world.alignIDsOfNextWidgetsInSystemTests()

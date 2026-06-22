@@ -86,7 +86,7 @@ Status: ✅ done · ☐ todo · ⏳ study (Phase-6-entangled) · — leave. Re-g
 - **misc hooks** (several independent sites, done piecemeal):
   - ✅ **menu-tick** — `Wallpaper.setPattern` + `StringWdgt.setFontName` `menuItem.parent instanceof MenuWdgt` → `menuItem.parent.isMenu?()` (reuses the menu-detect `isMenu`; `menuItem?.parent?` guards nil). Byte-identical, zero recapture.
   - ✅ **window-content height** — `WindowWdgt.contentsRecursivelyCanSetHeightFreely` `!(@contents instanceof WindowWdgt)` → `!@contents.isWindow?()` (done in the isWindow cluster).
-  - ☐ **external-link** — `buttons/ExternalLinkButtonWdgt.coffee:6` `@parent instanceof SimpleLinkWdgt` → `@parent.openExternalURL?()`.
+  - ✅ **external-link** — `ExternalLinkButtonWdgt.mouseClickLeft` `@parent instanceof SimpleLinkWdgt` (+ reaching into `@parent.outputTextArea`) → behaviour-move `@parent?.openExternalURL?()` (SimpleLinkWdgt opens its own URL; inherited by SimpleVideoLinkWdgt = exact set). Byte-identical, zero recapture.
   - ☐ **console menu** — `basic-widgets/TextWdgt.coffee:~716` → console contributes its own menu entries.
   - ☐ **autoscroll** — `ActivePointerWdgt.coffee:~937` `newWdgt instanceof ScrollPanelWdgt` → `maybeStartAutoScroll?` ([DET]-sensitive input path — care).
   - ☐ **shortcut-drop** — `mixins/CreateShortcutOfDroppedItemsMixin.coffee:22/29` `instanceof IconicDesktopSystemShortcutWdgt`.
