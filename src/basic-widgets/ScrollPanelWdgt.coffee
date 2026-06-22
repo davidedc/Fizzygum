@@ -193,18 +193,23 @@ class ScrollPanelWdgt extends PanelWdgt
       super
     else
       @contents.add aWdgt, position, layoutSpec, beingDropped, nil, positionOnScreen
+      # Intentional synchronous APPLY (not an off-settle trigger to defer): add / addMany /
+      # showResizeAndMoveHandlesAndLayoutAdjusters are public content-change ENDPOINTS, idempotent
+      # with this panel's own doLayout ('super; @_reFitToContents') so the cycle re-fits identically;
+      # the inline call just keeps geometry current within the calling public method. Distinct from
+      # the seam sites (raw-mutator / gesture triggers), which DO defer. (deferred-layout-residuals-audit.md)
       @_reFitToContents()
 
   # see SimpleSlideWdgt for performance improvements
   # of this over the non-
   addMany: (widgetsToBeAdded) ->
     @contents.addMany widgetsToBeAdded
-    @_reFitToContents()
+    @_reFitToContents() # intentional synchronous APPLY -- see add() above (public endpoint, not a deferred trigger)
 
 
   showResizeAndMoveHandlesAndLayoutAdjusters: ->
     super
-    @_reFitToContents()
+    @_reFitToContents() # intentional synchronous APPLY -- see add() above (public endpoint, not a deferred trigger)
 
   
   setContents: (aWdgt, extraPadding) ->

@@ -30,7 +30,7 @@ mid-pass, Widget.coffee ~:3804) — but they MAY APPLY layout synchronously duri
 - **Construction re-fits** — on orphan widgets, `invalidateLayout` is a no-op until the widget is added (~36 sites).
 - **~26 `invalidateLayout` calls from public setters/structural mutators** — legal deferred scheduling.
 - **The twin's outside-pass container re-fit now DEFERS (2026-06-21).** `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt`
-  is now a 3-way (recalc→enqueue, `_reFittingContents`→synchronous cascade, **else→invalidate the container**). The
+  was MADE a 3-way (recalc→enqueue, `_reFittingContents`→synchronous cascade, **else→invalidate the container**) — later collapsed to the **2-state** form by the capstone (`_reFittingContents` middle arm retired; see `deferred-layout-OVERVIEW.md` §3/§5). The
   twin's callers are the `VerticalStackLayoutSpec` alignment/elasticity/base-width setters (part of 3), collapse (4),
   and content-edit/soft-wrap (5) — for all of them the shared synchronous container re-fit (the
   `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` call) is now deferred. Byte-identical (165/165 dpr1+dpr2+WebKit,
@@ -46,13 +46,15 @@ mid-pass, Widget.coffee ~:3804) — but they MAY APPLY layout synchronously duri
   dpr1+dpr2+WebKit, smoke OK). LEFT synchronous (correct, per the mapping Workflow): the cascade SINK is each
   container's deferred `doLayout` → `_reFitToContents` (the synchronous `childGeometryChanged` climb arm was retired by
   the capstone and that orphaned method deleted), `reLayOutAfterContainedPanelChange`/`_refitContentsAndScrollBars` (absorb
-  return-value contract), `PanelWdgt.childRemoved` + `addInPseudoRandomPosition` (later slice / verify-and-drop), and
-  `WindowWdgt.reactToDropOf` (no direct re-fit — covered by `super`, verified byte-identical).
+  return-value contract), and `WindowWdgt.reactToDropOf` (no direct re-fit — covered by `super`, verified byte-identical).
+  (`PanelWdgt.childRemoved` + `addInPseudoRandomPosition` — formerly the verify-and-drop slice — are now RESOLVED
+  2026-06-22: childRemoved CONVERTED to the deferred 2-state seam; addInPseudoRandomPosition's redundant re-fit DROPPED
+  (its `fullRawMoveTo` already fires the geometry seam). Full record: `deferred-layout-OVERVIEW.md` §5.)
 - **The `newParentChoice*` dev-menu re-fits now DEFER (2026-06-21) — family 3 leftover.** `Widget.newParentChoice`
   and `newParentChoiceWithHorizLayout` ("attach this selected widget to me") used to call `@_refitContentsAndScrollBars?()`
   synchronously right after a self-settling `@add`. Now the call site is the 2-way deferred form (mirrors
   `reactToDropOf`): an existence check `if @_refitContentsAndScrollBars?` does the old `?()`-soak's job (no-op off a
-  scroll panel), then `if _recalculatingLayouts or _reFittingContents → synchronous; else → @invalidateLayout()`. Safe
+  scroll panel), then `if _recalculatingLayouts → synchronous; else → @invalidateLayout()` (the `_reFittingContents` arm was later retired by the capstone). Safe
   because `_refitContentsAndScrollBars` IS `@_reFitToContents`, the very method `doLayout` (`super; @_reFitToContents`)
   runs next cycle — and `@add` already flushed `@desired*`, so `super` is a no-op. Byte-identical (165/165
   dpr1+dpr2+WebKit, smoke OK). The shared `_refitContentsAndScrollBars`/`reLayOutAfterContainedPanelChange` pair stays
@@ -88,8 +90,9 @@ conversion will remove."
    `childRemoved` now defer (2-way: pass/cascade → synchronous; else → invalidate the container). What REMAINS here is
    left synchronous BY DESIGN: the cascade SINK (each container's deferred `doLayout` → `_reFitToContents`; the
    synchronous `childGeometryChanged` climb arm was later retired by the capstone and the orphaned method deleted),
-   `reLayOutAfterContainedPanelChange` / `_refitContentsAndScrollBars` (the absorb return-value contract), and `PanelWdgt.childRemoved` +
-   `addInPseudoRandomPosition` (a later verify-and-drop slice).
+   `reLayOutAfterContainedPanelChange` / `_refitContentsAndScrollBars` (the absorb return-value contract). [`PanelWdgt.childRemoved`
+   + `addInPseudoRandomPosition` — formerly a verify-and-drop slice — are now RESOLVED 2026-06-22: childRemoved →
+   deferred 2-state seam; addInPseudoRandomPosition's redundant re-fit dropped. See `deferred-layout-OVERVIEW.md` §5.]
 
 3. **Menu actions** (the twin-mediated part is **DONE — deferred `1caea690`**). `VerticalStackLayoutSpec.setAlignmentToLeft/Right/Center`/`setElasticity`/`setWidthOfElementWhenAdded`
    re-fit via the twin → done. The two non-twin-mediated "attach selected widget to me" dev-menu sites
@@ -195,5 +198,8 @@ through:
 scroll-follow tripwires) because `CaretWdgt.gotoSlot`'s `scrollCaretIntoView` mutates contents geometry that must
 settle IN-CYCLE, and a byte-exact alternative would need the `isLayoutDecoration` caret to participate in the settle
 loop (freeze-class risk) for ZERO reward (full record: `softwrap-deferred-layout-conversion-plan.md` §5 PROBE box). So
-family 5 is **LEFT SYNCHRONOUS**, like the borderline handlers (a) families 1/6/7. **Nothing further to do** — every
-synchronous relayout that can defer without cost now does.
+family 5 is **LEFT SYNCHRONOUS**, like the borderline handlers (a) families 1/6/7. The one open code item — the
+`PanelWdgt.childRemoved` + `addInPseudoRandomPosition` verify-and-drop slice — was **CLOSED 2026-06-22** (childRemoved →
+deferred 2-state seam; addInPseudoRandomPosition's redundant re-fit dropped; full gauntlet incl. 20-min soak green —
+`deferred-layout-OVERVIEW.md` §5). **Nothing further to do** — every off-settle synchronous re-fit trigger now defers,
+and every synchronous relayout that can defer without cost does.

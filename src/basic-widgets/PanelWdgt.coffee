@@ -91,9 +91,19 @@ class PanelWdgt extends Widget
       @parent.invalidateLayout()
 
   childRemoved: (child) ->
-    if @parent?
-      @parent.grandChildRemoved?()
-      @parent._reFitToContents?()
+    return unless @parent?
+    @parent.grandChildRemoved?()
+    # Re-fit my enclosing container (@parent): DEFER to the cycle, mirroring reactToGrabOf /
+    # reactToDropOf below. childRemoved fires only OUTSIDE a layout pass (its callers Widget.destroy
+    # and Widget._addCore route through destroy / mutateGeometryThenSettle, neither of which runs
+    # mid-pass), so the else arm -- invalidate the container so its doLayout re-fits on the next
+    # cycle -- is what runs; the in-pass arm is a defensive synchronous APPLY. (fam 2 --
+    # deferred-layout-residuals-audit.md)
+    return unless @parent._reFitToContents?
+    if world?._recalculatingLayouts
+      @parent._reFitToContents()
+    else
+      @parent.invalidateLayout()
 
   childAdded: (child) ->
     # the BasementWdgt has a filter that can
@@ -118,9 +128,13 @@ class PanelWdgt extends Widget
     position = @position().add new Point posx, posy
 
     @add aWdgt
+    # Container re-fit DEFERS to the cycle: fullRawMoveTo below routes through fullRawMoveBy ->
+    # _reFitContainerAfterRawGeometryChange, which -- since aWdgt sits directly in a non-text-
+    # wrapping ScrollPanel's contents (me) -- invalidates the enclosing ScrollPanel (@parent),
+    # whose doLayout ('super; @_reFitToContents') re-fits it on the next doOneCycle. So the old
+    # ad-hoc synchronous @parent._reFitToContents() here is redundant and removed. (fam 2
+    # verify-and-drop -- deferred-layout-residuals-audit.md)
     aWdgt.fullRawMoveTo position
-
-    @parent?._reFitToContents?()
 
 
   detachesWhenDragged: ->

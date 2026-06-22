@@ -2,11 +2,12 @@
 
 **Read this first — it is the self-contained entry point for the whole deferred-layout effort.** You should be
 able to pick the work up cold from this one doc. The other docs (§9 Doc map) are detail/history. Last updated
-2026-06-21.
+2026-06-22.
 
-**master:** Fizzygum **`55c80ea6`** / Fizzygum-tests **`6785d94ad`** — all green (suite 165/165 at dpr1+dpr2+WebKit,
-smoke-apps 12/12, lint A–E 0). The high-value deferred-layout phase is **COMPLETE** (see §5 — the campaign is at a
-natural stop-and-report point: the remaining families are deliberately left synchronous or are the last+blocked capstone).
+**master:** Fizzygum — at/after the capstone **`a7463bbc`** (`world._reFittingContents` retired, §4/§5) plus the
+PanelWdgt residual closure (§5, 2026-06-22) / Fizzygum-tests **`6785d94ad`** — all green (suite 165/165 at
+dpr1+dpr2+WebKit, smoke-apps 12/12, lint A–E 0, 20-min torture soak clean). The deferred-layout phase is **COMPLETE**
+(see §5 — every off-settle synchronous re-fit trigger now defers; the remaining families are deliberately left synchronous, documented in §5).
 
 > **This doc is canonical — it supersedes every other deferred-layout doc on any conflict.** Line numbers below are
 > **approximate (as of `55c80ea6`) — the METHOD NAME is authoritative; `grep` it.** (Each shipped edit shifts lines.)
@@ -75,15 +76,15 @@ The seams + their conversion state (all in `Widget.coffee` unless noted):
 
 | Seam | fired from | shape now |
 |---|---|---|
-| `_reFitContainerAfterRawGeometryChange` (~:1659) | the immediate mutators `silentRawSetExtent` (~:1566) + `fullRawMoveBy` (~:1220) | **3-way**: `_recalculatingLayouts` → enqueue · `_reFittingContents` → synchronous · else → `invalidateLayout` |
-| `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` (~:1606) | property setters (`VerticalStackLayoutSpec` align/elasticity/base-width), collapse, content-edit/soft-wrap | **3-way** (same) |
-| `reactToDropOf`/`reactToGrabOf` (ScrollPanelWdgt/PanelWdgt/SimpleVerticalStackPanelWdgt) + the stack's `childRemoved` | `ActivePointerWdgt.drop`/`grab` (after a self-settling `add`) | **2-way**: pass/cascade → synchronous · else → `invalidateLayout` (no recalc-enqueue arm — these are never dispatched mid-pass) |
+| `_reFitContainerAfterRawGeometryChange` (~:1651) | the immediate mutators `silentRawSetExtent` (~:1599) + `fullRawMoveBy` (~:1243) | **2-state**: in-pass (`_recalculatingLayouts`) → enqueue · else → `invalidateLayout` (the old `_reFittingContents` synchronous middle arm was RETIRED by the capstone — §4/§5) |
+| `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` (~:1608) | property setters (`VerticalStackLayoutSpec` align/elasticity/base-width), collapse, content-edit/soft-wrap | **2-state** (same) |
+| `reactToDropOf`/`reactToGrabOf` (ScrollPanelWdgt/PanelWdgt/SimpleVerticalStackPanelWdgt) + `PanelWdgt`'s & the stack's `childRemoved` | `ActivePointerWdgt.drop`/`grab` (after a self-settling `add`); `childRemoved` from `destroy`/reparent | **2-way**: pass/cascade → synchronous · else → `invalidateLayout` (no recalc-enqueue arm — these are never dispatched mid-pass) |
 
-**`world._reFittingContents`** (`WorldWdgt.coffee:277`) is a COUNTER, bumped inside each container `_reFitToContents`
-(ScrollPanelWdgt ~:258, SimpleVerticalStackPanelWdgt ~:54, WindowWdgt ~:194). It marks "inside a cross-widget re-fit
-cascade" (e.g. clock ↔ inner-window ↔ outer-window). Inside such a cascade the seams stay **synchronous** so the
-cascade completes/iterates within the public op; only a PRIMARY change outside it defers. This is what made deferral
-sound where a naive blanket deferral was not.
+**`world._reFittingContents`** WAS a COUNTER marking "inside a cross-widget re-fit cascade" (e.g. clock ↔ inner-window ↔
+outer-window), used to keep the seams **synchronous** inside such a cascade while only a PRIMARY change outside it
+deferred. The capstone **RETIRED it** (§4/§5): the cross-widget cascade now converges through the **pure deferred
+re-queue** — the in-pass arm enqueues the affected container into `widgetsThatMaybeChangedLayout` and the until-loop
+re-fits it on the same cycle, so no synchronous middle arm is needed. (Historical detail in `deferred-layout-capstone-execution-plan.md`.)
 
 **Path-B de-read-back** is the companion technique for constraint handlers: instead of mutate-then-read-geometry-back,
 the mutator HANDS its result forward. `rawSetWidthSizeHeightAccordingly` RETURNS its resulting height (base
@@ -176,6 +177,18 @@ LEAVE-SYNCHRONOUS (below).** Status of the 8 families (2–5 + the `newParentCho
   forbidding `_reFitToContents` by name was **declined as cosmetic** (it would force a DRY-breaking inline for zero real
   protection). Instead the two applies are marked sanctioned in code and lint [E]'s header documents the now-complete
   boundary. Full record: `deferred-layout-capstone-execution-plan.md` (RESULT-2 + Part B).
+- **The last residual (PanelWdgt) — CLOSED 2026-06-22 (full gauntlet green; a SIMPLIFICATION).** The two off-settle
+  synchronous `@parent._reFitToContents?()` calls that `deferred-layout-residuals-audit.md` flagged as a "verify-and-drop
+  slice" are resolved: `PanelWdgt.addInPseudoRandomPosition`'s trailing re-fit was **DROPPED** as redundant — its
+  `aWdgt.fullRawMoveTo` already fires `_reFitContainerAfterRawGeometryChange`, which invalidates the enclosing
+  non-text-wrapping ScrollPanel (verified `BasementWdgt.scrollPanel` / `BasementOpenerWdgt` are plain `ScrollPanelWdgt`,
+  so `_amIDirectlyInsideNonTextWrappingScrollPanelWdgt` holds); `PanelWdgt.childRemoved`'s was **CONVERTED** to the
+  deferred 2-state seam (mirrors `reactToGrabOf` and the already-converted `SimpleVerticalStackPanelWdgt.childRemoved`).
+  Net: every off-settle synchronous re-fit TRIGGER now defers; the only remaining synchronous `_reFitToContents` callers
+  are APPLY bodies, the documented leave-synchronous families below, and the `ScrollPanelWdgt.add`/`addMany`/`showResize…`
+  public ENDPOINTS (now annotated in code as intentional applies, idempotent with the cycle — not deferral targets).
+  Verified: suite 165/165 at dpr1/dpr2/WebKit, smoke-apps 12/12, lint A–E 0, 20-min torture soak (dpr2·fastest·8-shard,
+  15 runs / ~2,475 execs) ZERO nondeterminism.
 
 **Left deliberately synchronous (correct, do not "fix"):** the above families 1/6/7;
 `ScrollPanelWdgt.reLayOutAfterContainedPanelChange`/`_refitContentsAndScrollBars`
@@ -276,8 +289,11 @@ what the soak hunts. Read `../Fizzygum-tests/DETERMINISM.md` before touching the
   twin `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` ~:1606 · seam `_reFitContainerAfterRawGeometryChange` ~:1659 ·
   `invalidateLayout` ~:3791 (mid-pass throw ~:3804; freefloating-doesn't-climb ~:3808). Accessors read `@bounds`.
 - `src/WorldWdgt.coffee`: `recalculateLayouts` ~:863 / `_recalculateLayoutsCore` ~:876 (until-loop ~:885; the walk-up
-  that STOPS at freefloating ~:925); `world._reFittingContents` :277.
-- `src/basic-widgets/ScrollPanelWdgt.coffee`: `_reFitToContents` ~:258 (bumps `_reFittingContents`) · `doLayout`
-  (`super; @_reFitToContents`) ~:276 · gesture seams `reactToDropOf` ~:241 / `reactToGrabOf` ~:247.
-- `src/SimpleVerticalStackPanelWdgt.coffee`: `_reFitToContents` ~:54 · `doLayout` ~:70 · `childGeometryChanged` (the
-  cascade SINK — left synchronous). Plus `src/basic-widgets/PanelWdgt.coffee` + `src/WindowWdgt.coffee` (`_reFitToContents` ~:194).
+  that STOPS at freefloating ~:925). (`world._reFittingContents` was RETIRED by the capstone — §4/§5.)
+- `src/basic-widgets/ScrollPanelWdgt.coffee`: `_reFitToContents` ~:262 · `doLayout`
+  (`super; @_reFitToContents`) ~:276 · gesture seams `reactToDropOf` ~:245 / `reactToGrabOf` ~:251 · the public-endpoint
+  applies `add`/`addMany`/`showResizeAndMoveHandlesAndLayoutAdjusters` ~:196/202/207 (intentional synchronous APPLY, not deferral targets).
+- `src/SimpleVerticalStackPanelWdgt.coffee`: `_reFitToContents` ~:54 · `doLayout` ~:70 · `childRemoved` (deferred 2-state).
+  Plus `src/basic-widgets/PanelWdgt.coffee` (`childRemoved` deferred 2-state ~:93 + `reactToDropOf`/`reactToGrabOf`;
+  `addInPseudoRandomPosition` ~:112 defers via the geometry seam, no own re-fit) + `src/WindowWdgt.coffee`
+  (`_reFitToContents` ~:194). (`childGeometryChanged` was DELETED by the capstone — §5.)
