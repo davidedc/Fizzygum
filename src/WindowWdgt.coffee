@@ -91,8 +91,12 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       referenceName = nil
       placeToDropItIn = world
 
-    if @contents? and (@contents instanceof ScriptWdgt)
-      widgetToAdd = new IconicDesktopSystemScriptShortcutWdgt @, referenceName
+    # ScriptWdgt content yields a special script shortcut (runs the script on double-click);
+    # any other content falls to the default reference via super. The content type decides via
+    # specialWindowReferenceShortcut instead of `@contents instanceof ScriptWdgt`.
+    # (type-test-elimination campaign)
+    widgetToAdd = @contents?.specialWindowReferenceShortcut?(@, referenceName)
+    if widgetToAdd?
       # this "add" is going to try to position the reference
       # in some smart way (i.e. according to a grid)
       placeToDropItIn.add widgetToAdd

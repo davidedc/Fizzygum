@@ -19,3 +19,10 @@ class IconicDesktopSystemLinkWdgt extends WidgetHolderWithCaptionWdgt
       @parent.children.remove @
       @parent.children.unshift @
 
+  # When dropped into a folder I move directly into its contents (I am a desktop icon),
+  # rather than the default "create a reference". IconicDesktopSystemFolderShortcutWdgt
+  # keys its drop off this instead of `instanceof IconicDesktopSystemLinkWdgt`.
+  # (type-test-elimination campaign)
+  addSelfWhenDroppedIntoFolder: (folderContents) ->
+    folderContents.add @
+
