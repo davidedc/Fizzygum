@@ -25,7 +25,7 @@ class PenWdgt extends Widget
     @penSize = 1
 
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
-    if !(whereTo instanceof ActivePointerWdgt or whereTo instanceof CanvasWdgt)
+    if !(whereTo.acceptsPenDrawing?())
       @inform "a pen will only\nwork on a canvas..."
 
   # NOTE: here we are painting the turtle/pen,

@@ -38,6 +38,12 @@ class ActivePointerWdgt extends Widget
     @minimumExtent = new Point 0,0
     @silentRawSetBounds Rectangle.EMPTY
 
+  # Capability query (with CanvasWdgt; replaces `whereTo instanceof ActivePointerWdgt or ... CanvasWdgt`
+  # in PenWdgt.iHaveBeenAddedTo): "can a pen draw onto me?" -- the hand counts because a pen mid-drag
+  # lives on it. Dispatched via ?() (nothing on Widget). (type-test-elimination campaign)
+  acceptsPenDrawing: ->
+    true
+
   clippedThroughBounds: ->
     @checkClippedThroughBoundsCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
     @clippedThroughBoundsCache = @boundingBox()

@@ -11,6 +11,12 @@ class CanvasWdgt extends PanelWdgt
   constructor: ->
     super
     @color = Color.WHITE
+
+  # Capability query (with ActivePointerWdgt): "can a pen draw onto me?" -- replaces the
+  # `whereTo instanceof CanvasWdgt` arm in PenWdgt.iHaveBeenAddedTo. Inherited by all CanvasWdgt
+  # subclasses, mirroring the instanceof. (type-test-elimination campaign)
+  acceptsPenDrawing: ->
+    true
   
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
 
