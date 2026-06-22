@@ -38,6 +38,13 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
   isShortcutTo: (widget) ->
     @target == widget
 
+  # I am a desktop shortcut (a reference), not a real widget being dropped in. A folder's drop
+  # handling positions/references me accordingly, asking this instead of testing
+  # `instanceof IconicDesktopSystemShortcutWdgt`; inherited by all shortcut subclasses.
+  # (type-test-elimination campaign)
+  isDesktopShortcut: ->
+    true
+
   destroy: ->
     super
     world.widgetsReferencingOtherWidgets.delete @

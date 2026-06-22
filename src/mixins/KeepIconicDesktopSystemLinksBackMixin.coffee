@@ -10,10 +10,11 @@ KeepIconicDesktopSystemLinksBackMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
 
+      # only a desktop link knows how to layer itself above the other references; non-links
+      # have no moveOnTopOfTopReference, so `?()` fires for exactly the old
+      # `instanceof IconicDesktopSystemLinkWdgt`. (type-test-elimination campaign)
       childAdded: (theWidget) ->
-        if theWidget instanceof IconicDesktopSystemLinkWdgt
-          theWidget.moveOnTopOfTopReference()
+        theWidget.moveOnTopOfTopReference?()
 
       childMovedInFrontOfOthers: (theWidget) ->
-        if theWidget instanceof IconicDesktopSystemLinkWdgt
-          theWidget.moveOnTopOfTopReference()
+        theWidget.moveOnTopOfTopReference?()

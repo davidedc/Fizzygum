@@ -89,8 +89,8 @@ Status: ✅ done · ☐ todo · ⏳ study (Phase-6-entangled) · — leave. Re-g
   - ✅ **external-link** — `ExternalLinkButtonWdgt.mouseClickLeft` `@parent instanceof SimpleLinkWdgt` (+ reaching into `@parent.outputTextArea`) → behaviour-move `@parent?.openExternalURL?()` (SimpleLinkWdgt opens its own URL; inherited by SimpleVideoLinkWdgt = exact set). Byte-identical, zero recapture.
   - ☐ **console menu** — `basic-widgets/TextWdgt.coffee:~716` → console contributes its own menu entries.
   - ☐ **autoscroll** — `ActivePointerWdgt.coffee:~937` `newWdgt instanceof ScrollPanelWdgt` → `maybeStartAutoScroll?` ([DET]-sensitive input path — care).
-  - ☐ **shortcut-drop** — `mixins/CreateShortcutOfDroppedItemsMixin.coffee:22/29` `instanceof IconicDesktopSystemShortcutWdgt`.
-  - ☐ **keep-links-back** — `mixins/KeepIconicDesktopSystemLinksBackMixin.coffee:14/18` `instanceof IconicDesktopSystemLinkWdgt`.
+  - ✅ **shortcut-drop** — `CreateShortcutOfDroppedItemsMixin.aboutToDrop`/`reactToDropOf` `instanceof IconicDesktopSystemShortcutWdgt` → `isDesktopShortcut?()` (`-> true` on IconicDesktopSystemShortcutWdgt, inherited by Folder/Script/Document shortcuts = exact). Byte-identical, zero recapture.
+  - ✅ **keep-links-back** — `KeepIconicDesktopSystemLinksBackMixin.childAdded`/`childMovedInFrontOfOthers` `if theWidget instanceof IconicDesktopSystemLinkWdgt then theWidget.moveOnTopOfTopReference()` → `theWidget.moveOnTopOfTopReference?()` (that method lives ONLY on IconicDesktopSystemLinkWdgt, so `?()` = exact; no new method). Byte-identical, zero recapture.
 
 ### Phase δ — singleton identity
 - ✅ **world / hand identity** — `ButtonWdgt:129`, `HandleWdgt:48`, `ActivePointerWdgt.grab` (refuse to grab the world), `Widget` grabsToParentWhenDragged/rootForFocus/lock-menu-label (`@parent == world`) + `isBeingFloatDragged`/`breakNumberOfRawMovesAndResizesCaches` (`== world.hand`). All `instanceof WorldWdgt`/`instanceof ActivePointerWdgt` → `== world`/`== world.hand` (established idiom: cf. PopUpWdgt, TreeNode).

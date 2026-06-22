@@ -19,12 +19,18 @@ CreateShortcutOfDroppedItemsMixin =
       # So, move the "transient" dropped widget just a bit to the
       # right and below the origin.
       aboutToDrop: (wdgtToDrop) ->
-        if wdgtToDrop instanceof IconicDesktopSystemShortcutWdgt
+        # a shortcut (already a reference) just fits within; a real dropped widget is offset so
+        # the folder panel doesn't resize and scroll (was `instanceof
+        # IconicDesktopSystemShortcutWdgt`). (type-test-elimination campaign)
+        if wdgtToDrop.isDesktopShortcut?()
           wdgtToDrop.fullRawMoveWithin @
         else
           wdgtToDrop.fullRawMoveTo @position().add new Point 10, 10
 
       reactToDropOf: (droppedWidget) ->
         super
-        if !(droppedWidget instanceof IconicDesktopSystemShortcutWdgt)
+        # a real widget (not already a shortcut) leaves a reference behind and closes
+        # (was `!(droppedWidget instanceof IconicDesktopSystemShortcutWdgt)`).
+        # (type-test-elimination campaign)
+        if !droppedWidget.isDesktopShortcut?()
           droppedWidget.createReferenceAndClose nil, @
