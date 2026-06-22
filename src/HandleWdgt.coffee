@@ -45,7 +45,7 @@ class HandleWdgt extends Widget
   isLayoutDecoration: -> true
 
   detachesWhenDragged: ->
-    if (@parent instanceof WorldWdgt)
+    if (@parent == world)
       return true
     else
       return false

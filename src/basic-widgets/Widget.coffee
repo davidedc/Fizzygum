@@ -1260,7 +1260,7 @@ class Widget extends TreeNode
   breakNumberOfRawMovesAndResizesCaches: ->
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
-    if @ instanceof ActivePointerWdgt
+    if @ == world.hand
       if @children.length == 0
         return
     WorldWdgt.numberOfRawMovesAndResizes++
@@ -2703,7 +2703,7 @@ class Widget extends TreeNode
   grabsToParentWhenDragged: ->
     if @parent?
 
-      if @parent instanceof WorldWdgt
+      if @parent == world
         return @isLockingToPanels
 
       if @_amIDirectlyInsideScrollPanelWdgt()
@@ -2811,7 +2811,7 @@ class Widget extends TreeNode
       return false
 
     # then check if my root is the hand
-    if @root() instanceof ActivePointerWdgt
+    if @root() == world.hand
       return true
 
     # if we are here it means we are not being
@@ -2834,7 +2834,7 @@ class Widget extends TreeNode
 
   rootForFocus: ->
     if !@parent? or
-      @parent instanceof WorldWdgt
+      @parent == world
         return @
     @parent.rootForFocus()
 
@@ -3211,7 +3211,7 @@ class Widget extends TreeNode
       menu.addLine()
 
     if (@parent instanceof PanelWdgt) and !(@parent instanceof ScrollPanelWdgt)
-      if @parent instanceof WorldWdgt
+      if @parent == world
         whereToOrFrom = "desktop"
       else
         whereToOrFrom = "panel"

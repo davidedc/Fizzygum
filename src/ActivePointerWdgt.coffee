@@ -153,7 +153,7 @@ class ActivePointerWdgt extends Widget
     target
   
   grab: (aWdgt, displacementDueToGrabDragThreshold,  switcherooHappened) ->
-    return nil  if aWdgt instanceof WorldWdgt
+    return nil  if aWdgt == world
     oldParent = aWdgt.parent
     if !@isThisPointerFloatDraggingSomething()
 

@@ -126,7 +126,7 @@ class ButtonWdgt extends Widget
   # and you shouldn't be able to drag the button away either
   # so the drag is entirely rejected
   rejectDrags: ->
-    if @parent instanceof WorldWdgt
+    if @parent == world
       return false
     else
       return @defaultRejectDrags
