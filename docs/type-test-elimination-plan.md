@@ -58,13 +58,13 @@ Status: ✅ done · ☐ todo · ⏳ study (Phase-6-entangled) · — leave. Re-g
 - ✅ **adder/droplet** `b92345d9` — `Widget.addOrRemoveAdders` ×5 → `isLayoutAdderOrDroplet?()` on `LayoutElementAdderOrDropletWdgt`.
 - ✅ **fanout-pin** — `mixins/ContainerMixin.coffee:26`, `mixins/ControllerMixin.coffee:23`, `patch-programming/FanoutWdgt.coffee:36` → `isConnectionPin?()` on `FanoutPinWdgt` (role-named, not the class; 3 sites incl. the input-routing loop).
 - ☐ **last-focus tracking** — `ActivePointerWdgt.coffee:248/556` → `tracksAsLastFocusedWidget?()` (excludes `HorizontalMenuPanelWdgt`).
-- ☐ **glass-box wrap idempotency** — `HorizontalMenuPanelWdgt.coffee:28`, `ToolPanelWdgt.coffee:30` → `isGlassBoxWrapper?()` on `GlassBoxBottomWdgt`.
+- ✅ **glass-box wrap idempotency** — `HorizontalMenuPanelWdgt.coffee:28`, `ToolPanelWdgt.coffee:30` → `isGlassBoxWrapper?()` on `GlassBoxBottomWdgt` (the `ActivePointerWdgt` grab-inflate site left for γ).
 - ☐ **ratio-constraint drop/grab** — `mixins/KeepsRatioWhenInVerticalStackMixin.coffee:15/32`, `graphs-plots-charts/Example3DPlotWdgt.coffee:70/74/90/94` → `imposesRatioConstraintOnDroppedChildren?()`/`releasesRatioConstraintOnGrabbedChildren?()` on the stack (overridden false by `WindowWdgt`); kills 6 copy-pasted sites + the IS-A-minus-subclass smell.
 - ☐ **entry fields** — `Widget.coffee:~3586`, `PanelWdgt.coffee:78` → reuse `isEditable` + `isTextEntryField?()`.
-- ☐ **pen surface** — `PenWdgt.coffee:28` → `acceptsPenDrawing?()` on `CanvasWdgt`+`ActivePointerWdgt`.
+- ✅ **pen surface** — `PenWdgt.coffee:28` → `acceptsPenDrawing?()` on `CanvasWdgt`+`ActivePointerWdgt`.
 - ☐ **basement** — `TreeNode.coffee:168/174/182` → `isBasementContainer?()` on `BasementWdgt`.
 - ☐ **desktop-icon family** — `IconicDesktopSystemLinkWdgt.coffee:11`, `WorldWdgt.coffee:1457`, `mixins/GridPositioningOfAddedShortcutsMixin.coffee:25` → `isDesktopIcon?()`/`participatesInIconGrid?()`.
-- ☐ **shortcut-to-self** — `Widget.coffee:~2125` → `isShortcutTo?(w)`.
+- ✅ **shortcut-to-self** — `Widget.coffee:~2125` → `isShortcutTo?(w)` on `IconicDesktopSystemShortcutWdgt` (folds the `target == @` check in).
 - ☐ **menu detection (filter half)** — `ActivePointerWdgt.coffee:83/382` → `isMenu?()` on `MenuWdgt`.
 - ☐ **hierarchy-scaffold** — `Widget.coffee:~3124` → `hiddenAsInternalScaffolding?()`.
 - ☐ **handle-initiated geometry** — `Widget.coffee:~1343/1562` → `changeShouldRememberFractionalGeometry?()` on the initiator.
