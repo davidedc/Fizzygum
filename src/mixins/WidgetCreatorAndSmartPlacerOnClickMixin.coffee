@@ -21,7 +21,8 @@ WidgetCreatorAndSmartPlacerOnClickMixin =
         # acceptsSmartPlacedWidgets / smartPlace live on the content widgets
         # (StretchableEditableWdgt + subclasses, SimpleDocumentWdgt).
         where = world.topmostChildSuchThat (w) ->
-          (w instanceof WindowWdgt) and w.contents?.acceptsSmartPlacedWidgets?()
+          # was `w instanceof WindowWdgt` (type-test-elimination campaign)
+          w.isWindow?() and w.contents?.acceptsSmartPlacedWidgets?()
 
         if where?
           where.contents.smartPlace widgetToBePlaced, @

@@ -477,7 +477,7 @@ class Widget extends TreeNode
     # closing window content: also close the window
     # UNLESS we are an internal window, in such case
     # leave the parent one as is
-    if !@isWindow() and @parent?.isWindow()
+    if !@isWindow?() and @parent?.isWindow?()
       @parent.close()
       return
 
@@ -2087,10 +2087,6 @@ class Widget extends TreeNode
   colloquialName: ->
     "generic widget"
 
-  # Polymorphic "are you a window?" (replaces `instanceof WindowWdgt`); WindowWdgt overrides to true.
-  isWindow: ->
-    false
-
   representativeIcon: ->
     new WidgetIconWdgt
 
@@ -3217,7 +3213,7 @@ class Widget extends TreeNode
     if !world.isIndexPage
       menu.addMenuItem "hide", true, @, "hide"
 
-    if @isWindow()
+    if @isWindow?()
       menu.addMenuItem "close", true, @, "close"
     else
       menu.addMenuItem "delete", true, @, "close"

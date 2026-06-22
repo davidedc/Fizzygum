@@ -158,7 +158,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @contents?.editButtonPressedFromWindowBar?()
 
   contentsRecursivelyCanSetHeightFreely: ->
-    if !(@contents instanceof WindowWdgt)
+    # was `!(@contents instanceof WindowWdgt)` (type-test-elimination campaign)
+    if !@contents.isWindow?()
       # FIT_BOX_TO_TEXT content drives its OWN height from its wrapped text, so the
       # window must FOLLOW that height (shrinking when a widen re-wraps to fewer
       # lines), not stretch the content to fill a freely-dragged height. A
@@ -174,7 +175,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       return true
 
     if @parent?
-      if @parent instanceof WindowWdgt
+      # was `@parent instanceof WindowWdgt` (type-test-elimination campaign)
+      if @parent.isWindow?()
         return @parent.recursivelyAttachedAsFreeFloating()
 
     return false
@@ -196,9 +198,10 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       @label.setText "empty window"
 
-  # Polymorphic replacement for `instanceof WindowWdgt`: lets Widget / TreeNode
-  # ask "are you a window?" without naming this subclass. The base default
-  # (Widget.isWindow -> false) means call sites need no `?()` guard.
+  # Polymorphic replacement for `instanceof WindowWdgt`: lets Widget / the smart-placer
+  # ask "are you a window?" without naming this subclass. Defined ONLY here -- there is NO
+  # Widget base default (Widget is the God class under decomposition), so every call site
+  # dispatches via `?()` and a non-window answers undefined (falsy). (type-test-elimination campaign)
   isWindow: -> true
 
   colloquialName: ->
