@@ -6,9 +6,9 @@
 # SimplePlainTextScrollPanelWdgt.)
 #
 # SimplePlainTextWdgt is a THIN specialization of TextWdgt: its ctor just opts
-# into FIT_BOX_TO_TEXT (the contained-text mode) — see TextWdgt::reLayout and the
+# into FIT_BOX_TO_TEXT (the contained-text mode) — see TextWdgt::_reLayoutSelf and the
 # FITTING MODEL comment in StringWdgt. The contained-reflow engine and the EDIT
-# triggers (the reLayout + _refreshScrollPanelWdgtOrVerticalStackIfIamInIt that
+# triggers (the _reLayoutSelf + _refreshScrollPanelWdgtOrVerticalStackIfIamInIt that
 # re-flow the box and nudge the container on setText/setFontSize/setFontName/toggle*)
 # live on the base (TextWdgt::reLayoutAndRefreshContainerIfContainedText, gated by
 # the mode), so ANY TextWdgt (not just this one) can be contained text.
@@ -40,10 +40,10 @@ class SimplePlainTextWdgt extends TextWdgt
     @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
     # this widget IS the contained-text case: fit the BOX to the TEXT (width from
     # the layout, height from the wrapped content). The sizing lives on the
-    # base TextWdgt::reLayout, driven by this mode; softWrap (true by default on
+    # base TextWdgt::_reLayoutSelf, driven by this mode; softWrap (true by default on
     # TextWdgt) wraps to the given width.
     @fittingSpec = FittingSpecText.FIT_BOX_TO_TEXT
-    @reLayout()
+    @_reLayoutSelf()
 
 
   colloquialName: ->
@@ -111,18 +111,18 @@ class SimplePlainTextWdgt extends TextWdgt
   # Toggle soft-wrap for a text inside a scroll panel. The directions are
   # deliberately ASYMMETRIC: wrap ON re-constrains the content to the viewport
   # (inside setTextLineWrapping) and lets the layout re-wrap; wrap OFF must
-  # reLayout the text to its NATURAL un-wrapped width so the panel scrolls
-  # horizontally -- because TextWdgt::reLayout wraps to the current extent when
+  # _reLayoutSelf the text to its NATURAL un-wrapped width so the panel scrolls
+  # horizontally -- because TextWdgt::_reLayoutSelf wraps to the current extent when
   # @softWrap, but measures the full natural width when not.
   #
   # This runs synchronously in a click handler and does IMMEDIATE layout work (the
-  # raw resize inside setTextLineWrapping + an explicit reLayout) rather than the
+  # raw resize inside setTextLineWrapping + an explicit _reLayoutSelf) rather than the
   # framework's deferred invalidateLayout() pattern. This is INTERMEDIATE state, not
   # an oversight: the deferred mechanism is half-built by construction (the geometry
   # accessors read applied @bounds only, so handler-level raw geometry is a symptom of
   # that incompleteness). Soft-wrap also has an EXTRA blocker: the content/text are
   # ATTACHEDAS_FREEFLOATING (so invalidateLayout() never climbs to the scroll panel)
-  # and the wrap geometry lives in _adjustContentsBounds, off the doLayout cycle.
+  # and the wrap geometry lives in _positionAndResizeChildren, off the _reLayout cycle.
   # Completing the deferred model stays the goal -- see
   # docs/softwrap-deferred-layout-conversion-plan.md for the model finding, the
   # obstacle map, and what a conversion would take.
@@ -130,7 +130,7 @@ class SimplePlainTextWdgt extends TextWdgt
     return if @parent.parent.isTextLineWrapping == wrap   # already in this state -- skip the relayout + repaint
     @softWrap = wrap
     @parent.parent.setTextLineWrapping wrap
-    @reLayout() unless wrap
+    @_reLayoutSelf() unless wrap
     @_refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   # the bang makes the node fire the current output value

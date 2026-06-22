@@ -10,7 +10,7 @@ class ScrollPanelWdgt extends PanelWdgt
   vBar: nil
   hBar: nil
   # used to avoid recursively re-entering the
-  # _adjustContentsBounds function
+  # _positionAndResizeChildren function
   _adjustingContentsBounds: false
 
   # there are several ways in which we allow
@@ -64,7 +64,7 @@ class ScrollPanelWdgt extends PanelWdgt
     @vBar.target = @
     @vBar.action = "adjustContentsBasedOnVBar"
 
-    @_adjustScrollBars()
+    @_reLayoutScrollbars()
 
   wantsDropOf: (aWdgt) ->
     if @contents instanceof FolderPanelWdgt
@@ -82,14 +82,14 @@ class ScrollPanelWdgt extends PanelWdgt
   adjustContentsBasedOnHBar: (num) ->
     @contents.fullRawMoveTo new Point @left() - num, @contents.position().y
     # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
-    @_adjustContentsBounds()
-    @_adjustScrollBars()
+    @_positionAndResizeChildren()
+    @_reLayoutScrollbars()
 
   adjustContentsBasedOnVBar: (num) ->
     @contents.fullRawMoveTo new Point @contents.position().x, @top() - num
     # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
-    @_adjustContentsBounds()
-    @_adjustScrollBars()
+    @_positionAndResizeChildren()
+    @_reLayoutScrollbars()
 
   setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
@@ -116,7 +116,7 @@ class ScrollPanelWdgt extends PanelWdgt
       return true
     return false
 
-  _adjustScrollBars: ->
+  _reLayoutScrollbars: ->
     # one typically has both scrollbars in view, plus a resizer
     # in bottom right corner, so adjust the width/height of the
     # scrollbars so that there is no overlap between the three things
@@ -197,26 +197,26 @@ class ScrollPanelWdgt extends PanelWdgt
       @contents.add aWdgt, position, layoutSpec, beingDropped, nil, positionOnScreen
       # Intentional synchronous APPLY (not an off-settle trigger to defer): add / addMany /
       # showResizeAndMoveHandlesAndLayoutAdjusters are public content-change ENDPOINTS, idempotent
-      # with this panel's own doLayout ('super; @_reFitToContents') so the cycle re-fits identically;
+      # with this panel's own _reLayout ('super; @_reLayoutChildren') so the cycle re-fits identically;
       # the inline call just keeps geometry current within the calling public method. Distinct from
       # the seam sites (raw-mutator / gesture triggers), which DO defer. (deferred-layout-residuals-audit.md)
       # Deferring this re-fit through settleLayoutsOnceAfter was PROBED 2026-06-22 (OVERVIEW §11 Phase-4) and
       # REJECTED: it deterministically diverges nested-scroll content/thumb geometry (3 frames of
       # macroNestedScrollPanelsRouteWheel + macroDocumentScrollsMixedTextAndClocks) for ZERO gain -- the
       # synchronous re-fit's re-read of APPLIED geometry is load-bearing (OVERVIEW §11 PROOF 2). Leave synchronous.
-      # layout-apply-sanctioned: public content-change endpoint, idempotent w/ doLayout (OVERVIEW §11 PROOF 2)
-      @_reFitToContents()
+      # layout-apply-sanctioned: public content-change endpoint, idempotent w/ _reLayout (OVERVIEW §11 PROOF 2)
+      @_reLayoutChildren()
 
   # see SimpleSlideWdgt for performance improvements
   # of this over the non-
   addMany: (widgetsToBeAdded) ->
     @contents.addMany widgetsToBeAdded
-    @_reFitToContents() # layout-apply-sanctioned: public content-change endpoint -- see add() (OVERVIEW §11 PROOF 2)
+    @_reLayoutChildren() # layout-apply-sanctioned: public content-change endpoint -- see add() (OVERVIEW §11 PROOF 2)
 
 
   showResizeAndMoveHandlesAndLayoutAdjusters: ->
     super
-    @_reFitToContents() # layout-apply-sanctioned: public content-change endpoint -- see add() (OVERVIEW §11 PROOF 2)
+    @_reLayoutChildren() # layout-apply-sanctioned: public content-change endpoint -- see add() (OVERVIEW §11 PROOF 2)
 
   
   setContents: (aWdgt, extraPadding) ->
@@ -235,36 +235,36 @@ class ScrollPanelWdgt extends PanelWdgt
       #console.log "move 15"
       @breakNumberOfRawMovesAndResizesCaches()
 
-      # TODO this part seems like it should be in a doLayout function
+      # TODO this part seems like it should be in a _reLayout function
       # rather than here
       if @isTextLineWrapping and !(@contents instanceof SimpleVerticalStackPanelWdgt)
         @contents.fullRawMoveTo @position()
       super aPoint
       @contents.rawSetExtent aPoint
       # raw setter: APPLY the re-fit NOW -- synchronous, single-container, TERMINAL
-      # (_reFitToContents -> _adjustContentsBounds + _adjustScrollBars, neither climbs to my
+      # (_reLayoutChildren -> _positionAndResizeChildren + _reLayoutScrollbars, neither climbs to my
       # parent). Never SCHEDULE it (no invalidateLayout): the sanctioned immediate-mutator
-      # apply, like TextWdgt.rawSetExtent -> @reLayout (task #17). Rule [E] forbids the SCHEDULE.
-      @_reFitToContents()
+      # apply, like TextWdgt.rawSetExtent -> @_reLayoutSelf (task #17). Rule [E] forbids the SCHEDULE.
+      @_reLayoutChildren()
 
 
   # Gesture-driven container re-fit (a widget was dropped into / grabbed out of me): DEFER it to
   # the cycle. These are dispatched from ActivePointerWdgt.drop/grab AFTER a self-settling add, so
-  # they run OUTSIDE any layout pass -- the else arm (invalidate self; my doLayout is
-  # 'super; @_reFitToContents', so the cycle re-fits me identically) is what runs. The in-pass
+  # they run OUTSIDE any layout pass -- the else arm (invalidate self; my _reLayout is
+  # 'super; @_reLayoutChildren', so the cycle re-fits me identically) is what runs. The in-pass
   # arm keeps the synchronous re-fit (the pre-existing behaviour) for safety. (No recalc-enqueue arm:
   # unlike the seams, these are never dispatched mid-pass. See deferred-layout-residuals-audit.md fam 2.)
   reactToDropOf: ->
     if world?._recalculatingLayouts
       # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
-      @_reFitToContents()
+      @_reLayoutChildren()
     else
       @invalidateLayout()
 
   reactToGrabOf: ->
     if world?._recalculatingLayouts
       # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
-      @_reFitToContents()
+      @_reLayoutChildren()
     else
       @invalidateLayout()
 
@@ -273,51 +273,51 @@ class ScrollPanelWdgt extends PanelWdgt
   # contained panel's notification). Inherited by ListWdgt and the other scroll
   # panels -- they all re-fit the same way (the ListWdgt opt-out below is ONLY
   # for the contained-panel notification, not for this pair).
-  _reFitToContents: ->
-    @_adjustContentsBounds()
-    @_adjustScrollBars()
+  _reLayoutChildren: ->
+    @_positionAndResizeChildren()
+    @_reLayoutScrollbars()
 
-  # ===== Phase 3b (Slice 1): re-fit on the doLayout cycle =====
+  # ===== Phase 3b (Slice 1): re-fit on the _reLayout cycle =====
   # A scroll panel re-fits its contents+scrollbars during recalculateLayouts (deferred),
-  # not only via the inline _reFitToContents triggers. super (Widget::doLayout) applies
+  # not only via the inline _reLayoutChildren triggers. super (Widget::_reLayout) applies
   # MY OWN new bounds FIRST -- consuming @desired* and, on a real resize, re-fitting via the
   # rawSetExtent override -- and THEN we re-fit to the (now-applied) viewport. Establishing
   # own bounds before re-fitting the contents is the DETERMINISM.md case-3c discipline (a
-  # custom doLayout must apply its own bounds before laying out what it contains). On a pure
+  # custom _reLayout must apply its own bounds before laying out what it contains). On a pure
   # resize the re-fit here is redundant with the rawSetExtent override and idempotent; on a
   # content-only change (Phase 3b Slice 2, when the inline triggers become invalidateLayout)
   # it is the one that runs.
-  doLayout: (newBoundsForThisLayout) ->
+  _reLayout: (newBoundsForThisLayout) ->
     super
-    @_reFitToContents()
+    @_reLayoutChildren()
 
-  # implementsDeferredLayout is `@doLayout != Widget::doLayout`, so the doLayout above would
+  # implementsDeferredLayout is `@_reLayout != Widget::_reLayout`, so the _reLayout above would
   # otherwise flip it true and change TWO read sites: (A) rawSetWidthSizeHeightAccordingly
   # (invalidate-on-resize) and, the load-bearing one, (B) subWidgetsMergedFullBounds -- a
   # deferred-layout child contributes only its viewport rect, not its scrolled subtree, which
   # would shrink a NESTED scroll panel's reported content size and regress nested-scroll
-  # (the proven 16->18 Path-A trap). We pin it to false so the doLayout drives the re-fit
-  # while our merged-bounds/resize classification stays exactly as before we had a doLayout.
+  # (the proven 16->18 Path-A trap). We pin it to false so the _reLayout drives the re-fit
+  # while our merged-bounds/resize classification stays exactly as before we had a _reLayout.
   implementsDeferredLayout: ->
     false
 
-  _refitContentsAndScrollBars: ->
-    @_reFitToContents()
+  _reLayoutChildrenAndScrollbars: ->
+    @_reLayoutChildren()
 
   # A contained panel (e.g. a vertical stack acting as my @contents) tells me
   # its set of children changed, so I re-fit. I return true so the panel knows I
-  # took over its re-layout (my _adjustContentsBounds already re-lays my contents
+  # took over its re-layout (my _positionAndResizeChildren already re-lays my contents
   # out) and needn't do its own. This is the polymorphic replacement for
   # SimpleVerticalStackPanelWdgt testing `@amIPanelOfScrollPanelWdgt()`: the
   # stack just notifies its parent, and only a scroll panel reacts. NB kept
-  # SEPARATE from _refitContentsAndScrollBars / reactToDropOf / reactToGrabOf on
+  # SEPARATE from _reLayoutChildrenAndScrollbars / reactToDropOf / reactToGrabOf on
   # purpose -- a ListWdgt opts OUT of THIS notification (see ListWdgt) yet still
   # re-fits on its own drops/grabs/attaches.
-  reLayOutAfterContainedPanelChange: ->
-    @_refitContentsAndScrollBars()
+  _reLayOutAfterContainedPanelChange: ->
+    @_reLayoutChildrenAndScrollbars()
     return true
 
-  _adjustContentsBounds: ->
+  _positionAndResizeChildren: ->
     # avoid recursively re-entering this function
     if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true
 
@@ -330,7 +330,7 @@ class ScrollPanelWdgt extends PanelWdgt
     totalPadding = 2*padding
 
     if @contents instanceof SimpleVerticalStackPanelWdgt
-      @contents._adjustContentsBounds()
+      @contents._positionAndResizeChildren()
     else if @isTextLineWrapping and @contents instanceof PanelWdgt
       @contents.children.forEach (widget) =>
         if widget.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
@@ -390,7 +390,7 @@ class ScrollPanelWdgt extends PanelWdgt
 
     unless @contents.boundingBox().equals newBounds
       @contents.silentRawSetBounds newBounds
-      @contents.reLayout()
+      @contents._reLayoutSelf()
     
     # you'd think that if @contents.boundingBox().equals newBounds
     # then we don't need to check if the contents are "in good view"
@@ -439,13 +439,13 @@ class ScrollPanelWdgt extends PanelWdgt
     @contents.fullRawMoveLeftSideTo -whereTo.x
     @contents.fullRawMoveTopSideTo -whereTo.y
     # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
-    @_adjustScrollBars()
+    @_reLayoutScrollbars()
 
 
   scrollToBottom: ->
     @scrollY -100000
     # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
-    @_adjustScrollBars()
+    @_reLayoutScrollbars()
   
   scrollY: (steps) ->
     ct = @contents.top()
@@ -597,8 +597,8 @@ class ScrollPanelWdgt extends PanelWdgt
               scrollbarJustChanged ||= @scrollY Math.round deltaY
       if scrollbarJustChanged
         # layout-apply-sanctioned: scroll-input (momentum glide), determinism-exempt (residuals-audit fam 1)
-        @_adjustContentsBounds()
-        @_adjustScrollBars()
+        @_positionAndResizeChildren()
+        @_reLayoutScrollbars()
     super
   
   startAutoScrolling: ->
@@ -646,8 +646,8 @@ class ScrollPanelWdgt extends PanelWdgt
       scrollbarJustChanged ||= @scrollY -(inset - (@bottom() - pos.y))
     if scrollbarJustChanged
       # layout-apply-sanctioned: scroll-input (edge auto-scroll), determinism-exempt (residuals-audit fam 1)
-      @_adjustContentsBounds()
-      @_adjustScrollBars()
+      @_positionAndResizeChildren()
+      @_reLayoutScrollbars()
   
   # ScrollPanelWdgt scrolling when editing text
   # so to bring the caret fully into view.
@@ -658,7 +658,7 @@ class ScrollPanelWdgt extends PanelWdgt
     fl = @left() + @padding
     fr = @right() - @padding
     # layout-apply-sanctioned: scroll-input (caret-into-view), determinism-exempt (residuals-audit fam 1)
-    @_adjustContentsBounds()
+    @_positionAndResizeChildren()
     marginAroundCaret = @padding
     if @extraPadding?
       marginAroundCaret += @extraPadding
@@ -678,8 +678,8 @@ class ScrollPanelWdgt extends PanelWdgt
       newR = @contents.right() + fr - caretWidget.right()
       @contents.fullRawMoveRightSideTo newR - marginAroundCaret
       caretWidget.fullRawMoveRightSideTo fr
-    @_adjustContentsBounds()
-    @_adjustScrollBars()
+    @_positionAndResizeChildren()
+    @_reLayoutScrollbars()
 
   # ScrollPanelWdgt events.
   wheel: (xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg) ->
@@ -749,8 +749,8 @@ class ScrollPanelWdgt extends PanelWdgt
 
     if scrollbarJustChanged
       # layout-apply-sanctioned: scroll-input (wheel), determinism-exempt (residuals-audit fam 1)
-      @_adjustContentsBounds()
-      @_adjustScrollBars()
+      @_positionAndResizeChildren()
+      @_reLayoutScrollbars()
   
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
@@ -768,13 +768,13 @@ class ScrollPanelWdgt extends PanelWdgt
   #
   # The resize here is DELIBERATELY IMMEDIATE (raw geometry), not the framework's
   # ideal DEFERRED pattern (set a flag + invalidateLayout(), let recalculateLayouts
-  # -> doLayout derive the geometry). This is INTERMEDIATE state, not an oversight:
+  # -> _reLayout derive the geometry). This is INTERMEDIATE state, not an oversight:
   # the deferred mechanism is half-built by construction (the geometry accessors read
   # applied @bounds only, so handler-level raw geometry is a symptom of that
   # incompleteness, not a one-off). Soft-wrap has an EXTRA blocker on top: the content
   # panel + text are ATTACHEDAS_FREEFLOATING, so invalidateLayout() on them does NOT
-  # climb up to this scroll panel, and the wrap geometry lives in _adjustContentsBounds
-  # -- which the doLayout cycle never reaches for a wrap toggle. Completing the
+  # climb up to this scroll panel, and the wrap geometry lives in _positionAndResizeChildren
+  # -- which the _reLayout cycle never reaches for a wrap toggle. Completing the
   # deferred model (and this case) is deliberate, sequenced work; see
   # docs/softwrap-deferred-layout-conversion-plan.md for the model finding, the
   # obstacle map, and what a conversion would take.

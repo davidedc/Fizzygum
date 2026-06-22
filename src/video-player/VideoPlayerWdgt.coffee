@@ -57,7 +57,7 @@ class VideoPlayerWdgt extends Widget
     @videoPlayerCanvas.loadVideo videoPath
 
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
-  doLayout: (newBoundsForThisLayout) ->
+  _reLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
     if @_handleCollapsedStateShouldWeReturn() then return
@@ -89,13 +89,13 @@ class VideoPlayerWdgt extends Widget
     # to do the layout
     videoPlayerCanvasBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() + @externalPadding
     videoPlayerCanvasBounds = videoPlayerCanvasBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, newBoundsForThisLayout.height() - 24  - @internalPadding - 14
-    @videoPlayerCanvas.doLayout videoPlayerCanvasBounds
+    @videoPlayerCanvas._reLayout videoPlayerCanvasBounds
 
     # put the videoControlsPane in the bottom part
     videoControlsBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, videoPlayerCanvasBounds.bottom() + 2
     videoControlsBounds = videoControlsBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, 22 + 7 + 14
     #console.log "videoControlsBounds: #{videoControlsBounds}"
-    @videoControlsPane.doLayout videoControlsBounds
+    @videoControlsPane._reLayout videoControlsBounds
 
 
     world.maybeEnableTrackChanges()

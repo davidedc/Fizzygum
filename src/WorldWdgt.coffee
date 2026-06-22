@@ -203,7 +203,7 @@ class WorldWdgt extends PanelWdgt
   paintingWidget: nil
   widgetsGivingErrorWhileRepainting: []
 
-  # errors thrown by a doLayout() DURING the recalculateLayouts flush. We can't build the
+  # errors thrown by a _reLayout() DURING the recalculateLayouts flush. We can't build the
   # error console there: createErrorConsole uses the public, self-flushing geometry setters,
   # which would re-enter recalculateLayouts and throw. So we stash them here and report them
   # next cycle, outside the flush -- exactly like errorsWhileRepainting. (task #18)
@@ -856,7 +856,7 @@ class WorldWdgt extends PanelWdgt
   recalculateLayouts: ->
     # re-entrancy guard: recalculateLayouts must not run inside itself. This fires if a
     # public geometry setter (which flushes via recalculateLayouts) is reached from a
-    # layout pass (doLayout/_adjustContentsBounds). Internal layout must use the raw/silent
+    # layout pass (_reLayout/_positionAndResizeChildren). Internal layout must use the raw/silent
     # setters, never the public deferred API. (prototype 2026-06-19)
     if @_recalculatingLayouts
       throw new Error "Fizzygum: re-entrant recalculateLayouts() -- a public geometry setter was called from within a layout pass. Internal layout code must use the raw/silent setters, not the public deferred API."
@@ -868,7 +868,7 @@ class WorldWdgt extends PanelWdgt
 
   _recalculateLayoutsCore: ->
 
-    # Defensive backstop: this loop is structurally convergent -- each doLayout() either ends
+    # Defensive backstop: this loop is structurally convergent -- each _reLayout() either ends
     # in markLayoutAsFixed() (so the widget is popped) or, on throw, is settled + banned by the
     # catch below. If it ever fails to converge anyway, bail loudly instead of hanging the world
     # (the freeze that masked the real error before task #18). Never fires in normal operation.
@@ -911,7 +911,7 @@ class WorldWdgt extends PanelWdgt
       # child will do its layout first according to the
       # wrong size of the parent, and then the
       # parent will have to re-layout it again, so the
-      # doLayout of the freefloating child is called twice,
+      # _reLayout of the freefloating child is called twice,
       # the first time wrongly.
 
       while tryThisWidget.parent?
@@ -922,16 +922,16 @@ class WorldWdgt extends PanelWdgt
       try
         # so now you have a "top" element up a chain
         # of widgets with broken layout. Go do a
-        # doLayout on it, so it might fix a bunch of those
+        # _reLayout on it, so it might fix a bunch of those
         # on the chain (but not all)
-        tryThisWidget.doLayout()
+        tryThisWidget._reLayout()
       catch err
         # We are INSIDE the recalculateLayouts flush here (_recalculatingLayouts is true), so this
         # block must do the ABSOLUTE MINIMUM and stay strictly non-flushing / non-invalidating:
         #   - createErrorConsole uses public, self-flushing setters -> it would re-enter
         #     recalculateLayouts and throw BEFORE @errorConsole is assigned (masking the real error);
         #   - even softResetWorld is unsafe here (its hand.drop -> target.add can flush too).
-        # And because the throwing doLayout() never reached its trailing markLayoutAsFixed(),
+        # And because the throwing _reLayout() never reached its trailing markLayoutAsFixed(),
         # tryThisWidget is still layoutIsValid==false, so unless we settle it here this until-loop
         # would spin forever. So: settle + ban the offender (both layout-clean), then defer the
         # softReset + reporting to the next cycle's drain, outside the flush. (task #18)
@@ -1243,10 +1243,10 @@ class WorldWdgt extends PanelWdgt
     # createErrorConsole (public setters). This is the deferred tail of that catch. (task #18)
     @softResetWorld()
     for eachErr in errorsToShow
-      # Loud in the browser console too -- not only in the in-world error console. A doLayout()
+      # Loud in the browser console too -- not only in the in-world error console. A _reLayout()
       # that throws is a real bug, and CI / the smoke-apps app-launch gate key off console.error;
       # without this a broken app would no longer freeze (good) but would also go undetected (bad).
-      console.error "LAYOUT_ERROR: a doLayout() threw during recalculateLayouts: " + (eachErr?.stack ? eachErr)
+      console.error "LAYOUT_ERROR: a _reLayout() threw during recalculateLayouts: " + (eachErr?.stack ? eachErr)
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError eachErr
 
@@ -1429,10 +1429,10 @@ class WorldWdgt extends PanelWdgt
       @worldCanvas.style.height = clientHeight + "px"
       @syncRenderCanvasToWorldCanvas()
       @rawSetExtent new Point clientWidth, clientHeight
-      @desktopReLayout()
+      @_reLayoutDesktop()
   
 
-  desktopReLayout: ->
+  _reLayoutDesktop: ->
     basementOpenerWdgt = @firstChildSuchThat (w) ->
       w instanceof BasementOpenerWdgt
     if basementOpenerWdgt?

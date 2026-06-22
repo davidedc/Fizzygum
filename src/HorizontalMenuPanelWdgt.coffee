@@ -65,10 +65,10 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
         super aWdgt, @numberOfIconsOnPanel, layoutSpec, beingDropped
 
       @numberOfIconsOnPanel++
-      @reLayout()
+      @_reLayoutSelf()
 
 
-  reLayout: ->
+  _reLayoutSelf: ->
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

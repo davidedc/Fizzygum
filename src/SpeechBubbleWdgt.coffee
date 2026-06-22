@@ -51,7 +51,7 @@ class SpeechBubbleWdgt extends Widget
 
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
-  doLayout: (newBoundsForThisLayout) ->
+  _reLayout: (newBoundsForThisLayout) ->
 
     #if !window.recalculatingLayouts then debugger
 
@@ -75,7 +75,7 @@ class SpeechBubbleWdgt extends Widget
     @rawSetHeight newBoundsForThisLayout.height()
 
     # adjust layout of my contents
-    @contentsWidget.doLayout (
+    @contentsWidget._reLayout (
       (new Rectangle 0, 0,
         (newBoundsForThisLayout.width() - (2 * @cornerRadius)),
         (newBoundsForThisLayout.height() - (2 * @cornerRadius) - newBoundsForThisLayout.height()/5))

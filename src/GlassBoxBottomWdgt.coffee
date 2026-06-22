@@ -14,7 +14,7 @@ class GlassBoxBottomWdgt extends BoxWdgt
     @strokeColor = Color.create 196,195,196
     @setAlphaScaled 50
 
-  reLayout: ->
+  _reLayoutSelf: ->
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

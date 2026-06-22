@@ -9,7 +9,7 @@
 #    the height follows the wrapped content (height-adjusts-to-width); this is
 #    what makes a SimplePlainTextWdgt — and now ANY TextWdgt used as
 #    window / panel / scroll content — re-wrap and auto-grow/shrink its height.
-#    Wired into StringWdgt/TextWdgt reflowText + reLayout + createBufferCacheKey.
+#    Wired into StringWdgt/TextWdgt reflowText + _reLayoutSelf + createBufferCacheKey.
 #
 # This class SHIPS in the homepage build (production content layout references it
 # via FIT_BOX_TO_TEXT) — do NOT re-add a "# this file is excluded from the

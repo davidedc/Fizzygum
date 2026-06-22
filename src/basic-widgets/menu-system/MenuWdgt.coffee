@@ -134,7 +134,7 @@ class MenuWdgt extends PopUpWdgt
 
   # this part is excluded from the fizzygum homepage build <<«
 
-  reLayout: ->
+  _reLayoutSelf: ->
     # console.log "menu update rendering"
     super()
 

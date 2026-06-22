@@ -12,20 +12,20 @@ class ClassInspectorWdgt extends InspectorWdgt
     "Class Inspector (" + @target.constructor.name.replace("Wdgt", "") + ")"
 
   layoutOwnPropsOnlyToggle: (height) ->
-    # layout-apply-sanctioned: apply helper, runs under doLayout (settle point)
+    # layout-apply-sanctioned: apply helper, runs under _reLayout (settle point)
 
 
     toggleBounds = new Rectangle new Point @left() + @externalPadding , height
     toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (@width() - 2*@externalPadding - 2*@internalPadding)/4,15).round()
-    @showMethodsToggle.doLayout toggleBounds
+    @showMethodsToggle._reLayout toggleBounds
 
     toggleBounds = new Rectangle new Point @showMethodsToggle.right() + @internalPadding, height
     toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (@width() - 2*@externalPadding - 2*@internalPadding)/4,15).round()
-    @showFieldsToggle.doLayout toggleBounds
+    @showFieldsToggle._reLayout toggleBounds
 
     toggleBounds = new Rectangle new Point @showFieldsToggle.right() + @internalPadding, height
     toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point 2*(@width() - 2*@externalPadding - 2*@internalPadding)/4,15).round()
-    @showInheritedToggle.doLayout toggleBounds
+    @showInheritedToggle._reLayout toggleBounds
 
 
   buildAndConnectObjOwnPropsButton: ->

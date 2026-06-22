@@ -1,7 +1,7 @@
 # Deferred-layout Path A — the per-reader design (why "pending-aware accessors" fails, what to do instead)
 
 > **STATUS: HISTORICAL — Path A is FALSIFIED, do NOT revive.** Path A ("pending-aware accessors": add `effective*`
-> reads that return where geometry is HEADING) is incorrect for the container path — `_adjustContentsBounds` bakes
+> reads that return where geometry is HEADING) is incorrect for the container path — `_positionAndResizeChildren` bakes
 > via the non-invalidating `silentRawSetBounds`, so a pending read bakes a mid-settle transient (§11 has the
 > instrumented proof: scroll content over-sized 43px). The deferred-layout effort instead uses the **deferred
 > re-queue** + **Path-B de-read-back** (see [`deferred-layout-OVERVIEW.md`](deferred-layout-OVERVIEW.md) §3/§6, the
@@ -20,7 +20,7 @@ specifies the **per-reader** design that actually works. Written 2026-06-19 afte
 Let macros (and, eventually, framework handlers) set geometry through the **deferred** API
 (`setExtent`/`fullMoveTo`/`setWidth`/`setBounds`) instead of the immediate `raw*` API, and still get
 **byte-identical** results. The blocker is in-cycle **read-back**: code that reads a widget's geometry
-*after a deferred set but before the `recalculateLayouts → doLayout` settle* sees the stale APPLIED
+*after a deferred set but before the `recalculateLayouts → _reLayout` settle* sees the stale APPLIED
 `@bounds`, not the just-requested value. The originating concrete target is the **16 SystemTest macros**
 that still use raw because they read geometry back synchronously during scene construction (see §7).
 
@@ -63,13 +63,13 @@ paths.
 
 **PENDING-needers** (want `@desired*` when set) — all are *intra-cycle, pre-settle* reads whose job is
 to compute a derived layout from where things are going. (The names below are the post-Phase-2
-privatized `_adjustContentsBounds`; **AUDIT-REFINED 2026-06-20** — the original "all overrides" claim was
+privatized `_positionAndResizeChildren`; **AUDIT-REFINED 2026-06-20** — the original "all overrides" claim was
 too broad, the per-override reality is annotated:)
-- `_adjustContentsBounds` overrides — **only the SCROLL PANEL reads pending.** `ScrollPanelWdgt._adjustContentsBounds`
+- `_positionAndResizeChildren` overrides — **only the SCROLL PANEL reads pending.** `ScrollPanelWdgt._positionAndResizeChildren`
   (`:317`) sizes itself to `@contents.subWidgetsMergedFullBounds()` (it REACTS to content extent) → pending.
-  `WindowWdgt._adjustContentsBounds` reads `@contents.width()` (`:442`) as a freshly-added content's
+  `WindowWdgt._positionAndResizeChildren` reads `@contents.width()` (`:442`) as a freshly-added content's
   preferred width (one pending candidate); its `@contents.height()` reads are *after* a raw width re-fit →
-  applied. `SimpleVerticalStackPanelWdgt._adjustContentsBounds` **DRIVES** its children (sizes via raw
+  applied. `SimpleVerticalStackPanelWdgt._positionAndResizeChildren` **DRIVES** its children (sizes via raw
   `rawSetWidthSizeHeightAccordingly`, positions via raw `fullRawMoveTo`, reads `widget.height()` only
   *after* the raw size) → its child reads are already applied → **NOT a pending-needer.**
 - `Widget.subWidgetsMergedFullBounds` (`:1067`): reads `child.bounds` / `child.fullBounds()` to merge child
@@ -233,8 +233,8 @@ The `effective*` reads (§4/§10) were added to `Widget` (`effectivePosition`/`e
 (suite green; the only delta was the §7 sanctioned inspector recapture — see the note below). Then the
 **container content-sizing conversion was attempted and REVERTED** because it is **not byte-safe**:
 
-- Routing `ScrollPanelWdgt._adjustContentsBounds`'s `@contents.subWidgetsMergedFullBounds()` →
-  `effectiveSubWidgetsMergedFullBounds()` (and `WindowWdgt._adjustContentsBounds`'s `@contents.width()`
+- Routing `ScrollPanelWdgt._positionAndResizeChildren`'s `@contents.subWidgetsMergedFullBounds()` →
+  `effectiveSubWidgetsMergedFullBounds()` (and `WindowWdgt._positionAndResizeChildren`'s `@contents.width()`
   → `effectiveExtent().x`) changed the **settled scrollbar thumb** in **2 tests** —
   `macroNestedScrollPanelsRouteWheel` (all 3 images) and `macroSimpleDocumentHandlesOldInspector`
   (image_2/3). The outer thumb became **shorter** (content sized **larger**) though the *visible* content
@@ -243,7 +243,7 @@ The `effective*` reads (§4/§10) were added to `Widget` (`effectivePosition`/`e
   (the nested-scroll case — the `child.bounds` branch + ScrollPanelWdgt's `implementsDeferredLayout:false`
   pin) fixed one image, but the **non-deferred** branch (`effectiveFullBounds`) still diverged → reverted.
 
-**Root cause / the load-bearing insight.** `_adjustContentsBounds` **BAKES** its computed content size via
+**Root cause / the load-bearing insight.** `_positionAndResizeChildren` **BAKES** its computed content size via
 `@contents.silentRawSetBounds` (a *non-invalidating raw* set). The applied read is correct because the
 **synchronous re-fit is RE-TRIGGERED** as each child applies its `@desired*` (the inline
 `_reFitContainerAfterRawGeometryChange` seam fires on a child's raw geometry change), so a *later* re-fit

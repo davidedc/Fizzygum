@@ -33,7 +33,7 @@ class SliderButtonWdgt extends CircleBoxWdgt
     else
       return true
 
-  reLayout: ->
+  _reLayoutSelf: ->
     super()
 
     if @parent?

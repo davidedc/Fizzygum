@@ -29,7 +29,7 @@ check) → commit individually.
   thinning, paint dedup, `MenuItemSpec`). **Phase 5 (decouple `Widget` from
   subclass identity) DONE for the clean cases:** 5a (smart-placer), 5b
   (`isWindow?()`/`isLayoutDecoration?()`), the `childGeometryChanged` exemplar,
-  Cluster A (`reLayOutAfterContainedPanelChange` notify-hook + delete dead
+  Cluster A (`_reLayOutAfterContainedPanelChange` notify-hook + delete dead
   `amIPanelOfScrollPanelWdgt`), Cluster C (`refitContentsAndScrollBars` +
   soak-dispatch). State at this plan: **Fizzygum master `4c684991`**,
   Fizzygum-tests `a6b125db5`.
@@ -71,7 +71,7 @@ check) → commit individually.
    This makes "zero recapture" no longer the pass/fail oracle for Phase 6; the
    oracle is "the only delta is the moved method-name rows." Budget for regen.
 2. **DETERMINISM contract (`Fizzygum-tests/DETERMINISM.md`).** The render loop,
-   input recognition, layout (`doLayout`) and geometry must stay **pure functions
+   input recognition, layout (`_reLayout`) and geometry must stay **pure functions
    of the event stream + final geometry** — never of wall-clock/frame counts/
    intermediate passes (diverge at dpr 2 under parallel load). The DET cores are
    the **late capstone**, not early sub-steps. Read DETERMINISM.md before touching
@@ -123,7 +123,7 @@ bounds + caches (C5), visibility/collapse (C6), paint/render coordination (C7),
 image+screenshot capture (C8, the SystemTest hash source), shadow (C9),
 change-tracking (C10), add/remove (C12), drag/grab (C14), **scroll-structure
 queries (C15)**, focus/pop-up/keyboard + mouse entry (C17/C18), and **the layout
-engine `doLayout` + dim solver (C28, `:4213`, ~520 L incl. `addOrRemoveAdders`
+engine `_reLayout` + dim solver (C28, `:4213`, ~520 L incl. `addOrRemoveAdders`
 `:4401`)**.
 
 The **liftable rim** (lower DET risk; each move recaptures the inspector test per
@@ -134,7 +134,7 @@ guardrail 1):
 | C22 | Demo/factory `create…` menu actions + `@setupTestScreen1` (`:4469`, ~256 L) | ~900 | Largest by volume; **almost all homepage-excluded scaffolding**. Many are `menusHelper` string-action targets → rebind call sites (see MenusHelper coupling). Houses the `1960` shortcut-dedup filter. |
 | C20 | Setter-introspection (`colorSetters`/`stringSetters`/`numericalSetters`/`allSetters` `:3781-3809`) | ~110 | Pure (builds string/fn-name arrays). Soak-delegates `addShapeSpecific*` to `@appearance` already. |
 | C23 | Inspector/console/prompt/dialog spawning (`spawnInspector` `:2858`, `inform`/`prompt`/`pickColor` `:2798-2830`) | ~130 | Opens `InspectorWdgt`/`PromptWdgt`/etc. Behaviour-touching but cohesive. |
-| C25 | Code injection / `eval` (`injectProperty`/`injectProperties` `:2450-2460`, `evaluateString` `:3904`) | ~50 | Patch-programming eval; ends in `reLayout`+`changed`. |
+| C25 | Code injection / `eval` (`injectProperty`/`injectProperties` `:2450-2460`, `evaluateString` `:3904`) | ~50 | Patch-programming eval; ends in `_reLayoutSelf`+`changed`. |
 | C21 | Context-menu construction (`buildContextMenu` `:2888`, `buildBaseWidgetClassContextMenu` `:3426`, hierarchy menu `:2925-2965`) | ~250 | Houses the `2903`/`2952-2954`/`3455-3456` menu filters. **`Wdgt`-label-stripping hazard** (menu labels drift → screenshots) — verify carefully. |
 | C19 | Entry-field tab navigation (`allEntryFields` `:3824`, `next/previousEntryField`) | ~25 | Houses the `3827-3828` text-type filter. |
 | C24 | Serialization/copy wrappers (`fullCopy`/`serialize`/`deserialize` `:2340-2406`, align* `:2312-2329`) | ~150 | Deep-copy core already in `DeepCopierMixin`; these are call-sites + world-structure re-registration. SWCanvas image-decode branch in `deserialize` is backend-sensitive. |
@@ -428,7 +428,7 @@ current signature first.
 
 **Tier 4 — the DET capstone — ASSESSED 2026-06-18 = LEAVE (no clean determinism-safe seam; PHASE 6 COMPLETE).** A read-only design pass studied the three candidate clusters on disk against DETERMINISM.md. Verdict per cluster:
   - **Scroll/drag coordination (B/E) — LEAVE.** `grabsToParentWhenDragged` (`:2519`) is ALREADY a correct polymorphic protocol (overridden in HandleWdgt / StackElementsSizeAdjustingWdgt / SliderButtonWdgt / PanelWdgt / CreatorButtonWdgt) — moving the base off Widget would *de-polymorphize* it (the C20 argument). `amIDirectlyInside*ScrollPanelWdgt` (`:2579`/`:2587`) are topology `instanceof` queries woven into the geometry mutators (C3 `:1142`/`:1477`/`:1484`), the drag path (`:2525`), and the caret (`CaretWdgt:155`) — relocation = a rejected predicate (cf. the reverted Phase-5c) or parent-side hooks, on the exact hot path the 3 historical flakes hit; the author's own comment (`:1138`) flags it as awaiting *"proper layouts."* The drag *machine* is already in `@hand`/ActivePointerWdgt.
-  - **Layout-adder management — LEAVE.** `addOrRemoveAdders` (`:3975`) is called only from `doLayout` (`:3853`) and mutates the child set *during* the DET-critical layout pass; it operates entirely on `@`'s tree, so extraction is a feature-envy inversion with no cohesion gain + real DET risk.
+  - **Layout-adder management — LEAVE.** `addOrRemoveAdders` (`:3975`) is called only from `_reLayout` (`:3853`) and mutates the child set *during* the DET-critical layout pass; it operates entirely on `@`'s tree, so extraction is a feature-envy inversion with no cohesion gain + real DET risk.
   - **WorldWdgt render/input machine — LEAVE.** `doOneCycle`/`playQueuedEvents`/`updateBroken` are the determinism machine (event-time gating + broken-rectangles); no clean seam without perturbing it. The drag/macro/input machines (`@hand`, `@macroToolkit`, `@inputEventsQueue`, `@caret`) are already delegated.
   - **Conclusion:** the DET core is the *essential* behaviour of Widget/WorldWdgt, correctly placed — not a liftable rim. The genuine residual (decoupling Widget from scroll-structure topology, B/E) is NOT a God-class extraction but Phase-5-style notify/override-hook polymorphism — see `widget-identity-decoupling-plan.md` (Clusters A/C dissolved adjacent cases); a separate incremental effort if/when the determinism risk is judged worth it.
 

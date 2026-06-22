@@ -31,7 +31,7 @@ class MenuItemWdgt extends LabelButtonWdgt
   # in theory this would be the right thing to do
   # but a bunch of tests break and it's not worth it
   # as we are going to remake the whole layout system anyways
-  #reLayout: ->
+  #_reLayoutSelf: ->
   #  @label.setExtent @extent().subtract (@label.bounds.origin.subtract @.bounds.origin)
 
   # MenuItemWdgt hugs its box to its (multi-line, modern TextWdgt) label -- the
@@ -42,7 +42,7 @@ class MenuItemWdgt extends LabelButtonWdgt
     @label = new TextWdgt @labelString, @fontSize, @fontStyle
     @label.setColor @labelColor
 
-    # _addCore (NOT add): createLabel is driven by reLayout (a layout pass), so a
+    # _addCore (NOT add): createLabel is driven by _reLayoutSelf (a layout pass), so a
     # self-settle here would re-enter the flush guard and throw.
     @_addCore @label
     # the modern family does not self-size; make the label hug its text before
@@ -61,7 +61,7 @@ class MenuItemWdgt extends LabelButtonWdgt
   toggleTick: ->
     if @label.text.isTicked()
       @label.text = @label.text.toggleTick()
-      # reLayout is a base no-op on the modern TextWdgt, so it would leave the
+      # _reLayoutSelf is a base no-op on the modern TextWdgt, so it would leave the
       # ticked/unticked label at a stale width; re-measure and re-size instead.
       @label.sizeToTextAndDisableFitting()
       @label.changed()

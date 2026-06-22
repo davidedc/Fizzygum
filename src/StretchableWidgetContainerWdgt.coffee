@@ -96,28 +96,28 @@ class StretchableWidgetContainerWdgt extends Widget
       return
 
     super
-    @doLayout @bounds
+    @_reLayout @bounds
 
 
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
-  doLayout: (newBoundsForThisLayout) ->
+  _reLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
-    #console.log "spanel @contents: " + @contents + " doLayout 1"
+    #console.log "spanel @contents: " + @contents + " _reLayout 1"
 
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    #console.log "spanel @contents: " + @contents + " doLayout 2"
+    #console.log "spanel @contents: " + @contents + " _reLayout 2"
 
     # TODO shouldn't be calling this rawSetBounds from here,
     # rather use super
     @rawSetBounds newBoundsForThisLayout
 
-    #console.log "spanel @contents: " + @contents + " doLayout 3"
+    #console.log "spanel @contents: " + @contents + " _reLayout 3"
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -150,10 +150,10 @@ class StretchableWidgetContainerWdgt extends Widget
 
       newBounds = (new Rectangle p0).setBoundsWidthAndHeight newExtent
       #console.log "spanel @contents: " + @contents + " bounds: " + newBounds.round()
-      @contents.doLayout newBounds.round()
+      @contents._reLayout newBounds.round()
 
     else
-      @contents.doLayout @bounds
+      @contents._reLayout @bounds
 
 
 

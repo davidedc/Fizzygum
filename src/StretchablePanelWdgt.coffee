@@ -27,12 +27,12 @@ class StretchablePanelWdgt extends PanelWdgt
       return
 
     super
-    @doLayout @bounds
+    @_reLayout @bounds
 
 
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
-  doLayout: (newBoundsForThisLayout) ->
+  _reLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
@@ -52,21 +52,21 @@ class StretchablePanelWdgt extends PanelWdgt
 
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
-    # TODO antipattern - in doLayout you should never set raw position
+    # TODO antipattern - in _reLayout you should never set raw position
     # and extent like this directly on the children (except in the base Widget
     # implementation) because the children might have their own layouts
-    # inside of them, so you have to call doLayout on them in some form.
-    # the bad news here is that doLayout cannot take in input a fractional position yet
+    # inside of them, so you have to call _reLayout on them in some form.
+    # the bad news here is that _reLayout cannot take in input a fractional position yet
     for w in childrenNotHandlesNorCarets
       w.fullRawMoveInStretchablePanelToFractionalPosition newBoundsForThisLayout
       w.rawSetExtentToFractionalExtentInPaneUserHasSet newBoundsForThisLayout
 
-      # Since we can't call doLayout with fractional position/bounds yet (TODO), we
+      # Since we can't call _reLayout with fractional position/bounds yet (TODO), we
       # have set the raw position and extent directly, and
-      # we now still need to invoke doLayout.
+      # we now still need to invoke _reLayout.
       w.desiredPosition = nil
       w.desiredExtent = nil
-      w.doLayout()
+      w._reLayout()
 
     # TODO shouldn't be calling this rawSetBounds from here,
     # rather use super

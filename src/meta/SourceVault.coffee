@@ -58,7 +58,7 @@ class SourceVault
   
   @allSourcesContainingReLayoutCall: ->
     @allSourceFilesNames().filter (eachSourceFileName) =>
-      @getSourceContent(eachSourceFileName).stripComments().match /[@\.]reLayout/
+      @getSourceContent(eachSourceFileName).stripComments().match /[@\.]_reLayoutSelf/
   
   @allSourcesContainingQuestionMark: ->
     @allSourceFilesNames().filter (eachSourceFileName) =>
@@ -83,13 +83,13 @@ class SourceVault
   
   @allSourcesWithDoLayout: ->
     @allSourcesJustClassName().filter (eachSource) =>
-      window[eachSource]?.class?.nonStaticPropertiesSources.doLayout?
+      window[eachSource]?.class?.nonStaticPropertiesSources._reLayout?
   
-  # unused, this is now included in a bigger check we do on the doLayout source
+  # unused, this is now included in a bigger check we do on the _reLayout source
   @allSourcesWithDoLayoutWithoutSuper: ->
     @allSourcesWithDoLayout().filter (eachSource) =>
       if eachSource == "Widget" then return false
-      doLayoutMethod = NonStaticPropertyOfClassSource.fromFileAndMethodName eachSource, "doLayout"
+      doLayoutMethod = NonStaticPropertyOfClassSource.fromFileAndMethodName eachSource, "_reLayout"
       doLayoutMethod = doLayoutMethod.stripComments().collapseLinesWithOnlySpaces().collapseLastEmptyLines()
       doLayoutLineByLine = doLayoutMethod.split "\n"
       doLayoutLastLines = doLayoutLineByLine.slice Math.max doLayoutLineByLine.length - 5, 1
@@ -102,7 +102,7 @@ class SourceVault
 
   @allSourcesWithDoLayoutCallingRaw: ->
     @allSourcesWithDoLayout().filter (eachSource) =>
-      doLayoutMethod = NonStaticPropertyOfClassSource.fromFileAndMethodName eachSource, "doLayout"
+      doLayoutMethod = NonStaticPropertyOfClassSource.fromFileAndMethodName eachSource, "_reLayout"
       doLayoutMethod = doLayoutMethod.stripComments()
       if doLayoutMethod.match /raw/i
         console.log "x " + eachSource
@@ -113,7 +113,7 @@ class SourceVault
 
   @allSourcesWithReLayoutMethod: ->
     @allSourcesJustClassName().filter (eachSource) =>
-      window[eachSource]?.class?.nonStaticPropertiesSources.reLayout?
+      window[eachSource]?.class?.nonStaticPropertiesSources._reLayoutSelf?
 
   @allTrailingWhiteSpaces: ->
     @highlightRegex [/[^\s#][ ]+$/gm],[/[^\s#]([ ]+)$/gm],["🡆$1🡄"]
@@ -156,7 +156,7 @@ class SourceVault
   @allSourcesWithDoLayoutWithoutStandardStructure: ->
     @allSourcesWithDoLayout().filter (eachSource) =>
       if eachSource == "Widget" then return false
-      doLayoutMethod = NonStaticPropertyOfClassSource.fromFileAndMethodName eachSource, "doLayout"
+      doLayoutMethod = NonStaticPropertyOfClassSource.fromFileAndMethodName eachSource, "_reLayout"
       doLayoutMethod = doLayoutMethod.stripComments().collapseLinesWithOnlySpaces().collapseLastEmptyLines()
       if doLayoutMethod.match /newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout\s*if @_handleCollapsedStateShouldWeReturn\(\) then return\s*@rawSetBounds newBoundsForThisLayout\s*world.disableTrackChanges\(\)/m
         if doLayoutMethod.match /world.maybeEnableTrackChanges\(\)\s*super\s*@markLayoutAsFixed\(\)/

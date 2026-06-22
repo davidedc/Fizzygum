@@ -40,8 +40,8 @@ class WidgetFactory
   createNewScrollPanelWdgt: ->
     newWdgt = new ScrollPanelWdgt
     # layout-apply-sanctioned: construction-time dev factory (orphan, no cycle yet)
-    newWdgt._adjustContentsBounds()
-    newWdgt._adjustScrollBars()
+    newWdgt._positionAndResizeChildren()
+    newWdgt._reLayoutScrollbars()
     newWdgt.rawSetExtent new Point 350, 250
     world.create newWdgt
   createNewCanvas: ->

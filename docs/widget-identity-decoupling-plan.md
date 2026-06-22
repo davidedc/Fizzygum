@@ -112,14 +112,14 @@ clusters (after 5a/5b + the exemplar):
   `amIPanelOfScrollPanelWdgt()` fires for {ScrollPanel} **minus** {List}; they differ on List parents
   AND on SVStack/Window parents, so a shared hook would be unfaithful. Also: only
   `SimpleVerticalStackPanelWdgt` used `amIPanelOfScrollPanelWdgt` — NOT `ListWdgt`, as the original
-  note guessed. **What shipped:** a new `reLayOutAfterContainedPanelChange` notify-hook on
+  note guessed. **What shipped:** a new `_reLayOutAfterContainedPanelChange` notify-hook on
   `ScrollPanelWdgt` (does the `adjustContentsBounds()`+`adjustScrollBars()` pair, returns `true` =
   "I absorbed it"), with a `ListWdgt` opt-out override (returns `nil`) — faithfully reproducing
   `instanceof ScrollPanelWdgt and not instanceof ListWdgt`. Kept deliberately SEPARATE from
   `reactToDropOf`/`reactToGrabOf` because `ListWdgt` inherits those and must keep adjusting on its own
   drops while opting OUT of the contained-panel notification (folding the hook into them would
   silently stop a list adjusting — unfaithful). `SimpleVerticalStackPanelWdgt`'s two
-  `amIPanelOfScrollPanelWdgt()` sites became `return if @parent?.reLayOutAfterContainedPanelChange?()`
+  `amIPanelOfScrollPanelWdgt()` sites became `return if @parent?._reLayOutAfterContainedPanelChange?()`
   then self-adjust (inherited by `WindowWdgt`, incl. via its `reactToDropOf` `super`). With its only
   callers gone, `amIPanelOfScrollPanelWdgt` was **deleted** from `Widget` (owner call: accept the
   recapture); that caused the single inspector recapture in Established facts — regenerated +
@@ -147,9 +147,9 @@ clusters (after 5a/5b + the exemplar):
   subclasses, NO opt-out) and dispatched via `?()` so **nothing lands on `Widget`** (zero recapture
   — this is why an override-hook with a base no-op on `Widget`, which WOULD recapture the inspector,
   was avoided). Faithfulness note that *forced a separate method* (NOT reusing Cluster A's
-  `reLayOutAfterContainedPanelChange`): here `instanceof ScrollPanelWdgt` INCLUDES `ListWdgt`, whereas
+  `_reLayOutAfterContainedPanelChange`): here `instanceof ScrollPanelWdgt` INCLUDES `ListWdgt`, whereas
   Cluster A EXCLUDED it — so Cluster C must hit a hook `ListWdgt` does NOT opt out of.
-  `reLayOutAfterContainedPanelChange` now delegates to `refitContentsAndScrollBars`. 165/165 Chrome
+  `_reLayOutAfterContainedPanelChange` now delegates to `refitContentsAndScrollBars`. 165/165 Chrome
   dpr1+dpr2 + WebKit + `--homepage`.
 - **D — WindowWdgt (polish on 5b).** `Widget:480` (content-close closes its window) and `:3477`
   (close-vs-delete menu label) already use `isWindow?()` (5b). Optional upgrade to behaviour-moves

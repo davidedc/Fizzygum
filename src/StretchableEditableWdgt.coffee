@@ -53,7 +53,7 @@ class StretchableEditableWdgt extends Widget
     @add @stretchableWidgetContainer
 
 
-  reLayout: ->
+  _reLayoutSelf: ->
     # here we are disabling all the broken
     # rectangles. The reason is that all the
     # subwidgets of the inspector are within the
@@ -90,7 +90,7 @@ class StretchableEditableWdgt extends Widget
 
   rawSetExtent: (aPoint) ->
     super
-    @reLayout()
+    @_reLayoutSelf()
 
   hasStartingContentBeenChangedByUser: ->
     @stretchableWidgetContainer?.ratio?

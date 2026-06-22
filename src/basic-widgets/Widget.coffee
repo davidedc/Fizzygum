@@ -689,14 +689,14 @@ class Widget extends TreeNode
   #  - normally (from an event handler / the public-setter flush): @invalidateLayout() --
   #    schedule the re-fit for the current frame's recalculateLayouts (the deferred path).
   #  - WHILE recalculateLayouts is running (a CONTAINER sizing this child from inside its own
-  #    doLayout / _adjustContentsBounds -- Phase 3b's window/stack re-fit on the cycle):
+  #    _reLayout / _positionAndResizeChildren -- Phase 3b's window/stack re-fit on the cycle):
   #    invalidateLayout would, for a non-freefloating deferred-layout child, CLIMB back and
   #    re-dirty the container in the SAME pass -> the until-loop never converges. So settle
-  #    this child IN PLACE with a synchronous @doLayout() (no invalidate, no climb), making
-  #    the container's doLayout a FIXED POINT -- the same outcome ScrollPanelWdgt reaches via
+  #    this child IN PLACE with a synchronous @_reLayout() (no invalidate, no climb), making
+  #    the container's _reLayout a FIXED POINT -- the same outcome ScrollPanelWdgt reaches via
   #    silent setters. (See docs/deferred-layout-refit-and-add-design.md, "Phase 3b -- Slice 2".)
   # RETURNS the RESULTING height (Path B de-read-back). A container re-fit that sizes a child this way
-  # (WindowWdgt / SimpleVerticalStackPanelWdgt _adjustContentsBounds) must NOT then read the child's
+  # (WindowWdgt / SimpleVerticalStackPanelWdgt _positionAndResizeChildren) must NOT then read the child's
   # geometry back to learn its new height -- that synchronous mutate-then-read-back is exactly what forces
   # the container re-fit to stay on the synchronous seam (it broke C1; see
   # docs/softwrap-deferred-layout-conversion-plan.md §6b + docs/deferred-layout-OVERVIEW.md §5). Instead it
@@ -706,9 +706,9 @@ class Widget extends TreeNode
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
     @rawSetWidth newWidth
     if @implementsDeferredLayout()
-      # raw setter: APPLY the re-fit now (synchronous doLayout), never SCHEDULE it
+      # raw setter: APPLY the re-fit now (synchronous _reLayout), never SCHEDULE it
       # (no invalidateLayout). See task #17 -- low-level mutators must not schedule layout.
-      @doLayout()
+      @_reLayout()
     @height()
 
   # note that using this one, the children
@@ -751,18 +751,18 @@ class Widget extends TreeNode
     unless world?
       return coreThunk()
     # A public geometry setter reached while a flush or a layout pass is already in
-    # progress is a flow-soundness violation: internal layout (doLayout / reLayout / ...)
+    # progress is a flow-soundness violation: internal layout (_reLayout / _reLayoutSelf / ...)
     # must use the raw/silent setters, never the public deferred API -- otherwise
     # recalculateLayouts would re-enter. THROW so the violation is found and fixed. The
     # static gate buildSystem/check-layering.js catches the name-recognized internal
     # methods at BUILD time; this is the runtime backstop for anything that slips through.
     if world._inLayoutMutation or world._recalculatingLayouts
-      throw new Error "Fizzygum: a public geometry setter was reached during a layout flush/pass -- internal layout code (doLayout / reLayout / ...) must use the raw/silent setters, not the public deferred API (see buildSystem/check-layering.js)."
+      throw new Error "Fizzygum: a public geometry setter was reached during a layout flush/pass -- internal layout code (_reLayout / _reLayoutSelf / ...) must use the raw/silent setters, not the public deferred API (see buildSystem/check-layering.js)."
     # ORPHAN guard: a widget that is attached to neither the world nor the hand has no
     # world-managed layout to flush -- and flushing one would try to lay it out via the
     # global recalculateLayouts queue while it is still HALF-BUILT inside its own
     # constructor (its already-added children point back at it through .parent), which
-    # crashes its doLayout. So we just record the change and return; it settles for real
+    # crashes its _reLayout. So we just record the change and return; it settles for real
     # when the finished widget is added to the world. (isOrphan() is false for the world
     # itself and for anything on the hand, so world.add / dragged-widget mutations still
     # flush. The pre-self-settling convention -- constructors use raw setters -- means no
@@ -1484,7 +1484,7 @@ class Widget extends TreeNode
   # Deferred twin of fullRawMoveWithin: make sure I end up completely within
   # aWdgt's bounds, but DON'T bake the move now -- compute the clamped position
   # and DEFER it via fullMoveTo, so it settles in the recalculateLayouts ->
-  # doLayout phase (before paint), together with any other pending change.
+  # _reLayout phase (before paint), together with any other pending change.
   # Pending-aware like fullRawMoveWithin (it clamps the not-yet-applied
   # @desired* geometry when present); but, being deferred, it leaves
   # @desiredExtent for the cycle to apply rather than baking it now.
@@ -1534,7 +1534,7 @@ class Widget extends TreeNode
 
       @silentRawSetExtent aPoint
       @changed()
-      @reLayout()
+      @_reLayoutSelf()
 
   # high-level geometry-change API,
   # you don't actually change the geometry right away,
@@ -1612,7 +1612,7 @@ class Widget extends TreeNode
       # @_adjustingContentsBounds guard as the seam's in-pass arm; closure duplicated rather than
       # shared to avoid adding a Widget method that would grow every inspected widget's member list).
       enqueueReFitDuringPass = (container) ->
-        return unless container?._reFitToContents?
+        return unless container?._reLayoutChildren?
         return if container._adjustingContentsBounds
         if container.layoutIsValid
           world.widgetsThatMaybeChangedLayout.push container
@@ -1633,8 +1633,8 @@ class Widget extends TreeNode
 
   # The single seam: an IMMEDIATE geometry mutator (silentRawSetExtent / fullRawMoveBy) notifies the
   # container that tracks my geometry to re-fit -- a NON-text-wrapping scroll panel (text-wrapping panels
-  # drive their own content re-wrap in _adjustContentsBounds, so they are excluded here) re-fits its
-  # contents+scrollbars, and a stack/window container re-fits its contents on its deferred doLayout. A freefloating
+  # drive their own content re-wrap in _positionAndResizeChildren, so they are excluded here) re-fits its
+  # contents+scrollbars, and a stack/window container re-fits its contents on its deferred _reLayout. A freefloating
   # child's invalidateLayout does NOT climb to its container, which is why the container is notified
   # explicitly here. The re-fit is now FULLY DEFERRED (the all-deferred aim) -- TWO states:
   #  - INSIDE recalculateLayouts: enqueue the container into the until-loop (the "deferred re-queue");
@@ -1654,14 +1654,14 @@ class Widget extends TreeNode
       # C2 "deferred re-queue") instead of re-fitting synchronously now -- so the relayout runs
       # in the loop, not inside this immediate mutator (the all-deferred aim). Enqueuing is legal
       # mid-pass: unlike invalidateLayout it does NOT throw and does NOT climb to ancestors (it
-      # enqueues only the directly-affected container). A container mid its OWN _adjustContentsBounds
+      # enqueues only the directly-affected container). A container mid its OWN _positionAndResizeChildren
       # is driving this child top-down and already accounts for it, so we SKIP it (enqueuing then
       # would re-fire on every pass and never converge -- the @_adjustingContentsBounds re-entrancy
       # guard's deferred-mode analogue). If the deferred re-fit later changes the container's own
       # geometry, ITS seam re-fires and enqueues ITS parent, so up-propagation is preserved -- just
       # routed lazily through the queue. (deferred-layout-c2-execution-plan.md -- the re-queue step.)
       enqueueReFitDuringPass = (container) ->
-        return unless container?._reFitToContents?
+        return unless container?._reLayoutChildren?
         return if container._adjustingContentsBounds
         if container.layoutIsValid
           world.widgetsThatMaybeChangedLayout.push container
@@ -2364,7 +2364,7 @@ class Widget extends TreeNode
   # the invocations.
 
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
-    @reLayout()
+    @_reLayoutSelf()
 
   # »>> this part is excluded from the fizzygum homepage build
   # _addCore (NOT add): these run from addOrRemoveAdders during a layout pass, so a
@@ -2390,7 +2390,7 @@ class Widget extends TreeNode
   # so a top-level caller (app / macro / event handler) is left with a consistent world
   # -- no manual settle/yield. Neither calls the other (public->public is banned, see
   # check-layering.js); both wrap _addCore. Internal callers that run INSIDE a layout
-  # pass (doLayout / reLayout) -- or that build their own innards during construction --
+  # pass (_reLayout / _reLayoutSelf) -- or that build their own innards during construction --
   # must call _addCore directly (it does not settle, so it neither re-enters the flush
   # guard nor triggers a redundant relayout). See docs/deferred-layout-refit-and-add-design.md (D3).
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
@@ -2466,7 +2466,7 @@ class Widget extends TreeNode
     return aWdgt
 
   sourceChanged: ->
-    @reLayout?()
+    @_reLayoutSelf?()
     @changed?()
 
   # this is done before the updating of the
@@ -2475,7 +2475,7 @@ class Widget extends TreeNode
   # layout (which depends on the children)
   # before painting themselves
   # e.g. the MenuWdgt
-  reLayout: ->
+  _reLayoutSelf: ->
 
   calculateAndUpdateExtent: ->
 
@@ -3379,17 +3379,17 @@ class Widget extends TreeNode
     @add theWidgetToBeAttached
     # I just attached the selected widget to myself; if I am a scroll panel my contents changed,
     # so re-fit my contents + scrollbars -- but DEFER it (the deferred-layout aim) rather than the
-    # old synchronous @_refitContentsAndScrollBars?(). @add already self-settled and this menu
-    # action runs OUTSIDE any layout pass, so I just invalidate myself: my doLayout is
-    # 'super; @_reFitToContents' and _refitContentsAndScrollBars IS @_reFitToContents, so the next
+    # old synchronous @_reLayoutChildrenAndScrollbars?(). @add already self-settled and this menu
+    # action runs OUTSIDE any layout pass, so I just invalidate myself: my _reLayout is
+    # 'super; @_reLayoutChildren' and _reLayoutChildrenAndScrollbars IS @_reLayoutChildren, so the next
     # doOneCycle re-fits me identically before paint -- the shipped gesture-seam pattern
     # (ScrollPanelWdgt.reactToDropOf). The existence check does the old ?()-soak's job (only
-    # ScrollPanelWdgt + subclasses incl. ListWdgt define _refitContentsAndScrollBars -> re-fit; any
+    # ScrollPanelWdgt + subclasses incl. ListWdgt define _reLayoutChildrenAndScrollbars -> re-fit; any
     # other widget: no-op -- replacing `if @ instanceof ScrollPanelWdgt`). The in-pass arm keeps
     # the synchronous re-fit for safety, though a menu action never runs mid-pass.
-    if @_refitContentsAndScrollBars?
+    if @_reLayoutChildrenAndScrollbars?
       if world?._recalculatingLayouts
-        @_refitContentsAndScrollBars()
+        @_reLayoutChildrenAndScrollbars()
       else
         @invalidateLayout()
 
@@ -3400,12 +3400,12 @@ class Widget extends TreeNode
     @add theWidgetToBeAttached, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     # DEFER my contents/scrollbar re-fit, exactly as newParentChoice above (the deferred-layout aim):
     # @add self-settled and this menu action runs outside any pass, so I invalidate myself and the
-    # next doOneCycle re-fits me identically before paint (doLayout's 'super; @_reFitToContents' ==
-    # _refitContentsAndScrollBars). The existence check is the old ?()-soak's job (no-op off a scroll
+    # next doOneCycle re-fits me identically before paint (_reLayout's 'super; @_reLayoutChildren' ==
+    # _reLayoutChildrenAndScrollbars). The existence check is the old ?()-soak's job (no-op off a scroll
     # panel); the in-pass arm keeps the synchronous re-fit for safety.
-    if @_refitContentsAndScrollBars?
+    if @_reLayoutChildrenAndScrollbars?
       if world?._recalculatingLayouts
-        @_refitContentsAndScrollBars()
+        @_reLayoutChildrenAndScrollbars()
       else
         @invalidateLayout()
   # this part is excluded from the fizzygum homepage build <<«
@@ -3697,7 +3697,7 @@ class Widget extends TreeNode
     JSCode = compileFGCode codeSource, true
     #console.log JSCode
     result = eval JSCode
-    @reLayout()
+    @_reLayoutSelf()
     @changed()
   
   
@@ -3985,7 +3985,7 @@ class Widget extends TreeNode
   # because it means that its current size is indicative
   # (particularly the children's sizes and position)
   implementsDeferredLayout: ->
-    @doLayout != Widget::doLayout
+    @_reLayout != Widget::_reLayout
 
   __calculateNewBoundsWhenDoingLayout: (newBoundsForThisLayout) ->
     if !newBoundsForThisLayout?
@@ -4015,7 +4015,7 @@ class Widget extends TreeNode
   markLayoutAsFixed: ->
     @layoutIsValid = true
 
-  doLayout: (newBoundsForThisLayout) ->
+  _reLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
@@ -4111,7 +4111,7 @@ class Widget extends TreeNode
             childLeft + C.getMinDim().width() * reductionFraction,
             newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
           childLeft += childBounds.width()
-          C.doLayout childBounds
+          C._reLayout childBounds
 
       # the min is within the bounds but the desired is just
       # equal or larger than the bounds.
@@ -4137,7 +4137,7 @@ class Widget extends TreeNode
             childLeft + minWidth + (desWidth - minWidth) * fraction,
             newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
           childLeft += childBounds.width()
-          C.doLayout childBounds
+          C._reLayout childBounds
 
       # min and desired are strictly less than the bounds
       # i.e. we have more space than needed or desired
@@ -4177,7 +4177,7 @@ class Widget extends TreeNode
           childLeft += childBounds.width()
           if childLeft > newBoundsForThisLayout.right() + 5
             debugger
-          C.doLayout childBounds
+          C._reLayout childBounds
     # this part is excluded from the fizzygum homepage build <<«
 
     @markLayoutAsFixed()
@@ -4186,7 +4186,7 @@ class Widget extends TreeNode
     # of all children that have position/size depending on mine
     allCornerLayoutedChildren = @children.filter (m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
     for w in allCornerLayoutedChildren
-      w.doLayout()
+      w._reLayout()
 
 
   # »>> this part is excluded from the fizzygum homepage build

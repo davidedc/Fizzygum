@@ -49,7 +49,7 @@ class VideoControlsPaneWdgt extends RectangleWdgt
   # and if it's nil then you should use the current bounds
   #
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023 definition:
-  # we currently have most of the doLayout methods
+  # we currently have most of the _reLayout methods
   # invoking super at the end of the method, and a few
   # at the beginning.
   # This is because when creating the Video widget I found out that
@@ -61,7 +61,7 @@ class VideoControlsPaneWdgt extends RectangleWdgt
   # BUT IN FACT, studying the TODO id SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT 
   # matter a bit more, I found out that
   # super is a bit of a smell, because that's the exact problem:
-  # the implementors of doLayout now have to understand some
+  # the implementors of _reLayout now have to understand some
   # deep aspects that they shouldn't have to - see
   # https://martinfowler.com/bliki/CallSuper.html
   # What should really happen is that there should be
@@ -69,12 +69,12 @@ class VideoControlsPaneWdgt extends RectangleWdgt
   # (say "fixLayoutOfFreefloatingChildren") that are
   # attached with free floating layout, and everything
   # else should be done automatically by the
-  # doLayout implementation in Widget.
+  # _reLayout implementation in Widget.
   # So now implementing layouts should be a lot clearer
   # by using that hook rather than understanding the
   # super call (what it doesn, why is it called where it is).
 
-  doLayout: (newBoundsForThisLayout) ->
+  _reLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
     if @_handleCollapsedStateShouldWeReturn() then return
@@ -106,19 +106,19 @@ class VideoControlsPaneWdgt extends RectangleWdgt
     playPauseToggleBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() + @externalPadding
     playPauseToggleBounds = playPauseToggleBounds.setBoundsWidthAndHeight new Point 44, 23 + 7 + 14
     #console.log "playPauseToggleBounds: " + playPauseToggleBounds
-    @playPauseToggle.doLayout playPauseToggleBounds
+    @playPauseToggle._reLayout playPauseToggleBounds
 
     videoScrubberBounds = new Rectangle new Point newBoundsForThisLayout.left() +  2 * (44 + @internalPadding), newBoundsForThisLayout.top() + @externalPadding
     videoScrubberBounds = videoScrubberBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 3 * (44 + @internalPadding), 44
-    @videoScrubber.doLayout videoScrubberBounds
+    @videoScrubber._reLayout videoScrubberBounds
 
     playHeadTimeLabelBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding + 44 + 2 * @internalPadding, newBoundsForThisLayout.top() + @externalPadding + 2 + 5 + 7
     playHeadTimeLabelBounds = playHeadTimeLabelBounds.setBoundsWidthAndHeight 44 , 18
-    @playHeadTimeLabel.doLayout playHeadTimeLabelBounds
+    @playHeadTimeLabel._reLayout playHeadTimeLabelBounds
 
     durationTimeLabelBounds = new Rectangle new Point newBoundsForThisLayout.right() - 44 + 2 * @internalPadding, newBoundsForThisLayout.top() + @externalPadding + 2 + 5 + 7
     durationTimeLabelBounds = durationTimeLabelBounds.setBoundsWidthAndHeight 44 , 18
-    @durationTimeLabel.doLayout durationTimeLabelBounds
+    @durationTimeLabel._reLayout durationTimeLabelBounds
 
     world.maybeEnableTrackChanges()
     @fullChanged()

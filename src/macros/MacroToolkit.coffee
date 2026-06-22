@@ -189,7 +189,7 @@ class MacroToolkit
   # Install the linked macro code (pump header + linked verbs) with `@` = this
   # MacroToolkit instance, so the generator and the verbs it calls resolve their
   # @helpers against this collaborator. Mirrors Widget.evaluateString's
-  # compile-then-eval, minus the reLayout/changed tail (installing a macro paints
+  # compile-then-eval, minus the _reLayoutSelf/changed tail (installing a macro paints
   # nothing, and this collaborator has no widget methods).
   evaluateString: (codeSource) ->
     eval compileFGCode codeSource, true
@@ -1001,7 +1001,7 @@ class MacroToolkit
         text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
         text.softWrap = true
         text.silentRawSetWidth 185
-        text.reLayout()
+        text._reLayoutSelf()
         panel.add text
         text.fullRawMoveTo new Point (topLeftPoint.x + 12), (topLeftPoint.y + 12)
         yield "waitNoInputsOngoing"

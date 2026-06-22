@@ -95,7 +95,7 @@ class ListWdgt extends ScrollPanelWdgt
 
     world.maybeEnableTrackChanges()
     @listContents.silentFullRawMoveTo @contents.position()
-    @listContents.reLayout()
+    @listContents._reLayoutSelf()
     
     @add @listContents
 
@@ -103,9 +103,9 @@ class ListWdgt extends ScrollPanelWdgt
   # panel" notification (the old amIPanelOfScrollPanelWdgt returned false for
   # lists): opt OUT so a contained panel re-lays out itself, as before. This
   # opt-out is NARROW -- a list still re-fits on its own drops/grabs/attaches
-  # (reactToDropOf/reactToGrabOf and the inherited _refitContentsAndScrollBars),
+  # (reactToDropOf/reactToGrabOf and the inherited _reLayoutChildrenAndScrollbars),
   # which is exactly why those are kept separate from this notification.
-  reLayOutAfterContainedPanelChange: ->
+  _reLayOutAfterContainedPanelChange: ->
     nil
 
   select: (item, trigger) ->

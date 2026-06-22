@@ -69,7 +69,7 @@ class ButtonWdgt extends Widget
 
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
-  doLayout: (newBoundsForThisLayout) ->
+  _reLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
@@ -81,7 +81,7 @@ class ButtonWdgt extends Widget
     @rawSetBounds newBoundsForThisLayout
 
     # TODO can we use the more standard way i.e.
-    # calculate the bounds and pass them as args in the doLayout method
+    # calculate the bounds and pass them as args in the _reLayout method
     # of the faceWidget?
 
     if @faceWidget?.parent == @

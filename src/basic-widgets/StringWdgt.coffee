@@ -97,7 +97,7 @@ class StringWdgt extends Widget
   # reflowText short-circuits fitToExtent for this mode and renders at
   # @originallySetFontSize — without that, SCALEUP's searchLargestFittingFont would
   # blow the font up, since the render leaks force every fit-measure to the set
-  # size). The box-to-text SIZING lives in TextWdgt::reLayout — a LAYOUT pass, NOT
+  # size). The box-to-text SIZING lives in TextWdgt::_reLayoutSelf — a LAYOUT pass, NOT
   # the paint path (createRefreshOrGetBackBuffer must never change @extent()):
   #   - softWrap ON  → HEIGHT_ADJUSTS_TO_WIDTH: keep the width (the container feeds
   #     it), wrap the text to it, the height follows the line count.
@@ -113,7 +113,7 @@ class StringWdgt extends Widget
   #     text in BOTH dims" case is the chrome-label path,
   #     StringWdgt#sizeToTextAndDisableFitting (flagged by autoSizeBoxToText).
   #
-  # The mode is driven off reflowText()/reLayout(), NOT a menu and NOT a
+  # The mode is driven off reflowText()/_reLayoutSelf(), NOT a menu and NOT a
   # type-check: the window / panel / scroll layout sites opt their text content in
   # by setting `fittingSpec` (they RESPECT the mode rather than impose it, so the
   # empty-window placeholder text — a FIT_TEXT_TO_BOX TextWdgt — is left alone),
@@ -136,7 +136,7 @@ class StringWdgt extends Widget
   # what act. A contained TextWdgt opts into FIT_BOX_TO_TEXT (set by the window /
   # panel / scroll layout sites, and by SimplePlainTextWdgt's ctor) to re-wrap +
   # auto-height instead. The sub-axes are honoured by the FIT_BOX_TO_TEXT sizing
-  # in TextWdgt::reLayout and are part of createBufferCacheKey so a mode/sub-axis
+  # in TextWdgt::_reLayoutSelf and are part of createBufferCacheKey so a mode/sub-axis
   # change re-renders the cached back-buffer.
   fittingSpec: FittingSpecText.FIT_TEXT_TO_BOX
   fittingSpecBoxTightOrLoose: FittingSpecTextBoxFittingTextTightOrLoose.TIGHT
@@ -1138,7 +1138,7 @@ class StringWdgt extends Widget
   reflowText: ->
     @synchroniseTextAndActualText()
     # FIT_BOX_TO_TEXT sizes the BOX to the text at the SET font size (see
-    # TextWdgt::reLayout), so the font must NOT be scaled — render at
+    # TextWdgt::_reLayoutSelf), so the font must NOT be scaled — render at
     # @originallySetFontSize. We must skip fitToExtent here because its
     # scale-up/scale-down search is broken FOR this mode: the FIT_BOX_TO_TEXT
     # render leaks force every fit-measurement to @originallySetFontSize, so

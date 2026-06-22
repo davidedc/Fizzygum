@@ -436,7 +436,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     @pencilToolButton.toggle()
     @invalidateLayout()
 
-  reLayout: ->
+  _reLayoutSelf: ->
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -468,22 +468,22 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
       if @pencilToolButton.parent == @toolsPanel
         buttonBounds = new Rectangle new Point @toolsPanel.left() + @internalPadding, labelBottom + @internalPadding
         buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
-        @pencilToolButton.doLayout buttonBounds
+        @pencilToolButton._reLayout buttonBounds
 
       if @brushToolButton.parent == @toolsPanel
         buttonBounds = new Rectangle new Point @toolsPanel.left() + @internalPadding, @pencilToolButton.bottom() + @internalPadding
         buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
-        @brushToolButton.doLayout buttonBounds
+        @brushToolButton._reLayout buttonBounds
 
       if @toothpasteToolButton.parent == @toolsPanel
         buttonBounds = new Rectangle new Point @toolsPanel.left() + @internalPadding, @brushToolButton.bottom() + @internalPadding
         buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
-        @toothpasteToolButton.doLayout buttonBounds
+        @toothpasteToolButton._reLayout buttonBounds
 
       if @eraserToolButton.parent == @toolsPanel
         buttonBounds = new Rectangle new Point @toolsPanel.left() + @internalPadding, @toothpasteToolButton.bottom() + @internalPadding
         buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
-        @eraserToolButton.doLayout buttonBounds
+        @eraserToolButton._reLayout buttonBounds
 
     # stretchableWidgetContainer --------------------------
     if @toolsPanel? and @toolsPanel.parent == @

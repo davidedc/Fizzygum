@@ -391,7 +391,7 @@ class TextWdgt extends StringWdgt
   # The text is always broken at @originallySetFontSize (the box grows; the font
   # is never scaled — see the render-path FIT_BOX_TO_TEXT branches above).
   # FIT_TEXT_TO_BOX (the default) keeps its given box → this is a no-op for it.
-  reLayout: ->
+  _reLayoutSelf: ->
     super()
 
     if @fittingSpec != FittingSpecText.FIT_BOX_TO_TEXT then return
@@ -425,11 +425,11 @@ class TextWdgt extends StringWdgt
   # TextWdgt.
   rawSetExtent: (aPoint) ->
     super
-    if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT then @reLayout()
+    if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT then @_reLayoutSelf()
 
   # ── Edit triggers for CONTAINED (FIT_BOX_TO_TEXT) text ──────────────────────
   # When a FIT_BOX_TO_TEXT TextWdgt's text content / font / style changes, the box
-  # must re-flow to the new measure (reLayout) AND the surrounding layout must
+  # must re-flow to the new measure (_reLayoutSelf) AND the surrounding layout must
   # follow (_refreshScrollPanelWdgtOrVerticalStackIfIamInIt). Gated by the mode, so
   # ANY contained TextWdgt (not just a SimplePlainTextWdgt) re-flows on its OWN
   # edit — a bare FIT_BOX_TO_TEXT TextWdgt is a drop-in for SimplePlainTextWdgt
@@ -442,7 +442,7 @@ class TextWdgt extends StringWdgt
   # in StringWdgt).
   reLayoutAndRefreshContainerIfContainedText: ->
     if @fittingSpec != FittingSpecText.FIT_BOX_TO_TEXT then return
-    @reLayout()
+    @_reLayoutSelf()
     @_refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   setText: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall) ->
@@ -497,7 +497,7 @@ class TextWdgt extends StringWdgt
     contentHeight = @reflowText()
 
     # FIT_BOX_TO_TEXT paints exactly lineCount × fontHeight tall at the SET font
-    # size (the box was already grown to this by reLayout; here we only recompute
+    # size (the box was already grown to this by _reLayoutSelf; here we only recompute
     # the paint height, we do NOT resize — see the "no extent changes" note above).
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
       contentHeight = @wrappedLines.length *  Math.ceil @fontHeight @originallySetFontSize

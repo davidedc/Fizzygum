@@ -57,19 +57,19 @@ class PromptWdgt extends MenuWdgt
     # the property concurrently
     @addMenuItem "Close", true, @, "close"
 
-    @reLayout()
+    @_reLayoutSelf()
 
   reactToSliderAction: (num) ->
     @tempPromptEntryField.changed()
     # the field's inner text is a StringWdgt. Use setText
     # -- which re-runs synchroniseTextAndActualText so textPossiblyCroppedToFit tracks the new
-    # value -- instead of poking .text + reLayout (StringWdgt has no reLayout that refits).
+    # value -- instead of poking .text + _reLayoutSelf (StringWdgt has no _reLayoutSelf that refits).
     # Otherwise edit() below sees a stale cropped text and defers to the "edit:" prompt.
     @tempPromptEntryField.text.setText Math.round(num).toString()
     @tempPromptEntryField.text.changed()
     @tempPromptEntryField.text.edit()
 
-  reLayout: ->
+  _reLayoutSelf: ->
     super()
     @buildSubwidgets()
 

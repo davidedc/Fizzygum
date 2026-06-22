@@ -53,13 +53,13 @@ class SliderWdgt extends CircleBoxWdgt
       @layoutSpecDetails = new VerticalStackLayoutSpec 0
 
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
-    @reLayout()
+    @_reLayoutSelf()
     
     # might happen in phase of deserialization that
     # the button reference here is still a string
     # so skip in that case
     if @button? and @button instanceof SliderButtonWdgt
-      @button.reLayout()
+      @button._reLayoutSelf()
       
     @changed()
 
@@ -71,7 +71,7 @@ class SliderWdgt extends CircleBoxWdgt
       # my backing store had just been updated
       # in the call of super, now
       # it's the time of the button
-      @button.reLayout()
+      @button._reLayoutSelf()
     
   initialiseDefaultWindowContentLayoutSpec: ->
     @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.THIS_ONE_I_HAVE_NOW , PreferredSize.THIS_ONE_I_HAVE_NOW, 0
@@ -103,8 +103,8 @@ class SliderWdgt extends CircleBoxWdgt
   # (i.e. changed by something else than the user moving the slider)
   updateHandlePosition: (newvalue) ->
     @value = Number(newvalue)
-    @reLayout()    
-    @button.reLayout()
+    @_reLayoutSelf()    
+    @button._reLayoutSelf()
     @changed()
 
   # TODO this should call updateHandlePosition above
@@ -114,9 +114,9 @@ class SliderWdgt extends CircleBoxWdgt
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     @value = Number(newvalue)
     @updateTarget()
-    @reLayout()
+    @_reLayoutSelf()
     
-    @button.reLayout()
+    @button._reLayoutSelf()
     
     @changed()
     
@@ -223,9 +223,9 @@ class SliderWdgt extends CircleBoxWdgt
     if stop? then @stop = stop
     if value? then @value = value
     if size? then @size = size
-    @reLayout()
+    @_reLayoutSelf()
     
-    @button.reLayout()
+    @button._reLayoutSelf()
     
     # if the parent is the same as the target
     # then issue a fullChanged on the parent.
@@ -251,9 +251,9 @@ class SliderWdgt extends CircleBoxWdgt
       @start = Math.min Math.max(newStart, 0), @stop - @size  unless isNaN newStart
     @value = Math.max @value, @start
     @updateTarget()
-    @reLayout()
+    @_reLayoutSelf()
     
-    @button.reLayout()
+    @button._reLayoutSelf()
     
     @changed()
   
@@ -271,9 +271,9 @@ class SliderWdgt extends CircleBoxWdgt
       @stop = Math.max newStop, @start + @size  unless isNaN newStop
     @value = Math.min @value, @stop
     @updateTarget()
-    @reLayout()
+    @_reLayoutSelf()
     
-    @button.reLayout()
+    @button._reLayoutSelf()
     
     @changed()
   
@@ -307,9 +307,9 @@ class SliderWdgt extends CircleBoxWdgt
     # button keeps the same value, so there
     # is no need to update the target.
     #@updateTarget()
-    @reLayout()
+    @_reLayoutSelf()
     
-    @button.reLayout()
+    @button._reLayoutSelf()
     
     @changed()
   

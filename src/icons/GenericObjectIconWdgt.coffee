@@ -32,12 +32,12 @@ class GenericObjectIconWdgt extends Widget
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
     @rawResizeToWithoutSpacing()
     @rawSetExtent new Point newWidth, newWidth
-    @doLayout()
+    @_reLayout()
     @height()  # Path B: hand the resulting height back. See Widget.rawSetWidthSizeHeightAccordingly.
 
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
-  doLayout: (newBoundsForThisLayout) ->
+  _reLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout

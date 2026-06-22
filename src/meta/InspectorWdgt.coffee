@@ -111,7 +111,7 @@ class InspectorWdgt extends Widget
     super()
 
     # A naked (chrome-less) inspector must establish its OWN usable extent.
-    # Without a WindowWdgt to size it, doLayout would divide the Widget-default
+    # Without a WindowWdgt to size it, _reLayout would divide the Widget-default
     # ~50x40 across three panes and collapse them. The windowed path
     # (Widget::spawnInspector) overrides this via the window's setExtent, so
     # setting it here is windowed-pixel-neutral.
@@ -441,13 +441,13 @@ class InspectorWdgt extends Widget
   
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
-  doLayout: (newBoundsForThisLayout) ->
+  _reLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
     # Establish THIS layout pass's final bounds on OURSELVES first, before positioning the
-    # children below. The base Widget::doLayout (our `super` at the end) is what normally
+    # children below. The base Widget::_reLayout (our `super` at the end) is what normally
     # applies newBoundsForThisLayout to @bounds — but we lay the children out manually from
     # @left()/@width()/@bottom() BEFORE calling super, so without this they'd be sized to the
     # PREVIOUS pass's extent and lag the inspector by one layout. During a resize that lag
@@ -473,7 +473,7 @@ class InspectorWdgt extends Widget
 
     headerBounds = new Rectangle new Point(Math.round(@left() + @externalPadding), Math.round(@top() + @externalPadding))
     headerBounds = headerBounds.setBoundsWidthAndHeight @width() - 2 * @externalPadding, 15
-    @hierarchyHeaderString.doLayout headerBounds
+    @hierarchyHeaderString._reLayout headerBounds
 
 
     # classes diagram
@@ -486,7 +486,7 @@ class InspectorWdgt extends Widget
       if eachClassButton.parent == @
         buttonBounds = new Rectangle new Point(Math.round(@left() + @externalPadding + @internalPadding + justAcounter), Math.round(@hierarchyHeaderString.bottom() + 2*@internalPadding + justAcounter))
         buttonBounds = buttonBounds.setBoundsWidthAndHeight 120 + @classNamesTextPadding * 2, 15 + @classNamesTextPadding * 2
-        eachClassButton.doLayout buttonBounds
+        eachClassButton._reLayout buttonBounds
 
         # the top class doesn't get an arrow pointing upwards
         if anotherCount > 0
@@ -505,7 +505,7 @@ class InspectorWdgt extends Widget
 
     headerBounds = new Rectangle new Point @left() + @externalPadding , @hierarchyBackgroundPanel.bottom()+ @internalPadding
     headerBounds = headerBounds.setBoundsWidthAndHeight @width() - 2 * @externalPadding , 15
-    @propertyHeaderString.doLayout headerBounds
+    @propertyHeaderString._reLayout headerBounds
 
     listWidth = Math.floor((@width() - 2 * @externalPadding - @internalPadding ) / 3)
     detailWidth = 2*listWidth
@@ -527,19 +527,19 @@ class InspectorWdgt extends Widget
 
     buttonBounds = new Rectangle new Point @left() + @externalPadding, @bottom() - 15 - @externalPadding
     buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
-    @addPropertyButton.doLayout buttonBounds
+    @addPropertyButton._reLayout buttonBounds
 
     buttonBounds = new Rectangle new Point @addPropertyButton.right() + @internalPadding, @bottom() - 15 - @externalPadding
     buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
-    @renamePropertyButton.doLayout buttonBounds
+    @renamePropertyButton._reLayout buttonBounds
 
     buttonBounds = new Rectangle new Point @renamePropertyButton.right() + @internalPadding, @bottom() - 15 - @externalPadding
     buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
-    @removePropertyButton.doLayout buttonBounds
+    @removePropertyButton._reLayout buttonBounds
 
     buttonBounds = new Rectangle new Point Math.round(@right() - @width()/4 - @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize), @bottom() - 15 - @externalPadding
     buttonBounds = buttonBounds.setBoundsWidthAndHeight Math.round(@width()/4), 15
-    @saveButton.doLayout buttonBounds
+    @saveButton._reLayout buttonBounds
 
     world.maybeEnableTrackChanges()
     @fullChanged()
@@ -551,23 +551,23 @@ class InspectorWdgt extends Widget
       world.alignIDsOfNextWidgetsInSystemTests()
 
   layoutOwnPropsOnlyToggle: (height, listWidth, detailWidth) ->
-    # layout-apply-sanctioned: apply helper, runs under doLayout (settle point)
+    # layout-apply-sanctioned: apply helper, runs under _reLayout (settle point)
 
     toggleBounds = new Rectangle new Point @left()+@externalPadding , height
     toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (listWidth-@internalPadding)/ 2,15).round()
-    @showMethodsToggle.doLayout toggleBounds
+    @showMethodsToggle._reLayout toggleBounds
 
     toggleBounds = new Rectangle new Point @showMethodsToggle.right() + @internalPadding, height
     toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (listWidth-@internalPadding)/ 2,15).round()
-    @showFieldsToggle.doLayout toggleBounds
+    @showFieldsToggle._reLayout toggleBounds
  
     toggleBounds = new Rectangle new Point @showFieldsToggle.right() + @internalPadding, height
     toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (detailWidth-@internalPadding)/ 2,15).round()
-    @showInheritedToggle.doLayout toggleBounds
+    @showInheritedToggle._reLayout toggleBounds
 
     toggleBounds = new Rectangle new Point @showInheritedToggle.right() + @internalPadding, height
     toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (detailWidth-@internalPadding)/ 2,15).round()
-    @showOwnPropsOnlyToggle.doLayout toggleBounds
+    @showOwnPropsOnlyToggle._reLayout toggleBounds
 
 
   layoutLastLabelInHierarchy: (posx, posy) ->

@@ -33,11 +33,11 @@ class SaveShortcutPromptWdgt extends MenuWdgt
     @addMenuItem "Cancel", true, @, "close"
     @addMenuItem "Ok", true, @, "createReferenceAndClose"
 
-    @reLayout()
+    @_reLayoutSelf()
     @rawSetWidth 150
     @tempPromptEntryField.text.edit()
 
-  reLayout: ->
+  _reLayoutSelf: ->
     super()
     @buildSubwidgets()
 

@@ -107,7 +107,7 @@ class ErrorsLogViewerWdgt extends Widget
 
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
-  doLayout: (newBoundsForThisLayout) ->
+  _reLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
@@ -146,17 +146,17 @@ class ErrorsLogViewerWdgt extends Widget
     if @clearButton.parent == @
       buttonBounds = new Rectangle new Point @left() + @externalPadding + 0*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-      @clearButton.doLayout buttonBounds
+      @clearButton._reLayout buttonBounds
 
     if @pauseToggle.parent == @
       buttonBounds = new Rectangle new Point @left() + @externalPadding + 1*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-      @pauseToggle.doLayout buttonBounds
+      @pauseToggle._reLayout buttonBounds
 
     if @okButton.parent == @
       buttonBounds = new Rectangle new Point @left() + @externalPadding + 2*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-      @okButton.doLayout buttonBounds
+      @okButton._reLayout buttonBounds
 
     # ----------------------------------------------
 

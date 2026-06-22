@@ -50,7 +50,7 @@ class StringFieldWdgt extends PanelWdgt
     @rawSetWidth Math.max @minTextWidth, text.width()
     #console.log "string field widget extent: " + @extent()
 
-  reLayout: ->
+  _reLayoutSelf: ->
     super()
     txt = (if @text then @getValue() else @defaultContents)
     if !@text?
@@ -59,8 +59,8 @@ class StringFieldWdgt extends PanelWdgt
       @text.isEditable = @isEditable
       @text.enableSelecting()
       @text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
-      # _addCore (NOT add): reLayout runs inside a layout pass -- and via
-      # iHaveBeenAddedTo -> reLayout inside another mutation's settle -- so a
+      # _addCore (NOT add): _reLayoutSelf runs inside a layout pass -- and via
+      # iHaveBeenAddedTo -> _reLayoutSelf inside another mutation's settle -- so a
       # self-settle here would re-enter the flush guard and throw.
       @_addCore @text
     @text.fullRawMoveTo @position().add new Point 5,2

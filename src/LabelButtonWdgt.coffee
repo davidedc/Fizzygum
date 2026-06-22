@@ -62,7 +62,7 @@ class LabelButtonWdgt extends ButtonWdgt
     @color = WorldWdgt.preferencesAndSettings.menuBackgroundColor
 
     if @labelString?
-      @reLayout()
+      @_reLayoutSelf()
 
   # the default label: a self-sized single-line StringWdgt that does NOT resize
   # the button's box. Subclasses that need the box to hug the label (e.g.
@@ -78,14 +78,14 @@ class LabelButtonWdgt extends ButtonWdgt
       false, # isNumeric
       @labelColor
     )
-    # _addCore (NOT add): createLabel is driven by reLayout (a layout pass), so a
+    # _addCore (NOT add): createLabel is driven by _reLayoutSelf (a layout pass), so a
     # self-settle here would re-enter the flush guard and throw.
     @_addCore @label
     # the modern family does not self-size; make the label hug its text so
-    # reLayout's centring math (which reads @label.extent()) works.
+    # _reLayoutSelf's centring math (which reads @label.extent()) works.
     @label.sizeToTextAndDisableFitting()
 
-  reLayout: ->
+  _reLayoutSelf: ->
     if not @label?
       @createLabel()
     if @centered
@@ -93,26 +93,26 @@ class LabelButtonWdgt extends ButtonWdgt
 
   # a label button has no faceWidget; use the base Widget layout rather than
   # ButtonWdgt's faceWidget-centric override.
-  doLayout: (newBoundsForThisLayout) ->
-    Widget::doLayout.call @, newBoundsForThisLayout
+  _reLayout: (newBoundsForThisLayout) ->
+    Widget::_reLayout.call @, newBoundsForThisLayout
 
   # »>> this part is excluded from the fizzygum homepage build
   setLabel: (@labelString) ->
     # just recreate the label from scratch
     if @label?
       @label = @label.fullDestroy()
-    @reLayout()
+    @_reLayoutSelf()
   # this part is excluded from the fizzygum homepage build <<«
 
   alignCenter: ->
     if !@centered
       @centered = true
-      @reLayout()
+      @_reLayoutSelf()
 
   alignLeft: ->
     if @centered
       @centered = false
-      @reLayout()
+      @_reLayoutSelf()
 
   # This method only paints this very widget's "image"; it doesn't descend the
   # children recursively (that's fullPaintIntoAreaOrBlitFromBackBuffer's job).

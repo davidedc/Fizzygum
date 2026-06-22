@@ -121,7 +121,7 @@ class ScriptWdgt extends Widget
 
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
-  doLayout: (newBoundsForThisLayout) ->
+  _reLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
     if @_handleCollapsedStateShouldWeReturn() then return
@@ -153,12 +153,12 @@ class ScriptWdgt extends Widget
     if @runItButton.parent == @
       buttonBounds = new Rectangle new Point @left() + @externalPadding, textBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonsWidth, 15
-      @runItButton.doLayout buttonBounds
+      @runItButton._reLayout buttonBounds
 
     if @saveButton.parent == @
       buttonBounds = new Rectangle new Point buttonBounds.right() + @internalPadding, textBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonsWidth, 15
-      @saveButton.doLayout buttonBounds
+      @saveButton._reLayout buttonBounds
 
 
     # ----------------------------------------------

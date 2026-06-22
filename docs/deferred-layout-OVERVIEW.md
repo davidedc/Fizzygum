@@ -11,18 +11,25 @@ dpr1+dpr2+WebKit, smoke-apps 12/12, lint A–E 0, 20-min torture soak clean). Th
 
 > **This doc is canonical — it supersedes every other deferred-layout doc on any conflict.** Line numbers below are
 > **approximate (as of `55c80ea6`) — the METHOD NAME is authoritative; `grep` it.** (Each shipped edit shifts lines.)
+>
+> **2026-06-22 — the layout-method family was renamed to a coherent private `_reLayout*` scheme** (this doc has been
+> updated to the new names). Older git revisions / sibling memories use the pre-rename names; translate via:
+> `doLayout`→`_reLayout`, `reLayout`→`_reLayoutSelf`, `_reFitToContents`→`_reLayoutChildren`,
+> `_adjustContentsBounds`→`_positionAndResizeChildren`, `_adjustScrollBars`→`_reLayoutScrollbars`,
+> `_refitContentsAndScrollBars`→`_reLayoutChildrenAndScrollbars`, `desktopReLayout`→`_reLayoutDesktop`,
+> `reLayOutAfterContainedPanelChange`→`_reLayOutAfterContainedPanelChange`.
 
 ---
 
 ## 1. The aim
 
-**Turn EVERY synchronous re-layout into a DEFERRED one.** A relayout (a `doLayout`/`reLayout`/container `_reFitToContents`)
+**Turn EVERY synchronous re-layout into a DEFERRED one.** A relayout (a `_reLayout`/`_reLayoutSelf`/container `_reLayoutChildren`)
 must run at exactly one of two SETTLE POINTS, never mid-handler and never from a low-level mutator:
 
 - **(a) the end of a geometry-changing PUBLIC method** — the self-settling flush `Widget.mutateGeometryThenSettle`
   (records intent, then runs `recalculateLayouts`); *modulo batching*, where a batch settles once via
   `settleLayoutsOnceAfter`; or
-- **(b) the end of `doOneCycle`** — the `recalculateLayouts → doLayout` pass that runs before paint.
+- **(b) the end of `doOneCycle`** — the `recalculateLayouts → _reLayout` pass that runs before paint.
 
 Low-level mutators (`raw*`/`silent*`/`fullRaw*`) must only MUTATE geometry, never schedule/run layout.
 
@@ -34,7 +41,7 @@ Low-level mutators (`raw*`/`silent*`/`fullRaw*`) must only MUTATE geometry, neve
   and then run `world.recalculateLayouts()` once before returning. So a top-level caller always sees a consistent
   world; deferral is **within-frame** (no cross-frame lag).
 - **The until-loop is the single settle engine.** `WorldWdgt._recalculateLayoutsCore` (`src/WorldWdgt.coffee`
-  ~:876, the loop ~:885) drains `world.widgetsThatMaybeChangedLayout`, calling `doLayout()` on the top-most invalid
+  ~:876, the loop ~:885) drains `world.widgetsThatMaybeChangedLayout`, calling `_reLayout()` on the top-most invalid
   widget of each broken chain, until the queue is empty. `WorldWdgt.doOneCycle` runs it every frame before paint.
 - **`invalidateLayout` is how you enqueue** (`Widget.coffee` ~:3791): `if @layoutIsValid then push @ onto
   world.widgetsThatMaybeChangedLayout; @layoutIsValid = false; climb to @parent (unless ATTACHEDAS_FREEFLOATING)`.
@@ -59,17 +66,17 @@ the container **synchronously**; they now **DEFER** via the re-queue:
 ```coffee
 # In a layout pass, schedule the container into the until-loop instead of re-fitting it NOW.
 # Legal mid-pass: no throw (unlike invalidateLayout), no climb. Skip a container that is mid its
-# own _adjustContentsBounds (it is driving this child top-down and already accounts for it -- enqueuing
+# own _positionAndResizeChildren (it is driving this child top-down and already accounts for it -- enqueuing
 # then would re-fire every pass and never converge).
 enqueueReFitDuringPass = (container) ->
-  return unless container?._reFitToContents?
+  return unless container?._reLayoutChildren?
   return if container._adjustingContentsBounds
   if container.layoutIsValid
     world.widgetsThatMaybeChangedLayout.push container
   container.layoutIsValid = false
 ```
 
-Because every container's `doLayout` is `super; @_reFitToContents()` (ScrollPanelWdgt ~:276, SimpleVerticalStackPanelWdgt ~:70,
+Because every container's `_reLayout` is `super; @_reLayoutChildren()` (ScrollPanelWdgt ~:276, SimpleVerticalStackPanelWdgt ~:70,
 WindowWdgt inherits), **enqueuing a container makes the until-loop re-fit it on the same cycle, identically.**
 
 The seams + their conversion state (all in `Widget.coffee` unless noted):
@@ -88,7 +95,7 @@ re-fits it on the same cycle, so no synchronous middle arm is needed. (Historica
 
 **Path-B de-read-back** is the companion technique for constraint handlers: instead of mutate-then-read-geometry-back,
 the mutator HANDS its result forward. `rawSetWidthSizeHeightAccordingly` RETURNS its resulting height (base
-`Widget.coffee:706` + 8 overrides); `WindowWdgt._adjustContentsBounds` uses the return instead of reading
+`Widget.coffee:706` + 8 overrides); `WindowWdgt._positionAndResizeChildren` uses the return instead of reading
 `@contents.height()` back. (`SliderWdgt.updateValue` was the pilot.)
 
 ## 4. What's shipped
@@ -97,9 +104,9 @@ the mutator HANDS its result forward. `rawSetWidthSizeHeightAccordingly` RETURNS
 | What | commit |
 |---|---|
 | Self-settling public geometry API (`mutateGeometryThenSettle`) | `817c2ce4` |
-| Re-fit chokepoint `_reFitToContents` + lint A/B/C/D | `ad2000cc` |
+| Re-fit chokepoint `_reLayoutChildren` + lint A/B/C/D | `ad2000cc` |
 | `add`/`addRaw` public & self-settling over private `_addCore` | `b8165920` |
-| Stack/window content re-fit on the `doLayout` cycle (Phase 3b) | `00cea256` / `6c7060e5` |
+| Stack/window content re-fit on the `_reLayout` cycle (Phase 3b) | `00cea256` / `6c7060e5` |
 | **Flow rule** — raw/silent/fullRaw must MUTATE, never SCHEDULE (runtime throw + lint [E]) | `c45113ac` / `b89c9141` |
 | `createErrorConsole` freeze-amplifier fixed; `invalidateLayout` guard log→throw | `4c78c9cb` |
 | **C0** — inline re-fit triggers consolidated into the single seam | `c8bb8a87` |
@@ -122,7 +129,7 @@ the mutator HANDS its result forward. `rawSetWidthSizeHeightAccordingly` RETURNS
 |---|---|
 | **A-minimal proportion fix** — aspect content (`AnalogClockWdgt`/`IconWdgt`) `elasticity 0` ⇒ `getWidthInStack = min(wEl, availW)`, convergence-independent; 2 clock-resize tests recaptured | `a7463bbc` |
 | **Defer the `WindowWdgt.add` pre-fit** + order-independent content-spec init (prior 164/165 HUGE-clock → 165/165) | `a7463bbc` |
-| **Retire `world._reFittingContents`** — declaration + 3 `_reFitToContents` bumps removed; seam/twin/gesture/menu reads collapsed 3-way → deferred 2-state | `a7463bbc` |
+| **Retire `world._reFittingContents`** — declaration + 3 `_reLayoutChildren` bumps removed; seam/twin/gesture/menu reads collapsed 3-way → deferred 2-state | `a7463bbc` |
 
 **Net: every synchronous re-fit triggered by an IMMEDIATE MUTATOR or an ad-hoc gesture/menu/collapse handler now
 defers.** The C2 "wall" was specifically the *naive* removal (stub the in-pass re-fit with no replacement → 7 tests
@@ -139,11 +146,11 @@ LEAVE-SYNCHRONOUS (below).** Status of the 8 families (2–5 + the `newParentCho
 - **Families 1 (scroll-input), 6 (Slider), 7 (LabelButton): assessed LEAVE SYNCHRONOUS — do NOT "fix".** Family 1 is
   the highest-determinism-risk residual (timer/momentum/known dpr2 scroll-thumb-flake path) for ZERO correctness gain,
   and is the wrong problem class (the panel adjusts its OWN contents — not a freefloating-child→container notification —
-  so the re-queue machinery doesn't apply). Family 6 has no pattern surface (`SliderWdgt.reLayout` is the empty base
-  no-op; the button reLayout repositions only its own thumb). Family 7 is already compliant in substance (own-label
+  so the re-queue machinery doesn't apply). Family 6 has no pattern surface (`SliderWdgt._reLayoutSelf` is the empty base
+  no-op; the button _reLayoutSelf repositions only its own thumb). Family 7 is already compliant in substance (own-label
   re-center from a discrete menu action). None blocks the capstone (they're event/menu handlers, not immediate mutators).
 - **`BoxWdgt.choiceOfWidgetToBePicked`: dead code** (`BoxWdgt` is never a `ScrollPanelWdgt` ancestor) — leave it.
-- **Soft-wrap `reLayout` (family 5): LEAVE SYNCHRONOUS — PROBED & rejected 2026-06-21.** Its prerequisite (making the
+- **Soft-wrap `_reLayoutSelf` (family 5): LEAVE SYNCHRONOUS — PROBED & rejected 2026-06-21.** Its prerequisite (making the
   Caret↔Text geometry read settle-correct so the re-wrap can defer) was tested by a disable-the-mechanism probe
   (neutralise the edit-time caret placement+scroll, rely on the existing paint-time `gotoSlot`): **7 tests red**, incl.
   the scroll-follow tripwires. ROOT CAUSE: `CaretWdgt.gotoSlot`'s `scrollCaretIntoView` MUTATES contents geometry that
@@ -168,23 +175,23 @@ LEAVE-SYNCHRONOUS (below).** Status of the 8 families (2–5 + the `newParentCho
   clock-resize tests (`macroWindowWithAClockInAWindowConstructionTwo`, `macroClockInWindowKeepsSquareOnResize`). With
   the clock fixed, the `WindowWdgt.add` pre-fit DEFERS and converges (prior **164/165 HUGE-clock → 165/165**), and the
   cross-widget geometry cascade converges through the **pure deferred re-queue** — so the counter is **RETIRED**
-  (`WorldWdgt` declaration + the 3 `_reFitToContents` bumps removed; seam/twin/gesture/menu reads collapsed from 3-way
+  (`WorldWdgt` declaration + the 3 `_reLayoutChildren` bumps removed; seam/twin/gesture/menu reads collapsed from 3-way
   to the deferred 2-state: enqueue in-pass / invalidate out-of-pass). **Part B (tighten lint [E]) — RESOLVED 2026-06-21
   (assessed → no lint to add).** The freeze vector Part B targeted — an immediate mutator triggering a CLIMB — was
   already eliminated by the capstone's deferred re-fit seam, which retired the synchronous `childGeometryChanged` climb
-  arm; that now-orphaned method has been **deleted** (zero callers). The two `rawSetExtent→_reFitToContents` calls are
-  TERMINAL single-container applies (no climb), identical in kind to the sanctioned `TextWdgt.rawSetExtent→reLayout`;
-  forbidding `_reFitToContents` by name was **declined as cosmetic** (it would force a DRY-breaking inline for zero real
+  arm; that now-orphaned method has been **deleted** (zero callers). The two `rawSetExtent→_reLayoutChildren` calls are
+  TERMINAL single-container applies (no climb), identical in kind to the sanctioned `TextWdgt.rawSetExtent→_reLayoutSelf`;
+  forbidding `_reLayoutChildren` by name was **declined as cosmetic** (it would force a DRY-breaking inline for zero real
   protection). Instead the two applies are marked sanctioned in code and lint [E]'s header documents the now-complete
   boundary. Full record: `deferred-layout-capstone-execution-plan.md` (RESULT-2 + Part B).
 - **The last residual (PanelWdgt) — CLOSED 2026-06-22 (full gauntlet green; a SIMPLIFICATION).** The two off-settle
-  synchronous `@parent._reFitToContents?()` calls that `deferred-layout-residuals-audit.md` flagged as a "verify-and-drop
+  synchronous `@parent._reLayoutChildren?()` calls that `deferred-layout-residuals-audit.md` flagged as a "verify-and-drop
   slice" are resolved: `PanelWdgt.addInPseudoRandomPosition`'s trailing re-fit was **DROPPED** as redundant — its
   `aWdgt.fullRawMoveTo` already fires `_reFitContainerAfterRawGeometryChange`, which invalidates the enclosing
   non-text-wrapping ScrollPanel (verified `BasementWdgt.scrollPanel` / `BasementOpenerWdgt` are plain `ScrollPanelWdgt`,
   so `_amIDirectlyInsideNonTextWrappingScrollPanelWdgt` holds); `PanelWdgt.childRemoved`'s was **CONVERTED** to the
   deferred 2-state seam (mirrors `reactToGrabOf` and the already-converted `SimpleVerticalStackPanelWdgt.childRemoved`).
-  Net: every off-settle synchronous re-fit TRIGGER now defers; the only remaining synchronous `_reFitToContents` callers
+  Net: every off-settle synchronous re-fit TRIGGER now defers; the only remaining synchronous `_reLayoutChildren` callers
   are APPLY bodies, the documented leave-synchronous families below, and the `ScrollPanelWdgt.add`/`addMany`/`showResize…`
   public ENDPOINTS (annotated in code as intentional applies, idempotent with the cycle; the only stricter form —
   routing through `settleLayoutsOnceAfter` — is byte-risky and zero-gain, see §11 PROOF 2).
@@ -192,15 +199,15 @@ LEAVE-SYNCHRONOUS (below).** Status of the 8 families (2–5 + the `newParentCho
   15 runs / ~2,475 execs) ZERO nondeterminism.
 
 **Left deliberately synchronous (correct, do not "fix"):** the above families 1/6/7;
-`ScrollPanelWdgt.reLayOutAfterContainedPanelChange`/`_refitContentsAndScrollBars`
-(absorb the return-value contract); `WindowWdgt.childUnCollapsed`'s `reInflating`-coupled re-fit; and the soft-wrap `reLayout`
+`ScrollPanelWdgt._reLayOutAfterContainedPanelChange`/`_reLayoutChildrenAndScrollbars`
+(absorb the return-value contract); `WindowWdgt.childUnCollapsed`'s `reInflating`-coupled re-fit; and the soft-wrap `_reLayoutSelf`
 (assessed 2026-06-21 = leave-synchronous, blocked by a same-cycle caret read — `softwrap-deferred-layout-conversion-plan.md` §5).
 
 ## 6. The dead end (do not revive)
 
 **Path A — "pending-aware accessors"** (add `effective*` reads that return where geometry is HEADING) is **FALSIFIED**.
 A blanket version diverges (one accessor can't serve both pending-needers and the applied-needers: canvas buffers,
-inspector, dirty-rects). The targeted container-path version is not just non-byte-safe but *incorrect*: `_adjustContentsBounds`
+inspector, dirty-rects). The targeted container-path version is not just non-byte-safe but *incorrect*: `_positionAndResizeChildren`
 bakes its size via the non-invalidating `silentRawSetBounds`, so reading pending bakes a mid-settle transient
 (over-sized scroll content by 43px). The synchronous re-fit/convergence that re-reads APPLIED geometry is load-bearing.
 → `deferred-layout-path-a-design.md` §11.
@@ -291,27 +298,27 @@ what the soak hunts. Read `../Fizzygum-tests/DETERMINISM.md` before touching the
   `invalidateLayout` ~:3791 (mid-pass throw ~:3804; freefloating-doesn't-climb ~:3808). Accessors read `@bounds`.
 - `src/WorldWdgt.coffee`: `recalculateLayouts` ~:863 / `_recalculateLayoutsCore` ~:876 (until-loop ~:885; the walk-up
   that STOPS at freefloating ~:925). (`world._reFittingContents` was RETIRED by the capstone — §4/§5.)
-- `src/basic-widgets/ScrollPanelWdgt.coffee`: `_reFitToContents` ~:262 · `doLayout`
-  (`super; @_reFitToContents`) ~:276 · gesture seams `reactToDropOf` ~:245 / `reactToGrabOf` ~:251 · the public-endpoint
+- `src/basic-widgets/ScrollPanelWdgt.coffee`: `_reLayoutChildren` ~:262 · `_reLayout`
+  (`super; @_reLayoutChildren`) ~:276 · gesture seams `reactToDropOf` ~:245 / `reactToGrabOf` ~:251 · the public-endpoint
   applies `add`/`addMany`/`showResizeAndMoveHandlesAndLayoutAdjusters` ~:196/202/207 (intentional synchronous APPLY — §11 PROOF 2; the stricter `settleLayoutsOnceAfter` form is byte-risky/zero-gain).
-- `src/SimpleVerticalStackPanelWdgt.coffee`: `_reFitToContents` ~:54 · `doLayout` ~:70 · `childRemoved` (deferred 2-state).
+- `src/SimpleVerticalStackPanelWdgt.coffee`: `_reLayoutChildren` ~:54 · `_reLayout` ~:70 · `childRemoved` (deferred 2-state).
   Plus `src/basic-widgets/PanelWdgt.coffee` (`childRemoved` deferred 2-state ~:93 + `reactToDropOf`/`reactToGrabOf`;
   `addInPseudoRandomPosition` ~:112 defers via the geometry seam, no own re-fit) + `src/WindowWdgt.coffee`
-  (`_reFitToContents` ~:194). (`childGeometryChanged` was DELETED by the capstone — §5.)
+  (`_reLayoutChildren` ~:194). (`childGeometryChanged` was DELETED by the capstone — §5.)
 
 ## 11. Why the boundary is maximal — the SCHEDULE/APPLY classifier + the irreducibility proof
 
 **This section makes "COMPLETE" AUDITABLE: it is the classifier of every layout-APPLY call site + the proof that the
 remaining synchronous applies CANNOT defer.** A read-only census (2026-06-22) bucketed every runtime apply call
-(`doLayout`/`reLayout`/`_reFitToContents`/`_adjustContentsBounds`/`_adjustScrollBars`/`recalculateLayouts`) under
+(`_reLayout`/`_reLayoutSelf`/`_reLayoutChildren`/`_positionAndResizeChildren`/`_reLayoutScrollbars`/`recalculateLayouts`) under
 `src/` (~142 sites; counts approximate — the bucket BOUNDARIES are the point, not the tallies; re-derive via grep):
 
 | Bucket | ~n | what it is | representative | verdict |
 |---|---|---|---|---|
-| CYCLE-APPLY | 73 | the until-loop + every container/widget `doLayout`·`_adjust*` body + child fan-outs | `WorldWdgt._recalculateLayoutsCore:927` | settle point ✓ |
+| CYCLE-APPLY | 73 | the until-loop + every container/widget `_reLayout`·`_adjust*` body + child fan-outs | `WorldWdgt._recalculateLayoutsCore:927` | settle point ✓ |
 | PUBLIC-FLUSH | 2 | the self-settling flush wrappers | `Widget.mutateGeometryThenSettle:783` | settle point ✓ |
 | DEFERRED-SEAM | 11 | in-pass arms (run only under `_recalculatingLayouts`) | `ScrollPanelWdgt.reactToDropOf:252` | already deferred ✓ |
-| TERMINAL-RAW-APPLY | 33 | `raw*`/`fullRaw*`/`iHaveBeenAddedTo` → `reLayout`/`doLayout`/`_reFitToContents` | `TextWdgt.rawSetExtent:428` | **IRREDUCIBLE** (PROOF 1) |
+| TERMINAL-RAW-APPLY | 33 | `raw*`/`fullRaw*`/`iHaveBeenAddedTo` → `_reLayoutSelf`/`_reLayout`/`_reLayoutChildren` | `TextWdgt.rawSetExtent:428` | **IRREDUCIBLE** (PROOF 1) |
 | SCROLL-INPUT-APPLY | 18 | scroll handlers adjusting their OWN contents | `ScrollPanelWdgt.wheel:737` | LEAVE (family 1) |
 | CONSTRUCTION/DEV | 9 | constructors / `WidgetFactory` / live-edit | `WidgetFactory.createNewScrollPanelWdgt:42` | not steady-state |
 | SUSPICIOUS | 2 | `BoxWdgt.choiceOfWidgetToBePicked:21-22` | dead (`BoxWdgt` ⊄ `ScrollPanelWdgt`) → DELETED 2026-06-22 |
@@ -324,19 +331,19 @@ remaining synchronous applies CANNOT defer.** A read-only census (2026-06-22) bu
 > MAXIMAL achievable invariant — the strict "no apply outside `recalculateLayouts`/flush" is UNACHIEVABLE for (c).**
 
 Build-gated by **lint [F]** (`buildSystem/check-layering.js`): a non-low-level, non-immediate-mutator method that calls
-a container APPLY (`_reFitToContents`/`_adjustContentsBounds`/`_adjustScrollBars`/`doLayout`) must DEFER or carry a
+a container APPLY (`_reLayoutChildren`/`_positionAndResizeChildren`/`_reLayoutScrollbars`/`_reLayout`) must DEFER or carry a
 conscious `# layout-apply-sanctioned: <why>` marker. (Cases (a)/(b)/(c) are already exempt via
-`isLowLevel||isImmediateMutator`; (d)/(e) carry markers. `reLayout` is OUT of [F]'s scope by design — it is a SELF-apply
+`isLowLevel||isImmediateMutator`; (d)/(e) carry markers. `_reLayoutSelf` is OUT of [F]'s scope by design — it is a SELF-apply
 (own text re-wrap / own thumb / own label), not the freefloating-child→container regression class [F] guards.)
 
 ### PROOF 1 — the terminal raw applies cannot defer (so (c) is irreducible)
-`rawSetExtent → @reLayout()` / `rawSetWidthSizeHeightAccordingly → @doLayout()` cannot become a deferred SCHEDULE:
+`rawSetExtent → @_reLayoutSelf()` / `rawSetWidthSizeHeightAccordingly → @_reLayout()` cannot become a deferred SCHEDULE:
 (i) raw setters run DURING passes, where `invalidateLayout` THROWS; (ii) the calling pass reads the apply's result back
 **in the same pass**; (iii) the only mechanism that would let a deferred read see the heading value is Path A — FALSIFIED
-(§6). The decisive same-pass read-back is in the hot container path: `SimpleVerticalStackPanelWdgt._adjustContentsBounds`
+(§6). The decisive same-pass read-back is in the hot container path: `SimpleVerticalStackPanelWdgt._positionAndResizeChildren`
 calls `widget.rawSetWidthSizeHeightAccordingly recommendedElementWidth` (~:145) then reads `widget.height()` back to
 accumulate `stackHeight` (~:164) and bakes it via `@rawSetHeight` (~:171). Defer the apply ⇒ stale read ⇒ wrong stack
-height. (Same shape: `ScrollPanelWdgt._adjustContentsBounds` ~:335 re `TextWdgt.rawSetExtent→reLayout`.) No clean
+height. (Same shape: `ScrollPanelWdgt._positionAndResizeChildren` ~:335 re `TextWdgt.rawSetExtent→_reLayoutSelf`.) No clean
 counterexample (checked `rawSetWidthSizeHeightAccordingly` Widget.coffee:706, the `Stretchable*` overrides,
 `ContainerMixin.adjustBounds`).
 
@@ -344,8 +351,8 @@ counterexample (checked `rawSetWidthSizeHeightAccordingly` Widget.coffee:706, th
 A bare two-arm swap (the `reactToDropOf` idiom) is UNSAFE for `add`: (i) `add` passes `ATTACHEDAS_FREEFLOATING`, so
 `_addCore`'s climb-invalidate (Widget.coffee ~:2454) is SKIPPED and the freefloating child does not climb — the inner
 `@contents.add` self-settle drains a queue the panel was **never enqueued into**, so only the trailing synchronous
-`@_reFitToContents()` re-fits it; (ii) the dominant caller is ORPHAN construction (`SimpleDocumentWdgt.spawnContents`
-~:78-86: `setContents`→`add`→`_reFitToContents` before the panel is added to the world), where the inner add hits
+`@_reLayoutChildren()` re-fits it; (ii) the dominant caller is ORPHAN construction (`SimpleDocumentWdgt.spawnContents`
+~:78-86: `setContents`→`add`→`_reLayoutChildren` before the panel is added to the world), where the inner add hits
 `mutateGeometryThenSettle`'s orphan guard (no flush) and the synchronous re-fit is the only thing establishing geometry.
 The seams may defer only because `ActivePointerWdgt.drop`/`grab` guarantee a same-cycle settle; `add` has none. The sole
 consistency-preserving stricter form (wrap in `settleLayoutsOnceAfter` + keep a synchronous orphan re-fit, because

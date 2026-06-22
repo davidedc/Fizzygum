@@ -6,7 +6,7 @@
  *
  * THE CONSTRAINTS (program-flow soundness, not state invariants)
  *   A) A LOW-LEVEL method (name starting raw / silent / __ , ending Core, or one of
- *      doLayout / adjustContentsBounds / adjustScrollBars) must NOT call a public
+ *      _reLayout / _positionAndResizeChildren / _reLayoutScrollbars) must NOT call a public
  *      geometry setter or recalculateLayouts.
  *      Low-level code mutates immediately (raw/silent) and must never reach UP into the
  *      public, self-flushing layer.
@@ -43,21 +43,22 @@ const PUBLIC_SETTERS = ['setExtent', 'fullMoveTo', 'setBounds', 'setWidth', 'set
 const PUB_CALL = new RegExp('[@.]\\s*(' + PUBLIC_SETTERS.join('|') + ')\\b');
 const RECALC_CALL = /[@.]\s*recalculateLayouts\b/;            // @recalculateLayouts / world.recalculateLayouts
 const INVALIDATE_CALL = /[@.]\s*invalidateLayout\b/;         // @invalidateLayout / x.invalidateLayout
-// [F] a CONTAINER-refit apply CALL (excludes reLayout — see the [F] rule note by the check below). The
-// trailing (?!\?) skips the `?._reFitToContents?` EXISTENCE-CHECK guards (e.g. `return unless @parent?._reFitToContents?`)
+// [F] a CONTAINER-refit apply CALL (excludes _reLayoutSelf — see the [F] rule note by the check below). The
+// trailing (?!\?) skips the `?._reLayoutChildren?` EXISTENCE-CHECK guards (e.g. `return unless @parent?._reLayoutChildren?`)
 // — those test for the method, they don't apply it; a real apply is `()`-called or paren-less-arg-called, never `?`-tested.
-const APPLY_CALL = /[@.]\s*(_reFitToContents|_adjustContentsBounds|_adjustScrollBars|doLayout)\b(?!\?)/;
+const APPLY_CALL = /[@.]\s*(_reLayoutChildren|_positionAndResizeChildren|_reLayoutScrollbars|_reLayout)\b(?!\?)/;
 const SANCTION_MARKER = 'layout-apply-sanctioned';        // the conscious-sign-off comment marker for [F]
 const PUBLIC_SET = new Set(PUBLIC_SETTERS);
 const RECALC_WHITELIST = new Set(['doOneCycle', 'mutateGeometryThenSettle', 'settleLayoutsOnceAfter']);
 
 const isLowLevel = (name) =>
   /^raw[A-Z]/.test(name) || /^silent/.test(name) ||
-  /^_/.test(name) ||        // leading-underscore = private (incl. __ and the re-fit machinery
-                            // _adjustContentsBounds / _adjustScrollBars / _refitContentsAndScrollBars /
-                            // _reFitToContents / _refreshScrollPanelWdgtOrVerticalStackIfIamInIt / _amIDirectlyInside*)
+  /^_/.test(name) ||        // leading-underscore = private (incl. __ and the re-layout machinery
+                            // _positionAndResizeChildren / _reLayoutScrollbars / _reLayoutChildrenAndScrollbars /
+                            // _reLayoutChildren / _reLayoutSelf / _reLayoutDesktop /
+                            // _refreshScrollPanelWdgtOrVerticalStackIfIamInIt / _amIDirectlyInside*)
   /Core$/.test(name) ||
-  /Layout$/.test(name);     // doLayout, reLayout, desktopReLayout — internal layout passes
+  /Layout$/.test(name);     // _reLayout — the main layout pass (and any future *Layout)
 
 // [E] the flow rule (task #17): an IMMEDIATE geometry mutator (raw*/silent*/fullRaw*) must only
 // MUTATE geometry, never SCHEDULE a (re-)layout. Scheduling (invalidateLayout) is the public
@@ -73,22 +74,24 @@ const isLowLevel = (name) =>
 // a lint but by deferring the re-fit seam (_reFitContainerAfterRawGeometryChange enqueues/invalidates
 // the container; its synchronous childGeometryChanged climb arm was retired and that orphaned method
 // deleted). What an immediate mutator legitimately MAY do is APPLY a re-fit synchronously IN PLACE -- a
-// TERMINAL, single-container apply (TextWdgt.rawSetExtent->@reLayout, StretchablePanelWdgt.rawSetExtent
-// ->@doLayout, ScrollPanelWdgt/SimpleVerticalStackPanelWdgt.rawSetExtent->@_reFitToContents). Those
+// TERMINAL, single-container apply (TextWdgt.rawSetExtent->@_reLayoutSelf, StretchablePanelWdgt.rawSetExtent
+// ->@_reLayout, ScrollPanelWdgt/SimpleVerticalStackPanelWdgt.rawSetExtent->@_reLayoutChildren). Those
 // applies are SANCTIONED (see those overrides' comments) -- only the SCHEDULE below is forbidden.
-// Forbidding the _reFitToContents apply by name was assessed and DECLINED as cosmetic: it does the
-// identical work to the blessed reLayout/doLayout applies, so a name-based ban would just force a
+// Forbidding the _reLayoutChildren apply by name was assessed and DECLINED as cosmetic: it does the
+// identical work to the blessed _reLayoutSelf/_reLayout applies, so a name-based ban would just force a
 // DRY-breaking inline. (deferred-layout-capstone-execution-plan.md, Part B.)
 const isImmediateMutator = (name) => /^(raw[A-Z]|silent|fullRaw)/.test(name);
 
 // [D] macro hygiene: a SystemTest macro must not reach into the framework's PRIVATE surface.
-// Forbid calls to _private methods (the re-fit machinery -- _adjustContentsBounds / _adjustScrollBars /
-// _reFitToContents / _refreshScrollPanelWdgtOrVerticalStackIfIamInIt / _amIDirectlyInside* -- and any
+// Forbid calls to _private methods (the re-layout machinery -- _positionAndResizeChildren / _reLayoutScrollbars /
+// _reLayoutChildren / _refreshScrollPanelWdgtOrVerticalStackIfIamInIt / _amIDirectlyInside* -- and any
 // future _-method). This is the gate that would have caught the original 16-macro mess.
 // NOT (yet) forbidden: the immediate raw/silent geometry API (rawSet*/fullRaw*/silent*, used for
-// legitimate construction-time measure-and-size read-back) and reLayout() (force a re-wrap after a
-// property change). Per owner: these are "needed now"; at the END of the deferred-layout plan they get
-// public self-settling alternatives and this rule tightens to forbid them too (raw|silent|fullRaw|/Layout$/).
+// legitimate construction-time measure-and-size read-back). Per owner: these are "needed now"; at the
+// END of the deferred-layout plan they get public self-settling alternatives and this rule tightens to
+// forbid them too (raw|silent|fullRaw).
+// The former reLayout() carve-out is now CLOSED: this arc renamed reLayout -> _reLayoutSelf (private) and
+// removed the macro calls, so the _-check below already forbids it (the planned tightening, achieved here).
 const MACROS_DIR = path.join(__dirname, '..', '..', 'Fizzygum-tests', 'tests');
 const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*)\b/;
 
@@ -179,14 +182,14 @@ function checkFile(file, violations) {
     }
     // [F] the SCHEDULE/APPLY boundary, made auditable (deferred-layout-OVERVIEW.md §11). A method that is NEITHER
     // low-level NOR an immediate mutator -- i.e. a handler / property setter / menu action / gesture / constructor --
-    // must NOT call a CONTAINER-refit apply (_reFitToContents / _adjustContentsBounds / _adjustScrollBars / doLayout)
+    // must NOT call a CONTAINER-refit apply (_reLayoutChildren / _positionAndResizeChildren / _reLayoutScrollbars / _reLayout)
     // synchronously OFF-SETTLE. It must DEFER (record intent via invalidateLayout; let the cycle / a flush apply it),
     // OR, if the apply is genuinely AT a settle point (a deferred-seam in-pass arm, run under _recalculatingLayouts) or
     // a documented determinism-exempt family (scroll-input / collapse / construction), CONSCIOUSLY mark the METHOD --
     // any one line in its body `# layout-apply-sanctioned: <why>` exempts that whole handler. The apply BODIES, the
     // cycle, and the raw-tier terminal applies are already
     // isLowLevel / isImmediateMutator and exit above -- so this rule's whole surface is the off-settle non-mutator
-    // caller. SCOPE: reLayout is DELIBERATELY excluded -- it is a SELF-apply (own text re-wrap / own slider thumb / own
+    // caller. SCOPE: _reLayoutSelf is DELIBERATELY excluded -- it is a SELF-apply (own text re-wrap / own slider thumb / own
     // button label; residuals-audit families 5/6/7 are "compliant in substance"), not the freefloating-child->container
     // regression class [F] guards; including it would mark ~30 benign self-applies for little risk coverage.
     if (!isLowLevel(method) && !isImmediateMutator(method)) {

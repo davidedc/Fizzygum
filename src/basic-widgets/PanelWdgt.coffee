@@ -81,13 +81,13 @@ class PanelWdgt extends Widget
 
   # Gesture-driven re-fit of my enclosing container (@parent): DEFER to the cycle. Dispatched from
   # ActivePointerWdgt.drop AFTER a self-settling add (outside any pass) -> the else arm invalidates the
-  # container so its doLayout re-fits on the cycle. Gated on @parent?._reFitToContents? to preserve the
+  # container so its _reLayout re-fits on the cycle. Gated on @parent?._reLayoutChildren? to preserve the
   # original "only a tracking container reacts" semantics. (fam 2 -- deferred-layout-residuals-audit.md)
   reactToDropOf: ->
-    return unless @parent?._reFitToContents?
+    return unless @parent?._reLayoutChildren?
     if world?._recalculatingLayouts
       # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
-      @parent._reFitToContents()
+      @parent._reLayoutChildren()
     else
       @parent.invalidateLayout()
 
@@ -97,13 +97,13 @@ class PanelWdgt extends Widget
     # Re-fit my enclosing container (@parent): DEFER to the cycle, mirroring reactToGrabOf /
     # reactToDropOf below. childRemoved fires only OUTSIDE a layout pass (its callers Widget.destroy
     # and Widget._addCore route through destroy / mutateGeometryThenSettle, neither of which runs
-    # mid-pass), so the else arm -- invalidate the container so its doLayout re-fits on the next
+    # mid-pass), so the else arm -- invalidate the container so its _reLayout re-fits on the next
     # cycle -- is what runs; the in-pass arm is a defensive synchronous APPLY. (fam 2 --
     # deferred-layout-residuals-audit.md)
-    return unless @parent._reFitToContents?
+    return unless @parent._reLayoutChildren?
     if world?._recalculatingLayouts
       # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
-      @parent._reFitToContents()
+      @parent._reLayoutChildren()
     else
       @parent.invalidateLayout()
 
@@ -133,8 +133,8 @@ class PanelWdgt extends Widget
     # Container re-fit DEFERS to the cycle: fullRawMoveTo below routes through fullRawMoveBy ->
     # _reFitContainerAfterRawGeometryChange, which -- since aWdgt sits directly in a non-text-
     # wrapping ScrollPanel's contents (me) -- invalidates the enclosing ScrollPanel (@parent),
-    # whose doLayout ('super; @_reFitToContents') re-fits it on the next doOneCycle. So the old
-    # ad-hoc synchronous @parent._reFitToContents() here is redundant and removed. (fam 2
+    # whose _reLayout ('super; @_reLayoutChildren') re-fits it on the next doOneCycle. So the old
+    # ad-hoc synchronous @parent._reLayoutChildren() here is redundant and removed. (fam 2
     # verify-and-drop -- deferred-layout-residuals-audit.md)
     aWdgt.fullRawMoveTo position
 
@@ -166,10 +166,10 @@ class PanelWdgt extends Widget
     return false
   
   reactToGrabOf: ->
-    return unless @parent?._reFitToContents?
+    return unless @parent?._reLayoutChildren?
     if world?._recalculatingLayouts
       # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
-      @parent._reFitToContents()
+      @parent._reLayoutChildren()
     else
       @parent.invalidateLayout()
 

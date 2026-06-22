@@ -214,7 +214,7 @@ lessons that bit hard and are now folded into §4 above:
   `macroStringMorph2AndTextMorph2ResizingInLayout` has a SECOND class token not preceded by `macro`, so a naive
   `(?<!macro)` guard renames it and breaks the metadata var↔dir match (`reading 'testDuration' of undefined`).
   After any test-name-adjacent sweep, assert every `var SystemTest_<name>` matches its directory.
-- A self-sizing chrome label needs to re-hug its text on **setText AND setFontSize** (the old family reLayout'd on
+- A self-sizing chrome label needs to re-hug its text on **setText AND setFontSize** (the old family _reLayoutSelf'd on
   both), else an edited/font-driven caption is crammed into the stale box.
 
 (The content-text reflow follow-up it deferred is now DONE — see the FIT_BOX_TO_TEXT arc below.)
@@ -224,8 +224,8 @@ technical cleanup).** Made a bare `TextWdgt` re-wrap + auto-grow/shrink its heig
 CONTENT, like `SimplePlainTextWdgt` already did — done PROPERLY (not the cheap "widen `instanceof
 SimplePlainTextWdgt` + propagate `maxTextWidth`"). Retired the dead-`TextMorph` `maxTextWidth` knob; WIRED the
 pre-scaffolded `FittingSpecText` enums (`fittingSpec` mode + tight/loose + which-dimension sub-axes) into
-`reflowText`/`TextWdgt::reLayout`/`createBufferCacheKey`; removed the 3 `instanceof SimplePlainTextWdgt` render
-leaks (→ `fittingSpec == FIT_BOX_TO_TEXT`); moved the contained-reflow engine onto `TextWdgt::reLayout` gated by
+`reflowText`/`TextWdgt::_reLayoutSelf`/`createBufferCacheKey`; removed the 3 `instanceof SimplePlainTextWdgt` render
+leaks (→ `fittingSpec == FIT_BOX_TO_TEXT`); moved the contained-reflow engine onto `TextWdgt::_reLayoutSelf` gated by
 the mode, leaving `SimplePlainTextWdgt` a thin mode-specialization; re-pointed the 3 content sites
 (`WindowWdgt`/`SimpleVerticalStackPanelWdgt`/`ScrollPanelWdgt`) to RESPECT the mode. New lessons:
 - **Wiring a mode that one subclass already half-implemented hides INCOMPLETE wiring — the new general-case
@@ -253,10 +253,10 @@ the mode, leaving `SimplePlainTextWdgt` a thin mode-specialization; re-pointed t
   `macroBareTextWdgtAsWindowContentReflowsOnResize`, `macroBareTextWdgtInVerticalStackReflows`; 6 existing
   macros migrated `maxTextWidth`→`softWrap`.
 - **FOLLOW-UP (2026-06-15): bare-TextWdgt setText-reflow parity (closed the documented scope boundary).** The
-  arc left a gap: a bare FIT_BOX_TO_TEXT TextWdgt reflowed on a container RESIZE (`rawSetExtent`→`reLayout`) but
-  NOT on its OWN `setText` (that reLayout+refresh trigger still lived on `SimplePlainTextWdgt`). Moved it up: a
+  arc left a gap: a bare FIT_BOX_TO_TEXT TextWdgt reflowed on a container RESIZE (`rawSetExtent`→`_reLayoutSelf`) but
+  NOT on its OWN `setText` (that _reLayoutSelf+refresh trigger still lived on `SimplePlainTextWdgt`). Moved it up: a
   new gated helper `TextWdgt::reLayoutAndRefreshContainerIfContainedText` (`if fittingSpec == FIT_BOX_TO_TEXT`
-  then `reLayout` + `refreshScrollPanelWdgtOrVerticalStackIfIamInIt`), and `TextWdgt` now overrides the 7 edit
+  then `_reLayoutSelf` + `refreshScrollPanelWdgtOrVerticalStackIfIamInIt`), and `TextWdgt` now overrides the 7 edit
   methods (`setText`/`setFontSize`/`setFontName`/`toggleShowBlanks`/`toggleWeight`/`toggleItalic`/`toggleIsPassword`)
   as `super` + the helper. `SimplePlainTextWdgt` deleted its 6 pure-trigger overrides and keeps only `setText`,
   and only for the ControllerMixin plumbing (the `connectionsCalculationToken` guard + `updateTarget`) — it
@@ -277,7 +277,7 @@ family). Lessons folded in above and new ones:
 - **Re-basing onto a class that `@augmentWith`s a behaviour mixin can silently change behaviour through the mixin.**
   `ButtonWdgt` augments `HighlightableMixin`; a naive re-base inherited its `updateColor` (which `setColor`s — would
   clobber the retained flat fill), its `mouseUpLeft` (resets `state`→NORMAL — breaks list-row selection that reads
-  `STATE_PRESSED`), and its `doLayout` (lays out a `faceMorph` a label button hasn't). Each needed an explicit
+  `STATE_PRESSED`), and its `_reLayout` (lays out a `faceMorph` a label button hasn't). Each needed an explicit
   override; `mouseDownLeft` had to replicate `Widget`'s INLINE rather than `super` (which hits the mixin). Audit the
   new base's mixins before assuming a re-base is behaviour-preserving.
 - **Keep the look by RETAINING paint, not adopting the new family's.** The button family draws no flat fill

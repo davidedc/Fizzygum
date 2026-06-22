@@ -37,7 +37,7 @@ class ToolPanelWdgt extends PanelWdgt
           glassBoxBottom.add glassBoxTop
 
         glassBoxBottom.fullRawMoveTo @topLeft().add new Point @externalPadding, @externalPadding
-        # TODO anti-pattern - this rawSetExtent should be called within doLayout, not here
+        # TODO anti-pattern - this rawSetExtent should be called within _reLayout, not here
         glassBoxBottom.rawSetExtent new Point @thumbnailSize, @thumbnailSize
         glassBoxBottom.invalidateLayout()
 
@@ -71,7 +71,7 @@ class ToolPanelWdgt extends PanelWdgt
 
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
-  doLayout: ->
+  _reLayout: ->
     #if !window.recalculatingLayouts then debugger
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout

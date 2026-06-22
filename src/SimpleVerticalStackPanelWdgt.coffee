@@ -8,7 +8,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   tight: true
   constrainContentWidth: true
   # used to avoid recursively re-entering the
-  # _adjustContentsBounds function
+  # _positionAndResizeChildren function
   _adjustingContentsBounds: false
 
   colloquialName: ->
@@ -50,22 +50,22 @@ class SimpleVerticalStackPanelWdgt extends Widget
     @color = color if color?
 
   # The re-fit chokepoint for a stack (no scrollbars): re-lay-out my stacked
-  # contents. See Widget._reFitToContents.
-  _reFitToContents: ->
-    @_adjustContentsBounds()
+  # contents. See Widget._reLayoutChildren.
+  _reLayoutChildren: ->
+    @_positionAndResizeChildren()
 
-  # ===== Phase 3b (Slice 2): re-fit on the doLayout cycle =====
+  # ===== Phase 3b (Slice 2): re-fit on the _reLayout cycle =====
   # Mirror of ScrollPanelWdgt's Slice-1 pair (see there). super applies my own bounds first
   # (DETERMINISM.md case-3c), then I re-lay-out my stacked contents. Inherited by WindowWdgt.
-  # This is a fixed point ONLY because _adjustContentsBounds sizes its (deferred-layout)
+  # This is a fixed point ONLY because _positionAndResizeChildren sizes its (deferred-layout)
   # children via rawSetWidthSizeHeightAccordingly, which -- when called during a layout pass --
-  # settles them in place (synchronous doLayout, no invalidate-climb); see that method + the
+  # settles them in place (synchronous _reLayout, no invalidate-climb); see that method + the
   # design doc's "Phase 3b -- Slice 2".
-  # implementsDeferredLayout pinned false so adding this doLayout doesn't flip the two read
+  # implementsDeferredLayout pinned false so adding this _reLayout doesn't flip the two read
   # sites (rawSetWidthSizeHeightAccordingly invalidate + subWidgetsMergedFullBounds).
-  doLayout: (newBoundsForThisLayout) ->
+  _reLayout: (newBoundsForThisLayout) ->
     super
-    @_reFitToContents()
+    @_reLayoutChildren()
 
   implementsDeferredLayout: ->
     false
@@ -76,25 +76,25 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # polymorphic replacement for `if @amIPanelOfScrollPanelWdgt()` -- the stack
   # no longer asks where it sits in the scroll structure; it just notifies, and
   # only a (non-List) scroll panel reacts. See
-  # ScrollPanelWdgt.reLayOutAfterContainedPanelChange.
-  # Membership-change re-fit. The absorb query (reLayOutAfterContainedPanelChange) STAYS synchronous --
+  # ScrollPanelWdgt._reLayOutAfterContainedPanelChange.
+  # Membership-change re-fit. The absorb query (_reLayOutAfterContainedPanelChange) STAYS synchronous --
   # its truthy answer decides whether I skip my own re-fit (return-value contract). If not absorbed, my
-  # own re-fit DEFERS to the cycle (else arm; my doLayout is 'super; @_reFitToContents'). These run
+  # own re-fit DEFERS to the cycle (else arm; my _reLayout is 'super; @_reLayoutChildren'). These run
   # outside a pass (drop gesture / destroy / add-flush re-parent -- where invalidate is legal); the
   # in-pass arm keeps the synchronous re-fit. (fam 2 -- deferred-layout-residuals-audit.md)
   childRemoved: ->
-    return if @parent?.reLayOutAfterContainedPanelChange?()
+    return if @parent?._reLayOutAfterContainedPanelChange?()
     if world?._recalculatingLayouts
       # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
-      @_reFitToContents()
+      @_reLayoutChildren()
     else
       @invalidateLayout()
 
   reactToDropOf: ->
-    return if @parent?.reLayOutAfterContainedPanelChange?()
+    return if @parent?._reLayOutAfterContainedPanelChange?()
     if world?._recalculatingLayouts
       # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
-      @_reFitToContents()
+      @_reLayoutChildren()
     else
       @invalidateLayout()
 
@@ -105,7 +105,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   availableWidthForContents: ->
     @width() - 2 * @padding
 
-  _adjustContentsBounds: ->
+  _positionAndResizeChildren: ->
     # avoid recursively re-entering this function
     if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true
     @padding = 5
@@ -140,10 +140,10 @@ class SimpleVerticalStackPanelWdgt extends Widget
       else
         recommendedElementWidth = widget.layoutSpecDetails.getWidthInStack()
 
-        # this re-layouts each widget to fit the width. When this runs FROM doLayout (on the
+        # this re-layouts each widget to fit the width. When this runs FROM _reLayout (on the
         # recalculateLayouts cycle) rawSetWidthSizeHeightAccordingly settles a deferred-layout
-        # child IN PLACE (synchronous doLayout, no invalidate-climb), so this
-        # _adjustContentsBounds is a fixed point -- see Widget.rawSetWidthSizeHeightAccordingly.
+        # child IN PLACE (synchronous _reLayout, no invalidate-climb), so this
+        # _positionAndResizeChildren is a fixed point -- see Widget.rawSetWidthSizeHeightAccordingly.
         widget.rawSetWidthSizeHeightAccordingly recommendedElementWidth
 
         # contained text that OPTED INTO FIT_BOX_TO_TEXT (a SimplePlainTextWdgt or a
@@ -179,8 +179,8 @@ class SimpleVerticalStackPanelWdgt extends Widget
       @breakNumberOfRawMovesAndResizesCaches()
       super aPoint
       # raw setter: APPLY the re-fit NOW -- synchronous, single-container, TERMINAL
-      # (_reFitToContents -> _adjustContentsBounds, which does not climb to my parent).
+      # (_reLayoutChildren -> _positionAndResizeChildren, which does not climb to my parent).
       # Never SCHEDULE it (no invalidateLayout): the sanctioned immediate-mutator apply,
-      # exactly like TextWdgt.rawSetExtent -> @reLayout and rawSetWidthSizeHeightAccordingly
-      # -> @doLayout (task #17). check-layering.js rule [E] forbids the SCHEDULE, not this APPLY.
-      @_reFitToContents()
+      # exactly like TextWdgt.rawSetExtent -> @_reLayoutSelf and rawSetWidthSizeHeightAccordingly
+      # -> @_reLayout (task #17). check-layering.js rule [E] forbids the SCHEDULE, not this APPLY.
+      @_reLayoutChildren()

@@ -19,7 +19,7 @@ so a top-level caller (macro, app, event handler) always sees a consistent world
 "settle"/yield — and the read-backs that caused M1–M4 can no longer observe stale geometry.
 
 **Flow-soundness layering it rests on:** the public setters are the *only* thing that flushes; INTERNAL
-layout (`doLayout` / `reLayout` / `desktopReLayout` / `raw*` / `silent*` / `adjustContentsBounds`) must
+layout (`_reLayout` / `_reLayoutSelf` / `_reLayoutDesktop` / `raw*` / `silent*` / `adjustContentsBounds`) must
 use the **raw** setters, never the public ones (else a setter reached during a flush re-enters
 `recalculateLayouts`). Enforced two ways:
 - **runtime (hard throw):** `mutateGeometryThenSettle` throws if a public setter is reached while a flush
@@ -30,10 +30,10 @@ use the **raw** setters, never the public ones (else a setter reached during a f
   outside `doOneCycle`/the flush, or on public→public.
 
 **Internal→public sites converted to raw to satisfy this (byte-safe — freefloating targets, matching
-the adjacent `fullRawMoveTo`):** 5 `doLayout` (`AxisWdgt`, `FanoutWdgt`, `GenericObjectIconWdgt`,
-`GenericShortcutIconWdgt`, `WidgetHolderWithCaptionWdgt`), 5 `reLayout` (`StretchableEditableWdgt`,
+the adjacent `fullRawMoveTo`):** 5 `_reLayout` (`AxisWdgt`, `FanoutWdgt`, `GenericObjectIconWdgt`,
+`GenericShortcutIconWdgt`, `WidgetHolderWithCaptionWdgt`), 5 `_reLayoutSelf` (`StretchableEditableWdgt`,
 `PatchProgrammingWdgt`, `DashboardsWdgt`, `SimpleSlideWdgt`, `ReconfigurablePaintWdgt`), 2
-`desktopReLayout` (`WorldWdgt`).
+`_reLayoutDesktop` (`WorldWdgt`).
 
 **Verified:** lint 0 violations; suite 165/165 (dpr1); all 12 desktop apps launch clean **under the
 hard-throw build** via the new `Fizzygum-tests/scripts/smoke-apps-headless.js`. The 16 acceptance macros
@@ -45,7 +45,7 @@ app) that reaches a private→public in a method the lint doesn't recognize by n
 **Step 1 — DONE (2026-06-19, Fizzygum-tests).** Macros no longer call ANY scroll-panel re-fit method
 (`adjustContentsBounds` / `adjustScrollBars` / `refitContentsAndScrollBars`). It turned out **no
 framework change was needed**: the self-settling deferred API already re-fits an enclosing scroll panel
-when a freefloating child's `setExtent`/`fullMoveTo` settles — `doLayout` applies the change via
+when a freefloating child's `setExtent`/`fullMoveTo` settles — `_reLayout` applies the change via
 `fullRawMoveTo` (→ `fullRawMoveBy`) and `rawSetExtent`, both of which carry the auto-refit hook
 `if @amIDirectlyInsideNonTextWrappingScrollPanelWdgt() then @parent.parent.adjustContentsBounds();
 @parent.parent.adjustScrollBars()` — so the explicit macro calls were simply redundant. 7 macros,
@@ -58,7 +58,7 @@ of the full deferred-layout migration.
 **Privates-hygiene backlog (owner-requested 2026-06-19).** The notification + auto-refit hooks grew
 organically and want a consistent treatment — to be sequenced into the migration:
 1. **Reorg + privatize the hooks.** `childGeometryChanged`, `reactToDropOf` / `reactToGrabOf`,
-   `reLayOutAfterContainedPanelChange`, `refreshScrollPanelWdgtOrVerticalStackIfIamInIt`,
+   `_reLayOutAfterContainedPanelChange`, `refreshScrollPanelWdgtOrVerticalStackIfIamInIt`,
    `childAdded` / `childRemoved` / `grandChild*`, `amIDirectlyInside*` follow different conventions and
    invocation paths — unify them onto one standard and make them all private.
 2. **`refitContentsAndScrollBars` + `adjustContentsBounds` + `adjustScrollBars` are private too.**
@@ -104,7 +104,7 @@ decide the per-case fix.
 
 **Every one of the 16 fails for the same underlying reason, in four shapes.** The macro builds a parent
 widget with the **deferred** API, then does something that *depends on that geometry already being
-applied* — **before the settle** (`recalculateLayouts → doLayout`, which runs once per cycle just before
+applied* — **before the settle** (`recalculateLayouts → _reLayout`, which runs once per cycle just before
 paint). With the old raw API the geometry applied *immediately*, so the dependent step saw the final
 value; with the deferred API it sees the **stale, pre-settle** value.
 
@@ -115,7 +115,7 @@ The four shapes (mechanisms **M1–M4**):
 | **M1** | **Macro reads back stale geometry** — the macro reads a just-deferred widget's geometry, or calls `adjustContentsBounds()`/`adjustScrollBars()` explicitly, *before* a `yield` settle. | the macro source | Attach, CompositeDrags, DocumentScrolls, NoSpuriousScrollbars, SimpleDocAddIndented | 5 |
 | **M2** | **Nested children mis-placed under a pending parent** — children added to / positioned within a parent whose deferred *move* hasn't settled get the parent's settle-move applied **on top of** their own position (double-counted), so they land shifted by ~the parent's move delta. | framework (settle moves the subtree) + macro ordering | HideUnhide, HierarchyMenuHover, MenuFromFramedItem, PanelInPanel, EmbeddedDuplicate | 5 |
 | **M3** | **Scroll-panel / document content sizing reads the container's pending extent** — `ScrollPanelWdgt.adjustContentsBounds` (auto-triggered by add / scroll) reads the panel's own stale `@width()/@height()` while its deferred `setExtent` is pending, so the contents are fit to the wrong size. | `ScrollPanelWdgt.adjustContentsBounds` | EditingString, NestedScrollPanels, ScrollPanelCaret, ScrollPanelCoalesces | 4 |
-| **M4** | **Slider thumb positioned from the slider's stale position** — `SliderButtonWdgt.reLayout` places the thumb at `(posX,posY).add @parent.position()`; on `add` (`iHaveBeenAddedTo`) the slider's deferred move is still pending, so the thumb reads a stale parent origin, and a pure *move* never re-lays-out the thumb afterwards. | `SliderButtonWdgt.coffee:68` (`@parent.position()`) | CompositeShadow, Sliders | 2 |
+| **M4** | **Slider thumb positioned from the slider's stale position** — `SliderButtonWdgt._reLayoutSelf` places the thumb at `(posX,posY).add @parent.position()`; on `add` (`iHaveBeenAddedTo`) the slider's deferred move is still pending, so the thumb reads a stale parent origin, and a pure *move* never re-lays-out the thumb afterwards. | `SliderButtonWdgt.coffee:68` (`@parent.position()`) | CompositeShadow, Sliders | 2 |
 
 Several tests carry a secondary mechanism too (noted per entry) — e.g. a ScrollPanel test that *also*
 nests a composite.
@@ -293,10 +293,10 @@ Visualisation links are relative to this file (`Fizzygum/docs/`).
 
 ### M4 — slider thumb positioned from the slider's stale position
 
-> `SliderButtonWdgt.reLayout` (`SliderButtonWdgt.coffee:68`) does
+> `SliderButtonWdgt._reLayoutSelf` (`SliderButtonWdgt.coffee:68`) does
 > `@silentFullRawMoveTo new Point(posX, posY).add @parent.position()`. On `add`/`iHaveBeenAddedTo` the
 > slider's deferred move is pending, so `@parent.position()` is stale; a pure *move* (no extent change)
-> never re-triggers the thumb's `reLayout`, so the thumb stays at the stale origin. **Fix:** settle the
+> never re-triggers the thumb's `_reLayoutSelf`, so the thumb stays at the stale origin. **Fix:** settle the
 > slider before adding it (so its origin is applied before the thumb lays out), or a targeted framework
 > change (thumb reads `@parent.effectivePosition()`, or a move re-lays-out the thumb).
 

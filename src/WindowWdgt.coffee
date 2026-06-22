@@ -28,7 +28,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   titlebarBackground: nil
   contentNeverSetInPlaceYet: true
   # used to avoid recursively re-entering the
-  # _adjustContentsBounds function
+  # _positionAndResizeChildren function
   _adjustingContentsBounds: false
   internal: false
   defaultContents: nil
@@ -190,9 +190,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       return "window"
 
   # The re-fit chokepoint for a window (no scrollbars): re-fit chrome + content.
-  # See Widget._reFitToContents.
-  _reFitToContents: ->
-    @_adjustContentsBounds()
+  # See Widget._reLayoutChildren.
+  _reLayoutChildren: ->
+    @_positionAndResizeChildren()
 
   add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
     unless notContent or (aWdgt instanceof CaretWdgt) or (aWdgt instanceof HandleWdgt)
@@ -206,10 +206,10 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @removeChild @contents
       @contents = aWdgt
       # Deferred-layout (capstone probe): the window-content re-fit now DEFERS to the settle cycle
-      # (super -> _addCore invalidates the window; the inherited doLayout runs @_reFitToContents on
-      # the recalculateLayouts pass). The old synchronous pre-fit (@_reFitToContents here) is removed.
+      # (super -> _addCore invalidates the window; the inherited _reLayout runs @_reLayoutChildren on
+      # the recalculateLayouts pass). The old synchronous pre-fit (@_reLayoutChildren here) is removed.
       # Init the content's WindowContentLayoutSpec up-front -- the pre-fit used to do this implicitly
-      # via _adjustContentsBounds, so without it the deferred re-fit would deref an uninitialised spec.
+      # via _positionAndResizeChildren, so without it the deferred re-fit would deref an uninitialised spec.
       aWdgt.initialiseDefaultWindowContentLayoutSpec() unless aWdgt.layoutSpecDetails instanceof WindowContentLayoutSpec
       super aWdgt, position, LayoutSpec.ATTACHEDAS_WINDOW_CONTENT, beingDropped
     else
@@ -252,7 +252,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       if @widthWhenCollapsed?
         @rawSetWidth @widthWhenCollapsed
       # layout-apply-sanctioned: collapse re-fit (must stay synchronous, residuals-audit fam 4)
-      @_reFitToContents()
+      @_reLayoutChildren()
       @_refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   childUnCollapsed: (child) ->
@@ -263,7 +263,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       if @widthWhenUnCollapsed?
         @rawSetWidth @widthWhenUnCollapsed
       # layout-apply-sanctioned: uncollapse re-fit, reInflating-coupled (must stay synchronous, residuals-audit fam 4)
-      @_reFitToContents()
+      @_reLayoutChildren()
       @reInflating = false
       @rememberFractionalSituationInHoldingPanel()
       @_refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
@@ -415,8 +415,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     super
     @layoutSpecDetails.canSetHeightFreely = false
 
-  # should this just be the doLayout function? Why do we need this extra one?
-  _adjustContentsBounds: ->
+  # should this just be the _reLayout function? Why do we need this extra one?
+  _positionAndResizeChildren: ->
     # avoid recursively re-entering this function
     # TODO nasty check this one, can we make this go away?
     if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true
@@ -427,13 +427,13 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     if @closeButton? and @closeButton.parent == @
       buttonBounds = new Rectangle new Point @left() + @padding, @top() + @padding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
-      @closeButton.doLayout buttonBounds
+      @closeButton._reLayout buttonBounds
 
     # collapse/uncollapse button
     if @collapseUncollapseSwitchButton? and @collapseUncollapseSwitchButton.parent == @
       buttonBounds = new Rectangle new Point @left() + closeIconSize + 2 * @padding, @top() + @padding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
-      @collapseUncollapseSwitchButton.doLayout buttonBounds
+      @collapseUncollapseSwitchButton._reLayout buttonBounds
 
     stackHeight = 0
 
@@ -512,7 +512,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # content. We RESPECT the mode rather than imposing it, so the empty-window
       # placeholder — a TextWdgt that stays FIT_TEXT_TO_BOX — is left alone. Here we
       # only (re)assert soft-wrap (the actual reflow is driven by the generic
-      # width-set above → the widget's own FIT_BOX_TO_TEXT reLayout).
+      # width-set above → the widget's own FIT_BOX_TO_TEXT _reLayoutSelf).
       if @contents.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
         @contents.softWrap = true
 
@@ -564,17 +564,17 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     if @editButton? and !@editButton.isCollapsed() and @editButton.parent == @
       buttonBounds = new Rectangle new Point @right() - 2 * (closeIconSize + @padding), @top() + @padding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
-      @editButton.doLayout buttonBounds
+      @editButton._reLayout buttonBounds
 
     # internal/external button
     if @internalExternalSwitchButton? and !@internalExternalSwitchButton.isCollapsed() and @internalExternalSwitchButton.parent == @
       buttonBounds = new Rectangle new Point @right() - 1 * (closeIconSize + @padding), @top() + @padding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
-      @internalExternalSwitchButton.doLayout buttonBounds
+      @internalExternalSwitchButton._reLayout buttonBounds
 
     # TODO there is *already* a way to make handles do the right thing, and that is
-    # to have this sort of code in a doLayout function, and calling super in there,
-    # where the base Windget.doLayout takes care of everything that has a
+    # to have this sort of code in a _reLayout function, and calling super in there,
+    # where the base Windget._reLayout takes care of everything that has a
     # corner or edge internal layout, like handles. This should work the same way i.e.
     # this code should not be here.
     if @resizer?.parent == @

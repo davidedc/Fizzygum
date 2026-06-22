@@ -154,7 +154,7 @@ class BasementWdgt extends BoxWdgt
 
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
-  doLayout: (newBoundsForThisLayout) ->
+  _reLayout: (newBoundsForThisLayout) ->
     #if !window.recalculatingLayouts then debugger
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
@@ -183,7 +183,7 @@ class BasementWdgt extends BoxWdgt
     y = @scrollPanel.bottom() + @cornerRadius
     h = WorldWdgt.preferencesAndSettings.handleSize
     w = @scrollPanel.width() - h - @cornerRadius
-    @hideUsedWdgtsToggle.doLayout (new Rectangle  0,0,w,h).translateBy new Point x, y
+    @hideUsedWdgtsToggle._reLayout (new Rectangle  0,0,w,h).translateBy new Point x, y
     world.maybeEnableTrackChanges()
 
     super

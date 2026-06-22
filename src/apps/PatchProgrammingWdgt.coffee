@@ -31,7 +31,7 @@ class PatchProgrammingWdgt extends StretchableEditableWdgt
 
 
   # TODO this method is the same as in the simple slide widget
-  reLayout: ->
+  _reLayoutSelf: ->
     # here we are disabling all the broken
     # rectangles. The reason is that all the
     # subwidgets of the inspector are within the
