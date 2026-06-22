@@ -1899,13 +1899,7 @@ class Widget extends TreeNode
     if @childrenBoundsUpdatedAt < WorldWdgt.frameCount
       @childrenBoundsUpdatedAt = WorldWdgt.frameCount
       @clippedBoundsWhenLastPainted = @clippedThroughBounds()
-      #if (@ != world) and (@clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
-      #  debugger
       @fullClippedBoundsWhenLastPainted = @fullClippedBounds()
-      #if (@ != world) and (@fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
-      #  debugger
-      #if (@ instanceof MenuWdgt) and (@fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
-      #  debugger
 
   # in general, the children of a Widget could be outside the
   # bounds of the parent (they could also be much larger

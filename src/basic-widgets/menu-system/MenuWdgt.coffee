@@ -200,9 +200,6 @@ class MenuWdgt extends PopUpWdgt
   
   maxWidthOfMenuEntries: ->
     w = 0
-    #if @parent instanceof PanelWdgt
-    #  if @parent.scrollPanel instanceof ScrollPanelWdgt
-    #    w = @parent.scrollPanel.width()
     # Each entry that contributes a width answers menuEntryPreferredWidth()
     # (MenuItemWdgt / StringFieldWdgt / ColorPickerWdgt / SliderWdgt define it);
     # divider lines and the header don't, and are skipped -- exactly the set the

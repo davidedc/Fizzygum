@@ -666,9 +666,6 @@ class WorldWdgt extends PanelWdgt
   checkARectWithHierarchy: (aRect, brokenWidget, isSrc) ->
     brokenWidgetAncestor = brokenWidget
 
-    #if brokenWidget instanceof SliderWdgt
-    #  debugger
-
     while brokenWidgetAncestor.parent?
       brokenWidgetAncestor = brokenWidgetAncestor.parent
       if brokenWidgetAncestor.srcBrokenRect?
