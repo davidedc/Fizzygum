@@ -82,9 +82,7 @@ Status: ✅ done · ☐ todo · ⏳ study (Phase-6-entangled) · — leave. Re-g
 - ☐ **misc hooks** — `buttons/ExternalLinkButtonWdgt.coffee:6` (`openExternalURL?`), `TextWdgt.coffee:716` (console contributes menu entries), `ActivePointerWdgt.coffee:931` (`maybeStartAutoScroll?`), `Wallpaper.coffee:55`+`StringWdgt.coffee:967` (menu `refreshTicks?`), `WindowWdgt.coffee:149/165` (polymorphic `contentsRecursivelyCanSetHeightFreely`), `mixins/CreateShortcutOfDroppedItemsMixin.coffee:22/29` + `mixins/KeepIconicDesktopSystemLinksBackMixin.coffee:14/18`.
 
 ### Phase δ — singleton identity
-- ☐ **`@parent instanceof WorldWdgt`** — `ButtonWdgt.coffee:129`, `HandleWdgt.coffee:41`, `Widget.coffee:2706/2837/3214` → `@parent == world`.
-- ☐ **hand root** — `Widget.coffee:2814` (`@root() instanceof ActivePointerWdgt`) → `@root() == world.hand`.
-- ☐ **grabbable** — `ActivePointerWdgt.coffee:150` (`instanceof WorldWdgt`) → `isGrabbable?()`/`@parent == world`.
+- ✅ **world / hand identity** — `ButtonWdgt:129`, `HandleWdgt:48`, `ActivePointerWdgt.grab` (refuse to grab the world), `Widget` grabsToParentWhenDragged/rootForFocus/lock-menu-label (`@parent == world`) + `isBeingFloatDragged`/`breakNumberOfRawMovesAndResizesCaches` (`== world.hand`). All `instanceof WorldWdgt`/`instanceof ActivePointerWdgt` → `== world`/`== world.hand` (established idiom: cf. PopUpWdgt, TreeNode).
 - ☐ **isWindow base-default reconciliation** — move `a581b03b`'s `Widget.isWindow: -> false` off the God class (to `?()` dispatch) OR upgrade the call sites to behaviour-moves (e.g. close-vs-delete menu → `addDestroyMenuItem` override).
 
 ### ⏳ Phase ε — study (Phase-6-entangled; defer)
