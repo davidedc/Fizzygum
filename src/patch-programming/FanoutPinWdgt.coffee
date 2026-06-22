@@ -12,6 +12,13 @@ class FanoutPinWdgt extends Widget
     super
     @appearance = new FanoutPinAppearance @
 
+  # Role query (replaces `x instanceof FanoutPinWdgt` filters): "am I a patch-graph connection pin?" --
+  # a structural sub-part of a Fanout, not a standalone targetable widget. Used to exclude pins from the
+  # target-chooser menu (Container/ControllerMixin) and to route fanout input to pin children (FanoutWdgt).
+  # True here only; dispatched via ?() so nothing lands on Widget. (type-test-elimination campaign)
+  isConnectionPin: ->
+    true
+
   setInput: (newvalue, ignored, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     @inputValue = newvalue

@@ -33,7 +33,7 @@ class FanoutWdgt extends Widget
 
   updateTarget: ->
     for target in @children
-      if target instanceof FanoutPinWdgt
+      if target.isConnectionPin?()
         target.setInput @inputValue, nil, @connectionsCalculationToken
     return
 

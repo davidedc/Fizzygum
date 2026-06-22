@@ -20,7 +20,7 @@ ControllerMixin =
           menu = new MenuWdgt @, false, @, true, true, "choose target:"
           #choices.push @world()
           choices.forEach (each) =>
-            if !(each instanceof FanoutPinWdgt)
+            if !(each.isConnectionPin?())
               menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ➜", false, @, "openTargetPropertySelector", nil, nil, nil, nil, nil, each, nil, true
         else
           menu = new MenuWdgt @, false, @, true, true, "no targets available"

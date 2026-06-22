@@ -56,7 +56,7 @@ Status: ✅ done · ☐ todo · ⏳ study (Phase-6-entangled) · — leave. Re-g
 
 ### Phase β — capability/role queries (named for capability)
 - ✅ **adder/droplet** `b92345d9` — `Widget.addOrRemoveAdders` ×5 → `isLayoutAdderOrDroplet?()` on `LayoutElementAdderOrDropletWdgt`.
-- ☐ **fanout-pin filter** — `mixins/ContainerMixin.coffee:26`, `mixins/ControllerMixin.coffee:23` → `selectableAsConnectionTarget?()` on `FanoutPinWdgt`.
+- ✅ **fanout-pin** — `mixins/ContainerMixin.coffee:26`, `mixins/ControllerMixin.coffee:23`, `patch-programming/FanoutWdgt.coffee:36` → `isConnectionPin?()` on `FanoutPinWdgt` (role-named, not the class; 3 sites incl. the input-routing loop).
 - ☐ **last-focus tracking** — `ActivePointerWdgt.coffee:248/556` → `tracksAsLastFocusedWidget?()` (excludes `HorizontalMenuPanelWdgt`).
 - ☐ **glass-box wrap idempotency** — `HorizontalMenuPanelWdgt.coffee:28`, `ToolPanelWdgt.coffee:30` → `isGlassBoxWrapper?()` on `GlassBoxBottomWdgt`.
 - ☐ **ratio-constraint drop/grab** — `mixins/KeepsRatioWhenInVerticalStackMixin.coffee:15/32`, `graphs-plots-charts/Example3DPlotWdgt.coffee:70/74/90/94` → `imposesRatioConstraintOnDroppedChildren?()`/`releasesRatioConstraintOnGrabbedChildren?()` on the stack (overridden false by `WindowWdgt`); kills 6 copy-pasted sites + the IS-A-minus-subclass smell.
