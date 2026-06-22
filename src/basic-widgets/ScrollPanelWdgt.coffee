@@ -593,6 +593,15 @@ class ScrollPanelWdgt extends PanelWdgt
         @_reLayoutScrollbars()
     super
   
+  # During a float-drag, if I want the dragged widget and the pointer is in my edge band, I
+  # auto-scroll. ActivePointerWdgt calls this instead of testing `newWdgt instanceof
+  # ScrollPanelWdgt` and driving the wantsDropOf / edge / startAutoScrolling logic itself.
+  # (type-test-elimination campaign)
+  maybeStartAutoScrollForDraggedWidget: (widgetBeingFloatDragged, pointerPosition) ->
+    if @wantsDropOf widgetBeingFloatDragged
+      if !@boundingBox().insetBy(WorldWdgt.preferencesAndSettings.scrollBarsThickness * 3).containsPoint pointerPosition
+        @startAutoScrolling()
+
   startAutoScrolling: ->
     # The edge auto-scroll is wall-clock driven (the Date.now() settle below
     # plus per-frame increments), but unlike the momentum glide in

@@ -934,11 +934,9 @@ class ActivePointerWdgt extends Widget
         # if we are dragging stuff that can't be dropped
         # (e.g. external windows) then nothing happens
         if !widgetBeingFloatDragged.rejectsBeingDropped? or !widgetBeingFloatDragged.rejectsBeingDropped()
-          if newWdgt instanceof ScrollPanelWdgt
-            if newWdgt.wantsDropOf widgetBeingFloatDragged
-              if !newWdgt.boundingBox().insetBy(
-                WorldWdgt.preferencesAndSettings.scrollBarsThickness * 3
-                ).containsPoint @position()
-                  newWdgt.startAutoScrolling()
+          # a scroll panel decides whether to auto-scroll for the dragged widget near its edge
+          # (was `newWdgt instanceof ScrollPanelWdgt` + the wantsDropOf / edge / start logic here).
+          # (type-test-elimination campaign)
+          newWdgt.maybeStartAutoScrollForDraggedWidget? widgetBeingFloatDragged, @position()
 
     @mouseOverList = mouseOverNew
