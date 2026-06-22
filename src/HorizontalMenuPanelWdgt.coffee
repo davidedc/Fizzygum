@@ -25,7 +25,7 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
       if !aWdgt.extentToGetWhenDraggedFromGlassBox?
         aWdgt.extentToGetWhenDraggedFromGlassBox = aWdgt.extent()
 
-      if !(aWdgt instanceof GlassBoxBottomWdgt)
+      if !(aWdgt.isGlassBoxWrapper?())
         glassBoxBottom = new GlassBoxBottomWdgt
         glassBoxBottom.add aWdgt
 
