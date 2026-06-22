@@ -64,14 +64,17 @@ class Example3DPlotWdgt extends Widget
   # want the content to force the ratio of the window so that the
   # plot grows/shrinks in both dimensions harmoniously as the
   # page is widened/narrowed.
+  # The stack/window checks below ask the container capabilities
+  # imposesRatioConstraintOnDroppedChildren / releasesRatioConstraintOnGrabbedChildren
+  # rather than testing its class. (type-test-elimination campaign)
 
   justDropped: (whereIn) ->
     super
-    if (whereIn instanceof SimpleVerticalStackPanelWdgt) and !(whereIn instanceof WindowWdgt)
+    if whereIn?.imposesRatioConstraintOnDroppedChildren?()
       @constrainToRatio()
 
   holderWindowJustDropped: (whereIn) ->
-    if (whereIn instanceof SimpleVerticalStackPanelWdgt) and !(whereIn instanceof WindowWdgt)
+    if whereIn?.imposesRatioConstraintOnDroppedChildren?()
       @constrainToRatio()
 
   constrainToRatio: ->
@@ -87,11 +90,11 @@ class Example3DPlotWdgt extends Widget
       @rawSetExtent new Point @width(), 0
 
   holderWindowJustBeenGrabbed: (whereFrom) ->
-    if whereFrom instanceof SimpleVerticalStackPanelWdgt
+    if whereFrom?.releasesRatioConstraintOnGrabbedChildren?()
       @freeFromRatioConstraints()
 
   justBeenGrabbed: (whereFrom) ->
-    if whereFrom instanceof SimpleVerticalStackPanelWdgt
+    if whereFrom?.releasesRatioConstraintOnGrabbedChildren?()
       @freeFromRatioConstraints()
 
   freeFromRatioConstraints: ->

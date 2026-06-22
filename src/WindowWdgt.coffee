@@ -183,6 +183,13 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   rejectsBeingDropped: ->
     return !@internal
 
+  # A window is a SimpleVerticalStackPanelWdgt but does NOT impose its ratio on dropped
+  # children (was the `!(whereIn instanceof WindowWdgt)` exclusion in the ratio mixin /
+  # Example3DPlotWdgt). It still RELEASES the constraint on grab, via the inherited default.
+  # (type-test-elimination campaign)
+  imposesRatioConstraintOnDroppedChildren: ->
+    false
+
   setEmptyWindowLabel: ->
     if @internal
       @label.setText "empty internal window"

@@ -14,6 +14,17 @@ class SimpleVerticalStackPanelWdgt extends Widget
   colloquialName: ->
     "stack"
 
+  # A vertical stack constrains a dropped child to its width/height ratio, and frees that
+  # constraint when the child is grabbed back out. These container capabilities replace the
+  # `whereIn/whereFrom instanceof SimpleVerticalStackPanelWdgt` tests in the ratio mixin and
+  # Example3DPlotWdgt; WindowWdgt (a stack subclass) overrides the DROP one to false because
+  # a window does NOT impose the ratio on its contents. (type-test-elimination campaign)
+  imposesRatioConstraintOnDroppedChildren: ->
+    true
+
+  releasesRatioConstraintOnGrabbedChildren: ->
+    true
+
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
     aWdgt.rawResizeToWithoutSpacing()
 

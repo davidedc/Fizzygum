@@ -12,7 +12,9 @@ KeepsRatioWhenInVerticalStackMixin =
       @rawSetExtent new Point newWidth, Math.round newWidth * ratio
 
     holderWindowJustBeenGrabbed: (whereFrom) ->
-      if whereFrom instanceof SimpleVerticalStackPanelWdgt
+      # capability query replaces `whereFrom instanceof SimpleVerticalStackPanelWdgt`
+      # (type-test-elimination campaign)
+      if whereFrom?.releasesRatioConstraintOnGrabbedChildren?()
         @freeFromRatioConstraints()
 
     holderWindowMadeIntoExternal: ->
@@ -29,7 +31,9 @@ KeepsRatioWhenInVerticalStackMixin =
           @parent.fullRawMoveWithin world
 
     holderWindowJustDropped: (whereIn) ->
-      if (whereIn instanceof SimpleVerticalStackPanelWdgt) and !(whereIn instanceof WindowWdgt)
+      # capability query replaces `(whereIn instanceof SimpleVerticalStackPanelWdgt) and
+      # !(whereIn instanceof WindowWdgt)` (type-test-elimination campaign)
+      if whereIn?.imposesRatioConstraintOnDroppedChildren?()
         @constrainToRatio()
 
     constrainToRatio: ->
