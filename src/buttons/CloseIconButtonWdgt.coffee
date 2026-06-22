@@ -9,8 +9,12 @@ class CloseIconButtonWdgt extends IconButtonWdgt
   createAppearance: -> new CloseIconAppearance @
 
   actOnClick: ->
+    # Ask the container what its bar's close button does -- a window handles it
+    # (closeFromWindowBar or close, per its contents); any other container of a
+    # close button just closes. Was an `instanceof WindowWdgt` branch.
+    # (type-test-elimination campaign)
     if @parent?
-      if (@parent instanceof WindowWdgt) and @parent.contents?
-        @parent.closeFromWindowBar()
+      if @parent.closeButtonInBarPressed?
+        @parent.closeButtonInBarPressed()
       else
         @parent.close()

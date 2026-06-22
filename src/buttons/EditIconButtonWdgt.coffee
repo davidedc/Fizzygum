@@ -8,6 +8,7 @@ class EditIconButtonWdgt extends IconButtonWdgt
   createAppearance: -> new PencilIconAppearance @
 
   actOnClick: ->
-    if @parent?
-      if (@parent instanceof WindowWdgt)
-        @parent.contents?.editButtonPressedFromWindowBar?()
+    # Notify the containing window its edit button was pressed (the window forwards
+    # to its contents); only a window answers editButtonInBarPressed, so this fires
+    # for exactly the old `instanceof WindowWdgt` set. (type-test-elimination campaign)
+    @parent?.editButtonInBarPressed?()

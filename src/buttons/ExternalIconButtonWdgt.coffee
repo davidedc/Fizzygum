@@ -8,6 +8,7 @@ class ExternalIconButtonWdgt extends IconButtonWdgt
   createAppearance: -> new ExternalIconAppearance @
 
   actOnClick: ->
-    if @parent?.parent?
-      if (@parent.parent instanceof WindowWdgt)
-        @parent.parent.makeInternal()
+    # These buttons sit in a SwitchButtonWdgt inside the window, so the window is
+    # the grandparent; only a window answers makeInternal, replacing the old
+    # `instanceof WindowWdgt` test. (type-test-elimination campaign)
+    @parent?.parent?.makeInternal?()

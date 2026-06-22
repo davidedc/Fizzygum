@@ -145,6 +145,18 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   closeFromWindowBar: ->
     @contents?.closeFromContainerWindow @
 
+  # The title-bar Close/Edit buttons announce their press here instead of testing
+  # `@parent instanceof WindowWdgt` themselves -- the window owns what its bar
+  # buttons mean. closeButtonInBarPressed mirrors the old button branch exactly (a
+  # contents-bearing window closes from the bar, an empty one just closes); a
+  # non-window container of a close button has no such method, so that button falls
+  # back to Widget.close(). (type-test-elimination campaign)
+  closeButtonInBarPressed: ->
+    if @contents? then @closeFromWindowBar() else @close()
+
+  editButtonInBarPressed: ->
+    @contents?.editButtonPressedFromWindowBar?()
+
   contentsRecursivelyCanSetHeightFreely: ->
     if !(@contents instanceof WindowWdgt)
       # FIT_BOX_TO_TEXT content drives its OWN height from its wrapped text, so the
