@@ -4176,7 +4176,7 @@ class Widget extends TreeNode
       allAddersToBeDestroyed =
         @collectAllChildrenBottomToTopSuchThat (m) ->
           m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED and
-          m instanceof LayoutElementAdderOrDropletWdgt
+          m.isLayoutAdderOrDroplet?()
       for C in allAddersToBeDestroyed
         C.fullDestroy()
       return
@@ -4191,7 +4191,7 @@ class Widget extends TreeNode
       leftToDo = @firstChildSuchThat (m) ->
           if m.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
             return false
-          if m instanceof LayoutElementAdderOrDropletWdgt
+          if m.isLayoutAdderOrDroplet?()
             return false
           kkk = m.lastSiblingBeforeMeSuchThat(
               (mm) ->
@@ -4199,7 +4199,7 @@ class Widget extends TreeNode
             )
           if !kkk?
             return true
-          if kkk instanceof LayoutElementAdderOrDropletWdgt
+          if kkk.isLayoutAdderOrDroplet?()
             return false
           return true
       if !leftToDo?
@@ -4216,7 +4216,7 @@ class Widget extends TreeNode
       leftToDo = @firstChildSuchThat (m) ->
           if m.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
             return false
-          if m instanceof LayoutElementAdderOrDropletWdgt
+          if m.isLayoutAdderOrDroplet?()
             return false
           kkk = m.firstSiblingAfterMeSuchThat(
               (mm) ->
@@ -4224,7 +4224,7 @@ class Widget extends TreeNode
             )
           if !kkk?
             return true
-          if kkk instanceof LayoutElementAdderOrDropletWdgt
+          if kkk.isLayoutAdderOrDroplet?()
             return false
           return true
       if !leftToDo?

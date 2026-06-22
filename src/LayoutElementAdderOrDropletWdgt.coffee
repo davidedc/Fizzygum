@@ -8,6 +8,13 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
     @setColor Color.BLACK
     @setMinAndMaxBoundsAndSpreadability (new Point 15,15) , (new Point 15,15), LayoutSpec.SPREADABILITY_HANDLES
 
+  # Role query (replaces the `x instanceof LayoutElementAdderOrDropletWdgt` filters in
+  # Widget.addOrRemoveAdders): "am I one of the auto-inserted stack add/drop placeholders?" — true
+  # here (and any subclass), so callers skip these chrome placeholders when scanning real stack
+  # content. Parallels isLayoutDecoration. (type-test-elimination campaign, capability-first)
+  isLayoutAdderOrDroplet: ->
+    true
+
   # paintIntoAreaOrBlitFromBackBuffer is inherited from LayoutChromeWdgt; this
   # class supplies only its drawLayoutChrome tail (the base default, via
   # spacerWidgetRenderingHelper below).
