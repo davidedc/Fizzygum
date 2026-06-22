@@ -62,12 +62,12 @@ Status: ✅ done · ☐ todo · ⏳ study (Phase-6-entangled) · — leave. Re-g
 - ☐ **ratio-constraint drop/grab** — `mixins/KeepsRatioWhenInVerticalStackMixin.coffee:15/32`, `graphs-plots-charts/Example3DPlotWdgt.coffee:70/74/90/94` → `imposesRatioConstraintOnDroppedChildren?()`/`releasesRatioConstraintOnGrabbedChildren?()` on the stack (overridden false by `WindowWdgt`); kills 6 copy-pasted sites + the IS-A-minus-subclass smell.
 - ☐ **entry fields** — `Widget.coffee:~3586`, `PanelWdgt.coffee:78` → reuse `isEditable` + `isTextEntryField?()`.
 - ✅ **pen surface** — `PenWdgt.coffee:28` → `acceptsPenDrawing?()` on `CanvasWdgt`+`ActivePointerWdgt`.
-- ☐ **basement** — `TreeNode.coffee:168/174/182` → `isBasementContainer?()` on `BasementWdgt`.
+- ✅ **basement** — `TreeNode.coffee:168/174/182` → `== world.basementWdgt` (singleton identity, level 3 — the basement is a boot-created singleton with no subclasses; cleaner than a predicate).
 - ☐ **desktop-icon family** — `IconicDesktopSystemLinkWdgt.coffee:11`, `WorldWdgt.coffee:1457`, `mixins/GridPositioningOfAddedShortcutsMixin.coffee:25` → `isDesktopIcon?()`/`participatesInIconGrid?()`.
 - ✅ **shortcut-to-self** — `Widget.coffee:~2125` → `isShortcutTo?(w)` on `IconicDesktopSystemShortcutWdgt` (folds the `target == @` check in).
 - ☐ **menu detection (filter half)** — `ActivePointerWdgt.coffee:83/382` → `isMenu?()` on `MenuWdgt`.
 - ☐ **hierarchy-scaffold** — `Widget.coffee:~3124` → `hiddenAsInternalScaffolding?()`.
-- ☐ **handle-initiated geometry** — `Widget.coffee:~1343/1562` → `changeShouldRememberFractionalGeometry?()` on the initiator.
+- ✅ **handle-initiated geometry** — `Widget.coffee:~1343/1562` → `changeShouldRememberFractionalGeometry?()` on `HandleWdgt` (the `:608` find-handle site is separate, deferred).
 
 ### Phase α — capability reuse (per-site faithfulness; NOT a blanket reuse)
 - ☐ **overlay-chrome** — sites test DIFFERENT class-sets, so map per site: {Caret,Handle}→`isLayoutDecoration?()` (`WindowWdgt.coffee:197`); {annotation,Handle}→a distinct `attachesToScrollFrameDirectly?()` (`ScrollPanelWdgt.coffee:194`, `HorizontalMenuPanelWdgt.coffee:20`, `ToolPanelWdgt.coffee:16`, `StretchableWidgetContainerWdgt.coffee:34`); {Caret} / {Highlighter,Caret} (`ActivePointerWdgt.coffee:66`, `PanelWdgt.coffee:75`, `SimplePlainTextWdgt.coffee:97`, `Widget.coffee:2377`) → extend `isLayoutDecoration` ONLY if the firing set stays exact, else a narrower query. Verify each is byte-identical.
