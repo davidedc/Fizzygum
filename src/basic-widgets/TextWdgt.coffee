@@ -752,6 +752,11 @@ class TextWdgt extends StringWdgt
       menu.prependMenuItem "do selection", true, @, "doSelection", "evaluate the\nselected expression"
     menu
 
+  # Multi-line text inserts a newline on Enter rather than accepting -- override of
+  # StringWdgt.enterKeyAccepts, inherited by all TextWdgt subclasses. (type-test-elimination campaign)
+  enterKeyAccepts: ->
+    false
+
   # StringWdgt editing:
   edit: ->
     # when you edit a text widget, potentially

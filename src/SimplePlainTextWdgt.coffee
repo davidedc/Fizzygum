@@ -49,6 +49,11 @@ class SimplePlainTextWdgt extends TextWdgt
   colloquialName: ->
     "text"
 
+  # On Tab, this widget inserts two spaces instead of letting the target handle Tab
+  # (was `@target instanceof SimplePlainTextWdgt` in the caret). (type-test-elimination campaign)
+  tabInsertsSpaces: ->
+    true
+
   initialiseDefaultWindowContentLayoutSpec: ->
     super
     @layoutSpecDetails.canSetHeightFreely = false

@@ -87,15 +87,20 @@ class CaretWdgt extends BlinkerWdgt
             if shiftKey
               return @target.backTab @target
             else
-              if @target instanceof SimplePlainTextWdgt
+              # SimplePlainTextWdgt inserts two spaces on Tab; every other target
+              # handles Tab itself (was `@target instanceof SimplePlainTextWdgt`).
+              # (type-test-elimination campaign)
+              if @target.tabInsertsSpaces?()
                 @insert "  "
               else
                 return @target.tab @target
         when "Enter"
-          # we can't check the class using instanceof because a TextWdgt is an
-          # instance of StringWdgt but wants Enter to insert a carriage return
-          # (multi-line), whereas a single-line StringWdgt wants Enter to accept.
-          if @target.constructor.name == "StringWdgt"
+          # A single-line StringWdgt accepts on Enter; a multi-line TextWdgt (and any
+          # other StringWdgt subclass) inserts a newline. enterKeyAccepts is true only on
+          # the bare StringWdgt and overridden false down the tree -- which is why this
+          # can't be `instanceof StringWdgt` (a TextWdgt is-a StringWdgt).
+          # (type-test-elimination campaign)
+          if @target.enterKeyAccepts?()
             @accept()
           else
             @insert "\n"

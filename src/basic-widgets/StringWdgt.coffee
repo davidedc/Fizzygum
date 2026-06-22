@@ -1271,6 +1271,12 @@ class StringWdgt extends Widget
     @updateTarget()
 
   
+  # On Enter, a single-line StringWdgt commits (accept); subclasses override this to
+  # false so multi-line/derived text inserts a newline instead. The caret keys off
+  # this rather than an exact class-name check. (type-test-elimination campaign)
+  enterKeyAccepts: ->
+    true
+
   # StringWdgt editing:
   edit: ->
     if @textPossiblyCroppedToFit == @transformTextOneToOne @text

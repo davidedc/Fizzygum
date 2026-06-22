@@ -3,6 +3,12 @@ class HhmmssLabelWdgt extends StringWdgt
   colloquialName: ->
     "HH:MM:SS label"
 
+  # A clock label is a StringWdgt subclass, so (like any non-bare StringWdgt) Enter does
+  # not 'accept' it -- it inserts a newline. Override of StringWdgt.enterKeyAccepts that
+  # preserves the caret's old exact-class-name behaviour. (type-test-elimination campaign)
+  enterKeyAccepts: ->
+    false
+
   _formatTime: (time) ->
     hours = Math.floor(time / 3600)
     minutes = Math.floor((time - (hours * 3600)) / 60)
