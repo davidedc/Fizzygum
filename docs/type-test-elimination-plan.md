@@ -63,7 +63,7 @@ Status: ✅ done · ☐ todo · ⏳ study (Phase-6-entangled) · — leave. Re-g
 - ✅ **last-focus tracking** — `ActivePointerWdgt.coffee:254/562` → `excludedFromLastFocusTracking?()` on `HorizontalMenuPanelWdgt` (negative capability on the special class, no Widget base).
 - ✅ **glass-box wrap idempotency** — `HorizontalMenuPanelWdgt.coffee:28`, `ToolPanelWdgt.coffee:30` → `isGlassBoxWrapper?()` on `GlassBoxBottomWdgt` (the `ActivePointerWdgt` grab-inflate site left for γ).
 - ✅ **ratio-constraint drop/grab** — 6 sites (`KeepsRatioWhenInVerticalStackMixin` grab+drop, `Example3DPlotWdgt` justDropped/holderWindowJustDropped + holderWindowJustBeenGrabbed/justBeenGrabbed) → two container capabilities on `SimpleVerticalStackPanelWdgt`: `imposesRatioConstraintOnDroppedChildren?()` (`-> true`, overridden `-> false` on `WindowWdgt` — reproduces the DROP `… and !(whereIn instanceof WindowWdgt)` exclusion exactly, since `WindowWdgt extends SimpleVerticalStackPanelWdgt`) and `releasesRatioConstraintOnGrabbedChildren?()` (`-> true`, NOT overridden — the GRAB sites include windows). Used `whereIn?.…?()`/`whereFrom?.…?()` to preserve the `instanceof` nil→false. Killed the IS-A-minus-subclass smell. Byte-identical, zero recapture.
-- ☐ **entry fields** — `Widget.coffee:~3586`, `PanelWdgt.coffee:78` → reuse `isEditable` + `isTextEntryField?()`.
+- ✅ **entry fields (`Widget.allEntryFields`)** — `instanceof StringWdgt or instanceof SimplePlainTextWdgt` (2nd clause already redundant: SimplePlainTextWdgt is-a StringWdgt) → `each.isEditable and each.isTextEntryField?()` (`isTextEntryField -> true` on StringWdgt, family-wide; faithful = the old `instanceof StringWdgt`). **`PanelWdgt:78` SPLIT OUT to ε** (it tests the narrower single class `instanceof SimplePlainTextWdgt`; reusing `isTextEntryField` would broaden it, and a one-class predicate there would be cosmetic). Benign recapture of 3 StringWdgt-inspecting tests (member list grew by `isTextEntryField`).
 - ✅ **pen surface** — `PenWdgt.coffee:28` → `acceptsPenDrawing?()` on `CanvasWdgt`+`ActivePointerWdgt`.
 - ✅ **basement** — `TreeNode.coffee:168/174/182` → `== world.basementWdgt` (singleton identity, level 3 — the basement is a boot-created singleton with no subclasses; cleaner than a predicate).
 - ☐ **desktop-icon family** — `IconicDesktopSystemLinkWdgt.coffee:11`, `WorldWdgt.coffee:1457`, `mixins/GridPositioningOfAddedShortcutsMixin.coffee:25` → `isDesktopIcon?()`/`participatesInIconGrid?()`.
@@ -92,7 +92,11 @@ Status: ✅ done · ☐ todo · ⏳ study (Phase-6-entangled) · — leave. Re-g
 Scroll-structure topology (`_amIDirectlyInsideScrollPanelWdgt`/`…NonTextWrapping…` and the Panel/Slider-in-ScrollPanel
 drag-policy sites) and lock-to-panels (`Widget.coffee:~2706/3213`) — these dissolve under the God-class split; convert
 via a parent capability-query only if the split doesn't reach them first. ScrollPanel content-type layout
-(`ScrollPanelWdgt.coffee:240/324/358`) — polymorphic content hook; layout-determinism-sensitive.
+(`ScrollPanelWdgt.coffee:240/324/358`) — polymorphic content hook; layout-determinism-sensitive. Also `PanelWdgt:78`
+(`(m instanceof SimplePlainTextWdgt) and m.isEditable` — the single editable wrapping-text child of a panel inside a
+scroll panel, for a click-to-place-caret forward): narrower than the StringWdgt-family `isTextEntryField`, so a
+faithful conversion needs a SimplePlainTextWdgt-specific query (cosmetic) — LEAVE-candidate; revisit with the
+scroll-panel-content hook.
 
 ## LEAVE (concrete class is clearest — do NOT convert)
 Generic class-param tree utils (`TreeNode.parentThatIsA/siblingBeforeMeIsA/siblingAfterMeIsA`); serialization/

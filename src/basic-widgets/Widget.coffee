@@ -3581,11 +3581,12 @@ class Widget extends TreeNode
   # Widget entry field tabbing //////////////////////////////////////////////
   
   allEntryFields: ->
+    # an entry field is any editable StringWdgt-family widget. isTextEntryField (on StringWdgt,
+    # inherited by SimplePlainTextWdgt et al.) replaces the `instanceof StringWdgt or instanceof
+    # SimplePlainTextWdgt` test -- whose second clause was already redundant, since
+    # SimplePlainTextWdgt is-a StringWdgt. (type-test-elimination campaign)
     @collectAllChildrenBottomToTopSuchThat (each) ->
-      each.isEditable and
-      (each instanceof StringWdgt or
-        each instanceof SimplePlainTextWdgt
-        )
+      each.isEditable and each.isTextEntryField?()
   
   
   nextEntryField: (current) ->

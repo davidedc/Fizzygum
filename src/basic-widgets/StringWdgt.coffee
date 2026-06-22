@@ -1277,6 +1277,11 @@ class StringWdgt extends Widget
   enterKeyAccepts: ->
     true
 
+  # I am an editable text entry field -- used by Widget.allEntryFields for Tab navigation.
+  # True for the whole StringWdgt family (replaces an `instanceof StringWdgt`). (type-test-elimination campaign)
+  isTextEntryField: ->
+    true
+
   # StringWdgt editing:
   edit: ->
     if @textPossiblyCroppedToFit == @transformTextOneToOne @text
