@@ -31,6 +31,13 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
     super @title, @icon
     world.widgetsReferencingOtherWidgets.add @
 
+  # Capability query (replaces `w instanceof IconicDesktopSystemShortcutWdgt and w.target == X` in
+  # Widget.createReference): "am I a shortcut pointing at `widget`?" -- folds the target check in.
+  # Defined here (inherited by all shortcut subclasses), dispatched via ?() (nothing on Widget).
+  # (type-test-elimination campaign)
+  isShortcutTo: (widget) ->
+    @target == widget
+
   destroy: ->
     super
     world.widgetsReferencingOtherWidgets.delete @

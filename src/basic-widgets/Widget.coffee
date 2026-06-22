@@ -2122,7 +2122,7 @@ class Widget extends TreeNode
 
     # don't create new reference if it exists already
     for w in placeToDropItIn.children
-      if (w instanceof IconicDesktopSystemShortcutWdgt) and w.target == @
+      if w.isShortcutTo?(@)
         return
 
     widgetToAdd = new IconicDesktopSystemDocumentShortcutWdgt @, referenceName
