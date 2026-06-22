@@ -92,9 +92,14 @@ class LabelButtonWdgt extends ButtonWdgt
       @label.fullRawMoveTo @center().subtract @label.extent().floorDivideBy 2
 
   # a label button has no faceWidget; use the base Widget layout rather than
-  # ButtonWdgt's faceWidget-centric override.
+  # ButtonWdgt's faceWidget-centric override. Then re-run _reLayoutSelf so a
+  # CENTERED button keeps its label centred through ANY layout/resize: the base
+  # pass applies the new bounds, then _reLayoutSelf re-centres the label against
+  # them (a no-op when not centered). This is why a caller resizing a centered
+  # label button no longer needs an explicit re-centre.
   _reLayout: (newBoundsForThisLayout) ->
     Widget::_reLayout.call @, newBoundsForThisLayout
+    @_reLayoutSelf()
 
   # »>> this part is excluded from the fizzygum homepage build
   setLabel: (@labelString) ->
