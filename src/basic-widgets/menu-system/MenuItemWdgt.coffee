@@ -19,6 +19,13 @@ class MenuItemWdgt extends LabelButtonWdgt
     super menuItemSpec.ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, menuItemSpec.target, menuItemSpec.action, (menuItemSpec.label or "close"), fontSize, fontStyle, centered, environment, widgetEnv, menuItemSpec.toolTipMessage, menuItemSpec.color, menuItemSpec.bold, menuItemSpec.italic, menuItemSpec.doubleClickAction, menuItemSpec.argumentToAction1, menuItemSpec.argumentToAction2, menuItemSpec.representsAWidget
     @actionableAsThumbnail = true
 
+  # In a glass box I am sized to my (variable-width) text, not laid out as a square
+  # thumbnail like other contents -- the glass-box layout in GlassBoxBottomWdgt /
+  # HorizontalMenuPanelWdgt keys off this instead of `instanceof MenuItemWdgt`.
+  # (type-test-elimination campaign)
+  isTextSizedGlassBoxItem: ->
+    true
+
   getTextDescription: ->
     if @textDescription?
       return @textDescription + " (adhoc description of menu item)"

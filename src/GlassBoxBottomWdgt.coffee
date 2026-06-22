@@ -40,7 +40,9 @@ class GlassBoxBottomWdgt extends BoxWdgt
 
     for w in childrenNotHandlesNorCarets
 
-      if (w instanceof MenuItemWdgt)
+      # a menu item is sized to its text; other contents become square thumbnails
+      # (was `w instanceof MenuItemWdgt`). (type-test-elimination campaign)
+      if w.isTextSizedGlassBoxItem?()
         w.fullRawMoveTo @topLeft().add((new Point 0 ,(@height() - w.height())/2 ).round())
       else
         if w.idealRatioWidthToHeight?

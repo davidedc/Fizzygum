@@ -41,7 +41,9 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
           glassBoxTop.toolTipMessage = aWdgt.toolTipMessage
 
         glassBoxBottom.fullRawMoveTo @topLeft().add new Point @internalPadding, @internalPadding
-        if (aWdgt instanceof MenuItemWdgt)
+        # a menu item gets a text-width glass box; everything else a square thumbnail
+        # (was `aWdgt instanceof MenuItemWdgt`). (type-test-elimination campaign)
+        if aWdgt.isTextSizedGlassBoxItem?()
           aWdgt.shrinkToTextSize()
           glassBoxBottom.rawSetExtent new Point aWdgt.width(), @thumbnailSize
         else
