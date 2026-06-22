@@ -227,9 +227,10 @@ class MenuWdgt extends PopUpWdgt
 
   
   unselectAllItems: ->
+    # only menu items carry a selection state; each resets its own (was
+    # `if item instanceof MenuItemWdgt`). (type-test-elimination campaign)
     @children.forEach (item) ->
-      if item instanceof MenuItemWdgt
-        item.state = item.STATE_NORMAL
+      item.unselect?()
 
     @changed()
 

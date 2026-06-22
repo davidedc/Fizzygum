@@ -26,6 +26,11 @@ class MenuItemWdgt extends LabelButtonWdgt
   isTextSizedGlassBoxItem: ->
     true
 
+  # reset my selection highlight (called for every menu child by MenuWdgt.unselectAllItems,
+  # replacing its `if item instanceof MenuItemWdgt`). (type-test-elimination campaign)
+  unselect: ->
+    @state = @STATE_NORMAL
+
   getTextDescription: ->
     if @textDescription?
       return @textDescription + " (adhoc description of menu item)"
