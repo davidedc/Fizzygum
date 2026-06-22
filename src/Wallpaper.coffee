@@ -52,7 +52,8 @@ class Wallpaper
     @patternName = thePatternName
     world.changed()
 
-    if menuItem?.parent? and (menuItem.parent instanceof MenuWdgt)
+    # was `menuItem.parent instanceof MenuWdgt` (type-test-elimination campaign)
+    if menuItem?.parent? and menuItem.parent.isMenu?()
       @updatePatternsMenuEntriesTicks menuItem.parent
 
 
