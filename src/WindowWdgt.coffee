@@ -251,6 +251,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     if child == @contents
       if @widthWhenCollapsed?
         @rawSetWidth @widthWhenCollapsed
+      # layout-apply-sanctioned: collapse re-fit (must stay synchronous, residuals-audit fam 4)
       @_reFitToContents()
       @_refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
@@ -261,6 +262,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @contents.rawSetExtent @contentsExtentWhenCollapsed
       if @widthWhenUnCollapsed?
         @rawSetWidth @widthWhenUnCollapsed
+      # layout-apply-sanctioned: uncollapse re-fit, reInflating-coupled (must stay synchronous, residuals-audit fam 4)
       @_reFitToContents()
       @reInflating = false
       @rememberFractionalSituationInHoldingPanel()

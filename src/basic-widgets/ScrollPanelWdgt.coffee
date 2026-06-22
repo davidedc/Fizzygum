@@ -81,11 +81,13 @@ class ScrollPanelWdgt extends PanelWdgt
 
   adjustContentsBasedOnHBar: (num) ->
     @contents.fullRawMoveTo new Point @left() - num, @contents.position().y
+    # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
     @_adjustContentsBounds()
     @_adjustScrollBars()
 
   adjustContentsBasedOnVBar: (num) ->
     @contents.fullRawMoveTo new Point @contents.position().x, @top() - num
+    # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
     @_adjustContentsBounds()
     @_adjustScrollBars()
 
@@ -198,18 +200,23 @@ class ScrollPanelWdgt extends PanelWdgt
       # with this panel's own doLayout ('super; @_reFitToContents') so the cycle re-fits identically;
       # the inline call just keeps geometry current within the calling public method. Distinct from
       # the seam sites (raw-mutator / gesture triggers), which DO defer. (deferred-layout-residuals-audit.md)
+      # Deferring this re-fit through settleLayoutsOnceAfter was PROBED 2026-06-22 (OVERVIEW §11 Phase-4) and
+      # REJECTED: it deterministically diverges nested-scroll content/thumb geometry (3 frames of
+      # macroNestedScrollPanelsRouteWheel + macroDocumentScrollsMixedTextAndClocks) for ZERO gain -- the
+      # synchronous re-fit's re-read of APPLIED geometry is load-bearing (OVERVIEW §11 PROOF 2). Leave synchronous.
+      # layout-apply-sanctioned: public content-change endpoint, idempotent w/ doLayout (OVERVIEW §11 PROOF 2)
       @_reFitToContents()
 
   # see SimpleSlideWdgt for performance improvements
   # of this over the non-
   addMany: (widgetsToBeAdded) ->
     @contents.addMany widgetsToBeAdded
-    @_reFitToContents() # intentional synchronous APPLY -- see add() above (public endpoint, not a deferred trigger)
+    @_reFitToContents() # layout-apply-sanctioned: public content-change endpoint -- see add() (OVERVIEW §11 PROOF 2)
 
 
   showResizeAndMoveHandlesAndLayoutAdjusters: ->
     super
-    @_reFitToContents() # intentional synchronous APPLY -- see add() above (public endpoint, not a deferred trigger)
+    @_reFitToContents() # layout-apply-sanctioned: public content-change endpoint -- see add() (OVERVIEW §11 PROOF 2)
 
   
   setContents: (aWdgt, extraPadding) ->
@@ -249,12 +256,14 @@ class ScrollPanelWdgt extends PanelWdgt
   # unlike the seams, these are never dispatched mid-pass. See deferred-layout-residuals-audit.md fam 2.)
   reactToDropOf: ->
     if world?._recalculatingLayouts
+      # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
       @_reFitToContents()
     else
       @invalidateLayout()
 
   reactToGrabOf: ->
     if world?._recalculatingLayouts
+      # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
       @_reFitToContents()
     else
       @invalidateLayout()
@@ -429,11 +438,13 @@ class ScrollPanelWdgt extends PanelWdgt
   scrollTo: (whereTo) ->
     @contents.fullRawMoveLeftSideTo -whereTo.x
     @contents.fullRawMoveTopSideTo -whereTo.y
+    # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
     @_adjustScrollBars()
 
 
   scrollToBottom: ->
     @scrollY -100000
+    # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
     @_adjustScrollBars()
   
   scrollY: (steps) ->
@@ -585,6 +596,7 @@ class ScrollPanelWdgt extends PanelWdgt
             if deltaY isnt 0
               scrollbarJustChanged ||= @scrollY Math.round deltaY
       if scrollbarJustChanged
+        # layout-apply-sanctioned: scroll-input (momentum glide), determinism-exempt (residuals-audit fam 1)
         @_adjustContentsBounds()
         @_adjustScrollBars()
     super
@@ -633,6 +645,7 @@ class ScrollPanelWdgt extends PanelWdgt
     if area.containsPoint(pos)
       scrollbarJustChanged ||= @scrollY -(inset - (@bottom() - pos.y))
     if scrollbarJustChanged
+      # layout-apply-sanctioned: scroll-input (edge auto-scroll), determinism-exempt (residuals-audit fam 1)
       @_adjustContentsBounds()
       @_adjustScrollBars()
   
@@ -644,6 +657,7 @@ class ScrollPanelWdgt extends PanelWdgt
     fb = @bottom() - @padding
     fl = @left() + @padding
     fr = @right() - @padding
+    # layout-apply-sanctioned: scroll-input (caret-into-view), determinism-exempt (residuals-audit fam 1)
     @_adjustContentsBounds()
     marginAroundCaret = @padding
     if @extraPadding?
@@ -734,6 +748,7 @@ class ScrollPanelWdgt extends PanelWdgt
         @scrollX x * WorldWdgt.preferencesAndSettings.wheelScaleX
 
     if scrollbarJustChanged
+      # layout-apply-sanctioned: scroll-input (wheel), determinism-exempt (residuals-audit fam 1)
       @_adjustContentsBounds()
       @_adjustScrollBars()
   

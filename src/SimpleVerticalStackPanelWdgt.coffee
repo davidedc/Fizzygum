@@ -85,6 +85,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   childRemoved: ->
     return if @parent?.reLayOutAfterContainedPanelChange?()
     if world?._recalculatingLayouts
+      # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
       @_reFitToContents()
     else
       @invalidateLayout()
@@ -92,6 +93,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   reactToDropOf: ->
     return if @parent?.reLayOutAfterContainedPanelChange?()
     if world?._recalculatingLayouts
+      # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
       @_reFitToContents()
     else
       @invalidateLayout()

@@ -186,7 +186,8 @@ LEAVE-SYNCHRONOUS (below).** Status of the 8 families (2–5 + the `newParentCho
   deferred 2-state seam (mirrors `reactToGrabOf` and the already-converted `SimpleVerticalStackPanelWdgt.childRemoved`).
   Net: every off-settle synchronous re-fit TRIGGER now defers; the only remaining synchronous `_reFitToContents` callers
   are APPLY bodies, the documented leave-synchronous families below, and the `ScrollPanelWdgt.add`/`addMany`/`showResize…`
-  public ENDPOINTS (now annotated in code as intentional applies, idempotent with the cycle — not deferral targets).
+  public ENDPOINTS (annotated in code as intentional applies, idempotent with the cycle; the only stricter form —
+  routing through `settleLayoutsOnceAfter` — is byte-risky and zero-gain, see §11 PROOF 2).
   Verified: suite 165/165 at dpr1/dpr2/WebKit, smoke-apps 12/12, lint A–E 0, 20-min torture soak (dpr2·fastest·8-shard,
   15 runs / ~2,475 execs) ZERO nondeterminism.
 
@@ -292,8 +293,70 @@ what the soak hunts. Read `../Fizzygum-tests/DETERMINISM.md` before touching the
   that STOPS at freefloating ~:925). (`world._reFittingContents` was RETIRED by the capstone — §4/§5.)
 - `src/basic-widgets/ScrollPanelWdgt.coffee`: `_reFitToContents` ~:262 · `doLayout`
   (`super; @_reFitToContents`) ~:276 · gesture seams `reactToDropOf` ~:245 / `reactToGrabOf` ~:251 · the public-endpoint
-  applies `add`/`addMany`/`showResizeAndMoveHandlesAndLayoutAdjusters` ~:196/202/207 (intentional synchronous APPLY, not deferral targets).
+  applies `add`/`addMany`/`showResizeAndMoveHandlesAndLayoutAdjusters` ~:196/202/207 (intentional synchronous APPLY — §11 PROOF 2; the stricter `settleLayoutsOnceAfter` form is byte-risky/zero-gain).
 - `src/SimpleVerticalStackPanelWdgt.coffee`: `_reFitToContents` ~:54 · `doLayout` ~:70 · `childRemoved` (deferred 2-state).
   Plus `src/basic-widgets/PanelWdgt.coffee` (`childRemoved` deferred 2-state ~:93 + `reactToDropOf`/`reactToGrabOf`;
   `addInPseudoRandomPosition` ~:112 defers via the geometry seam, no own re-fit) + `src/WindowWdgt.coffee`
   (`_reFitToContents` ~:194). (`childGeometryChanged` was DELETED by the capstone — §5.)
+
+## 11. Why the boundary is maximal — the SCHEDULE/APPLY classifier + the irreducibility proof
+
+**This section makes "COMPLETE" AUDITABLE: it is the classifier of every layout-APPLY call site + the proof that the
+remaining synchronous applies CANNOT defer.** A read-only census (2026-06-22) bucketed every runtime apply call
+(`doLayout`/`reLayout`/`_reFitToContents`/`_adjustContentsBounds`/`_adjustScrollBars`/`recalculateLayouts`) under
+`src/` (~142 sites; counts approximate — the bucket BOUNDARIES are the point, not the tallies; re-derive via grep):
+
+| Bucket | ~n | what it is | representative | verdict |
+|---|---|---|---|---|
+| CYCLE-APPLY | 73 | the until-loop + every container/widget `doLayout`·`_adjust*` body + child fan-outs | `WorldWdgt._recalculateLayoutsCore:927` | settle point ✓ |
+| PUBLIC-FLUSH | 2 | the self-settling flush wrappers | `Widget.mutateGeometryThenSettle:783` | settle point ✓ |
+| DEFERRED-SEAM | 11 | in-pass arms (run only under `_recalculatingLayouts`) | `ScrollPanelWdgt.reactToDropOf:252` | already deferred ✓ |
+| TERMINAL-RAW-APPLY | 33 | `raw*`/`fullRaw*`/`iHaveBeenAddedTo` → `reLayout`/`doLayout`/`_reFitToContents` | `TextWdgt.rawSetExtent:428` | **IRREDUCIBLE** (PROOF 1) |
+| SCROLL-INPUT-APPLY | 18 | scroll handlers adjusting their OWN contents | `ScrollPanelWdgt.wheel:737` | LEAVE (family 1) |
+| CONSTRUCTION/DEV | 9 | constructors / `WidgetFactory` / live-edit | `WidgetFactory.createNewScrollPanelWdgt:42` | not steady-state |
+| SUSPICIOUS | 2 | `BoxWdgt.choiceOfWidgetToBePicked:21-22` | dead (`BoxWdgt` ⊄ `ScrollPanelWdgt`) → DELETED 2026-06-22 |
+
+**THE MAXIMAL INVARIANT (what "complete" means, precisely):**
+> Off-settle code may request layout only by RECORDING INTENT (`invalidateLayout`, or `@desired*`-then-flush). A layout
+> APPLY runs synchronously only at: (a) the cycle, (b) a public flush, (c) a raw-mutator TERMINAL self-apply
+> (irreducible — PROOF 1), (d) a deferred-seam in-pass arm (already under `_recalculatingLayouts`), or (e) a documented
+> determinism-exempt family (scroll-input / Slider / LabelButton / soft-wrap / collapse-`reInflating`). **This is the
+> MAXIMAL achievable invariant — the strict "no apply outside `recalculateLayouts`/flush" is UNACHIEVABLE for (c).**
+
+Build-gated by **lint [F]** (`buildSystem/check-layering.js`): a non-low-level, non-immediate-mutator method that calls
+a container APPLY (`_reFitToContents`/`_adjustContentsBounds`/`_adjustScrollBars`/`doLayout`) must DEFER or carry a
+conscious `# layout-apply-sanctioned: <why>` marker. (Cases (a)/(b)/(c) are already exempt via
+`isLowLevel||isImmediateMutator`; (d)/(e) carry markers. `reLayout` is OUT of [F]'s scope by design — it is a SELF-apply
+(own text re-wrap / own thumb / own label), not the freefloating-child→container regression class [F] guards.)
+
+### PROOF 1 — the terminal raw applies cannot defer (so (c) is irreducible)
+`rawSetExtent → @reLayout()` / `rawSetWidthSizeHeightAccordingly → @doLayout()` cannot become a deferred SCHEDULE:
+(i) raw setters run DURING passes, where `invalidateLayout` THROWS; (ii) the calling pass reads the apply's result back
+**in the same pass**; (iii) the only mechanism that would let a deferred read see the heading value is Path A — FALSIFIED
+(§6). The decisive same-pass read-back is in the hot container path: `SimpleVerticalStackPanelWdgt._adjustContentsBounds`
+calls `widget.rawSetWidthSizeHeightAccordingly recommendedElementWidth` (~:145) then reads `widget.height()` back to
+accumulate `stackHeight` (~:164) and bakes it via `@rawSetHeight` (~:171). Defer the apply ⇒ stale read ⇒ wrong stack
+height. (Same shape: `ScrollPanelWdgt._adjustContentsBounds` ~:335 re `TextWdgt.rawSetExtent→reLayout`.) No clean
+counterexample (checked `rawSetWidthSizeHeightAccordingly` Widget.coffee:706, the `Stretchable*` overrides,
+`ContainerMixin.adjustBounds`).
+
+### PROOF 2 — `ScrollPanelWdgt.add`/`addMany`/`showResize…` correctly stay synchronous APPLIES
+A bare two-arm swap (the `reactToDropOf` idiom) is UNSAFE for `add`: (i) `add` passes `ATTACHEDAS_FREEFLOATING`, so
+`_addCore`'s climb-invalidate (Widget.coffee ~:2454) is SKIPPED and the freefloating child does not climb — the inner
+`@contents.add` self-settle drains a queue the panel was **never enqueued into**, so only the trailing synchronous
+`@_reFitToContents()` re-fits it; (ii) the dominant caller is ORPHAN construction (`SimpleDocumentWdgt.spawnContents`
+~:78-86: `setContents`→`add`→`_reFitToContents` before the panel is added to the world), where the inner add hits
+`mutateGeometryThenSettle`'s orphan guard (no flush) and the synchronous re-fit is the only thing establishing geometry.
+The seams may defer only because `ActivePointerWdgt.drop`/`grab` guarantee a same-cycle settle; `add` has none. The sole
+consistency-preserving stricter form (wrap in `settleLayoutsOnceAfter` + keep a synchronous orphan re-fit, because
+`settleLayoutsOnceAfter` skips the orphan flush) is byte-risky (reorders content-settle vs panel-refit in one drain) and
+zero-gain. **Phase-4 EMPIRICAL RESULT (2026-06-22): PROBED and REJECTED — the question is now closed by attempt, not
+just argument.** The `settleLayoutsOnceAfter` form (with a synchronous orphan re-fit, since the batch flush is skipped
+for orphans) COMPILED, passed lint [F], and did NOT break construction (boot/smoke fine, `completed:true`) — but it
+**deterministically diverged the nested-scroll content/thumb geometry at dpr1**: `macroNestedScrollPanelsRouteWheel`
+(3 frames) + `macroDocumentScrollsMixedTextAndClocks` — the exact thumb-proportion hazard named above (a §11/Path-A
+casualty). So the synchronous re-fit's re-read of APPLIED geometry IS load-bearing for nested-scroll content sizing:
+deferring it to the batch flush reorders content-settle vs panel-refit and changes the *converged* geometry, for ZERO
+correctness gain. **BACKED OUT** — the endpoints stay synchronous, with a code breadcrumb at `ScrollPanelWdgt.add`
+recording the probe so it is not re-attempted. This empirically confirms PROOF 2 and the original "leave synchronous"
+decision.

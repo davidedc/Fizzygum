@@ -43,6 +43,11 @@ const PUBLIC_SETTERS = ['setExtent', 'fullMoveTo', 'setBounds', 'setWidth', 'set
 const PUB_CALL = new RegExp('[@.]\\s*(' + PUBLIC_SETTERS.join('|') + ')\\b');
 const RECALC_CALL = /[@.]\s*recalculateLayouts\b/;            // @recalculateLayouts / world.recalculateLayouts
 const INVALIDATE_CALL = /[@.]\s*invalidateLayout\b/;         // @invalidateLayout / x.invalidateLayout
+// [F] a CONTAINER-refit apply CALL (excludes reLayout — see the [F] rule note by the check below). The
+// trailing (?!\?) skips the `?._reFitToContents?` EXISTENCE-CHECK guards (e.g. `return unless @parent?._reFitToContents?`)
+// — those test for the method, they don't apply it; a real apply is `()`-called or paren-less-arg-called, never `?`-tested.
+const APPLY_CALL = /[@.]\s*(_reFitToContents|_adjustContentsBounds|_adjustScrollBars|doLayout)\b(?!\?)/;
+const SANCTION_MARKER = 'layout-apply-sanctioned';        // the conscious-sign-off comment marker for [F]
 const PUBLIC_SET = new Set(PUBLIC_SETTERS);
 const RECALC_WHITELIST = new Set(['doOneCycle', 'mutateGeometryThenSettle', 'settleLayoutsOnceAfter']);
 
@@ -141,6 +146,7 @@ function checkFile(file, violations) {
   const rel = path.relative(path.join(__dirname, '..'), file);
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   let method = null;          // current method name (null = not inside a 2-space method)
+  let methodMarked = false;   // [F]: has a `# layout-apply-sanctioned` sign-off appeared in the current method?
   let strState = null;
   for (let n = 0; n < lines.length; n++) {
     const raw = lines[n];
@@ -148,11 +154,12 @@ function checkFile(file, violations) {
     strState = state;
     if (strState === null) {                       // header detection only on fully-closed lines
       const m = raw.match(METHOD_HEADER);
-      if (m) { method = m[1]; continue; }
+      if (m) { method = m[1]; methodMarked = false; continue; }
       // a new 2-space property/non-method, or a dedent to class level, ends the method
-      if (/^  [A-Za-z_]\w*:/.test(raw) || /^[^\s]/.test(raw)) method = null;
+      if (/^  [A-Za-z_]\w*:/.test(raw) || /^[^\s]/.test(raw)) { method = null; methodMarked = false; }
     }
     if (!method) continue;
+    if (raw.includes(SANCTION_MARKER)) methodMarked = true;  // [F] per-method conscious sign-off (any body line)
     const at = `${rel}:${n + 1}`;
     const pub = code.match(PUB_CALL);
     const recalc = RECALC_CALL.test(code);
@@ -169,6 +176,24 @@ function checkFile(file, violations) {
     }
     if (PUBLIC_SET.has(method) && pub && pub[1] !== method) {
       violations.push(`[C] public setter ${method}() calls another public setter .${pub[1]}()  — ${at}`);
+    }
+    // [F] the SCHEDULE/APPLY boundary, made auditable (deferred-layout-OVERVIEW.md §11). A method that is NEITHER
+    // low-level NOR an immediate mutator -- i.e. a handler / property setter / menu action / gesture / constructor --
+    // must NOT call a CONTAINER-refit apply (_reFitToContents / _adjustContentsBounds / _adjustScrollBars / doLayout)
+    // synchronously OFF-SETTLE. It must DEFER (record intent via invalidateLayout; let the cycle / a flush apply it),
+    // OR, if the apply is genuinely AT a settle point (a deferred-seam in-pass arm, run under _recalculatingLayouts) or
+    // a documented determinism-exempt family (scroll-input / collapse / construction), CONSCIOUSLY mark the METHOD --
+    // any one line in its body `# layout-apply-sanctioned: <why>` exempts that whole handler. The apply BODIES, the
+    // cycle, and the raw-tier terminal applies are already
+    // isLowLevel / isImmediateMutator and exit above -- so this rule's whole surface is the off-settle non-mutator
+    // caller. SCOPE: reLayout is DELIBERATELY excluded -- it is a SELF-apply (own text re-wrap / own slider thumb / own
+    // button label; residuals-audit families 5/6/7 are "compliant in substance"), not the freefloating-child->container
+    // regression class [F] guards; including it would mark ~30 benign self-applies for little risk coverage.
+    if (!isLowLevel(method) && !isImmediateMutator(method)) {
+      const apply = code.match(APPLY_CALL);
+      if (apply && !methodMarked) {
+        violations.push(`[F] off-settle synchronous layout apply .${apply[1]}() in ${method}() — DEFER it (invalidateLayout), or if it is at a settle point / a documented determinism-exempt family mark the method  # ${SANCTION_MARKER}: <why>  — ${at}`);
+      }
     }
   }
 }
@@ -225,9 +250,10 @@ function main() {
     for (const v of violations) console.error('  ' + v);
     console.error('\nSee docs/deferred-layout-refit-and-add-design.md (D: macros must not call private/low-level methods;');
     console.error('E: raw/silent/fullRaw mutators must not call invalidateLayout) and docs/deferred-layout-16-macro-breakages.md (A/B/C).');
+    console.error('F: a non-mutator handler must DEFER a container apply (invalidateLayout) or mark it `# layout-apply-sanctioned: <why>` — see docs/deferred-layout-OVERVIEW.md §11.');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E)`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F)`);
   process.exit(0);
 }
 

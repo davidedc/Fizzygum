@@ -11,17 +11,6 @@ class BoxWdgt extends Widget
   colloquialName: ->
     "box"
 
-  # »>> this part is excluded from the fizzygum homepage build
-  # there is another method almost equal to this
-  # TODO refactor
-  choiceOfWidgetToBePicked: (ignored, widgetPickingUp) ->
-    # this is what happens when "each" is
-    # selected: we attach the selected widget
-    if @ instanceof ScrollPanelWdgt
-      @_adjustContentsBounds()
-      @_adjustScrollBars()
-  # this part is excluded from the fizzygum homepage build <<«
-
 
   setCornerRadius: (radiusOrWidgetGivingRadius, widgetGivingRadius) ->
     if widgetGivingRadius?.getValue?

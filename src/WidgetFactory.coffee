@@ -39,6 +39,7 @@ class WidgetFactory
     world.create newWdgt
   createNewScrollPanelWdgt: ->
     newWdgt = new ScrollPanelWdgt
+    # layout-apply-sanctioned: construction-time dev factory (orphan, no cycle yet)
     newWdgt._adjustContentsBounds()
     newWdgt._adjustScrollBars()
     newWdgt.rawSetExtent new Point 350, 250

@@ -86,6 +86,7 @@ class PanelWdgt extends Widget
   reactToDropOf: ->
     return unless @parent?._reFitToContents?
     if world?._recalculatingLayouts
+      # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
       @parent._reFitToContents()
     else
       @parent.invalidateLayout()
@@ -101,6 +102,7 @@ class PanelWdgt extends Widget
     # deferred-layout-residuals-audit.md)
     return unless @parent._reFitToContents?
     if world?._recalculatingLayouts
+      # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
       @parent._reFitToContents()
     else
       @parent.invalidateLayout()
@@ -166,6 +168,7 @@ class PanelWdgt extends Widget
   reactToGrabOf: ->
     return unless @parent?._reFitToContents?
     if world?._recalculatingLayouts
+      # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
       @parent._reFitToContents()
     else
       @parent.invalidateLayout()

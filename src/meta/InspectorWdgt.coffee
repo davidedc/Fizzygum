@@ -551,6 +551,7 @@ class InspectorWdgt extends Widget
       world.alignIDsOfNextWidgetsInSystemTests()
 
   layoutOwnPropsOnlyToggle: (height, listWidth, detailWidth) ->
+    # layout-apply-sanctioned: apply helper, runs under doLayout (settle point)
 
     toggleBounds = new Rectangle new Point @left()+@externalPadding , height
     toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (listWidth-@internalPadding)/ 2,15).round()

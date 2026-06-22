@@ -12,6 +12,7 @@ class ClassInspectorWdgt extends InspectorWdgt
     "Class Inspector (" + @target.constructor.name.replace("Wdgt", "") + ")"
 
   layoutOwnPropsOnlyToggle: (height) ->
+    # layout-apply-sanctioned: apply helper, runs under doLayout (settle point)
 
 
     toggleBounds = new Rectangle new Point @left() + @externalPadding , height

@@ -160,8 +160,9 @@ conversion will remove."
   `childGeometryChanged`/`reLayout` needs **family 8** (the `rawSetExtent→reLayout` structural root) converted first —
   it is the load-bearing blocker. Retiring the `_reFittingContents` counter is blocked independently: the counter's
   synchronous middle arm stays load-bearing as long as ANY `_reFitToContents` runs outside a recalc pass with a nested
-  raw change, and two such roots are un-deferrable / not at a settle point — **`WindowWdgt.add:212`** calls
-  `@_reFitToContents()` BEFORE its `super` flush (:213), and **`WindowWdgt.childUnCollapsed:258-264`** runs a
+  raw change, and two such roots WERE believed un-deferrable — **`WindowWdgt.add`** then called
+  `@_reFitToContents()` before its `super` flush [**⚠ STALE: that pre-fit was REMOVED/deferred by the capstone
+  (WindowWdgt.coffee ~:208-213); see `deferred-layout-OVERVIEW.md` §4/§11**], and **`WindowWdgt.childUnCollapsed`** runs a
   `reInflating`-coupled `@_reFitToContents()` whose `_adjustContentsBounds` reads `!@reInflating` mid-run (WindowWdgt:157).
   So the counter cannot be deleted ahead of resolving the structural root + those un-deferrable sites + the
   `reLayOutAfterContainedPanelChange` return-value contract. (A naive in-pass seam removal already broke 7 tests — the
@@ -202,4 +203,5 @@ family 5 is **LEFT SYNCHRONOUS**, like the borderline handlers (a) families 1/6/
 `PanelWdgt.childRemoved` + `addInPseudoRandomPosition` verify-and-drop slice — was **CLOSED 2026-06-22** (childRemoved →
 deferred 2-state seam; addInPseudoRandomPosition's redundant re-fit dropped; full gauntlet incl. 20-min soak green —
 `deferred-layout-OVERVIEW.md` §5). **Nothing further to do** — every off-settle synchronous re-fit trigger now defers,
-and every synchronous relayout that can defer without cost does.
+and every synchronous relayout that can defer without cost does. **The boundary is now AUDITABLE + build-gated: see
+`deferred-layout-OVERVIEW.md` §11 — the SCHEDULE/APPLY classifier, the irreducibility PROOF 1/2, and lint [F].**
