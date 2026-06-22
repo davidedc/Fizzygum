@@ -3,6 +3,11 @@
 > **STATUS: LIVE — the campaign map.** Canonical current state + the re-queue mechanism: `deferred-layout-OVERVIEW.md`
 > (it supersedes this doc on any conflict). Originally a read-only audit (2026-06-21, 3 parallel sweeps over `src/`).
 > **Progress so far: the seam + twin + drag/drop gesture re-fits are now DEFERRED** (see "Already compliant" below).
+> **Update 2026-06-22:** the seam (`_reFitContainerAfterRawGeometryChange`), twin
+> (`_refreshScrollPanelWdgtOrVerticalStackIfIamInIt`), the drag/drop gesture handlers (family 2), and the
+> `newParentChoice*` menu re-fits (family 3) were all UNIFIED onto the single `Widget._reFitContainer` primitive
+> (in-pass ENQUEUE / out-of-pass `invalidateLayout`); the duplicated inlined enqueue closures are gone. The per-family
+> "2-state / 2-way" shapes described below are historical — see `deferred-layout-OVERVIEW.md` §3 for the current shape.
 > This maps the ~40 synchronous relayouts that REMAIN. Line numbers are approximate (as of `1e5d3745`) — grep the
 > method name (authoritative).
 

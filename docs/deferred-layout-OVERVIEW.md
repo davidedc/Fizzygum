@@ -61,31 +61,39 @@ notification because — (a) a freefloating child's `invalidateLayout` does NOT 
 (`Widget.coffee` ~:3808); (b) the until-loop's walk-up **deliberately stops at freefloating widgets**
 (`WorldWdgt.coffee` ~:925), so the loop never re-fits a container in response to a freefloating child; and
 (c) `invalidateLayout` throws mid-pass. So the container is notified by **"seam" methods**. The seams used to re-fit
-the container **synchronously**; they now **DEFER** via the re-queue:
+the container **synchronously**; they now **DEFER** via the re-queue. As of 2026-06-22 the in-pass-enqueue /
+out-of-pass-invalidate dispatch is centralized in the single `Widget._reFitContainer` primitive — the seams, the
+drag/drop gesture handlers, and the `newParentChoice*` menu actions all call it (previously each inlined this dispatch;
+two seams inlined a byte-identical `enqueueReFitDuringPass` closure, now deleted):
 
 ```coffee
-# In a layout pass, schedule the container into the until-loop instead of re-fitting it NOW.
-# Legal mid-pass: no throw (unlike invalidateLayout), no climb. Skip a container that is mid its
-# own _positionAndResizeChildren (it is driving this child top-down and already accounts for it -- enqueuing
-# then would re-fire every pass and never converge).
-enqueueReFitDuringPass = (container) ->
+# Widget._reFitContainer -- the ONE phase-dispatch primitive. In a layout pass, ENQUEUE the container into the
+# until-loop instead of re-fitting it NOW (legal mid-pass: no throw unlike invalidateLayout, no climb; skip a
+# container mid its own _positionAndResizeChildren -- it drives this child top-down, so re-enqueuing never converges).
+# Outside a pass, invalidateLayout(). Gated on _reLayoutChildren? so only a tracking container reacts.
+_reFitContainer: (container = @) ->
   return unless container?._reLayoutChildren?
-  return if container._adjustingContentsBounds
-  if container.layoutIsValid
-    world.widgetsThatMaybeChangedLayout.push container
-  container.layoutIsValid = false
+  if world?._recalculatingLayouts
+    return if container._adjustingContentsBounds
+    if container.layoutIsValid
+      world.widgetsThatMaybeChangedLayout.push container
+    container.layoutIsValid = false
+  else
+    container.invalidateLayout()
 ```
 
 Because every container's `_reLayout` is `super; @_reLayoutChildren()` (ScrollPanelWdgt ~:276, SimpleVerticalStackPanelWdgt ~:70,
 WindowWdgt inherits), **enqueuing a container makes the until-loop re-fit it on the same cycle, identically.**
 
-The seams + their conversion state (all in `Widget.coffee` unless noted):
+The seams + handlers (all in `Widget.coffee` unless noted), all now routing through the shared `_reFitContainer`
+(grep the method name — line refs drift):
 
-| Seam | fired from | shape now |
+| Seam / handler | fired from | shape now |
 |---|---|---|
-| `_reFitContainerAfterRawGeometryChange` (~:1651) | the immediate mutators `silentRawSetExtent` (~:1599) + `fullRawMoveBy` (~:1243) | **2-state**: in-pass (`_recalculatingLayouts`) → enqueue · else → `invalidateLayout` (the old `_reFittingContents` synchronous middle arm was RETIRED by the capstone — §4/§5) |
-| `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` (~:1608) | property setters (`VerticalStackLayoutSpec` align/elasticity/base-width), collapse, content-edit/soft-wrap | **2-state** (same) |
-| `reactToDropOf`/`reactToGrabOf` (ScrollPanelWdgt/PanelWdgt/SimpleVerticalStackPanelWdgt) + `PanelWdgt`'s & the stack's `childRemoved` | `ActivePointerWdgt.drop`/`grab` (after a self-settling `add`); `childRemoved` from `destroy`/reparent | **2-way**: pass/cascade → synchronous · else → `invalidateLayout` (no recalc-enqueue arm — these are never dispatched mid-pass) |
+| `_reFitContainerAfterRawGeometryChange` | the immediate mutators `silentRawSetExtent` + `fullRawMoveBy` | `@_reFitContainer @parent` (+ `@parent.parent` when in a non-text-wrapping scroll panel) — the in-pass ENQUEUE arm is the LIVE path here (raw setters run during passes); the old `_reFittingContents` synchronous middle arm was RETIRED by the capstone (§4/§5) |
+| `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` | property setters (`VerticalStackLayoutSpec` align/elasticity/base-width), collapse, content-edit/soft-wrap | `@_reFitContainer @parent` (+ `@parent.parent` when in a scroll panel) |
+| `reactToDropOf`/`reactToGrabOf` (ScrollPanelWdgt/PanelWdgt/SimpleVerticalStackPanelWdgt) + `PanelWdgt`'s & the stack's `childRemoved` | `ActivePointerWdgt.drop`/`grab` (after a self-settling `add`); `childRemoved` from `destroy`/reparent | `@_reFitContainer …` — dispatched OUTSIDE passes, so the out-of-pass `invalidateLayout` arm runs (the in-pass ENQUEUE arm is uniform across the family but dead for these — never dispatched mid-pass) |
+| `newParentChoice` / `newParentChoiceWithHorizLayout` (menu "attach selected widget to me") | dev/demo menu | `@_reFitContainer() if @_reLayoutChildrenAndScrollbars?` (ScrollPanel-only pre-guard; otherwise a no-op, exactly as before) |
 
 **`world._reFittingContents`** WAS a COUNTER marking "inside a cross-widget re-fit cascade" (e.g. clock ↔ inner-window ↔
 outer-window), used to keep the seams **synchronous** inside such a cascade while only a PRIMARY change outside it
@@ -135,6 +143,18 @@ the mutator HANDS its result forward. `rawSetWidthSizeHeightAccordingly` RETURNS
 defers.** The C2 "wall" was specifically the *naive* removal (stub the in-pass re-fit with no replacement → 7 tests
 break, because the freefloating→container notification has no home); the re-queue is the replacement that converges
 byte-identically. See `deferred-layout-c2-execution-plan.md` for the full finding + evidence.
+
+### This session (2026-06-22) — re-fit phase-dispatch UNIFIED into one primitive
+The three near-duplicate phase-dispatch shapes (gesture-handler APPLY-in-pass; the two seams' ENQUEUE-in-pass via a
+byte-identical inlined `enqueueReFitDuringPass` closure; the `newParentChoice*` menu APPLY-of-a-different-method) were
+collapsed onto the single `Widget._reFitContainer` (in-pass ENQUEUE / out-of-pass `invalidateLayout`, gated on
+`_reLayoutChildren?`). The 7 gesture sites' in-pass arm went APPLY→ENQUEUE (byte-identical — that arm is never
+dispatched mid-pass); the two seams shrank to two `@_reFitContainer …` lines each (both inlined closures deleted, and
+with them the obsolete "duplicated to avoid growing the inspector member list" rationale); `newParentChoice*` became
+`@_reFitContainer() if @_reLayoutChildrenAndScrollbars?`. The one behaviour delta — the seams' out-of-pass arm narrowed
+from an unconditional `@parent.invalidateLayout()` to the `_reLayoutChildren?`-gated form — is expected inert (a
+freefloating child's non-tracking `@parent` does not re-fit to it anyway, and an enclosing scroll panel is already
+invalidated by the explicit `@parent.parent` line) and is verified by the suite + dpr2 soak.
 
 ## 5. What's left — the residuals campaign
 
@@ -317,7 +337,7 @@ remaining synchronous applies CANNOT defer.** A read-only census (2026-06-22) bu
 |---|---|---|---|---|
 | CYCLE-APPLY | 73 | the until-loop + every container/widget `_reLayout`·`_adjust*` body + child fan-outs | `WorldWdgt._recalculateLayoutsCore:927` | settle point ✓ |
 | PUBLIC-FLUSH | 2 | the self-settling flush wrappers | `Widget.mutateGeometryThenSettle:783` | settle point ✓ |
-| DEFERRED-SEAM | 11 | in-pass arms (run only under `_recalculatingLayouts`) | `ScrollPanelWdgt.reactToDropOf:252` | already deferred ✓ |
+| DEFERRED-SEAM | 1 | the unified `_reFitContainer` in-pass arm (2026-06-22) — ENQUEUEs into the until-loop (records intent, NOT an APPLY); the seams/gestures/`newParentChoice*` all route through it | `Widget._reFitContainer` | already deferred ✓ |
 | TERMINAL-RAW-APPLY | 33 | `raw*`/`fullRaw*`/`iHaveBeenAddedTo` → `_reLayoutSelf`/`_reLayout`/`_reLayoutChildren` | `TextWdgt.rawSetExtent:428` | **IRREDUCIBLE** (PROOF 1) |
 | SCROLL-INPUT-APPLY | 18 | scroll handlers adjusting their OWN contents | `ScrollPanelWdgt.wheel:737` | LEAVE (family 1) |
 | CONSTRUCTION/DEV | 9 | constructors / `WidgetFactory` / live-edit | `WidgetFactory.createNewScrollPanelWdgt:42` | not steady-state |

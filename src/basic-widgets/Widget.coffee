@@ -477,7 +477,7 @@ class Widget extends TreeNode
     # closing window content: also close the window
     # UNLESS we are an internal window, in such case
     # leave the parent one as is
-    if !@isWindow?() and @parent?.isWindow?()
+    if !@isWindow() and @parent?.isWindow()
       @parent.close()
       return
 
@@ -1599,98 +1599,53 @@ class Widget extends TreeNode
       @_reFitContainerAfterRawGeometryChange()
 
 
-  # The SECOND re-fit "seam" (cf. _reFitContainerAfterRawGeometryChange): a content widget tells the
+  # A re-fit "seam" (cf. _reFitContainerAfterRawGeometryChange): a freefloating content widget tells the
   # scroll-panel / vertical-stack it sits in to re-fit, after a layout-affecting property change
   # (VerticalStackLayoutSpec alignment/elasticity/base-width, SimplePlainTextWdgt soft-wrap, a
-  # contained-text edit, collapse). Same freefloating-non-climb reason it exists, and the same
-  # fully-deferred TWO-state shape as the main seam (enqueue in a pass, else invalidate -- the
-  # synchronous world._reFittingContents middle arm is gone; see _reFitContainerAfterRawGeometryChange).
+  # contained-text edit, collapse). A freefloating child's invalidateLayout does NOT climb to its
+  # container, which is why the container(s) are notified explicitly here. The phase dispatch (enqueue in
+  # a pass, else invalidate) lives in the shared _reFitContainer; this seam only supplies which container(s).
   _refreshScrollPanelWdgtOrVerticalStackIfIamInIt: ->
-    if world?._recalculatingLayouts
-      # In a layout pass: DEFER via the re-queue -- enqueue the affected container for the
-      # recalculateLayouts until-loop instead of re-fitting synchronously now (same mechanism +
-      # @_adjustingContentsBounds guard as the seam's in-pass arm; closure duplicated rather than
-      # shared to avoid adding a Widget method that would grow every inspected widget's member list).
-      enqueueReFitDuringPass = (container) ->
-        return unless container?._reLayoutChildren?
-        return if container._adjustingContentsBounds
-        if container.layoutIsValid
-          world.widgetsThatMaybeChangedLayout.push container
-        container.layoutIsValid = false
-      if @_amIDirectlyInsideScrollPanelWdgt()
-        enqueueReFitDuringPass @parent.parent
-      enqueueReFitDuringPass @parent
-    else
-      # Outside any pass/cascade -- the property-change callers (VerticalStackLayoutSpec
-      # alignment/elasticity/base-width, content-edit, soft-wrap, collapse): DEFER the container
-      # re-fit to the next cycle by invalidating the container directly (the freefloating content
-      # does not climb, so invalidate the container, not the content). The relayout then settles in
-      # recalculateLayouts (end of doOneCycle) instead of an ad-hoc synchronous re-fit at the
-      # handler -- the all-deferred aim. (Matches the seam's outside-pass arm.)
-      if @_amIDirectlyInsideScrollPanelWdgt()
-        @parent.parent.invalidateLayout?()
-      @parent?.invalidateLayout?()
+    @_reFitContainer @parent.parent if @_amIDirectlyInsideScrollPanelWdgt()
+    @_reFitContainer @parent
 
-  # The single seam: an IMMEDIATE geometry mutator (silentRawSetExtent / fullRawMoveBy) notifies the
+  # A re-fit "seam": an IMMEDIATE geometry mutator (silentRawSetExtent / fullRawMoveBy) notifies the
   # container that tracks my geometry to re-fit -- a NON-text-wrapping scroll panel (text-wrapping panels
-  # drive their own content re-wrap in _positionAndResizeChildren, so they are excluded here) re-fits its
-  # contents+scrollbars, and a stack/window container re-fits its contents on its deferred _reLayout. A freefloating
-  # child's invalidateLayout does NOT climb to its container, which is why the container is notified
-  # explicitly here. The re-fit is now FULLY DEFERRED (the all-deferred aim) -- TWO states:
-  #  - INSIDE recalculateLayouts: enqueue the container into the until-loop (the "deferred re-queue");
-  #    enqueuing is legal mid-pass (unlike invalidateLayout it does NOT throw and does NOT climb).
-  #  - OUTSIDE a pass (a primary change, or a drop/nest/collapse settle): invalidate the container so the
-  #    next settle (end of doOneCycle / the enclosing public-method flush) re-fits it on the cycle.
-  # The old synchronous MIDDLE arm -- a world._reFittingContents counter that kept the cross-widget cascade
-  # (clock <-> inner-window <-> outer-window) synchronous within a public op -- was RETIRED once the
-  # proportion model became convergence-independent: aspect content (clock/icon) is elasticity 0, so its
-  # width is min(intrinsicWidth, availW) with NO dependence on the stack width sampled mid-cascade. The
-  # cascade then converges in ONE top-down deferred pass, so no synchronous re-fire is needed. Sound also
-  # because the container-fits-content read-back is gone (Path B, fa0d7961): no one reads the re-fit result
-  # back synchronously before the settle. (softwrap-deferred-layout-conversion-plan.md §6b.)
+  # drive their own content re-wrap in _positionAndResizeChildren, so they are excluded here), or a
+  # stack/window container. A freefloating child's invalidateLayout does NOT climb to its container, which
+  # is why the container(s) are notified explicitly here. The phase dispatch lives in the shared
+  # _reFitContainer (enqueue in a pass -- legal mid-pass, and the LIVE path for this immediate-mutator seam
+  # since raw setters run during layout passes -- else invalidate); this seam only supplies which container(s).
   _reFitContainerAfterRawGeometryChange: ->
-    if world?._recalculatingLayouts
-      # In a layout pass: DEFER the container re-fit to the recalculateLayouts until-loop (the
-      # C2 "deferred re-queue") instead of re-fitting synchronously now -- so the relayout runs
-      # in the loop, not inside this immediate mutator (the all-deferred aim). Enqueuing is legal
-      # mid-pass: unlike invalidateLayout it does NOT throw and does NOT climb to ancestors (it
-      # enqueues only the directly-affected container). A container mid its OWN _positionAndResizeChildren
-      # is driving this child top-down and already accounts for it, so we SKIP it (enqueuing then
-      # would re-fire on every pass and never converge -- the @_adjustingContentsBounds re-entrancy
-      # guard's deferred-mode analogue). If the deferred re-fit later changes the container's own
-      # geometry, ITS seam re-fires and enqueues ITS parent, so up-propagation is preserved -- just
-      # routed lazily through the queue. (deferred-layout-c2-execution-plan.md -- the re-queue step.)
-      enqueueReFitDuringPass = (container) ->
-        return unless container?._reLayoutChildren?
-        return if container._adjustingContentsBounds
-        if container.layoutIsValid
-          world.widgetsThatMaybeChangedLayout.push container
-        container.layoutIsValid = false
-      if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
-        enqueueReFitDuringPass @parent.parent
-      enqueueReFitDuringPass @parent
-    else
-      if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
-        @parent.parent.invalidateLayout?()
-      @parent?.invalidateLayout?()
+    @_reFitContainer @parent.parent if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
+    @_reFitContainer @parent
 
-  # Phase-safe container re-fit: make `container` re-lay-out its children at the next settle point.
-  # The ONE place that knows about layout phase, replacing seven gesture handlers that each inlined
-  # this dispatch:
-  #  - INSIDE a layout pass (world._recalculatingLayouts): APPLY now via _reLayoutChildren(). We must
-  #    NOT schedule here -- invalidateLayout() throws mid-pass (the freeze guard, see invalidateLayout
-  #    below) -- and a settle is already draining, so applying in place is correct.
-  #  - OUTSIDE a pass (the drop / grab / childRemoved gestures): SCHEDULE via invalidateLayout() so the
-  #    next cycle re-fits the container.
-  # The in-pass APPLY is the documented determinism-exempt seam path (deferred-layout-OVERVIEW.md §11);
-  # this method is low-level (leading underscore) so lint rule [F] exempts it -- the callers, now reading
-  # as pure intent (@_reFitContainer @parent / @_reFitContainer()), need no per-site sanction marker.
-  # NB distinct from _reFitContainerAfterRawGeometryChange above, which ENQUEUES in-pass for the
-  # immediate-mutator seam; these gesture handlers fire outside passes and APPLY in-pass for safety.
+  # The ONE phase-dispatch primitive for the whole "re-fit a container at the next settle point" family:
+  # the drag/drop gesture handlers (PanelWdgt / ScrollPanelWdgt / SimpleVerticalStackPanelWdgt
+  # reactToDropOf / reactToGrabOf / childRemoved), the two freefloating-content "seams" above
+  # (_refreshScrollPanelWdgtOrVerticalStackIfIamInIt, _reFitContainerAfterRawGeometryChange), and the
+  # newParentChoice* menu actions all route through here. Two states:
+  #  - INSIDE a layout pass (world._recalculatingLayouts): ENQUEUE the container into the
+  #    recalculateLayouts until-loop. Enqueuing is legal mid-pass -- unlike invalidateLayout it neither
+  #    throws (the freeze guard, see invalidateLayout below) nor climbs to ancestors; it enqueues only the
+  #    directly-affected container. A container mid its OWN _positionAndResizeChildren is driving this child
+  #    top-down and already accounts for it, so we SKIP it (re-enqueuing would re-fire every pass and never
+  #    converge) -- the @_adjustingContentsBounds guard. If the deferred re-fit later changes the
+  #    container's own geometry, ITS seam re-fires and enqueues ITS parent, so up-propagation is preserved.
+  #  - OUTSIDE a pass: invalidateLayout() so the next doOneCycle re-fits the container.
+  # Gated on _reLayoutChildren? so only a tracking container (Window / Stack / ScrollPanel -- the only
+  # classes that define it) reacts; any other widget is a no-op. Low-level (leading underscore) so lint
+  # rule [F] exempts it, and the callers read as pure intent (@_reFitContainer @parent / @_reFitContainer()).
+  # DETERMINISM: the gesture + menu callers fire OUTSIDE passes, so their in-pass arm is dead (kept uniform
+  # for safety); the immediate-mutator seam's in-pass enqueue IS live and is the determinism-exempt path
+  # (deferred-layout-OVERVIEW.md §11).
   _reFitContainer: (container = @) ->
     return unless container?._reLayoutChildren?
     if world?._recalculatingLayouts
-      container._reLayoutChildren()
+      return if container._adjustingContentsBounds
+      if container.layoutIsValid
+        world.widgetsThatMaybeChangedLayout.push container
+      container.layoutIsValid = false
     else
       container.invalidateLayout()
 
@@ -2137,6 +2092,10 @@ class Widget extends TreeNode
 
   colloquialName: ->
     "generic widget"
+
+  # Polymorphic "are you a window?" (replaces `instanceof WindowWdgt`); WindowWdgt overrides to true.
+  isWindow: ->
+    false
 
   representativeIcon: ->
     new WidgetIconWdgt
@@ -3264,7 +3223,7 @@ class Widget extends TreeNode
     if !world.isIndexPage
       menu.addMenuItem "hide", true, @, "hide"
 
-    if @isWindow?()
+    if @isWindow()
       menu.addMenuItem "close", true, @, "close"
     else
       menu.addMenuItem "delete", true, @, "close"
@@ -3397,37 +3356,25 @@ class Widget extends TreeNode
     # this is what happens when "each" is
     # selected: we attach the selected widget
     @add theWidgetToBeAttached
-    # I just attached the selected widget to myself; if I am a scroll panel my contents changed,
-    # so re-fit my contents + scrollbars -- but DEFER it (the deferred-layout aim) rather than the
-    # old synchronous @_reLayoutChildrenAndScrollbars?(). @add already self-settled and this menu
-    # action runs OUTSIDE any layout pass, so I just invalidate myself: my _reLayout is
-    # 'super; @_reLayoutChildren' and _reLayoutChildrenAndScrollbars IS @_reLayoutChildren, so the next
-    # doOneCycle re-fits me identically before paint -- the shipped gesture-seam pattern
-    # (ScrollPanelWdgt.reactToDropOf). The existence check does the old ?()-soak's job (only
-    # ScrollPanelWdgt + subclasses incl. ListWdgt define _reLayoutChildrenAndScrollbars -> re-fit; any
-    # other widget: no-op -- replacing `if @ instanceof ScrollPanelWdgt`). The in-pass arm keeps
-    # the synchronous re-fit for safety, though a menu action never runs mid-pass.
-    if @_reLayoutChildrenAndScrollbars?
-      if world?._recalculatingLayouts
-        @_reLayoutChildrenAndScrollbars()
-      else
-        @invalidateLayout()
+    # I just attached the selected widget; if I am a scroll panel my contents changed, so re-fit my
+    # contents + scrollbars -- DEFERRED via the shared _reFitContainer (this menu action runs OUTSIDE any
+    # pass, so it invalidates me; the next doOneCycle re-fits me identically before paint, since my
+    # _reLayout is 'super; @_reLayoutChildren' and _reLayoutChildrenAndScrollbars IS @_reLayoutChildren).
+    # The _reLayoutChildrenAndScrollbars? pre-guard keeps this ScrollPanel-only -- only ScrollPanelWdgt +
+    # subclasses (incl. ListWdgt) define it; any other widget is a no-op (replacing `if @ instanceof
+    # ScrollPanelWdgt`). NB it is intentionally narrower than _reFitContainer's own _reLayoutChildren? gate
+    # (which also matches Window/Stack), so a non-scroll-panel stays a no-op exactly as before.
+    @_reFitContainer() if @_reLayoutChildrenAndScrollbars?
 
   # »>> this part is excluded from the fizzygum homepage build
   newParentChoiceWithHorizLayout: (ignored, theWidgetToBeAttached) ->
     # this is what happens when "each" is
     # selected: we attach the selected widget
     @add theWidgetToBeAttached, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    # DEFER my contents/scrollbar re-fit, exactly as newParentChoice above (the deferred-layout aim):
-    # @add self-settled and this menu action runs outside any pass, so I invalidate myself and the
-    # next doOneCycle re-fits me identically before paint (_reLayout's 'super; @_reLayoutChildren' ==
-    # _reLayoutChildrenAndScrollbars). The existence check is the old ?()-soak's job (no-op off a scroll
-    # panel); the in-pass arm keeps the synchronous re-fit for safety.
-    if @_reLayoutChildrenAndScrollbars?
-      if world?._recalculatingLayouts
-        @_reLayoutChildrenAndScrollbars()
-      else
-        @invalidateLayout()
+    # DEFER my contents/scrollbar re-fit exactly as newParentChoice above, via the shared _reFitContainer
+    # (ScrollPanel-only pre-guard; this menu action runs outside any pass, so the next doOneCycle re-fits
+    # me identically before paint -- _reLayout's 'super; @_reLayoutChildren' == _reLayoutChildrenAndScrollbars).
+    @_reFitContainer() if @_reLayoutChildrenAndScrollbars?
   # this part is excluded from the fizzygum homepage build <<«
 
   attach: ->
