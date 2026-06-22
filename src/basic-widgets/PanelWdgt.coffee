@@ -84,28 +84,16 @@ class PanelWdgt extends Widget
   # container so its _reLayout re-fits on the cycle. Gated on @parent?._reLayoutChildren? to preserve the
   # original "only a tracking container reacts" semantics. (fam 2 -- deferred-layout-residuals-audit.md)
   reactToDropOf: ->
-    return unless @parent?._reLayoutChildren?
-    if world?._recalculatingLayouts
-      # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
-      @parent._reLayoutChildren()
-    else
-      @parent.invalidateLayout()
+    @_reFitContainer @parent
 
   childRemoved: (child) ->
     return unless @parent?
     @parent.grandChildRemoved?()
-    # Re-fit my enclosing container (@parent): DEFER to the cycle, mirroring reactToGrabOf /
-    # reactToDropOf below. childRemoved fires only OUTSIDE a layout pass (its callers Widget.destroy
-    # and Widget._addCore route through destroy / mutateGeometryThenSettle, neither of which runs
-    # mid-pass), so the else arm -- invalidate the container so its _reLayout re-fits on the next
-    # cycle -- is what runs; the in-pass arm is a defensive synchronous APPLY. (fam 2 --
-    # deferred-layout-residuals-audit.md)
-    return unless @parent._reLayoutChildren?
-    if world?._recalculatingLayouts
-      # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
-      @parent._reLayoutChildren()
-    else
-      @parent.invalidateLayout()
+    # Re-fit my enclosing container (@parent) via the phase-safe helper. childRemoved fires only
+    # OUTSIDE a layout pass (its callers Widget.destroy / Widget._addCore route through destroy /
+    # mutateGeometryThenSettle, neither mid-pass), so in practice the helper's schedule arm runs.
+    # (fam 2 -- deferred-layout-residuals-audit.md)
+    @_reFitContainer @parent
 
   childAdded: (child) ->
     # the BasementWdgt has a filter that can
@@ -166,12 +154,7 @@ class PanelWdgt extends Widget
     return false
   
   reactToGrabOf: ->
-    return unless @parent?._reLayoutChildren?
-    if world?._recalculatingLayouts
-      # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
-      @parent._reLayoutChildren()
-    else
-      @parent.invalidateLayout()
+    @_reFitContainer @parent
 
   # PanelWdgt menus:
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->

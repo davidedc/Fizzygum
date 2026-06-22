@@ -255,18 +255,10 @@ class ScrollPanelWdgt extends PanelWdgt
   # arm keeps the synchronous re-fit (the pre-existing behaviour) for safety. (No recalc-enqueue arm:
   # unlike the seams, these are never dispatched mid-pass. See deferred-layout-residuals-audit.md fam 2.)
   reactToDropOf: ->
-    if world?._recalculatingLayouts
-      # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
-      @_reLayoutChildren()
-    else
-      @invalidateLayout()
+    @_reFitContainer()
 
   reactToGrabOf: ->
-    if world?._recalculatingLayouts
-      # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
-      @_reLayoutChildren()
-    else
-      @invalidateLayout()
+    @_reFitContainer()
 
   # Re-fit my contents area and my scrollbars: the named "re-fit me" pair, shared
   # by every trigger that changes what I contain (drops, grabs, attaches, a

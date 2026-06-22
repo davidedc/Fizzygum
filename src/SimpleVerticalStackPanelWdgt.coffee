@@ -84,19 +84,11 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # in-pass arm keeps the synchronous re-fit. (fam 2 -- deferred-layout-residuals-audit.md)
   childRemoved: ->
     return if @parent?._reLayOutAfterContainedPanelChange?()
-    if world?._recalculatingLayouts
-      # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
-      @_reLayoutChildren()
-    else
-      @invalidateLayout()
+    @_reFitContainer()
 
   reactToDropOf: ->
     return if @parent?._reLayOutAfterContainedPanelChange?()
-    if world?._recalculatingLayouts
-      # layout-apply-sanctioned: seam in-pass arm (runs under _recalculatingLayouts)
-      @_reLayoutChildren()
-    else
-      @invalidateLayout()
+    @_reFitContainer()
 
   initialiseDefaultWindowContentLayoutSpec: ->
     super

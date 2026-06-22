@@ -1674,6 +1674,26 @@ class Widget extends TreeNode
         @parent.parent.invalidateLayout?()
       @parent?.invalidateLayout?()
 
+  # Phase-safe container re-fit: make `container` re-lay-out its children at the next settle point.
+  # The ONE place that knows about layout phase, replacing seven gesture handlers that each inlined
+  # this dispatch:
+  #  - INSIDE a layout pass (world._recalculatingLayouts): APPLY now via _reLayoutChildren(). We must
+  #    NOT schedule here -- invalidateLayout() throws mid-pass (the freeze guard, see invalidateLayout
+  #    below) -- and a settle is already draining, so applying in place is correct.
+  #  - OUTSIDE a pass (the drop / grab / childRemoved gestures): SCHEDULE via invalidateLayout() so the
+  #    next cycle re-fits the container.
+  # The in-pass APPLY is the documented determinism-exempt seam path (deferred-layout-OVERVIEW.md §11);
+  # this method is low-level (leading underscore) so lint rule [F] exempts it -- the callers, now reading
+  # as pure intent (@_reFitContainer @parent / @_reFitContainer()), need no per-site sanction marker.
+  # NB distinct from _reFitContainerAfterRawGeometryChange above, which ENQUEUES in-pass for the
+  # immediate-mutator seam; these gesture handlers fire outside passes and APPLY in-pass for safety.
+  _reFitContainer: (container = @) ->
+    return unless container?._reLayoutChildren?
+    if world?._recalculatingLayouts
+      container._reLayoutChildren()
+    else
+      container.invalidateLayout()
+
 
   rawSetWidth: (width) ->
     # TODO in theory the low-level APIs should only be
