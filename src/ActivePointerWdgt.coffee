@@ -86,7 +86,7 @@ class ActivePointerWdgt extends Widget
         m.visibleBasedOnIsVisibleProperty() and
         !m.isCollapsed() and
         (m.noticesTransparentClick or
-        (not m.isTransparentAt(@position()))) and (m instanceof MenuWdgt)
+        (not m.isTransparentAt(@position()))) and (m.isMenu?())
     return result
   # this part is excluded from the fizzygum homepage build <<«
 
@@ -251,7 +251,7 @@ class ActivePointerWdgt extends Widget
       # when you click the buttons, sometimes you end up
       # clicking between the buttons, and so the "proper"
       # widget "loses focus" so to speak. So avoiding that here.
-      if !(wdgtToDrop instanceof HorizontalMenuPanelWdgt)
+      if !(wdgtToDrop.excludedFromLastFocusTracking?())
         world.lastNonTextPropertyChangerButtonClickedOrDropped = wdgtToDrop
 
       @children = []
@@ -385,7 +385,7 @@ class ActivePointerWdgt extends Widget
       # been freshly created or not. This came about because
       # small movements of the mouse while clicking on the
       # desktop would not dismiss menus.
-      if !(w.firstParentThatIsAPopUp() instanceof MenuWdgt)
+      if !(w.firstParentThatIsAPopUp()?.isMenu?())
         @cleanupMenuWdgts nil, w, true
 
       @wdgtToGrab = w.findRootForGrab()
@@ -559,7 +559,7 @@ class ActivePointerWdgt extends Widget
 
           # fire the click, sending info on whether this was part
           # of a double/triple click
-          if !w.editorContentPropertyChangerButton and !(w instanceof HorizontalMenuPanelWdgt)
+          if !w.editorContentPropertyChangerButton and !(w.excludedFromLastFocusTracking?())
             world.lastNonTextPropertyChangerButtonClickedOrDropped = w
           w[expectedClick] @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey, doubleClickInvocation, tripleClickInvocation
           #console.log ">>> sent event " + expectedClick + " to: " + w

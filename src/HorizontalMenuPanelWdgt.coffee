@@ -15,6 +15,12 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
     super
     @rawSetExtent new Point 300,15
 
+  # Role query (replaces `w instanceof HorizontalMenuPanelWdgt` exclusions in ActivePointerWdgt): the
+  # global menu bar is NOT recorded as the "last clicked/dropped" content widget. True here only;
+  # dispatched via ?() (nothing on Widget). (type-test-elimination campaign)
+  excludedFromLastFocusTracking: ->
+    true
+
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
 
     if (aWdgt instanceof ModifiedTextTriangleAnnotationWdgt) or
