@@ -13,6 +13,12 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
     @target = world.basementWdgt
     @rawSetExtent new Point 75, 75
 
+  # I am a desktop icon but the desktop positions me itself (bottom-right corner), so I do
+  # NOT take part in the auto icon grid -- override of WidgetHolderWithCaptionWdgt (was the
+  # `!(aWdgt instanceof BasementOpenerWdgt)` exclusion). (type-test-elimination campaign)
+  participatesInIconGrid: ->
+    false
+
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
     super
     if whereTo == world and !@userMovedThisFromComputedPosition

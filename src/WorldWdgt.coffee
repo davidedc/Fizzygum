@@ -1454,7 +1454,10 @@ class WorldWdgt extends PanelWdgt
         analogClockWdgt.fullRawMoveTo new Point @right() - 80 - @desktopSidesPadding, @top() + @desktopSidesPadding
 
     @children.forEach (child) =>
-      if child != basementOpenerWdgt and child != analogClockWdgt and  !(child instanceof WidgetHolderWithCaptionWdgt)
+      # reposition the non-icon desktop children (the basement opener and clock are handled
+      # above); !child.isDesktopIcon?() replaces `!(child instanceof WidgetHolderWithCaptionWdgt)`
+      # (type-test-elimination campaign)
+      if child != basementOpenerWdgt and child != analogClockWdgt and !child.isDesktopIcon?()
         if child.positionFractionalInHoldingPanel?
           child.fullRawMoveInDesktopToFractionalPosition()
         if !child.wasPositionedSlightlyOutsidePanel

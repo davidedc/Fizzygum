@@ -24,6 +24,17 @@ class WidgetHolderWithCaptionWdgt extends Widget
     # update layout
     @invalidateLayout()
 
+  # I am a desktop icon (an icon with a caption). isDesktopIcon replaces the
+  # `instanceof WidgetHolderWithCaptionWdgt` tests that find/skip icons among desktop
+  # children; participatesInIconGrid additionally drives the auto grid-positioning of
+  # newly-created icons -- BasementOpenerWdgt overrides it to false (it is an icon but the
+  # desktop places it itself, not the grid). (type-test-elimination campaign)
+  isDesktopIcon: ->
+    true
+
+  participatesInIconGrid: ->
+    true
+
 
   setColor: (theColor, ignored, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken

@@ -22,7 +22,10 @@ GridPositioningOfAddedShortcutsMixin =
         # If the user drops an icon, it's more natural to just position it
         # where it is. Conversely, if an icon is just "created" somewhere,
         # then automatic grid positioning is better.
-        if !beingDropped and (aWdgt instanceof WidgetHolderWithCaptionWdgt) and !(aWdgt instanceof BasementOpenerWdgt)
+        # a freshly-created (not dropped) desktop icon that takes part in the grid is auto-placed;
+        # was `(aWdgt instanceof WidgetHolderWithCaptionWdgt) and !(aWdgt instanceof BasementOpenerWdgt)`
+        # (type-test-elimination campaign)
+        if !beingDropped and aWdgt.participatesInIconGrid?()
           if @laysIconsHorizontallyInGrid
             xPos = @numberOfIconsOnDesktop % @iconsLayingInGridWrapCount
             yPos = Math.floor @numberOfIconsOnDesktop / @iconsLayingInGridWrapCount

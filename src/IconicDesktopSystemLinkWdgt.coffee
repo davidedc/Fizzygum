@@ -7,8 +7,10 @@
 class IconicDesktopSystemLinkWdgt extends WidgetHolderWithCaptionWdgt
 
   moveOnTopOfTopReference: ->
+    # find the topmost OTHER desktop icon to layer myself just above it
+    # (was `c instanceof WidgetHolderWithCaptionWdgt`). (type-test-elimination campaign)
     topMostReference = @parent.topmostChildSuchThat (c) =>
-      c != @ and (c instanceof WidgetHolderWithCaptionWdgt)
+      c != @ and c.isDesktopIcon?()
     if topMostReference?
       @parent.children.remove @
       index = @parent.children.indexOf topMostReference
