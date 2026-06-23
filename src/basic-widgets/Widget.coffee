@@ -516,11 +516,11 @@ class Widget extends TreeNode
     #   alignCopiedWidgetToKeyboardEventsReceiversSet
 
     @destroyed = true
-    # FREEFLOATING-skip: removing a freefloating child cannot change the parent's layout (mirror
-    # invalidateLayout's climb-guard + _addCore's new-container skip). Containers that MANAGE a
-    # freefloating child (e.g. LabelButton/MenuItem centring their label) self-settle their
-    # re-layout on the change itself (sizeToTextAndDisableFitting / setLabel), not via this teardown.
-    @parent?.invalidateLayout() unless @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
+    # FREEFLOATING-skip is centralized in invalidateLayout(triggeringChild): passing @ lets the
+    # parent skip when I'm freefloating (removing a freefloating child can't change the parent's
+    # layout). Containers that MANAGE a freefloating child (e.g. LabelButton/MenuItem centring their
+    # label) self-settle on the change itself (sizeToTextAndDisableFitting / setLabel), not here.
+    @parent?.invalidateLayout(@)
     @breakNumberOfRawMovesAndResizesCaches()
     WorldWdgt.numberOfAddsAndRemoves++
 
@@ -2085,9 +2085,9 @@ class Widget extends TreeNode
         return false
   
   removeFromTree: ->
-    # FREEFLOATING-skip (see destroy / _addCore): removing a freefloating child doesn't change
-    # the parent's layout.
-    @parent?.invalidateLayout() unless @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
+    # FREEFLOATING-skip centralized in invalidateLayout(triggeringChild): pass @ so the parent skips
+    # when I'm freefloating -- removing a freefloating child doesn't change the parent's layout.
+    @parent?.invalidateLayout(@)
     @breakNumberOfRawMovesAndResizesCaches()
     WorldWdgt.numberOfAddsAndRemoves++
     @parent.removeChild @
@@ -2419,11 +2419,11 @@ class Widget extends TreeNode
       return nil
 
     previousParent = aWdgt.parent
-    # FREEFLOATING-skip: removing aWdgt from its OLD parent only changes that parent's layout if
-    # aWdgt was laid out by it. Key on aWdgt.layoutSpec (the OLD spec, read BEFORE setLayoutSpec
-    # below changes it) -- NOT the layoutSpec param (that's the NEW spec for the new container,
-    # already handled by the `if layoutSpec != FREEFLOATING` guard further down).
-    aWdgt.parent?.invalidateLayout() unless aWdgt.layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
+    # FREEFLOATING-skip via invalidateLayout(triggeringChild): pass aWdgt so its OLD parent skips
+    # when aWdgt is freefloating (removing it only changes that parent's layout if it laid it out).
+    # This runs BEFORE setLayoutSpec below, so the param reads aWdgt's OLD spec -- correct. (The NEW
+    # container is invalidated AFTER setLayoutSpec, further down, also via the param.)
+    aWdgt.parent?.invalidateLayout(aWdgt)
 
     # if the widget contributes to a shadow, unfortunately
     # we have to walk towards the top to
@@ -2435,8 +2435,10 @@ class Widget extends TreeNode
       aWdgt.fullChanged()
 
     aWdgt.setLayoutSpec layoutSpec
-    if layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
-      @invalidateLayout()
+    # NEW-container invalidate via the param: setLayoutSpec above set aWdgt.layoutSpec to the NEW
+    # spec, so passing aWdgt makes me (the new container) skip iff aWdgt is now freefloating -- same
+    # as the old `if layoutSpec != FREEFLOATING` guard, now centralized in invalidateLayout.
+    @invalidateLayout(aWdgt)
 
     aWdgt.fullChanged()
     @silentAdd aWdgt, true, position
@@ -3759,7 +3761,15 @@ class Widget extends TreeNode
       C.makeSpacersOpaque()
   # this part is excluded from the fizzygum homepage build <<«
 
-  invalidateLayout: ->
+  invalidateLayout: (triggeringChild = nil) ->
+    # FREEFLOATING-skip -- THE single home of the rule: a freefloating child's add/remove/resize
+    # cannot change its parent's layout (it's positioned absolutely, not laid out by the parent).
+    # The climb and every teardown/move site pass the child whose change triggered this invalidate;
+    # a nil triggeringChild is a direct self-invalidate from feature code. This return MUST stay
+    # BEFORE the _recalculatingLayouts throw below: a freefloating teardown is a silent no-op today
+    # (the inline `unless …isFreeFloating()` guard meant invalidateLayout wasn't even called for it),
+    # so it has to keep being a silent no-op even if it happens mid-pass -- it must never throw.
+    return if triggeringChild?.isFreeFloating()
     # FLOW-RULE INVARIANT (fail fast): the low-level geometry mutators (raw*/silent*/fullRaw*)
     # must not SCHEDULE layout -- they only mutate; scheduling a (re-)layout is the public
     # self-settling tier's job. If an invalidate reaches here while recalculateLayouts is running,
@@ -3776,8 +3786,10 @@ class Widget extends TreeNode
     if @layoutIsValid
       world.widgetsThatMaybeChangedLayout.push @
     @layoutIsValid = false
-    if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING and @parent?
-      @parent.invalidateLayout()
+    # CLIMB: tell my parent that a child (me) changed. Pass @ so the parent short-circuits via the
+    # return at the top iff I'm freefloating -- this replaces the old inline `unless @isFreeFloating()
+    # and @parent?` climb-guard (the freefloating rule now lives in ONE place, the param check above).
+    @parent?.invalidateLayout(@)
 
   # »>> this part is excluded from the fizzygum homepage build
   setMinAndMaxBoundsAndSpreadability: (minBounds, desiredBounds, spreadability = LayoutSpec.SPREADABILITY_MEDIUM) ->
