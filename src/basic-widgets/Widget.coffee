@@ -473,6 +473,13 @@ class Widget extends TreeNode
       return firstPart + @uniqueIDString()
 
   close: ->
+    # SELF-SETTLE. NOT a single mutation: _closeCore re-homes me to the basement via add() (a NESTED
+    # public setter), so the single-mutation tier mutateGeometryThenSettle would THROW on that inner
+    # add (it forbids a public setter mid-flush). settleLayoutsOnceAfter is the right tier -- it defers
+    # the inner add into ONE flush. Anchored on (@parent ? @) (its orphan check is at the end).
+    (@parent ? @).settleLayoutsOnceAfter => @_closeCore()
+
+  _closeCore: ->
 
     # closing window content: also close the window
     # UNLESS we are an internal window, in such case
@@ -498,6 +505,17 @@ class Widget extends TreeNode
   # NOTE that the tree under this widget is kept intact,
   # so this widget could be duplicated and revived
   destroy: ->
+    # SELF-SETTLE via the single-mutation tier (close, by contrast, re-homes via add() and needs the
+    # batching tier). mutateGeometryThenSettle checks orphan at the START (I'm still attached) then
+    # flushes globally, so my parent settles even though _destroyCore orphans me. Inside fullDestroy's
+    # batch it sees world._batchingLayoutSettling and defers, so the recursion still collapses to one flush.
+    # CAVEAT (tight by choice): a STANDALONE destroy() (not fullDestroy) of a widget whose
+    # childBeingDestroyed/childRemoved hook does a NESTED public setter would throw -- the only such path
+    # is a window's @contents (childBeingDestroyed -> resetToDefaultContents -> buildAndConnectChildren ->
+    # add). Not reachable: contents are torn down via the batched fullDestroy, never a bare destroy().
+    @mutateGeometryThenSettle => @_destroyCore()
+
+  _destroyCore: ->
 
     @parent?.childBeingDestroyed? @
     @unregisterThisInstance()
@@ -563,6 +581,13 @@ class Widget extends TreeNode
   # from the bottom (leaf widgets, drawn on top
   # of everything) to the top
   fullDestroy: ->
+    # SELF-SETTLE + BATCH (like add building many children): the recursive teardown below invalidates
+    # ancestors repeatedly; ONE settleLayoutsOnceAfter wrap collapses it to a single flush at the end
+    # -- the nested fullDestroy/destroy calls see world._batchingLayoutSettling and defer. Anchored on
+    # my surviving parent (removeChild orphans me by the end).
+    (@parent ? @).settleLayoutsOnceAfter => @_fullDestroyCore()
+
+  _fullDestroyCore: ->
     WorldWdgt.numberOfAddsAndRemoves++
     # we can't use a normal iterator because
     # we are iterating over an array that changes

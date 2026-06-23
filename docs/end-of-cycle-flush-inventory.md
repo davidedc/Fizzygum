@@ -72,30 +72,34 @@ un-allowlisted end-of-cycle layout" gate (§8).
 
 ## 4. Q2 + Q3 — Attribution & why-not-settled (the by-action inventory)
 
-> **Current numbers** (post-centralization; one full-suite headless dpr1 audit run — **569** origin records across
-> **477** interaction frames). NB on noise: this metric counts how layout work is *distributed across frames*, which is
-> wall-clock-sensitive (a heavy cycle drains several queued events in one frame instead of spreading them — see
-> `DETERMINISM.md`), so the totals are **run-to-run noisy by a few records even on a fixed build** — one text-resize
-> test alone samples 66–74. Read them as order-of-magnitude (where ±a-few records is negligible against e.g. the
-> 230-record hover bucket), not exact; regenerate any time — see `end-of-cycle-audit-tooling.md`.
+> **Current numbers** (post-teardown-self-settle; one full-suite headless dpr1 audit run — **320** origin records
+> across **245** interaction frames, **down from 569/477**). This session made `close`/`destroy`/`fullDestroy`
+> **self-settle** (like `add`: `destroy` via `mutateGeometryThenSettle`, `close`/`fullDestroy` batched via
+> `settleLayoutsOnceAfter`), which drove the drop. It also **re-classified the old "230-record hover" row**: that was
+> mostly **menu-cleanup `close()`** re-fitting a ScrollPanel (it shared hover's `Set.forEach < playQueuedEvents` sig,
+> so the first pass mislabelled it as pointer-dispatch) — `close()` self-settling eliminated ~210 of it; the ~19
+> residual is genuine hover/scroll. NB on noise: this metric counts how layout work is *distributed across frames*,
+> wall-clock-sensitive (a heavy cycle drains several queued events in one frame — see `DETERMINISM.md`), so totals are
+> **run-to-run noisy by a few records** even on a fixed build; read as order-of-magnitude, regenerate any time — see
+> `end-of-cycle-audit-tooling.md`.
 
 Rolled up by **action** (the convert-vs-leave unit), interaction frames, with the §5 verdict:
 
 | action (trigger) | records | tests | nature | why it defers | **verdict** |
 |---|--:|--:|---|---|---|
-| `Widget.destroy` (teardown of tooltips, menus, windows) | 16 | 12 | teardown | freefloating teardown now **skips** the parent invalidate; the managing-container cases **self-settle** (prior arc + this centralization) | **DONE → §5b** |
-| *(untagged)* **hover / pointer-dispatch** (`ActivePointerWdgt` mouseEnter/mouseLeave diff, `mouseOverList.forEach`) | 230 | 85 | **continuous** (every pointer move) | hover state change invalidates the hovered container | **LEAVE** (textbook batch) |
-| `TextWdgt.reLayoutAndRefreshContainerIfContainedText` (contained-text edit) | 129 | 13 | **high-frequency** (per keystroke) | content edit re-fits the container via the seam | **LEAVE** (per-char settle is wasteful) |
-| `*.reactToDropOf` / `reactToGrabOf` / `childRemoved` (drag/drop) | 76 | 29 | **discrete gesture events** | the deferred-layout campaign **deliberately** defers these | **LEAVE** (already a conscious decision) |
+| `Widget.destroy` / `close` / `fullDestroy` (teardown) | 0 | 0 | teardown | **self-settles** this session, like `add` (`destroy` via `mutateGeometryThenSettle`; `close`/`fullDestroy` batched via `settleLayoutsOnceAfter`) — gone from end-of-cycle | **DONE** (self-settled) |
+| *(untagged)* **event-dispatch residual** (genuine hover/scroll; the bulk here WAS menu-cleanup `close()` re-fitting a ScrollPanel, same `Set.forEach < playQueuedEvents` sig — now self-settled) | 19 | 11 | **continuous** (residual) | hover/scroll state change invalidates the container | **LEAVE** (residual is textbook batch) |
+| `TextWdgt.reLayoutAndRefreshContainerIfContainedText` (contained-text edit) | 118 | 11 | **high-frequency** (per keystroke) | content edit re-fits the container via the seam | **LEAVE** (per-char settle is wasteful) |
+| `*.reactToDropOf` / `reactToGrabOf` / `childRemoved` (drag/drop) | 71 | 26 | **discrete gesture events** | the deferred-layout campaign **deliberately** defers these | **LEAVE** (already a conscious decision) |
 | `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | 32 | 6 | discrete click | invalidates on toggle | **LEAVE/convert** (entangled w/ collapse) |
 | `Widget.collapse` / `unCollapse` | 36 | 7 | discrete | self-invalidate defers; parent re-fit is *synchronous & sanctioned* | **LEAVE** (mixed; see §10) |
 | `WindowWdgt.childCollapsed` / `childUnCollapsed` | 8 | 2 | discrete | parent reaction | **LEAVE** (synchronous arm is sanctioned) |
-| *(untagged)* **during-paint** (freefloating re-fit from `fullPaintInto…`) | 14 | 4 | curiosity | a freefloating widget recomputed lazily at paint | **LEAVE** (self-contained; §11) |
+| *(untagged)* **during-paint** (freefloating re-fit from `fullPaintInto…`) | 13 | 4 | curiosity | a freefloating widget recomputed lazily at paint | **LEAVE** (self-contained; §11) |
 | *(untagged)* **macro-driver** (test fixture-build macros) | 14 | 9 | test-construction | harness builds fixtures mid-test | **out of scope** (not product) |
-| `Widget.setMaxDim` (stack-divider drag) | 4 | 1 | continuous-ish (divider drag) | constraint change invalidates | **LEAVE** |
-| `SimplePlainTextWdgt.setSoftWrap` | 3 | 2 | discrete | family 5, **left synchronous** by prior decision | **LEAVE** |
-| **`VerticalStackLayoutSpec.setAlignment*` / `setWidthOfElementWhenAdded`** | **6** | **2** | **discrete menu pick** | sets a layout-spec property, re-fits via the seam | **CONVERT candidate** |
-| `Widget.newParentChoice` (re-parent menu) | 1 | 1 | discrete menu | deferred via `_reFitContainer` | **CONVERT candidate** (or allowlist) |
+| `Widget.setMaxDim` (stack-divider drag) | 6 | 1 | continuous-ish (divider drag) | constraint change invalidates | **LEAVE** |
+| `SimplePlainTextWdgt.setSoftWrap` | 1 | 1 | discrete | family 5, **left synchronous** by prior decision | **LEAVE** |
+| **`VerticalStackLayoutSpec.setAlignment*` / `setWidthOfElementWhenAdded`** | **2** | **1** | **discrete menu pick** | sets a layout-spec property, re-fits via the seam | **CONVERT candidate** |
+| `Widget.newParentChoice` (re-parent menu) | 0 | 0 | discrete menu | deferred via `_reFitContainer` (none surfaced this run) | **CONVERT candidate** (or allowlist) |
 
 ## 5. Q4 — Should it self-settle? (the verdict, with rationale)
 
