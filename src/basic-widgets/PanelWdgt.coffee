@@ -110,7 +110,13 @@ class PanelWdgt extends Widget
   # puts the widget in the ScrollPanel
   # in some sparse manner and keeping it
   # "in view"
+  # public self-settling entry (e.g. a drop into the basement). The private chain that re-homes a
+  # closed/lost widget calls _addInPseudoRandomPositionCore directly -- it is already inside close()'s
+  # settle batch, so it must NOT re-enter the settle tier through the public add.
   addInPseudoRandomPosition: (aWdgt) ->
+    @mutateGeometryThenSettle => @_addInPseudoRandomPositionCore aWdgt
+
+  _addInPseudoRandomPositionCore: (aWdgt) ->
     width = @width()
     height = @height()
 
@@ -118,7 +124,7 @@ class PanelWdgt extends Widget
     posy = Math.abs((aWdgt.toString() + "x").hashCode()) % height
     position = @position().add new Point posx, posy
 
-    @add aWdgt
+    @_addCore aWdgt
     # Container re-fit DEFERS to the cycle: fullRawMoveTo below routes through fullRawMoveBy ->
     # _reFitContainerAfterRawGeometryChange, which -- since aWdgt sits directly in a non-text-
     # wrapping ScrollPanel's contents (me) -- invalidates the enclosing ScrollPanel (@parent),

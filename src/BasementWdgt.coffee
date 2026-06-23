@@ -130,9 +130,10 @@ class BasementWdgt extends BoxWdgt
     for w in @scrollPanel.contents.children
       w.show()
 
-  # a closed/lost widget is scattered into the basement's contents
-  addLostWidget: (w) ->
-    @scrollPanel.contents.addInPseudoRandomPosition w
+  # a closed/lost widget is scattered into the basement's contents. A core itself: called only from
+  # close()'s private chain (_closeCore) and invoking a core, with no settle (the close batch settles).
+  _addLostWidgetCore: (w) ->
+    @scrollPanel.contents._addInPseudoRandomPositionCore w
 
   # is w currently sitting in the basement's contents?
   holds: (w) ->

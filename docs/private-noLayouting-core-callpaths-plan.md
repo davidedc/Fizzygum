@@ -4,6 +4,31 @@
 background, the engine model, every call chain with file:line + signatures, the concrete edits, the subtleties, and
 the verification. Read §0 → §3 before touching code. **Do Plan 2 (the settle-tier rename) AFTER this plan.**
 
+**EXECUTION STATUS (2026-06-23 — partial; the rest is a tracked follow-up):**
+- **Step 0 — ONE core, not two.** Instead of the `_addCore`/`_addRawCore` split this plan proposed, `_addCore` itself
+  was made the full "add minus settle" (shadow + structural + fractional folded in); `add`/`addRaw` are thin wrappers.
+  Byte-identical (the construction adders pass fresh non-world children, so the shadow step is a no-op). The
+  now-redundant dead `addRaw` + `fullRawMoveCenterTo` were deleted.
+- **Chain 1 (close → basement) DONE & byte-identical.** `addInPseudoRandomPosition` → wrapper +
+  `_addInPseudoRandomPositionCore` (→ `@_addCore`); `addLostWidget` → `_addLostWidgetCore`; `_closeCore` recurses
+  `@parent._closeCore()`.
+- **`_fullDestroyCore` made a PURE core** — recurses `@children[0]._fullDestroyCore()` + `@_destroyCore()` instead of
+  public `fullDestroy`/`destroy`, so it is safe to call directly even under `_inLayoutMutation`. Byte-identical.
+- **`collapse`/`unCollapse` made self-settling** (public API) via `settleLayoutsOnceAfter` + `_collapseCore`/
+  `_unCollapseCore` (batching tier — they reach nested `destroy`/`add` through the window collapse hooks).
+  Determinism-verified (gauntlet + torture).
+- **DEFERRED FOLLOW-UP — Chain 2 (window rebuild) chrome `@add → @_addCore`.** Converting the 7
+  `_buildAndConnectChildrenCore` chrome adds BREAKS `reactToDropOf` (*"a `_reLayout()` threw during recalculateLayouts:
+  `@stack` undefined"*) — the window content's stack is wired through `@add`'s path but not the bare `@_addCore`, a
+  real subtle dependency to chase. AND the re-entry there is LATENT (the build is always batched by
+  `buildAndConnectChildren`'s `settleLayoutsOnceAfter`, so the `@add` never actually throws). Left as `@add`; the
+  `check-layering.js` private→public-settle lint (§5) is coupled to this and also deferred.
+- **STINK tracker added** (`buildSystem/check-stinks.js`, NON-BLOCKING build report): the 5
+  `settleLayoutsOnceAfter => @_xxxCore()` sites (close / fullDestroy / buildAndConnectChildren / collapse / unCollapse)
+  are reported on every build to drive to zero — each flips to `mutateGeometryThenSettle` once its core is pure (which,
+  for most, awaits the chrome follow-up above). A dead-method lint (`check-dead-methods.js`, 53-method baseline) was
+  also added.
+
 ---
 
 ## 0. Cold-start orientation (workspace, build, test)

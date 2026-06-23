@@ -485,13 +485,14 @@ class Widget extends TreeNode
     # UNLESS we are an internal window, in such case
     # leave the parent one as is
     if !@isWindow?() and @parent?.isWindow?()
-      @parent.close()
+      # private chain: the core, not public close() -- we are already inside close()'s settle batch.
+      @parent._closeCore()
       return
 
     world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
     @parent?.childBeingClosed? @
     if world.basementWdgt?
-      world.basementWdgt.addLostWidget @
+      world.basementWdgt._addLostWidgetCore @
     else
       world.inform "There is no\nbasement to go in!"
 
@@ -582,9 +583,9 @@ class Widget extends TreeNode
   # of everything) to the top
   fullDestroy: ->
     # SELF-SETTLE + BATCH (like add building many children): the recursive teardown below invalidates
-    # ancestors repeatedly; ONE settleLayoutsOnceAfter wrap collapses it to a single flush at the end
-    # -- the nested fullDestroy/destroy calls see world._batchingLayoutSettling and defer. Anchored on
-    # my surviving parent (removeChild orphans me by the end).
+    # ancestors repeatedly; ONE settleLayoutsOnceAfter wrap collapses it to a single flush at the end.
+    # _fullDestroyCore recurses CORE-to-core (no nested settle), so this wrap is the only settle.
+    # Anchored on my surviving parent (removeChild orphans me by the end).
     (@parent ? @).settleLayoutsOnceAfter => @_fullDestroyCore()
 
   _fullDestroyCore: ->
@@ -593,9 +594,12 @@ class Widget extends TreeNode
     # we are iterating over an array that changes
     # its length as we are deleting its contents
     # while we are iterating on it.
+    # core-to-core recursion (no public fullDestroy/destroy): a PURE core. The public fullDestroy
+    # wrapper supplies the single settle, so _fullDestroyCore is safe to call directly from another
+    # private chain even under _inLayoutMutation (where the public destroy() would throw).
     until @children.length == 0
-      @children[0].fullDestroy()
-    @destroy()
+      @children[0]._fullDestroyCore()
+    @_destroyCore()
     return nil
 
   closeChildren: ->
@@ -2065,9 +2069,14 @@ class Widget extends TreeNode
     @invalidateFullClippedBoundsCache @
     @fullChanged()
 
+  # SELF-SETTLE (public API). NOT a single mutation: childBeingCollapsed can destroy() the window's
+  # bar buttons (a nested public setter), so this needs the BATCHING tier (like close) -- the
+  # single-mutation mutateGeometryThenSettle would throw on that nested destroy.
   collapse: ->
-    if @collapsed
-      return
+    return if @collapsed
+    (@parent ? @).settleLayoutsOnceAfter => @_collapseCore()
+
+  _collapseCore: ->
     @parent?.childBeingCollapsed? @
     @collapsed = true
     WorldWdgt.numberOfCollapseFlagsChanges++
@@ -2077,11 +2086,14 @@ class Widget extends TreeNode
     @fullChanged()
     @parent?.childCollapsed? @
 
+  # SELF-SETTLE (public API). BATCHING tier like collapse: childBeingUnCollapsed re-adds the bar
+  # buttons via the public add (a nested public setter), which the batch defers.
   unCollapse: ->
-    if !@collapsed
-      return
-    if !@isCollapsed()
-      return
+    return if !@collapsed
+    return if !@isCollapsed()
+    (@parent ? @).settleLayoutsOnceAfter => @_unCollapseCore()
+
+  _unCollapseCore: ->
     @parent?.childBeingUnCollapsed? @
     @collapsed = false
     WorldWdgt.numberOfCollapseFlagsChanges++
