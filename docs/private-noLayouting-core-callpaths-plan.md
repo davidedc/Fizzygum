@@ -4,7 +4,7 @@
 background, the engine model, every call chain with file:line + signatures, the concrete edits, the subtleties, and
 the verification. Read §0 → §3 before touching code. **Do Plan 2 (the settle-tier rename) AFTER this plan.**
 
-**EXECUTION STATUS (2026-06-23 — partial; the rest is a tracked follow-up):**
+**EXECUTION STATUS (2026-06-23 — chains 1 & 2 DONE; only the optional §5 private→public-settle lint + Plan 2 remain):**
 - **Step 0 — ONE core, not two.** Instead of the `_addCore`/`_addRawCore` split this plan proposed, `_addCore` itself
   was made the full "add minus settle" (shadow + structural + fractional folded in); `add`/`addRaw` are thin wrappers.
   Byte-identical (the construction adders pass fresh non-world children, so the shadow step is a no-op). The
@@ -17,17 +17,23 @@ the verification. Read §0 → §3 before touching code. **Do Plan 2 (the settle
 - **`collapse`/`unCollapse` made self-settling** (public API) via `settleLayoutsOnceAfter` + `_collapseCore`/
   `_unCollapseCore` (batching tier — they reach nested `destroy`/`add` through the window collapse hooks).
   Determinism-verified (gauntlet + torture).
-- **DEFERRED FOLLOW-UP — Chain 2 (window rebuild) chrome `@add → @_addCore`.** Converting the 7
-  `_buildAndConnectChildrenCore` chrome adds BREAKS `reactToDropOf` (*"a `_reLayout()` threw during recalculateLayouts:
-  `@stack` undefined"*) — the window content's stack is wired through `@add`'s path but not the bare `@_addCore`, a
-  real subtle dependency to chase. AND the re-entry there is LATENT (the build is always batched by
-  `buildAndConnectChildren`'s `settleLayoutsOnceAfter`, so the `@add` never actually throws). Left as `@add`; the
-  `check-layering.js` private→public-settle lint (§5) is coupled to this and also deferred.
-- **STINK tracker added** (`buildSystem/check-stinks.js`, NON-BLOCKING build report): the 5
-  `settleLayoutsOnceAfter => @_xxxCore()` sites (close / fullDestroy / buildAndConnectChildren / collapse / unCollapse)
-  are reported on every build to drive to zero — each flips to `mutateGeometryThenSettle` once its core is pure (which,
-  for most, awaits the chrome follow-up above). A dead-method lint (`check-dead-methods.js`, 53-method baseline) was
-  also added.
+- **Chain 2 (window rebuild) chrome `@add → @_addCore` — DONE 2026-06-23 (was the deferred follow-up; the stink it
+  carried is now cleared).** Split `add` → `add`/`_addCore` on `SimpleVerticalStackPanelWdgt` + `WindowWdgt` (mirroring
+  the base `Widget` pair), so `WindowWdgt._addCore` folds in the content bookkeeping
+  (`contentNeverSetInPlaceYet`/title/`@contents`/spec-init) that the bare base `_addCore` skipped — THAT was the
+  `@stack`-undefined break: the content's tag stayed stale, so on a later re-fit the order-independent init recreated
+  its `WindowContentLayoutSpec` and dropped the wired `@stack`. Converted all 7 chrome adds; flipped
+  `buildAndConnectChildren` to the single-mutation `mutateGeometryThenSettle`; routed `resetToDefaultContents` through
+  `@_buildAndConnectChildrenCore` so the child-lifecycle-hook rebuild path never re-enters the public self-settler.
+  **Root enabler (a real engine fix):** the chrome icon-button CONSTRUCTORS build their innards via public `add` on an
+  ORPHAN, which THREW under `_inLayoutMutation` because `mutateGeometryThenSettle` checked the flow-violation throw
+  BEFORE the orphan exemption. Reordered so the orphan guard precedes the throw — orphans aren't in the live tree, so a
+  setter on one can't corrupt a flush and must DEFER, not throw (this also retires the old `destroy` "not reachable"
+  caveat). Verified dpr1/dpr2/WebKit/apps 165/165 + 18-min torture + end-of-cycle audit.
+- **STINK tracker** (`buildSystem/check-stinks.js`, NON-BLOCKING build report): now **4** `settleLayoutsOnceAfter =>
+  @_xxxCore()` sites (close / fullDestroy / collapse / unCollapse) — `buildAndConnectChildren` flipped to
+  `mutateGeometryThenSettle` 2026-06-23 (above), so it left the list (5 → 4). Each remaining site flips once its core
+  is pure. A dead-method lint (`check-dead-methods.js`, 53-method baseline) was also added.
 
 ---
 

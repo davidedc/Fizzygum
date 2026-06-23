@@ -510,10 +510,11 @@ class Widget extends TreeNode
     # batching tier). mutateGeometryThenSettle checks orphan at the START (I'm still attached) then
     # flushes globally, so my parent settles even though _destroyCore orphans me. Inside fullDestroy's
     # batch it sees world._batchingLayoutSettling and defers, so the recursion still collapses to one flush.
-    # CAVEAT (tight by choice): a STANDALONE destroy() (not fullDestroy) of a widget whose
-    # childBeingDestroyed/childRemoved hook does a NESTED public setter would throw -- the only such path
-    # is a window's @contents (childBeingDestroyed -> resetToDefaultContents -> buildAndConnectChildren ->
-    # add). Not reachable: contents are torn down via the batched fullDestroy, never a bare destroy().
+    # The one hook that rebuilds during destroy -- a window losing its @contents
+    # (childBeingDestroyed -> resetToDefaultContents) -- is safe inside this _inLayoutMutation:
+    # resetToDefaultContents rebuilds through the non-settling @_buildAndConnectChildrenCore (not the
+    # public self-settler), and the chrome it constructs adds to ORPHANS, which are exempt from the
+    # flush-throw (see mutateGeometryThenSettle's orphan guard). So nothing re-enters a settle mid-destroy.
     @mutateGeometryThenSettle => @_destroyCore()
 
   _destroyCore: ->
@@ -786,26 +787,23 @@ class Widget extends TreeNode
     # nothing to flush to -- just record the desired change; the first frame settles it.
     unless world?
       return coreThunk()
-    # A public geometry setter reached while a flush or a layout pass is already in
-    # progress is a flow-soundness violation: internal layout (_reLayout / _reLayoutSelf / ...)
-    # must use the raw/silent setters, never the public deferred API -- otherwise
-    # recalculateLayouts would re-enter. THROW so the violation is found and fixed. The
-    # static gate buildSystem/check-layering.js catches the name-recognized internal
-    # methods at BUILD time; this is the runtime backstop for anything that slips through.
-    if world._inLayoutMutation or world._recalculatingLayouts
-      throw new Error "Fizzygum: a public geometry setter was reached during a layout flush/pass -- internal layout code (_reLayout / _reLayoutSelf / ...) must use the raw/silent setters, not the public deferred API (see buildSystem/check-layering.js)."
-    # ORPHAN guard: a widget that is attached to neither the world nor the hand has no
-    # world-managed layout to flush -- and flushing one would try to lay it out via the
-    # global recalculateLayouts queue while it is still HALF-BUILT inside its own
-    # constructor (its already-added children point back at it through .parent), which
-    # crashes its _reLayout. So we just record the change and return; it settles for real
-    # when the finished widget is added to the world. (isOrphan() is false for the world
-    # itself and for anything on the hand, so world.add / dragged-widget mutations still
-    # flush. The pre-self-settling convention -- constructors use raw setters -- means no
-    # existing path relied on flushing an orphan, so this only ever SKIPS a flush that
-    # would have crashed or been a no-op.) See docs/deferred-layout-refit-and-add-design.md (D3).
+    # ORPHAN guard -- MUST precede the flow-violation throw below. A widget attached to neither the
+    # world nor the hand is not part of the live layout, so a public setter on it cannot corrupt a
+    # flush/pass in progress: it just records the change and settles for real when the finished widget
+    # is added to the world. This is what makes CONSTRUCTION safe inside another mutation's settle -- a
+    # constructor that builds its innards via add() (e.g. the icon buttons WindowWdgt.buildAndConnect
+    # Children makes) adds to an orphan, and must DEFER, not throw. (isOrphan() is false for the world
+    # itself and for anything on the hand, so world.add / dragged-widget mutations still reach the throw
+    # + flush below.) See docs/deferred-layout-refit-and-add-design.md (D3).
     if @isOrphan()
       return coreThunk()
+    # A public geometry setter reached on an ATTACHED widget while a flush or a layout pass is already
+    # in progress is a flow-soundness violation: internal layout (_reLayout / _reLayoutSelf / ...) must
+    # use the raw/silent setters, never the public deferred API -- otherwise recalculateLayouts would
+    # re-enter. THROW so the violation is found and fixed. The static gate buildSystem/check-layering.js
+    # catches the name-recognized internal methods at BUILD time; this is the runtime backstop.
+    if world._inLayoutMutation or world._recalculatingLayouts
+      throw new Error "Fizzygum: a public geometry setter was reached during a layout flush/pass -- internal layout code (_reLayout / _reLayoutSelf / ...) must use the raw/silent setters, not the public deferred API (see buildSystem/check-layering.js)."
     # BATCH guard: inside settleLayoutsOnceAfter, DEFER the per-mutation flush -- the batch
     # does ONE settle at the end. This turns O(N) relayouts (building N children, each add
     # self-settling) into 1, and -- crucially -- stops a mid-build settle from re-fitting a
