@@ -1172,14 +1172,22 @@ class StringWdgt extends Widget
     # remember the box-hugs-text mode so a later setText (e.g. editing a button
     # label in place) keeps the box tracking the text instead of cramming the new
     # text into the stale box.
-    @autoSizeBoxToText = true
-    @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
-    @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
-    measuredWidth = @calculateTextWidth (@transformTextOneToOne @text), @originallySetFontSize
-    widthOfText = Math.max (Math.ceil measuredWidth), 1
-    heightOfText = @fontHeight @originallySetFontSize
-    @silentRawSetExtent new Point widthOfText, heightOfText
-    @reflowText()
+    #
+    # SELF-SETTLING (see TextWdgt::sizeToTextAndDisableFitting for the full rationale): a chrome
+    # label is a freefloating child laid out by its managing container (button/menu centres it in
+    # _reLayoutSelf). The generic _reFitContainer seam can't reach a non-scroll/stack container and
+    # a freefloating child doesn't climb, so invalidate the managing parent explicitly and settle --
+    # consistent on return -- instead of leaning on the caret-destroy accident. Gated out-of-pass.
+    @settleLayoutsOnceAfter =>
+      @autoSizeBoxToText = true
+      @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
+      @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
+      measuredWidth = @calculateTextWidth (@transformTextOneToOne @text), @originallySetFontSize
+      widthOfText = Math.max (Math.ceil measuredWidth), 1
+      heightOfText = @fontHeight @originallySetFontSize
+      @silentRawSetExtent new Point widthOfText, heightOfText
+      @reflowText()
+      @parent?.invalidateLayout() unless world?._recalculatingLayouts
     @
 
   # This is also invoked for example when you take a slider

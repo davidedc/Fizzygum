@@ -1,0 +1,347 @@
+#  Layout system — architecture assessment
+
+**What this is.** An outside-in architectural review of Fizzygum's layout engine: what it actually does,
+whether it is *byzantine* or merely *highly unusual* relative to the field, and where its architecture/flow
+could be improved. It is a companion to `deferred-layout-OVERVIEW.md` (which is the canonical record of the
+deferral *campaign*); this doc steps back and assesses the *engine* the campaign produced.
+
+**State assessed.** Fizzygum master at/after the deferred-layout capstone (`a7463bbc`), with the
+`_reLayout*` method-family naming. Written 2026-06-22.
+
+> **Line numbers are approximate — the METHOD NAME is authoritative; `grep` it.** (Same convention as the
+> OVERVIEW; every shipped edit shifts lines.) Every file:line below was read against source while writing this.
+
+---
+
+## 1. Verdict in one paragraph
+
+The layout engine is **not byzantine** — it is a deliberately *unusual* one. Mainstream retained-mode toolkits
+(WPF, Flutter, Android, Qt, CSS block/flex) run a structured **two-pass `measure` → `arrange`**: one bottom-up
+sizing pass, one top-down positioning pass, both O(n), guaranteed to terminate. Fizzygum instead runs a
+**work-list / dirty-set settle that iterates to a fixed point** — the same family as **browser reflow +
+invalidation**, **constraint solvers** (Cassowary / Auto Layout), and **spreadsheet/reactive recalculation**.
+That is exotic for a GUI toolkit but it is a *recognized* pattern, and most of its complexity is **essential**,
+given three hard constraints the design genuinely faces (§3). The genuinely *accidental* complexity is narrow
+and is already being paid down with lints + a determinism soak. The single most consequential oddity is the
+**absence of a pure measure pass**, replaced by **synchronous mutate-then-read-back** for content sizing — and
+the framework already contains the clean alternative on one of its own code paths (§2.5). Closing that gap is
+the highest-leverage architectural change available (§4.1).
+
+---
+
+## 2. What the system actually does
+
+### 2.1 The per-frame spine
+
+`WorldWdgt.doOneCycle` (`src/WorldWdgt.coffee` ~:1266) runs, in order:
+
+```
+updateTimeReferences
+show errors from previous cycle           (incl. layout errors deferred out of the settle loop)
+playQueuedEvents()                         (~:1276 — dispatch input)
+replayTestCommands / step functions        (~:1280–1288 — animation, stepping widgets)
+recalculateLayouts()                       (~:1291 — the engine's end-of-cycle settle)
+add pinout/highlight overlays
+updateBroken()                             (~:1299 — paint dirty rectangles)
+```
+
+So layout is wedged between input/stepping and paint.
+
+### 2.2 The flush model — how often layout actually settles
+
+> **Common misreading (worth stating because it is the natural one): "there is one layout flush per frame."
+> That is false.** There is one *engine-scheduled* flush per frame; the *total* is generally several.
+
+`recalculateLayouts()` (`WorldWdgt.coffee` ~:856) is invoked from **exactly three** sites:
+
+| # | Site | When | Cardinality |
+|---|---|---|---|
+| 1 | `WorldWdgt.coffee` ~:1291 (end of `doOneCycle`) | every frame, by the engine | **1 / frame** |
+| 2 | `Widget.mutateGeometryThenSettle` ~:783 | every **public geometry mutation** | **1 / mutation** |
+| 3 | `Widget.settleLayoutsOnceAfter` ~:808 | every **batch** | 1 / batch |
+
+The 7 public mutators all route through `mutateGeometryThenSettle` and therefore **self-settle** — they record
+the desired change and then run a full `recalculateLayouts()` *before returning*:
+`setBounds` ~:813, `fullMoveTo` ~:1324, `setExtent` ~:1543, `setWidth` ~:1667, `setHeight` ~:1703,
+`add` ~:2375, `addRaw` ~:2397. The flush is **skipped** when the target is an *orphan* (attached to neither
+world nor hand — `mutateGeometryThenSettle` ~:771) and **coalesced** when inside a `settleLayoutsOnceAfter`
+batch (~:778). Nested public setters do **not** stack flushes — they *throw* (the re-entrancy guard, ~:759).
+
+So the honest formula is:
+
+> **flushes / frame  =  (self-settling public mutations executed this frame)  +  (top-level batches)  +  1**
+> &nbsp;&nbsp;&nbsp;&nbsp;— minus mutations skipped for orphans, minus those coalesced inside a batch.
+
+**Evidence this is by design, not incidental:**
+
+- The code documents sequential per-call flushing in so many words (`Widget.coffee` ~:743): *"Calling several
+  public setters in SEQUENCE is fine — each completes, flushing once, before the next begins."*
+- A frame dispatches its **whole** event backlog, not one event: `playQueuedEvents` (`WorldWdgt.coffee` ~:1190)
+  loops `for event in @inputEventsQueue` and returns only at a *future-timed* event (~:1197). Under load —
+  the dpr2 heavy-frame case the determinism docs warn about — many events are drained in one frame.
+- A concrete per-event flush: the resize handle's drag handler `HandleWdgt.nonFloatDragging`
+  (`src/HandleWdgt.coffee` ~:218) calls `@target.setExtent` / `fullMoveTo` / `setWidth` / `setHeight` — each a
+  self-settling flush. A resize gesture emits a *stream* of these; several landing in one heavy frame ⇒ one
+  flush *per drag event*, plus the end-of-cycle flush.
+
+**Why two settle points exist (and why the end-of-cycle one is load-bearing, not a redundant safety net).**
+The two flush kinds drain two different populations of dirtiness:
+
+- **Per-call flushes (site 2)** settle mutations made through the **public deferred API** so an event handler
+  always observes a *consistent world between calls* — the entire reason for the self-settling tier (no caller
+  ever has to "yield and wait for layout").
+- **The end-of-cycle flush (site 1)** drains everything that invalidated layout *without* going through that
+  API and so never self-flushed: raw/silent/fullRaw mutations (float-drag moves, `wheel` scroll adjustments,
+  step-function animations) that enqueue via the seam's out-of-pass `invalidateLayout` arm, plus direct
+  `invalidateLayout()` callers (`setMaxDim` ~:3804, `showAdders`/`removeAdders`, collapse, …). Without this
+  flush those changes would reach paint unsettled.
+
+`settleLayoutsOnceAfter` (`Widget.coffee` ~:795) exists *because* per-call flushing is O(mutations): a
+multi-add builder would otherwise do N full settles, so the batch collapses them to one
+(`WindowWdgt._buildAndConnectChildren` ~:334 is the live caller).
+
+**Consequence.** A heavy frame's final layout is the **composition of several full settle passes, in event
+order**. This is sound only because each settle is a pure function of geometry-at-that-instant and converges to
+the same fixed point regardless of iteration count — but it makes per-frame cost `flushes × cost-per-settle`,
+and it is a real reason determinism is hard: the *sequence* of settles within a frame (and the event-draining
+order driving it) must be deterministic, not just each settle in isolation.
+
+### 2.3 The settle engine: invalidate **up**, re-layout **down**, iterate to a fixed point
+
+`_recalculateLayoutsCore` (`WorldWdgt.coffee` ~:869) is the whole engine:
+
+```
+until widgetsThatMaybeChangedLayout is empty:           (~:878)
+   pop valid widgets off the tail
+   take a dirty widget; walk UP parents while the parent is also dirty   (~:917)
+       (stop at a valid parent, or at a freefloating boundary  ~:918)    → "top of a broken chain"
+   tryThisWidget._reLayout()       (~:927 — lays out that subtree top-down, marking each node valid)
+```
+
+Two facts make this a *fixed-point* loop, not a fixed *number* of passes:
+
+1. **Invalidation climbs up; layout flows down.** `invalidateLayout` (`Widget.coffee` ~:3756) pushes the
+   widget, marks it invalid, then recurses to `@parent` (unless freefloating, ~:3773) — so one deep change
+   enqueues the whole ancestor chain, and the loop then does a single top-down `_reLayout` from the topmost
+   dirty ancestor. **In the common case a localized change is "climb up once, lay out down once" — effectively
+   one top-down arrange.** `_reLayout` ends in `markLayoutAsFixed()` (~:4150), popping the node.
+2. **A `_reLayout` can re-dirty something *outside* the subtree it just settled**, via the re-fit seam
+   `_reFitContainer` (`Widget.coffee` ~:1642), whose in-pass arm *enqueues* a container mid-pass. This is the
+   only thing that produces genuine iteration: the clock → inner-window → outer-window cascade re-enqueues
+   containers, so the loop runs another `_reLayout`, and again, **until the queue drains.**
+
+> **So the right mental model:** one *up-then-down* per localized change; degenerating into true
+> *up/down/up/down* fixed-point iteration only across **container boundaries that re-dirty each other**
+> (freefloating content ↔ its container). The iteration is concentrated in a small, specific part of behavior.
+
+Termination is guarded by a hard `recalcIterationsCap = 100000` freeze-backstop (~:875), a per-container
+re-entrancy guard `_adjustingContentsBounds` (e.g. `SimpleVerticalStackPanelWdgt._positionAndResizeChildren`
+~:102), and the rule that `invalidateLayout` **throws** if reached mid-pass (~:3768) so a raw setter can never
+re-dirty the pass it is running inside.
+
+### 2.4 The root constraint: accessors read *applied* geometry → mutate-then-read-back
+
+Every geometry accessor (`width()`, `height()`, `position()`, …) reads the *applied* `@bounds`. There is no
+way to ask "where is this heading." So a container that must size itself to its content cannot *measure* the
+content — it **mutates the child and reads the result back**. The vertical stack does exactly this
+(`SimpleVerticalStackPanelWdgt.coffee` ~:139, ~:158):
+
+```coffee
+widget.rawSetWidthSizeHeightAccordingly recommendedElementWidth   # mutate child (synchronously _reLayout's it)
+stackHeight += widget.height()                                    # read the applied result back
+```
+
+**This read-back is the cause of most of the engine's complexity.** It forces the child's `_reLayout` to run
+*synchronously, now* (so `height()` is fresh), which is why low-level setters apply layout immediately
+(`rawSetWidthSizeHeightAccordingly` ~:706 calls `@_reLayout()` at ~:711 and *returns the height* as the
+"Path-B de-read-back" workaround), why `invalidateLayout` must throw mid-pass, and why the cross-container
+notifications had to be synchronous before the deferral campaign converted them to the enqueue-mid-pass seam.
+
+### 2.5 Two sizing philosophies coexist (the most important structural finding)
+
+This is not spelled out in the campaign docs, but it is the crux for any future architecture work:
+
+| | **Horizontal stacks** | **Vertical stacks / window content / scroll content** |
+|---|---|---|
+| Sizing model | **min / desired / max**, computed **bottom-up** and cached: `getRecursiveMinDim/DesiredDim/MaxDim` (`Widget.coffee` ~:3835–3930) | **proportional**: child width = f(*current* container width), `getWidthInStack` (`VerticalStackLayoutSpec.coffee` ~:31) |
+| How a container learns content size | a **pure measure** (no mutation) | **mutate the child, read `@bounds` back** (§2.4) |
+| Arrange | 3-case distribution in base `_reLayout` (`Widget.coffee` ~:4059–4147): under-min shrink / desired-margin grow / max-margin grow | sum the read-back heights (`_positionAndResizeChildren`) |
+
+The horizontal path is **a textbook constraint box layout** (essentially flexbox with min/preferred/max + grow
+factors) with a clean measure/arrange separation. The vertical/window/scroll path is the imperative,
+read-back, fixed-point path. *The framework already contains a clean measure engine — it just isn't used on
+the side that hurts.*
+
+The proportional model is what creates the cyclic coupling: `getWidthInStack`
+(`width = wEl + elasticity·(availW·wEl/wStk − wEl)`, capped at `availW`) makes child width a *continuous
+function of container width*, and container size depends back on children. When that loops through an
+aspect-locked widget (a square clock in a window-in-window), width depends on height depends on width — a
+genuine cycle. The capstone's fix — give aspect content `elasticity 0` so the converged-width term multiplies
+out (OVERVIEW §5) — is exactly right: it **breaks the cycle** rather than iterating through it.
+
+### 2.6 Convergence is empirical and capped, not structural
+
+Termination today rests on: each `_reLayout` ending in `markLayoutAsFixed`; the `_adjustingContentsBounds`
+re-entrancy guard; manual cycle-breaking (the `elasticity 0` fix); a 20-minute determinism torture soak; and
+the `recalcIterationsCap = 100000` backstop that exists to convert a hypothetical non-convergence into a loud
+bail instead of a freeze (~:880). That is a defensible engineering position — but it means convergence is a
+*verified property of the current constraint set*, not a *guaranteed property of the algorithm*.
+
+---
+
+## 3. Is it byzantine, or highly unusual?
+
+Two different questions; the answers differ.
+
+### Axis 1 — unusual relative to the field? **Yes, but with clear pedigree.**
+
+| System | Sizing | Termination |
+|---|---|---|
+| WPF / Flutter / Android / Qt / CSS block-flex | two-pass **measure → arrange**, one bottom-up + one top-down | structural, O(n), no iteration |
+| **Fizzygum** | **work-list dirty-set settle**, invalidate-up + relayout-down, **iterate to fixpoint** | empirical, capped (§2.6) |
+| Browser layout (reflow + invalidation) | dirty-propagate + reflow | can re-run; *forced synchronous layout / layout thrashing* is the pathology |
+| Constraint solvers (Cassowary / Auto Layout) | solve a *system* | solver convergence |
+| Spreadsheet / reactive recalculation | dirty cells, propagate | until stable |
+
+The closest analog is **browser layout**, and the match is striking: the browser pathology of *"read
+`offsetHeight` after a write forces a synchronous reflow"* is **exactly Fizzygum's root constraint** (§2.4 —
+accessors read applied geometry, so a read forces a synchronous settle). The deferred-layout campaign is the
+same remedy the web ecosystem reaches for: batch mutations, defer to a flush, stop interleaving read-and-mutate.
+
+### Axis 2 — *byzantine* (gratuitously, confusingly complex)? **No.**
+
+Most of the complexity is **essential**, forced by three constraints the design genuinely has:
+
+1. a **retained widget tree drawn on an immediate-mode `<canvas>`** with applied-geometry-only accessors (the
+   Morphic.js heritage);
+2. a **proportional + content-sized model with real cycles** (aspect-locked nesting);
+3. **byte-exact determinism** — SystemTests assert pixel-identical canvases, so layout must be a pure function
+   of *event stream + final geometry*, independent of iteration count, frame count, or wall-clock
+   (`Fizzygum-tests/DETERMINISM.md`). Deferral matters *precisely because* intermediate passes must not leak
+   into pixels.
+
+And the *accidental* complexity is visibly **under disciplined reduction**: the deferral campaign collapsed the
+synchronous special-cases into one deferred seam, unified three near-duplicate dispatch shapes into the single
+`_reFitContainer`, and gated the invariant with build-time lints A–F plus the determinism soak. That is the
+opposite of byzantine — it is a system whose owner is paying down historical `fixLayout` debt with proofs.
+
+**The parts that *do* read byzantine — the fair targets:**
+
+- **Behavior keyed off scattered global phase booleans** on `world` (`_recalculatingLayouts`,
+  `_inLayoutMutation`, `_batchingLayoutSettling`): the legal operation (throw / enqueue / invalidate / apply)
+  depends on *which phase you are in*, and that knowledge is spread across `Widget` and `WorldWdgt`.
+- **Mutate-then-read-back** (§2.4) and the **two coexisting sizing philosophies** (§2.5).
+- **Convergence is empirical, not structural** (§2.6).
+
+---
+
+## 4. Improvement directions
+
+Ranked by leverage. The three approaches the campaign already **falsified** are *not* re-proposed and are
+listed as "do not revisit" at the end. Each suggestion is determinism-sensitive and must clear the soak.
+
+### 4.1 Add a pure *measure* protocol to kill the read-back — **highest leverage; attacks the root**
+
+Introduce a side-effect-free `preferredExtentForWidth(availW) → {w, h}` that **never touches `@bounds`** — i.e.
+generalize what `getRecursive*Dim` already is for horizontal stacks (§2.5) to text (compute wrapped height for
+a width *without committing the wrap*) and to the vertical/window/scroll path. Then `_positionAndResizeChildren`
+sums *measured* heights instead of mutating each child and reading `height()` back.
+
+Why it is the keystone:
+- It **dissolves the root constraint locally** without overloading the applied accessors.
+- A container's size becomes a **pure function of children's measures**, so the synchronous "apply-then-see-it"
+  is no longer needed — which is what forces immediate `_reLayout`, the mid-pass throw, and the Path-B
+  "hand the height forward" plumbing.
+- It **unifies the two sizing philosophies** onto the one the codebase already trusts, and (§2.2) makes
+  repeated per-frame settles far cheaper, since a pure measure is much lighter than a mutate-read-back arrange.
+
+**This is explicitly *not* Path A** (the falsified dead end, OVERVIEW §6). Path A failed because it made the
+*same* accessor serve both "applied" and "pending" readers (canvas buffers, inspector, dirty-rects vs. layout).
+A *separate, pure* measure query has no such conflict; the applied accessors are untouched.
+
+**Honest caveat.** This is the big change: byte-exact text measurement must reproduce wrap geometry without
+committing it, and every result must clear the soak. And measure alone does **not** remove the genuine
+width↔height cycle of aspect-locked nested content — that is irreducible in any single-pass system (it is why
+CSS needs special `aspect-ratio` rules and Flutter forbids unbounded-both-axes). The `elasticity 0` fix already
+breaks that cycle correctly, so the end-state is: *measure+arrange handles everything except the handful of true
+cycles, which stay explicitly cycle-broken — and the fixpoint iteration becomes unnecessary in principle.*
+
+### 4.2 Make convergence *structural*, not empirical (falls out of 4.1)
+
+Once 4.1 removes read-back coupling, classify each layout dependency edge by axis and direction — "width flows
+down" (proportional) vs "size flows up" (content-sized) — and add a lint (in the spirit of `check-layering.js`
+rules A–F) that flags any new edge coupling both directions on the same axis of the same widget. If the graph
+is a per-axis DAG, a single measure+arrange terminates with zero iteration, and `recalcIterationsCap` downgrades
+from a *recovery path* to a *should-never-fire assert*. This converts §2.6's empirical invariant into a
+build-enforced one — the same move already made for the flow rule.
+
+### 4.3 Encapsulate the engine state behind one owner object
+
+Move `widgetsThatMaybeChangedLayout` + the three phase booleans + the `_reFitContainer` dispatch into a single
+`world.layoutEngine` with an explicit phase enum (`IDLE | MUTATING | SETTLING | BATCHING`) and one documented
+table of "legal operations per phase." Cohesion, not algorithm change — but it directly targets the part that
+*reads* byzantine (§3), because the "throw vs enqueue vs invalidate vs apply" rule is currently reconstructed
+from booleans scattered across two classes. (Bonus: an engine *object*'s methods are not `Widget` members, so
+this sidesteps the inspector-recapture cost of adding methods to base `Widget`.)
+
+### 4.4 Split dirtiness into two flags
+
+Replace single `layoutIsValid` + climb-and-enqueue-the-whole-chain with the standard browser/React pair:
+**`needsLayout` (this node)** and **`hasDirtyDescendant` (a child needs layout)**. `invalidateLayout` then sets
+one bit on the node and flips `hasDirtyDescendant` up the chain (O(depth) marking but O(1) *enqueues* — only
+roots-with-dirty-descendants go on the work-list), and the loop walks *down* from those roots. It also makes the
+"freefloating child laid out twice" sub-optimality (§4.5) disappear naturally. Determinism-sensitive.
+
+### 4.5 Quick win — the freefloating walk-up TODO (`WorldWdgt.coffee` ~:900–915)
+
+The code itself flags that the walk-up stops at the *first valid* parent rather than the *topmost invalid* one,
+so a freefloating child can be laid out twice (first with a stale parent size). Stopping at the
+last-invalid-on-the-way-up is a small, local fix that removes redundant double-layout. Optimization, not
+correctness; soak it (anything in this loop is cadence-sensitive).
+
+### 4.6 Minor — flush-count hygiene in multi-mutation handlers
+
+Following from §2.2: a handler that performs several geometry mutations does one full settle *each*. Where a
+gesture changes both extent and position, prefer the compound `setBounds` (one flush) over `setExtent` +
+`fullMoveTo` (two), or wrap the sequence in `settleLayoutsOnceAfter`. Pure micro-optimization, but it is the
+productive corollary of the corrected flush model and costs nothing.
+
+### Do **not** revisit (already falsified — see the OVERVIEW)
+
+- **Path A — pending-aware accessors** (OVERVIEW §6): one accessor cannot serve both pending- and applied-needers.
+- **Reformulating the proportion fraction** (OVERVIEW §5): the stored `wEl/wStk` fraction is irreducibly
+  load-bearing (base-width menu, `DONT_MIND` fill, per-instance text); three reformulations were falsified.
+- **Routing `ScrollPanelWdgt.add`/`addMany`/`showResize…` through `settleLayoutsOnceAfter`** (OVERVIEW §11
+  PROOF 2): probed 2026-06-22 and rejected — it deterministically diverged nested-scroll content/thumb geometry
+  at dpr1 for zero gain.
+
+---
+
+## 5. Appendix — verified code map
+
+All read against source while writing this (names authoritative; lines approximate).
+
+- **Per-frame cycle:** `WorldWdgt.doOneCycle` ~:1266 · `playQueuedEvents` ~:1185 (whole-queue drain ~:1190,
+  future-event return ~:1197).
+- **Settle engine:** `recalculateLayouts` ~:856 (re-entrancy throw ~:861) · `_recalculateLayoutsCore` ~:869
+  (until-loop ~:878; cap `100000` ~:875; walk-up ~:917; freefloating stop ~:918; `_reLayout` call ~:927;
+  non-flushing catch ~:938).
+- **Self-settling public API:** `mutateGeometryThenSettle` `Widget.coffee` ~:748 (flush ~:783; re-entrancy
+  throw ~:759; orphan guard ~:771; batch guard ~:778) · `settleLayoutsOnceAfter` ~:795 (flush ~:808). The 7
+  mutators: `setBounds` ~:813, `fullMoveTo` ~:1324, `setExtent` ~:1543, `setWidth` ~:1667, `setHeight` ~:1703,
+  `add` ~:2375, `addRaw` ~:2397.
+- **Invalidation / re-fit:** `invalidateLayout` ~:3756 (mid-pass throw ~:3768; climb ~:3773) ·
+  `_reFitContainer` ~:1642 · `_reFitContainerAfterRawGeometryChange` ~:1619 ·
+  `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` ~:1606.
+- **Apply bodies:** base `Widget._reLayout` ~:3985 (`markLayoutAsFixed` ~:4150; horizontal-stack 3-case
+  distribution ~:4059–4147) · `rawSetWidthSizeHeightAccordingly` ~:706 (synchronous `_reLayout` ~:711, returns
+  height) · `getRecursive{Desired,Min,Max}Dim` ~:3835–3930.
+- **Containers:** `SimpleVerticalStackPanelWdgt._positionAndResizeChildren` ~:100 (read-back ~:139/~:158;
+  `_adjustingContentsBounds` guard ~:102) · `VerticalStackLayoutSpec.getWidthInStack` ~:31 (elasticity field
+  ~:12) · `ScrollPanelWdgt._reLayout` ~:282 / `_positionAndResizeChildren` ~:312 / public-endpoint applies
+  `add`·`addMany`·`showResize…` ~:196/~:202/~:207 · `WindowWdgt._positionAndResizeChildren` ~:418 /
+  `_buildAndConnectChildren` batch ~:334.
+- **Vocabulary:** `LayoutSpec.coffee` (`ATTACHEDAS_FREEFLOATING`, `…_VERTICAL_STACK_ELEMENT`,
+  `…_WINDOW_CONTENT`, `…_STACK_HORIZONTAL_*`, `…_CORNER_INTERNAL_*`).
+- **Concrete multi-flush source:** `HandleWdgt.nonFloatDragging` `src/HandleWdgt.coffee` ~:218
+  (`setExtent` ~:227 / `fullMoveTo` ~:229 / `setWidth` ~:232 / `setHeight` ~:235).

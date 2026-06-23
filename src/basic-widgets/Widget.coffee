@@ -516,7 +516,11 @@ class Widget extends TreeNode
     #   alignCopiedWidgetToKeyboardEventsReceiversSet
 
     @destroyed = true
-    @parent?.invalidateLayout()
+    # FREEFLOATING-skip: removing a freefloating child cannot change the parent's layout (mirror
+    # invalidateLayout's climb-guard + _addCore's new-container skip). Containers that MANAGE a
+    # freefloating child (e.g. LabelButton/MenuItem centring their label) self-settle their
+    # re-layout on the change itself (sizeToTextAndDisableFitting / setLabel), not via this teardown.
+    @parent?.invalidateLayout() unless @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
     @breakNumberOfRawMovesAndResizesCaches()
     WorldWdgt.numberOfAddsAndRemoves++
 
@@ -2078,7 +2082,9 @@ class Widget extends TreeNode
         return false
   
   removeFromTree: ->
-    @parent?.invalidateLayout()
+    # FREEFLOATING-skip (see destroy / _addCore): removing a freefloating child doesn't change
+    # the parent's layout.
+    @parent?.invalidateLayout() unless @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
     @breakNumberOfRawMovesAndResizesCaches()
     WorldWdgt.numberOfAddsAndRemoves++
     @parent.removeChild @
@@ -2410,7 +2416,11 @@ class Widget extends TreeNode
       return nil
 
     previousParent = aWdgt.parent
-    aWdgt.parent?.invalidateLayout()
+    # FREEFLOATING-skip: removing aWdgt from its OLD parent only changes that parent's layout if
+    # aWdgt was laid out by it. Key on aWdgt.layoutSpec (the OLD spec, read BEFORE setLayoutSpec
+    # below changes it) -- NOT the layoutSpec param (that's the NEW spec for the new container,
+    # already handled by the `if layoutSpec != FREEFLOATING` guard further down).
+    aWdgt.parent?.invalidateLayout() unless aWdgt.layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
 
     # if the widget contributes to a shadow, unfortunately
     # we have to walk towards the top to

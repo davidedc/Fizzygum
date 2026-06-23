@@ -365,17 +365,28 @@ class TextWdgt extends StringWdgt
   # OFF so the text never re-wraps to the container; the box just hugs the text.
   # See StringWdgt::sizeToTextAndDisableFitting for the full rationale.
   sizeToTextAndDisableFitting: ->
-    @softWrap = false
-    @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
-    @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
-    # softWrap == false → breakTextIntoLines uses an unbounded width, so lines
-    # split only on hard "\n" and maxLineWidth is the natural text width.
-    [lines, lineSlots, naturalWidth, naturalHeight] =
-      @breakTextIntoLines (@transformTextOneToOne @text), @originallySetFontSize
-    widthOfText = Math.max naturalWidth, 1
-    heightOfText = Math.max naturalHeight, (@fontHeight @originallySetFontSize)
-    @silentRawSetExtent new Point widthOfText, heightOfText
-    @reflowText()
+    # SELF-SETTLING: a chrome label (menu item / button caption -- a freefloating TextWdgt at
+    # .label) is laid out by its container, which centres it in _reLayoutSelf (LabelButton /
+    # MenuItem). On re-hug the container must re-layout, but it is NOT a scroll-panel/stack so the
+    # generic _reFitContainer seam (gated on _reLayoutChildren) does not reach it, and a
+    # freefloating child does not climb. So invalidate the managing parent explicitly and settle,
+    # leaving the world consistent on return -- instead of relying on an unrelated later event
+    # (the caret destroy on stop-editing) to re-fit the button. settleLayoutsOnceAfter flushes
+    # standalone / defers inside a pass; the invalidate is gated out-of-pass (inside a pass -- e.g.
+    # createLabel -- the container is already re-laying out and invalidateLayout would throw).
+    @settleLayoutsOnceAfter =>
+      @softWrap = false
+      @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
+      @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
+      # softWrap == false → breakTextIntoLines uses an unbounded width, so lines
+      # split only on hard "\n" and maxLineWidth is the natural text width.
+      [lines, lineSlots, naturalWidth, naturalHeight] =
+        @breakTextIntoLines (@transformTextOneToOne @text), @originallySetFontSize
+      widthOfText = Math.max naturalWidth, 1
+      heightOfText = Math.max naturalHeight, (@fontHeight @originallySetFontSize)
+      @silentRawSetExtent new Point widthOfText, heightOfText
+      @reflowText()
+      @parent?.invalidateLayout() unless world?._recalculatingLayouts
     @
 
   # FIT_BOX_TO_TEXT layout pass: resize our OWN extent to hug the text. This is

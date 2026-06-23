@@ -103,10 +103,15 @@ class LabelButtonWdgt extends ButtonWdgt
 
   # »>> this part is excluded from the fizzygum homepage build
   setLabel: (@labelString) ->
-    # just recreate the label from scratch
-    if @label?
-      @label = @label.fullDestroy()
-    @_reLayoutSelf()
+    # Recreate the label, then SELF-SETTLE (public tier, like setExtent/add) so the button's
+    # FULL re-layout -- createLabel + centre, via _reLayout -- runs synchronously and the world is
+    # consistent on return. Previously this leaned on the old label's destroy to invalidate the
+    # button for us (a deferred end-of-cycle re-layout); we now invalidate explicitly, so it is
+    # robust to the freefloating teardown skip and settles immediately.
+    @mutateGeometryThenSettle =>
+      if @label?
+        @label = @label.fullDestroy()
+      @invalidateLayout()
   # this part is excluded from the fizzygum homepage build <<«
 
   alignCenter: ->
