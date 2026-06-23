@@ -281,6 +281,24 @@ if ! $noSyntaxCheck ; then
   echo "... layering OK"
 fi
 
+# --- build-time DEAD-METHOD gate ------------------------------------------------------
+# Flags methods DEFINED in src but referenced NOWHERE (src + tests + harness) -- catches
+# dead code like the addRaw / fullRawMoveCenterTo deletions. A baseline of known-dead methods
+# is allowlisted in buildSystem/dead-method-allowlist.txt (a to-triage list); the gate FAILS
+# only on a NEW dead method not in that list. (buildSystem/check-dead-methods.js -- self-skips
+# if the sibling Fizzygum-tests repo is absent, e.g. a --homepage build; same --noSyntaxCheck
+# escape hatch and explicit $? check as the layering gate above.)
+if ! $noSyntaxCheck ; then
+  echo "checking for dead (never-referenced) methods ..."
+  node ./buildSystem/check-dead-methods.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: dead-method gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... dead-method check OK"
+fi
+
 # --- build-time test-.js syntax gate (only when tests are part of this build) ---------
 # Each SystemTest's _automationCommands.js carries its macro inside a backtick-delimited JS
 # template literal; a stray backtick silently corrupts the file so the test never loads (with
