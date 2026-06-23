@@ -34,7 +34,7 @@ class ScrollPanelWdgt extends PanelWdgt
     super()
 
     @contents = new PanelWdgt @ unless @contents?
-    # _addCore (NOT the self-settling public addRaw): we are building our own innards
+    # _addCore (NOT the self-settling public add): we are building our own innards
     # during construction; the panel is not parented yet, so a flush here would be a
     # redundant whole-world relayout (and would throw if we are built during a layout pass).
     @_addCore @contents

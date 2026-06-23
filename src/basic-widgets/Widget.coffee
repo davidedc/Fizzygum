@@ -774,7 +774,7 @@ class Widget extends TreeNode
   # public setter (or a layout pass), which would flush more than once per logical
   # mutation. Calling several public setters in SEQUENCE is fine -- each completes,
   # flushing once, before the next begins.
-  # The same wrapper also backs the public STRUCTURAL mutators add()/addRaw() (a tree
+  # The same wrapper also backs the public STRUCTURAL mutator add() (a tree
   # change re-fits layouts too), so it RETURNS the thunk's value -- those need to hand
   # back the added widget (see docs/deferred-layout-refit-and-add-design.md, D3).
   mutateGeometryThenSettle: (coreThunk) ->
@@ -1435,14 +1435,6 @@ class Widget extends TreeNode
 
     @fullRawMoveTo new Point @left(), y - @height()
   
-  fullRawMoveCenterTo: (aPoint) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
-    @fullRawMoveTo aPoint.subtract @extent().floorDivideBy 2
-
   fullRawMoveToSideOf: (aWidget) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
@@ -2383,53 +2375,27 @@ class Widget extends TreeNode
     @parent._addCore aWdgt, myPosition, layoutSpec
   # this part is excluded from the fizzygum homepage build <<«
 
-  # this level of indirection is needed because you have a "raw" "tree" need of
-  # adding stuff and a higher level way to "add". For example, a ScrollPanelWdgt does
-  # a "high-level" add of things in a different way, as it actually adds stuff to a
-  # Panel inside it. Hence a need for both a high-level entry and a low-level core.
-  # ===== public structural mutators: add / addRaw (self-settling) =====
-  # Both are PUBLIC and SELF-SETTLING: they link the widget in through the private,
-  # NON-settling core _addCore and then flush layouts once (mutateGeometryThenSettle),
-  # so a top-level caller (app / macro / event handler) is left with a consistent world
-  # -- no manual settle/yield. Neither calls the other (public->public is banned, see
-  # check-layering.js); both wrap _addCore. Internal callers that run INSIDE a layout
-  # pass (_reLayout / _reLayoutSelf) -- or that build their own innards during construction --
-  # must call _addCore directly (it does not settle, so it neither re-enters the flush
-  # guard nor triggers a redundant relayout). See docs/deferred-layout-refit-and-add-design.md (D3).
+  # ===== structural add =====
+  # add() is the PUBLIC self-settling entry: it links the widget in through the private,
+  # NON-settling _addCore and then flushes layouts once (mutateGeometryThenSettle), so a
+  # top-level caller (app / macro / event handler) is left with a consistent world -- no manual
+  # settle/yield. _addCore is the COMPLETE add minus the settle (shadow management + structural
+  # link-in + fractional-position recording); add() is just the settle-wrap over it. Callers that
+  # run INSIDE a layout pass (_reLayout / _reLayoutSelf), build their own innards during
+  # construction, or tear down / re-home from a private chain call _addCore DIRECTLY (it does not
+  # settle, so it neither re-enters the flush guard nor triggers a redundant relayout). They are
+  # byte-identical to going through add(): for a fresh non-world child the shadow step is a no-op
+  # removeShadow and the fractional step is skipped. See docs/deferred-layout-refit-and-add-design.md (D3).
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
-    @mutateGeometryThenSettle =>
-      # transient overlays (highlighter, caret) skip add-time shadow management (was their two
-      # instanceof). (type-test-elimination campaign)
-      unless aWdgt.skipsAddShadowManagement?()
-        if @ == world
-          aWdgt.addShadow()
-          # when any widget is added to the world, all scheduled tooltips
-          # are cancelled. To avoid that a tooltip appears over what the
-          # button has just opened. This would happen for example in the
-          # "snippets" button in the Simple Document. You go over that
-          # button, you click it, the snippets windows come up, then
-          # the tooltip with "snippets windows" message pops up
-          # over it.
-          if !(aWdgt instanceof ToolTipWdgt)
-            ToolTipWdgt.cancelAllScheduledToolTips()
-        else
-          aWdgt.removeShadow()
+    @mutateGeometryThenSettle => @_addCore aWdgt, position, layoutSpec, beingDropped
 
-      @_addCore aWdgt, position, layoutSpec, beingDropped
-      if @ == world
-        aWdgt.rememberFractionalPositionInHoldingPanel()
-      aWdgt
-
-  addRaw: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
-    @mutateGeometryThenSettle =>
-      @_addCore aWdgt, position, layoutSpec, beingDropped
-
-  # attaches subwidget on top -- the NON-settling structural core shared by add/addRaw
-  # and called directly by internal layout-time / construction-time adders (it must NOT
-  # flush layouts: it runs inside another mutation's settle or during construction).
-  # Full semantics: invalidate + iHaveBeenAddedTo / childAdded / childRemoved callbacks,
-  # but never recalculateLayouts. This was the body of addRaw before the self-settling
-  # split (2026-06-19, Phase 3a).
+  # _addCore -- the COMPLETE add minus the settle. The single NON-settling core behind add() and
+  # every internal layout-time / construction-time / teardown adder (it must NOT
+  # flush layouts: it runs inside another mutation's settle, during construction, or from a
+  # private teardown chain). Full semantics: shadow management + invalidate + silentAdd +
+  # iHaveBeenAddedTo / childAdded / childRemoved callbacks + fractional-position, but never
+  # recalculateLayouts. (The shadow/fractional steps fold in what add() used to do in its
+  # settle-wrap; they are no-ops for the fresh non-world children the internal adders pass.)
   # ??? TODO you should handle the case of Widget
   #     being added to itself and the case of
   # ??? TODO a Widget being added to one of its
@@ -2442,6 +2408,20 @@ class Widget extends TreeNode
     # so we return nil to signal the error.
     if aWdgt.isAncestorOf @
       return nil
+
+    # shadow management (folded in from add()'s old settle-wrap): added to the world a widget
+    # gains a drop-shadow; added anywhere else it loses one. Transient overlays (highlighter,
+    # caret) opt out via skipsAddShadowManagement. For a fresh non-world child removeShadow is a
+    # no-op, so the internal adders that call _addCore directly stay byte-identical.
+    unless aWdgt.skipsAddShadowManagement?()
+      if @ == world
+        aWdgt.addShadow()
+        # adding to the world cancels scheduled tooltips, so a tooltip doesn't pop over what the
+        # button just opened (e.g. the Simple Document "snippets" button).
+        if !(aWdgt instanceof ToolTipWdgt)
+          ToolTipWdgt.cancelAllScheduledToolTips()
+      else
+        aWdgt.removeShadow()
 
     previousParent = aWdgt.parent
     # FREEFLOATING-skip via invalidateLayout(triggeringChild): pass aWdgt so its OLD parent skips
@@ -2473,6 +2453,11 @@ class Widget extends TreeNode
 
     if @childAdded?
       @childAdded aWdgt
+
+    # fractional-position recording (folded in from add()): only meaningful for a world-level
+    # widget, skipped otherwise -- so a no-op for the internal adders.
+    if @ == world
+      aWdgt.rememberFractionalPositionInHoldingPanel()
 
     return aWdgt
 
