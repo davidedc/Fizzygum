@@ -1,6 +1,61 @@
 # Plan — consolidate `ATTACHEDAS_FREEFLOATING` layout handling
 
-**Status: PLAN ONLY. Written to be executed COLD by an LLM/engineer with zero prior context.** It embeds all the
+> ## ✅ EXECUTED & VERIFIED 2026-06-23
+>
+> Shipped as a **byte-identical consolidation**, NOT the fallout-hunting arc this plan first envisioned: verifying the
+> plan's assumptions found the §5 "public methods that should self-settle" were **already fixed in the prior arc**
+> (`end-of-cycle-self-settle-conversion-plan.md`), so the centralization is a pure behaviour-preserving refactor.
+>
+> **What shipped (one commit per phase):**
+> - **Phase 0 — `Widget.isFreeFloating()` predicate** (`Widget.coffee`, by `setLayoutSpec`) + **15 widget-state inline
+>   `<w>.layoutSpec == ATTACHEDAS_FREEFLOATING` checks** adopt it (Widget ×10, WorldWdgt, HandleWdgt, WindowWdgt,
+>   LayoutElementAdderOrDropletWdgt, InspectorWdgt). Cosmetic, byte-identical. ONE **benign inspector recapture**
+>   (`macroDuplicatedInspectorDrivesCopiedTargetOnly`, dpr1+dpr2): the inspected widget's *methods* list grew by the
+>   new method, nudging the scroll-thumb — confirmed by eye to be nothing else. (The local-`layoutSpec`-param check in
+>   `_addCore` is a value, not a widget, so it stayed a constant — folded into the param by Phase 1.)
+> - **Phase 1 — `invalidateLayout(triggeringChild = nil)`** with `return if triggeringChild?.isFreeFloating()` placed
+>   BEFORE the flow-rule throw. All **5 propagation sites** now pass the child, so the freefloating rule lives in ONE
+>   place: the climb (`@parent?.invalidateLayout(@)`), `destroy`, `removeFromTree`, `_addCore` old-parent
+>   (`aWdgt.parent?.invalidateLayout(aWdgt)`, BEFORE `setLayoutSpec` → reads aWdgt's OLD spec) and new-container
+>   (`@invalidateLayout(aWdgt)`, AFTER `setLayoutSpec` → reads the NEW spec, since `setLayoutSpec` sets it to exactly
+>   the param). Provably equivalent (proof in §3); the inline guards are gone.
+> - **Phase 2 — proactive widening sweep: NO safe targets** (verdict table below). The only un-routed
+>   parent-invalidates are the 2 **deliberate shrink-wrap exceptions** (`TextWdgt:389`/`StringWdgt:1190`
+>   `sizeToTextAndDisableFitting` — a freefloating label re-fitting its managing container) which MUST stay unguarded;
+>   every membership hook routes through `_reFitContainer` (the **complementary** axis — a freefloating child in a
+>   ScrollPanel DOES contribute to scroll extent, so a skip there would be wrong). The prior arc + this centralization
+>   capture the entire eligible teardown-skip surface; nothing is left to widen.
+>
+> **Verified:** `fg gauntlet` (dpr1/dpr2/WebKit/apps) 165/165 after Phase 1a AND Phase 1b · 18-min torture
+> (dpr2·fastest·s8) 0 nondeterminism (~1,800 execs). End-of-cycle audit: `Widget.destroy` **16 (exact)**; total
+> interaction records effectively unchanged (single-sample 568 vs 569 — **within the noise**). The audit counts
+> per-frame *work distribution*, which is wall-clock-sensitive (a heavy cycle drains several queued events at once vs
+> spreading them — see `DETERMINISM.md`), so its total is **run-to-run noisy on the SAME build**: the relevant
+> text-resize test (`macroWrappingTextFieldResizesOK`) alone samples 66–74 on clean HEAD and 70–74 with the change —
+> overlapping distributions, ±4–8 spread. So the ±1 is below the audit's resolution, **not** a real effect; the
+> consolidation is flush-neutral, consistent with byte-identical pixels (gauntlet) and 0 nondeterminism (torture).
+> (NB: the audit remains valid for its purpose — resolving order-of-magnitude contributors like `destroy` 505→16 —
+> where ±8 noise is negligible; it just cannot resolve a true-zero change.)
+>
+> **Untouched OTHER axes (§3.1), now reading via the predicate:** the 5 geometry-setter ownership gates
+> (`not @isFreeFloating()`) and the settle walk-up break in `WorldWdgt` (`tryThisWidget.isFreeFloating()`, the
+> structural dual of the climb-skip — kept consistent).
+>
+> ### Phase 2 widening-sweep verdicts (per-hook record)
+>
+> | Hook(s) | Routes to | Verdict |
+> |---|---|---|
+> | `Widget` climb · `destroy` · `removeFromTree` · `_addCore` old & new | `invalidateLayout(child)` (now) | **CENTRALIZED** — the 5 sites |
+> | `TextWdgt:389` · `StringWdgt:1190` `sizeToTextAndDisableFitting` | bare `@parent?.invalidateLayout()` | **LEAVE — deliberate shrink-wrap exception** (a freefloating label MUST dirty its managing container; routing through the param would re-break the prior arc's fix) |
+> | `PanelWdgt.childRemoved`/`reactToDropOf`/`reactToGrabOf` | `_reFitContainer(@parent)` | **LEAVE — complementary axis** (freefloating scroll content contributes to the re-fit) |
+> | `ScrollPanelWdgt.reactToDropOf`/`reactToGrabOf` | `_reFitContainer()` | **LEAVE — complementary axis** |
+> | `SimpleVerticalStackPanelWdgt.childRemoved`/`reactToDropOf` | `_reLayOutAfterContainedPanelChange?` / `_reFitContainer()` | **LEAVE — stack content is non-freefloating by definition** |
+> | `StretchablePanelWdgt.childRemoved`/`childAdded` | `super` (→`_reFitContainer`) + ratio | **LEAVE — complementary axis; ratio counts all non-handle children** |
+> | `PanelWdgt.childAdded` · `WindowWdgt.childBeing{Destroyed,Closed,PickedUp}` | grandChild notify · `if child==@contents then reset` | **N/A — not a layout-propagation invalidate** |
+>
+> The rest of this file is the ORIGINAL PLAN, kept verbatim as the historical record of the design + equivalence proof.
+
+**Status: PLAN ONLY (original text follows — see the EXECUTED banner above for the outcome).** It embeds all the
 background, file:line anchors, code patterns, commands, and gotchas you need. Read §0 → §3 before touching code.
 
 **Deliverables, in THREE stages at increasing risk — keep each a SEPARATE commit; do NOT bundle the byte-identical

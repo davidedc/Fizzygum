@@ -23,6 +23,12 @@ audit ran the **whole 165-macro suite headless at dpr1** with a behaviour-neutra
 > `setLabel`) and removed a pile of wasted freefloating-teardown re-layouts. The continuing campaign — drive the
 > queue down, one contributor at a time — is `end-of-cycle-flush-drawdown-plan.md`.
 
+> **Follow-on (2026-06-23):** the freefloating-teardown skip that drove this −55% was later **centralized** into an
+> optional `triggeringChild` param on `Widget.invalidateLayout` — one home for the rule, a byte-identical refactor
+> (flush-neutral; these numbers unchanged). A proactive widening sweep found **no further skip targets** (the indirect
+> membership hooks are the complementary `_reFitContainer` axis, where a freefloating child DOES contribute). Full
+> record: `freefloating-invalidation-skip-centralization-plan.md`.
+
 The hypothesis was: *most of what lands at end-of-cycle are discrete state changes that **should** have
 self-settled through a public API; an empty end-of-cycle queue should be the steady state, so a non-empty one is a
 smell.*
@@ -66,18 +72,21 @@ un-allowlisted end-of-cycle layout" gate (§8).
 
 ## 4. Q2 + Q3 — Attribution & why-not-settled (the by-action inventory)
 
-> **These are the BASELINE numbers (1244 records, before any conversion).** After the first conversion the headline
-> dropped to 564 (`Widget.destroy` 505 → 16; §1). Regenerate the current numbers any time — see
-> `end-of-cycle-audit-tooling.md`.
+> **Current numbers** (post-centralization; one full-suite headless dpr1 audit run — **569** origin records across
+> **477** interaction frames). NB on noise: this metric counts how layout work is *distributed across frames*, which is
+> wall-clock-sensitive (a heavy cycle drains several queued events in one frame instead of spreading them — see
+> `DETERMINISM.md`), so the totals are **run-to-run noisy by a few records even on a fixed build** — one text-resize
+> test alone samples 66–74. Read them as order-of-magnitude (where ±a-few records is negligible against e.g. the
+> 230-record hover bucket), not exact; regenerate any time — see `end-of-cycle-audit-tooling.md`.
 
 Rolled up by **action** (the convert-vs-leave unit), interaction frames, with the §5 verdict:
 
 | action (trigger) | records | tests | nature | why it defers | **verdict** |
 |---|--:|--:|---|---|---|
-| `Widget.destroy` (teardown of tooltips, menus, windows) | 505 | 94 | teardown | `removeFromTree`/`destroy` invalidate the parent **unconditionally**; no self-settle | **REVISED → §5b** (freefloating: eliminate; else: self-settle) |
-| *(untagged)* **hover / pointer-dispatch** (`ActivePointerWdgt` mouseEnter/mouseLeave diff, `mouseOverList.forEach`) | 432 | 87 | **continuous** (every pointer move) | hover state change invalidates the hovered container | **LEAVE** (textbook batch) |
-| `TextWdgt.reLayoutAndRefreshContainerIfContainedText` (contained-text edit) | 114 | 13 | **high-frequency** (per keystroke) | content edit re-fits the container via the seam | **LEAVE** (per-char settle is wasteful) |
-| `*.reactToDropOf` / `reactToGrabOf` / `childRemoved` (drag/drop) | 75 | ~22 | **discrete gesture events** | the deferred-layout campaign **deliberately** defers these | **LEAVE** (already a conscious decision) |
+| `Widget.destroy` (teardown of tooltips, menus, windows) | 16 | 12 | teardown | freefloating teardown now **skips** the parent invalidate; the managing-container cases **self-settle** (prior arc + this centralization) | **DONE → §5b** |
+| *(untagged)* **hover / pointer-dispatch** (`ActivePointerWdgt` mouseEnter/mouseLeave diff, `mouseOverList.forEach`) | 230 | 85 | **continuous** (every pointer move) | hover state change invalidates the hovered container | **LEAVE** (textbook batch) |
+| `TextWdgt.reLayoutAndRefreshContainerIfContainedText` (contained-text edit) | 129 | 13 | **high-frequency** (per keystroke) | content edit re-fits the container via the seam | **LEAVE** (per-char settle is wasteful) |
+| `*.reactToDropOf` / `reactToGrabOf` / `childRemoved` (drag/drop) | 76 | 29 | **discrete gesture events** | the deferred-layout campaign **deliberately** defers these | **LEAVE** (already a conscious decision) |
 | `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | 32 | 6 | discrete click | invalidates on toggle | **LEAVE/convert** (entangled w/ collapse) |
 | `Widget.collapse` / `unCollapse` | 36 | 7 | discrete | self-invalidate defers; parent re-fit is *synchronous & sanctioned* | **LEAVE** (mixed; see §10) |
 | `WindowWdgt.childCollapsed` / `childUnCollapsed` | 8 | 2 | discrete | parent reaction | **LEAVE** (synchronous arm is sanctioned) |
@@ -85,7 +94,7 @@ Rolled up by **action** (the convert-vs-leave unit), interaction frames, with th
 | *(untagged)* **macro-driver** (test fixture-build macros) | 14 | 9 | test-construction | harness builds fixtures mid-test | **out of scope** (not product) |
 | `Widget.setMaxDim` (stack-divider drag) | 4 | 1 | continuous-ish (divider drag) | constraint change invalidates | **LEAVE** |
 | `SimplePlainTextWdgt.setSoftWrap` | 3 | 2 | discrete | family 5, **left synchronous** by prior decision | **LEAVE** |
-| **`VerticalStackLayoutSpec.setAlignment*` / `setWidthOfElementWhenAdded`** | **6** | **1** | **discrete menu pick** | sets a layout-spec property, re-fits via the seam | **CONVERT candidate** |
+| **`VerticalStackLayoutSpec.setAlignment*` / `setWidthOfElementWhenAdded`** | **6** | **2** | **discrete menu pick** | sets a layout-spec property, re-fits via the seam | **CONVERT candidate** |
 | `Widget.newParentChoice` (re-parent menu) | 1 | 1 | discrete menu | deferred via `_reFitContainer` | **CONVERT candidate** (or allowlist) |
 
 ## 5. Q4 — Should it self-settle? (the verdict, with rationale)
