@@ -912,7 +912,7 @@ class WorldWdgt extends PanelWdgt
       # the first time wrongly.
 
       while tryThisWidget.parent?
-        if tryThisWidget.layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING or tryThisWidget.parent.layoutIsValid
+        if tryThisWidget.isFreeFloating() or tryThisWidget.parent.layoutIsValid
           break
         tryThisWidget = tryThisWidget.parent
 

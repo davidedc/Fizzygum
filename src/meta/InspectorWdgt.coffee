@@ -135,7 +135,7 @@ class InspectorWdgt extends Widget
   setLayoutSpec: (newLayoutSpec) ->
     super
     @appearance =
-      if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
+      if @isFreeFloating()
         @inspectorBackgroundAppearance
       else
         nil

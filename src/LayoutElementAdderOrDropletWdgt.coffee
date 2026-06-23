@@ -89,7 +89,7 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
     # if the adder/droplet is on its own, free floating, then
     # put a supporting widget underneath it and put the adder/droplet
     # in a layout.
-    if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
+    if @isFreeFloating()
       newWdgt = new Widget
       @parent.add newWdgt
       newWdgt.rawSetBounds @boundingBox()

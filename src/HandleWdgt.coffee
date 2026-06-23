@@ -73,7 +73,7 @@ class HandleWdgt extends Widget
     # just make it "inactive" and by drawing it gray, which
     # would also look better (rather than a hole with
     # nothing)
-    if @parent.layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
+    if @parent.isFreeFloating()
       @show()
     else
       @hide()

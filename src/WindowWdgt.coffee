@@ -175,7 +175,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     return @contents.contentsRecursivelyCanSetHeightFreely()
 
   recursivelyAttachedAsFreeFloating: ->
-    if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
+    if @isFreeFloating()
       return true
 
     if @parent?

@@ -596,6 +596,9 @@ class Widget extends TreeNode
       @children[0].fullDestroy()
     return nil
 
+  isFreeFloating: ->
+    @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
+
   setLayoutSpec: (newLayoutSpec) ->
     if @layoutSpec == newLayoutSpec
       return
@@ -816,7 +819,7 @@ class Widget extends TreeNode
 
   setBounds: (aRectangle, widgetStartingTheChange = nil) ->
     @mutateGeometryThenSettle =>
-      if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
+      if not @isFreeFloating()
         return
       else
         aRectangle = aRectangle.round()
@@ -1327,7 +1330,7 @@ class Widget extends TreeNode
   # layouting mechanism to do its best to satisfy it
   fullMoveTo: (aPoint, widgetStartingTheChange = nil) ->
     @mutateGeometryThenSettle =>
-      if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
+      if not @isFreeFloating()
         return
       else
         aPoint = aPoint.round()
@@ -1546,7 +1549,7 @@ class Widget extends TreeNode
   # layouting mechanism to do its best to satisfy it
   setExtent: (aPoint, widgetStartingTheChange = nil) ->
     @mutateGeometryThenSettle =>
-      if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
+      if not @isFreeFloating()
         return
       else
         aPoint = aPoint.round()
@@ -1670,7 +1673,7 @@ class Widget extends TreeNode
   # layouting mechanism to do its best to satisfy it
   setWidth: (width) ->
     @mutateGeometryThenSettle =>
-      if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
+      if not @isFreeFloating()
         return
       else
         newWidth = Math.max width, 0
@@ -1706,7 +1709,7 @@ class Widget extends TreeNode
   # layouting mechanism to do its best to satisfy it
   setHeight: (height) ->
     @mutateGeometryThenSettle =>
-      if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
+      if not @isFreeFloating()
         return
       else
         newHeight = Math.max 0, height
@@ -2951,7 +2954,7 @@ class Widget extends TreeNode
   # Widget utilities ////////////////////////////////////////////////////////
   
   showResizeAndMoveHandlesAndLayoutAdjusters: ->
-    if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
+    if @isFreeFloating()
       world.temporaryHandlesAndLayoutAdjusters.add new HandleWdgt(@, "resizeHorizontalHandle")
       world.temporaryHandlesAndLayoutAdjusters.add new HandleWdgt(@, "resizeVerticalHandle")
       world.temporaryHandlesAndLayoutAdjusters.add new HandleWdgt(@, "moveHandle")
