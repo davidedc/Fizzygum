@@ -299,6 +299,14 @@ if ! $noSyntaxCheck ; then
   echo "... dead-method check OK"
 fi
 
+# --- build-time STINK report (NON-BLOCKING) -------------------------------------------
+# Reports "stinks": smells we want to drive to zero (e.g. settleLayoutsOnceAfter wrapping a single
+# *Core, which should become mutateGeometryThenSettle once the core is pure). check-stinks.js NEVER
+# blocks the build (it always exits 0) -- it just keeps the count visible so it trends down.
+if ! $noSyntaxCheck ; then
+  node ./buildSystem/check-stinks.js
+fi
+
 # --- build-time test-.js syntax gate (only when tests are part of this build) ---------
 # Each SystemTest's _automationCommands.js carries its macro inside a backtick-delimited JS
 # template literal; a stray backtick silently corrupts the file so the test never loads (with
