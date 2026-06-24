@@ -299,12 +299,22 @@ if ! $noSyntaxCheck ; then
   echo "... dead-method check OK"
 fi
 
-# --- build-time STINK report (NON-BLOCKING) -------------------------------------------
-# Reports "stinks": smells we want to drive to zero (e.g. settleLayoutsOnceAfter wrapping a single
-# *Core, which should become mutateGeometryThenSettle once the core is pure). check-stinks.js NEVER
-# blocks the build (it always exits 0) -- it just keeps the count visible so it trends down.
+# --- build-time STINK gate (baseline-ratcheted) ---------------------------------------
+# Enforces "stinks": smells driven to a baseline count (e.g. settleLayoutsOnceAfter wrapping a single
+# *Core, which should be mutateGeometryThenSettle once the core is pure). Each stink has a baseline in
+# buildSystem/check-stinks.js; the gate FAILS only when a stink EXCEEDS its baseline (a regression) --
+# mirroring the dead-method allowlist ratchet above. settle-batch-with-core is now at baseline 0 (a
+# hard rule). Same --noSyntaxCheck escape hatch and explicit $? check as the gates above; scans src/
+# only, so it runs for every build flavour (incl. --homepage).
 if ! $noSyntaxCheck ; then
+  echo "checking for stinks (smells ratcheted to a baseline) ..."
   node ./buildSystem/check-stinks.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: stink gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... stink check OK"
 fi
 
 # --- build-time test-.js syntax gate (only when tests are part of this build) ---------
