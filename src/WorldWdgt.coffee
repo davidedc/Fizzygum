@@ -1815,8 +1815,17 @@ class WorldWdgt extends PanelWdgt
     @lastNonTextPropertyChangerButtonClickedOrDropped = nil
 
   # »>> this part is excluded from the fizzygum homepage build
+  # resetWorld self-settles like any public API method: it is a SEQUENCE of two self-settling
+  # operations (each flushes once -- mutateGeometryThenSettle's doc blesses sequential setters), and
+  # the geometry teardown lives in _resetWorldCore so an internal caller already inside a settle can
+  # reach it without re-entering the flush. softResetWorld stays OUTSIDE the settle on purpose: its
+  # @hand.drop() does a real re-parenting drop (target.add, which self-flushes), so running it inside
+  # the settle below would re-enter recalculateLayouts and throw the flow-violation (see ~:930).
   resetWorld: ->
     @softResetWorld()
+    @mutateGeometryThenSettle => @_resetWorldCore()
+
+  _resetWorldCore: ->
     @changed() # redraw the whole screen
     @fullDestroyChildren()
     # the "basementWdgt" is not attached to the
@@ -2065,11 +2074,22 @@ class WorldWdgt extends PanelWdgt
   #   cancel (user hits ESC)
   #   accept (on string widget, user hits enter)
   #   user clicks/floatDrags another widget
+  # Tearing the caret down re-fits the text it was editing, so stopEditing self-settles -- but ONLY
+  # when there is a caret (no caret -> no geometry change -> no flush). The public method tears the
+  # caret down via fullDestroy (which self-settles); _stopEditingCore tears it down via the
+  # non-settling _fullDestroyCore, for callers already inside a layout flush (Widget._destroyCore
+  # stopping editing while it destroys a widget that contains the caret). Both share the body below.
   stopEditing: ->
+    @_stopEditingTearingCaretDownWith (caret) -> caret.fullDestroy()
+
+  _stopEditingCore: ->
+    @_stopEditingTearingCaretDownWith (caret) -> caret._fullDestroyCore()
+
+  _stopEditingTearingCaretDownWith: (tearDownCaret) ->
     if @caret
       @lastEditedText = @caret.target
       @lastEditedText.clearSelection()
-      @caret = @caret.fullDestroy()
+      @caret = tearDownCaret @caret
 
     # the only place where the caret is removed from the keyboardEventsReceivers
     # (and the hidden input is removed)

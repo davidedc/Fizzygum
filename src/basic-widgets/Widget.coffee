@@ -548,10 +548,12 @@ class Widget extends TreeNode
 
     # if there is anything being edited inside
     # what we are destroying, then also
-    # invoke stopEditing()
+    # stop editing -- through the NON-settling core, since _destroyCore is a pure core that may run
+    # under a layout flush (e.g. resetWorld / fullDestroyChildren): the public stopEditing tears the
+    # caret down via fullDestroy (a self-settler) which would re-enter the flush and throw.
     if world.caret?
       if @isAncestorOf world.caret.target
-        world.stopEditing()
+        world._stopEditingCore()
 
     # remove callback when user clicks outside
     # me or any of my children
