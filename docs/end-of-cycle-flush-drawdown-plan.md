@@ -99,6 +99,62 @@ new ones appearing.
 
 ---
 
+## 3b. The SINGLE-settle conversion playbook (the text-setter case study, 2026-06-24)
+
+> **Settle-tier names drifted.** The current code uses **`_settleLayoutsAfter`** (the SINGLE tier — was
+> `mutateGeometryThenSettle`) and **`_settleLayoutsAfterBatch`** (the BATCH tier — was `settleLayoutsOnceAfter`).
+> Both self-settle; the **batch** absorbs a nested settle / defers under a pass, the **single** THROWS the
+> flow-violation if reached mid-pass. Translate the §5/§7 snippets accordingly until they are refreshed.
+
+§3 drives a contributor's WASTED work to zero. This **complementary** technique takes a public API that
+self-settles via the **BATCH** tier and converts it to the **SINGLE** tier — *single by default* — so each logical
+mutation flushes once, INLINE, and leaves the end-of-cycle queue entirely (an end-of-cycle survivor is by
+definition a mutation that didn't self-settle, §1; a batch setter reached mid-pass DEFERS to end-of-cycle and shows
+up in the inventory — single moves that flush inline). The single tier's throw-on-mid-pass *surfaces* the exact
+callers that were keeping the contributor on the queue.
+
+**The loop (this is the technique the owner asked to document):**
+1. **Flip the public API to single** — `@_settleLayoutsAfterBatch =>` → `@_settleLayoutsAfter =>` (or extract a
+   non-settling `_xNoSettle` core and wrap it single).
+2. **Run the FULL gate and SEE WHAT BREAKS — not just the dpr1 suite.** A batch→single flip only throws when the
+   setter is reached UNDER another settle / a layout pass, which the dpr1 suite may not exercise. The **app smoke**
+   (`node scripts/smoke-apps-headless.js`) and teardown/`resetWorld` paths often do. The break is either a STALL
+   (an uncaught throw mid-macro freezes the test → its shard hangs) or a console
+   `LAYOUT_ERROR: a _reLayout() threw during recalculateLayouts: … a public geometry setter was reached during a
+   layout flush/pass`.
+3. **Read the STACK of the throw — it names the offending caller.** `at Object.eval [as setText] at window.X.eval
+   [as _reLayout]` ⇒ `X._reLayout` (layout code) reached `setText` mid-pass. The error text *is* the rule ("internal
+   layout code must use the raw/silent setters, not the public deferred API").
+4. **Find every mid-pass caller** — what CALLS the now-single setter from inside a settle / a layout pass:
+   a LAYOUT method (`_reLayout` / `_positionAndResizeChildren` / a per-frame `step()`); a STRUCTURAL core
+   mid-build/teardown (a `_addNoSettle` re-titling a label); a NESTED public setter (one single setter calling
+   another — `setFontName` re-ticking sibling menu items via `menu.label.setText`); or DYNAMIC dispatch (a
+   connection's `updateTarget → @target[@action]`, an eval'd app document) — a static lint can't see these, so the
+   runtime throw is the only catch.
+5. **Change each mid-pass call to the NON-settling core** (`@x.setText …` → `@x._setTextNoSettle …`). The mutation
+   still happens; the ENCLOSING settle (the add / teardown / frame `recalculateLayouts`) flushes it — "cores call
+   cores." Byte-identical (same flush point) AND it fixes a real latent flow-violation.
+6. **If a setter genuinely NESTS another settling setter** and you can't route the nested one to a core (it's a
+   public API in its own right), the OUTER setter is a legitimate **batch** case — leave it batch, document why.
+   `sizeToTextAndDisableFitting` stays batch for exactly this: the single setters call it (autoSize re-hug) and it
+   ABSORBS under their settle.
+7. **Lock it in with a lint.** Extend `buildSystem/check-layering.js` rule [A] to forbid low-level / layout code
+   from calling the now-single setters (the guard that catches the violation at BUILD time, not at app-smoke
+   runtime). EXCLUDE any setter you deliberately left batch (it is *allowed* to be reached mid-pass).
+8. **Verify** (§6): build (incl. the new lint) → gauntlet → torture → re-audit.
+
+**Worked result (this session):** all 7 `StringWdgt` text setters (`setText` / `setFontSize` / `setFontName` /
+`toggle{ShowBlanks,Weight,Italic,IsPassword}`) went single. Mid-pass callers found + routed to `_setTextNoSettle`:
+the window re-title (`WindowWdgt._addNoSettle` / `_setEmptyWindowLabelNoSettle`), `AxisWdgt._reLayout`'s tick labels,
+the font-menu re-ticking, and the video per-frame time labels. `sizeToTextAndDisableFitting` stayed batch.
+`check-layering [A]` now forbids low-level code calling the single text setters. Gauntlet 165/165 + torture clean.
+(Two non-obvious snags that ate the most time, both surfaced by step 2: a `resetWorld` teardown HANG that was
+actually a missed method-rename caller — *not* a settle issue — and an inspector test whose member-count-sensitive
+scroll navigation broke when `StringWdgt` gained the `_setTextNoSettle` member; a stall that vanishes when a test
+runs ALONE is almost always the PRECEDING test's teardown, so reproduce it with two tests back-to-back.)
+
+---
+
 ## 4. The audit tooling — regenerate the inventory
 
 The committed harness (the behaviour-neutral, inspector-invisible prelude + the serial per-test loop + the
@@ -161,11 +217,18 @@ MANY settles run per frame — exactly the risk; gauntlet+torture proves safety.
 
 ---
 
-## 7. The current inventory (2026-06-24 audit: **278** records / 243 frames; trajectory 1244 → 564 → 320 → 278)
+## 7. The current inventory (2026-06-25 audit: **253** records / 230 frames / 27 groups; trajectory 1244 → 564 → 320 → 278 → 253)
 
-By-action (interaction-frame records). **UPDATE 2026-06-24:** all 5 settle-tier "stinks" now self-settle via the
-single-mutation `mutateGeometryThenSettle` (`buildAndConnectChildren` + `fullDestroy`/`close`/`collapse`/`unCollapse`);
-flush-NEUTRAL, but the `collapse`/`unCollapse` + `childCollapsed`/`childUnCollapsed` rows are now **0**. Re-run §4 to refresh.
+**UPDATE 2026-06-25 (this arc + a tooling fix):** all 7 StringWdgt text setters now SINGLE-self-settle, so the
+contained-text **API path left end-of-cycle** — the old **120-record `reLayoutAndRefreshContainerIfContainedText`
+row is GONE (0)**. The surviving contained-text traffic is the **caret-editing path only** (`SimplePlainTextScroll
+PanelWdgt` re-fitting per keystroke during `playQueuedEvents`, **~84 records**, rolled up under the hover row by the
+shared sig) — now the **prime convert candidate**. TOOLING: the prior audit captured 0 origins (the prelude patched
+the renamed `invalidateLayout`→`_invalidateLayout`); fixed 2026-06-25, so this is the first valid post-rename audit.
+Full refreshed by-action table + verdicts: `end-of-cycle-flush-inventory.md` §4. (Settle-tier renames since this
+plan's §5: `mutateGeometryThenSettle`→`_settleLayoutsAfter`, `settleLayoutsOnceAfter`→`_settleLayoutsAfterBatch`.)
+
+By-action (interaction-frame records; some rows below predate the 2026-06-25 re-audit — see the inventory doc for current verdicts).
 
 | action / origin | recs | first-pass classification (verify with the data) |
 |---|--:|---|

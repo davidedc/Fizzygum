@@ -94,12 +94,15 @@ class AxisWdgt extends Widget
       @majorDimLine.fullRawMoveTo new Point @left() + tickHeight, @top() + 5
       @majorDimLine.rawSetExtent new Point heightOfTheDrawnBar, thickness
 
+    # _reLayout runs INSIDE the layout pass (recalculateLayouts), so the tick labels are positioned
+    # AND texted through the non-settling APIs (rawSetExtent / fullRawMoveTo / _setTextNoSettle) -- a
+    # public settling setText here would re-enter the settle tier and throw the flow-violation.
     for i in [0 ... numberOfTicks]
       if height > width
         @ticksRectangles[i].fullRawMoveTo new Point @right()-10, @top() + tickHeight + Math.round(i * tickHeight)
         @ticksRectangles[i].rawSetExtent new Point 5 + thickness, thickness
 
-        @labelsTextBoxes[i].setText "" + (@max - i)
+        @labelsTextBoxes[i]._setTextNoSettle "" + (@max - i)
         @labelsTextBoxes[i].fullRawMoveTo new Point @left(), @top() + tickHeight + Math.round(i * tickHeight) - labelSpace/2
         @labelsTextBoxes[i].rawSetExtent new Point width - 10, labelSpace
         @labelsTextBoxes[i].alignMiddle()
@@ -109,7 +112,7 @@ class AxisWdgt extends Widget
         @ticksRectangles[i].fullRawMoveTo new Point @left() + tickHeight + Math.round(i * tickHeight), @top() + 5
         @ticksRectangles[i].rawSetExtent new Point thickness, 5 + thickness
 
-        @labelsTextBoxes[i].setText "" + (@min + i)
+        @labelsTextBoxes[i]._setTextNoSettle "" + (@min + i)
         @labelsTextBoxes[i].fullRawMoveTo new Point @left() + tickHeight + Math.round(i * tickHeight) - labelSpace/2, @top() + 5 + 5
         @labelsTextBoxes[i].rawSetExtent new Point labelSpace, height - 10
         @labelsTextBoxes[i].alignTop()

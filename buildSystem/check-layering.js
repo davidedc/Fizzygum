@@ -7,9 +7,12 @@
  * THE CONSTRAINTS (program-flow soundness, not state invariants)
  *   A) A LOW-LEVEL method (name starting raw / silent / __ , ending NoSettle, or one of
  *      _reLayout / _positionAndResizeChildren / _reLayoutScrollbars) must NOT call a public
- *      geometry setter or recalculateLayouts.
+ *      geometry setter, a SINGLE-settling text setter (setText / setFontSize / setFontName /
+ *      toggleShowBlanks / toggleWeight / toggleItalic / toggleIsPassword), or recalculateLayouts.
  *      Low-level code mutates immediately (raw/silent) and must never reach UP into the
- *      public, self-flushing layer.
+ *      public, self-flushing layer. (The text setters self-settle via the single _settleLayoutsAfter,
+ *      so reaching one from a layout pass throws the flow-violation — AxisWdgt._reLayout once called
+ *      setText for its tick labels; it now uses the non-settling _setTextNoSettle core.)
  *   B) recalculateLayouts() may be called ONLY from doOneCycle (the frame) and the settle tiers
  *      _settleLayoutsAfter / _settleLayoutsAfterBatch (the public-setter flush). Nowhere else.
  *   C) A public geometry setter must NOT call another public geometry setter (that would
@@ -41,6 +44,15 @@ const PUBLIC_SETTERS = ['setExtent', 'fullMoveTo', 'setBounds', 'setWidth', 'set
 // a call to a public setter: leading @ or . then the lowercase name (excludes raw*/silent* —
 // those have `raw`/`silent` between the @/. and the capitalised `Set*`/`*MoveTo`).
 const PUB_CALL = new RegExp('[@.]\\s*(' + PUBLIC_SETTERS.join('|') + ')\\b');
+// The SINGLE-settling text setters (StringWdgt): each self-settles via _settleLayoutsAfter, so being
+// reached from a layout pass / another settle throws the flow-violation. Low-level code that must set
+// text uses the NON-settling core (_setTextNoSettle) or a raw setter. NB sizeToTextAndDisableFitting is
+// deliberately EXCLUDED — it stays on the BATCH settler (it IS reached mid-pass by these setters'
+// autoSize branch and ABSORBS), so low-level code (e.g. _setTextNoSettle) may legitimately call it.
+// The `[@.]\s*` anchor + `\b` make `@setText`/`.setText` match while `@_setTextNoSettle`/`._setTextNoSettle`
+// (the cores, leading `_`) and `setTextLineWrapping` do NOT.
+const TEXT_SETTERS = ['setText', 'setFontSize', 'setFontName', 'toggleShowBlanks', 'toggleWeight', 'toggleItalic', 'toggleIsPassword'];
+const TEXT_SETTER_CALL = new RegExp('[@.]\\s*(' + TEXT_SETTERS.join('|') + ')\\b');
 const RECALC_CALL = /[@.]\s*recalculateLayouts\b/;            // @recalculateLayouts / world.recalculateLayouts
 const INVALIDATE_CALL = /[@.]\s*_invalidateLayout\b/;         // @_invalidateLayout / x._invalidateLayout
 // [F] a CONTAINER-refit apply CALL (excludes _reLayoutSelf — see the [F] rule note by the check below). The
@@ -165,10 +177,12 @@ function checkFile(file, violations) {
     if (raw.includes(SANCTION_MARKER)) methodMarked = true;  // [F] per-method conscious sign-off (any body line)
     const at = `${rel}:${n + 1}`;
     const pub = code.match(PUB_CALL);
+    const txt = code.match(TEXT_SETTER_CALL);
     const recalc = RECALC_CALL.test(code);
     const invalidate = INVALIDATE_CALL.test(code);
     if (isLowLevel(method)) {
       if (pub) violations.push(`[A] low-level ${method}() calls public setter .${pub[1]}()  — ${at}`);
+      if (txt) violations.push(`[A] low-level ${method}() calls self-settling text setter .${txt[1]}() — set text from a layout pass via the non-settling _setTextNoSettle core (or a raw setter), never the single-settling public setter  — ${at}`);
       // recalc is OK from a whitelisted flush driver (the settle tiers are now _-prefixed, hence
       // low-level by name, but they ARE the flush — rule [B] below governs who may call recalc).
       if (recalc && !RECALC_WHITELIST.has(method)) violations.push(`[A] low-level ${method}() calls recalculateLayouts()  — ${at}`);

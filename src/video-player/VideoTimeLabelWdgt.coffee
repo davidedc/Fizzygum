@@ -22,4 +22,6 @@ class VideoTimeLabelWdgt extends HhmmssLabelWdgt
 
   _updatePlayHeadTimeLabel: ->
     if @videoPlayerCanvas?
-      @setText @_formatTime @videoPlayerCanvas.video.currentTime
+      # per-frame label update via the NON-settling core -- the frame loop settles it; a settling
+      # setText every frame would be needless churn (and throws if step ever runs mid-pass).
+      @_setTextNoSettle @_formatTime @videoPlayerCanvas.video.currentTime

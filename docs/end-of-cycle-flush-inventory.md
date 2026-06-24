@@ -72,9 +72,10 @@ un-allowlisted end-of-cycle layout" gate (§8).
 
 ## 4. Q2 + Q3 — Attribution & why-not-settled (the by-action inventory)
 
-> **Current numbers** (2026-06-24 full-suite dpr1 audit — **278** origin records across **243** interaction frames;
-> trajectory **1244 → 564 → 320 → 278**). ALL FIVE settle-tier "stinks" now self-settle via the **single-mutation**
-> `mutateGeometryThenSettle` (`buildAndConnectChildren` 2026-06-23; `fullDestroy`/`close`/`collapse`/`unCollapse`
+> **Current numbers** (2026-06-25 full-suite dpr1 audit — **253** origin records across **230** interaction frames /
+> 27 groups; trajectory **1244 → 564 → 320 → 278 → 253**). ALL FIVE settle-tier "stinks" now self-settle via the
+> **single-mutation** `_settleLayoutsAfter`
+> (`buildAndConnectChildren` 2026-06-23; `fullDestroy`/`close`/`collapse`/`unCollapse`
 > 2026-06-24) — this flip is **flush-NEUTRAL** (the records were already deferred/gone) but it ZEROES the
 > `collapse`/`unCollapse` + `childCollapsed`/`childUnCollapsed` rows below. (Older note — the teardown pass that drove
 > 569→320:) an earlier session made `close`/`destroy`/`fullDestroy`
@@ -86,21 +87,27 @@ un-allowlisted end-of-cycle layout" gate (§8).
 > **run-to-run noisy by a few records** even on a fixed build; read as order-of-magnitude, regenerate any time — see
 > `end-of-cycle-audit-tooling.md`.
 >
-> **2026-06-24 (contained-text re-fit refactor — RE-AUDIT PENDING):** the contained-text edit re-fit moved off
-> TextWdgt onto **StringWdgt** and was renamed → **`StringWdgt._reFitContainedTextNoSettle`** (the row + §6 below). Its
-> seven API-path setters (`setText`/`setFontSize`/`setFontName`/`toggle*`) now **self-settle** (each wraps its work in
-> `_settleLayoutsAfterBatch`), so an API/menu/connection edit flushes synchronously at the setter — and the container
-> notify is now **guarded** (skipped when the box measure is unchanged). The **120** below **predates** this; it is the
-> deferred per-keystroke (caret-editing) state and stays LEAVE, but the drawdown continuation must re-run the audit to
-> split the surviving caret residual from the now-self-settled API path.
+> **2026-06-25 (contained-text re-fit refactor — RE-AUDIT DONE; total 278 → 253):** the contained-text re-fit lives on
+> **`StringWdgt._reFitContainedTextNoSettle`**, and this session converted all seven API-path setters
+> (`setText`/`setFontSize`/`setFontName`/`toggle*`) to the **SINGLE** `_settleLayoutsAfter` (was the BATCH
+> `_settleLayoutsAfterBatch`; tier renames for old docs: `_settleLayoutsAfter` was `mutateGeometryThenSettle`,
+> `_settleLayoutsAfterBatch` was `settleLayoutsOnceAfter`). An API/menu/connection edit now flushes SYNCHRONOUSLY at the
+> setter and **leaves the end-of-cycle queue entirely** — the audit confirms it: the old **120-record
+> `reLayoutAndRefreshContainerIfContainedText` action is GONE (0; absent from the rollup)**. The surviving
+> contained-text traffic is the **CARET-editing path only**: `SimplePlainTextScrollPanelWdgt` re-fitting during
+> `playQueuedEvents` (per-keystroke typing), **~84 records**, rolled up under the "(untagged) hover/pointer-dispatch"
+> row because it shares the `Set.forEach < playQueuedEvents` sig (the SAME mislabel the old menu-cleanup `close()` had).
+> That caret path is the **next PRIME CONVERT candidate**. **Tooling fix (2026-06-25):** the prior session's audit
+> captured ZERO origins — the prelude patched the renamed `invalidateLayout` (now `_invalidateLayout`); fixed
+> (`invPatched=true`), so THIS is the first valid post-rename audit.
 
 Rolled up by **action** (the convert-vs-leave unit), interaction frames, with the §5 verdict:
 
 | action (trigger) | records | tests | nature | why it defers | **verdict** |
 |---|--:|--:|---|---|---|
 | `Widget.destroy` / `close` / `fullDestroy` (teardown) | 0 | 0 | teardown | **self-settles**, like `add` — ALL now via the single-mutation `mutateGeometryThenSettle` (`close`/`fullDestroy` flipped off the batching tier 2026-06-24; bulk-teardown loops `fullDestroyChildren`/`closeChildren` use cores) — gone from end-of-cycle | **DONE** (self-settled) |
-| *(untagged)* **event-dispatch residual** (genuine hover/scroll; the bulk here WAS menu-cleanup `close()` re-fitting a ScrollPanel, same `Set.forEach < playQueuedEvents` sig — now self-settled) | 19 | 11 | **continuous** (residual) | hover/scroll state change invalidates the container | **LEAVE** (residual is textbook batch) |
-| `StringWdgt._reFitContainedTextNoSettle` (contained-text edit; was `TextWdgt.reLayoutAndRefreshContainerIfContainedText`) | 120 ⚠pre-refactor | 11 | **high-frequency** (per keystroke) | content edit re-fits the container via the seam; API-path setters now self-settle (see the 2026-06-24 note above) | **LEAVE** (per-char caret residual; re-audit pending) |
+| *(untagged)* **hover / pointer-dispatch** (genuine hover/scroll **+** the CARET-editing contained-text re-fit, which shares the `Set.forEach < playQueuedEvents` sig and so rolls up here) | 117 | 13 | mixed | ~84 is `SimplePlainTextScrollPanelWdgt` re-fitting **per keystroke** (the caret residual — a CONVERT candidate); ~33 is genuine hover/scroll | **SPLIT** (convert the caret re-fit; leave hover) |
+| `StringWdgt._reFitContainedTextNoSettle` (contained-text edit, **API path**; was `TextWdgt.reLayoutAndRefreshContainerIfContainedText`) | **0** (was 120) | 0 | — | the 7 API-path setters now **single**-self-settle (`_settleLayoutsAfter`), so this leaves end-of-cycle entirely (see the 2026-06-25 note above); the per-keystroke CARET residual is the ~84 in the hover row | **DONE** (API path self-settles; caret residual is the next convert) |
 | `*.reactToDropOf` / `reactToGrabOf` / `childRemoved` (drag/drop) | 71 | 26 | **discrete gesture events** | the deferred-layout campaign **deliberately** defers these | **LEAVE** (already a conscious decision) |
 | `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | 32 | 6 | discrete click | invalidates on toggle | **LEAVE/convert** (entangled w/ collapse) |
 | `Widget.collapse` / `unCollapse` | **0** | 0 | discrete | **self-settles** via `mutateGeometryThenSettle` (flipped 2026-06-24; collapse-hook `destroy` + bar-button re-`add` use cores) — gone from end-of-cycle | **DONE** (self-settled) |

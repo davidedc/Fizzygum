@@ -959,8 +959,13 @@ class StringWdgt extends Widget
       @text,
       nil, 6, nil, true
 
+  # SELF-SETTLES via the single @_settleLayoutsAfter, like the other text setters. From a font menu it
+  # ALSO re-ticks the sibling menu items, but updateFontsMenuEntriesTicks does that through the
+  # NON-settling label core (menu.children[i].label._setTextNoSettle), so it does NOT nest another
+  # settling setter -- the menu items' re-fit rides this single settle (or popUpAtHand's, when the menu
+  # is still being built on the hand).
   setFontName: (menuItem, ignored2, theNewFontName) ->
-    @_settleLayoutsAfterBatch =>
+    @_settleLayoutsAfter =>
       if @fontName != theNewFontName
         @fontName = theNewFontName
         @changed()
@@ -1020,15 +1025,15 @@ class StringWdgt extends Widget
       when @monoFontStack
         monoFontStackTick = tick
 
-    menu.children[1].label.setText justArialFontStackTick + "Arial"
-    menu.children[2].label.setText timesFontStackTick + "Times"
-    menu.children[3].label.setText georgiaFontStackTick + "Georgia"
-    menu.children[4].label.setText garamoFontStackTick + "Garamo"
-    menu.children[5].label.setText helveFontStackTick + "Helve"
-    menu.children[6].label.setText verdaFontStackTick + "Verda"
-    menu.children[7].label.setText trebuFontStackTick + "Treby"
-    menu.children[8].label.setText heavyFontStackTick + "Heavy"
-    menu.children[9].label.setText monoFontStackTick + "Mono"
+    menu.children[1].label._setTextNoSettle justArialFontStackTick + "Arial"
+    menu.children[2].label._setTextNoSettle timesFontStackTick + "Times"
+    menu.children[3].label._setTextNoSettle georgiaFontStackTick + "Georgia"
+    menu.children[4].label._setTextNoSettle garamoFontStackTick + "Garamo"
+    menu.children[5].label._setTextNoSettle helveFontStackTick + "Helve"
+    menu.children[6].label._setTextNoSettle verdaFontStackTick + "Verda"
+    menu.children[7].label._setTextNoSettle trebuFontStackTick + "Treby"
+    menu.children[8].label._setTextNoSettle heavyFontStackTick + "Heavy"
+    menu.children[9].label._setTextNoSettle monoFontStackTick + "Mono"
 
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
@@ -1108,19 +1113,19 @@ class StringWdgt extends Widget
 
   
   toggleShowBlanks: ->
-    @_settleLayoutsAfterBatch =>
+    @_settleLayoutsAfter =>
       @isShowingBlanks = not @isShowingBlanks
       @changed()
       @_reFitContainedTextNoSettle()
 
   toggleWeight: ->
-    @_settleLayoutsAfterBatch =>
+    @_settleLayoutsAfter =>
       @isBold = not @isBold
       @changed()
       @_reFitContainedTextNoSettle()
 
   toggleItalic: ->
-    @_settleLayoutsAfterBatch =>
+    @_settleLayoutsAfter =>
       @isItalic = not @isItalic
       @changed()
       @_reFitContainedTextNoSettle()
@@ -1131,7 +1136,7 @@ class StringWdgt extends Widget
   
   toggleIsPassword: ->
     world.stopEditing()
-    @_settleLayoutsAfterBatch =>
+    @_settleLayoutsAfter =>
       @isPassword = not @isPassword
       @changed()
       @_reFitContainedTextNoSettle()
@@ -1201,7 +1206,7 @@ class StringWdgt extends Widget
     @
 
   # ── Contained-text (FIT_BOX_TO_TEXT) edit: the re-fit core ───────────────────
-  # The NON-settling core behind the seven text-property setters (setText / setFontSize
+  # The NON-settling re-fit behind the seven text-property setters (setText / setFontSize
   # / setFontName / toggleShowBlanks / toggleWeight / toggleItalic / toggleIsPassword).
   # A FIT_BOX_TO_TEXT widget re-flows its box to the new text measure (_reLayoutSelf)
   # and, ONLY if the box actually changed size, nudges its tracking container
@@ -1209,57 +1214,64 @@ class StringWdgt extends Widget
   # unchanged needs no redundant up-then-down container re-fit. For a bare StringWdgt the
   # base Widget::_reLayoutSelf is empty (box-to-text sizing lives in
   # TextWdgt::_reLayoutSelf), so the gated body is a no-op.
-  #
-  # Each of the seven setters SELF-SETTLES at its own public boundary by wrapping its
-  # work in @_settleLayoutsAfterBatch and calling this non-settling core last -- the
-  # ordinary self-settling-setter convention (cf. setBounds / setExtent).
-  #
-  # WHY BATCH, not the usual single @_settleLayoutsAfter: a text setter can be reached
-  # MID-PASS, nested inside another operation's settle. The everyday case is a widget
-  # `add` -- add() self-settles, and inside it a connection cascade (updateTarget ->
-  # @target[@action]) fires setText on the added / target widget. A single self-settle
-  # reached mid-pass THROWS the flow-violation -- and the throw is uncaught, so it
-  # STALLS the suite; _settleLayoutsAfterBatch instead sees the enclosing settle and
-  # DEFERS to it. That cascade is dynamically dispatched (@target[@action] is a runtime
-  # string), so it can't be statically routed to a non-settling core -- batch is the
-  # architecture's mechanism for exactly this nesting (see the _settleLayoutsAfter throw
-  # comment in Widget).
   _reFitContainedTextNoSettle: ->
     return unless @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
     extentBefore = @extent()
     @_reLayoutSelf()
     @_refreshScrollPanelWdgtOrVerticalStackIfIamInIt() unless @extent().equals extentBefore
 
+  # The NON-settling core of setText: apply a text change IN PLACE -- re-hug the box if this
+  # is a box-hugs-text chrome label, notify any connection target, and re-fit if contained-text
+  # -- WITHOUT settling layouts. The public setText wraps this in its single self-settler; callers
+  # that must set text WITHOUT opening a settle -- because they run INSIDE another settle or a
+  # LAYOUT PASS -- call this directly ("cores call cores"): structural re-titles (WindowWdgt.
+  # _addNoSettle / _setEmptyWindowLabelNoSettle), layout code (AxisWdgt._reLayout's tick labels),
+  # menu re-ticking (updateFontsMenuEntriesTicks), per-frame updates (the video time labels). The
+  # change rides the enclosing settle / the frame's recalculateLayouts. The connection token +
+  # stringFieldWidget decoding is setText-specific and stays in setText (these callers have no
+  # connection, so the core needs neither).
+  _setTextNoSettle: (theTextContent) ->
+    theNewText = theTextContent + ""
+    if @text != theNewText
+      # other widgets might send something like a
+      # number or a color so let's make sure we
+      # convert to a string.
+      @clearSelection()
+      @text = theNewText
+      @checkIfTextContentWasModifiedFromTextAtStart()
+      @synchroniseTextAndActualText()
+      # chrome labels (menu items, button captions, …) keep their box hugging the
+      # text on every edit; without this the new text would be crammed/scaled into
+      # the box sized to the OLD text. Generic StringWdgts leave the flag off and
+      # keep their fixed box.
+      if @autoSizeBoxToText
+        @sizeToTextAndDisableFitting()
+      @changed()
+    @updateTarget()
+    @_reFitContainedTextNoSettle()
+
   # This is also invoked for example when you take a slider
   # and set it to target this.
+  #
+  # SELF-SETTLES via the single @_settleLayoutsAfter -- the ordinary self-settling-setter convention.
+  # It is thin-wrap-exempt only because it does arg-decoding FIRST (the connection token guard + the
+  # stringFieldWidget unwrap), so it is not the BARE canonical wrap. Single is SAFE here because the one
+  # flow that used to reach setText MID-PASS -- a window RE-TITLING its label from inside an add's settle
+  # -- now calls @_setTextNoSettle DIRECTLY (see WindowWdgt._addNoSettle), so NO flow reaches setText
+  # under a layout pass anymore (VERIFIED: full suite green with the single settler). The single settler's
+  # flow-violation throw stays as the NET: if some future caller (e.g. a connection's updateTarget
+  # dynamically dispatching to setText) reaches it mid-pass, it SURFACES the violation rather than
+  # silently deferring it.
+  # thin-wrap-exempt: decodes the connection token + stringFieldWidget arg before the single-settle delegate.
   setText: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
-    @_settleLayoutsAfterBatch =>
-      if stringFieldWidget?
-        # in this case, the stringFieldWidget has a
-        # string widget in "text". The string widget has the
-        # "text" inside it.
-        theTextContent = stringFieldWidget.text.text
-
-      theNewText = theTextContent + ""
-      if @text != theNewText
-        # other widgets might send something like a
-        # number or a color so let's make sure we
-        # convert to a string.
-        @clearSelection()
-        @text = theNewText
-        @checkIfTextContentWasModifiedFromTextAtStart()
-        @synchroniseTextAndActualText()
-        # chrome labels (menu items, button captions, …) keep their box hugging the
-        # text on every edit; without this the new text would be crammed/scaled into
-        # the box sized to the OLD text. Generic StringWdgts leave the flag off and
-        # keep their fixed box.
-        if @autoSizeBoxToText
-          @sizeToTextAndDisableFitting()
-        @changed()
-
-      @updateTarget()
-      @_reFitContainedTextNoSettle()
+    if stringFieldWidget?
+      # in this case, the stringFieldWidget has a
+      # string widget in "text". The string widget has the
+      # "text" inside it.
+      theTextContent = stringFieldWidget.text.text
+    @_settleLayoutsAfter =>
+      @_setTextNoSettle theTextContent
 
   considerCurrentTextAsReferenceText: ->
     @hashOfTextConsideredAsReference = @text.hashCode()
@@ -1272,7 +1284,7 @@ class StringWdgt extends Widget
         @widgetToBeNotifiedOfTextModificationChange.textContentModified?()
   
   setFontSize: (sizeOrWidgetGivingSize, widgetGivingSize) ->
-    @_settleLayoutsAfterBatch =>
+    @_settleLayoutsAfter =>
       if widgetGivingSize?.getValue?
         size = widgetGivingSize.getValue()
       else

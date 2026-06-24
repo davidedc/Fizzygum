@@ -63,7 +63,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @buildAndConnectChildren()
 
     if @contents == @defaultContents
-      @setEmptyWindowLabel()
+      @_setEmptyWindowLabelNoSettle()
     else
       @disableDrops()
       # TODO there is a duplicate of this down below
@@ -196,11 +196,16 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   imposesRatioConstraintOnDroppedChildren: ->
     false
 
-  setEmptyWindowLabel: ->
+  # Re-title the (content-less) window through the NON-settling label core (hence the NoSettle
+  # name): reached either during construction (orphan -> deferred) or from resetToDefaultContents
+  # inside a close/destroy settle, so the enclosing settle flushes it -- a self-settling setText
+  # would open a nested settle mid-pass. (The label is FIT_TEXT_TO_BOX, so the text swap changes
+  # no geometry anyway; @changed() in the core repaints it.)
+  _setEmptyWindowLabelNoSettle: ->
     if @internal
-      @label.setText "empty internal window"
+      @label._setTextNoSettle "empty internal window"
     else
-      @label.setText "empty window"
+      @label._setTextNoSettle "empty window"
 
   # Polymorphic replacement for `instanceof WindowWdgt`: lets Widget / the smart-placer
   # ask "are you a window?" without naming this subclass. Defined ONLY here -- there is NO
@@ -238,7 +243,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
         titleToBeSet = "window with another " + titleToBeSet
       if titleToBeSet == "internal window"
         titleToBeSet = "window with an " + titleToBeSet
-      @label.setText titleToBeSet
+      # re-title through the NON-settling label core: _addNoSettle already runs inside the
+      # add's settle, so the title change rides that flush instead of opening a nested one.
+      @label._setTextNoSettle titleToBeSet
       @removeChild @contents
       @contents = aWdgt
       # Deferred-layout (capstone probe): the window-content re-fit now DEFERS to the settle cycle
@@ -314,7 +321,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # the non-settling core so a hook firing INSIDE an enclosing settle (destroy/close) is absorbed by
     # that operation's settle instead of re-entering the public self-settler. (window-rebuild follow-up)
     @_buildAndConnectChildrenNoSettle()
-    @setEmptyWindowLabel()
+    @_setEmptyWindowLabelNoSettle()
     if @recursivelyAttachedAsFreeFloating()
       @rawSetExtent new Point 300, 300
 
