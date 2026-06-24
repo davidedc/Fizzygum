@@ -10,8 +10,8 @@
 // allowlist file: the baseline lives inline next to the rule, since a smell is a count, not a set of
 // named methods.
 //
-// Stink: settle-batch-with-core  --  `<anchor>.settleLayoutsOnceAfter => @_xxxNoSettle()`
-//   Using the BATCHING settler (settleLayoutsOnceAfter) with a single *NoSettle thunk. A pure core is a
+// Stink: settle-batch-with-core  --  `<anchor>._settleLayoutsAfterBatch => @_xxxNoSettle()`
+//   Using the BATCHING settler (_settleLayoutsAfterBatch) with a single *NoSettle thunk. A pure core is a
 //   single mutation that does NOT re-enter the settle tier, so it wants the SINGLE-mutation settler
 //   (_settleLayoutsAfter). Reaching for the batch means the core still calls a NESTED public
 //   setter, and the batch is masking that. Fix: make the core pure, then switch the wrapper to
@@ -28,8 +28,8 @@ const STINKS = [
   {
     id: 'settle-batch-with-core',
     baseline: 0,
-    why: 'settleLayoutsOnceAfter (batch settler) wrapping a single *NoSettle thunk -- a pure core wants the single-mutation _settleLayoutsAfter; the batch masks a core that still reaches a nested public setter',
-    re: /settleLayoutsOnceAfter\s*=>\s*@_\w+NoSettle\b/,
+    why: '_settleLayoutsAfterBatch (batch settler) wrapping a single *NoSettle thunk -- a pure core wants the single-mutation _settleLayoutsAfter; the batch masks a core that still reaches a nested public setter',
+    re: /_settleLayoutsAfterBatch\s*=>\s*@_\w+NoSettle\b/,
   },
 ];
 

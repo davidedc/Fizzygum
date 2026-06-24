@@ -371,10 +371,10 @@ class TextWdgt extends StringWdgt
     # generic _reFitContainer seam (gated on _reLayoutChildren) does not reach it, and a
     # freefloating child does not climb. So invalidate the managing parent explicitly and settle,
     # leaving the world consistent on return -- instead of relying on an unrelated later event
-    # (the caret destroy on stop-editing) to re-fit the button. settleLayoutsOnceAfter flushes
+    # (the caret destroy on stop-editing) to re-fit the button. _settleLayoutsAfterBatch flushes
     # standalone / defers inside a pass; the invalidate is gated out-of-pass (inside a pass -- e.g.
     # createLabel -- the container is already re-laying out and invalidateLayout would throw).
-    @settleLayoutsOnceAfter =>
+    @_settleLayoutsAfterBatch =>
       @softWrap = false
       @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
       @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN

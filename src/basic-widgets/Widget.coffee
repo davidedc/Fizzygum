@@ -811,11 +811,11 @@ class Widget extends TreeNode
     # catches the name-recognized internal methods at BUILD time; this is the runtime backstop.
     if world._inLayoutMutation or world._recalculatingLayouts
       throw new Error "Fizzygum: a public geometry setter was reached during a layout flush/pass -- internal layout code (_reLayout / _reLayoutSelf / ...) must use the raw/silent setters, not the public deferred API (see buildSystem/check-layering.js)."
-    # BATCH guard: inside settleLayoutsOnceAfter, DEFER the per-mutation flush -- the batch
+    # BATCH guard: inside _settleLayoutsAfterBatch, DEFER the per-mutation flush -- the batch
     # does ONE settle at the end. This turns O(N) relayouts (building N children, each add
     # self-settling) into 1, and -- crucially -- stops a mid-build settle from re-fitting a
     # HALF-WIRED widget (e.g. a window whose contents' layoutSpec.stack isn't set yet, which
-    # crashes the deferred re-fit in getWidthInStack). See settleLayoutsOnceAfter. (Phase 3b.)
+    # crashes the deferred re-fit in getWidthInStack). See _settleLayoutsAfterBatch. (Phase 3b.)
     if world._batchingLayoutSettling
       return coreThunk()
     world._inLayoutMutation = true
@@ -833,7 +833,7 @@ class Widget extends TreeNode
   # getWidthInStack-on-unset-@stack crash during an in-world rebuild). Nestable -- an inner
   # batch is absorbed by the outer; mirrors _settleLayoutsAfter's orphan/re-entrancy
   # guards for the final flush. Returns the thunk's value. (Phase 3b.)
-  settleLayoutsOnceAfter: (thunk) ->
+  _settleLayoutsAfterBatch: (thunk) ->
     unless world?
       return thunk()
     if world._batchingLayoutSettling

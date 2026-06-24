@@ -202,7 +202,7 @@ class ScrollPanelWdgt extends PanelWdgt
       # with this panel's own _reLayout ('super; @_reLayoutChildren') so the cycle re-fits identically;
       # the inline call just keeps geometry current within the calling public method. Distinct from
       # the seam sites (raw-mutator / gesture triggers), which DO defer. (deferred-layout-residuals-audit.md)
-      # Deferring this re-fit through settleLayoutsOnceAfter was PROBED 2026-06-22 (OVERVIEW §11 Phase-4) and
+      # Deferring this re-fit through _settleLayoutsAfterBatch was PROBED 2026-06-22 (OVERVIEW §11 Phase-4) and
       # REJECTED: it deterministically diverges nested-scroll content/thumb geometry (3 frames of
       # macroNestedScrollPanelsRouteWheel + macroDocumentScrollsMixedTextAndClocks) for ZERO gain -- the
       # synchronous re-fit's re-read of APPLIED geometry is load-bearing (OVERVIEW §11 PROOF 2). Leave synchronous.

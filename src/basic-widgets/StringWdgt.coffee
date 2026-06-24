@@ -1178,7 +1178,7 @@ class StringWdgt extends Widget
     # _reLayoutSelf). The generic _reFitContainer seam can't reach a non-scroll/stack container and
     # a freefloating child doesn't climb, so invalidate the managing parent explicitly and settle --
     # consistent on return -- instead of leaning on the caret-destroy accident. Gated out-of-pass.
-    @settleLayoutsOnceAfter =>
+    @_settleLayoutsAfterBatch =>
       @autoSizeBoxToText = true
       @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
       @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
