@@ -85,6 +85,14 @@ un-allowlisted end-of-cycle layout" gate (§8).
 > wall-clock-sensitive (a heavy cycle drains several queued events in one frame — see `DETERMINISM.md`), so totals are
 > **run-to-run noisy by a few records** even on a fixed build; read as order-of-magnitude, regenerate any time — see
 > `end-of-cycle-audit-tooling.md`.
+>
+> **2026-06-24 (contained-text re-fit refactor — RE-AUDIT PENDING):** the contained-text edit re-fit moved off
+> TextWdgt onto **StringWdgt** and was renamed → **`StringWdgt._reFitContainedTextNoSettle`** (the row + §6 below). Its
+> seven API-path setters (`setText`/`setFontSize`/`setFontName`/`toggle*`) now **self-settle** (each wraps its work in
+> `_settleLayoutsAfterBatch`), so an API/menu/connection edit flushes synchronously at the setter — and the container
+> notify is now **guarded** (skipped when the box measure is unchanged). The **120** below **predates** this; it is the
+> deferred per-keystroke (caret-editing) state and stays LEAVE, but the drawdown continuation must re-run the audit to
+> split the surviving caret residual from the now-self-settled API path.
 
 Rolled up by **action** (the convert-vs-leave unit), interaction frames, with the §5 verdict:
 
@@ -92,7 +100,7 @@ Rolled up by **action** (the convert-vs-leave unit), interaction frames, with th
 |---|--:|--:|---|---|---|
 | `Widget.destroy` / `close` / `fullDestroy` (teardown) | 0 | 0 | teardown | **self-settles**, like `add` — ALL now via the single-mutation `mutateGeometryThenSettle` (`close`/`fullDestroy` flipped off the batching tier 2026-06-24; bulk-teardown loops `fullDestroyChildren`/`closeChildren` use cores) — gone from end-of-cycle | **DONE** (self-settled) |
 | *(untagged)* **event-dispatch residual** (genuine hover/scroll; the bulk here WAS menu-cleanup `close()` re-fitting a ScrollPanel, same `Set.forEach < playQueuedEvents` sig — now self-settled) | 19 | 11 | **continuous** (residual) | hover/scroll state change invalidates the container | **LEAVE** (residual is textbook batch) |
-| `TextWdgt.reLayoutAndRefreshContainerIfContainedText` (contained-text edit) | 120 | 11 | **high-frequency** (per keystroke) | content edit re-fits the container via the seam | **LEAVE** (per-char settle is wasteful) |
+| `StringWdgt._reFitContainedTextNoSettle` (contained-text edit; was `TextWdgt.reLayoutAndRefreshContainerIfContainedText`) | 120 ⚠pre-refactor | 11 | **high-frequency** (per keystroke) | content edit re-fits the container via the seam; API-path setters now self-settle (see the 2026-06-24 note above) | **LEAVE** (per-char caret residual; re-audit pending) |
 | `*.reactToDropOf` / `reactToGrabOf` / `childRemoved` (drag/drop) | 71 | 26 | **discrete gesture events** | the deferred-layout campaign **deliberately** defers these | **LEAVE** (already a conscious decision) |
 | `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | 32 | 6 | discrete click | invalidates on toggle | **LEAVE/convert** (entangled w/ collapse) |
 | `Widget.collapse` / `unCollapse` | **0** | 0 | discrete | **self-settles** via `mutateGeometryThenSettle` (flipped 2026-06-24; collapse-hook `destroy` + bar-button re-`add` use cores) — gone from end-of-cycle | **DONE** (self-settled) |
@@ -181,7 +189,7 @@ The enforceable allowlist (what is *allowed* to reach end-of-cycle), by action c
 2. **Teardown** — `Widget.destroy` / `removeFromTree` (parent re-fit on child removal).
 3. **Drag/drop gestures** — `reactToDropOf` / `reactToGrabOf` / `childRemoved` on the container classes (already a
    conscious campaign deferral).
-4. **Contained-text edit** — `TextWdgt.reLayoutAndRefreshContainerIfContainedText`.
+4. **Contained-text edit** — `StringWdgt._reFitContainedTextNoSettle` (was `TextWdgt.reLayoutAndRefreshContainerIfContainedText`; the per-keystroke caret residual — the API-path setters now self-settle).
 5. **Collapse/uncollapse** — `Widget.collapse`/`unCollapse` + `WindowWdgt.childCollapsed`/`childUnCollapsed` +
    the `SwitchButtonWdgt` toggle that drives them.
 6. **Constraint/divider drag** — `Widget.setMaxDim` / `setMinAndMaxBoundsAndSpreadability`.

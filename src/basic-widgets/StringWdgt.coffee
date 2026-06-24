@@ -960,13 +960,15 @@ class StringWdgt extends Widget
       nil, 6, nil, true
 
   setFontName: (menuItem, ignored2, theNewFontName) ->
-    if @fontName != theNewFontName
-      @fontName = theNewFontName
-      @changed()
+    @_settleLayoutsAfterBatch =>
+      if @fontName != theNewFontName
+        @fontName = theNewFontName
+        @changed()
 
-      # was `menuItem.parent instanceof MenuWdgt` (type-test-elimination campaign)
-      if menuItem?.parent? and menuItem.parent.isMenu?()
-        @updateFontsMenuEntriesTicks menuItem.parent
+        # was `menuItem.parent instanceof MenuWdgt` (type-test-elimination campaign)
+        if menuItem?.parent? and menuItem.parent.isMenu?()
+          @updateFontsMenuEntriesTicks menuItem.parent
+      @_reFitContainedTextNoSettle()
 
 
   fontsMenu: (a,targetWidget)->
@@ -1106,16 +1108,22 @@ class StringWdgt extends Widget
 
   
   toggleShowBlanks: ->
-    @isShowingBlanks = not @isShowingBlanks
-    @changed()
-  
+    @_settleLayoutsAfterBatch =>
+      @isShowingBlanks = not @isShowingBlanks
+      @changed()
+      @_reFitContainedTextNoSettle()
+
   toggleWeight: ->
-    @isBold = not @isBold
-    @changed()
-  
+    @_settleLayoutsAfterBatch =>
+      @isBold = not @isBold
+      @changed()
+      @_reFitContainedTextNoSettle()
+
   toggleItalic: ->
-    @isItalic = not @isItalic
-    @changed()
+    @_settleLayoutsAfterBatch =>
+      @isItalic = not @isItalic
+      @changed()
+      @_reFitContainedTextNoSettle()
 
   toggleHeaderLine: ->
     @isHeaderLine = not @isHeaderLine
@@ -1123,8 +1131,10 @@ class StringWdgt extends Widget
   
   toggleIsPassword: ->
     world.stopEditing()
-    @isPassword = not @isPassword
-    @changed()
+    @_settleLayoutsAfterBatch =>
+      @isPassword = not @isPassword
+      @changed()
+      @_reFitContainedTextNoSettle()
 
   changed: ->
     super
@@ -1190,34 +1200,66 @@ class StringWdgt extends Widget
       @parent?._invalidateLayout() unless world?._recalculatingLayouts
     @
 
+  # ── Contained-text (FIT_BOX_TO_TEXT) edit: the re-fit core ───────────────────
+  # The NON-settling core behind the seven text-property setters (setText / setFontSize
+  # / setFontName / toggleShowBlanks / toggleWeight / toggleItalic / toggleIsPassword).
+  # A FIT_BOX_TO_TEXT widget re-flows its box to the new text measure (_reLayoutSelf)
+  # and, ONLY if the box actually changed size, nudges its tracking container
+  # (_refreshScrollPanelWdgtOrVerticalStackIfIamInIt) -- an edit that leaves the measure
+  # unchanged needs no redundant up-then-down container re-fit. For a bare StringWdgt the
+  # base Widget::_reLayoutSelf is empty (box-to-text sizing lives in
+  # TextWdgt::_reLayoutSelf), so the gated body is a no-op.
+  #
+  # Each of the seven setters SELF-SETTLES at its own public boundary by wrapping its
+  # work in @_settleLayoutsAfterBatch and calling this non-settling core last -- the
+  # ordinary self-settling-setter convention (cf. setBounds / setExtent).
+  #
+  # WHY BATCH, not the usual single @_settleLayoutsAfter: a text setter can be reached
+  # MID-PASS, nested inside another operation's settle. The everyday case is a widget
+  # `add` -- add() self-settles, and inside it a connection cascade (updateTarget ->
+  # @target[@action]) fires setText on the added / target widget. A single self-settle
+  # reached mid-pass THROWS the flow-violation -- and the throw is uncaught, so it
+  # STALLS the suite; _settleLayoutsAfterBatch instead sees the enclosing settle and
+  # DEFERS to it. That cascade is dynamically dispatched (@target[@action] is a runtime
+  # string), so it can't be statically routed to a non-settling core -- batch is the
+  # architecture's mechanism for exactly this nesting (see the _settleLayoutsAfter throw
+  # comment in Widget).
+  _reFitContainedTextNoSettle: ->
+    return unless @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
+    extentBefore = @extent()
+    @_reLayoutSelf()
+    @_refreshScrollPanelWdgtOrVerticalStackIfIamInIt() unless @extent().equals extentBefore
+
   # This is also invoked for example when you take a slider
   # and set it to target this.
   setText: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
-    if stringFieldWidget?
-      # in this case, the stringFieldWidget has a
-      # string widget in "text". The string widget has the
-      # "text" inside it.
-      theTextContent = stringFieldWidget.text.text
+    @_settleLayoutsAfterBatch =>
+      if stringFieldWidget?
+        # in this case, the stringFieldWidget has a
+        # string widget in "text". The string widget has the
+        # "text" inside it.
+        theTextContent = stringFieldWidget.text.text
 
-    theNewText = theTextContent + ""
-    if @text != theNewText
-      # other widgets might send something like a
-      # number or a color so let's make sure we
-      # convert to a string.
-      @clearSelection()
-      @text = theNewText
-      @checkIfTextContentWasModifiedFromTextAtStart()
-      @synchroniseTextAndActualText()
-      # chrome labels (menu items, button captions, …) keep their box hugging the
-      # text on every edit; without this the new text would be crammed/scaled into
-      # the box sized to the OLD text. Generic StringWdgts leave the flag off and
-      # keep their fixed box.
-      if @autoSizeBoxToText
-        @sizeToTextAndDisableFitting()
-      @changed()
+      theNewText = theTextContent + ""
+      if @text != theNewText
+        # other widgets might send something like a
+        # number or a color so let's make sure we
+        # convert to a string.
+        @clearSelection()
+        @text = theNewText
+        @checkIfTextContentWasModifiedFromTextAtStart()
+        @synchroniseTextAndActualText()
+        # chrome labels (menu items, button captions, …) keep their box hugging the
+        # text on every edit; without this the new text would be crammed/scaled into
+        # the box sized to the OLD text. Generic StringWdgts leave the flag off and
+        # keep their fixed box.
+        if @autoSizeBoxToText
+          @sizeToTextAndDisableFitting()
+        @changed()
 
-    @updateTarget()
+      @updateTarget()
+      @_reFitContainedTextNoSettle()
 
   considerCurrentTextAsReferenceText: ->
     @hashOfTextConsideredAsReference = @text.hashCode()
@@ -1230,25 +1272,27 @@ class StringWdgt extends Widget
         @widgetToBeNotifiedOfTextModificationChange.textContentModified?()
   
   setFontSize: (sizeOrWidgetGivingSize, widgetGivingSize) ->
-    if widgetGivingSize?.getValue?
-      size = widgetGivingSize.getValue()
-    else
-      size = sizeOrWidgetGivingSize
+    @_settleLayoutsAfterBatch =>
+      if widgetGivingSize?.getValue?
+        size = widgetGivingSize.getValue()
+      else
+        size = sizeOrWidgetGivingSize
 
-    if typeof size is "number"
-      newSize = Math.round Math.min Math.max(size, 4), 500
-    else
-      newSize = parseFloat size
-      newSize = Math.round Math.min Math.max(newSize, 4), 500  unless isNaN newSize
+      if typeof size is "number"
+        newSize = Math.round Math.min Math.max(size, 4), 500
+      else
+        newSize = parseFloat size
+        newSize = Math.round Math.min Math.max(newSize, 4), 500  unless isNaN newSize
 
-    if newSize != @originallySetFontSize
-      @originallySetFontSize = newSize
-      # a box-hugs-text widget (e.g. a chrome label) must track its text size on a
-      # font change too; otherwise the bigger/smaller font would just be fitted
-      # into the box sized for the old font.
-      if @autoSizeBoxToText
-        @sizeToTextAndDisableFitting()
-      @changed()
+      if newSize != @originallySetFontSize
+        @originallySetFontSize = newSize
+        # a box-hugs-text widget (e.g. a chrome label) must track its text size on a
+        # font change too; otherwise the bigger/smaller font would just be fitted
+        # into the box sized for the old font.
+        if @autoSizeBoxToText
+          @sizeToTextAndDisableFitting()
+        @changed()
+      @_reFitContainedTextNoSettle()
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     [menuEntriesStrings, functionNamesStrings] = theTarget.stringSetters()

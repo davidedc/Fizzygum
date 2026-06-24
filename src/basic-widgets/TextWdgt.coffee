@@ -438,57 +438,6 @@ class TextWdgt extends StringWdgt
     super
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT then @_reLayoutSelf()
 
-  # ── Edit triggers for CONTAINED (FIT_BOX_TO_TEXT) text ──────────────────────
-  # When a FIT_BOX_TO_TEXT TextWdgt's text content / font / style changes, the box
-  # must re-flow to the new measure (_reLayoutSelf) AND the surrounding layout must
-  # follow (_refreshScrollPanelWdgtOrVerticalStackIfIamInIt). Gated by the mode, so
-  # ANY contained TextWdgt (not just a SimplePlainTextWdgt) re-flows on its OWN
-  # edit — a bare FIT_BOX_TO_TEXT TextWdgt is a drop-in for SimplePlainTextWdgt
-  # (the container RESIZE path is the rawSetExtent override above; this is the
-  # content-CHANGE path).
-  # For a free-floating FIT_TEXT_TO_BOX TextWdgt (the default — e.g. the empty-window
-  # placeholder WindowContentsPlaceholderText, or FizzytilesCodeWdgt) this is a
-  # no-op: the box is fixed, so we must NOT reflow it or poke the container (the
-  # "respect the mode, don't impose it" rule — see the FITTING MODEL comment
-  # in StringWdgt).
-  # NON-settling: it _invalidateLayout's the container (out of a pass); each text-property setter below
-  # wraps the call in @_settleLayoutsAfter, so the deferred re-fit flushes synchronously at the API
-  # boundary instead of draining at end-of-cycle (the setter is the public boundary; this helper stays
-  # settle-agnostic -- hence NoSettle). Settle stays at TextWdgt (NOT StringWdgt): moving it up re-fits
-  # non-TextWdgt FIT_BOX_TO_TEXT widgets too, which regresses (e.g. macroMovingSlidersSideways...).
-  _reLayoutAndRefreshContainerIfContainedTextNoSettle: ->
-    if @fittingSpec != FittingSpecText.FIT_BOX_TO_TEXT then return
-    @_reLayoutSelf()
-    @_refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
-
-  setText: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall) ->
-    super
-    @_settleLayoutsAfter => @_reLayoutAndRefreshContainerIfContainedTextNoSettle()
-
-  setFontSize: (sizeOrWidgetGivingSize, widgetGivingSize) ->
-    super
-    @_settleLayoutsAfter => @_reLayoutAndRefreshContainerIfContainedTextNoSettle()
-
-  setFontName: (menuItem, ignored2, theNewFontName) ->
-    super
-    @_settleLayoutsAfter => @_reLayoutAndRefreshContainerIfContainedTextNoSettle()
-
-  toggleShowBlanks: ->
-    super
-    @_settleLayoutsAfter => @_reLayoutAndRefreshContainerIfContainedTextNoSettle()
-
-  toggleWeight: ->
-    super
-    @_settleLayoutsAfter => @_reLayoutAndRefreshContainerIfContainedTextNoSettle()
-
-  toggleItalic: ->
-    super
-    @_settleLayoutsAfter => @_reLayoutAndRefreshContainerIfContainedTextNoSettle()
-
-  toggleIsPassword: ->
-    super
-    @_settleLayoutsAfter => @_reLayoutAndRefreshContainerIfContainedTextNoSettle()
-
   createBufferCacheKey: ->
     return super() +  "-" + @softWrap
 
