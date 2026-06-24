@@ -1187,7 +1187,7 @@ class StringWdgt extends Widget
       heightOfText = @fontHeight @originallySetFontSize
       @silentRawSetExtent new Point widthOfText, heightOfText
       @reflowText()
-      @parent?.invalidateLayout() unless world?._recalculatingLayouts
+      @parent?._invalidateLayout() unless world?._recalculatingLayouts
     @
 
   # This is also invoked for example when you take a slider

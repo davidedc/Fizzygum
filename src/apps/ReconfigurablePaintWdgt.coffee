@@ -434,7 +434,7 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     @toolsPanel.add @eraserToolButton
 
     @pencilToolButton.toggle()
-    @invalidateLayout()
+    @_invalidateLayout()
 
   _reLayoutSelf: ->
 

@@ -22,7 +22,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
     @label.alignMiddle()
     @label.isEditable = true
     # update layout
-    @invalidateLayout()
+    @_invalidateLayout()
 
   # I am a desktop icon (an icon with a caption). isDesktopIcon replaces the
   # `instanceof WidgetHolderWithCaptionWdgt` tests that find/skip icons among desktop

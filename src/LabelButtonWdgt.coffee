@@ -111,7 +111,7 @@ class LabelButtonWdgt extends ButtonWdgt
     @_settleLayoutsAfter =>
       if @label?
         @label = @label.fullDestroy()
-      @invalidateLayout()
+      @_invalidateLayout()
   # this part is excluded from the fizzygum homepage build <<«
 
   alignCenter: ->

@@ -70,7 +70,7 @@ class CodePromptWdgt extends Widget
     # changed yet), so trigger the content check now
     @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
 
-    @invalidateLayout()
+    @_invalidateLayout()
 
   textContentModified: ->
     @saveTextWdgt.setColor Color.BLACK

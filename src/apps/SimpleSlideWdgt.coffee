@@ -93,7 +93,7 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
     @toolsPanel.disableDragsDropsAndEditing()
     @add @toolsPanel
     @dragsDropsAndEditingEnabled = true
-    @invalidateLayout()
+    @_invalidateLayout()
 
   createNewStretchablePanel: ->
     @stretchableWidgetContainer = new StretchableWidgetContainerWdgt

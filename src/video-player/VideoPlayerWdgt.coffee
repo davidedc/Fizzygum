@@ -51,7 +51,7 @@ class VideoPlayerWdgt extends Widget
     @add @videoControlsPane
 
     # update layout
-    @invalidateLayout()
+    @_invalidateLayout()
 
   loadVideo: (videoPath) ->
     @videoPlayerCanvas.loadVideo videoPath

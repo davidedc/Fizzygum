@@ -22,7 +22,7 @@ class StretchableEditableWdgt extends Widget
   constructor: ->
     super
     @buildAndConnectChildren()
-    @invalidateLayout()
+    @_invalidateLayout()
 
   colloquialName: ->
     "Generic panel"
@@ -172,7 +172,7 @@ class StretchableEditableWdgt extends Widget
       @toolsPanel.destroy()
       @toolsPanel = nil
     @stretchableWidgetContainer.disableDragsDropsAndEditing @
-    @invalidateLayout()
+    @_invalidateLayout()
 
   buildAndConnectChildren: ->
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
@@ -181,12 +181,12 @@ class StretchableEditableWdgt extends Widget
     @createNewStretchablePanel()
     @createToolsPanel()
 
-    @invalidateLayout()
+    @_invalidateLayout()
 
   childPickedUp: (childPickedUp) ->
     if childPickedUp == @stretchableWidgetContainer
       @createNewStretchablePanel()
-      @invalidateLayout()
+      @_invalidateLayout()
 
   # same as simpledocumentscrollpanel, you can lock the contents.
   # worth factoring it out as a mixin?

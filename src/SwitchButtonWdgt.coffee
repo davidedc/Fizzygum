@@ -23,7 +23,7 @@ class SwitchButtonWdgt extends Widget
     for eachButton in @buttons
       @add eachButton
 
-    @invalidateLayout()
+    @_invalidateLayout()
   
   # so that when you duplicate a "selected" toggle
   # and you pick it up and you attach it somewhere else
@@ -68,11 +68,11 @@ class SwitchButtonWdgt extends Widget
     @buttonShown++
     @buttonShown = @buttonShown % @buttons.length
 
-    @invalidateLayout()
+    @_invalidateLayout()
     # TODO gross pattern break - usually mouseClickLeft has 9 params
     # none of which is a widget
     @escalateEvent "mouseClickLeft", @
 
   resetSwitchButton: ->
     @buttonShown = 0
-    @invalidateLayout()
+    @_invalidateLayout()

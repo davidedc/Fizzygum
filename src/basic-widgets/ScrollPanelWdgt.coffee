@@ -245,7 +245,7 @@ class ScrollPanelWdgt extends PanelWdgt
       @contents.rawSetExtent aPoint
       # raw setter: APPLY the re-fit NOW -- synchronous, single-container, TERMINAL
       # (_reLayoutChildren -> _positionAndResizeChildren + _reLayoutScrollbars, neither climbs to my
-      # parent). Never SCHEDULE it (no invalidateLayout): the sanctioned immediate-mutator
+      # parent). Never SCHEDULE it (no _invalidateLayout): the sanctioned immediate-mutator
       # apply, like TextWdgt.rawSetExtent -> @_reLayoutSelf (task #17). Rule [E] forbids the SCHEDULE.
       @_reLayoutChildren()
 
@@ -279,7 +279,7 @@ class ScrollPanelWdgt extends PanelWdgt
   # own bounds before re-fitting the contents is the DETERMINISM.md case-3c discipline (a
   # custom _reLayout must apply its own bounds before laying out what it contains). On a pure
   # resize the re-fit here is redundant with the rawSetExtent override and idempotent; on a
-  # content-only change (Phase 3b Slice 2, when the inline triggers become invalidateLayout)
+  # content-only change (Phase 3b Slice 2, when the inline triggers become _invalidateLayout)
   # it is the one that runs.
   _reLayout: (newBoundsForThisLayout) ->
     super
@@ -770,12 +770,12 @@ class ScrollPanelWdgt extends PanelWdgt
   # toggle, which used to write this flag + resize the content from outside.)
   #
   # The resize here is DELIBERATELY IMMEDIATE (raw geometry), not the framework's
-  # ideal DEFERRED pattern (set a flag + invalidateLayout(), let recalculateLayouts
+  # ideal DEFERRED pattern (set a flag + _invalidateLayout(), let recalculateLayouts
   # -> _reLayout derive the geometry). This is INTERMEDIATE state, not an oversight:
   # the deferred mechanism is half-built by construction (the geometry accessors read
   # applied @bounds only, so handler-level raw geometry is a symptom of that
   # incompleteness, not a one-off). Soft-wrap has an EXTRA blocker on top: the content
-  # panel + text are ATTACHEDAS_FREEFLOATING, so invalidateLayout() on them does NOT
+  # panel + text are ATTACHEDAS_FREEFLOATING, so _invalidateLayout() on them does NOT
   # climb up to this scroll panel, and the wrap geometry lives in _positionAndResizeChildren
   # -- which the _reLayout cycle never reaches for a wrap toggle. Completing the
   # deferred model (and this case) is deliberate, sequenced work; see
@@ -808,5 +808,5 @@ class ScrollPanelWdgt extends PanelWdgt
     @dragsDropsAndEditingEnabled = false
 
     @contents.disableDragsDropsAndEditing @
-    @invalidateLayout()
+    @_invalidateLayout()
 

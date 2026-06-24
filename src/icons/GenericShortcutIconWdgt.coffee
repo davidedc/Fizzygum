@@ -17,7 +17,7 @@ class GenericShortcutIconWdgt extends Widget
     @add @referenceArrowIcon
 
     # update layout
-    @invalidateLayout()
+    @_invalidateLayout()
 
   widthWithoutSpacing: ->
     Math.min @width(), @height()

@@ -53,7 +53,7 @@ class SimpleLinkWdgt extends Widget
     @createLinkIcon()
     @add @externalLinkIcon
 
-    @invalidateLayout()
+    @_invalidateLayout()
 
   createLinkIcon: ->
     @externalLinkIcon = new ExternalLinkButtonWdgt

@@ -46,7 +46,7 @@ class SpeechBubbleWdgt extends Widget
 
 
     @add @contentsWidget
-    @invalidateLayout()
+    @_invalidateLayout()
 
 
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023

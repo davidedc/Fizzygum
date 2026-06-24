@@ -190,7 +190,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
       super aPoint
       # raw setter: APPLY the re-fit NOW -- synchronous, single-container, TERMINAL
       # (_reLayoutChildren -> _positionAndResizeChildren, which does not climb to my parent).
-      # Never SCHEDULE it (no invalidateLayout): the sanctioned immediate-mutator apply,
+      # Never SCHEDULE it (no _invalidateLayout): the sanctioned immediate-mutator apply,
       # exactly like TextWdgt.rawSetExtent -> @_reLayoutSelf and rawSetWidthSizeHeightAccordingly
       # -> @_reLayout (task #17). check-layering.js rule [E] forbids the SCHEDULE, not this APPLY.
       @_reLayoutChildren()

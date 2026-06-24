@@ -535,11 +535,11 @@ class Widget extends TreeNode
     #   alignCopiedWidgetToKeyboardEventsReceiversSet
 
     @destroyed = true
-    # FREEFLOATING-skip is centralized in invalidateLayout(triggeringChild): passing @ lets the
+    # FREEFLOATING-skip is centralized in _invalidateLayout(triggeringChild): passing @ lets the
     # parent skip when I'm freefloating (removing a freefloating child can't change the parent's
     # layout). Containers that MANAGE a freefloating child (e.g. LabelButton/MenuItem centring their
     # label) self-settle on the change itself (sizeToTextAndDisableFitting / setLabel), not here.
-    @parent?.invalidateLayout(@)
+    @parent?._invalidateLayout(@)
     @breakNumberOfRawMovesAndResizesCaches()
     WorldWdgt.numberOfAddsAndRemoves++
 
@@ -730,11 +730,11 @@ class Widget extends TreeNode
   # KeepsRatioWhenInVerticalStackMixin -> ratio, the icons / Stretchable* -> their own
   # extent rule). The base just sets the width and lets a deferred-layout widget re-fit its
   # children. HOW that re-fit is triggered depends on WHETHER A LAYOUT PASS IS ALREADY RUNNING:
-  #  - normally (from an event handler / the public-setter flush): @invalidateLayout() --
+  #  - normally (from an event handler / the public-setter flush): @_invalidateLayout() --
   #    schedule the re-fit for the current frame's recalculateLayouts (the deferred path).
   #  - WHILE recalculateLayouts is running (a CONTAINER sizing this child from inside its own
   #    _reLayout / _positionAndResizeChildren -- Phase 3b's window/stack re-fit on the cycle):
-  #    invalidateLayout would, for a non-freefloating deferred-layout child, CLIMB back and
+  #    _invalidateLayout would, for a non-freefloating deferred-layout child, CLIMB back and
   #    re-dirty the container in the SAME pass -> the until-loop never converges. So settle
   #    this child IN PLACE with a synchronous @_reLayout() (no invalidate, no climb), making
   #    the container's _reLayout a FIXED POINT -- the same outcome ScrollPanelWdgt reaches via
@@ -751,7 +751,7 @@ class Widget extends TreeNode
     @rawSetWidth newWidth
     if @implementsDeferredLayout()
       # raw setter: APPLY the re-fit now (synchronous _reLayout), never SCHEDULE it
-      # (no invalidateLayout). See task #17 -- low-level mutators must not schedule layout.
+      # (no _invalidateLayout). See task #17 -- low-level mutators must not schedule layout.
       @_reLayout()
     @height()
 
@@ -778,7 +778,7 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   # ===== self-settling public geometry API (prototype, 2026-06-19) =====
-  # A public geometry setter records the DESIRED change (@desired* + invalidateLayout)
+  # A public geometry setter records the DESIRED change (@desired* + _invalidateLayout)
   # and then FLUSHES the layout (world.recalculateLayouts) before returning, so the
   # world's geometry is consistent between public calls -- the caller never needs a
   # "settle"/yield. (See docs/deferred-layout-16-macro-breakages.md.) Re-entrancy is
@@ -861,12 +861,12 @@ class Widget extends TreeNode
         newExtent = new Point aRectangle.width(), aRectangle.height()
         unless @extent().equals newExtent
           @desiredExtent = newExtent
-          @invalidateLayout()
+          @_invalidateLayout()
 
         newPos = aRectangle.origin.copy()
         unless @position().equals newPos
           @desiredPosition = newPos
-          @invalidateLayout()
+          @_invalidateLayout()
 
   silentRawSetBounds: (newBounds) ->
     # TODO in theory the low-level APIs should only be
@@ -1373,7 +1373,7 @@ class Widget extends TreeNode
         newPos = new Point newX, newY
         unless @position().equals newPos
           @desiredPosition = newPos
-          @invalidateLayout()
+          @_invalidateLayout()
           # all the moves via the handles arrive here,
           # where we remember the fractional position in the
           # holding panel. That is so for example moving
@@ -1584,7 +1584,7 @@ class Widget extends TreeNode
         newExtent = new Point newWidth, newHeight
         unless @extent().equals newExtent
           @desiredExtent = newExtent
-          @invalidateLayout()
+          @_invalidateLayout()
           # all the resizes via the handles arrive here,
           # where we remember the fractional size in the
           # holding panel. That is so for example resizing
@@ -1635,7 +1635,7 @@ class Widget extends TreeNode
   # A re-fit "seam" (cf. _reFitContainerAfterRawGeometryChange): a freefloating content widget tells the
   # scroll-panel / vertical-stack it sits in to re-fit, after a layout-affecting property change
   # (VerticalStackLayoutSpec alignment/elasticity/base-width, SimplePlainTextWdgt soft-wrap, a
-  # contained-text edit, collapse). A freefloating child's invalidateLayout does NOT climb to its
+  # contained-text edit, collapse). A freefloating child's _invalidateLayout does NOT climb to its
   # container, which is why the container(s) are notified explicitly here. The phase dispatch (enqueue in
   # a pass, else invalidate) lives in the shared _reFitContainer; this seam only supplies which container(s).
   _refreshScrollPanelWdgtOrVerticalStackIfIamInIt: ->
@@ -1645,7 +1645,7 @@ class Widget extends TreeNode
   # A re-fit "seam": an IMMEDIATE geometry mutator (silentRawSetExtent / fullRawMoveBy) notifies the
   # container that tracks my geometry to re-fit -- a NON-text-wrapping scroll panel (text-wrapping panels
   # drive their own content re-wrap in _positionAndResizeChildren, so they are excluded here), or a
-  # stack/window container. A freefloating child's invalidateLayout does NOT climb to its container, which
+  # stack/window container. A freefloating child's _invalidateLayout does NOT climb to its container, which
   # is why the container(s) are notified explicitly here. The phase dispatch lives in the shared
   # _reFitContainer (enqueue in a pass -- legal mid-pass, and the LIVE path for this immediate-mutator seam
   # since raw setters run during layout passes -- else invalidate); this seam only supplies which container(s).
@@ -1659,13 +1659,13 @@ class Widget extends TreeNode
   # (_refreshScrollPanelWdgtOrVerticalStackIfIamInIt, _reFitContainerAfterRawGeometryChange), and the
   # newParentChoice* menu actions all route through here. Two states:
   #  - INSIDE a layout pass (world._recalculatingLayouts): ENQUEUE the container into the
-  #    recalculateLayouts until-loop. Enqueuing is legal mid-pass -- unlike invalidateLayout it neither
-  #    throws (the freeze guard, see invalidateLayout below) nor climbs to ancestors; it enqueues only the
+  #    recalculateLayouts until-loop. Enqueuing is legal mid-pass -- unlike _invalidateLayout it neither
+  #    throws (the freeze guard, see _invalidateLayout below) nor climbs to ancestors; it enqueues only the
   #    directly-affected container. A container mid its OWN _positionAndResizeChildren is driving this child
   #    top-down and already accounts for it, so we SKIP it (re-enqueuing would re-fire every pass and never
   #    converge) -- the @_adjustingContentsBounds guard. If the deferred re-fit later changes the
   #    container's own geometry, ITS seam re-fires and enqueues ITS parent, so up-propagation is preserved.
-  #  - OUTSIDE a pass: invalidateLayout() so the next doOneCycle re-fits the container.
+  #  - OUTSIDE a pass: _invalidateLayout() so the next doOneCycle re-fits the container.
   # Gated on _reLayoutChildren? so only a tracking container (Window / Stack / ScrollPanel -- the only
   # classes that define it) reacts; any other widget is a no-op. Low-level (leading underscore) so lint
   # rule [F] exempts it, and the callers read as pure intent (@_reFitContainer @parent / @_reFitContainer()).
@@ -1680,7 +1680,7 @@ class Widget extends TreeNode
         world.widgetsThatMaybeChangedLayout.push container
       container.layoutIsValid = false
     else
-      container.invalidateLayout()
+      container._invalidateLayout()
 
 
   rawSetWidth: (width) ->
@@ -1706,7 +1706,7 @@ class Widget extends TreeNode
         newExtent = new Point newWidth, @height()
         unless @extent().equals newExtent
           @desiredExtent = newExtent
-          @invalidateLayout()
+          @_invalidateLayout()
   
   silentRawSetWidth: (width) ->
     # TODO in theory the low-level APIs should only be
@@ -1742,7 +1742,7 @@ class Widget extends TreeNode
         newExtent = new Point @width(), newHeight
         unless @extent().equals newExtent
           @desiredExtent = newExtent
-          @invalidateLayout()
+          @_invalidateLayout()
   
   silentRawSetHeight: (height) ->
     # TODO in theory the low-level APIs should only be
@@ -2087,7 +2087,7 @@ class Widget extends TreeNode
     WorldWdgt.numberOfCollapseFlagsChanges++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
-    @invalidateLayout()
+    @_invalidateLayout()
     @fullChanged()
     @parent?.childCollapsed? @
 
@@ -2106,7 +2106,7 @@ class Widget extends TreeNode
     WorldWdgt.numberOfCollapseFlagsChanges++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
-    @invalidateLayout()
+    @_invalidateLayout()
     @fullChanged()
     @parent?.childUnCollapsed? @
 
@@ -2121,9 +2121,9 @@ class Widget extends TreeNode
         return false
   
   removeFromTree: ->
-    # FREEFLOATING-skip centralized in invalidateLayout(triggeringChild): pass @ so the parent skips
+    # FREEFLOATING-skip centralized in _invalidateLayout(triggeringChild): pass @ so the parent skips
     # when I'm freefloating -- removing a freefloating child doesn't change the parent's layout.
-    @parent?.invalidateLayout(@)
+    @parent?._invalidateLayout(@)
     @breakNumberOfRawMovesAndResizesCaches()
     WorldWdgt.numberOfAddsAndRemoves++
     @parent.removeChild @
@@ -2443,11 +2443,11 @@ class Widget extends TreeNode
         aWdgt.removeShadow()
 
     previousParent = aWdgt.parent
-    # FREEFLOATING-skip via invalidateLayout(triggeringChild): pass aWdgt so its OLD parent skips
+    # FREEFLOATING-skip via _invalidateLayout(triggeringChild): pass aWdgt so its OLD parent skips
     # when aWdgt is freefloating (removing it only changes that parent's layout if it laid it out).
     # This runs BEFORE setLayoutSpec below, so the param reads aWdgt's OLD spec -- correct. (The NEW
     # container is invalidated AFTER setLayoutSpec, further down, also via the param.)
-    aWdgt.parent?.invalidateLayout(aWdgt)
+    aWdgt.parent?._invalidateLayout(aWdgt)
 
     # if the widget contributes to a shadow, unfortunately
     # we have to walk towards the top to
@@ -2461,8 +2461,8 @@ class Widget extends TreeNode
     aWdgt.setLayoutSpec layoutSpec
     # NEW-container invalidate via the param: setLayoutSpec above set aWdgt.layoutSpec to the NEW
     # spec, so passing aWdgt makes me (the new container) skip iff aWdgt is now freefloating -- same
-    # as the old `if layoutSpec != FREEFLOATING` guard, now centralized in invalidateLayout.
-    @invalidateLayout(aWdgt)
+    # as the old `if layoutSpec != FREEFLOATING` guard, now centralized in _invalidateLayout.
+    @_invalidateLayout(aWdgt)
 
     aWdgt.fullChanged()
     @silentAdd aWdgt, true, position
@@ -3790,13 +3790,13 @@ class Widget extends TreeNode
       C.makeSpacersOpaque()
   # this part is excluded from the fizzygum homepage build <<«
 
-  invalidateLayout: (triggeringChild = nil) ->
+  _invalidateLayout: (triggeringChild = nil) ->
     # FREEFLOATING-skip -- THE single home of the rule: a freefloating child's add/remove/resize
     # cannot change its parent's layout (it's positioned absolutely, not laid out by the parent).
     # The climb and every teardown/move site pass the child whose change triggered this invalidate;
     # a nil triggeringChild is a direct self-invalidate from feature code. This return MUST stay
     # BEFORE the _recalculatingLayouts throw below: a freefloating teardown is a silent no-op today
-    # (the inline `unless …isFreeFloating()` guard meant invalidateLayout wasn't even called for it),
+    # (the inline `unless …isFreeFloating()` guard meant _invalidateLayout wasn't even called for it),
     # so it has to keep being a silent no-op even if it happens mid-pass -- it must never throw.
     return if triggeringChild?.isFreeFloating()
     # FLOW-RULE INVARIANT (fail fast): the low-level geometry mutators (raw*/silent*/fullRaw*)
@@ -3811,14 +3811,14 @@ class Widget extends TreeNode
     # the flush, so this throw is caught there, reported via the layout-error path (loud
     # console.error + in-world console), and the world keeps running -- never a freeze.
     if world?._recalculatingLayouts
-      throw new Error "FLOWRULE_VIOLATION: invalidateLayout() during a layout pass by " + (@constructor?.name) + " -- a raw/silent/fullRaw setter must not schedule layout (task #17)"
+      throw new Error "FLOWRULE_VIOLATION: _invalidateLayout() during a layout pass by " + (@constructor?.name) + " -- a raw/silent/fullRaw setter must not schedule layout (task #17)"
     if @layoutIsValid
       world.widgetsThatMaybeChangedLayout.push @
     @layoutIsValid = false
     # CLIMB: tell my parent that a child (me) changed. Pass @ so the parent short-circuits via the
     # return at the top iff I'm freefloating -- this replaces the old inline `unless @isFreeFloating()
     # and @parent?` climb-guard (the freefloating rule now lives in ONE place, the param check above).
-    @parent?.invalidateLayout(@)
+    @parent?._invalidateLayout(@)
 
   # »>> this part is excluded from the fizzygum homepage build
   setMinAndMaxBoundsAndSpreadability: (minBounds, desiredBounds, spreadability = LayoutSpec.SPREADABILITY_MEDIUM) ->
@@ -3832,7 +3832,7 @@ class Widget extends TreeNode
     maxHeight = desiredBounds.y + spreadability * desiredBounds.y/100
     @setMaxDim new Point maxWidth, maxHeight
 
-    @invalidateLayout()
+    @_invalidateLayout()
 
 
   setMaxDim: (overridingMaxDim) ->
@@ -3848,7 +3848,7 @@ class Widget extends TreeNode
     @maxWidth = overridingMaxDim.x
     @maxHeight = overridingMaxDim.y
 
-    @invalidateLayout()
+    @_invalidateLayout()
 
   # if you use this paragraph, then
   # we have a system where you CAN easily resize things to any
@@ -4206,7 +4206,7 @@ class Widget extends TreeNode
   # »>> this part is excluded from the fizzygum homepage build
   removeAdders: ->
     @_showsAdders = false
-    @invalidateLayout()
+    @_invalidateLayout()
 
   showAdders: ->
     @_showsAdders = true
@@ -4215,7 +4215,7 @@ class Widget extends TreeNode
         new LayoutElementAdderOrDropletWdgt,
         nil,
         LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    @invalidateLayout()
+    @_invalidateLayout()
 
   addOrRemoveAdders: ->
 

@@ -55,7 +55,7 @@ class ConsoleWdgt extends Widget
     @add @runAllButton
     # ---------------------------------------
 
-    @invalidateLayout()
+    @_invalidateLayout()
 
   doSelection: ->
     savedScript = @textWidget.selection()

@@ -87,7 +87,7 @@ class ErrorsLogViewerWdgt extends Widget
     @okButton = new SimpleButtonWdgt true, @, "closeFromContainerWindow", "ok"
     @add @okButton
 
-    @invalidateLayout()
+    @_invalidateLayout()
 
   pauseErrors: ->
     @paused = true

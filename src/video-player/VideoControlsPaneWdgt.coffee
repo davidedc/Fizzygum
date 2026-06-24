@@ -42,7 +42,7 @@ class VideoControlsPaneWdgt extends RectangleWdgt
     @add @durationTimeLabel
 
     # update layout
-    @invalidateLayout()
+    @_invalidateLayout()
 
 
   # TODO you should use the newBoundsForThisLayout param

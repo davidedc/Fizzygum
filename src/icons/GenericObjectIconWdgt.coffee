@@ -17,7 +17,7 @@ class GenericObjectIconWdgt extends Widget
     @add @icon
 
     # update layout
-    @invalidateLayout()
+    @_invalidateLayout()
 
   widthWithoutSpacing: ->
     Math.min @width(), @height()

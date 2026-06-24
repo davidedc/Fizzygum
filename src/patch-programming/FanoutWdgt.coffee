@@ -24,7 +24,7 @@ class FanoutWdgt extends Widget
     @add @pinLeft
     @add @pinRight
 
-    @invalidateLayout()
+    @_invalidateLayout()
 
   setInput: (newvalue, ignored, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken

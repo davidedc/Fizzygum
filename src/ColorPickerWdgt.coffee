@@ -38,7 +38,7 @@ class ColorPickerWdgt extends Widget
     @add @colorPalette
     @add @grayPalette
     @add @feedback
-    @invalidateLayout()
+    @_invalidateLayout()
 
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
   

@@ -42,7 +42,7 @@ const PUBLIC_SETTERS = ['setExtent', 'fullMoveTo', 'setBounds', 'setWidth', 'set
 // those have `raw`/`silent` between the @/. and the capitalised `Set*`/`*MoveTo`).
 const PUB_CALL = new RegExp('[@.]\\s*(' + PUBLIC_SETTERS.join('|') + ')\\b');
 const RECALC_CALL = /[@.]\s*recalculateLayouts\b/;            // @recalculateLayouts / world.recalculateLayouts
-const INVALIDATE_CALL = /[@.]\s*invalidateLayout\b/;         // @invalidateLayout / x.invalidateLayout
+const INVALIDATE_CALL = /[@.]\s*_invalidateLayout\b/;         // @_invalidateLayout / x._invalidateLayout
 // [F] a CONTAINER-refit apply CALL (excludes _reLayoutSelf — see the [F] rule note by the check below). The
 // trailing (?!\?) skips the `?._reLayoutChildren?` EXISTENCE-CHECK guards (e.g. `return unless @parent?._reLayoutChildren?`)
 // — those test for the method, they don't apply it; a real apply is `()`-called or paren-less-arg-called, never `?`-tested.
@@ -61,7 +61,7 @@ const isLowLevel = (name) =>
   /Layout$/.test(name);     // _reLayout — the main layout pass (and any future *Layout)
 
 // [E] the flow rule (task #17): an IMMEDIATE geometry mutator (raw*/silent*/fullRaw*) must only
-// MUTATE geometry, never SCHEDULE a (re-)layout. Scheduling (invalidateLayout) is the public
+// MUTATE geometry, never SCHEDULE a (re-)layout. Scheduling (_invalidateLayout) is the public
 // self-settling tier's job; a raw setter that invalidates lets "applying a layout" re-trigger
 // "scheduling a layout", re-dirtying a container DURING its own layout pass -> the recalculate-
 // Layouts until-loop never converges (the Phase 3b Slice 2 freeze that hung 9/12 desktop apps).
@@ -174,7 +174,7 @@ function checkFile(file, violations) {
       if (recalc && !RECALC_WHITELIST.has(method)) violations.push(`[A] low-level ${method}() calls recalculateLayouts()  — ${at}`);
     }
     if (isImmediateMutator(method) && invalidate) {
-      violations.push(`[E] immediate mutator ${method}() calls invalidateLayout() — raw/silent/fullRaw setters must only MUTATE, never SCHEDULE layout (task #17)  — ${at}`);
+      violations.push(`[E] immediate mutator ${method}() calls _invalidateLayout() — raw/silent/fullRaw setters must only MUTATE, never SCHEDULE layout (task #17)  — ${at}`);
     }
     if (recalc && !RECALC_WHITELIST.has(method)) {
       violations.push(`[B] recalculateLayouts() called from ${method}() (only doOneCycle / _settleLayoutsAfter / _settleLayoutsAfterBatch may)  — ${at}`);
@@ -185,7 +185,7 @@ function checkFile(file, violations) {
     // [F] the SCHEDULE/APPLY boundary, made auditable (deferred-layout-OVERVIEW.md §11). A method that is NEITHER
     // low-level NOR an immediate mutator -- i.e. a handler / property setter / menu action / gesture / constructor --
     // must NOT call a CONTAINER-refit apply (_reLayoutChildren / _positionAndResizeChildren / _reLayoutScrollbars / _reLayout)
-    // synchronously OFF-SETTLE. It must DEFER (record intent via invalidateLayout; let the cycle / a flush apply it),
+    // synchronously OFF-SETTLE. It must DEFER (record intent via _invalidateLayout; let the cycle / a flush apply it),
     // OR, if the apply is genuinely AT a settle point (a deferred-seam in-pass arm, run under _recalculatingLayouts) or
     // a documented determinism-exempt family (scroll-input / collapse / construction), CONSCIOUSLY mark the METHOD --
     // any one line in its body `# layout-apply-sanctioned: <why>` exempts that whole handler. The apply BODIES, the
@@ -197,7 +197,7 @@ function checkFile(file, violations) {
     if (!isLowLevel(method) && !isImmediateMutator(method)) {
       const apply = code.match(APPLY_CALL);
       if (apply && !methodMarked) {
-        violations.push(`[F] off-settle synchronous layout apply .${apply[1]}() in ${method}() — DEFER it (invalidateLayout), or if it is at a settle point / a documented determinism-exempt family mark the method  # ${SANCTION_MARKER}: <why>  — ${at}`);
+        violations.push(`[F] off-settle synchronous layout apply .${apply[1]}() in ${method}() — DEFER it (_invalidateLayout), or if it is at a settle point / a documented determinism-exempt family mark the method  # ${SANCTION_MARKER}: <why>  — ${at}`);
       }
     }
   }
@@ -254,8 +254,8 @@ function main() {
     console.error(`\n!!! layering gate FAILED — ${violations.length} violation(s):\n`);
     for (const v of violations) console.error('  ' + v);
     console.error('\nSee docs/deferred-layout-refit-and-add-design.md (D: macros must not call private/low-level methods;');
-    console.error('E: raw/silent/fullRaw mutators must not call invalidateLayout) and docs/deferred-layout-16-macro-breakages.md (A/B/C).');
-    console.error('F: a non-mutator handler must DEFER a container apply (invalidateLayout) or mark it `# layout-apply-sanctioned: <why>` — see docs/deferred-layout-OVERVIEW.md §11.');
+    console.error('E: raw/silent/fullRaw mutators must not call _invalidateLayout) and docs/deferred-layout-16-macro-breakages.md (A/B/C).');
+    console.error('F: a non-mutator handler must DEFER a container apply (_invalidateLayout) or mark it `# layout-apply-sanctioned: <why>` — see docs/deferred-layout-OVERVIEW.md §11.');
     process.exit(1);
   }
   console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F)`);

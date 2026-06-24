@@ -85,7 +85,7 @@ class SimpleDocumentWdgt extends Widget
 
     @add @simpleDocumentScrollPanel
 
-    @invalidateLayout()
+    @_invalidateLayout()
 
   createToolsPanel: ->
     @toolsPanel = new HorizontalMenuPanelWdgt
@@ -110,7 +110,7 @@ class SimpleDocumentWdgt extends Widget
     @toolsPanel.disableDragsDropsAndEditing()
 
     @dragsDropsAndEditingEnabled = true
-    @invalidateLayout()
+    @_invalidateLayout()
 
   editButtonPressedFromWindowBar: ->
     if @dragsDropsAndEditingEnabled
@@ -142,7 +142,7 @@ class SimpleDocumentWdgt extends Widget
     @toolsPanel = nil
     @dragsDropsAndEditingEnabled = false
     @simpleDocumentScrollPanel.disableDragsDropsAndEditing @
-    @invalidateLayout()
+    @_invalidateLayout()
 
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023

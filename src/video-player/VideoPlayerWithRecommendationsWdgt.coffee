@@ -101,7 +101,7 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     @recommendationsPane.add @nextButton
     
     # update layout
-    @invalidateLayout()
+    @_invalidateLayout()
 
   prev: ->
     #console.log "prev"

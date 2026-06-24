@@ -30,7 +30,7 @@ class AxisWdgt extends Widget
       @labelsTextBoxes[i].fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
       @add @labelsTextBoxes[i]
 
-    @invalidateLayout()
+    @_invalidateLayout()
 
   # TODO some duplication of code here with
   # the method below

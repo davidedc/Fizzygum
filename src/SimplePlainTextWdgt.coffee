@@ -123,11 +123,11 @@ class SimplePlainTextWdgt extends TextWdgt
   #
   # This runs synchronously in a click handler and does IMMEDIATE layout work (the
   # raw resize inside setTextLineWrapping + an explicit _reLayoutSelf) rather than the
-  # framework's deferred invalidateLayout() pattern. This is INTERMEDIATE state, not
+  # framework's deferred _invalidateLayout() pattern. This is INTERMEDIATE state, not
   # an oversight: the deferred mechanism is half-built by construction (the geometry
   # accessors read applied @bounds only, so handler-level raw geometry is a symptom of
   # that incompleteness). Soft-wrap also has an EXTRA blocker: the content/text are
-  # ATTACHEDAS_FREEFLOATING (so invalidateLayout() never climbs to the scroll panel)
+  # ATTACHEDAS_FREEFLOATING (so _invalidateLayout() never climbs to the scroll panel)
   # and the wrap geometry lives in _positionAndResizeChildren, off the _reLayout cycle.
   # Completing the deferred model stays the goal -- see
   # docs/softwrap-deferred-layout-conversion-plan.md for the model finding, the

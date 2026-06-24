@@ -16,7 +16,7 @@ class PlotWithAxesWdgt extends Widget
 
     @setColor Color.create 242,242,242
 
-    @invalidateLayout()
+    @_invalidateLayout()
 
   colloquialName: ->
     @plot.colloquialName()

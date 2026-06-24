@@ -346,7 +346,7 @@ class InspectorWdgt extends Widget
     @resizer = new HandleWdgt @
 
     # update layout
-    @invalidateLayout()
+    @_invalidateLayout()
 
   textContentModified: ->
     # TODO this would stand for enabling/disabling the button

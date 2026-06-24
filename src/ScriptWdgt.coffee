@@ -102,7 +102,7 @@ class ScriptWdgt extends Widget
     # changed yet), so trigger the content check now
     @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
 
-    @invalidateLayout()
+    @_invalidateLayout()
 
   saveScript: ->
     @savedScript = @textWidget.text

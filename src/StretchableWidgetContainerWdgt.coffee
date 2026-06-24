@@ -26,7 +26,7 @@ class StretchableWidgetContainerWdgt extends Widget
 
     @rawSetExtent new Point 300, 300
     @contents.rawSetExtent new Point @width(), @height()
-    @invalidateLayout()
+    @_invalidateLayout()
 
   # actually
   # ends up in the Panel inside it
@@ -46,7 +46,7 @@ class StretchableWidgetContainerWdgt extends Widget
     if @ratio?
       @ratio = nil
       @layoutSpecDetails?.canSetHeightFreely = true
-      @invalidateLayout()
+      @_invalidateLayout()
 
 
   colloquialName: ->

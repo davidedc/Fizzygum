@@ -64,7 +64,7 @@ class ButtonWdgt extends Widget
       if (typeof @faceWidget) == "string"
         @faceWidget = (new StringWdgt @faceWidget, WorldWdgt.preferencesAndSettings.textInButtonsFontSize).alignCenter()
       @add @faceWidget
-      @invalidateLayout()
+      @_invalidateLayout()
   
 
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023

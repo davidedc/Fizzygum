@@ -48,7 +48,7 @@ class BasementWdgt extends BoxWdgt
     # resizer
     @resizer = new HandleWdgt @
 
-    @invalidateLayout()
+    @_invalidateLayout()
 
 
   # this is a very basic garbage collection mechanism

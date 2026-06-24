@@ -9,7 +9,7 @@ class ToolPanelWdgt extends PanelWdgt
   addMany: (widgetsToBeAdded) ->
     for eachWidget in widgetsToBeAdded
       @add eachWidget, nil, nil, nil, nil, nil, true
-    @invalidateLayout()
+    @_invalidateLayout()
 
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen, dontLayout) ->
 
@@ -40,7 +40,7 @@ class ToolPanelWdgt extends PanelWdgt
         glassBoxBottom.fullRawMoveTo @topLeft().add new Point @externalPadding, @externalPadding
         # TODO anti-pattern - this rawSetExtent should be called within _reLayout, not here
         glassBoxBottom.rawSetExtent new Point @thumbnailSize, @thumbnailSize
-        glassBoxBottom.invalidateLayout()
+        glassBoxBottom._invalidateLayout()
 
         aWdgt = glassBoxBottom
 
@@ -68,7 +68,7 @@ class ToolPanelWdgt extends PanelWdgt
       @numberOfIconsOnPanel++
 
       unless dontLayout
-        @invalidateLayout()
+        @_invalidateLayout()
 
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023

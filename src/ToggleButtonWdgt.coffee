@@ -17,7 +17,7 @@ class ToggleButtonWdgt extends SwitchButtonWdgt
   setToggleState: (whichOne) ->
     if @buttonShown != whichOne
       @buttonShown = whichOne
-      @invalidateLayout()
+      @_invalidateLayout()
 
   mouseClickLeft: ->
     # can't "unselect" a radio button if it's attached to a radio

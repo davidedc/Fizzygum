@@ -373,7 +373,7 @@ class TextWdgt extends StringWdgt
     # leaving the world consistent on return -- instead of relying on an unrelated later event
     # (the caret destroy on stop-editing) to re-fit the button. _settleLayoutsAfterBatch flushes
     # standalone / defers inside a pass; the invalidate is gated out-of-pass (inside a pass -- e.g.
-    # createLabel -- the container is already re-laying out and invalidateLayout would throw).
+    # createLabel -- the container is already re-laying out and _invalidateLayout would throw).
     @_settleLayoutsAfterBatch =>
       @softWrap = false
       @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
@@ -386,7 +386,7 @@ class TextWdgt extends StringWdgt
       heightOfText = Math.max naturalHeight, (@fontHeight @originallySetFontSize)
       @silentRawSetExtent new Point widthOfText, heightOfText
       @reflowText()
-      @parent?.invalidateLayout() unless world?._recalculatingLayouts
+      @parent?._invalidateLayout() unless world?._recalculatingLayouts
     @
 
   # FIT_BOX_TO_TEXT layout pass: resize our OWN extent to hug the text. This is
