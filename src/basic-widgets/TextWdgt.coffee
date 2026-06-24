@@ -451,38 +451,43 @@ class TextWdgt extends StringWdgt
   # no-op: the box is fixed, so we must NOT reflow it or poke the container (the
   # "respect the mode, don't impose it" rule — see the FITTING MODEL comment
   # in StringWdgt).
-  reLayoutAndRefreshContainerIfContainedText: ->
+  # NON-settling: it _invalidateLayout's the container (out of a pass); each text-property setter below
+  # wraps the call in @_settleLayoutsAfter, so the deferred re-fit flushes synchronously at the API
+  # boundary instead of draining at end-of-cycle (the setter is the public boundary; this helper stays
+  # settle-agnostic -- hence NoSettle). Settle stays at TextWdgt (NOT StringWdgt): moving it up re-fits
+  # non-TextWdgt FIT_BOX_TO_TEXT widgets too, which regresses (e.g. macroMovingSlidersSideways...).
+  _reLayoutAndRefreshContainerIfContainedTextNoSettle: ->
     if @fittingSpec != FittingSpecText.FIT_BOX_TO_TEXT then return
     @_reLayoutSelf()
     @_refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   setText: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall) ->
     super
-    @reLayoutAndRefreshContainerIfContainedText()
+    @_settleLayoutsAfter => @_reLayoutAndRefreshContainerIfContainedTextNoSettle()
 
   setFontSize: (sizeOrWidgetGivingSize, widgetGivingSize) ->
     super
-    @reLayoutAndRefreshContainerIfContainedText()
+    @_settleLayoutsAfter => @_reLayoutAndRefreshContainerIfContainedTextNoSettle()
 
   setFontName: (menuItem, ignored2, theNewFontName) ->
     super
-    @reLayoutAndRefreshContainerIfContainedText()
+    @_settleLayoutsAfter => @_reLayoutAndRefreshContainerIfContainedTextNoSettle()
 
   toggleShowBlanks: ->
     super
-    @reLayoutAndRefreshContainerIfContainedText()
+    @_settleLayoutsAfter => @_reLayoutAndRefreshContainerIfContainedTextNoSettle()
 
   toggleWeight: ->
     super
-    @reLayoutAndRefreshContainerIfContainedText()
+    @_settleLayoutsAfter => @_reLayoutAndRefreshContainerIfContainedTextNoSettle()
 
   toggleItalic: ->
     super
-    @reLayoutAndRefreshContainerIfContainedText()
+    @_settleLayoutsAfter => @_reLayoutAndRefreshContainerIfContainedTextNoSettle()
 
   toggleIsPassword: ->
     super
-    @reLayoutAndRefreshContainerIfContainedText()
+    @_settleLayoutsAfter => @_reLayoutAndRefreshContainerIfContainedTextNoSettle()
 
   createBufferCacheKey: ->
     return super() +  "-" + @softWrap

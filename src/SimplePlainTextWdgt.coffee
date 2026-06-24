@@ -10,7 +10,7 @@
 # FITTING MODEL comment in StringWdgt. The contained-reflow engine and the EDIT
 # triggers (the _reLayoutSelf + _refreshScrollPanelWdgtOrVerticalStackIfIamInIt that
 # re-flow the box and nudge the container on setText/setFontSize/setFontName/toggle*)
-# live on the base (TextWdgt::reLayoutAndRefreshContainerIfContainedText, gated by
+# live on the base (TextWdgt::_reLayoutAndRefreshContainerIfContainedTextNoSettle, gated by
 # the mode), so ANY TextWdgt (not just this one) can be contained text.
 # What's left specific to THIS class is its CONTROLLER chrome: pinning
 # layoutSpecDetails.canSetHeightFreely = false (height is content-driven), the
@@ -163,7 +163,7 @@ class SimplePlainTextWdgt extends TextWdgt
 
   # setText (above) + the inherited setFontSize / setFontName / toggleShowBlanks /
   # toggleWeight / toggleItalic / toggleIsPassword all re-flow the box AND nudge the
-  # container via TextWdgt::reLayoutAndRefreshContainerIfContainedText (gated by
+  # container via TextWdgt::_reLayoutAndRefreshContainerIfContainedTextNoSettle (gated by
   # FIT_BOX_TO_TEXT). softWrapOn/Off (above) are scroll-panel-specific (they flip
   # @parent.parent.isTextLineWrapping).
 
