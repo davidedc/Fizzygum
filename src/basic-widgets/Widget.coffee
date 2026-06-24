@@ -473,26 +473,26 @@ class Widget extends TreeNode
       return firstPart + @uniqueIDString()
 
   close: ->
-    # SELF-SETTLE (single-mutation tier). _closeCore re-homes me to the basement through the NON-settling
-    # core _addLostWidgetCore (-> _addInPseudoRandomPositionCore -> _addCore) and recurses
-    # @parent._closeCore(), so it reaches no public setter. Anchored on @ (the canonical wrap): I'm
+    # SELF-SETTLE (single-mutation tier). _closeNoSettle re-homes me to the basement through the NON-settling
+    # core _addLostWidgetNoSettle (-> _addInPseudoRandomPositionNoSettle -> _addNoSettle) and recurses
+    # @parent._closeNoSettle(), so it reaches no public setter. Anchored on @ (the canonical wrap): I'm
     # attached at entry so the orphan guard passes, then the global flush re-lays-out my parent.
-    @mutateGeometryThenSettle => @_closeCore()
+    @mutateGeometryThenSettle => @_closeNoSettle()
 
-  _closeCore: ->
+  _closeNoSettle: ->
 
     # closing window content: also close the window
     # UNLESS we are an internal window, in such case
     # leave the parent one as is
     if !@isWindow?() and @parent?.isWindow?()
       # private chain: the core, not public close() -- we are already inside close()'s settle batch.
-      @parent._closeCore()
+      @parent._closeNoSettle()
       return
 
     world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
     @parent?.childBeingClosed? @
     if world.basementWdgt?
-      world.basementWdgt._addLostWidgetCore @
+      world.basementWdgt._addLostWidgetNoSettle @
     else
       world.inform "There is no\nbasement to go in!"
 
@@ -507,16 +507,16 @@ class Widget extends TreeNode
   # so this widget could be duplicated and revived
   destroy: ->
     # SELF-SETTLE (single-mutation tier, the canonical wrap). mutateGeometryThenSettle checks orphan at
-    # the START (I'm still attached) then flushes globally, so my parent settles even though _destroyCore
+    # the START (I'm still attached) then flushes globally, so my parent settles even though _destroyNoSettle
     # orphans me.
     # The one hook that rebuilds during destroy -- a window losing its @contents
     # (childBeingDestroyed -> resetToDefaultContents) -- is safe inside this _inLayoutMutation:
-    # resetToDefaultContents rebuilds through the non-settling @_buildAndConnectChildrenCore (not the
+    # resetToDefaultContents rebuilds through the non-settling @_buildAndConnectChildrenNoSettle (not the
     # public self-settler), and the chrome it constructs adds to ORPHANS, which are exempt from the
     # flush-throw (see mutateGeometryThenSettle's orphan guard). So nothing re-enters a settle mid-destroy.
-    @mutateGeometryThenSettle => @_destroyCore()
+    @mutateGeometryThenSettle => @_destroyNoSettle()
 
-  _destroyCore: ->
+  _destroyNoSettle: ->
 
     @parent?.childBeingDestroyed? @
     @unregisterThisInstance()
@@ -547,12 +547,12 @@ class Widget extends TreeNode
 
     # if there is anything being edited inside
     # what we are destroying, then also
-    # stop editing -- through the NON-settling core, since _destroyCore is a pure core that may run
+    # stop editing -- through the NON-settling core, since _destroyNoSettle is a pure core that may run
     # under a layout flush (e.g. resetWorld / fullDestroyChildren): the public stopEditing tears the
     # caret down via fullDestroy (a self-settler) which would re-enter the flush and throw.
     if world.caret?
       if @isAncestorOf world.caret.target
-        world._stopEditingCore()
+        world._stopEditingNoSettle()
 
     # remove callback when user clicks outside
     # me or any of my children
@@ -584,22 +584,22 @@ class Widget extends TreeNode
   # from the bottom (leaf widgets, drawn on top
   # of everything) to the top
   fullDestroy: ->
-    # SELF-SETTLE (single-mutation tier, the canonical wrap). _fullDestroyCore is a PURE core (recurses
+    # SELF-SETTLE (single-mutation tier, the canonical wrap). _fullDestroyNoSettle is a PURE core (recurses
     # cores). Anchored on @: attached at entry so the orphan guard passes, then the global flush re-fits.
-    @mutateGeometryThenSettle => @_fullDestroyCore()
+    @mutateGeometryThenSettle => @_fullDestroyNoSettle()
 
-  _fullDestroyCore: ->
+  _fullDestroyNoSettle: ->
     WorldWdgt.numberOfAddsAndRemoves++
     # we can't use a normal iterator because
     # we are iterating over an array that changes
     # its length as we are deleting its contents
     # while we are iterating on it.
     # core-to-core recursion (no public fullDestroy/destroy): a PURE core. The public fullDestroy
-    # wrapper supplies the single settle, so _fullDestroyCore is safe to call directly from another
+    # wrapper supplies the single settle, so _fullDestroyNoSettle is safe to call directly from another
     # private chain even under _inLayoutMutation (where the public destroy() would throw).
     until @children.length == 0
-      @children[0]._fullDestroyCore()
-    @_destroyCore()
+      @children[0]._fullDestroyNoSettle()
+    @_destroyNoSettle()
     return nil
 
   closeChildren: ->
@@ -612,7 +612,7 @@ class Widget extends TreeNode
     # self-settling close() would re-home + flush once PER child, and under the single-mutation tier
     # each immediate settle re-fits a half-emptied container. The caller settles once afterwards.
     until @children.length == 0
-      @children[0]._closeCore()
+      @children[0]._closeNoSettle()
     return nil
 
   fullDestroyChildren: ->
@@ -630,7 +630,7 @@ class Widget extends TreeNode
     # (resetWorld / Inspector rebuild / video panes / basement) are reset/rebuild contexts that settle
     # once afterwards (or redraw an empty container), so no per-child flush is wanted.
     until @children.length == 0
-      @children[0]._fullDestroyCore()
+      @children[0]._fullDestroyNoSettle()
     return nil
 
   isFreeFloating: ->
@@ -2075,13 +2075,13 @@ class Widget extends TreeNode
     @fullChanged()
 
   # SELF-SETTLE (single-mutation tier). childBeingCollapsed now tears down the bar buttons through the
-  # NON-settling core (_destroyCore), and childCollapsed re-fits via raw setters + _reFitContainer, so
-  # _collapseCore reaches no public setter. Anchored on (@parent ? @) (the container that re-lays-out).
+  # NON-settling core (_destroyNoSettle), and childCollapsed re-fits via raw setters + _reFitContainer, so
+  # _collapseNoSettle reaches no public setter. Anchored on (@parent ? @) (the container that re-lays-out).
   collapse: ->
     return if @collapsed
-    @mutateGeometryThenSettle => @_collapseCore()
+    @mutateGeometryThenSettle => @_collapseNoSettle()
 
-  _collapseCore: ->
+  _collapseNoSettle: ->
     @parent?.childBeingCollapsed? @
     @collapsed = true
     WorldWdgt.numberOfCollapseFlagsChanges++
@@ -2092,15 +2092,15 @@ class Widget extends TreeNode
     @parent?.childCollapsed? @
 
   # SELF-SETTLE (single-mutation tier). childBeingUnCollapsed re-creates the bar buttons through the
-  # NON-settling core (createAndAdd* -> @_addCore; the button constructors add their innards on ORPHANS,
-  # exempt from the flush-throw), and childUnCollapsed re-fits via raw setters, so _unCollapseCore reaches
+  # NON-settling core (createAndAdd* -> @_addNoSettle; the button constructors add their innards on ORPHANS,
+  # exempt from the flush-throw), and childUnCollapsed re-fits via raw setters, so _unCollapseNoSettle reaches
   # no public setter. Anchored on @ (the canonical wrap; the global flush re-lays-out the container).
   unCollapse: ->
     return if !@collapsed
     return if !@isCollapsed()
-    @mutateGeometryThenSettle => @_unCollapseCore()
+    @mutateGeometryThenSettle => @_unCollapseNoSettle()
 
-  _unCollapseCore: ->
+  _unCollapseNoSettle: ->
     @parent?.childBeingUnCollapsed? @
     @collapsed = false
     WorldWdgt.numberOfCollapseFlagsChanges++
@@ -2381,34 +2381,34 @@ class Widget extends TreeNode
     @_reLayoutSelf()
 
   # »>> this part is excluded from the fizzygum homepage build
-  # _addCore (NOT add): these run from addOrRemoveAdders during a layout pass, so a
+  # _addNoSettle (NOT add): these run from addOrRemoveAdders during a layout pass, so a
   # self-settle would re-enter the flush guard; for the other caller
   # (showResizeAndMoveHandlesAndLayoutAdjusters, a menu action) it is byte-identical
   # because the frame settles anyway.
   addAsSiblingAfterMe: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
     myPosition = @positionAmongSiblings()
-    @parent._addCore aWdgt, (myPosition + 1), layoutSpec
+    @parent._addNoSettle aWdgt, (myPosition + 1), layoutSpec
 
   addAsSiblingBeforeMe: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
     myPosition = @positionAmongSiblings()
-    @parent._addCore aWdgt, myPosition, layoutSpec
+    @parent._addNoSettle aWdgt, myPosition, layoutSpec
   # this part is excluded from the fizzygum homepage build <<«
 
   # ===== structural add =====
   # add() is the PUBLIC self-settling entry: it links the widget in through the private,
-  # NON-settling _addCore and then flushes layouts once (mutateGeometryThenSettle), so a
+  # NON-settling _addNoSettle and then flushes layouts once (mutateGeometryThenSettle), so a
   # top-level caller (app / macro / event handler) is left with a consistent world -- no manual
-  # settle/yield. _addCore is the COMPLETE add minus the settle (shadow management + structural
+  # settle/yield. _addNoSettle is the COMPLETE add minus the settle (shadow management + structural
   # link-in + fractional-position recording); add() is just the settle-wrap over it. Callers that
   # run INSIDE a layout pass (_reLayout / _reLayoutSelf), build their own innards during
-  # construction, or tear down / re-home from a private chain call _addCore DIRECTLY (it does not
+  # construction, or tear down / re-home from a private chain call _addNoSettle DIRECTLY (it does not
   # settle, so it neither re-enters the flush guard nor triggers a redundant relayout). They are
   # byte-identical to going through add(): for a fresh non-world child the shadow step is a no-op
   # removeShadow and the fractional step is skipped. See docs/deferred-layout-refit-and-add-design.md (D3).
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
-    @mutateGeometryThenSettle => @_addCore aWdgt, position, layoutSpec, beingDropped
+    @mutateGeometryThenSettle => @_addNoSettle aWdgt, position, layoutSpec, beingDropped
 
-  # _addCore -- the COMPLETE add minus the settle. The single NON-settling core behind add() and
+  # _addNoSettle -- the COMPLETE add minus the settle. The single NON-settling core behind add() and
   # every internal layout-time / construction-time / teardown adder (it must NOT
   # flush layouts: it runs inside another mutation's settle, during construction, or from a
   # private teardown chain). Full semantics: shadow management + invalidate + silentAdd +
@@ -2419,7 +2419,7 @@ class Widget extends TreeNode
   #     being added to itself and the case of
   # ??? TODO a Widget being added to one of its
   #     children
-  _addCore: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
+  _addNoSettle: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
 
     # let's check if we are trying to add
     # an ancestor of me below me.
@@ -2431,7 +2431,7 @@ class Widget extends TreeNode
     # shadow management (folded in from add()'s old settle-wrap): added to the world a widget
     # gains a drop-shadow; added anywhere else it loses one. Transient overlays (highlighter,
     # caret) opt out via skipsAddShadowManagement. For a fresh non-world child removeShadow is a
-    # no-op, so the internal adders that call _addCore directly stay byte-identical.
+    # no-op, so the internal adders that call _addNoSettle directly stay byte-identical.
     unless aWdgt.skipsAddShadowManagement?()
       if @ == world
         aWdgt.addShadow()
@@ -4211,7 +4211,7 @@ class Widget extends TreeNode
   showAdders: ->
     @_showsAdders = true
     if @children.length == 0
-      @_addCore \
+      @_addNoSettle \
         new LayoutElementAdderOrDropletWdgt,
         nil,
         LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -4229,7 +4229,7 @@ class Widget extends TreeNode
       return
 
     if @children.length == 0
-      @_addCore \
+      @_addNoSettle \
         new LayoutElementAdderOrDropletWdgt,
         nil,
         LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED

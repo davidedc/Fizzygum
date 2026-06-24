@@ -220,16 +220,16 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @_positionAndResizeChildren()
 
   add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
-    @mutateGeometryThenSettle => @_addCore aWdgt, position, layoutSpec, beingDropped, notContent
+    @mutateGeometryThenSettle => @_addNoSettle aWdgt, position, layoutSpec, beingDropped, notContent
 
-  # _addCore -- the non-settling core of add() (mirrors Widget.add/_addCore and
-  # SimpleVerticalStackPanelWdgt.add/_addCore). Folds in the window's content bookkeeping (title,
+  # _addNoSettle -- the non-settling core of add() (mirrors Widget.add/_addNoSettle and
+  # SimpleVerticalStackPanelWdgt.add/_addNoSettle). Folds in the window's content bookkeeping (title,
   # @contents swap, contentNeverSetInPlaceYet, spec init) so the build/teardown chain
-  # (_buildAndConnectChildrenCore) adds chrome + content WITHOUT flushing layouts: super threads
-  # down through SimpleVerticalStackPanelWdgt._addCore to Widget._addCore, all non-settling. Note the
-  # content branch sets contentNeverSetInPlaceYet -- @_addCore @contents (vs the bare base _addCore)
+  # (_buildAndConnectChildrenNoSettle) adds chrome + content WITHOUT flushing layouts: super threads
+  # down through SimpleVerticalStackPanelWdgt._addNoSettle to Widget._addNoSettle, all non-settling. Note the
+  # content branch sets contentNeverSetInPlaceYet -- @_addNoSettle @contents (vs the bare base _addNoSettle)
   # is exactly what keeps @stack wired by the deferred re-fit.
-  _addCore: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
+  _addNoSettle: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
     # caret + handle are the layout decorations (was their two instanceof) (type-test-elimination campaign)
     unless notContent or aWdgt.isLayoutDecoration?()
       @contentNeverSetInPlaceYet = true
@@ -242,7 +242,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @removeChild @contents
       @contents = aWdgt
       # Deferred-layout (capstone probe): the window-content re-fit now DEFERS to the settle cycle
-      # (super -> _addCore invalidates the window; the inherited _reLayout runs @_reLayoutChildren on
+      # (super -> _addNoSettle invalidates the window; the inherited _reLayout runs @_reLayoutChildren on
       # the recalculateLayouts pass). The old synchronous pre-fit (@_reLayoutChildren here) is removed.
       # Init the content's WindowContentLayoutSpec up-front -- the pre-fit used to do this implicitly
       # via _positionAndResizeChildren, so without it the deferred re-fit would deref an uninitialised spec.
@@ -273,10 +273,10 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # tear down the bar buttons through the non-settling core: this hook fires inside collapse's
       # settle, so the public self-settling destroy() would throw under the single-mutation tier. The
       # enclosing collapse settle covers the re-layout.
-      @editButton?._destroyCore()
+      @editButton?._destroyNoSettle()
       @editButton = nil
 
-      @internalExternalSwitchButton?._destroyCore()
+      @internalExternalSwitchButton?._destroyNoSettle()
       @internalExternalSwitchButton = nil
 
   childBeingUnCollapsed: (child) ->
@@ -313,7 +313,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # Reached only from a child-lifecycle hook (childBeingDestroyed/PickedUp/Closed). Rebuild through
     # the non-settling core so a hook firing INSIDE an enclosing settle (destroy/close) is absorbed by
     # that operation's settle instead of re-entering the public self-settler. (window-rebuild follow-up)
-    @_buildAndConnectChildrenCore()
+    @_buildAndConnectChildrenNoSettle()
     @setEmptyWindowLabel()
     if @recursivelyAttachedAsFreeFloating()
       @rawSetExtent new Point 300, 300
@@ -353,7 +353,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # tear down through the non-settling core: this runs inside buildAndConnectChildren's settle, so
       # the public self-settling fullDestroy() would throw under the single-mutation tier. The enclosing
       # rebuild settle covers the re-layout.
-      @titlebarBackground._fullDestroyCore()
+      @titlebarBackground._fullDestroyNoSettle()
 
     # TODO we should really just instantiate a Widget,
     # and give it the shape, there is no reason to create
@@ -367,30 +367,30 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @titlebarBackground = new BoxWdgt
 
     @setAppearanceAndColorOfTitleBackground()
-    @_addCore @titlebarBackground, nil, nil, nil, true
+    @_addNoSettle @titlebarBackground, nil, nil, nil, true
   
   # ONE settle around the whole rebuild via the single-mutation tier (mutateGeometryThenSettle). The
-  # core is non-settling: it adds every chrome widget AND the content through @_addCore (the cores
+  # core is non-settling: it adds every chrome widget AND the content through @_addNoSettle (the cores
   # mirrored down WindowWdgt -> SimpleVerticalStackPanelWdgt -> Widget), so nothing self-settles per add
   # and nothing re-fits the HALF-built window mid-loop -- the window's content bookkeeping rides along in
-  # WindowWdgt._addCore. The single settle runs AFTER the core, when @stack is wired: O(1) relayouts.
+  # WindowWdgt._addNoSettle. The single settle runs AFTER the core, when @stack is wired: O(1) relayouts.
   #
   # This PUBLIC self-settler is only ever called STANDALONE (the constructor and reactToDropOf). The
   # rebuild path that fires from inside an enclosing settle -- a child-lifecycle hook
   # (childBeingDestroyed/Closed/PickedUp) -> resetToDefaultContents -> rebuild -- goes through the
-  # non-settling @_buildAndConnectChildrenCore directly, never this wrapper, so the wrapper never
+  # non-settling @_buildAndConnectChildrenNoSettle directly, never this wrapper, so the wrapper never
   # re-enters a flush. The chrome the core constructs adds to ORPHANS, exempt from the flush-throw
   # (Widget.mutateGeometryThenSettle's orphan guard precedes the throw). (Phase 3b; window-rebuild follow-up.)
   buildAndConnectChildren: ->
-    @mutateGeometryThenSettle => @_buildAndConnectChildrenCore()
+    @mutateGeometryThenSettle => @_buildAndConnectChildrenNoSettle()
 
-  _buildAndConnectChildrenCore: ->
+  _buildAndConnectChildrenNoSettle: ->
 
     if !@titlebarBackground?
       @buildTitlebarBackground()
 
     # label -- tear down through the non-settling core (inside the rebuild's settle; see buildTitlebarBackground)
-    @label?._fullDestroyCore()
+    @label?._fullDestroyNoSettle()
     @label = new StringWdgt @labelContent, WorldWdgt.preferencesAndSettings.titleBarTextFontSize
 
     # as of March 2018, Safari 10.1.1 on OSX 10.12.5 :
@@ -402,26 +402,26 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @label.isBold = WorldWdgt.preferencesAndSettings.titleBarBoldText
 
     @label.color = Color.WHITE
-    @_addCore @label, nil, nil, nil, true
+    @_addNoSettle @label, nil, nil, nil, true
 
     # upper-left button, often a close button
     # but it can be anything
     if !@closeButton?
       @closeButton = new CloseIconButtonWdgt
-    @_addCore @closeButton, nil, nil, nil, true
+    @_addNoSettle @closeButton, nil, nil, nil, true
 
 
     if !@collapseUncollapseSwitchButton?
       collapseButton = new CollapseIconButtonWdgt
       uncollapseButton = new UncollapseIconButtonWdgt
       @collapseUncollapseSwitchButton = new SwitchButtonWdgt [collapseButton, uncollapseButton]
-    @_addCore @collapseUncollapseSwitchButton, nil, nil, nil, true
+    @_addNoSettle @collapseUncollapseSwitchButton, nil, nil, nil, true
 
 
     @createAndAddInternalExternalSwitchButton()
     @createAndAddEditButton()
 
-    @_addCore @contents
+    @_addNoSettle @contents
 
     if !@resizer?
       @resizer = new HandleWdgt @
@@ -435,7 +435,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       else
         listOfButtons = [externalButton, internalButton]
       @internalExternalSwitchButton = new SwitchButtonWdgt listOfButtons
-      @_addCore @internalExternalSwitchButton, nil, nil, nil, true
+      @_addNoSettle @internalExternalSwitchButton, nil, nil, nil, true
 
   makePencilYellow: ->
       # TODO assigning to color_normal is not enough
@@ -454,7 +454,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   createAndAddEditButton: ->
     if @contents?.providesAmenitiesForEditing and !@editButton?
       @editButton = new EditIconButtonWdgt @
-      @_addCore @editButton, nil, nil, nil, true
+      @_addNoSettle @editButton, nil, nil, nil, true
 
       if @contents.dragsDropsAndEditingEnabled
         @makePencilYellow()

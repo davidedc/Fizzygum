@@ -34,10 +34,10 @@ class ScrollPanelWdgt extends PanelWdgt
     super()
 
     @contents = new PanelWdgt @ unless @contents?
-    # _addCore (NOT the self-settling public add): we are building our own innards
+    # _addNoSettle (NOT the self-settling public add): we are building our own innards
     # during construction; the panel is not parented yet, so a flush here would be a
     # redundant whole-world relayout (and would throw if we are built during a layout pass).
-    @_addCore @contents
+    @_addNoSettle @contents
 
     # the ScrollPanel is never going to paint itself,
     # but its values are going to mimic the values of the
@@ -52,12 +52,12 @@ class ScrollPanelWdgt extends PanelWdgt
     @hBar.rawSetHeight @scrollBarsThickness
 
     @hBar.target = @
-    @_addCore @hBar
+    @_addNoSettle @hBar
 
     @vBar = new SliderWdgt nil, nil, nil, nil, @sliderColor
     @vBar.rawSetWidth @scrollBarsThickness
     @vBar.target = @
-    @_addCore @vBar
+    @_addNoSettle @vBar
 
     @hBar.target = @
     @hBar.action = "adjustContentsBasedOnHBar"

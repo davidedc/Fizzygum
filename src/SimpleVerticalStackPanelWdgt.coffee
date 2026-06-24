@@ -26,13 +26,13 @@ class SimpleVerticalStackPanelWdgt extends Widget
     true
 
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
-    @mutateGeometryThenSettle => @_addCore aWdgt, position, layoutSpec, beingDropped, unused, positionOnScreen
+    @mutateGeometryThenSettle => @_addNoSettle aWdgt, position, layoutSpec, beingDropped, unused, positionOnScreen
 
-  # _addCore -- the non-settling core of add(), mirroring Widget.add/_addCore. The stack-specific
+  # _addNoSettle -- the non-settling core of add(), mirroring Widget.add/_addNoSettle. The stack-specific
   # work (rawResize-without-spacing + sibling-position computation) only uses raw/structural setters,
   # so build-time / layout-time / teardown adders can call it directly without flushing layouts.
-  # (window-rebuild follow-up: lets WindowWdgt._buildAndConnectChildrenCore add chrome + content through cores.)
-  _addCore: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
+  # (window-rebuild follow-up: lets WindowWdgt._buildAndConnectChildrenNoSettle add chrome + content through cores.)
+  _addNoSettle: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
     aWdgt.rawResizeToWithoutSpacing()
 
     # find out WHERE to add the widget. Find the existing widget in the

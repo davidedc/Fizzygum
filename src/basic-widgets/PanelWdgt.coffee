@@ -91,7 +91,7 @@ class PanelWdgt extends Widget
     return unless @parent?
     @parent.grandChildRemoved?()
     # Re-fit my enclosing container (@parent) via the phase-safe helper. childRemoved fires only
-    # OUTSIDE a layout pass (its callers Widget.destroy / Widget._addCore route through destroy /
+    # OUTSIDE a layout pass (its callers Widget.destroy / Widget._addNoSettle route through destroy /
     # mutateGeometryThenSettle, neither mid-pass), so in practice the helper's schedule arm runs.
     # (fam 2 -- deferred-layout-residuals-audit.md)
     @_reFitContainer @parent
@@ -111,12 +111,12 @@ class PanelWdgt extends Widget
   # in some sparse manner and keeping it
   # "in view"
   # public self-settling entry (e.g. a drop into the basement). The private chain that re-homes a
-  # closed/lost widget calls _addInPseudoRandomPositionCore directly -- it is already inside close()'s
+  # closed/lost widget calls _addInPseudoRandomPositionNoSettle directly -- it is already inside close()'s
   # settle batch, so it must NOT re-enter the settle tier through the public add.
   addInPseudoRandomPosition: (aWdgt) ->
-    @mutateGeometryThenSettle => @_addInPseudoRandomPositionCore aWdgt
+    @mutateGeometryThenSettle => @_addInPseudoRandomPositionNoSettle aWdgt
 
-  _addInPseudoRandomPositionCore: (aWdgt) ->
+  _addInPseudoRandomPositionNoSettle: (aWdgt) ->
     width = @width()
     height = @height()
 
@@ -124,7 +124,7 @@ class PanelWdgt extends Widget
     posy = Math.abs((aWdgt.toString() + "x").hashCode()) % height
     position = @position().add new Point posx, posy
 
-    @_addCore aWdgt
+    @_addNoSettle aWdgt
     # Container re-fit DEFERS to the cycle: fullRawMoveTo below routes through fullRawMoveBy ->
     # _reFitContainerAfterRawGeometryChange, which -- since aWdgt sits directly in a non-text-
     # wrapping ScrollPanel's contents (me) -- invalidates the enclosing ScrollPanel (@parent),

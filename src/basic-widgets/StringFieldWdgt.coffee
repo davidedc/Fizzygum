@@ -59,10 +59,10 @@ class StringFieldWdgt extends PanelWdgt
       @text.isEditable = @isEditable
       @text.enableSelecting()
       @text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
-      # _addCore (NOT add): _reLayoutSelf runs inside a layout pass -- and via
+      # _addNoSettle (NOT add): _reLayoutSelf runs inside a layout pass -- and via
       # iHaveBeenAddedTo -> _reLayoutSelf inside another mutation's settle -- so a
       # self-settle here would re-enter the flush guard and throw.
-      @_addCore @text
+      @_addNoSettle @text
     @text.fullRawMoveTo @position().add new Point 5,2
     @text.rawSetExtent new Point 300, 18
     @silentRawSetExtent new Point @width(), 18

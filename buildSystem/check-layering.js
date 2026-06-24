@@ -5,7 +5,7 @@
  * geometry API (docs/deferred-layout-16-macro-breakages.md / the self-settling-API design).
  *
  * THE CONSTRAINTS (program-flow soundness, not state invariants)
- *   A) A LOW-LEVEL method (name starting raw / silent / __ , ending Core, or one of
+ *   A) A LOW-LEVEL method (name starting raw / silent / __ , ending NoSettle, or one of
  *      _reLayout / _positionAndResizeChildren / _reLayoutScrollbars) must NOT call a public
  *      geometry setter or recalculateLayouts.
  *      Low-level code mutates immediately (raw/silent) and must never reach UP into the
@@ -57,7 +57,7 @@ const isLowLevel = (name) =>
                             // _positionAndResizeChildren / _reLayoutScrollbars / _reLayoutChildrenAndScrollbars /
                             // _reLayoutChildren / _reLayoutSelf / _reLayoutDesktop /
                             // _refreshScrollPanelWdgtOrVerticalStackIfIamInIt / _amIDirectlyInside*)
-  /Core$/.test(name) ||
+  /NoSettle$/.test(name) ||  // the _xxxNoSettle cores (do the mutation, no settle)
   /Layout$/.test(name);     // _reLayout — the main layout pass (and any future *Layout)
 
 // [E] the flow rule (task #17): an IMMEDIATE geometry mutator (raw*/silent*/fullRaw*) must only
@@ -65,7 +65,7 @@ const isLowLevel = (name) =>
 // self-settling tier's job; a raw setter that invalidates lets "applying a layout" re-trigger
 // "scheduling a layout", re-dirtying a container DURING its own layout pass -> the recalculate-
 // Layouts until-loop never converges (the Phase 3b Slice 2 freeze that hung 9/12 desktop apps).
-// NB this is NARROWER than isLowLevel on purpose: a _private / *Core / *Layout method legitimately
+// NB this is NARROWER than isLowLevel on purpose: a _private / *NoSettle / *Layout method legitimately
 // drives layout (and may invalidate other widgets), so it is NOT covered by rule E.
 //
 // COMPLETENESS (deferred-layout capstone, 2026-06-21): the immediate-mutator boundary is now fully

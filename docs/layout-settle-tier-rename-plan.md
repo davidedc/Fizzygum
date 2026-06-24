@@ -44,14 +44,17 @@ convention:
 
 ---
 
-## 2. The rename scheme (recommended; the exact spelling is the owner's call)
+## 2. The rename scheme — CHOSEN (owner-confirmed 2026-06-24)
 
 | current | → new | rationale |
 |---|---|---|
-| `mutateGeometryThenSettle` | **`_settleLayoutAfter`** | private; "settle layout after [this one mutation]"; SINGLE variant = the bare stem |
-| `settleLayoutsOnceAfter` | **`_settleLayoutAfterBatch`** | private; same stem + **`Batch`** = "…after [a batch of] mutations" → the relationship is now obvious |
+| `mutateGeometryThenSettle` | **`_settleLayoutsAfter`** | private; "settle the layouts after [this one mutation]"; SINGLE variant = the bare stem; plural `Layouts` matches `recalculateLayouts` |
+| `settleLayoutsOnceAfter` | **`_settleLayoutsAfterBatch`** | private; same stem + **`Batch`** = visibly the batched variant of the single |
 | `invalidateLayout` | **`_invalidateLayout`** | private; already layout-explicit, just needs the underscore |
-| `_xxxCore` (all) | **`_xxxNoLayouting`** | "Core" → the literal intent "does the work with NO layouting" |
+| `_xxxCore` (mutation cores) | **`_xxxNoSettle`** | the core mutates + **invalidates** but does NOT settle (recalc). `NoSettle` is precise where `NoLayouting` misleads — the core DOES `invalidateLayout`; it just skips `recalculateLayouts`. Pairs with the `_settleLayoutsAfter` wrapper (settle ⟷ no-settle). |
+| `_recalculateLayoutsCore` | **`_recalculateLayoutsBody`** | SPECIAL CASE — this core IS the settle (the re-entrancy-guarded recalc body), so it is NOT a no-settle mutation core. It's a "guard + body" split; `Body` names the unguarded recalc. |
+
+(The original recommendation was `_settleLayoutAfter`/`NoLayouting`; superseded by the above. `NoSettle` chosen because the cores verifiably call `invalidateLayout` — see `_addCore`/`_destroyCore`/`_collapseCore` — so they DO "layout", they just don't settle.)
 
 So: `_addCore`→`_addNoLayouting`, `_destroyCore`→`_destroyNoLayouting`, `_closeCore`→`_closeNoLayouting`,
 `_fullDestroyCore`→`_fullDestroyNoLayouting`, `_buildAndConnectChildrenCore`→`_buildAndConnectChildrenNoLayouting`,

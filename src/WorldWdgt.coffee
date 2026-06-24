@@ -850,8 +850,9 @@ class WorldWdgt extends PanelWdgt
   # and take out of the list what's healed in that step,
   # and we continue doing so until there is nothing else
   # to heal.
-  # thin-wrap-exempt: the flush primitive itself (re-entrancy-guarded direct core call) -- it is what
-  # the settle tier CALLS, not a public geometry setter that self-settles.
+  # recalculateLayouts is the FLUSH primitive itself (re-entrancy guard + _recalculateLayoutsBody), not
+  # a public geometry setter -- so its core is named _Body (the guarded recalc body), NOT the
+  # _<name>NoSettle convention, and the thin-wrap lint does not pair it (no exempt marker needed).
   recalculateLayouts: ->
     # re-entrancy guard: recalculateLayouts must not run inside itself. This fires if a
     # public geometry setter (which flushes via recalculateLayouts) is reached from a
@@ -861,11 +862,11 @@ class WorldWdgt extends PanelWdgt
       throw new Error "Fizzygum: re-entrant recalculateLayouts() -- a public geometry setter was called from within a layout pass. Internal layout code must use the raw/silent setters, not the public deferred API."
     @_recalculatingLayouts = true
     try
-      @_recalculateLayoutsCore()
+      @_recalculateLayoutsBody()
     finally
       @_recalculatingLayouts = false
 
-  _recalculateLayoutsCore: ->
+  _recalculateLayoutsBody: ->
 
     # Defensive backstop: this loop is structurally convergent -- each _reLayout() either ends
     # in markLayoutAsFixed() (so the widget is popped) or, on throw, is settled + banned by the
@@ -1231,7 +1232,7 @@ class WorldWdgt extends PanelWdgt
       @errorConsole.contents.showUpWithError eachErr
 
   # Drains layout errors stashed during the previous cycle's recalculateLayouts flush (see the
-  # catch in _recalculateLayoutsCore). Runs at cycle start, OUTSIDE the flush, so building the
+  # catch in _recalculateLayoutsBody). Runs at cycle start, OUTSIDE the flush, so building the
   # error console via the public setters is safe here. (task #18)
   showLayoutErrorsFromPreviousCycle: ->
     if @layoutErrorsToReport.length == 0 then return
@@ -1819,17 +1820,17 @@ class WorldWdgt extends PanelWdgt
   # »>> this part is excluded from the fizzygum homepage build
   # resetWorld self-settles like any public API method: it is a SEQUENCE of two self-settling
   # operations (each flushes once -- mutateGeometryThenSettle's doc blesses sequential setters), and
-  # the geometry teardown lives in _resetWorldCore so an internal caller already inside a settle can
+  # the geometry teardown lives in _resetWorldNoSettle so an internal caller already inside a settle can
   # reach it without re-entering the flush. softResetWorld stays OUTSIDE the settle on purpose: its
   # @hand.drop() does a real re-parenting drop (target.add, which self-flushes), so running it inside
   # the settle below would re-enter recalculateLayouts and throw the flow-violation (see ~:930).
   # thin-wrap-exempt: softReset (its hand.drop self-flushes) must precede the settle, so this is a
-  # two-statement sequence, not the bare @mutateGeometryThenSettle => @_resetWorldCore wrap (see above).
+  # two-statement sequence, not the bare @mutateGeometryThenSettle => @_resetWorldNoSettle wrap (see above).
   resetWorld: ->
     @softResetWorld()
-    @mutateGeometryThenSettle => @_resetWorldCore()
+    @mutateGeometryThenSettle => @_resetWorldNoSettle()
 
-  _resetWorldCore: ->
+  _resetWorldNoSettle: ->
     @changed() # redraw the whole screen
     @fullDestroyChildren()
     # the "basementWdgt" is not attached to the
@@ -2080,16 +2081,16 @@ class WorldWdgt extends PanelWdgt
   #   user clicks/floatDrags another widget
   # Tearing the caret down re-fits the text it was editing, so stopEditing self-settles -- but ONLY
   # when there is a caret (no caret -> no geometry change -> no flush). The public method tears the
-  # caret down via fullDestroy (which self-settles); _stopEditingCore tears it down via the
-  # non-settling _fullDestroyCore, for callers already inside a layout flush (Widget._destroyCore
+  # caret down via fullDestroy (which self-settles); _stopEditingNoSettle tears it down via the
+  # non-settling _fullDestroyNoSettle, for callers already inside a layout flush (Widget._destroyNoSettle
   # stopping editing while it destroys a widget that contains the caret). Both share the body below.
-  # thin-wrap-exempt: CONDITIONAL self-settle (only when a caret exists), shared with _stopEditingCore
-  # via a teardown-strategy thunk -- not the bare @mutateGeometryThenSettle => @_stopEditingCore wrap.
+  # thin-wrap-exempt: CONDITIONAL self-settle (only when a caret exists), shared with _stopEditingNoSettle
+  # via a teardown-strategy thunk -- not the bare @mutateGeometryThenSettle => @_stopEditingNoSettle wrap.
   stopEditing: ->
     @_stopEditingTearingCaretDownWith (caret) -> caret.fullDestroy()
 
-  _stopEditingCore: ->
-    @_stopEditingTearingCaretDownWith (caret) -> caret._fullDestroyCore()
+  _stopEditingNoSettle: ->
+    @_stopEditingTearingCaretDownWith (caret) -> caret._fullDestroyNoSettle()
 
   _stopEditingTearingCaretDownWith: (tearDownCaret) ->
     if @caret
