@@ -850,6 +850,8 @@ class WorldWdgt extends PanelWdgt
   # and take out of the list what's healed in that step,
   # and we continue doing so until there is nothing else
   # to heal.
+  # thin-wrap-exempt: the flush primitive itself (re-entrancy-guarded direct core call) -- it is what
+  # the settle tier CALLS, not a public geometry setter that self-settles.
   recalculateLayouts: ->
     # re-entrancy guard: recalculateLayouts must not run inside itself. This fires if a
     # public geometry setter (which flushes via recalculateLayouts) is reached from a
@@ -1821,6 +1823,8 @@ class WorldWdgt extends PanelWdgt
   # reach it without re-entering the flush. softResetWorld stays OUTSIDE the settle on purpose: its
   # @hand.drop() does a real re-parenting drop (target.add, which self-flushes), so running it inside
   # the settle below would re-enter recalculateLayouts and throw the flow-violation (see ~:930).
+  # thin-wrap-exempt: softReset (its hand.drop self-flushes) must precede the settle, so this is a
+  # two-statement sequence, not the bare @mutateGeometryThenSettle => @_resetWorldCore wrap (see above).
   resetWorld: ->
     @softResetWorld()
     @mutateGeometryThenSettle => @_resetWorldCore()
@@ -2079,6 +2083,8 @@ class WorldWdgt extends PanelWdgt
   # caret down via fullDestroy (which self-settles); _stopEditingCore tears it down via the
   # non-settling _fullDestroyCore, for callers already inside a layout flush (Widget._destroyCore
   # stopping editing while it destroys a widget that contains the caret). Both share the body below.
+  # thin-wrap-exempt: CONDITIONAL self-settle (only when a caret exists), shared with _stopEditingCore
+  # via a teardown-strategy thunk -- not the bare @mutateGeometryThenSettle => @_stopEditingCore wrap.
   stopEditing: ->
     @_stopEditingTearingCaretDownWith (caret) -> caret.fullDestroy()
 

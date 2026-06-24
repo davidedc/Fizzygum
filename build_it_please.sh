@@ -317,6 +317,24 @@ if ! $noSyntaxCheck ; then
   echo "... stink check OK"
 fi
 
+# --- build-time THIN-WRAP gate --------------------------------------------------------
+# Enforces the ONE canonical shape for a public self-settling method that owns a private *Core twin:
+# `[guards] @mutateGeometryThenSettle => @_<name>Core <args>` -- it must do no work of its own, only
+# delegate to the core through the single-mutation settle tier. Genuine exceptions carry a per-method
+# `# thin-wrap-exempt: <reason>` marker (no central allowlist). (buildSystem/check-thin-wraps.js --
+# complements check-layering.js, which enforces that the CORE reaches no public setter. Same
+# --noSyntaxCheck escape hatch + explicit $? abort as the gates above; scans src/ only.)
+if ! $noSyntaxCheck ; then
+  echo "checking public/Core thin-wrap shape ..."
+  node ./buildSystem/check-thin-wraps.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: thin-wrap gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... thin-wrap check OK"
+fi
+
 # --- build-time test-.js syntax gate (only when tests are part of this build) ---------
 # Each SystemTest's _automationCommands.js carries its macro inside a backtick-delimited JS
 # template literal; a stray backtick silently corrupts the file so the test never loads (with

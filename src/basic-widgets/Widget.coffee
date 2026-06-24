@@ -475,9 +475,9 @@ class Widget extends TreeNode
   close: ->
     # SELF-SETTLE (single-mutation tier). _closeCore re-homes me to the basement through the NON-settling
     # core _addLostWidgetCore (-> _addInPseudoRandomPositionCore -> _addCore) and recurses
-    # @parent._closeCore(), so it reaches no public setter. Anchored on (@parent ? @): the parent re-lays-
-    # out, attached at entry so the orphan guard passes + flushes.
-    (@parent ? @).mutateGeometryThenSettle => @_closeCore()
+    # @parent._closeCore(), so it reaches no public setter. Anchored on @ (the canonical wrap): I'm
+    # attached at entry so the orphan guard passes, then the global flush re-lays-out my parent.
+    @mutateGeometryThenSettle => @_closeCore()
 
   _closeCore: ->
 
@@ -506,10 +506,9 @@ class Widget extends TreeNode
   # NOTE that the tree under this widget is kept intact,
   # so this widget could be duplicated and revived
   destroy: ->
-    # SELF-SETTLE via the single-mutation tier (close, by contrast, re-homes via add() and needs the
-    # batching tier). mutateGeometryThenSettle checks orphan at the START (I'm still attached) then
-    # flushes globally, so my parent settles even though _destroyCore orphans me. Inside fullDestroy's
-    # batch it sees world._batchingLayoutSettling and defers, so the recursion still collapses to one flush.
+    # SELF-SETTLE (single-mutation tier, the canonical wrap). mutateGeometryThenSettle checks orphan at
+    # the START (I'm still attached) then flushes globally, so my parent settles even though _destroyCore
+    # orphans me.
     # The one hook that rebuilds during destroy -- a window losing its @contents
     # (childBeingDestroyed -> resetToDefaultContents) -- is safe inside this _inLayoutMutation:
     # resetToDefaultContents rebuilds through the non-settling @_buildAndConnectChildrenCore (not the
@@ -585,8 +584,9 @@ class Widget extends TreeNode
   # from the bottom (leaf widgets, drawn on top
   # of everything) to the top
   fullDestroy: ->
-    # SELF-SETTLE (single-mutation tier). _fullDestroyCore is a PURE core (recurses cores).
-    (@parent ? @).mutateGeometryThenSettle => @_fullDestroyCore()
+    # SELF-SETTLE (single-mutation tier, the canonical wrap). _fullDestroyCore is a PURE core (recurses
+    # cores). Anchored on @: attached at entry so the orphan guard passes, then the global flush re-fits.
+    @mutateGeometryThenSettle => @_fullDestroyCore()
 
   _fullDestroyCore: ->
     WorldWdgt.numberOfAddsAndRemoves++
@@ -2079,7 +2079,7 @@ class Widget extends TreeNode
   # _collapseCore reaches no public setter. Anchored on (@parent ? @) (the container that re-lays-out).
   collapse: ->
     return if @collapsed
-    (@parent ? @).mutateGeometryThenSettle => @_collapseCore()
+    @mutateGeometryThenSettle => @_collapseCore()
 
   _collapseCore: ->
     @parent?.childBeingCollapsed? @
@@ -2094,11 +2094,11 @@ class Widget extends TreeNode
   # SELF-SETTLE (single-mutation tier). childBeingUnCollapsed re-creates the bar buttons through the
   # NON-settling core (createAndAdd* -> @_addCore; the button constructors add their innards on ORPHANS,
   # exempt from the flush-throw), and childUnCollapsed re-fits via raw setters, so _unCollapseCore reaches
-  # no public setter. Anchored on (@parent ? @) (the container that re-lays-out).
+  # no public setter. Anchored on @ (the canonical wrap; the global flush re-lays-out the container).
   unCollapse: ->
     return if !@collapsed
     return if !@isCollapsed()
-    (@parent ? @).mutateGeometryThenSettle => @_unCollapseCore()
+    @mutateGeometryThenSettle => @_unCollapseCore()
 
   _unCollapseCore: ->
     @parent?.childBeingUnCollapsed? @
