@@ -11,7 +11,7 @@
  *      Low-level code mutates immediately (raw/silent) and must never reach UP into the
  *      public, self-flushing layer.
  *   B) recalculateLayouts() may be called ONLY from doOneCycle (the frame) and
- *      mutateGeometryThenSettle (the public-setter flush). Nowhere else.
+ *      _settleLayoutsAfter (the public-setter flush). Nowhere else.
  *   C) A public geometry setter must NOT call another public geometry setter (that would
  *      flush more than once per logical mutation).
  *
@@ -49,7 +49,7 @@ const INVALIDATE_CALL = /[@.]\s*invalidateLayout\b/;         // @invalidateLayou
 const APPLY_CALL = /[@.]\s*(_reLayoutChildren|_positionAndResizeChildren|_reLayoutScrollbars|_reLayout)\b(?!\?)/;
 const SANCTION_MARKER = 'layout-apply-sanctioned';        // the conscious-sign-off comment marker for [F]
 const PUBLIC_SET = new Set(PUBLIC_SETTERS);
-const RECALC_WHITELIST = new Set(['doOneCycle', 'mutateGeometryThenSettle', 'settleLayoutsOnceAfter']);
+const RECALC_WHITELIST = new Set(['doOneCycle', '_settleLayoutsAfter', 'settleLayoutsOnceAfter']);
 
 const isLowLevel = (name) =>
   /^raw[A-Z]/.test(name) || /^silent/.test(name) ||
@@ -169,13 +169,15 @@ function checkFile(file, violations) {
     const invalidate = INVALIDATE_CALL.test(code);
     if (isLowLevel(method)) {
       if (pub) violations.push(`[A] low-level ${method}() calls public setter .${pub[1]}()  — ${at}`);
-      if (recalc) violations.push(`[A] low-level ${method}() calls recalculateLayouts()  — ${at}`);
+      // recalc is OK from a whitelisted flush driver (the settle tiers are now _-prefixed, hence
+      // low-level by name, but they ARE the flush — rule [B] below governs who may call recalc).
+      if (recalc && !RECALC_WHITELIST.has(method)) violations.push(`[A] low-level ${method}() calls recalculateLayouts()  — ${at}`);
     }
     if (isImmediateMutator(method) && invalidate) {
       violations.push(`[E] immediate mutator ${method}() calls invalidateLayout() — raw/silent/fullRaw setters must only MUTATE, never SCHEDULE layout (task #17)  — ${at}`);
     }
     if (recalc && !RECALC_WHITELIST.has(method)) {
-      violations.push(`[B] recalculateLayouts() called from ${method}() (only doOneCycle / mutateGeometryThenSettle may)  — ${at}`);
+      violations.push(`[B] recalculateLayouts() called from ${method}() (only doOneCycle / _settleLayoutsAfter may)  — ${at}`);
     }
     if (PUBLIC_SET.has(method) && pub && pub[1] !== method) {
       violations.push(`[C] public setter ${method}() calls another public setter .${pub[1]}()  — ${at}`);

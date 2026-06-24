@@ -108,7 +108,7 @@ class LabelButtonWdgt extends ButtonWdgt
     # consistent on return. Previously this leaned on the old label's destroy to invalidate the
     # button for us (a deferred end-of-cycle re-layout); we now invalidate explicitly, so it is
     # robust to the freefloating teardown skip and settles immediately.
-    @mutateGeometryThenSettle =>
+    @_settleLayoutsAfter =>
       if @label?
         @label = @label.fullDestroy()
       @invalidateLayout()

@@ -1819,16 +1819,16 @@ class WorldWdgt extends PanelWdgt
 
   # »>> this part is excluded from the fizzygum homepage build
   # resetWorld self-settles like any public API method: it is a SEQUENCE of two self-settling
-  # operations (each flushes once -- mutateGeometryThenSettle's doc blesses sequential setters), and
+  # operations (each flushes once -- _settleLayoutsAfter's doc blesses sequential setters), and
   # the geometry teardown lives in _resetWorldNoSettle so an internal caller already inside a settle can
   # reach it without re-entering the flush. softResetWorld stays OUTSIDE the settle on purpose: its
   # @hand.drop() does a real re-parenting drop (target.add, which self-flushes), so running it inside
   # the settle below would re-enter recalculateLayouts and throw the flow-violation (see ~:930).
   # thin-wrap-exempt: softReset (its hand.drop self-flushes) must precede the settle, so this is a
-  # two-statement sequence, not the bare @mutateGeometryThenSettle => @_resetWorldNoSettle wrap (see above).
+  # two-statement sequence, not the bare @_settleLayoutsAfter => @_resetWorldNoSettle wrap (see above).
   resetWorld: ->
     @softResetWorld()
-    @mutateGeometryThenSettle => @_resetWorldNoSettle()
+    @_settleLayoutsAfter => @_resetWorldNoSettle()
 
   _resetWorldNoSettle: ->
     @changed() # redraw the whole screen
@@ -2085,7 +2085,7 @@ class WorldWdgt extends PanelWdgt
   # non-settling _fullDestroyNoSettle, for callers already inside a layout flush (Widget._destroyNoSettle
   # stopping editing while it destroys a widget that contains the caret). Both share the body below.
   # thin-wrap-exempt: CONDITIONAL self-settle (only when a caret exists), shared with _stopEditingNoSettle
-  # via a teardown-strategy thunk -- not the bare @mutateGeometryThenSettle => @_stopEditingNoSettle wrap.
+  # via a teardown-strategy thunk -- not the bare @_settleLayoutsAfter => @_stopEditingNoSettle wrap.
   stopEditing: ->
     @_stopEditingTearingCaretDownWith (caret) -> caret.fullDestroy()
 

@@ -220,7 +220,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @_positionAndResizeChildren()
 
   add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
-    @mutateGeometryThenSettle => @_addNoSettle aWdgt, position, layoutSpec, beingDropped, notContent
+    @_settleLayoutsAfter => @_addNoSettle aWdgt, position, layoutSpec, beingDropped, notContent
 
   # _addNoSettle -- the non-settling core of add() (mirrors Widget.add/_addNoSettle and
   # SimpleVerticalStackPanelWdgt.add/_addNoSettle). Folds in the window's content bookkeeping (title,
@@ -369,7 +369,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @setAppearanceAndColorOfTitleBackground()
     @_addNoSettle @titlebarBackground, nil, nil, nil, true
   
-  # ONE settle around the whole rebuild via the single-mutation tier (mutateGeometryThenSettle). The
+  # ONE settle around the whole rebuild via the single-mutation tier (_settleLayoutsAfter). The
   # core is non-settling: it adds every chrome widget AND the content through @_addNoSettle (the cores
   # mirrored down WindowWdgt -> SimpleVerticalStackPanelWdgt -> Widget), so nothing self-settles per add
   # and nothing re-fits the HALF-built window mid-loop -- the window's content bookkeeping rides along in
@@ -380,9 +380,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # (childBeingDestroyed/Closed/PickedUp) -> resetToDefaultContents -> rebuild -- goes through the
   # non-settling @_buildAndConnectChildrenNoSettle directly, never this wrapper, so the wrapper never
   # re-enters a flush. The chrome the core constructs adds to ORPHANS, exempt from the flush-throw
-  # (Widget.mutateGeometryThenSettle's orphan guard precedes the throw). (Phase 3b; window-rebuild follow-up.)
+  # (Widget._settleLayoutsAfter's orphan guard precedes the throw). (Phase 3b; window-rebuild follow-up.)
   buildAndConnectChildren: ->
-    @mutateGeometryThenSettle => @_buildAndConnectChildrenNoSettle()
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
 

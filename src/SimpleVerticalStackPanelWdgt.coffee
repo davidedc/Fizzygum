@@ -26,7 +26,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     true
 
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
-    @mutateGeometryThenSettle => @_addNoSettle aWdgt, position, layoutSpec, beingDropped, unused, positionOnScreen
+    @_settleLayoutsAfter => @_addNoSettle aWdgt, position, layoutSpec, beingDropped, unused, positionOnScreen
 
   # _addNoSettle -- the non-settling core of add(), mirroring Widget.add/_addNoSettle. The stack-specific
   # work (rawResize-without-spacing + sibling-position computation) only uses raw/structural setters,

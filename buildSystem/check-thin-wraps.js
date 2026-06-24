@@ -6,9 +6,9 @@
 // CANONICAL FORM: for a private `_<name>NoSettle`, the public `<name>` in the SAME class must, after
 // comments/blank lines, be:
 //     [ zero or more  `return if <cond>` / `return unless <cond>` idempotency guards ]
-//     @mutateGeometryThenSettle => @_<name>NoSettle <args?>
+//     @_settleLayoutsAfter => @_<name>NoSettle <args?>
 // i.e. it does NO work of its own -- it guards, then hands the mutation to the core via the
-// single-mutation settle tier. (mutateGeometryThenSettle anchors on `@`: a teardown that orphans `@`
+// single-mutation settle tier. (_settleLayoutsAfter anchors on `@`: a teardown that orphans `@`
 // is still safe -- the orphan guard is checked at entry while `@` is attached and the flush is global,
 // so `@` and the older `(@parent ? @)` anchor are provably equivalent; `@` is the standard.)
 //
@@ -69,7 +69,7 @@ for (const p of walk(SRC, [])) {
     // strip leading idempotency guards, then require exactly the canonical wrap
     let rest = body.slice();
     while (rest.length && GUARD.test(rest[0])) rest.shift();
-    const canonical = new RegExp('^@mutateGeometryThenSettle\\s*=>\\s*@_' + base + 'NoSettle\\b');
+    const canonical = new RegExp('^@_settleLayoutsAfter\\s*=>\\s*@_' + base + 'NoSettle\\b');
     if (rest.length === 1 && canonical.test(rest[0])) checked++;
     else violations.push({ key: cls + '.' + base, file: path.relative(SRC, p), line: head.i + 1, body });
   }
@@ -82,7 +82,7 @@ if (violations.length) {
     console.error(`  ${v.key}  (${v.file}:${v.line})`);
     console.error(`    body: ${JSON.stringify(v.body)}`);
   }
-  console.error('\nCanonical: [return if/unless guards] then  @mutateGeometryThenSettle => @_<name>NoSettle <args>.');
+  console.error('\nCanonical: [return if/unless guards] then  @_settleLayoutsAfter => @_<name>NoSettle <args>.');
   console.error('Or add a  # thin-wrap-exempt: <reason>  comment directly above the method (see the 3 in WorldWdgt).');
   process.exit(1);
 }

@@ -92,7 +92,7 @@ class PanelWdgt extends Widget
     @parent.grandChildRemoved?()
     # Re-fit my enclosing container (@parent) via the phase-safe helper. childRemoved fires only
     # OUTSIDE a layout pass (its callers Widget.destroy / Widget._addNoSettle route through destroy /
-    # mutateGeometryThenSettle, neither mid-pass), so in practice the helper's schedule arm runs.
+    # _settleLayoutsAfter, neither mid-pass), so in practice the helper's schedule arm runs.
     # (fam 2 -- deferred-layout-residuals-audit.md)
     @_reFitContainer @parent
 
@@ -114,7 +114,7 @@ class PanelWdgt extends Widget
   # closed/lost widget calls _addInPseudoRandomPositionNoSettle directly -- it is already inside close()'s
   # settle batch, so it must NOT re-enter the settle tier through the public add.
   addInPseudoRandomPosition: (aWdgt) ->
-    @mutateGeometryThenSettle => @_addInPseudoRandomPositionNoSettle aWdgt
+    @_settleLayoutsAfter => @_addInPseudoRandomPositionNoSettle aWdgt
 
   _addInPseudoRandomPositionNoSettle: (aWdgt) ->
     width = @width()

@@ -13,11 +13,11 @@
 // Stink: settle-batch-with-core  --  `<anchor>.settleLayoutsOnceAfter => @_xxxNoSettle()`
 //   Using the BATCHING settler (settleLayoutsOnceAfter) with a single *NoSettle thunk. A pure core is a
 //   single mutation that does NOT re-enter the settle tier, so it wants the SINGLE-mutation settler
-//   (mutateGeometryThenSettle). Reaching for the batch means the core still calls a NESTED public
+//   (_settleLayoutsAfter). Reaching for the batch means the core still calls a NESTED public
 //   setter, and the batch is masking that. Fix: make the core pure, then switch the wrapper to
-//   mutateGeometryThenSettle. Baseline driven to 0 (2026-06-24): the 5 teardown/build wrappers
+//   _settleLayoutsAfter. Baseline driven to 0 (2026-06-24): the 5 teardown/build wrappers
 //   (fullDestroy/close/collapse/unCollapse/buildAndConnectChildren) were all flipped to
-//   mutateGeometryThenSettle via "cores call cores" — now a hard rule, no new occurrence may land.
+//   _settleLayoutsAfter via "cores call cores" — now a hard rule, no new occurrence may land.
 
 const fs = require('fs');
 const path = require('path');
@@ -28,7 +28,7 @@ const STINKS = [
   {
     id: 'settle-batch-with-core',
     baseline: 0,
-    why: 'settleLayoutsOnceAfter (batch settler) wrapping a single *NoSettle thunk -- a pure core wants the single-mutation mutateGeometryThenSettle; the batch masks a core that still reaches a nested public setter',
+    why: 'settleLayoutsOnceAfter (batch settler) wrapping a single *NoSettle thunk -- a pure core wants the single-mutation _settleLayoutsAfter; the batch masks a core that still reaches a nested public setter',
     re: /settleLayoutsOnceAfter\s*=>\s*@_\w+NoSettle\b/,
   },
 ];

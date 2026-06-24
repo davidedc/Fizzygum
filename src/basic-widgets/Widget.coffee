@@ -477,7 +477,7 @@ class Widget extends TreeNode
     # core _addLostWidgetNoSettle (-> _addInPseudoRandomPositionNoSettle -> _addNoSettle) and recurses
     # @parent._closeNoSettle(), so it reaches no public setter. Anchored on @ (the canonical wrap): I'm
     # attached at entry so the orphan guard passes, then the global flush re-lays-out my parent.
-    @mutateGeometryThenSettle => @_closeNoSettle()
+    @_settleLayoutsAfter => @_closeNoSettle()
 
   _closeNoSettle: ->
 
@@ -506,15 +506,15 @@ class Widget extends TreeNode
   # NOTE that the tree under this widget is kept intact,
   # so this widget could be duplicated and revived
   destroy: ->
-    # SELF-SETTLE (single-mutation tier, the canonical wrap). mutateGeometryThenSettle checks orphan at
+    # SELF-SETTLE (single-mutation tier, the canonical wrap). _settleLayoutsAfter checks orphan at
     # the START (I'm still attached) then flushes globally, so my parent settles even though _destroyNoSettle
     # orphans me.
     # The one hook that rebuilds during destroy -- a window losing its @contents
     # (childBeingDestroyed -> resetToDefaultContents) -- is safe inside this _inLayoutMutation:
     # resetToDefaultContents rebuilds through the non-settling @_buildAndConnectChildrenNoSettle (not the
     # public self-settler), and the chrome it constructs adds to ORPHANS, which are exempt from the
-    # flush-throw (see mutateGeometryThenSettle's orphan guard). So nothing re-enters a settle mid-destroy.
-    @mutateGeometryThenSettle => @_destroyNoSettle()
+    # flush-throw (see _settleLayoutsAfter's orphan guard). So nothing re-enters a settle mid-destroy.
+    @_settleLayoutsAfter => @_destroyNoSettle()
 
   _destroyNoSettle: ->
 
@@ -586,7 +586,7 @@ class Widget extends TreeNode
   fullDestroy: ->
     # SELF-SETTLE (single-mutation tier, the canonical wrap). _fullDestroyNoSettle is a PURE core (recurses
     # cores). Anchored on @: attached at entry so the orphan guard passes, then the global flush re-fits.
-    @mutateGeometryThenSettle => @_fullDestroyNoSettle()
+    @_settleLayoutsAfter => @_fullDestroyNoSettle()
 
   _fullDestroyNoSettle: ->
     WorldWdgt.numberOfAddsAndRemoves++
@@ -789,7 +789,7 @@ class Widget extends TreeNode
   # The same wrapper also backs the public STRUCTURAL mutator add() (a tree
   # change re-fits layouts too), so it RETURNS the thunk's value -- those need to hand
   # back the added widget (see docs/deferred-layout-refit-and-add-design.md, D3).
-  mutateGeometryThenSettle: (coreThunk) ->
+  _settleLayoutsAfter: (coreThunk) ->
     # early world bootstrap: the `world` singleton isn't wired up yet, so there's
     # nothing to flush to -- just record the desired change; the first frame settles it.
     unless world?
@@ -831,7 +831,7 @@ class Widget extends TreeNode
   # builders (buildAndConnectChildren) and bulk content insertion: it makes O(N) relayouts
   # into 1, and keeps the re-fit from running on a half-built widget mid-batch (the
   # getWidthInStack-on-unset-@stack crash during an in-world rebuild). Nestable -- an inner
-  # batch is absorbed by the outer; mirrors mutateGeometryThenSettle's orphan/re-entrancy
+  # batch is absorbed by the outer; mirrors _settleLayoutsAfter's orphan/re-entrancy
   # guards for the final flush. Returns the thunk's value. (Phase 3b.)
   settleLayoutsOnceAfter: (thunk) ->
     unless world?
@@ -852,7 +852,7 @@ class Widget extends TreeNode
     result
 
   setBounds: (aRectangle, widgetStartingTheChange = nil) ->
-    @mutateGeometryThenSettle =>
+    @_settleLayoutsAfter =>
       if not @isFreeFloating()
         return
       else
@@ -1363,7 +1363,7 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   fullMoveTo: (aPoint, widgetStartingTheChange = nil) ->
-    @mutateGeometryThenSettle =>
+    @_settleLayoutsAfter =>
       if not @isFreeFloating()
         return
       else
@@ -1574,7 +1574,7 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setExtent: (aPoint, widgetStartingTheChange = nil) ->
-    @mutateGeometryThenSettle =>
+    @_settleLayoutsAfter =>
       if not @isFreeFloating()
         return
       else
@@ -1698,7 +1698,7 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setWidth: (width) ->
-    @mutateGeometryThenSettle =>
+    @_settleLayoutsAfter =>
       if not @isFreeFloating()
         return
       else
@@ -1734,7 +1734,7 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setHeight: (height) ->
-    @mutateGeometryThenSettle =>
+    @_settleLayoutsAfter =>
       if not @isFreeFloating()
         return
       else
@@ -2079,7 +2079,7 @@ class Widget extends TreeNode
   # _collapseNoSettle reaches no public setter. Anchored on (@parent ? @) (the container that re-lays-out).
   collapse: ->
     return if @collapsed
-    @mutateGeometryThenSettle => @_collapseNoSettle()
+    @_settleLayoutsAfter => @_collapseNoSettle()
 
   _collapseNoSettle: ->
     @parent?.childBeingCollapsed? @
@@ -2098,7 +2098,7 @@ class Widget extends TreeNode
   unCollapse: ->
     return if !@collapsed
     return if !@isCollapsed()
-    @mutateGeometryThenSettle => @_unCollapseNoSettle()
+    @_settleLayoutsAfter => @_unCollapseNoSettle()
 
   _unCollapseNoSettle: ->
     @parent?.childBeingUnCollapsed? @
@@ -2396,7 +2396,7 @@ class Widget extends TreeNode
 
   # ===== structural add =====
   # add() is the PUBLIC self-settling entry: it links the widget in through the private,
-  # NON-settling _addNoSettle and then flushes layouts once (mutateGeometryThenSettle), so a
+  # NON-settling _addNoSettle and then flushes layouts once (_settleLayoutsAfter), so a
   # top-level caller (app / macro / event handler) is left with a consistent world -- no manual
   # settle/yield. _addNoSettle is the COMPLETE add minus the settle (shadow management + structural
   # link-in + fractional-position recording); add() is just the settle-wrap over it. Callers that
@@ -2406,7 +2406,7 @@ class Widget extends TreeNode
   # byte-identical to going through add(): for a fresh non-world child the shadow step is a no-op
   # removeShadow and the fractional step is skipped. See docs/deferred-layout-refit-and-add-design.md (D3).
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
-    @mutateGeometryThenSettle => @_addNoSettle aWdgt, position, layoutSpec, beingDropped
+    @_settleLayoutsAfter => @_addNoSettle aWdgt, position, layoutSpec, beingDropped
 
   # _addNoSettle -- the COMPLETE add minus the settle. The single NON-settling core behind add() and
   # every internal layout-time / construction-time / teardown adder (it must NOT
