@@ -473,11 +473,11 @@ class Widget extends TreeNode
       return firstPart + @uniqueIDString()
 
   close: ->
-    # SELF-SETTLE. NOT a single mutation: _closeCore re-homes me to the basement via add() (a NESTED
-    # public setter), so the single-mutation tier mutateGeometryThenSettle would THROW on that inner
-    # add (it forbids a public setter mid-flush). settleLayoutsOnceAfter is the right tier -- it defers
-    # the inner add into ONE flush. Anchored on (@parent ? @) (its orphan check is at the end).
-    (@parent ? @).settleLayoutsOnceAfter => @_closeCore()
+    # SELF-SETTLE (single-mutation tier). _closeCore re-homes me to the basement through the NON-settling
+    # core _addLostWidgetCore (-> _addInPseudoRandomPositionCore -> _addCore) and recurses
+    # @parent._closeCore(), so it reaches no public setter. Anchored on (@parent ? @): the parent re-lays-
+    # out, attached at entry so the orphan guard passes + flushes.
+    (@parent ? @).mutateGeometryThenSettle => @_closeCore()
 
   _closeCore: ->
 
@@ -583,11 +583,8 @@ class Widget extends TreeNode
   # from the bottom (leaf widgets, drawn on top
   # of everything) to the top
   fullDestroy: ->
-    # SELF-SETTLE + BATCH (like add building many children): the recursive teardown below invalidates
-    # ancestors repeatedly; ONE settleLayoutsOnceAfter wrap collapses it to a single flush at the end.
-    # _fullDestroyCore recurses CORE-to-core (no nested settle), so this wrap is the only settle.
-    # Anchored on my surviving parent (removeChild orphans me by the end).
-    (@parent ? @).settleLayoutsOnceAfter => @_fullDestroyCore()
+    # SELF-SETTLE (single-mutation tier). _fullDestroyCore is a PURE core (recurses cores).
+    (@parent ? @).mutateGeometryThenSettle => @_fullDestroyCore()
 
   _fullDestroyCore: ->
     WorldWdgt.numberOfAddsAndRemoves++
@@ -609,8 +606,11 @@ class Widget extends TreeNode
     # we are iterating over an array that changes
     # its length as we are deleting its contents
     # while we are iterating on it.
+    # bulk teardown through the non-settling core (see fullDestroyChildren): looping the public
+    # self-settling close() would re-home + flush once PER child, and under the single-mutation tier
+    # each immediate settle re-fits a half-emptied container. The caller settles once afterwards.
     until @children.length == 0
-      @children[0].close()
+      @children[0]._closeCore()
     return nil
 
   fullDestroyChildren: ->
@@ -622,8 +622,13 @@ class Widget extends TreeNode
     # we are iterating over an array that changes
     # its length as we are deleting its contents
     # while we are iterating on it.
+    # Bulk teardown through the non-settling core, NOT the public self-settling fullDestroy(): looping
+    # the public method would self-settle once PER child (O(children) flushes), and -- with fullDestroy
+    # on the single-mutation tier -- each immediate settle re-fits a half-emptied container. Callers
+    # (resetWorld / Inspector rebuild / video panes / basement) are reset/rebuild contexts that settle
+    # once afterwards (or redraw an empty container), so no per-child flush is wanted.
     until @children.length == 0
-      @children[0].fullDestroy()
+      @children[0]._fullDestroyCore()
     return nil
 
   isFreeFloating: ->
@@ -2067,12 +2072,12 @@ class Widget extends TreeNode
     @invalidateFullClippedBoundsCache @
     @fullChanged()
 
-  # SELF-SETTLE (public API). NOT a single mutation: childBeingCollapsed can destroy() the window's
-  # bar buttons (a nested public setter), so this needs the BATCHING tier (like close) -- the
-  # single-mutation mutateGeometryThenSettle would throw on that nested destroy.
+  # SELF-SETTLE (single-mutation tier). childBeingCollapsed now tears down the bar buttons through the
+  # NON-settling core (_destroyCore), and childCollapsed re-fits via raw setters + _reFitContainer, so
+  # _collapseCore reaches no public setter. Anchored on (@parent ? @) (the container that re-lays-out).
   collapse: ->
     return if @collapsed
-    (@parent ? @).settleLayoutsOnceAfter => @_collapseCore()
+    (@parent ? @).mutateGeometryThenSettle => @_collapseCore()
 
   _collapseCore: ->
     @parent?.childBeingCollapsed? @
@@ -2084,12 +2089,14 @@ class Widget extends TreeNode
     @fullChanged()
     @parent?.childCollapsed? @
 
-  # SELF-SETTLE (public API). BATCHING tier like collapse: childBeingUnCollapsed re-adds the bar
-  # buttons via the public add (a nested public setter), which the batch defers.
+  # SELF-SETTLE (single-mutation tier). childBeingUnCollapsed re-creates the bar buttons through the
+  # NON-settling core (createAndAdd* -> @_addCore; the button constructors add their innards on ORPHANS,
+  # exempt from the flush-throw), and childUnCollapsed re-fits via raw setters, so _unCollapseCore reaches
+  # no public setter. Anchored on (@parent ? @) (the container that re-lays-out).
   unCollapse: ->
     return if !@collapsed
     return if !@isCollapsed()
-    (@parent ? @).settleLayoutsOnceAfter => @_unCollapseCore()
+    (@parent ? @).mutateGeometryThenSettle => @_unCollapseCore()
 
   _unCollapseCore: ->
     @parent?.childBeingUnCollapsed? @

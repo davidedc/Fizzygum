@@ -10,7 +10,10 @@ relies on an *unrelated* later event to settle for it). We already proved this o
 (`Widget.destroy`): cutting its wasted work dropped total end-of-cycle traffic by **−55%** (1244 → 564 records) and
 revealed two public methods that should have self-settled and didn't. A **second pass (this session)** made the
 teardown public methods THEMSELVES self-settle (`close`/`destroy`/`fullDestroy`, like `add`), dropping the total a
-further **−44%** (564 → 320) and revealing the old "230 hover" row was mostly menu-cleanup `close()`. This plan
+further **−44%** (564 → 320) and revealing the old "230 hover" row was mostly menu-cleanup `close()`. **STATUS
+2026-06-24: the 5 settle-tier "stinks" are all DONE** — `buildAndConnectChildren` + `fullDestroy`/`close`/`collapse`/
+`unCollapse` now self-settle via the single-mutation `mutateGeometryThenSettle` (flush-NEUTRAL; the later 320 → 278
+drop came from the deferred-layout campaign, not these flips). This plan
 repeats that, contributor by contributor, down the inventory.
 
 ---
@@ -158,19 +161,21 @@ MANY settles run per frame — exactly the risk; gauntlet+torture proves safety.
 
 ---
 
-## 7. The current inventory — starting targets (after the teardown self-settle: 320 records)
+## 7. The current inventory (2026-06-24 audit: **278** records / 243 frames; trajectory 1244 → 564 → 320 → 278)
 
-By-action (interaction-frame records; from the post-teardown-self-settle audit). Re-run §4 to refresh before starting.
+By-action (interaction-frame records). **UPDATE 2026-06-24:** all 5 settle-tier "stinks" now self-settle via the
+single-mutation `mutateGeometryThenSettle` (`buildAndConnectChildren` + `fullDestroy`/`close`/`collapse`/`unCollapse`);
+flush-NEUTRAL, but the `collapse`/`unCollapse` + `childCollapsed`/`childUnCollapsed` rows are now **0**. Re-run §4 to refresh.
 
 | action / origin | recs | first-pass classification (verify with the data) |
 |---|--:|---|
 | **(untagged) event-dispatch residual** (genuine hover/scroll) | 19 | **LEAVE** — continuous. This row was **230**; the teardown self-settle revealed the bulk was menu-cleanup `close()` re-fitting a ScrollPanel (same `Set.forEach < playQueuedEvents` sig as hover, so mislabelled here) — now self-settled, leaving the true hover/scroll residual. |
-| **`TextWdgt.reLayoutAndRefreshContainerIfContainedText`** (contained-text edit re-fit) | 118 | **PRIME CONVERT CANDIDATE** (now the biggest residual) — the contained-text-edit seam. Mirror of the `sizeToTextAndDisableFitting` fix: a text edit should self-settle its container. |
+| **`TextWdgt.reLayoutAndRefreshContainerIfContainedText`** (contained-text edit re-fit) | 120 | **PRIME CONVERT CANDIDATE** (now the biggest residual) — the contained-text-edit seam. Mirror of the `sizeToTextAndDisableFitting` fix: a text edit should self-settle its container. |
 | `*.reactToDropOf` / `reactToGrabOf` / `childRemoved` (drag/drop, several classes) | ~75 | **LEAVE** — drag gesture events; the deferred-layout campaign deliberately defers these. |
 | `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | 32 | discrete click → **investigate** (entangled with collapse). |
-| `Widget.collapse` / `unCollapse` | 18+18 | discrete; the container re-fit (`WindowWdgt.childUnCollapsed`) is already synchronous/sanctioned. **Investigate** whether the self-invalidate should self-settle. |
-| `Widget.destroy` / `close` / `fullDestroy` (teardown) | **0** | **CONVERTED this session** — even genuine non-freefloating teardown now self-settles (consistent-on-return, like `add`): `destroy` via `mutateGeometryThenSettle`, `close`/`fullDestroy` batched via `settleLayoutsOnceAfter`. The earlier "LEAVE" was overridden. |
-| `WindowWdgt.childCollapsed` / `childUnCollapsed` | 4+4 | collapse reactions; sanctioned-synchronous. **Investigate**. |
+| `Widget.collapse` / `unCollapse` | **0** | **DONE 2026-06-24** — flipped to `mutateGeometryThenSettle`; gone from end-of-cycle (collapse-hook `destroy` + bar-button re-`add` use cores). |
+| `Widget.destroy` / `close` / `fullDestroy` (teardown) | **0** | **CONVERTED** — even genuine non-freefloating teardown self-settles (consistent-on-return, like `add`): ALL via `mutateGeometryThenSettle` (`close`/`fullDestroy` flipped off the batching tier 2026-06-24; bulk loops `fullDestroyChildren`/`closeChildren` use cores). The earlier "LEAVE" was overridden. |
+| `WindowWdgt.childCollapsed` / `childUnCollapsed` | **0** | **DONE 2026-06-24** — folded into collapse's single settle. |
 | `(untagged) during-paint` (freefloating re-fit from `fullPaintInto…`) | 14 | curiosity — layout invalidation reached from the PAINT pass. Low volume; flag, likely leave. |
 | `(untagged) macro-driver` (test fixture-build macros) | 14 | out of scope (test construction, not product). |
 | `Widget.setMaxDim` (stack-divider drag) | 4 | continuous-ish (divider drag) → likely LEAVE. |

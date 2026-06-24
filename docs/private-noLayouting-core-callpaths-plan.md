@@ -30,10 +30,17 @@ the verification. Read §0 → §3 before touching code. **Do Plan 2 (the settle
   BEFORE the orphan exemption. Reordered so the orphan guard precedes the throw — orphans aren't in the live tree, so a
   setter on one can't corrupt a flush and must DEFER, not throw (this also retires the old `destroy` "not reachable"
   caveat). Verified dpr1/dpr2/WebKit/apps 165/165 + 18-min torture + end-of-cycle audit.
-- **STINK tracker** (`buildSystem/check-stinks.js`, NON-BLOCKING build report): now **4** `settleLayoutsOnceAfter =>
-  @_xxxCore()` sites (close / fullDestroy / collapse / unCollapse) — `buildAndConnectChildren` flipped to
-  `mutateGeometryThenSettle` 2026-06-23 (above), so it left the list (5 → 4). Each remaining site flips once its core
-  is pure. A dead-method lint (`check-dead-methods.js`, 53-method baseline) was also added.
+- **STINK tracker** (`buildSystem/check-stinks.js`, NON-BLOCKING build report): **0** sites — ALL FIVE
+  `settleLayoutsOnceAfter => @_xxxCore()` stinks flipped to the single-mutation `mutateGeometryThenSettle`
+  (`buildAndConnectChildren` 2026-06-23; `fullDestroy` / `close` / `collapse` / `unCollapse` 2026-06-24). The batching
+  tier was NOT load-bearing; the systematic fix was "cores call cores" on every nested public teardown reached under the
+  core's `_inLayoutMutation` — incl. the BULK-teardown loops `Widget.fullDestroyChildren`/`closeChildren` (now loop
+  `_fullDestroyCore`/`_closeCore`, not the public self-settler), the chrome `fullDestroy` in `buildAndConnectChildren`,
+  and `childBeingCollapsed`'s `destroy` (→ `_destroyCore`). Enabled by the orphan-guard reorder in
+  `mutateGeometryThenSettle` (orphan exemption BEFORE the flow-throw, so orphan construction inside a settle defers
+  instead of throwing). DIAGNOSIS NOTE: a macro that passes ALONE but stalls in the suite traced to `resetWorld` ->
+  `fullDestroyChildren` looping the flipped public `fullDestroy` (state leakage between tests); repro with
+  `run-all-headless.js --shards=1`. A dead-method lint (`check-dead-methods.js`, 53-method baseline) was also added.
 
 ---
 

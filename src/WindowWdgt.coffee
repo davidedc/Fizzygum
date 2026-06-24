@@ -270,10 +270,13 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @contentsExtentWhenCollapsed = @contents.extent()
       @extentWhenCollapsed = @extent()
 
-      @editButton?.destroy()
+      # tear down the bar buttons through the non-settling core: this hook fires inside collapse's
+      # settle, so the public self-settling destroy() would throw under the single-mutation tier. The
+      # enclosing collapse settle covers the re-layout.
+      @editButton?._destroyCore()
       @editButton = nil
 
-      @internalExternalSwitchButton?.destroy()
+      @internalExternalSwitchButton?._destroyCore()
       @internalExternalSwitchButton = nil
 
   childBeingUnCollapsed: (child) ->
@@ -347,7 +350,10 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
   buildTitlebarBackground: ->
     if @titlebarBackground?
-      @titlebarBackground.fullDestroy()
+      # tear down through the non-settling core: this runs inside buildAndConnectChildren's settle, so
+      # the public self-settling fullDestroy() would throw under the single-mutation tier. The enclosing
+      # rebuild settle covers the re-layout.
+      @titlebarBackground._fullDestroyCore()
 
     # TODO we should really just instantiate a Widget,
     # and give it the shape, there is no reason to create
@@ -383,8 +389,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     if !@titlebarBackground?
       @buildTitlebarBackground()
 
-    # label
-    @label?.fullDestroy()
+    # label -- tear down through the non-settling core (inside the rebuild's settle; see buildTitlebarBackground)
+    @label?._fullDestroyCore()
     @label = new StringWdgt @labelContent, WorldWdgt.preferencesAndSettings.titleBarTextFontSize
 
     # as of March 2018, Safari 10.1.1 on OSX 10.12.5 :
