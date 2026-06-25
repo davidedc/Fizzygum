@@ -262,15 +262,17 @@ class ActivePointerWdgt extends Widget
       # widget (it may tweak its OWN spec -- e.g. constrainToRatio when dropped into a ratio container).
       # Both run AFTER add()'s self-settle ON PURPOSE -- _justDropped reads the dropped widget's SETTLED
       # geometry (rememberFractionalSituationInHoldingPanel, constrainToRatio's @width()/@height()), so we
-      # must NOT absorb add's settle. But the recipient re-fit (_reactToDropOf) + the post-_justDropped spec
+      # must NOT absorb add's settle. The recipient re-fit (_reactToDropOf) + the post-_justDropped spec
       # change used to DEFER to end-of-cycle. A drop is one discrete re-parent gesture, so settle them HERE:
-      # consistent on return, not on the next doOneCycle. BATCH (not single): WindowWdgt._reactToDropOf
-      # rebuilds the window chrome via buildAndConnectChildren (many public adds), so a single self-settle
-      # fires mid-rebuild on the half-wired window and crashes (verified: exactly the 16 window-drop tests
-      # fail under _settleLayoutsAfter with "undefined.availableWidthForContents"). The batch absorbs those
-      # nested settles + _justDropped's constrainToRatio resize and flushes ONCE, after the chrome and the
-      # final spec are in place. (end-of-cycle-flush drawdown: _reactToDropOf was the biggest residual, ~44.)
-      @_settleLayoutsAfterBatch =>
+      # consistent on return, not on the next doOneCycle. SINGLE settle (_settleLayoutsAfter): every
+      # _reactToDropOf / _justDropped override re-homes / rebuilds / re-fits through the NON-settling cores
+      # (WindowWdgt._buildAndConnectChildrenNoSettle, _fullDestroyNoSettle, _addNoSettle / _addInPseudoRandom
+      # PositionNoSettle, _createReferenceAndCloseNoSettle, _closePopUpsMarkedForClosureNoSettle, and raw
+      # setters), so nothing re-enters the flush guard mid-pass; the single tier flushes ONCE at the end and
+      # THROWS if a future override sneaks in a public setter (the wanted cores-call-cores discipline -- the
+      # batch tier used to silently absorb that). (end-of-cycle-flush drawdown: the drop was the biggest
+      # residual, ~62 records, all flushed here once now.)
+      @_settleLayoutsAfter =>
         target._reactToDropOf? wdgtToDrop, @
         wdgtToDrop._justDropped? target
 

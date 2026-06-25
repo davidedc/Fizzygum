@@ -120,8 +120,8 @@ un-allowlisted end-of-cycle layout" gate (§8).
 > gesture. `ActivePointerWdgt.drop` does `target.add` (public, self-settles) then `_reactToDropOf` + `_justDropped`,
 > whose recipient re-fit + final-spec change DEFERRED. A disable-the-mechanism probe proved that re-fit is NECESSARY
 > (6 stack tests fail without it) — so it is a CONVERT, not the caret's eliminate: wrapping `_reactToDropOf` +
-> `_justDropped` in ONE `_settleLayoutsAfterBatch` (keeping `add`'s settle FIRST so `_justDropped` reads settled
-> geometry) drives the **`reactToDropOf` action to 0** (was ~62). The symmetric `reactToGrabOf` (7) + `childRemoved`
+> `_justDropped` in ONE `_settleLayoutsAfter` over non-settling cores (keeping `add`'s settle FIRST so `_justDropped`
+> reads settled geometry) drives the **`reactToDropOf` action to 0** (was ~62). The symmetric `reactToGrabOf` (7) + `childRemoved`
 > (2) are the SAME pattern, not yet converted — the next targets. Full record: §5d.
 
 Rolled up by **action** (the convert-vs-leave unit), interaction frames, with the §5 verdict:
@@ -131,7 +131,7 @@ Rolled up by **action** (the convert-vs-leave unit), interaction frames, with th
 | `Widget.destroy` / `close` / `fullDestroy` (teardown) | 0 | 0 | teardown | **self-settles**, like `add` — ALL now via the single-mutation `mutateGeometryThenSettle` (`close`/`fullDestroy` flipped off the batching tier 2026-06-24; bulk-teardown loops `fullDestroyChildren`/`closeChildren` use cores) — gone from end-of-cycle | **DONE** (self-settled) |
 | *(untagged)* **hover / pointer-dispatch** (genuine hover/scroll) | **9** | 5 | continuous | one settle/frame is correct batching | **LEAVE** (continuous). The ~84 `SimplePlainTextScrollPanelWdgt` per-keystroke caret re-fit **plus** the layout-inert HANDLE-move re-fits that used to inflate this row (shared `playQueuedEvents` sig) were **ELIMINATED 2026-06-25** as wasted decoration work (§5c) — 117 → 9. |
 | `StringWdgt._reFitContainedTextNoSettle` (contained-text edit, **API path**; was `TextWdgt.reLayoutAndRefreshContainerIfContainedText`) | **0** (was 120) | 0 | — | the 7 API-path setters now **single**-self-settle (`_settleLayoutsAfter`), so this leaves end-of-cycle entirely (see the 2026-06-25 note above); the per-keystroke CARET residual that remained was then eliminated-as-wasted (§5c), so contained-text no longer reaches end-of-cycle at all | **DONE** (API path self-settles 2026-06-24; caret residual eliminated 2026-06-25) |
-| `*._reactToDropOf` (drag/DROP) | **0** (was ~62) | 0 | discrete re-parent gesture | — | **CONVERTED 2026-06-25** — the drop self-settles (`ActivePointerWdgt.drop` batches `_reactToDropOf`+`_justDropped`); overturned the earlier "LEAVE" (§5d). |
+| `*._reactToDropOf` (drag/DROP) | **0** (was ~62) | 0 | discrete re-parent gesture | — | **CONVERTED 2026-06-25** — the drop self-settles (`ActivePointerWdgt.drop` wraps `_reactToDropOf`+`_justDropped` in ONE single settle over non-settling cores); overturned the earlier "LEAVE" (§5d). |
 | `*.reactToGrabOf` / `childRemoved` (drag/GRAB + removal) | 9 | ~6 | discrete gesture events | symmetric to the drop, not yet converted | **CONVERT candidate** (the grab/removal counterparts — next) |
 | `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | 32 | 6 | discrete click | invalidates on toggle | **LEAVE/convert** (entangled w/ collapse) |
 | `Widget.collapse` / `unCollapse` | **0** | 0 | discrete | **self-settles** via `mutateGeometryThenSettle` (flipped 2026-06-24; collapse-hook `destroy` + bar-button re-`add` use cores) — gone from end-of-cycle | **DONE** (self-settled) |
@@ -253,8 +253,11 @@ that container's re-fit.*
 ## 5d. REVISION — the drag/DROP gesture is a CONVERT (the "LEAVE" was circular)
 
 > **✅ EXECUTED & VERIFIED 2026-06-25.** Total **140 → 80 (−43%)**; the `reactToDropOf` action (was ~62) is **0**.
-> `fg gauntlet` (dpr1/dpr2/WebKit/apps) 165/165 byte-identical + dpr2 torture (shards=4, ~3,300 execs) 0
-> nondeterminism + re-audit neutrality 165/165 (one benign inspector member-list recapture from the hook rename).
+> Landed in TWO steps: first as a batch (ce5e78b7), then converted to a **SINGLE settle over non-settling cores** — the
+> principled end state (see "The fix"). The count is identical across the two (single doesn't move WHERE the drop
+> flushes — once, at the gesture — it hardens HOW). `fg gauntlet` (dpr1/dpr2/WebKit/apps) 165/165 byte-identical + dpr2
+> torture (shards=4) 0 nondeterminism + neutrality 165/165 (one benign inspector member-list recapture each step — the
+> hook rename, then the two new `_create*NoSettle` base methods).
 
 The biggest residual after the caret elimination was the drag/drop family, dismissed as *"LEAVE — the deferred-layout
 campaign deliberately defers these."* **That verdict was circular:** the deferred-layout campaign's goal was to push
@@ -272,22 +275,37 @@ re-fit failed **6 stack-drop tests** — so unlike the caret (§5c), this re-fit
 after the spec is finalized, which `add`'s earlier settle predates). So the fix is to make the gesture **self-settle**,
 not to delete the re-fit.
 
-**The fix.** Wrap `_reactToDropOf` + `_justDropped` in ONE `_settleLayoutsAfterBatch`, AFTER `add`'s settle. Two
-non-obvious constraints fixed the shape:
-- **Keep `add`'s settle first** (don't batch the whole drop): `_justDropped` READS the dropped widget's settled
+**The fix.** Wrap `_reactToDropOf` + `_justDropped` in ONE settle, AFTER `add`'s settle. Two non-obvious constraints
+fixed the shape:
+- **Keep `add`'s settle first** (don't wrap the whole drop): `_justDropped` READS the dropped widget's settled
   geometry (`@width()`/`@height()`, fractional-in-parent), so absorbing `add`'s settle would feed it stale geometry.
-- **BATCH, not single:** `WindowWdgt._reactToDropOf` rebuilds the window chrome via `buildAndConnectChildren` (many
-  public adds); a single self-settle fires mid-rebuild on the half-wired window and crashes (16 window-drop tests).
-  The batch absorbs those nested settles + `_justDropped`'s `constrainToRatio` and flushes once.
+- **SINGLE over non-settling cores, not batch.** The tail dispatches to an OPEN-ENDED set of recipient hooks (13
+  `_reactToDropOf` overrides) that legitimately do structural work — rebuild window chrome, `fullDestroy`, re-home via
+  `add`, create-a-reference-and-`close`, recompile tiles. The first landing (ce5e78b7) used `_settleLayoutsAfterBatch`,
+  which ABSORBS those nested public self-settlers (batch's whole job), because `WindowWdgt._reactToDropOf`'s chrome
+  rebuild (`buildAndConnectChildren`, many adds) crashed a NAIVE single mid-rebuild on the half-wired window (16
+  window-drop tests). The FOLLOW-UP did it right: route every recipient through the NON-settling CORE
+  (`buildAndConnectChildren`→`_buildAndConnectChildrenNoSettle`, `fullDestroy`→`_fullDestroyNoSettle`, `add`→
+  `_addNoSettle`, `addInPseudoRandomPosition`→its core; and SPLIT the coreless ones into the standard public-wrapper /
+  `_xNoSettle` pair — `createReference`/`createReferenceAndClose`, the popup `closePopUpsMarkedForClosure`, the
+  fizzytiles `showCompiledCode`), then wrap the tail in SINGLE (`_settleLayoutsAfter`). `buildAndConnectChildren` was
+  ALREADY this shape (single over 8 `_addNoSettle`s) — the precedent proving the "single can't nest a builder" fear
+  unfounded; the rebuild just had to call the core it already owned. Single is the campaign's discipline: it THROWS if a
+  future recipient sneaks in a public setter (cores-call-cores enforced at runtime); batch silently absorbs it.
 
 **The hook rename (private calls private).** `reactToDropOf`/`justDropped` → `_reactToDropOf`/`_justDropped` (they are
 framework-internal drop hooks). This surfaced one lint [A] hit — `SimpleDropletWdgt._reactToDropOf`'s public
-`setBounds` → `silentRawSetBounds` (raw twin; byte-identical for the freefloating dropped widget). The STRUCTURAL
-calls (`add`/`addAsSiblingAfterMe`/`fullDestroy`/`buildAndConnectChildren`) stay PUBLIC on purpose: `_reactToDropOf`
-also runs from a NON-batch caller (`Widget.coffee:2985`, the animated return-to-origin), where a public setter
-correctly self-settles; at the drop the batch absorbs it. So lint [A]'s geometry-only scope is exactly right.
+`setBounds` → `silentRawSetBounds` (raw twin; byte-identical for the freefloating dropped widget). Under the SINGLE
+tier the structural calls (`fullDestroy`/`add`/`buildAndConnectChildren`/…) go to their NON-settling CORES too (the
+first batch landing left them public, since batch absorbed them). A cores-only hook needs EVERY caller to provide the
+settle: the live drop does; the dead / homepage-excluded slide-back (`Widget.coffee` `slideBackTo`) got an explicit
+`_settleLayoutsAfter` wrap. (`addAsSiblingAfterMe` needed no change — it already routes through `_addNoSettle`.) When
+deleting a recipient's last settling caller orphans a public wrapper, the build's dead-method gate catches it
+(`PanelWdgt.addInPseudoRandomPosition` was deleted, its core kept); a `_xNoSettle` twin that is a sibling-closer not a
+wrapper/core is marked `# thin-wrap-exempt` (the popup closer).
 
-**Next:** `reactToGrabOf` (7) + `childRemoved` (2) are the symmetric grab/removal counterparts — the same convert.
+**Next:** `reactToGrabOf` (7) + `childRemoved` (2) are the symmetric grab/removal counterparts — the same convert,
+now with the single-over-cores pattern as the template.
 
 ## 6. Q5 — The legitimate residual (the proposed allowlist)
 

@@ -80,10 +80,13 @@ class PopUpWdgt extends Widget
     @onClickOutsideMeOrAnyOfMyChildren nil
     if pinMenuItem?
       pinMenuItem.firstParentThatIsAPopUp().propagateKillPopUps()
+      world.closePopUpsMarkedForClosure()
     else
+      # no-arg caller is _justDropped (inside the drop's settle): mark + close the popups through
+      # the non-settling core so they ride the drop's flush rather than re-entering the flush guard.
       @getParentPopUp()?.propagateKillPopUps()
-    world.closePopUpsMarkedForClosure()
-    
+      world._closePopUpsMarkedForClosureNoSettle()
+
     # leave the menu attached to whatever it's attached,
     # just change the shadow.
     @updatePopUpShadow()

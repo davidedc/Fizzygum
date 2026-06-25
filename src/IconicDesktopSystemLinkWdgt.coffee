@@ -23,6 +23,8 @@ class IconicDesktopSystemLinkWdgt extends WidgetHolderWithCaptionWdgt
   # rather than the default "create a reference". IconicDesktopSystemFolderShortcutWdgt
   # keys its drop off this instead of `instanceof IconicDesktopSystemLinkWdgt`.
   # (type-test-elimination campaign)
+  # Only called from IconicDesktopSystemFolderShortcutWdgt._reactToDropOf, inside the drop's single
+  # settle, so add through the non-settling core.
   addSelfWhenDroppedIntoFolder: (folderContents) ->
-    folderContents.add @
+    folderContents._addNoSettle @
 

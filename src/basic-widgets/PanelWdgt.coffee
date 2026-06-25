@@ -110,12 +110,10 @@ class PanelWdgt extends Widget
   # puts the widget in the ScrollPanel
   # in some sparse manner and keeping it
   # "in view"
-  # public self-settling entry (e.g. a drop into the basement). The private chain that re-homes a
-  # closed/lost widget calls _addInPseudoRandomPositionNoSettle directly -- it is already inside close()'s
-  # settle batch, so it must NOT re-enter the settle tier through the public add.
-  addInPseudoRandomPosition: (aWdgt) ->
-    @_settleLayoutsAfter => @_addInPseudoRandomPositionNoSettle aWdgt
-
+  # NON-settling: every caller (a drop into the basement via BasementOpenerWdgt._reactToDropOf, the
+  # close/lost re-home chain) runs inside an enclosing settle, so this must not re-enter the settle tier
+  # through a public add. (The public self-settling wrapper was removed when its last caller -- the drop --
+  # went cores-only; nothing needs a standalone settling entry here.)
   _addInPseudoRandomPositionNoSettle: (aWdgt) ->
     width = @width()
     height = @height()

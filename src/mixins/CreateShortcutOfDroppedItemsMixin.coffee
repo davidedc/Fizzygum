@@ -32,5 +32,6 @@ CreateShortcutOfDroppedItemsMixin =
         # a real widget (not already a shortcut) leaves a reference behind and closes
         # (was `!(droppedWidget instanceof IconicDesktopSystemShortcutWdgt)`).
         # (type-test-elimination campaign)
+        # _reactToDropOf runs inside the drop's single settle -> the non-settling core.
         if !droppedWidget.isDesktopShortcut?()
-          droppedWidget.createReferenceAndClose nil, @
+          droppedWidget._createReferenceAndCloseNoSettle nil, @

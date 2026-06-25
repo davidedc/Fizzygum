@@ -53,8 +53,9 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
       @target.parent.rememberFractionalSituationInHoldingPanel()
 
 
+  # Runs inside the drop's single settle, so add through the non-settling core.
   _reactToDropOf: (droppedWidget) ->
-    @target.scrollPanel.contents.addInPseudoRandomPosition droppedWidget
+    @target.scrollPanel.contents._addInPseudoRandomPositionNoSettle droppedWidget
 
   rejectsBeingDropped: ->
     true

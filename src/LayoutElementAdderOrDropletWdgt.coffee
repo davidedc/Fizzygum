@@ -101,12 +101,14 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
       nil,
       LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
+  # Runs inside the drop's single settle: addAsSiblingAfterMe is already non-settling (-> _addNoSettle),
+  # and fullDestroy -> the non-settling core _fullDestroyNoSettle.
   _reactToDropOf: (widgetBeingDropped) ->
     @addAsSiblingAfterMe \
       widgetBeingDropped,
       nil,
       LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    @fullDestroy()
+    @_fullDestroyNoSettle()
 
   mouseEnter: ->
     @setColor Color.create 100, 100, 100

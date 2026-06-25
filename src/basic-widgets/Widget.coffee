@@ -2154,7 +2154,17 @@ class Widget extends TreeNode
     @removeFromTree()
   # this part is excluded from the fizzygum homepage build <<«
 
+  # PUBLIC self-settling entry (menus / triggers / double-clicks). The NON-settling core
+  # _createReferenceNoSettle is what a drop recipient calls (it runs inside the drop's settle, so
+  # a public add/setExtent would re-enter the flush guard and throw under the single-mutation tier).
   createReference: (referenceName, placeToDropItIn = world) ->
+    @_settleLayoutsAfter => @_createReferenceNoSettle referenceName, placeToDropItIn
+
+  # The COMPLETE createReference minus the settle. add -> _addNoSettle and setExtent -> rawSetExtent
+  # (the shortcut is freshly added freefloating, so the immediate raw size is byte-identical to the
+  # deferred desired-extent path; same add-then-size order as the public version, so the icon grid
+  # positions identically once the enclosing settle re-fits).
+  _createReferenceNoSettle: (referenceName, placeToDropItIn = world) ->
     # this function can also be called as a callback
     # of a trigger, in which case the first parameter
     # here is a menuItem. We take that parameter away
@@ -2171,14 +2181,19 @@ class Widget extends TreeNode
     widgetToAdd = new IconicDesktopSystemDocumentShortcutWdgt @, referenceName
     # this "add" is going to try to position the
     # new icon into a grid
-    placeToDropItIn.add widgetToAdd
-    widgetToAdd.setExtent new Point 75, 75
+    placeToDropItIn._addNoSettle widgetToAdd
+    widgetToAdd.rawSetExtent new Point 75, 75
     widgetToAdd.fullChanged()
     @bringToForeground()
 
+  # PUBLIC self-settling entry; _createReferenceAndCloseNoSettle is the core a drop recipient calls
+  # (IconicDesktopSystemFolderShortcutWdgt / CreateShortcutOfDroppedItemsMixin, inside the drop's settle).
   createReferenceAndClose: (referenceName, placeToDropItIn = world) ->
-    @createReference referenceName, placeToDropItIn
-    @close()
+    @_settleLayoutsAfter => @_createReferenceAndCloseNoSettle referenceName, placeToDropItIn
+
+  _createReferenceAndCloseNoSettle: (referenceName, placeToDropItIn = world) ->
+    @_createReferenceNoSettle referenceName, placeToDropItIn
+    @_closeNoSettle()
 
   # Widget full image:
   # Fixes https://github.com/jmoenig/morphic.js/issues/7
@@ -2982,7 +2997,11 @@ class Widget extends TreeNode
       stepCount += 1
       if stepCount is steps
         situation.origin.add @
-        situation.origin._reactToDropOf @  if situation.origin._reactToDropOf
+        # _reactToDropOf is cores-only now (non-settling), so it needs an enclosing settle -- the live
+        # drop settles it in ActivePointerWdgt.drop; this (dead / homepage-excluded slide-back) path must
+        # too. add above already self-settled the re-home.
+        if situation.origin._reactToDropOf
+          situation.origin._settleLayoutsAfter => situation.origin._reactToDropOf @
         @step = oldStep
         @fps = oldFps
         if @step == noOperation or !@step?

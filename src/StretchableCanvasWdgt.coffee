@@ -171,9 +171,10 @@ class StretchableCanvasWdgt extends CanvasWdgt
     # due to rounding errors
     @behindTheScenesBackBufferContext.useLogicalPixelsUntilRestore()
 
+  # Runs inside the drop's single settle: re-home the dropped widget through the non-settling add core.
   _reactToDropOf: (droppedWidget) ->
     @paintImage droppedWidget.position(), droppedWidget.fullImage(nil, false, true)
-    world.add droppedWidget, nil, nil, true
+    world._addNoSettle droppedWidget, nil, nil, true
   
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023

@@ -583,9 +583,23 @@ class WorldWdgt extends PanelWdgt
   # this part is excluded from the fizzygum homepage build <<«
 
   # used to close temporary menus
+  # thin-wrap-exempt: NOT the canonical wrap over its _NoSettle twin -- the two are PARALLEL closers, not
+  # wrapper/core. This one closes each marked popup via the self-settling close() (correct for the top-level
+  # "pin" menu-click path, MenuHeader -> pinPopUp); the twin closes via _closeNoSettle for the drop path
+  # (PopUpWdgt._justDropped -> pinPopUp, inside the drop's settle). Separate keeps the menu path's per-popup
+  # settle exactly (vs collapsing to one settle, which could shift size-dependent basement re-home spots).
   closePopUpsMarkedForClosure: ->
     @popUpsMarkedForClosure.forEach (eachWidget) =>
       eachWidget.close()
+    @popUpsMarkedForClosure.clear()
+
+  # NON-settling variant for the drop path (PopUpWdgt._justDropped -> pinPopUp, inside the drop's
+  # settle): each marked popup closes through the core _closeNoSettle so it rides the drop's single
+  # flush instead of re-entering the flush guard. The public version above stays for the top-level
+  # menu-click "pin" path, where the self-settling close() is correct.
+  _closePopUpsMarkedForClosureNoSettle: ->
+    @popUpsMarkedForClosure.forEach (eachWidget) =>
+      eachWidget._closeNoSettle()
     @popUpsMarkedForClosure.clear()
   
   # »>> this part is excluded from the fizzygum homepage build
