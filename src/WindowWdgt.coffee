@@ -595,15 +595,18 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     #@titlebarBackground.rawSetExtent (new Point @width(), closeIconSize + 2 * @padding).subtract new Point 4,4
     #@titlebarBackground.fullRawMoveTo @position().add new Point 2,2
 
+    # NON-settling cores (not the public collapse/unCollapse): this is a layout pass, so reaching the
+    # self-settling wrapper would re-enter the flush. The cores are idempotent, so an already-correct
+    # button is a no-op exactly as the public guards made it. (check-layering [G])
     if @width() < 4 * (closeIconSize + @padding) + @padding
-      @editButton?.collapse()
+      @editButton?._collapseNoSettle()
     else
-      @editButton?.unCollapse()
+      @editButton?._unCollapseNoSettle()
 
     if @width() < 3 * (closeIconSize + @padding) + @padding
-      @internalExternalSwitchButton?.collapse()
+      @internalExternalSwitchButton?._collapseNoSettle()
     else
-      @internalExternalSwitchButton?.unCollapse()
+      @internalExternalSwitchButton?._unCollapseNoSettle()
 
     # label
     if @label? and @label.parent == @

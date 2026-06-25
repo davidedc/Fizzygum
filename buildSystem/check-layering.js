@@ -146,7 +146,7 @@ const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*)\b/;
 // The wrapper set is DISCOVERED structurally (discoverSettlingWrappers: every method whose body calls
 // @_settleLayoutsAfter), never hand-listed -- so a NEW single-settling wrapper is auto-covered. Only the
 // SINGLE-mutation tier counts: a future _settleLayoutsAfterBatch wrapper ABSORBS nested settles, so it is
-// safe from low-level code and is NOT a [G] subject (SETTLE_CALL matches _settleLayoutsAfter only). Three
+// safe from low-level code and is NOT a [G] subject (SETTLE_CALL matches _settleLayoutsAfter only). Two
 // name groups are excluded (a name line-scanner cannot cover them -- documented so they are a reasoned
 // boundary, not a silent gap):
 //   * the geometry/text setters -- [A] already reports them, with a sharper message.
@@ -158,11 +158,12 @@ const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*)\b/;
 //     scanner CAN attribute, and the most important hole to close (a future *NoSettle core doing @add).
 //     (The orphan guard + runtime throw remain the backstop for the `.add` member form and for
 //     construction-time add() on an orphan.)
-//   * collapse / unCollapse -- present in layout passes TODAY (WindowWdgt._positionAndResizeChildren's
-//     editButton / internalExternalSwitchButton; HorizontalMenuPanelWdgt._reLayoutSelf). That is the
-//     "SwitchButton-collapse" item OWNED by the end-of-cycle-flush drawdown campaign's OPEN re-probe set
-//     (docs/end-of-cycle-flush-inventory.md). [G] DEFERS to that campaign rather than rubber-stamping a
-//     # nosettle-sanctioned marker here, which would pre-judge convert-vs-leave (lint-ratchet plan Phase 5).
+// (collapse / unCollapse USED to be excluded here -- they appeared in layout passes
+// [WindowWdgt._positionAndResizeChildren's editButton / internalExternalSwitchButton;
+// HorizontalMenuPanelWdgt._reLayoutSelf]. The end-of-cycle-flush drawdown convert (2026-06-25) routed those
+// layout-pass call-sites to the idempotent _collapseNoSettle / _unCollapseNoSettle cores, so [G] now COVERS
+// collapse / unCollapse like any other wrapper -- the discrete-handler callers [Un/CollapseIconButtonWdgt,
+// BasementOpenerWdgt] are non-low-level and correctly keep the public self-settling form.)
 //
 // The TRANSITIVE closure of [G] (forbid low-level code from REACHING a wrapper by ANY call path) was
 // prototyped and REJECTED: a name-based backward-reachability fixpoint balloons to ~720-870 names / ~500-710
@@ -172,7 +173,7 @@ const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*)\b/;
 // the orphan guard (a receiver's attached-ness is dynamic), so this DIRECT rule is the maximal SOUND static
 // check; the runtime throw stays the backstop for the transitive/dynamic cases (and for `add`).
 const SETTLE_CALL = /[@.]\s*_settleLayoutsAfter\b/;          // SINGLE-mutation tier only (Batch absorbs nested settles)
-const WRAPPER_EXCLUDED = new Set(['add', 'collapse', 'unCollapse']);   // see the [G] block above
+const WRAPPER_EXCLUDED = new Set(['add']);   // see the [G] block above (collapse/unCollapse folded in once the layout passes routed to their cores)
 const SELF_ADD_CALL = /@\s*add\b/;        // [G] the unambiguous structural add: @add (self == Widget.add inside a Widget
                                           // method). \b excludes @addMany / @addInPseudoRandomPosition; the leading @ (not .)
                                           // excludes the Point#add-ambiguous member form @expr().add / pt.add / @_addNoSettle.

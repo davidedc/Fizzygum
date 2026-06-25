@@ -72,8 +72,8 @@ un-allowlisted end-of-cycle layout" gate (§8).
 
 ## 4. Q2 + Q3 — Attribution & why-not-settled (the by-action inventory)
 
-> **Current numbers** (2026-06-25 full-suite dpr1 audit, post drop-convert — **80** origin records across
-> **71** interaction frames / 15 groups; trajectory **1244 → 564 → 320 → 278 → 253 → 140 → 80**). ALL FIVE settle-tier "stinks" now self-settle via the
+> **Current numbers** (2026-06-25 full-suite dpr1 audit, post the collapse + SwitchButton convert — **38** origin records across
+> **30** interaction frames / 13 groups; trajectory **1244 → 564 → 320 → 278 → 253 → 140 → 80 → 73 → 38**). ALL FIVE settle-tier "stinks" now self-settle via the
 > **single-mutation** `_settleLayoutsAfter`
 > (`buildAndConnectChildren` 2026-06-23; `fullDestroy`/`close`/`collapse`/`unCollapse`
 > 2026-06-24) — this flip is **flush-NEUTRAL** (the records were already deferred/gone) but it ZEROES the
@@ -86,6 +86,20 @@ un-allowlisted end-of-cycle layout" gate (§8).
 > wall-clock-sensitive (a heavy cycle drains several queued events in one frame — see `DETERMINISM.md`), so totals are
 > **run-to-run noisy by a few records** even on a fixed build; read as order-of-magnitude, regenerate any time — see
 > `end-of-cycle-audit-tooling.md`.
+>
+> **2026-06-25 (collapse + SwitchButton convert — RE-AUDIT DONE; total 73 → 38, the biggest residual ELIMINATED):**
+> CONVERTED `SwitchButtonWdgt.mouseClickLeft` (the window-collapse toggle, the **32-record biggest residual**): the
+> discrete click now SELF-SETTLES (`@_settleLayoutsAfter` around the `@buttonShown` toggle + `_invalidateLayout`)
+> instead of riding the per-frame flush — `escalateEvent` stays outside the settle (the ancestor handler self-settles
+> independently). The audit confirms `SwitchButtonWdgt.mouseClickLeft` is GONE from the origin records. ENABLED by the
+> companion [G] hardening: the width-driven collapse decisions in the layout passes
+> (`WindowWdgt._positionAndResizeChildren`'s editButton / internalExternalSwitchButton;
+> `HorizontalMenuPanelWdgt._reLayoutSelf`) were ROUTED from the public self-settling `collapse()`/`unCollapse()` to the
+> now-idempotent `_collapseNoSettle`/`_unCollapseNoSettle` cores — so the synchronous settle can re-enter those passes
+> without hitting the one-flush throw. `check-layering` rule [G] now COVERS collapse/unCollapse (removed from
+> `WRAPPER_EXCLUDED`). Byte-identical: full gauntlet (dpr1/dpr2/WebKit 165/165) + dpr2 torture; audit neutrality 165/165.
+> Lesson: the prior "OPEN — re-probe; likely CONVERT" verdict was right — the convert is clean once the layout-pass
+> collapse calls route to cores. (lint-ratchet follow-up C3; [[fizzygum-end-of-cycle-flush-drawdown]].)
 >
 > **2026-06-25 (contained-text re-fit refactor — RE-AUDIT DONE; total 278 → 253):** the contained-text re-fit lives on
 > **`StringWdgt._reFitContainedTextNoSettle`**, and this session converted all seven API-path setters
@@ -142,7 +156,7 @@ Rolled up by **action** (the convert-vs-leave unit), interaction frames, with th
 | `*._reactToDropOf` (drag/DROP) | **0** (was ~62) | 0 | discrete re-parent gesture | — | **CONVERTED 2026-06-25** — the drop self-settles (`ActivePointerWdgt.drop` wraps `_reactToDropOf`+`_justDropped` in ONE single settle over non-settling cores); overturned the earlier "LEAVE" (§5d). |
 | `*.reactToGrabOf` (drag/GRAB) | **0** (was 7) | 0 | discrete re-parent gesture | — | **CONVERTED 2026-06-25** — the grab self-settles (`ActivePointerWdgt.grab` wraps the recipient `reactToGrabOf`→`_reactToGrabOfNoSettle` in ONE single settle over non-settling cores); the symmetric twin of the drop (§5e). |
 | `PanelWdgt.childRemoved` (tree removal) | 2 | 2 | discrete removal | a child removed from a scroll panel **mid string-edit** re-fits the container, deferred | **CONVERT candidate** (SEPARATE from the grab — string-edit path, not a grab gesture; §5e) |
-| `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | 32 | 6 | discrete click | invalidates on toggle | **OPEN — re-probe** (a discrete click → likely CONVERT; entangled w/ collapse, the biggest residual at 32 — investigate) |
+| `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | **0** | 0 | discrete click | **self-settles** via `_settleLayoutsAfter` (CONVERTED 2026-06-25; enabled by routing the layout-pass collapse decisions to the `_collapseNoSettle`/`_unCollapseNoSettle` cores) — gone from end-of-cycle | **DONE** (converted; was the 32-record biggest residual) |
 | `Widget.collapse` / `unCollapse` | **0** | 0 | discrete | **self-settles** via `mutateGeometryThenSettle` (flipped 2026-06-24; collapse-hook `destroy` + bar-button re-`add` use cores) — gone from end-of-cycle | **DONE** (self-settled) |
 | `WindowWdgt.childCollapsed` / `childUnCollapsed` | **0** | 0 | discrete | parent reaction, now inside collapse's single settle | **DONE** (folded into collapse self-settle) |
 | *(untagged)* **during-paint** (freefloating re-fit from `fullPaintInto…`) | 7 | 1 | curiosity | a freefloating widget recomputed lazily at paint | **OPEN — re-probe** (hypothesis: self-contained paint-time recompute; §11 — VERIFY) |
@@ -361,9 +375,10 @@ for a dedicated convert/leave decision (find the off-settle removal path, disabl
 — fired when `@add` re-homes the grabbed widget onto the hand — is already captured inside `@add`'s settle, which is why the
 grab tests show no `childRemoved` survivors.
 
-**Next:** `childRemoved` (2, string-edit path) + the big `SwitchButtonWdgt.mouseClickLeft` (32, window-collapse) are the
-clearest discrete-action convert candidates; the rest of the 73 is now **OPEN — re-probe** (§6, a provisional suspect-list,
-not a settled allowlist) + the out-of-scope macro-driver (14).
+**Next:** `SwitchButtonWdgt.mouseClickLeft` (32, the biggest residual) is now **DONE** (converted 2026-06-25, see the
+banner). `childRemoved` (2, string-edit path) remains the clearest discrete-action convert candidate; the rest of the
+post-convert 38 is **OPEN — re-probe** (§6, a provisional suspect-list, not a settled allowlist) + the out-of-scope
+macro-driver (14).
 
 ## 6. Q5 — The legitimate residual (the proposed allowlist)
 

@@ -65,10 +65,16 @@ class SwitchButtonWdgt extends Widget
     return @buttonShown != 0
 
   mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
-    @buttonShown++
-    @buttonShown = @buttonShown % @buttons.length
-
-    @_invalidateLayout()
+    # SELF-SETTLE the toggle (end-of-cycle-flush drawdown convert 2026-06-25): a discrete click is an
+    # outermost public mutation, so it flushes ONCE on return instead of riding the per-frame end-of-cycle
+    # flush (this was the biggest end-of-cycle residual). escalateEvent stays OUTSIDE the settle -- the
+    # ancestor handler is its own outermost mutation and self-settles independently; nesting it would
+    # re-enter this flush. Safe because the layout-pass collapse decisions it can trigger now route to the
+    # idempotent _collapseNoSettle / _unCollapseNoSettle cores (no public re-entrant settle).
+    @_settleLayoutsAfter =>
+      @buttonShown++
+      @buttonShown = @buttonShown % @buttons.length
+      @_invalidateLayout()
     # TODO gross pattern break - usually mouseClickLeft has 9 params
     # none of which is a widget
     @escalateEvent "mouseClickLeft", @

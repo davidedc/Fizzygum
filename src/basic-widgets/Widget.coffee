@@ -2100,6 +2100,11 @@ class Widget extends TreeNode
     @_settleLayoutsAfter => @_collapseNoSettle()
 
   _collapseNoSettle: ->
+    # IDEMPOTENT (mirrors collapse's public guard): a direct caller -- a layout pass that decides collapse
+    # by width (WindowWdgt._positionAndResizeChildren, HorizontalMenuPanelWdgt._reLayoutSelf) -- relies on
+    # this no-op when already in state, so the core never re-runs the hooks / @_invalidateLayout (which would
+    # THROW mid-pass). Byte-identical for the public path, which guards before ever reaching here.
+    return if @collapsed
     @parent?.childBeingCollapsed? @
     @collapsed = true
     WorldWdgt.numberOfCollapseFlagsChanges++
@@ -2119,6 +2124,10 @@ class Widget extends TreeNode
     @_settleLayoutsAfter => @_unCollapseNoSettle()
 
   _unCollapseNoSettle: ->
+    # IDEMPOTENT (mirrors unCollapse's public guards) -- see _collapseNoSettle for why a direct layout-pass
+    # caller needs the no-op (avoid re-running hooks / @_invalidateLayout mid-pass).
+    return if !@collapsed
+    return if !@isCollapsed()
     @parent?.childBeingUnCollapsed? @
     @collapsed = false
     WorldWdgt.numberOfCollapseFlagsChanges++

@@ -104,13 +104,13 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
 
     widthLayingDown = @internalPadding
     for i in [0...countOfItems]
-      childrenNotHandlesNorCarets[i].unCollapse()
+      childrenNotHandlesNorCarets[i]._unCollapseNoSettle()   # NON-settling core: a layout pass, not the public wrapper (check-layering [G])
       startingPoint = @position().add new Point (@width() - widthOfContentsSoFar)/2, 0
       childrenNotHandlesNorCarets[i].fullRawMoveTo (startingPoint.add new Point widthLayingDown, (@height()-childrenNotHandlesNorCarets[i].height())/2).round()
       widthLayingDown += childrenNotHandlesNorCarets[i].width() + @internalPadding
 
     for i in [countOfItems...childrenNotHandlesNorCarets.length]
-      childrenNotHandlesNorCarets[i].collapse()
+      childrenNotHandlesNorCarets[i]._collapseNoSettle()   # NON-settling core (check-layering [G])
 
     world.maybeEnableTrackChanges()
     @fullChanged()
