@@ -126,21 +126,29 @@ un-allowlisted end-of-cycle layout" gate (§8).
 
 Rolled up by **action** (the convert-vs-leave unit), interaction frames, with the §5 verdict:
 
+> **⚠ ALL "LEAVE" VERDICTS RETRACTED (owner, 2026-06-25).** The earlier leave assessments were cavalier — **nothing**
+> is allowlisted as "legitimately continuous, leave it" until its discrete-vs-continuous nature is *verified*. Every
+> verdict that was **LEAVE** now reads **OPEN — re-probe**: pin the actual enqueue stack (§ technique), and for a
+> suspected-continuous prove the interaction record is a raw EVENT STREAM, not a discrete public mutator returning
+> unsettled; disable-probe a suspected-wasted re-fit. The prior is strong: drop, grab, teardown, collapse, and
+> contained-text were **all** once "LEAVE" and **all** turned out CONVERT or eliminate — a "LEAVE" here has been far
+> likelier wrong than right. (§6's "allowlist" is likewise PROVISIONAL until each entry is re-probed.)
+
 | action (trigger) | records | tests | nature | why it defers | **verdict** |
 |---|--:|--:|---|---|---|
 | `Widget.destroy` / `close` / `fullDestroy` (teardown) | 0 | 0 | teardown | **self-settles**, like `add` — ALL now via the single-mutation `mutateGeometryThenSettle` (`close`/`fullDestroy` flipped off the batching tier 2026-06-24; bulk-teardown loops `fullDestroyChildren`/`closeChildren` use cores) — gone from end-of-cycle | **DONE** (self-settled) |
-| *(untagged)* **hover / pointer-dispatch** (genuine hover/scroll) | **9** | 5 | continuous | one settle/frame is correct batching | **LEAVE** (continuous). The ~84 `SimplePlainTextScrollPanelWdgt` per-keystroke caret re-fit **plus** the layout-inert HANDLE-move re-fits that used to inflate this row (shared `playQueuedEvents` sig) were **ELIMINATED 2026-06-25** as wasted decoration work (§5c) — 117 → 9. |
+| *(untagged)* **hover / pointer-dispatch** (genuine hover/scroll) | **9** | 5 | continuous | one settle/frame is correct batching | **OPEN — re-probe** (hypothesis: continuous hover/scroll, one-settle-per-frame is correct — VERIFY, don't assume). The ~84 `SimplePlainTextScrollPanelWdgt` per-keystroke caret re-fit **plus** the layout-inert HANDLE-move re-fits that used to inflate this row (shared `playQueuedEvents` sig) were **ELIMINATED 2026-06-25** as wasted decoration work (§5c) — 117 → 9. |
 | `StringWdgt._reFitContainedTextNoSettle` (contained-text edit, **API path**; was `TextWdgt.reLayoutAndRefreshContainerIfContainedText`) | **0** (was 120) | 0 | — | the 7 API-path setters now **single**-self-settle (`_settleLayoutsAfter`), so this leaves end-of-cycle entirely (see the 2026-06-25 note above); the per-keystroke CARET residual that remained was then eliminated-as-wasted (§5c), so contained-text no longer reaches end-of-cycle at all | **DONE** (API path self-settles 2026-06-24; caret residual eliminated 2026-06-25) |
 | `*._reactToDropOf` (drag/DROP) | **0** (was ~62) | 0 | discrete re-parent gesture | — | **CONVERTED 2026-06-25** — the drop self-settles (`ActivePointerWdgt.drop` wraps `_reactToDropOf`+`_justDropped` in ONE single settle over non-settling cores); overturned the earlier "LEAVE" (§5d). |
 | `*.reactToGrabOf` (drag/GRAB) | **0** (was 7) | 0 | discrete re-parent gesture | — | **CONVERTED 2026-06-25** — the grab self-settles (`ActivePointerWdgt.grab` wraps the recipient `reactToGrabOf`→`_reactToGrabOfNoSettle` in ONE single settle over non-settling cores); the symmetric twin of the drop (§5e). |
 | `PanelWdgt.childRemoved` (tree removal) | 2 | 2 | discrete removal | a child removed from a scroll panel **mid string-edit** re-fits the container, deferred | **CONVERT candidate** (SEPARATE from the grab — string-edit path, not a grab gesture; §5e) |
-| `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | 32 | 6 | discrete click | invalidates on toggle | **LEAVE/convert** (entangled w/ collapse) |
+| `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | 32 | 6 | discrete click | invalidates on toggle | **OPEN — re-probe** (a discrete click → likely CONVERT; entangled w/ collapse, the biggest residual at 32 — investigate) |
 | `Widget.collapse` / `unCollapse` | **0** | 0 | discrete | **self-settles** via `mutateGeometryThenSettle` (flipped 2026-06-24; collapse-hook `destroy` + bar-button re-`add` use cores) — gone from end-of-cycle | **DONE** (self-settled) |
 | `WindowWdgt.childCollapsed` / `childUnCollapsed` | **0** | 0 | discrete | parent reaction, now inside collapse's single settle | **DONE** (folded into collapse self-settle) |
-| *(untagged)* **during-paint** (freefloating re-fit from `fullPaintInto…`) | 7 | 1 | curiosity | a freefloating widget recomputed lazily at paint | **LEAVE** (self-contained; §11) |
+| *(untagged)* **during-paint** (freefloating re-fit from `fullPaintInto…`) | 7 | 1 | curiosity | a freefloating widget recomputed lazily at paint | **OPEN — re-probe** (hypothesis: self-contained paint-time recompute; §11 — VERIFY) |
 | *(untagged)* **macro-driver** (test fixture-build macros) | 14 | 9 | test-construction | harness builds fixtures mid-test | **out of scope** (not product) |
-| `Widget.setMaxDim` (stack-divider drag) | 4 | 1 | continuous-ish (divider drag) | constraint change invalidates | **LEAVE** |
-| `SimplePlainTextWdgt.setSoftWrap` | 1 | 1 | discrete | family 5, **left synchronous** by prior decision | **LEAVE** |
+| `Widget.setMaxDim` (stack-divider drag) | 4 | 1 | continuous-ish (divider drag) | constraint change invalidates | **OPEN — re-probe** (hypothesis: continuous divider drag — but is it a discrete `setMaxDim` public mutator? VERIFY) |
+| `SimplePlainTextWdgt.setSoftWrap` | 1 | 1 | discrete | family 5, **left synchronous** by prior decision | **OPEN — re-probe** (discrete; family-5 soft-wrap was left synchronous by a prior decision — re-verify that decision) |
 | **`VerticalStackLayoutSpec.setAlignment*` / `setWidthOfElementWhenAdded`** | **2** | **1** | **discrete menu pick** | sets a layout-spec property, re-fits via the seam | **CONVERT candidate** |
 | `Widget.newParentChoice` (re-parent menu) | 0 | 0 | discrete menu | deferred via `_reFitContainer` (none surfaced this run) | **CONVERT candidate** (or allowlist) |
 
@@ -149,10 +157,14 @@ Rolled up by **action** (the convert-vs-leave unit), interaction frames, with th
 Applying the rubric (continuous/high-frequency → leave; discrete one-shot → convert candidate; category-3 → out of
 scope; boot → n/a here):
 
-- **LEAVE (the legitimate residual, ~95% of records):** hover/pointer-dispatch, teardown (`destroy`), content-edit,
-  drag/drop, collapse-adjacent, stack-divider, soft-wrap. These are continuous, high-frequency, or already a
-  *conscious* deferral by the deferred-layout campaign. One settle/frame is the **correct** batching; self-settling
-  each event would inflate per-frame settle count and risk determinism (esp. dpr2-under-load).
+- **~~LEAVE (the legitimate residual, ~95% of records)~~ — RETRACTED 2026-06-25 (see the §4 banner).** The first pass
+  parked hover/pointer-dispatch, teardown (`destroy`), content-edit, drag/drop, collapse-adjacent, stack-divider and
+  soft-wrap here as "continuous, leave." That was cavalier: teardown, content-edit, drag/DROP, GRAB and collapse have
+  **all since CONVERTED or been eliminated** (§5b–§5e); the remainder (hover, during-paint, `setMaxDim`, soft-wrap) are
+  now **OPEN — re-probe**, not leave. "One settle/frame is the correct batching" is the HYPOTHESIS to verify per item,
+  not the default — a record is only left once *proven* a raw event stream, never because a public mutator returning
+  unsettled is convenient to call continuous. (Determinism risk is real but is checked by the gauntlet+torture on each
+  actual convert, not assumed in advance.)
 - **CONVERT candidates (the genuine discrete minority, ~7 records):** the **`VerticalStackLayoutSpec` property
   setters** (the textbook case — a discrete menu pick that currently relies on end-of-cycle) and **`newParentChoice`**.
   These *could* wrap their seam call in `settleLayoutsOnceAfter` (the setters already guard with `unless @x == x`,
@@ -350,11 +362,17 @@ for a dedicated convert/leave decision (find the off-settle removal path, disabl
 grab tests show no `childRemoved` survivors.
 
 **Next:** `childRemoved` (2, string-edit path) + the big `SwitchButtonWdgt.mouseClickLeft` (32, window-collapse) are the
-remaining discrete-action convert candidates; the rest of the 73 is the allowlist (§6) + the out-of-scope macro-driver (14).
+clearest discrete-action convert candidates; the rest of the 73 is now **OPEN — re-probe** (§6, a provisional suspect-list,
+not a settled allowlist) + the out-of-scope macro-driver (14).
 
 ## 6. Q5 — The legitimate residual (the proposed allowlist)
 
-The enforceable allowlist (what is *allowed* to reach end-of-cycle), by action class:
+> **PROVISIONAL pending re-probe (2026-06-25, §4 banner).** With the "LEAVE" verdicts retracted, this is a LIST OF
+> SUSPECTS, not a settled allowlist — each entry must be re-probed and *proven* a raw event stream before it earns a
+> permanent place. Several original entries (teardown, drag/DROP+GRAB, contained-text, collapse) have ALREADY converted
+> or been eliminated since the first pass; treat every remaining one as **OPEN — re-probe**, not allowed.
+
+The (provisional) list of what *might* legitimately reach end-of-cycle, by action class:
 
 1. **Pointer/hover dispatch** — `ActivePointerWdgt` mouseEnter/mouseLeave (`mouseOverList`/`mouseOverNew` diff).
 2. **Teardown** — `Widget.destroy` / `removeFromTree` (parent re-fit on child removal).

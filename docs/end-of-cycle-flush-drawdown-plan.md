@@ -16,6 +16,9 @@ which one is the whole job:
    scheduling it (§3, §3c).
 3. **LEAVE** — genuinely **continuous internal machinery** (pointer hover, a drag/typing stream of raw moves) that no
    programmatic caller is awaiting; one coalesced settle/frame is the *correct* batching. Fix: allowlist it (§2, §6).
+   **The RAREST verdict, and the hardest to earn** — every "LEAVE" this campaign assigned has so far been wrong (§2
+   prior; the owner retracted them all 2026-06-25). Reach for it only with PROOF of a raw event stream, never as a
+   default for something that merely looks frequent.
 
 **The discriminator** (learned the hard way this session — §3c): pin the *actual* enqueue stack and ask **"is a public
 API mutator on it, returning unsettled?"** Yes → CONVERT. No, and the enqueuing raw/internal move belongs to a widget
@@ -98,8 +101,10 @@ flows reached only by re-probing a "LEAVE" turned out to be quietly violating it
 ## 2. The classification rubric (per contributor)
 
 1. **CONTINUOUS / high-frequency** (pointer hover, momentum scroll, per-frame step animation, a drag move stream)?
-   → **LEAVE.** One settle/frame is correct batching; self-settling each event would multiply per-frame settle
-   count for no benefit and risk determinism. Allowlist it.
+   → **LEAVE — but ONLY once PROVEN a raw event stream** (the prior below; this has been the campaign's RAREST correct
+   verdict). One settle/frame is correct batching for a genuine stream; self-settling each event would multiply
+   per-frame settle count for no benefit and risk determinism. Do NOT call something continuous because it is a
+   convenient label — pin the stack and confirm no discrete public mutator is on it.
 2. **Raw/silent synchronous-apply mislabelled** (it applies layout on the spot, never enqueues)? → out of scope.
 3. **DISCRETE one-shot state change** (a menu pick, a button/toggle, collapse, a content edit, a property setter,
    a re-parent, **a drag/drop gesture**) that defers OR relies on an unrelated event to settle? → **CONVERT *or*
@@ -115,6 +120,14 @@ The drag/drop row sat at LEAVE because "the deferred-layout campaign deliberatel
 goal (push re-fits ONTO the cycle) is the *opposite* of the drawdown's, so its intent is no classification here. Any
 standing LEAVE that cites another arc's design choice — rather than genuine continuity — is worth re-probing; this
 session converted the biggest contributor exactly that way (§3d, the drop: 140 → 80).
+
+**THE PRIOR IS STRONGLY AGAINST LEAVE — the owner RETRACTED every standing LEAVE on 2026-06-25** (inventory §4 banner).
+Track record: drop, GRAB, teardown, collapse and contained-text were ALL once classified *"LEAVE — continuous,
+allowlist it"* and ALL turned out CONVERT or eliminate — not one survived re-probing. So treat "LEAVE" as a verdict
+that must be EARNED by proof (the record is demonstrably a raw event stream — hover / momentum-scroll / typing-move),
+never a default for anything merely frequent-*looking*. The inventory's verdict cells now read **"OPEN — re-probe"** and
+its §6 allowlist is a provisional suspect-list, precisely so no one trusts an unverified leave. Re-probe relentlessly:
+methodically plowing through "LEAVE"s — re-classifying each from scratch — is what has driven this campaign's gains.
 
 **The same skepticism applies ONE level down — distrust a "convert-but-via-batch, single would be too much churn"
 verdict.** Once a discrete contributor is a confirmed convert, the tier is single (`_settleLayoutsAfter`, THROWS on a
@@ -303,12 +316,17 @@ wrap so the invariant holds everywhere. Full record + verification: `end-of-cycl
 
 ## 4. The audit tooling — regenerate the inventory
 
-The committed harness (the behaviour-neutral, inspector-invisible prelude + the serial per-test loop + the
-by-action aggregator), the exact **build → run-serial → aggregate → before/after-diff** recipe, the **neutrality
-gate** (`165 PASS inst=YES`, `0 inst=NO`), and how to **attribute a new contributor** (add it to the prelude's
+The committed harness (the behaviour-neutral, inspector-invisible prelude + the SHARDED audit loop + the by-action
+aggregator), the exact **build → run → aggregate → before/after-diff** recipe, the **neutrality gate** (`installed OK:
+165/165`; the sharded runner `failed: 0`), and how to **attribute a new contributor** (add it to the prelude's
 `tagClass(...)` block) all live in ONE place: **`end-of-cycle-audit-tooling.md`** (tooling committed at
-`Fizzygum-tests/scripts/end-of-cycle-audit/`; ~25 min serial). Run it **before** starting (to refresh the §7 by-action
-targets) and **after each convert** (to confirm the contributor shrank and no new one appeared).
+`Fizzygum-tests/scripts/end-of-cycle-audit/`). **~1.5 min now (was ~20):** 2026-06-25 the per-test loop (one cold
+browser PER test, 165 boots — the whole cost) was replaced by the suite's one-browser-per-shard model —
+`run-all-headless.js` gained an opt-in `AUDIT_PRELUDE`/`AUDIT_DIR` hook that injects the prelude per shard and segments
+its `LAYOUTAUDIT` stream into the same per-test logs (the prelude resets its boot/interaction boundary + emits
+`LAYOUTAUDIT_TESTSTART` per test, so totals + classification match the per-test loop — cross-checked byte-for-byte). Run
+it **before** starting (refresh the §7 targets) and **after each convert** (confirm the contributor shrank, no new one
+appeared) — now cheap enough to run freely.
 
 ---
 
@@ -393,7 +411,7 @@ MANY settles run per frame — exactly the risk; gauntlet+torture proves safety.
 
 ---
 
-## 7. The current inventory (2026-06-25 audit, post drop-convert: **80** records / 71 frames / 15 groups; trajectory 1244 → 564 → 320 → 278 → 253 → 140 → 80)
+## 7. The current inventory (2026-06-25 audit, post GRAB-convert: **73** records / 64 frames / 14 groups; trajectory 1244 → 564 → 320 → 278 → 253 → 140 → 80 → 73)
 
 > Update (2026-06-25, later same day): the **sizeToText flip** (StringWdgt/TextWdgt `sizeToTextAndDisableFitting`, the
 > last two `_settleLayoutsAfterBatch` call-sites → single-over-cores via the wrapper/core split, §8) is
@@ -413,11 +431,11 @@ the renamed `invalidateLayout`→`_invalidateLayout`); fixed 2026-06-25, so this
 Full refreshed by-action table + verdicts: `end-of-cycle-flush-inventory.md` §4. (Settle-tier renames since this
 plan's §5: `mutateGeometryThenSettle`→`_settleLayoutsAfter`, `settleLayoutsOnceAfter`→`_settleLayoutsAfterBatch`.)
 
-By-action (interaction-frame records; some rows below predate the 2026-06-25 re-audit — see the inventory doc for current verdicts).
+By-action (CONVERT HISTORY — kept for the trajectory). **⚠ SUPERSEDED for current records + verdicts by `end-of-cycle-flush-inventory.md` §4** (re-audited 2026-06-25 via the sharded loop: 73 records; ALL former "LEAVE" verdicts RETRACTED to "OPEN — re-probe" per the owner — see the §2 prior). The "likely leave" notes below are first-pass and are now OPEN.
 
 | action / origin | recs | first-pass classification (verify with the data) |
 |---|--:|---|
-| **(untagged) event-dispatch residual** (genuine hover/scroll) | 19 | **LEAVE** — continuous. This row was **230**; the teardown self-settle revealed the bulk was menu-cleanup `close()` re-fitting a ScrollPanel (same `Set.forEach < playQueuedEvents` sig as hover, so mislabelled here) — now self-settled, leaving the true hover/scroll residual. |
+| **(untagged) event-dispatch residual** (genuine hover/scroll) | 19 | **OPEN — re-probe** (hypothesis: continuous hover/scroll — VERIFY, §2 prior). This row was **230**; the teardown self-settle revealed the bulk was menu-cleanup `close()` re-fitting a ScrollPanel (same `Set.forEach < playQueuedEvents` sig as hover, so mislabelled here) — now self-settled, leaving the true hover/scroll residual. |
 | **contained-text edit re-fit** (API path `StringWdgt._reFitContainedTextNoSettle`; caret path via the raw seam) | **0** | **DONE** — the API path now self-settles single (§3b, 120→0); the per-keystroke CARET path was ELIMINATED-as-wasted (§3c/§5c). Contained-text no longer reaches end-of-cycle. |
 | `*._reactToDropOf` (drag/DROP) | **0** (was ~62) | **CONVERTED 2026-06-25** — the drop self-settles (`ActivePointerWdgt.drop` wraps `_reactToDropOf`+`_justDropped` in ONE single settle over non-settling cores); the old "LEAVE — the campaign defers these" was circular (§3d / inventory §5d). |
 | `*.reactToGrabOf` (drag/GRAB) | **0** (was 7) | **CONVERTED 2026-06-25** — the grab self-settles (`ActivePointerWdgt.grab` wraps the recipient `_reactToGrabOfNoSettle` in ONE single settle over non-settling cores); the symmetric twin of the drop (§3d / inventory §5e). Audit total 80 → 73. |
@@ -426,24 +444,24 @@ By-action (interaction-frame records; some rows below predate the 2026-06-25 re-
 | `Widget.collapse` / `unCollapse` | **0** | **DONE 2026-06-24** — flipped to `mutateGeometryThenSettle`; gone from end-of-cycle (collapse-hook `destroy` + bar-button re-`add` use cores). |
 | `Widget.destroy` / `close` / `fullDestroy` (teardown) | **0** | **CONVERTED** — even genuine non-freefloating teardown self-settles (consistent-on-return, like `add`): ALL via `mutateGeometryThenSettle` (`close`/`fullDestroy` flipped off the batching tier 2026-06-24; bulk loops `fullDestroyChildren`/`closeChildren` use cores). The earlier "LEAVE" was overridden. |
 | `WindowWdgt.childCollapsed` / `childUnCollapsed` | **0** | **DONE 2026-06-24** — folded into collapse's single settle. |
-| `(untagged) during-paint` (freefloating re-fit from `fullPaintInto…`) | 14 | curiosity — layout invalidation reached from the PAINT pass. Low volume; flag, likely leave. |
+| `(untagged) during-paint` (freefloating re-fit from `fullPaintInto…`) | 14 | curiosity — layout invalidation reached from the PAINT pass. Low volume; flag — **OPEN — re-probe**. |
 | `(untagged) macro-driver` (test fixture-build macros) | 14 | out of scope (test construction, not product). |
-| `Widget.setMaxDim` (stack-divider drag) | 4 | continuous-ish (divider drag) → likely LEAVE. |
+| `Widget.setMaxDim` (stack-divider drag) | 4 | continuous-ish (divider drag) → **OPEN — re-probe** (is it a discrete `setMaxDim` public mutator? §2 prior). |
 | **`VerticalStackLayoutSpec.setAlignment*` / `setWidthOfElementWhenAdded`** | 6 (3 actions) | **CONVERT CANDIDATE** — discrete layout-spec menu picks (the survey's textbook case); rare but clean. |
-| `SimplePlainTextWdgt.setSoftWrap` | 3 | family-5 soft-wrap, deliberately left synchronous-adjacent → likely LEAVE. |
+| `SimplePlainTextWdgt.setSoftWrap` | 3 | family-5 soft-wrap, left synchronous-adjacent by a prior decision → **OPEN — re-probe** that decision. |
 | `Widget.newParentChoice` (re-parent menu) | 1 | discrete menu → **CONVERT CANDIDATE** (or allowlist). |
 
-**Recommended order (biggest leverage / cleanest first):**
-1. ~~**contained-text edit**~~ **DONE** — the API path self-settled single (§3b, 120→0) and the per-keystroke caret
-   path was eliminated-as-wasted (§3c/§5c, −113 total). The largest residual is now drag/drop (deliberately LEAVE).
-2. **`VerticalStackLayoutSpec` setters (6) + `newParentChoice` (1)** — small, discrete, textbook; quick wins to
-   validate the pattern end-to-end on menu actions.
-3. **collapse / switch (≈70)** — entangled (the container side is already synchronous); investigate whether the
-   self-invalidate is a real gap or correct batching before converting.
-4. Confirm the **LEAVE** set (hover/scroll 19, drag ~71, paint 13, setMaxDim 6, softwrap 1) is
-   genuinely continuous/correct — these become the **allowlist** for the eventual "warn on un-allowlisted
-   end-of-cycle layout" gate (survey §9: a build-lint extension of `buildSystem/check-layering.js` with an
-   `# end-of-cycle-sanctioned: <why>` marker, mirroring the existing `# layout-apply-sanctioned` lint `[F]`).
+**Recommended order (biggest leverage / cleanest first; current as of the post-grab 73-record audit):**
+1. ~~contained-text edit~~ **DONE** (§3b/§3c, 120→0). ~~drag/DROP~~ **DONE** (§3d). ~~GRAB~~ **DONE** (§5e, 80→73).
+2. **`childRemoved` (2, string-edit path)** — a discrete tree-removal whose container re-fit defers; find the off-settle
+   path and disable-probe convert-vs-eliminate (§5e). Small + clean.
+3. **`SwitchButtonWdgt.mouseClickLeft` (32 — the BIGGEST residual, window-collapse)** — entangled with collapse (the
+   container side is already synchronous); investigate whether the self-invalidate is a real convert or correct batching.
+4. **`VerticalStackLayoutSpec` setters (2) + `newParentChoice`** — small, discrete, textbook menu-pick converts.
+5. **Re-probe the rest** (hover/scroll 9, during-paint 7, `setMaxDim` 6, soft-wrap 1) — now **OPEN — re-probe**, NOT a
+   presumed LEAVE set (§2 prior + inventory §4 banner). Each must be PROVEN a raw event stream before it earns an
+   allowlist place; ONLY then build the "warn on un-allowlisted end-of-cycle layout" gate (§9: a `check-layering.js`
+   extension with an `# end-of-cycle-sanctioned: <why>` marker, mirroring the existing `# layout-apply-sanctioned` `[F]`).
 
 ---
 
