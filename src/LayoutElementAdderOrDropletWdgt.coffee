@@ -11,7 +11,7 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
   # Role query (replaces the `x instanceof LayoutElementAdderOrDropletWdgt` filters in
   # Widget.addOrRemoveAdders): "am I one of the auto-inserted stack add/drop placeholders?" — true
   # here (and any subclass), so callers skip these chrome placeholders when scanning real stack
-  # content. Parallels isLayoutDecoration. (type-test-elimination campaign, capability-first)
+  # content. Parallels isLayoutInert. (type-test-elimination campaign, capability-first)
   isLayoutAdderOrDroplet: ->
     true
 

@@ -72,8 +72,8 @@ un-allowlisted end-of-cycle layout" gate (§8).
 
 ## 4. Q2 + Q3 — Attribution & why-not-settled (the by-action inventory)
 
-> **Current numbers** (2026-06-25 full-suite dpr1 audit — **253** origin records across **230** interaction frames /
-> 27 groups; trajectory **1244 → 564 → 320 → 278 → 253**). ALL FIVE settle-tier "stinks" now self-settle via the
+> **Current numbers** (2026-06-25 full-suite dpr1 audit, post caret-seam elimination — **140** origin records across
+> **118** interaction frames / 22 groups; trajectory **1244 → 564 → 320 → 278 → 253 → 140**). ALL FIVE settle-tier "stinks" now self-settle via the
 > **single-mutation** `_settleLayoutsAfter`
 > (`buildAndConnectChildren` 2026-06-23; `fullDestroy`/`close`/`collapse`/`unCollapse`
 > 2026-06-24) — this flip is **flush-NEUTRAL** (the records were already deferred/gone) but it ZEROES the
@@ -97,24 +97,37 @@ un-allowlisted end-of-cycle layout" gate (§8).
 > contained-text traffic is the **CARET-editing path only**: `SimplePlainTextScrollPanelWdgt` re-fitting during
 > `playQueuedEvents` (per-keystroke typing), **~84 records**, rolled up under the "(untagged) hover/pointer-dispatch"
 > row because it shares the `Set.forEach < playQueuedEvents` sig (the SAME mislabel the old menu-cleanup `close()` had).
-> That caret path is the **next PRIME CONVERT candidate**. **Tooling fix (2026-06-25):** the prior session's audit
+> That caret path was the presumed next convert — but a same-day stack probe (§5c) proved it **wasted work, not a
+> missing self-settle**, so it was ELIMINATED, not converted (see the next block). **Tooling fix (2026-06-25):** the prior session's audit
 > captured ZERO origins — the prelude patched the renamed `invalidateLayout` (now `_invalidateLayout`); fixed
 > (`invPatched=true`), so THIS is the first valid post-rename audit.
+>
+> **2026-06-25 (caret-seam WASTED-WORK elimination — RE-AUDIT DONE; total 253 → 140, −45%):** the ~84-record caret
+> path was NOT a convert. An unfiltered-stack probe (§5c) pinned the survivor: the **caret repositioning ITSELF**
+> (`CaretWdgt.gotoSlot`'s `@fullRawMoveTo`) trips the raw-geometry re-fit seam (`_reFitContainerAfterRawGeometryChange`)
+> and defers a container re-fit. But the caret is `isLayoutInert` overlay chrome, EXCLUDED from container
+> content-bounds, so its move cannot change the container's fit; the genuine scroll-on-edit is already applied
+> SYNCHRONOUSLY by `ScrollPanelWdgt.scrollCaretIntoView`. So it is **wasted work, not a missing self-settle** — the
+> public mutator in the flow (`setText`) already self-settles (no contract breach; cf. §5c). Skipping the seam for
+> `isLayoutInert` widgets (caret **and** resize handles) removed it; because handles are layout-inert too, the
+> handle-move re-fits that shared the untagged hover bucket went with it — **hover/pointer 117 → 9**, during-paint
+> 10 → 7, setMaxDim 6 → 4, total **253 → 140**. Byte-identical gauntlet + 0-nondeterminism torture confirm the removed
+> re-fits were pure redundancy.
 
 Rolled up by **action** (the convert-vs-leave unit), interaction frames, with the §5 verdict:
 
 | action (trigger) | records | tests | nature | why it defers | **verdict** |
 |---|--:|--:|---|---|---|
 | `Widget.destroy` / `close` / `fullDestroy` (teardown) | 0 | 0 | teardown | **self-settles**, like `add` — ALL now via the single-mutation `mutateGeometryThenSettle` (`close`/`fullDestroy` flipped off the batching tier 2026-06-24; bulk-teardown loops `fullDestroyChildren`/`closeChildren` use cores) — gone from end-of-cycle | **DONE** (self-settled) |
-| *(untagged)* **hover / pointer-dispatch** (genuine hover/scroll **+** the CARET-editing contained-text re-fit, which shares the `Set.forEach < playQueuedEvents` sig and so rolls up here) | 117 | 13 | mixed | ~84 is `SimplePlainTextScrollPanelWdgt` re-fitting **per keystroke** (the caret residual — a CONVERT candidate); ~33 is genuine hover/scroll | **SPLIT** (convert the caret re-fit; leave hover) |
-| `StringWdgt._reFitContainedTextNoSettle` (contained-text edit, **API path**; was `TextWdgt.reLayoutAndRefreshContainerIfContainedText`) | **0** (was 120) | 0 | — | the 7 API-path setters now **single**-self-settle (`_settleLayoutsAfter`), so this leaves end-of-cycle entirely (see the 2026-06-25 note above); the per-keystroke CARET residual is the ~84 in the hover row | **DONE** (API path self-settles; caret residual is the next convert) |
+| *(untagged)* **hover / pointer-dispatch** (genuine hover/scroll) | **9** | 5 | continuous | one settle/frame is correct batching | **LEAVE** (continuous). The ~84 `SimplePlainTextScrollPanelWdgt` per-keystroke caret re-fit **plus** the layout-inert HANDLE-move re-fits that used to inflate this row (shared `playQueuedEvents` sig) were **ELIMINATED 2026-06-25** as wasted decoration work (§5c) — 117 → 9. |
+| `StringWdgt._reFitContainedTextNoSettle` (contained-text edit, **API path**; was `TextWdgt.reLayoutAndRefreshContainerIfContainedText`) | **0** (was 120) | 0 | — | the 7 API-path setters now **single**-self-settle (`_settleLayoutsAfter`), so this leaves end-of-cycle entirely (see the 2026-06-25 note above); the per-keystroke CARET residual that remained was then eliminated-as-wasted (§5c), so contained-text no longer reaches end-of-cycle at all | **DONE** (API path self-settles 2026-06-24; caret residual eliminated 2026-06-25) |
 | `*.reactToDropOf` / `reactToGrabOf` / `childRemoved` (drag/drop) | 71 | 26 | **discrete gesture events** | the deferred-layout campaign **deliberately** defers these | **LEAVE** (already a conscious decision) |
 | `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | 32 | 6 | discrete click | invalidates on toggle | **LEAVE/convert** (entangled w/ collapse) |
 | `Widget.collapse` / `unCollapse` | **0** | 0 | discrete | **self-settles** via `mutateGeometryThenSettle` (flipped 2026-06-24; collapse-hook `destroy` + bar-button re-`add` use cores) — gone from end-of-cycle | **DONE** (self-settled) |
 | `WindowWdgt.childCollapsed` / `childUnCollapsed` | **0** | 0 | discrete | parent reaction, now inside collapse's single settle | **DONE** (folded into collapse self-settle) |
-| *(untagged)* **during-paint** (freefloating re-fit from `fullPaintInto…`) | 13 | 4 | curiosity | a freefloating widget recomputed lazily at paint | **LEAVE** (self-contained; §11) |
+| *(untagged)* **during-paint** (freefloating re-fit from `fullPaintInto…`) | 7 | 1 | curiosity | a freefloating widget recomputed lazily at paint | **LEAVE** (self-contained; §11) |
 | *(untagged)* **macro-driver** (test fixture-build macros) | 14 | 9 | test-construction | harness builds fixtures mid-test | **out of scope** (not product) |
-| `Widget.setMaxDim` (stack-divider drag) | 6 | 1 | continuous-ish (divider drag) | constraint change invalidates | **LEAVE** |
+| `Widget.setMaxDim` (stack-divider drag) | 4 | 1 | continuous-ish (divider drag) | constraint change invalidates | **LEAVE** |
 | `SimplePlainTextWdgt.setSoftWrap` | 1 | 1 | discrete | family 5, **left synchronous** by prior decision | **LEAVE** |
 | **`VerticalStackLayoutSpec.setAlignment*` / `setWidthOfElementWhenAdded`** | **2** | **1** | **discrete menu pick** | sets a layout-spec property, re-fits via the seam | **CONVERT candidate** |
 | `Widget.newParentChoice` (re-parent menu) | 0 | 0 | discrete menu | deferred via `_reFitContainer` (none surfaced this run) | **CONVERT candidate** (or allowlist) |
@@ -188,6 +201,44 @@ handled); (ii) full gauntlet (dpr1/dpr2/WebKit + app smoke + torture soak) since
 dpr2-under-load-sensitive. Net effect on this report: the teardown slice moves **LEAVE → (Part 1) eliminate /
 (Part 2) convert**, materially enlarging the actionable set beyond the <1% the first pass found.
 
+## 5c. REVISION — the per-keystroke caret container re-fit was WASTED, not a convert (eliminate)
+
+> **✅ EXECUTED & VERIFIED 2026-06-25.** Total end-of-cycle records **253 → 140 (−45%)**; the
+> `SimplePlainTextScrollPanelWdgt | playQueuedEvents` caret group (84) is **gone**, the untagged hover/pointer row
+> collapsed **117 → 9**. `fg gauntlet` (dpr1/dpr2/WebKit/apps) 165/165 byte-identical + dpr2 torture (shards=4,
+> ~1,155 execs) 0 nondeterminism + re-audit neutrality 165/165.
+
+After the API-path setters went single (§4 note, contained-text 120 → 0), the largest remaining contributor was the
+editing scroll-panel re-fitting **once per keystroke** (~84 records, dominated by `macroWrappingTextFieldResizesOK`
+typing a ~400-char string). The drawdown plan had labelled this the "prime convert candidate" by analogy to
+`sizeToTextAndDisableFitting`. **That label was wrong**, and *how* we proved it is the reusable lesson:
+
+**1. Pin the stack before classifying.** The audit's `shortSig` is truncated AND filters out `eval` frames — and
+since Fizzygum compiles every class in-browser, *every framework method is an `eval` frame*, so the recorded sig
+(`Object.playQueuedEvents < e`) hides the real call chain. A throwaway probe prelude (`PRELUDE_JS`) that dumps the
+UNFILTERED stack, gated on `!world._inLayoutMutation` (= the genuine end-of-cycle survivors, not the drained
+in-settle enqueues), revealed it in one run:
+`_invalidateLayout ← _reFitContainer ← _reFitContainerAfterRawGeometryChange ← fullRawMoveBy ← CaretWdgt.gotoSlot ←
+goRight ← insert ← processKeyDown`.
+
+**2. The discriminator: is a PUBLIC API mutator on the survivor's stack, returning unsettled?** It is not. The one
+public mutator in the keystroke flow, `setText`, self-settles correctly (the probe's `drained` counter proved its
+own container re-fits flush *inside* its settle). The survivor is the **caret moving ITSELF** — a raw move of overlay
+chrome. So this is NOT the public-API-consistency fault that §3b *converts*; it is the **wasted-work** fault that §3
+*eliminates* (the `destroy`/freefloating pattern), one rung lower:
+
+- The caret (and resize handles) are `isLayoutInert` — overlay chrome EXCLUDED from every container's content-bounds
+  (`TreeNode.childrenNotHandlesNorCarets`, `WindowWdgt.add`). Their geometry cannot change the container's
+  content-fit, so tripping the container re-fit seam on their raw moves schedules a re-fit that **changes nothing**.
+- The genuine scroll-on-edit is already applied **synchronously** by `ScrollPanelWdgt.scrollCaretIntoView`; the
+  deferred seam re-fit was pure redundancy.
+
+**Fix:** `Widget._reFitContainerAfterRawGeometryChange` returns early for `isLayoutInert` widgets. Because handles are
+layout-inert too, this also drained the handle-move re-fits that shared the untagged hover bucket — hence the row
+collapsing **117 → 9**, well past the 84 caret records alone. This is the **second instance** of the wasted-work
+pattern after `Widget.destroy` (§5b): *a widget that does not participate in a container's layout must not schedule
+that container's re-fit.*
+
 ## 6. Q5 — The legitimate residual (the proposed allowlist)
 
 The enforceable allowlist (what is *allowed* to reach end-of-cycle), by action class:
@@ -196,7 +247,9 @@ The enforceable allowlist (what is *allowed* to reach end-of-cycle), by action c
 2. **Teardown** — `Widget.destroy` / `removeFromTree` (parent re-fit on child removal).
 3. **Drag/drop gestures** — `reactToDropOf` / `reactToGrabOf` / `childRemoved` on the container classes (already a
    conscious campaign deferral).
-4. **Contained-text edit** — `StringWdgt._reFitContainedTextNoSettle` (was `TextWdgt.reLayoutAndRefreshContainerIfContainedText`; the per-keystroke caret residual — the API-path setters now self-settle).
+4. ~~**Contained-text edit**~~ — **removed from the allowlist 2026-06-25.** The API-path setters self-settle (§4) and
+   the per-keystroke caret-move re-fit was eliminated-as-wasted (§5c), so contained-text **no longer reaches
+   end-of-cycle at all** — it is neither a residual nor an allowlist entry now.
 5. **Collapse/uncollapse** — `Widget.collapse`/`unCollapse` + `WindowWdgt.childCollapsed`/`childUnCollapsed` +
    the `SwitchButtonWdgt` toggle that drives them.
 6. **Constraint/divider drag** — `Widget.setMaxDim` / `setMinAndMaxBoundsAndSpreadability`.

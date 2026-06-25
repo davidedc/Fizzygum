@@ -1124,7 +1124,7 @@ class Widget extends TreeNode
         # calculate their size when they are resized
         # (remember that the resizing handle of ScrollPanelWdgts
         # actually end up in the Panel inside them.)
-        if !child.isLayoutDecoration?()
+        if !child.isLayoutInert?()
           # if a widget implements deferred layout, then
           # really we can't consider the sizes and positions
           # of its children, so stick to the parent bounds
@@ -1650,6 +1650,14 @@ class Widget extends TreeNode
   # _reFitContainer (enqueue in a pass -- legal mid-pass, and the LIVE path for this immediate-mutator seam
   # since raw setters run during layout passes -- else invalidate); this seam only supplies which container(s).
   _reFitContainerAfterRawGeometryChange: ->
+    # OVERLAY CHROME (carets, resize handles -- isLayoutInert) is excluded from every container's
+    # content-bounds (TreeNode.childrenNotHandlesNorCarets, Widget._reLayout*, WindowWdgt.add), so a raw
+    # move/resize of it CANNOT change the container's content-fit -- tripping this seam would only schedule a
+    # WASTED container re-fit. Per-keystroke CARET repositioning (gotoSlot's @fullRawMoveTo) was the single
+    # largest end-of-cycle layout-flush residual (~84 records); the genuine scroll-on-edit is already applied
+    # SYNCHRONOUSLY by ScrollPanelWdgt.scrollCaretIntoView, so the deferred re-fit was pure redundancy. Skip
+    # it for decoration. (Capability `?()`, not a Widget base default -- type-test-elimination convention.)
+    return if @isLayoutInert?()
     @_reFitContainer @parent.parent if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
     @_reFitContainer @parent
 

@@ -236,7 +236,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # is exactly what keeps @stack wired by the deferred re-fit.
   _addNoSettle: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
     # caret + handle are the layout decorations (was their two instanceof) (type-test-elimination campaign)
-    unless notContent or aWdgt.isLayoutDecoration?()
+    unless notContent or aWdgt.isLayoutInert?()
       @contentNeverSetInPlaceYet = true
       titleToBeSet = aWdgt.colloquialName()
       if titleToBeSet == "window"

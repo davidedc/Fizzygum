@@ -503,7 +503,7 @@ class TreeNode
 
   childrenNotHandlesNorCarets: (whereToAct = @) ->
     whereToAct.children.filter (w) ->
-      !w.isLayoutDecoration?()
+      !w.isLayoutInert?()
 
   # find the nth child satisfying
   # a property.

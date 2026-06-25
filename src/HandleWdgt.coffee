@@ -42,7 +42,7 @@ class HandleWdgt extends Widget
   # it is excluded from content-bounds and real-children calculations (see
   # Widget.fullBounds and TreeNode.childrenNotHandlesNorCarets). Answered via
   # `?()` at the call sites, so no default lands on the Widget base.
-  isLayoutDecoration: -> true
+  isLayoutInert: -> true
 
   # I attach directly to a scroll panel's frame (not its inner contents) when added -- the
   # container add methods key off this instead of `instanceof HandleWdgt`. (type-test-elimination campaign)

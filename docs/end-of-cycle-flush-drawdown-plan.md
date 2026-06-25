@@ -4,9 +4,27 @@
 background, the proven `Widget.destroy` playbook, the tooling, commands, code snippets, and gotchas. Read §0 → §3
 before touching code.
 
-**Thesis:** each item still landing on the per-frame end-of-cycle layout flush is, on first approximation, a sign of
-a **public API method that mutates layout-relevant state but does NOT self-settle** (it defers to end-of-cycle, or
-relies on an *unrelated* later event to settle for it). We already proved this on the biggest contributor
+**Thesis (refined 2026-06-25):** an empty end-of-cycle queue is the ideal steady state, so each item still landing on
+the per-frame flush is a *smell* — but of one of **THREE distinct faults, each with a different fix**, and naming
+which one is the whole job:
+
+1. **CONVERT** — a discrete **public API mutator that fails to self-settle** (it defers, or leans on an *unrelated*
+   later event to settle for it). A public mutator must leave the world layout-consistent **on return**; one that
+   doesn't is a contract breach. Fix: make it self-settle (§3b).
+2. **ELIMINATE** — **wasted work**: a mutation that schedules a re-fit which *changes nothing* — a freefloating
+   child's teardown re-fitting the world, or a layout-inert caret/handle re-fitting its container. Fix: stop
+   scheduling it (§3, §3c).
+3. **LEAVE** — genuinely **continuous internal machinery** (pointer hover, a drag/typing stream of raw moves) that no
+   programmatic caller is awaiting; one coalesced settle/frame is the *correct* batching. Fix: allowlist it (§2, §6).
+
+**The discriminator** (learned the hard way this session — §3c): pin the *actual* enqueue stack and ask **"is a public
+API mutator on it, returning unsettled?"** Yes → CONVERT. No, and the enqueuing raw/internal move belongs to a widget
+that *cannot affect* the container it dirties → ELIMINATE. It's the raw event stream itself → LEAVE. Reasoning from
+the by-action *name* is not enough: this session both **converted** the contained-text *API* path (a real
+public-mutator leak) and **eliminated** the visually-identical contained-text *caret* path (wasted raw-mover work) —
+opposite fixes the action label alone would have conflated.
+
+We first proved the ELIMINATE + CONVERT pair on the biggest contributor
 (`Widget.destroy`): cutting its wasted work dropped total end-of-cycle traffic by **−55%** (1244 → 564 records) and
 revealed two public methods that should have self-settled and didn't. A **second pass (this session)** made the
 teardown public methods THEMSELVES self-settle (`close`/`destroy`/`fullDestroy`, like `add`), dropping the total a
@@ -155,6 +173,45 @@ runs ALONE is almost always the PRECEDING test's teardown, so reproduce it with 
 
 ---
 
+## 3c. The WASTED-WORK elimination playbook + the stack probe (the caret case study, 2026-06-25)
+
+§3 (destroy) and §3b (single-settle) both make a real mutation *settle*. This third move is the opposite: a survivor
+that should neither settle nor defer because the work itself is **redundant** — the *scheduling* is the bug. Don't
+convert it; delete it.
+
+**When it applies.** A mutation dirties a container whose layout **cannot depend on** the thing that changed:
+- a **freefloating** child's add/remove/resize (the `destroy` lever, §3/§5b — the world doesn't lay out freefloating
+  children); or
+- a **layout-inert** widget's raw move/resize — overlay chrome (`isLayoutInert`: the text caret, resize handles),
+  excluded from every container's content-bounds (`TreeNode.childrenNotHandlesNorCarets`, `WindowWdgt.add`), so its
+  geometry can't change the container's fit (§5c).
+Re-fitting the container in these cases re-runs `_reLayout` and **changes nothing**. Tell it apart from a CONVERT by
+the Thesis discriminator: no public mutator is leaking — the enqueue is a raw/internal move.
+
+**The technique that made it diagnosable — the UNFILTERED STACK PROBE.** The audit's `sig` is useless here: its
+`shortSig` truncates to 3 frames *and filters out `eval` frames* — and every in-browser-compiled Fizzygum method is
+an `eval` frame — so it collapses to a misleading `Object.playQueuedEvents < e` and hides the real chain. To see the
+truth, inject a throwaway probe prelude (the same `PRELUDE_JS` hook the audit uses, on ONE test:
+`PRELUDE_JS=<probe> LOG_FILE=<out> node scripts/run-macro-test-headless.js <test>`) that, on the enqueue of the target
+ctor, dumps `new Error().stack` UNFILTERED, **gated on `!world._inLayoutMutation`** so you log only the genuine
+end-of-cycle survivors — not the enqueues a public setter is about to drain. One run names the exact line. Counting
+the `_inLayoutMutation==true` enqueues *separately* is the proof that the public mutators in the flow ARE settling
+correctly (so the survivor must be something else). For the caret it printed:
+`_invalidateLayout ← _reFitContainer ← _reFitContainerAfterRawGeometryChange ← fullRawMoveBy ← CaretWdgt.gotoSlot ←
+goRight ← insert ← processKeyDown` — no public mutator, just the caret moving itself.
+
+**The fix shape.** Guard the *scheduling seam*, not the call sites: an early-return for the non-participating widget,
+in one greppable home — `_reFitContainerAfterRawGeometryChange` does `return if @isLayoutInert?()`; the
+freefloating-skip does `unless triggeringChild?.isFreeFloating()`. Verify with the full §6 gate: the removed re-fit
+must be **byte-identical** (it was redundant) AND **determinism-clean** (it changed *when/whether* a settle ran).
+
+**Result (caret, 2026-06-25):** −113 records (**253 → 140, −45%**) — bigger than the 84 caret records alone, because
+the same `isLayoutInert` guard also caught the resize-**handle** move re-fits that shared the untagged hover bucket.
+The mis-label warning (this was the by-action table's "prime convert candidate") and the full record:
+`end-of-cycle-flush-inventory.md` §5c.
+
+---
+
 ## 4. The audit tooling — regenerate the inventory
 
 The committed harness (the behaviour-neutral, inspector-invisible prelude + the serial per-test loop + the
@@ -217,13 +274,15 @@ MANY settles run per frame — exactly the risk; gauntlet+torture proves safety.
 
 ---
 
-## 7. The current inventory (2026-06-25 audit: **253** records / 230 frames / 27 groups; trajectory 1244 → 564 → 320 → 278 → 253)
+## 7. The current inventory (2026-06-25 audit, post caret-seam elimination: **140** records / 118 frames / 22 groups; trajectory 1244 → 564 → 320 → 278 → 253 → 140)
 
 **UPDATE 2026-06-25 (this arc + a tooling fix):** all 7 StringWdgt text setters now SINGLE-self-settle, so the
 contained-text **API path left end-of-cycle** — the old **120-record `reLayoutAndRefreshContainerIfContainedText`
 row is GONE (0)**. The surviving contained-text traffic is the **caret-editing path only** (`SimplePlainTextScroll
 PanelWdgt` re-fitting per keystroke during `playQueuedEvents`, **~84 records**, rolled up under the hover row by the
-shared sig) — now the **prime convert candidate**. TOOLING: the prior audit captured 0 origins (the prelude patched
+shared sig) — which was then **ELIMINATED as wasted work, not converted** (§3c/§5c: the caret is `isLayoutInert`
+overlay chrome whose raw move can't change container fit), dropping the total **253 → 140 (−45%)** and collapsing the
+hover row 117 → 9. TOOLING: the prior audit captured 0 origins (the prelude patched
 the renamed `invalidateLayout`→`_invalidateLayout`); fixed 2026-06-25, so this is the first valid post-rename audit.
 Full refreshed by-action table + verdicts: `end-of-cycle-flush-inventory.md` §4. (Settle-tier renames since this
 plan's §5: `mutateGeometryThenSettle`→`_settleLayoutsAfter`, `settleLayoutsOnceAfter`→`_settleLayoutsAfterBatch`.)
@@ -233,7 +292,7 @@ By-action (interaction-frame records; some rows below predate the 2026-06-25 re-
 | action / origin | recs | first-pass classification (verify with the data) |
 |---|--:|---|
 | **(untagged) event-dispatch residual** (genuine hover/scroll) | 19 | **LEAVE** — continuous. This row was **230**; the teardown self-settle revealed the bulk was menu-cleanup `close()` re-fitting a ScrollPanel (same `Set.forEach < playQueuedEvents` sig as hover, so mislabelled here) — now self-settled, leaving the true hover/scroll residual. |
-| **`TextWdgt.reLayoutAndRefreshContainerIfContainedText`** (contained-text edit re-fit) | 120 | **PRIME CONVERT CANDIDATE** (now the biggest residual) — the contained-text-edit seam. Mirror of the `sizeToTextAndDisableFitting` fix: a text edit should self-settle its container. |
+| **contained-text edit re-fit** (API path `StringWdgt._reFitContainedTextNoSettle`; caret path via the raw seam) | **0** | **DONE** — the API path now self-settles single (§3b, 120→0); the per-keystroke CARET path was ELIMINATED-as-wasted (§3c/§5c). Contained-text no longer reaches end-of-cycle. |
 | `*.reactToDropOf` / `reactToGrabOf` / `childRemoved` (drag/drop, several classes) | ~75 | **LEAVE** — drag gesture events; the deferred-layout campaign deliberately defers these. |
 | `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | 32 | discrete click → **investigate** (entangled with collapse). |
 | `Widget.collapse` / `unCollapse` | **0** | **DONE 2026-06-24** — flipped to `mutateGeometryThenSettle`; gone from end-of-cycle (collapse-hook `destroy` + bar-button re-`add` use cores). |
@@ -247,8 +306,8 @@ By-action (interaction-frame records; some rows below predate the 2026-06-25 re-
 | `Widget.newParentChoice` (re-parent menu) | 1 | discrete menu → **CONVERT CANDIDATE** (or allowlist). |
 
 **Recommended order (biggest leverage / cleanest first):**
-1. **`reLayoutAndRefreshContainerIfContainedText` (124)** — the largest convertible; directly analogous to the
-   already-proven `sizeToTextAndDisableFitting` self-settle. Likely the next big −%.
+1. ~~**contained-text edit**~~ **DONE** — the API path self-settled single (§3b, 120→0) and the per-keystroke caret
+   path was eliminated-as-wasted (§3c/§5c, −113 total). The largest residual is now drag/drop (deliberately LEAVE).
 2. **`VerticalStackLayoutSpec` setters (6) + `newParentChoice` (1)** — small, discrete, textbook; quick wins to
    validate the pattern end-to-end on menu actions.
 3. **collapse / switch (≈70)** — entangled (the container side is already synchronous); investigate whether the

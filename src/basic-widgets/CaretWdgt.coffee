@@ -34,7 +34,7 @@ class CaretWdgt extends BlinkerWdgt
   # CaretWdgt is overlay chrome (the text-editing caret), not a content child, so
   # it is excluded from content-bounds and real-children calculations (see
   # Widget.fullBounds and TreeNode.childrenNotHandlesNorCarets).
-  isLayoutDecoration: -> true
+  isLayoutInert: -> true
 
   # I am a transient overlay, so I am skipped by the add-time drop-shadow management in
   # Widget.add (was `instanceof CaretWdgt` there). (type-test-elimination campaign)
