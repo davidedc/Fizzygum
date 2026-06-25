@@ -171,7 +171,7 @@ class StretchableCanvasWdgt extends CanvasWdgt
     # due to rounding errors
     @behindTheScenesBackBufferContext.useLogicalPixelsUntilRestore()
 
-  reactToDropOf: (droppedWidget) ->
+  _reactToDropOf: (droppedWidget) ->
     @paintImage droppedWidget.position(), droppedWidget.fullImage(nil, false, true)
     world.add droppedWidget, nil, nil, true
   

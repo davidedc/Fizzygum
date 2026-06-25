@@ -28,7 +28,7 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
       # so this is byte-equivalent to the old deferred fullMoveTo.
       @fullRawMoveTo world.bottomRight().subtract @extent().add world.desktopSidesPadding
 
-  justDropped: (whereIn) ->
+  _justDropped: (whereIn) ->
     super
     if whereIn == world
       @userMovedThisFromComputedPosition = true
@@ -53,7 +53,7 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
       @target.parent.rememberFractionalSituationInHoldingPanel()
 
 
-  reactToDropOf: (droppedWidget) ->
+  _reactToDropOf: (droppedWidget) ->
     @target.scrollPanel.contents.addInPseudoRandomPosition droppedWidget
 
   rejectsBeingDropped: ->

@@ -328,14 +328,14 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   aboutToDrop: ->
     @removeChild @contents
 
-  justDropped: (whereIn) ->
+  _justDropped: (whereIn) ->
     super
     @contents?.holderWindowJustDropped? whereIn
 
   justBeenGrabbed: (whereFrom) ->
     @contents?.holderWindowJustBeenGrabbed? whereFrom
 
-  reactToDropOf: (theWidget) ->
+  _reactToDropOf: (theWidget) ->
     @contents = theWidget
     super
     @disableDrops()
@@ -382,7 +382,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # and nothing re-fits the HALF-built window mid-loop -- the window's content bookkeeping rides along in
   # WindowWdgt._addNoSettle. The single settle runs AFTER the core, when @stack is wired: O(1) relayouts.
   #
-  # This PUBLIC self-settler is only ever called STANDALONE (the constructor and reactToDropOf). The
+  # This PUBLIC self-settler is only ever called STANDALONE (the constructor and _reactToDropOf). The
   # rebuild path that fires from inside an enclosing settle -- a child-lifecycle hook
   # (childBeingDestroyed/Closed/PickedUp) -> resetToDefaultContents -> rebuild -- goes through the
   # non-settling @_buildAndConnectChildrenNoSettle directly, never this wrapper, so the wrapper never

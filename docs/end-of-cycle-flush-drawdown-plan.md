@@ -80,10 +80,19 @@ it have?*
    count for no benefit and risk determinism. Allowlist it.
 2. **Raw/silent synchronous-apply mislabelled** (it applies layout on the spot, never enqueues)? → out of scope.
 3. **DISCRETE one-shot state change** (a menu pick, a button/toggle, collapse, a content edit, a property setter,
-   a re-parent) that defers OR relies on an unrelated event to settle? → **CONVERT CANDIDATE.** Find the public
-   method; make it self-settle. This is the `Widget.destroy` pattern.
+   a re-parent, **a drag/drop gesture**) that defers OR relies on an unrelated event to settle? → **CONVERT *or*
+   ELIMINATE** — and it is *not* automatically a convert. Decide *which* with a **disable-the-mechanism probe** (§3c):
+   no-op the deferred re-fit and run its tests. Byte-identical → the re-fit was **wasted** → ELIMINATE (the caret §3c,
+   the freefloating `destroy` §3). Tests fail → the re-fit is **necessary** → CONVERT it to self-settle (the text
+   setters §3b, the drop gesture §3d). Same ~10-min probe, opposite verdicts.
 4. **Construction / boot**? → expected; the orphan/batch guards handle it. (The audit showed **0** boot survivors —
    construction self-settles already.)
+
+**A LEAVE verdict that rests on "another mechanism deferred it on purpose" is CIRCULAR — re-classify from scratch.**
+The drag/drop row sat at LEAVE because "the deferred-layout campaign deliberately defers these" — but that campaign's
+goal (push re-fits ONTO the cycle) is the *opposite* of the drawdown's, so its intent is no classification here. Any
+standing LEAVE that cites another arc's design choice — rather than genuine continuity — is worth re-probing; this
+session converted the biggest contributor exactly that way (§3d, the drop: 140 → 80).
 
 ---
 
@@ -212,6 +221,33 @@ The mis-label warning (this was the by-action table's "prime convert candidate")
 
 ---
 
+## 3d. The discrete-GESTURE convert via batch (the drag/drop case study, 2026-06-25)
+
+§3b converts a public API SETTER to single; this converts a discrete GESTURE (a drop) that defers its recipient
+re-fit. Distinct enough to record (and it's the template for the `reactToGrabOf` / `childRemoved` next):
+
+**A "the other campaign deferred it" verdict is NOT a classification.** The drag/drop row sat at LEAVE because the
+deferred-layout campaign deliberately made it defer — but that campaign PUSHES re-fits onto the cycle, the opposite of
+the drawdown. Re-classify from scratch: a drop is a discrete re-parent gesture (§2 rule 3), a convert candidate.
+
+**Disable-the-mechanism distinguishes convert from eliminate.** Before converting, no-op the deferred re-fit and run
+its tests. The caret's (§3c) vanished byte-identically → wasted → eliminate. The drop's failed 6 tests → necessary →
+convert. Same ~10-min probe, opposite verdict — run it, don't guess.
+
+**Batch the gesture's TAIL, not the whole gesture; mind read-order + nested builders:**
+- The gesture often does `add` (public, self-settles) THEN hooks that re-fit / change spec. Keep `add`'s settle and
+  batch only the TAIL (`_reactToDropOf` + `_justDropped`) — a later hook may READ the settled geometry `add` produced
+  (`_justDropped`'s `constrainToRatio` reads `@width()`/`@height()`); absorbing `add`'s settle feeds it stale geometry.
+- Use `_settleLayoutsAfterBatch` (not single) when a hook nests a multi-add builder (`WindowWdgt._reactToDropOf` →
+  `buildAndConnectChildren`): a single self-settle fires mid-rebuild on a half-wired widget and crashes.
+
+**Renaming a hook private (`_`) makes lint [A] police its GEOMETRY setters** — route those to raw twins
+(`setBounds`→`silentRawSetBounds`), but leave STRUCTURAL calls (`add`/`fullDestroy`) public: a hook with a NON-batch
+caller (the animated return-to-origin) needs the public setter's self-settle there, and the batch absorbs it at the
+gesture. Full record + verification: `end-of-cycle-flush-inventory.md` §5d.
+
+---
+
 ## 4. The audit tooling — regenerate the inventory
 
 The committed harness (the behaviour-neutral, inspector-invisible prelude + the serial per-test loop + the
@@ -272,9 +308,21 @@ Per convert (small, verifiable increments — NEVER convert many at once):
 of timers, frame counts, or intermediate passes (`Fizzygum-tests/DETERMINISM.md`). Self-settling changes WHEN/HOW
 MANY settles run per frame — exactly the risk; gauntlet+torture proves safety.
 
+**Three considerations this session added:**
+- **Probe BEFORE you convert.** The disable-the-mechanism probe (§2 rule 3, §3c) decides convert-vs-eliminate in
+  ~10 min — it stops you self-settling work that should simply be deleted (the caret looked like a convert; it was an
+  eliminate).
+- **The FULL gate is what picks BATCH vs SINGLE.** A single self-settle that nests a multi-add builder
+  (`buildAndConnectChildren`) or another public setter crashes/throws mid-build — and that surfaces only under the
+  **app-smoke + window/teardown paths**, never the dpr1 suite (this session: single crashed 16 window-drop tests that
+  dpr1 passed). Try single, read the crash, fall back to batch with the reason documented.
+- **A fix that RENAMES an inspected method shifts the inspector's member list.** Renaming a Widget-base hook
+  (`justDropped`→`_justDropped`) reorders the alphabetical list (the `_` group sorts first) → an inspector test
+  recaptures benignly. Confirm by the pixels (only the member rows move), recapture, don't contort the name.
+
 ---
 
-## 7. The current inventory (2026-06-25 audit, post caret-seam elimination: **140** records / 118 frames / 22 groups; trajectory 1244 → 564 → 320 → 278 → 253 → 140)
+## 7. The current inventory (2026-06-25 audit, post drop-convert: **80** records / 71 frames / 15 groups; trajectory 1244 → 564 → 320 → 278 → 253 → 140 → 80)
 
 **UPDATE 2026-06-25 (this arc + a tooling fix):** all 7 StringWdgt text setters now SINGLE-self-settle, so the
 contained-text **API path left end-of-cycle** — the old **120-record `reLayoutAndRefreshContainerIfContainedText`
@@ -293,7 +341,8 @@ By-action (interaction-frame records; some rows below predate the 2026-06-25 re-
 |---|--:|---|
 | **(untagged) event-dispatch residual** (genuine hover/scroll) | 19 | **LEAVE** — continuous. This row was **230**; the teardown self-settle revealed the bulk was menu-cleanup `close()` re-fitting a ScrollPanel (same `Set.forEach < playQueuedEvents` sig as hover, so mislabelled here) — now self-settled, leaving the true hover/scroll residual. |
 | **contained-text edit re-fit** (API path `StringWdgt._reFitContainedTextNoSettle`; caret path via the raw seam) | **0** | **DONE** — the API path now self-settles single (§3b, 120→0); the per-keystroke CARET path was ELIMINATED-as-wasted (§3c/§5c). Contained-text no longer reaches end-of-cycle. |
-| `*.reactToDropOf` / `reactToGrabOf` / `childRemoved` (drag/drop, several classes) | ~75 | **LEAVE** — drag gesture events; the deferred-layout campaign deliberately defers these. |
+| `*._reactToDropOf` (drag/DROP) | **0** (was ~62) | **CONVERTED 2026-06-25** — the drop self-settles (`ActivePointerWdgt.drop` batches `_reactToDropOf`+`_justDropped`); the old "LEAVE — the campaign defers these" was circular (§3d / inventory §5d). |
+| `*.reactToGrabOf` / `childRemoved` (drag/GRAB + removal) | ~9 | **CONVERT candidate** — symmetric to the drop convert (the grab/removal counterparts), not yet done → the next target. |
 | `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | 32 | discrete click → **investigate** (entangled with collapse). |
 | `Widget.collapse` / `unCollapse` | **0** | **DONE 2026-06-24** — flipped to `mutateGeometryThenSettle`; gone from end-of-cycle (collapse-hook `destroy` + bar-button re-`add` use cores). |
 | `Widget.destroy` / `close` / `fullDestroy` (teardown) | **0** | **CONVERTED** — even genuine non-freefloating teardown self-settles (consistent-on-return, like `add`): ALL via `mutateGeometryThenSettle` (`close`/`fullDestroy` flipped off the batching tier 2026-06-24; bulk loops `fullDestroyChildren`/`closeChildren` use cores). The earlier "LEAVE" was overridden. |
@@ -343,6 +392,17 @@ By-action (interaction-frame records; some rows below predate the 2026-06-25 re-
   sufficient for a settle-timing change — always finish with gauntlet + torture.
 - **Benign inspector recapture is fine** (the owner does not care) — but a chrome-render regression (a mis-centred
   label) is a REAL bug; tell them apart by looking at the pixels.
+- **Renaming a method to `_`-private subjects it to lint [A]** (low-level code must not call public *geometry*
+  setters). Route geometry calls to raw twins (`setBounds`→`silentRawSetBounds`); leave STRUCTURAL calls
+  (`add`/`fullDestroy`/`buildAndConnectChildren`) public when the method also has a NON-batch caller — the batch
+  absorbs the public setter at the gesture, and it self-settles at the non-batch site (this session: `_reactToDropOf`
+  runs from both the drop's batch and the animated return-to-origin). lint [A]'s geometry-only scope is exactly right.
+- **Overridable event HOOKS are NOT `_`-prefixed by convention** (`reactToGrabOf`, `aboutToDrop`, `mouseClickLeft`,
+  `step`, `wheel`). `_`-prefixing one (as this session did to the drop hooks, by request) is a deliberate deviation,
+  not the default — weigh it against the lint friction it invites.
+- **macOS BSD `sed` has no `\b`** — a `s/\bname\b/_name/g` rename silently no-ops. Use plain `s/name/_name/g` for a
+  unique identifier (a CamelCase neighbour like `holderWindowJustDropped` won't match lowercase `justDropped`), then
+  `grep` to verify 0 un-prefixed remain.
 
 ## 9. File:line map (lines drift — grep the name)
 

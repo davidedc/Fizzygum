@@ -256,7 +256,7 @@ class ScrollPanelWdgt extends PanelWdgt
   # 'super; @_reLayoutChildren', so the cycle re-fits me identically) is what runs. The in-pass
   # arm keeps the synchronous re-fit (the pre-existing behaviour) for safety. (No recalc-enqueue arm:
   # unlike the seams, these are never dispatched mid-pass. See deferred-layout-residuals-audit.md fam 2.)
-  reactToDropOf: ->
+  _reactToDropOf: ->
     @_reFitContainer()
 
   reactToGrabOf: ->
@@ -304,7 +304,7 @@ class ScrollPanelWdgt extends PanelWdgt
   # out) and needn't do its own. This is the polymorphic replacement for
   # SimpleVerticalStackPanelWdgt testing `@amIPanelOfScrollPanelWdgt()`: the
   # stack just notifies its parent, and only a scroll panel reacts. NB kept
-  # SEPARATE from _reLayoutChildrenAndScrollbars / reactToDropOf / reactToGrabOf on
+  # SEPARATE from _reLayoutChildrenAndScrollbars / _reactToDropOf / reactToGrabOf on
   # purpose -- a ListWdgt opts OUT of THIS notification (see ListWdgt) yet still
   # re-fits on its own drops/grabs/attaches.
   _reLayOutAfterContainedPanelChange: ->

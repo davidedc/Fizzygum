@@ -144,8 +144,8 @@ class ActivePointerWdgt extends Widget
   #   prepareToBeGrabbed() -> grabTarget
   #   reactToGrabOf(grabbedWdgt) -> oldParent
   #   wantsDropOf(wdgtToDrop) ->  newParent
-  #   justDropped(activePointerWdgt) -> droppedWdgt
-  #   reactToDropOf(droppedWdgt, activePointerWdgt) -> newParent
+  #   _justDropped(activePointerWdgt) -> droppedWdgt
+  #   _reactToDropOf(droppedWdgt, activePointerWdgt) -> newParent
   #
   dropTargetFor: (aWdgt) ->
     target = @topWdgtUnderPointer()
@@ -258,16 +258,21 @@ class ActivePointerWdgt extends Widget
       @children = []
       @rawSetExtent new Point
 
-      # first we notify the recipient of the drop
-      # this gives the chance to the recipient to
-      # initialise a layout spec for the dropped widget
-      target.reactToDropOf? wdgtToDrop, @
-
-      # then we notify the dropped widget. This currently
-      # is used to let the dropped widget tweak the layout
-      # spec (some widgets suddenly become constrained by ratio
-      # when they are dropped into a document)
-      wdgtToDrop.justDropped? target
+      # Notify the recipient (it may initialise the dropped widget's layout spec) and then the dropped
+      # widget (it may tweak its OWN spec -- e.g. constrainToRatio when dropped into a ratio container).
+      # Both run AFTER add()'s self-settle ON PURPOSE -- _justDropped reads the dropped widget's SETTLED
+      # geometry (rememberFractionalSituationInHoldingPanel, constrainToRatio's @width()/@height()), so we
+      # must NOT absorb add's settle. But the recipient re-fit (_reactToDropOf) + the post-_justDropped spec
+      # change used to DEFER to end-of-cycle. A drop is one discrete re-parent gesture, so settle them HERE:
+      # consistent on return, not on the next doOneCycle. BATCH (not single): WindowWdgt._reactToDropOf
+      # rebuilds the window chrome via buildAndConnectChildren (many public adds), so a single self-settle
+      # fires mid-rebuild on the half-wired window and crashes (verified: exactly the 16 window-drop tests
+      # fail under _settleLayoutsAfter with "undefined.availableWidthForContents"). The batch absorbs those
+      # nested settles + _justDropped's constrainToRatio resize and flushes ONCE, after the chrome and the
+      # final spec are in place. (end-of-cycle-flush drawdown: _reactToDropOf was the biggest residual, ~44.)
+      @_settleLayoutsAfterBatch =>
+        target._reactToDropOf? wdgtToDrop, @
+        wdgtToDrop._justDropped? target
 
     #else
     #  alert "if you never see this alert then you can delete the test"

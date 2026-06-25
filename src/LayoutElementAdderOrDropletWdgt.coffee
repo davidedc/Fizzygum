@@ -101,7 +101,7 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
       nil,
       LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
-  reactToDropOf: (widgetBeingDropped) ->
+  _reactToDropOf: (widgetBeingDropped) ->
     @addAsSiblingAfterMe \
       widgetBeingDropped,
       nil,

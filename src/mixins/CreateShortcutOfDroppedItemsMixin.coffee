@@ -27,7 +27,7 @@ CreateShortcutOfDroppedItemsMixin =
         else
           wdgtToDrop.fullRawMoveTo @position().add new Point 10, 10
 
-      reactToDropOf: (droppedWidget) ->
+      _reactToDropOf: (droppedWidget) ->
         super
         # a real widget (not already a shortcut) leaves a reference behind and closes
         # (was `!(droppedWidget instanceof IconicDesktopSystemShortcutWdgt)`).

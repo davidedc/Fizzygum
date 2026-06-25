@@ -20,7 +20,7 @@ class SimpleDropletWdgt extends Widget
     @appearance = new SimpleDropletAppearance @
     @setColor Color.BLACK
 
-  reactToDropOf: (widgetBeingDropped) ->
+  _reactToDropOf: (widgetBeingDropped) ->
     # TODO we add as FREEFLOATING if we don't pass
     # the third parameter, certainly that's not always
     # the case?
@@ -29,7 +29,13 @@ class SimpleDropletWdgt extends Widget
       widgetBeingDropped,
       nil,
       nil
-    widgetBeingDropped.setBounds @bounds
+    # _reactToDropOf is low-level (it runs inside the drop's settle batch), so it uses the RAW bounds setter,
+    # not the public deferred setBounds (lint [A]: a low-level method must not call a public geometry setter).
+    # The dropped widget is freefloating here (added via addAsSiblingAfterMe with nil -> ATTACHEDAS_FREEFLOATING),
+    # so the immediate raw set is byte-identical to setBounds's desired-extent/position path, and
+    # silentRawSetExtent fires the container re-fit seam. (Structural calls -- addAsSiblingAfterMe / fullDestroy --
+    # stay public: they are absorbed by the drop's batch and self-settle at the non-batch return-to-origin caller.)
+    widgetBeingDropped.silentRawSetBounds @bounds
     @fullDestroy()
 
 

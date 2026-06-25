@@ -72,8 +72,8 @@ un-allowlisted end-of-cycle layout" gate (§8).
 
 ## 4. Q2 + Q3 — Attribution & why-not-settled (the by-action inventory)
 
-> **Current numbers** (2026-06-25 full-suite dpr1 audit, post caret-seam elimination — **140** origin records across
-> **118** interaction frames / 22 groups; trajectory **1244 → 564 → 320 → 278 → 253 → 140**). ALL FIVE settle-tier "stinks" now self-settle via the
+> **Current numbers** (2026-06-25 full-suite dpr1 audit, post drop-convert — **80** origin records across
+> **71** interaction frames / 15 groups; trajectory **1244 → 564 → 320 → 278 → 253 → 140 → 80**). ALL FIVE settle-tier "stinks" now self-settle via the
 > **single-mutation** `_settleLayoutsAfter`
 > (`buildAndConnectChildren` 2026-06-23; `fullDestroy`/`close`/`collapse`/`unCollapse`
 > 2026-06-24) — this flip is **flush-NEUTRAL** (the records were already deferred/gone) but it ZEROES the
@@ -113,6 +113,16 @@ un-allowlisted end-of-cycle layout" gate (§8).
 > handle-move re-fits that shared the untagged hover bucket went with it — **hover/pointer 117 → 9**, during-paint
 > 10 → 7, setMaxDim 6 → 4, total **253 → 140**. Byte-identical gauntlet + 0-nondeterminism torture confirm the removed
 > re-fits were pure redundancy.
+>
+> **2026-06-25 (drag/DROP gesture CONVERT — RE-AUDIT DONE; total 140 → 80, −43%):** the drag/drop row had been
+> dismissed "LEAVE — the deferred-layout campaign deliberately defers these" — a **circular** verdict (that campaign's
+> goal was to PUSH re-fits ONTO the cycle; the drawdown's is to drive them OFF). A drop is a DISCRETE re-parent
+> gesture. `ActivePointerWdgt.drop` does `target.add` (public, self-settles) then `_reactToDropOf` + `_justDropped`,
+> whose recipient re-fit + final-spec change DEFERRED. A disable-the-mechanism probe proved that re-fit is NECESSARY
+> (6 stack tests fail without it) — so it is a CONVERT, not the caret's eliminate: wrapping `_reactToDropOf` +
+> `_justDropped` in ONE `_settleLayoutsAfterBatch` (keeping `add`'s settle FIRST so `_justDropped` reads settled
+> geometry) drives the **`reactToDropOf` action to 0** (was ~62). The symmetric `reactToGrabOf` (7) + `childRemoved`
+> (2) are the SAME pattern, not yet converted — the next targets. Full record: §5d.
 
 Rolled up by **action** (the convert-vs-leave unit), interaction frames, with the §5 verdict:
 
@@ -121,7 +131,8 @@ Rolled up by **action** (the convert-vs-leave unit), interaction frames, with th
 | `Widget.destroy` / `close` / `fullDestroy` (teardown) | 0 | 0 | teardown | **self-settles**, like `add` — ALL now via the single-mutation `mutateGeometryThenSettle` (`close`/`fullDestroy` flipped off the batching tier 2026-06-24; bulk-teardown loops `fullDestroyChildren`/`closeChildren` use cores) — gone from end-of-cycle | **DONE** (self-settled) |
 | *(untagged)* **hover / pointer-dispatch** (genuine hover/scroll) | **9** | 5 | continuous | one settle/frame is correct batching | **LEAVE** (continuous). The ~84 `SimplePlainTextScrollPanelWdgt` per-keystroke caret re-fit **plus** the layout-inert HANDLE-move re-fits that used to inflate this row (shared `playQueuedEvents` sig) were **ELIMINATED 2026-06-25** as wasted decoration work (§5c) — 117 → 9. |
 | `StringWdgt._reFitContainedTextNoSettle` (contained-text edit, **API path**; was `TextWdgt.reLayoutAndRefreshContainerIfContainedText`) | **0** (was 120) | 0 | — | the 7 API-path setters now **single**-self-settle (`_settleLayoutsAfter`), so this leaves end-of-cycle entirely (see the 2026-06-25 note above); the per-keystroke CARET residual that remained was then eliminated-as-wasted (§5c), so contained-text no longer reaches end-of-cycle at all | **DONE** (API path self-settles 2026-06-24; caret residual eliminated 2026-06-25) |
-| `*.reactToDropOf` / `reactToGrabOf` / `childRemoved` (drag/drop) | 71 | 26 | **discrete gesture events** | the deferred-layout campaign **deliberately** defers these | **LEAVE** (already a conscious decision) |
+| `*._reactToDropOf` (drag/DROP) | **0** (was ~62) | 0 | discrete re-parent gesture | — | **CONVERTED 2026-06-25** — the drop self-settles (`ActivePointerWdgt.drop` batches `_reactToDropOf`+`_justDropped`); overturned the earlier "LEAVE" (§5d). |
+| `*.reactToGrabOf` / `childRemoved` (drag/GRAB + removal) | 9 | ~6 | discrete gesture events | symmetric to the drop, not yet converted | **CONVERT candidate** (the grab/removal counterparts — next) |
 | `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | 32 | 6 | discrete click | invalidates on toggle | **LEAVE/convert** (entangled w/ collapse) |
 | `Widget.collapse` / `unCollapse` | **0** | 0 | discrete | **self-settles** via `mutateGeometryThenSettle` (flipped 2026-06-24; collapse-hook `destroy` + bar-button re-`add` use cores) — gone from end-of-cycle | **DONE** (self-settled) |
 | `WindowWdgt.childCollapsed` / `childUnCollapsed` | **0** | 0 | discrete | parent reaction, now inside collapse's single settle | **DONE** (folded into collapse self-settle) |
@@ -239,14 +250,53 @@ collapsing **117 → 9**, well past the 84 caret records alone. This is the **se
 pattern after `Widget.destroy` (§5b): *a widget that does not participate in a container's layout must not schedule
 that container's re-fit.*
 
+## 5d. REVISION — the drag/DROP gesture is a CONVERT (the "LEAVE" was circular)
+
+> **✅ EXECUTED & VERIFIED 2026-06-25.** Total **140 → 80 (−43%)**; the `reactToDropOf` action (was ~62) is **0**.
+> `fg gauntlet` (dpr1/dpr2/WebKit/apps) 165/165 byte-identical + dpr2 torture (shards=4, ~3,300 execs) 0
+> nondeterminism + re-audit neutrality 165/165 (one benign inspector member-list recapture from the hook rename).
+
+The biggest residual after the caret elimination was the drag/drop family, dismissed as *"LEAVE — the deferred-layout
+campaign deliberately defers these."* **That verdict was circular:** the deferred-layout campaign's goal was to push
+synchronous re-fits ONTO the cycle (centralize layout); the drawdown's is to drive them OFF. "The other campaign put
+it here on purpose" is not a classification under our rubric — and a drop is a **discrete re-parent gesture** (§2.3
+convert candidate), not continuous.
+
+**Mechanism.** `ActivePointerWdgt.drop` does, in order: `target.add` (public, self-settles → the dropped widget is
+placed) → `_reactToDropOf` (recipient re-fits / rebuilds chrome) → `_justDropped` (the dropped widget tweaks its OWN
+spec — `rememberFractionalSituationInHoldingPanel`, `constrainToRatio`). The recipient re-fit + the post-`_justDropped`
+spec change DEFERRED to end-of-cycle (the ~62 records).
+
+**Convert, not eliminate — proven by a disable-the-mechanism probe.** No-op'ing the stack's deferred `_reactToDropOf`
+re-fit failed **6 stack-drop tests** — so unlike the caret (§5c), this re-fit is NECESSARY (it re-flows the stack
+after the spec is finalized, which `add`'s earlier settle predates). So the fix is to make the gesture **self-settle**,
+not to delete the re-fit.
+
+**The fix.** Wrap `_reactToDropOf` + `_justDropped` in ONE `_settleLayoutsAfterBatch`, AFTER `add`'s settle. Two
+non-obvious constraints fixed the shape:
+- **Keep `add`'s settle first** (don't batch the whole drop): `_justDropped` READS the dropped widget's settled
+  geometry (`@width()`/`@height()`, fractional-in-parent), so absorbing `add`'s settle would feed it stale geometry.
+- **BATCH, not single:** `WindowWdgt._reactToDropOf` rebuilds the window chrome via `buildAndConnectChildren` (many
+  public adds); a single self-settle fires mid-rebuild on the half-wired window and crashes (16 window-drop tests).
+  The batch absorbs those nested settles + `_justDropped`'s `constrainToRatio` and flushes once.
+
+**The hook rename (private calls private).** `reactToDropOf`/`justDropped` → `_reactToDropOf`/`_justDropped` (they are
+framework-internal drop hooks). This surfaced one lint [A] hit — `SimpleDropletWdgt._reactToDropOf`'s public
+`setBounds` → `silentRawSetBounds` (raw twin; byte-identical for the freefloating dropped widget). The STRUCTURAL
+calls (`add`/`addAsSiblingAfterMe`/`fullDestroy`/`buildAndConnectChildren`) stay PUBLIC on purpose: `_reactToDropOf`
+also runs from a NON-batch caller (`Widget.coffee:2985`, the animated return-to-origin), where a public setter
+correctly self-settles; at the drop the batch absorbs it. So lint [A]'s geometry-only scope is exactly right.
+
+**Next:** `reactToGrabOf` (7) + `childRemoved` (2) are the symmetric grab/removal counterparts — the same convert.
+
 ## 6. Q5 — The legitimate residual (the proposed allowlist)
 
 The enforceable allowlist (what is *allowed* to reach end-of-cycle), by action class:
 
 1. **Pointer/hover dispatch** — `ActivePointerWdgt` mouseEnter/mouseLeave (`mouseOverList`/`mouseOverNew` diff).
 2. **Teardown** — `Widget.destroy` / `removeFromTree` (parent re-fit on child removal).
-3. **Drag/drop gestures** — `reactToDropOf` / `reactToGrabOf` / `childRemoved` on the container classes (already a
-   conscious campaign deferral).
+3. **Drag/drop gestures** — ~~`reactToDropOf`~~ **CONVERTED 2026-06-25** (the drop self-settles, §5d); the symmetric
+   `reactToGrabOf` / `childRemoved` remain — next convert candidates, NOT a permanent allowlist entry.
 4. ~~**Contained-text edit**~~ — **removed from the allowlist 2026-06-25.** The API-path setters self-settle (§4) and
    the per-keystroke caret-move re-fit was eliminated-as-wasted (§5c), so contained-text **no longer reaches
    end-of-cycle at all** — it is neither a residual nor an allowlist entry now.

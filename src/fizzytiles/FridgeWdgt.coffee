@@ -181,5 +181,5 @@ class FridgeWdgt extends PanelWdgt
   reactToGrabOf: ->
     @compileTiles()
 
-  reactToDropOf: ->
+  _reactToDropOf: ->
     @compileTiles()

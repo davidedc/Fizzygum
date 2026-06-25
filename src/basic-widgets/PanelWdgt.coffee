@@ -84,7 +84,7 @@ class PanelWdgt extends Widget
   # ActivePointerWdgt.drop AFTER a self-settling add (outside any pass) -> the else arm invalidates the
   # container so its _reLayout re-fits on the cycle. Gated on @parent?._reLayoutChildren? to preserve the
   # original "only a tracking container reacts" semantics. (fam 2 -- deferred-layout-residuals-audit.md)
-  reactToDropOf: ->
+  _reactToDropOf: ->
     @_reFitContainer @parent
 
   childRemoved: (child) ->
