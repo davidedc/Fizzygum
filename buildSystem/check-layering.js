@@ -17,6 +17,13 @@
  *      _settleLayoutsAfter / _settleLayoutsAfterBatch (the public-setter flush). Nowhere else.
  *   C) A public geometry setter must NOT call another public geometry setter (that would
  *      flush more than once per logical mutation).
+ *   G) A LOW-LEVEL method must NOT directly call a STRUCTURAL self-settling wrapper -- add's siblings
+ *      destroy / close / fullDestroy / createReference / grab / drop / slideBackTo / setLabel /
+ *      buildAndConnectChildren / ... : every method that self-settles via _settleLayoutsAfter. It must
+ *      reach the _<name>NoSettle CORE instead (the "cores call cores" discipline, made static). The
+ *      wrapper set is DISCOVERED structurally (not hand-listed); `add` and collapse/unCollapse are
+ *      deliberately excluded -- see the [G] block lower down for why. [G] is the structural-wrapper
+ *      extension of [A] (which covers the geometry/text setters + recalc).
  *
  * WHY A LINT (not only the runtime guards): the runtime re-entrancy guards
  * (_inLayoutMutation, _recalculatingLayouts) throw on the DANGEROUS dynamic cases
@@ -47,10 +54,12 @@ const PUB_CALL = new RegExp('[@.]\\s*(' + PUBLIC_SETTERS.join('|') + ')\\b');
 // The SINGLE-settling text setters (StringWdgt): each self-settles via _settleLayoutsAfter, so being
 // reached from a layout pass / another settle throws the flow-violation. Low-level code that must set
 // text uses the NON-settling core (_setTextNoSettle) or a raw setter. NB sizeToTextAndDisableFitting is
-// deliberately EXCLUDED — it stays on the BATCH settler (it IS reached mid-pass by these setters'
-// autoSize branch and ABSORBS), so low-level code (e.g. _setTextNoSettle) may legitimately call it.
-// The `[@.]\s*` anchor + `\b` make `@setText`/`.setText` match while `@_setTextNoSettle`/`._setTextNoSettle`
-// (the cores, leading `_`) and `setTextLineWrapping` do NOT.
+// not in THIS list (it is not one of the 7 text setters) but it is NOT a free pass: it now self-settles
+// via the SINGLE tier (_settleLayoutsAfter — it moved off the batch settler when the batch tier went to 0
+// callers), so rule [G] discovers it as a structural wrapper and forbids low-level code from calling it
+// (low-level code uses the core _sizeToTextAndDisableFittingNoSettle). The `[@.]\s*` anchor + `\b` make
+// `@setText`/`.setText` match while `@_setTextNoSettle`/`._setTextNoSettle` (the cores, leading `_`) and
+// `setTextLineWrapping` do NOT.
 const TEXT_SETTERS = ['setText', 'setFontSize', 'setFontName', 'toggleShowBlanks', 'toggleWeight', 'toggleItalic', 'toggleIsPassword'];
 const TEXT_SETTER_CALL = new RegExp('[@.]\\s*(' + TEXT_SETTERS.join('|') + ')\\b');
 const RECALC_CALL = /[@.]\s*recalculateLayouts\b/;            // @recalculateLayouts / world.recalculateLayouts
@@ -92,6 +101,14 @@ const isLowLevel = (name) =>
 // Forbidding the _reLayoutChildren apply by name was assessed and DECLINED as cosmetic: it does the
 // identical work to the blessed _reLayoutSelf/_reLayout applies, so a name-based ban would just force a
 // DRY-breaking inline. (deferred-layout-capstone-execution-plan.md, Part B.)
+//
+// NAME-COVERAGE re-census (lint-ratchet plan Phase 2, 2026-06-25): confirmed the immediate-mutator NAME
+// set == exactly the methods that write geometry immediately, so [E] has no innocent-named blind spot.
+// Every method that assigns @bounds or calls the raw-geometry seam (_reFitContainerAfterRawGeometryChange)
+// / the move-cache break is raw*/silent*/fullRaw*-named (incl. the mixin-nested fullRawMoveBy). The only
+// non-raw-named methods touching the cache-break are constructor (@bounds init, not a mutation),
+// _destroyNoSettle and removeFromTree (teardown / structural-removal cache hygiene -- neither writes
+// geometry; removeFromTree is a structural op that legitimately schedules). No escapee -> no rename needed.
 const isImmediateMutator = (name) => /^(raw[A-Z]|silent|fullRaw)/.test(name);
 
 // [D] macro hygiene: a SystemTest macro must not reach into the framework's PRIVATE surface.
@@ -102,10 +119,64 @@ const isImmediateMutator = (name) => /^(raw[A-Z]|silent|fullRaw)/.test(name);
 // legitimate construction-time measure-and-size read-back). Per owner: these are "needed now"; at the
 // END of the deferred-layout plan they get public self-settling alternatives and this rule tightens to
 // forbid them too (raw|silent|fullRaw).
+//   TIGHTENING ASSESSED — NOT YET RIPE (lint-ratchet plan Phase 3, 2026-06-25): a full macro audit found
+//   the ONLY remaining raw/silent macro uses are 6 silentRawSetWidth/silentRawSetHeight calls, all the
+//   SAME measure-and-size read-back on an ORPHAN, in 3 macros: macroTextRelayoutsCorrectlyOnResize,
+//   macroBareTextWidgetDropShadowRestAndDrag, macroBoxTransparencyAndColorChanging. Each does
+//   silentRawSetWidth W -> breakTextIntoLines (measure the wrapped height AT W) -> silentRawSetHeight
+//   wrappedHeight, before world.add. No behaviour-preserving public alternative exists: setExtent needs
+//   both dims up front, but the height is DERIVED from the width just set (chicken-and-egg), and the
+//   widget is an orphan (the public setters' settle would no-op anyway via the orphan guard, but they
+//   are not byte-identical to silent). Tightening now would force these into a worse pattern -> DECLINED.
+//   Re-ripens only once a public "size to wrapped text at width W" construction helper exists.
 // The former reLayout() carve-out is now CLOSED: this arc renamed reLayout -> _reLayoutSelf (private) and
 // removed the macro calls, so the _-check below already forbids it (the planned tightening, achieved here).
 const MACROS_DIR = path.join(__dirname, '..', '..', 'Fizzygum-tests', 'tests');
 const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*)\b/;
+
+// [G] the STRUCTURAL self-settling-wrapper rule (the deferred-layout "cores call cores" discipline,
+// made static). [A] above forbids a low-level method from DIRECTLY calling the 5 geometry setters /
+// the single-settling text setters / recalculateLayouts -- a closed, hand-listed set. The SAME
+// re-entrancy hazard exists for the STRUCTURAL self-settling wrappers (destroy / close / fullDestroy /
+// createReference / grab / drop / slideBackTo / setLabel / buildAndConnectChildren / ...): each routes
+// through the single-mutation settle tier _settleLayoutsAfter, so reaching one from inside a layout pass
+// / a *NoSettle core / a raw setter re-enters the flush and hits the runtime throw (Widget.coffee, in
+// _settleLayoutsAfter). Low-level code must call the matching _<name>NoSettle CORE, never the wrapper.
+//
+// The wrapper set is DISCOVERED structurally (discoverSettlingWrappers: every method whose body calls
+// @_settleLayoutsAfter), never hand-listed -- so a NEW single-settling wrapper is auto-covered. Only the
+// SINGLE-mutation tier counts: a future _settleLayoutsAfterBatch wrapper ABSORBS nested settles, so it is
+// safe from low-level code and is NOT a [G] subject (SETTLE_CALL matches _settleLayoutsAfter only). Three
+// name groups are excluded (a name line-scanner cannot cover them -- documented so they are a reasoned
+// boundary, not a silent gap):
+//   * the geometry/text setters -- [A] already reports them, with a sharper message.
+//   * `add` -- only its MEMBER form `.add` is excluded: it shares a name with Point#add / Rectangle#add
+//     (vector arithmetic, ubiquitous in layout math: `@topLeft().add pt`), and a name scanner cannot tell
+//     a Widget structural add from a Point add on an expression without type inference (29 of 35 census
+//     hits were Point#add). But the SELF form `@add` IS covered (SELF_ADD_CALL below): inside a Widget
+//     method `@` is unambiguously a Widget, so `@add child` is always Widget.add -- the one add shape a
+//     scanner CAN attribute, and the most important hole to close (a future *NoSettle core doing @add).
+//     (The orphan guard + runtime throw remain the backstop for the `.add` member form and for
+//     construction-time add() on an orphan.)
+//   * collapse / unCollapse -- present in layout passes TODAY (WindowWdgt._positionAndResizeChildren's
+//     editButton / internalExternalSwitchButton; HorizontalMenuPanelWdgt._reLayoutSelf). That is the
+//     "SwitchButton-collapse" item OWNED by the end-of-cycle-flush drawdown campaign's OPEN re-probe set
+//     (docs/end-of-cycle-flush-inventory.md). [G] DEFERS to that campaign rather than rubber-stamping a
+//     # nosettle-sanctioned marker here, which would pre-judge convert-vs-leave (lint-ratchet plan Phase 5).
+//
+// The TRANSITIVE closure of [G] (forbid low-level code from REACHING a wrapper by ANY call path) was
+// prototyped and REJECTED: a name-based backward-reachability fixpoint balloons to ~720-870 names / ~500-710
+// hits, because `constructor` (-> buildAndConnectChildren -> add) is a hub reached by `new @constructor`
+// and `@constructor.name` everywhere, and the raw setters / *NoSettle cores themselves land in the set --
+// so it flags the very "cores call cores" pattern it exists to bless. Name-based reachability cannot model
+// the orphan guard (a receiver's attached-ness is dynamic), so this DIRECT rule is the maximal SOUND static
+// check; the runtime throw stays the backstop for the transitive/dynamic cases (and for `add`).
+const SETTLE_CALL = /[@.]\s*_settleLayoutsAfter\b/;          // SINGLE-mutation tier only (Batch absorbs nested settles)
+const WRAPPER_EXCLUDED = new Set(['add', 'collapse', 'unCollapse']);   // see the [G] block above
+const SELF_ADD_CALL = /@\s*add\b/;        // [G] the unambiguous structural add: @add (self == Widget.add inside a Widget
+                                          // method). \b excludes @addMany / @addInPseudoRandomPosition; the leading @ (not .)
+                                          // excludes the Point#add-ambiguous member form @expr().add / pt.add / @_addNoSettle.
+const NOSETTLE_MARKER = 'nosettle-sanctioned';              // the [G] per-method conscious sign-off (mirrors [F])
 
 // Strip string literals and trailing `#` comments from one line, carrying multi-line
 // string state across lines. Returns { code, state }.
@@ -157,11 +228,37 @@ function collectCoffee(dir, out) {
 
 const METHOD_HEADER = /^  ([A-Za-z_]\w*): (\(.*?\) )?[-=]>/;   // a class-level (2-space) method def
 
-function checkFile(file, violations) {
+// [G] pre-pass: the set of public methods that self-settle via the SINGLE-mutation tier (their body
+// calls @_settleLayoutsAfter) -- the structural wrappers a low-level method must NOT call (it must reach
+// the _<name>NoSettle core instead). Computed from source so it tracks the codebase as wrappers are
+// added/removed. The 2-space-method grouping mirrors checkFile's exactly. Returns the FORBIDDEN set:
+// the discovered wrappers minus the geometry/text setters ([A] covers those) and minus WRAPPER_EXCLUDED.
+function discoverSettlingWrappers(files) {
+  const wrappers = new Set();
+  for (const file of files) {
+    const lines = fs.readFileSync(file, 'utf8').split('\n');
+    let method = null, strState = null;
+    for (let n = 0; n < lines.length; n++) {
+      const { code, state } = stripLine(lines[n], strState);
+      strState = state;
+      if (strState === null) {
+        const m = lines[n].match(METHOD_HEADER);
+        if (m) { method = m[1]; continue; }
+        if (/^  [A-Za-z_]\w*:/.test(lines[n]) || /^[^\s]/.test(lines[n])) method = null;
+      }
+      if (method && SETTLE_CALL.test(code)) wrappers.add(method);
+    }
+  }
+  for (const n of [...PUBLIC_SETTERS, ...TEXT_SETTERS, ...WRAPPER_EXCLUDED]) wrappers.delete(n);
+  return wrappers;
+}
+
+function checkFile(file, violations, wrapperCall) {
   const rel = path.relative(path.join(__dirname, '..'), file);
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   let method = null;          // current method name (null = not inside a 2-space method)
   let methodMarked = false;   // [F]: has a `# layout-apply-sanctioned` sign-off appeared in the current method?
+  let methodNoSettleMarked = false;   // [G]: has a `# nosettle-sanctioned` sign-off appeared in the current method?
   let strState = null;
   for (let n = 0; n < lines.length; n++) {
     const raw = lines[n];
@@ -169,12 +266,13 @@ function checkFile(file, violations) {
     strState = state;
     if (strState === null) {                       // header detection only on fully-closed lines
       const m = raw.match(METHOD_HEADER);
-      if (m) { method = m[1]; methodMarked = false; continue; }
+      if (m) { method = m[1]; methodMarked = false; methodNoSettleMarked = false; continue; }
       // a new 2-space property/non-method, or a dedent to class level, ends the method
-      if (/^  [A-Za-z_]\w*:/.test(raw) || /^[^\s]/.test(raw)) { method = null; methodMarked = false; }
+      if (/^  [A-Za-z_]\w*:/.test(raw) || /^[^\s]/.test(raw)) { method = null; methodMarked = false; methodNoSettleMarked = false; }
     }
     if (!method) continue;
     if (raw.includes(SANCTION_MARKER)) methodMarked = true;  // [F] per-method conscious sign-off (any body line)
+    if (raw.includes(NOSETTLE_MARKER)) methodNoSettleMarked = true;  // [G] per-method conscious sign-off (any body line)
     const at = `${rel}:${n + 1}`;
     const pub = code.match(PUB_CALL);
     const txt = code.match(TEXT_SETTER_CALL);
@@ -186,6 +284,16 @@ function checkFile(file, violations) {
       // recalc is OK from a whitelisted flush driver (the settle tiers are now _-prefixed, hence
       // low-level by name, but they ARE the flush — rule [B] below governs who may call recalc).
       if (recalc && !RECALC_WHITELIST.has(method)) violations.push(`[A] low-level ${method}() calls recalculateLayouts()  — ${at}`);
+      // [G] structural self-settling wrapper (discovered from _settleLayoutsAfter callers): low-level code
+      // must reach the _<name>NoSettle core, never the public wrapper (it re-enters the single-mutation
+      // flush). The settle tiers themselves (RECALC_WHITELIST) ARE the flush, so they are not [G] subjects.
+      if (!RECALC_WHITELIST.has(method) && !methodNoSettleMarked) {
+        const wrap = wrapperCall && code.match(wrapperCall);
+        if (wrap) violations.push(`[G] low-level ${method}() calls self-settling wrapper .${wrap[1]}() — reach the non-settling core (e.g. _${wrap[1]}NoSettle), not the public self-settling wrapper (or mark # ${NOSETTLE_MARKER}: <why>)  — ${at}`);
+        // the unambiguous self-add @add (Widget.add) — the one add shape a name scanner can attribute (`.add` member
+        // stays excluded as Point#add-ambiguous). Low-level code must use @_addNoSettle, not the self-settling add().
+        if (SELF_ADD_CALL.test(code)) violations.push(`[G] low-level ${method}() calls @add (self == Widget.add) — reach @_addNoSettle, not the self-settling add() (or mark # ${NOSETTLE_MARKER}: <why>)  — ${at}`);
+      }
     }
     if (isImmediateMutator(method) && invalidate) {
       violations.push(`[E] immediate mutator ${method}() calls _invalidateLayout() — raw/silent/fullRaw setters must only MUTATE, never SCHEDULE layout (task #17)  — ${at}`);
@@ -248,9 +356,14 @@ function main() {
     console.error('check-layering: operational error collecting sources:', e.message);
     process.exit(2);
   }
+  // [G] pre-pass: discover the structural self-settling wrappers (single-tier), then a regex that
+  // matches a CALL to one. Empty-set guard keeps the regex well-formed (it is ~12 names in practice).
+  const FORBIDDEN_WRAPPERS = discoverSettlingWrappers(files);
+  const WRAPPER_CALL = FORBIDDEN_WRAPPERS.size
+    ? new RegExp('[@.]\\s*(' + [...FORBIDDEN_WRAPPERS].join('|') + ')\\b') : null;
   const violations = [];
   for (const f of files) {
-    try { checkFile(f, violations); }
+    try { checkFile(f, violations, WRAPPER_CALL); }
     catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
   }
   let macroCount = 0;
@@ -270,9 +383,10 @@ function main() {
     console.error('\nSee docs/deferred-layout-refit-and-add-design.md (D: macros must not call private/low-level methods;');
     console.error('E: raw/silent/fullRaw mutators must not call _invalidateLayout) and docs/deferred-layout-16-macro-breakages.md (A/B/C).');
     console.error('F: a non-mutator handler must DEFER a container apply (_invalidateLayout) or mark it `# layout-apply-sanctioned: <why>` — see docs/deferred-layout-OVERVIEW.md §11.');
+    console.error('G: low-level code must reach the _<name>NoSettle core, not the public self-settling wrapper (destroy/close/fullDestroy/createReference/...) — or mark `# nosettle-sanctioned: <why>`.');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F)`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)`);
   process.exit(0);
 }
 

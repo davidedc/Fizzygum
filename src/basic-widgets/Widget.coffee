@@ -808,7 +808,10 @@ class Widget extends TreeNode
     # in progress is a flow-soundness violation: internal layout (_reLayout / _reLayoutSelf / ...) must
     # use the raw/silent setters, never the public deferred API -- otherwise recalculateLayouts would
     # re-enter. THROW so the violation is found and fixed. The static gate buildSystem/check-layering.js
-    # catches the name-recognized internal methods at BUILD time; this is the runtime backstop.
+    # catches the name-recognized internal methods at BUILD time -- [A] the public geometry/text setters,
+    # [G] the structural self-settling wrappers (destroy/close/fullDestroy/...). This runtime backstop
+    # still covers what the name-scanner CANNOT: a structural add() (its name collides with Point#add, so
+    # [G] excludes it) and any wrapper reached TRANSITIVELY or via a dynamically-typed receiver.
     if world._inLayoutMutation or world._recalculatingLayouts
       throw new Error "Fizzygum: a public geometry setter was reached during a layout flush/pass -- internal layout code (_reLayout / _reLayoutSelf / ...) must use the raw/silent setters, not the public deferred API (see buildSystem/check-layering.js)."
     # BATCH guard: inside _settleLayoutsAfterBatch, DEFER the per-mutation flush -- the batch
@@ -3438,6 +3441,11 @@ class Widget extends TreeNode
 
   # »>> this part is excluded from the fizzygum homepage build
   newParentChoiceWithHorizLayout: (ignored, theWidgetToBeAttached) ->
+    # nosettle-sanctioned: this is a MENU ACTION, not a layout pass -- it runs OUTSIDE any flush (see the
+    # _reFitContainer DEFER note below), so @add self-settles once, harmlessly. It is a [G] subject only
+    # because isLowLevel's /Layout$/ arm matches the name's "...HorizLayout" tail -- a vestigial false
+    # match (after the layout-method rename every real pass is _reLayout*-prefixed). See lint-ratchet
+    # plan / the report's "/Layout$/ vestigial arm" follow-up.
     # this is what happens when "each" is
     # selected: we attach the selected widget
     @add theWidgetToBeAttached, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED

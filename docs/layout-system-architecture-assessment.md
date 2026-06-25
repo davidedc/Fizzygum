@@ -120,9 +120,12 @@ forbidden.)
 
 **The throw is the enforcement, not a convention.** Clean layering here is a *checked* invariant, not a guideline the
 authors hope to honour: the runtime tripwire (`FLOWRULE_VIOLATION`, raised by both `_settleLayoutsAfter` and
-`_invalidateLayout`) **plus** the build-time layering lint (`buildSystem/check-layering.js` rules [A]/[E], which catch
-the name-recognized internal methods statically) together make "public self-settles once; low-level code never
-schedules layout" a property the build and the runtime *verify*. That is precisely what stops this class of stateful
+`_invalidateLayout`) **plus** the build-time layering lint (`buildSystem/check-layering.js`: rules [A]/[E] catch the
+name-recognized internal methods directly, and [G] forbids low-level code from calling a *structural* self-settling
+wrapper — destroy / close / fullDestroy / createReference / …) together make "public self-settles once; low-level code
+never schedules layout" a property the build and the runtime *verify*. ("Low-level" and "immediate mutator" here ≝
+whatever `check-layering.js`'s `isLowLevel()` / `isImmediateMutator()` predicates match — those predicates are the
+single source of truth for the tiers, and this prose must not drift from them.) That is precisely what stops this class of stateful
 layout fix from getting out of control: a new caller that re-enters the settle machinery fails LOUDLY (a flow
 violation surfaced at test/build time) instead of silently corrupting an in-progress flush.
 

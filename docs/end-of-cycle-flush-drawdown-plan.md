@@ -502,9 +502,15 @@ By-action (CONVERT HISTORY — kept for the trajectory). **⚠ SUPERSEDED for cu
   gate SKIPS a twinless `*NoSettle` (`check-thin-wraps.js:57` — no public base to constrain), so none needs a `# thin-wrap-
   exempt`; check-layering's call-graph rule still enforces the core reaches no public setter. BOUNDARY (keep the signal
   strong): suffix ONLY hooks where "does this settle?" is a real question — NOT the raw/silent primitives (already named
-  for their tier) nor `childRemoved`/`childAdded` (a public tree-lifecycle family). Payoff = a future ratchet, a
-  `*NoSettle` transitive-no-settle build lint (runtime `FLOWRULE_VIOLATION` → build-time). The formal low-level tiers
-  (`isLowLevel` ⊃ `isImmediateMutator`) already live in `check-layering.js`; memory [[fizzygum-layering-naming-tiers]].
+  for their tier) nor `childRemoved`/`childAdded` (a public tree-lifecycle family). Payoff = a ratchet that LANDED as
+  check-layering rule **[G]** (2026-06-25, lint-ratchet plan Phase 1): a low-level method must not call a structural
+  self-settling wrapper (the `_settleLayoutsAfter` callers — destroy/close/fullDestroy/…). It is the DIRECT form only:
+  the TRANSITIVE `*NoSettle` closure (runtime `FLOWRULE_VIOLATION` → build-time) was prototyped and REJECTED as
+  intractable — a name-based reachability fixpoint engulfs the raw setters / `*NoSettle` cores themselves (~500–710
+  false hits, because `constructor`→`buildAndConnectChildren`→`add` is a universal hub), and the `add`/`Point#add` name
+  collision is unresolvable without type inference; `add` and collapse/unCollapse are therefore excluded from [G] too
+  (the runtime throw stays their backstop). The formal low-level tiers (`isLowLevel` ⊃ `isImmediateMutator`) live in
+  `check-layering.js`; memory [[fizzygum-layering-naming-tiers]].
 - **The symmetric-twin convert: a gesture and its mirror share a shape — and the second is cheaper.** Drop and grab are
   twins (`ActivePointerWdgt.drop`/`grab`): each re-homes via a self-settling `@add`, then calls a recipient re-fit hook
   that DEFERRED. Convert by wrapping the hook in ONE `_settleLayoutsAfter` AFTER add's settle. The grab needed NO batch

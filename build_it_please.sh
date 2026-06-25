@@ -264,12 +264,16 @@ if ! $noSyntaxCheck ; then
 fi
 
 # --- build-time layering / flow-soundness gate (self-settling public geometry API) -----
-# Enforces the call-graph layering the self-settling API relies on: a low-level method
-# (raw*/silent*/__*/*Core, doLayout/adjustContentsBounds/adjustScrollBars) must NOT call a
-# public geometry setter or recalculateLayouts; recalculateLayouts() is called ONLY by
-# doOneCycle and the public-setter flush (mutateGeometryThenSettle); and no public setter
-# calls another. (buildSystem/check-layering.js — same --noSyntaxCheck escape hatch and
-# explicit $? check as the syntax gates around it; scans src/ directly so needs no args.)
+# Enforces the call-graph layering the self-settling API relies on. A low-level method (raw*/silent*/
+# fullRaw*/_*, a *NoSettle core, or the _reLayout* / _positionAndResizeChildren / _reLayoutScrollbars
+# layout passes) must NOT reach UP into the public self-flushing layer: [A] no public geometry/text
+# setter or recalculateLayouts; [G] no structural self-settling wrapper (destroy/close/fullDestroy/
+# createReference/... — discovered structurally as the _settleLayoutsAfter callers); [B] recalculate-
+# Layouts() only from doOneCycle / the _settleLayoutsAfter(Batch) settle tiers; [C] no public setter
+# calls another; [E] a raw/silent/fullRaw mutator must not _invalidateLayout; [F] a non-mutator handler
+# must DEFER a container apply or mark it; [D] a SystemTest macro must not call a private/low-level
+# method. (buildSystem/check-layering.js — same --noSyntaxCheck escape hatch and explicit $? check as the
+# syntax gates around it; scans src/ + the tests' macros directly so needs no args.)
 if ! $noSyntaxCheck ; then
   echo "checking public-API layering of all shipped sources ..."
   node ./buildSystem/check-layering.js
