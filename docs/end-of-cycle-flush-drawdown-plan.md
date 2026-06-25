@@ -71,6 +71,28 @@ tier-2/3 (self-settling) flush drained the queue between the invalidation and `d
 survivor is, by definition, a mutation that **did not self-settle**. The classification question for each: *should
 it have?*
 
+**Why this matters beyond a counter — the campaign is enforcing a checked architectural invariant: *one flush per
+outermost public mutation.*** The single tier (`_settleLayoutsAfter`, née `mutateGeometryThenSettle`) sets
+`world._inLayoutMutation = true`, runs the mutation core, and flushes `recalculateLayouts()` **exactly once**; its
+re-entrancy guard THROWS (`FLOWRULE_VIOLATION`) the instant a public setter is reached on an *attached* widget while a
+flush/pass is already running. So once you are inside a public entry point's settle, nothing nested can open a second
+flush — internal code is *forced* onto the non-settling `_xNoSettle` cores and the raw/silent setters. **The outermost
+attached public mutation owns the single flush; everything underneath rides it** (sequential, non-nested public calls
+each get their own one flush — they don't interleave, so that's fine). The throw — plus the build-time layering lint
+([A]/[E], which catches the name-recognized internal methods statically) — makes "public self-settles once; low-level
+code never schedules layout" a property the runtime and the build *verify*, not a convention humans must remember.
+That is exactly what keeps this class of stateful layout fix from getting out of control, or worse, **recursing and
+hanging**: `_invalidateLayout` throws when reached mid-pass *because* a container that re-scheduled layout from inside
+the settle once climbed an invalidate back into itself and the `recalculateLayouts` convergence loop never terminated;
+the `catch` around the pass is non-flushing, so the tripwire yields a loud error, never a hang. So each convert /
+eliminate in this plan isn't just shrinking a number — it brings one more flow into that single-flush-per-entry-point
+compliance. (Two riders: the **batch tier** `_settleLayoutsAfterBatch` is the deliberate exception — it ABSORBS nested
+settles to coalesce a genuine multi-add bundle into one flush, so the fully general invariant is "one flush per
+outermost public mutation, whether single or batch"; and the **orphan guard** defers construction, so a detached
+subtree settles *zero* times until it is added.) Driving the end-of-cycle queue down is the **measurable** face of
+getting the settle done *right and minimally*; the throw-checked invariant is the **structural** one — and several
+flows reached only by re-probing a "LEAVE" turned out to be quietly violating it.
+
 ---
 
 ## 2. The classification rubric (per contributor)
@@ -373,6 +395,13 @@ MANY settles run per frame — exactly the risk; gauntlet+torture proves safety.
 
 ## 7. The current inventory (2026-06-25 audit, post drop-convert: **80** records / 71 frames / 15 groups; trajectory 1244 → 564 → 320 → 278 → 253 → 140 → 80)
 
+> Update (2026-06-25, later same day): the **sizeToText flip** (StringWdgt/TextWdgt `sizeToTextAndDisableFitting`, the
+> last two `_settleLayoutsAfterBatch` call-sites → single-over-cores via the wrapper/core split, §8) is
+> **byte-identical**, so the end-of-cycle count is unchanged — but `_settleLayoutsAfterBatch` now has **zero callers**
+> (retained as an allowlisted performance primitive). Every discrete public mutation in the codebase is now
+> single-tier; the batch tier is dormant-but-available. 11 benign inspector recaptures (the 2 new `_NoSettle` methods
+> add a row to inspected StringWdgt/TextWdgt member lists).
+
 **UPDATE 2026-06-25 (this arc + a tooling fix):** all 7 StringWdgt text setters now SINGLE-self-settle, so the
 contained-text **API path left end-of-cycle** — the old **120-record `reLayoutAndRefreshContainerIfContainedText`
 row is GONE (0)**. The surviving contained-text traffic is the **caret-editing path only** (`SimplePlainTextScroll
@@ -453,6 +482,21 @@ By-action (interaction-frame records; some rows below predate the 2026-06-25 re-
 - **macOS BSD `sed` has no `\b`** — a `s/\bname\b/_name/g` rename silently no-ops. Use plain `s/name/_name/g` for a
   unique identifier (a CamelCase neighbour like `holderWindowJustDropped` won't match lowercase `justDropped`), then
   `grep` to verify 0 un-prefixed remain.
+- **Changing a method's RETURN VALUE can break test MACROS that chain off it — grep the `.js`, not just `src`** (cost
+  a whole session, the sizeToText split). The wrapper/core split dropped the method's `return @` (to keep the wrapper
+  a canonical thin-wrap); every `src` caller ignored the return, but ~14 macros do `s = (new StringWdgt …).sizeToText
+  AndDisableFitting(); world.add s` → `world.add(undefined)` → a **stackless** `undefined.isAncestorOf` crash far from
+  the change, in `_addNoSettle`. The behaviour was byte-identical the whole time — only the return value moved. FIX:
+  the core ends with `@`. SUSPECT THIS the moment a "byte-identical" refactor crashes in `add`/`_addNoSettle`, and grep
+  BOTH repos' `.js` for the method in EXPRESSION/chain position. (Memory: [[macro-test-relocation-gotchas]] 1b.)
+- **Splitting a pattern-(A) method (reached BOTH standalone and in-pass/in-settle) into wrapper/core works iff every
+  call-site is *statically* one or the other** — then no caller needs to know its context at runtime. sizeToText (the
+  last batch site) split cleanly: in-pass/in-settle callers (createLabel, `_setTextNoSettle`, setFontSize) → the
+  `_xNoSettle` core; standalone callers (tick-toggle, orphan header/tooltip build) → the single wrapper. **Decide the
+  routing with instrumentation, not analysis:** a throwaway probe logging every *attached-mid-settle* wrapper call (and
+  every *standalone* core call) reports empirically which reroute is needed — far faster and surer than reasoning out
+  each caller's pass-context. The build's `stinks` gate also actively forbids `_settleLayoutsAfterBatch => @_xNoSettle`
+  (a pure core wants single), so it pushes you toward the right tier.
 
 ## 9. File:line map (lines drift — grep the name)
 

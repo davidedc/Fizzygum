@@ -826,6 +826,13 @@ class Widget extends TreeNode
     finally
       world._inLayoutMutation = false
 
+  # ⚠ CURRENTLY UNUSED (0 callers) — RETAINED as an available performance primitive, NOT dead-to-delete
+  # (allowlisted in buildSystem/dead-method-allowlist.txt). The drag/drop gesture (ActivePointerWdgt.drop,
+  # 61f527f0) and sizeToTextAndDisableFitting both moved to a SINGLE settle over non-settling cores, which
+  # removed the last batch call-sites. Kept because a future multi-add bundle may want ONE O(1) flush
+  # instead of N self-settles; the `_batchingLayoutSettling` flag + the guard in _settleLayoutsAfter stay
+  # wired so it works as-is if reintroduced.
+  #
   # Run several geometry/structural mutations as a BATCH that settles layouts only ONCE, at
   # the end, instead of each public add()/setExtent() self-settling. Use it for multi-add
   # builders (buildAndConnectChildren) and bulk content insertion: it makes O(N) relayouts

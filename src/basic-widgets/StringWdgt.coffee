@@ -1183,27 +1183,33 @@ class StringWdgt extends Widget
   # cropping, the edit-prompt, nor any font scaling ever fires — i.e. it draws
   # the text at its exact set size.
   # (TextWdgt overrides this with a multi-line, soft-wrap-off variant.)
+  # PUBLIC self-settling entry for STANDALONE callers (a tick toggle on an open menu, a header/tooltip
+  # build on an orphan). The IN-PASS / IN-SETTLE callers -- createLabel (driven by _reLayoutSelf),
+  # _setTextNoSettle, setFontSize -- call _sizeToTextAndDisableFittingNoSettle DIRECTLY, because a single
+  # self-settle reached mid-pass/mid-settle re-enters the flush guard and THROWS. That throw is the wanted
+  # discipline (it surfaces a mis-routed caller); the old _settleLayoutsAfterBatch silently absorbed it.
+  # Returns @ (the core ends with @) so callers can chain -- several macros do
+  # `s = (new StringWdgt ...).sizeToTextAndDisableFitting()` then `world.add s`.
   sizeToTextAndDisableFitting: ->
-    # remember the box-hugs-text mode so a later setText (e.g. editing a button
-    # label in place) keeps the box tracking the text instead of cramming the new
-    # text into the stale box.
-    #
-    # SELF-SETTLING (see TextWdgt::sizeToTextAndDisableFitting for the full rationale): a chrome
-    # label is a freefloating child laid out by its managing container (button/menu centres it in
-    # _reLayoutSelf). The generic _reFitContainer seam can't reach a non-scroll/stack container and
-    # a freefloating child doesn't climb, so invalidate the managing parent explicitly and settle --
-    # consistent on return -- instead of leaning on the caret-destroy accident. Gated out-of-pass.
-    @_settleLayoutsAfterBatch =>
-      @autoSizeBoxToText = true
-      @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
-      @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
-      measuredWidth = @calculateTextWidth (@transformTextOneToOne @text), @originallySetFontSize
-      widthOfText = Math.max (Math.ceil measuredWidth), 1
-      heightOfText = @fontHeight @originallySetFontSize
-      @silentRawSetExtent new Point widthOfText, heightOfText
-      @reflowText()
-      @parent?._invalidateLayout() unless world?._recalculatingLayouts
-    @
+    @_settleLayoutsAfter => @_sizeToTextAndDisableFittingNoSettle()
+
+  # The box-hug, minus the settle. Remembers the box-hugs-text mode (autoSizeBoxToText) so a later setText
+  # (editing a button label in place) keeps the box tracking the text instead of cramming the new text into
+  # the stale box. A chrome label is a freefloating child laid out by its managing container (button/menu
+  # centres it in _reLayoutSelf); the generic _reFitContainer seam can't reach a non-scroll/stack container
+  # and a freefloating child doesn't climb, so invalidate the managing parent explicitly (gated out-of-pass
+  # -- _invalidateLayout THROWS during a pass) and let the enclosing settle flush it.
+  _sizeToTextAndDisableFittingNoSettle: ->
+    @autoSizeBoxToText = true
+    @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
+    @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
+    measuredWidth = @calculateTextWidth (@transformTextOneToOne @text), @originallySetFontSize
+    widthOfText = Math.max (Math.ceil measuredWidth), 1
+    heightOfText = @fontHeight @originallySetFontSize
+    @silentRawSetExtent new Point widthOfText, heightOfText
+    @reflowText()
+    @parent?._invalidateLayout() unless world?._recalculatingLayouts
+    @  # return self so the public wrapper is chainable (macros do `(new StringWdgt …).sizeToTextAndDisableFitting()`)
 
   # ── Contained-text (FIT_BOX_TO_TEXT) edit: the re-fit core ───────────────────
   # The NON-settling re-fit behind the seven text-property setters (setText / setFontSize
@@ -1245,7 +1251,9 @@ class StringWdgt extends Widget
       # the box sized to the OLD text. Generic StringWdgts leave the flag off and
       # keep their fixed box.
       if @autoSizeBoxToText
-        @sizeToTextAndDisableFitting()
+        # _setTextNoSettle always runs inside an enclosing settle → the NoSettle core (the public
+        # self-settling wrapper would re-enter the flush guard and throw).
+        @_sizeToTextAndDisableFittingNoSettle()
       @changed()
     @updateTarget()
     @_reFitContainedTextNoSettle()
@@ -1302,7 +1310,8 @@ class StringWdgt extends Widget
         # font change too; otherwise the bigger/smaller font would just be fitted
         # into the box sized for the old font.
         if @autoSizeBoxToText
-          @sizeToTextAndDisableFitting()
+          # setFontSize wraps its body in a single settle, so this runs in-settle → the NoSettle core.
+          @_sizeToTextAndDisableFittingNoSettle()
         @changed()
       @_reFitContainedTextNoSettle()
 

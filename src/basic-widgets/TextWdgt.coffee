@@ -364,30 +364,34 @@ class TextWdgt extends StringWdgt
   # count (width = maxLineWidth, height = lines × fontHeight). softWrap is turned
   # OFF so the text never re-wraps to the container; the box just hugs the text.
   # See StringWdgt::sizeToTextAndDisableFitting for the full rationale.
+  # PUBLIC self-settling entry for STANDALONE callers; the in-pass / in-settle callers (createLabel
+  # driven by _reLayoutSelf, _setTextNoSettle, setFontSize) call the NoSettle core directly -- a single
+  # self-settle reached mid-pass/mid-settle THROWS (the wanted discipline). See
+  # StringWdgt::sizeToTextAndDisableFitting for the full standalone-vs-in-settle rationale. Returns @
+  # (the core ends with @) so callers can chain -- several macros do `(new TextWdgt …).sizeToTextAndDisableFitting()`.
   sizeToTextAndDisableFitting: ->
-    # SELF-SETTLING: a chrome label (menu item / button caption -- a freefloating TextWdgt at
-    # .label) is laid out by its container, which centres it in _reLayoutSelf (LabelButton /
-    # MenuItem). On re-hug the container must re-layout, but it is NOT a scroll-panel/stack so the
-    # generic _reFitContainer seam (gated on _reLayoutChildren) does not reach it, and a
-    # freefloating child does not climb. So invalidate the managing parent explicitly and settle,
-    # leaving the world consistent on return -- instead of relying on an unrelated later event
-    # (the caret destroy on stop-editing) to re-fit the button. _settleLayoutsAfterBatch flushes
-    # standalone / defers inside a pass; the invalidate is gated out-of-pass (inside a pass -- e.g.
-    # createLabel -- the container is already re-laying out and _invalidateLayout would throw).
-    @_settleLayoutsAfterBatch =>
-      @softWrap = false
-      @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
-      @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
-      # softWrap == false → breakTextIntoLines uses an unbounded width, so lines
-      # split only on hard "\n" and maxLineWidth is the natural text width.
-      [lines, lineSlots, naturalWidth, naturalHeight] =
-        @breakTextIntoLines (@transformTextOneToOne @text), @originallySetFontSize
-      widthOfText = Math.max naturalWidth, 1
-      heightOfText = Math.max naturalHeight, (@fontHeight @originallySetFontSize)
-      @silentRawSetExtent new Point widthOfText, heightOfText
-      @reflowText()
-      @parent?._invalidateLayout() unless world?._recalculatingLayouts
-    @
+    @_settleLayoutsAfter => @_sizeToTextAndDisableFittingNoSettle()
+
+  # The multi-line box-hug, minus the settle. A chrome label (menu item / button caption -- a freefloating
+  # TextWdgt at .label) is laid out by its container, which centres it in _reLayoutSelf (LabelButton /
+  # MenuItem). On re-hug the container must re-layout, but it is NOT a scroll-panel/stack so the generic
+  # _reFitContainer seam (gated on _reLayoutChildren) doesn't reach it and a freefloating child doesn't
+  # climb. So invalidate the managing parent explicitly (gated out-of-pass -- inside a pass the container is
+  # already re-laying out and _invalidateLayout would throw) and let the enclosing settle flush it.
+  _sizeToTextAndDisableFittingNoSettle: ->
+    @softWrap = false
+    @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
+    @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
+    # softWrap == false → breakTextIntoLines uses an unbounded width, so lines
+    # split only on hard "\n" and maxLineWidth is the natural text width.
+    [lines, lineSlots, naturalWidth, naturalHeight] =
+      @breakTextIntoLines (@transformTextOneToOne @text), @originallySetFontSize
+    widthOfText = Math.max naturalWidth, 1
+    heightOfText = Math.max naturalHeight, (@fontHeight @originallySetFontSize)
+    @silentRawSetExtent new Point widthOfText, heightOfText
+    @reflowText()
+    @parent?._invalidateLayout() unless world?._recalculatingLayouts
+    @  # return self so the public wrapper is chainable (macros do `(new TextWdgt …).sizeToTextAndDisableFitting()`)
 
   # FIT_BOX_TO_TEXT layout pass: resize our OWN extent to hug the text. This is
   # the contained-text engine — gated by the mode, so ANY TextWdgt used as window

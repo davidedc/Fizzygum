@@ -82,8 +82,9 @@ class LabelButtonWdgt extends ButtonWdgt
     # self-settle here would re-enter the flush guard and throw.
     @_addNoSettle @label
     # the modern family does not self-size; make the label hug its text so
-    # _reLayoutSelf's centring math (which reads @label.extent()) works.
-    @label.sizeToTextAndDisableFitting()
+    # _reLayoutSelf's centring math (which reads @label.extent()) works. createLabel is driven by
+    # _reLayoutSelf (a layout pass), so use the NoSettle core -- the wrapper would throw mid-pass.
+    @label._sizeToTextAndDisableFittingNoSettle()
 
   _reLayoutSelf: ->
     if not @label?

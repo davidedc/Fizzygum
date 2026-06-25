@@ -106,6 +106,46 @@ the same fixed point regardless of iteration count — but it makes per-frame co
 and it is a real reason determinism is hard: the *sequence* of settles within a frame (and the event-draining
 order driving it) must be deterministic, not just each settle in isolation.
 
+**The normative invariant under the formula: one flush per *outermost* public mutation — and the throw is what
+enforces it.** The formula above is descriptive; the *design rule* it realizes is sharper, and it is what makes a
+layout system this stateful safe to keep extending. A public entry point's single tier (`_settleLayoutsAfter`, née
+`mutateGeometryThenSettle`) sets `world._inLayoutMutation = true`, runs the mutation core, then runs
+`recalculateLayouts()` **exactly once**. Its re-entrancy guard (~:759) THROWS (`FLOWRULE_VIOLATION`) the moment a
+public setter is reached on an *attached* widget while `_inLayoutMutation` (or `_recalculatingLayouts`) is already
+true — so once you are inside an entry point's settle, **no nested public call can open a second settle.** Internal
+code is thereby *forced* onto the non-settling `_xNoSettle` cores and the raw/silent setters, which schedule nothing.
+Net: **the outermost attached public mutation owns the single flush; everything underneath rides it.** (Sequential,
+non-nested public calls each get their own one flush — they don't interleave, so that's fine; it is *nesting* that is
+forbidden.)
+
+**The throw is the enforcement, not a convention.** Clean layering here is a *checked* invariant, not a guideline the
+authors hope to honour: the runtime tripwire (`FLOWRULE_VIOLATION`, raised by both `_settleLayoutsAfter` and
+`_invalidateLayout`) **plus** the build-time layering lint (`buildSystem/check-layering.js` rules [A]/[E], which catch
+the name-recognized internal methods statically) together make "public self-settles once; low-level code never
+schedules layout" a property the build and the runtime *verify*. That is precisely what stops this class of stateful
+layout fix from getting out of control: a new caller that re-enters the settle machinery fails LOUDLY (a flow
+violation surfaced at test/build time) instead of silently corrupting an in-progress flush.
+
+**The motivation is a real recursion/hang, not theoretical purity.** `_invalidateLayout` throws specifically when
+reached during `_recalculatingLayouts` because of a documented app-freeze: a container resizing its children climbed
+an `invalidate` back into itself *mid-pass*, so the convergence loop (§2.3) never terminated. Forbidding *any*
+re-scheduling of layout from inside the pass is what guarantees that loop converges. And the `catch` around
+`recalculateLayouts` is non-flushing — it defers recovery outside the flush — so even when the tripwire fires you get
+a loud error, never a hang. Poor layering in this engine does not merely look untidy; it risks a non-terminating
+settle, which is *why* the discipline is enforced rather than recommended.
+
+Two caveats keep the mental model exact:
+- **"One flush" = one *convergent* flush, not one layout calculation.** `recalculateLayouts()` internally walks/loops
+  until layouts reach a fixed point (§2.3); "one flush" means one *bounded convergence operation* per entry point. It
+  is bounded *because* nothing inside it can inject a new public mutation — the throw is what makes the bound hold.
+- **The batch tier is the deliberate exception.** `_settleLayoutsAfterBatch` (née `settleLayoutsOnceAfter`) ABSORBS
+  nested settles to coalesce a genuine bundle (a multi-add builder) into one flush, so the fully general invariant is
+  **"one flush per outermost public mutation, whether single or batch."** The orphan guard adds a third case:
+  construction of a *detached* subtree settles **zero** times until it is added — so building innards is flush-free by
+  construction. (The end-of-cycle drawdown campaign — `end-of-cycle-flush-drawdown-plan.md` — is the ongoing work of
+  bringing every remaining flow into this invariant; re-probing several "LEAVE" verdicts found flows quietly outside
+  it.)
+
 ### 2.3 The settle engine: invalidate **up**, re-layout **down**, iterate to a fixed point
 
 `_recalculateLayoutsCore` (`WorldWdgt.coffee` ~:869) is the whole engine:

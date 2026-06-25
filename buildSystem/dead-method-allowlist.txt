@@ -56,3 +56,10 @@ topCenterTight
 userSetStart
 visualisedText
 widthTight
+
+# DELIBERATELY RETAINED (not triage-to-delete): the BATCH settle tier. 0 callers as of the
+# single-over-cores work -- the drag/drop gesture (ActivePointerWdgt.drop, 61f527f0) and
+# sizeToTextAndDisableFitting both moved to a single settle over non-settling cores, removing the last
+# batch call-sites. Kept as an available performance primitive (ONE O(1) flush over a multi-add bundle
+# vs N self-settles) that may be wanted again; its flag + guard stay wired. See the method's comment.
+_settleLayoutsAfterBatch
