@@ -72,7 +72,7 @@ un-allowlisted end-of-cycle layout" gate (§8).
 
 ## 4. Q2 + Q3 — Attribution & why-not-settled (the by-action inventory)
 
-> **Current numbers** (2026-06-25 full-suite dpr1 audit, post the collapse + SwitchButton convert — **38** origin records across
+> **Current numbers** (2026-06-26 full-suite dpr1 audit, post the `childRemoved` elimination — **38** origin records across
 > **30** interaction frames / 13 groups; trajectory **1244 → 564 → 320 → 278 → 253 → 140 → 80 → 73 → 38**). ALL FIVE settle-tier "stinks" now self-settle via the
 > **single-mutation** `_settleLayoutsAfter`
 > (`buildAndConnectChildren` 2026-06-23; `fullDestroy`/`close`/`collapse`/`unCollapse`
@@ -86,6 +86,28 @@ un-allowlisted end-of-cycle layout" gate (§8).
 > wall-clock-sensitive (a heavy cycle drains several queued events in one frame — see `DETERMINISM.md`), so totals are
 > **run-to-run noisy by a few records** even on a fixed build; read as order-of-magnitude, regenerate any time — see
 > `end-of-cycle-audit-tooling.md`.
+>
+> **2026-06-26 (`PanelWdgt.childRemoved` ELIMINATED — RE-AUDIT DONE; the `childRemoved` action is GONE from the origin
+> records):** the 2 `childRemoved` records were a pop-up-close **lost-widget re-home into the OFF-WORLD basement**
+> (`Widget._closeNoSettle → basement.scrollPanel.contents._addInPseudoRandomPositionNoSettle → _addNoSettle →
+> childRemoved`): the removed child's container — the CLOSED basement's scroll panel (root == `BasementWdgt`, never
+> painted) — got a deferred re-fit that rode the per-frame flush. FIX: `PanelWdgt.childRemoved` skips the re-fit when its
+> container is part of a **DETACHED** subtree (`@isOrphan()`); the basement re-lays-out top-down when re-attached
+> (`BasementOpenerWdgt` wraps it in a window + `world.add`s it), exactly as `_settleLayoutsAfter`'s orphan early-return
+> defers off-world work. **`macroStringWdgtEditDefersToPromptWhenCropped` is now fully clean.** Also removed the dead
+> `grandChildRemoved`/`grandChildAdded` no-op hooks (called via `?()`, defined nowhere). Byte-identical: full gauntlet
+> (dpr1/dpr2/WebKit 165/165 + apps 12/12) + dpr2 torture (9 passes, ~1,485 execs, 0 nondeterminism); audit neutrality
+> 165/165. ⚠ The skip is SAFE **only at this removal seam**: a root-cause `return if @isOrphan()` in the shared
+> `Widget._invalidateLayout` was ATTEMPTED and **REVERTED — it broke 63 tests** across all engines, because orphan
+> invalidates are generally LOAD-BEARING (every widget is parent-less — hence an orphan — while being CONSTRUCTED, and
+> the flush legitimately lays out detached-but-live widgets, e.g. the float-dragged one in
+> `macroDetachedWidgetStaysFloatDraggable`). `childRemoved` is uniquely safe because it fires ONLY on
+> removal-from-a-detached-container, never during construction. **Headline total holds at ~38:**
+> `macroStringWdgtInlineTypingRefitsUnderFittingModes` keeps 1 record, now **untagged** — the SAME basement re-home
+> reaches its detached scroll panel from OTHER seams too (`_addNoSettle`, the raw-move re-fit, the basement show/hide
+> filter) that coalesce onto one record and CANNOT be safely orphan-skipped (they share the construction path). So the
+> `childRemoved` ACTION is eliminated; that one test's basement-coalesce residual is irreducible at the seam level.
+> ([[fizzygum-end-of-cycle-flush-drawdown]].)
 >
 > **2026-06-25 (collapse + SwitchButton convert — RE-AUDIT DONE; total 73 → 38, the biggest residual ELIMINATED):**
 > CONVERTED `SwitchButtonWdgt.mouseClickLeft` (the window-collapse toggle, the **32-record biggest residual**): the
@@ -155,7 +177,7 @@ Rolled up by **action** (the convert-vs-leave unit), interaction frames, with th
 | `StringWdgt._reFitContainedTextNoSettle` (contained-text edit, **API path**; was `TextWdgt.reLayoutAndRefreshContainerIfContainedText`) | **0** (was 120) | 0 | — | the 7 API-path setters now **single**-self-settle (`_settleLayoutsAfter`), so this leaves end-of-cycle entirely (see the 2026-06-25 note above); the per-keystroke CARET residual that remained was then eliminated-as-wasted (§5c), so contained-text no longer reaches end-of-cycle at all | **DONE** (API path self-settles 2026-06-24; caret residual eliminated 2026-06-25) |
 | `*._reactToDropOf` (drag/DROP) | **0** (was ~62) | 0 | discrete re-parent gesture | — | **CONVERTED 2026-06-25** — the drop self-settles (`ActivePointerWdgt.drop` wraps `_reactToDropOf`+`_justDropped` in ONE single settle over non-settling cores); overturned the earlier "LEAVE" (§5d). |
 | `*.reactToGrabOf` (drag/GRAB) | **0** (was 7) | 0 | discrete re-parent gesture | — | **CONVERTED 2026-06-25** — the grab self-settles (`ActivePointerWdgt.grab` wraps the recipient `reactToGrabOf`→`_reactToGrabOfNoSettle` in ONE single settle over non-settling cores); the symmetric twin of the drop (§5e). |
-| `PanelWdgt.childRemoved` (tree removal) | 2 | 2 | discrete removal | a child removed from a scroll panel **mid string-edit** re-fits the container, deferred | **CONVERT candidate** (SEPARATE from the grab — string-edit path, not a grab gesture; §5e) |
+| `PanelWdgt.childRemoved` (tree removal) | **0** (was 2) | 0 | discrete removal | a child removed from the OFF-WORLD basement (a pop-up-close lost-widget re-home) re-fit the detached basement scroll panel — wasted | **ELIMINATED 2026-06-26** — `childRemoved` skips the re-fit when its container is DETACHED (`@isOrphan()`); the basement re-lays-out on re-attach. SAFE only at this removal seam (the blanket `_invalidateLayout` orphan-skip broke construction layout, 63 tests — reverted). See the 2026-06-26 banner. |
 | `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | **0** | 0 | discrete click | **self-settles** via `_settleLayoutsAfter` (CONVERTED 2026-06-25; enabled by routing the layout-pass collapse decisions to the `_collapseNoSettle`/`_unCollapseNoSettle` cores) — gone from end-of-cycle | **DONE** (converted; was the 32-record biggest residual) |
 | `Widget.collapse` / `unCollapse` | **0** | 0 | discrete | **self-settles** via `mutateGeometryThenSettle` (flipped 2026-06-24; collapse-hook `destroy` + bar-button re-`add` use cores) — gone from end-of-cycle | **DONE** (self-settled) |
 | `WindowWdgt.childCollapsed` / `childUnCollapsed` | **0** | 0 | discrete | parent reaction, now inside collapse's single settle | **DONE** (folded into collapse self-settle) |
@@ -366,7 +388,7 @@ nor `childRemoved`/`childAdded` (a public tree-lifecycle family). The suffix's p
 `*NoSettle` **transitive-no-settle** build lint (today the contract is only enforced at runtime, by the `FLOWRULE_VIOLATION`
 throw on tested paths). See drawdown-plan §8 + memory `fizzygum-layering-naming-tiers`.
 
-**`childRemoved` (2) is a SEPARATE residual — a next target, NOT this convert.** The post-convert audit shows the grab
+**`childRemoved` (2) is a SEPARATE residual — a next target, NOT this convert.** *(→ DONE 2026-06-26: ELIMINATED via an orphan-skip at the removal seam; see the 2026-06-26 banner.)* The post-convert audit shows the grab
 gone but a `ScrollPanelWdgt` `PanelWdgt.childRemoved` re-fit (2 records) surviving on the STRING-EDIT tests
 (`macroStringWdgtEditDefersToPromptWhenCropped`, `macroStringWdgtInlineTypingRefitsUnderFittingModes`) — a child removed
 from a scroll panel mid-edit whose container re-fit defers. So the grab convert does NOT zero "removal": `childRemoved`'s
@@ -376,9 +398,9 @@ for a dedicated convert/leave decision (find the off-settle removal path, disabl
 grab tests show no `childRemoved` survivors.
 
 **Next:** `SwitchButtonWdgt.mouseClickLeft` (32, the biggest residual) is now **DONE** (converted 2026-06-25, see the
-banner). `childRemoved` (2, string-edit path) remains the clearest discrete-action convert candidate; the rest of the
-post-convert 38 is **OPEN — re-probe** (§6, a provisional suspect-list, not a settled allowlist) + the out-of-scope
-macro-driver (14).
+banner), and `childRemoved` (2, the basement-re-home path) is now **DONE too** (ELIMINATED 2026-06-26 — orphan-skip at
+the removal seam; see the 2026-06-26 banner). The rest of the ~38 is **OPEN — re-probe** (§6, a provisional
+suspect-list, not a settled allowlist) + the out-of-scope macro-driver (14).
 
 ## 6. Q5 — The legitimate residual (the proposed allowlist)
 
