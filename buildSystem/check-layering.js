@@ -67,7 +67,10 @@ const INVALIDATE_CALL = /[@.]\s*_invalidateLayout\b/;         // @_invalidateLay
 // [F] a CONTAINER-refit apply CALL (excludes _reLayoutSelf — see the [F] rule note by the check below). The
 // trailing (?!\?) skips the `?._reLayoutChildren?` EXISTENCE-CHECK guards (e.g. `return unless @parent?._reLayoutChildren?`)
 // — those test for the method, they don't apply it; a real apply is `()`-called or paren-less-arg-called, never `?`-tested.
-const APPLY_CALL = /[@.]\s*(_reLayoutChildren|_positionAndResizeChildren|_reLayoutScrollbars|_reLayout)\b(?!\?)/;
+// The SECOND lookahead skips a method-REFERENCE COMPARISON (`@_reLayout != Widget::_reLayout` — the
+// implementsDeferredLayout idiom for "does the subclass override _reLayout"): a comparison / `is` / `isnt`
+// right after the name means it is being compared AS A VALUE, not applied. (A real apply is never compared.)
+const APPLY_CALL = /[@.]\s*(_reLayoutChildren|_positionAndResizeChildren|_reLayoutScrollbars|_reLayout)\b(?!\?)(?!\s*(?:[!=]=|[<>]=?|is\b|isnt\b))/;
 const SANCTION_MARKER = 'layout-apply-sanctioned';        // the conscious-sign-off comment marker for [F]
 const PUBLIC_SET = new Set(PUBLIC_SETTERS);
 const RECALC_WHITELIST = new Set(['doOneCycle', '_settleLayoutsAfter', '_settleLayoutsAfterBatch']);
@@ -78,8 +81,14 @@ const isLowLevel = (name) =>
                             // _positionAndResizeChildren / _reLayoutScrollbars / _reLayoutChildrenAndScrollbars /
                             // _reLayoutChildren / _reLayoutSelf / _reLayoutDesktop /
                             // _refreshScrollPanelWdgtOrVerticalStackIfIamInIt / _amIDirectlyInside*)
-  /NoSettle$/.test(name) ||  // the _xxxNoSettle cores (do the mutation, no settle)
-  /Layout$/.test(name);     // _reLayout — the main layout pass (and any future *Layout)
+  /NoSettle$/.test(name);    // the _xxxNoSettle cores (do the mutation, no settle)
+// NB the old `|| /Layout$/.test(name)` arm was REMOVED (lint-ratchet C4, 2026-06-25): after the
+// layout-method-family rename every real layout pass is _reLayout*-prefixed (already caught by /^_/
+// above), so /Layout$/ only ever matched NON-pass methods whose name ends in "Layout" -- the queries
+// implementsDeferredLayout / countOfChildrenInHorizontalStackLayout and the menu actions
+// newParentChoiceWithHorizLayout / attachWithHorizLayout -- mis-classifying them as low-level.
+// (Widget.implementsDeferredLayout's `@_reLayout != Widget::_reLayout` is a reference comparison,
+// handled by APPLY_CALL's comparison lookahead above, so it is not a false [F] off-settle-apply hit.)
 
 // [E] the flow rule (task #17): an IMMEDIATE geometry mutator (raw*/silent*/fullRaw*) must only
 // MUTATE geometry, never SCHEDULE a (re-)layout. Scheduling (_invalidateLayout) is the public

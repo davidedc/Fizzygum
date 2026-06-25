@@ -3450,11 +3450,6 @@ class Widget extends TreeNode
 
   # »>> this part is excluded from the fizzygum homepage build
   newParentChoiceWithHorizLayout: (ignored, theWidgetToBeAttached) ->
-    # nosettle-sanctioned: this is a MENU ACTION, not a layout pass -- it runs OUTSIDE any flush (see the
-    # _reFitContainer DEFER note below), so @add self-settles once, harmlessly. It is a [G] subject only
-    # because isLowLevel's /Layout$/ arm matches the name's "...HorizLayout" tail -- a vestigial false
-    # match (after the layout-method rename every real pass is _reLayout*-prefixed). See lint-ratchet
-    # plan / the report's "/Layout$/ vestigial arm" follow-up.
     # this is what happens when "each" is
     # selected: we attach the selected widget
     @add theWidgetToBeAttached, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED

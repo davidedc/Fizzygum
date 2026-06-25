@@ -16,14 +16,14 @@
   read-backs on orphans with no behaviour-preserving public alternative. Not tightened.
 - **Phases 4 & 5:** stay parked/gated (Phase 5's precondition — the drawdown OPEN set resolved — does not hold).
 - **§4:** docs point at the `isLowLevel`/`isImmediateMutator` predicates; gate comments de-staled.
-- **Follow-ups surfaced (not done here):** (a) `isLowLevel`'s `/Layout$/` arm is VESTIGIAL post-rename — it now matches
-  only non-pass methods (`implementsDeferredLayout`, the `*HorizLayout` menu actions, `countOfChildrenInHorizontalStack
-  Layout`); a `# nosettle-sanctioned` marker papers over the one [G] hit it causes. **This is a TWO-PART change, not a
-  one-liner:** the base `Widget.implementsDeferredLayout` is `@_reLayout != Widget::_reLayout` (a method-REFERENCE
-  comparison), which rule [F]'s `APPLY_CALL` regex would flag as a false off-settle apply the moment that method stops
-  being low-level — so the arm removal must be PAIRED with teaching `APPLY_CALL` to ignore reference comparisons
-  (`@x != Widget::x` / the `::` prototype-ref form), then retire the marker. (b) The collapse/unCollapse convert
-  (drawdown campaign), after which they fold back into [G]. Full record: the session report.
+- **Follow-ups surfaced — both now DONE (2026-06-25):** (a) **`/Layout$/` arm removed** (`e13c44c6`): the vestigial arm
+  matched only non-pass methods (`implementsDeferredLayout`, the `*HorizLayout` menu actions,
+  `countOfChildrenInHorizontalStackLayout`); removed it, PAIRED with an `APPLY_CALL` lookahead skipping reference
+  comparisons (`@_reLayout != Widget::_reLayout`, the implementsDeferredLayout idiom) so the reclassified base isn't a
+  false `[F]` hit, and retired the `# nosettle-sanctioned` marker on `newParentChoiceWithHorizLayout`. (b) **collapse/
+  unCollapse convert DONE** (`86d3b1e8`, drawdown campaign): the layout-pass call-sites routed to the idempotent
+  `_collapseNoSettle`/`_unCollapseNoSettle` cores + `SwitchButtonWdgt.mouseClickLeft` converted to self-settle (the
+  32-record residual eliminated, total 73 → 38); `[G]` now covers collapse/unCollapse (removed from `WRAPPER_EXCLUDED`).
 
 **For the CURRENT STATE of the whole build-time checking system** (the gate inventory, rules [A]–[G], the markers, the
 predicates, the reasoned boundaries, how-to extend/debug) see the canonical reference **`docs/lint-and-static-checks.md`**.

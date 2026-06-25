@@ -202,16 +202,17 @@ What the layering gate deliberately does NOT cover, and why — so a maintainer 
   assessed: the only remaining macro raw-uses are 6 `silentRawSetWidth/Height` *measure-and-size read-backs* on orphans
   (set width → measure the wrap AT that width → set height) with no behaviour-preserving public alternative. Re-ripens
   only once a public "size to wrapped text at width" construction helper exists.
-- **PENDING cleanup — `isLowLevel`'s `/Layout$/` arm is VESTIGIAL.** After the layout-method-family rename every real
-  layout pass is `_reLayout*`-prefixed (already caught by `/^_/`), so `/Layout$/` now matches ONLY non-pass methods:
-  `implementsDeferredLayout` (×3, capability queries), the `*HorizLayout` menu actions
-  (`newParentChoiceWithHorizLayout` — currently carrying a `# nosettle-sanctioned` marker for exactly this reason —
-  and `attachWithHorizLayout`), and `countOfChildrenInHorizontalStackLayout` (a query). **This is a TWO-PART change,
-  not a one-liner:** removing `|| /Layout$/.test(name)` makes the base `Widget.implementsDeferredLayout`
-  (`@_reLayout != Widget::_reLayout`, a method-REFERENCE comparison) non-low-level → an [F] subject → its `@_reLayout`
-  matches `APPLY_CALL` → a FALSE off-settle-apply flag. So the arm removal **must be paired** with teaching `APPLY_CALL`
-  to ignore reference comparisons (`@x != Widget::x` / the `::` prototype-ref form). Then retire the marker on
-  `newParentChoiceWithHorizLayout`. Verify gate green + suite byte-identical.
+- **(DONE 2026-06-25) `isLowLevel`'s `/Layout$/` arm was VESTIGIAL — removed.** After the layout-method-family rename
+  every real layout pass is `_reLayout*`-prefixed (already caught by `/^_/`), so `/Layout$/` only ever matched non-pass
+  methods whose name ends in "Layout": `implementsDeferredLayout` (×3, capability queries), the `*HorizLayout` menu
+  actions (`newParentChoiceWithHorizLayout` / `attachWithHorizLayout`), and `countOfChildrenInHorizontalStackLayout` (a
+  query) — mis-classifying them as low-level. It was a TWO-PART change (the reason it wasn't a one-liner): reclassifying
+  `Widget.implementsDeferredLayout` (`@_reLayout != Widget::_reLayout`, a method-REFERENCE comparison) to non-low-level
+  makes it an `[F]` subject, and its `@_reLayout` would false-match `APPLY_CALL`. So the arm removal was PAIRED with a
+  second `APPLY_CALL` lookahead that skips a comparison / `is` / `isnt` right after the name (a value compared, never
+  applied), and the now-unnecessary `# nosettle-sanctioned` marker on `newParentChoiceWithHorizLayout` was retired.
+  Self-tested: `[F]` still flags a real `@_reLayout()` apply, skips `@_reLayout != Widget::_reLayout`. Gate green + suite
+  165/165 byte-identical + apps 12/12.
 
 ---
 
