@@ -103,7 +103,7 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
 
   # Runs inside the drop's single settle: addAsSiblingAfterMe is already non-settling (-> _addNoSettle),
   # and fullDestroy -> the non-settling core _fullDestroyNoSettle.
-  _reactToDropOf: (widgetBeingDropped) ->
+  _reactToDropOfNoSettle: (widgetBeingDropped) ->
     @addAsSiblingAfterMe \
       widgetBeingDropped,
       nil,

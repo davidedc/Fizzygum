@@ -82,7 +82,7 @@ class PopUpWdgt extends Widget
       pinMenuItem.firstParentThatIsAPopUp().propagateKillPopUps()
       world.closePopUpsMarkedForClosure()
     else
-      # no-arg caller is _justDropped (inside the drop's settle): mark + close the popups through
+      # no-arg caller is _justDroppedNoSettle (inside the drop's settle): mark + close the popups through
       # the non-settling core so they ride the drop's flush rather than re-entering the flush guard.
       @getParentPopUp()?.propagateKillPopUps()
       world._closePopUpsMarkedForClosureNoSettle()
@@ -105,7 +105,7 @@ class PopUpWdgt extends Widget
     menu.addLine()
     menu.addMenuItem "pin", false, @, "pin"
  
-  _justDropped: (whereIn) ->
+  _justDroppedNoSettle: (whereIn) ->
     super
     if whereIn != world
       @pinPopUp()

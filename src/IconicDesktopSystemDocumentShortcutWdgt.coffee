@@ -3,7 +3,7 @@
 
 class IconicDesktopSystemDocumentShortcutWdgt extends IconicDesktopSystemShortcutWdgt
 
-  _reactToDropOf: (droppedWidget) ->
+  _reactToDropOfNoSettle: (droppedWidget) ->
 
   constructor: (@target, @title, @icon) ->
     if !@icon?

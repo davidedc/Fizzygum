@@ -1670,7 +1670,7 @@ class Widget extends TreeNode
 
   # The ONE phase-dispatch primitive for the whole "re-fit a container at the next settle point" family:
   # the drag/drop gesture handlers (PanelWdgt / ScrollPanelWdgt / SimpleVerticalStackPanelWdgt
-  # _reactToDropOf / reactToGrabOf / childRemoved), the two freefloating-content "seams" above
+  # _reactToDropOfNoSettle / _reactToGrabOfNoSettle / childRemoved), the two freefloating-content "seams" above
   # (_refreshScrollPanelWdgtOrVerticalStackIfIamInIt, _reFitContainerAfterRawGeometryChange), and the
   # newParentChoice* menu actions all route through here. Two states:
   #  - INSIDE a layout pass (world._recalculatingLayouts): ENQUEUE the container into the
@@ -2940,7 +2940,7 @@ class Widget extends TreeNode
       #console.log "****** onClickOutsideMeOrAnyOfMyChildren removing element"
       world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
 
-  _justDropped: (whereIn) ->
+  _justDroppedNoSettle: (whereIn) ->
     @rememberFractionalSituationInHoldingPanel()
     
   wantsDropOf: (aWdgt) ->
@@ -3004,11 +3004,11 @@ class Widget extends TreeNode
       stepCount += 1
       if stepCount is steps
         situation.origin.add @
-        # _reactToDropOf is cores-only now (non-settling), so it needs an enclosing settle -- the live
+        # _reactToDropOfNoSettle is cores-only now (non-settling), so it needs an enclosing settle -- the live
         # drop settles it in ActivePointerWdgt.drop; this (dead / homepage-excluded slide-back) path must
         # too. add above already self-settled the re-home.
-        if situation.origin._reactToDropOf
-          situation.origin._settleLayoutsAfter => situation.origin._reactToDropOf @
+        if situation.origin._reactToDropOfNoSettle
+          situation.origin._settleLayoutsAfter => situation.origin._reactToDropOfNoSettle @
         @step = oldStep
         @fps = oldFps
         if @step == noOperation or !@step?

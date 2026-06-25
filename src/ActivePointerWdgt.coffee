@@ -142,10 +142,10 @@ class ActivePointerWdgt extends Widget
   # floatDrag 'n' drop events, method(arg) -> receiver:
   #
   #   prepareToBeGrabbed() -> grabTarget
-  #   reactToGrabOf(grabbedWdgt) -> oldParent
+  #   _reactToGrabOfNoSettle(grabbedWdgt) -> oldParent
   #   wantsDropOf(wdgtToDrop) ->  newParent
-  #   _justDropped(activePointerWdgt) -> droppedWdgt
-  #   _reactToDropOf(droppedWdgt, activePointerWdgt) -> newParent
+  #   _justDroppedNoSettle(activePointerWdgt) -> droppedWdgt
+  #   _reactToDropOfNoSettle(droppedWdgt, activePointerWdgt) -> newParent
   #
   dropTargetFor: (aWdgt) ->
     target = @topWdgtUnderPointer()
@@ -217,11 +217,18 @@ class ActivePointerWdgt extends Widget
       
       #debugger
       @fullChanged()
-      # this gives an occasion to the old parent
-      # widget to adjust itself e.g. the ScrollPanelWdgt
-      # readjusts itself if you take some widgets
-      # out of it.
-      oldParent?.reactToGrabOf? aWdgt
+      # Notify the old parent so it can re-fit itself (e.g. a ScrollPanelWdgt re-snugs its contents +
+      # scrollbars when you take a widget out of it). A grab is one discrete re-parent gesture, so settle it
+      # HERE -- consistent on return, not on the next doOneCycle. This is the SYMMETRIC twin of the drop
+      # (see ActivePointerWdgt.drop): @add above already self-settled the re-home (its _addNoSettle captured
+      # the OLD container's childRemoved re-fit inside add's settle), and this SINGLE settle flushes the
+      # _reactToGrabOfNoSettle re-fit once. Every _reactToGrabOfNoSettle override re-fits through NON-settling paths -- Panel
+      # Wdgt / ScrollPanelWdgt via _reFitContainer (a raw invalidate, no public setter), FridgeWdgt via
+      # compileTiles -> FizzytilesCodeWdgt.showCompiledCode -> _setTextNoSettle (core) -- so nothing re-enters
+      # the flush guard mid-pass; the single tier flushes ONCE and THROWS if a future override sneaks in a
+      # public setter (the wanted cores-call-cores discipline). (end-of-cycle-flush drawdown: _reactToGrabOfNoSettle
+      # was ~7 records, all flushed here once now -- the grab/removal counterpart of the drop convert.)
+      @_settleLayoutsAfter => oldParent?._reactToGrabOfNoSettle? aWdgt
 
   isThisPointerDraggingSomething: ->
     @isThisPointerFloatDraggingSomething() or @isThisPointerNonFloatDraggingSomething()
@@ -260,12 +267,12 @@ class ActivePointerWdgt extends Widget
 
       # Notify the recipient (it may initialise the dropped widget's layout spec) and then the dropped
       # widget (it may tweak its OWN spec -- e.g. constrainToRatio when dropped into a ratio container).
-      # Both run AFTER add()'s self-settle ON PURPOSE -- _justDropped reads the dropped widget's SETTLED
+      # Both run AFTER add()'s self-settle ON PURPOSE -- _justDroppedNoSettle reads the dropped widget's SETTLED
       # geometry (rememberFractionalSituationInHoldingPanel, constrainToRatio's @width()/@height()), so we
-      # must NOT absorb add's settle. The recipient re-fit (_reactToDropOf) + the post-_justDropped spec
+      # must NOT absorb add's settle. The recipient re-fit (_reactToDropOfNoSettle) + the post-_justDroppedNoSettle spec
       # change used to DEFER to end-of-cycle. A drop is one discrete re-parent gesture, so settle them HERE:
       # consistent on return, not on the next doOneCycle. SINGLE settle (_settleLayoutsAfter): every
-      # _reactToDropOf / _justDropped override re-homes / rebuilds / re-fits through the NON-settling cores
+      # _reactToDropOfNoSettle / _justDroppedNoSettle override re-homes / rebuilds / re-fits through the NON-settling cores
       # (WindowWdgt._buildAndConnectChildrenNoSettle, _fullDestroyNoSettle, _addNoSettle / _addInPseudoRandom
       # PositionNoSettle, _createReferenceAndCloseNoSettle, _closePopUpsMarkedForClosureNoSettle, and raw
       # setters), so nothing re-enters the flush guard mid-pass; the single tier flushes ONCE at the end and
@@ -273,8 +280,8 @@ class ActivePointerWdgt extends Widget
       # batch tier used to silently absorb that). (end-of-cycle-flush drawdown: the drop was the biggest
       # residual, ~62 records, all flushed here once now.)
       @_settleLayoutsAfter =>
-        target._reactToDropOf? wdgtToDrop, @
-        wdgtToDrop._justDropped? target
+        target._reactToDropOfNoSettle? wdgtToDrop, @
+        wdgtToDrop._justDroppedNoSettle? target
 
     #else
     #  alert "if you never see this alert then you can delete the test"

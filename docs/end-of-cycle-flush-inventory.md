@@ -132,7 +132,8 @@ Rolled up by **action** (the convert-vs-leave unit), interaction frames, with th
 | *(untagged)* **hover / pointer-dispatch** (genuine hover/scroll) | **9** | 5 | continuous | one settle/frame is correct batching | **LEAVE** (continuous). The ~84 `SimplePlainTextScrollPanelWdgt` per-keystroke caret re-fit **plus** the layout-inert HANDLE-move re-fits that used to inflate this row (shared `playQueuedEvents` sig) were **ELIMINATED 2026-06-25** as wasted decoration work (§5c) — 117 → 9. |
 | `StringWdgt._reFitContainedTextNoSettle` (contained-text edit, **API path**; was `TextWdgt.reLayoutAndRefreshContainerIfContainedText`) | **0** (was 120) | 0 | — | the 7 API-path setters now **single**-self-settle (`_settleLayoutsAfter`), so this leaves end-of-cycle entirely (see the 2026-06-25 note above); the per-keystroke CARET residual that remained was then eliminated-as-wasted (§5c), so contained-text no longer reaches end-of-cycle at all | **DONE** (API path self-settles 2026-06-24; caret residual eliminated 2026-06-25) |
 | `*._reactToDropOf` (drag/DROP) | **0** (was ~62) | 0 | discrete re-parent gesture | — | **CONVERTED 2026-06-25** — the drop self-settles (`ActivePointerWdgt.drop` wraps `_reactToDropOf`+`_justDropped` in ONE single settle over non-settling cores); overturned the earlier "LEAVE" (§5d). |
-| `*.reactToGrabOf` / `childRemoved` (drag/GRAB + removal) | 9 | ~6 | discrete gesture events | symmetric to the drop, not yet converted | **CONVERT candidate** (the grab/removal counterparts — next) |
+| `*.reactToGrabOf` (drag/GRAB) | **0** (was 7) | 0 | discrete re-parent gesture | — | **CONVERTED 2026-06-25** — the grab self-settles (`ActivePointerWdgt.grab` wraps the recipient `reactToGrabOf`→`_reactToGrabOfNoSettle` in ONE single settle over non-settling cores); the symmetric twin of the drop (§5e). |
+| `PanelWdgt.childRemoved` (tree removal) | 2 | 2 | discrete removal | a child removed from a scroll panel **mid string-edit** re-fits the container, deferred | **CONVERT candidate** (SEPARATE from the grab — string-edit path, not a grab gesture; §5e) |
 | `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | 32 | 6 | discrete click | invalidates on toggle | **LEAVE/convert** (entangled w/ collapse) |
 | `Widget.collapse` / `unCollapse` | **0** | 0 | discrete | **self-settles** via `mutateGeometryThenSettle` (flipped 2026-06-24; collapse-hook `destroy` + bar-button re-`add` use cores) — gone from end-of-cycle | **DONE** (self-settled) |
 | `WindowWdgt.childCollapsed` / `childUnCollapsed` | **0** | 0 | discrete | parent reaction, now inside collapse's single settle | **DONE** (folded into collapse self-settle) |
@@ -304,8 +305,52 @@ deleting a recipient's last settling caller orphans a public wrapper, the build'
 (`PanelWdgt.addInPseudoRandomPosition` was deleted, its core kept); a `_xNoSettle` twin that is a sibling-closer not a
 wrapper/core is marked `# thin-wrap-exempt` (the popup closer).
 
-**Next:** `reactToGrabOf` (7) + `childRemoved` (2) are the symmetric grab/removal counterparts — the same convert,
-now with the single-over-cores pattern as the template.
+## 5e. REVISION — the drag/GRAB gesture is a CONVERT (the symmetric twin of the drop)
+
+> **✅ EXECUTED & VERIFIED 2026-06-25.** Total **80 → 73 (−7)**; the `reactToGrabOf` action (was ~7) now flushes
+> IN-GESTURE — audit: **zero `_reactToGrabOfNoSettle` / grab records** across the whole suite. Done as a SINGLE settle
+> over non-settling cores from the START — no batch intermediate, because the drop convert (§5d) had already routed every
+> recipient through cores. `fg gauntlet` (dpr1/dpr2/WebKit/apps) 165/165 byte-identical + dpr2 torture (shards=4, 5 iters)
+> 0 nondeterminism. **Zero recaptures** (no inspector-visible surface changed). NB the old "reactToGrabOf (7) + childRemoved
+> (2)" lumping was misleading: only the GRAB is converted here; `childRemoved` (2) is a SEPARATE residual (see below).
+
+A float-GRAB is the mirror of the drop, dismissed in the same breath as the symmetric counterpart. `ActivePointerWdgt.grab`
+does, in order: `@add aWdgt` (public, self-settles — the grabbed widget is re-homed onto the hand; its `_addNoSettle`
+re-parent already fires the OLD container's `childRemoved` re-fit INSIDE add's settle, so that is captured) → then, after
+the shadow/paint, `oldParent?.reactToGrabOf?` (the old container re-fits — e.g. a ScrollPanelWdgt re-snugs its
+contents+scrollbars after a widget leaves). That recipient re-fit DEFERRED to end-of-cycle (the ~7 records), exactly like
+the drop's `_reactToDropOf`.
+
+**Convert (consistent-on-return), not eliminate.** A grab is a discrete re-parent gesture, so its old-container re-fit
+should land on return, not the next `doOneCycle`. Fix: wrap `oldParent?.reactToGrabOf?` in ONE `_settleLayoutsAfter`,
+AFTER `@add`'s settle (mirroring the drop's tail at `ActivePointerWdgt.drop`). **No batch needed** — unlike the drop's
+first landing, every grab recipient already re-fits through non-settling paths: `PanelWdgt`/`ScrollPanelWdgt` →
+`_reFitContainer` (raw invalidate, no public setter); `FridgeWdgt` → `compileTiles` → `FizzytilesCodeWdgt.showCompiledCode`
+→ `_setTextNoSettle` core (the `showCompiledCode` having been made non-settling for the drop's Fridge path in §5d). Single
+THROWS if a future override sneaks in a public setter — the cores-call-cores discipline, enforced at runtime.
+
+**The hook rename + the `NoSettle`-naming harmonization.** `reactToGrabOf` → `_reactToGrabOfNoSettle` (a private hook that
+only ever runs inside the gesture's settle). And the owner-decided convention (2026-06-25): the **`NoSettle` suffix marks a
+NON-SETTLING REGION** — a static-checkable "nothing downstream settles" contract — **not** "the core of a public/core
+pair." So the drop's already-private hooks were harmonized to match: `_reactToDropOf` → `_reactToDropOfNoSettle`,
+`_justDropped` → `_justDroppedNoSettle`. The thin-wrap gate **skips a twinless `*NoSettle`** (no public base to constrain,
+`check-thin-wraps.js:57`), so none needs a `# thin-wrap-exempt`; the boundary that keeps the suffix meaningful — suffix the
+gesture/lifecycle hooks where "does this settle?" is a real question, NOT the raw/silent primitives (already `raw`/`silent`)
+nor `childRemoved`/`childAdded` (a public tree-lifecycle family). The suffix's payoff is a future check-layering ratchet — a
+`*NoSettle` **transitive-no-settle** build lint (today the contract is only enforced at runtime, by the `FLOWRULE_VIOLATION`
+throw on tested paths). See drawdown-plan §8 + memory `fizzygum-layering-naming-tiers`.
+
+**`childRemoved` (2) is a SEPARATE residual — a next target, NOT this convert.** The post-convert audit shows the grab
+gone but a `ScrollPanelWdgt` `PanelWdgt.childRemoved` re-fit (2 records) surviving on the STRING-EDIT tests
+(`macroStringWdgtEditDefersToPromptWhenCropped`, `macroStringWdgtInlineTypingRefitsUnderFittingModes`) — a child removed
+from a scroll panel mid-edit whose container re-fit defers. So the grab convert does NOT zero "removal": `childRemoved`'s
+deferring path is a different mechanism from the grab gesture (it is NOT reached from `ActivePointerWdgt.grab`), and is left
+for a dedicated convert/leave decision (find the off-settle removal path, disable-probe it). The grab's OWN `childRemoved`
+— fired when `@add` re-homes the grabbed widget onto the hand — is already captured inside `@add`'s settle, which is why the
+grab tests show no `childRemoved` survivors.
+
+**Next:** `childRemoved` (2, string-edit path) + the big `SwitchButtonWdgt.mouseClickLeft` (32, window-collapse) are the
+remaining discrete-action convert candidates; the rest of the 73 is the allowlist (§6) + the out-of-scope macro-driver (14).
 
 ## 6. Q5 — The legitimate residual (the proposed allowlist)
 
@@ -313,8 +358,9 @@ The enforceable allowlist (what is *allowed* to reach end-of-cycle), by action c
 
 1. **Pointer/hover dispatch** — `ActivePointerWdgt` mouseEnter/mouseLeave (`mouseOverList`/`mouseOverNew` diff).
 2. **Teardown** — `Widget.destroy` / `removeFromTree` (parent re-fit on child removal).
-3. **Drag/drop gestures** — ~~`reactToDropOf`~~ **CONVERTED 2026-06-25** (the drop self-settles, §5d); the symmetric
-   `reactToGrabOf` / `childRemoved` remain — next convert candidates, NOT a permanent allowlist entry.
+3. **Drag/drop/grab gestures** — ~~`reactToDropOf`~~ **CONVERTED** (the drop self-settles, §5d) + ~~`reactToGrabOf`~~
+   **CONVERTED 2026-06-25** (the grab self-settles, §5e) — both off the allowlist now; `childRemoved` (the string-edit
+   removal path, 2) remains a next convert candidate, NOT a permanent allowlist entry.
 4. ~~**Contained-text edit**~~ — **removed from the allowlist 2026-06-25.** The API-path setters self-settle (§4) and
    the per-keystroke caret-move re-fit was eliminated-as-wasted (§5c), so contained-text **no longer reaches
    end-of-cycle at all** — it is neither a residual nor an allowlist entry now.

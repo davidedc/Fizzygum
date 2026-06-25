@@ -20,7 +20,7 @@ class SimpleDropletWdgt extends Widget
     @appearance = new SimpleDropletAppearance @
     @setColor Color.BLACK
 
-  _reactToDropOf: (widgetBeingDropped) ->
+  _reactToDropOfNoSettle: (widgetBeingDropped) ->
     # TODO we add as FREEFLOATING if we don't pass
     # the third parameter, certainly that's not always
     # the case?
@@ -29,7 +29,7 @@ class SimpleDropletWdgt extends Widget
       widgetBeingDropped,
       nil,
       nil
-    # _reactToDropOf runs inside the drop's single settle, so it uses NON-settling calls throughout:
+    # _reactToDropOfNoSettle runs inside the drop's single settle, so it uses NON-settling calls throughout:
     # addAsSiblingAfterMe already routes through _addNoSettle; silentRawSetBounds is the raw setter (the
     # dropped widget is freefloating -- added via addAsSiblingAfterMe with nil -> ATTACHEDAS_FREEFLOATING --
     # so the immediate raw set is byte-identical to the deferred setBounds path and fires the container

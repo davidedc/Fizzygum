@@ -420,7 +420,8 @@ By-action (interaction-frame records; some rows below predate the 2026-06-25 re-
 | **(untagged) event-dispatch residual** (genuine hover/scroll) | 19 | **LEAVE** — continuous. This row was **230**; the teardown self-settle revealed the bulk was menu-cleanup `close()` re-fitting a ScrollPanel (same `Set.forEach < playQueuedEvents` sig as hover, so mislabelled here) — now self-settled, leaving the true hover/scroll residual. |
 | **contained-text edit re-fit** (API path `StringWdgt._reFitContainedTextNoSettle`; caret path via the raw seam) | **0** | **DONE** — the API path now self-settles single (§3b, 120→0); the per-keystroke CARET path was ELIMINATED-as-wasted (§3c/§5c). Contained-text no longer reaches end-of-cycle. |
 | `*._reactToDropOf` (drag/DROP) | **0** (was ~62) | **CONVERTED 2026-06-25** — the drop self-settles (`ActivePointerWdgt.drop` wraps `_reactToDropOf`+`_justDropped` in ONE single settle over non-settling cores); the old "LEAVE — the campaign defers these" was circular (§3d / inventory §5d). |
-| `*.reactToGrabOf` / `childRemoved` (drag/GRAB + removal) | ~9 | **CONVERT candidate** — symmetric to the drop convert (the grab/removal counterparts), not yet done → the next target. |
+| `*.reactToGrabOf` (drag/GRAB) | **0** (was 7) | **CONVERTED 2026-06-25** — the grab self-settles (`ActivePointerWdgt.grab` wraps the recipient `_reactToGrabOfNoSettle` in ONE single settle over non-settling cores); the symmetric twin of the drop (§3d / inventory §5e). Audit total 80 → 73. |
+| `PanelWdgt.childRemoved` (tree removal) | 2 | **CONVERT candidate (SEPARATE from the grab)** — a child removed from a scroll panel mid string-edit re-fits the container off-settle; a different mechanism (not a grab gesture), next target. |
 | `SwitchButtonWdgt.mouseClickLeft` (window collapse toggle) | 32 | discrete click → **investigate** (entangled with collapse). |
 | `Widget.collapse` / `unCollapse` | **0** | **DONE 2026-06-24** — flipped to `mutateGeometryThenSettle`; gone from end-of-cycle (collapse-hook `destroy` + bar-button re-`add` use cores). |
 | `Widget.destroy` / `close` / `fullDestroy` (teardown) | **0** | **CONVERTED** — even genuine non-freefloating teardown self-settles (consistent-on-return, like `add`): ALL via `mutateGeometryThenSettle` (`close`/`fullDestroy` flipped off the batching tier 2026-06-24; bulk loops `fullDestroyChildren`/`closeChildren` use cores). The earlier "LEAVE" was overridden. |
@@ -476,9 +477,24 @@ By-action (interaction-frame records; some rows below predate the 2026-06-25 re-
   settle (the drop went single-over-cores — §3d). lint [A] polices only GEOMETRY setters, so a stray structural public
   call won't fail the BUILD — the single tier's runtime THROW catches it (which is exactly why single, not batch, is the
   goal: it surfaces the violation; batch silently absorbs it).
-- **Overridable event HOOKS are NOT `_`-prefixed by convention** (`reactToGrabOf`, `aboutToDrop`, `mouseClickLeft`,
-  `step`, `wheel`). `_`-prefixing one (as this session did to the drop hooks, by request) is a deliberate deviation,
-  not the default — weigh it against the lint friction it invites.
+- **The `NoSettle` suffix marks a NON-SETTLING REGION (twin-optional), not "the core of a public/core pair"** (owner-
+  decided 2026-06-25). A gesture/lifecycle recipient hook that runs INSIDE a caller-supplied settle and must not re-enter
+  the flush is named `_<hook>NoSettle` even with NO public `<hook>` wrapper: `_reactToGrabOfNoSettle` (this session)
+  joined `_reactToDropOfNoSettle` / `_justDroppedNoSettle` (harmonized from the drop's `_`-prefixed hooks). The thin-wrap
+  gate SKIPS a twinless `*NoSettle` (`check-thin-wraps.js:57` — no public base to constrain), so none needs a `# thin-wrap-
+  exempt`; check-layering's call-graph rule still enforces the core reaches no public setter. BOUNDARY (keep the signal
+  strong): suffix ONLY hooks where "does this settle?" is a real question — NOT the raw/silent primitives (already named
+  for their tier) nor `childRemoved`/`childAdded` (a public tree-lifecycle family). Payoff = a future ratchet, a
+  `*NoSettle` transitive-no-settle build lint (runtime `FLOWRULE_VIOLATION` → build-time). The formal low-level tiers
+  (`isLowLevel` ⊃ `isImmediateMutator`) already live in `check-layering.js`; memory [[fizzygum-layering-naming-tiers]].
+- **The symmetric-twin convert: a gesture and its mirror share a shape — and the second is cheaper.** Drop and grab are
+  twins (`ActivePointerWdgt.drop`/`grab`): each re-homes via a self-settling `@add`, then calls a recipient re-fit hook
+  that DEFERRED. Convert by wrapping the hook in ONE `_settleLayoutsAfter` AFTER add's settle. The grab needed NO batch
+  intermediate — the drop's earlier core-routing had already made every shared recipient non-settling. So when doing the
+  SECOND of a twin pair, check whether the first already paid the core-routing cost (it usually has) → go straight to
+  single. CAVEAT: a name-shared row in the by-action audit (here "reactToGrabOf / childRemoved") can lump DISTINCT
+  mechanisms — the grab convert zeroed `reactToGrabOf` but `childRemoved` (a string-edit removal, not a grab) survived;
+  split the row and verify each mechanism with the audit, don't assume the twin convert covers both.
 - **macOS BSD `sed` has no `\b`** — a `s/\bname\b/_name/g` rename silently no-ops. Use plain `s/name/_name/g` for a
   unique identifier (a CamelCase neighbour like `holderWindowJustDropped` won't match lowercase `justDropped`), then
   `grep` to verify 0 un-prefixed remain.

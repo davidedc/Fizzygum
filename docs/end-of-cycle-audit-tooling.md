@@ -10,15 +10,21 @@ each origin to the action that caused it, and rolls it up by action — so you c
 
 `Fizzygum-tests/scripts/end-of-cycle-audit/` (tracked):
 - **`layout-audit-prelude.js`** — a behaviour-neutral runtime prelude injected via `run-macro-test-headless.js`'s
-  `PRELUDE_JS` hook. It rAF-polls until `Widget`/`WorldWdgt`/`world` exist, then patches prototypes to log one
-  `LAYOUTAUDIT <json>` line per **ORIGIN** survivor at the end-of-cycle flush. **Inspector-invisible** (audit state
+  `PRELUDE_JS` hook (single test) **or `run-all-headless.js`'s `AUDIT_PRELUDE`/`AUDIT_DIR` env hook (the SHARDED loop)**.
+  It rAF-polls until `Widget`/`WorldWdgt`/`world` exist, then patches prototypes to log one `LAYOUTAUDIT <json>` line per
+  **ORIGIN** survivor at the end-of-cycle flush. It also emits `LAYOUTAUDIT_TESTSTART <name>` and resets the
+  boot/interaction boundary at each test transition, so a sharded run (one browser plays many tests) segments + classifies
+  exactly like the per-test loop (record TOTALS are identical either way; the cross-check confirmed 10/8/1 byte-for-byte). **Inspector-invisible** (audit state
   in a `WeakMap` off the widgets; a closure tag, not a window global) and **proven pixel-neutral** (the instrumented
   suite stays 165/165). Isolates the end-of-cycle flush via `!world._inLayoutMutation` at `recalculateLayouts` entry
   (the two self-settling callers set that flag first; `doOneCycle` doesn't). Distinguishes ORIGIN from climbed
   ancestor via an `invalidateLayout` re-entrancy depth counter.
 - **`audit-one.sh`** — one test headless at dpr1 with the prelude + `LOG_FILE`; emits `PASS/FAIL inst=YES/NO recs=N`.
-- **`run-audit-loop.sh`** — all 165 tests **SERIALLY** (`bash run-audit-loop.sh 1` — parallel cold Chrome launches
-  overwhelm the box). ~25 min. Logs to the gitignored `scripts/.scratch/audit/`.
+- **`run-audit-loop.sh`** — all 165 tests **SHARDED** (`bash run-audit-loop.sh [shards=6]`): the SAME one-browser-per-
+  shard model as the suite (`run-all-headless.js`, via its `AUDIT_PRELUDE`/`AUDIT_DIR` hook), so the prelude is injected
+  once per shard and its `LAYOUTAUDIT` stream segmented into the same per-test logs. **~1.5 min** (was ~20 min / 165 cold
+  browser boots). A shard the 8-way cold-boot race drops is recovered per-test (audit-one.sh). Logs to the gitignored
+  `scripts/.scratch/audit/`. (`audit-one.sh` is still the per-test path for single-test debugging.)
 - **`aggregate-layout-audit.js`** — parses the logs → `_SUMMARY.{md,json}` (a **by-action** rollup + per-test +
   headline interaction-frame count). Pass the audit dir as arg 1.
 
@@ -30,12 +36,13 @@ From `Fizzygum-tests/`:
 # (optional) snapshot the current inventory as the BEFORE baseline to diff against:
 node scripts/end-of-cycle-audit/aggregate-layout-audit.js scripts/.scratch/audit/ 2>/dev/null \
   && cp scripts/.scratch/audit/_SUMMARY.json scripts/.scratch/audit/_SUMMARY_baseline.json
-bash scripts/end-of-cycle-audit/run-audit-loop.sh 1                  # ~25 min, SERIAL
+bash scripts/end-of-cycle-audit/run-audit-loop.sh                    # ~1.5 min, SHARDED (6) + per-test recovery
+# (aggregate runs automatically at the end of run-audit-loop.sh; or re-run it standalone:)
 node scripts/end-of-cycle-audit/aggregate-layout-audit.js scripts/.scratch/audit/   # -> _SUMMARY.{md,json}
 ```
 
-**Neutrality check (mandatory):** the loop's tally must be `165 PASS inst=YES`, `0 inst=NO`. Anything else means the
-prelude perturbed something — fix before trusting the data.
+**Neutrality check (mandatory):** the aggregate must report `installed OK: 165/165` and the sharded runner `tests: 165
+| failed: 0`. Anything else means the prelude perturbed something — fix before trusting the data.
 
 **Before→after diff** (paste-ready):
 ```sh

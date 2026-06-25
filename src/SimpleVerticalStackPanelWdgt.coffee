@@ -104,7 +104,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     return if @parent?._reLayOutAfterContainedPanelChange?()
     @_reFitContainer()
 
-  _reactToDropOf: ->
+  _reactToDropOfNoSettle: ->
     return if @parent?._reLayOutAfterContainedPanelChange?()
     @_reFitContainer()
 
