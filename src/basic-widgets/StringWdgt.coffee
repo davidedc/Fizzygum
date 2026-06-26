@@ -965,15 +965,20 @@ class StringWdgt extends Widget
   # settling setter -- the menu items' re-fit rides this single settle (or popUpAtHand's, when the menu
   # is still being built on the hand).
   setFontName: (menuItem, ignored2, theNewFontName) ->
-    @_settleLayoutsAfter =>
-      if @fontName != theNewFontName
-        @fontName = theNewFontName
-        @changed()
+    @_settleLayoutsAfter => @_setFontNameNoSettle menuItem, ignored2, theNewFontName
 
-        # was `menuItem.parent instanceof MenuWdgt` (type-test-elimination campaign)
-        if menuItem?.parent? and menuItem.parent.isMenu?()
-          @updateFontsMenuEntriesTicks menuItem.parent
-      @_reFitContainedTextNoSettle()
+  # The NON-settling core of setFontName -- used by low-level builders that configure a contained text
+  # widget while assembling it (e.g. InspectorWdgt's detail pane, inside its own rebuild settle). The public
+  # setFontName self-settles over this; low-level code reaches the core directly (cores call cores).
+  _setFontNameNoSettle: (menuItem, ignored2, theNewFontName) ->
+    if @fontName != theNewFontName
+      @fontName = theNewFontName
+      @changed()
+
+      # was `menuItem.parent instanceof MenuWdgt` (type-test-elimination campaign)
+      if menuItem?.parent? and menuItem.parent.isMenu?()
+        @updateFontsMenuEntriesTicks menuItem.parent
+    @_reFitContainedTextNoSettle()
 
 
   fontsMenu: (a,targetWidget)->

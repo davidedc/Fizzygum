@@ -140,7 +140,18 @@ class InspectorWdgt extends Widget
       else
         nil
   
+  # CONVERT (end-of-cycle-flush-drawdown): a live inspector rebuild -- a property add/rename/remove, or a
+  # show/hide toggle -- is a DISCRETE public mutation, so SELF-SETTLE it once, instead of the leading
+  # fullDestroyChildren's _destroyNoSettle riding the per-frame end-of-cycle flush. SINGLE tier over a
+  # non-settling core: the body's @add's are @_addNoSettle, so the multi-add rebuild does NOT re-enter the
+  # flush per child -- they invalidate, and the ONE _settleLayoutsAfter flush at the end re-fits the COMPLETE
+  # inspector. (No BATCH tier needed: the settle fires ONCE, AFTER the build, so there is no mid-build re-fit
+  # of a half-wired child -- the crash _settleLayoutsAfterBatch guards against can't arise here.) Construction
+  # calls this on an orphan -> _settleLayoutsAfter's orphan early-return defers it, unchanged.
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
       world.alignIDsOfNextWidgetsInSystemTests()
 
@@ -205,56 +216,56 @@ class InspectorWdgt extends Widget
 
     @hierarchyBackgroundPanel = new RectangleWdgt
     @hierarchyBackgroundPanel.setColor Color.create 255,255,255,.2
-    @add @hierarchyBackgroundPanel
+    @_addNoSettle @hierarchyBackgroundPanel
 
     counter = 0
     for eachNamedClass in @classesNames
       classButton = new SimpleButtonWdgt true, @, "openClassInspector", (new StringWdgt eachNamedClass, WorldWdgt.preferencesAndSettings.textInButtonsFontSize),nil,nil,nil,nil,eachNamedClass,nil,nil,@classNamesTextPadding
       @classesButtons.push classButton
-      @add classButton
+      @_addNoSettle classButton
 
       # the top class doesn't get an arrow pointing upwards
       if counter > 0
         angledArrow = new AngledArrowUpLeftIconWdgt Color.BLACK
         @angledArrows.push angledArrow
-        @add angledArrow
+        @_addNoSettle angledArrow
 
       counter++
 
     # single-line label; the layout below gives it a fixed 150×15 box, so it
     # needs no self-sizing — a StringWdgt fits "this object" left-aligned.
     @lastLabelInHierarchy = new StringWdgt "this object"
-    @add @lastLabelInHierarchy
+    @_addNoSettle @lastLabelInHierarchy
     @lastArrowInHierarchy = new AngledArrowUpLeftIconWdgt Color.BLACK
-    @add @lastArrowInHierarchy
+    @_addNoSettle @lastArrowInHierarchy
 
     @showMethodsOnButton = new SimpleButtonWdgt true, @, "hideMethods", "methods: on"
     @showMethodsOffButton = new SimpleButtonWdgt true, @, "showMethods", "methods: off"
     @showMethodsToggle = new ToggleButtonWdgt @showMethodsOnButton, @showMethodsOffButton, if @showingMethods then 0 else 1
-    @add @showMethodsToggle
+    @_addNoSettle @showMethodsToggle
 
     @showFieldsOnButton = new SimpleButtonWdgt true, @, "hideFields", "fields: on"
     @showFieldsOffButton = new SimpleButtonWdgt true, @, "showFields", "fields: off"
     @showFieldsToggle = new ToggleButtonWdgt @showFieldsOnButton, @showFieldsOffButton, if @showingFields then 0 else 1
-    @add @showFieldsToggle
+    @_addNoSettle @showFieldsToggle
 
     @showInheritedOnButton = new SimpleButtonWdgt true, @, "hideInherited", "inherited: on"
     @showInheritedOffButton = new SimpleButtonWdgt true, @, "showInherited", "inherited: off"
     @showInheritedToggle = new ToggleButtonWdgt @showInheritedOnButton, @showInheritedOffButton, if @showingInherited then 0 else 1
-    @add @showInheritedToggle
+    @_addNoSettle @showInheritedToggle
 
     @buildAndConnectObjOwnPropsButton()
 
     @addPropertyButton = new SimpleButtonWdgt true, @, "addPropertyPopout", "add..."
-    @add @addPropertyButton
+    @_addNoSettle @addPropertyButton
     @renamePropertyButton = new SimpleButtonWdgt true, @, "renamePropertyPopout", "rename..."
-    @add @renamePropertyButton
+    @_addNoSettle @renamePropertyButton
     @removePropertyButton = new SimpleButtonWdgt true, @, "removeProperty", "remove"
-    @add @removePropertyButton
+    @_addNoSettle @removePropertyButton
 
     @saveTextWdgt = (new StringWdgt "save", WorldWdgt.preferencesAndSettings.textInButtonsFontSize).alignCenter()
     @saveButton = new SimpleButtonWdgt true, @, "save", @saveTextWdgt
-    @add @saveButton
+    @_addNoSettle @saveButton
 
 
 
@@ -289,7 +300,7 @@ class InspectorWdgt extends Widget
     # scrollbars, but the MenuWdgt (which contains the actual list contents)
     # in this context doesn't.
     world.steppingWdgts.delete @list.listContents
-    @add @list
+    @_addNoSettle @list
 
     # we add a Widget alignment here because adjusting IDs whenever
     # we add or remove methods is a pain...
@@ -319,23 +330,23 @@ class InspectorWdgt extends Widget
 
     @textWidget = @detail.textWdgt
     @textWidget.backgroundColor = Color.TRANSPARENT
-    @textWidget.setFontName nil, nil, @textWidget.monoFontStack
+    @textWidget._setFontNameNoSettle nil, nil, @textWidget.monoFontStack
     @textWidget.isEditable = false
 
-    @add @detail
+    @_addNoSettle @detail
 
 
 
     @hierarchyHeaderString = new StringWdgt "Hierarchy", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @hierarchyHeaderString.toggleHeaderLine()
     @hierarchyHeaderString.alignCenter()
-    @add @hierarchyHeaderString
+    @_addNoSettle @hierarchyHeaderString
 
 
     @propertyHeaderString = new StringWdgt "Properties", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @propertyHeaderString.toggleHeaderLine()
     @propertyHeaderString.alignCenter()
-    @add @propertyHeaderString
+    @_addNoSettle @propertyHeaderString
 
     # The inspector's own resize handle. It is shown ONLY when the inspector
     # is free-floating (naked on the desktop) and hidden when it is WindowWdgt
@@ -365,7 +376,7 @@ class InspectorWdgt extends Widget
     @showOwnPropsOnlyOnButton = new SimpleButtonWdgt true, @, "hideOwnPropsOnly", "obj own props only: on"
     @showOwnPropsOnlyOffButton = new SimpleButtonWdgt true, @, "showOwnPropsOnly", "obj own props only: off"
     @showOwnPropsOnlyToggle = new ToggleButtonWdgt @showOwnPropsOnlyOnButton, @showOwnPropsOnlyOffButton, if @showingOwnPropsOnly then 0 else 1
-    @add @showOwnPropsOnlyToggle
+    @_addNoSettle @showOwnPropsOnlyToggle
 
   openClassInspector: (ignored,ignored2,className) ->
     classInspector = new ClassInspectorWdgt window[className].prototype

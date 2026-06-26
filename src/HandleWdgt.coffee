@@ -260,15 +260,22 @@ class HandleWdgt extends Widget
   makeHandleSolidWithParentWidget: (ignored, ignored2, widgetAttachedTo)->
     if widgetAttachedTo?
       @target = widgetAttachedTo
+      # Attach the handle NON-settling. A handle is isLayoutInert overlay chrome -- excluded from @target's
+      # content-bounds -- so corner-attaching it CANNOT change @target's content layout; it only needs its own
+      # corner position, which the next layout pass computes (the _addNoSettle below invalidates @target, so a
+      # standalone handle settles at end-of-cycle, byte-identical). So this never needs a layout FLUSH, and a
+      # public add() would force one -- which also RE-ENTERS and throws when a builder attaches a handle from
+      # inside its own settle (e.g. InspectorWdgt.buildAndConnectChildren's `@resizer = new HandleWdgt @`).
+      # Mirrors _reFitContainerAfterRawGeometryChange's isLayoutInert skip on the raw-move side.
       switch @type
         when "resizeBothDimensionsHandle"
-          @target.add @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT
+          @target._addNoSettle @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT
         when "moveHandle"
-          @target.add @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT
+          @target._addNoSettle @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT
         when "resizeHorizontalHandle"
-          @target.add @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT
+          @target._addNoSettle @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT
         when "resizeVerticalHandle"
-          @target.add @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
+          @target._addNoSettle @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
       @noticesTransparentClick = true
 
     
