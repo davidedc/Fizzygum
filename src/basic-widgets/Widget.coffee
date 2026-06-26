@@ -3876,13 +3876,21 @@ class Widget extends TreeNode
     @desiredWidth = desiredBounds.x
     @desiredHeight = desiredBounds.y
 
-    maxWidth = desiredBounds.x + spreadability * desiredBounds.x/100
-    maxHeight = desiredBounds.y + spreadability * desiredBounds.y/100
-    # internal setup (every caller is a constructor) -- use the NON-settling core; this method does its own
-    # @_invalidateLayout below for the min/desired changes setMaxDim doesn't cover. (end-of-cycle-flush -- CONVERT)
-    @_setMaxDimNoSettle new Point maxWidth, maxHeight
+    @maxWidth = desiredBounds.x + spreadability * desiredBounds.x/100
+    @maxHeight = desiredBounds.y + spreadability * desiredBounds.y/100
 
-    @_invalidateLayout()
+    # ELIMINATE (end-of-cycle-flush-drawdown): every caller is a CONSTRUCTOR, so @ is an ORPHAN here -- the
+    # widget is just sized now and re-fit TOP-DOWN when it is later added to the world (a self-settling add
+    # re-lays-out its subtree). So scheduling a re-layout DURING construction is WASTED work: it only rode the
+    # per-frame end-of-cycle flush (~12 records -- the resize HandleWdgt sizing itself, plus the new-HandleWdgt
+    # cell/button construction in the layout/resize tests). Skip it for the orphan. An ATTACHED caller (there is
+    # none today, but the method is public) still schedules via _invalidateLayout, so the public contract holds.
+    # The skip is SAFE specifically at THIS sizing-then-add seam -- NOT as a blanket _invalidateLayout
+    # orphan-skip, which broke 63 tests because orphan invalidates are generally load-bearing (cf.
+    # PanelWdgt.childRemoved). A disable-probe confirmed the orphan re-layout changes nothing (byte-identical).
+    # (Sets @maxWidth/@maxHeight inline rather than via _setMaxDimNoSettle, which would re-introduce the very
+    # construction invalidate this skips; setMaxDim's own callers are unaffected.)
+    @_invalidateLayout() unless @isOrphan()
 
 
   # CONVERT (end-of-cycle-flush-drawdown): setMaxDim is the public "set the max dimension" mutator, so it must
