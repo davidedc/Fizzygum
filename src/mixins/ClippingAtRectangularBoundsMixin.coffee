@@ -23,7 +23,7 @@ ClippingAtRectangularBoundsMixin =
         # control the properties of one of its subwidgets)
         result = []
         if @visibleBasedOnIsVisibleProperty() and
-            !@isCollapsed() and
+            !@isInCollapsedSubtree() and
             !theWidget.isAncestorOf(@) and
             @areBoundsIntersecting(theWidget) and
             !@anyParentPopUpMarkedForClosure()
@@ -61,7 +61,7 @@ ClippingAtRectangularBoundsMixin =
         @bounds
 
       SLOWfullClippedBounds: ->
-        if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
+        if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
           result = Rectangle.EMPTY
         else
           result = @clippedThroughBounds()
@@ -91,7 +91,7 @@ ClippingAtRectangularBoundsMixin =
         @cachedFullBounds = result
 
       fullClippedBounds: ->
-        if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
+        if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
           result = Rectangle.EMPTY
         else
           if @cachedFullClippedBounds?

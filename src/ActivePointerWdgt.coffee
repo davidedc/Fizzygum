@@ -59,7 +59,7 @@ class ActivePointerWdgt extends Widget
     result = world.topWdgtSuchThat (m) =>
       m.clippedThroughBounds().containsPoint(@position()) and
         m.visibleBasedOnIsVisibleProperty() and
-        !m.isCollapsed() and
+        !m.isInCollapsedSubtree() and
         (m.noticesTransparentClick or (not m.isTransparentAt(@position()))) and
         # we exclude the Caret here because
         #  a) it messes up things on double-click as it appears under
@@ -85,7 +85,7 @@ class ActivePointerWdgt extends Widget
     result = world.topWdgtSuchThat (m) =>
       m.clippedThroughBounds().containsPoint(@position()) and
         m.visibleBasedOnIsVisibleProperty() and
-        !m.isCollapsed() and
+        !m.isInCollapsedSubtree() and
         (m.noticesTransparentClick or
         (not m.isTransparentAt(@position()))) and (m.isMenu?())
     return result
@@ -131,7 +131,7 @@ class ActivePointerWdgt extends Widget
   allWdgtsAtPointer: ->
     return world.collectAllChildrenBottomToTopSuchThat (m) =>
       m.visibleBasedOnIsVisibleProperty() and
-      !m.isCollapsed() and
+      !m.isInCollapsedSubtree() and
       m.clippedThroughBounds().containsPoint @position()
   # this part is excluded from the fizzygum homepage build <<«
   

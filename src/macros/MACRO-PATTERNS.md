@@ -1339,11 +1339,11 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Hiding a stack cell does NOT redistribute — visibility is layout-blind** (`macroLayoutsAndVisibility`): `hide()`/`show()`
   only flip paint state (`Widget.hide:1841`/`show:1860` touch `@isVisible` + the bounds caches; NEITHER calls
   `invalidateLayout`), and `doLayout`'s three stack-distribution loops filter children by `layoutSpec` only
-  (`Widget.coffee:4334/4358/4392`) — `getDesiredDim`/`getMinDim` gate on `isCollapsed()`, never on visibility (`:4089-4098`).
+  (`Widget.coffee:4334/4358/4392`) — `getDesiredDim`/`getMinDim` gate on `isInCollapsedSubtree()`, never on visibility (`:4089-4098`).
   So a HIDDEN cell keeps its allocated slot (the holder's own background — Widget default `Color.create 80,80,80` — shows
   through the gap), keeps receiving its spreadability share when the holder is resized WHILE hidden, and `show()` paints it
   straight back into the kept slot with no fresh layout pass: a hide/show round-trip at a fixed size is BYTE-EQUAL (assert via
-  matching dataHashes), and hide → resize → show ends pixel-identical to never having hidden at all. CONTRAST: `isCollapsed()`
+  matching dataHashes), and hide → resize → show ends pixel-identical to never having hidden at all. CONTRAST: `isInCollapsedSubtree()`
   zeroes the layout dims, so COLLAPSE really does redistribute where HIDE does not — `macroLayoutsAndCollapsing`, the next
   entry, which reuses this fixture verbatim (the green|divider|blue equal-spreadability holder — `setupTestScreen1`'s second
   holder — plus its lone HandleWdgt). The recording had to `show()` the cell back through an
@@ -1352,7 +1352,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Collapsing a stack cell DOES redistribute — collapse is layout-aware** (`macroLayoutsAndCollapsing`): the contrast twin
   of the visibility entry above, same fixture VERBATIM, opposite mechanic. `collapse()`/`unCollapse()`
   (`Widget.coffee:1883/1895`) BOTH call `invalidateLayout()` (hide/show call neither), and the dimension getters the stack's
-  distribution loops read — `getDesiredDim`/`getMinDim`/`getMaxDim` — gate on `isCollapsed()` and return zero for a
+  distribution loops read — `getDesiredDim`/`getMinDim`/`getMaxDim` — gate on `isInCollapsedSubtree()` and return zero for a
   collapsed cell (`:4089-4098`): the moment a cell collapses, `doLayout` re-runs and hands its WHOLE share to the siblings
   by spreadability (the divider rides to the holder's edge; no gap), every resize-while-collapsed keeps distributing to the
   others, and `unCollapse()` re-runs the same distribution off the UNTOUCHED `layoutSpecDetails` — a collapse/unCollapse

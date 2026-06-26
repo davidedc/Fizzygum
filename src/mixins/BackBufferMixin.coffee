@@ -98,7 +98,7 @@ BackBufferMixin =
       paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
         @justBeforeBeingPainted?()
 
-        if !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
+        if !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
           return nil
 
         [@backBuffer, @backBufferContext] = @createRefreshOrGetBackBuffer()

@@ -129,7 +129,7 @@ class LabelButtonWdgt extends ButtonWdgt
   # children recursively (that's fullPaintIntoAreaOrBlitFromBackBuffer's job).
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
-    if !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
+    if !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
       return nil
 
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle

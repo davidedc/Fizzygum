@@ -111,8 +111,8 @@ class ScrollPanelWdgt extends PanelWdgt
     return alpha
 
   anyScrollBarShowing: ->
-    if (@hBar.visibleBasedOnIsVisibleProperty() and !@hBar.isCollapsed()) or
-    (@vBar.visibleBasedOnIsVisibleProperty() and !@vBar.isCollapsed())
+    if (@hBar.visibleBasedOnIsVisibleProperty() and !@hBar.isInCollapsedSubtree()) or
+    (@vBar.visibleBasedOnIsVisibleProperty() and !@vBar.isInCollapsedSubtree())
       return true
     return false
 
@@ -507,12 +507,12 @@ class ScrollPanelWdgt extends PanelWdgt
           wasScrollDragging = true
           newPos = world.hand.position()
           if @hBar.visibleBasedOnIsVisibleProperty() and
-          !@hBar.isCollapsed()
+          !@hBar.isInCollapsedSubtree()
             deltaX = newPos.x - oldPos.x
             if deltaX isnt 0
               scrollbarJustChanged ||= @scrollX deltaX
           if @vBar.visibleBasedOnIsVisibleProperty() and
-          !@vBar.isCollapsed()
+          !@vBar.isInCollapsedSubtree()
             deltaY = newPos.y - oldPos.y
             if deltaY isnt 0
               scrollbarJustChanged ||= @scrollY deltaY
@@ -549,12 +549,12 @@ class ScrollPanelWdgt extends PanelWdgt
           releasePos = world.hand.position()
           if @boundsContainPoint releasePos
             if @hBar.visibleBasedOnIsVisibleProperty() and
-            !@hBar.isCollapsed()
+            !@hBar.isInCollapsedSubtree()
               deltaX = releasePos.x - oldPos.x
               if deltaX isnt 0
                 scrollbarJustChanged ||= @scrollX deltaX
             if @vBar.visibleBasedOnIsVisibleProperty() and
-            !@vBar.isCollapsed()
+            !@vBar.isInCollapsedSubtree()
               deltaY = releasePos.y - oldPos.y
               if deltaY isnt 0
                 scrollbarJustChanged ||= @scrollY deltaY
@@ -580,12 +580,12 @@ class ScrollPanelWdgt extends PanelWdgt
         else
           world.wdgtsWithOngoingScrollMomentum.add @
           if @hBar.visibleBasedOnIsVisibleProperty() and
-          !@hBar.isCollapsed()
+          !@hBar.isInCollapsedSubtree()
             deltaX = deltaX * friction
             if deltaX isnt 0
               scrollbarJustChanged ||= @scrollX Math.round deltaX
           if @vBar.visibleBasedOnIsVisibleProperty() and
-          !@vBar.isCollapsed()
+          !@vBar.isInCollapsedSubtree()
             deltaY = deltaY * friction
             if deltaY isnt 0
               scrollbarJustChanged ||= @scrollY Math.round deltaY

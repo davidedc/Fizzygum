@@ -1004,7 +1004,7 @@ class Widget extends TreeNode
     # control the properties of one of its subwidgets)
     result = []
     if @visibleBasedOnIsVisibleProperty() and
-        !@isCollapsed() and
+        !@isInCollapsedSubtree() and
         !theWidget.isAncestorOf(@) and
         @areBoundsIntersecting(theWidget) and
         !@anyParentPopUpMarkedForClosure()
@@ -1034,7 +1034,7 @@ class Widget extends TreeNode
     if !@visibleBasedOnIsVisibleProperty()
       return true
 
-    if @isCollapsed()
+    if @isInCollapsedSubtree()
       return true
 
     return false
@@ -1108,16 +1108,16 @@ class Widget extends TreeNode
     result = @bounds
     @children.forEach (child) ->
       if child.visibleBasedOnIsVisibleProperty() and
-      !child.isCollapsed()
+      !child.isInCollapsedSubtree()
         result = result.merge child.SLOWfullBounds()
     result
 
   SLOWfullClippedBounds: ->
-    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
+    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
       return Rectangle.EMPTY
     result = @clippedThroughBounds()
     @children.forEach (child) ->
-      if child.visibleBasedOnIsVisibleProperty() and !child.isCollapsed()
+      if child.visibleBasedOnIsVisibleProperty() and !child.isInCollapsedSubtree()
         result = result.merge child.SLOWfullClippedBounds()
     #if this != world and result.corner.x > 400 and result.corner.y > 100 and result.origin.x ==0 and result.origin.y ==0
     #  debugger
@@ -1156,7 +1156,7 @@ class Widget extends TreeNode
 
     result = @bounds
     @children.forEach (child) ->
-      if child.visibleBasedOnIsVisibleProperty() and !child.isCollapsed()
+      if child.visibleBasedOnIsVisibleProperty() and !child.isInCollapsedSubtree()
         result = result.merge child.fullBounds()
 
     if world.doubleCheckCachedMethodsResults
@@ -1174,7 +1174,7 @@ class Widget extends TreeNode
   # we do take into account orphanage and
   # visibility.
   fullClippedBounds: ->
-    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
+    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
       result = Rectangle.EMPTY
     else
       if @checkFullClippedBoundsCache == WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
@@ -1191,7 +1191,7 @@ class Widget extends TreeNode
 
       result = @clippedThroughBounds()
       @children.forEach (child) ->
-        if child.visibleBasedOnIsVisibleProperty() and !child.isCollapsed()
+        if child.visibleBasedOnIsVisibleProperty() and !child.isInCollapsedSubtree()
           result = result.merge child.fullClippedBounds()
 
     if world.doubleCheckCachedMethodsResults
@@ -1219,7 +1219,7 @@ class Widget extends TreeNode
     #  #console.log (WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes) + " cache: " + @checkClippedThroughBoundsCache
     #  #debugger
 
-    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
+    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
       @checkClippedThroughBoundsCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
       @clippedThroughBoundsCache = Rectangle.EMPTY
       return @clippedThroughBoundsCache
@@ -1248,7 +1248,7 @@ class Widget extends TreeNode
     #  #console.log (WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes) + " cache: " + @checkClipThroughCache
     #  #debugger
 
-    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
+    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
       @checkClipThroughCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
       @clipThroughCache = Rectangle.EMPTY
       return @clipThroughCache
@@ -1941,7 +1941,7 @@ class Widget extends TreeNode
     if aContext == world.worldCanvasContext and !@visibleBasedOnIsVisibleProperty()
       return true
 
-    if aContext == world.worldCanvasContext and @isCollapsed()
+    if aContext == world.worldCanvasContext and @isInCollapsedSubtree()
       return true
 
     return false
@@ -2095,15 +2095,16 @@ class Widget extends TreeNode
   # SELF-SETTLE (single-mutation tier). childBeingCollapsed now tears down the bar buttons through the
   # NON-settling core (_destroyNoSettle), and childCollapsed re-fits via raw setters + _reFitContainer, so
   # _collapseNoSettle reaches no public setter. Anchored on (@parent ? @) (the container that re-lays-out).
+  # THIN wrapper: the already-collapsed guard lives in the core (check-layering [H]), not before the settle.
   collapse: ->
-    return if @collapsed
     @_settleLayoutsAfter => @_collapseNoSettle()
 
   _collapseNoSettle: ->
-    # IDEMPOTENT (mirrors collapse's public guard): a direct caller -- a layout pass that decides collapse
-    # by width (WindowWdgt._positionAndResizeChildren, HorizontalMenuPanelWdgt._reLayoutSelf) -- relies on
-    # this no-op when already in state, so the core never re-runs the hooks / @_invalidateLayout (which would
-    # THROW mid-pass). Byte-identical for the public path, which guards before ever reaching here.
+    # IDEMPOTENT -- the SOLE collapse guard (the public collapse() is a thin settle wrapper). A direct caller --
+    # a layout pass that decides collapse by width (WindowWdgt._positionAndResizeChildren,
+    # HorizontalMenuPanelWdgt._reLayoutSelf) -- relies on this no-op when already in state, so the core never
+    # re-runs the hooks / @_invalidateLayout (which would THROW mid-pass). The public path now settles-then-no-ops
+    # for an already-collapsed widget -- byte-identical (a no-op flush).
     return if @collapsed
     @parent?.childBeingCollapsed? @
     @collapsed = true
@@ -2118,16 +2119,17 @@ class Widget extends TreeNode
   # NON-settling core (createAndAdd* -> @_addNoSettle; the button constructors add their innards on ORPHANS,
   # exempt from the flush-throw), and childUnCollapsed re-fits via raw setters, so _unCollapseNoSettle reaches
   # no public setter. Anchored on @ (the canonical wrap; the global flush re-lays-out the container).
+  # THIN wrapper: the guard lives in the core (check-layering [H]), not before the settle.
   unCollapse: ->
-    return if !@collapsed
-    return if !@isCollapsed()
     @_settleLayoutsAfter => @_unCollapseNoSettle()
 
   _unCollapseNoSettle: ->
-    # IDEMPOTENT (mirrors unCollapse's public guards) -- see _collapseNoSettle for why a direct layout-pass
-    # caller needs the no-op (avoid re-running hooks / @_invalidateLayout mid-pass).
+    # IDEMPOTENT -- the SOLE unCollapse guard (the public unCollapse() is a thin settle wrapper). See
+    # _collapseNoSettle for why a direct layout-pass caller needs the no-op (avoid re-running hooks /
+    # @_invalidateLayout mid-pass). Guard on @collapsed -- this widget's OWN collapse flag. The redundant
+    # `return if !@isInCollapsedSubtree()` was REMOVED: isInCollapsedSubtree() is the RECURSIVE self-or-ancestor query, and once
+    # @collapsed is true it necessarily returns true, so that second guard was DEAD code.
     return if !@collapsed
-    return if !@isCollapsed()
     @parent?.childBeingUnCollapsed? @
     @collapsed = false
     WorldWdgt.numberOfCollapseFlagsChanges++
@@ -2138,12 +2140,12 @@ class Widget extends TreeNode
     @parent?.childUnCollapsed? @
 
   
-  isCollapsed: ->
+  isInCollapsedSubtree: ->
     if @collapsed
       return true
     else
       if @parent?
-        return @parent.isCollapsed()
+        return @parent.isInCollapsedSubtree()
       else
         return false
   
@@ -3914,19 +3916,19 @@ class Widget extends TreeNode
   # layouts will have a minimum equal to the sum of minimums
   # of the contents.
   getDesiredDim: ->
-    if @isCollapsed() then return new Point 0,0
+    if @isInCollapsedSubtree() then return new Point 0,0
     @getRecursiveDesiredDim()
   getMinDim: ->
-    if @isCollapsed() then return new Point 0,0
+    if @isInCollapsedSubtree() then return new Point 0,0
     @getRecursiveMinDim()
   getMaxDim: ->
-    if @isCollapsed() then return new Point 0,0
+    if @isInCollapsedSubtree() then return new Point 0,0
     maxDim = new Point @maxWidth, @maxHeight
     return maxDim.max @getDesiredDim()
 
 
   getRecursiveDesiredDim: ->
-    if @isCollapsed() then return new Point 0,0
+    if @isInCollapsedSubtree() then return new Point 0,0
     
     # TBD the exact shape of @checkDesiredDimCache
     #if @checkDesiredDimCache
@@ -3957,7 +3959,7 @@ class Widget extends TreeNode
 
 
   getRecursiveMinDim: ->
-    if @isCollapsed() then return new Point 0,0
+    if @isInCollapsedSubtree() then return new Point 0,0
     # TBD the exact shape of @checkMinDimCache
     #if @checkMinDimCache
     #  # the user might have forced the "desired" to
@@ -3994,7 +3996,7 @@ class Widget extends TreeNode
     return @minDimCache.min @getRecursiveMaxDim()
 
   getRecursiveMaxDim: ->
-    if @isCollapsed() then return new Point 0,0
+    if @isInCollapsedSubtree() then return new Point 0,0
 
     # TBD the exact shape of @checkMaxDimCache
     #if @checkMaxDimCache
@@ -4032,11 +4034,11 @@ class Widget extends TreeNode
     return @maxDimCache
 
   countOfChildrenInHorizontalStackLayout: ->
-    if @isCollapsed() then return 0
+    if @isInCollapsedSubtree() then return 0
     count = 0
     for C in @children
       if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED and
-      !C.isCollapsed()
+      !C.isInCollapsedSubtree()
         count++
     return count
   # this part is excluded from the fizzygum homepage build <<«
@@ -4067,7 +4069,7 @@ class Widget extends TreeNode
     return newBoundsForThisLayout
 
   _handleCollapsedStateShouldWeReturn: ->
-    if @isCollapsed()
+    if @isInCollapsedSubtree()
       @markLayoutAsFixed()
       return true
     return false

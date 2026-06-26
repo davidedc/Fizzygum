@@ -76,7 +76,7 @@ class SliderButtonWdgt extends CircleBoxWdgt
     @offset = pos.subtract nonFloatDragPositionWithinWdgtAtStart
     if world.hand.mouseButton and
     @visibleBasedOnIsVisibleProperty() and
-    !@isCollapsed()
+    !@isInCollapsedSubtree()
       oldButtonPosition = @position()
       if @parent.autoOrientation() is "vertical"
         newX = @left()

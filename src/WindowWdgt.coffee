@@ -171,7 +171,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # = false in its ctor; keying off the mode generalizes it to any contained
       # TextWdgt (a non-text content has no fittingSpec, so this is a no-op for it).
       if @contents.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT then return false
-      return (@contents.layoutSpecDetails.canSetHeightFreely and !@contents.isCollapsed()) and !@reInflating
+      return (@contents.layoutSpecDetails.canSetHeightFreely and !@contents.isInCollapsedSubtree()) and !@reInflating
     return @contents.contentsRecursivelyCanSetHeightFreely()
 
   recursivelyAttachedAsFreeFloating: ->
@@ -613,9 +613,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       labelLeft = @left() + @padding + 2 * (closeIconSize + @padding)
       labelTop = @top() + @padding
       labelRight = @right() - @padding
-      if @editButton? and !@editButton.isCollapsed()
+      if @editButton? and !@editButton.isInCollapsedSubtree()
         labelRight -= 1 * (closeIconSize + @padding)
-      if @internalExternalSwitchButton? and !@internalExternalSwitchButton.isCollapsed()
+      if @internalExternalSwitchButton? and !@internalExternalSwitchButton.isInCollapsedSubtree()
         labelRight -= 1 * (closeIconSize + @padding)
       labelWidth = labelRight - labelLeft
 
@@ -624,13 +624,13 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @label.rawSetBounds labelBounds
 
     # edit button
-    if @editButton? and !@editButton.isCollapsed() and @editButton.parent == @
+    if @editButton? and !@editButton.isInCollapsedSubtree() and @editButton.parent == @
       buttonBounds = new Rectangle new Point @right() - 2 * (closeIconSize + @padding), @top() + @padding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
       @editButton._reLayout buttonBounds
 
     # internal/external button
-    if @internalExternalSwitchButton? and !@internalExternalSwitchButton.isCollapsed() and @internalExternalSwitchButton.parent == @
+    if @internalExternalSwitchButton? and !@internalExternalSwitchButton.isInCollapsedSubtree() and @internalExternalSwitchButton.parent == @
       buttonBounds = new Rectangle new Point @right() - 1 * (closeIconSize + @padding), @top() + @padding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
       @internalExternalSwitchButton._reLayout buttonBounds
