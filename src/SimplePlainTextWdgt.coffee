@@ -133,7 +133,18 @@ class SimplePlainTextWdgt extends TextWdgt
   # Completing the deferred model stays the goal -- see
   # docs/softwrap-deferred-layout-conversion-plan.md for the model finding, the
   # obstacle map, and what a conversion would take.
+  # CONVERT (end-of-cycle-flush-drawdown): soft-wrap is a DISCRETE public toggle (softWrapOn / softWrapOff),
+  # so SELF-SETTLE it -- one layout flush per toggle, instead of the trailing
+  # _refreshScrollPanelWdgtOrVerticalStackIfIamInIt re-fit riding the per-frame end-of-cycle flush. Canonical
+  # public-wrapper / _NoSettle-core split: the public entry is JUST the settle, and ALL the work -- INCLUDING
+  # the already-in-this-state early return -- lives in the core, so the wrapper hides no pre-settle guard
+  # (check-layering rule [H] flags a return before a settle as an early-return that belongs in the core). The
+  # immediate raw work (setTextLineWrapping resize + the unwrap _reLayoutSelf) is unchanged; completing the
+  # DEFERRED model stays a separate goal (the comment block above + docs/softwrap-deferred-layout-conversion-plan.md).
   setSoftWrap: (wrap) ->
+    @_settleLayoutsAfter => @_setSoftWrapNoSettle wrap
+
+  _setSoftWrapNoSettle: (wrap) ->
     return if @parent.parent.isTextLineWrapping == wrap   # already in this state -- skip the relayout + repaint
     @softWrap = wrap
     @parent.parent.setTextLineWrapping wrap

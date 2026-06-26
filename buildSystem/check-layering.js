@@ -24,6 +24,11 @@
  *      wrapper set is DISCOVERED structurally (not hand-listed); `add` and collapse/unCollapse are
  *      deliberately excluded -- see the [G] block lower down for why. [G] is the structural-wrapper
  *      extension of [A] (which covers the geometry/text setters + recalc).
+ *   H) (WARNING, non-fatal) A method that self-settles via @_settleLayoutsAfter should be a THIN public
+ *      wrapper -- a GUARD return (`return` / `return if|unless …`) BEFORE the settle is an early-return that
+ *      almost always belongs INSIDE the _<name>NoSettle core (so the wrapper is a pure settle and the
+ *      "already in this state" skip is not split across wrapper + core). Surfaced as a WARNING (the build
+ *      still passes); bless a deliberate pre-settle guard with `# early-return-sanctioned: <why>`.
  *
  * WHY A LINT (not only the runtime guards): the runtime re-entrancy guards
  * (_inLayoutMutation, _recalculatingLayouts) throw on the DANGEROUS dynamic cases
@@ -187,6 +192,12 @@ const SELF_ADD_CALL = /@\s*add\b/;        // [G] the unambiguous structural add:
                                           // method). \b excludes @addMany / @addInPseudoRandomPosition; the leading @ (not .)
                                           // excludes the Point#add-ambiguous member form @expr().add / pt.add / @_addNoSettle.
 const NOSETTLE_MARKER = 'nosettle-sanctioned';              // the [G] per-method conscious sign-off (mirrors [F])
+const EARLY_RETURN_MARKER = 'early-return-sanctioned';      // the [H] per-method conscious sign-off (mirrors [F]/[G])
+// [H] a GUARD return: a bare `return`, or a postfix `return if … / return unless …`. NOT `return <value>`
+// (that is a legit return-the-result, e.g. `return @_settleLayoutsAfter => …` — what follows `return` is an
+// expression, not if/unless/end-of-line). This is the early-return guard that should live INSIDE the
+// _<name>NoSettle core, not before a public wrapper's _settleLayoutsAfter.
+const GUARD_RETURN = /\breturn\b\s*(if\b|unless\b|$)/;
 
 // Strip string literals and trailing `#` comments from one line, carrying multi-line
 // string state across lines. Returns { code, state }.
@@ -263,12 +274,15 @@ function discoverSettlingWrappers(files) {
   return wrappers;
 }
 
-function checkFile(file, violations, wrapperCall) {
+function checkFile(file, violations, wrapperCall, warnings) {
   const rel = path.relative(path.join(__dirname, '..'), file);
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   let method = null;          // current method name (null = not inside a 2-space method)
   let methodMarked = false;   // [F]: has a `# layout-apply-sanctioned` sign-off appeared in the current method?
   let methodNoSettleMarked = false;   // [G]: has a `# nosettle-sanctioned` sign-off appeared in the current method?
+  let methodGuardReturnLine = -1;     // [H]: line of a GUARD return seen before any _settleLayoutsAfter in this method
+  let methodHWarned = false;          // [H]: already emitted the early-return-before-settle warning for this method
+  let methodEarlyReturnMarked = false;// [H]: has a `# early-return-sanctioned` sign-off appeared in the current method?
   let strState = null;
   for (let n = 0; n < lines.length; n++) {
     const raw = lines[n];
@@ -276,13 +290,27 @@ function checkFile(file, violations, wrapperCall) {
     strState = state;
     if (strState === null) {                       // header detection only on fully-closed lines
       const m = raw.match(METHOD_HEADER);
-      if (m) { method = m[1]; methodMarked = false; methodNoSettleMarked = false; continue; }
+      if (m) { method = m[1]; methodMarked = false; methodNoSettleMarked = false; methodGuardReturnLine = -1; methodHWarned = false; methodEarlyReturnMarked = false; continue; }
       // a new 2-space property/non-method, or a dedent to class level, ends the method
-      if (/^  [A-Za-z_]\w*:/.test(raw) || /^[^\s]/.test(raw)) { method = null; methodMarked = false; methodNoSettleMarked = false; }
+      if (/^  [A-Za-z_]\w*:/.test(raw) || /^[^\s]/.test(raw)) { method = null; methodMarked = false; methodNoSettleMarked = false; methodGuardReturnLine = -1; methodHWarned = false; methodEarlyReturnMarked = false; }
     }
     if (!method) continue;
     if (raw.includes(SANCTION_MARKER)) methodMarked = true;  // [F] per-method conscious sign-off (any body line)
     if (raw.includes(NOSETTLE_MARKER)) methodNoSettleMarked = true;  // [G] per-method conscious sign-off (any body line)
+    if (raw.includes(EARLY_RETURN_MARKER)) methodEarlyReturnMarked = true;  // [H] per-method conscious sign-off
+    // [H] EARLY-RETURN-BEFORE-SETTLE (a WARNING, not a hard failure): a method that self-settles via
+    // @_settleLayoutsAfter should be a THIN public wrapper. A GUARD return BEFORE that settle is an early-return
+    // that almost always belongs INSIDE the _<name>NoSettle core -- otherwise the wrapper hides a guard, and the
+    // "already in this state" skip is split across the wrapper (skip the settle) and the core (skip the work).
+    // Record the first guard return; flag once when a _settleLayoutsAfter appears after it. The settle tiers
+    // themselves are exempt (RECALC_WHITELIST). Bless a deliberate pre-settle guard with `# early-return-sanctioned`.
+    if (!RECALC_WHITELIST.has(method) && !methodHWarned) {
+      if (methodGuardReturnLine < 0 && GUARD_RETURN.test(code)) methodGuardReturnLine = n + 1;
+      if (SETTLE_CALL.test(code) && methodGuardReturnLine >= 0 && !methodEarlyReturnMarked) {
+        warnings.push(`[H] ${method}() has a guard return at ${rel}:${methodGuardReturnLine} BEFORE its _settleLayoutsAfter (${rel}:${n + 1}) — move that early-return into the _<name>NoSettle core so the public wrapper stays a thin settle (or mark # ${EARLY_RETURN_MARKER}: <why>)`);
+        methodHWarned = true;
+      }
+    }
     const at = `${rel}:${n + 1}`;
     const pub = code.match(PUB_CALL);
     const txt = code.match(TEXT_SETTER_CALL);
@@ -372,8 +400,9 @@ function main() {
   const WRAPPER_CALL = FORBIDDEN_WRAPPERS.size
     ? new RegExp('[@.]\\s*(' + [...FORBIDDEN_WRAPPERS].join('|') + ')\\b') : null;
   const violations = [];
+  const warnings = [];
   for (const f of files) {
-    try { checkFile(f, violations, WRAPPER_CALL); }
+    try { checkFile(f, violations, WRAPPER_CALL, warnings); }
     catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
   }
   let macroCount = 0;
@@ -387,6 +416,11 @@ function main() {
       catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
     }
   }
+  if (warnings.length) {
+    console.warn(`\n⚠ layering gate — ${warnings.length} [H] early-return-before-settle warning(s) (non-fatal):`);
+    for (const w of warnings) console.warn('  ' + w);
+    console.warn('  [H] a public settle-wrapper should be THIN — push its early-return guard(s) into the _<name>NoSettle core, or mark `# early-return-sanctioned: <why>`.');
+  }
   if (violations.length) {
     console.error(`\n!!! layering gate FAILED — ${violations.length} violation(s):\n`);
     for (const v of violations) console.error('  ' + v);
@@ -396,7 +430,7 @@ function main() {
     console.error('G: low-level code must reach the _<name>NoSettle core, not the public self-settling wrapper (destroy/close/fullDestroy/createReference/...) — or mark `# nosettle-sanctioned: <why>`.');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
   process.exit(0);
 }
 
