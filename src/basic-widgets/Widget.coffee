@@ -1692,8 +1692,15 @@ class Widget extends TreeNode
   # (deferred-layout-OVERVIEW.md §11).
   _reFitContainer: (container = @) ->
     return unless container?._reLayoutChildren?
+    # SKIP when the container is mid its OWN _positionAndResizeChildren: it is driving this child top-down and
+    # already accounts for the child's resize, so re-fitting it is REDUNDANT. This guard was on the IN-PASS arm
+    # only; HOISTING it covers the SYNCHRONOUS off-settle arm too -- e.g. ScrollPanelWdgt.add's synchronous
+    # _reLayoutChildren resizing a child (rawSetWidthSizeHeightAccordingly) tripped this seam and scheduled a
+    # wasted container re-fit that rode the per-frame end-of-cycle flush (and climbed to invalidate the world).
+    # (end-of-cycle-flush-drawdown -- ELIMINATE; the convert alt -- making ScrollPanel.add self-settle -- was
+    # probed and rejected for deterministic nested-scroll divergence.)
+    return if container._adjustingContentsBounds
     if world?._recalculatingLayouts
-      return if container._adjustingContentsBounds
       if container.layoutIsValid
         world.widgetsThatMaybeChangedLayout.push container
       container.layoutIsValid = false
