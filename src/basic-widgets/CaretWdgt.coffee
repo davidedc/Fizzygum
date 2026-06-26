@@ -42,7 +42,7 @@ class CaretWdgt extends BlinkerWdgt
 
   adjustAccordingToTargetText: ->
     @updateDimension()
-    @gotoSlot @slot
+    @_gotoSlotNoSettle @slot
 
   justBeforeBeingPainted: ->
     @adjustAccordingToTargetText()
@@ -136,7 +136,18 @@ class CaretWdgt extends BlinkerWdgt
     @insert clipboardText
 
   
+  # CONVERT (end-of-cycle-flush-drawdown, Option B -- docs/gotoSlot-scoping-investigation.md): gotoSlot is the
+  # public "move the caret to slot N" API (called cross-widget as world.caret.gotoSlot from StringWdgt/TextWdgt
+  # click handlers, and by the caret's own discrete click / undo-redo paths), so it SELF-SETTLES -- its
+  # scrollCaretIntoView content re-fit flushes once per discrete caret move instead of riding the per-frame
+  # end-of-cycle flush. The HIGH-FREQUENCY callers route to the _gotoSlotNoSettle core instead: the arrow /
+  # typing / delete STREAMS (so per-keystroke moves still COALESCE into the one frame flush), the PAINT-time
+  # re-sync (justBeforeBeingPainted -> adjustAccordingToTargetText -- which MUST NOT settle mid-paint: it would
+  # re-enter recalculateLayouts after the cycle's own flush), and construction.
   gotoSlot: (slot, becauseOfMouseClick) ->
+    @_settleLayoutsAfter => @_gotoSlotNoSettle slot, becauseOfMouseClick
+
+  _gotoSlotNoSettle: (slot, becauseOfMouseClick) ->
     # check that slot is within the allowed boundaries of
     # of zero and text length.
     length = @target.text.length
@@ -170,61 +181,61 @@ class CaretWdgt extends BlinkerWdgt
   
   goLeft: (shift) ->
     if !shift and @target.firstSelectedSlot()?
-      @gotoSlot @target.firstSelectedSlot()
+      @_gotoSlotNoSettle @target.firstSelectedSlot()
       @updateSelection shift
     else
       @updateSelection shift
-      @gotoSlot @slot - 1
+      @_gotoSlotNoSettle @slot - 1
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
     @target.caretHorizPositionForVertMovement = @slot
   
   goRight: (shift, howMany) ->
     if !shift and @target.lastSelectedSlot()?
-      @gotoSlot @target.lastSelectedSlot()
+      @_gotoSlotNoSettle @target.lastSelectedSlot()
       @updateSelection shift
     else
       @updateSelection shift
-      @gotoSlot @slot + (howMany || 1)
+      @_gotoSlotNoSettle @slot + (howMany || 1)
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
     @target.caretHorizPositionForVertMovement = @slot
   
   goUp: (shift) ->
     if !shift and @target.lastSelectedSlot()?
-      @gotoSlot @target.firstSelectedSlot()
+      @_gotoSlotNoSettle @target.firstSelectedSlot()
       @updateSelection shift
     else
       @updateSelection shift
-      @gotoSlot @target.upFrom @slot
+      @_gotoSlotNoSettle @target.upFrom @slot
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
   
   goDown: (shift) ->
     if !shift and @target.lastSelectedSlot()?
-      @gotoSlot @target.lastSelectedSlot()
+      @_gotoSlotNoSettle @target.lastSelectedSlot()
       @updateSelection shift
     else
       @updateSelection shift
-      @gotoSlot @target.downFrom @slot
+      @_gotoSlotNoSettle @target.downFrom @slot
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
   
   goHome: (shift) ->
     @updateSelection shift
-    @gotoSlot @target.startOfLine @slot
+    @_gotoSlotNoSettle @target.startOfLine @slot
     @updateSelection shift
     @clearSelectionIfStartAndEndMeet shift
   
   goEnd: (shift) ->
     @updateSelection shift
-    @gotoSlot @target.endOfLine @slot
+    @_gotoSlotNoSettle @target.endOfLine @slot
     @updateSelection shift
     @clearSelectionIfStartAndEndMeet shift
   
   gotoPos: (aPoint) ->
     slotToGoTo = @target.slotAt aPoint
-    @gotoSlot slotToGoTo
+    @gotoSlot slotToGoTo   # discrete (click-to-position) -> public self-settling gotoSlot
     @show()
     return slotToGoTo
 
@@ -273,7 +284,7 @@ class CaretWdgt extends BlinkerWdgt
 
   bringTextAndCaretToState: (state) ->
     @target.setText state.textContent, nil, nil
-    @gotoSlot state.cursorPos
+    @gotoSlot state.cursorPos   # discrete (undo/redo restore) -> public self-settling gotoSlot
     if state.selectionStart? and state.selectionEnd?
       @target.selectBetween state.selectionStart, state.selectionEnd
     else
@@ -317,7 +328,7 @@ class CaretWdgt extends BlinkerWdgt
       @target.pushUndoState? @slot
 
       if @target.selection() isnt ""
-        @gotoSlot @target.firstSelectedSlot()
+        @_gotoSlotNoSettle @target.firstSelectedSlot()
         @target.deleteSelection()
       text = @target.text
       text = text.slice(0, @slot) + key + text.slice(@slot)
@@ -345,7 +356,7 @@ class CaretWdgt extends BlinkerWdgt
   
   deleteRight: ->
     if @target.selection() isnt ""
-      @gotoSlot @target.firstSelectedSlot()
+      @_gotoSlotNoSettle @target.firstSelectedSlot()
       @target.deleteSelection()
     else
       text = @target.text
@@ -354,7 +365,7 @@ class CaretWdgt extends BlinkerWdgt
   
   deleteLeft: ->
     if @target.selection()
-      @gotoSlot @target.firstSelectedSlot()
+      @_gotoSlotNoSettle @target.firstSelectedSlot()
       @target.deleteSelection()
     else
       text = @target.text
@@ -362,7 +373,7 @@ class CaretWdgt extends BlinkerWdgt
       @goLeft()
 
     @updateSelection false
-    @gotoSlot @slot
+    @_gotoSlotNoSettle @slot
     @updateSelection false
     @clearSelectionIfStartAndEndMeet false
   
