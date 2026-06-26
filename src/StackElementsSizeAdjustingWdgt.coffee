@@ -67,15 +67,27 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
 
       #console.log " deltax 4 : " + deltaX
 
-      prev = leftWidget.getMaxDim().x - leftWidget.getDesiredDim().x + rightWidget.getMaxDim().x - rightWidget.getDesiredDim().x
-      # drag-move STREAM: call the non-settling core so the per-move re-fits COALESCE into the one end-of-cycle
-      # flush (the public setMaxDim self-settles, for discrete callers). (end-of-cycle-flush-drawdown -- CONVERT)
-      leftWidget._setMaxDimNoSettle new Point lmdd.x + deltaX, lmdd.y
-      rightWidget._setMaxDimNoSettle new Point rmdd.x - deltaX, rmdd.y
-      newone = leftWidget.getMaxDim().x - leftWidget.getDesiredDim().x + rightWidget.getMaxDim().x - rightWidget.getDesiredDim().x
-      if prev != newone
-        leftWidget._setMaxDimNoSettle lmdd
-        rightWidget._setMaxDimNoSettle rmdd
+      # The move grows the left cell by deltaX and shrinks the right by the same -- legal ONLY while neither cell
+      # is pushed BELOW its content (desired) width, where getMaxDim clamps UP to getDesiredDim (getMaxDim ==
+      # max(@maxWidth, getDesiredDim)) so the +deltaX/-deltaX no longer cancel and the conservation sum changes.
+      # PREDICT that check WITHOUT mutating -- the same max(maxWidth, desired) getMaxDim uses, in the same
+      # `a - b + c - d` float grouping the original read used (float add isn't associative) -- and set ONCE iff it
+      # holds, instead of speculatively setting both cells, re-reading, and reverting on a boundary hit. Byte-
+      # identical to the old set-then-revert (same accept/reject, same final maxDims; a rejected move netted zero)
+      # but ~3x fewer _setMaxDimNoSettle calls -- no 2 speculative sets + 2 reverts per rejected move, and this
+      # drag rejects ~60% of moves at the limits. (efficiency, divider revert-thrash -- docs/coalescing-measurement.md)
+      ldes = leftWidget.getDesiredDim().x
+      rdes = rightWidget.getDesiredDim().x
+      prev   = lmdd.x - ldes + rmdd.x - rdes
+      newone = Math.max(lmdd.x + deltaX, ldes) - ldes + Math.max(rmdd.x - deltaX, rdes) - rdes
+      if prev == newone
+        # drag-move STREAM: the PUBLIC coalesced entrypoint, which DECLARES intentional per-move coalescing onto
+        # the one end-of-cycle flush instead of reaching into the private _setMaxDimNoSettle core. Measured
+        # warranted here (~13 moves/frame -> ~26 muts/frame; see docs/coalescing-measurement.md); toggle
+        # world.coalescingEnabled to self-settle-per-move and A/B it. (the plain setMaxDim self-settles, for
+        # discrete callers). (end-of-cycle-flush-drawdown -- CONVERT)
+        leftWidget.setMaxDimCoalesced new Point lmdd.x + deltaX, lmdd.y
+        rightWidget.setMaxDimCoalesced new Point rmdd.x - deltaX, rmdd.y
       #console.log "leftWidget.getMaxDim().x : " + leftWidget.getMaxDim().x
       #console.log "leftWidget.getDesiredDim().x: " + leftWidget.getDesiredDim().x
       #console.log "rightWidget.getMaxDim().x: " + rightWidget.getMaxDim().x

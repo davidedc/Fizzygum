@@ -3862,6 +3862,13 @@ class Widget extends TreeNode
       throw new Error "FLOWRULE_VIOLATION: _invalidateLayout() during a layout pass by " + (@constructor?.name) + " -- a raw/silent/fullRaw setter must not schedule layout (task #17)"
     if @layoutIsValid
       world.widgetsThatMaybeChangedLayout.push @
+      # DEBUG (WorldWdgt.auditUndeclaredEndOfCycle, default off): an OFF-SETTLE push (not @_inLayoutMutation) on
+      # an ATTACHED widget made OUTSIDE a *Coalesced declaration (_coalescedDeclarationDepth == 0) is the
+      # "careless" set the eventual declared-coalescing gate will reject -- record its ctor for the end-of-cycle
+      # log. ORPHAN pushes are excluded: an off-world (under-construction) widget legitimately defers and settles
+      # when attached (the childRemoved lesson) -- it is not careless, and is the bulk of the macro-driver noise.
+      if world.auditUndeclaredEndOfCycle and world._coalescedDeclarationDepth == 0 and not world._inLayoutMutation and not @isOrphan()
+        (world._undeclaredEndOfCyclePushes ?= []).push @constructor?.name
     @layoutIsValid = false
     # CLIMB: tell my parent that a child (me) changed. Pass @ so the parent short-circuits via the
     # return at the top iff I'm freefloating -- this replaces the old inline `unless @isFreeFloating()
@@ -3901,6 +3908,36 @@ class Widget extends TreeNode
   # goal is coalescing WITHOUT a PUBLIC method skipping its settle).
   setMaxDim: (overridingMaxDim) ->
     @_settleLayoutsAfter => @_setMaxDimNoSettle overridingMaxDim
+
+  # PUBLIC COALESCED entrypoint -- the first of the *Coalesced family. Same EFFECT as the private
+  # _setMaxDimNoSettle core, but PUBLIC (anyone, incl. programmatic callers, may use it) and INTENTION-REVEALING:
+  # it DECLARES that this is an intentional per-event-stream mutation (a drag / scroll / key burst) whose layout
+  # flush should ride the ONE end-of-cycle settle instead of self-settling per call -- so a stream draining many
+  # mutations per frame collapses N flushes into 1. (Contrast: the bare public setMaxDim self-settles, for a
+  # single discrete mutation; the _NoSettle core is internal-only and feature code should NOT reach into it.)
+  # Because the coalescing is DECLARED here, the end-of-cycle settle/audit can eventually tell an intentional
+  # coalesced mutation from a public method that carelessly forgot to self-settle -- the hook for that
+  # "allowed in the final settle" flag/mode goes right here. world.coalescingEnabled is the A/B switch: ON
+  # (default) coalesces via the core; OFF self-settles per call (the plain setMaxDim), so we can MEASURE whether
+  # coalescing is warranted for a given stream (docs/coalescing-measurement.md -- e.g. key-repeat rarely bursts
+  # enough to matter). Default ON => byte-identical to calling the _NoSettle core directly.
+  setMaxDimCoalesced: (overridingMaxDim) ->
+    if world?.coalescingEnabled
+      @_coalescedDeclare => @_setMaxDimNoSettle overridingMaxDim
+    else
+      @setMaxDim overridingMaxDim
+
+  # Run a coalesced-mutation core inside a DECLARATION window: while it runs, world._coalescedDeclarationDepth
+  # is > 0, so the off-settle invalidates the core schedules are marked INTENTIONAL and the end-of-cycle debug
+  # check (WorldWdgt.auditUndeclaredEndOfCycle) does NOT flag them as "careless". Every *Coalesced entrypoint
+  # wraps its core through here. Nestable; returns the core's value. (Default-off audit => ~zero overhead.)
+  _coalescedDeclare: (coreThunk) ->
+    return coreThunk() unless world?
+    world._coalescedDeclarationDepth += 1
+    try
+      return coreThunk()
+    finally
+      world._coalescedDeclarationDepth -= 1
 
   _setMaxDimNoSettle: (overridingMaxDim) ->
 

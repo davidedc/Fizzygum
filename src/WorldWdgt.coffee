@@ -81,6 +81,23 @@ class WorldWdgt extends PanelWdgt
   showRedraws: false
   doubleCheckCachedMethodsResults: false
 
+  # The A/B switch for the public *Coalesced layout API (Widget.setMaxDimCoalesced, ...). ON (default): a
+  # *Coalesced call defers its layout flush to the ONE end-of-cycle settle (a gesture/stream draining many
+  # mutations per frame collapses N flushes into 1). OFF: every *Coalesced call self-settles immediately (its
+  # plain public setter), so we can A/B and MEASURE whether coalescing is actually warranted for a given stream
+  # -- toggle at runtime (`world.coalescingEnabled = false`) and re-run docs/coalescing-measurement.md. (Default
+  # ON keeps current behaviour: the *Coalesced calls are byte-identical to the _NoSettle cores they wrap.)
+  coalescingEnabled: true
+
+  # *Coalesced DECLARATION tracking (Widget._coalescedDeclare / setMaxDimCoalesced). _coalescedDeclarationDepth
+  # is > 0 while a DECLARED coalesced mutation runs, so the off-settle invalidates it schedules are known to be
+  # intentional. auditUndeclaredEndOfCycle (DEBUG, default off) turns on the end-of-cycle check that LOGS every
+  # UNDECLARED off-settle push -- the "careless" set (a public method that forgot to self-settle, or a stream
+  # not yet on a *Coalesced entrypoint) the eventual declared-coalescing gate will reject. Off => ~zero overhead.
+  _coalescedDeclarationDepth: 0
+  auditUndeclaredEndOfCycle: false
+  _undeclaredEndOfCyclePushes: nil
+
   automator: nil
 
   # this is the actual reference to the canvas
@@ -868,6 +885,21 @@ class WorldWdgt extends PanelWdgt
   # a public geometry setter -- so its core is named _Body (the guarded recalc body), NOT the
   # _<name>NoSettle convention, and the thin-wrap lint does not pair it (no exempt marker needed).
   recalculateLayouts: ->
+    # DEBUG (auditUndeclaredEndOfCycle): at the END-OF-CYCLE flush only (NOT a self-settle -- a settle has
+    # @_inLayoutMutation set), report this frame's UNDECLARED off-settle pushes -- the "careless" set (a public
+    # method that forgot to self-settle, or a stream not yet on a *Coalesced entrypoint) that the eventual
+    # declared-coalescing gate will reject. Declared coalescing (setMaxDimCoalesced) is intentional and excluded.
+    if @auditUndeclaredEndOfCycle and not @_inLayoutMutation and @_undeclaredEndOfCyclePushes?.length
+      summary = {}
+      for c in @_undeclaredEndOfCyclePushes
+        summary[c] = (summary[c] ? 0) + 1
+      parts = []
+      for own k, v of summary
+        parts.push k + " x" + v
+      console.log "UNDECLARED-EOC frame=" + WorldWdgt.frameCount + " total=" + @_undeclaredEndOfCyclePushes.length + " :: " + parts.join(", ")
+    # reset the per-frame accumulator at the end-of-cycle flush ONLY -- a mid-frame self-settle (which calls
+    # recalculateLayouts with @_inLayoutMutation set) must not drop off-settle pushes recorded before it.
+    @_undeclaredEndOfCyclePushes = nil unless @_inLayoutMutation
     # re-entrancy guard: recalculateLayouts must not run inside itself. This fires if a
     # public geometry setter (which flushes via recalculateLayouts) is reached from a
     # layout pass (_reLayout/_positionAndResizeChildren). Internal layout must use the raw/silent
