@@ -68,12 +68,14 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
       #console.log " deltax 4 : " + deltaX
 
       prev = leftWidget.getMaxDim().x - leftWidget.getDesiredDim().x + rightWidget.getMaxDim().x - rightWidget.getDesiredDim().x
-      leftWidget.setMaxDim new Point lmdd.x + deltaX, lmdd.y
-      rightWidget.setMaxDim new Point rmdd.x - deltaX, rmdd.y
+      # drag-move STREAM: call the non-settling core so the per-move re-fits COALESCE into the one end-of-cycle
+      # flush (the public setMaxDim self-settles, for discrete callers). (end-of-cycle-flush-drawdown -- CONVERT)
+      leftWidget._setMaxDimNoSettle new Point lmdd.x + deltaX, lmdd.y
+      rightWidget._setMaxDimNoSettle new Point rmdd.x - deltaX, rmdd.y
       newone = leftWidget.getMaxDim().x - leftWidget.getDesiredDim().x + rightWidget.getMaxDim().x - rightWidget.getDesiredDim().x
       if prev != newone
-        leftWidget.setMaxDim lmdd
-        rightWidget.setMaxDim rmdd
+        leftWidget._setMaxDimNoSettle lmdd
+        rightWidget._setMaxDimNoSettle rmdd
       #console.log "leftWidget.getMaxDim().x : " + leftWidget.getMaxDim().x
       #console.log "leftWidget.getDesiredDim().x: " + leftWidget.getDesiredDim().x
       #console.log "rightWidget.getMaxDim().x: " + rightWidget.getMaxDim().x

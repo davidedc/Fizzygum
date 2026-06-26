@@ -3878,12 +3878,23 @@ class Widget extends TreeNode
 
     maxWidth = desiredBounds.x + spreadability * desiredBounds.x/100
     maxHeight = desiredBounds.y + spreadability * desiredBounds.y/100
-    @setMaxDim new Point maxWidth, maxHeight
+    # internal setup (every caller is a constructor) -- use the NON-settling core; this method does its own
+    # @_invalidateLayout below for the min/desired changes setMaxDim doesn't cover. (end-of-cycle-flush -- CONVERT)
+    @_setMaxDimNoSettle new Point maxWidth, maxHeight
 
     @_invalidateLayout()
 
 
+  # CONVERT (end-of-cycle-flush-drawdown): setMaxDim is the public "set the max dimension" mutator, so it must
+  # SELF-SETTLE (one flush per outermost public mutation) like every other public geometry setter. Its only
+  # high-frequency caller -- the stack-divider drag (StackElementsSizeAdjustingWdgt.nonFloatDragging) -- and the
+  # construction-time setMinAndMaxBoundsAndSpreadability call the NON-settling _setMaxDimNoSettle core instead, so
+  # the drag-move STREAM still COALESCES into the one end-of-cycle flush (a core rides the cycle by design; the
+  # goal is coalescing WITHOUT a PUBLIC method skipping its settle).
   setMaxDim: (overridingMaxDim) ->
+    @_settleLayoutsAfter => @_setMaxDimNoSettle overridingMaxDim
+
+  _setMaxDimNoSettle: (overridingMaxDim) ->
 
     #   currentMax = @getRecursiveMaxDim()
     #   ratio = currentMax.x / overridingMaxDim.x
