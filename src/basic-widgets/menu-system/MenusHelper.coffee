@@ -485,8 +485,10 @@ class MenusHelper
   createSimpleVerticalStackScrollPanelWdgt: ->
     svsspw = new SimpleVerticalStackScrollPanelWdgt
     world.add svsspw
-    svsspw.fullRawMoveTo new Point 430, 25
-    svsspw.rawSetExtent new Point 370, 325
+    # public setters on the ATTACHED panel self-settle in place (was fullRawMoveTo/rawSetExtent, whose raw
+    # resize on an attached panel tripped the _reFitContainerAfterRawGeometryChange seam into an off-settle re-fit)
+    svsspw.fullMoveTo new Point 430, 25
+    svsspw.setExtent new Point 370, 325
 
   createSimpleVerticalStackPanelWdgtAndScrollPanel: ->
     @createSimpleVerticalStackPanelWdgt()

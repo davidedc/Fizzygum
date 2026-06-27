@@ -117,6 +117,14 @@ class ScrollPanelWdgt extends PanelWdgt
     return false
 
   _reLayoutScrollbars: ->
+    # Laying out my own scrollbar chrome IS adjusting my contents bounds: I drive the bars' geometry top-down
+    # here, so a bar's raw resize below must NOT trip the _reFitContainerAfterRawGeometryChange seam into
+    # re-fitting ME (the panel) -- that re-fit is redundant and rode the per-frame end-of-cycle flush. Same
+    # self-guard, and same flag, as _positionAndResizeChildren (which _reFitContainer already honours); restore
+    # on exit so a caller that is itself mid-adjust keeps its state. (end-of-cycle drawdown ELIMINATE.)
+    outerAdjustingContentsBounds = @_adjustingContentsBounds
+    @_adjustingContentsBounds = true
+
     # one typically has both scrollbars in view, plus a resizer
     # in bottom right corner, so adjust the width/height of the
     # scrollbars so that there is no overlap between the three things
@@ -183,7 +191,9 @@ class ScrollPanelWdgt extends PanelWdgt
         )
       else
         @vBar.hide()
-  
+
+    @_adjustingContentsBounds = outerAdjustingContentsBounds
+
   # when you add things to the ScrollPanelWdgt they actually
   # end up in the Panel inside it.
   # This would also apply to resizing handles - so we need to
