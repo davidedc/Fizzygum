@@ -201,21 +201,20 @@ class CaretWdgt extends BlinkerWdgt
       @fullRawMoveTo pos.floor()
 
   # Schedule THIS caret for a scroll-follow so its _reLayout runs the follow on settled geometry -- the caret
-  # settles like any other widget whose layout changed, drained by the NEXT settle (which is always IN-PLACE,
-  # during the event: a discrete click/arrow move self-settles via gotoSlot/goLeft/goRight; a typing/delete/paste
-  # advance defers to its editing handler's tail, _settleScrollFollow -- see there). The caret never rides
-  # the end-of-cycle coalesced flush (it does not coalesce). It enqueues ITSELF with the low-level schedule
-  # primitive (push + mark invalid), NOT _invalidateLayout: the caret is inert + free-floating, so it has no
-  # parent layout to climb-and-invalidate (the whole job of _invalidateLayout), and _invalidateLayout's flow-rule
-  # throw + careless-push audit both target CONTENT mutators that forgot to self-settle -- which a deliberate
-  # overlay self-schedule is not (it can't self-settle: the follow is a NoSettle step run by the flush; and the
-  # caret does not coalesce). Using _invalidateLayout here was the trap an earlier attempt fell into: in-pass it
-  # threw the flow-rule, off-pass it registered as a careless end-of-cycle push. The direct schedule is correct in
-  # BOTH phases -- inside a pass the until-loop picks the caret up; off-pass the next in-place settle drains it.
-  # (See WorldWdgt._recalculateLayoutsBody.)
+  # settles like any other widget whose layout changed, drained by the NEXT settle (always IN-PLACE, during the
+  # event: a discrete click/arrow move self-settles via gotoSlot/goLeft/goRight; a typing/delete/paste advance
+  # defers to its editing handler's tail, _settleScrollFollow -- see there). The caret never rides the end-of-cycle
+  # coalesced flush (it does not coalesce). It schedules via the CANONICAL _invalidateLayout: the caret is
+  # free-floating + inert, so _invalidateLayout's INERT-RECEIVER branch enqueues it with the bare no-climb primitive
+  # (_markForRelayoutNoClimb) and skips the climb / flow-rule throw / careless-push audit -- all of which are
+  # structurally INAPPLICABLE to an overlay that has no parent layout to climb and no ancestor it can re-dirty
+  # (Widget._invalidateLayout; docs/unify-layout-enqueue-primitives-plan.md §2). This USED to open-code the bare
+  # push here to dodge that throw + audit (which fired because _invalidateLayout assumed a climbing content widget);
+  # the inert branch now makes the canonical verb correct for the caret, so there is ONE scheduling verb, not two.
+  # The schedule is correct in BOTH phases -- inside a pass the until-loop picks the caret up; off-pass the next
+  # in-place settle drains it. (See WorldWdgt._recalculateLayoutsBody.)
   _requestScrollFollow: ->
-    if @layoutIsValid then world.widgetsThatMaybeChangedLayout.push @
-    @layoutIsValid = false
+    @_invalidateLayout()
 
   # The caret's layout step IS the scroll-follow. ScrollPanelWdgt.scrollCaretIntoView reaches its mark over a FEW
   # passes (its trailing keepContentsInScrollPanelWdgt clamp advances @contents only PARTWAY toward the target

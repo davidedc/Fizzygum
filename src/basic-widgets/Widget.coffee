@@ -1676,10 +1676,10 @@ class Widget extends TreeNode
   # _reactToDropOfNoSettle / _reactToGrabOfNoSettle / childRemoved), the two freefloating-content "seams" above
   # (_refreshScrollPanelWdgtOrVerticalStackIfIamInIt, _reFitContainerAfterRawGeometryChange), and the
   # newParentChoice* menu actions all route through here. Two states:
-  #  - INSIDE a layout pass (world._recalculatingLayouts): ENQUEUE the container into the
-  #    recalculateLayouts until-loop. Enqueuing is legal mid-pass -- unlike _invalidateLayout it neither
-  #    throws (the freeze guard, see _invalidateLayout below) nor climbs to ancestors; it enqueues only the
-  #    directly-affected container. A container mid its OWN _positionAndResizeChildren is driving this child
+  #  - INSIDE a layout pass (world._recalculatingLayouts): ENQUEUE the container into the recalculateLayouts
+  #    until-loop via the shared bare-push atom (_markForRelayoutNoClimb). Enqueuing is legal mid-pass -- unlike
+  #    _invalidateLayout the atom neither throws (the freeze guard, see _invalidateLayout below) nor climbs to
+  #    ancestors; it enqueues only the directly-affected container. A container mid its OWN _positionAndResizeChildren is driving this child
   #    top-down and already accounts for it, so we SKIP it (re-enqueuing would re-fire every pass and never
   #    converge) -- the @_adjustingContentsBounds guard. If the deferred re-fit later changes the
   #    container's own geometry, ITS seam re-fires and enqueues ITS parent, so up-propagation is preserved.
@@ -1701,9 +1701,7 @@ class Widget extends TreeNode
     # probed and rejected for deterministic nested-scroll divergence.)
     return if container._adjustingContentsBounds
     if world?._recalculatingLayouts
-      if container.layoutIsValid
-        world.widgetsThatMaybeChangedLayout.push container
-      container.layoutIsValid = false
+      container._markForRelayoutNoClimb()   # in-pass: enqueue just this directly-affected container, no climb (shared atom)
     else
       container._invalidateLayout()
 
@@ -3871,6 +3869,19 @@ class Widget extends TreeNode
       C.makeSpacersOpaque()
   # this part is excluded from the fizzygum homepage build <<«
 
+  # The bare layout-enqueue ATOM: put me into the recalculateLayouts until-loop and mark my layout invalid, WITHOUT
+  # climbing to ancestors and WITHOUT the flow-rule throw / careless-push audit that _invalidateLayout wraps around it
+  # for the climbing content-widget case. This is the ONE primitive under all three enqueue paths: _invalidateLayout
+  # (calls it, THEN climbs), _reFitContainer's in-pass arm (enqueue one directly-affected container, no climb --
+  # up-propagation is restored by that container's own seam re-firing if its geometry moves), and the caret's
+  # scroll-follow (an inert free-floating overlay, reached via _invalidateLayout's inert-receiver branch). "NoClimb"
+  # is the warning in the name: this alone does NOT tell my container I changed -- a CONTENT widget must use
+  # _invalidateLayout, which climbs. Only framework layout machinery calls this (the two methods above); feature code
+  # schedules via _invalidateLayout. (docs/unify-layout-enqueue-primitives-plan.md.)
+  _markForRelayoutNoClimb: ->
+    if @layoutIsValid then world.widgetsThatMaybeChangedLayout.push @
+    @layoutIsValid = false
+
   _invalidateLayout: (triggeringChild = nil) ->
     # FREEFLOATING-skip -- THE single home of the rule: a freefloating child's add/remove/resize
     # cannot change its parent's layout (it's positioned absolutely, not laid out by the parent).
@@ -3880,6 +3891,17 @@ class Widget extends TreeNode
     # (the inline `unless …isFreeFloating()` guard meant _invalidateLayout wasn't even called for it),
     # so it has to keep being a silent no-op even if it happens mid-pass -- it must never throw.
     return if triggeringChild?.isFreeFloating()
+    # INERT-RECEIVER branch: a free-floating + inert overlay (caret / resize handle) has no parent layout to climb
+    # into, and is excluded from every container's content-bounds (childrenNotHandlesNorCarets), so re-running its
+    # _reLayout re-fits NOTHING above it. The climb, the flow-rule throw, and the careless-push audit below are
+    # therefore all structurally INAPPLICABLE -- they PASS here, they are not silenced (the worry this resolves:
+    # docs/unify-layout-enqueue-primitives-plan.md §2). So enqueue just me, no climb. Gated on BOTH predicates so no
+    # content widget can slip onto the no-climb path -- a content widget's container genuinely needs the climb. (This
+    # is the single home of the caret's self-schedule, reached via CaretWdgt._requestScrollFollow -> here; today only
+    # the caret exercises it -- handles are moved by drag machinery through raw setters, never self-invalidate.)
+    if @isFreeFloating() and @isLayoutInert?()
+      @_markForRelayoutNoClimb()
+      return
     # FLOW-RULE INVARIANT (fail fast): the low-level geometry mutators (raw*/silent*/fullRaw*)
     # must not SCHEDULE layout -- they only mutate; scheduling a (re-)layout is the public
     # self-settling tier's job. If an invalidate reaches here while recalculateLayouts is running,
@@ -3899,16 +3921,18 @@ class Widget extends TreeNode
     # (The caret's paint-time scroll-follow, the original such offender, was moved to a post-flush pre-paint step.)
     if world?.healingRectanglesPhase and world.auditPaintTimeLayoutScheduling and not @isOrphan()
       (world._paintTimeLayoutSchedules ?= []).push @constructor?.name
-    if @layoutIsValid
-      world.widgetsThatMaybeChangedLayout.push @
-      # DEBUG (WorldWdgt.auditUndeclaredEndOfCycle, default off): an OFF-SETTLE push (not @_inLayoutMutation) on
-      # an ATTACHED widget made OUTSIDE a *Coalesced declaration (_coalescedDeclarationDepth == 0) is the
-      # "careless" set the eventual declared-coalescing gate will reject -- record its ctor for the end-of-cycle
-      # log. ORPHAN pushes are excluded: an off-world (under-construction) widget legitimately defers and settles
-      # when attached (the childRemoved lesson) -- it is not careless, and is the bulk of the macro-driver noise.
-      if world.auditUndeclaredEndOfCycle and world._coalescedDeclarationDepth == 0 and not world._inLayoutMutation and not @isOrphan()
-        (world._undeclaredEndOfCyclePushes ?= []).push @constructor?.name
-    @layoutIsValid = false
+    # DEBUG (WorldWdgt.auditUndeclaredEndOfCycle, default off): an OFF-SETTLE push (not @_inLayoutMutation) on
+    # an ATTACHED widget made OUTSIDE a *Coalesced declaration (_coalescedDeclarationDepth == 0) is the
+    # "careless" set the eventual declared-coalescing gate will reject -- record its ctor for the end-of-cycle
+    # log. ORPHAN pushes are excluded: an off-world (under-construction) widget legitimately defers and settles
+    # when attached (the childRemoved lesson) -- it is not careless, and is the bulk of the macro-driver noise.
+    # Recorded BEFORE _markForRelayoutNoClimb flips @layoutIsValid, and only on an ACTUAL push (@layoutIsValid still
+    # true) -- an already-invalid widget is not re-pushed, so it must not be re-counted.
+    if @layoutIsValid and world.auditUndeclaredEndOfCycle and world._coalescedDeclarationDepth == 0 and not world._inLayoutMutation and not @isOrphan()
+      (world._undeclaredEndOfCyclePushes ?= []).push @constructor?.name
+    # the bare enqueue (+ mark invalid): the shared primitive. The climb is this method's OWN extra responsibility,
+    # added explicitly below -- _markForRelayoutNoClimb deliberately does not climb (see its comment).
+    @_markForRelayoutNoClimb()
     # CLIMB: tell my parent that a child (me) changed. Pass @ so the parent short-circuits via the
     # return at the top iff I'm freefloating -- this replaces the old inline `unless @isFreeFloating()
     # and @parent?` climb-guard (the freefloating rule now lives in ONE place, the param check above).
