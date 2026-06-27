@@ -6,11 +6,6 @@ class CaretWdgt extends BlinkerWdgt
   slot: nil
   viewPadding: 1
   currentCaretFontSize: nil
-  # set by a caret MOVE (_gotoSlotNoSettle); consumed once per cycle by WorldWdgt.doOneCycle AFTER the
-  # end-of-cycle flush and BEFORE paint, to scroll the caret into view on settled geometry (see
-  # _scrollCaretIntoViewNoSettle). A plain wheel/scroll never sets it, so the panel follows the caret
-  # only when the caret MOVES.
-  _pendingScrollIntoView: nil
 
   constructor: (@target) ->
     # additional properties:
@@ -49,8 +44,8 @@ class CaretWdgt extends BlinkerWdgt
   # on the target's CURRENT slot coordinate. The caret is isLayoutInert, so this schedules / mutates NO
   # layout -- it is READ-ONLY w.r.t. the layout tree and therefore safe to run at PAINT time
   # (justBeforeBeingPainted). It deliberately does NOT scroll-follow: bringing the caret into view mutates
-  # layout (moves @target / @contents) and must happen out of paint -- see _scrollCaretIntoViewNoSettle and
-  # WorldWdgt.doOneCycle. (Also called from the constructor.)
+  # layout (moves @target / @contents) and must happen out of paint -- that is the caret's _reLayout, settled
+  # inside the end-of-cycle flush (see _requestScrollFollow / _reLayout). (Also called from the constructor.)
   adjustAccordingToTargetText: ->
     @updateDimension()
     @_repositionToSlotNoSettle()
@@ -156,11 +151,12 @@ class CaretWdgt extends BlinkerWdgt
   # (contrast setMaxDimCoalesced, for ~50-per-frame drag/scroll STREAMS) -- each keystroke self-settles, one flush
   # per discrete move.
   #   _gotoSlotNoSettle does ONLY the layout-free work: clamp the slot, re-place the caret on the target's current
-  #   slot coordinate (inert), and REQUEST a scroll-follow (@_pendingScrollIntoView). The actual scroll-follow --
-  #   the only layout-MUTATING part -- is deferred to WorldWdgt.doOneCycle, which runs it once AFTER the cycle's
-  #   flush (so @target is settled -- doing it inline computed against UN-settled geometry, which is why the old
-  #   code leaned on a paint-time re-sync to finish the job) and BEFORE paint (so paint stays read-only). The core
-  #   is the non-settling member reached where settling is wrong or already provided: (1) insert/delete, where a
+  #   slot coordinate (inert), do one best-effort scroll-follow pass inline (load-bearing for in-place typing --
+  #   see below), and ENQUEUE the caret into the end-of-cycle flush (_requestScrollFollow). The scroll-follow --
+  #   the only layout-MUTATING part -- then runs as the caret's OWN _reLayout, settled in-line with every other
+  #   widget: the flush drains the caret AFTER its target / scroll-panel are settled and iterates the follow to a
+  #   fixed point via the until-loop -- no post-flush special-case, no hand-rolled convergence loop. The core is
+  #   the non-settling member reached where settling is wrong or already provided: (1) insert/delete, where a
   #   subsequent self-settling @target.setText/deleteSelection flushes the move within the same event; and (2)
   #   construction (the caret is an orphan, so it defers and settles when first added).
   gotoSlot: (slot, becauseOfMouseClick) ->
@@ -178,11 +174,11 @@ class CaretWdgt extends BlinkerWdgt
     # shifts the result (macroStringWdgtInlineTypingRefitsUnderFittingModes). One pass suffices where the
     # follow converges immediately (e.g. a single-line horizontal scroll) ...
     @_oneScrollCaretIntoViewPassNoSettle()
-    # ... and REQUEST a post-flush convergence pass for the cases that need MORE than one (a scroll panel's
-    # vertical follow advances only partway per pass): doOneCycle runs _scrollCaretIntoViewNoSettle once after
-    # the flush, on settled geometry, before paint. The wheel/scroll path does NOT come through here, so it
-    # never requests a follow -- the panel chases the caret only when the caret MOVES.
-    @_pendingScrollIntoView = true
+    # ... and ENQUEUE the caret into the end-of-cycle flush for the cases that need MORE than one pass (a scroll
+    # panel's vertical follow advances only partway per pass): the caret's _reLayout runs the follow on settled
+    # geometry and the until-loop iterates it to convergence. The wheel/scroll path does NOT come through here,
+    # so it never enqueues a follow -- the panel chases the caret only when the caret MOVES.
+    @_requestScrollFollow()
 
     if becauseOfMouseClick and @target.undoHistory?.length == 0
       @target.pushUndoState? @slot, true
@@ -195,33 +191,43 @@ class CaretWdgt extends BlinkerWdgt
       @show()
       @fullRawMoveTo pos.floor()
 
-  # The SCROLL-FOLLOW: bring the caret into view by scrolling @target horizontally and/or the enclosing scroll
-  # panel vertically (ScrollPanelWdgt.scrollCaretIntoView). This MUTATES layout, so it must run OUT of paint:
-  # WorldWdgt.doOneCycle calls it once AFTER the end-of-cycle flush (so @target's geometry is final) and BEFORE
-  # paint (so updateBroken stays read-only), and only when a move set @_pendingScrollIntoView.
-  #   It iterates to a FIXED POINT: ScrollPanelWdgt.scrollCaretIntoView reaches its mark over a FEW passes (its
-  # trailing keepContentsInScrollPanelWdgt clamp advances @contents only PARTWAY toward the target each call), and
-  # the old design leaned on the per-PAINT re-sync to supply those repeated passes across successive frames. Doing
-  # it in ONE place means doing it to convergence HERE -- which is deterministic (same settled geometry in => same
-  # number of passes), unlike a frame-count-dependent multi-frame convergence. A safety cap guards the unlikely
-  # non-convergent case (the loop is bounded either way, so determinism holds).
-  # thin-wrap-exempt: standalone non-settling step run at a controlled point in doOneCycle (no public twin --
-  # settling is provided by the cycle, not a self-settling wrapper).
-  _scrollCaretIntoViewNoSettle: ->
-    cap = 12
-    loop
-      beforeT = @top() ; beforeL = @left()
-      beforeParentT = @parent?.top() ; beforeParentL = @parent?.left()
-      @_oneScrollCaretIntoViewPassNoSettle()
-      cap -= 1
-      # converged once neither the caret nor its (scrolled) container moved on the last pass
-      stable = @top() == beforeT and @left() == beforeL and @parent?.top() == beforeParentT and @parent?.left() == beforeParentL
-      break if stable or cap <= 0
+  # Schedule THIS caret into the end-of-cycle flush so its _reLayout runs the scroll-follow on settled geometry
+  # -- the caret settles like any other widget whose layout changed, instead of via a post-flush special-case in
+  # doOneCycle. It enqueues ITSELF with the low-level schedule primitive (push + mark invalid), NOT
+  # _invalidateLayout: the caret is inert + free-floating, so it has no parent layout to climb-and-invalidate
+  # (the whole job of _invalidateLayout), and _invalidateLayout's flow-rule throw + careless-push audit both
+  # target CONTENT mutators that forgot to self-settle -- which a deliberate overlay self-schedule is not (it
+  # can't self-settle: the follow is a NoSettle step run by the flush; and the caret does not coalesce). Using
+  # _invalidateLayout here was the trap an earlier attempt fell into: in-pass it threw the flow-rule, off-pass it
+  # registered as a careless end-of-cycle push. The direct schedule is correct in BOTH phases -- inside a pass
+  # the until-loop picks the caret up; outside, the next flush drains it. (See WorldWdgt._recalculateLayoutsBody.)
+  _requestScrollFollow: ->
+    if @layoutIsValid then world.widgetsThatMaybeChangedLayout.push @
+    @layoutIsValid = false
 
-  # A SINGLE scroll-follow pass (see _scrollCaretIntoViewNoSettle, which iterates this to a fixed point). Re-derives
+  # The caret's layout step IS the scroll-follow. ScrollPanelWdgt.scrollCaretIntoView reaches its mark over a FEW
+  # passes (its trailing keepContentsInScrollPanelWdgt clamp advances @contents only PARTWAY toward the target
+  # each call), so this does ONE pass and converges through the flush's until-loop rather than a hand-rolled loop:
+  # a pass that scrolls @contents re-enqueues the scroll panel (the seam, in-pass) AHEAD of the caret, and the
+  # caret stays layoutIsValid==false so the loop re-runs it AFTER the panel settles -- iterating to a fixed point.
+  # Deterministic (same settled geometry in => same passes; the recalcIterationsCap backstop bounds the unlikely
+  # non-convergent case). The caret is isLayoutInert + childless, so there is no base _reLayout work to do (no
+  # bounds to fit, no children to place) -- this override is the whole layout step.
+  _reLayout: ->
+    beforeT = @top() ; beforeL = @left()
+    beforeParentT = @parent?.top() ; beforeParentL = @parent?.left()
+    @_oneScrollCaretIntoViewPassNoSettle()
+    # converged once neither the caret nor its (scrolled) container moved on the last pass
+    stable = @top() == beforeT and @left() == beforeL and @parent?.top() == beforeParentT and @parent?.left() == beforeParentL
+    if stable
+      @markLayoutAsFixed()
+    # else: stay layoutIsValid==false -- still in the queue, re-processed after the just-enqueued panel settles
+
+  # A SINGLE scroll-follow pass (see _reLayout, which iterates this to a fixed point via the flush). Re-derives
   # pos from the current (settled) geometry, applies the horizontal clamp (which scrolls @target and adjusts where
   # the caret lands), re-places the caret, then asks the scroll panel to scroll it vertically into view.
-  # thin-wrap-exempt: one convergence pass of _scrollCaretIntoViewNoSettle (no public twin -- see above).
+  # thin-wrap-exempt: one convergence pass driven by the caret's _reLayout (no public twin -- settling is provided
+  # by the flush, not a self-settling wrapper).
   _oneScrollCaretIntoViewPassNoSettle: ->
     pos = @target.slotCoordinates @slot
     if pos?
@@ -415,6 +421,11 @@ class CaretWdgt extends BlinkerWdgt
       # connections "from within", starting a new connections
       # update round
       @target.setText text, nil, nil
+      # The text just GREW: if it no longer fits a CROP-overflow field, hand off to the pop-out editor NOW, at
+      # event time (off the flush). This is the explicit home of what used to fire lazily + impurely inside
+      # slotCoordinates -- insert (typing + paste) is the only path that can grow inline-edited text past the
+      # fit. If it hands off, the inline caret is gone, so stop here (no advance / dimension / undo to do).
+      return if @target.handOffToPopoutEditorIfOverflowing()
       @_goRightNoSettle false, key.length   # internal advance: rides setText's flush, must NOT self-settle early
       @updateDimension()
       @target.pushUndoState? @slot

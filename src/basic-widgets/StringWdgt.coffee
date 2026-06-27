@@ -826,14 +826,12 @@ class StringWdgt extends Widget
   
   # StringWdgt measuring:
   slotCoordinates: (slot) ->
-    
-    # this makes it so when you type and the string becomes too big
-    # then the edit stops to be directly in the screen and the
-    # popout for editing takes over.
-    if (@transformTextOneToOne @text) != @textPossiblyCroppedToFit and @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
-      world.stopEditing()
-      @edit()
-      return nil
+    # PURE geometry: the position point of the given index ("slot"). The overflow hand-off that used to live
+    # here (when typing grew the text too big for a CROP field, stop inline editing and let the pop-out editor
+    # take over) was a SIDE EFFECT in a coordinate read -- illegal once the caret's scroll-follow settles INSIDE
+    # the layout flush (stopEditing/edit are public, self-settling, can't run mid-pass) and a latent paint-time
+    # hazard in drawSelection. It moved to an explicit event-time step, handOffToPopoutEditorIfOverflowing,
+    # invoked from the one place text can grow (CaretWdgt.insert). This read now has no side effect.
 
     # answer the position point of the given index ("slot")
     # where the caret should be placed
@@ -1369,6 +1367,23 @@ class StringWdgt extends Widget
     else
       @editPopup()
       return nil
+
+  # When inline editing and the just-grown text no longer fits a CROP-overflow field, abandon inline editing
+  # and hand off to the pop-out editor (stopEditing tears down the inline caret; edit() then routes to
+  # editPopup() because the text no longer fits). Returns true if it handed off, so the caller stops -- the
+  # inline caret is gone. PURE PREDICATE + explicit transition, OFF the layout flush: this used to fire lazily
+  # and impurely as a side effect of slotCoordinates, which became illegal once the caret's scroll-follow
+  # settles inside the flush (stopEditing/edit are public/self-settling -- a mid-pass call throws the flow-rule)
+  # and was a latent paint-time hazard in drawSelection. CaretWdgt.insert (the one place editing can GROW the
+  # text -- typing and paste both route through it) calls this right after setText, at event time. Entering an
+  # edit on an already-overflowing field can't reach here: edit() sends it straight to editPopup(), so a field
+  # is only ever inline-edited while it fits, and the single way to exceed that is insert.
+  handOffToPopoutEditorIfOverflowing: ->
+    return false unless @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
+    return false if @textPossiblyCroppedToFit == @transformTextOneToOne @text
+    world.stopEditing()
+    @edit()
+    return true
 
   selection: ->
     start = Math.min @startMark, @endMark

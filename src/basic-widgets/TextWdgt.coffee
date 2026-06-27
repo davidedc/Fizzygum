@@ -581,19 +581,9 @@ class TextWdgt extends StringWdgt
   # This is in absolute world coordinates.
   # This function assumes that the text is left-justified.
   slotCoordinates: (slot) ->
-
-    #if !window.globCounter3? then window.globCounter3 = 0
-    #window.globCounter3++
-    #console.log "slotCoordinates " + window.globCounter3
-
-    # this makes it so when you type and the string becomes too big
-    # then the edit stops to be directly in the screen and the
-    # popout for editing takes over.
-    if (@transformTextOneToOne @text) != @textPossiblyCroppedToFit and @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
-      world.stopEditing()
-      @edit()
-      return nil
-
+    # PURE geometry (see StringWdgt.slotCoordinates): the overflow hand-off to the pop-out editor that used to
+    # be a side effect here moved to an explicit event-time step (handOffToPopoutEditorIfOverflowing, from
+    # CaretWdgt.insert), so this read has no side effect and is safe inside the flush / at paint.
     @reflowText()
     [slotRow, slotColumn] = @slotRowAndColumn slot
 

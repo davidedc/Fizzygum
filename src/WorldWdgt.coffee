@@ -102,8 +102,8 @@ class WorldWdgt extends PanelWdgt
   # layouts (recalculateLayouts) -> PAINTS (updateBroken), with NO layout work at paint. auditPaintTimeLayout-
   # Scheduling (DEBUG, default off) turns on the check that LOGS every layout (re-)schedule reached DURING the
   # paint pass (healingRectanglesPhase true) -- i.e. a widget that scheduled layout while being painted, crossing
-  # the render/layout boundary. The caret's paint-time scroll-follow (the original offender) was moved to a
-  # post-flush pre-paint step (CaretWdgt._scrollCaretIntoViewNoSettle + doOneCycle). Off => ~zero overhead.
+  # the render/layout boundary. The caret's paint-time scroll-follow (the original offender) was moved off paint
+  # and now settles inside the flush as the caret's _reLayout (CaretWdgt._requestScrollFollow). Off => ~zero overhead.
   auditPaintTimeLayoutScheduling: false
   _paintTimeLayoutSchedules: nil
 
@@ -1360,16 +1360,12 @@ class WorldWdgt extends PanelWdgt
     @recalculateLayouts()
     window.recalculatingLayouts = false
 
-    # The caret SCROLL-FOLLOW runs HERE: AFTER the end-of-cycle flush (so the edited text and the caret's
-    # target geometry are settled) and BEFORE paint (so updateBroken stays read-only -- no layout mutation
-    # or scheduling during the paint pass; the owner's invariant: process events fixing layouts, then fix
-    # coalesced layouts, then paint). It fires only when a caret MOVE requested it this cycle
-    # (@_pendingScrollIntoView, set in CaretWdgt._gotoSlotNoSettle) -- a plain wheel/scroll does NOT move the
-    # caret, so the panel does not chase it ("the panel follows the caret only when the caret MOVES").
-    # (paint-time-caret-resync arc: moved out of CaretWdgt.justBeforeBeingPainted, now read-only.)
-    if @caret?._pendingScrollIntoView
-      @caret._pendingScrollIntoView = false
-      @caret._scrollCaretIntoViewNoSettle()
+    # (There is no caret scroll-follow step here any more: a caret MOVE enqueues the caret into the flush
+    # above -- CaretWdgt._requestScrollFollow -- and the caret's _reLayout runs the scroll-follow settled
+    # in-line with every other widget, so the cycle is purely process events -> fix coalesced layouts ->
+    # paint, with NO caret special-case and paint still read-only. A plain wheel/scroll does not move the
+    # caret, so the panel still chases it only when the caret MOVES. Cf. the paint-time-caret-resync arc,
+    # which first moved this work out of the paint pass into this post-flush step; it now folds into the flush.)
 
     # »>> this part is excluded from the fizzygum homepage build
     @addPinoutingWidgets()
