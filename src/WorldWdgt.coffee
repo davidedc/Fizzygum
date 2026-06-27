@@ -1360,12 +1360,16 @@ class WorldWdgt extends PanelWdgt
     @recalculateLayouts()
     window.recalculatingLayouts = false
 
-    # (There is no caret scroll-follow step here any more: a caret MOVE enqueues the caret into the flush
-    # above -- CaretWdgt._requestScrollFollow -- and the caret's _reLayout runs the scroll-follow settled
-    # in-line with every other widget, so the cycle is purely process events -> fix coalesced layouts ->
-    # paint, with NO caret special-case and paint still read-only. A plain wheel/scroll does not move the
-    # caret, so the panel still chases it only when the caret MOVES. Cf. the paint-time-caret-resync arc,
-    # which first moved this work out of the paint pass into this post-flush step; it now folds into the flush.)
+    # (There is no caret scroll-follow step here any more: a caret MOVE settles its scroll-follow IN-PLACE,
+    # during the event that moved it -- a discrete click/arrow move self-settles (CaretWdgt.gotoSlot), and a
+    # typing/delete/paste advance settles at its editing handler's tail (CaretWdgt._settleScrollFollow).
+    # The caret enqueues itself (CaretWdgt._requestScrollFollow) and its _reLayout runs the follow in-line with
+    # every other widget, but it is drained by that in-place per-event settle, NOT this end-of-cycle coalesced
+    # flush (the caret is discrete, not a coalesced stream). So the cycle is purely process events fixing layouts
+    # step by step -> fix coalesced layouts -> paint, with NO caret special-case and paint still read-only. A
+    # plain wheel/scroll does not move the caret, so the panel still chases it only when the caret MOVES. Cf. the
+    # paint-time-caret-resync arc, which first moved this work out of the paint pass into a post-flush step; the
+    # Option-C arc folded it into the flush; this arc folds it into the per-event in-place settle.)
 
     # »>> this part is excluded from the fizzygum homepage build
     @addPinoutingWidgets()

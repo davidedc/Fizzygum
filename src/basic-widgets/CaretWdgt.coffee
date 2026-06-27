@@ -128,10 +128,16 @@ class CaretWdgt extends BlinkerWdgt
     # notify target's parent of key event
     @target.escalateEvent "reactToKeystroke", key, code, shiftKey, ctrlKey, altKey, metaKey
     @updateDimension()
-  
+    # The target geometry is now final (reactToKeystroke re-fit done): converge any deferred caret scroll-follow
+    # IN-PLACE, during this keystroke event, rather than leaving it to ride the end-of-cycle flush. (No-op for a
+    # nav/no-move keystroke -- see _settleScrollFollow. Typing/delete enqueue off-settle here, so this is
+    # where their follow settles, AFTER the reactToKeystroke re-fit the inline advance pass had to precede.)
+    @_settleScrollFollow()
+
   processCut: (selectedText) ->
     #console.log "processing cut"
     @deleteLeft()
+    @_settleScrollFollow()   # converge the deferred caret follow in-place (clipboard event, bypasses processKeyDown)
 
 
   # unused
@@ -141,24 +147,26 @@ class CaretWdgt extends BlinkerWdgt
   processPaste: (clipboardText) ->
     #console.log "about to insert text: " + clipboardText
     @insert clipboardText
+    @_settleScrollFollow()   # converge the deferred caret follow in-place (clipboard event, bypasses processKeyDown)
 
   
-  # gotoSlot is the public "move the caret to slot N" API: it SELF-SETTLES -- the inert re-place flushes once,
+  # gotoSlot is the public "move the caret to slot N" API: it SELF-SETTLES -- the move + scroll-follow flush once,
   # DURING the event that moved the caret (the doOneCycle model: process events fixing layouts step by step,
   # then flush coalesced, then paint). Reached cross-widget (world.caret.gotoSlot from StringWdgt/TextWdgt click
   # handlers), by the caret's own click / undo-redo restore, AND by the arrow / Home / End navigation keystrokes
   # (goLeft/goRight/...). Per-keystroke caret navigation is NOT a high-traffic stream, so it does NOT coalesce
   # (contrast setMaxDimCoalesced, for ~50-per-frame drag/scroll STREAMS) -- each keystroke self-settles, one flush
-  # per discrete move.
+  # per discrete move. The follow NEVER rides the end-of-cycle coalesced flush.
   #   _gotoSlotNoSettle does ONLY the layout-free work: clamp the slot, re-place the caret on the target's current
   #   slot coordinate (inert), do one best-effort scroll-follow pass inline (load-bearing for in-place typing --
-  #   see below), and ENQUEUE the caret into the end-of-cycle flush (_requestScrollFollow). The scroll-follow --
-  #   the only layout-MUTATING part -- then runs as the caret's OWN _reLayout, settled in-line with every other
-  #   widget: the flush drains the caret AFTER its target / scroll-panel are settled and iterates the follow to a
+  #   see below), and ENQUEUE the caret for the follow (_requestScrollFollow). The scroll-follow -- the only
+  #   layout-MUTATING part -- then runs as the caret's OWN _reLayout, settled in-line with every other widget: the
+  #   draining flush picks the caret up AFTER its target / scroll-panel are settled and iterates the follow to a
   #   fixed point via the until-loop -- no post-flush special-case, no hand-rolled convergence loop. The core is
-  #   the non-settling member reached where settling is wrong or already provided: (1) insert/delete, where a
-  #   subsequent self-settling @target.setText/deleteSelection flushes the move within the same event; and (2)
-  #   construction (the caret is an orphan, so it defers and settles when first added).
+  #   the non-settling member reached where the immediate flush is wrong: (1) typing/delete/paste, whose advance
+  #   must stay off-settle so its inline pass precedes the keystroke's reactToKeystroke re-fit -- their editing
+  #   handler's tail (_settleScrollFollow) drains the follow in-place at the keystroke's end instead; and
+  #   (2) construction (the caret is an orphan, so it defers and settles when first added).
   gotoSlot: (slot, becauseOfMouseClick) ->
     @_settleLayoutsAfter => @_gotoSlotNoSettle slot, becauseOfMouseClick
 
@@ -174,10 +182,11 @@ class CaretWdgt extends BlinkerWdgt
     # shifts the result (macroStringWdgtInlineTypingRefitsUnderFittingModes). One pass suffices where the
     # follow converges immediately (e.g. a single-line horizontal scroll) ...
     @_oneScrollCaretIntoViewPassNoSettle()
-    # ... and ENQUEUE the caret into the end-of-cycle flush for the cases that need MORE than one pass (a scroll
-    # panel's vertical follow advances only partway per pass): the caret's _reLayout runs the follow on settled
-    # geometry and the until-loop iterates it to convergence. The wheel/scroll path does NOT come through here,
-    # so it never enqueues a follow -- the panel chases the caret only when the caret MOVES.
+    # ... and ENQUEUE the caret for the follow for the cases that need MORE than one pass (a scroll panel's
+    # vertical follow advances only partway per pass): the caret's _reLayout runs the follow on settled geometry
+    # and the until-loop iterates it to convergence, drained by the next IN-PLACE settle (the discrete move's own,
+    # or the editing handler's tail). The wheel/scroll path does NOT come through here, so it never enqueues a
+    # follow -- the panel chases the caret only when the caret MOVES.
     @_requestScrollFollow()
 
     if becauseOfMouseClick and @target.undoHistory?.length == 0
@@ -191,16 +200,19 @@ class CaretWdgt extends BlinkerWdgt
       @show()
       @fullRawMoveTo pos.floor()
 
-  # Schedule THIS caret into the end-of-cycle flush so its _reLayout runs the scroll-follow on settled geometry
-  # -- the caret settles like any other widget whose layout changed, instead of via a post-flush special-case in
-  # doOneCycle. It enqueues ITSELF with the low-level schedule primitive (push + mark invalid), NOT
-  # _invalidateLayout: the caret is inert + free-floating, so it has no parent layout to climb-and-invalidate
-  # (the whole job of _invalidateLayout), and _invalidateLayout's flow-rule throw + careless-push audit both
-  # target CONTENT mutators that forgot to self-settle -- which a deliberate overlay self-schedule is not (it
-  # can't self-settle: the follow is a NoSettle step run by the flush; and the caret does not coalesce). Using
-  # _invalidateLayout here was the trap an earlier attempt fell into: in-pass it threw the flow-rule, off-pass it
-  # registered as a careless end-of-cycle push. The direct schedule is correct in BOTH phases -- inside a pass
-  # the until-loop picks the caret up; outside, the next flush drains it. (See WorldWdgt._recalculateLayoutsBody.)
+  # Schedule THIS caret for a scroll-follow so its _reLayout runs the follow on settled geometry -- the caret
+  # settles like any other widget whose layout changed, drained by the NEXT settle (which is always IN-PLACE,
+  # during the event: a discrete click/arrow move self-settles via gotoSlot/goLeft/goRight; a typing/delete/paste
+  # advance defers to its editing handler's tail, _settleScrollFollow -- see there). The caret never rides
+  # the end-of-cycle coalesced flush (it does not coalesce). It enqueues ITSELF with the low-level schedule
+  # primitive (push + mark invalid), NOT _invalidateLayout: the caret is inert + free-floating, so it has no
+  # parent layout to climb-and-invalidate (the whole job of _invalidateLayout), and _invalidateLayout's flow-rule
+  # throw + careless-push audit both target CONTENT mutators that forgot to self-settle -- which a deliberate
+  # overlay self-schedule is not (it can't self-settle: the follow is a NoSettle step run by the flush; and the
+  # caret does not coalesce). Using _invalidateLayout here was the trap an earlier attempt fell into: in-pass it
+  # threw the flow-rule, off-pass it registered as a careless end-of-cycle push. The direct schedule is correct in
+  # BOTH phases -- inside a pass the until-loop picks the caret up; off-pass the next in-place settle drains it.
+  # (See WorldWdgt._recalculateLayoutsBody.)
   _requestScrollFollow: ->
     if @layoutIsValid then world.widgetsThatMaybeChangedLayout.push @
     @layoutIsValid = false
@@ -222,6 +234,25 @@ class CaretWdgt extends BlinkerWdgt
     if stable
       @markLayoutAsFixed()
     # else: stay layoutIsValid==false -- still in the queue, re-processed after the just-enqueued panel settles
+
+  # Converge the caret's pending scroll-follow IN-PLACE, during the event -- called at the tail of each caret
+  # EDITING-event handler (processKeyDown / processCut / processPaste), once the target geometry is final. The
+  # discrete moves (click/arrow/Home/End) already settle in-place: their public gotoSlot/goLeft/goRight wrap the
+  # advance in _settleLayoutsAfter. The typing/delete/paste advance can't do that -- its inline scroll pass must
+  # precede the keystroke's reactToKeystroke re-fit (§ byte-exact typing, see goLeft/goRight), so it enqueues the
+  # caret OFF-settle (_requestScrollFollow) and the convergence is deferred to here, the keystroke's end. This
+  # drains it now -- in-place, "step by step" per the doOneCycle invariant -- instead of letting it ride the
+  # end-of-cycle coalesced flush (the caret is discrete, not a coalesced stream, so it belongs in the per-event
+  # settle). Reuses the standard in-place settle (_settleLayoutsAfter) with an EMPTY core: the work (the enqueue +
+  # the one inline pass) already happened in the advance; we only need to DRAIN the queue now and let the caret's
+  # _reLayout iterate the follow to a fixed point. No-op when nothing is pending -- a nav keystroke (already
+  # self-settled via gotoSlot), or a keystroke whose reactToKeystroke re-fit happened to self-settle and drain the
+  # caret early; in both cases @layoutIsValid is back to true.
+  _settleScrollFollow: ->
+    # early-return-sanctioned: the guard is the "is a follow pending?" predicate, not a state-skip that belongs in
+    #   a _<name>NoSettle core -- this settle has no core (it is a pure drain of an already-enqueued inert overlay).
+    return if @layoutIsValid
+    @_settleLayoutsAfter => nil
 
   # A SINGLE scroll-follow pass (see _reLayout, which iterates this to a fixed point via the flush). Re-derives
   # pos from the current (settled) geometry, applies the horizontal clamp (which scrolls @target and adjusts where
@@ -253,11 +284,12 @@ class CaretWdgt extends BlinkerWdgt
   
   # Navigation keystrokes SELF-SETTLE (one flush per arrow press, during the event) -- caret navigation is not a
   # high-traffic stream, so it does not coalesce (see the comment on gotoSlot). goLeft / goRight are ALSO called
-  # INTERNALLY (insert -> goRight to advance past the typed char; deleteLeft -> goLeft), where the surrounding
-  # setText / deleteSelection already self-settled and the caret advance must ride the SAME deferred flush as the
-  # original -- self-settling it early reorders the fit (it broke macroStringWdgtInlineTypingRefitsUnderFittingModes:
-  # the advance scroll flushed before updateDimension/escalateEvent). So goLeft/goRight split into a self-settling
-  # public wrapper (the keystroke path) + a non-settling _go*NoSettle core (the internal path). goUp/goDown/goHome/
+  # INTERNALLY (insert -> goRight to advance past the typed char; deleteLeft -> goLeft), where the caret advance
+  # must NOT self-settle early -- doing so reorders the fit (it broke macroStringWdgtInlineTypingRefitsUnderFitting-
+  # Modes: the advance scroll flushed before updateDimension/escalateEvent). The advance instead enqueues the
+  # follow off-settle and lets the editing handler's tail settle it in-place once the reactToKeystroke re-fit is
+  # done (processKeyDown -> _settleScrollFollow). So goLeft/goRight split into a self-settling public
+  # wrapper (the keystroke path) + a non-settling _go*NoSettle core (the internal path). goUp/goDown/goHome/
   # goEnd have NO internal callers, so they self-settle inline via gotoSlot. updateSelection / clearSelectionIf...
   # only touch selection marks (no layout). (end-of-cycle-flush-drawdown CONVERT.)
   goLeft: (shift) ->
