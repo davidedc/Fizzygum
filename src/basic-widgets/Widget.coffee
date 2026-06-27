@@ -3893,6 +3893,12 @@ class Widget extends TreeNode
     # console.error + in-world console), and the world keeps running -- never a freeze.
     if world?._recalculatingLayouts
       throw new Error "FLOWRULE_VIOLATION: _invalidateLayout() during a layout pass by " + (@constructor?.name) + " -- a raw/silent/fullRaw setter must not schedule layout (task #17)"
+    # DEBUG (WorldWdgt.auditPaintTimeLayoutScheduling, default off): PAINT must be READ-ONLY. healingRectangles-
+    # Phase is true only inside updateBroken's paint pass; reaching here then means a widget SCHEDULED layout while
+    # being painted -- crossing the render/layout boundary. Record its ctor for the per-frame paint-schedules log.
+    # (The caret's paint-time scroll-follow, the original such offender, was moved to a post-flush pre-paint step.)
+    if world?.healingRectanglesPhase and world.auditPaintTimeLayoutScheduling and not @isOrphan()
+      (world._paintTimeLayoutSchedules ?= []).push @constructor?.name
     if @layoutIsValid
       world.widgetsThatMaybeChangedLayout.push @
       # DEBUG (WorldWdgt.auditUndeclaredEndOfCycle, default off): an OFF-SETTLE push (not @_inLayoutMutation) on

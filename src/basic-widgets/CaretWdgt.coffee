@@ -6,6 +6,11 @@ class CaretWdgt extends BlinkerWdgt
   slot: nil
   viewPadding: 1
   currentCaretFontSize: nil
+  # set by a caret MOVE (_gotoSlotNoSettle); consumed once per cycle by WorldWdgt.doOneCycle AFTER the
+  # end-of-cycle flush and BEFORE paint, to scroll the caret into view on settled geometry (see
+  # _scrollCaretIntoViewNoSettle). A plain wheel/scroll never sets it, so the panel follows the caret
+  # only when the caret MOVES.
+  _pendingScrollIntoView: nil
 
   constructor: (@target) ->
     # additional properties:
@@ -40,10 +45,17 @@ class CaretWdgt extends BlinkerWdgt
   # Widget.add (was `instanceof CaretWdgt` there). (type-test-elimination campaign)
   skipsAddShadowManagement: -> true
 
+  # The INERT re-sync of the caret to its target: re-size it to the target's font height and re-place it
+  # on the target's CURRENT slot coordinate. The caret is isLayoutInert, so this schedules / mutates NO
+  # layout -- it is READ-ONLY w.r.t. the layout tree and therefore safe to run at PAINT time
+  # (justBeforeBeingPainted). It deliberately does NOT scroll-follow: bringing the caret into view mutates
+  # layout (moves @target / @contents) and must happen out of paint -- see _scrollCaretIntoViewNoSettle and
+  # WorldWdgt.doOneCycle. (Also called from the constructor.)
   adjustAccordingToTargetText: ->
     @updateDimension()
-    @_gotoSlotNoSettle @slot
+    @_repositionToSlotNoSettle()
 
+  # PAINT is read-only: the only caret work here is the inert re-place above (no scroll-follow, no layout).
   justBeforeBeingPainted: ->
     @adjustAccordingToTargetText()
 
@@ -136,20 +148,21 @@ class CaretWdgt extends BlinkerWdgt
     @insert clipboardText
 
   
-  # gotoSlot is the public "move the caret to slot N" API: it SELF-SETTLES -- its @target horizontal-scroll +
-  # scrollCaretIntoView re-fit flushes once, DURING the event that moved the caret (the doOneCycle model: process
-  # events fixing layouts step by step, then flush coalesced, then paint). Reached cross-widget (world.caret.gotoSlot
-  # from StringWdgt/TextWdgt click handlers), by the caret's own click / undo-redo restore, AND by the arrow / Home /
-  # End navigation keystrokes (goLeft/goRight/...). Per-keystroke caret navigation is NOT a high-traffic stream, so
-  # it does NOT coalesce (contrast setMaxDimCoalesced, which is for ~50-per-frame drag/scroll STREAMS) -- each
-  # keystroke self-settles, one flush per discrete move.
-  #   The _gotoSlotNoSettle CORE (non-settling) is reached ONLY where settling is wrong or already provided:
-  #   (1) the PAINT-time re-sync (justBeforeBeingPainted -> adjustAccordingToTargetText), which MUST NOT settle
-  #       mid-paint (it would re-enter recalculateLayouts after the cycle's flush). NB that path can still trip the
-  #       layout seam DURING paint -- a known smell to be addressed separately (end-of-cycle-flush plan, paint-time);
-  #   (2) the insert / delete paths, where a subsequent self-settling @target.setText / deleteSelection flushes the
-  #       caret move within the same event; and
-  #   (3) construction (the caret is an orphan, so it defers and settles when first added).
+  # gotoSlot is the public "move the caret to slot N" API: it SELF-SETTLES -- the inert re-place flushes once,
+  # DURING the event that moved the caret (the doOneCycle model: process events fixing layouts step by step,
+  # then flush coalesced, then paint). Reached cross-widget (world.caret.gotoSlot from StringWdgt/TextWdgt click
+  # handlers), by the caret's own click / undo-redo restore, AND by the arrow / Home / End navigation keystrokes
+  # (goLeft/goRight/...). Per-keystroke caret navigation is NOT a high-traffic stream, so it does NOT coalesce
+  # (contrast setMaxDimCoalesced, for ~50-per-frame drag/scroll STREAMS) -- each keystroke self-settles, one flush
+  # per discrete move.
+  #   _gotoSlotNoSettle does ONLY the layout-free work: clamp the slot, re-place the caret on the target's current
+  #   slot coordinate (inert), and REQUEST a scroll-follow (@_pendingScrollIntoView). The actual scroll-follow --
+  #   the only layout-MUTATING part -- is deferred to WorldWdgt.doOneCycle, which runs it once AFTER the cycle's
+  #   flush (so @target is settled -- doing it inline computed against UN-settled geometry, which is why the old
+  #   code leaned on a paint-time re-sync to finish the job) and BEFORE paint (so paint stays read-only). The core
+  #   is the non-settling member reached where settling is wrong or already provided: (1) insert/delete, where a
+  #   subsequent self-settling @target.setText/deleteSelection flushes the move within the same event; and (2)
+  #   construction (the caret is an orphan, so it defers and settles when first added).
   gotoSlot: (slot, becauseOfMouseClick) ->
     @_settleLayoutsAfter => @_gotoSlotNoSettle slot, becauseOfMouseClick
 
@@ -159,6 +172,57 @@ class CaretWdgt extends BlinkerWdgt
     length = @target.text.length
     @slot = (if slot < 0 then 0 else (if slot > length then length else slot))
 
+    # Scroll-follow the move ONE pass right here, DURING the event (not at paint). This is load-bearing for
+    # in-place TYPING (insert -> _goRightNoSettle): the advance scroll must happen BEFORE the keystroke's
+    # escalateEvent re-fit, which reads the (now-scrolled) target geometry -- deferring it past that re-fit
+    # shifts the result (macroStringWdgtInlineTypingRefitsUnderFittingModes). One pass suffices where the
+    # follow converges immediately (e.g. a single-line horizontal scroll) ...
+    @_oneScrollCaretIntoViewPassNoSettle()
+    # ... and REQUEST a post-flush convergence pass for the cases that need MORE than one (a scroll panel's
+    # vertical follow advances only partway per pass): doOneCycle runs _scrollCaretIntoViewNoSettle once after
+    # the flush, on settled geometry, before paint. The wheel/scroll path does NOT come through here, so it
+    # never requests a follow -- the panel chases the caret only when the caret MOVES.
+    @_pendingScrollIntoView = true
+
+    if becauseOfMouseClick and @target.undoHistory?.length == 0
+      @target.pushUndoState? @slot, true
+
+  # The INERT re-place (no layout): put the caret at the target's current slot coordinate. Shared by the
+  # paint/ctor re-sync (adjustAccordingToTargetText) and every caret move (_gotoSlotNoSettle).
+  _repositionToSlotNoSettle: ->
+    pos = @target.slotCoordinates @slot
+    if pos?
+      @show()
+      @fullRawMoveTo pos.floor()
+
+  # The SCROLL-FOLLOW: bring the caret into view by scrolling @target horizontally and/or the enclosing scroll
+  # panel vertically (ScrollPanelWdgt.scrollCaretIntoView). This MUTATES layout, so it must run OUT of paint:
+  # WorldWdgt.doOneCycle calls it once AFTER the end-of-cycle flush (so @target's geometry is final) and BEFORE
+  # paint (so updateBroken stays read-only), and only when a move set @_pendingScrollIntoView.
+  #   It iterates to a FIXED POINT: ScrollPanelWdgt.scrollCaretIntoView reaches its mark over a FEW passes (its
+  # trailing keepContentsInScrollPanelWdgt clamp advances @contents only PARTWAY toward the target each call), and
+  # the old design leaned on the per-PAINT re-sync to supply those repeated passes across successive frames. Doing
+  # it in ONE place means doing it to convergence HERE -- which is deterministic (same settled geometry in => same
+  # number of passes), unlike a frame-count-dependent multi-frame convergence. A safety cap guards the unlikely
+  # non-convergent case (the loop is bounded either way, so determinism holds).
+  # thin-wrap-exempt: standalone non-settling step run at a controlled point in doOneCycle (no public twin --
+  # settling is provided by the cycle, not a self-settling wrapper).
+  _scrollCaretIntoViewNoSettle: ->
+    cap = 12
+    loop
+      beforeT = @top() ; beforeL = @left()
+      beforeParentT = @parent?.top() ; beforeParentL = @parent?.left()
+      @_oneScrollCaretIntoViewPassNoSettle()
+      cap -= 1
+      # converged once neither the caret nor its (scrolled) container moved on the last pass
+      stable = @top() == beforeT and @left() == beforeL and @parent?.top() == beforeParentT and @parent?.left() == beforeParentL
+      break if stable or cap <= 0
+
+  # A SINGLE scroll-follow pass (see _scrollCaretIntoViewNoSettle, which iterates this to a fixed point). Re-derives
+  # pos from the current (settled) geometry, applies the horizontal clamp (which scrolls @target and adjusts where
+  # the caret lands), re-places the caret, then asks the scroll panel to scroll it vertically into view.
+  # thin-wrap-exempt: one convergence pass of _scrollCaretIntoViewNoSettle (no public twin -- see above).
+  _oneScrollCaretIntoViewPassNoSettle: ->
     pos = @target.slotCoordinates @slot
     if pos?
       if @parent and @target.isScrollable
@@ -174,15 +238,11 @@ class CaretWdgt extends BlinkerWdgt
         if @target.right() < right and right - @target.width() < left
           pos.x += right - @target.right()
           @target.fullRawMoveRightSideTo right
-      #console.log "moving caret to: " + pos
       @show()
       @fullRawMoveTo pos.floor()
 
       if @_amIDirectlyInsideScrollPanelWdgt() and @target.isScrollable
         @parent.parent.scrollCaretIntoView @
-
-    if becauseOfMouseClick and @target.undoHistory?.length == 0
-      @target.pushUndoState? @slot, true
 
   
   # Navigation keystrokes SELF-SETTLE (one flush per arrow press, during the event) -- caret navigation is not a

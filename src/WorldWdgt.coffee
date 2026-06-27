@@ -98,6 +98,15 @@ class WorldWdgt extends PanelWdgt
   auditUndeclaredEndOfCycle: false
   _undeclaredEndOfCyclePushes: nil
 
+  # PAINT must be READ-ONLY: the cycle PROCESSES EVENTS (fixing layouts step by step) -> FIXES the coalesced
+  # layouts (recalculateLayouts) -> PAINTS (updateBroken), with NO layout work at paint. auditPaintTimeLayout-
+  # Scheduling (DEBUG, default off) turns on the check that LOGS every layout (re-)schedule reached DURING the
+  # paint pass (healingRectanglesPhase true) -- i.e. a widget that scheduled layout while being painted, crossing
+  # the render/layout boundary. The caret's paint-time scroll-follow (the original offender) was moved to a
+  # post-flush pre-paint step (CaretWdgt._scrollCaretIntoViewNoSettle + doOneCycle). Off => ~zero overhead.
+  auditPaintTimeLayoutScheduling: false
+  _paintTimeLayoutSchedules: nil
+
   automator: nil
 
   # this is the actual reference to the canvas
@@ -1069,6 +1078,20 @@ class WorldWdgt extends PanelWdgt
     @resetDataStructuresForBrokenRects()
 
     @healingRectanglesPhase = false
+
+    # DEBUG (auditPaintTimeLayoutScheduling, default off): report any layout scheduled DURING this frame's paint
+    # pass, then reset for the next frame. A non-empty log => paint was NOT read-only (a widget scheduled layout
+    # while being painted -- a render/layout boundary crossing). Recorded in Widget._invalidateLayout.
+    if @auditPaintTimeLayoutScheduling and @_paintTimeLayoutSchedules?.length
+      summary = {}
+      for c in @_paintTimeLayoutSchedules
+        summary[c] = (summary[c] ? 0) + 1
+      parts = []
+      for own k, v of summary
+        parts.push k + " x" + v
+      console.log "PAINT-SCHEDULES frame=" + WorldWdgt.frameCount + " total=" + @_paintTimeLayoutSchedules.length + " :: " + parts.join(", ")
+    @_paintTimeLayoutSchedules = nil
+
     if @trackChanges.length != 1 and @trackChanges[0] != true
       alert "trackChanges array should have only one element (true)"
 
@@ -1336,6 +1359,18 @@ class WorldWdgt extends PanelWdgt
     window.recalculatingLayouts = true
     @recalculateLayouts()
     window.recalculatingLayouts = false
+
+    # The caret SCROLL-FOLLOW runs HERE: AFTER the end-of-cycle flush (so the edited text and the caret's
+    # target geometry are settled) and BEFORE paint (so updateBroken stays read-only -- no layout mutation
+    # or scheduling during the paint pass; the owner's invariant: process events fixing layouts, then fix
+    # coalesced layouts, then paint). It fires only when a caret MOVE requested it this cycle
+    # (@_pendingScrollIntoView, set in CaretWdgt._gotoSlotNoSettle) -- a plain wheel/scroll does NOT move the
+    # caret, so the panel does not chase it ("the panel follows the caret only when the caret MOVES").
+    # (paint-time-caret-resync arc: moved out of CaretWdgt.justBeforeBeingPainted, now read-only.)
+    if @caret?._pendingScrollIntoView
+      @caret._pendingScrollIntoView = false
+      @caret._scrollCaretIntoViewNoSettle()
+
     # »>> this part is excluded from the fizzygum homepage build
     @addPinoutingWidgets()
     # this part is excluded from the fizzygum homepage build <<«
