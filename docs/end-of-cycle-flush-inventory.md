@@ -1,5 +1,22 @@
 # End-of-cycle layout-flush — survey report + EXECUTED self-settle conversion
 
+> **✅ CAMPAIGN COMPLETE — 2026-06-27.** The PRODUCTION-careless set is at **ZERO suite-wide**, and a self-tested
+> hard-fail **capstone gate** guards it. The binding measure is the suite-wide PRODUCTION audit
+> (`WorldWdgt.auditUndeclaredEndOfCycle`: an off-settle push on an ATTACHED, non-declared-coalesced widget) — NOT
+> the snapshot-based prelude audit, which MISSES careless pushes that a later same-frame settle drains. That audit
+> found **5** careless mechanisms (3 the prelude flagged + **2 it missed**: `newParentChoice`,
+> `disableDragsDropsAndEditing`). All 5 driven to 0: `createSimpleDocumentScrollPanelWdgt` (raw→public setters),
+> `showResizeAndMoveHandlesAndLayoutAdjusters` (CONVERT, wrapper+core), `CaretWdgt` arrow/Home/End navigation
+> (CONVERT — split wrapper+core so the internal `insert`/`deleteLeft` advance keeps deferring; typing is NOT a
+> high-traffic stream, so it self-settles, does NOT coalesce), `newParentChoice`(+`…WithHorizLayout`) (CONVERT),
+> `disableDragsDropsAndEditing` (ELIMINATE — disable-probe-proven redundant). The ONLY remaining end-of-cycle
+> traffic is the by-design exclusions: ORPHAN (basement re-home, defers+settles on re-attach) + declared-COALESCED
+> (divider drag, `setMaxDimCoalesced`). **CAPSTONE:** `Fizzygum-tests/scripts/end-of-cycle-audit/run-capstone-gate.sh`
+> (runs the suite with the flag on, exit 1 on any careless push; self-tested PASS-clean / FAIL-on-planted-violation).
+> Verified: gauntlet 165/165 (dpr1/dpr2/WebKit + 12 apps), production audit 0/165, dpr2 torture 0 nondeterminism.
+> One benign inspector member-list recapture (`macroDuplicatedInspectorDrivesCopiedTargetOnly`). NEXT (deferred): the
+> paint-time caret re-sync (`justBeforeBeingPainted`) can still schedule layout mid-paint — latent, a separate item.
+
 **Status: SURVEY + FIRST CONVERSION SHIPPED (2026-06-23).** The survey answered the owner's question (*what reaches
 the end-of-cycle layout flush, why isn't it settled, should it be?*); the first conversion then **shipped** and cut
 end-of-cycle traffic −55% (§1, §5b). Behaviour DID change — verified by the full gauntlet + torture.

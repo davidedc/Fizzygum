@@ -4,6 +4,15 @@
 background, the proven `Widget.destroy` playbook, the tooling, commands, code snippets, and gotchas. Read §0 → §3
 before touching code.
 
+> **2026-06-26 — the CONCEPTS moved out; this is now the PLAYBOOK half.** The conceptual material — the
+> end-of-cycle flush model, the CATEGORY rubric (the three faults + the discriminator + macro-driver/orphan/
+> irreducible), the DETECTION toolkit (stack-probe / disable-probe / sharded audit / the `auditUndeclaredEndOfCycle`
+> "careless" set), and the NEW **coalescing** model + the `*Coalesced` public API (`setMaxDimCoalesced`) — now live in
+> **`layout-system-architecture-assessment.md` §2.7** (the canonical, current home). This doc keeps the worked
+> case-study **playbooks** (§3–§3d), the **code patterns** (§5), the **verification protocol** (§6), and the
+> **tips/gotchas** (§8); **§1 and §2 below are now pointers into §2.7.** For the live remaining-work TODO + current
+> numbers, see **`end-of-cycle-flush-endgame-plan.md`**.
+
 **Thesis (refined 2026-06-25):** an empty end-of-cycle queue is the ideal steady state, so each item still landing on
 the per-frame flush is a *smell* — but of one of **THREE distinct faults, each with a different fix**, and naming
 which one is the whole job:
@@ -14,8 +23,12 @@ which one is the whole job:
 2. **ELIMINATE** — **wasted work**: a mutation that schedules a re-fit which *changes nothing* — a freefloating
    child's teardown re-fitting the world, or a layout-inert caret/handle re-fitting its container. Fix: stop
    scheduling it (§3, §3c).
-3. **LEAVE** — genuinely **continuous internal machinery** (pointer hover, a drag/typing stream of raw moves) that no
-   programmatic caller is awaiting; one coalesced settle/frame is the *correct* batching. Fix: allowlist it (§2, §6).
+3. **LEAVE / COALESCE** — genuinely **continuous internal machinery** (pointer hover, a drag/typing stream of raw
+   moves) that no programmatic caller is awaiting; one coalesced settle/frame is the *correct* batching. *(Refined in
+   the current model — `layout-system-architecture-assessment.md` §2.7: a proven stream is **COALESCE** — DECLARE it
+   via a `*Coalesced` public entrypoint, e.g. `setMaxDimCoalesced`, so the audit knows the batching is intentional —
+   not merely "allowlist it". The campaign capstone is the `auditUndeclaredEndOfCycle` audit-fail flip, NOT the older
+   `# end-of-cycle-sanctioned` lint.)*
    **The RAREST verdict, and the hardest to earn** — every "LEAVE" this campaign assigned has so far been wrong (§2
    prior; the owner retracted them all 2026-06-25). Reach for it only with PROOF of a raw event stream, never as a
    default for something that merely looks frequent.
@@ -59,88 +72,36 @@ filename == class name. `nil` == `undefined`. Every class is a global compiled i
 
 ## 1. The layout engine + the end-of-cycle flush (internalize this)
 
-Deferred invalidate-then-settle engine. `Widget.invalidateLayout()` (`src/basic-widgets/Widget.coffee` ~:3749)
-pushes the widget onto `world.widgetsThatMaybeChangedLayout` and climbs to the parent (unless freefloating). The
-settle `WorldWdgt.recalculateLayouts()` (`src/WorldWdgt.coffee` ~:853) drains the queue, calling each dirty
-widget's `_reLayout()`. **Three settle sites:** (1) **end-of-cycle**, once/frame, `WorldWdgt.doOneCycle` ~:1288 —
-**the queue this plan drains**; (2) `mutateGeometryThenSettle` ~:748 (public setter self-settles before returning);
-(3) `settleLayoutsOnceAfter` ~:795 (batch → one settle). **Three mutation tiers:** public self-settling
-(`setExtent`/`add` via tier 2/3) · deferred (bare `invalidateLayout` → end-of-cycle) · raw/silent
-(`silentRawSetExtent`/`fullRawMoveBy` — schedule nothing, used inside passes). `LayoutSpec.ATTACHEDAS_FREEFLOATING
-== 100000` = positioned absolutely, NOT laid out by parent.
-
-**What lands at end-of-cycle = the SUBJECT.** A widget's invalidation survives to the end-of-cycle flush iff no
-tier-2/3 (self-settling) flush drained the queue between the invalidation and `doOneCycle`. So an end-of-cycle
-survivor is, by definition, a mutation that **did not self-settle**. The classification question for each: *should
-it have?*
-
-**Why this matters beyond a counter — the campaign is enforcing a checked architectural invariant: *one flush per
-outermost public mutation.*** The single tier (`_settleLayoutsAfter`, née `mutateGeometryThenSettle`) sets
-`world._inLayoutMutation = true`, runs the mutation core, and flushes `recalculateLayouts()` **exactly once**; its
-re-entrancy guard THROWS (`FLOWRULE_VIOLATION`) the instant a public setter is reached on an *attached* widget while a
-flush/pass is already running. So once you are inside a public entry point's settle, nothing nested can open a second
-flush — internal code is *forced* onto the non-settling `_xNoSettle` cores and the raw/silent setters. **The outermost
-attached public mutation owns the single flush; everything underneath rides it** (sequential, non-nested public calls
-each get their own one flush — they don't interleave, so that's fine). The throw — plus the build-time layering lint
-([A]/[E], which catches the name-recognized internal methods statically) — makes "public self-settles once; low-level
-code never schedules layout" a property the runtime and the build *verify*, not a convention humans must remember.
-That is exactly what keeps this class of stateful layout fix from getting out of control, or worse, **recursing and
-hanging**: `_invalidateLayout` throws when reached mid-pass *because* a container that re-scheduled layout from inside
-the settle once climbed an invalidate back into itself and the `recalculateLayouts` convergence loop never terminated;
-the `catch` around the pass is non-flushing, so the tripwire yields a loud error, never a hang. So each convert /
-eliminate in this plan isn't just shrinking a number — it brings one more flow into that single-flush-per-entry-point
-compliance. (Two riders: the **batch tier** `_settleLayoutsAfterBatch` is the deliberate exception — it ABSORBS nested
-settles to coalesce a genuine multi-add bundle into one flush, so the fully general invariant is "one flush per
-outermost public mutation, whether single or batch"; and the **orphan guard** defers construction, so a detached
-subtree settles *zero* times until it is added.) Driving the end-of-cycle queue down is the **measurable** face of
-getting the settle done *right and minimally*; the throw-checked invariant is the **structural** one — and several
-flows reached only by re-probing a "LEAVE" turned out to be quietly violating it.
+> **→ Moved to `layout-system-architecture-assessment.md` §2.7** (and §2.2 / §2.3 for the per-frame settle spine).
+> The flush model, the *one-flush-per-outermost-public-mutation* invariant + the `_settleLayoutsAfter` throw that
+> enforces it (and the recursion/hang it prevents), the three settle sites, the three mutation tiers, the batch +
+> orphan riders, and the definition of an end-of-cycle survivor now live there as the canonical conceptual reference.
+> Internalize §2.7 before touching code; the rest of THIS doc is the operational playbook that acts on it.
 
 ---
 
 ## 2. The classification rubric (per contributor)
 
-1. **CONTINUOUS / high-frequency** (pointer hover, momentum scroll, per-frame step animation, a drag move stream)?
-   → **LEAVE — but ONLY once PROVEN a raw event stream** (the prior below; this has been the campaign's RAREST correct
-   verdict). One settle/frame is correct batching for a genuine stream; self-settling each event would multiply
-   per-frame settle count for no benefit and risk determinism. Do NOT call something continuous because it is a
-   convenient label — pin the stack and confirm no discrete public mutator is on it.
-2. **Raw/silent synchronous-apply mislabelled** (it applies layout on the spot, never enqueues)? → out of scope.
-3. **DISCRETE one-shot state change** (a menu pick, a button/toggle, collapse, a content edit, a property setter,
-   a re-parent, **a drag/drop gesture**) that defers OR relies on an unrelated event to settle? → **CONVERT *or*
-   ELIMINATE** — and it is *not* automatically a convert. Decide *which* with a **disable-the-mechanism probe** (§3c):
-   no-op the deferred re-fit and run its tests. Byte-identical → the re-fit was **wasted** → ELIMINATE (the caret §3c,
-   the freefloating `destroy` §3). Tests fail → the re-fit is **necessary** → CONVERT it to self-settle (the text
-   setters §3b, the drop gesture §3d). Same ~10-min probe, opposite verdicts.
-4. **Construction / boot**? → expected; the orphan/batch guards handle it. (The audit showed **0** boot survivors —
-   construction self-settles already.)
-
-**A LEAVE verdict that rests on "another mechanism deferred it on purpose" is CIRCULAR — re-classify from scratch.**
-The drag/drop row sat at LEAVE because "the deferred-layout campaign deliberately defers these" — but that campaign's
-goal (push re-fits ONTO the cycle) is the *opposite* of the drawdown's, so its intent is no classification here. Any
-standing LEAVE that cites another arc's design choice — rather than genuine continuity — is worth re-probing; this
-session converted the biggest contributor exactly that way (§3d, the drop: 140 → 80).
-
-**THE PRIOR IS STRONGLY AGAINST LEAVE — the owner RETRACTED every standing LEAVE on 2026-06-25** (inventory §4 banner).
-Track record: drop, GRAB, teardown, collapse and contained-text were ALL once classified *"LEAVE — continuous,
-allowlist it"* and ALL turned out CONVERT or eliminate — not one survived re-probing. So treat "LEAVE" as a verdict
-that must be EARNED by proof (the record is demonstrably a raw event stream — hover / momentum-scroll / typing-move),
-never a default for anything merely frequent-*looking*. The inventory's verdict cells now read **"OPEN — re-probe"** and
-its §6 allowlist is a provisional suspect-list, precisely so no one trusts an unverified leave. Re-probe relentlessly:
-methodically plowing through "LEAVE"s — re-classifying each from scratch — is what has driven this campaign's gains.
-
-**The same skepticism applies ONE level down — distrust a "convert-but-via-batch, single would be too much churn"
-verdict.** Once a discrete contributor is a confirmed convert, the tier is single (`_settleLayoutsAfter`, THROWS on a
-stray nested public setter) vs batch (`_settleLayoutsAfterBatch`, silently ABSORBS them). Batch is a crutch: it works,
-but it tolerates the exact cores-call-cores violation the campaign exists to remove, so it should be the rare fallback,
-not the default. The reflex *"the recipient hooks call public setters I'd have to core-ify — too much churn, keep
-batch"* deserves re-probing just like a circular LEAVE: **SCOPE the splits before believing the churn is
-disproportionate.** A gesture-tail convert's real cost is a PATTERNED set of public-wrapper / `_xNoSettle`-core splits
-(§5 D), and most cores already exist (`add`/`_addNoSettle`, `fullDestroy`/`_fullDestroyNoSettle`,
-`buildAndConnectChildren`/`_buildAndConnectChildrenNoSettle`). This session's drop FIRST landed as batch on a
-"WindowWdgt's chrome rebuild can't go single" belief; scoping the 13 recipients showed **5 reroutes to existing cores +
-3 standard splits** — single worked, byte-identical (§3d). Default to single-over-cores; fall back to batch only when a
-recipient genuinely cannot be cored (a dynamically-nested, open-ended set), and SAY why in a breadcrumb.
+> **→ Moved to `layout-system-architecture-assessment.md` §2.7.** The rubric — the **three faults** (CONVERT /
+> ELIMINATE / COALESCE), the **discriminator** ("is a public API mutator on the actual enqueue stack, returning
+> unsettled?" → CONVERT; a raw move of a widget that can't affect what it dirties → ELIMINATE; a raw event stream from
+> `playQueuedEvents` → COALESCE), and the recognized non-fault categories (macro-driver / orphan-construction /
+> irreducible) — is documented there.
+>
+> Two hard-won campaign *priors* this section used to carry, kept here because they shape every classification (and are
+> echoed in the endgame plan's TRICKS):
+> - **LEAVE/COALESCE is the rarest, hardest-EARNED verdict.** Every standing "LEAVE" this campaign ever assigned (drop,
+>   grab, teardown, collapse, contained-text, childRemoved) was overturned to convert/eliminate. So a careless survivor
+>   is convert/eliminate, and a *genuine* stream is **COALESCE** (declare it via a `*Coalesced` entrypoint) — **never
+>   "exempt"/allowlist** (the owner's zero-careless mandate; see `end-of-cycle-flush-endgame-plan.md`). Earn it only with
+>   PROOF of a raw event stream, never because something "looks continuous."
+> - **Distrust "convert-but-via-batch, single is too much churn."** SCOPE the public-wrapper / `_<name>NoSettle`-core
+>   splits before believing it — most cores already exist. Single (`_settleLayoutsAfter`, which THROWS on a stray nested
+>   public setter, surfacing the cores-call-cores violation) is the goal; batch (`_settleLayoutsAfterBatch`, which
+>   absorbs it silently) is the rare fallback, used only when a recipient genuinely can't be cored (an open-ended
+>   dynamically-nested set) — and SAY why in a breadcrumb. (The §3d drop landed as batch first on a "the window chrome
+>   rebuild can't go single" belief; scoping the 13 recipients showed 5 reroutes + 3 splits — single worked,
+>   byte-identical.)
 
 ---
 
@@ -316,6 +277,10 @@ wrap so the invariant holds everywhere. Full record + verification: `end-of-cycl
 
 ## 4. The audit tooling — regenerate the inventory
 
+> *(The detection **concepts** — the sharded audit, the `auditUndeclaredEndOfCycle` "careless" set, the stack-probe
+> and the disable-probe — are described in `layout-system-architecture-assessment.md` §2.7. This section is the
+> operational recipe for re-running the audit.)*
+
 The committed harness (the behaviour-neutral, inspector-invisible prelude + the SHARDED audit loop + the by-action
 aggregator), the exact **build → run → aggregate → before/after-diff** recipe, the **neutrality gate** (`installed OK:
 165/165`; the sharded runner `failed: 0`), and how to **attribute a new contributor** (add it to the prelude's
@@ -412,6 +377,14 @@ MANY settles run per frame — exactly the risk; gauntlet+torture proves safety.
 ---
 
 ## 7. The current inventory (2026-06-25 audit, post GRAB-convert: **73** records / 64 frames / 14 groups; trajectory 1244 → 564 → 320 → 278 → 253 → 140 → 80 → 73)
+
+> **⚠ STALE — this §7 snapshot is the 2026-06-25 / 73-record state, kept for the CONVERT HISTORY + trajectory only.**
+> Since then the `*Coalesced` API + the `setMaxDim`/`CaretWdgt.gotoSlot`/`InspectorWdgt` converts, the
+> `setMinAndMaxBoundsAndSpreadability` construction ELIMINATE, the `VerticalStackLayoutSpec` + `SimplePlainTextWdgt.set
+> SoftWrap` converts, and the `f4626843` `_reFitContainer` guard-hoist ELIMINATE drove the **careless** set to
+> **~18 records / 8 groups** (master `f4626843`). For the CURRENT records, verdicts, and the ordered remaining-work
+> TODO use **`end-of-cycle-flush-endgame-plan.md`**; for the full by-action audit history use
+> **`end-of-cycle-flush-inventory.md`**. Regenerate ground truth any time with the §4 audit recipe.
 
 > Update (2026-06-25, later same day): the **sizeToText flip** (StringWdgt/TextWdgt `sizeToTextAndDisableFitting`, the
 > last two `_settleLayoutsAfterBatch` call-sites → single-over-cores via the wrapper/core split, §8) is

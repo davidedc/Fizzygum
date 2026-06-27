@@ -226,7 +226,10 @@ class ScrollPanelWdgt extends PanelWdgt
     @_reLayoutChildren() # layout-apply-sanctioned: public content-change endpoint -- see add() (OVERVIEW §11 PROOF 2)
 
 
-  showResizeAndMoveHandlesAndLayoutAdjusters: ->
+  # Override the NON-settling CORE (the public showResizeAndMoveHandlesAndLayoutAdjusters wrapper is inherited from
+  # Widget and self-settles once around the whole show-handles tree). super adds the handles + climbs; @_reLayout
+  # Children re-fits my contents+scrollbars synchronously, riding that outer settle. (end-of-cycle-flush-drawdown.)
+  _showResizeAndMoveHandlesAndLayoutAdjustersNoSettle: ->
     super
     @_reLayoutChildren() # layout-apply-sanctioned: public content-change endpoint -- see add() (OVERVIEW §11 PROOF 2)
 
@@ -818,5 +821,11 @@ class ScrollPanelWdgt extends PanelWdgt
     @dragsDropsAndEditingEnabled = false
 
     @contents.disableDragsDropsAndEditing @
-    @_invalidateLayout()
+    # ELIMINATE (end-of-cycle-flush-drawdown): the "disable editing" menu action used to schedule an OFF-SETTLE
+    # re-fit here (@_invalidateLayout) -- a careless end-of-cycle push (it reaches the flush from the menu trigger,
+    # outside any settle; the suite-wide production audit flagged exactly this site). A disable-probe proved it
+    # REDUNDANT: disabling changes appearance + drop-handling, not this panel's settled geometry, and the cascade's
+    # @contents.disableDragsDropsAndEditing above already did its synchronous work, so the deferred re-fit changed
+    # nothing -- removing it is byte-identical (full gauntlet incl. the 12 panel-locking apps) and clears the
+    # macroLockedDocumentRejectsDrop record. (Was `@_invalidateLayout()`.)
 

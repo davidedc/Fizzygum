@@ -6,7 +6,10 @@ could be improved. It is a companion to `deferred-layout-OVERVIEW.md` (which is 
 deferral *campaign*); this doc steps back and assesses the *engine* the campaign produced.
 
 **State assessed.** Fizzygum master at/after the deferred-layout capstone (`a7463bbc`), with the
-`_reLayout*` method-family naming. Written 2026-06-22.
+`_reLayout*` method-family naming. Written 2026-06-22. *(§2.7 — the end-of-cycle flush's categories,
+detection toolkit, and the coalescing API — was appended 2026-06-26 at master `f4626843`, folding in the
+conceptual core of the end-of-cycle-flush drawdown campaign; the live remaining-work plan is
+`end-of-cycle-flush-endgame-plan.md`.)*
 
 > **Line numbers are approximate — the METHOD NAME is authoritative; `grep` it.** (Same convention as the
 > OVERVIEW; every shipped edit shifts lines.) Every file:line below was read against source while writing this.
@@ -147,7 +150,7 @@ Two caveats keep the mental model exact:
   construction of a *detached* subtree settles **zero** times until it is added — so building innards is flush-free by
   construction. (The end-of-cycle drawdown campaign — `end-of-cycle-flush-drawdown-plan.md` — is the ongoing work of
   bringing every remaining flow into this invariant; re-probing several "LEAVE" verdicts found flows quietly outside
-  it.)
+  it. §2.7 develops the categories, the detection toolkit, and the coalescing API that campaign produced.)
 
 ### 2.3 The settle engine: invalidate **up**, re-layout **down**, iterate to a fixed point
 
@@ -229,6 +232,138 @@ re-entrancy guard; manual cycle-breaking (the `elasticity 0` fix); a 20-minute d
 the `recalcIterationsCap = 100000` backstop that exists to convert a hypothetical non-convergence into a loud
 bail instead of a freeze (~:880). That is a defensible engineering position — but it means convergence is a
 *verified property of the current constraint set*, not a *guaranteed property of the algorithm*.
+
+### 2.7 The end-of-cycle flush: what survives it, the categories, and coalescing
+
+§2.2 established *that* the end-of-cycle flush (site 1, run once per frame by the engine in `doOneCycle`) drains
+everything that invalidated layout *without* self-settling through the public API. This section steps in one level
+closer and assesses *what* legitimately rides that flush versus what is a leak — the vocabulary the **end-of-cycle
+drawdown campaign** settled on, how a survivor is detected, and the one intentional-batching mechanism
+(**coalescing**) the engine now exposes as public API. It is the conceptual companion to the campaign's operational
+docs: `end-of-cycle-flush-drawdown-plan.md` (the worked playbooks + patterns + verification), `end-of-cycle-flush-
+inventory.md` (the by-action audit history), `coalescing-measurement.md` (the measurement harness), and
+`end-of-cycle-flush-endgame-plan.md` (the live remaining-work plan and current numbers).
+
+**An end-of-cycle survivor, precisely.** A widget's `_invalidateLayout` push survives to the end-of-cycle flush iff
+*no* self-settling flush (site 2 per-mutation, or site 3 batch) drained the queue between that push and `doOneCycle`'s
+`recalculateLayouts()`. So a survivor is, by construction, *a layout invalidation that did not self-settle.* Under the
+one-flush-per-outermost-public-mutation invariant (§2.2), an **empty** end-of-cycle queue is the *ideal* steady state —
+so every survivor is worth a question: should it have settled, and if it legitimately should not, *why* is it here?
+The campaign has driven the interaction-frame survivor count from **1244 → ~18 records** answering exactly that,
+contributor by contributor.
+
+**The three faults (the classification rubric).** A survivor is one of three things, each demanding a *different* fix —
+and naming which is the whole job:
+
+| Fault | What it is | The fix |
+|---|---|---|
+| **CONVERT** | a discrete **public API mutator** that failed to self-settle (it defers, or leans on an *unrelated* later event to settle for it). A public mutator must leave the world layout-consistent *on return*; one that doesn't is a contract breach. | wrap its body `@_settleLayoutsAfter => @_<name>NoSettle(…)` — a thin public settle-wrapper over a non-settling core; its high-frequency *internal* callers use the core, so a gesture stream still rides one flush |
+| **ELIMINATE** | **wasted work** — a re-fit that changes nothing: a freefloating child's teardown re-fitting the world; a layout-inert caret/handle re-fitting its container; a container re-fit scheduled while the container is mid its own `_positionAndResizeChildren`; a relayout during construction on an orphan | stop scheduling it — the *narrowest* provably-byte-identical guard |
+| **COALESCE** | a genuine **per-input-event STREAM** (drag-move, wheel, key-repeat) where N mutations land in one frame; deferring them onto the one end-of-cycle flush saves (N−1) flushes/frame | **DECLARE** it via a `*Coalesced` public entrypoint (below). NOT a leak — an intentional, *measured*, *declared* batching |
+
+**The discriminator.** Pin the *actual* enqueue stack (see "Detecting a survivor") and ask: **"is a public API mutator
+on it, returning unsettled?"** Yes → CONVERT. No, and the raw/internal move that enqueued belongs to a widget that
+*cannot affect* the container it dirtied → ELIMINATE. It is a raw event stream draining straight from
+`playQueuedEvents` → COALESCE. Reasoning from the by-action *name* is not enough: the campaign both **converted** the
+contained-text *API* path (a real public-mutator leak) and **eliminated** the visually-identical contained-text *caret*
+path (wasted layout-inert-mover work) — opposite fixes the action label alone would have conflated.
+
+**Three further categories sit alongside the faults** — not themselves leaks to fix, but you must recognize each so you
+don't chase it:
+- **macro-driver** — the SystemTest harness (`theTest_InputEvents_Macro`) building fixtures mid-test. Long treated as
+  "out of scope" because it is test code, not product — but the current direction is to drive these to zero too *where
+  they trace to a product code path* (a real `add` / re-fit the harness merely triggers, which any app would also hit).
+- **orphan / construction** — an off-world, under-construction widget legitimately defers and settles when it is
+  attached (the orphan guard, §2.2). EXCLUDED from the careless set by construction; the audit hook below skips it.
+- **irreducible** — a coalesced detached-subtree record that cannot be skipped *at its seam* because it shares the
+  construction invalidate path. The documented case is `PanelWdgt.childRemoved`'s off-world basement re-home (a pop-up
+  close re-homing a lost widget into the never-painted basement, which is also invalidated by construction-path
+  `_addNoSettle` / raw-move / filter seams that can't be safely orphan-skipped). One such record is known and expected;
+  the mandate-compliant disposal is to *declare* it (below), not to exempt it.
+
+**Why this rubric exists at all — and where it goes.** The interesting architectural point is that this whole
+classification *only exists because* the engine is the deferred work-list settle of §2.3, not a structured
+measure→arrange. In a two-pass toolkit there is no "did this settle?" question — arrange always runs once, top-down.
+Here, *because* invalidation is decoupled from layout (climb-up / relayout-down), every mutation site faces a real
+choice — settle now, ride the flush, or it's wasted — and the campaign's value is making that choice *checked* rather
+than ad-hoc, which is exactly what keeps a system this stateful safe to keep extending. The keystone change in §4.1 (a
+pure measure pass) would dissolve much of it: a container that *measures* its children never mutates-then-reads-back, so
+far fewer sites schedule layout at all, and the residual rubric shrinks to the genuine event streams.
+
+#### Detecting a survivor
+
+Four tools, in increasing precision:
+
+- **The sharded audit** (`scripts/end-of-cycle-audit/run-audit-loop.sh` → `scripts/.scratch/audit/_SUMMARY.md`,
+  ~1.5 min): runs the whole 165-test suite headless with a behaviour-neutral, inspector-invisible prelude, counts
+  end-of-cycle survivors per frame, and attributes each to a by-action *group*. It is **run-to-run noisy by a few
+  records** (the metric counts how layout work is *distributed across frames*, which is wall-clock-sensitive) — so read
+  it as order-of-magnitude and treat "a row → 0" as the signal. Recipe + neutrality gate (`installed OK: 165/165`):
+  `end-of-cycle-audit-tooling.md`.
+- **`WorldWdgt.auditUndeclaredEndOfCycle`** (a DEBUG flag, default off) — the in-engine version of the audit, and the
+  basis of the campaign's eventual *gate*. Its hook in `Widget._invalidateLayout` records the ctor of every push that is
+  OFF-settle (`!world._inLayoutMutation`), ATTACHED (`!@isOrphan()`), and UN-declared (`world._coalescedDeclarationDepth
+  == 0`) into `world._undeclaredEndOfCyclePushes`; `WorldWdgt.recalculateLayouts` then logs them at the end-of-cycle
+  flush as `UNDECLARED-EOC frame=N total=M :: Ctor xK`. This is precisely **the "careless" set** — the set a future
+  gate will reject. Orphan pushes and declared-coalesced pushes are excluded by construction, so what it reports is
+  exactly the convert/eliminate target.
+- **The stack-probe** — the only reliable *localizer*. The audit's `sig` lies: its `shortSig` truncates to ~3 frames
+  AND filters `eval` frames — and since Fizzygum compiles every class in-browser, *every framework method is an `eval`
+  frame* — so it collapses to a useless `Object.playQueuedEvents < e` that hides the real chain. Instead inject a
+  throwaway `PRELUDE_JS` that patches `_invalidateLayout` to `console.log(new Error().stack)` UNFILTERED, gated on
+  `!world._inLayoutMutation` (so you log only genuine off-settle survivors, not the in-settle enqueues a public setter
+  is about to drain). One run names the exact origin line. **Reason from the stack, never the by-action tag** — the tag
+  has repeatedly lied.
+- **The disable-probe** — the convert-vs-eliminate decider. No-op the suspected-redundant re-fit, build, run the suite:
+  byte-identical ⇒ it was wasted ⇒ ELIMINATE; tests fail ⇒ load-bearing ⇒ CONVERT. ~10 minutes, opposite verdicts.
+  (Caveat: a *global* disable-probe verdict can be coarser than the real fix — a "load-bearing" hook can still have a
+  *specific* eliminable leak on a detached / non-contributing subtree, so localize with the stack-probe first. And never
+  generalize an eliminate skip down to a shared primitive without checking the construction path: a blanket
+  `return if @isOrphan()` in `_invalidateLayout` once broke 63 tests, because every widget is an orphan *while being
+  constructed* and those invalidates are load-bearing.)
+
+#### Coalescing: the `*Coalesced` public API
+
+The COALESCE fault is the one that is *not* a bug, and the engine gives it a first-class, auditable home rather than
+letting feature code reach into a private `_<name>NoSettle` core. The surface today is a **single member** —
+`Widget.setMaxDimCoalesced` (the stack-divider drag uses it) — but it establishes the pattern for every future
+per-event-stream mutation.
+
+**Why a declared surface at all.** A stream's mutations *want* to ride the one end-of-cycle flush (that is the whole
+point: N muts/frame → 1 flush), which looks **identical at the invalidate site** to a careless public method that forgot
+to self-settle. Without a declaration the audit cannot tell intentional batching from a leak. `setMaxDimCoalesced` makes
+the intent EXPLICIT and PUBLIC: it declares "this is a deliberately-coalesced per-event-stream mutation; its flush is
+*supposed* to ride the cycle." It is intention-revealing, and any caller (including programmatic ones) may use it — the
+private `_setMaxDimNoSettle` core stays internal-only.
+
+**Mechanism** — three small pieces on `world` (`Widget.coffee` ~:3910–3947, `WorldWdgt.coffee` ~:84–99):
+- `setMaxDimCoalesced(x)` = `if world.coalescingEnabled then @_coalescedDeclare => @_setMaxDimNoSettle x else @setMaxDim x`.
+  So coalescing-ON runs the non-settling core inside a declaration window; coalescing-OFF falls back to the plain
+  self-settling `setMaxDim`.
+- `_coalescedDeclare(coreThunk)` runs the core inside a **declaration window**: `world._coalescedDeclarationDepth += 1`
+  around the thunk (try/finally). While depth > 0, the off-settle invalidates the core schedules are marked INTENTIONAL,
+  so `auditUndeclaredEndOfCycle` does *not* flag them careless. Every future `*Coalesced` entrypoint wraps its core
+  through here; it is nestable and returns the core's value.
+- `world.coalescingEnabled` (default ON) is the **A/B switch**: ON coalesces via the core; OFF self-settles every call
+  (the plain `setMaxDim`). Flip it at runtime to MEASURE whether coalescing is warranted for a given stream. Default
+  ON ⇒ byte-identical to calling the `_NoSettle` core directly, so the API is behaviour-neutral until you choose to
+  measure.
+
+So three tiers coexist for one logical mutation: the bare public `setMaxDim` **self-settles** (one discrete mutation,
+one flush); `setMaxDimCoalesced` **declares-and-rides** (a stream: one flush/frame for N muts); the `_setMaxDimNoSettle`
+core is **internal-only** and feature code must not reach into it directly. This is also the disposal route for an
+*irreducible* survivor: if a record genuinely cannot be converted or eliminated at its seam, the mandate-compliant move
+is to bring it under `_coalescedDeclare` (declare it) so it leaves the careless set — a **declaration**, not an
+allowlist exemption.
+
+**Measuring whether to coalesce.** Whether a stream *earns* a `*Coalesced` entrypoint is a performance question, never a
+correctness one — render happens once per frame *after* all events, so coalesced-vs-self-settle is byte-identical; only
+the flush count per frame differs. The harness in `coalescing-measurement.md` measures mutations-per-frame for a gesture
+at two speeds; the verdict rule: **max ≈ 1 → coalescing saves nothing → use the plain self-settling setter**; **max ≫ 1
+→ coalescing is warranted** (and how much it matters scales with the settle's queue length — a 3-widget settle is cheap,
+a 300-widget one is not, so weigh muts/frame × qlen). Read the **normal**-speed rate as real usage (headless `fastest`
+crams the whole gesture into 1–2 cycles and over-states it). The divider drag measured a median **16 (up to 56)**
+muts/frame at normal speed → coalescing warranted; that worked case study is in the harness doc.
 
 ---
 

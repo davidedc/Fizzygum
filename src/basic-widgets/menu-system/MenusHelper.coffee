@@ -712,8 +712,10 @@ class MenusHelper
   createSimpleDocumentScrollPanelWdgt: ->
     sdspw = new SimpleDocumentScrollPanelWdgt
     world.add sdspw
-    sdspw.fullRawMoveTo new Point 35, 30
-    sdspw.rawSetExtent new Point 370, 325
+    # public setters on the ATTACHED panel self-settle in place (was fullRawMoveTo/rawSetExtent, whose raw
+    # resize on an attached panel tripped the _reFitContainerAfterRawGeometryChange seam into an off-settle re-fit)
+    sdspw.fullMoveTo new Point 35, 30
+    sdspw.setExtent new Point 370, 325
 
   popUpDocumentMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Document"

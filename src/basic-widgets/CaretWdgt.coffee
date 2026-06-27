@@ -136,14 +136,20 @@ class CaretWdgt extends BlinkerWdgt
     @insert clipboardText
 
   
-  # CONVERT (end-of-cycle-flush-drawdown, Option B -- docs/gotoSlot-scoping-investigation.md): gotoSlot is the
-  # public "move the caret to slot N" API (called cross-widget as world.caret.gotoSlot from StringWdgt/TextWdgt
-  # click handlers, and by the caret's own discrete click / undo-redo paths), so it SELF-SETTLES -- its
-  # scrollCaretIntoView content re-fit flushes once per discrete caret move instead of riding the per-frame
-  # end-of-cycle flush. The HIGH-FREQUENCY callers route to the _gotoSlotNoSettle core instead: the arrow /
-  # typing / delete STREAMS (so per-keystroke moves still COALESCE into the one frame flush), the PAINT-time
-  # re-sync (justBeforeBeingPainted -> adjustAccordingToTargetText -- which MUST NOT settle mid-paint: it would
-  # re-enter recalculateLayouts after the cycle's own flush), and construction.
+  # gotoSlot is the public "move the caret to slot N" API: it SELF-SETTLES -- its @target horizontal-scroll +
+  # scrollCaretIntoView re-fit flushes once, DURING the event that moved the caret (the doOneCycle model: process
+  # events fixing layouts step by step, then flush coalesced, then paint). Reached cross-widget (world.caret.gotoSlot
+  # from StringWdgt/TextWdgt click handlers), by the caret's own click / undo-redo restore, AND by the arrow / Home /
+  # End navigation keystrokes (goLeft/goRight/...). Per-keystroke caret navigation is NOT a high-traffic stream, so
+  # it does NOT coalesce (contrast setMaxDimCoalesced, which is for ~50-per-frame drag/scroll STREAMS) -- each
+  # keystroke self-settles, one flush per discrete move.
+  #   The _gotoSlotNoSettle CORE (non-settling) is reached ONLY where settling is wrong or already provided:
+  #   (1) the PAINT-time re-sync (justBeforeBeingPainted -> adjustAccordingToTargetText), which MUST NOT settle
+  #       mid-paint (it would re-enter recalculateLayouts after the cycle's flush). NB that path can still trip the
+  #       layout seam DURING paint -- a known smell to be addressed separately (end-of-cycle-flush plan, paint-time);
+  #   (2) the insert / delete paths, where a subsequent self-settling @target.setText / deleteSelection flushes the
+  #       caret move within the same event; and
+  #   (3) construction (the caret is an orphan, so it defers and settles when first added).
   gotoSlot: (slot, becauseOfMouseClick) ->
     @_settleLayoutsAfter => @_gotoSlotNoSettle slot, becauseOfMouseClick
 
@@ -179,7 +185,18 @@ class CaretWdgt extends BlinkerWdgt
       @target.pushUndoState? @slot, true
 
   
+  # Navigation keystrokes SELF-SETTLE (one flush per arrow press, during the event) -- caret navigation is not a
+  # high-traffic stream, so it does not coalesce (see the comment on gotoSlot). goLeft / goRight are ALSO called
+  # INTERNALLY (insert -> goRight to advance past the typed char; deleteLeft -> goLeft), where the surrounding
+  # setText / deleteSelection already self-settled and the caret advance must ride the SAME deferred flush as the
+  # original -- self-settling it early reorders the fit (it broke macroStringWdgtInlineTypingRefitsUnderFittingModes:
+  # the advance scroll flushed before updateDimension/escalateEvent). So goLeft/goRight split into a self-settling
+  # public wrapper (the keystroke path) + a non-settling _go*NoSettle core (the internal path). goUp/goDown/goHome/
+  # goEnd have NO internal callers, so they self-settle inline via gotoSlot. updateSelection / clearSelectionIf...
+  # only touch selection marks (no layout). (end-of-cycle-flush-drawdown CONVERT.)
   goLeft: (shift) ->
+    @_settleLayoutsAfter => @_goLeftNoSettle shift
+  _goLeftNoSettle: (shift) ->
     if !shift and @target.firstSelectedSlot()?
       @_gotoSlotNoSettle @target.firstSelectedSlot()
       @updateSelection shift
@@ -189,8 +206,10 @@ class CaretWdgt extends BlinkerWdgt
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
     @target.caretHorizPositionForVertMovement = @slot
-  
+
   goRight: (shift, howMany) ->
+    @_settleLayoutsAfter => @_goRightNoSettle shift, howMany
+  _goRightNoSettle: (shift, howMany) ->
     if !shift and @target.lastSelectedSlot()?
       @_gotoSlotNoSettle @target.lastSelectedSlot()
       @updateSelection shift
@@ -200,36 +219,36 @@ class CaretWdgt extends BlinkerWdgt
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
     @target.caretHorizPositionForVertMovement = @slot
-  
+
   goUp: (shift) ->
     if !shift and @target.lastSelectedSlot()?
-      @_gotoSlotNoSettle @target.firstSelectedSlot()
+      @gotoSlot @target.firstSelectedSlot()
       @updateSelection shift
     else
       @updateSelection shift
-      @_gotoSlotNoSettle @target.upFrom @slot
+      @gotoSlot @target.upFrom @slot
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
-  
+
   goDown: (shift) ->
     if !shift and @target.lastSelectedSlot()?
-      @_gotoSlotNoSettle @target.lastSelectedSlot()
+      @gotoSlot @target.lastSelectedSlot()
       @updateSelection shift
     else
       @updateSelection shift
-      @_gotoSlotNoSettle @target.downFrom @slot
+      @gotoSlot @target.downFrom @slot
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
-  
+
   goHome: (shift) ->
     @updateSelection shift
-    @_gotoSlotNoSettle @target.startOfLine @slot
+    @gotoSlot @target.startOfLine @slot
     @updateSelection shift
     @clearSelectionIfStartAndEndMeet shift
-  
+
   goEnd: (shift) ->
     @updateSelection shift
-    @_gotoSlotNoSettle @target.endOfLine @slot
+    @gotoSlot @target.endOfLine @slot
     @updateSelection shift
     @clearSelectionIfStartAndEndMeet shift
   
@@ -336,7 +355,7 @@ class CaretWdgt extends BlinkerWdgt
       # connections "from within", starting a new connections
       # update round
       @target.setText text, nil, nil
-      @goRight false, key.length
+      @_goRightNoSettle false, key.length   # internal advance: rides setText's flush, must NOT self-settle early
       @updateDimension()
       @target.pushUndoState? @slot
   
@@ -370,7 +389,7 @@ class CaretWdgt extends BlinkerWdgt
     else
       text = @target.text
       @target.setText text.substring(0, @slot - 1) + text.substr(@slot), nil, nil
-      @goLeft()
+      @_goLeftNoSettle()   # internal: rides setText's flush, must NOT self-settle early (see goLeft/goRight)
 
     @updateSelection false
     @_gotoSlotNoSettle @slot

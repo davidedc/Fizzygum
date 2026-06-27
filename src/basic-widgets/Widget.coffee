@@ -3058,7 +3058,15 @@ class Widget extends TreeNode
     @_addNoSettle handle, nil, handle.defaultLayoutSpecWhenAddedTo(@)
     world.temporaryHandlesAndLayoutAdjusters.add handle
 
+  # CONVERT (end-of-cycle-flush-drawdown): showing the resize/move handles is a DISCRETE menu/click action, so it
+  # SELF-SETTLES (one flush per outermost public mutation). The handles attach via _addNoSettle (addAndTrackHandle /
+  # addAsSibling*), which only RIDE a settle; the trigger chain (mouseClickLeft -> trigger) provided none, so the
+  # _addNoSettle invalidate rode the per-frame end-of-cycle flush. The recursion to @parent goes through the
+  # NON-settling core so the whole show-handles tree flushes ONCE. (ScrollPanelWdgt overrides the core, not this.)
   showResizeAndMoveHandlesAndLayoutAdjusters: ->
+    @_settleLayoutsAfter => @_showResizeAndMoveHandlesAndLayoutAdjustersNoSettle()
+
+  _showResizeAndMoveHandlesAndLayoutAdjustersNoSettle: ->
     if @isFreeFloating()
       @addAndTrackHandle "resizeHorizontalHandle"
       @addAndTrackHandle "resizeVerticalHandle"
@@ -3081,7 +3089,7 @@ class Widget extends TreeNode
             nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
       if @parent?
-        @parent.showResizeAndMoveHandlesAndLayoutAdjusters()
+        @parent._showResizeAndMoveHandlesAndLayoutAdjustersNoSettle()
 
   # »>> this part is excluded from the fizzygum homepage build
   # currently unused
@@ -3466,25 +3474,24 @@ class Widget extends TreeNode
     # this is what happens when "each" is
     # selected: we attach the selected widget
     @add theWidgetToBeAttached
-    # I just attached the selected widget; if I am a scroll panel my contents changed, so re-fit my
-    # contents + scrollbars -- DEFERRED via the shared _reFitContainer (this menu action runs OUTSIDE any
-    # pass, so it invalidates me; the next doOneCycle re-fits me identically before paint, since my
-    # _reLayout is 'super; @_reLayoutChildren' and _reLayoutChildrenAndScrollbars IS @_reLayoutChildren).
-    # The _reLayoutChildrenAndScrollbars? pre-guard keeps this ScrollPanel-only -- only ScrollPanelWdgt +
-    # subclasses (incl. ListWdgt) define it; any other widget is a no-op (replacing `if @ instanceof
-    # ScrollPanelWdgt`). NB it is intentionally narrower than _reFitContainer's own _reLayoutChildren? gate
-    # (which also matches Window/Stack), so a non-scroll-panel stays a no-op exactly as before.
-    @_reFitContainer() if @_reLayoutChildrenAndScrollbars?
+    # I just attached the selected widget; if I am a scroll panel my contents changed, so re-fit my contents +
+    # scrollbars. SELF-SETTLE it (CONVERT, end-of-cycle-flush-drawdown): this menu action is a DISCRETE public
+    # mutation, so the re-fit must flush at the action, not ride the per-frame end-of-cycle flush. @add already
+    # self-settled the attach; the _reFitContainer re-fit (NEEDED when the widget attaches directly, so @add took
+    # the no-re-fit `super` path) now self-settles too -- one extra flush, idempotent with @add's. The
+    # _reLayoutChildrenAndScrollbars? pre-guard keeps this ScrollPanel-only -- only ScrollPanelWdgt + subclasses
+    # (incl. ListWdgt) define it; any other widget is a no-op (replacing `if @ instanceof ScrollPanelWdgt`). NB it
+    # is intentionally narrower than _reFitContainer's own _reLayoutChildren? gate (which also matches Window/Stack).
+    @_settleLayoutsAfter(=> @_reFitContainer()) if @_reLayoutChildrenAndScrollbars?
 
   # »>> this part is excluded from the fizzygum homepage build
   newParentChoiceWithHorizLayout: (ignored, theWidgetToBeAttached) ->
     # this is what happens when "each" is
     # selected: we attach the selected widget
     @add theWidgetToBeAttached, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    # DEFER my contents/scrollbar re-fit exactly as newParentChoice above, via the shared _reFitContainer
-    # (ScrollPanel-only pre-guard; this menu action runs outside any pass, so the next doOneCycle re-fits
-    # me identically before paint -- _reLayout's 'super; @_reLayoutChildren' == _reLayoutChildrenAndScrollbars).
-    @_reFitContainer() if @_reLayoutChildrenAndScrollbars?
+    # SELF-SETTLE my contents/scrollbar re-fit exactly as newParentChoice above (CONVERT, discrete menu action;
+    # ScrollPanel-only pre-guard; @add already self-settled the attach).
+    @_settleLayoutsAfter(=> @_reFitContainer()) if @_reLayoutChildrenAndScrollbars?
   # this part is excluded from the fizzygum homepage build <<«
 
   attach: ->
