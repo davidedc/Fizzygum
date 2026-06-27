@@ -18,16 +18,17 @@ class HandleWdgt extends Widget
   changeShouldRememberFractionalGeometry: ->
     true
 
-  constructor: (@target = nil, @type = "resizeBothDimensionsHandle") ->
-
-    # some minimum padding with whatever edge we
-    # end up against, it looks better
-    minimumPadding = 2
-
-    if @target?.padding?
-      @inset = new Point Math.max(@target.padding, minimumPadding), Math.max(@target.padding, minimumPadding)
-    else
-      @inset = new Point minimumPadding, minimumPadding
+  # I am NOT given a target to attach to, and I do NOT attach myself. Like every other widget I am built
+  # here and ATTACHED by whoever adds me: `someWidget.add handle` (self-settling, the standard discrete
+  # attach) or `someWidget._addNoSettle handle` (deferred, inside a builder's own settle). defaultLayoutSpec
+  # WhenAddedTo (below) makes me corner-attach to whatever real widget I am added to -- so the caller writes
+  # the uniform `target.add handle`, no layoutSpec and no target-passed-twice. (end-of-cycle CONVERT: a
+  # standalone attach now self-settles -- placed by its OWN flush -- instead of the old off-settle constructor
+  # side-effect that rode the shared per-frame end-of-cycle flush. @target + the padding-aware @inset are now
+  # set in iHaveBeenAddedTo, once the destination -- which IS the target -- is known.)
+  constructor: (@type = "resizeBothDimensionsHandle") ->
+    # default inset; recomputed against the real target's padding in iHaveBeenAddedTo when I corner-attach
+    @inset = new Point 2, 2
     super()
     @color = Color.WHITE
     @noticesTransparentClick = true
@@ -36,7 +37,19 @@ class HandleWdgt extends Widget
     @layoutSpec_cornerInternal_fixedSize = WorldWdgt.preferencesAndSettings.handleSize
     @layoutSpec_cornerInternal_inset = @inset
 
-    @makeHandleSolidWithParentWidget nil, nil, @target
+  # I corner-attach (the corner fixed by my @type) to whatever widget I am added to -- that widget becomes my
+  # resize/move @target. Added to the WORLD or the HAND (a naked desktop handle, or while detached / picked
+  # up) I am free-floating like any grabbed widget. Keying the placement off the destination is what lets
+  # every caller use the uniform `target.add handle` -- no explicit layoutSpec -- and a detach-to-desktop drop
+  # stay free-floating. (The base Widget answer is FREEFLOATING, so only handles place themselves on add.)
+  defaultLayoutSpecWhenAddedTo: (destination) ->
+    if destination == world or destination == world.hand
+      return LayoutSpec.ATTACHEDAS_FREEFLOATING
+    switch @type
+      when "resizeBothDimensionsHandle" then LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT
+      when "moveHandle"                 then LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT
+      when "resizeHorizontalHandle"     then LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT
+      when "resizeVerticalHandle"       then LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
 
   # HandleWdgt is overlay chrome (a resize/move handle), not a content child, so
   # it is excluded from content-bounds and real-children calculations (see
@@ -66,6 +79,16 @@ class HandleWdgt extends Widget
 
 
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
+    # Adopt whoever I was just added to as my resize/move @target -- UNLESS I landed free-floating (on the
+    # world or the hand: a naked desktop handle, or mid-detach), in which case I have no target. The spec was
+    # already resolved by defaultLayoutSpecWhenAddedTo during the add, so @isFreeFloating() tells the two
+    # apart. Recompute the corner inset from the real target's padding now that I know it (the constructor only
+    # had a default 2; for every non-menu attach the construction target used to supply this -- same value).
+    unless @isFreeFloating()
+      @target = whereTo
+      pad = Math.max (@target.padding ? 2), 2
+      @inset = new Point pad, pad
+      @layoutSpec_cornerInternal_inset = @inset
     @moveInFrontOfSiblings()
 
   updateVisibility: ->
@@ -257,26 +280,13 @@ class HandleWdgt extends Widget
     @state = @STATE_NORMAL
     @changed()
 
-  makeHandleSolidWithParentWidget: (ignored, ignored2, widgetAttachedTo)->
-    if widgetAttachedTo?
-      @target = widgetAttachedTo
-      # Attach the handle NON-settling. A handle is isLayoutInert overlay chrome -- excluded from @target's
-      # content-bounds -- so corner-attaching it CANNOT change @target's content layout; it only needs its own
-      # corner position, which the next layout pass computes (the _addNoSettle below invalidates @target, so a
-      # standalone handle settles at end-of-cycle, byte-identical). So this never needs a layout FLUSH, and a
-      # public add() would force one -- which also RE-ENTERS and throws when a builder attaches a handle from
-      # inside its own settle (e.g. InspectorWdgt.buildAndConnectChildren's `@resizer = new HandleWdgt @`).
-      # Mirrors _reFitContainerAfterRawGeometryChange's isLayoutInert skip on the raw-move side.
-      switch @type
-        when "resizeBothDimensionsHandle"
-          @target._addNoSettle @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT
-        when "moveHandle"
-          @target._addNoSettle @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT
-        when "resizeHorizontalHandle"
-          @target._addNoSettle @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT
-        when "resizeVerticalHandle"
-          @target._addNoSettle @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
-      @noticesTransparentClick = true
+  # Menu action ("attach..." -> choose target): corner-attach this handle to the chosen widget. A discrete
+  # user action, so it goes through the public self-settling add() -- the corner placement comes from default
+  # LayoutSpecWhenAddedTo and @target is adopted in iHaveBeenAddedTo (the destination IS the new target). add()
+  # also unlinks me from any previous parent (e.g. the world, if I had been detached). Kept on this name + arg
+  # position because the "attach..." menu dispatches it by string with the chosen target as the 3rd argument.
+  makeHandleSolidWithParentWidget: (ignored, ignored2, widgetAttachedTo) ->
+    widgetAttachedTo?.add @
 
     
   # HandleWdgt menu:

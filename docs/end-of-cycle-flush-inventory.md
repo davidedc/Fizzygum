@@ -72,8 +72,10 @@ un-allowlisted end-of-cycle layout" gate (§8).
 
 ## 4. Q2 + Q3 — Attribution & why-not-settled (the by-action inventory)
 
-> **Current numbers** (2026-06-26 full-suite dpr1 audit, post the `childRemoved` elimination — **38** origin records across
-> **30** interaction frames / 13 groups; trajectory **1244 → 564 → 320 → 278 → 253 → 140 → 80 → 73 → 38**). ALL FIVE settle-tier "stinks" now self-settle via the
+> **Current numbers** (2026-06-27 full-suite dpr1 audit, post the HandleWdgt-as-normal-widget refactor — **12** origin records across
+> **11** interaction frames / 6 groups; trajectory **1244 → 564 → 320 → 278 → 253 → 140 → 80 → 73 → 38 → 36 → 18 → 12** — the
+> 38→36→18 steps were the `VerticalStackLayoutSpec`/`SimplePlainTextWdgt` converts (`e575a776`) and the `_reFitContainer`
+> guard-hoist (`f4626843`); the 18→12 step is the handle refactor below). ALL FIVE settle-tier "stinks" now self-settle via the
 > **single-mutation** `_settleLayoutsAfter`
 > (`buildAndConnectChildren` 2026-06-23; `fullDestroy`/`close`/`collapse`/`unCollapse`
 > 2026-06-24) — this flip is **flush-NEUTRAL** (the records were already deferred/gone) but it ZEROES the
@@ -86,6 +88,26 @@ un-allowlisted end-of-cycle layout" gate (§8).
 > wall-clock-sensitive (a heavy cycle drains several queued events in one frame — see `DETERMINISM.md`), so totals are
 > **run-to-run noisy by a few records** even on a fixed build; read as order-of-magnitude, regenerate any time — see
 > `end-of-cycle-audit-tooling.md`.
+>
+> **2026-06-27 (Handle construction CONVERTED via HandleWdgt-as-normal-widget — RE-AUDIT DONE; total 18 → 12, the
+> 6-record handle-construction group ELIMINATED):** the endgame's Group 1 — `new HandleWdgt(target)` attaching ITSELF
+> inside its constructor (a layout side-effect on `@target` that rode the per-frame end-of-cycle flush; 6 records:
+> `RectangleWdgt` ×5 + `SimpleButtonWdgt` ×1 in the layout/resize tests) — was not narrowly eliminated/converted but
+> **dissolved at the root**: HandleWdgt is now an ORDINARY widget that the CALLER attaches like any other
+> (`target.add handle` self-settles; `target._addNoSettle handle` defers inside a builder's own settle). The corner
+> placement comes from a new general Widget hook **`defaultLayoutSpecWhenAddedTo(destination)`** (base = FREEFLOATING,
+> so every non-handle is byte-identical; HandleWdgt corner-attaches to a real destination, free-floats on the world/
+> hand) — so the standalone attach now self-settles (placed by its OWN flush) and the careless constructor push is
+> gone. `@target` + the padding-aware inset moved into `iHaveBeenAddedTo`. The 3 builders (Window/Inspector/Basement)
+> attach the resizer via the explicit-spec `_addNoSettle` (a direct `_addNoSettle` bypasses `add()`'s default-arg
+> resolution, and `WindowWdgt._addNoSettle` threads the unset spec through a FREE-defaulting intermediate), recording
+> `@resizer` AFTER the add so it stays nil during its own add (byte-identical to the old in-constructor attach). The 5
+> macro tests that built `new HandleWdgt holder/button` now read `holder.add new HandleWdgt`. **NO new settle tier**
+> (an earlier `_settleLayoutsAfterIfOutermost` probe was rejected by the owner as defeating the one-tier discipline —
+> the root cause was the constructor side-effect, not a missing tier). Byte-identical: full gauntlet (dpr1/dpr2/WebKit
+> 165/165 + apps 12/12) + dpr2 torture, modulo ONE benign inspector member-list recapture
+> (`macroDuplicatedInspectorDrivesCopiedTargetOnly` — the 2 new Widget methods shift the alphabetical property list;
+> owner-sanctioned recapture, code not contorted). Audit neutrality 165/165. ([[fizzygum-end-of-cycle-flush-drawdown]].)
 >
 > **2026-06-26 (`PanelWdgt.childRemoved` ELIMINATED — RE-AUDIT DONE; the `childRemoved` action is GONE from the origin
 > records):** the 2 `childRemoved` records were a pop-up-close **lost-widget re-home into the OFF-WORLD basement**

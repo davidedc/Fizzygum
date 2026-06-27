@@ -434,7 +434,13 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @_addNoSettle @contents
 
     if !@resizer?
-      @resizer = new HandleWdgt @
+      # Attach the resizer, then record it. @resizer stays nil DURING its own add so the
+      # `@resizer?.moveInFrontOfSiblings()` in _addNoSettle (above) is a no-op for the resizer
+      # itself -- it only re-fronts the resizer when LATER content is added. (Byte-identical to the
+      # old `@resizer = new HandleWdgt @`, whose in-constructor add also ran while @resizer was nil.)
+      resizer = new HandleWdgt
+      @_addNoSettle resizer, nil, resizer.defaultLayoutSpecWhenAddedTo(@)
+      @resizer = resizer
 
   createAndAddInternalExternalSwitchButton: ->
     if (@contents?.providesAmenitiesForEditing or @alwaysShowInternalExternalButton) and !@internalExternalSwitchButton?

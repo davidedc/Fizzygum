@@ -182,7 +182,7 @@ class WidgetFactory
     lmHolder.fullMoveTo new Point 10 + 60 * 0, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleWdgt lmHolder
+    lmHolder.add new HandleWdgt
 
     # ----------------------------------------------
 
@@ -204,7 +204,7 @@ class WidgetFactory
     lmHolder.fullMoveTo new Point 10 + 60 * 1, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleWdgt lmHolder
+    lmHolder.add new HandleWdgt
 
     # ----------------------------------------------
 
@@ -230,7 +230,7 @@ class WidgetFactory
     lmHolder.fullMoveTo new Point 10 + 60 * 2, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleWdgt lmHolder
+    lmHolder.add new HandleWdgt
 
     # ----------------------------------------------
 
@@ -258,7 +258,7 @@ class WidgetFactory
     lmHolder.fullMoveTo new Point 10 + 60 * 3, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleWdgt lmHolder
+    lmHolder.add new HandleWdgt
 
     # ----------------------------------------------
 
@@ -295,7 +295,7 @@ class WidgetFactory
     lmHolder.fullMoveTo new Point 10 + 60 * 4, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleWdgt lmHolder
+    lmHolder.add new HandleWdgt
 
     # ----------------------------------------------
 
@@ -332,7 +332,7 @@ class WidgetFactory
     lmHolder.fullMoveTo new Point 10 + 60 * 5, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleWdgt lmHolder
+    lmHolder.add new HandleWdgt
 
     # ----------------------------------------------
 
@@ -369,7 +369,7 @@ class WidgetFactory
     lmHolder.fullMoveTo new Point 10 + 60 * 6, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleWdgt lmHolder
+    lmHolder.add new HandleWdgt
 
     # ----------------------------------------------
 
@@ -406,4 +406,4 @@ class WidgetFactory
     lmHolder.fullMoveTo new Point 10 + 60 * 7, 30 + 50 * 1
 
     world.add lmHolder
-    new HandleWdgt lmHolder
+    lmHolder.add new HandleWdgt

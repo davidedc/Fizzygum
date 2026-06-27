@@ -2445,6 +2445,14 @@ class Widget extends TreeNode
     @parent._addNoSettle aWdgt, myPosition, layoutSpec
   # this part is excluded from the fizzygum homepage build <<«
 
+  # The layoutSpec a widget takes when added with NO explicit one -- the default for add() / _addNoSettle()'s
+  # layoutSpec argument. Plain widgets are free-floating; a widget with an intrinsic placement overrides this
+  # so a caller can write the uniform `parent.add child` (no spec at the call site) and still get the right
+  # attachment. The destination is passed so the placement can depend on it (e.g. a HandleWdgt corner-attaches
+  # only to the very widget it resizes -- its @target -- and is free-floating on the world / hand otherwise).
+  defaultLayoutSpecWhenAddedTo: (destination) ->
+    LayoutSpec.ATTACHEDAS_FREEFLOATING
+
   # ===== structural add =====
   # add() is the PUBLIC self-settling entry: it links the widget in through the private,
   # NON-settling _addNoSettle and then flushes layouts once (_settleLayoutsAfter), so a
@@ -2456,7 +2464,7 @@ class Widget extends TreeNode
   # settle, so it neither re-enters the flush guard nor triggers a redundant relayout). They are
   # byte-identical to going through add(): for a fresh non-world child the shadow step is a no-op
   # removeShadow and the fractional step is skipped. See docs/deferred-layout-refit-and-add-design.md (D3).
-  add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
+  add: (aWdgt, position = nil, layoutSpec = aWdgt.defaultLayoutSpecWhenAddedTo(@), beingDropped) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position, layoutSpec, beingDropped
 
   # _addNoSettle -- the COMPLETE add minus the settle. The single NON-settling core behind add() and
@@ -2470,7 +2478,7 @@ class Widget extends TreeNode
   #     being added to itself and the case of
   # ??? TODO a Widget being added to one of its
   #     children
-  _addNoSettle: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
+  _addNoSettle: (aWdgt, position = nil, layoutSpec = aWdgt.defaultLayoutSpecWhenAddedTo(@), beingDropped) ->
 
     # let's check if we are trying to add
     # an ancestor of me below me.
@@ -3039,12 +3047,23 @@ class Widget extends TreeNode
   
   # Widget utilities ////////////////////////////////////////////////////////
   
+  # Create a resize/move HandleWdgt of `type` and corner-attach it to myself (I become its @target), tracking
+  # it in the temporary-adjusters set so it is torn down when handles are hidden. _addNoSettle (not add): a
+  # hover-shown handle rides the showResize caller's frame, byte-identical to the old in-constructor corner-
+  # attach. The explicit defaultLayoutSpecWhenAddedTo(@) is needed because a DIRECT _addNoSettle bypasses add()'s
+  # default-arg resolution (and an intermediate container _addNoSettle, e.g. a windowed target, would otherwise
+  # re-default the unset spec to FREEFLOATING before it reaches the handle).
+  addAndTrackHandle: (type) ->
+    handle = new HandleWdgt type
+    @_addNoSettle handle, nil, handle.defaultLayoutSpecWhenAddedTo(@)
+    world.temporaryHandlesAndLayoutAdjusters.add handle
+
   showResizeAndMoveHandlesAndLayoutAdjusters: ->
     if @isFreeFloating()
-      world.temporaryHandlesAndLayoutAdjusters.add new HandleWdgt(@, "resizeHorizontalHandle")
-      world.temporaryHandlesAndLayoutAdjusters.add new HandleWdgt(@, "resizeVerticalHandle")
-      world.temporaryHandlesAndLayoutAdjusters.add new HandleWdgt(@, "moveHandle")
-      world.temporaryHandlesAndLayoutAdjusters.add new HandleWdgt(@, "resizeBothDimensionsHandle")
+      @addAndTrackHandle "resizeHorizontalHandle"
+      @addAndTrackHandle "resizeVerticalHandle"
+      @addAndTrackHandle "moveHandle"
+      @addAndTrackHandle "resizeBothDimensionsHandle"
     else
       if (@lastSiblingBeforeMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingBeforeMeIsA(StackElementsSizeAdjustingWdgt)
         world.temporaryHandlesAndLayoutAdjusters.add \
@@ -3067,7 +3086,7 @@ class Widget extends TreeNode
   # »>> this part is excluded from the fizzygum homepage build
   # currently unused
   showMoveHandle: ->
-    world.temporaryHandlesAndLayoutAdjusters.add new HandleWdgt @, "moveHandle"
+    @addAndTrackHandle "moveHandle"
   # this part is excluded from the fizzygum homepage build <<«
   
   inform: (msg) ->
