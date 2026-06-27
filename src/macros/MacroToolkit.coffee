@@ -986,24 +986,25 @@ class MacroToolkit
     # topLeftPoint, and RETURNS the panel. Takes NO screenshots (only a test's own sources are scanned for reference names).
     macroSubroutines.add Macro.fromString """
       buildOverflowingScrollPanelWithText_Macro = (topLeftPoint) ->
+        # Build entirely through the PUBLIC widget API (macros must not use raw/silent/fullRaw/private):
+        # attach first, so the public setExtent/setWidth/fullMoveTo SELF-SETTLE and apply in place.
         panel = new ScrollPanelWdgt
-        panel.rawSetExtent new Point 270, 200
         world.add panel
-        panel.fullRawMoveTo topLeftPoint
+        panel.setExtent new Point 270, 200
+        panel.fullMoveTo topLeftPoint
         text = new TextWdgt "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer rhoncus pharetra nulla, vel maximus lectus posuere a. Phasellus finibus blandit ex vitae varius. Vestibulum blandit velit elementum, ornare ipsum sollicitudin, blandit nunc. Mauris a sapien nibh. Nulla nec bibendum quam, eu condimentum nisl. Cras consequat efficitur nisi sed ornare. Pellentesque vitae urna vitae libero malesuada pharetra. Pellentesque commodo, nulla mattis vulputate porttitor, elit augue vestibulum est, nec congue ex dui a velit. Nullam lectus leo, lobortis eget erat ac, lobortis dignissim magna. Morbi ac odio in purus blandit dignissim. Maecenas at sagittis odio."
         # a bare TextWdgt SELF-SIZES as contained text: put it in
         # FIT_BOX_TO_TEXT and it wraps to its own width and grows its HEIGHT to the
         # wrapped content (FLOAT/SCALEDOWN = render at the set font size, never
         # crop). Wrap it to 185px so the tall result OVERFLOWS the 200px panel → a
-        # vertical scrollbar shows.
+        # vertical scrollbar shows. setWidth on the attached FIT_BOX_TO_TEXT text wraps it AND fits the height.
         text.fittingSpec = FittingSpecText.FIT_BOX_TO_TEXT
         text.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
         text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
         text.softWrap = true
-        text.silentRawSetWidth 185
-        text._reLayoutSelf()
         panel.add text
-        text.fullRawMoveTo new Point (topLeftPoint.x + 12), (topLeftPoint.y + 12)
+        text.setWidth 185
+        text.fullMoveTo new Point (topLeftPoint.x + 12), (topLeftPoint.y + 12)
         yield "waitNoInputsOngoing"
         return panel
     """

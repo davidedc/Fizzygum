@@ -82,6 +82,9 @@ const RECALC_WHITELIST = new Set(['doOneCycle', '_settleLayoutsAfter', '_settleL
 
 const isLowLevel = (name) =>
   /^raw[A-Z]/.test(name) || /^silent/.test(name) ||
+  /^fullRaw/.test(name) ||  // fullRawMoveTo / fullRawMoveBy / fullRawMoveWithin — immediate geometry mutators
+                            // (also matched by isImmediateMutator), low-level like raw*/silent*. Kept here so [A]
+                            // governs their bodies and [D] forbids macros from reaching them (same family).
   /^_/.test(name) ||        // leading-underscore = private (incl. __ and the re-layout machinery
                             // _positionAndResizeChildren / _reLayoutScrollbars / _reLayoutChildrenAndScrollbars /
                             // _reLayoutChildren / _reLayoutSelf / _reLayoutDesktop /
@@ -125,28 +128,29 @@ const isLowLevel = (name) =>
 // geometry; removeFromTree is a structural op that legitimately schedules). No escapee -> no rename needed.
 const isImmediateMutator = (name) => /^(raw[A-Z]|silent|fullRaw)/.test(name);
 
-// [D] macro hygiene: a SystemTest macro must not reach into the framework's PRIVATE surface.
-// Forbid calls to _private methods (the re-layout machinery -- _positionAndResizeChildren / _reLayoutScrollbars /
-// _reLayoutChildren / _refreshScrollPanelWdgtOrVerticalStackIfIamInIt / _amIDirectlyInside* -- and any
-// future _-method). This is the gate that would have caught the original 16-macro mess.
-// NOT (yet) forbidden: the immediate raw/silent geometry API (rawSet*/fullRaw*/silent*, used for
-// legitimate construction-time measure-and-size read-back). Per owner: these are "needed now"; at the
-// END of the deferred-layout plan they get public self-settling alternatives and this rule tightens to
-// forbid them too (raw|silent|fullRaw).
-//   TIGHTENING ASSESSED — NOT YET RIPE (lint-ratchet plan Phase 3, 2026-06-25): a full macro audit found
-//   the ONLY remaining raw/silent macro uses are 6 silentRawSetWidth/silentRawSetHeight calls, all the
-//   SAME measure-and-size read-back on an ORPHAN, in 3 macros: macroTextRelayoutsCorrectlyOnResize,
-//   macroBareTextWidgetDropShadowRestAndDrag, macroBoxTransparencyAndColorChanging. Each does
-//   silentRawSetWidth W -> breakTextIntoLines (measure the wrapped height AT W) -> silentRawSetHeight
-//   wrappedHeight, before world.add. No behaviour-preserving public alternative exists: setExtent needs
-//   both dims up front, but the height is DERIVED from the width just set (chicken-and-egg), and the
-//   widget is an orphan (the public setters' settle would no-op anyway via the orphan guard, but they
-//   are not byte-identical to silent). Tightening now would force these into a worse pattern -> DECLINED.
-//   Re-ripens only once a public "size to wrapped text at width W" construction helper exists.
-// The former reLayout() carve-out is now CLOSED: this arc renamed reLayout -> _reLayoutSelf (private) and
-// removed the macro calls, so the _-check below already forbids it (the planned tightening, achieved here).
+// [D] macro hygiene: a SystemTest macro must drive the world through the PUBLIC widget API ONLY -- never
+// the framework's private (_) surface, nor the immediate-mutator geometry API (raw*/silent*/fullRaw*).
+// HARD ban, no sanctioned escape. Two reasons: (1) the raw/silent/fullRaw setters bypass the layout settle,
+// so a macro poking one on an ATTACHED widget leaks an off-settle container re-fit onto the per-frame
+// end-of-cycle flush (the end-of-cycle drawdown); (2) a macro reaching past the public API is testing
+// through a back door instead of the surface a user actually drives. This is also the gate that catches the
+// original 16-macro private-call mess.
+//
+// The one historical carve-out -- the construction "measure-and-size" read-back (size a soft-wrapping text
+// to its wrapped HEIGHT at a chosen WIDTH: silentRawSetWidth W -> measure -> silentRawSetHeight) -- is now
+// CLOSED. The fix is to ATTACH the widget FIRST (to its end destination, or the desktop) and use the PUBLIC
+// setters: an attached setWidth SELF-SETTLES, so the text wraps in place and its height is then readable,
+// then setHeight (or just let the container fit it). The orphan-before-add trick existed only to avoid a
+// settle during construction; attaching first makes the settle legitimate. (If some public geometry method
+// genuinely cannot work on an orphan, it should THROW on an orphan rather than invite a raw workaround.)
+//
+// Scope: BOTH the test macros (tests/*/*_automationCommands.js, scanned whole-file -- they are ~all macro
+// source) AND the shared macro VERBS in src/macros/MacroToolkit.coffee -- but for the latter only the
+// `Macro.fromString """..."""` heredoc bodies (the L1/L2 toolkit METHODS around them are framework code that
+// legitimately uses the low-level API).
 const MACROS_DIR = path.join(__dirname, '..', '..', 'Fizzygum-tests', 'tests');
-const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*)\b/;
+const MACRO_VERBS_FILE = path.join(SRC, 'macros', 'MacroToolkit.coffee');
+const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*|silent\w*|fullRaw\w*)\b/;
 
 // [G] the STRUCTURAL self-settling-wrapper rule (the deferred-layout "cores call cores" discipline,
 // made static). [A] above forbids a low-level method from DIRECTLY calling the 5 geometry setters /
@@ -375,14 +379,27 @@ function collectMacros(dir, out) {
 // Scan a macro test source for forbidden private/low-level calls (rule D). The macro CoffeeScript
 // lives in a backtick string inside this .js; a per-line `#`-comment strip is enough to avoid the
 // narrative comments (which legitimately mention e.g. adjustContentsBounds / @fullRawMoveWithin).
-function checkMacroFile(file, violations) {
+// heredocOnly: scan only the `Macro.fromString """..."""` bodies (for MacroToolkit.coffee, whose
+// surrounding L1/L2 toolkit methods are framework code). When false, scan the whole file (the test
+// automationCommands.js are ~all macro source).
+function checkMacroFile(file, violations, heredocOnly) {
   const rel = path.relative(path.join(__dirname, '..', '..'), file);
   const lines = fs.readFileSync(file, 'utf8').split('\n');
+  let inHeredoc = false;
   for (let n = 0; n < lines.length; n++) {
-    const hash = lines[n].indexOf('#');
-    const code = hash >= 0 ? lines[n].slice(0, hash) : lines[n];
+    const raw = lines[n];
+    if (heredocOnly) {
+      if (!inHeredoc) {
+        if (/Macro\.fromString\s+"""/.test(raw)) inHeredoc = true;  // opener; its own line has no body call
+        continue;
+      }
+      if (/^\s*"""\s*$/.test(raw)) { inHeredoc = false; continue; }  // lone closing """
+    }
+    const hash = raw.indexOf('#');
+    const code = hash >= 0 ? raw.slice(0, hash) : raw;
     const m = code.match(MACRO_FORBIDDEN_CALL);
-    if (m) violations.push(`[D] macro calls private/low-level .${m[1]}()  — ${rel}:${n + 1}`);
+    if (m) violations.push(`[D] macro calls private/low-level .${m[1]}() — ${rel}:${n + 1} `
+      + `(use the PUBLIC API; for measure-and-size, attach the widget first then setExtent/setWidth/fullMoveTo)`);
   }
 }
 
@@ -414,6 +431,11 @@ function main() {
     for (const f of macros) {
       try { checkMacroFile(f, violations); }
       catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
+    }
+    // also scan the SHARED macro verbs in MacroToolkit.coffee (heredoc bodies only)
+    if (fs.existsSync(MACRO_VERBS_FILE)) {
+      try { checkMacroFile(MACRO_VERBS_FILE, violations, true); macroCount++; }
+      catch (e) { console.error(`check-layering: operational error in ${MACRO_VERBS_FILE}:`, e.message); process.exit(2); }
     }
   }
   if (warnings.length) {
