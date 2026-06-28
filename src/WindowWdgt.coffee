@@ -34,15 +34,50 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   internalExternalSwitchButton: nil
   alwaysShowInternalExternalButton: nil
 
-  # §4.1 pure measure (Stage B STUB -- Stage D replaces this with the real window measure:
-  # content measured at availW + chrome). A window's height-at-width comes from its arrange
-  # (_positionAndResizeChildren reflows content + chrome), the tangled Stage-D case. For now
-  # return the current extent, which (a) overrides the inherited stack measure so a window-in-
-  # stack does NOT run that measure on its non-stack children (which throws), and (b) is only
-  # APPROXIMATE: a window-in-stack is not yet byte-exact in a parent's measure, so a parent
-  # must not consume it until Stage D.
+  # §4.1 pure measure (Stage D): a window's preferred height-at-width, side-effect-free (no
+  # @bounds write, no seam) -- it MIRRORS the steady-state _positionAndResizeChildren WITHOUT
+  # mutating anything, so a parent (a stack/scroll holding this window) can MEASURE this window
+  # instead of mutating-it-and-reading-the-applied-height-back. Replaces the Stage-B stub.
+  #
+  #   window height = content height-at-its-allotted-width + title/resizer chrome
+  #
+  # - chrome (== the arrange's partOfHeightUsedUp): the titlebar (closeIcon + 2*padding) plus the
+  #   bottom margin, which differs by whether the resizer may overlap the contents -- the two
+  #   branches mirror _positionAndResizeChildren's chrome calc exactly.
+  # - content height: when the content sets its height FREELY (a scroller / slider / document fills
+  #   whatever height the window is dragged to), the height is the window's OWN height minus chrome
+  #   (mirrors the contentsRecursivelyCanSetHeightFreely branch); otherwise the content DICTATES the
+  #   height (wrapping text, a stack, an aspect widget), so we RECURSE into its measure at the width
+  #   it gets in the window -- getWidthInStack(availW - 2*padding), which reproduces the arrange's
+  #   no-arg getWidthInStack() since availableWidthForContents() == width() - 2*padding.
+  # contentsRecursivelyCanSetHeightFreely is width-independent, so testing it here (before the
+  # recursion) matches the arrange's post-width-set test. A collapsed window is just its titlebar.
   preferredExtentForWidth: (availW) ->
-    new Point (availW ? @width()), @height()
+    # No content-derived measure yet -- this window is mid FIRST content-placement
+    # (contentNeverSetInPlaceYet), so its own / nested content specs may be uninitialised (their
+    # getWidthInStack would divide-by-zero to a NaN measure). Report the current extent, mirroring
+    # the arrange's own construction-transient branch. This is what keeps a NESTED window's measure
+    # finite when an outer window recurses into it DURING the inner window's construction.
+    if @contentNeverSetInPlaceYet then return new Point (availW ? @width()), @height()
+    closeIconSize = 16
+    if @contents? and !@contents.collapsed
+      spec = @contents.layoutSpecDetails
+      # A content transiently WITHOUT its layoutSpec (mid drop/delete) has no derivable measure either --
+      # keep the measure total and report the current extent.
+      if !spec? then return new Point (availW ? @width()), @height()
+      if spec.resizerCanOverlapContents
+        chrome = Math.round(closeIconSize + @padding + @padding) + 2 * @padding
+      else
+        chrome = Math.round(closeIconSize + @padding + @padding) + 3 * @padding + WorldWdgt.preferencesAndSettings.handleSize
+      if @contentsRecursivelyCanSetHeightFreely()
+        desiredHeight = Math.round @height() - chrome
+      else
+        recommendedElementWidth = spec.getWidthInStack(availW - 2 * @padding)
+        desiredHeight = @contents.preferredExtentForWidth(recommendedElementWidth).y
+      return new Point availW, desiredHeight + chrome
+    else if @contents?.collapsed
+      return new Point availW, Math.round(closeIconSize) + @padding + @padding
+    return new Point availW, @height()
 
   # TODO passing the @labelContent doesn't quite work, when
   # you add a widget to the window it overwrites the

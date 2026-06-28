@@ -145,7 +145,9 @@ class SimpleVerticalStackPanelWdgt extends Widget
     totalHeight = 0
     for widget in children
       if @constrainContentWidth
-        childWidth = widget.layoutSpecDetails.getWidthInStack(availForContents)
+        # A child transiently without its layoutSpec (mid drop/delete) gets the raw available width --
+        # keeps the measure TOTAL (never throws), mirroring WindowWdgt.preferredExtentForWidth's guard.
+        childWidth = widget.layoutSpecDetails?.getWidthInStack(availForContents) ? availForContents
         measured = widget.preferredExtentForWidth?(childWidth)
         childHeight = measured?.y ? widget.height()
       else

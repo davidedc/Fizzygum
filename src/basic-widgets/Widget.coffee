@@ -755,6 +755,17 @@ class Widget extends TreeNode
       @_reLayout()
     @height()
 
+  # §4.1 pure measure -- the side-effect-free counterpart of rawSetWidthSizeHeightAccordingly above:
+  # "what extent would I take at this available width?", computed WITHOUT mutating @bounds or firing the
+  # re-fit seam, so a parent can MEASURE a child instead of sizing-it-then-reading-the-height-back. The
+  # BASE default is for a widget whose height is INVARIANT under width (a plain box, an icon, a menu): its
+  # height at any width is just its current height. Width->height-coupled widgets OVERRIDE it with their
+  # real measure -- TextWdgt (wrapped-text height), SimpleVerticalStackPanelWdgt (Sigma of children's),
+  # WindowWdgt (content + chrome), AnalogClockWdgt / KeepsRatioWhenInVerticalStackMixin (aspect). Reading
+  # @height()/@width() here is allowed: those are STABLE applied geometry, NOT a mutate-then-read-back.
+  preferredExtentForWidth: (availW) ->
+    new Point (availW ? @width()), @height()
+
   # note that using this one, the children
   # widgets attached as floating don't move
   rawSetBounds: (newBounds) ->
