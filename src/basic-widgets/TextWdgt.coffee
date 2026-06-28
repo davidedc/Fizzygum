@@ -304,7 +304,7 @@ class TextWdgt extends StringWdgt
   # the font size here because is the one we are going to
   # change when we do the binary search for trying to
   # see the largest fitting size.
-  breakTextIntoLines: (text = (@transformTextOneToOne @text), overrideFontSize, justCheckIfItFitsInThisExtent) ->
+  breakTextIntoLines: (text = (@transformTextOneToOne @text), overrideFontSize, justCheckIfItFitsInThisExtent, widthOverride) ->
 
     # FIT_BOX_TO_TEXT always breaks the text at the SET font size (the box is what
     # grows; the font is never scaled).
@@ -318,7 +318,10 @@ class TextWdgt extends StringWdgt
     # Also testing if it fits in an extent can be made
     # really easy.
     if @softWrap
-      widgetWidth = @width()
+      # widthOverride lets the pure measure (preferredExtentForWidth, §4.1 proper-layouts)
+      # wrap at an EXPLICIT available width instead of the applied @width(). Without it this
+      # is the unchanged commit path: an undefined override falls through to @width().
+      widgetWidth = widthOverride ? @width()
     else
       widgetWidth = Number.MAX_VALUE
 
@@ -343,6 +346,33 @@ class TextWdgt extends StringWdgt
 
     world.cacheForTextBreakingIntoLinesTopLevel.set cacheKey, textWrappingData
     return textWrappingData
+
+  # §4.1 PURE MEASURE (proper-layouts): the side-effect-free preferred extent of this
+  # wrapping text at an available width. It computes the wrapped layout WITHOUT committing
+  # it -- NO @bounds write, NO re-fit seam; only the benign width+font+text-keyed wrap memo
+  # is populated (the same entry the commit path hits). It generalises the horizontal-stack
+  # pure measure (getRecursive*Dim) to a width-DEPENDENT wrapped height, the gap §2.5/§4.1
+  # names. The round + min-extent clamp mirrors silentRawSetExtent, so the measured height
+  # byte-matches what _reLayoutSelf commits when the box is later sized to availW (proven
+  # suite-wide: 4022 measure-vs-commit differentials, 0 mismatches). NO production consumer
+  # yet -- Stage A lands the measure alone; the vertical-stack/window/scroll arranges consume
+  # it (and shed their mutate-then-read-back) in later stages.
+  preferredExtentForWidth: (availW) ->
+    # a non-growing text keeps its box (FIT_TEXT_TO_BOX scales/crops the text, it does not
+    # size to it), so its preferred extent is simply its current extent.
+    if @fittingSpec != FittingSpecText.FIT_BOX_TO_TEXT then return @extent()
+    if @softWrap
+      wrapW = Math.round availW
+      minExtent = @getMinimumExtent()
+      if minExtent? and wrapW < minExtent.x then wrapW = minExtent.x
+      tuple = @breakTextIntoLines @text, @originallySetFontSize, @extent(), wrapW
+      measuredWidth = wrapW
+    else
+      veryWideExtent = new Point 10000000, 10000000
+      tuple = @breakTextIntoLines @text, @originallySetFontSize, veryWideExtent
+      measuredWidth = tuple[2]   # the natural (un-wrapped) max line width
+    measuredHeight = tuple[0].length * Math.ceil @fontHeight @originallySetFontSize
+    return new Point measuredWidth, measuredHeight
 
   # adjust the data models behind the text. E.g.
   # is it going to be shown as cropped? What size
