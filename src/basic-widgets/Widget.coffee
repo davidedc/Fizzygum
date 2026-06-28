@@ -1156,6 +1156,30 @@ class Widget extends TreeNode
             result = result.merge child.fullBounds()
     result
 
+  # §4.1 Stage C (proper-layouts): the side-effect-free counterpart of subWidgetsMergedFullBounds above --
+  # the merged bounds of my children with each child's SIZE taken from its pure preferredExtentForWidth
+  # measure (min-extent-clamped, as silentRawSetExtent applies on commit) instead of its just-mutated applied
+  # extent, at the child's current position. A scroll panel consumes this to size its content frame WITHOUT
+  # first resizing my children and reading the result back -- the mutate-then-read-back the re-fit seam exists
+  # for (assessment §2.4). Seeded IDENTICALLY to subWidgetsMergedFullBounds (child[0] even if inert) so a
+  # leading inert child contributes the same; byte-identical to it at the fixed point, where measured extent
+  # == applied extent (Stage-C probe: 0/1429 converged mismatches). childMeasureWidth = the width to measure
+  # each child at (the caller subtracts its own padding). SimpleVerticalStackPanelWdgt overrides this to also
+  # derive child POSITIONS from measures (its children's positions are layout-derived, not stable state).
+  subWidgetsMergedPreferredBounds: (childMeasureWidth) ->
+    result = nil
+    if @children.length
+      result = @children[0].bounds
+      @children.forEach (child) ->
+        if !child.isLayoutInert?()
+          measured = child.preferredExtentForWidth?(childMeasureWidth)
+          ext = if measured? then measured else child.extent()
+          minE = child.getMinimumExtent?()
+          w = if minE? then Math.max(ext.x, minE.x) else ext.x
+          h = if minE? then Math.max(ext.y, minE.y) else ext.y
+          result = result.merge new Rectangle child.left(), child.top(), child.left() + w, child.top() + h
+    result
+
   # does not take into account orphanage or visibility
   fullBounds: ->
     if @cachedFullBounds?

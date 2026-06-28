@@ -158,6 +158,49 @@ class SimpleVerticalStackPanelWdgt extends Widget
       totalHeight = Math.max totalHeight, @height()
     return new Point availW, totalHeight
 
+  # §4.1 Stage C (proper-layouts) override of Widget.subWidgetsMergedPreferredBounds: my children's merged
+  # bounds derived PURELY from measures -- I compute each child's SIZE (preferredExtentForWidth) AND POSITION
+  # (the SAME cumulative-stack + alignment arithmetic as _positionAndResizeChildren below, but WITHOUT
+  # applying it), so a scroll-panel parent can size its content frame without my children having been
+  # resized+moved first. Unlike the base (which reads stable applied positions of a non-laying-out panel's
+  # children), a stack's child positions are layout-derived, so they are RE-DERIVED here from measured
+  # heights. availW = my available width (I subtract my own padding, exactly as the arrange does). Sizes are
+  # min-extent-clamped to match silentRawSetExtent. Byte-identical to subWidgetsMergedFullBounds at the fixed
+  # point (Stage-C probe: 0/1429 converged mismatches). NB the tight=false viewport grow in
+  # preferredExtentForWidth is deliberately NOT applied here -- the scroll panel does its own viewport grow,
+  # and the frame wants the NATURAL children union.
+  subWidgetsMergedPreferredBounds: (availW) ->
+    kids = @childrenNotHandlesNorCarets()
+    return nil if kids.length == 0
+    avail = (availW ? @width()) - 2 * @padding
+    merged = nil
+    cumH = 0
+    for widget, i in kids
+      if @constrainContentWidth
+        recW = widget.layoutSpecDetails?.getWidthInStack(avail) ? avail
+        measured = widget.preferredExtentForWidth?(recW)
+        h = measured?.y ? widget.height()
+        w = recW
+        if widget.layoutSpecDetails?.alignment == 'right'
+          left = @left() + @width() - @padding - recW
+        else if widget.layoutSpecDetails?.alignment == 'center'
+          left = @left() + Math.floor (@width() - recW) / 2
+        else
+          left = @left() + @padding
+      else
+        h = widget.height()
+        w = widget.width()
+        left = @left() + @padding
+      minE = widget.getMinimumExtent?()
+      if minE?
+        h = Math.max h, minE.y
+        w = Math.max w, minE.x
+      top = @top() + (i + 1) * @padding + cumH
+      r = new Rectangle left, top, left + w, top + h
+      merged = if merged? then merged.merge r else r
+      cumH += h
+    merged
+
   _positionAndResizeChildren: ->
     @padding = 5
 

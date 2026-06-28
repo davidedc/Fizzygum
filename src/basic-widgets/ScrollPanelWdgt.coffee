@@ -358,7 +358,24 @@ class ScrollPanelWdgt extends PanelWdgt
           # position clamp self-settles in <=2 passes once this stops). The genuine content-height read-back is
           # subBounds itself, retired only when a later phase gives the arrange a pure measure of its children.
 
-    subBounds = @contents.subWidgetsMergedFullBounds()?.ceil()
+    # §4.1 Stage C (proper-layouts): a content-sizing scroll panel (text-wrapping / vertical-stack / plain-text)
+    # derives its content frame from a PURE measure of @contents's children (subWidgetsMergedPreferredBounds)
+    # rather than mutating them and reading their merged APPLIED bounds back. This breaks the frame-sizing's
+    # dependency on the children having been resized first -- the mutate-then-read-back the re-fit seam exists
+    # for (assessment §2.4) -- yet is byte-identical (measured extent == applied at the fixed point; Stage-C
+    # probe 0/1429 converged mismatches). The stack measures at its own width (it subtracts its own padding);
+    # a bare text panel measures its children at the scroll-padding-inset width (== the rawSetWidth re-wrap
+    # above). The else-branch (folder / toolbar) is NOT a content-sizing target and keeps the applied read-back.
+    isContentSizing = @isTextLineWrapping or
+     (@ instanceof SimplePlainTextScrollPanelWdgt) or
+     (@ instanceof SimpleVerticalStackScrollPanelWdgt)
+    if isContentSizing
+      if @contents instanceof SimpleVerticalStackPanelWdgt
+        subBounds = @contents.subWidgetsMergedPreferredBounds(@contents.width())?.ceil()
+      else
+        subBounds = @contents.subWidgetsMergedPreferredBounds(@contents.width() - totalPadding)?.ceil()
+    else
+      subBounds = @contents.subWidgetsMergedFullBounds()?.ceil()
     if subBounds
 
       # add-in the content's own external padding
@@ -376,9 +393,7 @@ class ScrollPanelWdgt extends PanelWdgt
       # components in it, then we add the minimum space needed to fill
       # the viewport, so we never end up with empty space filling the stack
       # beyond the height of the viewport.
-      if @isTextLineWrapping or
-       (@ instanceof SimplePlainTextScrollPanelWdgt) or
-       (@ instanceof SimpleVerticalStackScrollPanelWdgt)
+      if isContentSizing
         newBounds = subBounds.expandBy(padding).ceil()
 
         # ok so this is tricky: say that you have a document with
