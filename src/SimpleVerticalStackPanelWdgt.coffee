@@ -133,6 +133,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
 
     childrenNotHandlesNorCarets.forEach (widget) =>
       verticalPadding += @padding
+      elementHeight = nil   # set in the else-branch from the handed-forward resize result; see stackHeight += below
 
       if !@constrainContentWidth
         # if the stack doesn't constrain the positions of the
@@ -154,7 +155,10 @@ class SimpleVerticalStackPanelWdgt extends Widget
         # recalculateLayouts cycle) rawSetWidthSizeHeightAccordingly settles a deferred-layout
         # child IN PLACE (synchronous _reLayout, no invalidate-climb), so this
         # _positionAndResizeChildren is a fixed point -- see Widget.rawSetWidthSizeHeightAccordingly.
-        widget.rawSetWidthSizeHeightAccordingly recommendedElementWidth
+        # CONSUME the height it HANDS FORWARD (the freshly-applied height, byte-equal to a widget.height()
+        # read right here) instead of re-reading the child's applied @bounds at the bottom of the loop --
+        # the half of the "hand the height forward" plumbing that was left undone. (proper-layouts Phase B; assessment §2.4)
+        elementHeight = widget.rawSetWidthSizeHeightAccordingly recommendedElementWidth
 
         # contained text that OPTED INTO FIT_BOX_TO_TEXT (a SimplePlainTextWdgt or a
         # bare TextWdgt put into that mode) fits its BOX to the TEXT: wrap to the
@@ -173,7 +177,10 @@ class SimpleVerticalStackPanelWdgt extends Widget
 
 
       widget.fullRawMoveTo new Point leftPosition, @top() + verticalPadding + stackHeight
-      stackHeight += widget.height()
+      # else-branch: consume the handed-forward height (no read-back of applied @bounds). The
+      # !constrainContentWidth if-branch does NO resize -- there is no mutate-then-read-back to remove there --
+      # so it falls back to reading the child's already-settled height. (proper-layouts Phase B)
+      stackHeight += elementHeight ? widget.height()
 
     newHeight = stackHeight + verticalPadding + @padding
 

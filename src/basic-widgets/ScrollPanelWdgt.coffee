@@ -348,8 +348,20 @@ class ScrollPanelWdgt extends PanelWdgt
           # vertical slider below. We RESPECT the mode (a non-text child or a
           # FIT_TEXT_TO_BOX widget is skipped).
           widget.softWrap = true
-          widget.rawSetWidth @contents.width() - totalPadding
-          @contents.rawSetHeight (Math.max widget.height(), @height()) - totalPadding
+          textWidth = @contents.width() - totalPadding
+          widget.rawSetWidth textWidth
+          # (Phase C, proper-layouts) We only RE-WRAP the text child here (rawSetWidth -> height = wrapped
+          # line count); paint + the caret's synchronous @wrappedLines read need that committed, and the new
+          # height then flows into subBounds below. We do NOT prime the contents FRAME height here anymore:
+          # the merged-bounds commit at the end of this method is the SINGLE owner of @contents' extent. The
+          # old priming `@contents.rawSetHeight (max(<text wrapped height>, @height()) - totalPadding)` was
+          # redundant with that commit (nothing between here and there reads @contents.height() -- subBounds is
+          # the CHILDREN's merged bounds, not the frame's) and, worse, NON-IDEMPOTENT: it set `max(M,vp) -
+          # totalPadding` while the commit sets `max(M + 2*padding, vp)`, so the frame height flip-flopped by
+          # ~totalPadding every pass (a re-fit seam each) -- one of the three self-oscillations the
+          # @_adjustingContentsBounds flag had to mask, and the one that PERPETUATED the non-convergence (the
+          # position clamp self-settles in <=2 passes once this stops). The genuine content-height read-back is
+          # subBounds itself, retired only when a later phase gives the arrange a pure measure of its children.
 
     subBounds = @contents.subWidgetsMergedFullBounds()?.ceil()
     if subBounds
@@ -398,7 +410,7 @@ class ScrollPanelWdgt extends PanelWdgt
     unless @contents.boundingBox().equals newBounds
       @contents.silentRawSetBounds newBounds
       @contents._reLayoutSelf()
-    
+
     # you'd think that if @contents.boundingBox().equals newBounds
     # then we don't need to check if the contents are "in good view"
     # but actually for example a stack resizes itself automatically when the
