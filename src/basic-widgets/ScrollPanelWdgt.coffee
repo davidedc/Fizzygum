@@ -117,13 +117,13 @@ class ScrollPanelWdgt extends PanelWdgt
     return false
 
   _reLayoutScrollbars: ->
-    # Laying out my own scrollbar chrome IS adjusting my contents bounds: I drive the bars' geometry top-down
-    # here, so a bar's raw resize below must NOT trip the _reFitContainerAfterRawGeometryChange seam into
-    # re-fitting ME (the panel) -- that re-fit is redundant and rode the per-frame end-of-cycle flush. Same
-    # self-guard, and same flag, as _positionAndResizeChildren (which _reFitContainer already honours); restore
-    # on exit so a caller that is itself mid-adjust keeps its state. (end-of-cycle drawdown ELIMINATE.)
-    outerAdjustingContentsBounds = @_adjustingContentsBounds
-    @_adjustingContentsBounds = true
+    # (proper-layouts Phase D, 2026-06-28) This used to set @_adjustingContentsBounds (save/restore) SOLELY so
+    # the cross-method seam check in Widget._reFitContainer suppressed the bars' raw resizes below from
+    # re-fitting ME (the panel). That check was deleted in Phase D, so the save/restore was inert and is gone
+    # too: the bars' raw resizes now notify me like any other child geometry change (the arrange is a fixed
+    # point post-Phase-C, so it converges in one extra pass). Retired fully when Phase E replaces the seam
+    # with dirty-tracking. The @_adjustingContentsBounds field survives only for the _positionAndResizeChildren
+    # re-entrancy guard (#1).
 
     # one typically has both scrollbars in view, plus a resizer
     # in bottom right corner, so adjust the width/height of the
@@ -191,8 +191,6 @@ class ScrollPanelWdgt extends PanelWdgt
         )
       else
         @vBar.hide()
-
-    @_adjustingContentsBounds = outerAdjustingContentsBounds
 
   # when you add things to the ScrollPanelWdgt they actually
   # end up in the Panel inside it.

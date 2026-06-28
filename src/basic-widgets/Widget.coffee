@@ -1679,10 +1679,7 @@ class Widget extends TreeNode
   #  - INSIDE a layout pass (world._recalculatingLayouts): ENQUEUE the container into the recalculateLayouts
   #    until-loop via the shared bare-push atom (_markForRelayoutNoClimb). Enqueuing is legal mid-pass -- unlike
   #    _invalidateLayout the atom neither throws (the freeze guard, see _invalidateLayout below) nor climbs to
-  #    ancestors; it enqueues only the directly-affected container. A container mid its OWN _positionAndResizeChildren is driving this child
-  #    top-down and already accounts for it, so we SKIP it (re-enqueuing would re-fire every pass and never
-  #    converge) -- the @_adjustingContentsBounds guard. If the deferred re-fit later changes the
-  #    container's own geometry, ITS seam re-fires and enqueues ITS parent, so up-propagation is preserved.
+  #    ancestors; it enqueues only the directly-affected container.
   #  - OUTSIDE a pass: _invalidateLayout() so the next doOneCycle re-fits the container.
   # Gated on _reLayoutChildren? so only a tracking container (Window / Stack / ScrollPanel -- the only
   # classes that define it) reacts; any other widget is a no-op. Low-level (leading underscore) so lint
@@ -1690,16 +1687,16 @@ class Widget extends TreeNode
   # DETERMINISM: the gesture + menu callers fire OUTSIDE passes, so their in-pass arm is dead (kept uniform
   # for safety); the immediate-mutator seam's in-pass enqueue IS live and is the determinism-exempt path
   # (deferred-layout-OVERVIEW.md §11).
+  #
+  # (proper-layouts Phase D, 2026-06-28) The cross-method `return if container._adjustingContentsBounds`
+  # suppression was DELETED here. Post-Phase-C every container arrange is a fixed point, so re-enqueuing a
+  # container that is mid its OWN _positionAndResizeChildren now CONVERGES (one extra convergence pass instead
+  # of being skipped) rather than looping forever -- which is why the skip is no longer needed for
+  # correctness. The @_adjustingContentsBounds FIELD stays only for the per-arrange re-entrancy guard (#1,
+  # atop each _positionAndResizeChildren), retired when Phase E replaces this seam with explicit
+  # dirty-tracking. (The redundant pass is the transient slowdown removed structurally by Phase E/F.)
   _reFitContainer: (container = @) ->
     return unless container?._reLayoutChildren?
-    # SKIP when the container is mid its OWN _positionAndResizeChildren: it is driving this child top-down and
-    # already accounts for the child's resize, so re-fitting it is REDUNDANT. This guard was on the IN-PASS arm
-    # only; HOISTING it covers the SYNCHRONOUS off-settle arm too -- e.g. ScrollPanelWdgt.add's synchronous
-    # _reLayoutChildren resizing a child (rawSetWidthSizeHeightAccordingly) tripped this seam and scheduled a
-    # wasted container re-fit that rode the per-frame end-of-cycle flush (and climbed to invalidate the world).
-    # (end-of-cycle-flush-drawdown -- ELIMINATE; the convert alt -- making ScrollPanel.add self-settle -- was
-    # probed and rejected for deterministic nested-scroll divergence.)
-    return if container._adjustingContentsBounds
     if world?._recalculatingLayouts
       container._markForRelayoutNoClimb()   # in-pass: enqueue just this directly-affected container, no climb (shared atom)
     else
