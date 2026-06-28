@@ -1691,10 +1691,13 @@ class Widget extends TreeNode
   # (proper-layouts Phase D, 2026-06-28) The cross-method `return if container._adjustingContentsBounds`
   # suppression was DELETED here. Post-Phase-C every container arrange is a fixed point, so re-enqueuing a
   # container that is mid its OWN _positionAndResizeChildren now CONVERGES (one extra convergence pass instead
-  # of being skipped) rather than looping forever -- which is why the skip is no longer needed for
-  # correctness. The @_adjustingContentsBounds FIELD stays only for the per-arrange re-entrancy guard (#1,
-  # atop each _positionAndResizeChildren), retired when Phase E replaces this seam with explicit
-  # dirty-tracking. (The redundant pass is the transient slowdown removed structurally by Phase E/F.)
+  # of being skipped) rather than looping forever -- which is why the skip is no longer needed for correctness.
+  # (proper-layouts Phase E, 2026-06-28) The @_adjustingContentsBounds field itself is now GONE too: its last
+  # use was the per-arrange re-entrancy guard, retired by giving each container arrange a NON-re-applying
+  # self-resize (SimpleVerticalStackPanelWdgt._applyOwnArrangedWidth/Height -> base Widget::rawSetExtent, which
+  # fires THIS seam to notify the parent but does NOT re-enter @_reLayoutChildren). This notify-by-mutation seam
+  # itself STAYS: deleting it needs the scroll panels to converge in one pass (their self-re-fit IS their
+  # convergence), a separate convergence arc (see docs/proper-layouts-eliminate-suppression-booleans-plan.md).
   _reFitContainer: (container = @) ->
     return unless container?._reLayoutChildren?
     if world?._recalculatingLayouts

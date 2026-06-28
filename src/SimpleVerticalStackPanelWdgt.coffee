@@ -7,9 +7,6 @@ class SimpleVerticalStackPanelWdgt extends Widget
   _acceptsDrops: true
   tight: true
   constrainContentWidth: true
-  # used to avoid recursively re-entering the
-  # _positionAndResizeChildren function
-  _adjustingContentsBounds: false
 
   colloquialName: ->
     "stack"
@@ -115,9 +112,25 @@ class SimpleVerticalStackPanelWdgt extends Widget
   availableWidthForContents: ->
     @width() - 2 * @padding
 
+  # proper-layouts Phase E: apply my OWN arranged extent during _positionAndResizeChildren WITHOUT
+  # re-entering my children's layout. My class rawSetExtent override (here / WindowWdgt / ScrollPanelWdgt)
+  # re-fits my children via @_reLayoutChildren() -- correct for an EXTERNAL resize, but during my own
+  # arrange I am ALREADY laying my children out, so that re-fit is a redundant synchronous RE-ENTRY of
+  # _positionAndResizeChildren (it was a no-op ONLY because the @_adjustingContentsBounds re-entrancy guard
+  # caught it). Going through the BASE Widget::rawSetExtent applies the geometry AND fires the
+  # up-notification seam (so my container still re-fits -- the nested clock-in-window cascade), but SKIPS the
+  # override's @_reLayoutChildren(). That removes the last synchronous re-entry, which is what let the
+  # re-entrancy guard + the @_adjustingContentsBounds field be deleted. Byte-identical: the skipped re-entry
+  # was already a guarded no-op. (The leading breakCaches mirrors rawSetWidth / rawSetHeight exactly.)
+  _applyOwnArrangedWidth: (newWidth) ->
+    @breakNumberOfRawMovesAndResizesCaches()
+    Widget::rawSetExtent.call @, new Point(newWidth or 0, @height())
+
+  _applyOwnArrangedHeight: (newHeight) ->
+    @breakNumberOfRawMovesAndResizesCaches()
+    Widget::rawSetExtent.call @, new Point(@width(), newHeight or 0)
+
   _positionAndResizeChildren: ->
-    # avoid recursively re-entering this function
-    if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true
     @padding = 5
 
     stackHeight = 0
@@ -187,8 +200,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     if !@tight or childrenNotHandlesNorCarets.length == 0
       newHeight = Math.max newHeight, @height()
 
-    @rawSetHeight newHeight
-    @_adjustingContentsBounds = false
+    @_applyOwnArrangedHeight newHeight
 
   rawSetExtent: (aPoint) ->
     unless aPoint.equals @extent()

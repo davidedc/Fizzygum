@@ -27,9 +27,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   contents: nil
   titlebarBackground: nil
   contentNeverSetInPlaceYet: true
-  # used to avoid recursively re-entering the
-  # _positionAndResizeChildren function
-  _adjustingContentsBounds: false
   internal: false
   defaultContents: nil
   reInflating: false
@@ -483,9 +480,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
   # should this just be the _reLayout function? Why do we need this extra one?
   _positionAndResizeChildren: ->
-    # avoid recursively re-entering this function
-    # TODO nasty check this one, can we make this go away?
-    if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true
 
     closeIconSize = 16
 
@@ -521,7 +515,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
             windowWidth = recommendedElementWidth + @padding * 2
           else
             windowWidth = Math.min @width(), recommendedElementWidth + @padding * 2
-          @rawSetWidth windowWidth
+          @_applyOwnArrangedWidth windowWidth
         else if @contents.layoutSpecDetails.preferredStartingWidth == PreferredSize.DONT_MIND
           recommendedElementWidth = @width()  - 2 * @padding
         else
@@ -530,7 +524,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
             windowWidth = recommendedElementWidth + @padding * 2
           else
             windowWidth = Math.min @width(), recommendedElementWidth + @padding * 2
-          @rawSetWidth windowWidth
+          @_applyOwnArrangedWidth windowWidth
 
         @contents.layoutSpecDetails.rememberInitialDimensions @contents, @
 
@@ -552,7 +546,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
           if !@recursivelyAttachedAsFreeFloating()
             desiredHeight = Math.min desiredHeight, @height() - partOfHeightUsedUp
           @contents.rawSetWidth recommendedElementWidth
-          @rawSetWidth windowWidth
+          @_applyOwnArrangedWidth windowWidth
           @contents.rawSetHeight desiredHeight
         else if @contents.layoutSpecDetails.preferredStartingHeight == PreferredSize.DONT_MIND
           @contents.rawSetWidth recommendedElementWidth
@@ -593,7 +587,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     newHeight = stackHeight + partOfHeightUsedUp
 
-    @rawSetHeight newHeight
+    @_applyOwnArrangedHeight newHeight
 
     @titlebarBackground.rawSetExtent (new Point @width(), closeIconSize + 2 * @padding).subtract new Point 2,2
     @titlebarBackground.fullRawMoveTo @position().add new Point 1,1
@@ -648,5 +642,3 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # this code should not be here.
     if @resizer?.parent == @
       @resizer.silentFullRawMoveTo new Point @right() - WorldWdgt.preferencesAndSettings.handleSize - @padding, @bottom() - WorldWdgt.preferencesAndSettings.handleSize - @padding
-
-    @_adjustingContentsBounds = false

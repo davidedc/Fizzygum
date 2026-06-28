@@ -9,9 +9,6 @@ class ScrollPanelWdgt extends PanelWdgt
   contents: nil
   vBar: nil
   hBar: nil
-  # used to avoid recursively re-entering the
-  # _positionAndResizeChildren function
-  _adjustingContentsBounds: false
 
   # there are several ways in which we allow
   # scrolling when a ScrollPanel is scrollable
@@ -121,9 +118,11 @@ class ScrollPanelWdgt extends PanelWdgt
     # the cross-method seam check in Widget._reFitContainer suppressed the bars' raw resizes below from
     # re-fitting ME (the panel). That check was deleted in Phase D, so the save/restore was inert and is gone
     # too: the bars' raw resizes now notify me like any other child geometry change (the arrange is a fixed
-    # point post-Phase-C, so it converges in one extra pass). Retired fully when Phase E replaces the seam
-    # with dirty-tracking. The @_adjustingContentsBounds field survives only for the _positionAndResizeChildren
-    # re-entrancy guard (#1).
+    # point post-Phase-C, so it converges in one extra pass). (proper-layouts Phase E, 2026-06-28) The
+    # @_adjustingContentsBounds field is now fully DELETED: its last use -- the _positionAndResizeChildren
+    # re-entrancy guard -- was retired by the non-re-applying self-resize (SimpleVerticalStackPanelWdgt.
+    # _applyOwnArrangedWidth/Height). The notify-by-mutation seam itself STAYS (deleting it needs the scroll
+    # panels to converge in one pass -- their self-re-fit IS their convergence -- which is a separate arc).
 
     # one typically has both scrollbars in view, plus a resizer
     # in bottom right corner, so adjust the width/height of the
@@ -323,8 +322,6 @@ class ScrollPanelWdgt extends PanelWdgt
     return true
 
   _positionAndResizeChildren: ->
-    # avoid recursively re-entering this function
-    if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true
 
     # if PanelWdgt is of type isTextLineWrapping
     # it means that you don't want the text widget to
@@ -417,7 +414,6 @@ class ScrollPanelWdgt extends PanelWdgt
     # case. The good news is that it's a cheap check to do in case
     # there is nothing to do.
     @keepContentsInScrollPanelWdgt()
-    @_adjustingContentsBounds = false
 
   keepContentsInScrollPanelWdgt: ->
     if @contents.left() > @left()
