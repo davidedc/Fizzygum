@@ -28,8 +28,8 @@ class VerticalStackLayoutSpec
 
     @widthOfStackWhenAdded = availableWidthInStack
 
-  getWidthInStack: ->
-    availableWidthInStack = @stack.availableWidthForContents()
+  getWidthInStack: (availableWidthOverride) ->
+    availableWidthInStack = availableWidthOverride ? @stack.availableWidthForContents()
     proportionalWidth = availableWidthInStack * @widthOfElementWhenAdded / @widthOfStackWhenAdded
     differenceWithFixedWidth = proportionalWidth - @widthOfElementWhenAdded
     

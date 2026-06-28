@@ -11,6 +11,11 @@ KeepsRatioWhenInVerticalStackMixin =
       ratio = @height()/@width()
       @rawSetExtent new Point newWidth, Math.round newWidth * ratio
 
+    # §4.1 pure measure: ratio-locked, so preferred height = round(width * current ratio)
+    # (mirrors rawSetWidthSizeHeightAccordingly above). No mutation, no seam.
+    preferredExtentForWidth: (availW) ->
+      new Point availW, Math.round availW * (@height()/@width())
+
     holderWindowJustBeenGrabbed: (whereFrom) ->
       # capability query replaces `whereFrom instanceof SimpleVerticalStackPanelWdgt`
       # (type-test-elimination campaign)

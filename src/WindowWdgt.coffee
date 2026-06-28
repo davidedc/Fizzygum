@@ -34,6 +34,16 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   internalExternalSwitchButton: nil
   alwaysShowInternalExternalButton: nil
 
+  # §4.1 pure measure (Stage B STUB -- Stage D replaces this with the real window measure:
+  # content measured at availW + chrome). A window's height-at-width comes from its arrange
+  # (_positionAndResizeChildren reflows content + chrome), the tangled Stage-D case. For now
+  # return the current extent, which (a) overrides the inherited stack measure so a window-in-
+  # stack does NOT run that measure on its non-stack children (which throws), and (b) is only
+  # APPROXIMATE: a window-in-stack is not yet byte-exact in a parent's measure, so a parent
+  # must not consume it until Stage D.
+  preferredExtentForWidth: (availW) ->
+    new Point (availW ? @width()), @height()
+
   # TODO passing the @labelContent doesn't quite work, when
   # you add a widget to the window it overwrites the
   # title which means that this one parameter passed in

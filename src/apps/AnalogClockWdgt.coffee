@@ -45,6 +45,11 @@ class AnalogClockWdgt extends Widget
     @rawSetExtent new Point newWidth, newWidth
     @height()  # Path B: hand the (square) height back so a container needn't read it off me. See Widget.
 
+  # §4.1 pure measure: the clock is square, so its preferred height equals the width
+  # (mirrors rawSetWidthSizeHeightAccordingly above). No mutation, no seam.
+  preferredExtentForWidth: (availW) ->
+    new Point availW, availW
+
 
   # This method only paints this very widget's "image",
   # it doesn't descend the children

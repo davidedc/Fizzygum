@@ -63,11 +63,3 @@ widthTight
 # batch call-sites. Kept as an available performance primitive (ONE O(1) flush over a multi-add bundle
 # vs N self-settles) that may be wanted again; its flag + guard stay wired. See the method's comment.
 _settleLayoutsAfterBatch
-
-# §4.1 PURE-MEASURE KEYSTONE (proper-layouts campaign, Stage A -- 2026-06-28). The side-effect-free
-# TextWdgt.preferredExtentForWidth(availW) is the production pure measure that the vertical-stack /
-# window / scroll arranges will CONSUME (shedding their mutate-then-read-back) in Stages B-E. Landed
-# ALONE first (no consumer by design), proven byte-exact suite-wide by the Stage-0 probe (4022
-# measure-vs-commit differentials, 0 mismatches). Remove this entry once Stage B wires the first
-# container consumer. See docs/proper-layouts-4.1-pure-measure-campaign-plan.md.
-preferredExtentForWidth

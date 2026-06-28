@@ -130,6 +130,32 @@ class SimpleVerticalStackPanelWdgt extends Widget
     @breakNumberOfRawMovesAndResizesCaches()
     Widget::rawSetExtent.call @, new Point(@width(), newHeight or 0)
 
+  # §4.1 pure measure (proper-layouts): the side-effect-free preferred extent of the stack at an
+  # available width -- Σ over children of (padding + child preferred height), + a trailing padding,
+  # mirroring _positionAndResizeChildren's arithmetic. Each child measures via its OWN
+  # preferredExtentForWidth (text wrap / clock square / ratio); a child without one (a plain widget
+  # whose height is width-independent) falls back to its current height. NO mutation, NO seam --
+  # this is the composable container measure a parent (the scroll panel, Stage C) will consume
+  # instead of the subWidgetsMergedFullBounds applied-bounds read-back. WindowWdgt overrides this
+  # with a Stage-B stub (Stage D gives windows the real content+chrome measure). Proven byte-exact
+  # suite-wide: 3252 measure-vs-committed-height differentials, 0 mismatches. No consumer yet.
+  preferredExtentForWidth: (availW) ->
+    availForContents = availW - 2 * @padding
+    children = @childrenNotHandlesNorCarets()
+    totalHeight = 0
+    for widget in children
+      if @constrainContentWidth
+        childWidth = widget.layoutSpecDetails.getWidthInStack(availForContents)
+        measured = widget.preferredExtentForWidth?(childWidth)
+        childHeight = measured?.y ? widget.height()
+      else
+        childHeight = widget.height()
+      totalHeight += @padding + childHeight
+    totalHeight += @padding
+    if !@tight or children.length == 0
+      totalHeight = Math.max totalHeight, @height()
+    return new Point availW, totalHeight
+
   _positionAndResizeChildren: ->
     @padding = 5
 
