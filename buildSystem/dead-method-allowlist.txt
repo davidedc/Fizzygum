@@ -17,7 +17,6 @@ childrenTopToBottom
 cornersTight
 darker
 divideBy
-drawCachedTexture
 extentTight
 firstSiblingsSuchThat
 fullImageHashCode
@@ -33,7 +32,6 @@ identifyViaTextLabel
 inspectKeyEvent
 isPickedUp
 isSelectedListItem
-isTouching
 leftCenterTight
 lighter
 menuAtPointer
@@ -48,7 +46,6 @@ rotateZ
 runLastWorkingProgram
 runProgram
 setTextDescription
-showMoveHandle
 slideBackTo
 syntheticEventsMouseMoveWhileDragging_InputEvents
 toggleShowBlanks

@@ -1891,19 +1891,6 @@ class Widget extends TreeNode
   # * fullPaintIntoAreaOrBlitFromBackBuffer: recursively draws all the local canvas of this widget and all
   #   its children into a specific area of a passed canvas.
 
-  # »>> this part is excluded from the fizzygum homepage build
-  # tiles the texture - never used in Fizzygum at the moment.
-  # unused code
-  drawCachedTexture: ->
-    bg = @cachedTexture
-    cols = Math.floor @backBuffer.width / bg.width
-    lines = Math.floor @backBuffer.height / bg.height
-    context = @backBuffer.getContext "2d"
-    for y in [0..lines]
-      for x in [0..cols]
-        context.drawImage bg, Math.round(x * bg.width), Math.round(y * bg.height)
-    @changed()
-  # this part is excluded from the fizzygum homepage build <<«
   
   
   boundsContainPoint: (aPoint) ->
@@ -3143,11 +3130,6 @@ class Widget extends TreeNode
       if @parent?
         @parent._showResizeAndMoveHandlesAndLayoutAdjustersNoSettle()
 
-  # »>> this part is excluded from the fizzygum homepage build
-  # currently unused
-  showMoveHandle: ->
-    @addAndTrackHandle "moveHandle"
-  # this part is excluded from the fizzygum homepage build <<«
   
   inform: (msg) ->
     text = msg
@@ -3838,35 +3820,6 @@ class Widget extends TreeNode
     @changed()
   
   
-  # »>> this part is excluded from the fizzygum homepage build
-
-  # Widget collision detection - not used anywhere at the moment ////////////////////////
-  
-  isTouching: (otherWidget) ->
-    oImg = @overlappingImage otherWidget
-    data = oImg.getContext("2d").getImageData(1, 1, oImg.width, oImg.height).data
-    detect(data, (each) ->
-      each isnt 0
-    )?
-  
-  overlappingImage: (otherWidget) ->
-    fb = @fullBounds()
-    otherFb = otherWidget.fullBounds()
-    oRect = fb.intersect(otherFb)
-    oImg = HTMLCanvasElement.createOfPhysicalDimensions oRect.extent().scaleBy ceilPixelRatio
-    ctx = oImg.getContext "2d"
-    ctx.useLogicalPixelsUntilRestore()
-    if oRect.width() < 1 or oRect.height() < 1
-      return HTMLCanvasElement.createOfPhysicalDimensions (new Point 1, 1).scaleBy ceilPixelRatio
-    ctx.drawImage @fullImage(),
-      Math.round(oRect.origin.x - fb.origin.x),
-      Math.round(oRect.origin.y - fb.origin.y)
-    ctx.globalCompositeOperation = "source-in"
-    ctx.drawImage otherWidget.fullImage(),
-      Math.round(otherFb.origin.x - oRect.origin.x),
-      Math.round(otherFb.origin.y - oRect.origin.y)
-    oImg
-  # this part is excluded from the fizzygum homepage build <<«
 
 
   # ------------------------------------------------------------------------------------
