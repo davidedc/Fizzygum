@@ -123,11 +123,11 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # re-entrancy guard + the @_adjustingContentsBounds field be deleted. Byte-identical: the skipped re-entry
   # was already a guarded no-op. (The leading breakCaches mirrors rawSetWidth / rawSetHeight exactly.)
   _applyOwnArrangedWidth: (newWidth) ->
-    @breakNumberOfRawMovesAndResizesCaches()
+    @__breakMoveResizeCaches()
     Widget::rawSetExtent.call @, new Point(newWidth or 0, @height())
 
   _applyOwnArrangedHeight: (newHeight) ->
-    @breakNumberOfRawMovesAndResizesCaches()
+    @__breakMoveResizeCaches()
     Widget::rawSetExtent.call @, new Point(@width(), newHeight or 0)
 
   # §4.1 pure measure (proper-layouts): the side-effect-free preferred extent of the stack at an
@@ -316,7 +316,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   rawSetExtent: (aPoint) ->
     unless aPoint.equals @extent()
       #console.log "move 15"
-      @breakNumberOfRawMovesAndResizesCaches()
+      @__breakMoveResizeCaches()
       super aPoint
       # raw setter: APPLY the re-fit NOW -- synchronous, single-container, TERMINAL
       # (_reLayoutChildren -> _positionAndResizeChildren, which does not climb to my parent).

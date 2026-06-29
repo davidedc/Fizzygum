@@ -202,7 +202,7 @@ class CaretWdgt extends BlinkerWdgt
   # defers to its editing handler's tail, _settleScrollFollow -- see there). The caret never rides the end-of-cycle
   # coalesced flush (it does not coalesce). It schedules via the CANONICAL _invalidateLayout: the caret is
   # free-floating + inert, so _invalidateLayout's INERT-RECEIVER branch enqueues it with the bare no-climb primitive
-  # (_markForRelayoutNoClimb) and skips the climb / flow-rule throw / careless-push audit -- all of which are
+  # (__markForRelayout) and skips the climb / flow-rule throw / careless-push audit -- all of which are
   # structurally INAPPLICABLE to an overlay that has no parent layout to climb and no ancestor it can re-dirty
   # (Widget._invalidateLayout; docs/unify-layout-enqueue-primitives-plan.md §2). This USED to open-code the bare
   # push here to dodge that throw + audit (which fired because _invalidateLayout assumed a climbing content widget);

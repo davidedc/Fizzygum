@@ -65,7 +65,7 @@ class SliderButtonWdgt extends CircleBoxWdgt
           Math.round((sliderValue - @parent.start) * @parent.unitSize()),
           @parent.width() - @width()))
 
-      @silentFullRawMoveTo new Point(posX, posY).add @parent.position()
+      @__commitMoveTo new Point(posX, posY).add @parent.position()
 
   grabsToParentWhenDragged: ->
     if @parent instanceof SliderWdgt

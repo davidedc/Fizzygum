@@ -42,7 +42,7 @@ class PromptWdgt extends MenuWdgt
       slider.alpha = 1
       slider.color = Color.create 225, 225, 225
       slider.button.setColorScheme Color.create 60, 60, 60
-      slider.silentRawSetHeight WorldWdgt.preferencesAndSettings.prompterSliderSize
+      slider.__commitHeight WorldWdgt.preferencesAndSettings.prompterSliderSize
       slider.target = @
       slider.argumentToAction = @
       slider.action = "reactToSliderAction"

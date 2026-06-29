@@ -119,13 +119,13 @@ const isLowLevel = (name) =>
 // identical work to the blessed _reLayoutSelf/_reLayout applies, so a name-based ban would just force a
 // DRY-breaking inline. (deferred-layout-capstone-execution-plan.md, Part B.)
 //
-// NAME-COVERAGE re-census (lint-ratchet plan Phase 2, 2026-06-25): confirmed the immediate-mutator NAME
-// set == exactly the methods that write geometry immediately, so [E] has no innocent-named blind spot.
-// Every method that assigns @bounds or calls the raw-geometry seam (_reFitContainerAfterRawGeometryChange)
-// / the move-cache break is raw*/silent*/fullRaw*-named (incl. the mixin-nested fullRawMoveBy). The only
-// non-raw-named methods touching the cache-break are constructor (@bounds init, not a mutation),
-// _destroyNoSettle and removeFromTree (teardown / structural-removal cache hygiene -- neither writes
-// geometry; removeFromTree is a structural op that legitimately schedules). No escapee -> no rename needed.
+// NAME-COVERAGE re-census (lint-ratchet plan Phase 2, 2026-06-25; refined for the __-leaf tier 2026-06-29):
+// every method that writes geometry immediately is recognizably low-level -- either raw*/silent*/fullRaw*-named
+// (covered by [E], the immediate-mutator SCHEDULE ban) or a __commit*/__breakMoveResizeCaches LEAF (covered by
+// [I], the stronger no-orchestration ban that subsumes [E] for the __ tier). So [E] has no innocent-named blind
+// spot. The only non-low-level methods touching the cache-break are constructor (@bounds init, not a mutation),
+// _destroyNoSettle and removeFromTree (teardown / structural-removal cache hygiene -- neither writes geometry;
+// removeFromTree is a structural op that legitimately schedules). No escapee.
 const isImmediateMutator = (name) => /^(raw[A-Z]|silent|fullRaw)/.test(name);
 
 // [D] macro hygiene: a SystemTest macro must drive the world through the PUBLIC widget API ONLY -- never
@@ -192,6 +192,11 @@ const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*|silent\w*|fullRaw
 // check; the runtime throw stays the backstop for the transitive/dynamic cases (and for `add`).
 const SETTLE_CALL = /[@.]\s*_settleLayoutsAfter\b/;          // SINGLE-mutation tier only (Batch absorbs nested settles)
 const CALLBACK_HOOK = /^_(reactTo|before)[A-Z]/;            // [J] a notification hook -- settle-neutral by convention (layering/naming plan §9.2)
+// [I] the orchestration verbs a __ LEAF must not @-self-call: the re-fit seam (_reFitContainer*/_refresh*), a
+// react step (_reLayout\w* = _reLayoutSelf/_reLayoutChildren*/_reLayoutScrollbars/_reLayout; changed/fullChanged),
+// a schedule/settle (_invalidateLayout/recalculateLayouts/_settleLayoutsAfter*), or a public setter. Scoped to
+// @-self (a .-receiver can't be typed -- like SELF_ADD_CALL); the runtime audit covers dynamic dispatch.
+const LEAF_FORBIDDEN = /@\s*(_reFitContainer\w*|_refresh\w*|_reLayout\w*|_invalidateLayout|recalculateLayouts|_settleLayoutsAfter\w*|fullChanged|changed|setExtent|setBounds|setWidth|setHeight|fullMoveTo)\b/;
 const WRAPPER_EXCLUDED = new Set(['add']);   // see the [G] block above (collapse/unCollapse folded in once the layout passes routed to their cores)
 const SELF_ADD_CALL = /@\s*add\b/;        // [G] the unambiguous structural add: @add (self == Widget.add inside a Widget
                                           // method). \b excludes @addMany / @addInPseudoRandomPosition; the leading @ (not .)
@@ -377,9 +382,16 @@ function checkFile(file, violations, wrapperCall, warnings) {
     // [J] settle-neutral callbacks (layering/naming plan §9.2/§9.6): a notification HOOK (_reactTo* / _before*)
     // must NOT open a settle -- the gesture/structural DISPATCHER owns the single _settleLayoutsAfter; the hook is
     // a settle-neutral core. (recalculateLayouts inside a hook is already [A]/[B] -- hooks are _-prefixed = low-level.)
-    // [I] is reserved for the upcoming __-leaf rule (§5).
     if (CALLBACK_HOOK.test(method) && SETTLE_CALL.test(code)) {
       violations.push(`[J] notification hook ${method}() calls _settleLayoutsAfter — a callback is a settle-neutral core; the dispatcher owns the one settle (layering/naming plan §9.2)  — ${at}`);
+    }
+    // [I] the __ LEAF (HARD-FAIL, layering/naming plan §3a/§5): a __ method is a true bottom -- via @-self it must
+    // trigger NO orchestration (re-fit seam / react step / schedule-settle / public setter). Scoped to @-self (a
+    // .-receiver can't be typed; the runtime audit -- a later batch -- covers dynamic dispatch and __-getter purity).
+    // recalc/_invalidateLayout overlap [A]/[E] harmlessly.
+    if (/^__/.test(method)) {
+      const leaf = code.match(LEAF_FORBIDDEN);
+      if (leaf) violations.push(`[I] __ leaf ${method}() @-calls ${leaf[1]}() — a __ leaf must trigger no orchestration (seam/react/schedule/settle/public setter); keep it a pure bottom (layering/naming plan §3a)  — ${at}`);
     }
     if (recalc && !RECALC_WHITELIST.has(method)) {
       violations.push(`[B] recalculateLayouts() called from ${method}() (only doOneCycle / _settleLayoutsAfter / _settleLayoutsAfterBatch may)  — ${at}`);
@@ -492,10 +504,11 @@ function main() {
     console.error('E: raw/silent/fullRaw mutators must not call _invalidateLayout) and docs/deferred-layout-16-macro-breakages.md (A/B/C).');
     console.error('F: a non-mutator handler must DEFER a container apply (_invalidateLayout) or mark it `# layout-apply-sanctioned: <why>` — see docs/deferred-layout-OVERVIEW.md §11.');
     console.error('G: low-level code must reach the _<name>NoSettle core, not the public self-settling wrapper (destroy/close/fullDestroy/createReference/...) — or mark `# nosettle-sanctioned: <why>`.');
+    console.error('I: a __ leaf must trigger no orchestration (re-fit seam / react / schedule-settle / public setter) — keep it a pure bottom (layering/naming plan §3a).');
     console.error('J: a notification hook (_reactTo*/_before*) must not open a settle — the gesture/structural dispatcher owns the one _settleLayoutsAfter (layering/naming plan §9.2).');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/J; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
   process.exit(0);
 }
 

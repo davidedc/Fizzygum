@@ -140,7 +140,7 @@ class PopUpWdgt extends Widget
 
   popUp: (pos, widgetToAttachTo) ->
     # console.log "menu popup"
-    @silentFullRawMoveTo pos
+    @__commitMoveTo pos
     widgetToAttachTo.add @
     # the @fullRawMoveWithin method
     # needs to know the extent of the widget

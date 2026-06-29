@@ -540,7 +540,7 @@ class Widget extends TreeNode
     # layout). Containers that MANAGE a freefloating child (e.g. LabelButton/MenuItem centring their
     # label) self-settle on the change itself (sizeToTextAndDisableFitting / setLabel), not here.
     @parent?._invalidateLayout(@)
-    @breakNumberOfRawMovesAndResizesCaches()
+    @__breakMoveResizeCaches()
     WorldWdgt.numberOfAddsAndRemoves++
 
     world.steppingWdgts.delete @
@@ -779,7 +779,7 @@ class Widget extends TreeNode
 
     unless @bounds.origin.equals newBounds.origin
       @bounds = @bounds.translateTo newBounds.origin
-      @breakNumberOfRawMovesAndResizesCaches()
+      @__breakMoveResizeCaches()
       @changed()
 
     @rawSetExtent newBounds.extent()
@@ -900,7 +900,7 @@ class Widget extends TreeNode
 
     unless @bounds.origin.equals newBounds.origin
       @bounds = @bounds.translateTo newBounds.origin
-      @breakNumberOfRawMovesAndResizesCaches()
+      @__breakMoveResizeCaches()
 
     @silentRawSetExtent newBounds.extent()
   
@@ -1318,34 +1318,34 @@ class Widget extends TreeNode
   # _arrangeApplyMoveBy is fullRawMoveBy's shared core (returns true iff actually moved, so the wrapper fires the seam).
   _arrangeApplyMoveBy: (delta) ->
     return false if delta.isZero()
-    @breakNumberOfRawMovesAndResizesCaches()
+    @__breakMoveResizeCaches()
     @fullChanged()
     @bounds = @bounds.translateBy delta
     @children.forEach (child) ->
-      child.silentFullRawMoveBy delta
+      child.__commitMoveBy delta
     return true
 
   _arrangeApplyMoveTo: (aPoint) ->
     aPoint.debugIfFloats()
     delta = aPoint.toLocalCoordinatesOf @
     if !delta.isZero()
-      @breakNumberOfRawMovesAndResizesCaches()
+      @__breakMoveResizeCaches()
       @_arrangeApplyMoveBy delta
     @bounds.debugIfFloats()
 
-  silentFullRawMoveBy: (delta) ->
+  __commitMoveBy: (delta) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
       debugger
 
     #console.log "move 5"
-    @breakNumberOfRawMovesAndResizesCaches()
+    @__breakMoveResizeCaches()
     @bounds = @bounds.translateBy delta
     @children.forEach (child) ->
-      child.silentFullRawMoveBy delta
+      child.__commitMoveBy delta
   
-  breakNumberOfRawMovesAndResizesCaches: ->
+  __breakMoveResizeCaches: ->
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
     if @ == world.hand
@@ -1401,7 +1401,7 @@ class Widget extends TreeNode
     delta = aPoint.toLocalCoordinatesOf @
     if !delta.isZero()
       #console.log "move 6"
-      @breakNumberOfRawMovesAndResizesCaches()
+      @__breakMoveResizeCaches()
       @fullRawMoveBy delta
     @bounds.debugIfFloats()
 
@@ -1448,16 +1448,16 @@ class Widget extends TreeNode
     @rememberFractionalExtentInHoldingPanel()
     @wasPositionedSlightlyOutsidePanel = ! @parent.bounds.containsRectangle @bounds
   
-  silentFullRawMoveTo: (aPoint) ->
+  __commitMoveTo: (aPoint) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
       debugger
 
     #console.log "move 7"
-    @breakNumberOfRawMovesAndResizesCaches()
+    @__breakMoveResizeCaches()
     delta = aPoint.toLocalCoordinatesOf @
-    @silentFullRawMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
+    @__commitMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
   
   fullRawMoveLeftSideTo: (x) ->
     # TODO in theory the low-level APIs should only be
@@ -1610,7 +1610,7 @@ class Widget extends TreeNode
       widgetStartingTheChange = @
     # check whether we are actually changing the extent.
     unless aPoint.equals @extent()
-      @breakNumberOfRawMovesAndResizesCaches()
+      @__breakMoveResizeCaches()
 
       @silentRawSetExtent aPoint
       @changed()
@@ -1645,18 +1645,18 @@ class Widget extends TreeNode
   
   # "silent" = no repaint / no self-relayout, but it DOES fire the re-fit seam (Intent-1: notify the container
   # tracking my geometry to re-fit). The bounds-set body is shared with the NON-notifying arrange twin
-  # _arrangeApplyExtent (below) via _setExtentBoundsNoNotify; here we just add the seam fire iff the bounds changed.
+  # _arrangeApplyExtent (below) via __commitExtent; here we just add the seam fire iff the bounds changed.
   silentRawSetExtent: (aPoint) ->
-    if @_setExtentBoundsNoNotify aPoint
+    if @__commitExtent aPoint
       @_reFitContainerAfterRawGeometryChange()
 
   # The shared bounds-set core of silentRawSetExtent: round + min-extent clamp + commit @bounds, WITHOUT firing the
   # re-fit seam. Returns true iff @bounds actually changed (so the notifying wrapper knows to fire the seam).
   # (§4.2 structural arrange: the top-down arrange applies geometry via the non-notifying path -- _arrangeApply* --
   # since the arranger already knows the new geometry; only EXTERNAL agents notify by mutation via silentRawSetExtent.)
-  _setExtentBoundsNoNotify: (aPoint) ->
+  __commitExtent: (aPoint) ->
     aPoint = aPoint.round()
-    minExtent = @getMinimumExtent()
+    minExtent = @minimumExtent  # the __ leaf reads the field directly (getMinimumExtent is the non-overridden accessor -> @minimumExtent, so byte-identical); keeps __commitExtent a pure bottom (§3c)
     if ! aPoint.ge minExtent
       aPoint = aPoint.max minExtent
     newWidth = Math.max aPoint.x, 0
@@ -1664,7 +1664,7 @@ class Widget extends TreeNode
     newBounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + newWidth, @bounds.origin.y + newHeight
     if @bounds.equals newBounds then return false
     @bounds = newBounds
-    @breakNumberOfRawMovesAndResizesCaches()
+    @__breakMoveResizeCaches()
     return true
 
   # Non-notifying twin of rawSetExtent (§4.2 structural arrange-down): apply my extent the way rawSetExtent does
@@ -1673,8 +1673,8 @@ class Widget extends TreeNode
   # Byte-for-byte mirrors rawSetExtent except for the seam (rawSetExtent -> silentRawSetExtent which notifies).
   _arrangeApplyExtent: (aPoint) ->
     unless aPoint.equals @extent()
-      @breakNumberOfRawMovesAndResizesCaches()
-      @_setExtentBoundsNoNotify aPoint
+      @__breakMoveResizeCaches()
+      @__commitExtent aPoint
       @changed()
       @_reLayoutSelf()
 
@@ -1682,13 +1682,13 @@ class Widget extends TreeNode
   # the way silentRawSetBounds does (silently -- no repaint, no self-relayout) but WITHOUT firing the re-fit seam.
   # A scroll panel sizing its content frame already knows the content's new bounds (it computed them from the §4.1
   # pure measure), so the seam's Intent-2 self-re-enqueue is redundant. Byte-for-byte mirrors silentRawSetBounds
-  # except it commits the extent via _setExtentBoundsNoNotify (no seam) instead of silentRawSetExtent.
+  # except it commits the extent via __commitExtent (no seam) instead of silentRawSetExtent.
   _arrangeApplyBounds: (newBounds) ->
     return if @bounds.equals newBounds
     unless @bounds.origin.equals newBounds.origin
       @bounds = @bounds.translateTo newBounds.origin
-      @breakNumberOfRawMovesAndResizesCaches()
-    @_setExtentBoundsNoNotify newBounds.extent()
+      @__breakMoveResizeCaches()
+    @__commitExtent newBounds.extent()
 
 
   # A re-fit "seam" (cf. _reFitContainerAfterRawGeometryChange): a freefloating content widget tells the
@@ -1726,7 +1726,7 @@ class Widget extends TreeNode
   # (_refreshScrollPanelWdgtOrVerticalStackIfIamInIt, _reFitContainerAfterRawGeometryChange), and the
   # newParentChoice* menu actions all route through here. Two states:
   #  - INSIDE a layout pass (world._recalculatingLayouts): ENQUEUE the container into the recalculateLayouts
-  #    until-loop via the shared bare-push atom (_markForRelayoutNoClimb). Enqueuing is legal mid-pass -- unlike
+  #    until-loop via the shared bare-push atom (__markForRelayout). Enqueuing is legal mid-pass -- unlike
   #    _invalidateLayout the atom neither throws (the freeze guard, see _invalidateLayout below) nor climbs to
   #    ancestors; it enqueues only the directly-affected container.
   #  - OUTSIDE a pass: _invalidateLayout() so the next doOneCycle re-fits the container.
@@ -1755,7 +1755,7 @@ class Widget extends TreeNode
   _reFitContainer: (container = @) ->
     return unless container?._reLayoutChildren?
     if world?._recalculatingLayouts
-      container._markForRelayoutNoClimb()   # in-pass: enqueue just this directly-affected container, no climb (shared atom)
+      container.__markForRelayout()   # in-pass: enqueue just this directly-affected container, no climb (shared atom)
     else
       container._invalidateLayout()
 
@@ -1767,7 +1767,7 @@ class Widget extends TreeNode
       debugger
 
     #console.log "move 10"
-    @breakNumberOfRawMovesAndResizesCaches()
+    @__breakMoveResizeCaches()
     @rawSetExtent new Point(width or 0, @height())
 
   # high-level geometry-change API,
@@ -1785,14 +1785,14 @@ class Widget extends TreeNode
           @desiredExtent = newExtent
           @_invalidateLayout()
   
-  silentRawSetWidth: (width) ->
+  __commitWidth: (width) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
       debugger
 
     #console.log "move 11"
-    @breakNumberOfRawMovesAndResizesCaches()
+    @__breakMoveResizeCaches()
     w = Math.max Math.round(width or 0), 0
     @bounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + w, @bounds.corner.y
   
@@ -1803,7 +1803,7 @@ class Widget extends TreeNode
       debugger
 
     #console.log "move 12"
-    @breakNumberOfRawMovesAndResizesCaches()
+    @__breakMoveResizeCaches()
     @rawSetExtent new Point(@width(), height or 0)
 
   # high-level geometry-change API,
@@ -1821,14 +1821,14 @@ class Widget extends TreeNode
           @desiredExtent = newExtent
           @_invalidateLayout()
   
-  silentRawSetHeight: (height) ->
+  __commitHeight: (height) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
       debugger
 
     #console.log "move 13"
-    @breakNumberOfRawMovesAndResizesCaches()
+    @__breakMoveResizeCaches()
     h = Math.max Math.round(height or 0), 0
     @bounds = new Rectangle @bounds.origin, new Point @bounds.corner.x, @bounds.origin.y + h
   
@@ -2199,7 +2199,7 @@ class Widget extends TreeNode
     # FREEFLOATING-skip centralized in _invalidateLayout(triggeringChild): pass @ so the parent skips
     # when I'm freefloating -- removing a freefloating child doesn't change the parent's layout.
     @parent?._invalidateLayout(@)
-    @breakNumberOfRawMovesAndResizesCaches()
+    @__breakMoveResizeCaches()
     WorldWdgt.numberOfAddsAndRemoves++
     @parent.removeChild @
     @fullChanged()
@@ -3067,7 +3067,7 @@ class Widget extends TreeNode
     @fps = 0
     world.steppingWdgts.add @
     @step = =>
-      @silentFullRawMoveBy new Point xStep, yStep
+      @__commitMoveBy new Point xStep, yStep
       @fullChanged()
       stepCount += 1
       if stepCount is steps
@@ -3881,11 +3881,11 @@ class Widget extends TreeNode
   # for the climbing content-widget case. This is the ONE primitive under all three enqueue paths: _invalidateLayout
   # (calls it, THEN climbs), _reFitContainer's in-pass arm (enqueue one directly-affected container, no climb --
   # up-propagation is restored by that container's own seam re-firing if its geometry moves), and the caret's
-  # scroll-follow (an inert free-floating overlay, reached via _invalidateLayout's inert-receiver branch). "NoClimb"
-  # is the warning in the name: this alone does NOT tell my container I changed -- a CONTENT widget must use
+  # scroll-follow (an inert free-floating overlay, reached via _invalidateLayout's inert-receiver branch). NO CLIMB
+  # (the ex-"NoClimb" suffix, dropped in the __ rename): this alone does NOT tell my container I changed -- a CONTENT widget must use
   # _invalidateLayout, which climbs. Only framework layout machinery calls this (the two methods above); feature code
   # schedules via _invalidateLayout. (docs/unify-layout-enqueue-primitives-plan.md.)
-  _markForRelayoutNoClimb: ->
+  __markForRelayout: ->
     if @layoutIsValid then world.widgetsThatMaybeChangedLayout.push @
     @layoutIsValid = false
 
@@ -3907,7 +3907,7 @@ class Widget extends TreeNode
     # is the single home of the caret's self-schedule, reached via CaretWdgt._requestScrollFollow -> here; today only
     # the caret exercises it -- handles are moved by drag machinery through raw setters, never self-invalidate.)
     if @isFreeFloating() and @isLayoutInert?()
-      @_markForRelayoutNoClimb()
+      @__markForRelayout()
       return
     # FLOW-RULE INVARIANT (fail fast): the low-level geometry mutators (raw*/silent*/fullRaw*)
     # must not SCHEDULE layout -- they only mutate; scheduling a (re-)layout is the public
@@ -3933,13 +3933,13 @@ class Widget extends TreeNode
     # "careless" set the eventual declared-coalescing gate will reject -- record its ctor for the end-of-cycle
     # log. ORPHAN pushes are excluded: an off-world (under-construction) widget legitimately defers and settles
     # when attached (the childRemoved lesson) -- it is not careless, and is the bulk of the macro-driver noise.
-    # Recorded BEFORE _markForRelayoutNoClimb flips @layoutIsValid, and only on an ACTUAL push (@layoutIsValid still
+    # Recorded BEFORE __markForRelayout flips @layoutIsValid, and only on an ACTUAL push (@layoutIsValid still
     # true) -- an already-invalid widget is not re-pushed, so it must not be re-counted.
     if @layoutIsValid and world.auditUndeclaredEndOfCycle and world._coalescedDeclarationDepth == 0 and not world._inLayoutMutation and not @isOrphan()
       (world._undeclaredEndOfCyclePushes ?= []).push @constructor?.name
     # the bare enqueue (+ mark invalid): the shared primitive. The climb is this method's OWN extra responsibility,
-    # added explicitly below -- _markForRelayoutNoClimb deliberately does not climb (see its comment).
-    @_markForRelayoutNoClimb()
+    # added explicitly below -- __markForRelayout deliberately does not climb (see its comment).
+    @__markForRelayout()
     # CLIMB: tell my parent that a child (me) changed. Pass @ so the parent short-circuits via the
     # return at the top iff I'm freefloating -- this replaces the old inline `unless @isFreeFloating()
     # and @parent?` climb-guard (the freefloating rule now lives in ONE place, the param check above).

@@ -253,7 +253,7 @@ class ScrollPanelWdgt extends PanelWdgt
   rawSetExtent: (aPoint) ->
     unless aPoint.equals @extent()
       #console.log "move 15"
-      @breakNumberOfRawMovesAndResizesCaches()
+      @__breakMoveResizeCaches()
 
       # TODO this part seems like it should be in a _reLayout function
       # rather than here

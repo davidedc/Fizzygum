@@ -686,4 +686,4 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # corner or edge internal layout, like handles. This should work the same way i.e.
     # this code should not be here.
     if @resizer?.parent == @
-      @resizer.silentFullRawMoveTo new Point @right() - WorldWdgt.preferencesAndSettings.handleSize - @padding, @bottom() - WorldWdgt.preferencesAndSettings.handleSize - @padding
+      @resizer.__commitMoveTo new Point @right() - WorldWdgt.preferencesAndSettings.handleSize - @padding, @bottom() - WorldWdgt.preferencesAndSettings.handleSize - @padding

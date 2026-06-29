@@ -88,8 +88,8 @@ class ToolTipWdgt extends Widget
     # Widget / string contents are already handled by the branches above.
     else if @contents? and typeof @contents.getContext is "function"
       @contentsWidget = new Widget
-      @contentsWidget.silentRawSetWidth @contents.width
-      @contentsWidget.silentRawSetHeight @contents.height
+      @contentsWidget.__commitWidth @contents.width
+      @contentsWidget.__commitHeight @contents.height
       @contentsWidget.backBuffer = @contents
       @contentsWidget.backBufferContext = @contentsWidget.backBuffer.getContext "2d"
     else
@@ -108,8 +108,8 @@ class ToolTipWdgt extends Widget
     @contentsWidget.sizeToTextAndDisableFitting() if @contentsWidget instanceof TextWdgt
 
     # adjust my layout
-    @silentRawSetWidth @contentsWidget.width() + ((if @padding then @padding * 2 else @cornerRadius * 2))
-    @silentRawSetHeight @contentsWidget.height() + @cornerRadius + @padding * 2 + 2
+    @__commitWidth @contentsWidget.width() + ((if @padding then @padding * 2 else @cornerRadius * 2))
+    @__commitHeight @contentsWidget.height() + @cornerRadius + @padding * 2 + 2
 
     # position my contents
     @contentsWidget.fullRawMoveTo @position().add(

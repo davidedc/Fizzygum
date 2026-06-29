@@ -64,9 +64,9 @@ class MenuItemWdgt extends LabelButtonWdgt
 
     w = @width()
     @silentRawSetExtent @label.extent().add new Point 8, 0
-    @silentRawSetWidth w
+    @__commitWidth w
     np = @position().add new Point 4, 0
-    @label.silentFullRawMoveTo np
+    @label.__commitMoveTo np
 
   isTicked: ->
     @label.text.isTicked()

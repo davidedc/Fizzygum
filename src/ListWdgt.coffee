@@ -94,7 +94,7 @@ class ListWdgt extends ScrollPanelWdgt
       )
 
     world.maybeEnableTrackChanges()
-    @listContents.silentFullRawMoveTo @contents.position()
+    @listContents.__commitMoveTo @contents.position()
     @listContents._reLayoutSelf()
     
     @add @listContents
@@ -119,7 +119,7 @@ class ListWdgt extends ScrollPanelWdgt
   rawSetExtent: (aPoint) ->
     unless aPoint.equals @extent()
       #console.log "move 3"
-      @breakNumberOfRawMovesAndResizesCaches()
+      @__breakMoveResizeCaches()
       lb = @listContents.boundingBox()
       nb = @bounds.origin.corner @bounds.origin.add aPoint
       if nb.right() > lb.right() and nb.width() <= lb.width()

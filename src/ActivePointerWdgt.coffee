@@ -733,7 +733,7 @@ class ActivePointerWdgt extends Widget
     if delta.isZero() then return
     world.disableTrackChanges()
     #console.log "move 2"
-    @breakNumberOfRawMovesAndResizesCaches()
+    @__breakMoveResizeCaches()
     super delta
     world.maybeEnableTrackChanges()
     @fullChanged()
