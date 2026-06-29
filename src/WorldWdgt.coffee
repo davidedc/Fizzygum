@@ -282,8 +282,8 @@ class WorldWdgt extends PanelWdgt
   # changes" correctly.
   trackChanges: [true]
 
-  widgetsThatMaybeChangedGeometryOrPosition: []
-  widgetsThatMaybeChangedFullGeometryOrPosition: []
+  widgetsWithMaybeChangedPaintBounds: []
+  widgetsWithMaybeChangedFullPaintBounds: []
   widgetsThatMaybeChangedLayout: []
 
   # self-settling public geometry API (prototype 2026-06-19): re-entrancy guards.
@@ -738,7 +738,7 @@ class WorldWdgt extends PanelWdgt
 
 
   rectAlreadyIncludedInParentBrokenWidget: ->
-    for brokenWidget in @widgetsThatMaybeChangedGeometryOrPosition
+    for brokenWidget in @widgetsWithMaybeChangedPaintBounds
         if brokenWidget.srcBrokenRect?
           aRect = @broken[brokenWidget.srcBrokenRect]
           @checkARectWithHierarchy aRect, brokenWidget, true
@@ -746,7 +746,7 @@ class WorldWdgt extends PanelWdgt
           aRect = @broken[brokenWidget.dstBrokenRect]
           @checkARectWithHierarchy aRect, brokenWidget, false
 
-    for brokenWidget in @widgetsThatMaybeChangedFullGeometryOrPosition
+    for brokenWidget in @widgetsWithMaybeChangedFullPaintBounds
         if brokenWidget.srcBrokenRect?
           aRect = @broken[brokenWidget.srcBrokenRect]
           @checkARectWithHierarchy aRect, brokenWidget
@@ -755,23 +755,23 @@ class WorldWdgt extends PanelWdgt
           @checkARectWithHierarchy aRect, brokenWidget
 
   cleanupSrcAndDestRectsOfWidgets: ->
-    for brokenWidget in @widgetsThatMaybeChangedGeometryOrPosition
+    for brokenWidget in @widgetsWithMaybeChangedPaintBounds
       brokenWidget.srcBrokenRect = nil
       brokenWidget.dstBrokenRect = nil
-    for brokenWidget in @widgetsThatMaybeChangedFullGeometryOrPosition
+    for brokenWidget in @widgetsWithMaybeChangedFullPaintBounds
       brokenWidget.srcBrokenRect = nil
       brokenWidget.dstBrokenRect = nil
 
 
   fleshOutBroken: ->
-    #if @widgetsThatMaybeChangedGeometryOrPosition.length > 0
+    #if @widgetsWithMaybeChangedPaintBounds.length > 0
     #  debugger
 
     sourceBroken = nil
     destinationBroken = nil
 
 
-    for brokenWidget in @widgetsThatMaybeChangedGeometryOrPosition
+    for brokenWidget in @widgetsWithMaybeChangedPaintBounds
 
       # let's see if this Widget that marked itself as broken
       # was actually painted in the past frame.
@@ -809,19 +809,19 @@ class WorldWdgt extends PanelWdgt
         else
           @pushBrokenRect brokenWidget, destinationBroken, true
 
-      brokenWidget.geometryOrPositionPossiblyChanged = false
+      brokenWidget.paintBoundsMaybeChanged = false
       brokenWidget.clippedBoundsWhenLastPainted = nil
 
     
 
   fleshOutFullBroken: ->
-    #if @widgetsThatMaybeChangedFullGeometryOrPosition.length > 0
+    #if @widgetsWithMaybeChangedFullPaintBounds.length > 0
     #  debugger
 
     sourceBroken = nil
     destinationBroken = nil
 
-    for brokenWidget in @widgetsThatMaybeChangedFullGeometryOrPosition
+    for brokenWidget in @widgetsWithMaybeChangedFullPaintBounds
 
       #console.log "fleshOutFullBroken: " + brokenWidget
 
@@ -851,7 +851,7 @@ class WorldWdgt extends PanelWdgt
         else
           @pushBrokenRect brokenWidget, destinationBroken, true
 
-      brokenWidget.fullGeometryOrPositionPossiblyChanged = false
+      brokenWidget.fullPaintBoundsMaybeChanged = false
       brokenWidget.fullClippedBoundsWhenLastPainted = nil
 
 
@@ -995,13 +995,13 @@ class WorldWdgt extends PanelWdgt
         @layoutErrorsToReport.push err
 
 
-  clearGeometryOrPositionPossiblyChangedFlags: ->
-    for m in @widgetsThatMaybeChangedGeometryOrPosition
-      m.geometryOrPositionPossiblyChanged = false
+  clearPaintBoundsMaybeChangedFlags: ->
+    for m in @widgetsWithMaybeChangedPaintBounds
+      m.paintBoundsMaybeChanged = false
 
-  clearFullGeometryOrPositionPossiblyChangedFlags: ->
-    for m in @widgetsThatMaybeChangedFullGeometryOrPosition
-      m.fullGeometryOrPositionPossiblyChanged = false
+  clearFullPaintBoundsMaybeChangedFlags: ->
+    for m in @widgetsWithMaybeChangedFullPaintBounds
+      m.fullPaintBoundsMaybeChanged = false
 
   disableTrackChanges: ->
     @trackChanges.push false
@@ -1021,11 +1021,11 @@ class WorldWdgt extends PanelWdgt
     @rectAlreadyIncludedInParentBrokenWidget()
     @cleanupSrcAndDestRectsOfWidgets()
 
-    @clearGeometryOrPositionPossiblyChangedFlags()
-    @clearFullGeometryOrPositionPossiblyChangedFlags()
+    @clearPaintBoundsMaybeChangedFlags()
+    @clearFullPaintBoundsMaybeChangedFlags()
 
-    @widgetsThatMaybeChangedGeometryOrPosition = []
-    @widgetsThatMaybeChangedFullGeometryOrPosition = []
+    @widgetsWithMaybeChangedPaintBounds = []
+    @widgetsWithMaybeChangedFullPaintBounds = []
     # »>> this part is excluded from the fizzygum homepage build
     #ProfilingDataCollector.profileBrokenRects @broken, @numberOfDuplicatedBrokenRects, @numberOfMergedSourceAndDestination
     # this part is excluded from the fizzygum homepage build <<«
@@ -1192,7 +1192,7 @@ class WorldWdgt extends PanelWdgt
   addPinoutingWidgets: ->
     @currentPinoutingWidgets.forEach (eachPinoutingWidget) =>
       if @widgetsToBePinouted.has eachPinoutingWidget.wdgtThisWdgtIsPinouting
-        if eachPinoutingWidget.wdgtThisWdgtIsPinouting.hasMaybeChangedGeometryOrPosition()
+        if eachPinoutingWidget.wdgtThisWdgtIsPinouting.hasMaybeChangedPaintBounds()
           # reposition the pinout widget if needed
           peekThroughBox = eachPinoutingWidget.wdgtThisWdgtIsPinouting.clippedThroughBounds()
           eachPinoutingWidget._applyMoveToAndNotify new Point(peekThroughBox.right() + 10,peekThroughBox.top())
@@ -1219,7 +1219,7 @@ class WorldWdgt extends PanelWdgt
   addHighlightingWidgets: ->
     @currentHighlightingWidgets.forEach (eachHighlightingWidget) =>
       if @widgetsToBeHighlighted.has eachHighlightingWidget.wdgtThisWdgtIsHighlighting
-        if eachHighlightingWidget.wdgtThisWdgtIsHighlighting.hasMaybeChangedGeometryOrPosition()
+        if eachHighlightingWidget.wdgtThisWdgtIsHighlighting.hasMaybeChangedPaintBounds()
           eachHighlightingWidget._applyBoundsAndNotify eachHighlightingWidget.wdgtThisWdgtIsHighlighting.clippedThroughBounds()
       else
         @currentHighlightingWidgets.delete eachHighlightingWidget

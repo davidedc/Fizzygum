@@ -181,11 +181,11 @@ class Widget extends TreeNode
   # flag in the children. This is intentionally so,
   # as we don't want to navigate the children too many times.
   # If you want to know whether a widget has changed its
-  # position, use the hasMaybeChangedGeometryOrPosition:
+  # position, use the hasMaybeChangedPaintBounds:
   # method instead, which looks at this flag (and another one).
-  # See comment below on fullGeometryOrPositionPossiblyChanged
+  # See comment below on fullPaintBoundsMaybeChanged
   # for more information.
-  geometryOrPositionPossiblyChanged: false
+  paintBoundsMaybeChanged: false
   clippedBoundsWhenLastPainted: nil
 
   # you'd be tempted to check this flag to figure out
@@ -200,17 +200,17 @@ class Widget extends TreeNode
   # have a parent with this flag since we know that they are
   # already covered.
   # If you want to figure out whether a widget has changed,
-  # use the hasMaybeChangedGeometryOrPosition: method,
+  # use the hasMaybeChangedPaintBounds: method,
   # which checks recursively with the parents both the
-  # fullGeometryOrPositionPossiblyChanged flag and the
-  # geometryOrPositionPossiblyChanged flag.
+  # fullPaintBoundsMaybeChanged flag and the
+  # paintBoundsMaybeChanged flag.
   # Another way of doing this is to mark with a special flag
   # all the widget that touch their bounds or positions, but
   # then it's sort of costly to un-set such flag in all such
   # widgets, as we'd have to keep the "changed" widgets in a special
   # array to do that. Seems quite a bit more work and complication,
   # so just use the method.
-  fullGeometryOrPositionPossiblyChanged: false
+  fullPaintBoundsMaybeChanged: false
   fullClippedBoundsWhenLastPainted: nil
 
   cachedFullBounds: nil
@@ -2414,28 +2414,28 @@ class Widget extends TreeNode
 
       # you could check directly if it's in the array
       # but we use a flag because it's faster.
-      if !@geometryOrPositionPossiblyChanged
+      if !@paintBoundsMaybeChanged
         # if we already issued a fullChanged on this widget
         # then there is no point issuing a change too.
-        if !@fullGeometryOrPositionPossiblyChanged
-          world.widgetsThatMaybeChangedGeometryOrPosition.push @
-          @geometryOrPositionPossiblyChanged = true
+        if !@fullPaintBoundsMaybeChanged
+          world.widgetsWithMaybeChangedPaintBounds.push @
+          @paintBoundsMaybeChanged = true
 
   # to actually make sure if a widget has changed
   # position, you need to check it and all its
   # parents.
-  # See comment on the fullGeometryOrPositionPossiblyChanged
+  # See comment on the fullPaintBoundsMaybeChanged
   # property above for more info.
-  hasMaybeChangedGeometryOrPosition: ->
-    if @fullGeometryOrPositionPossiblyChanged or @geometryOrPositionPossiblyChanged
+  hasMaybeChangedPaintBounds: ->
+    if @fullPaintBoundsMaybeChanged or @paintBoundsMaybeChanged
       return true
     else
       if @parent?
-        return @parent.hasMaybeChangedGeometryOrPosition()
+        return @parent.hasMaybeChangedPaintBounds()
       else
         return false
   
-  # See comment on the fullGeometryOrPositionPossiblyChanged
+  # See comment on the fullPaintBoundsMaybeChanged
   # property above for more info.
   fullChanged: ->
     # tests should all pass even if you don't
@@ -2448,9 +2448,9 @@ class Widget extends TreeNode
     # I tested this was OK in December 2017
     if world.trackChanges[world.trackChanges.length - 1]
       # check if we already issued a fullChanged on this widget
-      if !@fullGeometryOrPositionPossiblyChanged
-        world.widgetsThatMaybeChangedFullGeometryOrPosition.push @
-        @fullGeometryOrPositionPossiblyChanged = true
+      if !@fullPaintBoundsMaybeChanged
+        world.widgetsWithMaybeChangedFullPaintBounds.push @
+        @fullPaintBoundsMaybeChanged = true
   
   # Widget accessing - structure //////////////////////////////////////////////
 
@@ -2628,13 +2628,13 @@ class Widget extends TreeNode
   # data structures related to broken widgets, then
   # we have to add the copy too.
   alignCopiedWidgetToBrokenInfoDataStructures: (copiedWidget) ->
-    if world.widgetsThatMaybeChangedGeometryOrPosition.includes(@) and
-     !world.widgetsThatMaybeChangedGeometryOrPosition.includes(copiedWidget)
-      world.widgetsThatMaybeChangedGeometryOrPosition.push copiedWidget
+    if world.widgetsWithMaybeChangedPaintBounds.includes(@) and
+     !world.widgetsWithMaybeChangedPaintBounds.includes(copiedWidget)
+      world.widgetsWithMaybeChangedPaintBounds.push copiedWidget
 
-    if world.widgetsThatMaybeChangedFullGeometryOrPosition.includes(@) and
-     !world.widgetsThatMaybeChangedFullGeometryOrPosition.includes(copiedWidget)
-      world.widgetsThatMaybeChangedFullGeometryOrPosition.push copiedWidget
+    if world.widgetsWithMaybeChangedFullPaintBounds.includes(@) and
+     !world.widgetsWithMaybeChangedFullPaintBounds.includes(copiedWidget)
+      world.widgetsWithMaybeChangedFullPaintBounds.push copiedWidget
 
   # in case we copy a widget, if the original was in some
   # stepping structures, then we have to add the copy too.
