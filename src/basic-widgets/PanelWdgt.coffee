@@ -87,7 +87,7 @@ class PanelWdgt extends Widget
   _reactToChildDropped: ->
     @_reFitContainer @parent
 
-  childRemoved: (child) ->
+  _reactToChildRemoved: (child) ->
     return unless @parent?
     # Re-fit my enclosing container (@parent) -- but ONLY when this container is part of the LIVE layout.
     # A removal inside a DETACHED subtree (root neither world nor hand) re-fits nothing observable and is
@@ -95,8 +95,8 @@ class PanelWdgt extends Widget
     # subtree re-lays-out when re-attached (a self-settling add re-fits top-down -- BasementOpenerWdgt wraps
     # the off-world basement in a WindowWdgt and world.add-s it). Concretely the lost-widget re-home during a
     # pop-up close (Widget._closeNoSettle -> basement.scrollPanel.contents._addInPseudoRandomPositionNoSettle
-    # -> _addNoSettle -> childRemoved) fires here on the CLOSED basement's contents (root == BasementWdgt);
-    # without this its wasted re-fit rode the per-frame end-of-cycle flush (the PanelWdgt.childRemoved
+    # -> _addNoSettle -> _reactToChildRemoved) fires here on the CLOSED basement's contents (root == BasementWdgt);
+    # without this its wasted re-fit rode the per-frame end-of-cycle flush (the PanelWdgt._reactToChildRemoved
     # residual). The skip is SAFE specifically at this REMOVAL seam (the only detached case is the
     # never-painted basement): a blanket orphan-skip in the shared _invalidateLayout instead breaks
     # construction/detached-live layout, since orphan invalidates are generally load-bearing (every widget

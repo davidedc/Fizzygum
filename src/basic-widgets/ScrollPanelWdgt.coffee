@@ -63,7 +63,7 @@ class ScrollPanelWdgt extends PanelWdgt
 
     @_reLayoutScrollbars()
 
-  wantsDropOf: (aWdgt) ->
+  wantsDropOfChild: (aWdgt) ->
     if @contents instanceof FolderPanelWdgt
       return false
     return @_acceptsDrops
@@ -650,10 +650,10 @@ class ScrollPanelWdgt extends PanelWdgt
   
   # During a float-drag, if I want the dragged widget and the pointer is in my edge band, I
   # auto-scroll. ActivePointerWdgt calls this instead of testing `newWdgt instanceof
-  # ScrollPanelWdgt` and driving the wantsDropOf / edge / startAutoScrolling logic itself.
+  # ScrollPanelWdgt` and driving the wantsDropOfChild / edge / startAutoScrolling logic itself.
   # (type-test-elimination campaign)
   maybeStartAutoScrollForDraggedWidget: (widgetBeingFloatDragged, pointerPosition) ->
-    if @wantsDropOf widgetBeingFloatDragged
+    if @wantsDropOfChild widgetBeingFloatDragged
       if !@boundingBox().insetBy(WorldWdgt.preferencesAndSettings.scrollBarsThickness * 3).containsPoint pointerPosition
         @startAutoScrolling()
 

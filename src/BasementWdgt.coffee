@@ -149,7 +149,7 @@ class BasementWdgt extends BoxWdgt
   # sure that the "only show lost items"
   # filter is respected. Just re-invoke the
   # methods that calculate the visibility
-  _reactToChildAddedInScrollPanel: ->
+  _reactToChildAddedInScrollPanel: (child) ->
     if @showingLostItemsOnly
       @hideUsedWidgets()
     else

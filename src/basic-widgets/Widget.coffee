@@ -570,8 +570,8 @@ class Widget extends TreeNode
         @fullChanged()
 
       previousParent.removeChild @
-      if previousParent.childRemoved?
-        previousParent.childRemoved @
+      if previousParent._reactToChildRemoved?
+        previousParent._reactToChildRemoved @
 
     # in case I'm a destroy at the end of a fullDestroy,
     # the children array is already empty
@@ -1722,7 +1722,7 @@ class Widget extends TreeNode
 
   # The ONE phase-dispatch primitive for the whole "re-fit a container at the next settle point" family:
   # the drag/drop gesture handlers (PanelWdgt / ScrollPanelWdgt / SimpleVerticalStackPanelWdgt
-  # _reactToChildDropped / _reactToChildGrabbed / childRemoved), the two freefloating-content "seams" above
+  # _reactToChildDropped / _reactToChildGrabbed / _reactToChildRemoved), the two freefloating-content "seams" above
   # (_refreshScrollPanelWdgtOrVerticalStackIfIamInIt, _reFitContainerAfterRawGeometryChange), and the
   # newParentChoice* menu actions all route through here. Two states:
   #  - INSIDE a layout pass (world._recalculatingLayouts): ENQUEUE the container into the recalculateLayouts
@@ -2510,7 +2510,7 @@ class Widget extends TreeNode
   # every internal layout-time / construction-time / teardown adder (it must NOT
   # flush layouts: it runs inside another mutation's settle, during construction, or from a
   # private teardown chain). Full semantics: shadow management + invalidate + silentAdd +
-  # _reactToBeingAdded / _reactToChildAdded / childRemoved callbacks + fractional-position, but never
+  # _reactToBeingAdded / _reactToChildAdded / _reactToChildRemoved callbacks + fractional-position, but never
   # recalculateLayouts. (The shadow/fractional steps fold in what add() used to do in its
   # settle-wrap; they are no-ops for the fresh non-world children the internal adders pass.)
   # ??? TODO you should handle the case of Widget
@@ -2565,8 +2565,8 @@ class Widget extends TreeNode
     aWdgt.fullChanged()
     @silentAdd aWdgt, true, position
     aWdgt._reactToBeingAdded @, beingDropped
-    if previousParent?.childRemoved?
-      previousParent.childRemoved @
+    if previousParent?._reactToChildRemoved?
+      previousParent._reactToChildRemoved aWdgt
 
     if @_reactToChildAdded?
       @_reactToChildAdded aWdgt
@@ -3011,8 +3011,14 @@ class Widget extends TreeNode
   _reactToBeingDropped: (whereIn) ->
     @rememberFractionalSituationInHoldingPanel()
     
-  wantsDropOf: (aWdgt) ->
+  wantsDropOfChild: (aWdgt) ->
     return @_acceptsDrops
+
+  # the SELF drop gate (public, pure, positive — §9.2): the base default is "yes, droppable"; WindowWdgt
+  # (external) / BasementOpenerWdgt override to refuse. (ex-rejectsBeingDropped, polarity-flipped — §9.7-3;
+  # a base default is required so a widget with no override still defaults droppable — R4.)
+  wantsToBeDropped: ->
+    return true
 
   enableDrops: ->
     @_acceptsDrops = true
@@ -3932,7 +3938,7 @@ class Widget extends TreeNode
     # an ATTACHED widget made OUTSIDE a *Coalesced declaration (_coalescedDeclarationDepth == 0) is the
     # "careless" set the eventual declared-coalescing gate will reject -- record its ctor for the end-of-cycle
     # log. ORPHAN pushes are excluded: an off-world (under-construction) widget legitimately defers and settles
-    # when attached (the childRemoved lesson) -- it is not careless, and is the bulk of the macro-driver noise.
+    # when attached (the _reactToChildRemoved lesson) -- it is not careless, and is the bulk of the macro-driver noise.
     # Recorded BEFORE __markForRelayout flips @layoutIsValid, and only on an ACTUAL push (@layoutIsValid still
     # true) -- an already-invalid widget is not re-pushed, so it must not be re-counted.
     if @layoutIsValid and world.auditUndeclaredEndOfCycle and world._coalescedDeclarationDepth == 0 and not world._inLayoutMutation and not @isOrphan()
@@ -3964,7 +3970,7 @@ class Widget extends TreeNode
     # none today, but the method is public) still schedules via _invalidateLayout, so the public contract holds.
     # The skip is SAFE specifically at THIS sizing-then-add seam -- NOT as a blanket _invalidateLayout
     # orphan-skip, which broke 63 tests because orphan invalidates are generally load-bearing (cf.
-    # PanelWdgt.childRemoved). A disable-probe confirmed the orphan re-layout changes nothing (byte-identical).
+    # PanelWdgt._reactToChildRemoved). A disable-probe confirmed the orphan re-layout changes nothing (byte-identical).
     # (Sets @maxWidth/@maxHeight inline rather than via _setMaxDimNoSettle, which would re-introduce the very
     # construction invalidate this skips; setMaxDim's own callers are unaffected.)
     @_invalidateLayout() unless @isOrphan()

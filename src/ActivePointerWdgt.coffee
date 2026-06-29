@@ -143,13 +143,13 @@ class ActivePointerWdgt extends Widget
   #
   #   _beforeBeingGrabbed() -> grabTarget
   #   _reactToChildGrabbed(grabbedWdgt) -> oldParent
-  #   wantsDropOf(wdgtToDrop) ->  newParent
+  #   wantsDropOfChild(wdgtToDrop) ->  newParent
   #   _reactToBeingDropped(activePointerWdgt) -> droppedWdgt
   #   _reactToChildDropped(droppedWdgt, activePointerWdgt) -> newParent
   #
   dropTargetFor: (aWdgt) ->
     target = @topWdgtUnderPointer()
-    until target.wantsDropOf aWdgt
+    until target.wantsDropOfChild aWdgt
       target = target.parent
     target
   
@@ -221,7 +221,7 @@ class ActivePointerWdgt extends Widget
       # scrollbars when you take a widget out of it). A grab is one discrete re-parent gesture, so settle it
       # HERE -- consistent on return, not on the next doOneCycle. This is the SYMMETRIC twin of the drop
       # (see ActivePointerWdgt.drop): @add above already self-settled the re-home (its _addNoSettle captured
-      # the OLD container's childRemoved re-fit inside add's settle), and this SINGLE settle flushes the
+      # the OLD container's _reactToChildRemoved re-fit inside add's settle), and this SINGLE settle flushes the
       # _reactToChildGrabbed re-fit once. Every _reactToChildGrabbed override re-fits through NON-settling paths -- Panel
       # Wdgt / ScrollPanelWdgt via _reFitContainer (a raw invalidate, no public setter), FridgeWdgt via
       # compileTiles -> FizzytilesCodeWdgt.showCompiledCode -> _setTextNoSettle (core) -- so nothing re-enters
@@ -245,13 +245,12 @@ class ActivePointerWdgt extends Widget
 
       wdgtToDrop = @children[0]
 
-      if wdgtToDrop.rejectsBeingDropped?()
+      if not wdgtToDrop.wantsToBeDropped()
         target = world
       else
         target = @dropTargetFor wdgtToDrop
 
       @fullChanged()
-      wdgtToDrop.aboutToBeDropped? target
       target._beforeChildDropped? wdgtToDrop
       target.add wdgtToDrop, nil, nil, true, nil, @position()
       wdgtToDrop.fullChanged()
@@ -948,9 +947,9 @@ class ActivePointerWdgt extends Widget
         widgetBeingFloatDragged = @children[0]
         # if we are dragging stuff that can't be dropped
         # (e.g. external windows) then nothing happens
-        if !widgetBeingFloatDragged.rejectsBeingDropped? or !widgetBeingFloatDragged.rejectsBeingDropped()
+        if widgetBeingFloatDragged.wantsToBeDropped()
           # a scroll panel decides whether to auto-scroll for the dragged widget near its edge
-          # (was `newWdgt instanceof ScrollPanelWdgt` + the wantsDropOf / edge / start logic here).
+          # (was `newWdgt instanceof ScrollPanelWdgt` + the wantsDropOfChild / edge / start logic here).
           # (type-test-elimination campaign)
           newWdgt.maybeStartAutoScrollForDraggedWidget? widgetBeingFloatDragged, @position()
 

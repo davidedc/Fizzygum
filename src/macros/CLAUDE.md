@@ -221,7 +221,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   it is only editable after a list-row is selected; it HIDES inherited properties by default (toggle
   `showInheritedToggle`, and scroll the list to a row by name since e.g. `alpha` sorts below the first rows);
   property editing is via the `add.../rename.../remove/save` footer buttons (`save` → `@target.injectProperty`); and
-  being an EXTERNAL window it refuses to nest into a container (`rejectsBeingDropped`) — call `win.makeInternal()`
+  being an EXTERNAL window it refuses to nest into a container (`wantsToBeDropped` is false for external) — call `win.makeInternal()`
   first to drop it into a document/panel.
 
 ## Composing macros (args, return values, DRY for code AND assets)

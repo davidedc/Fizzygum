@@ -228,8 +228,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     return false
 
 
-  rejectsBeingDropped: ->
-    return !@internal
+  wantsToBeDropped: ->
+    return @internal
 
   # A window is a SimpleVerticalStackPanelWdgt but does NOT impose its ratio on dropped
   # children (was the `!(whereIn instanceof WindowWdgt)` exclusion in the ratio mixin /
@@ -367,7 +367,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     if @recursivelyAttachedAsFreeFloating()
       @_applyExtentAndNotify new Point 300, 300
 
-  _beforeChildDropped: ->
+  _beforeChildDropped: (child) ->
     @removeChild @contents
 
   _reactToBeingDropped: (whereIn) ->

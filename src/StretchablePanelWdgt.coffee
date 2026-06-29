@@ -3,7 +3,7 @@
 
 class StretchablePanelWdgt extends PanelWdgt
 
-  childRemoved: (child) ->
+  _reactToChildRemoved: (child) ->
     super
     if @parent?.setRatio? and @parent.ratio?
       childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()

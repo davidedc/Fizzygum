@@ -97,7 +97,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # own re-fit DEFERS to the cycle (else arm; my _reLayout is 'super; @_reLayoutChildren'). These run
   # outside a pass (drop gesture / destroy / add-flush re-parent -- where invalidate is legal); the
   # in-pass arm keeps the synchronous re-fit. (fam 2 -- deferred-layout-residuals-audit.md)
-  childRemoved: ->
+  _reactToChildRemoved: ->
     return if @parent?._reLayOutAfterContainedPanelChange?()
     @_reFitContainer()
 

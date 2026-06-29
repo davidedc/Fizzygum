@@ -594,8 +594,8 @@ assertion a recapture after a regression silently stores two different hashes an
   CHILD (label/background), so descend `"a Window"` by prefix first; then the standard carry-drop (no-button move + click).
   Locate the copy STRUCTURALLY (`world.topWdgtSuchThat` on class + position) — original and copy share their title. No new verb.
 - **Internal vs external window drop** (`macroInternalVsExternalWindowDrop`): a `WindowWdgt`'s 4th ctor arg is `internal`
-  (default false). `WindowWdgt.rejectsBeingDropped` returns `!@internal`, and `ActivePointerWdgt.drop` forces `target = world`
-  for a widget that rejectsBeingDropped (`:242`) — so an EXTERNAL window dropped over a container lands on the desktop (NOT
+  (default false). `WindowWdgt.wantsToBeDropped` returns `@internal`, and `ActivePointerWdgt.drop` forces `target = world`
+  for a widget that does not want to be dropped (`:248`) — so an EXTERNAL window dropped over a container lands on the desktop (NOT
   nested) while an INTERNAL window nests into the morph under the point (e.g. a PanelWdgt, `_acceptsDrops:true`). Carry on the
   hand with `win.pickUp()` + a no-button `@syntheticEventsMouseMove_InputEvents`, drop with `@syntheticEventsMouseClick_InputEvents()`.
   Prove nesting with `panel.fullMoveTo …` (only the nested internal window travels).
@@ -837,7 +837,7 @@ assertion a recapture after a regression silently stores two different hashes an
   from the pristine shot by exactly the `HighlightableMixin` pristine-vs-repaint glyph rule of the nested-collapse entry). Park
   the pointer on one clear spot before every shot. No new verb.
 - **Edge auto-scroll while dragging** (`macroListWdgtAutoScrollsNearDraggedEdge`): a ScrollPanelWdgt auto-scrolls when a
-  float-dragged morph it `wantsDropOf` is held near an edge band (≈`scrollBarsThickness*3`). Build a list overflowing BOTH ways,
+  float-dragged morph it `wantsDropOfChild` is held near an edge band (≈`scrollBarsThickness*3`). Build a list overflowing BOTH ways,
   `pickUp` a rectangle (don't drop), then `@syntheticEventsMouseMove_InputEvents (a point in an edge band), "no button", …` and
   yield generously. MUST hold long enough that the `autoScroll` 500ms `Date.now()` settle elapses and the scroll CLAMPS — via a
   NON-scaled numeric `yield N` (real-time settle, speed-independent), so it's deterministic at every speed and needs no speed metadata.
@@ -1051,7 +1051,7 @@ assertion a recapture after a regression silently stores two different hashes an
   duplicated-heart targets. The size-preserving sibling of the flow-in (`macroIconDroppedIntoDocumentFlows`) and reject
   (`macroLockedDocumentRejectsDrop`) document-drop facets.
 - **A document HOSTS the inspector as flowing content** (`macroSimpleDocumentHandlesOldInspector`): a `SimpleDocumentScrollPanelWdgt` can host
-  the inspector window. KEY: the inspector is an EXTERNAL `WindowWdgt`, which REFUSES to nest (`rejectsBeingDropped = !@internal` forces a drop to
+  the inspector window. KEY: the inspector is an EXTERNAL `WindowWdgt`, which REFUSES to nest (`wantsToBeDropped = @internal` is false for external → forces a drop to
   the world) — so first `win.makeInternal()` (the genuine internal/external toggle affordance, `WindowWdgt.coffee:106-109`). An INTERNAL window
   dropped into the doc (drag it by its TITLE — a per-test `dragWindowByTitleTo` helper; pressing a pane would grab the pane) becomes flowing content
   below the default text, kept at its own size and CLIPPED at the doc's right edge if oversized; dragged back out by its title it returns to a
@@ -1378,7 +1378,7 @@ assertion a recapture after a regression silently stores two different hashes an
   — start from substantial content.) The reusable fixture for the big `Width*VerticalStackPanel` family.
 - **Stack SHRINKS when a child is removed** (`macroVerticalStackPanelShrinksOnParagraphRemoval`): the SHRINK complement of the
   grows entry above — a tight, width-constraining `SimpleVerticalStackPanelWdgt` tracks its height DOWN as well as up. Removing a
-  child fires `childRemoved → adjustContentsBounds` (`SimpleVerticalStackPanelWdgt.coffee:52-57`), which re-sums the (now fewer)
+  child fires `_reactToChildRemoved → adjustContentsBounds` (`SimpleVerticalStackPanelWdgt.coffee:52-57`), which re-sums the (now fewer)
   child heights with NO floor while tight & non-empty (`:130-131`) → the panel snaps down to hug the remaining paragraph. The
   removal hook fires when the dragged-out child is re-parented to the world (`Widget.coffee:2249-2250`). Build like the grows
   fixture (bare `new SimpleVerticalStackPanelWdgt`, two yellow wrapping `SimplePlainTextWdgt` dropped in via

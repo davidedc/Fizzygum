@@ -444,7 +444,7 @@ class WorldWdgt extends PanelWdgt
 
     @changed()
 
-  wantsDropOf: (aWdgt) ->
+  wantsDropOfChild: (aWdgt) ->
     return @_acceptsDrops
 
   makeNewConnectionsCalculationToken: ->
