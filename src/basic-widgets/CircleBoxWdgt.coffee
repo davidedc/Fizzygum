@@ -6,7 +6,7 @@ class CircleBoxWdgt extends Widget
   constructor: ->
     super()
     @appearance = new CircleBoxyAppearance(@)
-    @silentRawSetExtent new Point 20, 100
+    @_commitExtentAndNotify new Point 20, 100
 
   colloquialName: ->
     return "circle-box"

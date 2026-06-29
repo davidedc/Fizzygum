@@ -13,5 +13,5 @@ class UpperRightTriangleWdgt extends Widget
     @noticesTransparentClick = false
 
     size = WorldWdgt.preferencesAndSettings.handleSize
-    @silentRawSetExtent new Point size, size
+    @_commitExtentAndNotify new Point size, size
     parent?.add @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT

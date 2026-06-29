@@ -115,7 +115,7 @@ class InspectorWdgt extends Widget
     # ~50x40 across three panes and collapse them. The windowed path
     # (Widget::spawnInspector) overrides this via the window's setExtent, so
     # setting it here is windowed-pixel-neutral.
-    @silentRawSetExtent new Point 560, 410
+    @_commitExtentAndNotify new Point 560, 410
 
     # When free-floating (naked on the desktop) the inspector paints its own
     # opaque background; inside a WindowWdgt the window supplies it. The

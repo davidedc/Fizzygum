@@ -165,7 +165,7 @@ class MenuWdgt extends PopUpWdgt
     unless @isListContents
       @cornerRadius = if WorldWdgt.preferencesAndSettings.isFlat then 0 else 5
     @color = Color.create 238, 238, 238
-    @silentRawSetExtent new Point 0, 0
+    @_commitExtentAndNotify new Point 0, 0
     y = @top()
     x = @left() + 2
 
@@ -194,7 +194,7 @@ class MenuWdgt extends PopUpWdgt
     fb = @fullBounds()
     #console.log "fb: " + fb
     # add some padding to the right and bottom of the menu
-    @silentRawSetExtent fb.extent().add 2
+    @_commitExtentAndNotify fb.extent().add 2
     world.maybeEnableTrackChanges()
     @fullChanged()
   

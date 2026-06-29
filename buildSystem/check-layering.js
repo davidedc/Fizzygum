@@ -119,13 +119,13 @@ const isLowLevel = (name) =>
 // identical work to the blessed _reLayoutSelf/_reLayout applies, so a name-based ban would just force a
 // DRY-breaking inline. (deferred-layout-capstone-execution-plan.md, Part B.)
 //
-// NAME-COVERAGE re-census (lint-ratchet plan Phase 2, 2026-06-25; refined for the __-leaf tier 2026-06-29):
-// every method that writes geometry immediately is recognizably low-level -- either raw*/silent*/fullRaw*-named
-// (covered by [E], the immediate-mutator SCHEDULE ban) or a __commit*/__breakMoveResizeCaches LEAF (covered by
-// [I], the stronger no-orchestration ban that subsumes [E] for the __ tier). So [E] has no innocent-named blind
-// spot. The only non-low-level methods touching the cache-break are constructor (@bounds init, not a mutation),
-// _destroyNoSettle and removeFromTree (teardown / structural-removal cache hygiene -- neither writes geometry;
-// removeFromTree is a structural op that legitimately schedules). No escapee.
+// NAME-COVERAGE invariant (lint-ratchet Phase 2, 2026-06-25; kept current through the __/apply rename, 2026-06-29):
+// every method that writes geometry immediately is recognizably LOW-LEVEL -- a raw*/silent*/fullRaw* mutator
+// (covered by [E], the SCHEDULE ban), a __ leaf (covered by the stronger [I] no-orchestration ban), or a
+// _-prefixed apply/commit (_apply*/_commit*) that itself bottoms out on those. None is innocent-named, so [E]
+// has no blind spot. The only non-low-level methods touching the cache-break are constructor (@bounds init, not a
+// mutation), _destroyNoSettle and removeFromTree (teardown / structural-removal cache hygiene -- neither writes
+// geometry; removeFromTree is a structural op that legitimately schedules). No escapee.
 const isImmediateMutator = (name) => /^(raw[A-Z]|silent|fullRaw)/.test(name);
 
 // [D] macro hygiene: a SystemTest macro must drive the world through the PUBLIC widget API ONLY -- never

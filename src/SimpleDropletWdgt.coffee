@@ -30,11 +30,11 @@ class SimpleDropletWdgt extends Widget
       nil,
       nil
     # _reactToChildDropped runs inside the drop's single settle, so it uses NON-settling calls throughout:
-    # addAsSiblingAfterMe already routes through _addNoSettle; silentRawSetBounds is the raw setter (the
+    # addAsSiblingAfterMe already routes through _addNoSettle; _commitBoundsAndNotify is the raw setter (the
     # dropped widget is freefloating -- added via addAsSiblingAfterMe with nil -> ATTACHEDAS_FREEFLOATING --
     # so the immediate raw set is byte-identical to the deferred setBounds path and fires the container
     # re-fit seam); fullDestroy -> _fullDestroyNoSettle.
-    widgetBeingDropped.silentRawSetBounds @bounds
+    widgetBeingDropped._commitBoundsAndNotify @bounds
     @_fullDestroyNoSettle()
 
 

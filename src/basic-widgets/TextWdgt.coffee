@@ -352,7 +352,7 @@ class TextWdgt extends StringWdgt
   # it -- NO @bounds write, NO re-fit seam; only the benign width+font+text-keyed wrap memo
   # is populated (the same entry the commit path hits). It generalises the horizontal-stack
   # pure measure (getRecursive*Dim) to a width-DEPENDENT wrapped height, the gap §2.5/§4.1
-  # names. The round + min-extent clamp mirrors silentRawSetExtent, so the measured height
+  # names. The round + min-extent clamp mirrors _commitExtentAndNotify, so the measured height
   # byte-matches what _reLayoutSelf commits when the box is later sized to availW (proven
   # suite-wide: 4022 measure-vs-commit differentials, 0 mismatches). NO production consumer
   # yet -- Stage A lands the measure alone; the vertical-stack/window/scroll arranges consume
@@ -418,7 +418,7 @@ class TextWdgt extends StringWdgt
       @breakTextIntoLines (@transformTextOneToOne @text), @originallySetFontSize
     widthOfText = Math.max naturalWidth, 1
     heightOfText = Math.max naturalHeight, (@fontHeight @originallySetFontSize)
-    @silentRawSetExtent new Point widthOfText, heightOfText
+    @_commitExtentAndNotify new Point widthOfText, heightOfText
     @reflowText()
     @parent?._invalidateLayout() unless world?._recalculatingLayouts
     @  # return self so the public wrapper is chainable (macros do `(new TextWdgt …).sizeToTextAndDisableFitting()`)
@@ -460,7 +460,7 @@ class TextWdgt extends StringWdgt
     # they are stored + part of createBufferCacheKey so a future opt-in
     # re-renders, but their sizing is left for the first caller that needs them
     # (the padding amount is a look-and-decide per the FITTING MODEL design).
-    @silentRawSetExtent new Point width, height
+    @_commitExtentAndNotify new Point width, height
 
     @changed()
 

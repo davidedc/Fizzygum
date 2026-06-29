@@ -14,7 +14,7 @@ class RectangleWdgt extends Widget
   constructor: (extent, color) ->
     super()
     @appearance = new RectangularAppearance @
-    @silentRawSetExtent(extent) if extent?
+    @_commitExtentAndNotify(extent) if extent?
     @color = color if color?
     @toolTipMessage = "rectangle"
 

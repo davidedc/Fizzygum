@@ -38,7 +38,7 @@ ContainerMixin =
           newBounds = @boundingBox()
 
         unless @boundingBox().equals newBounds
-          @silentRawSetBounds newBounds
+          @_commitBoundsAndNotify newBounds
           @changed()
           @_reLayoutSelf()
           

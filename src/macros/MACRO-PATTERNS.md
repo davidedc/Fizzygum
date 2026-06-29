@@ -290,7 +290,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Text reflow under HANDLE resize — old TextMorph (width-from-user, height-from-content)**
   (`macroTextRelayoutsCorrectlyOnResize`): the OLD `TextMorph` family's resize law, and the suite's only dedicated
   old-TextMorph assertion. `TextMorph.rawSetExtent` keeps ONLY the requested x — it becomes `@maxTextWidth`
-  (`TextMorph.coffee:235`) — and `reLayout` re-breaks the text at that measure and `silentRawSetExtent`s the morph to
+  (`TextMorph.coffee:235`) — and `reLayout` re-breaks the text at that measure and `_commitExtentAndNotify`s the morph to
   (maxTextWidth, lineCount × fontHeight) (`:118-131`): the drag's y is DISCARDED. So a corner-handle drag released far
   ABOVE the content's eventual bottom yields a wide block SHORTER than the release point, and a hard narrow yields a
   column far TALLER than it — both directions in one test. Fixture: the world menu's "demo ➜" → "text" (the Lorelei

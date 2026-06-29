@@ -63,7 +63,7 @@ class MenuItemWdgt extends LabelButtonWdgt
     @label._sizeToTextAndDisableFittingNoSettle()
 
     w = @width()
-    @silentRawSetExtent @label.extent().add new Point 8, 0
+    @_commitExtentAndNotify @label.extent().add new Point 8, 0
     @__commitWidth w
     np = @position().add new Point 4, 0
     @label.__commitMoveTo np

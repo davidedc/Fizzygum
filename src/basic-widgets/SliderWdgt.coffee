@@ -36,7 +36,7 @@ class SliderWdgt extends CircleBoxWdgt
     @button = new SliderButtonWdgt
     super # if nil, then a vertical one will be created
     @alpha = 0.1
-    @silentRawSetExtent new Point 20, 100
+    @_commitExtentAndNotify new Point 20, 100
     @silentAdd @button
 
   colloquialName: ->

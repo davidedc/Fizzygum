@@ -49,7 +49,7 @@ class SliderButtonWdgt extends CircleBoxWdgt
       if orientation is "vertical"
         bw = @parent.width() - 2
         bh = Math.max bw, Math.round @parent.height() * @parent.ratio()
-        @silentRawSetExtent new Point bw, bh
+        @_commitExtentAndNotify new Point bw, bh
         posX = 1
         posY = Math.max(0,Math.min(
           Math.round((sliderValue - @parent.start) * @parent.unitSize()),
@@ -59,7 +59,7 @@ class SliderButtonWdgt extends CircleBoxWdgt
       else
         bh = @parent.height() - 2
         bw = Math.max bh, Math.round @parent.width() * @parent.ratio()
-        @silentRawSetExtent new Point bw, bh
+        @_commitExtentAndNotify new Point bw, bh
         posY = 1
         posX = Math.max(0, Math.min(
           Math.round((sliderValue - @parent.start) * @parent.unitSize()),

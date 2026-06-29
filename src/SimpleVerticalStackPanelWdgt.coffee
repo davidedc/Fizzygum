@@ -61,7 +61,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   constructor: (extent, color, @padding, @constrainContentWidth = true) ->
     super()
     @appearance = new RectangularAppearance @
-    @silentRawSetExtent(extent) if extent?
+    @_commitExtentAndNotify(extent) if extent?
     @color = color if color?
 
   # The re-fit chokepoint for a stack (no scrollbars): re-lay-out my stacked
@@ -122,11 +122,11 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # override's @_reLayoutChildren(). That removes the last synchronous re-entry, which is what let the
   # re-entrancy guard + the @_adjustingContentsBounds field be deleted. Byte-identical: the skipped re-entry
   # was already a guarded no-op. (The leading breakCaches mirrors rawSetWidth / rawSetHeight exactly.)
-  _applyOwnArrangedWidth: (newWidth) ->
+  _resizeOwnWidthSkippingChildRelayout: (newWidth) ->
     @__breakMoveResizeCaches()
     Widget::rawSetExtent.call @, new Point(newWidth or 0, @height())
 
-  _applyOwnArrangedHeight: (newHeight) ->
+  _resizeOwnHeightSkippingChildRelayout: (newHeight) ->
     @__breakMoveResizeCaches()
     Widget::rawSetExtent.call @, new Point(@width(), newHeight or 0)
 
@@ -165,7 +165,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # resized+moved first. Unlike the base (which reads stable applied positions of a non-laying-out panel's
   # children), a stack's child positions are layout-derived, so they are RE-DERIVED here from measured
   # heights. availW = my available width (I subtract my own padding, exactly as the arrange does). Sizes are
-  # min-extent-clamped to match silentRawSetExtent. Byte-identical to subWidgetsMergedFullBounds at the fixed
+  # min-extent-clamped to match _commitExtentAndNotify. Byte-identical to subWidgetsMergedFullBounds at the fixed
   # point (Stage-C probe: 0/1429 converged mismatches). NB the tight=false viewport grow in
   # preferredExtentForWidth is deliberately NOT applied here -- the scroll panel does its own viewport grow,
   # and the frame wants the NATURAL children union.
@@ -266,7 +266,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
           elementHeight = widget.rawSetWidthSizeHeightAccordingly recommendedElementWidth
         else
           measured = widget.preferredExtentForWidth recommendedElementWidth
-          widget._arrangeApplyExtent measured
+          widget._applyExtent measured
           elementHeight = measured.y
 
         # contained text that OPTED INTO FIT_BOX_TO_TEXT (a SimplePlainTextWdgt or a
@@ -294,7 +294,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
       if widget._reLayoutChildren?
         widget.fullRawMoveTo moveTo
       else
-        widget._arrangeApplyMoveTo moveTo
+        widget._applyMoveTo moveTo
       # else-branch: consume the handed-forward height (no read-back of applied @bounds). The
       # !constrainContentWidth if-branch does NO resize -- there is no mutate-then-read-back to remove there --
       # so it falls back to reading the child's already-settled height. (proper-layouts Phase B)
@@ -309,9 +309,9 @@ class SimpleVerticalStackPanelWdgt extends Widget
     # NON-notifying twin -- the frame commit that follows overrides it anyway, so the only effect of the notifying
     # path here was the redundant Pattern-A up-notify to my sizer. Otherwise notify (the load-bearing cascade).
     if parentWillSizeMe
-      @_arrangeApplyExtent new Point @width(), newHeight
+      @_applyExtent new Point @width(), newHeight
     else
-      @_applyOwnArrangedHeight newHeight
+      @_resizeOwnHeightSkippingChildRelayout newHeight
 
   rawSetExtent: (aPoint) ->
     unless aPoint.equals @extent()

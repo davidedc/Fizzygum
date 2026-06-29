@@ -353,7 +353,7 @@ class Widget extends TreeNode
     @bounds = Rectangle.EMPTY
     @minimumExtent = new Point 5,5
 
-    @silentRawSetBounds new Rectangle 0,0,50,40
+    @_commitBoundsAndNotify new Rectangle 0,0,50,40
 
     @lastTime = Date.now()
     # Note that we don't call
@@ -889,7 +889,7 @@ class Widget extends TreeNode
           @desiredPosition = newPos
           @_invalidateLayout()
 
-  silentRawSetBounds: (newBounds) ->
+  _commitBoundsAndNotify: (newBounds) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
@@ -902,7 +902,7 @@ class Widget extends TreeNode
       @bounds = @bounds.translateTo newBounds.origin
       @__breakMoveResizeCaches()
 
-    @silentRawSetExtent newBounds.extent()
+    @_commitExtentAndNotify newBounds.extent()
   
   # »>> this part is excluded from the fizzygum homepage build
   # unused code
@@ -1158,7 +1158,7 @@ class Widget extends TreeNode
 
   # §4.1 Stage C (proper-layouts): the side-effect-free counterpart of subWidgetsMergedFullBounds above --
   # the merged bounds of my children with each child's SIZE taken from its pure preferredExtentForWidth
-  # measure (min-extent-clamped, as silentRawSetExtent applies on commit) instead of its just-mutated applied
+  # measure (min-extent-clamped, as _commitExtentAndNotify applies on commit) instead of its just-mutated applied
   # extent, at the child's current position. A scroll panel consumes this to size its content frame WITHOUT
   # first resizing my children and reading the result back -- the mutate-then-read-back the re-fit seam exists
   # for (assessment §2.4). Seeded IDENTICALLY to subWidgetsMergedFullBounds (child[0] even if inert) so a
@@ -1304,19 +1304,19 @@ class Widget extends TreeNode
   
   # Widget accessing - simple changes:
   # Translate me + my children + repaint, then fire the re-fit seam (Intent-1: notify the container tracking my
-  # geometry to re-fit). The move body is shared with the NON-notifying arrange twin _arrangeApplyMoveBy (below);
+  # geometry to re-fit). The move body is shared with the NON-notifying arrange twin _applyMoveBy (below);
   # the seam fires iff I actually moved. (Byte-exact vs the prior in-the-middle seam fire: the seam only SCHEDULES
   # my container's re-fit -- reading my parent, not my children -- so firing it AFTER the children-translate rather
   # than before is geometry-identical, and the silent children-translate enqueues nothing in between.)
   fullRawMoveBy: (delta) ->
-    @_reFitContainerAfterRawGeometryChange() if @_arrangeApplyMoveBy delta
+    @_reFitContainerAfterRawGeometryChange() if @_applyMoveBy delta
 
   # Non-notifying twins of fullRawMoveBy / fullRawMoveTo (§4.2 structural arrange-down): translate me + my children +
   # repaint WITHOUT firing the re-fit seam -- a container placing me top-down already knows my new position, so the
   # seam's Intent-2 self-re-enqueue is redundant. Used by the stack arrange for LEAF children (a leaf has no inner
   # convergence the move's re-enqueue would drive; a container child keeps the seam-firing fullRawMoveTo).
-  # _arrangeApplyMoveBy is fullRawMoveBy's shared core (returns true iff actually moved, so the wrapper fires the seam).
-  _arrangeApplyMoveBy: (delta) ->
+  # _applyMoveBy is fullRawMoveBy's shared core (returns true iff actually moved, so the wrapper fires the seam).
+  _applyMoveBy: (delta) ->
     return false if delta.isZero()
     @__breakMoveResizeCaches()
     @fullChanged()
@@ -1325,12 +1325,12 @@ class Widget extends TreeNode
       child.__commitMoveBy delta
     return true
 
-  _arrangeApplyMoveTo: (aPoint) ->
+  _applyMoveTo: (aPoint) ->
     aPoint.debugIfFloats()
     delta = aPoint.toLocalCoordinatesOf @
     if !delta.isZero()
       @__breakMoveResizeCaches()
-      @_arrangeApplyMoveBy delta
+      @_applyMoveBy delta
     @bounds.debugIfFloats()
 
   __commitMoveBy: (delta) ->
@@ -1612,7 +1612,7 @@ class Widget extends TreeNode
     unless aPoint.equals @extent()
       @__breakMoveResizeCaches()
 
-      @silentRawSetExtent aPoint
+      @_commitExtentAndNotify aPoint
       @changed()
       @_reLayoutSelf()
 
@@ -1643,17 +1643,17 @@ class Widget extends TreeNode
             @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
 
   
-  # "silent" = no repaint / no self-relayout, but it DOES fire the re-fit seam (Intent-1: notify the container
+  # The NOTIFY-ONLY corner: no repaint / no self-relayout, but it DOES fire the re-fit seam (Intent-1: notify the container
   # tracking my geometry to re-fit). The bounds-set body is shared with the NON-notifying arrange twin
-  # _arrangeApplyExtent (below) via __commitExtent; here we just add the seam fire iff the bounds changed.
-  silentRawSetExtent: (aPoint) ->
+  # _applyExtent (below) via __commitExtent; here we just add the seam fire iff the bounds changed.
+  _commitExtentAndNotify: (aPoint) ->
     if @__commitExtent aPoint
       @_reFitContainerAfterRawGeometryChange()
 
-  # The shared bounds-set core of silentRawSetExtent: round + min-extent clamp + commit @bounds, WITHOUT firing the
+  # The shared bounds-set core of _commitExtentAndNotify: round + min-extent clamp + commit @bounds, WITHOUT firing the
   # re-fit seam. Returns true iff @bounds actually changed (so the notifying wrapper knows to fire the seam).
-  # (§4.2 structural arrange: the top-down arrange applies geometry via the non-notifying path -- _arrangeApply* --
-  # since the arranger already knows the new geometry; only EXTERNAL agents notify by mutation via silentRawSetExtent.)
+  # (§4.2 structural arrange: the top-down arrange applies geometry via the non-notifying path -- _apply* --
+  # since the arranger already knows the new geometry; only EXTERNAL agents notify by mutation via _commitExtentAndNotify.)
   __commitExtent: (aPoint) ->
     aPoint = aPoint.round()
     minExtent = @minimumExtent  # the __ leaf reads the field directly (getMinimumExtent is the non-overridden accessor -> @minimumExtent, so byte-identical); keeps __commitExtent a pure bottom (§3c)
@@ -1670,20 +1670,20 @@ class Widget extends TreeNode
   # Non-notifying twin of rawSetExtent (§4.2 structural arrange-down): apply my extent the way rawSetExtent does
   # (commit @bounds + @changed repaint + @_reLayoutSelf), but WITHOUT firing the re-fit seam -- a container
   # arranging me top-down already knows my new geometry, so the seam's Intent-2 self-re-enqueue is redundant.
-  # Byte-for-byte mirrors rawSetExtent except for the seam (rawSetExtent -> silentRawSetExtent which notifies).
-  _arrangeApplyExtent: (aPoint) ->
+  # Byte-for-byte mirrors rawSetExtent except for the seam (rawSetExtent -> _commitExtentAndNotify which notifies).
+  _applyExtent: (aPoint) ->
     unless aPoint.equals @extent()
       @__breakMoveResizeCaches()
       @__commitExtent aPoint
       @changed()
       @_reLayoutSelf()
 
-  # Non-notifying twin of silentRawSetBounds (§4.2 structural arrange-down): translate my origin + set my extent
-  # the way silentRawSetBounds does (silently -- no repaint, no self-relayout) but WITHOUT firing the re-fit seam.
+  # Non-notifying twin of _commitBoundsAndNotify (§4.2 structural arrange-down): translate my origin + set my extent
+  # the way _commitBoundsAndNotify does (silently -- no repaint, no self-relayout) but WITHOUT firing the re-fit seam.
   # A scroll panel sizing its content frame already knows the content's new bounds (it computed them from the §4.1
-  # pure measure), so the seam's Intent-2 self-re-enqueue is redundant. Byte-for-byte mirrors silentRawSetBounds
-  # except it commits the extent via __commitExtent (no seam) instead of silentRawSetExtent.
-  _arrangeApplyBounds: (newBounds) ->
+  # pure measure), so the seam's Intent-2 self-re-enqueue is redundant. Byte-for-byte mirrors _commitBoundsAndNotify
+  # except it commits the extent via __commitExtent (no seam) instead of _commitExtentAndNotify.
+  _applyBounds: (newBounds) ->
     return if @bounds.equals newBounds
     unless @bounds.origin.equals newBounds.origin
       @bounds = @bounds.translateTo newBounds.origin
@@ -1701,7 +1701,7 @@ class Widget extends TreeNode
     @_reFitContainer @parent.parent if @_amIDirectlyInsideScrollPanelWdgt()
     @_reFitContainer @parent
 
-  # A re-fit "seam": an IMMEDIATE geometry mutator (silentRawSetExtent / fullRawMoveBy) notifies the
+  # A re-fit "seam": an IMMEDIATE geometry mutator (_commitExtentAndNotify / fullRawMoveBy) notifies the
   # container that tracks my geometry to re-fit -- a NON-text-wrapping scroll panel (text-wrapping panels
   # drive their own content re-wrap in _positionAndResizeChildren, so they are excluded here), or a
   # stack/window container. A freefloating child's _invalidateLayout does NOT climb to its container, which
@@ -1743,7 +1743,7 @@ class Widget extends TreeNode
   # of being skipped) rather than looping forever -- which is why the skip is no longer needed for correctness.
   # (proper-layouts Phase E, 2026-06-28) The @_adjustingContentsBounds field itself is now GONE too: its last
   # use was the per-arrange re-entrancy guard, retired by giving each container arrange a NON-re-applying
-  # self-resize (SimpleVerticalStackPanelWdgt._applyOwnArrangedWidth/Height -> base Widget::rawSetExtent, which
+  # self-resize (SimpleVerticalStackPanelWdgt._resizeOwnWidthSkippingChildRelayout/Height -> base Widget::rawSetExtent, which
   # fires THIS seam to notify the parent but does NOT re-enter @_reLayoutChildren). This notify-by-mutation seam
   # itself STAYS -- and its deletion was PROVEN INFEASIBLE 2026-06-29 (do NOT re-attempt; see
   # docs/proper-layouts-4.4-ordered-downwalk-plan.md §8): the container arrange is already single-pass/idempotent, so
@@ -4248,7 +4248,7 @@ class Widget extends TreeNode
         yDim = @parent.height()
         minDim = Math.min(xDim, yDim) * @layoutSpec_cornerInternal_proportionOfParent + @layoutSpec_cornerInternal_fixedSize
 
-        @silentRawSetExtent new Point minDim, minDim
+        @_commitExtentAndNotify new Point minDim, minDim
 
         # TODO this hack is because I couldn't initialise this properly
         # where I should, due to load dependency problems

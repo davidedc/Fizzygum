@@ -13,7 +13,7 @@ class BasementWdgt extends BoxWdgt
   constructor: ->
     super()
 
-    @silentRawSetExtent new Point 340, 270
+    @_commitExtentAndNotify new Point 340, 270
     @color = Color.create 60, 60, 60
     @padding = 5
     @buildAndConnectChildren()

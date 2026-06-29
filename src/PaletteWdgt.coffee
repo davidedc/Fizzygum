@@ -20,7 +20,7 @@ class PaletteWdgt extends Widget
 
   constructor: (@target = nil, sizePoint) ->
     super()
-    @silentRawSetExtent sizePoint or @defaultSize()
+    @_commitExtentAndNotify sizePoint or @defaultSize()
 
   # subclass overrides this only if it wants a size other than the default
   defaultSize: -> new Point 80, 50
