@@ -8,10 +8,10 @@
 # SimplePlainTextWdgt is a THIN specialization of TextWdgt: its ctor just opts
 # into FIT_BOX_TO_TEXT (the contained-text mode) — see TextWdgt::_reLayoutSelf and the
 # FITTING MODEL comment in StringWdgt. The contained-reflow engine and the EDIT
-# triggers (the _reLayoutSelf + _refreshScrollPanelWdgtOrVerticalStackIfIamInIt that
+# triggers (the _reLayoutSelf + _announceLayoutPropertyChangeToContainer that
 # re-flow the box and nudge the container on setText/setFontSize/setFontName/toggle*)
 # live on the base StringWdgt: its seven text setters self-settle and call the
-# non-settling StringWdgt::_reFitContainedTextNoSettle core (gated by the mode), so ANY
+# non-settling StringWdgt::_reflowContainedTextThenAnnounce core (gated by the mode), so ANY
 # TextWdgt (not just this one) can be contained text.
 # What's left specific to THIS class is its CONTROLLER chrome: pinning
 # layoutSpecDetails.canSetHeightFreely = false (height is content-driven), the
@@ -135,7 +135,7 @@ class SimplePlainTextWdgt extends TextWdgt
   # obstacle map, and what a conversion would take.
   # CONVERT (end-of-cycle-flush-drawdown): soft-wrap is a DISCRETE public toggle (softWrapOn / softWrapOff),
   # so SELF-SETTLE it -- one layout flush per toggle, instead of the trailing
-  # _refreshScrollPanelWdgtOrVerticalStackIfIamInIt re-fit riding the per-frame end-of-cycle flush. Canonical
+  # _announceLayoutPropertyChangeToContainer re-fit riding the per-frame end-of-cycle flush. Canonical
   # public-wrapper / _NoSettle-core split: the public entry is JUST the settle, and ALL the work -- INCLUDING
   # the already-in-this-state early return -- lives in the core, so the wrapper hides no pre-settle guard
   # (check-layering rule [H] flags a return before a settle as an early-return that belongs in the core). The
@@ -149,7 +149,7 @@ class SimplePlainTextWdgt extends TextWdgt
     @softWrap = wrap
     @parent.parent.setTextLineWrapping wrap
     @_reLayoutSelf() unless wrap
-    @_refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+    @_announceLayoutPropertyChangeToContainer()
 
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
@@ -175,7 +175,7 @@ class SimplePlainTextWdgt extends TextWdgt
 
   # setText (above) + the inherited setFontSize / setFontName / toggleShowBlanks /
   # toggleWeight / toggleItalic / toggleIsPassword all re-flow the box AND nudge the
-  # container via StringWdgt::_reFitContainedTextNoSettle (gated by FIT_BOX_TO_TEXT).
+  # container via StringWdgt::_reflowContainedTextThenAnnounce (gated by FIT_BOX_TO_TEXT).
   # softWrapOn/Off (above) are scroll-panel-specific (they flip
   # @parent.parent.isTextLineWrapping).
 

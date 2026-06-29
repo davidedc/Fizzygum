@@ -59,7 +59,7 @@ class VerticalStackLayoutSpec
   # settle is taken on @element (the stack element). Canonical public-wrapper / _NoSettle-core split: each
   # public setter is JUST the settle over its _<name>NoSettle core, and ALL the work -- INCLUDING the
   # already-in-this-state guard -- lives in the core, so no wrapper hides a pre-settle early return
-  # (check-layering rule [H]). _refreshScrollPanelWdgtOrVerticalStackIfIamInIt stays the NON-settling re-fit
+  # (check-layering rule [H]). _announceLayoutPropertyChangeToContainer stays the NON-settling re-fit
   # core (it is also called by in-cycle paths -- soft-wrap, contained-text edits, WindowWdgt resize -- that
   # ride THEIR own outer settle). (Off-world content hits _settleLayoutsAfter's orphan early-return, so it
   # still just defers, unchanged.) (end-of-cycle-flush-drawdown -- CONVERT)
@@ -71,7 +71,7 @@ class VerticalStackLayoutSpec
   _setAlignmentToLeftNoSettle: ->
     if @alignment isnt "left"
       @alignment = "left"
-      @element._refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+      @element._announceLayoutPropertyChangeToContainer()
 
   # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
   setAlignmentToRight: ->
@@ -79,7 +79,7 @@ class VerticalStackLayoutSpec
   _setAlignmentToRightNoSettle: ->
     if @alignment isnt "right"
       @alignment = "right"
-      @element._refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+      @element._announceLayoutPropertyChangeToContainer()
 
   # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
   setAlignmentToCenter: ->
@@ -87,7 +87,7 @@ class VerticalStackLayoutSpec
   _setAlignmentToCenterNoSettle: ->
     if @alignment isnt "enter"
       @alignment = "center"
-      @element._refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+      @element._announceLayoutPropertyChangeToContainer()
 
   elasticityPopout: (menuItem,a,b,c,d,e,f)->
     @element.prompt menuItem.parent.title + "\nelasticity:",
@@ -113,7 +113,7 @@ class VerticalStackLayoutSpec
     elasticity = elasticity/100
     unless @elasticity == elasticity
       @elasticity = elasticity
-      @element._refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+      @element._announceLayoutPropertyChangeToContainer()
 
   baseWidthPopout: (menuItem,a,b,c,d,e,f)->
     @element.prompt menuItem.parent.title + "\nbase width:",
@@ -139,5 +139,5 @@ class VerticalStackLayoutSpec
     if widthOfElementWhenAdded
       unless @widthOfElementWhenAdded == widthOfElementWhenAdded
         @widthOfElementWhenAdded = widthOfElementWhenAdded
-        @element._refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+        @element._announceLayoutPropertyChangeToContainer()
 

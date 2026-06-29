@@ -97,7 +97,7 @@ const isLowLevel = (name) =>
   /^_/.test(name) ||        // leading-underscore = private (incl. __ and the re-layout machinery
                             // _positionAndResizeChildren / _reLayoutScrollbars / _reLayoutChildrenAndScrollbars /
                             // _reLayoutChildren / _reLayoutSelf / _reLayoutDesktop /
-                            // _refreshScrollPanelWdgtOrVerticalStackIfIamInIt / _amIDirectlyInside*)
+                            // _announceLayoutPropertyChangeToContainer / _amIDirectlyInside*)
   /NoSettle$/.test(name);    // the _xxxNoSettle cores (do the mutation, no settle)
 // NB the old `|| /Layout$/.test(name)` arm was REMOVED (lint-ratchet C4, 2026-06-25): after the
 // layout-method-family rename every real layout pass is _reLayout*-prefixed (already caught by /^_/
@@ -118,7 +118,7 @@ const isLowLevel = (name) =>
 // COMPLETENESS (deferred-layout capstone, 2026-06-21): the immediate-mutator boundary is now fully
 // closed, and this SCHEDULE rule is the whole of what needs LINTING. The other freeze vector -- an
 // immediate mutator triggering a CLIMB (re-fitting its ancestors up the tree) -- was eliminated not by
-// a lint but by deferring the re-fit seam (_reFitContainerAfterRawGeometryChange enqueues/invalidates
+// a lint but by deferring the re-fit seam (_announceGeometryChangeToContainer enqueues/invalidates
 // the container; its synchronous childGeometryChanged climb arm was retired and that orphaned method
 // deleted). What an immediate mutator legitimately MAY do is APPLY a re-fit synchronously IN PLACE -- a
 // TERMINAL, single-container apply (TextWdgt._applyExtentAndNotify->@_reLayoutSelf, StretchablePanelWdgt.
@@ -212,11 +212,11 @@ const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*|silent\w*)\b/;  /
 // check; the runtime throw stays the backstop for the transitive/dynamic cases (and for `add`).
 const SETTLE_CALL = /[@.]\s*_settleLayoutsAfter\b/;          // SINGLE-mutation tier only (Batch absorbs nested settles)
 const CALLBACK_HOOK = /^_(reactTo|before)[A-Z]/;            // [J] a notification hook -- settle-neutral by convention (layering/naming plan §9.2)
-// [I] the orchestration verbs a __ LEAF must not @-self-call: the re-fit seam (_reFitContainer*/_refresh*), a
+// [I] the orchestration verbs a __ LEAF must not @-self-call: the re-fit seam (_reFitContainer* valve + _announce* announce-up), a
 // react step (_reLayout\w* = _reLayoutSelf/_reLayoutChildren*/_reLayoutScrollbars/_reLayout; changed/fullChanged),
 // a schedule/settle (_invalidateLayout/recalculateLayouts/_settleLayoutsAfter*), or a public setter. Scoped to
 // @-self (a .-receiver can't be typed -- like SELF_ADD_CALL); the runtime audit covers dynamic dispatch.
-const LEAF_FORBIDDEN = /@\s*(_reFitContainer\w*|_refresh\w*|_reLayout\w*|_invalidateLayout|recalculateLayouts|_settleLayoutsAfter\w*|fullChanged|changed|setExtent|setBounds|setWidth|setHeight|moveTo)\b/;  // public setters mirror PUBLIC_SETTERS (moveTo, not the retired fullMoveTo — §6-1)
+const LEAF_FORBIDDEN = /@\s*(_reFitContainer\w*|_announce\w*|_reLayout\w*|_invalidateLayout|recalculateLayouts|_settleLayoutsAfter\w*|fullChanged|changed|setExtent|setBounds|setWidth|setHeight|moveTo)\b/;  // _reFitContainer* = the phase valve; _announce* = the announce-up seam (§9.4, ex _reFitContainerAfterRawGeometryChange / _refreshScrollPanelWdgtOrVerticalStackIfIamInIt). public setters mirror PUBLIC_SETTERS (moveTo, not the retired fullMoveTo — §6-1)
 
 // [K] the 2x2 apply-family NAME-CONSISTENCY corners (layering/naming plan §3b/§5b). A corner's NAME must match its
 // NOTIFY×REACT behaviour. We enforce the two STATICALLY-SOUND negatives (in checkFile below); the POSITIVE "every
@@ -226,7 +226,7 @@ const LEAF_FORBIDDEN = /@\s*(_reFitContainer\w*|_refresh\w*|_reLayout\w*|_invali
 // which translates + repaints WITHOUT firing the seam). Scoped to the 2x2 CORNERS only: the convenience movers/setters
 // (_move*/_set*/_resize*) delegate to a *AndNotify corner freely, so they are NOT subjects.
 const APPLY_CORNER = /^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)(AndNotify)?$|^_commit(Extent|Bounds)AndNotify$/;
-const K_SEAM_CALL  = /@\s*(_reFitContainer\w*|_refreshScrollPanelWdgtOrVerticalStackIfIamInIt)\b/;   // the up-notify seam (the NOTIFY axis)
+const K_SEAM_CALL  = /@\s*(_reFitContainer\w*|_announce\w*)\b/;   // the up-notify seam (the NOTIFY axis): _reFitContainer* valve + the _announce* announce-up (§9.4)
 const K_REACT_CALL = /@\s*(changed|fullChanged|_reLayout\w*|_positionAndResizeChildren)\b/;           // repaint / self- or child-relayout (the REACT axis)
 const K_ANDNOTIFY  = /[@.]\s*_[A-Za-z]\w*AndNotify\b/;                                                 // a call to a notifying corner
 const WRAPPER_EXCLUDED = new Set(['add']);   // see the [G] block above (collapse/unCollapse folded in once the layout passes routed to their cores)

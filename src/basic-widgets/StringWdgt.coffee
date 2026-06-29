@@ -118,7 +118,7 @@ class StringWdgt extends Widget
   # by setting `fittingSpec` (they RESPECT the mode rather than impose it, so the
   # empty-window placeholder text — a FIT_TEXT_TO_BOX TextWdgt — is left alone),
   # and a FIT_BOX_TO_TEXT widget notifies its container via
-  # _refreshScrollPanelWdgtOrVerticalStackIfIamInIt so the surrounding layout
+  # _announceLayoutPropertyChangeToContainer so the surrounding layout
   # follows.
   #
   # Keep FIT_BOX_TO_TEXT implemented HERE (where the SWCanvas font cap,
@@ -996,7 +996,7 @@ class StringWdgt extends Widget
       # was `menuItem.parent instanceof MenuWdgt` (type-test-elimination campaign)
       if menuItem?.parent? and menuItem.parent.isMenu?()
         @updateFontsMenuEntriesTicks menuItem.parent
-    @_reFitContainedTextNoSettle()
+    @_reflowContainedTextThenAnnounce()
 
 
   fontsMenu: (a,targetWidget)->
@@ -1139,19 +1139,19 @@ class StringWdgt extends Widget
     @_settleLayoutsAfter =>
       @isShowingBlanks = not @isShowingBlanks
       @changed()
-      @_reFitContainedTextNoSettle()
+      @_reflowContainedTextThenAnnounce()
 
   toggleWeight: ->
     @_settleLayoutsAfter =>
       @isBold = not @isBold
       @changed()
-      @_reFitContainedTextNoSettle()
+      @_reflowContainedTextThenAnnounce()
 
   toggleItalic: ->
     @_settleLayoutsAfter =>
       @isItalic = not @isItalic
       @changed()
-      @_reFitContainedTextNoSettle()
+      @_reflowContainedTextThenAnnounce()
 
   toggleHeaderLine: ->
     @isHeaderLine = not @isHeaderLine
@@ -1162,7 +1162,7 @@ class StringWdgt extends Widget
     @_settleLayoutsAfter =>
       @isPassword = not @isPassword
       @changed()
-      @_reFitContainedTextNoSettle()
+      @_reflowContainedTextThenAnnounce()
 
   changed: ->
     super
@@ -1239,15 +1239,15 @@ class StringWdgt extends Widget
   # / setFontName / toggleShowBlanks / toggleWeight / toggleItalic / toggleIsPassword).
   # A FIT_BOX_TO_TEXT widget re-flows its box to the new text measure (_reLayoutSelf)
   # and, ONLY if the box actually changed size, nudges its tracking container
-  # (_refreshScrollPanelWdgtOrVerticalStackIfIamInIt) -- an edit that leaves the measure
+  # (_announceLayoutPropertyChangeToContainer) -- an edit that leaves the measure
   # unchanged needs no redundant up-then-down container re-fit. For a bare StringWdgt the
   # base Widget::_reLayoutSelf is empty (box-to-text sizing lives in
   # TextWdgt::_reLayoutSelf), so the gated body is a no-op.
-  _reFitContainedTextNoSettle: ->
+  _reflowContainedTextThenAnnounce: ->
     return unless @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
     extentBefore = @extent()
     @_reLayoutSelf()
-    @_refreshScrollPanelWdgtOrVerticalStackIfIamInIt() unless @extent().equals extentBefore
+    @_announceLayoutPropertyChangeToContainer() unless @extent().equals extentBefore
 
   # The NON-settling core of setText: apply a text change IN PLACE -- re-hug the box if this
   # is a box-hugs-text chrome label, notify any connection target, and re-fit if contained-text
@@ -1279,7 +1279,7 @@ class StringWdgt extends Widget
         @_sizeToTextAndDisableFittingNoSettle()
       @changed()
     @updateTarget()
-    @_reFitContainedTextNoSettle()
+    @_reflowContainedTextThenAnnounce()
 
   # This is also invoked for example when you take a slider
   # and set it to target this.
@@ -1336,7 +1336,7 @@ class StringWdgt extends Widget
           # setFontSize wraps its body in a single settle, so this runs in-settle → the NoSettle core.
           @_sizeToTextAndDisableFittingNoSettle()
         @changed()
-      @_reFitContainedTextNoSettle()
+      @_reflowContainedTextThenAnnounce()
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     [menuEntriesStrings, functionNamesStrings] = theTarget.stringSetters()

@@ -1309,7 +1309,7 @@ class Widget extends TreeNode
   # my container's re-fit -- reading my parent, not my children -- so firing it AFTER the children-translate rather
   # than before is geometry-identical, and the silent children-translate enqueues nothing in between.)
   _applyMoveByAndNotify: (delta) ->
-    @_reFitContainerAfterRawGeometryChange() if @_applyMoveBy delta
+    @_announceGeometryChangeToContainer() if @_applyMoveBy delta
 
   # Non-notifying twins of _applyMoveByAndNotify / _applyMoveToAndNotify (§4.2 structural arrange-down): translate me + my children +
   # repaint WITHOUT firing the re-fit seam -- a container placing me top-down already knows my new position, so the
@@ -1648,7 +1648,7 @@ class Widget extends TreeNode
   # _applyExtent (below) via __commitExtent; here we just add the seam fire iff the bounds changed.
   _commitExtentAndNotify: (aPoint) ->
     if @__commitExtent aPoint
-      @_reFitContainerAfterRawGeometryChange()
+      @_announceGeometryChangeToContainer()
 
   # The shared bounds-set core of _commitExtentAndNotify: round + min-extent clamp + commit @bounds, WITHOUT firing the
   # re-fit seam. Returns true iff @bounds actually changed (so the notifying wrapper knows to fire the seam).
@@ -1691,13 +1691,13 @@ class Widget extends TreeNode
     @__commitExtent newBounds.extent()
 
 
-  # A re-fit "seam" (cf. _reFitContainerAfterRawGeometryChange): a freefloating content widget tells the
+  # A re-fit "seam" (cf. _announceGeometryChangeToContainer): a freefloating content widget tells the
   # scroll-panel / vertical-stack it sits in to re-fit, after a layout-affecting property change
   # (VerticalStackLayoutSpec alignment/elasticity/base-width, SimplePlainTextWdgt soft-wrap, a
   # contained-text edit, collapse). A freefloating child's _invalidateLayout does NOT climb to its
   # container, which is why the container(s) are notified explicitly here. The phase dispatch (enqueue in
   # a pass, else invalidate) lives in the shared _reFitContainer; this seam only supplies which container(s).
-  _refreshScrollPanelWdgtOrVerticalStackIfIamInIt: ->
+  _announceLayoutPropertyChangeToContainer: ->
     @_reFitContainer @parent.parent if @_amIDirectlyInsideScrollPanelWdgt()
     @_reFitContainer @parent
 
@@ -1708,7 +1708,7 @@ class Widget extends TreeNode
   # is why the container(s) are notified explicitly here. The phase dispatch lives in the shared
   # _reFitContainer (enqueue in a pass -- legal mid-pass, and the LIVE path for this immediate-mutator seam
   # since raw setters run during layout passes -- else invalidate); this seam only supplies which container(s).
-  _reFitContainerAfterRawGeometryChange: ->
+  _announceGeometryChangeToContainer: ->
     # OVERLAY CHROME (carets, resize handles -- isLayoutInert) is excluded from every container's
     # content-bounds (TreeNode.childrenNotHandlesNorCarets, Widget._reLayout*, WindowWdgt.add), so a raw
     # move/resize of it CANNOT change the container's content-fit -- tripping this seam would only schedule a
@@ -1723,7 +1723,7 @@ class Widget extends TreeNode
   # The ONE phase-dispatch primitive for the whole "re-fit a container at the next settle point" family:
   # the drag/drop gesture handlers (PanelWdgt / ScrollPanelWdgt / SimpleVerticalStackPanelWdgt
   # _reactToChildDropped / _reactToChildGrabbed / _reactToChildRemoved), the two freefloating-content "seams" above
-  # (_refreshScrollPanelWdgtOrVerticalStackIfIamInIt, _reFitContainerAfterRawGeometryChange), and the
+  # (_announceLayoutPropertyChangeToContainer, _announceGeometryChangeToContainer), and the
   # newParentChoice* menu actions all route through here. Two states:
   #  - INSIDE a layout pass (world._recalculatingLayouts): ENQUEUE the container into the recalculateLayouts
   #    until-loop via the shared bare-push atom (__markForRelayout). Enqueuing is legal mid-pass -- unlike
