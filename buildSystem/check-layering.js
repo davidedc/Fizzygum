@@ -253,6 +253,37 @@ function collectCoffee(dir, out) {
 
 const METHOD_HEADER = /^  ([A-Za-z_]\w*): (\(.*?\) )?[-=]>/;   // a class-level (2-space) method def
 
+// --- mixin-DSL awareness: ATTRIBUTE methods defined inside a mixin instead of lumping them into
+// onceAddedClassProperties. A mixin (src/mixins/*) declares its methods INSIDE a 2-space
+// `onceAddedClassProperties: (fromClass) -> @addInstanceProperties fromClass, { … }` block; the method
+// keys sit one nesting level deeper -- 4-space (e.g. KeepsRatioWhenInVerticalStackMixin) or 6-space
+// (most others). methodBoundary() locks the hash indent from the FIRST sub-method and treats siblings
+// at that indent as headers (deeper lines = their bodies). For a NON-mixin file (no onceAddedClass
+// Properties) mixinHashIndent stays null and methodBoundary is byte-for-byte the old 2-space logic.
+const MIXIN_CONTAINER = 'onceAddedClassProperties';
+const MIXIN_METHOD_HEADER = /^( {4,})([A-Za-z_]\w*): (\(.*?\) )?[-=]>/;
+
+// What a fully-closed line does to the current method grouping:
+//   { method, mixinHashIndent, kind:'header'|'end' }  -- the line STARTS or ENDS a method
+//   null                                              -- the line is inside the current method's body
+// mixinHashIndent: null = not in a mixin block; -1 = in onceAddedClassProperties, awaiting the first
+// sub-method to lock the indent; >0 = the locked sub-method indent.
+function methodBoundary(raw, mixinHashIndent) {
+  const m = raw.match(METHOD_HEADER);                          // a 2-space class / mixin-container method
+  if (m) return { method: m[1], mixinHashIndent: m[1] === MIXIN_CONTAINER ? -1 : null, kind: 'header' };
+  if (mixinHashIndent !== null) {                              // inside a mixin's onceAddedClassProperties
+    const sm = raw.match(MIXIN_METHOD_HEADER);
+    if (sm) {
+      const indent = sm[1].length;
+      const lock = mixinHashIndent === -1 ? indent : mixinHashIndent;   // first sub-method locks the indent
+      if (indent === lock) return { method: sm[2], mixinHashIndent: lock, kind: 'header' };
+      return null;                                             // deeper: a nested def inside a sub-method body
+    }
+  }
+  if (/^  [A-Za-z_]\w*:/.test(raw) || /^[^\s]/.test(raw)) return { method: null, mixinHashIndent: null, kind: 'end' };
+  return null;                                                 // ordinary body line
+}
+
 // [G] pre-pass: the set of public methods that self-settle via the SINGLE-mutation tier (their body
 // calls @_settleLayoutsAfter) -- the structural wrappers a low-level method must NOT call (it must reach
 // the _<name>NoSettle core instead). Computed from source so it tracks the codebase as wrappers are
@@ -262,14 +293,13 @@ function discoverSettlingWrappers(files) {
   const wrappers = new Set();
   for (const file of files) {
     const lines = fs.readFileSync(file, 'utf8').split('\n');
-    let method = null, strState = null;
+    let method = null, mixinHashIndent = null, strState = null;
     for (let n = 0; n < lines.length; n++) {
       const { code, state } = stripLine(lines[n], strState);
       strState = state;
       if (strState === null) {
-        const m = lines[n].match(METHOD_HEADER);
-        if (m) { method = m[1]; continue; }
-        if (/^  [A-Za-z_]\w*:/.test(lines[n]) || /^[^\s]/.test(lines[n])) method = null;
+        const b = methodBoundary(lines[n], mixinHashIndent);
+        if (b) { method = b.method; mixinHashIndent = b.mixinHashIndent; if (b.kind === 'header') continue; }
       }
       if (method && SETTLE_CALL.test(code)) wrappers.add(method);
     }
@@ -282,6 +312,7 @@ function checkFile(file, violations, wrapperCall, warnings) {
   const rel = path.relative(path.join(__dirname, '..'), file);
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   let method = null;          // current method name (null = not inside a 2-space method)
+  let mixinHashIndent = null; // mixin-DSL grouping state (see methodBoundary): null = not in a mixin block
   let methodMarked = false;   // [F]: has a `# layout-apply-sanctioned` sign-off appeared in the current method?
   let methodNoSettleMarked = false;   // [G]: has a `# nosettle-sanctioned` sign-off appeared in the current method?
   let methodGuardReturnLine = -1;     // [H]: line of a GUARD return seen before any _settleLayoutsAfter in this method
@@ -292,11 +323,13 @@ function checkFile(file, violations, wrapperCall, warnings) {
     const raw = lines[n];
     const { code, state } = stripLine(raw, strState);
     strState = state;
-    if (strState === null) {                       // header detection only on fully-closed lines
-      const m = raw.match(METHOD_HEADER);
-      if (m) { method = m[1]; methodMarked = false; methodNoSettleMarked = false; methodGuardReturnLine = -1; methodHWarned = false; methodEarlyReturnMarked = false; continue; }
-      // a new 2-space property/non-method, or a dedent to class level, ends the method
-      if (/^  [A-Za-z_]\w*:/.test(raw) || /^[^\s]/.test(raw)) { method = null; methodMarked = false; methodNoSettleMarked = false; methodGuardReturnLine = -1; methodHWarned = false; methodEarlyReturnMarked = false; }
+    if (strState === null) {                       // header detection only on fully-closed lines (mixin-aware)
+      const b = methodBoundary(raw, mixinHashIndent);
+      if (b) {
+        method = b.method; mixinHashIndent = b.mixinHashIndent;
+        methodMarked = false; methodNoSettleMarked = false; methodGuardReturnLine = -1; methodHWarned = false; methodEarlyReturnMarked = false;
+        if (b.kind === 'header') continue;           // the header line itself carries no call to check
+      }
     }
     if (!method) continue;
     if (raw.includes(SANCTION_MARKER)) methodMarked = true;  // [F] per-method conscious sign-off (any body line)
@@ -412,7 +445,8 @@ function main() {
     process.exit(2);
   }
   // [G] pre-pass: discover the structural self-settling wrappers (single-tier), then a regex that
-  // matches a CALL to one. Empty-set guard keeps the regex well-formed (it is ~12 names in practice).
+  // matches a CALL to one. Empty-set guard keeps the regex well-formed (a few dozen names in practice;
+  // now mixin-aware -- see methodBoundary -- so a settling wrapper defined inside a mixin is attributed too).
   const FORBIDDEN_WRAPPERS = discoverSettlingWrappers(files);
   const WRAPPER_CALL = FORBIDDEN_WRAPPERS.size
     ? new RegExp('[@.]\\s*(' + [...FORBIDDEN_WRAPPERS].join('|') + ')\\b') : null;
