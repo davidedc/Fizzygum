@@ -44,7 +44,7 @@ class PointerWdgt extends BoxWdgt
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), LayoutSpec.SPREADABILITY_MEDIUM
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), LayoutSpec.SPREADABILITY_NONE
 
-    @fullMoveTo new Point 10 + 60 * 0, 30 + 50 * 1
+    @moveTo new Point 10 + 60 * 0, 30 + 50 * 1
 
 
   mouseClickLeft: (pos) ->
@@ -60,7 +60,7 @@ class PointerWdgt extends BoxWdgt
       @target.createPointerWdgt()
     myPosition = @positionAmongSiblings()
     @parent.add @target, myPosition
-    @target.fullMoveTo @position()
+    @target.moveTo @position()
     @target.fullChanged()
     @close()
 

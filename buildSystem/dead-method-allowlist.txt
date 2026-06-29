@@ -21,7 +21,6 @@ extentTight
 firstSiblingsSuchThat
 fullImageHashCode
 fullImageNoShadow
-fullMoveWithin
 getBody
 getName
 getWorldMatrix
@@ -35,6 +34,7 @@ isSelectedListItem
 leftCenterTight
 lighter
 menuAtPointer
+moveWithin
 onlyContainingIntegers
 positionTight
 processCopy

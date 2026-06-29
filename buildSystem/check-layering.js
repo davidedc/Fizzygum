@@ -52,10 +52,18 @@ const path = require('path');
 
 const SRC = path.join(__dirname, '..', 'src');
 
-const PUBLIC_SETTERS = ['setExtent', 'fullMoveTo', 'setBounds', 'setWidth', 'setHeight'];
+const PUBLIC_SETTERS = ['setExtent', 'moveTo', 'setBounds', 'setWidth', 'setHeight'];
+// NB moveWithin (ex-fullMoveWithin, public) is deliberately NOT here: it is a public CONVENIENCE that delegates
+// to the one-settle moveTo, so listing it would false-trip [C] (public-setter calls public-setter) on its
+// moveWithin -> moveTo call. Like fullMoveWithin pre-rename, it stays untracked (it self-settles via moveTo).
 // a call to a public setter: leading @ or . then the lowercase name (excludes raw*/silent* —
 // those have `raw`/`silent` between the @/. and the capitalised `Set*`/`*MoveTo`).
 const PUB_CALL = new RegExp('[@.]\\s*(' + PUBLIC_SETTERS.join('|') + ')\\b');
+// R2 carve-out: the public mover moveTo shares its name with the HTML5 canvas context.moveTo (~560 draw
+// call-sites + @moveTo in the canvas extensions). PUB_CALL is receiver-blind, so a moveTo match is IGNORED
+// (in checkFile) when it is a canvas call -- a canvas receiver, or one of the boot canvas-extension files.
+const CANVAS_MOVETO = /\b(context|pctx|backBufferContext|aContext|ctx)\s*\.\s*moveTo\b/;
+const CANVAS_EXT_FILE = /boot[\/\\]extensions[\/\\].*[Cc]anvas/;
 // The SINGLE-settling text setters (StringWdgt): each self-settles via _settleLayoutsAfter, so being
 // reached from a layout pass / another settle throws the flow-violation. Low-level code that must set
 // text uses the NON-settling core (_setTextNoSettle) or a raw setter. NB sizeToTextAndDisableFitting is
@@ -355,7 +363,9 @@ function checkFile(file, violations, wrapperCall, warnings) {
       }
     }
     const at = `${rel}:${n + 1}`;
-    const pub = code.match(PUB_CALL);
+    let pub = code.match(PUB_CALL);
+    // R2: ignore the HTML5-canvas moveTo (context.moveTo / @moveTo in the canvas extensions), not Widget.moveTo.
+    if (pub && pub[1] === 'moveTo' && (CANVAS_EXT_FILE.test(rel) || CANVAS_MOVETO.test(code))) pub = null;
     const txt = code.match(TEXT_SETTER_CALL);
     const recalc = RECALC_CALL.test(code);
     const invalidate = INVALIDATE_CALL.test(code);

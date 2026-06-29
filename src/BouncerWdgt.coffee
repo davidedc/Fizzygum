@@ -48,6 +48,6 @@ class BouncerWdgt extends Widget
       vy = - vy
       bounced = true
 
-    @fullMoveTo new Point px, py
+    @moveTo new Point px, py
     if bounced
         @velocity = new Point vx, vy

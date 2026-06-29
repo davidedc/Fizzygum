@@ -165,8 +165,8 @@ class ActivePointerWdgt extends Widget
       if switcherooHappened
         # in this case the widget being grabbed is created on the fly
         # so just like the next case it's OK to center it under the pointer
-        aWdgt.fullMoveTo @position().subtract aWdgt.extent().floorDivideBy 2
-        aWdgt.fullRawMoveWithin world # raw flush+clamp here; a deferred fullMoveWithin now exists, but switching this real-time grab to it is a Path-A determinism call
+        aWdgt.moveTo @position().subtract aWdgt.extent().floorDivideBy 2
+        aWdgt.fullRawMoveWithin world # raw flush+clamp here; a deferred moveWithin now exists, but switching this real-time grab to it is a Path-A determinism call
       else if aWdgt.extentToGetWhenDraggedFromGlassBox? and (oldParent instanceof GlassBoxBottomWdgt)
         # in this case the widget is "inflating". So, all
         # visual references that the user might have around the
@@ -175,7 +175,7 @@ class ActivePointerWdgt extends Widget
         # desktop bounds since we are at it (useful in case the
         # widget is inflating near the screen edges)
         aWdgt.setExtent aWdgt.extentToGetWhenDraggedFromGlassBox
-        aWdgt.fullMoveTo @position().subtract aWdgt.extent().floorDivideBy 2
+        aWdgt.moveTo @position().subtract aWdgt.extent().floorDivideBy 2
         aWdgt.fullRawMoveWithin world
       else if displacementDueToGrabDragThreshold?
         # in this case keep some visual consistency and move

@@ -22,10 +22,10 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
     super
     if whereTo == world and !@userMovedThisFromComputedPosition
-      # fullRawMoveTo (NOT the public fullMoveTo): iHaveBeenAddedTo is fired by the add
+      # fullRawMoveTo (NOT the public moveTo): iHaveBeenAddedTo is fired by the add
       # core INSIDE the add's settle, so a public setter here would re-enter the flush
       # guard and throw. The freefloating position is not changed by the outer settle,
-      # so this is byte-equivalent to the old deferred fullMoveTo.
+      # so this is byte-equivalent to the old deferred moveTo.
       @fullRawMoveTo world.bottomRight().subtract @extent().add world.desktopSidesPadding
 
   _reactToBeingDropped: (whereIn) ->

@@ -260,7 +260,7 @@ class HandleWdgt extends Widget
         newExt = newPos.add(@extent().add(@inset)).subtract @target.position()
         @target.setExtent newExt, @
       when "moveHandle"
-        @target.fullMoveTo (newPos.subtract @inset), @
+        @target.moveTo (newPos.subtract @inset), @
       when "resizeHorizontalHandle"
         newWidth = newPos.x + @extent().x + @inset.x - @target.left()
         @target.setWidth newWidth

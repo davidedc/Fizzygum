@@ -158,7 +158,7 @@ class WidgetFactory
     for i in [0..5]
       lmHolder = new RectangleWdgt
       lmHolder.setExtent new Point 10 + i*10,10 + i*10
-      lmHolder.fullMoveTo new Point 10 + 60 * i, 10 + 50 * 0
+      lmHolder.moveTo new Point 10 + 60 * i, 10 + 50 * 0
 
       world.add lmHolder
 
@@ -179,7 +179,7 @@ class WidgetFactory
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), 2* LayoutSpec.SPREADABILITY_MEDIUM
 
-    lmHolder.fullMoveTo new Point 10 + 60 * 0, 30 + 50 * 1
+    lmHolder.moveTo new Point 10 + 60 * 0, 30 + 50 * 1
 
     world.add lmHolder
     lmHolder.add new HandleWdgt
@@ -201,7 +201,7 @@ class WidgetFactory
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
-    lmHolder.fullMoveTo new Point 10 + 60 * 1, 30 + 50 * 1
+    lmHolder.moveTo new Point 10 + 60 * 1, 30 + 50 * 1
 
     world.add lmHolder
     lmHolder.add new HandleWdgt
@@ -227,7 +227,7 @@ class WidgetFactory
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
-    lmHolder.fullMoveTo new Point 10 + 60 * 2, 30 + 50 * 1
+    lmHolder.moveTo new Point 10 + 60 * 2, 30 + 50 * 1
 
     world.add lmHolder
     lmHolder.add new HandleWdgt
@@ -255,7 +255,7 @@ class WidgetFactory
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
-    lmHolder.fullMoveTo new Point 10 + 60 * 3, 30 + 50 * 1
+    lmHolder.moveTo new Point 10 + 60 * 3, 30 + 50 * 1
 
     world.add lmHolder
     lmHolder.add new HandleWdgt
@@ -292,7 +292,7 @@ class WidgetFactory
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
 
-    lmHolder.fullMoveTo new Point 10 + 60 * 4, 30 + 50 * 1
+    lmHolder.moveTo new Point 10 + 60 * 4, 30 + 50 * 1
 
     world.add lmHolder
     lmHolder.add new HandleWdgt
@@ -329,7 +329,7 @@ class WidgetFactory
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
 
-    lmHolder.fullMoveTo new Point 10 + 60 * 5, 30 + 50 * 1
+    lmHolder.moveTo new Point 10 + 60 * 5, 30 + 50 * 1
 
     world.add lmHolder
     lmHolder.add new HandleWdgt
@@ -366,7 +366,7 @@ class WidgetFactory
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60), 2 * LayoutSpec.SPREADABILITY_MEDIUM
 
-    lmHolder.fullMoveTo new Point 10 + 60 * 6, 30 + 50 * 1
+    lmHolder.moveTo new Point 10 + 60 * 6, 30 + 50 * 1
 
     world.add lmHolder
     lmHolder.add new HandleWdgt
@@ -403,7 +403,7 @@ class WidgetFactory
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
 
-    lmHolder.fullMoveTo new Point 10 + 60 * 7, 30 + 50 * 1
+    lmHolder.moveTo new Point 10 + 60 * 7, 30 + 50 * 1
 
     world.add lmHolder
     lmHolder.add new HandleWdgt

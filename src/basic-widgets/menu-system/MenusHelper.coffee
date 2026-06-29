@@ -487,7 +487,7 @@ class MenusHelper
     world.add svsspw
     # public setters on the ATTACHED panel self-settle in place (was fullRawMoveTo/rawSetExtent, whose raw
     # resize on an attached panel tripped the _reFitContainerAfterRawGeometryChange seam into an off-settle re-fit)
-    svsspw.fullMoveTo new Point 430, 25
+    svsspw.moveTo new Point 430, 25
     svsspw.setExtent new Point 370, 325
 
   createSimpleVerticalStackPanelWdgtAndScrollPanel: ->
@@ -714,7 +714,7 @@ class MenusHelper
     world.add sdspw
     # public setters on the ATTACHED panel self-settle in place (was fullRawMoveTo/rawSetExtent, whose raw
     # resize on an attached panel tripped the _reFitContainerAfterRawGeometryChange seam into an off-settle re-fit)
-    sdspw.fullMoveTo new Point 35, 30
+    sdspw.moveTo new Point 35, 30
     sdspw.setExtent new Point 370, 325
 
   popUpDocumentMenu: (widgetOpeningThePopUp) ->

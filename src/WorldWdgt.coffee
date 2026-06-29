@@ -463,7 +463,7 @@ class WorldWdgt extends PanelWdgt
 
 
     @errorConsole = wm
-    @errorConsole.fullMoveTo new Point 190,10
+    @errorConsole.moveTo new Point 190,10
     @errorConsole.setExtent new Point 550,415
     @errorConsole.hide()
 
@@ -1246,7 +1246,7 @@ class WorldWdgt extends PanelWdgt
       videoPlayer.setExtent new Point 934, 896
       # it would be -28 instead of zero here below, but the system doesn't allow
       # to put windows outside of the screen
-      videoPlayer.fullMoveTo new Point 174, 0
+      videoPlayer.moveTo new Point 174, 0
 
   # this part is only needed for VideoPlayer <<«
 

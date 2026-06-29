@@ -569,7 +569,7 @@ class MacroToolkit
 
   # Drag a resize/move HANDLE (one of the handles shown after a widget's "resize/move..." menu
   # item) from its centre to a destination Point. Handles resize/move the target via NON-float
-  # dragging (HandleWdgt.nonFloatDragging → setExtent / fullMoveTo), so this is a real
+  # dragging (HandleWdgt.nonFloatDragging → setExtent / moveTo), so this is a real
   # press-drag-release. handleType picks the handle: "resizeBothDimensionsHandle" (bottom-right
   # corner — resizes both dimensions), "moveHandle", "resizeHorizontalHandle", "resizeVerticalHandle".
   dragResizeMoveHandleTo_InputEvents: (handleType, destination, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
@@ -960,11 +960,11 @@ class MacroToolkit
       buildExternalAndFreeInternalWindow_Macro = ->
         extWin = new WindowWdgt nil, nil, nil
         extWin.setExtent new Point 290, 240
-        extWin.fullMoveTo new Point 75, 90
+        extWin.moveTo new Point 75, 90
         world.add extWin
         intWin = new WindowWdgt nil, nil, nil, true
         intWin.setExtent new Point 250, 160
-        intWin.fullMoveTo new Point 600, 200
+        intWin.moveTo new Point 600, 200
         world.add intWin
         yield "waitNoInputsOngoing"
         return [extWin, intWin]
@@ -987,11 +987,11 @@ class MacroToolkit
     macroSubroutines.add Macro.fromString """
       buildOverflowingScrollPanelWithText_Macro = (topLeftPoint) ->
         # Build entirely through the PUBLIC widget API (macros must not use raw/silent/fullRaw/private):
-        # attach first, so the public setExtent/setWidth/fullMoveTo SELF-SETTLE and apply in place.
+        # attach first, so the public setExtent/setWidth/moveTo SELF-SETTLE and apply in place.
         panel = new ScrollPanelWdgt
         world.add panel
         panel.setExtent new Point 270, 200
-        panel.fullMoveTo topLeftPoint
+        panel.moveTo topLeftPoint
         text = new TextWdgt "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer rhoncus pharetra nulla, vel maximus lectus posuere a. Phasellus finibus blandit ex vitae varius. Vestibulum blandit velit elementum, ornare ipsum sollicitudin, blandit nunc. Mauris a sapien nibh. Nulla nec bibendum quam, eu condimentum nisl. Cras consequat efficitur nisi sed ornare. Pellentesque vitae urna vitae libero malesuada pharetra. Pellentesque commodo, nulla mattis vulputate porttitor, elit augue vestibulum est, nec congue ex dui a velit. Nullam lectus leo, lobortis eget erat ac, lobortis dignissim magna. Morbi ac odio in purus blandit dignissim. Maecenas at sagittis odio."
         # a bare TextWdgt SELF-SIZES as contained text: put it in
         # FIT_BOX_TO_TEXT and it wraps to its own width and grows its HEIGHT to the
@@ -1004,7 +1004,7 @@ class MacroToolkit
         text.softWrap = true
         panel.add text
         text.setWidth 185
-        text.fullMoveTo new Point (topLeftPoint.x + 12), (topLeftPoint.y + 12)
+        text.moveTo new Point (topLeftPoint.x + 12), (topLeftPoint.y + 12)
         yield "waitNoInputsOngoing"
         return panel
     """

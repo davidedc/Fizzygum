@@ -1409,7 +1409,7 @@ class Widget extends TreeNode
   # you don't actually change the geometry right away,
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
-  fullMoveTo: (aPoint, widgetStartingTheChange = nil) ->
+  moveTo: (aPoint, widgetStartingTheChange = nil) ->
     @_settleLayoutsAfter =>
       if not @isFreeFloating()
         return
@@ -1563,12 +1563,12 @@ class Widget extends TreeNode
 
   # Deferred twin of fullRawMoveWithin: make sure I end up completely within
   # aWdgt's bounds, but DON'T bake the move now -- compute the clamped position
-  # and DEFER it via fullMoveTo, so it settles in the recalculateLayouts ->
+  # and DEFER it via moveTo, so it settles in the recalculateLayouts ->
   # _reLayout phase (before paint), together with any other pending change.
   # Pending-aware like fullRawMoveWithin (it clamps the not-yet-applied
   # @desired* geometry when present); but, being deferred, it leaves
   # @desiredExtent for the cycle to apply rather than baking it now.
-  fullMoveWithin: (aWdgt) ->
+  moveWithin: (aWdgt) ->
     # use the desired (not-yet-applied) geometry if present, else the applied one
     ext = if @desiredExtent?   then @desiredExtent   else @extent()
     pos = if @desiredPosition? then @desiredPosition else @position()
@@ -1586,7 +1586,7 @@ class Widget extends TreeNode
     if bottomOff > 0 then newY = newY - bottomOff
     if newY < aWdgt.top() then newY = aWdgt.top()
 
-    @fullMoveTo new Point newX, newY
+    @moveTo new Point newX, newY
 
   # more complex Widgets, e.g. layouts, might
   # do a more complex calculation to get the
@@ -2215,7 +2215,7 @@ class Widget extends TreeNode
     myPosition = @positionAmongSiblings()
     widgetToAdd = new PointerWdgt @
     @parent.add widgetToAdd, myPosition
-    widgetToAdd.fullMoveTo @position()
+    widgetToAdd.moveTo @position()
     widgetToAdd.setExtent new Point 150, 20
     widgetToAdd.fullChanged()
     @removeFromTree()
