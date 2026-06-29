@@ -117,12 +117,14 @@ class ScrollPanelWdgt extends PanelWdgt
     # (proper-layouts Phase D, 2026-06-28) This used to set @_adjustingContentsBounds (save/restore) SOLELY so
     # the cross-method seam check in Widget._reFitContainer suppressed the bars' raw resizes below from
     # re-fitting ME (the panel). That check was deleted in Phase D, so the save/restore was inert and is gone
-    # too: the bars' raw resizes now notify me like any other child geometry change (the arrange is a fixed
-    # point post-Phase-C, so it converges in one extra pass). (proper-layouts Phase E, 2026-06-28) The
-    # @_adjustingContentsBounds field is now fully DELETED: its last use -- the _positionAndResizeChildren
-    # re-entrancy guard -- was retired by the non-re-applying self-resize (SimpleVerticalStackPanelWdgt.
-    # _applyOwnArrangedWidth/Height). The notify-by-mutation seam itself STAYS (deleting it needs the scroll
-    # panels to converge in one pass -- their self-re-fit IS their convergence -- which is a separate arc).
+    # too. (proper-layouts Phase E, 2026-06-28) The @_adjustingContentsBounds field is now fully DELETED: its
+    # last use -- the _positionAndResizeChildren re-entrancy guard -- was retired by the non-re-applying
+    # self-resize (SimpleVerticalStackPanelWdgt._applyOwnArrangedWidth/Height).
+    # (§4.2 Stage 3, 2026-06-29) The bars below now apply their geometry via the NON-notifying arrange twins
+    # (_arrangeApplyExtent / _arrangeApplyMoveTo) so they no longer fire the re-fit seam back at ME: the bars
+    # are chrome I own and place from my own size, never affecting my content-fit, so the seam's self-re-enqueue
+    # (the capstone's Pattern C) was a pure redundant confirm pass. (The seam itself still fires for EXTERNAL
+    # content changes -- Intent-1 -- until Stage 4/5.)
 
     # one typically has both scrollbars in view, plus a resizer
     # in bottom right corner, so adjust the width/height of the
@@ -155,12 +157,17 @@ class ScrollPanelWdgt extends PanelWdgt
     if @hBar.target == @
       if @contents.width() >= @width() + 1
         @hBar.show()
-        @hBar.rawSetWidth hWidth  if @hBar.width() isnt hWidth
+        # §4.2 Stage 3: my scrollbars are chrome I OWN and place -- pure followers of my own width/height, never
+        # affecting my content-fit (subBounds reads @contents' children, not my bars). So size/position them via
+        # the NON-notifying twins; the old rawSetWidth/fullRawMoveTo fired the re-fit seam back at ME (the
+        # capstone's Pattern C self-re-enqueue), a redundant confirm pass. (_arrangeApplyExtent == rawSetWidth/Height
+        # minus the seam; preserves height/width by passing the current other axis.)
+        @hBar._arrangeApplyExtent new Point(hWidth, @hBar.height())  if @hBar.width() isnt hWidth
         # we check whether the bar has been detached. If it's still
         # attached then we possibly move it, together with the
         # ScrollPanel, otherwise we don't move it.
         if @hBar.parent == @
-          @hBar.fullRawMoveTo new Point @left(), @bottom() - @hBar.height()
+          @hBar._arrangeApplyMoveTo new Point @left(), @bottom() - @hBar.height()
         stopValue = @contents.width() - @width()
         @hBar.updateSpecs(
           0, # start
@@ -175,12 +182,13 @@ class ScrollPanelWdgt extends PanelWdgt
     if @vBar.target == @
       if @contents.height() >= @height() + 1
         @vBar.show()
-        @vBar.rawSetHeight vHeight  if @vBar.height() isnt vHeight
+        # §4.2 Stage 3: same as the hBar above -- non-notifying twin (chrome I own, never affects content-fit).
+        @vBar._arrangeApplyExtent new Point(@vBar.width(), vHeight)  if @vBar.height() isnt vHeight
         # we check whether the bar has been detached. If it's still
         # attached then we possibly move it, together with the
         # ScrollPanel, otherwise we don't move it.
         if @vBar.parent == @
-          @vBar.fullRawMoveTo new Point @right() - @vBar.width(), @top()
+          @vBar._arrangeApplyMoveTo new Point @right() - @vBar.width(), @top()
         stopValue = @contents.height() - @height()
         @vBar.updateSpecs(
           0, # start
@@ -332,7 +340,11 @@ class ScrollPanelWdgt extends PanelWdgt
     totalPadding = 2*padding
 
     if @contents instanceof SimpleVerticalStackPanelWdgt
-      @contents._positionAndResizeChildren()
+      # §4.2 Stage 3: arrange the content stack's children but tell it I OWN its frame (parentWillSizeMe) -- I size
+      # it from the §4.1 pure measure (subBounds -> the frame commit below), so the stack's own self-resize must
+      # not fire the re-fit seam back at me (the capstone's Pattern A). Its children + container-child width
+      # convergence are unaffected; only its terminal self-resize goes non-notifying.
+      @contents._positionAndResizeChildren(true)
     else if @isTextLineWrapping and @contents instanceof PanelWdgt
       @contents.children.forEach (widget) =>
         if widget.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
@@ -418,7 +430,11 @@ class ScrollPanelWdgt extends PanelWdgt
       newBounds = @boundingBox()?.ceil()
 
     unless @contents.boundingBox().equals newBounds
-      @contents.silentRawSetBounds newBounds
+      # §4.2 Stage 3 (structural arrange): I OWN my content's frame -- I computed newBounds from the §4.1 pure
+      # measure (subBounds), so apply it via the NON-notifying twin. The old silentRawSetBounds fired the re-fit
+      # seam back at ME (Intent-2 self-re-enqueue = the capstone's Pattern D), redundant since I am the one sizing
+      # the content; the seam only delivered a confirm pass that the §4.1 measure already makes a no-op.
+      @contents._arrangeApplyBounds newBounds
       @contents._reLayoutSelf()
 
     # you'd think that if @contents.boundingBox().equals newBounds
@@ -430,15 +446,18 @@ class ScrollPanelWdgt extends PanelWdgt
     # there is nothing to do.
     @keepContentsInScrollPanelWdgt()
 
+  # §4.2 Stage 3 (structural arrange): the position clamp keeping my content snug against my viewport edges. I
+  # OWN this position, so apply each nudge via the NON-notifying move twin -- the old fullRawMoveBy fired the
+  # re-fit seam back at ME (part of the scroll panel's Intent-2 self-re-enqueue), redundant since I am the clamper.
   keepContentsInScrollPanelWdgt: ->
     if @contents.left() > @left()
-      @contents.fullRawMoveBy new Point @left() - @contents.left(), 0
+      @contents._arrangeApplyMoveBy new Point @left() - @contents.left(), 0
     if @contents.right() < @right()
-      @contents.fullRawMoveBy new Point @right() - @contents.right(), 0
+      @contents._arrangeApplyMoveBy new Point @right() - @contents.right(), 0
     if @contents.top() > @top()
-      @contents.fullRawMoveBy new Point 0, @top() - @contents.top()
+      @contents._arrangeApplyMoveBy new Point 0, @top() - @contents.top()
     if @contents.bottom() < @bottom()
-      @contents.fullRawMoveBy new Point 0, @bottom() - @contents.bottom()
+      @contents._arrangeApplyMoveBy new Point 0, @bottom() - @contents.bottom()
   
   # ScrollPanelWdgt scrolling by floatDragging:
   scrollX: (steps) ->

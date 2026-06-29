@@ -201,7 +201,15 @@ class SimpleVerticalStackPanelWdgt extends Widget
       cumH += h
     merged
 
-  _positionAndResizeChildren: ->
+  # §4.2 Stage 3 (structural arrange): `parentWillSizeMe` is passed true by a SCROLL PANEL arranging me as its
+  # content -- the scroll panel OWNS my frame (it sizes me from its §4.1 pure measure right after this returns), so
+  # my own self-resize at the end is redundant and its up-notification seam to the scroll panel was the capstone's
+  # Pattern A (the SimpleDocumentScrollPanelWdgt self-re-enqueue). When true I apply my arranged height via the
+  # NON-notifying twin so I still settle my children but do not fire the seam back at my sizer. Default false keeps
+  # the notifying self-resize for every OTHER caller (my own _reLayoutChildren, a WINDOW content arrange) where the
+  # up-notify IS load-bearing (the nested clock-in-window cascade) -- this is the static "split by who is arranging"
+  # axis, NOT a runtime suppression flag.
+  _positionAndResizeChildren: (parentWillSizeMe = false) ->
     @padding = 5
 
     stackHeight = 0
@@ -297,7 +305,13 @@ class SimpleVerticalStackPanelWdgt extends Widget
     if !@tight or childrenNotHandlesNorCarets.length == 0
       newHeight = Math.max newHeight, @height()
 
-    @_applyOwnArrangedHeight newHeight
+    # §4.2 Stage 3: if my scroll-panel parent will size me (parentWillSizeMe), apply my arranged height via the
+    # NON-notifying twin -- the frame commit that follows overrides it anyway, so the only effect of the notifying
+    # path here was the redundant Pattern-A up-notify to my sizer. Otherwise notify (the load-bearing cascade).
+    if parentWillSizeMe
+      @_arrangeApplyExtent new Point @width(), newHeight
+    else
+      @_applyOwnArrangedHeight newHeight
 
   rawSetExtent: (aPoint) ->
     unless aPoint.equals @extent()

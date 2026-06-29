@@ -1678,6 +1678,18 @@ class Widget extends TreeNode
       @changed()
       @_reLayoutSelf()
 
+  # Non-notifying twin of silentRawSetBounds (§4.2 structural arrange-down): translate my origin + set my extent
+  # the way silentRawSetBounds does (silently -- no repaint, no self-relayout) but WITHOUT firing the re-fit seam.
+  # A scroll panel sizing its content frame already knows the content's new bounds (it computed them from the §4.1
+  # pure measure), so the seam's Intent-2 self-re-enqueue is redundant. Byte-for-byte mirrors silentRawSetBounds
+  # except it commits the extent via _setExtentBoundsNoNotify (no seam) instead of silentRawSetExtent.
+  _arrangeApplyBounds: (newBounds) ->
+    return if @bounds.equals newBounds
+    unless @bounds.origin.equals newBounds.origin
+      @bounds = @bounds.translateTo newBounds.origin
+      @breakNumberOfRawMovesAndResizesCaches()
+    @_setExtentBoundsNoNotify newBounds.extent()
+
 
   # A re-fit "seam" (cf. _reFitContainerAfterRawGeometryChange): a freefloating content widget tells the
   # scroll-panel / vertical-stack it sits in to re-fit, after a layout-affecting property change
