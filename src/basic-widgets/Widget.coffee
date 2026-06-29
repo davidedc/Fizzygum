@@ -1303,27 +1303,27 @@ class Widget extends TreeNode
   
   
   # Widget accessing - simple changes:
+  # Translate me + my children + repaint, then fire the re-fit seam (Intent-1: notify the container tracking my
+  # geometry to re-fit). The move body is shared with the NON-notifying arrange twin _arrangeApplyMoveBy (below);
+  # the seam fires iff I actually moved. (Byte-exact vs the prior in-the-middle seam fire: the seam only SCHEDULES
+  # my container's re-fit -- reading my parent, not my children -- so firing it AFTER the children-translate rather
+  # than before is geometry-identical, and the silent children-translate enqueues nothing in between.)
   fullRawMoveBy: (delta) ->
-    if delta.isZero() then return
-    @breakNumberOfRawMovesAndResizesCaches()
-    @fullChanged()
-    @bounds = @bounds.translateBy delta
-    @_reFitContainerAfterRawGeometryChange()
-    @children.forEach (child) ->
-      child.silentFullRawMoveBy delta
+    @_reFitContainerAfterRawGeometryChange() if @_arrangeApplyMoveBy delta
 
   # Non-notifying twins of fullRawMoveBy / fullRawMoveTo (§4.2 structural arrange-down): translate me + my children +
   # repaint WITHOUT firing the re-fit seam -- a container placing me top-down already knows my new position, so the
   # seam's Intent-2 self-re-enqueue is redundant. Used by the stack arrange for LEAF children (a leaf has no inner
-  # convergence the move's re-enqueue would drive; a container child keeps the seam-firing fullRawMoveTo). The body
-  # mirrors fullRawMoveBy minus the seam; they merge with their notifying twins once the seam is deleted (Stage 5).
+  # convergence the move's re-enqueue would drive; a container child keeps the seam-firing fullRawMoveTo).
+  # _arrangeApplyMoveBy is fullRawMoveBy's shared core (returns true iff actually moved, so the wrapper fires the seam).
   _arrangeApplyMoveBy: (delta) ->
-    return if delta.isZero()
+    return false if delta.isZero()
     @breakNumberOfRawMovesAndResizesCaches()
     @fullChanged()
     @bounds = @bounds.translateBy delta
     @children.forEach (child) ->
       child.silentFullRawMoveBy delta
+    return true
 
   _arrangeApplyMoveTo: (aPoint) ->
     aPoint.debugIfFloats()
