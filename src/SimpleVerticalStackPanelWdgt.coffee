@@ -235,14 +235,31 @@ class SimpleVerticalStackPanelWdgt extends Widget
       else
         recommendedElementWidth = widget.layoutSpecDetails.getWidthInStack()
 
-        # this re-layouts each widget to fit the width. When this runs FROM _reLayout (on the
-        # recalculateLayouts cycle) rawSetWidthSizeHeightAccordingly settles a deferred-layout
-        # child IN PLACE (synchronous _reLayout, no invalidate-climb), so this
-        # _positionAndResizeChildren is a fixed point -- see Widget.rawSetWidthSizeHeightAccordingly.
-        # CONSUME the height it HANDS FORWARD (the freshly-applied height, byte-equal to a widget.height()
-        # read right here) instead of re-reading the child's applied @bounds at the bottom of the loop --
-        # the half of the "hand the height forward" plumbing that was left undone. (proper-layouts Phase B; assessment §2.4)
-        elementHeight = widget.rawSetWidthSizeHeightAccordingly recommendedElementWidth
+        # §4.2 Stage 1 (structural arrange): MEASURE the child's preferred extent at the recommended width, then
+        # APPLY it via the NON-notifying arrange twin so this arrange does not fire the re-fit seam at ME (Intent-2
+        # self-re-enqueue = the capstone's Pattern B). preferredExtentForWidth is PURE and already encapsulates each
+        # child type's width->height sizing (wrapped text / clock square / ratio), so it returns the SAME extent the
+        # old rawSetWidthSizeHeightAccordingly mutate-and-read-back produced -- proven byte-exact by the §4.1 Stage-A/B
+        # differential probes. A deferred-layout child (a nested container) then re-lays-out its OWN children at that
+        # extent (its self-resize is a no-op == the measure, so it fires no seam either). (was: notify-by-mutation
+        # mutate-then-read-back; assessment §2.4.)
+        # §4.2 Stage 1: apply the child's width WITHOUT firing the re-fit seam at ME (Pattern B) -- but for LEAF
+        # children ONLY. A child that is itself a TRACKING CONTAINER (`_reLayoutChildren?` -- a Window / Stack /
+        # ScrollPanel, the same marker the seam gates on) KEEPS the seam-firing rawSetWidthSizeHeightAccordingly:
+        # its child-resize re-enqueue is LOAD-BEARING for a constrained-scroll-stack's content<->scrollbar WIDTH
+        # convergence (making it non-notifying settled the stack 6px wider, overlapping its scrollbar --
+        # macroWindowCellsInConstrainedScrollStackReflow). That converts only in Stage 3, once the convergence is
+        # structural. (NB do NOT use `implementsDeferredLayout()` here -- it is pinned false on Window/Stack/Scroll
+        # precisely so it doesn't flip their read sites, so it would mis-route them to the leaf branch.) A LEAF child
+        # (text / clock / box -- the stack's 10 capstone Pattern-B pushes) takes the pure measure applied
+        # non-notifying: the measure carries its per-type width->height sizing (wrapped text / clock square / ratio),
+        # byte-exact by the §4.1 Stage-A/B probes, and a leaf has no inner convergence to drive.
+        if widget._reLayoutChildren?
+          elementHeight = widget.rawSetWidthSizeHeightAccordingly recommendedElementWidth
+        else
+          measured = widget.preferredExtentForWidth recommendedElementWidth
+          widget._arrangeApplyExtent measured
+          elementHeight = measured.y
 
         # contained text that OPTED INTO FIT_BOX_TO_TEXT (a SimplePlainTextWdgt or a
         # bare TextWdgt put into that mode) fits its BOX to the TEXT: wrap to the
@@ -260,7 +277,16 @@ class SimpleVerticalStackPanelWdgt extends Widget
           leftPosition = @left() + @padding
 
 
-      widget.fullRawMoveTo new Point leftPosition, @top() + verticalPadding + stackHeight
+      # §4.2 Stage 1: move via the NON-notifying arrange twin for LEAF children (once the resize stops firing the
+      # seam, the child-MOVE becomes the surviving half of the stack's Pattern-B pushes). A child that is a TRACKING
+      # CONTAINER (`_reLayoutChildren?`) keeps the seam-firing fullRawMoveTo: its move's in-pass re-enqueue is
+      # load-bearing for a constrained-scroll-stack's content<->scrollbar WIDTH convergence (dropping it settled the
+      # stack 6px wider, overlapping its scrollbar) -- it converts only in Stage 3. Same discriminator as the resize.
+      moveTo = new Point leftPosition, @top() + verticalPadding + stackHeight
+      if widget._reLayoutChildren?
+        widget.fullRawMoveTo moveTo
+      else
+        widget._arrangeApplyMoveTo moveTo
       # else-branch: consume the handed-forward height (no read-back of applied @bounds). The
       # !constrainContentWidth if-branch does NO resize -- there is no mutate-then-read-back to remove there --
       # so it falls back to reading the child's already-settled height. (proper-layouts Phase B)

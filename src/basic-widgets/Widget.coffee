@@ -1304,32 +1304,34 @@ class Widget extends TreeNode
   
   # Widget accessing - simple changes:
   fullRawMoveBy: (delta) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
     if delta.isZero() then return
-    #console.log "move 4"
     @breakNumberOfRawMovesAndResizesCaches()
     @fullChanged()
     @bounds = @bounds.translateBy delta
-
-    # note that if I am a subwidget of a widget directly
-    # inside a non-text-wrapping ScrollPanelWdgt then this
-    # is not going to work. So if I'm a box attached to a
-    # box inside a non-text-wrapping ScrollPanelWdgt then
-    # there will be no adjusting of bounds of the ScrollPanel
-    # not the adjusting of the scrollbars.
-    # This could be done, we could check up the chain to find
-    # if we are indirectly inside a ScrollPanel however
-    # there might be performance implications, so I'd probably
-    # have to introduce caching, and this whole mechanism should
-    # go away with proper layouts...
     @_reFitContainerAfterRawGeometryChange()
-
     @children.forEach (child) ->
       child.silentFullRawMoveBy delta
+
+  # Non-notifying twins of fullRawMoveBy / fullRawMoveTo (§4.2 structural arrange-down): translate me + my children +
+  # repaint WITHOUT firing the re-fit seam -- a container placing me top-down already knows my new position, so the
+  # seam's Intent-2 self-re-enqueue is redundant. Used by the stack arrange for LEAF children (a leaf has no inner
+  # convergence the move's re-enqueue would drive; a container child keeps the seam-firing fullRawMoveTo). The body
+  # mirrors fullRawMoveBy minus the seam; they merge with their notifying twins once the seam is deleted (Stage 5).
+  _arrangeApplyMoveBy: (delta) ->
+    return if delta.isZero()
+    @breakNumberOfRawMovesAndResizesCaches()
+    @fullChanged()
+    @bounds = @bounds.translateBy delta
+    @children.forEach (child) ->
+      child.silentFullRawMoveBy delta
+
+  _arrangeApplyMoveTo: (aPoint) ->
+    aPoint.debugIfFloats()
+    delta = aPoint.toLocalCoordinatesOf @
+    if !delta.isZero()
+      @breakNumberOfRawMovesAndResizesCaches()
+      @_arrangeApplyMoveBy delta
+    @bounds.debugIfFloats()
 
   silentFullRawMoveBy: (delta) ->
     # TODO in theory the low-level APIs should only be
@@ -1641,40 +1643,40 @@ class Widget extends TreeNode
             @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
 
   
+  # "silent" = no repaint / no self-relayout, but it DOES fire the re-fit seam (Intent-1: notify the container
+  # tracking my geometry to re-fit). The bounds-set body is shared with the NON-notifying arrange twin
+  # _arrangeApplyExtent (below) via _setExtentBoundsNoNotify; here we just add the seam fire iff the bounds changed.
   silentRawSetExtent: (aPoint) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
+    if @_setExtentBoundsNoNotify aPoint
+      @_reFitContainerAfterRawGeometryChange()
 
+  # The shared bounds-set core of silentRawSetExtent: round + min-extent clamp + commit @bounds, WITHOUT firing the
+  # re-fit seam. Returns true iff @bounds actually changed (so the notifying wrapper knows to fire the seam).
+  # (§4.2 structural arrange: the top-down arrange applies geometry via the non-notifying path -- _arrangeApply* --
+  # since the arranger already knows the new geometry; only EXTERNAL agents notify by mutation via silentRawSetExtent.)
+  _setExtentBoundsNoNotify: (aPoint) ->
     aPoint = aPoint.round()
-    #console.log "move 9"
-
     minExtent = @getMinimumExtent()
     if ! aPoint.ge minExtent
       aPoint = aPoint.max minExtent
-
     newWidth = Math.max aPoint.x, 0
     newHeight = Math.max aPoint.y, 0
-
     newBounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + newWidth, @bounds.origin.y + newHeight
+    if @bounds.equals newBounds then return false
+    @bounds = newBounds
+    @breakNumberOfRawMovesAndResizesCaches()
+    return true
 
-    unless @bounds.equals newBounds
-      @bounds = newBounds
+  # Non-notifying twin of rawSetExtent (§4.2 structural arrange-down): apply my extent the way rawSetExtent does
+  # (commit @bounds + @changed repaint + @_reLayoutSelf), but WITHOUT firing the re-fit seam -- a container
+  # arranging me top-down already knows my new geometry, so the seam's Intent-2 self-re-enqueue is redundant.
+  # Byte-for-byte mirrors rawSetExtent except for the seam (rawSetExtent -> silentRawSetExtent which notifies).
+  _arrangeApplyExtent: (aPoint) ->
+    unless aPoint.equals @extent()
       @breakNumberOfRawMovesAndResizesCaches()
-
-      # note that if I am a subwidget of a widget directly
-      # inside a non-text-wrapping ScrollPanelWdgt then this
-      # is not going to work. So if I'm a box attached to a
-      # box inside a non-text-wrapping ScrollPanelWdgt then
-      # there will be no adjusting of bounds of the ScrollPanel
-      # not the adjusting of the scrollbars.
-      # This could be done, we could check up the chain to find
-      # if we are indirectly inside a ScrollPanel however
-      # there might be performance implications, so I'd probably
-      # have to introduce caching, and this whole mechanism should
-      # go away with proper layouts...
-      @_reFitContainerAfterRawGeometryChange()
+      @_setExtentBoundsNoNotify aPoint
+      @changed()
+      @_reLayoutSelf()
 
 
   # A re-fit "seam" (cf. _reFitContainerAfterRawGeometryChange): a freefloating content widget tells the
