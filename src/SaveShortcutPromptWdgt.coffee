@@ -43,7 +43,7 @@ class SaveShortcutPromptWdgt extends MenuWdgt
 
   buildSubwidgets: ->
 
-  iHaveBeenAddedTo: (whereTo, beingDropped) ->
+  _reactToBeingAdded: (whereTo, beingDropped) ->
   
   createReferenceAndClose: ->
     @target.createReferenceAndClose @tempPromptEntryField.text.text, @wdgtWhereReferenceWillGo

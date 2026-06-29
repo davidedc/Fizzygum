@@ -52,7 +52,7 @@ class SliderWdgt extends CircleBoxWdgt
     unless @layoutSpecDetails instanceof VerticalStackLayoutSpec
       @layoutSpecDetails = new VerticalStackLayoutSpec 0
 
-  iHaveBeenAddedTo: (whereTo, beingDropped) ->
+  _reactToBeingAdded: (whereTo, beingDropped) ->
     @_reLayoutSelf()
     
     # might happen in phase of deserialization that

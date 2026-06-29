@@ -183,8 +183,8 @@ class StretchableEditableWdgt extends Widget
 
     @_invalidateLayout()
 
-  childPickedUp: (childPickedUp) ->
-    if childPickedUp == @stretchableWidgetContainer
+  _reactToChildPickedUp: (_reactToChildPickedUp) ->
+    if _reactToChildPickedUp == @stretchableWidgetContainer
       @createNewStretchablePanel()
       @_invalidateLayout()
 

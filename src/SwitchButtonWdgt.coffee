@@ -28,7 +28,7 @@ class SwitchButtonWdgt extends Widget
   # so that when you duplicate a "selected" toggle
   # and you pick it up and you attach it somewhere else
   # it gets automatically unselected
-  iHaveBeenAddedTo: (whereTo, beingDropped) ->
+  _reactToBeingAdded: (whereTo, beingDropped) ->
     @resetSwitchButton()
 
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023

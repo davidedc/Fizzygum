@@ -16,7 +16,7 @@ KeepsRatioWhenInVerticalStackMixin =
     preferredExtentForWidth: (availW) ->
       new Point availW, Math.round availW * (@height()/@width())
 
-    holderWindowJustBeenGrabbed: (whereFrom) ->
+    _reactToHolderWindowGrabbed: (whereFrom) ->
       # capability query replaces `whereFrom instanceof SimpleVerticalStackPanelWdgt`
       # (type-test-elimination campaign)
       if whereFrom?.releasesRatioConstraintOnGrabbedChildren?()
@@ -35,7 +35,7 @@ KeepsRatioWhenInVerticalStackMixin =
           @parent._applyMoveToAndNotify world.hand.position().subtract @parent.extent().floorDivideBy 2
           @parent._moveWithin world
 
-    holderWindowJustDropped: (whereIn) ->
+    _reactToHolderWindowDropped: (whereIn) ->
       # capability query replaces `(whereIn instanceof SimpleVerticalStackPanelWdgt) and
       # !(whereIn instanceof WindowWdgt)` (type-test-elimination campaign)
       if whereIn?.imposesRatioConstraintOnDroppedChildren?()

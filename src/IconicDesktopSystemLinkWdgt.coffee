@@ -25,6 +25,6 @@ class IconicDesktopSystemLinkWdgt extends WidgetHolderWithCaptionWdgt
   # (type-test-elimination campaign)
   # Only called from IconicDesktopSystemFolderShortcutWdgt._reactToChildDropped, inside the drop's single
   # settle, so add through the non-settling core.
-  addSelfWhenDroppedIntoFolder: (folderContents) ->
+  _reactToBeingDroppedIntoFolder: (folderContents) ->
     folderContents._addNoSettle @
 

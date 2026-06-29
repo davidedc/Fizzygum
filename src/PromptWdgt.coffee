@@ -75,5 +75,5 @@ class PromptWdgt extends MenuWdgt
 
   buildSubwidgets: ->
 
-  iHaveBeenAddedTo: (whereTo, beingDropped) ->
+  _reactToBeingAdded: (whereTo, beingDropped) ->
   

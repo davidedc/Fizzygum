@@ -11,7 +11,7 @@ class StretchablePanelWdgt extends PanelWdgt
       if childrenNotHandlesNorCarets.length == 0
         @parent.resetRatio()
 
-  childAdded: (child) ->
+  _reactToChildAdded: (child) ->
     super
     # only set ratio with the first added child
     # the following ones don't change it

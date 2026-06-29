@@ -570,10 +570,10 @@ assertion a recapture after a regression silently stores two different hashes an
   bottom-right HandleWdgt, non-float drag → setExtent; use deltas off the live bounds).
 - **Resizing a window WHILE collapsed reverts on uncollapse** (`macroCollapsedWindowBarResizeRevertsOnUncollapse`): the
   collapsed-bar follow-on to the chrome-button entry above. Collapsing a `WindowWdgt` SAVES its pre-collapse size —
-  `childBeingCollapsed`/`childCollapsed` store `@widthWhenUnCollapsed`/`@extentWhenCollapsed` (`WindowWdgt.coffee:208-232`) and shrink
+  `_beforeChildCollapsed`/`_reactToChildCollapsed` store `@widthWhenUnCollapsed`/`@extentWhenCollapsed` (`WindowWdgt.coffee:208-232`) and shrink
   it to just its title bar at the SAME width; the `.resizer` stays present and draggable while collapsed (`adjustContentsBounds`
   repositions it unconditionally, `:536-537`), so `@dragWindowResizerTo_InputEvents` NARROWS the bar's width (height pinned to the bar,
-  `:480-486`). But `childUnCollapsed` (`:234-244`) does `_applyExtentAndNotify @extentWhenCollapsed` then `_applyWidthAndNotify @widthWhenUnCollapsed` (the
+  `:480-486`). But `_reactToChildUnCollapsed` (`:234-244`) does `_applyExtentAndNotify @extentWhenCollapsed` then `_applyWidthAndNotify @widthWhenUnCollapsed` (the
   width captured BEFORE collapsing), so uncollapse RESTORES the full pre-collapse extent and DISCARDS the resize-while-collapsed — a
   round-trip REVERT for the EXPANDED size. But the COLLAPSED-bar size and the expanded size are tracked SEPARATELY, and the collapsed-bar
   size is STICKY: a later re-collapse returns the bar to its last resized (narrowed) width. So resizing while collapsed changes ONLY the
@@ -609,7 +609,7 @@ assertion a recapture after a regression silently stores two different hashes an
   "Composing macros" in CLAUDE.md (one test owns the composite screenshot, the other reuses the fixture without re-shooting).
 - **Close an inner (nested) window → the outer survives and stays reusable** (`macroClosingInnerWindowKeepsOuter`): the lifecycle
   follow-on to the bullet above. Once an internal window is the outer window's `@contents`, `@closeWindow_InputEvents intWin`
-  (clicks the INNER window's own `.closeButton`) closes only it; the outer's `childBeingClosed(child)` (`WindowWdgt.coffee:204`)
+  (clicks the INNER window's own `.closeButton`) closes only it; the outer's `_beforeChildClosed(child)` (`WindowWdgt.coffee:204`)
   detects `child == @contents` and calls `resetToDefaultContents` (`:246`) — re-enabling drops and restoring the
   `WindowContentsPlaceholderText` ("Drop a widget in here") + the "empty window" label. The outer window is NEVER closed and stays
   functional: a fresh `@dragWidgetTo_InputEvents clock2, extWin` is accepted as its new content (relabelled "analog clock"). Build via
@@ -686,7 +686,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **NESTED collapse/uncollapse cascades through window layers — the full resize matrix** (`macroWindowsNestedCollapsingUncollapsing`):
   a window always WRAPS its content, so collapse state CASCADES through nesting. The switch collapses the window's CONTENT
   (`CollapseIconButtonWdgt.actOnClick` → `@parent.parent.contents.collapse()`), the window reacts via
-  `childBeingCollapsed`/`childCollapsed`/`childUnCollapsed` (`WindowWdgt.coffee:207-243`, store/restore extents) — with an
+  `_beforeChildCollapsed`/`_reactToChildCollapsed`/`_reactToChildUnCollapsed` (`WindowWdgt.coffee:207-243`, store/restore extents) — with an
   internal window AS the outer's content (wrapping lorem AS the inner's), collapsing the INNER drops the OUTER to bar-plus-bar.
   The test resizes the EXTERNAL window in ALL FOUR (outer × inner) collapse combinations, each followed by the complete,
   step-by-step uncollapsing (a reviewer-requested matrix; the recording itself resized in only two of the four). The two
@@ -806,7 +806,7 @@ assertion a recapture after a regression silently stores two different hashes an
   macro reproduced its recording's reference pixels hash-for-hash at both densities). No new verb.
 - **A nested WINDOW's lifecycle re-syncs its scroll panel** (`macroScrollPanelUpdatesCorrectlyOnCollapsingAndUncollapsingAndClosingWindow`):
   the window-lifecycle sibling of the two recompute entries above. A `WindowWdgt` nested INSIDE a ScrollPanelWdgt actively refreshes it:
-  `childCollapsed`/`childUnCollapsed` both END with `refreshScrollPanelWdgtOrVerticalStackIfIamInIt()` (`WindowWdgt.coffee:232/:244` →
+  `_reactToChildCollapsed`/`_reactToChildUnCollapsed` both END with `refreshScrollPanelWdgtOrVerticalStackIfIamInIt()` (`WindowWdgt.coffee:232/:244` →
   the `Widget.coffee` helper calls the enclosing panel's `adjustContentsBounds()` + `adjustScrollBars()` when the widget sits directly
   inside one) — so collapsing the nested window (content shrinks to its bar), uncollapsing (the stored pre-collapse extent re-overflows
   the viewport), and closing it (panel empties) each snap the scrollbars to the new content extent with no manual recompute. Beats:
@@ -1218,7 +1218,7 @@ assertion a recapture after a regression silently stores two different hashes an
   hierarchy menu) → `"a MenuItem ➜"` → `"pick up"` → carry into the panel (no-button move) + `@syntheticEventsMouseClick_InputEvents()` to
   drop. Clicking the embedded button puts the copy ON THE HAND, so a plain move-then-click carries-and-drops it (NOT a held-drag — that is only
   for a free morph not already on the hand). Locate each generation's button by a LIVE-WORLD query — the new `PanelWdgt` not yet seen, then its
-  descendant `MenuItemWdgt` with `labelString == "duplicate"` (`topWdgtSuchThat`) — never recorded coordinates. (`justBeenCopied`,
+  descendant `MenuItemWdgt` with `labelString == "duplicate"` (`topWdgtSuchThat`) — never recorded coordinates. (`_reactToBeingCopied`,
   now on `MenuItemWdgt`, is only a cosmetic un-highlight, NOT the duplication mechanism.) No new verb.
 
 ## Controllers (patch-programming)

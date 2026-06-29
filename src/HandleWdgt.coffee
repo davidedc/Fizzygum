@@ -25,9 +25,9 @@ class HandleWdgt extends Widget
   # the uniform `target.add handle`, no layoutSpec and no target-passed-twice. (end-of-cycle CONVERT: a
   # standalone attach now self-settles -- placed by its OWN flush -- instead of the old off-settle constructor
   # side-effect that rode the shared per-frame end-of-cycle flush. @target + the padding-aware @inset are now
-  # set in iHaveBeenAddedTo, once the destination -- which IS the target -- is known.)
+  # set in _reactToBeingAdded, once the destination -- which IS the target -- is known.)
   constructor: (@type = "resizeBothDimensionsHandle") ->
-    # default inset; recomputed against the real target's padding in iHaveBeenAddedTo when I corner-attach
+    # default inset; recomputed against the real target's padding in _reactToBeingAdded when I corner-attach
     @inset = new Point 2, 2
     super()
     @color = Color.WHITE
@@ -78,7 +78,7 @@ class HandleWdgt extends Widget
     return false
 
 
-  iHaveBeenAddedTo: (whereTo, beingDropped) ->
+  _reactToBeingAdded: (whereTo, beingDropped) ->
     # Adopt whoever I was just added to as my resize/move @target -- UNLESS I landed free-floating (on the
     # world or the hand: a naked desktop handle, or mid-detach), in which case I have no target. The spec was
     # already resolved by defaultLayoutSpecWhenAddedTo during the add, so @isFreeFloating() tells the two
@@ -282,7 +282,7 @@ class HandleWdgt extends Widget
 
   # Menu action ("attach..." -> choose target): corner-attach this handle to the chosen widget. A discrete
   # user action, so it goes through the public self-settling add() -- the corner placement comes from default
-  # LayoutSpecWhenAddedTo and @target is adopted in iHaveBeenAddedTo (the destination IS the new target). add()
+  # LayoutSpecWhenAddedTo and @target is adopted in _reactToBeingAdded (the destination IS the new target). add()
   # also unlinks me from any previous parent (e.g. the world, if I had been detached). Kept on this name + arg
   # position because the "attach..." menu dispatches it by string with the chosen target as the 3rd argument.
   makeHandleSolidWithParentWidget: (ignored, ignored2, widgetAttachedTo) ->

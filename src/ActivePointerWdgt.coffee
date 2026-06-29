@@ -39,7 +39,7 @@ class ActivePointerWdgt extends Widget
     @_commitBoundsAndNotify Rectangle.EMPTY
 
   # Capability query (with CanvasWdgt; replaces `whereTo instanceof ActivePointerWdgt or ... CanvasWdgt`
-  # in PenWdgt.iHaveBeenAddedTo): "can a pen draw onto me?" -- the hand counts because a pen mid-drag
+  # in PenWdgt._reactToBeingAdded): "can a pen draw onto me?" -- the hand counts because a pen mid-drag
   # lives on it. Dispatched via ?() (nothing on Widget). (type-test-elimination campaign)
   acceptsPenDrawing: ->
     true
@@ -141,7 +141,7 @@ class ActivePointerWdgt extends Widget
   #
   # floatDrag 'n' drop events, method(arg) -> receiver:
   #
-  #   prepareToBeGrabbed() -> grabTarget
+  #   _beforeBeingGrabbed() -> grabTarget
   #   _reactToChildGrabbed(grabbedWdgt) -> oldParent
   #   wantsDropOf(wdgtToDrop) ->  newParent
   #   _reactToBeingDropped(activePointerWdgt) -> droppedWdgt
@@ -190,10 +190,10 @@ class ActivePointerWdgt extends Widget
         aWdgt._applyMoveToAndNotify aWdgt.position().add displacementDueToGrabDragThreshold
 
       @grabOrigin = aWdgt.situation()
-      aWdgt.prepareToBeGrabbed?()
+      aWdgt._beforeBeingGrabbed?()
 
       @add aWdgt
-      aWdgt.justBeenGrabbed? oldParent
+      aWdgt._reactToBeingGrabbed? oldParent
       # you must add the shadow
       # after the widget has been added
       # because "@add aWdgt" causes
@@ -252,7 +252,7 @@ class ActivePointerWdgt extends Widget
 
       @fullChanged()
       wdgtToDrop.aboutToBeDropped? target
-      target.aboutToDrop? wdgtToDrop
+      target._beforeChildDropped? wdgtToDrop
       target.add wdgtToDrop, nil, nil, true, nil, @position()
       wdgtToDrop.fullChanged()
 

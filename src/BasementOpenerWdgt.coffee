@@ -19,10 +19,10 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
   participatesInIconGrid: ->
     false
 
-  iHaveBeenAddedTo: (whereTo, beingDropped) ->
+  _reactToBeingAdded: (whereTo, beingDropped) ->
     super
     if whereTo == world and !@userMovedThisFromComputedPosition
-      # _applyMoveToAndNotify (NOT the public moveTo): iHaveBeenAddedTo is fired by the add
+      # _applyMoveToAndNotify (NOT the public moveTo): _reactToBeingAdded is fired by the add
       # core INSIDE the add's settle, so a public setter here would re-enter the flush
       # guard and throw. The freefloating position is not changed by the outer settle,
       # so this is byte-equivalent to the old deferred moveTo.

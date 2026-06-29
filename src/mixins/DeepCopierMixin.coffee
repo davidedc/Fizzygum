@@ -103,7 +103,7 @@ DeepCopierMixin =
         # cleanup, for example a button that is
         # highlighted might want to un-highlight
         # itself
-        cloneOfMe.justBeenCopied?()
+        cloneOfMe._reactToBeingCopied?()
 
         return cloneOfMe
 

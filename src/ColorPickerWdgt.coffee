@@ -40,7 +40,7 @@ class ColorPickerWdgt extends Widget
     @add @feedback
     @_invalidateLayout()
 
-  iHaveBeenAddedTo: (whereTo, beingDropped) ->
+  _reactToBeingAdded: (whereTo, beingDropped) ->
   
   getColor: ->
     @feedback.color

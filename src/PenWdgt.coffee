@@ -24,7 +24,7 @@ class PenWdgt extends Widget
     # of the arrow and of the line. Probably should make the two distinct
     @penSize = 1
 
-  iHaveBeenAddedTo: (whereTo, beingDropped) ->
+  _reactToBeingAdded: (whereTo, beingDropped) ->
     if !(whereTo.acceptsPenDrawing?())
       @inform "a pen will only\nwork on a canvas..."
 

@@ -301,19 +301,19 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       super aWdgt, position, layoutSpec, beingDropped
     @resizer?.moveInFrontOfSiblings()
 
-  childBeingDestroyed: (child) ->
+  _beforeChildDestroyed: (child) ->
     if child == @contents
       @resetToDefaultContents()
 
-  childBeingPickedUp: (child) ->
+  _beforeChildPickedUp: (child) ->
     if child == @contents
       @resetToDefaultContents()
 
-  childBeingClosed: (child) ->
+  _beforeChildClosed: (child) ->
     if child == @contents
       @resetToDefaultContents()
 
-  childBeingCollapsed: (child) ->
+  _beforeChildCollapsed: (child) ->
     if child == @contents
       @widthWhenUnCollapsed = @width()
       @contentsExtentWhenCollapsed = @contents.extent()
@@ -328,14 +328,14 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @internalExternalSwitchButton?._destroyNoSettle()
       @internalExternalSwitchButton = nil
 
-  childBeingUnCollapsed: (child) ->
+  _beforeChildUnCollapsed: (child) ->
     if child == @contents
       @widthWhenCollapsed = @width()
 
     @createAndAddEditButton()
     @createAndAddInternalExternalSwitchButton()
 
-  childCollapsed: (child) ->
+  _reactToChildCollapsed: (child) ->
     if child == @contents
       if @widthWhenCollapsed?
         @_applyWidthAndNotify @widthWhenCollapsed
@@ -343,7 +343,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @_reLayoutChildren()
       @_refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
-  childUnCollapsed: (child) ->
+  _reactToChildUnCollapsed: (child) ->
     if child == @contents
       @reInflating = true
       @_applyExtentAndNotify @extentWhenCollapsed
@@ -359,7 +359,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   resetToDefaultContents: ->
     @enableDrops()
     @contents = @defaultContents
-    # Reached only from a child-lifecycle hook (childBeingDestroyed/PickedUp/Closed). Rebuild through
+    # Reached only from a child-lifecycle hook (_beforeChildDestroyed/PickedUp/Closed). Rebuild through
     # the non-settling core so a hook firing INSIDE an enclosing settle (destroy/close) is absorbed by
     # that operation's settle instead of re-entering the public self-settler. (window-rebuild follow-up)
     @_buildAndConnectChildrenNoSettle()
@@ -367,15 +367,15 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     if @recursivelyAttachedAsFreeFloating()
       @_applyExtentAndNotify new Point 300, 300
 
-  aboutToDrop: ->
+  _beforeChildDropped: ->
     @removeChild @contents
 
   _reactToBeingDropped: (whereIn) ->
     super
-    @contents?.holderWindowJustDropped? whereIn
+    @contents?._reactToHolderWindowDropped? whereIn
 
-  justBeenGrabbed: (whereFrom) ->
-    @contents?.holderWindowJustBeenGrabbed? whereFrom
+  _reactToBeingGrabbed: (whereFrom) ->
+    @contents?._reactToHolderWindowGrabbed? whereFrom
 
   _reactToChildDropped: (theWidget) ->
     @contents = theWidget
@@ -428,7 +428,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # WindowWdgt._addNoSettle. The single settle runs AFTER the core, when @stack is wired: O(1) relayouts.
   #
   # This PUBLIC self-settler is only ever called STANDALONE (the constructor). Every rebuild path that
-  # fires from inside an enclosing settle -- a child-lifecycle hook (childBeingDestroyed/Closed/PickedUp)
+  # fires from inside an enclosing settle -- a child-lifecycle hook (_beforeChildDestroyed/Closed/PickedUp)
   # -> resetToDefaultContents -> rebuild, or _reactToChildDropped inside the drop's settle -- goes through the
   # non-settling @_buildAndConnectChildrenNoSettle directly, never this wrapper, so the wrapper never
   # re-enters a flush. The chrome the core constructs adds to ORPHANS, exempt from the flush-throw

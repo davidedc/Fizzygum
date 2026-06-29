@@ -490,7 +490,7 @@ class Widget extends TreeNode
       return
 
     world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
-    @parent?.childBeingClosed? @
+    @parent?._beforeChildClosed? @
     if world.basementWdgt?
       world.basementWdgt._addLostWidgetNoSettle @
     else
@@ -510,7 +510,7 @@ class Widget extends TreeNode
     # the START (I'm still attached) then flushes globally, so my parent settles even though _destroyNoSettle
     # orphans me.
     # The one hook that rebuilds during destroy -- a window losing its @contents
-    # (childBeingDestroyed -> resetToDefaultContents) -- is safe inside this _inLayoutMutation:
+    # (_beforeChildDestroyed -> resetToDefaultContents) -- is safe inside this _inLayoutMutation:
     # resetToDefaultContents rebuilds through the non-settling @_buildAndConnectChildrenNoSettle (not the
     # public self-settler), and the chrome it constructs adds to ORPHANS, which are exempt from the
     # flush-throw (see _settleLayoutsAfter's orphan guard). So nothing re-enters a settle mid-destroy.
@@ -518,7 +518,7 @@ class Widget extends TreeNode
 
   _destroyNoSettle: ->
 
-    @parent?.childBeingDestroyed? @
+    @parent?._beforeChildDestroyed? @
     @unregisterThisInstance()
     world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
     world.keyboardEventsReceivers.delete @
@@ -2138,8 +2138,8 @@ class Widget extends TreeNode
     @invalidateFullClippedBoundsCache @
     @fullChanged()
 
-  # SELF-SETTLE (single-mutation tier). childBeingCollapsed now tears down the bar buttons through the
-  # NON-settling core (_destroyNoSettle), and childCollapsed re-fits via raw setters + _reFitContainer, so
+  # SELF-SETTLE (single-mutation tier). _beforeChildCollapsed now tears down the bar buttons through the
+  # NON-settling core (_destroyNoSettle), and _reactToChildCollapsed re-fits via raw setters + _reFitContainer, so
   # _collapseNoSettle reaches no public setter. Anchored on (@parent ? @) (the container that re-lays-out).
   # THIN wrapper: the already-collapsed guard lives in the core (check-layering [H]), not before the settle.
   collapse: ->
@@ -2152,18 +2152,18 @@ class Widget extends TreeNode
     # re-runs the hooks / @_invalidateLayout (which would THROW mid-pass). The public path now settles-then-no-ops
     # for an already-collapsed widget -- byte-identical (a no-op flush).
     return if @collapsed
-    @parent?.childBeingCollapsed? @
+    @parent?._beforeChildCollapsed? @
     @collapsed = true
     WorldWdgt.numberOfCollapseFlagsChanges++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
     @_invalidateLayout()
     @fullChanged()
-    @parent?.childCollapsed? @
+    @parent?._reactToChildCollapsed? @
 
-  # SELF-SETTLE (single-mutation tier). childBeingUnCollapsed re-creates the bar buttons through the
+  # SELF-SETTLE (single-mutation tier). _beforeChildUnCollapsed re-creates the bar buttons through the
   # NON-settling core (createAndAdd* -> @_addNoSettle; the button constructors add their innards on ORPHANS,
-  # exempt from the flush-throw), and childUnCollapsed re-fits via raw setters, so _unCollapseNoSettle reaches
+  # exempt from the flush-throw), and _reactToChildUnCollapsed re-fits via raw setters, so _unCollapseNoSettle reaches
   # no public setter. Anchored on @ (the canonical wrap; the global flush re-lays-out the container).
   # THIN wrapper: the guard lives in the core (check-layering [H]), not before the settle.
   unCollapse: ->
@@ -2176,14 +2176,14 @@ class Widget extends TreeNode
     # `return if !@isInCollapsedSubtree()` was REMOVED: isInCollapsedSubtree() is the RECURSIVE self-or-ancestor query, and once
     # @collapsed is true it necessarily returns true, so that second guard was DEAD code.
     return if !@collapsed
-    @parent?.childBeingUnCollapsed? @
+    @parent?._beforeChildUnCollapsed? @
     @collapsed = false
     WorldWdgt.numberOfCollapseFlagsChanges++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
     @_invalidateLayout()
     @fullChanged()
-    @parent?.childUnCollapsed? @
+    @parent?._reactToChildUnCollapsed? @
 
   
   isInCollapsedSubtree: ->
@@ -2467,7 +2467,7 @@ class Widget extends TreeNode
   # functions, as that's architecturally incorrect and can cause infinite loops in
   # the invocations.
 
-  iHaveBeenAddedTo: (whereTo, beingDropped) ->
+  _reactToBeingAdded: (whereTo, beingDropped) ->
     @_reLayoutSelf()
 
   # »>> this part is excluded from the fizzygum homepage build
@@ -2510,7 +2510,7 @@ class Widget extends TreeNode
   # every internal layout-time / construction-time / teardown adder (it must NOT
   # flush layouts: it runs inside another mutation's settle, during construction, or from a
   # private teardown chain). Full semantics: shadow management + invalidate + silentAdd +
-  # iHaveBeenAddedTo / childAdded / childRemoved callbacks + fractional-position, but never
+  # _reactToBeingAdded / _reactToChildAdded / childRemoved callbacks + fractional-position, but never
   # recalculateLayouts. (The shadow/fractional steps fold in what add() used to do in its
   # settle-wrap; they are no-ops for the fresh non-world children the internal adders pass.)
   # ??? TODO you should handle the case of Widget
@@ -2564,12 +2564,12 @@ class Widget extends TreeNode
 
     aWdgt.fullChanged()
     @silentAdd aWdgt, true, position
-    aWdgt.iHaveBeenAddedTo @, beingDropped
+    aWdgt._reactToBeingAdded @, beingDropped
     if previousParent?.childRemoved?
       previousParent.childRemoved @
 
-    if @childAdded?
-      @childAdded aWdgt
+    if @_reactToChildAdded?
+      @_reactToChildAdded aWdgt
 
     # fractional-position recording (folded in from add()): only meaningful for a world-level
     # widget, skipped otherwise -- so a no-op for the internal adders.
@@ -3022,7 +3022,7 @@ class Widget extends TreeNode
   
   pickUp: ->
     oldParent = @parent
-    oldParent?.childBeingPickedUp? @
+    oldParent?._beforeChildPickedUp? @
     world.hand.grab @
     # if one uses the "deferred" API then we need to look
     # into the "desiredExtent" as the true extent has yet
@@ -3031,7 +3031,7 @@ class Widget extends TreeNode
       @_applyMoveToAndNotify world.hand.position().subtract @desiredExtent.floorDivideBy 2
     else
       @_applyMoveToAndNotify world.hand.position().subtract @fullBounds().extent().floorDivideBy 2
-    oldParent?.childPickedUp? @
+    oldParent?._reactToChildPickedUp? @
 
   grabbedWidgetSwitcheroo: ->
     @
@@ -3657,7 +3657,7 @@ class Widget extends TreeNode
 
   # ---------------------------------------------------------------------
 
-  prepareToBeGrabbed: ->
+  _beforeBeingGrabbed: ->
     @userMovedThisFromComputedPosition = true
     @unlockFromPanels()
     @setLayoutSpec LayoutSpec.ATTACHEDAS_FREEFLOATING

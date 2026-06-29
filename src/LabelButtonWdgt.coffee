@@ -160,7 +160,7 @@ class LabelButtonWdgt extends ButtonWdgt
 
   # a copied label button usually wants to un-highlight itself (e.g. when you
   # duplicate by clicking a "duplicate" button INSIDE it).
-  justBeenCopied: ->
+  _reactToBeingCopied: ->
     @mouseLeave()
 
   mouseEnter: ->

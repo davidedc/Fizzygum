@@ -105,15 +105,15 @@ class PanelWdgt extends Widget
     return if @isOrphan()
     @_reFitContainer @parent
 
-  childAdded: (child) ->
+  _reactToChildAdded: (child) ->
     # the BasementWdgt has a filter that can
     # show/hide the contents of this pane
     # based on whether they are reachable or
     # not. So let's notify it.
     if @parent?
       if @parent.parent?
-        if @parent.parent.childAddedInScrollPanel?
-          @parent.parent.childAddedInScrollPanel child
+        if @parent.parent._reactToChildAddedInScrollPanel?
+          @parent.parent._reactToChildAddedInScrollPanel child
 
   # puts the widget in the ScrollPanel
   # in some sparse manner and keeping it

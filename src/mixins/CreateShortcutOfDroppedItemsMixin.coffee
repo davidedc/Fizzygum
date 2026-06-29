@@ -18,7 +18,7 @@ CreateShortcutOfDroppedItemsMixin =
       # of the neat automatic grid positioning.
       # So, move the "transient" dropped widget just a bit to the
       # right and below the origin.
-      aboutToDrop: (wdgtToDrop) ->
+      _beforeChildDropped: (wdgtToDrop) ->
         # a shortcut (already a reference) just fits within; a real dropped widget is offset so
         # the folder panel doesn't resize and scroll (was `instanceof
         # IconicDesktopSystemShortcutWdgt`). (type-test-elimination campaign)

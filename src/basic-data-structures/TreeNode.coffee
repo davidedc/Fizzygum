@@ -123,7 +123,7 @@ class TreeNode
 
     @parent.children.splice idx, 1
     @parent.children.push @
-    @parent.childMovedInFrontOfOthers? @
+    @parent._reactToChildMovedToFront? @
     # whoever invoked this should probably
     # do a fullChanged() we don't do it
     # here because it seems like a lower-level

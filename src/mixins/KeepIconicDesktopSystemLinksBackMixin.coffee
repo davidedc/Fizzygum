@@ -13,8 +13,8 @@ KeepIconicDesktopSystemLinksBackMixin =
       # only a desktop link knows how to layer itself above the other references; non-links
       # have no moveOnTopOfTopReference, so `?()` fires for exactly the old
       # `instanceof IconicDesktopSystemLinkWdgt`. (type-test-elimination campaign)
-      childAdded: (theWidget) ->
+      _reactToChildAdded: (theWidget) ->
         theWidget.moveOnTopOfTopReference?()
 
-      childMovedInFrontOfOthers: (theWidget) ->
+      _reactToChildMovedToFront: (theWidget) ->
         theWidget.moveOnTopOfTopReference?()
