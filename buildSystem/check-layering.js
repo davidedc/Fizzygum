@@ -216,7 +216,19 @@ const CALLBACK_HOOK = /^_(reactTo|before)[A-Z]/;            // [J] a notificatio
 // react step (_reLayout\w* = _reLayoutSelf/_reLayoutChildren*/_reLayoutScrollbars/_reLayout; changed/fullChanged),
 // a schedule/settle (_invalidateLayout/recalculateLayouts/_settleLayoutsAfter*), or a public setter. Scoped to
 // @-self (a .-receiver can't be typed -- like SELF_ADD_CALL); the runtime audit covers dynamic dispatch.
-const LEAF_FORBIDDEN = /@\s*(_reFitContainer\w*|_refresh\w*|_reLayout\w*|_invalidateLayout|recalculateLayouts|_settleLayoutsAfter\w*|fullChanged|changed|setExtent|setBounds|setWidth|setHeight|fullMoveTo)\b/;
+const LEAF_FORBIDDEN = /@\s*(_reFitContainer\w*|_refresh\w*|_reLayout\w*|_invalidateLayout|recalculateLayouts|_settleLayoutsAfter\w*|fullChanged|changed|setExtent|setBounds|setWidth|setHeight|moveTo)\b/;  // public setters mirror PUBLIC_SETTERS (moveTo, not the retired fullMoveTo — §6-1)
+
+// [K] the 2x2 apply-family NAME-CONSISTENCY corners (layering/naming plan §3b/§5b). A corner's NAME must match its
+// NOTIFY×REACT behaviour. We enforce the two STATICALLY-SOUND negatives (in checkFile below); the POSITIVE "every
+// *AndNotify REACHES the re-fit seam" is delegated to the RUNTIME auditTierAndApplyNaming -- a static name-scanner
+// can't follow `super` / dynamic dispatch (most corner overrides reach the seam via `super`), and an override may
+// legitimately NOT notify despite the AndNotify name (e.g. ClippingAtRectangularBoundsMixin._applyMoveByAndNotify,
+// which translates + repaints WITHOUT firing the seam). Scoped to the 2x2 CORNERS only: the convenience movers/setters
+// (_move*/_set*/_resize*) delegate to a *AndNotify corner freely, so they are NOT subjects.
+const APPLY_CORNER = /^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)(AndNotify)?$|^_commit(Extent|Bounds)AndNotify$/;
+const K_SEAM_CALL  = /@\s*(_reFitContainer\w*|_refreshScrollPanelWdgtOrVerticalStackIfIamInIt)\b/;   // the up-notify seam (the NOTIFY axis)
+const K_REACT_CALL = /@\s*(changed|fullChanged|_reLayout\w*|_positionAndResizeChildren)\b/;           // repaint / self- or child-relayout (the REACT axis)
+const K_ANDNOTIFY  = /[@.]\s*_[A-Za-z]\w*AndNotify\b/;                                                 // a call to a notifying corner
 const WRAPPER_EXCLUDED = new Set(['add']);   // see the [G] block above (collapse/unCollapse folded in once the layout passes routed to their cores)
 const SELF_ADD_CALL = /@\s*add\b/;        // [G] the unambiguous structural add: @add (self == Widget.add inside a Widget
                                           // method). \b excludes @addMany / @addInPseudoRandomPosition; the leading @ (not .)
@@ -415,6 +427,17 @@ function checkFile(file, violations, wrapperCall, warnings) {
       const leaf = code.match(LEAF_FORBIDDEN);
       if (leaf) violations.push(`[I] __ leaf ${method}() @-calls ${leaf[1]}() — a __ leaf must trigger no orchestration (seam/react/schedule/settle/public setter); keep it a pure bottom (layering/naming plan §3a)  — ${at}`);
     }
+    // [K] 2x2 apply-family name-consistency (the two statically-sound negatives; positive reaches-seam is the runtime audit's job, see the defs).
+    if (APPLY_CORNER.test(method)) {
+      if (!/AndNotify$/.test(method)) {
+        // arrange corner (_apply* w/o AndNotify) reacts only — must NOT notify (fire the seam) nor call an *AndNotify mutator
+        if (K_SEAM_CALL.test(code)) violations.push(`[K] arrange corner ${method}() fires the re-fit seam — a non-AndNotify corner reacts only; the notifying twin is the *AndNotify corner (layering/naming plan §3b)  — ${at}`);
+        else { const kc = code.match(K_ANDNOTIFY); if (kc) violations.push(`[K] arrange corner ${method}() calls notifying ${kc[0].replace(/^[@.]\s*/, '')}() — a non-AndNotify corner must not notify (layering/naming plan §3b)  — ${at}`); }
+      } else if (/^_commit/.test(method) && K_REACT_CALL.test(code)) {
+        // notify-only corner (_commit*AndNotify) commits + fires the seam — must NOT react
+        violations.push(`[K] notify-only corner ${method}() reacts via ${code.match(K_REACT_CALL)[1]}() — _commit*AndNotify only commits + notifies; the reacting full mutator is _apply*AndNotify (layering/naming plan §3b)  — ${at}`);
+      }
+    }
     if (recalc && !RECALC_WHITELIST.has(method)) {
       violations.push(`[B] recalculateLayouts() called from ${method}() (only doOneCycle / _settleLayoutsAfter / _settleLayoutsAfterBatch may)  — ${at}`);
     }
@@ -474,7 +497,7 @@ function checkMacroFile(file, violations, heredocOnly) {
     const code = hash >= 0 ? raw.slice(0, hash) : raw;
     const m = code.match(MACRO_FORBIDDEN_CALL);
     if (m) violations.push(`[D] macro calls private/low-level .${m[1]}() — ${rel}:${n + 1} `
-      + `(use the PUBLIC API; for measure-and-size, attach the widget first then setExtent/setWidth/fullMoveTo)`);
+      + `(use the PUBLIC API; for measure-and-size, attach the widget first then setExtent/setWidth/moveTo)`);
   }
 }
 
@@ -528,9 +551,10 @@ function main() {
     console.error('G: low-level code must reach the _<name>NoSettle core, not the public self-settling wrapper (destroy/close/fullDestroy/createReference/...) — or mark `# nosettle-sanctioned: <why>`.');
     console.error('I: a __ leaf must trigger no orchestration (re-fit seam / react / schedule-settle / public setter) — keep it a pure bottom (layering/naming plan §3a).');
     console.error('J: a notification hook (_reactTo*/_before*) must not open a settle — the gesture/structural dispatcher owns the one _settleLayoutsAfter (layering/naming plan §9.2).');
+    console.error('K: a 2x2 apply corner must match its name — a non-AndNotify _apply*/_commit* must not fire the seam nor call an *AndNotify; a _commit*AndNotify must not react (layering/naming plan §3b).');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
   process.exit(0);
 }
 
