@@ -12,14 +12,10 @@ class CaretWdgt extends BlinkerWdgt
     @slot = @target.text.length
     super()
 
-    # if the only thing in the undo history is the
-    # first positioning of the caret via click, we can clear
-    # that because we are going to set out own with
-    # the first click
-    if @target.undoHistory?.length == 1
-      onlyUndo = @target.undoHistory[@target.undoHistory.length - 1]
-      if onlyUndo.isJustFirstClickToPositionCursor
-        @target.undoHistory = []
+    # if the only thing in the undo history is the first positioning of the caret via click, we
+    # clear it because we are going to set our own with the first click. The text widget owns its
+    # undo history, so it does the check (was an @target.undoHistory = [] reach-in here). (Phase 7a)
+    @target.clearUndoHistoryIfOnlyFirstClickPositioning()
 
     # font could be really small I guess?
     @minimumExtent = new Point 1,1
@@ -302,7 +298,7 @@ class CaretWdgt extends BlinkerWdgt
       @_gotoSlotNoSettle @slot - 1
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
-    @target.caretHorizPositionForVertMovement = @slot
+    @target.rememberCaretColumn @slot
 
   goRight: (shift, howMany) ->
     @_settleLayoutsAfter => @_goRightNoSettle shift, howMany
@@ -315,7 +311,7 @@ class CaretWdgt extends BlinkerWdgt
       @_gotoSlotNoSettle @slot + (howMany || 1)
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
-    @target.caretHorizPositionForVertMovement = @slot
+    @target.rememberCaretColumn @slot
 
   goUp: (shift) ->
     if !shift and @target.lastSelectedSlot()?
@@ -357,17 +353,11 @@ class CaretWdgt extends BlinkerWdgt
 
   clearSelectionIfStartAndEndMeet: (shift) ->
     if shift
-      #console.log "@target.startMark: " + @target.startMark + " @target.endMark: " + @target.endMark
-      if @target.startMark == @target.endMark
-        #console.log "clearSelectionIfStartAndEndMeet clearing selection"
-        @target.clearSelection()
+      @target.clearSelectionIfCollapsed()
 
   updateSelection: (shift) ->
     if shift
-      if (!@target.endMark?) and (!@target.startMark?)
-        @target.selectBetween @slot, @slot
-      else if @target.endMark isnt @slot
-        @target.setEndMark @slot
+      @target.anchorOrExtendSelectionTo @slot
     else
       @target.clearSelection()
   

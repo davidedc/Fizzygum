@@ -277,6 +277,26 @@ class StringWdgt extends Widget
       @redoHistory.push poppedElement
     return poppedElement
 
+  # --- caret-editing-session state the caret collaborates on (oo-smells Phase 7a) ---
+  # These two used to be reached into directly by CaretWdgt (it wrote @target.undoHistory and
+  # @target.caretHorizPositionForVertMovement). The state belongs here -- the text widget owns
+  # its undo history's TextEditingState format and its remembered caret column -- so the caret
+  # now asks rather than pokes.
+
+  # The caret remembers the column it should land on during vertical (up/down) movement, so a
+  # short line passed over on the way doesn't lose the original horizontal position. Read by
+  # TextWdgt.upFrom / downFrom; set by the caret on horizontal moves and by mouseClickLeft below.
+  rememberCaretColumn: (slot) ->
+    @caretHorizPositionForVertMovement = slot
+
+  # When a caret first attaches via a positioning click, the only undo entry is that click, which
+  # we discard so the user's first real edit becomes the first undo step (CaretWdgt's constructor).
+  clearUndoHistoryIfOnlyFirstClickPositioning: ->
+    if @undoHistory?.length == 1
+      onlyUndo = @undoHistory[@undoHistory.length - 1]
+      if onlyUndo.isJustFirstClickToPositionCursor
+        @undoHistory = []
+
   setHorizontalAlignment: (newAlignment) ->
     if @horizontalAlignment != newAlignment
       @horizontalAlignment = newAlignment
@@ -1444,6 +1464,23 @@ class StringWdgt extends Widget
     @endMark = slotToExtendTo
     @changed()
 
+  # Caret-driven selection (shift + arrow / Home / End): anchor a fresh selection at slot if none
+  # is ongoing, otherwise move the moving end to slot. Distinct from the shift-CLICK pair above
+  # (startSelectionUpToSlot / extendSelectionUpToSlot, which carry the click's previous caret slot)
+  # -- this one grows the selection to wherever the caret just moved. Used to be done inside
+  # CaretWdgt.updateSelection by reading @target.startMark / @target.endMark directly. (Phase 7a)
+  anchorOrExtendSelectionTo: (slot) ->
+    if (!@endMark?) and (!@startMark?)
+      @selectBetween slot, slot
+    else if @endMark isnt slot
+      @setEndMark slot
+
+  # Collapse a zero-width selection (the two marks met) back to no selection. Used to be done in
+  # CaretWdgt.clearSelectionIfStartAndEndMeet by reading the marks directly. (Phase 7a)
+  clearSelectionIfCollapsed: ->
+    if @startMark == @endMark
+      @clearSelection()
+
   mouseDoubleClick: ->
     if @isEditable
       previousCaretSlot = world.caret?.slot
@@ -1496,7 +1533,7 @@ class StringWdgt extends Widget
       if editResult?
         world.caret.gotoSlot slotUserClickedOn, true
         world.caret.show()
-        @caretHorizPositionForVertMovement = world.caret.slot
+        @rememberCaretColumn world.caret.slot
 
     else
       @escalateEvent "mouseClickLeft", pos, arg2, arg3, arg4, shiftKey, arg6, arg7, arg8, arg9
