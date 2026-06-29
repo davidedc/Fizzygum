@@ -7,13 +7,13 @@ class ReconfigurablePaintInfoWdgt extends SimpleDocumentWdgt
     simpleDocument = new @
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
-    sdspw.fullRawMoveTo new Point 114, 10
-    sdspw.rawSetExtent new Point 365, 405
+    sdspw._applyMoveToAndNotify new Point 114, 10
+    sdspw._applyExtentAndNotify new Point 365, 405
 
     # ---------------------
 
     startingContent = new PaintBucketIconWdgt
-    startingContent.rawSetExtent new Point 85, 85
+    startingContent._applyExtentAndNotify new Point 85, 85
 
     sdspw.setContents startingContent, 5
     startingContent.layoutSpecDetails.setElasticity 0
@@ -41,7 +41,7 @@ class ReconfigurablePaintInfoWdgt extends SimpleDocumentWdgt
     # ---------------------
 
     startingContent = new SimpleVideoLinkWdgt "Draw app", "http://fizzygum.org/docs/draw-app/"
-    startingContent.rawSetExtent new Point 405, 50
+    startingContent._applyExtentAndNotify new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
@@ -53,15 +53,15 @@ class ReconfigurablePaintInfoWdgt extends SimpleDocumentWdgt
     # ---------------------
 
     startingContent = new SimpleVideoLinkWdgt "Hacking Fizzygum", "http://fizzygum.org/docs/hacking-fizzygum/"
-    startingContent.rawSetExtent new Point 405, 50
+    startingContent._applyExtentAndNotify new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
     # ---------------------
 
     wm = new WindowWdgt nil, nil, simpleDocument
-    wm.rawSetExtent new Point 365, 405
-    wm.fullRawMoveFullCenterTo world.center()
+    wm._applyExtentAndNotify new Point 365, 405
+    wm._moveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Drawings Maker info"
 
@@ -76,5 +76,5 @@ class ReconfigurablePaintInfoWdgt extends SimpleDocumentWdgt
     simpleDocument.closeFromContainerWindow = (containerWindow) ->
       containerWindow.destroy()
 
-    wm.fullRawMoveToSideOf nextToThisWidget
+    wm._moveToSideOf nextToThisWidget
     wm.rememberFractionalSituationInHoldingPanel()

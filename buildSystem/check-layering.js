@@ -39,8 +39,8 @@
  * HOW: a heuristic line scanner. It strips `#` comments and string literals (', ", ''',
  * """, `) so the call-detecting regexes never match a method name that merely appears in a
  * throw message or a comment; it groups lines into 2-space-indent methods. Call detection
- * keys off the leading `@`/`.` and the LOWERCASE public name, so `@setExtent`/`.fullMoveTo`
- * match while the low-level `@rawSetExtent`/`@fullRawMoveTo`/`@silentRawSetBounds` do NOT.
+ * keys off the leading `@`/`.` and the LOWERCASE public name, so `@setExtent`/`.moveTo`
+ * match while the low-level `@_applyExtentAndNotify`/`@_applyMoveToAndNotify`/`@_commitBoundsAndNotify` do NOT.
  *
  * Exit codes: 0 = clean, 1 = layering violation(s), 2 = operational error.
  * Run from the Fizzygum/ repo root (build_it_please.sh does this):
@@ -89,10 +89,11 @@ const PUBLIC_SET = new Set(PUBLIC_SETTERS);
 const RECALC_WHITELIST = new Set(['doOneCycle', '_settleLayoutsAfter', '_settleLayoutsAfterBatch']);
 
 const isLowLevel = (name) =>
-  /^raw[A-Z]/.test(name) || /^silent/.test(name) ||
-  /^fullRaw/.test(name) ||  // fullRawMoveTo / fullRawMoveBy / fullRawMoveWithin — immediate geometry mutators
-                            // (also matched by isImmediateMutator), low-level like raw*/silent*. Kept here so [A]
-                            // governs their bodies and [D] forbids macros from reaching them (same family).
+  /^raw[A-Z]/.test(name) || /^silent/.test(name) ||  // raw* is now ONLY the pixel accessors (rawPixelInfo/rawPixelHash/
+                            // rawRGBA); silent* = structural (silentHide/silentAdd/silentAddShadow), pending the §3d pass.
+                            // (the old /^fullRaw/ arm was REMOVED with the §6-1/§6-5 move+mutator renames, 2026-06-29:
+                            //  every fullRaw* mover is now an _apply*AndNotify corner or a _move* convenience — both
+                            //  leading-underscore, so caught by /^_/ below; the low-level classification is unchanged.)
   /^_/.test(name) ||        // leading-underscore = private (incl. __ and the re-layout machinery
                             // _positionAndResizeChildren / _reLayoutScrollbars / _reLayoutChildrenAndScrollbars /
                             // _reLayoutChildren / _reLayoutSelf / _reLayoutDesktop /
@@ -106,9 +107,9 @@ const isLowLevel = (name) =>
 // (Widget.implementsDeferredLayout's `@_reLayout != Widget::_reLayout` is a reference comparison,
 // handled by APPLY_CALL's comparison lookahead above, so it is not a false [F] off-settle-apply hit.)
 
-// [E] the flow rule (task #17): an IMMEDIATE geometry mutator (raw*/silent*/fullRaw*) must only
-// MUTATE geometry, never SCHEDULE a (re-)layout. Scheduling (_invalidateLayout) is the public
-// self-settling tier's job; a raw setter that invalidates lets "applying a layout" re-trigger
+// [E] the flow rule (task #17): an IMMEDIATE geometry mutator (the apply-2x2 corners + convenience movers)
+// must only MUTATE geometry, never SCHEDULE a (re-)layout. Scheduling (_invalidateLayout) is the public
+// self-settling tier's job; an apply corner that invalidates lets "applying a layout" re-trigger
 // "scheduling a layout", re-dirtying a container DURING its own layout pass -> the recalculate-
 // Layouts until-loop never converges (the Phase 3b Slice 2 freeze that hung 9/12 desktop apps).
 // NB this is NARROWER than isLowLevel on purpose: a _private / *NoSettle / *Layout method legitimately
@@ -120,32 +121,43 @@ const isLowLevel = (name) =>
 // a lint but by deferring the re-fit seam (_reFitContainerAfterRawGeometryChange enqueues/invalidates
 // the container; its synchronous childGeometryChanged climb arm was retired and that orphaned method
 // deleted). What an immediate mutator legitimately MAY do is APPLY a re-fit synchronously IN PLACE -- a
-// TERMINAL, single-container apply (TextWdgt.rawSetExtent->@_reLayoutSelf, StretchablePanelWdgt.rawSetExtent
-// ->@_reLayout, ScrollPanelWdgt/SimpleVerticalStackPanelWdgt.rawSetExtent->@_reLayoutChildren). Those
+// TERMINAL, single-container apply (TextWdgt._applyExtentAndNotify->@_reLayoutSelf, StretchablePanelWdgt.
+// _applyExtentAndNotify->@_reLayout, ScrollPanelWdgt/SimpleVerticalStackPanelWdgt._applyExtentAndNotify->@_reLayoutChildren). Those
 // applies are SANCTIONED (see those overrides' comments) -- only the SCHEDULE below is forbidden.
 // Forbidding the _reLayoutChildren apply by name was assessed and DECLINED as cosmetic: it does the
 // identical work to the blessed _reLayoutSelf/_reLayout applies, so a name-based ban would just force a
 // DRY-breaking inline. (deferred-layout-capstone-execution-plan.md, Part B.)
 //
-// NAME-COVERAGE invariant (lint-ratchet Phase 2, 2026-06-25; kept current through the __/apply rename, 2026-06-29):
-// every method that writes geometry immediately is recognizably LOW-LEVEL -- a raw*/silent*/fullRaw* mutator
-// (covered by [E], the SCHEDULE ban), a __ leaf (covered by the stronger [I] no-orchestration ban), or a
-// _-prefixed apply/commit (_apply*/_commit*) that itself bottoms out on those. None is innocent-named, so [E]
-// has no blind spot. The only non-low-level methods touching the cache-break are constructor (@bounds init, not a
-// mutation), _destroyNoSettle and removeFromTree (teardown / structural-removal cache hygiene -- neither writes
-// geometry; removeFromTree is a structural op that legitimately schedules). No escapee.
-const isImmediateMutator = (name) => /^(raw[A-Z]|silent|fullRaw)/.test(name);
+// NAME-COVERAGE invariant (lint-ratchet Phase 2, 2026-06-25; kept current through the §6-5 mutator sweep, 2026-06-29):
+// every method that writes geometry immediately is recognizably LOW-LEVEL and named in the apply 2x2 family -- an
+// _apply*AndNotify / _commit*AndNotify CORNER, or a _move* / _setWidthSizeHeightAccordingly /
+// _setExtentToFractional* / _resizeToWithoutSpacing CONVENIENCE (all covered by [E], the SCHEDULE ban below), or a
+// __commit* LEAF (covered by the STRONGER [I] no-orchestration ban, which subsumes the schedule ban). The
+// structural silent* setters (silentHide/silentAdd/silentAddShadow, pending §3d) are matched too. None is
+// innocent-named, so [E]/[I] have no blind spot. The only non-low-level methods touching the cache-break are
+// constructor (@bounds init, not a mutation), _destroyNoSettle and removeFromTree (teardown / structural-removal
+// cache hygiene -- neither writes geometry; removeFromTree is a structural op that legitimately schedules). No escapee.
+const isImmediateMutator = (name) =>
+  /^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)AndNotify$/.test(name) ||   // ✓/✓ corners (ex rawSet*/fullRawMove{By,To})
+  /^_commit(Extent|Bounds)AndNotify$/.test(name) ||                             // notify-only corners (ex silentRawSet{Extent,Bounds})
+  /^_move(LeftSideTo|RightSideTo|TopSideTo|BottomSideTo|ToSideOf|FullCenterTo|Within|InDesktopToFractionalPosition|InStretchablePanelToFractionalPosition)$/.test(name) ||  // convenience movers (ex fullRawMove*)
+  /^_(setWidthSizeHeightAccordingly|setExtentToFractionalExtentInPaneUserHasSet|resizeToWithoutSpacing)$/.test(name) ||  // convenience setters/resizer (ex rawSet*/rawResize*)
+  /^silent/.test(name);  // structural silent setters (silentHide/silentAddShadow/silentAdd), pending §3d
+// (the __commit* leaves are deliberately NOT matched here -- rule [I] governs them more strictly. The —/✓ arrange
+//  corners _applyExtent/_applyBounds/_applyMoveBy/_applyMoveTo react synchronously and were never [E]-covered;
+//  they stay out, exactly as their pre-sweep raw-less _arrangeApply* form was.)
 
 // [D] macro hygiene: a SystemTest macro must drive the world through the PUBLIC widget API ONLY -- never
-// the framework's private (_) surface, nor the immediate-mutator geometry API (raw*/silent*/fullRaw*).
-// HARD ban, no sanctioned escape. Two reasons: (1) the raw/silent/fullRaw setters bypass the layout settle,
+// the framework's private (_) surface, nor the immediate-mutator geometry API (the _apply*/_commit*/__commit*
+// corners + leaves, the _move*/_set*/_resize* convenience movers, and the structural silent* setters).
+// HARD ban, no sanctioned escape. Two reasons: (1) the low-level geometry setters bypass the layout settle,
 // so a macro poking one on an ATTACHED widget leaks an off-settle container re-fit onto the per-frame
 // end-of-cycle flush (the end-of-cycle drawdown); (2) a macro reaching past the public API is testing
 // through a back door instead of the surface a user actually drives. This is also the gate that catches the
 // original 16-macro private-call mess.
 //
 // The one historical carve-out -- the construction "measure-and-size" read-back (size a soft-wrapping text
-// to its wrapped HEIGHT at a chosen WIDTH: silentRawSetWidth W -> measure -> silentRawSetHeight) -- is now
+// to its wrapped HEIGHT at a chosen WIDTH: __commitWidth W -> measure -> __commitHeight) -- is now
 // CLOSED. The fix is to ATTACH the widget FIRST (to its end destination, or the desktop) and use the PUBLIC
 // setters: an attached setWidth SELF-SETTLES, so the text wraps in place and its height is then readable,
 // then setHeight (or just let the container fit it). The orphan-before-add trick existed only to avoid a
@@ -158,7 +170,7 @@ const isImmediateMutator = (name) => /^(raw[A-Z]|silent|fullRaw)/.test(name);
 // legitimately uses the low-level API).
 const MACROS_DIR = path.join(__dirname, '..', '..', 'Fizzygum-tests', 'tests');
 const MACRO_VERBS_FILE = path.join(SRC, 'macros', 'MacroToolkit.coffee');
-const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*|silent\w*|fullRaw\w*)\b/;
+const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*|silent\w*)\b/;  // renamed geometry mutators are now _-prefixed (caught by _[A-Za-z]); raw* = pixel API, silent* = structural — both still macro-forbidden. (the dead fullRaw\w* arm was dropped with the §6-5 sweep.)
 
 // [G] the STRUCTURAL self-settling-wrapper rule (the deferred-layout "cores call cores" discipline,
 // made static). [A] above forbids a low-level method from DIRECTLY calling the 5 geometry setters /
@@ -387,7 +399,7 @@ function checkFile(file, violations, wrapperCall, warnings) {
       }
     }
     if (isImmediateMutator(method) && invalidate) {
-      violations.push(`[E] immediate mutator ${method}() calls _invalidateLayout() — raw/silent/fullRaw setters must only MUTATE, never SCHEDULE layout (task #17)  — ${at}`);
+      violations.push(`[E] immediate mutator ${method}() calls _invalidateLayout() — an apply/commit corner or convenience mover must only MUTATE geometry, never SCHEDULE layout (task #17)  — ${at}`);
     }
     // [J] settle-neutral callbacks (layering/naming plan §9.2/§9.6): a notification HOOK (_reactTo* / _before*)
     // must NOT open a settle -- the gesture/structural DISPATCHER owns the single _settleLayoutsAfter; the hook is
@@ -441,7 +453,7 @@ function collectMacros(dir, out) {
 
 // Scan a macro test source for forbidden private/low-level calls (rule D). The macro CoffeeScript
 // lives in a backtick string inside this .js; a per-line `#`-comment strip is enough to avoid the
-// narrative comments (which legitimately mention e.g. adjustContentsBounds / @fullRawMoveWithin).
+// narrative comments (which legitimately mention e.g. adjustContentsBounds / @_moveWithin).
 // heredocOnly: scan only the `Macro.fromString """..."""` bodies (for MacroToolkit.coffee, whose
 // surrounding L1/L2 toolkit methods are framework code). When false, scan the whole file (the test
 // automationCommands.js are ~all macro source).
@@ -511,7 +523,7 @@ function main() {
     console.error(`\n!!! layering gate FAILED — ${violations.length} violation(s):\n`);
     for (const v of violations) console.error('  ' + v);
     console.error('\nSee docs/deferred-layout-refit-and-add-design.md (D: macros must not call private/low-level methods;');
-    console.error('E: raw/silent/fullRaw mutators must not call _invalidateLayout) and docs/deferred-layout-16-macro-breakages.md (A/B/C).');
+    console.error('E: immediate geometry mutators (apply/commit corners + convenience movers) must not call _invalidateLayout) and docs/deferred-layout-16-macro-breakages.md (A/B/C).');
     console.error('F: a non-mutator handler must DEFER a container apply (_invalidateLayout) or mark it `# layout-apply-sanctioned: <why>` — see docs/deferred-layout-OVERVIEW.md §11.');
     console.error('G: low-level code must reach the _<name>NoSettle core, not the public self-settling wrapper (destroy/close/fullDestroy/createReference/...) — or mark `# nosettle-sanctioned: <why>`.');
     console.error('I: a __ leaf must trigger no orchestration (re-fit seam / react / schedule-settle / public setter) — keep it a pure bottom (layering/naming plan §3a).');

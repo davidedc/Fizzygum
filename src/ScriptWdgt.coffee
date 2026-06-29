@@ -150,8 +150,8 @@ class ScriptWdgt extends Widget
     buttonsWidth = Math.round((textWidth - 2 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize)/2)
 
     if @tempPromptEntryField.parent == @
-      @tempPromptEntryField.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
-      @tempPromptEntryField.rawSetExtent new Point textWidth, textHeight
+      @tempPromptEntryField._applyMoveToAndNotify new Point @left() + @externalPadding, @top() + @externalPadding
+      @tempPromptEntryField._applyExtentAndNotify new Point textWidth, textHeight
 
 
     # buttons -------------------------------

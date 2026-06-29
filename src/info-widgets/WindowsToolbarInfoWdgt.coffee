@@ -7,11 +7,11 @@ class WindowsToolbarInfoWdgt extends SimpleDocumentWdgt
     simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
-    sdspw.fullRawMoveTo new Point 114, 10
-    sdspw.rawSetExtent new Point 365, 405
+    sdspw._applyMoveToAndNotify new Point 114, 10
+    sdspw._applyExtentAndNotify new Point 365, 405
 
     startingContent = new WindowsToolbarIconWdgt
-    startingContent.rawSetExtent new Point 85, 85
+    startingContent._applyExtentAndNotify new Point 85, 85
 
     sdspw.setContents startingContent, 5
     startingContent.layoutSpecDetails.setElasticity 0
@@ -36,14 +36,14 @@ class WindowsToolbarInfoWdgt extends SimpleDocumentWdgt
     #sdspw.addNormalParagraph "Check out some examples of use in this video:"
 
     #startingContent = new SimpleVideoLinkWdgt "Using windows"
-    #startingContent.rawSetExtent new Point 405, 50
+    #startingContent._applyExtentAndNotify new Point 405, 50
     #sdspw.add startingContent
     #startingContent.layoutSpecDetails.setAlignmentToRight()
 
 
     wm = new WindowWdgt nil, nil, simpleDocument
-    wm.rawSetExtent new Point 365, 405
-    wm.fullRawMoveFullCenterTo world.center()
+    wm._applyExtentAndNotify new Point 365, 405
+    wm._moveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Windows info"
 
@@ -58,7 +58,7 @@ class WindowsToolbarInfoWdgt extends SimpleDocumentWdgt
     simpleDocument.closeFromContainerWindow = (containerWindow) ->
       containerWindow.destroy()
 
-    wm.fullRawMoveToSideOf nextToThisWidget
+    wm._moveToSideOf nextToThisWidget
     wm.rememberFractionalSituationInHoldingPanel()
 
     return wm

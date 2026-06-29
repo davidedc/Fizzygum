@@ -71,8 +71,8 @@ class SpeechBubbleWdgt extends Widget
     world.disableTrackChanges()
 
     # adjust my layout
-    @rawSetWidth newBoundsForThisLayout.width()
-    @rawSetHeight newBoundsForThisLayout.height()
+    @_applyWidthAndNotify newBoundsForThisLayout.width()
+    @_applyHeightAndNotify newBoundsForThisLayout.height()
 
     # adjust layout of my contents
     @contentsWidget._reLayout (

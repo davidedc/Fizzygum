@@ -6,8 +6,8 @@ class ExternalLinkCreatorButtonWdgt extends CreatorButtonWdgt
 
   createWidgetToBeHandled: ->
     switcheroo = new SimpleLinkWdgt
-    switcheroo.fullRawMoveTo @position()
-    switcheroo.rawSetExtent new Point 330, 65
+    switcheroo._applyMoveToAndNotify @position()
+    switcheroo._applyExtentAndNotify new Point 330, 65
     return switcheroo
 
 

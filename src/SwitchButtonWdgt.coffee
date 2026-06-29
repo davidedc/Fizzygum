@@ -39,9 +39,9 @@ class SwitchButtonWdgt extends Widget
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
 
 
-    # TODO shouldn't be calling this rawSetBounds from here,
+    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
     # rather use super
-    @rawSetBounds newBoundsForThisLayout
+    @_applyBoundsAndNotify newBoundsForThisLayout
 
     counter = 0
     for eachButton in @buttons

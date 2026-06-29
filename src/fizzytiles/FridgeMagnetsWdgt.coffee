@@ -132,55 +132,55 @@ class FridgeMagnetsWdgt extends Widget
     magnetsBoxLeft = @left() + @externalPadding + eachPaneWidth + @internalPadding
 
     if @fridge.parent == @
-      @fridge.fullRawMoveTo new Point magnetsBoxLeft, @top() + @externalPadding +  15 + @internalPadding
-      @fridge.rawSetExtent new Point eachPaneWidth, fridgeHeight
+      @fridge._applyMoveToAndNotify new Point magnetsBoxLeft, @top() + @externalPadding +  15 + @internalPadding
+      @fridge._applyExtentAndNotify new Point eachPaneWidth, fridgeHeight
 
     if @liveCodeLangOutputHeader.parent == @
-      @liveCodeLangOutputHeader.fullRawMoveTo new Point magnetsBoxLeft, @fridge.bottom() + @internalPadding
-      @liveCodeLangOutputHeader.rawSetExtent new Point eachPaneWidth, 15
+      @liveCodeLangOutputHeader._applyMoveToAndNotify new Point magnetsBoxLeft, @fridge.bottom() + @internalPadding
+      @liveCodeLangOutputHeader._applyExtentAndNotify new Point eachPaneWidth, 15
 
     # codeOutput
     if @codeOutput.parent == @
-      @codeOutput.fullRawMoveTo new Point magnetsBoxLeft, @liveCodeLangOutputHeader.bottom() + @internalPadding
-      @codeOutput.rawSetExtent new Point fridgeWidth, fridgeHeight
+      @codeOutput._applyMoveToAndNotify new Point magnetsBoxLeft, @liveCodeLangOutputHeader.bottom() + @internalPadding
+      @codeOutput._applyExtentAndNotify new Point fridgeWidth, fridgeHeight
 
     if @dragTheTilesHereHeader.parent == @
-      @dragTheTilesHereHeader.fullRawMoveTo new Point magnetsBoxLeft, @top() + @externalPadding
-      @dragTheTilesHereHeader.rawSetExtent new Point eachPaneWidth, 15
+      @dragTheTilesHereHeader._applyMoveToAndNotify new Point magnetsBoxLeft, @top() + @externalPadding
+      @dragTheTilesHereHeader._applyExtentAndNotify new Point eachPaneWidth, 15
 
     if @tilesBinHeader.parent == @
-      @tilesBinHeader.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
-      @tilesBinHeader.rawSetExtent new Point eachPaneWidth, 15
+      @tilesBinHeader._applyMoveToAndNotify new Point @left() + @externalPadding, @top() + @externalPadding
+      @tilesBinHeader._applyExtentAndNotify new Point eachPaneWidth, 15
 
     # magnets box
     magnetsBoxHeight = @height() - 2 * @externalPadding - 15 - @internalPadding
     if @magnetsBox.parent == @
-      @magnetsBox.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding +  15 + @internalPadding
-      @magnetsBox.rawSetExtent new Point(eachPaneWidth, magnetsBoxHeight).round()
+      @magnetsBox._applyMoveToAndNotify new Point @left() + @externalPadding, @top() + @externalPadding +  15 + @internalPadding
+      @magnetsBox._applyExtentAndNotify new Point(eachPaneWidth, magnetsBoxHeight).round()
 
     # visual output
     visualOutputLeft = @codeOutput.right() + @internalPadding
     if @visualOutput.parent == @
-      @visualOutput.fullRawMoveTo new Point visualOutputLeft, @top() + @externalPadding +  15 + @internalPadding
-      @visualOutput.rawSetExtent new Point(eachPaneWidth, magnetsBoxHeight).round()
+      @visualOutput._applyMoveToAndNotify new Point visualOutputLeft, @top() + @externalPadding +  15 + @internalPadding
+      @visualOutput._applyExtentAndNotify new Point(eachPaneWidth, magnetsBoxHeight).round()
 
     if @outputAnimationHeader.parent == @
-      @outputAnimationHeader.fullRawMoveTo new Point visualOutputLeft, @top() + @externalPadding
-      @outputAnimationHeader.rawSetExtent new Point eachPaneWidth, 15
+      @outputAnimationHeader._applyMoveToAndNotify new Point visualOutputLeft, @top() + @externalPadding
+      @outputAnimationHeader._applyExtentAndNotify new Point eachPaneWidth, 15
 
 
     # sample magnets -------------------------------
     if @scale.parent == @magnetsBox
-      @scale.fullRawMoveTo new Point @magnetsBox.left() + @internalPadding, @magnetsBox.top() + @internalPadding
+      @scale._applyMoveToAndNotify new Point @magnetsBox.left() + @internalPadding, @magnetsBox.top() + @internalPadding
 
     if @rotate.parent == @magnetsBox
-      @rotate.fullRawMoveTo new Point @magnetsBox.left() + @internalPadding, @scale.bottom() + @internalPadding
+      @rotate._applyMoveToAndNotify new Point @magnetsBox.left() + @internalPadding, @scale.bottom() + @internalPadding
 
     if @box.parent == @magnetsBox
-      @box.fullRawMoveTo new Point @magnetsBox.left() + @internalPadding, @rotate.bottom() + @internalPadding
+      @box._applyMoveToAndNotify new Point @magnetsBox.left() + @internalPadding, @rotate.bottom() + @internalPadding
 
     if @move.parent == @magnetsBox
-      @move.fullRawMoveTo new Point @magnetsBox.left() + @internalPadding, @box.bottom() + @internalPadding
+      @move._applyMoveToAndNotify new Point @magnetsBox.left() + @internalPadding, @box.bottom() + @internalPadding
 
     # ----------------------------------------------
 

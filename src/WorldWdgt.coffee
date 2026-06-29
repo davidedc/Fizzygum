@@ -479,8 +479,8 @@ class WorldWdgt extends PanelWdgt
     @makePrettier()
 
     acm = new AnalogClockWdgt
-    acm.rawSetExtent new Point 80, 80
-    acm.fullRawMoveTo new Point @right()-80-@desktopSidesPadding, @top() + @desktopSidesPadding
+    acm._applyExtentAndNotify new Point 80, 80
+    acm._applyMoveToAndNotify new Point @right()-80-@desktopSidesPadding, @top() + @desktopSidesPadding
     @add acm
 
     # TODO find a way to put this back
@@ -1195,7 +1195,7 @@ class WorldWdgt extends PanelWdgt
         if eachPinoutingWidget.wdgtThisWdgtIsPinouting.hasMaybeChangedGeometryOrPosition()
           # reposition the pinout widget if needed
           peekThroughBox = eachPinoutingWidget.wdgtThisWdgtIsPinouting.clippedThroughBounds()
-          eachPinoutingWidget.fullRawMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
+          eachPinoutingWidget._applyMoveToAndNotify new Point(peekThroughBox.right() + 10,peekThroughBox.top())
 
       else
         @currentPinoutingWidgets.delete eachPinoutingWidget
@@ -1209,7 +1209,7 @@ class WorldWdgt extends PanelWdgt
         @add hM
         hM.wdgtThisWdgtIsPinouting = eachWidgetNeedingPinout
         peekThroughBox = eachWidgetNeedingPinout.clippedThroughBounds()
-        hM.fullRawMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
+        hM._applyMoveToAndNotify new Point(peekThroughBox.right() + 10,peekThroughBox.top())
         hM.setColor Color.BLUE
         hM.setWidth 400
         @currentPinoutingWidgets.add hM
@@ -1220,7 +1220,7 @@ class WorldWdgt extends PanelWdgt
     @currentHighlightingWidgets.forEach (eachHighlightingWidget) =>
       if @widgetsToBeHighlighted.has eachHighlightingWidget.wdgtThisWdgtIsHighlighting
         if eachHighlightingWidget.wdgtThisWdgtIsHighlighting.hasMaybeChangedGeometryOrPosition()
-          eachHighlightingWidget.rawSetBounds eachHighlightingWidget.wdgtThisWdgtIsHighlighting.clippedThroughBounds()
+          eachHighlightingWidget._applyBoundsAndNotify eachHighlightingWidget.wdgtThisWdgtIsHighlighting.clippedThroughBounds()
       else
         @currentHighlightingWidgets.delete eachHighlightingWidget
         @widgetsBeingHighlighted.delete eachHighlightingWidget.wdgtThisWdgtIsHighlighting
@@ -1232,7 +1232,7 @@ class WorldWdgt extends PanelWdgt
         hM = new HighlighterWdgt
         @add hM
         hM.wdgtThisWdgtIsHighlighting = eachWidgetNeedingHighlight
-        hM.rawSetBounds eachWidgetNeedingHighlight.clippedThroughBounds()
+        hM._applyBoundsAndNotify eachWidgetNeedingHighlight.clippedThroughBounds()
         hM.setColor Color.BLUE
         hM.setAlphaScaled 50
         @currentHighlightingWidgets.add hM
@@ -1509,7 +1509,7 @@ class WorldWdgt extends PanelWdgt
       @worldCanvas.height = (clientHeight * ceilPixelRatio)
       @worldCanvas.style.height = clientHeight + "px"
       @syncRenderCanvasToWorldCanvas()
-      @rawSetExtent new Point clientWidth, clientHeight
+      @_applyExtentAndNotify new Point clientWidth, clientHeight
       @_reLayoutDesktop()
   
 
@@ -1518,21 +1518,21 @@ class WorldWdgt extends PanelWdgt
       w instanceof BasementOpenerWdgt
     if basementOpenerWdgt?
       if basementOpenerWdgt.userMovedThisFromComputedPosition
-        basementOpenerWdgt.fullRawMoveInDesktopToFractionalPosition()
+        basementOpenerWdgt._moveInDesktopToFractionalPosition()
         if !basementOpenerWdgt.wasPositionedSlightlyOutsidePanel
-          basementOpenerWdgt.fullRawMoveWithin @
+          basementOpenerWdgt._moveWithin @
       else
-        basementOpenerWdgt.fullRawMoveTo @bottomRight().subtract (new Point 75, 75).add @desktopSidesPadding
+        basementOpenerWdgt._applyMoveToAndNotify @bottomRight().subtract (new Point 75, 75).add @desktopSidesPadding
 
     analogClockWdgt = @firstChildSuchThat (w) ->
       w instanceof AnalogClockWdgt
     if analogClockWdgt?
       if analogClockWdgt.userMovedThisFromComputedPosition
-        analogClockWdgt.fullRawMoveInDesktopToFractionalPosition()
+        analogClockWdgt._moveInDesktopToFractionalPosition()
         if !analogClockWdgt.wasPositionedSlightlyOutsidePanel
-          analogClockWdgt.fullRawMoveWithin @
+          analogClockWdgt._moveWithin @
       else
-        analogClockWdgt.fullRawMoveTo new Point @right() - 80 - @desktopSidesPadding, @top() + @desktopSidesPadding
+        analogClockWdgt._applyMoveToAndNotify new Point @right() - 80 - @desktopSidesPadding, @top() + @desktopSidesPadding
 
     @children.forEach (child) =>
       # reposition the non-icon desktop children (the basement opener and clock are handled
@@ -1540,9 +1540,9 @@ class WorldWdgt extends PanelWdgt
       # (type-test-elimination campaign)
       if child != basementOpenerWdgt and child != analogClockWdgt and !child.isDesktopIcon?()
         if child.positionFractionalInHoldingPanel?
-          child.fullRawMoveInDesktopToFractionalPosition()
+          child._moveInDesktopToFractionalPosition()
         if !child.wasPositionedSlightlyOutsidePanel
-          child.fullRawMoveWithin @
+          child._moveWithin @
   
   # WorldWdgt events:
 
@@ -2046,12 +2046,12 @@ class WorldWdgt extends PanelWdgt
   # Wrap a content widget in a window, size and place it, add it to the world --
   # the windowed sibling of `create`. Returns the window. The single home for the
   # "fresh window" wrap (windowed apps' buildWindow, menusHelper's window demos, the
-  # inspector/console/prompt spawners). Titled / rawSetExtent windows build directly.
+  # inspector/console/prompt spawners). Titled / _applyExtentAndNotify windows build directly.
   openWindowWith: (contentWidget, extent, position) ->
     wm = new WindowWdgt nil, nil, contentWidget
     wm.setExtent extent
-    wm.fullRawMoveTo position
-    wm.fullRawMoveWithin @
+    wm._applyMoveToAndNotify position
+    wm._moveWithin @
     @add wm
     wm
 

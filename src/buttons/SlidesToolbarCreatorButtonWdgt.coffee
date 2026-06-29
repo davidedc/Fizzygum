@@ -46,10 +46,10 @@ class SlidesToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
     toolsPanel.disableDragsDropsAndEditing()
 
     switcherooWm = new WindowWdgt nil, nil, toolsPanel
-    switcherooWm.fullRawMoveTo new Point 90, Math.floor((world.height()-192)/2)
-    switcherooWm.fullRawMoveWithin world
+    switcherooWm._applyMoveToAndNotify new Point 90, Math.floor((world.height()-192)/2)
+    switcherooWm._moveWithin world
     world.add switcherooWm
-    switcherooWm.rawSetExtent new Point 105, 300
+    switcherooWm._applyExtentAndNotify new Point 105, 300
 
     return switcherooWm
 

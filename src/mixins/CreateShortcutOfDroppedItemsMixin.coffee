@@ -23,9 +23,9 @@ CreateShortcutOfDroppedItemsMixin =
         # the folder panel doesn't resize and scroll (was `instanceof
         # IconicDesktopSystemShortcutWdgt`). (type-test-elimination campaign)
         if wdgtToDrop.isDesktopShortcut?()
-          wdgtToDrop.fullRawMoveWithin @
+          wdgtToDrop._moveWithin @
         else
-          wdgtToDrop.fullRawMoveTo @position().add new Point 10, 10
+          wdgtToDrop._applyMoveToAndNotify @position().add new Point 10, 10
 
       _reactToChildDropped: (droppedWidget) ->
         super

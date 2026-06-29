@@ -90,7 +90,7 @@ class LabelButtonWdgt extends ButtonWdgt
     if not @label?
       @createLabel()
     if @centered
-      @label.fullRawMoveTo @center().subtract @label.extent().floorDivideBy 2
+      @label._applyMoveToAndNotify @center().subtract @label.extent().floorDivideBy 2
 
   # a label button has no faceWidget; use the base Widget layout rather than
   # ButtonWdgt's faceWidget-centric override. Then re-run _reLayoutSelf so a

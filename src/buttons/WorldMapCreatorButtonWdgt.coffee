@@ -6,7 +6,7 @@ class WorldMapCreatorButtonWdgt extends CreatorButtonWdgt
 
   createWidgetToBeHandled: ->
     switcheroo = new SimpleWorldMapIconWdgt
-    switcheroo.rawSetExtent new Point 240, 125
+    switcheroo._applyExtentAndNotify new Point 240, 125
     switcheroo.setColor Color.create 183, 183, 183
     return switcheroo
 

@@ -4,6 +4,6 @@ class ToolbarCreatorButtonWdgt extends CreatorButtonWdgt
     if partOfDoubleClick
       return
     windowToBePlaced = @createWidgetToBeHandled()
-    windowToBePlaced.fullRawMoveTo @topRight().add new Point 20,-40
+    windowToBePlaced._applyMoveToAndNotify @topRight().add new Point 20,-40
     world.add windowToBePlaced
-    windowToBePlaced.fullRawMoveWithin world
+    windowToBePlaced._moveWithin world

@@ -158,7 +158,7 @@ class SourceVault
       if eachSource == "Widget" then return false
       doLayoutMethod = NonStaticPropertyOfClassSource.fromFileAndMethodName eachSource, "_reLayout"
       doLayoutMethod = doLayoutMethod.stripComments().collapseLinesWithOnlySpaces().collapseLastEmptyLines()
-      if doLayoutMethod.match /newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout\s*if @_handleCollapsedStateShouldWeReturn\(\) then return\s*@rawSetBounds newBoundsForThisLayout\s*world.disableTrackChanges\(\)/m
+      if doLayoutMethod.match /newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout\s*if @_handleCollapsedStateShouldWeReturn\(\) then return\s*@_applyBoundsAndNotify newBoundsForThisLayout\s*world.disableTrackChanges\(\)/m
         if doLayoutMethod.match /world.maybeEnableTrackChanges\(\)\s*super\s*@markLayoutAsFixed\(\)/
           return false
       console.log eachSource + "-------------------------"

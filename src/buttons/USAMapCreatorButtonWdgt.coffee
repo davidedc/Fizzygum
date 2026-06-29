@@ -6,7 +6,7 @@ class USAMapCreatorButtonWdgt extends CreatorButtonWdgt
 
   createWidgetToBeHandled: ->
     switcheroo = new SimpleUSAMapIconWdgt
-    switcheroo.rawSetExtent new Point 230, 145
+    switcheroo._applyExtentAndNotify new Point 230, 145
     switcheroo.setColor Color.create 183, 183, 183
     return switcheroo
 

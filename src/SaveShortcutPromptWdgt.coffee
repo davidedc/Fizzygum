@@ -34,7 +34,7 @@ class SaveShortcutPromptWdgt extends MenuWdgt
     @addMenuItem "Ok", true, @, "createReferenceAndClose"
 
     @_reLayoutSelf()
-    @rawSetWidth 150
+    @_applyWidthAndNotify 150
     @tempPromptEntryField.text.edit()
 
   _reLayoutSelf: ->

@@ -13,7 +13,7 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
 
   constructor: ->
     super
-    @rawSetExtent new Point 300,15
+    @_applyExtentAndNotify new Point 300,15
 
   # Role query (replaces `w instanceof HorizontalMenuPanelWdgt` exclusions in ActivePointerWdgt): the
   # global menu bar is NOT recorded as the "last clicked/dropped" content widget. True here only;
@@ -41,14 +41,14 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
           glassBoxBottom.add glassBoxTop
           glassBoxTop.toolTipMessage = aWdgt.toolTipMessage
 
-        glassBoxBottom.fullRawMoveTo @topLeft().add new Point @internalPadding, @internalPadding
+        glassBoxBottom._applyMoveToAndNotify @topLeft().add new Point @internalPadding, @internalPadding
         # a menu item gets a text-width glass box; everything else a square thumbnail
         # (was `aWdgt instanceof MenuItemWdgt`). (type-test-elimination campaign)
         if aWdgt.isTextSizedGlassBoxItem?()
           aWdgt.shrinkToTextSize()
-          glassBoxBottom.rawSetExtent new Point aWdgt.width(), @thumbnailSize
+          glassBoxBottom._applyExtentAndNotify new Point aWdgt.width(), @thumbnailSize
         else
-          glassBoxBottom.rawSetExtent new Point @thumbnailSize, @thumbnailSize
+          glassBoxBottom._applyExtentAndNotify new Point @thumbnailSize, @thumbnailSize
 
         aWdgt = glassBoxBottom
 
@@ -106,7 +106,7 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
     for i in [0...countOfItems]
       childrenNotHandlesNorCarets[i]._unCollapseNoSettle()   # NON-settling core: a layout pass, not the public wrapper (check-layering [G])
       startingPoint = @position().add new Point (@width() - widthOfContentsSoFar)/2, 0
-      childrenNotHandlesNorCarets[i].fullRawMoveTo (startingPoint.add new Point widthLayingDown, (@height()-childrenNotHandlesNorCarets[i].height())/2).round()
+      childrenNotHandlesNorCarets[i]._applyMoveToAndNotify (startingPoint.add new Point widthLayingDown, (@height()-childrenNotHandlesNorCarets[i].height())/2).round()
       widthLayingDown += childrenNotHandlesNorCarets[i].width() + @internalPadding
 
     for i in [countOfItems...childrenNotHandlesNorCarets.length]

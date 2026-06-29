@@ -79,7 +79,7 @@ assertion a recapture after a regression silently stores two different hashes an
   each `@shiftClickAtFractionOf_InputEvents txt, [fx,fy]` grows the selection from the anchor to the click point
   (StringWdgt/TextWdgt.mouseClickLeft reads shiftKey → `startSelectionUpToSlot`/`extendSelectionUpToSlot`).
   Gotchas: TextWdgt softWrap wraps to the WIDGET width (`@width()`, not `maxTextWidth`) so size it big with
-  `rawSetExtent` (tall enough not to crop); a shift-click PAST a line's end clamps to the line-end slot, so two
+  `_applyExtentAndNotify` (tall enough not to crop); a shift-click PAST a line's end clamps to the line-end slot, so two
   clicks past the end produce identical shots — land clicks WITHIN the line text.
 - **Keyboard selection — the anchor model in full** (`macroStringWdgtImprovedSelection`): the KEYBOARD sibling of
   shift-click above. The rules, all driven by the caret's `cmd` off one clicked anchor slot: Shift+ArrowLeft/Right GROW
@@ -160,7 +160,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (inline caret); different (the CROP spec ellipsised it) → `editPopup()` (`:873-882`), the "edit:" `PromptWdgt` whose
   field is preloaded with `@text` and whose "Ok" commits via `setText` ("Close" discards — anchor that byte-exactly: a
   cancelled prompt leaves zero residue, same dataHash as the pre-prompt shot with the pointer parked). So the SAME click
-  yields a caret or a modal purely by whether the text currently fits; widen the box (`rawSetExtent`) and the click takes
+  yields a caret or a modal purely by whether the text currently fits; widen the box (`_applyExtentAndNotify`) and the click takes
   the inline branch. Locate the prompt's field structurally (the prompt's editable `StringMorph`) and click it at the
   banked `topLeft+(3,8)` slot-0 idiom; capture the prompt via `getMostRecentlyOpenedMenu()` right after the opening click.
   This is the mechanic the NoJumps entry's tail deliberately skipped — now asserted. No new verb.
@@ -186,7 +186,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Text ellipsisation** (`macroStringEllipsisation`): a `StringWdgt` does NOT grow to its text — when too narrow it
   crops to the longest fitting prefix + "…" (`fittingSpecWhenBoundsTooSmall` defaults to `CROP`; SCALEDOWN scales instead,
   the "crop/shrink to fit" item). `new StringWdgt "long text", fontSize` (give a `backgroundColor` so the bounds show) +
-  `rawSetExtent` to a narrow width ellipsises; a narrower extent crops more. The screenshot's settle re-crops.
+  `_applyExtentAndNotify` to a narrow width ellipsises; a narrower extent crops more. The screenshot's settle re-crops.
 - **Text shrink-to-fit (SCALEDOWN)** (`macroTextWdgtShrinksToFitLongToken`): the SCALEDOWN counterpart of the CROP
   ellipsisation above. When a wrapping `TextWdgt` holds a single UNBREAKABLE token wider than the box, the WHOLE text's
   font is scaled DOWN uniformly until the token fits — `StringWdgt.fitToExtent` (`:537`, inherited) takes the SCALEDOWN
@@ -195,7 +195,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (`TextWdgt.coffee:107-150`), so a space-less token is one over-wide line that only a font shrink can fit. A TextWdgt
   DEFAULTS to CROP (`TextWdgt.coffee:53`), so the fixture MUST set `txt.fittingSpecWhenBoundsTooSmall =
   FittingSpecTextInSmallerBounds.SCALEDOWN` — LOAD-BEARING: without it image_2 ellipsises instead of shrinking (proving the
-  wrong mechanic). Build the TextWdgt narrow (`rawSetExtent` width < the token's pixel width) with `softWrap` ON
+  wrong mechanic). Build the TextWdgt narrow (`_applyExtentAndNotify` width < the token's pixel width) with `softWrap` ON
   (default), then `txt.setText "<words> <80+-char token> <words>"` (the clean deterministic equivalent of caret typing —
   same `@text`, same fitting result; as macroNonWrappingTextResizesToContent argues). image_1 normal font → image_2 whole
   text uniformly smaller. No clicks (so no "edit:" prompt trap; `isEditable` not needed). No new verb.
@@ -248,7 +248,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `TextWdgt.coffee:314-317`; nothing resizes the box), with SCALEDOWN re-fitting the FONT on every text change. (2)
   Backspace/Enter genuinely JOIN/SPLIT logical lines — no-wrap rows are real fragments. (3) There is no panel to scroll,
   so `CaretWdgt.gotoSlot` (`CaretWdgt.coffee:128-142`, gated on `@target.isScrollable` — StringWdgt default true)
-  SLIDES THE TARGET MORPH (`fullRawMoveLeftSideTo`) whenever the caret's new x falls outside the world's padded view:
+  SLIDES THE TARGET MORPH (`_moveLeftSideTo`) whenever the caret's new x falls outside the world's padded view:
   send the caret to the END of a wider-than-the-canvas line and the box's left edge drags OFF-canvas while the caret
   parks at the world's RIGHT edge — floating over the desktop BEYOND the box's painted width; land it near a line START
   (Enter at the text's end → empty last line, col 0) and the whole morph slides back right. The scroll-panel branch
@@ -289,7 +289,7 @@ assertion a recapture after a regression silently stores two different hashes an
   edge IS the assertion). No new verb.
 - **Text reflow under HANDLE resize — old TextMorph (width-from-user, height-from-content)**
   (`macroTextRelayoutsCorrectlyOnResize`): the OLD `TextMorph` family's resize law, and the suite's only dedicated
-  old-TextMorph assertion. `TextMorph.rawSetExtent` keeps ONLY the requested x — it becomes `@maxTextWidth`
+  old-TextMorph assertion. `TextMorph._applyExtentAndNotify` keeps ONLY the requested x — it becomes `@maxTextWidth`
   (`TextMorph.coffee:235`) — and `reLayout` re-breaks the text at that measure and `_commitExtentAndNotify`s the morph to
   (maxTextWidth, lineCount × fontHeight) (`:118-131`): the drag's y is DISCARDED. So a corner-handle drag released far
   ABOVE the content's eventual bottom yields a wide block SHORTER than the release point, and a hard narrow yields a
@@ -306,7 +306,7 @@ assertion a recapture after a regression silently stores two different hashes an
   then reuse the caret verbs (`"Meta+a"` → `@syntheticEventsStringKeys_InputEvents "new"`) and `world.stopEditing()` to
   commit. Use a `MenuItemWdgt`: its label is a self-sizing modern `TextWdgt` that re-measures on setText (a
   `SimpleButtonWdgt`'s `StringWdgt` face crops instead); give the standalone item `centered=true` + a fixed
-  `rawSetExtent` and `reLayout()` after each edit. (`MenuItemWdgt` is the button-family widget that carries an
+  `_applyExtentAndNotify` and `reLayout()` after each edit. (`MenuItemWdgt` is the button-family widget that carries an
   editable label; the deprecated `TriggerMorph` it once extended was deleted and folded into `ButtonWdgt`.)
 - **Caret brought into view only when MOVED** (`macroDocumentCaretBroughtIntoViewWhenMoved`): in a scrollable document the panel
   scrolls to keep the caret visible — but ONLY on a caret MOVE, not on a wheel scroll. `ScrollPanelWdgt.scrollCaretIntoView` (`:504`)
@@ -319,7 +319,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Caret stays visible while EDITING in a scroll panel** (`macroEditingStringInScrollablePanelCaretAlwaysVisible`): the bare-`ScrollPanelWdgt`
   sibling of the document caret-into-view above — the SAME `ScrollPanelWdgt.scrollCaretIntoView` (`:504`) / `CaretWdgt.gotoSlot` (`:147`) path,
   but a large-font string overflows a small panel and the caret is WALKED with ArrowRight so the panel auto-scrolls HORIZONTALLY to keep it in
-  view. Fixture: `panel = new ScrollPanelWdgt; panel.rawSetExtent (new Point 300,140); panel.add str` where `str = new StringMorph "Hello,
+  view. Fixture: `panel = new ScrollPanelWdgt; panel._applyExtentAndNotify (new Point 300,140); panel.add str` where `str = new StringMorph "Hello,
   World!", 60` (the 2nd ctor arg is fontSize, ~5× the default → overflows the viewport) with `str.isEditable = true` (the OLD single-line
   StringMorph defaults `isEditable=false`, `StringMorph.coffee:18`). Drive: `@moveToAndClickAtFractionOf_InputEvents str, [0.04,0.5]` (click
   WITHIN the leading glyphs → inline caret at the start), then `@repeatSpecialKey_InputEvents "ArrowRight", n` walks the caret past the right
@@ -393,7 +393,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `@clickOnSliderTrackAtFraction_InputEvents`, pass a `[fx,fy]` POINT, NOT a scalar — a scalar indexes as `fraction[0]`=undefined → a NaN
   click point → a non-finite base-width → a "Point x must be finite" paint crash.) (2) base-width only bites when the paragraph's remembered
   `widthOfStackWhenAdded` equals the current available stack width; the SHIPPED default paragraph remembered it at CONSTRUCTION (before
-  `doc.rawSetExtent`), so with elasticity 1 the proportional-width calc (`availW·baseWidth/stackWhenAdded`) cancels to full width — re-anchor
+  `doc._applyExtentAndNotify`), so with elasticity 1 the proportional-width calc (`availW·baseWidth/stackWhenAdded`) cancels to full width — re-anchor
   the paragraph's initial dimensions to the resized stack in the FIXTURE: `target.layoutSpecDetails.rememberInitialDimensions target,
   doc.contents`.
 
@@ -532,7 +532,7 @@ assertion a recapture after a regression silently stores two different hashes an
 
 - **Popup repositioned to stay on-screen** (`macroMenuRepositionsToStayOnScreen`): a popup is never clipped by the
   world edge — it is shifted to stay fully visible. `PopUpWdgt.popUp` (`:143`) puts the popup's top-left at the requested
-  point, then `@fullRawMoveWithin world` (`:153` → `Widget.fullRawMoveWithin`, `:1337`) CLAMPS it into the world
+  point, then `@_moveWithin world` (`:153` → `Widget._moveWithin`, `:1337`) CLAMPS it into the world
   rectangle (right/bottom shifted in first, top/left nudged last so a too-big popup still shows its top-left). It is
   unconditional, self-protecting (can't end up off-screen), and universal to every PopUpWdgt. Demonstrate with the
   bare-desktop right-click (the world menu) at three points via `@moveToAndClick_InputEvents pt, "right button"` using the
@@ -573,7 +573,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `childBeingCollapsed`/`childCollapsed` store `@widthWhenUnCollapsed`/`@extentWhenCollapsed` (`WindowWdgt.coffee:208-232`) and shrink
   it to just its title bar at the SAME width; the `.resizer` stays present and draggable while collapsed (`adjustContentsBounds`
   repositions it unconditionally, `:536-537`), so `@dragWindowResizerTo_InputEvents` NARROWS the bar's width (height pinned to the bar,
-  `:480-486`). But `childUnCollapsed` (`:234-244`) does `rawSetExtent @extentWhenCollapsed` then `rawSetWidth @widthWhenUnCollapsed` (the
+  `:480-486`). But `childUnCollapsed` (`:234-244`) does `_applyExtentAndNotify @extentWhenCollapsed` then `_applyWidthAndNotify @widthWhenUnCollapsed` (the
   width captured BEFORE collapsing), so uncollapse RESTORES the full pre-collapse extent and DISCARDS the resize-while-collapsed — a
   round-trip REVERT for the EXPANDED size. But the COLLAPSED-bar size and the expanded size are tracked SEPARATELY, and the collapsed-bar
   size is STICKY: a later re-collapse returns the bar to its last resized (narrowed) width. So resizing while collapsed changes ONLY the
@@ -664,7 +664,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Window CONTENT resize — aspect-CONSTRAINED (stays square)** (`macroClockInWindowKeepsSquareOnResize`): the third window-content
   case after free/fixed-width. An `AnalogClockWdgt` as window content keeps a SQUARE aspect at every window size — its
   `initialiseDefaultWindowContentLayoutSpec` sets `canSetHeightFreely=false` (`AnalogClockWdgt.coffee:32`) and it overrides
-  `rawSetWidthSizeHeightAccordingly` to `@rawSetExtent new Point newWidth, newWidth` (`:36`) so width drives an EQUAL height; so
+  `_setWidthSizeHeightAccordingly` to `@_applyExtentAndNotify new Point newWidth, newWidth` (`:36`) so width drives an EQUAL height; so
   `WindowWdgt.adjustContentsBounds` sizes the content from the recommended WIDTH and SKIPS the free-height branch (`:466-468`, gated
   on `contentsRecursivelyCanSetHeightFreely`). Build `new WindowWdgt nil,nil,nil` + `new AnalogClockWdgt` (self-sizes — no extent
   needed), drop the clock in with `@dragWidgetTo_InputEvents clock, win` (centre grab — no sub-widget), then
@@ -712,7 +712,7 @@ assertion a recapture after a regression silently stores two different hashes an
 ## Scroll & scrollbars
 
 - **ListWdgt wheel scroll** (`macroListWdgtWheelScroll`): a `ListWdgt` (extends ScrollPanelWdgt) is a clipped column of rows.
-  Build standalone — `new ListWdgt nil, nil, [item strings]` — `rawSetExtent` SHORTER than its content so it overflows + shows
+  Build standalone — `new ListWdgt nil, nil, [item strings]` — `_applyExtentAndNotify` SHORTER than its content so it overflows + shows
   a scrollbar; `@wheelOn_InputEvents list, deltaY` scrolls it (positive deltaY = DOWN). Tune the delta to the overflow (drop it
   if two later shots stop changing). Row-click highlight is NOT a reliable screenshot signal; scrolling is.
 - **Slider/scrollbar TRACK click** (`macroSliderTrackClickMovesButton`): `@clickOnSliderTrackAtFraction_InputEvents doc.vBar,
@@ -731,8 +731,8 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Scrollbars track content** (`macroScrollBarsTrackContentChange`): `ScrollPanelWdgt.adjustScrollBars` (`:114`) shows the hBar
   only when `contents.width() >= width()+1` and the vBar only when `contents.height() >= height()+1`, sizing each thumb to the
   viewport/content ratio and positioning it by the scroll offset. Add a wrapping `SimplePlainTextWdgt` as a real SUBMORPH of the
-  inner `@contents` (`panel.add text`); NARROW it (`text.rawSetWidth narrower` re-wraps it taller, synchronously, since
-  it is `FIT_BOX_TO_TEXT` with `softWrap` on) → vBar appears; MOVE it toward the bottom-right (`text.fullRawMoveTo`) → hBar appears + vBar thumb shrinks;
+  inner `@contents` (`panel.add text`); NARROW it (`text._applyWidthAndNotify narrower` re-wraps it taller, synchronously, since
+  it is `FIT_BOX_TO_TEXT` with `softWrap` on) → vBar appears; MOVE it toward the bottom-right (`text._applyMoveToAndNotify`) → hBar appears + vBar thumb shrinks;
   re-run `panel.adjustContentsBounds()` + `panel.adjustScrollBars()` after each. TRAP: a single-widget contents (`new
   ScrollPanelWdgt child`) has no submorphs, so `adjustContentsBounds` re-fits it back to the viewport (undoing the overflow) —
   use a real submorph, or call `adjustScrollBars()` only.
@@ -864,7 +864,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `SimpleDocumentScrollPanelWdgt` is a general widget container, not just a text flow. `doc.add widget` re-parents any widget into its
   inner `SimpleVerticalStackPanelWdgt` content stack (`ScrollPanelWdgt.add → @contents.add`, `:186-194`), which `@augmentWith
   ClippingAtRectangularBoundsMixin` clips to the panel box. On insert the stack re-squares an `AnalogClockWdgt` to its remembered width
-  (`VerticalStackLayoutSpec.rememberInitialDimensions` + `AnalogClockWdgt.rawSetWidthSizeHeightAccordingly`); getWidthInStack DISPLAYS
+  (`VerticalStackLayoutSpec.rememberInitialDimensions` + `AnalogClockWdgt._setWidthSizeHeightAccordingly`); getWidthInStack DISPLAYS
   that remembered width CLAMPED to the current column — so clocks added at distinct sizes stay distinct, one wider than the column is shown
   clamped (clipped at the panel edges as you scroll), and it GROWS BACK toward its remembered size when the document is WIDENED (the clamp
   relaxes). Build the fixture DIRECTLY (`doc.addNormalParagraph "…"` + `doc.add clock`): the test targets the
@@ -873,14 +873,14 @@ assertion a recapture after a regression silently stores two different hashes an
   scrolls (positive = down; `ScrollPanelWdgt.scrollY` clamps at the travel limits, so the top/bottom shots are deterministic). The
   clocks freeze (`new Date 2011,10,30`) during playback, so a LIVE dynamic widget is a safe screenshot fixture (precedent:
   macroAnalogClockInspectEdit). Interleave a tall text paragraph BEFORE and AFTER the clocks so the narrow-document scroll positions
-  (top / oversized-clock-clipped / bottom-with-trailing-text) are distinct. Then `doc.rawSetExtent` to near-fullscreen (a fixture-state
+  (top / oversized-clock-clipped / bottom-with-trailing-text) are distinct. Then `doc._applyExtentAndNotify` to near-fullscreen (a fixture-state
   change) + `adjustContentsBounds`/`adjustScrollBars`: the text reflows wider and the clamped clock grows back, and a wheel-scroll back UP
   shows the reflowed content (image_4 widened+bottom / image_5 widened+mid / image_6 widened+top). First document-handles-a-dynamic-widget
   test. No new verb.
 - **No SPURIOUS scrollbars on resize** (`macroNoSpuriousScrollbarsOnScrollPanelResize`): the NEGATIVE of
   `macroScrollBarsTrackContentChange` — a bar appears ONLY when content overflows, so moving content around inside a panel and
   RESIZING it while the content still FITS must spawn NONE. Same `adjustScrollBars` gate (`ScrollPanelWdgt.coffee:114`; hBar
-  `:143-160` / vBar `:163-180`), re-evaluated on `rawSetExtent` (`:232-233`) AND on entering resize/move mode
+  `:143-160` / vBar `:163-180`), re-evaluated on `_applyExtentAndNotify` (`:232-233`) AND on entering resize/move mode
   (`showResizeAndMoveHandlesAndLayoutAdjusters` override, `:204-207`). Build `new ScrollPanelWdgt` + a default `new BoxWdgt`
   (Widget defaults: 50×40, dark, fits with room to spare) added via `panel.add box` (routes into `@contents`); move the box around
   with `@dragWidgetTo_InputEvents box, pt` (re-drop re-parents into `@contents`, re-runs the gate — still fits, no bar); then
@@ -1043,7 +1043,7 @@ assertion a recapture after a regression silently stores two different hashes an
   normalise the size of widgets dropped into it — each keeps the effective extent it had when dropped. On a drop,
   `VerticalStackLayoutSpec.rememberInitialDimensions` (`VerticalStackLayoutSpec.coffee:18`) stores the widget's OWN width
   (`widthOfElementWhenAdded`), and `getWidthInStack` (`:31`, default elasticity 1) returns that remembered width CAPPED at the content
-  width — it never stretches up; a plain `RectangleWdgt` (no `rawSetWidthSizeHeightAccordingly` override) keeps that width AND its
+  width — it never stretches up; a plain `RectangleWdgt` (no `_setWidthSizeHeightAccordingly` override) keeps that width AND its
   constructed height. So three boxes built at distinct sizes, dropped in via `@dragWidgetTo_InputEvents box, (new Point doc.center().x,
   doc.bottom()-40)` (aim low to append below the default text), stay at THREE DISTINCT sizes stacked vertically — the distinct sizes ARE
   the assertion (a width-CONSTRAINING container would force one common width). Keep each box width BELOW the doc content width
@@ -1071,7 +1071,7 @@ assertion a recapture after a regression silently stores two different hashes an
   whereas a width shrink keeps the detail fitting and the resize shot deterministic. No new verb.
 - **The constraining stack CAPS oversized drops to its full width — it never stretches up**
   (`macroConstrainingStackForcesDroppedWidgetsToFullWidth`): `SimpleVerticalStackPanelWdgt`'s default
-  (`constrainContentWidth = true`) runs `rawSetWidthSizeHeightAccordingly(getWidthInStack())` on every child, and
+  (`constrainContentWidth = true`) runs `_setWidthSizeHeightAccordingly(getWidthInStack())` on every child, and
   `getWidthInStack` returns the remembered DROP-time width capped at the content width — so small widgets keep their sizes
   (`macroDocumentPreservesDroppedWidgetSizes`) and OVERSIZED ones come out at exactly ONE shared width (texts also get
   re-wrapped via `softWrap`, the retired `maxTextWidth`'s replacement). To show the cap, build the parade WIDER than the stack. GOTCHA: a bare `SliderWdgt` cannot be
@@ -1115,7 +1115,7 @@ assertion a recapture after a regression silently stores two different hashes an
   Widget (`HandleWdgt.coffee:4`), not just resize chrome on another morph — "resize/move..." on it adds its OWN four
   sub-handles (a moveHandle at the top-left; resizers around it), so FIVE HandleWdgts coexist, and dragging the
   bottom-right one resizes the handle itself (`HandleWdgt.nonFloatDragging` `:219` → `@target.setExtent`). Build `new
-  HandleWdgt` (exactly what the demo "handle" item does — `WorldWdgt.createNewHandle`; give it a `rawSetExtent` so the
+  HandleWdgt` (exactly what the demo "handle" item does — `WorldWdgt.createNewHandle`; give it a `_applyExtentAndNotify` so the
   striped-triangle glyph is visible), `@moveToAndClickAtFractionOf_InputEvents handle, [0.72,0.75], "right button"` (it
   sets `noticesTransparentClick`, so any point in its box works; the painted part is the bottom-right) → "resize/move..."
   → `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest`; click empty desktop to leave the mode.
@@ -1176,7 +1176,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `mouseClickLeft → trigger()` (MenuItemWdgt's `mouseClickLeft`; `trigger` inherited from `ButtonWdgt.coffee:98-102`), gated on a same-morph mouse-up; a float-drag ends in a DROP
   (`ActivePointerWdgt.processMouseUp:435-436`), never a click → no trigger. Build the button DIRECTLY wired to a VISIBLE action: `new
   MenuItemWdgt true, world, "popUpDemoMenu", "demo", 24, "sans-serif", true` (the same action the world menu's "demo" item uses,
-  `WorldWdgt.coffee:1940`; `popUpDemoMenu` self-pops at the hand, `:2241`) + `world.add` + `rawSetExtent` + `reLayout()` (a standalone
+  `WorldWdgt.coffee:1940`; `popUpDemoMenu` self-pops at the hand, `:2241`) + `world.add` + `_applyExtentAndNotify` + `reLayout()` (a standalone
   item doesn't size its box to its label, so set the extent + re-centre the big 24pt label — matches the original torn-off menu item).
   (Was a `TriggerMorph`; that deprecated class is gone — its label-bearing button role is now `MenuItemWdgt`, identical float-drag/trigger
   semantics. For a STANDALONE button with NO editable label, `SimpleButtonWdgt` is the modern idiom; here we need the flat big centred
@@ -1371,7 +1371,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Stack grows with content** (`macroVerticalStackPanelGrowsWithContent`): a `SimpleVerticalStackPanelWdgt`
   (`constrainContentWidth` defaults true) stacks children, constrains each child's WIDTH to the panel, and — being `tight` —
   grows its HEIGHT to the children (`adjustContentsBounds`, `SimpleVerticalStackPanelWdgt.coffee`: re-wraps each
-  FIT_BOX_TO_TEXT text child to the available width via `softWrap` — the retired `maxTextWidth`'s replacement — sums child heights into `rawSetHeight`). Reproduce the demo widgets exactly (`new
+  FIT_BOX_TO_TEXT text child to the available width via `softWrap` — the retired `maxTextWidth`'s replacement — sums child heights into `_applyHeightAndNotify`). Reproduce the demo widgets exactly (`new
   SimpleVerticalStackPanelWdgt` at 370×325 = `Widget.createSimpleVerticalStackPanelWdgt`; each text = `Widget.createNewWrappingSimplePlainTextWdgtWithBackground`,
   a 2-paragraph Lorem + cream bg); DROP each in with `@dragWidgetTo_InputEvents text, panel` (fires `reactToDropOf →
   adjustContentsBounds`), so a second drop ~doubles the height. (A tight EMPTY box taller than one child SHRINKS on the first add
@@ -1469,7 +1469,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (`@dragWidgetTo_InputEvents` grabs at `center()` = the button), so compose the primitive:
   `@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf slider, [0.5, 0.15]), dropPoint` (one held drag-move
   is enough; the playback skips the grab threshold). Build a standalone vertical `new SliderWdgt 1,100,50,10` + `slider.alpha = 1`
-  (ctor defaults `@alpha = 0.1` ≈ invisible, `:38`) + `rawSetExtent 22×130` (height>width ⇒ vertical) + a `PanelWdgt` + an EMPTY
+  (ctor defaults `@alpha = 0.1` ≈ invisible, `:38`) + `_applyExtentAndNotify 22×130` (height>width ⇒ vertical) + a `PanelWdgt` + an EMPTY
   `ScrollPanelWdgt` (empty ⇒ no bars ⇒ no extent growth). The button stays mid-track across all four shots = the proof. (The
   recorded original's DIGEST mislabels the drag source as the panel; its 4 screenshots show the SLIDER is the moving object —
   trust the screenshots. Don't over-distill to a bare track-CLICK no-op: the recording's real demonstration is this
@@ -1506,7 +1506,7 @@ assertion a recapture after a regression silently stores two different hashes an
   shadow — larger+fainter than the at-rest (4,4)α0.2 desktop shadow), then `fullChanged()`. A `PanelWdgt` (cream fill + dark 1px stroke via
   `RectangularAppearance`, painted synchronously; `defaultPanels*`, `PreferencesAndSettings.coffee:122-123`) overrides nothing in the grab
   path, so its held frame is deterministic — no timer/animation/frame-race, and axis-aligned chrome (no trig → immune to the cross-engine
-  `Math.sin/cos` issue). Build `new PanelWdgt` + `rawSetExtent` + `world.add` + `fullRawMoveTo` (equivalent to the demo "panel" item, since
+  `Math.sin/cos` issue). Build `new PanelWdgt` + `_applyExtentAndNotify` + `world.add` + `_applyMoveToAndNotify` (equivalent to the demo "panel" item, since
   `WorldWdgt.create` IS `pickUp()` and PanelWdgt overrides nothing in the grab path), then the held mid-drag idiom:
   `@moveToAndMouseDown_InputEvents panel.center()` → `@syntheticEventsMouseMove_InputEvents pt, "left button"` (lifts onto the hand) →
   `takeScreenshot…` (the held panel, fully painted with its drag shadow) → `@syntheticEventsMouseUp_InputEvents()`. The paint-on-pickup
@@ -1529,18 +1529,18 @@ assertion a recapture after a regression silently stores two different hashes an
   (`bringToForeground`) is the observable.
 - **Rectangular clipping** (`macroClippingBoxClipsChildAtBounds`): a `ClippingBoxWdgt` is an ORDINARY BoxWdgt that merely
   `@augmentWith ClippingAtRectangularBoundsMixin` (the whole class body) — the mixin clips children to its bounds. `new
-  ClippingBoxWdgt` (setColor/rawSetExtent/fullRawMoveTo/world.add), `clipBox.add child`, then move the child
-  (`child.fullRawMoveTo …`) to STRADDLE each edge in turn — it's cut off at that edge, proving the clip is the box's fixed
+  ClippingBoxWdgt` (setColor/_applyExtentAndNotify/_applyMoveToAndNotify/world.add), `clipBox.add child`, then move the child
+  (`child._applyMoveToAndNotify …`) to STRADDLE each edge in turn — it's cut off at that edge, proving the clip is the box's fixed
   rectangle on every side.
 - **Hide / show + subtree** (`macroHideUnhideWidgetChain`): `widget.hide()` / `widget.show()` flip `@isVisible`; the paint
   recursion short-circuits at an invisible morph BEFORE its children (`Widget.preliminaryCheckNothingToDraw`), so hiding a
   mid-chain morph hides its WHOLE subtree, and `show()` restores it. Drive them DIRECTLY — `hide()` is the "hide" item's method,
   and `show()` MUST be programmatic (a hidden morph can't be right-clicked; recordings un-hide via an inspector `show()` eval).
   `show()` no-ops if the morph is already effectively visible (ancestor-chain AND), so a hide→show round-trip is image-identical.
-- **Canvas / pen turtle drawing** (`macroSierpinskiInCanvas`): `canvas = new CanvasWdgt; canvas.rawSetExtent (new Point W, H)`
-  (REQUIRED — CanvasWdgt ships no default extent), `canvas.fullRawMoveTo …; world.add canvas`; `pen = new PenWdgt; canvas.add
+- **Canvas / pen turtle drawing** (`macroSierpinskiInCanvas`): `canvas = new CanvasWdgt; canvas._applyExtentAndNotify (new Point W, H)`
+  (REQUIRED — CanvasWdgt ships no default extent), `canvas._applyMoveToAndNotify …; world.add canvas`; `pen = new PenWdgt; canvas.add
   pen` — a PenWdgt draws on its PARENT when that parent is a CanvasWdgt (`PenWdgt.forward → @parent.drawLine`), so attaching it
-  to the canvas wires the turtle to the surface. Place with `pen.fullRawMoveTo …` and call a drawing method DIRECTLY, e.g.
+  to the canvas wires the turtle to the surface. Place with `pen._applyMoveToAndNotify …` and call a drawing method DIRECTLY, e.g.
   `pen.sierpinski 400, 40` (synchronous).
 
 ## Assertions & eval

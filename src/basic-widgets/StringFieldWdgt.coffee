@@ -36,9 +36,9 @@ class StringFieldWdgt extends PanelWdgt
   # calls this polymorphically instead of type-checking the entry).
   menuEntryPreferredWidth: -> @width()
 
-  rawSetWidth: (newWidth)->
+  _applyWidthAndNotify: (newWidth)->
     super
-    @text.rawSetWidth 300
+    @text._applyWidthAndNotify 300
 
 
   calculateAndUpdateExtent: ->
@@ -47,7 +47,7 @@ class StringFieldWdgt extends PanelWdgt
     text = new StringWdgt txt, @fontSize, @fontStyle, @isBold, @isItalic, false, @isNumeric
     text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
     #console.log "text widget extent: " + text.text + " : " + text.extent()
-    @rawSetWidth Math.max @minTextWidth, text.width()
+    @_applyWidthAndNotify Math.max @minTextWidth, text.width()
     #console.log "string field widget extent: " + @extent()
 
   _reLayoutSelf: ->
@@ -63,8 +63,8 @@ class StringFieldWdgt extends PanelWdgt
       # iHaveBeenAddedTo -> _reLayoutSelf inside another mutation's settle -- so a
       # self-settle here would re-enter the flush guard and throw.
       @_addNoSettle @text
-    @text.fullRawMoveTo @position().add new Point 5,2
-    @text.rawSetExtent new Point 300, 18
+    @text._applyMoveToAndNotify @position().add new Point 5,2
+    @text._applyExtentAndNotify new Point 300, 18
     @_commitExtentAndNotify new Point @width(), 18
 
   getValue: ->

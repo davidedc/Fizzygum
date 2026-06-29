@@ -46,13 +46,13 @@ class ScrollPanelWdgt extends PanelWdgt
     #@setAlphaScaled = @contents.setAlphaScaled
 
     @hBar = new SliderWdgt nil, nil, nil, nil, @sliderColor
-    @hBar.rawSetHeight @scrollBarsThickness
+    @hBar._applyHeightAndNotify @scrollBarsThickness
 
     @hBar.target = @
     @_addNoSettle @hBar
 
     @vBar = new SliderWdgt nil, nil, nil, nil, @sliderColor
-    @vBar.rawSetWidth @scrollBarsThickness
+    @vBar._applyWidthAndNotify @scrollBarsThickness
     @vBar.target = @
     @_addNoSettle @vBar
 
@@ -77,13 +77,13 @@ class ScrollPanelWdgt extends PanelWdgt
       "scrollable panel"
 
   adjustContentsBasedOnHBar: (num) ->
-    @contents.fullRawMoveTo new Point @left() - num, @contents.position().y
+    @contents._applyMoveToAndNotify new Point @left() - num, @contents.position().y
     # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
     @_positionAndResizeChildren()
     @_reLayoutScrollbars()
 
   adjustContentsBasedOnVBar: (num) ->
-    @contents.fullRawMoveTo new Point @contents.position().x, @top() - num
+    @contents._applyMoveToAndNotify new Point @contents.position().x, @top() - num
     # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
     @_positionAndResizeChildren()
     @_reLayoutScrollbars()
@@ -159,8 +159,8 @@ class ScrollPanelWdgt extends PanelWdgt
         @hBar.show()
         # §4.2 Stage 3: my scrollbars are chrome I OWN and place -- pure followers of my own width/height, never
         # affecting my content-fit (subBounds reads @contents' children, not my bars). So size/position them via
-        # the NON-notifying twins; the old rawSetWidth/fullRawMoveTo fired the re-fit seam back at ME (the
-        # capstone's Pattern C self-re-enqueue), a redundant confirm pass. (_applyExtent == rawSetWidth/Height
+        # the NON-notifying twins; the old _applyWidthAndNotify/_applyMoveToAndNotify fired the re-fit seam back at ME (the
+        # capstone's Pattern C self-re-enqueue), a redundant confirm pass. (_applyExtent == _applyWidthAndNotify/Height
         # minus the seam; preserves height/width by passing the current other axis.)
         @hBar._applyExtent new Point(hWidth, @hBar.height())  if @hBar.width() isnt hWidth
         # we check whether the bar has been detached. If it's still
@@ -243,14 +243,14 @@ class ScrollPanelWdgt extends PanelWdgt
     @extraPadding = extraPadding
     # there should never be a shadow but one never knows...
     @contents.closeChildren()
-    @contents.fullRawMoveTo @position()
+    @contents._applyMoveToAndNotify @position()
 
-    aWdgt.fullRawMoveTo @position().add @padding + @extraPadding
+    aWdgt._applyMoveToAndNotify @position().add @padding + @extraPadding
 
     @add aWdgt
 
 
-  rawSetExtent: (aPoint) ->
+  _applyExtentAndNotify: (aPoint) ->
     unless aPoint.equals @extent()
       #console.log "move 15"
       @__breakMoveResizeCaches()
@@ -258,13 +258,13 @@ class ScrollPanelWdgt extends PanelWdgt
       # TODO this part seems like it should be in a _reLayout function
       # rather than here
       if @isTextLineWrapping and !(@contents instanceof SimpleVerticalStackPanelWdgt)
-        @contents.fullRawMoveTo @position()
+        @contents._applyMoveToAndNotify @position()
       super aPoint
-      @contents.rawSetExtent aPoint
+      @contents._applyExtentAndNotify aPoint
       # raw setter: APPLY the re-fit NOW -- synchronous, single-container, TERMINAL
       # (_reLayoutChildren -> _positionAndResizeChildren + _reLayoutScrollbars, neither climbs to my
       # parent). Never SCHEDULE it (no _invalidateLayout): the sanctioned immediate-mutator
-      # apply, like TextWdgt.rawSetExtent -> @_reLayoutSelf (task #17). Rule [E] forbids the SCHEDULE.
+      # apply, like TextWdgt._applyExtentAndNotify -> @_reLayoutSelf (task #17). Rule [E] forbids the SCHEDULE.
       @_reLayoutChildren()
 
 
@@ -293,10 +293,10 @@ class ScrollPanelWdgt extends PanelWdgt
   # A scroll panel re-fits its contents+scrollbars during recalculateLayouts (deferred),
   # not only via the inline _reLayoutChildren triggers. super (Widget::_reLayout) applies
   # MY OWN new bounds FIRST -- consuming @desired* and, on a real resize, re-fitting via the
-  # rawSetExtent override -- and THEN we re-fit to the (now-applied) viewport. Establishing
+  # _applyExtentAndNotify override -- and THEN we re-fit to the (now-applied) viewport. Establishing
   # own bounds before re-fitting the contents is the DETERMINISM.md case-3c discipline (a
   # custom _reLayout must apply its own bounds before laying out what it contains). On a pure
-  # resize the re-fit here is redundant with the rawSetExtent override and idempotent; on a
+  # resize the re-fit here is redundant with the _applyExtentAndNotify override and idempotent; on a
   # content-only change (Phase 3b Slice 2, when the inline triggers become _invalidateLayout)
   # it is the one that runs.
   _reLayout: (newBoundsForThisLayout) ->
@@ -304,7 +304,7 @@ class ScrollPanelWdgt extends PanelWdgt
     @_reLayoutChildren()
 
   # implementsDeferredLayout is `@_reLayout != Widget::_reLayout`, so the _reLayout above would
-  # otherwise flip it true and change TWO read sites: (A) rawSetWidthSizeHeightAccordingly
+  # otherwise flip it true and change TWO read sites: (A) _setWidthSizeHeightAccordingly
   # (invalidate-on-resize) and, the load-bearing one, (B) subWidgetsMergedFullBounds -- a
   # deferred-layout child contributes only its viewport rect, not its scrolled subtree, which
   # would shrink a NESTED scroll panel's reported content size and regress nested-scroll
@@ -350,18 +350,18 @@ class ScrollPanelWdgt extends PanelWdgt
         if widget.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
           # contained text that OPTED INTO FIT_BOX_TO_TEXT (a SimplePlainTextWdgt or
           # a bare TextWdgt put into that mode) fits its BOX to the TEXT: reassert
-          # soft-wrap, then feed it the width — rawSetWidth re-lays-out the text to
+          # soft-wrap, then feed it the width — _applyWidthAndNotify re-lays-out the text to
           # that width (height = wrapped line count), and that new height drives the
           # vertical slider below. We RESPECT the mode (a non-text child or a
           # FIT_TEXT_TO_BOX widget is skipped).
           widget.softWrap = true
           textWidth = @contents.width() - totalPadding
-          widget.rawSetWidth textWidth
-          # (Phase C, proper-layouts) We only RE-WRAP the text child here (rawSetWidth -> height = wrapped
+          widget._applyWidthAndNotify textWidth
+          # (Phase C, proper-layouts) We only RE-WRAP the text child here (_applyWidthAndNotify -> height = wrapped
           # line count); paint + the caret's synchronous @wrappedLines read need that committed, and the new
           # height then flows into subBounds below. We do NOT prime the contents FRAME height here anymore:
           # the merged-bounds commit at the end of this method is the SINGLE owner of @contents' extent. The
-          # old priming `@contents.rawSetHeight (max(<text wrapped height>, @height()) - totalPadding)` was
+          # old priming `@contents._applyHeightAndNotify (max(<text wrapped height>, @height()) - totalPadding)` was
           # redundant with that commit (nothing between here and there reads @contents.height() -- subBounds is
           # the CHILDREN's merged bounds, not the frame's) and, worse, NON-IDEMPOTENT: it set `max(M,vp) -
           # totalPadding` while the commit sets `max(M + 2*padding, vp)`, so the frame height flip-flopped by
@@ -376,7 +376,7 @@ class ScrollPanelWdgt extends PanelWdgt
     # dependency on the children having been resized first -- the mutate-then-read-back the re-fit seam exists
     # for (assessment §2.4) -- yet is byte-identical (measured extent == applied at the fixed point; Stage-C
     # probe 0/1429 converged mismatches). The stack measures at its own width (it subtracts its own padding);
-    # a bare text panel measures its children at the scroll-padding-inset width (== the rawSetWidth re-wrap
+    # a bare text panel measures its children at the scroll-padding-inset width (== the _applyWidthAndNotify re-wrap
     # above). The else-branch (folder / toolbar) is NOT a content-sizing target and keeps the applied read-back.
     isContentSizing = @isTextLineWrapping or
      (@ instanceof SimplePlainTextScrollPanelWdgt) or
@@ -447,7 +447,7 @@ class ScrollPanelWdgt extends PanelWdgt
     @keepContentsInScrollPanelWdgt()
 
   # §4.2 Stage 3 (structural arrange): the position clamp keeping my content snug against my viewport edges. I
-  # OWN this position, so apply each nudge via the NON-notifying move twin -- the old fullRawMoveBy fired the
+  # OWN this position, so apply each nudge via the NON-notifying move twin -- the old _applyMoveByAndNotify fired the
   # re-fit seam back at ME (part of the scroll panel's Intent-2 self-re-enqueue), redundant since I am the clamper.
   keepContentsInScrollPanelWdgt: ->
     if @contents.left() > @left()
@@ -477,14 +477,14 @@ class ScrollPanelWdgt extends PanelWdgt
     # updates of the content and scrollbars
     # or not.
     if newX isnt cl
-      @contents.fullRawMoveLeftSideTo newX
+      @contents._moveLeftSideTo newX
       return true
     else
       return false
 
   scrollTo: (whereTo) ->
-    @contents.fullRawMoveLeftSideTo -whereTo.x
-    @contents.fullRawMoveTopSideTo -whereTo.y
+    @contents._moveLeftSideTo -whereTo.x
+    @contents._moveTopSideTo -whereTo.y
     # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
     @_reLayoutScrollbars()
 
@@ -514,7 +514,7 @@ class ScrollPanelWdgt extends PanelWdgt
     # updates of the content and scrollbars
     # or not.
     if newY isnt ct
-      @contents.fullRawMoveTopSideTo newY
+      @contents._moveTopSideTo newY
       return true
     else
       return false
@@ -720,20 +720,20 @@ class ScrollPanelWdgt extends PanelWdgt
       marginAroundCaret += @extraPadding
     if caretWidget.top() < ft
       newT = @contents.top() + ft - caretWidget.top()
-      @contents.fullRawMoveTopSideTo newT + marginAroundCaret
-      caretWidget.fullRawMoveTopSideTo ft
+      @contents._moveTopSideTo newT + marginAroundCaret
+      caretWidget._moveTopSideTo ft
     else if caretWidget.bottom() > fb
       newB = @contents.bottom() + fb - caretWidget.bottom()
-      @contents.fullRawMoveBottomSideTo newB - marginAroundCaret
-      caretWidget.fullRawMoveBottomSideTo fb
+      @contents._moveBottomSideTo newB - marginAroundCaret
+      caretWidget._moveBottomSideTo fb
     if caretWidget.left() < fl
       newL = @contents.left() + fl - caretWidget.left()
-      @contents.fullRawMoveLeftSideTo newL + marginAroundCaret
-      caretWidget.fullRawMoveLeftSideTo fl
+      @contents._moveLeftSideTo newL + marginAroundCaret
+      caretWidget._moveLeftSideTo fl
     else if caretWidget.right() > fr
       newR = @contents.right() + fr - caretWidget.right()
-      @contents.fullRawMoveRightSideTo newR - marginAroundCaret
-      caretWidget.fullRawMoveRightSideTo fr
+      @contents._moveRightSideTo newR - marginAroundCaret
+      caretWidget._moveRightSideTo fr
     @_positionAndResizeChildren()
     @_reLayoutScrollbars()
 
@@ -837,8 +837,8 @@ class ScrollPanelWdgt extends PanelWdgt
   setTextLineWrapping: (wraps) ->
     @isTextLineWrapping = wraps
     if wraps
-      @contents.fullRawMoveTo @position()
-      @contents.rawSetExtent @extent()
+      @contents._applyMoveToAndNotify @position()
+      @contents._applyExtentAndNotify @extent()
 
   enableDragsDropsAndEditing: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @

@@ -58,9 +58,9 @@ class AxisWdgt extends Widget
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    # TODO shouldn't be calling this rawSetBounds from here,
+    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
     # rather use super
-    @rawSetBounds newBoundsForThisLayout
+    @_applyBoundsAndNotify newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -88,33 +88,33 @@ class AxisWdgt extends Widget
     labelSpace = tickHeight* labelSizeReduction
 
     if height > width
-      @majorDimLine.fullRawMoveTo new Point @right() - 5, @top() + tickHeight
-      @majorDimLine.rawSetExtent new Point thickness, heightOfTheDrawnBar
+      @majorDimLine._applyMoveToAndNotify new Point @right() - 5, @top() + tickHeight
+      @majorDimLine._applyExtentAndNotify new Point thickness, heightOfTheDrawnBar
     else
-      @majorDimLine.fullRawMoveTo new Point @left() + tickHeight, @top() + 5
-      @majorDimLine.rawSetExtent new Point heightOfTheDrawnBar, thickness
+      @majorDimLine._applyMoveToAndNotify new Point @left() + tickHeight, @top() + 5
+      @majorDimLine._applyExtentAndNotify new Point heightOfTheDrawnBar, thickness
 
     # _reLayout runs INSIDE the layout pass (recalculateLayouts), so the tick labels are positioned
-    # AND texted through the non-settling APIs (rawSetExtent / fullRawMoveTo / _setTextNoSettle) -- a
+    # AND texted through the non-settling APIs (_applyExtentAndNotify / _applyMoveToAndNotify / _setTextNoSettle) -- a
     # public settling setText here would re-enter the settle tier and throw the flow-violation.
     for i in [0 ... numberOfTicks]
       if height > width
-        @ticksRectangles[i].fullRawMoveTo new Point @right()-10, @top() + tickHeight + Math.round(i * tickHeight)
-        @ticksRectangles[i].rawSetExtent new Point 5 + thickness, thickness
+        @ticksRectangles[i]._applyMoveToAndNotify new Point @right()-10, @top() + tickHeight + Math.round(i * tickHeight)
+        @ticksRectangles[i]._applyExtentAndNotify new Point 5 + thickness, thickness
 
         @labelsTextBoxes[i]._setTextNoSettle "" + (@max - i)
-        @labelsTextBoxes[i].fullRawMoveTo new Point @left(), @top() + tickHeight + Math.round(i * tickHeight) - labelSpace/2
-        @labelsTextBoxes[i].rawSetExtent new Point width - 10, labelSpace
+        @labelsTextBoxes[i]._applyMoveToAndNotify new Point @left(), @top() + tickHeight + Math.round(i * tickHeight) - labelSpace/2
+        @labelsTextBoxes[i]._applyExtentAndNotify new Point width - 10, labelSpace
         @labelsTextBoxes[i].alignMiddle()
         @labelsTextBoxes[i].alignRight()
 
       else
-        @ticksRectangles[i].fullRawMoveTo new Point @left() + tickHeight + Math.round(i * tickHeight), @top() + 5
-        @ticksRectangles[i].rawSetExtent new Point thickness, 5 + thickness
+        @ticksRectangles[i]._applyMoveToAndNotify new Point @left() + tickHeight + Math.round(i * tickHeight), @top() + 5
+        @ticksRectangles[i]._applyExtentAndNotify new Point thickness, 5 + thickness
 
         @labelsTextBoxes[i]._setTextNoSettle "" + (@min + i)
-        @labelsTextBoxes[i].fullRawMoveTo new Point @left() + tickHeight + Math.round(i * tickHeight) - labelSpace/2, @top() + 5 + 5
-        @labelsTextBoxes[i].rawSetExtent new Point labelSpace, height - 10
+        @labelsTextBoxes[i]._applyMoveToAndNotify new Point @left() + tickHeight + Math.round(i * tickHeight) - labelSpace/2, @top() + 5 + 5
+        @labelsTextBoxes[i]._applyExtentAndNotify new Point labelSpace, height - 10
         @labelsTextBoxes[i].alignTop()
         @labelsTextBoxes[i].alignCenter()
 

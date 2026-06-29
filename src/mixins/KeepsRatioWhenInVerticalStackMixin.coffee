@@ -6,13 +6,13 @@ KeepsRatioWhenInVerticalStackMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
 
-    rawSetWidthSizeHeightAccordingly: (newWidth) ->
-      @rawResizeToWithoutSpacing?()
+    _setWidthSizeHeightAccordingly: (newWidth) ->
+      @_resizeToWithoutSpacing?()
       ratio = @height()/@width()
-      @rawSetExtent new Point newWidth, Math.round newWidth * ratio
+      @_applyExtentAndNotify new Point newWidth, Math.round newWidth * ratio
 
     # §4.1 pure measure: ratio-locked, so preferred height = round(width * current ratio)
-    # (mirrors rawSetWidthSizeHeightAccordingly above). No mutation, no seam.
+    # (mirrors _setWidthSizeHeightAccordingly above). No mutation, no seam.
     preferredExtentForWidth: (availW) ->
       new Point availW, Math.round availW * (@height()/@width())
 
@@ -31,9 +31,9 @@ KeepsRatioWhenInVerticalStackMixin =
 
         availableHeight = world.height() - 20
         if @parent.height() > availableHeight
-          @parent.rawSetExtent (new Point Math.min((@width()/@height()) * availableHeight, world.width()), availableHeight).round()
-          @parent.fullRawMoveTo world.hand.position().subtract @parent.extent().floorDivideBy 2
-          @parent.fullRawMoveWithin world
+          @parent._applyExtentAndNotify (new Point Math.min((@width()/@height()) * availableHeight, world.width()), availableHeight).round()
+          @parent._applyMoveToAndNotify world.hand.position().subtract @parent.extent().floorDivideBy 2
+          @parent._moveWithin world
 
     holderWindowJustDropped: (whereIn) ->
       # capability query replaces `(whereIn instanceof SimpleVerticalStackPanelWdgt) and
@@ -47,6 +47,6 @@ KeepsRatioWhenInVerticalStackMixin =
         # force a resize, so widget
         # will take the right ratio
         # Note that the height of 0 here is ignored since
-        # "rawSetWidthSizeHeightAccordingly" will
+        # "_setWidthSizeHeightAccordingly" will
         # calculate the height.
-        @rawSetWidthSizeHeightAccordingly @width()
+        @_setWidthSizeHeightAccordingly @width()

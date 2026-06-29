@@ -246,16 +246,16 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     text3Height = Math.round(availableHeight * 2/4)
 
     if @regexEntryField.parent == @
-      @regexEntryField.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
-      @regexEntryField.rawSetExtent new Point @width() - 2 * @externalPadding, text1Height
+      @regexEntryField._applyMoveToAndNotify new Point @left() + @externalPadding, @top() + @externalPadding
+      @regexEntryField._applyExtentAndNotify new Point @width() - 2 * @externalPadding, text1Height
 
     if @substitutionTextArea.parent == @
-      @substitutionTextArea.fullRawMoveTo new Point @left() + @externalPadding, @regexEntryField.bottom() + @internalPadding
-      @substitutionTextArea.rawSetExtent new Point @width() - 2 * @externalPadding, text2Height
+      @substitutionTextArea._applyMoveToAndNotify new Point @left() + @externalPadding, @regexEntryField.bottom() + @internalPadding
+      @substitutionTextArea._applyExtentAndNotify new Point @width() - 2 * @externalPadding, text2Height
 
     if @outputTextArea.parent == @
-      @outputTextArea.fullRawMoveTo new Point @left() + @externalPadding, @substitutionTextArea.bottom() + @internalPadding
-      @outputTextArea.rawSetExtent new Point @width() - 2 * @externalPadding, text3Height
+      @outputTextArea._applyMoveToAndNotify new Point @left() + @externalPadding, @substitutionTextArea.bottom() + @internalPadding
+      @outputTextArea._applyExtentAndNotify new Point @width() - 2 * @externalPadding, text3Height
 
 
     world.maybeEnableTrackChanges()

@@ -166,7 +166,7 @@ class ActivePointerWdgt extends Widget
         # in this case the widget being grabbed is created on the fly
         # so just like the next case it's OK to center it under the pointer
         aWdgt.moveTo @position().subtract aWdgt.extent().floorDivideBy 2
-        aWdgt.fullRawMoveWithin world # raw flush+clamp here; a deferred moveWithin now exists, but switching this real-time grab to it is a Path-A determinism call
+        aWdgt._moveWithin world # raw flush+clamp here; a deferred moveWithin now exists, but switching this real-time grab to it is a Path-A determinism call
       else if aWdgt.extentToGetWhenDraggedFromGlassBox? and (oldParent instanceof GlassBoxBottomWdgt)
         # in this case the widget is "inflating". So, all
         # visual references that the user might have around the
@@ -176,7 +176,7 @@ class ActivePointerWdgt extends Widget
         # widget is inflating near the screen edges)
         aWdgt.setExtent aWdgt.extentToGetWhenDraggedFromGlassBox
         aWdgt.moveTo @position().subtract aWdgt.extent().floorDivideBy 2
-        aWdgt.fullRawMoveWithin world
+        aWdgt._moveWithin world
       else if displacementDueToGrabDragThreshold?
         # in this case keep some visual consistency and move
         # the widget accordingly to where the grab started
@@ -187,7 +187,7 @@ class ActivePointerWdgt extends Widget
         # happens to pick up a widget that is partially outside the
         # screen and it's no good to make it jump within the screen
         # - I tried and it looks really strange -
-        aWdgt.fullRawMoveTo aWdgt.position().add displacementDueToGrabDragThreshold
+        aWdgt._applyMoveToAndNotify aWdgt.position().add displacementDueToGrabDragThreshold
 
       @grabOrigin = aWdgt.situation()
       aWdgt.prepareToBeGrabbed?()
@@ -263,7 +263,7 @@ class ActivePointerWdgt extends Widget
         world.lastNonTextPropertyChangerButtonClickedOrDropped = wdgtToDrop
 
       @children = []
-      @rawSetExtent new Point
+      @_applyExtentAndNotify new Point
 
       # Notify the recipient (it may initialise the dropped widget's layout spec) and then the dropped
       # widget (it may tweak its OWN spec -- e.g. constrainToRatio when dropped into a ratio container).
@@ -729,7 +729,7 @@ class ActivePointerWdgt extends Widget
   # ActivePointerWdgt tools
   
   # ActivePointerWdgt floatDragging optimization
-  fullRawMoveBy: (delta) ->
+  _applyMoveByAndNotify: (delta) ->
     if delta.isZero() then return
     world.disableTrackChanges()
     #console.log "move 2"
@@ -749,7 +749,7 @@ class ActivePointerWdgt extends Widget
 
     #startProcessMouseMove = new Date().getTime()
     pos = new Point worldX, worldY
-    @fullRawMoveTo pos
+    @_applyMoveToAndNotify pos
 
     if Automator? and Automator.state == Automator.PLAYING
       mousePointerIndicator = document.getElementById "mousePointerIndicator"
@@ -858,9 +858,9 @@ class ActivePointerWdgt extends Widget
         if w
           fb = w.fullBounds()
           unless fb.containsPoint pos
-            @rawSetExtent @extent().subtract fb.extent().floorDivideBy 2
+            @_applyExtentAndNotify @extent().subtract fb.extent().floorDivideBy 2
             @grab w
-            @fullRawMoveTo pos
+            @_applyMoveToAndNotify pos
     #endProcessMouseMove = new Date().getTime()
     #timeProcessMouseMove = endProcessMouseMove - startProcessMouseMove
     #console.log('Execution time ProcessMouseMove: ' + timeProcessMouseMove)

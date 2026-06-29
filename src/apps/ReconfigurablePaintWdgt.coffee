@@ -462,8 +462,8 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
         toolButtonSize = new Point 0, 0
 
     if @toolsPanel? and @toolsPanel.parent == @
-      @toolsPanel.fullRawMoveTo new Point @left() + @externalPadding, labelBottom
-      @toolsPanel.rawSetExtent new Point 2 * @internalPadding + toolButtonSize.width(), @height() - 2 * @externalPadding
+      @toolsPanel._applyMoveToAndNotify new Point @left() + @externalPadding, labelBottom
+      @toolsPanel._applyExtentAndNotify new Point 2 * @internalPadding + toolButtonSize.width(), @height() - 2 * @externalPadding
 
       if @pencilToolButton.parent == @toolsPanel
         buttonBounds = new Rectangle new Point @toolsPanel.left() + @internalPadding, labelBottom + @internalPadding
@@ -499,8 +499,8 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
       stretchableWidgetContainerLeft = @left() + @externalPadding
 
     if @stretchableWidgetContainer.parent == @
-      @stretchableWidgetContainer.fullRawMoveTo new Point stretchableWidgetContainerLeft, labelBottom
-      @stretchableWidgetContainer.rawSetExtent new Point stretchableWidgetContainerWidth, stretchableWidgetContainerHeight
+      @stretchableWidgetContainer._applyMoveToAndNotify new Point stretchableWidgetContainerLeft, labelBottom
+      @stretchableWidgetContainer._applyExtentAndNotify new Point stretchableWidgetContainerWidth, stretchableWidgetContainerHeight
 
 
     world.maybeEnableTrackChanges()

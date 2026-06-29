@@ -54,7 +54,7 @@ class CaretWdgt extends BlinkerWdgt
     ls = @target.fontHeight @target.actualFontSizeUsedInRendering()
     if ls != @currentCaretFontSize
       @currentCaretFontSize = ls
-      @rawSetExtent new Point Math.max(Math.floor(ls / 20), 1), ls
+      @_applyExtentAndNotify new Point Math.max(Math.floor(ls / 20), 1), ls
   
   # CaretWdgt event processing:
 
@@ -194,7 +194,7 @@ class CaretWdgt extends BlinkerWdgt
     pos = @target.slotCoordinates @slot
     if pos?
       @show()
-      @fullRawMoveTo pos.floor()
+      @_applyMoveToAndNotify pos.floor()
 
   # Schedule THIS caret for a scroll-follow so its _reLayout runs the follow on settled geometry -- the caret
   # settles like any other widget whose layout changed, drained by the NEXT settle (always IN-PLACE, during the
@@ -261,17 +261,17 @@ class CaretWdgt extends BlinkerWdgt
         right = @parent.right() - @viewPadding
         left = @parent.left() + @viewPadding
         if pos.x > right
-          @target.fullRawMoveLeftSideTo @target.left() + right - pos.x
+          @target._moveLeftSideTo @target.left() + right - pos.x
           pos.x = right
         if pos.x < left
           left = Math.min @parent.left(), left
-          @target.fullRawMoveLeftSideTo @target.left() + left - pos.x
+          @target._moveLeftSideTo @target.left() + left - pos.x
           pos.x = left
         if @target.right() < right and right - @target.width() < left
           pos.x += right - @target.right()
-          @target.fullRawMoveRightSideTo right
+          @target._moveRightSideTo right
       @show()
-      @fullRawMoveTo pos.floor()
+      @_applyMoveToAndNotify pos.floor()
 
       if @_amIDirectlyInsideScrollPanelWdgt() and @target.isScrollable
         @parent.parent.scrollCaretIntoView @

@@ -17,8 +17,8 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
     simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
-    sdspw.fullRawMoveTo new Point 114, 10
-    sdspw.rawSetExtent new Point 365, 405
+    sdspw._applyMoveToAndNotify new Point 114, 10
+    sdspw._applyExtentAndNotify new Point 365, 405
 
     startingContent = new SimplePlainTextWdgt(
       "Sample Doc",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
@@ -34,7 +34,7 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
     sdspw.addNormalParagraph "For example, here is an interactive 3D plot:\n"
 
     plot3D = new WindowWdgt nil, nil, new Example3DPlotWdgt, true, true
-    plot3D.rawSetExtent new Point 400, 255
+    plot3D._applyExtentAndNotify new Point 400, 255
     # "constrainToRatio" makes it so the plot in the doc gets taller
     # as the page is made wider
     plot3D.contents.constrainToRatio()
@@ -45,7 +45,7 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
     sdspw.addNormalParagraph "Connected widgets can be added too, for example this slider below controls the data points of the graph above:\n"
 
     slider1 = new SliderWdgt nil, nil, nil, nil, nil, true
-    slider1.rawSetExtent new Point 400, 24
+    slider1._applyExtentAndNotify new Point 400, 24
     sdspw.add slider1
     slider1.setTargetAndActionWithOnesPickedFromMenu nil, nil, plot3D.contents, "setParameter"
 
@@ -58,8 +58,8 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
     sdspw.addNormalParagraph "What else could be added? Anything! Scripts, maps, maps inside scrolling views, maps with graphs, slides, other docs, and on and on and on..."
 
     wm = new WindowWdgt nil, nil, simpleDocument
-    wm.rawSetExtent new Point 331, 545
-    wm.fullRawMoveTo new Point 257, 110
+    wm._applyExtentAndNotify new Point 331, 545
+    wm._applyMoveToAndNotify new Point 257, 110
     world.add wm
     wm.setTitleWithoutPrependedContentName "Sample text document"
 

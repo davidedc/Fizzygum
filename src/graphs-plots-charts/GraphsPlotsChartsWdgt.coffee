@@ -7,7 +7,7 @@ class GraphsPlotsChartsWdgt extends Widget
   constructor: (@drawOnlyPartOfBoundingRect)->
     super()
     @setColor Color.create 255, 125, 125
-    @rawSetExtent new Point 200, 200
+    @_applyExtentAndNotify new Point 200, 200
 
 
   # This method only paints this very widget's "image",

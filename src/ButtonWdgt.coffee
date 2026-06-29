@@ -76,16 +76,16 @@ class ButtonWdgt extends Widget
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    # TODO shouldn't be calling this rawSetBounds from here,
+    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
     # rather use super
-    @rawSetBounds newBoundsForThisLayout
+    @_applyBoundsAndNotify newBoundsForThisLayout
 
     # TODO can we use the more standard way i.e.
     # calculate the bounds and pass them as args in the _reLayout method
     # of the faceWidget?
 
     if @faceWidget?.parent == @
-      @faceWidget.rawSetBounds newBoundsForThisLayout.insetBy @padding
+      @faceWidget._applyBoundsAndNotify newBoundsForThisLayout.insetBy @padding
 
     super
     @markLayoutAsFixed()

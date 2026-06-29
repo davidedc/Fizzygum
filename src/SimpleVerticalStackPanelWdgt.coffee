@@ -30,7 +30,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # so build-time / layout-time / teardown adders can call it directly without flushing layouts.
   # (window-rebuild follow-up: lets WindowWdgt._buildAndConnectChildrenNoSettle add chrome + content through cores.)
   _addNoSettle: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
-    aWdgt.rawResizeToWithoutSpacing()
+    aWdgt._resizeToWithoutSpacing()
 
     # find out WHERE to add the widget. Find the existing widget in the
     # stack that is at the same height, and put the new
@@ -73,11 +73,11 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # Mirror of ScrollPanelWdgt's Slice-1 pair (see there). super applies my own bounds first
   # (DETERMINISM.md case-3c), then I re-lay-out my stacked contents. Inherited by WindowWdgt.
   # This is a fixed point ONLY because _positionAndResizeChildren sizes its (deferred-layout)
-  # children via rawSetWidthSizeHeightAccordingly, which -- when called during a layout pass --
+  # children via _setWidthSizeHeightAccordingly, which -- when called during a layout pass --
   # settles them in place (synchronous _reLayout, no invalidate-climb); see that method + the
   # design doc's "Phase 3b -- Slice 2".
   # implementsDeferredLayout pinned false so adding this _reLayout doesn't flip the two read
-  # sites (rawSetWidthSizeHeightAccordingly invalidate + subWidgetsMergedFullBounds).
+  # sites (_setWidthSizeHeightAccordingly invalidate + subWidgetsMergedFullBounds).
   _reLayout: (newBoundsForThisLayout) ->
     super
     @_reLayoutChildren()
@@ -113,22 +113,22 @@ class SimpleVerticalStackPanelWdgt extends Widget
     @width() - 2 * @padding
 
   # proper-layouts Phase E: apply my OWN arranged extent during _positionAndResizeChildren WITHOUT
-  # re-entering my children's layout. My class rawSetExtent override (here / WindowWdgt / ScrollPanelWdgt)
+  # re-entering my children's layout. My class _applyExtentAndNotify override (here / WindowWdgt / ScrollPanelWdgt)
   # re-fits my children via @_reLayoutChildren() -- correct for an EXTERNAL resize, but during my own
   # arrange I am ALREADY laying my children out, so that re-fit is a redundant synchronous RE-ENTRY of
   # _positionAndResizeChildren (it was a no-op ONLY because the @_adjustingContentsBounds re-entrancy guard
-  # caught it). Going through the BASE Widget::rawSetExtent applies the geometry AND fires the
+  # caught it). Going through the BASE Widget::_applyExtentAndNotify applies the geometry AND fires the
   # up-notification seam (so my container still re-fits -- the nested clock-in-window cascade), but SKIPS the
   # override's @_reLayoutChildren(). That removes the last synchronous re-entry, which is what let the
   # re-entrancy guard + the @_adjustingContentsBounds field be deleted. Byte-identical: the skipped re-entry
-  # was already a guarded no-op. (The leading breakCaches mirrors rawSetWidth / rawSetHeight exactly.)
+  # was already a guarded no-op. (The leading breakCaches mirrors _applyWidthAndNotify / _applyHeightAndNotify exactly.)
   _resizeOwnWidthSkippingChildRelayout: (newWidth) ->
     @__breakMoveResizeCaches()
-    Widget::rawSetExtent.call @, new Point(newWidth or 0, @height())
+    Widget::_applyExtentAndNotify.call @, new Point(newWidth or 0, @height())
 
   _resizeOwnHeightSkippingChildRelayout: (newHeight) ->
     @__breakMoveResizeCaches()
-    Widget::rawSetExtent.call @, new Point(@width(), newHeight or 0)
+    Widget::_applyExtentAndNotify.call @, new Point(@width(), newHeight or 0)
 
   # §4.1 pure measure (proper-layouts): the side-effect-free preferred extent of the stack at an
   # available width -- Σ over children of (padding + child preferred height), + a trailing padding,
@@ -247,13 +247,13 @@ class SimpleVerticalStackPanelWdgt extends Widget
         # APPLY it via the NON-notifying arrange twin so this arrange does not fire the re-fit seam at ME (Intent-2
         # self-re-enqueue = the capstone's Pattern B). preferredExtentForWidth is PURE and already encapsulates each
         # child type's width->height sizing (wrapped text / clock square / ratio), so it returns the SAME extent the
-        # old rawSetWidthSizeHeightAccordingly mutate-and-read-back produced -- proven byte-exact by the §4.1 Stage-A/B
+        # old _setWidthSizeHeightAccordingly mutate-and-read-back produced -- proven byte-exact by the §4.1 Stage-A/B
         # differential probes. A deferred-layout child (a nested container) then re-lays-out its OWN children at that
         # extent (its self-resize is a no-op == the measure, so it fires no seam either). (was: notify-by-mutation
         # mutate-then-read-back; assessment §2.4.)
         # §4.2 Stage 1: apply the child's width WITHOUT firing the re-fit seam at ME (Pattern B) -- but for LEAF
         # children ONLY. A child that is itself a TRACKING CONTAINER (`_reLayoutChildren?` -- a Window / Stack /
-        # ScrollPanel, the same marker the seam gates on) KEEPS the seam-firing rawSetWidthSizeHeightAccordingly:
+        # ScrollPanel, the same marker the seam gates on) KEEPS the seam-firing _setWidthSizeHeightAccordingly:
         # its child-resize re-enqueue is LOAD-BEARING for a constrained-scroll-stack's content<->scrollbar WIDTH
         # convergence (making it non-notifying settled the stack 6px wider, overlapping its scrollbar --
         # macroWindowCellsInConstrainedScrollStackReflow). That converts only in Stage 3, once the convergence is
@@ -263,7 +263,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
         # non-notifying: the measure carries its per-type width->height sizing (wrapped text / clock square / ratio),
         # byte-exact by the §4.1 Stage-A/B probes, and a leaf has no inner convergence to drive.
         if widget._reLayoutChildren?
-          elementHeight = widget.rawSetWidthSizeHeightAccordingly recommendedElementWidth
+          elementHeight = widget._setWidthSizeHeightAccordingly recommendedElementWidth
         else
           measured = widget.preferredExtentForWidth recommendedElementWidth
           widget._applyExtent measured
@@ -287,12 +287,12 @@ class SimpleVerticalStackPanelWdgt extends Widget
 
       # §4.2 Stage 1: move via the NON-notifying arrange twin for LEAF children (once the resize stops firing the
       # seam, the child-MOVE becomes the surviving half of the stack's Pattern-B pushes). A child that is a TRACKING
-      # CONTAINER (`_reLayoutChildren?`) keeps the seam-firing fullRawMoveTo: its move's in-pass re-enqueue is
+      # CONTAINER (`_reLayoutChildren?`) keeps the seam-firing _applyMoveToAndNotify: its move's in-pass re-enqueue is
       # load-bearing for a constrained-scroll-stack's content<->scrollbar WIDTH convergence (dropping it settled the
       # stack 6px wider, overlapping its scrollbar) -- it converts only in Stage 3. Same discriminator as the resize.
       moveTo = new Point leftPosition, @top() + verticalPadding + stackHeight
       if widget._reLayoutChildren?
-        widget.fullRawMoveTo moveTo
+        widget._applyMoveToAndNotify moveTo
       else
         widget._applyMoveTo moveTo
       # else-branch: consume the handed-forward height (no read-back of applied @bounds). The
@@ -313,7 +313,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     else
       @_resizeOwnHeightSkippingChildRelayout newHeight
 
-  rawSetExtent: (aPoint) ->
+  _applyExtentAndNotify: (aPoint) ->
     unless aPoint.equals @extent()
       #console.log "move 15"
       @__breakMoveResizeCaches()
@@ -321,6 +321,6 @@ class SimpleVerticalStackPanelWdgt extends Widget
       # raw setter: APPLY the re-fit NOW -- synchronous, single-container, TERMINAL
       # (_reLayoutChildren -> _positionAndResizeChildren, which does not climb to my parent).
       # Never SCHEDULE it (no _invalidateLayout): the sanctioned immediate-mutator apply,
-      # exactly like TextWdgt.rawSetExtent -> @_reLayoutSelf and rawSetWidthSizeHeightAccordingly
+      # exactly like TextWdgt._applyExtentAndNotify -> @_reLayoutSelf and _setWidthSizeHeightAccordingly
       # -> @_reLayout (task #17). check-layering.js rule [E] forbids the SCHEDULE, not this APPLY.
       @_reLayoutChildren()

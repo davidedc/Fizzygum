@@ -17,7 +17,7 @@ class AnalogClockWdgt extends Widget
 
     super()
     @setColor Color.create 255, 125, 125
-    @rawSetExtent new Point 200, 200
+    @_applyExtentAndNotify new Point 200, 200
     return
 
   colloquialName: ->
@@ -26,8 +26,8 @@ class AnalogClockWdgt extends Widget
   widthWithoutSpacing: ->
     Math.min @width(), @height()
 
-  rawResizeToWithoutSpacing: ->
-    @rawSetExtent new Point @widthWithoutSpacing(), @widthWithoutSpacing()
+  _resizeToWithoutSpacing: ->
+    @_applyExtentAndNotify new Point @widthWithoutSpacing(), @widthWithoutSpacing()
 
   initialiseDefaultWindowContentLayoutSpec: ->
     super
@@ -38,15 +38,15 @@ class AnalogClockWdgt extends Widget
     # min(wEl, availW) -- the widthOfStackWhenAdded term is multiplied out, so the clock no longer
     # depends on the stack width sampled at RECORD time (which, for a clock nested in a
     # window-in-window, was the ancestor-cascade-converged width and drove the deferred-layout
-    # runaway). The clock's square aspect is preserved by rawSetWidthSizeHeightAccordingly.
+    # runaway). The clock's square aspect is preserved by _setWidthSizeHeightAccordingly.
     @layoutSpecDetails.elasticity = 0
 
-  rawSetWidthSizeHeightAccordingly: (newWidth) ->
-    @rawSetExtent new Point newWidth, newWidth
+  _setWidthSizeHeightAccordingly: (newWidth) ->
+    @_applyExtentAndNotify new Point newWidth, newWidth
     @height()  # Path B: hand the (square) height back so a container needn't read it off me. See Widget.
 
   # §4.1 pure measure: the clock is square, so its preferred height equals the width
-  # (mirrors rawSetWidthSizeHeightAccordingly above). No mutation, no seam.
+  # (mirrors _setWidthSizeHeightAccordingly above). No mutation, no seam.
   preferredExtentForWidth: (availW) ->
     new Point availW, availW
 

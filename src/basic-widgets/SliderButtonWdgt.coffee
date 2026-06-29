@@ -92,7 +92,7 @@ class SliderButtonWdgt extends CircleBoxWdgt
 
       newPosition = new Point newX, newY
       if !oldButtonPosition.equals newPosition
-        @fullRawMoveTo newPosition
+        @_applyMoveToAndNotify newPosition
         # pass the just-applied clamped position so updateValue derives the value
         # from it rather than reading the thumb's geometry back (byte-identical; the
         # precondition for deferring this move later — see SliderWdgt.updateValue).

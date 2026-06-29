@@ -39,7 +39,7 @@ class StretchableEditableWdgt extends Widget
     @dragsDropsAndEditingEnabled
 
   smartPlace: (widgetToBePlaced, creator) ->
-    widgetToBePlaced.fullRawMoveTo @stretchableWidgetContainer.center().round().subtract widgetToBePlaced.extent().floorDivideBy 2
+    widgetToBePlaced._applyMoveToAndNotify @stretchableWidgetContainer.center().round().subtract widgetToBePlaced.extent().floorDivideBy 2
     @stretchableWidgetContainer.add widgetToBePlaced
     widgetToBePlaced.rememberFractionalSituationInHoldingPanel()
     @stretchableWidgetContainer.bringToForeground()
@@ -76,8 +76,8 @@ class StretchableEditableWdgt extends Widget
     stretchableWidgetContainerLeft = @left() + @externalPadding
 
     if @stretchableWidgetContainer.parent == @
-      @stretchableWidgetContainer.fullRawMoveTo new Point stretchableWidgetContainerLeft, labelBottom
-      @stretchableWidgetContainer.rawSetExtent new Point stretchableWidgetContainerWidth, stretchableWidgetContainerHeight
+      @stretchableWidgetContainer._applyMoveToAndNotify new Point stretchableWidgetContainerLeft, labelBottom
+      @stretchableWidgetContainer._applyExtentAndNotify new Point stretchableWidgetContainerWidth, stretchableWidgetContainerHeight
 
     # ----------------------------------------------
 
@@ -88,7 +88,7 @@ class StretchableEditableWdgt extends Widget
 
     @markLayoutAsFixed()
 
-  rawSetExtent: (aPoint) ->
+  _applyExtentAndNotify: (aPoint) ->
     super
     @_reLayoutSelf()
 
@@ -119,10 +119,10 @@ class StretchableEditableWdgt extends Widget
       # it's in will take the right ratio, and hence
       # the content will take the whole window it's in.
       # Note that the height of 0 here is ignored since
-      # "rawSetWidthSizeHeightAccordingly" will
+      # "_setWidthSizeHeightAccordingly" will
       # calculate the height.
       if @stretchableWidgetContainer?.ratio?
-        @rawSetExtent new Point @width(), 0
+        @_applyExtentAndNotify new Point @width(), 0
 
   enableDragsDropsAndEditing: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
@@ -147,9 +147,9 @@ class StretchableEditableWdgt extends Widget
   # 2) if we drop the slide in
   #    a document then it will take a height proportional
   #    to the given width, which is what looks natural.
-  rawSetWidthSizeHeightAccordingly: (newWidth) ->
+  _setWidthSizeHeightAccordingly: (newWidth) ->
     if @layoutSpecDetails?.canSetHeightFreely
-     return super  # Path B: propagate the resulting height. See Widget.rawSetWidthSizeHeightAccordingly.
+     return super  # Path B: propagate the resulting height. See Widget._setWidthSizeHeightAccordingly.
 
     if !@stretchableWidgetContainer?
      return super
@@ -157,7 +157,7 @@ class StretchableEditableWdgt extends Widget
     if !@stretchableWidgetContainer.ratio?
      return super
 
-    @rawSetExtent new Point newWidth, Math.round(newWidth / @stretchableWidgetContainer.ratio)
+    @_applyExtentAndNotify new Point newWidth, Math.round(newWidth / @stretchableWidgetContainer.ratio)
     @height()
 
 

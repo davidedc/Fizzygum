@@ -142,13 +142,13 @@ class PopUpWdgt extends Widget
     # console.log "menu popup"
     @__commitMoveTo pos
     widgetToAttachTo.add @
-    # the @fullRawMoveWithin method
+    # the @_moveWithin method
     # needs to know the extent of the widget
     # so it must be called after the widgetToAttachTo.add
     # method. If you call before, there is
     # nopainting happening and the widget doesn't
     # know its extent.
-    @fullRawMoveWithin world
+    @_moveWithin world
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
       world.alignIDsOfNextWidgetsInSystemTests()
     # shadow must be added after the widget

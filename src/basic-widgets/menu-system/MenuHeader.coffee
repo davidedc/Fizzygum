@@ -20,11 +20,11 @@ class MenuHeader extends BoxWdgt
     # the modern family does not self-size; make the label hug its text so the
     # header below can size itself to it (see sizeToTextAndDisableFitting).
     @text.sizeToTextAndDisableFitting()
-    @rawSetExtent @text.extent().add 2
+    @_applyExtentAndNotify @text.extent().add 2
 
-  rawSetWidth: (theWidth) ->
+  _applyWidthAndNotify: (theWidth) ->
     super
-    @text.fullRawMoveTo @center().subtract @text.extent().floorDivideBy 2
+    @text._applyMoveToAndNotify @center().subtract @text.extent().floorDivideBy 2
 
   mouseClickLeft: ->
     super

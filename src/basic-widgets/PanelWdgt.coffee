@@ -131,13 +131,13 @@ class PanelWdgt extends Widget
     position = @position().add new Point posx, posy
 
     @_addNoSettle aWdgt
-    # Container re-fit DEFERS to the cycle: fullRawMoveTo below routes through fullRawMoveBy ->
+    # Container re-fit DEFERS to the cycle: _applyMoveToAndNotify below routes through _applyMoveByAndNotify ->
     # _reFitContainerAfterRawGeometryChange, which -- since aWdgt sits directly in a non-text-
     # wrapping ScrollPanel's contents (me) -- invalidates the enclosing ScrollPanel (@parent),
     # whose _reLayout ('super; @_reLayoutChildren') re-fits it on the next doOneCycle. So the old
     # ad-hoc synchronous @parent._reLayoutChildren() here is redundant and removed. (fam 2
     # verify-and-drop -- deferred-layout-residuals-audit.md)
-    aWdgt.fullRawMoveTo position
+    aWdgt._applyMoveToAndNotify position
 
 
   detachesWhenDragged: ->
@@ -178,7 +178,7 @@ class PanelWdgt extends Widget
   
   keepAllSubwidgetsWithin: ->
     @children.forEach (m) =>
-      m.fullRawMoveWithin @
+      m._moveWithin @
 
   editButtonPressedFromWindowBar: ->
     if @dragsDropsAndEditingEnabled

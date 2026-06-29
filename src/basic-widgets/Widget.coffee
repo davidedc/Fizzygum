@@ -723,7 +723,7 @@ class Widget extends TreeNode
   boundingBoxTight: ->
     new Rectangle @leftTight(), @topTight(), @rightTight(), @bottomTight()
 
-  rawResizeToWithoutSpacing: ->
+  _resizeToWithoutSpacing: ->
 
   # Set my width and re-fit my height / children to it. The width->height POLICY is
   # POLYMORPHIC: shape-keepers override this WHOLE method (AnalogClockWdgt -> square,
@@ -747,15 +747,15 @@ class Widget extends TreeNode
   # HANDS the height forward: read once HERE, at the source, immediately after the synchronous mutation (so
   # byte-equal to the caller's old `child.height()`), and returned. EVERY override must likewise return its
   # resulting height (the 8 overrides are the historical break point -- keep them in sync).
-  rawSetWidthSizeHeightAccordingly: (newWidth) ->
-    @rawSetWidth newWidth
+  _setWidthSizeHeightAccordingly: (newWidth) ->
+    @_applyWidthAndNotify newWidth
     if @implementsDeferredLayout()
       # raw setter: APPLY the re-fit now (synchronous _reLayout), never SCHEDULE it
       # (no _invalidateLayout). See task #17 -- low-level mutators must not schedule layout.
       @_reLayout()
     @height()
 
-  # §4.1 pure measure -- the side-effect-free counterpart of rawSetWidthSizeHeightAccordingly above:
+  # §4.1 pure measure -- the side-effect-free counterpart of _setWidthSizeHeightAccordingly above:
   # "what extent would I take at this available width?", computed WITHOUT mutating @bounds or firing the
   # re-fit seam, so a parent can MEASURE a child instead of sizing-it-then-reading-the-height-back. The
   # BASE default is for a widget whose height is INVARIANT under width (a plain box, an icon, a menu): its
@@ -768,7 +768,7 @@ class Widget extends TreeNode
 
   # note that using this one, the children
   # widgets attached as floating don't move
-  rawSetBounds: (newBounds) ->
+  _applyBoundsAndNotify: (newBounds) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
@@ -782,7 +782,7 @@ class Widget extends TreeNode
       @__breakMoveResizeCaches()
       @changed()
 
-    @rawSetExtent newBounds.extent()
+    @_applyExtentAndNotify newBounds.extent()
 
   # high-level geometry-change API,
   # you don't actually change the geometry right away,
@@ -1308,14 +1308,14 @@ class Widget extends TreeNode
   # the seam fires iff I actually moved. (Byte-exact vs the prior in-the-middle seam fire: the seam only SCHEDULES
   # my container's re-fit -- reading my parent, not my children -- so firing it AFTER the children-translate rather
   # than before is geometry-identical, and the silent children-translate enqueues nothing in between.)
-  fullRawMoveBy: (delta) ->
+  _applyMoveByAndNotify: (delta) ->
     @_reFitContainerAfterRawGeometryChange() if @_applyMoveBy delta
 
-  # Non-notifying twins of fullRawMoveBy / fullRawMoveTo (§4.2 structural arrange-down): translate me + my children +
+  # Non-notifying twins of _applyMoveByAndNotify / _applyMoveToAndNotify (§4.2 structural arrange-down): translate me + my children +
   # repaint WITHOUT firing the re-fit seam -- a container placing me top-down already knows my new position, so the
   # seam's Intent-2 self-re-enqueue is redundant. Used by the stack arrange for LEAF children (a leaf has no inner
-  # convergence the move's re-enqueue would drive; a container child keeps the seam-firing fullRawMoveTo).
-  # _applyMoveBy is fullRawMoveBy's shared core (returns true iff actually moved, so the wrapper fires the seam).
+  # convergence the move's re-enqueue would drive; a container child keeps the seam-firing _applyMoveToAndNotify).
+  # _applyMoveBy is _applyMoveByAndNotify's shared core (returns true iff actually moved, so the wrapper fires the seam).
   _applyMoveBy: (delta) ->
     return false if delta.isZero()
     @__breakMoveResizeCaches()
@@ -1356,7 +1356,7 @@ class Widget extends TreeNode
   # moving to fractional position within the desktop is
   # different from the case below because the desktop can be
   # resized to any ratio
-  fullRawMoveInDesktopToFractionalPosition: (boundsOfParent) ->
+  _moveInDesktopToFractionalPosition: (boundsOfParent) ->
     if !boundsOfParent?
       boundsOfParent = @parent.bounds
 
@@ -1368,30 +1368,30 @@ class Widget extends TreeNode
     # we just don't move widgets along the dimensions that have a negative
     # fractional component
     if @positionFractionalInHoldingPanel[0] > 0
-      @fullRawMoveTo (new Point boundsOfParent.left() + (boundsOfParent.width() * @positionFractionalInHoldingPanel[0]), @top()).round()
+      @_applyMoveToAndNotify (new Point boundsOfParent.left() + (boundsOfParent.width() * @positionFractionalInHoldingPanel[0]), @top()).round()
     if @positionFractionalInHoldingPanel[1] > 0
-      @fullRawMoveTo (new Point @left(), boundsOfParent.top() + (boundsOfParent.height() * @positionFractionalInHoldingPanel[1])).round()
+      @_applyMoveToAndNotify (new Point @left(), boundsOfParent.top() + (boundsOfParent.height() * @positionFractionalInHoldingPanel[1])).round()
 
-  fullRawMoveInStretchablePanelToFractionalPosition: (boundsOfParent) ->
+  _moveInStretchablePanelToFractionalPosition: (boundsOfParent) ->
     if !boundsOfParent?
       boundsOfParent = @parent.bounds
 
-    @fullRawMoveTo (
+    @_applyMoveToAndNotify (
       new Point \
        boundsOfParent.left() + (boundsOfParent.width() * @positionFractionalInHoldingPanel[0]),
        boundsOfParent.top() + (boundsOfParent.height() * @positionFractionalInHoldingPanel[1])
     ).round()
 
-  rawSetExtentToFractionalExtentInPaneUserHasSet: (boundsOfParent) ->
+  _setExtentToFractionalExtentInPaneUserHasSet: (boundsOfParent) ->
     if !boundsOfParent?
       boundsOfParent = @parent.bounds
 
-    @rawSetExtent new Point @extentFractionalInHoldingPanel[0] * boundsOfParent.width(), @extentFractionalInHoldingPanel[1] * boundsOfParent.height()
+    @_applyExtentAndNotify new Point @extentFractionalInHoldingPanel[0] * boundsOfParent.width(), @extentFractionalInHoldingPanel[1] * boundsOfParent.height()
 
   
   # this one actually immediately changes the position and
   # bounds of widgets
-  fullRawMoveTo: (aPoint) ->
+  _applyMoveToAndNotify: (aPoint) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
@@ -1402,7 +1402,7 @@ class Widget extends TreeNode
     if !delta.isZero()
       #console.log "move 6"
       @__breakMoveResizeCaches()
-      @fullRawMoveBy delta
+      @_applyMoveByAndNotify delta
     @bounds.debugIfFloats()
 
   # high-level geometry-change API,
@@ -1459,57 +1459,57 @@ class Widget extends TreeNode
     delta = aPoint.toLocalCoordinatesOf @
     @__commitMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
   
-  fullRawMoveLeftSideTo: (x) ->
+  _moveLeftSideTo: (x) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
       debugger
 
-    @fullRawMoveTo new Point x, @top()
+    @_applyMoveToAndNotify new Point x, @top()
   
-  fullRawMoveRightSideTo: (x) ->
+  _moveRightSideTo: (x) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
       debugger
 
-    @fullRawMoveTo new Point x - @width(), @top()
+    @_applyMoveToAndNotify new Point x - @width(), @top()
   
-  fullRawMoveTopSideTo: (y) ->
+  _moveTopSideTo: (y) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
       debugger
 
-    @fullRawMoveTo new Point @left(), y
+    @_applyMoveToAndNotify new Point @left(), y
   
-  fullRawMoveBottomSideTo: (y) ->
+  _moveBottomSideTo: (y) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
       debugger
 
-    @fullRawMoveTo new Point @left(), y - @height()
+    @_applyMoveToAndNotify new Point @left(), y - @height()
   
-  fullRawMoveToSideOf: (aWidget) ->
+  _moveToSideOf: (aWidget) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
       debugger
 
-    @fullRawMoveTo aWidget.topRight().add new Point 10, -Math.round((@height() - aWidget.height())/2)
-    @fullRawMoveWithin @parent
+    @_applyMoveToAndNotify aWidget.topRight().add new Point 10, -Math.round((@height() - aWidget.height())/2)
+    @_moveWithin @parent
   
-  fullRawMoveFullCenterTo: (aPoint) ->
+  _moveFullCenterTo: (aPoint) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
       debugger
 
-    @fullRawMoveTo aPoint.subtract @fullBounds().extent().floorDivideBy 2
+    @_applyMoveToAndNotify aPoint.subtract @fullBounds().extent().floorDivideBy 2
   
   # make sure I am completely within another Widget's bounds
-  fullRawMoveWithin: (aWdgt) ->
+  _moveWithin: (aWdgt) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
@@ -1531,7 +1531,7 @@ class Widget extends TreeNode
 
     # "bake" the "deferred" size and position
     # into the current size and position
-    @rawSetBounds newBoundsForThisLayout
+    @_applyBoundsAndNotify newBoundsForThisLayout
 
     # adjust the top side and the left side last, so that
     # the control buttons in the window bars are still
@@ -1541,31 +1541,31 @@ class Widget extends TreeNode
 
     rightOff = newBoundsForThisLayout.right() - aWdgt.right()
     if rightOff > 0
-      @fullRawMoveBy new Point -rightOff, 0
+      @_applyMoveByAndNotify new Point -rightOff, 0
       newBoundsForThisLayout = @bounds
 
     leftOff = newBoundsForThisLayout.left() - aWdgt.left()
     if leftOff < 0
-      @fullRawMoveBy new Point -leftOff, 0
+      @_applyMoveByAndNotify new Point -leftOff, 0
       newBoundsForThisLayout = @bounds
 
     bottomOff = newBoundsForThisLayout.bottom() - aWdgt.bottom()
     if bottomOff > 0
-      @fullRawMoveBy new Point 0, -bottomOff
+      @_applyMoveByAndNotify new Point 0, -bottomOff
       newBoundsForThisLayout = @bounds
     
     topOff = newBoundsForThisLayout.top() - aWdgt.top()
     if topOff < 0
-      @fullRawMoveBy new Point 0, -topOff
+      @_applyMoveByAndNotify new Point 0, -topOff
       newBoundsForThisLayout = @bounds
 
     return
 
-  # Deferred twin of fullRawMoveWithin: make sure I end up completely within
+  # Deferred twin of _moveWithin: make sure I end up completely within
   # aWdgt's bounds, but DON'T bake the move now -- compute the clamped position
   # and DEFER it via moveTo, so it settles in the recalculateLayouts ->
   # _reLayout phase (before paint), together with any other pending change.
-  # Pending-aware like fullRawMoveWithin (it clamps the not-yet-applied
+  # Pending-aware like _moveWithin (it clamps the not-yet-applied
   # @desired* geometry when present); but, being deferred, it leaves
   # @desiredExtent for the cycle to apply rather than baking it now.
   moveWithin: (aWdgt) ->
@@ -1577,7 +1577,7 @@ class Widget extends TreeNode
     newY = pos.y
 
     # adjust the right and bottom first, the left and top LAST, so the control
-    # buttons in window bars stay visible/reachable (mirrors fullRawMoveWithin)
+    # buttons in window bars stay visible/reachable (mirrors _moveWithin)
     rightOff = (newX + ext.x) - aWdgt.right()
     if rightOff > 0 then newX = newX - rightOff
     if newX < aWdgt.left() then newX = aWdgt.left()
@@ -1597,7 +1597,7 @@ class Widget extends TreeNode
   setMinimumExtent: (@minimumExtent) ->
 
   # Widget accessing - dimensional changes requiring a complete redraw
-  rawSetExtent: (aPoint, widgetStartingTheChange = nil) ->
+  _applyExtentAndNotify: (aPoint, widgetStartingTheChange = nil) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
@@ -1667,10 +1667,10 @@ class Widget extends TreeNode
     @__breakMoveResizeCaches()
     return true
 
-  # Non-notifying twin of rawSetExtent (§4.2 structural arrange-down): apply my extent the way rawSetExtent does
+  # Non-notifying twin of _applyExtentAndNotify (§4.2 structural arrange-down): apply my extent the way _applyExtentAndNotify does
   # (commit @bounds + @changed repaint + @_reLayoutSelf), but WITHOUT firing the re-fit seam -- a container
   # arranging me top-down already knows my new geometry, so the seam's Intent-2 self-re-enqueue is redundant.
-  # Byte-for-byte mirrors rawSetExtent except for the seam (rawSetExtent -> _commitExtentAndNotify which notifies).
+  # Byte-for-byte mirrors _applyExtentAndNotify except for the seam (_applyExtentAndNotify -> _commitExtentAndNotify which notifies).
   _applyExtent: (aPoint) ->
     unless aPoint.equals @extent()
       @__breakMoveResizeCaches()
@@ -1701,7 +1701,7 @@ class Widget extends TreeNode
     @_reFitContainer @parent.parent if @_amIDirectlyInsideScrollPanelWdgt()
     @_reFitContainer @parent
 
-  # A re-fit "seam": an IMMEDIATE geometry mutator (_commitExtentAndNotify / fullRawMoveBy) notifies the
+  # A re-fit "seam": an IMMEDIATE geometry mutator (_commitExtentAndNotify / _applyMoveByAndNotify) notifies the
   # container that tracks my geometry to re-fit -- a NON-text-wrapping scroll panel (text-wrapping panels
   # drive their own content re-wrap in _positionAndResizeChildren, so they are excluded here), or a
   # stack/window container. A freefloating child's _invalidateLayout does NOT climb to its container, which
@@ -1712,7 +1712,7 @@ class Widget extends TreeNode
     # OVERLAY CHROME (carets, resize handles -- isLayoutInert) is excluded from every container's
     # content-bounds (TreeNode.childrenNotHandlesNorCarets, Widget._reLayout*, WindowWdgt.add), so a raw
     # move/resize of it CANNOT change the container's content-fit -- tripping this seam would only schedule a
-    # WASTED container re-fit. Per-keystroke CARET repositioning (gotoSlot's @fullRawMoveTo) was the single
+    # WASTED container re-fit. Per-keystroke CARET repositioning (gotoSlot's @_applyMoveToAndNotify) was the single
     # largest end-of-cycle layout-flush residual (~84 records); the genuine scroll-on-edit is already applied
     # SYNCHRONOUSLY by ScrollPanelWdgt.scrollCaretIntoView, so the deferred re-fit was pure redundancy. Skip
     # it for decoration. (Capability `?()`, not a Widget base default -- type-test-elimination convention.)
@@ -1743,7 +1743,7 @@ class Widget extends TreeNode
   # of being skipped) rather than looping forever -- which is why the skip is no longer needed for correctness.
   # (proper-layouts Phase E, 2026-06-28) The @_adjustingContentsBounds field itself is now GONE too: its last
   # use was the per-arrange re-entrancy guard, retired by giving each container arrange a NON-re-applying
-  # self-resize (SimpleVerticalStackPanelWdgt._resizeOwnWidthSkippingChildRelayout/Height -> base Widget::rawSetExtent, which
+  # self-resize (SimpleVerticalStackPanelWdgt._resizeOwnWidthSkippingChildRelayout/Height -> base Widget::_applyExtentAndNotify, which
   # fires THIS seam to notify the parent but does NOT re-enter @_reLayoutChildren). This notify-by-mutation seam
   # itself STAYS -- and its deletion was PROVEN INFEASIBLE 2026-06-29 (do NOT re-attempt; see
   # docs/proper-layouts-4.4-ordered-downwalk-plan.md §8): the container arrange is already single-pass/idempotent, so
@@ -1760,7 +1760,7 @@ class Widget extends TreeNode
       container._invalidateLayout()
 
 
-  rawSetWidth: (width) ->
+  _applyWidthAndNotify: (width) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
@@ -1768,7 +1768,7 @@ class Widget extends TreeNode
 
     #console.log "move 10"
     @__breakMoveResizeCaches()
-    @rawSetExtent new Point(width or 0, @height())
+    @_applyExtentAndNotify new Point(width or 0, @height())
 
   # high-level geometry-change API,
   # you don't actually change the geometry right away,
@@ -1796,7 +1796,7 @@ class Widget extends TreeNode
     w = Math.max Math.round(width or 0), 0
     @bounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + w, @bounds.corner.y
   
-  rawSetHeight: (height) ->
+  _applyHeightAndNotify: (height) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
@@ -1804,7 +1804,7 @@ class Widget extends TreeNode
 
     #console.log "move 12"
     @__breakMoveResizeCaches()
-    @rawSetExtent new Point(@width(), height or 0)
+    @_applyExtentAndNotify new Point(@width(), height or 0)
 
   # high-level geometry-change API,
   # you don't actually change the geometry right away,
@@ -2227,7 +2227,7 @@ class Widget extends TreeNode
   createReference: (referenceName, placeToDropItIn = world) ->
     @_settleLayoutsAfter => @_createReferenceNoSettle referenceName, placeToDropItIn
 
-  # The COMPLETE createReference minus the settle. add -> _addNoSettle and setExtent -> rawSetExtent
+  # The COMPLETE createReference minus the settle. add -> _addNoSettle and setExtent -> _applyExtentAndNotify
   # (the shortcut is freshly added freefloating, so the immediate raw size is byte-identical to the
   # deferred desired-extent path; same add-then-size order as the public version, so the icon grid
   # positions identically once the enclosing settle re-fits).
@@ -2249,7 +2249,7 @@ class Widget extends TreeNode
     # this "add" is going to try to position the
     # new icon into a grid
     placeToDropItIn._addNoSettle widgetToAdd
-    widgetToAdd.rawSetExtent new Point 75, 75
+    widgetToAdd._applyExtentAndNotify new Point 75, 75
     widgetToAdd.fullChanged()
     @bringToForeground()
 
@@ -2617,7 +2617,7 @@ class Widget extends TreeNode
     aFullCopy = @fullCopy()
     aFullCopy.unlockFromPanels()
     world.add aFullCopy
-    aFullCopy.fullRawMoveTo @position().add new Point 10, 10
+    aFullCopy._applyMoveToAndNotify @position().add new Point 10, 10
     aFullCopy.rememberFractionalSituationInHoldingPanel()
 
   duplicateMenuActionAndPickItUp: ->
@@ -3028,9 +3028,9 @@ class Widget extends TreeNode
     # into the "desiredExtent" as the true extent has yet
     # to be settled
     if @desiredExtent?
-      @fullRawMoveTo world.hand.position().subtract @desiredExtent.floorDivideBy 2
+      @_applyMoveToAndNotify world.hand.position().subtract @desiredExtent.floorDivideBy 2
     else
-      @fullRawMoveTo world.hand.position().subtract @fullBounds().extent().floorDivideBy 2
+      @_applyMoveToAndNotify world.hand.position().subtract @fullBounds().extent().floorDivideBy 2
     oldParent?.childPickedUp? @
 
   grabbedWidgetSwitcheroo: ->
@@ -3199,8 +3199,8 @@ class Widget extends TreeNode
     if !whereToAddIt?
       whereToAddIt = widgetToBeNextTo.parent
     whereToAddIt.add @
-    @fullRawMoveTo widgetToBeNextTo.center()
-    @fullRawMoveWithin whereToAddIt
+    @_applyMoveToAndNotify widgetToBeNextTo.center()
+    @_moveWithin whereToAddIt
     
   
   # Widget menus ////////////////////////////////////////////////////////////////
@@ -3708,7 +3708,7 @@ class Widget extends TreeNode
       menuEntriesStrings = []
       functionNamesStrings = []
     menuEntriesStrings.push "width", "height", "alpha 0-100", "padding", "padding top", "padding bottom", "padding left", "padding right"
-    functionNamesStrings.push "rawSetWidth", "rawSetHeight", "setAlphaScaled", "setPadding", "setPaddingTop", "setPaddingBottom", "setPaddingLeft", "setPaddingRight"
+    functionNamesStrings.push "_applyWidthAndNotify", "_applyHeightAndNotify", "setAlphaScaled", "setPadding", "setPaddingTop", "setPaddingBottom", "setPaddingLeft", "setPaddingRight"
 
     if @addShapeSpecificNumericalSetters?
       [menuEntriesStrings, functionNamesStrings] = @addShapeSpecificNumericalSetters menuEntriesStrings, functionNamesStrings
@@ -4224,23 +4224,23 @@ class Widget extends TreeNode
     # rather than breaking what could be many
     # rectangles?
 
-    # the fullRawMoveTo makes sure that all children
+    # the _applyMoveToAndNotify makes sure that all children
     # that are float-attached move together with the
     # widget.
-    @fullRawMoveTo newBoundsForThisLayout.origin
+    @_applyMoveToAndNotify newBoundsForThisLayout.origin
     
     # bad kludge here but I think there will be more
     # of these as we move over to the new layouts, we'll
     # probably have split Widgets for the new layouts mechanism.
     # FIT_BOX_TO_TEXT content re-sizes its OWN height to its text, so hand it the
     # full bounds (origin + extent) in one shot; everything else just takes the
-    # new extent (its origin was already set by the fullRawMoveTo above). ANY
+    # new extent (its origin was already set by the _applyMoveToAndNotify above). ANY
     # contained TextWdgt qualifies (a non-text widget has no fittingSpec, so it
     # falls through to the else).
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
-      @rawSetBounds newBoundsForThisLayout
+      @_applyBoundsAndNotify newBoundsForThisLayout
     else
-      @rawSetExtent newBoundsForThisLayout.extent()
+      @_applyExtentAndNotify newBoundsForThisLayout.extent()
 
     if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
       if @parent
@@ -4256,15 +4256,15 @@ class Widget extends TreeNode
           @layoutSpec_cornerInternal_inset = new Point 0, 0
 
         if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT
-          @fullRawMoveTo new Point @parent.left() + @layoutSpec_cornerInternal_inset.x, @parent.top() + @layoutSpec_cornerInternal_inset.y
+          @_applyMoveToAndNotify new Point @parent.left() + @layoutSpec_cornerInternal_inset.x, @parent.top() + @layoutSpec_cornerInternal_inset.y
         else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
-          @fullRawMoveTo new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, @parent.top() + @layoutSpec_cornerInternal_inset.y
+          @_applyMoveToAndNotify new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, @parent.top() + @layoutSpec_cornerInternal_inset.y
         else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT
-          @fullRawMoveTo new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, @parent.bottom() - minDim - @layoutSpec_cornerInternal_inset.y
+          @_applyMoveToAndNotify new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, @parent.bottom() - minDim - @layoutSpec_cornerInternal_inset.y
         else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT
-          @fullRawMoveTo new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, Math.floor(@parent.top() + (@parent.extent().y - minDim)/2)
+          @_applyMoveToAndNotify new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, Math.floor(@parent.top() + (@parent.extent().y - minDim)/2)
         else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
-          @fullRawMoveTo new Point Math.floor(@parent.left() + (@parent.extent().x - minDim)/2), @parent.bottom() - minDim - @layoutSpec_cornerInternal_inset.y
+          @_applyMoveToAndNotify new Point Math.floor(@parent.left() + (@parent.extent().x - minDim)/2), @parent.bottom() - minDim - @layoutSpec_cornerInternal_inset.y
 
     # »>> this part is excluded from the fizzygum homepage build
     else if @countOfChildrenInHorizontalStackLayout() != 0

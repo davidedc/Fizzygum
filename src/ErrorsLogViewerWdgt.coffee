@@ -114,9 +114,9 @@ class ErrorsLogViewerWdgt extends Widget
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    # TODO shouldn't be calling this rawSetBounds from here,
+    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
     # rather use super
-    @rawSetBounds newBoundsForThisLayout
+    @_applyBoundsAndNotify newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -134,8 +134,8 @@ class ErrorsLogViewerWdgt extends Widget
     mainCanvasBottom = @top() + @externalPadding + mainCanvasHeight
 
     if @tempPromptEntryField.parent == @
-      @tempPromptEntryField.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
-      @tempPromptEntryField.rawSetExtent new Point @width() - 2 * @externalPadding, mainCanvasHeight
+      @tempPromptEntryField._applyMoveToAndNotify new Point @left() + @externalPadding, @top() + @externalPadding
+      @tempPromptEntryField._applyExtentAndNotify new Point @width() - 2 * @externalPadding, mainCanvasHeight
 
 
     # buttons -------------------------------

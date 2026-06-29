@@ -110,8 +110,8 @@ class CodePromptWdgt extends Widget
     textBottom = @top() + @externalPadding + textHeight
 
     if @tempPromptEntryField.parent == @
-      @tempPromptEntryField.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
-      @tempPromptEntryField.rawSetExtent new Point @width() - 2 * @externalPadding, textHeight
+      @tempPromptEntryField._applyMoveToAndNotify new Point @left() + @externalPadding, @top() + @externalPadding
+      @tempPromptEntryField._applyExtentAndNotify new Point @width() - 2 * @externalPadding, textHeight
 
 
     # buttons -------------------------------

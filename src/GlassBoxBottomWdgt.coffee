@@ -43,20 +43,20 @@ class GlassBoxBottomWdgt extends BoxWdgt
       # a menu item is sized to its text; other contents become square thumbnails
       # (was `w instanceof MenuItemWdgt`). (type-test-elimination campaign)
       if w.isTextSizedGlassBoxItem?()
-        w.fullRawMoveTo @topLeft().add((new Point 0 ,(@height() - w.height())/2 ).round())
+        w._applyMoveToAndNotify @topLeft().add((new Point 0 ,(@height() - w.height())/2 ).round())
       else
         if w.idealRatioWidthToHeight?
           ratio = w.idealRatioWidthToHeight
           if ratio > 1
             # more wide than tall
-            w.rawSetExtent new Point thumbnailSize, thumbnailSize / ratio
+            w._applyExtentAndNotify new Point thumbnailSize, thumbnailSize / ratio
           else
             # more tall than wide
-            w.rawSetExtent new Point thumbnailSize * ratio, thumbnailSize
+            w._applyExtentAndNotify new Point thumbnailSize * ratio, thumbnailSize
         else
-          w.rawSetExtent new Point thumbnailSize, thumbnailSize
+          w._applyExtentAndNotify new Point thumbnailSize, thumbnailSize
 
-        w.fullRawMoveTo @topLeft().add((new Point (thumbnailSize - w.width())/2 ,(thumbnailSize - w.height())/2 ).round())
+        w._applyMoveToAndNotify @topLeft().add((new Point (thumbnailSize - w.width())/2 ,(thumbnailSize - w.height())/2 ).round())
 
 
     world.maybeEnableTrackChanges()

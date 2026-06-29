@@ -64,9 +64,9 @@ class FanoutWdgt extends Widget
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    # TODO shouldn't be calling this rawSetBounds from here,
+    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
     # rather use super
-    @rawSetBounds newBoundsForThisLayout
+    @_applyBoundsAndNotify newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -96,15 +96,15 @@ class FanoutWdgt extends Widget
 
     pinSize = (new Point 22 * squareDim/100, 22*squareDim/100).round()
 
-    @pinUp.rawSetExtent pinSize
-    @pinDown.rawSetExtent pinSize
-    @pinLeft.rawSetExtent pinSize
-    @pinRight.rawSetExtent pinSize
+    @pinUp._applyExtentAndNotify pinSize
+    @pinDown._applyExtentAndNotify pinSize
+    @pinLeft._applyExtentAndNotify pinSize
+    @pinRight._applyExtentAndNotify pinSize
 
-    @pinUp.fullRawMoveTo (p0.add new Point 39 * squareDim/100, 1 * squareDim/100).round()
-    @pinDown.fullRawMoveTo (p0.add new Point 39 * squareDim/100, 77 * squareDim/100).round()
-    @pinLeft.fullRawMoveTo (p0.add new Point 1 * squareDim/100, 39 * squareDim/100).round()
-    @pinRight.fullRawMoveTo (p0.add new Point 77 * squareDim/100, 39 * squareDim/100).round()
+    @pinUp._applyMoveToAndNotify (p0.add new Point 39 * squareDim/100, 1 * squareDim/100).round()
+    @pinDown._applyMoveToAndNotify (p0.add new Point 39 * squareDim/100, 77 * squareDim/100).round()
+    @pinLeft._applyMoveToAndNotify (p0.add new Point 1 * squareDim/100, 39 * squareDim/100).round()
+    @pinRight._applyMoveToAndNotify (p0.add new Point 77 * squareDim/100, 39 * squareDim/100).round()
 
 
     world.maybeEnableTrackChanges()

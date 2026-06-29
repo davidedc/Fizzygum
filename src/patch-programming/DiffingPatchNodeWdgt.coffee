@@ -214,8 +214,8 @@ class DiffingPatchNodeWdgt extends Widget
     textHeight = @height() - 2 * @externalPadding
 
     if @tempPromptEntryField.parent == @
-      @tempPromptEntryField.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
-      @tempPromptEntryField.rawSetExtent new Point @width() - 2 * @externalPadding, textHeight
+      @tempPromptEntryField._applyMoveToAndNotify new Point @left() + @externalPadding, @top() + @externalPadding
+      @tempPromptEntryField._applyExtentAndNotify new Point @width() - 2 * @externalPadding, textHeight
 
 
 

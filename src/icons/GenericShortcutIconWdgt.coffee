@@ -10,7 +10,7 @@ class GenericShortcutIconWdgt extends Widget
 
     if !@icon?
       @icon = new SimpleDropletWdgt "icon"
-    @rawSetExtent new Point 95, 95
+    @_applyExtentAndNotify new Point 95, 95
     @add @icon
 
     @referenceArrowIcon = new ShortcutArrowIconWdgt
@@ -22,18 +22,18 @@ class GenericShortcutIconWdgt extends Widget
   widthWithoutSpacing: ->
     Math.min @width(), @height()
 
-  rawResizeToWithoutSpacing: ->
-    @rawSetExtent new Point @widthWithoutSpacing(), @widthWithoutSpacing()
+  _resizeToWithoutSpacing: ->
+    @_applyExtentAndNotify new Point @widthWithoutSpacing(), @widthWithoutSpacing()
 
   initialiseDefaultWindowContentLayoutSpec: ->
     super
     @layoutSpecDetails.canSetHeightFreely = false
 
-  rawSetWidthSizeHeightAccordingly: (newWidth) ->
-    @rawResizeToWithoutSpacing()
-    @rawSetExtent new Point newWidth, newWidth
+  _setWidthSizeHeightAccordingly: (newWidth) ->
+    @_resizeToWithoutSpacing()
+    @_applyExtentAndNotify new Point newWidth, newWidth
     @_reLayout()
-    @height()  # Path B: hand the resulting height back. See Widget.rawSetWidthSizeHeightAccordingly.
+    @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
 
   # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
@@ -44,9 +44,9 @@ class GenericShortcutIconWdgt extends Widget
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    # TODO shouldn't be calling this rawSetBounds from here,
+    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
     # rather use super
-    @rawSetBounds newBoundsForThisLayout
+    @_applyBoundsAndNotify newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -74,12 +74,12 @@ class GenericShortcutIconWdgt extends Widget
     # square centered in the widget
     p0 = p0.subtract new Point squareDim/2, squareDim/2
 
-    @icon.rawSetExtent (new Point squareDim, squareDim).round()
-    @icon.fullRawMoveTo p0.round()
+    @icon._applyExtentAndNotify (new Point squareDim, squareDim).round()
+    @icon._applyMoveToAndNotify p0.round()
 
 
-    @referenceArrowIcon.rawSetExtent (new Point squareDim*3/10, squareDim*3/10).round()
-    @referenceArrowIcon.fullRawMoveTo (p0.add new Point 0, squareDim*7/10).round()
+    @referenceArrowIcon._applyExtentAndNotify (new Point squareDim*3/10, squareDim*3/10).round()
+    @referenceArrowIcon._applyMoveToAndNotify (p0.add new Point 0, squareDim*7/10).round()
 
 
     world.maybeEnableTrackChanges()

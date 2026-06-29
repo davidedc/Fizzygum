@@ -14,8 +14,8 @@ class IconWdgt extends Widget
   widthWithoutSpacing: ->
     @appearance.widthWithoutSpacing()
 
-  rawResizeToWithoutSpacing: ->
-    @rawSetExtent @appearance.calculateRectangleOfIcon().extent()
+  _resizeToWithoutSpacing: ->
+    @_applyExtentAndNotify @appearance.calculateRectangleOfIcon().extent()
 
   initialiseDefaultWindowContentLayoutSpec: ->
     super

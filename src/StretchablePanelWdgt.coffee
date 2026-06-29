@@ -22,7 +22,7 @@ class StretchablePanelWdgt extends PanelWdgt
         @parent.setRatio @width() / @height()
 
 
-  rawSetExtent: (extent) ->
+  _applyExtentAndNotify: (extent) ->
     if extent.equals @extent()
       return
 
@@ -58,8 +58,8 @@ class StretchablePanelWdgt extends PanelWdgt
     # inside of them, so you have to call _reLayout on them in some form.
     # the bad news here is that _reLayout cannot take in input a fractional position yet
     for w in childrenNotHandlesNorCarets
-      w.fullRawMoveInStretchablePanelToFractionalPosition newBoundsForThisLayout
-      w.rawSetExtentToFractionalExtentInPaneUserHasSet newBoundsForThisLayout
+      w._moveInStretchablePanelToFractionalPosition newBoundsForThisLayout
+      w._setExtentToFractionalExtentInPaneUserHasSet newBoundsForThisLayout
 
       # Since we can't call _reLayout with fractional position/bounds yet (TODO), we
       # have set the raw position and extent directly, and
@@ -68,9 +68,9 @@ class StretchablePanelWdgt extends PanelWdgt
       w.desiredExtent = nil
       w._reLayout()
 
-    # TODO shouldn't be calling this rawSetBounds from here,
+    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
     # rather use super
-    @rawSetBounds newBoundsForThisLayout
+    @_applyBoundsAndNotify newBoundsForThisLayout
 
 
 

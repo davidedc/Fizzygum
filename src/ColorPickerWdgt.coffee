@@ -21,7 +21,7 @@ class ColorPickerWdgt extends Widget
     super()
     @appearance = new RectangularAppearance @
     @color = Color.WHITE
-    @rawSetExtent new Point 80, 80
+    @_applyExtentAndNotify new Point 80, 80
     @buildSubwidgets()
 
   colloquialName: ->
@@ -66,19 +66,19 @@ class ColorPickerWdgt extends Widget
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    # TODO shouldn't be calling this rawSetBounds from here,
+    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
     # rather use super
-    @rawSetBounds newBoundsForThisLayout
-    @colorPalette.fullRawMoveTo @position()
-    @colorPalette.rawSetExtent new Point @width(), Math.round(@height() * 0.625)
+    @_applyBoundsAndNotify newBoundsForThisLayout
+    @colorPalette._applyMoveToAndNotify @position()
+    @colorPalette._applyExtentAndNotify new Point @width(), Math.round(@height() * 0.625)
 
-    @grayPalette.fullRawMoveTo @colorPalette.bottomLeft()
-    @grayPalette.rawSetExtent new Point @width(), Math.round(@height() * 0.0625)
+    @grayPalette._applyMoveToAndNotify @colorPalette.bottomLeft()
+    @grayPalette._applyExtentAndNotify new Point @width(), Math.round(@height() * 0.0625)
 
     x = @grayPalette.left() + Math.floor((@grayPalette.width() - @feedback.width()) / 2)
     y = @grayPalette.bottom() + Math.floor((@bottom() - @grayPalette.bottom() - @feedback.height()) / 2)
-    @feedback.fullRawMoveTo new Point x, y
-    @feedback.rawSetExtent new Point Math.min(@width(), Math.round(@height() * 0.25)), Math.round(@height() * 0.25)
+    @feedback._applyMoveToAndNotify new Point x, y
+    @feedback._applyExtentAndNotify new Point Math.min(@width(), Math.round(@height() * 0.25)), Math.round(@height() * 0.25)
 
     world.maybeEnableTrackChanges()
     @fullChanged()

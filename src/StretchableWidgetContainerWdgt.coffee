@@ -24,8 +24,8 @@ class StretchableWidgetContainerWdgt extends Widget
     @add contents
     @contents = contents
 
-    @rawSetExtent new Point 300, 300
-    @contents.rawSetExtent new Point @width(), @height()
+    @_applyExtentAndNotify new Point 300, 300
+    @contents._applyExtentAndNotify new Point @width(), @height()
     @_invalidateLayout()
 
   # actually
@@ -73,24 +73,24 @@ class StretchableWidgetContainerWdgt extends Widget
     else
         return width
 
-  rawResizeToWithoutSpacing: ->
+  _resizeToWithoutSpacing: ->
     if @ratio?
-      @rawSetExtent new Point @widthWithoutSpacing(), Math.round(@widthWithoutSpacing()/@ratio)
+      @_applyExtentAndNotify new Point @widthWithoutSpacing(), Math.round(@widthWithoutSpacing()/@ratio)
 
-  rawSetWidthSizeHeightAccordingly: (newWidth) ->
+  _setWidthSizeHeightAccordingly: (newWidth) ->
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets @contents
 
     if childrenNotHandlesNorCarets.length != 0
       if !@ratio?
         @ratio = @width() / @height()
         @layoutSpecDetails?.canSetHeightFreely = false
-      @rawSetExtent new Point newWidth, Math.round(newWidth/@ratio)
+      @_applyExtentAndNotify new Point newWidth, Math.round(newWidth/@ratio)
     else
-      @rawSetExtent new Point newWidth, @height()
-    @height()  # Path B: hand the resulting height back. See Widget.rawSetWidthSizeHeightAccordingly.
+      @_applyExtentAndNotify new Point newWidth, @height()
+    @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
 
 
-  rawSetExtent: (extent) ->
+  _applyExtentAndNotify: (extent) ->
 
     if extent.equals @extent()
       return
@@ -113,9 +113,9 @@ class StretchableWidgetContainerWdgt extends Widget
 
     #console.log "spanel @contents: " + @contents + " _reLayout 2"
 
-    # TODO shouldn't be calling this rawSetBounds from here,
+    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
     # rather use super
-    @rawSetBounds newBoundsForThisLayout
+    @_applyBoundsAndNotify newBoundsForThisLayout
 
     #console.log "spanel @contents: " + @contents + " _reLayout 3"
 

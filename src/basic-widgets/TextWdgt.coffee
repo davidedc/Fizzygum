@@ -468,7 +468,7 @@ class TextWdgt extends StringWdgt
   # extent is set by the layout (a container resize feeds it the width). Gated by
   # the mode, so it is a no-op for a normal free-floating (FIT_TEXT_TO_BOX)
   # TextWdgt.
-  rawSetExtent: (aPoint) ->
+  _applyExtentAndNotify: (aPoint) ->
     super
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT then @_reLayoutSelf()
 

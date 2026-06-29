@@ -98,7 +98,7 @@ class StretchableCanvasWdgt extends CanvasWdgt
     @backBufferContext.useLogicalPixelsUntilRestore()
 
 
-  rawSetExtent: (extent) ->
+  _applyExtentAndNotify: (extent) ->
 
     if extent.equals @extent()
       return
@@ -196,14 +196,14 @@ class StretchableCanvasWdgt extends CanvasWdgt
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    # TODO shouldn't be calling this rawSetBounds from here,
+    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
     # rather use super
-    @rawSetBounds newBoundsForThisLayout
+    @_applyBoundsAndNotify newBoundsForThisLayout
 
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
     for w in childrenNotHandlesNorCarets
-      w.rawSetBounds @bounds
+      w._applyBoundsAndNotify @bounds
 
 
     world.maybeEnableTrackChanges()

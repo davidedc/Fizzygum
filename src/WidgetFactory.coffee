@@ -35,18 +35,18 @@ class WidgetFactory
     world.create new SliderWdgt
   createNewPanelWdgt: ->
     newWdgt = new PanelWdgt
-    newWdgt.rawSetExtent new Point 350, 250
+    newWdgt._applyExtentAndNotify new Point 350, 250
     world.create newWdgt
   createNewScrollPanelWdgt: ->
     newWdgt = new ScrollPanelWdgt
     # layout-apply-sanctioned: construction-time dev factory (orphan, no cycle yet)
     newWdgt._positionAndResizeChildren()
     newWdgt._reLayoutScrollbars()
-    newWdgt.rawSetExtent new Point 350, 250
+    newWdgt._applyExtentAndNotify new Point 350, 250
     world.create newWdgt
   createNewCanvas: ->
     newWdgt = new CanvasWdgt
-    newWdgt.rawSetExtent new Point 350, 250
+    newWdgt._applyExtentAndNotify new Point 350, 250
     world.create newWdgt
   createNewHandle: ->
     world.create new HandleWdgt
@@ -88,14 +88,14 @@ class WidgetFactory
     gP = new GrayPaletteWdgt
     wm = new WindowWdgt nil, nil, gP
     world.add wm
-    wm.rawSetExtent new Point 130, 70
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm._applyExtentAndNotify new Point 130, 70
+    wm._applyMoveToAndNotify world.hand.position().subtract new Point 50, 100
   createNewColorPaletteWdgtInWindow: ->
     cP = new ColorPaletteWdgt
     wm = new WindowWdgt nil, nil, cP
     world.add wm
-    wm.rawSetExtent new Point 130, 100
-    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm._applyExtentAndNotify new Point 130, 100
+    wm._applyMoveToAndNotify world.hand.position().subtract new Point 50, 100
   createNewColorPickerWdgt: ->
     world.create new ColorPickerWdgt
   createNewSensorDemo: ->
@@ -103,40 +103,40 @@ class WidgetFactory
     newWdgt.setColor Color.create 230, 200, 100
     newWdgt.cornerRadius = 35
     newWdgt.alpha = 0.2
-    newWdgt.rawSetExtent new Point 100, 100
+    newWdgt._applyExtentAndNotify new Point 100, 100
     world.create newWdgt
   createNewAnimationDemo: ->
     foo = new BouncerWdgt
-    foo.fullRawMoveTo new Point 50, 20
-    foo.rawSetExtent new Point 300, 200
+    foo._applyMoveToAndNotify new Point 50, 20
+    foo._applyExtentAndNotify new Point 300, 200
     foo.alpha = 0.9
     foo.speed = 3
     bar = new BouncerWdgt
     bar.setColor Color.create 50, 50, 50
-    bar.fullRawMoveTo new Point 80, 80
-    bar.rawSetExtent new Point 80, 250
+    bar._applyMoveToAndNotify new Point 80, 80
+    bar._applyExtentAndNotify new Point 80, 250
     bar.type = "horizontal"
     bar.direction = "right"
     bar.alpha = 0.9
     bar.speed = 5
     baz = new BouncerWdgt
     baz.setColor Color.create 20, 20, 20
-    baz.fullRawMoveTo new Point 90, 140
-    baz.rawSetExtent new Point 40, 30
+    baz._applyMoveToAndNotify new Point 90, 140
+    baz._applyExtentAndNotify new Point 40, 30
     baz.type = "horizontal"
     baz.direction = "right"
     baz.speed = 3
     garply = new BouncerWdgt
     garply.setColor Color.create 200, 20, 20
-    garply.fullRawMoveTo new Point 90, 140
-    garply.rawSetExtent new Point 20, 20
+    garply._applyMoveToAndNotify new Point 90, 140
+    garply._applyExtentAndNotify new Point 20, 20
     garply.type = "vertical"
     garply.direction = "up"
     garply.speed = 8
     fred = new BouncerWdgt
     fred.setColor Color.create 20, 200, 20
-    fred.fullRawMoveTo new Point 120, 140
-    fred.rawSetExtent new Point 20, 20
+    fred._applyMoveToAndNotify new Point 120, 140
+    fred._applyExtentAndNotify new Point 20, 20
     fred.type = "vertical"
     fred.direction = "down"
     fred.speed = 4

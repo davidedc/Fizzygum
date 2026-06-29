@@ -237,20 +237,20 @@ class CalculatingPatchNodeWdgt extends Widget
     textBottom = @top() + @externalPadding + 15 + @internalPadding + text1Height
 
     if @formulaTextBoxLabel.parent == @
-      @formulaTextBoxLabel.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
-      @formulaTextBoxLabel.rawSetExtent new Point @width() - 2 * @externalPadding, 15
+      @formulaTextBoxLabel._applyMoveToAndNotify new Point @left() + @externalPadding, @top() + @externalPadding
+      @formulaTextBoxLabel._applyExtentAndNotify new Point @width() - 2 * @externalPadding, 15
 
     if @tempPromptEntryField.parent == @
-      @tempPromptEntryField.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding + 15 + @internalPadding
-      @tempPromptEntryField.rawSetExtent new Point @width() - 2 * @externalPadding, text1Height
+      @tempPromptEntryField._applyMoveToAndNotify new Point @left() + @externalPadding, @top() + @externalPadding + 15 + @internalPadding
+      @tempPromptEntryField._applyExtentAndNotify new Point @width() - 2 * @externalPadding, text1Height
 
     if @outputTextBoxLabel.parent == @
-      @outputTextBoxLabel.fullRawMoveTo new Point @left() + @externalPadding, @tempPromptEntryField.bottom() + @internalPadding
-      @outputTextBoxLabel.rawSetExtent new Point @width() - 2 * @externalPadding, 15
+      @outputTextBoxLabel._applyMoveToAndNotify new Point @left() + @externalPadding, @tempPromptEntryField.bottom() + @internalPadding
+      @outputTextBoxLabel._applyExtentAndNotify new Point @width() - 2 * @externalPadding, 15
 
     if @outputTextArea.parent == @
-      @outputTextArea.fullRawMoveTo new Point @left() + @externalPadding, textBottom + @internalPadding + 15 + @internalPadding
-      @outputTextArea.rawSetExtent new Point @width() - 2 * @externalPadding, text2Height
+      @outputTextArea._applyMoveToAndNotify new Point @left() + @externalPadding, textBottom + @internalPadding + 15 + @internalPadding
+      @outputTextArea._applyExtentAndNotify new Point @width() - 2 * @externalPadding, text2Height
 
 
     world.maybeEnableTrackChanges()

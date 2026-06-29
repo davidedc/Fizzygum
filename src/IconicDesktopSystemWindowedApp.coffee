@@ -47,8 +47,8 @@ class IconicDesktopSystemWindowedApp
       if existingWindow? and !existingWindow.destroyed and existingWindow.parent?
         world.add existingWindow
         existingWindow.bringToForeground()
-        existingWindow.fullRawMoveTo world.hand.position().add new Point 100, -50
-        existingWindow.fullRawMoveWithin world
+        existingWindow._applyMoveToAndNotify world.hand.position().add new Point 100, -50
+        existingWindow._moveWithin world
         existingWindow.rememberFractionalSituationInHoldingPanel()
         return
       world[@slot] = @buildWindow()

@@ -19,8 +19,8 @@ class PlotsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
     switcherooWm = new WindowWdgt nil, nil, toolsPanel
     switcherooWm.setExtent new Point 60, 192
-    switcherooWm.fullRawMoveTo new Point 90, Math.floor((world.height()-192)/2)
-    switcherooWm.fullRawMoveWithin world
+    switcherooWm._applyMoveToAndNotify new Point 90, Math.floor((world.height()-192)/2)
+    switcherooWm._moveWithin world
     world.add switcherooWm
 
     return switcherooWm

@@ -116,14 +116,14 @@ class ListWdgt extends ScrollPanelWdgt
     return
 
   
-  rawSetExtent: (aPoint) ->
+  _applyExtentAndNotify: (aPoint) ->
     unless aPoint.equals @extent()
       #console.log "move 3"
       @__breakMoveResizeCaches()
       lb = @listContents.boundingBox()
       nb = @bounds.origin.corner @bounds.origin.add aPoint
       if nb.right() > lb.right() and nb.width() <= lb.width()
-        @listContents.fullRawMoveRightSideTo nb.right()
+        @listContents._moveRightSideTo nb.right()
       if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
-        @listContents.fullRawMoveBottomSideTo nb.bottom()
+        @listContents._moveBottomSideTo nb.bottom()
       super aPoint
