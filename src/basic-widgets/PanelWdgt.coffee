@@ -84,7 +84,7 @@ class PanelWdgt extends Widget
   # ActivePointerWdgt.drop AFTER a self-settling add (outside any pass) -> the else arm invalidates the
   # container so its _reLayout re-fits on the cycle. Gated on @parent?._reLayoutChildren? to preserve the
   # original "only a tracking container reacts" semantics. (fam 2 -- deferred-layout-residuals-audit.md)
-  _reactToDropOfNoSettle: ->
+  _reactToChildDropped: ->
     @_reFitContainer @parent
 
   childRemoved: (child) ->
@@ -118,7 +118,7 @@ class PanelWdgt extends Widget
   # puts the widget in the ScrollPanel
   # in some sparse manner and keeping it
   # "in view"
-  # NON-settling: every caller (a drop into the basement via BasementOpenerWdgt._reactToDropOfNoSettle, the
+  # NON-settling: every caller (a drop into the basement via BasementOpenerWdgt._reactToChildDropped, the
   # close/lost re-home chain) runs inside an enclosing settle, so this must not re-enter the settle tier
   # through a public add. (The public self-settling wrapper was removed when its last caller -- the drop --
   # went cores-only; nothing needs a standalone settling entry here.)
@@ -166,7 +166,7 @@ class PanelWdgt extends Widget
     # doesn't have a parent
     return false
   
-  _reactToGrabOfNoSettle: ->
+  _reactToChildGrabbed: (child) ->
     @_reFitContainer @parent
 
   # PanelWdgt menus:

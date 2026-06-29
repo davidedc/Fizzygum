@@ -178,8 +178,8 @@ class FridgeWdgt extends PanelWdgt
       @fridgeMagnetsCanvas?.newGraphicsCode code
 
 
-  _reactToGrabOfNoSettle: ->
+  _reactToChildGrabbed: (child) ->
     @compileTiles()
 
-  _reactToDropOfNoSettle: ->
+  _reactToChildDropped: ->
     @compileTiles()

@@ -191,6 +191,7 @@ const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*|silent\w*|fullRaw
 // the orphan guard (a receiver's attached-ness is dynamic), so this DIRECT rule is the maximal SOUND static
 // check; the runtime throw stays the backstop for the transitive/dynamic cases (and for `add`).
 const SETTLE_CALL = /[@.]\s*_settleLayoutsAfter\b/;          // SINGLE-mutation tier only (Batch absorbs nested settles)
+const CALLBACK_HOOK = /^_(reactTo|before)[A-Z]/;            // [J] a notification hook -- settle-neutral by convention (layering/naming plan §9.2)
 const WRAPPER_EXCLUDED = new Set(['add']);   // see the [G] block above (collapse/unCollapse folded in once the layout passes routed to their cores)
 const SELF_ADD_CALL = /@\s*add\b/;        // [G] the unambiguous structural add: @add (self == Widget.add inside a Widget
                                           // method). \b excludes @addMany / @addInPseudoRandomPosition; the leading @ (not .)
@@ -373,6 +374,13 @@ function checkFile(file, violations, wrapperCall, warnings) {
     if (isImmediateMutator(method) && invalidate) {
       violations.push(`[E] immediate mutator ${method}() calls _invalidateLayout() — raw/silent/fullRaw setters must only MUTATE, never SCHEDULE layout (task #17)  — ${at}`);
     }
+    // [J] settle-neutral callbacks (layering/naming plan §9.2/§9.6): a notification HOOK (_reactTo* / _before*)
+    // must NOT open a settle -- the gesture/structural DISPATCHER owns the single _settleLayoutsAfter; the hook is
+    // a settle-neutral core. (recalculateLayouts inside a hook is already [A]/[B] -- hooks are _-prefixed = low-level.)
+    // [I] is reserved for the upcoming __-leaf rule (§5).
+    if (CALLBACK_HOOK.test(method) && SETTLE_CALL.test(code)) {
+      violations.push(`[J] notification hook ${method}() calls _settleLayoutsAfter — a callback is a settle-neutral core; the dispatcher owns the one settle (layering/naming plan §9.2)  — ${at}`);
+    }
     if (recalc && !RECALC_WHITELIST.has(method)) {
       violations.push(`[B] recalculateLayouts() called from ${method}() (only doOneCycle / _settleLayoutsAfter / _settleLayoutsAfterBatch may)  — ${at}`);
     }
@@ -484,9 +492,10 @@ function main() {
     console.error('E: raw/silent/fullRaw mutators must not call _invalidateLayout) and docs/deferred-layout-16-macro-breakages.md (A/B/C).');
     console.error('F: a non-mutator handler must DEFER a container apply (_invalidateLayout) or mark it `# layout-apply-sanctioned: <why>` — see docs/deferred-layout-OVERVIEW.md §11.');
     console.error('G: low-level code must reach the _<name>NoSettle core, not the public self-settling wrapper (destroy/close/fullDestroy/createReference/...) — or mark `# nosettle-sanctioned: <why>`.');
+    console.error('J: a notification hook (_reactTo*/_before*) must not open a settle — the gesture/structural dispatcher owns the one _settleLayoutsAfter (layering/naming plan §9.2).');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/J; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
   process.exit(0);
 }
 

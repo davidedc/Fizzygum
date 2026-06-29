@@ -370,18 +370,18 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   aboutToDrop: ->
     @removeChild @contents
 
-  _justDroppedNoSettle: (whereIn) ->
+  _reactToBeingDropped: (whereIn) ->
     super
     @contents?.holderWindowJustDropped? whereIn
 
   justBeenGrabbed: (whereFrom) ->
     @contents?.holderWindowJustBeenGrabbed? whereFrom
 
-  _reactToDropOfNoSettle: (theWidget) ->
+  _reactToChildDropped: (theWidget) ->
     @contents = theWidget
     super
     @disableDrops()
-    # _reactToDropOfNoSettle runs inside the drop's single settle, so rebuild through the NON-settling core
+    # _reactToChildDropped runs inside the drop's single settle, so rebuild through the NON-settling core
     # (not the public buildAndConnectChildren wrapper, which would re-enter the flush guard) -- same
     # as the resetToDefaultContents lifecycle path above.
     @_buildAndConnectChildrenNoSettle()
@@ -429,7 +429,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   #
   # This PUBLIC self-settler is only ever called STANDALONE (the constructor). Every rebuild path that
   # fires from inside an enclosing settle -- a child-lifecycle hook (childBeingDestroyed/Closed/PickedUp)
-  # -> resetToDefaultContents -> rebuild, or _reactToDropOfNoSettle inside the drop's settle -- goes through the
+  # -> resetToDefaultContents -> rebuild, or _reactToChildDropped inside the drop's settle -- goes through the
   # non-settling @_buildAndConnectChildrenNoSettle directly, never this wrapper, so the wrapper never
   # re-enters a flush. The chrome the core constructs adds to ORPHANS, exempt from the flush-throw
   # (Widget._settleLayoutsAfter's orphan guard precedes the throw). (Phase 3b; window-rebuild follow-up.)

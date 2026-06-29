@@ -68,7 +68,7 @@ class Example3DPlotWdgt extends Widget
   # imposesRatioConstraintOnDroppedChildren / releasesRatioConstraintOnGrabbedChildren
   # rather than testing its class. (type-test-elimination campaign)
 
-  _justDroppedNoSettle: (whereIn) ->
+  _reactToBeingDropped: (whereIn) ->
     super
     if whereIn?.imposesRatioConstraintOnDroppedChildren?()
       @constrainToRatio()

@@ -28,7 +28,7 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
       # so this is byte-equivalent to the old deferred fullMoveTo.
       @fullRawMoveTo world.bottomRight().subtract @extent().add world.desktopSidesPadding
 
-  _justDroppedNoSettle: (whereIn) ->
+  _reactToBeingDropped: (whereIn) ->
     super
     if whereIn == world
       @userMovedThisFromComputedPosition = true
@@ -54,7 +54,7 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
 
 
   # Runs inside the drop's single settle, so add through the non-settling core.
-  _reactToDropOfNoSettle: (droppedWidget) ->
+  _reactToChildDropped: (droppedWidget) ->
     @target.scrollPanel.contents._addInPseudoRandomPositionNoSettle droppedWidget
 
   rejectsBeingDropped: ->

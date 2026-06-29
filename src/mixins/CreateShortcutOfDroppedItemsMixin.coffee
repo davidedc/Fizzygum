@@ -27,11 +27,11 @@ CreateShortcutOfDroppedItemsMixin =
         else
           wdgtToDrop.fullRawMoveTo @position().add new Point 10, 10
 
-      _reactToDropOfNoSettle: (droppedWidget) ->
+      _reactToChildDropped: (droppedWidget) ->
         super
         # a real widget (not already a shortcut) leaves a reference behind and closes
         # (was `!(droppedWidget instanceof IconicDesktopSystemShortcutWdgt)`).
         # (type-test-elimination campaign)
-        # _reactToDropOfNoSettle runs inside the drop's single settle -> the non-settling core.
+        # _reactToChildDropped runs inside the drop's single settle -> the non-settling core.
         if !droppedWidget.isDesktopShortcut?()
           droppedWidget._createReferenceAndCloseNoSettle nil, @

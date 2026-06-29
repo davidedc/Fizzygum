@@ -22,7 +22,7 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
   color_pressed: Color.GRAY
   color_normal: Color.BLACK
 
-  _reactToDropOfNoSettle: (droppedWidget) ->
+  _reactToChildDropped: (droppedWidget) ->
 
   constructor: (@target, @title, @icon) ->
     if !@title?
