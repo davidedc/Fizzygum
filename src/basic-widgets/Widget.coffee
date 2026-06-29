@@ -1745,8 +1745,13 @@ class Widget extends TreeNode
   # use was the per-arrange re-entrancy guard, retired by giving each container arrange a NON-re-applying
   # self-resize (SimpleVerticalStackPanelWdgt._applyOwnArrangedWidth/Height -> base Widget::rawSetExtent, which
   # fires THIS seam to notify the parent but does NOT re-enter @_reLayoutChildren). This notify-by-mutation seam
-  # itself STAYS: deleting it needs the scroll panels to converge in one pass (their self-re-fit IS their
-  # convergence), a separate convergence arc (see docs/proper-layouts-eliminate-suppression-booleans-plan.md).
+  # itself STAYS -- and its deletion was PROVEN INFEASIBLE 2026-06-29 (do NOT re-attempt; see
+  # docs/proper-layouts-4.4-ordered-downwalk-plan.md §8): the container arrange is already single-pass/idempotent, so
+  # the seam is NOT internal-convergence waste -- it is the irreducible MULTI-WIDGET notification that a freefloating
+  # content's in-pass geometry change must re-fit its tracking container (a different settle visit). All deletion
+  # paths were falsified (off-pass dirty-climb; ordered content-first pre-settle; analytic decoupling / synchronous
+  # fixpoint). The convergence/suppression WASTE the elimination arc targeted was removed separately (§4.2 Stage 3,
+  # non-notifying arrange -> end-of-cycle capstone GREEN); only this legitimate edge remains.
   _reFitContainer: (container = @) ->
     return unless container?._reLayoutChildren?
     if world?._recalculatingLayouts
