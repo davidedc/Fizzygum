@@ -107,6 +107,21 @@ class WorldWdgt extends PanelWdgt
   auditPaintTimeLayoutScheduling: false
   _paintTimeLayoutSchedules: nil
 
+  # auditTierAndApplyNaming (DEBUG, default off): the RUNTIME twin of the static [K] apply-2x2 name-consistency lint
+  # (check-layering.js). The static gate enforces only the NEGATIVES (an arrange _apply* must not fire the seam nor
+  # call an *AndNotify; a _commit*AndNotify must not react); the POSITIVE "every *AndNotify reaches the re-fit seam"
+  # + the __-leaf-fires-nothing / arrange-corner-reacts-not-notifies behaviour + tier monotonicity (a __ frame
+  # calling out reaches only __) are verified HERE -- the dynamic-dispatch ground truth a name scanner can't follow.
+  # Driven by Fizzygum-tests/scripts/tier-naming-audit/run-tier-naming-gate.sh (the prelude installs the wrapping +
+  # the per-frame lattice assertions). Off => zero overhead (a default-off flag, no wrap installed).
+  auditTierAndApplyNaming: false
+
+  # auditNotificationSettleNeutrality (DEBUG, default off): the RUNTIME twin of the static [J] settle-neutral-callback
+  # ban (layering/naming plan §9.2/§9.6). Asserts NO nested recalculateLayouts fires INSIDE a _reactTo*/_before*
+  # callback (the dynamic twin of [J], catching dynamic dispatch), and that exactly one settle brackets each
+  # gesture/structural dispatch batch. Driven by notification-settle-audit/run-notification-settle-gate.sh. Off => zero overhead.
+  auditNotificationSettleNeutrality: false
+
   automator: nil
 
   # this is the actual reference to the canvas
