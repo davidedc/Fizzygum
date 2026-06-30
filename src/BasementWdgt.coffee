@@ -34,15 +34,19 @@ class BasementWdgt extends BoxWdgt
     @scrollPanel?.contents?.fullDestroyChildren()
   # this part is excluded from the fizzygum homepage build <<«
   
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
 
     @scrollPanel = new ScrollPanelWdgt
-    @add @scrollPanel
+    @_addNoSettle @scrollPanel
 
     @hideUsedWdgtsOnButton = new SimpleButtonWdgt true, @, "showAllWidgets", "☒ only show lost items"
     @hideUsedWdgtsOffButton = new SimpleButtonWdgt true, @, "hideUsedWidgets", "☐ only show lost items"
     @hideUsedWdgtsToggle = new ToggleButtonWdgt @hideUsedWdgtsOffButton, @hideUsedWdgtsOnButton, 0
-    @add @hideUsedWdgtsToggle
+    @_addNoSettle @hideUsedWdgtsToggle
 
 
     # resizer -- attach, then record (@resizer stays nil during its own add; byte-identical to the old

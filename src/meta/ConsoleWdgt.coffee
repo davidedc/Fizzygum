@@ -27,7 +27,11 @@ class ConsoleWdgt extends Widget
   colloquialName: ->
     "Console for: " + @target.colloquialName().toLowerCase()
 
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
       world.alignIDsOfNextWidgetsInSystemTests()
 
@@ -38,21 +42,21 @@ class ConsoleWdgt extends Widget
 
     @textWidget = @tempPromptEntryField.textWdgt
     @textWidget.backgroundColor = Color.TRANSPARENT
-    @textWidget.setFontName nil, nil, @textWidget.monoFontStack
+    @textWidget._setFontNameNoSettle nil, nil, @textWidget.monoFontStack
     @textWidget.isEditable = true
     @textWidget.enableSelecting()
 
-    @add @tempPromptEntryField
+    @_addNoSettle @tempPromptEntryField
 
     # "do" buttons -------------------------------
     # NOTE that you can also "doAll" or "doSelection" via
     # the context menu entries in the text panel!
     @runSelectionButton = new SimpleButtonWdgt true, @, "doSelection", "run selection"
     @runSelectionButton.editorContentPropertyChangerButton = true
-    @add @runSelectionButton
+    @_addNoSettle @runSelectionButton
 
     @runAllButton = new SimpleButtonWdgt true, @, "doAll", "run all"
-    @add @runAllButton
+    @_addNoSettle @runAllButton
     # ---------------------------------------
 
     @_invalidateLayout()

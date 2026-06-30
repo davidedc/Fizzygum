@@ -103,16 +103,22 @@ class LabelButtonWdgt extends ButtonWdgt
     @_reLayoutSelf()
 
   # »>> this part is excluded from the fizzygum homepage build
-  setLabel: (@labelString) ->
-    # Recreate the label, then SELF-SETTLE (public tier, like setExtent/add) so the button's
-    # FULL re-layout -- createLabel + centre, via _reLayout -- runs synchronously and the world is
-    # consistent on return. Previously this leaned on the old label's destroy to invalidate the
-    # button for us (a deferred end-of-cycle re-layout); we now invalidate explicitly, so it is
-    # robust to the freefloating teardown skip and settles immediately.
-    @_settleLayoutsAfter =>
-      if @label?
-        @label = @label.fullDestroy()
-      @_invalidateLayout()
+  # THIN public wrapper over the non-settling core (canonical self-settling form): recreate the label, then
+  # SELF-SETTLE (public tier, like setExtent/add) so the button's FULL re-layout -- createLabel + centre, via
+  # _reLayout -- runs synchronously and the world is consistent on return. This is the public label-setter
+  # API; its one historical caller (FridgeMagnetsWdgt construction) now labels via the core directly, so the
+  # wrapper has no in-tree caller and is intentionally dead-method-allowlisted (a runtime label change settles).
+  setLabel: (labelString) ->
+    @_settleLayoutsAfter => @_setLabelNoSettle labelString
+
+  # NON-settling core -- the construction-time label path: a freshly-built button labels its ORPHAN member
+  # before attach (FridgeMagnetsWdgt's magnets), reached from a low-level _NoSettle build. Tears down the old
+  # label via the non-settling _fullDestroyNoSettle and SCHEDULES the re-layout (invalidate, not a bare settle);
+  # the public wrapper -- or the enclosing construction settle -- does the one flush.
+  _setLabelNoSettle: (@labelString) ->
+    if @label?
+      @label = @label._fullDestroyNoSettle()
+    @_invalidateLayout()
   # this part is excluded from the fizzygum homepage build <<«
 
   alignCenter: ->

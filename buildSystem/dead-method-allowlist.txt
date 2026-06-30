@@ -60,3 +60,10 @@ widthTight
 # batch call-sites. Kept as an available performance primitive (ONE O(1) flush over a multi-add bundle
 # vs N self-settles) that may be wanted again; its flag + guard stay wired. See the method's comment.
 _settleLayoutsAfterBatch
+
+# DELIBERATELY RETAINED public API: LabelButtonWdgt.setLabel -- the public self-settling label setter
+# (canonical thin wrap over _setLabelNoSettle). Its one historical caller, FridgeMagnetsWdgt construction,
+# now labels its orphan magnets through the non-settling core directly (orphan-settledness sweep), so the
+# wrapper has no in-tree caller -- but it stays the public API a label button should expose (a runtime label
+# change must settle). Chosen over a `# nosettle-sanctioned` fudge on the construction call. See LabelButtonWdgt.
+setLabel

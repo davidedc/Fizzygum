@@ -22,41 +22,46 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
     container = patchProgrammingWdgt.stretchableWidgetContainer.contents
     container._applyExtentAndNotify new Point 584,552
 
+    # Build this orphan window tree settle-free: `container` is part of the not-yet-attached
+    # patchProgrammingWdgt, so add the body widgets via the non-settling _addNoSettle core (orphan
+    # construction). Under orphan-settledness a public container.add() would settle MID-construction
+    # on the half-built tree and crash; the single `world.add wm` below settles the whole tree once.
+
     slider1 = new SliderWdgt nil, nil, nil, nil, nil, true
     slider1._applyMoveToAndNotify container.position().add new Point 43+xCorrection, 195+yCorrection
     slider1._applyExtentAndNotify new Point 20, 100
-    container.add slider1
+    container._addNoSettle slider1
     slider1.rememberFractionalSituationInHoldingPanel()
 
     slider2 = new SliderWdgt nil, nil, nil, nil, nil, true
     slider2._applyMoveToAndNotify container.position().add new Point 472+xCorrection, 203+yCorrection
     slider2._applyExtentAndNotify new Point 20, 100
-    container.add slider2
+    container._addNoSettle slider2
     slider2.rememberFractionalSituationInHoldingPanel()
 
     cText = new TextWdgt "0"
     cText._applyMoveToAndNotify container.position().add new Point 104, 253
     cText._applyExtentAndNotify new Point 150, 75
-    container.add cText
+    container._addNoSettle cText
     cText.rememberFractionalSituationInHoldingPanel()
 
     fText = new TextWdgt "0"
     fText._applyMoveToAndNotify container.position().add new Point 344, 255
     fText.alignRight()
     fText._applyExtentAndNotify new Point 150, 75
-    container.add fText
+    container._addNoSettle fText
     fText.rememberFractionalSituationInHoldingPanel()
 
     calc1 = new WindowWdgt nil, nil, new CalculatingPatchNodeWdgt("# °C → °F formula\n(in1)->Math.round in1*9/5+32"), true
     calc1._applyMoveToAndNotify container.position().add new Point 148+xCorrection/2, 19
     calc1._applyExtentAndNotify new Point 241, 167
-    container.add calc1
+    container._addNoSettle calc1
     calc1.rememberFractionalSituationInHoldingPanel()
 
     calc2 = new WindowWdgt nil, nil, new CalculatingPatchNodeWdgt("# °F → °C formula\n(in1)->Math.round (in1-32)*5/9"), true
     calc2._applyMoveToAndNotify container.position().add new Point 148+xCorrection/2, 365
     calc2._applyExtentAndNotify new Point 241, 167
-    container.add calc2
+    container._addNoSettle calc2
     calc2.rememberFractionalSituationInHoldingPanel()
 
 
@@ -72,13 +77,13 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
     cLabel = new TextWdgt "°C"
     cLabel._applyMoveToAndNotify container.position().add new Point 0+xCorrection, 102+yCorrection
     cLabel._applyExtentAndNotify new Point 90, 90
-    container.add cLabel
+    container._addNoSettle cLabel
     cLabel.rememberFractionalSituationInHoldingPanel()
 
     fLabel = new TextWdgt "°F"
     fLabel._applyMoveToAndNotify container.position().add new Point 422+xCorrection, 102+yCorrection
     fLabel._applyExtentAndNotify new Point 90, 90
-    container.add fLabel
+    container._addNoSettle fLabel
     fLabel.rememberFractionalSituationInHoldingPanel()
 
     #@inform (@position().subtract @parent.position()) + " " +  @extent()

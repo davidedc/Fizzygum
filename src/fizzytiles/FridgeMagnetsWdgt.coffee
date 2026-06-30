@@ -23,7 +23,11 @@ class FridgeMagnetsWdgt extends Widget
   colloquialName: ->
     "Fizzytiles"
  
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     if Automator? and
      Automator.state != Automator.IDLE and
      Automator.alignmentOfWidgetIDsMechanism
@@ -35,7 +39,7 @@ class FridgeMagnetsWdgt extends Widget
     #@visualOutput = new FridgeMagnetsCanvasWdgt
     @visualOutput = new FridgeMagnets3DCanvasWdgt
     @visualOutput.disableDrops()
-    @add @visualOutput
+    @_addNoSettle @visualOutput
     
     # source code output pane
     @codeOutput = new FizzytilesCodeWdgt "",nil,nil,nil,nil,nil,(Color.create 255, 250, 245), 1
@@ -43,37 +47,39 @@ class FridgeMagnetsWdgt extends Widget
     @codeOutput.isEditable = true
     @codeOutput.enableSelecting()
     @codeOutput.togglefittingSpecWhenBoundsTooLarge()
-    @add @codeOutput
+    @_addNoSettle @codeOutput
 
     # fridge
     @fridge = new FridgeWdgt
     @fridge.fridgeMagnetsCanvas = @visualOutput
     @fridge.sourceCodeHolder = @codeOutput
-    @add @fridge
+    @_addNoSettle @fridge
 
     # magnets box
     @magnetsBox = new PanelWdgt
-    @add @magnetsBox
+    @_addNoSettle @magnetsBox
 
 
     # sample magnets -------------------------------
+    # the magnets are orphan members built here; label them through the non-settling _setLabelNoSettle core
+    # (the public setLabel would re-enter the settle from this low-level build), like the @_addNoSettle adds above.
     @scale = new MagnetWdgt true, @
-    @scale.setLabel "scale"
+    @scale._setLabelNoSettle "scale"
     @scale.alignCenter()
     @magnetsBox.add @scale
 
     @rotate = new MagnetWdgt true, @
-    @rotate.setLabel "rotate"
+    @rotate._setLabelNoSettle "rotate"
     @rotate.alignCenter()
     @magnetsBox.add @rotate
 
     @box = new MagnetWdgt true, @
-    @box.setLabel "box"
+    @box._setLabelNoSettle "box"
     @box.alignCenter()
     @magnetsBox.add @box
 
     @move = new MagnetWdgt true, @
-    @move.setLabel "move"
+    @move._setLabelNoSettle "move"
     @move.alignCenter()
     @magnetsBox.add @move
 
@@ -83,22 +89,22 @@ class FridgeMagnetsWdgt extends Widget
     @dragTheTilesHereHeader = new StringWdgt "drag tiles here"
     @dragTheTilesHereHeader.toggleHeaderLine()
     @dragTheTilesHereHeader.alignCenter()
-    @add @dragTheTilesHereHeader
+    @_addNoSettle @dragTheTilesHereHeader
 
     @tilesBinHeader = new StringWdgt "tiles bin"
     @tilesBinHeader.toggleHeaderLine()
     @tilesBinHeader.alignCenter()
-    @add @tilesBinHeader
+    @_addNoSettle @tilesBinHeader
 
     @liveCodeLangOutputHeader = new StringWdgt "LiveCodeLang output"
     @liveCodeLangOutputHeader.toggleHeaderLine()
     @liveCodeLangOutputHeader.alignCenter()
-    @add @liveCodeLangOutputHeader
+    @_addNoSettle @liveCodeLangOutputHeader
 
     @outputAnimationHeader = new StringWdgt "output animation"
     @outputAnimationHeader.toggleHeaderLine()
     @outputAnimationHeader.alignCenter()
-    @add @outputAnimationHeader
+    @_addNoSettle @outputAnimationHeader
     # -----------------------------------------------
 
     @_invalidateLayout()

@@ -183,7 +183,11 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
       menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another widget\nwhose numerical property\n will be" + " controlled by this one"
 
 
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
       world.alignIDsOfNextWidgetsInSystemTests()
 
@@ -193,10 +197,10 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     @regexEntryField.color = Color.WHITE
     @textWidget = @regexEntryField.textWdgt
     @textWidget.backgroundColor = Color.TRANSPARENT
-    @textWidget.setFontName nil, nil, @textWidget.monoFontStack
+    @textWidget._setFontNameNoSettle nil, nil, @textWidget.monoFontStack
     @textWidget.isEditable = true
     @textWidget.enableSelecting()
-    @add @regexEntryField
+    @_addNoSettle @regexEntryField
 
     @substitutionTextArea = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
     @substitutionTextArea.disableDrops()
@@ -204,10 +208,10 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     @substitutionTextArea.color = Color.WHITE
     @substitutionTextAreaText = @substitutionTextArea.textWdgt
     @substitutionTextAreaText.backgroundColor = Color.TRANSPARENT
-    @substitutionTextAreaText.setFontName nil, nil, @substitutionTextAreaText.monoFontStack
+    @substitutionTextAreaText._setFontNameNoSettle nil, nil, @substitutionTextAreaText.monoFontStack
     @substitutionTextAreaText.isEditable = true
     @substitutionTextAreaText.enableSelecting()
-    @add @substitutionTextArea
+    @_addNoSettle @substitutionTextArea
 
     @outputTextArea = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
     @outputTextArea.disableDrops()
@@ -215,9 +219,9 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     @outputTextArea.color = Color.WHITE
     @outputTextAreaText = @outputTextArea.textWdgt
     @outputTextAreaText.backgroundColor = Color.TRANSPARENT
-    @outputTextAreaText.setFontName nil, nil, @outputTextAreaText.monoFontStack
+    @outputTextAreaText._setFontNameNoSettle nil, nil, @outputTextAreaText.monoFontStack
     @outputTextAreaText.isEditable = false
-    @add @outputTextArea
+    @_addNoSettle @outputTextArea
 
 
     @_invalidateLayout()

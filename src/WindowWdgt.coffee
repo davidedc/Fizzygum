@@ -116,7 +116,12 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
         titleToBeSet = "window with an " + titleToBeSet
       @label.setText titleToBeSet
 
-    @_applyExtentAndNotify new Point 300, 300
+    # settled-after-new: SETTLE the default extent as the constructor's LAST act (was
+    # @_applyExtentAndNotify, which left a pending re-fit -- and, for default contents, the
+    # _setEmptyWindowLabelNoSettle label too -- so `new WindowWdgt` returned UNsettled). This flushes both.
+    # Kept on the public setExtent rather than folded into _buildAndConnectChildrenNoSettle: that core is
+    # SHARED with the rebuild-on-drop paths, which must NOT reset a user-resized window back to 300x300.
+    @setExtent new Point 300, 300
 
 
   # in general, windows just create a reference of themselves and

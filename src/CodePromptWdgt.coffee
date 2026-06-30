@@ -28,7 +28,11 @@ class CodePromptWdgt extends Widget
   colloquialName: ->
     "Edit tool code"
 
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
       world.alignIDsOfNextWidgetsInSystemTests()
 
@@ -45,24 +49,24 @@ class CodePromptWdgt extends Widget
 
     @textWidget = @tempPromptEntryField.textWdgt
     @textWidget.backgroundColor = Color.TRANSPARENT
-    @textWidget.setFontName nil, nil, @textWidget.monoFontStack
+    @textWidget._setFontNameNoSettle nil, nil, @textWidget.monoFontStack
     @textWidget.isEditable = true
     @textWidget.enableSelecting()
 
-    @add @tempPromptEntryField
+    @_addNoSettle @tempPromptEntryField
 
     # buttons -------------------------------
     @cancelButton = new SimpleButtonWdgt true, @, "close", "cancel"
-    @add @cancelButton
+    @_addNoSettle @cancelButton
 
     
     @saveTextWdgt = new StringWdgt "save", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @saveTextWdgt.alignCenter()
     @saveButton = new SimpleButtonWdgt true, @, "informTarget", @saveTextWdgt
-    @add @saveButton
+    @_addNoSettle @saveButton
 
     @okButton = new SimpleButtonWdgt true, @, "notifyTargetAndClose", "ok"
-    @add @okButton
+    @_addNoSettle @okButton
     # ---------------------------------------
 
     # now that we added the buttons there is a "save" button

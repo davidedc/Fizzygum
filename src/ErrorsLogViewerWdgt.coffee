@@ -55,7 +55,11 @@ class ErrorsLogViewerWdgt extends Widget
       @parent.bringToForeground()
 
 
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     if Automator? and
      Automator.state != Automator.IDLE and
      Automator.alignmentOfWidgetIDsMechanism
@@ -68,24 +72,24 @@ class ErrorsLogViewerWdgt extends Widget
 
     @textWidget = @tempPromptEntryField.textWdgt
     @textWidget.backgroundColor = Color.TRANSPARENT
-    @textWidget.setFontName nil, nil, @textWidget.monoFontStack
+    @textWidget._setFontNameNoSettle nil, nil, @textWidget.monoFontStack
     @textWidget.isEditable = true
     @textWidget.enableSelecting()
 
-    @add @tempPromptEntryField
+    @_addNoSettle @tempPromptEntryField
 
     # buttons -------------------------------
     @clearButton = new SimpleButtonWdgt true, @, "clearTextPane", "clear"
-    @add @clearButton
+    @_addNoSettle @clearButton
 
 
     pauseButton = new SimpleButtonWdgt true, @, "pauseErrors", "pause"
     unpauseButton = new SimpleButtonWdgt true, @, "unpauseErrors", "un-pause"
     @pauseToggle = new ToggleButtonWdgt pauseButton, unpauseButton, if @paused then 1 else 0
-    @add @pauseToggle
+    @_addNoSettle @pauseToggle
 
     @okButton = new SimpleButtonWdgt true, @, "closeFromContainerWindow", "ok"
-    @add @okButton
+    @_addNoSettle @okButton
 
     @_invalidateLayout()
 

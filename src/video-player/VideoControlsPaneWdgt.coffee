@@ -21,7 +21,11 @@ class VideoControlsPaneWdgt extends RectangleWdgt
     super new Point(20, 20), Color.TRANSPARENT
     @buildAndConnectChildren()
 
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     # remove all submorhs i.e. panes and buttons
     # THE ONES THAT ARE STILL
     # subwidgets of the inspector. If they
@@ -29,17 +33,17 @@ class VideoControlsPaneWdgt extends RectangleWdgt
     @fullDestroyChildren()
 
     @playPauseToggle = new VideoPlayPauseToggle @videoPlayerCanvas
-    @add @playPauseToggle
+    @_addNoSettle @playPauseToggle
 
     @videoScrubber = new VideoScrubberWdgt @videoPlayerCanvas
-    @add @videoScrubber
+    @_addNoSettle @videoScrubber
 
 
     @playHeadTimeLabel = new VideoTimeLabelWdgt @videoPlayerCanvas
-    @add @playHeadTimeLabel
+    @_addNoSettle @playHeadTimeLabel
 
     @durationTimeLabel = new VideoDurationLabelWdgt @videoPlayerCanvas
-    @add @durationTimeLabel
+    @_addNoSettle @durationTimeLabel
 
     # update layout
     @_invalidateLayout()

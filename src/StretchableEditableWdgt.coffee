@@ -22,7 +22,6 @@ class StretchableEditableWdgt extends Widget
   constructor: ->
     super
     @buildAndConnectChildren()
-    @_invalidateLayout()
 
   colloquialName: ->
     "Generic panel"
@@ -174,7 +173,14 @@ class StretchableEditableWdgt extends Widget
     @stretchableWidgetContainer.disableDragsDropsAndEditing @
     @_invalidateLayout()
 
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
+  # The core's createNewStretchablePanel/createToolsPanel add to ORPHANS, so their settles defer in-flush
+  # and are flushed once here; the same methods stay self-settling when called post-construction
+  # (createNewStretchablePanel from _reactToChildPickedUp on the attached widget).
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
       world.alignIDsOfNextWidgetsInSystemTests()
 

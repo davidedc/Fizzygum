@@ -805,26 +805,26 @@ class Widget extends TreeNode
     # nothing to flush to -- just record the desired change; the first frame settles it.
     unless world?
       return coreThunk()
-    # ORPHAN guard -- MUST precede the flow-violation throw below. A widget attached to neither the
-    # world nor the hand is not part of the live layout, so a public setter on it cannot corrupt a
-    # flush/pass in progress: it just records the change and settles for real when the finished widget
-    # is added to the world. This is what makes CONSTRUCTION safe inside another mutation's settle -- a
-    # constructor that builds its innards via add() (e.g. the icon buttons WindowWdgt.buildAndConnect
-    # Children makes) adds to an orphan, and must DEFER, not throw. (isOrphan() is false for the world
-    # itself and for anything on the hand, so world.add / dragged-widget mutations still reach the throw
-    # + flush below.) See docs/deferred-layout-refit-and-add-design.md (D3).
-    if @isOrphan()
-      return coreThunk()
-    # A public geometry setter reached on an ATTACHED widget while a flush or a layout pass is already
-    # in progress is a flow-soundness violation: internal layout (_reLayout / _reLayoutSelf / ...) must
-    # use the raw/silent setters, never the public deferred API -- otherwise recalculateLayouts would
-    # re-enter. THROW so the violation is found and fixed. The static gate buildSystem/check-layering.js
-    # catches the name-recognized internal methods at BUILD time -- [A] the public geometry/text setters,
-    # [G] the structural self-settling wrappers (destroy/close/fullDestroy/...). This runtime backstop
-    # still covers what the name-scanner CANNOT: a structural add() (its name collides with Point#add, so
-    # [G] excludes it) and any wrapper reached TRANSITIVELY or via a dynamically-typed receiver.
+    # ALREADY inside a flush/pass?  Two cases, split by whether the receiver is part of the live world:
+    #  - ORPHAN receiver -> DEFER (record the change, do NOT flush). This is the ONE remaining settle
+    #    deferral, and it is framework-internal: a constructor that builds its innards (e.g. the icon
+    #    buttons WindowWdgt.buildAndConnectChildren makes) runs INSIDE the enclosing mutation's settle and
+    #    adds to an orphan; it must not re-enter recalculateLayouts (which would throw). It settles for real
+    #    when that enclosing operation's flush completes -- or, for a widget that stays detached, on its next
+    #    public call / on attach. (isOrphan() is false for the world itself and for anything on the hand, so
+    #    world.add / dragged-widget mutations are NOT orphans and fall through to the throw.) See
+    #    docs/orphan-settledness-plan.md and docs/deferred-layout-refit-and-add-design.md (D3).
+    #  - ATTACHED receiver -> THROW. A public geometry setter reached on an attached widget mid flush/pass is
+    #    a flow-soundness violation: internal layout (_reLayout / _reLayoutSelf / ...) must use the immediate
+    #    (geometry) mutators, never the public deferred API -- otherwise recalculateLayouts would re-enter.
+    #    The static gate buildSystem/check-layering.js catches the name-recognized internal methods at BUILD
+    #    time ([A] the public geometry/text setters, [G] the structural self-settling wrappers
+    #    destroy/close/fullDestroy/...); this runtime backstop covers what the name-scanner CANNOT: a
+    #    structural add() (its name collides with Point#add, so [G] excludes it) and any wrapper reached
+    #    TRANSITIVELY or via a dynamically-typed receiver.
     if world._inLayoutMutation or world._recalculatingLayouts
-      throw new Error "Fizzygum: a public geometry setter was reached during a layout flush/pass -- internal layout code (_reLayout / _reLayoutSelf / ...) must use the raw/silent setters, not the public deferred API (see buildSystem/check-layering.js)."
+      return coreThunk() if @isOrphan()
+      throw new Error "Fizzygum: a public geometry setter was reached during a layout flush/pass -- internal layout code (_reLayout / _reLayoutSelf / ...) must use the immediate (geometry) mutators, not the public deferred API (see buildSystem/check-layering.js)."
     # BATCH guard: inside _settleLayoutsAfterBatch, DEFER the per-mutation flush -- the batch
     # does ONE settle at the end. This turns O(N) relayouts (building N children, each add
     # self-settling) into 1, and -- crucially -- stops a mid-build settle from re-fitting a
@@ -832,6 +832,13 @@ class Widget extends TreeNode
     # crashes the deferred re-fit in getWidthInStack). See _settleLayoutsAfterBatch. (Phase 3b.)
     if world._batchingLayoutSettling
       return coreThunk()
+    # NOT in a flush: settle NOW -- for ATTACHED widgets (always have) AND for ORPHANS (orphan-settledness,
+    # docs/orphan-settledness-plan.md): a public mutation leaves the receiver's OWN subtree settled on return,
+    # so there is no "is it settled here?" question for a detached/under-construction widget either.
+    # recalculateLayouts lays out the orphan's queued invalidations, which are its own subtree (an orphan's
+    # _invalidateLayout can't climb into the world -- it stops at parent==nil), so when the world is already
+    # settled this flushes ONLY the orphan. The orphan's intrinsic (parentless) geometry re-settles to its
+    # in-context form when it is later added to the world.
     world._inLayoutMutation = true
     try
       result = coreThunk()
@@ -852,8 +859,8 @@ class Widget extends TreeNode
   # builders (buildAndConnectChildren) and bulk content insertion: it makes O(N) relayouts
   # into 1, and keeps the re-fit from running on a half-built widget mid-batch (the
   # getWidthInStack-on-unset-@stack crash during an in-world rebuild). Nestable -- an inner
-  # batch is absorbed by the outer; mirrors _settleLayoutsAfter's orphan/re-entrancy
-  # guards for the final flush. Returns the thunk's value. (Phase 3b.)
+  # batch is absorbed by the outer; mirrors _settleLayoutsAfter's in-flush deferral for the
+  # final flush (orphans settle at batch end when not in a flush). Returns the thunk's value. (Phase 3b.)
   _settleLayoutsAfterBatch: (thunk) ->
     unless world?
       return thunk()
@@ -864,7 +871,10 @@ class Widget extends TreeNode
       result = thunk()
     finally
       world._batchingLayoutSettling = false
-    unless @isOrphan() or world._inLayoutMutation or world._recalculatingLayouts
+    # Settle once at batch end -- for ATTACHED widgets AND for ORPHANS (orphan-settledness: a batch leaves
+    # the receiver's subtree settled on return, same as a single _settleLayoutsAfter). DEFER only when
+    # already inside a flush/pass (the in-flush construction case _settleLayoutsAfter also defers).
+    unless world._inLayoutMutation or world._recalculatingLayouts
       world._inLayoutMutation = true
       try
         world.recalculateLayouts()
@@ -2148,16 +2158,19 @@ class Widget extends TreeNode
   _collapseNoSettle: ->
     # IDEMPOTENT -- the SOLE collapse guard (the public collapse() is a thin settle wrapper). A direct caller --
     # a layout pass that decides collapse by width (WindowWdgt._positionAndResizeChildren,
-    # HorizontalMenuPanelWdgt._reLayoutSelf) -- relies on this no-op when already in state, so the core never
-    # re-runs the hooks / @_invalidateLayout (which would THROW mid-pass). The public path now settles-then-no-ops
-    # for an already-collapsed widget -- byte-identical (a no-op flush).
+    # HorizontalMenuPanelWdgt._reLayoutSelf) -- may collapse a NOT-yet-collapsed child MID-PASS (e.g. the FIRST
+    # layout of an under-construction window, now that orphan construction settles -- see
+    # docs/orphan-settledness-plan.md), so the re-layout the collapse schedules goes through the PHASE-VALVE
+    # (in-pass -> the no-climb __markForRelayout; off-pass -> _invalidateLayout), exactly like the re-fit seam
+    # _reFitContainer -- never a bare _invalidateLayout, which THROWS mid-pass. The no-op-when-already-collapsed
+    # guard still short-circuits the common repeat call.
     return if @collapsed
     @parent?._beforeChildCollapsed? @
     @collapsed = true
     WorldWdgt.numberOfCollapseFlagsChanges++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
-    @_invalidateLayout()
+    if world?._recalculatingLayouts then @__markForRelayout() else @_invalidateLayout()
     @fullChanged()
     @parent?._reactToChildCollapsed? @
 
@@ -2171,17 +2184,21 @@ class Widget extends TreeNode
 
   _unCollapseNoSettle: ->
     # IDEMPOTENT -- the SOLE unCollapse guard (the public unCollapse() is a thin settle wrapper). See
-    # _collapseNoSettle for why a direct layout-pass caller needs the no-op (avoid re-running hooks /
-    # @_invalidateLayout mid-pass). Guard on @collapsed -- this widget's OWN collapse flag. The redundant
-    # `return if !@isInCollapsedSubtree()` was REMOVED: isInCollapsedSubtree() is the RECURSIVE self-or-ancestor query, and once
-    # @collapsed is true it necessarily returns true, so that second guard was DEAD code.
+    # _collapseNoSettle for why a direct layout-pass caller needs the no-op (avoid re-running the hooks
+    # mid-pass) AND why the re-layout goes through the PHASE-VALVE (in-pass -> the no-climb
+    # __markForRelayout; off-pass -> _invalidateLayout): a bare _invalidateLayout THROWS mid-pass, which a
+    # width-driven uncollapse during the FIRST layout of an under-construction window now hits (orphan
+    # construction settles -- see docs/orphan-settledness-plan.md), exactly symmetric to _collapseNoSettle.
+    # Guard on @collapsed -- this widget's OWN collapse flag. The redundant `return if !@isInCollapsedSubtree()`
+    # was REMOVED: isInCollapsedSubtree() is the RECURSIVE self-or-ancestor query, and once @collapsed is true
+    # it necessarily returns true, so that second guard was DEAD code.
     return if !@collapsed
     @parent?._beforeChildUnCollapsed? @
     @collapsed = false
     WorldWdgt.numberOfCollapseFlagsChanges++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
-    @_invalidateLayout()
+    if world?._recalculatingLayouts then @__markForRelayout() else @_invalidateLayout()
     @fullChanged()
     @parent?._reactToChildUnCollapsed? @
 

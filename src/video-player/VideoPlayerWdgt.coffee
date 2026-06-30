@@ -36,7 +36,11 @@ class VideoPlayerWdgt extends Widget
   togglePlayPause: ->
     @videoPlayerCanvas.togglePlayPause()
 
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     # remove all submorhs i.e. panes and buttons
     # THE ONES THAT ARE STILL
     # subwidgets of the inspector. If they
@@ -44,11 +48,11 @@ class VideoPlayerWdgt extends Widget
     @fullDestroyChildren()
 
     @videoPlayerCanvas = new VideoPlayerCanvasWdgt
-    @add @videoPlayerCanvas
+    @_addNoSettle @videoPlayerCanvas
 
     # videoControlsPane is just a black rectangle for now
     @videoControlsPane = new VideoControlsPaneWdgt @videoPlayerCanvas
-    @add @videoControlsPane
+    @_addNoSettle @videoControlsPane
 
     # update layout
     @_invalidateLayout()

@@ -29,7 +29,11 @@ class SpeechBubbleWdgt extends Widget
   colloquialName: ->
     "speech bubble"
   
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     @contentsWidget = new TextWdgt(
       @contents,
       WorldWdgt.preferencesAndSettings.bubbleHelpFontSize,
@@ -45,7 +49,7 @@ class SpeechBubbleWdgt extends Widget
     @contentsWidget.isEditable = true
 
 
-    @add @contentsWidget
+    @_addNoSettle @contentsWidget
     @_invalidateLayout()
 
 

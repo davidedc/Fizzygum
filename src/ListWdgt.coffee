@@ -52,7 +52,13 @@ class ListWdgt extends ScrollPanelWdgt
     # instead of nil because the scrollbars (inherited from ScrollPanel)
     # need the step function to react to mouse floatDrag.
   
-  # builds the list contents
+  # builds the list contents. NOT converted to the buildAndConnectChildren wrapper+NoSettle-core pattern
+  # of the orphan-settledness sweep: ListWdgt extends ScrollPanelWdgt, whose `add` is a CUSTOM override
+  # (it redirects a non-frame child into @contents, NOT the standard `@_settleLayoutsAfter => @_addNoSettle`),
+  # so `@add @listContents` is NOT equivalent to `@_addNoSettle @listContents` here -- the latter would
+  # attach @listContents to the scroll frame itself, breaking the list (and every InspectorWdgt, which builds
+  # a ListWdgt for its property pane). It also needs no conversion: this build's last layout act is the
+  # settling `@add @listContents` with no trailing _invalidateLayout, so `new ListWdgt` already returns settled.
   buildAndConnectChildren: ->
     @listContents = new MenuWdgt @, true, @, false, false, nil, nil
     @listContents.isLockingToPanels = true

@@ -69,7 +69,17 @@ class SimpleDocumentWdgt extends Widget
       containerWindow.close()
 
 
+  # PUBLIC self-settling wrapper: build the whole subtree settle-free, then settle ONCE at the end
+  # (orphan-settledness -- `new SimpleDocumentWdgt()` returns settled). Crucially the single flush runs
+  # AFTER @simpleDocumentScrollPanel is wired, so _reLayout never reads it while still nil -- which is
+  # exactly the crash this fixes: under the orphan-settles change an early add()/setContents() settle ran
+  # SimpleDocumentWdgt._reLayout with @simpleDocumentScrollPanel == nil (-> "reading 'parent'"). Every
+  # nested build inside the core (createToolsPanel's adds, the SimpleDocumentScrollPanelWdgt construction's
+  # setContents) runs INSIDE this settle and DEFERS as orphan-in-flush, so construction is O(1) flushes.
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
       world.alignIDsOfNextWidgetsInSystemTests()
 
@@ -83,7 +93,7 @@ class SimpleDocumentWdgt extends Widget
     startingContent.isEditable = true
     startingContent.enableSelecting()
 
-    @add @simpleDocumentScrollPanel
+    @_addNoSettle @simpleDocumentScrollPanel
 
     @_invalidateLayout()
 

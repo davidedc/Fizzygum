@@ -64,7 +64,11 @@ class ScriptWdgt extends Widget
     else
       containerWindow.close()
 
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
       world.alignIDsOfNextWidgetsInSystemTests()
 
@@ -81,20 +85,20 @@ class ScriptWdgt extends Widget
 
     @textWidget = @tempPromptEntryField.textWdgt
     @textWidget.backgroundColor = Color.TRANSPARENT
-    @textWidget.setFontName nil, nil, @textWidget.monoFontStack
+    @textWidget._setFontNameNoSettle nil, nil, @textWidget.monoFontStack
     @textWidget.isEditable = true
     @textWidget.enableSelecting()
 
-    @add @tempPromptEntryField
+    @_addNoSettle @tempPromptEntryField
 
     # buttons -------------------------------
     @runItButton = new SimpleButtonWdgt true, @, "tryIt", "try it"
-    @add @runItButton
+    @_addNoSettle @runItButton
 
     @saveTextWdgt = new StringWdgt "save + close", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @saveTextWdgt.alignCenter()
     @saveButton = new SimpleButtonWdgt true, @, "saveScriptAndClose", @saveTextWdgt
-    @add @saveButton
+    @_addNoSettle @saveButton
     # ---------------------------------------
 
     # now that we added the buttons there is a "save" button

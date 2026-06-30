@@ -12,23 +12,27 @@ class AxisWdgt extends Widget
     @labelsTextBoxes = []
     @buildAndConnectChildren()
 
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
 
     @majorDimLine = new RectangleWdgt
     @majorDimLine.minimumExtent = new Point 1,1
 
-    @add @majorDimLine
+    @_addNoSettle @majorDimLine
 
     numberOfTicks = @max - @min + 1
     for i in [0 ... numberOfTicks]
       @ticksRectangles[i] = new RectangleWdgt
       @ticksRectangles[i].minimumExtent = new Point 1,1
-      @add @ticksRectangles[i]
+      @_addNoSettle @ticksRectangles[i]
 
       @labelsTextBoxes[i] = new StringWdgt ""
       @labelsTextBoxes[i].fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
       @labelsTextBoxes[i].fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
-      @add @labelsTextBoxes[i]
+      @_addNoSettle @labelsTextBoxes[i]
 
     @_invalidateLayout()
 

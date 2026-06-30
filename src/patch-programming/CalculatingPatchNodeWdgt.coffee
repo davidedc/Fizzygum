@@ -173,7 +173,11 @@ class CalculatingPatchNodeWdgt extends Widget
       menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another widget\nwhose numerical property\n will be" + " controlled by this one"
 
 
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
       world.alignIDsOfNextWidgetsInSystemTests()
 
@@ -183,10 +187,10 @@ class CalculatingPatchNodeWdgt extends Widget
     @tempPromptEntryField.color = Color.WHITE
     @textWidget = @tempPromptEntryField.textWdgt
     @textWidget.backgroundColor = Color.TRANSPARENT
-    @textWidget.setFontName nil, nil, @textWidget.monoFontStack
+    @textWidget._setFontNameNoSettle nil, nil, @textWidget.monoFontStack
     @textWidget.isEditable = true
     @textWidget.enableSelecting()
-    @add @tempPromptEntryField
+    @_addNoSettle @tempPromptEntryField
 
     @outputTextArea = new SimplePlainTextScrollPanelWdgt "", false, 5
     @outputTextArea.disableDrops()
@@ -194,20 +198,20 @@ class CalculatingPatchNodeWdgt extends Widget
     @outputTextArea.color = Color.WHITE
     @outputTextAreaText = @outputTextArea.textWdgt
     @outputTextAreaText.backgroundColor = Color.TRANSPARENT
-    @outputTextAreaText.setFontName nil, nil, @outputTextAreaText.monoFontStack
+    @outputTextAreaText._setFontNameNoSettle nil, nil, @outputTextAreaText.monoFontStack
     @outputTextAreaText.isEditable = false
-    @add @outputTextArea
+    @_addNoSettle @outputTextArea
 
 
     @formulaTextBoxLabel = new StringWdgt "Formula", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @formulaTextBoxLabel.toggleHeaderLine()
     #@formulaTextBoxLabel.alignCenter()
-    @add @formulaTextBoxLabel
+    @_addNoSettle @formulaTextBoxLabel
 
     @outputTextBoxLabel = new StringWdgt "Output", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @outputTextBoxLabel.toggleHeaderLine()
     #@outputTextBoxLabel.alignCenter()
-    @add @outputTextBoxLabel
+    @_addNoSettle @outputTextBoxLabel
 
 
     @_invalidateLayout()

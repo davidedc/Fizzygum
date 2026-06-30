@@ -31,7 +31,11 @@ class SimpleLinkWdgt extends Widget
   openExternalURL: ->
     window.open @outputTextArea.text
 
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
       world.alignIDsOfNextWidgetsInSystemTests()
 
@@ -41,7 +45,7 @@ class SimpleLinkWdgt extends Widget
     @tempPromptEntryField.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
     @tempPromptEntryField.alignMiddle()
     @tempPromptEntryField.alignRight()
-    @add @tempPromptEntryField
+    @_addNoSettle @tempPromptEntryField
 
     @outputTextArea = new StringWdgt @linkString
     @outputTextArea.isEditable = true
@@ -49,9 +53,9 @@ class SimpleLinkWdgt extends Widget
     @outputTextArea.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
     @outputTextArea.alignMiddle()
     @outputTextArea.alignRight()
-    @add @outputTextArea
+    @_addNoSettle @outputTextArea
     @createLinkIcon()
-    @add @externalLinkIcon
+    @_addNoSettle @externalLinkIcon
 
     @_invalidateLayout()
 

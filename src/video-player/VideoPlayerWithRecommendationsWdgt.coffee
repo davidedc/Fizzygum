@@ -67,7 +67,11 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
       Math.random() - 0.5
 
 
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     # remove all submorhs i.e. panes and buttons
     # THE ONES THAT ARE STILL
     # subwidgets of the inspector. If they
@@ -75,11 +79,11 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     @fullDestroyChildren()
 
     @videoPlayer = new VideoPlayerWdgt
-    @add @videoPlayer
+    @_addNoSettle @videoPlayer
 
     # TODO this should be something better than a RectangleWdgt
     @recommendationsPane = new RectangleWdgt
-    @add @recommendationsPane
+    @_addNoSettle @recommendationsPane
     @recommendationsPane.setColor Color.TRANSPARENT
 
     # TODO this setup (and all the following handlings) of the thumbnails
