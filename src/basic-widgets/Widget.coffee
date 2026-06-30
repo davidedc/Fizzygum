@@ -750,7 +750,7 @@ class Widget extends TreeNode
   _setWidthSizeHeightAccordingly: (newWidth) ->
     @_applyWidthAndNotify newWidth
     if @implementsDeferredLayout()
-      # raw setter: APPLY the re-fit now (synchronous _reLayout), never SCHEDULE it
+      # immediate mutator: APPLY the re-fit now (synchronous _reLayout), never SCHEDULE it
       # (no _invalidateLayout). See task #17 -- low-level mutators must not schedule layout.
       @_reLayout()
     @height()
@@ -1707,7 +1707,7 @@ class Widget extends TreeNode
   # stack/window container. A freefloating child's _invalidateLayout does NOT climb to its container, which
   # is why the container(s) are notified explicitly here. The phase dispatch lives in the shared
   # _reFitContainer (enqueue in a pass -- legal mid-pass, and the LIVE path for this immediate-mutator seam
-  # since raw setters run during layout passes -- else invalidate); this seam only supplies which container(s).
+  # since immediate mutators run during layout passes -- else invalidate); this seam only supplies which container(s).
   _announceGeometryChangeToContainer: ->
     # OVERLAY CHROME (carets, resize handles -- isLayoutInert) is excluded from every container's
     # content-bounds (TreeNode.childrenNotHandlesNorCarets, Widget._reLayout*, WindowWdgt.add), so a raw
@@ -2139,7 +2139,7 @@ class Widget extends TreeNode
     @fullChanged()
 
   # SELF-SETTLE (single-mutation tier). _beforeChildCollapsed now tears down the bar buttons through the
-  # NON-settling core (_destroyNoSettle), and _reactToChildCollapsed re-fits via raw setters + _reFitContainer, so
+  # NON-settling core (_destroyNoSettle), and _reactToChildCollapsed re-fits via immediate mutators + _reFitContainer, so
   # _collapseNoSettle reaches no public setter. Anchored on (@parent ? @) (the container that re-lays-out).
   # THIN wrapper: the already-collapsed guard lives in the core (check-layering [H]), not before the settle.
   collapse: ->
@@ -2163,7 +2163,7 @@ class Widget extends TreeNode
 
   # SELF-SETTLE (single-mutation tier). _beforeChildUnCollapsed re-creates the bar buttons through the
   # NON-settling core (createAndAdd* -> @_addNoSettle; the button constructors add their innards on ORPHANS,
-  # exempt from the flush-throw), and _reactToChildUnCollapsed re-fits via raw setters, so _unCollapseNoSettle reaches
+  # exempt from the flush-throw), and _reactToChildUnCollapsed re-fits via immediate mutators, so _unCollapseNoSettle reaches
   # no public setter. Anchored on @ (the canonical wrap; the global flush re-lays-out the container).
   # THIN wrapper: the guard lives in the core (check-layering [H]), not before the settle.
   unCollapse: ->
@@ -3911,23 +3911,23 @@ class Widget extends TreeNode
     # docs/unify-layout-enqueue-primitives-plan.md §2). So enqueue just me, no climb. Gated on BOTH predicates so no
     # content widget can slip onto the no-climb path -- a content widget's container genuinely needs the climb. (This
     # is the single home of the caret's self-schedule, reached via CaretWdgt._requestScrollFollow -> here; today only
-    # the caret exercises it -- handles are moved by drag machinery through raw setters, never self-invalidate.)
+    # the caret exercises it -- handles are moved by drag machinery through immediate mutators, never self-invalidate.)
     if @isFreeFloating() and @isLayoutInert?()
       @__markForRelayout()
       return
-    # FLOW-RULE INVARIANT (fail fast): the low-level geometry mutators (raw*/silent*/fullRaw*)
+    # FLOW-RULE INVARIANT (fail fast): the immediate geometry mutators (the _apply*/_commit* corners, __commit* leaves, _move*/_set*/_resize* convenience)
     # must not SCHEDULE layout -- they only mutate; scheduling a (re-)layout is the public
     # self-settling tier's job. If an invalidate reaches here while recalculateLayouts is running,
-    # a raw setter is (re-)scheduling layout mid-pass -- the Phase 3b Slice 2 app-freeze (a
+    # an immediate mutator is (re-)scheduling layout mid-pass -- the Phase 3b Slice 2 app-freeze (a
     # container resizing its children climbed an invalidate back into itself, so the until-loop
-    # never converged). The raw setters were migrated to honour this and a build-time lint (rule
+    # never converged). The immediate mutators were migrated to honour this and a build-time lint (rule
     # [E]) enforces it statically; this throw is the RUNTIME tripwire for anything that slips past
     # the lint (e.g. a dynamic/duck-typed call it can't see). The throw is safe to be hard now
     # (task #18): the recalculateLayouts catch is strictly non-flushing and defers recovery outside
     # the flush, so this throw is caught there, reported via the layout-error path (loud
     # console.error + in-world console), and the world keeps running -- never a freeze.
     if world?._recalculatingLayouts
-      throw new Error "FLOWRULE_VIOLATION: _invalidateLayout() during a layout pass by " + (@constructor?.name) + " -- a raw/silent/fullRaw setter must not schedule layout (task #17)"
+      throw new Error "FLOWRULE_VIOLATION: _invalidateLayout() during a layout pass by " + (@constructor?.name) + " -- an immediate geometry mutator (an _apply*/_commit*/__commit* corner or _move*/_set* convenience) must not schedule layout (task #17)"
     # DEBUG (WorldWdgt.auditPaintTimeLayoutScheduling, default off): PAINT must be READ-ONLY. healingRectangles-
     # Phase is true only inside updateBroken's paint pass; reaching here then means a widget SCHEDULED layout while
     # being painted -- crossing the render/layout boundary. Record its ctor for the per-frame paint-schedules log.

@@ -261,7 +261,7 @@ class ScrollPanelWdgt extends PanelWdgt
         @contents._applyMoveToAndNotify @position()
       super aPoint
       @contents._applyExtentAndNotify aPoint
-      # raw setter: APPLY the re-fit NOW -- synchronous, single-container, TERMINAL
+      # immediate mutator: APPLY the re-fit NOW -- synchronous, single-container, TERMINAL
       # (_reLayoutChildren -> _positionAndResizeChildren + _reLayoutScrollbars, neither climbs to my
       # parent). Never SCHEDULE it (no _invalidateLayout): the sanctioned immediate-mutator
       # apply, like TextWdgt._applyExtentAndNotify -> @_reLayoutSelf (task #17). Rule [E] forbids the SCHEDULE.

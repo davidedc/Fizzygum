@@ -318,7 +318,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
       #console.log "move 15"
       @__breakMoveResizeCaches()
       super aPoint
-      # raw setter: APPLY the re-fit NOW -- synchronous, single-container, TERMINAL
+      # immediate mutator: APPLY the re-fit NOW -- synchronous, single-container, TERMINAL
       # (_reLayoutChildren -> _positionAndResizeChildren, which does not climb to my parent).
       # Never SCHEDULE it (no _invalidateLayout): the sanctioned immediate-mutator apply,
       # exactly like TextWdgt._applyExtentAndNotify -> @_reLayoutSelf and _setWidthSizeHeightAccordingly

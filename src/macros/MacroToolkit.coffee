@@ -986,7 +986,7 @@ class MacroToolkit
     # topLeftPoint, and RETURNS the panel. Takes NO screenshots (only a test's own sources are scanned for reference names).
     macroSubroutines.add Macro.fromString """
       buildOverflowingScrollPanelWithText_Macro = (topLeftPoint) ->
-        # Build entirely through the PUBLIC widget API (macros must not use raw/silent/fullRaw/private):
+        # Build entirely through the PUBLIC widget API (macros must not use the private / low-level _-prefixed API):
         # attach first, so the public setExtent/setWidth/moveTo SELF-SETTLE and apply in place.
         panel = new ScrollPanelWdgt
         world.add panel
