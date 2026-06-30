@@ -1,0 +1,233 @@
+# Layering & method-naming convention — the `_`/`__` tier scheme + the geometry-apply 2×2 + the notification grid
+
+**What this is.** The durable reference for Fizzygum's layout/structure method-naming convention: the `_`/`__` tier
+scheme and the two method families that ride it — the **geometry-APPLY 2×2** (how a widget applies geometry to
+*itself*) and the **NOTIFICATION grid** (how widgets tell *each other* a structural/geometric event happened) — plus
+how the convention is enforced **statically** (the `check-layering.js` rules) and **at runtime** (two off-by-default
+audit gates). Both families ride one tier scheme (§1) and one enforcement pattern (§4–§5).
+
+**What this is NOT.** It is not the build-gate *mechanics* — for how the line scanner works, the full rule list
+[A]–[M] (the flow-soundness rules [A]–[H] as well as the naming rules), the markers, and how to extend/debug the gate,
+see **`docs/lint-and-static-checks.md`** (that doc owns the gate; this one owns the convention the naming rules
+enforce). It is not the runtime layout architecture either — for the flush model and the convergence invariant see
+`docs/layout-system-architecture-assessment.md`.
+
+> **The principle.** Tier/privacy is signalled ONE way (underscore depth), each behavioural axis is spelled ONE way,
+> and **the name encodes the behaviour** — so the gate can enforce the lattice by checking callee NAMES, without type
+> inference. `raw`/`silent`/`full` never appear in geometry names (`raw*` survives only as the pixel accessors).
+
+---
+
+## 1. The tier scheme — underscore depth
+
+- **`name`** — public API, user-meaningful. No leaked internals (`full`/`raw`/`silent` never appear).
+- **`_name`** — internal apply / orchestrator: calls other internals, has side effects, may schedule/settle.
+- **`__name`** — **leaf primitive**: a true bottom that **triggers no downstream orchestration** (rule **[I]**). Via
+  `@`-self it must NOT call the re-fit seam (`_reFitContainer*` / the `_announce*` announce-up), a react step
+  (`changed` / `fullChanged` / `_reLayoutSelf` / `_reLayoutChildren` / `_reLayoutScrollbars` / `_reLayout`), a
+  schedule/settle verb (`_invalidateLayout` / `recalculateLayouts` / `_settleLayoutsAfter*`), or any public setter. It
+  MAY read fields, call pure accessors, do Point/Rectangle/Array math, recurse into other `__`, and do cache hygiene +
+  counter bumps. This is a **DENYLIST** of orchestration verbs (deliberately NOT "calls only `__`" — a line scanner
+  can't type the receiver of `aPoint.round()` / `@children.forEach`, and a genuine leaf legitimately reads a
+  polymorphic accessor and clears a cache); it is `@`-self-scoped.
+
+Tier depth strictly INCREASES down a call chain — e.g. `setExtent` (public) → `_settleLayoutsAfter` (`_`) →
+`_applyExtentAndNotify` (`_`) → `__commitExtent` (`__`) — which is the readable-depth goal. **Tier follows behaviour:**
+the tier of a method is determined by what it does (leaf vs orchestrator vs public), never by a `raw`/`silent`/`full`
+fragment.
+
+---
+
+## 2. Family 1 — the geometry-apply 2×2 (NOTIFY × REACT)
+
+### 2.1 Why a 2×2
+An immediate geometry **apply** is exactly **two independent booleans**:
+- **NOTIFY** — fire the up-notify seam (tell the container tracking my geometry to re-fit). Needed when an EXTERNAL
+  agent mutates a freefloating widget; redundant when an arranger places me top-down (it already knows my new geometry).
+- **REACT** — `changed()` repaint + `_reLayoutSelf()` (extent) / children-translate (move).
+
+Two booleans ⇒ a 2×2 lattice of corners. The naming is fully derivable: `commit<Geom>` / `apply<Geom>` is the **REACT**
+axis (commit = no react, apply = react); the `…AndNotify` suffix is the **NOTIFY** axis. **Only the leaf** (no react,
+no notify) is `__`; any corner that REACTS or NOTIFIES is `_`, because the seam and `changed`/`_reLayout*` are
+orchestration a `__` may not trigger — so the notify-only corner is `_commit…AndNotify` (single `_`), not `__`.
+
+### 2.2 The corners
+
+| corner (NOTIFY / REACT) | extent / bounds / width / height | move |
+|---|---|---|
+| **— / —** leaf (`__`) | `__commitExtent` · `__commitWidth` · `__commitHeight` | `__commitMoveBy` · `__commitMoveTo` |
+| **✓ / —** notify-only (`_`) | `_commitExtentAndNotify` · `_commitBoundsAndNotify` | *(n/a — a move always repaints)* |
+| **— / ✓** arrange (`_`) | `_applyExtent` · `_applyBounds` | `_applyMoveBy` · `_applyMoveTo` |
+| **✓ / ✓** full mutator (`_`) | `_applyExtentAndNotify` · `_applyBoundsAndNotify` · `_applyWidthAndNotify` · `_applyHeightAndNotify` | `_applyMoveByAndNotify` · `_applyMoveToAndNotify` |
+| **public** | `setExtent` · `setBounds` · `setWidth` · `setHeight` | `moveTo` · `moveWithin` |
+
+(`moveWithin` is a public CONVENIENCE that delegates to the one-settle `moveTo`, so it is deliberately NOT in the
+gate's `PUBLIC_SETTERS` — listing it would false-trip rule [C] on its `moveWithin → moveTo` call.)
+
+### 2.3 Core vs convenience
+Scheme ② names the four CORNER PRIMITIVES. The many *convenience/composite* movers and setters that merely delegate to
+a corner just drop any prefix and become plain `_<verb>` (no `…AndNotify` needed — they inherit the corner's
+behaviour): the movers `_moveLeftSideTo` · `_moveRightSideTo` · `_moveTopSideTo` · `_moveBottomSideTo` · `_moveToSideOf`
+· `_moveFullCenterTo` · `_moveWithin` · `_moveInDesktopToFractionalPosition` ·
+`_moveInStretchablePanelToFractionalPosition`; the setters/resizer `_setWidthSizeHeightAccordingly` ·
+`_setExtentToFractionalExtentInPaneUserHasSet` · `_resizeToWithoutSpacing`.
+
+### 2.4 The `__` leaf atom set
+Each is a true bottom (satisfies §1 / rule [I]):
+- the geometry leaves `__commitExtent` (reads `@minimumExtent` inline), `__commitWidth` / `__commitHeight`,
+  `__commitMoveBy` / `__commitMoveTo`;
+- the cache atom `__breakMoveResizeCaches` (cache hygiene only — `@invalidateFull{,Clipped}BoundsCache` + the
+  `WorldWdgt` move/resize counter bump; NOT orchestration, and those bounds caches are LIVE — do not delete them);
+- the relayout-enqueue atom `__markForRelayout` (the no-climb enqueue);
+- the structural leaves `__hide`, `__addShadow`, `__add` — the no-side-effect cores their public siblings
+  (`hide` / `addShadow` / `add`) wrap with a `fullChanged()` repaint; the depth chain is e.g. `add → _addNoSettle → __add`.
+
+### 2.5 The settle tier (orthogonal)
+`_settleLayoutsAfter` (single-mutation flush) and `_settleLayoutsAfterBatch` (nested-absorbing flush) are the SETTLE
+axis — the mechanism the `*NoSettle` cores are named against — not geometry-apply primitives, so the 2×2 does not touch
+them. Both stay **`_`** (internal orchestrators: they drive `recalculateLayouts` + the `_recalculatingLayouts`
+re-entrancy token; never `__`, never public). `*NoSettle` marks the *property* "nothing downstream settles" and is
+twin-optional (a structural core can carry it with no public twin, e.g. `_addInPseudoRandomPositionNoSettle`).
+
+### 2.6 The re-fit seam — one announce verb (mechanism unchanged)
+The seam is the highest-frequency notification and was proven irreducible. Its mechanism: **announce-up** → the
+`_reFitContainer(container)` phase-valve → in-pass `__markForRelayout` / off-pass `_invalidateLayout` → container
+`_reLayoutChildren`. The announce-up is one verb family:
+- `_announceGeometryChangeToContainer()` — a widget's geometry changed; re-fit the container.
+- `_announceLayoutPropertyChangeToContainer()` — a layout property (stack align/elasticity/base-width &c.) changed.
+- `_reflowContainedTextThenAnnounce()` — self-reflow contained text, then announce.
+
+The valve `_reFitContainer` and the react-down `_reLayoutChildren` are the apply side (§2.2 / the `_reLayout*`
+layout-method family) — unchanged.
+
+### 2.7 PaintBounds — the repaint dirty-region vocabulary
+The broken-rectangles repaint loop uses a **`PaintBounds`** vocabulary (`paintBoundsMaybeChanged` /
+`hasMaybeChangedPaintBounds` / the `Full` variants / `widgetsWithMaybeChangedPaintBounds`). This keeps three formerly
+collision-named "dirty" subsystems self-evident:
+- **PaintBounds** — repaint dirty-regions (this vocabulary);
+- **Layout** — the layout-invalidation queue (`layoutIsValid` / `widgetsThatMaybeChangedLayout`) — distinct, left as-is;
+- **GeometryChange** — the re-fit seam announce names (§2.6).
+
+---
+
+## 3. Family 2 — the notification grid `(perspective × phase)` over canonical events
+
+How widgets tell *each other* that a structural/geometric EVENT happened (drag/drop/grab/pickup, add/remove/close/
+destroy/collapse/uncollapse, z-order, copy, the geometry seam). The behaviour is uniform — a single **dispatcher owns
+exactly one `_settleLayoutsAfter`**, the callbacks being settle-neutral cores inside it (the gestures hand-roll the
+settle in `ActivePointerWdgt.grab`/`.drop`; the structural ops wrap it in a public `verb()` over a `_verbNoSettle()`
+core). So this family is pure naming + a settle-discipline (rule [J]).
+
+### 3.1 The decomposition
+Every notification is `(event × perspective × phase)`:
+- **EVENT** — `Added` · `Removed` · `Grabbed` · `PickedUp` · `Dropped` · `Closed` · `Destroyed` · `Collapsed` ·
+  `UnCollapsed` · `MovedToFront` · `Copied` · `GeometryChange`. (An event may be qualified — e.g.
+  `AddedInScrollPanel`, `DroppedIntoFolder`.)
+- **PERSPECTIVE** — **self** (the widget the event happens to) · **container** (a parent, about its child) · a
+  **third party** (a holder window, about a widget it hosts).
+- **PHASE** — **gate** (pre-event predicate) · **pre** (before-hook) · **post** (after-hook).
+
+### 3.2 The grid
+`(perspective)(phase)` over a canonical PascalCase `<Event>`, fully derivable:
+
+| | SELF (`Being`) | CONTAINER (`Child`) |
+|---|---|---|
+| **gate** — pure bool, **public**, positive | `wantsToBe<Event>ed()` | `wants<Event>OfChild(child)` |
+| **pre-hook** — `_`, settle-neutral | `_beforeBeing<Event>ed(counterparty)` | `_beforeChild<Event>ed(child)` |
+| **post-hook** — `_`, settle-neutral | `_reactToBeing<Event>ed(counterparty)` | `_reactToChild<Event>ed(child)` |
+
+Plus the **third-perspective** hooks `_reactToHolderWindow<Event>(…)` (a widget reacting to its holder window's event).
+
+Rules:
+- **Tier = `_`** for every hook (an internal override protocol); **gates are public + pure + positive** (queried by
+  the dispatcher, no side effects).
+- **No `NoSettle` on a callback** — it is a settle-neutral core by definition; the DISPATCHER owns the one settle
+  (rule [J]). (`NoSettle` stays reserved for the public-setter cores of §2.5.)
+- **Argument convention:** a self-hook receives the COUNTERPARTY (the other container); a container-hook receives the
+  CHILD.
+- **Optional dispatch** (`?` soak) is the norm — sparse overrides; most events have no base def. A hook with no
+  implementor is dead weight (fill the ⌀ gaps on demand, not pre-emptively).
+- **Pairing is visible:** `_reactToBeingDropped` ↔ `_reactToChildDropped`.
+
+### 3.3 Boundaries
+- **grab ≠ pickUp.** The grab/pickUp family is EXCLUSIVELY the **float-drag** case: the widget DETACHES off its parent
+  into the hand (gated by `detachesWhenDragged()`). A **non-float drag** (sliders, resize handles) leaves the widget IN
+  PLACE and uses the SEPARATE `nonFloatDragging` / `endOfNonFloatDrag` family, firing NONE of these notifications — so
+  dragging a slider is NOT a pickup. `grab` (mouse) and `pickUp` (programmatic) are two entry points to "detach into
+  hand" whose hook sets OVERLAP, not coincide, so they stay DISTINCT events (merging them is a behaviour change, not a
+  rename).
+- **Capability predicates stay as-is** — `imposesRatioConstraintOnDroppedChildren` /
+  `releasesRatioConstraintOnGrabbedChildren`, `isDesktopShortcut` / `isShortcutTo` are capability *queries*, not phase
+  hooks, so they are outside the grid.
+
+---
+
+## 4. Static enforcement — `check-layering.js`
+
+The convention is unusually enforceable because the name encodes the behaviour, so most checks reduce to
+NAME-CONSISTENCY of the call graph (no type inference). These are the **naming** rules; the full rule list, the tier
+predicates, the markers, and the gate mechanics live in `docs/lint-and-static-checks.md`.
+
+| Rule | Checks |
+|---|---|
+| **[I]** `__` leaf no-orchestration (HARD-FAIL) | inside a `__` method, an `@`-self call to the re-fit seam (`_reFitContainer*`/`_announce*`), a react step (`_reLayout*`/`changed`/`fullChanged`), a schedule/settle (`_invalidateLayout`/`recalculateLayouts`/`_settleLayoutsAfter*`), or a public setter → FAIL. A DENYLIST (§1), `@`-self-scoped; the runtime audit (§5) covers dynamic dispatch. |
+| **[J]** callback settle-neutrality (HARD-FAIL) | a `_reactTo*`/`_before*` hook calling `_settleLayoutsAfter` → FAIL. The dispatcher owns the one settle. |
+| **[K]** apply-2×2 name-consistency (HARD-FAIL) | the two statically-sound NEGATIVES: a non-`AndNotify` `_apply*` arrange corner must not fire the seam nor call an `*AndNotify`; a `_commit*AndNotify` notify-only corner must not react (`changed`/`_reLayout*`). The POSITIVE "every `*AndNotify` reaches the seam" is delegated to the runtime audit (§5) — a static scanner can't follow `super`/dynamic dispatch, and an override may legitimately not notify (e.g. `ClippingAtRectangularBoundsMixin._applyMoveByAndNotify`). |
+| **[L]** callback-shape (HARD-FAIL) | at each def, a `_reactTo*`/`_before*` name MUST match `_(reactTo\|before)(Being\|Child\|HolderWindow)<Event>` and carry no `NoSettle`; the legacy fragments (`childX` / `justBeen` / `iHaveBeen` / `aboutTo` / `prepareTo`) are banned outright. |
+| **[M]** retired-fragment ban (HARD-FAIL) | a method DEF named with a retired geometry/structural prefix — `raw[A-Z]…` / `^silent[A-Z]` / `^fullRaw` → FAIL (allowlist: the raw-PIXEL accessors `rawPixelInfo` / `rawPixelHash` / `rawRGBA`). `full[A-Z]` is NOT banned — `full*` remains a legitimate SUBTREE-AWARE vocabulary (`fullChanged` / `fullBounds` / `fullPaintInto` / …). |
+
+The convention is also why the flow rules work: because every immediate geometry mutator is recognizably low-level
+(`_`/`__`-prefixed or `*NoSettle`) and named in the apply 2×2, rules **[A]** (low-level must not reach the public
+self-flushing layer) and **[E]** (an immediate mutator must MUTATE, never SCHEDULE) have no blind spot. See
+`docs/lint-and-static-checks.md` §2/§4 for `isLowLevel` / `isImmediateMutator` and rules [A]–[H].
+
+**DOC-only (un-mechanizable — stated, not enforced):** that public names are genuinely "user-meaningful"; whether a
+method is genuinely a leaf vs should be split (rule [I] enforces the call-graph property, not design intent); the
+core-vs-convenience choice; which ⌀ notification gaps are worth filling.
+
+---
+
+## 5. Runtime enforcement — the two audit gates
+
+The static name-consistency catches mislabels a scanner can see; RUNTIME verifies the name matches what the body
+ACTUALLY does (the ground truth — indirect/dynamic-dispatch paths the scanner can't follow). Each audit mirrors the
+established pattern (`auditUndeclaredEndOfCycle` / `auditPaintTimeLayoutScheduling`): an off-by-default `WorldWdgt` flag
+that a gate prelude flips on, instrumentation installed once at boot behind the flag (a wrap, not a hot-path branch),
+run over the WHOLE suite by a standalone `run-*-gate.sh` — siblings of `run-capstone-gate.sh` /
+`run-paint-readonly-gate.sh`, and wired into `fg gauntlet`.
+
+### 5.1 `auditTierAndApplyNaming` — the apply 2×2 (runtime twin of [I]/[K])
+`Fizzygum-tests/scripts/tier-naming-audit/` (prelude + `run-tier-naming-gate.sh`). It wraps every apply-2×2 corner +
+the seam (`_announce*`) + the react steps across all classes, and:
+- **HARD-fails the unconditional NEGATIVES** (sound): a `__commit*` leaf that fired the seam or a react step in its own
+  scope (not a true bottom); an arrange `_apply*` that fired the seam (it must react only). These catch a
+  dynamic-dispatch override the scanner can't follow; this is what the self-test exercises.
+- **Reports the [K] POSITIVE as INFORMATIONAL** (does NOT fail): how many `*AndNotify` corners were observed reaching
+  the seam (transitively). A runtime observation CANNOT soundly distinguish a mislabeled corner from one whose
+  seam-firing path simply was not exercised (a move corner only announces when the move changes the container's
+  layout) — so "never reached" is a REVIEW HINT, not a failure.
+
+### 5.2 `auditNotificationSettleNeutrality` — the callbacks (runtime twin of [J])
+`Fizzygum-tests/scripts/notification-settle-audit/` (prelude + `run-notification-settle-gate.sh`). It wraps every
+`_reactTo*`/`_before*` callback + the settle tiers and HARD-fails a callback that opens a settle of its own across the
+suite. It catches an INDIRECT leak the static [J] cannot see — e.g. a callback → a chrome-button CONSTRUCTOR's public
+`@add` → `_settleLayoutsAfter` (the fix: a constructor builds an orphan and must reach `@_addNoSettle`, never the
+self-settling `@add`).
+
+Both gates are self-tested (plant a violation, confirm the gate throws) and run green; both require their prelude to
+have installed on every test (a coverage gap fails the gate, so a silent miss can't mask a violation).
+
+---
+
+## 6. Scope & non-goals
+- **SAFE under method renames:** the dependency-finder (scans `extends`/`@augmentWith`/`new`, not method names) and
+  serialization (`DeepCopierMixin` copies data, not method names) are unaffected.
+- **Naming + tier-reclassification only — no behaviour change.** Pixels stay identical except inspector member lists
+  (method names show in the Object Inspector, so a rename of an inspected class's own method forces a benign reference
+  recapture).
+- **grab/pickUp stay DISTINCT** (§3.3) — a true unification is a separate, behaviour-verified change.
+- **NON-GOAL:** the non-float-drag family (`nonFloatDragging` / `endOfNonFloatDrag`) — already consistent, a separate
+  concern, left alone.
+- **Out of scope:** the repaint-cache data-FIELD naming (a separate data-field convention, distinct from these METHOD
+  families); and the layout-invalidation queue's `Layout` vocabulary (`layoutIsValid` / `widgetsThatMaybeChangedLayout`)
+  — already distinct from PaintBounds, a future `needsLayout`/`hasDirtyDescendant` rename is a separate item.

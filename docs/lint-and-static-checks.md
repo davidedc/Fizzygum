@@ -23,7 +23,7 @@ which now points *here* for current state and keeps only the execution / rejecte
 ## 1. The runtime invariant the layering gate protects (summary)
 
 **THE INVARIANT: one flush per OUTERMOST public mutation; low-level code never settles.** A *public* geometry/structure
-mutator (`setExtent`/`setBounds`/`setWidth`/`setHeight`/`fullMoveTo`, the text setters, `add`/`destroy`/`close`/
+mutator (`setExtent`/`setBounds`/`setWidth`/`setHeight`/`moveTo`, the text setters, `add`/`destroy`/`close`/
 `fullDestroy`/`collapse`/`unCollapse`/…) leaves the world consistent on return by self-settling through the single
 settle tier `_settleLayoutsAfter` (`Widget.coffee`), which sets `world._inLayoutMutation`, runs the mutation's
 non-settling core, then flushes `recalculateLayouts()` **exactly once**. Nested public calls must NOT each open their
@@ -37,7 +37,7 @@ setters, which schedule nothing. (Depth: `docs/layout-system-architecture-assess
 | Runtime throw | Where (grep the symbol; lines drift) | Fires when | Static twin |
 |---|---|---|---|
 | One-flush re-entrancy | `Widget.coffee` `_settleLayoutsAfter` (~:813) | a public geometry setter is reached on an *attached* widget while `_inLayoutMutation`/`_recalculatingLayouts` is already true | rules **[A]/[G]** (low-level code must not reach the public/wrapper layer) |
-| `FLOWRULE_VIOLATION` | `Widget.coffee` `_invalidateLayout` (~:3848) | a raw/silent/fullRaw setter schedules layout during a pass | rule **[E]** |
+| `FLOWRULE_VIOLATION` | `Widget.coffee` `_invalidateLayout` (~:3848) | an immediate-mutator corner/convenience (`_apply*`/`_commit*`/`_move*`) schedules layout during a pass | rule **[E]** |
 
 The gates "cannot be spoofed" (they read all shipped source, not a runtime token) but only see what a NAME scanner can;
 the throws see the real dynamic receiver but only on tested paths. They are complementary.
@@ -51,17 +51,23 @@ The layout-method layering is **formally defined**, once, in `buildSystem/check-
 ```js
 // LOW-LEVEL (rule [A]/[G] subject): must not reach UP into the public self-flushing layer.
 const isLowLevel = (name) =>
-  /^raw[A-Z]/.test(name) || /^silent/.test(name) ||   // immediate mutators
-  /^_/.test(name) ||                                   // any leading underscore (incl. __)
-  /NoSettle$/.test(name) ||                            // the *NoSettle cores
-  /Layout$/.test(name);                                // _reLayout & the layout-pass family
-// the strict INNER subset (rule [E] subject): may MUTATE, never SCHEDULE.
-const isImmediateMutator = (name) => /^(raw[A-Z]|silent|fullRaw)/.test(name);
+  /^raw[A-Z]/.test(name) ||   // raw* is now ONLY the pixel accessors (rawPixelInfo/rawPixelHash/rawRGBA)
+  /^_/.test(name) ||          // any leading underscore — the _ internal + __ leaf private tiers
+  /NoSettle$/.test(name);     // the *NoSettle cores
+// the strict INNER subset (rule [E] subject): may MUTATE geometry, never SCHEDULE.
+const isImmediateMutator = (name) =>
+  /^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)AndNotify$/.test(name) ||   // ✓/✓ apply corners
+  /^_commit(Extent|Bounds)AndNotify$/.test(name) ||                             // notify-only corners
+  /^_move(LeftSideTo|RightSideTo|TopSideTo|BottomSideTo|ToSideOf|FullCenterTo|Within|InDesktopToFractionalPosition|InStretchablePanelToFractionalPosition)$/.test(name) ||  // convenience movers
+  /^_(setWidthSizeHeightAccordingly|setExtentToFractionalExtentInPaneUserHasSet|resizeToWithoutSpacing)$/.test(name);  // convenience setters/resizer
 ```
 
-`isLowLevel ⊃ isImmediateMutator`. **Prose must POINT at these predicates, never re-define the tiers** — any doc that
-says "low-level"/"immediate mutator" means *exactly whatever these match*. (Known wart: the `/Layout$/` arm is now
-vestigial — see §7 Boundaries.)
+`isLowLevel ⊃ isImmediateMutator` (every immediate mutator is `_`-prefixed). **Prose must POINT at these predicates,
+never re-define the tiers** — any doc that says "low-level"/"immediate mutator" means *exactly whatever these match*.
+The names come from the geometry-apply **2×2** of the naming convention (`__commit*` leaf / `_apply*` arrange /
+`_apply*AndNotify` full mutator / `_commit*AndNotify` notify-only); the old `raw`/`silent`/`fullRaw` prefixes were
+retired (a build-time fragment-ban, rule **[M]**, keeps them out) and the `__` leaf tier has its own no-orchestration
+rule **[I]**. Full convention + rationale: `docs/layering-naming-convention.md`.
 
 ---
 
@@ -75,7 +81,7 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
 | Gate | File | Wired (`build_it_please.sh`) | Enforces | Ratchet mechanism |
 |---|---|---|---|---|
 | syntax | `buildSystem/check-coffee-syntax.js` | ~:257 | CoffeeScript *parse* errors, compiled the **fragmented** way the browser does | — |
-| **layering** | **`buildSystem/check-layering.js`** | **~:279** | **flow soundness — rules [A]–[G] (§4)** | per-method `# layout-apply-sanctioned` [F] / `# nosettle-sanctioned` [G] markers |
+| **layering** | **`buildSystem/check-layering.js`** | **~:279** | **flow soundness + the naming convention — rules [A]–[M] (§4)** | per-method `# layout-apply-sanctioned` [F] / `# nosettle-sanctioned` [G] / `# early-return-sanctioned` [H] markers |
 | dead-method | `buildSystem/check-dead-methods.js` | ~:297 | a method defined in src but referenced nowhere (src + harness + macro `.js`) | allowlist `dead-method-allowlist.txt`; fails only on a NEW dead method |
 | stinks | `buildSystem/check-stinks.js` | ~:315 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
 | thin-wrap | `buildSystem/check-thin-wraps.js` | ~:333 | a public method owning a `_<name>NoSettle` twin is the ONE canonical mechanical wrap | per-method `# thin-wrap-exempt: <reason>`; SKIPS a twinless `*NoSettle` |
@@ -107,25 +113,47 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
   does no work of its own. Complements `check-layering` (which enforces the CORE reaches no public setter). A twinless
   `_<name>NoSettle` (e.g. `_addInPseudoRandomPositionNoSettle`) is SKIPPED — no public twin to constrain.
 
+**Two RUNTIME naming-audit gates (suite-run, NOT build-time).** The naming convention also carries two off-by-default
+runtime audits that run over the WHOLE SystemTest suite (not `build_it_please.sh`) — each an injected prelude that wraps
+prototypes at boot behind a `WorldWdgt` flag, with a standalone `run-*-gate.sh`, siblings of the end-of-cycle /
+paint-readonly gates and wired into `fg gauntlet`:
+- **tier-naming** (`Fizzygum-tests/scripts/tier-naming-audit/`, flag `auditTierAndApplyNaming`) — the dynamic twin of
+  rules [I]/[K]: HARD-fails a `__commit*` leaf or an arrange `_apply*` that fires the seam/react at runtime; reports the
+  `*AndNotify`→seam coverage as INFORMATIONAL (a runtime observation can't soundly distinguish a mislabel from an
+  unexercised seam path).
+- **notification-settle** (`Fizzygum-tests/scripts/notification-settle-audit/`, flag
+  `auditNotificationSettleNeutrality`) — the dynamic twin of rule [J]: HARD-fails a `_reactTo*`/`_before*` callback that
+  opens a settle (it caught an INDIRECT leak the static [J] cannot see — a callback → constructor → public `@add`).
+
+They verify the *behaviour* the names promise (the ground truth the static scanner can't follow through dynamic
+dispatch). Full description: `docs/layering-naming-convention.md`.
+
 ---
 
-## 4. `check-layering.js` rules [A]–[G]
+## 4. `check-layering.js` rules [A]–[M]
 
 The scanner strips `#` comments and string literals (carrying multi-line state) so a call-regex never matches a name in
-a throw-message or comment, groups lines into 2-space-indent methods (`METHOD_HEADER`), and keys call detection off a
-leading `@`/`.` + the lowercase public name (so `@setExtent`/`.fullMoveTo` match while `@rawSetExtent`/`@_setTextNoSettle`
-do NOT — the `raw`/`silent`/`_` sits between the `@`/`.` and the verb). This co-design with the **naming convention** is
-why the lint works at all (§6).
+a throw-message or comment, groups lines into 2-space-indent methods (`METHOD_HEADER`, now mixin-DSL aware so a method
+defined inside a mixin's `onceAddedClassProperties` block is attributed too), and keys call detection off a leading
+`@`/`.` + the lowercase public name (so `@setExtent`/`.moveTo` match while `@_applyExtentAndNotify`/`@_setTextNoSettle`
+do NOT — the leading `_` sits between the `@`/`.` and the verb). This co-design with the **naming convention** is why the
+lint works at all (§6).
 
 | Rule | Subject | Forbids | Why | Runtime twin | Marker |
 |---|---|---|---|---|---|
-| **[A]** | `isLowLevel` method | calling a public geometry setter (`setExtent`/`fullMoveTo`/`setBounds`/`setWidth`/`setHeight`), a single-settling text setter (`setText`/`setFontSize`/`setFontName`/`toggleShowBlanks`/`toggleWeight`/`toggleItalic`/`toggleIsPassword`), or `recalculateLayouts` | low-level code mutates immediately and must never reach UP into the self-flushing layer | the one-flush throw | — (fix the code: use the core/raw setter) |
+| **[A]** | `isLowLevel` method | calling a public geometry setter (`setExtent`/`moveTo`/`setBounds`/`setWidth`/`setHeight`), a single-settling text setter (`setText`/`setFontSize`/`setFontName`/`toggleShowBlanks`/`toggleWeight`/`toggleItalic`/`toggleIsPassword`), or `recalculateLayouts` | low-level code mutates immediately and must never reach UP into the self-flushing layer | the one-flush throw | — (fix the code: use the `_<name>NoSettle` core / an apply corner) |
 | **[B]** | any method not in `{doOneCycle, _settleLayoutsAfter, _settleLayoutsAfterBatch}` | calling `recalculateLayouts()` | only the frame and the settle tiers may drive a flush | — | — |
 | **[C]** | a public geometry setter | calling another public geometry setter | would flush more than once per logical mutation | — | — |
-| **[D]** | a SystemTest macro (`Fizzygum-tests/tests/**/*_automationCommands.js`) | calling a `_private` method | macros must drive only the public surface (the gate that would have caught the original 16-macro mess) | — | — (planned raw/silent tightening: NOT-YET-RIPE, see §7) |
-| **[E]** | `isImmediateMutator` (`raw*`/`silent*`/`fullRaw*`) | calling `_invalidateLayout` | an immediate mutator may MUTATE geometry, never SCHEDULE a layout — scheduling during a pass re-dirties a container mid-pass and the convergence loop never terminates (the Phase-3b app-freeze) | `FLOWRULE_VIOLATION` (~:3848) | — |
+| **[D]** | a SystemTest macro (`Fizzygum-tests/tests/**/*_automationCommands.js`) + the `Macro.fromString` heredocs in `src/macros/MacroToolkit.coffee` | calling a `_private` method or a `raw*` (pixel) accessor | macros must drive only the public surface (the gate that would have caught the original 16-macro mess) | — | — (HARD ban; the construction measure-and-size carve-out is now CLOSED — attach the widget first, then public setters, see §7) |
+| **[E]** | `isImmediateMutator` (the `_apply*`/`_commit*` corners + the `_move*`/`_set*`/`_resize*` convenience) | calling `_invalidateLayout` | an immediate mutator may MUTATE geometry, never SCHEDULE a layout — scheduling during a pass re-dirties a container mid-pass and the convergence loop never terminates (the Phase-3b app-freeze) | `FLOWRULE_VIOLATION` (~:3848) | — |
 | **[F]** | a method that is NEITHER low-level NOR an immediate mutator (handler / property setter / menu action / gesture / constructor) | calling a container-refit apply (`_reLayoutChildren`/`_positionAndResizeChildren`/`_reLayoutScrollbars`/`_reLayout`) synchronously OFF-settle | such a handler must DEFER (record intent via `_invalidateLayout`; let the cycle apply it), unless the apply is genuinely AT a settle point / a documented determinism-exempt family | — | **`# layout-apply-sanctioned: <why>`** |
 | **[G]** | `isLowLevel` method (not a settle tier) | calling a STRUCTURAL self-settling wrapper — discovered structurally as the `_settleLayoutsAfter` callers (`destroy`/`close`/`fullDestroy`/`createReference*`/`grab`/`drop`/`slideBackTo`/`setLabel`/`buildAndConnectChildren`/`resetWorld`/`sizeToTextAndDisableFitting`) — OR the unambiguous self-add `@add` | the structural-wrapper extension of [A]: each wrapper self-settles via `_settleLayoutsAfter`, so reaching one from a core/raw/pass re-enters the flush; low-level code must call the `_<name>NoSettle` core | the one-flush throw | **`# nosettle-sanctioned: <why>`** |
+| **[H]** *(WARNING, non-fatal)* | a method that self-settles via `@_settleLayoutsAfter` | a GUARD `return` / `return if\|unless …` BEFORE the settle | a public settle-wrapper should be THIN; that early-return guard belongs INSIDE the `_<name>NoSettle` core (else the "already in this state" skip is split across wrapper + core) | — | **`# early-return-sanctioned: <why>`** |
+| **[I]** | a `__` leaf method (HARD-FAIL) | `@`-self-calling the re-fit seam (`_reFitContainer*`/`_announce*`), a react step (`_reLayout*`/`changed`/`fullChanged`), a schedule/settle (`_invalidateLayout`/`recalculateLayouts`/`_settleLayoutsAfter*`), or a public setter | a `__` leaf is a true bottom — it triggers NO orchestration (the lowest tier of the naming convention, §1) | tier-naming runtime audit | — (DENYLIST; `@`-self-scoped) |
+| **[J]** | a notification callback (`_reactTo*`/`_before*`) | calling `_settleLayoutsAfter` | a callback is a settle-neutral core; the gesture/structural DISPATCHER owns the one settle | notification-settle runtime audit | — |
+| **[K]** | a 2×2 apply CORNER (`_apply<Geom>` / `_apply<Geom>AndNotify` / `_commit<Geom>AndNotify`) | a non-`AndNotify` `_apply*` firing the seam or calling an `*AndNotify`; a `_commit*AndNotify` reacting (`changed`/`_reLayout*`) | a corner's NAME must match its NOTIFY×REACT behaviour (the two statically-sound negatives; the positive "*AndNotify reaches the seam" is delegated to the runtime audit — static can't follow `super`/dynamic dispatch) | tier-naming runtime audit (the positive) | — |
+| **[L]** | a notification callback DEF (`_reactTo*`/`_before*`) | a name not matching `_(reactTo\|before)(Being\|Child\|HolderWindow)<Event>`, a `NoSettle` suffix, or a legacy fragment (`childX`/`justBeen`/`iHaveBeen`/`aboutTo`/`prepareTo`) | callbacks follow the derivable (perspective × phase) scheme; the legacy spellings were retired | — | — |
+| **[M]** | any method DEF | a retired geometry/structural naming fragment as the name — `raw[A-Z]…` / `^silent[A-Z]` / `^fullRaw` (allowlist: the raw-PIXEL accessors `rawPixelInfo`/`rawPixelHash`/`rawRGBA`) | the `raw*`/`silent*`/`fullRaw*` geometry+structural prefixes were eliminated (§2 of the convention); lock them out — note `full[A-Z]` stays legitimate (`fullBounds`/`fullPaintInto`/…) | — | — |
 
 **[G] specifics.** The wrapper set is **discovered**, never hand-listed: `discoverSettlingWrappers` collects every method
 whose body calls `@_settleLayoutsAfter` (the SINGLE-mutation tier only — a `_settleLayoutsAfterBatch` wrapper ABSORBS
@@ -136,7 +164,7 @@ nested settles and is safe), minus the geometry/text setters ([A] reports those,
 
 ---
 
-## 5. The three in-code markers + the two ratchet idioms
+## 5. The four in-code markers + the two ratchet idioms
 
 **Markers — "the justification lives AT the method, no central allowlist."** Each exempts a single method/line via a
 comment, with a *required reason*:
@@ -145,6 +173,7 @@ comment, with a *required reason*:
 |---|---|---|
 | `# layout-apply-sanctioned: <why>` | `check-layering` [F] | a non-mutator method consciously applying a container refit off-settle (an in-pass deferred-seam arm, or a determinism-exempt family: scroll-input / collapse / construction) |
 | `# nosettle-sanctioned: <why>` | `check-layering` [G] | a low-level method consciously reaching a settling wrapper / `@add` (e.g. a method mis-tagged low-level, or a genuinely safe outside-any-pass case) |
+| `# early-return-sanctioned: <why>` | `check-layering` [H] *(warning)* | a public settle-wrapper that consciously keeps a guard `return` BEFORE its `_settleLayoutsAfter` (suppresses the non-fatal [H] warning) |
 | `# thin-wrap-exempt: <reason>` | `check-thin-wraps` | a public method that owns a `_<name>NoSettle` twin but legitimately cannot be the canonical mechanical wrap |
 
 A marker is detected anywhere in the method's body (it resets at each method header). The reason is mandatory — a bare
@@ -155,25 +184,32 @@ tighten incrementally):
 - **baseline / allowlist** (`check-dead-methods`, `check-stinks`): record the current count/set, fail on *regression*,
   drive the baseline down over time. To drive down: fix occurrences, then tighten the inline `baseline` (stinks) or
   remove from `dead-method-allowlist.txt` (dead-method) to lock the gain. Baseline 0 / empty allowlist = a hard rule.
-- **per-method marker** (`# layout-apply-sanctioned`, `# nosettle-sanctioned`, `# thin-wrap-exempt`): the justification
+- **per-method marker** (`# layout-apply-sanctioned`, `# nosettle-sanctioned`, `# early-return-sanctioned`, `# thin-wrap-exempt`): the justification
   lives at the method, no central list; a NEW unmarked violation fails the build. Best when the exception is a property
   of one method, not a count.
 
 ---
 
-## 6. The `NoSettle` naming convention, co-designed with the lints
+## 6. The tier / naming convention, co-designed with the lints
 
 `isLowLevel`/`isImmediateMutator` classify by NAME, and the call-detection regexes anchor on `[@.]` + the word-prefix —
-so the **naming convention and the lints are co-designed**:
-- **raw / silent / fullRaw** setters — the lowest tier: mutate geometry IMMEDIATELY, schedule nothing. The word sits
-  between the `@`/`.` and the verb, so `@rawSetExtent` does NOT match the public-setter regex `[@.]\s*setExtent`.
+so the **naming convention and the lints are co-designed** (the lint works at all only because the name encodes the
+behaviour). This section covers just *why the names and the regexes fit together*; the full two-family convention (the
+geometry-apply **2×2** + the notification **(perspective × phase)** grid) and its two runtime audits live in
+`docs/layering-naming-convention.md`.
+- **The geometry-apply tiers are all `_`/`__`-prefixed** — the leaf `__commit<Geom>`, the arrange `_apply<Geom>`, the
+  full mutator `_apply<Geom>AndNotify`, the notify-only `_commit<Geom>AndNotify`, and the `_move*`/`_set*`/`_resize*`
+  convenience. The leading underscore sits between the `@`/`.` and the verb, so `@_applyExtentAndNotify` does NOT match
+  the public-setter regex `[@.]\s*setExtent`. (`raw*` survives ONLY as the pixel accessors `rawPixelInfo`/`rawPixelHash`/
+  `rawRGBA`; rule **[M]** bans any new `raw*`/`silent*`/`fullRaw*` geometry/structural name.)
 - **`_<name>NoSettle` cores** — do the mutation + invalidate, never settle ("cores call cores"). The leading `_` makes
   `@_setTextNoSettle` invisible to the `[@.]\s*setText\b` text-setter regex.
 - **`NoSettle` suffix = a "non-settling region" signal, TWIN-OPTIONAL** (owner-decided 2026-06-25) — it marks the
-  *property* (nothing downstream settles), not "the core of a public/core pair". So a gesture/lifecycle hook that runs
-  inside a caller-supplied settle carries it with no public twin (`_reactToGrabOfNoSettle`/`_reactToDropOfNoSettle`/
-  `_justDroppedNoSettle`, `_addInPseudoRandomPositionNoSettle`); the thin-wrap gate SKIPS a twinless `*NoSettle`.
-  Memory: `fizzygum-layering-naming-tiers`.
+  *property* (nothing downstream settles), not "the core of a public/core pair". So a structural core can carry it with
+  no public twin (`_addInPseudoRandomPositionNoSettle`); the thin-wrap gate SKIPS a twinless `*NoSettle`. (The
+  notification callbacks that once mis-carried `NoSettle` — `_reactToGrabOfNoSettle` &c. — DROPPED it in the naming
+  campaign: a callback is a settle-neutral core by rule [J], so the suffix said nothing.) Memory:
+  `fizzygum-layering-naming-tiers`.
 
 ---
 
@@ -186,11 +222,11 @@ What the layering gate deliberately does NOT cover, and why — so a maintainer 
   Widget structural add from a Point add on an expression without type inference (29 of 35 census hits were `Point#add`).
   `@add` is unambiguous (self == Widget.add) and IS rule [G]'s `SELF_ADD_CALL`. The runtime throw backstops the member
   form and construction-time `add()` on an orphan.
-- **`collapse`/`unCollapse` excluded** (in `WRAPPER_EXCLUDED`). They appear in layout passes today
-  (`WindowWdgt._positionAndResizeChildren`'s editButton/internalExternalSwitchButton; `HorizontalMenuPanelWdgt._reLayoutSelf`)
-  — the "SwitchButton-collapse" item OWNED by the end-of-cycle-flush drawdown campaign's OPEN re-probe set. [G] defers
-  there rather than rubber-stamp a marker. **When that convert lands** (cores created, call-sites routed), remove
-  `collapse`/`unCollapse` from `WRAPPER_EXCLUDED` so [G] covers them.
+- **`collapse`/`unCollapse` are now COVERED by [G]** (they were once in `WRAPPER_EXCLUDED`). They appeared in layout
+  passes (`WindowWdgt._positionAndResizeChildren`'s editButton/internalExternalSwitchButton;
+  `HorizontalMenuPanelWdgt._reLayoutSelf`); the end-of-cycle-flush drawdown convert routed those call-sites to the
+  idempotent `_collapseNoSettle`/`_unCollapseNoSettle` cores, so they were removed from `WRAPPER_EXCLUDED` and [G] now
+  guards them like any other wrapper. `WRAPPER_EXCLUDED` now holds only `add` (the `Point#add`-ambiguous member form, above).
 - **The TRANSITIVE closure of [G] was prototyped and REJECTED as intractable — DO NOT re-attempt.** A name-based
   backward-reachability fixpoint ("a low-level method must not REACH a settling method by any path") balloons to
   ~720–870 names / ~500–710 false hits: `constructor → buildAndConnectChildren → add` is a universal hub reached by
@@ -198,10 +234,13 @@ What the layering gate deliberately does NOT cover, and why — so a maintainer 
   set — so it flags the very "cores call cores" pattern it should bless. Name-based reachability cannot model the orphan
   guard (a receiver's attached-ness is dynamic). The DIRECT rule [G] is the maximal SOUND static check; the throw
   backstops the transitive/dynamic cases. Evidence: `docs/lint-ratchet-static-checks-plan.md` (EXECUTED).
-- **Rule [D]'s raw/silent/fullRaw tightening is NOT-YET-RIPE.** Forbidding macros from the immediate geometry API was
-  assessed: the only remaining macro raw-uses are 6 `silentRawSetWidth/Height` *measure-and-size read-backs* on orphans
-  (set width → measure the wrap AT that width → set height) with no behaviour-preserving public alternative. Re-ripens
-  only once a public "size to wrapped text at width" construction helper exists.
+- **(DONE) Rule [D] is now a HARD ban with no carve-out.** Forbidding macros from the private/immediate geometry API
+  was once held back by the construction "measure-and-size" read-back (size a soft-wrapping text to its wrapped HEIGHT
+  at a chosen WIDTH on an orphan). That carve-out is now CLOSED: the fix is to ATTACH the widget first (to its
+  destination or the desktop) and use the PUBLIC setters — an attached `setWidth` self-settles, so the text wraps in
+  place and its height is then readable. `MACRO_FORBIDDEN_CALL` accordingly bans every `_private` call and every `raw*`
+  (now pixel-only) accessor in a macro, with no sanctioned escape; the retired `silent*`/`fullRaw*` arms were dropped
+  with the §2 renames.
 - **(DONE 2026-06-25) `isLowLevel`'s `/Layout$/` arm was VESTIGIAL — removed.** After the layout-method-family rename
   every real layout pass is `_reLayout*`-prefixed (already caught by `/^_/`), so `/Layout$/` only ever matched non-pass
   methods whose name ends in "Layout": `implementsDeferredLayout` (×3, capability queries), the `*HorizLayout` menu
@@ -219,7 +258,7 @@ What the layering gate deliberately does NOT cover, and why — so a maintainer 
 ## 8. How-to
 
 **Add a new `check-layering` rule.** (1) Add the call-detecting regex/predicate near the other constants, comment the
-rule (subject / forbidden / why / runtime twin / marker) the way [A]–[G] are. (2) Add the check inside `checkFile`'s
+rule (subject / forbidden / why / runtime twin / marker) the way [A]–[M] are. (2) Add the check inside `checkFile`'s
 per-method loop, under the right tier guard (`isLowLevel(method)` / `isImmediateMutator(method)` / the non-mutator
 branch). (3) If it needs an escape hatch, add a per-method marker (mirror the `methodNoSettleMarked` logic) rather than a
 central allowlist. (4) Update the summary line + the failure footer to name the new letter. (5) **Land it green** — see
@@ -260,9 +299,12 @@ source to satisfy a new rule.
 
 ## Appendix — file:line anchors (grep the symbol; numbers drift)
 
-- `buildSystem/check-layering.js` — `PUBLIC_SETTERS`/`TEXT_SETTERS`/`RECALC_WHITELIST` (~:50–64); `isLowLevel` (~:66),
-  `isImmediateMutator` (~:110); `SETTLE_CALL`/`WRAPPER_EXCLUDED`/`SELF_ADD_CALL`/`NOSETTLE_MARKER` (the [G] constants);
-  `stripLine` / `METHOD_HEADER`; `discoverSettlingWrappers`; `checkFile` (rules [A]–[G]); `checkMacroFile` (rule [D]).
+- `buildSystem/check-layering.js` — `PUBLIC_SETTERS`/`TEXT_SETTERS`/`RECALC_WHITELIST`; `isLowLevel` /
+  `isImmediateMutator` (the tier predicates, §2); `SETTLE_CALL`/`WRAPPER_EXCLUDED`/`SELF_ADD_CALL`/`NOSETTLE_MARKER` (the
+  [G] constants); `LEAF_FORBIDDEN` ([I]); `APPLY_CORNER`/`K_SEAM_CALL`/`K_REACT_CALL`/`K_ANDNOTIFY` ([K]);
+  `CALLBACK_PREFIX`/`CALLBACK_SHAPE`/`LEGACY_CALLBACK_FRAGMENT` ([L]); `FRAGMENT_BANNED`/`FRAGMENT_ALLOWLIST` ([M]);
+  `stripLine` / `METHOD_HEADER` / `methodBoundary` (mixin-DSL aware); `discoverSettlingWrappers`; `checkFile` (rules
+  [A]–[M]); `checkMacroFile` (rule [D]).
 - `buildSystem/check-thin-wraps.js` — `HEADER`/`GUARD`/`EXEMPT`; twinless skip (`if (!byName.has(base)) continue`).
 - `buildSystem/check-dead-methods.js` + `buildSystem/dead-method-allowlist.txt`.
 - `buildSystem/check-stinks.js` — the inline `baseline` per stink.
@@ -270,9 +312,11 @@ source to satisfy a new rule.
 - `Fizzygum-tests/scripts/check-tests-syntax.js`, `Fizzygum-tests/scripts/check-refs.js`.
 - `build_it_please.sh` — gate wiring (~:255–370), each `if ! $noSyntaxCheck` + `$?`-gated `exit 1`.
 - `src/basic-widgets/Widget.coffee` — `_settleLayoutsAfter` (the one-flush throw ~:813); `_invalidateLayout`
-  (`FLOWRULE_VIOLATION` ~:3848); the raw/silent setters + the `_<name>NoSettle` cores.
+  (`FLOWRULE_VIOLATION` ~:3848); the immediate-mutator apply corners (`_apply*`/`_commit*`) + the `_<name>NoSettle` cores.
 
 ## See also
+- `docs/layering-naming-convention.md` — the full naming convention (the geometry-apply 2×2 + the notification
+  (perspective × phase) grid) and its two runtime audit gates; rules [I]/[K]/[L]/[M] (and the [M] fragment-ban) enforce it.
 - `docs/layout-system-architecture-assessment.md` — the runtime flush model + the invariant in depth (the *why*).
 - `docs/lint-ratchet-static-checks-plan.md` — the arc that built rule [G] (STATUS: EXECUTED); the rejected-transitive record.
 - `docs/end-of-cycle-flush-drawdown-plan.md` / `end-of-cycle-flush-inventory.md` — the campaign that owns the

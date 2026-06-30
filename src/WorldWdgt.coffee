@@ -117,7 +117,7 @@ class WorldWdgt extends PanelWdgt
   auditTierAndApplyNaming: false
 
   # auditNotificationSettleNeutrality (DEBUG, default off): the RUNTIME twin of the static [J] settle-neutral-callback
-  # ban (layering/naming plan §9.2/§9.6). Asserts NO nested recalculateLayouts fires INSIDE a _reactTo*/_before*
+  # ban (layering/naming convention §3/§4). Asserts NO nested recalculateLayouts fires INSIDE a _reactTo*/_before*
   # callback (the dynamic twin of [J], catching dynamic dispatch), and that exactly one settle brackets each
   # gesture/structural dispatch batch. Driven by notification-settle-audit/run-notification-settle-gate.sh. Off => zero overhead.
   auditNotificationSettleNeutrality: false

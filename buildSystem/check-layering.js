@@ -211,14 +211,14 @@ const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*)\b/;  // renamed 
 // the orphan guard (a receiver's attached-ness is dynamic), so this DIRECT rule is the maximal SOUND static
 // check; the runtime throw stays the backstop for the transitive/dynamic cases (and for `add`).
 const SETTLE_CALL = /[@.]\s*_settleLayoutsAfter\b/;          // SINGLE-mutation tier only (Batch absorbs nested settles)
-const CALLBACK_HOOK = /^_(reactTo|before)[A-Z]/;            // [J] a notification hook -- settle-neutral by convention (layering/naming plan §9.2)
+const CALLBACK_HOOK = /^_(reactTo|before)[A-Z]/;            // [J] a notification hook -- settle-neutral by convention (layering/naming convention §3)
 // [I] the orchestration verbs a __ LEAF must not @-self-call: the re-fit seam (_reFitContainer* valve + _announce* announce-up), a
 // react step (_reLayout\w* = _reLayoutSelf/_reLayoutChildren*/_reLayoutScrollbars/_reLayout; changed/fullChanged),
 // a schedule/settle (_invalidateLayout/recalculateLayouts/_settleLayoutsAfter*), or a public setter. Scoped to
 // @-self (a .-receiver can't be typed -- like SELF_ADD_CALL); the runtime audit covers dynamic dispatch.
 const LEAF_FORBIDDEN = /@\s*(_reFitContainer\w*|_announce\w*|_reLayout\w*|_invalidateLayout|recalculateLayouts|_settleLayoutsAfter\w*|fullChanged|changed|setExtent|setBounds|setWidth|setHeight|moveTo)\b/;  // _reFitContainer* = the phase valve; _announce* = the announce-up seam (§9.4, ex _reFitContainerAfterRawGeometryChange / _refreshScrollPanelWdgtOrVerticalStackIfIamInIt). public setters mirror PUBLIC_SETTERS (moveTo, not the retired fullMoveTo — §6-1)
 
-// [K] the 2x2 apply-family NAME-CONSISTENCY corners (layering/naming plan §3b/§5b). A corner's NAME must match its
+// [K] the 2x2 apply-family NAME-CONSISTENCY corners (layering/naming convention §2/§4). A corner's NAME must match its
 // NOTIFY×REACT behaviour. We enforce the two STATICALLY-SOUND negatives (in checkFile below); the POSITIVE "every
 // *AndNotify REACHES the re-fit seam" is delegated to the RUNTIME auditTierAndApplyNaming -- a static name-scanner
 // can't follow `super` / dynamic dispatch (most corner overrides reach the seam via `super`), and an override may
@@ -241,7 +241,7 @@ const EARLY_RETURN_MARKER = 'early-return-sanctioned';      // the [H] per-metho
 // _<name>NoSettle core, not before a public wrapper's _settleLayoutsAfter.
 const GUARD_RETURN = /\breturn\b\s*(if\b|unless\b|$)/;
 
-// [L] the notification-callback NAME convention (layering/naming plan §9.2/§9.6), checked at the method DEF.
+// [L] the notification-callback NAME convention (layering/naming convention §3/§4), checked at the method DEF.
 // A callback uses the fully-derivable (perspective × phase) scheme _(reactTo|before)(Being|Child|HolderWindow)<Event>
 // (SELF = Being, CONTAINER = Child, third-party = HolderWindow; <Event> a PascalCase verb, optionally qualified
 // e.g. _reactToChildAddedInScrollPanel / _reactToBeingDroppedIntoFolder). Two static name checks:
@@ -257,7 +257,7 @@ const CALLBACK_PREFIX = /^_(reactTo|before)/;
 const CALLBACK_SHAPE = /^_(reactTo|before)(Being|Child|HolderWindow)[A-Z]\w*$/;
 const LEGACY_CALLBACK_FRAGMENT = /^(child[A-Z]|justBeen|iHaveBeen|aboutTo|prepareTo)/;
 
-// [M] terminology fragment-ban (layering/naming plan §5b): the retired GEOMETRY/STRUCTURAL prefixes must not
+// [M] terminology fragment-ban (layering/naming convention §4): the retired GEOMETRY/STRUCTURAL prefixes must not
 // reappear as method names. The geometry raw* setters/movers (rawSet*/fullRawMove*) were eliminated in §6, and the
 // structural silent* setters (silentHide/silentAdd/silentAddShadow) in §3d -- this locks them out for good. A small
 // allowlist holds the legit raw-PIXEL accessors (raw = raw pixel DATA, not raw geometry). NB `full[A-Z]` is
@@ -396,12 +396,12 @@ function checkFile(file, violations, wrapperCall, warnings) {
           // [L] callback NAME convention (checked once, at the def): derivable shape + legacy-fragment ban (see consts above).
           if (b.method) {
             if (CALLBACK_PREFIX.test(b.method)) {
-              if (/NoSettle$/.test(b.method)) violations.push(`[L] callback ${b.method}() carries NoSettle — a notification callback is a settle-neutral core; the dispatcher owns the one settle, so drop the suffix (layering/naming plan §9.2)  — ${rel}:${n + 1}`);
-              else if (!CALLBACK_SHAPE.test(b.method)) violations.push(`[L] malformed callback ${b.method}() — must match _(reactTo|before)(Being|Child|HolderWindow)<Event> (layering/naming plan §9.2)  — ${rel}:${n + 1}`);
+              if (/NoSettle$/.test(b.method)) violations.push(`[L] callback ${b.method}() carries NoSettle — a notification callback is a settle-neutral core; the dispatcher owns the one settle, so drop the suffix (layering/naming convention §3)  — ${rel}:${n + 1}`);
+              else if (!CALLBACK_SHAPE.test(b.method)) violations.push(`[L] malformed callback ${b.method}() — must match _(reactTo|before)(Being|Child|HolderWindow)<Event> (layering/naming convention §3)  — ${rel}:${n + 1}`);
             }
-            if (LEGACY_CALLBACK_FRAGMENT.test(b.method)) violations.push(`[L] legacy callback fragment ${b.method}() — use the _(reactTo|before)(Being|Child|HolderWindow)<Event> scheme (layering/naming plan §9.2/§9.6)  — ${rel}:${n + 1}`);
+            if (LEGACY_CALLBACK_FRAGMENT.test(b.method)) violations.push(`[L] legacy callback fragment ${b.method}() — use the _(reactTo|before)(Being|Child|HolderWindow)<Event> scheme (layering/naming convention §3/§4)  — ${rel}:${n + 1}`);
             // [M] retired geometry/structural naming fragments (raw* / silent* / fullRaw — see consts above; raw-pixel accessors allowlisted).
-            if (FRAGMENT_BANNED.test(b.method) && !FRAGMENT_ALLOWLIST.has(b.method)) violations.push(`[M] retired naming fragment ${b.method}() — the raw*/silent*/fullRaw geometry+structural prefixes were eliminated (§6/§3d); use the _apply*/_commit*/__ tier names (raw PIXEL data uses the rawPixel*/rawRGBA accessors). (layering/naming plan §5b)  — ${rel}:${n + 1}`);
+            if (FRAGMENT_BANNED.test(b.method) && !FRAGMENT_ALLOWLIST.has(b.method)) violations.push(`[M] retired naming fragment ${b.method}() — the raw*/silent*/fullRaw geometry+structural prefixes were eliminated (§6/§3d); use the _apply*/_commit*/__ tier names (raw PIXEL data uses the rawPixel*/rawRGBA accessors). (layering/naming convention §4)  — ${rel}:${n + 1}`);
           }
           continue;           // the header line itself carries no call to check
         }
@@ -451,29 +451,29 @@ function checkFile(file, violations, wrapperCall, warnings) {
     if (isImmediateMutator(method) && invalidate) {
       violations.push(`[E] immediate mutator ${method}() calls _invalidateLayout() — an apply/commit corner or convenience mover must only MUTATE geometry, never SCHEDULE layout (task #17)  — ${at}`);
     }
-    // [J] settle-neutral callbacks (layering/naming plan §9.2/§9.6): a notification HOOK (_reactTo* / _before*)
+    // [J] settle-neutral callbacks (layering/naming convention §3/§4): a notification HOOK (_reactTo* / _before*)
     // must NOT open a settle -- the gesture/structural DISPATCHER owns the single _settleLayoutsAfter; the hook is
     // a settle-neutral core. (recalculateLayouts inside a hook is already [A]/[B] -- hooks are _-prefixed = low-level.)
     if (CALLBACK_HOOK.test(method) && SETTLE_CALL.test(code)) {
-      violations.push(`[J] notification hook ${method}() calls _settleLayoutsAfter — a callback is a settle-neutral core; the dispatcher owns the one settle (layering/naming plan §9.2)  — ${at}`);
+      violations.push(`[J] notification hook ${method}() calls _settleLayoutsAfter — a callback is a settle-neutral core; the dispatcher owns the one settle (layering/naming convention §3)  — ${at}`);
     }
-    // [I] the __ LEAF (HARD-FAIL, layering/naming plan §3a/§5): a __ method is a true bottom -- via @-self it must
+    // [I] the __ LEAF (HARD-FAIL, layering/naming convention §1/§4): a __ method is a true bottom -- via @-self it must
     // trigger NO orchestration (re-fit seam / react step / schedule-settle / public setter). Scoped to @-self (a
     // .-receiver can't be typed; the runtime audit -- a later batch -- covers dynamic dispatch and __-getter purity).
     // recalc/_invalidateLayout overlap [A]/[E] harmlessly.
     if (/^__/.test(method)) {
       const leaf = code.match(LEAF_FORBIDDEN);
-      if (leaf) violations.push(`[I] __ leaf ${method}() @-calls ${leaf[1]}() — a __ leaf must trigger no orchestration (seam/react/schedule/settle/public setter); keep it a pure bottom (layering/naming plan §3a)  — ${at}`);
+      if (leaf) violations.push(`[I] __ leaf ${method}() @-calls ${leaf[1]}() — a __ leaf must trigger no orchestration (seam/react/schedule/settle/public setter); keep it a pure bottom (layering/naming convention §1)  — ${at}`);
     }
     // [K] 2x2 apply-family name-consistency (the two statically-sound negatives; positive reaches-seam is the runtime audit's job, see the defs).
     if (APPLY_CORNER.test(method)) {
       if (!/AndNotify$/.test(method)) {
         // arrange corner (_apply* w/o AndNotify) reacts only — must NOT notify (fire the seam) nor call an *AndNotify mutator
-        if (K_SEAM_CALL.test(code)) violations.push(`[K] arrange corner ${method}() fires the re-fit seam — a non-AndNotify corner reacts only; the notifying twin is the *AndNotify corner (layering/naming plan §3b)  — ${at}`);
-        else { const kc = code.match(K_ANDNOTIFY); if (kc) violations.push(`[K] arrange corner ${method}() calls notifying ${kc[0].replace(/^[@.]\s*/, '')}() — a non-AndNotify corner must not notify (layering/naming plan §3b)  — ${at}`); }
+        if (K_SEAM_CALL.test(code)) violations.push(`[K] arrange corner ${method}() fires the re-fit seam — a non-AndNotify corner reacts only; the notifying twin is the *AndNotify corner (layering/naming convention §2)  — ${at}`);
+        else { const kc = code.match(K_ANDNOTIFY); if (kc) violations.push(`[K] arrange corner ${method}() calls notifying ${kc[0].replace(/^[@.]\s*/, '')}() — a non-AndNotify corner must not notify (layering/naming convention §2)  — ${at}`); }
       } else if (/^_commit/.test(method) && K_REACT_CALL.test(code)) {
         // notify-only corner (_commit*AndNotify) commits + fires the seam — must NOT react
-        violations.push(`[K] notify-only corner ${method}() reacts via ${code.match(K_REACT_CALL)[1]}() — _commit*AndNotify only commits + notifies; the reacting full mutator is _apply*AndNotify (layering/naming plan §3b)  — ${at}`);
+        violations.push(`[K] notify-only corner ${method}() reacts via ${code.match(K_REACT_CALL)[1]}() — _commit*AndNotify only commits + notifies; the reacting full mutator is _apply*AndNotify (layering/naming convention §2)  — ${at}`);
       }
     }
     if (recalc && !RECALC_WHITELIST.has(method)) {
@@ -587,11 +587,11 @@ function main() {
     console.error('E: immediate geometry mutators (apply/commit corners + convenience movers) must not call _invalidateLayout) and docs/deferred-layout-16-macro-breakages.md (A/B/C).');
     console.error('F: a non-mutator handler must DEFER a container apply (_invalidateLayout) or mark it `# layout-apply-sanctioned: <why>` — see docs/deferred-layout-OVERVIEW.md §11.');
     console.error('G: low-level code must reach the _<name>NoSettle core, not the public self-settling wrapper (destroy/close/fullDestroy/createReference/...) — or mark `# nosettle-sanctioned: <why>`.');
-    console.error('I: a __ leaf must trigger no orchestration (re-fit seam / react / schedule-settle / public setter) — keep it a pure bottom (layering/naming plan §3a).');
-    console.error('J: a notification hook (_reactTo*/_before*) must not open a settle — the gesture/structural dispatcher owns the one _settleLayoutsAfter (layering/naming plan §9.2).');
-    console.error('K: a 2x2 apply corner must match its name — a non-AndNotify _apply*/_commit* must not fire the seam nor call an *AndNotify; a _commit*AndNotify must not react (layering/naming plan §3b).');
-    console.error('L: a notification callback must be named _(reactTo|before)(Being|Child|HolderWindow)<Event> with no NoSettle; the legacy fragments (childX/justBeen/iHaveBeen/aboutTo/prepareTo) are retired (layering/naming plan §9.2/§9.6).');
-    console.error('M: the retired raw*/silent*/fullRaw geometry+structural naming fragments must not reappear as method names (use _apply*/_commit*/__ tiers; raw PIXEL data uses rawPixel*/rawRGBA) (layering/naming plan §5b).');
+    console.error('I: a __ leaf must trigger no orchestration (re-fit seam / react / schedule-settle / public setter) — keep it a pure bottom (layering/naming convention §1).');
+    console.error('J: a notification hook (_reactTo*/_before*) must not open a settle — the gesture/structural dispatcher owns the one _settleLayoutsAfter (layering/naming convention §3).');
+    console.error('K: a 2x2 apply corner must match its name — a non-AndNotify _apply*/_commit* must not fire the seam nor call an *AndNotify; a _commit*AndNotify must not react (layering/naming convention §2).');
+    console.error('L: a notification callback must be named _(reactTo|before)(Being|Child|HolderWindow)<Event> with no NoSettle; the legacy fragments (childX/justBeen/iHaveBeen/aboutTo/prepareTo) are retired (layering/naming convention §3/§4).');
+    console.error('M: the retired raw*/silent*/fullRaw geometry+structural naming fragments must not reappear as method names (use _apply*/_commit*/__ tiers; raw PIXEL data uses rawPixel*/rawRGBA) (layering/naming convention §4).');
     process.exit(1);
   }
   console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);

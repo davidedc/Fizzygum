@@ -598,7 +598,7 @@ assertion a recapture after a regression silently stores two different hashes an
   for a widget that does not want to be dropped (`:248`) — so an EXTERNAL window dropped over a container lands on the desktop (NOT
   nested) while an INTERNAL window nests into the morph under the point (e.g. a PanelWdgt, `_acceptsDrops:true`). Carry on the
   hand with `win.pickUp()` + a no-button `@syntheticEventsMouseMove_InputEvents`, drop with `@syntheticEventsMouseClick_InputEvents()`.
-  Prove nesting with `panel.fullMoveTo …` (only the nested internal window travels).
+  Prove nesting with `panel.moveTo …` (only the nested internal window travels).
 - **Internal window dropped INTO a window → becomes its content** (`macroInternalWindowDroppedIntoWindowFits` /
   `macroResizeWindowContainingInternalWindow`): drop an internal window over an EMPTY external window — `WindowWdgt.add`
   (`:179`) re-parents it `ATTACHEDAS_WINDOW_CONTENT`, `adjustContentsBounds` (`:384`) COUPLES their bounds (the free-floating
@@ -958,7 +958,7 @@ assertion a recapture after a regression silently stores two different hashes an
   children ONLY where the PANEL's own bounds intersect the probe. So a child whose raw bounds stick out past the panel
   edge (clipped there) is UNREACHABLE as a candidate when the probe sits over the clipped-away part — the exclusion is a
   logical-AND of two raw-bounds intersections (`panel∩probe` AND `child∩probe`), NOT a per-pixel hit-test. Build `new
-  PanelWdgt`, `panel.add rect`, `rect.fullMoveTo` to STRADDLE the right edge; drop a probe ENTIRELY right of the panel
+  PanelWdgt`, `panel.add rect`, `rect.moveTo` to STRADDLE the right edge; drop a probe ENTIRELY right of the panel
   (over the rect's clipped-away raw bounds): `clickMenuItemOfWidget… "attach..."` → `@assertTopMenuItemCount 0` ("no
   morphs to attach to"); a slider's "set target" → `@assertTopMenuItemStrings ["a World ➜"]`. KEY: the probe must
   overlap ONLY the clipped-away part — if it also overlaps the panel, the recursion runs and the rect reappears (leave a
@@ -1273,7 +1273,7 @@ assertion a recapture after a regression silently stores two different hashes an
   slider (visible, not just an internal back-edge). KEY: both controllers are world children positioned to OVERLAP, so each "set
   target" menu lists exactly ONE candidate of the wanted class (one text / one slider) and is unambiguous — **so NOTHING is
   repositioned to wire, and nothing jumps.** The minimal form of the cycle. A naive 3-node `slider→text→slider` ring tempts you to
-  `fullMoveTo`-PARK a slider mid-wiring to disambiguate its `text→slider2` leg (the text hub overlaps BOTH sliders) — which reads on
+  `moveTo`-PARK a slider mid-wiring to disambiguate its `text→slider2` leg (the text hub overlaps BOTH sliders) — which reads on
   screen as the slider "jumping around for no reason" (an API reposition = a teleport, the anti-pattern flagged for dropped morphs);
   DON'T. Either use this 2-node cycle, or wire the full 3-node cycle WITHOUT moving anything by selecting the ambiguous leg BY MEANING
   (see `macroSliderTextSliderPatchCycle` below). Drive: `@dragSliderButtonToFraction_InputEvents slider, [0.5,fy]` (slider→text), then edit the text via
@@ -1300,7 +1300,7 @@ assertion a recapture after a regression silently stores two different hashes an
 
 - **Proportional stack cells** (`macroLayoutBasicProportions`): make a holder a horizontal stack —
   `holder.add cell, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED` per cell + `cell.setMinAndMaxBoundsAndSpreadability(min,
-  desired, k*LayoutSpec.SPREADABILITY_MEDIUM)` (k = its share of spare space). Position with `fullMoveTo` BEFORE `world.add`, then
+  desired, k*LayoutSpec.SPREADABILITY_MEDIUM)` (k = its share of spare space). Position with `moveTo` BEFORE `world.add`, then
   `new HandleWdgt holder` (self-installs at the bottom-right; lone holder ⇒ lone handle). Resize via
   `@dragResizeMoveHandleTo_InputEvents` and the cells redistribute by spreadability. Distilled from the first holder of
   `Widget.setupTestScreen1`.
