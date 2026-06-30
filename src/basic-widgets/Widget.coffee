@@ -285,22 +285,6 @@ class Widget extends TreeNode
       #console.log "got name: " + @constructor.name + " (class name)"
       return (@constructor.name.replace "Wdgt", "") + " (class name)"
 
-  identifyViaTextLabel: ->
-    myTextDescription = @getTextDescription()
-    allCandidateWidgetsWithSameTextDescription =
-      world.allChildrenTopToBottomSuchThat (m) ->
-        m.getTextDescription() == myTextDescription
-
-    position = allCandidateWidgetsWithSameTextDescription.indexOf @
-
-    theLength = allCandidateWidgetsWithSameTextDescription.length
-    #console.log [myTextDescription, position, theLength]
-    return [myTextDescription, position, theLength]
-
-  # »>> this part is excluded from the fizzygum homepage build
-  setTextDescription: (@textDescription) ->
-  # this part is excluded from the fizzygum homepage build <<«
-
   uniqueIDString: ->
     @widgetClassString() + "#" + @instanceNumericID
 
@@ -711,15 +695,6 @@ class Widget extends TreeNode
   bottomTight: ->
     @bounds.bottom() - @paddingBottom
   
-  bottomCenterTight: ->
-    @bounds.bottomCenter().subtract new Point 0, @paddingBottom
-  
-  bottomLeftTight: ->
-    @bounds.bottomLeft().add new Point @paddingLeft, -@paddingBottom
-  
-  bottomRightTight: ->
-    @bounds.bottomRight().subtract new Point @paddingRight, @paddingBottom
-  
   boundingBoxTight: ->
     new Rectangle @leftTight(), @topTight(), @rightTight(), @bottomTight()
 
@@ -971,41 +946,6 @@ class Widget extends TreeNode
   
   height: ->
     @bounds.height()
-
-  # »>> this part is excluded from the fizzygum homepage build
-  # unused code
-  cornersTight: ->
-    [@topLeftTight(), @bottomLeftTight(), @bottomRightTight(), @topRightTight()]
-  # this part is excluded from the fizzygum homepage build <<«
-  
-  leftCenterTight: ->
-    @bounds.leftCenter().add new Point @paddingLeft, 0
-  
-  rightCenterTight: ->
-    @bounds.rightCenter().subtract new Point @paddingRight, 0
-  
-  topCenterTight: ->
-    @bounds.topCenter().add new Point 0, @paddingTop
-  
-  # same as position()
-  topLeftTight: ->
-    @bounds.origin.add new Point @paddingLeft, @paddingTop
-  
-  topRightTight: ->
-    @bounds.topRight.add new Point -@paddingRight, @paddingTop
-  
-  positionTight: ->
-    @bounds.origin.add new Point @paddingLeft, @paddingTop
-  
-  extentTight: ->
-    @bounds.extent().subtract new Point - (@paddingLeft + @paddingRight), - (@paddingTop + @paddingBottom)
-  
-  widthTight: ->
-    @bounds.width() - (@paddingLeft + @paddingRight)
-  
-  heightTight: ->
-    @bounds.height() - (@paddingTop + @paddingBottom)
-
 
   # used for example:
   # - to determine which widgets you can attach a widget to
@@ -2331,18 +2271,6 @@ class Widget extends TreeNode
     img
 
   # »>> this part is excluded from the fizzygum homepage build
-  # unused code
-  fullImageNoShadow: ->
-    boundsWithNoShadow = @fullBounds()
-    return @fullImage boundsWithNoShadow, true
-
-  # unused code
-  fullImageData: ->
-    # returns a string like "data:image/png;base64,iVBORw0KGgoAA..."
-    # note that "image/png" below could be omitted as it's
-    # the default, but leaving it here for clarity.
-    @fullImage().toDataURL "image/png"
-
   # the way we take a picture here is different
   # than the way we usually take a picture.
   # Usually we ask the widget and subwidgets to
@@ -2384,9 +2312,6 @@ class Widget extends TreeNode
   fullImageAsItAppearsOnScreen: ->
     return @fullRenderCanvasAsItAppearsOnScreen().toDataURL "image/png"
 
-  # unused code
-  fullImageHashCode: ->
-    return @fullImageData().hashCode()
   # this part is excluded from the fizzygum homepage build <<«
   
   # shadow is added to a widget by
@@ -3059,15 +2984,6 @@ class Widget extends TreeNode
   grabbedWidgetSwitcheroo: ->
     @
   
-  # »>> this part is excluded from the fizzygum homepage build
-  # note how this checks whether
-  # at *any point* up in the
-  # widgets hierarchy there is an ActivePointerWdgt
-  # unused code
-  isPickedUp: ->
-    @parentThatIsA(ActivePointerWdgt)?
-  # this part is excluded from the fizzygum homepage build <<«
-  
   situation: ->
     # answer a dictionary specifying where I am right now, so
     # I can slide back to it if I'm dropped somewhere else
@@ -3077,35 +2993,6 @@ class Widget extends TreeNode
         position: @position().subtract @parent.position()
       )
     nil
-  
-  # »>> this part is excluded from the fizzygum homepage build
-  # unused code
-  slideBackTo: (situation, steps = 5) ->
-    pos = situation.origin.position().add situation.position
-    xStep = -(@left() - pos.x) / steps
-    yStep = -(@top() - pos.y) / steps
-    stepCount = 0
-    oldStep = @step
-    oldFps = @fps
-    @fps = 0
-    world.steppingWdgts.add @
-    @step = =>
-      @__commitMoveBy new Point xStep, yStep
-      @fullChanged()
-      stepCount += 1
-      if stepCount is steps
-        situation.origin.add @
-        # _reactToChildDropped is cores-only now (non-settling), so it needs an enclosing settle -- the live
-        # drop settles it in ActivePointerWdgt.drop; this (dead / homepage-excluded slide-back) path must
-        # too. add above already self-settled the re-home.
-        if situation.origin._reactToChildDropped
-          situation.origin._settleLayoutsAfter => situation.origin._reactToChildDropped @
-        @step = oldStep
-        @fps = oldFps
-        if @step == noOperation or !@step?
-          world.steppingWdgts.delete @
-  # this part is excluded from the fizzygum homepage build <<«
-  
   
   # Widget utilities ////////////////////////////////////////////////////////
   
@@ -3237,7 +3124,6 @@ class Widget extends TreeNode
     #show the normal menu in case there is text selected,
     #otherwise show the spacial multiplexing list
     #if !@world().caret
-    #  if @world().hand.allWdgtsAtPointer().length > 2
     #    return @buildHierarchyMenu()
 
     widgetToAskMenuTo = @
@@ -3279,8 +3165,6 @@ class Widget extends TreeNode
     #   1) all widgets "pierced through" by the pointer
     #   2) all widgets parents of the topmost widget under the pointer
     # 2 is what is used in Cuis
-    # commented-out addendum for the implementation of 1):
-    # parents = @world().hand.allWdgtsAtPointer().reverse()
     parents = @allParentsTopToBottom()
     parents.forEach (each) ->
       # only add widgets that have a menu, and

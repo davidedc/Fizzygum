@@ -16,7 +16,6 @@ class VideoPlayerWdgt extends Widget
     world.keyboardEventsReceivers.add @
 
   processKeyDown: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
-    # @inspectKeyEvent event
 
     # see:
     #   https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values

@@ -64,12 +64,6 @@ class TreeNode
       childrenLength = "-"
     "a TreeNode" + "[" + childrenLength + "]"
 
-  # »>> this part is excluded from the fizzygum homepage build
-  # currently unused
-  childrenTopToBottom: ->
-    @children.shallowCopy().reverse()
-  # this part is excluded from the fizzygum homepage build <<«
-  
   # TreeNode accessing:
   addChild: (node, position = nil) ->
     WorldWdgt.numberOfAddsAndRemoves++
@@ -81,13 +75,6 @@ class TreeNode
       @children.splice position, 0, node
     node.parent = @
   
-  # »>> this part is excluded from the fizzygum homepage build
-  # currently unused
-  addChildFirst: (node) ->
-    @addChild node, 0
-  # this part is excluded from the fizzygum homepage build <<«
-
-
   isLastChild: ->
     if !@parent?
       return false
@@ -258,13 +245,6 @@ class TreeNode
       result = result.concat child.allChildrenBottomToTop()
     result
 
-  
-  # »>> this part is excluded from the fizzygum homepage build
-  # currently unused
-  allChildrenTopToBottom: ->
-    return allChildrenTopToBottomSuchThat -> true
-  # this part is excluded from the fizzygum homepage build <<«
-
   # the easiest way here would be to just return
   #   @allChildrenBottomToTop().shallowCopy().reverse()
   # but that's slower.
@@ -420,13 +400,6 @@ class TreeNode
     siblings.remove @
     return siblings
 
-  # currently unused
-  firstSiblingsSuchThat: (predicate) ->
-    for eachSibling in @parent.children
-      if predicate.call nil, eachSibling
-        return eachSibling
-    return nil
-
   amITheFirstSibling: ->
     if @parent.children[0] == @
       return true
@@ -458,23 +431,6 @@ class TreeNode
       return true
     return false
   # this part is excluded from the fizzygum homepage build <<«
-
-  # find how many siblings before me
-  # satisfy a property
-  # This is used when figuring out
-  # how many buttons before a particular button
-  # are labeled in the same way,
-  # in the test system.
-  # (so that we can say: automatically
-  # click on the nth button labelled "X")
-  howManySiblingsBeforeMeSuchThat: (predicate) ->
-    theCount = 0
-    for eachSibling in @parent.children
-      if eachSibling == @
-        return theCount
-      if predicate.call nil, eachSibling
-        theCount++
-    return theCount
 
   lastSiblingBeforeMeSuchThat: (predicate) ->
     theCount = 0

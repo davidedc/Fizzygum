@@ -242,20 +242,6 @@ class Color
       @_b * frac1 + otherColor._b * frac2
       @_a * frac1 + otherColor._a * frac2)
   
-  # currently unused
-  darker: (percent) ->
-    # return an rgb-interpolated darker copy of me, ignore alpha
-    fract = 0.8333
-    fract = (100 - percent) / 100  if percent
-    @mixed fract, @constructor.BLACK
-  
-  # currently unused
-  lighter: (percent) ->
-    # return an rgb-interpolated lighter copy of me, ignore alpha
-    fract = 0.8333
-    fract = (100 - percent) / 100  if percent
-    @mixed fract, @constructor.WHITE
-  
   # this part is excluded from the fizzygum homepage build <<«
 
   getEmptyObjectOfSameTypeAsThisOne: (doSerialize)->

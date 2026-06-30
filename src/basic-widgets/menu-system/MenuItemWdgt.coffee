@@ -148,9 +148,3 @@ class MenuItemWdgt extends LabelButtonWdgt
   isListItem: ->
     return @parent.isListContents  if @parent
     false
-
-  # »>> this part is excluded from the fizzygum homepage build
-  isSelectedListItem: ->
-    return @state is @STATE_PRESSED if @isListItem()
-    false
-  # this part is excluded from the fizzygum homepage build <<«

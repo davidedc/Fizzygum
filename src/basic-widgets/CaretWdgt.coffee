@@ -59,7 +59,6 @@ class CaretWdgt extends BlinkerWdgt
   # CaretWdgt event processing:
 
   processKeyDown: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
-    # @inspectKeyEvent event
 
     # see:
     #   https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values
@@ -120,7 +119,6 @@ class CaretWdgt extends BlinkerWdgt
           if !key? then debugger
           @insert key, shiftKey
 
-    # @inspectKeyEvent event
     # notify target's parent of key event
     @target.escalateEvent "reactToKeystroke", key, code, shiftKey, ctrlKey, altKey, metaKey
     @updateDimension()
@@ -134,11 +132,6 @@ class CaretWdgt extends BlinkerWdgt
     #console.log "processing cut"
     @deleteLeft()
     @_settleScrollFollow()   # converge the deferred caret follow in-place (clipboard event, bypasses processKeyDown)
-
-
-  # unused
-  processCopy: (selectedText) ->
-    #console.log "processing copy"
 
   processPaste: (clipboardText) ->
     #console.log "about to insert text: " + clipboardText
@@ -487,10 +480,3 @@ class CaretWdgt extends BlinkerWdgt
     @_gotoSlotNoSettle @slot
     @updateSelection false
     @clearSelectionIfStartAndEndMeet false
-  
-  # »>> this part is excluded from the fizzygum homepage build
-  # CaretWdgt utilities:
-  inspectKeyEvent: (event) ->
-    # private
-    @inform "Key pressed: " + event.key + "\n------------------------" + "\nkey: " + event.key + "\ncode: " + event.code + "\naltKey: " + event.altKey + "\nctrlKey: " + event.ctrlKey  + "\ncmdKey: " + event.metaKey
-  # this part is excluded from the fizzygum homepage build <<«

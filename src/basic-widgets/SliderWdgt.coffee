@@ -208,14 +208,6 @@ class SliderWdgt extends CircleBoxWdgt
   showValue: ->
     @inform @value
 
-
-  # »>> this part is excluded from the fizzygum homepage build
-  # unused
-  userSetStart: (num) ->
-    @start = Math.max num, @stop
-  # this part is excluded from the fizzygum homepage build <<«
-
-  
   # once you set all the properties of a slider you
   # call this method so it updates itself
   updateSpecs: (start, stop, value, size)->

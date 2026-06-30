@@ -80,19 +80,6 @@ class ActivePointerWdgt extends Widget
     else
       return world
 
-  # »>> this part is excluded from the fizzygum homepage build
-  menuAtPointer: ->
-    result = world.topWdgtSuchThat (m) =>
-      m.clippedThroughBounds().containsPoint(@position()) and
-        m.visibleBasedOnIsVisibleProperty() and
-        !m.isInCollapsedSubtree() and
-        (m.noticesTransparentClick or
-        (not m.isTransparentAt(@position()))) and (m.isMenu?())
-    return result
-  # this part is excluded from the fizzygum homepage build <<«
-
-
-
   openContextMenuAtPointer: (wdgtTheMenuIsAbout) ->
     # note that the widgets that the menu
     # belongs to might not be under the mouse.
@@ -125,18 +112,6 @@ class ActivePointerWdgt extends Widget
     if contextMenu
       contextMenu.popUpAtHand()
 
-
-  # »>> this part is excluded from the fizzygum homepage build
-  # not used in Fizzygum yet
-  allWdgtsAtPointer: ->
-    return world.collectAllChildrenBottomToTopSuchThat (m) =>
-      m.visibleBasedOnIsVisibleProperty() and
-      !m.isInCollapsedSubtree() and
-      m.clippedThroughBounds().containsPoint @position()
-  # this part is excluded from the fizzygum homepage build <<«
-  
-  
-  
   # ActivePointerWdgt floatDragging and dropping:
   #
   # floatDrag 'n' drop events, method(arg) -> receiver:
@@ -767,8 +742,6 @@ class ActivePointerWdgt extends Widget
     #   2) all widgets parents of the topmost widgets under the pointer
     # 2 is what is used in Cuis
     
-    # commented-out implementation of 1):
-    # mouseOverNew = @allWdgtsAtPointer().reverse()
     topWdgt = @topWdgtUnderPointer()
     # allParentsTopToButton makes more logical sense but
     # allParentsBottomToTop is cheaper and it all ends up in a set anyways

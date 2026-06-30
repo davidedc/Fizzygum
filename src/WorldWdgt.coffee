@@ -643,17 +643,6 @@ class WorldWdgt extends PanelWdgt
       eachWidget._closeNoSettle()
     @popUpsMarkedForClosure.clear()
   
-  # »>> this part is excluded from the fizzygum homepage build
-  # World Widget broken rects debugging
-  # currently unused
-  brokenFor: (aWdgt) ->
-    # private
-    fb = aWdgt.fullBounds()
-    @broken.filter (rect) ->
-      rect.isIntersecting fb
-  # this part is excluded from the fizzygum homepage build <<«
-  
-  
   # fullPaintIntoAreaOrBlitFromBackBuffer results into actual painting of pieces of
   # widgets done
   # by the paintIntoAreaOrBlitFromBackBuffer function.

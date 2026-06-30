@@ -73,6 +73,20 @@ harvest(walk(TESTS, '.js', []), false, false);
 
 const dead = [...defs.keys()].filter((n) => !referenced.has(n)).sort();
 
+// SYMMETRY-AWARE (Topic 2): a public `<name>` and its private `_<name>NoSettle` core form ONE self-settling
+// pair (the same pairing check-thin-wraps.js enforces). If a member is dead but its settle-twin is LIVE, it is
+// RETAINED FOR SYMMETRY, not genuinely dead — the gate exempts it WITHOUT a manual allowlist entry. Safe in
+// both directions: a dead public wrapper whose core is live (e.g. LabelButtonWdgt.setLabel, whose
+// _setLabelNoSettle core FridgeMagnets construction calls), and a dead core whose public API is live. A pair
+// dead on BOTH sides is still flagged. Returns the live twin's name (for the report) or null.
+function liveSettleTwin(n) {
+  const core = /^_(.+)NoSettle$/.exec(n);
+  if (core) return referenced.has(core[1]) ? core[1] : null;                 // n is a core; its public twin is live
+  return referenced.has('_' + n + 'NoSettle') ? '_' + n + 'NoSettle' : null; // n is public; its NoSettle core is live
+}
+const symmetryRetained = dead.filter((n) => liveSettleTwin(n));
+const flaggableDead = dead.filter((n) => !liveSettleTwin(n));   // dead AND not covered by a live settle-twin
+
 // 3. allowlist
 const allow = new Set();
 if (fs.existsSync(ALLOWLIST)) {
@@ -87,15 +101,23 @@ if (process.argv.includes('--update-allowlist')) {
     '# Dead-method allowlist for buildSystem/check-dead-methods.js\n' +
     '# Methods DEFINED in src but referenced nowhere (src + tests + harness).\n' +
     '# Seeded as a BASELINE to triage/delete later; the lint FAILS on any NEW dead method not here.\n' +
-    '# Remove a name once you delete the method (or it gains a real caller). One name per line; # = comment.\n\n';
-  fs.writeFileSync(ALLOWLIST, header + dead.join('\n') + '\n');
-  console.log(`[dead-methods] wrote ${dead.length} names to ${path.relative(process.cwd(), ALLOWLIST)}`);
+    '# Remove a name once you delete the method (or it gains a real caller). One name per line; # = comment.\n' +
+    '# (Settle-tier wrapper/core symmetry pairs are auto-exempt — see liveSettleTwin — so they are NOT seeded.)\n\n';
+  fs.writeFileSync(ALLOWLIST, header + flaggableDead.join('\n') + '\n');
+  console.log(`[dead-methods] wrote ${flaggableDead.length} names to ${path.relative(process.cwd(), ALLOWLIST)} (${symmetryRetained.length} symmetry pairs auto-exempt)`);
   process.exit(0);
 }
 
-const newDead = dead.filter((n) => !allow.has(n));
-const stale = [...allow].filter((n) => !dead.includes(n));   // allowlisted but no longer dead/defined
+const newDead = flaggableDead.filter((n) => !allow.has(n));
+const stale = [...allow].filter((n) => !dead.includes(n));                  // allowlisted but no longer dead/defined
+const redundant = [...allow].filter((n) => symmetryRetained.includes(n));  // allowlisted but now auto-exempt by symmetry
 
+if (symmetryRetained.length) {
+  console.log(`[dead-methods] NOTE — ${symmetryRetained.length} dead method(s) auto-retained for settle-tier symmetry (live twin): ${symmetryRetained.map((n) => `${n}↔${liveSettleTwin(n)}`).join(', ')}`);
+}
+if (redundant.length) {
+  console.log(`[dead-methods] NOTE — ${redundant.length} allowlist entr${redundant.length === 1 ? 'y is' : 'ies are'} now redundant (covered by symmetry-awareness — delete from the allowlist): ${redundant.join(', ')}`);
+}
 if (stale.length) {
   console.log(`[dead-methods] NOTE — ${stale.length} allowlist entr${stale.length === 1 ? 'y is' : 'ies are'} no longer dead (delete from the allowlist): ${stale.join(', ')}`);
 }
@@ -105,8 +127,9 @@ if (newDead.length) {
   for (const n of newDead) console.error(`  ${n}  (${defs.get(n)[0]})`);
   console.error('\nEither DELETE the method, or — if it is intentional public API / dispatched by a computed name —');
   console.error('add its name to buildSystem/dead-method-allowlist.txt with a one-line reason.');
+  console.error('(A wrapper/core twin kept for symmetry needs NO entry — auto-exempt when its settle-twin is live.)');
   process.exit(1);
 }
 
-console.log(`[dead-methods] OK — ${defs.size} method names scanned, ${dead.length} dead (all allowlisted), 0 new.`);
+console.log(`[dead-methods] OK — ${defs.size} method names scanned, ${dead.length} dead (${flaggableDead.length} allowlisted + ${symmetryRetained.length} symmetry-exempt), 0 new.`);
 process.exit(0);

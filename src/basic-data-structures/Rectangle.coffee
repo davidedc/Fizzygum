@@ -66,20 +66,8 @@ class Rectangle
   toString: ->
     "[" + @origin + " | " + @extent() + "]"
 
-  # »>> this part is excluded from the fizzygum homepage build
-  onlyContainingIntegers: ->
-    if Math.floor(@origin.x) == @origin.x and
-      Math.floor(@origin.y) == @origin.y and
-      Math.floor(@corner.x) == @corner.x and
-      Math.floor(@corner.y) == @corner.y
-        return true
-    else
-      return false
-  # this part is excluded from the fizzygum homepage build <<«
-
   debugIfFloats: ->
-    #if !@onlyContainingIntegers()
-    #  debugger
+    return
 
   # »>> this part is excluded from the fizzygum homepage build
 
@@ -313,22 +301,6 @@ class Rectangle
     # round me by applying floor() to my origin and ceil() to my corner
     @origin.floor().corner @corner.ceil()
   
-  # »>> this part is excluded from the fizzygum homepage build
-  # unused code
-  amountToTranslateWithin: (aRect) ->
-    @debugIfFloats()
-    #
-    #    Answer a Point, delta, such that self + delta is forced within
-    #    aRectangle. when all of me cannot be made to fit, prefer to keep
-    #    my topLeft inside. Taken from Squeak.
-    #
-    dx = aRect.right() - @right()  if @right() > aRect.right()
-    dy = aRect.bottom() - @bottom()  if @bottom() > aRect.bottom()
-    dx = aRect.left() - @left()  if (@left() + dx) < aRect.left()
-    dy = aRect.top() - @top()  if (@top() + dy) < aRect.top()
-    new Point dx, dy
-  # this part is excluded from the fizzygum homepage build <<«
-  
   toLocalCoordinatesOf: (aWdgt) ->
     new @constructor @origin.x - aWdgt.left(),@origin.y - aWdgt.top(),@corner.x - aWdgt.left(),@corner.y - aWdgt.top()
   
@@ -376,7 +348,3 @@ class Rectangle
   asArray: ->
     @debugIfFloats()
     [@left(), @top(), @right(), @bottom()]
-  
-  asArray_xywh: ->
-    @debugIfFloats()
-    [@left(), @top(), @width(), @height()]

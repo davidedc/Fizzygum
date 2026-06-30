@@ -91,32 +91,6 @@ class Class
 
     return aString
 
-  # not used as of now because we prefer to load the comments
-  # as part of the sources. Note that the presence of multiline
-  # comments (and strings, for that matter) could mangle the
-  # parsing.
-  # Maybe a more correct way of doing this is to remove
-  # only multiline comments and strings into a "clean version",
-  # and maintaining line-to-line correspondence between this
-  # "clean" version and the original version.
-  # Then do the regexing on the "clean"
-  # version, but getting the source from the "original"
-  # version (which should be relatively easy if we know from which
-  # line to which line each field is defined in)
-  removeComments: (source) ->
-    splitSource = source.split "\n"
-    sourceWithoutComments = ""
-    multilineComment = false
-    for eachLine in splitSource
-      #console.log "eachLine: " + eachLine
-      if /^[ \t]*###/m.test(eachLine)
-        multilineComment = !multilineComment
-
-      if (! /^[ \t]*#/m.test(eachLine)) and (!multilineComment)
-        sourceWithoutComments += eachLine + "\n"
-    return sourceWithoutComments
-
-
   findIfItExtendsAnotherClass: (source) ->
     # find if it extends some other class
     extendsRegex = /^class[ \t]*[a-zA-Z_$][0-9a-zA-Z_$]*[ \t]*extends[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
