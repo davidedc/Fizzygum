@@ -47,19 +47,22 @@ class ListWdgt extends ScrollPanelWdgt
     super()
     @contents.disableDrops()
     @color = Color.WHITE
-    @buildAndConnectChildren() # builds the list contents
+    @_buildAndConnectChildren() # builds the list contents
     # it's important to leave the step as the default noOperation
     # instead of nil because the scrollbars (inherited from ScrollPanel)
     # need the step function to react to mouse floatDrag.
   
-  # builds the list contents. NOT converted to the buildAndConnectChildren wrapper+NoSettle-core pattern
-  # of the orphan-settledness sweep: ListWdgt extends ScrollPanelWdgt, whose `add` is a CUSTOM override
-  # (it redirects a non-frame child into @contents, NOT the standard `@_settleLayoutsAfter => @_addNoSettle`),
-  # so `@add @listContents` is NOT equivalent to `@_addNoSettle @listContents` here -- the latter would
-  # attach @listContents to the scroll frame itself, breaking the list (and every InspectorWdgt, which builds
-  # a ListWdgt for its property pane). It also needs no conversion: this build's last layout act is the
-  # settling `@add @listContents` with no trailing _invalidateLayout, so `new ListWdgt` already returns settled.
-  buildAndConnectChildren: ->
+  # builds the list contents, via the _buildAndConnectChildren wrapper + NoSettle-core pattern. ListWdgt extends
+  # ScrollPanelWdgt, whose `add` is a CUSTOM override that redirects a non-frame child into @contents; the
+  # non-settling twin of that redirect is `@contents._addNoSettle` (NOT the base `@_addNoSettle`, which would
+  # wrongly attach @listContents to the scroll frame itself and break every InspectorWdgt's property pane --
+  # the reason the orphan-settledness sweep left this unconverted). The core builds via @contents._addNoSettle
+  # with the same explicit ATTACHEDAS_FREEFLOATING layoutSpec the public redirect passes, so behaviour is byte-
+  # identical and the wrapper settles once -- `new ListWdgt` still returns settled.
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     @listContents = new MenuWdgt @, true, @, false, false, nil, nil
     @listContents.isLockingToPanels = true
     @elements = ["(empty)"]  if !@elements.length
@@ -102,8 +105,8 @@ class ListWdgt extends ScrollPanelWdgt
     world.maybeEnableTrackChanges()
     @listContents.__commitMoveTo @contents.position()
     @listContents._reLayoutSelf()
-    
-    @add @listContents
+
+    @contents._addNoSettle @listContents, nil, LayoutSpec.ATTACHEDAS_FREEFLOATING
 
   # A ListWdgt is excluded from the "scroll panel re-fits its contained stack
   # panel" notification (the old amIPanelOfScrollPanelWdgt returned false for

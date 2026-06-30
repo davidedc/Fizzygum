@@ -3,9 +3,12 @@ class ClassInspectorWdgt extends InspectorWdgt
   notifyInstancesOfSourceChange: (propertiesArray)->
     @target.constructor.class.notifyInstancesOfSourceChange propertiesArray
 
-  buildAndConnectChildren: ->
+  # Override the NON-SETTLING core (not the wrapper): the inherited _buildAndConnectChildren wrapper settles
+  # once, and this extension runs inside that single settle -- so the "this class" label is set via the
+  # non-settling _setTextNoSettle, keeping a low-level core free of public self-settling setters.
+  _buildAndConnectChildrenNoSettle: ->
     super
-    @lastLabelInHierarchy.setText "this class"
+    @lastLabelInHierarchy._setTextNoSettle "this class"
     #@label.setText "class " + @target.constructor.name
 
   colloquialName: ->

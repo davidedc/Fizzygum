@@ -783,7 +783,7 @@ class Widget extends TreeNode
     # ALREADY inside a flush/pass?  Two cases, split by whether the receiver is part of the live world:
     #  - ORPHAN receiver -> DEFER (record the change, do NOT flush). This is the ONE remaining settle
     #    deferral, and it is framework-internal: a constructor that builds its innards (e.g. the icon
-    #    buttons WindowWdgt.buildAndConnectChildren makes) runs INSIDE the enclosing mutation's settle and
+    #    buttons WindowWdgt._buildAndConnectChildren makes) runs INSIDE the enclosing mutation's settle and
     #    adds to an orphan; it must not re-enter recalculateLayouts (which would throw). It settles for real
     #    when that enclosing operation's flush completes -- or, for a widget that stays detached, on its next
     #    public call / on attach. (isOrphan() is false for the world itself and for anything on the hand, so
@@ -831,7 +831,7 @@ class Widget extends TreeNode
   #
   # Run several geometry/structural mutations as a BATCH that settles layouts only ONCE, at
   # the end, instead of each public add()/setExtent() self-settling. Use it for multi-add
-  # builders (buildAndConnectChildren) and bulk content insertion: it makes O(N) relayouts
+  # builders (_buildAndConnectChildren) and bulk content insertion: it makes O(N) relayouts
   # into 1, and keeps the re-fit from running on a half-built widget mid-batch (the
   # getWidthInStack-on-unset-@stack crash during an in-world rebuild). Nestable -- an inner
   # batch is absorbed by the outer; mirrors _settleLayoutsAfter's in-flush deferral for the

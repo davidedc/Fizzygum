@@ -22,13 +22,13 @@ class ConsoleWdgt extends Widget
 
   constructor: (@target) ->
     super new Point 200,400
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
 
   colloquialName: ->
     "Console for: " + @target.colloquialName().toLowerCase()
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  buildAndConnectChildren: ->
+  _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->

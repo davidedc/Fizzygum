@@ -25,7 +25,7 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
 
   constructor: ->
     super new Point 300, 300
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
 
     (loadJSFilePromise "./videos/Fizzygum-videos-private/privateVideosManifest.js").then \
       (result) =>
@@ -68,7 +68,7 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
 
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  buildAndConnectChildren: ->
+  _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->

@@ -21,7 +21,7 @@ class StretchableEditableWdgt extends Widget
 
   constructor: ->
     super
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
 
   colloquialName: ->
     "Generic panel"
@@ -177,7 +177,7 @@ class StretchableEditableWdgt extends Widget
   # The core's createNewStretchablePanel/createToolsPanel add to ORPHANS, so their settles defer in-flush
   # and are flushed once here; the same methods stay self-settling when called post-construction
   # (createNewStretchablePanel from _reactToChildPickedUp on the attached widget).
-  buildAndConnectChildren: ->
+  _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->

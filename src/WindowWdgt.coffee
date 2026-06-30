@@ -102,7 +102,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # TODO this looks better:
     #@padding = 10
     @color = Color.create 248, 248, 248
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
 
     if @contents == @defaultContents
       @_setEmptyWindowLabelNoSettle()
@@ -387,7 +387,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     super
     @disableDrops()
     # _reactToChildDropped runs inside the drop's single settle, so rebuild through the NON-settling core
-    # (not the public buildAndConnectChildren wrapper, which would re-enter the flush guard) -- same
+    # (not the public _buildAndConnectChildren wrapper, which would re-enter the flush guard) -- same
     # as the resetToDefaultContents lifecycle path above.
     @_buildAndConnectChildrenNoSettle()
 
@@ -407,7 +407,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
   buildTitlebarBackground: ->
     if @titlebarBackground?
-      # tear down through the non-settling core: this runs inside buildAndConnectChildren's settle, so
+      # tear down through the non-settling core: this runs inside _buildAndConnectChildren's settle, so
       # the public self-settling fullDestroy() would throw under the single-mutation tier. The enclosing
       # rebuild settle covers the re-layout.
       @titlebarBackground._fullDestroyNoSettle()
@@ -438,7 +438,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # non-settling @_buildAndConnectChildrenNoSettle directly, never this wrapper, so the wrapper never
   # re-enters a flush. The chrome the core constructs adds to ORPHANS, exempt from the flush-throw
   # (Widget._settleLayoutsAfter's orphan guard precedes the throw). (Phase 3b; window-rebuild follow-up.)
-  buildAndConnectChildren: ->
+  _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->

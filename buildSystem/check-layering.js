@@ -19,7 +19,7 @@
  *      flush more than once per logical mutation).
  *   G) A LOW-LEVEL method must NOT directly call a STRUCTURAL self-settling wrapper -- add's siblings
  *      destroy / close / fullDestroy / createReference / grab / drop / slideBackTo / setLabel /
- *      buildAndConnectChildren / ... : every method that self-settles via _settleLayoutsAfter. It must
+ *      _buildAndConnectChildren / ... : every method that self-settles via _settleLayoutsAfter. It must
  *      reach the _<name>NoSettle CORE instead (the "cores call cores" discipline, made static). The
  *      wrapper set is DISCOVERED structurally (not hand-listed); `add` and collapse/unCollapse are
  *      deliberately excluded -- see the [G] block lower down for why. [G] is the structural-wrapper
@@ -176,7 +176,7 @@ const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*)\b/;  // renamed 
 // made static). [A] above forbids a low-level method from DIRECTLY calling the 5 geometry setters /
 // the single-settling text setters / recalculateLayouts -- a closed, hand-listed set. The SAME
 // re-entrancy hazard exists for the STRUCTURAL self-settling wrappers (destroy / close / fullDestroy /
-// createReference / grab / drop / slideBackTo / setLabel / buildAndConnectChildren / ...): each routes
+// createReference / grab / drop / slideBackTo / setLabel / _buildAndConnectChildren / ...): each routes
 // through the single-mutation settle tier _settleLayoutsAfter, so reaching one from inside a layout pass
 // / a *NoSettle core / a raw setter re-enters the flush and hits the runtime throw (Widget.coffee, in
 // _settleLayoutsAfter). Low-level code must call the matching _<name>NoSettle CORE, never the wrapper.
@@ -205,7 +205,7 @@ const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*)\b/;  // renamed 
 //
 // The TRANSITIVE closure of [G] (forbid low-level code from REACHING a wrapper by ANY call path) was
 // prototyped and REJECTED: a name-based backward-reachability fixpoint balloons to ~720-870 names / ~500-710
-// hits, because `constructor` (-> buildAndConnectChildren -> add) is a hub reached by `new @constructor`
+// hits, because `constructor` (-> _buildAndConnectChildren -> add) is a hub reached by `new @constructor`
 // and `@constructor.name` everywhere, and the raw setters / *NoSettle cores themselves land in the set --
 // so it flags the very "cores call cores" pattern it exists to bless. Name-based reachability cannot model
 // the orphan guard (a receiver's attached-ness is dynamic), so this DIRECT rule is the maximal SOUND static

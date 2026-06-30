@@ -12,7 +12,7 @@ class VideoPlayerWdgt extends Widget
 
   constructor: ->
     super new Point 300, 300
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
     world.keyboardEventsReceivers.add @
 
   processKeyDown: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
@@ -36,7 +36,7 @@ class VideoPlayerWdgt extends Widget
     @videoPlayerCanvas.togglePlayPause()
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  buildAndConnectChildren: ->
+  _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->

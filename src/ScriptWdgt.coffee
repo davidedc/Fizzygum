@@ -42,7 +42,7 @@ class ScriptWdgt extends Widget
 
   constructor: (@savedScript = "") ->
     super new Point 200,400
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
 
   colloquialName: ->
     "script"
@@ -65,7 +65,7 @@ class ScriptWdgt extends Widget
       containerWindow.close()
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  buildAndConnectChildren: ->
+  _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->

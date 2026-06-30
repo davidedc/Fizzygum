@@ -67,42 +67,42 @@ class InspectorWdgt extends Widget
   showFields: ->
     if !@showingFields
       @showingFields = true
-      @buildAndConnectChildren()
+      @_buildAndConnectChildren()
 
   showMethods: ->
     if !@showingMethods
       @showingMethods = true
-      @buildAndConnectChildren()
+      @_buildAndConnectChildren()
 
   showInherited: ->
     if !@showingInherited
       @showingInherited = true
-      @buildAndConnectChildren()
+      @_buildAndConnectChildren()
 
   showOwnPropsOnly: ->
     if !@showingOwnPropsOnly
       @showingOwnPropsOnly = true
-      @buildAndConnectChildren()
+      @_buildAndConnectChildren()
 
   hideFields: ->
     if @showingFields
       @showingFields = false
-      @buildAndConnectChildren()
+      @_buildAndConnectChildren()
 
   hideMethods: ->
     if @showingMethods
       @showingMethods = false
-      @buildAndConnectChildren()
+      @_buildAndConnectChildren()
 
   hideInherited: ->
     if @showingInherited
       @showingInherited = false
-      @buildAndConnectChildren()
+      @_buildAndConnectChildren()
 
   hideOwnPropsOnly: ->
     if @showingOwnPropsOnly
       @showingOwnPropsOnly = false
-      @buildAndConnectChildren()
+      @_buildAndConnectChildren()
 
   constructor: (@target) ->
     @classesButtons = []
@@ -125,7 +125,7 @@ class InspectorWdgt extends Widget
     @inspectorBackgroundAppearance = new RectangularAppearance @
     @appearance = @inspectorBackgroundAppearance
 
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
 
   # Paint our own opaque background ONLY when free-floating (naked); as
   # WindowWdgt content the window provides it, so drop the appearance then
@@ -150,7 +150,7 @@ class InspectorWdgt extends Widget
   # this is called last on an orphan -> _settleLayoutsAfter now SETTLES the orphan subtree synchronously
   # (orphan-settledness), so `new InspectorWdgt` returns settled; the single flush still runs over the
   # complete, fully-wired inspector.
-  buildAndConnectChildren: ->
+  _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
@@ -636,7 +636,7 @@ class InspectorWdgt extends Widget
       if prop.getValue?
         prop = prop.getValue()
       @target[prop] = nil
-      @buildAndConnectChildren()
+      @_buildAndConnectChildren()
       @notifyInstancesOfSourceChange([prop])
   
   addPropertyPopout: ->
@@ -653,7 +653,7 @@ class InspectorWdgt extends Widget
     delete @target[propertyName]
     @target[prop] = @currentProperty
 
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
     @notifyInstancesOfSourceChange([prop, propertyName])
   
   renamePropertyPopout: ->
@@ -668,5 +668,5 @@ class InspectorWdgt extends Widget
     delete @target[propertyName]
 
     @currentProperty = nil
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
     @notifyInstancesOfSourceChange([propertyName])

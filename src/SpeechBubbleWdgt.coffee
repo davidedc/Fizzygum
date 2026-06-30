@@ -20,7 +20,7 @@ class SpeechBubbleWdgt extends Widget
     @cornerRadius = 6
     @appearance = new BubblyAppearance @
     @toolTipMessage = "speech bubble"
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
     @minimumExtent = new Point 10,10
     @extentToGetWhenDraggedFromGlassBox = new Point 105,80
 
@@ -30,7 +30,7 @@ class SpeechBubbleWdgt extends Widget
     "speech bubble"
   
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  buildAndConnectChildren: ->
+  _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->

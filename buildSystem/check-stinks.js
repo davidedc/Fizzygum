@@ -16,7 +16,7 @@
 //   (_settleLayoutsAfter). Reaching for the batch means the core still calls a NESTED public
 //   setter, and the batch is masking that. Fix: make the core pure, then switch the wrapper to
 //   _settleLayoutsAfter. Baseline driven to 0 (2026-06-24): the 5 teardown/build wrappers
-//   (fullDestroy/close/collapse/unCollapse/buildAndConnectChildren) were all flipped to
+//   (fullDestroy/close/collapse/unCollapse/_buildAndConnectChildren) were all flipped to
 //   _settleLayoutsAfter via "cores call cores" — now a hard rule, no new occurrence may land.
 
 const fs = require('fs');

@@ -19,10 +19,10 @@ class VideoControlsPaneWdgt extends RectangleWdgt
 
   constructor: (@videoPlayerCanvas) ->
     super new Point(20, 20), Color.TRANSPARENT
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  buildAndConnectChildren: ->
+  _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->

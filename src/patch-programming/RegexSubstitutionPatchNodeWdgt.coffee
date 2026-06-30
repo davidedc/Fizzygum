@@ -50,7 +50,7 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
 
   constructor: (@defaultContents = "") ->
     super new Point 200,400
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
 
   colloquialName: ->
     "Regex subst. patch node"
@@ -184,7 +184,7 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
 
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  buildAndConnectChildren: ->
+  _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->

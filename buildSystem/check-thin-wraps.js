@@ -3,8 +3,9 @@
 // MECHANICAL THIN WRAP around its private *NoSettle twin. Mirrors check-dead-methods.js / check-stinks.js
 // (line scanner; exit 0 clean / 1 violation).
 //
-// CANONICAL FORM: for a private `_<name>NoSettle`, the public `<name>` in the SAME class must, after
-// comments/blank lines, be:
+// CANONICAL FORM: for a private `_<name>NoSettle`, its settling twin in the SAME class -- the public
+// `<name>` (e.g. setLabel) OR the private `_<name>` (e.g. the construction wrapper _buildAndConnectChildren)
+// -- must, after comments/blank lines, be:
 //     [ zero or more  `return if <cond>` / `return unless <cond>` idempotency guards ]
 //     @_settleLayoutsAfter => @_<name>NoSettle <args?>
 // i.e. it does NO work of its own -- it guards, then hands the mutation to the core via the
@@ -54,8 +55,13 @@ for (const p of walk(SRC, [])) {
     const m = /^_(.+)NoSettle$/.exec(heads[k].name);
     if (!m) continue;                                   // not a *NoSettle method
     const base = m[1];                                  // _fullDestroyNoSettle -> fullDestroy
-    if (!byName.has(base)) continue;                    // no same-class public twin -> nothing to constrain
-    const head = heads[byName.get(base)];
+    // The settling twin is either the PUBLIC <base> (e.g. setLabel) or a PRIVATE _<base> (e.g. the
+    // construction wrapper _buildAndConnectChildren): a core can be wrapped by a public self-settling API
+    // OR a private self-settling internal step -- same canonical body either way.
+    const twinName = byName.has(base) ? base : (byName.has('_' + base) ? '_' + base : null);
+    if (!twinName) continue;                            // no same-class twin -> nothing to constrain
+    const twinIdx = byName.get(twinName);
+    const head = heads[twinIdx];
     // EXEMPTION: scan upward through the contiguous comment block directly above the public header.
     let marked = false;
     for (let j = head.i - 1; j >= 0 && /^\s*#/.test(lines[j]); j--) {
@@ -63,7 +69,7 @@ for (const p of walk(SRC, [])) {
     }
     if (marked) { exempt++; continue; }
     // the public method's code lines (comments + blanks removed)
-    const end = byName.get(base) + 1 < heads.length ? heads[byName.get(base) + 1].i : lines.length;
+    const end = twinIdx + 1 < heads.length ? heads[twinIdx + 1].i : lines.length;
     const body = [];
     for (let j = head.i + 1; j < end; j++) { const c = stripComment(lines[j]).trim(); if (c) body.push(c); }
     // strip leading idempotency guards, then require exactly the canonical wrap
@@ -71,7 +77,7 @@ for (const p of walk(SRC, [])) {
     while (rest.length && GUARD.test(rest[0])) rest.shift();
     const canonical = new RegExp('^@_settleLayoutsAfter\\s*=>\\s*@_' + base + 'NoSettle\\b');
     if (rest.length === 1 && canonical.test(rest[0])) checked++;
-    else violations.push({ key: cls + '.' + base, file: path.relative(SRC, p), line: head.i + 1, body });
+    else violations.push({ key: cls + '.' + twinName, file: path.relative(SRC, p), line: head.i + 1, body });
   }
 }
 

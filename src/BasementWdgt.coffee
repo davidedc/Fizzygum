@@ -16,7 +16,7 @@ class BasementWdgt extends BoxWdgt
     @_commitExtentAndNotify new Point 340, 270
     @color = Color.create 60, 60, 60
     @padding = 5
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
 
   colloquialName: ->
     "Basement"
@@ -35,7 +35,7 @@ class BasementWdgt extends BoxWdgt
   # this part is excluded from the fizzygum homepage build <<«
   
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  buildAndConnectChildren: ->
+  _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->

@@ -20,7 +20,7 @@ class SimpleLinkWdgt extends Widget
 
   constructor: (@descriptionString = "insert link caption here", @linkString = "http://www.google.com") ->
     super new Point 405, 50
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
 
   colloquialName: ->
     "Simple link"
@@ -32,7 +32,7 @@ class SimpleLinkWdgt extends Widget
     window.open @outputTextArea.text
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  buildAndConnectChildren: ->
+  _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->

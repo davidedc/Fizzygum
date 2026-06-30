@@ -55,7 +55,7 @@ class ToolTipWdgt extends Widget
   
   # ToolTipWdgt invoking:
   openAt: (pos) ->
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
     @_applyMoveToAndNotify pos.subtract new Point 8, @height()
     @_moveWithin world
     world.add @
@@ -64,11 +64,14 @@ class ToolTipWdgt extends Widget
     world.destroyToolTips()
     world.toolTipsList.add @
     
-  buildAndConnectChildren: ->
-    # console.log "bubble buildAndConnectChildren"
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
+    # console.log "bubble _buildAndConnectChildren"
     # re-build my contents
     if @contentsWidget
-      @contentsWidget = @contentsWidget.destroy()
+      @contentsWidget = @contentsWidget._destroyNoSettle()
     if @contents instanceof Widget
       @contentsWidget = @contents
     else if Utils.isString @contents
@@ -101,11 +104,11 @@ class ToolTipWdgt extends Widget
         true,
         Color.BLACK)
       @contentsWidget.alignCenter()
-    @add @contentsWidget
+    @_addNoSettle @contentsWidget
 
     # the modern family does not self-size; make the tooltip text hug its
     # content before we read its width/height to size the bubble around it.
-    @contentsWidget.sizeToTextAndDisableFitting() if @contentsWidget instanceof TextWdgt
+    @contentsWidget._sizeToTextAndDisableFittingNoSettle() if @contentsWidget instanceof TextWdgt
 
     # adjust my layout
     @__commitWidth @contentsWidget.width() + ((if @padding then @padding * 2 else @cornerRadius * 2))

@@ -40,7 +40,7 @@ class DiffingPatchNodeWdgt extends Widget
 
   constructor: (@defaultContents = "") ->
     super new Point 200,400
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
     @input1 = ""
     @input2 = ""
 
@@ -174,7 +174,7 @@ class DiffingPatchNodeWdgt extends Widget
 
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  buildAndConnectChildren: ->
+  _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->

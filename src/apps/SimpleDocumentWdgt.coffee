@@ -31,7 +31,7 @@ class SimpleDocumentWdgt extends Widget
 
   constructor: (@defaultContents = "") ->
     super new Point 368, 335
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
 
   colloquialName: ->
     "Docs Maker"
@@ -76,7 +76,7 @@ class SimpleDocumentWdgt extends Widget
   # SimpleDocumentWdgt._reLayout with @simpleDocumentScrollPanel == nil (-> "reading 'parent'"). Every
   # nested build inside the core (createToolsPanel's adds, the SimpleDocumentScrollPanelWdgt construction's
   # setContents) runs INSIDE this settle and DEFERS as orphan-in-flush, so construction is O(1) flushes.
-  buildAndConnectChildren: ->
+  _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->

@@ -19,7 +19,7 @@ class ErrorsLogViewerWdgt extends Widget
 
   constructor: (@msg, @target, @callback, @defaultContents) ->
     super new Point 200,400
-    @buildAndConnectChildren()
+    @_buildAndConnectChildren()
 
   colloquialName: ->
     "Error log"
@@ -56,7 +56,7 @@ class ErrorsLogViewerWdgt extends Widget
 
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  buildAndConnectChildren: ->
+  _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
