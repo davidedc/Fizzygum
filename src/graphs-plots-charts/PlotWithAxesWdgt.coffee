@@ -6,15 +6,20 @@ class PlotWithAxesWdgt extends Widget
     super
     @plot.drawOnlyPartOfBoundingRect = true
     @appearance = new RectangularAppearance @
+    @_buildAndConnectChildren()
+    @setColor Color.create 242,242,242
 
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     @_addNoSettle @plot
 
     @vertAxis = new AxisWdgt -5, 5
     @_addNoSettle @vertAxis
     @horizAxis = new AxisWdgt -5, 5
     @_addNoSettle @horizAxis
-
-    @setColor Color.create 242,242,242
 
     @_invalidateLayout()
 

@@ -11,6 +11,15 @@ class PointerWdgt extends BoxWdgt
     @color = Color.create 160, 160, 160
     @noticesTransparentClick = true
 
+    @_buildAndConnectChildren()
+
+    @moveTo new Point 10 + 60 * 0, 30 + 50 * 1
+
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     lmContent1 = new CollapsedStateIconWdgt
     lmContent2 = new StringWdgt(
       @target.toString(),
@@ -43,8 +52,6 @@ class PointerWdgt extends BoxWdgt
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), LayoutSpec.SPREADABILITY_NONE
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), LayoutSpec.SPREADABILITY_MEDIUM
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), LayoutSpec.SPREADABILITY_NONE
-
-    @moveTo new Point 10 + 60 * 0, 30 + 50 * 1
 
 
   mouseClickLeft: (pos) ->

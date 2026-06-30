@@ -171,7 +171,7 @@ predicates, the markers, and the gate mechanics live in `docs/lint-and-static-ch
 | Rule | Checks |
 |---|---|
 | **[I]** `__` leaf no-orchestration (HARD-FAIL) | inside a `__` method, an `@`-self call to the re-fit seam (`_reFitContainer*`/`_announce*`), a react step (`_reLayout*`/`changed`/`fullChanged`), a schedule/settle (`_invalidateLayout`/`recalculateLayouts`/`_settleLayoutsAfter*`), or a public setter → FAIL. A DENYLIST (§1), `@`-self-scoped; the runtime audit (§5) covers dynamic dispatch. |
-| **[J]** callback settle-neutrality (HARD-FAIL) | a `_reactTo*`/`_before*` hook calling `_settleLayoutsAfter` → FAIL. The dispatcher owns the one settle. |
+| **[J]** callback settle-neutrality (HARD-FAIL) | a `_reactTo*`/`_before*` hook calling `_settleLayoutsAfter` in its OWN body → FAIL (the dispatcher owns the one settle). *(Textual rule; a constructor reached via dynamic dispatch FROM a callback is the runtime audit's concern, §5.2 — which now PERMITS the orphan-construction case, since it auto-defers.)* |
 | **[K]** apply-2×2 name-consistency (HARD-FAIL) | the two statically-sound NEGATIVES: a non-`AndNotify` `_apply*` arrange corner must not fire the seam nor call an `*AndNotify`; a `_commit*AndNotify` notify-only corner must not react (`changed`/`_reLayout*`). The POSITIVE "every `*AndNotify` reaches the seam" is delegated to the runtime audit (§5) — a static scanner can't follow `super`/dynamic dispatch, and an override may legitimately not notify (e.g. `ClippingAtRectangularBoundsMixin._applyMoveByAndNotify`). |
 | **[L]** callback-shape (HARD-FAIL) | at each def, a `_reactTo*`/`_before*` name MUST match `_(reactTo\|before)(Being\|Child\|HolderWindow)<Event>` and carry no `NoSettle`; the legacy fragments (`childX` / `justBeen` / `iHaveBeen` / `aboutTo` / `prepareTo`) are banned outright. |
 | **[M]** retired-fragment ban (HARD-FAIL) | a method DEF named with a retired geometry/structural prefix — `raw[A-Z]…` / `^silent[A-Z]` / `^fullRaw` → FAIL (allowlist: the raw-PIXEL accessors `rawPixelInfo` / `rawPixelHash` / `rawRGBA`). `full[A-Z]` is NOT banned — `full*` remains a legitimate SUBTREE-AWARE vocabulary (`fullChanged` / `fullBounds` / `fullPaintInto` / …). |
@@ -209,10 +209,17 @@ the seam (`_announce*`) + the react steps across all classes, and:
 
 ### 5.2 `auditNotificationSettleNeutrality` — the callbacks (runtime twin of [J])
 `Fizzygum-tests/scripts/notification-settle-audit/` (prelude + `run-notification-settle-gate.sh`). It wraps every
-`_reactTo*`/`_before*` callback + the settle tiers and HARD-fails a callback that opens a settle of its own across the
-suite. It catches an INDIRECT leak the static [J] cannot see — e.g. a callback → a chrome-button CONSTRUCTOR's public
-`@add` → `_settleLayoutsAfter` (the fix: a constructor builds an orphan and must reach `@_addNoSettle`, never the
-self-settling `@add`).
+`_reactTo*`/`_before*` callback + the settle tiers across the suite and HARD-fails a callback that OPENS A FLUSH — an
+ATTACHED-receiver `_settleLayoutsAfter` (it would throw) or any `recalculateLayouts`. It catches an INDIRECT leak the
+static [J] cannot see (a callback → some method → an attached settle). **It PERMITS an ORPHAN-receiver
+`_settleLayoutsAfter` reached in a callback** (the all-constructors-settle campaign, 2026-06-30): that is a constructor
+settling its OWN orphan — e.g. the chrome buttons `WindowWdgt._reactToChildDropped → _buildAndConnectChildrenNoSettle →
+new …IconButtonWdgt`, whose ctor calls the settling `@_buildAndConnectChildren()`. Such a call provably takes the
+in-flush+orphan auto-defer branch (`return coreThunk() if @isOrphan()`) — it records the change, never flushes/recurses
+— so flagging it was a false positive (the gate's old premise "a nested settle in a callback would re-enter/throw" is
+false for an orphan). The discipline is unchanged — a callback still must not OPEN A FLUSH; an orphan construction
+simply doesn't. *(Superseded earlier model: a constructor was required to reach `@_addNoSettle` directly and NOT settle;
+it now settles via the wrapper, which auto-defers here. See `docs/all-constructors-settle-plan.md`.)*
 
 Both gates are self-tested (plant a violation, confirm the gate throws) and run green; both require their prelude to
 have installed on every test (a coverage gap fails the gate, so a silent miss can't mask a violation).

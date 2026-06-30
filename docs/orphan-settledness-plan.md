@@ -32,6 +32,15 @@ base (ScrollPanelWdgt) breaks it (caught + reverted on ListWdgt). Verified green
 (0 paint-time schedules). KNOWN-SEPARATE: a `speed=normal`/parallel-load flake in `macroDemoMenuCatalogueParade`
 + `macroPaddingAreaIsPartOfWidget` is **pre-existing** (reproduced on pre-campaign HEAD), tracked separately.
 
+**FOLLOW-ON (2026-06-30) — all constructors settle.** This plan's Phase-2 sweep settled the ~16 content-sizing
+constructors; the follow-on **Topic 4 part 2** (`docs/all-constructors-settle-plan.md`) extended it to EVERY
+inline-building constructor (13 more) under one contract + a can't-forget build gate
+(`buildSystem/check-constructors-build.js`). It also REFINED this plan's framing in two places: (1) §2's "constructors
+do NOT settle; they build via cores" is **superseded** — constructors now DO settle, via the wrapper, which AUTO-DEFERS
+in-flush (the §6 residual exception is exactly the branch that makes callback-time construction safe); (2) the rule-[J]
+notification-settle gate was made aware of that auto-defer — it now PERMITS an orphan-receiver `_settleLayoutsAfter`
+in a callback (it provably defers), so only an attached-receiver settle / `recalculateLayouts` stays a violation.
+
 > The detailed RESUME-HERE plan that produced this is kept below as the execution record.
 
 ### (original RESUME-HERE plan — now executed)
@@ -385,6 +394,14 @@ construction nested in a live pass defers, settling when that pass completes. Ma
 would require the settle engine to run a **scoped settle on the disjoint orphan subtree** independent of the
 global flush/queue/flag (an ordered-downwalk-flavored change) — a larger, separate undertaking, noted here as
 the future path to a truly exception-free engine, **not in scope for these phases.**
+
+**Update (2026-06-30):** the all-constructors-settle follow-on (`docs/all-constructors-settle-plan.md`) makes this
+deferral **load-bearing** rather than merely tolerated: now that every constructor calls its settling wrapper, a widget
+built inside a settle-neutral callback (the window chrome buttons via `WindowWdgt._reactToChildDropped`) relies on this
+exact in-flush+orphan branch to DEFER instead of leaking a settle. The rule-[J] notification-settle gate was
+correspondingly taught that an orphan-receiver settle in a callback IS this safe defer (not a violation). So "remove the
+exception" is no longer purely an improvement — it is the mechanism that lets callback-time construction settle
+uniformly with no per-construction flag.
 
 ---
 

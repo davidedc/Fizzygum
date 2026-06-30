@@ -13,7 +13,13 @@ class FanoutWdgt extends Widget
   constructor: (@color) ->
     super
     @appearance = new FanoutAppearance @
+    @_buildAndConnectChildren()
 
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     @pinUp = new FanoutPinWdgt
     @pinDown = new FanoutPinWdgt
     @pinLeft = new FanoutPinWdgt

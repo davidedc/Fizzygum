@@ -29,7 +29,20 @@ class ScrollPanelWdgt extends PanelWdgt
     # so we set 0 opacity here.
     @alpha = 0
     super()
+    @_buildScrollFrame()
 
+  # Build the scroll frame (contents + h/v scrollbars) via the NoSettle core, settling ONCE at the end
+  # (orphan-settledness: `new ScrollPanelWdgt` returns settled). The name is deliberately DISTINCT from the
+  # leaf builder `_buildAndConnectChildren`: ScrollPanelWdgt is a base whose subclass ListWdgt OVERRIDES
+  # `_buildAndConnectChildren` to build its list CONTENTS, and CoffeeScript binds a subclass's constructor
+  # params (@elements, …) only AFTER super(). If THIS base constructor called the (virtual)
+  # `_buildAndConnectChildren`, `new ListWdgt` would dispatch into ListWdgt's contents-core during super()
+  # with @elements still nil → crash. So the base builds only the frame here (a name ListWdgt does not
+  # override); ListWdgt's constructor builds its contents via `_buildAndConnectChildren` AFTER super().
+  _buildScrollFrame: ->
+    @_settleLayoutsAfter => @_buildScrollFrameNoSettle()
+
+  _buildScrollFrameNoSettle: ->
     @contents = new PanelWdgt @ unless @contents?
     # _addNoSettle (NOT the self-settling public add): we are building our own innards
     # during construction; the panel is not parented yet, so a flush here would be a

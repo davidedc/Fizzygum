@@ -20,9 +20,17 @@ class SwitchButtonWdgt extends Widget
 
     #@color = Color.create 255, 152, 152
     #@color = Color.WHITE
-    # A constructor builds an ORPHAN: add through the NON-settling core. The public @add self-settles, and a settle
-    # in a constructor leaks into any callback that builds this button (e.g. WindowWdgt._reactToChildDropped's chrome
-    # rebuild) -- same fix as ButtonWdgt's ctor. The layout is scheduled (deferred, below) and applied on attach.
+    @_buildAndConnectChildren()
+
+  # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
+  # This REPLACES the old "defer the layout until attach" hack. A switch built INSIDE a callback (e.g.
+  # WindowWdgt._reactToChildDropped's chrome rebuild) runs in-flush, where the settle-tier's in-flush+orphan
+  # AUTO-DEFER (Widget._settleLayoutsAfter: `return coreThunk() if @isOrphan()`) defers automatically -- so no
+  # settle leaks into the settle-neutral callback. A top-level `new SwitchButtonWdgt` settles its own orphan.
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     for eachButton in @buttons
       @_addNoSettle eachButton
 

@@ -116,7 +116,28 @@ notification callbacks (`_reactTo*`/`_before*`, settle-neutral by rule [J]) · `
 
 ---
 
-## Topic 4 — constructor self-settling: ✅ DESIGN DECIDED + BANKED (2026-06-30); execution deferred behind 5+2/3
+## Topic 4 — constructor self-settling: ✅ EXECUTED (2026-06-30) — all constructors settle
+
+> **✅ DONE (Part 2; HELD pending review/commit).** All 13 inline-building constructors converted: each calls the
+> settling wrapper `@_buildAndConnectChildren()` (or `@_buildScrollFrame()` for the ScrollPanelWdgt base); building
+> lives in `_buildAndConnectChildrenNoSettle`. New build gate `buildSystem/check-constructors-build.js` (wired into
+> `build_it_please.sh`) forbids inline child-building in a `constructor:` body — 0 violations. GREEN: gauntlet
+> dpr1/dpr2/webkit 165/165 + apps + tier + settle + capstone (0 careless) + paint (0); byte-identical, zero recaptures.
+>
+> **KEY FINDING — THE ARGUMENT refined (not falsified).** The "nested construction is ALREADY solved" reasoning below
+> was right that the in-flush+orphan AUTO-DEFER neutralizes the runtime LEAK — but it MISSED rule **[J]**'s
+> notification-settle gate, which forbids a callback from *calling* the settle tier at all (not merely from flushing).
+> The window chrome buttons (Edit/External/Internal IconButtonWdgt→ButtonWdgt + SwitchButtonWdgt) are built inside
+> `WindowWdgt._reactToChildDropped`, so their now-settling ctors call `_settleLayoutsAfter` there → **8 gate violations
+> despite byte-identical pixels.** RESOLUTION (owner-directed "two sets"): the two sets already exist — the auto-defer's
+> FLUSH (top-level) + DEFER (in-flush) branches; the ctor calls ONE wrapper that routes by context. The runtime prelude
+> `Fizzygum-tests/scripts/notification-settle-audit/notification-settle-prelude.js` was refined to PERMIT an
+> ORPHAN-receiver `_settleLayoutsAfter` in a callback (it provably auto-defers); an ATTACHED-receiver settle and any
+> `recalculateLayouts` stay violations → the gate is now PRECISE, not weaker. ScrollPanelWdgt needed a DISTINCT
+> `_buildScrollFrame` name: ListWdgt overrides `_buildAndConnectChildren` for its CONTENTS, and CoffeeScript binds a
+> subclass's ctor params (`@elements`) only AFTER `super()`, so a virtual `_buildAndConnectChildren` call from the base
+> ctor would read them nil. Full result: `docs/all-constructors-settle-plan.md`. **The design notes below are kept as
+> the execution record.**
 
 **DECISION (owner, this session).** Make construction self-settling **uniform + explicit + lint-enforced** —
 option **(B) author-fired**, NOT engine auto-injection. Rationale: the visible wrapper matches how every other
@@ -200,9 +221,9 @@ code: the thing it exempted may be gone/fixed, so the marker (or allowlist line)
 
 ## ⏩ RESUME HERE (cold start)
 
-**Sequence DECIDED (owner, 2026-06-30): 5+2 → 3 → 4 (Topic 4 design already banked above); Topic 1 a separate
-track.** Currently executing **Topic 5 + Topic 2 together** (sanitize the allowlist + make the dead-methods gate
-symmetry-aware so future wrapper/core splits need no manual entry). **Topic 3** (naming-coverage audit) follows;
-**Topic 4** is design-banked and plannable when reached. **Topic 1** (determinism) is the highest-rigor /
-separate track — start by reading `Fizzygum-tests/DETERMINISM.md` and reproducing with a FRESH torture `--out`.
-All gates green at `speed=fastest` on `ce21dcf7` at the start of this arc.
+**Sequence (owner, 2026-06-30): 5+2 → 4 → [3, 1 remain].** ✅ DONE: **Topic 5 + Topic 2** (sanitized allowlist +
+symmetry-aware dead-methods gate, `f35d7021`); **Topic 4 rename** (`buildAndConnectChildren` → private `_…`, `a51d9d57`);
+**Topic 4 part 2** (all constructors settle — see the banner above; HELD pending review/commit). **STILL OPEN:
+Topic 3** (every non-settling private fn named `*NoSettle` — the naming-coverage audit, never started) and **Topic 1**
+(determinism `speed=normal`/parallel-load flake, PRE-EXISTING — the highest-rigor separate track; start by reading
+`Fizzygum-tests/DETERMINISM.md` and reproducing with a FRESH torture `--out`). All gates green at `speed=fastest`.

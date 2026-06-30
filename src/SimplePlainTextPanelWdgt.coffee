@@ -11,7 +11,7 @@
 class SimplePlainTextPanelWdgt extends PanelWdgt
 
   constructor: (
-    textAsString,
+    @textAsString,
     wraps,
     padding
     ) ->
@@ -22,10 +22,17 @@ class SimplePlainTextPanelWdgt extends PanelWdgt
     @disableDrops()
     @isTextLineWrapping = wraps
     @color = Color.WHITE
+    @_buildAndConnectChildren()
+
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     ostmA = new SimplePlainTextWdgt(
-      textAsString,nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
+      @textAsString,nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     ostmA.isEditable = true
-    if !wraps
+    if !@isTextLineWrapping
       # non-wrapping ("code view"): hug the natural text width.
       ostmA.softWrap = false
     ostmA.enableSelecting()

@@ -6,7 +6,13 @@ class GenericObjectIconWdgt extends Widget
 
   constructor: (@icon) ->
     super()
+    @_buildAndConnectChildren()
 
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     @objectIcon = new ObjectIconWdgt
     @_addNoSettle @objectIcon
 

@@ -59,14 +59,22 @@ class ButtonWdgt extends Widget
 
     #@color = Color.create 255, 152, 152
     #@color = Color.WHITE
-    if @faceWidget?
+    @_buildAndConnectChildren()
 
+  # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
+  # This REPLACES the old "defer the face's layout until attach" hack. The old fear -- "a settle in a
+  # constructor leaks into ANY callback that builds a button (e.g. WindowWdgt._reactToChildDropped's chrome
+  # rebuild via new *IconButtonWdgt, which must stay settle-neutral)" -- no longer bites: a button built
+  # INSIDE such a callback runs in-flush, where the settle-tier's in-flush+orphan AUTO-DEFER
+  # (Widget._settleLayoutsAfter: `return coreThunk() if @isOrphan()`) defers automatically. So no settle
+  # leaks into the settle-neutral callback, while a top-level `new ButtonWdgt` settles its own orphan layout.
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
+    if @faceWidget?
       if (typeof @faceWidget) == "string"
         @faceWidget = (new StringWdgt @faceWidget, WorldWdgt.preferencesAndSettings.textInButtonsFontSize).alignCenter()
-      # A constructor builds an ORPHAN, so add the face through the NON-settling core: the public @add self-settles,
-      # and a settle in a constructor leaks into ANY callback that builds a button -- e.g. WindowWdgt._reactToChildDropped's
-      # chrome rebuild (_buildAndConnectChildrenNoSettle -> new *IconButtonWdgt), which must stay settle-neutral. The
-      # layout is scheduled (deferred, below) and applied when the button is later attached and its parent settles.
       @_addNoSettle @faceWidget
       @_invalidateLayout()
   

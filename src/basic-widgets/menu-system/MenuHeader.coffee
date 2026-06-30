@@ -16,10 +16,19 @@ class MenuHeader extends BoxWdgt
     @text.backgroundColor = @color
     @text.alignCenter()
 
+    @_buildAndConnectChildren()
+
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     @_addNoSettle @text
     # the modern family does not self-size; make the label hug its text so the
-    # header below can size itself to it (see sizeToTextAndDisableFitting).
-    @text.sizeToTextAndDisableFitting()
+    # header below can size itself to it. Use the NoSettle core (not the public
+    # sizeToTextAndDisableFitting wrapper): the build's settle happens ONCE via
+    # _buildAndConnectChildren, so a mid-core self-settle would be redundant (layering [G]).
+    @text._sizeToTextAndDisableFittingNoSettle()
     @_applyExtentAndNotify @text.extent().add 2
 
   _applyWidthAndNotify: (theWidth) ->

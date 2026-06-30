@@ -15,14 +15,19 @@ class StretchableWidgetContainerWdgt extends Widget
   ratio: nil
   contents: nil
 
-  constructor: (contents) ->
+  constructor: (@contents) ->
     super new Point 300, 300
-    
-    if !contents?
-      contents = new StretchablePanelWdgt
+    @_buildAndConnectChildren()
 
-    @_addNoSettle contents
-    @contents = contents
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
+    if !@contents?
+      @contents = new StretchablePanelWdgt
+
+    @_addNoSettle @contents
 
     @_applyExtentAndNotify new Point 300, 300
     @contents._applyExtentAndNotify new Point @width(), @height()

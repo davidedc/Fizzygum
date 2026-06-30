@@ -339,6 +339,26 @@ if ! $noSyntaxCheck ; then
   echo "... thin-wrap check OK"
 fi
 
+# --- build-time CONSTRUCTOR-BUILD gate ------------------------------------------------
+# Enforces the "all constructors settle" end-state (Topic 4 part 2): a `constructor:` body must NOT build
+# its own children inline (@add / @addNoSettle / @addMany / @_addNoSettle / … on `this`). Child-building
+# belongs in the _buildAndConnectChildrenNoSettle core, reached from the constructor via the settling
+# wrapper @_buildAndConnectChildren() (or @_buildScrollFrame() for the ScrollPanelWdgt base) -- so the
+# settle-tier FLUSHES a top-level `new X()` and AUTO-DEFERS one built in-flush (inside a callback). Genuine
+# exceptions carry a per-constructor `# constructor-build-exempt: <reason>` marker (no central allowlist).
+# (buildSystem/check-constructors-build.js -- same --noSyntaxCheck escape hatch + explicit $? abort as the
+# gates above; scans src/ only, so it runs for every build flavour incl. --homepage.)
+if ! $noSyntaxCheck ; then
+  echo "checking constructors do not build children inline ..."
+  node ./buildSystem/check-constructors-build.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: constructor-build gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... constructor-build check OK"
+fi
+
 # --- build-time test-.js syntax gate (only when tests are part of this build) ---------
 # Each SystemTest's _automationCommands.js carries its macro inside a backtick-delimited JS
 # template literal; a stray backtick silently corrupts the file so the test never loads (with

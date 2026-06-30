@@ -104,6 +104,16 @@ guarded by lint `[J]`). Line numbers were re-read against `c5ae7697`: only `Worl
 from the new audit fields), the `Widget.coffee` apply/seam band (1300–1800) is *unchanged*, its coalescing/measure band
 (3800–4200) moved ~+6, and the small files did not move — so the appendix (§5) numbers are current as of this HEAD.
 
+**Update (2026-06-30), post-`c5ae7697`:** three further settle-tier waves landed and §2.2/§2.7 below were updated for
+them. (1) **orphan-settledness** (`ce21dcf7`): a *top-level* orphan public call now FLUSHES its own subtree, so
+`new Foo()` returns settled (only an orphan call reached *inside* a live flush still defers — `Widget.coffee`
+`_settleLayoutsAfter` ~:816). (2) **settle-tier follow-ups** (`f35d7021`): a symmetry-aware dead-methods gate + 40 dead
+methods deleted. (3) **all constructors settle** (`docs/all-constructors-settle-plan.md`, HELD): every inline-building
+constructor routes through the settling wrapper `_buildAndConnectChildren()` / `_buildScrollFrame()` over its
+`_buildAndConnectChildrenNoSettle` core, locked in by a new build gate `buildSystem/check-constructors-build.js`; the
+rule-[J] notification-settle runtime gate was made aware of the orphan-construction auto-defer (it now permits an
+orphan-receiver settle reached in a callback). Numbers below predate these waves by a few commits — re-grep.
+
 > **Line numbers are approximate — the METHOD NAME is authoritative; `grep` it.** (Same convention as the
 > OVERVIEW; every shipped edit shifts lines — the two big files `Widget.coffee` and `WorldWdgt.coffee` drifted
 > ~40–190 lines since the 2026-06-22 writing, and the ten commits since `a5e89d1b` — the §4.1 measure, the §4.2
@@ -236,10 +246,12 @@ no longer exists in the tree — there is no raw/immediate public add to enumera
 that re-fits layouts also settles exactly once. *(An earlier revision listed `reactToDropOf` here; the fourth wave's
 `5f923847`/`dd3a5510` corrected that — a **drop** is settled **once by the drop *dispatcher*** (`ActivePointerWdgt.drop`),
 and the per-container drop **callback** is the settle-neutral `_reactToChildDropped`, not a self-settling mutator; lint
-`[J]` now forbids such a callback from opening its own settle.)* The flush is **skipped** when the target is an *orphan* (attached to
-neither world nor hand — `_settleLayoutsAfter` ~:816) and **coalesced** when inside a `_settleLayoutsAfterBatch`
-batch (~:833). Nested public setters reached on an *attached* widget do **not** stack flushes — they *throw* (the
-flow-violation guard, ~:826).
+`[J]` now forbids such a callback from opening its own settle.)* For an *orphan* (attached to neither world nor hand — `_settleLayoutsAfter` ~:816) the flush is **deferred only when the
+orphan call is itself reached inside a live flush/pass** (`return coreThunk() if @isOrphan()`): the orphan-settledness
+change (`ce21dcf7`) made a *top-level* orphan call FLUSH its own subtree, so `new Foo()` now returns settled (and the
+all-constructors-settle follow-on routes every constructor through that wrapper). A flush is also **coalesced** inside a
+`_settleLayoutsAfterBatch` batch (~:833). Nested public setters reached on an *attached* widget do **not** stack
+flushes — they *throw* (the flow-violation guard, ~:826).
 
 So the honest formula is:
 
@@ -569,14 +581,18 @@ don't chase it:
   foundational lifecycle. An orphan has no live container to lay out against, so its *authoritative* layout is
   unavoidably the top-down pass run when it is (re-)attached through a self-settling `add` — and *every* widget is an
   orphan while its subtree is being built, so "modify off-world, settle on attach" is how construction itself works.
-  *(A sharper corollary the fourth wave's `08bbb29d` had to enforce, which **confirms** this model rather than
-  complicating it: a constructor must add its children through the non-settling `_addNoSettle` core, not the public
-  self-settling `add`. The orphan guard skips the flush for a **bare** orphan — but a constructor that runs **inside an
-  enclosing callback/settle** (e.g. a window rebuilding its chrome on drop, `WindowWdgt._reactToChildDropped →
-  _buildAndConnectChildrenNoSettle → new …IconButtonWdgt`) would otherwise have its child-add's public `add` re-enter
-  that callback's flush — a "settle-in-callback" leak. Twelve constructors were swept from `@add` to `@_addNoSettle` to
-  close it; the layout is still scheduled via `_invalidateLayout` and applied when the widget is later attached and its
-  parent settles.)*
+  *(A sharper corollary, now in its mature form after the all-constructors-settle campaign
+  (`docs/all-constructors-settle-plan.md`, 2026-06-30): EVERY constructor builds its children in a non-settling core
+  `_buildAndConnectChildrenNoSettle` (via `@_addNoSettle`, never the public self-settling `add`) and reaches it through
+  the settling wrapper `@_buildAndConnectChildren()` (or `@_buildScrollFrame()` for the ScrollPanelWdgt base). That ONE
+  wrapper routes by context — a top-level `new Foo()` FLUSHES (orphan-settledness: returns settled), while a constructor
+  reached **inside an enclosing callback/settle** (e.g. a window rebuilding its chrome on drop,
+  `WindowWdgt._reactToChildDropped → _buildAndConnectChildrenNoSettle → new …IconButtonWdgt`) AUTO-DEFERS via the
+  in-flush+orphan branch, so no settle leaks into the settle-neutral callback. The earlier `08bbb29d` form of this
+  corollary — "a constructor must NOT settle; sweep its `@add`→`@_addNoSettle`" — is thus superseded: the build moved into
+  the core (a build gate `buildSystem/check-constructors-build.js` forbids inline child-building in a `constructor:`
+  body), and the rule-[J] notification-settle gate was taught that the orphan-receiver settle reached in a callback IS
+  this safe auto-defer, not a leak.)*
   Two points the campaign had to get exactly right:
   - **The exclusion is *classification*, not *suppression*.** The audit hook's `!@isOrphan()` only decides not to
     *count* an orphan push as careless; the push is still made, still queued, and still laid out — dormantly, against

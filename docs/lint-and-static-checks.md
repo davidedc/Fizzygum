@@ -85,8 +85,9 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
 | dead-method | `buildSystem/check-dead-methods.js` | ~:297 | a method defined in src but referenced nowhere (src + harness + macro `.js`) | allowlist `dead-method-allowlist.txt`; fails only on a NEW dead method |
 | stinks | `buildSystem/check-stinks.js` | ~:315 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
 | thin-wrap | `buildSystem/check-thin-wraps.js` | ~:333 | a public method owning a `_<name>NoSettle` twin is the ONE canonical mechanical wrap | per-method `# thin-wrap-exempt: <reason>`; SKIPS a twinless `*NoSettle` |
-| test-.js syntax | `Fizzygum-tests/scripts/check-tests-syntax.js` | ~:352 | JS syntax of the macro SystemTest `.js` files, before the build copies them in | — (self-skips on `--homepage`/`--notests`/absent sibling) |
-| ref-image integrity | `Fizzygum-tests/scripts/check-refs.js` | ~:370 | >1 `dataHash` per `(test,image,dpr,OS)` or an orphaned `.js`/`.png` reference | — (self-skips like the test gate) |
+| **constructor-build** | **`buildSystem/check-constructors-build.js`** | **~:353** | a `constructor:` body must not build its own children inline — `@add`/`@addMany`/`@addNoSettle`/`@_addNoSettle`/… on `this` belong in `_buildAndConnectChildrenNoSettle`, reached via the settling wrapper | per-constructor `# constructor-build-exempt: <reason>` (no central allowlist) |
+| test-.js syntax | `Fizzygum-tests/scripts/check-tests-syntax.js` | ~:372 | JS syntax of the macro SystemTest `.js` files, before the build copies them in | — (self-skips on `--homepage`/`--notests`/absent sibling) |
+| ref-image integrity | `Fizzygum-tests/scripts/check-refs.js` | ~:390 | >1 `dataHash` per `(test,image,dpr,OS)` or an orphaned `.js`/`.png` reference | — (self-skips like the test gate) |
 
 **Per-gate notes:**
 
@@ -112,6 +113,15 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
   after comments/blanks: `[zero+ return if/unless guards]` then `@_settleLayoutsAfter => @_<name>NoSettle <args>` — it
   does no work of its own. Complements `check-layering` (which enforces the CORE reaches no public setter). A twinless
   `_<name>NoSettle` (e.g. `_addInPseudoRandomPositionNoSettle`) is SKIPPED — no public twin to constrain.
+- **constructor-build (`check-constructors-build.js`).** Locks in the "all constructors settle" end-state (Topic 4
+  part 2): a `constructor:` body must NOT build its own children inline. An `inctor` state machine (set on `constructor:`,
+  cleared by the next 2-space class header — so it handles multi-line ctor headers, mirroring the FNR audit awk) scans
+  each constructor and FAILS on `@_?add(Many)?(NoSettle)?` called on `this`. The child-building belongs in
+  `_buildAndConnectChildrenNoSettle`, reached from the ctor via the settling wrapper `@_buildAndConnectChildren()` (or
+  `@_buildScrollFrame()` for the ScrollPanelWdgt base) — so the settle-tier FLUSHES a top-level `new X()` and AUTO-DEFERS
+  one built in-flush (inside a callback). Building INTO a sub-child (`@contents._addNoSettle …`) is NOT matched — that
+  `.`-qualified form is not `@`-prefixed. Genuine exceptions carry `# constructor-build-exempt: <reason>` (in the body or
+  the comment block directly above the header); no central allowlist.
 
 **Two RUNTIME naming-audit gates (suite-run, NOT build-time).** The naming convention also carries two off-by-default
 runtime audits that run over the WHOLE SystemTest suite (not `build_it_please.sh`) — each an injected prelude that wraps
@@ -123,7 +133,13 @@ paint-readonly gates and wired into `fg gauntlet`:
   unexercised seam path).
 - **notification-settle** (`Fizzygum-tests/scripts/notification-settle-audit/`, flag
   `auditNotificationSettleNeutrality`) — the dynamic twin of rule [J]: HARD-fails a `_reactTo*`/`_before*` callback that
-  opens a settle (it caught an INDIRECT leak the static [J] cannot see — a callback → constructor → public `@add`).
+  OPENS A FLUSH — an ATTACHED-receiver `_settleLayoutsAfter` (it would throw) or any `recalculateLayouts`. It PERMITS an
+  ORPHAN-receiver `_settleLayoutsAfter` reached in a callback: that is a constructor settling its own orphan (the window
+  chrome buttons `WindowWdgt._reactToChildDropped` rebuilds), which provably takes the in-flush+orphan auto-defer branch
+  (`return coreThunk() if @isOrphan()`) — it records the change, never flushes/recurses. (The "all constructors settle"
+  campaign added this orphan exemption — `docs/all-constructors-settle-plan.md`; it makes the gate PRECISE, since the old
+  premise "any nested settle in a callback would re-enter/throw" is false for an orphan. It still catches the INDIRECT
+  attached leak the static [J] cannot follow.)
 
 They verify the *behaviour* the names promise (the ground truth the static scanner can't follow through dynamic
 dispatch). Full description: `docs/layering-naming-convention.md`.
@@ -278,7 +294,7 @@ if ! $noSyntaxCheck ; then
   echo "... <thing> OK"
 fi
 ```
-Place it among the other gates (~:255–335). If it scans the sibling tests, guard it
+Place it among the other gates (~:255–390). If it scans the sibling tests, guard it
 (`&& ! $homepage && ! $notests && [ -d ../Fizzygum-tests ]`) so a tests-stripped build self-skips.
 
 **Self-test a rule (a lint that can't fail is worthless).** Plant a known violation in a throwaway source file, confirm
@@ -306,11 +322,12 @@ source to satisfy a new rule.
   `stripLine` / `METHOD_HEADER` / `methodBoundary` (mixin-DSL aware); `discoverSettlingWrappers`; `checkFile` (rules
   [A]–[M]); `checkMacroFile` (rule [D]).
 - `buildSystem/check-thin-wraps.js` — `HEADER`/`GUARD`/`EXEMPT`; twinless skip (`if (!byName.has(base)) continue`).
+- `buildSystem/check-constructors-build.js` — `METHOD`/`BUILD`/`EXEMPT`; the `inctor` state machine (multi-line-ctor-header aware).
 - `buildSystem/check-dead-methods.js` + `buildSystem/dead-method-allowlist.txt`.
 - `buildSystem/check-stinks.js` — the inline `baseline` per stink.
 - `buildSystem/check-coffee-syntax.js` — loads `src/meta/Class.coffee`/`Mixin.coffee` to compile fragmented.
 - `Fizzygum-tests/scripts/check-tests-syntax.js`, `Fizzygum-tests/scripts/check-refs.js`.
-- `build_it_please.sh` — gate wiring (~:255–370), each `if ! $noSyntaxCheck` + `$?`-gated `exit 1`.
+- `build_it_please.sh` — gate wiring (~:255–390), each `if ! $noSyntaxCheck` + `$?`-gated `exit 1`.
 - `src/basic-widgets/Widget.coffee` — `_settleLayoutsAfter` (the one-flush throw ~:813); `_invalidateLayout`
   (`FLOWRULE_VIOLATION` ~:3848); the immediate-mutator apply corners (`_apply*`/`_commit*`) + the `_<name>NoSettle` cores.
 
