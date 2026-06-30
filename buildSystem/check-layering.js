@@ -241,6 +241,22 @@ const EARLY_RETURN_MARKER = 'early-return-sanctioned';      // the [H] per-metho
 // _<name>NoSettle core, not before a public wrapper's _settleLayoutsAfter.
 const GUARD_RETURN = /\breturn\b\s*(if\b|unless\b|$)/;
 
+// [L] the notification-callback NAME convention (layering/naming plan §9.2/§9.6), checked at the method DEF.
+// A callback uses the fully-derivable (perspective × phase) scheme _(reactTo|before)(Being|Child|HolderWindow)<Event>
+// (SELF = Being, CONTAINER = Child, third-party = HolderWindow; <Event> a PascalCase verb, optionally qualified
+// e.g. _reactToChildAddedInScrollPanel / _reactToBeingDroppedIntoFolder). Two static name checks:
+//   * any _reactTo*/_before* def MUST match CALLBACK_SHAPE and must NOT carry NoSettle -- a callback is a
+//     settle-neutral core by definition (the dispatcher owns the one settle, rule [J]); the NoSettle suffix is
+//     reserved for the public-setter cores of §3d-settle, never a callback;
+//   * the legacy callback fragments (childX / justBeen / iHaveBeen / aboutTo / prepareTo) are banned outright --
+//     the ⚑ rename batches (§9.7-2/3/4) retired them; the (now empty) ban keeps them retired.
+// The old _reactToDropOf / _reactToGrabOf "…Of" shape is caught by CALLBACK_SHAPE itself (DropOf/GrabOf is not a
+// Being/Child/HolderWindow event), so it needs no separate fragment. The gates (wantsToBe<Event>ed /
+// wants<Event>OfChild) are PUBLIC positive bools, not _reactTo*/_before* hooks, so they are outside this rule.
+const CALLBACK_PREFIX = /^_(reactTo|before)/;
+const CALLBACK_SHAPE = /^_(reactTo|before)(Being|Child|HolderWindow)[A-Z]\w*$/;
+const LEGACY_CALLBACK_FRAGMENT = /^(child[A-Z]|justBeen|iHaveBeen|aboutTo|prepareTo)/;
+
 // Strip string literals and trailing `#` comments from one line, carrying multi-line
 // string state across lines. Returns { code, state }.
 function stripLine(line, state) {
@@ -366,7 +382,17 @@ function checkFile(file, violations, wrapperCall, warnings) {
       if (b) {
         method = b.method; mixinHashIndent = b.mixinHashIndent;
         methodMarked = false; methodNoSettleMarked = false; methodGuardReturnLine = -1; methodHWarned = false; methodEarlyReturnMarked = false;
-        if (b.kind === 'header') continue;           // the header line itself carries no call to check
+        if (b.kind === 'header') {
+          // [L] callback NAME convention (checked once, at the def): derivable shape + legacy-fragment ban (see consts above).
+          if (b.method) {
+            if (CALLBACK_PREFIX.test(b.method)) {
+              if (/NoSettle$/.test(b.method)) violations.push(`[L] callback ${b.method}() carries NoSettle — a notification callback is a settle-neutral core; the dispatcher owns the one settle, so drop the suffix (layering/naming plan §9.2)  — ${rel}:${n + 1}`);
+              else if (!CALLBACK_SHAPE.test(b.method)) violations.push(`[L] malformed callback ${b.method}() — must match _(reactTo|before)(Being|Child|HolderWindow)<Event> (layering/naming plan §9.2)  — ${rel}:${n + 1}`);
+            }
+            if (LEGACY_CALLBACK_FRAGMENT.test(b.method)) violations.push(`[L] legacy callback fragment ${b.method}() — use the _(reactTo|before)(Being|Child|HolderWindow)<Event> scheme (layering/naming plan §9.2/§9.6)  — ${rel}:${n + 1}`);
+          }
+          continue;           // the header line itself carries no call to check
+        }
       }
     }
     if (!method) continue;
@@ -552,9 +578,10 @@ function main() {
     console.error('I: a __ leaf must trigger no orchestration (re-fit seam / react / schedule-settle / public setter) — keep it a pure bottom (layering/naming plan §3a).');
     console.error('J: a notification hook (_reactTo*/_before*) must not open a settle — the gesture/structural dispatcher owns the one _settleLayoutsAfter (layering/naming plan §9.2).');
     console.error('K: a 2x2 apply corner must match its name — a non-AndNotify _apply*/_commit* must not fire the seam nor call an *AndNotify; a _commit*AndNotify must not react (layering/naming plan §3b).');
+    console.error('L: a notification callback must be named _(reactTo|before)(Being|Child|HolderWindow)<Event> with no NoSettle; the legacy fragments (childX/justBeen/iHaveBeen/aboutTo/prepareTo) are retired (layering/naming plan §9.2/§9.6).');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
   process.exit(0);
 }
 
