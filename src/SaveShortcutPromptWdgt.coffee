@@ -25,7 +25,7 @@ class SaveShortcutPromptWdgt extends MenuWdgt
 
     super widgetOpeningThePopUp, false, @target, true, true, @msg, @tempPromptEntryField
 
-    @silentAdd @tempPromptEntryField
+    @__add @tempPromptEntryField
 
     @addMenuItem "Don't save", true, @target, "destroy"
     # "Cancel" here just dismisses this prompt, but the target

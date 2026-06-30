@@ -32,7 +32,7 @@ class PromptWdgt extends MenuWdgt
     super widgetOpeningThePopUp, false, @target, true, true, @msg or "", @tempPromptEntryField
 
 
-    @silentAdd @tempPromptEntryField
+    @__add @tempPromptEntryField
     if @ceilingNum or WorldWdgt.preferencesAndSettings.useSliderForInput
       slider = new SliderWdgt(
         @floorNum or 0,
@@ -46,7 +46,7 @@ class PromptWdgt extends MenuWdgt
       slider.target = @
       slider.argumentToAction = @
       slider.action = "reactToSliderAction"
-      @silentAdd slider
+      @__add slider
     @addLine 2
 
     @addMenuItem "Ok", true, @target, @callback

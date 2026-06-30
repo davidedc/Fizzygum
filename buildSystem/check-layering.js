@@ -5,11 +5,11 @@
  * geometry API (docs/deferred-layout-16-macro-breakages.md / the self-settling-API design).
  *
  * THE CONSTRAINTS (program-flow soundness, not state invariants)
- *   A) A LOW-LEVEL method (name starting raw / silent / __ , ending NoSettle, or one of
+ *   A) A LOW-LEVEL method (name starting raw / _ / __ , ending NoSettle, or one of
  *      _reLayout / _positionAndResizeChildren / _reLayoutScrollbars) must NOT call a public
  *      geometry setter, a SINGLE-settling text setter (setText / setFontSize / setFontName /
  *      toggleShowBlanks / toggleWeight / toggleItalic / toggleIsPassword), or recalculateLayouts.
- *      Low-level code mutates immediately (raw/silent) and must never reach UP into the
+ *      Low-level code mutates immediately (raw pixels / the _ and __ private tiers) and must never reach UP into the
  *      public, self-flushing layer. (The text setters self-settle via the single _settleLayoutsAfter,
  *      so reaching one from a layout pass throws the flow-violation — AxisWdgt._reLayout once called
  *      setText for its tick labels; it now uses the non-settling _setTextNoSettle core.)
@@ -56,8 +56,8 @@ const PUBLIC_SETTERS = ['setExtent', 'moveTo', 'setBounds', 'setWidth', 'setHeig
 // NB moveWithin (ex-fullMoveWithin, public) is deliberately NOT here: it is a public CONVENIENCE that delegates
 // to the one-settle moveTo, so listing it would false-trip [C] (public-setter calls public-setter) on its
 // moveWithin -> moveTo call. Like fullMoveWithin pre-rename, it stays untracked (it self-settles via moveTo).
-// a call to a public setter: leading @ or . then the lowercase name (excludes raw*/silent* —
-// those have `raw`/`silent` between the @/. and the capitalised `Set*`/`*MoveTo`).
+// a call to a public setter: leading @ or . then the lowercase public name (the _-prefixed low-level mutators
+// — _applyExtentAndNotify / __commitExtent / etc. — don't match: the leading underscore sits between the @/. and the verb).
 const PUB_CALL = new RegExp('[@.]\\s*(' + PUBLIC_SETTERS.join('|') + ')\\b');
 // R2 carve-out: the public mover moveTo shares its name with the HTML5 canvas context.moveTo (~560 draw
 // call-sites + @moveTo in the canvas extensions). PUB_CALL is receiver-blind, so a moveTo match is IGNORED
@@ -89,11 +89,12 @@ const PUBLIC_SET = new Set(PUBLIC_SETTERS);
 const RECALC_WHITELIST = new Set(['doOneCycle', '_settleLayoutsAfter', '_settleLayoutsAfterBatch']);
 
 const isLowLevel = (name) =>
-  /^raw[A-Z]/.test(name) || /^silent/.test(name) ||  // raw* is now ONLY the pixel accessors (rawPixelInfo/rawPixelHash/
-                            // rawRGBA); silent* = structural (silentHide/silentAdd/silentAddShadow), pending the §3d pass.
-                            // (the old /^fullRaw/ arm was REMOVED with the §6-1/§6-5 move+mutator renames, 2026-06-29:
-                            //  every fullRaw* mover is now an _apply*AndNotify corner or a _move* convenience — both
-                            //  leading-underscore, so caught by /^_/ below; the low-level classification is unchanged.)
+  /^raw[A-Z]/.test(name) ||  // raw* is now ONLY the pixel accessors (rawPixelInfo/rawPixelHash/rawRGBA).
+                            // (the structural silent* setters were renamed to __hide/__addShadow/__add LEAVES in §3d/B13,
+                            //  caught by /^_/ below — the old /^silent/ arm was retired with them. The old /^fullRaw/ arm
+                            //  was likewise REMOVED with the §6-1/§6-5 move+mutator renames: every fullRaw* mover is now an
+                            //  _apply*AndNotify corner or a _move* convenience — both leading-underscore, so caught by /^_/
+                            //  below; the low-level classification is unchanged.)
   /^_/.test(name) ||        // leading-underscore = private (incl. __ and the re-layout machinery
                             // _positionAndResizeChildren / _reLayoutScrollbars / _reLayoutChildrenAndScrollbars /
                             // _reLayoutChildren / _reLayoutSelf / _reLayoutDesktop /
@@ -133,7 +134,7 @@ const isLowLevel = (name) =>
 // _apply*AndNotify / _commit*AndNotify CORNER, or a _move* / _setWidthSizeHeightAccordingly /
 // _setExtentToFractional* / _resizeToWithoutSpacing CONVENIENCE (all covered by [E], the SCHEDULE ban below), or a
 // __commit* LEAF (covered by the STRONGER [I] no-orchestration ban, which subsumes the schedule ban). The
-// structural silent* setters (silentHide/silentAdd/silentAddShadow, pending §3d) are matched too. None is
+// structural silent* setters were renamed to the __hide/__addShadow/__add LEAVES (§3d/B13), now [I]-governed. None is
 // innocent-named, so [E]/[I] have no blind spot. The only non-low-level methods touching the cache-break are
 // constructor (@bounds init, not a mutation), _destroyNoSettle and removeFromTree (teardown / structural-removal
 // cache hygiene -- neither writes geometry; removeFromTree is a structural op that legitimately schedules). No escapee.
@@ -141,15 +142,14 @@ const isImmediateMutator = (name) =>
   /^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)AndNotify$/.test(name) ||   // ✓/✓ corners (ex rawSet*/fullRawMove{By,To})
   /^_commit(Extent|Bounds)AndNotify$/.test(name) ||                             // notify-only corners (ex silentRawSet{Extent,Bounds})
   /^_move(LeftSideTo|RightSideTo|TopSideTo|BottomSideTo|ToSideOf|FullCenterTo|Within|InDesktopToFractionalPosition|InStretchablePanelToFractionalPosition)$/.test(name) ||  // convenience movers (ex fullRawMove*)
-  /^_(setWidthSizeHeightAccordingly|setExtentToFractionalExtentInPaneUserHasSet|resizeToWithoutSpacing)$/.test(name) ||  // convenience setters/resizer (ex rawSet*/rawResize*)
-  /^silent/.test(name);  // structural silent setters (silentHide/silentAddShadow/silentAdd), pending §3d
+  /^_(setWidthSizeHeightAccordingly|setExtentToFractionalExtentInPaneUserHasSet|resizeToWithoutSpacing)$/.test(name);  // convenience setters/resizer (ex rawSet*/rawResize*). NB the ex-silent* structural setters are now __hide/__addShadow/__add LEAVES under [I], NOT immediate-mutators (like the __commit* leaves).
 // (the __commit* leaves are deliberately NOT matched here -- rule [I] governs them more strictly. The —/✓ arrange
 //  corners _applyExtent/_applyBounds/_applyMoveBy/_applyMoveTo react synchronously and were never [E]-covered;
 //  they stay out, exactly as their pre-sweep raw-less _arrangeApply* form was.)
 
 // [D] macro hygiene: a SystemTest macro must drive the world through the PUBLIC widget API ONLY -- never
 // the framework's private (_) surface, nor the immediate-mutator geometry API (the _apply*/_commit*/__commit*
-// corners + leaves, the _move*/_set*/_resize* convenience movers, and the structural silent* setters).
+// corners + leaves [incl. the ex-silent* __hide/__addShadow/__add structural leaves], the _move*/_set*/_resize* movers).
 // HARD ban, no sanctioned escape. Two reasons: (1) the low-level geometry setters bypass the layout settle,
 // so a macro poking one on an ATTACHED widget leaks an off-settle container re-fit onto the per-frame
 // end-of-cycle flush (the end-of-cycle drawdown); (2) a macro reaching past the public API is testing
@@ -170,7 +170,7 @@ const isImmediateMutator = (name) =>
 // legitimately uses the low-level API).
 const MACROS_DIR = path.join(__dirname, '..', '..', 'Fizzygum-tests', 'tests');
 const MACRO_VERBS_FILE = path.join(SRC, 'macros', 'MacroToolkit.coffee');
-const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*|silent\w*)\b/;  // renamed geometry mutators are now _-prefixed (caught by _[A-Za-z]); raw* = pixel API, silent* = structural — both still macro-forbidden. (the dead fullRaw\w* arm was dropped with the §6-5 sweep.)
+const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*)\b/;  // renamed geometry mutators + the ex-silent* structural leaves (__hide/__addShadow/__add) are now _-prefixed (caught by _[A-Za-z]); raw* = the pixel API, still macro-forbidden. (the dead fullRaw\w* and silent\w* arms were dropped with the §6-5 / §3d renames.)
 
 // [G] the STRUCTURAL self-settling-wrapper rule (the deferred-layout "cores call cores" discipline,
 // made static). [A] above forbids a low-level method from DIRECTLY calling the 5 geometry setters /

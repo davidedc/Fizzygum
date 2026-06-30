@@ -2088,7 +2088,7 @@ class Widget extends TreeNode
   # ... when you want to hide something
   # but you don't want to generate any
   # broken rectangles
-  silentHide: ->
+  __hide: ->
     if !@isVisible
       return
     @isVisible = false
@@ -2100,7 +2100,7 @@ class Widget extends TreeNode
     if !@isVisible
       return
 
-    @silentHide()
+    @__hide()
 
     # TODO refactor this, it appears more than one time
     # if the widget contributes to a shadow, unfortunately
@@ -2375,10 +2375,10 @@ class Widget extends TreeNode
   # shadow is added to a widget by
   # the ActivePointerWdgt while floatDragging
   addShadow: (offset = new Point(4, 4), alpha = 0.2) ->
-    @silentAddShadow offset, alpha
+    @__addShadow offset, alpha
     @fullChanged()
 
-  silentAddShadow: (offset, alpha) ->
+  __addShadow: (offset, alpha) ->
     @shadowInfo = new ShadowInfo offset, alpha
   
   hasShadow: ->
@@ -2509,7 +2509,7 @@ class Widget extends TreeNode
   # _addNoSettle -- the COMPLETE add minus the settle. The single NON-settling core behind add() and
   # every internal layout-time / construction-time / teardown adder (it must NOT
   # flush layouts: it runs inside another mutation's settle, during construction, or from a
-  # private teardown chain). Full semantics: shadow management + invalidate + silentAdd +
+  # private teardown chain). Full semantics: shadow management + invalidate + __add +
   # _reactToBeingAdded / _reactToChildAdded / _reactToChildRemoved callbacks + fractional-position, but never
   # recalculateLayouts. (The shadow/fractional steps fold in what add() used to do in its
   # settle-wrap; they are no-ops for the fresh non-world children the internal adders pass.)
@@ -2563,7 +2563,7 @@ class Widget extends TreeNode
     @_invalidateLayout(aWdgt)
 
     aWdgt.fullChanged()
-    @silentAdd aWdgt, true, position
+    @__add aWdgt, true, position
     aWdgt._reactToBeingAdded @, beingDropped
     if previousParent?._reactToChildRemoved?
       previousParent._reactToChildRemoved aWdgt
@@ -2592,7 +2592,7 @@ class Widget extends TreeNode
 
   calculateAndUpdateExtent: ->
 
-  silentAdd: (aWdgt, avoidExtentCalculation, position = nil) ->
+  __add: (aWdgt, avoidExtentCalculation, position = nil) ->
     # the widget that is being
     # attached might be attached to
     # a clipping widget. So we
@@ -3168,7 +3168,7 @@ class Widget extends TreeNode
   pickColor: (msg, callback, defaultContents) ->
     colorPicker = new ColorPickerWdgt defaultContents
     menu = new MenuWdgt @, false, @, true, true, msg or "", colorPicker
-    menu.silentAdd colorPicker
+    menu.__add colorPicker
     menu.addLine 2
 
     menu.addMenuItem "Ok", true, @, callback

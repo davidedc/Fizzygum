@@ -37,7 +37,7 @@ class MenuWdgt extends PopUpWdgt
     unless @isListContents
       if @title
         @createLabel()
-        @silentAdd @label
+        @__add @label
 
   colloquialName: ->
     if @title
@@ -59,11 +59,11 @@ class MenuWdgt extends PopUpWdgt
 
   addLine: (height) ->
     item = @createLine height
-    @silentAdd item
+    @__add item
 
   prependLine: (height) ->
     item = @createLine height
-    @silentAdd item,nil,0
+    @__add item,nil,0
   
   createLabel: ->
     @label = new MenuHeader @title
@@ -111,13 +111,13 @@ class MenuWdgt extends PopUpWdgt
     # console.log "menu creating MenuItemWdgt "
     menuItemSpec = new MenuItemSpec label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic, doubleClickAction, arg1, arg2, representsAWidget
     item = @createMenuItem menuItemSpec
-    @silentAdd item
+    @__add item
 
   prependMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic, doubleClickAction, arg1, arg2, representsAWidget)->
     # console.log "menu creating MenuItemWdgt "
     menuItemSpec = new MenuItemSpec label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic, doubleClickAction, arg1, arg2, representsAWidget
     item = @createMenuItem menuItemSpec
-    @silentAdd item, nil, 0
+    @__add item, nil, 0
 
   # »>> this part is excluded from the fizzygum homepage build
 

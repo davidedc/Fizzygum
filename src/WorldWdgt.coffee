@@ -991,7 +991,7 @@ class WorldWdgt extends PanelWdgt
         # would spin forever. So: settle + ban the offender (both layout-clean), then defer the
         # softReset + reporting to the next cycle's drain, outside the flush. (task #18)
         tryThisWidget.markLayoutAsFixed()   # it threw before doing this itself; do it now so the loop converges
-        tryThisWidget.silentHide()          # ban from paint -- silent: nils caches only, no _invalidateLayout/flush
+        tryThisWidget.__hide()          # ban from paint -- silent: nils caches only, no _invalidateLayout/flush
         @layoutErrorsToReport.push err
 
 
@@ -1175,12 +1175,12 @@ class WorldWdgt extends PanelWdgt
     @errorsWhileRepainting.push err
     if !@widgetsGivingErrorWhileRepainting.includes @paintingWidget
       @widgetsGivingErrorWhileRepainting.push @paintingWidget
-      @paintingWidget.silentHide()
+      @paintingWidget.__hide()
 
   hideOffendingWidget: ->
     if !@widgetsGivingErrorWhileRepainting.includes @paintingWidget
       @widgetsGivingErrorWhileRepainting.push @paintingWidget
-      @paintingWidget.silentHide()
+      @paintingWidget.__hide()
 
   resetDataStructuresForBrokenRects: ->
     @broken = []
