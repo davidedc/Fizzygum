@@ -257,6 +257,16 @@ const CALLBACK_PREFIX = /^_(reactTo|before)/;
 const CALLBACK_SHAPE = /^_(reactTo|before)(Being|Child|HolderWindow)[A-Z]\w*$/;
 const LEGACY_CALLBACK_FRAGMENT = /^(child[A-Z]|justBeen|iHaveBeen|aboutTo|prepareTo)/;
 
+// [M] terminology fragment-ban (layering/naming plan §5b): the retired GEOMETRY/STRUCTURAL prefixes must not
+// reappear as method names. The geometry raw* setters/movers (rawSet*/fullRawMove*) were eliminated in §6, and the
+// structural silent* setters (silentHide/silentAdd/silentAddShadow) in §3d -- this locks them out for good. A small
+// allowlist holds the legit raw-PIXEL accessors (raw = raw pixel DATA, not raw geometry). NB `full[A-Z]` is
+// DELIBERATELY NOT banned: the geometry full* (fullMoveTo/fullRawMove*) are gone, but full* remains a legitimate
+// SUBTREE-AWARE vocabulary (fullChanged / fullCopy / fullDestroy / fullBounds / fullPaintInto / fullImage* -- ~25
+// live defs), out of scope for this campaign. Only the specific retired `fullRaw` mover prefix is caught.
+const FRAGMENT_BANNED = /^(silent[A-Z]|raw[A-Z]|fullRaw)/;
+const FRAGMENT_ALLOWLIST = new Set(['rawPixelInfo', 'rawPixelHash', 'rawRGBA']);  // raw-PIXEL accessors keep "raw" (raw pixel data, not raw geometry)
+
 // Strip string literals and trailing `#` comments from one line, carrying multi-line
 // string state across lines. Returns { code, state }.
 function stripLine(line, state) {
@@ -390,6 +400,8 @@ function checkFile(file, violations, wrapperCall, warnings) {
               else if (!CALLBACK_SHAPE.test(b.method)) violations.push(`[L] malformed callback ${b.method}() — must match _(reactTo|before)(Being|Child|HolderWindow)<Event> (layering/naming plan §9.2)  — ${rel}:${n + 1}`);
             }
             if (LEGACY_CALLBACK_FRAGMENT.test(b.method)) violations.push(`[L] legacy callback fragment ${b.method}() — use the _(reactTo|before)(Being|Child|HolderWindow)<Event> scheme (layering/naming plan §9.2/§9.6)  — ${rel}:${n + 1}`);
+            // [M] retired geometry/structural naming fragments (raw* / silent* / fullRaw — see consts above; raw-pixel accessors allowlisted).
+            if (FRAGMENT_BANNED.test(b.method) && !FRAGMENT_ALLOWLIST.has(b.method)) violations.push(`[M] retired naming fragment ${b.method}() — the raw*/silent*/fullRaw geometry+structural prefixes were eliminated (§6/§3d); use the _apply*/_commit*/__ tier names (raw PIXEL data uses the rawPixel*/rawRGBA accessors). (layering/naming plan §5b)  — ${rel}:${n + 1}`);
           }
           continue;           // the header line itself carries no call to check
         }
@@ -579,9 +591,10 @@ function main() {
     console.error('J: a notification hook (_reactTo*/_before*) must not open a settle — the gesture/structural dispatcher owns the one _settleLayoutsAfter (layering/naming plan §9.2).');
     console.error('K: a 2x2 apply corner must match its name — a non-AndNotify _apply*/_commit* must not fire the seam nor call an *AndNotify; a _commit*AndNotify must not react (layering/naming plan §3b).');
     console.error('L: a notification callback must be named _(reactTo|before)(Being|Child|HolderWindow)<Event> with no NoSettle; the legacy fragments (childX/justBeen/iHaveBeen/aboutTo/prepareTo) are retired (layering/naming plan §9.2/§9.6).');
+    console.error('M: the retired raw*/silent*/fullRaw geometry+structural naming fragments must not reappear as method names (use _apply*/_commit*/__ tiers; raw PIXEL data uses rawPixel*/rawRGBA) (layering/naming plan §5b).');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
   process.exit(0);
 }
 
