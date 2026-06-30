@@ -7,12 +7,12 @@ class PlotWithAxesWdgt extends Widget
     @plot.drawOnlyPartOfBoundingRect = true
     @appearance = new RectangularAppearance @
 
-    @add @plot
+    @_addNoSettle @plot
 
     @vertAxis = new AxisWdgt -5, 5
-    @add @vertAxis
+    @_addNoSettle @vertAxis
     @horizAxis = new AxisWdgt -5, 5
-    @add @horizAxis
+    @_addNoSettle @horizAxis
 
     @setColor Color.create 242,242,242
 

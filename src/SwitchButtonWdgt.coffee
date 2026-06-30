@@ -20,8 +20,11 @@ class SwitchButtonWdgt extends Widget
 
     #@color = Color.create 255, 152, 152
     #@color = Color.WHITE
+    # A constructor builds an ORPHAN: add through the NON-settling core. The public @add self-settles, and a settle
+    # in a constructor leaks into any callback that builds this button (e.g. WindowWdgt._reactToChildDropped's chrome
+    # rebuild) -- same fix as ButtonWdgt's ctor. The layout is scheduled (deferred, below) and applied on attach.
     for eachButton in @buttons
-      @add eachButton
+      @_addNoSettle eachButton
 
     @_invalidateLayout()
   

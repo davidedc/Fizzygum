@@ -29,6 +29,6 @@ class SimplePlainTextPanelWdgt extends PanelWdgt
       # non-wrapping ("code view"): hug the natural text width.
       ostmA.softWrap = false
     ostmA.enableSelecting()
-    @add ostmA
+    @_addNoSettle ostmA
     ostmA.lockToPanels()
 

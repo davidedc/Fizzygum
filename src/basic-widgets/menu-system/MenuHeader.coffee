@@ -16,7 +16,7 @@ class MenuHeader extends BoxWdgt
     @text.backgroundColor = @color
     @text.alignCenter()
 
-    @add @text
+    @_addNoSettle @text
     # the modern family does not self-size; make the label hug its text so the
     # header below can size itself to it (see sizeToTextAndDisableFitting).
     @text.sizeToTextAndDisableFitting()

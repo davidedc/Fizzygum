@@ -15,6 +15,6 @@ class UpperRightTriangleIconicButtonWdgt extends UpperRightTriangleWdgt
     super
     @pencilIconWdgt = new PencilIconWdgt Color.BLACK
 
-    @add @pencilIconWdgt, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
+    @_addNoSettle @pencilIconWdgt, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
     @pencilIconWdgt.layoutSpec_cornerInternal_proportionOfParent = 1/2
     @pencilIconWdgt.layoutSpec_cornerInternal_fixedSize = 0

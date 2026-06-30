@@ -63,7 +63,11 @@ class ButtonWdgt extends Widget
 
       if (typeof @faceWidget) == "string"
         @faceWidget = (new StringWdgt @faceWidget, WorldWdgt.preferencesAndSettings.textInButtonsFontSize).alignCenter()
-      @add @faceWidget
+      # A constructor builds an ORPHAN, so add the face through the NON-settling core: the public @add self-settles,
+      # and a settle in a constructor leaks into ANY callback that builds a button -- e.g. WindowWdgt._reactToChildDropped's
+      # chrome rebuild (_buildAndConnectChildrenNoSettle -> new *IconButtonWdgt), which must stay settle-neutral. The
+      # layout is scheduled (deferred, below) and applied when the button is later attached and its parent settles.
+      @_addNoSettle @faceWidget
       @_invalidateLayout()
   
 

@@ -12,12 +12,12 @@ class WidgetHolderWithCaptionWdgt extends Widget
     if !@icon?
       @icon = new SimpleDropletWdgt "icon"
     @_applyExtentAndNotify new Point 95, 95
-    @add @icon
+    @_addNoSettle @icon
     @label = new StringWdgt @labelContent, WorldWdgt.preferencesAndSettings.shortcutsFontSize
     @label.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
     @label.color = Color.WHITE
     @label.hasDarkOutline = true
-    @add @label, nil, nil, true
+    @_addNoSettle @label, nil, nil, true
     @label.alignCenter()
     @label.alignMiddle()
     @label.isEditable = true

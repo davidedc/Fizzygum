@@ -11,10 +11,10 @@ class GenericShortcutIconWdgt extends Widget
     if !@icon?
       @icon = new SimpleDropletWdgt "icon"
     @_applyExtentAndNotify new Point 95, 95
-    @add @icon
+    @_addNoSettle @icon
 
     @referenceArrowIcon = new ShortcutArrowIconWdgt
-    @add @referenceArrowIcon
+    @_addNoSettle @referenceArrowIcon
 
     # update layout
     @_invalidateLayout()

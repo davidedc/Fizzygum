@@ -19,10 +19,10 @@ class FanoutWdgt extends Widget
     @pinLeft = new FanoutPinWdgt
     @pinRight = new FanoutPinWdgt
 
-    @add @pinUp
-    @add @pinDown
-    @add @pinLeft
-    @add @pinRight
+    @_addNoSettle @pinUp
+    @_addNoSettle @pinDown
+    @_addNoSettle @pinLeft
+    @_addNoSettle @pinRight
 
     @_invalidateLayout()
 

@@ -21,7 +21,7 @@ class StretchableWidgetContainerWdgt extends Widget
     if !contents?
       contents = new StretchablePanelWdgt
 
-    @add contents
+    @_addNoSettle contents
     @contents = contents
 
     @_applyExtentAndNotify new Point 300, 300

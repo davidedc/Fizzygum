@@ -8,13 +8,13 @@ class GenericObjectIconWdgt extends Widget
     super()
 
     @objectIcon = new ObjectIconWdgt
-    @add @objectIcon
+    @_addNoSettle @objectIcon
 
 
     if !@icon?
       @icon = new SimpleDropletWdgt "icon"
     @_applyExtentAndNotify new Point 95, 95
-    @add @icon
+    @_addNoSettle @icon
 
     # update layout
     @_invalidateLayout()
