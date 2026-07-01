@@ -1,132 +1,50 @@
 #  Layout system — architecture assessment
 
-**What this is.** An outside-in architectural review of Fizzygum's layout engine: what it actually does,
-whether it is *byzantine* or merely *highly unusual* relative to the field, and where its architecture/flow
-could be improved. It is a companion to `deferred-layout-OVERVIEW.md` (which is the canonical record of the
-deferral *campaign*); this doc steps back and assesses the *engine* the campaign produced.
+**What this is.** The **canonical** description of Fizzygum's layout engine — what it does, why it is shaped the way
+it is, and **how to work with it**: §6 is the rulebook for introducing a new layout (the invariants a new widget/
+container must honour, and the static + dynamic checks that enforce them). It began as an outside-in *architecture
+assessment* and has now **absorbed the former `deferred-layout-OVERVIEW.md`** (the deferral campaign's entry-point): the
+verification gauntlet, the gotchas, and the maximal SCHEDULE/APPLY invariant + lint `[F]` all live here now (§6), and
+that doc is retired to a one-line pointer.
 
-**State assessed.** Fizzygum master `c5ae7697` (HEAD as this revision was written, 2026-06-30). The *substantive*
-engine state is still that of `95a131b2`: the seventeen commits since are a **naming/terminology campaign** (layering
-§6 + notifications §9.7 — the immediate-mutator and callback families renamed, the lint set extended) plus two
-behaviour-preserving fixes, none of which touch the algorithm — they are caught up in the **fourth re-grounding wave**
-below, and every method name in this doc is now the post-campaign one. The lineage matters
-because three successive layout campaigns plus a caret/paint coda shaped this engine in turn: it was first
-**written 2026-06-22** against the *deferred-layout* campaign's capstone (`a7463bbc`), with the `_reLayout*`
-method-family naming; §2.7 — the *end-of-cycle-flush drawdown* campaign's categories, detection toolkit, and
-coalescing API — was **appended 2026-06-26** at master `f4626843`, mid-campaign; that campaign reached its end-state
-at **`778a7db5`** (2026-06-27) — the **careless** survivor set driven to zero and a hard-fail **gate** (its own
-*capstone*, not to be confused with the deferred-layout capstone above) shipped to hold it there; a **caret/paint
-coda** then played out across four same-day commits (`a424cdb4` → `282ea492`): the caret's scroll-follow was relocated
-out of paint behind a sibling **paint-read-only gate** (`a424cdb4`), **folded into the end-of-cycle flush** as the
-caret's own `_reLayout` (`d60a0710`, *Option C*), **pinned to settle in-place** during its own event rather than ride
-the flush (`20586db1`), and finally **unified with the general layout-enqueue primitive** — the caret schedules
-through the one `_invalidateLayout` verb via an inert-receiver branch (`282ea492`) — ending as a normal fixed-point
-participant with no `doOneCycle` special-case (§2.1); and most recently the *proper-layouts* campaign — the
-longest-running, spanning 2026-06-28 → 2026-06-29 under a standing "**delete** the layout-suppression/convergence
-mechanisms, don't relocate them" mandate — which moved through three arcs and then a falsified endgame. **(i)** It
-**deleted the `@_adjustingContentsBounds` suppression boolean outright** (`3a1fb165` → `b52a0d6f` → `a5e89d1b`) by
-first making the wrapping-text arrange a fixed point (Phase C: delete the height wobble), then deleting the
-cross-method seam suppression (Phase D), then the field + its per-arrange re-entrancy guards (Phase E). **(ii)** It
-then **built the missing pure *measure*** the assessment had flagged as the highest-leverage change (§4.1): a
-side-effect-free `preferredExtentForWidth` on every width→height widget + a base default, consumed in the scroll
-panel's content-frame sizing (`a07f534a` → `85d0c186`). **(iii)** It then landed the **non-notifying single-pass
-*arrange*** (§4.2 Objective A — the stack and scroll arranges apply their *own* geometry through twins that no longer
-fire the re-fit seam at themselves), driving the end-of-cycle **capstone** from 18 careless pushes back to **0 —
-green** (`cf37fa3a` → `c8098e6d`). The campaign then probed the *endgame* — deleting the re-fit **seam** itself — and
-**closed it as proven-infeasible** (`838ff6e9`, "arc closed"): with the suppression/convergence *waste* gone, the seam
-survives carrying only a legitimate, effectively-irreducible multi-widget notification edge (§2.3, §2.6, §4.1). Two
-`oo-smells` commits close the campaign window: `467644a5` decoupled the caret from text selection/undo state
-(layout-orthogonal — §2.1), and `95a131b2` deleted four dead inspector-visible `Widget` methods. A subsequent
-**naming/terminology campaign** (`06578419` → `c5ae7697`, current HEAD) then renamed the low-level geometry family
-without changing it — retiring the "raw / silent / fullRaw setter" category-noun for **"immediate (geometry)
-mutator"** and giving its members consistent `_apply*AndNotify` / `_commit*AndNotify` / `_move*` / `_set*` / `__*`
-names — and extended the build-time layering lint from rules [A]–[H] to [A]–[M]; it is the fourth-wave subject below
-and leaves every §2–§5 finding intact. §2.7 folds in the
-end-of-cycle campaign's conceptual core — the enqueue-vs-snapshot definition of "careless," the orphan-exclusion
-lifecycle it rests on, and the convert implementation hazard that separates a flush-count fix from a correctness one.
+**State assessed.** Fizzygum master **`c2aec3bf`** (HEAD, 2026-07-01). **This revision overturns the previous one's
+central conclusion.** At `c5ae7697` (2026-06-30) the doc reported the re-fit **seam** as *irreducible* and its deletion
+as *proven-infeasible* ("arc closed", `838ff6e9`). On **2026-07-01 the seam was deleted** — via a mechanism that was
+*not* on the falsified list: a **settle-time up-edge** in the settle loop. After each chain-top settles, the loop re-fits
+its size-tracking container from the just-settled, *final* geometry (`Widget._reFitMyTrackingContainerAfterSettle`,
+dispatching through the kept `_reFitContainer`), so the container reads settled — not half-applied — content and re-fits
+in one visit. This **replaced** the notify-by-mutation seam (`_announceGeometryChangeToContainer` /
+`_announceLayoutPropertyChangeToContainer` — both now deleted; the immediate mutators fire nothing). The property half
+went first (off-pass, through the uniform dirty-tree — a freefloating child's `_invalidateLayout` climbs THROUGH a
+freefloating boundary off-pass when the parent is a size-tracking container); the geometry half followed (in-pass, via
+the up-edge). See §2.3 / §4.1 for the mechanism and why the earlier "infeasible" verdict missed it.
 
-**This doc has been re-grounded in four waves; the first three brought it to `95a131b2`, the fourth (this revision)
-to `c5ae7697`.** The first wave (the prior re-grounding, to
-`282ea492`) caught up renames that had silently drifted since the 2026-06-22 writing: the public-setter tier
-`mutateGeometryThenSettle → _settleLayoutsAfter` / `settleLayoutsOnceAfter → _settleLayoutsAfterBatch`, the settle
-engine's loop body `_recalculateLayoutsCore → _recalculateLayoutsBody`, and the `invalidateLayout` seam's added
-underscore — *all* already in place by the `f4626843` append yet never back-propagated, while `addRaw` was deleted
-outright — and corrected the facts that moved with them: the batch tier is now **dormant** (no live callers —
-everything self-settles through `_settleLayoutsAfter`), `setMaxDim`/`collapse` were **converted** from end-of-cycle
-riders to self-settling mutators, and the caret scroll-follow is **folded into the flush, settled in-place, and
-unified onto the one `_invalidateLayout` enqueue verb** (it is now the caret's own `_reLayout`, scheduled via
-`_invalidateLayout`'s inert-receiver branch and drained during the caret's event — never the end-of-cycle flush)
-while paint stays read-only behind the gate (§2.1). The second wave (this re-grounding, to `a5e89d1b`) folds in the
-three *proper-layouts* commits since `282ea492`: they **deleted the `@_adjustingContentsBounds` suppression boolean**
-(field + all three per-arrange re-entrancy guards + the cross-method seam check), so every prose reference that
-treated it as a *live* mechanism is corrected to describe it as **deleted**, with the notify-by-mutation *seam* it
-used to gate left standing (§2.3, §2.6, §4.1, §5). Those three commits drifted the big-file line numbers again — the
-`Widget.coffee` 3900–4400 band by ~24 lines — so the appendix (§5) was re-read against `a5e89d1b` accordingly. The
-third wave (this re-grounding, to `95a131b2`) folds in the **ten commits since `a5e89d1b`** — the rest of the
-*proper-layouts* campaign plus two `oo-smells` commits — and carries the most *substance*, because it catches up work
-the prior revision could only call **deferred**: the pure **measure** (§4.1) and the non-notifying single-pass
-**arrange** (§4.2 Objective A) both **landed**, so every place that framed them as future work now reports them done;
-the end-of-cycle **capstone** is **green again** (the campaign drove it 18 → 10 → 0), so §2.7's "intentionally red — 18
-pushes / 10 tests" is corrected to its current **zero**; and the seam-deletion **endgame was attempted and proven
-infeasible** (`838ff6e9`), so §4.1/§2.6's "deleting the seam is the real remaining work" is corrected to "**arc
-closed** — the seam stays as a legitimate irreducible edge, the convergence *waste* already gone." Line numbers were
-re-read against `95a131b2`: the §4.1/§4.2 commits grew `Widget.coffee` (the non-notifying-arrange twins, the measure)
-and `ScrollPanelWdgt.coffee`, then `95a131b2`'s dead-method deletion pulled the `Widget.coffee` 1900+/3100+/3800+
-bands back up ~47 lines, so the appendix (§5) numbers were current as of `95a131b2`.
+With the seam gone, the rest fell in sequence (all 2026-07-01): **Stage 6** retired the convergence cap
+(`recalcIterationsCap` → a never-fire loud-throw assert `layoutIterationsSanityLimit`) and added a no-op early-return
+(skip the up-edge when the chain-top's frame is unchanged), cutting peak per-flush re-visits 10 → 2; the **caret
+scroll-follow** was made single-pass (suite-wide re-visits 372 → 0 — root cause: `Point.floor` clamping to ≥0 capped
+the scroll); the **window content-negotiation** stack re-visits were eliminated (9 → 3, the window settling non-deferred
+stack content synchronously in its own arrange); the last **3 window re-visits** (nested-window first-placement) were
+chased and proven irreducible; and the dead `_batchingLayoutSettling` batch primitive was deleted. **So the engine is
+now: pure `measure` → non-notifying `arrange` → settle-time up-edge → bounded, near-single-pass convergence under a
+never-fire assert.** §2–§5 are updated throughout; the pre-`c5ae7697` re-grounding changelog (four waves) is dropped as
+git-recoverable meta.
 
-**The fourth wave (this revision, to `c5ae7697`) is the largest *renaming* catch-up yet — and the smallest in
-*substance*: it touches no algorithm.** The seventeen commits since `95a131b2` are a **naming/terminology campaign**
-(build-system "layering §6" + "notifications §9.7") plus two behaviour-preserving fixes, and they comprehensively
-renamed the low-level geometry family the doc had called the *"raw / silent / fullRaw setters."* That category-noun is
-**retired** (`c5ae7697`) for **"immediate (geometry) mutator"**, and the members got a consistent, intent-revealing
-lattice: the notifying setters `rawSet*` / `fullRawMove*` → **`_apply*AndNotify`** (and the notify-only `silentRaw*` →
-**`_commit*AndNotify`**); the §4.2 *non-notifying* arrange twins `_arrangeApply*` → the bare **`_apply*`** (so the name
-now *says* "applies without notifying"); the shared bottoms → **`__*` leaves** (`_setExtentBoundsNoNotify` →
-`__commitExtent`, `_markForRelayoutNoClimb` → `__markForRelayout`); the synchronous read-back setter
-`rawSetWidthSizeHeightAccordingly` → `_setWidthSizeHeightAccordingly`; the public movers `fullMoveTo` / `fullMoveWithin`
-→ `moveTo` / `moveWithin`; and the re-fit **seam** verbs `_reFitContainerAfterRawGeometryChange` →
-**`_announceGeometryChangeToContainer`** and `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt` →
-`_announceLayoutPropertyChangeToContainer` (the phase-dispatch primitive `_reFitContainer` keeps its name). The
-drag/drop/structural **callbacks** were swept too (`childRemoved` / `reactToDropOf` / `reactToGrabOf` / `justDropped` →
-`_reactToChildRemoved` / `_reactToChildDropped` / `_reactToChildGrabbed` / `_reactToBeingDropped`). Every prose and
-appendix reference below now uses the post-campaign name, with the pre-campaign name noted (née …) where it aids
-`grep`-ing older commits. The campaign also **extended the build-time layering lint from rules [A]–[H] to [A]–[M]**
-(the additive `[I]` `__`-leaf-purity, `[J]` callback-settle-neutrality, `[K]` apply-2×2 name-consistency, `[L]`
-callback-name convention, `[M]` retired-fragment ban; `[H]` is a non-fatal warning) and added **two off-by-default
-runtime audit flags** (`auditTierAndApplyNaming`, `auditNotificationSettleNeutrality` — the dynamic-dispatch twins of
-`[K]`/`[J]`), so §3's "lints A–H" reads "A–M" and §2.7's detection toolkit gains two siblings. Two
-*behaviour-preserving* fixes ride along, and both **sharpen** a §2 finding rather than overturn it: `08bbb29d` swept
-twelve constructors' child-adds from the self-settling public `@add` to `_addNoSettle` (a "settle-in-callback" leak —
-§2.7's orphan/construction note now states the sharper rule it implies), and `5f923847`/`dd3a5510` cleaned a
-*misapplied* `NoSettle` suffix off the drop/grab callbacks (which **corrects** §2.2: `reactToDropOf` was never a
-self-settling mutator — the drop *dispatcher* owns the one settle; it is now the settle-neutral `_reactToChildDropped`,
-guarded by lint `[J]`). Line numbers were re-read against `c5ae7697`: only `WorldWdgt.coffee` drifted materially (~+15,
-from the new audit fields), the `Widget.coffee` apply/seam band (1300–1800) is *unchanged*, its coalescing/measure band
-(3800–4200) moved ~+6, and the small files did not move — so the appendix (§5) numbers are current as of this HEAD.
+**Lineage (why the engine looks like this).** Five campaigns shaped it in turn, each visible in the sections it
+authored: **deferred-layout** (public setters self-settle; the until-loop settle engine — §2.2/§2.3); **end-of-cycle
+drawdown** (the careless-push taxonomy + a hard-fail capstone gate — §2.7); a **caret/paint coda** (the caret folded
+into the flush as its own `_reLayout`, paint kept read-only behind a gate — §2.1); **proper-layouts** (delete the
+suppression/convergence booleans: `@_adjustingContentsBounds` gone, the pure `preferredExtentForWidth` measure built,
+the non-notifying arrange landed — §4.1/§4.2); and the **2026-07-01 seam deletion + Stage 6 + caret/window single-pass**
+above. A **naming campaign** across the way renamed the low-level geometry family to the intent-revealing lattice
+(`_apply*AndNotify` notifies, bare `_apply*` does not, `_commit*AndNotify`, `__*`-leaves) and grew the build-time
+layering lint to rules **[A]–[M]**; every method name below is post-campaign, with the pre-campaign name in `(né …)`
+where it aids `grep`.
 
-**Update (2026-06-30), post-`c5ae7697`:** three further settle-tier waves landed and §2.2/§2.7 below were updated for
-them. (1) **orphan-settledness** (`ce21dcf7`): a *top-level* orphan public call now FLUSHES its own subtree, so
-`new Foo()` returns settled (only an orphan call reached *inside* a live flush still defers — `Widget.coffee`
-`_settleLayoutsAfter` ~:816). (2) **settle-tier follow-ups** (`f35d7021`): a symmetry-aware dead-methods gate + 40 dead
-methods deleted. (3) **all constructors settle** (`docs/all-constructors-settle-plan.md`, HELD): every inline-building
-constructor routes through the settling wrapper `_buildAndConnectChildren()` / `_buildScrollFrame()` over its
-`_buildAndConnectChildrenNoSettle` core, locked in by a new build gate `buildSystem/check-constructors-build.js`; the
-rule-[J] notification-settle runtime gate was made aware of the orphan-construction auto-defer (it now permits an
-orphan-receiver settle reached in a callback). Numbers below predate these waves by a few commits — re-grep.
-
-> **Line numbers are approximate — the METHOD NAME is authoritative; `grep` it.** (Same convention as the
-> OVERVIEW; every shipped edit shifts lines — the two big files `Widget.coffee` and `WorldWdgt.coffee` drifted
-> ~40–190 lines since the 2026-06-22 writing, and the ten commits since `a5e89d1b` — the §4.1 measure, the §4.2
-> non-notifying-arrange twins, then `95a131b2`'s dead-method deletion — shifted the `Widget.coffee` and
-> `ScrollPanelWdgt.coffee` bands; the fourth-wave naming campaign then *renamed* much of the family with only minor
-> line drift, so any older inline name reads off even where its number does not.) Every file:line below was re-read
-> against `c5ae7697` source while writing this revision; the small stable files (`VerticalStackLayoutSpec`,
-> `LayoutSpec`) did not move. The engine is under active parallel development (the caret/paint coda alone took four
-> commits — `a424cdb4` → `d60a0710` → `20586db1` → `282ea492` — the proper-layouts campaign then
-> ten more through `95a131b2`: boolean deletion (`3a1fb165` → `a5e89d1b`), §4.1 measure (`a07f534a` → `85d0c186`),
-> §4.2 Objective-A arrange (`cf37fa3a` → `c8098e6d`), seam-arc closure (`838ff6e9`), two `oo-smells` commits
-> (`467644a5` / `95a131b2`); and a seventeen-commit naming/terminology campaign through `c5ae7697`
-> (`06578419` → … → `c5ae7697`)), so treat every number as "as of `c5ae7697`" and re-grep against current HEAD.
+> **Line numbers are approximate — the METHOD NAME is authoritative; `grep` it.** Every shipped edit shifts lines; the
+> two big files (`Widget.coffee`, `WorldWdgt.coffee`) drift by tens of lines per campaign, so re-read against current
+> HEAD. Older git revisions / sibling memories use pre-naming-campaign names (`rawSet*` / `silentRaw*` / `fullRaw*` /
+> `mutateGeometryThenSettle` / `_reFitContainerAfterRawGeometryChange`) — the appendix (§5) gives the née … map.
 
 ---
 
@@ -143,10 +61,13 @@ and the change the first revisions called the highest-leverage one available —
 engine lacked, to retire the **synchronous mutate-then-read-back** content sizing — has since been **built and
 consumed** (§4.1, generalizing the clean measure the framework already ran on one of its own code paths, §2.5) and
 paired with a **non-notifying single-pass arrange** (§4.2 Objective A) that drove the end-of-cycle careless-push count
-to zero. The lasting lesson of that work is what it could *not* do: attempting to delete the residual re-fit **seam**
-proved it is not removable waste but a genuine constraint — a multi-widget size↔position notification effectively
-irreducible short of re-architecting the settle loop (§2.6, §4.1). So accidental complexity is now paid down with
-lints, a determinism soak, and two hard-fail gates; what remains is essential.
+to zero. The earlier revision's lasting caveat — that the residual re-fit **seam** was *irreducible* — was then
+**overturned (2026-07-01)**: the seam was **deleted** and replaced by a **settle-time up-edge** in the settle loop
+(re-fit each size-tracking container from its content's *final* geometry, once, after the content settles — §2.3/§4.1),
+which let the convergence cap retire to a **never-fire assert** (Stage 6). What remains beneath that assert is a small,
+bounded, *proven*-irreducible residual — nested-window first-placement re-visits (a container cannot measure an
+unplaced child) and the aspect-locked width↔height cycles (cycle-broken by `elasticity 0`). So accidental complexity is
+now paid down with lints, a determinism soak, and hard-fail gates; what remains is essential.
 
 ---
 
@@ -225,14 +146,13 @@ the *one* flush rather than adding a settling mechanism of its own.
 > **Common misreading (worth stating because it is the natural one): "there is one layout flush per frame."
 > That is false.** There is one *engine-scheduled* flush per frame; the *total* is generally several.
 
-`recalculateLayouts()` (`WorldWdgt.coffee` ~:911) is invoked from **exactly three** sites — though one of them is
-currently dormant:
+`recalculateLayouts()` (`WorldWdgt.coffee` ~:911) is invoked from **exactly two** sites (a former third — a
+bundle-coalescing batch tier `_settleLayoutsAfterBatch` — was **deleted 2026-07-01** as dead code, §4.6):
 
 | # | Site | When | Cardinality |
 |---|---|---|---|
 | 1 | `WorldWdgt.coffee` ~:1375 (end of `doOneCycle`) | every frame, by the engine | **1 / frame** |
 | 2 | `Widget._settleLayoutsAfter` flush ~:838 | every **public geometry/structural mutation** | **1 / mutation** |
-| 3 | `Widget._settleLayoutsAfterBatch` flush ~:870 | a **batch** — *0 live callers today* | 1 / batch (dormant) |
 
 The self-settling public API routes through `_settleLayoutsAfter` and therefore **self-settles** — each entry point
 records the desired change and then runs a full `recalculateLayouts()` *before returning*. Five are pure-geometry
@@ -249,17 +169,16 @@ and the per-container drop **callback** is the settle-neutral `_reactToChildDrop
 `[J]` now forbids such a callback from opening its own settle.)* For an *orphan* (attached to neither world nor hand — `_settleLayoutsAfter` ~:816) the flush is **deferred only when the
 orphan call is itself reached inside a live flush/pass** (`return coreThunk() if @isOrphan()`): the orphan-settledness
 change (`ce21dcf7`) made a *top-level* orphan call FLUSH its own subtree, so `new Foo()` now returns settled (and the
-all-constructors-settle follow-on routes every constructor through that wrapper). A flush is also **coalesced** inside a
-`_settleLayoutsAfterBatch` batch (~:833). Nested public setters reached on an *attached* widget do **not** stack
-flushes — they *throw* (the flow-violation guard, ~:826).
+all-constructors-settle follow-on routes every constructor through that wrapper). Nested public setters reached on an
+*attached* widget do **not** stack flushes — they *throw* (the flow-violation guard, ~:826).
 
 So the honest formula is:
 
 > **flushes / frame  =  (self-settling public mutations executed this frame)  +  (top-level batches)  +  1**
 > &nbsp;&nbsp;&nbsp;&nbsp;— minus mutations skipped for orphans, minus those coalesced inside a batch.
 
-(The *(top-level batches)* term is **currently zero** — `_settleLayoutsAfterBatch` has no live callers today, see
-below — so in practice the formula reduces to *(self-settling public mutations) + 1*.)
+(The *(top-level batches)* term is **gone** — the batch tier was deleted 2026-07-01 (§4.6) — so the formula is just
+*(self-settling public mutations executed this frame) + 1*, minus mutations skipped for orphans.)
 
 **Evidence this is by design, not incidental:**
 
@@ -292,14 +211,14 @@ The two flush kinds drain two different populations of dirtiness:
   driven to **zero**, leaving only legitimate riders — declared-coalesced streams, orphan/construction deferrals,
   and the in-pass re-fit seam.)*
 
-`_settleLayoutsAfterBatch` (`Widget.coffee` ~:857) exists *because* per-call flushing is O(mutations): a multi-add
-builder would otherwise do N full settles, so a batch can collapse them to one. **It has zero live callers today,
-however.** The design direction is to do everything through the single-mutation `_settleLayoutsAfter` tier, and the
+There used to be a third tier, `_settleLayoutsAfterBatch`, *because* per-call flushing is O(mutations): a multi-add
+builder would otherwise do N full settles, so a batch could collapse them to one. It reached **zero live callers** — the
 former batch users (the drag/drop gesture, `sizeToTextAndDisableFitting`, and `WindowWdgt`'s child build — now the
 public `buildAndConnectChildren` ~:436 over the non-settling `_buildAndConnectChildrenNoSettle` ~:439) were each
-re-expressed as a *single* settle over non-settling cores. So site 3 is a **retained but dormant** primitive: the
-`_batchingLayoutSettling` flag and its guard in `_settleLayoutsAfter` (~:833) stay wired so it works as-is if a
-future multi-add bundle wants one O(1) flush, but the live flush population today is sites 1 and 2 only.
+re-expressed as a *single* settle over non-settling cores — and was **deleted 2026-07-01** (together with its
+`_batchingLayoutSettling` flag and guard). So the live flush population is sites 1 and 2 only; if a future multi-add
+bundle wants one O(1) flush, reintroduce a batch settler from git history then (§4.6), and for per-input-event streams
+use the `*Coalesced` API (§2.7).
 
 **Consequence.** A heavy frame's final layout is the **composition of several full settle passes, in event
 order**. This is sound only because each settle is a pure function of geometry-at-that-instant and converges to
@@ -347,13 +266,10 @@ Two caveats keep the mental model exact:
 - **"One flush" = one *convergent* flush, not one layout calculation.** `recalculateLayouts()` internally walks/loops
   until layouts reach a fixed point (§2.3); "one flush" means one *bounded convergence operation* per entry point. It
   is bounded *because* nothing inside it can inject a new public mutation — the throw is what makes the bound hold.
-- **The batch tier is the deliberate — but currently dormant — exception.** `_settleLayoutsAfterBatch` (née
-  `settleLayoutsOnceAfter`) ABSORBS nested settles to coalesce a genuine bundle (a multi-add builder) into one flush,
-  so the fully general invariant is **"one flush per outermost public mutation, whether single or batch."** As §2.2
-  noted, no code reaches for it today — everything is single-`_settleLayoutsAfter` — so this is the *defined*
-  exception, not a *live* one. The orphan guard adds a third case:
-  construction of a *detached* subtree settles **zero** times until it is added — so building innards is flush-free by
-  construction. (The end-of-cycle drawdown campaign — `end-of-cycle-flush-drawdown-plan.md` — brought every remaining
+- **The orphan guard is the standing exception.** Construction of a *detached* subtree settles **zero** times until it
+  is added — so building innards is flush-free by construction, and the general invariant is simply **"one flush per
+  outermost public mutation."** (The bundle-coalescing batch tier that once qualified this — "…whether single or batch"
+  — was deleted 2026-07-01, §4.6.) (The end-of-cycle drawdown campaign — `end-of-cycle-flush-drawdown-plan.md` — brought every remaining
   flow into this invariant: re-probing the cavalier "LEAVE" verdicts found flow after flow quietly outside it, and the
   campaign has now driven the *careless* end-of-cycle set to **zero**, guarded by a hard-fail gate (§2.7). §2.7 develops
   the categories, the detection toolkit, and the coalescing API it produced.)
@@ -380,38 +296,39 @@ Two facts make this a *fixed-point* loop, not a fixed *number* of passes:
    enqueues the whole ancestor chain, and the loop then does a single top-down `_reLayout` from the topmost
    dirty ancestor. **In the common case a localized change is "climb up once, lay out down once" — effectively
    one top-down arrange.** `_reLayout` ends in `markLayoutAsFixed()` (~:4377), popping the node.
-2. **A `_reLayout` can re-dirty something *outside* the subtree it just settled**, via the re-fit seam
-   `_reFitContainer` (`Widget.coffee` ~:1755), whose in-pass arm *enqueues* a container mid-pass — legally: this
-   enqueue uses the shared no-climb atom `__markForRelayout` (~:1758), which neither throws nor climbs to
-   ancestors (the full `_invalidateLayout` does both, for a content widget); it just pushes the one
-   directly-affected container. This is the only thing that produces genuine iteration — and §4.2 Objective A
-   *narrowed* it. It used to have two sources: a container re-enqueuing **itself** during its own arrange (its
-   just-applied geometry firing the seam straight back at it — "Intent-2"), and a container re-fit triggered by an
-   **external** change to its freefloating content ("Intent-1"). The non-notifying arrange (§4.2, below) removed the
-   first — the stack and scroll arranges now apply their *own* geometry through twins that don't fire the seam, so a
-   settled container no longer re-dirties itself. What remains is the genuine cross-widget convergence: the clock →
-   inner-window → outer-window cascade (the window arrange is *not* yet non-notifying — §4.2 Stage 2 was deferred) and
-   the scroll panel's content-frame ↔ scroll-position coupling, each re-enqueuing *other* containers, so the loop
-   runs another `_reLayout`, and again, **until the queue drains.** *(Option C — `d60a0710`,
-   §2.1 — added a second live instance of exactly this shape: the text caret's `_reLayout` **is** a scroll-follow —
-   it scrolls its panel, the seam re-enqueues that panel ahead of the still-dirty caret, and the loop re-runs the
-   caret after the panel settles. The caret reaches the loop through `_invalidateLayout`'s inert-receiver branch — the
-   *same* `__markForRelayout` atom (§2.1; unified in `282ea492`) — not the seam, but it iterates by the very
-   same re-dirty-each-other mechanism.)*
+2. **A `_reLayout` can re-dirty something *outside* the subtree it just settled** — via the **settle-time up-edge**
+   (this is what *replaced* the notify-by-mutation seam, deleted 2026-07-01). After the loop `_reLayout`s a chain-top,
+   it calls `_reFitMyTrackingContainerAfterSettle` (`Widget.coffee` ~:1635) — which, *iff the chain-top's frame
+   actually changed* (Stage 6's no-op early-return), re-fits its size-tracking container via `_reFitContainer` (~:1716)
+   by *enqueuing* it into the work-list (the shared no-climb atom `__markForRelayout`, which neither throws nor climbs
+   to ancestors — the full `_invalidateLayout` does both, for a content widget). Because the container reads the
+   chain-top's *final*, just-settled geometry (not a half-applied mid-arrange value, as the old mutator seam did), it
+   re-fits correctly **in one visit** — a bounded O(depth) up-walk, no per-mutation notification. This is the only
+   thing that produces genuine iteration, and §4.2 Objective A + Stage 6 narrowed it to almost nothing: the arrange
+   applies its own geometry through **non-notifying twins** (so a settled container never re-dirties *itself* — the old
+   "Intent-2" self-re-enqueue), and the no-op early-return skips the up-edge on an unchanged frame. What remains is the
+   genuine cross-widget re-fit — a container fitting to content whose size *genuinely changed* (a window to its stack,
+   a scroll frame to its content) — which re-visits that *other* container once, **until the queue drains.** *(The
+   caret's `_reLayout` is a second instance: it scroll-follows its panel, the panel re-enqueues ahead of the
+   still-dirty caret, and the loop re-runs the caret after the panel settles — §2.1; since 2026-07-01 this reaches its
+   fixed point in a single pass, §4.1.)*
 
 > **So the right mental model:** one *up-then-down* per localized change; degenerating into true
 > *up/down/up/down* fixed-point iteration only across **container boundaries that re-dirty each other**
 > (freefloating content ↔ its container). The iteration is concentrated in a small, specific part of behavior.
 
-Termination is guarded by a hard `recalcIterationsCap = 100000` freeze-backstop (~:945); by each container arrange
-now being an idempotent **fixed point** — so a container the seam re-enqueues *while it is mid its own*
-`_positionAndResizeChildren` re-runs once and converges, rather than looping (the proper-layouts campaign deleted the
-old per-container `@_adjustingContentsBounds` re-entrancy/suppression boolean precisely because Phase C made the
-arrange idempotent and Phase E removed the last synchronous self-re-entry, §2.6/§4.1; §4.2 Objective A then made the
-arrange *non-notifying*, so it no longer re-enqueues itself even to confirm); and by the rule that `_invalidateLayout`
-**throws** `FLOWRULE_VIOLATION` if reached mid-pass (~:3929) so an immediate mutator can never re-dirty the pass it is running
-inside. The cap itself **stays**: retiring it was the goal of the seam-deletion endgame, which closed as infeasible
-(§4.1), so the genuine cross-widget convergence — bounded, but real — still iterates beneath it.
+Termination is guarded by: each `_reLayout` ending in `markLayoutAsFixed`; each container arrange being an idempotent
+**fixed point** (the proper-layouts campaign deleted the old per-container `@_adjustingContentsBounds`
+re-entrancy/suppression boolean precisely because Phase C made the arrange idempotent and Phase E removed the last
+synchronous self-re-entry — §2.6/§4.1; §4.2 Objective A then made the arrange *non-notifying*, so it no longer
+re-enqueues itself even to confirm); and the rule that `_invalidateLayout` **throws** `FLOWRULE_VIOLATION` if reached
+mid-pass (~:3929), so an immediate mutator can never re-dirty the pass it is running inside. What used to be the
+`recalcIterationsCap = 100000` freeze-*backstop* is now, since **Stage 6** (2026-07-01), a **never-fire loud-throw
+assert** `layoutIterationsSanityLimit` (~:944): the seam deletion + the no-op early-return drove peak per-flush
+re-visits to a handful (measured), so the loop demonstrably drains; the assert exists only to convert a *hypothetical*
+non-terminating cycle into a loud throw rather than a frozen tab — not to bound a real convergence budget (§2.6). The
+old cap **silently** bailed (log + abandon the work-list + ship broken layout); Stage 6 replaced that suppression with
+the loud throw.
 
 ### 2.4 The root constraint: accessors read *applied* geometry → mutate-then-read-back
 
@@ -426,7 +343,8 @@ elementHeight = widget._setWidthSizeHeightAccordingly recommendedElementWidth   
 stackHeight += elementHeight ? widget.height()                                    # consume that handed-forward height — no second read-back (~:301)
 ```
 
-**This read-back is the cause of most of the engine's complexity.** It forces the child's `_reLayout` to run
+**This read-back *was* the cause of most of the engine's complexity** (largely dissolved since — see below and §4.1).
+It forces the child's `_reLayout` to run
 *synchronously, now* (so `height()` is fresh), which is why the immediate (geometry) mutators apply layout immediately
 (`_setWidthSizeHeightAccordingly`, née `rawSetWidthSizeHeightAccordingly`, ~:750 calls `@_reLayout()` at ~:755 and *returns the height* as the
 "Path-B de-read-back" workaround — and this stack now **consumes** that returned value at ~:301 instead of
@@ -464,30 +382,36 @@ The proportional model is what creates the cyclic coupling: `getWidthInStack`
 function of container width*, and container size depends back on children. When that loops through an
 aspect-locked widget (a square clock in a window-in-window), width depends on height depends on width — a
 genuine cycle. The capstone's fix — give aspect content `elasticity 0` so the converged-width term multiplies
-out (OVERVIEW §5) — is exactly right: it **breaks the cycle** rather than iterating through it.
+out (the deferred-layout capstone record) — is exactly right: it **breaks the cycle** rather than iterating through it.
 
-### 2.6 Convergence is empirical and capped, not structural
+### 2.6 Convergence is bounded and near-single-pass — the cap is a never-fire assert
 
-Termination today rests on: each `_reLayout` ending in `markLayoutAsFixed`; each container arrange being an
-idempotent fixed point (the property Phase C established, which is what let the proper-layouts campaign **delete**
-the `@_adjustingContentsBounds` re-entrancy/suppression boolean that had previously masked the non-convergence —
-§4.1); manual cycle-breaking (the `elasticity 0` fix); a 20-minute determinism torture soak; and the
-`recalcIterationsCap = 100000` backstop that exists to convert a hypothetical non-convergence into a loud bail
-instead of a freeze (~:945). That is a defensible engineering position — but it means convergence is a *verified
-property of the current constraint set*, not a *guaranteed property of the algorithm*. **Deleting that boolean did
-not make convergence structural** — it removed a *crutch* (a runtime suppression that hid wasted passes), not the
-*cause*. What happened *next* sharpened the picture. §4.2 Objective A then made the arrange **non-notifying**, which
-*did* make one half structural — a container no longer re-enqueues its own just-applied geometry — and that is what
-drove the end-of-cycle careless count to zero (§2.7). But the notify-by-mutation seam still drives genuine multi-pass
-iteration for the *other* half: the cross-widget convergence — a freefloating content's in-pass geometry change must
-re-fit its size-tracking container in a *later* settle visit, above all in the scroll panels (content-frame ↔
-scroll-position coupling via `keepContents`). The campaign then **attempted to delete the seam outright and proved it
-cannot be** (§4.1): every removal path — non-notifying conversion, a synchronous in-arrange fixpoint, an off-pass
-dirty-tree climb, an ordered content-first pre-settle, an analytic position↔frame decoupling — was falsified, because
-the arrange is *already* single-pass-correct and the seam's surviving role is **multi-widget notification, not
-single-container convergence**. So convergence remains **empirical and capped** for that one irreducible edge — by a
-now-*proven-necessary* design, not deferred work and not a crutch: the waste is gone (§4.2 Objective A); what iterates
-beneath `recalcIterationsCap` is real coupling.
+The previous revision titled this section *"empirical and capped, not structural"* and argued the notify-by-mutation
+seam made it irreducibly so. **The 2026-07-01 seam deletion changed that.** Termination now rests on: each `_reLayout`
+ending in `markLayoutAsFixed`; each container arrange being an idempotent fixed point (Phase C — which let the campaign
+delete the `@_adjustingContentsBounds` re-entrancy boolean, §4.1) *and* non-notifying (§4.2 Objective A — a settled
+container never re-enqueues *itself*); the **settle-time up-edge** that replaced the seam (§2.3 — a container re-fits
+*once*, from its content's final geometry, after the content settles); manual cycle-breaking for the genuine
+width↔height cycles (`elasticity 0`); and a determinism torture soak. The empirical `recalcIterationsCap` is retired to
+a **never-fire assert** `layoutIterationsSanityLimit` (Stage 6, §2.3).
+
+What iterates beneath that assert is now tiny and *characterized*. A per-flush re-visit counter (instrumented +
+reverted) put the suite-wide residual at three sources, two since eliminated: the **caret scroll-follow** (372
+re-visits → **0**, §4.1); the **window→content re-fit over stack content** (6 → **0** — the window now settles its
+non-deferred stack content synchronously in its own arrange, so it fits in one pass); and **3** genuine survivors —
+nested-window **first-placement** re-visits. Those 3 are irreducible for a concrete reason: an outer window laid out
+before its inner window's content has been *first-placed* cannot measure the inner window
+(`WindowWdgt.preferredExtentForWidth` returns a stale extent while `contentNeverSetInPlaceYet` — the inner specs are
+uninitialised, and measuring would divide-by-zero to NaN), so it must place, then re-fit. They are one-time
+construction costs, not steady-state waste; three removal routes were falsified (can't measure ahead; can't settle
+early byte-exactly; can't reorder — a content-before-container climb-block breaks 9 load-bearing tests, §4.1).
+
+So convergence is now **bounded and near-single-pass**: the *waste* is gone, and the handful of real re-visits
+(nested-window first-placement + the aspect-locked cycles) are proven essential — the assert never fires. It is no
+longer "empirical-and-capped" in the old sense. It is still, honestly, a *verified* property of the current constraint
+set rather than a *structural* guarantee of a single topological pass; making it the latter would need the ordered
+down-walk §4.4 sketches — a far larger re-architecture, not currently justified given the near-single-pass resting
+point.
 
 ### 2.7 The end-of-cycle flush: what survives it, the categories, and coalescing
 
@@ -501,7 +425,7 @@ inventory.md` (the by-action audit history), `coalescing-measurement.md` (the me
 `end-of-cycle-flush-endgame-plan.md` (the campaign's endgame record — its target reached, the careless set at zero).
 
 **An end-of-cycle survivor, precisely.** A widget's `_invalidateLayout` push survives to the end-of-cycle flush iff
-*no* self-settling flush (site 2 per-mutation, or site 3 batch) drained the queue between that push and `doOneCycle`'s
+*no* self-settling flush (site 2, per-mutation) drained the queue between that push and `doOneCycle`'s
 `recalculateLayouts()`. So a survivor is, by construction, *a layout invalidation that did not self-settle.* Under the
 one-flush-per-outermost-public-mutation invariant (§2.2), an **empty** end-of-cycle queue (of the *careless* kind — see
 next) is the *ideal* steady state, and the end-of-cycle campaign drove it there: **interaction-frame careless records
@@ -784,9 +708,11 @@ down historical `fixLayout` debt with proofs, including a proof of where the pay
 
 **The parts that *do* read byzantine — the fair targets:**
 
-- **Behavior keyed off scattered global phase booleans** on `world` (`_recalculatingLayouts`,
-  `_inLayoutMutation`, `_batchingLayoutSettling`): the legal operation (throw / enqueue / invalidate / apply)
-  depends on *which phase you are in*, and that knowledge is spread across `Widget` and `WorldWdgt`.
+- **Behavior keyed off scattered global phase booleans** on `world` (`_recalculatingLayouts`, `_inLayoutMutation` —
+  down from three, since `_batchingLayoutSettling` was deleted 2026-07-01 with the batch tier): the legal operation
+  (throw / enqueue / invalidate / apply) depends on *which phase you are in*, and that knowledge is spread across
+  `Widget` and `WorldWdgt`. (This is what §4.3 proposes to encapsulate — though the owner has ruled that "bury it in a
+  `layoutEngine` object" is not the goal; see §4.3.)
 - **Mutate-then-read-back** (§2.4) and the **two coexisting sizing philosophies** (§2.5) — *substantially narrowed*
   since: §4.1 generalized the pure measure to the read-back side and the scroll panel now consumes it, leaving one
   load-bearing applied read-back (the folder/toolbar frame).
@@ -802,7 +728,7 @@ down historical `fixLayout` debt with proofs, including a proof of where the pay
 Ranked by leverage. The three approaches the campaign already **falsified** are *not* re-proposed and are
 listed as "do not revisit" at the end. Each suggestion is determinism-sensitive and must clear the soak.
 
-### 4.1 The pure *measure* protocol that killed the read-back — **the #1 lever; built + consumed, seam endgame closed**
+### 4.1 The pure *measure* + the seam deletion — **DONE: measure built, arrange non-notifying, seam DELETED (2026-07-01), cap retired**
 
 This was the assessment's top recommendation, and the proper-layouts campaign **executed it** (2026-06-28 → -29). The
 prescription was a side-effect-free `preferredExtentForWidth(availW) → {w, h}` that **never touches `@bounds`** —
@@ -821,7 +747,7 @@ Why it is the keystone:
 - It **unifies the two sizing philosophies** onto the one the codebase already trusts, and (§2.2) makes
   repeated per-frame settles far cheaper, since a pure measure is much lighter than a mutate-read-back arrange.
 
-**This is explicitly *not* Path A** (the falsified dead end, OVERVIEW §6). Path A failed because it made the
+**This is explicitly *not* Path A** (the falsified dead end, `deferred-layout-path-a-design.md`). Path A failed because it made the
 *same* accessor serve both "applied" and "pending" readers (canvas buffers, inspector, dirty-rects vs. layout).
 A *separate, pure* measure query has no such conflict; the applied accessors are untouched.
 
@@ -865,45 +791,50 @@ So the spearhead boolean fell *cheaply* — and that freed the campaign to pursu
   container itself. This removed the Intent-2 self-re-enqueues — the end-of-cycle capstone went **18 → 10** (Stage 1,
   the stack) **→ 0** (Stage 3, the scroll); it is **green** (§2.7).
 
-That cleared the *waste*. The remaining question was the assessment's #1-and-biggest: delete the **seam itself**
-(`_reFitContainer` / `_announceGeometryChangeToContainer`, née `_reFitContainerAfterRawGeometryChange`) and retire the empirical fixpoint. The campaign **probed
-that endgame and closed it as proven-infeasible** (`838ff6e9`, "arc closed"). The decisive finding: with the
-non-notifying arrange in place, the scroll arrange is *already single-pass-correct* — the seam's surviving role is
-**not** single-container convergence (the arrange is idempotent; there is nothing left to converge inside one visit)
-but a **multi-widget notification**: a freefloating content's geometry, *scheduled* off-pass but *applied* in-pass by
-its own `_reLayout`, must re-fit its size-tracking container in a *later* settle visit (the content-frame ↔
-scroll-position coupling via `keepContents`; instrumented as 341 in-pass vs 5 off-pass seam fires on the canonical
-`NoSpuriousScrollbars` test). Every removal path was falsified — non-notifying conversion (done, doesn't suffice); a
-synchronous in-arrange fixpoint (the arrange is already idempotent, so iterating it is a no-op); an off-pass
-dirty-tree climb / two-flag invalidation (it fires at *scheduling* time, before the content's geometry is applied —
-and the FLOWRULE forbids `_invalidateLayout` mid-pass, so an after-application notification cannot be delivered that
-way); an ordered content-first pre-settle (the box position is driven by `keepContents`, not by a pending descendant
-relayout); and an analytic position↔frame decoupling (its upper bound *is* that synchronous fixpoint, hence a no-op).
-The reverse-probe (seam no-op) still breaks exactly **10** scroll/window/stack tests — the job-B work-list —
-confirming the seam carries load-bearing notification, not waste. So the **seam stays**, a legitimate and
-effectively-irreducible dependency edge, and with it `recalcIterationsCap` and the bounded empirical convergence
-(§2.6).
+That cleared the *waste*, and the previous revision stopped there — it had **probed deleting the seam itself and
+closed the endgame as proven-infeasible** (`838ff6e9`, "arc closed"). Every removal path it tried kept the
+notify-by-mutation *shape* (a container notified mid-arrange, by its content's own mutator), and that shape genuinely
+cannot deliver an *after-application* re-fit within the FLOWRULE: an off-pass dirty-tree climb fires at scheduling
+time, before the content's geometry is applied; a synchronous in-arrange fixpoint is a no-op (the arrange is already
+idempotent); an ordered content-first pre-settle misses the `keepContents`-driven position. The reverse-probe (seam
+no-op, nothing replacing it) broke exactly **10** scroll/window/stack tests.
 
-The honest bottom line: the *waste* the assessment flagged — the read-back's self-convergence and the suppression
-boolean — is **gone**; the *root coupling* a measure was hoped to dissolve turned out, on contact, to be two things,
-only one of which is removable in this architecture. Deleting the seam would require re-architecting the settle loop so
-a freefloating content's geometry application is itself part of its container's ordered visit — a true topological
-down-walk — a far larger undertaking than this arc, and not justified given the capstone-green resting point.
-Companions: the staged records (`proper-layouts-4.1-pure-measure-campaign-plan.md`, `…-4.2-structural-arrange-plan.md`,
-and `…-4.4-ordered-downwalk-plan.md` §8 — the binding closure), why a naive text measure can't do it
-(`retire-adjustingContentsBounds-via-text-measure-plan.md`), and the convergence-arc feasibility memo (memory
-`fizzygum-convergence-arc-feasibility`).
+**2026-07-01 deleted the seam anyway — by changing the shape.** The crack was a mechanism *not* on that falsified
+list: a **settle-time up-edge**. Rather than the content's mutator notifying the container mid-arrange, the **settle
+loop** re-fits each chain-top's size-tracking container *after* that chain-top has fully settled
+(`_reFitMyTrackingContainerAfterSettle`, §2.3), so the container reads *final* — not half-applied — content geometry
+and re-fits correctly in one visit. The **property** half went first (off-pass: a freefloating child's
+`_invalidateLayout` now climbs THROUGH a freefloating boundary off-pass when the parent is a size-tracking container —
+the uniform dirty-tree replacing `_announceLayoutPropertyChangeToContainer`); the **geometry** half followed (in-pass,
+via the up-edge, replacing `_announceGeometryChangeToContainer`). Both announce-verbs are **deleted**; the immediate
+mutators are now pure geometry. Reverse-probe (seam methods gone, up-edge in) = **165/165 byte-exact** dpr1/dpr2/webkit,
+danger torture clean, `RECALC_NONCONVERGENCE` absent. The endgame's error was treating the notification as necessarily
+*mutation-driven*: the settle loop can drive it *structurally*. (The scroll content-frame ↔ scroll-position
+`keepContents` coupling the endgame called irreducible re-fits fine under the up-edge — the loop re-fits the panel once
+its content settles.) **Stage 6** then retired the cap to a never-fire assert (§2.3/§2.6), and the residual per-flush
+re-visits were driven down: the caret to single-pass (below), the window→stack-content to single-pass, leaving 3
+proven-irreducible nested-window first-placement re-visits.
 
-**Honest caveat (revised by the outcome).** Byte-exact text measurement *did* reproduce wrap geometry without
-committing it (Stage 0: 4022 measure-vs-commit differentials, 0 mismatches), and every landed step cleared the soak —
-so the measure half was **not** the limiting risk it was feared to be. The limit was elsewhere, and sharper than
-expected: measure + non-notifying-arrange handles content *sizing* cleanly, but it does **not** dissolve the
-**cross-widget notification** edge (a freefloating content applied in-pass must re-fit its container in a later visit),
-nor the genuine **width↔height cycle** of aspect-locked nested content — that one is irreducible in any single-pass
-system (it is why CSS needs special `aspect-ratio` rules and Flutter forbids unbounded-both-axes), and is already
-cycle-broken by `elasticity 0`. So the end-state is *not* the once-hoped "the fixpoint iteration becomes unnecessary in
-principle"; it is: **the iteration's *waste* is gone; its *essential* core — one notification edge plus the handful of
-true cycles — stays, bounded and capped.**
+So the honest bottom line is now the *opposite* of the previous revision's: not only is the *waste* gone (the read-back
+self-convergence, the suppression boolean, the arrange's self-re-enqueue), **the notification edge itself is gone**,
+restructured into the settle loop. What remains is a small proven-irreducible residual — nested-window first-placement
+(a container cannot measure an unplaced child, §2.6) and the aspect-locked width↔height cycle (irreducible in any
+single-pass system — CSS needs `aspect-ratio` rules, Flutter forbids unbounded-both-axes — cycle-broken here by
+`elasticity 0`).
+
+**Caret scroll-follow single-pass (`7370c25a`).** The dominant residual after Stage 6 was the caret — 372 re-visits/
+suite, the scroll-follow advancing partway per pass. Root cause: `Point.floor` clamps to ≥0 (`Math.max(⌊v⌋, 0)`); a
+slot scrolled above the world origin has negative absolute y, so clamping the caret to 0 capped
+`ScrollPanelWdgt.scrollCaretIntoView` at one viewport-step/pass and a far caret crawled. Fix (byte-exact, 3 lines in
+`CaretWdgt`): place the caret at its *true* un-clamped slot position (so the scroll one-shots the full delta), and
+detect convergence on the *containers* (`@parent`/`@target` moved?) rather than the caret's own idempotent reposition
+(dropping the redundant per-slot verify). **372 → 0.** Two non-silent backstops documented at the site: a wrong caret
+position fails the byte-exact suite; a real cycle throws `RECALC_NONCONVERGENCE`.
+
+Companions: the staged records (`proper-layouts-geometry-seam-removal-plan.md`, `-4.1-pure-measure-campaign-plan.md`,
+`-4.2-structural-arrange-plan.md`; `-4.4-ordered-downwalk-plan.md` §8 was the *pre-deletion* "infeasible" verdict,
+**superseded** by the up-edge), `caret-scroll-follow-single-pass-plan.md`, and `window-content-negotiation-residual-plan.md`
+(the 3 nested re-visits, banked).
 
 ### 4.2 Make convergence *structural*, not empirical — **Objective A landed; the DAG-lint half was falsified**
 
@@ -915,13 +846,13 @@ DAG lint** — was *not* built: the idea was to classify each layout dependency 
 down", proportional, vs "size flows up", content-sized) and add a lint (in the spirit of `check-layering.js` rules
 [A]–[M]) flagging any new edge that couples both directions on the same axis of the same widget, on the theory that a
 per-axis DAG would let a single measure+arrange terminate with zero iteration and let `recalcIterationsCap` downgrade
-to a should-never-fire assert. **That theory was falsified for the system as a whole** (§4.1 Status): the
-content→container notification is genuinely bidirectional in a way no per-widget lint dissolves — a freefloating
-content's in-pass geometry must re-fit its container in a *later* visit — so the graph is *not* a per-axis DAG, the cap
-stays load-bearing, and §2.6's empirical invariant could be made structural only for the arrange's *self*-iteration
-(Objective A), not for the whole settle. A both-direction-edge lint would still be a reasonable *hygiene guard* against
-introducing new coupling, but it is no longer a route to zero iteration — a guard, not the convergence proof it was
-sketched as.
+to a should-never-fire assert. **That theory was falsified as a *convergence proof*** (the content→container notification is genuinely bidirectional
+in a way no per-widget lint dissolves) — but the practical outcome it chased, near-zero iteration, was then reached by
+a *different* route: the **settle-time up-edge deleted the seam** (§4.1) and Stage 6 retired the cap to a **never-fire
+assert** (§2.3), so the graph does not need to be a provable per-axis DAG for the loop to demonstrably drain. A
+both-direction-edge lint would still be a worthwhile **hygiene guard** against a *new* layout re-introducing bidirectional
+coupling on one axis of one widget — a good candidate for §6's static checks — but it is a guard, not the structural
+single-pass *proof* it was sketched as (that would need the ordered down-walk, §4.4).
 
 ### 4.3 Encapsulate the engine state behind one owner object
 
@@ -940,16 +871,15 @@ one bit on the node and flips `hasDirtyDescendant` up the chain (O(depth) markin
 roots-with-dirty-descendants go on the work-list), and the loop walks *down* from those roots. It also makes the
 "freefloating child laid out twice" sub-optimality (§4.5) disappear naturally. Determinism-sensitive.
 
-**Worth doing for cleanliness — but proven *not* a path to the seam.** §4.4 is the *efficiency/cleanliness* layer:
-O(1) enqueues, and it makes the "freefloating child laid out twice" sub-optimality (§4.5) disappear. But the
-convergence-arc endgame (§4.1 Status) tested the two-flag's invalidation-time propagation *directly* as a seam
-replacement and **falsified it**: an off-pass dirty-tree climb fires at *scheduling* time, before the freefloating
-content's geometry is applied, whereas the seam's load-bearing notification is *in-pass, after* application (and the
-FLOWRULE forbids re-invalidating mid-pass) — so the two-flag cannot deliver the after-application re-fit the seam does.
-The capstone, meanwhile, had already been greened by the non-notifying arrange (§4.2 Objective A), not by any
-dirty-tracking change. So §4.4 stands on its own efficiency/cleanliness merits, but it neither deletes the seam nor was
-needed to green the capstone, and the seam-deletion endgame that would have consumed it is **closed** (§4.1). (Staged
-in `proper-layouts-4.4-ordered-downwalk-plan.md`, whose §8 records the closure.)
+**A remaining *optimization* — no longer a seam prerequisite (the seam is already deleted).** §4.4 is the
+efficiency/cleanliness layer: O(1) enqueues, and it makes the "freefloating child laid out twice" sub-optimality (§4.5)
+disappear. The convergence-arc endgame once tested the two-flag's invalidation-time propagation as a *seam replacement*
+and falsified it (an off-pass climb fires at scheduling time, before the content's geometry is applied) — but the seam
+was ultimately deleted by the **settle-time up-edge** instead (§4.1), which is post-application and needs no two-flag.
+So §4.4 no longer has a seam to enable; it stands purely on its own merits — a cleaner, cheaper settle loop (walk
+*down* from dirty roots instead of pop-tail + walk-up), byte-identical, determinism-gated. **It is the leading item in
+the optimizations plan** (`docs/layout-optimizations-and-oo-cleanup-plan.md`). Staged in
+`proper-layouts-4.4-ordered-downwalk-plan.md`, whose §8 is the (now-superseded) pre-deletion closure.
 
 ### 4.5 Quick win — the freefloating walk-up TODO (`WorldWdgt.coffee` ~:985–997)
 
@@ -962,32 +892,38 @@ correctness; soak it (anything in this loop is cadence-sensitive).
 
 Following from §2.2: a handler that performs several geometry mutations does one full settle *each*. Where a
 gesture changes both extent and position, prefer the compound `setBounds` (one flush) over `setExtent` +
-`moveTo` (two) — or, if a multi-mutation bundle recurs often enough to matter, revive the **dormant**
-`_settleLayoutsAfterBatch` tier (§2.2) for it rather than self-settling each call. Pure micro-optimization, but it
-is the productive corollary of the corrected flush model and costs nothing.
+`moveTo` (two). *(The old batch tier `_settleLayoutsAfterBatch` — a bundle-coalescing settler — was **deleted
+2026-07-01** as dead code (0 callers); if a multi-mutation bundle ever recurs often enough to matter, reintroduce a
+batch settler then, from git history, rather than keeping a dormant one. For per-input-event streams use the
+`*Coalesced` API instead, §2.7.)* Pure micro-optimization, the productive corollary of the corrected flush model.
 
-### Do **not** revisit (already falsified — see the OVERVIEW)
+### Do **not** revisit (already falsified)
 
-- **Path A — pending-aware accessors** (OVERVIEW §6): one accessor cannot serve both pending- and applied-needers.
-- **Reformulating the proportion fraction** (OVERVIEW §5): the stored `wEl/wStk` fraction is irreducibly
+- **Path A — pending-aware accessors** (`deferred-layout-path-a-design.md`): one accessor cannot serve both pending- and applied-needers.
+- **Reformulating the proportion fraction** (the deferred-layout capstone record): the stored `wEl/wStk` fraction is irreducibly
   load-bearing (base-width menu, `DONT_MIND` fill, per-instance text); three reformulations were falsified.
-- **Routing `ScrollPanelWdgt.add`/`addMany`/`showResize…` through the batch tier** (`_settleLayoutsAfterBatch`,
-  née `settleLayoutsOnceAfter`; OVERVIEW §11 PROOF 2): probed 2026-06-22 and rejected — it deterministically
-  diverged nested-scroll content/thumb geometry at dpr1 for zero gain. (A breadcrumb survives at
-  `ScrollPanelWdgt.coffee` ~:212.)
-- **Deleting the re-fit seam** by any of — non-notifying conversion *alone*, a synchronous in-arrange fixpoint, an
-  off-pass dirty-tree / two-flag climb, an ordered content-first pre-settle, or an analytic position↔frame decoupling
-  (the seam-deletion endgame, §4.1 Status; closed `838ff6e9`, binding record
-  `proper-layouts-4.4-ordered-downwalk-plan.md` §8): **all falsified** — the seam's surviving role is a multi-widget
-  *after-application* notification, irreducible short of re-architecting the settle loop into a topological ordered
-  down-walk. The capstone is already green without it (§2.7); leave the seam.
+- **Deferring `ScrollPanelWdgt.add`/`addMany`/`showResize…`** (once probed via the — now deleted — batch tier;
+  breadcrumb at `ScrollPanelWdgt.coffee` ~:212): probed 2026-06-22 and rejected — it deterministically diverged
+  nested-scroll content/thumb geometry at dpr1 for zero gain. These endpoints stay **synchronous** applies: the dominant
+  caller is orphan construction, which has no same-cycle settle to ride.
+- **Re-deleting the re-fit seam via the *mutation-driven* paths** — non-notifying conversion *alone*, a synchronous
+  in-arrange fixpoint, an off-pass dirty-tree / two-flag climb, an ordered content-first pre-settle, an analytic
+  position↔frame decoupling. Each was falsified in the pre-deletion endgame (`838ff6e9`,
+  `proper-layouts-4.4-ordered-downwalk-plan.md` §8) because each kept the notify-**by-mutation** *shape*. **The seam is
+  already deleted** (2026-07-01) — by the *structural* settle-time up-edge (§4.1), a different shape entirely — so there
+  is nothing left to remove. Do not reintroduce a mutation-driven container notification; the up-edge is the design.
+- **Re-fighting the 3 nested-window first-placement re-visits** (§2.6/§4.1): proven irreducible three ways (can't
+  measure an unplaced child, can't settle early byte-exactly, can't reorder). Banked in
+  `window-content-negotiation-residual-plan.md`.
 
 ---
 
 ## 5. Appendix — verified code map
 
-All re-read against `c5ae7697` source while writing this revision (names authoritative — *post-naming-campaign*, with
-the pre-campaign name in `(né …)` where it aids `grep`; lines approximate).
+Names authoritative — *post-naming-campaign*, with the pre-campaign name in `(né …)` where it aids `grep`; lines
+approximate. **⚠ The 2026-07-01 seam deletion + Stage 6 + batch deletion shifted the `Widget.coffee` 1200–1800 and
+3800–4200 bands and `WorldWdgt.coffee` 900–1000 — re-grep every symbol; the *semantic* entries below (seam, up-edge,
+cap, batch) are corrected to the current tree, but their line numbers pre-date these commits.**
 **Paths:** `Widget.coffee`, `StringWdgt.coffee`, `TextWdgt.coffee`, `CaretWdgt.coffee`, `ScrollPanelWdgt.coffee`
 live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-structures/`; `WorldWdgt`, `WindowWdgt`,
 `HandleWdgt`, `SimpleVerticalStackPanelWdgt`, `VerticalStackLayoutSpec`, `LayoutSpec` are directly under `src/`;
@@ -1007,14 +943,22 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
   never on the EOC flush) · purity hoist `StringWdgt.handOffToPopoutEditorIfOverflowing` ~:1401 (overflow→pop-out,
   called from `CaretWdgt.insert` ~:399 — removes the mutation that used to fire inside `slotCoordinates`).
 - **Settle engine:** `recalculateLayouts` (guard wrapper) ~:911 (re-entrancy throw ~:932) · `_recalculateLayoutsBody`
-  (loop) ~:939 (until-loop ~:948; cap `100000` ~:945; walk-up ~:987; freefloating stop ~:988; `_reLayout` call
-  ~:997; non-flushing catch ~:998).
-- **Self-settling public API:** `_settleLayoutsAfter` (née `mutateGeometryThenSettle`) `Widget.coffee` ~:803
-  (flush ~:838; flow-violation throw ~:826; orphan guard ~:816; batch guard ~:833) · `_settleLayoutsAfterBatch`
-  (née `settleLayoutsOnceAfter`) ~:857 (flush ~:870 — **0 live callers; dormant**). Pure-geometry setters (5, each an
-  inline `@_settleLayoutsAfter` thunk): `setBounds` ~:875, `moveTo` (née `fullMoveTo`) ~:1412, `setExtent` ~:1623, `setWidth` ~:1777,
-  `setHeight` ~:1813; structural `add` ~:2506 (→ a `_addNoSettle` core). (`addRaw` — listed as a 7th mutator in earlier
-  revisions — does not exist.)
+  (loop) ~:939 (until-loop; **never-fire assert** `layoutIterationsSanityLimit = 100000` + `RECALC_NONCONVERGENCE`
+  throw — Stage 6, ex-`recalcIterationsCap`; walk-up; freefloating stop; `_reLayout` call; **settle-time up-edge**
+  `_reFitMyTrackingContainerAfterSettle` after each chain-top settles, gated on the Stage-6 no-op early-return
+  `if myFrameChanged`; non-flushing catch).
+- **Settle-time up-edge (replaced the deleted seam, 2026-07-01):** `Widget._reFitMyTrackingContainerAfterSettle`
+  ~:1635 (`@_reFitContainer @parent.parent` if inside a non-text-wrapping scroll panel, then `@_reFitContainer @parent`)
+  · `_reFitContainer` ~:1716 (kept — the phase-dispatch primitive; gated on `container._reLayoutChildren?`; in-pass →
+  `__markForRelayout`, off-pass → `_invalidateLayout`). The immediate mutators (`_commitExtentAndNotify` /
+  `_applyMoveByAndNotify`) are now **pure geometry** — they fire no seam. The deleted announce-verbs
+  `_announceGeometryChangeToContainer` / `_announceLayoutPropertyChangeToContainer` survive only in explanatory
+  comments.
+- **Self-settling public API:** `_settleLayoutsAfter` (née `mutateGeometryThenSettle`) `Widget.coffee` ~:803 (flush;
+  flow-violation throw; orphan guard). *(The batch tier `_settleLayoutsAfterBatch` + the `_batchingLayoutSettling` guard
+  were deleted 2026-07-01, §4.6 — no batch tier remains.)* Pure-geometry setters (5, each an inline `@_settleLayoutsAfter`
+  thunk): `setBounds`, `moveTo` (née `fullMoveTo`), `setExtent`, `setWidth`, `setHeight`; structural `add` (→ a
+  `_addNoSettle` core).
 - **Enqueue primitives (unified — `282ea492`):** `__markForRelayout` (née `_markForRelayoutNoClimb`) ~:3894 — the shared bare-push atom (push +
   mark invalid, *no* climb), used by `_invalidateLayout`, `_reFitContainer`'s in-pass arm, and the caret ·
   `_invalidateLayout` ~:3898 (freefloating-skip param guard ~:3906; **inert-receiver branch**
@@ -1027,12 +971,13 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
   `_applyExtent` ~:1674 · `_applyBounds` ~:1686 · `_applyMoveBy` ~:1319 / `_applyMoveTo`
   ~:1328 (twins of `_applyMoveByAndNotify`, née `fullRawMoveBy`, ~:1311). The arrange applies its own geometry through these, so it no longer fires
   the seam at the container itself (the Intent-2 self-re-enqueue that the capstone counted).
-- **Re-fit seam (STAYS — proven irreducible, §4.1; its `@_adjustingContentsBounds` suppression was deleted in
-  proper-layouts Phase D; the fourth wave renamed its announce verbs):** `_announceGeometryChangeToContainer`
-  (née `_reFitContainerAfterRawGeometryChange`) ~:1711 (`isLayoutInert` skip ~:1719), fired by the
-  *notifying* `_commitExtentAndNotify` ~:1649 + `_applyMoveByAndNotify` ~:1311 (the arrange twins above deliberately do not fire
-  it) · `_reFitContainer` ~:1755 (in-pass → `__markForRelayout` ~:1758; off-pass → `_invalidateLayout` ~:1760) ·
-  `_announceLayoutPropertyChangeToContainer` (née `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt`) ~:1700.
+- **Re-fit seam — DELETED 2026-07-01 (replaced by the settle-time up-edge above).** The notify-by-mutation
+  announce-verbs `_announceGeometryChangeToContainer` (née `_reFitContainerAfterRawGeometryChange`) and
+  `_announceLayoutPropertyChangeToContainer` (née `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt`) are **gone** (their
+  `@_adjustingContentsBounds` suppression was already deleted in proper-layouts Phase D); they survive only in
+  explanatory comments. `_reFitContainer` is **retained** and is now driven by the up-edge, not by the mutators. The
+  immediate mutators (`_commitExtentAndNotify` ~:1649, `_applyMoveByAndNotify` ~:1311) and the non-notifying arrange
+  twins are all pure geometry now — none fires a seam.
 - **Apply bodies:** base `Widget._reLayout` ~:4212 (`markLayoutAsFixed` call ~:4377 — followed by a corner-layouted
   child re-layout loop ~:4381; `markLayoutAsFixed` def ~:4209; horizontal-stack 3-case distribution ~:4286–4374) ·
   `_setWidthSizeHeightAccordingly` (née `rawSetWidthSizeHeightAccordingly`) ~:750 (synchronous `_reLayout` ~:755 when `implementsDeferredLayout()`, returns
@@ -1078,3 +1023,163 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
   `…_WINDOW_CONTENT`, `…_STACK_HORIZONTAL_*`, `…_CORNER_INTERNAL_*`).
 - **Concrete multi-flush source:** `HandleWdgt.nonFloatDragging` `src/HandleWdgt.coffee` ~:252
   (`setExtent` ~:261 / `moveTo` ~:263 / `setWidth` ~:266 / `setHeight` ~:269).
+
+---
+
+## 6. Introducing a new layout — the rulebook (what to honour, what to check)
+
+This section is the practical companion to §2–§4: the invariants a new widget / container / layout spec must honour to
+fit the engine, and the static + dynamic checks that enforce them. It absorbs the former `deferred-layout-OVERVIEW.md`
+(the gauntlet, the gotchas, the maximal SCHEDULE/APPLY invariant + lint `[F]`). **The overarching principle: layout is
+a pure function of the event stream + final geometry — `measure` (no side effects) then `arrange` (apply once), with a
+settle-time up-edge doing any container re-fit. Everything below is a corollary.**
+
+### 6.1 The rules (in priority order)
+
+1. **NEVER introduce a read-back.** A container must *never* mutate a child and read the child's geometry back to size
+   itself. Give the child a side-effect-free **`preferredExtentForWidth(availW) → Point`** (§4.1) — "what extent would
+   I take at this width, without touching `@bounds`" — and *measure* it. Every width→height widget overrides it
+   (`TextWdgt`, `SimpleVerticalStackPanelWdgt`, `WindowWdgt`, `AnalogClockWdgt`, `KeepsRatioWhenInVerticalStackMixin`);
+   the base default returns current height (width-invariant). A container measures its subtree via
+   `subWidgetsMergedPreferredBounds`. *The one sanctioned read-back that survives* is the non-content-sizing
+   folder/toolbar frame merging children's **applied** bounds (`subWidgetsMergedFullBounds`, §2.5) — do not add a
+   second. If you find yourself calling `_setWidthSizeHeightAccordingly` and then reading `.height()` back, you are
+   re-introducing the root constraint — hand the height *forward* from the sizing call instead (the "Path-B"
+   convention; every override returns its resulting height).
+
+2. **Keep it to ONE pass.** A container fits its content in a *single* settle visit. You get this for free if you obey
+   the tiers (rule 3): the **settle-time up-edge** (`_reFitMyTrackingContainerAfterSettle`, §2.3) re-fits a
+   size-tracking container *after* its content settles, reading final geometry, once. **Do NOT add a mutation-driven
+   container notification** — the notify-by-mutation seam was deleted in 2026-07-01 precisely so nothing re-dirties a
+   container mid-arrange (§4.1). A **second** pass is legitimate *only* for the two proven-irreducible cases: (a)
+   nested-window **first-placement** (a container cannot measure a child whose content has never been placed —
+   `contentNeverSetInPlaceYet`, §2.6), and (b) an **aspect-locked width↔height cycle**, which you must break with
+   `elasticity 0` (rule 5), not iterate through. If your new layout needs a third reason to re-visit, that is a design
+   smell — stop and reconsider (or bring it to the ordered-down-walk discussion, §4.4).
+
+3. **Obey the tiers — the FLOWRULE is enforced, not advisory.** Three tiers, and mixing them throws (§2.2):
+   - **Public setters self-settle.** Shape a public geometry/structural mutator as `@_settleLayoutsAfter =>
+     @_<name>NoSettle(…)` — a thin wrapper over a non-settling core. The wrapper runs `recalculateLayouts()` once on
+     return; the core does not. *Internal* callers (other product code, gesture streams) call the **core**, never the
+     public wrapper — else you flush mid-sequence and re-order deferred work (§2.7, the caret-nav worked case). This
+     wrapper+core split is a *correctness* constraint, not just a flush-count one.
+   - **Immediate (geometry) mutators only mutate.** The `_apply*AndNotify` / `_commit*AndNotify` / bare `_apply*` /
+     `__*`-leaf family sets `@bounds` and nothing else — it must **never** call `_invalidateLayout` (rule [E]) or a
+     structural self-settling wrapper (rule [G]). Inside an *arrange* (`_reLayoutChildren`), apply your own geometry
+     through the **non-notifying** bare `_apply*` twins (not `_apply*AndNotify`), so the arrange does not re-enqueue
+     itself (§4.2 Objective A).
+   - **Off-settle code records intent, never applies.** Schedule via `_invalidateLayout()` (climbs to the parent;
+     short-circuits for a freefloating child) or `@desired*` + a public flush — never a synchronous `_reLayout` from an
+     event handler. `_invalidateLayout` **throws `FLOWRULE_VIOLATION`** if reached mid-pass; that throw is the tripwire
+     that keeps the settle loop terminating (§2.2).
+
+4. **Freefloating content climbs nothing; a size-tracking container gets the up-edge automatically.** A freefloating
+   child (`ATTACHEDAS_FREEFLOATING`) does not invalidate its parent — the walk-up stops at it. If your container tracks
+   its content's size, define **`_reLayoutChildren`** (that is the marker `_reFitContainer` gates on): the settle loop
+   then re-fits you after your content settles. Off-pass, a freefloating child's `_invalidateLayout` climbs THROUGH the
+   freefloating boundary to a `_reLayoutChildren` parent (the uniform dirty-tree that replaced the property seam, §4.1).
+   You do not — and must not — wire a manual notification.
+
+5. **Break real width↔height cycles with `elasticity 0`.** Aspect-locked content (a square clock, a ratio-keeper) whose
+   width depends on height depends on width is a genuine cycle. `getWidthInStack`'s proportional term multiplies out at
+   `elasticity 0` (`getWidthInStack = min(wEl, availW)`), making the content convergence-independent without touching
+   the proportion model (§2.5). Do *not* try to iterate the cycle to a fixpoint.
+
+6. **Adding a method to base `Widget` is inspector-safe; deleting one recaptures the inspector test.** A new capability
+   on `Widget` costs zero recaptures. *Deleting* an inspector-visible `Widget` method shifts the member list and
+   recaptures `macroDuplicatedInspectorDrivesCopiedTargetOnly` (benign, pre-authorised — recapture dpr1+2). Prefer a
+   **capability query** (a `foo?()` the answering subclass defines) over an `instanceof`/`isWindow`-style type test
+   (the type-test-elimination campaign removed those).
+
+### 6.2 The maximal SCHEDULE/APPLY invariant (what "correct" means, precisely) — lint `[F]`
+
+> Off-settle code may request layout only by **recording intent** (`_invalidateLayout`, or `@desired*`-then-flush). A
+> layout **APPLY** (`_reLayout` / `_reLayoutSelf` / `_reLayoutChildren` / `_positionAndResizeChildren` /
+> `_reLayoutScrollbars` / `recalculateLayouts`) runs synchronously **only** at: (a) the settle loop; (b) a public flush
+> (`_settleLayoutsAfter`); (c) a terminal immediate-mutator self-apply (irreducible — a raw setter runs during a pass,
+> where `_invalidateLayout` would throw, and the pass reads its result back in-pass); (d) the settle-time up-edge
+> (already under `_recalculatingLayouts`); or (e) a documented determinism-exempt family (scroll-input / Slider /
+> LabelButton / soft-wrap / collapse-`reInflating`).
+
+This is **build-gated by lint `[F]`** (`buildSystem/check-layering.js`): a non-low-level, non-immediate-mutator method
+that calls a container APPLY must DEFER or carry a conscious `# layout-apply-sanctioned: <why>` marker. Cases (a)/(b)/(c)
+are exempt via the `isLowLevel`/`isImmediateMutator` predicates; (d)/(e) carry markers. When you add a new container
+arrange, expect to either route its callers through the settle tiers or annotate the terminal apply with the marker and
+a one-line reason.
+
+### 6.3 The static checks (build-time — run by `./fg build` / `build_it_please.sh`)
+
+The build **fails** on any of these; read the failing rule's message, it names the offending method.
+
+- **`check-layering.js` — rules `[A]`–`[M]`** (the layering lint). The load-bearing ones for new layout code: `[A]`/`[E]`
+  an immediate mutator must not schedule layout; `[B]` only `doOneCycle`/`_settleLayoutsAfter` may call
+  `recalculateLayouts`; `[C]` a public setter must not call another public setter; `[F]` the SCHEDULE/APPLY invariant
+  above; `[G]` low-level code must not call a structural self-settling wrapper; `[I]`–`[M]` the naming lattice (`__`-leaf
+  purity, callback settle-neutrality, apply/notify name-consistency, callback-name convention, retired-fragment ban).
+  The predicates `isLowLevel` / `isImmediateMutator` are the single source of truth for the tiers — do not describe a
+  tier in a way that drifts from them.
+- **`check-dead-methods.js`** — dead-method ratchet + `dead-method-allowlist.txt`. Deleting a method drops the count;
+  a *new* dead method fails unless allowlisted (prefer deleting it).
+- **`check-stinks.js`** — smell ratchet (baseline counts). Currently empty (its one rule retired with
+  `_settleLayoutsAfterBatch`); add a `{id, baseline, why, re}` to ratchet a new smell.
+- **`check-constructors-build.js`** — every constructor must build its children through the settling wrapper
+  `_buildAndConnectChildren()` over a `_buildAndConnectChildrenNoSettle` core (no inline child-building in a
+  `constructor:` body), so `new Foo()` returns settled (orphan-settledness, §2.7).
+- **tier-naming gate** — no leaf/arrange naming leaks (part of `./fg gauntlet`).
+
+### 6.4 The dynamic checks (run-time)
+
+- **`./fg gauntlet`** (from the umbrella root) — the standard gate: build + suite at **dpr1 / dpr2 / webkit** (165/165
+  byte-exact) + apps smoke + tiernaming + notification-settle gate. Any layout change must pass this.
+- **The danger-config determinism torture** — **mandatory for any *convergence* change** (anything touching the settle
+  loop / `_reLayout` / an arrange / `_invalidateLayout` / the up-edge). `torture-headless.js` deadlocks in-session, so
+  run the manual loop over the danger configs `dpr2-fastest-s8`, `dpr2-fast-s8`, `dpr1-fastest-s8`, `dpr2-fastest-s4`
+  (a few rounds): pass = `RECALC_NONCONVERGENCE` **absent** + 0 test-fails. dpr2-under-load is where a bad
+  synchronous→deferred *timing* change surfaces (heavy frames starve timers, drain many events/frame).
+- **The two boundary gates** (siblings of the suite): the **end-of-cycle capstone** (`run-capstone-gate.sh` — no
+  careless off-settle push survives to the flush, §2.7) and the **paint-readonly gate** (`run-paint-readonly-gate.sh` —
+  paint schedules no layout, §2.1). Both self-test and hard-fail.
+- **The re-visit detector** (for measuring convergence) — a throwaway `__seen = new Set()` reset each
+  `_recalculateLayoutsBody` call, logging when a widget is processed a 2nd+ time in one flush. This is how the caret
+  (372) and window (9) re-visits were measured; it is the tool for confirming a new layout is single-pass. Related
+  off-by-default audits: `auditUndeclaredEndOfCycle` (enqueue-time careless-push audit) and
+  `auditPaintTimeLayoutScheduling` (paint-time layout-schedule audit).
+
+### 6.5 The gauntlet — self-contained commands
+
+Prefer the **`./fg`** wrapper from the umbrella root (`Fizzygum-all/`) — it is cwd-correct from anywhere, kills zombie
+browsers, and gates on real exit codes:
+
+```sh
+./fg build            # build + all static gates (expect "0 violations" + "done!!!")
+./fg suite            # full suite, dpr1 (add nothing; it's the default)
+./fg gauntlet         # build + dpr1 + dpr2 + webkit + apps + tiernaming + settle  (the standard gate)
+./fg test <name>      # one macro test
+./fg recapture <name> # recapture a benign inspector/reference shift
+```
+
+Raw forms (when not using `./fg`; **paths absolute** — the Bash cwd resets to the umbrella between calls, so a bare
+`./build_it_please.sh` silently tests a STALE build):
+
+```sh
+cd /Users/davidedellacasa/code/Fizzygum-all/Fizzygum && ./build_it_please.sh   # --keepTestsDirectoryAsIs while iterating
+cd /Users/davidedellacasa/code/Fizzygum-all/Fizzygum-tests && node scripts/run-all-headless.js --shards=5   # --dpr=2 / --browser=webkit
+# single test + instrument: LOG_FILE=<path> node scripts/run-macro-test-headless.js SystemTest_<name> [--dump-failures]
+# recapture: node scripts/capture-macro-test-references.js <name> --dprs=1,2
+```
+
+A wrong layout conversion fails **deterministically at dpr1** (stale geometry → red every run); a synchronous→deferred
+*timing* regression surfaces as a **dpr2-under-load flake** — that is what the torture hunts. Read
+`../Fizzygum-tests/DETERMINISM.md` before touching the render/layout/input loop.
+
+### 6.6 Gotchas (learned the hard way)
+
+- **Stale builds are structurally guarded** — the runners refuse to run against a build older than `src/` (exit 2);
+  override with `FIZZYGUM_ALLOW_STALE_BUILD=1`. Still prefer `./fg` or an absolute `cd … && ./build_it_please.sh`.
+- **Separate `cd` per repo** — chaining a `Fizzygum/` build with a `Fizzygum-tests/` node script in one `&&` runs the
+  script from the wrong dir (`MODULE_NOT_FOUND`). The PreToolUse guard blocks the wrong-cwd form; use `./fg`.
+- **`pkill -f "Chrome for Testing"`** before every suite/torture run (zombies starve the box → infra hiccups /
+  shard disconnects, which read as failures but aren't).
+- **Commit via `git commit -F <file>`** — never backticks / `$()` in `-m` (the Bash tool runs bash and
+  command-substitutes them). **Ask before commit/push** (review-driven project).
+- **`nil` means `undefined`.** Edit only `src/**/*.coffee`; never `../Fizzygum-builds/**` (regenerated each build).
