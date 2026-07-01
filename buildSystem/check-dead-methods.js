@@ -41,6 +41,46 @@ function walk(dir, ext, acc) {
 }
 function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); }
 
+// ── settle-tier symmetry helpers (pure; unit-tested via --self-test) ────────────────────────────────
+// A public `<name>` and its private core `_<name>NoSettle` form ONE self-settling pair. When one side is
+// dead we may RETAIN it for symmetry — but ONLY if the OTHER side is INDEPENDENTLY used. `twinName` maps a
+// member to its partner; `independentlyReferenced` answers "is `token` referenced by some owner OTHER than
+// `excluded`?" (owner = a src method name, '@toplevel' for class-level src, or '@external' for harness/tests).
+// The `excluded` guard is what closes the masking hole: a dead public wrapper's body is the one place that
+// references its core (`setLabel -> @_setLabelNoSettle`), so without excluding that body the core looks "used"
+// and a pair dead on BOTH sides would be saved. Excluding it, a both-dead pair is retained by neither.
+function twinName(n) {
+  const core = /^_(.+)NoSettle$/.exec(n);
+  return core ? core[1] : '_' + n + 'NoSettle';
+}
+function independentlyReferenced(token, excluded, referrers) {
+  const owners = referrers.get(token);
+  if (!owners) return false;
+  for (const o of owners) if (o !== excluded) return true;   // a referrer other than the dead method itself
+  return false;
+}
+
+// --self-test: prove the symmetry decision on synthetic referrer maps (runs without the sibling test repo).
+if (process.argv.includes('--self-test')) {
+  const R = (pairs) => new Map(pairs.map(([t, owners]) => [t, new Set(owners)]));
+  const cases = [
+    // [dead member, referrers-of-its-twin, expect RETAINED?]
+    ['setLabel',     R([['_setLabelNoSettle', ['setLabel', 'buildFridgeMagnets']]]), true],  // core used elsewhere -> keep the dead wrapper
+    ['setLabel',     R([['_setLabelNoSettle', ['setLabel']]]),                       false], // core used ONLY by the dead wrapper -> both dead
+    ['setLabel',     R([]),                                                          false], // nothing references the core at all
+    ['_fooNoSettle', R([['foo', ['someExternalCaller']]]),                           true],  // public twin live -> keep the dead core
+    ['_fooNoSettle', R([['foo', ['_fooNoSettle']]]),                                 false], // public twin referenced only from the core -> both dead
+  ];
+  let ok = true;
+  for (const [n, referrers, expect] of cases) {
+    const got = independentlyReferenced(twinName(n), n, referrers);
+    console[(got === expect) ? 'log' : 'error'](`  ${got === expect ? 'ok  ' : 'FAIL'} ${n}: retained=${got} (expected ${expect})`);
+    if (got !== expect) ok = false;
+  }
+  console.log(ok ? '[dead-methods] self-test PASS' : '[dead-methods] self-test FAIL');
+  process.exit(ok ? 0 : 1);
+}
+
 if (!fs.existsSync(TESTS) || !fs.existsSync(HARNESS)) {
   console.log('[dead-methods] SKIP — sibling Fizzygum-tests not present (needs it for an accurate reference set).');
   process.exit(0);
@@ -57,19 +97,53 @@ for (const p of walk(SRC, '.coffee', [])) {
 
 // 2. every identifier USED (not on a def header, not in a comment)
 const referenced = new Set();
-function harvest(files, stripHdr, stripCmt) {
+const referrers = new Map();   // token -> Set of owners that reference it (a src method name / '@toplevel' / '@external')
+function addRef(token, owner) {
+  referenced.add(token);
+  let s = referrers.get(token);
+  if (!s) referrers.set(token, (s = new Set()));
+  s.add(owner);
+}
+// src: attribute each reference to its ENCLOSING method, so we can later tell whether a settle-twin is used by
+// something OTHER than the dead method itself. A 2-space header opens a method; its inline body (after `->`)
+// and the 4+-space-indented lines below belong to it; class-level lines (indent < 4, not a header) are '@toplevel'.
+// (`referenced` ends up the SAME set as the old flat harvest — the per-owner map is purely additive.)
+function harvestSrc(files) {
   for (const p of files) {
-    for (let line of fs.readFileSync(p, 'utf8').split('\n')) {
-      if (stripHdr && HEADER.test(line)) { const gt = line.indexOf('>'); line = gt >= 0 ? line.slice(gt + 1) : ''; }
-      const code = stripCmt ? stripComment(line) : line;
+    let cur = null;
+    for (const raw of fs.readFileSync(p, 'utf8').split('\n')) {
+      const m = HEADER.exec(raw);
+      let code, owner;
+      if (m) {
+        cur = m[1];
+        const gt = raw.indexOf('>');
+        code = stripComment(gt >= 0 ? raw.slice(gt + 1) : '');
+        owner = cur;
+      } else {
+        code = stripComment(raw);
+        const indent = raw.length - raw.trimStart().length;
+        owner = (indent >= 4 && cur) ? cur : '@toplevel';
+      }
       const ws = code.match(WORD);
-      if (ws) for (const w of ws) referenced.add(w);
+      if (ws) for (const w of ws) addRef(w, owner);
     }
   }
 }
-harvest(walk(SRC, '.coffee', []), true, true);
-harvest(walk(HARNESS, '.coffee', []), true, true);
-harvest(walk(TESTS, '.js', []), false, false);
+// harness (.coffee) + macro tests (.js): every reference is an INDEPENDENT anchor ('@external') — it lives
+// outside the src pair, so it always counts as "the twin is used". (.coffee strips headers+comments as src does.)
+function harvestExternal(files, isCoffee) {
+  for (const p of files) {
+    for (let line of fs.readFileSync(p, 'utf8').split('\n')) {
+      if (isCoffee && HEADER.test(line)) { const gt = line.indexOf('>'); line = gt >= 0 ? line.slice(gt + 1) : ''; }
+      const code = isCoffee ? stripComment(line) : line;
+      const ws = code.match(WORD);
+      if (ws) for (const w of ws) addRef(w, '@external');
+    }
+  }
+}
+harvestSrc(walk(SRC, '.coffee', []));
+harvestExternal(walk(HARNESS, '.coffee', []), true);
+harvestExternal(walk(TESTS, '.js', []), false);
 
 const dead = [...defs.keys()].filter((n) => !referenced.has(n)).sort();
 
@@ -77,12 +151,14 @@ const dead = [...defs.keys()].filter((n) => !referenced.has(n)).sort();
 // pair (the same pairing check-thin-wraps.js enforces). If a member is dead but its settle-twin is LIVE, it is
 // RETAINED FOR SYMMETRY, not genuinely dead — the gate exempts it WITHOUT a manual allowlist entry. Safe in
 // both directions: a dead public wrapper whose core is live (e.g. LabelButtonWdgt.setLabel, whose
-// _setLabelNoSettle core FridgeMagnets construction calls), and a dead core whose public API is live. A pair
-// dead on BOTH sides is still flagged. Returns the live twin's name (for the report) or null.
+// _setLabelNoSettle core FridgeMagnets construction calls), and a dead core whose public API is live.
+// CRUCIALLY the twin must be used INDEPENDENTLY — referenced by some owner OTHER than `n` itself. A dead
+// public wrapper's body is the one place that references its core, so counting that self-reference would
+// SAVE a pair that is dead on BOTH sides. Excluding it (independentlyReferenced's `excluded` arg), a
+// both-dead pair is retained by neither and both get flagged. Returns the live twin's name or null.
 function liveSettleTwin(n) {
-  const core = /^_(.+)NoSettle$/.exec(n);
-  if (core) return referenced.has(core[1]) ? core[1] : null;                 // n is a core; its public twin is live
-  return referenced.has('_' + n + 'NoSettle') ? '_' + n + 'NoSettle' : null; // n is public; its NoSettle core is live
+  const twin = twinName(n);
+  return independentlyReferenced(twin, n, referrers) ? twin : null;
 }
 const symmetryRetained = dead.filter((n) => liveSettleTwin(n));
 const flaggableDead = dead.filter((n) => !liveSettleTwin(n));   // dead AND not covered by a live settle-twin
