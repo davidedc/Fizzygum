@@ -266,6 +266,18 @@ const LEGACY_CALLBACK_FRAGMENT = /^(child[A-Z]|justBeen|iHaveBeen|aboutTo|prepar
 const FRAGMENT_BANNED = /^(silent[A-Z]|raw[A-Z]|fullRaw)/;
 const FRAGMENT_ALLOWLIST = new Set(['rawPixelInfo', 'rawPixelHash', 'rawRGBA']);  // raw-PIXEL accessors keep "raw" (raw pixel data, not raw geometry)
 
+// [N] the retired notify-by-mutation CONTAINER SEAM must not be re-defined (Opt-4 hygiene guard, 2026-07-01). The two
+// announce-verbs (_announceGeometryChangeToContainer / _announceLayoutPropertyChangeToContainer) were the mutation-time
+// re-fit seam a widget fired to nudge its size-tracking container; BOTH were DELETED 2026-07-01 and replaced by the
+// settle-time up-edge (_reFitMyTrackingContainerAfterSettle re-fits the container AFTER its content settles, reading
+// FINAL geometry, from the settle loop -- assessment §4.1 + §6 rulebook rule 2). Re-introducing a mutation-driven
+// container notification re-opens the convergence the arc closed, so lock out the exact removed shape by name. Precise
+// (matches only the announce-a-change-TO-a-container seam, not any "announce"), sound TODAY (no _announce* method is
+// defined -- verified). Caveat (accepted, per the Opt-4 decision): name-based, so a revival under a NEW name is not
+// caught here -- but the CALL side of any such seam already is, by rule [I] (a __ leaf must not @-call _announce*) and
+// rule [K] (an arrange corner must not fire _announce*). This closes the DEF side those two never covered.
+const SEAM_VERB_BANNED = /^_announce\w*ToContainer$/;   // the deleted notify-by-mutation container-seam shape
+
 // Strip string literals and trailing `#` comments from one line, carrying multi-line
 // string state across lines. Returns { code, state }.
 function stripLine(line, state) {
@@ -401,6 +413,8 @@ function checkFile(file, violations, wrapperCall, warnings) {
             if (LEGACY_CALLBACK_FRAGMENT.test(b.method)) violations.push(`[L] legacy callback fragment ${b.method}() — use the _(reactTo|before)(Being|Child|HolderWindow)<Event> scheme (layering/naming convention §3/§4)  — ${rel}:${n + 1}`);
             // [M] retired geometry/structural naming fragments (raw* / silent* / fullRaw — see consts above; raw-pixel accessors allowlisted).
             if (FRAGMENT_BANNED.test(b.method) && !FRAGMENT_ALLOWLIST.has(b.method)) violations.push(`[M] retired naming fragment ${b.method}() — the raw*/silent*/fullRaw geometry+structural prefixes were eliminated (§6/§3d); use the _apply*/_commit*/__ tier names (raw PIXEL data uses the rawPixel*/rawRGBA accessors). (layering/naming convention §4)  — ${rel}:${n + 1}`);
+            // [N] retired notify-by-mutation container seam (see the SEAM_VERB_BANNED const above): the deleted _announce*ToContainer verbs must not return as a def.
+            if (SEAM_VERB_BANNED.test(b.method)) violations.push(`[N] retired container-seam verb ${b.method}() — the notify-by-mutation re-fit seam (_announce*ToContainer) was deleted 2026-07-01 and replaced by the settle-time up-edge _reFitMyTrackingContainerAfterSettle; do NOT re-introduce a mutation-driven container notification (assessment §4.1 / §6 rulebook rule 2)  — ${rel}:${n + 1}`);
           }
           continue;           // the header line itself carries no call to check
         }
@@ -591,9 +605,10 @@ function main() {
     console.error('K: a 2x2 apply corner must match its name — a non-AndNotify _apply*/_commit* must not fire the seam nor call an *AndNotify; a _commit*AndNotify must not react (layering/naming convention §2).');
     console.error('L: a notification callback must be named _(reactTo|before)(Being|Child|HolderWindow)<Event> with no NoSettle; the legacy fragments (childX/justBeen/iHaveBeen/aboutTo/prepareTo) are retired (layering/naming convention §3/§4).');
     console.error('M: the retired raw*/silent*/fullRaw geometry+structural naming fragments must not reappear as method names (use _apply*/_commit*/__ tiers; raw PIXEL data uses rawPixel*/rawRGBA) (layering/naming convention §4).');
+    console.error('N: the retired notify-by-mutation container seam (_announce*ToContainer) must not be re-defined — the settle-time up-edge _reFitMyTrackingContainerAfterSettle replaced it (assessment §4.1 / §6 rulebook rule 2).');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
   process.exit(0);
 }
 

@@ -850,9 +850,14 @@ to a should-never-fire assert. **That theory was falsified as a *convergence pro
 in a way no per-widget lint dissolves) — but the practical outcome it chased, near-zero iteration, was then reached by
 a *different* route: the **settle-time up-edge deleted the seam** (§4.1) and Stage 6 retired the cap to a **never-fire
 assert** (§2.3), so the graph does not need to be a provable per-axis DAG for the loop to demonstrably drain. A
-both-direction-edge lint would still be a worthwhile **hygiene guard** against a *new* layout re-introducing bidirectional
-coupling on one axis of one widget — a good candidate for §6's static checks — but it is a guard, not the structural
-single-pass *proof* it was sketched as (that would need the ordered down-walk, §4.4).
+both-direction-edge lint remains a worthwhile **hygiene guard** against a *new* layout re-introducing bidirectional
+coupling on one axis of one widget, but its *sound, per-axis* form is **not expressible** in the `check-layering.js`
+line-scanner — the signal is cross-method/cross-class data-flow ("width flows down" vs "size flows up" on one axis), not
+the local textual pattern every rule `[A]`–`[N]` keys off — and it is a guard, not the structural single-pass *proof* it
+was sketched as (that would need the ordered down-walk, §4.4). **What was built instead (Opt-4, 2026-07-01)** is the
+narrow, sound slice that *is* expressible: lint **rule `[N]`** bans re-*defining* the deleted `_announce*ToContainer`
+seam verbs, locking out a copy-from-git revival of the exact removed shape (the CALL side was already covered by rules
+`[I]`/`[K]`; `[N]` closes the DEF side). See §6.3.
 
 ### 4.3 Encapsulate the engine state behind one owner object
 
@@ -1111,13 +1116,14 @@ a one-line reason.
 
 The build **fails** on any of these; read the failing rule's message, it names the offending method.
 
-- **`check-layering.js` — rules `[A]`–`[M]`** (the layering lint). The load-bearing ones for new layout code: `[A]`/`[E]`
+- **`check-layering.js` — rules `[A]`–`[N]`** (the layering lint). The load-bearing ones for new layout code: `[A]`/`[E]`
   an immediate mutator must not schedule layout; `[B]` only `doOneCycle`/`_settleLayoutsAfter` may call
   `recalculateLayouts`; `[C]` a public setter must not call another public setter; `[F]` the SCHEDULE/APPLY invariant
-  above; `[G]` low-level code must not call a structural self-settling wrapper; `[I]`–`[M]` the naming lattice (`__`-leaf
-  purity, callback settle-neutrality, apply/notify name-consistency, callback-name convention, retired-fragment ban).
-  The predicates `isLowLevel` / `isImmediateMutator` are the single source of truth for the tiers — do not describe a
-  tier in a way that drifts from them.
+  above; `[G]` low-level code must not call a structural self-settling wrapper; `[I]`–`[N]` the naming lattice (`__`-leaf
+  purity, callback settle-neutrality, apply/notify name-consistency, callback-name convention, retired-fragment ban, and
+  `[N]` the retired notify-by-mutation container seam `_announce*ToContainer` must not be re-defined — the settle-time
+  up-edge replaced it, §4.1/§4.2). The predicates `isLowLevel` / `isImmediateMutator` are the single source of truth for
+  the tiers — do not describe a tier in a way that drifts from them.
 - **`check-dead-methods.js`** — dead-method ratchet + `dead-method-allowlist.txt`. Deleting a method drops the count;
   a *new* dead method fails unless allowlisted (prefer deleting it).
 - **`check-stinks.js`** — smell ratchet (baseline counts). Currently empty (its one rule retired with

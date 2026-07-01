@@ -59,10 +59,11 @@ class VerticalStackLayoutSpec
   # settle is taken on @element (the stack element). Canonical public-wrapper / _NoSettle-core split: each
   # public setter is JUST the settle over its _<name>NoSettle core, and ALL the work -- INCLUDING the
   # already-in-this-state guard -- lives in the core, so no wrapper hides a pre-settle early return
-  # (check-layering rule [H]). _announceLayoutPropertyChangeToContainer stays the NON-settling re-fit
-  # core (it is also called by in-cycle paths -- soft-wrap, contained-text edits, WindowWdgt resize -- that
-  # ride THEIR own outer settle). (Off-world content hits _settleLayoutsAfter's orphan early-return, so it
-  # still just defers, unchanged.) (end-of-cycle-flush-drawdown -- CONVERT)
+  # (check-layering rule [H]). Each core sets its property then calls @element._invalidateLayout() -- the
+  # uniform dirty-tree climb (element -> stack -> D1 scroll panel) that replaced the deleted property re-fit
+  # seam (a freefloating child's invalidate climbs THROUGH the freefloating boundary to its size-tracking
+  # container off-pass). (Off-world content hits _settleLayoutsAfter's orphan early-return, so it still just
+  # defers, unchanged.) (end-of-cycle-flush-drawdown -- CONVERT)
   # thin-wrap-exempt: the spec is NOT a Widget, so each setter settles on @element (the stack element), not @
   # -- the thin-wrap gate's canonical form anchors _settleLayoutsAfter on @ (a self-settle). This is the same
   # canonical thin wrap, just delegated to @element. (All 5 setters below are exempt for this reason.)

@@ -1211,11 +1211,10 @@ class Widget extends TreeNode
   
   
   # Widget accessing - simple changes: translate me + my children + repaint.
-  # (proper-layouts §4.3 / Stage 5, 2026-07-01) The re-fit seam this used to fire (_announceGeometryChangeToContainer)
-  # is DELETED: the settle loop now re-fits my tracking container AFTER I settle (_reFitMyTrackingContainerAfterSettle),
-  # so this immediate mutator is PURE geometry now (what the FLOWRULE always wanted). Left as a thin wrapper over the
-  # shared move core _applyMoveBy; the "AndNotify" suffix is now historical (collapsing the notifying/non-notifying
-  # twins is a follow-on cleanup).
+  # (Stage 5, 2026-07-01) The re-fit seam this used to fire is DELETED -- the settle loop now re-fits my tracking
+  # container AFTER I settle (see _reFitMyTrackingContainerAfterSettle) -- so this immediate mutator is PURE geometry
+  # now (what the FLOWRULE always wanted), a thin wrapper over the shared move core _applyMoveBy. The "AndNotify"
+  # suffix is historical (collapsing the notifying/non-notifying twins is a follow-on cleanup).
   _applyMoveByAndNotify: (delta) ->
     @_applyMoveBy delta
 
@@ -1551,10 +1550,10 @@ class Widget extends TreeNode
             @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
 
   
-  # (proper-layouts §4.3 / Stage 5, 2026-07-01) Was the NOTIFY-ONLY corner (fired the re-fit seam). That seam
-  # (_announceGeometryChangeToContainer) is DELETED -- the settle loop re-fits my container after I settle
-  # (_reFitMyTrackingContainerAfterSettle) -- so this is now a plain commit of @bounds via the shared core
-  # __commitExtent (no repaint / no self-relayout). The "AndNotify" suffix is historical (twin-collapse is a follow-on).
+  # (Stage 5, 2026-07-01) Was the NOTIFY-ONLY corner (fired the re-fit seam). That seam is DELETED -- the settle
+  # loop re-fits my container after I settle (see _reFitMyTrackingContainerAfterSettle) -- so this is now a plain
+  # commit of @bounds via the shared core __commitExtent (no repaint / no self-relayout). The "AndNotify" suffix is
+  # historical (twin-collapse is a follow-on).
   _commitExtentAndNotify: (aPoint) ->
     @__commitExtent aPoint
 
@@ -1607,10 +1606,9 @@ class Widget extends TreeNode
   # boundary OFF-PASS when the parent is a size-tracking container (the "D1" branch below). The 9 call sites now
   # invalidate the container directly -- BARE (@parent._invalidateLayout(), no freefloating triggeringChild, so a
   # non-tracking intermediate parent doesn't drop it) for the freefloating-content callers, or @element._invalidateLayout()
-  # for stack-child callers. The GEOMETRY seam (the old _announceGeometryChangeToContainer, immediate mutators) is
-  # now ALSO DELETED (§4.3 / Stage 5, 2026-07-01): the settle loop re-fits a size-tracking container AFTER its
-  # content settles (_reFitMyTrackingContainerAfterSettle), so the mutators are pure and nothing notifies by
-  # mutation anymore. §8's "in-pass post-application timing is irreducible" verdict was over-general.
+  # for stack-child callers. The GEOMETRY seam (the immediate-mutator half) is now ALSO DELETED (Stage 5,
+  # 2026-07-01): the settle loop re-fits a size-tracking container AFTER its content settles
+  # (_reFitMyTrackingContainerAfterSettle), so the mutators are pure and nothing notifies by mutation anymore.
 
   # (proper-layouts §4.3 / Stage 5, 2026-07-01) Re-fit MY size-tracking container now that I have SETTLED.
   # Called by the settle loop (WorldWdgt._recalculateLayoutsBody) right after my chain-top _reLayout completes --
@@ -1662,15 +1660,10 @@ class Widget extends TreeNode
   # (proper-layouts Phase E, 2026-06-28) The @_adjustingContentsBounds field itself is now GONE too: its last
   # use was the per-arrange re-entrancy guard, retired by giving each container arrange a NON-re-applying self-resize
   # (SimpleVerticalStackPanelWdgt._resizeOwnWidthSkippingChildRelayout/Height).
-  # (proper-layouts §4.3 / Stage 5, 2026-07-01) The notify-by-mutation GEOMETRY seam (the old
-  # _announceGeometryChangeToContainer, fired by the immediate mutators) is now fully DELETED -- BOTH halves. Its
-  # off-pass half went via the uniform dirty-tree (bare _invalidateLayout at the semantic points -- SimplePlainTextWdgt
-  # soft-wrap, WindowWdgt collapse/uncollapse); its in-pass half is now the ORDERED settle-time re-fit above
-  # (_reFitMyTrackingContainerAfterSettle, called by the settle loop after each chain-top settles) -- the container
-  # reads its content's FINAL geometry, not half-applied, and re-fits in one visit: a bounded O(depth) up-walk, no
-  # per-mutation notify. Reverse-probe: old-seam OFF + settle-time up-edge = 165/165 byte-exact dpr1/dpr2/webkit, so
-  # §8's "irreducible in-pass seam" verdict (docs/proper-layouts-4.4-ordered-downwalk-plan.md §8) was over-general.
-  # See docs/proper-layouts-geometry-seam-removal-plan.md.
+  # (Stage 5, 2026-07-01) The notify-by-mutation geometry seam the immediate mutators used to fire is fully DELETED:
+  # its in-pass half is now the ordered settle-time re-fit above (_reFitMyTrackingContainerAfterSettle -- see that
+  # method's comment for the mechanism + the reverse-probe record), its off-pass half the uniform dirty-tree (bare
+  # _invalidateLayout at the semantic points). docs/proper-layouts-geometry-seam-removal-plan.md.
   _reFitContainer: (container = @) ->
     return unless container?._reLayoutChildren?
     if world?._recalculatingLayouts
