@@ -486,7 +486,7 @@ class MenusHelper
     svsspw = new SimpleVerticalStackScrollPanelWdgt
     world.add svsspw
     # public setters on the ATTACHED panel self-settle in place (was _applyMoveToAndNotify/_applyExtentAndNotify, whose raw
-    # resize on an attached panel tripped the _announceGeometryChangeToContainer seam into an off-settle re-fit)
+    # resize on an attached panel used to trip the now-deleted _announceGeometryChangeToContainer geom seam into an off-settle re-fit)
     svsspw.moveTo new Point 430, 25
     svsspw.setExtent new Point 370, 325
 
@@ -713,7 +713,7 @@ class MenusHelper
     sdspw = new SimpleDocumentScrollPanelWdgt
     world.add sdspw
     # public setters on the ATTACHED panel self-settle in place (was _applyMoveToAndNotify/_applyExtentAndNotify, whose raw
-    # resize on an attached panel tripped the _announceGeometryChangeToContainer seam into an off-settle re-fit)
+    # resize on an attached panel used to trip the now-deleted _announceGeometryChangeToContainer geom seam into an off-settle re-fit)
     sdspw.moveTo new Point 35, 30
     sdspw.setExtent new Point 370, 325
 

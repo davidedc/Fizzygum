@@ -984,6 +984,13 @@ class WorldWdgt extends PanelWdgt
         # _reLayout on it, so it might fix a bunch of those
         # on the chain (but not all)
         tryThisWidget._reLayout()
+        # (proper-layouts §4.3, 2026-07-01) ORDERED settle-time re-fit: now that this chain-top has SETTLED, re-fit
+        # its size-tracking container so the container tracks the just-settled geometry. This REPLACES the deleted
+        # mutation-time geometry seam (_announceGeometryChangeToContainer): because the content is fully settled when
+        # this fires, the container reads its FINAL geometry and re-fits correctly in one visit -- no per-mutation
+        # notification, and no convergence iteration from a container reading half-applied content. The method gates
+        # on the parent being a tracking container (_reLayoutChildren?), so a non-tracking parent is a no-op.
+        tryThisWidget._reFitMyTrackingContainerAfterSettle()
       catch err
         # We are INSIDE the recalculateLayouts flush here (_recalculatingLayouts is true), so this
         # block must do the ABSOLUTE MINIMUM and stay strictly non-flushing / non-invalidating:

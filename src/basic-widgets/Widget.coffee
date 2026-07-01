@@ -1252,14 +1252,14 @@ class Widget extends TreeNode
     return @clipThroughCache
   
   
-  # Widget accessing - simple changes:
-  # Translate me + my children + repaint, then fire the re-fit seam (Intent-1: notify the container tracking my
-  # geometry to re-fit). The move body is shared with the NON-notifying arrange twin _applyMoveBy (below);
-  # the seam fires iff I actually moved. (Byte-exact vs the prior in-the-middle seam fire: the seam only SCHEDULES
-  # my container's re-fit -- reading my parent, not my children -- so firing it AFTER the children-translate rather
-  # than before is geometry-identical, and the silent children-translate enqueues nothing in between.)
+  # Widget accessing - simple changes: translate me + my children + repaint.
+  # (proper-layouts §4.3 / Stage 5, 2026-07-01) The re-fit seam this used to fire (_announceGeometryChangeToContainer)
+  # is DELETED: the settle loop now re-fits my tracking container AFTER I settle (_reFitMyTrackingContainerAfterSettle),
+  # so this immediate mutator is PURE geometry now (what the FLOWRULE always wanted). Left as a thin wrapper over the
+  # shared move core _applyMoveBy; the "AndNotify" suffix is now historical (collapsing the notifying/non-notifying
+  # twins is a follow-on cleanup).
   _applyMoveByAndNotify: (delta) ->
-    @_announceGeometryChangeToContainer() if @_applyMoveBy delta
+    @_applyMoveBy delta
 
   # Non-notifying twins of _applyMoveByAndNotify / _applyMoveToAndNotify (§4.2 structural arrange-down): translate me + my children +
   # repaint WITHOUT firing the re-fit seam -- a container placing me top-down already knows my new position, so the
@@ -1593,12 +1593,12 @@ class Widget extends TreeNode
             @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
 
   
-  # The NOTIFY-ONLY corner: no repaint / no self-relayout, but it DOES fire the re-fit seam (Intent-1: notify the container
-  # tracking my geometry to re-fit). The bounds-set body is shared with the NON-notifying arrange twin
-  # _applyExtent (below) via __commitExtent; here we just add the seam fire iff the bounds changed.
+  # (proper-layouts §4.3 / Stage 5, 2026-07-01) Was the NOTIFY-ONLY corner (fired the re-fit seam). That seam
+  # (_announceGeometryChangeToContainer) is DELETED -- the settle loop re-fits my container after I settle
+  # (_reFitMyTrackingContainerAfterSettle) -- so this is now a plain commit of @bounds via the shared core
+  # __commitExtent (no repaint / no self-relayout). The "AndNotify" suffix is historical (twin-collapse is a follow-on).
   _commitExtentAndNotify: (aPoint) ->
-    if @__commitExtent aPoint
-      @_announceGeometryChangeToContainer()
+    @__commitExtent aPoint
 
   # The shared bounds-set core of _commitExtentAndNotify: round + min-extent clamp + commit @bounds, WITHOUT firing the
   # re-fit seam. Returns true iff @bounds actually changed (so the notifying wrapper knows to fire the seam).
@@ -1649,47 +1649,40 @@ class Widget extends TreeNode
   # boundary OFF-PASS when the parent is a size-tracking container (the "D1" branch below). The 9 call sites now
   # invalidate the container directly -- BARE (@parent._invalidateLayout(), no freefloating triggeringChild, so a
   # non-tracking intermediate parent doesn't drop it) for the freefloating-content callers, or @element._invalidateLayout()
-  # for stack-child callers. The GEOMETRY seam (_announceGeometryChangeToContainer, immediate mutators) STAYS --
-  # its in-pass post-application timing can't be delivered by an off-pass climb (docs/…-4.4-…-plan.md §8).
+  # for stack-child callers. The GEOMETRY seam (the old _announceGeometryChangeToContainer, immediate mutators) is
+  # now ALSO DELETED (§4.3 / Stage 5, 2026-07-01): the settle loop re-fits a size-tracking container AFTER its
+  # content settles (_reFitMyTrackingContainerAfterSettle), so the mutators are pure and nothing notifies by
+  # mutation anymore. §8's "in-pass post-application timing is irreducible" verdict was over-general.
 
-  # A re-fit "seam": an IMMEDIATE geometry mutator (_commitExtentAndNotify / _applyMoveByAndNotify) notifies the
-  # container that tracks my geometry to re-fit -- a NON-text-wrapping scroll panel (text-wrapping panels
-  # drive their own content re-wrap in _positionAndResizeChildren, so they are excluded here), or a
-  # stack/window container. A freefloating child's _invalidateLayout does NOT climb to its container, which
-  # is why the container is notified explicitly here. This seam only supplies which container(s); the phase
-  # dispatch lives in the shared _reFitContainer.
-  #
-  # (proper-layouts Stage 1, 2026-07-01) This seam now fires IN-PASS ONLY. Its OFF-pass half was DELETED: a
-  # freefloating content's OFF-pass geometry change re-fits its tracking container through the UNIFORM dirty-tree
-  # instead -- a bare _invalidateLayout at the semantic point, reaching the tracking container directly. Because a
-  # scroll panel sits a level up past its non-tracking @contents PanelWdgt, that reach is @parent.parent (the
-  # trigger-form climb @parent._invalidateLayout(@) gets DROPPED at the non-tracking PanelWdgt by the
-  # freefloating-skip -- the same crack that closed the property seam's last holdout). The 3 off-pass callers:
-  # SimplePlainTextWdgt soft-wrap (:154), WindowWdgt collapse + uncollapse (:350 / :363). This mirrors the
-  # deleted property sub-seam. Only the IN-PASS post-application re-fit stays here: the FLOWRULE
-  # (_invalidateLayout throws mid-pass) forbids delivering it via an off-pass climb, and the notification is
-  # in-pass-post-application (see docs/proper-layouts-geometry-seam-removal-plan.md Stage 1; reverse-probe:
-  # dropping the off-pass arm broke 3 tests, all closed by the 3 uniform-climb callers -> suite 165/165).
-  _announceGeometryChangeToContainer: ->
-    # OVERLAY CHROME (carets, resize handles -- isLayoutInert) is excluded from every container's
-    # content-bounds (TreeNode.childrenNotHandlesNorCarets, Widget._reLayout*, WindowWdgt.add), so a raw
-    # move/resize of it CANNOT change the container's content-fit -- tripping this seam would only schedule a
-    # WASTED container re-fit. Per-keystroke CARET repositioning (gotoSlot's @_applyMoveToAndNotify) was the single
-    # largest end-of-cycle layout-flush residual (~84 records); the genuine scroll-on-edit is already applied
-    # SYNCHRONOUSLY by ScrollPanelWdgt.scrollCaretIntoView, so the deferred re-fit was pure redundancy. Skip
-    # it for decoration. (Capability `?()`, not a Widget base default -- type-test-elimination convention.)
+  # (proper-layouts §4.3 / Stage 5, 2026-07-01) Re-fit MY size-tracking container now that I have SETTLED.
+  # Called by the settle loop (WorldWdgt._recalculateLayoutsBody) right after my chain-top _reLayout completes --
+  # NOT by the geometry mutators. This is the ORDERED-settle successor to the DELETED notify-by-mutation geometry
+  # seam (the old _announceGeometryChangeToContainer, which fired from _commitExtentAndNotify /
+  # _applyMoveByAndNotify per mutation). A freefloating child's _invalidateLayout does not climb to its
+  # size-tracking container, so the container must be re-fit explicitly when my geometry changes. The old seam
+  # did that at MUTATION time -- while I was mid-settle -- so the container read my HALF-applied geometry and had
+  # to re-fit again and again (an empirical fixpoint the recalcIterationsCap backstopped). Firing at
+  # SETTLE-completion instead, the container reads my FINAL geometry and re-fits correctly in one visit; the whole
+  # thing is a bounded O(depth) up-walk (leaf content -> container -> its container -> ...), each widget re-fit
+  # once after its content settles. The immediate mutators are now PURE (no layout side effect) -- what the
+  # FLOWRULE always wanted. Reverse-probe: OLD-seam OFF + this up-edge = 165/165 byte-exact at dpr1/dpr2/webkit,
+  # so §8's "irreducible in-pass seam" verdict was over-general. Both containers are covered: a NON-text-wrapping
+  # scroll panel a level up past my non-tracking @contents PanelWdgt (@parent.parent), and my direct parent
+  # (stack/window). _reFitContainer gates on _reLayoutChildren?, so a non-tracking parent is a no-op. OVERLAY
+  # CHROME (carets, resize handles -- isLayoutInert) is excluded from every container's content-bounds
+  # (TreeNode.childrenNotHandlesNorCarets), so re-fitting for it would be pure waste -- skip it. (Capability
+  # `?()`, not a Widget base default -- type-test-elimination convention.) docs/proper-layouts-geometry-seam-removal-plan.md.
+  _reFitMyTrackingContainerAfterSettle: ->
     return if @isLayoutInert?()
-    # IN-PASS ONLY (see block comment): OFF-pass geometry re-fits now flow through the uniform dirty-tree.
-    return unless world?._recalculatingLayouts
+    return unless @parent?
     @_reFitContainer @parent.parent if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
     @_reFitContainer @parent
 
   # The ONE phase-dispatch primitive for the whole "re-fit a container at the next settle point" family:
   # the drag/drop gesture handlers (PanelWdgt / ScrollPanelWdgt / SimpleVerticalStackPanelWdgt
-  # _reactToChildDropped / _reactToChildGrabbed / _reactToChildRemoved), the freefloating-content geometry seam
-  # above (_announceGeometryChangeToContainer -- IN-PASS only since Stage 1; the property seam that also lived here
-  # is deleted, and the geom seam's off-pass half now flows through the uniform dirty-tree), and the
-  # newParentChoice* menu actions all route through here. Two states:
+  # _reactToChildDropped / _reactToChildGrabbed / _reactToChildRemoved), the ORDERED settle-time re-fit
+  # (_reFitMyTrackingContainerAfterSettle above, called by the settle loop after each chain-top settles), the
+  # attach re-fit, and the newParentChoice* menu actions all route through here. Two states:
   #  - INSIDE a layout pass (world._recalculatingLayouts): ENQUEUE the container into the recalculateLayouts
   #    until-loop via the shared bare-push atom (__markForRelayout). Enqueuing is legal mid-pass -- unlike
   #    _invalidateLayout the atom neither throws (the freeze guard, see _invalidateLayout below) nor climbs to
@@ -1699,7 +1692,7 @@ class Widget extends TreeNode
   # classes that define it) reacts; any other widget is a no-op. Low-level (leading underscore) so lint
   # rule [F] exempts it, and the callers read as pure intent (@_reFitContainer @parent / @_reFitContainer()).
   # DETERMINISM: the gesture + menu callers fire OUTSIDE passes, so their in-pass arm is dead (kept uniform
-  # for safety); the immediate-mutator seam's in-pass enqueue IS live and is the determinism-exempt path
+  # for safety); the settle-time re-fit's in-pass enqueue IS live and is the determinism-exempt path
   # (deferred-layout-OVERVIEW.md §11).
   #
   # (proper-layouts Phase D, 2026-06-28) The cross-method `return if container._adjustingContentsBounds`
@@ -1707,23 +1700,17 @@ class Widget extends TreeNode
   # container that is mid its OWN _positionAndResizeChildren now CONVERGES (one extra convergence pass instead
   # of being skipped) rather than looping forever -- which is why the skip is no longer needed for correctness.
   # (proper-layouts Phase E, 2026-06-28) The @_adjustingContentsBounds field itself is now GONE too: its last
-  # use was the per-arrange re-entrancy guard, retired by giving each container arrange a NON-re-applying
-  # self-resize (SimpleVerticalStackPanelWdgt._resizeOwnWidthSkippingChildRelayout/Height -> base Widget::_applyExtentAndNotify, which
-  # fires the geom seam to notify the parent but does NOT re-enter @_reLayoutChildren).
-  # (proper-layouts Stage 1, 2026-07-01) The geom seam's OFF-PASS half was DELETED: a freefloating content's
-  # off-pass geometry change now re-fits its tracking container through the uniform dirty-tree (bare _invalidateLayout
-  # at the semantic points -- SimplePlainTextWdgt soft-wrap, WindowWdgt collapse/uncollapse), so _reFitContainer's
-  # off-pass arm below is now reached ONLY by the gesture + menu + attach callers, never by the geom seam. What
-  # REMAINS is the geom seam's IN-PASS half: the container arrange is already single-pass/idempotent, so this is NOT
-  # internal-convergence waste -- it is the MULTI-WIDGET notification that a freefloating content's IN-PASS,
-  # post-application geometry change must re-fit its tracking container (a different settle visit). Delivering THAT
-  # off-pass is blocked by the FLOWRULE (_invalidateLayout throws mid-pass) and by timing (the change is applied
-  # in-pass, after scheduling); the 2026-06-29 falsification (docs/proper-layouts-4.4-ordered-downwalk-plan.md §8:
-  # off-pass dirty-climb; ordered content-first pre-settle; analytic decoupling / synchronous fixpoint) applies to
-  # this IN-PASS half. NOTE: that §8 "irreducible" verdict studied both sub-seams FUSED and OVER-generalised -- the
-  # property seam AND now the geom seam's off-pass half both fell to the uniform dirty-tree; only the in-pass half
-  # resists. The convergence/suppression WASTE the elimination arc targeted was removed separately (§4.2 Stage 3,
-  # non-notifying arrange -> end-of-cycle capstone GREEN). See docs/proper-layouts-geometry-seam-removal-plan.md.
+  # use was the per-arrange re-entrancy guard, retired by giving each container arrange a NON-re-applying self-resize
+  # (SimpleVerticalStackPanelWdgt._resizeOwnWidthSkippingChildRelayout/Height).
+  # (proper-layouts §4.3 / Stage 5, 2026-07-01) The notify-by-mutation GEOMETRY seam (the old
+  # _announceGeometryChangeToContainer, fired by the immediate mutators) is now fully DELETED -- BOTH halves. Its
+  # off-pass half went via the uniform dirty-tree (bare _invalidateLayout at the semantic points -- SimplePlainTextWdgt
+  # soft-wrap, WindowWdgt collapse/uncollapse); its in-pass half is now the ORDERED settle-time re-fit above
+  # (_reFitMyTrackingContainerAfterSettle, called by the settle loop after each chain-top settles) -- the container
+  # reads its content's FINAL geometry, not half-applied, and re-fits in one visit: a bounded O(depth) up-walk, no
+  # per-mutation notify. Reverse-probe: old-seam OFF + settle-time up-edge = 165/165 byte-exact dpr1/dpr2/webkit, so
+  # §8's "irreducible in-pass seam" verdict (docs/proper-layouts-4.4-ordered-downwalk-plan.md §8) was over-general.
+  # See docs/proper-layouts-geometry-seam-removal-plan.md.
   _reFitContainer: (container = @) ->
     return unless container?._reLayoutChildren?
     if world?._recalculatingLayouts
@@ -3832,8 +3819,8 @@ class Widget extends TreeNode
       # a size-TRACKING container (scroll / stack / window -- I define _reLayoutChildren) then the child's SIZE
       # genuinely IS tracked, so OFF-PASS let the invalidate CLIMB THROUGH (fall past this return) so I re-fit.
       # This is the uniform dirty-tree replacement for the deleted _announceLayoutPropertyChangeToContainer seam.
-      # IN-PASS this stays skipped: in-pass geometry changes are the immediate-mutator seam
-      # (_announceGeometryChangeToContainer) domain, and climbing in-pass would hit the FLOWRULE throw below.
+      # IN-PASS this stays skipped: in-pass container re-fits are handled by the settle loop's ORDERED settle-time
+      # re-fit (_reFitMyTrackingContainerAfterSettle, §4.3), and climbing in-pass would hit the FLOWRULE throw below.
       return unless (@_reLayoutChildren? and not world?._recalculatingLayouts)
     # INERT-RECEIVER branch: a free-floating + inert overlay (caret / resize handle) has no parent layout to climb
     # into, and is excluded from every container's content-bounds (childrenNotHandlesNorCarets), so re-running its

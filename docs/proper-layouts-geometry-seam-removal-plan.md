@@ -1,13 +1,18 @@
 # Plan — remove the GEOMETRY re-fit sub-seam (the last hard wall of the proper-layouts arc)
 
-> **STATUS (2026-07-01) — IN PROGRESS. The re-fit "seam" split into two sub-seams; the property one is gone, and
-> the geometry one's OFF-PASS half is now gone too (Stage 1).**
-> The PROPERTY sub-seam (`_announceLayoutPropertyChangeToContainer`) was **DELETED** (Fizzygum `c637ffb1` /
-> Fizzygum-tests `9d6af649a`). This plan attacks the GEOMETRY sub-seam (`_announceGeometryChangeToContainer`), which
-> `docs/proper-layouts-4.4-ordered-downwalk-plan.md` §8 declared *"effectively irreducible."* **Stages 0–1 DONE
-> 2026-07-01 (see §5): the geom seam's OFF-PASS half fell to the same uniform-dirty-tree bare-invalidate crack — it
-> now fires IN-PASS ONLY.** What remains is the geom seam's IN-PASS half (the §8 wall) + Stages 2–6 (retiring the
-> booleans). The §8 "irreducible" verdict has now been proven OVER-general TWICE (property seam + geom off-pass half).
+> **STATUS (2026-07-01) — ✅ THE ENTIRE NOTIFY-BY-MUTATION RE-FIT SEAM IS DELETED (property + geometry, both halves).
+> Stages 0–5 DONE. Only Stage 6 (retire the booleans) remains.**
+> The PROPERTY sub-seam (`_announceLayoutPropertyChangeToContainer`) was DELETED (Fizzygum `c637ffb1`). The GEOMETRY
+> sub-seam (`_announceGeometryChangeToContainer`) — which `docs/proper-layouts-4.4-ordered-downwalk-plan.md` §8
+> declared *"effectively irreducible"* — is now ALSO fully DELETED: its OFF-pass half via the uniform dirty-tree
+> (Stage 1, `65401c36`), and its IN-pass half via the settle loop's **ORDERED settle-time re-fit**
+> (`_reFitMyTrackingContainerAfterSettle`, Stages 4–5 — re-fit a chain-top's tracking container AFTER it settles, so
+> the container reads FINAL geometry in one bounded O(depth) up-walk, no per-mutation notify). The immediate mutators
+> are now PURE geometry. Verified byte-exact gauntlet dpr1/dpr2/webkit + danger-config convergence (RECALC absent).
+> **The §8 "irreducible" verdict was proven OVER-general THREE times (property, geom-off-pass, geom-in-pass).**
+> ⏭ NEXT = **Stage 6**: the bounded up-walk should let `recalcIterationsCap` demote to a never-fire assert, and the
+> 3 world phase-flag booleans (`_inLayoutMutation`/`_recalculatingLayouts`/`_batchingLayoutSettling`) lose their
+> reason to exist — the ACTUAL goal of the whole arc (`proper-layouts-elimination-goal`).
 >
 > **⚠ READ §0 BEFORE BELIEVING THAT VERDICT.** That §8 verdict was written when the two sub-seams were **fused**
 > and studied as one. This session PROVED the fused "irreducible" framing wrong for half of it: with the right
@@ -293,15 +298,44 @@ middle.
   centered-icon + scrolled cases; byte-exact gate. ⚠ 2026-07-01: line-431 removal proven byte-safe-with-seam but
   seam-reduction-neutral (see Stage 2 findings) — §4.4 must be paired with pure content positions (§4.2) + the §4.3
   visit channel to matter; it is not a standalone lever.
-- **Stage 4 — the real two-flag + ordered edge (§4.3).** The big one. Land the two-flag as byte-identical
-  scaffolding first; then the content-before-container ordering; drive by the reverse-probe (seam-off must converge
-  byte-exact for the remaining break-list).
-- **Stage 5 — DELETE `_announceGeometryChangeToContainer` + its 2 firing sites** (`_commitExtentAndNotify:1599`,
-  `_applyMoveByAndNotify:1261`) once the reverse-probe is byte-exact AND the whole break-list passes.
-- **Stage 6 — retire the booleans (THE GOAL).** With BOTH sub-seams gone, `recalcIterationsCap` (`WorldWdgt:934`)
-  demotes to a never-fire assert, and the 3 world phase flags (`_inLayoutMutation` / `_recalculatingLayouts` /
-  `_batchingLayoutSettling`) lose their reason to exist (see `proper-layouts-elimination-goal` — this is the actual
-  target the whole arc is for). Add the per-axis DAG lint (forbid a new edge coupling both directions on one axis).
+- **Stage 4 — ✅ DONE 2026-07-01 (the ordered settle-time re-fit — a simpler realization of §4.3 than the planned
+  two-flag).** No two-flag/down-walk scaffolding was needed. Instead: the settle loop already walks up each broken
+  chain to a chain-top and `_reLayout`s it; adding **one call right after that `_reLayout`** — re-fit the chain-top's
+  size-tracking container (`_reFitMyTrackingContainerAfterSettle`) — delivers the content→container edge at
+  SETTLE-completion instead of mutation-time. The container then reads FINAL (not half-applied) content geometry →
+  correct in one visit → bounded O(depth) up-walk, no fixpoint iteration. KEY: the up-edge must **NOT** be gated on
+  freefloating (a non-freefloating tracked child — a nested `WindowWdgt` — also re-fits its parent; a chain-top trace
+  found this). Reverse-probe seam-OFF + up-edge: 3 (scroll-only) → 7 → **0** as the guard broadened; final 165/165.
+- **Stage 5 — ✅ DONE 2026-07-01. DELETED `_announceGeometryChangeToContainer` + its 2 firing sites**
+  (`_commitExtentAndNotify` / `_applyMoveByAndNotify` — now pure geometry mutators). The method was repurposed/renamed
+  to `_reFitMyTrackingContainerAfterSettle`, called by the settle loop (Stage 4). Byte-exact: **gauntlet
+  dpr1/dpr2/webkit 165/165 + apps/tier/settle, 0 recaptures** (the rename netted zero method-count change → no
+  inspector shift); convergence via repeated danger-config runs, RECALC_NONCONVERGENCE ABSENT. **The entire
+  notify-by-mutation re-fit seam (property + geometry) is now GONE.** ⏭ NEXT = Stage 6 (retire the booleans): the
+  bounded up-walk should let `recalcIterationsCap` demote to a never-fire assert.
+- **Stage 6 — retire the booleans (THE GOAL). ⏭ NEXT — cold-start map below.** With the whole notify-by-mutation seam
+  gone, the settle is now a bounded O(depth) up-walk (each chain-top re-fit once after its content settles; the
+  mutators are pure so re-laying content does NOT re-mark it → no fixpoint iteration; measured peak
+  `recalcIterations` ≤ 8 suite-wide, seam-era and now). Targets + how to approach each (each its own byte-exact +
+  danger-torture-gated step; STOP-per-target is fine):
+  - **`recalcIterationsCap` (`WorldWdgt._recalculateLayoutsBody`, the `= 100000` + `RECALC_NONCONVERGENCE` bail).**
+    The clearest win. Approach: (1) instrument peak `recalcIterations` across the FULL suite + danger-torture (add a
+    `window.__maxRecalc` probe like this session's) to get the true empirical bound; (2) argue termination
+    structurally — the up-walk visits each widget at most once per its content settling, and pure mutators add no
+    re-marks, so the work-list strictly drains (no cycle). (3) Then either DELETE the cap (pure `until`-drains) or
+    demote it to a small never-fire assert (e.g. `10 * treeDepth`) that throws loudly if ever exceeded. Gate: the
+    danger-config torture must stay RECALC-absent with the cap gone/tiny.
+  - **The 3 phase flags — assess individually, do NOT assume all retirable (be honest per the mandate):**
+    `_recalculatingLayouts` is the **FLOWRULE re-entrancy guard** (throws if a public/deferred setter re-enters a
+    layout pass — `_invalidateLayout`/`recalculateLayouts`); that is a re-entrancy invariant, NOT a
+    convergence-suppression boolean, so it likely STAYS (deleting it would remove the guard that catches an immediate
+    mutator scheduling mid-pass). `_inLayoutMutation` and `_batchingLayoutSettling` — grep every read (Widget.coffee
+    ~21 refs total) and classify each as convergence-suppression (retire) vs re-entrancy/batching-correctness (leave);
+    the mandate (`proper-layouts-elimination-goal`) targets the SUPPRESSION/CONVERGENCE booleans specifically.
+  - **Add the per-axis DAG lint** (forbid re-introducing an edge that couples both directions on one axis) once the
+    convergence is a proven DAG up-walk.
+  Verification for every Stage-6 step: `./fg gauntlet` (dpr1/dpr2/webkit + gates) + the danger-config torture loop
+  (torture-headless.js deadlocks in-session — use the manual `scratch/manual-torture2.sh` pattern), RECALC absent.
 
 Any single stage that cannot be made byte-exact is a **sanctioned stopping point for that stage** — bank the
 reductions already shipped and leave the rest. That is NOT the same as declaring the seam irreducible.

@@ -131,12 +131,11 @@ class PanelWdgt extends Widget
     position = @position().add new Point posx, posy
 
     @_addNoSettle aWdgt
-    # Container re-fit DEFERS to the cycle: _applyMoveToAndNotify below routes through _applyMoveByAndNotify ->
-    # _announceGeometryChangeToContainer, which -- since aWdgt sits directly in a non-text-
-    # wrapping ScrollPanel's contents (me) -- invalidates the enclosing ScrollPanel (@parent),
-    # whose _reLayout ('super; @_reLayoutChildren') re-fits it on the next doOneCycle. So the old
-    # ad-hoc synchronous @parent._reLayoutChildren() here is redundant and removed. (fam 2
-    # verify-and-drop -- deferred-layout-residuals-audit.md)
+    # Container re-fit DEFERS to the cycle: aWdgt sits directly in a non-text-wrapping ScrollPanel's contents (me),
+    # so when the settle loop lays aWdgt out it then re-fits the enclosing ScrollPanel via the ORDERED settle-time
+    # re-fit (_reFitMyTrackingContainerAfterSettle, §4.3 -- successor to the deleted geom seam), whose _reLayout
+    # re-fits it on the next doOneCycle. So the old ad-hoc synchronous @parent._reLayoutChildren() here is redundant
+    # and removed. (fam 2 verify-and-drop -- deferred-layout-residuals-audit.md)
     aWdgt._applyMoveToAndNotify position
 
 

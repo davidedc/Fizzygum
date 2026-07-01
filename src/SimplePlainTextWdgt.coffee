@@ -151,7 +151,7 @@ class SimplePlainTextWdgt extends TextWdgt
     @_reLayoutSelf() unless wrap
     # (property sub-seam deletion) I re-laid MYSELF above; now climb so my tracking container re-fits -- via the
     # parent with me as trigger (NOT @_invalidateLayout, which re-marks me redundantly), the uniform-climb seam replacement.
-    @parent?.parent?._invalidateLayout()   # STAGE-1 EXPERIMENT: bare grandparent (scroll panel) invalidate — the trigger form got dropped at the non-tracking PanelWdgt
+    @parent?.parent?._invalidateLayout()   # (proper-layouts) re-fit the scroll-panel grandparent; the trigger form @parent._invalidateLayout(@) gets dropped at the non-tracking @contents PanelWdgt, so reach past it (bare)
 
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
