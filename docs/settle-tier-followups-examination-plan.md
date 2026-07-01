@@ -26,7 +26,21 @@ Commit `ce21dcf7` "layout: orphans + constructors settle synchronously (orphan-s
 
 ---
 
-## Topic 1 — determinism: green at `speed=fastest`, flaky at `speed=normal` + parallel load
+## Topic 1 — ✅ RESOLVED (2026-07-01): NOT a determinism bug — a false stall-timeout
+
+> **The suite is byte-clean at `speed=normal` too.** The "flake" was `Fizzygum-tests/scripts/run-all-headless.js`'s
+> per-test stall watchdog (+ segment cap) keyed off the BETWEEN-TESTS index (`indexOfSystemTestBeingPlayed`)
+> against a wall-clock threshold (`--test-stall-secs`, default 30 s): a single test that legitimately runs longer
+> than 30 s at normal speed (or under multi-shard load) freezes the index and is marked "failed" — a false
+> timeout, NOT a pixel divergence. `macroDemoMenuCatalogueParade` is a 60 s test (`testDuration: 60000`), so it
+> ALWAYS tripped it at normal; `macroPaddingAreaIsPartOfWidget` (16 s) only under 2-shard load. **Proof:** with a
+> generous watchdog the suite is **165/165 at normal, 1-shard AND 2-shard** (0 STALLED, 0 mismatches) —
+> deterministic, references speed-invariant exactly as the contract says. **FIX:** the watchdog now keys off
+> `WorldWdgt.frameCount` (world still cycling = progressing) and the segment cap off index-frozen time; a
+> slow-but-running test isn't flagged, a true hang (cycle stops) still is. Verified 165/165 at normal with DEFAULT
+> flags. (Byproduct: a benign `world.steppingWdgts` cross-test leak — carets/clocks survive `resetWorld`,
+> render-guarded by `Automator.animationsPacingControl` — noted for a future cleanup.) Full write-up:
+> `Fizzygum-tests/DETERMINISM.md` §2b. **The examination notes below are the (now-superseded) pre-diagnosis record.**
 
 **The finding (this session).** The SystemTest suite is **byte-clean at `speed=fastest`** (how the suite
 normally runs): `./fg gauntlet` = dpr1 + dpr2 + webkit 165/165 + apps + tier-naming + settle gates, plus the
