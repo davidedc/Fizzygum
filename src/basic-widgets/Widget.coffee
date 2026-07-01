@@ -337,7 +337,7 @@ class Widget extends TreeNode
     @bounds = Rectangle.EMPTY
     @minimumExtent = new Point 5,5
 
-    @_commitBoundsAndNotify new Rectangle 0,0,50,40
+    @_commitBounds new Rectangle 0,0,50,40
 
     @lastTime = Date.now()
     # Note that we don't call
@@ -832,7 +832,12 @@ class Widget extends TreeNode
           @desiredPosition = newPos
           @_invalidateLayout()
 
-  _commitBoundsAndNotify: (newBounds) ->
+  # Silently commit my bounds (origin + extent): translate my origin, then commit my extent via the __commitExtent
+  # leaf -- NO repaint, NO self-relayout. Used for construction-time sizing and by the top-down arrange (a container
+  # sizing my frame already knows my new bounds, so no repaint/relayout is owed here).
+  # (Collapsed 2026-07-01) The old "non-notifying twin" _applyBounds and this method became byte-identical once the
+  # re-fit seam was deleted -- both are just a silent origin+extent commit -- so they are ONE method now (_commitBounds).
+  _commitBounds: (newBounds) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
     if false and !window.recalculatingLayouts
@@ -845,7 +850,7 @@ class Widget extends TreeNode
       @bounds = @bounds.translateTo newBounds.origin
       @__breakMoveResizeCaches()
 
-    @_commitExtentAndNotify newBounds.extent()
+    @__commitExtent newBounds.extent()
   
   # »>> this part is excluded from the fizzygum homepage build
   # unused code
@@ -1066,7 +1071,7 @@ class Widget extends TreeNode
 
   # §4.1 Stage C (proper-layouts): the side-effect-free counterpart of subWidgetsMergedFullBounds above --
   # the merged bounds of my children with each child's SIZE taken from its pure preferredExtentForWidth
-  # measure (min-extent-clamped, as _commitExtentAndNotify applies on commit) instead of its just-mutated applied
+  # measure (min-extent-clamped, as __commitExtent applies on commit) instead of its just-mutated applied
   # extent, at the child's current position. A scroll panel consumes this to size its content frame WITHOUT
   # first resizing my children and reading the result back -- the mutate-then-read-back the re-fit seam exists
   # for (assessment §2.4). Seeded IDENTICALLY to subWidgetsMergedFullBounds (child[0] even if inert) so a
@@ -1214,15 +1219,22 @@ class Widget extends TreeNode
   # (Stage 5, 2026-07-01) The re-fit seam this used to fire is DELETED -- the settle loop now re-fits my tracking
   # container AFTER I settle (see _reFitMyTrackingContainerAfterSettle) -- so this immediate mutator is PURE geometry
   # now (what the FLOWRULE always wanted), a thin wrapper over the shared move core _applyMoveBy. The "AndNotify"
-  # suffix is historical (collapsing the notifying/non-notifying twins is a follow-on cleanup).
+  # suffix is historical -- but this twin is NOT collapsible into _applyMoveBy (2026-07-01 twin-collapse verdict):
+  # it is the polymorphic DISPATCH POINT for the ClippingAtRectangularBoundsMixin scroll-optimization and the
+  # ActivePointerWdgt float-drag OVERRIDES (which repaint via @changed, not @fullChanged), whereas bare _applyMoveBy
+  # is the uniform base translate the top-down arrange calls for leaf children. Folding the overrides onto _applyMoveBy
+  # would route arrange moves through them on clipping panels and change their dirty regions -- so the two names are a
+  # genuine dispatch distinction, not redundant twins. (Only the truly-redundant SILENT-commit twins collapsed in that
+  # pass: _commitExtentAndNotify folded into the __commitExtent leaf, _commitBoundsAndNotify + _applyBounds into _commitBounds.)
   _applyMoveByAndNotify: (delta) ->
     @_applyMoveBy delta
 
-  # Non-notifying twins of _applyMoveByAndNotify / _applyMoveToAndNotify (§4.2 structural arrange-down): translate me + my children +
-  # repaint WITHOUT firing the re-fit seam -- a container placing me top-down already knows my new position, so the
-  # seam's Intent-2 self-re-enqueue is redundant. Used by the stack arrange for LEAF children (a leaf has no inner
-  # convergence the move's re-enqueue would drive; a container child keeps the seam-firing _applyMoveToAndNotify).
-  # _applyMoveBy is _applyMoveByAndNotify's shared core (returns true iff actually moved, so the wrapper fires the seam).
+  # The bare move primitives _applyMoveBy / _applyMoveTo, used by the top-down arrange for LEAF children: translate me
+  # + my children + repaint via the UNIFORM base translate. A leaf child is placed through these rather than
+  # _applyMoveByAndNotify / _applyMoveToAndNotify precisely so its move takes the base path and NOT the
+  # ClippingAtRectangularBoundsMixin / ActivePointerWdgt override those *AndNotify names dispatch to (see the
+  # _applyMoveByAndNotify note above -- that override difference is why the two are not collapsible). _applyMoveBy is
+  # the shared move core (returns true iff it actually moved).
   _applyMoveBy: (delta) ->
     return false if delta.isZero()
     @__breakMoveResizeCaches()
@@ -1519,7 +1531,7 @@ class Widget extends TreeNode
     unless aPoint.equals @extent()
       @__breakMoveResizeCaches()
 
-      @_commitExtentAndNotify aPoint
+      @__commitExtent aPoint
       @changed()
       @_reLayoutSelf()
 
@@ -1550,17 +1562,13 @@ class Widget extends TreeNode
             @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
 
   
-  # (Stage 5, 2026-07-01) Was the NOTIFY-ONLY corner (fired the re-fit seam). That seam is DELETED -- the settle
-  # loop re-fits my container after I settle (see _reFitMyTrackingContainerAfterSettle) -- so this is now a plain
-  # commit of @bounds via the shared core __commitExtent (no repaint / no self-relayout). The "AndNotify" suffix is
-  # historical (twin-collapse is a follow-on).
-  _commitExtentAndNotify: (aPoint) ->
-    @__commitExtent aPoint
-
-  # The shared bounds-set core of _commitExtentAndNotify: round + min-extent clamp + commit @bounds, WITHOUT firing the
-  # re-fit seam. Returns true iff @bounds actually changed (so the notifying wrapper knows to fire the seam).
-  # (§4.2 structural arrange: the top-down arrange applies geometry via the non-notifying path -- _apply* --
-  # since the arranger already knows the new geometry; only EXTERNAL agents notify by mutation via _commitExtentAndNotify.)
+  # The silent extent-commit LEAF: round + min-extent clamp + commit @bounds, NO repaint / NO self-relayout. Returns
+  # true iff @bounds actually changed. This is the bottom of the extent-sizing family -- external agents sizing a
+  # widget (construction-time defaultSize / initial extent) call it directly, exactly like its __commitWidth /
+  # __commitHeight siblings. (Collapsed 2026-07-01: the single-underscore _commitExtentAndNotify was a pure
+  # pass-through to this leaf once the re-fit seam it used to fire was deleted -- it is gone, and its ~20 callers
+  # reach the leaf directly. The §4.2 arrange still applies geometry through the non-notifying _apply* path; this
+  # leaf is what those apply methods, and _commitBounds, commit through.)
   __commitExtent: (aPoint) ->
     aPoint = aPoint.round()
     minExtent = @minimumExtent  # the __ leaf reads the field directly (getMinimumExtent is the non-overridden accessor -> @minimumExtent, so byte-identical); keeps __commitExtent a pure bottom (§3c)
@@ -1574,28 +1582,19 @@ class Widget extends TreeNode
     @__breakMoveResizeCaches()
     return true
 
-  # Non-notifying twin of _applyExtentAndNotify (§4.2 structural arrange-down): apply my extent the way _applyExtentAndNotify does
-  # (commit @bounds + @changed repaint + @_reLayoutSelf), but WITHOUT firing the re-fit seam -- a container
-  # arranging me top-down already knows my new geometry, so the seam's Intent-2 self-re-enqueue is redundant.
-  # Byte-for-byte mirrors _applyExtentAndNotify except for the seam (_applyExtentAndNotify -> _commitExtentAndNotify which notifies).
+  # Base extent-apply WITHOUT the polymorphic override: commit @bounds + @changed repaint + @_reLayoutSelf -- the same
+  # body as Widget::_applyExtentAndNotify minus its widgetStartingTheChange guard. A container arranging a child
+  # top-down uses this to apply the child's measured extent while BYPASSING the child's own _applyExtentAndNotify
+  # override (e.g. SimpleVerticalStackPanelWdgt applies its arranged height via _applyExtent so it does NOT re-enter
+  # its own _reLayoutChildren -- the frame commit that follows handles that). This was the "non-notifying twin" of
+  # _applyExtentAndNotify; the re-fit seam it used to skip is gone, but the override-bypass keeps it a distinct, live
+  # method (unlike the bounds twins, which had no such override and so collapsed into _commitBounds 2026-07-01).
   _applyExtent: (aPoint) ->
     unless aPoint.equals @extent()
       @__breakMoveResizeCaches()
       @__commitExtent aPoint
       @changed()
       @_reLayoutSelf()
-
-  # Non-notifying twin of _commitBoundsAndNotify (§4.2 structural arrange-down): translate my origin + set my extent
-  # the way _commitBoundsAndNotify does (silently -- no repaint, no self-relayout) but WITHOUT firing the re-fit seam.
-  # A scroll panel sizing its content frame already knows the content's new bounds (it computed them from the §4.1
-  # pure measure), so the seam's Intent-2 self-re-enqueue is redundant. Byte-for-byte mirrors _commitBoundsAndNotify
-  # except it commits the extent via __commitExtent (no seam) instead of _commitExtentAndNotify.
-  _applyBounds: (newBounds) ->
-    return if @bounds.equals newBounds
-    unless @bounds.origin.equals newBounds.origin
-      @bounds = @bounds.translateTo newBounds.origin
-      @__breakMoveResizeCaches()
-    @__commitExtent newBounds.extent()
 
 
   # (proper-layouts, PROPERTY sub-seam DELETED 2026-07-01) The old _announceLayoutPropertyChangeToContainer seam
@@ -1613,8 +1612,8 @@ class Widget extends TreeNode
   # (proper-layouts §4.3 / Stage 5, 2026-07-01) Re-fit MY size-tracking container now that I have SETTLED.
   # Called by the settle loop (WorldWdgt._recalculateLayoutsBody) right after my chain-top _reLayout completes --
   # NOT by the geometry mutators. This is the ORDERED-settle successor to the DELETED notify-by-mutation geometry
-  # seam (the old _announceGeometryChangeToContainer, which fired from _commitExtentAndNotify /
-  # _applyMoveByAndNotify per mutation). A freefloating child's _invalidateLayout does not climb to its
+  # seam (the old _announceGeometryChangeToContainer, which fired from the extent-commit and _applyMoveByAndNotify
+  # mutators per mutation). A freefloating child's _invalidateLayout does not climb to its
   # size-tracking container, so the container must be re-fit explicitly when my geometry changes. The old seam
   # did that at MUTATION time -- while I was mid-settle -- so the container read my HALF-applied geometry and had
   # to re-fit again and again (an empirical fixpoint the old iteration cap backstopped). Firing at
@@ -4125,7 +4124,7 @@ class Widget extends TreeNode
         yDim = @parent.height()
         minDim = Math.min(xDim, yDim) * @layoutSpec_cornerInternal_proportionOfParent + @layoutSpec_cornerInternal_fixedSize
 
-        @_commitExtentAndNotify new Point minDim, minDim
+        @__commitExtent new Point minDim, minDim
 
         # TODO this hack is because I couldn't initialise this properly
         # where I should, due to load dependency problems

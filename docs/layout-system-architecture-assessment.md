@@ -786,8 +786,9 @@ So the spearhead boolean fell *cheaply* — and that freed the campaign to pursu
   byte-identical, soak-gated.
 - **§4.2 Objective A — the non-notifying arrange (the capstone-greener; `cf37fa3a` → `c8098e6d`).** The measure alone
   does not delete the seam: the arrange's *final commit* still fired it. So the stack and scroll arranges were switched
-  to apply their own geometry through **non-notifying twins** (`_applyExtent` / `_applyMoveBy` /
-  `_applyBounds`, née `_arrangeApply*` = the immediate mutators minus the seam fire — the bare `_apply*` name now *says* "applies without notifying"), so arrange output no longer re-triggers layout at the
+  to apply their own geometry through **non-notifying twins** (`_applyExtent` / `_applyMoveBy`, née `_arrangeApply*`, +
+  the silent bounds commit since folded into `_commitBounds` — the immediate mutators minus the seam fire — the bare
+  `_apply*`/`_commit*` name now *says* "applies without notifying"), so arrange output no longer re-triggers layout at the
   container itself. This removed the Intent-2 self-re-enqueues — the end-of-cycle capstone went **18 → 10** (Stage 1,
   the stack) **→ 0** (Stage 3, the scroll); it is **green** (§2.7).
 
@@ -955,7 +956,7 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
 - **Settle-time up-edge (replaced the deleted seam, 2026-07-01):** `Widget._reFitMyTrackingContainerAfterSettle`
   ~:1635 (`@_reFitContainer @parent.parent` if inside a non-text-wrapping scroll panel, then `@_reFitContainer @parent`)
   · `_reFitContainer` ~:1716 (kept — the phase-dispatch primitive; gated on `container._reLayoutChildren?`; in-pass →
-  `__markForRelayout`, off-pass → `_invalidateLayout`). The immediate mutators (`_commitExtentAndNotify` /
+  `__markForRelayout`, off-pass → `_invalidateLayout`). The immediate mutators (`__commitExtent` /
   `_applyMoveByAndNotify`) are now **pure geometry** — they fire no seam. The deleted announce-verbs
   `_announceGeometryChangeToContainer` / `_announceLayoutPropertyChangeToContainer` survive only in explanatory
   comments.
@@ -971,17 +972,19 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
   careless-push audit ~:3944; bare push ~:3948; climb ~:3952).
 - **Non-notifying arrange twins (§4.2 Objective A — `cf37fa3a` / `c8098e6d`; each = an immediate mutator minus the seam
   fire; the fourth wave renamed `_arrangeApply*` → the bare `_apply*`):**
-  `__commitExtent` (née `_setExtentBoundsNoNotify`) ~:1657 (the shared bounds-set `__` leaf, also used by the notifying
-  `_commitExtentAndNotify`, née `silentRawSetExtent`, ~:1649) ·
-  `_applyExtent` ~:1674 · `_applyBounds` ~:1686 · `_applyMoveBy` ~:1319 / `_applyMoveTo`
-  ~:1328 (twins of `_applyMoveByAndNotify`, née `fullRawMoveBy`, ~:1311). The arrange applies its own geometry through these, so it no longer fires
+  `__commitExtent` (née `_setExtentBoundsNoNotify`) — the shared bounds-set `__` leaf (**2026-07-01 twin-collapse:** the
+  pure pass-through `_commitExtentAndNotify`, née `silentRawSetExtent`, folded INTO this leaf; its ~20 callers reach it
+  directly) · `_applyExtent` · `_commitBounds` (**2026-07-01:** the ex-`_applyBounds` silent bounds twin + the
+  ex-`_commitBoundsAndNotify` folded into one) · `_applyMoveBy` / `_applyMoveTo` (twins of `_applyMoveByAndNotify`, née
+  `fullRawMoveBy` — **NOT collapsible:** the *AndNotify name is the ClippingMixin / ActivePointerWdgt override dispatch
+  point, bare is the uniform base translate). The arrange applies its own geometry through these, so it no longer fires
   the seam at the container itself (the Intent-2 self-re-enqueue that the capstone counted).
 - **Re-fit seam — DELETED 2026-07-01 (replaced by the settle-time up-edge above).** The notify-by-mutation
   announce-verbs `_announceGeometryChangeToContainer` (née `_reFitContainerAfterRawGeometryChange`) and
   `_announceLayoutPropertyChangeToContainer` (née `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt`) are **gone** (their
   `@_adjustingContentsBounds` suppression was already deleted in proper-layouts Phase D); they survive only in
   explanatory comments. `_reFitContainer` is **retained** and is now driven by the up-edge, not by the mutators. The
-  immediate mutators (`_commitExtentAndNotify` ~:1649, `_applyMoveByAndNotify` ~:1311) and the non-notifying arrange
+  immediate mutators (`__commitExtent`, `_applyMoveByAndNotify`) and the non-notifying arrange
   twins are all pure geometry now — none fires a seam.
 - **Apply bodies:** base `Widget._reLayout` ~:4212 (`markLayoutAsFixed` call ~:4377 — followed by a corner-layouted
   child re-layout loop ~:4381; `markLayoutAsFixed` def ~:4209; horizontal-stack 3-case distribution ~:4286–4374) ·
@@ -1012,7 +1015,7 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
   §4.1) · `VerticalStackLayoutSpec.getWidthInStack` ~:31 (elasticity field ~:12) · `ScrollPanelWdgt._reLayout` ~:302 /
   `_reLayoutChildren` ~:288 / `_positionAndResizeChildren` ~:332 (pure-measure content frame
   `subWidgetsMergedPreferredBounds` ~:386/~:388, non-content-sizing fallback `subWidgetsMergedFullBounds` ~:390,
-  non-notifying frame commit `_applyBounds` ~:437, `keepContentsInScrollPanelWdgt` clamp via `_applyMoveBy`
+  non-notifying frame commit `_commitBounds` ~:437, `keepContentsInScrollPanelWdgt` clamp via `_applyMoveBy`
   ~:454–460, `_reLayoutScrollbars` ~:116 via `_applyExtent` / `_applyMoveTo` ~:165/170/186/191,
   `parentWillSizeMe` content-arrange flag ~:347) / public content endpoints `add` ~:206 · `addMany` ~:229 ·
   `_showResizeAndMoveHandlesAndLayoutAdjustersNoSettle` core ~:237 (public `showResizeAndMoveHandlesAndLayoutAdjusters`

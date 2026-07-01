@@ -36,7 +36,7 @@ class SimplePlainTextWdgt extends TextWdgt
    ) ->
 
     super
-    @_commitBoundsAndNotify new Rectangle 0,0,400,40
+    @_commitBounds new Rectangle 0,0,400,40
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
     @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
     # this widget IS the contained-text case: fit the BOX to the TEXT (width from

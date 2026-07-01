@@ -61,7 +61,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   constructor: (extent, color, @padding, @constrainContentWidth = true) ->
     super()
     @appearance = new RectangularAppearance @
-    @_commitExtentAndNotify(extent) if extent?
+    @__commitExtent(extent) if extent?
     @color = color if color?
 
   # The re-fit chokepoint for a stack (no scrollbars): re-lay-out my stacked
@@ -165,7 +165,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # resized+moved first. Unlike the base (which reads stable applied positions of a non-laying-out panel's
   # children), a stack's child positions are layout-derived, so they are RE-DERIVED here from measured
   # heights. availW = my available width (I subtract my own padding, exactly as the arrange does). Sizes are
-  # min-extent-clamped to match _commitExtentAndNotify. Byte-identical to subWidgetsMergedFullBounds at the fixed
+  # min-extent-clamped to match __commitExtent. Byte-identical to subWidgetsMergedFullBounds at the fixed
   # point (Stage-C probe: 0/1429 converged mismatches). NB the tight=false viewport grow in
   # preferredExtentForWidth is deliberately NOT applied here -- the scroll panel does its own viewport grow,
   # and the frame wants the NATURAL children union.

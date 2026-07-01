@@ -1222,7 +1222,7 @@ class StringWdgt extends Widget
     measuredWidth = @calculateTextWidth (@transformTextOneToOne @text), @originallySetFontSize
     widthOfText = Math.max (Math.ceil measuredWidth), 1
     heightOfText = @fontHeight @originallySetFontSize
-    @_commitExtentAndNotify new Point widthOfText, heightOfText
+    @__commitExtent new Point widthOfText, heightOfText
     @reflowText()
     @parent?._invalidateLayout() unless world?._recalculatingLayouts
     @  # return self so the public wrapper is chainable (macros do `(new StringWdgt …).sizeToTextAndDisableFitting()`)

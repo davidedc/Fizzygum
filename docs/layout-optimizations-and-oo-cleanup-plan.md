@@ -112,10 +112,25 @@ assumptions were wrong: `_reFitContainer` has ~9 callers with **both** dispatch 
 for the up-edge; off-pass `_invalidateLayout` for the gesture/attach callers), and
 `_amIDirectlyInsideNonTextWrappingScrollPanelWdgt` is used by `WindowWdgt` ×2 **plus** the up-edge. The
 `_batchingLayoutSettling` field is fully gone (only a `check-stinks.js` comment correctly records it as retired). Build
-dead-methods gate: **0 new dead**. The one genuine redundancy — the now-trivial notify/non-notify twins
-(`_applyMoveByAndNotify`→`_applyMoveBy`, `_commitExtentAndNotify`→`__commitExtent`) — is a **convergence-adjacent**
-change (touches the immediate mutators → needs the full torture), already flagged in-code as a follow-on; **out of this
-cheap sweep's scope** (a candidate for a future determinism-gated pass, not OO-3).
+dead-methods gate: **0 new dead**. The one genuine redundancy — the now-trivial notify/non-notify twins — was a
+**convergence-adjacent** change left out of this cheap sweep; **✅ DONE as its own determinism-gated pass 2026-07-01**
+(next).
+
+### Twin collapse — ✅ DONE (2026-07-01, determinism-gated follow-on to OO-3)
+**Outcome.** Two SILENT-commit twin pairs became byte-identical once the re-fit seam was deleted (neither side is
+overridden anywhere) and collapsed:
+- `_commitExtentAndNotify` (a pure pass-through) folded into the **`__commitExtent`** leaf — its ~20 callers now reach
+  the leaf directly, exactly like its `__commitWidth` / `__commitHeight` siblings.
+- `_commitBoundsAndNotify` + the silent bounds arrange-twin `_applyBounds` folded into one **`_commitBounds`**.
+
+The **move twins were investigated and found NOT collapsible**: `_applyMoveByAndNotify` is the polymorphic dispatch
+point for the `ClippingAtRectangularBoundsMixin` scroll-opt + `ActivePointerWdgt` float-drag OVERRIDES (which repaint via
+`@changed`, not `@fullChanged`), whereas bare `_applyMoveBy` is the uniform base translate the top-down arrange calls for
+leaf children — merging would route arrange moves through those overrides on clipping panels and change their dirty
+regions. The `_apply…AndNotify` full-mutator rename (drop the now-false suffix, ~100 call sites + ~10 overrides) stays
+**out of scope**. Byte-identical (pure rename + forwarder removal, no logic change); gated by `./fg gauntlet`
+(dpr1/dpr2/webkit) + the danger torture. Comments updated (`Widget.coffee`, `check-layering.js`,
+`layering-naming-convention.md`).
 
 **What (original).** Sweep for anything orphaned by the 2026-07-01 deletions beyond what the build gates already catch.
 The dead-methods gate (`./fg build`) already fails on newly-dead methods, so this was mostly a naming/legibility pass.

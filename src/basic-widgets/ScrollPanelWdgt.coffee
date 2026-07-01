@@ -444,10 +444,10 @@ class ScrollPanelWdgt extends PanelWdgt
 
     unless @contents.boundingBox().equals newBounds
       # §4.2 Stage 3 (structural arrange): I OWN my content's frame -- I computed newBounds from the §4.1 pure
-      # measure (subBounds), so apply it via the NON-notifying twin. The old _commitBoundsAndNotify fired the re-fit
+      # measure (subBounds), so apply it via the NON-notifying twin. The old _commitBounds fired the re-fit
       # seam back at ME (Intent-2 self-re-enqueue = the capstone's Pattern D), redundant since I am the one sizing
       # the content; the seam only delivered a confirm pass that the §4.1 measure already makes a no-op.
-      @contents._applyBounds newBounds
+      @contents._commitBounds newBounds
       @contents._reLayoutSelf()
 
     # you'd think that if @contents.boundingBox().equals newBounds

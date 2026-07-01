@@ -36,7 +36,7 @@ class ActivePointerWdgt extends Widget
     @mouseOverList = new Set
     super()
     @minimumExtent = new Point 0,0
-    @_commitBoundsAndNotify Rectangle.EMPTY
+    @_commitBounds Rectangle.EMPTY
 
   # Capability query (with CanvasWdgt; replaces `whereTo instanceof ActivePointerWdgt or ... CanvasWdgt`
   # in PenWdgt._reactToBeingAdded): "can a pen draw onto me?" -- the hand counts because a pen mid-drag

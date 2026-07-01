@@ -65,7 +65,7 @@ class StringFieldWdgt extends PanelWdgt
       @_addNoSettle @text
     @text._applyMoveToAndNotify @position().add new Point 5,2
     @text._applyExtentAndNotify new Point 300, 18
-    @_commitExtentAndNotify new Point @width(), 18
+    @__commitExtent new Point @width(), 18
 
   getValue: ->
     @text.text

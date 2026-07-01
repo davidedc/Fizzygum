@@ -40,7 +40,7 @@
  * """, `) so the call-detecting regexes never match a method name that merely appears in a
  * throw message or a comment; it groups lines into 2-space-indent methods. Call detection
  * keys off the leading `@`/`.` and the LOWERCASE public name, so `@setExtent`/`.moveTo`
- * match while the low-level `@_applyExtentAndNotify`/`@_applyMoveToAndNotify`/`@_commitBoundsAndNotify` do NOT.
+ * match while the low-level `@_applyExtentAndNotify`/`@_applyMoveToAndNotify`/`@_commitBounds` do NOT.
  *
  * Exit codes: 0 = clean, 1 = layering violation(s), 2 = operational error.
  * Run from the Fizzygum/ repo root (build_it_please.sh does this):
@@ -144,7 +144,7 @@ const isImmediateMutator = (name) =>
   /^_move(LeftSideTo|RightSideTo|TopSideTo|BottomSideTo|ToSideOf|FullCenterTo|Within|InDesktopToFractionalPosition|InStretchablePanelToFractionalPosition)$/.test(name) ||  // convenience movers (ex fullRawMove*)
   /^_(setWidthSizeHeightAccordingly|setExtentToFractionalExtentInPaneUserHasSet|resizeToWithoutSpacing)$/.test(name);  // convenience setters/resizer (ex rawSet*/rawResize*). NB the ex-silent* structural setters are now __hide/__addShadow/__add LEAVES under [I], NOT immediate-mutators (like the __commit* leaves).
 // (the __commit* leaves are deliberately NOT matched here -- rule [I] governs them more strictly. The —/✓ arrange
-//  corners _applyExtent/_applyBounds/_applyMoveBy/_applyMoveTo react synchronously and were never [E]-covered;
+//  corners _applyExtent/_applyMoveBy/_applyMoveTo (+ the silent _commitBounds commit) react synchronously and were never [E]-covered;
 //  they stay out, exactly as their pre-sweep raw-less _arrangeApply* form was.)
 
 // [D] macro hygiene: a SystemTest macro must drive the world through the PUBLIC widget API ONLY -- never
