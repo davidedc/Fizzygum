@@ -1641,15 +1641,16 @@ class Widget extends TreeNode
     @__commitExtent newBounds.extent()
 
 
-  # A re-fit "seam" (cf. _announceGeometryChangeToContainer): a freefloating content widget tells the
-  # scroll-panel / vertical-stack it sits in to re-fit, after a layout-affecting property change
-  # (VerticalStackLayoutSpec alignment/elasticity/base-width, SimplePlainTextWdgt soft-wrap, a
-  # contained-text edit, collapse). A freefloating child's _invalidateLayout does NOT climb to its
-  # container, which is why the container(s) are notified explicitly here. The phase dispatch (enqueue in
-  # a pass, else invalidate) lives in the shared _reFitContainer; this seam only supplies which container(s).
-  _announceLayoutPropertyChangeToContainer: ->
-    @_reFitContainer @parent.parent if @_amIDirectlyInsideScrollPanelWdgt()
-    @_reFitContainer @parent
+  # (proper-layouts, PROPERTY sub-seam DELETED 2026-07-01) The old _announceLayoutPropertyChangeToContainer seam
+  # lived here: a freefloating content's layout-PROPERTY change (VerticalStackLayoutSpec alignment/elasticity/
+  # base-width, SimplePlainTextWdgt soft-wrap, StringWdgt contained-text edit, WindowWdgt collapse) explicitly
+  # re-fit its size-tracking container(s), because a freefloating child's _invalidateLayout does not climb. That
+  # dependency now flows through the UNIFORM dirty-tree instead: _invalidateLayout climbs THROUGH a freefloating
+  # boundary OFF-PASS when the parent is a size-tracking container (the "D1" branch below). The 9 call sites now
+  # invalidate the container directly -- BARE (@parent._invalidateLayout(), no freefloating triggeringChild, so a
+  # non-tracking intermediate parent doesn't drop it) for the freefloating-content callers, or @element._invalidateLayout()
+  # for stack-child callers. The GEOMETRY seam (_announceGeometryChangeToContainer, immediate mutators) STAYS --
+  # its in-pass post-application timing can't be delivered by an off-pass climb (docs/…-4.4-…-plan.md §8).
 
   # A re-fit "seam": an IMMEDIATE geometry mutator (_commitExtentAndNotify / _applyMoveByAndNotify) notifies the
   # container that tracks my geometry to re-fit -- a NON-text-wrapping scroll panel (text-wrapping panels
@@ -3804,7 +3805,15 @@ class Widget extends TreeNode
     # BEFORE the _recalculatingLayouts throw below: a freefloating teardown is a silent no-op today
     # (the inline `unless …isFreeFloating()` guard meant _invalidateLayout wasn't even called for it),
     # so it has to keep being a silent no-op even if it happens mid-pass -- it must never throw.
-    return if triggeringChild?.isFreeFloating()
+    if triggeringChild?.isFreeFloating()
+      # (proper-layouts, PROPERTY sub-seam deletion 2026-07-01) A freefloating child normally can't change its
+      # parent's layout (positioned absolutely), so its invalidate does NOT climb. EXCEPTION: if I (the parent) am
+      # a size-TRACKING container (scroll / stack / window -- I define _reLayoutChildren) then the child's SIZE
+      # genuinely IS tracked, so OFF-PASS let the invalidate CLIMB THROUGH (fall past this return) so I re-fit.
+      # This is the uniform dirty-tree replacement for the deleted _announceLayoutPropertyChangeToContainer seam.
+      # IN-PASS this stays skipped: in-pass geometry changes are the immediate-mutator seam
+      # (_announceGeometryChangeToContainer) domain, and climbing in-pass would hit the FLOWRULE throw below.
+      return unless (@_reLayoutChildren? and not world?._recalculatingLayouts)
     # INERT-RECEIVER branch: a free-floating + inert overlay (caret / resize handle) has no parent layout to climb
     # into, and is excluded from every container's content-bounds (childrenNotHandlesNorCarets), so re-running its
     # _reLayout re-fits NOTHING above it. The climb, the flow-rule throw, and the careless-push audit below are

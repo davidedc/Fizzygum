@@ -149,7 +149,9 @@ class SimplePlainTextWdgt extends TextWdgt
     @softWrap = wrap
     @parent.parent.setTextLineWrapping wrap
     @_reLayoutSelf() unless wrap
-    @_announceLayoutPropertyChangeToContainer()
+    # (property sub-seam deletion) I re-laid MYSELF above; now climb so my tracking container re-fits -- via the
+    # parent with me as trigger (NOT @_invalidateLayout, which re-marks me redundantly), the uniform-climb seam replacement.
+    @parent?._invalidateLayout(@)
 
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->

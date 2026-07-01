@@ -71,7 +71,7 @@ class VerticalStackLayoutSpec
   _setAlignmentToLeftNoSettle: ->
     if @alignment isnt "left"
       @alignment = "left"
-      @element._announceLayoutPropertyChangeToContainer()
+      @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
 
   # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
   setAlignmentToRight: ->
@@ -79,7 +79,7 @@ class VerticalStackLayoutSpec
   _setAlignmentToRightNoSettle: ->
     if @alignment isnt "right"
       @alignment = "right"
-      @element._announceLayoutPropertyChangeToContainer()
+      @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
 
   # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
   setAlignmentToCenter: ->
@@ -87,7 +87,7 @@ class VerticalStackLayoutSpec
   _setAlignmentToCenterNoSettle: ->
     if @alignment isnt "enter"
       @alignment = "center"
-      @element._announceLayoutPropertyChangeToContainer()
+      @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
 
   elasticityPopout: (menuItem,a,b,c,d,e,f)->
     @element.prompt menuItem.parent.title + "\nelasticity:",
@@ -113,7 +113,7 @@ class VerticalStackLayoutSpec
     elasticity = elasticity/100
     unless @elasticity == elasticity
       @elasticity = elasticity
-      @element._announceLayoutPropertyChangeToContainer()
+      @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
 
   baseWidthPopout: (menuItem,a,b,c,d,e,f)->
     @element.prompt menuItem.parent.title + "\nbase width:",
@@ -139,5 +139,5 @@ class VerticalStackLayoutSpec
     if widthOfElementWhenAdded
       unless @widthOfElementWhenAdded == widthOfElementWhenAdded
         @widthOfElementWhenAdded = widthOfElementWhenAdded
-        @element._announceLayoutPropertyChangeToContainer()
+        @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
 

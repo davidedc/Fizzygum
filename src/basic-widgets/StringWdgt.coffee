@@ -1241,7 +1241,7 @@ class StringWdgt extends Widget
     return unless @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
     extentBefore = @extent()
     @_reLayoutSelf()
-    @_announceLayoutPropertyChangeToContainer() unless @extent().equals extentBefore
+    @parent?._invalidateLayout() unless @extent().equals extentBefore   # (property sub-seam deletion) invalidate the container BARE (no freefloating trigger)
 
   # The NON-settling core of setText: apply a text change IN PLACE -- re-hug the box if this
   # is a box-hugs-text chrome label, notify any connection target, and re-fit if contained-text
