@@ -146,7 +146,7 @@ class InspectorWdgt extends Widget
   # non-settling core: the body's @add's are @_addNoSettle, so the multi-add rebuild does NOT re-enter the
   # flush per child -- they invalidate, and the ONE _settleLayoutsAfter flush at the end re-fits the COMPLETE
   # inspector. (No BATCH tier needed: the settle fires ONCE, AFTER the build, so there is no mid-build re-fit
-  # of a half-wired child -- the crash _settleLayoutsAfterBatch guards against can't arise here.) At CONSTRUCTION
+  # of a half-wired child -- the mid-build re-fit crash a batch settler would guard against can't arise here.) At CONSTRUCTION
   # this is called last on an orphan -> _settleLayoutsAfter now SETTLES the orphan subtree synchronously
   # (orphan-settledness), so `new InspectorWdgt` returns settled; the single flush still runs over the
   # complete, fully-wired inspector.

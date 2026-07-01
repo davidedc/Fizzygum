@@ -800,13 +800,6 @@ class Widget extends TreeNode
     if world._inLayoutMutation or world._recalculatingLayouts
       return coreThunk() if @isOrphan()
       throw new Error "Fizzygum: a public geometry setter was reached during a layout flush/pass -- internal layout code (_reLayout / _reLayoutSelf / ...) must use the immediate (geometry) mutators, not the public deferred API (see buildSystem/check-layering.js)."
-    # BATCH guard: inside _settleLayoutsAfterBatch, DEFER the per-mutation flush -- the batch
-    # does ONE settle at the end. This turns O(N) relayouts (building N children, each add
-    # self-settling) into 1, and -- crucially -- stops a mid-build settle from re-fitting a
-    # HALF-WIRED widget (e.g. a window whose contents' layoutSpec.stack isn't set yet, which
-    # crashes the deferred re-fit in getWidthInStack). See _settleLayoutsAfterBatch. (Phase 3b.)
-    if world._batchingLayoutSettling
-      return coreThunk()
     # NOT in a flush: settle NOW -- for ATTACHED widgets (always have) AND for ORPHANS (orphan-settledness,
     # docs/orphan-settledness-plan.md): a public mutation leaves the receiver's OWN subtree settled on return,
     # so there is no "is it settled here?" question for a detached/under-construction widget either.
@@ -821,41 +814,6 @@ class Widget extends TreeNode
       return result
     finally
       world._inLayoutMutation = false
-
-  # ⚠ CURRENTLY UNUSED (0 callers) — RETAINED as an available performance primitive, NOT dead-to-delete
-  # (allowlisted in buildSystem/dead-method-allowlist.txt). The drag/drop gesture (ActivePointerWdgt.drop,
-  # 61f527f0) and sizeToTextAndDisableFitting both moved to a SINGLE settle over non-settling cores, which
-  # removed the last batch call-sites. Kept because a future multi-add bundle may want ONE O(1) flush
-  # instead of N self-settles; the `_batchingLayoutSettling` flag + the guard in _settleLayoutsAfter stay
-  # wired so it works as-is if reintroduced.
-  #
-  # Run several geometry/structural mutations as a BATCH that settles layouts only ONCE, at
-  # the end, instead of each public add()/setExtent() self-settling. Use it for multi-add
-  # builders (_buildAndConnectChildren) and bulk content insertion: it makes O(N) relayouts
-  # into 1, and keeps the re-fit from running on a half-built widget mid-batch (the
-  # getWidthInStack-on-unset-@stack crash during an in-world rebuild). Nestable -- an inner
-  # batch is absorbed by the outer; mirrors _settleLayoutsAfter's in-flush deferral for the
-  # final flush (orphans settle at batch end when not in a flush). Returns the thunk's value. (Phase 3b.)
-  _settleLayoutsAfterBatch: (thunk) ->
-    unless world?
-      return thunk()
-    if world._batchingLayoutSettling
-      return thunk()
-    world._batchingLayoutSettling = true
-    try
-      result = thunk()
-    finally
-      world._batchingLayoutSettling = false
-    # Settle once at batch end -- for ATTACHED widgets AND for ORPHANS (orphan-settledness: a batch leaves
-    # the receiver's subtree settled on return, same as a single _settleLayoutsAfter). DEFER only when
-    # already inside a flush/pass (the in-flush construction case _settleLayoutsAfter also defers).
-    unless world._inLayoutMutation or world._recalculatingLayouts
-      world._inLayoutMutation = true
-      try
-        world.recalculateLayouts()
-      finally
-        world._inLayoutMutation = false
-    result
 
   setBounds: (aRectangle, widgetStartingTheChange = nil) ->
     @_settleLayoutsAfter =>

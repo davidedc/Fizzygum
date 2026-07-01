@@ -13,8 +13,8 @@
  *      public, self-flushing layer. (The text setters self-settle via the single _settleLayoutsAfter,
  *      so reaching one from a layout pass throws the flow-violation — AxisWdgt._reLayout once called
  *      setText for its tick labels; it now uses the non-settling _setTextNoSettle core.)
- *   B) recalculateLayouts() may be called ONLY from doOneCycle (the frame) and the settle tiers
- *      _settleLayoutsAfter / _settleLayoutsAfterBatch (the public-setter flush). Nowhere else.
+ *   B) recalculateLayouts() may be called ONLY from doOneCycle (the frame) and the settle tier
+ *      _settleLayoutsAfter (the public-setter flush). Nowhere else.
  *   C) A public geometry setter must NOT call another public geometry setter (that would
  *      flush more than once per logical mutation).
  *   G) A LOW-LEVEL method must NOT directly call a STRUCTURAL self-settling wrapper -- add's siblings
@@ -86,7 +86,7 @@ const INVALIDATE_CALL = /[@.]\s*_invalidateLayout\b/;         // @_invalidateLay
 const APPLY_CALL = /[@.]\s*(_reLayoutChildren|_positionAndResizeChildren|_reLayoutScrollbars|_reLayout)\b(?!\?)(?!\s*(?:[!=]=|[<>]=?|is\b|isnt\b))/;
 const SANCTION_MARKER = 'layout-apply-sanctioned';        // the conscious-sign-off comment marker for [F]
 const PUBLIC_SET = new Set(PUBLIC_SETTERS);
-const RECALC_WHITELIST = new Set(['doOneCycle', '_settleLayoutsAfter', '_settleLayoutsAfterBatch']);
+const RECALC_WHITELIST = new Set(['doOneCycle', '_settleLayoutsAfter']);
 
 const isLowLevel = (name) =>
   /^raw[A-Z]/.test(name) ||  // raw* is now ONLY the pixel accessors (rawPixelInfo/rawPixelHash/rawRGBA).
@@ -183,8 +183,7 @@ const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*)\b/;  // renamed 
 //
 // The wrapper set is DISCOVERED structurally (discoverSettlingWrappers: every method whose body calls
 // @_settleLayoutsAfter), never hand-listed -- so a NEW single-settling wrapper is auto-covered. Only the
-// SINGLE-mutation tier counts: a future _settleLayoutsAfterBatch wrapper ABSORBS nested settles, so it is
-// safe from low-level code and is NOT a [G] subject (SETTLE_CALL matches _settleLayoutsAfter only). Two
+// SINGLE-mutation tier counts: SETTLE_CALL matches _settleLayoutsAfter only, the sole settle wrapper. Two
 // name groups are excluded (a name line-scanner cannot cover them -- documented so they are a reasoned
 // boundary, not a silent gap):
 //   * the geometry/text setters -- [A] already reports them, with a sharper message.
@@ -477,7 +476,7 @@ function checkFile(file, violations, wrapperCall, warnings) {
       }
     }
     if (recalc && !RECALC_WHITELIST.has(method)) {
-      violations.push(`[B] recalculateLayouts() called from ${method}() (only doOneCycle / _settleLayoutsAfter / _settleLayoutsAfterBatch may)  — ${at}`);
+      violations.push(`[B] recalculateLayouts() called from ${method}() (only doOneCycle / _settleLayoutsAfter may)  — ${at}`);
     }
     if (PUBLIC_SET.has(method) && pub && pub[1] !== method) {
       violations.push(`[C] public setter ${method}() calls another public setter .${pub[1]}()  — ${at}`);

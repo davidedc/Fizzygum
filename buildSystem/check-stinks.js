@@ -10,28 +10,16 @@
 // allowlist file: the baseline lives inline next to the rule, since a smell is a count, not a set of
 // named methods.
 //
-// Stink: settle-batch-with-core  --  `<anchor>._settleLayoutsAfterBatch => @_xxxNoSettle()`
-//   Using the BATCHING settler (_settleLayoutsAfterBatch) with a single *NoSettle thunk. A pure core is a
-//   single mutation that does NOT re-enter the settle tier, so it wants the SINGLE-mutation settler
-//   (_settleLayoutsAfter). Reaching for the batch means the core still calls a NESTED public
-//   setter, and the batch is masking that. Fix: make the core pure, then switch the wrapper to
-//   _settleLayoutsAfter. Baseline driven to 0 (2026-06-24): the 5 teardown/build wrappers
-//   (fullDestroy/close/collapse/unCollapse/_buildAndConnectChildren) were all flipped to
-//   _settleLayoutsAfter via "cores call cores" — now a hard rule, no new occurrence may land.
+// No stinks are currently defined (the settle-batch-with-core stink was retired when its target,
+// _settleLayoutsAfterBatch, was deleted). The framework stays ready: add a new {id, baseline, why, re}
+// to STINKS below to ratchet the next smell.
 
 const fs = require('fs');
 const path = require('path');
 
 const SRC = path.resolve(__dirname, '../src');
 
-const STINKS = [
-  {
-    id: 'settle-batch-with-core',
-    baseline: 0,
-    why: '_settleLayoutsAfterBatch (batch settler) wrapping a single *NoSettle thunk -- a pure core wants the single-mutation _settleLayoutsAfter; the batch masks a core that still reaches a nested public setter',
-    re: /_settleLayoutsAfterBatch\s*=>\s*@_\w+NoSettle\b/,
-  },
-];
+const STINKS = [];
 
 function walk(dir, acc) {
   if (!fs.existsSync(dir)) return acc;

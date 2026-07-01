@@ -19,9 +19,16 @@
 >   the geometry-seam falsification) — the content→container climb is load-bearing.
 > - **Verified:** gauntlet dpr1/dpr2/webkit 165/165 + apps/tiernaming/settle; danger torture 12/12 (RECALC absent, 0
 >   fails); build 0 violations; 0 inspector recaptures. Diff: `WindowWdgt.coffee` +25 (the early-settle + the capability).
-> - The remaining 3 (nested-window/aspect) are the §4a "pure-measure wall" in disguise — a true width↔height
->   convergence; BANK them (benign, bounded, deterministic; mandate already complete). §1–§6 below are the original
->   cold-start plan, now historical.
+> - **The remaining 3 (nested-window content) were then CHASED (2026-07-01, owner-requested) and proven IRREDUCIBLE
+>   — do NOT re-attempt.** Instrument-and-LOOK (window-state trace, reverted) showed ALL 3 are CONSTRUCTION-TIME
+>   FIRST-PLACEMENT re-visits: in every re-visit flush the inner window is `contentNeverSetInPlaceYet=true` (its content
+>   — a clock / text — is being placed for the FIRST time), e.g. `Outer[563x339] content=Inner[cnsipy=true] → Inner
+>   settles 553x303→180x206 → Outer re-fits`. Irreducible three ways: (1) can't MEASURE ahead — `WindowWdgt.preferredExtentForWidth`
+>   returns stale extent for `cnsipy=true` BY DESIGN (uninitialised nested specs would NaN); (2) can't SETTLE early — pulling
+>   the inner's first placement into the outer's arrange is not byte-exact (breaks the clock/nested images, proven); (3) can't
+>   REORDER — the content-before-container climb-block breaks 9 load-bearing tests. They are ONE-TIME construction costs
+>   (first placement happens once per nested window), not steady-state waste. **BANK them — the proper-layouts arc is
+>   COMPLETE.** §1–§6 below are the original cold-start plan, now historical.
 
 **Status: DONE — stack half eliminated 2026-07-01; nested-window half banked as genuine.** (Originally: SCOPED, NOT
 STARTED.) This was the FINAL residual of the "proper-layouts" arc. The convergence-boolean MANDATE is COMPLETE (Stage 6 —

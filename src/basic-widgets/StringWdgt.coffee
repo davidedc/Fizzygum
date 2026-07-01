@@ -1204,7 +1204,7 @@ class StringWdgt extends Widget
   # build on an orphan). The IN-PASS / IN-SETTLE callers -- createLabel (driven by _reLayoutSelf),
   # _setTextNoSettle, setFontSize -- call _sizeToTextAndDisableFittingNoSettle DIRECTLY, because a single
   # self-settle reached mid-pass/mid-settle re-enters the flush guard and THROWS. That throw is the wanted
-  # discipline (it surfaces a mis-routed caller); the old _settleLayoutsAfterBatch silently absorbed it.
+  # discipline (it surfaces a mis-routed caller); an absorbing batch settler would silently swallow it.
   # Returns @ (the core ends with @) so callers can chain -- several macros do
   # `s = (new StringWdgt ...).sizeToTextAndDisableFitting()` then `world.add s`.
   sizeToTextAndDisableFitting: ->

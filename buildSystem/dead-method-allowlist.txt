@@ -31,7 +31,3 @@ runProgram
 runLastWorkingProgram
 getWorldMatrix
 identifyBlockEnd
-
-# --- Performance primitive, deliberately retained (0 callers; its flag + guard stay wired -- see the method's
-#     comment in Widget.coffee). ---
-_settleLayoutsAfterBatch
