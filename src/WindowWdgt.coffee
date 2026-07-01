@@ -271,6 +271,17 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   _reLayoutChildren: ->
     @_positionAndResizeChildren()
 
+  # A window fits its OWN width to its content (fit-to-content in BOTH axes), unlike a plain stack whose
+  # width its container sets. So re-laying a window synchronously while its CONTAINER is mid-arrange
+  # re-negotiates that width and diverges from the window's normal, independent settle -- an outer window's
+  # early settle of an inner window collapses the inner window to its content's aspect width. This capability
+  # tells a size-tracking container NOT to settle a window-as-content early: its content-negotiation re-visit
+  # is a GENUINE width<->height convergence, correctly handled by the settle loop's post-settle re-fit, not by
+  # the single-pass early-settle in SimpleVerticalStackPanelWdgt/WindowWdgt._positionAndResizeChildren. Absent
+  # (undefined via ?()) on a stack, whose synchronous re-lay keeps its container-assigned width.
+  _reLayoutMayResizeOwnWidth: ->
+    true
+
   add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position, layoutSpec, beingDropped, notContent
 
@@ -613,6 +624,20 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
         # the content was already there
         # Path B: take the resulting height from the sizing call, not a read-back of @contents.height().
         desiredHeight = @contents._setWidthSizeHeightAccordingly recommendedElementWidth
+
+        # (proper-layouts residual, 2026-07-01) Single-pass fit-to-content: settle a NON-deferred size-tracking
+        # container content (a stack) NOW, synchronously, so I fit its FINAL height in THIS pass. Otherwise the
+        # content settles independently LATER (as its own settle-loop chain-top) and its settle-time re-fit
+        # re-VISITS me to re-fit -- the residual WindowWdgt content-negotiation re-visits. This is the SAME
+        # _reLayout() the settle loop would call on the content's own turn, pulled one iteration earlier, so it
+        # is byte-exact. _setWidthSizeHeightAccordingly already settles DEFERRED-layout content (a scroll panel);
+        # a stack pins implementsDeferredLayout false, so we settle it here. EXCLUDES content that re-fits its OWN
+        # width when re-laid (a nested window, _reLayoutMayResizeOwnWidth): settling THAT early re-negotiates its
+        # width and diverges from its normal independent settle -- its re-visit is a GENUINE width<->height
+        # convergence, correctly left to the settle loop.
+        if @contents._reLayoutChildren? and not @contents.implementsDeferredLayout() and not @contents.layoutIsValid and not @contents._reLayoutMayResizeOwnWidth?()
+          @contents._reLayout()
+          desiredHeight = @contents.height()
 
         if @contentsRecursivelyCanSetHeightFreely()
           desiredHeight = Math.round @height() - partOfHeightUsedUp

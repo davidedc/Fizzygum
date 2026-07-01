@@ -1,10 +1,31 @@
 # Plan — the last proper-layouts residual: 8 `WindowWdgt` content-negotiation re-visits
 
-**Status: SCOPED, NOT STARTED (2026-07-01). Cold-start plan for an LLM/engineer with ZERO prior context.**
-This is the FINAL residual of the "proper-layouts" arc. The convergence-boolean MANDATE is already COMPLETE (Stage 6 —
-the cap is a never-fire assert). This residual is a small, bounded, benign, GENUINE convergence — attacking it is
-OPTIONAL and low-ROI. Read §5 (honest expectation) before deciding to spend time here. **Line numbers drift: grep the
-named symbol.**
+> ## ✅ RESULT (2026-07-01) — the WASTE half is ELIMINATED; the residual is now the 3 GENUINE convergences
+> The 9 re-visits SPLIT cleanly: **6 were WASTE (a window over STACK content) — now eliminated byte-exact; 3 are
+> GENUINE width↔height convergences (a window over a NESTED WINDOW / aspect content) — correctly retained.**
+> Suite-wide window re-visits **9 → 3.**
+> - **Mechanism (instrument-and-LOOK, reverted):** a fit-to-content window is laid out BEFORE its content settles.
+>   Content climbs → invalidates the window; the LIFO work-list pops the window first, so it reads the content's
+>   STALE height; the content settles as its own chain-top; the settle-time re-fit re-visits the window. Root
+>   asymmetry: `_setWidthSizeHeightAccordingly` settles DEFERRED-layout content synchronously (window-over-scroll is
+>   already one-pass), but a stack pins `implementsDeferredLayout` false → stale read → re-visit.
+> - **Fix (§4a-adjacent, the byte-exact one):** `WindowWdgt._positionAndResizeChildren` settles NON-deferred stack
+>   content synchronously DURING the window's arrange — the SAME `_reLayout()` the settle loop would call one
+>   iteration later, so byte-exact. Excludes window-as-content via the `_reLayoutMayResizeOwnWidth` capability (NOT a
+>   type test): settling a window early re-negotiates its OWN width (an outer window collapses an inner window to its
+>   content's aspect width — confirmed by dump+LOOK), so those re-visits are a REAL convergence, left to the settle loop.
+> - **Falsified (§4b, reverted):** the general "non-freefloating content of a size-tracking container does NOT
+>   climb-enqueue it; the settle-time re-fit handles it" broke 9 load-bearing tests (the same scroll/stack/window set as
+>   the geometry-seam falsification) — the content→container climb is load-bearing.
+> - **Verified:** gauntlet dpr1/dpr2/webkit 165/165 + apps/tiernaming/settle; danger torture 12/12 (RECALC absent, 0
+>   fails); build 0 violations; 0 inspector recaptures. Diff: `WindowWdgt.coffee` +25 (the early-settle + the capability).
+> - The remaining 3 (nested-window/aspect) are the §4a "pure-measure wall" in disguise — a true width↔height
+>   convergence; BANK them (benign, bounded, deterministic; mandate already complete). §1–§6 below are the original
+>   cold-start plan, now historical.
+
+**Status: DONE — stack half eliminated 2026-07-01; nested-window half banked as genuine.** (Originally: SCOPED, NOT
+STARTED.) This was the FINAL residual of the "proper-layouts" arc. The convergence-boolean MANDATE is COMPLETE (Stage 6 —
+the cap is a never-fire assert). **Line numbers drift: grep the named symbol.**
 
 ---
 
