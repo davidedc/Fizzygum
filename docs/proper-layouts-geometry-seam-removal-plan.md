@@ -268,8 +268,31 @@ middle.
 - **Stage 2 — the pure positional measure (§4.2), landed incrementally.** Build `subWidgetsMergedPreferredFullBounds`
   for the content kinds in the work-list; switch `_positionAndResizeChildren` to it for those; prove byte-exact with
   the seam ON, then check how many break-list tests it lets the seam-off probe recover.
+  - **SESSION FINDINGS 2026-07-01 (classification + §4.4 probe done; IN-PASS CORE = CHARACTERIZED WALL, not yet cracked):**
+    Instrumented the in-pass seam + ran the 10. They split **6 scroll ⊎ 4 window** by re-fit target:
+    (scroll) LockedScrollPanelScrolls, ScrollBarsTrackContentChange, ScrollPanelNotMovedViaNonFloatDrag,
+    NoSpuriousScrollbars (**92 in-pass re-fits in one run** = the content-frame↔scroll-position convergence),
+    EditingStringInScrollablePanel, ScrollPanelCaretBroughtIntoView — dominant edge `@contents PanelWdgt → ScrollPanelWdgt`;
+    (window) ScrollPanelInWindowMovesWindow, WindowWithAClock (**1212+748+… fires**), WindowWithSimpleVerticalPanel,
+    WindowsNestedCollapsing — re-fit target `WindowWdgt._reLayoutChildren` (a **SEPARATE mechanism** from the ScrollPanel crux).
+    ROOT of the scroll staleness: base `subWidgetsMergedPreferredBounds` (Widget.coffee:1130) uses **pure sizes but APPLIED
+    child positions** `child.left()/top()`; a **centered free-positioned icon does NOT re-center on `_reLayoutSelf`** (a bare
+    PanelWdgt has no centering layout), so its absolute position goes stale when the frame changes → the seam re-fits.
+    **§4.4 line-431 probe (empirical, throwaway, reverted):** commenting out the `@contents.left()/top()` anchor is
+    **byte-exact with the seam ON (165/165)** — it is redundant WITH the seam — but the in-pass reverse-probe with it
+    removed **still breaks the same 10** (recovers 0). ⇒ **§4.4's `:431` anchor is NOT the crux; decoupling it alone does
+    not reduce the in-pass seam dependence.** Two things a real crack needs, neither a quick change: (a) make content-sizing
+    child POSITIONS pure for EVERY content kind (extend the stack's `subWidgetsMergedPreferredBounds` override to the
+    bare-panel / centered-icon cases — i.e. give them a real centering layout so positions are re-derived, a behaviour-risky
+    change), AND/OR (b) the §4.3 ordered down-walk so the container is VISITED after its content settles WITHOUT the seam
+    (the in-pass channel; `_invalidateLayout` throws in-pass, so only `__markForRelayout` is legal — no D1 shortcut like the
+    off-pass half had). PLUS the window group (4) is a wholly separate `WindowWdgt` re-fit path. This is the genuine §8 wall;
+    §4.2/§4.3 are each a multi-hour structural build. **`_applyMoveBy` DOES translate children rigidly (Widget:1274-1276)** —
+    so the staleness is the non-re-centering free-positioned child, NOT a lagging keepContents move (rules out that fix).
 - **Stage 3 — the `:431`/keepContents decoupling (§4.4).** Rewrite frame-size/position separation; instrument the
-  centered-icon + scrolled cases; byte-exact gate.
+  centered-icon + scrolled cases; byte-exact gate. ⚠ 2026-07-01: line-431 removal proven byte-safe-with-seam but
+  seam-reduction-neutral (see Stage 2 findings) — §4.4 must be paired with pure content positions (§4.2) + the §4.3
+  visit channel to matter; it is not a standalone lever.
 - **Stage 4 — the real two-flag + ordered edge (§4.3).** The big one. Land the two-flag as byte-identical
   scaffolding first; then the content-before-container ordering; drive by the reverse-probe (seam-off must converge
   byte-exact for the remaining break-list).
