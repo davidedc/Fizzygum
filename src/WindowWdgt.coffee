@@ -347,6 +347,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # layout-apply-sanctioned: collapse re-fit (must stay synchronous, residuals-audit fam 4)
       @_reLayoutChildren()
       @_invalidateLayout()   # (property sub-seam deletion) uniform climb replaces the property re-fit seam
+      @parent.parent._invalidateLayout() if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()   # STAGE-1: reach the scroll-panel grandparent (window climb is dropped at the non-tracking PanelWdgt)
 
   _reactToChildUnCollapsed: (child) ->
     if child == @contents
@@ -360,6 +361,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @reInflating = false
       @rememberFractionalSituationInHoldingPanel()
       @_invalidateLayout()   # (property sub-seam deletion) uniform climb replaces the property re-fit seam
+      @parent.parent._invalidateLayout() if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()   # STAGE-1: reach the scroll-panel grandparent (window climb is dropped at the non-tracking PanelWdgt)
 
   resetToDefaultContents: ->
     @enableDrops()
