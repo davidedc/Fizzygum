@@ -1661,10 +1661,12 @@ class Widget extends TreeNode
   # _applyMoveByAndNotify per mutation). A freefloating child's _invalidateLayout does not climb to its
   # size-tracking container, so the container must be re-fit explicitly when my geometry changes. The old seam
   # did that at MUTATION time -- while I was mid-settle -- so the container read my HALF-applied geometry and had
-  # to re-fit again and again (an empirical fixpoint the recalcIterationsCap backstopped). Firing at
-  # SETTLE-completion instead, the container reads my FINAL geometry and re-fits correctly in one visit; the whole
-  # thing is a bounded O(depth) up-walk (leaf content -> container -> its container -> ...), each widget re-fit
-  # once after its content settles. The immediate mutators are now PURE (no layout side effect) -- what the
+  # to re-fit again and again (an empirical fixpoint the old iteration cap backstopped). Firing at
+  # SETTLE-completion instead, the container reads my FINAL geometry and re-fits correctly: for a simple chain a
+  # bounded O(depth) up-walk (leaf content -> container -> its container -> ...), each widget re-fit once after its
+  # content settles. (Constrained NESTED containers -- a width-capping stack of window cells inside a resized outer
+  # window -- still re-negotiate size over a SMALL bounded number of re-visits; measured suite-wide peak 10, see
+  # WorldWdgt._recalculateLayoutsBody.) The immediate mutators are now PURE (no layout side effect) -- what the
   # FLOWRULE always wanted. Reverse-probe: OLD-seam OFF + this up-edge = 165/165 byte-exact at dpr1/dpr2/webkit,
   # so §8's "irreducible in-pass seam" verdict was over-general. Both containers are covered: a NON-text-wrapping
   # scroll panel a level up past my non-tracking @contents PanelWdgt (@parent.parent), and my direct parent

@@ -927,19 +927,31 @@ class WorldWdgt extends PanelWdgt
 
   _recalculateLayoutsBody: ->
 
-    # Defensive backstop: this loop is structurally convergent -- each _reLayout() either ends
-    # in markLayoutAsFixed() (so the widget is popped) or, on throw, is settled + banned by the
-    # catch below. If it ever fails to converge anyway, bail loudly instead of hanging the world
-    # (the freeze that masked the real error before task #18). Never fires in normal operation.
-    recalcIterationsCap = 100000
+    # DEFENSIVE ASSERTION -- NOT a convergence budget. (proper-layouts Stage 6, 2026-07-01.)
+    # This loop is a work-list DRAIN: each _reLayout() marks its chain-top valid (so it is popped),
+    # and _reFitMyTrackingContainerAfterSettle re-fits the chain-top's size-tracking container as a
+    # bounded O(depth) up-walk. Instrumenting the FULL suite (dpr1 + dpr2) measured a peak of 428
+    # iterations in one flush -- but that was 427 DISTINCT widgets with ZERO re-visits (one big tree
+    # settled at once, a pure drain). The only residual iteration is a small, bounded size-negotiation
+    # cycle for constrained NESTED containers (measured peak: 10 re-visits of a 5-widget
+    # Window -> VerticalStack -> ScrollPanel chain in macroWindowCellsInConstrainedScrollStackReflow) --
+    # so the loop still CONVERGES (fast + bounded) rather than strictly draining. The old
+    # recalcIterationsCap masked a possible non-convergence SILENTLY (log + abandon the work-list +
+    # ship a broken layout); that suppression is DELETED. What remains is a pure never-fire assertion
+    # at a generous-but-finite bound: if the drain ever fails to TERMINATE it is a BUG (a real
+    # non-terminating layout cycle), so THROW loudly rather than freeze the tab or silently ship
+    # broken layout. (Per-_reLayout errors are a different path, handled by the catch below.)
+    layoutIterationsSanityLimit = 100000
     recalcIterations = 0
 
     until @widgetsThatMaybeChangedLayout.length == 0
       recalcIterations++
-      if recalcIterations > recalcIterationsCap
-        console.error "RECALC_NONCONVERGENCE: recalculateLayouts did not converge after " + recalcIterationsCap + " iterations; bailing to avoid a freeze. Last widget: " + (tryThisWidget?.constructor?.name) + " spec=" + (tryThisWidget?.layoutSpec)
-        @widgetsThatMaybeChangedLayout = []
-        return
+      if recalcIterations > layoutIterationsSanityLimit
+        # Never fires in normal operation (peak measured 428, bound 100000). Reaching here means a real
+        # non-terminating layout cycle. console.error first (keeps the RECALC_NONCONVERGENCE token the
+        # determinism torture greps for), then THROW so it surfaces loudly instead of being tolerated.
+        console.error "RECALC_NONCONVERGENCE: recalculateLayouts did not terminate after " + layoutIterationsSanityLimit + " iterations. Last widget: " + (tryThisWidget?.constructor?.name) + " spec=" + (tryThisWidget?.layoutSpec)
+        throw new Error "Fizzygum: RECALC_NONCONVERGENCE -- recalculateLayouts did not terminate after " + layoutIterationsSanityLimit + " iterations (a non-terminating layout cycle). Last widget: " + (tryThisWidget?.constructor?.name)
       # starting from the last element,
       # find the first Widget which has a broken layout,
       # (and pop out of the queue all the Widgets we encounter
@@ -983,14 +995,27 @@ class WorldWdgt extends PanelWdgt
         # of widgets with broken layout. Go do a
         # _reLayout on it, so it might fix a bunch of those
         # on the chain (but not all)
-        tryThisWidget._reLayout()
         # (proper-layouts §4.3, 2026-07-01) ORDERED settle-time re-fit: now that this chain-top has SETTLED, re-fit
         # its size-tracking container so the container tracks the just-settled geometry. This REPLACES the deleted
         # mutation-time geometry seam (_announceGeometryChangeToContainer): because the content is fully settled when
         # this fires, the container reads its FINAL geometry and re-fits correctly in one visit -- no per-mutation
         # notification, and no convergence iteration from a container reading half-applied content. The method gates
         # on the parent being a tracking container (_reLayoutChildren?), so a non-tracking parent is a no-op.
-        tryThisWidget._reFitMyTrackingContainerAfterSettle()
+        #
+        # (proper-layouts Stage 6, 2026-07-01) NO-OP EARLY RETURN: only re-fit the container if this _reLayout
+        # actually CHANGED my frame (position OR extent). A size-tracking container fits itself to its content's
+        # FRAME, so if my frame is identical before and after I settle, re-fitting the container is provably a
+        # no-op. This was the dominant residual "re-visit": a chain-top re-enqueued only to be re-laid to the same
+        # box (e.g. a scroll panel 362x204 -> 362x204 after its content settled unchanged). Skipping it removes
+        # those wasted passes. Sound either way I am sized: if I am fit-to-content my frame moves WITH my content,
+        # so a real content change IS caught here; if I am fixed-size my container fits my fixed frame regardless
+        # of my subtree -- so an unchanged frame always means my container's fit is unchanged. Measured byte-exact
+        # across dpr1 / dpr2 / webkit + determinism torture; suite-wide peak re-visits dropped from 10 to 2 (the
+        # residual 2 being the genuine one-round bidirectional negotiation: top-down size, then bottom-up re-fit).
+        preL = tryThisWidget.left(); preT = tryThisWidget.top(); preW = tryThisWidget.width(); preH = tryThisWidget.height()
+        tryThisWidget._reLayout()
+        myFrameChanged = tryThisWidget.left() != preL or tryThisWidget.top() != preT or tryThisWidget.width() != preW or tryThisWidget.height() != preH
+        tryThisWidget._reFitMyTrackingContainerAfterSettle() if myFrameChanged
       catch err
         # We are INSIDE the recalculateLayouts flush here (_recalculatingLayouts is true), so this
         # block must do the ABSOLUTE MINIMUM and stay strictly non-flushing / non-invalidating:

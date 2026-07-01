@@ -208,11 +208,13 @@ class CaretWdgt extends BlinkerWdgt
   # The caret's layout step IS the scroll-follow. ScrollPanelWdgt.scrollCaretIntoView reaches its mark over a FEW
   # passes (its trailing keepContentsInScrollPanelWdgt clamp advances @contents only PARTWAY toward the target
   # each call), so this does ONE pass and converges through the flush's until-loop rather than a hand-rolled loop:
-  # a pass that scrolls @contents re-enqueues the scroll panel (the seam, in-pass) AHEAD of the caret, and the
-  # caret stays layoutIsValid==false so the loop re-runs it AFTER the panel settles -- iterating to a fixed point.
-  # Deterministic (same settled geometry in => same passes; the recalcIterationsCap backstop bounds the unlikely
-  # non-convergent case). The caret is isLayoutInert + childless, so there is no base _reLayout work to do (no
-  # bounds to fit, no children to place) -- this override is the whole layout step.
+  # a pass that scrolls @contents re-enqueues the scroll panel (via the settle-time re-fit that succeeded the
+  # deleted geometry seam -- _reFitMyTrackingContainerAfterSettle / __markForRelayout, in-pass) AHEAD of the caret,
+  # and the caret stays layoutIsValid==false so the loop re-runs it AFTER the panel settles -- iterating to a fixed
+  # point. Deterministic (same settled geometry in => same passes). This bounded multi-pass convergence is
+  # legitimate; only a true NON-TERMINATING cycle would ever hit WorldWdgt._recalculateLayoutsBody's sanity-limit
+  # assert. The caret is isLayoutInert + childless, so there is no base _reLayout work to do (no bounds to fit,
+  # no children to place) -- this override is the whole layout step.
   _reLayout: ->
     beforeT = @top() ; beforeL = @left()
     beforeParentT = @parent?.top() ; beforeParentL = @parent?.left()
