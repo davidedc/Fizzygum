@@ -205,22 +205,41 @@ class CaretWdgt extends BlinkerWdgt
   _requestScrollFollow: ->
     @_invalidateLayout()
 
-  # The caret's layout step IS the scroll-follow. ScrollPanelWdgt.scrollCaretIntoView reaches its mark over a FEW
-  # passes (its trailing keepContentsInScrollPanelWdgt clamp advances @contents only PARTWAY toward the target
-  # each call), so this does ONE pass and converges through the flush's until-loop rather than a hand-rolled loop:
-  # a pass that scrolls @contents re-enqueues the scroll panel (via the settle-time re-fit that succeeded the
-  # deleted geometry seam -- _reFitMyTrackingContainerAfterSettle / __markForRelayout, in-pass) AHEAD of the caret,
-  # and the caret stays layoutIsValid==false so the loop re-runs it AFTER the panel settles -- iterating to a fixed
-  # point. Deterministic (same settled geometry in => same passes). This bounded multi-pass convergence is
-  # legitimate; only a true NON-TERMINATING cycle would ever hit WorldWdgt._recalculateLayoutsBody's sanity-limit
-  # assert. The caret is isLayoutInert + childless, so there is no base _reLayout work to do (no bounds to fit,
+  # The caret's layout step IS the scroll-follow. It does ONE pass of _oneScrollCaretIntoViewPassNoSettle then marks
+  # itself layout-fixed once no CORRECTIVE container move was needed (see the stable check below). It settles in a
+  # SINGLE visit for a caret that only repositions along its line (e.g. typing across a wrapping field -- the common
+  # case), and in one move + one confirming visit for a caret that also had to scroll its panel. Two single-pass
+  # properties make that hold (both 2026-07-01): (1) _oneScrollCaretIntoViewPassNoSettle places the caret at its
+  # TRUE, un-clamped slot position, so ScrollPanelWdgt.scrollCaretIntoView computes the FULL scroll in ONE call
+  # (previously the caret was clamped to y>=0, so a far scroll advanced only one viewport-step per pass and the
+  # content crawled to its mark over many re-visits); (2) convergence is detected on the CONTAINERS, not on the
+  # caret's own reposition (which is an exact, idempotent one-shot needing no confirming pass). A move pass that DID
+  # scroll re-enqueues the scroll panel (via the settle-time re-fit that succeeded the deleted geometry seam --
+  # _reFitMyTrackingContainerAfterSettle / __markForRelayout, in-pass) AHEAD of the caret, and the caret stays
+  # layoutIsValid==false so the loop re-runs it AFTER the panel settles, confirming convergence. This iterates via
+  # the flush's until-loop, not a hand-rolled loop; it is deterministic (same settled geometry in => same passes)
+  # and bounded (only a true NON-TERMINATING cycle would ever hit WorldWdgt._recalculateLayoutsBody's sanity-limit
+  # assert). The caret is isLayoutInert + childless, so there is no base _reLayout work to do (no bounds to fit,
   # no children to place) -- this override is the whole layout step.
   _reLayout: ->
-    beforeT = @top() ; beforeL = @left()
     beforeParentT = @parent?.top() ; beforeParentL = @parent?.left()
+    beforeTargetT = @target?.top() ; beforeTargetL = @target?.left()
     @_oneScrollCaretIntoViewPassNoSettle()
-    # converged once neither the caret nor its (scrolled) container moved on the last pass
-    stable = @top() == beforeT and @left() == beforeL and @parent?.top() == beforeParentT and @parent?.left() == beforeParentL
+    # converged when no CORRECTIVE CONTAINER move was needed this pass -- neither the scroll container (my parent =
+    # the scroll panel's contents) nor the target text had to move to keep me in view. The caret's OWN reposition
+    # to its slot is an exact, idempotent one-shot, so a pass that ONLY repositioned the caret is already at the
+    # fixed point and needs no confirming re-visit.
+    #   INVARIANT this leans on: placing the caret at slotCoordinates is idempotent (a direct absolute move), and my
+    #   target/panel settle BEFORE me (the flush drains parent-first; the caret is freefloating + inert, drained
+    #   last). Marking fixed here can only REDUCE settle iterations vs the old "did anything move" check -- it can
+    #   never ADD a cycle. If a future text-relayout change ever broke that invariant (so my slot moved AFTER I
+    #   marked fixed), TWO backstops catch it, NEITHER silent: (1) a wrong caret position fails the byte-exact
+    #   SystemTest suite -- the caret is screenshotted in ~a dozen tests (macroWrappingTextFieldResizesOK,
+    #   macroMultilineTextInputScrollsWell, the *CaretBroughtIntoView* pair, macroTextWdgtCaretResizing, ...); and
+    #   (2) an actual non-terminating cycle throws RECALC_NONCONVERGENCE at WorldWdgt._recalculateLayoutsBody's
+    #   sanity limit, naming this widget (and the determinism torture greps for that token). So a regression here
+    #   surfaces loudly and is diagnosable -- it does not hang the tab or render 1px-off unnoticed.
+    stable = @parent?.top() == beforeParentT and @parent?.left() == beforeParentL and @target?.top() == beforeTargetT and @target?.left() == beforeTargetL
     if stable
       @markLayoutAsFixed()
     # else: stay layoutIsValid==false -- still in the queue, re-processed after the just-enqueued panel settles
@@ -266,7 +285,15 @@ class CaretWdgt extends BlinkerWdgt
           pos.x += right - @target.right()
           @target._moveRightSideTo right
       @show()
-      @_applyMoveToAndNotify pos.floor()
+      # Place the caret at its TRUE slot position, integer-floored but WITHOUT Point.floor()'s clamp-to->=0
+      # (Math.max(_, 0)): when the content is scrolled up, a slot above the world origin has a NEGATIVE absolute y.
+      # Clamping the caret to 0 there capped scrollCaretIntoView -- which scrolls by (ft - caretWidget.top()) -- at
+      # ONE viewport-step (ft) per pass, so a far caret converged over MANY settle re-visits (contents crawled to
+      # its mark in +ft steps). Placing the caret at its real (possibly negative, off-viewport, harmlessly clipped)
+      # position lets scrollCaretIntoView compute the FULL scroll delta in ONE pass -- byte-identical fixed point,
+      # but the follow now settles in a single move + verify instead of distance/ft passes. The final resting
+      # position is always in view (positive), so the rendered caret is unchanged.
+      @_applyMoveToAndNotify new Point (Math.floor pos.x), (Math.floor pos.y)
 
       if @_amIDirectlyInsideScrollPanelWdgt() and @target.isScrollable
         @parent.parent.scrollCaretIntoView @
