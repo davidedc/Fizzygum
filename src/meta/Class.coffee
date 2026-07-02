@@ -65,10 +65,24 @@ class Class
     # coffeescript won't compile "super" unless it's an instance
     # method (i.e. if it comes inside a class), so we need to
     # translate that manually into valid CS that doesn't use super.
-    aString = aString.replace(/super\(\)/g, @name + ".__super__." + fieldName + ".call(this)")
-    aString = aString.replace(/super /g, @name + ".__super__." + fieldName + ".call this, ")
-    aString = aString.replace(/super\(/g, @name + ".__super__." + fieldName + ".call(this, ")
-    aString = aString.replace(/super$/gm, @name + ".__super__." + fieldName + ".apply(this, arguments)")
+    #
+    # ORDER MATTERS -- these are sequential text substitutions on the method source:
+    #  1. `super()`                    -> a no-argument super call.
+    #  2. bare `super` ENDING THE LINE -> forward ALL arguments (.apply(this, arguments)). We tolerate
+    #     trailing whitespace and/or an inline `#` comment before the newline (the comment is
+    #     re-appended). This MUST come before rule 4: a trailing space -- e.g. before an inline
+    #     comment, or stray end-of-line whitespace -- would otherwise be caught by rule 4 as
+    #     `.call this, ` with NO effective argument, SILENTLY dropping the forwarded arguments. That
+    #     miscompiled `return super  # Path B` (StretchableEditableWdgt) into a no-arg super call,
+    #     which sized the app content to its 5px minimum extent -- the "thin vertical slice" bug.
+    #  3. `super(args)`                -> a call with those explicit args.
+    #  4. `super <args>`               -> a call with those space-separated args.
+    superBase = @name + ".__super__." + fieldName
+    aString = aString.replace(/super\(\)/g, superBase + ".call(this)")
+    aString = aString.replace /super[ \t]*(#[^\n]*)?$/gm, (match, comment) ->
+      superBase + ".apply(this, arguments)" + (if comment then "  " + comment else "")
+    aString = aString.replace(/super\(/g, superBase + ".call(this, ")
+    aString = aString.replace(/super /g, superBase + ".call this, ")
 
   # Coffeescript adds some helper functions at the top of the compiled code:
   #

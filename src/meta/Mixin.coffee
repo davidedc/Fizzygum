@@ -30,8 +30,15 @@ class Mixin
     # variable... and then at runtime here we use that variable to
     # implement super
 
-    aString = aString.replace(/super$/gm, "window[@[arguments.callee.name + '_class_injected_in']].__super__[arguments.callee.name].apply(this, arguments)")
-    aString = aString.replace(/super /g, "window[@[arguments.callee.name + '_class_injected_in']].__super__[arguments.callee.name].call this, ")
+    # ORDER MATTERS -- see Class._equivalentforSuper for the full rationale. A bare `super` ending the
+    # line (tolerating trailing whitespace and/or an inline `#` comment, which is re-appended) forwards
+    # ALL arguments, and MUST run before the `super <arg>` rule below: otherwise a trailing space --
+    # before an inline comment, or as stray end-of-line whitespace -- is caught there as `.call this, `
+    # with no effective argument, SILENTLY dropping the forwarded arguments (the thin-slice-bug class).
+    mixinSuperBase = "window[@[arguments.callee.name + '_class_injected_in']].__super__[arguments.callee.name]"
+    aString = aString.replace /super[ \t]*(#[^\n]*)?$/gm, (match, comment) ->
+      mixinSuperBase + ".apply(this, arguments)" + (if comment then "  " + comment else "")
+    aString = aString.replace(/super /g, mixinSuperBase + ".call this, ")
 
     # TODO un-translated cases as of yet
     # /super\(\)/g -> ...???...
