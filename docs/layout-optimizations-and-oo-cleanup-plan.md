@@ -44,14 +44,32 @@ there is superseded; mine the two-flag *mechanics*, ignore the "delete the seam"
 **Recommendation.** The one worth doing if any is — but only for cleanliness/efficiency, with eyes open that it is a big
 determinism-gated change for no behaviour gain. Timebox; abandon if it can't be made byte-identical.
 
-### Opt-2 — Freefloating walk-up TODO  (assessment §4.5)
-**What.** The settle loop's walk-up stops at the *first valid* parent rather than the *topmost invalid* one
-(`WorldWdgt._recalculateLayoutsBody` ~:987, and the code's own TODO there), so a freefloating child can be laid out
-twice — first against a stale parent size. Stop at the last-invalid-on-the-way-up.
-**Why.** Removes redundant double-layout for freefloating children.
-**Risk / gate.** Local but cadence-sensitive (it changes *which* widget the loop lays out first) → torture. Largely
-**subsumed by Opt-1** (the walk-down eliminates the same double-layout structurally); do Opt-2 standalone only if Opt-1
-is declined.
+**⚠ FEASIBILITY FINDING (2026-07-02, fail-fast probe — reverted).** A ~2-line probe reversed the loop's processing order
+(head-scan / FIFO instead of tail-scan / LIFO, same chain-top logic): **byte-exact 165/165 at dpr1/dpr2/webkit.** ⇒ the
+settled layout is an **order-independent unique fixpoint** — any correct traversal yields the same pixels (this is the
+durable result; it de-risks Opt-2 and any future order-level loop work). **BUT** the deeper machinery read shows the
+plan's specific two-flag design is a **SEMANTIC flow-change, not a clean byte-exact refactor:** Fizzygum's
+`_invalidateLayout` **climbs and marks the whole ancestor chain `needsLayout`** (container-first — the chain-top
+container arranges its subtree in one `_reLayout`), whereas the React two-flag is **child-first** (ancestors get only
+`hasDirtyDescendant`, and the container re-arranges via the settle-time up-edge instead of the climb). Two honest builds,
+neither a clear win: **(C)** the child-first two-flag gets O(1) enqueue + Opt-2-for-free but is that rewrite of the
+invalidation model — real breakage risk (non-convergence / crash), byte-exactness only empirically checkable; **(B)** a
+climb-keeping walk-down is byte-exact *by construction* but is the current loop plus a `hasDirtyDescendant` flag whose
+CLEARING logic is a fresh bug surface — marginal legibility, arguably *more* complex. Reward either way: zero
+behaviour/pixel change; the flush is not a measured bottleneck. **Assessment: BANK Opt-1** (not the clean win the plan
+assumed); if ever revisited, do (C) empirically (gauntlet is the gate) and abandon on any non-byte-exact.
+
+### Opt-2 — Freefloating walk-up TODO  (assessment §4.5) — ✅ DONE 2026-07-02
+**What (done).** The settle loop's walk-up used to break at the first FREEFLOATING boundary, so a freefloating child
+became the chain-top even when its parent was ALSO invalid → it was laid out first against the parent's STALE size, then
+again once the parent settled. Now the walk-up climbs while the parent is invalid and stops at the LAST-invalid widget
+(`WorldWdgt._recalculateLayoutsBody`: `while tryThisWidget.parent? and not tryThisWidget.parent.layoutIsValid`), so the
+parent lays out first and the freefloating child settles once. Implements the long-standing TODO that lived there.
+**Why.** Removes the redundant double-layout for freefloating children (a StretchablePanel's fractional children, etc.).
+**Result.** Byte-exact — no behaviour change. Sound because the settled layout is an **order-independent fixpoint**
+(see the Opt-1 finding below), so laying the parent out first only removes a redundant pass. Gated: `./fg gauntlet`
+(dpr1/dpr2/webkit 165/165 + apps/tiernaming/settle, **0 inspector recaptures**) + the danger torture (dpr2-fastest-s8,
+dpr2-fast-s8, dpr2-fastest-s4, dpr1-fastest-s4 — all **0 failed, RECALC_NONCONVERGENCE absent**). Fizzygum `WorldWdgt.coffee`.
 
 ### Opt-3 — Flush-count hygiene in multi-mutation handlers  (assessment §4.6)
 **What.** A handler doing several geometry mutations self-settles once *each*. Where a gesture changes both extent and

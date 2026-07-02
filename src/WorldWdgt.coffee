@@ -965,29 +965,23 @@ class WorldWdgt extends PanelWdgt
         else
           break
 
-      # now that you have a Widget with a broken layout
-      # go up the chain of broken layouts as much as
-      # possible
-      # TODO: it would be more correct to start from the
-      # top-most invalid widget, i.e. on the way to the top,
-      # stop at the last widget with an invalid layout
-      # instead of stopping at the first widget with a
-      # valid layout...
-      # The reason is that a freefloating widget might
-      # still need to be resized according to the size
-      # of its parent, in which case you want the parent
-      # to do its layout first, and then the freefloating
-      # child to do its layout.
-      # Otherwise what happens is that the freefloating
-      # child will do its layout first according to the
-      # wrong size of the parent, and then the
-      # parent will have to re-layout it again, so the
-      # _reLayout of the freefloating child is called twice,
-      # the first time wrongly.
-
-      while tryThisWidget.parent?
-        if tryThisWidget.isFreeFloating() or tryThisWidget.parent.layoutIsValid
-          break
+      # now that you have a Widget with a broken layout, go up the chain of broken layouts as much
+      # as possible: climb to the TOP-MOST invalid widget -- on the way up, stop at the LAST widget
+      # with an invalid layout (parent valid or absent), NOT at the first freefloating boundary.
+      # (Opt-2, 2026-07-02 -- implements the long-standing TODO that used to live here.) A
+      # freefloating widget may be sized/positioned FROM its parent (e.g. a StretchablePanel's
+      # fractional children), so the parent must lay out FIRST and the freefloating child settle
+      # AFTER. The old `tryThisWidget.isFreeFloating()` early-break made the freefloating child the
+      # chain-top, so it was laid out first against the parent's STALE size and then AGAIN once the
+      # parent settled -- a wasted double-layout. Climbing past it lays the parent out first; the
+      # freefloating child then settles once, correctly. (This does NOT pull the freefloating child
+      # into the parent's own _reLayout -- the freefloating-skip in _invalidateLayout keeps that
+      # boundary; the climb only matters when the parent is ALSO invalid from its own source, and the
+      # freefloating child still settles as its own chain-top on a later iteration, now against the
+      # parent's FINAL size.) Byte-exact: the settled layout is an order-independent fixpoint
+      # (verified -- reversing the loop's processing order is 165/165 at dpr1/dpr2/webkit), so laying
+      # the parent out first only removes a redundant pass, it does not change the result.
+      while tryThisWidget.parent? and not tryThisWidget.parent.layoutIsValid
         tryThisWidget = tryThisWidget.parent
 
       try
