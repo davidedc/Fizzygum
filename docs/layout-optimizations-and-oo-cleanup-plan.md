@@ -562,11 +562,21 @@ insurance to run one round after step 2 since the diff is wide.
 
 ---
 
-## §4 — Tier C (✅ GREENLIT — do it NEXT session): coalesce the resize/move handle drags
+## §4 — Tier C (✅ DONE 2026-07-02): coalesce the resize/move handle drags
 
-> **Status (2026-07-02): APPROVED by the owner. The measurement gate ran (below) and the owner elected to PROCEED.**
-> Scheduled for a dedicated next session; NOT yet implemented. The whole change is ONE commit: the four `*Coalesced`
-> entrypoints + the switched handle arms + the caller-allowlist static guard (all required together).
+> **Status (2026-07-02): ✅ DONE.** Shipped as the Tier C commit (see §6). Landed as designed below, with ONE
+> owner-directed refinement made during execution: the whole `*Coalesced` family is `_`-PRIVATE (stream-handler-only,
+> not a public programmatic API), so the four new entrypoints are `_setExtentCoalesced` / `_moveToCoalesced` /
+> `_setWidthCoalesced` / `_setHeightCoalesced`, AND the pre-existing public `setMaxDimCoalesced` was renamed to
+> `_setMaxDimCoalesced` for family consistency (its old "PUBLIC, anyone may use it" comment contradicted the new
+> rule-[O] restriction). A `_`-private entrypoint reaches its `_<x>NoSettle` core directly in BOTH the coalesced and
+> the OFF (self-settle) branch — it must not call the public setter (would reach up into the self-flushing layer,
+> rules [A]/[G]); the OFF branch's `@_settleLayoutsAfter => core` is byte-identical to the public setter.
+> The soundness pre-check PASSED cleanly: each public setter's deferred core records the desired geometry +
+> `@_invalidateLayout` (exactly like `_setMaxDimNoSettle`), so it reaches the end-of-cycle flush — `_applyExtent` (the
+> arrange corner) was NOT the core, so the flagged design fork did not arise. Verified byte-identical: gauntlet
+> dpr1/dpr2/webkit 165/165 + apps + tiernaming + settle; the §0.5 four-config danger torture SUITE-OK with
+> `RECALC_NONCONVERGENCE` absent; one benign inspector member-list recapture.
 
 **What.** `HandleWdgt.nonFloatDragging` (`HandleWdgt.coffee` :252–269) issues one self-settling public setter per drag
 event (`setExtent` :261 / `moveTo` :263 / `setWidth` :265 / `setHeight` :269, mutually exclusive by handle type) — so N
@@ -625,9 +635,12 @@ out-of-allowlist `*Coalesced` call, then passes clean).
   gate; review it against assessment §2.3/§4.1.
 - **Tier B**: `./fg gauntlet` after each of the two rename steps; expect the benign inspector recapture; one torture
   round after step 2 as insurance.
-- **Tier C** (next session): measurement already done (§4). One commit = 4 `*Coalesced` entrypoints + switched handle
-  arms + the caller-allowlist static guard; `./fg build` (guard: plant an out-of-allowlist call → must fail, then clean)
-  + `./fg gauntlet` + full danger torture; expect no recapture.
+- **Tier C ✅ DONE**: the 4 `_`-private `*Coalesced` entrypoints (+ the `setMaxDimCoalesced` family rename) + switched
+  handle arms + the rule-[O] caller-allowlist guard. `./fg build` clean + the [O] bite-test (a planted out-of-allowlist
+  call failed the build, removing it built clean) + `./fg gauntlet` (dpr1/dpr2/webkit 165/165 + apps/tiernaming/settle)
+  + the §0.5 four-config danger torture (`RECALC_NONCONVERGENCE` absent). ONE benign inspector member-list recapture
+  (the 9 added `_`-methods lengthen the inspected list) — not the "no recapture" the pre-plan expected, but the same
+  pre-authorised member-list class as Tier A/B. See §4/§6.
 - **Ask before commit/push**; `git commit -F <file>` (§0.5 commit protocol).
 
 ## §6 — Landed record (2026-07-01 → 07-02, all committed; kept for cold-runnability)
@@ -667,6 +680,21 @@ out-of-allowlist `*Coalesced` call, then passes clean).
   §5 code map carries the explicit MEANING-SWAP ledger line (not a plain `(née …)`). 111 src files (+623/−622, pure
   rename); 11 benign inspector-member-list recaptures. Gauntlet dpr1/dpr2/webkit 165/165 + apps + tiernaming + settle
   green; dpr2-fastest-s8 torture clean, `RECALC_NONCONVERGENCE` absent.
+- **Tier C ✅ (`5a084e51` + tests `03d495d70`, 2026-07-02).** Coalesced the resize/move handle drags (§4): factored a
+  non-settling `_<x>NoSettle` core out of `setExtent`/`moveTo`/`setWidth`/`setHeight` and added one `_`-PRIVATE
+  coalesced entrypoint per stream (`_setExtentCoalesced`/`_moveToCoalesced`/`_setWidthCoalesced`/`_setHeightCoalesced`);
+  switched the four `HandleWdgt.nonFloatDragging` arms to them, so N per-frame drag settles collapse into the ONE
+  end-of-cycle flush (the `_setMaxDimCoalesced` precedent). Owner-directed refinement: the whole family is `_`-private
+  (stream-handler-only), and the pre-existing public `setMaxDimCoalesced` was renamed `_setMaxDimCoalesced` to match;
+  each entrypoint reaches its `_<x>NoSettle` core directly in both branches (a `_`-private method must not call the
+  public setter — rules [A]/[G]). New `check-layering.js` rule **[O]**: a `*Coalesced` CALL may appear only inside an
+  allowlisted stream handler (`COALESCED_CALLER_ALLOWLIST = {nonFloatDragging}`) — the caller side the
+  `_coalescedDeclarationDepth`/`auditUndeclaredEndOfCycle` machinery (which enforces the CONVERSE) does not cover;
+  proven to bite a planted out-of-allowlist call. Docs: the `[O]` row was added to `layering-naming-convention.md` +
+  `lint-and-static-checks.md` (which also gained its missing `[N]` row → contiguous A–O), and
+  `coalescing-measurement.md` was updated. Byte-identical (gauntlet ×3 engines + apps/tiernaming/settle + the §0.5
+  four-config danger torture, `RECALC_NONCONVERGENCE` absent); one benign inspector member-list recapture (the 9 new
+  `_`-methods lengthen the inspected member list).
 
 ## §7 — Recommended sequencing
 
@@ -676,9 +704,10 @@ out-of-allowlist `*Coalesced` call, then passes clean).
 2. **Tier B ✅ DONE (2026-07-02, `ad0bf5c7` + tests `c2ed1476`)** — the owner confirmed the name pair + accepted the
    meaning swap (§3 ⚠); ran after A6 (pre-shrank the surface) and A8 (de-staled the convention doc, which Tier B then
    rewrote). Two mechanical steps, each gated. See §6.
-3. **Tier C ✅ GREENLIT (owner, 2026-07-02, measurement done)** — do it next session as ONE commit: the four
-   `*Coalesced` entrypoints + the switched `HandleWdgt.nonFloatDragging` arms + the `*Coalesced` caller-allowlist static
-   guard (`check-layering.js`). See §4 for scope, the frame-time numbers, and the guard spec.
+3. **Tier C ✅ DONE (2026-07-02)** — coalesced the `HandleWdgt.nonFloatDragging` arms onto the one end-of-cycle flush
+   via four new `_`-private `*Coalesced` entrypoints (+ the `setMaxDimCoalesced`→`_setMaxDimCoalesced` family rename)
+   and the `check-layering.js` caller-allowlist rule **[O]**. Byte-identical; see §4 for the landed detail and §6 for
+   the record.
 4. Nothing else: the engine core needs no work (§1), and the Appendix items stay closed.
 
 ---
