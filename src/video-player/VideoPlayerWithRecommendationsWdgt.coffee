@@ -127,7 +127,6 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
 
   # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
   _reLayout: (newBoundsForThisLayout) ->
-    #if !window.recalculatingLayouts then debugger
 
     if @_handleCollapsedStateShouldWeReturn() then return
 

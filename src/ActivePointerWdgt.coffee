@@ -706,7 +706,6 @@ class ActivePointerWdgt extends Widget
   _applyMoveBy: (delta) ->
     if delta.isZero() then return
     world.disableTrackChanges()
-    #console.log "move 2"
     @__breakMoveResizeCaches()
     super delta
     world.maybeEnableTrackChanges()

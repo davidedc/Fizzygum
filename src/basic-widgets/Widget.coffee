@@ -810,7 +810,7 @@ class Widget extends TreeNode
     finally
       world._inLayoutMutation = false
 
-  setBounds: (aRectangle, widgetStartingTheChange = nil) ->
+  setBounds: (aRectangle) ->
     @_settleLayoutsAfter =>
       if not @isFreeFloating()
         return
@@ -1331,10 +1331,8 @@ class Widget extends TreeNode
         if widgetStartingTheChange?.changeShouldRememberFractionalGeometry?() and @parent?
           @rememberFractionalPositionInHoldingPanel()
 
-  # PRIVATE COALESCED move entrypoint (mirrors _setExtentCoalesced): restricted to per-event STREAM handlers
-  # (HandleWdgt.nonFloatDragging moveHandle) by check-layering [O]. BOTH branches reach the _moveToNoSettle core
-  # directly (a _-private entrypoint must not call the public moveTo -- rules [A]/[G]). Default coalescingEnabled ON
-  # coalesces to the ONE end-of-cycle settle; OFF self-settles (byte-identical to moveTo; the A/B measurement switch).
+  # PRIVATE COALESCED move entrypoint -- see the FAMILY comment on _setMaxDimCoalesced (rule [O]
+  # caller-allowlist; world.coalescingEnabled A/B switch; BOTH branches reach the _moveToNoSettle core).
   _moveToCoalesced: (aPoint, widgetStartingTheChange = nil) ->
     if world?.coalescingEnabled
       @_coalescedDeclare => @_moveToNoSettle aPoint, widgetStartingTheChange
@@ -1469,9 +1467,9 @@ class Widget extends TreeNode
   # The polymorphic extent-apply -- the override DISPATCH POINT (SimpleVerticalStackPanelWdgt / ScrollPanelWdgt /
   # TextWdgt / SliderWdgt / ListWdgt / the stretchables specialize it). The base is a pure pass-through to
   # _applyExtentBase, exactly like _applyMoveBy -> _applyMoveByBase: ONE body per behaviour, two names for
-  # dispatch (the bare twin is the override-BYPASSING base apply the top-down arrange uses). "AndNotify" is
-  # historical -- the notify seam was deleted 2026-07-01, nothing notifies; truthful rename planned
-  # (docs/layout-optimizations-and-oo-cleanup-plan.md §3).
+  # dispatch (the bare twin is the override-BYPASSING base apply the top-down arrange uses). Nothing notifies:
+  # the notify-by-mutation seam was deleted 2026-07-01 (the settle-time up-edge does any container re-fit), and
+  # the historical *AndNotify names were renamed away 2026-07-02 (Tier B -- this method WAS _applyExtentAndNotify).
   _applyExtent: (aPoint) ->
     @_applyExtentBase aPoint
 
@@ -1507,13 +1505,8 @@ class Widget extends TreeNode
         if widgetStartingTheChange?.changeShouldRememberFractionalGeometry?() and @parent?
           @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
 
-  # PRIVATE COALESCED extent entrypoint (mirrors _setMaxDimCoalesced) -- restricted to per-event STREAM handlers
-  # (HandleWdgt.nonFloatDragging), NOT for discrete/programmatic callers; the restriction is enforced statically by
-  # check-layering rule [O] (COALESCED_CALLER_ALLOWLIST), which is also why it is _-private. It declares the mutation
-  # so its layout flush rides the ONE end-of-cycle settle instead of self-settling per drag event. Default
-  # coalescingEnabled ON => byte-identical to setExtent (render is once-per-frame after all events); OFF self-settles
-  # per call (the A/B measurement switch). BOTH branches reach the _setExtentNoSettle core directly -- a _-private
-  # entrypoint must not call the public setExtent (that would reach UP into the self-flushing layer; rules [A]/[G]).
+  # PRIVATE COALESCED extent entrypoint -- see the FAMILY comment on _setMaxDimCoalesced (rule [O]
+  # caller-allowlist; world.coalescingEnabled A/B switch; BOTH branches reach the _setExtentNoSettle core).
   _setExtentCoalesced: (aPoint, widgetStartingTheChange = nil) ->
     if world?.coalescingEnabled
       @_coalescedDeclare => @_setExtentNoSettle aPoint, widgetStartingTheChange
@@ -1616,8 +1609,9 @@ class Widget extends TreeNode
   # container that is mid its OWN _positionAndResizeChildren now CONVERGES (one extra convergence pass instead
   # of being skipped) rather than looping forever -- which is why the skip is no longer needed for correctness.
   # (proper-layouts Phase E, 2026-06-28) The @_adjustingContentsBounds field itself is now GONE too: its last
-  # use was the per-arrange re-entrancy guard, retired by giving each container arrange a NON-re-applying self-resize
-  # (SimpleVerticalStackPanelWdgt._resizeOwnWidthSkippingChildRelayout/Height).
+  # use was the per-arrange re-entrancy guard, retired by having each container arrange apply its own geometry
+  # through the override-bypassing _applyExtentBase (the interim _resizeOwn*SkippingChildRelayout helpers were
+  # inlined away in Tier D, 2026-07-02).
   # (Stage 5, 2026-07-01) The notify-by-mutation geometry seam the immediate mutators used to fire is fully DELETED:
   # its in-pass half is now the ordered settle-time re-fit above (_reFitMyTrackingContainerAfterSettle -- see that
   # method's comment for the mechanism + the reverse-probe record), its off-pass half the uniform dirty-tree (bare
@@ -1652,9 +1646,8 @@ class Widget extends TreeNode
         @desiredExtent = newExtent
         @_invalidateLayout()
 
-  # PRIVATE COALESCED width entrypoint (mirrors _setExtentCoalesced): restricted to the per-event
-  # resizeHorizontalHandle drag STREAM by check-layering [O]. BOTH branches reach the _setWidthNoSettle core (no
-  # public setWidth call -- rules [A]/[G]). Default ON coalesces; OFF self-settles (byte-identical to setWidth).
+  # PRIVATE COALESCED width entrypoint -- see the FAMILY comment on _setMaxDimCoalesced (rule [O]
+  # caller-allowlist; world.coalescingEnabled A/B switch; BOTH branches reach the _setWidthNoSettle core).
   _setWidthCoalesced: (width) ->
     if world?.coalescingEnabled
       @_coalescedDeclare => @_setWidthNoSettle width
@@ -1688,9 +1681,8 @@ class Widget extends TreeNode
         @desiredExtent = newExtent
         @_invalidateLayout()
 
-  # PRIVATE COALESCED height entrypoint (mirrors _setExtentCoalesced): restricted to the per-event
-  # resizeVerticalHandle drag STREAM by check-layering [O]. BOTH branches reach the _setHeightNoSettle core (no
-  # public setHeight call -- rules [A]/[G]). Default ON coalesces; OFF self-settles (byte-identical to setHeight).
+  # PRIVATE COALESCED height entrypoint -- see the FAMILY comment on _setMaxDimCoalesced (rule [O]
+  # caller-allowlist; world.coalescingEnabled A/B switch; BOTH branches reach the _setHeightNoSettle core).
   _setHeightCoalesced: (height) ->
     if world?.coalescingEnabled
       @_coalescedDeclare => @_setHeightNoSettle height
@@ -3814,7 +3806,9 @@ class Widget extends TreeNode
   setMaxDim: (overridingMaxDim) ->
     @_settleLayoutsAfter => @_setMaxDimNoSettle overridingMaxDim
 
-  # PRIVATE COALESCED entrypoint -- the first of the *Coalesced family. Same EFFECT as the private
+  # PRIVATE COALESCED entrypoint -- the first of the *Coalesced family. THIS is the family's canonical comment
+  # -- the four geometry entrypoints (_setExtentCoalesced / _moveToCoalesced / _setWidthCoalesced /
+  # _setHeightCoalesced) reference it. Same EFFECT as the private
   # _setMaxDimNoSettle core, but INTENTION-REVEALING: it DECLARES that this is an intentional per-event-stream
   # mutation (a drag / scroll / key burst) whose layout flush should ride the ONE end-of-cycle settle instead of
   # self-settling per call -- so a stream draining many mutations per frame collapses N flushes into 1. RESTRICTED
@@ -4019,7 +4013,6 @@ class Widget extends TreeNode
     @layoutIsValid = true
 
   _reLayout: (newBoundsForThisLayout) ->
-    #if !window.recalculatingLayouts then debugger
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
 

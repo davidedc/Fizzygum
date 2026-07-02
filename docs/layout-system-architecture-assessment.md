@@ -773,6 +773,7 @@ steps:
   née `_applyOwnArrangedWidth/Height` → base `Widget::_applyExtent`, which fires the up-notification seam but
   skips the override's `_reLayoutChildren`), removing
   the last synchronous self-re-entry the guard caught. Byte-identical by construction. **The boolean is now 100% gone.**
+  *(Tier D, 2026-07-02, later inlined those helpers away — every arrange self-resize is now a direct `_applyExtentBase` call, and the `parentWillSizeMe` parameter is deleted.)*
 
 So the spearhead boolean fell *cheaply* — and that freed the campaign to pursue this entry's actual prescription, the
 **general pure measure**, which then landed in two further arcs:
@@ -1017,16 +1018,16 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
   **green / 0 as of `c5ae7697`**); paint-read-only `paint-readonly-audit/run-paint-readonly-gate.sh` (+
   `paint-readonly-prelude.js`).
 - **Containers:** `SimpleVerticalStackPanelWdgt._positionAndResizeChildren` ~:212 (container-child read-back /
-  hand-forward ~:266, leaf-child pure measure + non-notifying apply ~:269, height consumed ~:301; self-resize via
-  `_resizeOwnWidthSkippingChildRelayout` / `_resizeOwnHeightSkippingChildRelayout` (née `_applyOwnArrangedWidth/Height`)
-  ~:125/~:129, the latter used ~:314 — the per-arrange
+  hand-forward ~:266, leaf-child pure measure + non-notifying apply ~:269, height consumed ~:301; self-resize
+  applied directly via `_applyExtentBase` (the interim `_resizeOwn*SkippingChildRelayout` helpers, née
+  `_applyOwnArrangedWidth/Height`, were inlined away — Tier D 2026-07-02) — the per-arrange
   `@_adjustingContentsBounds` re-entrancy guard that used to sit atop this method was DELETED in proper-layouts Phase E,
   §4.1) · `VerticalStackLayoutSpec.getWidthInStack` ~:31 (elasticity field ~:12) · `ScrollPanelWdgt._reLayout` ~:302 /
   `_reLayoutChildren` ~:288 / `_positionAndResizeChildren` ~:332 (pure-measure content frame
   `subWidgetsMergedPreferredBounds` ~:386/~:388, non-content-sizing fallback `subWidgetsMergedFullBounds` ~:390,
   non-notifying frame commit `_commitBounds` ~:437, `keepContentsInScrollPanelWdgt` clamp via `_applyMoveByBase`
   ~:454–460, `_reLayoutScrollbars` ~:116 via `_applyExtentBase` / `_applyMoveToBase` ~:165/170/186/191,
-  `parentWillSizeMe` content-arrange flag ~:347) / public content endpoints `add` ~:206 · `addMany` ~:229 ·
+  the `parentWillSizeMe` content-arrange flag was deleted, Tier D 2026-07-02) / public content endpoints `add` ~:206 · `addMany` ~:229 ·
   `_showResizeAndMoveHandlesAndLayoutAdjustersNoSettle` core ~:237 (public `showResizeAndMoveHandlesAndLayoutAdjusters`
   wrapper inherited from `Widget` ~:3111) · `WindowWdgt.buildAndConnectChildren` ~:436 / `_buildAndConnectChildrenNoSettle`
   ~:439 (single settle, not a batch) / `_positionAndResizeChildren` ~:527 / `preferredExtentForWidth` ~:55.

@@ -131,13 +131,14 @@ class ScrollPanelWdgt extends PanelWdgt
     # the cross-method seam check in Widget._reFitContainer suppressed the bars' raw resizes below from
     # re-fitting ME (the panel). That check was deleted in Phase D, so the save/restore was inert and is gone
     # too. (proper-layouts Phase E, 2026-06-28) The @_adjustingContentsBounds field is now fully DELETED: its
-    # last use -- the _positionAndResizeChildren re-entrancy guard -- was retired by the non-re-applying
-    # self-resize (SimpleVerticalStackPanelWdgt._resizeOwnWidthSkippingChildRelayout/Height).
+    # last use -- the _positionAndResizeChildren re-entrancy guard -- was retired by the arrange applying its
+    # own geometry through the override-bypassing _applyExtentBase (the interim _resizeOwn*SkippingChildRelayout
+    # helpers were inlined away in Tier D, 2026-07-02).
     # (§4.2 Stage 3, 2026-06-29) The bars below now apply their geometry via the NON-notifying arrange twins
     # (_applyExtentBase / _applyMoveToBase) so they no longer fire the re-fit seam back at ME: the bars
     # are chrome I own and place from my own size, never affecting my content-fit, so the seam's self-re-enqueue
-    # (the capstone's Pattern C) was a pure redundant confirm pass. (The seam itself still fires for EXTERNAL
-    # content changes -- Intent-1 -- until Stage 4/5.)
+    # (the capstone's Pattern C) was a pure redundant confirm pass. (The whole notify-by-mutation seam has since
+    # been DELETED -- 2026-07-01, replaced by the settle-time up-edge -- so no mutator fires anything anymore.)
 
     # one typically has both scrollbars in view, plus a resizer
     # in bottom right corner, so adjust the width/height of the
@@ -265,7 +266,6 @@ class ScrollPanelWdgt extends PanelWdgt
 
   _applyExtent: (aPoint) ->
     unless aPoint.equals @extent()
-      #console.log "move 15"
       @__breakMoveResizeCaches()
 
       # TODO this part seems like it should be in a _reLayout function
@@ -353,11 +353,11 @@ class ScrollPanelWdgt extends PanelWdgt
     totalPadding = 2*padding
 
     if @contents instanceof SimpleVerticalStackPanelWdgt
-      # §4.2 Stage 3: arrange the content stack's children but tell it I OWN its frame (parentWillSizeMe) -- I size
-      # it from the §4.1 pure measure (subBounds -> the frame commit below), so the stack's own self-resize must
-      # not fire the re-fit seam back at me (the capstone's Pattern A). Its children + container-child width
-      # convergence are unaffected; only its terminal self-resize goes non-notifying.
-      @contents._positionAndResizeChildren(true)
+      # arrange the content stack's children; I OWN its frame regardless (I size it from the §4.1 pure
+      # measure -- subBounds -> the frame commit below), and the stack's terminal self-resize notifies nobody
+      # (the notify-by-mutation seam is deleted; its parentWillSizeMe don't-notify-my-sizer parameter went
+      # with it -- Tier D, 2026-07-02).
+      @contents._positionAndResizeChildren()
     else if @isTextLineWrapping and @contents instanceof PanelWdgt
       @contents.children.forEach (widget) =>
         if widget.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT

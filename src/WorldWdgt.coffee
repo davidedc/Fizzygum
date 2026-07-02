@@ -1388,9 +1388,7 @@ class WorldWdgt extends PanelWdgt
     
     @runChildrensStepFunction()
     @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()
-    window.recalculatingLayouts = true
     @recalculateLayouts()
-    window.recalculatingLayouts = false
 
     # (There is no caret scroll-follow step here any more: a caret MOVE settles its scroll-follow IN-PLACE,
     # during the event that moved it -- a discrete click/arrow move self-settles (CaretWdgt.gotoSlot), and a

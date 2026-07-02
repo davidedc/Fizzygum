@@ -65,7 +65,6 @@ class SliderWdgt extends CircleBoxWdgt
 
   _applyExtent: (aPoint) ->
     unless aPoint.equals @extent()
-      #console.log "move 17"
       @__breakMoveResizeCaches()
       super aPoint
       # my backing store had just been updated

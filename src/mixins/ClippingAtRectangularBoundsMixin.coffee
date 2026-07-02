@@ -228,7 +228,6 @@ ClippingAtRectangularBoundsMixin =
       _applyMoveBy: (delta) ->
         #console.log "moving all widgets in the Panel"
         @bounds = @bounds.translateBy delta
-        #console.log "move 1"
         @__breakMoveResizeCaches()
         @children.forEach (child) ->
           child.__commitMoveBy delta

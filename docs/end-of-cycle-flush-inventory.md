@@ -75,6 +75,7 @@ un-allowlisted end-of-cycle layout" gate (§8).
   passing.
 - **Snapshot fires exactly once/frame at the right place:** the cross-check (`window.recalculatingLayouts` must be
   set at the snapshot) **never** flagged a miss across all 165 tests.
+  *(The global + this cross-check were retired 2026-07-02, Tier D — the snapshot gate is `!this._inLayoutMutation`.)*
 - **Containment:** every runtime survivor maps to a catalog origin (§7). No unattributed dynamic path.
 - **Boot excluded:** **0** end-of-cycle survivors occurred before the first input event (boot construction
   self-settles via the orphan/batch paths). The entire residual is *interaction*-driven — which also means the

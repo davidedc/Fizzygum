@@ -578,7 +578,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
             windowWidth = recommendedElementWidth + @padding * 2
           else
             windowWidth = Math.min @width(), recommendedElementWidth + @padding * 2
-          @_resizeOwnWidthSkippingChildRelayout windowWidth
+          @_applyExtentBase new Point windowWidth, @height()
         else if @contents.layoutSpecDetails.preferredStartingWidth == PreferredSize.DONT_MIND
           recommendedElementWidth = @width()  - 2 * @padding
         else
@@ -587,7 +587,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
             windowWidth = recommendedElementWidth + @padding * 2
           else
             windowWidth = Math.min @width(), recommendedElementWidth + @padding * 2
-          @_resizeOwnWidthSkippingChildRelayout windowWidth
+          @_applyExtentBase new Point windowWidth, @height()
 
         @contents.layoutSpecDetails.rememberInitialDimensions @contents, @
 
@@ -609,7 +609,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
           if !@recursivelyAttachedAsFreeFloating()
             desiredHeight = Math.min desiredHeight, @height() - partOfHeightUsedUp
           @contents._applyWidth recommendedElementWidth
-          @_resizeOwnWidthSkippingChildRelayout windowWidth
           @contents._applyHeight desiredHeight
         else if @contents.layoutSpecDetails.preferredStartingHeight == PreferredSize.DONT_MIND
           @contents._applyWidth recommendedElementWidth
@@ -664,7 +663,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     newHeight = stackHeight + partOfHeightUsedUp
 
-    @_resizeOwnHeightSkippingChildRelayout newHeight
+    @_applyExtentBase new Point @width(), newHeight
 
     @titlebarBackground._applyExtent (new Point @width(), closeIconSize + 2 * @padding).subtract new Point 2,2
     @titlebarBackground._applyMoveTo @position().add new Point 1,1

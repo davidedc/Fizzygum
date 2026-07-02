@@ -127,7 +127,6 @@ class ListWdgt extends ScrollPanelWdgt
   
   _applyExtent: (aPoint) ->
     unless aPoint.equals @extent()
-      #console.log "move 3"
       @__breakMoveResizeCaches()
       lb = @listContents.boundingBox()
       nb = @bounds.origin.corner @bounds.origin.add aPoint

@@ -79,7 +79,6 @@ class VideoControlsPaneWdgt extends RectangleWdgt
   # super call (what it doesn, why is it called where it is).
 
   _reLayout: (newBoundsForThisLayout) ->
-    #if !window.recalculatingLayouts then debugger
 
     if @_handleCollapsedStateShouldWeReturn() then return
 

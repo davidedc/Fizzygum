@@ -112,24 +112,6 @@ class SimpleVerticalStackPanelWdgt extends Widget
   availableWidthForContents: ->
     @width() - 2 * @padding
 
-  # proper-layouts Phase E: apply my OWN arranged extent during _positionAndResizeChildren WITHOUT
-  # re-entering my children's layout. My class _applyExtent override (here / WindowWdgt / ScrollPanelWdgt)
-  # re-fits my children via @_reLayoutChildren() -- correct for an EXTERNAL resize, but during my own
-  # arrange I am ALREADY laying my children out, so that re-fit is a redundant synchronous RE-ENTRY of
-  # _positionAndResizeChildren (it was a no-op ONLY because the @_adjustingContentsBounds re-entrancy guard
-  # caught it). Going through the bare @_applyExtentBase applies the geometry but SKIPS the override's
-  # @_reLayoutChildren() (my container still re-fits at settle time via the up-edge, not by mutation).
-  # That removes the last synchronous re-entry, which is what let the
-  # re-entrancy guard + the @_adjustingContentsBounds field be deleted. Byte-identical: the skipped re-entry
-  # was already a guarded no-op. (The leading breakCaches is unconditional; @_applyExtentBase breaks the caches again only on an actual extent change.)
-  _resizeOwnWidthSkippingChildRelayout: (newWidth) ->
-    @__breakMoveResizeCaches()
-    @_applyExtentBase new Point(newWidth or 0, @height())
-
-  _resizeOwnHeightSkippingChildRelayout: (newHeight) ->
-    @__breakMoveResizeCaches()
-    @_applyExtentBase new Point(@width(), newHeight or 0)
-
   # §4.1 pure measure (proper-layouts): the side-effect-free preferred extent of the stack at an
   # available width -- Σ over children of (padding + child preferred height), + a trailing padding,
   # mirroring _positionAndResizeChildren's arithmetic. Each child measures via its OWN
@@ -201,15 +183,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
       cumH += h
     merged
 
-  # §4.2 Stage 3 (structural arrange): `parentWillSizeMe` is passed true by a SCROLL PANEL arranging me as its
-  # content -- the scroll panel OWNS my frame (it sizes me from its §4.1 pure measure right after this returns), so
-  # my own self-resize at the end is redundant and its up-notification seam to the scroll panel was the capstone's
-  # Pattern A (the SimpleDocumentScrollPanelWdgt self-re-enqueue). When true I apply my arranged height via the
-  # NON-notifying twin so I still settle my children but do not fire the seam back at my sizer. Default false keeps
-  # the notifying self-resize for every OTHER caller (my own _reLayoutChildren, a WINDOW content arrange) where the
-  # up-notify IS load-bearing (the nested clock-in-window cascade) -- this is the static "split by who is arranging"
-  # axis, NOT a runtime suppression flag.
-  _positionAndResizeChildren: (parentWillSizeMe = false) ->
+  _positionAndResizeChildren: ->
 
     stackHeight = 0
     verticalPadding = 0
@@ -304,17 +278,16 @@ class SimpleVerticalStackPanelWdgt extends Widget
     if !@tight or childrenNotHandlesNorCarets.length == 0
       newHeight = Math.max newHeight, @height()
 
-    # §4.2 Stage 3: if my scroll-panel parent will size me (parentWillSizeMe), apply my arranged height via the
-    # NON-notifying twin -- the frame commit that follows overrides it anyway, so the only effect of the notifying
-    # path here was the redundant Pattern-A up-notify to my sizer. Otherwise notify (the load-bearing cascade).
-    if parentWillSizeMe
-      @_applyExtentBase new Point @width(), newHeight
-    else
-      @_resizeOwnHeightSkippingChildRelayout newHeight
+    # Apply my arranged height via the override-bypassing base apply: it commits my frame + repaints WITHOUT
+    # re-entering _reLayoutChildren (I am mid-arrange; my children are already placed), and it notifies nobody
+    # (the notify-by-mutation seam is deleted -- my container re-fits at settle time via the up-edge, from my
+    # FINAL frame). The old parentWillSizeMe fork here ("my scroll-panel sizer owns my frame, don't notify it"
+    # vs "notify") died with the seam: both arms had become this same call, differing only by a redundant
+    # unconditional cache-break (Tier D, 2026-07-02).
+    @_applyExtentBase new Point @width(), newHeight
 
   _applyExtent: (aPoint) ->
     unless aPoint.equals @extent()
-      #console.log "move 15"
       @__breakMoveResizeCaches()
       super aPoint
       # immediate mutator: APPLY the re-fit NOW -- synchronous, single-container, TERMINAL
