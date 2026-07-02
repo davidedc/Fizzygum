@@ -23,7 +23,19 @@ so children lagged one cadence on a resize/move); each was FIXED to apply its bo
 `build_it_please.sh`) now FAILS the build on any `_reLayout` that reads own geometry before applying own bounds.
 **F6 is folded in** — its 3 patch nodes were among the 11 fixed. Verified: gauntlet dpr1/dpr2/webkit 165/165 +
 four-config torture (RECALC-0); the 11 fixes are steady-state byte-identical (0 recaptures) + 1 benign inspector
-recapture (F7). **The ONLY live items remaining are F8 and F9.** Full record in §5.
+recapture (F7). Full record in §5.
+
+**⟢ UPDATE 2026-07-02 (LANDED — Fizzygum `7aeb34e8`; pushed to master this session). TIER F COMPLETE — no live
+items remain in this plan.** The final two items both landed, behaviour-preserving (0 recaptures): **F8** —
+geometry-cache version keys: the four `WorldWdgt.numberOf*` counters + their string-concatenated key → three
+monotonic integer versions (`structureVersion` / `visibilityVersion` / `geometryVersion`) + the
+`noteStructureChange` / `noteVisibilityOrCollapseChange` helpers, ~15 key/bump sites converted across Widget /
+WorldWdgt / ActivePointerWdgt / ClippingAtRectangularBoundsMixin / TreeNode, plus deletion of fact-19's unreachable
+`if @ == Window then debugger` and the dead cache-hit/miss comment scaffolds; **F9** — `ToolPanelWdgt` brought into
+the wrapper/core convention: public `add`/`addMany` self-settle over a non-settling `_addNoSettle` core, the
+hand-rolled `dontLayout` batching flag dropped (the `SimpleVerticalStackPanelWdgt.add` shape). Verified: build 0
+violations; gauntlet dpr1/dpr2/webkit 165/165 + apps + tiernaming + settle; four-config danger torture
+(RECALC_NONCONVERGENCE absent, 0 fails). Full record in §5.
 
 ## §0 — Why this now, and what it is NOT
 
@@ -849,9 +861,9 @@ the log line. Find them per file with `grep -n "#console.log\|# console.log\|#de
   A comments-only session (Tier G alone) is also fine and needs no torture.
 - **Recommended split for a fresh session:** land F1–F5 + F7 (cheap, no torture) and all of Tier G first; take
   F6, F8, F9 (each independently) only when there is time to run the full gauntlet + torture and triage.
-- **✅ STATUS (2026-07-02, `cd8fc978`):** F1–F5, F7 and G1–G6 LANDED; **F6 folded into the escalated G4** (§5 +
-  the new `check-relayout-bounds-first.js` gate). **The only live items left are F8 and F9** — both torture-gated,
-  each independent.
+- **✅ STATUS (2026-07-02, `7aeb34e8`):** F1–F5, F7 and G1–G6 LANDED (`cd8fc978`); **F6 folded into the escalated
+  G4** (§5 + the new `check-relayout-bounds-first.js` gate); **F8 and F9 LANDED** (`7aeb34e8`). **Tier F and Tier G
+  are now entirely landed — no live items remain in this plan.**
 
 ## §5 — Landed record (2026-07-01 → 07-02, all committed; kept for cold-runnability)
 
@@ -946,10 +958,27 @@ Tiers A/B/C at `0b96d0ef`, Tier D + its evidence bank at `56f25c09`, Tier E in c
   new inherited `Widget._getRecursiveStackDim` shifts `macroDuplicatedInspectorDrivesCopiedTargetOnly`'s
   scroll-to-alpha by one row → tests `2a73a81b8`). **G4 drift note:** the plan expected 27 files with the 2-line
   marker; reality was 29 (the 3 `src/video-player/` files carried variant forms — a `definition:` legend + 2
-  singletons — conventionalised first). **Remaining live: F8, F9** (F9's `ToolPanelWdgt` got the smell fix but NOT
-  the add/addMany settle-architecture wrapper). Pre-existing wart left flagged, NOT fixed: several already-fixed
+  singletons — conventionalised first). Pre-existing wart left flagged, NOT fixed: several already-fixed
   `_reLayout` still carry a misleading `# TODO shouldn't be calling this _applyBounds from here, rather use super`
   comment (using `super` would REINTRODUCE the lag).
+- **Tier F F8 + F9 ✅ (`7aeb34e8`, 2026-07-02, pushed to master). TIER F COMPLETE.** **F8** — the four
+  `WorldWdgt.numberOf*` geometry-cache counters (adds/removes, visibility, collapse, raw moves/resizes) + their
+  string-concatenated key replaced by three monotonic INTEGER versions (`structureVersion` bumped on adds/removes;
+  `visibilityVersion` on adds/removes + visibility + collapse flips; `geometryVersion` on all + raw moves/resizes)
+  + the class helpers `noteStructureChange` / `noteVisibilityOrCollapseChange`; ~15 key/bump sites converted across
+  `Widget` / `WorldWdgt` / `ActivePointerWdgt` / `ClippingAtRectangularBoundsMixin` / `TreeNode` (each cache stamps +
+  compares ONE integer, no per-query string alloc, hit/miss IDENTICAL to the old keys); also deleted fact-19's
+  unreachable `if @ == Window then debugger` in `clipThrough` + the dead cache-hit/miss comment scaffolds in
+  `clippedThroughBounds` / `clipThrough` / `visibleBasedOnIsVisibleProperty`. **F9** — `ToolPanelWdgt` brought into
+  the wrapper/core convention: `add` → `_addNoSettle` (dropping the hand-rolled `dontLayout` batching flag; the
+  internal `super` calls now resolve to the non-settling `Widget::_addNoSettle`), a self-settling public `add`
+  wrapper added, and `addMany` rewritten as one `_settleLayoutsAfter` over the bundle (the
+  `SimpleVerticalStackPanelWdgt.add` shape; the orphan `glassBox.add` calls auto-defer, untouched). Behaviour-
+  preserving; **0 recaptures**. Gates: build 0 violations (incl. `check-relayout-bounds-first` + `thin-wraps`);
+  gauntlet dpr1/dpr2/webkit 165/165 failed:0 + apps + tiernaming + settle; four-config danger torture
+  (RECALC_NONCONVERGENCE absent, 0 fails). **NB** a separate `fix(meta)` commit (`cbb90457`) hardened the
+  `Class`/`Mixin` `super` rewriter the same session (a bare `super` + trailing comment dropped its forwarded
+  arguments) — unrelated to Tier F; it fixed the "thin vertical slice" defect in the Stretchable* apps.
 
 ---
 
