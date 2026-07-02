@@ -185,10 +185,26 @@ class WorldWdgt extends PanelWdgt
   # this part is excluded from the fizzygum homepage build <<«
 
   @frameCount: 0
-  @numberOfAddsAndRemoves: 0
-  @numberOfVisibilityFlagsChanges: 0
-  @numberOfCollapseFlagsChanges: 0
-  @numberOfRawMovesAndResizes: 0
+  # Monotonic GEOMETRY-CACHE VERSIONS (integers; replaced the four numberOf* counters
+  # whose string-concatenated key was rebuilt on every bounds query, Tier F 2026-07-02):
+  #   structureVersion  -- bumped on tree adds/removes only
+  #   visibilityVersion -- bumped on adds/removes + visibility flips + collapse flips
+  #   geometryVersion   -- bumped on all of the above + raw moves/resizes
+  # A cache stamps the version it was computed at and is valid iff it is unchanged; each
+  # event bumps every version whose caches it could invalidate, so hit/miss behaviour is
+  # IDENTICAL to the old concatenated keys (misses cost recompute, never values).
+  @structureVersion: 0
+  @visibilityVersion: 0
+  @geometryVersion: 0
+
+  @noteStructureChange: ->
+    @structureVersion++
+    @visibilityVersion++
+    @geometryVersion++
+
+  @noteVisibilityOrCollapseChange: ->
+    @visibilityVersion++
+    @geometryVersion++
 
   broken: nil
   duplicatedBrokenRectsTracker: nil
@@ -666,7 +682,7 @@ class WorldWdgt extends PanelWdgt
     @hand.fullPaintIntoAreaOrBlitFromBackBuffer aContext, aRect
 
   clippedThroughBounds: ->
-    @checkClippedThroughBoundsCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
+    @checkClippedThroughBoundsCache = WorldWdgt.geometryVersion
     @clippedThroughBoundsCache = @boundingBox()
     return @clippedThroughBoundsCache
 
@@ -674,7 +690,7 @@ class WorldWdgt extends PanelWdgt
   # doesn't seem that this is ever used
   # TODO investigate and see whether this is needed
   clipThrough: ->
-    @checkClipThroughCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
+    @checkClipThroughCache = WorldWdgt.geometryVersion
     @clipThroughCache = @boundingBox()
     return @clipThroughCache
 

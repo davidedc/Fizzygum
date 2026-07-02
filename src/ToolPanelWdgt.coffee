@@ -6,12 +6,22 @@ class ToolPanelWdgt extends PanelWdgt
   externalPadding: 10
   thumbnailSize: 30
 
+  # ONE settle over the whole bundle; each core's _invalidateLayout is deduped by
+  # layoutIsValid, so N adds still cost one flush.
   addMany: (widgetsToBeAdded) ->
-    for eachWidget in widgetsToBeAdded
-      @add eachWidget, nil, nil, nil, nil, nil, true
-    @_invalidateLayout()
+    @_settleLayoutsAfter =>
+      for eachWidget in widgetsToBeAdded
+        @_addNoSettle eachWidget
+      return
 
-  add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen, dontLayout) ->
+  # Public add self-settles over the non-settling core (the Widget /
+  # SimpleVerticalStackPanelWdgt add/_addNoSettle pattern). Was: a public add ending in a
+  # bare _invalidateLayout() that rode the end-of-cycle flush, plus a hand-rolled
+  # `dontLayout` batching flag -- the pre-convert shape everywhere else already left.
+  add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
+    @_settleLayoutsAfter => @_addNoSettle aWdgt, position, layoutSpec, beingDropped, unused, positionOnScreen
+
+  _addNoSettle: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
 
     # annotation + handle both attach to the scroll frame directly (was their two instanceof)
     # (type-test-elimination campaign)
@@ -67,8 +77,7 @@ class ToolPanelWdgt extends PanelWdgt
 
       @numberOfIconsOnPanel++
 
-      unless dontLayout
-        @_invalidateLayout()
+      @_invalidateLayout()
 
   _reLayout: ->
 

@@ -93,7 +93,7 @@ ClippingAtRectangularBoundsMixin =
           result = Rectangle.EMPTY
         else
           if @cachedFullClippedBounds?
-            if @checkFullClippedBoundsCache == WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
+            if @checkFullClippedBoundsCache == WorldWdgt.geometryVersion
               if world.doubleCheckCachedMethodsResults
                 if !@cachedFullClippedBounds.equals @SLOWfullClippedBounds()
                   debugger
@@ -107,7 +107,7 @@ ClippingAtRectangularBoundsMixin =
             debugger
             alert "fullClippedBounds is broken"
 
-        @checkFullClippedBoundsCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
+        @checkFullClippedBoundsCache = WorldWdgt.geometryVersion
         @cachedFullClippedBounds = result
 
 

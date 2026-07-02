@@ -45,12 +45,12 @@ class ActivePointerWdgt extends Widget
     true
 
   clippedThroughBounds: ->
-    @checkClippedThroughBoundsCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
+    @checkClippedThroughBoundsCache = WorldWdgt.geometryVersion
     @clippedThroughBoundsCache = @boundingBox()
     return @clippedThroughBoundsCache
 
   clipThrough: ->
-    @checkClipThroughCache = WorldWdgt.numberOfAddsAndRemoves + "-" + WorldWdgt.numberOfVisibilityFlagsChanges + "-" + WorldWdgt.numberOfCollapseFlagsChanges + "-" + WorldWdgt.numberOfRawMovesAndResizes
+    @checkClipThroughCache = WorldWdgt.geometryVersion
     @clipThroughCache = @boundingBox()
     return @clipThroughCache
   

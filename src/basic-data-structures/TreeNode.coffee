@@ -66,7 +66,7 @@ class TreeNode
 
   # TreeNode accessing:
   addChild: (node, position = nil) ->
-    WorldWdgt.numberOfAddsAndRemoves++
+    WorldWdgt.noteStructureChange()
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
     if !position?
@@ -119,7 +119,7 @@ class TreeNode
   removeChild: (node) ->
     # remove the array element from the
     # array
-    WorldWdgt.numberOfAddsAndRemoves++
+    WorldWdgt.noteStructureChange()
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
     @children.remove node
@@ -180,7 +180,7 @@ class TreeNode
 
   # TreeNode functions:
   root: ->
-    if @rootCacheChecker == WorldWdgt.numberOfAddsAndRemoves
+    if @rootCacheChecker == WorldWdgt.structureVersion
       #console.log "cache hit root"
       result = @rootCache
     else
@@ -189,7 +189,7 @@ class TreeNode
       if @parent?
         theRoot = @parent.root()
 
-      @rootCacheChecker = WorldWdgt.numberOfAddsAndRemoves
+      @rootCacheChecker = WorldWdgt.structureVersion
       @rootCache = theRoot
       result = @rootCache
 
@@ -490,7 +490,7 @@ class TreeNode
       return nil
 
   firstParentClippingAtBounds: (widgetToStartFrom = @) ->
-    if @checkFirstParentClippingAtBoundsCache == WorldWdgt.numberOfAddsAndRemoves
+    if @checkFirstParentClippingAtBoundsCache == WorldWdgt.structureVersion
       if world.doubleCheckCachedMethodsResults
         if @cachedFirstParentClippingAtBounds != @SLOWfirstParentClippingAtBounds widgetToStartFrom
           debugger
@@ -509,7 +509,7 @@ class TreeNode
         debugger
         alert "firstParentClippingAtBounds is broken (uncached)"
 
-    @checkFirstParentClippingAtBoundsCache = WorldWdgt.numberOfAddsAndRemoves
+    @checkFirstParentClippingAtBoundsCache = WorldWdgt.structureVersion
     @cachedFirstParentClippingAtBounds = result
 
 
