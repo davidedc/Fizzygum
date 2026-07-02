@@ -56,7 +56,7 @@ const isLowLevel = (name) =>
   /NoSettle$/.test(name);     // the *NoSettle cores
 // the strict INNER subset (rule [E] subject): may MUTATE geometry, never SCHEDULE.
 const isImmediateMutator = (name) =>
-  /^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)AndNotify$/.test(name) ||   // ✓/✓ apply corners
+  /^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)$/.test(name) ||            // the polymorphic apply corners (bare _apply*, ex *AndNotify — Tier B; NB _apply*Base is NOT matched)
   /^_commit(Extent|Bounds)AndNotify$/.test(name) ||                             // notify-only corners
   /^_move(LeftSideTo|RightSideTo|TopSideTo|BottomSideTo|ToSideOf|FullCenterTo|Within|InDesktopToFractionalPosition|InStretchablePanelToFractionalPosition)$/.test(name) ||  // convenience movers
   /^_(setWidthSizeHeightAccordingly|setExtentToFractionalExtentInPaneUserHasSet|resizeToWithoutSpacing)$/.test(name);  // convenience setters/resizer
@@ -64,8 +64,9 @@ const isImmediateMutator = (name) =>
 
 `isLowLevel ⊃ isImmediateMutator` (every immediate mutator is `_`-prefixed). **Prose must POINT at these predicates,
 never re-define the tiers** — any doc that says "low-level"/"immediate mutator" means *exactly whatever these match*.
-The names come from the geometry-apply **2×2** of the naming convention (`__commit*` leaf / `_apply*` arrange /
-`_apply*AndNotify` full mutator / `_commit*AndNotify` notify-only); the old `raw`/`silent`/`fullRaw` prefixes were
+The names come from the geometry-apply **2×2** of the naming convention (post-Tier-B REACT × DISPATCH: `__commit*` leaf /
+`_apply*Base` override-bypass arrange twin / `_apply*` polymorphic apply / `_commit*AndNotify` notify-only); the old
+`raw`/`silent`/`fullRaw` prefixes were
 retired (a build-time fragment-ban, rule **[M]**, keeps them out) and the `__` leaf tier has its own no-orchestration
 rule **[I]**. Full convention + rationale: `docs/layering-naming-convention.md`.
 
@@ -128,9 +129,10 @@ runtime audits that run over the WHOLE SystemTest suite (not `build_it_please.sh
 prototypes at boot behind a `WorldWdgt` flag, with a standalone `run-*-gate.sh`, siblings of the end-of-cycle /
 paint-readonly gates and wired into `fg gauntlet`:
 - **tier-naming** (`Fizzygum-tests/scripts/tier-naming-audit/`, flag `auditTierAndApplyNaming`) — the dynamic twin of
-  rules [I]/[K]: HARD-fails a `__commit*` leaf or an arrange `_apply*` that fires the seam/react at runtime; reports the
-  `*AndNotify`→seam coverage as INFORMATIONAL (a runtime observation can't soundly distinguish a mislabel from an
-  unexercised seam path).
+  rules [I]/[K]: HARD-fails a `__commit*` leaf or an arrange `_apply*Base` bypass twin that fires the seam/react at
+  runtime; reports the polymorphic `_apply*`→seam coverage as INFORMATIONAL (a runtime observation can't soundly
+  distinguish a mislabel from an unexercised seam path — and it is now vacuously 0, the `_announce*` seam having been
+  deleted 2026-07-01).
 - **notification-settle** (`Fizzygum-tests/scripts/notification-settle-audit/`, flag
   `auditNotificationSettleNeutrality`) — the dynamic twin of rule [J]: HARD-fails a `_reactTo*`/`_before*` callback that
   OPENS A FLUSH — an ATTACHED-receiver `_settleLayoutsAfter` (it would throw) or any `recalculateLayouts`. It PERMITS an
@@ -151,7 +153,7 @@ dispatch). Full description: `docs/layering-naming-convention.md`.
 The scanner strips `#` comments and string literals (carrying multi-line state) so a call-regex never matches a name in
 a throw-message or comment, groups lines into 2-space-indent methods (`METHOD_HEADER`, now mixin-DSL aware so a method
 defined inside a mixin's `onceAddedClassProperties` block is attributed too), and keys call detection off a leading
-`@`/`.` + the lowercase public name (so `@setExtent`/`.moveTo` match while `@_applyExtentAndNotify`/`@_setTextNoSettle`
+`@`/`.` + the lowercase public name (so `@setExtent`/`.moveTo` match while `@_applyExtent`/`@_applyExtentBase`/`@_setTextNoSettle`
 do NOT — the leading `_` sits between the `@`/`.` and the verb). This co-design with the **naming convention** is why the
 lint works at all (§6).
 
@@ -167,7 +169,7 @@ lint works at all (§6).
 | **[H]** *(WARNING, non-fatal)* | a method that self-settles via `@_settleLayoutsAfter` | a GUARD `return` / `return if\|unless …` BEFORE the settle | a public settle-wrapper should be THIN; that early-return guard belongs INSIDE the `_<name>NoSettle` core (else the "already in this state" skip is split across wrapper + core) | — | **`# early-return-sanctioned: <why>`** |
 | **[I]** | a `__` leaf method (HARD-FAIL) | `@`-self-calling the re-fit seam (`_reFitContainer*`/`_announce*`), a react step (`_reLayout*`/`changed`/`fullChanged`), a schedule/settle (`_invalidateLayout`/`recalculateLayouts`/`_settleLayoutsAfter*`), or a public setter | a `__` leaf is a true bottom — it triggers NO orchestration (the lowest tier of the naming convention, §1) | tier-naming runtime audit | — (DENYLIST; `@`-self-scoped) |
 | **[J]** | a notification callback (`_reactTo*`/`_before*`) | calling `_settleLayoutsAfter` | a callback is a settle-neutral core; the gesture/structural DISPATCHER owns the one settle | notification-settle runtime audit | — |
-| **[K]** | a 2×2 apply CORNER (`_apply<Geom>` / `_apply<Geom>AndNotify` / `_commit<Geom>AndNotify`) | a non-`AndNotify` `_apply*` firing the seam or calling an `*AndNotify`; a `_commit*AndNotify` reacting (`changed`/`_reLayout*`) | a corner's NAME must match its NOTIFY×REACT behaviour (the two statically-sound negatives; the positive "*AndNotify reaches the seam" is delegated to the runtime audit — static can't follow `super`/dynamic dispatch) | tier-naming runtime audit (the positive) | — |
+| **[K]** | a 2×2 apply CORNER (`_apply<Geom>` polymorphic / `_apply<Geom>Base` override-bypass twin / `_commit<Geom>AndNotify` notify-only) | a `_apply*Base` bypass twin firing the container re-fit seam (`_reFitContainer*`/`_announce*`) or DISPATCHING to its polymorphic `_apply*` sibling; a `_commit*AndNotify` corner reacting (`changed`/`_reLayout*`) | post-Tier-B the corners are REACT × DISPATCH: a `_apply*Base` reacts but must BYPASS the override — not fire the seam, not route the arrange apply back through `_apply*`; the notify-only corner must not react. The two statically-sound NEGATIVES; the old positive "*AndNotify reaches the seam" is retired with the seam (deleted 2026-07-01) | tier-naming runtime audit (now vacuous) | — |
 | **[L]** | a notification callback DEF (`_reactTo*`/`_before*`) | a name not matching `_(reactTo\|before)(Being\|Child\|HolderWindow)<Event>`, a `NoSettle` suffix, or a legacy fragment (`childX`/`justBeen`/`iHaveBeen`/`aboutTo`/`prepareTo`) | callbacks follow the derivable (perspective × phase) scheme; the legacy spellings were retired | — | — |
 | **[M]** | any method DEF | a retired geometry/structural naming fragment as the name — `raw[A-Z]…` / `^silent[A-Z]` / `^fullRaw` (allowlist: the raw-PIXEL accessors `rawPixelInfo`/`rawPixelHash`/`rawRGBA`) | the `raw*`/`silent*`/`fullRaw*` geometry+structural prefixes were eliminated (§2 of the convention); lock them out — note `full[A-Z]` stays legitimate (`fullBounds`/`fullPaintInto`/…) | — | — |
 | **[N]** | any method DEF | a name matching `/^_announce\w*ToContainer$/` (the retired notify-by-mutation container seam) | the mutation-time re-fit seam was deleted 2026-07-01 and replaced by the settle-time up-edge `_reFitMyTrackingContainerAfterSettle`; this bans reviving the announce-up verbs on the DEF side (the CALL side is already [I]/[K]) | — | — |
@@ -215,10 +217,10 @@ so the **naming convention and the lints are co-designed** (the lint works at al
 behaviour). This section covers just *why the names and the regexes fit together*; the full two-family convention (the
 geometry-apply **2×2** + the notification **(perspective × phase)** grid) and its two runtime audits live in
 `docs/layering-naming-convention.md`.
-- **The geometry-apply tiers are all `_`/`__`-prefixed** — the leaf `__commit<Geom>`, the arrange `_apply<Geom>`, the
-  full mutator `_apply<Geom>AndNotify`, the notify-only `_commit<Geom>AndNotify`, and the `_move*`/`_set*`/`_resize*`
-  convenience. The leading underscore sits between the `@`/`.` and the verb, so `@_applyExtentAndNotify` does NOT match
-  the public-setter regex `[@.]\s*setExtent`. (`raw*` survives ONLY as the pixel accessors `rawPixelInfo`/`rawPixelHash`/
+- **The geometry-apply tiers are all `_`/`__`-prefixed** — the leaf `__commit<Geom>`, the override-bypass arrange twin
+  `_apply<Geom>Base`, the polymorphic apply `_apply<Geom>` (ex `_apply<Geom>AndNotify` — Tier B), the notify-only
+  `_commit<Geom>AndNotify`, and the `_move*`/`_set*`/`_resize*` convenience. The leading underscore sits between the
+  `@`/`.` and the verb, so `@_applyExtent`/`@_applyExtentBase` do NOT match the public-setter regex `[@.]\s*setExtent`. (`raw*` survives ONLY as the pixel accessors `rawPixelInfo`/`rawPixelHash`/
   `rawRGBA`; rule **[M]** bans any new `raw*`/`silent*`/`fullRaw*` geometry/structural name.)
 - **`_<name>NoSettle` cores** — do the mutation + invalidate, never settle ("cores call cores"). The leading `_` makes
   `@_setTextNoSettle` invisible to the `[@.]\s*setText\b` text-setter regex.
@@ -319,7 +321,7 @@ source to satisfy a new rule.
 
 - `buildSystem/check-layering.js` — `PUBLIC_SETTERS`/`TEXT_SETTERS`/`RECALC_WHITELIST`; `isLowLevel` /
   `isImmediateMutator` (the tier predicates, §2); `SETTLE_CALL`/`WRAPPER_EXCLUDED`/`SELF_ADD_CALL`/`NOSETTLE_MARKER` (the
-  [G] constants); `LEAF_FORBIDDEN` ([I]); `APPLY_CORNER`/`K_SEAM_CALL`/`K_REACT_CALL`/`K_ANDNOTIFY` ([K]);
+  [G] constants); `LEAF_FORBIDDEN` ([I]); `APPLY_CORNER`/`K_SEAM_CALL`/`K_REACT_CALL`/`K_POLY_APPLY` ([K]);
   `CALLBACK_PREFIX`/`CALLBACK_SHAPE`/`LEGACY_CALLBACK_FRAGMENT` ([L]); `FRAGMENT_BANNED`/`FRAGMENT_ALLOWLIST` ([M]);
   `SEAM_VERB_BANNED` ([N]); `COALESCED_CALL`/`COALESCED_CALLER_ALLOWLIST` ([O]);
   `stripLine` / `METHOD_HEADER` / `methodBoundary` (mixin-DSL aware); `discoverSettlingWrappers`; `checkFile` (rules
