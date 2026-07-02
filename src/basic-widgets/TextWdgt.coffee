@@ -119,30 +119,21 @@ class TextWdgt extends StringWdgt
       # constrained horizontally but not vertically...
 
       #if !word.substr(0, word.length-1).includes(" ")
-      #  console.log ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-      #  console.log "> no space word: " + word
       #  checkingLongerSingleWorld = Math.ceil @measureText overrideFontSize, word
-      #  console.log "> length of: " + word + " : " + checkingLongerSingleWorld
-      #  console.log "> maxTextWidth: " + maxTextWidth
       #
       #  while checkingLongerSingleWorld > maxTextWidth
-      #    console.log "> " + word + " is too long at overrideFontSize: " + overrideFontSize
       #    maxLengthNotOverflowing = 0
       #    for scanning in [0..word.length]
       #      subword = word.substring 0, scanning
       #      checkingLongerSingleWorld2 = Math.ceil @measureText overrideFontSize, subword
-      #      console.log "> length at size " + overrideFontSize + " of subword: " + subword + " : " + checkingLongerSingleWorld2
       #      if checkingLongerSingleWorld2 > maxTextWidth
       #        maxLengthNotOverflowing = scanning - 1
       #        break
-      #    console.log "> maxLengthNotOverflowing: " + maxLengthNotOverflowing
       #    if maxLengthNotOverflowing == 0
       #      word = word.substring 1, word.length
       #    else
       #      currentLineCanStayInLine = word.substring 0, maxLengthNotOverflowing
       #      carryoverFromWrappingLine = word.substring maxLengthNotOverflowing, word.length
-      #      console.log "> part that is not overflowing: " + currentLineCanStayInLine
-      #      console.log "> part that is overflowing: " + carryoverFromWrappingLine
       #      slotsInParagraph += currentLineCanStayInLine.length
       #      wrappedLinesOfThisParagraph.push currentLineCanStayInLine
       #      wrappedLineSlotsOfThisParagraph.push slotsInParagraph
@@ -282,7 +273,6 @@ class TextWdgt extends StringWdgt
 
       if justCheckIfItFitsInThisExtent?
         heightOfPossiblyCroppedText = (wrappedLineSlotsOfWholeText.length - 1) * Math.ceil(@fontHeight overrideFontSize)
-        #console.log "heightOfPossiblyCroppedText: " + heightOfPossiblyCroppedText + " justCheckIfItFitsInThisExtent: " + justCheckIfItFitsInThisExtent
         if heightOfPossiblyCroppedText > justCheckIfItFitsInThisExtent.y or maxWrappedLineWidthOfWholeText > justCheckIfItFitsInThisExtent.x
           world.cacheForTextWrappingData.set cacheKey, false
           return false
@@ -329,7 +319,6 @@ class TextWdgt extends StringWdgt
     textWrappingData = world.cacheForTextBreakingIntoLinesTopLevel.get cacheKey
     if textWrappingData? then return textWrappingData
 
-    #console.log "breakTextIntoLines // " + " widgetWidth: " + widgetWidth + " overrideFontSize: " + overrideFontSize
 
     
     ## // this section only needs to be re-done when @text changes ////
@@ -354,9 +343,10 @@ class TextWdgt extends StringWdgt
   # pure measure (getRecursive*Dim) to a width-DEPENDENT wrapped height, the gap §2.5/§4.1
   # names. The round + min-extent clamp mirrors __commitExtent, so the measured height
   # byte-matches what _reLayoutSelf commits when the box is later sized to availW (proven
-  # suite-wide: 4022 measure-vs-commit differentials, 0 mismatches). NO production consumer
-  # yet -- Stage A lands the measure alone; the vertical-stack/window/scroll arranges consume
-  # it (and shed their mutate-then-read-back) in later stages.
+  # suite-wide: 4022 measure-vs-commit differentials, 0 mismatches). CONSUMED since §4.1
+  # Stage C by the vertical-stack / window / scroll arranges (leaf-child sizing + the
+  # content-frame measure via subWidgetsMergedPreferredBounds), which shed their
+  # mutate-then-read-back against it.
   preferredExtentForWidth: (availW) ->
     # a non-growing text keeps its box (FIT_TEXT_TO_BOX scales/crops the text, it does not
     # size to it), so its preferred extent is simply its current extent.
@@ -588,7 +578,6 @@ class TextWdgt extends StringWdgt
 
     #if !window.globCounter2? then window.globCounter2 = 0
     #window.globCounter2++
-    #console.log "slotRowAndColumn " + window.globCounter2
 
     @reflowText()
     idx = 0

@@ -253,7 +253,7 @@ class ScrollPanelWdgt extends PanelWdgt
     @_reLayoutChildren() # layout-apply-sanctioned: public content-change endpoint -- see add() (OVERVIEW §11 PROOF 2)
 
   
-  setContents: (aWdgt, extraPadding) ->
+  setContents: (aWdgt, extraPadding = 0) ->
     @extraPadding = extraPadding
     # there should never be a shadow but one never knows...
     @contents.closeChildren()

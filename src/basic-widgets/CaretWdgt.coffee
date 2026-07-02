@@ -129,12 +129,10 @@ class CaretWdgt extends BlinkerWdgt
     @_settleScrollFollow()
 
   processCut: (selectedText) ->
-    #console.log "processing cut"
     @deleteLeft()
     @_settleScrollFollow()   # converge the deferred caret follow in-place (clipboard event, bypasses processKeyDown)
 
   processPaste: (clipboardText) ->
-    #console.log "about to insert text: " + clipboardText
     @insert clipboardText
     @_settleScrollFollow()   # converge the deferred caret follow in-place (clipboard event, bypasses processKeyDown)
 

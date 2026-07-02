@@ -65,8 +65,6 @@ ClippingAtRectangularBoundsMixin =
           result = Rectangle.EMPTY
         else
           result = @clippedThroughBounds()
-        #if this != world and result.corner.x > 400 and result.corner.y > 100 and result.origin.x ==0 and result.origin.y ==0
-        #  debugger
         result
 
       # Panels clip any of their children
@@ -226,7 +224,6 @@ ClippingAtRectangularBoundsMixin =
 
       # PanelWdgt scrolling optimization:
       _applyMoveBy: (delta) ->
-        #console.log "moving all widgets in the Panel"
         @bounds = @bounds.translateBy delta
         @__breakMoveResizeCaches()
         @children.forEach (child) ->

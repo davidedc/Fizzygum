@@ -1658,9 +1658,12 @@ class Widget extends TreeNode
       @_settleLayoutsAfter => @_setWidthNoSettle width
   
   __commitWidth: (width) ->
-    @__breakMoveResizeCaches()
     w = Math.max Math.round(width or 0), 0
-    @bounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + w, @bounds.corner.y
+    newBounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + w, @bounds.corner.y
+    return if @bounds.equals newBounds
+    @bounds = newBounds
+    # cache-break under the did-anything-change guard, like __commitExtent (the D4/E1 discipline)
+    @__breakMoveResizeCaches()
   
   _applyHeight: (height) ->
     @_applyExtent new Point(@width(), height or 0)
@@ -1693,9 +1696,12 @@ class Widget extends TreeNode
       @_settleLayoutsAfter => @_setHeightNoSettle height
   
   __commitHeight: (height) ->
-    @__breakMoveResizeCaches()
     h = Math.max Math.round(height or 0), 0
-    @bounds = new Rectangle @bounds.origin, new Point @bounds.corner.x, @bounds.origin.y + h
+    newBounds = new Rectangle @bounds.origin, new Point @bounds.corner.x, @bounds.origin.y + h
+    return if @bounds.equals newBounds
+    @bounds = newBounds
+    # cache-break under the did-anything-change guard, like __commitExtent (the D4/E1 discipline)
+    @__breakMoveResizeCaches()
   
   setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
@@ -3893,83 +3899,39 @@ class Widget extends TreeNode
   # and `nil < h` is always false in JS, so the child-height max never accumulated (fixed with the dim-cache
   # scaffolding removal -- the caches were written but never read, and NOTHING ever reset their check-flags,
   # so enabling the commented-out reads would have served permanently stale sizes).
-  getRecursiveDesiredDim: ->
-    if @isInCollapsedSubtree() then return new Point 0,0
-
-    desiredWidth = nil
-    desiredHeight = 0
-    gotADesiredHeight = false
+  # ONE recursive walker for the three min/desired/max queries below. They differed only
+  # in WHICH per-child query recurses and WHICH own-field pair backstops a widget with no
+  # horizontal-stack children (plus the desired/min clamp, applied by the wrappers below).
+  # Width SUMS across the stack children; height takes the MAX.
+  _getRecursiveStackDim: (childQueryName, ownWidth, ownHeight) ->
+    width = 0
+    height = 0
+    gotAWidth = false
+    gotAHeight = false
     for C in @children
       if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-        childSize = C.getDesiredDim()
-        if !desiredWidth? then desiredWidth = 0
-        desiredWidth += childSize.width()
-        if desiredHeight < childSize.height()
-          gotADesiredHeight = true
-          desiredHeight = childSize.height()
+        childSize = C[childQueryName]()
+        gotAWidth = true
+        width += childSize.width()
+        if height < childSize.height()
+          gotAHeight = true
+          height = childSize.height()
+    width = ownWidth unless gotAWidth
+    height = ownHeight unless gotAHeight
+    new Point width, height
 
-    if !desiredWidth?
-      desiredWidth = @desiredWidth
-
-    if !gotADesiredHeight
-      desiredHeight = @desiredHeight
-
-    return (new Point desiredWidth, desiredHeight).min @getRecursiveMaxDim()
-
+  getRecursiveDesiredDim: ->
+    if @isInCollapsedSubtree() then return new Point 0,0
+    (@_getRecursiveStackDim "getDesiredDim", @desiredWidth, @desiredHeight).min @getRecursiveMaxDim()
 
   getRecursiveMinDim: ->
     if @isInCollapsedSubtree() then return new Point 0,0
-
-    minWidth = 0
-    minHeight = 0
-    gotAMinWidth = false
-    gotAMinHeight = false
-    for C in @children
-      if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-        childSize = C.getMinDim()
-        gotAMinWidth = true
-        minWidth += childSize.width()
-        if minHeight < childSize.height()
-          gotAMinHeight = true
-          minHeight = childSize.height()
-
-    if !gotAMinWidth
-      minWidth = @minWidth
-
-    if !gotAMinHeight
-      minHeight = @minHeight
-
-    # the user might have forced the "desired" to
-    # be smaller than the standard minimum set by
-    # the widget
-    return (new Point minWidth, minHeight).min @getRecursiveMaxDim()
+    # the user might have forced the "desired" to be smaller than the widget's standard minimum
+    (@_getRecursiveStackDim "getMinDim", @minWidth, @minHeight).min @getRecursiveMaxDim()
 
   getRecursiveMaxDim: ->
     if @isInCollapsedSubtree() then return new Point 0,0
-
-    maxWidth = 0
-    maxHeight = 0
-    gotAMaxWidth = false
-    gotAMaxHeight = false
-    for C in @children
-      if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-        childSize = C.getMaxDim()
-        gotAMaxWidth = true
-        maxWidth += childSize.width()
-        if maxHeight < childSize.height()
-          gotAMaxHeight = true
-          maxHeight = childSize.height()
-
-    if !gotAMaxWidth
-      maxWidth = @maxWidth
-
-    if !gotAMaxHeight
-      maxHeight = @maxHeight
-
-    # the user might have forced the "desired" to
-    # be bigger than the standard maximum set by
-    # the widget
-    return new Point maxWidth, maxHeight
+    @_getRecursiveStackDim "getMaxDim", @maxWidth, @maxHeight
 
   countOfChildrenInHorizontalStackLayout: ->
     if @isInCollapsedSubtree() then return 0
@@ -4046,7 +4008,7 @@ class Widget extends TreeNode
     else
       @_applyExtent newBoundsForThisLayout.extent()
 
-    if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
+    if LayoutSpec.isCornerOrEdgeInternal @layoutSpec
       if @parent
         xDim = @parent.width()
         yDim = @parent.height()
@@ -4171,7 +4133,7 @@ class Widget extends TreeNode
 
     # if I just did my layout, also do the layout
     # of all children that have position/size depending on mine
-    allCornerLayoutedChildren = @children.filter (m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT or m.layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
+    allCornerLayoutedChildren = @children.filter (m) -> LayoutSpec.isCornerOrEdgeInternal m.layoutSpec
     for w in allCornerLayoutedChildren
       w._reLayout()
 

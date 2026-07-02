@@ -82,11 +82,16 @@ class ConsoleWdgt extends Widget
       menu.addMenuItem "run selection", true, @, "doSelection"
     menu.addMenuItem "run contents", true, @, "doAll"
 
-  # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
-  # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
   _reLayout: (newBoundsForThisLayout) ->
 
+    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
+
     if @_handleCollapsedStateShouldWeReturn() then return
+
+    # Apply my own bounds FIRST, so the children laid out below read the FINAL frame and
+    # not the previous pass's (else they lag one cadence on resize -- see InspectorWdgt._reLayout /
+    # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
+    @_applyBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

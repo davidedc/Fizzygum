@@ -17,8 +17,6 @@ class MenuWdgt extends PopUpWdgt
     true
 
   constructor: (@widgetOpeningThePopUp, @isListContents = false, @target, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true, @title = nil, @environment = nil, @fontSize = nil) ->
-    # console.log "menu constructor"
-    # console.log "menu super"
     if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
       world.alignIDsOfNextWidgetsInSystemTests()
     if !@isListContents
@@ -75,7 +73,6 @@ class MenuWdgt extends PopUpWdgt
   # spec's named fields replace what used to be a 17-argument positional call
   # carrying a per-argument trailing comment on every line.
   createMenuItem: (menuItemSpec) ->
-    # console.log "menu creating MenuItemWdgt "
     item = new MenuItemWdgt menuItemSpec, (@fontSize or WorldWdgt.preferencesAndSettings.menuFontSize), WorldWdgt.preferencesAndSettings.menuFontName, false, @target, @environment
     if !@environment?
       item.dataSourceWidgetForTarget = item
@@ -108,13 +105,11 @@ class MenuWdgt extends PopUpWdgt
   # NOT changed. We just bundle the arguments into a MenuItemSpec internally; the
   # spec's constructor defaults reproduce the old createMenuItem defaults exactly.
   addMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic, doubleClickAction, arg1, arg2, representsAWidget)->
-    # console.log "menu creating MenuItemWdgt "
     menuItemSpec = new MenuItemSpec label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic, doubleClickAction, arg1, arg2, representsAWidget
     item = @createMenuItem menuItemSpec
     @__add item
 
   prependMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic, doubleClickAction, arg1, arg2, representsAWidget)->
-    # console.log "menu creating MenuItemWdgt "
     menuItemSpec = new MenuItemSpec label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic, doubleClickAction, arg1, arg2, representsAWidget
     item = @createMenuItem menuItemSpec
     @__add item, nil, 0
@@ -142,7 +137,6 @@ class MenuWdgt extends PopUpWdgt
   # this part is excluded from the fizzygum homepage build <<«
 
   _reLayoutSelf: ->
-    # console.log "menu update rendering"
     super()
 
     # no point in breaking a rectangle for each menu entry,
@@ -183,16 +177,13 @@ class MenuWdgt extends PopUpWdgt
     # strings, colorpickers,
     # sliders, menuItems (which are buttons)
     # and divider lines.
-    # console.log "menu @items.length " + @items.length
     for item in @children
       if item == @label then continue
       item._applyMoveTo new Point x, y
-      #console.log "item added: " + item.bounds
       y = y + item.height()
   
     @adjustWidthsOfMenuEntries()
     fb = @fullBounds()
-    #console.log "fb: " + fb
     # add some padding to the right and bottom of the menu
     @__commitExtent fb.extent().add 2
     world.maybeEnableTrackChanges()
@@ -207,23 +198,19 @@ class MenuWdgt extends PopUpWdgt
     @children.forEach (item) ->
       if item.menuEntryPreferredWidth?
         w = Math.max w, item.menuEntryPreferredWidth()
-      #console.log "maxWidthOfMenuEntries: width of item " + item + " : " + w
 
     if @label
       w = Math.max w, @label.width()
-      #console.log "maxWidthOfMenuEntries: label width : " + w
     w
   
   # makes all the elements of this menu the
   # right width.
   adjustWidthsOfMenuEntries: ->
     w = @maxWidthOfMenuEntries()
-    #console.log "maxWidthOfMenuEntries " + w
+    world.disableTrackChanges()
     @children.forEach (item) =>
-      world.disableTrackChanges()
       item._applyWidth w
-      #console.log "new width of " + item + " : " + item.width()
-      world.maybeEnableTrackChanges()
+    world.maybeEnableTrackChanges()
 
   
   unselectAllItems: ->

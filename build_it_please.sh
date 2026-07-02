@@ -359,6 +359,25 @@ if ! $noSyntaxCheck ; then
   echo "... constructor-build check OK"
 fi
 
+# --- build-time RELAYOUT-BOUNDS-FIRST gate --------------------------------------------
+# Enforces that a `_reLayout` override APPLIES ITS OWN BOUNDS before it reads its own geometry to position
+# children -- else the children lay out against the PREVIOUS pass's frame and lag one layout cadence on a
+# resize/move (the dpr2 "one-cadence-lag" flake fixed in InspectorWdgt and swept across the patch/prompt/app
+# widgets). A _reLayout that positions children from the newBoundsForThisLayout PARAM (or positions none)
+# passes trivially. Genuine exceptions carry a per-method `# relayout-bounds-first-exempt: <reason>` marker
+# (no central allowlist). (buildSystem/check-relayout-bounds-first.js -- same --noSyntaxCheck escape hatch +
+# explicit $? abort as the gates above; scans src/ only, so it runs for every build flavour incl. --homepage.)
+if ! $noSyntaxCheck ; then
+  echo "checking _reLayout applies own bounds before reading own geometry ..."
+  node ./buildSystem/check-relayout-bounds-first.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: relayout-bounds-first gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... relayout-bounds-first check OK"
+fi
+
 # --- build-time test-.js syntax gate (only when tests are part of this build) ---------
 # Each SystemTest's _automationCommands.js carries its macro inside a backtick-delimited JS
 # template literal; a stray backtick silently corrupts the file so the test never loads (with

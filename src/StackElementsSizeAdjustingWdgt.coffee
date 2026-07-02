@@ -53,19 +53,16 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
       # change based on how much the biggest max factor is.
       biggestMaxOfTheTwo = Math.max Math.abs(lmdd.x), Math.abs(rmdd.x)
       deltaX = (deltaDragFromPreviousCall.x * Math.pow(biggestMaxOfTheTwo,1.07)) * 500
-      #console.log " deltax 2 : " + deltaX + " lmdd.x: " + lmdd.x + " rmdd.x: " + rmdd.x
       deltaX = deltaX / (@parent.width() * 700)
 
       totalMax = @parent.children.reduce ((acc,elem) => acc + elem.getMaxDim().x), 0
 
       deltaX = deltaX * (totalMax / biggestMaxOfTheTwo)
 
-      #console.log "(@parent.width() * 100): " + (@parent.width() * 100) + " deltax 3: " + deltaX
 
       until (lmdd.x + deltaX > 0) and (rmdd.x - deltaX > 0)
         deltaX = deltaX / 2
 
-      #console.log " deltax 4 : " + deltaX
 
       # The move grows the left cell by deltaX and shrinks the right by the same -- legal ONLY while neither cell
       # is pushed BELOW its content (desired) width, where getMaxDim clamps UP to getDesiredDim (getMaxDim ==
@@ -89,11 +86,6 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
         # (end-of-cycle-flush-drawdown -- CONVERT)
         leftWidget._setMaxDimCoalesced new Point lmdd.x + deltaX, lmdd.y
         rightWidget._setMaxDimCoalesced new Point rmdd.x - deltaX, rmdd.y
-      #console.log "leftWidget.getMaxDim().x : " + leftWidget.getMaxDim().x
-      #console.log "leftWidget.getDesiredDim().x: " + leftWidget.getDesiredDim().x
-      #console.log "rightWidget.getMaxDim().x: " + rightWidget.getMaxDim().x
-      #console.log "rightWidget.getDesiredDim().x: " + rightWidget.getDesiredDim().x
-      #console.log "should be constant: " + (leftWidget.getMaxDim().x - leftWidget.getDesiredDim().x + rightWidget.getMaxDim().x - rightWidget.getDesiredDim().x)
 
 
   # TODO: this mechanism to show the right cursor is 90%

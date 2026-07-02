@@ -125,7 +125,6 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     @videoPlayer.loadVideo videoPath
     # TODO reshuffle the video recommandation thumbnails
 
-  # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
   _reLayout: (newBoundsForThisLayout) ->
 
     if @_handleCollapsedStateShouldWeReturn() then return

@@ -271,12 +271,10 @@ class HandleWdgt extends Widget
   
   # HandleWdgt events:
   mouseEnter: ->
-    #console.log "<<<<<< handle mousenter"
     @state = @STATE_HIGHLIGHTED
     @changed()
   
   mouseLeave: ->
-    #console.log "<<<<<< handle mouseleave"
     @state = @STATE_NORMAL
     @changed()
 

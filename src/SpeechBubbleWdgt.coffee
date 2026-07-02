@@ -53,8 +53,6 @@ class SpeechBubbleWdgt extends Widget
     @_invalidateLayout()
 
 
-  # TODO id: SUPER_SHOULD BE AT TOP_OF_DO_LAYOUT date: 1-May-2023
-  # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
   _reLayout: (newBoundsForThisLayout) ->
 
 
@@ -73,9 +71,9 @@ class SpeechBubbleWdgt extends Widget
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    # adjust my layout
-    @_applyWidth newBoundsForThisLayout.width()
-    @_applyHeight newBoundsForThisLayout.height()
+    # adjust my layout -- apply BOTH position and size up front (was _applyWidth + _applyHeight,
+    # which left the origin stale, so @position() below lagged one cadence on a move)
+    @_applyBounds newBoundsForThisLayout
 
     # adjust layout of my contents
     @contentsWidget._reLayout (

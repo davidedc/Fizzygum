@@ -59,7 +59,6 @@ class VideoPlayerWdgt extends Widget
   loadVideo: (videoPath) ->
     @videoPlayerCanvas.loadVideo videoPath
 
-  # TODO id: SUPER_IN_DO_LAYOUT_IS_A_SMELL date: 1-May-2023
   _reLayout: (newBoundsForThisLayout) ->
 
     if @_handleCollapsedStateShouldWeReturn() then return

@@ -178,8 +178,8 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   false` (`:43`) — set `txt.isEditable = true` before clicking it. A `SliderWdgt` defaults to `alpha 0.1`; a
   `CanvasWdgt` ships no default extent. A morph made via the demo menu (`world.create`, floats on the hand) is
   initialised differently from `new …; world.add` and can inspect differently — reproduce the menu path when it's load-bearing.
-- **`moveTo` vs `_applyMoveToAndNotify`.** Before `world.add` (nothing painted yet) a raw `_applyMoveToAndNotify` is fine; to move a
-  widget ALREADY in the world use **`moveTo`** (a proper broken-rect repaint of both regions) — `_applyMoveToAndNotify` only
+- **`moveTo` vs `_applyMoveTo`.** Before `world.add` (nothing painted yet) a raw `_applyMoveTo` is fine; to move a
+  widget ALREADY in the world use **`moveTo`** (a proper broken-rect repaint of both regions) — `_applyMoveTo` only
   dirties the OLD bounds.
 - **`getMostRecentlyOpenedMenu()` is fresh-only** — every mouseUp clears `world.freshlyCreatedPopUps`. Capture a popup
   reference right after it opens and drive its later items via `@moveToItemOfMenuAndClick_InputEvents`.

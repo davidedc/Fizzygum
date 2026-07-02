@@ -227,25 +227,22 @@ class SimpleVerticalStackPanelWdgt extends Widget
       else
         recommendedElementWidth = @_childWidthInStack widget, @availableWidthForContents()
 
-        # §4.2 Stage 1 (structural arrange): MEASURE the child's preferred extent at the recommended width, then
-        # APPLY it via the NON-notifying arrange twin so this arrange does not fire the re-fit seam at ME (Intent-2
-        # self-re-enqueue = the capstone's Pattern B). preferredExtentForWidth is PURE and already encapsulates each
-        # child type's width->height sizing (wrapped text / clock square / ratio), so it returns the SAME extent the
-        # old _setWidthSizeHeightAccordingly mutate-and-read-back produced -- proven byte-exact by the §4.1 Stage-A/B
-        # differential probes. A deferred-layout child (a nested container) then re-lays-out its OWN children at that
-        # extent (its self-resize is a no-op == the measure, so it fires no seam either). (was: notify-by-mutation
-        # mutate-then-read-back; assessment §2.4.)
-        # §4.2 Stage 1: apply the child's width WITHOUT firing the re-fit seam at ME (Pattern B) -- but for LEAF
-        # children ONLY. A child that is itself a TRACKING CONTAINER (`_reLayoutChildren?` -- a Window / Stack /
-        # ScrollPanel, the same marker the seam gates on) KEEPS the seam-firing _setWidthSizeHeightAccordingly:
-        # its child-resize re-enqueue is LOAD-BEARING for a constrained-scroll-stack's content<->scrollbar WIDTH
-        # convergence (making it non-notifying settled the stack 6px wider, overlapping its scrollbar --
-        # macroWindowCellsInConstrainedScrollStackReflow). That converts only in Stage 3, once the convergence is
-        # structural. (NB do NOT use `implementsDeferredLayout()` here -- it is pinned false on Window/Stack/Scroll
-        # precisely so it doesn't flip their read sites, so it would mis-route them to the leaf branch.) A LEAF child
-        # (text / clock / box -- the stack's 10 capstone Pattern-B pushes) takes the pure measure applied
-        # non-notifying: the measure carries its per-type width->height sizing (wrapped text / clock square / ratio),
-        # byte-exact by the §4.1 Stage-A/B probes, and a leaf has no inner convergence to drive.
+        # Size the child at the recommended width -- two paths by child KIND, neither of
+        # which notifies anyone (the notify-by-mutation seam was deleted 2026-07-01; my
+        # container re-fits at settle time via the up-edge):
+        #  - a TRACKING-CONTAINER child (`_reLayoutChildren?` -- Window / Stack / ScrollPanel)
+        #    goes through _setWidthSizeHeightAccordingly: applying its width must ALSO
+        #    arrange its own subtree at that width (a pure measure cannot apply a subtree
+        #    arrange), and the call HANDS the resulting height forward (Path B), so I never
+        #    read the child's geometry back.
+        #  - a LEAF child (text / clock / box) is sized by the PURE measure
+        #    preferredExtentForWidth -- it carries each type's width->height sizing (wrapped
+        #    text / clock square / ratio), proven byte-exact vs the old mutate-and-read-back
+        #    by the §4.1 Stage-A/B differential probes -- applied through the
+        #    override-bypassing _applyExtentBase.
+        # (NB do NOT use `implementsDeferredLayout()` as the discriminator -- it is pinned
+        # false on Window/Stack/Scroll precisely so it doesn't flip their read sites, so it
+        # would mis-route them to the leaf branch.)
         if widget._reLayoutChildren?
           elementHeight = widget._setWidthSizeHeightAccordingly recommendedElementWidth
         else
@@ -263,11 +260,15 @@ class SimpleVerticalStackPanelWdgt extends Widget
         leftPosition = @_childLeftInStack widget, recommendedElementWidth
 
 
-      # §4.2 Stage 1: move via the NON-notifying arrange twin for LEAF children (once the resize stops firing the
-      # seam, the child-MOVE becomes the surviving half of the stack's Pattern-B pushes). A child that is a TRACKING
-      # CONTAINER (`_reLayoutChildren?`) keeps the seam-firing _applyMoveTo: its move's in-pass re-enqueue is
-      # load-bearing for a constrained-scroll-stack's content<->scrollbar WIDTH convergence (dropping it settled the
-      # stack 6px wider, overlapping its scrollbar) -- it converts only in Stage 3. Same discriminator as the resize.
+      # Move the child -- same discriminator as the resize above, DIFFERENT reason (nothing
+      # notifies anything anymore; the notify-by-mutation seam was deleted 2026-07-01):
+      # _applyMoveTo is the POLYMORPHIC move corner (ClippingAtRectangularBoundsMixin's
+      # scroll-optimization override dispatches through it), _applyMoveToBase the uniform
+      # base translate. Each child KIND keeps the path it has always taken: a tracking
+      # container (a clipping widget) keeps its override's repaint behaviour, a leaf keeps
+      # the base translate. Unifying onto either name is a REPAINT-PATH change (e.g. a
+      # clipping leaf panel would gain the override), not a free cleanup -- see the
+      # twin-collapse verdict on Widget._applyMoveBy.
       targetPos = new Point leftPosition, @top() + verticalPadding + stackHeight
       if widget._reLayoutChildren?
         widget._applyMoveTo targetPos

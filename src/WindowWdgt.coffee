@@ -42,8 +42,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   #   window height = content height-at-its-allotted-width + title/resizer chrome
   #
   # - chrome (== the arrange's partOfHeightUsedUp): the titlebar (closeIcon + 2*padding) plus the
-  #   bottom margin, which differs by whether the resizer may overlap the contents -- the two
-  #   branches mirror _positionAndResizeChildren's chrome calc exactly.
+  #   bottom margin, which differs by whether the resizer may overlap the contents -- chrome
+  #   comes from the shared _chromeHeight (one home for the measure and the arrange).
   # - content height: when the content sets its height FREELY (a scroller / slider / document fills
   #   whatever height the window is dragged to), the height is the window's OWN height minus chrome
   #   (mirrors the contentsRecursivelyCanSetHeightFreely branch); otherwise the content DICTATES the
@@ -52,6 +52,30 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   #   no-arg getWidthInStack() since availableWidthForContents() == width() - 2*padding.
   # contentsRecursivelyCanSetHeightFreely is width-independent, so testing it here (before the
   # recursion) matches the arrange's post-width-set test. A collapsed window is just its titlebar.
+
+  # The titlebar icon square (close / collapse / edit buttons) -- ONE home for the
+  # literal 16 the measure and the arrange both used to declare locally.
+  @CLOSE_ICON_SIZE: 16
+
+  # Height of the titlebar strip: icon square + a padding above and below. (Rounding the
+  # whole sum -- identical to every historical inline form for any integer @padding.)
+  _titlebarHeight: ->
+    Math.round(WindowWdgt.CLOSE_ICON_SIZE + @padding + @padding)
+
+  # Window chrome height -- everything that is NOT content: the titlebar strip plus the
+  # bottom margin, which depends on whether the resizer may overlap the contents. ONE home
+  # for the calc the measure (preferredExtentForWidth) and the arrange
+  # (_positionAndResizeChildren) both used to write out inline: they MUST agree, or the
+  # window's measure diverges from what its arrange then applies (assessment §6.1 rule 1).
+  # The two inline copies had in fact drifted at the PARSE level -- one rounded only the
+  # titlebar, the other (via CoffeeScript's implicit call in `Math.round (a) + b`) the
+  # whole sum -- identical only while @padding is an integer.
+  _chromeHeight: (spec) ->
+    if spec.resizerCanOverlapContents
+      @_titlebarHeight() + 2 * @padding
+    else
+      @_titlebarHeight() + 3 * @padding + WorldWdgt.preferencesAndSettings.handleSize
+
   preferredExtentForWidth: (availW) ->
     # No content-derived measure yet -- this window is mid FIRST content-placement
     # (contentNeverSetInPlaceYet), so its own / nested content specs may be uninitialised (their
@@ -59,16 +83,12 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # the arrange's own construction-transient branch. This is what keeps a NESTED window's measure
     # finite when an outer window recurses into it DURING the inner window's construction.
     if @contentNeverSetInPlaceYet then return new Point (availW ? @width()), @height()
-    closeIconSize = 16
     if @contents? and !@contents.collapsed
       spec = @contents.layoutSpecDetails
       # A content transiently WITHOUT its layoutSpec (mid drop/delete) has no derivable measure either --
       # keep the measure total and report the current extent.
       if !spec? then return new Point (availW ? @width()), @height()
-      if spec.resizerCanOverlapContents
-        chrome = Math.round(closeIconSize + @padding + @padding) + 2 * @padding
-      else
-        chrome = Math.round(closeIconSize + @padding + @padding) + 3 * @padding + WorldWdgt.preferencesAndSettings.handleSize
+      chrome = @_chromeHeight spec
       if @contentsRecursivelyCanSetHeightFreely()
         desiredHeight = Math.round @height() - chrome
       else
@@ -76,7 +96,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
         desiredHeight = @contents.preferredExtentForWidth(recommendedElementWidth).y
       return new Point availW, desiredHeight + chrome
     else if @contents?.collapsed
-      return new Point availW, Math.round(closeIconSize) + @padding + @padding
+      return new Point availW, @_titlebarHeight()
     return new Point availW, @height()
 
   # TODO passing the @labelContent doesn't quite work, when
@@ -544,7 +564,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # should this just be the _reLayout function? Why do we need this extra one?
   _positionAndResizeChildren: ->
 
-    closeIconSize = 16
+    closeIconSize = WindowWdgt.CLOSE_ICON_SIZE
 
     # close button
     if @closeButton? and @closeButton.parent == @
@@ -596,10 +616,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
         # the content was already there
         recommendedElementWidth = @contents.layoutSpecDetails.getWidthInStack()
 
-      if @contents.layoutSpecDetails.resizerCanOverlapContents
-        partOfHeightUsedUp = Math.round (closeIconSize + @padding + @padding) + 2 * @padding
-      else
-        partOfHeightUsedUp = Math.round (closeIconSize + @padding + @padding) + 3 * @padding + WorldWdgt.preferencesAndSettings.handleSize
+      partOfHeightUsedUp = @_chromeHeight @contents.layoutSpecDetails
 
       # this re-layouts each widget to fit the width.
       if @contentNeverSetInPlaceYet
@@ -658,7 +675,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       stackHeight += desiredHeight
 
     if @contents? and @contents.collapsed
-      partOfHeightUsedUp = Math.round closeIconSize + @padding + @padding
+      partOfHeightUsedUp = @_titlebarHeight()
 
 
     newHeight = stackHeight + partOfHeightUsedUp

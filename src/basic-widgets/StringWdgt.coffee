@@ -463,9 +463,6 @@ class StringWdgt extends Widget
       if i != splitText.length - 1
         fittingText += "\n"
 
-      #console.log "searchLongestFittingTextByMultiCroppingIt trying to fit one more paragraph:"
-      #console.log "   " + eachParagraph
-      #console.log " overall blurb we are fitting: " + fittingText
 
       # add each new line of textToFit to the existing blurb to be tested
       # (if we are done with adding lines of textToFit, then we have our
@@ -480,19 +477,15 @@ class StringWdgt extends Widget
         # always end up start and pivot coinciding
         while start != (pivot = Math.floor (start + stop) / 2)
 
-          #console.log "start/stop/pivot: " + start + " / " + stop + " / " + pivot
 
           textAtPivot = fittingText.substring 0, pivot
           itFitsAtPivot = @doesTextFitInExtent textAtPivot, @originallySetFontSize
-          #console.log "  what fits: " + textAtPivot + " fits: " + valueAtPivot
 
           if itFitsAtPivot
-            #console.log "fits at pivot of " + pivot + " : start = pivot now"
             # bring forward the start since there are still
             # zeroes at the pivot
             start = pivot
           else
-            #console.log "doesn't fit at pivot of " + pivot + " : start = pivot now"
             # bring backwards the stop since there is already
             # a one at the pivot
             stop = pivot
@@ -534,7 +527,6 @@ class StringWdgt extends Widget
             debugger
             @doesTextFitInExtent fittingText, @originallySetFontSize
 
-      #console.log "what fits: " + fittingText
 
       # if there is no more space
       # for even a single line with the smallest character, then it means
@@ -543,7 +535,6 @@ class StringWdgt extends Widget
       # possible blurb that we can fit.
       #if i != splitText.length - 1
       #  if !@doesTextFitInExtent fittingText + "\n", @originallySetFontSize
-      #    console.log "break 2"
       #    break
 
     # we either found the fitting blurb or we are in the
@@ -556,7 +547,6 @@ class StringWdgt extends Widget
       else
         fittingText = ""
 
-    #console.log "_________fittingText: " + fittingText
 
 
     return fittingText
@@ -566,11 +556,9 @@ class StringWdgt extends Widget
     textToFit = @transformTextOneToOne @text
     if @doesTextFitInExtent textToFit, @originallySetFontSize
       @textPossiblyCroppedToFit = textToFit
-      #console.log "@textPossiblyCroppedToFit = textToFit 1"
     else
       if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.SCALEDOWN
         @textPossiblyCroppedToFit = textToFit
-        #console.log "@textPossiblyCroppedToFit = textToFit 2"
 
   eliminateInvisibleCharacter: (string) ->
     string.replace @emptyCharacter, ''
@@ -626,13 +614,11 @@ class StringWdgt extends Widget
     
     #if !window.globCounter? then window.globCounter = 0
     #window.globCounter++
-    #console.log "fitting to extent " + window.globCounter
 
     textToFit = @transformTextOneToOne @text
 
     if @doesTextFitInExtent textToFit, @originallySetFontSize
       @textPossiblyCroppedToFit = textToFit
-      #console.log "@textPossiblyCroppedToFit = textToFit 3"
       if @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.SCALEUP
         largestFittingFontSize = @searchLargestFittingFont textToFit
         return largestFittingFontSize
@@ -644,7 +630,6 @@ class StringWdgt extends Widget
         return @originallySetFontSize
       else
         @textPossiblyCroppedToFit = textToFit
-        #console.log "@textPossiblyCroppedToFit = textToFit 4"
         largestFittingFontSize = @searchLargestFittingFont textToFit
         return largestFittingFontSize
 
@@ -895,8 +880,6 @@ class StringWdgt extends Widget
     # other parts to move on to now.
     while true
       if charX > xPosition - @left()
-        #console.log "xPosition - @left(): " + (xPosition - @left()) + " charXMinusOne " + charXMinusOne + "  charX " + charX
-        #console.log "Math.abs(xPosition - @left() - charXMinusOne) " + Math.abs(xPosition - @left() - charXMinusOne) + "  Math.abs(xPosition - @left() - charX) " + Math.abs(xPosition - @left() - charX)
         if Math.abs(xPosition - @left() - charXMinusOne) < Math.abs(xPosition - @left() - charX)
           return idx - 1
         break

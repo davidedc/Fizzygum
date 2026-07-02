@@ -38,6 +38,16 @@ class LayoutSpec
   @ATTACHEDAS_CORNER_INTERNAL_RIGHT: 100017
   @ATTACHEDAS_CORNER_INTERNAL_BOTTOM: 100018
 
+  # TRUE iff `spec` is one of the five corner/edge-internal attachment specs above -- a
+  # child placed by base Widget._reLayout's corner pass (handles etc.). ONE home for the
+  # five-way test Widget._reLayout used to write out twice.
+  @isCornerOrEdgeInternal: (spec) ->
+    spec == @ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT or
+    spec == @ATTACHEDAS_CORNER_INTERNAL_TOPLEFT or
+    spec == @ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT or
+    spec == @ATTACHEDAS_CORNER_INTERNAL_RIGHT or
+    spec == @ATTACHEDAS_CORNER_INTERNAL_BOTTOM
+
 
   # »>> this part is excluded from the fizzygum homepage build
   # TODO

@@ -43,7 +43,6 @@ class ListWdgt extends ScrollPanelWdgt
     #    An example of how to use formats can be found in the InspectorWdgt's
     #    "markOwnProperties" mechanism.
     #
-    #debugger
     super()
     @contents.disableDrops()
     @color = Color.WHITE
@@ -89,7 +88,6 @@ class ListWdgt extends ScrollPanelWdgt
       #italic = false,
       #doubleClickAction # optional, when used as list contents
 
-      #console.log "@labelGetter(element): " + @labelGetter(element)
       @listContents.addMenuItem(
         @labelGetter(element), # labelString
         true,

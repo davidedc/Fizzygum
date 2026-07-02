@@ -53,14 +53,15 @@ class SliderWdgt extends CircleBoxWdgt
       @layoutSpecDetails = new VerticalStackLayoutSpec 0
 
   _reactToBeingAdded: (whereTo, beingDropped) ->
+    @_reLayoutSelfAndButton()
+
+  # Re-lay-out me and my thumb, then repaint -- the couplet every value/geometry change
+  # ends with. The button guard covers deserialization, where @button can still be a
+  # string reference (see unitSize).
+  _reLayoutSelfAndButton: ->
     @_reLayoutSelf()
-    
-    # might happen in phase of deserialization that
-    # the button reference here is still a string
-    # so skip in that case
     if @button? and @button instanceof SliderButtonWdgt
       @button._reLayoutSelf()
-      
     @changed()
 
   _applyExtent: (aPoint) ->
@@ -101,22 +102,13 @@ class SliderWdgt extends CircleBoxWdgt
   # (i.e. changed by something else than the user moving the slider)
   updateHandlePosition: (newvalue) ->
     @value = Number(newvalue)
-    @_reLayoutSelf()    
-    @button._reLayoutSelf()
-    @changed()
+    @_reLayoutSelfAndButton()
 
-  # TODO this should call updateHandlePosition above
-  # instead of duplicating code, however the tests are
-  # in a precarious condition and I don't want to break anything
   setValue: (newvalue, ignored, connectionsCalculationToken, superCall) ->
     if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
     @value = Number(newvalue)
     @updateTarget()
-    @_reLayoutSelf()
-    
-    @button._reLayoutSelf()
-    
-    @changed()
+    @_reLayoutSelfAndButton()
     
   # `constrainedButtonPosition`, when supplied, is the button's already-clamped
   # new top-left (passed by SliderButtonWdgt.nonFloatDragging right after it moves
@@ -241,11 +233,7 @@ class SliderWdgt extends CircleBoxWdgt
       @start = Math.min Math.max(newStart, 0), @stop - @size  unless isNaN newStart
     @value = Math.max @value, @start
     @updateTarget()
-    @_reLayoutSelf()
-    
-    @button._reLayoutSelf()
-    
-    @changed()
+    @_reLayoutSelfAndButton()
   
   setStop: (numOrWidgetGivingNum) ->
 
@@ -261,11 +249,7 @@ class SliderWdgt extends CircleBoxWdgt
       @stop = Math.max newStop, @start + @size  unless isNaN newStop
     @value = Math.min @value, @stop
     @updateTarget()
-    @_reLayoutSelf()
-    
-    @button._reLayoutSelf()
-    
-    @changed()
+    @_reLayoutSelfAndButton()
   
   mouseDownLeft: (pos) ->
     if @button.parent == @ and ((@parent instanceof ScrollPanelWdgt) or (@parent instanceof PromptWdgt))
@@ -297,11 +281,7 @@ class SliderWdgt extends CircleBoxWdgt
     # button keeps the same value, so there
     # is no need to update the target.
     #@updateTarget()
-    @_reLayoutSelf()
-    
-    @button._reLayoutSelf()
-    
-    @changed()
+    @_reLayoutSelfAndButton()
   
   # openTargetSelector: -> taken form the ControllerMixin
   
