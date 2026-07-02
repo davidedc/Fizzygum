@@ -562,26 +562,57 @@ insurance to run one round after step 2 since the diff is wide.
 
 ---
 
-## §4 — Tier C (optional, default-DECLINE): coalesce the resize/move handle drags
+## §4 — Tier C (✅ GREENLIT — do it NEXT session): coalesce the resize/move handle drags
 
-> **Cold-session guard: this tier is DECLINED by default. Do not execute it unless the owner's session instructions
-> explicitly ask for it AND the measurement gate below has passed.**
+> **Status (2026-07-02): APPROVED by the owner. The measurement gate ran (below) and the owner elected to PROCEED.**
+> Scheduled for a dedicated next session; NOT yet implemented. The whole change is ONE commit: the four `*Coalesced`
+> entrypoints + the switched handle arms + the caller-allowlist static guard (all required together).
 
-**What.** `HandleWdgt.nonFloatDragging` (:252–269) issues one self-settling public setter per drag event
-(`setExtent`/`moveTo`/`setWidth`/`setHeight` by handle type) — so N drag events landing in one heavy frame cost N full
-settles of the target subtree. The established remedy is a **declared coalesced entrypoint** per stream
-(`setMaxDimCoalesced` precedent, `Widget.coffee` :3858+, `_coalescedDeclare` window, assessment §2.7): add
-`setExtentCoalesced` / `moveToCoalesced` / `setWidthCoalesced` / `setHeightCoalesced` and switch the four arms to them.
-**Why it would be sound.** Render happens once per frame after all events, so coalesced-vs-self-settle is
-byte-identical by construction; and the handler's arithmetic reads only the mouse position + geometry the gesture does
-not mutate (`@target.position()` under a resize, the fixed grab-offset under a move) — no read of the target's
-*changing* extent between events, so deferring the applies cannot skew the stream.
-**Why default-DECLINE.** It **adds four public entrypoints** (against the minimal-code axis) to buy per-frame settle
-count during interactive drags — a cost nobody has measured as felt. The divider-drag precedent measured a median 16
-(max 56) muts/frame at normal speed, so the saving is real *if* the target subtree is big (weigh muts/frame × queue
-length, `coalescing-measurement.md`). **Gate to take it:** measure a window-resize drag with the harness first; only
-proceed if muts/frame ≫ 1 at normal speed AND the resize of heavy windows actually feels sluggish.
-**Risk / gate if taken.** Stream-timing change → `./fg gauntlet` + the full danger torture.
+**What.** `HandleWdgt.nonFloatDragging` (`HandleWdgt.coffee` :252–269) issues one self-settling public setter per drag
+event (`setExtent` :261 / `moveTo` :263 / `setWidth` :265 / `setHeight` :269, mutually exclusive by handle type) — so N
+drag events landing in one heavy frame cost N full settles of the target subtree. The established remedy is a
+**declared coalesced entrypoint** per stream (the `setMaxDimCoalesced` precedent — `Widget.coffee` :3769-3773 →
+`_coalescedDeclare` :3779 → the `_<x>NoSettle` core; assessment §2.7): add `setExtentCoalesced` / `moveToCoalesced` /
+`setWidthCoalesced` / `setHeightCoalesced` and switch the four `nonFloatDragging` arms to them. Each new twin mirrors
+`setMaxDimCoalesced` verbatim — `if world?.coalescingEnabled then @_coalescedDeclare => @<core> else @<publicSetter>`.
+**FIRST implementation step:** read each public setter's `_settleLayoutsAfter => <core>` body (`setExtent` etc. are the
+5 inline-thunk pure-geometry setters, assessment §5) to identify the core to wrap, and confirm it invalidates for the
+end-of-cycle flush the way `_setMaxDimNoSettle`'s `@_invalidateLayout()` (:3800) does — since Tier B the extent core is
+the polymorphic `_applyExtent`, so verify its reaction reaches the end-of-cycle settle before wiring the coalesced twin.
+
+**Why it is sound.** Render happens once per frame after all events, so coalesced-vs-self-settle is byte-identical by
+construction; and the handler's arithmetic reads only the mouse position + geometry the gesture does not mutate
+(`@target.position()`/`@extent()`/`@bounds` under a resize — set SYNCHRONOUSLY by the apply core, NOT by the deferred
+settle; the fixed grab-offset under a move) — no read of the target's *settled layout* between events, so deferring the
+settle cannot skew the stream.
+
+**Measurement (2026-07-02 — `coalescing-measure/` + a frame-time prelude, on `macroNakedInspectorRendersResizesAndEdits`,
+a heavy inspector-window resize-handle drag).** 1 setter per move (mutually-exclusive arms) ⇒ muts/frame ≈ moves/frame,
+bursty: at **normal** speed median 2 but a ~4-frame opening burst to **40/frame**, over a **44-widget** settle. Wall-ms
+of the self-settles coalescing would collapse: **peak ~9 ms in one frame** at normal (~12 ms at fastest), tapering to
+<1 ms/frame; with coalescing that peak frame drops to ~1 flush ≈ 0.2 ms. 9 ms is ~half a 60fps budget (no dropped frame
+on the dev box) and scales ~linearly with target size — a resize re-settling ~80+ widgets, or a slower machine, reaches
+a dropped frame at drag start. **Decision: PROCEED** — the settle-count collapse is proven-cheap (the `setMaxDim`
+precedent) and the win grows with heavier resizable content.
+
+**REQUIRED — the `*Coalesced` caller-allowlist STATIC guard (same commit).** TODAY there is NO check that a `*Coalesced`
+method is only called from a per-event stream: the `_coalescedDeclarationDepth` / `auditUndeclaredEndOfCycle` machinery
+(`WorldWdgt` :90-98, `Widget` :3713) enforces the CONVERSE — that end-of-cycle mutations are *declared* — and treats any
+`*Coalesced` call as auto-declared regardless of caller. Since `*Coalesced` defers only the LAYOUT SETTLE (the field
+write is synchronous), it is unsound only for a caller that reads back the *settled* layout within the cycle — which a
+discrete/programmatic caller might, and a stream handler never does. So add a `check-layering.js` rule: a call matching
+`[@.]\w+Coalesced\b` may appear ONLY inside a method whose name is in a small `COALESCED_CALLER_ALLOWLIST` (the stream
+handlers: `nonFloatDragging`, the wheel/scroll handler, any key-repeat handler); a call from any other method is a
+violation. It drops into the existing per-method call-scanning shape ([K]/[F]/[G]) and is `@`-self / `.`-receiver scoped
+(sufficient — the callers are always direct). Seed the allowlist with `StackElementsSizeAdjustingWdgt.nonFloatDragging`
+(the existing caller) + `HandleWdgt.nonFloatDragging` (this tier's new callers). *(A dynamic twin — a
+`_dispatchingInputEvent` boolean set around `playQueuedEvents`'s per-event dispatch, asserted in a prelude, keyed off
+`WorldWdgt.timeOfEventBeingProcessed` :80 — is possible but heavier and only covers dynamic dispatch the direct pattern
+lacks; the static rule is the ask.)*
+
+**Risk / gate.** Byte-identical by construction, but the diff touches the drag stream → `./fg gauntlet` + the full
+danger torture; expect no recapture. The static guard is build-time (`./fg build` — verify it FAILS a planted
+out-of-allowlist `*Coalesced` call, then passes clean).
 
 ---
 
@@ -594,7 +625,9 @@ proceed if muts/frame ≫ 1 at normal speed AND the resize of heavy windows actu
   gate; review it against assessment §2.3/§4.1.
 - **Tier B**: `./fg gauntlet` after each of the two rename steps; expect the benign inspector recapture; one torture
   round after step 2 as insurance.
-- **Tier C** (if ever taken): measurement harness first; then gauntlet + full torture.
+- **Tier C** (next session): measurement already done (§4). One commit = 4 `*Coalesced` entrypoints + switched handle
+  arms + the caller-allowlist static guard; `./fg build` (guard: plant an out-of-allowlist call → must fail, then clean)
+  + `./fg gauntlet` + full danger torture; expect no recapture.
 - **Ask before commit/push**; `git commit -F <file>` (§0.5 commit protocol).
 
 ## §6 — Landed record (2026-07-01 → 07-02, all committed; kept for cold-runnability)
@@ -643,7 +676,9 @@ proceed if muts/frame ≫ 1 at normal speed AND the resize of heavy windows actu
 2. **Tier B ✅ DONE (2026-07-02, `ad0bf5c7` + tests `c2ed1476`)** — the owner confirmed the name pair + accepted the
    meaning swap (§3 ⚠); ran after A6 (pre-shrank the surface) and A8 (de-staled the convention doc, which Tier B then
    rewrote). Two mechanical steps, each gated. See §6.
-3. **Tier C**: leave declined unless/until the measurement gate says otherwise (still open — see §4).
+3. **Tier C ✅ GREENLIT (owner, 2026-07-02, measurement done)** — do it next session as ONE commit: the four
+   `*Coalesced` entrypoints + the switched `HandleWdgt.nonFloatDragging` arms + the `*Coalesced` caller-allowlist static
+   guard (`check-layering.js`). See §4 for scope, the frame-time numbers, and the guard spec.
 4. Nothing else: the engine core needs no work (§1), and the Appendix items stay closed.
 
 ---
