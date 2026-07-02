@@ -17,7 +17,7 @@ class AnalogClockWdgt extends Widget
 
     super()
     @setColor Color.create 255, 125, 125
-    @_applyExtentAndNotify new Point 200, 200
+    @_applyExtent new Point 200, 200
     return
 
   colloquialName: ->
@@ -27,7 +27,7 @@ class AnalogClockWdgt extends Widget
     Math.min @width(), @height()
 
   _resizeToWithoutSpacing: ->
-    @_applyExtentAndNotify new Point @widthWithoutSpacing(), @widthWithoutSpacing()
+    @_applyExtent new Point @widthWithoutSpacing(), @widthWithoutSpacing()
 
   initialiseDefaultWindowContentLayoutSpec: ->
     super
@@ -42,7 +42,7 @@ class AnalogClockWdgt extends Widget
     @layoutSpecDetails.elasticity = 0
 
   _setWidthSizeHeightAccordingly: (newWidth) ->
-    @_applyExtentAndNotify new Point newWidth, newWidth
+    @_applyExtent new Point newWidth, newWidth
     @height()  # Path B: hand the (square) height back so a container needn't read it off me. See Widget.
 
   # §4.1 pure measure: the clock is square, so its preferred height equals the width

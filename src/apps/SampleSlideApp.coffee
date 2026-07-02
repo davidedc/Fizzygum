@@ -18,31 +18,31 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
     slideWdgt = new SimpleSlideWdgt
 
     container = slideWdgt.stretchableWidgetContainer.contents
-    container._applyExtentAndNotify new Point 575,454
+    container._applyExtent new Point 575,454
 
     windowWithScrollingPanel = new WindowWdgt nil, nil, new ScrollPanelWdgt, true, true
     windowWithScrollingPanel.setTitleWithoutPrependedContentName "New York City"
-    windowWithScrollingPanel._applyMoveToAndNotify container.position().add new Point 28, 43
-    windowWithScrollingPanel._applyExtentAndNotify new Point 322, 268
+    windowWithScrollingPanel._applyMoveTo container.position().add new Point 28, 43
+    windowWithScrollingPanel._applyExtent new Point 322, 268
     container.add windowWithScrollingPanel
     windowWithScrollingPanel.rememberFractionalSituationInHoldingPanel()
 
 
     usaMap = new SimpleUSAMapIconWdgt Color.create 183, 183, 183
-    usaMap._applyExtentAndNotify new Point 1808, 1115
+    usaMap._applyExtent new Point 1808, 1115
     windowWithScrollingPanel.contents.add usaMap
     windowWithScrollingPanel.contents.scrollTo new Point 1484, 246
     usaMap.rememberFractionalSituationInHoldingPanel()
 
     mapPin = new MapPinIconWdgt
     windowWithScrollingPanel.contents.add mapPin
-    mapPin._applyMoveToAndNotify windowWithScrollingPanel.contents.contents.position().add new Point 1606, 343
+    mapPin._applyMoveTo windowWithScrollingPanel.contents.contents.position().add new Point 1606, 343
     mapPin.rememberFractionalSituationInHoldingPanel()
 
     sampleBarPlot = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleBarPlotWdgt), true, true
-    sampleBarPlot._applyExtentAndNotify new Point 240, 104
+    sampleBarPlot._applyExtent new Point 240, 104
     windowWithScrollingPanel.contents.add sampleBarPlot
-    sampleBarPlot._applyMoveToAndNotify windowWithScrollingPanel.contents.contents.position().add new Point 1566, 420
+    sampleBarPlot._applyMoveTo windowWithScrollingPanel.contents.contents.position().add new Point 1566, 420
     sampleBarPlot.setTitleWithoutPrependedContentName "NYC: traffic"
 
 
@@ -52,21 +52,21 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
     mapCaption.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
     mapCaption.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
 
-    mapCaption._applyMoveToAndNotify container.position().add new Point 366, 40
-    mapCaption._applyExtentAndNotify new Point 176, 387
+    mapCaption._applyMoveTo container.position().add new Point 366, 40
+    mapCaption._applyExtent new Point 176, 387
     container.add mapCaption
     mapCaption.rememberFractionalSituationInHoldingPanel()
 
     wikiLink = new SimpleLinkWdgt "New York City Wikipedia page", "https://en.wikipedia.org/wiki/New_York_City"
-    wikiLink._applyMoveToAndNotify container.position().add new Point 110, 348
-    wikiLink._applyExtentAndNotify new Point 250, 50
+    wikiLink._applyMoveTo container.position().add new Point 110, 348
+    wikiLink._applyExtent new Point 250, 50
     container.add wikiLink
     wikiLink.rememberFractionalSituationInHoldingPanel()
 
 
     wm = new WindowWdgt nil, nil, slideWdgt
-    wm._applyMoveToAndNotify new Point 114, 10
-    wm._applyExtentAndNotify new Point 596, 592
+    wm._applyMoveTo new Point 114, 10
+    wm._applyExtent new Point 596, 592
     world.add wm
     wm.setTitleWithoutPrependedContentName "Sample slide"
 

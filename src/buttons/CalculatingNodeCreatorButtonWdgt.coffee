@@ -6,5 +6,5 @@ class CalculatingNodeCreatorButtonWdgt extends CreatorButtonWdgt
 
   createWidgetToBeHandled: ->
     switcherooWm = new WindowWdgt nil, nil, new CalculatingPatchNodeWdgt, true
-    switcherooWm._applyExtentAndNotify new Point 260, 265
+    switcherooWm._applyExtent new Point 260, 265
     return switcherooWm

@@ -7,13 +7,13 @@ class ReconfigurablePaintInfoWdgt extends SimpleDocumentWdgt
     simpleDocument = new @
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
-    sdspw._applyMoveToAndNotify new Point 114, 10
-    sdspw._applyExtentAndNotify new Point 365, 405
+    sdspw._applyMoveTo new Point 114, 10
+    sdspw._applyExtent new Point 365, 405
 
     # ---------------------
 
     startingContent = new PaintBucketIconWdgt
-    startingContent._applyExtentAndNotify new Point 85, 85
+    startingContent._applyExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
     startingContent.layoutSpecDetails.setElasticity 0
@@ -41,7 +41,7 @@ class ReconfigurablePaintInfoWdgt extends SimpleDocumentWdgt
     # ---------------------
 
     startingContent = new SimpleVideoLinkWdgt "Draw app", "http://fizzygum.org/docs/draw-app/"
-    startingContent._applyExtentAndNotify new Point 405, 50
+    startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
@@ -53,14 +53,14 @@ class ReconfigurablePaintInfoWdgt extends SimpleDocumentWdgt
     # ---------------------
 
     startingContent = new SimpleVideoLinkWdgt "Hacking Fizzygum", "http://fizzygum.org/docs/hacking-fizzygum/"
-    startingContent._applyExtentAndNotify new Point 405, 50
+    startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
     # ---------------------
 
     wm = new WindowWdgt nil, nil, simpleDocument
-    wm._applyExtentAndNotify new Point 365, 405
+    wm._applyExtent new Point 365, 405
     wm._moveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Drawings Maker info"

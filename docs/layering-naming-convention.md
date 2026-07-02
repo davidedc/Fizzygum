@@ -32,54 +32,62 @@ enforce). It is not the runtime layout architecture either — for the flush mod
   polymorphic accessor and clears a cache); it is `@`-self-scoped.
 
 Tier depth strictly INCREASES down a call chain — e.g. `setExtent` (public) → `_settleLayoutsAfter` (`_`) →
-`_applyExtentAndNotify` (`_`) → `__commitExtent` (`__`) — which is the readable-depth goal. **Tier follows behaviour:**
+`_applyExtent` (`_`) → `__commitExtent` (`__`) — which is the readable-depth goal. **Tier follows behaviour:**
 the tier of a method is determined by what it does (leaf vs orchestrator vs public), never by a `raw`/`silent`/`full`
 fragment.
 
 ---
 
-## 2. Family 1 — the geometry-apply 2×2 (NOTIFY × REACT)
+## 2. Family 1 — the geometry-apply 2×2 (REACT × DISPATCH)
 
 ### 2.1 Why a 2×2
-An immediate geometry **apply** is exactly **two independent booleans**:
-- **NOTIFY** — fire the up-notify seam (tell the container tracking my geometry to re-fit). Needed when an EXTERNAL
-  agent mutates a freefloating widget; redundant when an arranger places me top-down (it already knows my new geometry).
-- **REACT** — `changed()` repaint + `_reLayoutSelf()` (extent) / children-translate (move).
+An immediate geometry **apply** that REACTS is split by **two independent booleans**:
+- **REACT** — `changed()` repaint + `_reLayoutSelf()` (extent) / children-translate (move). `commit<Geom>` = no react,
+  `apply<Geom>` = react.
+- **DISPATCH** — is this the **polymorphic** entry (the override dispatch point a subclass specializes), or the
+  override-**BYPASS** base the top-down arrange uses to place a child WITHOUT re-entering its subclass apply-override?
+  Bare `_apply<Geom>` = polymorphic; `_apply<Geom>Base` = bypass.
 
-Two booleans ⇒ a 2×2 lattice of corners. The naming is fully derivable: `commit<Geom>` / `apply<Geom>` is the **REACT**
-axis (commit = no react, apply = react); the `…AndNotify` suffix is the **NOTIFY** axis. **Only the leaf** (no react,
-no notify) is `__`; any corner that REACTS or NOTIFIES is `_`, because the seam and `changed`/`_reLayout*` are
-orchestration a `__` may not trigger — so the notify-only corner is `_commit…AndNotify` (single `_`), not `__`.
+The lattice's *third* boolean — **NOTIFY** (fire the up-notify seam so a size-tracking container re-fits) — is **GONE**:
+the seam was deleted 2026-07-01 (the settle loop now re-fits containers after their content settles) and its
+`…AndNotify` suffix was renamed away 2026-07-02 (Tier B — see the note below). **Only the leaf** (no react) is `__`;
+any corner that REACTS is `_`, because `changed`/`_reLayout*` are orchestration a `__` may not trigger.
 
 ### 2.2 The corners
 
-| corner (NOTIFY / REACT) | extent / bounds / width / height | move |
+| corner (REACT / DISPATCH) | extent / bounds / width / height | move |
 |---|---|---|
-| **— / —** leaf (`__`) | `__commitExtent` · `__commitWidth` · `__commitHeight` | `__commitMoveBy` · `__commitMoveTo` |
-| **✓ / —** notify-only (`_`) | *(collapsed 2026-07-01 — see note)* | *(n/a — a move always repaints)* |
-| **— / ✓** arrange (`_`) | `_applyExtent` · `_commitBounds`¹ | `_applyMoveBy` · `_applyMoveTo` |
-| **✓ / ✓** full mutator (`_`) | `_applyExtentAndNotify` · `_applyBoundsAndNotify` · `_applyWidthAndNotify` · `_applyHeightAndNotify` | `_applyMoveByAndNotify` · `_applyMoveToAndNotify` |
+| **leaf** (`__`, no react) | `__commitExtent` · `__commitWidth` · `__commitHeight` | `__commitMoveBy` · `__commitMoveTo` |
+| **silent commit** (`_`, no react) | `_commitBounds`¹ | *(n/a — a move always repaints)* |
+| **apply — polymorphic** (`_`, reacts, DISPATCH point) | `_applyExtent` · `_applyBounds` · `_applyWidth` · `_applyHeight` | `_applyMoveBy` · `_applyMoveTo` |
+| **apply — bypass** (`_`, reacts, override-BYPASS base) | `_applyExtentBase` | `_applyMoveByBase` · `_applyMoveToBase` |
 | **public** | `setExtent` · `setBounds` · `setWidth` · `setHeight` | `moveTo` · `moveWithin` |
 
-(`moveWithin` is a public CONVENIENCE that delegates to the one-settle `moveTo`, so it is deliberately NOT in the
-gate's `PUBLIC_SETTERS` — listing it would false-trip rule [C] on its `moveWithin → moveTo` call.)
+Only extent / moveBy / moveTo carry a `*Base` bypass twin — those are the corners with live subclass overrides the
+top-down arrange must skip (extent: the stretchables / stack / scroll / text / slider / list; move: the clipping mixin
++ float-drag). Bounds / width / height are polymorphic-only (no override to bypass). (`moveWithin` is a public
+CONVENIENCE that delegates to the one-settle `moveTo`, so it is deliberately NOT in the gate's `PUBLIC_SETTERS` —
+listing it would false-trip rule [C] on its `moveWithin → moveTo` call.)
 
-> **Post-seam-deletion update (2026-07-01).** The NOTIFY axis of this lattice *was* the re-fit **seam**, now DELETED
-> (the settle loop re-fits size-tracking containers after their content settles). With nothing to notify, the
-> `…AndNotify` suffix no longer notifies, and the **notify-only (✓/—) corner collapsed**: `_commitExtentAndNotify` was a
-> pure pass-through to the `__commitExtent` leaf and is **gone** (its ~20 callers reach the leaf directly, like the
-> `__commitWidth`/`__commitHeight` siblings); `_commitBoundsAndNotify` and the silent bounds arrange-twin `_applyBounds`
-> became byte-identical and folded into one **`_commitBounds`** (¹ a silent origin+extent commit — leaf-like, but
-> single-`_` because it composes the extent leaf). The `_apply…AndNotify` **full mutators keep the suffix for now** (a
-> rename would touch 100+ sites + ~10 overrides). The *move* twins did **NOT** collapse: `_applyMoveByAndNotify` is the
-> dispatch point for the ClippingAtRectangularBoundsMixin / ActivePointerWdgt move overrides (they repaint via `@changed`,
-> not `@fullChanged`), whereas bare `_applyMoveBy` is the uniform base translate the arrange needs — a genuine dispatch
-> distinction, not a redundant twin. See `layout-optimizations-and-oo-cleanup-plan.md`.
+> **Tier B — the `*AndNotify` rename + MEANING SWAP (2026-07-02).** With the NOTIFY seam deleted (2026-07-01) the
+> `…AndNotify` suffix asserted a mechanism that no longer existed, on the most-called API in the layout system. The
+> polymorphic full mutators **dropped** it (`_applyExtentAndNotify` → **`_applyExtent`**; likewise
+> moveTo / moveBy / bounds / width / height), and the override-bypass base twins **took** a `Base` suffix (bare
+> `_applyExtent` / `_applyMoveBy` / `_applyMoveTo` → **`_applyExtentBase` / `_applyMoveByBase` / `_applyMoveToBase`**).
+> **⚠ MEANING SWAPPED:** the bare names `_applyExtent` / `_applyMoveBy` / `_applyMoveTo` *previously* named the **bypass**
+> corner and *now* name the **polymorphic** form — a git-history or pre-2026-07-02 doc/memory hit reading `_applyExtent`
+> silently means the OTHER (now-`*Base`) method. (The `_commit*AndNotify` corners had already collapsed 2026-07-01:
+> `_commitExtentAndNotify` → the `__commitExtent` leaf; `_commitBoundsAndNotify` + the silent bounds twin → one
+> **`_commitBounds`** — ¹ a silent origin+extent commit, leaf-like but single-`_` because it composes the extent leaf.)
+> The *move* twins did **NOT** collapse: polymorphic `_applyMoveBy` is the dispatch point for the
+> ClippingAtRectangularBoundsMixin / ActivePointerWdgt move overrides (they repaint via `@changed`, not `@fullChanged`),
+> whereas `_applyMoveByBase` is the uniform base translate the arrange needs for leaf children — a genuine dispatch
+> distinction, not a redundant twin. See `layout-optimizations-and-oo-cleanup-plan.md` §3.
 
 ### 2.3 Core vs convenience
 Scheme ② names the four CORNER PRIMITIVES. The many *convenience/composite* movers and setters that merely delegate to
-a corner just drop any prefix and become plain `_<verb>` (no `…AndNotify` needed — they inherit the corner's
-behaviour): the movers `_moveLeftSideTo` · `_moveRightSideTo` · `_moveTopSideTo` · `_moveBottomSideTo` · `_moveToSideOf`
+a corner just drop any prefix and become plain `_<verb>` (no `Base` suffix — they delegate to the polymorphic corner and
+inherit its behaviour): the movers `_moveLeftSideTo` · `_moveRightSideTo` · `_moveTopSideTo` · `_moveBottomSideTo` · `_moveToSideOf`
 · `_moveFullCenterTo` · `_moveWithin` · `_moveInDesktopToFractionalPosition` ·
 `_moveInStretchablePanelToFractionalPosition`; the setters/resizer `_setWidthSizeHeightAccordingly` ·
 `_setExtentToFractionalExtentInPaneUserHasSet` · `_resizeToWithoutSpacing`.
@@ -117,10 +125,10 @@ climbs THROUGH a freefloating boundary off-pass when the parent is a size-tracki
 
 The two announce-up verbs are **deleted** and are now BANNED as DEFs by rule **[N]** (do not revive them):
 `_announceGeometryChangeToContainer` (geometry) and `_announceLayoutPropertyChangeToContainer` (a layout property).
-One verb of the family survives:
-- `_reflowContainedTextThenAnnounce()` — self-reflow contained text, then invalidate. **Still live** (`StringWdgt`
-  + ~7 sites); its "Announce" tail now names the dirty-tree climb, not the deleted seam — a truthful-rename rider for
-  the `*AndNotify` sweep (`layout-optimizations-and-oo-cleanup-plan.md` §3).
+One verb of the family was **renamed** in the Tier B sweep (2026-07-02):
+- `_reflowContainedTextThenAnnounce` → **`_reflowContainedTextThenInvalidateLayout`** — self-reflow contained text, then
+  invalidate. **Still live** (`StringWdgt` + ~7 sites); its old "Announce" tail named the deleted seam, so the rider
+  renamed it to the dirty-tree-climb verb it actually ends in (`layout-optimizations-and-oo-cleanup-plan.md` §3).
 
 The valve `_reFitContainer` and the react-down `_reLayoutChildren` are the apply side (§2.2 / the `_reLayout*`
 layout-method family) — retained, now driven by the up-edge rather than by the mutators.
@@ -197,7 +205,7 @@ predicates, the markers, and the gate mechanics live in `docs/lint-and-static-ch
 |---|---|
 | **[I]** `__` leaf no-orchestration (HARD-FAIL) | inside a `__` method, an `@`-self call to the re-fit seam (`_reFitContainer*`/`_announce*`), a react step (`_reLayout*`/`changed`/`fullChanged`), a schedule/settle (`_invalidateLayout`/`recalculateLayouts`/`_settleLayoutsAfter*`), or a public setter → FAIL. A DENYLIST (§1), `@`-self-scoped; the runtime audit (§5) covers dynamic dispatch. |
 | **[J]** callback settle-neutrality (HARD-FAIL) | a `_reactTo*`/`_before*` hook calling `_settleLayoutsAfter` in its OWN body → FAIL (the dispatcher owns the one settle). *(Textual rule; a constructor reached via dynamic dispatch FROM a callback is the runtime audit's concern, §5.2 — which now PERMITS the orphan-construction case, since it auto-defers.)* |
-| **[K]** apply-2×2 name-consistency (HARD-FAIL) | the two statically-sound NEGATIVES: a non-`AndNotify` `_apply*` arrange corner must not fire the seam nor call an `*AndNotify`; a `_commit*AndNotify` notify-only corner must not react (`changed`/`_reLayout*`). The POSITIVE "every `*AndNotify` reaches the seam" is delegated to the runtime audit (§5) — a static scanner can't follow `super`/dynamic dispatch, and an override may legitimately not notify (e.g. `ClippingAtRectangularBoundsMixin._applyMoveByAndNotify`). *(2026-07-01: the anti-seam half is now VACUOUS — the `_announce*` seam and the `_commit*AndNotify` notify-only corner are deleted — kept only as belt-and-braces beside rule [N]; the surviving load-bearing negative is the arrange corner's "must not call an `*AndNotify`" override-bypass invariant, which Tier B re-derives under the truthful names, §3.)* |
+| **[K]** apply-2×2 name-consistency (HARD-FAIL) | the surviving statically-sound NEGATIVE (post-Tier-B, REACT × DISPATCH): a `_apply*Base` override-bypass twin must not fire the container re-fit seam nor DISPATCH to its polymorphic `_apply*` sibling (routing an arrange apply back through the override it exists to bypass); a `_commit*AndNotify` notify-only corner must not react (`changed`/`_reLayout*`). The old POSITIVE "every `*AndNotify` reaches the seam" is RETIRED with the seam (it was the runtime audit's job — §5). *(The anti-seam half is VACUOUS — the `_announce*` seam and the `_commit*AndNotify` corner were deleted 2026-07-01 — kept only as belt-and-braces beside rule [N]. Tier B (2026-07-02) renamed `_apply*AndNotify` → the bare polymorphic `_apply*` and re-derived this row under the truthful names; `AndNotify` now joins the [M] retired-fragment ban, §3.)* |
 | **[L]** callback-shape (HARD-FAIL) | at each def, a `_reactTo*`/`_before*` name MUST match `_(reactTo\|before)(Being\|Child\|HolderWindow)<Event>` and carry no `NoSettle`; the legacy fragments (`childX` / `justBeen` / `iHaveBeen` / `aboutTo` / `prepareTo`) are banned outright. |
 | **[M]** retired-fragment ban (HARD-FAIL) | a method DEF named with a retired geometry/structural prefix — `raw[A-Z]…` / `^silent[A-Z]` / `^fullRaw` → FAIL (allowlist: the raw-PIXEL accessors `rawPixelInfo` / `rawPixelHash` / `rawRGBA`). `full[A-Z]` is NOT banned — `full*` remains a legitimate SUBTREE-AWARE vocabulary (`fullChanged` / `fullBounds` / `fullPaintInto` / …). |
 | **[N]** seam-verb DEF ban (HARD-FAIL) | a method DEF named `_announce…ToContainer` (`/^_announce\w*ToContainer$/`) → FAIL — the notify-by-mutation re-fit seam was deleted 2026-07-01 (§2.6) and replaced by the settle-time up-edge, so this bans reviving the retired announce-up verbs on the DEF side (the CALL side is already covered by the [I]/[K] denylists). Analogous to [M]'s retired-fragment ban. |
@@ -226,9 +234,9 @@ run over the WHOLE suite by a standalone `run-*-gate.sh` — siblings of `run-ca
 `Fizzygum-tests/scripts/tier-naming-audit/` (prelude + `run-tier-naming-gate.sh`). It wraps every apply-2×2 corner +
 the seam (`_announce*`) + the react steps across all classes, and:
 - **HARD-fails the unconditional NEGATIVES** (sound): a `__commit*` leaf that fired the seam or a react step in its own
-  scope (not a true bottom); an arrange `_apply*` that fired the seam (it must react only). These catch a
-  dynamic-dispatch override the scanner can't follow; this is what the self-test exercises.
-- **Reports the [K] POSITIVE as INFORMATIONAL** (does NOT fail): how many `*AndNotify` corners were observed reaching
+  scope (not a true bottom); a `_apply*Base` bypass twin that fired the seam (it reacts only — seam-dead post-2026-07-01,
+  so the live catch is the leaf's react-half). These catch a dynamic-dispatch override the scanner can't follow.
+- **Reports the [K] POSITIVE as INFORMATIONAL** (does NOT fail; RETIRED with the seam — now vacuously 0-reached): how many `_apply*` corners were observed reaching
   the seam (transitively). A runtime observation CANNOT soundly distinguish a mislabeled corner from one whose
   seam-firing path simply was not exercised (a move corner only announces when the move changes the container's
   layout) — so "never reached" is a REVIEW HINT, not a failure.

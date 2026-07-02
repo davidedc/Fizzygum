@@ -56,7 +56,7 @@ class ToolTipWdgt extends Widget
   # ToolTipWdgt invoking:
   openAt: (pos) ->
     @_buildAndConnectChildren()
-    @_applyMoveToAndNotify pos.subtract new Point 8, @height()
+    @_applyMoveTo pos.subtract new Point 8, @height()
     @_moveWithin world
     world.add @
     @addShadow()
@@ -115,7 +115,7 @@ class ToolTipWdgt extends Widget
     @__commitHeight @contentsWidget.height() + @cornerRadius + @padding * 2 + 2
 
     # position my contents
-    @contentsWidget._applyMoveToAndNotify @position().add(
+    @contentsWidget._applyMoveTo @position().add(
       new Point(@padding or @cornerRadius, @padding + 1))
 
 

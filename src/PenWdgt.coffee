@@ -19,7 +19,7 @@ class PenWdgt extends Widget
   constructor: ->
     @penSize = WorldWdgt.preferencesAndSettings.handleSize * 4
     super()
-    @_applyExtentAndNotify new Point @penSize, @penSize
+    @_applyExtent new Point @penSize, @penSize
     # TODO we need to change the size two times, for getting the right size
     # of the arrow and of the line. Probably should make the two distinct
     @penSize = 1
@@ -118,7 +118,7 @@ class PenWdgt extends Widget
       dest = @position().distanceAngle dist, @heading
     else
       dest = @position().distanceAngle(Math.abs(dist), (@heading - 180))
-    @_applyMoveToAndNotify dest.round()
+    @_applyMoveTo dest.round()
     if @isDown
       @parent.drawLine start.subtract(@parent.position()), @center().subtract(@parent.position()), @penSize, @color
   

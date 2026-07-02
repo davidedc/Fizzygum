@@ -29,11 +29,11 @@ class MenuHeader extends BoxWdgt
     # sizeToTextAndDisableFitting wrapper): the build's settle happens ONCE via
     # _buildAndConnectChildren, so a mid-core self-settle would be redundant (layering [G]).
     @text._sizeToTextAndDisableFittingNoSettle()
-    @_applyExtentAndNotify @text.extent().add 2
+    @_applyExtent @text.extent().add 2
 
-  _applyWidthAndNotify: (theWidth) ->
+  _applyWidth: (theWidth) ->
     super
-    @text._applyMoveToAndNotify @center().subtract @text.extent().floorDivideBy 2
+    @text._applyMoveTo @center().subtract @text.extent().floorDivideBy 2
 
   mouseClickLeft: ->
     super

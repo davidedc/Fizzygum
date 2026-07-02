@@ -38,7 +38,7 @@ class StretchableEditableWdgt extends Widget
     @dragsDropsAndEditingEnabled
 
   smartPlace: (widgetToBePlaced, creator) ->
-    widgetToBePlaced._applyMoveToAndNotify @stretchableWidgetContainer.center().round().subtract widgetToBePlaced.extent().floorDivideBy 2
+    widgetToBePlaced._applyMoveTo @stretchableWidgetContainer.center().round().subtract widgetToBePlaced.extent().floorDivideBy 2
     @stretchableWidgetContainer.add widgetToBePlaced
     widgetToBePlaced.rememberFractionalSituationInHoldingPanel()
     @stretchableWidgetContainer.bringToForeground()
@@ -75,8 +75,8 @@ class StretchableEditableWdgt extends Widget
     stretchableWidgetContainerLeft = @left() + @externalPadding
 
     if @stretchableWidgetContainer.parent == @
-      @stretchableWidgetContainer._applyMoveToAndNotify new Point stretchableWidgetContainerLeft, labelBottom
-      @stretchableWidgetContainer._applyExtentAndNotify new Point stretchableWidgetContainerWidth, stretchableWidgetContainerHeight
+      @stretchableWidgetContainer._applyMoveTo new Point stretchableWidgetContainerLeft, labelBottom
+      @stretchableWidgetContainer._applyExtent new Point stretchableWidgetContainerWidth, stretchableWidgetContainerHeight
 
     # ----------------------------------------------
 
@@ -87,7 +87,7 @@ class StretchableEditableWdgt extends Widget
 
     @markLayoutAsFixed()
 
-  _applyExtentAndNotify: (aPoint) ->
+  _applyExtent: (aPoint) ->
     super
     @_reLayoutSelf()
 
@@ -121,7 +121,7 @@ class StretchableEditableWdgt extends Widget
       # "_setWidthSizeHeightAccordingly" will
       # calculate the height.
       if @stretchableWidgetContainer?.ratio?
-        @_applyExtentAndNotify new Point @width(), 0
+        @_applyExtent new Point @width(), 0
 
   enableDragsDropsAndEditing: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
@@ -156,7 +156,7 @@ class StretchableEditableWdgt extends Widget
     if !@stretchableWidgetContainer.ratio?
      return super
 
-    @_applyExtentAndNotify new Point newWidth, Math.round(newWidth / @stretchableWidgetContainer.ratio)
+    @_applyExtent new Point newWidth, Math.round(newWidth / @stretchableWidgetContainer.ratio)
     @height()
 
 

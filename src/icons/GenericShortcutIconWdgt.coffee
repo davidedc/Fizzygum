@@ -15,7 +15,7 @@ class GenericShortcutIconWdgt extends Widget
   _buildAndConnectChildrenNoSettle: ->
     if !@icon?
       @icon = new SimpleDropletWdgt "icon"
-    @_applyExtentAndNotify new Point 95, 95
+    @_applyExtent new Point 95, 95
     @_addNoSettle @icon
 
     @referenceArrowIcon = new ShortcutArrowIconWdgt
@@ -28,7 +28,7 @@ class GenericShortcutIconWdgt extends Widget
     Math.min @width(), @height()
 
   _resizeToWithoutSpacing: ->
-    @_applyExtentAndNotify new Point @widthWithoutSpacing(), @widthWithoutSpacing()
+    @_applyExtent new Point @widthWithoutSpacing(), @widthWithoutSpacing()
 
   initialiseDefaultWindowContentLayoutSpec: ->
     super
@@ -36,7 +36,7 @@ class GenericShortcutIconWdgt extends Widget
 
   _setWidthSizeHeightAccordingly: (newWidth) ->
     @_resizeToWithoutSpacing()
-    @_applyExtentAndNotify new Point newWidth, newWidth
+    @_applyExtent new Point newWidth, newWidth
     @_reLayout()
     @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
 
@@ -49,9 +49,9 @@ class GenericShortcutIconWdgt extends Widget
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
+    # TODO shouldn't be calling this _applyBounds from here,
     # rather use super
-    @_applyBoundsAndNotify newBoundsForThisLayout
+    @_applyBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -79,12 +79,12 @@ class GenericShortcutIconWdgt extends Widget
     # square centered in the widget
     p0 = p0.subtract new Point squareDim/2, squareDim/2
 
-    @icon._applyExtentAndNotify (new Point squareDim, squareDim).round()
-    @icon._applyMoveToAndNotify p0.round()
+    @icon._applyExtent (new Point squareDim, squareDim).round()
+    @icon._applyMoveTo p0.round()
 
 
-    @referenceArrowIcon._applyExtentAndNotify (new Point squareDim*3/10, squareDim*3/10).round()
-    @referenceArrowIcon._applyMoveToAndNotify (p0.add new Point 0, squareDim*7/10).round()
+    @referenceArrowIcon._applyExtent (new Point squareDim*3/10, squareDim*3/10).round()
+    @referenceArrowIcon._applyMoveTo (p0.add new Point 0, squareDim*7/10).round()
 
 
     world.maybeEnableTrackChanges()

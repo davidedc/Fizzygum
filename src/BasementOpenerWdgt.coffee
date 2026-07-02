@@ -11,7 +11,7 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
   constructor: ->
     super "Basement", new GenericShortcutIconWdgt new BasementIconWdgt
     @target = world.basementWdgt
-    @_applyExtentAndNotify new Point 75, 75
+    @_applyExtent new Point 75, 75
 
   # I am a desktop icon but the desktop positions me itself (bottom-right corner), so I do
   # NOT take part in the auto icon grid -- override of WidgetHolderWithCaptionWdgt (was the
@@ -22,11 +22,11 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
   _reactToBeingAdded: (whereTo, beingDropped) ->
     super
     if whereTo == world and !@userMovedThisFromComputedPosition
-      # _applyMoveToAndNotify (NOT the public moveTo): _reactToBeingAdded is fired by the add
+      # _applyMoveTo (NOT the public moveTo): _reactToBeingAdded is fired by the add
       # core INSIDE the add's settle, so a public setter here would re-enter the flush
       # guard and throw. The freefloating position is not changed by the outer settle,
       # so this is byte-equivalent to the old deferred moveTo.
-      @_applyMoveToAndNotify world.bottomRight().subtract @extent().add world.desktopSidesPadding
+      @_applyMoveTo world.bottomRight().subtract @extent().add world.desktopSidesPadding
 
   _reactToBeingDropped: (whereIn) ->
     super
@@ -42,8 +42,8 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
       @target.unCollapse()
       windowedBasementWdgt = new WindowWdgt nil, nil, @target
       world.add windowedBasementWdgt
-      windowedBasementWdgt._applyExtentAndNotify new Point 460, 400
-      windowedBasementWdgt._applyMoveToAndNotify new Point 140, 90
+      windowedBasementWdgt._applyExtent new Point 460, 400
+      windowedBasementWdgt._applyMoveTo new Point 140, 90
       windowedBasementWdgt.rememberFractionalSituationInHoldingPanel()
       BasementInfoWdgt.createNextTo windowedBasementWdgt
     else

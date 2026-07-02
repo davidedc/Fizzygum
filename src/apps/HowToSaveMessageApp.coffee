@@ -18,11 +18,11 @@ class HowToSaveMessageApp extends IconicDesktopSystemWindowedApp
     simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
-    sdspw._applyMoveToAndNotify new Point 114, 10
-    sdspw._applyExtentAndNotify new Point 365, 405
+    sdspw._applyMoveTo new Point 114, 10
+    sdspw._applyExtent new Point 365, 405
 
     startingContent = new FloppyDiskIconWdgt
-    startingContent._applyExtentAndNotify new Point 85, 85
+    startingContent._applyExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
     startingContent.layoutSpecDetails.setElasticity 0
@@ -45,7 +45,7 @@ class HowToSaveMessageApp extends IconicDesktopSystemWindowedApp
     sdspw.addSpacer()
 
     startingContent = new SimpleLinkWdgt "Contacts", "http://fizzygum.org/contact/"
-    startingContent._applyExtentAndNotify new Point 405, 50
+    startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
@@ -71,8 +71,8 @@ class HowToSaveMessageApp extends IconicDesktopSystemWindowedApp
 
 
     wm = new WindowWdgt nil, nil, simpleDocument
-    wm._applyMoveToAndNotify new Point 114, 10
-    wm._applyExtentAndNotify new Point 365, 447
+    wm._applyMoveTo new Point 114, 10
+    wm._applyExtent new Point 365, 447
     world.add wm
     wm.rememberFractionalSituationInHoldingPanel()
     wm.setTitleWithoutPrependedContentName "How to save?"

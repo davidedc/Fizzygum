@@ -25,7 +25,7 @@ CreateShortcutOfDroppedItemsMixin =
         if child.isDesktopShortcut?()
           child._moveWithin @
         else
-          child._applyMoveToAndNotify @position().add new Point 10, 10
+          child._applyMoveTo @position().add new Point 10, 10
 
       _reactToChildDropped: (droppedWidget) ->
         super

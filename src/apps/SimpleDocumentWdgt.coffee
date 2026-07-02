@@ -100,7 +100,7 @@ class SimpleDocumentWdgt extends Widget
   createToolsPanel: ->
     @toolsPanel = new HorizontalMenuPanelWdgt
     @toolsPanel.strokeColor = nil
-    @toolsPanel._applyExtentAndNotify new Point 300,10
+    @toolsPanel._applyExtent new Point 300,10
 
 
     @toolsPanel.add new ChangeFontButtonWdgt @
@@ -185,12 +185,12 @@ class SimpleDocumentWdgt extends Widget
 
 
     if @toolsPanel?.parent == @
-      @toolsPanel._applyMoveToAndNotify new Point @left() + @externalPadding, @top() + @externalPadding
-      @toolsPanel._applyExtentAndNotify new Point @width() - 2 * @externalPadding, toolsPanelHeight
+      @toolsPanel._applyMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
+      @toolsPanel._applyExtent new Point @width() - 2 * @externalPadding, toolsPanelHeight
 
     if @simpleDocumentScrollPanel.parent == @
-      @simpleDocumentScrollPanel._applyMoveToAndNotify new Point @left() + @externalPadding, simpleDocumentScrollPanelTop
-      @simpleDocumentScrollPanel._applyExtentAndNotify new Point @width() - 2 * @externalPadding, simpleDocumentScrollPanelHeight
+      @simpleDocumentScrollPanel._applyMoveTo new Point @left() + @externalPadding, simpleDocumentScrollPanelTop
+      @simpleDocumentScrollPanel._applyExtent new Point @width() - 2 * @externalPadding, simpleDocumentScrollPanelHeight
 
 
     world.maybeEnableTrackChanges()

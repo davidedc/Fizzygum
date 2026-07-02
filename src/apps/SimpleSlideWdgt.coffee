@@ -126,8 +126,8 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
     # tools -------------------------------
 
     if @toolsPanel?.parent == @
-      @toolsPanel._applyMoveToAndNotify new Point @left() + @externalPadding, labelBottom
-      @toolsPanel._applyExtentAndNotify new Point 95, @height() - 2 * @externalPadding
+      @toolsPanel._applyMoveTo new Point @left() + @externalPadding, labelBottom
+      @toolsPanel._applyExtent new Point 95, @height() - 2 * @externalPadding
 
 
     # stretchableWidgetContainer --------------------------
@@ -144,8 +144,8 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
       stretchableWidgetContainerLeft = @left() + @externalPadding
 
     if @stretchableWidgetContainer.parent == @
-      @stretchableWidgetContainer._applyMoveToAndNotify new Point stretchableWidgetContainerLeft, labelBottom
-      @stretchableWidgetContainer._applyExtentAndNotify new Point stretchableWidgetContainerWidth, stretchableWidgetContainerHeight
+      @stretchableWidgetContainer._applyMoveTo new Point stretchableWidgetContainerLeft, labelBottom
+      @stretchableWidgetContainer._applyExtent new Point stretchableWidgetContainerWidth, stretchableWidgetContainerHeight
 
     # ----------------------------------------------
 

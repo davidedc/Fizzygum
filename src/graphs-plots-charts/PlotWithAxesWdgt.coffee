@@ -35,9 +35,9 @@ class PlotWithAxesWdgt extends Widget
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
+    # TODO shouldn't be calling this _applyBounds from here,
     # rather use super
-    @_applyBoundsAndNotify newBoundsForThisLayout
+    @_applyBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -55,15 +55,15 @@ class PlotWithAxesWdgt extends Widget
 
     ftft = 35
 
-    @vertAxis._applyExtentAndNotify (new Point width/10 - 4, height).round()
-    @vertAxis._applyMoveToAndNotify (@position().add new Point 0, -2).subtract((new Point -width/ftft,height/ftft).round())
+    @vertAxis._applyExtent (new Point width/10 - 4, height).round()
+    @vertAxis._applyMoveTo (@position().add new Point 0, -2).subtract((new Point -width/ftft,height/ftft).round())
 
-    @horizAxis._applyExtentAndNotify (new Point width, height/10).round()
+    @horizAxis._applyExtent (new Point width, height/10).round()
     adjustmentX = (@vertAxis.left() + @horizAxis.distanceOfAxisOriginFromEdge().x) - ( @vertAxis.right() + @vertAxis.distanceOfAxisOriginFromEdge().x )
-    @horizAxis._applyMoveToAndNotify (@bottomLeft().subtract new Point adjustmentX, height/10).round().subtract((new Point -width/ftft,height/ftft).round())
+    @horizAxis._applyMoveTo (@bottomLeft().subtract new Point adjustmentX, height/10).round().subtract((new Point -width/ftft,height/ftft).round())
 
-    @plot._applyExtentAndNotify (new Point width - 2 *  @horizAxis.distanceOfAxisOriginFromEdge().x , height - 2 *  @vertAxis.distanceOfAxisOriginFromEdge().y).round()
-    @plot._applyMoveToAndNotify (@position().add new Point @horizAxis.distanceOfAxisOriginFromEdge().x - adjustmentX + 1, @vertAxis.distanceOfAxisOriginFromEdge().y - 1).round().subtract((new Point -width/ftft,height/ftft).round())
+    @plot._applyExtent (new Point width - 2 *  @horizAxis.distanceOfAxisOriginFromEdge().x , height - 2 *  @vertAxis.distanceOfAxisOriginFromEdge().y).round()
+    @plot._applyMoveTo (@position().add new Point @horizAxis.distanceOfAxisOriginFromEdge().x - adjustmentX + 1, @vertAxis.distanceOfAxisOriginFromEdge().y - 1).round().subtract((new Point -width/ftft,height/ftft).round())
 
     world.maybeEnableTrackChanges()
     @fullChanged()

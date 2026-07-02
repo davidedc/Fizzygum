@@ -723,7 +723,7 @@ class Widget extends TreeNode
   # byte-equal to the caller's old `child.height()`), and returned. EVERY override must likewise return its
   # resulting height (the 8 overrides are the historical break point -- keep them in sync).
   _setWidthSizeHeightAccordingly: (newWidth) ->
-    @_applyWidthAndNotify newWidth
+    @_applyWidth newWidth
     if @implementsDeferredLayout()
       # immediate mutator: APPLY the re-fit now (synchronous _reLayout), never SCHEDULE it
       # (no _invalidateLayout). See task #17 -- low-level mutators must not schedule layout.
@@ -743,7 +743,7 @@ class Widget extends TreeNode
 
   # note that using this one, the children
   # widgets attached as floating don't move
-  _applyBoundsAndNotify: (newBounds) ->
+  _applyBounds: (newBounds) ->
     if @bounds.equals newBounds
       return
 
@@ -752,7 +752,7 @@ class Widget extends TreeNode
       @__breakMoveResizeCaches()
       @changed()
 
-    @_applyExtentAndNotify newBounds.extent()
+    @_applyExtent newBounds.extent()
 
   # high-level geometry-change API,
   # you don't actually change the geometry right away,
@@ -1208,24 +1208,24 @@ class Widget extends TreeNode
   # Widget accessing - simple changes: translate me + my children + repaint.
   # (Stage 5, 2026-07-01) The re-fit seam this used to fire is DELETED -- the settle loop now re-fits my tracking
   # container AFTER I settle (see _reFitMyTrackingContainerAfterSettle) -- so this immediate mutator is PURE geometry
-  # now (what the FLOWRULE always wanted), a thin wrapper over the shared move core _applyMoveBy. The "AndNotify"
-  # suffix is historical -- but this twin is NOT collapsible into _applyMoveBy (2026-07-01 twin-collapse verdict):
+  # now (what the FLOWRULE always wanted), a thin wrapper over the shared move core _applyMoveByBase. The "AndNotify"
+  # suffix is historical -- but this twin is NOT collapsible into _applyMoveByBase (2026-07-01 twin-collapse verdict):
   # it is the polymorphic DISPATCH POINT for the ClippingAtRectangularBoundsMixin scroll-optimization and the
-  # ActivePointerWdgt float-drag OVERRIDES (which repaint via @changed, not @fullChanged), whereas bare _applyMoveBy
-  # is the uniform base translate the top-down arrange calls for leaf children. Folding the overrides onto _applyMoveBy
+  # ActivePointerWdgt float-drag OVERRIDES (which repaint via @changed, not @fullChanged), whereas bare _applyMoveByBase
+  # is the uniform base translate the top-down arrange calls for leaf children. Folding the overrides onto _applyMoveByBase
   # would route arrange moves through them on clipping panels and change their dirty regions -- so the two names are a
   # genuine dispatch distinction, not redundant twins. (Only the truly-redundant SILENT-commit twins collapsed in that
   # pass: _commitExtentAndNotify folded into the __commitExtent leaf, _commitBoundsAndNotify + _applyBounds into _commitBounds.)
-  _applyMoveByAndNotify: (delta) ->
-    @_applyMoveBy delta
-
-  # The bare move primitives _applyMoveBy / _applyMoveTo, used by the top-down arrange for LEAF children: translate me
-  # + my children + repaint via the UNIFORM base translate. A leaf child is placed through these rather than
-  # _applyMoveByAndNotify / _applyMoveToAndNotify precisely so its move takes the base path and NOT the
-  # ClippingAtRectangularBoundsMixin / ActivePointerWdgt override those *AndNotify names dispatch to (see the
-  # _applyMoveByAndNotify note above -- that override difference is why the two are not collapsible). _applyMoveBy is
-  # the shared move core (returns true iff it actually moved).
   _applyMoveBy: (delta) ->
+    @_applyMoveByBase delta
+
+  # The bare move primitives _applyMoveByBase / _applyMoveToBase, used by the top-down arrange for LEAF children: translate me
+  # + my children + repaint via the UNIFORM base translate. A leaf child is placed through these rather than
+  # _applyMoveBy / _applyMoveTo precisely so its move takes the base path and NOT the
+  # ClippingAtRectangularBoundsMixin / ActivePointerWdgt override those *AndNotify names dispatch to (see the
+  # _applyMoveBy note above -- that override difference is why the two are not collapsible). _applyMoveByBase is
+  # the shared move core (returns true iff it actually moved).
+  _applyMoveByBase: (delta) ->
     return false if delta.isZero()
     @__breakMoveResizeCaches()
     @fullChanged()
@@ -1234,11 +1234,11 @@ class Widget extends TreeNode
       child.__commitMoveBy delta
     return true
 
-  _applyMoveTo: (aPoint) ->
+  _applyMoveToBase: (aPoint) ->
     aPoint.debugIfFloats()
     delta = aPoint.toLocalCoordinatesOf @
     if !delta.isZero()
-      @_applyMoveBy delta
+      @_applyMoveByBase delta
     @bounds.debugIfFloats()
 
   __commitMoveBy: (delta) ->
@@ -1270,15 +1270,15 @@ class Widget extends TreeNode
     # we just don't move widgets along the dimensions that have a negative
     # fractional component
     if @positionFractionalInHoldingPanel[0] > 0
-      @_applyMoveToAndNotify (new Point boundsOfParent.left() + (boundsOfParent.width() * @positionFractionalInHoldingPanel[0]), @top()).round()
+      @_applyMoveTo (new Point boundsOfParent.left() + (boundsOfParent.width() * @positionFractionalInHoldingPanel[0]), @top()).round()
     if @positionFractionalInHoldingPanel[1] > 0
-      @_applyMoveToAndNotify (new Point @left(), boundsOfParent.top() + (boundsOfParent.height() * @positionFractionalInHoldingPanel[1])).round()
+      @_applyMoveTo (new Point @left(), boundsOfParent.top() + (boundsOfParent.height() * @positionFractionalInHoldingPanel[1])).round()
 
   _moveInStretchablePanelToFractionalPosition: (boundsOfParent) ->
     if !boundsOfParent?
       boundsOfParent = @parent.bounds
 
-    @_applyMoveToAndNotify (
+    @_applyMoveTo (
       new Point \
        boundsOfParent.left() + (boundsOfParent.width() * @positionFractionalInHoldingPanel[0]),
        boundsOfParent.top() + (boundsOfParent.height() * @positionFractionalInHoldingPanel[1])
@@ -1288,16 +1288,16 @@ class Widget extends TreeNode
     if !boundsOfParent?
       boundsOfParent = @parent.bounds
 
-    @_applyExtentAndNotify new Point @extentFractionalInHoldingPanel[0] * boundsOfParent.width(), @extentFractionalInHoldingPanel[1] * boundsOfParent.height()
+    @_applyExtent new Point @extentFractionalInHoldingPanel[0] * boundsOfParent.width(), @extentFractionalInHoldingPanel[1] * boundsOfParent.height()
 
   
   # this one actually immediately changes the position and
   # bounds of widgets
-  _applyMoveToAndNotify: (aPoint) ->
+  _applyMoveTo: (aPoint) ->
     aPoint.debugIfFloats()
     delta = aPoint.toLocalCoordinatesOf @
     if !delta.isZero()
-      @_applyMoveByAndNotify delta
+      @_applyMoveBy delta
     @bounds.debugIfFloats()
 
   # high-level geometry-change API,
@@ -1349,23 +1349,23 @@ class Widget extends TreeNode
     @__commitMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
   
   _moveLeftSideTo: (x) ->
-    @_applyMoveToAndNotify new Point x, @top()
+    @_applyMoveTo new Point x, @top()
   
   _moveRightSideTo: (x) ->
-    @_applyMoveToAndNotify new Point x - @width(), @top()
+    @_applyMoveTo new Point x - @width(), @top()
   
   _moveTopSideTo: (y) ->
-    @_applyMoveToAndNotify new Point @left(), y
+    @_applyMoveTo new Point @left(), y
   
   _moveBottomSideTo: (y) ->
-    @_applyMoveToAndNotify new Point @left(), y - @height()
+    @_applyMoveTo new Point @left(), y - @height()
   
   _moveToSideOf: (aWidget) ->
-    @_applyMoveToAndNotify aWidget.topRight().add new Point 10, -Math.round((@height() - aWidget.height())/2)
+    @_applyMoveTo aWidget.topRight().add new Point 10, -Math.round((@height() - aWidget.height())/2)
     @_moveWithin @parent
   
   _moveFullCenterTo: (aPoint) ->
-    @_applyMoveToAndNotify aPoint.subtract @fullBounds().extent().floorDivideBy 2
+    @_applyMoveTo aPoint.subtract @fullBounds().extent().floorDivideBy 2
   
   # make sure I am completely within another Widget's bounds
   _moveWithin: (aWdgt) ->
@@ -1385,7 +1385,7 @@ class Widget extends TreeNode
 
     # "bake" the "deferred" size and position
     # into the current size and position
-    @_applyBoundsAndNotify newBoundsForThisLayout
+    @_applyBounds newBoundsForThisLayout
 
     # adjust the top side and the left side last, so that
     # the control buttons in the window bars are still
@@ -1395,22 +1395,22 @@ class Widget extends TreeNode
 
     rightOff = newBoundsForThisLayout.right() - aWdgt.right()
     if rightOff > 0
-      @_applyMoveByAndNotify new Point -rightOff, 0
+      @_applyMoveBy new Point -rightOff, 0
       newBoundsForThisLayout = @bounds
 
     leftOff = newBoundsForThisLayout.left() - aWdgt.left()
     if leftOff < 0
-      @_applyMoveByAndNotify new Point -leftOff, 0
+      @_applyMoveBy new Point -leftOff, 0
       newBoundsForThisLayout = @bounds
 
     bottomOff = newBoundsForThisLayout.bottom() - aWdgt.bottom()
     if bottomOff > 0
-      @_applyMoveByAndNotify new Point 0, -bottomOff
+      @_applyMoveBy new Point 0, -bottomOff
       newBoundsForThisLayout = @bounds
     
     topOff = newBoundsForThisLayout.top() - aWdgt.top()
     if topOff < 0
-      @_applyMoveByAndNotify new Point 0, -topOff
+      @_applyMoveBy new Point 0, -topOff
       newBoundsForThisLayout = @bounds
 
     return
@@ -1453,12 +1453,12 @@ class Widget extends TreeNode
   # Widget accessing - dimensional changes requiring a complete redraw
   # The polymorphic extent-apply -- the override DISPATCH POINT (SimpleVerticalStackPanelWdgt / ScrollPanelWdgt /
   # TextWdgt / SliderWdgt / ListWdgt / the stretchables specialize it). The base is a pure pass-through to
-  # _applyExtent, exactly like _applyMoveByAndNotify -> _applyMoveBy: ONE body per behaviour, two names for
+  # _applyExtentBase, exactly like _applyMoveBy -> _applyMoveByBase: ONE body per behaviour, two names for
   # dispatch (the bare twin is the override-BYPASSING base apply the top-down arrange uses). "AndNotify" is
   # historical -- the notify seam was deleted 2026-07-01, nothing notifies; truthful rename planned
   # (docs/layout-optimizations-and-oo-cleanup-plan.md §3).
-  _applyExtentAndNotify: (aPoint) ->
-    @_applyExtent aPoint
+  _applyExtent: (aPoint) ->
+    @_applyExtentBase aPoint
 
   # high-level geometry-change API,
   # you don't actually change the geometry right away,
@@ -1508,13 +1508,13 @@ class Widget extends TreeNode
     return true
 
   # Base extent-apply WITHOUT the polymorphic override: commit @bounds + @changed repaint + @_reLayoutSelf. THE
-  # single body of the extent-apply pair -- the polymorphic _applyExtentAndNotify base is a pure pass-through to
+  # single body of the extent-apply pair -- the polymorphic _applyExtent base is a pure pass-through to
   # this. A container arranging a child top-down uses this to apply the child's measured extent while BYPASSING
-  # the child's own _applyExtentAndNotify override (e.g. SimpleVerticalStackPanelWdgt applies its arranged height
-  # via _applyExtent so it does NOT re-enter its own _reLayoutChildren -- the frame commit that follows handles
+  # the child's own _applyExtent override (e.g. SimpleVerticalStackPanelWdgt applies its arranged height
+  # via _applyExtentBase so it does NOT re-enter its own _reLayoutChildren -- the frame commit that follows handles
   # that). The re-fit seam this pair used to differ on is gone (2026-07-01); the override-bypass keeps the two
   # NAMES distinct.
-  _applyExtent: (aPoint) ->
+  _applyExtentBase: (aPoint) ->
     unless aPoint.equals @extent()
       @__breakMoveResizeCaches()
       @__commitExtent aPoint
@@ -1537,7 +1537,7 @@ class Widget extends TreeNode
   # (proper-layouts §4.3 / Stage 5, 2026-07-01) Re-fit MY size-tracking container now that I have SETTLED.
   # Called by the settle loop (WorldWdgt._recalculateLayoutsBody) right after my chain-top _reLayout completes --
   # NOT by the geometry mutators. This is the ORDERED-settle successor to the DELETED notify-by-mutation geometry
-  # seam (the old _announceGeometryChangeToContainer, which fired from the extent-commit and _applyMoveByAndNotify
+  # seam (the old _announceGeometryChangeToContainer, which fired from the extent-commit and _applyMoveBy
   # mutators per mutation). A freefloating child's _invalidateLayout does not climb to its
   # size-tracking container, so the container must be re-fit explicitly when my geometry changes. The old seam
   # did that at MUTATION time -- while I was mid-settle -- so the container read my HALF-applied geometry and had
@@ -1596,8 +1596,8 @@ class Widget extends TreeNode
       container._invalidateLayout()
 
 
-  _applyWidthAndNotify: (width) ->
-    @_applyExtentAndNotify new Point(width or 0, @height())
+  _applyWidth: (width) ->
+    @_applyExtent new Point(width or 0, @height())
 
   # high-level geometry-change API,
   # you don't actually change the geometry right away,
@@ -1619,8 +1619,8 @@ class Widget extends TreeNode
     w = Math.max Math.round(width or 0), 0
     @bounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + w, @bounds.corner.y
   
-  _applyHeightAndNotify: (height) ->
-    @_applyExtentAndNotify new Point(@width(), height or 0)
+  _applyHeight: (height) ->
+    @_applyExtent new Point(@width(), height or 0)
 
   # high-level geometry-change API,
   # you don't actually change the geometry right away,
@@ -2044,7 +2044,7 @@ class Widget extends TreeNode
   createReference: (referenceName, placeToDropItIn = world) ->
     @_settleLayoutsAfter => @_createReferenceNoSettle referenceName, placeToDropItIn
 
-  # The COMPLETE createReference minus the settle. add -> _addNoSettle and setExtent -> _applyExtentAndNotify
+  # The COMPLETE createReference minus the settle. add -> _addNoSettle and setExtent -> _applyExtent
   # (the shortcut is freshly added freefloating, so the immediate raw size is byte-identical to the
   # deferred desired-extent path; same add-then-size order as the public version, so the icon grid
   # positions identically once the enclosing settle re-fits).
@@ -2066,7 +2066,7 @@ class Widget extends TreeNode
     # this "add" is going to try to position the
     # new icon into a grid
     placeToDropItIn._addNoSettle widgetToAdd
-    widgetToAdd._applyExtentAndNotify new Point 75, 75
+    widgetToAdd._applyExtent new Point 75, 75
     widgetToAdd.fullChanged()
     @bringToForeground()
 
@@ -2419,7 +2419,7 @@ class Widget extends TreeNode
     aFullCopy = @fullCopy()
     aFullCopy.unlockFromPanels()
     world.add aFullCopy
-    aFullCopy._applyMoveToAndNotify @position().add new Point 10, 10
+    aFullCopy._applyMoveTo @position().add new Point 10, 10
     aFullCopy.rememberFractionalSituationInHoldingPanel()
 
   duplicateMenuActionAndPickItUp: ->
@@ -2836,9 +2836,9 @@ class Widget extends TreeNode
     # into the "desiredExtent" as the true extent has yet
     # to be settled
     if @desiredExtent?
-      @_applyMoveToAndNotify world.hand.position().subtract @desiredExtent.floorDivideBy 2
+      @_applyMoveTo world.hand.position().subtract @desiredExtent.floorDivideBy 2
     else
-      @_applyMoveToAndNotify world.hand.position().subtract @fullBounds().extent().floorDivideBy 2
+      @_applyMoveTo world.hand.position().subtract @fullBounds().extent().floorDivideBy 2
     oldParent?._reactToChildPickedUp? @
 
   grabbedWidgetSwitcheroo: ->
@@ -2969,7 +2969,7 @@ class Widget extends TreeNode
     if !whereToAddIt?
       whereToAddIt = widgetToBeNextTo.parent
     whereToAddIt.add @
-    @_applyMoveToAndNotify widgetToBeNextTo.center()
+    @_applyMoveTo widgetToBeNextTo.center()
     @_moveWithin whereToAddIt
     
   
@@ -3475,7 +3475,7 @@ class Widget extends TreeNode
       menuEntriesStrings = []
       functionNamesStrings = []
     menuEntriesStrings.push "width", "height", "alpha 0-100", "padding", "padding top", "padding bottom", "padding left", "padding right"
-    functionNamesStrings.push "_applyWidthAndNotify", "_applyHeightAndNotify", "setAlphaScaled", "setPadding", "setPaddingTop", "setPaddingBottom", "setPaddingLeft", "setPaddingRight"
+    functionNamesStrings.push "_applyWidth", "_applyHeight", "setAlphaScaled", "setPadding", "setPaddingTop", "setPaddingBottom", "setPaddingLeft", "setPaddingRight"
 
     if @addShapeSpecificNumericalSetters?
       [menuEntriesStrings, functionNamesStrings] = @addShapeSpecificNumericalSetters menuEntriesStrings, functionNamesStrings
@@ -3970,23 +3970,23 @@ class Widget extends TreeNode
     # layout to be recalculated but this Widget
     # now needs to do nothing.
 
-    # the _applyMoveToAndNotify makes sure that all children
+    # the _applyMoveTo makes sure that all children
     # that are float-attached move together with the
     # widget.
-    @_applyMoveToAndNotify newBoundsForThisLayout.origin
+    @_applyMoveTo newBoundsForThisLayout.origin
     
     # bad kludge here but I think there will be more
     # of these as we move over to the new layouts, we'll
     # probably have split Widgets for the new layouts mechanism.
     # FIT_BOX_TO_TEXT content re-sizes its OWN height to its text, so hand it the
     # full bounds (origin + extent) in one shot; everything else just takes the
-    # new extent (its origin was already set by the _applyMoveToAndNotify above). ANY
+    # new extent (its origin was already set by the _applyMoveTo above). ANY
     # contained TextWdgt qualifies (a non-text widget has no fittingSpec, so it
     # falls through to the else).
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
-      @_applyBoundsAndNotify newBoundsForThisLayout
+      @_applyBounds newBoundsForThisLayout
     else
-      @_applyExtentAndNotify newBoundsForThisLayout.extent()
+      @_applyExtent newBoundsForThisLayout.extent()
 
     if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT or @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
       if @parent
@@ -4002,15 +4002,15 @@ class Widget extends TreeNode
           @layoutSpec_cornerInternal_inset = new Point 0, 0
 
         if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT
-          @_applyMoveToAndNotify new Point @parent.left() + @layoutSpec_cornerInternal_inset.x, @parent.top() + @layoutSpec_cornerInternal_inset.y
+          @_applyMoveTo new Point @parent.left() + @layoutSpec_cornerInternal_inset.x, @parent.top() + @layoutSpec_cornerInternal_inset.y
         else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
-          @_applyMoveToAndNotify new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, @parent.top() + @layoutSpec_cornerInternal_inset.y
+          @_applyMoveTo new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, @parent.top() + @layoutSpec_cornerInternal_inset.y
         else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT
-          @_applyMoveToAndNotify new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, @parent.bottom() - minDim - @layoutSpec_cornerInternal_inset.y
+          @_applyMoveTo new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, @parent.bottom() - minDim - @layoutSpec_cornerInternal_inset.y
         else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT
-          @_applyMoveToAndNotify new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, Math.floor(@parent.top() + (@parent.extent().y - minDim)/2)
+          @_applyMoveTo new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, Math.floor(@parent.top() + (@parent.extent().y - minDim)/2)
         else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
-          @_applyMoveToAndNotify new Point Math.floor(@parent.left() + (@parent.extent().x - minDim)/2), @parent.bottom() - minDim - @layoutSpec_cornerInternal_inset.y
+          @_applyMoveTo new Point Math.floor(@parent.left() + (@parent.extent().x - minDim)/2), @parent.bottom() - minDim - @layoutSpec_cornerInternal_inset.y
 
     # »>> this part is excluded from the fizzygum homepage build
     else if @countOfChildrenInHorizontalStackLayout() != 0

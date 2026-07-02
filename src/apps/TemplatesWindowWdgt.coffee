@@ -15,7 +15,7 @@ class TemplatesWindowWdgt extends WindowWdgt
   @create: ->
     sdspw = new SimpleDocumentScrollPanelWdgt
 
-    sdspw._applyExtentAndNotify new Point 365, 335
+    sdspw._applyExtent new Point 365, 335
 
     startingContent = new SimplePlainTextWdgt(
       "Simply drag the items below into your document",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
@@ -28,7 +28,7 @@ class TemplatesWindowWdgt extends WindowWdgt
 
 
     startingContent = new ArrowSIconWdgt
-    startingContent._applyExtentAndNotify new Point 25, 25
+    startingContent._applyExtent new Point 25, 25
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToCenter()
 
@@ -102,12 +102,12 @@ class TemplatesWindowWdgt extends WindowWdgt
     sdspw.add startingContent
 
     startingContent = new SimpleLinkWdgt
-    startingContent._applyExtentAndNotify new Point 405, 50
+    startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
     startingContent = new SimpleVideoLinkWdgt
-    startingContent._applyExtentAndNotify new Point 405, 50
+    startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 

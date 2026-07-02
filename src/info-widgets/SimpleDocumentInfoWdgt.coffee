@@ -7,13 +7,13 @@ class SimpleDocumentInfoWdgt extends SimpleDocumentWdgt
     simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
-    sdspw._applyMoveToAndNotify new Point 114, 10
-    sdspw._applyExtentAndNotify new Point 365, 405
+    sdspw._applyMoveTo new Point 114, 10
+    sdspw._applyExtent new Point 365, 405
 
     # ---------------------
 
     startingContent = new TypewriterIconWdgt
-    startingContent._applyExtentAndNotify new Point 85, 85
+    startingContent._applyExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
     startingContent.layoutSpecDetails.setElasticity 0
@@ -39,7 +39,7 @@ class SimpleDocumentInfoWdgt extends SimpleDocumentWdgt
 
     startingContent = new GlassBoxBottomWdgt
     startingContent.add new TemplatesButtonWdgt
-    startingContent._applyExtentAndNotify new Point 50, 50
+    startingContent._applyExtent new Point 50, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToCenter()
 
@@ -53,14 +53,14 @@ class SimpleDocumentInfoWdgt extends SimpleDocumentWdgt
     # ---------------------
 
     startingContent = new SimpleVideoLinkWdgt "Docs Maker", "http://fizzygum.org/docs/documents-maker/"
-    startingContent._applyExtentAndNotify new Point 405, 50
+    startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
     # ---------------------
 
     wm = new WindowWdgt nil, nil, simpleDocument
-    wm._applyExtentAndNotify new Point 365, 405
+    wm._applyExtent new Point 365, 405
     wm._moveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Docs Maker info"

@@ -32,5 +32,5 @@ GridPositioningOfAddedShortcutsMixin =
           else
             xPos = Math.floor @numberOfIconsOnDesktop / @iconsLayingInGridWrapCount
             yPos = @numberOfIconsOnDesktop % @iconsLayingInGridWrapCount
-          aWdgt._applyMoveToAndNotify (@position().add new Point xPos * 85, yPos * 85).add @iconsPaddingFromContainerEdges
+          aWdgt._applyMoveTo (@position().add new Point xPos * 85, yPos * 85).add @iconsPaddingFromContainerEdges
           @numberOfIconsOnDesktop++

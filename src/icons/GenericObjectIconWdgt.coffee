@@ -19,7 +19,7 @@ class GenericObjectIconWdgt extends Widget
 
     if !@icon?
       @icon = new SimpleDropletWdgt "icon"
-    @_applyExtentAndNotify new Point 95, 95
+    @_applyExtent new Point 95, 95
     @_addNoSettle @icon
 
     # update layout
@@ -29,7 +29,7 @@ class GenericObjectIconWdgt extends Widget
     Math.min @width(), @height()
 
   _resizeToWithoutSpacing: ->
-    @_applyExtentAndNotify new Point @widthWithoutSpacing(), @widthWithoutSpacing()
+    @_applyExtent new Point @widthWithoutSpacing(), @widthWithoutSpacing()
 
   initialiseDefaultWindowContentLayoutSpec: ->
     super
@@ -37,7 +37,7 @@ class GenericObjectIconWdgt extends Widget
 
   _setWidthSizeHeightAccordingly: (newWidth) ->
     @_resizeToWithoutSpacing()
-    @_applyExtentAndNotify new Point newWidth, newWidth
+    @_applyExtent new Point newWidth, newWidth
     @_reLayout()
     @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
 
@@ -50,9 +50,9 @@ class GenericObjectIconWdgt extends Widget
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
+    # TODO shouldn't be calling this _applyBounds from here,
     # rather use super
-    @_applyBoundsAndNotify newBoundsForThisLayout
+    @_applyBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -81,12 +81,12 @@ class GenericObjectIconWdgt extends Widget
     # square centered in the widget
     p0 = p0.subtract new Point squareDim/2, squareDim/2
 
-    @icon._applyExtentAndNotify (new Point squareDim*50/100, squareDim*50/100).round()
-    @icon._applyMoveToAndNotify (centerPoint.subtract new Point squareDim*25/100, squareDim*25/100).round()
+    @icon._applyExtent (new Point squareDim*50/100, squareDim*50/100).round()
+    @icon._applyMoveTo (centerPoint.subtract new Point squareDim*25/100, squareDim*25/100).round()
 
 
-    @objectIcon._applyExtentAndNotify (new Point squareDim, squareDim).round()
-    @objectIcon._applyMoveToAndNotify p0
+    @objectIcon._applyExtent (new Point squareDim, squareDim).round()
+    @objectIcon._applyMoveTo p0
 
 
     world.maybeEnableTrackChanges()

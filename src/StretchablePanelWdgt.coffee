@@ -22,7 +22,7 @@ class StretchablePanelWdgt extends PanelWdgt
         @parent.setRatio @width() / @height()
 
 
-  _applyExtentAndNotify: (extent) ->
+  _applyExtent: (extent) ->
     if extent.equals @extent()
       return
 
@@ -68,9 +68,9 @@ class StretchablePanelWdgt extends PanelWdgt
       w.desiredExtent = nil
       w._reLayout()
 
-    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
+    # TODO shouldn't be calling this _applyBounds from here,
     # rather use super
-    @_applyBoundsAndNotify newBoundsForThisLayout
+    @_applyBounds newBoundsForThisLayout
 
 
 

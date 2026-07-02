@@ -54,7 +54,7 @@ class CaretWdgt extends BlinkerWdgt
     ls = @target.fontHeight @target.actualFontSizeUsedInRendering()
     if ls != @currentCaretFontSize
       @currentCaretFontSize = ls
-      @_applyExtentAndNotify new Point Math.max(Math.floor(ls / 20), 1), ls
+      @_applyExtent new Point Math.max(Math.floor(ls / 20), 1), ls
   
   # CaretWdgt event processing:
 
@@ -187,7 +187,7 @@ class CaretWdgt extends BlinkerWdgt
     pos = @target.slotCoordinates @slot
     if pos?
       @show()
-      @_applyMoveToAndNotify pos.floor()
+      @_applyMoveTo pos.floor()
 
   # Schedule THIS caret for a scroll-follow so its _reLayout runs the follow on settled geometry -- the caret
   # settles like any other widget whose layout changed, drained by the NEXT settle (always IN-PLACE, during the
@@ -293,7 +293,7 @@ class CaretWdgt extends BlinkerWdgt
       # position lets scrollCaretIntoView compute the FULL scroll delta in ONE pass -- byte-identical fixed point,
       # but the follow now settles in a single move + verify instead of distance/ft passes. The final resting
       # position is always in view (positive), so the rendered caret is unchanged.
-      @_applyMoveToAndNotify new Point (Math.floor pos.x), (Math.floor pos.y)
+      @_applyMoveTo new Point (Math.floor pos.x), (Math.floor pos.y)
 
       if @_amIDirectlyInsideScrollPanelWdgt() and @target.isScrollable
         @parent.parent.scrollCaretIntoView @

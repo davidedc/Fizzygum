@@ -21,7 +21,7 @@ class ColorPickerWdgt extends Widget
     super()
     @appearance = new RectangularAppearance @
     @color = Color.WHITE
-    @_applyExtentAndNotify new Point 80, 80
+    @_applyExtent new Point 80, 80
     @buildSubwidgets()
 
   colloquialName: ->
@@ -66,19 +66,19 @@ class ColorPickerWdgt extends Widget
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
+    # TODO shouldn't be calling this _applyBounds from here,
     # rather use super
-    @_applyBoundsAndNotify newBoundsForThisLayout
-    @colorPalette._applyMoveToAndNotify @position()
-    @colorPalette._applyExtentAndNotify new Point @width(), Math.round(@height() * 0.625)
+    @_applyBounds newBoundsForThisLayout
+    @colorPalette._applyMoveTo @position()
+    @colorPalette._applyExtent new Point @width(), Math.round(@height() * 0.625)
 
-    @grayPalette._applyMoveToAndNotify @colorPalette.bottomLeft()
-    @grayPalette._applyExtentAndNotify new Point @width(), Math.round(@height() * 0.0625)
+    @grayPalette._applyMoveTo @colorPalette.bottomLeft()
+    @grayPalette._applyExtent new Point @width(), Math.round(@height() * 0.0625)
 
     x = @grayPalette.left() + Math.floor((@grayPalette.width() - @feedback.width()) / 2)
     y = @grayPalette.bottom() + Math.floor((@bottom() - @grayPalette.bottom() - @feedback.height()) / 2)
-    @feedback._applyMoveToAndNotify new Point x, y
-    @feedback._applyExtentAndNotify new Point Math.min(@width(), Math.round(@height() * 0.25)), Math.round(@height() * 0.25)
+    @feedback._applyMoveTo new Point x, y
+    @feedback._applyExtent new Point Math.min(@width(), Math.round(@height() * 0.25)), Math.round(@height() * 0.25)
 
     world.maybeEnableTrackChanges()
     @fullChanged()

@@ -54,7 +54,7 @@ class MenuWdgt extends PopUpWdgt
     item = new RectangleWdgt
     item.setMinimumExtent new Point 5,1
     item.color = Color.create 230,230,230
-    item._applyHeightAndNotify height + 2
+    item._applyHeight height + 2
     item
 
   addLine: (height) ->
@@ -171,7 +171,7 @@ class MenuWdgt extends PopUpWdgt
 
     unless @isListContents
       if @title
-        @label._applyMoveToAndNotify @position().add 2
+        @label._applyMoveTo @position().add 2
         y = @label.bottom()
       else
         y = @top()
@@ -186,7 +186,7 @@ class MenuWdgt extends PopUpWdgt
     # console.log "menu @items.length " + @items.length
     for item in @children
       if item == @label then continue
-      item._applyMoveToAndNotify new Point x, y
+      item._applyMoveTo new Point x, y
       #console.log "item added: " + item.bounds
       y = y + item.height()
   
@@ -221,7 +221,7 @@ class MenuWdgt extends PopUpWdgt
     #console.log "maxWidthOfMenuEntries " + w
     @children.forEach (item) =>
       world.disableTrackChanges()
-      item._applyWidthAndNotify w
+      item._applyWidth w
       #console.log "new width of " + item + " : " + item.width()
       world.maybeEnableTrackChanges()
 

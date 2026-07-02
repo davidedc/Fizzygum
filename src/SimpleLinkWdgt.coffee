@@ -87,16 +87,16 @@ class SimpleLinkWdgt extends Widget
     squareSize = Math.min @width(), @height() - 2 * @externalPadding
 
     if @tempPromptEntryField.parent == @
-      @tempPromptEntryField._applyMoveToAndNotify new Point @left() + @externalPadding, @top() + @externalPadding
-      @tempPromptEntryField._applyExtentAndNotify new Point @width() - 2 * @externalPadding - @internalPadding - squareSize, text1Height
+      @tempPromptEntryField._applyMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
+      @tempPromptEntryField._applyExtent new Point @width() - 2 * @externalPadding - @internalPadding - squareSize, text1Height
 
     if @outputTextArea.parent == @
-      @outputTextArea._applyMoveToAndNotify new Point @left() + @externalPadding, @tempPromptEntryField.bottom() + @internalPadding
-      @outputTextArea._applyExtentAndNotify new Point @width() - 2 * @externalPadding - @internalPadding - squareSize, text2Height
+      @outputTextArea._applyMoveTo new Point @left() + @externalPadding, @tempPromptEntryField.bottom() + @internalPadding
+      @outputTextArea._applyExtent new Point @width() - 2 * @externalPadding - @internalPadding - squareSize, text2Height
 
     if @externalLinkIcon.parent == @
-      @externalLinkIcon._applyMoveToAndNotify new Point @right() - @externalPadding - squareSize, @top() + @externalPadding
-      @externalLinkIcon._applyExtentAndNotify new Point squareSize, squareSize
+      @externalLinkIcon._applyMoveTo new Point @right() - @externalPadding - squareSize, @top() + @externalPadding
+      @externalLinkIcon._applyExtent new Point squareSize, squareSize
 
 
     world.maybeEnableTrackChanges()

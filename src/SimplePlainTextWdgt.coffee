@@ -11,7 +11,7 @@
 # triggers (re-flow the box then invalidate the container so it re-fits, on
 # setText/setFontSize/setFontName/toggle*)
 # live on the base StringWdgt: its seven text setters self-settle and call the
-# non-settling StringWdgt::_reflowContainedTextThenAnnounce core (gated by the mode), so ANY
+# non-settling StringWdgt::_reflowContainedTextThenInvalidateLayout core (gated by the mode), so ANY
 # TextWdgt (not just this one) can be contained text.
 # What's left specific to THIS class is its CONTROLLER chrome: pinning
 # layoutSpecDetails.canSetHeightFreely = false (height is content-driven), the
@@ -177,7 +177,7 @@ class SimplePlainTextWdgt extends TextWdgt
 
   # setText (above) + the inherited setFontSize / setFontName / toggleShowBlanks /
   # toggleWeight / toggleItalic / toggleIsPassword all re-flow the box AND nudge the
-  # container via StringWdgt::_reflowContainedTextThenAnnounce (gated by FIT_BOX_TO_TEXT).
+  # container via StringWdgt::_reflowContainedTextThenInvalidateLayout (gated by FIT_BOX_TO_TEXT).
   # softWrapOn/Off (above) are scroll-panel-specific (they flip
   # @parent.parent.isTextLineWrapping).
 

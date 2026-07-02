@@ -136,7 +136,7 @@ class PanelWdgt extends Widget
     # re-fit (_reFitMyTrackingContainerAfterSettle, §4.3 -- successor to the deleted geom seam), whose _reLayout
     # re-fits it on the next doOneCycle. So the old ad-hoc synchronous @parent._reLayoutChildren() here is redundant
     # and removed. (fam 2 verify-and-drop -- deferred-layout-residuals-audit.md)
-    aWdgt._applyMoveToAndNotify position
+    aWdgt._applyMoveTo position
 
 
   detachesWhenDragged: ->

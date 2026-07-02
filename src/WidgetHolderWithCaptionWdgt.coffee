@@ -18,7 +18,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
   _buildAndConnectChildrenNoSettle: ->
     if !@icon?
       @icon = new SimpleDropletWdgt "icon"
-    @_applyExtentAndNotify new Point 95, 95
+    @_applyExtent new Point 95, 95
     @_addNoSettle @icon
     @label = new StringWdgt @labelContent, WorldWdgt.preferencesAndSettings.shortcutsFontSize
     @label.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
@@ -52,7 +52,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
     Math.min @width(), @height()
 
   _resizeToWithoutSpacing: ->
-    @_applyExtentAndNotify new Point @widthWithoutSpacing(), @widthWithoutSpacing()
+    @_applyExtent new Point @widthWithoutSpacing(), @widthWithoutSpacing()
 
   initialiseDefaultWindowContentLayoutSpec: ->
     super
@@ -60,7 +60,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
 
   _setWidthSizeHeightAccordingly: (newWidth) ->
     @_resizeToWithoutSpacing()
-    @_applyExtentAndNotify new Point newWidth, newWidth
+    @_applyExtent new Point newWidth, newWidth
     @_reLayout()
     @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
 
@@ -73,9 +73,9 @@ class WidgetHolderWithCaptionWdgt extends Widget
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
+    # TODO shouldn't be calling this _applyBounds from here,
     # rather use super
-    @_applyBoundsAndNotify newBoundsForThisLayout
+    @_applyBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -103,10 +103,10 @@ class WidgetHolderWithCaptionWdgt extends Widget
     # on the left edge of the square inscribed in the widget
     p0 = p0.subtract new Point squareDim/2, squareDim/2
 
-    @icon._applyExtentAndNotify (new Point squareDim, squareDim*8/10).round()
-    @icon._applyMoveToAndNotify p0.round()
-    @label._applyExtentAndNotify (new Point squareDim, squareDim*2/10).round()
-    @label._applyMoveToAndNotify (p0.add new Point 0, squareDim*8/10).round()
+    @icon._applyExtent (new Point squareDim, squareDim*8/10).round()
+    @icon._applyMoveTo p0.round()
+    @label._applyExtent (new Point squareDim, squareDim*2/10).round()
+    @label._applyMoveTo (p0.add new Point 0, squareDim*8/10).round()
 
 
     world.maybeEnableTrackChanges()

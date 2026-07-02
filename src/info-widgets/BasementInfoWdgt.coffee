@@ -7,11 +7,11 @@ class BasementInfoWdgt extends SimpleDocumentWdgt
     simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
-    sdspw._applyMoveToAndNotify new Point 114, 10
-    sdspw._applyExtentAndNotify new Point 365, 405
+    sdspw._applyMoveTo new Point 114, 10
+    sdspw._applyExtent new Point 365, 405
 
     startingContent = new BasementIconWdgt
-    startingContent._applyExtentAndNotify new Point 85, 85
+    startingContent._applyExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
     startingContent.layoutSpecDetails.setElasticity 0
@@ -30,7 +30,7 @@ class BasementInfoWdgt extends SimpleDocumentWdgt
     sdspw.addNormalParagraph "Drag things in here to recycle them.\n\nClosed or invisible items also end up in here, and the items that can't be used again are automatically recycled."
 
     wm = new WindowWdgt nil, nil, simpleDocument
-    wm._applyExtentAndNotify new Point 365, 405
+    wm._applyExtent new Point 365, 405
     wm._moveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Basement info"

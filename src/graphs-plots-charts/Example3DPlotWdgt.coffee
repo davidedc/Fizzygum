@@ -23,7 +23,7 @@ class Example3DPlotWdgt extends Widget
     world.steppingWdgts.add @
 
     @setColor Color.create 255, 125, 125
-    @_applyExtentAndNotify new Point 200, 200
+    @_applyExtent new Point 200, 200
 
 
 
@@ -87,7 +87,7 @@ class Example3DPlotWdgt extends Widget
       # Note that the height of 0 here is ignored since
       # "_setWidthSizeHeightAccordingly" will
       # calculate the height.
-      @_applyExtentAndNotify new Point @width(), 0
+      @_applyExtent new Point @width(), 0
 
   _reactToHolderWindowGrabbed: (whereFrom) ->
     if whereFrom?.releasesRatioConstraintOnGrabbedChildren?()
@@ -104,13 +104,13 @@ class Example3DPlotWdgt extends Widget
 
       availableHeight = world.height() - 20
       if @parent.height() > availableHeight
-        @parent._applyExtentAndNotify (new Point Math.min((@width()/@height()) * availableHeight, world.width()), availableHeight).round()
-        @parent._applyMoveToAndNotify world.hand.position().subtract @parent.extent().floorDivideBy 2
+        @parent._applyExtent (new Point Math.min((@width()/@height()) * availableHeight, world.width()), availableHeight).round()
+        @parent._applyMoveTo world.hand.position().subtract @parent.extent().floorDivideBy 2
         @parent._moveWithin world
 
   _setWidthSizeHeightAccordingly: (newWidth) ->
     if @ratio?
-      @_applyExtentAndNotify new Point newWidth, Math.round(newWidth / @ratio)
+      @_applyExtent new Point newWidth, Math.round(newWidth / @ratio)
       @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
     else
       super

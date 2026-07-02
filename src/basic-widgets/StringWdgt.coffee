@@ -118,7 +118,7 @@ class StringWdgt extends Widget
   # by setting `fittingSpec` (they RESPECT the mode rather than impose it, so the
   # empty-window placeholder text — a FIT_TEXT_TO_BOX TextWdgt — is left alone),
   # and a FIT_BOX_TO_TEXT widget re-flows its box then invalidates its container
-  # (_reflowContainedTextThenAnnounce, below) so the surrounding layout follows.
+  # (_reflowContainedTextThenInvalidateLayout, below) so the surrounding layout follows.
   #
   # Keep FIT_BOX_TO_TEXT implemented HERE (where the SWCanvas font cap,
   # ControllerMixin and undo/redo already live); do NOT re-introduce a menu-only
@@ -989,7 +989,7 @@ class StringWdgt extends Widget
       # was `menuItem.parent instanceof MenuWdgt` (type-test-elimination campaign)
       if menuItem?.parent? and menuItem.parent.isMenu?()
         @updateFontsMenuEntriesTicks menuItem.parent
-    @_reflowContainedTextThenAnnounce()
+    @_reflowContainedTextThenInvalidateLayout()
 
 
   fontsMenu: (a,targetWidget)->
@@ -1132,19 +1132,19 @@ class StringWdgt extends Widget
     @_settleLayoutsAfter =>
       @isShowingBlanks = not @isShowingBlanks
       @changed()
-      @_reflowContainedTextThenAnnounce()
+      @_reflowContainedTextThenInvalidateLayout()
 
   toggleWeight: ->
     @_settleLayoutsAfter =>
       @isBold = not @isBold
       @changed()
-      @_reflowContainedTextThenAnnounce()
+      @_reflowContainedTextThenInvalidateLayout()
 
   toggleItalic: ->
     @_settleLayoutsAfter =>
       @isItalic = not @isItalic
       @changed()
-      @_reflowContainedTextThenAnnounce()
+      @_reflowContainedTextThenInvalidateLayout()
 
   toggleHeaderLine: ->
     @isHeaderLine = not @isHeaderLine
@@ -1155,7 +1155,7 @@ class StringWdgt extends Widget
     @_settleLayoutsAfter =>
       @isPassword = not @isPassword
       @changed()
-      @_reflowContainedTextThenAnnounce()
+      @_reflowContainedTextThenInvalidateLayout()
 
   changed: ->
     super
@@ -1237,7 +1237,7 @@ class StringWdgt extends Widget
   # measure unchanged needs no redundant up-then-down container re-fit. For a bare StringWdgt the
   # base Widget::_reLayoutSelf is empty (box-to-text sizing lives in
   # TextWdgt::_reLayoutSelf), so the gated body is a no-op.
-  _reflowContainedTextThenAnnounce: ->
+  _reflowContainedTextThenInvalidateLayout: ->
     return unless @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
     extentBefore = @extent()
     @_reLayoutSelf()
@@ -1273,7 +1273,7 @@ class StringWdgt extends Widget
         @_sizeToTextAndDisableFittingNoSettle()
       @changed()
     @updateTarget()
-    @_reflowContainedTextThenAnnounce()
+    @_reflowContainedTextThenInvalidateLayout()
 
   # This is also invoked for example when you take a slider
   # and set it to target this.
@@ -1330,7 +1330,7 @@ class StringWdgt extends Widget
           # setFontSize wraps its body in a single settle, so this runs in-settle → the NoSettle core.
           @_sizeToTextAndDisableFittingNoSettle()
         @changed()
-      @_reflowContainedTextThenAnnounce()
+      @_reflowContainedTextThenInvalidateLayout()
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     [menuEntriesStrings, functionNamesStrings] = theTarget.stringSetters()

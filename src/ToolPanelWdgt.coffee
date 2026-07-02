@@ -37,9 +37,9 @@ class ToolPanelWdgt extends PanelWdgt
           glassBoxTop.toolTipMessage = aWdgt.toolTipMessage
           glassBoxBottom.add glassBoxTop
 
-        glassBoxBottom._applyMoveToAndNotify @topLeft().add new Point @externalPadding, @externalPadding
-        # TODO anti-pattern - this _applyExtentAndNotify should be called within _reLayout, not here
-        glassBoxBottom._applyExtentAndNotify new Point @thumbnailSize, @thumbnailSize
+        glassBoxBottom._applyMoveTo @topLeft().add new Point @externalPadding, @externalPadding
+        # TODO anti-pattern - this _applyExtent should be called within _reLayout, not here
+        glassBoxBottom._applyExtent new Point @thumbnailSize, @thumbnailSize
         glassBoxBottom._invalidateLayout()
 
         aWdgt = glassBoxBottom
@@ -124,7 +124,7 @@ class ToolPanelWdgt extends PanelWdgt
 
       horizAdj = (@thumbnailSize - w.width()) / 2
       vertAdj = (@thumbnailSize - w.height()) / 2
-      w._applyMoveToAndNotify @position().add(new Point @externalPadding, @externalPadding).add(new Point xPos, yPos).add(new Point horizAdj, vertAdj).round()
+      w._applyMoveTo @position().add(new Point @externalPadding, @externalPadding).add(new Point xPos, yPos).add(new Point horizAdj, vertAdj).round()
       scanningChildrenX++
       numberOfEntries++
 

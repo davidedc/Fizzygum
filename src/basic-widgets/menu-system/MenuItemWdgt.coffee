@@ -86,7 +86,7 @@ class MenuItemWdgt extends LabelButtonWdgt
   shrinkToTextSize: ->
     # '5' is to add some padding between
     # the text and the button edge
-    @_applyWidthAndNotify @widthOfLabel() + 5
+    @_applyWidth @widthOfLabel() + 5
 
   widthOfLabel: ->
     @label.width()

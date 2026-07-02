@@ -169,9 +169,9 @@ class BasementWdgt extends BoxWdgt
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
+    # TODO shouldn't be calling this _applyBounds from here,
     # rather use super
-    @_applyBoundsAndNotify newBoundsForThisLayout
+    @_applyBounds newBoundsForThisLayout
 
     world.disableTrackChanges()
 
@@ -183,8 +183,8 @@ class BasementWdgt extends BoxWdgt
     w -= @cornerRadius
     b = @bottom() - (2 * @cornerRadius) - WorldWdgt.preferencesAndSettings.handleSize
     h = b - y
-    @scrollPanel._applyMoveToAndNotify new Point x, y
-    @scrollPanel._applyExtentAndNotify new Point w, h
+    @scrollPanel._applyMoveTo new Point x, y
+    @scrollPanel._applyExtent new Point w, h
 
     # hideUsedWdgts toggle button
     x = @scrollPanel.left()

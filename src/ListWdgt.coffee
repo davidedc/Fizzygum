@@ -125,7 +125,7 @@ class ListWdgt extends ScrollPanelWdgt
     return
 
   
-  _applyExtentAndNotify: (aPoint) ->
+  _applyExtent: (aPoint) ->
     unless aPoint.equals @extent()
       #console.log "move 3"
       @__breakMoveResizeCaches()

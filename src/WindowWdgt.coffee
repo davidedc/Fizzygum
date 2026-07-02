@@ -117,7 +117,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @label.setText titleToBeSet
 
     # settled-after-new: SETTLE the default extent as the constructor's LAST act (was
-    # @_applyExtentAndNotify, which left a pending re-fit -- and, for default contents, the
+    # @_applyExtent, which left a pending re-fit -- and, for default contents, the
     # _setEmptyWindowLabelNoSettle label too -- so `new WindowWdgt` returned UNsettled). This flushes both.
     # Kept on the public setExtent rather than folded into _buildAndConnectChildrenNoSettle: that core is
     # SHARED with the rebuild-on-drop paths, which must NOT reset a user-resized window back to 300x300.
@@ -177,7 +177,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # make it jump out a little, but still, fit it
       # in the world
       if previousParent != world
-        @_applyMoveToAndNotify @position().add new Point 10, 10
+        @_applyMoveTo @position().add new Point 10, 10
         @_moveWithin world
         @rememberFractionalSituationInHoldingPanel()
 
@@ -354,7 +354,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   _reactToChildCollapsed: (child) ->
     if child == @contents
       if @widthWhenCollapsed?
-        @_applyWidthAndNotify @widthWhenCollapsed
+        @_applyWidth @widthWhenCollapsed
       # layout-apply-sanctioned: collapse re-fit (must stay synchronous, residuals-audit fam 4)
       @_reLayoutChildren()
       @_invalidateLayout()   # (property sub-seam deletion) uniform climb replaces the property re-fit seam
@@ -363,10 +363,10 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   _reactToChildUnCollapsed: (child) ->
     if child == @contents
       @reInflating = true
-      @_applyExtentAndNotify @extentWhenCollapsed
-      @contents._applyExtentAndNotify @contentsExtentWhenCollapsed
+      @_applyExtent @extentWhenCollapsed
+      @contents._applyExtent @contentsExtentWhenCollapsed
       if @widthWhenUnCollapsed?
-        @_applyWidthAndNotify @widthWhenUnCollapsed
+        @_applyWidth @widthWhenUnCollapsed
       # layout-apply-sanctioned: uncollapse re-fit, reInflating-coupled (must stay synchronous, residuals-audit fam 4)
       @_reLayoutChildren()
       @reInflating = false
@@ -383,7 +383,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @_buildAndConnectChildrenNoSettle()
     @_setEmptyWindowLabelNoSettle()
     if @recursivelyAttachedAsFreeFloating()
-      @_applyExtentAndNotify new Point 300, 300
+      @_applyExtent new Point 300, 300
 
   _beforeChildDropped: (child) ->
     @removeChild @contents
@@ -608,13 +608,13 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
           desiredHeight = @contents.height()
           if !@recursivelyAttachedAsFreeFloating()
             desiredHeight = Math.min desiredHeight, @height() - partOfHeightUsedUp
-          @contents._applyWidthAndNotify recommendedElementWidth
+          @contents._applyWidth recommendedElementWidth
           @_resizeOwnWidthSkippingChildRelayout windowWidth
-          @contents._applyHeightAndNotify desiredHeight
+          @contents._applyHeight desiredHeight
         else if @contents.layoutSpecDetails.preferredStartingHeight == PreferredSize.DONT_MIND
-          @contents._applyWidthAndNotify recommendedElementWidth
+          @contents._applyWidth recommendedElementWidth
           desiredHeight = Math.round @height() - partOfHeightUsedUp
-          @contents._applyHeightAndNotify desiredHeight
+          @contents._applyHeight desiredHeight
         else
           # Path B: the sizing HANDS its resulting height back -- no read-back of @contents.height().
           desiredHeight = @contents._setWidthSizeHeightAccordingly recommendedElementWidth
@@ -641,7 +641,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
         if @contentsRecursivelyCanSetHeightFreely()
           desiredHeight = Math.round @height() - partOfHeightUsedUp
-          @contents._applyHeightAndNotify desiredHeight
+          @contents._applyHeight desiredHeight
 
       # contained text that has OPTED INTO FIT_BOX_TO_TEXT (a SimplePlainTextWdgt,
       # or any bare TextWdgt put into that mode) fits its BOX to the TEXT: it wraps
@@ -655,7 +655,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
       leftPosition = @left() + Math.floor (@width() - recommendedElementWidth) / 2
 
-      @contents._applyMoveToAndNotify new Point leftPosition, @top() + (closeIconSize + @padding + @padding) + @padding
+      @contents._applyMoveTo new Point leftPosition, @top() + (closeIconSize + @padding + @padding) + @padding
       stackHeight += desiredHeight
 
     if @contents? and @contents.collapsed
@@ -666,11 +666,11 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     @_resizeOwnHeightSkippingChildRelayout newHeight
 
-    @titlebarBackground._applyExtentAndNotify (new Point @width(), closeIconSize + 2 * @padding).subtract new Point 2,2
-    @titlebarBackground._applyMoveToAndNotify @position().add new Point 1,1
+    @titlebarBackground._applyExtent (new Point @width(), closeIconSize + 2 * @padding).subtract new Point 2,2
+    @titlebarBackground._applyMoveTo @position().add new Point 1,1
     # TODO this looks better:
-    #@titlebarBackground._applyExtentAndNotify (new Point @width(), closeIconSize + 2 * @padding).subtract new Point 4,4
-    #@titlebarBackground._applyMoveToAndNotify @position().add new Point 2,2
+    #@titlebarBackground._applyExtent (new Point @width(), closeIconSize + 2 * @padding).subtract new Point 4,4
+    #@titlebarBackground._applyMoveTo @position().add new Point 2,2
 
     # NON-settling cores (not the public collapse/unCollapse): this is a layout pass, so reaching the
     # self-settling wrapper would re-enter the flush. The cores are idempotent, so an already-correct
@@ -698,7 +698,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
       labelBounds = new Rectangle new Point labelLeft, labelTop
       labelBounds = labelBounds.setBoundsWidthAndHeight labelWidth, WorldWdgt.preferencesAndSettings.titleBarTextHeight
-      @label._applyBoundsAndNotify labelBounds
+      @label._applyBounds labelBounds
 
     # edit button
     if @editButton? and !@editButton.isInCollapsedSubtree() and @editButton.parent == @

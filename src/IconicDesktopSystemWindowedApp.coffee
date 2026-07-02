@@ -47,7 +47,7 @@ class IconicDesktopSystemWindowedApp
       if existingWindow? and !existingWindow.destroyed and existingWindow.parent?
         world.add existingWindow
         existingWindow.bringToForeground()
-        existingWindow._applyMoveToAndNotify world.hand.position().add new Point 100, -50
+        existingWindow._applyMoveTo world.hand.position().add new Point 100, -50
         existingWindow._moveWithin world
         existingWindow.rememberFractionalSituationInHoldingPanel()
         return

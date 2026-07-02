@@ -106,8 +106,8 @@ class ConsoleWdgt extends Widget
     buttonsWidth = (textWidth - 2 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize)/2
 
     if @tempPromptEntryField.parent == @
-      @tempPromptEntryField._applyMoveToAndNotify new Point @left() + @externalPadding, @top() + @externalPadding
-      @tempPromptEntryField._applyExtentAndNotify new Point textWidth, textHeight
+      @tempPromptEntryField._applyMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
+      @tempPromptEntryField._applyExtent new Point textWidth, textHeight
 
 
     # buttons -------------------------------

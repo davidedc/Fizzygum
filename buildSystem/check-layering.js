@@ -40,7 +40,7 @@
  * """, `) so the call-detecting regexes never match a method name that merely appears in a
  * throw message or a comment; it groups lines into 2-space-indent methods. Call detection
  * keys off the leading `@`/`.` and the LOWERCASE public name, so `@setExtent`/`.moveTo`
- * match while the low-level `@_applyExtentAndNotify`/`@_applyMoveToAndNotify`/`@_commitBounds` do NOT.
+ * match while the low-level `@_applyExtent`/`@_applyMoveTo`/`@_commitBounds` do NOT.
  *
  * Exit codes: 0 = clean, 1 = layering violation(s), 2 = operational error.
  * Run from the Fizzygum/ repo root (build_it_please.sh does this):
@@ -57,7 +57,7 @@ const PUBLIC_SETTERS = ['setExtent', 'moveTo', 'setBounds', 'setWidth', 'setHeig
 // to the one-settle moveTo, so listing it would false-trip [C] (public-setter calls public-setter) on its
 // moveWithin -> moveTo call. Like fullMoveWithin pre-rename, it stays untracked (it self-settles via moveTo).
 // a call to a public setter: leading @ or . then the lowercase public name (the _-prefixed low-level mutators
-// — _applyExtentAndNotify / __commitExtent / etc. — don't match: the leading underscore sits between the @/. and the verb).
+// — _applyExtent / __commitExtent / etc. — don't match: the leading underscore sits between the @/. and the verb).
 const PUB_CALL = new RegExp('[@.]\\s*(' + PUBLIC_SETTERS.join('|') + ')\\b');
 // R2 carve-out: the public mover moveTo shares its name with the HTML5 canvas context.moveTo (~560 draw
 // call-sites + @moveTo in the canvas extensions). PUB_CALL is receiver-blind, so a moveTo match is IGNORED
@@ -93,7 +93,7 @@ const isLowLevel = (name) =>
                             // (the structural silent* setters were renamed to __hide/__addShadow/__add LEAVES in §3d/B13,
                             //  caught by /^_/ below — the old /^silent/ arm was retired with them. The old /^fullRaw/ arm
                             //  was likewise REMOVED with the §6-1/§6-5 move+mutator renames: every fullRaw* mover is now an
-                            //  _apply*AndNotify corner or a _move* convenience — both leading-underscore, so caught by /^_/
+                            //  _apply* corner or a _move* convenience — both leading-underscore, so caught by /^_/
                             //  below; the low-level classification is unchanged.)
   /^_/.test(name) ||        // leading-underscore = private (incl. __ and the re-layout machinery
                             // _positionAndResizeChildren / _reLayoutScrollbars / _reLayoutChildrenAndScrollbars /
@@ -122,8 +122,8 @@ const isLowLevel = (name) =>
 // a lint but by deferring the re-fit seam (_announceGeometryChangeToContainer enqueues/invalidates
 // the container; its synchronous childGeometryChanged climb arm was retired and that orphaned method
 // deleted). What an immediate mutator legitimately MAY do is APPLY a re-fit synchronously IN PLACE -- a
-// TERMINAL, single-container apply (TextWdgt._applyExtentAndNotify->@_reLayoutSelf, StretchablePanelWdgt.
-// _applyExtentAndNotify->@_reLayout, ScrollPanelWdgt/SimpleVerticalStackPanelWdgt._applyExtentAndNotify->@_reLayoutChildren). Those
+// TERMINAL, single-container apply (TextWdgt._applyExtent->@_reLayoutSelf, StretchablePanelWdgt.
+// _applyExtent->@_reLayout, ScrollPanelWdgt/SimpleVerticalStackPanelWdgt._applyExtent->@_reLayoutChildren). Those
 // applies are SANCTIONED (see those overrides' comments) -- only the SCHEDULE below is forbidden.
 // Forbidding the _reLayoutChildren apply by name was assessed and DECLINED as cosmetic: it does the
 // identical work to the blessed _reLayoutSelf/_reLayout applies, so a name-based ban would just force a
@@ -131,7 +131,7 @@ const isLowLevel = (name) =>
 //
 // NAME-COVERAGE invariant (lint-ratchet Phase 2, 2026-06-25; kept current through the §6-5 mutator sweep, 2026-06-29):
 // every method that writes geometry immediately is recognizably LOW-LEVEL and named in the apply 2x2 family -- an
-// _apply*AndNotify / _commit*AndNotify CORNER, or a _move* / _setWidthSizeHeightAccordingly /
+// _apply* (or its _apply*Base override-bypass twin) / _commit*AndNotify CORNER, or a _move* / _setWidthSizeHeightAccordingly /
 // _setExtentToFractional* / _resizeToWithoutSpacing CONVENIENCE (all covered by [E], the SCHEDULE ban below), or a
 // __commit* LEAF (covered by the STRONGER [I] no-orchestration ban, which subsumes the schedule ban). The
 // structural silent* setters were renamed to the __hide/__addShadow/__add LEAVES (§3d/B13), now [I]-governed. None is
@@ -139,12 +139,12 @@ const isLowLevel = (name) =>
 // constructor (@bounds init, not a mutation), _destroyNoSettle and removeFromTree (teardown / structural-removal
 // cache hygiene -- neither writes geometry; removeFromTree is a structural op that legitimately schedules). No escapee.
 const isImmediateMutator = (name) =>
-  /^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)AndNotify$/.test(name) ||   // ✓/✓ corners (ex rawSet*/fullRawMove{By,To})
+  /^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)$/.test(name) ||            // ✓/✓ corners — the polymorphic apply (ex *AndNotify; Tier B 2026-07-02). NB _apply*Base is the arrange-bypass twin, NOT matched here.
   /^_commit(Extent|Bounds)AndNotify$/.test(name) ||                             // notify-only corners (ex silentRawSet{Extent,Bounds})
   /^_move(LeftSideTo|RightSideTo|TopSideTo|BottomSideTo|ToSideOf|FullCenterTo|Within|InDesktopToFractionalPosition|InStretchablePanelToFractionalPosition)$/.test(name) ||  // convenience movers (ex fullRawMove*)
   /^_(setWidthSizeHeightAccordingly|setExtentToFractionalExtentInPaneUserHasSet|resizeToWithoutSpacing)$/.test(name);  // convenience setters/resizer (ex rawSet*/rawResize*). NB the ex-silent* structural setters are now __hide/__addShadow/__add LEAVES under [I], NOT immediate-mutators (like the __commit* leaves).
 // (the __commit* leaves are deliberately NOT matched here -- rule [I] governs them more strictly. The —/✓ arrange
-//  corners _applyExtent/_applyMoveBy/_applyMoveTo (+ the silent _commitBounds commit) react synchronously and were never [E]-covered;
+//  corners _applyExtentBase/_applyMoveByBase/_applyMoveToBase (+ the silent _commitBounds commit) react synchronously and were never [E]-covered;
 //  they stay out, exactly as their pre-sweep raw-less _arrangeApply* form was.)
 
 // [D] macro hygiene: a SystemTest macro must drive the world through the PUBLIC widget API ONLY -- never
@@ -217,17 +217,22 @@ const CALLBACK_HOOK = /^_(reactTo|before)[A-Z]/;            // [J] a notificatio
 // @-self (a .-receiver can't be typed -- like SELF_ADD_CALL); the runtime audit covers dynamic dispatch.
 const LEAF_FORBIDDEN = /@\s*(_reFitContainer\w*|_announce\w*|_reLayout\w*|_invalidateLayout|recalculateLayouts|_settleLayoutsAfter\w*|fullChanged|changed|setExtent|setBounds|setWidth|setHeight|moveTo)\b/;  // _reFitContainer* = the phase valve; _announce* = the announce-up seam (§9.4, ex _reFitContainerAfterRawGeometryChange / _refreshScrollPanelWdgtOrVerticalStackIfIamInIt). public setters mirror PUBLIC_SETTERS (moveTo, not the retired fullMoveTo — §6-1)
 
-// [K] the 2x2 apply-family NAME-CONSISTENCY corners (layering/naming convention §2/§4). A corner's NAME must match its
-// NOTIFY×REACT behaviour. We enforce the two STATICALLY-SOUND negatives (in checkFile below); the POSITIVE "every
-// *AndNotify REACHES the re-fit seam" is delegated to the RUNTIME auditTierAndApplyNaming -- a static name-scanner
-// can't follow `super` / dynamic dispatch (most corner overrides reach the seam via `super`), and an override may
-// legitimately NOT notify despite the AndNotify name (e.g. ClippingAtRectangularBoundsMixin._applyMoveByAndNotify,
-// which translates + repaints WITHOUT firing the seam). Scoped to the 2x2 CORNERS only: the convenience movers/setters
-// (_move*/_set*/_resize*) delegate to a *AndNotify corner freely, so they are NOT subjects.
-const APPLY_CORNER = /^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)(AndNotify)?$|^_commit(Extent|Bounds)AndNotify$/;
-const K_SEAM_CALL  = /@\s*(_reFitContainer\w*|_announce\w*)\b/;   // the up-notify seam (the NOTIFY axis): _reFitContainer* valve + the _announce* announce-up (§9.4)
+// [K] the 2x2 apply-family NAME-CONSISTENCY corners (layering/naming convention §2/§4). Since the *AndNotify rename
+// (Tier B, 2026-07-02) the axis is REACT × DISPATCH: the polymorphic _apply<Geom> (ex *AndNotify) is the override
+// DISPATCH POINT, and its _apply<Geom>Base twin is the override-BYPASS primitive the top-down arrange uses for leaf
+// children. We enforce the STATICALLY-SOUND negative that survives post-seam-deletion (in checkFile below): a _apply*Base
+// bypass twin reacts only -- it must NOT fire the container re-fit seam (_reFitContainer* valve; the _announce* announce-up
+// half is dead, deleted 2026-07-01 -- rule [N]) NOR DISPATCH to its polymorphic _apply* sibling (routing an arrange apply
+// back through the very override the twin exists to bypass -- e.g. ClippingAtRectangularBoundsMixin._applyMoveBy, the
+// override _applyMoveByBase must skip). The old "*AndNotify REACHES the seam" POSITIVE is retired with the seam (it was
+// the RUNTIME auditTierAndApplyNaming's job; the settle-time up-edge replaced the seam). The _commit*AndNotify "must not
+// react" half is vacuous (those corners collapsed into the __commit* leaves / _commitBounds 2026-07-01) -- kept as a
+// defensive arm. Scoped to the 2x2 CORNERS only: the convenience movers/setters (_move*/_set*/_resize*) delegate to a
+// polymorphic _apply* corner freely, so they are NOT subjects.
+const APPLY_CORNER = /^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)$|^_apply(Extent|MoveBy|MoveTo)Base$|^_commit(Extent|Bounds)AndNotify$/;  // clean poly form | the 3 override-bypass *Base twins | the (collapsed) notify-only commit corners
+const K_SEAM_CALL  = /@\s*(_reFitContainer\w*|_announce\w*)\b/;   // the up-notify seam (the DISPATCH-axis negative): _reFitContainer* valve + the _announce* announce-up (dead, deleted 2026-07-01)
 const K_REACT_CALL = /@\s*(changed|fullChanged|_reLayout\w*|_positionAndResizeChildren)\b/;           // repaint / self- or child-relayout (the REACT axis)
-const K_ANDNOTIFY  = /[@.]\s*_[A-Za-z]\w*AndNotify\b/;                                                 // a call to a notifying corner
+const K_POLY_APPLY = /[@.]\s*_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)(?![A-Za-z])/;           // a call to a polymorphic apply corner (the clean _apply*, NOT the _apply*Base twin) — routing an arrange apply back through the override it bypasses
 const WRAPPER_EXCLUDED = new Set(['add']);   // see the [G] block above (collapse/unCollapse folded in once the layout passes routed to their cores)
 const SELF_ADD_CALL = /@\s*add\b/;        // [G] the unambiguous structural add: @add (self == Widget.add inside a Widget
                                           // method). \b excludes @addMany / @addInPseudoRandomPosition; the leading @ (not .)
@@ -265,6 +270,7 @@ const LEGACY_CALLBACK_FRAGMENT = /^(child[A-Z]|justBeen|iHaveBeen|aboutTo|prepar
 // live defs), out of scope for this campaign. Only the specific retired `fullRaw` mover prefix is caught.
 const FRAGMENT_BANNED = /^(silent[A-Z]|raw[A-Z]|fullRaw)/;
 const FRAGMENT_ALLOWLIST = new Set(['rawPixelInfo', 'rawPixelHash', 'rawRGBA']);  // raw-PIXEL accessors keep "raw" (raw pixel data, not raw geometry)
+const APPLY_ANDNOTIFY_BANNED = /^_apply\w*AndNotify$/;  // [M] the retired _apply*AndNotify polymorphic-apply suffix (Tier B, 2026-07-02): the corners dropped it to the bare _apply* once the notify seam was deleted (2026-07-01). NB _commit*AndNotify is a DIFFERENT (collapsed) corner, deliberately not caught here.
 
 // [N] the retired notify-by-mutation CONTAINER SEAM must not be re-defined (Opt-4 hygiene guard, 2026-07-01). The two
 // announce-verbs (_announceGeometryChangeToContainer / _announceLayoutPropertyChangeToContainer) were the mutation-time
@@ -275,7 +281,7 @@ const FRAGMENT_ALLOWLIST = new Set(['rawPixelInfo', 'rawPixelHash', 'rawRGBA']);
 // (matches only the announce-a-change-TO-a-container seam, not any "announce"), sound TODAY (no _announce* method is
 // defined -- verified). Caveat (accepted, per the Opt-4 decision): name-based, so a revival under a NEW name is not
 // caught here -- but the CALL side of any such seam already is, by rule [I] (a __ leaf must not @-call _announce*) and
-// rule [K] (an arrange corner must not fire _announce*). This closes the DEF side those two never covered.
+// rule [K] (a _apply*Base bypass twin must not fire _announce*). This closes the DEF side those two never covered.
 const SEAM_VERB_BANNED = /^_announce\w*ToContainer$/;   // the deleted notify-by-mutation container-seam shape
 
 // Strip string literals and trailing `#` comments from one line, carrying multi-line
@@ -413,6 +419,7 @@ function checkFile(file, violations, wrapperCall, warnings) {
             if (LEGACY_CALLBACK_FRAGMENT.test(b.method)) violations.push(`[L] legacy callback fragment ${b.method}() — use the _(reactTo|before)(Being|Child|HolderWindow)<Event> scheme (layering/naming convention §3/§4)  — ${rel}:${n + 1}`);
             // [M] retired geometry/structural naming fragments (raw* / silent* / fullRaw — see consts above; raw-pixel accessors allowlisted).
             if (FRAGMENT_BANNED.test(b.method) && !FRAGMENT_ALLOWLIST.has(b.method)) violations.push(`[M] retired naming fragment ${b.method}() — the raw*/silent*/fullRaw geometry+structural prefixes were eliminated (§6/§3d); use the _apply*/_commit*/__ tier names (raw PIXEL data uses the rawPixel*/rawRGBA accessors). (layering/naming convention §4)  — ${rel}:${n + 1}`);
+            if (APPLY_ANDNOTIFY_BANNED.test(b.method)) violations.push(`[M] retired apply-notify suffix ${b.method}() — the _apply*AndNotify corners were renamed to the bare polymorphic _apply* (Tier B, 2026-07-02, docs/layout-optimizations-and-oo-cleanup-plan.md §3); "AndNotify" asserted a notify seam deleted 2026-07-01. Use _apply* (polymorphic) or _apply*Base (override-bypass twin). (layering/naming convention §4)  — ${rel}:${n + 1}`);
             // [N] retired notify-by-mutation container seam (see the SEAM_VERB_BANNED const above): the deleted _announce*ToContainer verbs must not return as a def.
             if (SEAM_VERB_BANNED.test(b.method)) violations.push(`[N] retired container-seam verb ${b.method}() — the notify-by-mutation re-fit seam (_announce*ToContainer) was deleted 2026-07-01 and replaced by the settle-time up-edge _reFitMyTrackingContainerAfterSettle; do NOT re-introduce a mutation-driven container notification (assessment §4.1 / §6 rulebook rule 2)  — ${rel}:${n + 1}`);
           }
@@ -480,14 +487,16 @@ function checkFile(file, violations, wrapperCall, warnings) {
     }
     // [K] 2x2 apply-family name-consistency (the two statically-sound negatives; positive reaches-seam is the runtime audit's job, see the defs).
     if (APPLY_CORNER.test(method)) {
-      if (!/AndNotify$/.test(method)) {
-        // arrange corner (_apply* w/o AndNotify) reacts only — must NOT notify (fire the seam) nor call an *AndNotify mutator
-        if (K_SEAM_CALL.test(code)) violations.push(`[K] arrange corner ${method}() fires the re-fit seam — a non-AndNotify corner reacts only; the notifying twin is the *AndNotify corner (layering/naming convention §2)  — ${at}`);
-        else { const kc = code.match(K_ANDNOTIFY); if (kc) violations.push(`[K] arrange corner ${method}() calls notifying ${kc[0].replace(/^[@.]\s*/, '')}() — a non-AndNotify corner must not notify (layering/naming convention §2)  — ${at}`); }
+      if (/Base$/.test(method)) {
+        // override-BYPASS twin (_apply*Base) reacts only — must NOT fire the container re-fit seam nor DISPATCH to its polymorphic _apply* sibling (the corner it exists to bypass)
+        if (K_SEAM_CALL.test(code)) violations.push(`[K] bypass twin ${method}() fires the re-fit seam — a _apply*Base primitive reacts only; the polymorphic dispatch point is the bare _apply* corner (layering/naming convention §2)  — ${at}`);
+        else { const kc = code.match(K_POLY_APPLY); if (kc) violations.push(`[K] bypass twin ${method}() dispatches to polymorphic ${kc[0].replace(/^[@.]\s*/, '')}() — a _apply*Base must bypass the override, not route the arrange apply back through it (layering/naming convention §2)  — ${at}`); }
       } else if (/^_commit/.test(method) && K_REACT_CALL.test(code)) {
-        // notify-only corner (_commit*AndNotify) commits + fires the seam — must NOT react
-        violations.push(`[K] notify-only corner ${method}() reacts via ${code.match(K_REACT_CALL)[1]}() — _commit*AndNotify only commits + notifies; the reacting full mutator is _apply*AndNotify (layering/naming convention §2)  — ${at}`);
+        // notify-only corner (_commit*AndNotify) commits + notifies — must NOT react  [vacuous: these corners collapsed into the __commit* leaves / _commitBounds 2026-07-01]
+        violations.push(`[K] notify-only corner ${method}() reacts via ${code.match(K_REACT_CALL)[1]}() — _commit*AndNotify only commits; the reacting polymorphic mutator is _apply* (layering/naming convention §2)  — ${at}`);
       }
+      // the clean polymorphic _apply* (ex *AndNotify) reacts + IS the override dispatch point — no static negative:
+      // its "reaches the container re-fit" is now the settle-time up-edge's job, not a corner-name invariant.
     }
     if (recalc && !RECALC_WHITELIST.has(method)) {
       violations.push(`[B] recalculateLayouts() called from ${method}() (only doOneCycle / _settleLayoutsAfter may)  — ${at}`);
@@ -602,9 +611,9 @@ function main() {
     console.error('G: low-level code must reach the _<name>NoSettle core, not the public self-settling wrapper (destroy/close/fullDestroy/createReference/...) — or mark `# nosettle-sanctioned: <why>`.');
     console.error('I: a __ leaf must trigger no orchestration (re-fit seam / react / schedule-settle / public setter) — keep it a pure bottom (layering/naming convention §1).');
     console.error('J: a notification hook (_reactTo*/_before*) must not open a settle — the gesture/structural dispatcher owns the one _settleLayoutsAfter (layering/naming convention §3).');
-    console.error('K: a 2x2 apply corner must match its name — a non-AndNotify _apply*/_commit* must not fire the seam nor call an *AndNotify; a _commit*AndNotify must not react (layering/naming convention §2).');
+    console.error('K: a 2x2 apply corner must match its name — a _apply*Base bypass twin must not fire the container re-fit seam nor dispatch to its polymorphic _apply* sibling; a _commit*AndNotify must not react (layering/naming convention §2).');
     console.error('L: a notification callback must be named _(reactTo|before)(Being|Child|HolderWindow)<Event> with no NoSettle; the legacy fragments (childX/justBeen/iHaveBeen/aboutTo/prepareTo) are retired (layering/naming convention §3/§4).');
-    console.error('M: the retired raw*/silent*/fullRaw geometry+structural naming fragments must not reappear as method names (use _apply*/_commit*/__ tiers; raw PIXEL data uses rawPixel*/rawRGBA) (layering/naming convention §4).');
+    console.error('M: the retired raw*/silent*/fullRaw fragments and the _apply*AndNotify suffix must not reappear as method names (use _apply*/_apply*Base/_commit*/__ tiers; raw PIXEL data uses rawPixel*/rawRGBA) (layering/naming convention §4).');
     console.error('N: the retired notify-by-mutation container seam (_announce*ToContainer) must not be re-defined — the settle-time up-edge _reFitMyTrackingContainerAfterSettle replaced it (assessment §4.1 / §6 rulebook rule 2).');
     process.exit(1);
   }

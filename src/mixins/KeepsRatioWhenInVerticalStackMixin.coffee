@@ -9,7 +9,7 @@ KeepsRatioWhenInVerticalStackMixin =
     _setWidthSizeHeightAccordingly: (newWidth) ->
       @_resizeToWithoutSpacing?()
       ratio = @height()/@width()
-      @_applyExtentAndNotify new Point newWidth, Math.round newWidth * ratio
+      @_applyExtent new Point newWidth, Math.round newWidth * ratio
 
     # §4.1 pure measure: ratio-locked, so preferred height = round(width * current ratio)
     # (mirrors _setWidthSizeHeightAccordingly above). No mutation, no seam.
@@ -31,8 +31,8 @@ KeepsRatioWhenInVerticalStackMixin =
 
         availableHeight = world.height() - 20
         if @parent.height() > availableHeight
-          @parent._applyExtentAndNotify (new Point Math.min((@width()/@height()) * availableHeight, world.width()), availableHeight).round()
-          @parent._applyMoveToAndNotify world.hand.position().subtract @parent.extent().floorDivideBy 2
+          @parent._applyExtent (new Point Math.min((@width()/@height()) * availableHeight, world.width()), availableHeight).round()
+          @parent._applyMoveTo world.hand.position().subtract @parent.extent().floorDivideBy 2
           @parent._moveWithin world
 
     _reactToHolderWindowDropped: (whereIn) ->

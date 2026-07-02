@@ -157,7 +157,7 @@ class MenusHelper
     calculatingPatchNodeWdgt = new CalculatingPatchNodeWdgt
     wm = new WindowWdgt nil, nil, calculatingPatchNodeWdgt, true
     wm.setExtent new Point 460, 400
-    wm._applyMoveToAndNotify world.hand.position().subtract new Point 50, 100
+    wm._applyMoveTo world.hand.position().subtract new Point 50, 100
     wm._moveWithin world
     world.add wm
 
@@ -165,7 +165,7 @@ class MenusHelper
     diffingPatchNodeWdgt = new DiffingPatchNodeWdgt
     wm = new WindowWdgt nil, nil, diffingPatchNodeWdgt, true
     wm.setExtent new Point 460, 400
-    wm._applyMoveToAndNotify world.hand.position().subtract new Point 50, 100
+    wm._applyMoveTo world.hand.position().subtract new Point 50, 100
     wm._moveWithin world
     world.add wm
 
@@ -176,7 +176,7 @@ class MenusHelper
     regexSubstitutionPatchNodeWdgt = new RegexSubstitutionPatchNodeWdgt
     wm = new WindowWdgt nil, nil, regexSubstitutionPatchNodeWdgt, true
     wm.setExtent new Point 460, 400
-    wm._applyMoveToAndNotify world.hand.position().subtract new Point 50, 100
+    wm._applyMoveTo world.hand.position().subtract new Point 50, 100
     wm._moveWithin world
     world.add wm
 
@@ -192,7 +192,7 @@ class MenusHelper
     toolPanel = new ScrollPanelWdgt new ToolPanelWdgt
     wm = new WindowWdgt nil, nil, toolPanel, true
     wm.setExtent new Point 200, 400
-    wm._applyMoveToAndNotify world.hand.position().subtract new Point 50, 100
+    wm._applyMoveTo world.hand.position().subtract new Point 50, 100
     wm._moveWithin world
     world.add wm
 
@@ -200,7 +200,7 @@ class MenusHelper
     horizontalMenuPanel = new HorizontalMenuPanelWdgt
     wm = new WindowWdgt nil, nil, horizontalMenuPanel, true
     wm.setExtent new Point 200, 400
-    wm._applyMoveToAndNotify world.hand.position().subtract new Point 50, 100
+    wm._applyMoveTo world.hand.position().subtract new Point 50, 100
     wm._moveWithin world
     world.add wm
 
@@ -414,7 +414,7 @@ class MenusHelper
   createExampleScatterPlotWithAxes: ->
     exampleScatterPlot = new ExampleScatterPlotWdgt
     plotWithAxesWdgt = new PlotWithAxesWdgt exampleScatterPlot
-    plotWithAxesWdgt._applyExtentAndNotify new Point 300, 300
+    plotWithAxesWdgt._applyExtent new Point 300, 300
     world.create plotWithAxesWdgt
 
   createExampleFunctionPlot: ->
@@ -479,13 +479,13 @@ class MenusHelper
   createSimpleVerticalStackPanelWdgt: ->
     svspw = new SimpleVerticalStackPanelWdgt
     world.add svspw
-    svspw._applyMoveToAndNotify new Point 35, 30
-    svspw._applyExtentAndNotify new Point 370, 325
+    svspw._applyMoveTo new Point 35, 30
+    svspw._applyExtent new Point 370, 325
 
   createSimpleVerticalStackScrollPanelWdgt: ->
     svsspw = new SimpleVerticalStackScrollPanelWdgt
     world.add svsspw
-    # public setters on the ATTACHED panel self-settle in place (was _applyMoveToAndNotify/_applyExtentAndNotify, whose raw
+    # public setters on the ATTACHED panel self-settle in place (was _applyMoveTo/_applyExtent, whose raw
     # resize on an attached panel used to trip the now-deleted _announceGeometryChangeToContainer geom seam into an off-settle re-fit)
     svsspw.moveTo new Point 430, 25
     svsspw.setExtent new Point 370, 325
@@ -497,14 +497,14 @@ class MenusHelper
   createSimpleVerticalStackPanelWdgtFreeContentsWidth: ->
     svspw = new SimpleVerticalStackPanelWdgt null, null, null, false
     world.add svspw
-    svspw._applyMoveToAndNotify new Point 35, 30
-    svspw._applyExtentAndNotify new Point 370, 325
+    svspw._applyMoveTo new Point 35, 30
+    svspw._applyExtent new Point 370, 325
 
   createSimpleVerticalStackScrollPanelWdgtFreeContentsWidth: ->
     svsspw = new SimpleVerticalStackScrollPanelWdgt false
     world.add svsspw
-    svsspw._applyMoveToAndNotify new Point 430, 25
-    svsspw._applyExtentAndNotify new Point 370, 325
+    svsspw._applyMoveTo new Point 430, 25
+    svsspw._applyExtent new Point 370, 325
 
   createSimpleVerticalStackPanelWdgtAndScrollPanelFreeContentsWidth: ->
     @createSimpleVerticalStackPanelWdgt()
@@ -550,13 +550,13 @@ class MenusHelper
 
   createEmptyInternalWindow: ->
     wm = new WindowWdgt nil, nil, nil, true
-    wm._applyMoveToAndNotify world.hand.position()
+    wm._applyMoveTo world.hand.position()
     wm._moveWithin world
     world.add wm
 
   createEmptyWindow: ->
     wm = new WindowWdgt nil, nil, nil
-    wm._applyMoveToAndNotify world.hand.position()
+    wm._applyMoveTo world.hand.position()
     wm._moveWithin world
     world.add wm
 
@@ -586,8 +586,8 @@ class MenusHelper
     newWdgt.isEditable = true
 
     world.add newWdgt
-    newWdgt._applyMoveToAndNotify new Point 25, 40
-    newWdgt._applyExtentAndNotify new Point 500, 300
+    newWdgt._applyMoveTo new Point 25, 40
+    newWdgt._applyExtent new Point 500, 300
 
   createNewNonWrappingSimplePlainTextWdgtWithBackground: ->
     newWdgt = new SimplePlainTextWdgt(
@@ -606,8 +606,8 @@ class MenusHelper
     newWdgt.softWrap = false
 
     world.add newWdgt
-    newWdgt._applyMoveToAndNotify new Point 540, 40
-    newWdgt._applyExtentAndNotify new Point 500, 300
+    newWdgt._applyMoveTo new Point 540, 40
+    newWdgt._applyExtent new Point 500, 300
 
   createNewWrappingAndNonWrappingSimplePlainTextWdgtWithBackground: ->
     @createNewWrappingSimplePlainTextWdgtWithBackground()
@@ -637,8 +637,8 @@ class MenusHelper
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
       "nisi.",true, 10)
     world.add SfA
-    SfA._applyMoveToAndNotify new Point 20, 25
-    SfA._applyExtentAndNotify new Point 390, 305
+    SfA._applyMoveTo new Point 20, 25
+    SfA._applyExtent new Point 390, 305
 
   createNonWrappingSimplePlainTextScrollPanelWdgt: ->
     SfB = new SimplePlainTextScrollPanelWdgt(
@@ -649,8 +649,8 @@ class MenusHelper
       "porttitor, elit augue vestibulum est, nec congue " +
       "nisi.",false, 10)
     world.add SfB
-    SfB._applyMoveToAndNotify new Point 430, 25
-    SfB._applyExtentAndNotify new Point 390, 305
+    SfB._applyMoveTo new Point 430, 25
+    SfB._applyExtent new Point 390, 305
 
   createWrappingAndNonWrappingSimplePlainTextScrollPanelWdgt: ->
     @createWrappingSimplePlainTextScrollPanelWdgt()
@@ -683,8 +683,8 @@ class MenusHelper
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
       "nisi.",true, 10)
     world.add SfA
-    SfA._applyMoveToAndNotify new Point 20, 25
-    SfA._applyExtentAndNotify new Point 390, 305
+    SfA._applyMoveTo new Point 20, 25
+    SfA._applyExtent new Point 390, 305
 
   # this is provided for completeness, however see the
   # note in SimplePlainTextPanelWdgt about how this is
@@ -698,8 +698,8 @@ class MenusHelper
       "porttitor, elit augue vestibulum est, nec congue " +
       "nisi.",false, 10)
     world.add SfB
-    SfB._applyMoveToAndNotify new Point 430, 25
-    SfB._applyExtentAndNotify new Point 390, 305
+    SfB._applyMoveTo new Point 430, 25
+    SfB._applyExtent new Point 390, 305
 
   # this is provided for completeness, however see the
   # note in SimplePlainTextPanelWdgt about how this is
@@ -712,7 +712,7 @@ class MenusHelper
   createSimpleDocumentScrollPanelWdgt: ->
     sdspw = new SimpleDocumentScrollPanelWdgt
     world.add sdspw
-    # public setters on the ATTACHED panel self-settle in place (was _applyMoveToAndNotify/_applyExtentAndNotify, whose raw
+    # public setters on the ATTACHED panel self-settle in place (was _applyMoveTo/_applyExtent, whose raw
     # resize on an attached panel used to trip the now-deleted _announceGeometryChangeToContainer geom seam into an off-settle re-fit)
     sdspw.moveTo new Point 35, 30
     sdspw.setExtent new Point 370, 325

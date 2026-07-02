@@ -6,7 +6,7 @@ class ScatterPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
 
   createWidgetToBeHandled: ->
     switcherooWm = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleScatterPlotWdgt), true, true
-    switcherooWm._applyExtentAndNotify new Point 200, 200
+    switcherooWm._applyExtent new Point 200, 200
 
     return switcherooWm
 

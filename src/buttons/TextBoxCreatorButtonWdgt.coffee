@@ -11,6 +11,6 @@ class TextBoxCreatorButtonWdgt extends CreatorButtonWdgt
     switcheroo.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
     switcheroo.alignMiddle()
     switcheroo.alignLeft()
-    switcheroo._applyMoveToAndNotify @position()
-    switcheroo._applyExtentAndNotify new Point 150, 75
+    switcheroo._applyMoveTo @position()
+    switcheroo._applyExtent new Point 150, 75
     return switcheroo

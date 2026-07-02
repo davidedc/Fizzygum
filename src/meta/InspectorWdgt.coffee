@@ -278,7 +278,7 @@ class InspectorWdgt extends Widget
       if !Utils.isObject @currentProperty
         return
       inspector = new @constructor @currentProperty
-      inspector._applyMoveToAndNotify world.hand.position()
+      inspector._applyMoveTo world.hand.position()
       inspector._moveWithin world
       world.add inspector
       inspector.changed()
@@ -474,8 +474,8 @@ class InspectorWdgt extends Widget
     # flake). Applying the bounds here makes the child layout read the FINAL extent, so the
     # render is identical regardless of cadence. `super` re-applies the same bounds (idempotent).
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
-    @_applyMoveToAndNotify newBoundsForThisLayout.origin
-    @_applyExtentAndNotify newBoundsForThisLayout.extent()
+    @_applyMoveTo newBoundsForThisLayout.origin
+    @_applyExtent newBoundsForThisLayout.extent()
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -508,8 +508,8 @@ class InspectorWdgt extends Widget
         # the top class doesn't get an arrow pointing upwards
         if anotherCount > 0
           if @angledArrows[anotherCount-1].parent == @
-            @angledArrows[anotherCount-1]._applyMoveToAndNotify new Point(eachClassButton.left() - 15, Math.round(eachClassButton.top()))
-            @angledArrows[anotherCount-1]._applyExtentAndNotify new Point 15, 15
+            @angledArrows[anotherCount-1]._applyMoveTo new Point(eachClassButton.left() - 15, Math.round(eachClassButton.top()))
+            @angledArrows[anotherCount-1]._applyExtent new Point 15, 15
 
         justAcounter += 20
 
@@ -517,8 +517,8 @@ class InspectorWdgt extends Widget
     @classesButtons.reverse()
     @layoutLastLabelInHierarchy Math.round(@left() + @externalPadding + @internalPadding + justAcounter), Math.round(@hierarchyHeaderString.bottom() + 2 * @internalPadding + justAcounter)
 
-    @hierarchyBackgroundPanel._applyMoveToAndNotify new Point @left() + @externalPadding, @hierarchyHeaderString.bottom() + @internalPadding
-    @hierarchyBackgroundPanel._applyExtentAndNotify new Point @width() - 2 * @externalPadding, justAcounter + 20 + @internalPadding
+    @hierarchyBackgroundPanel._applyMoveTo new Point @left() + @externalPadding, @hierarchyHeaderString.bottom() + @internalPadding
+    @hierarchyBackgroundPanel._applyExtent new Point @width() - 2 * @externalPadding, justAcounter + 20 + @internalPadding
 
     headerBounds = new Rectangle new Point @left() + @externalPadding , @hierarchyBackgroundPanel.bottom()+ @internalPadding
     headerBounds = headerBounds.setBoundsWidthAndHeight @width() - 2 * @externalPadding , 15
@@ -532,13 +532,13 @@ class InspectorWdgt extends Widget
     # list
     listHeight = (@bottom() - @externalPadding - @internalPadding - 15) - (@showMethodsToggle.bottom() + @internalPadding)
     if @list.parent == @
-      @list._applyMoveToAndNotify new Point @left() + @externalPadding, @showMethodsToggle.bottom() + @internalPadding
-      @list._applyExtentAndNotify new Point listWidth, listHeight
+      @list._applyMoveTo new Point @left() + @externalPadding, @showMethodsToggle.bottom() + @internalPadding
+      @list._applyExtent new Point listWidth, listHeight
 
     # detail
     if @detail.parent == @
-      @detail._applyMoveToAndNotify new Point @list.right() + @internalPadding, @list.top()
-      @detail._applyExtentAndNotify (new Point detailWidth, listHeight).round()
+      @detail._applyMoveTo new Point @list.right() + @internalPadding, @list.top()
+      @detail._applyExtent (new Point detailWidth, listHeight).round()
 
     widthOfButtonsUnderList = Math.round((listWidth - 2 * @internalPadding)/3)
 
@@ -589,12 +589,12 @@ class InspectorWdgt extends Widget
 
   layoutLastLabelInHierarchy: (posx, posy) ->
     if @lastLabelInHierarchy.parent == @
-      @lastLabelInHierarchy._applyMoveToAndNotify new Point posx, posy
-      @lastLabelInHierarchy._applyExtentAndNotify new Point 150, 15
+      @lastLabelInHierarchy._applyMoveTo new Point posx, posy
+      @lastLabelInHierarchy._applyExtent new Point 150, 15
 
     if @lastArrowInHierarchy.parent == @
-      @lastArrowInHierarchy._applyMoveToAndNotify new Point posx - 15, posy
-      @lastArrowInHierarchy._applyExtentAndNotify new Point 15, 15
+      @lastArrowInHierarchy._applyMoveTo new Point posx - 15, posy
+      @lastArrowInHierarchy._applyExtent new Point 15, 15
 
 
   notifyInstancesOfSourceChange: (propertiesArray)->

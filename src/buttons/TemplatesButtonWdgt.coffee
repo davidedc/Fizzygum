@@ -9,7 +9,7 @@ class TemplatesButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   bringTemplatesWindowIntoView: ->
     world.simpleEditorTemplates.bringToForeground()
-    world.simpleEditorTemplates._applyMoveToAndNotify world.hand.position().subtract new Point 50, 50
+    world.simpleEditorTemplates._applyMoveTo world.hand.position().subtract new Point 50, 50
     world.simpleEditorTemplates._moveWithin world
 
   mouseClickLeft: ->
@@ -27,7 +27,7 @@ class TemplatesButtonWdgt extends EditorContentPropertyChangerButtonWdgt
       @positionTemplatesWindowAndRegisterIt templatesWindow
 
   positionTemplatesWindowAndRegisterIt: (templatesWindow) ->
-    templatesWindow._applyMoveToAndNotify world.hand.position().subtract new Point 50, 50
+    templatesWindow._applyMoveTo world.hand.position().subtract new Point 50, 50
     templatesWindow._moveWithin world
     world.add templatesWindow
     world.simpleEditorTemplates = templatesWindow

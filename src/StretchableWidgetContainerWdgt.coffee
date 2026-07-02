@@ -29,8 +29,8 @@ class StretchableWidgetContainerWdgt extends Widget
 
     @_addNoSettle @contents
 
-    @_applyExtentAndNotify new Point 300, 300
-    @contents._applyExtentAndNotify new Point @width(), @height()
+    @_applyExtent new Point 300, 300
+    @contents._applyExtent new Point @width(), @height()
     @_invalidateLayout()
 
   # actually
@@ -80,7 +80,7 @@ class StretchableWidgetContainerWdgt extends Widget
 
   _resizeToWithoutSpacing: ->
     if @ratio?
-      @_applyExtentAndNotify new Point @widthWithoutSpacing(), Math.round(@widthWithoutSpacing()/@ratio)
+      @_applyExtent new Point @widthWithoutSpacing(), Math.round(@widthWithoutSpacing()/@ratio)
 
   _setWidthSizeHeightAccordingly: (newWidth) ->
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets @contents
@@ -89,13 +89,13 @@ class StretchableWidgetContainerWdgt extends Widget
       if !@ratio?
         @ratio = @width() / @height()
         @layoutSpecDetails?.canSetHeightFreely = false
-      @_applyExtentAndNotify new Point newWidth, Math.round(newWidth/@ratio)
+      @_applyExtent new Point newWidth, Math.round(newWidth/@ratio)
     else
-      @_applyExtentAndNotify new Point newWidth, @height()
+      @_applyExtent new Point newWidth, @height()
     @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
 
 
-  _applyExtentAndNotify: (extent) ->
+  _applyExtent: (extent) ->
 
     if extent.equals @extent()
       return
@@ -118,9 +118,9 @@ class StretchableWidgetContainerWdgt extends Widget
 
     #console.log "spanel @contents: " + @contents + " _reLayout 2"
 
-    # TODO shouldn't be calling this _applyBoundsAndNotify from here,
+    # TODO shouldn't be calling this _applyBounds from here,
     # rather use super
-    @_applyBoundsAndNotify newBoundsForThisLayout
+    @_applyBounds newBoundsForThisLayout
 
     #console.log "spanel @contents: " + @contents + " _reLayout 3"
 

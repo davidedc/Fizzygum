@@ -34,7 +34,7 @@ class SimpleDocumentScrollPanelWdgt extends SimpleVerticalStackScrollPanelWdgt
 
   addIndentedText: (text)->
     indentedText = @getNormalParagraph text
-    indentedText._applyExtentAndNotify new Point Math.round(92*@width()/100), 335
+    indentedText._applyExtent new Point Math.round(92*@width()/100), 335
     @add indentedText
     indentedText.layoutSpecDetails.setAlignmentToRight()
     return indentedText

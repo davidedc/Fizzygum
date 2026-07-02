@@ -11,7 +11,7 @@ class BouncerWdgt extends Widget
     super()
     @fps = 60
     world.steppingWdgts.add @
-    @_applyExtentAndNotify new Point 5, 5
+    @_applyExtent new Point 5, 5
 
     @appearance = new RectangularAppearance @
 

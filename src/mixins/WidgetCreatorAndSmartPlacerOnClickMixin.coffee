@@ -27,6 +27,6 @@ WidgetCreatorAndSmartPlacerOnClickMixin =
         if where?
           where.contents.smartPlace widgetToBePlaced, @
         else
-          widgetToBePlaced._applyMoveToAndNotify @topRight().add new Point 20,-40
+          widgetToBePlaced._applyMoveTo @topRight().add new Point 20,-40
           widgetToBePlaced._moveWithin world
           world.add widgetToBePlaced

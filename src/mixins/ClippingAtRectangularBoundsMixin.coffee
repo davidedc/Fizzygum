@@ -225,7 +225,7 @@ ClippingAtRectangularBoundsMixin =
 
 
       # PanelWdgt scrolling optimization:
-      _applyMoveByAndNotify: (delta) ->
+      _applyMoveBy: (delta) ->
         #console.log "moving all widgets in the Panel"
         @bounds = @bounds.translateBy delta
         #console.log "move 1"

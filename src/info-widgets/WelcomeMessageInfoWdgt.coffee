@@ -4,11 +4,11 @@ class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
     simpleDocument = new SimpleDocumentWdgt
     sdspw = simpleDocument.simpleDocumentScrollPanel
 
-    sdspw._applyMoveToAndNotify new Point 114, 10
-    sdspw._applyExtentAndNotify new Point 365, 405
+    sdspw._applyMoveTo new Point 114, 10
+    sdspw._applyExtent new Point 365, 405
 
     startingContent = new FizzygumLogoIconWdgt
-    startingContent._applyExtentAndNotify new Point 85, 85
+    startingContent._applyExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
     startingContent.layoutSpecDetails.setElasticity 0
@@ -77,21 +77,21 @@ class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
     sdspw.addNormalParagraph "Also check out some screenshots here:"
 
     startingContent = new SimpleLinkWdgt "Screenshots", "http://fizzygum.org/screenshots/"
-    startingContent._applyExtentAndNotify new Point 405, 50
+    startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
     sdspw.addNormalParagraph "...or watch some quick demos on the Youtube channel:"
 
     startingContent = new SimpleVideoLinkWdgt "YouTube channel", "https://www.youtube.com/channel/UCmYco9RU3h9dofRVN3bqxIw"
-    startingContent._applyExtentAndNotify new Point 405, 50
+    startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
     sdspw.addNormalParagraph "...or docs here:"
 
     startingContent = new SimpleLinkWdgt "Docs", "http://fizzygum.org/docs/intro/"
-    startingContent._applyExtentAndNotify new Point 405, 50
+    startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
@@ -110,12 +110,12 @@ class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
     sdspw.addNormalParagraph "Mail? Mailing list? Facebook page? Twitter? Chat? We have it all."
 
     startingContent = new SimpleLinkWdgt "Contacts", "http://fizzygum.org/contact/"
-    startingContent._applyExtentAndNotify new Point 405, 50
+    startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
     wm = new WindowWdgt nil, nil, simpleDocument
-    wm._applyExtentAndNotify new Point 365, 405
+    wm._applyExtent new Point 365, 405
     wm._moveFullCenterTo world.center()
     world.add wm
     wm.setTitleWithoutPrependedContentName "Welcome"

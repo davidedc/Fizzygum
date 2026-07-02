@@ -108,12 +108,13 @@ class WorldWdgt extends PanelWdgt
   _paintTimeLayoutSchedules: nil
 
   # auditTierAndApplyNaming (DEBUG, default off): the RUNTIME twin of the static [K] apply-2x2 name-consistency lint
-  # (check-layering.js). The static gate enforces only the NEGATIVES (an arrange _apply* must not fire the seam nor
-  # call an *AndNotify; a _commit*AndNotify must not react); the POSITIVE "every *AndNotify reaches the re-fit seam"
-  # + the __-leaf-fires-nothing / arrange-corner-reacts-not-notifies behaviour + tier monotonicity (a __ frame
-  # calling out reaches only __) are verified HERE -- the dynamic-dispatch ground truth a name scanner can't follow.
-  # Driven by Fizzygum-tests/scripts/tier-naming-audit/run-tier-naming-gate.sh (the prelude installs the wrapping +
-  # the per-frame lattice assertions). Off => zero overhead (a default-off flag, no wrap installed).
+  # (check-layering.js). The static gate enforces the surviving NEGATIVE (a _apply*Base bypass twin must not fire the
+  # container re-fit nor dispatch to its polymorphic _apply* sibling); the live runtime checks are __-leaf-fires-nothing
+  # (a __ leaf is a true bottom) + tier monotonicity (a __ frame calling out reaches only __) -- the dynamic-dispatch
+  # ground truth a name scanner can't follow. The old "*AndNotify reaches the re-fit seam" POSITIVE is retired: the
+  # notify seam was deleted 2026-07-01 (replaced by the settle-time up-edge) and the *AndNotify corners renamed to the
+  # bare polymorphic _apply* 2026-07-02 (Tier B). Driven by Fizzygum-tests/scripts/tier-naming-audit/
+  # run-tier-naming-gate.sh (the prelude installs the wrapping + the per-frame lattice assertions). Off => zero overhead.
   auditTierAndApplyNaming: false
 
   # auditNotificationSettleNeutrality (DEBUG, default off): the RUNTIME twin of the static [J] settle-neutral-callback
@@ -494,8 +495,8 @@ class WorldWdgt extends PanelWdgt
     @makePrettier()
 
     acm = new AnalogClockWdgt
-    acm._applyExtentAndNotify new Point 80, 80
-    acm._applyMoveToAndNotify new Point @right()-80-@desktopSidesPadding, @top() + @desktopSidesPadding
+    acm._applyExtent new Point 80, 80
+    acm._applyMoveTo new Point @right()-80-@desktopSidesPadding, @top() + @desktopSidesPadding
     @add acm
 
     # TODO find a way to put this back
@@ -1225,7 +1226,7 @@ class WorldWdgt extends PanelWdgt
         if eachPinoutingWidget.wdgtThisWdgtIsPinouting.hasMaybeChangedPaintBounds()
           # reposition the pinout widget if needed
           peekThroughBox = eachPinoutingWidget.wdgtThisWdgtIsPinouting.clippedThroughBounds()
-          eachPinoutingWidget._applyMoveToAndNotify new Point(peekThroughBox.right() + 10,peekThroughBox.top())
+          eachPinoutingWidget._applyMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
 
       else
         @currentPinoutingWidgets.delete eachPinoutingWidget
@@ -1239,7 +1240,7 @@ class WorldWdgt extends PanelWdgt
         @add hM
         hM.wdgtThisWdgtIsPinouting = eachWidgetNeedingPinout
         peekThroughBox = eachWidgetNeedingPinout.clippedThroughBounds()
-        hM._applyMoveToAndNotify new Point(peekThroughBox.right() + 10,peekThroughBox.top())
+        hM._applyMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
         hM.setColor Color.BLUE
         hM.setWidth 400
         @currentPinoutingWidgets.add hM
@@ -1250,7 +1251,7 @@ class WorldWdgt extends PanelWdgt
     @currentHighlightingWidgets.forEach (eachHighlightingWidget) =>
       if @widgetsToBeHighlighted.has eachHighlightingWidget.wdgtThisWdgtIsHighlighting
         if eachHighlightingWidget.wdgtThisWdgtIsHighlighting.hasMaybeChangedPaintBounds()
-          eachHighlightingWidget._applyBoundsAndNotify eachHighlightingWidget.wdgtThisWdgtIsHighlighting.clippedThroughBounds()
+          eachHighlightingWidget._applyBounds eachHighlightingWidget.wdgtThisWdgtIsHighlighting.clippedThroughBounds()
       else
         @currentHighlightingWidgets.delete eachHighlightingWidget
         @widgetsBeingHighlighted.delete eachHighlightingWidget.wdgtThisWdgtIsHighlighting
@@ -1262,7 +1263,7 @@ class WorldWdgt extends PanelWdgt
         hM = new HighlighterWdgt
         @add hM
         hM.wdgtThisWdgtIsHighlighting = eachWidgetNeedingHighlight
-        hM._applyBoundsAndNotify eachWidgetNeedingHighlight.clippedThroughBounds()
+        hM._applyBounds eachWidgetNeedingHighlight.clippedThroughBounds()
         hM.setColor Color.BLUE
         hM.setAlphaScaled 50
         @currentHighlightingWidgets.add hM
@@ -1539,7 +1540,7 @@ class WorldWdgt extends PanelWdgt
       @worldCanvas.height = (clientHeight * ceilPixelRatio)
       @worldCanvas.style.height = clientHeight + "px"
       @syncRenderCanvasToWorldCanvas()
-      @_applyExtentAndNotify new Point clientWidth, clientHeight
+      @_applyExtent new Point clientWidth, clientHeight
       @_reLayoutDesktop()
   
 
@@ -1552,7 +1553,7 @@ class WorldWdgt extends PanelWdgt
         if !basementOpenerWdgt.wasPositionedSlightlyOutsidePanel
           basementOpenerWdgt._moveWithin @
       else
-        basementOpenerWdgt._applyMoveToAndNotify @bottomRight().subtract (new Point 75, 75).add @desktopSidesPadding
+        basementOpenerWdgt._applyMoveTo @bottomRight().subtract (new Point 75, 75).add @desktopSidesPadding
 
     analogClockWdgt = @firstChildSuchThat (w) ->
       w instanceof AnalogClockWdgt
@@ -1562,7 +1563,7 @@ class WorldWdgt extends PanelWdgt
         if !analogClockWdgt.wasPositionedSlightlyOutsidePanel
           analogClockWdgt._moveWithin @
       else
-        analogClockWdgt._applyMoveToAndNotify new Point @right() - 80 - @desktopSidesPadding, @top() + @desktopSidesPadding
+        analogClockWdgt._applyMoveTo new Point @right() - 80 - @desktopSidesPadding, @top() + @desktopSidesPadding
 
     @children.forEach (child) =>
       # reposition the non-icon desktop children (the basement opener and clock are handled
@@ -2076,11 +2077,11 @@ class WorldWdgt extends PanelWdgt
   # Wrap a content widget in a window, size and place it, add it to the world --
   # the windowed sibling of `create`. Returns the window. The single home for the
   # "fresh window" wrap (windowed apps' buildWindow, menusHelper's window demos, the
-  # inspector/console/prompt spawners). Titled / _applyExtentAndNotify windows build directly.
+  # inspector/console/prompt spawners). Titled / _applyExtent windows build directly.
   openWindowWith: (contentWidget, extent, position) ->
     wm = new WindowWdgt nil, nil, contentWidget
     wm.setExtent extent
-    wm._applyMoveToAndNotify position
+    wm._applyMoveTo position
     wm._moveWithin @
     @add wm
     wm

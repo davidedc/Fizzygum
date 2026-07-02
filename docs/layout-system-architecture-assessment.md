@@ -759,7 +759,7 @@ then REVERTED first: it only fed a TRANSIENT priming height-write that the scrol
 immediately overwrote, so it never removed a load-bearing read-back.) What landed for the boolean, in three byte-safe
 steps:
 
-- **Phase C** deleted that priming write — the `@contents._applyHeightAndNotify` (née `rawSetHeight`) "height wobble" that, by disagreeing with the
+- **Phase C** deleted that priming write — the `@contents._applyHeight` (née `rawSetHeight`) "height wobble" that, by disagreeing with the
   commit by ~`totalPadding`, re-fired the re-fit seam every pass and was the PERPETUAL driver of non-convergence (NOT
   a position cycle, as first thought — the position clamp self-settles once the wobble is gone). Deleting it makes the
   wrapping-text arrange a **fixed point**, so the flag became correctness-*unnecessary* (proven: the 4 tripwires
@@ -770,7 +770,7 @@ steps:
   point, a container re-enqueued mid-arrange re-runs once and that pass no-ops.
 - **Phase E** (narrow) **deleted the `@_adjustingContentsBounds` field itself** + all three per-arrange re-entrancy
   guards, by giving each container arrange a *non-re-applying* self-resize (`_resizeOwnWidthSkippingChildRelayout/Height`,
-  née `_applyOwnArrangedWidth/Height` → base `Widget::_applyExtentAndNotify`, which fires the up-notification seam but
+  née `_applyOwnArrangedWidth/Height` → base `Widget::_applyExtent`, which fires the up-notification seam but
   skips the override's `_reLayoutChildren`), removing
   the last synchronous self-re-entry the guard caught. Byte-identical by construction. **The boolean is now 100% gone.**
 
@@ -786,7 +786,7 @@ So the spearhead boolean fell *cheaply* — and that freed the campaign to pursu
   byte-identical, soak-gated.
 - **§4.2 Objective A — the non-notifying arrange (the capstone-greener; `cf37fa3a` → `c8098e6d`).** The measure alone
   does not delete the seam: the arrange's *final commit* still fired it. So the stack and scroll arranges were switched
-  to apply their own geometry through **non-notifying twins** (`_applyExtent` / `_applyMoveBy`, née `_arrangeApply*`, +
+  to apply their own geometry through **non-notifying twins** (`_applyExtentBase` / `_applyMoveByBase`, née `_arrangeApply*`, +
   the silent bounds commit since folded into `_commitBounds` — the immediate mutators minus the seam fire — the bare
   `_apply*`/`_commit*` name now *says* "applies without notifying"), so arrange output no longer re-triggers layout at the
   container itself. This removed the Intent-2 self-re-enqueues — the end-of-cycle capstone went **18 → 10** (Stage 1,
@@ -957,7 +957,7 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
   ~:1635 (`@_reFitContainer @parent.parent` if inside a non-text-wrapping scroll panel, then `@_reFitContainer @parent`)
   · `_reFitContainer` ~:1716 (kept — the phase-dispatch primitive; gated on `container._reLayoutChildren?`; in-pass →
   `__markForRelayout`, off-pass → `_invalidateLayout`). The immediate mutators (`__commitExtent` /
-  `_applyMoveByAndNotify`) are now **pure geometry** — they fire no seam. The deleted announce-verbs
+  `_applyMoveBy`) are now **pure geometry** — they fire no seam. The deleted announce-verbs
   `_announceGeometryChangeToContainer` / `_announceLayoutPropertyChangeToContainer` survive only in explanatory
   comments.
 - **Self-settling public API:** `_settleLayoutsAfter` (née `mutateGeometryThenSettle`) `Widget.coffee` ~:803 (flush;
@@ -971,20 +971,29 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
   `@isFreeFloating() and @isLayoutInert?()` → atom + return ~:3915; `FLOWRULE_VIOLATION` mid-pass throw ~:3929;
   careless-push audit ~:3944; bare push ~:3948; climb ~:3952).
 - **Non-notifying arrange twins (§4.2 Objective A — `cf37fa3a` / `c8098e6d`; each = an immediate mutator minus the seam
-  fire; the fourth wave renamed `_arrangeApply*` → the bare `_apply*`):**
+  fire; the fourth wave renamed `_arrangeApply*` → the bare `_apply*`, then Tier B renamed that bare form → `_apply*Base` — see the MEANING-SWAP note below):**
   `__commitExtent` (née `_setExtentBoundsNoNotify`) — the shared bounds-set `__` leaf (**2026-07-01 twin-collapse:** the
   pure pass-through `_commitExtentAndNotify`, née `silentRawSetExtent`, folded INTO this leaf; its ~20 callers reach it
-  directly) · `_applyExtent` · `_commitBounds` (**2026-07-01:** the ex-`_applyBounds` silent bounds twin + the
-  ex-`_commitBoundsAndNotify` folded into one) · `_applyMoveBy` / `_applyMoveTo` (twins of `_applyMoveByAndNotify`, née
-  `fullRawMoveBy` — **NOT collapsible:** the *AndNotify name is the ClippingMixin / ActivePointerWdgt override dispatch
-  point, bare is the uniform base translate). The arrange applies its own geometry through these, so it no longer fires
-  the seam at the container itself (the Intent-2 self-re-enqueue that the capstone counted).
+  directly) · `_applyExtentBase` · `_commitBounds` (**2026-07-01:** the ex-`_applyBounds` silent bounds twin + the
+  ex-`_commitBoundsAndNotify` folded into one) · `_applyMoveByBase` / `_applyMoveToBase` (twins of `_applyMoveBy`, née
+  `fullRawMoveBy` — **NOT collapsible:** the polymorphic `_apply*` (ex-`*AndNotify`) is the ClippingMixin / ActivePointerWdgt
+  override dispatch point, the `*Base` twin is the uniform base translate). The arrange applies its own geometry through
+  these, so it no longer fires the seam at the container itself (the Intent-2 self-re-enqueue that the capstone counted).
+
+  > **⚠ MEANING SWAPPED (Tier B, 2026-07-02, `layout-optimizations-and-oo-cleanup-plan.md` §3).** The `_apply*AndNotify`
+  > polymorphic corners **dropped** the suffix → the bare `_apply*` (`_applyExtentAndNotify` → `_applyExtent`; likewise
+  > moveTo / moveBy / bounds / width / height), and the override-bypass twins **took** a `Base` suffix (bare `_applyExtent`
+  > / `_applyMoveBy` / `_applyMoveTo` → `_applyExtentBase` / `_applyMoveByBase` / `_applyMoveToBase`). So the bare names
+  > `_applyExtent` / `_applyMoveBy` / `_applyMoveTo` NOW mean the **polymorphic** corner, whereas in git history / older
+  > memories / any pre-2026-07-02 doc they meant the **bypass** twin — a genuine meaning swap, not a plain `(née …)`
+  > rename. The `…AndNotify` suffix is retired and BANNED as a def by lint rule [M]. (This appendix's own body has been
+  > updated to the post-swap names throughout: bare `_apply*` = polymorphic dispatch point, `_apply*Base` = bypass.)
 - **Re-fit seam — DELETED 2026-07-01 (replaced by the settle-time up-edge above).** The notify-by-mutation
   announce-verbs `_announceGeometryChangeToContainer` (née `_reFitContainerAfterRawGeometryChange`) and
   `_announceLayoutPropertyChangeToContainer` (née `_refreshScrollPanelWdgtOrVerticalStackIfIamInIt`) are **gone** (their
   `@_adjustingContentsBounds` suppression was already deleted in proper-layouts Phase D); they survive only in
   explanatory comments. `_reFitContainer` is **retained** and is now driven by the up-edge, not by the mutators. The
-  immediate mutators (`__commitExtent`, `_applyMoveByAndNotify`) and the non-notifying arrange
+  immediate mutators (`__commitExtent`, `_applyMoveBy`) and the non-notifying arrange
   twins are all pure geometry now — none fires a seam.
 - **Apply bodies:** base `Widget._reLayout` ~:4212 (`markLayoutAsFixed` call ~:4377 — followed by a corner-layouted
   child re-layout loop ~:4381; `markLayoutAsFixed` def ~:4209; horizontal-stack 3-case distribution ~:4286–4374) ·
@@ -1015,8 +1024,8 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
   §4.1) · `VerticalStackLayoutSpec.getWidthInStack` ~:31 (elasticity field ~:12) · `ScrollPanelWdgt._reLayout` ~:302 /
   `_reLayoutChildren` ~:288 / `_positionAndResizeChildren` ~:332 (pure-measure content frame
   `subWidgetsMergedPreferredBounds` ~:386/~:388, non-content-sizing fallback `subWidgetsMergedFullBounds` ~:390,
-  non-notifying frame commit `_commitBounds` ~:437, `keepContentsInScrollPanelWdgt` clamp via `_applyMoveBy`
-  ~:454–460, `_reLayoutScrollbars` ~:116 via `_applyExtent` / `_applyMoveTo` ~:165/170/186/191,
+  non-notifying frame commit `_commitBounds` ~:437, `keepContentsInScrollPanelWdgt` clamp via `_applyMoveByBase`
+  ~:454–460, `_reLayoutScrollbars` ~:116 via `_applyExtentBase` / `_applyMoveToBase` ~:165/170/186/191,
   `parentWillSizeMe` content-arrange flag ~:347) / public content endpoints `add` ~:206 · `addMany` ~:229 ·
   `_showResizeAndMoveHandlesAndLayoutAdjustersNoSettle` core ~:237 (public `showResizeAndMoveHandlesAndLayoutAdjusters`
   wrapper inherited from `Widget` ~:3111) · `WindowWdgt.buildAndConnectChildren` ~:436 / `_buildAndConnectChildrenNoSettle`
