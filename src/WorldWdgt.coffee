@@ -81,15 +81,16 @@ class WorldWdgt extends PanelWdgt
   showRedraws: false
   doubleCheckCachedMethodsResults: false
 
-  # The A/B switch for the public *Coalesced layout API (Widget.setMaxDimCoalesced, ...). ON (default): a
-  # *Coalesced call defers its layout flush to the ONE end-of-cycle settle (a gesture/stream draining many
-  # mutations per frame collapses N flushes into 1). OFF: every *Coalesced call self-settles immediately (its
-  # plain public setter), so we can A/B and MEASURE whether coalescing is actually warranted for a given stream
+  # The A/B switch for the _-private *Coalesced layout API (Widget._setMaxDimCoalesced, ...; _-private +
+  # stream-handler-restricted by check-layering [O]). ON (default): a *Coalesced call defers its layout flush to
+  # the ONE end-of-cycle settle (a gesture/stream draining many mutations per frame collapses N flushes into 1).
+  # OFF: every *Coalesced call self-settles immediately (its NoSettle core under _settleLayoutsAfter, exactly like
+  # the plain public setter), so we can A/B and MEASURE whether coalescing is actually warranted for a given stream
   # -- toggle at runtime (`world.coalescingEnabled = false`) and re-run docs/coalescing-measurement.md. (Default
   # ON keeps current behaviour: the *Coalesced calls are byte-identical to the _NoSettle cores they wrap.)
   coalescingEnabled: true
 
-  # *Coalesced DECLARATION tracking (Widget._coalescedDeclare / setMaxDimCoalesced). _coalescedDeclarationDepth
+  # *Coalesced DECLARATION tracking (Widget._coalescedDeclare / _setMaxDimCoalesced). _coalescedDeclarationDepth
   # is > 0 while a DECLARED coalesced mutation runs, so the off-settle invalidates it schedules are known to be
   # intentional. auditUndeclaredEndOfCycle (DEBUG, default off) turns on the end-of-cycle check that LOGS every
   # UNDECLARED off-settle push -- the "careless" set (a public method that forgot to self-settle, or a stream
@@ -902,7 +903,7 @@ class WorldWdgt extends PanelWdgt
     # DEBUG (auditUndeclaredEndOfCycle): at the END-OF-CYCLE flush only (NOT a self-settle -- a settle has
     # @_inLayoutMutation set), report this frame's UNDECLARED off-settle pushes -- the "careless" set (a public
     # method that forgot to self-settle, or a stream not yet on a *Coalesced entrypoint) that the eventual
-    # declared-coalescing gate will reject. Declared coalescing (setMaxDimCoalesced) is intentional and excluded.
+    # declared-coalescing gate will reject. Declared coalescing (_setMaxDimCoalesced) is intentional and excluded.
     if @auditUndeclaredEndOfCycle and not @_inLayoutMutation and @_undeclaredEndOfCyclePushes?.length
       summary = {}
       for c in @_undeclaredEndOfCyclePushes

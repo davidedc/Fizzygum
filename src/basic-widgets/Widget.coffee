@@ -1305,26 +1305,41 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   moveTo: (aPoint, widgetStartingTheChange = nil) ->
-    @_settleLayoutsAfter =>
-      if not @isFreeFloating()
-        return
-      else
-        aPoint = aPoint.round()
-        newX = Math.max aPoint.x, 0
-        newY = Math.max aPoint.y, 0
-        newPos = new Point newX, newY
-        unless @position().equals newPos
-          @desiredPosition = newPos
-          @_invalidateLayout()
-          # all the moves via the handles arrive here,
-          # where we remember the fractional position in the
-          # holding panel. That is so for example moving
-          # items inside a StretchablePanel causes their
-          # relative position to be remembered, so resizing
-          # the stretchable panel will get them to the
-          # correct positions
-          if widgetStartingTheChange?.changeShouldRememberFractionalGeometry?() and @parent?
-            @rememberFractionalPositionInHoldingPanel()
+    @_settleLayoutsAfter => @_moveToNoSettle aPoint, widgetStartingTheChange
+
+  # Non-settling move core (the setMaxDim/_setMaxDimNoSettle pattern): record @desiredPosition + invalidate,
+  # no flush -- rides an OUTER settle. Callers: public moveTo (self-settles) + coalesced _moveToCoalesced
+  # (rides the ONE end-of-cycle flush). Feature code uses those PUBLIC entrypoints, never this core directly.
+  _moveToNoSettle: (aPoint, widgetStartingTheChange = nil) ->
+    if not @isFreeFloating()
+      return
+    else
+      aPoint = aPoint.round()
+      newX = Math.max aPoint.x, 0
+      newY = Math.max aPoint.y, 0
+      newPos = new Point newX, newY
+      unless @position().equals newPos
+        @desiredPosition = newPos
+        @_invalidateLayout()
+        # all the moves via the handles arrive here,
+        # where we remember the fractional position in the
+        # holding panel. That is so for example moving
+        # items inside a StretchablePanel causes their
+        # relative position to be remembered, so resizing
+        # the stretchable panel will get them to the
+        # correct positions
+        if widgetStartingTheChange?.changeShouldRememberFractionalGeometry?() and @parent?
+          @rememberFractionalPositionInHoldingPanel()
+
+  # PRIVATE COALESCED move entrypoint (mirrors _setExtentCoalesced): restricted to per-event STREAM handlers
+  # (HandleWdgt.nonFloatDragging moveHandle) by check-layering [O]. BOTH branches reach the _moveToNoSettle core
+  # directly (a _-private entrypoint must not call the public moveTo -- rules [A]/[G]). Default coalescingEnabled ON
+  # coalesces to the ONE end-of-cycle settle; OFF self-settles (byte-identical to moveTo; the A/B measurement switch).
+  _moveToCoalesced: (aPoint, widgetStartingTheChange = nil) ->
+    if world?.coalescingEnabled
+      @_coalescedDeclare => @_moveToNoSettle aPoint, widgetStartingTheChange
+    else
+      @_settleLayoutsAfter => @_moveToNoSettle aPoint, widgetStartingTheChange
 
 
   rememberFractionalPositionInHoldingPanel: ->
@@ -1465,26 +1480,45 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setExtent: (aPoint, widgetStartingTheChange = nil) ->
-    @_settleLayoutsAfter =>
-      if not @isFreeFloating()
-        return
-      else
-        aPoint = aPoint.round()
-        newWidth = Math.max aPoint.x, 0
-        newHeight = Math.max aPoint.y, 0
-        newExtent = new Point newWidth, newHeight
-        unless @extent().equals newExtent
-          @desiredExtent = newExtent
-          @_invalidateLayout()
-          # all the resizes via the handles arrive here,
-          # where we remember the fractional size in the
-          # holding panel. That is so for example resizing
-          # items inside a StretchablePanel causes their
-          # relative size to be remembered, so resizing
-          # the stretchable panel will get them to the
-          # correct dimensions
-          if widgetStartingTheChange?.changeShouldRememberFractionalGeometry?() and @parent?
-            @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
+    @_settleLayoutsAfter => @_setExtentNoSettle aPoint, widgetStartingTheChange
+
+  # Non-settling extent core (the setMaxDim/_setMaxDimNoSettle pattern): record @desiredExtent + invalidate,
+  # but do NOT flush -- so the mutation rides an OUTER settle. Two callers: the public setExtent (self-settles
+  # via _settleLayoutsAfter) and the coalesced _setExtentCoalesced (rides the ONE end-of-cycle flush). Feature
+  # code uses one of those PUBLIC entrypoints, never this core directly.
+  _setExtentNoSettle: (aPoint, widgetStartingTheChange = nil) ->
+    if not @isFreeFloating()
+      return
+    else
+      aPoint = aPoint.round()
+      newWidth = Math.max aPoint.x, 0
+      newHeight = Math.max aPoint.y, 0
+      newExtent = new Point newWidth, newHeight
+      unless @extent().equals newExtent
+        @desiredExtent = newExtent
+        @_invalidateLayout()
+        # all the resizes via the handles arrive here,
+        # where we remember the fractional size in the
+        # holding panel. That is so for example resizing
+        # items inside a StretchablePanel causes their
+        # relative size to be remembered, so resizing
+        # the stretchable panel will get them to the
+        # correct dimensions
+        if widgetStartingTheChange?.changeShouldRememberFractionalGeometry?() and @parent?
+          @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
+
+  # PRIVATE COALESCED extent entrypoint (mirrors _setMaxDimCoalesced) -- restricted to per-event STREAM handlers
+  # (HandleWdgt.nonFloatDragging), NOT for discrete/programmatic callers; the restriction is enforced statically by
+  # check-layering rule [O] (COALESCED_CALLER_ALLOWLIST), which is also why it is _-private. It declares the mutation
+  # so its layout flush rides the ONE end-of-cycle settle instead of self-settling per drag event. Default
+  # coalescingEnabled ON => byte-identical to setExtent (render is once-per-frame after all events); OFF self-settles
+  # per call (the A/B measurement switch). BOTH branches reach the _setExtentNoSettle core directly -- a _-private
+  # entrypoint must not call the public setExtent (that would reach UP into the self-flushing layer; rules [A]/[G]).
+  _setExtentCoalesced: (aPoint, widgetStartingTheChange = nil) ->
+    if world?.coalescingEnabled
+      @_coalescedDeclare => @_setExtentNoSettle aPoint, widgetStartingTheChange
+    else
+      @_settleLayoutsAfter => @_setExtentNoSettle aPoint, widgetStartingTheChange
 
   
   # The silent extent-commit LEAF: round + min-extent clamp + commit @bounds, NO repaint / NO self-relayout. Returns
@@ -1604,15 +1638,28 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setWidth: (width) ->
-    @_settleLayoutsAfter =>
-      if not @isFreeFloating()
-        return
-      else
-        newWidth = Math.max width, 0
-        newExtent = new Point newWidth, @height()
-        unless @extent().equals newExtent
-          @desiredExtent = newExtent
-          @_invalidateLayout()
+    @_settleLayoutsAfter => @_setWidthNoSettle width
+
+  # Non-settling width core (the setMaxDim/_setMaxDimNoSettle pattern): record @desiredExtent + invalidate,
+  # no flush. Callers: public setWidth (self-settles) + coalesced _setWidthCoalesced (rides the end-of-cycle flush).
+  _setWidthNoSettle: (width) ->
+    if not @isFreeFloating()
+      return
+    else
+      newWidth = Math.max width, 0
+      newExtent = new Point newWidth, @height()
+      unless @extent().equals newExtent
+        @desiredExtent = newExtent
+        @_invalidateLayout()
+
+  # PRIVATE COALESCED width entrypoint (mirrors _setExtentCoalesced): restricted to the per-event
+  # resizeHorizontalHandle drag STREAM by check-layering [O]. BOTH branches reach the _setWidthNoSettle core (no
+  # public setWidth call -- rules [A]/[G]). Default ON coalesces; OFF self-settles (byte-identical to setWidth).
+  _setWidthCoalesced: (width) ->
+    if world?.coalescingEnabled
+      @_coalescedDeclare => @_setWidthNoSettle width
+    else
+      @_settleLayoutsAfter => @_setWidthNoSettle width
   
   __commitWidth: (width) ->
     @__breakMoveResizeCaches()
@@ -1627,15 +1674,28 @@ class Widget extends TreeNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setHeight: (height) ->
-    @_settleLayoutsAfter =>
-      if not @isFreeFloating()
-        return
-      else
-        newHeight = Math.max 0, height
-        newExtent = new Point @width(), newHeight
-        unless @extent().equals newExtent
-          @desiredExtent = newExtent
-          @_invalidateLayout()
+    @_settleLayoutsAfter => @_setHeightNoSettle height
+
+  # Non-settling height core (the setMaxDim/_setMaxDimNoSettle pattern): record @desiredExtent + invalidate,
+  # no flush. Callers: public setHeight (self-settles) + coalesced _setHeightCoalesced (rides the end-of-cycle flush).
+  _setHeightNoSettle: (height) ->
+    if not @isFreeFloating()
+      return
+    else
+      newHeight = Math.max 0, height
+      newExtent = new Point @width(), newHeight
+      unless @extent().equals newExtent
+        @desiredExtent = newExtent
+        @_invalidateLayout()
+
+  # PRIVATE COALESCED height entrypoint (mirrors _setExtentCoalesced): restricted to the per-event
+  # resizeVerticalHandle drag STREAM by check-layering [O]. BOTH branches reach the _setHeightNoSettle core (no
+  # public setHeight call -- rules [A]/[G]). Default ON coalesces; OFF self-settles (byte-identical to setHeight).
+  _setHeightCoalesced: (height) ->
+    if world?.coalescingEnabled
+      @_coalescedDeclare => @_setHeightNoSettle height
+    else
+      @_settleLayoutsAfter => @_setHeightNoSettle height
   
   __commitHeight: (height) ->
     @__breakMoveResizeCaches()
@@ -3754,23 +3814,25 @@ class Widget extends TreeNode
   setMaxDim: (overridingMaxDim) ->
     @_settleLayoutsAfter => @_setMaxDimNoSettle overridingMaxDim
 
-  # PUBLIC COALESCED entrypoint -- the first of the *Coalesced family. Same EFFECT as the private
-  # _setMaxDimNoSettle core, but PUBLIC (anyone, incl. programmatic callers, may use it) and INTENTION-REVEALING:
-  # it DECLARES that this is an intentional per-event-stream mutation (a drag / scroll / key burst) whose layout
-  # flush should ride the ONE end-of-cycle settle instead of self-settling per call -- so a stream draining many
-  # mutations per frame collapses N flushes into 1. (Contrast: the bare public setMaxDim self-settles, for a
-  # single discrete mutation; the _NoSettle core is internal-only and feature code should NOT reach into it.)
-  # Because the coalescing is DECLARED here, the end-of-cycle settle/audit can eventually tell an intentional
-  # coalesced mutation from a public method that carelessly forgot to self-settle -- the hook for that
-  # "allowed in the final settle" flag/mode goes right here. world.coalescingEnabled is the A/B switch: ON
-  # (default) coalesces via the core; OFF self-settles per call (the plain setMaxDim), so we can MEASURE whether
-  # coalescing is warranted for a given stream (docs/coalescing-measurement.md -- e.g. key-repeat rarely bursts
-  # enough to matter). Default ON => byte-identical to calling the _NoSettle core directly.
-  setMaxDimCoalesced: (overridingMaxDim) ->
+  # PRIVATE COALESCED entrypoint -- the first of the *Coalesced family. Same EFFECT as the private
+  # _setMaxDimNoSettle core, but INTENTION-REVEALING: it DECLARES that this is an intentional per-event-stream
+  # mutation (a drag / scroll / key burst) whose layout flush should ride the ONE end-of-cycle settle instead of
+  # self-settling per call -- so a stream draining many mutations per frame collapses N flushes into 1. RESTRICTED
+  # to those stream handlers, NOT for discrete/programmatic callers (which must use the self-settling setMaxDim so
+  # their settled layout is available in-cycle); the restriction is enforced statically by check-layering rule [O]
+  # (COALESCED_CALLER_ALLOWLIST), which is also why the whole *Coalesced family is _-private. Because the coalescing
+  # is DECLARED here, the end-of-cycle audit can tell an intentional coalesced mutation from a public method that
+  # carelessly forgot to self-settle. world.coalescingEnabled is the A/B switch: ON (default) coalesces via the core;
+  # OFF self-settles per call (like the plain setMaxDim), so we can MEASURE whether coalescing is warranted for a
+  # given stream (docs/coalescing-measurement.md -- e.g. key-repeat rarely bursts enough to matter). Default ON =>
+  # byte-identical to calling the _NoSettle core directly. BOTH branches reach the _setMaxDimNoSettle core directly
+  # -- a _-private entrypoint must not call the public setMaxDim (it would reach UP into the self-flushing layer;
+  # rules [A]/[G]).
+  _setMaxDimCoalesced: (overridingMaxDim) ->
     if world?.coalescingEnabled
       @_coalescedDeclare => @_setMaxDimNoSettle overridingMaxDim
     else
-      @setMaxDim overridingMaxDim
+      @_settleLayoutsAfter => @_setMaxDimNoSettle overridingMaxDim
 
   # Run a coalesced-mutation core inside a DECLARATION window: while it runs, world._coalescedDeclarationDepth
   # is > 0, so the off-settle invalidates the core schedules are marked INTENTIONAL and the end-of-cycle debug

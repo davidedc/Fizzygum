@@ -284,6 +284,24 @@ const APPLY_ANDNOTIFY_BANNED = /^_apply\w*AndNotify$/;  // [M] the retired _appl
 // rule [K] (a _apply*Base bypass twin must not fire _announce*). This closes the DEF side those two never covered.
 const SEAM_VERB_BANNED = /^_announce\w*ToContainer$/;   // the deleted notify-by-mutation container-seam shape
 
+// [O] the *Coalesced caller ALLOWLIST (Tier C, 2026-07-02, docs/layout-optimizations-and-oo-cleanup-plan.md §4).
+// A *Coalesced entrypoint (_setMaxDimCoalesced / _setExtentCoalesced / _moveToCoalesced / _setWidthCoalesced /
+// _setHeightCoalesced -- all _-private, restricted to stream handlers) DEFERS its layout SETTLE to the ONE
+// end-of-cycle flush -- the field write is synchronous,
+// only the flush is deferred. That is byte-identical (render is once-per-frame after all events), hence sound,
+// ONLY for a per-event STREAM handler (a drag / scroll / key burst) draining many mutations in one frame that
+// never reads back the SETTLED layout mid-cycle. A DISCRETE / programmatic caller might read the settled layout
+// within the cycle, so it must use the self-settling setter, not the coalesced twin. Nothing else enforces this:
+// the _coalescedDeclarationDepth / auditUndeclaredEndOfCycle machinery (WorldWdgt :90-98, Widget :3713) enforces
+// the CONVERSE -- that end-of-cycle mutations are DECLARED -- and treats any *Coalesced call as auto-declared
+// regardless of caller. So restrict the CALL to the allowlisted stream handlers by ENCLOSING-METHOD NAME (both
+// HandleWdgt and StackElementsSizeAdjustingWdgt name their drag handler nonFloatDragging, so the one name covers
+// both callers). @-self / .-receiver scoped -- the callers are always direct; comment mentions are stripped
+// (stripLine). Extend the allowlist ONLY when a genuine new per-event stream (a wheel/scroll or key-repeat
+// handler) adopts a *Coalesced entrypoint -- a discrete caller reaching for one is exactly the bug this catches.
+const COALESCED_CALL = /[@.]\s*(\w+Coalesced)\b/;
+const COALESCED_CALLER_ALLOWLIST = new Set(['nonFloatDragging']);
+
 // Strip string literals and trailing `#` comments from one line, carrying multi-line
 // string state across lines. Returns { code, state }.
 function stripLine(line, state) {
@@ -498,6 +516,12 @@ function checkFile(file, violations, wrapperCall, warnings) {
       // the clean polymorphic _apply* (ex *AndNotify) reacts + IS the override dispatch point — no static negative:
       // its "reaches the container re-fit" is now the settle-time up-edge's job, not a corner-name invariant.
     }
+    // [O] the *Coalesced caller allowlist (see the consts above): a *Coalesced entrypoint defers its layout settle
+    // to the ONE end-of-cycle flush, sound only inside an allowlisted per-event STREAM handler.
+    const coalesced = code.match(COALESCED_CALL);
+    if (coalesced && !COALESCED_CALLER_ALLOWLIST.has(method)) {
+      violations.push(`[O] ${method}() calls ${coalesced[1]}() outside the coalesced-caller allowlist — a *Coalesced entrypoint DEFERS its layout settle to the ONE end-of-cycle flush, which is byte-identical (hence sound) only inside a per-event STREAM handler (drag/scroll/key burst) that never reads back the settled layout mid-cycle. A discrete/programmatic caller must use the self-settling setter. If this genuinely IS such a stream, add its method name to COALESCED_CALLER_ALLOWLIST (layering/naming convention §4)  — ${at}`);
+    }
     if (recalc && !RECALC_WHITELIST.has(method)) {
       violations.push(`[B] recalculateLayouts() called from ${method}() (only doOneCycle / _settleLayoutsAfter may)  — ${at}`);
     }
@@ -615,9 +639,10 @@ function main() {
     console.error('L: a notification callback must be named _(reactTo|before)(Being|Child|HolderWindow)<Event> with no NoSettle; the legacy fragments (childX/justBeen/iHaveBeen/aboutTo/prepareTo) are retired (layering/naming convention §3/§4).');
     console.error('M: the retired raw*/silent*/fullRaw fragments and the _apply*AndNotify suffix must not reappear as method names (use _apply*/_apply*Base/_commit*/__ tiers; raw PIXEL data uses rawPixel*/rawRGBA) (layering/naming convention §4).');
     console.error('N: the retired notify-by-mutation container seam (_announce*ToContainer) must not be re-defined — the settle-time up-edge _reFitMyTrackingContainerAfterSettle replaced it (assessment §4.1 / §6 rulebook rule 2).');
+    console.error('O: a *Coalesced entrypoint (defers its layout settle to the end-of-cycle flush) may be CALLED only from an allowlisted per-event stream handler — COALESCED_CALLER_ALLOWLIST (a discrete/programmatic caller must use the self-settling setter) (layering/naming convention §4).');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N/O; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
   process.exit(0);
 }
 

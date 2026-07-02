@@ -7,7 +7,7 @@ how the convention is enforced **statically** (the `check-layering.js` rules) an
 audit gates). Both families ride one tier scheme (§1) and one enforcement pattern (§4–§5).
 
 **What this is NOT.** It is not the build-gate *mechanics* — for how the line scanner works, the full rule list
-[A]–[N] (the flow-soundness rules [A]–[H] as well as the naming rules), the markers, and how to extend/debug the gate,
+[A]–[O] (the flow-soundness rules [A]–[H] as well as the naming rules), the markers, and how to extend/debug the gate,
 see **`docs/lint-and-static-checks.md`** (that doc owns the gate; this one owns the convention the naming rules
 enforce). It is not the runtime layout architecture either — for the flush model and the convergence invariant see
 `docs/layout-system-architecture-assessment.md`.
@@ -209,6 +209,7 @@ predicates, the markers, and the gate mechanics live in `docs/lint-and-static-ch
 | **[L]** callback-shape (HARD-FAIL) | at each def, a `_reactTo*`/`_before*` name MUST match `_(reactTo\|before)(Being\|Child\|HolderWindow)<Event>` and carry no `NoSettle`; the legacy fragments (`childX` / `justBeen` / `iHaveBeen` / `aboutTo` / `prepareTo`) are banned outright. |
 | **[M]** retired-fragment ban (HARD-FAIL) | a method DEF named with a retired geometry/structural prefix — `raw[A-Z]…` / `^silent[A-Z]` / `^fullRaw` → FAIL (allowlist: the raw-PIXEL accessors `rawPixelInfo` / `rawPixelHash` / `rawRGBA`). `full[A-Z]` is NOT banned — `full*` remains a legitimate SUBTREE-AWARE vocabulary (`fullChanged` / `fullBounds` / `fullPaintInto` / …). |
 | **[N]** seam-verb DEF ban (HARD-FAIL) | a method DEF named `_announce…ToContainer` (`/^_announce\w*ToContainer$/`) → FAIL — the notify-by-mutation re-fit seam was deleted 2026-07-01 (§2.6) and replaced by the settle-time up-edge, so this bans reviving the retired announce-up verbs on the DEF side (the CALL side is already covered by the [I]/[K] denylists). Analogous to [M]'s retired-fragment ban. |
+| **[O]** `*Coalesced` caller allowlist (HARD-FAIL) | a `*Coalesced` entrypoint (`_setMaxDimCoalesced` / `_setExtentCoalesced` / `_moveToCoalesced` / `_setWidthCoalesced` / `_setHeightCoalesced`) DEFERS its layout SETTLE to the ONE end-of-cycle flush (the field write is synchronous; only the flush is deferred) — byte-identical, hence sound, ONLY for a per-event STREAM handler (drag/scroll/key burst) that never reads back the SETTLED layout mid-cycle. So a `[@.]…Coalesced` CALL from a method whose name is NOT in `COALESCED_CALLER_ALLOWLIST` (seeded `{nonFloatDragging}` — both `HandleWdgt` and `StackElementsSizeAdjustingWdgt` name their drag handler that) → FAIL; a discrete/programmatic caller must use the self-settling setter. These entrypoints are `_`-private for the same reason (only stream handlers may reach them). The `_coalescedDeclarationDepth`/`auditUndeclaredEndOfCycle` machinery enforces the CONVERSE (end-of-cycle mutations are *declared*), so this closes the caller side it does not cover. (Tier C, 2026-07-02.) |
 
 The convention is also why the flow rules work: because every immediate geometry mutator is recognizably low-level
 (`_`/`__`-prefixed or `*NoSettle`) and named in the apply 2×2, rules **[A]** (low-level must not reach the public

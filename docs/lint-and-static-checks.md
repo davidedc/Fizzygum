@@ -81,7 +81,7 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
 | Gate | File | Wired (`build_it_please.sh`) | Enforces | Ratchet mechanism |
 |---|---|---|---|---|
 | syntax | `buildSystem/check-coffee-syntax.js` | ~:257 | CoffeeScript *parse* errors, compiled the **fragmented** way the browser does | — |
-| **layering** | **`buildSystem/check-layering.js`** | **~:279** | **flow soundness + the naming convention — rules [A]–[M] (§4)** | per-method `# layout-apply-sanctioned` [F] / `# nosettle-sanctioned` [G] / `# early-return-sanctioned` [H] markers |
+| **layering** | **`buildSystem/check-layering.js`** | **~:279** | **flow soundness + the naming convention — rules [A]–[O] (§4)** | per-method `# layout-apply-sanctioned` [F] / `# nosettle-sanctioned` [G] / `# early-return-sanctioned` [H] markers |
 | dead-method | `buildSystem/check-dead-methods.js` | ~:297 | a method defined in src but referenced nowhere (src + harness + macro `.js`) | allowlist `dead-method-allowlist.txt`; fails only on a NEW dead method |
 | stinks | `buildSystem/check-stinks.js` | ~:315 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
 | thin-wrap | `buildSystem/check-thin-wraps.js` | ~:333 | a public method owning a `_<name>NoSettle` twin is the ONE canonical mechanical wrap | per-method `# thin-wrap-exempt: <reason>`; SKIPS a twinless `*NoSettle` |
@@ -146,7 +146,7 @@ dispatch). Full description: `docs/layering-naming-convention.md`.
 
 ---
 
-## 4. `check-layering.js` rules [A]–[M]
+## 4. `check-layering.js` rules [A]–[O]
 
 The scanner strips `#` comments and string literals (carrying multi-line state) so a call-regex never matches a name in
 a throw-message or comment, groups lines into 2-space-indent methods (`METHOD_HEADER`, now mixin-DSL aware so a method
@@ -170,6 +170,8 @@ lint works at all (§6).
 | **[K]** | a 2×2 apply CORNER (`_apply<Geom>` / `_apply<Geom>AndNotify` / `_commit<Geom>AndNotify`) | a non-`AndNotify` `_apply*` firing the seam or calling an `*AndNotify`; a `_commit*AndNotify` reacting (`changed`/`_reLayout*`) | a corner's NAME must match its NOTIFY×REACT behaviour (the two statically-sound negatives; the positive "*AndNotify reaches the seam" is delegated to the runtime audit — static can't follow `super`/dynamic dispatch) | tier-naming runtime audit (the positive) | — |
 | **[L]** | a notification callback DEF (`_reactTo*`/`_before*`) | a name not matching `_(reactTo\|before)(Being\|Child\|HolderWindow)<Event>`, a `NoSettle` suffix, or a legacy fragment (`childX`/`justBeen`/`iHaveBeen`/`aboutTo`/`prepareTo`) | callbacks follow the derivable (perspective × phase) scheme; the legacy spellings were retired | — | — |
 | **[M]** | any method DEF | a retired geometry/structural naming fragment as the name — `raw[A-Z]…` / `^silent[A-Z]` / `^fullRaw` (allowlist: the raw-PIXEL accessors `rawPixelInfo`/`rawPixelHash`/`rawRGBA`) | the `raw*`/`silent*`/`fullRaw*` geometry+structural prefixes were eliminated (§2 of the convention); lock them out — note `full[A-Z]` stays legitimate (`fullBounds`/`fullPaintInto`/…) | — | — |
+| **[N]** | any method DEF | a name matching `/^_announce\w*ToContainer$/` (the retired notify-by-mutation container seam) | the mutation-time re-fit seam was deleted 2026-07-01 and replaced by the settle-time up-edge `_reFitMyTrackingContainerAfterSettle`; this bans reviving the announce-up verbs on the DEF side (the CALL side is already [I]/[K]) | — | — |
+| **[O]** | any method NOT in `COALESCED_CALLER_ALLOWLIST` (seeded `{nonFloatDragging}`) | a `[@.]…Coalesced` CALL to a `*Coalesced` entrypoint (`_setMaxDimCoalesced`/`_setExtentCoalesced`/`_moveToCoalesced`/`_setWidthCoalesced`/`_setHeightCoalesced`) | a `*Coalesced` entrypoint DEFERS its layout settle to the ONE end-of-cycle flush — byte-identical (sound) only for a per-event STREAM handler that never reads back the settled layout mid-cycle; a discrete caller must use the self-settling setter. These entrypoints are `_`-private for the same reason (only stream handlers may reach them) | — | — (add a genuine new stream handler's method name to `COALESCED_CALLER_ALLOWLIST`) |
 
 **[G] specifics.** The wrapper set is **discovered**, never hand-listed: `discoverSettlingWrappers` collects every method
 whose body calls `@_settleLayoutsAfter` (the SINGLE-mutation tier only — a `_settleLayoutsAfterBatch` wrapper ABSORBS
@@ -274,7 +276,7 @@ What the layering gate deliberately does NOT cover, and why — so a maintainer 
 ## 8. How-to
 
 **Add a new `check-layering` rule.** (1) Add the call-detecting regex/predicate near the other constants, comment the
-rule (subject / forbidden / why / runtime twin / marker) the way [A]–[M] are. (2) Add the check inside `checkFile`'s
+rule (subject / forbidden / why / runtime twin / marker) the way [A]–[O] are. (2) Add the check inside `checkFile`'s
 per-method loop, under the right tier guard (`isLowLevel(method)` / `isImmediateMutator(method)` / the non-mutator
 branch). (3) If it needs an escape hatch, add a per-method marker (mirror the `methodNoSettleMarked` logic) rather than a
 central allowlist. (4) Update the summary line + the failure footer to name the new letter. (5) **Land it green** — see
@@ -319,8 +321,9 @@ source to satisfy a new rule.
   `isImmediateMutator` (the tier predicates, §2); `SETTLE_CALL`/`WRAPPER_EXCLUDED`/`SELF_ADD_CALL`/`NOSETTLE_MARKER` (the
   [G] constants); `LEAF_FORBIDDEN` ([I]); `APPLY_CORNER`/`K_SEAM_CALL`/`K_REACT_CALL`/`K_ANDNOTIFY` ([K]);
   `CALLBACK_PREFIX`/`CALLBACK_SHAPE`/`LEGACY_CALLBACK_FRAGMENT` ([L]); `FRAGMENT_BANNED`/`FRAGMENT_ALLOWLIST` ([M]);
+  `SEAM_VERB_BANNED` ([N]); `COALESCED_CALL`/`COALESCED_CALLER_ALLOWLIST` ([O]);
   `stripLine` / `METHOD_HEADER` / `methodBoundary` (mixin-DSL aware); `discoverSettlingWrappers`; `checkFile` (rules
-  [A]–[M]); `checkMacroFile` (rule [D]).
+  [A]–[O]); `checkMacroFile` (rule [D]).
 - `buildSystem/check-thin-wraps.js` — `HEADER`/`GUARD`/`EXEMPT`; twinless skip (`if (!byName.has(base)) continue`).
 - `buildSystem/check-constructors-build.js` — `METHOD`/`BUILD`/`EXEMPT`; the `inctor` state machine (multi-line-ctor-header aware).
 - `buildSystem/check-dead-methods.js` + `buildSystem/dead-method-allowlist.txt`.

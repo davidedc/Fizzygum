@@ -81,13 +81,14 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
       prev   = lmdd.x - ldes + rmdd.x - rdes
       newone = Math.max(lmdd.x + deltaX, ldes) - ldes + Math.max(rmdd.x - deltaX, rdes) - rdes
       if prev == newone
-        # drag-move STREAM: the PUBLIC coalesced entrypoint, which DECLARES intentional per-move coalescing onto
-        # the one end-of-cycle flush instead of reaching into the private _setMaxDimNoSettle core. Measured
-        # warranted here (~13 moves/frame -> ~26 muts/frame; see docs/coalescing-measurement.md); toggle
-        # world.coalescingEnabled to self-settle-per-move and A/B it. (the plain setMaxDim self-settles, for
-        # discrete callers). (end-of-cycle-flush-drawdown -- CONVERT)
-        leftWidget.setMaxDimCoalesced new Point lmdd.x + deltaX, lmdd.y
-        rightWidget.setMaxDimCoalesced new Point rmdd.x - deltaX, rmdd.y
+        # drag-move STREAM: the _-private coalesced entrypoint (restricted to stream handlers like this one by
+        # check-layering [O]), which DECLARES intentional per-move coalescing onto the one end-of-cycle flush
+        # instead of reaching into the private _setMaxDimNoSettle core. Measured warranted here (~13 moves/frame
+        # -> ~26 muts/frame; see docs/coalescing-measurement.md); toggle world.coalescingEnabled to
+        # self-settle-per-move and A/B it. (the plain setMaxDim self-settles, for discrete callers.)
+        # (end-of-cycle-flush-drawdown -- CONVERT)
+        leftWidget._setMaxDimCoalesced new Point lmdd.x + deltaX, lmdd.y
+        rightWidget._setMaxDimCoalesced new Point rmdd.x - deltaX, rmdd.y
       #console.log "leftWidget.getMaxDim().x : " + leftWidget.getMaxDim().x
       #console.log "leftWidget.getDesiredDim().x: " + leftWidget.getDesiredDim().x
       #console.log "rightWidget.getMaxDim().x: " + rightWidget.getMaxDim().x
