@@ -121,7 +121,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # @_reLayoutChildren() (my container still re-fits at settle time via the up-edge, not by mutation).
   # That removes the last synchronous re-entry, which is what let the
   # re-entrancy guard + the @_adjustingContentsBounds field be deleted. Byte-identical: the skipped re-entry
-  # was already a guarded no-op. (The leading breakCaches mirrors _applyWidthAndNotify / _applyHeightAndNotify exactly.)
+  # was already a guarded no-op. (The leading breakCaches is unconditional; @_applyExtent breaks the caches again only on an actual extent change.)
   _resizeOwnWidthSkippingChildRelayout: (newWidth) ->
     @__breakMoveResizeCaches()
     @_applyExtent new Point(newWidth or 0, @height())

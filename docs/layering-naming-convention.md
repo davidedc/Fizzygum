@@ -131,7 +131,7 @@ The broken-rectangles repaint loop uses a **`PaintBounds`** vocabulary (`paintBo
 collision-named "dirty" subsystems self-evident:
 - **PaintBounds** — repaint dirty-regions (this vocabulary);
 - **Layout** — the layout-invalidation queue (`layoutIsValid` / `widgetsThatMaybeChangedLayout`) — distinct, left as-is;
-- **GeometryChange** — the re-fit seam announce names (§2.6).
+- **GeometryChange** — the container re-fit up-edge (§2.6).
 
 ---
 
