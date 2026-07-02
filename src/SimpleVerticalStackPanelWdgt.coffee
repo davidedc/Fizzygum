@@ -112,6 +112,24 @@ class SimpleVerticalStackPanelWdgt extends Widget
   availableWidthForContents: ->
     @width() - 2 * @padding
 
+  # The per-child stack sizing POLICY, in ONE place for the three siblings that walk my children
+  # (the pure measures preferredExtentForWidth / subWidgetsMergedPreferredBounds and the applying
+  # _positionAndResizeChildren): the width my stack recommends for a child, and the left edge its
+  # alignment puts it at. A child transiently without its layoutSpec (mid drop/delete) gets the raw
+  # available width -- keeps the pure measures TOTAL (never throw), mirroring
+  # WindowWdgt.preferredExtentForWidth's guard; the arrange initialises every spec before asking.
+  _childWidthInStack: (widget, availForContents) ->
+    widget.layoutSpecDetails?.getWidthInStack(availForContents) ? availForContents
+
+  _childLeftInStack: (widget, childWidth) ->
+    if widget.layoutSpecDetails?.alignment == 'right'
+      @left() + @width() - @padding - childWidth
+    else if widget.layoutSpecDetails?.alignment == 'center'
+      @left() + Math.floor (@width() - childWidth) / 2
+    else
+      # 'left' (or a transiently-missing spec)
+      @left() + @padding
+
   # §4.1 pure measure (proper-layouts): the side-effect-free preferred extent of the stack at an
   # available width -- Σ over children of (padding + child preferred height), + a trailing padding,
   # mirroring _positionAndResizeChildren's arithmetic. Each child measures via its OWN
@@ -127,9 +145,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     totalHeight = 0
     for widget in children
       if @constrainContentWidth
-        # A child transiently without its layoutSpec (mid drop/delete) gets the raw available width --
-        # keeps the measure TOTAL (never throws), mirroring WindowWdgt.preferredExtentForWidth's guard.
-        childWidth = widget.layoutSpecDetails?.getWidthInStack(availForContents) ? availForContents
+        childWidth = @_childWidthInStack widget, availForContents
         measured = widget.preferredExtentForWidth?(childWidth)
         childHeight = measured?.y ? widget.height()
       else
@@ -159,16 +175,11 @@ class SimpleVerticalStackPanelWdgt extends Widget
     cumH = 0
     for widget, i in kids
       if @constrainContentWidth
-        recW = widget.layoutSpecDetails?.getWidthInStack(avail) ? avail
+        recW = @_childWidthInStack widget, avail
         measured = widget.preferredExtentForWidth?(recW)
         h = measured?.y ? widget.height()
         w = recW
-        if widget.layoutSpecDetails?.alignment == 'right'
-          left = @left() + @width() - @padding - recW
-        else if widget.layoutSpecDetails?.alignment == 'center'
-          left = @left() + Math.floor (@width() - recW) / 2
-        else
-          left = @left() + @padding
+        left = @_childLeftInStack widget, recW
       else
         h = widget.height()
         w = widget.width()
@@ -214,7 +225,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
         # it looks left-aligned
         leftPosition = @left() + @padding
       else
-        recommendedElementWidth = widget.layoutSpecDetails.getWidthInStack()
+        recommendedElementWidth = @_childWidthInStack widget, @availableWidthForContents()
 
         # §4.2 Stage 1 (structural arrange): MEASURE the child's preferred extent at the recommended width, then
         # APPLY it via the NON-notifying arrange twin so this arrange does not fire the re-fit seam at ME (Intent-2
@@ -249,13 +260,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
         if widget.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
           widget.softWrap = true
 
-        if widget.layoutSpecDetails.alignment == 'right'
-          leftPosition = @left() + @width() - @padding - recommendedElementWidth
-        else if widget.layoutSpecDetails.alignment == 'center'
-          leftPosition = @left() + Math.floor (@width() - recommendedElementWidth) / 2
-        else
-          # we hope here that  widget.layoutSpecDetails.alignment == 'left'
-          leftPosition = @left() + @padding
+        leftPosition = @_childLeftInStack widget, recommendedElementWidth
 
 
       # §4.2 Stage 1: move via the NON-notifying arrange twin for LEAF children (once the resize stops firing the
@@ -288,7 +293,6 @@ class SimpleVerticalStackPanelWdgt extends Widget
 
   _applyExtent: (aPoint) ->
     unless aPoint.equals @extent()
-      @__breakMoveResizeCaches()
       super aPoint
       # immediate mutator: APPLY the re-fit NOW -- synchronous, single-container, TERMINAL
       # (_reLayoutChildren -> _positionAndResizeChildren, which does not climb to my parent).

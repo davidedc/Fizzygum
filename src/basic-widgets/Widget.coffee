@@ -1357,7 +1357,8 @@ class Widget extends TreeNode
     @wasPositionedSlightlyOutsidePanel = ! @parent.bounds.containsRectangle @bounds
   
   __commitMoveTo: (aPoint) ->
-    @__breakMoveResizeCaches()
+    # no cache-break here: __commitMoveBy breaks the caches itself, so a zero-delta move
+    # no longer bumps the cache version key (the Tier-D D4 discipline).
     delta = aPoint.toLocalCoordinatesOf @
     @__commitMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
   
@@ -1543,7 +1544,9 @@ class Widget extends TreeNode
   # NAMES distinct.
   _applyExtentBase: (aPoint) ->
     unless aPoint.equals @extent()
-      @__breakMoveResizeCaches()
+      # no cache-break here: __commitExtent breaks the caches itself, under its own did-anything-change
+      # guard -- so a round/min-clamp no-op commit no longer bumps the clipped-bounds cache version key
+      # (misses cost recompute, never values -- the Tier-D D4 discipline).
       @__commitExtent aPoint
       @changed()
       @_reLayoutSelf()

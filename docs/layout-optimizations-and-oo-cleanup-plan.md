@@ -339,6 +339,23 @@ override's just ran — but the latter smells like a fresh suppression flag, whi
 and the mandate's history warns against re-adding "did I already do this?" state. **Promotion condition:** a
 `coalescing-measurement.md`-style harness shows ≥ milliseconds/frame on a realistic text-heavy scroll arrange;
 then design against §6 of the assessment (rules 1–3) and gate with the FULL torture.
+**⛔ MEASURED 2026-07-02 (evening, Tier E) — promotion condition NOT met; DECLINE now data-backed.** A throwaway
+observation prelude (PRELUDE_JS, off-instance wrappers timing `_reLayoutChildren` runs-per-`_reLayout`-visit,
+`subWidgetsMergedPreferredBounds`, and `TextWdgt.preferredExtentForWidth`) over four realistic text-heavy scenarios at
+`--speed=normal`, dpr 1, all tests PASS under the probe:
+- *text-window resize drag* (`macroBareTextWdgtAsWindowContentReflowsOnResize`): 104 visits → 204 child re-fits — the
+  (i) double-run is REAL in count (100 redundant runs) — but the redundant half cost **1.3 ms over the whole gesture**
+  (≈0.013 ms/frame, peak 0.10 ms/frame): the second run's `unless aPoint.equals @extent()` guards short-circuit it.
+- *document scroll* (`macroDocumentScrollsMixedTextAndClocks`): redundant 0.10 ms total; the (ii) pure re-measure
+  0.5 ms total (peak 0.4 ms/frame).
+- *constrained scroll-stack reflow* (`macroWindowCellsInConstrainedScrollStackReflow`): 76 redundant runs = **1.0 ms
+  total** (peak 0.3 ms/frame).
+- *typing into a scrolling text input* (`macroMultilineTextInputScrollsWell`): 1575 measure calls ≈ 1.6 µs each
+  (wrap-cache-cheap); mergedPref 4.0 ms + text measures 2.5 ms over the whole gesture (peak frame 1.8 + 1.3 ms — but
+  that is the LOAD-BEARING frame-sizing measure, not the duplicate); strictly-redundant re-fit cost 0.6 ms total.
+Worst-case strictly-redundant cost ≈ **0.3–0.6 ms in a single frame, ~1 ms per whole gesture** — an order of magnitude
+under the ms/frame bar. The idempotent-guard architecture already neutralizes the double-work; both fix shapes stay
+unbuilt. Re-measure only if a future layout makes the second visit's guards miss (e.g. a non-idempotent arrange).
 
 ### X7 — Evening-re-read reviewed-and-NOT-selected ledger (so no future session re-derives them)
 - **`getRecursive*Dim` flush-scoped memo** — already assessed in Tier A's A3: the queries are mutually recursive

@@ -266,8 +266,6 @@ class ScrollPanelWdgt extends PanelWdgt
 
   _applyExtent: (aPoint) ->
     unless aPoint.equals @extent()
-      @__breakMoveResizeCaches()
-
       # TODO this part seems like it should be in a _reLayout function
       # rather than here
       if @isTextLineWrapping and !(@contents instanceof SimpleVerticalStackPanelWdgt)
