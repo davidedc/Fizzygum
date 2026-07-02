@@ -203,13 +203,9 @@ are kept for cold-runnability of any follow-up work.
 
 ## §3 — Verification (commands and pass-criteria in §0.5)
 
-- `./fg build` after every item (blame stays per-item).
-- End of tier: `./fg gauntlet` (dpr1/dpr2/webkit 165/165 + apps/tiernaming/settle) — always; **plus** the §0.5
-  four-config short torture **iff D4 ran** (arrange + cache-version-key change). D4f is droppable alone; D4's
-  cache-break dedup has the line-level fallback spelled out in the item.
-- Benign inspector recaptures pre-authorised per §0.5 (D4 deletes two inspector-visible stack methods).
-- D1 sub-item 4 + any recapture land in `Fizzygum-tests` — present that repo's diff too.
-- **Ask before commit/push**; `git commit -F <file>` (§0.5 commit protocol).
+Tier D was verified per the §0.5 gates (`./fg build` per item; then `./fg gauntlet` + the four-config danger
+torture, `RECALC_NONCONVERGENCE` absent, 0 fails). The recorded outcome is the Tier D bullet in §5; the full
+protocol (build loop, gates, benign-recapture, commit) is §0.5.
 
 ## §4 — Recommended sequencing
 
