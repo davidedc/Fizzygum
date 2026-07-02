@@ -7,7 +7,7 @@ how the convention is enforced **statically** (the `check-layering.js` rules) an
 audit gates). Both families ride one tier scheme (§1) and one enforcement pattern (§4–§5).
 
 **What this is NOT.** It is not the build-gate *mechanics* — for how the line scanner works, the full rule list
-[A]–[M] (the flow-soundness rules [A]–[H] as well as the naming rules), the markers, and how to extend/debug the gate,
+[A]–[N] (the flow-soundness rules [A]–[H] as well as the naming rules), the markers, and how to extend/debug the gate,
 see **`docs/lint-and-static-checks.md`** (that doc owns the gate; this one owns the convention the naming rules
 enforce). It is not the runtime layout architecture either — for the flush model and the convergence invariant see
 `docs/layout-system-architecture-assessment.md`.
@@ -95,22 +95,35 @@ Each is a true bottom (satisfies §1 / rule [I]):
   (`hide` / `addShadow` / `add`) wrap with a `fullChanged()` repaint; the depth chain is e.g. `add → _addNoSettle → __add`.
 
 ### 2.5 The settle tier (orthogonal)
-`_settleLayoutsAfter` (single-mutation flush) and `_settleLayoutsAfterBatch` (nested-absorbing flush) are the SETTLE
-axis — the mechanism the `*NoSettle` cores are named against — not geometry-apply primitives, so the 2×2 does not touch
-them. Both stay **`_`** (internal orchestrators: they drive `recalculateLayouts` + the `_recalculatingLayouts`
-re-entrancy token; never `__`, never public). `*NoSettle` marks the *property* "nothing downstream settles" and is
-twin-optional (a structural core can carry it with no public twin, e.g. `_addInPseudoRandomPositionNoSettle`).
+`_settleLayoutsAfter` (single-mutation flush) is the SETTLE axis — the mechanism the `*NoSettle` cores are named
+against — not a geometry-apply primitive, so the 2×2 does not touch it. It stays **`_`** (an internal orchestrator:
+it drives `recalculateLayouts` + the `_recalculatingLayouts` re-entrancy token; never `__`, never public). `*NoSettle`
+marks the *property* "nothing downstream settles" and is twin-optional (a structural core can carry it with no public
+twin, e.g. `_addInPseudoRandomPositionNoSettle`). *(The `_settleLayoutsAfterBatch` nested-absorbing tier was deleted
+2026-07-01 — zero callers; reintroduce from git history if ever needed.)*
 
-### 2.6 The re-fit seam — one announce verb (mechanism unchanged)
-The seam is the highest-frequency notification and was proven irreducible. Its mechanism: **announce-up** → the
-`_reFitContainer(container)` phase-valve → in-pass `__markForRelayout` / off-pass `_invalidateLayout` → container
-`_reLayoutChildren`. The announce-up is one verb family:
-- `_announceGeometryChangeToContainer()` — a widget's geometry changed; re-fit the container.
-- `_announceLayoutPropertyChangeToContainer()` — a layout property (stack align/elasticity/base-width &c.) changed.
-- `_reflowContainedTextThenAnnounce()` — self-reflow contained text, then announce.
+### 2.6 The container re-fit — the settle-time up-edge (seam DELETED 2026-07-01)
+A size-tracking container (a window fitting its stack, a scroll frame fitting its content) must re-fit when the
+content it tracks changes size. This *was* a notify-by-mutation **seam** — the content's mutator announced up to the
+container mid-arrange — and it was **DELETED 2026-07-01** (the endgame's "proven irreducible" verdict was
+over-general). It is replaced by a **settle-time up-edge** in the settle loop: after the loop `_reLayout`s a
+chain-top, it calls `_reFitMyTrackingContainerAfterSettle`, which — *iff the chain-top's frame actually changed* —
+re-fits the container through the **retained** `_reFitContainer(container)` phase-valve → in-pass `__markForRelayout`
+/ off-pass `_invalidateLayout` → container `_reLayoutChildren`. Because the container reads the chain-top's *final*,
+just-settled geometry (not a half-applied mid-arrange value), it re-fits correctly in one visit — a bounded O(depth)
+up-walk, no per-mutation notification (§2.3; assessment §4.1). The layout-**property** dependency (a freefloating
+child's stack align / elasticity / base-width) instead flows through the **uniform dirty-tree**: `_invalidateLayout`
+climbs THROUGH a freefloating boundary off-pass when the parent is a size-tracking container.
+
+The two announce-up verbs are **deleted** and are now BANNED as DEFs by rule **[N]** (do not revive them):
+`_announceGeometryChangeToContainer` (geometry) and `_announceLayoutPropertyChangeToContainer` (a layout property).
+One verb of the family survives:
+- `_reflowContainedTextThenAnnounce()` — self-reflow contained text, then invalidate. **Still live** (`StringWdgt`
+  + ~7 sites); its "Announce" tail now names the dirty-tree climb, not the deleted seam — a truthful-rename rider for
+  the `*AndNotify` sweep (`layout-optimizations-and-oo-cleanup-plan.md` §3).
 
 The valve `_reFitContainer` and the react-down `_reLayoutChildren` are the apply side (§2.2 / the `_reLayout*`
-layout-method family) — unchanged.
+layout-method family) — retained, now driven by the up-edge rather than by the mutators.
 
 ### 2.7 PaintBounds — the repaint dirty-region vocabulary
 The broken-rectangles repaint loop uses a **`PaintBounds`** vocabulary (`paintBoundsMaybeChanged` /
@@ -184,9 +197,10 @@ predicates, the markers, and the gate mechanics live in `docs/lint-and-static-ch
 |---|---|
 | **[I]** `__` leaf no-orchestration (HARD-FAIL) | inside a `__` method, an `@`-self call to the re-fit seam (`_reFitContainer*`/`_announce*`), a react step (`_reLayout*`/`changed`/`fullChanged`), a schedule/settle (`_invalidateLayout`/`recalculateLayouts`/`_settleLayoutsAfter*`), or a public setter → FAIL. A DENYLIST (§1), `@`-self-scoped; the runtime audit (§5) covers dynamic dispatch. |
 | **[J]** callback settle-neutrality (HARD-FAIL) | a `_reactTo*`/`_before*` hook calling `_settleLayoutsAfter` in its OWN body → FAIL (the dispatcher owns the one settle). *(Textual rule; a constructor reached via dynamic dispatch FROM a callback is the runtime audit's concern, §5.2 — which now PERMITS the orphan-construction case, since it auto-defers.)* |
-| **[K]** apply-2×2 name-consistency (HARD-FAIL) | the two statically-sound NEGATIVES: a non-`AndNotify` `_apply*` arrange corner must not fire the seam nor call an `*AndNotify`; a `_commit*AndNotify` notify-only corner must not react (`changed`/`_reLayout*`). The POSITIVE "every `*AndNotify` reaches the seam" is delegated to the runtime audit (§5) — a static scanner can't follow `super`/dynamic dispatch, and an override may legitimately not notify (e.g. `ClippingAtRectangularBoundsMixin._applyMoveByAndNotify`). |
+| **[K]** apply-2×2 name-consistency (HARD-FAIL) | the two statically-sound NEGATIVES: a non-`AndNotify` `_apply*` arrange corner must not fire the seam nor call an `*AndNotify`; a `_commit*AndNotify` notify-only corner must not react (`changed`/`_reLayout*`). The POSITIVE "every `*AndNotify` reaches the seam" is delegated to the runtime audit (§5) — a static scanner can't follow `super`/dynamic dispatch, and an override may legitimately not notify (e.g. `ClippingAtRectangularBoundsMixin._applyMoveByAndNotify`). *(2026-07-01: the anti-seam half is now VACUOUS — the `_announce*` seam and the `_commit*AndNotify` notify-only corner are deleted — kept only as belt-and-braces beside rule [N]; the surviving load-bearing negative is the arrange corner's "must not call an `*AndNotify`" override-bypass invariant, which Tier B re-derives under the truthful names, §3.)* |
 | **[L]** callback-shape (HARD-FAIL) | at each def, a `_reactTo*`/`_before*` name MUST match `_(reactTo\|before)(Being\|Child\|HolderWindow)<Event>` and carry no `NoSettle`; the legacy fragments (`childX` / `justBeen` / `iHaveBeen` / `aboutTo` / `prepareTo`) are banned outright. |
 | **[M]** retired-fragment ban (HARD-FAIL) | a method DEF named with a retired geometry/structural prefix — `raw[A-Z]…` / `^silent[A-Z]` / `^fullRaw` → FAIL (allowlist: the raw-PIXEL accessors `rawPixelInfo` / `rawPixelHash` / `rawRGBA`). `full[A-Z]` is NOT banned — `full*` remains a legitimate SUBTREE-AWARE vocabulary (`fullChanged` / `fullBounds` / `fullPaintInto` / …). |
+| **[N]** seam-verb DEF ban (HARD-FAIL) | a method DEF named `_announce…ToContainer` (`/^_announce\w*ToContainer$/`) → FAIL — the notify-by-mutation re-fit seam was deleted 2026-07-01 (§2.6) and replaced by the settle-time up-edge, so this bans reviving the retired announce-up verbs on the DEF side (the CALL side is already covered by the [I]/[K] denylists). Analogous to [M]'s retired-fragment ban. |
 
 The convention is also why the flow rules work: because every immediate geometry mutator is recognizably low-level
 (`_`/`__`-prefixed or `*NoSettle`) and named in the apply 2×2, rules **[A]** (low-level must not reach the public

@@ -744,11 +744,6 @@ class Widget extends TreeNode
   # note that using this one, the children
   # widgets attached as floating don't move
   _applyBoundsAndNotify: (newBounds) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
     if @bounds.equals newBounds
       return
 
@@ -838,11 +833,6 @@ class Widget extends TreeNode
   # (Collapsed 2026-07-01) The old "non-notifying twin" _applyBounds and this method became byte-identical once the
   # re-fit seam was deleted -- both are just a silent origin+extent commit -- so they are ONE method now (_commitBounds).
   _commitBounds: (newBounds) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
     if @bounds.equals newBounds
       return
 
@@ -1248,17 +1238,10 @@ class Widget extends TreeNode
     aPoint.debugIfFloats()
     delta = aPoint.toLocalCoordinatesOf @
     if !delta.isZero()
-      @__breakMoveResizeCaches()
       @_applyMoveBy delta
     @bounds.debugIfFloats()
 
   __commitMoveBy: (delta) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
-    #console.log "move 5"
     @__breakMoveResizeCaches()
     @bounds = @bounds.translateBy delta
     @children.forEach (child) ->
@@ -1311,16 +1294,9 @@ class Widget extends TreeNode
   # this one actually immediately changes the position and
   # bounds of widgets
   _applyMoveToAndNotify: (aPoint) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
     aPoint.debugIfFloats()
     delta = aPoint.toLocalCoordinatesOf @
     if !delta.isZero()
-      #console.log "move 6"
-      @__breakMoveResizeCaches()
       @_applyMoveByAndNotify delta
     @bounds.debugIfFloats()
 
@@ -1368,72 +1344,31 @@ class Widget extends TreeNode
     @wasPositionedSlightlyOutsidePanel = ! @parent.bounds.containsRectangle @bounds
   
   __commitMoveTo: (aPoint) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
-    #console.log "move 7"
     @__breakMoveResizeCaches()
     delta = aPoint.toLocalCoordinatesOf @
     @__commitMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
   
   _moveLeftSideTo: (x) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
     @_applyMoveToAndNotify new Point x, @top()
   
   _moveRightSideTo: (x) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
     @_applyMoveToAndNotify new Point x - @width(), @top()
   
   _moveTopSideTo: (y) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
     @_applyMoveToAndNotify new Point @left(), y
   
   _moveBottomSideTo: (y) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
     @_applyMoveToAndNotify new Point @left(), y - @height()
   
   _moveToSideOf: (aWidget) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
     @_applyMoveToAndNotify aWidget.topRight().add new Point 10, -Math.round((@height() - aWidget.height())/2)
     @_moveWithin @parent
   
   _moveFullCenterTo: (aPoint) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
     @_applyMoveToAndNotify aPoint.subtract @fullBounds().extent().floorDivideBy 2
   
   # make sure I am completely within another Widget's bounds
   _moveWithin: (aWdgt) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
     # in case of widgets with deferred layouts we need
     # to look into desired extent and desired position
     if @desiredExtent?
@@ -1516,24 +1451,14 @@ class Widget extends TreeNode
   setMinimumExtent: (@minimumExtent) ->
 
   # Widget accessing - dimensional changes requiring a complete redraw
-  _applyExtentAndNotify: (aPoint, widgetStartingTheChange = nil) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
-    #console.log "move 8"
-    if @ == widgetStartingTheChange
-      return
-    if !widgetStartingTheChange?
-      widgetStartingTheChange = @
-    # check whether we are actually changing the extent.
-    unless aPoint.equals @extent()
-      @__breakMoveResizeCaches()
-
-      @__commitExtent aPoint
-      @changed()
-      @_reLayoutSelf()
+  # The polymorphic extent-apply -- the override DISPATCH POINT (SimpleVerticalStackPanelWdgt / ScrollPanelWdgt /
+  # TextWdgt / SliderWdgt / ListWdgt / the stretchables specialize it). The base is a pure pass-through to
+  # _applyExtent, exactly like _applyMoveByAndNotify -> _applyMoveBy: ONE body per behaviour, two names for
+  # dispatch (the bare twin is the override-BYPASSING base apply the top-down arrange uses). "AndNotify" is
+  # historical -- the notify seam was deleted 2026-07-01, nothing notifies; truthful rename planned
+  # (docs/layout-optimizations-and-oo-cleanup-plan.md §3).
+  _applyExtentAndNotify: (aPoint) ->
+    @_applyExtent aPoint
 
   # high-level geometry-change API,
   # you don't actually change the geometry right away,
@@ -1582,13 +1507,13 @@ class Widget extends TreeNode
     @__breakMoveResizeCaches()
     return true
 
-  # Base extent-apply WITHOUT the polymorphic override: commit @bounds + @changed repaint + @_reLayoutSelf -- the same
-  # body as Widget::_applyExtentAndNotify minus its widgetStartingTheChange guard. A container arranging a child
-  # top-down uses this to apply the child's measured extent while BYPASSING the child's own _applyExtentAndNotify
-  # override (e.g. SimpleVerticalStackPanelWdgt applies its arranged height via _applyExtent so it does NOT re-enter
-  # its own _reLayoutChildren -- the frame commit that follows handles that). This was the "non-notifying twin" of
-  # _applyExtentAndNotify; the re-fit seam it used to skip is gone, but the override-bypass keeps it a distinct, live
-  # method (unlike the bounds twins, which had no such override and so collapsed into _commitBounds 2026-07-01).
+  # Base extent-apply WITHOUT the polymorphic override: commit @bounds + @changed repaint + @_reLayoutSelf. THE
+  # single body of the extent-apply pair -- the polymorphic _applyExtentAndNotify base is a pure pass-through to
+  # this. A container arranging a child top-down uses this to apply the child's measured extent while BYPASSING
+  # the child's own _applyExtentAndNotify override (e.g. SimpleVerticalStackPanelWdgt applies its arranged height
+  # via _applyExtent so it does NOT re-enter its own _reLayoutChildren -- the frame commit that follows handles
+  # that). The re-fit seam this pair used to differ on is gone (2026-07-01); the override-bypass keeps the two
+  # NAMES distinct.
   _applyExtent: (aPoint) ->
     unless aPoint.equals @extent()
       @__breakMoveResizeCaches()
@@ -1672,13 +1597,6 @@ class Widget extends TreeNode
 
 
   _applyWidthAndNotify: (width) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
-    #console.log "move 10"
-    @__breakMoveResizeCaches()
     @_applyExtentAndNotify new Point(width or 0, @height())
 
   # high-level geometry-change API,
@@ -1697,24 +1615,11 @@ class Widget extends TreeNode
           @_invalidateLayout()
   
   __commitWidth: (width) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
-    #console.log "move 11"
     @__breakMoveResizeCaches()
     w = Math.max Math.round(width or 0), 0
     @bounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + w, @bounds.corner.y
   
   _applyHeightAndNotify: (height) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
-    #console.log "move 12"
-    @__breakMoveResizeCaches()
     @_applyExtentAndNotify new Point(@width(), height or 0)
 
   # high-level geometry-change API,
@@ -1733,12 +1638,6 @@ class Widget extends TreeNode
           @_invalidateLayout()
   
   __commitHeight: (height) ->
-    # TODO in theory the low-level APIs should only be
-    # in the "recalculateLayouts" phase
-    if false and !window.recalculatingLayouts
-      debugger
-
-    #console.log "move 13"
     @__breakMoveResizeCaches()
     h = Math.max Math.round(height or 0), 0
     @bounds = new Rectangle @bounds.origin, new Point @bounds.corner.x, @bounds.origin.y + h
@@ -3929,45 +3828,38 @@ class Widget extends TreeNode
     return maxDim.max @getDesiredDim()
 
 
+  # NB the .height() halves of the three getRecursive*Dim queries are currently CONSUMED NOWHERE outside the
+  # queries' own cross-clamps -- every external reader takes .width() only (the horizontal 3-case distribution
+  # in Widget._reLayout, and the stack-divider drag). Kept correct anyway: desiredHeight used to init to nil,
+  # and `nil < h` is always false in JS, so the child-height max never accumulated (fixed with the dim-cache
+  # scaffolding removal -- the caches were written but never read, and NOTHING ever reset their check-flags,
+  # so enabling the commented-out reads would have served permanently stale sizes).
   getRecursiveDesiredDim: ->
     if @isInCollapsedSubtree() then return new Point 0,0
-    
-    # TBD the exact shape of @checkDesiredDimCache
-    #if @checkDesiredDimCache
-    #  return @desiredDimCache
 
     desiredWidth = nil
-    desiredHeight = nil
+    desiredHeight = 0
+    gotADesiredHeight = false
     for C in @children
       if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
         childSize = C.getDesiredDim()
         if !desiredWidth? then desiredWidth = 0
         desiredWidth += childSize.width()
         if desiredHeight < childSize.height()
-          if !desiredHeight? then desiredHeight = 0
+          gotADesiredHeight = true
           desiredHeight = childSize.height()
 
     if !desiredWidth?
       desiredWidth = @desiredWidth
 
-    if !desiredHeight?
+    if !gotADesiredHeight
       desiredHeight = @desiredHeight
 
-    # TBD the exact shape of @checkDesiredDimCache
-    @checkDesiredDimCache = true
-    @desiredDimCache = new Point desiredWidth, desiredHeight
-
-    return @desiredDimCache.min @getRecursiveMaxDim()
+    return (new Point desiredWidth, desiredHeight).min @getRecursiveMaxDim()
 
 
   getRecursiveMinDim: ->
     if @isInCollapsedSubtree() then return new Point 0,0
-    # TBD the exact shape of @checkMinDimCache
-    #if @checkMinDimCache
-    #  # the user might have forced the "desired" to
-    #  # be smaller than the standard minimum set by
-    #  # the widget
-    #  return Math.min @minDimCache, @getRecursiveDesiredDim()
 
     minWidth = 0
     minHeight = 0
@@ -3988,24 +3880,13 @@ class Widget extends TreeNode
     if !gotAMinHeight
       minHeight = @minHeight
 
-    # TBD the exact shape of @checkMinDimCache
-    @checkMinDimCache = true
-    @minDimCache = new Point minWidth, minHeight
-
     # the user might have forced the "desired" to
     # be smaller than the standard minimum set by
     # the widget
-    return @minDimCache.min @getRecursiveMaxDim()
+    return (new Point minWidth, minHeight).min @getRecursiveMaxDim()
 
   getRecursiveMaxDim: ->
     if @isInCollapsedSubtree() then return new Point 0,0
-
-    # TBD the exact shape of @checkMaxDimCache
-    #if @checkMaxDimCache
-    #  # the user might have forced the "desired" to
-    #  # be bigger than the standard maximum set by
-    #  # the widget
-    #  return Math.max @maxDimCache, @getRecursiveDesiredDim()
 
     maxWidth = 0
     maxHeight = 0
@@ -4026,14 +3907,10 @@ class Widget extends TreeNode
     if !gotAMaxHeight
       maxHeight = @maxHeight
 
-    # TBD the exact shape of @checkMaxDimCache
-    @checkMaxDimCache = true
-    @maxDimCache = new Point maxWidth, maxHeight
-
     # the user might have forced the "desired" to
     # be bigger than the standard maximum set by
     # the widget
-    return @maxDimCache
+    return new Point maxWidth, maxHeight
 
   countOfChildrenInHorizontalStackLayout: ->
     if @isInCollapsedSubtree() then return 0
@@ -4092,13 +3969,6 @@ class Widget extends TreeNode
     # for finding the widgets that actually have a
     # layout to be recalculated but this Widget
     # now needs to do nothing.
-    #if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
-    #  @markLayoutAsFixed()
-    #  return
-    
-    # TODO should we do a fullChanged here?
-    # rather than breaking what could be many
-    # rectangles?
 
     # the _applyMoveToAndNotify makes sure that all children
     # that are float-attached move together with the
@@ -4154,7 +4024,6 @@ class Widget extends TreeNode
       # we are forced to be in a space smaller
       # than the minimum needed. We obey.
       if min.width() >= newBoundsForThisLayout.width()
-        if @parent == world then console.log "case 1"
         # Give all children under minimum
         # this is unfortunate but
         # we don't want to rely on clipping what's
@@ -4184,7 +4053,6 @@ class Widget extends TreeNode
       # give min to all and then what is left available
       # redistribute proportionally based on desired
       else if desired.width() >= newBoundsForThisLayout.width()
-        if @parent == world then console.log "case 2"
         desiredMargin = desired.width() - min.width()
         if desiredMargin != 0
           fraction = (newBoundsForThisLayout.width() - min.width()) / desiredMargin
@@ -4212,17 +4080,14 @@ class Widget extends TreeNode
         totDesWidth = desired.width()
         extraSpace = newBoundsForThisLayout.width() - desired.width()
         if extraSpace < 0
-          console.log "this shouldn't happen, extraSpace is negative: " + extraSpace
-          debugger
-        if @parent == world then console.log "case 3 maxMargin: " + maxMargin
+          console.error "this shouldn't happen, extraSpace is negative: " + extraSpace
 
         if maxMargin > 0
-          ssss = 0
+          fillByDesiredFraction = 0
         else if maxMargin == 0
-          ssss = 1
+          fillByDesiredFraction = 1
         else
-          console.log "this shouldn't happen, maxMargin negative: " + maxMargin + " max.width(): " + max.width() + " desired.width(): " + desired.width()
-          debugger
+          console.error "this shouldn't happen, maxMargin negative: " + maxMargin + " max.width(): " + max.width() + " desired.width(): " + desired.width()
 
         childLeft = newBoundsForThisLayout.left()
         for C in @children
@@ -4236,11 +4101,11 @@ class Widget extends TreeNode
           childBounds = new Rectangle \
             childLeft,
             newBoundsForThisLayout.top(),
-            childLeft + desWidth + xtra + ssss * (newBoundsForThisLayout.width()-desired.width()) * (desWidth / totDesWidth),
+            childLeft + desWidth + xtra + fillByDesiredFraction * (newBoundsForThisLayout.width()-desired.width()) * (desWidth / totDesWidth),
             newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
           childLeft += childBounds.width()
           if childLeft > newBoundsForThisLayout.right() + 5
-            debugger
+            console.error "horizontal stack distribution overflowed its allocated width by " + (childLeft - newBoundsForThisLayout.right())
           C._reLayout childBounds
     # this part is excluded from the fizzygum homepage build <<«
 

@@ -58,7 +58,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     else
       super aWdgt, position, layoutSpec, beingDropped
 
-  constructor: (extent, color, @padding, @constrainContentWidth = true) ->
+  constructor: (extent, color, @padding = 5, @constrainContentWidth = true) ->
     super()
     @appearance = new RectangularAppearance @
     @__commitExtent(extent) if extent?
@@ -117,18 +117,18 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # re-fits my children via @_reLayoutChildren() -- correct for an EXTERNAL resize, but during my own
   # arrange I am ALREADY laying my children out, so that re-fit is a redundant synchronous RE-ENTRY of
   # _positionAndResizeChildren (it was a no-op ONLY because the @_adjustingContentsBounds re-entrancy guard
-  # caught it). Going through the BASE Widget::_applyExtentAndNotify applies the geometry AND fires the
-  # up-notification seam (so my container still re-fits -- the nested clock-in-window cascade), but SKIPS the
-  # override's @_reLayoutChildren(). That removes the last synchronous re-entry, which is what let the
+  # caught it). Going through the bare @_applyExtent applies the geometry but SKIPS the override's
+  # @_reLayoutChildren() (my container still re-fits at settle time via the up-edge, not by mutation).
+  # That removes the last synchronous re-entry, which is what let the
   # re-entrancy guard + the @_adjustingContentsBounds field be deleted. Byte-identical: the skipped re-entry
   # was already a guarded no-op. (The leading breakCaches mirrors _applyWidthAndNotify / _applyHeightAndNotify exactly.)
   _resizeOwnWidthSkippingChildRelayout: (newWidth) ->
     @__breakMoveResizeCaches()
-    Widget::_applyExtentAndNotify.call @, new Point(newWidth or 0, @height())
+    @_applyExtent new Point(newWidth or 0, @height())
 
   _resizeOwnHeightSkippingChildRelayout: (newHeight) ->
     @__breakMoveResizeCaches()
-    Widget::_applyExtentAndNotify.call @, new Point(@width(), newHeight or 0)
+    @_applyExtent new Point(@width(), newHeight or 0)
 
   # §4.1 pure measure (proper-layouts): the side-effect-free preferred extent of the stack at an
   # available width -- Σ over children of (padding + child preferred height), + a trailing padding,
@@ -210,7 +210,6 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # up-notify IS load-bearing (the nested clock-in-window cascade) -- this is the static "split by who is arranging"
   # axis, NOT a runtime suppression flag.
   _positionAndResizeChildren: (parentWillSizeMe = false) ->
-    @padding = 5
 
     stackHeight = 0
     verticalPadding = 0
@@ -290,11 +289,11 @@ class SimpleVerticalStackPanelWdgt extends Widget
       # CONTAINER (`_reLayoutChildren?`) keeps the seam-firing _applyMoveToAndNotify: its move's in-pass re-enqueue is
       # load-bearing for a constrained-scroll-stack's content<->scrollbar WIDTH convergence (dropping it settled the
       # stack 6px wider, overlapping its scrollbar) -- it converts only in Stage 3. Same discriminator as the resize.
-      moveTo = new Point leftPosition, @top() + verticalPadding + stackHeight
+      targetPos = new Point leftPosition, @top() + verticalPadding + stackHeight
       if widget._reLayoutChildren?
-        widget._applyMoveToAndNotify moveTo
+        widget._applyMoveToAndNotify targetPos
       else
-        widget._applyMoveTo moveTo
+        widget._applyMoveTo targetPos
       # else-branch: consume the handed-forward height (no read-back of applied @bounds). The
       # !constrainContentWidth if-branch does NO resize -- there is no mutate-then-read-back to remove there --
       # so it falls back to reading the child's already-settled height. (proper-layouts Phase B)

@@ -86,7 +86,7 @@ class VerticalStackLayoutSpec
   setAlignmentToCenter: ->
     @element._settleLayoutsAfter => @_setAlignmentToCenterNoSettle()
   _setAlignmentToCenterNoSettle: ->
-    if @alignment isnt "enter"
+    if @alignment isnt "center"
       @alignment = "center"
       @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
 
