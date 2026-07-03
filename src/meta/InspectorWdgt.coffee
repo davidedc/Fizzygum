@@ -416,6 +416,21 @@ class InspectorWdgt extends Widget
     else
       return nil
 
+  # The recorded CoffeeScript source of member `selected` if it is injected by one of `theClass`'s
+  # augmentedWith mixins, else nil. `augmentedWith` holds the mixin GLOBAL names ("ControllerMixin"); a parsed
+  # Mixin's @name is that minus the "Mixin" suffix ("Controller"), so match either form. Mixin.allMixines is
+  # the list of parsed Mixins (each carrying nonStaticPropertiesSources), populated at boot by Mixin's create
+  # pass. (Adds the mixin leg the class-chain walk in selectionFromList lacked -- so a mixin method shows real
+  # source instead of compiled JS.)
+  _mixinSourceForMember: (theClass, selected) ->
+    return nil unless theClass.augmentedWith?
+    for mixinName in theClass.augmentedWith
+      for theMixin in Mixin.allMixines
+        if (theMixin.name == mixinName or theMixin.name + "Mixin" == mixinName) and
+           theMixin.nonStaticPropertiesSources[selected]?
+          return theMixin.nonStaticPropertiesSources[selected]
+    nil
+
   selectionFromList: (selected) ->
     if selected == undefined then return
 
@@ -438,8 +453,16 @@ class InspectorWdgt extends Widget
         # through to val.toString() below instead of crashing. (V8 masked this; JSC surfaced it.)
         goingUpTargetProtChain = @target
         while goingUpTargetProtChain?.constructor?.class?
-          if goingUpTargetProtChain.constructor.class.nonStaticPropertiesSources[selected]?
-            val = goingUpTargetProtChain.constructor.class.nonStaticPropertiesSources[selected]
+          theClass = goingUpTargetProtChain.constructor.class
+          if theClass.nonStaticPropertiesSources[selected]?
+            val = theClass.nonStaticPropertiesSources[selected]
+            break
+          # The method may be MIXIN-injected (e.g. ControllerMixin._fireConnection) -- not recorded on any
+          # class's nonStaticPropertiesSources, but on the parsed Mixin. Consult each mixin this class
+          # augmentsWith so the inspector shows real CoffeeScript instead of the compiled-JS toString() below.
+          mixinSource = @_mixinSourceForMember theClass, selected
+          if mixinSource?
+            val = mixinSource
             break
           goingUpTargetProtChain = goingUpTargetProtChain.__proto__
       txt = val.toString()

@@ -116,6 +116,12 @@ class Mixin
         catch err
           console.log " error " + err + " evaling : " + JS_string_definitions
           debugger
+        # Register this parsed mixin so the inspector can recover a mixin method's real CoffeeScript source
+        # from @nonStaticPropertiesSources (InspectorWdgt.selectionFromList) instead of falling back to the
+        # compiled JS of val.toString(). Only the real create pass registers -- the build-time syntax gate's
+        # parse-only `new Mixin(src, true, false)` (createMixin false) never reaches here, so allMixines stays
+        # empty there.
+        Mixin.allMixines.push @
 
 
     #if @name == "LCLCodePreprocessor" then debugger

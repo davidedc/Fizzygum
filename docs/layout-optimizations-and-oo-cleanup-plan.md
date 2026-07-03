@@ -71,6 +71,26 @@ code-de-duplication items are in and green; **H5–H7 remain (owner's-call test-
   0.25, right to 0.6, no cross-talk; `alpha` selected by list text). Unavoidable: `Widget.setColor` itself uses the
   guard, so `_acceptsConnectionToken` must live on Widget.
 
+**⟢ UPDATE 2026-07-03 (H5–H7 LANDED — owner-approved this session; H5 built with real-source "Option C"). TIER H
+COMPLETE.**
+- **H7** (pushed `1975aff18`) — a capture-time STUCK-STATE canary in `capture-macro-test-references.js`
+  (Fizzygum-tests): a recapture yielding FEWER distinct dataHashes than it replaced (shots that used to differ now
+  identical = a stuck/error frame the Chrome legs pass vacuously) prints a WARNING pointing at a webkit-leg check.
+  Self-contained tooling, no recapture. Verified: syntax + logic unit-checks + it stayed silent on real recaptures.
+- **H5** — the inspector now shows REAL CoffeeScript source for MIXIN methods. `Mixin.allMixines` (declared but
+  never populated) is filled in Mixin's create pass; `InspectorWdgt.selectionFromList` consults each class's
+  `augmentedWith` mixins' `nonStaticPropertiesSources` (new `_mixinSourceForMember` helper) instead of the
+  compiled-JS `val.toString()` fallback. Verified with a headless probe (`_fireConnection` → CoffeeScript, 14 mixins
+  registered).
+- **H6** — the 3 inspector macros select a member BY NAME (`topWdgtSuchThat m.text == …`) instead of the brittle
+  first-row-by-PIXEL click, robust to member-list reordering. `macroInspectorResizingOKEvenWhenTakenApart` keeps
+  the same members (`_fireConnection` top / `_setFontNameNoSettle` lower) so only image_2/image_3 recapture (the H5
+  source change; image_1/image_4 byte-identical); `macroMultilineTextInputScrollsWell` +
+  `macroWrappingTextFieldResizesOK` arm-then-clear → ZERO recapture.
+- **Verification:** `./fg build` 0 violations; H5 probe; `./fg gauntlet` GREEN (dpr1/dpr2/webkit/apps/tiernaming/
+  settle, 166/166) over the recapture. Recapture: `macroInspectorResizingOKEvenWhenTakenApart` image_2/image_3
+  (dpr1+dpr2) only.
+
 ## §6 — Tier H (LIVE, 2026-07-03): connection-cascade-fix follow-ups
 
 Behaviour-preserving cleanups + robustness items surfaced by the connection-cascade settle-lane fix and its
