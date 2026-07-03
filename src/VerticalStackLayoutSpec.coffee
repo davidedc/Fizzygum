@@ -12,7 +12,7 @@ class VerticalStackLayoutSpec
   elasticity: 1
   alignment: 'left'
 
-  constructor: (@elasticity) ->
+  constructor: (@elasticity = 1) ->
     return nil
 
   rememberInitialDimensions: (@element, @stack) ->
@@ -68,26 +68,21 @@ class VerticalStackLayoutSpec
   # -- the thin-wrap gate's canonical form anchors _settleLayoutsAfter on @ (a self-settle). This is the same
   # canonical thin wrap, just delegated to @element. (All 5 setters below are exempt for this reason.)
   setAlignmentToLeft: ->
-    @element._settleLayoutsAfter => @_setAlignmentToLeftNoSettle()
-  _setAlignmentToLeftNoSettle: ->
-    if @alignment isnt "left"
-      @alignment = "left"
-      @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
+    @element._settleLayoutsAfter => @_setAlignmentNoSettle "left"
 
   # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
   setAlignmentToRight: ->
-    @element._settleLayoutsAfter => @_setAlignmentToRightNoSettle()
-  _setAlignmentToRightNoSettle: ->
-    if @alignment isnt "right"
-      @alignment = "right"
-      @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
+    @element._settleLayoutsAfter => @_setAlignmentNoSettle "right"
 
   # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
   setAlignmentToCenter: ->
-    @element._settleLayoutsAfter => @_setAlignmentToCenterNoSettle()
-  _setAlignmentToCenterNoSettle: ->
-    if @alignment isnt "center"
-      @alignment = "center"
+    @element._settleLayoutsAfter => @_setAlignmentNoSettle "center"
+
+  # ONE parameterized core for the three alignment wrappers above (they collapse onto it -- identical bar
+  # the "left"|"right"|"center" string; the wrappers stay separate because vertStackMenu addresses them BY NAME).
+  _setAlignmentNoSettle: (newAlignment) ->
+    if @alignment isnt newAlignment
+      @alignment = newAlignment
       @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
 
   elasticityPopout: (menuItem,a,b,c,d,e,f)->

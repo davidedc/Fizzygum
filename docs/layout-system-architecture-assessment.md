@@ -38,7 +38,7 @@ suppression/convergence booleans: `@_adjustingContentsBounds` gone, the pure `pr
 the non-notifying arrange landed — §4.1/§4.2); and the **2026-07-01 seam deletion + Stage 6 + caret/window single-pass**
 above. A **naming campaign** across the way renamed the low-level geometry family to the intent-revealing lattice
 (`_apply*AndNotify` notifies, bare `_apply*` does not, `_commit*AndNotify`, `__*`-leaves) and grew the build-time
-layering lint to rules **[A]–[M]**; every method name below is post-campaign, with the pre-campaign name in `(né …)`
+layering lint to rules **[A]–[Q]**; every method name below is post-campaign, with the pre-campaign name in `(né …)`
 where it aids `grep`.
 
 > **Line numbers are approximate — the METHOD NAME is authoritative; `grep` it.** Every shipped edit shifts lines; the
@@ -266,7 +266,7 @@ flow-violation throw (a plain, explicitly worded `Error` ~:826, when a *public* 
 widget during a flush/pass) and `_invalidateLayout`'s `FLOWRULE_VIOLATION` throw (~:3929, when an *immediate (geometry)
 mutator* tries to schedule layout mid-pass — this is the throw that actually carries that label, and the fourth wave
 reworded its message to name "an immediate geometry mutator" in place of the retired "raw/silent/fullRaw setter") —
-**plus** the build-time layering lint (`buildSystem/check-layering.js`, now rules **[A]–[M]**: rules [A]/[E] catch the
+**plus** the build-time layering lint (`buildSystem/check-layering.js`, now rules **[A]–[Q]**: rules [A]/[E] catch the
 name-recognized internal methods directly — [E] forbids an immediate mutator from calling `_invalidateLayout` — and [G]
 forbids low-level code from calling a *structural* self-settling
 wrapper — destroy / close / fullDestroy / createReference / …) together make "public self-settles once; low-level code
@@ -383,7 +383,7 @@ This is not spelled out in the campaign docs, but it is the crux for any future 
 
 | | **Horizontal stacks** | **Vertical stacks / window content / scroll content** |
 |---|---|---|
-| Sizing model | **min / desired / max**, computed **bottom-up** by recursion: `getRecursiveMinDim/DesiredDim/MaxDim` (`Widget.coffee` ~:4062–4161) — memoization is *scaffolded* (`@minDimCache`/`@desiredDimCache`/`@maxDimCache` are written) but the cache **reads are commented out** ("TBD the exact shape of …"), so each query currently re-walks the subtree | **proportional**: child width = f(*current* container width), `getWidthInStack` (`VerticalStackLayoutSpec.coffee` ~:31) |
+| Sizing model | **min / desired / max**, computed **bottom-up** by recursion: `getRecursiveMinDim/DesiredDim/MaxDim` (`Widget.coffee` ~:4062–4161) — the three walkers now delegate to the shared `_getRecursiveStackDim` walker (F7), so each query re-walks the subtree (the earlier `@minDimCache`/`@desiredDimCache`/`@maxDimCache` memoization scaffolding was deleted, Tier A) | **proportional**: child width = f(*current* container width), `getWidthInStack` (`VerticalStackLayoutSpec.coffee` ~:31) |
 | How a container learns content size | a **pure measure** (no mutation) | a **pure measure** too, for content-sizing content, since §4.1 (`preferredExtentForWidth`); but still **mutate-then-read-back** at the source (`_setWidthSizeHeightAccordingly`) and for non-content-sizing folder/toolbar frames (§2.4) |
 | Arrange | 3-case distribution in base `_reLayout` (`Widget.coffee` ~:4286–4374): under-min shrink / desired-margin grow / max-margin grow | sum the handed-forward / measured heights (`_positionAndResizeChildren`) |
 
@@ -724,7 +724,7 @@ live with them more comfortably; and it then went further, **building the pure m
 before establishing, by *attempting* the re-fit seam's deletion and failing, that the one iteration that remains is
 essential coupling rather than waste (§2.6); and a final naming campaign (the fourth wave) retired the confusing
 "raw / silent / fullRaw setter" category-noun for the intent-revealing **immediate-mutator** lattice (`_apply*AndNotify`
-notifies the container, bare `_apply*` does not) and grew the layering lint to [A]–[M] — the names now *say* what each
+notifies the container, bare `_apply*` does not) and grew the layering lint to [A]–[Q] — the names now *say* what each
 method does. That is the opposite of byzantine — it is a system whose owner is paying
 down historical `fixLayout` debt with proofs, including a proof of where the paydown *stops*.
 
@@ -868,7 +868,7 @@ not fire the re-fit seam, so a container's *own* arrange is now a single idempot
 fixpoint. That made one edge structural and drove the capstone to zero (§2.7). The intended **second half — a per-axis
 DAG lint** — was *not* built: the idea was to classify each layout dependency edge by axis and direction ("width flows
 down", proportional, vs "size flows up", content-sized) and add a lint (in the spirit of `check-layering.js` rules
-[A]–[M]) flagging any new edge that couples both directions on the same axis of the same widget, on the theory that a
+[A]–[Q]) flagging any new edge that couples both directions on the same axis of the same widget, on the theory that a
 per-axis DAG would let a single measure+arrange terminate with zero iteration and let `recalcIterationsCap` downgrade
 to a should-never-fire assert. **That theory was falsified as a *convergence proof*** (the content→container notification is genuinely bidirectional
 in a way no per-widget lint dissolves) — but the practical outcome it chased, near-zero iteration, was then reached by
@@ -1021,8 +1021,8 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
 - **Apply bodies:** base `Widget._reLayout` ~:4212 (`markLayoutAsFixed` call ~:4377 — followed by a corner-layouted
   child re-layout loop ~:4381; `markLayoutAsFixed` def ~:4209; horizontal-stack 3-case distribution ~:4286–4374) ·
   `_setWidthSizeHeightAccordingly` (née `rawSetWidthSizeHeightAccordingly`) ~:750 (synchronous `_reLayout` ~:755 when `implementsDeferredLayout()`, returns
-  height ~:756) · `getRecursiveDesiredDim` ~:4062 / `getRecursiveMinDim` ~:4093 / `getRecursiveMaxDim` ~:4130 (cache
-  writes live, cache reads commented out).
+  height ~:756) · `getRecursiveDesiredDim` / `getRecursiveMinDim` / `getRecursiveMaxDim` ~:3976–3987 (thin wrappers over the
+  shared `_getRecursiveStackDim` walker since F7; no dim-cache — the scaffolding was deleted in Tier A).
 - **§4.1 pure measure (built `a07f534a` → `20b37277`; consumed `85d0c186`):** `Widget.preferredExtentForWidth` base
   default ~:766, overridden by `TextWdgt` ~:360, `SimpleVerticalStackPanelWdgt` ~:142, `WindowWdgt` ~:55,
   `AnalogClockWdgt` ~:50, `KeepsRatioWhenInVerticalStackMixin` ~:16 · the children-union
@@ -1053,7 +1053,7 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
   `_showResizeAndMoveHandlesAndLayoutAdjustersNoSettle` core ~:237 (public `showResizeAndMoveHandlesAndLayoutAdjusters`
   wrapper inherited from `Widget` ~:3111) · `WindowWdgt.buildAndConnectChildren` ~:436 / `_buildAndConnectChildrenNoSettle`
   ~:439 (single settle, not a batch) / `_positionAndResizeChildren` ~:527 / `preferredExtentForWidth` ~:55.
-- **Build-time layering lint:** `buildSystem/check-layering.js` — rules **[A]–[M]** (predicates `isLowLevel` ~:91,
+- **Build-time layering lint:** `buildSystem/check-layering.js` — rules **[A]–[Q]** (predicates `isLowLevel` ~:91,
   `isImmediateMutator` ~:141; the summary prints `A/B/C/D/E/F/G/I/J/K/L/M`, with [H] a non-fatal *warning*); [E]
   forbids an immediate mutator from scheduling layout, [G] forbids low-level code from calling a *structural*
   self-settling wrapper, and the fourth wave's additive **[I]** `__`-leaf purity / **[J]** callback settle-neutrality /
@@ -1151,13 +1151,16 @@ a one-line reason.
 
 The build **fails** on any of these; read the failing rule's message, it names the offending method.
 
-- **`check-layering.js` — rules `[A]`–`[N]`** (the layering lint). The load-bearing ones for new layout code: `[A]`/`[E]`
+- **`check-layering.js` — rules `[A]`–`[Q]`** (the layering lint). The load-bearing ones for new layout code: `[A]`/`[E]`
   an immediate mutator must not schedule layout; `[B]` only `doOneCycle`/`_settleLayoutsAfter` may call
   `recalculateLayouts`; `[C]` a public setter must not call another public setter; `[F]` the SCHEDULE/APPLY invariant
   above; `[G]` low-level code must not call a structural self-settling wrapper; `[I]`–`[N]` the naming lattice (`__`-leaf
   purity, callback settle-neutrality, apply/notify name-consistency, callback-name convention, retired-fragment ban, and
   `[N]` the retired notify-by-mutation container seam `_announce*ToContainer` must not be re-defined — the settle-time
-  up-edge replaced it, §4.1/§4.2). The predicates `isLowLevel` / `isImmediateMutator` are the single source of truth for
+  up-edge replaced it, §4.1/§4.2). Beyond the naming lattice, three caller-gates: `[O]` a `*Coalesced` call only from an
+  allowlisted stream handler; `[P]` `_settleLayoutsAfterOrJoinEnclosingPass` callable only from `_<name>Connector`
+  entrypoints; `[Q]` a `_<name>Connector` textually callable only from an allowlisted mid-cascade self-render
+  (`recalculateOutput`). The predicates `isLowLevel` / `isImmediateMutator` are the single source of truth for
   the tiers — do not describe a tier in a way that drifts from them.
 - **`check-dead-methods.js`** — dead-method ratchet + `dead-method-allowlist.txt`. Deleting a method drops the count;
   a *new* dead method fails unless allowlisted (prefer deleting it).

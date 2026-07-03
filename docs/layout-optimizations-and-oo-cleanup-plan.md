@@ -91,6 +91,18 @@ COMPLETE.**
   settle, 166/166) over the recapture. Recapture: `macroInspectorResizingOKEvenWhenTakenApart` image_2/image_3
   (dpr1+dpr2) only.
 
+**⟢ UPDATE 2026-07-03 (evening) — TIER H COMPLETE; a THIRD owner-directed wart hunt ("find NEW warts; efficient,
+clear, minimal") produced the NEW live Tier I (§7).** A fourth code-level re-read at Fizzygum `b05f8d1e` (tree clean)
+hunted the classes the earlier hunts did not: landmine defaults in the layout-spec objects, dropped parameters,
+dead public twins, half-finished caches, and per-child measure formulas written N× with inconsistent clamp/round
+treatment. Every item was checked against Appendix X1–X8, the assessment's do-not-revisit list, and Tiers A–H —
+none is a re-proposal; the standout finds are a **write-only cache** (`TreeNode.firstParentClippingAtBounds`
+checks its version key but never returns the cached value — I4), a **dead deferred twin** (`Widget.moveWithin`,
+zero callers, allowlisted instead of deleted — I3, since OWNER-RE-SCOPED from delete to "build the real
+wrapper/core lattice + one clamp home"), and the **14-file misleading `_applyBounds` TODO** the G4
+drift note explicitly left flagged (I6). Items reviewed and NOT selected are banked in the new **Appendix X9**.
+**A NEW SESSION STARTS AT §7** (read §0.5 first for the cold-execution protocol).
+
 ## §6 — Tier H (LIVE, 2026-07-03): connection-cascade-fix follow-ups
 
 Behaviour-preserving cleanups + robustness items surfaced by the connection-cascade settle-lane fix and its
@@ -139,6 +151,421 @@ Never trust a recapture without a green webkit leg over it.**
   when a recapture produces FEWER distinct dataHashes than the refs it replaces (a resize / multi-shot test collapsing
   to identical images = a stuck / error-log state). That, plus the webkit-leg rule above, would have caught this
   session's crash-masking AT CAPTURE TIME rather than in the gauntlet.
+
+## §7 — Tier I (LIVE, 2026-07-03): third wart hunt — landmines, dead twin, write-only cache, one-home measures
+
+Found by a fourth code-level re-read at Fizzygum **`b05f8d1e`** (all line numbers exact there; method name + quoted
+text authoritative — §0.5 drift protocol). Ordered cheap→risky; each item standalone, any prefix is a legitimate
+session. Torture is required iff **I4, I5 or I10** ran (cache / arrange / `_reLayout` class — §0.5 gate 2).
+
+### §7.1 — Evidence bank (verified 2026-07-03 at `b05f8d1e`; re-run the greps before editing)
+
+1. **`VerticalStackLayoutSpec.constructor: (@elasticity) ->` has no default** (`src/VerticalStackLayoutSpec.coffee`
+   :15) while the class-level default is `elasticity: 1` (:12). CoffeeScript assigns the param unconditionally, so a
+   no-arg `new VerticalStackLayoutSpec()` writes `undefined` over the prototype's 1 → `getWidthInStack`'s
+   `@elasticity * differenceWithFixedWidth` (:36) goes NaN → NaN child widths. Both live constructions pass a value
+   (`Widget.coffee` :270 passes 1, `SliderWdgt.coffee` :53 passes 0 — `grep -rn "new VerticalStackLayoutSpec" src`)
+   — a landmine, not a live bug (the exact F1/`setContents` class).
+2. **`ToolPanelWdgt._reLayout` dropped its parameter.** `src/ToolPanelWdgt.coffee` :82 is `_reLayout: ->` yet :84
+   reads `newBoundsForThisLayout` on its own RHS — CoffeeScript auto-declares the local, so it is `undefined` and
+   `__calculateNewBoundsWhenDoingLayout` always falls back to desired*/current geometry. Every sibling override
+   takes `(newBoundsForThisLayout)`; a caller passing explicit bounds (the horizontal-stack distribution's
+   `C._reLayout childBounds`, a WindowWdgt-style chrome placement) is silently ignored. Additionally :117–:121
+   assign `widthINeedToFitContentIn` only under `if @parent?` — a parentless (orphan) re-layout leaves it
+   `undefined`, so the wrap test at :128 is always false → one endless row.
+3. **`Widget.moveWithin` is dead.** The deferred twin of `_moveWithin` (`Widget.coffee` :1450–:1468) has ZERO
+   callers (`grep -rn "[^_.]moveWithin\b" src` → only the definition; nothing in `Fizzygum-tests` either) and is
+   parked on `buildSystem/dead-method-allowlist.txt` :17. Its one intended consumer explicitly declined it —
+   `ActivePointerWdgt.coffee` :144: "a deferred moveWithin now exists, but switching this real-time grab to it is a
+   Path-A determinism call". The `_moveWithin`/`moveWithin` pair also duplicates the clamp-into-parent policy in two
+   homes; deleting the dead twin dissolves the duplication.
+4. **`TreeNode.firstParentClippingAtBounds`'s cache is WRITE-ONLY.** `src/basic-data-structures/TreeNode.coffee`
+   :493–:515: the hit branch (`if @checkFirstParentClippingAtBoundsCache == WorldWdgt.structureVersion`) contains
+   ONLY the `doubleCheckCachedMethodsResults` assertion and then FALLS THROUGH to the full ancestor walk + cache
+   re-write — there is no `return @cachedFirstParentClippingAtBounds`. Compare the sibling `root()` (:181–:196),
+   which returns its cached value on the same key. Sole production caller is `Widget.clipThrough` (:1205), whose own
+   cache re-keys on every `geometryVersion` bump (each move/resize) — so during any gesture every repainted widget
+   re-walks its ancestor chain per frame for a value that only changes on `structureVersion` (adds/removes).
+   Invalidation soundness is identical to `root()`'s: `clipsAtRectangularBounds` is class-static, parent changes bump
+   `structureVersion`. The vestigial `widgetToStartFrom` param is always the default `@` (the recursion at :503
+   passes no arg; no external caller passes one), so returning the per-`@` cache is sound. F8 converted this key
+   string→integer mechanically and preserved the missing-return shape. Residue: the `#console.log "cache hit root"`
+   line inside `root()` (:184).
+5. **The stack's per-child measure is written 3× with a THREE-WAY clamp/round divergence**
+   (`src/SimpleVerticalStackPanelWdgt.coffee`): `preferredExtentForWidth` :149–:150 takes `measured?.y ?
+   widget.height()` with NO min-clamp and NO round; `subWidgetsMergedPreferredBounds` :187–:190 DOES min-clamp
+   ("Sizes are min-extent-clamped to match `__commitExtent`" — its own header) but does not round;
+   `_positionAndResizeChildren` :249–:251 applies `measured` through `_applyExtentBase` → `__commitExtent` (which
+   ROUNDS **and** min-clamps, `Widget.coffee` :1536–:1547) yet hands the UN-clamped, UN-rounded `measured.y` forward
+   into the stack sum (:280). The three agree today only by convention: every `preferredExtentForWidth` override
+   returns integers (TextWdgt line-count heights; the ratio mixin `Math.round`s, `KeepsRatioWhenInVerticalStackMixin`
+   :17) and every widget's constructor-set `minimumExtent` is the tiny `(5,5)` (`Widget.coffee` :338). A future
+   measure returning a fractional or sub-minimum height diverges the stack's own measure from its merged-bounds
+   measure AND from the child geometry its arrange actually commits — the F5 fragile-mirror class, one level up.
+6. **14 files carry a comment instructing the one-cadence-lag REGRESSION.** The exact pair
+   `# TODO shouldn't be calling this _applyBounds from here,` / `# rather use super` sits above the apply-bounds-
+   first line in 14 `_reLayout` overrides (`grep -rln "shouldn't be calling this _applyBounds" src` →
+   StretchablePanelWdgt, ErrorsLogViewerWdgt, BasementWdgt, StretchableCanvasWdgt, WidgetHolderWithCaptionWdgt,
+   ButtonWdgt, StretchableWidgetContainerWdgt, SwitchButtonWdgt, ColorPickerWdgt, GenericShortcutIconWdgt,
+   GenericObjectIconWdgt, FanoutWdgt, PlotWithAxesWdgt, AxisWdgt). Following the TODO — moving the bounds-apply into
+   the trailing `super` — would REINTRODUCE the lag G4 fixed and trip the `check-relayout-bounds-first` gate. The G4
+   landed-record explicitly banked this as "pre-existing wart left flagged, NOT fixed".
+7. **Two comment/doc lies about live consumers and live lint rules.** (a) The stack `preferredExtentForWidth` header
+   (`SimpleVerticalStackPanelWdgt.coffee` :140–:141) still ends "WindowWdgt overrides this with a Stage-B stub (Stage
+   D gives windows the real content+chrome measure) … No consumer yet." — Stage D landed (`WindowWdgt.coffee` :37–:40
+   "Replaces the Stage-B stub") and the measure IS consumed (`WindowWdgt.preferredExtentForWidth` :96 recurses into a
+   stack content; a stack-in-stack recurses via :149; the G3 fix repaired TextWdgt's identical lie but missed this
+   one). (b) `layout-system-architecture-assessment.md` still says the layering lint is rules "[A]–[M]" (:41, :269,
+   :727, :871, :1056) / "[A]–[N]" (§6.3) — the live inventory is **[A]–[Q]** ([N] seam-def ban, [O] coalesced-caller
+   allowlist, [P] join-lane caller gate, [Q] connector-caller gate); its §2.5 table and §5 map also still describe
+   the `getRecursive*Dim` "memoization … scaffolded … cache reads commented out" — that scaffolding was DELETED
+   (Tier A) and the walkers collapsed onto `_getRecursiveStackDim` (F7).
+8. **The `VerticalStackLayoutSpec` alignment setters are a triplicated sextet** (:70–:91): three thin wrappers +
+   three cores identical up to the string `"left"|"right"|"center"`. The wrappers are menu-addressed BY NAME
+   (`vertStackMenu` :50–:52), so they stay; the three cores collapse onto one parameterized core.
+9. **`addOrRemoveAdders` self-confesses its duplication** (`Widget.coffee` :4247–:4248: "this code is duplicate of
+   the one above and is only needed for adding the last adder/droplet"): two ~20-line `while true` loops identical
+   except direction (`lastSiblingBeforeMeSuchThat`/`addAsSiblingBeforeMe` vs `firstSiblingAfterMeSuchThat`/
+   `addAsSiblingAfterMe`). Inside the homepage-excluded band.
+10. **The horizontal 3-case distribution repeats one loop skeleton 3×** (`Widget.coffee` :4099–:4182): each case is
+    `for C in @children` → skip non-stack → build `childBounds` at `childLeft` with a case-specific WIDTH formula →
+    advance `childLeft` → `C._reLayout childBounds`. Only the width formula differs. The third case's error arm
+    (`maxMargin < 0`, :4162–:4163) `console.error`s but leaves `fillByDesiredFraction` undefined → NaN childBounds
+    downstream. Inside the homepage-excluded band.
+11. **`MenusHelper` — the standard-user-use exemplar — calls private methods 33×, all THREE verbs, ONE pattern.**
+    Census (`grep -oE '\._[a-zA-Z]+' src/basic-widgets/menu-system/MenusHelper.coffee | sort | uniq -c`):
+    `_applyMoveTo` ×16, `_applyExtent` ×10, `_moveWithin` ×7 — nothing else. Every site is the same shape: place +
+    size a FRESH ORPHAN (a just-built window/panel) then clamp it in view, before `world.add` (e.g.
+    `createCalculatingPatchNode` :159–:162). So the missing public surface is exactly: the one-shot frame setter
+    (fact 12) + the public `moveWithin` (I3). The receivers are orphans, so public-setter flushes are cheap
+    orphan-subtree settles (and X2's falsification already covers the cold-builder multi-flush concern). The
+    `src/apps/` census (`_applyExtent` ×52, `_applyMoveTo` ×45, `_addNoSettle` ×8, `_reLayout` ×7) is a DIFFERENT
+    population: most sit inside constructor-core plumbing (`_buildAndConnectChildrenNoSettle` bodies use
+    `_addNoSettle`/`_apply*` BY MANDATE of `check-constructors-build.js`), so apps are OUT of the v1 rule scope.
+12. **`setBounds` already IS the public one-shot position+extent setter — it just lacks the lattice.** It is
+    public, one-flush, Rectangle-taking (`Widget.coffee` :839–:854) — the Morphic/Cocoa `setFrame` lineage
+    (Qt spells the same thing `setGeometry(x,y,w,h)`). Gaps: (a) its settle thunk is INLINE — no
+    `_setBoundsNoSettle` core for internal/lattice callers (the X7 "cosmetic asymmetry — leave" bullet; the owner's
+    2026-07-03 userland-public-API direction is the new evidence that promotes it); (b) the friendly
+    origin+size call requires knowing the `Point.extent` Rectangle-builder (`pos.extent ext` →
+    `Point.coffee` :247) — insider knowledge, so userland reached for `_applyMoveTo`+`_applyExtent` instead.
+    Observation only (do NOT change in this tier): `setBounds`' core does not clamp positions to ≥0 while
+    `_moveToNoSettle` does (`Math.max aPoint.x, 0`) — a public-API asymmetry to note in the item's report.
+
+### §7.2 — The items
+
+### I1 — `VerticalStackLayoutSpec` elasticity default — trivial
+*Why:* fact 1. *How:* in `src/VerticalStackLayoutSpec.coffee`, change `constructor: (@elasticity) ->` to
+`constructor: (@elasticity = 1) ->`. Byte-identical today (both constructions pass a value). *Gate:* build.
+
+### I2 — `ToolPanelWdgt._reLayout` signature + parentless-width fallback — trivial
+*Why:* fact 2. *How (in `src/ToolPanelWdgt.coffee`):* change `_reLayout: ->` (:82) to
+`_reLayout: (newBoundsForThisLayout) ->`; and replace the `if @parent?` fork (:117–:121) with the same fork
+preceded by a default — `widthINeedToFitContentIn = @width()` on its own line before `if @parent?`, keeping the
+`instanceof ScrollPanelWdgt` branch byte-identical (the type-test is X8-banked; do NOT touch it). Behaviour is
+identical for every live call (no caller passes bounds; no parentless caller exists) — this closes both
+landmines. *Gate:* build + suite.
+
+### I3 — `moveWithin` → the canonical public/core lattice with ONE clamp home — small-medium
+**⟢ RE-SCOPED 2026-07-03 (owner-directed): NOT a deletion.** The original spec deleted the dead deferred twin;
+the owner instead wants a public `moveWithin` EXPOSED (useful API) plus a private version internal code may call
+(the layering rules forbid low-level code reaching the public self-settling tier). That is exactly the house
+wrapper/core lattice — and building it properly also dissolves the original complaint (the clamp policy written
+in two drifting bodies) AND makes the dead-methods gate's symmetry retention apply for real.
+*Why the gate did not auto-keep the old pair:* `liveSettleTwin` in `check-dead-methods.js` pairs strictly
+`<name>` ↔ `_<name>NoSettle` (the same pairing `check-thin-wraps.js` enforces); `moveWithin`'s twin under that
+rule is the non-existent `_moveWithinNoSettle`. `_moveWithin` is an immediate `_move*` convenience, not a core —
+`moveWithin` never called it; the two were two DIVERGENT implementations of the clamp. Do NOT loosen the gate to
+bare `foo`/`_foo` pairing (it would auto-retain any dead public sharing a name with an unrelated immediate
+mutator — a masking hole). The fix is to make the pair REAL, not to widen the rule.
+*Target shape (four pieces, all in `src/basic-widgets/Widget.coffee` unless noted):*
+1. **`_clampedPositionWithin: (aWdgt, pos, ext) ->`** — the ONE home of the clamp policy (pure; returns a Point):
+```coffee
+  # ONE home for the keep-me-inside-aWdgt position clamp (consumed by the immediate
+  # _moveWithin bake AND the deferred _moveWithinNoSettle core): clamp right/bottom FIRST,
+  # left/top LAST (last-wins), so a too-big widget pins its top-left and window-bar
+  # controls stay reachable. Pure -- no reads of @, no mutation.
+  _clampedPositionWithin: (aWdgt, pos, ext) ->
+    newX = pos.x
+    newY = pos.y
+    rightOff = (newX + ext.x) - aWdgt.right()
+    if rightOff > 0 then newX = newX - rightOff
+    if newX < aWdgt.left() then newX = aWdgt.left()
+    bottomOff = (newY + ext.y) - aWdgt.bottom()
+    if bottomOff > 0 then newY = newY - bottomOff
+    if newY < aWdgt.top() then newY = aWdgt.top()
+    new Point newX, newY
+```
+2. **`_moveWithinNoSettle: (aWdgt) ->`** — the deferred core (the old dead body's pending-aware math, ending in
+   the MOVE CORE, not the public `moveTo` — cores call cores; this also removes the old body's latent
+   public-calls-public `@moveTo`, the rule-[C] shape):
+```coffee
+  _moveWithinNoSettle: (aWdgt) ->
+    ext = if @desiredExtent?   then @desiredExtent   else @extent()
+    pos = if @desiredPosition? then @desiredPosition else @position()
+    @_moveToNoSettle @_clampedPositionWithin aWdgt, pos, ext
+```
+3. **`moveWithin: (aWdgt) -> @_settleLayoutsAfter => @_moveWithinNoSettle aWdgt`** — the canonical thin wrap
+   (replaces the old 26-line dead body + header; keep a one-line header naming `_moveWithin` as the immediate
+   sibling for bake-now callers).
+4. **`_moveWithin` KEEPS its name, role and all 13 callers** (immediate `_move*` convenience; the
+   ActivePointerWdgt Path-A breadcrumb stands). Its four sequential `_applyMoveBy` side-adjustments collapse onto
+   the helper: the desired*-bake prelude (`@_applyBounds newBoundsForThisLayout`) stays byte-identical, the tail
+   becomes `@_applyMoveTo @_clampedPositionWithin aWdgt, @position(), @extent()`. Net translation is identical
+   (both formulations are per-axis with left/top last-wins); intermediate broken-rects differ but repaint is
+   idempotent over the settled world, so pixels are identical. **This sub-item is independently droppable** — if
+   it diffs in the gauntlet, revert the tail-swap alone (the lattice above stands without it; the policy then has
+   two homes temporarily, cross-referenced by the helper's header).
+*First consumer + gate-cleanliness (recommended, owner may defer):* convert `PanelWdgt.keepAllSubwidgetsWithin`
+(the "move all inside" menu action — a public mutator doing N immediate bakes) to one settle over the bundle:
+```coffee
+  keepAllSubwidgetsWithin: ->
+    @_settleLayoutsAfter =>
+      for m in @children
+        m._moveWithinNoSettle @
+      return
+```
+With the core independently live, `liveSettleTwin` AUTO-retains the (still caller-less) public `moveWithin` →
+DELETE `buildSystem/dead-method-allowlist.txt` :17 — zero entries, the symmetry rule finally carrying the pair.
+⚠ Two honest deltas to verify: (a) `_moveToNoSettle`'s `isFreeFloating` guard means a NON-freefloating child is
+now skipped where the old bake moved it — arguably MORE correct (a laid-out child's position belongs to its
+container's arrange), and panel/world children are freefloating, but the action is TEST-UNCOVERED (verified
+2026-07-03: zero hits in `Fizzygum-tests`) and also on the WORLD menu (`WorldWdgt.coffee` :2045) — check it by
+hand in the built world (desktop + a folder panel). (b) N flushes→1 is the standard bundle shape.
+**Fallback** if the owner wants zero behaviour risk now: skip the conversion, keep `keepAllSubwidgetsWithin`
+as-is, and allowlist BOTH lattice members with honest wording (`moveWithin` + `_moveWithinNoSettle` — "intentional
+public API awaiting first consumer; core kept for the settle-tier lattice").
+*Pre-flight:* re-run fact 3's greps; confirm the old `moveWithin` body still matches (`Widget.coffee` :1443–:1468)
+and `_moveToNoSettle`'s shape (rounds, clamps ≥0, freefloating-guarded — :1324).
+*Gate:* build (thin-wraps picks up the new pair; dead-methods per the consumer/fallback choice above) + gauntlet
+(sub-item 4 touches the grab flow → the dpr2 leg matters; no torture — no settle-loop/arrange semantics change).
+Methods are ADDED, none deleted → NO inspector recapture expected.
+
+### I4 — Complete the write-only `firstParentClippingAtBounds` cache — medium (cache class → torture)
+*Why:* fact 4 — a cache that pays its bookkeeping on every call and never serves a hit, on the paint hot path.
+This is the F8/A3 family: finish the cache or delete it; finishing costs one line and `root()` is the proven
+in-file template.
+*Pre-flight:* confirm fact 4's shape at `TreeNode.coffee` (grep `checkFirstParentClippingAtBoundsCache`); confirm
+no caller passes `widgetToStartFrom` (`grep -rn "firstParentClippingAtBounds(" src` — only the no-arg recursion
+:503 and the no-arg `Widget.coffee` :1205).
+*How (in `src/basic-data-structures/TreeNode.coffee`):*
+1. Drop the vestigial param from the FAST variant: `firstParentClippingAtBounds: (widgetToStartFrom = @) ->`
+   becomes `firstParentClippingAtBounds: ->`, and its body's `widgetToStartFrom.` reads become `@.`-reads
+   (`@parent?`, `@parent.clipsAtRectangularBounds`, `@parent`); the two `@SLOWfirstParentClippingAtBounds
+   widgetToStartFrom` doubleCheck calls become `@SLOWfirstParentClippingAtBounds()`. (The SLOW twin keeps its
+   param — it self-recurses through it.)
+2. Make the hit branch RETURN, mirroring `root()` exactly:
+```coffee
+    if @checkFirstParentClippingAtBoundsCache == WorldWdgt.structureVersion
+      if world.doubleCheckCachedMethodsResults
+        if @cachedFirstParentClippingAtBounds != @SLOWfirstParentClippingAtBounds()
+          debugger
+          alert "firstParentClippingAtBounds is broken (cached)"
+      return @cachedFirstParentClippingAtBounds
+```
+3. Delete the `#console.log "cache hit root"` residue line inside `root()` (:184).
+*Gate:* gauntlet + torture (cache-shape change — the F8 precedent class). Values are provably identical (same
+key, same invalidation events as `root()`); a stale-cache mistake fails the suite deterministically (wrong
+clip/broken rects), and `world.doubleCheckCachedMethodsResults` exists for interactive diagnosis. Revert as a
+whole item if red.
+
+### I5 — ONE home for the stack's per-child measured extent — medium (arrange → torture)
+*Why:* fact 5 — the measure↔measure↔arrange mirror has already diverged in clamp/round treatment; only
+integer-measure convention and the tiny (5,5) minimum mask it (assessment §6.1 rule 1 — the F5 class).
+*Pre-flight:* confirm fact 5's three quoted sites in `SimpleVerticalStackPanelWdgt.coffee`.
+*How (in `src/SimpleVerticalStackPanelWdgt.coffee`):*
+1. Add, next to `_childWidthInStack`/`_childLeftInStack` (completing the E3 family):
+```coffee
+  # The per-child MEASURED EXTENT at a recommended width, in ONE place for the three walkers
+  # (the pure measures preferredExtentForWidth / subWidgetsMergedPreferredBounds and the applying
+  # _positionAndResizeChildren): measure via the child's own preferredExtentForWidth (fallback: a
+  # width-invariant child keeps its current height), then ROUND + MIN-CLAMP exactly as __commitExtent
+  # will when the arrange applies it -- so what a measure REPORTS is byte-what the arrange COMMITS.
+  # (Before this helper the three sites disagreed: no-clamp-no-round / clamp-no-round /
+  # commit-clamped-but-hand-forward-unclamped -- masked only by every measure returning integers
+  # >= the (5,5) default minimumExtent.)
+  _childMeasuredExtentInStack: (widget, recommendedWidth) ->
+    measured = widget.preferredExtentForWidth?(recommendedWidth)
+    ext = if measured? then measured.round() else new Point recommendedWidth, widget.height()
+    minE = widget.getMinimumExtent?()
+    if minE? then ext = ext.max minE
+    ext
+```
+2. `preferredExtentForWidth` (:148–:150): the `childWidth = …` / `measured = …` / `childHeight = …` triple becomes
+   `childHeight = (@_childMeasuredExtentInStack widget, @_childWidthInStack widget, availForContents).y` (keep the
+   `!@constrainContentWidth` else-arm byte-identical).
+3. `subWidgetsMergedPreferredBounds` (:178–:190): replace the `recW`/`measured`/`h`/`w`/`minE` block with the helper
+   (`recW` stays for `left`): `e = @_childMeasuredExtentInStack widget, recW` then `w = e.x`, `h = e.y` — NB the
+   helper's `w` is the measured-then-clamped width where the old code clamped the RECOMMENDED width; confirm every
+   measure returns `x == availW` (they do — every override returns its input width) so this is identical, and note
+   it in the item report.
+4. `_positionAndResizeChildren` leaf branch (:249–:251): becomes
+```coffee
+          measured = @_childMeasuredExtentInStack widget, recommendedElementWidth
+          widget._applyExtentBase measured
+          elementHeight = measured.y
+```
+   — the handed-forward height is now the rounded+clamped one, i.e. exactly what `__commitExtent` committed
+   (strictly MORE faithful Path-B than the old unclamped hand-forward).
+*Gate:* gauntlet + torture (arrange + measure). Expect byte-identical (fact 5's masking argument); ANY diff means
+the divergence was LIVE somewhere — stop and report, do not recapture.
+*Narrowing:* if sub-item 3's width note surprises, convert sites 2 and 4 only and leave 3 — still one home for
+the height policy.
+
+### I6 — Truth-repair the 14 misleading `_applyBounds` TODOs — comment-only
+*Why:* fact 6 — a comment that actively instructs the regression the G4 gate exists to prevent; explicitly left
+flagged in the G4 landed record.
+*How:* in each of the 14 files, replace the exact pair
+```coffee
+    # TODO shouldn't be calling this _applyBounds from here,
+    # rather use super
+```
+with
+```coffee
+    # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
+    # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
+    # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
+```
+(match each file's indentation; the pair sits at various indents). Post-edit:
+`grep -rn "shouldn't be calling this _applyBounds" src` → zero hits. *Gate:* build.
+
+### I7 — Comment/doc truth repairs (stack measure header + assessment lint/scaffolding staleness) — doc-only
+*Why:* fact 7. *How:*
+(a) `SimpleVerticalStackPanelWdgt.coffee` :139–:141 — replace "WindowWdgt overrides this
+with a Stage-B stub (Stage D gives windows the real content+chrome measure). Proven byte-exact suite-wide: 3252
+measure-vs-committed-height differentials, 0 mismatches. No consumer yet." with "WindowWdgt overrides this with
+its real content+chrome measure (Stage D). Proven byte-exact suite-wide: 3252 measure-vs-committed-height
+differentials, 0 mismatches. CONSUMED by WindowWdgt.preferredExtentForWidth (a window recursing into its stack
+content) and by any enclosing stack/scroll measuring a nested stack."
+(b) `docs/layout-system-architecture-assessment.md` — update the five "[A]–[M]"/"[A]–[N]" rule-range mentions to
+"[A]–[Q]" and, at the §6.3 list, append one line: "**[O]** a `*Coalesced` call only from an allowlisted stream
+handler; **[P]** `_settleLayoutsAfterOrJoinEnclosingPass` callable only from `_<name>Connector` entrypoints;
+**[Q]** a `_<name>Connector` textually callable only from an allowlisted mid-cascade self-render
+(`recalculateOutput`)." Fix the §2.5 table cell and §5 map line still describing the `getRecursive*Dim` dim-cache
+scaffolding ("cache writes live, cache reads commented out") — the scaffolding was deleted (Tier A) and the three
+walkers collapsed onto `_getRecursiveStackDim` (F7). *Gate:* build.
+
+### I8 — Collapse the alignment cores (`VerticalStackLayoutSpec`) — small
+*Why:* fact 8. *How:* replace the three `_setAlignmentTo*NoSettle` cores with one
+```coffee
+  _setAlignmentNoSettle: (newAlignment) ->
+    if @alignment isnt newAlignment
+      @alignment = newAlignment
+      @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
+```
+and point the three public wrappers at it (`setAlignmentToLeft: -> @element._settleLayoutsAfter =>
+@_setAlignmentNoSettle "left"` etc. — wrappers KEEP their names, they are menu-addressed by name; keep their
+`# thin-wrap-exempt: …` markers). *Gate:* build + suite (menu pixels unchanged).
+
+### I9 — Dedup `addOrRemoveAdders`' confessed duplicate loop — small
+*Why:* fact 9. *How (in `Widget.coffee`, inside the homepage-excluded band):* extract the shared scan into a
+direction-parameterized private helper (e.g. `_insertAddersSuchThat (scanVerbName, insertVerbName) ->` looping the
+existing predicate with `m[scanVerbName](…)` and `leftToDo[insertVerbName] new LayoutElementAdderOrDropletWdgt, …`),
+called twice: `("lastSiblingBeforeMeSuchThat", "addAsSiblingBeforeMe")` then
+`("firstSiblingAfterMeSuchThat", "addAsSiblingAfterMe")`. Keep the two-call structure and the trailing-adder
+comment (now one line). ~20 lines saved; the helper must stay INSIDE the excluded band. *Gate:* build + suite.
+
+### I10 — Collapse the horizontal 3-case distribution onto one loop — medium (`_reLayout` body → torture)
+*Why:* fact 10. *How (in `Widget.coffee` :4099–:4182, inside the homepage-excluded band):* keep the 3-case
+`if/else if/else` ONLY for computing a per-child width FUNCTION (a closure `childWidthFor = (C) -> …` per case,
+with the case's preamble math hoisted as today: `reductionFraction`; `fraction`; `maxMargin`/`totDesWidth`/
+`extraSpace`/`fillByDesiredFraction`), then run ONE shared loop:
+```coffee
+      childLeft = newBoundsForThisLayout.left()
+      for C in @children
+        if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
+        childBounds = new Rectangle \
+          childLeft,
+          newBoundsForThisLayout.top(),
+          childLeft + childWidthFor(C),
+          newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
+        childLeft += childBounds.width()
+        C._reLayout childBounds
+```
+keeping the case-3 overflow `console.error` (move it into the shared loop guarded on `fillByDesiredFraction?`
+or keep the whole check — judgment call, note what you did), and in the impossible `maxMargin < 0` error arm ALSO
+set `fillByDesiredFraction = 0` after the `console.error` (today it stays `undefined` → NaN childBounds; the
+error remains loud). Arithmetic must be REPRODUCED EXACTLY per case — this is a skeleton dedup, not a formula
+change. ~95 → ~55 lines. *Gate:* gauntlet + torture (`_reLayout` body). Revert as a whole item if red.
+
+### I11 — Finish `setBounds` into the one-shot frame-setter lattice (owner-directed 2026-07-03) — small
+*Why:* fact 12 + the owner's ask ("a one-shot method to position AND set an extent — what would other UI systems
+consider user-friendly?"). The field's consensus is ONE frame setter taking origin+size (Cocoa/AppKit
+`setFrame(NSRect)`, Qt `setGeometry(x,y,w,h)`, Win32 `MoveWindow`, Morphic — our lineage — `setBounds(rect)`).
+Fizzygum already has it: `setBounds` is public and one-flush. What's missing is friendliness (the origin+size
+call shape people actually think in — fact 11's menu code has `pos` and `extent` as separate Points at every
+site) and the lattice (a `_setBoundsNoSettle` core internal callers may ride — the layering rules bar them from
+the public tier). RECOMMENDATION: do NOT add a second public name; extend `setBounds` with a Point-pair overload
+(the codebase's established overload-by-arg style, cf. `setColor(aColorOrAWidgetGivingAColor, …)`) and extract
+the canonical core. One name, zero new inspector members, one flush.
+*How (in `src/basic-widgets/Widget.coffee`):* replace the current inline-thunk `setBounds` (quote it per fact 12
+before editing) with:
+```coffee
+  # The ONE-SHOT frame setter: position AND extent in a single public mutation (ONE flush --
+  # prefer this over a setExtent-then-moveTo pair, which flushes twice). Two call shapes:
+  #   setBounds aRectangle            -- the Morphic/Cocoa-setFrame form
+  #   setBounds aPosition, anExtent   -- origin + size as Points (the friendly form)
+  setBounds: (aRectangleOrPosition, extent = nil) ->
+    @_settleLayoutsAfter => @_setBoundsNoSettle aRectangleOrPosition, extent
+
+  # Non-settling bounds core (the setMaxDim/_setMaxDimNoSettle pattern): record @desiredExtent /
+  # @desiredPosition + invalidate, no flush -- rides an OUTER settle. Was setBounds' inline thunk.
+  _setBoundsNoSettle: (aRectangleOrPosition, extent = nil) ->
+    aRectangle = if extent? then aRectangleOrPosition.extent extent else aRectangleOrPosition
+    if not @isFreeFloating()
+      return
+    else
+      aRectangle = aRectangle.round()
+
+      newExtent = new Point aRectangle.width(), aRectangle.height()
+      unless @extent().equals newExtent
+        @desiredExtent = newExtent
+        @_invalidateLayout()
+
+      newPos = aRectangle.origin.copy()
+      unless @position().equals newPos
+        @desiredPosition = newPos
+        @_invalidateLayout()
+```
+(The body below the `aRectangle =` line is the OLD thunk byte-identical — including the no-≥0-clamp semantics;
+fact 12's clamp asymmetry is an observation for the report, not a change.) This promotes X7's "setBounds lacks a
+core" bullet under its stated new-evidence condition; the thin-wraps pairing picks the pair up. The core is
+dead-until-used by internals — `liveSettleTwin` retains it off the live public `setBounds` (this direction of the
+symmetry rule needs no allowlist entry).
+*Gate:* build + suite.
+
+### I12 — Userland uses PUBLIC API only: convert `MenusHelper`'s 33 private calls + new lint rule [R] — medium
+*Why:* fact 11 + the owner's direction: menu code "should represent standard user use and so should use public
+APIs only". Depends on **I3** (public `moveWithin`) and **I11** (the Point-pair `setBounds`).
+*How, sub-item a (the conversion sweep, `src/basic-widgets/menu-system/MenusHelper.coffee`):* per fact 11's
+census, mechanical per-site mapping — adjacent `X._applyMoveTo p` + `X._applyExtent e` (either order) →
+`X.setBounds p, e`; a LONE `X._applyMoveTo p` → `X.moveTo p`; a LONE `X._applyExtent e` → `X.setExtent e`;
+`X._moveWithin world` → `X.moveWithin world`. Semantics notes for the report: every receiver is a fresh ORPHAN
+(fact 11) so each public call is a cheap orphan-subtree flush; `moveTo`/`setExtent` round and `moveTo` clamps
+≥0 where `_apply*` did not — every site passes integer constants or integer hand positions, and the wm sites'
+possibly-negative hand-relative position is clamped to the world origin by the FOLLOWING `moveWithin world`
+either way, so final geometry is byte-identical. Menu-created windows are heavily screenshot-covered — a wrong
+conversion fails deterministically at dpr1.
+*How, sub-item b (rule [R], `buildSystem/check-layering.js`; land AFTER sub-item a):* new rule
+**[R] USERLAND-PUBLIC-API** — in `USERLAND_FILES = ["src/basic-widgets/menu-system/MenusHelper.coffee"]`, a
+dotted call of an underscore method on a NON-`@` receiver (`<receiver>._<name>(…)`, receiver ≠ `@`/`this`) is a
+violation unless the line carries `# private-use-sanctioned: <reason>` (the owner's "unless the menu is doing
+something really strange" escape hatch, in the house marker style). Prove it PASSES post-sweep and BITES (plant
+one `_applyMoveTo` back, expect fail, revert). Scope deliberately v1-narrow: `src/apps/**` stays OUT — fact 11's
+apps census is dominated by constructor-core plumbing that `check-constructors-build.js` MANDATES to use cores;
+a phase-2 extension (flag only calls made from non-underscore methods, using the scanner's enclosing-method
+context) is the banked follow-up if the owner wants apps covered.
+*Gate:* build (incl. [R] pass+bite) + gauntlet (menu-window screenshots).
+
+### §7.3 — Verification & sequencing
+- Per item: pre-flight greps → exact edits → `./fg build`. Suites at tier end.
+- **Recommended order:** I1 → I2 → I6 → I7 → I3 → I11 → I12 → I8 → I9 → I4 → I5 → I10 (rising risk; comments/docs
+  banked early; the I3→I11→I12 lattice trilogy adjacent and in dependency order — I12 needs I3's `moveWithin` and
+  I11's Point-pair `setBounds`, and its rule [R] lands only after its own sweep; the three torture items last,
+  each independently revertible).
+- **Tier-end gates:** `./fg gauntlet`; **plus the four-config danger torture iff I4/I5/I10 ran** (§0.5 gate 2).
+  I3 adds methods only (no deletion) → no inspector recapture expected. A comments/docs-only session (I6+I7)
+  needs one `./fg suite`.
 
 ## §0 — Why this now, and what it is NOT
 
@@ -1082,6 +1509,60 @@ Tiers A/B/C at `0b96d0ef`, Tier D + its evidence bank at `56f25c09`, Tier E in c
   (RECALC_NONCONVERGENCE absent, 0 fails). **NB** a separate `fix(meta)` commit (`cbb90457`) hardened the
   `Class`/`Mixin` `super` rewriter the same session (a bare `super` + trailing comment dropped its forwarded
   arguments) — unrelated to Tier F; it fixed the "thin vertical slice" defect in the Stretchable* apps.
+- **Tier I (I1–I12) ✅ (2026-07-03, this session — pending owner review/commit). TIER I COMPLETE.** The third wart
+  hunt (§7), landed in the §7.3 order I1→I2→I6→I7→I3→I11→I12→I8→I9→I4→I5→I10. **I1** — `VerticalStackLayoutSpec`
+  constructor `(@elasticity = 1)` default (a no-arg `new` wrote `undefined` over the prototype 1 → NaN child widths;
+  byte-identical today, both live constructions pass a value). **I2** — `ToolPanelWdgt._reLayout
+  (newBoundsForThisLayout)` param restored + a `widthINeedToFitContentIn = @width()` parentless default (two
+  landmines: silently-dropped explicit bounds; an orphan wrap-test-always-false one-endless-row). **I6** —
+  truth-repaired the 14 apply-bounds-first TODOs that INSTRUCTED the one-cadence-lag regression G4 fixed
+  (comment-only). **I7** — the stack `preferredExtentForWidth` header (Stage-D is CONSUMED, not "no consumer yet") +
+  `layout-system-architecture-assessment.md` lint range `[A]–[M]`/`[A]–[N]` → `[A]–[Q]` (5 mentions + §6.3 gains the
+  `[O]`/`[P]`/`[Q]` caller-gate descriptions) + the `getRecursive*Dim` scaffolding truth (deleted Tier A; walkers on
+  `_getRecursiveStackDim` since F7) (doc-only). **I3** (owner-directed RE-SCOPE — NOT the original deletion) —
+  `moveWithin` became the canonical public/core lattice: new pure `_clampedPositionWithin` (the ONE clamp home),
+  deferred core `_moveWithinNoSettle` (cores-call-cores via `_moveToNoSettle` — drops the old body's
+  public-calls-public `@moveTo`), thin wrap `moveWithin`, and `_moveWithin`'s four-`_applyMoveBy` tail collapsed onto
+  the helper. `keepAllSubwidgetsWithin` kept as-is (the FALLBACK — its freefloating-guard delta is test-uncovered +
+  on the World menu, wants built-world hand-verification), but **I12's sweep gave `moveWithin` seven real callers**,
+  so it went LIVE and its dead-method allowlist entry was DELETED — the symmetry rule now carries the pair with ZERO
+  behaviour risk (the Path-A clean end-state reached WITHOUT the risky consumer conversion). **I11** (owner-directed)
+  — `setBounds` grew a Point-pair overload (`setBounds pos, ext` via `Point.extent`) over an extracted
+  `_setBoundsNoSettle` core: the one-shot frame-setter lattice (the `setFrame`/`setGeometry` field consensus), one
+  flush. **I12** (owner-directed) — `MenusHelper`, the standard-user-use exemplar, had all 33 private
+  `_applyMoveTo`/`_applyExtent`/`_moveWithin` calls converted to the PUBLIC API (adjacent pos+ext pairs → one-flush
+  `setBounds pos, ext`; lone → `moveTo`/`setExtent`; `_moveWithin` → `moveWithin`) + NEW lint rule
+  **[R] USERLAND-PUBLIC-API** (`check-layering.js`: a `<receiver>._<name>` call on a non-`@`/`this` receiver in
+  `USERLAND_FILES = [MenusHelper]` is a violation unless the line carries `# private-use-sanctioned:`; proven to PASS
+  post-sweep and BITE a re-planted `_applyExtent`; summary now `[A]–[R]`). **I8** — the `VerticalStackLayoutSpec`
+  triplicated alignment cores → one `_setAlignmentNoSettle(newAlignment)` (the 3 menu-addressed wrappers keep their
+  names + thin-wrap-exempt markers). **I9** — `addOrRemoveAdders`' two confessed-duplicate `while`-loops → one
+  direction-parameterized `_insertAddersSuchThat(scanVerb, insertVerb)` called twice (kept inside the
+  homepage-excluded band). **I4** — the WRITE-ONLY `TreeNode.firstParentClippingAtBounds` cache finished: the hit
+  branch now RETURNs `@cachedFirstParentClippingAtBounds` (mirroring `root()`) instead of falling through to re-walk
+  the ancestor chain every paint frame; the always-`@` vestigial `widgetToStartFrom` param dropped to `@`-reads (the
+  SLOW twin keeps its); the `#console.log "cache hit root"` residue deleted. **I5** — the stack's per-child measured
+  extent, previously written 3× with a diverging clamp/round treatment, now lives in ONE `_childMeasuredExtentInStack`
+  (measure → round → min-clamp EXACTLY as `__commitExtent` commits), consumed by `preferredExtentForWidth` /
+  `subWidgetsMergedPreferredBounds` / `_positionAndResizeChildren` (the redundant post-hoc `minE` clamp in the
+  merged-bounds walker dropped — the helper owns it; the else-arm dims are already ≥ min). **I10** — the horizontal
+  3-case distribution's three copies of the placement loop → three per-case `childWidthFor(C)` closures + ONE shared
+  loop; the impossible `maxMargin < 0` arm now sets `fillByDesiredFraction = 0` (was `undefined` → NaN childBounds);
+  the case-3 overflow guard kept UNGUARDED in the shared loop (cases 1/2 telescope to EXACTLY the available width, so
+  only case 3 can trip it — behaviour-equivalent). Gates: build 0 violations (incl. `[R]` pass+bite, `thin-wraps`,
+  `check-dead-methods`, `check-relayout-bounds-first`); gauntlet dpr1/dpr2/webkit **166/166** failed:0 + apps +
+  tiernaming + settle; four-config danger torture (dpr2-s8 / dpr2-fast-s8 / dpr1-s8 / dpr2-s4 — RECALC_NONCONVERGENCE
+  absent, 0 fails). **ONE benign inspector member-list recapture** (`macroDuplicatedInspectorDrivesCopiedTargetOnly`
+  — the four NEW `Widget` methods `_clampedPositionWithin` / `_moveWithinNoSettle` / `_setBoundsNoSettle` /
+  `_insertAddersSuchThat` shift its alphabetical member list by rows; the F7-established Widget-method-addition canary
+  → tests recapture, 16 files, image_1 unchanged). **Observations flagged NOT fixed** (scope discipline): (a)
+  `setBounds`/`_setBoundsNoSettle` do NOT clamp position ≥0 while `_moveToNoSettle` does (`Math.max …, 0`) — a
+  public-API asymmetry (fact 12); (b) assessment §4.2 (~:880) still reads "every rule `[A]`–`[N]`" — a mechanism
+  description outside I7's enumerated inventory set; (c) `MenusHelper`'s two PRE-EXISTING already-public
+  attached-panel sites (`createSimpleVerticalStackScrollPanelWdgt` / `createSimpleDocumentScrollPanelWdgt`) still use
+  `moveTo`+`setExtent` (two flushes) where the I12 sweep uses one-flush `setBounds` — a cosmetic inconsistency out of
+  the 33-census; (d) fact 11's "fresh orphan" is inaccurate for the adjacent-pair sites (svspw/svsspw/SfA/SfB/newWdgt
+  are `world.add`'d FIRST = attached, but still freefloating so the conversion holds byte-identical).
 
 ---
 
@@ -1203,3 +1684,33 @@ unbuilt. Re-measure only if a future layout makes the second visit's guards miss
 - **`CaretWdgt`/`ScrollPanelWdgt.scrollCaretIntoView` double `_positionAndResizeChildren`** — the caret follow's
   pre/post re-fit pair; determinism-exempt family (residuals-audit fam 1), measured-cheap (X6's data), and the
   caret arc just closed at single-pass. Leave.
+
+### X9 — Third-hunt (2026-07-03, `b05f8d1e`) reviewed-and-NOT-selected ledger
+- **`_settleLayoutsAfter` / `_settleLayoutsAfterOrJoinEnclosingPass` shared tail** (~7 lines: the
+  `world._inLayoutMutation = true; try core; recalculateLayouts; finally` window) — factoring a `__runSettleWindow`
+  helper would give lint rule **[B]** ("only `doOneCycle`/`_settleLayoutsAfter` may call `recalculateLayouts`") a
+  third caller to allowlist plus a caller-guard so the exclusion isn't a hole — the X5 lesson verbatim; and the two
+  lanes' DIVERGENT heads (throw vs join) ARE the semantics a reader needs side-by-side. Leave.
+- **`setText` vs `_setTextConnector` shared 4-line token-guard + `stringFieldWidget` decode** — consciously shaped
+  by the H review (H2 blessed the guard idiom; the connector's near-identity to the public setter is the [P]-lane
+  DESIGN, documented in both headers). An extraction would hide the lane boundary for ~4 lines. Leave.
+- **`WindowWdgt._positionAndResizeChildren`'s remaining inline titlebar sums** (:674 content-top
+  `(closeIconSize + @padding + @padding) + @padding`, :685 titlebarBackground `closeIconSize + 2 * @padding`) —
+  F5 deliberately scoped the button/label/titlebar PLACEMENT math out of the chrome mirror (only the
+  measure↔arrange chrome calc must agree; these are arrange-local). Converting them to `_titlebarHeight()` is
+  cosmetic; fold in opportunistically only if that band is reopened for a real change.
+- **`SimpleVerticalStackPanelWdgt._reactToChildRemoved` / `_reactToChildDropped` identical 2-line bodies** — the
+  [J]/[L] callback NAMES are the content (two distinct dispatch points); a shared private helper saves 2 lines and
+  costs a name. Leave.
+- **`ScrollPanelWdgt._reLayoutScrollbars` hBar/vBar axis mirror** (~30 lines each) — same determinism-sensitive
+  scroll-chrome family as X8's `scrollX`/`scrollY` bullet (the thumb hover-state / cadence-collapse case law lives
+  on these exact widgets); same promotion condition: fold only when that code is opened for a real behaviour fix.
+- **`Widget.setColor` / `setBackgroundColor` near-duplication** — not layout (X4's general-OO bucket).
+- **`ClippingAtRectangularBoundsMixin._applyMoveBy` lacks `_applyMoveByBase`'s zero-delta guard / return-bool** —
+  every caller pre-guards via the `_applyMoveTo` twins' `if !delta.isZero()`; adding the guard is dead code today.
+  Leave.
+- **`ScrollPanelWdgt._applyExtent`'s `@contents._applyExtent aPoint` (contents frame := viewport extent) + its
+  `isTextLineWrapping and !(@contents instanceof …)` fork** — long-standing shape flagged by its own TODO; any
+  change is behaviour-change territory entangled with the scroll-topology ε set (X7/X8). Leave.
+- **`Widget.sourceChanged`'s `@_reLayoutSelf?()` existence-check** (base `_reLayoutSelf` always exists) — trivial.
+  Leave.

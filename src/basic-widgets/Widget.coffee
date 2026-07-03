@@ -836,22 +836,31 @@ class Widget extends TreeNode
     finally
       world._inLayoutMutation = false
 
-  setBounds: (aRectangle) ->
-    @_settleLayoutsAfter =>
-      if not @isFreeFloating()
-        return
-      else
-        aRectangle = aRectangle.round()
+  # The ONE-SHOT frame setter: position AND extent in a single public mutation (ONE flush --
+  # prefer this over a setExtent-then-moveTo pair, which flushes twice). Two call shapes:
+  #   setBounds aRectangle            -- the Morphic/Cocoa-setFrame form
+  #   setBounds aPosition, anExtent   -- origin + size as Points (the friendly form)
+  setBounds: (aRectangleOrPosition, extent = nil) ->
+    @_settleLayoutsAfter => @_setBoundsNoSettle aRectangleOrPosition, extent
 
-        newExtent = new Point aRectangle.width(), aRectangle.height()
-        unless @extent().equals newExtent
-          @desiredExtent = newExtent
-          @_invalidateLayout()
+  # Non-settling bounds core (the setMaxDim/_setMaxDimNoSettle pattern): record @desiredExtent /
+  # @desiredPosition + invalidate, no flush -- rides an OUTER settle. Was setBounds' inline thunk.
+  _setBoundsNoSettle: (aRectangleOrPosition, extent = nil) ->
+    aRectangle = if extent? then aRectangleOrPosition.extent extent else aRectangleOrPosition
+    if not @isFreeFloating()
+      return
+    else
+      aRectangle = aRectangle.round()
 
-        newPos = aRectangle.origin.copy()
-        unless @position().equals newPos
-          @desiredPosition = newPos
-          @_invalidateLayout()
+      newExtent = new Point aRectangle.width(), aRectangle.height()
+      unless @extent().equals newExtent
+        @desiredExtent = newExtent
+        @_invalidateLayout()
+
+      newPos = aRectangle.origin.copy()
+      unless @position().equals newPos
+        @desiredPosition = newPos
+        @_invalidateLayout()
 
   # Silently commit my bounds (origin + extent): translate my origin, then commit my extent via the __commitExtent
   # leaf -- NO repaint, NO self-relayout. Used for construction-time sizing and by the top-down arrange (a container
@@ -1412,60 +1421,42 @@ class Widget extends TreeNode
     # into the current size and position
     @_applyBounds newBoundsForThisLayout
 
-    # adjust the top side and the left side last, so that
-    # the control buttons in the window bars are still
-    # visible/reachable
-    # Note that we have to update newBoundsForThisLayout as
-    # we update the widget position!
-
-    rightOff = newBoundsForThisLayout.right() - aWdgt.right()
-    if rightOff > 0
-      @_applyMoveBy new Point -rightOff, 0
-      newBoundsForThisLayout = @bounds
-
-    leftOff = newBoundsForThisLayout.left() - aWdgt.left()
-    if leftOff < 0
-      @_applyMoveBy new Point -leftOff, 0
-      newBoundsForThisLayout = @bounds
-
-    bottomOff = newBoundsForThisLayout.bottom() - aWdgt.bottom()
-    if bottomOff > 0
-      @_applyMoveBy new Point 0, -bottomOff
-      newBoundsForThisLayout = @bounds
-    
-    topOff = newBoundsForThisLayout.top() - aWdgt.top()
-    if topOff < 0
-      @_applyMoveBy new Point 0, -topOff
-      newBoundsForThisLayout = @bounds
-
+    # Clamp me inside aWdgt via the ONE clamp home, then bake the move (immediate twin).
+    # Net translation is identical to the old per-axis _applyMoveBy quartet (per-axis,
+    # right/bottom first + left/top last-wins); one _applyMoveTo replaces four incremental
+    # bakes -- intermediate broken-rects differ, but repaint is idempotent over the settled world.
+    @_applyMoveTo @_clampedPositionWithin aWdgt, @position(), @extent()
     return
 
-  # Deferred twin of _moveWithin: make sure I end up completely within
-  # aWdgt's bounds, but DON'T bake the move now -- compute the clamped position
-  # and DEFER it via moveTo, so it settles in the recalculateLayouts ->
-  # _reLayout phase (before paint), together with any other pending change.
-  # Pending-aware like _moveWithin (it clamps the not-yet-applied
-  # @desired* geometry when present); but, being deferred, it leaves
-  # @desiredExtent for the cycle to apply rather than baking it now.
-  moveWithin: (aWdgt) ->
-    # use the desired (not-yet-applied) geometry if present, else the applied one
-    ext = if @desiredExtent?   then @desiredExtent   else @extent()
-    pos = if @desiredPosition? then @desiredPosition else @position()
-
+  # ONE home for the keep-me-inside-aWdgt position clamp (consumed by the immediate
+  # _moveWithin bake AND the deferred _moveWithinNoSettle core): clamp right/bottom FIRST,
+  # left/top LAST (last-wins), so a too-big widget pins its top-left and window-bar
+  # controls stay reachable. Pure -- no reads of @, no mutation.
+  _clampedPositionWithin: (aWdgt, pos, ext) ->
     newX = pos.x
     newY = pos.y
-
-    # adjust the right and bottom first, the left and top LAST, so the control
-    # buttons in window bars stay visible/reachable (mirrors _moveWithin)
     rightOff = (newX + ext.x) - aWdgt.right()
     if rightOff > 0 then newX = newX - rightOff
     if newX < aWdgt.left() then newX = aWdgt.left()
-
     bottomOff = (newY + ext.y) - aWdgt.bottom()
     if bottomOff > 0 then newY = newY - bottomOff
     if newY < aWdgt.top() then newY = aWdgt.top()
+    new Point newX, newY
 
-    @moveTo new Point newX, newY
+  # Deferred core of the public moveWithin (the _moveToNoSettle lattice pattern): clamp me
+  # inside aWdgt using the not-yet-applied @desired* geometry when present, then DEFER the move
+  # via the move CORE (cores call cores -- NOT the public moveTo, which would be the rule-[C]
+  # public-calls-public shape), so it settles in the recalculateLayouts -> _reLayout phase
+  # together with any other pending change.
+  _moveWithinNoSettle: (aWdgt) ->
+    ext = if @desiredExtent?   then @desiredExtent   else @extent()
+    pos = if @desiredPosition? then @desiredPosition else @position()
+    @_moveToNoSettle @_clampedPositionWithin aWdgt, pos, ext
+
+  # Canonical thin wrap: the PUBLIC deferred "keep me inside aWdgt" -- one settle over the
+  # _moveWithinNoSettle core. (_moveWithin is the IMMEDIATE sibling for bake-now callers.)
+  moveWithin: (aWdgt) ->
+    @_settleLayoutsAfter => @_moveWithinNoSettle aWdgt
 
   # more complex Widgets, e.g. layouts, might
   # do a more complex calculation to get the
@@ -4096,6 +4087,9 @@ class Widget extends TreeNode
       
       # we are forced to be in a space smaller
       # than the minimum needed. We obey.
+      # Each of the three width regimes below differs ONLY in the per-child WIDTH it hands out, so each
+      # sets a childWidthFor(C) closure (case preamble math hoisted as before); the ONE shared placement
+      # loop underneath walks the stack children and lays each out. (Was three copies of that same loop.)
       if min.width() >= newBoundsForThisLayout.width()
         # Give all children under minimum
         # this is unfortunate but
@@ -4108,16 +4102,7 @@ class Widget extends TreeNode
         # then reductionFraction = 1/5 , i.e. all the minimums
         # will be further reduced to fit
         reductionFraction = newBoundsForThisLayout.width() / min.width()
-        childLeft = newBoundsForThisLayout.left()
-        for C in @children
-          if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
-          childBounds = new Rectangle \
-            childLeft,
-            newBoundsForThisLayout.top(),
-            childLeft + C.getMinDim().width() * reductionFraction,
-            newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
-          childLeft += childBounds.width()
-          C._reLayout childBounds
+        childWidthFor = (C) -> C.getMinDim().width() * reductionFraction
 
       # the min is within the bounds but the desired is just
       # equal or larger than the bounds.
@@ -4131,18 +4116,10 @@ class Widget extends TreeNode
           fraction = (newBoundsForThisLayout.width() - min.width()) / desiredMargin
         else
           fraction = 0
-        childLeft = newBoundsForThisLayout.left()
-        for C in @children
-          if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
+        childWidthFor = (C) ->
           minWidth = C.getMinDim().width()
           desWidth = C.getDesiredDim().width()
-          childBounds = new Rectangle \
-            childLeft,
-            newBoundsForThisLayout.top(),
-            childLeft + minWidth + (desWidth - minWidth) * fraction,
-            newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
-          childLeft += childBounds.width()
-          C._reLayout childBounds
+          minWidth + (desWidth - minWidth) * fraction
 
       # min and desired are strictly less than the bounds
       # i.e. we have more space than needed or desired
@@ -4161,25 +4138,33 @@ class Widget extends TreeNode
           fillByDesiredFraction = 1
         else
           console.error "this shouldn't happen, maxMargin negative: " + maxMargin + " max.width(): " + max.width() + " desired.width(): " + desired.width()
+          fillByDesiredFraction = 0
 
-        childLeft = newBoundsForThisLayout.left()
-        for C in @children
-          if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
+        childWidthFor = (C) ->
           maxWidth = C.getMaxDim().width()
           desWidth = C.getDesiredDim().width()
           if (maxWidth - desWidth) > 0
             xtra = extraSpace * ((maxWidth - desWidth)/maxMargin)
           else
             xtra = 0
-          childBounds = new Rectangle \
-            childLeft,
-            newBoundsForThisLayout.top(),
-            childLeft + desWidth + xtra + fillByDesiredFraction * (newBoundsForThisLayout.width()-desired.width()) * (desWidth / totDesWidth),
-            newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
-          childLeft += childBounds.width()
-          if childLeft > newBoundsForThisLayout.right() + 5
-            console.error "horizontal stack distribution overflowed its allocated width by " + (childLeft - newBoundsForThisLayout.right())
-          C._reLayout childBounds
+          desWidth + xtra + fillByDesiredFraction * (newBoundsForThisLayout.width()-desired.width()) * (desWidth / totDesWidth)
+
+      # ONE shared placement loop for all three cases (each set childWidthFor above). The overflow guard
+      # runs for every case but only case 3's max-based fill can trip it: cases 1 and 2 distribute to EXACTLY
+      # newBoundsForThisLayout.width() (their per-child widths telescope to the available width), so childLeft
+      # lands on right() and never exceeds it.
+      childLeft = newBoundsForThisLayout.left()
+      for C in @children
+        if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
+        childBounds = new Rectangle \
+          childLeft,
+          newBoundsForThisLayout.top(),
+          childLeft + childWidthFor(C),
+          newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
+        childLeft += childBounds.width()
+        if childLeft > newBoundsForThisLayout.right() + 5
+          console.error "horizontal stack distribution overflowed its allocated width by " + (childLeft - newBoundsForThisLayout.right())
+        C._reLayout childBounds
     # this part is excluded from the fizzygum homepage build <<«
 
     @markLayoutAsFixed()
@@ -4222,13 +4207,21 @@ class Widget extends TreeNode
         nil,
         LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
+    @_insertAddersSuchThat "lastSiblingBeforeMeSuchThat", "addAsSiblingBeforeMe"
+    # the second call scans the OTHER direction -- only needed to add the LAST adder/droplet.
+    @_insertAddersSuchThat "firstSiblingAfterMeSuchThat", "addAsSiblingAfterMe"
+
+  # ONE direction-parameterized scan for addOrRemoveAdders' two passes (was two ~20-line while-loops
+  # identical bar the scan/insert verbs): repeatedly find the first stack child still needing an adder on
+  # the given side (skipping adders/droplets themselves) and insert one there, until none remain.
+  _insertAddersSuchThat: (scanVerbName, insertVerbName) ->
     while true
       leftToDo = @firstChildSuchThat (m) ->
           if m.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
             return false
           if m.isLayoutAdderOrDroplet?()
             return false
-          kkk = m.lastSiblingBeforeMeSuchThat(
+          kkk = m[scanVerbName](
               (mm) ->
                 mm.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
             )
@@ -4239,32 +4232,7 @@ class Widget extends TreeNode
           return true
       if !leftToDo?
         break
-      leftToDo.addAsSiblingBeforeMe \
-            new LayoutElementAdderOrDropletWdgt,
-            nil,
-            LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-
-    # this code is duplicate of the one above and is only needed for
-    # adding the last adder/droplet.
-
-    while true
-      leftToDo = @firstChildSuchThat (m) ->
-          if m.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-            return false
-          if m.isLayoutAdderOrDroplet?()
-            return false
-          kkk = m.firstSiblingAfterMeSuchThat(
-              (mm) ->
-                mm.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-            )
-          if !kkk?
-            return true
-          if kkk.isLayoutAdderOrDroplet?()
-            return false
-          return true
-      if !leftToDo?
-        break
-      leftToDo.addAsSiblingAfterMe \
+      leftToDo[insertVerbName] \
             new LayoutElementAdderOrDropletWdgt,
             nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED

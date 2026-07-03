@@ -325,6 +325,23 @@ const JOIN_CALL = /[@.]\s*_settleLayoutsAfterOrJoinEnclosingPass\b/;
 const CONNECTOR_CALL = /[@.]\s*(_\w+Connector)\b/;
 const CONNECTOR_CALLER_ALLOWLIST = new Set(['recalculateOutput']);
 
+// [R] USERLAND-PUBLIC-API (Tier I, 2026-07-03, docs/layout-optimizations-and-oo-cleanup-plan.md §7 I12). MenusHelper
+// is the STANDARD-USER-USE exemplar: it builds the windows/panels a user creates from the menus, so -- per the owner's
+// 2026-07-03 direction -- it must reach OTHER widgets through their PUBLIC API only, never their private _-underscore
+// internals. A menu placing+sizing a fresh window uses setBounds / moveTo / setExtent / moveWithin (the self-settling
+// public tier), NOT _applyMoveTo / _applyExtent / _moveWithin (the immediate cores the layering rules reserve for
+// low-level / in-pass code). Violation shape: a dotted call of an underscore method on a bare-identifier receiver
+// (someWidget._foo). A @-self call is written @_foo (no identifier+dot), and this._foo is a self-call too -- BOTH are
+// fine (a helper touching its OWN internals is not reaching into another object), so neither is flagged. Escape hatch
+// (the owner's "unless the menu is doing something really strange"): mark the LINE  # private-use-sanctioned: <why>.
+// SCOPE (v1, deliberately narrow): MenusHelper only -- src/apps/** is a DIFFERENT population (constructor-core plumbing
+// that check-constructors-build.js MANDATES to use _addNoSettle / _apply* cores, fact 11's apps census), so it stays
+// OUT; a phase-2 extension keyed on the ENCLOSING method's tier (flag only calls from non-underscore methods) is the
+// banked follow-up.
+const USERLAND_FILES = new Set(['src/basic-widgets/menu-system/MenusHelper.coffee']);
+const USERLAND_PRIVATE_CALL = /([A-Za-z_$][\w$]*)(\._[a-zA-Z]\w*)/;   // <bare-identifier receiver>._name (a @-self call is @_name -- no identifier+dot -- so it is NOT matched; this._name is caught then excluded by name)
+const PRIVATE_USE_MARKER = 'private-use-sanctioned';   // the [R] per-LINE conscious sign-off (owner's escape hatch)
+
 // Strip string literals and trailing `#` comments from one line, carrying multi-line
 // string state across lines. Returns { code, state }.
 function stripLine(line, state) {
@@ -558,6 +575,14 @@ function checkFile(file, violations, wrapperCall, warnings) {
     if (connectorCall && !CONNECTOR_CALLER_ALLOWLIST.has(method)) {
       violations.push(`[Q] ${method}() calls ${connectorCall[1]}() outside the connector-caller allowlist — a _<name>Connector entrypoint JOINS an already-open layout pass instead of throwing the flow-violation guard (the reactive-connection settle lane, rule [P]); a hard-coded textual call to one smuggles a never-throwing setter past that guard. Only a sanctioned mid-cascade self-render (a patch node's recalculateOutput) may call one directly; the reactive dispatch resolves the connector name at runtime and needs no textual call. If this genuinely IS such a render, add its method name to CONNECTOR_CALLER_ALLOWLIST (connection-cascade-settle-fix-plan.md §7e)  — ${at}`);
     }
+    // [R] USERLAND-PUBLIC-API (see USERLAND_FILES / USERLAND_PRIVATE_CALL / PRIVATE_USE_MARKER above): in a
+    // standard-user-use file, reach OTHER widgets through their PUBLIC API, not their _-underscore internals.
+    if (USERLAND_FILES.has(rel) && !raw.includes(PRIVATE_USE_MARKER)) {
+      const upc = code.match(USERLAND_PRIVATE_CALL);
+      if (upc && upc[1] !== 'this') {
+        violations.push(`[R] userland ${method}() reaches into a private: ${upc[1]}${upc[2]}() — ${rel} is the standard-user-use exemplar (menu-built windows/panels) and must use the PUBLIC self-settling API (setBounds / moveTo / setExtent / setWidth / setHeight / moveWithin), not another widget's immediate _apply*/_move* cores (reserved for low-level / in-pass code). If the menu genuinely must reach a private, mark the line  # ${PRIVATE_USE_MARKER}: <why>  — ${at}`);
+      }
+    }
     if (recalc && !RECALC_WHITELIST.has(method)) {
       violations.push(`[B] recalculateLayouts() called from ${method}() (only doOneCycle / _settleLayoutsAfter may)  — ${at}`);
     }
@@ -680,7 +705,7 @@ function main() {
     console.error('Q: a _<name>Connector entrypoint (which joins an open layout pass instead of throwing — rule P) may be textually CALLED only from an allowlisted mid-cascade self-render — CONNECTOR_CALLER_ALLOWLIST; the reactive dispatch resolves it at runtime and needs no textual call (connection-cascade-settle-fix-plan.md §7e).');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N/O/P/Q; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N/O/P/Q/R; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
   process.exit(0);
 }
 

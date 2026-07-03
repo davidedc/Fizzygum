@@ -181,7 +181,6 @@ class TreeNode
   # TreeNode functions:
   root: ->
     if @rootCacheChecker == WorldWdgt.structureVersion
-      #console.log "cache hit root"
       result = @rootCache
     else
   
@@ -489,23 +488,24 @@ class TreeNode
     else
       return nil
 
-  firstParentClippingAtBounds: (widgetToStartFrom = @) ->
+  firstParentClippingAtBounds: ->
     if @checkFirstParentClippingAtBoundsCache == WorldWdgt.structureVersion
       if world.doubleCheckCachedMethodsResults
-        if @cachedFirstParentClippingAtBounds != @SLOWfirstParentClippingAtBounds widgetToStartFrom
+        if @cachedFirstParentClippingAtBounds != @SLOWfirstParentClippingAtBounds()
           debugger
           alert "firstParentClippingAtBounds is broken (cached)"
+      return @cachedFirstParentClippingAtBounds
 
-    if widgetToStartFrom.parent?
-      if widgetToStartFrom.parent.clipsAtRectangularBounds
-        result = widgetToStartFrom.parent
+    if @parent?
+      if @parent.clipsAtRectangularBounds
+        result = @parent
       else
-        result = widgetToStartFrom.parent.firstParentClippingAtBounds()
+        result = @parent.firstParentClippingAtBounds()
     else
       result =  nil
 
     if world.doubleCheckCachedMethodsResults
-      if result != @SLOWfirstParentClippingAtBounds widgetToStartFrom
+      if result != @SLOWfirstParentClippingAtBounds()
         debugger
         alert "firstParentClippingAtBounds is broken (uncached)"
 

@@ -65,8 +65,9 @@ class StretchablePanelWdgt extends PanelWdgt
       w.desiredExtent = nil
       w._reLayout()
 
-    # TODO shouldn't be calling this _applyBounds from here,
-    # rather use super
+    # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
+    # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
+    # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
     @_applyBounds newBoundsForThisLayout
 
 

@@ -14,7 +14,6 @@
 asArray                 # Point [x,y] / Rectangle [l,t,r,b] conversion API (the _xywh variant was deleted)
 divideBy                # Point arithmetic, parallel to the live multiplyBy
 rotateZ                 # Point3D, completes the rotateX / rotateY / rotateZ family
-moveWithin              # Widget public deferred-layout twin of the live _moveWithin
 getBody                 # Macro immutable value-class accessor
 getName                 # Macro immutable value-class accessor
 toggleShowBlanks        # StringWdgt menu-toggle action, same shape as toggleWeight / toggleItalic / ...

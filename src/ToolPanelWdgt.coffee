@@ -79,7 +79,7 @@ class ToolPanelWdgt extends PanelWdgt
 
       @_invalidateLayout()
 
-  _reLayout: ->
+  _reLayout: (newBoundsForThisLayout) ->
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
 
@@ -114,6 +114,7 @@ class ToolPanelWdgt extends PanelWdgt
     # BUT we want the toolpanel to never scroll horizontally
     # (only vertically), i.e. we want it to fit the contents
     # of the scroll panel parent
+    widthINeedToFitContentIn = @width()
     if @parent?
       if @parent instanceof ScrollPanelWdgt
         widthINeedToFitContentIn = @parent.width()

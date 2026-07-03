@@ -130,6 +130,21 @@ class SimpleVerticalStackPanelWdgt extends Widget
       # 'left' (or a transiently-missing spec)
       @left() + @padding
 
+  # The per-child MEASURED EXTENT at a recommended width, in ONE place for the three walkers
+  # (the pure measures preferredExtentForWidth / subWidgetsMergedPreferredBounds and the applying
+  # _positionAndResizeChildren): measure via the child's own preferredExtentForWidth (fallback: a
+  # width-invariant child keeps its current height), then ROUND + MIN-CLAMP exactly as __commitExtent
+  # will when the arrange applies it -- so what a measure REPORTS is byte-what the arrange COMMITS.
+  # (Before this helper the three sites disagreed: no-clamp-no-round / clamp-no-round /
+  # commit-clamped-but-hand-forward-unclamped -- masked only by every measure returning integers
+  # >= the (5,5) default minimumExtent.)
+  _childMeasuredExtentInStack: (widget, recommendedWidth) ->
+    measured = widget.preferredExtentForWidth?(recommendedWidth)
+    ext = if measured? then measured.round() else new Point recommendedWidth, widget.height()
+    minE = widget.getMinimumExtent?()
+    if minE? then ext = ext.max minE
+    ext
+
   # §4.1 pure measure (proper-layouts): the side-effect-free preferred extent of the stack at an
   # available width -- Σ over children of (padding + child preferred height), + a trailing padding,
   # mirroring _positionAndResizeChildren's arithmetic. Each child measures via its OWN
@@ -137,17 +152,17 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # whose height is width-independent) falls back to its current height. NO mutation, NO seam --
   # this is the composable container measure a parent (the scroll panel, Stage C) will consume
   # instead of the subWidgetsMergedFullBounds applied-bounds read-back. WindowWdgt overrides this
-  # with a Stage-B stub (Stage D gives windows the real content+chrome measure). Proven byte-exact
-  # suite-wide: 3252 measure-vs-committed-height differentials, 0 mismatches. No consumer yet.
+  # with its real content+chrome measure (Stage D). Proven byte-exact suite-wide: 3252
+  # measure-vs-committed-height differentials, 0 mismatches. CONSUMED by
+  # WindowWdgt.preferredExtentForWidth (a window recursing into its stack content) and by any
+  # enclosing stack/scroll measuring a nested stack.
   preferredExtentForWidth: (availW) ->
     availForContents = availW - 2 * @padding
     children = @childrenNotHandlesNorCarets()
     totalHeight = 0
     for widget in children
       if @constrainContentWidth
-        childWidth = @_childWidthInStack widget, availForContents
-        measured = widget.preferredExtentForWidth?(childWidth)
-        childHeight = measured?.y ? widget.height()
+        childHeight = (@_childMeasuredExtentInStack widget, @_childWidthInStack widget, availForContents).y
       else
         childHeight = widget.height()
       totalHeight += @padding + childHeight
@@ -176,18 +191,14 @@ class SimpleVerticalStackPanelWdgt extends Widget
     for widget, i in kids
       if @constrainContentWidth
         recW = @_childWidthInStack widget, avail
-        measured = widget.preferredExtentForWidth?(recW)
-        h = measured?.y ? widget.height()
-        w = recW
+        e = @_childMeasuredExtentInStack widget, recW
+        w = e.x
+        h = e.y
         left = @_childLeftInStack widget, recW
       else
         h = widget.height()
         w = widget.width()
         left = @left() + @padding
-      minE = widget.getMinimumExtent?()
-      if minE?
-        h = Math.max h, minE.y
-        w = Math.max w, minE.x
       top = @top() + (i + 1) * @padding + cumH
       r = new Rectangle left, top, left + w, top + h
       merged = if merged? then merged.merge r else r
@@ -246,7 +257,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
         if widget._reLayoutChildren?
           elementHeight = widget._setWidthSizeHeightAccordingly recommendedElementWidth
         else
-          measured = widget.preferredExtentForWidth recommendedElementWidth
+          measured = @_childMeasuredExtentInStack widget, recommendedElementWidth
           widget._applyExtentBase measured
           elementHeight = measured.y
 
