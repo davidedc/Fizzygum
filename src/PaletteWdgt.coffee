@@ -93,7 +93,7 @@ class PaletteWdgt extends Widget
     if !@action?
       @action = "setColor"
 
-    @target[@action].call @target, @choice, nil, @connectionsCalculationToken
+    @_fireConnection @choice
     return
 
   reactToTargetConnection: ->

@@ -810,6 +810,32 @@ class Widget extends TreeNode
     finally
       world._inLayoutMutation = false
 
+  # The REACTIVE-CONNECTOR settle lane: like _settleLayoutsAfter, but when an enclosing settle's MUTATION WINDOW
+  # is already open (world._inLayoutMutation) it JOINS it (runs the core in it) instead of throwing. A connection
+  # cascade (a wired reactive circuit) legitimately reaches a self-settling connector entrypoint mid-window --
+  # e.g. the C<->F converter: cText's connector opens the settle, and the calc renders + fText's connector hops
+  # run inside it -- so the whole cascade settles ONCE, when the OUTERMOST connector returns.
+  # Reached from INSIDE the flush walk itself (world._recalculatingLayouts -- only layout code can get here, e.g.
+  # a wired AxisWdgt tick label re-titled by its _reLayout firing its connection) it KEEPS the strict lane's
+  # orphan-defer + flow-violation throw: layout code must not fire settling entrypoints, cascade or not.
+  # RESTRICTED to _<name>Connector callers by check-layering rule [P] -- general/internal code must keep using
+  # _settleLayoutsAfter (which also throws mid-WINDOW, surfacing the violation) or a _<name>NoSettle core.
+  _settleLayoutsAfterOrJoinEnclosingPass: (coreThunk) ->
+    unless world?
+      return coreThunk()
+    if world._recalculatingLayouts
+      return coreThunk() if @isOrphan()
+      throw new Error "Fizzygum: a connector entrypoint was reached from inside the layout flush walk -- layout code (_reLayout / _reLayoutSelf / ...) must not fire a connection's settling entrypoint (see buildSystem/check-layering.js, rule [P])."
+    if world._inLayoutMutation
+      return coreThunk()          # JOIN the enclosing settle's mutation window (no nested settle, no throw)
+    world._inLayoutMutation = true
+    try
+      result = coreThunk()
+      world.recalculateLayouts()
+      return result
+    finally
+      world._inLayoutMutation = false
+
   setBounds: (aRectangle) ->
     @_settleLayoutsAfter =>
       if not @isFreeFloating()

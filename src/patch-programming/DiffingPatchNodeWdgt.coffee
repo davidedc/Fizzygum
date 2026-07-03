@@ -138,8 +138,7 @@ class DiffingPatchNodeWdgt extends Widget
     # worth complicating things with an additional check
     @connectionsCalculationToken = calculationToken
 
-    if @action and @action != ""
-      @target[@action].call @target, @output, nil, @connectionsCalculationToken
+    @_fireConnection @output
 
   reactToTargetConnection: ->
     # we generate a new calculation token, that's OK because
@@ -149,7 +148,7 @@ class DiffingPatchNodeWdgt extends Widget
 
   recalculateOutput: ->
     @output = @formattedDiff @input1, @input2
-    @textWidget.setText @output
+    @textWidget._setTextConnector @output
 
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->

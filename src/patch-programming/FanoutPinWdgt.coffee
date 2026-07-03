@@ -50,8 +50,7 @@ class FanoutPinWdgt extends Widget
 
 
   updateTarget: ->
-    if @action and @action != ""
-      @target[@action].call @target, @inputValue, nil, @connectionsCalculationToken
+    @_fireConnection @inputValue
     return
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->

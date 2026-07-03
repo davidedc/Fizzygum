@@ -172,6 +172,28 @@ change (`ce21dcf7`) made a *top-level* orphan call FLUSH its own subtree, so `ne
 all-constructors-settle follow-on routes every constructor through that wrapper). Nested public setters reached on an
 *attached* widget do **not** stack flushes — they *throw* (the flow-violation guard, ~:826).
 
+**A third self-settling variant handles reactive connection cascades** (`connection-cascade-settle-fix-plan.md`,
+2026-07-03): a dedicated `_<name>Connector` entrypoint (e.g. `_setTextConnector`, over the same `_<name>NoSettle`
+core + the same `connectionsCalculationToken` cycle-guard as the public setter) that settles through
+**`_settleLayoutsAfterOrJoinEnclosingPass`** — identical to `_settleLayoutsAfter` EXCEPT that, reached inside an
+enclosing settle's mutation window (`world._inLayoutMutation`), it **joins** it (runs its core in it) instead of
+throwing (reached from inside the flush walk itself, `world._recalculatingLayouts`, it keeps the orphan-defer +
+throw). A value propagating around a wired reactive circuit (e.g. the °C↔°F converter,
+`src/apps/DegreesConverterApp.coffee`) reaches a self-settling setter (`setText`) while a *sibling's* settle is
+already open; the first connector opens the ONE settle and every later wired hop joins it, so the whole cascade
+settles once. The reactive dispatch resolves the connector via `ControllerMixin._fireConnection` (route to
+`_<action>Connector` when the target defines one, else the public `@action`), so the menu-friendly action names and
+the hard-wired app circuits need no change; the two self-settling wireable actions — `setText` and `setFontSize` —
+each get a connector. (Complement — the OTHER half of the fix: a node's DIRECT self-render, a reactive text-write that
+is NOT dynamic dispatch — e.g. a patch node's `recalculateOutput` writing its own result box,
+`src/patch-programming/CalculatingPatchNodeWdgt.coffee`, and the sibling Diffing/Regex nodes — ALSO goes through the
+connector `_setTextConnector`, not the bare core: a cascade does not always carry an open settle, so the connector
+OPENS one when none is open and JOINS when one is, staying byte-faithful to the old direct `setText` render minus the
+throw.) The lane is OPT-IN per entrypoint and gated to `_<name>Connector` callers by check-layering rule **[P]**; the
+general `_settleLayoutsAfter` keeps THROWING (it must, to surface genuine internal-layout misuse). Detected via the
+runtime throw at `Widget._settleLayoutsAfter` (~:826) surfacing in the converter; root-caused + verified with a
+headless repro — see the plan's §1 (verbatim stack trace) and §5 (acceptance probe over `Fizzygum-tests`' puppeteer).
+
 So the honest formula is:
 
 > **flushes / frame  =  (self-settling public mutations executed this frame)  +  (top-level batches)  +  1**

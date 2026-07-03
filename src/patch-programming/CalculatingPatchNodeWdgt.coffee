@@ -135,8 +135,7 @@ class CalculatingPatchNodeWdgt extends Widget
     # worth complicating things with an additional check
     @connectionsCalculationToken = calculationToken
 
-    if @action and @action != ""
-      @target[@action].call @target, @output, nil, @connectionsCalculationToken
+    @_fireConnection @output
 
   reactToTargetConnection: ->
     # we generate a new calculation token, that's OK because
@@ -149,7 +148,7 @@ class CalculatingPatchNodeWdgt extends Widget
       @evaluateString "@functionFromCompiledCode = " + @textWidget.text
       # now we have the user-defined function in @functionFromCompiledCode
       @output = @functionFromCompiledCode?.call world, @input1, @input2, @input3, @input4
-      @outputTextAreaText.setText @output + ""
+      @outputTextAreaText._setTextConnector @output + ""
 
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->

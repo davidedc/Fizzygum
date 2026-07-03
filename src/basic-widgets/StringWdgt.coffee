@@ -1281,6 +1281,19 @@ class StringWdgt extends Widget
     @_settleLayoutsAfter =>
       @_setTextNoSettle theTextContent
 
+  # The reactive-CONNECTOR entrypoint for setText (the connection lane -- see Widget.
+  # _settleLayoutsAfterOrJoinEnclosingPass and check-layering [P]). IDENTICAL to the public setText -- same
+  # connectionsCalculationToken cycle-guard, same stringFieldWidget decode -- EXCEPT it JOINS an already-open layout
+  # pass instead of opening a nested settle (which the public setText's _settleLayoutsAfter would reject mid-pass).
+  # The reactive dispatch (ControllerMixin._fireConnection) routes wired "setText" connections here; direct/API
+  # callers keep using the public setText.
+  _setTextConnector: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall) ->
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
+    if stringFieldWidget?
+      theTextContent = stringFieldWidget.text.text
+    @_settleLayoutsAfterOrJoinEnclosingPass =>
+      @_setTextNoSettle theTextContent
+
   considerCurrentTextAsReferenceText: ->
     @hashOfTextConsideredAsReference = @text.hashCode()
 
@@ -1291,29 +1304,39 @@ class StringWdgt extends Widget
       else
         @widgetToBeNotifiedOfTextModificationChange.textContentModified?()
   
+  _setFontSizeNoSettle: (sizeOrWidgetGivingSize, widgetGivingSize) ->
+    if widgetGivingSize?.getValue?
+      size = widgetGivingSize.getValue()
+    else
+      size = sizeOrWidgetGivingSize
+
+    if typeof size is "number"
+      newSize = Math.round Math.min Math.max(size, 4), 500
+    else
+      newSize = parseFloat size
+      newSize = Math.round Math.min Math.max(newSize, 4), 500  unless isNaN newSize
+
+    if newSize != @originallySetFontSize
+      @originallySetFontSize = newSize
+      # a box-hugs-text widget (e.g. a chrome label) must track its text size on a
+      # font change too; otherwise the bigger/smaller font would just be fitted
+      # into the box sized for the old font.
+      if @autoSizeBoxToText
+        # this core always runs in-settle (the public setFontSize / _setFontSizeConnector each wrap it) → the NoSettle sibling.
+        @_sizeToTextAndDisableFittingNoSettle()
+      @changed()
+    @_reflowContainedTextThenInvalidateLayout()
+
   setFontSize: (sizeOrWidgetGivingSize, widgetGivingSize) ->
-    @_settleLayoutsAfter =>
-      if widgetGivingSize?.getValue?
-        size = widgetGivingSize.getValue()
-      else
-        size = sizeOrWidgetGivingSize
+    @_settleLayoutsAfter => @_setFontSizeNoSettle sizeOrWidgetGivingSize, widgetGivingSize
 
-      if typeof size is "number"
-        newSize = Math.round Math.min Math.max(size, 4), 500
-      else
-        newSize = parseFloat size
-        newSize = Math.round Math.min Math.max(newSize, 4), 500  unless isNaN newSize
-
-      if newSize != @originallySetFontSize
-        @originallySetFontSize = newSize
-        # a box-hugs-text widget (e.g. a chrome label) must track its text size on a
-        # font change too; otherwise the bigger/smaller font would just be fitted
-        # into the box sized for the old font.
-        if @autoSizeBoxToText
-          # setFontSize wraps its body in a single settle, so this runs in-settle → the NoSettle core.
-          @_sizeToTextAndDisableFittingNoSettle()
-        @changed()
-      @_reflowContainedTextThenInvalidateLayout()
+  # The reactive-CONNECTOR entrypoint for setFontSize (see _setTextConnector above / check-layering [P]).
+  # NO connectionsCalculationToken guard: setFontSize is a SINK -- it never calls updateTarget, so a circuit
+  # cannot cycle through it; the dispatch's extra (token) argument is simply ignored, exactly as the public
+  # setter ignores it today.
+  _setFontSizeConnector: (sizeOrWidgetGivingSize, widgetGivingSize) ->
+    @_settleLayoutsAfterOrJoinEnclosingPass =>
+      @_setFontSizeNoSettle sizeOrWidgetGivingSize, widgetGivingSize
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     [menuEntriesStrings, functionNamesStrings] = theTarget.stringSetters()
@@ -1337,8 +1360,7 @@ class StringWdgt extends Widget
     return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
 
   updateTarget: ->
-    if @action and @action != ""
-      @target[@action].call @target, @text, nil, @connectionsCalculationToken
+    @_fireConnection @text
     return
 
   reactToTargetConnection: ->

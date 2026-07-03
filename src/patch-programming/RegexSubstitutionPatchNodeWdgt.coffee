@@ -137,8 +137,7 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     # worth complicating things with an additional check
     @connectionsCalculationToken = calculationToken
 
-    if @action and @action != ""
-      @target[@action].call @target, @output, nil, @connectionsCalculationToken
+    @_fireConnection @output
 
   reactToTargetConnection: ->
     # we generate a new calculation token, that's OK because
@@ -159,7 +158,7 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
         regexp = new RegExp(@textWidget.text)
 
       @output = @input1.replace regexp, @substitutionTextAreaText.text
-      @outputTextAreaText.setText @output
+      @outputTextAreaText._setTextConnector @output
 
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->

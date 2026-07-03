@@ -13,8 +13,10 @@
  *      public, self-flushing layer. (The text setters self-settle via the single _settleLayoutsAfter,
  *      so reaching one from a layout pass throws the flow-violation — AxisWdgt._reLayout once called
  *      setText for its tick labels; it now uses the non-settling _setTextNoSettle core.)
- *   B) recalculateLayouts() may be called ONLY from doOneCycle (the frame) and the settle tier
- *      _settleLayoutsAfter (the public-setter flush). Nowhere else.
+ *   B) recalculateLayouts() may be called ONLY from doOneCycle (the frame), the settle tier
+ *      _settleLayoutsAfter (the public-setter flush), and the reactive-connection settle lane
+ *      _settleLayoutsAfterOrJoinEnclosingPass (which OPENS a settle just like _settleLayoutsAfter on a
+ *      cascade's first hop — rule [P] / connection-cascade-settle-fix-plan.md). Nowhere else.
  *   C) A public geometry setter must NOT call another public geometry setter (that would
  *      flush more than once per logical mutation).
  *   G) A LOW-LEVEL method must NOT directly call a STRUCTURAL self-settling wrapper -- add's siblings
@@ -86,7 +88,11 @@ const INVALIDATE_CALL = /[@.]\s*_invalidateLayout\b/;         // @_invalidateLay
 const APPLY_CALL = /[@.]\s*(_reLayoutChildren|_positionAndResizeChildren|_reLayoutScrollbars|_reLayout)\b(?!\?)(?!\s*(?:[!=]=|[<>]=?|is\b|isnt\b))/;
 const SANCTION_MARKER = 'layout-apply-sanctioned';        // the conscious-sign-off comment marker for [F]
 const PUBLIC_SET = new Set(PUBLIC_SETTERS);
-const RECALC_WHITELIST = new Set(['doOneCycle', '_settleLayoutsAfter']);
+// The settle TIERS that legitimately drive recalculateLayouts(): the frame (doOneCycle), the public-setter
+// flush (_settleLayoutsAfter), and the reactive-connection lane (_settleLayoutsAfterOrJoinEnclosingPass — it
+// OPENS a settle exactly like _settleLayoutsAfter when it is the first hop of a cascade; see rule [P] and
+// docs/connection-cascade-settle-fix-plan.md). Everything else is [A]/[B].
+const RECALC_WHITELIST = new Set(['doOneCycle', '_settleLayoutsAfter', '_settleLayoutsAfterOrJoinEnclosingPass']);
 
 const isLowLevel = (name) =>
   /^raw[A-Z]/.test(name) ||  // raw* is now ONLY the pixel accessors (rawPixelInfo/rawPixelHash/rawRGBA).
@@ -301,6 +307,13 @@ const SEAM_VERB_BANNED = /^_announce\w*ToContainer$/;   // the deleted notify-by
 // handler) adopts a *Coalesced entrypoint -- a discrete caller reaching for one is exactly the bug this catches.
 const COALESCED_CALL = /[@.]\s*(\w+Coalesced)\b/;
 const COALESCED_CALLER_ALLOWLIST = new Set(['nonFloatDragging']);
+
+// [P] the connector-join caller rule (docs/connection-cascade-settle-fix-plan.md). _settleLayoutsAfterOrJoinEnclosingPass
+// JOINS an enclosing settle's mutation window instead of throwing (it is the reactive-connection settle lane) -- sound
+// ONLY for a dedicated _<name>Connector entrypoint (which carries the connectionsCalculationToken cycle-guard whenever
+// its action can propagate onward; a sink connector like _setFontSizeConnector needs none). Any other caller must
+// use the self-settling _settleLayoutsAfter (which surfaces the flow violation) or a _<name>NoSettle core.
+const JOIN_CALL = /[@.]\s*_settleLayoutsAfterOrJoinEnclosingPass\b/;
 
 // Strip string literals and trailing `#` comments from one line, carrying multi-line
 // string state across lines. Returns { code, state }.
@@ -522,6 +535,13 @@ function checkFile(file, violations, wrapperCall, warnings) {
     if (coalesced && !COALESCED_CALLER_ALLOWLIST.has(method)) {
       violations.push(`[O] ${method}() calls ${coalesced[1]}() outside the coalesced-caller allowlist — a *Coalesced entrypoint DEFERS its layout settle to the ONE end-of-cycle flush, which is byte-identical (hence sound) only inside a per-event STREAM handler (drag/scroll/key burst) that never reads back the settled layout mid-cycle. A discrete/programmatic caller must use the self-settling setter. If this genuinely IS such a stream, add its method name to COALESCED_CALLER_ALLOWLIST (layering/naming convention §4)  — ${at}`);
     }
+    // [P] the connector-join caller rule (see JOIN_CALL above): _settleLayoutsAfterOrJoinEnclosingPass is the
+    // reactive-connection settle lane -- it JOINS an open layout pass instead of throwing the flow-violation guard,
+    // sound ONLY for a dedicated _<name>Connector entrypoint. Any other caller must use the self-settling lane.
+    const join = code.match(JOIN_CALL);
+    if (join && !/Connector$/.test(method)) {
+      violations.push(`[P] ${method}() calls _settleLayoutsAfterOrJoinEnclosingPass() but is not a _<name>Connector entrypoint — the connector settle lane JOINS an open layout pass (it does NOT throw the flow-violation guard), sound only for a dedicated reactive-connection entrypoint carrying the connectionsCalculationToken cycle-guard. Use the self-settling _settleLayoutsAfter or a _<name>NoSettle core instead (connection-cascade-settle-fix-plan.md)  — ${at}`);
+    }
     if (recalc && !RECALC_WHITELIST.has(method)) {
       violations.push(`[B] recalculateLayouts() called from ${method}() (only doOneCycle / _settleLayoutsAfter may)  — ${at}`);
     }
@@ -640,9 +660,10 @@ function main() {
     console.error('M: the retired raw*/silent*/fullRaw fragments and the _apply*AndNotify suffix must not reappear as method names (use _apply*/_apply*Base/_commit*/__ tiers; raw PIXEL data uses rawPixel*/rawRGBA) (layering/naming convention §4).');
     console.error('N: the retired notify-by-mutation container seam (_announce*ToContainer) must not be re-defined — the settle-time up-edge _reFitMyTrackingContainerAfterSettle replaced it (assessment §4.1 / §6 rulebook rule 2).');
     console.error('O: a *Coalesced entrypoint (defers its layout settle to the end-of-cycle flush) may be CALLED only from an allowlisted per-event stream handler — COALESCED_CALLER_ALLOWLIST (a discrete/programmatic caller must use the self-settling setter) (layering/naming convention §4).');
+    console.error('P: _settleLayoutsAfterOrJoinEnclosingPass (the reactive-connection settle lane — JOINS an open layout pass instead of throwing) may be CALLED only from a dedicated _<name>Connector entrypoint (connection-cascade-settle-fix-plan.md).');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N/O; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N/O/P; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
   process.exit(0);
 }
 

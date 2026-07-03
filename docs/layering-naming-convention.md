@@ -110,6 +110,21 @@ marks the *property* "nothing downstream settles" and is twin-optional (a struct
 twin, e.g. `_addInPseudoRandomPositionNoSettle`). *(The `_settleLayoutsAfterBatch` nested-absorbing tier was deleted
 2026-07-01 — zero callers; reintroduce from git history if ever needed.)*
 
+**Sibling on the SETTLE axis — the reactive-connector lane** (`connection-cascade-settle-fix-plan.md`,
+2026-07-03): `_settleLayoutsAfterOrJoinEnclosingPass` is `_settleLayoutsAfter` minus the MUTATION-WINDOW throw —
+reached inside an enclosing settle's mutation window (`world._inLayoutMutation`) it JOINS it (runs the
+`_<name>NoSettle` core in it) rather than throwing; reached from inside the flush walk itself
+(`world._recalculatingLayouts`) it KEEPS the strict lane's orphan-defer + throw. It backs a dedicated
+`_<name>Connector` entrypoint (e.g. `_setTextConnector`) — the reactive-connection twin of the public setter,
+carrying the same `connectionsCalculationToken` cycle-guard — which a connection cascade dispatches to via
+`ControllerMixin._fireConnection` (a per-call `_<action>Connector`-or-`@action` name resolution), so a wired circuit
+settles ONCE (the first connector opens the one settle; every later wired hop joins it). (Complement: a node's DIRECT
+self-render — a reactive text-write that is NOT dynamic dispatch, e.g. a patch node's `recalculateOutput` writing its
+own result box — ALSO goes through the connector `_setTextConnector`, not the bare core: a cascade does not always
+carry an open settle, so the connector correctly OPENS one when none is open and JOINS when one is — byte-faithful to
+the old direct `setText` render minus the throw.) Opt-in per entrypoint and gated to `_<name>Connector` callers by
+check-layering rule **[P]** (§4); the plain `_settleLayoutsAfter` stays the *throwing* lane for general/internal code.
+
 ### 2.6 The container re-fit — the settle-time up-edge (seam DELETED 2026-07-01)
 A size-tracking container (a window fitting its stack, a scroll frame fitting its content) must re-fit when the
 content it tracks changes size. This *was* a notify-by-mutation **seam** — the content's mutator announced up to the
@@ -210,6 +225,7 @@ predicates, the markers, and the gate mechanics live in `docs/lint-and-static-ch
 | **[M]** retired-fragment ban (HARD-FAIL) | a method DEF named with a retired geometry/structural prefix — `raw[A-Z]…` / `^silent[A-Z]` / `^fullRaw` → FAIL (allowlist: the raw-PIXEL accessors `rawPixelInfo` / `rawPixelHash` / `rawRGBA`). `full[A-Z]` is NOT banned — `full*` remains a legitimate SUBTREE-AWARE vocabulary (`fullChanged` / `fullBounds` / `fullPaintInto` / …). |
 | **[N]** seam-verb DEF ban (HARD-FAIL) | a method DEF named `_announce…ToContainer` (`/^_announce\w*ToContainer$/`) → FAIL — the notify-by-mutation re-fit seam was deleted 2026-07-01 (§2.6) and replaced by the settle-time up-edge, so this bans reviving the retired announce-up verbs on the DEF side (the CALL side is already covered by the [I]/[K] denylists). Analogous to [M]'s retired-fragment ban. |
 | **[O]** `*Coalesced` caller allowlist (HARD-FAIL) | a `*Coalesced` entrypoint (`_setMaxDimCoalesced` / `_setExtentCoalesced` / `_moveToCoalesced` / `_setWidthCoalesced` / `_setHeightCoalesced`) DEFERS its layout SETTLE to the ONE end-of-cycle flush (the field write is synchronous; only the flush is deferred) — byte-identical, hence sound, ONLY for a per-event STREAM handler (drag/scroll/key burst) that never reads back the SETTLED layout mid-cycle. So a `[@.]…Coalesced` CALL from a method whose name is NOT in `COALESCED_CALLER_ALLOWLIST` (seeded `{nonFloatDragging}` — both `HandleWdgt` and `StackElementsSizeAdjustingWdgt` name their drag handler that) → FAIL; a discrete/programmatic caller must use the self-settling setter. These entrypoints are `_`-private for the same reason (only stream handlers may reach them). The `_coalescedDeclarationDepth`/`auditUndeclaredEndOfCycle` machinery enforces the CONVERSE (end-of-cycle mutations are *declared*), so this closes the caller side it does not cover. (Tier C, 2026-07-02.) |
+| **[P]** connector-join caller (HARD-FAIL) | a `[@.]_settleLayoutsAfterOrJoinEnclosingPass` CALL from a method whose name does NOT end `Connector` → FAIL. That primitive is the reactive-connection settle lane (§2.5): reached mid-pass it JOINS the open layout pass instead of throwing — sound ONLY for a dedicated `_<name>Connector` entrypoint carrying the `connectionsCalculationToken` cycle-guard (so a wired reactive circuit — the °C↔°F converter, `src/apps/DegreesConverterApp.coffee` — settles once). Any other caller must use the self-settling `_settleLayoutsAfter` (which *surfaces* the flow violation) or a `_<name>NoSettle` core. Modelled on [O]; self-test by planting `@_settleLayoutsAfterOrJoinEnclosingPass => …` in a non-`Connector` method. |
 
 The convention is also why the flow rules work: because every immediate geometry mutator is recognizably low-level
 (`_`/`__`-prefixed or `*NoSettle`) and named in the apply 2×2, rules **[A]** (low-level must not reach the public

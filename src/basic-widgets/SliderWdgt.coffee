@@ -150,8 +150,7 @@ class SliderWdgt extends CircleBoxWdgt
 
   
   updateTarget: ->
-    if @action and @action != ""
-      @target[@action].call @target, @value, @argumentToAction, @connectionsCalculationToken
+    @_fireConnection @value, @argumentToAction
     return
 
   reactToTargetConnection: ->

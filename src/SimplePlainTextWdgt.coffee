@@ -168,8 +168,7 @@ class SimplePlainTextWdgt extends TextWdgt
     @updateTarget()
 
   updateTarget: ->
-    if @action and @action != ""
-      @target[@action].call @target, @text, nil, @connectionsCalculationToken
+    @_fireConnection @text
     return
 
   reactToTargetConnection: ->

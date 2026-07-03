@@ -429,8 +429,15 @@ class InspectorWdgt extends Widget
       if @target[selected + "_source"]?
           val = @target[selected + "_source"]
       else
+        # Walk the Fizzygum class chain looking for the selected method's recorded source. Guard on
+        # `.constructor?.class?` (a Fizzygum Class object) rather than the old `!= Object`: __proto__ yields
+        # PROTOTYPES, never the Object CONSTRUCTOR, so `!= Object` never matched and the walk ran off the end to
+        # Object.prototype (whose `.constructor.class` is undefined) and THREW when the source was not found in
+        # any class. Not-found is legitimate: a mixin-injected method (e.g. ControllerMixin._fireConnection) is
+        # not recorded in any class's nonStaticPropertiesSources, so its source is not on the class chain -- fall
+        # through to val.toString() below instead of crashing. (V8 masked this; JSC surfaced it.)
         goingUpTargetProtChain = @target
-        while goingUpTargetProtChain != Object
+        while goingUpTargetProtChain?.constructor?.class?
           if goingUpTargetProtChain.constructor.class.nonStaticPropertiesSources[selected]?
             val = goingUpTargetProtChain.constructor.class.nonStaticPropertiesSources[selected]
             break
