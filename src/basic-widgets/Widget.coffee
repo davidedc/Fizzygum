@@ -214,6 +214,7 @@ class Widget extends TreeNode
   fullClippedBoundsWhenLastPainted: nil
 
   cachedFullBounds: nil
+  checkFullBoundsCache: nil
   childrenBoundsUpdatedAt: -1
 
   cachedFullClippedBounds: nil
@@ -1027,31 +1028,6 @@ class Widget extends TreeNode
     return result
 
 
-  # Note that in a case of a fullMove*
-  # you should also invalidate all the widgets in
-  # the subtree as well.
-  # This happens indirectly as the fullMove* methods
-  # move all the children too, so *that*
-  # invalidates them. Note that things might change
-  # if you use a different coordinate system, in which
-  # case you have to invalidate the caches in all the
-  # subwidgets manually or use some other cache
-  # invalidation mechanism.
-  invalidateFullBoundsCache: ->
-    if !@cachedFullBounds?
-      return
-    @cachedFullBounds = nil
-    if @parent?.cachedFullBounds?
-        @parent.invalidateFullBoundsCache @
-
-  invalidateFullClippedBoundsCache: ->
-    if !@checkFullClippedBoundsCache?
-      return
-    @checkFullClippedBoundsCache = nil
-    if @parent?.checkFullClippedBoundsCache?
-        @parent.invalidateFullClippedBoundsCache @
-
-
   # doesn't take into account orphanage
   # or visibility
   SLOWfullBounds: ->
@@ -1147,7 +1123,7 @@ class Widget extends TreeNode
 
   # does not take into account orphanage or visibility
   fullBounds: ->
-    if @cachedFullBounds?
+    if @checkFullBoundsCache == WorldWdgt.geometryVersion
       if world.doubleCheckCachedMethodsResults
         if !@cachedFullBounds.equals @SLOWfullBounds()
           debugger
@@ -1164,6 +1140,7 @@ class Widget extends TreeNode
         debugger
         alert "fullBounds is broken (uncached)"
 
+    @checkFullBoundsCache = WorldWdgt.geometryVersion
     @cachedFullBounds = result
 
   # this one does take into account orphanage and
@@ -1307,14 +1284,13 @@ class Widget extends TreeNode
       child.__commitMoveBy delta
   
   __breakMoveResizeCaches: ->
-    @invalidateFullBoundsCache @
-    @invalidateFullClippedBoundsCache @
     # EMPTY-HAND CARVE-OUT (load-bearing -- measured: hover hit-testing stays ~96%-cached
     # because of this): a BARE pointer move must NOT bump geometryVersion, or every mouse
     # move would invalidate every version-keyed bounds cache in the world. The hand
-    # compensates locally: its clippedThroughBounds/clipThrough overrides always recompute
-    # (ActivePointerWdgt), and the explicit invalidate*Cache climbs above still run for
-    # the hand's own chain. With children (mid float-drag) the bump proceeds as normal.
+    # compensates locally: its fullBounds / fullClippedBounds / clippedThroughBounds /
+    # clipThrough overrides all recompute fresh (ActivePointerWdgt), so the hand never
+    # serves a stale version-keyed bounds. With children (mid float-drag) the bump proceeds
+    # as normal.
     if @ == world.hand
       if @children.length == 0
         return
@@ -2032,8 +2008,6 @@ class Widget extends TreeNode
       return
     @isVisible = false
     WorldWdgt.noteVisibilityOrCollapseChange()
-    @invalidateFullBoundsCache @
-    @invalidateFullClippedBoundsCache @
 
   hide: ->
     if !@isVisible
@@ -2061,8 +2035,6 @@ class Widget extends TreeNode
       return
     @isVisible = true
     WorldWdgt.noteVisibilityOrCollapseChange()
-    @invalidateFullBoundsCache @
-    @invalidateFullClippedBoundsCache @
 
     firstParentOwningMyShadow = @firstParentOwningMyShadow()
     if firstParentOwningMyShadow?
@@ -2073,8 +2045,6 @@ class Widget extends TreeNode
   toggleVisibility: ->
     @isVisible = not @isVisible
     WorldWdgt.noteVisibilityOrCollapseChange()
-    @invalidateFullBoundsCache @
-    @invalidateFullClippedBoundsCache @
     @fullChanged()
 
   # SELF-SETTLE (single-mutation tier). _beforeChildCollapsed now tears down the bar buttons through the
@@ -2097,8 +2067,6 @@ class Widget extends TreeNode
     @parent?._beforeChildCollapsed? @
     @collapsed = true
     WorldWdgt.noteVisibilityOrCollapseChange()
-    @invalidateFullBoundsCache @
-    @invalidateFullClippedBoundsCache @
     if world?._recalculatingLayouts then @__markForRelayout() else @_invalidateLayout()
     @fullChanged()
     @parent?._reactToChildCollapsed? @
@@ -2125,8 +2093,6 @@ class Widget extends TreeNode
     @parent?._beforeChildUnCollapsed? @
     @collapsed = false
     WorldWdgt.noteVisibilityOrCollapseChange()
-    @invalidateFullBoundsCache @
-    @invalidateFullClippedBoundsCache @
     if world?._recalculatingLayouts then @__markForRelayout() else @_invalidateLayout()
     @fullChanged()
     @parent?._reactToChildUnCollapsed? @

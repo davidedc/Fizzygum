@@ -63,6 +63,26 @@ class ActivePointerWdgt extends Widget
   SLOWclipThrough: ->
     return @boundingBox()
 
+  # The hand does not participate in the version-keyed caches: the empty-hand carve-out
+  # (__breakMoveResizeCaches) skips the geometryVersion bump for a bare pointer move, so
+  # a version-stamped cache on the hand itself would serve STALE bounds mid-hover.
+  # Recompute fresh, like clippedThroughBounds/clipThrough above. With children (mid
+  # float-drag) every move bumps the version anyway, so nothing is lost -- the children's
+  # own caches below stay exact.
+  fullBounds: ->
+    result = @boundingBox()
+    @children.forEach (child) ->
+      if child.visibleBasedOnIsVisibleProperty() and !child.isInCollapsedSubtree()
+        result = result.merge child.fullBounds()
+    result
+
+  fullClippedBounds: ->
+    result = @clippedThroughBounds()
+    @children.forEach (child) ->
+      if child.visibleBasedOnIsVisibleProperty() and !child.isInCollapsedSubtree()
+        result = result.merge child.fullClippedBounds()
+    result
+
   # ActivePointerWdgt navigation:
   topWdgtUnderPointer: ->
     result = world.topWdgtSuchThat (m) =>

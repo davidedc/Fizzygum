@@ -682,13 +682,12 @@ class WorldWdgt extends PanelWdgt
     @hand.fullPaintIntoAreaOrBlitFromBackBuffer aContext, aRect
 
   clippedThroughBounds: ->
-    # always recompute -- the empty-hand carve-out means the version key can be stale for the hand; the compute is trivial
+    # always recompute -- the world is the clip terminal, so its clipped bounds ARE its boundingBox; trivial, no version cache.
     return @boundingBox()
 
   # terminal of every desktop widget's clipThrough recursion (via the firstParentClippingAtBounds -> world
   # fallback); recomputes trivially, does not participate in the version caches.
   clipThrough: ->
-    # always recompute -- the empty-hand carve-out means the version key can be stale for the hand; the compute is trivial
     return @boundingBox()
 
   # SLOW-oracle mirrors of the two overrides above (Tier J2): the world is the clip terminal, so its

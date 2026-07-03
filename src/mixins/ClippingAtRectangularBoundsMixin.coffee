@@ -41,18 +41,6 @@ ClippingAtRectangularBoundsMixin =
             result = result.concat child.plausibleTargetAndDestinationWidgets theWidget
 
         return result
-
-      # do nothing if the call comes from a child
-      # otherwise, if it comes from me (say, because the
-      # Panel has been moved), then
-      # do invalidate the cache as normal.
-      invalidateFullBoundsCache: (widgetCalling) ->
-        if widgetCalling == @
-          super @
-
-      invalidateFullClippedBoundsCache: (widgetCalling) ->
-        if widgetCalling == @
-          super @
       
       # here is the magic of a Frame: the recursion
       # stops and we can ignore the bounds of potentially
@@ -72,7 +60,7 @@ ClippingAtRectangularBoundsMixin =
       # so there is no need to do a deep
       # traversal to find the bounds.
       fullBounds: ->
-        if @cachedFullBounds?
+        if @checkFullBoundsCache == WorldWdgt.geometryVersion
           if world.doubleCheckCachedMethodsResults
             if !@cachedFullBounds.equals @SLOWfullBounds()
               debugger
@@ -86,6 +74,7 @@ ClippingAtRectangularBoundsMixin =
             debugger
             alert "fullBounds is broken (uncached)"
 
+        @checkFullBoundsCache = WorldWdgt.geometryVersion
         @cachedFullBounds = result
 
       fullClippedBounds: ->

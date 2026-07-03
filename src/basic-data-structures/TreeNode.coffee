@@ -67,8 +67,6 @@ class TreeNode
   # TreeNode accessing:
   addChild: (node, position = nil) ->
     WorldWdgt.noteStructureChange()
-    @invalidateFullBoundsCache @
-    @invalidateFullClippedBoundsCache @
     if !position?
       @children.push node
     else
@@ -120,8 +118,6 @@ class TreeNode
     # remove the array element from the
     # array
     WorldWdgt.noteStructureChange()
-    @invalidateFullBoundsCache @
-    @invalidateFullClippedBoundsCache @
     @children.remove node
     node.parent = nil
 

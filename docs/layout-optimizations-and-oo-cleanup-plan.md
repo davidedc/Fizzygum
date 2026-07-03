@@ -581,7 +581,7 @@ context) is the banked follow-up if the owner wants apps covered.
   I3 adds methods only (no deletion) → no inspector recapture expected. A comments/docs-only session (I6+I7)
   needs one `./fg suite`.
 
-## §8 — Tier J (J1–J5 ✅ LANDED 2026-07-03; **J6 is the sole remaining item**): bounds/visibility-cache follow-ups — the measured cache, the oracle gate, the mechanism retirement
+## §8 — Tier J (J1–J6 ✅ LANDED — **TIER J COMPLETE**; J1–J5 2026-07-03, J6 2026-07-04): bounds/visibility-cache follow-ups — the measured cache, the oracle gate, the mechanism retirement
 
 Source: an owner-directed assessment (2026-07-03) of the recursive/clipped-bounds cache system — the region with
 the `SLOW*` twin methods and the `world.doubleCheckCachedMethodsResults` assertions — run at Fizzygum **`d6bda64a`**
@@ -598,12 +598,30 @@ Ordered cheap→risky; each item standalone, any prefix is a legitimate session.
 oracles). Expect the pre-authorised benign duplicated-inspector member-list recapture on J2/J5 (Widget methods
 ADDED) and J6 (two inspector-visible methods DELETED).
 
-> ### ✅ LANDED STATUS (2026-07-03, executed + committed this session) — **read before J6**
-> **J1, J2, J3, J4, J5 are DONE, gated green, and committed** (Fizzygum src + this doc; Fizzygum-tests gate infra +
-> one inspector recapture). **J6 is the only item left.** Gates run: `./fg gauntlet` all-green (dpr1/dpr2/webkit/apps
-> + tiernaming + settle) twice (post-J4 and post-J5); the four-config danger torture all-PASS (no
-> `RECALC_NONCONVERGENCE`); the new cache-oracle gate green (0 mismatch records, 8/8 coverage) with its
-> SLOWroot-corruption bite-proof (gate FAILS with 408 records). Amendments a J6 executor MUST know:
+> ### ✅ LANDED STATUS — **TIER J COMPLETE** (J1–J5 2026-07-03, J6 2026-07-04; all executed + committed this session)
+> **J1, J2, J3, J4, J5, J6 are ALL DONE, gated green, and committed** (Fizzygum src + this doc; Fizzygum-tests gate
+> infra + one inspector recapture). Gates run: `./fg gauntlet` all-green (dpr1/dpr2/webkit/apps + tiernaming +
+> settle) — post-J4, post-J5, and post-J6 (166/166, failed:0 every leg); the four-config danger torture all-PASS
+> (no `RECALC_NONCONVERGENCE`) after J5 and again after J6; the cache-oracle gate green (0 mismatch records, 8/8
+> per-shard coverage, ~0.9 min) with its SLOWroot-corruption bite-proof (gate FAILS with 408 records).
+> **J6 landing (the mechanism retirement, 2026-07-04):** `Widget.fullBounds` (+ the `ClippingAtRectangularBoundsMixin`
+> override) moved onto the `geometryVersion` key (new `checkFullBoundsCache` field; both doubleCheck blocks kept);
+> `ActivePointerWdgt` gained always-recompute `fullBounds`/`fullClippedBounds` overrides (the empty-hand carve-out's
+> local compensation, now complete for all four bounds queries — alongside its existing `clippedThroughBounds`/
+> `clipThrough` and their J2 SLOW mirrors); the whole explicit-climb mechanism DELETED — both
+> `invalidateFullBounds*Cache` defs + the two mixin overrides + all 8 live call-site pairs (Widget
+> `__breakMoveResizeCaches` + the 5 visibility/collapse mutators; TreeNode add/removeChild); the carve-out comment
+> truth-repaired. **ONE invalidation idiom (the version stamp) now serves the whole system.** Semantics deltas:
+> `fullBounds` invalidation went COARSER (any move anywhere vs the old path-local climb — it was measured near-cold,
+> 4–359 calls/test) and the hand's two bounds queries went cache-less (identical during drags — the version churns
+> then anyway). Also folded into J6: four cosmetic gate/comment nits banked from the J1–J5 review — the oracle-gate
+> header now states the measured ~0.9 min (not "a multiple of the ~1.5-min baseline"); the real prelude gained the
+> corruptor's per-shard log cap (a genuine hot-cache break no longer floods the log before failing); the WORLD's
+> `clippedThroughBounds`/`clipThrough` shed the copied-from-the-hand "stale for the hand" comment for the correct
+> clip-terminal note; and the gate's coverage check tightened from ≥1-install-anywhere to per-shard
+> (`readyShards >= effShards`, robust to shard-clamping). One benign inspector recapture
+> (`macroDuplicatedInspectorDrivesCopiedTargetOnly`, dpr1+2 — the two deleted Widget methods shift its member list;
+> webkit leg verified clean). Amendments recorded during J1–J5 (kept for history):
 > - **J2 hand-override CORRECTION (the authored §8.2 J2 code was incomplete).** The inline `SLOWclipThrough` handled
 >   only `world`'s override (via a `firstClipping == @` guard); it did NOT mirror the HAND's override, and the new
 >   oracle caught it at once (`fullClippedBounds is broken`, ~175k records on the menu test: the hand's override
@@ -1857,7 +1875,7 @@ Tiers A/B/C at `0b96d0ef`, Tier D + its evidence bank at `56f25c09`, Tier E in c
   (RECALC_NONCONVERGENCE absent, 0 fails). **NB** a separate `fix(meta)` commit (`cbb90457`) hardened the
   `Class`/`Mixin` `super` rewriter the same session (a bare `super` + trailing comment dropped its forwarded
   arguments) — unrelated to Tier F; it fixed the "thin vertical slice" defect in the Stretchable* apps.
-- **Tier J (J1–J5) ✅ (2026-07-03, this session, pushed to master). J6 REMAINING.** The bounds/visibility-cache
+- **Tier J (J1–J6) ✅ (J1–J5 2026-07-03 pushed to master; J6 2026-07-04 this session). TIER J COMPLETE.** The bounds/visibility-cache
   follow-ups (§8): SLOW-oracle completion + de-circularization, the suite-wide cache-coherence gate + its bite-proof,
   cache-field naming unification, and the measured `isInCollapsedSubtree` cache. **J1** — documented the load-bearing
   empty-hand carve-out; retired `WorldWdgt.clipThrough`'s false "unused" TODO; dropped the four World/hand write-only
@@ -1874,9 +1892,27 @@ Tiers A/B/C at `0b96d0ef`, Tier D + its evidence bank at `56f25c09`, Tier E in c
   cache `isInCollapsedSubtree` on `visibilityVersion` (measured 310k node-visits / 149 ms → cached), airtight
   invalidation (the two `@collapsed` writes + a reparent all bump `visibilityVersion`; moves don't → no empty-hand
   interaction). Gauntlet ×2 + 4-config danger torture + the cache-oracle gate all green; one benign inspector
-  member-list recapture (`macroDuplicatedInspectorDrivesCopiedTargetOnly`, dpr1+2). **J6** (retire the explicit-climb
-  invalidation mechanism) is the sole remaining item — see §8's LANDED STATUS box for the line-shift + J2-amendment
-  caveats.
+  member-list recapture (`macroDuplicatedInspectorDrivesCopiedTargetOnly`, dpr1+2). **J6 (2026-07-04)** — retired the
+  explicit-climb invalidation mechanism, leaving ONE invalidation idiom (the version stamp) for the whole system:
+  `Widget.fullBounds` (+ the `ClippingAtRectangularBoundsMixin` override) moved onto the `geometryVersion` key
+  (new `checkFullBoundsCache`; both doubleCheck blocks kept); `ActivePointerWdgt` gained always-recompute
+  `fullBounds`/`fullClippedBounds` overrides (the empty-hand carve-out's local compensation, now complete for all
+  four bounds queries — matching its `clippedThroughBounds`/`clipThrough`); and the whole second mechanism was
+  DELETED — both `invalidateFullBounds*Cache` defs, the two mixin overrides, and all 8 live call-site pairs (Widget
+  `__breakMoveResizeCaches` + the 5 visibility/collapse mutators; TreeNode add/removeChild), with the carve-out
+  comment truth-repaired. Semantics deltas: `fullBounds` invalidation went COARSER (any move anywhere vs the old
+  path-local climb — measured near-cold, 4–359 calls/test) and the hand's two bounds queries went cache-less
+  (identical during drags — the version churns then anyway). Four cosmetic nits banked from the J1–J5 review were
+  folded in: the cache-oracle gate header now states the measured ~0.9 min (not "a multiple of the ~1.5-min
+  baseline"); the real oracle prelude gained the self-test corruptor's per-shard log cap (a genuine hot-cache break
+  no longer floods the log before failing); the WORLD's `clippedThroughBounds`/`clipThrough` shed the
+  copied-from-the-hand "stale for the hand" comment for the correct clip-terminal note; and the gate's coverage
+  check tightened from ≥1-install-anywhere to per-shard (`readyShards >= effShards`, robust to shard-clamping).
+  Gates: build 0 violations; gauntlet dpr1/dpr2/webkit **166/166** failed:0 + apps + tiernaming + settle; four-config
+  danger torture (dpr2-s8 / dpr2-fast-s8 / dpr1-s8 / dpr2-s4 — RECALC_NONCONVERGENCE absent, 0 fails); the
+  cache-oracle gate green (0 records, 8/8 coverage, 0m54s). ONE benign inspector member-list recapture
+  (`macroDuplicatedInspectorDrivesCopiedTargetOnly`, dpr1+2 — the two deleted Widget methods shift its list; webkit
+  leg verified clean). **TIER J COMPLETE.**
 - **Tier I (I1–I12) ✅ (`d6bda64a` + tests `600862e57`, 2026-07-03, pushed to master). TIER I COMPLETE.** The third wart
   hunt (§7), landed in the §7.3 order I1→I2→I6→I7→I3→I11→I12→I8→I9→I4→I5→I10. **I1** — `VerticalStackLayoutSpec`
   constructor `(@elasticity = 1)` default (a no-arg `new` wrote `undefined` over the prototype 1 → NaN child widths;
