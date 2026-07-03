@@ -84,7 +84,7 @@ class PaletteWdgt extends Widget
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
     if !@choice? then return
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
     @updateTarget()
 
   updateTarget: ->
@@ -110,10 +110,4 @@ class PaletteWdgt extends Widget
   # openTargetSelector: -> taken from the ControllerMixin
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    [menuEntriesStrings, functionNamesStrings] = theTarget.colorSetters()
-    menu = new MenuWdgt @, false, @, true, true, "choose target property:"
-    for i in [0...menuEntriesStrings.length]
-      menu.addMenuItem menuEntriesStrings[i], true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil, theTarget, functionNamesStrings[i]
-    if menuEntriesStrings.length == 0
-      menu = new MenuWdgt @, false, @, true, true, "no target properties available"
-    menu.popUpAtHand()
+    @_popUpTargetPropertyMenu theTarget, theTarget.colorSetters()

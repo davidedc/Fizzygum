@@ -102,7 +102,7 @@ class ScrollPanelWdgt extends PanelWdgt
     @_reLayoutScrollbars()
 
   setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
 
     aColor = super aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, true
     # keep in sync the color of the content.

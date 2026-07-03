@@ -33,7 +33,7 @@ class FanoutWdgt extends Widget
     @_invalidateLayout()
 
   setInput: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
     @inputValue = newvalue
     @updateTarget()
 

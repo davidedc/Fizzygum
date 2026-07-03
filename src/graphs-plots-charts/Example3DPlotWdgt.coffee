@@ -39,7 +39,7 @@ class Example3DPlotWdgt extends Widget
     "3D plot"
 
   setParameter: (parameterValue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
     @parameterValue = parameterValue
     @calculateNewPlotValues()
 

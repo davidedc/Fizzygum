@@ -54,38 +54,32 @@ class CalculatingPatchNodeWdgt extends Widget
     "Calculating patch node"
 
   setInput1: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @input1connectionsCalculationToken then return else if !connectionsCalculationToken? then @input1connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @input1connectionsCalculationToken = connectionsCalculationToken
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall, "input1connectionsCalculationToken"
     @input1 = Number(newvalue)
     @updateTarget @input1connectionsCalculationToken
 
   setInput2: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @input2connectionsCalculationToken then return else if !connectionsCalculationToken? then @input2connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @input2connectionsCalculationToken = connectionsCalculationToken
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall, "input2connectionsCalculationToken"
     @input2 = Number(newvalue)
     @updateTarget @input2connectionsCalculationToken
 
   setInput3: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @input3connectionsCalculationToken then return else if !connectionsCalculationToken? then @input3connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @input3connectionsCalculationToken = connectionsCalculationToken
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall, "input3connectionsCalculationToken"
     @input3 = Number(newvalue)
     @updateTarget @input3connectionsCalculationToken
 
   setInput4: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @input4connectionsCalculationToken then return else if !connectionsCalculationToken? then @input4connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @input4connectionsCalculationToken = connectionsCalculationToken
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall, "input4connectionsCalculationToken"
     @input4 = Number(newvalue)
     @updateTarget @input4connectionsCalculationToken
 
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
     @updateTarget @connectionsCalculationToken, true
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    [menuEntriesStrings, functionNamesStrings] = theTarget.numericalSetters()
-    menu = new MenuWdgt @, false, @, true, true, "choose target property:"
-    for i in [0...menuEntriesStrings.length]
-      menu.addMenuItem menuEntriesStrings[i], true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil, theTarget, functionNamesStrings[i]
-    if menuEntriesStrings.length == 0
-      menu = new MenuWdgt @, false, @, true, true, "no target properties available"
-    menu.popUpAtHand()
+    @_popUpTargetPropertyMenu theTarget, theTarget.numericalSetters()
 
   updateTarget: (connectionsCalculationToken, fireBecauseBang) ->
     if !@setInput1IsConnected and

@@ -315,6 +315,16 @@ const COALESCED_CALLER_ALLOWLIST = new Set(['nonFloatDragging']);
 // use the self-settling _settleLayoutsAfter (which surfaces the flow violation) or a _<name>NoSettle core.
 const JOIN_CALL = /[@.]\s*_settleLayoutsAfterOrJoinEnclosingPass\b/;
 
+// [Q] the connector-CALLER rule (docs/connection-cascade-settle-fix-plan.md §7e). A _<name>Connector entrypoint
+// JOINS an already-open layout pass instead of throwing the flow-violation guard (it IS the reactive-connection
+// settle lane -- see [P]); reaching one by a hard-coded @/.-textual call is a way to smuggle "a setText that never
+// throws" past that guard. The ONLY legitimate textual callers are the patch nodes' recalculateOutput renders (a
+// node rendering its OWN output mid-cascade -- connection-cascade-settle-fix-plan.md step 4). The reactive dispatch
+// (ControllerMixin._fireConnection) resolves the connector name at RUNTIME (@target[actionToCall]) and is invisible
+// to this name-scanner regardless. Extend the allowlist only when another genuine mid-cascade self-render appears.
+const CONNECTOR_CALL = /[@.]\s*(_\w+Connector)\b/;
+const CONNECTOR_CALLER_ALLOWLIST = new Set(['recalculateOutput']);
+
 // Strip string literals and trailing `#` comments from one line, carrying multi-line
 // string state across lines. Returns { code, state }.
 function stripLine(line, state) {
@@ -542,6 +552,12 @@ function checkFile(file, violations, wrapperCall, warnings) {
     if (join && !/Connector$/.test(method)) {
       violations.push(`[P] ${method}() calls _settleLayoutsAfterOrJoinEnclosingPass() but is not a _<name>Connector entrypoint — the connector settle lane JOINS an open layout pass (it does NOT throw the flow-violation guard), sound only for a dedicated reactive-connection entrypoint carrying the connectionsCalculationToken cycle-guard. Use the self-settling _settleLayoutsAfter or a _<name>NoSettle core instead (connection-cascade-settle-fix-plan.md)  — ${at}`);
     }
+    // [Q] the connector-caller allowlist (see CONNECTOR_CALL above): a hard-coded textual call to a _<name>Connector
+    // must be a sanctioned mid-cascade self-render, else it smuggles a never-throwing setter past the flow guard.
+    const connectorCall = code.match(CONNECTOR_CALL);
+    if (connectorCall && !CONNECTOR_CALLER_ALLOWLIST.has(method)) {
+      violations.push(`[Q] ${method}() calls ${connectorCall[1]}() outside the connector-caller allowlist — a _<name>Connector entrypoint JOINS an already-open layout pass instead of throwing the flow-violation guard (the reactive-connection settle lane, rule [P]); a hard-coded textual call to one smuggles a never-throwing setter past that guard. Only a sanctioned mid-cascade self-render (a patch node's recalculateOutput) may call one directly; the reactive dispatch resolves the connector name at runtime and needs no textual call. If this genuinely IS such a render, add its method name to CONNECTOR_CALLER_ALLOWLIST (connection-cascade-settle-fix-plan.md §7e)  — ${at}`);
+    }
     if (recalc && !RECALC_WHITELIST.has(method)) {
       violations.push(`[B] recalculateLayouts() called from ${method}() (only doOneCycle / _settleLayoutsAfter may)  — ${at}`);
     }
@@ -661,9 +677,10 @@ function main() {
     console.error('N: the retired notify-by-mutation container seam (_announce*ToContainer) must not be re-defined — the settle-time up-edge _reFitMyTrackingContainerAfterSettle replaced it (assessment §4.1 / §6 rulebook rule 2).');
     console.error('O: a *Coalesced entrypoint (defers its layout settle to the end-of-cycle flush) may be CALLED only from an allowlisted per-event stream handler — COALESCED_CALLER_ALLOWLIST (a discrete/programmatic caller must use the self-settling setter) (layering/naming convention §4).');
     console.error('P: _settleLayoutsAfterOrJoinEnclosingPass (the reactive-connection settle lane — JOINS an open layout pass instead of throwing) may be CALLED only from a dedicated _<name>Connector entrypoint (connection-cascade-settle-fix-plan.md).');
+    console.error('Q: a _<name>Connector entrypoint (which joins an open layout pass instead of throwing — rule P) may be textually CALLED only from an allowlisted mid-cascade self-render — CONNECTOR_CALLER_ALLOWLIST; the reactive dispatch resolves it at runtime and needs no textual call (connection-cascade-settle-fix-plan.md §7e).');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N/O/P; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N/O/P/Q; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
   process.exit(0);
 }
 

@@ -105,7 +105,7 @@ class SliderWdgt extends CircleBoxWdgt
     @_reLayoutSelfAndButton()
 
   setValue: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
     @value = Number(newvalue)
     @updateTarget()
     @_reLayoutSelfAndButton()
@@ -145,7 +145,7 @@ class SliderWdgt extends CircleBoxWdgt
 
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
     @updateTarget()
 
   
@@ -285,13 +285,7 @@ class SliderWdgt extends CircleBoxWdgt
   # openTargetSelector: -> taken form the ControllerMixin
   
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    [menuEntriesStrings, functionNamesStrings] = theTarget.numericalSetters()
-    menu = new MenuWdgt @, false, @, true, true, "choose target property:"
-    for i in [0...menuEntriesStrings.length]
-      menu.addMenuItem menuEntriesStrings[i], true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil, theTarget, functionNamesStrings[i]
-    if menuEntriesStrings.length == 0
-      menu = new MenuWdgt @, false, @, true, true, "no target properties available"
-    menu.popUpAtHand()
+    @_popUpTargetPropertyMenu theTarget, theTarget.numericalSetters()
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings

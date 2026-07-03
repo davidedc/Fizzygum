@@ -14,7 +14,7 @@ ChildrenStainerMixin =
     @addInstanceProperties fromClass,
 
       setColor: (theColor, ignored, connectionsCalculationToken, superCall) ->
-        if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
+        return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
         super theColor, ignored, connectionsCalculationToken, true
         for w in @children
           w.setColor theColor, ignored, connectionsCalculationToken

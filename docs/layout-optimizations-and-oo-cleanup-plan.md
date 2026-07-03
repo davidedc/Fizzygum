@@ -37,6 +37,89 @@ hand-rolled `dontLayout` batching flag dropped (the `SimpleVerticalStackPanelWdg
 violations; gauntlet dpr1/dpr2/webkit 165/165 + apps + tiernaming + settle; four-config danger torture
 (RECALC_NONCONVERGENCE absent, 0 fails). Full record in §5.
 
+**⟢ UPDATE 2026-07-03 — Tiers A–G are all DONE; the LIVE work is now the NEW Tier H below (§6).** A separate,
+unrelated fix landed this session — the **connection-cascade settle-lane fix** (`connection-cascade-settle-fix-plan.md`;
+Fizzygum `14014e44`, tests `d3c05bf9b` + `a8f7cc18f`): reactive circuits (the °C↔°F converter) now settle once
+instead of throwing, via a new `Widget._settleLayoutsAfterOrJoinEnclosingPass` connector settle-tier + check-layering
+rule **[P]** + `ControllerMixin._fireConnection` routing. It ALSO fixed a latent `InspectorWdgt.selectionFromList`
+crash (mixin methods ran its `while … != Object` proto-walk off the end) and added the converter's first SystemTest.
+That work surfaced a batch of behaviour-preserving OO-cleanup + robustness follow-ups — banked as **Tier H (§6)**,
+the only live items in this plan. **A NEW SESSION STARTS AT §6.** (Read §0.5 for the cold-execution protocol; then §6.)
+
+**⟢ UPDATE 2026-07-03 (H1–H4 LANDED — behaviour-preserving; ready for review, not yet committed).** The four
+code-de-duplication items are in and green; **H5–H7 remain (owner's-call test-infra / feature items).**
+- **H1** — deleted `SimplePlainTextWdgt.setText`'s trailing `@updateTarget()`; `super → StringWdgt::_setTextNoSettle`
+  already fires it with the same token (the second fire was a token-guard-absorbed duplicate). The wire still fires
+  on a text change, once.
+- **H2** — the 34 inlined `connectionsCalculationToken` guard one-liners (17 files) → `Widget._acceptsConnectionToken`
+  (returns false-to-reject; mints/adopts otherwise). Byte-identical. The readable `return unless` form makes
+  check-layering **[H]** newly recognise `StringWdgt.setText`'s legitimate pre-settle arg-decoding guard (it can't
+  move into the token-less `_setTextNoSettle` core) → blessed with `# early-return-sanctioned`.
+- **H3** — the 8 near-identical `openTargetPropertySelector` bodies → one shared `Widget._popUpTargetPropertyMenu`;
+  each controller keeps a one-line stub passing its setter table. Menu byte-identical. Put on **Widget** (not
+  ControllerMixin): an inherited member the inspector's own-props view hides, so the controllers' member lists are
+  unshifted (ControllerMixin would make it an own member of all 8).
+- **H4** — new check-layering rule **[Q]** (chosen over `[P]`, which is taken by the join-primitive callee rule):
+  a `_<name>Connector` may be textually CALLED only from an allowlisted mid-cascade self-render (`recalculateOutput`);
+  the runtime dispatch is invisible to the scanner. Verified to pass AND bite.
+- **Verification:** `./fg build` 0 violations; headless converter probe propagates 30 °C→86 °F with no throw;
+  `./fg gauntlet` GREEN (dpr1/dpr2/webkit/apps/tiernaming/settle, 166/166 each). No torture needed (nothing touches
+  the settle loop / `_reLayout` / caches).
+- **One benign recapture (Fizzygum-tests):** `macroDuplicatedInspectorDrivesCopiedTargetOnly` is the only SystemTest
+  that shows INHERITED props (on a `RectangleWdgt`), so its inspector member list gained the 2 new Widget helpers →
+  its scrolled-to-`alpha` shots (image_2/image_3, dpr1+dpr2) shifted. Behaviour verified intact (left rect fades to
+  0.25, right to 0.6, no cross-talk; `alpha` selected by list text). Unavoidable: `Widget.setColor` itself uses the
+  guard, so `_acceptsConnectionToken` must live on Widget.
+
+## §6 — Tier H (LIVE, 2026-07-03): connection-cascade-fix follow-ups
+
+Behaviour-preserving cleanups + robustness items surfaced by the connection-cascade settle-lane fix and its
+independent review. **H1–H4 are code de-duplication (fully specced in `connection-cascade-settle-fix-plan.md` §7 —
+read it for the exact call sites); H5–H7 are from the review.** Ordered cheap→valuable. Each is standalone; do any
+prefix. Verify each with `./fg build` then `./fg suite` (H5/H6 touch inspector-rendered tests → run the full gauntlet
+incl. **webkit** + expect recaptures). **STANDING RULE banked this session: a recapture can BAKE IN a crash/error
+frame — the Chrome legs then pass vacuously; only the WEBKIT gauntlet leg surfaces it (crash pixels diverge V8/JSC).
+Never trust a recapture without a green webkit leg over it.**
+
+- **H1 — delete `SimplePlainTextWdgt.setText`'s trailing `@updateTarget()`** (`src/SimplePlainTextWdgt.coffee` ~:168).
+  A duplicate fire with the SAME token, always absorbed by the receiver's token-guard — `_setTextNoSettle` already
+  fired it. One line + a breadcrumb; expect byte-identical suite. (§7d.) *Trivial.*
+- **H2 — extract the 34× token-guard one-liner → one helper.** The exact
+  `if !superCall and connectionsCalculationToken == @… then return else if !…? then @… = world.makeNewConnectionsCalculationToken() else @… = …`
+  line is copy-pasted 34× across ~17 files (StringWdgt, SimplePlainTextWdgt, Slider, Widget setColor/setBackgroundColor,
+  Palette, the Fanout/Calculating/Diffing/Regex nodes, …; census = §7b / fact 14). Shape: a Widget-level
+  `_acceptsConnectionToken: (token, superCall, tokenField = "connectionsCalculationToken") ->` returning false-to-reject
+  (minting/adopting the token otherwise); callers become `return unless @_acceptsConnectionToken connectionsCalculationToken, superCall`
+  (per-input variants pass `"input1connectionsCalculationToken"` …). Behaviour-identical mechanical sweep; expect a
+  byte-identical suite. **Highest readability payoff** — the current line is the least readable idiom in the dataflow code.
+- **H3 — consolidate `openTargetPropertySelector` (8 near-identical copies → 1).** `StringWdgt:1318`,
+  `SimplePlainTextWdgt:63`, `SliderWdgt:288`, `PaletteWdgt:113`, `FanoutPinWdgt` (allSetters), `Calculating:81`,
+  `Diffing:78`, `Regex:84` — the SAME menu-builder body differing ONLY in which setter table it consults. Shape: ONE
+  `ControllerMixin` builder taking the table (or a per-class `connectionSetterTableFor: (theTarget) ->` hook);
+  `PaletteWdgt.addBangSetter` is the in-file de-triplication precedent. Menu output byte-identical. (§7c.)
+- **H4 — optional `[P]` caller-side clause in `check-layering.js`.** Mirror `[O]`'s caller allowlist for TEXTUAL
+  calls of `_*Connector` methods (allowlist `recalculateOutput`; the `ControllerMixin._fireConnection` dynamic dispatch
+  is invisible to the name-scanner regardless). Stops someone hand-calling `_setTextConnector` as "a setText that never
+  throws". Cheap; add when/if a second textual `_*Connector` caller class appears. (§7e.)
+- **H5 — inspector shows COMPILED JS for mixin methods; make it show real source (the review's "Option C").** The
+  `14014e44` InspectorWdgt fix stops the crash but falls through to the pre-existing `val.toString()` fallback —
+  compiled JS, off-brand for a live-CoffeeScript-introspection tool. Root: mixin method sources ARE parsed
+  (`Mixin.coffee` ~:108) but into `Mixin` meta-objects that are dropped at boot — `Mixin.allMixines` is declared and
+  NEVER populated. Fix shape: populate `Mixin.allMixines`, and have `InspectorWdgt.selectionFromList`'s walk consult
+  the class's `augmentedWith` mixins for the source. **⚠ Changes the detail-pane pixels of the 3 inspector crash tests
+  — `macroInspectorResizingOKEvenWhenTakenApart` image_2/image_4 display `_fireConnection`'s source — so RECAPTURE
+  those (dpr1+dpr2, verify webkit). A FEATURE, not a bug fix — ask the owner before doing it, to avoid a double
+  recapture.**
+- **H6 — harden the 3 inspector macros' brittle "first list row" click.** `macroInspectorResizingOKEvenWhenTakenApart`,
+  `macroMultilineTextInputScrollsWell`, `macroWrappingTextFieldResizesOK` arm the detail pane by clicking
+  `inspector.list.topLeft() + (12,8)` — the FIRST row, BY PIXEL — so their refs are coupled to the alphabetical
+  composition of the member list (any new method sorting before `_reflowContainedText…` re-churns them; that is what
+  `_fireConnection` did). Select a NAMED member instead. Test-robustness; owner's call, separate change.
+- **H7 — capture "stuck-state canary."** Add to `Fizzygum-tests/scripts/capture-macro-test-references.js` a warning
+  when a recapture produces FEWER distinct dataHashes than the refs it replaces (a resize / multi-shot test collapsing
+  to identical images = a stuck / error-log state). That, plus the webkit-leg rule above, would have caught this
+  session's crash-masking AT CAPTURE TIME rather than in the gauntlet.
+
 ## §0 — Why this now, and what it is NOT
 
 The **proper-layouts mandate is complete** (see `layout-system-architecture-assessment.md` §1/§2.6/§4.1): the

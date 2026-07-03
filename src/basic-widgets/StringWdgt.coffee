@@ -1272,7 +1272,12 @@ class StringWdgt extends Widget
   # silently deferring it.
   # thin-wrap-exempt: decodes the connection token + stringFieldWidget arg before the single-settle delegate.
   setText: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
+    # early-return-sanctioned: the connectionsCalculationToken cycle-guard is arg-DECODING that must gate BEFORE
+    # the settle -- it can't move into the token-less _setTextNoSettle core (which _setTextConnector and the
+    # mid-pass window-retitle path both reach WITHOUT a token). Same reason this method is thin-wrap-exempt
+    # (above). [H] only started flagging it once Tier H2 rewrote the guard from an inline `if…then return` (which
+    # [H] does not recognise) to the readable `return unless @_acceptsConnectionToken`.
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
     if stringFieldWidget?
       # in this case, the stringFieldWidget has a
       # string widget in "text". The string widget has the
@@ -1288,7 +1293,7 @@ class StringWdgt extends Widget
   # The reactive dispatch (ControllerMixin._fireConnection) routes wired "setText" connections here; direct/API
   # callers keep using the public setText.
   _setTextConnector: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
     if stringFieldWidget?
       theTextContent = stringFieldWidget.text.text
     @_settleLayoutsAfterOrJoinEnclosingPass =>
@@ -1339,13 +1344,7 @@ class StringWdgt extends Widget
       @_setFontSizeNoSettle sizeOrWidgetGivingSize, widgetGivingSize
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    [menuEntriesStrings, functionNamesStrings] = theTarget.stringSetters()
-    menu = new MenuWdgt @, false, @, true, true, "choose target property:"
-    for i in [0...menuEntriesStrings.length]
-      menu.addMenuItem menuEntriesStrings[i], true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil, theTarget, functionNamesStrings[i]
-    if menuEntriesStrings.length == 0
-      menu = new MenuWdgt @, false, @, true, true, "no target properties available"
-    menu.popUpAtHand()
+    @_popUpTargetPropertyMenu theTarget, theTarget.stringSetters()
   
   numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings

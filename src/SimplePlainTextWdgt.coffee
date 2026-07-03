@@ -60,13 +60,7 @@ class SimplePlainTextWdgt extends TextWdgt
     @layoutSpecDetails.canSetHeightFreely = false
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    [menuEntriesStrings, functionNamesStrings] = theTarget.stringSetters()
-    menu = new MenuWdgt @, false, @, true, true, "choose target property:"
-    for i in [0...menuEntriesStrings.length]
-      menu.addMenuItem menuEntriesStrings[i], true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil, theTarget, functionNamesStrings[i]
-    if menuEntriesStrings.length == 0
-      menu = new MenuWdgt @, false, @, true, true, "no target properties available"
-    menu.popUpAtHand()
+    @_popUpTargetPropertyMenu theTarget, theTarget.stringSetters()
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
@@ -155,7 +149,7 @@ class SimplePlainTextWdgt extends TextWdgt
 
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
     @updateTarget()
 
   # This is also invoked for example when you take a slider and set it to target
@@ -163,9 +157,12 @@ class SimplePlainTextWdgt extends TextWdgt
   # updateTarget) is SPTW-specific now; the box re-flow on a text change is the
   # inherited TextWdgt::setText (gated by FIT_BOX_TO_TEXT), reached via super.
   setText: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
     super theTextContent, stringFieldWidget, connectionsCalculationToken, true
-    @updateTarget()
+    # No trailing @updateTarget() here: super -> StringWdgt::_setTextNoSettle already fired it (StringWdgt
+    # ~:1258) with THIS same connectionsCalculationToken -- a second fire would be a duplicate that the
+    # receiver's token guard always absorbs (a no-op). Removed 2026-07-03 (Tier H1).
+    return
 
   updateTarget: ->
     @_fireConnection @text

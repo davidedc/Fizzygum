@@ -1714,8 +1714,29 @@ class Widget extends TreeNode
     # cache-break under the did-anything-change guard, like __commitExtent (the D4/E1 discipline)
     @__breakMoveResizeCaches()
   
+  # The reactive-connection cycle guard, extracted from the ~34 verbatim copies it used to be inlined as
+  # (Tier H2, 2026-07-03). A wired controller stamps every value it propagates with a
+  # connectionsCalculationToken; a receiver that has ALREADY seen this token (the cascade has come back
+  # around) must fire nothing. Returns:
+  #   false -- REJECT: the caller must `return` at once (exactly the old `... then return`);
+  #   true  -- ACCEPT: a FRESH token was minted (a user-initiated change, token nil) or the incoming one
+  #            ADOPTED (mid-cascade), stamped onto @[tokenField]; the caller proceeds.
+  # `superCall` forces acceptance (an override delegating to super with its own already-checked token).
+  # `tokenField` names the per-input token slot for the multi-input patch nodes (setInputN); it defaults to
+  # the shared field every single-input controller uses.
+  # Caller idiom: `return unless @_acceptsConnectionToken connectionsCalculationToken, superCall`
+  # (per-input variants pass e.g. "input1connectionsCalculationToken").
+  _acceptsConnectionToken: (connectionsCalculationToken, superCall, tokenField = "connectionsCalculationToken") ->
+    if !superCall and connectionsCalculationToken == @[tokenField]
+      return false
+    if !connectionsCalculationToken?
+      @[tokenField] = world.makeNewConnectionsCalculationToken()
+    else
+      @[tokenField] = connectionsCalculationToken
+    true
+
   setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
 
     if widgetGivingColor?.getColor?
       aColor = widgetGivingColor.getColor()
@@ -1732,7 +1753,7 @@ class Widget extends TreeNode
     return aColor
   
   setBackgroundColor: (aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, superCall) ->
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = world.makeNewConnectionsCalculationToken() else @connectionsCalculationToken = connectionsCalculationToken
+    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
 
     if widgetGivingColor?.getColor?
       aColor = widgetGivingColor.getColor()
@@ -3526,6 +3547,27 @@ class Widget extends TreeNode
       k++
 
     return [menuEntriesStrings, functionNamesStrings]
+
+  # The shared body of every controller widget's openTargetPropertySelector (Tier H3, 2026-07-03): pop up the
+  # "choose target property" menu -- one item per (label, setter) pair the caller resolved from `theTarget`'s
+  # setter table. WHICH table (stringSetters / numericalSetters / colorSetters / allSetters) is the ONLY thing
+  # the 8 per-class openTargetPropertySelector stubs differ by, so they now each pass their table here and this
+  # holds the once-copied menu-building body. Each item wires @action = that setter onto theTarget via
+  # setTargetAndActionWithOnesPickedFromMenu (a ControllerMixin method -- every caller @augmentWith's it).
+  # Deliberately on Widget, NOT ControllerMixin: as an INHERITED member it is hidden from the inspector's
+  # default own-props view, so the 8 controllers' inspected member lists are unshifted -- a ControllerMixin
+  # method would be copied in as an OWN member of all 8 and shift every one of them. (It DOES surface in the
+  # rarer inherited-props inspector view, alongside _acceptsConnectionToken; one such SystemTest,
+  # macroDuplicatedInspectorDrivesCopiedTargetOnly, was recaptured.) The thin per-class
+  # openTargetPropertySelector stays (own, menu-dispatched).
+  _popUpTargetPropertyMenu: (theTarget, setters) ->
+    [menuEntriesStrings, functionNamesStrings] = setters
+    menu = new MenuWdgt @, false, @, true, true, "choose target property:"
+    for i in [0...menuEntriesStrings.length]
+      menu.addMenuItem menuEntriesStrings[i], true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil, theTarget, functionNamesStrings[i]
+    if menuEntriesStrings.length == 0
+      menu = new MenuWdgt @, false, @, true, true, "no target properties available"
+    menu.popUpAtHand()
 
   colorSetters: (menuEntriesStrings, functionNamesStrings) ->
     if !menuEntriesStrings?
