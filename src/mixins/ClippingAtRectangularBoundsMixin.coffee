@@ -61,10 +61,10 @@ ClippingAtRectangularBoundsMixin =
         @bounds
 
       SLOWfullClippedBounds: ->
-        if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
+        if @isOrphan() or !@SLOWvisibleBasedOnIsVisibleProperty() or @SLOWisInCollapsedSubtree()
           result = Rectangle.EMPTY
         else
-          result = @clippedThroughBounds()
+          result = @SLOWclippedThroughBounds()
         result
 
       # Panels clip any of their children

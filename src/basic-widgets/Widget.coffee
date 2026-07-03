@@ -219,14 +219,17 @@ class Widget extends TreeNode
   cachedFullClippedBounds: nil
   checkFullClippedBoundsCache: nil
 
-  visibleBasedOnIsVisiblePropertyCache: nil
-  checkVisibleBasedOnIsVisiblePropertyCache: ""
+  cachedVisibleBasedOnIsVisibleProperty: nil
+  checkVisibleBasedOnIsVisiblePropertyCache: nil
 
-  clippedThroughBoundsCache: nil
-  checkClippedThroughBoundsCache: ""
+  cachedClippedThroughBounds: nil
+  checkClippedThroughBoundsCache: nil
 
-  clipThroughCache: nil
+  cachedClipThrough: nil
   checkClipThroughCache: nil
+
+  cachedIsInCollapsedSubtree: nil
+  checkIsInCollapsedSubtreeCache: nil
 
   srcBrokenRect: nil
   dstBrokenRect: nil
@@ -1003,18 +1006,18 @@ class Widget extends TreeNode
       # I'm not sure updating the cache here does
       # anything but it's two lines so let's do it
       @checkVisibleBasedOnIsVisiblePropertyCache = WorldWdgt.visibilityVersion
-      @visibleBasedOnIsVisiblePropertyCache = false
-      result = @visibleBasedOnIsVisiblePropertyCache
+      @cachedVisibleBasedOnIsVisibleProperty = false
+      result = @cachedVisibleBasedOnIsVisibleProperty
     else # @isVisible is true
       if !@parent?
         result = true
       else
         if @checkVisibleBasedOnIsVisiblePropertyCache == WorldWdgt.visibilityVersion
-          result = @visibleBasedOnIsVisiblePropertyCache
+          result = @cachedVisibleBasedOnIsVisibleProperty
         else
           @checkVisibleBasedOnIsVisiblePropertyCache = WorldWdgt.visibilityVersion
-          @visibleBasedOnIsVisiblePropertyCache = @parent.visibleBasedOnIsVisibleProperty()
-          result = @visibleBasedOnIsVisiblePropertyCache
+          @cachedVisibleBasedOnIsVisibleProperty = @parent.visibleBasedOnIsVisibleProperty()
+          result = @cachedVisibleBasedOnIsVisibleProperty
 
     if world.doubleCheckCachedMethodsResults
       if result != @SLOWvisibleBasedOnIsVisibleProperty()
@@ -1054,21 +1057,47 @@ class Widget extends TreeNode
   SLOWfullBounds: ->
     result = @bounds
     @children.forEach (child) ->
-      if child.visibleBasedOnIsVisibleProperty() and
-      !child.isInCollapsedSubtree()
+      if child.SLOWvisibleBasedOnIsVisibleProperty() and
+      !child.SLOWisInCollapsedSubtree()
         result = result.merge child.SLOWfullBounds()
     result
 
   SLOWfullClippedBounds: ->
-    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
+    if @isOrphan() or !@SLOWvisibleBasedOnIsVisibleProperty() or @SLOWisInCollapsedSubtree()
       return Rectangle.EMPTY
-    result = @clippedThroughBounds()
+    result = @SLOWclippedThroughBounds()
     @children.forEach (child) ->
-      if child.visibleBasedOnIsVisibleProperty() and !child.isInCollapsedSubtree()
+      if child.SLOWvisibleBasedOnIsVisibleProperty() and !child.SLOWisInCollapsedSubtree()
         result = result.merge child.SLOWfullClippedBounds()
     #if this != world and result.corner.x > 400 and result.corner.y > 100 and result.origin.x ==0 and result.origin.y ==0
     #  debugger
     result
+
+  # Independent (de-circularized) re-derivations of the version-keyed clipThrough /
+  # clippedThroughBounds, mirroring their CACHED bodies exactly. Like the cached clipThrough,
+  # the recursion terminates at the two overriders -- world and the hand -- which return their
+  # raw @boundingBox() via matching SLOW* overrides (WorldWdgt / ActivePointerWdgt), exactly as
+  # their cached clippedThroughBounds/clipThrough overrides do. The hand's override is NOT the
+  # same as the generic clip-through-world computation (the hand is painted on top of
+  # everything, unclipped -- and its @boundingBox() can be inside-out/empty, which the generic
+  # intersect would normalize to EMPTY), so it MUST be mirrored explicitly per overrider; a
+  # base-only guard cannot reproduce it.
+  SLOWclipThrough: ->
+    if @isOrphan() or !@SLOWvisibleBasedOnIsVisibleProperty() or @SLOWisInCollapsedSubtree()
+      return Rectangle.EMPTY
+    firstClipping = @SLOWfirstParentClippingAtBounds()
+    if !firstClipping?
+      firstClipping = world
+    upstream = firstClipping.SLOWclipThrough()
+    if @clipsAtRectangularBounds
+      @boundingBox().intersect upstream
+    else
+      upstream
+
+  SLOWclippedThroughBounds: ->
+    if @isOrphan() or !@SLOWvisibleBasedOnIsVisibleProperty() or @SLOWisInCollapsedSubtree()
+      return Rectangle.EMPTY
+    @boundingBox().intersect @SLOWclipThrough()
 
   # for PanelWdgt scrolling support
   subWidgetsMergedFullBounds: ->
@@ -1183,16 +1212,22 @@ class Widget extends TreeNode
   clippedThroughBounds: ->
 
     if @checkClippedThroughBoundsCache == WorldWdgt.geometryVersion
-      return @clippedThroughBoundsCache
-
-    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
+      result = @cachedClippedThroughBounds
+    else if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
       @checkClippedThroughBoundsCache = WorldWdgt.geometryVersion
-      @clippedThroughBoundsCache = Rectangle.EMPTY
-      return @clippedThroughBoundsCache
+      @cachedClippedThroughBounds = Rectangle.EMPTY
+      result = @cachedClippedThroughBounds
+    else
+      @checkClippedThroughBoundsCache = WorldWdgt.geometryVersion
+      @cachedClippedThroughBounds = @boundingBox().intersect @clipThrough()
+      result = @cachedClippedThroughBounds
 
-    @checkClippedThroughBoundsCache = WorldWdgt.geometryVersion
-    @clippedThroughBoundsCache = @boundingBox().intersect @clipThrough()
-    return @clippedThroughBoundsCache
+    if world.doubleCheckCachedMethodsResults
+      if !result.equals @SLOWclippedThroughBounds()
+        debugger
+        alert "clippedThroughBounds is broken"
+
+    return result
   
   # this one does take into account orphanage and
   # visibility. The reason is that this is used to
@@ -1204,25 +1239,29 @@ class Widget extends TreeNode
   clipThrough: ->
     # answer which part of me is not clipped by a Panel
     if @checkClipThroughCache == WorldWdgt.geometryVersion
-      return @clipThroughCache
-
-    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
+      result = @cachedClipThrough
+    else if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
       @checkClipThroughCache = WorldWdgt.geometryVersion
-      @clipThroughCache = Rectangle.EMPTY
-      return @clipThroughCache
-
-    firstParentClippingAtBounds = @firstParentClippingAtBounds()
-    if !firstParentClippingAtBounds?
-      firstParentClippingAtBounds = world
-    firstParentClippingAtBoundsClipThroughBounds = firstParentClippingAtBounds.clipThrough()
-    @checkClipThroughCache = WorldWdgt.geometryVersion
-    if @clipsAtRectangularBounds
-      @clipThroughCache = @boundingBox().intersect firstParentClippingAtBoundsClipThroughBounds
+      @cachedClipThrough = Rectangle.EMPTY
+      result = @cachedClipThrough
     else
-      @clipThroughCache = firstParentClippingAtBoundsClipThroughBounds
+      firstParentClippingAtBounds = @firstParentClippingAtBounds()
+      if !firstParentClippingAtBounds?
+        firstParentClippingAtBounds = world
+      firstParentClippingAtBoundsClipThroughBounds = firstParentClippingAtBounds.clipThrough()
+      @checkClipThroughCache = WorldWdgt.geometryVersion
+      if @clipsAtRectangularBounds
+        @cachedClipThrough = @boundingBox().intersect firstParentClippingAtBoundsClipThroughBounds
+      else
+        @cachedClipThrough = firstParentClippingAtBoundsClipThroughBounds
+      result = @cachedClipThrough
 
+    if world.doubleCheckCachedMethodsResults
+      if !result.equals @SLOWclipThrough()
+        debugger
+        alert "clipThrough is broken"
 
-    return @clipThroughCache
+    return result
   
   
   # Widget accessing - simple changes: translate me + my children + repaint.
@@ -1270,6 +1309,12 @@ class Widget extends TreeNode
   __breakMoveResizeCaches: ->
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
+    # EMPTY-HAND CARVE-OUT (load-bearing -- measured: hover hit-testing stays ~96%-cached
+    # because of this): a BARE pointer move must NOT bump geometryVersion, or every mouse
+    # move would invalidate every version-keyed bounds cache in the world. The hand
+    # compensates locally: its clippedThroughBounds/clipThrough overrides always recompute
+    # (ActivePointerWdgt), and the explicit invalidate*Cache climbs above still run for
+    # the hand's own chain. With children (mid float-drag) the bump proceeds as normal.
     if @ == world.hand
       if @children.length == 0
         return
@@ -2087,14 +2132,38 @@ class Widget extends TreeNode
     @parent?._reactToChildUnCollapsed? @
 
   
-  isInCollapsedSubtree: ->
+  SLOWisInCollapsedSubtree: ->
     if @collapsed
       return true
+    if @parent?
+      return @parent.SLOWisInCollapsedSubtree()
+    return false
+
+  # Cached on visibilityVersion, exactly like visibleBasedOnIsVisibleProperty: the only
+  # two @collapsed writes (collapse/unCollapse cores) bump it, and a reparent bumps it
+  # via noteStructureChange -- so the stamp invalidates in exactly the situations the
+  # walk's inputs can change, and moves never touch it (no empty-hand interaction).
+  # Measured before caching (2026-07-03): 310k node-visits / ~149 ms in one menu-hover
+  # test -- an uncached O(depth) walk on every hit-test / broken-rect guard.
+  isInCollapsedSubtree: ->
+    if @checkIsInCollapsedSubtreeCache == WorldWdgt.visibilityVersion
+      result = @cachedIsInCollapsedSubtree
     else
-      if @parent?
-        return @parent.isInCollapsedSubtree()
+      if @collapsed
+        result = true
+      else if @parent?
+        result = @parent.isInCollapsedSubtree()
       else
-        return false
+        result = false
+      @checkIsInCollapsedSubtreeCache = WorldWdgt.visibilityVersion
+      @cachedIsInCollapsedSubtree = result
+
+    if world.doubleCheckCachedMethodsResults
+      if result != @SLOWisInCollapsedSubtree()
+        debugger
+        alert "isInCollapsedSubtree is broken"
+
+    return result
   
   removeFromTree: ->
     # FREEFLOATING-skip centralized in _invalidateLayout(triggeringChild): pass @ so the parent skips

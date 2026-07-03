@@ -103,6 +103,20 @@ wrapper/core lattice + one clamp home"), and the **14-file misleading `_applyBou
 drift note explicitly left flagged (I6). Items reviewed and NOT selected are banked in the new **Appendix X9**.
 **A NEW SESSION STARTS AT §7** (read §0.5 first for the cold-execution protocol).
 
+**⟢ UPDATE 2026-07-03 (late) — Tier I is LANDED + PUSHED (Fizzygum `d6bda64a` / tests `600862e57`); an
+owner-directed assessment of the bounds/visibility CACHE system (the `SLOW*`-twin /
+`doubleCheckCachedMethodsResults` region) produced the NEW live Tier J (§8).** Assessment verdict in one line:
+all seven caches WORK (verified with the engine's own oracle, headless) and are MEASURED load-bearing — pointer
+hit-testing is the dominant consumer (93k `clippedThroughBounds` reads @ 96% hit in one menu test; the empty-hand
+carve-out in `__breakMoveResizeCaches` is what keeps hover cached) — but the SEAMS are warty: dual invalidation
+mechanisms, an uncommented load-bearing carve-out, three field-naming conventions, and a partial/non-independent
+SLOW oracle. Tier J = one measured cache ADDITION (`isInCollapsedSubtree` — 310k uncached walk-visits/149 ms in
+that same test), completion + de-circularization of the SLOW oracle, a NEW suite-wide cache-coherence GATE
+(owner-directed: *"in test mode always check the results against the simpler SLOW implementations; outside of
+testing the double-calculation and the check are off"* — the off-outside-testing half is ALREADY the default),
+retirement of the explicit-climb invalidation mechanism, and naming/comment polish. Evidence + all measurements
+in §8.1. **A NEW SESSION STARTS AT §8** (read §0.5 first for the cold-execution protocol).
+
 ## §6 — Tier H (LIVE, 2026-07-03): connection-cascade-fix follow-ups
 
 Behaviour-preserving cleanups + robustness items surfaced by the connection-cascade settle-lane fix and its
@@ -152,7 +166,7 @@ Never trust a recapture without a green webkit leg over it.**
   to identical images = a stuck / error-log state). That, plus the webkit-leg rule above, would have caught this
   session's crash-masking AT CAPTURE TIME rather than in the gauntlet.
 
-## §7 — Tier I (LIVE, 2026-07-03): third wart hunt — landmines, dead twin, write-only cache, one-home measures
+## §7 — Tier I (✅ LANDED + PUSHED 2026-07-03 — Fizzygum `d6bda64a` / tests `600862e57`): third wart hunt — landmines, dead twin, write-only cache, one-home measures
 
 Found by a fourth code-level re-read at Fizzygum **`b05f8d1e`** (all line numbers exact there; method name + quoted
 text authoritative — §0.5 drift protocol). Ordered cheap→risky; each item standalone, any prefix is a legitimate
@@ -566,6 +580,340 @@ context) is the banked follow-up if the owner wants apps covered.
 - **Tier-end gates:** `./fg gauntlet`; **plus the four-config danger torture iff I4/I5/I10 ran** (§0.5 gate 2).
   I3 adds methods only (no deletion) → no inspector recapture expected. A comments/docs-only session (I6+I7)
   needs one `./fg suite`.
+
+## §8 — Tier J (J1–J5 ✅ LANDED 2026-07-03; **J6 is the sole remaining item**): bounds/visibility-cache follow-ups — the measured cache, the oracle gate, the mechanism retirement
+
+Source: an owner-directed assessment (2026-07-03) of the recursive/clipped-bounds cache system — the region with
+the `SLOW*` twin methods and the `world.doubleCheckCachedMethodsResults` assertions — run at Fizzygum **`d6bda64a`**
+(tree clean; all line numbers exact there; method name + quoted text authoritative per §0.5 drift protocol).
+Measurement method, reusable in ~5 minutes: a PRELUDE_JS prelude wrapping the queries with hit/miss (or
+call-count + time) counters, injected via `PRELUDE_JS=<file> LOG_FILE=<file> node scripts/run-macro-test-headless.js
+SystemTest_<name> --speed=normal` (from `Fizzygum-tests/`), counters dumped as a JSON console line each second;
+probed on three scenarios: `macroHoppingBetweenSubMenus` (hover/hit-testing), `macroDocumentScrollsMixedTextAndClocks`
+(scroll + stepping), `macroBareTextWdgtAsWindowContentReflowsOnResize` (geometry churn). All probed runs PASSED
+byte-identical with wrappers on.
+
+Ordered cheap→risky; each item standalone, any prefix is a legitimate session. **Torture required iff J5 or J6 ran**
+(cache class — §0.5 gate 2). **J2→J3 are a dependency pair** (the gate is blind to two caches until J2 adds their
+oracles). Expect the pre-authorised benign duplicated-inspector member-list recapture on J2/J5 (Widget methods
+ADDED) and J6 (two inspector-visible methods DELETED).
+
+> ### ✅ LANDED STATUS (2026-07-03, executed + committed this session) — **read before J6**
+> **J1, J2, J3, J4, J5 are DONE, gated green, and committed** (Fizzygum src + this doc; Fizzygum-tests gate infra +
+> one inspector recapture). **J6 is the only item left.** Gates run: `./fg gauntlet` all-green (dpr1/dpr2/webkit/apps
+> + tiernaming + settle) twice (post-J4 and post-J5); the four-config danger torture all-PASS (no
+> `RECALC_NONCONVERGENCE`); the new cache-oracle gate green (0 mismatch records, 8/8 coverage) with its
+> SLOWroot-corruption bite-proof (gate FAILS with 408 records). Amendments a J6 executor MUST know:
+> - **J2 hand-override CORRECTION (the authored §8.2 J2 code was incomplete).** The inline `SLOWclipThrough` handled
+>   only `world`'s override (via a `firstClipping == @` guard); it did NOT mirror the HAND's override, and the new
+>   oracle caught it at once (`fullClippedBounds is broken`, ~175k records on the menu test: the hand's override
+>   returns its raw, possibly inside-out/EMPTY `boundingBox()`, which the generic clip-through-world SLOW normalizes
+>   to EMPTY and diverges from). FIX (per this section's own *"mirror the CACHED body exactly"* directive): base
+>   `SLOWclipThrough` is now a faithful mirror (the `firstClipping == @` guard is GONE — termination is via the
+>   overriders), and **both** `WorldWdgt` and `ActivePointerWdgt` carry `SLOWclippedThroughBounds` / `SLOWclipThrough`
+>   overrides returning `@boundingBox()`. Post-fix: **0 oracle records suite-wide.** J6's ActivePointerWdgt work
+>   (always-recompute `fullBounds`/`fullClippedBounds`) sits ALONGSIDE these existing hand overrides.
+> - **All §8.1/§8.2 line numbers below are now STALE** — J1–J5 added ~90 lines to `Widget.coffee` (the :216–229
+>   defaults block gained the J5 pair; the SLOW block, `fullBounds`/`fullClippedBounds`/`clippedThroughBounds`/
+>   `clipThrough`, `__breakMoveResizeCaches`, `isInCollapsedSubtree`, and the collapse/visibility mutators all
+>   shifted). Re-grep per §0.5 (method name + quoted code authoritative).
+> - **J4 already renamed the fields** J6 references: `clippedThroughBoundsCache`→`cachedClippedThroughBounds`,
+>   `clipThroughCache`→`cachedClipThrough`, `rootCache`→`cachedRoot`, `rootCacheChecker`→`checkRootCache`,
+>   `visibleBasedOnIsVisiblePropertyCache`→`cachedVisibleBasedOnIsVisibleProperty`. `cachedFullBounds` still has NO
+>   check field (J6 step 1 adds `checkFullBoundsCache`).
+> - **J1(a)'s carve-out comment** (in `__breakMoveResizeCaches`) still contains the "the explicit invalidate*Cache
+>   climbs above still run for the hand's own chain" sentence — **J6 step 4 deletes that sentence** (the mechanism
+>   is gone).
+> - **The J6 gate is ready:** `Fizzygum-tests/scripts/cache-oracle-audit/run-cache-oracle-gate.sh` (+
+>   `cache-oracle-prelude.js`; bite-proof `cache-oracle-selftest-prelude.js`) directly guards the
+>   fullBounds-invalidation class J6 touches. J3.4's "multiple of baseline" prediction was wrong — oracle-on ≈ 0.9 min.
+
+### §8.1 — Evidence bank (verified + measured 2026-07-03 at `d6bda64a`; re-run the greps before editing)
+
+1. **The cache inventory and its THREE coexisting mechanisms.** Seven memoized queries: `Widget.fullBounds`
+   (:1120–1138 — **no version key**; explicit parent-climb invalidation only), `fullClippedBounds` (:1147–1174 —
+   `geometryVersion` key **plus also** the explicit climb), `clippedThroughBounds` (:1183–1195) and `clipThrough`
+   (:1204–1225) (`geometryVersion` only), `visibleBasedOnIsVisibleProperty` (:1001–1024, `visibilityVersion`),
+   `TreeNode.root` (:182–200) and `firstParentClippingAtBounds` (:491–513) (`structureVersion`). Field defaults:
+   `Widget.coffee` :216–229. The explicit-climb invalidators are `invalidateFullBoundsCache` /
+   `invalidateFullClippedBoundsCache` (:1037–1049; mixin child-call-ignoring overrides
+   `ClippingAtRectangularBoundsMixin.coffee` :49–55). `ClippingAtRectangularBoundsMixin` (installed on PanelWdgt /
+   ClippingBoxWdgt / SimpleVerticalStackPanelWdgt; sets `clipsAtRectangularBounds: true` at :9) overrides
+   `fullBounds`→own `@bounds` (:74–89) and `fullClippedBounds`→own `clippedThroughBounds` (:91–111) — the O(1)
+   frame cut. `WorldWdgt` (~:684–:695) and `ActivePointerWdgt` (:47–55) override `clippedThroughBounds`/`clipThrough`
+   to ALWAYS recompute (`@boundingBox()`), stamping cache fields nothing ever reads back.
+2. **All seven hit paths WORK** (F8 made the keys integers; I4 completed the one write-only cache). Verified two
+   ways: code-read of every hit branch, AND two headless runs with the engine's own oracle ON
+   (`world.doubleCheckCachedMethodsResults = true`, `window.alert` patched to `console.error` in a prelude so a
+   headless dialog cannot stall) — scroll + menu tests, **zero "is broken" assertions, byte-identical PASS**.
+3. **Measured hit rates (probe 1).** Menu-hover: `clippedThroughBounds` 93,257 calls @ **96.1%** hit (the
+   `topWdgtUnderPointer` per-mousemove scan is the dominant consumer), `visibleBasedOnIsVisibleProperty` 96,852 @
+   93.2%, `root` 62,497 @ 92.9%; scroll: `clippedThroughBounds` 5,591 @ **98.7%**; resize-drag (1,747
+   `geometryVersion` bumps): 14,488 @ 74.0%. `fullBounds` measured near-COLD: 4 / 5 / 359 calls in the three tests.
+   `clipThrough`'s low standalone rates (0–47%) are by construction: it is only reached on a `clippedThroughBounds`
+   miss, once per widget per version epoch; its cache pays via ancestor-sharing inside panels.
+4. **The empty-hand carve-out is the load-bearing perf decision — and it is uncommented.**
+   `__breakMoveResizeCaches` (`Widget.coffee` :1270–1276) skips the `geometryVersion` bump when `@ == world.hand`
+   with zero children, so a bare pointer move invalidates NO version-keyed cache — that is what makes fact 3's
+   hover hit rates possible. Its compensations live elsewhere uncredited: the hand's always-recompute
+   `clippedThroughBounds`/`clipThrough` overrides (`ActivePointerWdgt.coffee` :47–55) and the explicit-climb
+   invalidators (which the empty-hand move still runs, :1271–1272 — the ONLY case where the explicit
+   `invalidateFullClippedBoundsCache` is not redundant with the version key).
+5. **The explicit-climb invalidators are a second, mostly-redundant mechanism.** Call sites
+   (`grep -rn "invalidateFullBoundsCache\|invalidateFullClippedBoundsCache" src`): `__breakMoveResizeCaches`
+   :1271–1272; the visibility/collapse mutators `Widget.coffee` :1990–1991, :2019–2020, :2031–2032, :2055–2056,
+   :2083–2084 — each of those sites ALSO calls `WorldWdgt.noteVisibilityOrCollapseChange()` (which bumps
+   `geometryVersion`), so for `fullClippedBounds` the explicit call there is redundant; add/remove sites
+   `TreeNode.coffee` :70–71, :123–124 (ditto via `noteStructureChange`). The climbs are load-bearing ONLY for
+   (a) `fullBounds` (no version key at all) and (b) the empty-hand case of fact 4.
+6. **`isInCollapsedSubtree` is the ONE measured-justified NEW cache.** Def `Widget.coffee` :2090–2097 — an
+   UNCACHED O(depth) ancestor walk, ~43 textual call sites, sitting on the same hot guards as its CACHED sibling
+   `visibleBasedOnIsVisibleProperty` (`fullClippedBounds`, `clippedThroughBounds`, `clipThrough`, the hit-test
+   predicate, `fleshOutBroken`). Probe 2 (node-visits, i.e. exactly the work a per-level cache removes):
+   menu-hover **310,680 visits / 148.5 ms** (3× the calls, ~9× the time of the cached sibling's 96,243 / 16.3 ms);
+   resize 56,041 / 29.0 ms; scroll 6,758 / 3.7 ms. Invalidation mapping is AIRTIGHT for a `visibilityVersion`
+   stamp: `@collapsed` is written in exactly TWO places (:2053 collapse-core, :2081 uncollapse-core;
+   `grep -rn "collapsed = " src` excluding comments), each immediately followed by
+   `WorldWdgt.noteVisibilityOrCollapseChange()` (:2054, :2082); a reparent bumps `visibilityVersion` via
+   `noteStructureChange`. Moves never touch `visibilityVersion` → **no interaction with the empty-hand carve-out**,
+   and the cache stays hot across a whole settle+paint (nothing bumps it mid-pass).
+7. **Candidates measured COLD or wrong-mechanism (do not add caches for these).** `isOrphan` (57,712 calls
+   menu-test but already O(1) amortized — it rides the CACHED `root()`, `TreeNode.coffee` :145–149);
+   `isTransparentAt` (≤1,250 calls, ~2.5 ms; delegates to the appearance's back-buffer pixel read — CONTENT-keyed,
+   the back-buffer already is its cache); `surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage`
+   (766 calls; its cost is its constituents — J5 fixes the expensive one); the layout/measure path
+   (`getRecursive*Dim`, `subWidgetsMergedFullBounds`/`PreferredBounds`, `preferredExtentForWidth`) — ZERO calls in
+   all three probed scenarios, X6/X7 verdicts stand, and STRUCTURALLY the version stamps cannot serve it: every
+   `__breakMoveResizeCaches` mid-settle bumps `geometryVersion`, so a geometry-stamped cache self-invalidates
+   continuously inside the very pass that would read it (version stamps are a BETWEEN-mutations mechanism serving
+   the read phases — paint + hit-testing; intra-settle memoization would need the X7-banked flush-scoped memo).
+   Post-J5, the only remaining hover cost is the O(N) hit-test scan itself — spatial-index territory, not a
+   version stamp, and not justified by current totals.
+8. **The SLOW oracle has two coverage gaps and three circular twins.** `clippedThroughBounds` and `clipThrough`
+   have NO `SLOW*` twin and no `doubleCheckCachedMethodsResults` block at all. And the twins that exist are not
+   independent re-derivations: `SLOWfullBounds` (:1054–1060) filters children via the CACHED
+   `visibleBasedOnIsVisibleProperty()`; `SLOWfullClippedBounds` (:1062–1071) calls the CACHED
+   `@clippedThroughBounds()` + the cached visibility filter (mixin `SLOWfullClippedBounds` :63–68 likewise) — so a
+   broken lower-tier cache can vacuously pass an upper oracle. Fully independent already: `SLOWvisibleBasedOn…`
+   (:992–998), `SLOWroot` (:175–179), `SLOWfirstParentClippingAtBounds` (:482–489).
+9. **Naming census — three conventions for one field pair, plus two stale `""` defaults.** `cachedFullBounds`
+   (no check field) · `checkFullClippedBoundsCache`/`cachedFullClippedBounds` ·
+   `checkClippedThroughBoundsCache`/`clippedThroughBoundsCache` · `checkClipThroughCache`/`clipThroughCache` ·
+   `checkVisibleBasedOnIsVisiblePropertyCache`/`visibleBasedOnIsVisiblePropertyCache` ·
+   `rootCacheChecker`/`rootCache` · `checkFirstParentClippingAtBoundsCache`/`cachedFirstParentClippingAtBounds`.
+   The dominant/target convention is **`check<Name>Cache` + `cached<Name>`**. Residue: the prototype defaults
+   `checkVisibleBasedOnIsVisiblePropertyCache: ""` (:223) and `checkClippedThroughBoundsCache: ""` (:226) still
+   initialize to the pre-F8 STRING-key empty string (harmless — `"" == <int>` never matches — but a lie).
+10. **`WorldWdgt.clipThrough`'s "never used" TODO is FALSE.** `WorldWdgt extends PanelWdgt` (:2) which carries the
+    clipping mixin, so every desktop-level widget's `clipThrough` recursion terminates at
+    `world.clipThrough()` (via the `firstParentClippingAtBounds ? world` fallback, `Widget.coffee` :1214–1217).
+    The comment above `WorldWdgt.clipThrough` (~:691) claiming Chrome code-coverage showed it unused predates the
+    caches' current shape.
+11. **Nothing outside `src` reads any of it.** `grep -rn` in `Fizzygum-tests` (scripts + harness src) for the
+    cache field names, the `SLOW*` names, `doubleCheckCachedMethodsResults`, and `isInCollapsedSubtree` → zero
+    hits (verified 2026-07-03).
+12. **Serialization/deepCopy note.** The cache fields are ordinary prototype-defaulted instance fields riding
+    `deepCopy`/`serialize` like any other; any new cache field (J5/J6) must simply sit in the same :216–229
+    defaults block and needs no special handling (pre-flight: confirm the block's fields get no special-casing in
+    the serializer — `grep -n "cachedFullBounds" src` beyond Widget/mixin/TreeNode → zero hits today).
+
+### §8.2 — The items
+
+### J1 — Carve-out + TODO truth repairs, dead stamps, stale `""` defaults — trivial
+*Why:* facts 4, 9, 10 + fact 1's write-only stamps. *How:*
+(a) Above the `if @ == world.hand` skip in `__breakMoveResizeCaches` (`Widget.coffee` :1273), add:
+```coffee
+    # EMPTY-HAND CARVE-OUT (load-bearing -- measured: hover hit-testing stays ~96%-cached
+    # because of this): a BARE pointer move must NOT bump geometryVersion, or every mouse
+    # move would invalidate every version-keyed bounds cache in the world. The hand
+    # compensates locally: its clippedThroughBounds/clipThrough overrides always recompute
+    # (ActivePointerWdgt), and the explicit invalidate*Cache climbs above still run for
+    # the hand's own chain. With children (mid float-drag) the bump proceeds as normal.
+```
+(b) Replace `WorldWdgt.clipThrough`'s stale coverage TODO (~:691) with one line: "terminal of every desktop
+widget's clipThrough recursion (via the firstParentClippingAtBounds → world fallback); recomputes trivially, does
+not participate in the version caches." (c) In the four World/hand overrides (fact 1), drop the write-only stamp
+pair — each body becomes `return @boundingBox()` plus a one-line comment ("always recompute — the empty-hand
+carve-out means the version key can be stale for the hand; the compute is trivial"). Pre-flight:
+`grep -rn "clippedThroughBoundsCache\|clipThroughCache" src` → confirm the only reads are inside the OWN methods
+(so the stamps are provably write-only there). (d) `Widget.coffee` :223/:226 — the two `""` defaults become `nil`.
+*Gate:* build; rides the tier-end suite.
+
+### J2 — Complete + de-circularize the SLOW oracle — small (debug-only paths)
+*Why:* fact 8 — J3's gate is only as strong as the oracle's coverage and independence.
+*How (all `Widget.coffee` unless noted; flag-off behaviour identical by construction):*
+1. Add independent twins next to the existing SLOW block:
+```coffee
+  SLOWclipThrough: ->
+    if @isOrphan() or !@SLOWvisibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
+      return Rectangle.EMPTY
+    firstClipping = @SLOWfirstParentClippingAtBounds()
+    if !firstClipping?
+      firstClipping = world
+    upstream = if firstClipping == @ then @boundingBox() else firstClipping.SLOWclipThrough()
+    if @clipsAtRectangularBounds
+      @boundingBox().intersect upstream
+    else
+      upstream
+
+  SLOWclippedThroughBounds: ->
+    if @isOrphan() or !@SLOWvisibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
+      return Rectangle.EMPTY
+    @boundingBox().intersect @SLOWclipThrough()
+```
+   (NB `SLOWclipThrough` must terminate at the world — world's own `clipThrough` override returns its
+   boundingBox, and `SLOWfirstParentClippingAtBounds` of a desktop widget returns nil → the `world` fallback;
+   the `firstClipping == @` guard covers world itself. Verify against the cached bodies :1183–1225 before
+   landing; if the intersect/passthrough shapes differ in any branch, mirror the CACHED body exactly.)
+2. Add the house doubleCheck block (result-compare + `debugger` + `alert`, the :1019–1024 shape) before the
+   return of `clippedThroughBounds` and `clipThrough` — one block each, covering hit and miss paths uniformly.
+3. De-circularize (fact 8): in `SLOWfullBounds` :1057 and `SLOWfullClippedBounds` :1063/:1067 (+ mixin :64/:67),
+   `visibleBasedOnIsVisibleProperty()` → `SLOWvisibleBasedOnIsVisibleProperty()` and `@clippedThroughBounds()` →
+   `@SLOWclippedThroughBounds()`. (`isInCollapsedSubtree()` calls stay — it is uncached until J5, which sweeps
+   them to `SLOWisInCollapsedSubtree`.)
+*Gate:* build; then ONE oracle-on single-test smoke (the J3 prelude, or by hand: prelude sets the flag + patches
+alert) to prove the new assertions hold on a live run. Adds Widget methods → possible benign inspector recapture.
+
+### J3 — The cache-coherence GATE: suite-wide oracle-on run (owner-directed) — test-infra only
+*Why:* the owner's directive — *"in test mode we always check the results against the simpler SLOW
+implementations, while outside of testing the double-calculation and the check are off."* The off-half already
+holds (`doubleCheckCachedMethodsResults: false` default, `WorldWdgt.coffee` :82 — production pays only the
+memoized path); this item builds the on-half as a hard-fail gate, the exact sibling of the end-of-cycle capstone
+and paint-readonly gates (assessment §6.4). Depends on J2 for full coverage.
+*How (all in `Fizzygum-tests`, mirroring `scripts/paint-readonly-audit/run-paint-readonly-gate.sh` + its prelude):*
+1. `scripts/cache-oracle-audit/cache-oracle-prelude.js`: at init-script time patch
+   `window.alert = (msg) => console.error('CACHEORACLE-FAIL ' + msg)` (a headless dialog would stall the run —
+   the standing gotcha; the `debugger` statements are no-ops headless), then poll until `world` exists and set
+   `world.doubleCheckCachedMethodsResults = true`.
+2. `run-cache-oracle-gate.sh`: run the full suite sharded with the prelude; FAIL (non-zero) on any
+   `CACHEORACLE-FAIL` / `is broken` console record OR any test failure; PASS = suite green + zero records.
+3. **Self-test (house rule — prove it bites):** a variant prelude additionally plants
+   `Widget.prototype.SLOWroot = function () { return 42; }` after boot → every `root()` doubleCheck mismatches →
+   the gate must FAIL; remove the plant, gate green again. Document both runs in the landed record.
+4. Measure and record the oracle-on suite wall-clock (the SLOW paths are O(subtree) per call — expect a
+   multiple of the ~1.5-min sharded baseline). The gate is a per-cache-change gate like the torture, NOT part of
+   the default `./fg suite`; optionally wire a local `fg cachegate` leg (umbrella tooling, uncommitted).
+*Scope note:* the oracle catches WRONG-VALUE serving only; it cannot catch the I4 class (a write-only cache is a
+perf bug, not a wrong value) — that space stays covered by the probe method (§8 header) and code review.
+*Gate:* the gate gating itself: one full PASS run + the bite proof. No `src` change → no recapture.
+
+### J4 — Field-naming unification onto `check<Name>Cache` / `cached<Name>` — mechanical
+*Why:* fact 9. *How:* four mechanical renames across `Widget.coffee` / `WorldWdgt.coffee` /
+`ActivePointerWdgt.coffee` / `TreeNode.coffee` (defaults block + all uses; pre-flight `grep -rn <oldName> src`
+per name, and fact 11 says nothing outside `src` reads them):
+`clippedThroughBoundsCache`→`cachedClippedThroughBounds` · `clipThroughCache`→`cachedClipThrough` ·
+`visibleBasedOnIsVisiblePropertyCache`→`cachedVisibleBasedOnIsVisibleProperty` · `rootCache`→`cachedRoot` +
+`rootCacheChecker`→`checkRootCache`. (If J1(c) landed, the World/hand override uses are already gone.)
+Post-edit: `grep -rn "rootCacheChecker\|ThroughBoundsCache\|clipThroughCache\|PropertyCache" src` → zero hits.
+*Gate:* build + suite.
+
+### J5 — Cache `isInCollapsedSubtree` on `visibilityVersion` — the measured win (cache class → torture)
+*Why:* fact 6 — the one hot uncached walk left in the read-path family; fact 7 says it is also the last one.
+*Pre-flight:* re-run fact 6's greps (`@collapsed` writes still exactly 2, each followed by the bump; def still
+:2090–2097 shape); confirm the fields slot into the :216–229 defaults block (fact 12).
+*How (in `src/basic-widgets/Widget.coffee`):*
+1. Add `checkIsInCollapsedSubtreeCache: nil` / `cachedIsInCollapsedSubtree: nil` to the defaults block.
+2. Replace the def with (mirroring the cached sibling `visibleBasedOnIsVisibleProperty` exactly — including its
+   unguarded `world.doubleCheckCachedMethodsResults` read, which the sibling proves boot-safe):
+```coffee
+  SLOWisInCollapsedSubtree: ->
+    if @collapsed
+      return true
+    if @parent?
+      return @parent.SLOWisInCollapsedSubtree()
+    return false
+
+  # Cached on visibilityVersion, exactly like visibleBasedOnIsVisibleProperty: the only
+  # two @collapsed writes (collapse/unCollapse cores) bump it, and a reparent bumps it
+  # via noteStructureChange -- so the stamp invalidates in exactly the situations the
+  # walk's inputs can change, and moves never touch it (no empty-hand interaction).
+  # Measured before caching (2026-07-03): 310k node-visits / ~149 ms in one menu-hover
+  # test -- an uncached O(depth) walk on every hit-test / broken-rect guard.
+  isInCollapsedSubtree: ->
+    if @checkIsInCollapsedSubtreeCache == WorldWdgt.visibilityVersion
+      result = @cachedIsInCollapsedSubtree
+    else
+      if @collapsed
+        result = true
+      else if @parent?
+        result = @parent.isInCollapsedSubtree()
+      else
+        result = false
+      @checkIsInCollapsedSubtreeCache = WorldWdgt.visibilityVersion
+      @cachedIsInCollapsedSubtree = result
+
+    if world.doubleCheckCachedMethodsResults
+      if result != @SLOWisInCollapsedSubtree()
+        debugger
+        alert "isInCollapsedSubtree is broken"
+
+    return result
+```
+3. Sweep the SLOW twins' internal `isInCollapsedSubtree()` calls (J2's `SLOWclipThrough`/`SLOWclippedThroughBounds`,
+   `SLOWfullBounds` :1058, `SLOWfullClippedBounds` :1063/:1067, mixin :64/:67) to `SLOWisInCollapsedSubtree()` —
+   the oracle stays independent of the new cache.
+*Verification bullet (optional but cheap):* re-run probe 2 on `macroHoppingBetweenSubMenus` — expect the
+310k-visit / 148 ms row to collapse to a hit rate ≥90% and single-digit ms.
+*Gate:* gauntlet + torture; run the J3 gate over it if landed. New Widget method → expect the benign inspector
+recapture.
+
+### J6 — Retire the explicit-climb invalidation mechanism — medium (cache class → torture)
+*Why:* facts 3, 5 — a second invalidation mechanism whose sole non-redundant duties are (a) `fullBounds`, a
+measured near-cold query, and (b) the empty-hand case, which the hand can compensate locally like it already does
+for its other two queries. Deleting it leaves ONE invalidation idiom (the version stamp) for the whole system.
+*How:*
+1. `Widget.fullBounds` (:1120–1138) converts to the version key: add `checkFullBoundsCache: nil` to the defaults
+   block; hit guard `if @cachedFullBounds?` becomes `if @checkFullBoundsCache == WorldWdgt.geometryVersion`; the
+   write tail stamps both fields. Same conversion in the mixin override (:74–89). Keep every doubleCheck block.
+2. `ActivePointerWdgt` gains always-recompute overrides for the remaining two bounds queries (the same pattern
+   as its `clippedThroughBounds`/`clipThrough` — fact 4's compensation, now complete):
+```coffee
+  # The hand does not participate in the version-keyed caches: the empty-hand carve-out
+  # (__breakMoveResizeCaches) skips the geometryVersion bump for a bare pointer move, so
+  # a version-stamped cache on the hand itself would serve STALE bounds mid-hover.
+  # Recompute fresh, like clippedThroughBounds/clipThrough above. With children (mid
+  # float-drag) every move bumps the version anyway, so nothing is lost -- the children's
+  # own caches below stay exact.
+  fullBounds: ->
+    result = @boundingBox()
+    @children.forEach (child) ->
+      if child.visibleBasedOnIsVisibleProperty() and !child.isInCollapsedSubtree()
+        result = result.merge child.fullBounds()
+    result
+
+  fullClippedBounds: ->
+    result = @clippedThroughBounds()
+    @children.forEach (child) ->
+      if child.visibleBasedOnIsVisibleProperty() and !child.isInCollapsedSubtree()
+        result = result.merge child.fullClippedBounds()
+    result
+```
+   (Byte-shape of the Widget bodies minus guard-branches that are constant-false for the hand — verify against
+   :1128–1131 / :1163–1166 before landing.)
+3. DELETE: `invalidateFullBoundsCache` + `invalidateFullClippedBoundsCache` defs incl. the :1027–1036 comment
+   block; the mixin overrides (:49–55 + their comment); every call site (fact 5's census — `__breakMoveResizeCaches`
+   :1271–1272, the five visibility/collapse pairs, the two TreeNode pairs). Post-edit:
+   `grep -rn "invalidateFullBounds\|invalidateFullClippedBounds" src` → zero hits. Update J1(a)'s carve-out
+   comment (drop the "explicit invalidate*Cache climbs" sentence).
+4. Semantics deltas to note in the report: `fullBounds` invalidation goes COARSER (any move anywhere, vs today's
+   path-local climb) — fact 3 measured it near-cold, and the mid-settle folder-frame merge that reads it is the
+   X6-measured ~1 ms/gesture family; the hand's two queries go cache-less (identical during drags — the version
+   churns then anyway).
+*Pre-flight:* fact 5's census greps; `grep -rn "invalidateFullBounds" buildSystem` → confirm no gate/allowlist
+names them. *Gate:* gauntlet + torture + (if landed) the J3 cache-oracle gate — which directly guards exactly
+this class of mistake. Deletes two inspector-visible Widget methods → expect the benign inspector recapture.
+Revert as a whole item if red.
+
+### §8.3 — Verification & sequencing
+- Per item: pre-flight greps → exact edits → `./fg build`. Suites at tier end.
+- **Recommended order: J1 → J2 → J3 → J4 → J5 → J6** — rising risk; the gate (J3) lands BEFORE the two
+  cache-semantics items so it stands guard over them; J2 before J3 (coverage); J4 anywhere (mechanical).
+- **Tier-end gates:** `./fg gauntlet`; **plus the four-config danger torture iff J5/J6 ran** (§0.5 gate 2);
+  **plus one J3 cache-oracle gate run** once it exists (and after J5/J6 in the same session).
+- Benign-recapture expectations: J2/J5 add, J6 deletes, inspector-visible Widget methods → the
+  `macroDuplicatedInspectorDrivesCopiedTargetOnly` member-list recapture is pre-authorised (§0.5); anything ELSE
+  diffing is a real failure — stop and report.
+- A J1-only or J1+J4 session needs one `./fg suite`; a J3-only session needs no src gates at all (tests repo).
 
 ## §0 — Why this now, and what it is NOT
 
@@ -1509,7 +1857,27 @@ Tiers A/B/C at `0b96d0ef`, Tier D + its evidence bank at `56f25c09`, Tier E in c
   (RECALC_NONCONVERGENCE absent, 0 fails). **NB** a separate `fix(meta)` commit (`cbb90457`) hardened the
   `Class`/`Mixin` `super` rewriter the same session (a bare `super` + trailing comment dropped its forwarded
   arguments) — unrelated to Tier F; it fixed the "thin vertical slice" defect in the Stretchable* apps.
-- **Tier I (I1–I12) ✅ (2026-07-03, this session — pending owner review/commit). TIER I COMPLETE.** The third wart
+- **Tier J (J1–J5) ✅ (2026-07-03, this session, pushed to master). J6 REMAINING.** The bounds/visibility-cache
+  follow-ups (§8): SLOW-oracle completion + de-circularization, the suite-wide cache-coherence gate + its bite-proof,
+  cache-field naming unification, and the measured `isInCollapsedSubtree` cache. **J1** — documented the load-bearing
+  empty-hand carve-out; retired `WorldWdgt.clipThrough`'s false "unused" TODO; dropped the four World/hand write-only
+  cache stamps; two pre-F8 `""` defaults → `nil`. **J2** — added independent `SLOWclipThrough`/`SLOWclippedThroughBounds`
+  twins + doubleCheck blocks, de-circularized `SLOWfullBounds`/`SLOWfullClippedBounds` (+ mixin); **CORRECTION beyond
+  the authored code** (per the section's own *"mirror the CACHED body exactly"* directive): the SLOW twins now mirror
+  the world **and hand** overrides — the hand returns raw/possibly-inside-out `boundingBox()` that the generic SLOW
+  normalized to EMPTY and diverged on; the new oracle caught it, so base `SLOWclipThrough` is a faithful mirror (no
+  `firstClipping == @` guard) and `WorldWdgt`+`ActivePointerWdgt` gained matching `SLOW*` overrides. **J3** —
+  `Fizzygum-tests/scripts/cache-oracle-audit/` (prelude + `run-cache-oracle-gate.sh` + bite-proof corruptor): the
+  on-half of the owner's "in test mode always check cached vs SLOW" directive; 0 mismatch records suite-wide, the
+  planted broken `SLOWroot` makes it FAIL (408 records — proven). **J4** — `cachedClippedThroughBounds` /
+  `cachedClipThrough` / `cachedRoot` / `checkRootCache` / `cachedVisibleBasedOnIsVisibleProperty` renames. **J5** —
+  cache `isInCollapsedSubtree` on `visibilityVersion` (measured 310k node-visits / 149 ms → cached), airtight
+  invalidation (the two `@collapsed` writes + a reparent all bump `visibilityVersion`; moves don't → no empty-hand
+  interaction). Gauntlet ×2 + 4-config danger torture + the cache-oracle gate all green; one benign inspector
+  member-list recapture (`macroDuplicatedInspectorDrivesCopiedTargetOnly`, dpr1+2). **J6** (retire the explicit-climb
+  invalidation mechanism) is the sole remaining item — see §8's LANDED STATUS box for the line-shift + J2-amendment
+  caveats.
+- **Tier I (I1–I12) ✅ (`d6bda64a` + tests `600862e57`, 2026-07-03, pushed to master). TIER I COMPLETE.** The third wart
   hunt (§7), landed in the §7.3 order I1→I2→I6→I7→I3→I11→I12→I8→I9→I4→I5→I10. **I1** — `VerticalStackLayoutSpec`
   constructor `(@elasticity = 1)` default (a no-arg `new` wrote `undefined` over the prototype 1 → NaN child widths;
   byte-identical today, both live constructions pass a value). **I2** — `ToolPanelWdgt._reLayout

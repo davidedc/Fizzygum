@@ -44,8 +44,8 @@ class TreeNode
   # not even overlap.
   children: nil
 
-  rootCache: nil
-  rootCacheChecker: nil
+  cachedRoot: nil
+  checkRootCache: nil
 
   checkFirstParentClippingAtBoundsCache: nil
   cachedFirstParentClippingAtBounds: nil
@@ -180,17 +180,17 @@ class TreeNode
 
   # TreeNode functions:
   root: ->
-    if @rootCacheChecker == WorldWdgt.structureVersion
-      result = @rootCache
+    if @checkRootCache == WorldWdgt.structureVersion
+      result = @cachedRoot
     else
   
       theRoot = @
       if @parent?
         theRoot = @parent.root()
 
-      @rootCacheChecker = WorldWdgt.structureVersion
-      @rootCache = theRoot
-      result = @rootCache
+      @checkRootCache = WorldWdgt.structureVersion
+      @cachedRoot = theRoot
+      result = @cachedRoot
 
     if world.doubleCheckCachedMethodsResults
       if result != @SLOWroot()

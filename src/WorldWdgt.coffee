@@ -682,17 +682,23 @@ class WorldWdgt extends PanelWdgt
     @hand.fullPaintIntoAreaOrBlitFromBackBuffer aContext, aRect
 
   clippedThroughBounds: ->
-    @checkClippedThroughBoundsCache = WorldWdgt.geometryVersion
-    @clippedThroughBoundsCache = @boundingBox()
-    return @clippedThroughBoundsCache
+    # always recompute -- the empty-hand carve-out means the version key can be stale for the hand; the compute is trivial
+    return @boundingBox()
 
-  # using the code coverage tool from Chrome, it
-  # doesn't seem that this is ever used
-  # TODO investigate and see whether this is needed
+  # terminal of every desktop widget's clipThrough recursion (via the firstParentClippingAtBounds -> world
+  # fallback); recomputes trivially, does not participate in the version caches.
   clipThrough: ->
-    @checkClipThroughCache = WorldWdgt.geometryVersion
-    @clipThroughCache = @boundingBox()
-    return @clipThroughCache
+    # always recompute -- the empty-hand carve-out means the version key can be stale for the hand; the compute is trivial
+    return @boundingBox()
+
+  # SLOW-oracle mirrors of the two overrides above (Tier J2): the world is the clip terminal, so its
+  # clipped / clip-through bounds ARE its boundingBox -- exactly what the cached overrides return. These keep
+  # the base SLOWclipThrough recursion terminating at the world, mirroring the cached recursion.
+  SLOWclippedThroughBounds: ->
+    return @boundingBox()
+
+  SLOWclipThrough: ->
+    return @boundingBox()
 
   pushBrokenRect: (brokenWidget, theRect, isSrc) ->
     if @duplicatedBrokenRectsTracker[theRect.toString()]?

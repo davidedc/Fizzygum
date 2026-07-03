@@ -45,15 +45,24 @@ class ActivePointerWdgt extends Widget
     true
 
   clippedThroughBounds: ->
-    @checkClippedThroughBoundsCache = WorldWdgt.geometryVersion
-    @clippedThroughBoundsCache = @boundingBox()
-    return @clippedThroughBoundsCache
+    # always recompute -- the empty-hand carve-out means the version key can be stale for the hand; the compute is trivial
+    return @boundingBox()
 
   clipThrough: ->
-    @checkClipThroughCache = WorldWdgt.geometryVersion
-    @clipThroughCache = @boundingBox()
-    return @clipThroughCache
-  
+    # always recompute -- the empty-hand carve-out means the version key can be stale for the hand; the compute is trivial
+    return @boundingBox()
+
+  # SLOW-oracle mirrors of the two overrides above (Tier J2): the hand is painted on top of everything,
+  # unclipped, so its clipped / clip-through bounds ARE its (possibly inside-out / empty) boundingBox --
+  # exactly what the cached overrides return. The generic clip-through-world SLOW computation would
+  # intersect that boundingBox with the world and normalize an inside-out hand boundingBox to EMPTY, so it
+  # would diverge from the cached override; mirror the override explicitly instead.
+  SLOWclippedThroughBounds: ->
+    return @boundingBox()
+
+  SLOWclipThrough: ->
+    return @boundingBox()
+
   # ActivePointerWdgt navigation:
   topWdgtUnderPointer: ->
     result = world.topWdgtSuchThat (m) =>
