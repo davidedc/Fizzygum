@@ -238,7 +238,7 @@ assertion a recapture after a regression silently stores two different hashes an
   its menu (TextWdgt-family drift). Give it a `backgroundColor` so the float position is visible.
 - **Soft-wrap toggle** (`macroSoftWrapTogglesTextReflow`): `textBox.toggleSoftWrap()` DIRECTLY (the "✓ soft wrap" method) —
   a synthetic right-click on a TextWdgt does NOT open a usable context menu in a macro (it does on plain widgets; and
-  INSIDE a ScrollPanelWdgt the panel's COALESCED menu does open fine, with `SimplePlainTextWdgt`'s own `softWrapOff/On`
+  INSIDE a ScrollPanelWdgt the panel's MERGED menu does open fine, with `SimplePlainTextWdgt`'s own `softWrapOff/On`
   items — see the Scroll section's in-panel soft-wrap entry).
   NB the box does NOT grow on toggle: the overflowing no-wrap line CROPS with an ellipsis at the unchanged box width
   (the default CROP spec) — see the desktop-editing entry below for the SCALEDOWN/editing interplay.
@@ -414,14 +414,14 @@ assertion a recapture after a regression silently stores two different hashes an
   HIERARCHY menu (`Widget.buildContextMenu`/`buildHierarchyMenu`) — one "a X ➜" item per ancestor that has a menu (labels are
   `toString().replace("Wdgt","")` so a WindowWdgt reads "a Window ➜"). Navigate to the desired ancestor by class-name PREFIX
   to open ITS own menu (used to resize a content-covered panel, duplicate a nested widget, "pick up" an inspector part, …).
-- **A coalescing scroll panel SUPPRESSES its child's hierarchy menu** (`macroScrollPanelCoalescesChildMenu`): the inverse of the
+- **A merging scroll panel SUPPRESSES its child's hierarchy menu** (`macroScrollPanelCoalescesChildMenu`): the inverse of the
   rule above. A `SimplePlainTextScrollPanelWdgt` sets `takesOverAndCoalescesChildrensMenus = true` (`SimplePlainTextScrollPanelWdgt.coffee:25`),
   so `Widget.buildContextMenu` (`:2905-2908`) finds that ancestor and returns the PANEL'S OWN menu — right-clicking the inner text
   blurb produces no "a X ➜" disambiguation at all (the blurb is never offered as a separate target). A NEGATIVE assertion needs
   the baseline visible: pair it with a plain `PanelWdgt` + `RectangleWdgt` child whose right-click DOES build the 2-item hierarchy
   menu (`@assertTopMenuItemStrings ["a Rectangle ➜", "a Panel ➜"]`) — same gesture, opposite menu. Build the panel directly:
   `new SimplePlainTextScrollPanelWdgt "text", false, 5` (ctor `(textAsString, wraps, padding)` auto-builds the inner blurb).
-  image_1 (the panel's own coalesced menu) vs image_2 (the 2-item hierarchy menu) is the proof.
+  image_1 (the panel's own merged menu) vs image_2 (the 2-item hierarchy menu) is the proof.
 - **Submenu hopping — keep the common chain open** (`macroHoppingBetweenSubMenus`): an arrow item opens a submenu AT the
   clicked point on click (the menu item's `trigger`, inherited from the `ButtonWdgt` family). Clicking ANY item KEEPS the menus in its ASCENDING hierarchy
   (`PopUpWdgt.hierarchyOfPopUps`) and DISMISSES the DOWNSTREAM submenus — so re-click a world-menu sibling IN THE CHAIN to
@@ -785,7 +785,7 @@ assertion a recapture after a regression silently stores two different hashes an
   the 'simple plain text scrollpanel wrapping' demo recipe (`Widget.createWrappingSimplePlainTextScrollPanelWdgt:3089` —
   (20,25) 390×305, padding 10, one wrapping lorem at the default font 12, which FITS: no bar at baseline). MENU
   DISCOVERY: the text is `lockToPanels`'d and the panel sets `takesOverAndCoalescesChildrensMenus`
-  (`SimplePlainTextScrollPanelWdgt.coffee:25`), so a right-click opens ONE coalesced menu with 'font size...' at TOP
+  (`SimplePlainTextScrollPanelWdgt.coffee:25`), so a right-click opens ONE merged menu with 'font size...' at TOP
   level — NO hierarchy descent (unlike a document paragraph); then the banked Meta+a-overtype prompt dance. While
   end-scrolled the tall text's centre is above the viewport clip — right-click a bottom FRACTION (`[0.5, 0.95]`).
   No new verb.
@@ -795,7 +795,7 @@ assertion a recapture after a regression silently stores two different hashes an
   when it is the panel's LONE child) and call `softWrapOff` (panel `isTextLineWrapping` false +
   `softWrap = false` — `softWrap` replaced the retired `maxTextWidth`) / `softWrapOn` (both back, plus re-homing the panel's contents to the panel origin) —
   TextWdgt's `toggleSoftWrap` is NOT involved. The bare-TextWdgt no-menu drift does NOT apply here either: the
-  coalesced in-panel menu OPENS for synthetic right-clicks, so drive the REAL items (match the decorated label by
+  merged in-panel menu OPENS for synthetic right-clicks, so drive the REAL items (match the decorated label by
   SUBSTRING, `moveToItemContainingOfMenuAndClick`). Toggling OFF while scrolled at the END collapses the content to its
   unbounded logical rows (width = LONGEST line, `reLayout :191-196`) → it fits vertically → the view re-anchors at the
   TOP with the V-bar swapped for an H-bar (thumb at the LEFT: the x offset was never touched); toggling ON re-wraps tall

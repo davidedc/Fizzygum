@@ -120,7 +120,7 @@ class ActivePointerWdgt extends Widget
     # these three are checks and actions that normally
     # would happen on MouseDown event, but we
     # removed that event as we collapsed the down and up
-    # into this coalesced higher-level event,
+    # into this combined higher-level event,
     # but we still need to make these checks and actions
     @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem wdgtTheMenuIsAbout
     @stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere wdgtTheMenuIsAbout

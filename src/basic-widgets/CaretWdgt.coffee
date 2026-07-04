@@ -139,11 +139,11 @@ class CaretWdgt extends BlinkerWdgt
   
   # gotoSlot is the public "move the caret to slot N" API: it SELF-SETTLES -- the move + scroll-follow flush once,
   # DURING the event that moved the caret (the doOneCycle model: process events fixing layouts step by step,
-  # then flush coalesced, then paint). Reached cross-widget (world.caret.gotoSlot from StringWdgt/TextWdgt click
+  # then run the end-of-cycle flush, then paint). Reached cross-widget (world.caret.gotoSlot from StringWdgt/TextWdgt click
   # handlers), by the caret's own click / undo-redo restore, AND by the arrow / Home / End navigation keystrokes
-  # (goLeft/goRight/...). Per-keystroke caret navigation is NOT a high-traffic stream, so it does NOT coalesce
+  # (goLeft/goRight/...). Per-keystroke caret navigation is NOT a high-traffic stream, so it does NOT defer its settle
   # (contrast _setMaxDimDeferredSettle, for ~50-per-frame drag/scroll STREAMS) -- each keystroke self-settles, one flush
-  # per discrete move. The follow NEVER rides the end-of-cycle coalesced flush.
+  # per discrete move. The follow NEVER rides the end-of-cycle flush.
   #   _gotoSlotNoSettle does ONLY the layout-free work: clamp the slot, re-place the caret on the target's current
   #   slot coordinate (inert), do one best-effort scroll-follow pass inline (load-bearing for in-place typing --
   #   see below), and ENQUEUE the caret for the follow (_requestScrollFollow). The scroll-follow -- the only
@@ -191,7 +191,7 @@ class CaretWdgt extends BlinkerWdgt
   # settles like any other widget whose layout changed, drained by the NEXT settle (always IN-PLACE, during the
   # event: a discrete click/arrow move self-settles via gotoSlot/goLeft/goRight; a typing/delete/paste advance
   # defers to its editing handler's tail, _settleScrollFollow -- see there). The caret never rides the end-of-cycle
-  # coalesced flush (it does not coalesce). It schedules via the CANONICAL _invalidateLayout: the caret is
+  # flush (it does not defer its settle). It schedules via the CANONICAL _invalidateLayout: the caret is
   # free-floating + inert, so _invalidateLayout's INERT-RECEIVER branch enqueues it with the bare no-climb primitive
   # (__markForRelayout) and skips the climb / flow-rule throw / careless-push audit -- all of which are
   # structurally INAPPLICABLE to an overlay that has no parent layout to climb and no ancestor it can re-dirty
@@ -249,7 +249,7 @@ class CaretWdgt extends BlinkerWdgt
   # precede the keystroke's reactToKeystroke re-fit (§ byte-exact typing, see goLeft/goRight), so it enqueues the
   # caret OFF-settle (_requestScrollFollow) and the convergence is deferred to here, the keystroke's end. This
   # drains it now -- in-place, "step by step" per the doOneCycle invariant -- instead of letting it ride the
-  # end-of-cycle coalesced flush (the caret is discrete, not a coalesced stream, so it belongs in the per-event
+  # end-of-cycle flush (the caret is discrete, not a deferred-settle stream, so it belongs in the per-event
   # settle). Reuses the standard in-place settle (_settleLayoutsAfter) with an EMPTY core: the work (the enqueue +
   # the one inline pass) already happened in the advance; we only need to DRAIN the queue now and let the caret's
   # _reLayout iterate the follow to a fixed point. No-op when nothing is pending -- a nav keystroke (already
@@ -298,7 +298,7 @@ class CaretWdgt extends BlinkerWdgt
 
   
   # Navigation keystrokes SELF-SETTLE (one flush per arrow press, during the event) -- caret navigation is not a
-  # high-traffic stream, so it does not coalesce (see the comment on gotoSlot). goLeft / goRight are ALSO called
+  # high-traffic stream, so it does not defer its settle (see the comment on gotoSlot). goLeft / goRight are ALSO called
   # INTERNALLY (insert -> goRight to advance past the typed char; deleteLeft -> goLeft), where the caret advance
   # must NOT self-settle early -- doing so reorders the fit (it broke macroStringWdgtInlineTypingRefitsUnderFitting-
   # Modes: the advance scroll flushed before updateDimension/escalateEvent). The advance instead enqueues the

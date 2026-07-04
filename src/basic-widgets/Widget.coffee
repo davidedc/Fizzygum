@@ -158,7 +158,7 @@ class Widget extends TreeNode
   # itself.
   overridingContextMenu: nil
 
-  # menu coalescing is useful when you want a "parent"
+  # menu merging is useful when you want a "parent"
   # menu to take over the menus of their children.
   # This assumes that for certain widgets is OK to just exist
   # "in their whole" without letting the user obviously take it
@@ -168,7 +168,7 @@ class Widget extends TreeNode
   # on scrollable text, the menu OF THE SCROLLFRAME that
   # contains it takes over.
   #
-  # Otherwise, without coalescing, there would FIRST be a
+  # Otherwise, without merging, there would FIRST be a
   # multiple-selection menu to spacially demultiplex which
   # widget is the one of interest
   # (the text widget, or the Panel, or the ScrollPanelWdgt?). And
@@ -1367,7 +1367,7 @@ class Widget extends TreeNode
     @_settleLayoutsAfter => @_moveToNoSettle aPoint, widgetStartingTheChange
 
   # Non-settling move core (the setMaxDim/_setMaxDimNoSettle pattern): record @desiredPosition + invalidate,
-  # no flush -- rides an OUTER settle. Callers: public moveTo (self-settles) + coalesced _moveToDeferredSettle
+  # no flush -- rides an OUTER settle. Callers: public moveTo (self-settles) + _moveToDeferredSettle
   # (rides the ONE end-of-cycle flush). Feature code uses those PUBLIC entrypoints, never this core directly.
   _moveToNoSettle: (aPoint, widgetStartingTheChange = nil) ->
     if not @isFreeFloating()
@@ -1390,7 +1390,7 @@ class Widget extends TreeNode
         if widgetStartingTheChange?.changeShouldRememberFractionalGeometry?() and @parent?
           @rememberFractionalPositionInHoldingPanel()
 
-  # PRIVATE COALESCED move entrypoint -- see the FAMILY comment on _setMaxDimDeferredSettle (rule [O]
+  # PRIVATE DEFERRED-SETTLE move entrypoint -- see the FAMILY comment on _setMaxDimDeferredSettle (rule [O]
   # caller-allowlist; world.deferredSettlingEnabled A/B switch; BOTH branches reach the _moveToNoSettle core).
   _moveToDeferredSettle: (aPoint, widgetStartingTheChange = nil) ->
     if world?.deferredSettlingEnabled
@@ -1524,7 +1524,7 @@ class Widget extends TreeNode
 
   # Non-settling extent core (the setMaxDim/_setMaxDimNoSettle pattern): record @desiredExtent + invalidate,
   # but do NOT flush -- so the mutation rides an OUTER settle. Two callers: the public setExtent (self-settles
-  # via _settleLayoutsAfter) and the coalesced _setExtentDeferredSettle (rides the ONE end-of-cycle flush). Feature
+  # via _settleLayoutsAfter) and the _setExtentDeferredSettle (rides the ONE end-of-cycle flush). Feature
   # code uses one of those PUBLIC entrypoints, never this core directly.
   _setExtentNoSettle: (aPoint, widgetStartingTheChange = nil) ->
     if not @isFreeFloating()
@@ -1547,7 +1547,7 @@ class Widget extends TreeNode
         if widgetStartingTheChange?.changeShouldRememberFractionalGeometry?() and @parent?
           @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
 
-  # PRIVATE COALESCED extent entrypoint -- see the FAMILY comment on _setMaxDimDeferredSettle (rule [O]
+  # PRIVATE DEFERRED-SETTLE extent entrypoint -- see the FAMILY comment on _setMaxDimDeferredSettle (rule [O]
   # caller-allowlist; world.deferredSettlingEnabled A/B switch; BOTH branches reach the _setExtentNoSettle core).
   _setExtentDeferredSettle: (aPoint, widgetStartingTheChange = nil) ->
     if world?.deferredSettlingEnabled
@@ -1679,7 +1679,7 @@ class Widget extends TreeNode
     @_settleLayoutsAfter => @_setWidthNoSettle width
 
   # Non-settling width core (the setMaxDim/_setMaxDimNoSettle pattern): record @desiredExtent + invalidate,
-  # no flush. Callers: public setWidth (self-settles) + coalesced _setWidthDeferredSettle (rides the end-of-cycle flush).
+  # no flush. Callers: public setWidth (self-settles) + _setWidthDeferredSettle (rides the end-of-cycle flush).
   _setWidthNoSettle: (width) ->
     if not @isFreeFloating()
       return
@@ -1690,7 +1690,7 @@ class Widget extends TreeNode
         @desiredExtent = newExtent
         @_invalidateLayout()
 
-  # PRIVATE COALESCED width entrypoint -- see the FAMILY comment on _setMaxDimDeferredSettle (rule [O]
+  # PRIVATE DEFERRED-SETTLE width entrypoint -- see the FAMILY comment on _setMaxDimDeferredSettle (rule [O]
   # caller-allowlist; world.deferredSettlingEnabled A/B switch; BOTH branches reach the _setWidthNoSettle core).
   _setWidthDeferredSettle: (width) ->
     if world?.deferredSettlingEnabled
@@ -1717,7 +1717,7 @@ class Widget extends TreeNode
     @_settleLayoutsAfter => @_setHeightNoSettle height
 
   # Non-settling height core (the setMaxDim/_setMaxDimNoSettle pattern): record @desiredExtent + invalidate,
-  # no flush. Callers: public setHeight (self-settles) + coalesced _setHeightDeferredSettle (rides the end-of-cycle flush).
+  # no flush. Callers: public setHeight (self-settles) + _setHeightDeferredSettle (rides the end-of-cycle flush).
   _setHeightNoSettle: (height) ->
     if not @isFreeFloating()
       return
@@ -1728,7 +1728,7 @@ class Widget extends TreeNode
         @desiredExtent = newExtent
         @_invalidateLayout()
 
-  # PRIVATE COALESCED height entrypoint -- see the FAMILY comment on _setMaxDimDeferredSettle (rule [O]
+  # PRIVATE DEFERRED-SETTLE height entrypoint -- see the FAMILY comment on _setMaxDimDeferredSettle (rule [O]
   # caller-allowlist; world.deferredSettlingEnabled A/B switch; BOTH branches reach the _setHeightNoSettle core).
   _setHeightDeferredSettle: (height) ->
     if world?.deferredSettlingEnabled
@@ -3067,7 +3067,7 @@ class Widget extends TreeNode
     widgetToAskMenuTo = @
 
     # check if a parent wants to take over my menu (and hopefully
-    # coalesce some of my entries!). In such case let it open the
+    # merge some of my entries!). In such case let it open the
     # menu. Used for example for scrollable text (which is text inside
     # a ScrollPanelWdgt).
     anyParentsTakingOverMyMenu = @allParentsTopToBottomSuchThat (m) ->
@@ -3828,8 +3828,8 @@ class Widget extends TreeNode
     if world?.healingRectanglesPhase and world.auditPaintTimeLayoutScheduling and not @isOrphan()
       (world._paintTimeLayoutSchedules ?= []).push @constructor?.name
     # DEBUG (WorldWdgt.auditUndeclaredEndOfCycle, default off): an OFF-SETTLE push (not @_inLayoutMutation) on
-    # an ATTACHED widget made OUTSIDE a *Coalesced declaration (_deferredSettleDeclarationDepth == 0) is the
-    # "careless" set the eventual declared-coalescing gate will reject -- record its ctor for the end-of-cycle
+    # an ATTACHED widget made OUTSIDE a *DeferredSettle declaration (_deferredSettleDeclarationDepth == 0) is the
+    # "careless" set the eventual declared-deferred-settling gate will reject -- record its ctor for the end-of-cycle
     # log. ORPHAN pushes are excluded: an off-world (under-construction) widget legitimately defers and settles
     # when attached (the _reactToChildRemoved lesson) -- it is not careless, and is the bulk of the macro-driver noise.
     # Recorded BEFORE __markForRelayout flips @layoutIsValid, and only on an ACTUAL push (@layoutIsValid still
@@ -3873,12 +3873,12 @@ class Widget extends TreeNode
   # SELF-SETTLE (one flush per outermost public mutation) like every other public geometry setter. Its only
   # high-frequency caller -- the stack-divider drag (StackElementsSizeAdjustingWdgt.nonFloatDragging) -- and the
   # construction-time setMinAndMaxBoundsAndSpreadability call the NON-settling _setMaxDimNoSettle core instead, so
-  # the drag-move STREAM still COALESCES into the one end-of-cycle flush (a core rides the cycle by design; the
-  # goal is coalescing WITHOUT a PUBLIC method skipping its settle).
+  # the drag-move STREAM still defers into the one end-of-cycle flush (a core rides the cycle by design; the
+  # goal is deferred settling WITHOUT a PUBLIC method skipping its settle).
   setMaxDim: (overridingMaxDim) ->
     @_settleLayoutsAfter => @_setMaxDimNoSettle overridingMaxDim
 
-  # PRIVATE COALESCED entrypoint -- the first of the *Coalesced family. THIS is the family's canonical comment
+  # PRIVATE DEFERRED-SETTLE entrypoint -- the first of the *DeferredSettle family. THIS is the family's canonical comment
   # -- the four geometry entrypoints (_setExtentDeferredSettle / _moveToDeferredSettle / _setWidthDeferredSettle /
   # _setHeightDeferredSettle) reference it. Same EFFECT as the private
   # _setMaxDimNoSettle core, but INTENTION-REVEALING: it DECLARES that this is an intentional per-event-stream
@@ -3886,10 +3886,10 @@ class Widget extends TreeNode
   # self-settling per call -- so a stream draining many mutations per frame collapses N flushes into 1. RESTRICTED
   # to those stream handlers, NOT for discrete/programmatic callers (which must use the self-settling setMaxDim so
   # their settled layout is available in-cycle); the restriction is enforced statically by check-layering rule [O]
-  # (COALESCED_CALLER_ALLOWLIST), which is also why the whole *Coalesced family is _-private. Because the coalescing
-  # is DECLARED here, the end-of-cycle audit can tell an intentional coalesced mutation from a public method that
-  # carelessly forgot to self-settle. world.deferredSettlingEnabled is the A/B switch: ON (default) coalesces via the core;
-  # OFF self-settles per call (like the plain setMaxDim), so we can MEASURE whether coalescing is warranted for a
+  # (DEFERRED_SETTLE_CALLER_ALLOWLIST), which is also why the whole *DeferredSettle family is _-private. Because the deferred settling
+  # is DECLARED here, the end-of-cycle audit can tell an intentional deferred-settle mutation from a public method that
+  # carelessly forgot to self-settle. world.deferredSettlingEnabled is the A/B switch: ON (default) defers via the core;
+  # OFF self-settles per call (like the plain setMaxDim), so we can MEASURE whether deferred settling is warranted for a
   # given stream (docs/coalescing-measurement.md -- e.g. key-repeat rarely bursts enough to matter). Default ON =>
   # byte-identical to calling the _NoSettle core directly. BOTH branches reach the _setMaxDimNoSettle core directly
   # -- a _-private entrypoint must not call the public setMaxDim (it would reach UP into the self-flushing layer;
@@ -3900,9 +3900,9 @@ class Widget extends TreeNode
     else
       @_settleLayoutsAfter => @_setMaxDimNoSettle overridingMaxDim
 
-  # Run a coalesced-mutation core inside a DECLARATION window: while it runs, world._deferredSettleDeclarationDepth
+  # Run a deferred-settle-mutation core inside a DECLARATION window: while it runs, world._deferredSettleDeclarationDepth
   # is > 0, so the off-settle invalidates the core schedules are marked INTENTIONAL and the end-of-cycle debug
-  # check (WorldWdgt.auditUndeclaredEndOfCycle) does NOT flag them as "careless". Every *Coalesced entrypoint
+  # check (WorldWdgt.auditUndeclaredEndOfCycle) does NOT flag them as "careless". Every *DeferredSettle entrypoint
   # wraps its core through here. Nestable; returns the core's value. (Default-off audit => ~zero overhead.)
   _deferredSettleDeclare: (coreThunk) ->
     return coreThunk() unless world?

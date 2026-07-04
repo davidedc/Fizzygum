@@ -81,25 +81,25 @@ class WorldWdgt extends PanelWdgt
   showRedraws: false
   doubleCheckCachedMethodsResults: false
 
-  # The A/B switch for the _-private *Coalesced layout API (Widget._setMaxDimDeferredSettle, ...; _-private +
-  # stream-handler-restricted by check-layering [O]). ON (default): a *Coalesced call defers its layout flush to
+  # The A/B switch for the _-private *DeferredSettle layout API (Widget._setMaxDimDeferredSettle, ...; _-private +
+  # stream-handler-restricted by check-layering [O]). ON (default): a *DeferredSettle call defers its layout flush to
   # the ONE end-of-cycle settle (a gesture/stream draining many mutations per frame collapses N flushes into 1).
-  # OFF: every *Coalesced call self-settles immediately (its NoSettle core under _settleLayoutsAfter, exactly like
-  # the plain public setter), so we can A/B and MEASURE whether coalescing is actually warranted for a given stream
+  # OFF: every *DeferredSettle call self-settles immediately (its NoSettle core under _settleLayoutsAfter, exactly like
+  # the plain public setter), so we can A/B and MEASURE whether deferred settling is actually warranted for a given stream
   # -- toggle at runtime (`world.deferredSettlingEnabled = false`) and re-run docs/coalescing-measurement.md. (Default
-  # ON keeps current behaviour: the *Coalesced calls are byte-identical to the _NoSettle cores they wrap.)
+  # ON keeps current behaviour: the *DeferredSettle calls are byte-identical to the _NoSettle cores they wrap.)
   deferredSettlingEnabled: true
 
-  # *Coalesced DECLARATION tracking (Widget._deferredSettleDeclare / _setMaxDimDeferredSettle). _deferredSettleDeclarationDepth
-  # is > 0 while a DECLARED coalesced mutation runs, so the off-settle invalidates it schedules are known to be
+  # *DeferredSettle DECLARATION tracking (Widget._deferredSettleDeclare / _setMaxDimDeferredSettle). _deferredSettleDeclarationDepth
+  # is > 0 while a DECLARED deferred-settle mutation runs, so the off-settle invalidates it schedules are known to be
   # intentional. auditUndeclaredEndOfCycle (DEBUG, default off) turns on the end-of-cycle check that LOGS every
   # UNDECLARED off-settle push -- the "careless" set (a public method that forgot to self-settle, or a stream
-  # not yet on a *Coalesced entrypoint) the eventual declared-coalescing gate will reject. Off => ~zero overhead.
+  # not yet on a *DeferredSettle entrypoint) the eventual declared-deferred-settling gate will reject. Off => ~zero overhead.
   _deferredSettleDeclarationDepth: 0
   auditUndeclaredEndOfCycle: false
   _undeclaredEndOfCyclePushes: nil
 
-  # PAINT must be READ-ONLY: the cycle PROCESSES EVENTS (fixing layouts step by step) -> FIXES the coalesced
+  # PAINT must be READ-ONLY: the cycle PROCESSES EVENTS (fixing layouts step by step) -> FIXES the deferred-settle
   # layouts (recalculateLayouts) -> PAINTS (updateBroken), with NO layout work at paint. auditPaintTimeLayout-
   # Scheduling (DEBUG, default off) turns on the check that LOGS every layout (re-)schedule reached DURING the
   # paint pass (healingRectanglesPhase true) -- i.e. a widget that scheduled layout while being painted, crossing
@@ -926,8 +926,8 @@ class WorldWdgt extends PanelWdgt
   recalculateLayouts: ->
     # DEBUG (auditUndeclaredEndOfCycle): at the END-OF-CYCLE flush only (NOT a self-settle -- a settle has
     # @_inLayoutMutation set), report this frame's UNDECLARED off-settle pushes -- the "careless" set (a public
-    # method that forgot to self-settle, or a stream not yet on a *Coalesced entrypoint) that the eventual
-    # declared-coalescing gate will reject. Declared coalescing (_setMaxDimDeferredSettle) is intentional and excluded.
+    # method that forgot to self-settle, or a stream not yet on a *DeferredSettle entrypoint) that the eventual
+    # declared-deferred-settling gate will reject. Declared deferred settling (_setMaxDimDeferredSettle) is intentional and excluded.
     if @auditUndeclaredEndOfCycle and not @_inLayoutMutation and @_undeclaredEndOfCyclePushes?.length
       summary = {}
       for c in @_undeclaredEndOfCyclePushes
@@ -1414,7 +1414,7 @@ class WorldWdgt extends PanelWdgt
     @recalculateLayouts()
     # Hover re-sync AFTER the flush: re-derive the widgets-under-(stationary)-pointer set against the
     # frame's SETTLED geometry -- the same fixed point paint reads -- so hover never lags geometry within
-    # a painted frame (pre-swap it read pre-flush bounds, one stage too early; coalesced drag geometry
+    # a painted frame (pre-swap it read pre-flush bounds, one stage too early; deferred-settle drag geometry
     # was still unapplied). Handlers fired here write paint-layer state and at most SELF-SETTLING
     # mutations (tooltip fullDestroy), so the world is settled again before updateBroken; a careless
     # (off-settle) push from a hover handler would be caught by the end-of-cycle capstone gate.
@@ -1425,9 +1425,9 @@ class WorldWdgt extends PanelWdgt
     # during the event that moved it -- a discrete click/arrow move self-settles (CaretWdgt.gotoSlot), and a
     # typing/delete/paste advance settles at its editing handler's tail (CaretWdgt._settleScrollFollow).
     # The caret enqueues itself (CaretWdgt._requestScrollFollow) and its _reLayout runs the follow in-line with
-    # every other widget, but it is drained by that in-place per-event settle, NOT this end-of-cycle coalesced
-    # flush (the caret is discrete, not a coalesced stream). So the cycle is purely process events fixing layouts
-    # step by step -> fix coalesced layouts -> re-sync hover to settled geometry -> paint, with NO caret
+    # every other widget, but it is drained by that in-place per-event settle, NOT this end-of-cycle
+    # flush (the caret is discrete, not a deferred-settle stream). So the cycle is purely process events fixing layouts
+    # step by step -> fix deferred-settle layouts -> re-sync hover to settled geometry -> paint, with NO caret
     # special-case and paint still read-only. A
     # plain wheel/scroll does not move the caret, so the panel still chases it only when the caret MOVES. Cf. the
     # paint-time-caret-resync arc, which first moved this work out of the paint pass into a post-flush step; the
