@@ -832,7 +832,7 @@ class ScrollPanelWdgt extends PanelWdgt
   
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
-    if @takesOverAndCoalescesChildrensMenus
+    if @takesOverAndMergesChildrensMenus
       if @contents
         childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets @contents
       if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length == 1

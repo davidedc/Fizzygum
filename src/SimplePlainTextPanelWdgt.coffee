@@ -17,7 +17,7 @@ class SimplePlainTextPanelWdgt extends PanelWdgt
     ) ->
 
     super()
-    @takesOverAndCoalescesChildrensMenus = true
+    @takesOverAndMergesChildrensMenus = true
     @disableDrops()
     @disableDrops()
     @isTextLineWrapping = wraps

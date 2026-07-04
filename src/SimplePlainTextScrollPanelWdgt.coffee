@@ -22,7 +22,7 @@ class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
     ) ->
 
     super()
-    @takesOverAndCoalescesChildrensMenus = true
+    @takesOverAndMergesChildrensMenus = true
     @disableDrops()
     @contents.disableDrops()
     @isTextLineWrapping = wraps

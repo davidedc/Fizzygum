@@ -186,7 +186,7 @@ class Widget extends TreeNode
   # Note that this mechanism could be overridden for "advanced"
   # users who want to mangle with the sub-components of a scrollable
   # text
-  takesOverAndCoalescesChildrensMenus: false
+  takesOverAndMergesChildrensMenus: false
 
   onNextStep: nil # optional function to be run once. Not currently used in Fizzygum
 
@@ -3071,7 +3071,7 @@ class Widget extends TreeNode
     # menu. Used for example for scrollable text (which is text inside
     # a ScrollPanelWdgt).
     anyParentsTakingOverMyMenu = @allParentsTopToBottomSuchThat (m) ->
-      (m instanceof ScrollPanelWdgt) and m.takesOverAndCoalescesChildrensMenus
+      (m instanceof ScrollPanelWdgt) and m.takesOverAndMergesChildrensMenus
     if anyParentsTakingOverMyMenu? and anyParentsTakingOverMyMenu.length > 0
       widgetToAskMenuTo = anyParentsTakingOverMyMenu[0]
 
