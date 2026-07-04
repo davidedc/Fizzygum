@@ -83,13 +83,18 @@ show errors from previous cycle            (~:1353–1354 — incl. layout error
 playQueuedEvents()                         (~:1360 — dispatch input)
 replayTestCommands / step functions        (~:1364–1372 — animation, stepping widgets)
 recalculateLayouts()                       (~:1375 — the engine's end-of-cycle settle)
+hand hover re-sync                         (~:1376 — reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges: re-syncs hover to widgets that MOVED under the stationary pointer, reading SETTLED geometry; moved AFTER the flush 2026-07-04)
 add pinout/highlight overlays              (~:1390–1392)
 updateBroken()                             (~:1395 — paint dirty rectangles)
 ```
 
 So layout is wedged between input/stepping and paint — and the *intended* invariant is sharper than the listing looks:
 **paint reads layout but never *schedules* it** (events fix layout step-by-step, the end-of-cycle settle drains the
-rest, then `updateBroken` paints an already-settled world). The caret's **scroll-follow** — "bring the caret into
+rest, then `updateBroken` paints an already-settled world). The per-cycle **hand hover re-sync** obeys the same
+criterion from the *read* side: it re-derives the widgets-under-(stationary)-pointer set, and was moved **after** the
+flush (2026-07-04) so it reads the SAME settled fixed point paint reads — never a mid-pipeline snapshot (before, a
+coalesced handle/resize drag's geometry could still be unapplied when it ran, so hover lagged geometry by one frame
+*within* a painted frame; see `docs/hover-resync-after-flush-plan.md`). The caret's **scroll-follow** — "bring the caret into
 view," which genuinely *mutates* layout (it moves `@target`/`@contents`) — is the place that exercised this boundary,
 and its turbulent same-day arc (2026-06-27, four commits) is instructive. It began *inside* paint (a leak — a
 keystroke that scrolled the text scheduled layout from within `updateBroken`); `a424cdb4` **relocated** it to a
@@ -998,7 +1003,10 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
 `AnalogClockWdgt` under `src/apps/`, `KeepsRatioWhenInVerticalStackMixin` under `src/mixins/`.
 
 - **Per-frame cycle:** `WorldWdgt.doOneCycle` ~:1350 · `playQueuedEvents` ~:1269 (whole-queue drain ~:1274,
-  future-event return ~:1281) · `updateBroken` paint call ~:1395 (def ~:1027). *(No caret step in `doOneCycle`: the scroll-follow folds
+  future-event return ~:1281) · hand hover re-sync `reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges`
+  ~:1376 (runs AFTER `recalculateLayouts` — moved after the flush 2026-07-04 — re-syncing hover to widgets that MOVED
+  under a stationary pointer against SETTLED geometry; def `ActivePointerWdgt` ~:920; `docs/hover-resync-after-flush-plan.md`)
+  · `updateBroken` paint call ~:1395 (def ~:1027). *(No caret step in `doOneCycle`: the scroll-follow folds
   into the flush as the caret's `_reLayout` and settles in-place during the caret's event — see the caret row.)*
   Paint-time caret work is the inert `CaretWdgt.justBeforeBeingPainted → adjustAccordingToTargetText` (~:50/~:45;
   `isLayoutInert` ~:33).

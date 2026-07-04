@@ -917,6 +917,12 @@ class ActivePointerWdgt extends Widget
     # interposes to absorb the enter. Resolving it here is cadence/density-independent.
     @dispatchEventsFollowingMouseMove mouseOverNew
 
+  # Per-cycle hover re-sync for widgets that MOVED under a STATIONARY pointer (pointer MOTION is handled
+  # per-event inside playQueuedEvents; this catches stepping animations, event-driven relayouts, teleports,
+  # opens/closes). It runs AFTER @recalculateLayouts() in WorldWdgt.doOneCycle, so it re-derives the
+  # widgets-under-pointer set against SETTLED geometry (the same fixed point paint reads). Hover handlers
+  # must not make a careless (off-settle) layout push -- self-settling mutations (e.g. a tooltip fullDestroy)
+  # are fine; the end-of-cycle capstone gate enforces this. See docs/hover-resync-after-flush-plan.md.
   reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges: ->
     topWdgt = @topWdgtUnderPointer()
     # allParentsTopToButton makes more logical sense but

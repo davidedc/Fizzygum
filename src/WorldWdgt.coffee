@@ -1411,8 +1411,15 @@ class WorldWdgt extends PanelWdgt
     @progressFramePacedActions()
     
     @runChildrensStepFunction()
-    @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()
     @recalculateLayouts()
+    # Hover re-sync AFTER the flush: re-derive the widgets-under-(stationary)-pointer set against the
+    # frame's SETTLED geometry -- the same fixed point paint reads -- so hover never lags geometry within
+    # a painted frame (pre-swap it read pre-flush bounds, one stage too early; coalesced drag geometry
+    # was still unapplied). Handlers fired here write paint-layer state and at most SELF-SETTLING
+    # mutations (tooltip fullDestroy), so the world is settled again before updateBroken; a careless
+    # (off-settle) push from a hover handler would be caught by the end-of-cycle capstone gate.
+    # See docs/hover-resync-after-flush-plan.md.
+    @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()
 
     # (There is no caret scroll-follow step here any more: a caret MOVE settles its scroll-follow IN-PLACE,
     # during the event that moved it -- a discrete click/arrow move self-settles (CaretWdgt.gotoSlot), and a
@@ -1420,7 +1427,8 @@ class WorldWdgt extends PanelWdgt
     # The caret enqueues itself (CaretWdgt._requestScrollFollow) and its _reLayout runs the follow in-line with
     # every other widget, but it is drained by that in-place per-event settle, NOT this end-of-cycle coalesced
     # flush (the caret is discrete, not a coalesced stream). So the cycle is purely process events fixing layouts
-    # step by step -> fix coalesced layouts -> paint, with NO caret special-case and paint still read-only. A
+    # step by step -> fix coalesced layouts -> re-sync hover to settled geometry -> paint, with NO caret
+    # special-case and paint still read-only. A
     # plain wheel/scroll does not move the caret, so the panel still chases it only when the caret MOVES. Cf. the
     # paint-time-caret-resync arc, which first moved this work out of the paint pass into a post-flush step; the
     # Option-C arc folded it into the flush; this arc folds it into the per-event in-place settle.)
