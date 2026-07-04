@@ -352,6 +352,45 @@ non-terminating cycle into a loud throw rather than a frozen tab — not to boun
 old cap **silently** bailed (log + abandon the work-list + ship broken layout); Stage 6 replaced that suppression with
 the loud throw.
 
+**Mid-pass re-dirtying — who may enqueue into a draining flush (and what stops everyone else).** The fixed-point story
+above invites one sharp question, worth answering in one place rather than piecewise: *while `_recalculateLayoutsBody`
+drains the work-list, is anything checking that no NEW breakage lands in the very queue being drained?* Yes — but the
+invariant is deliberately **not** "no new breakage while sanitising." It is: **new breakage may only originate from the
+settle machinery itself, through the no-climb atom `__markForRelayout`, aimed at the one directly-affected widget —
+every other writer fails loudly.** The two sides:
+
+- **Every outside channel into the queue throws mid-pass** (§2.2's tripwires, seen from the queue's side): the climbing
+  verb `_invalidateLayout` throws `FLOWRULE_VIOLATION` (~:3929); a public setter's `_settleLayoutsAfter` throws on an
+  attached receiver (an orphan defers instead); the connector lane `_settleLayoutsAfterOrJoinEnclosingPass` throws when
+  reached from inside the walk (rule [P]'s runtime backstop); and `recalculateLayouts` itself throws on re-entry.
+  Build-time, rules [A]/[E]/[G] catch the name-recognizable offenders before any of those can fire. (One path is
+  deliberately a silent NO-OP rather than a throw: a *freefloating-triggered* climb mid-pass returns before the
+  tripwire — a freefloating teardown was historically a silent no-op and must stay one even mid-pass.)
+- **The sanctioned mid-pass writers all route through the atom** (push + mark-invalid, NO climb, NO throw — the climb
+  is exactly what must not happen mid-pass, since it would re-dirty already-settled ancestors indiscriminately). The
+  census is short — three:
+  1. the **settle-time up-edge** (`_reFitMyTrackingContainerAfterSettle` → `_reFitContainer`'s in-pass arm) — the
+     loop's own cross-container re-fit, fact 2 above (this is also how a caret pass that scrolled its panel re-enqueues
+     that panel);
+  2. the **caret's inert-receiver self-schedule** (§2.1): `_invalidateLayout`'s inert branch sits *before* the
+     mid-pass throw, so the caret may re-enqueue itself during a pass; its `_reLayout` also simply *stays* dirty until
+     its containers stop moving — which re-dirties nothing else, it just isn't popped yet;
+  3. the **collapse phase-valve** (`_collapseNoSettle` / `_unCollapseNoSettle`, `Widget.coffee` ~:2088/~:2114 —
+     `if world._recalculatingLayouts then @__markForRelayout() else @_invalidateLayout()`): an arrange that decides
+     collapse *by width* (`WindowWdgt._positionAndResizeChildren`, `HorizontalMenuPanelWdgt._reLayoutSelf`)
+     legitimately flips a child's collapsed state mid-pass, and the valve routes the re-layout that schedules onto the
+     no-climb path where the bare verb would throw.
+
+The loop is *built* to absorb exactly this: the until-loop is a **live drain, not a snapshot walk** — work enqueued
+mid-pass is consumed by the same flush, which is what makes it a fixed-point iteration rather than a single sweep. What
+keeps the sanctioned re-dirtying from being open-ended is §2.6's convergence case: idempotent, non-notifying arranges
+(a settled container never re-dirties *itself*), the Stage-6 unchanged-frame skip on the up-edge, `elasticity 0` on the
+genuine width↔height cycles, and the never-fire assert converting a hypothetical residual cycle into a loud
+`RECALC_NONCONVERGENCE` throw. Even a **crashing** `_reLayout` cannot wedge or re-dirty the drain: the loop's catch
+force-marks the thrower `markLayoutAsFixed` (it died before popping itself — without this the until-loop would spin on
+it forever), silently `__hide`s it (nils caches only — no invalidate, no flush), and defers the report to the next
+cycle's `showLayoutErrorsFromPreviousCycle`, outside the flush (task #18).
+
 ### 2.4 The root constraint: accessors read *applied* geometry → mutate-then-read-back
 
 Every geometry accessor (`width()`, `height()`, `position()`, …) reads the *applied* `@bounds`. There is no
@@ -975,7 +1014,8 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
   (loop) ~:939 (until-loop; **never-fire assert** `layoutIterationsSanityLimit = 100000` + `RECALC_NONCONVERGENCE`
   throw — Stage 6, ex-`recalcIterationsCap`; walk-up; freefloating stop; `_reLayout` call; **settle-time up-edge**
   `_reFitMyTrackingContainerAfterSettle` after each chain-top settles, gated on the Stage-6 no-op early-return
-  `if myFrameChanged`; non-flushing catch).
+  `if myFrameChanged`; non-flushing catch — force-`markLayoutAsFixed` + silent `__hide` of a throwing widget so the
+  drain cannot spin on it, report deferred to next cycle's `showLayoutErrorsFromPreviousCycle`).
 - **Settle-time up-edge (replaced the deleted seam, 2026-07-01):** `Widget._reFitMyTrackingContainerAfterSettle`
   ~:1635 (`@_reFitContainer @parent.parent` if inside a non-text-wrapping scroll panel, then `@_reFitContainer @parent`)
   · `_reFitContainer` ~:1716 (kept — the phase-dispatch primitive; gated on `container._reLayoutChildren?`; in-pass →
@@ -989,7 +1029,9 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
   thunk): `setBounds`, `moveTo` (née `fullMoveTo`), `setExtent`, `setWidth`, `setHeight`; structural `add` (→ a
   `_addNoSettle` core).
 - **Enqueue primitives (unified — `282ea492`):** `__markForRelayout` (née `_markForRelayoutNoClimb`) ~:3894 — the shared bare-push atom (push +
-  mark invalid, *no* climb), used by `_invalidateLayout`, `_reFitContainer`'s in-pass arm, and the caret ·
+  mark invalid, *no* climb), used by `_invalidateLayout`, `_reFitContainer`'s in-pass arm, the caret, and the
+  collapse/unCollapse **phase-valve** (`_collapseNoSettle`/`_unCollapseNoSettle` ~:2088/~:2114 — in-pass → the atom,
+  off-pass → `_invalidateLayout`; the full mid-pass writer census is §2.3's mid-pass block) ·
   `_invalidateLayout` ~:3898 (freefloating-skip param guard ~:3906; **inert-receiver branch**
   `@isFreeFloating() and @isLayoutInert?()` → atom + return ~:3915; `FLOWRULE_VIOLATION` mid-pass throw ~:3929;
   careless-push audit ~:3944; bare push ~:3948; climb ~:3952).
@@ -1111,7 +1153,11 @@ settle-time up-edge doing any container re-fit. Everything below is a corollary.
    - **Off-settle code records intent, never applies.** Schedule via `_invalidateLayout()` (climbs to the parent;
      short-circuits for a freefloating child) or `@desired*` + a public flush — never a synchronous `_reLayout` from an
      event handler. `_invalidateLayout` **throws `FLOWRULE_VIOLATION`** if reached mid-pass; that throw is the tripwire
-     that keeps the settle loop terminating (§2.2).
+     that keeps the settle loop terminating (§2.2). If your arrange genuinely must schedule layout mid-pass (the
+     precedent: a width-driven collapse), route it like the existing sanctioned writers — the no-climb
+     `__markForRelayout` behind a phase-valve (`if world._recalculatingLayouts then @__markForRelayout() else
+     @_invalidateLayout()`), aimed at the one directly-affected widget — never the bare climbing verb; the census of
+     who may re-dirty a draining flush (and why it stays bounded) is §2.3's mid-pass block.
 
 4. **Freefloating content climbs nothing; a size-tracking container gets the up-edge automatically.** A freefloating
    child (`ATTACHEDAS_FREEFLOATING`) does not invalidate its parent — the walk-up stops at it. If your container tracks
