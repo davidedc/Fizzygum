@@ -282,13 +282,16 @@ stepping loop's existing skip-don't-catch-up stance).
 - Instrumentation from day one: recompute-pass counts per drain with documented expected
   peaks, in the spirit of the layout system's measured-convergence posture.
 
-## 11. Implementation order (summary; detailed plan to follow separately)
+## 11. Implementation order
 
-1. Nomenclature plan executes (already specced separately).
+Detailed, cold-executable plan with phase ledger:
+**`docs/dataflow-engine-implementation-plan.md`**.
+
+1. ~~Nomenclature plan executes~~ — done (the `*DeferredSettle` rename landed).
 2. Engine core + spreadsheet v1 (sparse grid, CS formulas, Color as the first non-scalar
-   value, classify→present, errors-as-values).
-3. Interactive-widget cells + time sources.
-4. Patch-programming port (strangler, §8), token retirement.
+   value, classify→present, errors-as-values) — plan Phases 1–3.
+3. Interactive-widget cells + time sources — plan Phases 4–5.
+4. Patch-programming port (strangler, §8), token retirement — plan Phase 6.
 
 ## 12. Alternatives considered (brief)
 

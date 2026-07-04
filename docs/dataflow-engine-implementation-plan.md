@@ -1,0 +1,447 @@
+# Dataflow engine & spreadsheet — implementation plan (cold-executable)
+
+Implements `docs/specs/dataflow-engine-spec.md` (normative design; read it FIRST) using the
+vocabulary of `NOMENCLATURE.md` (normative naming; read it SECOND). This plan assumes no
+other context. Its prerequisite — the coalesced-nomenclature rename
+(`docs/coalesced-nomenclature-rename-plan.md`) — is **executed**: the deferred-settle family
+is now `*DeferredSettle` / `world.deferredSettlingEnabled`; the only surviving "coalesc"
+strings in `src`/`buildSystem` are 4 references to the historical doc *filename*
+`docs/coalescing-measurement.md` (legitimate; leave them).
+
+**Read the status ledger below before doing anything: execute the FIRST phase whose box is
+unchecked, then update the ledger in the same commit that completes the phase.**
+
+## Status ledger
+
+- [ ] Phase 0 — pre-flight verification
+- [ ] Phase 1 — engine core, dark (no callers)
+- [ ] Phase 2a — spreadsheet shell: window, painted grid, selection
+- [ ] Phase 2b — cell model, literal/CoffeeScript evaluation, editing
+- [ ] Phase 2c — references, recompute, errors-as-values
+- [ ] Phase 3 — value protocol & presenters (Color first)
+- [ ] Phase 4 — widget-valued cells & sockets
+- [ ] Phase 5 — time sources (`seconds` / `frame`)
+- [ ] Phase 6a — `firesPerEvent` wire property + menu toggle
+- [ ] Phase 6b — patch-programming port behind A/B switch (default OFF)
+- [ ] Phase 6c — A/B default ON, suite reconciliation
+- [ ] Phase 6d — token retirement
+- [ ] Phase 7 — docs closeout
+
+Each phase = one or more commits, independently green and revertable. Do not start a phase
+with the previous one unverified.
+
+---
+
+## §0 Environment, verification tiers, baseline
+
+Identical to the rename plan's §0, restated: prerequisites `coffee`, `terser`, `node`,
+`python3` (global). Tiers:
+
+- **Full** (`../Fizzygum-tests` exists): verify with `./build_and_test.sh` (~1 min,
+  headless, parallel). New behavior additionally needs NEW SystemTests (§4.3) — authored in
+  the sibling repo per `src/macros/CLAUDE.md` and `src/macros/MACRO-PATTERNS.md`.
+- **Repo-only**: verify with `./build_it_please.sh --notests` (auto-creates
+  `../Fizzygum-builds`; runs the syntax, layering, and dead-method gates). Phases whose
+  deliverable is *behavior* (2a onward) should preferably run in the full tier; if executed
+  repo-only, state in the commit message that suite + new-test authoring are pending.
+
+**Baseline before any edit** (also = Phase 0, see below). Ignore git's harmless
+`.gitattributes` warning.
+
+## §1 Verified tree facts this plan relies on
+
+Re-derive each before relying on it; commands given. *(all verified 2026-07-04)*
+
+1. **`build.py` does NOT walk `src/` recursively.** It globs an explicit directory list
+   (`buildSystem/build.py` ~lines 191–226, `filenames = sorted(... glob("src/<dir>/*.coffee"))`).
+   → Every new directory (`src/dataflow`, `src/spreadsheet`) needs its own glob line
+   (model: the `src/serialization` line, including its placement comment). The syntax gate
+   consumes `build.py --list-shippable`, so a class missing from the glob list fails at
+   *runtime dependency resolution*, not at the gate — add the glob line in the SAME commit
+   that creates the directory.
+2. **Class conventions:** one class per file; **filename must equal the class name**; no
+   imports (all globals); `nil` not `null`/`undefined`; load order is auto-discovered by
+   `src/boot/dependencies-finding.coffee` regex-scanning for the literal forms
+   `extends X`, `@augmentWith X`, `new X` — always reference classes with those literal
+   forms.
+3. **Collaborator construction site:** `WorldWdgt` constructor ~line 389
+   (`@macroToolkit = new MacroToolkit`, `@widgetFactory = new WidgetFactory`). `world.dataflow`
+   is constructed here. Find with `grep -n "new WidgetFactory" src/WorldWdgt.coffee`.
+4. **`doOneCycle` station order** (grep `doOneCycle: ->` in `src/WorldWdgt.coffee`):
+   `updateTimeReferences → …error consoles… → macro steps → playQueuedEvents → automator
+   replay → runOtherTasksStepFunction → progressFramePacedActions →
+   runChildrensStepFunction → recalculateLayouts →
+   hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges → pinouting/highlighting →
+   updateBroken`. The drain inserts between `runChildrensStepFunction` and
+   `recalculateLayouts` (spec §4.1).
+5. **The ONE connection dispatch:** `ControllerMixin._fireConnection`
+   (`src/mixins/ControllerMixin.coffee`) routes to a target's `_<action>Connector` variant
+   when defined (the non-settling lane that joins an enclosing pass), else the public
+   action. Sink application (spec §4.2 item 5) uses this lane.
+6. **Stepping contract** (`WorldWdgt.runChildrensStepFunction`): membership is
+   `world.steppingWdgts` (a Set: `.add @` / `.delete @`); per-member `fps` (`0` = every
+   cycle, `1` = per second), optional `synchronisedStepping`; member must define `step()`.
+   Model: `src/apps/AnalogClockWdgt.coffee` constructor.
+7. **Serialization/duplication:** per-class protocol documented in
+   `docs/serialization-duplication-reference.md`; world singletons re-bind via
+   `WellKnownObjects` (`{"$wk": key}`) — the general fallback reads a `wellKnownKey`
+   class marker (see `src/serialization/WellKnownObjects.coffee` header). Derived values
+   use the `rebuildDerivedValue` convention (skipped by the copier, rebuilt after).
+8. **Runtime CS evaluation:** `compileFGCode(src, bare)` (defined in
+   `src/boot/loading-and-compiling-coffeescript-sources.coffee`); `Widget.evaluateString`
+   is `eval` of compiled code in the widget's scope. Patch-node precedent for user
+   formulas: `CalculatingPatchNodeWdgt.recalculateOutput`.
+9. **Time references:** `WorldWdgt.dateOfCurrentCycleStart` (one timestamp per cycle,
+   set in `updateTimeReferences`), `WorldWdgt.frameCount` (incremented at cycle end).
+10. **Gates that always run** in `build_it_please.sh`: syntax
+    (`check-coffee-syntax.js`), layering (`check-layering.js`), dead-method
+    (`check-dead-methods.js`). Gotcha: the dead-method gate flags never-referenced
+    methods — engine node-protocol methods invoked only *dynamically* may trip it; if so,
+    inspect how existing dynamically-invoked connection setters are exempted in
+    `check-dead-methods.js` and follow that pattern (do NOT weaken the gate).
+11. **Legacy connection machinery** (to be subsumed in Phase 6): `@target`/`@action`
+    wiring via `setTargetAndActionWithOnesPickedFromMenu`; token guard
+    `Widget._acceptsConnectionToken` (~34 call sites); patch-node freshness gate
+    `CalculatingPatchNodeWdgt.updateTarget`.
+
+## §2 Deliverables map
+
+| Phase | New files | Modified files |
+|---|---|---|
+| 1 | `src/dataflow/DataflowEngine.coffee` | `WorldWdgt.coffee` (ctor + doOneCycle), `WellKnownObjects.coffee`, `buildSystem/build.py` |
+| 2 | `src/spreadsheet/SpreadsheetApp.coffee`, `SpreadsheetWdgt.coffee`, `SheetModel.coffee`, `SheetCellRecord.coffee`, `FormulaCompiler.coffee`, `FormulaHelpers.coffee`, icon widget | `build.py`, `WorldWdgt.coffee` (launcher), `MenusHelper.coffee` (menu entry) |
+| 3 | — | `Widget.coffee` (`exportedValue`), `Color.coffee` (`cellPresenter`, `lighter`, `darker`; promote `mixed`), `SpreadsheetWdgt`/presenter chain |
+| 4 | (maybe) `CellSocketWdgt.coffee` | `SpreadsheetWdgt`, `SheetCellRecord` |
+| 5 | `src/dataflow/SecondsSource.coffee`, `FrameSource.coffee` | `FormulaCompiler` (bindings), `DataflowEngine` (subscription-count hooks) |
+| 6 | — | `ControllerMixin.coffee`, `Widget.coffee`, `CalculatingPatchNodeWdgt.coffee` + patch family, wire menus; later: deletion sweep of token plumbing |
+| 7 | `src/dataflow/CLAUDE.md`, `src/spreadsheet/CLAUDE.md` | root `CLAUDE.md`, spec status header, `NOMENCLATURE.md` if deviations occurred |
+
+---
+
+## §3 Phases
+
+### Phase 0 — pre-flight
+
+1. `git pull`; run baseline verification for your tier; confirm green BEFORE any edit.
+2. Re-verify §1 facts (each has a grep). If any fact has drifted, STOP, update this plan's
+   §1 in its own commit, then proceed.
+3. Confirm rename state: `grep -rin coalesc src buildSystem` → only
+   `docs/coalescing-measurement.md` filename references (4 at last count).
+
+### Phase 1 — engine core, dark
+
+**Goal:** `DataflowEngine` exists, is constructed, its drain station runs every cycle — and
+nothing uses it. Zero behavior change; the drain early-returns on an empty stale pool.
+
+**`src/dataflow/DataflowEngine.coffee`** (plain class, NOT a Widget; the
+`MacroToolkit`/`WidgetFactory` collaborator pattern):
+
+- Class markers: `keptByReferenceOnDeepCopy: true`; `wellKnownKey: "dataflow"`. Also add
+  the identity check to `WellKnownObjects.keyFor` primary list (`return "dataflow" if obj is
+  world?.dataflow`) — mirrors `widgetFactory`.
+- **State:** `@edgesFrom` (Map: producer → Set of edge records `{consumer, firesPerEvent,
+  cold}` — `firesPerEvent`/`cold` unused until Phases 6/never, present in the record shape
+  from day one), `@edgesTo` (reverse Map), `@stalePool` (Set), `@forcedPool` (Set),
+  `@_recalculatingDataflow` (guard), `@lastValues` (Map: node → last recomputed value),
+  instrumentation counters (`@lastDrainPassCount`, `@maxObservedPassCount`,
+  `@lastDrainRecomputeCount`).
+- **Edge API:** `addEdge(producer, consumer, opts)`, `removeEdgesInto(consumer)`,
+  `removeAllEdgesOf(node)` (call when a node dies), `wouldCloseCycle(producer, consumer)`
+  (DFS over `@edgesFrom`). The index is derived and disposable (spec §2): clients re-declare
+  edges; the engine never serializes any of this state (all Maps/Sets are runtime-only —
+  give them the `rebuildDerivedValue`-style treatment or rebuild on wake, per
+  `docs/serialization-duplication-reference.md`).
+- **Node protocol (duck-typed, documented in the class header):** a node may implement
+  `dataflowRecompute()` → new value (computing node; absence = pure source/sink),
+  and `dataflowApply(value)` (sink application hook; Phase 2's cells and Phase 6's wires
+  provide concrete implementations). Equality for the equal-value cutoff:
+  `_valuesEqual: (a, b) -> if a?.equals? then a.equals b else a is b`.
+- **Verbs (spec §3, §5):**
+  - `__poolStale: (node, forced = false)` — bare atom: add to pools, nothing else.
+  - `markStale: (node, forced = false)` — dual-mode: if `@_recalculatingDataflow` then
+    `__poolStale` (demote-not-throw); else `__poolStale` (per-event lane arrives in
+    Phase 6b; until then everything pools).
+- **Drain (spec §4.1/§4.2/§5):** `recalculateDataflow()`:
+  1. `return if @stalePool.size is 0` — the dark-phase hot path; keep it first.
+  2. Re-entrancy guard: throw if `@_recalculatingDataflow` (mirror the
+     `recalculateLayouts` guard's message style).
+  3. Loop (drain-until-quiet): snapshot + clear pools; compute downstream closure; order
+     topologically (Kahn over the closure's subgraph; SCCs: nodes left unordered by Kahn
+     belong to cycles — order them by BFS from the pass's entry nodes, each visited once);
+     recompute each node at most once (per-pass visited set), pulling inputs; equal-value
+     cutoff (skip marking consumers if `_valuesEqual` and not forced); apply sinks.
+     Wrap each node's recompute in try/catch: on throw, record the error AS the node's
+     value if the node supports it (`dataflowNoteError?`), never leave it stale, stash the
+     exception for the error console outside the drain (model: layout's
+     `layoutErrorsToReport`).
+  4. Pass-count cap: `dataflowPassesSanityLimit = 1000`, throw
+     `DATAFLOW_NONCONVERGENCE` with the offending nodes' identities in the message.
+     Expected measured peaks: 1 pass typical, 2 with sink-onto-source chains — record
+     actuals in Phase 7.
+- **What the engine must NOT do:** call any public self-settling setter; call
+  `_invalidateLayout`; fire a connection's settling entrypoint. Sinks route via the
+  `_<action>Connector` lane or bare mutators (§1.5); their layout dirt settles in the
+  `recalculateLayouts` that immediately follows the drain.
+
+**`WorldWdgt` changes:** construct `@dataflow = new DataflowEngine` beside
+`@widgetFactory`; insert `@dataflow.recalculateDataflow()` between
+`@runChildrensStepFunction()` and `@recalculateLayouts()` in `doOneCycle`, with a comment
+naming the two-drain contract (dataflow settles values; layout settles geometry; one-way
+coupling — cite spec §4.1/§5).
+
+**`build.py`:** add `src/dataflow` glob line (place before the serialization line, comment
+in the established style: shipped feature, not homepage-excluded).
+
+**Verification:** tier verification (dark ⇒ zero pixel diffs, zero recaptures). Then the
+console exercise — open the built world, paste into a ScriptWdgt or the console (dev menu):
+
+```coffee
+a = {name: "a"}
+b = {name: "b", dataflowRecompute: -> world.dataflow.pullValue(a) + 1}
+# adapt to the final pull API; assert:
+world.dataflow.addEdge a, b
+world.dataflow.markStale a
+world.dataflow.recalculateDataflow()
+# expect: lastDrainPassCount is 1, lastDrainRecomputeCount is 1
+```
+
+(Adjust to the real API you built; the point is a documented, repeatable by-hand smoke of
+pool→drain→once semantics before any real client exists. If `pullValue` ends up not being
+an engine method — e.g. nodes read inputs directly — update this snippet in this plan.)
+
+### Phase 2 — spreadsheet v1 (first client)
+
+New `src/spreadsheet/` directory (+ `build.py` glob line, same commit). All widgets follow
+the layout discipline: immediate `_apply*` mutators inside `_reLayout`, bulk moves inside
+`world.disableTrackChanges()` … `world.maybeEnableTrackChanges()` + one `fullChanged()`
+(model: `StretchablePanelWdgt._reLayout`).
+
+**2a — shell, painted grid, selection.**
+- `SpreadsheetApp extends IconicDesktopSystemWindowedApp` (`title: "Spreadsheet"`,
+  `slot: nil` — multiple sheets allowed; `buildIcon`; `buildWindow` wraps a
+  `SpreadsheetWdgt` in a `WindowWdgt` — model: `DegreesConverterApp.buildWindow`).
+  Register a launcher at the WorldWdgt boot site (grep `createOpener` there) and/or a
+  `MenusHelper` entry (grep `"Simple doc launcher"` for the pattern).
+- `SpreadsheetWdgt extends Widget` hosting a `ScrollPanelWdgt` whose contents is the grid
+  pane. The grid pane paints EVERYTHING itself in
+  `paintIntoAreaOrBlitFromBackBuffer` (model: `AnalogClockWdgt`'s custom paint): gridlines,
+  lettered column headers / numbered row headers (headers may be a separate non-scrolling
+  chrome layer — decide during 2a; simplest v1: headers painted by `SpreadsheetWdgt` itself
+  outside the scroll frame), the selection rectangle, and (from 2b) cell value text.
+  Fixed default column width / row height; column resize is NOT in v1.
+- Selection: `mouseClickLeft` → cell coordinate math → repaint via `changed()`. Keyboard
+  arrows move selection (see how text widgets receive key events; route through the
+  standard event path, never a DOM listener).
+- **SystemTests to author (sibling repo, full tier):**
+  `SystemTest_spreadsheet_open_grid` (launch, screenshot),
+  `SystemTest_spreadsheet_selection` (click cells, arrows, screenshot).
+- Determinism: nothing time-based exists yet; keep it that way (no `Date.now`, no
+  wall-clock — spec §10).
+
+**2b — cell model, evaluation, editing.**
+- `SheetModel` (plain class): sparse Map keyed `"A1"`; owns `SheetCellRecord`s; address
+  helpers (`colToLetters`/`lettersToCol`).
+- `SheetCellRecord` (plain class): persistent `{@sheet, @address, @source}`; derived
+  `{@compiledFn, @value, @errorFlag}` — derived fields rebuilt, never serialized
+  (serialization participation per `docs/serialization-duplication-reference.md`; the
+  SHEET serializes: model + sources + geometry; on load/duplicate, recommit every cell to
+  rebuild derived state and re-declare edges).
+- `FormulaCompiler` (plain class): `commit(cellRecord, newSource)` →
+  (1) strip CS comments and string literals from a scan copy;
+  (2) scan identifiers: cell refs (`/(?<![\w$.])[A-Z]{1,2}(?:[1-9][0-9]{0,3})(?![\w$])/`,
+  NOT preceded by `.` so `foo.A1` is a property access, not a ref), helper names
+  (`FormulaHelpers` own-property names), later `seconds`/`frame`;
+  (3) build the wrapper source
+  `"(#{boundNames.join ','}) ->\n#{indented user source}"`, compile ONCE via
+  `compileFGCode` (bare), eval to get `@compiledFn`;
+  (4) on compile failure: `@value = new SheetError "SYNTAX", message` (see 2c), no edges.
+  Everything-is-CoffeeScript (spec §9.2): `42`, `"total"`, `A1 * 2` are all just source.
+  Evaluation calls `@compiledFn.apply sheetScope, boundValues` — decide and document
+  `sheetScope` (`@` inside formulas): the `SpreadsheetWdgt`. Full world access, no sandbox.
+- Editing v1: selected cell + typing → an overlay editor mounted at the cell's rect (a
+  `StringWdgt`-based single-line editor; Enter commits, Escape cancels; commit path =
+  `FormulaCompiler.commit` + `world.dataflow.markStale cellRecord`). Multi-line editing
+  via the cell's menu → `CodePromptWdgt` (existing modal code editor). The overlay editor
+  is the ONLY live child widget in v1 — everything else stays painted.
+- **SystemTests:** `SystemTest_spreadsheet_literal_entry` (type `42`, `"hello"` — note
+  the CS quoting requirement is BY DESIGN, spec §9.2/§13), `SystemTest_spreadsheet_edit_cancel`.
+
+**2c — references, recompute, errors.**
+- Cells become dataflow nodes: `SheetCellRecord.dataflowRecompute()` pulls referenced
+  cells' values (via the sheet model; a reference to a widget-valued cell applies the
+  exported-value rule from Phase 4 — until then, values are plain), runs `@compiledFn`,
+  returns the new value. Commit re-declares edges: `engine.removeEdgesInto cell;
+  engine.addEdge refCell, cell for each ref` — but FIRST
+  `engine.wouldCloseCycle(...)` for each new edge: on a would-be cycle, reject the commit
+  with `@value = new SheetError "LOOP"` and declare NO edges (spec §7).
+- `SheetError` (plain class, `src/spreadsheet/`): `{@kind, @message}`; `toString ->
+  "#" + @kind`; propagates: `dataflowRecompute` of a cell whose input is a `SheetError`
+  returns that error (short-circuit before calling the formula). Painted distinctly
+  (badge/red text).
+- Formula runtime throw → catch inside the cell's `dataflowRecompute`, return
+  `new SheetError "ERR", err.message` (this doubles as the engine-level
+  force-resolve of spec §5 — the cell always yields a value).
+- **SystemTests:** `SystemTest_spreadsheet_refs_recalc` (A1=3, B1=`A1 * 2`,
+  C1=`A1 + B1`; edit A1→5; assert 10/15 — the diamond, computed once: also assert via
+  `world.dataflow.lastDrainRecomputeCount` in a macro `macroEvaluateString` step),
+  `SystemTest_spreadsheet_loop_rejected`, `SystemTest_spreadsheet_error_propagation`.
+
+### Phase 3 — value protocol & presenters (Color first)
+
+- `Widget.exportedValue: -> @getColor?() ? @getValue?() ? @text` (spec §9.3) — on
+  `Widget`, with a header comment naming it the unified reader over the duck-typed cluster.
+- `Color`: promote `mixed` (remove its homepage-exclusion markers `# »>> … <<«` — they mark
+  build-stripped code; `mixed` becomes shipped); add `lighter: (amount = 0.5) ->
+  @mixed 1 - amount, Color.WHITE` and `darker` (via `Color.BLACK`); add
+  `cellPresenter: -> s = new RectangleWdgt; s.setColor @; s` — respect Color's official
+  immutability (never mutate; see the class's own deep-copy comment).
+- Presenter chain in the sheet (spec §9.4), evaluated per recompute:
+  widget → itself; `value.cellPresenter?()` → returned widget mounted in the cell's rect;
+  else painted `toString()` text (NO widget — painting stays the default). Presenter
+  lifecycle decision (spec §13, decide now): if the value's class is unchanged, REUSE the
+  mounted presenter and update it (e.g. `setColor`); on class change, dispose and rebuild.
+- `FormulaHelpers` v1: `mix: (a, b, p = 0.5) -> a.mixed p, b` — one helper to prove the
+  binding path; the algebra otherwise = value-class methods (spec §9.5).
+- The "operate ➜" cell menu (meta-introspection listing of the value class's methods) is
+  OPTIONAL scope — implement only if time allows; record either way in the ledger commit.
+- **SystemTests:** `SystemTest_spreadsheet_color_cell` (`new Color 255, 0, 0` → swatch;
+  B1 = `A1.lighter()` → lighter swatch; edit A1 → both change).
+
+### Phase 4 — widget-valued cells & sockets
+
+- A formula yielding a Widget mounts it live in the cell (presenter chain branch 1);
+  the mount point is the **socket** (either a thin `CellSocketWdgt` or direct child
+  management in the grid pane — decide by whichever keeps `_reLayout` simplest).
+- References to a widget-valued cell yield `widget.exportedValue()`; a widget with no
+  export yields the widget itself (spec §9.3).
+- Interactivity in: wire the mounted widget's connection at the socket
+  (`widget.setTargetAndActionWithOnesPickedFromMenu nil, nil, socketAdapter, "cellInput"`
+  — hard-wired at mount; the adapter's `cellInput` marks the cell stale; pooled lane, so
+  a drag = per-frame recompute of dependents, spec Scenario A). Drag-and-DROP of desktop
+  widgets into cells is OUT of scope for this phase (record as deferred).
+- **SystemTests:** `SystemTest_spreadsheet_slider_cell` (macro drags the slider; dependent
+  cell updates; deterministic — input events only).
+
+### Phase 5 — time sources
+
+- `src/dataflow/SecondsSource.coffee`, `FrameSource.coffee`: plain classes; singletons
+  constructed lazily by the engine (or world) on first subscription;
+  `subscriberCount` maintained by the engine's `addEdge`/`removeEdgesInto` (engine calls
+  `source.subscriberCountChanged n` — registering in `world.steppingWdgts` (`fps: 1` /
+  `fps: 0`, `step: -> world.dataflow.markStale @`) while n>0, deregistering at 0).
+- Values pulled at recompute: `SecondsSource` → `WorldWdgt.dateOfCurrentCycleStart`;
+  `FrameSource` → `WorldWdgt.frameCount`. Formulas NEVER call `Date` (spec §6/§10);
+  the scanner bindings `seconds` / `frame` become edges to the sources plus bound
+  parameters carrying the pulled values.
+- Perf discipline (spec §9.7): a tick that only changes painted text = `changed()` on the
+  grid pane region; NO `_invalidateLayout` on the tick path — assert this by reading the
+  code path, and measure: with one `seconds` cell, `lastDrainRecomputeCount` per second
+  must equal the dependent count.
+- **Testing & determinism:** time-driven cells are EXCLUDED from pixel assertions unless
+  the macro drives ticks: for tests, set the source's value injection via macro
+  (`world.dataflow` exposing a test hook is acceptable if guarded `if Automator?` so
+  `--homepage` strips it). Author `SystemTest_spreadsheet_seconds_cell` only if the
+  macro-driven tick hook is built; otherwise verify by hand and record that in the ledger.
+
+### Phase 6 — patch-programming port (strangler; spec §8)
+
+**6a — `firesPerEvent` on wires.** Property + menu toggle on connection-bearing widgets
+(default `false`). No engine involvement yet: legacy delivery still runs. Dark for pixels.
+
+**6b — engine delivery behind an A/B switch.** `world.dataflowWiresEnabled` (default
+`false`; model: `world.deferredSettlingEnabled` A/B). When ON:
+- `setTargetAndActionWithOnesPickedFromMenu` additionally declares an engine edge
+  (controller → target-action sink record); un-wiring removes it.
+- Controllers' update paths call `world.dataflow.markStale @` instead of
+  `@_fireConnection` (which becomes the engine's sink-application callback:
+  `dataflowApply` on the wire record calls the existing `_fireConnection` body — the
+  `_<action>Connector` routing is thereby reused verbatim).
+- `firesPerEvent` wires: `markStale` outside a drain runs the synchronous mini-pass
+  scoped to that wire (spec §4).
+- `bang` → `markStale @, true` (forced). `reactToTargetConnection` → mark stale+forced on
+  edge creation.
+- `CalculatingPatchNodeWdgt`: implement `dataflowRecompute` (pull all connected inputs,
+  run the user formula); DELETE the per-input freshness gate — under the A/B OFF path keep
+  legacy behavior intact (guard the changes on the switch; the class carries both paths
+  during 6b only).
+- **Acceptance:** with the switch ON by hand: the °C↔°F converter behaves identically
+  (bidirectional, terminates — the ring walks once per event); the full suite passes with
+  the switch OFF (default).
+
+**6c — default ON.** Flip the default; run the full suite; expect final-frame equality for
+DAG circuits and the ring. Intermediate-frame differences may force screenshot recaptures —
+follow the established recapture procedure in the tests repo; list every recaptured test in
+the commit message with a one-line cause. Keep the switch for one release as a kill-switch.
+
+**6d — token retirement.** Delete `_acceptsConnectionToken`, the
+`connectionsCalculationToken` fields and threading (~34 sites: grep
+`connectionsCalculationToken`), `makeNewConnectionsCalculationToken`, and the per-input
+token fields in patch nodes; simplify every connection setter's signature; remove the 6b
+legacy guards and the A/B switch. Update `NOMENCLATURE.md`: mark the legacy connection
+domain rows as historical. This is the largest mechanical sweep — full-tier verification
+mandatory.
+
+### Phase 7 — docs closeout
+
+- Root `CLAUDE.md`: add the dataflow/spreadsheet subsystem to the architecture section
+  (two-drain sentence; pointer to spec + `src/dataflow/CLAUDE.md`).
+- Write `src/dataflow/CLAUDE.md` and `src/spreadsheet/CLAUDE.md` (subsystem depth: node
+  protocol, drain contract, formula compiler behavior, presenter chain).
+- Record measured instrumentation (suite-wide peak pass counts, typical drain sizes) in
+  the spec or a small `docs/dataflow-measurements.md`, in the spirit of layout's
+  measured-convergence posture.
+- Update the spec header: status → implemented; list any deviations decided during
+  execution (each deviation must have been recorded in its phase's commit message).
+
+---
+
+## §4 Cross-cutting rules (every phase)
+
+1. **Naming:** every new identifier passes `NOMENCLATURE.md`. In particular: no "settle",
+   "invalidate", "dirty", "coalesced", "announce", "volatile" in dataflow code; "source"
+   qualified.
+2. **Dependency finder:** reference classes only via literal `new X` / `extends X` /
+   `@augmentWith X` (§1.2). A dynamically-constructed class name breaks load order.
+3. **Homepage build:** engine + spreadsheet ship (no whole-file exclusion). Test-only
+   hooks guarded `if Automator?` or marked with the established exclusion comments.
+4. **Layout discipline:** widget code follows wrapper+core (`_settleLayoutsAfter` /
+   `*NoSettle`) and bounds-first `_reLayout`; the lint gates enforce most of it — never
+   bypass with `--noSyntaxCheck`.
+5. **Testing:** each behavior phase lands with its SystemTests authored in
+   `../Fizzygum-tests` (full tier), following `src/macros/CLAUDE.md` + MACRO-PATTERNS
+   (macros are the only authoring path). Respect `../Fizzygum-tests/DETERMINISM.md` —
+   especially for Phases 4–6 (input recognition) and 5 (time).
+6. **Commits:** conventional style (`feat(dataflow): …`, `feat(spreadsheet): …`,
+   `refactor(connections): …`); each states its verification tier and updates the ledger.
+7. **When reality diverges from this plan** (an API doesn't fit, a gate complains, a fact
+   in §1 has drifted): stop, decide, record the deviation IN THIS PLAN (edit the relevant
+   section) in the same commit — this document must stay executable for the next cold
+   session.
+
+## §5 Risks & rollback
+
+- **doOneCycle overhead (Phase 1):** the empty-pool early return keeps the dark engine at
+  one Set-size check per cycle. Measure nothing; just keep it first in the method.
+- **Formula ref-scan false positives** (e.g. `A1` inside a regex literal): strings and
+  comments are stripped before scanning; regex literals are rare in formulas — accepted
+  v1 limitation, documented in `src/spreadsheet/CLAUDE.md`.
+- **Serialization of sheets:** derived-state rebuild on load must recommit cells in
+  dependency-safe order — simplest: commit all sources with edge-declaration deferred,
+  then mark ALL cells stale and let one drain compute values (order-independent by
+  construction). If a saved sheet contains a `#LOOP`, the reject-at-commit check must
+  tolerate re-loading it (reject again, same error value).
+- **Suite recaptures (6c)** are expected and bounded; every recapture is listed and
+  justified.
+- **Rollback:** Phases 1–5 are additive (revert = delete the feature commits). 6b/6c ride
+  the A/B switch (kill-switch rollback without revert). 6d is the only
+  hard-to-revert sweep — hence last, and only after 6c has soaked.
+
+## §6 Definition of done (overall)
+
+- [ ] Ledger fully checked; every phase's verification tier recorded.
+- [ ] Full-tier run green; new SystemTests exist for phases 2a–4 (and 5 if the tick hook
+      was built); recaptures (if any) listed in 6c's commit.
+- [ ] `world.dataflow` drains dark-cheap (empty-pool early return first).
+- [ ] Token machinery deleted (6d); `grep -rn connectionsCalculationToken src` → 0.
+- [ ] Docs closeout (Phase 7) landed; spec marked implemented with deviations.
+- [ ] `NOMENCLATURE.md` consistent with the shipped names.
