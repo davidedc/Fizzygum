@@ -23,8 +23,12 @@
   self-settle) — the MISSED TWIN of the `ScrollPanelWdgt.disableDragsDropsAndEditing` push the drawdown campaign
   deleted as redundant (`ScrollPanelWdgt.coffee:875–881`). Only surfaced now because `DegreesConverterApp.buildWindow`
   calls it on an ATTACHED widget (`world.add wm` :94 THEN `disableDragsDropsAndEditing()` :98) and the capstone gate
-  is NOT part of `fg gauntlet`. Recommended fix (separate change): delete the redundant push per the ScrollPanelWdgt
-  precedent, prove byte-identical via disable-probe + `fg gauntlet` + capstone-green. **OUT OF SCOPE for this arc.**
+  is NOT part of `fg gauntlet`. **FIXED (commit #2) via call-site reorder:** `DegreesConverterApp.buildWindow` now disables
+  BEFORE `world.add` (orphan push → gate-excluded by classification), byte-identical (standalone 4/4 refs; `fg gauntlet`
+  167/167 dpr1+dpr2+webkit+apps+tiernaming+settle; `dpr2-fastest-s8` torture clean; capstone GREEN). Two class-level fixes
+  were FALSIFIED first (delete → suite mismatch, not image-verified; `_settleLayoutsAfter` whole-body wrap → crash); the
+  class method's careless tail persists on its untested interactive paths. Three-shape history + the capstone-gate weakness
+  it exposed: §6.
 
 ## §0 What this is
 
@@ -315,11 +319,38 @@ recorded here so a future fix arc is cold-executable:
   capstone gate is NOT part of `fg gauntlet`, so it was never re-run at the test's landing.
 - **No visual defect:** the end-of-cycle flush drains the push to the same geometry, so every screenshot passes
   byte-exact (which is why the gauntlet is green).
-- **Recommended fix (a separate, tiny change):** DELETE the redundant `@_invalidateLayout()` at
-  `StretchableEditableWdgt:174` per the `ScrollPanelWdgt` precedent, then prove byte-identical via the disable-probe
-  + `fg gauntlet` + a green capstone re-run. Wrinkle to confirm in the probe (ScrollPanelWdgt didn't have it): this
-  method also `@toolsPanel.destroy()`s the editing toolbar — verify that removal doesn't shift settled geometry (the
-  byte-exact screenshots are strong evidence it doesn't). If it turns out NOT redundant, fall back to wrapping the
-  body in `@_settleLayoutsAfter => …` (the `_buildAndConnectChildren` idiom). Scope is isolated to that one line —
-  base `Widget` (`:3483`), `StretchablePanelWdgt` (`:114`), `StretchableWidgetContainerWdgt` (`:201`) have no
-  trailing careless push, and `ScrollPanelWdgt` was already cleaned.
+- **FIX SHIPPED — call-site reorder (commit #2, 2026-07-04).** Three shapes were tried; the first two (both class-level)
+  were FALSIFIED — recorded so nobody re-treads them:
+  1. **ELIMINATE** — delete the `:174` push per the `ScrollPanelWdgt` precedent. Result: the capstone gate's embedded suite
+     reported `macroDegreesConverterFourWayDrive` no longer matching — a **suite MISMATCH whose failure mode was NOT
+     image-verified** (pivoted before dumping the frame, so pixel-diff vs. crash is unconfirmed). The ScrollPanelWdgt
+     redundancy did NOT transfer: this method tears down a real editing toolbar (`@toolsPanel.destroy()`) and the widget
+     re-fits after, so the `:174` push is genuinely load-bearing.
+  2. **CONVERT** — wrap the whole body in `@_settleLayoutsAfter => …` (the `_buildAndConnectChildren` idiom). Result:
+     **CRASH (verified, standalone `--dump-failures`):** `Fizzygum: a public geometry setter was reached during a layout
+     flush/pass`, thrown from `_settleLayoutsAfter`. Mechanism: the body calls the self-settling `@toolsPanel.destroy()`
+     plus the `@stretchableWidgetContainer` cascade, which reach PUBLIC geometry setters — illegal inside a settle/flush
+     pass — so a whole-body wrap ALWAYS throws. A future class-level convert needs the **wrapper + NoSettle-core split AND
+     `destroy()` routed through its own NoSettle core**, so nothing inside the flush touches a public setter.
+  3. **CALL-SITE reorder (SHIPPED).** `DegreesConverterApp.buildWindow` was the LONE caller disabling AFTER `world.add`;
+     every other construction caller disables the freshly-built ORPHAN subtree (e.g. `ToolbarsApp` disables its
+     `new ScrollPanelWdgt` toolsPanel before adding it). Moving `patchProgrammingWdgt.disableDragsDropsAndEditing()` to
+     BEFORE `world.add wm` makes the `:174` push an **orphan push** — excluded from the careless audit by classification
+     (not suppressed), drained on attach. **Verified byte-identical:** standalone converter 4/4 references match (no
+     recapture); capstone GREEN (`careless pushes=0`, suite `ALL TESTS PASSED`); full `fg gauntlet` 167/167 byte-exact
+     (dpr1+dpr2+webkit+apps+tiernaming+settle) + one `dpr2-fastest-s8` torture round clean (167/167, 0 nonconvergence).
+- **LATENT TAIL — the class method is NOT fixed.** `StretchableEditableWdgt.disableDragsDropsAndEditing` STILL ends in a
+  bare `@_invalidateLayout()` (`:174`). Its INTERACTIVE paths stay attached-off-settle and UNWITNESSED by any test: the
+  window-bar edit toggle (`editButtonPressedFromWindowBar` → `disableDragsDropsAndEditing`) and the "disable editing" menu
+  item (`addWidgetSpecificMenuEntries`). A user toggling either on an attached widget makes the same careless push the
+  call-site reorder dodged — no test exercises it, so the capstone gate stays green over it. Whoever fixes the class
+  method: use the wrapper + NoSettle-core split (per CONVERT above, with `destroy()` on a NoSettle core), and BE PREPARED
+  FOR A REFERENCE RECAPTURE — both class-level shapes provably change the converter's render, so the current references may
+  bake a one-frame-late re-fit; that needs an OWNER-EYEBALLED before/after correctness decision, not a blind
+  recapture-to-green. (Scope of the tail: base `Widget` `:3483`, `StretchablePanelWdgt` `:114`,
+  `StretchableWidgetContainerWdgt` `:201` have no trailing push; `ScrollPanelWdgt` was already cleaned — only this one.)
+- **CAPSTONE GATE WEAKNESS (found this session — backlog).** `run-capstone-gate.sh` verdicts on the careless-push COUNT
+  only — it exits 0 even when its embedded suite run has FAILING or CRASHING tests. It bit TWICE today: exit 0 with a
+  mismatching converter (ELIMINATE) and exit 0 with a crashing converter (CONVERT). A fix that trades careless pushes for
+  broken tests currently PASSES the gate. Fix: the gate should also fail on `suite runner exit != 0` (it already captures
+  `suite_rc`). The paint-readonly gate shares the shape — check it too.
