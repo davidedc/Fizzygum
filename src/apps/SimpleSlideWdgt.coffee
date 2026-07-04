@@ -7,7 +7,7 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
     new SimpleSlideIconWdgt
 
 
-  createToolsPanel: ->
+  _createToolsPanelNoSettle: ->
     # tools -------------------------------
     @toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
 
@@ -52,7 +52,7 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
     # (average of 5.4 ms on my machine instead of 10 ms), and
     # also variance is lower (3.1 vs 9.5).
     #console.time 'createToolsPanel'
-    @toolsPanel.addMany [
+    @toolsPanel._addManyNoSettle [
       new TextBoxCreatorButtonWdgt
       new ExternalLinkCreatorButtonWdgt
       new VideoPlayCreatorButtonWdgt
@@ -90,8 +90,8 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
 
 
 
-    @toolsPanel.disableDragsDropsAndEditing()
-    @add @toolsPanel
+    @toolsPanel._disableDragsDropsAndEditingNoSettle()
+    @_addNoSettle @toolsPanel
     @dragsDropsAndEditingEnabled = true
     @_invalidateLayout()
 

@@ -663,7 +663,9 @@ Four tools, in increasing precision:
   was byte-identical across the full gauntlet (the 12 panel-locking apps included), proving the re-fit redundant — a
   **one-line ELIMINATE**, no convert at all. The lesson generalizes: a leak that *presents* as a public-mutator convert
   but has many internal / construction callers is exactly where to disable-probe *first* — the cheap probe routinely
-  turns a multi-class convert into a deleted line.
+  turns a multi-class convert into a deleted line. *(The rest of the 7-class family was since converted to wrapper +
+  `_*NoSettle` core — 2026-07-04, `docs/disable-editing-family-convert-plan.md` — because ScrollPanelWdgt's ELIMINATE did
+  not generalize to the members whose tail is load-bearing; per the caveat below.)*
   (Caveat: a *global* disable-probe verdict can be coarser than the real fix — a "load-bearing" hook can still have a
   *specific* eliminable leak on a detached / non-contributing subtree, so localize with the stack-probe first. And never
   generalize an eliminate skip down to a shared primitive without checking the construction path: a blanket

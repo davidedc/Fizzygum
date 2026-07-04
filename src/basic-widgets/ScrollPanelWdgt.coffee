@@ -240,9 +240,20 @@ class ScrollPanelWdgt extends PanelWdgt
 
   # see SimpleSlideWdgt for performance improvements
   # of this over the non-
+  # thin-wrap-exempt: SYNCHRONOUS content-change endpoint -- @contents.addMany + immediate @_reLayoutChildren
+  # (re-reading APPLIED geometry is load-bearing; deferring it diverges nested-scroll geometry, exactly as for
+  # add() -- OVERVIEW §11 PROOF 2). The _addManyNoSettle twin below is the non-settling core for in-flush callers
+  # (createToolsPanel), NOT a settle the public form should route through.
   addMany: (widgetsToBeAdded) ->
     @contents.addMany widgetsToBeAdded
     @_reLayoutChildren() # layout-apply-sanctioned: public content-change endpoint -- see add() (OVERVIEW §11 PROOF 2)
+
+  # NON-settling core: forward to @contents' addMany core (the buttons attach to the scrolled ToolPanelWdgt, NOT
+  # this frame -- like add() -> @contents.add above), then SCHEDULE this frame's re-fit. The enclosing wrapper's
+  # flush applies it -- vs the public addMany's synchronous @_reLayoutChildren endpoint (which is off-settle).
+  _addManyNoSettle: (widgetsToBeAdded) ->
+    @contents._addManyNoSettle widgetsToBeAdded
+    @_invalidateLayout()
 
 
   # Override the NON-settling CORE (the public showResizeAndMoveHandlesAndLayoutAdjusters wrapper is inherited from
@@ -852,6 +863,9 @@ class ScrollPanelWdgt extends PanelWdgt
       @contents._applyExtent @extent()
 
   enableDragsDropsAndEditing: (triggeringWidget) ->
+    @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle triggeringWidget
+
+  _enableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
@@ -860,9 +874,12 @@ class ScrollPanelWdgt extends PanelWdgt
     @enableDrops()
     @dragsDropsAndEditingEnabled = true
 
-    @contents.enableDragsDropsAndEditing @
+    @contents._enableDragsDropsAndEditingNoSettle @
 
   disableDragsDropsAndEditing: (triggeringWidget) ->
+    @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle triggeringWidget
+
+  _disableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
     if !@dragsDropsAndEditingEnabled
       return
@@ -871,7 +888,7 @@ class ScrollPanelWdgt extends PanelWdgt
     @disableDrops()
     @dragsDropsAndEditingEnabled = false
 
-    @contents.disableDragsDropsAndEditing @
+    @contents._disableDragsDropsAndEditingNoSettle @
     # ELIMINATE (end-of-cycle-flush-drawdown): the "disable editing" menu action used to schedule an OFF-SETTLE
     # re-fit here (@_invalidateLayout) -- a careless end-of-cycle push (it reaches the flush from the menu trigger,
     # outside any settle; the suite-wide production audit flagged exactly this site). A disable-probe proved it

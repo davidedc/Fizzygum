@@ -3450,7 +3450,13 @@ class Widget extends TreeNode
   # ---------------------------------------------------------------------
   # locking of contents
 
+  # SELF-SETTLE (single-mutation tier): unlock the contents settle-free, then flush ONCE (mirror of
+  # disableDragsDropsAndEditing). Any entry point self-settles, so ordering vs world.add no longer matters;
+  # the idempotency guard + per-child work live in the core.
   enableDragsDropsAndEditing: ->
+    @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle()
+
+  _enableDragsDropsAndEditingNoSettle: ->
 
     if @dragsDropsAndEditingEnabled
       return
@@ -3480,7 +3486,15 @@ class Widget extends TreeNode
           each.isEditable = true
 
 
+  # SELF-SETTLE (single-mutation tier): lock the contents settle-free, then flush ONCE. Any entry point (the edit
+  # button, the "disable editing" menu, or a construction-time call) self-settles -- so calling this before or after
+  # world.add is equally legal (an orphan defers in-flush, orphan-settledness). Idempotency guard + per-child work
+  # live in the core; world.stopEditing routes to the NON-settling _stopEditingNoSettle (a caret teardown re-fits its
+  # text, so the public stopEditing self-settles -- reaching it inside this flush would throw).
   disableDragsDropsAndEditing: ->
+    @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle()
+
+  _disableDragsDropsAndEditingNoSettle: ->
     if !@dragsDropsAndEditingEnabled
       return
     @dragsDropsAndEditingEnabled = false
@@ -3508,7 +3522,7 @@ class Widget extends TreeNode
         if each.isEditable?
           each.isEditable = false
           if world.caret?.target == each
-            world.stopEditing()
+            world._stopEditingNoSettle()
 
 
   # ---------------------------------------------------------------------

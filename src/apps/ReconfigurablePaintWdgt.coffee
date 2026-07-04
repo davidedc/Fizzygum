@@ -70,9 +70,14 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
             @changed()
     """
 
-  createToolsPanel: ->
+  # NON-settling core (only callers are cores). SIBLING SHAPE: build the whole holder+buttons subtree while the
+  # holder is still detached from @, so @pencilToolButton.toggle() below runs its radio-click escalation
+  # (sub-button -> SwitchButtonWdgt self-settle -> RadioButtonsHolder resets siblings) on a subtree whose ROOT is
+  # still an orphan -- the switch's _settleLayoutsAfter then DEFERS instead of throwing inside the enable flush.
+  # The radio logic reads no attachment-dependent geometry and stops at the holder (never climbs to @). @toolsPanel
+  # is attached LAST (@_addNoSettle, below the toggle), exactly like Patch/Dashboards/SimpleSlide build-then-attach.
+  _createToolsPanelNoSettle: ->
     @toolsPanel = new RadioButtonsHolderWdgt
-    @add @toolsPanel
 
     pencilButtonOff = new CodeInjectingSimpleRectangularButtonWdgt @, @overlayCanvas, new Pencil2IconWdgt
     pencilButtonOff.alpha = 0.1
@@ -428,12 +433,13 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     # eraserAnnotation
     new EditableMarkWdgt @eraserToolButton, eraserToolButtonOff, "editInjectableSource"
 
-    @toolsPanel.add @pencilToolButton
-    @toolsPanel.add @brushToolButton
-    @toolsPanel.add @toothpasteToolButton
-    @toolsPanel.add @eraserToolButton
+    @toolsPanel._addNoSettle @pencilToolButton
+    @toolsPanel._addNoSettle @brushToolButton
+    @toolsPanel._addNoSettle @toothpasteToolButton
+    @toolsPanel._addNoSettle @eraserToolButton
 
     @pencilToolButton.toggle()
+    @_addNoSettle @toolsPanel   # attach the fully-built holder LAST (sibling shape) -- keeps the toggle's settle on an orphan root
     @_invalidateLayout()
 
   _reLayoutSelf: ->

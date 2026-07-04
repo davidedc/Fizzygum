@@ -91,12 +91,10 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
     wm = new WindowWdgt nil, nil, patchProgrammingWdgt
     wm._applyMoveTo new Point 114, 10
     wm._applyExtent new Point 596, 592
-    # Disable editing while the window subtree is still an ORPHAN (BEFORE world.add): the tail @_invalidateLayout in
-    # StretchableEditableWdgt.disableDragsDropsAndEditing then settles on attach as an ORPHAN push -- excluded from
-    # the end-of-cycle careless audit by classification (the sanctioned "build off-world, settle on attach" pattern
-    # other construction callers already use, e.g. ToolbarsApp disables its freshly-built orphan toolsPanel). This
-    # was the lone caller that disabled AFTER world.add, so it alone witnessed that method's latent careless tail
-    # via the capstone gate. Keep this BEFORE world.add. See docs/hover-resync-after-flush-plan.md §6.
+    # disableDragsDropsAndEditing now self-settles (wrapper + _disableDragsDropsAndEditingNoSettle core -- the
+    # disable/enable-editing family convert), so calling it BEFORE or AFTER world.add is equally legal: the delicate
+    # "must precede world.add" ordering that once made this the lone witness of that method's careless tail has
+    # DISSOLVED (the tail rides the wrapper's own flush now, on orphan or attached alike). Order kept as-is, unchanged.
     patchProgrammingWdgt.disableDragsDropsAndEditing()
     world.add wm
     wm.setTitleWithoutPrependedContentName "°C ↔ °F converter"

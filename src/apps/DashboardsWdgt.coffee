@@ -7,11 +7,11 @@ class DashboardsWdgt extends StretchableEditableWdgt
     new DashboardsIconWdgt
 
 
-  createToolsPanel: ->
+  _createToolsPanelNoSettle: ->
     # tools -------------------------------
     @toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
 
-    @toolsPanel.addMany [
+    @toolsPanel._addManyNoSettle [
       new TextBoxCreatorButtonWdgt
       new ExternalLinkCreatorButtonWdgt
 
@@ -38,8 +38,8 @@ class DashboardsWdgt extends StretchableEditableWdgt
 
 
 
-    @toolsPanel.disableDragsDropsAndEditing()
-    @add @toolsPanel
+    @toolsPanel._disableDragsDropsAndEditingNoSettle()
+    @_addNoSettle @toolsPanel
     @dragsDropsAndEditingEnabled = true
     @_invalidateLayout()
 

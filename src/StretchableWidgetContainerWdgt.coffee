@@ -189,21 +189,27 @@ class StretchableWidgetContainerWdgt extends Widget
     true
 
   enableDragsDropsAndEditing: (triggeringWidget) ->
+    @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle triggeringWidget
+
+  _enableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
     @parent?.makePencilYellow?()
     if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
-      @parent.enableDragsDropsAndEditing @
+      @parent._enableDragsDropsAndEditingNoSettle @
     else
       super @
 
   disableDragsDropsAndEditing: (triggeringWidget) ->
+    @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle triggeringWidget
+
+  _disableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
     if !@dragsDropsAndEditingEnabled
       return
     @parent?.makePencilClear?()
     if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
-      @parent.disableDragsDropsAndEditing @
+      @parent._disableDragsDropsAndEditingNoSettle @
     else
       super @

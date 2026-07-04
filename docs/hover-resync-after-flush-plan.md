@@ -339,7 +339,7 @@ recorded here so a future fix arc is cold-executable:
      (not suppressed), drained on attach. **Verified byte-identical:** standalone converter 4/4 references match (no
      recapture); capstone GREEN (`careless pushes=0`, suite `ALL TESTS PASSED`); full `fg gauntlet` 167/167 byte-exact
      (dpr1+dpr2+webkit+apps+tiernaming+settle) + one `dpr2-fastest-s8` torture round clean (167/167, 0 nonconvergence).
-- **LATENT TAIL — the class method is NOT fixed.** `StretchableEditableWdgt.disableDragsDropsAndEditing` STILL ends in a
+- **LATENT TAIL — ✅ RESOLVED 2026-07-04** by the disable/enable-editing family CONVERT (`docs/disable-editing-family-convert-plan.md`): the whole 7-class family (enable + disable + `createToolsPanel`) is now wrapper + `_*NoSettle` core, so the interactive paths self-settle and the tail rides the wrapper's own flush — the prescription below is executed. *Historical note (pre-fix):* `StretchableEditableWdgt.disableDragsDropsAndEditing` STILL ends in a
   bare `@_invalidateLayout()` (`:174`). Its INTERACTIVE paths stay attached-off-settle and UNWITNESSED by any test: the
   window-bar edit toggle (`editButtonPressedFromWindowBar` → `disableDragsDropsAndEditing`) and the "disable editing" menu
   item (`addWidgetSpecificMenuEntries`). A user toggling either on an attached widget makes the same careless push the
@@ -349,7 +349,7 @@ recorded here so a future fix arc is cold-executable:
   bake a one-frame-late re-fit; that needs an OWNER-EYEBALLED before/after correctness decision, not a blind
   recapture-to-green. (Scope of the tail: base `Widget` `:3483`, `StretchablePanelWdgt` `:114`,
   `StretchableWidgetContainerWdgt` `:201` have no trailing push; `ScrollPanelWdgt` was already cleaned — only this one.)
-- **CAPSTONE GATE WEAKNESS (found this session — backlog).** `run-capstone-gate.sh` verdicts on the careless-push COUNT
+- **CAPSTONE GATE WEAKNESS — ✅ FIXED 2026-07-04** (disable/enable convert Phase 1): `run-capstone-gate.sh` now HARD-FAILS on `suite runner exit != 0` (self-tested with a planted pixel-break that leaves 0 careless pushes). The paint-readonly gate sharing the shape is still open (backlog). *Historical note:* `run-capstone-gate.sh` verdicts on the careless-push COUNT
   only — it exits 0 even when its embedded suite run has FAILING or CRASHING tests. It bit TWICE today: exit 0 with a
   mismatching converter (ELIMINATE) and exit 0 with a crashing converter (CONVERT). A fix that trades careless pushes for
   broken tests currently PASSES the gate. Fix: the gate should also fail on `suite runner exit != 0` (it already captures

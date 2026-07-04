@@ -7,11 +7,11 @@ class PatchProgrammingWdgt extends StretchableEditableWdgt
     new PatchProgrammingIconWdgt
 
 
-  createToolsPanel: ->
+  _createToolsPanelNoSettle: ->
     # tools -------------------------------
     @toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
 
-    @toolsPanel.addMany [
+    @toolsPanel._addManyNoSettle [
       new TextBoxCreatorButtonWdgt
       new SliderNodeCreatorButtonWdgt
 
@@ -20,8 +20,8 @@ class PatchProgrammingWdgt extends StretchableEditableWdgt
       new CalculatingNodeCreatorButtonWdgt
     ]
 
-    @toolsPanel.disableDragsDropsAndEditing()
-    @add @toolsPanel
+    @toolsPanel._disableDragsDropsAndEditingNoSettle()
+    @_addNoSettle @toolsPanel
     @dragsDropsAndEditingEnabled = true
     @_invalidateLayout()
 

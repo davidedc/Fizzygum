@@ -9,10 +9,15 @@ class ToolPanelWdgt extends PanelWdgt
   # ONE settle over the whole bundle; each core's _invalidateLayout is deduped by
   # layoutIsValid, so N adds still cost one flush.
   addMany: (widgetsToBeAdded) ->
-    @_settleLayoutsAfter =>
-      for eachWidget in widgetsToBeAdded
-        @_addNoSettle eachWidget
-      return
+    @_settleLayoutsAfter => @_addManyNoSettle widgetsToBeAdded
+
+  # NON-settling core (mirror of _addNoSettle): the COMPLETE addMany minus the settle. A core building a tools
+  # panel (createToolsPanel) loop-adds through this so the whole bundle rides ONE enclosing flush; each
+  # _addNoSettle's _invalidateLayout is deduped by layoutIsValid, so N adds still cost one flush.
+  _addManyNoSettle: (widgetsToBeAdded) ->
+    for eachWidget in widgetsToBeAdded
+      @_addNoSettle eachWidget
+    return
 
   # Public add self-settles over the non-settling core (the Widget /
   # SimpleVerticalStackPanelWdgt add/_addNoSettle pattern). Was: a public add ending in a

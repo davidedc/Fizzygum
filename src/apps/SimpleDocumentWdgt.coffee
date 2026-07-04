@@ -84,7 +84,7 @@ class SimpleDocumentWdgt extends Widget
       world.alignIDsOfNextWidgetsInSystemTests()
 
 
-    @createToolsPanel()
+    @_createToolsPanelNoSettle()
     @simpleDocumentScrollPanel = new SimpleDocumentScrollPanelWdgt
 
     startingContent = new SimplePlainTextWdgt(
@@ -97,7 +97,12 @@ class SimpleDocumentWdgt extends Widget
 
     @_invalidateLayout()
 
-  createToolsPanel: ->
+  # NON-settling core (the only callers are cores: _enableDragsDropsAndEditingNoSettle / _buildAndConnectChildrenNoSettle).
+  # The @toolsPanel.add calls below run on the ORPHAN toolsPanel (before it is attached) and go through the PUBLIC add
+  # deliberately -- HorizontalMenuPanelWdgt.add wraps each item in a GlassBoxBottomWdgt, which _addNoSettle would bypass;
+  # on an orphan they defer, so they need no routing. Only the post-attach @toolsPanel disable + the @add of the panel
+  # itself route to cores.
+  _createToolsPanelNoSettle: ->
     @toolsPanel = new HorizontalMenuPanelWdgt
     @toolsPanel.strokeColor = nil
     @toolsPanel._applyExtent new Point 300,10
@@ -116,8 +121,8 @@ class SimpleDocumentWdgt extends Widget
 
     @toolsPanel.add new TemplatesButtonWdgt
 
-    @add @toolsPanel
-    @toolsPanel.disableDragsDropsAndEditing()
+    @_addNoSettle @toolsPanel
+    @toolsPanel._disableDragsDropsAndEditingNoSettle()
 
     @dragsDropsAndEditingEnabled = true
     @_invalidateLayout()
@@ -135,23 +140,29 @@ class SimpleDocumentWdgt extends Widget
     true
 
   enableDragsDropsAndEditing: (triggeringWidget) ->
+    @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle triggeringWidget
+
+  _enableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
     @parent?.makePencilYellow?()
     @dragsDropsAndEditingEnabled = true
-    @createToolsPanel()
-    @simpleDocumentScrollPanel.enableDragsDropsAndEditing @
+    @_createToolsPanelNoSettle()
+    @simpleDocumentScrollPanel._enableDragsDropsAndEditingNoSettle @
 
   disableDragsDropsAndEditing: (triggeringWidget) ->
+    @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle triggeringWidget
+
+  _disableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
     if !@dragsDropsAndEditingEnabled
       return
     @parent?.makePencilClear?()
-    @toolsPanel.destroy()
+    @toolsPanel._destroyNoSettle()
     @toolsPanel = nil
     @dragsDropsAndEditingEnabled = false
-    @simpleDocumentScrollPanel.disableDragsDropsAndEditing @
+    @simpleDocumentScrollPanel._disableDragsDropsAndEditingNoSettle @
     @_invalidateLayout()
 
   _reLayout: (newBoundsForThisLayout) ->

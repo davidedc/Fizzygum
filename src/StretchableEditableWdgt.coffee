@@ -45,7 +45,10 @@ class StretchableEditableWdgt extends Widget
     creator.bringToForeground()
 
 
-  createToolsPanel: ->
+  # empty base -- subclasses (PatchProgramming/Dashboards/SimpleSlide/ReconfigurablePaint) override the core.
+  # A core (not a public wrapper): the only callers are cores (_enableDragsDropsAndEditingNoSettle,
+  # _buildAndConnectChildrenNoSettle), so there is no public createToolsPanel to self-settle.
+  _createToolsPanelNoSettle: ->
 
   createNewStretchablePanel: ->
     @stretchableWidgetContainer = new StretchableWidgetContainerWdgt
@@ -124,13 +127,16 @@ class StretchableEditableWdgt extends Widget
         @_applyExtent new Point @width(), 0
 
   enableDragsDropsAndEditing: (triggeringWidget) ->
+    @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle triggeringWidget
+
+  _enableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
     @parent?.makePencilYellow?()
     @dragsDropsAndEditingEnabled = true
-    @createToolsPanel()
-    @stretchableWidgetContainer.enableDragsDropsAndEditing @
+    @_createToolsPanelNoSettle()
+    @stretchableWidgetContainer._enableDragsDropsAndEditingNoSettle @
 
 
   # while in editing mode, the slide can take any dimension
@@ -161,22 +167,34 @@ class StretchableEditableWdgt extends Widget
 
 
   disableDragsDropsAndEditing: (triggeringWidget) ->
+    @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle triggeringWidget
+
+  _disableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
     if !@dragsDropsAndEditingEnabled
       return
     @parent?.makePencilClear?()
     @dragsDropsAndEditingEnabled = false
     if @toolsPanel?
+      # DETACH-then-teardown (mirror of the enable sibling-reorder). For ReconfigurablePaint's RadioButtonsHolder
+      # toolsPanel, unselectAll?() fires a synthetic w.toggle() whose escalation reaches SwitchButtonWdgt's
+      # SELF-SETTLING mouseClickLeft -- the SECOND transitive-settle blind spot (unselectAll's OWN body has no
+      # @_settleLayoutsAfter, so an own-body grep passes it, but it settles via toggle -> mouseClickLeft, same shape
+      # as stopEditing). removeFromTree FIRST orphans the toolsPanel subtree's root, so that settle DEFERS instead of
+      # throwing in this flush; the un-inject still lands (it targets the overlayCanvas, which stays attached in the
+      # stretchableWidgetContainer). Non-radio toolsPanels (ScrollPanel) have no unselectAll -- there the detach is
+      # just settle-neutral structural-removal-before-destroy (removeFromTree repaints the vacated region).
+      @toolsPanel.removeFromTree()
       @toolsPanel.unselectAll?()
-      @toolsPanel.destroy()
+      @toolsPanel._destroyNoSettle()
       @toolsPanel = nil
-    @stretchableWidgetContainer.disableDragsDropsAndEditing @
+    @stretchableWidgetContainer._disableDragsDropsAndEditingNoSettle @
     @_invalidateLayout()
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  # The core's createNewStretchablePanel/createToolsPanel add to ORPHANS, so their settles defer in-flush
-  # and are flushed once here; the same methods stay self-settling when called post-construction
-  # (createNewStretchablePanel from _reactToChildPickedUp on the attached widget).
+  # createNewStretchablePanel does a public @add on the ORPHAN (defers in-flush) and _createToolsPanelNoSettle
+  # is a non-settling core; both are flushed once here. createNewStretchablePanel stays self-settling when
+  # called post-construction (from _reactToChildPickedUp on the attached widget).
   _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
@@ -185,7 +203,7 @@ class StretchableEditableWdgt extends Widget
       world.alignIDsOfNextWidgetsInSystemTests()
 
     @createNewStretchablePanel()
-    @createToolsPanel()
+    @_createToolsPanelNoSettle()
 
     @_invalidateLayout()
 
