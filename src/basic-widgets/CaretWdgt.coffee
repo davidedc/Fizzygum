@@ -142,7 +142,7 @@ class CaretWdgt extends BlinkerWdgt
   # then flush coalesced, then paint). Reached cross-widget (world.caret.gotoSlot from StringWdgt/TextWdgt click
   # handlers), by the caret's own click / undo-redo restore, AND by the arrow / Home / End navigation keystrokes
   # (goLeft/goRight/...). Per-keystroke caret navigation is NOT a high-traffic stream, so it does NOT coalesce
-  # (contrast _setMaxDimCoalesced, for ~50-per-frame drag/scroll STREAMS) -- each keystroke self-settles, one flush
+  # (contrast _setMaxDimDeferredSettle, for ~50-per-frame drag/scroll STREAMS) -- each keystroke self-settles, one flush
   # per discrete move. The follow NEVER rides the end-of-cycle coalesced flush.
   #   _gotoSlotNoSettle does ONLY the layout-free work: clamp the slot, re-place the caret on the target's current
   #   slot coordinate (inert), do one best-effort scroll-follow pass inline (load-bearing for in-place typing --

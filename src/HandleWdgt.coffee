@@ -258,15 +258,15 @@ class HandleWdgt extends Widget
       # ...i.e. *after* the parent has re-layouted (in the deferred layout phase).
       when "resizeBothDimensionsHandle"
         newExt = newPos.add(@extent().add(@inset)).subtract @target.position()
-        @target._setExtentCoalesced newExt, @
+        @target._setExtentDeferredSettle newExt, @
       when "moveHandle"
-        @target._moveToCoalesced (newPos.subtract @inset), @
+        @target._moveToDeferredSettle (newPos.subtract @inset), @
       when "resizeHorizontalHandle"
         newWidth = newPos.x + @extent().x + @inset.x - @target.left()
-        @target._setWidthCoalesced newWidth
+        @target._setWidthDeferredSettle newWidth
       when "resizeVerticalHandle"
         newHeight = newPos.y + @extent().y + @inset.y - @target.top()
-        @target._setHeightCoalesced newHeight
+        @target._setHeightDeferredSettle newHeight
   
   
   # HandleWdgt events:

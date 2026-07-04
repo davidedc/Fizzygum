@@ -290,23 +290,23 @@ const APPLY_ANDNOTIFY_BANNED = /^_apply\w*AndNotify$/;  // [M] the retired _appl
 // rule [K] (a _apply*Base bypass twin must not fire _announce*). This closes the DEF side those two never covered.
 const SEAM_VERB_BANNED = /^_announce\w*ToContainer$/;   // the deleted notify-by-mutation container-seam shape
 
-// [O] the *Coalesced caller ALLOWLIST (Tier C, 2026-07-02, docs/layout-optimizations-and-oo-cleanup-plan.md §4).
-// A *Coalesced entrypoint (_setMaxDimCoalesced / _setExtentCoalesced / _moveToCoalesced / _setWidthCoalesced /
-// _setHeightCoalesced -- all _-private, restricted to stream handlers) DEFERS its layout SETTLE to the ONE
+// [O] the *DeferredSettle caller ALLOWLIST (Tier C, 2026-07-02, docs/layout-optimizations-and-oo-cleanup-plan.md §4).
+// A *DeferredSettle entrypoint (_setMaxDimDeferredSettle / _setExtentDeferredSettle / _moveToDeferredSettle / _setWidthDeferredSettle /
+// _setHeightDeferredSettle -- all _-private, restricted to stream handlers) DEFERS its layout SETTLE to the ONE
 // end-of-cycle flush -- the field write is synchronous,
 // only the flush is deferred. That is byte-identical (render is once-per-frame after all events), hence sound,
 // ONLY for a per-event STREAM handler (a drag / scroll / key burst) draining many mutations in one frame that
 // never reads back the SETTLED layout mid-cycle. A DISCRETE / programmatic caller might read the settled layout
-// within the cycle, so it must use the self-settling setter, not the coalesced twin. Nothing else enforces this:
-// the _coalescedDeclarationDepth / auditUndeclaredEndOfCycle machinery (WorldWdgt :90-98, Widget :3713) enforces
-// the CONVERSE -- that end-of-cycle mutations are DECLARED -- and treats any *Coalesced call as auto-declared
+// within the cycle, so it must use the self-settling setter, not the deferred-settle twin. Nothing else enforces this:
+// the _deferredSettleDeclarationDepth / auditUndeclaredEndOfCycle machinery (WorldWdgt :90-98, Widget :3713) enforces
+// the CONVERSE -- that end-of-cycle mutations are DECLARED -- and treats any *DeferredSettle call as auto-declared
 // regardless of caller. So restrict the CALL to the allowlisted stream handlers by ENCLOSING-METHOD NAME (both
 // HandleWdgt and StackElementsSizeAdjustingWdgt name their drag handler nonFloatDragging, so the one name covers
 // both callers). @-self / .-receiver scoped -- the callers are always direct; comment mentions are stripped
 // (stripLine). Extend the allowlist ONLY when a genuine new per-event stream (a wheel/scroll or key-repeat
-// handler) adopts a *Coalesced entrypoint -- a discrete caller reaching for one is exactly the bug this catches.
-const COALESCED_CALL = /[@.]\s*(\w+Coalesced)\b/;
-const COALESCED_CALLER_ALLOWLIST = new Set(['nonFloatDragging']);
+// handler) adopts a *DeferredSettle entrypoint -- a discrete caller reaching for one is exactly the bug this catches.
+const DEFERRED_SETTLE_CALL = /[@.]\s*(\w+DeferredSettle)\b/;
+const DEFERRED_SETTLE_CALLER_ALLOWLIST = new Set(['nonFloatDragging']);
 
 // [P] the connector-join caller rule (docs/connection-cascade-settle-fix-plan.md). _settleLayoutsAfterOrJoinEnclosingPass
 // JOINS an enclosing settle's mutation window instead of throwing (it is the reactive-connection settle lane) -- sound
@@ -556,11 +556,11 @@ function checkFile(file, violations, wrapperCall, warnings) {
       // the clean polymorphic _apply* (ex *AndNotify) reacts + IS the override dispatch point — no static negative:
       // its "reaches the container re-fit" is now the settle-time up-edge's job, not a corner-name invariant.
     }
-    // [O] the *Coalesced caller allowlist (see the consts above): a *Coalesced entrypoint defers its layout settle
+    // [O] the *DeferredSettle caller allowlist (see the consts above): a *DeferredSettle entrypoint defers its layout settle
     // to the ONE end-of-cycle flush, sound only inside an allowlisted per-event STREAM handler.
-    const coalesced = code.match(COALESCED_CALL);
-    if (coalesced && !COALESCED_CALLER_ALLOWLIST.has(method)) {
-      violations.push(`[O] ${method}() calls ${coalesced[1]}() outside the coalesced-caller allowlist — a *Coalesced entrypoint DEFERS its layout settle to the ONE end-of-cycle flush, which is byte-identical (hence sound) only inside a per-event STREAM handler (drag/scroll/key burst) that never reads back the settled layout mid-cycle. A discrete/programmatic caller must use the self-settling setter. If this genuinely IS such a stream, add its method name to COALESCED_CALLER_ALLOWLIST (layering/naming convention §4)  — ${at}`);
+    const deferredSettle = code.match(DEFERRED_SETTLE_CALL);
+    if (deferredSettle && !DEFERRED_SETTLE_CALLER_ALLOWLIST.has(method)) {
+      violations.push(`[O] ${method}() calls ${deferredSettle[1]}() outside the deferred-settle-caller allowlist — a *DeferredSettle entrypoint DEFERS its layout settle to the ONE end-of-cycle flush, which is byte-identical (hence sound) only inside a per-event STREAM handler (drag/scroll/key burst) that never reads back the settled layout mid-cycle. A discrete/programmatic caller must use the self-settling setter. If this genuinely IS such a stream, add its method name to DEFERRED_SETTLE_CALLER_ALLOWLIST (layering/naming convention §4)  — ${at}`);
     }
     // [P] the connector-join caller rule (see JOIN_CALL above): _settleLayoutsAfterOrJoinEnclosingPass is the
     // reactive-connection settle lane -- it JOINS an open layout pass instead of throwing the flow-violation guard,
@@ -700,7 +700,7 @@ function main() {
     console.error('L: a notification callback must be named _(reactTo|before)(Being|Child|HolderWindow)<Event> with no NoSettle; the legacy fragments (childX/justBeen/iHaveBeen/aboutTo/prepareTo) are retired (layering/naming convention §3/§4).');
     console.error('M: the retired raw*/silent*/fullRaw fragments and the _apply*AndNotify suffix must not reappear as method names (use _apply*/_apply*Base/_commit*/__ tiers; raw PIXEL data uses rawPixel*/rawRGBA) (layering/naming convention §4).');
     console.error('N: the retired notify-by-mutation container seam (_announce*ToContainer) must not be re-defined — the settle-time up-edge _reFitMyTrackingContainerAfterSettle replaced it (assessment §4.1 / §6 rulebook rule 2).');
-    console.error('O: a *Coalesced entrypoint (defers its layout settle to the end-of-cycle flush) may be CALLED only from an allowlisted per-event stream handler — COALESCED_CALLER_ALLOWLIST (a discrete/programmatic caller must use the self-settling setter) (layering/naming convention §4).');
+    console.error('O: a *DeferredSettle entrypoint (defers its layout settle to the end-of-cycle flush) may be CALLED only from an allowlisted per-event stream handler — DEFERRED_SETTLE_CALLER_ALLOWLIST (a discrete/programmatic caller must use the self-settling setter) (layering/naming convention §4).');
     console.error('P: _settleLayoutsAfterOrJoinEnclosingPass (the reactive-connection settle lane — JOINS an open layout pass instead of throwing) may be CALLED only from a dedicated _<name>Connector entrypoint (connection-cascade-settle-fix-plan.md).');
     console.error('Q: a _<name>Connector entrypoint (which joins an open layout pass instead of throwing — rule P) may be textually CALLED only from an allowlisted mid-cascade self-render — CONNECTOR_CALLER_ALLOWLIST; the reactive dispatch resolves it at runtime and needs no textual call (connection-cascade-settle-fix-plan.md §7e).');
     process.exit(1);

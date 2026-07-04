@@ -81,11 +81,11 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
         # drag-move STREAM: the _-private coalesced entrypoint (restricted to stream handlers like this one by
         # check-layering [O]), which DECLARES intentional per-move coalescing onto the one end-of-cycle flush
         # instead of reaching into the private _setMaxDimNoSettle core. Measured warranted here (~13 moves/frame
-        # -> ~26 muts/frame; see docs/coalescing-measurement.md); toggle world.coalescingEnabled to
+        # -> ~26 muts/frame; see docs/coalescing-measurement.md); toggle world.deferredSettlingEnabled to
         # self-settle-per-move and A/B it. (the plain setMaxDim self-settles, for discrete callers.)
         # (end-of-cycle-flush-drawdown -- CONVERT)
-        leftWidget._setMaxDimCoalesced new Point lmdd.x + deltaX, lmdd.y
-        rightWidget._setMaxDimCoalesced new Point rmdd.x - deltaX, rmdd.y
+        leftWidget._setMaxDimDeferredSettle new Point lmdd.x + deltaX, lmdd.y
+        rightWidget._setMaxDimDeferredSettle new Point rmdd.x - deltaX, rmdd.y
 
 
   # TODO: this mechanism to show the right cursor is 90%
