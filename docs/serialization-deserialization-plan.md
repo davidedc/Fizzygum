@@ -1,8 +1,9 @@
 # Serialization / deserialization plan — widgets → composites → whole-world snapshots, over `file://`
 
-**Status: APPROVED 2026-07-04 (owner resolved all §8 decisions same day). No code landed yet.
-§9 is the landed-status box. Cold-start execution prompt:
-`docs/serialization-execution-starting-prompt.md`.**
+**Status: IN PROGRESS. Phases 0–4 LANDED + COMMITTED + PUSHED to `master` (2026-07-04) — widget
+serialization/deserialization + `file://` save/load are done and fully gated. Phases 5 (whole-world
+snapshot) and 6 (source-edit capture) REMAIN. §9 is the per-phase landed-status box (read it to
+resume). Cold-start execution prompt (points at the next work): `docs/serialization-execution-starting-prompt.md`.**
 
 This plan is self-contained: it embeds the current-state survey (with `file:line` references), the
 empirically-verified defect catalog of the existing prototype (spike-tested against build

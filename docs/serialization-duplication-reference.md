@@ -17,9 +17,11 @@ how the machinery works; the plan is the *build order*.
 > `Serializer.serializeWidget` (the §3 envelope), `Widget.deserialize` / `world.deserialize`
 > → `Deserializer.deserialize`; the old `doSerialize=true` prototype and its dead trio are
 > deleted; duplication (`DeepCopierMixin`, `doSerialize`-free) is unchanged and pixel-verified.
-> Restored widgets are byte-identical to the originals (same-page AND cross-session). Still
-> [Ph N]: file save/load (§10, Ph 4), the whole-world snapshot (§11, Ph 5), source-edit
-> capture (§12, Ph 6).
+> Restored widgets are byte-identical to the originals (same-page AND cross-session). **File
+> save/load over `file://` (§10) is also LIVE** — `Widget.saveToFile` / `FileSaving`, the
+> `WorldWdgt` drop handler / `FileLoading`, `*.fzw.json` routed on `kind`. Still [Ph N]: the
+> whole-world snapshot (§11, Ph 5 — `FileLoading`'s `kind:"world"` branch + `WellKnownObjects.resolveApp`
+> are stubbed for it), source-edit capture (§12, Ph 6).
 >
 > NB: `buildSystem/build.py` discovers sources via an explicit directory allowlist — any new
 > `src/` subdirectory (like `src/serialization/`) must be added there or its classes never
