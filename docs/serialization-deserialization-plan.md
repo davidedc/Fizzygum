@@ -1,9 +1,11 @@
 # Serialization / deserialization plan — widgets → composites → whole-world snapshots, over `file://`
 
-**Status: IN PROGRESS. Phases 0–4 LANDED + COMMITTED + PUSHED to `master` (2026-07-04) — widget
-serialization/deserialization + `file://` save/load are done and fully gated. Phases 5 (whole-world
-snapshot) and 6 (source-edit capture) REMAIN. §9 is the per-phase landed-status box (read it to
-resume). Cold-start execution prompt (points at the next work): `docs/serialization-execution-starting-prompt.md`.**
+**Status: ARC COMPLETE (pending owner review/commit). Phases 0–4 LANDED + COMMITTED + PUSHED to
+`master` (2026-07-04). Phases 5 (whole-world snapshot) and 6 (source-edit capture) LANDED
+2026-07-04 (not yet committed) — desktop snapshots round-trip pixel-identical same-page AND
+cross-session at dpr 1/2, and in-world instance+class source edits survive into a fresh session.
+The whole serialization/deserialization/duplication machinery is now live. §9 is the per-phase
+landed-status box. Cold-start execution prompt: `docs/serialization-execution-starting-prompt.md`.**
 
 This plan is self-contained: it embeds the current-state survey (with `file:line` references), the
 empirically-verified defect catalog of the existing prototype (spike-tested against build
@@ -912,7 +914,85 @@ run-straight-through-verify, one-end-of-arc-review convention.
     `<a`-sorting name — the test passed, proving the alphabetical INSERTION POSITION (not the count)
     drove the tip. Manual `--browser` sanity in a real Chrome/Safari over `file://` NOT performed
     (headless CDP + synthetic drop is the automated gate; noted as a follow-up).
-- (Phases 5-6 — not started; Phase 5 next.)
+- **Phase 5 — Whole-world snapshot — LANDED 2026-07-04 (not committed).** New
+  `Serializer.serializeWorld` (+ `@WORLD_APP_SLOTS`, `@collectIdCounters`, and the extracted
+  shared encoder `@_buildObjectTable` that `serializeWidget` now also uses — one walker, no
+  drift), `WorldWdgt.serializeWorldSnapshot` / `loadWorldSnapshot` / `saveWorldSnapshotToFile`
+  / `_teardownForSnapshotLoadNoSettle` + the guided-error `WorldWdgt.serialize` override,
+  `WellKnownObjects.resolveApp` completed (memoized fresh app singleton), `Deserializer`
+  returns `shells` + resolves `{$ext}` by iid, "save world snapshot…" in the product world
+  menu. Round-trip proven **pixel-identical same-page AND cross-session, dpr 1 + dpr 2**, for
+  the default desktop (11 children incl. 8 app launchers whose targets re-bind via
+  `app:<Class>` well-knowns, a basement with content, customized prefs, "dots" wallpaper) and
+  a populated desktop (added window + moved icon + recoloured + "bricks" wallpaper).
+  - **Design refinements vs the plan (recorded; all consistent with §4's intent):**
+    1. **The world is NOT a table record.** §4.9 floated "the world record itself is a normal
+       table entry with transients excluded" — but the empirical own-prop surface is ~50
+       transient fields (canvases/contexts/7 LRUCaches/input queue/hand/caret/broken-rect
+       trackers/`@appearance` CanvasPattern/a dozen event-listener CLOSURES). Serializing the
+       world as a record needs ALL of them declared transient and still risks the D8 crash. So
+       the world is captured ENTIRELY via the explicit greppable `world` section, and only the
+       snapshot ROOTS (children + basement + app windows + templates) are walked. **Consequence:
+       WorldWdgt needs NO `@serializationTransients`** — its transient surface is never visited.
+    2. **`onExternalPointer:"capture"`** (a new mode) instead of `"record"`+resolution-pass:
+       the sole off-tree straggler on a real desktop is a non-empty folder window's
+       `defaultContents` placeholder (held for when the folder empties). `"record"` (`{$ext}`)
+       would restore it to nil (it is in NO snapshot root, so the iid pass can't find it);
+       `"capture"` pulls it into the table as a full record, realizing §4.9's "everything is
+       in-structure" intent. Self-policing (still throws on a truly unserializable value). The
+       `{$ext}` path + `shellByUniqueId` iid resolution stay as a defensive fallback (a settled
+       world leaves none).
+    3. **Product-safe teardown.** §4.9 said reuse `fullDestroyChildren`/`_resetWorldNoSettle` —
+       but `resetWorld`/`_resetWorldNoSettle` are **homepage-stripped** and this ships in
+       `--homepage`. Teardown is built from product primitives (`fullDestroyChildren` [product,
+       and it zeroes the id counters] + `basementWdgt.empty` + nil the slots) in a NoSettle core.
+    4. **Basement is SWAPPED, not contents-merged** (`world.basementWdgt = restoredBasement`) so
+       every `{$r}` pointer at it (the basement opener's target) stays consistent; the basement
+       is off-tree and self-contained, so the swap is safe.
+    5. **`loadWorldSnapshot` is a PUBLIC orchestrator** (not `_`-prefixed) so its self-settling
+       `setColor` / `_settleLayoutsAfter` calls pass layering gate [G] (a `_`-method calling a
+       self-settling wrapper is a [G] violation — caught at build; fixed by making the
+       orchestrator public, like `resetWorld`).
+    6. **Confirm = native `window.confirm`** (works over `file://`; rig/macro pass
+       `skipConfirm`) — Fizzygum has no styled confirm dialog; a styled one is a polish item.
+  - **Gate — MET.** `fg build` 0 violations; serialization rig GREEN incl. the new world leg
+    (dpr 1 AND dpr 2): `world.serializeHandled` (guided error), `world.samePage.pixelParity`,
+    `.childrenPreserved`, `.statePreserved`, `world.populated.pixelParity`,
+    `world.crossSession.pixelParity`, `.childrenPreserved`; file rig GREEN; widget rig GREEN
+    (native+sw). `fg gauntlet` + `fg homepage` — see the Phase-5 exit-gate note.
+  - **Deferred (recorded):** a webkit leg of the world RIG is NOT built (the rig is raw
+    Puppeteer/Chrome; the widget path is already byte-identical cross-engine and the world
+    restore reuses it, and the gauntlet's webkit SUITE run covers cross-engine rendering — so
+    the marginal value is low). A live in-world macro (`SystemTest_macroWorldSnapshotSaveLoad`)
+    was NOT authored: the destructive teardown/reset is exactly the settle-minefield the lore
+    warns against driving from a macro, and the rig gates the functionality deterministically at
+    both densities; noted as an optional follow-up.
+- **Phase 6 — Source-edit capture — LANDED 2026-07-04 (not committed).** New
+  `src/serialization/SourceEditsRegistry.coffee` at `world.sourceEditsRegistry` (constructed in
+  the WorldWdgt ctor; product, ships in `--homepage`): logs function-source edits as plain-JSON
+  `{scope, className, uniqueID?, propertyName, source}`. Hooked at BOTH edit choke points —
+  `Widget.injectProperty` (`recordInstanceEdit`) and `ClassInspectorWdgt.applyPropertyEdit`
+  (`recordClassEdit`, whose `@target` is the class prototype). `serializeWorld` embeds
+  `serializableRecords()` in `world.sourceEdits`; `loadWorldSnapshot` rebuilds the registry
+  (`fromRecords`) and **replays CLASS-scope edits BEFORE deserialization** (`replayClassEdits` →
+  `prototype.evaluateString`), installs the registry AFTER deserialize (so the `$src`
+  re-injections don't double-log). Instance-scope edits ride the normal `{"$src"}` path.
+  - **Gate — MET.** `fg build` 0 violations; serialization rig GREEN incl. the new source-edit
+    leg — `sourceEdits.instanceEditSurvives` (an `injectProperty` method edit → `"INST_A"` in a
+    fresh page) and `sourceEdits.classEditReplayed` (a `ClassInspectorWdgt` prototype edit →
+    `"CLASS_A"` replayed onto a fresh page whose prototype had NO such method, `absent-before=true`).
+    Both exercise the REAL hooks. `fg gauntlet` + `fg homepage` — see the arc-end gate note.
+  - **Deferred / banked (recorded):** the staged §4.10 extensions stay banked — whole-class
+    source replacement, classes DEFINED in-world, exporting edits as a `.coffee` patch, baking
+    edits into `?generatePreCompiled`. Instance-edit recording is deliberately function-only
+    (a non-function `injectProperty` is a value set that rides normal serialization, not a
+    "source edit" needing replay).
+
+**Arc complete.** Phases 0–6 all landed; the whole serialization / deserialization / duplication
+machinery is live (widgets, composites, connected controllers, `file://` save/load, whole-world
+snapshots, in-world source edits). Final combined gate: `fg gauntlet` (167 tests, dpr1/dpr2/webkit
+/apps/tiernaming/settle) + `fg homepage` boot + both serialization rigs, all green — recorded at
+commit time. Awaiting owner review (the one end-of-arc review, per the long-arc workflow).
 
 ---
 

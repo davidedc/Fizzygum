@@ -1,8 +1,8 @@
-# Serializer — turns a widget subtree into a versioned, self-contained JSON envelope. See
-# docs/serialization-duplication-reference.md for the format spec (§3), the reference
-# policy (§4), the transients/derived/function protocol (§5), the per-type handlers (§6),
-# and how it shares per-class knowledge with — but no mutable state with — the
-# DeepCopierMixin duplication walker (§1).
+# Serializer — turns a widget subtree (or a whole world) into a versioned, self-contained
+# JSON envelope. See docs/serialization-duplication-reference.md for the format spec (§3),
+# the reference policy (§4), the transients/derived/function protocol (§5), the per-type
+# handlers (§6), the whole-world snapshot (§11), and how it shares per-class knowledge with
+# — but no mutable state with — the DeepCopierMixin duplication walker (§1).
 #
 # It is side-effect-free and deterministic: it builds records DIRECTLY from the live graph
 # (it creates no shells, so it advances no ID counters and leaks no Class.instances entry),
@@ -12,6 +12,17 @@ class Serializer
   # envelope identity (see the reference doc §3)
   @FORMAT: "fizzygum"
   @FORMAT_VERSION: 1
+
+  # The world slots that each hold (at most) one singleton-app window. A slot may be nil, or
+  # hold an ORPHANED-but-revivable window (the app's launch() checks parent?). See
+  # IconicDesktopSystemWindowedApp and the world snapshot (§11).
+  @WORLD_APP_SLOTS: [
+    "degreesConverterWindow"
+    "howToSaveDocWindow"
+    "sampleDashboardWindow"
+    "sampleSlideWindow"
+    "sampleDocWindow"
+  ]
 
   # Merge the `@serializationTransients` declarations up a class's chain into one Set of
   # property names the serializer must SKIP. A subclass's declaration ADDS to (never
@@ -44,14 +55,127 @@ class Serializer
     envelope = @buildEnvelope root, opts
     if opts.prettyPrint then JSON.stringify(envelope, null, 2) else JSON.stringify(envelope)
 
-  # Build the plain-object envelope (no stringify) — reused by the world snapshot (Phase 5).
+  # Build the plain-object widget envelope (no stringify) — reused by callers that want the
+  # object (e.g. the file-save path re-stringifies with a savedAt stamp).
   @buildEnvelope: (root, opts = {}) ->
     onExternal = opts.onExternalPointer or "throw"
+    rootDescription = if root.uniqueIDString? then root.uniqueIDString() else root.constructor.name
     # the set of widgets that count as "in-structure" (O(1) membership); includes root.
     widgetSet = new Set root.allChildrenBottomToTop()
+    table = @_buildObjectTable widgetSet, onExternal, rootDescription, root
+    rootIndex = table.encodeToSlot root, rootDescription
+
+    envelope =
+      format: Serializer.FORMAT
+      formatVersion: Serializer.FORMAT_VERSION
+      kind: opts.kind or "widget"
+      root: rootIndex
+      objects: table.objects
+    envelope.savedAt = opts.savedAt if opts.savedAt?
+    envelope.build = window.FIZZYGUM_BUILD if window.FIZZYGUM_BUILD?
+    envelope
+
+  # --- whole-world snapshot (kind:"world"); see docs §11 and the plan §4.9 -----------------
+  #
+  # The world is DELIBERATELY NOT a table record. Serializing the world widget's own props
+  # would drag in ~50 transient fields (the render/measure canvases + contexts, seven
+  # LRUCaches, the input-event queue, the hand, the caret, the broken-rect trackers, and a
+  # dozen event-listener CLOSURES) — the walker would crash on the first one (a CanvasPattern
+  # on @appearance, exactly defect D8). Instead the genuine world state is captured in an
+  # explicit, greppable `world` envelope section, and only the SNAPSHOT ROOTS — the desktop
+  # children, the off-tree basement, the non-nil app-slot windows, the templates window — are
+  # walked into the object table. A snapshot restores a SETTLED world (§1), so mid-gesture
+  # transients (the hand-held widget, open menus, the caret) are dropped by construction.
+  @serializeWorld: (theWorld, opts = {}) ->
+    # snapshot roots (deduped by the widgetSet Set below); an app-slot window may also be a
+    # desktop child, an orphan in the basement, or off-tree — all are captured here.
+    roots = []
+    roots.push child for child in (theWorld.children or [])
+    roots.push theWorld.basementWdgt if theWorld.basementWdgt?
+    for slot in Serializer.WORLD_APP_SLOTS
+      slotWindow = theWorld[slot]
+      roots.push slotWindow if slotWindow? and not slotWindow.destroyed
+    roots.push theWorld.simpleEditorTemplates if theWorld.simpleEditorTemplates? and not theWorld.simpleEditorTemplates.destroyed
+    widgetSet = new Set
+    for aRoot in roots when aRoot?
+      widgetSet.add w for w in aRoot.allChildrenBottomToTop()
+
+    # a world snapshot CAPTURES everything reachable: a cross-root pointer resolves as {"$r"};
+    # an off-tree widget reached only via a property (e.g. a folder window's `defaultContents`
+    # placeholder) is pulled into the table as its own record, so "everything is in-structure"
+    # (§4.9) holds and no world state is silently dropped. (A stray {"$ext"} same-world token
+    # is still resolvable by iid on restore, but "capture" leaves none for a settled world.)
+    onExternal = opts.onExternalPointer or "capture"
+    table = @_buildObjectTable widgetSet, onExternal, "the world", nil
+    ref = table.refFor
+
+    # --- the explicit world section (plain, greppable; outside the object table) ---
+    section = {}
+    section.children = (ref(c, "the world → .children") for c in (theWorld.children or []))
+    section.desktopColor = ref(theWorld.color, "the world → .color") if theWorld.color?
+    section.alpha = theWorld.alpha if theWorld.alpha?
+    section.isDevMode = theWorld.isDevMode
+    section.wallpaperPatternName = theWorld.wallpaper?.patternName
+    section.numberOfIconsOnDesktop = theWorld.numberOfIconsOnDesktop if theWorld.numberOfIconsOnDesktop?
+    # info-doc "already created" flags: plain own booleans set on the world instance.
+    infoDocFlags = {}
+    for own name of theWorld when name.indexOf("infoDoc") is 0
+      infoDocFlags[name] = theWorld[name]
+    section.infoDocFlags = infoDocFlags
+    # untitled-naming counters (a plain delegated collaborator — capture its counters).
+    uns = theWorld.untitledNamingService
+    section.untitledNamingCounters =
+      howManyUntitledShortcuts: uns?.howManyUntitledShortcuts or 0
+      howManyUntitledFoldersShortcuts: uns?.howManyUntitledFoldersShortcuts or 0
+    # app-slot windows + the templates window (may be orphaned-but-revivable).
+    appSlots = {}
+    for slot in Serializer.WORLD_APP_SLOTS
+      slotWindow = theWorld[slot]
+      appSlots[slot] = ref(slotWindow, "the world → ." + slot) if slotWindow? and not slotWindow.destroyed
+    section.appSlots = appSlots
+    if theWorld.simpleEditorTemplates? and not theWorld.simpleEditorTemplates.destroyed
+      section.simpleEditorTemplates = ref theWorld.simpleEditorTemplates, "the world → .simpleEditorTemplates"
+    section.basement = ref(theWorld.basementWdgt, "the world → .basementWdgt") if theWorld.basementWdgt?
+    # preferences: a FORCED data record. refFor would give {"$wk":"preferences"} (the
+    # symbolic link that a widget-in-tree uses); here we need the actual values, restored
+    # onto the static bag on load.
+    if WorldWdgt.preferencesAndSettings?
+      section.preferences = {$r: table.encodeToSlot WorldWdgt.preferencesAndSettings, "the world → .preferences"}
+    # per-class ID counters (restored into the freshly-zeroed ID space — §4.4/§4.9).
+    section.idCounters = Serializer.collectIdCounters()
+    # source edits (Phase 6) — embedded verbatim if the registry exists.
+    section.sourceEdits = theWorld.sourceEditsRegistry.serializableRecords() if theWorld.sourceEditsRegistry?.serializableRecords?
+
+    envelope =
+      format: Serializer.FORMAT
+      formatVersion: Serializer.FORMAT_VERSION
+      kind: "world"
+      objects: table.objects
+      world: section
+    envelope.savedAt = opts.savedAt if opts.savedAt?
+    envelope.build = window.FIZZYGUM_BUILD if window.FIZZYGUM_BUILD?
+    if opts.prettyPrint then JSON.stringify(envelope, null, 2) else JSON.stringify(envelope)
+
+  # The per-class ID counters to restore. Mirrors WorldWdgt.fullDestroyChildren's class
+  # sweep (any global whose name ends in Wdgt/Widget), skipping WorldWdgt (the live world
+  # keeps its own id — fullDestroyChildren never zeroes it) and any counter still at 0 (the
+  # freshly-reset ID space is already 0 there, so recording it would be redundant).
+  @collectIdCounters: ->
+    counters = {}
+    for name in Object.keys(window) when (name.endsWith("Wdgt") or name.endsWith("Widget")) and name isnt "WorldWdgt"
+      klass = window[name]
+      if klass? and (typeof klass.lastBuiltInstanceNumericID is "number") and klass.lastBuiltInstanceNumericID > 0
+        counters[name] = klass.lastBuiltInstanceNumericID
+    counters
+
+  # --- the shared object-table encoder -----------------------------------------------------
+  # Builds `objects` (the versioned record table) for a set of in-structure widgets, and
+  # returns the encoding primitives used by BOTH serializeWidget and serializeWorld so the
+  # two share one walker and cannot drift. `root` is the single detach-root (its `parent`
+  # serializes as null) or nil (world snapshot: top children keep parent = {"$wk":"world"}).
+  @_buildObjectTable: (widgetSet, onExternal, rootDescription, root) ->
     objects = []
     slotOf = new Map          # live object -> table index (identity; cycle/sharing safe)
-    rootDescription = if root.uniqueIDString? then root.uniqueIDString() else root.constructor.name
 
     describe = (v) ->
       return "nil" unless v?
@@ -82,6 +206,12 @@ class Serializer
         switch onExternal
           when "nullify" then return null
           when "record"  then return {$ext: value.uniqueIDString()}
+          # "capture": pull the off-tree widget into the table as a full record. Used by the
+          # world snapshot, where EVERYTHING reachable is genuine world state (e.g. a folder
+          # window's off-tree `defaultContents` placeholder) and "everything is in-structure"
+          # is the intent (§4.9). Self-policing: if it reaches a truly unserializable value it
+          # throws the same rich error below.
+          when "capture" then return {$r: encodeToSlot(value, path)}
           else fail (value.uniqueIDString() + " is outside the serialized structure and is not a well-known object"),
                     path, describe(value),
                     "Serialize a common container that holds both widgets; or clear the connection; or register the target as a well-known object."
@@ -195,17 +325,7 @@ class Serializer
       if obj instanceof Widget
         m = membershipsFor obj
         record.memberships = m if m.length
-      record.props = encodeOwnProps obj, path, (obj is root)
+      record.props = encodeOwnProps obj, path, (root? and obj is root)
       return
 
-    rootIndex = encodeToSlot root, rootDescription
-
-    envelope =
-      format: Serializer.FORMAT
-      formatVersion: Serializer.FORMAT_VERSION
-      kind: opts.kind or "widget"
-      root: rootIndex
-      objects: objects
-    envelope.savedAt = opts.savedAt if opts.savedAt?
-    envelope.build = window.FIZZYGUM_BUILD if window.FIZZYGUM_BUILD?
-    envelope
+    {objects: objects, refFor: refFor, encodeToSlot: encodeToSlot}

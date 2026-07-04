@@ -388,6 +388,9 @@ class WorldWdgt extends PanelWdgt
     if MacroToolkit?
       @macroToolkit = new MacroToolkit
     @untitledNamingService = new UntitledNamingService
+    # the per-world log of in-world source edits (instance + class scope), embedded in and
+    # replayed from a whole-world snapshot. A product collaborator (ships in --homepage).
+    @sourceEditsRegistry = new SourceEditsRegistry
     # WidgetFactory is dev/demo scaffolding (homepage-excluded), so guard like
     # the other test/dev collaborators above -- under --homepage the class is
     # stripped and the demo menus that use it are stripped too.
@@ -2035,12 +2038,133 @@ class WorldWdgt extends PanelWdgt
   openFromFile: ->
     FileLoading.openFromFileDialog()
 
+  # --- whole-world snapshot save/load (kind:"world") ---------------------------------------
+  # See docs/serialization-duplication-reference.md §11 and the plan §4.9. Serialization is a
+  # PRODUCT feature — these ship in --homepage (no strip markers). The world is NOT saved as a
+  # widget record (that would drag in its canvases/caches/hand/listener closures and crash the
+  # walker, defect D8); Serializer.serializeWorld captures the desktop tree + off-tree basement
+  # + app-slot windows into the object table, and the genuine world state into a `world` section.
+
+  serializeWorldSnapshot: (opts = {}) ->
+    Serializer.serializeWorld @, opts
+
+  # `world.serialize()` is a GUIDED error: a world is not a widget subtree, so the inherited
+  # Widget.serialize would crash the graph walker (D8). Point callers at the snapshot entry.
+  serialize: (opts) ->
+    throw new SerializationError "a whole world cannot be saved as a widget — call world.serializeWorldSnapshot() instead (menu: \"save world snapshot…\")",
+      rootDescription: "the world"
+      remediation: "Use world.serializeWorldSnapshot() to save the whole desktop, or serialize an individual widget subtree."
+
+  # "save world snapshot…" world-menu action: serialize + download over file://.
+  saveWorldSnapshotToFile: ->
+    try
+      envelope = @serializeWorldSnapshot prettyPrint: true
+    catch error
+      if error instanceof SerializationError
+        world.inform error.toString()
+        return
+      else
+        throw error
+    FileSaving.saveStringAsFile envelope, "world.fzw.json"
+
+  # Load a whole-world snapshot, REPLACING the current desktop. A snapshot can carry code
+  # ($src methods, source edits), so a file/menu load confirms first; programmatic callers
+  # (the rig, a macro) pass opts.skipConfirm. This is a PUBLIC orchestrator (like resetWorld):
+  # it sequences self-settling operations at the top level, so its setColor / _settleLayoutsAfter
+  # calls are the sanctioned public path. NB the teardown is built from PRODUCT-safe primitives
+  # — NOT the homepage-stripped resetWorld/_resetWorldNoSettle — since this ships in --homepage.
+  loadWorldSnapshot: (envelopeOrString, opts = {}) ->
+    envelope = if typeof envelopeOrString is "string" then JSON.parse(envelopeOrString) else envelopeOrString
+    unless envelope? and envelope.format is Serializer.FORMAT and envelope.kind is "world"
+      world.inform "This is not a Fizzygum world snapshot file."
+      return
+    unless opts.skipConfirm
+      msg = "Load this world snapshot?\n\nIt REPLACES everything on your desktop, and can run code the snapshot carries."
+      return unless (typeof window.confirm is "function") and window.confirm msg
+    section = envelope.world or {}
+    # 1. tear the current world down (product-safe) — one settle over the NoSettle core.
+    @_settleLayoutsAfter => @_teardownForSnapshotLoadNoSettle()
+    # 2. restore the per-class id counters into the freshly-zeroed space BEFORE deserializing,
+    #    so registerThisInstance sees the right high-water marks (§4.4/§4.9).
+    if section.idCounters?
+      for own className, n of section.idCounters
+        window[className].lastBuiltInstanceNumericID = n if window[className]?
+    # 2b. replay CLASS-scope source edits against the live prototypes BEFORE deserializing, so
+    #     restored shells (Object.create(prototype)) already see the edited methods (§12). The
+    #     confirm above warned that a load can run code the snapshot carries. Instance-scope
+    #     edits ride the normal {"$src"} path on their own widget. The rebuilt registry is
+    #     installed AFTER deserialize (below), so the $src re-injections don't double-log into it.
+    restoredRegistry = SourceEditsRegistry.fromRecords section.sourceEdits
+    restoredRegistry.replayClassEdits()
+    # 3. deserialize the object table (kind:"world" preserves each widget's iid).
+    result = Deserializer.deserialize envelope
+    shells = result.shells or []
+    resolve = (refOrVal) ->
+      return nil unless refOrVal?
+      return shells[refOrVal.$r] if refOrVal.$r?
+      return WellKnownObjects.resolve refOrVal.$wk if refOrVal.$wk?
+      refOrVal
+    # 4. restore the static preferences bag (values only) from its forced data record.
+    if section.preferences?
+      restoredPrefs = resolve section.preferences
+      if restoredPrefs?
+        WorldWdgt.preferencesAndSettings[k] = v for own k, v of restoredPrefs
+    # 5. apply the world-state scalars to the LIVE world.
+    @isDevMode = section.isDevMode if section.isDevMode?
+    @alpha = section.alpha if section.alpha?
+    @numberOfIconsOnDesktop = section.numberOfIconsOnDesktop if section.numberOfIconsOnDesktop?
+    @[name] = val for own name, val of (section.infoDocFlags or {})
+    if section.untitledNamingCounters? and @untitledNamingService?
+      @untitledNamingService.howManyUntitledShortcuts = section.untitledNamingCounters.howManyUntitledShortcuts or 0
+      @untitledNamingService.howManyUntitledFoldersShortcuts = section.untitledNamingCounters.howManyUntitledFoldersShortcuts or 0
+    # 6. swap in the restored (self-contained, off-tree) basement so every $r pointer at it
+    #    (the basement opener's target, ...) stays consistent, and re-bind the app-slot /
+    #    templates windows (orphaned-but-revivable — NOT re-attached to the desktop here).
+    restoredBasement = resolve section.basement
+    @basementWdgt = restoredBasement if restoredBasement?
+    @[slot] = resolve(refVal) for own slot, refVal of (section.appSlots or {})
+    @simpleEditorTemplates = resolve(section.simpleEditorTemplates) if section.simpleEditorTemplates?
+    # 7. attach the desktop children in ONE settle batch, via the base _addNoSettle so the
+    #    grid mixin does NOT re-place them (their restored positions are preserved) — the
+    #    sanctioned public-equivalent path (never a raw layout core; see DETERMINISM.md).
+    #    Clear each child's parent first (deserialize pre-set it to {"$wk":"world"}) so the
+    #    attach is a clean re-parent.
+    @_settleLayoutsAfter =>
+      for childRef in (section.children or [])
+        child = resolve childRef
+        if child?
+          child.parent = nil
+          @_addNoSettle child
+    # 8. desktop colour + wallpaper (sequential self-settling public ops).
+    restoredColor = resolve section.desktopColor
+    @setColor restoredColor if restoredColor?
+    @wallpaper.setPattern nil, nil, section.wallpaperPatternName if section.wallpaperPatternName? and @wallpaper?
+    # 9. install the snapshot's source-edit registry (its class edits are already replayed;
+    #    this makes the loaded world's edit history authoritative), then repaint now and again
+    #    once any async image/canvas assets have decoded.
+    @sourceEditsRegistry = restoredRegistry
+    result.whenReady?.then? => @fullChanged()
+    @fullChanged()
+    return
+
+  # NoSettle teardown core for a snapshot load (mirrors _resetWorldNoSettle but product-safe:
+  # no @changed/scrollTop/setColor — the loader re-establishes those). fullDestroyChildren is
+  # itself a NoSettle-level op that ALSO zeroes every per-class lastBuiltInstanceNumericID,
+  # giving the clean id space the restored iids need. Called only inside loadWorldSnapshot's
+  # settle wrap above.
+  _teardownForSnapshotLoadNoSettle: ->
+    @fullDestroyChildren()
+    @basementWdgt?.empty()
+    @[slot] = nil for slot in Serializer.WORLD_APP_SLOTS
+    @simpleEditorTemplates = nil
+
   buildContextMenu: ->
 
     if @isIndexPage
       menu = new MenuWdgt @, false, @, true, true, "Desktop"
       menu.addMenuItem "wallpapers ➜", false, @wallpaper, "wallpapersMenu", "choose a wallpaper for the Desktop"
       menu.addMenuItem "new folder", true, @, "makeFolder"
+      menu.addMenuItem "save world snapshot…", true, @, "saveWorldSnapshotToFile", "save the whole desktop\nto a *.fzw.json file"
       menu.addMenuItem "open from file…", true, @, "openFromFile", "load a widget or world\nfrom a *.fzw.json file"
       return menu
 

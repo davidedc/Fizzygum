@@ -29,6 +29,10 @@ class Deserializer
     shells = new Array records.length
     asyncPromises = []
     srcJobs = []          # deferred function compiles: {shell, name, source}
+    # uniqueIDString ("Class#iid") -> shell, so a {"$ext"} same-world re-link token (the
+    # world snapshot's tolerant pass) resolves against the SHELLS being built rather than
+    # the live world (the restored widgets are not attached yet). Populated after pass 1.
+    shellByUniqueId = new Map
 
     # resolve a reference form to a live value (used at any nesting depth).
     resolveRef = (ref) =>
@@ -37,7 +41,9 @@ class Deserializer
       return ref if t is "string" or t is "number" or t is "boolean"
       return shells[ref.$r] if ref.$r?              # $r may legitimately be 0
       return @resolveWellKnown ref.$wk if ref.$wk?
-      return @resolveExternal ref.$ext if ref.$ext?
+      if ref.$ext?
+        # prefer a shell being restored (world snapshot); fall back to the live world.
+        return shellByUniqueId.get(ref.$ext) ? @resolveExternal ref.$ext
       # a $src at a non-property position (e.g. inside an array/Map) — rare; compile eagerly.
       return @compileFunction(ref.$src) if ref.$src?
       nil
@@ -53,6 +59,10 @@ class Deserializer
     # ---- Pass 1: instantiate shells ----
     for record, i in records
       shells[i] = @instantiate record, asyncPromises
+    # index widget shells by their (about-to-be-restored) uniqueIDString so a {"$ext"}
+    # token can resolve to a shell in pass 2 (world snapshot only emits these).
+    for record, i in records when record.iid? and record.class? and record.class.charAt(0) isnt "$"
+      shellByUniqueId.set record.class + "#" + record.iid, shells[i]
 
     # ---- Pass 2: populate & link ----
     for record, i in records
@@ -108,8 +118,10 @@ class Deserializer
       shell._afterDeserialization?() if shell instanceof Widget
 
     # ---- Pass 5: deliver ----
+    # `shells` is exposed so the world-snapshot loader can resolve its `world` section's
+    # {"$r"} references (children, basement, app slots, preferences) against the same table.
     whenReady = if asyncPromises.length then Promise.all(asyncPromises) else Promise.resolve()
-    { widget: shells[envelope.root], whenReady: whenReady }
+    { widget: shells[envelope.root], whenReady: whenReady, shells: shells }
 
   # --- pass-1 factory: shell (or fully-built native value) for one record ---
   @instantiate: (record, asyncPromises) ->

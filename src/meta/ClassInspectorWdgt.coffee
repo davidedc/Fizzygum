@@ -49,4 +49,8 @@ class ClassInspectorWdgt extends InspectorWdgt
     # again.
     if Utils.isFunction @target[propertyName]
       @target[propertyName + "_source"] = txt
+      # log the CLASS-scope source edit so a world snapshot can carry AND replay it (§12).
+      # Unlike an instance edit, nothing else records a prototype edit — @target is the class
+      # prototype, so this is the registry's essential case.
+      world?.sourceEditsRegistry?.recordClassEdit? @target, propertyName, txt
     @notifyInstancesOfSourceChange([propertyName])

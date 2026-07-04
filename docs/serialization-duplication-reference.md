@@ -12,16 +12,20 @@ owner-resolved decisions, landed-status). This reference is the *durable* descri
 how the machinery works; the plan is the *build order*.
 
 > **Implementation status.** Markers below say what is live vs planned:
-> **[LIVE]** in the build · **[Ph N]** lands in plan Phase N. As of **Phase 3**: the whole
+> **[LIVE]** in the build · **[Ph N]** lands in plan Phase N. As of **Phase 5**: the whole
 > widget serialization round-trip is **LIVE and wired** — `Widget.serialize` →
 > `Serializer.serializeWidget` (the §3 envelope), `Widget.deserialize` / `world.deserialize`
 > → `Deserializer.deserialize`; the old `doSerialize=true` prototype and its dead trio are
 > deleted; duplication (`DeepCopierMixin`, `doSerialize`-free) is unchanged and pixel-verified.
 > Restored widgets are byte-identical to the originals (same-page AND cross-session). **File
-> save/load over `file://` (§10) is also LIVE** — `Widget.saveToFile` / `FileSaving`, the
-> `WorldWdgt` drop handler / `FileLoading`, `*.fzw.json` routed on `kind`. Still [Ph N]: the
-> whole-world snapshot (§11, Ph 5 — `FileLoading`'s `kind:"world"` branch + `WellKnownObjects.resolveApp`
-> are stubbed for it), source-edit capture (§12, Ph 6).
+> save/load over `file://` (§10) is LIVE** — `Widget.saveToFile` / `FileSaving`, the
+> `WorldWdgt` drop handler / `FileLoading`, `*.fzw.json` routed on `kind`. **The whole-world
+> snapshot (§11) is LIVE** — `WorldWdgt.serializeWorldSnapshot` / `loadWorldSnapshot`,
+> `Serializer.serializeWorld`, `WellKnownObjects.resolveApp`, `FileLoading`'s `kind:"world"`
+> branch; pixel-identical desktop round-trip same-page + cross-session at dpr 1/2. **Source-edit
+> capture (§12) is LIVE** — `SourceEditsRegistry` at `world.sourceEditsRegistry`, hooked at
+> `Widget.injectProperty` + `ClassInspectorWdgt.applyPropertyEdit`, embedded in and replayed from
+> the world snapshot. The whole serialization / deserialization / duplication arc is now LIVE.
 >
 > NB: `buildSystem/build.py` discovers sources via an explicit directory allowlist — any new
 > `src/` subdirectory (like `src/serialization/`) must be added there or its classes never
@@ -292,23 +296,100 @@ does NOT work — `fetch`/XHR of local files.
 
 ---
 
-## 11. Whole-world snapshot (`kind:"world"`) — **[Ph 5]**
+## 11. Whole-world snapshot (`kind:"world"`) — **[LIVE]**
 
-`WorldWdgt.serializeWorldSnapshot` / `loadWorldSnapshot`: snapshot roots = world subtree +
-off-tree basement + non-nil app-slot windows; a `world` envelope section (outside the
-object table) carries preferences, wallpaper pattern, desktop color/alpha, dev-mode flag,
-info-doc flags, naming counters, app slots, basement ref, per-class ID counters, and the
-source-edits registry. Restore tears the world down through the existing reset machinery,
-restores counters, deserializes with preserved `iid`, re-links the world sections and
-memberships, awaits `whenReady`, settles, repaints. `world.serialize()` becomes a guided
-error pointing at `serializeWorldSnapshot`.
+`WorldWdgt.serializeWorldSnapshot` / `loadWorldSnapshot` (both PRODUCT — ship in `--homepage`).
+Save downloads `world.fzw.json` ("save world snapshot…" world menu); load routes through the
+`kind` field (the drop handler / "open from file…").
+
+**The world is DELIBERATELY NOT a table record.** Serializing the world *widget's* own props
+would drag in ~50 transient fields (the render/measure canvases + contexts, seven LRUCaches,
+the input-event queue, the hand, the caret, the broken-rect trackers, a dozen event-listener
+CLOSURES, `@appearance`'s `CanvasPattern`) — the walker crashes on the first, exactly defect
+D8. So the world's genuine state goes into an explicit, greppable **`world` envelope section**,
+and only the SNAPSHOT ROOTS are walked into the object table. This is why the world needs no
+`@serializationTransients` at all — its transient surface is simply never visited.
+
+**Snapshot roots** (a settled world — the hand-held transient, open menus, and the caret are
+dropped by construction): the desktop `world.children`, the off-tree `world.basementWdgt`
+subtree, each non-nil app-slot window (`Serializer.WORLD_APP_SLOTS` — may be orphaned-but-
+revivable), and `world.simpleEditorTemplates`. `widgetSet` = the union of their subtrees; the
+world itself is excluded (a pointer *to* it becomes `{"$wk":"world"}`).
+
+**`onExternalPointer: "capture"`** (world default, vs `"throw"` for widgets): an off-tree
+widget reached only via a property — e.g. a non-empty folder window's `defaultContents`
+placeholder — is pulled into the table as its own record, so "everything reachable is
+in-structure" holds and no world state is silently dropped. Self-policing: a genuinely
+unserializable value still raises the rich `SerializationError`.
+
+**The `world` envelope section** (outside `objects`, plain and greppable): `children`
+(`[{$r}…]`), `desktopColor` (`{$r}`), `alpha`, `isDevMode`, `wallpaperPatternName`,
+`numberOfIconsOnDesktop`, `infoDocFlags` (the `world.infoDoc_*_created` own booleans),
+`untitledNamingCounters`, `appSlots` (`{slot:{$r}}`), `simpleEditorTemplates` (`{$r}`),
+`basement` (`{$r}`), `preferences` (a FORCED data record — `refFor` would give the
+`{"$wk":"preferences"}` symbolic link, but the section needs the actual values, restored onto
+the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
+`lastBuiltInstanceNumericID`, `WorldWdgt`/zeros skipped), and `sourceEdits` (§12).
+
+**Restore** — `loadWorldSnapshot(envelope, {skipConfirm})` — a PUBLIC orchestrator (like
+`resetWorld`), so its `setColor`/`_settleLayoutsAfter` calls are the sanctioned public path:
+1. Confirm (a file/menu load warns it replaces the desktop AND can run code — §4.12; the rig /
+   a macro pass `skipConfirm`).
+2. **Product-safe teardown** — `_teardownForSnapshotLoadNoSettle` (`fullDestroyChildren` +
+   `basementWdgt.empty` + nil the slots), NOT the homepage-stripped `resetWorld` /
+   `_resetWorldNoSettle`. `fullDestroyChildren` also zeroes every per-class
+   `lastBuiltInstanceNumericID`, giving the clean id space the restored iids need.
+3. Restore `idCounters` **before** deserializing (so `registerThisInstance` sees the right
+   high-water marks), then `Deserializer.deserialize` (`kind:"world"` preserves each `iid`;
+   returns `shells` so the loader resolves the `world` section's `{$r}` refs).
+4. Restore the static `preferences` bag; apply the scalars (isDevMode/alpha/infoDoc/naming/
+   icon-count) to the LIVE world; **swap** in the restored (self-contained, off-tree)
+   `basementWdgt` so every `{$r}` pointer at it (the basement opener's target, …) stays
+   consistent; re-bind the app-slot / templates windows (orphaned-but-revivable — not
+   re-attached to the desktop).
+5. Attach the desktop children in ONE settle batch via the base `_addNoSettle` (the grid mixin
+   overrides only `add`, so `_addNoSettle` does NOT re-place them — restored positions are
+   preserved); then `setColor` + `wallpaper.setPattern` (sequential self-settling public ops);
+   await `whenReady`; repaint. Never a raw layout core (DETERMINISM.md risk 4).
+
+`WellKnownObjects.resolveApp(className)` returns a **memoized fresh app singleton** — an
+`IconicDesktopSystemWindowedApp` subclass is a stateless config holder (its one window lives on
+`world[@slot]`, not on the app), so a fresh instance is behaviourally identical and safe to
+`new` during a restore. `world.serialize()` is a **guided `SerializationError`** pointing at
+`serializeWorldSnapshot`.
+
+The round-trip is proven PIXEL-IDENTICAL same-page AND cross-session (fresh page), at dpr 1 and
+dpr 2, for the default desktop (clock region masked — its hands track wall-clock time) and a
+populated/customized desktop (added window + moved icon + recoloured desktop + changed
+wallpaper): `serialization-roundtrip-headless.js`'s world leg.
 
 ---
 
-## 12. Source-edit capture — **[Ph 6]**
+## 12. Source-edit capture — **[LIVE]**
 
-`SourceEditsRegistry.coffee` at `world.sourceEditsRegistry`, hooked at the two edit choke
-points (`Widget.injectProperty`, `ClassInspectorWdgt.applyPropertyEdit`). The snapshot
-embeds the registry; restore replays class-scope edits before instantiation (so prototypes
-are correct) and lets instance-scope edits ride the normal `$src` mechanism. Loading from
-file confirms first, warning that a snapshot can execute code (§4.12 of the plan).
+`SourceEditsRegistry.coffee` at `world.sourceEditsRegistry` (constructed in the WorldWdgt
+ctor; a PRODUCT collaborator — ships in `--homepage`). It logs in-world SOURCE edits so a
+whole-world snapshot can carry and replay them. Record: `{scope, className, uniqueID?,
+propertyName, source}` — plain JSON, embedded verbatim in `world.sourceEdits` (§11).
+
+Two scopes, captured at the two edit choke points (function edits only — the `$src`-backed
+ones):
+
+- **instance** — `Widget.injectProperty` records `recordInstanceEdit(widget, name, txt)`. These
+  ALSO ride serialization on their own: the widget carries a `<name>_source` string →
+  `{"$src"}` → re-injected on restore (§5). The registry adds auditability.
+- **class** — `ClassInspectorWdgt.applyPropertyEdit` records `recordClassEdit(prototype, name,
+  txt)` (its `@target` is the class prototype — `new ClassInspectorWdgt window[className].prototype`).
+  This is the ESSENTIAL case: a prototype edit mutates the live class but leaves no other
+  serializable trace (§2.7).
+
+**Restore** (`loadWorldSnapshot`): the registry is rebuilt from `world.sourceEdits`
+(`SourceEditsRegistry.fromRecords`) and its **class-scope edits are replayed BEFORE
+deserialization** (`replayClassEdits` — `prototype.evaluateString "@name = source"` + restore
+the `_source`), so a shell (`Object.create(prototype)`) already sees the edited method; a class
+edit that no longer compiles is logged, not fatal. Instance-scope edits ride the normal
+`{"$src"}` path on their own widget. The rebuilt registry is installed AFTER deserialize (so the
+`$src` re-injections don't double-log into it). A file/menu load confirms first, warning that a
+snapshot can execute code (§4.12 of the plan). Proven fresh-session: an `injectProperty` method
+edit and a `ClassInspectorWdgt` prototype edit both survive into a fresh page where the prototype
+had no such method (`serialization-roundtrip-headless.js` source-edit leg).

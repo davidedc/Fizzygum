@@ -2648,6 +2648,11 @@ class Widget extends TreeNode
     # again.
     if Utils.isFunction @[propertyName]
       @[propertyName + "_source"] = txt
+      # log the instance-scope source edit so a world snapshot can carry it (§12). The edit
+      # also rides serialization on its own via `<name>_source` -> {"$src"}; the registry adds
+      # auditability. (A re-injection during a snapshot restore re-logs harmlessly — the loader
+      # replaces the whole registry from the snapshot's records.)
+      world?.sourceEditsRegistry?.recordInstanceEdit? @, propertyName, txt
     @sourceChanged()
 
   injectProperties: (codeBlurb) ->

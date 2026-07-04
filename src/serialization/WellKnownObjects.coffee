@@ -57,13 +57,18 @@ class WellKnownObjects
         else
           nil
 
-  # Resolve (in Phase 5, lazily create/launch) the per-app singleton for an app class
-  # name. The full launch-on-restore wiring belongs to the whole-world snapshot phase;
-  # for now this best-effort binds to an already-live instance if one exists, else nil.
+  # Resolve the per-app singleton for a windowed-app class name (e.g. the target of a
+  # deserialized desktop launcher). An IconicDesktopSystemWindowedApp subclass is a
+  # STATELESS config holder — it declares a title/icon/slot and a launch()/buildWindow()
+  # apparatus, but keeps no per-world mutable state (the one window it opens lives on
+  # world[@slot], not on the app object). So a fresh instance is behaviourally identical to
+  # the one the original launcher pointed at, and it is safe to `new` during a restore (the
+  # subclasses have no explicit constructor — verified). We memoize one instance per class
+  # so multiple launchers for the same app share it (matching the desktop's singleton
+  # semantics), and because the apps are stateless the cache is safe to keep across loads.
   @resolveApp: (className) ->
     appClass = window[className]
     return nil unless appClass?
-    # A windowed-app singleton is the reflection target of its desktop launcher. If the
-    # class keeps a live singleton anywhere reachable, a later phase resolves it here;
-    # until then, callers treat a nil as "unresolved well-known app".
-    nil
+    @_appSingletons ?= {}
+    @_appSingletons[className] ?= new appClass
+    @_appSingletons[className]
