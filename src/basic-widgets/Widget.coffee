@@ -30,6 +30,24 @@ class Widget extends TreeNode
   @lastBuiltInstanceNumericID: 0
   instanceNumericID: 0
 
+  # Serialization: own properties the serializer must SKIP (frame timing + the
+  # WorldWdgt.geometryVersion-keyed derived geometry caches — all re-derived on demand
+  # after a restore). Merged up the class chain by Serializer.transientsForClass; a
+  # subclass ADDS to this list. See docs/serialization-duplication-reference.md §5.
+  @serializationTransients: [
+    "lastTime"
+    # the back-buffer render cache (BackBufferMixin) — rebuilt on demand by
+    # createRefreshOrGetBackBuffer, so it is never serialized; the restored widget
+    # re-renders it on its first paint.
+    "backBuffer", "backBufferContext"
+    "cachedFullBounds", "checkFullBoundsCache", "childrenBoundsUpdatedAt"
+    "cachedFullClippedBounds", "checkFullClippedBoundsCache"
+    "cachedVisibleBasedOnIsVisibleProperty", "checkVisibleBasedOnIsVisiblePropertyCache"
+    "cachedClippedThroughBounds", "checkClippedThroughBoundsCache"
+    "cachedClipThrough", "checkClipThroughCache"
+    "cachedIsInCollapsedSubtree", "checkIsInCollapsedSubtreeCache"
+  ]
+
   appearance: nil
 
   dragsDropsAndEditingEnabled: true
@@ -2581,106 +2599,42 @@ class Widget extends TreeNode
       @inform "The item you are\ntrying to copy\nis dead!"
       return nil
     allWidgetsInStructure = @allChildrenBottomToTop()
-    copiedWidget = @deepCopy false, [], [], allWidgetsInStructure
+    copiedWidget = @deepCopy [], [], allWidgetsInStructure
     return copiedWidget
 
-  # »>> this part is excluded from the fizzygum homepage build
-  serialize: ->
-    allWidgetsInStructure = @allChildrenBottomToTop()
-    arr1 = []
-    arr2 = []
-    @deepCopy true, arr1, arr2, allWidgetsInStructure
-    totalJSON = ""
-
-    for element in arr2
-      try
-        console.log JSON.stringify(element) + "\n// --------------------------- \n"
-      catch e
-        debugger
-
-      totalJSON = totalJSON + JSON.stringify(element) + "\n// --------------------------- \n"
-    return totalJSON
+  # Serialization — delegates to the src/serialization/ Serializer. Unlike the old dev-only
+  # prototype this replaced, serialize/deserialize SHIP in all builds (including --homepage):
+  # they are a product feature, so they carry NO homepage-strip markers. Only the dev
+  # "test menu" entries that drive them (serialiseToMemory etc., MenusHelper.testMenu) stay
+  # homepage-stripped. See docs/serialization-duplication-reference.md.
+  serialize: (opts) ->
+    Serializer.serializeWidget @, opts
 
 
   # Deserialization -----------------------------------
 
 
+  # Returns the restored, DETACHED widget (the caller attaches it). Callers that need the
+  # async-decode readiness promise (SWCanvas image/canvas decode) should call
+  # Deserializer.deserialize directly and await its .whenReady; the widget returned here
+  # fills its canvases in within a frame.
   deserialize: (serializationString) ->
-    # this is to ignore all the comment strings
-    # that might be there for reading purposes
-    objectsSerializations = serializationString.split /^\/\/.*$/gm
-    # the serialization ends with a comment so
-    # last element is empty, pop it
-    objectsSerializations.pop()
+    Deserializer.deserialize(serializationString).widget
 
-    createdObjects = []
-    for eachSerialization in objectsSerializations
-      createdObjects.push JSON.parse eachSerialization
-
-    clonedWidgets = []
-    for eachObject in createdObjects
-      # note that the constructor method is not run!
-      #console.log "cloning:" + eachWidget.className
-      #console.log "with:" + window[eachObject.className].prototype
-      if eachObject.className == "Canvas"
-        theClone = HTMLCanvasElement.createOfPhysicalDimensions new Point eachObject.width, eachObject.height
-        ctx = theClone.getContext "2d"
-
-        image = new Image
-        # Under the SWCanvas backend, drawImage rasterises an <img> by decoding
-        # it into a scratch canvas, which requires the image to be decoded first;
-        # drawing it before decode would throw. So paint on load instead (the
-        # clone starts blank and fills in within a frame). The native path below
-        # is left exactly as-is so flag-off output is unchanged.
-        if window.FIZZYGUM_USE_SWCANVAS
-          image.onload = ->
-            try ctx.drawImage image, 0, 0
-        image.src = eachObject.data
-        unless window.FIZZYGUM_USE_SWCANVAS
-          # if something doesn't get painted here,
-          # it might be because the allocation of the image
-          # would actually be asynchronous, in theory
-          # you'd have to do the drawImage in a callback
-          # on onLoad of the image...
-          ctx.drawImage image, 0, 0
-
-      else if eachObject.constructor != Array
-        theClone = Object.create window[eachObject.className].prototype
-        if theClone.assignUniqueID?
-          theClone.assignUniqueID()
+  # Save this widget subtree to a downloaded *.fzw.json file over file:// (a product
+  # feature — ships in all builds). A SerializationError (an external pointer that can't be
+  # encoded, ...) becomes a friendly, path-carrying dialog rather than an uncaught throw.
+  saveToFile: ->
+    try
+      envelope = @serialize prettyPrint: true
+    catch error
+      if error instanceof SerializationError
+        world.inform error.toString()
+        return
       else
-        theClone = []
-      clonedWidgets.push theClone
-      #theClone.constructor()
-
-    for i in [0... clonedWidgets.length]
-      eachClonedWidget = clonedWidgets[i]
-      if eachClonedWidget.constructor == HTMLCanvasElement
-        # do nothing
-      else if eachClonedWidget.constructor != Array
-        for property of createdObjects[i]
-          # also includes the "parent" property
-          if createdObjects[i].hasOwnProperty property
-            console.log "looking at property: " + property
-            clonedWidgets[i][property] = createdObjects[i][property]
-            if typeof clonedWidgets[i][property] is "string"
-              if clonedWidgets[i][property].startsWith "$"
-                referenceNumberAsString = clonedWidgets[i][property].substring(1)
-                referenceNumber = parseInt referenceNumberAsString
-                clonedWidgets[i][property] = clonedWidgets[referenceNumber]
-      else
-        for j in [0... createdObjects[i].length]
-          eachArrayElement = createdObjects[i][j]
-          clonedWidgets[i][j] = createdObjects[i][j]
-          if typeof eachArrayElement is "string"
-            if eachArrayElement.startsWith "$"
-              referenceNumberAsString = eachArrayElement.substring(1)
-              referenceNumber = parseInt referenceNumberAsString
-              clonedWidgets[i][j] = clonedWidgets[referenceNumber]
-
-
-    return clonedWidgets[0]
-  # this part is excluded from the fizzygum homepage build <<«
+        throw error
+    baseName = (@colloquialName?() or @constructor.name.replace "Wdgt", "") or "widget"
+    FileSaving.saveStringAsFile envelope, baseName + ".fzw.json"
 
   # Injecting code /////////////////////////////////////////
 
@@ -3208,7 +3162,17 @@ class Widget extends TreeNode
     world.widgetsToBePinouted.delete b
 
   serialiseToMemory: ->
-    world.lastSerializationString = @serialize()
+    # Surface a SerializationError (an external pointer that can't be encoded, a function
+    # with no source, ...) as a friendly, path-carrying dialog instead of an uncaught throw
+    # (the §4.7 UX; the file-save action in Phase 4 does the same). Any other error is a real
+    # bug and re-thrown.
+    try
+      world.lastSerializationString = @serialize()
+    catch error
+      if error instanceof SerializationError
+        world.inform error.toString()
+      else
+        throw error
 
   deserialiseFromMemoryAndAttachToHand: ->
     derezzedObject = world.deserialize world.lastSerializationString
@@ -3233,6 +3197,7 @@ class Widget extends TreeNode
       menu.addMenuItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this widget's" + " extent"
       menu.addLine()
       menu.addMenuItem "duplicate", true, @, "duplicateMenuAction" , "make a copy"
+      menu.addMenuItem "save to file…", true, @, "saveToFile", "save this widget\nto a *.fzw.json file"
       menu.addMenuItem "create shortcut", true, @, "createReference", "creates a reference to this wdgt and leaves it on the desktop"
       menu.addMenuItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
     else

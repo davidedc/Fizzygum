@@ -23,6 +23,13 @@ class Wallpaper
   # DeepCopierMixin to keep the reference (the way it already keeps external Widgets).
   keptByReferenceOnDeepCopy: true
 
+  # Serialization: this per-world singleton is encoded symbolically as {"$wk":"wallpaper"}
+  # and re-bound to the destination world's own wallpaper on restore. WellKnownObjects
+  # matches it primarily by identity against world.wallpaper; this marker documents intent
+  # and is the eventual replacement for keptByReferenceOnDeepCopy. See
+  # docs/serialization-duplication-reference.md §4a.
+  wellKnownKey: "wallpaper"
+
   constructor: ->
     @patternName = @pattern1
 

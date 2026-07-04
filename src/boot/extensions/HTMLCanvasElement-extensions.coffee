@@ -2,17 +2,13 @@
 # just create a class that extends this one, and has the extra
 # functionality that you want
 
-HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allWidgetsInStructure) ->
+HTMLCanvasElement::deepCopy = (objOriginalsClonedAlready, objectClones, allWidgetsInStructure) ->
   # TODO id: DUPLICATED_CODE_IN_DEEPCOPY date: 6-Jun-2023
 
   haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf(@)
   if  haveIBeenCopiedAlready >= 0
-    if doSerialize
-      return "$" + haveIBeenCopiedAlready
-    else
-      return objectClones[haveIBeenCopiedAlready]
+    return objectClones[haveIBeenCopiedAlready]
 
-  positionInObjClonesArray = objOriginalsClonedAlready.length
   objOriginalsClonedAlready.push @
   # with and height here are not the widget's,
   # which would be in logical units and hence would need ceilPixelRatio
@@ -23,18 +19,7 @@ HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClo
   ctx = cloneOfMe.getContext "2d"
   ctx.drawImage @, 0, 0
 
-  if doSerialize
-    cloneOfMe = {}
-
   objectClones.push cloneOfMe
-
-  if doSerialize
-    cloneOfMe.className = "Canvas"
-    cloneOfMe.width = @width
-    cloneOfMe.height = @height
-    cloneOfMe.data = @toDataURL()
-    return "$" + positionInObjClonesArray
-
 
   return cloneOfMe
 

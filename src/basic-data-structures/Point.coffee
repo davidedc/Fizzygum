@@ -17,22 +17,6 @@ class Point
   toString: ->
     Math.round(@x) + "@" + Math.round(@y)
 
-  # »>> this part is excluded from the fizzygum homepage build
-
-  # currently unused. Also: duplicated function
-  prepareBeforeSerialization: ->
-    @className = @constructor.name
-    @classVersion = "0.0.1"
-    @serializerVersion = "0.0.1"
-    for property of @
-      if @[property]?
-        if typeof @[property] == 'object'
-          if !@[property].className?
-            if @[property].prepareBeforeSerialization?
-              @[property].prepareBeforeSerialization()
-
-  # this part is excluded from the fizzygum homepage build <<«
-  
   # Point copying:
   copy: ->
     new @constructor @x, @y

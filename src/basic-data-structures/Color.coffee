@@ -209,20 +209,6 @@ class Color
     return @_derived_String
 
 
-  # »>> this part is excluded from the fizzygum homepage build
-  # currently unused. Also: duplicated function
-  prepareBeforeSerialization: ->
-    @className = @constructor.name
-    @classVersion = "0.0.1"
-    @serializerVersion = "0.0.1"
-    for property of @
-      if @[property]?
-        if typeof @[property] == 'object'
-          if !@[property].className?
-            if @[property].prepareBeforeSerialization?
-              @[property].prepareBeforeSerialization()
-  # this part is excluded from the fizzygum homepage build <<«
-  
   # Color comparison:
   equals: (aColor) ->
     @==aColor or (aColor and @_r == aColor._r and @_g == aColor._g and @_b == aColor._b and @_a == aColor._a)
@@ -244,19 +230,11 @@ class Color
   
   # this part is excluded from the fizzygum homepage build <<«
 
-  getEmptyObjectOfSameTypeAsThisOne: (doSerialize)->
-    if doSerialize
-      theClone = Object.create(@constructor::)
-      theClone.className = @constructor.name
-      return theClone
-    else
-      return @
-
-  recursivelyCloneContent: (cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allWidgetsInStructure)->
-    if doSerialize
-      # we normally serialise each field, however for immutable classes
-      # we want to serialise something special so we don't end up
-      # just cloning the object. We'd rather use the static factory
-      # so that we don't actually create a new object if there is another
-      # immutable one with the same contents that we can reference.
-      cloneOfMe.compactSerialisedForm = [@_r,@_g,@_b,@_a]
+  # Colors are immutable and cached (see @create): a deep COPY therefore returns the
+  # SAME object rather than cloning it, so getEmptyObjectOfSameTypeAsThisOne yields @ and
+  # there is nothing to clone field-by-field (the base recursivelyCloneContent then only
+  # self-assigns @'s own primitives, a no-op). Serialization is separate now: it emits a
+  # compact {class:"Color", rgba:[...]} record restored through @create — see
+  # src/serialization/ and docs/serialization-duplication-reference.md §6.
+  getEmptyObjectOfSameTypeAsThisOne: ->
+    return @

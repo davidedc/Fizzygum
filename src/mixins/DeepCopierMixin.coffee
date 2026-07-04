@@ -1,5 +1,14 @@
 # //////////////////////////////////////////////////////////
 
+# DeepCopierMixin is the DUPLICATION engine: it clones a widget subtree (and the data
+# structures it reaches) into live sibling objects. Serialization used to share this walker
+# via a `doSerialize` flag, but that mode has moved to its own side-effect-free record
+# builder in src/serialization/ (Serializer / Deserializer); this walker is now
+# duplication-only. The two still share per-class KNOWLEDGE (keptByReferenceOnDeepCopy /
+# the wellKnownKey markers, rebuildDerivedValue, the native-type clone handlers) but no
+# mutable state, so neither can regress the other. See
+# docs/serialization-duplication-reference.md.
+
 DeepCopierMixin =
   # class properties here:
   # none
@@ -16,26 +25,22 @@ DeepCopierMixin =
       # For example, if the widget appeared in a data
       # structure related to the broken rectangles mechanism,
       # we should place the copied widget there.
-      deepCopy: (doSerialize, objOriginalsClonedAlready, objectClones, allWidgetsInStructure)->
+      deepCopy: (objOriginalsClonedAlready, objectClones, allWidgetsInStructure)->
         # TODO id: DUPLICATED_CODE_IN_DEEPCOPY date: 6-Jun-2023
 
         haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf @
         if haveIBeenCopiedAlready >= 0
-          if doSerialize
-            return "$" + haveIBeenCopiedAlready
-          else
-            return objectClones[haveIBeenCopiedAlready]
+          return objectClones[haveIBeenCopiedAlready]
+        # a Widget outside the copied structure is an external collaborator: the
+        # duplicate KEEPS the live reference (so a copied widget can stay wired to a
+        # widget outside the copy). Serialization, which cannot keep a live pointer,
+        # handles this case separately in src/serialization/.
         if (@ instanceof Widget) and (@ not in allWidgetsInStructure)
-          if doSerialize
-            return "$EXTERNAL" + @uniqueIDString()
-          else
-            return @
-     
-        positionInObjClonesArray = objOriginalsClonedAlready.length
+          return @
 
-        # note that for immutable objects, in the non-serialisation case,
-        # we actually don't create a copy, we just use the same object
-        cloneOfMe = @getEmptyObjectOfSameTypeAsThisOne doSerialize
+        # note that for immutable objects we actually don't create a copy,
+        # we just use the same object
+        cloneOfMe = @getEmptyObjectOfSameTypeAsThisOne()
 
         # this is the only place where we add to these arrays.
         # Note that we know for sure that @ is NOT already in objOriginalsClonedAlready
@@ -47,12 +52,9 @@ DeepCopierMixin =
 
         # cloneOfMe at this point is just an "empty shell" copy
 
-        @recursivelyCloneContent cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allWidgetsInStructure
+        @recursivelyCloneContent cloneOfMe, objOriginalsClonedAlready, objectClones, allWidgetsInStructure
 
         # cloneOfMe at this point is a full deep copy
-
-        if doSerialize
-          return "$" + positionInObjClonesArray
 
         # see comment in the method
         cloneOfMe.rebuildDerivedValues @
@@ -122,7 +124,7 @@ DeepCopierMixin =
             if theOriginal[property]?.rebuildDerivedValue?
               theOriginal[property].rebuildDerivedValue(@, property)
 
-      recursivelyCloneContent: (cloneOfMe, doSerialize, objOriginalsClonedAlready, objectClones, allWidgetsInStructure)->
+      recursivelyCloneContent: (cloneOfMe, objOriginalsClonedAlready, objectClones, allWidgetsInStructure)->
         # these are all the properties that are NOT static
         # AND that are "attached" to the object.
         # Which means basically inherited and non-inherited, non-static properties that
@@ -131,9 +133,6 @@ DeepCopierMixin =
         # https://coffeescript.org/#try:class%20ColorExtended%0A%20%20%40extendedStatic%3A%204%0A%20%20extendedNonStatic%3A%205%0A%0A%0Aclass%20Color%20extends%20ColorExtended%0A%20%20%40aStatic%3A%202%0A%20%20nonStatic%3A%202%0A%20%20%0A%0AColor.aStatic%20%3D%2010%0AmyColor%20%3D%20new%20Color%0AmyColor.extendedNonStatic%20%3D%209%0A%0Afor%20property%20of%20myColor%0A%20%20alert%20property%20%2B%20%22%20%22%20%2B%20myColor.hasOwnProperty(property)
         for own property of @
           # also includes the "parent" property
-
-          #if property == "backBufferContext"
-          #  debugger
 
           if !@[property]?
             # undefined, null, nil
@@ -153,18 +152,14 @@ DeepCopierMixin =
               # exactly as the external-Widget branch of deepCopy (above) returns @
               # for a Widget not in allWidgetsInStructure. Without this the copier
               # would try to call a missing deepCopy on the plain collaborator and
-              # throw (e.g. when duplicating a menu whose item targets it). Serialize
-              # emits an external-reference token, the same convention as widgets.
-              if doSerialize
-                cloneOfMe[property] = "$EXTERNAL"
-              else
-                cloneOfMe[property] = @[property]
+              # throw (e.g. when duplicating a menu whose item targets it).
+              cloneOfMe[property] = @[property]
             else
               if !@[property].deepCopy?
                 console.dir @
                 console.log property
                 debugger
-              cloneOfMe[property] = @[property].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allWidgetsInStructure
+              cloneOfMe[property] = @[property].deepCopy objOriginalsClonedAlready, objectClones, allWidgetsInStructure
           else
             # boolean, number, bigint, string, symbol and function
             if property != "instanceNumericID"
@@ -182,7 +177,7 @@ DeepCopierMixin =
       #      same type. The properties are not copied.
       # This is never run on Arrays because they
       # override deepCopy altogether
-      getEmptyObjectOfSameTypeAsThisOne: (doSerialize)->
+      getEmptyObjectOfSameTypeAsThisOne: ->
         #alert "cloning a " + @constructor.name
         if typeof @ is "object"
           theClone = Object.create(@constructor::)
@@ -190,10 +185,6 @@ DeepCopierMixin =
           # note that only Widgets have that kind
           # of tracking
           theClone.registerThisInstance?()
-          if doSerialize
-            # add a className field if object is not an array
-            theClone.className = @constructor.name
-          #console.log "theClone class:" + theClone.constructor.name
 
           # although we don't run the constructor,
           # it's useful to at least initialise the

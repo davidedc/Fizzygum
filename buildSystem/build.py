@@ -218,6 +218,10 @@ def main():
     filenames = sorted(filenames + sorted(glob("src/fizzytiles" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/events-input" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/macros" + "/*.coffee")))
+    # serialization / deserialization / file-save-load family. NOT homepage-excluded:
+    # serialization is a shipped product feature (only the dev "test menu" items are
+    # stripped, via their own in-file markers). See serialization-deserialization-plan §8.1.
+    filenames = sorted(filenames + sorted(glob("src/serialization" + "/*.coffee")))
     if args.includeVideoPlayer:
         filenames = sorted(filenames + sorted(glob("src/video-player" + "/*.coffee")))
 

@@ -1860,9 +1860,13 @@ class WorldWdgt extends PanelWdgt
     window.addEventListener "dragover", @dragoverEventListener, false
     
     @dropBrowserEventListener = (event) =>
-      # nothing here, although code for handling a "drop" is in the
-      # comments
       event.preventDefault()
+      # a Fizzygum file (*.fzw.json) dropped on the desktop is deserialised and attached at
+      # the drop point; FileLoading sniffs the envelope and rejects non-Fizzygum files.
+      # (Image-file drag-ingestion is a banked future extension.)
+      files = event.dataTransfer?.files
+      if files? and files.length > 0
+        FileLoading.loadFile files[0], new Point event.clientX, event.clientY
     window.addEventListener "drop", @dropBrowserEventListener, false
 
     @resizeBrowserEventListener = =>
@@ -2025,12 +2029,19 @@ class WorldWdgt extends PanelWdgt
         @toolTipsList.delete tooltip
   
 
+  # "open from file…" world-menu action: pop the file picker; FileLoading routes the chosen
+  # *.fzw.json by its envelope `kind` (a widget is attached to the desktop, a world snapshot
+  # replaces the world). A product feature — ships in all builds.
+  openFromFile: ->
+    FileLoading.openFromFileDialog()
+
   buildContextMenu: ->
 
     if @isIndexPage
       menu = new MenuWdgt @, false, @, true, true, "Desktop"
       menu.addMenuItem "wallpapers ➜", false, @wallpaper, "wallpapersMenu", "choose a wallpaper for the Desktop"
       menu.addMenuItem "new folder", true, @, "makeFolder"
+      menu.addMenuItem "open from file…", true, @, "openFromFile", "load a widget or world\nfrom a *.fzw.json file"
       return menu
 
     if @isDevMode

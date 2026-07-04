@@ -17,6 +17,12 @@ class IconicDesktopSystemWindowedApp
 
   keptByReferenceOnDeepCopy: true
 
+  # Serialization: each app singleton is encoded symbolically as {"$wk":"app:<ClassName>"}
+  # and re-resolved (in Phase 5, launched if absent) against the destination world. A
+  # method because the key is per-subclass. See docs/serialization-duplication-reference.md
+  # §4a.
+  wellKnownKey: -> "app:" + @constructor.name
+
   # --- per-app configuration (subclasses override) ---
   title: nil
   slot: nil           # world.<slot> holds the single window; nil => a fresh window every launch

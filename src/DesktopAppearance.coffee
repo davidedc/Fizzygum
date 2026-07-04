@@ -1,5 +1,9 @@
 class DesktopAppearance extends RectangularAppearance
 
+  # Serialization: skip these on a whole-world snapshot. `pattern` is a live CanvasPattern
+  # (the first thing a whole-world serialize used to crash on); both re-derive on demand
+  # from world.wallpaper.patternName. See docs/serialization-duplication-reference.md §5.
+  @serializationTransients: ["pattern", "currentPattern"]
 
   currentPattern: nil
 

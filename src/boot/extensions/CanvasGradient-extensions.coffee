@@ -14,22 +14,15 @@
 #      maybe even if it's tied to a canvas you can get to the
 #            copy canvas and create the copy gradient from that?
 
-CanvasGradient::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allWidgetsInStructure) ->
+CanvasGradient::deepCopy = (objOriginalsClonedAlready, objectClones, allWidgetsInStructure) ->
   # TODO id: DUPLICATED_CODE_IN_DEEPCOPY date: 6-Jun-2023
 
   haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf @
   if haveIBeenCopiedAlready >= 0
-    if doSerialize
-      return "$" + haveIBeenCopiedAlready
-    else
-      return objectClones[haveIBeenCopiedAlready]
+    return objectClones[haveIBeenCopiedAlready]
 
-  positionInObjClonesArray = objOriginalsClonedAlready.length
   objOriginalsClonedAlready.push @
   cloneOfMe = nil
   objectClones.push  cloneOfMe
-
-  if doSerialize
-    return "$" + positionInObjClonesArray
 
   return cloneOfMe
