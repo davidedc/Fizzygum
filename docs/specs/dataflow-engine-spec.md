@@ -88,14 +88,18 @@ side-effects-per-event and read-your-writes within a frame, at N× the evaluatio
 playQueuedEvents            ← per-event mini-passes run in here, inside their events
 runChildrensStepFunction    ← stepping: time sources mark themselves stale
 recalculateDataflow         ← NEW: drain the stale pool (this spec)
-hand re-check enters/leaves     (exact relative placement: open, §13)
 recalculateLayouts          ← layout's end-of-cycle flush
+hand hover re-sync          ← reads SETTLED geometry (moved after the flush, 2026-07-04)
 updateBroken                ← paint
 ```
 
 - **After stepping**, so this frame's ticks join this frame's batch.
 - **Before `recalculateLayouts`**, so sink applications feed this frame's settle and paint
   (running after layouts would reintroduce the one-cadence-lag bug class).
+- Nothing else sits between the two drains: since the hover re-sync moved after the
+  end-of-cycle flush (hover-resync-after-flush, 2026-07-04), it reads the settled fixed
+  point that paint reads — which now automatically includes dataflow-driven geometry
+  changes, with no dataflow-specific handling needed.
 
 ### 4.2 One recompute pass
 
@@ -309,7 +313,9 @@ stepping loop's existing skip-don't-catch-up stance).
 
 ## 13. Open questions (decide at implementation time)
 
-- Exact placement of the drain relative to the hand's enter/leave re-check (§4.1).
+- ~~Placement of the drain relative to the hand's enter/leave re-check~~ — resolved
+  upstream: the hover re-sync now runs after `recalculateLayouts` (§4.1), so the drain
+  slots directly between stepping and the layout flush.
 - Range syntax (`FormulaHelpers` functions vs a light preprocessor — the fizzytiles
   `LCLCodePreprocessor` is precedent) and aggregate operations.
 - Per-event mini-pass downstream scoping fine print (per-wire vs per-source).

@@ -40,7 +40,10 @@ was green when you started. (Ignore the harmless `.gitattributes` warning git pr
 
 ## 1. Background: the three meanings of "coalesced"
 
-*(verified 2026-07-04: 314 occurrences of `coalesc` across `src`, `buildSystem`, `docs`)*
+*(verified 2026-07-04: 371 occurrences of `coalesc` across `src`, `buildSystem`, `docs`;
+re-checked same day after the hover-resync and disable-editing-family merges — all growth
+was in new `docs/*.md` plan records, which §4 excludes; every identifier count in §2a/§2b
+was unchanged)*
 
 1. **Layout deferred-settle tier** (the real rename target): five `_`-private geometry
    entrypoints that, instead of settling layouts themselves, *defer their settle to the ONE
