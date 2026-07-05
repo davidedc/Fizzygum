@@ -91,6 +91,7 @@ class SimplePlainTextWdgt extends TextWdgt
       menu.addMenuItem "connect to ➜", true, @, "openTargetSelector", "connect to\nanother widget"
     else
       menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another widget\nwhose numerical property\n will be" + " controlled by this one"
+    @addFiresPerEventMenuEntry menu
 
     if @_amIDirectlyInsideScrollPanelWdgt()
       # the caret is a world singleton; was `!(m instanceof CaretWdgt)` (type-test-elimination campaign)

@@ -34,6 +34,22 @@ deregisters on `positive → 0`. So entering the first `seconds` cell makes the 
 exist; clearing the last one makes it cease. `removeAllEdgesOf` routes a dying node's incoming
 edges through `removeEdgesInto`, so deleting a `seconds` cell decrements its source too.
 
+## Connections client — patch-programming migration (spec §8, plan Phase 6)
+
+The patch-programming circuits (widgets wired by `@target`/`@action` via `ControllerMixin`) are the
+engine's SECOND client, ported by a strangler. Landed so far:
+
+- **6a — `firesPerEvent` (DARK).** A per-wire delivery policy now lives on `ControllerMixin`
+  (`firesPerEvent`, default `false` = **pooled**: one drain per cycle using final values; `true` =
+  **per-event**: a synchronous mini-pass inside each event, spec §4). It is flipped by the shared
+  "✓ fires per event" connection-menu toggle (`addFiresPerEventMenuEntry` → `toggleFiresPerEvent`,
+  offered by every controller — SliderWdgt, StringWdgt, the patch nodes, … — once a target is
+  wired). Declared as a PROTOTYPE default, so an untoggled wire carries no own property and
+  serializes exactly as before (the `@target`/`@action` own-only-when-set idiom). 6a is DARK:
+  **nothing reads the flag yet** — legacy `_fireConnection` delivery still runs, pixels unchanged.
+  Phase 6b's engine delivery (behind `world.dataflowWiresEnabled`) reads it when it declares the
+  edge, letting the policy ride the edge record's opts.
+
 ## The model in one breath
 
 An **edge** means "when this changes, that must react". **Notifications carry no values** —
@@ -61,7 +77,8 @@ A node with neither `dataflowRecompute` nor `dataflowValue` is treated as **alwa
 ## The two verbs, and the drain
 
 - **`markStale(node, forced)`** — the public, policy-aware verb sources call (demotes to the
-  bare pool atom during a drain; the `firesPerEvent` per-event lane lands in Phase 6b).
+  bare pool atom during a drain; the `firesPerEvent` per-event LANE lands in Phase 6b — the
+  per-wire property itself landed in 6a, see "Connections client" above).
 - **`__poolStale(node, forced)`** — the bare atom: push into the stale pool, nothing else.
 - **`recalculateDataflow()`** — the once-per-cycle drain, called from `WorldWdgt.doOneCycle`
   BETWEEN `runChildrensStepFunction` and `recalculateLayouts`. **Two parallel drain stations:

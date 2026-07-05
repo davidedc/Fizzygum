@@ -60,6 +60,7 @@ class FanoutPinWdgt extends Widget
       menu.addMenuItem "connect to ➜", true, @, "openTargetSelector", "connect to\nanother widget"
     else
       menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another widget\nwhose color property\n will be" + " controlled by this one"
+    @addFiresPerEventMenuEntry menu
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     @_popUpTargetPropertyMenu theTarget, theTarget.allSetters()

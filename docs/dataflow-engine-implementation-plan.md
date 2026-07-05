@@ -21,7 +21,7 @@ unchecked, then update the ledger in the same commit that completes the phase.**
 - [x] Phase 3 — value protocol & presenters (Color first)
 - [x] Phase 4 — widget-valued cells & sockets
 - [x] Phase 5 — time sources (`seconds` / `frame`)
-- [ ] Phase 6a — `firesPerEvent` wire property + menu toggle
+- [x] Phase 6a — `firesPerEvent` wire property + menu toggle
 - [ ] Phase 6b — patch-programming port behind A/B switch (default OFF)
 - [ ] Phase 6c — A/B default ON, suite reconciliation
 - [ ] Phase 6d — token retirement
@@ -846,6 +846,55 @@ classify→present chain), `SheetCellRecord._cacheValue` (the reconcile trigger)
 
 **6a — `firesPerEvent` on wires.** Property + menu toggle on connection-bearing widgets
 (default `false`). No engine involvement yet: legacy delivery still runs. Dark for pixels.
+
+**Landed 2026-07-05 (this session) — all green.** Modified `src/mixins/ControllerMixin.coffee`
+(the single connection-bearing base — every wiring widget `@augmentWith`s it) + 8 controller menus.
+- **`ControllerMixin` gains three members.** `firesPerEvent: false` (per-wire delivery policy —
+  `false` = POOLED: one drain per cycle using final values; `true` = PER-EVENT: a synchronous
+  mini-pass inside each event, spec §4); `toggleFiresPerEvent` (a plain boolean flip — no layout, no
+  tree mutation, hence no settle, so `check-layering`-clean); and the shared
+  `addFiresPerEventMenuEntry(menu)` helper.
+- **`firesPerEvent` is a PROTOTYPE default, not a per-instance assignment** (`addInstanceProperties`
+  sets `@::firesPerEvent = false`). The serializer walks `for own` (`Serializer.coffee:245`), so an
+  untoggled wire carries NO own `firesPerEvent` and serializes byte-for-byte as before — the same
+  own-only-when-set idiom as `@target`/`@action` (SliderWdgt ~13). Only a user who TOGGLES a wire
+  writes an own property that then serializes (correct: a saved per-event wire keeps its policy).
+- **The toggle rides the existing connection menu.** The 8 controllers that render "connect to ➜" /
+  "set target" (`SliderWdgt`, `StringWdgt`, `SimplePlainTextWdgt`, `PaletteWdgt`, and the four patch
+  nodes `CalculatingPatchNodeWdgt` / `DiffingPatchNodeWdgt` / `RegexSubstitutionPatchNodeWdgt` /
+  `FanoutPinWdgt`) each call `@addFiresPerEventMenuEntry menu` right after that block — one shared
+  helper, no duplicated toggle logic. Shown ONLY once a target is wired (`return unless @target?` —
+  `firesPerEvent` is a property OF a wire); a leading ✓ reflects state via `String::tick` (matched in
+  tests by the "fires per event" substring).
+- **DARK, like Phase 1: nothing READS the flag yet.** Legacy `_fireConnection` delivery still runs
+  unchanged. Phase 6b's engine delivery (behind `world.dataflowWiresEnabled`) reads it when it
+  declares the edge, letting the policy ride the edge record's opts. NOMENCLATURE already had the
+  terms (`firesPerEvent` line 64, `fire` line 99); `src/dataflow/CLAUDE.md` grew a "Connections
+  client — patch-programming migration" section.
+- **11 BENIGN inspector recaptures (revised the "no new pixel refs" expectation).** The 3 new members
+  (plus the two `_class_injected_in` companions `addInstanceProperties` adds for the two methods)
+  appear as new rows in every CONTROLLER's inspected property list. `StringWdgt` is the canonical
+  inspected fixture, so every inspector test that inspects a controller shifts by ~5 rows — a member-
+  list growth (the byte-identical-not-sacred case): `macroDuplicatedInspectorsCloseIndependently`,
+  `macroInspectorRejectsDrops`, `macroInspectorResizingOKEvenWhenTakenApart`,
+  `macroInspectorScrollbarUnplugged`, `macroMovingSlidersSidewaysDoesntCauseContentToMoveSideways`,
+  `macroMultilineTextInputScrollsWell`, `macroPickingUpPartsFromInspector`,
+  `macroResizingPristineInspector`, `macroSimpleDocumentHandlesOldInspector`,
+  `macroWrappingTextFieldResizesOK` recaptured (pixel-only; verified deterministic + eyeballed).
+  **One test, `macroAddEditSaveRenameRemoveProperty`, also needed a test-logic fix** (NOT a source
+  change): its `selectInspectorRow` scrolls the vBar by a fraction of `elements.length`, so the +5
+  members landed the target row at the viewport clip edge and the centre click silently missed —
+  cascading to a rename-with-no-selection crash. Made the select robust (VERIFY `list.selected` took;
+  retry with a larger top margin — tolerant of any list length); the add→save→rename→remove round-trip
+  completes and was eyeballed correct at dpr1+dpr2.
+- **Verification:** `fg build` 0 violations (`toggleFiresPerEvent` seen via the `addMenuItem`
+  string-dispatch, `addFiresPerEventMenuEntry` via its 8 call sites — dead-method gate satisfied by
+  real use, NOT the allowlist); new `SystemTest_macroConnectionFiresPerEventToggle` (wires two sliders,
+  drives the REAL menu toggle — right-clicking the LOWER track at [0.5,0.85] because at value 50 the
+  thumb covers the centre — and asserts `firesPerEvent` false→true→false by value; 3/3 PASS) captured +
+  verified dpr1 + dpr2 + eyeballed (two inert sliders — the toggle is pixel-dark); the 11 inspector
+  recaptures above; `fg gauntlet` **181 dpr1/dpr2/webkit + apps + tiernaming/settle/capstone all PASS**;
+  both serialization legs green (surface UNCHANGED — no fixture toggles a wire); `fg homepage` BOOT OK.
 
 **6b — engine delivery behind an A/B switch.** `world.dataflowWiresEnabled` (default
 `false`; model: `world.deferredSettlingEnabled` A/B, WorldWdgt ~91). When ON:

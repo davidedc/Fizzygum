@@ -1098,6 +1098,7 @@ class StringWdgt extends Widget
         menu.addMenuItem "connect to ➜", true, @, "openTargetSelector", "connect to\nanother widget"
       else
         menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another widget\nwhose numerical property\n will be" + " controlled by this one"
+    @addFiresPerEventMenuEntry menu
 
 
   togglefittingSpecWhenBoundsTooSmall: ->

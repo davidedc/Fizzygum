@@ -47,3 +47,31 @@ ControllerMixin =
         actionToCall = if @target[connectorName]? then connectorName else @action
         @target[actionToCall].call @target, value, argumentToAction, @connectionsCalculationToken
 
+      # ---- firesPerEvent: per-wire delivery policy (dataflow migration; spec §4/§8, ----
+      # ---- implementation-plan Phase 6a) --------------------------------------------------
+      # false (default) = POOLED: under the engine, ten drag events + a tick in one frame collapse
+      #   to ONE recompute batch, drained once per cycle using final values.
+      # true = PER-EVENT: a synchronous mini-pass inside each event (side-effects-per-event,
+      #   read-your-writes within a frame), at N× the evaluation cost.
+      # In Phase 6a this is DARK: the flag is stored and toggled from the menu, but nothing READS it
+      # yet -- legacy _fireConnection delivery still runs unchanged, so pixels are unaffected. Phase 6b
+      # (engine delivery behind world.dataflowWiresEnabled) reads it when it declares the edge, letting
+      # it ride the edge record's opts. Declared as a PROTOTYPE default (not assigned per instance),
+      # so an untoggled wire carries NO own `firesPerEvent` property and serializes byte-for-byte as
+      # before -- the same own-only-when-set idiom as @target / @action.
+      firesPerEvent: false
+
+      # Flip the per-wire delivery policy (the "✓ fires per event" menu toggle). A plain boolean flip:
+      # no layout and no tree mutation, hence no settle (check-layering-clean); nothing visual changes.
+      toggleFiresPerEvent: ->
+        @firesPerEvent = not @firesPerEvent
+
+      # The shared connection-menu entry: every controller (SliderWdgt, StringWdgt, the patch nodes, …)
+      # calls this right after its own "connect to ➜" / "set target" item, so the toggle lives in one
+      # place. Shown only once a target is wired (firesPerEvent is a property OF a wire); a leading ✓
+      # reflects the current state (String::tick — matched in tests by the "fires per event" substring).
+      addFiresPerEventMenuEntry: (menu) ->
+        return unless @target?
+        label = "fires per event"
+        menu.addMenuItem (if @firesPerEvent then label.tick() else label), true, @, "toggleFiresPerEvent", "deliver on every event (a synchronous mini-pass)\ninstead of once per cycle"
+
