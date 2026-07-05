@@ -226,8 +226,17 @@ class SpreadsheetWdgt extends Widget
     return nil if col < 0 or col >= @numCols or row < 0 or row >= @numRows
     {col: col, row: row}
 
+  # single-sheet keyboard focus: the sheet the user is typing into is the ONLY sheet receiving
+  # keys. Other sheets stay rendered but inactive — WITHOUT this, a DUPLICATED sheet (the copier's
+  # alignCopiedWidgetToKeyboardEventsReceiversSet inherits the original's keyboard-receiver
+  # membership) would sit in the receivers set too and edit in LOCKSTEP with this one. Non-sheet
+  # receivers (carets, …) are untouched. (Full multi-sheet focus was deferred in 2a; this is the
+  # minimal single-focus the multi-sheet case needs to behave.)
   _takeKeyboardFocus: ->
-    world?.keyboardEventsReceivers?.add @   # a Set — idempotent
+    return unless world?.keyboardEventsReceivers?
+    world.keyboardEventsReceivers.forEach (r) =>
+      world.keyboardEventsReceivers.delete r if (r isnt @) and (r instanceof SpreadsheetWdgt)
+    world.keyboardEventsReceivers.add @   # a Set — idempotent
 
   # local {x,y,w,h} rect of a cell (relative to the widget top-left).
   _cellRectLocal: (col, row) ->
@@ -358,9 +367,35 @@ class SpreadsheetWdgt extends Widget
     @changed()
     return
 
+  # ── serialization / duplication (spec §2: the engine index is derived + disposable) ──────────
+
+  # Rebuild every cell's DERIVED state (compiledFn / value / edges) from its persisted @source,
+  # then mark all stale so the next drain recomputes the whole sheet in dependency order. A
+  # RESTORED (deserialize) or DUPLICATED (deep-copy) sheet re-declares its OWN edges here rather
+  # than serializing/copying the shared engine — the two hooks below call this.
+  recommitAllCells: ->
+    return unless @model?
+    @model.forEachCell (cell) -> FormulaCompiler.commit cell, cell.source
+    @model.forEachCell (cell) -> world.dataflow?.markStale cell
+    return
+
+  # after a deep-copy (the duplicate gesture → fullCopy → deepCopy): the copier runs this once the
+  # whole subtree — model + records — is cloned, so the copy's fresh records wire THEIR OWN edges
+  # (independent of the original's), and a subsequent edit to the original leaves the copy alone.
+  _reactToBeingCopied: ->
+    @recommitAllCells()
+
+  # after deserialize (loading a saved world/sheet): the same source-driven rebuild.
+  _afterDeserialization: ->
+    @recommitAllCells()
+
   # drop keyboard focus + any live editor when this sheet goes away, so a dead widget never
-  # receives keys (the editor child is also torn down by super's child destruction).
+  # receives keys (the editor child is also torn down by super's child destruction). Also perform
+  # NODE DEATH on every cell: drop its edges from the shared engine (the Phase-1 removeAllEdgesOf
+  # API) — a destroyed sheet's cells are gone, so leaving their edges would leak and could
+  # ghost-recompute.
   destroy: ->
     @_editor = nil
     world?.keyboardEventsReceivers?.delete @
+    @model?.forEachCell (cell) -> world.dataflow?.removeAllEdgesOf cell
     super()

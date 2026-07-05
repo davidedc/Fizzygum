@@ -438,6 +438,9 @@ printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/extensions/Array-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat src/boot/extensions/Map-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+
+printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/extensions/Object-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee

@@ -26,6 +26,14 @@
 
 class SheetCellRecord
 
+  # deep-copied per sheet (a duplicated sheet gets its OWN records). The derived fields ride along:
+  # @compiledFn (a function) copies by reference and @value (maybe a SheetError, kept by reference)
+  # too — both are then OVERWRITTEN when the duplicated sheet recommits every cell (rebuild), so
+  # the brief sharing is harmless; @boundNames (an array) copies via Array::deepCopy. On the
+  # SERIALIZE side these four are dropped instead (@serializationTransients below), then rebuilt
+  # the same way on restore.
+  @augmentWith DeepCopierMixin
+
   @serializationTransients: ["compiledFn", "boundNames", "value", "errorFlag"]
 
   # @sheet is the owning SheetModel ("the sheet the cell belongs to"); @sheet.sheetWidget is the
@@ -39,26 +47,44 @@ class SheetCellRecord
   # ── dataflow node protocol ───────────────────────────────────────────────────────────────
 
   dataflowRecompute: ->
-    # A blank or syntax-errored cell has no compiled function: its @value is already settled
-    # (nil, or the SYNTAX SheetError set by FormulaCompiler.commit) — return it unchanged.
+    # A blank, syntax-errored or loop-rejected cell has no compiled function: its @value is
+    # already resolved (nil, or a SheetError set by FormulaCompiler.commit) — return it unchanged.
     return @value unless @compiledFn?
     boundValues = @boundNames.map (name) => @_resolveBoundName name
+    # ERROR-AS-VALUE PROPAGATION (spec §9.6): if any INPUT is a SheetError, this cell yields that
+    # SAME error, short-circuit BEFORE running the formula (never compute on a poisoned input).
+    for v in boundValues
+      return @_cacheValue v if v instanceof SheetError
     # THIN arrow in the wrapper => `@` inside the formula is bound HERE, by apply, to the sheet
-    # widget (full world access, no sandbox — spec §9.2). A formula throw is caught by the engine
-    # (_processNode) and, from Phase 2c, turned into an "ERR" value via dataflowNoteError.
-    result = @compiledFn.apply @sheet.sheetWidget, boundValues
-    @value     = result
-    @errorFlag = result instanceof SheetError
-    @sheet.sheetWidget?.changed()   # repaint the grid; paint-only (changed, never a relayout)
-    @value
+    # widget (full world access, no sandbox — spec §9.2). A formula THROW is caught by the engine
+    # (_processNode) → dataflowNoteError below turns it into an "ERR" value.
+    @_cacheValue @compiledFn.apply @sheet.sheetWidget, boundValues
 
   dataflowValue: -> @value
 
+  # The engine calls this when @compiledFn THREW mid-recompute: force-resolve to an "ERR" value so
+  # the drain cannot spin on the cell and references propagate the error (spec §5/§9.6). Detail is
+  # logged to the console OUTSIDE the drain by the engine.
+  dataflowNoteError: (error) ->
+    @_cacheValue new SheetError "ERR", (error?.message ? "" + error)
+
+  # cache the computed value for painting + downstream pulls, flag errors, request a repaint, and
+  # RETURN it (the engine's equal-value cutoff compares old vs returned). Paint-only — `changed()`
+  # marks a broken rect, never a relayout (NOMENCLATURE: dataflow "caches/recomputes", it does not
+  # "settle" — that verb is layout's).
+  _cacheValue: (v) ->
+    @value     = v
+    @errorFlag = v instanceof SheetError
+    @sheet.sheetWidget?.changed()
+    @value
+
   # Resolve one bound parameter name to the value passed into the formula.
   _resolveBoundName: (name) ->
-    # A cell reference -> the referenced cell's VALUE. A SheetError input propagates (spec §9.6):
-    # yield it so the formula short-circuits into the same error at recompute (Phase 2c wires the
-    # reactive EDGE that re-runs this cell when the referenced cell changes; here we only READ).
+    # A cell reference -> the referenced cell's VALUE (plain in v1; the widget-exportedValue rule
+    # for a ref to a widget-valued cell arrives in Phase 4). A SheetError value flows through
+    # unchanged and is caught by the propagation short-circuit in dataflowRecompute above. The
+    # reactive EDGE that re-runs this cell when the referenced cell changes is declared by
+    # FormulaCompiler.commit (Phase 2c).
     if SheetModel.looksLikeCellRef name
       return @sheet.valueAt name
     # A FormulaHelpers veneer name -> the bound helper function. The veneer itself arrives in

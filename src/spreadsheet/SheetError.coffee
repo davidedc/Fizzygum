@@ -15,6 +15,11 @@
 
 class SheetError
 
+  # immutable (spec §9.5 purity law) — like Color, a deep copy can KEEP THE REFERENCE rather than
+  # clone it (and a cell's error value is rebuilt on recommit anyway). This also spares the copier
+  # a deepCopy it would otherwise demand of every SheetError-valued cell.
+  keptByReferenceOnDeepCopy: true
+
   constructor: (@kind, @message = "") ->
 
   # what the grid paints and what toString-based presenters show: a terse badge like "#SYNTAX".

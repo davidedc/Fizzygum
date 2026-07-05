@@ -62,10 +62,19 @@ class FormulaCompiler
         push helperName if boundaryRe.test scanCopy
     names
 
+  # Compile the source AND (re)declare the cell's reactive dataflow edges. Every path first drops
+  # the cell's OLD incoming edges (an idempotent recommit — used live AND to rebuild a restored /
+  # duplicated sheet, spec §2). A cell-shaped reference `A1` becomes an edge refCell -> cell, so
+  # editing A1 re-runs this cell; but a reference that would close a directed cycle rejects the
+  # commit with a "#LOOP" value and declares NO edges (spec §7).
   @commit: (cell, newSource) ->
     cell.source = newSource
-    # a blank cell holds nothing (deleting a cell — edge teardown — is Phase 2c).
+    engine = world?.dataflow
+    # a blank cell holds nothing. Drop its incoming edges but KEEP the node (its downstream
+    # references reactively see `nil`); full node-death (removeAllEdgesOf) is reserved for sheet
+    # destroy / Phase 6 un-wiring — see src/spreadsheet/CLAUDE.md.
     if not newSource? or newSource.trim() is ""
+      engine?.removeEdgesInto cell
       cell.compiledFn = nil
       cell.boundNames = []
       cell.value      = nil
@@ -75,14 +84,33 @@ class FormulaCompiler
     boundNames = FormulaCompiler.scanBoundNames newSource
     indented   = (("  " + line) for line in newSource.split("\n")).join "\n"
     wrapperSource = "(" + boundNames.join(", ") + ") ->\n" + indented
+    # re-declare edges from scratch: drop old dependencies before (maybe) adding new ones.
+    engine?.removeEdgesInto cell
     try
-      cell.compiledFn = eval compileFGCode wrapperSource, true
-      cell.boundNames = boundNames
-      cell.errorFlag  = false
+      compiledFn = eval compileFGCode wrapperSource, true
     catch error
       # compileFGCode throws a rich Error on a parse failure (boot ~88) — that IS the SYNTAX path.
       cell.compiledFn = nil
       cell.boundNames = []
       cell.value      = new SheetError "SYNTAX", (error?.message ? "" + error)
       cell.errorFlag  = true
+      return cell
+
+    # cycle check BEFORE wiring: check each new edge (refCell -> cell) against the pre-commit graph
+    # (cell's old incoming edges already dropped). Any cycle ⇒ reject with "#LOOP", declare NO
+    # edges. wouldCloseCycle also catches the trivial self-reference (`A1` inside A1).
+    refCells = []
+    for name in boundNames when SheetModel.looksLikeCellRef name
+      refCell = cell.sheet.getOrCreateCellAt name
+      if engine?.wouldCloseCycle refCell, cell
+        cell.compiledFn = nil
+        cell.boundNames = []
+        cell.value      = new SheetError "LOOP"
+        cell.errorFlag  = true
+        return cell
+      refCells.push refCell
+    refCells.forEach (refCell) -> engine?.addEdge refCell, cell
+    cell.compiledFn = compiledFn
+    cell.boundNames = boundNames
+    cell.errorFlag  = false
     cell

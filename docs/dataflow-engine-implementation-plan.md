@@ -17,7 +17,7 @@ unchecked, then update the ledger in the same commit that completes the phase.**
 - [x] Phase 1 — engine core, dark (no callers)
 - [x] Phase 2a — spreadsheet shell: window, painted grid, selection
 - [x] Phase 2b — cell model, literal/CoffeeScript evaluation, editing
-- [ ] Phase 2c — references, recompute, errors-as-values
+- [x] Phase 2c — references, recompute, errors-as-values
 - [ ] Phase 3 — value protocol & presenters (Color first)
 - [ ] Phase 4 — widget-valued cells & sockets
 - [ ] Phase 5 — time sources (`seconds` / `frame`)
@@ -548,6 +548,45 @@ rules 7/8:
   recompute works — spec §2's no-engine-fix-up corollary, actually exercised, not assumed.
   Run both serialization legs (§0).
 - **Phase-close:** run the §0 battery — 2c closes the first user-visible feature set.
+
+**Landed 2026-07-05 (this session) — all green.** Modified `FormulaCompiler` (edge declaration +
+cycle rejection), `SheetCellRecord` (error propagation + `dataflowNoteError`), `SpreadsheetWdgt`
+(recommit hooks, single-focus, node-death on destroy), `SheetError`/`SheetModel`/`SheetCellRecord`
+(deep-copy participation); new `src/boot/extensions/Map-extensions.coffee` (+ `build_it_please.sh`
+cat line); `src/spreadsheet/CLAUDE.md` grown. Decisions/deviations per rules 7/8:
+- **Reactive edges live in `FormulaCompiler.commit`** (so "commit" = compile + wire, and the
+  recommit-on-load/copy rebuilds both in one call): every path first `removeEdgesInto cell` (drop
+  old deps), then a successful compile runs the **cycle check** per ref (`wouldCloseCycle refCell,
+  cell` against the pre-commit graph) BEFORE any `addEdge`; a cycle ⇒ `@value = #LOOP`,
+  `@compiledFn = nil`, NO edges (spec §7). Syntax fail ⇒ `#SYNTAX`, no edges.
+- **Errors are values (spec §9.6):** `dataflowRecompute` short-circuits to the input's SheetError
+  BEFORE running the formula (propagation); a formula THROW is caught by the engine →
+  `dataflowNoteError` returns a `#ERR` (force-resolve, spec §5). Both painted in the error colour.
+- **Deletion (blank commit) = clear value + `removeEdgesInto`, KEEP the node** so downstream refs
+  reactively see `nil`; full `removeAllEdgesOf` is reserved for node DEATH (sheet `destroy`, added
+  this phase — a destroyed sheet drops all its cells' edges — and Phase 6 un-wiring). Documented in
+  `src/spreadsheet/CLAUDE.md`.
+- **Duplication (spec §2, no-engine-fix-up):** `SpreadsheetWdgt._reactToBeingCopied` (deep-copy)
+  and `_afterDeserialization` (restore) both call `recommitAllCells` (recommit all → mark all
+  stale → one drain), so a copied/restored sheet re-declares its OWN edges — the engine index is
+  never serialized/copied (`keptByReferenceOnDeepCopy`). This needed the plain data classes to be
+  deep-copyable: `SheetModel`/`SheetCellRecord` `@augmentWith DeepCopierMixin`, `SheetError`
+  `keptByReferenceOnDeepCopy` (immutable), and a NEW general `Map::deepCopy`/`Set::deepCopy`
+  (parallel to `Array::deepCopy`; the serializer already handled `$Map`/`$Set`).
+- **Single-sheet keyboard focus** (a fix the Duplicate test surfaced, not conjecture): the copier's
+  `alignCopiedWidgetToKeyboardEventsReceiversSet` puts a duplicated sheet in the receivers set too,
+  so typing hit BOTH sheets (the copy committed a stray literal). `_takeKeyboardFocus` now removes
+  other `SpreadsheetWdgt`s from the receivers set first. (2a's "multi-sheet focus deferred" — this
+  is the minimal single-focus the multi-sheet case needs.)
+- **SystemTests (all captured SWCanvas dpr1+dpr2, webkit-verified, eyeballed):**
+  `SpreadsheetRefsRecalc` (diamond 5/10/15, `lastDrainRecomputeCount == 3` via the NEW toolkit verb
+  `assertValuesEqual`), `SpreadsheetLoopRejected` (`#LOOP`), `SpreadsheetErrorPropagation`
+  (`#ERR`→`#ERR`), `SpreadsheetDuplicate` (original 5/10 vs independent copy 3/6 + value
+  assertions). Serialization rig grew a `sheet` fixture + `spreadsheet.roundtrip.rebuild` check
+  (literals + formula chain + error cell; restore rebuilds `3|6|9|#ERR`).
+- **Verification:** `fg build` 0-violations + boot-smoke green; a headless probe proved deep-copy
+  independence directly (copy stays 3/6 after editing the original to 5); `fg gauntlet` (dpr1/dpr2/
+  webkit + apps + gates) + both serialization legs green — see the ledger.
 
 ### Phase 3 — value protocol & presenters (Color first)
 

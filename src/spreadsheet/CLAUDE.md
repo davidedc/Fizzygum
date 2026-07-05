@@ -41,9 +41,40 @@ compiles once, then `world.dataflow.markStale cell`; the once-per-cycle dataflow
 stepping and layout in `doOneCycle`) calls `cell.dataflowRecompute()`, which runs
 `@compiledFn.apply sheetWidget, boundValues` and caches `@value`; the grid repaints it — all in
 the SAME cycle as the Enter event (deterministic, spec §10). `@` inside a formula is the
-`SpreadsheetWdgt` (full world access, no sandbox — spec §9.2). References currently READ sibling
-values from the model but are NOT yet reactive; the EDGE declaration (`addEdge` at commit) that
-makes a ref re-run when its target changes is Phase 2c.
+`SpreadsheetWdgt` (full world access, no sandbox — spec §9.2).
+
+## References, errors & duplication (2c)
+
+- **Reactive references.** `FormulaCompiler.commit` DECLARES the dataflow edges: it drops the
+  cell's old incoming edges (`engine.removeEdgesInto`), then for each cell-shaped reference adds
+  `engine.addEdge refCell, cell` — so editing an upstream cell marks it stale and the drain
+  recomputes the downstream closure in dependency order (a diamond's bottom exactly once).
+- **Cycle rejection (spec §7).** BEFORE wiring, each new edge is checked with
+  `engine.wouldCloseCycle refCell, cell` (against the pre-commit graph); a cycle ⇒ the value
+  becomes a `#LOOP` `SheetError`, `@compiledFn` is cleared, NO edges are declared (the drain cannot
+  spin). Catches the trivial self-reference too.
+- **Errors are values (spec §9.6).** A formula that THROWS is caught by the engine →
+  `SheetCellRecord.dataflowNoteError` returns a `#ERR`. A cell whose INPUT is a `SheetError` yields
+  that same error, short-circuiting before running its formula — so errors PROPAGATE along
+  references. Error values paint in the error colour.
+- **Deleting a cell (blank commit).** The value is cleared to `nil` and the cell's incoming edges
+  dropped, but the NODE is KEPT — so downstream references reactively see `nil`. Full
+  `removeAllEdgesOf` (node death) is reserved for the sheet's `destroy` (drops every cell's edges)
+  and Phase 6 un-wiring; a plain deletion is not node death because the cell may still be referenced.
+
+## Serialization & duplication (spec §2 — the engine index is derived, never serialized)
+
+The SHEET serializes its model + cell SOURCES + geometry; the engine's edges are NOT serialized or
+deep-copied. On **restore** (`_afterDeserialization`) and **duplicate** (`_reactToBeingCopied`) the
+sheet calls `recommitAllCells` — recommit every cell (rebuild `compiledFn`/`value` AND re-declare
+edges), mark all stale, one drain — so a restored/duplicated sheet re-declares its OWN edges and
+needs no engine fix-up. This requires the plain data classes to be deep-copyable:
+`SheetModel`/`SheetCellRecord` `@augmentWith DeepCopierMixin`, `SheetError`
+`keptByReferenceOnDeepCopy` (immutable), and the general `Map::deepCopy`/`Set::deepCopy`
+(`src/boot/extensions/Map-extensions.coffee`). Derived fields are dropped on serialize
+(`@serializationTransients`) and copied-then-overwritten on deep-copy. **Single-sheet keyboard
+focus:** `_takeKeyboardFocus` removes other sheets from `world.keyboardEventsReceivers` first, so a
+duplicated sheet (which inherits receiver membership via the copier) doesn't edit in lockstep.
 
 ## Design north star (spec §9)
 

@@ -737,6 +737,17 @@ class MacroToolkit
     shorten = (fp) -> if fp.length > 70 then fp.slice(0, 64) + "… (" + fp.length + " chars)" else fp
     world.automator.player.recordMacroAssertion (earlier == later), description, (shorten earlier), (shorten later)
 
+  # Generic VALUE assertion for a non-visual invariant (e.g. a computed count read from the live
+  # world). Records PASS/FAIL via recordMacroAssertion, so a mismatch fails the test exactly as a
+  # screenshot mismatch would — WITHOUT stopping the macro (a bare `throw` in macro source would
+  # surface as an uncaught error / shard stall). Compared with `==`. Like the other @assert…
+  # methods it pushes no input events and does not yield. It is a TOOLKIT method precisely so the
+  # sink `recordMacroAssertion` is not written in the macro source (its "Macro" mid-token would be
+  # mangled by the invocation rewriter). Used e.g. to assert `world.dataflow.lastDrainRecomputeCount`
+  # (a diamond recomputes its bottom ONCE — dataflow §1.18).
+  assertValuesEqual: (description, expected, found) ->
+    world.automator.player.recordMacroAssertion (found == expected), description, expected, found
+
   # Topmost widget matching either a class-name string (compared via
   # widgetClassString) or a class object (compared via instanceof).
   findTopWidgetByClassNameOrClass: (widgetNameOrClass) ->
