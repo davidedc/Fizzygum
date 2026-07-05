@@ -156,6 +156,13 @@ class SliderWdgt extends CircleBoxWdgt
   reactToTargetConnection: ->
     @updateTarget()
 
+  # The exported-value reader (dataflow spec §9.3): a slider joins the spreadsheet value protocol by
+  # exposing its numeric @value, so Widget.exportedValue()'s `getColor?() ? getValue?() ? @text`
+  # chain reads a slider-valued cell as its number (and a reference to that cell yields the number).
+  # The duck-typed cluster already probed `x.getValue?()` at the setStart/setStop/setSize call sites;
+  # this makes a SliderWdgt answer it on itself too.
+  getValue: -> @value
+
   # SliderWdgt menu:
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super

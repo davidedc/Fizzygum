@@ -19,7 +19,7 @@ unchecked, then update the ledger in the same commit that completes the phase.**
 - [x] Phase 2b — cell model, literal/CoffeeScript evaluation, editing
 - [x] Phase 2c — references, recompute, errors-as-values
 - [x] Phase 3 — value protocol & presenters (Color first)
-- [ ] Phase 4 — widget-valued cells & sockets
+- [x] Phase 4 — widget-valued cells & sockets
 - [ ] Phase 5 — time sources (`seconds` / `frame`)
 - [ ] Phase 6a — `firesPerEvent` wire property + menu toggle
 - [ ] Phase 6b — patch-programming port behind A/B switch (default OFF)
@@ -714,6 +714,51 @@ classify→present chain), `SheetCellRecord._cacheValue` (the reconcile trigger)
   assert the position survived — or the documented alternative); run the serialization
   legs (§0).
 - **Phase-close:** run the §0 battery.
+
+**Landed 2026-07-05 (this session) — all green.**
+- **`CellSocketWdgt.coffee` NEW** — the real socket (owner decision, seed of Phase 8): a
+  transparent (`@color = nil`) freefloating child at the cell rect that HOSTS the cell's
+  value/presenter widget (`hostNoSettle` / `_unhostNoSettle`), wires an interactive value-widget
+  (`wireValueWidget`), and is the connection target (`cellInput` → the sheet's
+  `_markCellStaleFromSocketNoSettle`). Serializes `@address` + `@hostedWidget` (a ref to its child,
+  so a slider's dragged position rides the tree); `_sheetWidget` + `presentedValue` transient. Both
+  branch-2 presenters AND branch-1 value-widgets now mount in sockets (unified), replacing Phase 3's
+  direct-child presenter maps.
+- **Retain-and-remount = the phase's spine (spec §13, RECOMMENDED option taken, NOT the
+  recompute-and-replace alternative).** `SpreadsheetWdgt._reconcileCellSocketNoSettle` (renamed from
+  `_reconcileCellPresenterNoSettle`, now RETURNS the value to cache) RETAINS an existing hosted widget
+  of the same class, discarding the freshly-constructed throwaway. This is required for the LIVE case
+  (a drag marks the cell stale → recompute must not reset the widget being dragged), the SAVE/LOAD case
+  (a restored slider is kept, its dragged position survives), and Phase 8 scroll — one rule. Restore
+  path: `recommitAllCells` → `_reindexCellSocketsNoSettle` (rebuild address→socket index from the
+  restored socket children, destroy strays) → recompute retains value-widgets / rebuilds presenters —
+  replaces Phase 3's `_disposeAllCellPresentersNoSettle` sweep (which would have destroyed the widget
+  state). A headless probe (13/13) verified mount / exported-ref / drag→propagation / live-retain
+  (identity stable) / save-load-retain (value 77 survived) / restored-widget re-drag BEFORE the macro.
+- **Exported value = `Widget.exportedValue`'s first live consumer.** `SheetCellRecord.exportedCellValue`
+  (widget → `exportedValue()`, else self) is what a reference yields (`SheetModel.exportedValueAt` at
+  the read site) AND what `dataflowRecompute`/`dataflowValue` return for the engine cutoff — because a
+  `Widget` has no `.equals`, so an identity cutoff would stop a dragged slider from propagating.
+  `SliderWdgt.getValue: -> @value` added (§1.15). `SpreadsheetWdgt.hostedWidgetAt` is the PUBLIC
+  accessor (a macro's `._cellSockets` reach tripped layering gate [D] — added the public API instead).
+- **Interactivity IN wired per Scenario A** (`setTargetAndActionWithOnesPickedFromMenu nil, nil, socket,
+  "cellInput"`; signature verified — first two args ignored, no `_cellInputConnector` so it routes to
+  the plain public `cellInput` = no settle). The wire fires once at mount (`reactToTargetConnection`),
+  costing one extra pooled pass — accepted. Drag-and-DROP of desktop widgets into cells DEFERRED.
+- **Serialized surface changed → both serialization legs run + green.** Rig `sheet` fixture grew F1 =
+  a slider cell; new `spreadsheet.roundtrip.sockets` (2 rich cells = 2 sockets, round-trips) +
+  `spreadsheet.roundtrip.sliderRetain` (drag→77, save, load, assert 77 survived) checks; old
+  `colorPresenter` renamed `sockets`. Legs: 24 native + 34 SWCanvas + 7 file, all green.
+- **Verification:** `fg build` 0 violations; new `SystemTest_macroSpreadsheetSliderCell` captured +
+  verified dpr1 + dpr2 + eyeballed (slider mounts at 30 → drag → thumb right, B1 = 94); `fg gauntlet`
+  **179 dpr1/dpr2/webkit + apps + tiernaming/settle/capstone all PASS** (webkit-verified the new test
+  cross-engine); `fg homepage` BOOT OK (`SliderWdgt.getValue` ships). **NO benign inspector recapture**
+  (nothing added to the base `Widget` this phase — the readers landed on `SliderWdgt`/`SheetCellRecord`).
+- **v1 limitations (documented in `src/spreadsheet/CLAUDE.md`):** (a) sockets are freefloating,
+  positioned at mount — a sheet that MOVES after mounting rich cells leaves them behind (shared with
+  Phase-3 presenters; Phase 8's laid-out cells retire it); (b) the retain check re-constructs a
+  throwaway widget per recompute to read its class — a minor cost. The interim Phase-3 presenter-
+  serialization deviation is now CLEANED (sockets + reconcile-on-restore replace the sweep).
 
 ### Phase 5 — time sources
 

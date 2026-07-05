@@ -2,8 +2,9 @@
 # §9.1). "Painted chrome, widgetized contents": the widget's own paint draws the gridlines,
 # the lettered column headers / numbered row headers, the selection, and the plain cell VALUES
 # DIRECTLY — no widget-per-cell (that would defeat the framework's lack of widget
-# virtualization). A live child widget (the socket) exists only for a cell being EDITED (the
-# overlay editor, Phase 2b) or, later, holding/presenting a rich widget (Phase 4).
+# virtualization). A live child widget exists only for a cell being EDITED (the overlay editor,
+# Phase 2b) or presenting a RICH value — a CellSocketWdgt (Phase 4) that hosts a cell's live
+# value-widget (a `new SliderWdgt`, branch 1) or presenter (a Color → a swatch, branch 2).
 #
 # The data lives in @model (a SheetModel, sparse Map keyed "A1"); each cell is a SheetCellRecord
 # — a dataflow NODE. Committing an edit compiles the source once (FormulaCompiler) and marks the
@@ -32,13 +33,16 @@
 
 class SpreadsheetWdgt extends Widget
 
-  # transient UI state (rebuilt by interaction, never document data): the in-progress edit and
-  # its live overlay editor are dropped from a snapshot (a mid-edit save restores to a settled,
-  # not-editing sheet). The cell-presenter indexes are transient too — the presenter widgets are
-  # DERIVED from cell values (spec §9.4, "one-way glass"), so they are rebuilt from @model on
-  # restore/duplicate (recommitAllCells → drain → reconcile), never round-tripped as document data.
-  # @model / @selected* ARE document state and serialize normally.
-  @serializationTransients: ["_editing", "_editBuffer", "_editCol", "_editRow", "_editor", "_cellPresenters", "_presentedValues"]
+  # transient UI state (rebuilt by interaction, never document data): the in-progress edit and its
+  # live overlay editor are dropped from a snapshot (a mid-edit save restores to a settled,
+  # not-editing sheet). The cell-socket INDEX (@_cellSockets: address → CellSocketWdgt) is transient
+  # too — but note the socket WIDGETS themselves are ordinary children and DO ride the tree, so a
+  # widget-valued cell's live widget (a dragged slider's position) survives save/load (spec §13
+  # retain-and-remount). On restore the index is rebuilt from those socket children
+  # (_reindexCellSocketsNoSettle → recommitAllCells → drain → reconcile): a DERIVED presenter (a
+  # Color's swatch, spec §9.4 "one-way glass") is rebuilt from the value, a state-bearing value-widget
+  # is RETAINED. @model / @selected* ARE document state and serialize normally.
+  @serializationTransients: ["_editing", "_editBuffer", "_editCol", "_editRow", "_editor", "_cellSockets"]
 
   # fixed grid geometry (no column resize in v1)
   headerColWidth: 34     # the left row-number header column
@@ -72,13 +76,12 @@ class SpreadsheetWdgt extends Widget
     @_editBuffer = ""
     @_editCol = nil
     @_editRow = nil
-    # cell-presenter indexes (spec §9.4 classify→present): a cell whose value answers cellPresenter()
-    # gets a live child widget (a Color → a swatch) mounted in its rect. @_cellPresenters maps the
-    # cell address → that widget; @_presentedValues maps address → the value it currently reflects
-    # (the churn-skip: an unchanged value keeps its presenter). Both are transient + rebuilt by the
-    # drain (see _reconcileCellPresenterNoSettle).
-    @_cellPresenters = new Map
-    @_presentedValues = new Map
+    # cell-socket index (spec §9.3/§9.4 classify→present): a cell whose value IS a Widget (branch 1)
+    # or answers cellPresenter() (branch 2) mounts a CellSocketWdgt in its rect, hosting that widget.
+    # Maps the cell address → its socket. Scalars paint directly (no socket). TRANSIENT (the socket
+    # widgets themselves ride the tree as children; this index is rebuilt from them on restore by
+    # _reindexCellSocketsNoSettle, and grown by the drain — see _reconcileCellSocketNoSettle).
+    @_cellSockets = new Map
     @setColor @backgroundColorGrid
     @_applyExtent new Point @_gridWidth(), @_gridHeight()
     return
@@ -179,17 +182,18 @@ class SpreadsheetWdgt extends Widget
       row += 1
 
     # committed cell VALUES, painted directly (no widget-per-cell). Only stored cells (sparse)
-    # are visited; a value being edited is shown by its live overlay editor, and a value that
-    # PRESENTS as a widget (a Color → a swatch, spec §9.4) is drawn by that mounted presenter — both
-    # are skipped here. A SheetError paints in the error colour as its badge ("#SYNTAX"). No overflow
-    # clipping in v1 (values are short) — a later polish, with centring.
+    # are visited; a value being edited is shown by its live overlay editor, and a value HOSTED in a
+    # socket — a widget-valued cell (branch 1) or a value that presents as a widget (a Color → a
+    # swatch, branch 2, spec §9.4) — is drawn by that mounted widget, so both are skipped here. A
+    # SheetError paints in the error colour as its badge ("#SYNTAX"). No overflow clipping in v1
+    # (values are short) — a later polish, with centring.
     aContext.font = @_gridFont()
     @model.forEachCell (cell, address) =>
       cr = @model.colRowFor address
       return unless cr?
       return if cr.col >= @numCols or cr.row >= @numRows
       return if @_editing and cr.col is @_editCol and cr.row is @_editRow
-      return if @_cellPresenters.has address
+      return if @_cellSockets.has address
       return unless cell.value?
       text = cell.value.toString()
       return if text is ""
@@ -379,68 +383,102 @@ class SpreadsheetWdgt extends Widget
     @changed()
     return
 
-  # ── cell presenters: classify → present (spec §9.4) ──────────────────────────────────────
+  # ── cell sockets: classify → present (spec §9.3/§9.4) ────────────────────────────────────
   # Called from SheetCellRecord._cacheValue right after a cell recomputes, so it runs INSIDE the
   # dataflow drain's layout settle (DataflowEngine._drainOnePass wraps the pass in
   # world._settleLayoutsAfter) — hence every helper here is a NoSettle core, exactly like the editor.
   #
-  # The fallback chain: a value that answers cellPresenter() (a Color) mounts the returned widget
-  # (branch 2); anything else falls back to painted toString() text (branch 3) — the sheet's default.
-  # Branch 1 (the value IS a Widget → mount it directly) is the widget-valued cell, plan Phase 4.
-  #
-  # Lifecycle (spec §13, decided here): REBUILD on value change, don't reuse-and-update. A branch-2
-  # presenter is pure display with no interactive state to preserve, and rebuilding keeps the sheet
-  # value-class-agnostic (no per-class "update this widget from that value" protocol — it just calls
-  # cellPresenter() again). The churn-skip below means an unchanged value keeps its widget, so a
-  # steady cell rebuilds nothing; interactive presenters that must keep state are the widget-VALUED
-  # branch (Phase 4), which is never rebuilt from a formula.
-  _reconcileCellPresenterNoSettle: (cell) ->
-    return unless cell?
+  # RETURNS the value to CACHE on the record: normally `value` unchanged, but for a widget-valued cell
+  # that keeps its existing widget the RETAINED instance (so the record's @value IS the mounted
+  # widget). The fallback chain (spec §9.4):
+  #   branch 1 — value IS a Widget → host it live in a CellSocketWdgt (a slider, a picker). RETAIN an
+  #     existing hosted widget of the SAME class: its runtime state IS the cell's live state (a dragged
+  #     slider's position; a restored widget's saved position — spec §13 retain-and-remount), so the
+  #     just-constructed throwaway is discarded and the live one kept. This is exactly what lets a
+  #     widget-valued cell be marked stale by its OWN widget's interaction (cellInput → markStale)
+  #     WITHOUT the recompute resetting the widget being dragged. (Re)build only on first mount / class
+  #     change. The socket wires the widget so its firings mark the cell stale (interactivity in).
+  #   branch 2 — value answers cellPresenter() (a Color → a swatch) → host that presenter. Lifecycle
+  #     (spec §13): REBUILD on value change; a churn-skip keeps an unchanged value's presenter, so a
+  #     steady cell rebuilds nothing. No reuse-and-update — keeps the sheet value-class-agnostic (it
+  #     just calls cellPresenter() again). A presenter is "one-way glass": it is NOT wired.
+  #   branch 3 — scalar / error / nil → no widget: drop any socket; the grid paints toString().
+  _reconcileCellSocketNoSettle: (cell, value) ->
+    return value unless cell?
     address = cell.address
-    value = cell.value
-    hadPresenter = @_cellPresenters.has address
-    # branch 3: the value declines to present as a widget (a number, string, error, nil) — drop any
-    # presenter it used to have and let the grid paint its toString() text.
-    unless value? and typeof value.cellPresenter is "function"
-      @_disposeCellPresenterNoSettle address if hadPresenter
-      return
-    # churn-skip: an unchanged value keeps its mounted presenter (immutable Color compares by value).
-    return if hadPresenter and @_presentedValuesEqual @_presentedValues.get(address), value
-    # (re)build: dispose the stale presenter, then mount a fresh one from the value's own class.
-    @_disposeCellPresenterNoSettle address if hadPresenter
-    presenter = value.cellPresenter()
-    return unless presenter?    # a value class may answer cellPresenter yet decline (nil) → text
-    @_mountCellPresenterNoSettle address, value, presenter
-    return
+    socket = @_cellSockets.get address
+    # branch 1 — a live Widget value
+    if value instanceof Widget
+      if socket?.hostedWidget? and socket.hostedWidget.constructor is value.constructor
+        return socket.hostedWidget                 # RETAIN (drag/restore keep the live instance)
+      socket = @_ensureCellSocketNoSettle address
+      return value unless socket?                   # off-viewport guard (v1: every cell is on-screen)
+      socket.hostNoSettle value
+      socket.wireValueWidget value
+      @changed()
+      return value
+    # branch 2 — a value that presents as a widget
+    if value? and typeof value.cellPresenter is "function"
+      return value if socket?.hostedWidget? and @_presentedValuesEqual socket.presentedValue, value
+      presenter = value.cellPresenter()
+      if presenter?
+        socket = @_ensureCellSocketNoSettle address
+        return value unless socket?
+        socket.hostNoSettle presenter
+        socket.presentedValue = value
+        @changed()
+        return value
+      # a value class may answer cellPresenter yet decline (nil) → fall through to branch 3
+    # branch 3 — scalar / error / nil
+    @_disposeCellSocketNoSettle address if socket?
+    value
 
   # a.equals?(b) when the value defines it (Color does), else identity — mirrors the engine's cutoff.
   _presentedValuesEqual: (a, b) ->
     if a?.equals? then a.equals b else a is b
 
-  # mount the presenter widget in the cell's rect: a freefloating child at the cell's absolute
-  # position, inset by the gridline so header/gridlines/selection stay visible (the _addNoSettle +
-  # _apply* idiom the editor uses). It paints itself; the value-paint loop skips this address.
-  _mountCellPresenterNoSettle: (address, value, presenter) ->
+  # the socket for an address, creating + attaching + positioning it if absent (repositioning an
+  # existing one too — cheap, keeps a rebuilt cell correct). A freefloating child at the cell's
+  # absolute rect, inset by the gridline so header/gridlines/selection stay visible (the _addNoSettle
+  # + _apply* idiom the overlay editor uses). Returns nil for a cell outside the fixed viewport (v1
+  # has none — every cell is on-screen; Phase 8's viewport-bounded materialisation is where that bites).
+  _ensureCellSocketNoSettle: (address) ->
     cr = @model.colRowFor address
-    return unless cr?
-    return if cr.col >= @numCols or cr.row >= @numRows
+    return nil unless cr?
+    return nil if cr.col >= @numCols or cr.row >= @numRows
+    socket = @_cellSockets.get address
+    unless socket?
+      socket = new CellSocketWdgt address
+      socket.attachSheet this
+      @_addNoSettle socket
+      @_cellSockets.set address, socket
     rect = @_cellRectLocal cr.col, cr.row
     inset = 2
-    @_addNoSettle presenter
-    presenter._applyExtent new Point rect.w - 2 * inset, rect.h - 2 * inset
-    presenter._applyMoveTo @position().add new Point rect.x + inset, rect.y + inset
-    @_cellPresenters.set address, presenter
-    @_presentedValues.set address, value
-    presenter.changed()
-    return
+    socket._applyExtent new Point rect.w - 2 * inset, rect.h - 2 * inset
+    socket._applyMoveTo @position().add new Point rect.x + inset, rect.y + inset
+    socket
 
-  _disposeCellPresenterNoSettle: (address) ->
-    presenter = @_cellPresenters.get address
-    @_cellPresenters.delete address
-    @_presentedValues.delete address
-    presenter?._fullDestroyNoSettle()
+  _disposeCellSocketNoSettle: (address) ->
+    socket = @_cellSockets.get address
+    return unless socket?
+    @_cellSockets.delete address
+    socket._fullDestroyNoSettle()
     @changed()
     return
+
+  # the connection target a hosted interactive value-widget fires into (via CellSocketWdgt.cellInput):
+  # mark the cell STALE so the drain recomputes its dependents (spec §9.3 — a drag = a per-cycle
+  # recompute of the closure). A pooled dataflow mark, NOT a layout settle, so no settle is opened here
+  # (the drain owns any settle for the recompute).
+  _markCellStaleFromSocketNoSettle: (address) ->
+    cell = @model.cellAt address
+    world.dataflow?.markStale cell if cell?
+    return
+
+  # PUBLIC: the live widget a cell currently hosts — its value-widget (branch 1, a slider) or
+  # presenter (branch 2, a swatch), or nil for a scalar / empty cell. The public reach into a
+  # mounted cell widget (a macro drags `sheet.hostedWidgetAt "A1"`, never the private socket index).
+  hostedWidgetAt: (address) -> @_cellSockets.get(address)?.hostedWidget
 
   # ── serialization / duplication (spec §2: the engine index is derived + disposable) ──────────
 
@@ -450,30 +488,37 @@ class SpreadsheetWdgt extends Widget
   # than serializing/copying the shared engine — the two hooks below call this.
   # NoSettle core (not a self-settling wrapper): the notification hooks below call it directly, and
   # the copy/deserialize gesture owns the enclosing settle (layering rule [J]); both hooks fire on a
-  # DETACHED sheet (orphan), so the child sweep settles its own subtree on attach anyway. First drop
-  # every DERIVED child — the sheet's only children are the transient overlay editor and the cell
-  # presenters (a Color's swatch, spec §9.4), both rebuilt from @model, never document data (that is
-  # @model). This also sweeps presenter widgets that rode a whole-world snapshot as tree children:
-  # their address→presenter index is transient, so a restored sheet cannot re-associate them and the
-  # recompute below would otherwise ADD a second presenter per cell. Rebuilding from values keeps
-  # restore/duplicate exact. (Phase 4's socket makes presenters properly non-serialized; until then
-  # this is the reconciliation.)
+  # DETACHED sheet (orphan). First RE-INDEX the cell sockets (below) from the restored/copied socket
+  # children, so the recompute RETAINS a widget-valued cell's live widget instead of rebuilding it
+  # (spec §13); presenters (derived) rebuild from values.
   recommitAllCells: ->
     return unless @model?
-    @_disposeAllCellPresentersNoSettle()
+    @_reindexCellSocketsNoSettle()
     @model.forEachCell (cell) -> FormulaCompiler.commit cell, cell.source
     @model.forEachCell (cell) -> world.dataflow?.markStale cell
     return
 
-  # drop EVERY child (all derived: the overlay editor + cell presenters) and reset the transient
-  # edit + presenter indexes, so the next drain rebuilds presenters from cell values.
-  _disposeAllCellPresentersNoSettle: ->
-    child._fullDestroyNoSettle() for child in @children.slice()
+  # After restore/duplicate the transient @_cellSockets index is empty, but the socket WIDGETS rode
+  # the tree as this sheet's children — each carrying its @address and its hosted value/presenter
+  # widget (a restored slider keeps its dragged position, spec §13). Rebuild the address→socket index
+  # from them and re-attach the back-ref, so the recompute above RETAINS a widget-valued cell's
+  # restored widget (class match) rather than rebuilding it — a DERIVED presenter is rebuilt from the
+  # value (its churn-skip @presentedValue is nil after restore, which forces the rebuild), a
+  # state-bearing value-widget is kept. DESTROY any non-socket stray child (a mid-edit overlay editor
+  # that rode a subtree snapshot) and reset the transient edit state.
+  _reindexCellSocketsNoSettle: ->
     @_editing = false
     @_editor = nil
     @_editBuffer = ""
-    @_cellPresenters = new Map
-    @_presentedValues = new Map
+    @_editCol = nil
+    @_editRow = nil
+    @_cellSockets = new Map
+    for child in @children.slice()
+      if child instanceof CellSocketWdgt
+        child.attachSheet this
+        @_cellSockets.set child.address, child
+      else
+        child._fullDestroyNoSettle()
     return
 
   # after a deep-copy (the duplicate gesture → fullCopy → deepCopy): the copier runs this once the

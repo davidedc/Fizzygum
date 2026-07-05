@@ -72,9 +72,14 @@ class SheetModel
     @cells.set address, record
     record
 
-  # the plain VALUE at an address (nil for an untouched cell). References resolve through here;
-  # the widget-exportedValue rule (a ref to a widget-valued cell) arrives in Phase 3/4.
+  # the raw VALUE at an address (nil for an untouched cell) — what the grid PAINTS / a Color mounts.
   valueAt: (address) -> @cells.get(address)?.value
+
+  # the EXPORTED value at an address (spec §9.3): what a REFERENCE to the cell yields — a
+  # widget-valued cell exports its widget's exportedValue(), everything else exports itself.
+  # References resolve through here (SheetCellRecord._resolveBoundName), keeping @value the raw
+  # widget for presentation while dependents consume the scalar it exports.
+  exportedValueAt: (address) -> @cells.get(address)?.exportedCellValue()
 
   # paint / recompute helper: visit every stored cell as (record, address).
   forEachCell: (fn) -> @cells.forEach fn
