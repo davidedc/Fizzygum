@@ -528,6 +528,11 @@ class Widget extends TreeNode
     @unregisterThisInstance()
     world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
     world.keyboardEventsReceivers.delete @
+    # a connection-bearing widget that became a dataflow node (6b, wires switch ON) drops its edges from the
+    # shared engine index on death — a dead node left in @edgesFrom/@edgesTo is a leak AND a ghost recompute
+    # (spec §2, the node-death API). A cheap no-op for a widget that was never a node; gated on the switch so
+    # the switch-OFF teardown is byte-identical (no widget is ever a node then).
+    world.dataflow?.removeAllEdgesOf @ if world.dataflowWiresEnabled
     # TODO note that there might be other data structures that
     # reference this widget that should have that reference removed.
     # The duplication method deals with a similar situation, so you
@@ -1808,6 +1813,12 @@ class Widget extends TreeNode
   # (Phase 4), keeping this one uniform chain.
   exportedValue: ->
     @getColor?() ? @getValue?() ? @text
+
+  # The dataflow node-protocol value reader (spec §3; DataflowEngine header): a widget node's current value IS
+  # its exported value, so when a ported wire (plan Phase 6b, world.dataflowWiresEnabled) delivers, the engine
+  # PULLS the producer widget's exportedValue, and the equal-value cutoff compares it after each edge apply.
+  # Plain widgets (slider, text) inherit this; computing patch nodes override it to return their @output.
+  dataflowValue: -> @exportedValue()
 
   # Widget displaying ---------------------------------------------------------
 

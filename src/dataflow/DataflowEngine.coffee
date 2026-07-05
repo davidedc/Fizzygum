@@ -96,6 +96,9 @@ class DataflowEngine
     # Maps are strong, hence the explicit removeAllEdgesOf node-death API below.
     @lastValues = new WeakMap
     @_recalculatingDataflow = false
+    # the node the engine is currently applying an edge INTO (6b): its own onward-fire tail re-marks it —
+    # the ECHO — which markStale then drops (spec §1.13). nil outside _processNode.
+    @_applyingNode = nil
     # instrumentation (spec §10 measured-convergence posture)
     @lastDrainPassCount = 0
     @maxObservedPassCount = 0
@@ -148,6 +151,22 @@ class DataflowEngine
       # correctly decrements its source.
       @_notifySubscriberCount producer
     @edgesTo.delete consumer
+    return
+
+  # Remove every edge whose PRODUCER is this node — the inverse of removeEdgesInto. A re-wired controller
+  # (ControllerMixin.setTargetAndActionWithOnesPickedFromMenu pointing @target somewhere new) drops its single
+  # old out-edge before declaring the new one, so a stale edge is never left behind as a ghost (6b).
+  removeOutgoingEdgesOf: (producer) ->
+    outSet = @edgesFrom.get producer
+    return unless outSet?
+    outSet.forEach (rec) =>
+      inSet = @edgesTo.get rec.consumer
+      if inSet?
+        inSet.delete producer
+        @edgesTo.delete rec.consumer if inSet.size is 0
+    @edgesFrom.delete producer
+    # producer just lost all its subscribers; a time source would deregister here (a plain controller no-ops).
+    @_notifySubscriberCount producer
     return
 
   # The node-death entry: remove this node as BOTH producer and consumer, and forget any pooled
@@ -220,9 +239,19 @@ class DataflowEngine
     return
 
   markStale: (node, forced = false) ->
-    # Dual-mode. During a drain ALL marking demotes to the bare pool atom (demote-not-throw,
-    # spec §5). Outside a drain the per-event mini-pass lane (firesPerEvent wires, spec §4)
-    # arrives in Phase 6b; until then everything pools.
+    # Dual-mode. During a drain ALL marking demotes to the bare pool atom (demote-not-throw, spec §5) —
+    # EXCEPT the ECHO (spec §1.13, NOMENCLATURE "echo"): while the engine is APPLYING an edge into a node,
+    # that node's own unconditional onward-fire tail (a ported controller's updateTarget) re-marks the very
+    # node being applied. That is redundant — the engine already owns that node's downstream traversal — so
+    # it is DROPPED, which keeps a driven circuit at ONE pass (no pooled echo to drain next pass). Any OTHER
+    # mid-drain marking (a genuine sink-onto-source, a formula side effect) still pools. The suppression is
+    # gated on the wires switch so the switch-OFF spreadsheet drain is byte-identical (its cells never
+    # re-mark the applying node; only ported wires emit the echo).
+    #   The per-event mini-pass lane (firesPerEvent=true, spec §4) is DEFERRED in 6b: the flag rides the edge
+    # record (addEdge opts) but delivery POOLS for now — the two lanes are screen-indistinguishable (§4), no
+    # test exercises per-event DELIVERY (6a only asserts the flag flips), and a truly synchronous scoped
+    # mini-pass fights the drain's per-pass settle-open (spec §13 open: per-event downstream scoping).
+    return if world.dataflowWiresEnabled and @_recalculatingDataflow and (node is @_applyingNode) and not forced
     @__poolStale node, forced
     return
 
@@ -283,28 +312,77 @@ class DataflowEngine
     producers.forEach (p) -> found = true if changed.has p
     found
 
+  # 6b — apply each incoming WIRE edge (a producer→consumer edge carrying an ACTION) whose producer CHANGED
+  # this pass: push the producer's pulled value onto the consumer via the action, routed through the target's
+  # _<action>Connector lane if it defines one, else the public action — the SAME routing
+  # ControllerMixin._fireConnection uses, so the non-settling connector lane (§1.5/§1.14) is preserved and
+  # joins the pass settle. Sheet reference edges carry no action and are skipped, so the spreadsheet client is
+  # untouched. Called only while world.dataflowWiresEnabled (the only time wire edges carry an action).
+  _applyIncomingWireEdges: (consumer, changed) ->
+    producers = @edgesTo.get consumer
+    return unless producers?
+    producers.forEach (producer) =>
+      return unless changed.has producer
+      rec = @_wireEdgeRecord producer, consumer
+      return unless rec?.action?
+      @_applyWireValue consumer, rec.action, @pullValue(producer)
+    return
+
+  _wireEdgeRecord: (producer, consumer) ->
+    outSet = @edgesFrom.get producer
+    return nil unless outSet?
+    found = nil
+    outSet.forEach (rec) -> found = rec if rec.consumer is consumer
+    found
+
+  _applyWireValue: (consumer, action, value) ->
+    connectorName = "_#{action}Connector"
+    actionToCall = if consumer[connectorName]? then connectorName else action
+    consumer[actionToCall]?.call consumer, value
+    return
+
   _processNode: (node, changed, forcedSet) ->
-    newVal = nil
-    if node.dataflowRecompute?
-      oldVal = @lastValues.get node
-      try
-        newVal = node.dataflowRecompute()
-      catch error
-        newVal = @_noteRecomputeError node, error, oldVal
-      @lastValues.set node, newVal
-      @lastDrainRecomputeCount += 1
-      # equal-value cutoff: a recomputed value equal to the old one marks nothing downstream
-      # (force-fire, spec §8, is exempt).
-      if forcedSet.has(node) or not @_valuesEqual oldVal, newVal
-        changed.add node
-    else
-      # pure source / sink: no formula to cut off on, so conservatively always-changed. Widget-
-      # node value-cutoff (read dataflowValue after an incoming edge apply) arrives in Phase 6b.
-      changed.add node
-      newVal = @pullValue node
-    # sink application hook — routes via the node's _<action>Connector lane (Phase 2 cells,
-    # Phase 6 wire edge-records); joins the pass settle opened by _drainOnePass.
-    node.dataflowApply?(newVal)
+    # @_applyingNode names the node the engine is applying INTO, so its own onward-fire tail (a ported
+    # controller's updateTarget → markStale @) is recognised as the echo and dropped (see markStale).
+    @_applyingNode = node
+    try
+      # 6b — CIRCUIT EDGES: before recomputing/reading this node, APPLY each incoming WIRE edge whose
+      # producer changed this pass, pushing the producer's pulled value onto this node via the wire's action
+      # (routed through the target's _<action>Connector lane, exactly as _fireConnection would). Sheet
+      # reference edges carry no action, so they are skipped — the spreadsheet client is unaffected.
+      @_applyIncomingWireEdges node, changed if world.dataflowWiresEnabled
+      newVal = nil
+      if node.dataflowRecompute?
+        oldVal = @lastValues.get node
+        try
+          newVal = node.dataflowRecompute()
+        catch error
+          newVal = @_noteRecomputeError node, error, oldVal
+        @lastValues.set node, newVal
+        @lastDrainRecomputeCount += 1
+        # equal-value cutoff: a recomputed value equal to the old one marks nothing downstream
+        # (force-fire, spec §8, is exempt).
+        if forcedSet.has(node) or not @_valuesEqual oldVal, newVal
+          changed.add node
+      else
+        newVal = @pullValue node
+        if world.dataflowWiresEnabled and @edgesTo.get(node)?.size > 0
+          # 6b widget SINK (a node reached via wire edges): equal-value cutoff on the APPLIED value — read
+          # its value after the incoming applies and traverse onward only if it changed (spec §8). Alongside
+          # the visit-once rule this walks a driven ring exactly one lap and stops a DAG limb early.
+          if forcedSet.has(node) or not @_valuesEqual (@lastValues.get node), newVal
+            changed.add node
+          @lastValues.set node, newVal
+        else
+          # pure source / seed (a time source, an untargeted seed): no incoming edge to cut off on, so
+          # conservatively always-changed — the pre-6b behaviour, preserved byte-identical when the switch
+          # is OFF (no widget is ever a node then, so only sources reach here).
+          changed.add node
+      # sink application hook — a node applying its OWN value (a cell → its socket/presenter); routes via
+      # the node's _<action>Connector lane and joins the pass settle opened by _drainOnePass.
+      node.dataflowApply?(newVal)
+    finally
+      @_applyingNode = nil
     return
 
   _noteRecomputeError: (node, error, oldVal) ->

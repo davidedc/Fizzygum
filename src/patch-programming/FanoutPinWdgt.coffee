@@ -45,6 +45,8 @@ class FanoutPinWdgt extends Widget
 
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
+    # 6b — a bang is a FORCE-fire (spec §8): mark stale+forced so it propagates despite the equal-value cutoff.
+    return world.dataflow.markStale @, true if world.dataflowWiresEnabled
     return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
     @updateTarget()
 
@@ -52,6 +54,9 @@ class FanoutPinWdgt extends Widget
   updateTarget: ->
     @_fireConnection @inputValue
     return
+
+  # 6b node protocol: a pin's fired value is @inputValue (not the Widget.exportedValue chrome text).
+  dataflowValue: -> @inputValue
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super

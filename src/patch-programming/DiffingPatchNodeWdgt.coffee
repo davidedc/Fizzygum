@@ -78,6 +78,12 @@ class DiffingPatchNodeWdgt extends Widget
     @_popUpTargetPropertyMenu theTarget, theTarget.numericalSetters()
 
   updateTarget: (connectionsCalculationToken, fireBecauseBang, fireBecauseOneHotInputHasBeenUpdated) ->
+    # 6b — under the engine, skip the legacy freshness gate (the allConnectedInputsAreFresh deadlock, spec §8):
+    # ANY input change marks me STALE and the drain recomputes me (dataflowRecompute pulls both stored inputs).
+    # The "hot input" one-input-fires mode collapses into this engine default; a bang marks me forced.
+    if world.dataflowWiresEnabled
+      world.dataflow.markStale @, (fireBecauseBang is true)
+      return
     # if there is no input connected, then bail
     # TODO we could be more lenient, one could enter the node value in a box in the widget for example
     # and we might issue a bang, so we'd expect the output to be pushed to the target
@@ -143,6 +149,16 @@ class DiffingPatchNodeWdgt extends Widget
   recalculateOutput: ->
     @output = @formattedDiff @input1, @input2
     @textWidget._setTextConnector @output
+
+  # ── dataflow node protocol (6b, spec §8) ─────────────────────────────────────────────────
+  # A COMPUTING node: recompute = re-diff the stored inputs (recalculateOutput refreshes the on-node display too),
+  # handing the engine the fresh @output; dataflowValue lets a consumer PULL @output and the cutoff compare it.
+  # Reached only while world.dataflowWiresEnabled.
+  dataflowRecompute: ->
+    @recalculateOutput()
+    @output
+
+  dataflowValue: -> @output
 
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->

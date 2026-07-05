@@ -22,7 +22,7 @@ unchecked, then update the ledger in the same commit that completes the phase.**
 - [x] Phase 4 — widget-valued cells & sockets
 - [x] Phase 5 — time sources (`seconds` / `frame`)
 - [x] Phase 6a — `firesPerEvent` wire property + menu toggle
-- [ ] Phase 6b — patch-programming port behind A/B switch (default OFF)
+- [x] Phase 6b — patch-programming port behind A/B switch (default OFF)
 - [ ] Phase 6c — A/B default ON, suite reconciliation
 - [ ] Phase 6d — token retirement
 - [ ] Phase 7 — docs closeout
@@ -941,6 +941,67 @@ classify→present chain), `SheetCellRecord._cacheValue` (the reconcile trigger)
   walks once per event and the entry is never re-applied, §1.11); the full suite passes
   with the switch OFF (default). The end-of-cycle capstone audit must stay at 0 with the
   switch ON (the drain's apply-settle discipline, §1.14, is exactly what it polices).
+
+**Landed 2026-07-05 (this session) — all green.** The patch-programming circuits are now the engine's
+SECOND client, behind `world.dataflowWiresEnabled` (default OFF). 12 source files; the switch-OFF path is
+byte-identical (every change is gated), so the whole suite runs legacy and stays green while 6b lands.
+- **The switch** — `WorldWdgt.dataflowWiresEnabled: false` (PROTOTYPE default beside `deferredSettlingEnabled`,
+  ~92; own-only-when-set → serialized surface unchanged, no fixture ever writes it).
+- **The core is EDGE application in the engine, not a per-node hook.** When ON, `_processNode` (guarded)
+  first calls NEW `_applyIncomingWireEdges`: for each incoming wire edge whose producer CHANGED this pass, it
+  pushes `pullValue(producer)` onto the consumer via the wire's action, routed through the target's
+  `_<action>Connector` lane if present else the public action (NEW `_applyWireValue`/`_wireEdgeRecord` — the
+  SAME routing `_fireConnection` used, so the non-settling connector lane §1.5/§1.14 is preserved and joins the
+  pass settle). Sheet reference edges carry no `action` and are skipped → the spreadsheet client is untouched.
+  A widget SINK (a node with incoming edges) then takes an equal-value CUTOFF on its pulled value (NEW else-branch,
+  switch-gated); a pure source (time source / seed, no incoming edges) stays always-changed = pre-6b behaviour.
+- **The echo (§1.13) is SUPPRESSED, not pooled** → a driven circuit is ONE pass. `@_applyingNode` (set around
+  `_processNode`) names the node being applied into; `markStale @` on that node while applying it is dropped
+  (gated on the switch, so switch-OFF `markStale` is byte-identical). Measured: the 6-node °C↔°F ring drains in
+  **1 pass / 2 recomputes** per event (probe below), both drag directions.
+- **`Widget.dataflowValue: -> @exportedValue()`** (the pull/cutoff reader). Overridden where exportedValue
+  wouldn't carry the fired value: `CalculatingPatchNodeWdgt`/`DiffingPatchNodeWdgt`/`RegexSubstitutionPatchNodeWdgt`
+  → `@output`; `PaletteWdgt` → `@choice`; `FanoutWdgt`/`FanoutPinWdgt` → `@inputValue`.
+- **ControllerMixin** — `_fireConnection` switch-gates to `world.dataflow.markStale @` (a wire carries NO value;
+  the drain pulls; every controller's `updateTarget` = `@_fireConnection <val>` becomes a markStale with NO
+  per-controller change). `setTargetAndActionWithOnesPickedFromMenu` additionally declares the edge
+  (`removeOutgoingEdgesOf @` — NEW inverse of removeEdgesInto, for re-wiring — then `addEdge @, @target,
+  {action, firesPerEvent}`), then the UNCHANGED `@reactToTargetConnection?()` drives each controller's exact
+  on-connect fire via the gated `_fireConnection`.
+- **Patch family** (behind the switch, both paths carried during 6b): the 3 calc-style nodes switch-gate
+  `updateTarget → markStale @, (fireBecauseBang is true)` (DELETES the `allConnectedInputsAreFresh` freshness
+  gate = the §8 deadlock) + gain `dataflowRecompute: -> @recalculateOutput(); @output`. `setInput1..4` are
+  UNCHANGED (no-token `_acceptsConnectionToken` mints+accepts; stores `@inputN`; the `updateTarget→markStale`
+  is echo-suppressed while the engine applies the input). `bang` is force-fire: patch nodes free (updateTarget's
+  `fireBecauseBang`), plain controllers (Slider/SimplePlainText/Palette/FanoutPin) switch-gate `bang → markStale
+  @, true`. FanoutWdgt (homepage-excluded) re-fans to its pins as before; the pins carry the out-edges.
+- **Node death** — `Widget._destroyNoSettle` → `world.dataflow?.removeAllEdgesOf @` (switch-gated), so a
+  destroyed connection-bearing widget drops its edges (leak + ghost recompute otherwise). Cells already did this.
+- **DEVIATIONS (rule 7).** (a) The `firesPerEvent` PER-EVENT synchronous mini-pass is DEFERRED: the flag rides
+  the edge record (`addEdge` opts, so it IS read/plumbed) but delivery POOLS for now — the two lanes are
+  screen-indistinguishable (§4), no test exercises per-event DELIVERY (6a only asserts the flag flips), and a
+  truly synchronous scoped mini-pass fights the drain's per-pass settle-open (spec §13 open: per-event
+  downstream scoping). Recorded in `markStale`'s header. (b) `reactToTargetConnection` is LEFT UNCHANGED (plan
+  said forced-on-creation); instead the gated `_fireConnection` makes it a NON-forced markStale, which PRESERVES
+  each controller's exact on-connect semantics — PaletteWdgt's empty override fires nothing on connect (a blanket
+  forced mark would spuriously fire it), Example3DPlot recomputes its plot — and non-forced still fires the ring
+  init (initial values differ). Both deviations are strictly safer and unexercised-otherwise.
+- **Acceptance verified (headless probes, throwaway):** the °C↔°F ring built with the switch ON is FRAME-IDENTICAL
+  to the same ring switch-OFF (legacy) at every observed frame, BOTH drag directions (drag °C entry to 70 → 158°F
+  ring; drag °F entry to 212 → 100°C ring); 1 pass; the entry node is never re-applied; switch-OFF shows the
+  engine drain empty (pass 0) = truly legacy. A second probe with `auditUndeclaredEndOfCycle` ON drove the ring
+  both ways + a rounding-plateau drag with **0 UNDECLARED-EOC** (capstone stays 0 with the switch ON, §1.14).
+- **11 → 2 BENIGN inspector recaptures.** `Widget.dataflowValue` adds one inherited-member row (like Phase 3's
+  `exportedValue`) → `macroDuplicatedInspectorDrivesCopiedTargetOnly` (its inherited-member list + thumb geometry
+  shift, behaviour verified unchanged — left rect still fades to 0.25, right solid). `macroInspectorResizingOK
+  EvenWhenTakenApart` renders `ControllerMixin._fireConnection`'s SOURCE in a method-browser frame, which the 6b
+  edit changed → recaptured. Both eyeballed (proper inspectors, no crash) + webkit-verified via the gauntlet.
+  [[byte-identical-not-sacred-for-benign-inspector-recapture]]. NO code contortion.
+- **Verification:** `fg build` 0 violations (no new dead methods — `dataflowValue`/`dataflowRecompute`/
+  `removeOutgoingEdgesOf` all have live callers; the switch is a property); `fg gauntlet` dpr1/dpr2/webkit 181 +
+  apps + tiernaming/settle/capstone all PASS after the 2 recaptures; both serialization legs green (surface
+  UNCHANGED — switch never set, no wire toggled); `fg homepage` BOOT OK (ControllerMixin + Calculating patch node
+  + sliders ship; Diffing/Regex/Fanout are homepage-excluded).
 
 **6c — default ON.** Flip the default; run the full suite; expect final-frame equality for
 DAG circuits and the ring. The known reconciliation set (grep the suite for

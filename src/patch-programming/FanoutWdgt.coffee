@@ -43,6 +43,13 @@ class FanoutWdgt extends Widget
         target.setInput @inputValue, nil, @connectionsCalculationToken
     return
 
+  # ── dataflow node protocol (6b) ──────────────────────────────────────────────────────────
+  # A fanout is a CONSUMER (a setInput target) that re-fans @inputValue to its pins in updateTarget; the pins are
+  # the producers carrying their own out-edges (each markStale'd via the gated _fireConnection). dataflowValue
+  # answers @inputValue for the cutoff. Reached only while world.dataflowWiresEnabled (homepage-excluded; the
+  # fanout path is verified switch-ON in 6c, not the 6b ring acceptance).
+  dataflowValue: -> @inputValue
+
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
     menuEntriesStrings.push "input"

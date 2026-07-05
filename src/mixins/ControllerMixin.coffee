@@ -32,6 +32,17 @@ ControllerMixin =
         if @target[@action + "IsConnected"]?
           @target[@action + "IsConnected"] = true
         @connectionsCalculationToken = world.makeNewConnectionsCalculationToken()
+        # 6b -- a wire IS a dataflow edge (spec §8): declare producer(me) -> target in the engine index, with
+        # the action + the Phase-6a firesPerEvent policy riding the edge record. Re-wiring drops my single old
+        # out-edge first. The index is derived/disposable (spec §2), re-declared by the client on load/copy --
+        # here the client is the wire itself, re-declaring on every (re)connection.
+        if world.dataflowWiresEnabled
+          world.dataflow.removeOutgoingEdgesOf @
+          world.dataflow.addEdge @, @target, {action: @action, firesPerEvent: @firesPerEvent}
+        # reactToTargetConnection is left UNCHANGED across every controller: via the gated _fireConnection it
+        # markStale's me (the initial fire), so each keeps its exact on-connect semantics -- a slider/text fires
+        # its current value, PaletteWdgt's empty override fires nothing, Example3DPlot recomputes its plot.
+        # Non-forced is sufficient (a fresh wire's producer value differs from the target's, so it propagates).
         @reactToTargetConnection?()
 
       # The ONE reactive-connection dispatch: fire @action on @target with `value` (+ the optional per-connection
@@ -43,6 +54,15 @@ ControllerMixin =
       # (menus, <action>IsConnected flags, hard-wired app circuits) and gives the routing a single home.
       _fireConnection: (value, argumentToAction = nil) ->
         return unless @target? and @action and @action != ""
+        # 6b -- under the engine a wire carries NO value: it only marks me STALE, and the drain PULLS my
+        # dataflowValue when it delivers along my edge (spec §3, notifications carry no values). So every
+        # controller's updateTarget (`@_fireConnection <myValue>`) becomes a markStale with no per-controller
+        # change; the pushed value/argumentToAction are ignored (the pull is the source of truth). markStale is
+        # echo-suppressed while the engine is applying me (DataflowEngine.markStale). A wire-less widget still
+        # returns above, matching legacy (no target = no fire).
+        if world.dataflowWiresEnabled
+          world.dataflow.markStale @
+          return
         connectorName = "_#{@action}Connector"
         actionToCall = if @target[connectorName]? then connectorName else @action
         @target[actionToCall].call @target, value, argumentToAction, @connectionsCalculationToken

@@ -84,6 +84,8 @@ class PaletteWdgt extends Widget
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
     if !@choice? then return
+    # 6b — a bang is a FORCE-fire (spec §8): mark stale+forced so it propagates despite the equal-value cutoff.
+    return world.dataflow.markStale @, true if world.dataflowWiresEnabled
     return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
     @updateTarget()
 
@@ -95,6 +97,10 @@ class PaletteWdgt extends Widget
 
     @_fireConnection @choice
     return
+
+  # 6b node protocol: a palette's fired value is its picked @choice colour (Widget.exportedValue doesn't cover
+  # it — a palette defines no getColor). Reached only while world.dataflowWiresEnabled.
+  dataflowValue: -> @choice
 
   reactToTargetConnection: ->
 

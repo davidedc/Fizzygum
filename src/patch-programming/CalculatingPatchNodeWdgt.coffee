@@ -82,6 +82,14 @@ class CalculatingPatchNodeWdgt extends Widget
     @_popUpTargetPropertyMenu theTarget, theTarget.numericalSetters()
 
   updateTarget: (connectionsCalculationToken, fireBecauseBang) ->
+    # 6b — under the engine, skip the legacy multi-input FRESHNESS GATE entirely (the allConnectedInputsAreFresh
+    # deadlock where two independently-sourced inputs never share a token, spec §8): any input change just marks
+    # me STALE (a bang marks me forced), and the drain recomputes me via dataflowRecompute — which pulls ALL my
+    # stored inputs — then delivers @output along my out-edge. markStale is echo-suppressed while the engine is
+    # applying an input into me (setInput1..4's own updateTarget tail).
+    if world.dataflowWiresEnabled
+      world.dataflow.markStale @, (fireBecauseBang is true)
+      return
     if !@setInput1IsConnected and
      !@setInput2IsConnected and
      !@setInput3IsConnected and
@@ -143,6 +151,17 @@ class CalculatingPatchNodeWdgt extends Widget
       # now we have the user-defined function in @functionFromCompiledCode
       @output = @functionFromCompiledCode?.call world, @input1, @input2, @input3, @input4
       @outputTextAreaText._setTextConnector @output + ""
+
+  # ── dataflow node protocol (6b, spec §8) ─────────────────────────────────────────────────
+  # A calc node is a COMPUTING node: recompute = run the user formula over the stored inputs (recalculateOutput,
+  # which also refreshes the on-node output display), handing the engine the fresh @output. dataflowValue lets a
+  # consumer PULL @output along my out-edge and lets the cutoff compare it — a plain Widget.exportedValue would
+  # read my chrome text, not the computed output. Reached only while world.dataflowWiresEnabled.
+  dataflowRecompute: ->
+    @recalculateOutput()
+    @output
+
+  dataflowValue: -> @output
 
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->

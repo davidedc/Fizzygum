@@ -50,6 +50,25 @@ engine's SECOND client, ported by a strangler. Landed so far:
   Phase 6b's engine delivery (behind `world.dataflowWiresEnabled`) reads it when it declares the
   edge, letting the policy ride the edge record's opts.
 
+- **6b — engine delivery behind `world.dataflowWiresEnabled` (default OFF).** When ON, a wire IS a
+  dataflow edge: `ControllerMixin.setTargetAndActionWithOnesPickedFromMenu` declares `addEdge producer →
+  target {action, firesPerEvent}` (re-wiring first `removeOutgoingEdgesOf`), and `_fireConnection` becomes
+  `markStale @` (a wire carries no value; the drain PULLS `dataflowValue`). **Edges are applied BY THE
+  ENGINE**: `_processNode` → `_applyIncomingWireEdges` pushes each changed producer's value onto the consumer
+  via the wire action, routed through the target's `_<action>Connector` lane (same routing `_fireConnection`
+  used, joins the pass settle). A widget SINK then takes the equal-value cutoff on its pulled `dataflowValue`
+  (`Widget.dataflowValue -> @exportedValue()`; patch nodes override → `@output`, palette → `@choice`, fanout
+  → `@inputValue`); a pure source stays always-changed. The **echo** (a ported controller's `updateTarget`
+  tail re-marking the node the engine is applying) is DROPPED via `@_applyingNode` — so a driven ring is ONE
+  pass. The 3 calc-style patch nodes gain `dataflowRecompute` (run the formula over stored inputs → `@output`)
+  and DELETE their `allConnectedInputsAreFresh` freshness gate (the §8 deadlock) on the ON path. Node death
+  (`Widget._destroyNoSettle`) → `removeAllEdgesOf @`. Sheet reference edges (no `action`) are skipped, so the
+  spreadsheet is untouched. Everything is switch-gated → switch-OFF is byte-identical legacy. The `firesPerEvent`
+  PER-EVENT synchronous mini-pass is DEFERRED (the flag rides the edge record; delivery pools — screen-
+  indistinguishable, spec §13). Acceptance: the °C↔°F ring is frame-identical ON≡OFF both directions, 1 pass,
+  entry never re-applied, capstone 0 with the switch ON. NEXT (6c) flips the default and reconciles the
+  connection-driving macros; 6d deletes the `connectionsCalculationToken` machinery.
+
 ## The model in one breath
 
 An **edge** means "when this changes, that must react". **Notifications carry no values** —

@@ -84,6 +84,13 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     @_popUpTargetPropertyMenu theTarget, theTarget.numericalSetters()
 
   updateTarget: (connectionsCalculationToken, fireBecauseBang) ->
+    # 6b — under the engine, skip the legacy multi-input FRESHNESS GATE entirely (the allConnectedInputsAreFresh
+    # deadlock, spec §8): any input change just marks me STALE (a bang marks me forced), and the drain recomputes
+    # me via dataflowRecompute (pulling all stored inputs) then delivers @output along my out-edge. markStale is
+    # echo-suppressed while the engine is applying an input into me.
+    if world.dataflowWiresEnabled
+      world.dataflow.markStale @, (fireBecauseBang is true)
+      return
     if !@setInput1IsConnected and
      !@setInput2IsConnected and
      !@setInput3IsConnected and
@@ -153,6 +160,16 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
 
       @output = @input1.replace regexp, @substitutionTextAreaText.text
       @outputTextAreaText._setTextConnector @output
+
+  # ── dataflow node protocol (6b, spec §8) ─────────────────────────────────────────────────
+  # A COMPUTING node: recompute = re-run the substitution over the stored inputs (recalculateOutput refreshes the
+  # on-node display too), handing the engine the fresh @output; dataflowValue lets a consumer PULL @output and the
+  # cutoff compare it. Reached only while world.dataflowWiresEnabled.
+  dataflowRecompute: ->
+    @recalculateOutput()
+    @output
+
+  dataflowValue: -> @output
 
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->

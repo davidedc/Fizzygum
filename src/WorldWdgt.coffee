@@ -90,6 +90,17 @@ class WorldWdgt extends PanelWdgt
   # ON keeps current behaviour: the *DeferredSettle calls are byte-identical to the _NoSettle cores they wrap.)
   deferredSettlingEnabled: true
 
+  # The A/B switch for the patch-programming → dataflow-engine migration (spec §8, implementation-plan Phase 6b).
+  # OFF (default): connection wires (@target/@action via ControllerMixin) deliver the LEGACY way -- a source's
+  # updateTarget fires @target[@action] directly (ControllerMixin._fireConnection), termination guarded by the
+  # connectionsCalculationToken cascade stamps. ON: a wire ALSO declares a dataflow EDGE (setTargetAndActionWith...
+  # → world.dataflow.addEdge), _fireConnection becomes markStale, and the once-per-cycle drain delivers every wire
+  # -- the patch family (Calculating/Diffing/Regex nodes, Fanout) becomes the engine's SECOND client. Kept a switch
+  # (not a hard cut) so the whole suite stays green on the legacy path while 6b lands, then 6c flips the default and
+  # reconciles, then 6d deletes the token machinery. A PROTOTYPE default (own-only-when-set), so with the switch
+  # untouched the serialized surface is byte-identical -- no widget ever writes an own `dataflowWiresEnabled`.
+  dataflowWiresEnabled: false
+
   # *DeferredSettle DECLARATION tracking (Widget._deferredSettleDeclare / _setMaxDimDeferredSettle). _deferredSettleDeclarationDepth
   # is > 0 while a DECLARED deferred-settle mutation runs, so the off-settle invalidates it schedules are known to be
   # intentional. auditUndeclaredEndOfCycle (DEBUG, default off) turns on the end-of-cycle check that LOGS every

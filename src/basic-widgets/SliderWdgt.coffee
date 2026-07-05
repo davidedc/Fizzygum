@@ -145,10 +145,12 @@ class SliderWdgt extends CircleBoxWdgt
 
   # the bang makes the node fire the current output value
   bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
+    # 6b — a bang is a FORCE-fire (spec §8): mark stale+forced so it propagates despite the equal-value cutoff.
+    return world.dataflow.markStale @, true if world.dataflowWiresEnabled
     return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
     @updateTarget()
 
-  
+
   updateTarget: ->
     @_fireConnection @value, @argumentToAction
     return
