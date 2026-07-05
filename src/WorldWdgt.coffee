@@ -541,6 +541,7 @@ class WorldWdgt extends PanelWdgt
     (new SampleSlideApp).createOpener exampleDocsFolder
     (new SampleDashboardApp).createOpener exampleDocsFolder
     (new SampleDocApp).createOpener exampleDocsFolder
+    (new SpreadsheetApp).createOpener exampleDocsFolder
 
     # »>> this part is only needed for VideoPlayer
     # Guard: VideoPlayerWithRecommendationsWdgt is only bundled with --includeVideoPlayer,

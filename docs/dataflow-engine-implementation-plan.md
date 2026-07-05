@@ -15,7 +15,7 @@ unchecked, then update the ledger in the same commit that completes the phase.**
 
 - [x] Phase 0 — pre-flight verification
 - [x] Phase 1 — engine core, dark (no callers)
-- [ ] Phase 2a — spreadsheet shell: window, painted grid, selection
+- [x] Phase 2a — spreadsheet shell: window, painted grid, selection
 - [ ] Phase 2b — cell model, literal/CoffeeScript evaluation, editing
 - [ ] Phase 2c — references, recompute, errors-as-values
 - [ ] Phase 3 — value protocol & presenters (Color first)
@@ -402,6 +402,39 @@ docs are a per-phase deliverable, not a Phase 7 chore.
   `SystemTest_macroSpreadsheetSelection` (click cells, arrows, screenshot).
 - Determinism: nothing time-based exists yet; keep it that way (no `Date.now`, no
   wall-clock — spec §10).
+
+**Landed 2026-07-05 (this session) — all green.** `src/spreadsheet/SpreadsheetApp.coffee`
++ `SpreadsheetWdgt.coffee` + `src/spreadsheet/CLAUDE.md`; `build.py` glob; `WorldWdgt`
+launcher registration. Decisions/deviations recorded per rules 7/8:
+- **DIRECT-PAINT, no `ScrollPanelWdgt` in v1** (the spec §9.1 hosts the grid in one). The
+  grid is a fixed viewport that fits the window; scroll is deferred until the model exceeds
+  it. The paint + hit-test math transplant into a scroll-child unchanged; sockets (2b/4) are
+  unaffected. Revisit when a sheet needs more cells than fit.
+- **Fixed-size window content** (`initialiseDefaultWindowContentLayoutSpec` elasticity 0 +
+  `preferredExtentForWidth`/`_setWidthSizeHeightAccordingly` = grid size — the AnalogClockWdgt
+  pattern). This was the DETERMINISM fix: a stretchable content converges over several cycles,
+  so a screenshot right after `launch()` (before the multi-cycle settle) is a pre-settle frame
+  that varies run-to-run — the first OpenGrid capture caught one. Fixed-size settles in ONE
+  cycle → the capture is the fixed point. (`takeScreenshot` already gates on
+  `waitForScreenshotReady`/warm-repaint, but that does NOT wait for layout convergence.)
+- **Text = 12px Arial**, left-aligned (SWCanvas ships Arial/Times/Courier atlases only —
+  `SWCanvasElement-extensions.coffee`; 12px Arial is the deterministic band). Centering needs
+  `measureText` — a later polish.
+- **Placeholder icon** (`GenericShortcutIconWdgt`+`TypewriterIconWdgt`); custom `SpreadsheetIconWdgt`
+  deferred. **Launcher in the examples folder** (not the desktop) so it doesn't shift the
+  desktop icon grid (mass recapture); tests open via `launch()`. MenusHelper entry deferred.
+- **Keyboard focus-on-click**: `mouseClickLeft` reads `world.hand.position()` for cell
+  hit-testing and registers the sheet in `world.keyboardEventsReceivers`; `processKeyDown`
+  moves the single-cell selection on `ArrowLeft/Right/Up/Down` (key-based, CaretWdgt
+  convention); deregistered in `destroy`. Multi-sheet focus refinement deferred.
+- **Verification:** `fg gauntlet` green — dpr1/dpr2/webkit suite **171/171** (168 + Phase-1
+  smoke + `SpreadsheetOpenGrid` + `SpreadsheetSelection`), apps smoke, tiernaming/settle/
+  capstone gates; both serialization legs green (no new serialized surface in 2a). Both new
+  tests captured SWCanvas dpr1+dpr2 and webkit-verified; the rendered grids were eyeballed
+  (OpenGrid = full 6×14 grid + A1 selected; Selection = D4 after click C3 + Right + Down).
+  NOTE: a brand-new test needs a FULL `fg build` (regenerates `testsManifest`) before
+  `fg recapture` finds it — a bare recapture right after authoring reports "did not select
+  exactly one SystemTest".
 
 **2b — cell model, evaluation, editing.**
 - `SheetModel` (plain class): sparse Map keyed `"A1"`; owns `SheetCellRecord`s; address

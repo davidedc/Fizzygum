@@ -222,6 +222,9 @@ def main():
     # feature, NOT homepage-excluded (like serialization below). The spreadsheet client's
     # src/spreadsheet glob is added in Phase 2.
     filenames = sorted(filenames + sorted(glob("src/dataflow" + "/*.coffee")))
+    # spreadsheet app (the dataflow engine's first client). A shipped product feature, NOT
+    # homepage-excluded (like serialization below).
+    filenames = sorted(filenames + sorted(glob("src/spreadsheet" + "/*.coffee")))
     # serialization / deserialization / file-save-load family. NOT homepage-excluded:
     # serialization is a shipped product feature (only the dev "test menu" items are
     # stripped, via their own in-file markers). See serialization-deserialization-plan §8.1.
