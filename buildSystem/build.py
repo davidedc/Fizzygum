@@ -218,6 +218,10 @@ def main():
     filenames = sorted(filenames + sorted(glob("src/fizzytiles" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/events-input" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/macros" + "/*.coffee")))
+    # dataflow / calculation engine (spec docs/specs/dataflow-engine-spec.md). A shipped product
+    # feature, NOT homepage-excluded (like serialization below). The spreadsheet client's
+    # src/spreadsheet glob is added in Phase 2.
+    filenames = sorted(filenames + sorted(glob("src/dataflow" + "/*.coffee")))
     # serialization / deserialization / file-save-load family. NOT homepage-excluded:
     # serialization is a shipped product feature (only the dev "test menu" items are
     # stripped, via their own in-file markers). See serialization-deserialization-plan §8.1.

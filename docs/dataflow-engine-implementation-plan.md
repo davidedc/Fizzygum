@@ -14,7 +14,7 @@ unchecked, then update the ledger in the same commit that completes the phase.**
 ## Status ledger
 
 - [x] Phase 0 — pre-flight verification
-- [ ] Phase 1 — engine core, dark (no callers)
+- [x] Phase 1 — engine core, dark (no callers)
 - [ ] Phase 2a — spreadsheet shell: window, painted grid, selection
 - [ ] Phase 2b — cell model, literal/CoffeeScript evaluation, editing
 - [ ] Phase 2c — references, recompute, errors-as-values
@@ -338,6 +338,37 @@ OPTIONAL: productize this smoke as `SystemTest_macroDataflowEngineSmoke` — a n
 macro driving the same calls via the toolkit's `evaluateString`, throwing on a wrong
 counter (§1.18). If skipped, Phase 2c's instrumentation asserts subsume it — record the
 choice in the ledger either way.)
+
+**Landed 2026-07-05 (this session) — all green.** `src/dataflow/DataflowEngine.coffee`
+(+ `src/dataflow/CLAUDE.md`), `WorldWdgt` (ctor `@dataflow = new DataflowEngine` beside
+`@widgetFactory`, unguarded since it ships; drain call in `doOneCycle` between
+`runChildrensStepFunction` and `recalculateLayouts`), `WellKnownObjects` (both arms),
+`build.py` glob, serialization-reference well-known row. Decisions/deviations recorded here
+per rules 7/8:
+- **Ordering** = Kahn + one-lap-from-entry BFS remainder (the plan's simpler sanctioned
+  option, NOT full Tarjan SCC condensation). Visit-once + the equal-value cutoff converge
+  regardless of order; a diamond below a cycle may cost one extra cutoff-terminated pass.
+  Documented in the class header. Tarjan remains a future optimisation for Phase 6.
+- **Settle call is gate-clean** — `recalculateDataflow`/`_drainOnePass` calling
+  `world._settleLayoutsAfter` did NOT trip `check-layering` (`recalculateDataflow` is not
+  low-level by name; `_drainOnePass` has no guard-return-before-settle), so NO WorldWdgt
+  settle-wrapper was needed (the plan's fallback was not exercised).
+- **Smoke test AUTHORED, not skipped** — `SystemTest_macroDataflowEngineSmoke` (sibling
+  repo) drives the engine DIRECTLY from the macro scope (simpler than nested
+  `evaluateString`; `world.dataflow` is reachable there) and asserts pool→drain→once by
+  throwing. Authored (rather than allowlisting) because 3 dark public-API methods
+  (`addEdge`/`removeAllEdgesOf`/`wouldCloseCycle`) had no in-`src` callers yet and the
+  dead-method gate flags them; the gate harvests tokens from `tests/**/*.js`, so the test's
+  macro source references them (plan §1.10; allowlist avoided). Its capture run at dpr1+dpr2
+  IS the Phase 1 behavioural verification (the assertions passed). A 4th flag,
+  `_describeStalePool`, was a gate false-positive (used only inside a `"…#{…}…"`
+  interpolation that the gate's `stripComment` truncates at the first `#`) — fixed by
+  assigning to a local before the throw.
+- **Verification:** `fg gauntlet` green — dpr1/dpr2/webkit suite **169/169** (168
+  dark-unaffected + the new smoke), apps smoke, tiernaming/settle/capstone runtime gates;
+  both serialization legs green (round-trip rig 21+31 checks, FILE 7 checks — the engine
+  index is never serialized and no widget references `@dataflow` yet, so the world
+  envelope is untouched). Smoke references cross-engine-verified on the webkit leg.
 
 ### Phase 2 — spreadsheet v1 (first client)
 

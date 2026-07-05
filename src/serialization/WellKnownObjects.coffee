@@ -31,6 +31,7 @@ class WellKnownObjects
       return "hand"          if obj is world.hand
       return "wallpaper"     if obj is world.wallpaper
       return "widgetFactory" if obj is world.widgetFactory
+      return "dataflow"      if obj is world.dataflow
       return "basement"      if obj is world.basementWdgt
     return "preferences"     if obj is WorldWdgt.preferencesAndSettings
     # general fallback: a class-declared marker (data string or computed method),
@@ -49,6 +50,7 @@ class WellKnownObjects
       when "hand"          then world?.hand
       when "wallpaper"     then world?.wallpaper
       when "widgetFactory" then world?.widgetFactory
+      when "dataflow"      then world?.dataflow
       when "basement"      then world?.basementWdgt
       when "preferences"   then WorldWdgt.preferencesAndSettings
       else

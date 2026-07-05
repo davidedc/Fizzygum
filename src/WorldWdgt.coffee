@@ -397,6 +397,12 @@ class WorldWdgt extends PanelWdgt
     if WidgetFactory?
       @widgetFactory = new WidgetFactory
 
+    # world.dataflow — the ONE calculation/dataflow engine (spec docs/specs/dataflow-engine-spec.md).
+    # A shipped product collaborator (like @sourceEditsRegistry above), so it is constructed
+    # UNGUARDED, unlike the dev-only @widgetFactory. It drains once per cycle in doOneCycle,
+    # between value-settling (its own) and geometry-settling (recalculateLayouts).
+    @dataflow = new DataflowEngine
+
     # The DOM <canvas id="world"> (@worldCanvas) stays the event target. Under the
     # SWCanvas backend all rendering goes to a separate software render canvas
     # (@worldRenderCanvas), whose pixels are blitted onto the DOM canvas once per
@@ -1411,6 +1417,14 @@ class WorldWdgt extends PanelWdgt
     @progressFramePacedActions()
     
     @runChildrensStepFunction()
+    # Drain the dataflow engine's stale pool (spec docs/specs/dataflow-engine-spec.md §4.1). Two
+    # deliberately-parallel drain stations sit here: recalculateDataflow settles VALUES,
+    # recalculateLayouts settles GEOMETRY. Placed AFTER stepping so this frame's time-source ticks
+    # join this frame's batch, and BEFORE recalculateLayouts so sink applications feed this frame's
+    # geometry settle and paint (running after layouts would reintroduce the one-cadence-lag bug
+    # class). The coupling is ONE-WAY: dataflow may dirty layout; layout must never mark dataflow
+    # stale. Dark-cheap — early-returns on an empty stale pool.
+    @dataflow.recalculateDataflow()
     @recalculateLayouts()
     # Hover re-sync AFTER the flush: re-derive the widgets-under-(stationary)-pointer set against the
     # frame's SETTLED geometry -- the same fixed point paint reads -- so hover never lags geometry within

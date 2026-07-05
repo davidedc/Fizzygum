@@ -166,7 +166,9 @@ classification. Transient fields (§5) never reach classification at all.
 
 `src/serialization/WellKnownObjects.coffee` is a two-way symbolic registry for the
 singletons present in every world: `world`, `hand`, `wallpaper`, `widgetFactory`,
-`basement`, `preferences`, and `app:<ClassName>` per windowed-app singleton.
+`dataflow` (the `DataflowEngine` — a shipped product collaborator; its edge index is
+derived/disposable and never serialized), `basement`, `preferences`, and `app:<ClassName>`
+per windowed-app singleton.
 
 - `WellKnownObjects.keyFor(obj)` → symbolic key or `nil`.
 - `WellKnownObjects.resolve(key)` → the live object in the **current** world, or `nil`
@@ -177,8 +179,9 @@ than from a boot-time map. This is boot-order-safe (basement/apps are built afte
 world) and — crucially — correct for cross-session restore: a key binds to the *new*
 session's singletons, not to a stale map. The per-world singletons are matched by identity
 against the live world in `keyFor`; the `wellKnownKey` marker on the collaborator classes
-(`Wallpaper` → `"wallpaper"`, `WidgetFactory` → `"widgetFactory"`,
-`IconicDesktopSystemWindowedApp` → `"app:" + @constructor.name`) is the general fallback
+(`Wallpaper` → `"wallpaper"`, `WidgetFactory` → `"widgetFactory"`, `DataflowEngine` →
+`"dataflow"`, `IconicDesktopSystemWindowedApp` → `"app:" + @constructor.name`) is the
+general fallback
 and documents intent (it is the eventual replacement for `keptByReferenceOnDeepCopy`).
 App-singleton resolution (`resolveApp`) is stubbed until the whole-world snapshot phase.
 
