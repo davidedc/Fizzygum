@@ -26,9 +26,14 @@ unchecked, then update the ledger in the same commit that completes the phase.**
 - [ ] Phase 6c — A/B default ON, suite reconciliation
 - [ ] Phase 6d — token retirement
 - [ ] Phase 7 — docs closeout
+- [ ] Phase 8 — widgetise the grid (one CellWdgt per VISIBLE cell; viewport-bounded) — follow-on
 
 Each phase = one or more commits, independently green and revertable. Do not start a phase
-with the previous one unverified.
+with the previous one unverified. **Phase 8 is a planned follow-on** (owner direction 2026-07-05):
+the spreadsheet's END STATE is full composability — every cell is a real widget — but the
+DATAFLOW arc (Phases 1–7) ships first on the current "painted chrome + sockets" rendering, then
+Phase 8 refactors ONLY the rendering. See the Phase 8 section for why this is a stepping stone,
+not throwaway, and the Phase 4 socket note for the decision that seeds it.
 
 ---
 
@@ -673,8 +678,12 @@ classify→present chain), `SheetCellRecord._cacheValue` (the reconcile trigger)
 ### Phase 4 — widget-valued cells & sockets
 
 - A formula yielding a Widget mounts it live in the cell (presenter chain branch 1);
-  the mount point is the **socket** (either a thin `CellSocketWdgt` or direct child
-  management in the grid pane — decide by whichever keeps `_reLayout` simplest).
+  the mount point is the **socket**. **Decision (owner direction 2026-07-05): build a REAL
+  `CellSocketWdgt` widget, not ad-hoc direct child management** — even though direct management
+  might keep `_reLayout` marginally simpler now, the `CellSocketWdgt` is the SEED of Phase 8's
+  per-cell `CellWdgt` (widgetise the grid). Design it so it is trivially generalisable from
+  "one socket per RICH cell" to "one socket per VISIBLE cell": it holds a cell's rect, renders
+  the record's scalar value OR hosts a value/presenter widget, and owns the interaction wiring.
   Unmounting de-registers the socket wiring; a dying cell calls `removeAllEdgesOf`
   (Phase 1 node-death API).
 - References to a widget-valued cell yield `widget.exportedValue()`; a widget with no
@@ -694,7 +703,11 @@ classify→present chain), `SheetCellRecord._cacheValue` (the reconcile trigger)
   fresh instance, discarding runtime state (a moved slider's position). Recommended v1:
   on load, if the restored socket already holds a widget of the class the recompute
   would produce, KEEP the restored widget; on class mismatch, rebuild. Document the
-  decision in `src/spreadsheet/CLAUDE.md`.
+  decision in `src/spreadsheet/CLAUDE.md`. **Design this as one "retain-and-remount" rule**
+  (a value-widget is MODEL state, retained by the record; the view mounts/unmounts the
+  instance, never destroy-and-rebuilds it): Phase 8's scroll-virtualisation reuses exactly this
+  rule when a widget-valued cell leaves/re-enters the viewport, so save/load and scroll are one
+  problem, not two.
 - **SystemTests:** `SystemTest_macroSpreadsheetSliderCell` (macro drags the slider;
   dependent cell updates; deterministic — input events only). Extend the rig's sheet
   fixture with a slider-valued cell pinning the save/load decision (drag, save, load,
@@ -829,6 +842,55 @@ phase is the completeness pass, not the first write.)
   shipped.
 - Update the spec header: status → implemented; list any deviations decided during
   execution (each deviation must have been recorded in its phase's commit message).
+
+### Phase 8 — widgetise the grid (one CellWdgt per VISIBLE cell) — planned follow-on
+
+**Goal (owner direction 2026-07-05):** the spreadsheet's end state is full Fizzygum
+composability — every cell the user sees is a REAL widget (inspectable, live-editable,
+drag-target), not painted chrome. This phase refactors ONLY the rendering/interaction layer of
+the sheet; it is scheduled AFTER the dataflow arc (1–7) ships and is fully tested, so it runs
+against a green suite as a safety net.
+
+**Why this is a stepping stone, not a rewrite.** The switch touches only the VIEW. Everything
+below it is unchanged: the dataflow engine, `SheetModel`/`SheetCellRecord` (the model + node
+protocol), `FormulaCompiler`, `SheetError`/`FormulaHelpers`, the value protocol
+(`exportedValue`, `Color.cellPresenter`, classify→present *logic*), and all serialization /
+recommit-on-load. The dataflow layer operates on RECORDS, never widgets, so correctness is
+independent of what is materialised (see below). Concretely, what changes: `SpreadsheetWdgt`'s
+custom paint (`_paintGrid`), the centralized hit-test (`_cellAtLocal`), and the single overlay
+editor are replaced by a grid of `CellWdgt`s (each = the Phase-4 `CellSocketWdgt` generalised to
+every visible cell) in a table/stack layout; `SheetCellRecord` stays the model/node and the
+`CellWdgt` becomes its view (Phase-3's push-reconcile inverts to the CellWdgt PULLING from its
+record on materialise + on change-while-visible — standard MVC).
+
+**Materialise the VIEWPORT, not the model (the key insight — dissolves the "no widget
+virtualisation" objection the spec raised).** "Widget per cell" ≠ "materialise every cell":
+- The MODEL (`SheetModel`, sparse) covers the whole sheet; **widgets exist only for the cells
+  currently ON SCREEN.** So live-widget count is bounded by the viewport, never by sheet size.
+- An OFF-screen cell is still a live dataflow node: the drain recomputes its `record.value`
+  with no widget present. Scrolling it IN materialises a `CellWdgt` that READS the current
+  value (instantly correct, no catch-up); scrolling OUT recycles the widget; the
+  record/node/edges persist untouched.
+- **For v1 this is FREE:** the viewport is fixed and small (the whole 6×14 grid is on screen),
+  so "visible set" = "all cells" and there is NO recycle-on-scroll logic to write yet — you
+  materialise the fixed grid once. The materialise/recycle-on-scroll machinery is purely
+  additive, landing with scroll + large models (and it is the standard bounded-viewport trick,
+  not open-ended virtualisation).
+
+**The one subtlety — widget-VALUED cells hold state.** Distinguish the CellWdgt (the cell's
+VIEW — recyclable, materialise/destroy freely) from a widget that IS a cell's value (a user's
+`new SliderWdgt` — its position is MODEL state). A value-widget must be RETAINED by the record
+and unmounted/remounted as its cell leaves/re-enters the viewport — never destroy-and-rebuilt.
+This is the SAME retain-and-remount rule Phase 4 defines for save/load (spec §13), so the two
+share one mechanism.
+
+**Scope / cost:** a rendering + interaction refactor. Behavioural SystemTest assertions (values,
+recompute counts, reference propagation) carry over unchanged; the grid's PIXELS change (widget
+backgrounds/borders/spacing), so most spreadsheet screenshots recapture — routine, webkit-verified,
+listed in the commit. Scroll + a real grid layout (the deferred `ScrollPanelWdgt`, 2a) may land
+here or in a sub-phase. Update `src/spreadsheet/CLAUDE.md` (the design north star flips from
+"painted chrome, widgetized contents" to "widgetized viewport over a sparse model") and root
+`CLAUDE.md`. Full §0 phase-close battery.
 
 ---
 
