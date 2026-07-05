@@ -18,7 +18,7 @@ unchecked, then update the ledger in the same commit that completes the phase.**
 - [x] Phase 2a — spreadsheet shell: window, painted grid, selection
 - [x] Phase 2b — cell model, literal/CoffeeScript evaluation, editing
 - [x] Phase 2c — references, recompute, errors-as-values
-- [ ] Phase 3 — value protocol & presenters (Color first)
+- [x] Phase 3 — value protocol & presenters (Color first)
 - [ ] Phase 4 — widget-valued cells & sockets
 - [ ] Phase 5 — time sources (`seconds` / `frame`)
 - [ ] Phase 6a — `firesPerEvent` wire property + menu toggle
@@ -615,6 +615,60 @@ cat line); `src/spreadsheet/CLAUDE.md` grown. Decisions/deviations per rules 7/8
   fixture with a color cell (the compact-form round-trip through `create` is already the
   documented Color behavior — now exercised through a sheet) and run the serialization
   legs (§0).
+
+**Landed 2026-07-05 (this session) — all green.** Modified `Widget.coffee` (`exportedValue`),
+`Color.coffee` (promoted `mixed` + `lighter`/`darker`/`cellPresenter`), `SpreadsheetWdgt` (the
+classify→present chain), `SheetCellRecord._cacheValue` (the reconcile trigger); new
+`src/spreadsheet/FormulaHelpers.coffee` (auto-shipped by the 2a `src/spreadsheet/*` glob — no
+`build.py` change); `src/spreadsheet/CLAUDE.md` grown. Decisions/deviations per rules 7/8:
+- **`Widget.exportedValue: -> @getColor?() ? @getValue?() ? @text`** — defined now (spec §9.3); its
+  CONSUMER (a reference to a widget-valued cell) lands with widget-valued cells in Phase 4, so it is
+  exercised DIRECTLY in the ColorCell test (a bare `StringWdgt`'s `@text` arm) to satisfy the
+  dead-method gate — the Phase-1 precedent of driving dark public API from a macro rather than
+  allowlisting. §1.15 honoured: no `SliderWdgt.getValue` added here (that is Phase 4).
+- **`Color.mixed` promoted + alpha semantics decided.** Removed the `# »>> … <<«` homepage-exclusion
+  markers (it now ships — it backs lighter/darker + `mix`); switched its body from `new
+  @constructor(...)` to `@constructor.create(...)` (keeps the immutable-and-cached invariant). The
+  old comment said "ignore alpha" while the code MIXED it — **decided: blend ALL FOUR channels** (a
+  plain lerp, no special-casing; moot for the opaque colours spreadsheets use) and made comment+code
+  agree. Added `lighter`/`darker` (mix toward `Color.WHITE`/`BLACK`) and `cellPresenter` (a
+  `RectangleWdgt` swatch via `setColor` — immutability respected).
+- **Classify→present (spec §9.4), REBUILD-on-change lifecycle (spec §13 decided).** `_cacheValue`
+  calls `_reconcileCellPresenterNoSettle` per recompute (INSIDE the drain's settle, so NoSettle
+  cores): a value answering `cellPresenter()` mounts that widget in the cell's rect (branch 2), else
+  painted text (branch 3, the value-paint loop skips a presented cell); branch 1 (value IS a Widget)
+  is Phase 4. Lifecycle = dispose + fresh `cellPresenter()` on value change (keeps the sheet
+  value-class-agnostic — no per-class update protocol), with a churn-skip on an unchanged value.
+- **Presenter serialization deviation (recorded; Phase 4 cleans it).** Presenters are DERIVED and
+  their `@_cellPresenters`/`@_presentedValues` indexes are transient, but a presenter widget still
+  rides a whole-world snapshot AS a tree child. `recommitAllCells` now first sweeps every derived
+  child (`_disposeAllCellPresentersNoSettle` — the sheet's only children are the editor + presenters)
+  and the drain rebuilds them, so restore/duplicate stay exact (no orphan/double swatch). Phase 4's
+  socket makes presenters properly non-serialized. No new serialization CODE/handlers (RectangleWdgt
+  + Color already serialize) — the deliverables-map "no new serialized surface" holds in that sense.
+- **`FormulaHelpers.mix` (spec §9.5)** — `@mix: (a, b, p = 0.5) -> a.mixed p, b`; static methods are
+  bound by the compiler's existing `for own name of FormulaHelpers` scan. (A static is also exempt
+  from the dead-method gate's instance-method header regex — no reference needed.)
+- **"operate ➜" cell menu: DEFERRED** (the plan marked it optional). Meta-introspection UI, not part
+  of the value protocol; recorded here as not-done. Can land any later phase.
+- **SystemTests (captured SWCanvas dpr1+dpr2, webkit-verified via the gauntlet, eyeballed):**
+  `SpreadsheetColorCell` — A1=`new Color 255,0,0` (swatch), B1=`A1.lighter()`, C1=`A1.darker()`,
+  D1=`mix A1, B1` (four red-family swatches, image_1); `exportedValue` `@text`-arm assertion; edit
+  A1→blue recolours the whole chain reactively (image_2). Serialization rig's `sheet` fixture grew a
+  `D1` Color cell (`spreadsheet.roundtrip.rebuild` now `3|6|9|rgb(255,0,0)|#ERR`) + a new
+  `spreadsheet.roundtrip.colorPresenter` check (exactly one presenter/child on both orig and restore
+  — proves the sweep, no orphan/double).
+- **One benign inspector recapture** (owner rule `byte-identical-not-sacred-for-benign-inspector-
+  recapture`): `SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly` image_2/image_3.
+  `Widget.exportedValue` grows every widget's inherited-member list by one row, and this is the ONE
+  inspector test that SHOWS inherited members + scrolls through them, so the list's scroll/thumb
+  geometry shifted sub-visibly. Behavior verified unchanged (LEFT rect still fades to alpha 0.25,
+  RIGHT copy to 0.6 — each inspector drives its own target; image_1 unchanged) before recapturing;
+  webkit-verified. NOT a code contortion — the method belongs on `Widget` (spec §9.3).
+- **Verification:** `fg build` 0-violations (syntax/layering/dead-methods/stinks/thin-wraps) +
+  boot clean (no Color→RectangleWdgt load-order issue); both serialization legs green (23 native +
+  33 SWCanvas incl. the two new checks; 7 file); `fg gauntlet` (dpr1/dpr2/webkit + apps + gates) —
+  see the ledger.
 
 ### Phase 4 — widget-valued cells & sockets
 

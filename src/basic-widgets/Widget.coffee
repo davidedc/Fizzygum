@@ -1798,7 +1798,17 @@ class Widget extends TreeNode
       @changed()
 
     return aColor
-  
+
+  # The principal value this widget offers to a spreadsheet reference (dataflow spec §9.3): the
+  # unified reader over today's duck-typed export cluster — a colour picker's colour, a field's
+  # value, else its text. Widgets that export none of these answer nil here; the reference read then
+  # falls back to the widget itself (that fallback lives at the read site — see the spreadsheet's
+  # widget-valued-cell path, plan Phase 4). Only ColorPickerWdgt defines getColor and only
+  # StringFieldWdgt defines getValue today; SliderWdgt gains getValue when it joins the protocol
+  # (Phase 4), keeping this one uniform chain.
+  exportedValue: ->
+    @getColor?() ? @getValue?() ? @text
+
   # Widget displaying ---------------------------------------------------------
 
   # There are three fundamental methods for rendering and displaying anything.

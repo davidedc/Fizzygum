@@ -34,8 +34,11 @@ class SpreadsheetWdgt extends Widget
 
   # transient UI state (rebuilt by interaction, never document data): the in-progress edit and
   # its live overlay editor are dropped from a snapshot (a mid-edit save restores to a settled,
-  # not-editing sheet). @model / @selected* ARE document state and serialize normally.
-  @serializationTransients: ["_editing", "_editBuffer", "_editCol", "_editRow", "_editor"]
+  # not-editing sheet). The cell-presenter indexes are transient too — the presenter widgets are
+  # DERIVED from cell values (spec §9.4, "one-way glass"), so they are rebuilt from @model on
+  # restore/duplicate (recommitAllCells → drain → reconcile), never round-tripped as document data.
+  # @model / @selected* ARE document state and serialize normally.
+  @serializationTransients: ["_editing", "_editBuffer", "_editCol", "_editRow", "_editor", "_cellPresenters", "_presentedValues"]
 
   # fixed grid geometry (no column resize in v1)
   headerColWidth: 34     # the left row-number header column
@@ -69,6 +72,13 @@ class SpreadsheetWdgt extends Widget
     @_editBuffer = ""
     @_editCol = nil
     @_editRow = nil
+    # cell-presenter indexes (spec §9.4 classify→present): a cell whose value answers cellPresenter()
+    # gets a live child widget (a Color → a swatch) mounted in its rect. @_cellPresenters maps the
+    # cell address → that widget; @_presentedValues maps address → the value it currently reflects
+    # (the churn-skip: an unchanged value keeps its presenter). Both are transient + rebuilt by the
+    # drain (see _reconcileCellPresenterNoSettle).
+    @_cellPresenters = new Map
+    @_presentedValues = new Map
     @setColor @backgroundColorGrid
     @_applyExtent new Point @_gridWidth(), @_gridHeight()
     return
@@ -169,8 +179,9 @@ class SpreadsheetWdgt extends Widget
       row += 1
 
     # committed cell VALUES, painted directly (no widget-per-cell). Only stored cells (sparse)
-    # are visited; a value being edited is shown by its live overlay editor, so it is skipped
-    # here. A SheetError paints in the error colour as its badge ("#SYNTAX"). No overflow
+    # are visited; a value being edited is shown by its live overlay editor, and a value that
+    # PRESENTS as a widget (a Color → a swatch, spec §9.4) is drawn by that mounted presenter — both
+    # are skipped here. A SheetError paints in the error colour as its badge ("#SYNTAX"). No overflow
     # clipping in v1 (values are short) — a later polish, with centring.
     aContext.font = @_gridFont()
     @model.forEachCell (cell, address) =>
@@ -178,6 +189,7 @@ class SpreadsheetWdgt extends Widget
       return unless cr?
       return if cr.col >= @numCols or cr.row >= @numRows
       return if @_editing and cr.col is @_editCol and cr.row is @_editRow
+      return if @_cellPresenters.has address
       return unless cell.value?
       text = cell.value.toString()
       return if text is ""
@@ -367,16 +379,101 @@ class SpreadsheetWdgt extends Widget
     @changed()
     return
 
+  # ── cell presenters: classify → present (spec §9.4) ──────────────────────────────────────
+  # Called from SheetCellRecord._cacheValue right after a cell recomputes, so it runs INSIDE the
+  # dataflow drain's layout settle (DataflowEngine._drainOnePass wraps the pass in
+  # world._settleLayoutsAfter) — hence every helper here is a NoSettle core, exactly like the editor.
+  #
+  # The fallback chain: a value that answers cellPresenter() (a Color) mounts the returned widget
+  # (branch 2); anything else falls back to painted toString() text (branch 3) — the sheet's default.
+  # Branch 1 (the value IS a Widget → mount it directly) is the widget-valued cell, plan Phase 4.
+  #
+  # Lifecycle (spec §13, decided here): REBUILD on value change, don't reuse-and-update. A branch-2
+  # presenter is pure display with no interactive state to preserve, and rebuilding keeps the sheet
+  # value-class-agnostic (no per-class "update this widget from that value" protocol — it just calls
+  # cellPresenter() again). The churn-skip below means an unchanged value keeps its widget, so a
+  # steady cell rebuilds nothing; interactive presenters that must keep state are the widget-VALUED
+  # branch (Phase 4), which is never rebuilt from a formula.
+  _reconcileCellPresenterNoSettle: (cell) ->
+    return unless cell?
+    address = cell.address
+    value = cell.value
+    hadPresenter = @_cellPresenters.has address
+    # branch 3: the value declines to present as a widget (a number, string, error, nil) — drop any
+    # presenter it used to have and let the grid paint its toString() text.
+    unless value? and typeof value.cellPresenter is "function"
+      @_disposeCellPresenterNoSettle address if hadPresenter
+      return
+    # churn-skip: an unchanged value keeps its mounted presenter (immutable Color compares by value).
+    return if hadPresenter and @_presentedValuesEqual @_presentedValues.get(address), value
+    # (re)build: dispose the stale presenter, then mount a fresh one from the value's own class.
+    @_disposeCellPresenterNoSettle address if hadPresenter
+    presenter = value.cellPresenter()
+    return unless presenter?    # a value class may answer cellPresenter yet decline (nil) → text
+    @_mountCellPresenterNoSettle address, value, presenter
+    return
+
+  # a.equals?(b) when the value defines it (Color does), else identity — mirrors the engine's cutoff.
+  _presentedValuesEqual: (a, b) ->
+    if a?.equals? then a.equals b else a is b
+
+  # mount the presenter widget in the cell's rect: a freefloating child at the cell's absolute
+  # position, inset by the gridline so header/gridlines/selection stay visible (the _addNoSettle +
+  # _apply* idiom the editor uses). It paints itself; the value-paint loop skips this address.
+  _mountCellPresenterNoSettle: (address, value, presenter) ->
+    cr = @model.colRowFor address
+    return unless cr?
+    return if cr.col >= @numCols or cr.row >= @numRows
+    rect = @_cellRectLocal cr.col, cr.row
+    inset = 2
+    @_addNoSettle presenter
+    presenter._applyExtent new Point rect.w - 2 * inset, rect.h - 2 * inset
+    presenter._applyMoveTo @position().add new Point rect.x + inset, rect.y + inset
+    @_cellPresenters.set address, presenter
+    @_presentedValues.set address, value
+    presenter.changed()
+    return
+
+  _disposeCellPresenterNoSettle: (address) ->
+    presenter = @_cellPresenters.get address
+    @_cellPresenters.delete address
+    @_presentedValues.delete address
+    presenter?._fullDestroyNoSettle()
+    @changed()
+    return
+
   # ── serialization / duplication (spec §2: the engine index is derived + disposable) ──────────
 
   # Rebuild every cell's DERIVED state (compiledFn / value / edges) from its persisted @source,
   # then mark all stale so the next drain recomputes the whole sheet in dependency order. A
   # RESTORED (deserialize) or DUPLICATED (deep-copy) sheet re-declares its OWN edges here rather
   # than serializing/copying the shared engine — the two hooks below call this.
+  # NoSettle core (not a self-settling wrapper): the notification hooks below call it directly, and
+  # the copy/deserialize gesture owns the enclosing settle (layering rule [J]); both hooks fire on a
+  # DETACHED sheet (orphan), so the child sweep settles its own subtree on attach anyway. First drop
+  # every DERIVED child — the sheet's only children are the transient overlay editor and the cell
+  # presenters (a Color's swatch, spec §9.4), both rebuilt from @model, never document data (that is
+  # @model). This also sweeps presenter widgets that rode a whole-world snapshot as tree children:
+  # their address→presenter index is transient, so a restored sheet cannot re-associate them and the
+  # recompute below would otherwise ADD a second presenter per cell. Rebuilding from values keeps
+  # restore/duplicate exact. (Phase 4's socket makes presenters properly non-serialized; until then
+  # this is the reconciliation.)
   recommitAllCells: ->
     return unless @model?
+    @_disposeAllCellPresentersNoSettle()
     @model.forEachCell (cell) -> FormulaCompiler.commit cell, cell.source
     @model.forEachCell (cell) -> world.dataflow?.markStale cell
+    return
+
+  # drop EVERY child (all derived: the overlay editor + cell presenters) and reset the transient
+  # edit + presenter indexes, so the next drain rebuilds presenters from cell values.
+  _disposeAllCellPresentersNoSettle: ->
+    child._fullDestroyNoSettle() for child in @children.slice()
+    @_editing = false
+    @_editor = nil
+    @_editBuffer = ""
+    @_cellPresenters = new Map
+    @_presentedValues = new Map
     return
 
   # after a deep-copy (the duplicate gesture → fullCopy → deepCopy): the copier runs this once the

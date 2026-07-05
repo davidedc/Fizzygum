@@ -214,21 +214,42 @@ class Color
     @==aColor or (aColor and @_r == aColor._r and @_g == aColor._g and @_b == aColor._b and @_a == aColor._a)
   
   
-  # »>> this part is excluded from the fizzygum homepage build
-  
-  # Color mixing:
-  # currently unused
+  # Color mixing (dataflow spec §9.5 — the value-class method algebra a spreadsheet formula operates
+  # with). Answer a NEW color that is this color blended with `otherColor`, `proportion` being THIS
+  # color's weight: proportion = 1 ⇒ this color unchanged, 0 ⇒ otherColor, 0.5 ⇒ halfway. ALL FOUR
+  # channels (r, g, b AND alpha) are linearly interpolated — a plain lerp, no channel special-cased
+  # (the old "ignore alpha" comment contradicted the code; for the opaque colors spreadsheets use it
+  # is moot anyway, so the general lerp wins and comment+code now agree). Immutable + cached: routes
+  # through the shared @constructor.create factory (never bare `new`, which would bypass the cache and
+  # the immutable-color dedupe). No longer homepage-excluded — it backs lighter/darker and the `mix`
+  # formula helper, so it ships.
   mixed: (proportion, otherColor) ->
-    # answer a copy of this color mixed with another color, ignore alpha
     frac1 = Math.min Math.max(proportion, 0), 1
     frac2 = 1 - frac1
-    new @constructor(
+    @constructor.create(
       @_r * frac1 + otherColor._r * frac2
       @_g * frac1 + otherColor._g * frac2
       @_b * frac1 + otherColor._b * frac2
       @_a * frac1 + otherColor._a * frac2)
-  
-  # this part is excluded from the fizzygum homepage build <<«
+
+  # A lighter shade: mix `amount` (0..1) of the way toward WHITE (0 ⇒ unchanged, 1 ⇒ white). A new
+  # (cached) color — this one is never mutated.
+  lighter: (amount = 0.5) ->
+    @mixed 1 - amount, Color.WHITE
+
+  # A darker shade: mix `amount` (0..1) of the way toward BLACK (0 ⇒ unchanged, 1 ⇒ black).
+  darker: (amount = 0.5) ->
+    @mixed 1 - amount, Color.BLACK
+
+  # Spreadsheet presenter (dataflow spec §9.4): a cell whose value is a Color displays as a solid
+  # swatch. Answer a fresh RectangleWdgt filled with this color; the sheet mounts it in the cell's
+  # rect. Presentation knowledge lives HERE, on the value's class (live-editable via the meta system),
+  # so the sheet asks the value how to present itself and never hard-codes "a Color is a swatch".
+  # Immutability respected: setColor stores the shared color, it does not mutate it.
+  cellPresenter: ->
+    swatch = new RectangleWdgt
+    swatch.setColor @
+    swatch
 
   # Colors are immutable and cached (see @create): a deep COPY therefore returns the
   # SAME object rather than cloning it, so getEmptyObjectOfSameTypeAsThisOne yields @ and

@@ -32,7 +32,10 @@ The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
   `SheetError`.
 - `SheetError.coffee` (2b) — a failed computation IS the cell's value (`#SYNTAX` now; `#ERR`/
   `#LOOP` in 2c). `{@kind, @message}`, `toString -> "#" + @kind`.
-- Presenters, sockets, `FormulaHelpers`, widget-valued cells arrive in Phases 3/4.
+- `FormulaHelpers.coffee` (3) — the optional free-function veneer (`mix A1, B1`) over the value
+  classes' method algebra (spec §9.5). Static methods only; each own-property name is a bindable
+  helper (the compiler's scan + `SheetCellRecord._resolveBoundName` already resolve it).
+- Sockets + widget-valued cells arrive in Phase 4.
 
 ## The evaluation flow (2b)
 
@@ -62,13 +65,49 @@ the SAME cycle as the Enter event (deterministic, spec §10). `@` inside a formu
   `removeAllEdgesOf` (node death) is reserved for the sheet's `destroy` (drops every cell's edges)
   and Phase 6 un-wiring; a plain deletion is not node death because the cell may still be referenced.
 
+## Value protocol & presenters (3)
+
+- **Exported value (spec §9.3).** `Widget.exportedValue()` is the unified reader a reference uses
+  when a cell's value is a Widget: `@getColor?() ? @getValue?() ? @text`. Defined on `Widget` now;
+  the reference-read site that consumes it (a ref to a widget-valued cell yields the widget's
+  exported value, or the widget itself if it exports nothing) lands with widget-valued cells in
+  Phase 4.
+- **The value-class algebra (spec §9.5).** Operations live as METHODS on the value classes, not in
+  the sheet: `Color.mixed` (promoted from its old homepage-excluded, unused state — now shipped, and
+  routed through the immutable `Color.create` factory), plus new `Color.lighter` / `Color.darker`.
+  `FormulaHelpers.mix` is a thin free-function veneer that delegates to `Color.mixed`. Adding a
+  method to a value class (even live, via the class inspector) makes it available to the next
+  recompute, since formulas compile from source.
+- **Classify → present (spec §9.4), in `SpreadsheetWdgt`.** Per recompute, `_cacheValue` calls
+  `_reconcileCellPresenterNoSettle`: a value that answers `cellPresenter()` (a `Color` → a
+  `RectangleWdgt` swatch) gets that widget mounted in the cell's rect (branch 2); anything else
+  falls back to the painted `toString()` text (branch 3 — the grid's default; the value-paint loop
+  skips a cell that has a live presenter). Branch 1 (the value IS a Widget → mount it directly) is
+  the widget-valued cell, Phase 4. Presenters are LIVE CHILD widgets, positioned like the overlay
+  editor (`_addNoSettle` + `_apply*`, inset inside the gridlines). The reconcile runs INSIDE the
+  drain's layout settle (`DataflowEngine._drainOnePass` wraps the pass), so every helper is a
+  NoSettle core.
+- **Presenter lifecycle (spec §13 decision): REBUILD on value change, not reuse-and-update.** A
+  branch-2 presenter is pure display with no interactive state to keep, so the sheet disposes the
+  old widget and calls `cellPresenter()` again — which keeps the sheet value-class-agnostic (no
+  per-class "update this widget from that value" protocol). A churn-skip (`_presentedValuesEqual`,
+  the engine's `equals?`-or-identity rule) means a cell whose value is unchanged keeps its widget and
+  rebuilds nothing. Interactive presenters that must preserve state are the widget-VALUED branch
+  (Phase 4), which is never rebuilt from a formula.
+
 ## Serialization & duplication (spec §2 — the engine index is derived, never serialized)
 
 The SHEET serializes its model + cell SOURCES + geometry; the engine's edges are NOT serialized or
 deep-copied. On **restore** (`_afterDeserialization`) and **duplicate** (`_reactToBeingCopied`) the
-sheet calls `recommitAllCells` — recommit every cell (rebuild `compiledFn`/`value` AND re-declare
-edges), mark all stale, one drain — so a restored/duplicated sheet re-declares its OWN edges and
-needs no engine fix-up. This requires the plain data classes to be deep-copyable:
+sheet calls `recommitAllCells` — first DROP every derived child (`_disposeAllCellPresentersNoSettle`
+— the sheet's only children are the transient editor and cell presenters), then recommit every cell
+(rebuild `compiledFn`/`value` AND re-declare edges), mark all stale, one drain — so a
+restored/duplicated sheet re-declares its OWN edges AND rebuilds its presenters from values, needing
+no engine fix-up. (Presenters are DERIVED, spec §9.4; their address→widget index is transient. A
+presenter widget still rides a whole-world snapshot AS a tree child today — the sweep drops that
+restored copy so the recompute doesn't leave a second, un-associated swatch. Phase 4's socket makes
+presenters properly non-serialized; the sweep is the interim reconciliation.) This requires the
+plain data classes to be deep-copyable:
 `SheetModel`/`SheetCellRecord` `@augmentWith DeepCopierMixin`, `SheetError`
 `keptByReferenceOnDeepCopy` (immutable), and the general `Map::deepCopy`/`Set::deepCopy`
 (`src/boot/extensions/Map-extensions.coffee`). Derived fields are dropped on serialize

@@ -68,14 +68,17 @@ class SheetCellRecord
   dataflowNoteError: (error) ->
     @_cacheValue new SheetError "ERR", (error?.message ? "" + error)
 
-  # cache the computed value for painting + downstream pulls, flag errors, request a repaint, and
-  # RETURN it (the engine's equal-value cutoff compares old vs returned). Paint-only — `changed()`
-  # marks a broken rect, never a relayout (NOMENCLATURE: dataflow "caches/recomputes", it does not
-  # "settle" — that verb is layout's).
+  # cache the computed value for painting + downstream pulls, flag errors, request a repaint,
+  # reconcile the cell's presenter widget (spec §9.4 classify→present — a Color mounts a swatch), and
+  # RETURN it (the engine's equal-value cutoff compares old vs returned). This runs inside the drain's
+  # layout settle (DataflowEngine._drainOnePass), so the presenter mount/teardown rides it via NoSettle
+  # cores. Paint-only otherwise — `changed()` marks a broken rect, never a relayout (NOMENCLATURE:
+  # dataflow "caches/recomputes", it does not "settle" — that verb is layout's).
   _cacheValue: (v) ->
     @value     = v
     @errorFlag = v instanceof SheetError
     @sheet.sheetWidget?.changed()
+    @sheet.sheetWidget?._reconcileCellPresenterNoSettle this
     @value
 
   # Resolve one bound parameter name to the value passed into the formula.
