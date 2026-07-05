@@ -1,6 +1,9 @@
 # Dataflow engine & spreadsheet — design spec
 
-**Status:** agreed design, pre-implementation. **Vocabulary:** `NOMENCLATURE.md` (root) is
+**Status:** agreed design, pre-implementation; fact-checked against the tree 2026-07-05
+(every cited API/behavior re-verified — the plan's §1 carries the receipts; refinements
+folded in here: §4.2 item 5 apply-settle mechanics, §9.3 exported-value cluster, one §13
+addition). **Vocabulary:** `NOMENCLATURE.md` (root) is
 normative for every term used here; the layout-side renames it depends on are in
 `docs/coalesced-nomenclature-rename-plan.md`.
 
@@ -109,9 +112,15 @@ updateBroken                ← paint
 3. Recompute each affected node **at most once per pass**, pulling current input values.
 4. **Equal-value cutoff:** a recomputed value that `equals` the old one marks nothing
    further stale. (Force-fire exempts this, §8.)
-5. Apply sinks via the **non-settling connector lane** (`_<action>Connector` variants) or
-   bare mutators — never the public self-settling setters. Layout dirt produced by sinks
-   pools via layout's own atoms and settles in the ONE `recalculateLayouts` that follows.
+5. Apply sinks via the **connector lane** (`_<action>Connector` variants) or bare
+   mutators — never the public self-settling setters. Settle mechanics (verified
+   2026-07-05): a connector JOINS an enclosing settle but OPENS one when it is a
+   cascade's first hop (`_settleLayoutsAfterOrJoinEnclosingPass`; check-layering's
+   settle-tier whitelist) — so the engine opens ONE settle around each pass's
+   interleaved recompute+apply and every connector application joins it: the same
+   first-hop-owns-the-settle shape today's event cascades use, transplanted to the
+   drain. Pure repaint sinks (`changed()`-only) need no settle; residual layout dirt
+   still lands in the `recalculateLayouts` that follows.
 
 ## 5. Re-entrancy during the drain
 
@@ -226,6 +235,11 @@ widget. No marker syntax.
 - If that value is a **Widget**, the reference yields the widget's **exported value**
   instead: `Widget.exportedValue()` — the unified reader over today's duck-typed cluster
   (`getColor()` ?? `getValue()` ?? `@text`). A widget exporting nothing yields itself.
+  The cluster is thinner than the shorthand reads (verified 2026-07-05): only
+  `ColorPickerWdgt` defines `getColor`, only `StringFieldWdgt` defines `getValue`;
+  `SliderWdgt` holds a bare `@value` property — such widgets gain the missing reader
+  (`getValue: -> @value`) when they join the protocol (plan Phase 4), keeping
+  `exportedValue` one uniform chain.
 - The cell **socket** is the two-way boundary adapter: it mounts the presenter/widget, and
   it is the connection target that interactive widget-sources (slider, picker, clock) fire
   into — each firing is a `markStale` on the cell.
@@ -330,3 +344,8 @@ Detailed, cold-executable plan with phase ledger:
 - Read-your-writes for scripts/macros reading cells mid-cycle (settle-on-read vs accept
   cycle granularity).
 - Node identity naming for copied sheets/cells in the engine index.
+- Widget-valued cells across save/load: the serialized tree carries the MOUNTED widget
+  (the socket's child), while recommit-on-load rebuilds cell values from source — a naive
+  recompute would REPLACE the restored widget with a fresh instance, discarding its
+  runtime state (a moved slider's position). Re-mount the restored widget vs
+  recompute-and-replace: plan Phase 4 decides and documents.

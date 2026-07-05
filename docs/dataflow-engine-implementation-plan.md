@@ -38,19 +38,43 @@ Identical to the rename plan's §0, restated: prerequisites `coffee`, `terser`, 
 `python3` (global). Tiers:
 
 - **Full** (`../Fizzygum-tests` exists): verify with `./build_and_test.sh` (~1 min,
-  headless, parallel). New behavior additionally needs NEW SystemTests (§4.3) — authored in
+  headless, parallel). New behavior additionally needs NEW SystemTests (§4 rule 5) — authored in
   the sibling repo per `src/macros/CLAUDE.md` and `src/macros/MACRO-PATTERNS.md`.
 - **Repo-only**: verify with `./build_it_please.sh --notests` (auto-creates
   `../Fizzygum-builds`; runs the syntax, layering, and dead-method gates). Phases whose
   deliverable is *behavior* (2a onward) should preferably run in the full tier; if executed
   repo-only, state in the commit message that suite + new-test authoring are pending.
 
+**Verification cadence (full tier; referenced by every phase):**
+
+- **Inner loop (every commit):** `./build_and_test.sh` — dpr 1, Chrome, headless parallel
+  (~1 min); the build gates run inside it.
+- **Phase-close battery (mandatory at the end of Phases 2c, 4, 5, 6c, 6d; recommended at
+  1 and 3):** dpr 1 suite + dpr 2 (`cd ../Fizzygum-tests && node scripts/run-all-headless.js
+  --dpr=2`) + WebKit cross-engine (`npm run test:webkit`) + apps smoke
+  (`node scripts/smoke-apps-headless.js`). (The owner's umbrella `fg gauntlet` wrapper —
+  local workspace tooling, not committed — bundles exactly this battery plus the audits.)
+- **Serialization legs — whenever the serialized surface changes** (Phases 1, 2b/2c, 3, 4):
+  `npm run test:serialization` + `npm run test:serialization:file` (the characterization
+  rig — `scripts/serialization-roundtrip-headless.js` builds a fixture battery, round-trips
+  it, and checks an EXPECTATIONS table; phases that add serializable state EXTEND that
+  battery, see per-phase notes).
+- **Recapture rule:** every screenshot recapture is verified on the WebKit leg too — a
+  recapture can BAKE IN an error frame, after which the Chrome legs pass vacuously; only
+  the cross-engine leg surfaces it (crash pixels diverge V8/JSC). Lesson learned the hard
+  way: `fizzygum-recapture-masks-crash-webkit-safeguard`.
+- **Test naming/authoring:** every new SystemTest is macro-driven and named
+  `SystemTest_macro<CamelCase>` — the suite's ONLY style (verified 2026-07-05: 168/168
+  existing tests). Author per `src/macros/CLAUDE.md` + `src/macros/MACRO-PATTERNS.md`.
+
 **Baseline before any edit** (also = Phase 0, see below). Ignore git's harmless
 `.gitattributes` warning.
 
 ## §1 Verified tree facts this plan relies on
 
-Re-derive each before relying on it; commands given. *(all verified 2026-07-04)*
+Re-derive each before relying on it; commands given. *(facts 1–9 verified 2026-07-04 and
+re-verified 2026-07-05; facts 10–18 verified/added in the 2026-07-05 pre-implementation
+review, with file:line receipts)*
 
 1. **`build.py` does NOT walk `src/` recursively.** It globs an explicit directory list
    (`buildSystem/build.py` ~lines 191–226, `filenames = sorted(... glob("src/<dir>/*.coffee"))`).
@@ -95,26 +119,71 @@ Re-derive each before relying on it; commands given. *(all verified 2026-07-04)*
    set in `updateTimeReferences`), `WorldWdgt.frameCount` (incremented at cycle end).
 10. **Gates that always run** in `build_it_please.sh`: syntax
     (`check-coffee-syntax.js`), layering (`check-layering.js`), dead-method
-    (`check-dead-methods.js`). Gotcha: the dead-method gate flags never-referenced
-    methods — engine node-protocol methods invoked only *dynamically* may trip it; if so,
-    inspect how existing dynamically-invoked connection setters are exempted in
-    `check-dead-methods.js` and follow that pattern (do NOT weaken the gate).
+    (`check-dead-methods.js`). The dead-method gate's escape hatch is
+    `buildSystem/dead-method-allowlist.txt` (its header documents the mechanism); it
+    harvests every identifier token — string-dispatched names and literal property
+    accesses included — so `dataflowRecompute`/`dataflowValue`/`dataflowApply` invoked as
+    `node.dataflowRecompute?()` at engine call sites ARE seen and will not false-positive.
+    Reach for the allowlist only for a genuinely never-literally-named method (do NOT
+    weaken the gate).
 11. **Legacy connection machinery** (to be subsumed in Phase 6): `@target`/`@action`
     wiring via `setTargetAndActionWithOnesPickedFromMenu`; token guard
-    `Widget._acceptsConnectionToken` (~34 call sites); patch-node freshness gate
-    `CalculatingPatchNodeWdgt.updateTarget`.
+    `Widget._acceptsConnectionToken` (Widget.coffee ~1759; 38 grep matches) — it REJECTS a
+    seen token BEFORE storing the value, so a come-back-around delivery is discarded
+    entirely and the ring's entry node is never re-applied; token threading
+    `connectionsCalculationToken` ≈146 matching lines across 19 src files (the true 6d
+    sweep size); patch-node freshness gate `CalculatingPatchNodeWdgt.updateTarget`
+    (~84–125: compares each connected input's token slot against the incoming token — two
+    INDEPENDENTLY-sourced inputs can never match, so the spec-§8 deadlock is verified
+    fact, not conjecture).
+12. **`WellKnownObjects` has TWO tables** (`src/serialization/WellKnownObjects.coffee`):
+    `keyFor` (identity checks + the `wellKnownKey` marker fallback) AND the `resolve`
+    switch (key → live object). A new well-known singleton needs BOTH arms — `keyFor`
+    alone saves fine, but the load then dies on an unknown key.
+13. **Cascade propagation today is node-local:** every controller's setter core ends in an
+    UNCONDITIONAL `updateTarget()` tail (e.g. `StringWdgt._setTextNoSettle` ~1258 runs it
+    even when the text did not change); tokens are the only termination. Under the engine
+    this tail becomes `markStale` and re-marks the very node being applied — the **echo**
+    (NOMENCLATURE, dataflow table); Phase 6b must suppress or absorb it.
+14. **The connector lane opens a settle at first hop:**
+    `_settleLayoutsAfterOrJoinEnclosingPass` joins an enclosing pass but OPENS a settle
+    when there is none (ControllerMixin header ~37–48; `check-layering.js`
+    RECALC_WHITELIST). The drain therefore opens ONE settle per pass around its apply work
+    (Phase 1 drain, step 5) — sinks never run off-settle (the end-of-cycle capstone audit
+    exists to flag exactly that).
+15. **`SliderWdgt` has no `getValue`** — its value is the bare `@value` property
+    (SliderWdgt ~18). The `exportedValue` cluster is thinner than the spec shorthand:
+    `getColor` = ColorPickerWdgt only, `getValue` = StringFieldWdgt only. Phase 4 adds
+    `SliderWdgt.getValue: -> @value` or the slider-in-a-cell acceptance test cannot work.
+16. **The serializer THROWS on undeclared unserializable state** (`Serializer.coffee`
+    ~229/~322, e.g. a function-valued property): `SheetCellRecord`'s
+    `@serializationTransients: ["compiledFn", …]` is mandatory for saving to work at all,
+    not hygiene. Protocol reference: `docs/serialization-duplication-reference.md`.
+17. **Keyboard input path:** receivers register in `world.keyboardEventsReceivers` (a
+    Set; the caret's add/delete at WorldWdgt ~2330/~2378 is the model) and implement
+    `processKeyDown key, code, shiftKey, ctrlKey, altKey, metaKey`
+    (`src/events-input/KeydownInputEvent.coffee`). Never a DOM listener.
+18. **Macro-side instrumentation asserting is established:** `MacroToolkit.evaluateString`
+    (~194) runs arbitrary CS mid-macro (`SystemTest_macroEvaluateString` is the suite
+    precedent) and the `MacroToolkit.assert*` verbs show the failure plumbing — a macro
+    step that reads `world.dataflow.lastDrainRecomputeCount` and throws on mismatch is a
+    real, supported test shape.
 
 ## §2 Deliverables map
 
 | Phase | New files | Modified files |
 |---|---|---|
-| 1 | `src/dataflow/DataflowEngine.coffee` | `WorldWdgt.coffee` (ctor + doOneCycle), `WellKnownObjects.coffee`, `buildSystem/build.py` |
-| 2 | `src/spreadsheet/SpreadsheetApp.coffee`, `SpreadsheetWdgt.coffee`, `SheetModel.coffee`, `SheetCellRecord.coffee`, `FormulaCompiler.coffee`, `FormulaHelpers.coffee`, icon widget | `build.py`, `WorldWdgt.coffee` (launcher), `MenusHelper.coffee` (menu entry) |
+| 1 | `src/dataflow/DataflowEngine.coffee`, `src/dataflow/CLAUDE.md` | `WorldWdgt.coffee` (ctor + doOneCycle), `WellKnownObjects.coffee` (keyFor AND resolve), `buildSystem/build.py`, `docs/serialization-duplication-reference.md` (well-known row) |
+| 2 | `src/spreadsheet/SpreadsheetApp.coffee`, `SpreadsheetWdgt.coffee`, `SheetModel.coffee`, `SheetCellRecord.coffee`, `SheetError.coffee`, `FormulaCompiler.coffee`, `FormulaHelpers.coffee`, icon widget, `src/spreadsheet/CLAUDE.md` | `build.py`, `WorldWdgt.coffee` (launcher), `MenusHelper.coffee` (menu entry) |
 | 3 | — | `Widget.coffee` (`exportedValue`), `Color.coffee` (`cellPresenter`, `lighter`, `darker`; promote `mixed`), `SpreadsheetWdgt`/presenter chain |
-| 4 | (maybe) `CellSocketWdgt.coffee` | `SpreadsheetWdgt`, `SheetCellRecord` |
-| 5 | `src/dataflow/SecondsSource.coffee`, `FrameSource.coffee` | `FormulaCompiler` (bindings), `DataflowEngine` (subscription-count hooks) |
-| 6 | — | `ControllerMixin.coffee`, `Widget.coffee`, `CalculatingPatchNodeWdgt.coffee` + patch family, wire menus; later: deletion sweep of token plumbing |
-| 7 | `src/dataflow/CLAUDE.md`, `src/spreadsheet/CLAUDE.md` | root `CLAUDE.md`, spec status header, `NOMENCLATURE.md` if deviations occurred |
+| 4 | (maybe) `CellSocketWdgt.coffee` | `SpreadsheetWdgt`, `SheetCellRecord`, `SliderWdgt.coffee` (`getValue`, §1.15) |
+| 5 | `src/dataflow/SecondsSource.coffee`, `FrameSource.coffee` | `FormulaCompiler` (bindings), `DataflowEngine` (subscription-count hooks), `../Fizzygum-tests/DETERMINISM.md` (time-source rule) |
+| 6 | — | `ControllerMixin.coffee`, `Widget.coffee`, `CalculatingPatchNodeWdgt.coffee` + patch family (incl. `DiffingPatchNodeWdgt`, `RegexSubstitutionPatchNodeWdgt`, `FanoutWdgt`/`FanoutPinWdgt`), wire menus; later: deletion sweep of token plumbing + `NOMENCLATURE.md` (legacy rows → historical) |
+| 7 | `docs/dataflow-measurements.md` (or a spec section) | root `CLAUDE.md`, spec status header, completeness pass over `src/dataflow/CLAUDE.md` + `src/spreadsheet/CLAUDE.md` (seeded in 1/2a), tests-repo `CLAUDE.md` |
+
+Tests-repo deliverables (full tier) are listed per phase below: new `SystemTest_macro*`
+suites, serialization-rig fixtures + EXPECTATIONS rows (2c/3/4), the `DETERMINISM.md`
+update (5), and the 6c recapture set.
 
 ---
 
@@ -138,24 +207,36 @@ nothing uses it. Zero behavior change; the drain early-returns on an empty stale
 
 - Class markers: `keptByReferenceOnDeepCopy: true`; `wellKnownKey: "dataflow"`. Also add
   the identity check to `WellKnownObjects.keyFor` primary list (`return "dataflow" if obj is
-  world?.dataflow`) — mirrors `widgetFactory`.
+  world?.dataflow`) — mirrors `widgetFactory` — AND the `resolve` switch arm
+  (`when "dataflow" then world?.dataflow`): §1.12 — `keyFor` alone saves fine but the
+  load then dies on the unknown key.
 - **State:** `@edgesFrom` (Map: producer → Set of edge records `{consumer, firesPerEvent,
   cold}` — `firesPerEvent`/`cold` unused until Phases 6/never, present in the record shape
-  from day one), `@edgesTo` (reverse Map), `@stalePool` (Set), `@forcedPool` (Set),
-  `@_recalculatingDataflow` (guard), `@lastValues` (Map: node → last recomputed value),
+  from day one; the record is also where a wire's `action` rides in Phase 6b), `@edgesTo`
+  (reverse Map), `@stalePool` (Set — insertion-ordered, which is event order: the drain's
+  determinism leans on this), `@forcedPool` (Set), `@_recalculatingDataflow` (guard),
+  `@lastValues` (**WeakMap**: node → last recomputed value — weak so a dead node's value is
+  never pinned; the edge Maps are strong, hence the explicit node-death API below),
   instrumentation counters (`@lastDrainPassCount`, `@maxObservedPassCount`,
   `@lastDrainRecomputeCount`).
 - **Edge API:** `addEdge(producer, consumer, opts)`, `removeEdgesInto(consumer)`,
-  `removeAllEdgesOf(node)` (call when a node dies), `wouldCloseCycle(producer, consumer)`
-  (DFS over `@edgesFrom`). The index is derived and disposable (spec §2): clients re-declare
-  edges; the engine never serializes any of this state (all Maps/Sets are runtime-only —
-  give them the `rebuildDerivedValue`-style treatment or rebuild on wake, per
+  `removeAllEdgesOf(node)` (the node-death entry — callers: 2c cell delete/re-commit, 4
+  socket unmount, 6b un-wiring + a `fullDestroy` hook on connection-bearing widgets; a
+  dead node left in the index is both a leak and a ghost recompute),
+  `wouldCloseCycle(producer, consumer)` (DFS over `@edgesFrom`; `wouldCloseCycle(n, n)`
+  answers true — the self-reference `A1` inside A1 is the trivial case). The index is
+  derived and disposable (spec §2): clients re-declare edges; the engine never serializes
+  any of this state (all Maps/Sets are runtime-only — give them the
+  `rebuildDerivedValue`-style treatment or rebuild on wake, per
   `docs/serialization-duplication-reference.md`).
-- **Node protocol (duck-typed, documented in the class header):** a node may implement
-  `dataflowRecompute()` → new value (computing node; absence = pure source/sink),
-  and `dataflowApply(value)` (sink application hook; Phase 2's cells and Phase 6's wires
-  provide concrete implementations). Equality for the equal-value cutoff:
-  `_valuesEqual: (a, b) -> if a?.equals? then a.equals b else a is b`.
+- **Node protocol (duck-typed, documented in the class header — the header IS the
+  contract doc):** a node may implement `dataflowRecompute()` → new value (computing
+  node; absence = pure source/sink), `dataflowValue()` → current value (the pull/cutoff
+  reader for nodes that are NOT computing nodes — Phase 6b maps it to `exportedValue()`;
+  a node with neither is treated as always-changed, the conservative default for
+  sources), and `dataflowApply(value)` (sink application hook; Phase 2's cells and Phase
+  6's wire edge-records provide concrete implementations). Equality for the equal-value
+  cutoff: `_valuesEqual: (a, b) -> if a?.equals? then a.equals b else a is b`.
 - **Verbs (spec §3, §5):**
   - `__poolStale: (node, forced = false)` — bare atom: add to pools, nothing else.
   - `markStale: (node, forced = false)` — dual-mode: if `@_recalculatingDataflow` then
@@ -165,23 +246,43 @@ nothing uses it. Zero behavior change; the drain early-returns on an empty stale
   1. `return if @stalePool.size is 0` — the dark-phase hot path; keep it first.
   2. Re-entrancy guard: throw if `@_recalculatingDataflow` (mirror the
      `recalculateLayouts` guard's message style).
-  3. Loop (drain-until-quiet): snapshot + clear pools; compute downstream closure; order
-     topologically (Kahn over the closure's subgraph; SCCs: nodes left unordered by Kahn
-     belong to cycles — order them by BFS from the pass's entry nodes, each visited once);
-     recompute each node at most once (per-pass visited set), pulling inputs; equal-value
-     cutoff (skip marking consumers if `_valuesEqual` and not forced); apply sinks.
-     Wrap each node's recompute in try/catch: on throw, record the error AS the node's
-     value if the node supports it (`dataflowNoteError?`), never leave it stale, stash the
-     exception for the error console outside the drain (model: layout's
-     `layoutErrorsToReport`).
-  4. Pass-count cap: `dataflowPassesSanityLimit = 1000`, throw
+  3. Loop (drain-until-quiet): snapshot + clear pools; compute the downstream closure via
+     the index; order it. Ordering precision (the one spot where a hand-wave breeds a
+     bug): Kahn over the closure's subgraph leaves unordered not just cycle members but
+     ALSO everything DOWNSTREAM of a cycle (their in-degrees never reach 0) — so either
+     run a proper SCC condensation (Tarjan, ~30 lines; Kahn over the condensation; within
+     an SCC, BFS from the pass's entry node — one lap, spec §7) or accept the simpler
+     Kahn-then-BFS-remainder ordering and DOCUMENT that a diamond below a cycle may cost
+     one extra (cutoff-terminated) pass. Multiple entries in one batch: BFS from the
+     entries in stale-pool insertion order (= event order, §"State") keeps the drain
+     deterministic (spec §10).
+  4. Walk the ordered closure with a per-pass `visited` set and a `changed` set seeded
+     with the snapshot's nodes. Recompute/apply a node ONLY IF it is in the snapshot or
+     has a producer in `changed` — this dynamic pruning IS the equal-value cutoff
+     (without it every pass recomputes the entire closure). Recompute at most once per
+     pass; a recomputed value that `_valuesEqual`s the old one (and is not forced) does
+     NOT enter `changed`. `visited` covers SINK APPLICATION too: a node already visited
+     this pass is not re-applied — this reproduces the token guard's
+     discard-on-come-back-around semantics (§1.11) and is what stops a ring at exactly
+     one lap.
+  5. Apply-phase settle (§1.14): the engine opens ONE settle around each pass's
+     interleaved recompute+apply (world-level `_settleLayoutsAfter`; if `check-layering`
+     objects to the cross-object call, add a sanctioned wrapper on `WorldWdgt` and record
+     the deviation) which every `_<action>Connector` application then joins;
+     `changed()`-only sinks are settle-free. Wrap each node's recompute in try/catch: on
+     throw, record the error AS the node's value if the node supports it
+     (`dataflowNoteError?`), never leave it stale, stash the exception for the error
+     console outside the drain (model: layout's `layoutErrorsToReport`).
+  6. Pass-count cap: `dataflowPassesSanityLimit = 1000`, throw
      `DATAFLOW_NONCONVERGENCE` with the offending nodes' identities in the message.
-     Expected measured peaks: 1 pass typical, 2 with sink-onto-source chains — record
-     actuals in Phase 7.
+     Expected measured peaks: 1 pass typical, 2 with sink-onto-source chains (and, if 6b
+     ships the pool-the-echo fallback instead of echo suppression, 2 as the circuit
+     norm) — record actuals in Phase 7.
 - **What the engine must NOT do:** call any public self-settling setter; call
   `_invalidateLayout`; fire a connection's settling entrypoint. Sinks route via the
-  `_<action>Connector` lane or bare mutators (§1.5); their layout dirt settles in the
-  `recalculateLayouts` that immediately follows the drain.
+  `_<action>Connector` lane or bare mutators (§1.5), joining the pass's apply-phase settle
+  (step 5); anything a sink pools bare still settles in the `recalculateLayouts` that
+  immediately follows the drain.
 
 **`WorldWdgt` changes:** construct `@dataflow = new DataflowEngine` beside
 `@widgetFactory`; insert `@dataflow.recalculateDataflow()` between
@@ -192,7 +293,15 @@ coupling — cite spec §4.1/§5).
 **`build.py`:** add `src/dataflow` glob line (place before the serialization line, comment
 in the established style: shipped feature, not homepage-excluded).
 
-**Verification:** tier verification (dark ⇒ zero pixel diffs, zero recaptures). Then the
+**Docs (same commit):** seed `src/dataflow/CLAUDE.md` — collaborator pattern, node
+protocol, drain contract, the two-drain sentence, pointer to the spec (subsystem-depth
+docs are created WITH the subsystem, not in Phase 7; Phase 7 only closes them out). Add
+the engine's row to the well-known-objects section of
+`docs/serialization-duplication-reference.md`. The `DataflowEngine` class header carries
+the node-protocol contract in full.
+
+**Verification:** tier verification (dark ⇒ zero pixel diffs, zero recaptures), plus the
+serialization legs (§0 cadence — the world grew a well-known singleton). Then the
 console exercise — open the built world, paste into a ScriptWdgt or the console (dev menu):
 
 ```coffee
@@ -207,14 +316,20 @@ world.dataflow.recalculateDataflow()
 
 (Adjust to the real API you built; the point is a documented, repeatable by-hand smoke of
 pool→drain→once semantics before any real client exists. If `pullValue` ends up not being
-an engine method — e.g. nodes read inputs directly — update this snippet in this plan.)
+an engine method — e.g. nodes read inputs directly — update this snippet in this plan.
+OPTIONAL: productize this smoke as `SystemTest_macroDataflowEngineSmoke` — a no-pixel
+macro driving the same calls via the toolkit's `evaluateString`, throwing on a wrong
+counter (§1.18). If skipped, Phase 2c's instrumentation asserts subsume it — record the
+choice in the ledger either way.)
 
 ### Phase 2 — spreadsheet v1 (first client)
 
 New `src/spreadsheet/` directory (+ `build.py` glob line, same commit). All widgets follow
 the layout discipline: immediate `_apply*` mutators inside `_reLayout`, bulk moves inside
 `world.disableTrackChanges()` … `world.maybeEnableTrackChanges()` + one `fullChanged()`
-(model: `StretchablePanelWdgt._reLayout`).
+(model: `StretchablePanelWdgt._reLayout`). Seed `src/spreadsheet/CLAUDE.md` in the 2a
+commit (shell + painted-grid model + socket philosophy) and grow it in 2b/2c/4 — subsystem
+docs are a per-phase deliverable, not a Phase 7 chore.
 
 **2a — shell, painted grid, selection.**
 - `SpreadsheetApp extends IconicDesktopSystemWindowedApp` (`title: "Spreadsheet"`,
@@ -230,11 +345,13 @@ the layout discipline: immediate `_apply*` mutators inside `_reLayout`, bulk mov
   outside the scroll frame), the selection rectangle, and (from 2b) cell value text.
   Fixed default column width / row height; column resize is NOT in v1.
 - Selection: `mouseClickLeft` → cell coordinate math → repaint via `changed()`. Keyboard
-  arrows move selection (see how text widgets receive key events; route through the
-  standard event path, never a DOM listener).
-- **SystemTests to author (sibling repo, full tier):**
-  `SystemTest_spreadsheet_open_grid` (launch, screenshot),
-  `SystemTest_spreadsheet_selection` (click cells, arrows, screenshot).
+  arrows move selection — the standard path (§1.17): register in
+  `world.keyboardEventsReceivers` (add on focus/selection, delete on blur — the caret's
+  add/delete at WorldWdgt ~2330/~2378 is the model) and implement `processKeyDown`;
+  never a DOM listener.
+- **SystemTests to author (sibling repo, full tier; naming per §0):**
+  `SystemTest_macroSpreadsheetOpenGrid` (launch, screenshot),
+  `SystemTest_macroSpreadsheetSelection` (click cells, arrows, screenshot).
 - Determinism: nothing time-based exists yet; keep it that way (no `Date.now`, no
   wall-clock — spec §10).
 
@@ -242,18 +359,23 @@ the layout discipline: immediate `_apply*` mutators inside `_reLayout`, bulk mov
 - `SheetModel` (plain class): sparse Map keyed `"A1"`; owns `SheetCellRecord`s; address
   helpers (`colToLetters`/`lettersToCol`).
 - `SheetCellRecord` (plain class): persistent `{@sheet, @address, @source}`; derived
-  `{@compiledFn, @value, @errorFlag}` — derived fields rebuilt, never serialized
-  (serialization participation per `docs/serialization-duplication-reference.md`; the
-  SHEET serializes: model + sources + geometry; on load/duplicate, recommit every cell to
-  rebuild derived state and re-declare edges).
+  `{@compiledFn, @value, @errorFlag}` — derived fields rebuilt, never serialized:
+  declare them in `@serializationTransients` (MANDATORY, §1.16 — the serializer THROWS
+  on an undeclared function-valued property; per-class protocol in
+  `docs/serialization-duplication-reference.md`; the SHEET serializes: model + sources +
+  geometry; on load/duplicate, recommit every cell to rebuild derived state and
+  re-declare edges).
 - `FormulaCompiler` (plain class): `commit(cellRecord, newSource)` →
   (1) strip CS comments and string literals from a scan copy;
   (2) scan identifiers: cell refs (`/(?<![\w$.])[A-Z]{1,2}(?:[1-9][0-9]{0,3})(?![\w$])/`,
-  NOT preceded by `.` so `foo.A1` is a property access, not a ref), helper names
-  (`FormulaHelpers` own-property names), later `seconds`/`frame`;
+  NOT preceded by `.` so `foo.A1` is a property access, not a ref — JS lookbehind is fine
+  on every engine the suite runs: current Chrome/Puppeteer, Playwright WebKit; production
+  Safari ≥16.4), helper names (`FormulaHelpers` own-property names), later
+  `seconds`/`frame`;
   (3) build the wrapper source
   `"(#{boundNames.join ','}) ->\n#{indented user source}"`, compile ONCE via
-  `compileFGCode` (bare), eval to get `@compiledFn`;
+  `compileFGCode` (bare — NB it THROWS a rich Error on a parse failure, boot file ~88:
+  the catch around it IS the `#SYNTAX` path), eval to get `@compiledFn`;
   (4) on compile failure: `@value = new SheetError "SYNTAX", message` (see 2c), no edges.
   Everything-is-CoffeeScript (spec §9.2): `42`, `"total"`, `A1 * 2` are all just source.
   Evaluation calls `@compiledFn.apply sheetScope, boundValues` — decide and document
@@ -263,8 +385,10 @@ the layout discipline: immediate `_apply*` mutators inside `_reLayout`, bulk mov
   `FormulaCompiler.commit` + `world.dataflow.markStale cellRecord`). Multi-line editing
   via the cell's menu → `CodePromptWdgt` (existing modal code editor). The overlay editor
   is the ONLY live child widget in v1 — everything else stays painted.
-- **SystemTests:** `SystemTest_spreadsheet_literal_entry` (type `42`, `"hello"` — note
-  the CS quoting requirement is BY DESIGN, spec §9.2/§13), `SystemTest_spreadsheet_edit_cancel`.
+- **SystemTests:** `SystemTest_macroSpreadsheetLiteralEntry` (type `42`, `"hello"` — note
+  the CS quoting requirement is BY DESIGN, spec §9.2/§13),
+  `SystemTest_macroSpreadsheetEditCancel`. Typing in macros is established (keyboard
+  patterns in `src/macros/MACRO-PATTERNS.md`).
 
 **2c — references, recompute, errors.**
 - Cells become dataflow nodes: `SheetCellRecord.dataflowRecompute()` pulls referenced
@@ -273,7 +397,12 @@ the layout discipline: immediate `_apply*` mutators inside `_reLayout`, bulk mov
   returns the new value. Commit re-declares edges: `engine.removeEdgesInto cell;
   engine.addEdge refCell, cell for each ref` — but FIRST
   `engine.wouldCloseCycle(...)` for each new edge: on a would-be cycle, reject the commit
-  with `@value = new SheetError "LOOP"` and declare NO edges (spec §7).
+  with `@value = new SheetError "LOOP"` and declare NO edges (spec §7). (Checking each
+  new edge against the pre-commit graph suffices: every new edge points INTO the
+  committed cell, so any new cycle must run cell→…→refCell over existing edges.)
+  Deleting a cell (committing empty source) calls `engine.removeAllEdgesOf cellRecord`
+  (Phase 1 node-death API); what downstream references then see (`nil` vs an `#ERR`) —
+  decide and document in `src/spreadsheet/CLAUDE.md`.
 - `SheetError` (plain class, `src/spreadsheet/`): `{@kind, @message}`; `toString ->
   "#" + @kind`; propagates: `dataflowRecompute` of a cell whose input is a `SheetError`
   returns that error (short-circuit before calling the formula). Painted distinctly
@@ -281,18 +410,33 @@ the layout discipline: immediate `_apply*` mutators inside `_reLayout`, bulk mov
 - Formula runtime throw → catch inside the cell's `dataflowRecompute`, return
   `new SheetError "ERR", err.message` (this doubles as the engine-level
   force-resolve of spec §5 — the cell always yields a value).
-- **SystemTests:** `SystemTest_spreadsheet_refs_recalc` (A1=3, B1=`A1 * 2`,
+- **SystemTests:** `SystemTest_macroSpreadsheetRefsRecalc` (A1=3, B1=`A1 * 2`,
   C1=`A1 + B1`; edit A1→5; assert 10/15 — the diamond, computed once: also assert via
-  `world.dataflow.lastDrainRecomputeCount` in a macro `macroEvaluateString` step),
-  `SystemTest_spreadsheet_loop_rejected`, `SystemTest_spreadsheet_error_propagation`.
+  `world.dataflow.lastDrainRecomputeCount` in an `evaluateString` macro step that throws
+  on mismatch, §1.18), `SystemTest_macroSpreadsheetLoopRejected`,
+  `SystemTest_macroSpreadsheetErrorPropagation`.
+- **Round-trip & duplication coverage (this phase creates the serialized surface):**
+  extend the serialization rig's fixture battery + EXPECTATIONS table
+  (`../Fizzygum-tests/scripts/serialization-roundtrip-headless.js`) with a sheet fixture —
+  literals + a formula chain + an error cell; the restore path exercises the §5 rebuild
+  strategy (recommit all, mark all stale, one drain). Author
+  `SystemTest_macroSpreadsheetDuplicate`: duplicate a sheet window (the standard duplicate
+  gesture), edit the ORIGINAL's A1, assert the copy is unaffected AND the copy's own
+  recompute works — spec §2's no-engine-fix-up corollary, actually exercised, not assumed.
+  Run both serialization legs (§0).
+- **Phase-close:** run the §0 battery — 2c closes the first user-visible feature set.
 
 ### Phase 3 — value protocol & presenters (Color first)
 
 - `Widget.exportedValue: -> @getColor?() ? @getValue?() ? @text` (spec §9.3) — on
   `Widget`, with a header comment naming it the unified reader over the duck-typed cluster.
 - `Color`: promote `mixed` (remove its homepage-exclusion markers `# »>> … <<«` — they mark
-  build-stripped code; `mixed` becomes shipped); add `lighter: (amount = 0.5) ->
-  @mixed 1 - amount, Color.WHITE` and `darker` (via `Color.BLACK`); add
+  build-stripped code; `mixed` becomes shipped). While promoting (verified 2026-07-05):
+  its body builds `new @constructor(...)` — switch to `@constructor.create(...)` (keeps
+  the immutable-and-cached invariant), and its comment says "ignore alpha" while the code
+  MIXES alpha — decide the intended alpha semantics and make comment+code agree. Add
+  `lighter: (amount = 0.5) -> @mixed 1 - amount, Color.WHITE` and `darker` (via
+  `Color.BLACK`; both constants exist — `Color.create` statics at Color ~22/~147); add
   `cellPresenter: -> s = new RectangleWdgt; s.setColor @; s` — respect Color's official
   immutability (never mutate; see the class's own deep-copy comment).
 - Presenter chain in the sheet (spec §9.4), evaluated per recompute:
@@ -304,23 +448,43 @@ the layout discipline: immediate `_apply*` mutators inside `_reLayout`, bulk mov
   binding path; the algebra otherwise = value-class methods (spec §9.5).
 - The "operate ➜" cell menu (meta-introspection listing of the value class's methods) is
   OPTIONAL scope — implement only if time allows; record either way in the ledger commit.
-- **SystemTests:** `SystemTest_spreadsheet_color_cell` (`new Color 255, 0, 0` → swatch;
-  B1 = `A1.lighter()` → lighter swatch; edit A1 → both change).
+- **SystemTests:** `SystemTest_macroSpreadsheetColorCell` (`new Color 255, 0, 0` → swatch;
+  B1 = `A1.lighter()` → lighter swatch; edit A1 → both change). Extend the rig's sheet
+  fixture with a color cell (the compact-form round-trip through `create` is already the
+  documented Color behavior — now exercised through a sheet) and run the serialization
+  legs (§0).
 
 ### Phase 4 — widget-valued cells & sockets
 
 - A formula yielding a Widget mounts it live in the cell (presenter chain branch 1);
   the mount point is the **socket** (either a thin `CellSocketWdgt` or direct child
   management in the grid pane — decide by whichever keeps `_reLayout` simplest).
+  Unmounting de-registers the socket wiring; a dying cell calls `removeAllEdgesOf`
+  (Phase 1 node-death API).
 - References to a widget-valued cell yield `widget.exportedValue()`; a widget with no
-  export yields the widget itself (spec §9.3).
+  export yields the widget itself (spec §9.3). Add `SliderWdgt.getValue: -> @value`
+  (§1.15) with a one-line header comment naming it the exported-value reader — without it
+  `exportedValue` falls through to the export-nothing branch and the acceptance test
+  below cannot work.
 - Interactivity in: wire the mounted widget's connection at the socket
   (`widget.setTargetAndActionWithOnesPickedFromMenu nil, nil, socketAdapter, "cellInput"`
-  — hard-wired at mount; the adapter's `cellInput` marks the cell stale; pooled lane, so
-  a drag = per-frame recompute of dependents, spec Scenario A). Drag-and-DROP of desktop
-  widgets into cells is OUT of scope for this phase (record as deferred).
-- **SystemTests:** `SystemTest_spreadsheet_slider_cell` (macro drags the slider; dependent
-  cell updates; deterministic — input events only).
+  — hard-wired at mount, signature verified (first two args ignored); the adapter's
+  `cellInput` marks the cell stale and accepts-and-ignores the token argument; pooled
+  lane, so a drag = per-frame recompute of dependents, spec Scenario A). Drag-and-DROP of
+  desktop widgets into cells is OUT of scope for this phase (record as deferred).
+- **Save/load semantics for widget-valued cells (decide + document now; spec §13):** the
+  serialized tree carries the MOUNTED widget (the socket's child), while the §5 rebuild
+  strategy (recommit-all-then-drain) would recompute the formula and REPLACE it with a
+  fresh instance, discarding runtime state (a moved slider's position). Recommended v1:
+  on load, if the restored socket already holds a widget of the class the recompute
+  would produce, KEEP the restored widget; on class mismatch, rebuild. Document the
+  decision in `src/spreadsheet/CLAUDE.md`.
+- **SystemTests:** `SystemTest_macroSpreadsheetSliderCell` (macro drags the slider;
+  dependent cell updates; deterministic — input events only). Extend the rig's sheet
+  fixture with a slider-valued cell pinning the save/load decision (drag, save, load,
+  assert the position survived — or the documented alternative); run the serialization
+  legs (§0).
+- **Phase-close:** run the §0 battery.
 
 ### Phase 5 — time sources
 
@@ -329,10 +493,15 @@ the layout discipline: immediate `_apply*` mutators inside `_reLayout`, bulk mov
   `subscriberCount` maintained by the engine's `addEdge`/`removeEdgesInto` (engine calls
   `source.subscriberCountChanged n` — registering in `world.steppingWdgts` (`fps: 1` /
   `fps: 0`, `step: -> world.dataflow.markStale @`) while n>0, deregistering at 0).
-- Values pulled at recompute: `SecondsSource` → `WorldWdgt.dateOfCurrentCycleStart`;
-  `FrameSource` → `WorldWdgt.frameCount`. Formulas NEVER call `Date` (spec §6/§10);
-  the scanner bindings `seconds` / `frame` become edges to the sources plus bound
-  parameters carrying the pulled values.
+- Values pulled at recompute: `SecondsSource` → `WorldWdgt.dateOfCurrentCycleStart`
+  (a `Date`, set at cycle start in `updateTimeReferences`, nil'd at cycle end — verified);
+  `FrameSource` → `WorldWdgt.frameCount` (incremented at cycle END — verified; document
+  which frame a `frame` formula therefore sees). Decide the pulled value SHAPE now:
+  `seconds` binds a NUMBER (e.g. epoch seconds, `Math.floor(date.getTime() / 1000)`),
+  not the raw `Date` — formula arithmetic and `_valuesEqual` both want a scalar; document
+  in `src/spreadsheet/CLAUDE.md` + the engine header. Formulas NEVER call `Date`
+  (spec §6/§10); the scanner bindings `seconds` / `frame` become edges to the sources
+  plus bound parameters carrying the pulled values.
 - Perf discipline (spec §9.7): a tick that only changes painted text = `changed()` on the
   grid pane region; NO `_invalidateLayout` on the tick path — assert this by reading the
   code path, and measure: with one `seconds` cell, `lastDrainRecomputeCount` per second
@@ -340,8 +509,14 @@ the layout discipline: immediate `_apply*` mutators inside `_reLayout`, bulk mov
 - **Testing & determinism:** time-driven cells are EXCLUDED from pixel assertions unless
   the macro drives ticks: for tests, set the source's value injection via macro
   (`world.dataflow` exposing a test hook is acceptable if guarded `if Automator?` so
-  `--homepage` strips it). Author `SystemTest_spreadsheet_seconds_cell` only if the
-  macro-driven tick hook is built; otherwise verify by hand and record that in the ledger.
+  `--homepage` strips it — established precedent, e.g. `StretchablePanelWdgt` ~82).
+  Author `SystemTest_macroSpreadsheetSecondsCell` only if the macro-driven tick hook is
+  built; otherwise verify by hand and record that in the ledger.
+- **Docs (same commit):** add the time-source rule to `../Fizzygum-tests/DETERMINISM.md`
+  (all time enters through mockable sources; formulas cannot read the wall clock;
+  frame-driven cells excluded from pixel refs unless the macro drives synthetic ticks) —
+  it is the doc every test author reads, so the rule must live there, not only in the spec.
+- **Phase-close:** run the §0 battery.
 
 ### Phase 6 — patch-programming port (strangler; spec §8)
 
@@ -349,47 +524,93 @@ the layout discipline: immediate `_apply*` mutators inside `_reLayout`, bulk mov
 (default `false`). No engine involvement yet: legacy delivery still runs. Dark for pixels.
 
 **6b — engine delivery behind an A/B switch.** `world.dataflowWiresEnabled` (default
-`false`; model: `world.deferredSettlingEnabled` A/B). When ON:
-- `setTargetAndActionWithOnesPickedFromMenu` additionally declares an engine edge
-  (controller → target-action sink record); un-wiring removes it.
+`false`; model: `world.deferredSettlingEnabled` A/B, WorldWdgt ~91). When ON:
+- `setTargetAndActionWithOnesPickedFromMenu` additionally declares an engine edge —
+  producer widget → target widget, with the wire's `action` (+ `firesPerEvent`) riding
+  the EDGE RECORD's opts and `dataflowApply` defined edge-level (its body reuses the
+  existing `_fireConnection` routing verbatim, so the `_<action>Connector` lane is
+  preserved). Nodes stay widgets; do NOT model sinks as separate graph NODES — closure
+  traversal must flow THROUGH ring intermediates (text widgets, sliders), and it does so
+  by reading the consumer widget's value after each application. Un-wiring removes the
+  edge.
+- `Widget.dataflowValue: -> @exportedValue()` — the cutoff/pull reader for widget nodes
+  (Phase 1 node protocol): after applying an edge into a widget, the engine reads its
+  value and traverses onward only if it changed.
 - Controllers' update paths call `world.dataflow.markStale @` instead of
-  `@_fireConnection` (which becomes the engine's sink-application callback:
-  `dataflowApply` on the wire record calls the existing `_fireConnection` body — the
-  `_<action>Connector` routing is thereby reused verbatim).
+  `@_fireConnection`.
+- **The echo (§1.13):** during engine application, the applied setter's legacy
+  `updateTarget` tail (unconditional — it runs even on a no-change set) now calls
+  `markStale` on the very node being applied. Suppress it: `markStale n` while the
+  engine is applying `n` is a no-op — the engine already owns that node's downstream
+  traversal. Any OTHER mid-drain marking still pools (spec §5's legitimate re-entrancy).
+  Fallback if suppression proves fiddly: let the echo pool and let the next pass die on
+  the equal-value cutoff — correct, but makes 2 passes the circuit norm; whichever
+  ships, record it here and put the measured pass counts in Phase 7's numbers.
 - `firesPerEvent` wires: `markStale` outside a drain runs the synchronous mini-pass
   scoped to that wire (spec §4).
 - `bang` → `markStale @, true` (forced). `reactToTargetConnection` → mark stale+forced on
-  edge creation.
+  edge creation. Nuance (verified): today `bang` fires the CACHED output WITHOUT
+  recomputing (`updateTarget`'s `fireBecauseBang` path); the engine's forced marking
+  recomputes then propagates — identical for pure formulas, and a side-effecting formula
+  runs once more per bang. Acceptable; note it in the commit message.
 - `CalculatingPatchNodeWdgt`: implement `dataflowRecompute` (pull all connected inputs,
   run the user formula); DELETE the per-input freshness gate — under the A/B OFF path keep
   legacy behavior intact (guard the changes on the switch; the class carries both paths
-  during 6b only).
+  during 6b only). Port the whole patch FAMILY deliberately, not just this class:
+  `DiffingPatchNodeWdgt` (its `fireBecauseOneHotInputHasBeenUpdated` hot-input mode IS
+  any-input-marks-stale — it collapses into the engine default),
+  `RegexSubstitutionPatchNodeWdgt`, `FanoutWdgt`/`FanoutPinWdgt`.
+- Widget death: `fullDestroy` of a connection-bearing widget calls
+  `world.dataflow.removeAllEdgesOf @` (Phase 1 node-death API — leak + ghost recompute
+  otherwise).
 - **Acceptance:** with the switch ON by hand: the °C↔°F converter behaves identically
-  (bidirectional, terminates — the ring walks once per event); the full suite passes with
-  the switch OFF (default).
+  (bidirectional, terminates — the SIX-node ring slider1→cText→calc1→fText→slider2→calc2
+  walks once per event and the entry is never re-applied, §1.11); the full suite passes
+  with the switch OFF (default). The end-of-cycle capstone audit must stay at 0 with the
+  switch ON (the drain's apply-settle discipline, §1.14, is exactly what it polices).
 
 **6c — default ON.** Flip the default; run the full suite; expect final-frame equality for
-DAG circuits and the ring. Intermediate-frame differences may force screenshot recaptures —
-follow the established recapture procedure in the tests repo; list every recaptured test in
-the commit message with a one-line cause. Keep the switch for one release as a kill-switch.
+DAG circuits and the ring. The known reconciliation set (grep the suite for
+connection-driving macros to complete it): `SystemTest_macroDegreesConverterFourWayDrive`
+(THE ring acceptance), `SystemTest_macroSliderTextSliderPatchCycle`,
+`SystemTest_macroSliderTextTwoWayPatchCycle`, `SystemTest_macroSlidersControlTextWidget`,
+plus whatever patch-programming/fanout tests the grep surfaces. Intermediate-frame
+differences may force screenshot recaptures — follow the established recapture procedure
+in the tests repo; list every recaptured test in the commit message with a one-line
+cause, and verify EVERY recapture on the WebKit leg (§0 recapture rule — a recapture can
+bake in an error frame that Chrome then vacuously accepts). Run the full §0 phase-close
+battery. Keep the switch for one release as a kill-switch.
 
 **6d — token retirement.** Delete `_acceptsConnectionToken`, the
-`connectionsCalculationToken` fields and threading (~34 sites: grep
-`connectionsCalculationToken`), `makeNewConnectionsCalculationToken`, and the per-input
-token fields in patch nodes; simplify every connection setter's signature; remove the 6b
-legacy guards and the A/B switch. Update `NOMENCLATURE.md`: mark the legacy connection
-domain rows as historical. This is the largest mechanical sweep — full-tier verification
-mandatory.
+`connectionsCalculationToken` fields and threading (≈146 matching lines across 19 src
+files — grep `connectionsCalculationToken`; §1.11), `makeNewConnectionsCalculationToken`
+(WorldWdgt ~486), and the per-input token fields in patch nodes; simplify every
+connection setter's signature; remove the 6b legacy guards and the A/B switch. Docs in
+the same sweep: the `ControllerMixin` header and the `Widget._acceptsConnectionToken`
+block comment currently TEACH token semantics — rewrite/delete them with the code; sweep
+the tests-repo docs (`MACRO-PATTERNS.md`, tests-repo `CLAUDE.md`) for token vocabulary;
+update `NOMENCLATURE.md`: mark the legacy connection domain rows as historical. This is
+the largest mechanical sweep — the full §0 phase-close battery is mandatory.
 
 ### Phase 7 — docs closeout
 
+(The subsystem docs were SEEDED in Phases 1/2a and grown per phase — rule 8 below. This
+phase is the completeness pass, not the first write.)
+
 - Root `CLAUDE.md`: add the dataflow/spreadsheet subsystem to the architecture section
-  (two-drain sentence; pointer to spec + `src/dataflow/CLAUDE.md`).
-- Write `src/dataflow/CLAUDE.md` and `src/spreadsheet/CLAUDE.md` (subsystem depth: node
-  protocol, drain contract, formula compiler behavior, presenter chain).
-- Record measured instrumentation (suite-wide peak pass counts, typical drain sizes) in
-  the spec or a small `docs/dataflow-measurements.md`, in the spirit of layout's
-  measured-convergence posture.
+  (two-drain sentence; pointer to spec + `src/dataflow/CLAUDE.md`); grep the repo's docs
+  and CLAUDE.mds for doOneCycle station enumerations and add the drain where one is
+  normative.
+- Completeness pass over `src/dataflow/CLAUDE.md` and `src/spreadsheet/CLAUDE.md`: a cold
+  session must be able to operate the subsystem from them alone (node protocol, drain
+  contract, formula compiler behavior, presenter chain, widget-valued-cell save/load
+  semantics, cell-deletion semantics).
+- Record measured instrumentation (suite-wide peak pass counts — including the 6b echo
+  decision's numbers — and typical drain sizes) in the spec or a small
+  `docs/dataflow-measurements.md`, in the spirit of layout's measured-convergence posture.
+- Tests-repo closeout: update the tests-repo `CLAUDE.md` suite description (count grew;
+  a spreadsheet area exists) and verify `DETERMINISM.md` (Phase 5) still matches what
+  shipped.
 - Update the spec header: status → implemented; list any deviations decided during
   execution (each deviation must have been recorded in its phase's commit message).
 
@@ -409,14 +630,24 @@ mandatory.
    bypass with `--noSyntaxCheck`.
 5. **Testing:** each behavior phase lands with its SystemTests authored in
    `../Fizzygum-tests` (full tier), following `src/macros/CLAUDE.md` + MACRO-PATTERNS
-   (macros are the only authoring path). Respect `../Fizzygum-tests/DETERMINISM.md` —
-   especially for Phases 4–6 (input recognition) and 5 (time).
+   (macros are the only authoring path), named `SystemTest_macro<CamelCase>` (§0). The
+   §0 verification cadence governs which battery runs when: inner loop per commit,
+   phase-close battery at 2c/4/5/6c/6d, serialization legs whenever the serialized
+   surface changes, WebKit verification on every recapture. Respect
+   `../Fizzygum-tests/DETERMINISM.md` — especially for Phases 4–6 (input recognition)
+   and 5 (time).
 6. **Commits:** conventional style (`feat(dataflow): …`, `feat(spreadsheet): …`,
    `refactor(connections): …`); each states its verification tier and updates the ledger.
 7. **When reality diverges from this plan** (an API doesn't fit, a gate complains, a fact
    in §1 has drifted): stop, decide, record the deviation IN THIS PLAN (edit the relevant
    section) in the same commit — this document must stay executable for the next cold
    session.
+8. **Docs are a phase deliverable, not a closeout chore:** every phase updates, in the
+   same commit: the touched class headers, the subsystem `CLAUDE.md`s (seeded in 1/2a),
+   `NOMENCLATURE.md` on any new term of art, `docs/serialization-duplication-reference.md`
+   when the serialized surface changes (1, 2b, 4), and `../Fizzygum-tests/DETERMINISM.md`
+   when a determinism rule changes (5). Phase 7 is a completeness pass over docs that
+   already exist.
 
 ## §5 Risks & rollback
 
@@ -430,8 +661,15 @@ mandatory.
   then mark ALL cells stale and let one drain compute values (order-independent by
   construction). If a saved sheet contains a `#LOOP`, the reject-at-commit check must
   tolerate re-loading it (reject again, same error value).
-- **Suite recaptures (6c)** are expected and bounded; every recapture is listed and
-  justified.
+- **Suite recaptures (6c)** are expected and bounded; every recapture is listed,
+  justified, and WebKit-verified (§0 recapture rule — a recapture can freeze an error
+  frame into the references, after which the Chrome legs pass vacuously).
+- **Engine-index leaks / ghost nodes:** a destroyed widget or deleted cell left in
+  `@edgesFrom`/`@edgesTo` is a memory leak AND a ghost recompute. Mitigations are
+  structural: `@lastValues` is a WeakMap (Phase 1), and every death path calls
+  `removeAllEdgesOf` (2c cell delete, 4 socket unmount, 6b `fullDestroy` hook).
+- **Widget-valued cells across save/load:** naive recommit-on-load discards restored
+  widget state — Phase 4 decides the semantics and pins it with a rig fixture.
 - **Rollback:** Phases 1–5 are additive (revert = delete the feature commits). 6b/6c ride
   the A/B switch (kill-switch rollback without revert). 6d is the only
   hard-to-revert sweep — hence last, and only after 6c has soaked.
@@ -440,8 +678,12 @@ mandatory.
 
 - [ ] Ledger fully checked; every phase's verification tier recorded.
 - [ ] Full-tier run green; new SystemTests exist for phases 2a–4 (and 5 if the tick hook
-      was built); recaptures (if any) listed in 6c's commit.
+      was built); recaptures (if any) listed in 6c's commit and WebKit-verified.
+- [ ] §0 phase-close battery green at 2c, 4, 5, 6c, 6d; serialization rig green with the
+      sheet / color-cell / widget-cell fixtures and their EXPECTATIONS rows.
 - [ ] `world.dataflow` drains dark-cheap (empty-pool early return first).
 - [ ] Token machinery deleted (6d); `grep -rn connectionsCalculationToken src` → 0.
+- [ ] In-phase docs (rule 8) landed as they went: subsystem CLAUDE.mds,
+      serialization reference, DETERMINISM.md; Phase 7 completeness pass done.
 - [ ] Docs closeout (Phase 7) landed; spec marked implemented with deviations.
 - [ ] `NOMENCLATURE.md` consistent with the shipped names.

@@ -59,6 +59,8 @@ Do not use these terms for new mechanisms; they name the pre-dataflow wiring mac
 | **`recalculateDataflow` / dataflow drain** | the once-per-cycle drain station (deliberately parallel to `recalculateLayouts`) |
 | **recompute pass** | one visit-once batch over the stale set's downstream |
 | **dataflow source / sink / edge / index** | the graph roles; the index is derived and disposable |
+| **node protocol (`dataflowRecompute` / `dataflowValue` / `dataflowApply`)** | the duck-typed members a node (or edge record) may implement: recompute thunk / current-value reader / sink-application hook |
+| **echo** | the redundant self-marking a legacy controller's unconditional onward-fire tail emits while the engine is applying that very node; dropped by `markStale` during application |
 | **`firesPerEvent`** | per-wire delivery policy (per-event mini-pass vs pooled) |
 | **equal-value cutoff** | don't propagate staleness when the recomputed value equals the old one |
 | **`DATAFLOW_NONCONVERGENCE`** | the never-fire pass-count assert |
