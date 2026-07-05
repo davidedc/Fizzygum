@@ -13,7 +13,7 @@ unchecked, then update the ledger in the same commit that completes the phase.**
 
 ## Status ledger
 
-- [ ] Phase 0 — pre-flight verification
+- [x] Phase 0 — pre-flight verification
 - [ ] Phase 1 — engine core, dark (no callers)
 - [ ] Phase 2a — spreadsheet shell: window, painted grid, selection
 - [ ] Phase 2b — cell model, literal/CoffeeScript evaluation, editing
@@ -196,6 +196,23 @@ update (5), and the 6c recapture set.
    §1 in its own commit, then proceed.
 3. Confirm rename state: `grep -rin coalesc src buildSystem` → only
    `docs/coalescing-measurement.md` filename references (4 at last count).
+
+**Verified 2026-07-05 (cold execution session), no drift:** baseline green — `fg build`
+0 violations / `done!!!`; dpr1 suite 168/168, 0 failed. All 18 §1 facts re-verified against
+the tree; every line receipt still holds (facts 11/16/17/18 line-exact; the connection-token
+counts are still **146 lines / 19 files** and **38** exactly). Two grep gotchas recorded so a
+re-run does not misread them: (a) fact 15 — an anchored `^  getColor:` / `^  getValue:` grep
+confirms `getColor` is defined ONLY in `ColorPickerWdgt` and `getValue` ONLY in
+`StringFieldWdgt`; the loose `getColor:` hit in `Appearance.coffee` is a substring
+false-positive inside `ownColorInsteadOfWidgetColor:` (Appearance is a standalone drawing
+delegate, not a Widget), and SliderWdgt's six `getValue` hits are inbound duck-typed calls
+(`x.getValue?()`), not a definition — so Phase 4 must still add `SliderWdgt.getValue: -> @value`.
+(b) `Widget`/`StringWdgt`/`SliderWdgt` live under `src/basic-widgets/`, `ColorPickerWdgt` at
+top-level `src/` — grep by class name, not an assumed path. Non-material line shifts (within
+the `~` the facts already carry): fact 3 `widgetFactory` is at WorldWdgt:398 (macroToolkit at
+389); fact 15 SliderWdgt `@value = 50` first appears at ~31 (plan said ~18). Rename state:
+exactly 4 `coalesc` matches in `src`, all `docs/coalescing-measurement.md` filename refs
+(`WorldWdgt` 89, `StackElementsSizeAdjustingWdgt` 75/84, `Widget` 3893) — none in `buildSystem`.
 
 ### Phase 1 — engine core, dark
 
