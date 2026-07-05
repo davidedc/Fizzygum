@@ -16,7 +16,7 @@ unchecked, then update the ledger in the same commit that completes the phase.**
 - [x] Phase 0 — pre-flight verification
 - [x] Phase 1 — engine core, dark (no callers)
 - [x] Phase 2a — spreadsheet shell: window, painted grid, selection
-- [ ] Phase 2b — cell model, literal/CoffeeScript evaluation, editing
+- [x] Phase 2b — cell model, literal/CoffeeScript evaluation, editing
 - [ ] Phase 2c — references, recompute, errors-as-values
 - [ ] Phase 3 — value protocol & presenters (Color first)
 - [ ] Phase 4 — widget-valued cells & sockets
@@ -470,6 +470,48 @@ launcher registration. Decisions/deviations recorded per rules 7/8:
   the CS quoting requirement is BY DESIGN, spec §9.2/§13),
   `SystemTest_macroSpreadsheetEditCancel`. Typing in macros is established (keyboard
   patterns in `src/macros/MACRO-PATTERNS.md`).
+
+**Landed 2026-07-05 (this session) — all green.** New `src/spreadsheet/SheetModel.coffee`,
+`SheetCellRecord.coffee`, `FormulaCompiler.coffee`, `SheetError.coffee`; `SpreadsheetWdgt`
+extended (model, value painting, editing); `src/spreadsheet/CLAUDE.md` grown. `build.py` needed
+NO change (the 2a `src/spreadsheet/*.coffee` glob auto-ships new files). Decisions/deviations per
+rules 7/8:
+- **Evaluation routes THROUGH the engine** (the spreadsheet is now the engine's FIRST live
+  client): commit = `FormulaCompiler.commit` (compile once) + `world.dataflow.markStale cell`;
+  the drain calls `SheetCellRecord.dataflowRecompute` → `@compiledFn.apply sheetScope, boundValues`
+  → caches `@value` → repaints, in the SAME `doOneCycle` as the Enter event. `sheetScope` (`@` in
+  a formula) = the `SpreadsheetWdgt` (full world access, no sandbox).
+- **Buffer-driven overlay editor, NO caret** — DEVIATION from "reuse the caret / StringWdgt.edit".
+  The framework has NO built-in Enter-commits/Escape-reverts (no `accept`/`cancel` handlers exist
+  in the tree — only `CaretWdgt` escalates them, to nobody; text live-updates as you type), and a
+  live caret is a keyboard receiver that BLINKS (non-deterministic under a screenshot). So the
+  sheet stays the SOLE keyboard receiver in both modes and drives its own edit BUFFER (append /
+  Backspace / Enter-commits / Escape-cancels), mirrored into a live overlay `StringWdgt` (the
+  socket precursor). Exact, deterministic commit/cancel; no receiver juggling. Rich editing stays
+  the deferred `CodePromptWdgt` path.
+- **Layering discipline:** the mount/teardown of the overlay mutates the tree, so the ONE settle
+  is opened at the PUBLIC event entries (`processKeyDown`/`mouseClickLeft`, like `world.edit`) and
+  every edit-lifecycle helper is a `*NoSettle` core (`_addNoSettle`/`_setTextNoSettle`/
+  `_fullDestroyNoSettle`/`_apply*`). The first pass FAILED `check-layering.js` [G]/[A] (low-level
+  `_x` calling self-settling wrappers) — restructured to this; green.
+- **`SheetCellRecord.@serializationTransients = ["compiledFn","boundNames","value","errorFlag"]`**
+  (mandatory, §1.16 — the serializer THROWS on an undeclared function-valued own-prop; the
+  transients check runs BEFORE that). DeepCopier copies a function prop by reference (harmless;
+  overwritten by the 2c recommit-on-copy). `SpreadsheetWdgt` also declares the transient editing
+  fields.
+- **`SheetError` created in 2b** (minimal — the `#SYNTAX` path needs it); 2c grows `#ERR`/`#LOOP`
+  + propagation. **`FormulaHelpers` deferred to Phase 3** (only useful once value-class ops exist,
+  spec §9.5); the compiler's helper-scan is guarded `if FormulaHelpers?` so it lights up then.
+- **References READ but are not yet REACTIVE:** `dataflowRecompute` resolves cell-ref bound names
+  from the model (so a ref evaluates), but the reactive EDGE (`addEdge` at commit, so a ref
+  re-runs when its target changes) + cycle rejection + error propagation are Phase 2c. No 2b test
+  exercises a reference (literals only), so this is not a visible half-feature.
+- **Verification:** `fg build` 0-violations (syntax/layering/dead-methods/stinks/thin-wraps green;
+  21 new methods, 0 new dead); headless boot-smoke green (native + SWCanvas). Two new tests
+  authored + captured SWCanvas dpr1+dpr2, re-verify matched (deterministic); rendered grids
+  eyeballed (LiteralEntry = `42` in A1 + `hello` in B2; EditCancel = A1 reverted to `7`, not
+  `999`). `fg gauntlet` (dpr1/dpr2/webkit 173 + apps + tiernaming/settle/capstone) + both
+  serialization legs green — see the ledger.
 
 **2c — references, recompute, errors.**
 - Cells become dataflow nodes: `SheetCellRecord.dataflowRecompute()` pulls referenced
