@@ -27,9 +27,11 @@ The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
   pull). Reactive reference EDGES + error propagation arrive in 2c.
 - `FormulaCompiler.coffee` (2b) — stateless (class methods): `commit(cell, source)` scans the
   source (comments/strings stripped) for the identifiers to bind — cell refs (`A1`), helper
-  names, later `seconds`/`frame` — builds the `"(names) ->\n  <source>"` wrapper and compiles it
-  ONCE via `compileFGCode` (bare) to `@compiledFn`; a compile failure yields a `#SYNTAX`
-  `SheetError`.
+  names, and the time bindings `seconds`/`frame` (5, `@timeBindingNames`) — builds the
+  `"(names) ->\n  <source>"` wrapper and compiles it ONCE via `compileFGCode` (bare) to
+  `@compiledFn`; a compile failure yields a `#SYNTAX` `SheetError`. `commit` also declares the
+  reactive edges: cell refs (with a cycle check) and time-source edges (`seconds`/`frame` → the
+  world time singletons, no cycle check).
 - `SheetError.coffee` (2b) — a failed computation IS the cell's value (`#SYNTAX` now; `#ERR`/
   `#LOOP` in 2c). `{@kind, @message}`, `toString -> "#" + @kind`.
 - `FormulaHelpers.coffee` (3) — the optional free-function veneer (`mix A1, B1`) over the value
@@ -139,6 +141,33 @@ the SAME cycle as the Enter event (deterministic, spec §10). `@` inside a formu
   MOVES after mounting rich cells would leave them behind (shared with the Phase-3 presenter mount).
   Not hit by any test (the sheet is placed once); Phase 8's laid-out cells retire it. The retain check
   also re-CONSTRUCTS a throwaway widget each recompute (to read its class) — a minor v1 cost.
+
+## Time sources — `seconds` / `frame` (5)
+
+- **A ticking cell is an ordinary node with an edge from a time source** (spec §6) — no volatile
+  concept. `FormulaCompiler.scanBoundNames` reserves `seconds` / `frame` (boundary-guarded, so
+  `secondsElapsed` / `foo.frame` don't match); `commit` declares an edge `world.dataflow.secondsSource()`
+  / `frameSource()` → cell (no cycle check — a source has no inputs). `SheetCellRecord._resolveBoundName`
+  resolves the binding to the source's current `dataflowValue()`. The two sources live in
+  `../dataflow/` (`SecondsSource`, `FrameSource`); the subscriber-count lifecycle that makes them tick
+  only while a cell depends on them is engine machinery (see `../dataflow/CLAUDE.md`).
+- **Pulled shape is a NUMBER** (decided Phase 5): `seconds` = epoch seconds
+  (`Math.floor(dateOfCurrentCycleStart.getTime() / 1000)`), `frame` = `WorldWdgt.frameCount`. NOT the
+  raw `Date` — formula arithmetic and the engine's `_valuesEqual` cutoff both want a scalar, so two
+  cycles in the same wall second pull the same integer and the cutoff stops propagation until the
+  second ticks. `frameCount` is incremented at cycle END (after the drain), so a `frame` formula sees
+  the count of cycles COMPLETED before this one. Formulas NEVER read the wall clock — all time enters
+  through the sources (mockable → deterministic, spec §10).
+- **Ticks repaint, never re-layout** (spec §9.7). A tick recompute goes `_cacheValue` → `changed()`
+  (paint) + the socket reconcile; a scalar takes the text branch (dispose socket, no widget) — there
+  is NO `_invalidateLayout` on the tick path. Cost is linear in the affected subgraph
+  (`world.dataflow.lastDrainRecomputeCount`). A `frame` cell defeats the drain's empty-pool early
+  return every cycle by design (it IS per-frame); a `seconds` cell only re-propagates when the
+  integer second changes.
+- **Determinism:** the SecondsCell SystemTest displays time COMPARISONS (`seconds > 1e9`, always
+  true), so no raw instant reaches a pixel reference; the numeric + subscriber-lifecycle facts are
+  proven by value assertions. Frame/second-driven cells are excluded from pixel refs unless a macro
+  drives the tick (`../../../Fizzygum-tests/DETERMINISM.md`).
 
 ## Serialization & duplication (spec §2 — the engine index is derived, never serialized)
 

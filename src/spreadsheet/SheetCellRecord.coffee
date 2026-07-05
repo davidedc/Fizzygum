@@ -116,5 +116,12 @@ class SheetCellRecord
     # A FormulaHelpers veneer name -> the bound helper function (spec §9.5).
     if FormulaHelpers? and Object::hasOwnProperty.call(FormulaHelpers, name)
       return FormulaHelpers[name]
-    # seconds / frame time bindings arrive in Phase 5.
+    # A time binding (spec §6) -> the source's current pulled value (a NUMBER: epoch seconds /
+    # the frame counter). Formulas NEVER read the wall clock — all time enters through the source,
+    # pulled here from the one-timestamp-per-cycle. The reactive EDGE that re-runs this cell on each
+    # tick was declared by FormulaCompiler.commit; the source ticks only while such a cell exists.
+    if name is "seconds"
+      return world?.dataflow?.secondsSource().dataflowValue()
+    if name is "frame"
+      return world?.dataflow?.frameSource().dataflowValue()
     nil

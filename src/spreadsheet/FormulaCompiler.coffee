@@ -27,6 +27,11 @@ class FormulaCompiler
   # production Safari >= 16.4).
   @cellRefScan: /(?<![\w$.])[A-Z]{1,2}[1-9][0-9]{0,3}(?![\w$])/g
 
+  # Reserved time-binding identifiers (spec §6): each, when it appears as a bare identifier, binds
+  # as a formula parameter carrying the matching time source's pulled value AND becomes an edge to
+  # that source. Not cell-ref-shaped, so they never collide with an address.
+  @timeBindingNames: ["seconds", "frame"]
+
   # Strip CoffeeScript comments and string literals to a SCAN COPY (whitespace-preserving-ish),
   # so an address-shaped substring inside a comment or string is NOT mistaken for a reference
   # (e.g. `"see A1"` must not bind A1). Heuristic but sound for the short formulas cells hold:
@@ -60,6 +65,12 @@ class FormulaCompiler
       for own helperName of FormulaHelpers
         boundaryRe = new RegExp "(?<![\\w$.])" + helperName + "(?![\\w$])"
         push helperName if boundaryRe.test scanCopy
+    # time bindings (spec §6): `seconds` / `frame` bind as parameters carrying the time sources'
+    # pulled values, and each becomes an edge to its source (commit, below). Boundary-guarded so
+    # `secondsElapsed`, `frameRate`, or `foo.frame` do NOT match.
+    for timeName in FormulaCompiler.timeBindingNames
+      boundaryRe = new RegExp "(?<![\\w$.])" + timeName + "(?![\\w$])"
+      push timeName if boundaryRe.test scanCopy
     names
 
   # Compile the source AND (re)declare the cell's reactive dataflow edges. Every path first drops
@@ -110,6 +121,13 @@ class FormulaCompiler
         return cell
       refCells.push refCell
     refCells.forEach (refCell) -> engine?.addEdge refCell, cell
+    # time-source edges (spec §6): a `seconds`/`frame` binding is an edge from the world time
+    # singleton INTO this cell, so the source's per-second / per-frame markStale re-runs the cell.
+    # No cycle check — a source has no inputs, so it can never close a loop. The engine's addEdge
+    # bumps the source's subscriber count, registering it in the stepping loop on its first cell.
+    if engine?
+      engine.addEdge engine.secondsSource(), cell if "seconds" in boundNames
+      engine.addEdge engine.frameSource(),  cell if "frame"   in boundNames
     cell.compiledFn = compiledFn
     cell.boundNames = boundNames
     cell.errorFlag  = false

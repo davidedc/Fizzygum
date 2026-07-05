@@ -102,6 +102,11 @@ class DataflowEngine
     @lastDrainRecomputeCount = 0
     # errors stashed mid-drain, reported to the console OUTSIDE the drain (layout's pattern)
     @_errorsToReport = []
+    # time sources (spec §6), constructed LAZILY on first subscription (secondsSource/frameSource).
+    # World-level singletons the sheet's `seconds`/`frame` edges point at; never serialized (the
+    # engine itself is a $wk singleton whose own-props the serializer never walks).
+    @_secondsSource = nil
+    @_frameSource   = nil
 
   # ── EDGE INDEX (derived, disposable; clients re-declare — the engine never serializes it) ──
 
@@ -122,6 +127,9 @@ class DataflowEngine
       inSet = new Set
       @edgesTo.set consumer, inSet
     inSet.add producer
+    # a time SOURCE gaining a subscriber registers itself in the stepping loop (spec §6); a plain
+    # producer (a cell) has no subscriberCountChanged, so this is a cheap no-op for it.
+    @_notifySubscriberCount producer
     return
 
   # Remove every edge whose CONSUMER is this node (a cell re-commit drops its old references
@@ -131,9 +139,14 @@ class DataflowEngine
     return unless producers?
     producers.forEach (producer) =>
       outSet = @edgesFrom.get producer
-      return unless outSet?
-      outSet.forEach (rec) -> outSet.delete rec if rec.consumer is consumer
-      @edgesFrom.delete producer if outSet.size is 0
+      if outSet?
+        outSet.forEach (rec) -> outSet.delete rec if rec.consumer is consumer
+        @edgesFrom.delete producer if outSet.size is 0
+      # a time SOURCE losing its last subscriber deregisters from the stepping loop (spec §6). Runs
+      # per affected producer, after the removal, so the reported count is current. removeAllEdgesOf
+      # routes a dying node's incoming edges through here too, so a deleted `seconds`/`frame` cell
+      # correctly decrements its source.
+      @_notifySubscriberCount producer
     @edgesTo.delete consumer
     return
 
@@ -171,6 +184,26 @@ class DataflowEngine
       outSet = @edgesFrom.get n
       outSet?.forEach (rec) -> stack.push rec.consumer
     false
+
+  # ── TIME SOURCES (spec §6) — lazily-built world singletons ───────────────────────────────
+  # A time source is a pure dataflow SOURCE (dataflowValue, no dataflowRecompute) that ticks itself
+  # stale via the stepping loop while — and only while — a cell depends on it. Built on first
+  # subscription and kept for the world's life; the sheet's `seconds`/`frame` bindings are edges
+  # into these (FormulaCompiler.commit). Never serialized (this engine is a $wk singleton; its
+  # own-props are never walked — see the class header).
+
+  secondsSource: -> @_secondsSource ?= new SecondsSource
+
+  frameSource:   -> @_frameSource   ?= new FrameSource
+
+  # Tell a producer its current subscriber count IF it cares (a time source registers/deregisters
+  # in the stepping loop on the 0↔positive crossing). Count = its out-edge records = its subscriber
+  # cells (each subscribes at most once — boundNames dedup + removeEdgesInto-before-re-add on
+  # recommit). A plain producer has no subscriberCountChanged, so this returns immediately for it.
+  _notifySubscriberCount: (producer) ->
+    return unless producer?.subscriberCountChanged?
+    producer.subscriberCountChanged (@edgesFrom.get(producer)?.size ? 0)
+    return
 
   # ── VALUE PULL + EQUALITY (spec §3) ──────────────────────────────────────────────────────
 

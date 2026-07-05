@@ -13,9 +13,26 @@ node-protocol contract.
 - `DataflowEngine.coffee` — the engine. A plain delegated collaborator (NOT a Widget), reached
   as `world.dataflow` (the MacroToolkit / WidgetFactory pattern). Ships in every build (a
   product feature — no homepage exclusion), so WorldWdgt constructs it UNGUARDED.
+- `SecondsSource.coffee` / `FrameSource.coffee` — the two **time sources** (spec §6). Plain
+  non-serialized singletons the engine builds LAZILY (`world.dataflow.secondsSource()` /
+  `.frameSource()`) on the first `seconds` / `frame` subscription. Each is a **pure dataflow
+  source** (has `dataflowValue`, no `dataflowRecompute`) that registers in `world.steppingWdgts`
+  (`fps:1` synchronised / `fps:0`) and marks ITSELF stale each tick — **only while a cell depends
+  on it** (see below). The pulled value is a NUMBER: `seconds` = epoch seconds from
+  `WorldWdgt.dateOfCurrentCycleStart`; `frame` = `WorldWdgt.frameCount`.
 
-(Time sources `SecondsSource` / `FrameSource` arrive in Phase 5; the spreadsheet client lives
-in `../spreadsheet/`.)
+(The spreadsheet client lives in `../spreadsheet/`.)
+
+## Time sources & the subscriber count (spec §6)
+
+A "ticking" cell is an ORDINARY node with an edge FROM a time source — there is no volatile-cell
+concept (NOMENCLATURE). The engine keeps each source ticking **only while something needs it**:
+`addEdge` / `removeEdgesInto` call `_notifySubscriberCount(producer)`, which — for a producer that
+implements `subscriberCountChanged` (a time source does; a cell does not) — reports its current
+out-edge count. The source registers in the stepping loop on the `0 → positive` crossing and
+deregisters on `positive → 0`. So entering the first `seconds` cell makes the per-second ticker
+exist; clearing the last one makes it cease. `removeAllEdgesOf` routes a dying node's incoming
+edges through `removeEdgesInto`, so deleting a `seconds` cell decrements its source too.
 
 ## The model in one breath
 

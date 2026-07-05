@@ -20,7 +20,7 @@ unchecked, then update the ledger in the same commit that completes the phase.**
 - [x] Phase 2c — references, recompute, errors-as-values
 - [x] Phase 3 — value protocol & presenters (Color first)
 - [x] Phase 4 — widget-valued cells & sockets
-- [ ] Phase 5 — time sources (`seconds` / `frame`)
+- [x] Phase 5 — time sources (`seconds` / `frame`)
 - [ ] Phase 6a — `firesPerEvent` wire property + menu toggle
 - [ ] Phase 6b — patch-programming port behind A/B switch (default OFF)
 - [ ] Phase 6c — A/B default ON, suite reconciliation
@@ -791,6 +791,56 @@ classify→present chain), `SheetCellRecord._cacheValue` (the reconcile trigger)
   frame-driven cells excluded from pixel refs unless the macro drives synthetic ticks) —
   it is the doc every test author reads, so the rule must live there, not only in the spec.
 - **Phase-close:** run the §0 battery.
+
+**Landed 2026-07-05 (this session) — all green.**
+- **`SecondsSource.coffee` / `FrameSource.coffee` NEW** — the two time sources (spec §6): plain
+  non-Widget, non-serialized world singletons the engine builds LAZILY (`world.dataflow.secondsSource()`
+  / `.frameSource()`) on the first `seconds`/`frame` subscription. Each is a PURE dataflow source
+  (`dataflowValue`, no `dataflowRecompute` → the drain treats it as always-changed and pulls its value).
+  `SecondsSource` = `fps:1` + `synchronisedStepping` (the trap-free stepping mode — the non-synchronised
+  branch leaves a mid-run member's `lastTime` uninitialised → NaN → never fires); `FrameSource` = `fps:0`
+  (the every-cycle branch). `step()` does exactly one thing: `markStale` SELF.
+- **Subscriber-count lifecycle = the phase's novel machinery.** `DataflowEngine.addEdge`/`removeEdgesInto`
+  now call NEW `_notifySubscriberCount(producer)` → `producer.subscriberCountChanged?(outEdgeCount)`. A
+  time source registers in `world.steppingWdgts` on the `0→positive` crossing and deregisters on
+  `positive→0`, so the per-second/per-frame tick EXISTS ONLY WHILE a cell depends on it (entering the first
+  `seconds` cell makes the ticker exist; clearing the last one makes it cease — spec §6). `removeAllEdgesOf`
+  routes a dying node's incoming edges through `removeEdgesInto`, so deleting a `seconds` cell decrements
+  its source. A plain producer (a cell) has no `subscriberCountChanged` = a cheap no-op.
+- **Bindings wired.** `FormulaCompiler.@timeBindingNames = ["seconds","frame"]`; `scanBoundNames`
+  boundary-guards them (so `secondsElapsed`/`foo.frame` don't match); `commit` declares the edge
+  `secondsSource()`/`frameSource()` → cell (NO cycle check — a source has no inputs). `SheetCellRecord.
+  _resolveBoundName` resolves each to the source's current `dataflowValue()` — the Phase-2c stub retired.
+- **Pulled SHAPE decided = a NUMBER** (source headers + `src/spreadsheet/CLAUDE.md`): `seconds` = epoch
+  seconds `Math.floor(WorldWdgt.dateOfCurrentCycleStart.getTime()/1000)` (verified live throughout the
+  drain, nil'd only at cycle end; `dateOfPreviousCycleStart` fallback, never a fresh `new Date`); `frame` =
+  `WorldWdgt.frameCount` (verified incremented at cycle END → a `frame` formula sees the count of cycles
+  COMPLETED before this one). A scalar so formula arithmetic and the engine's `_valuesEqual` cutoff both
+  behave — two cycles in the same wall second pull the same integer, so the cutoff stops propagation until
+  the second ticks. Formulas NEVER read the wall clock (spec §6/§10).
+- **Perf (spec §9.7) — ticks repaint, never re-layout.** Asserted by reading the path: a tick recompute
+  goes `SheetCellRecord._cacheValue` → `changed()` + the socket reconcile; a scalar takes the text branch
+  (no widget, no `_invalidateLayout`). Cost is linear in the subgraph (`lastDrainRecomputeCount`). A `frame`
+  cell defeats the drain's empty-pool early return every cycle BY DESIGN (it IS per-frame).
+- **Serialization: surface UNCHANGED, verified.** `steppingWdgts` is serialized PER-WIDGET (a marker on
+  each serialized widget — `Serializer.coffee:262` / `Deserializer.coffee:113`); a non-widget source
+  reached only via the `$wk` engine is never encoded, and on restore `recommitAllCells` re-declares the
+  `seconds`/`frame` edge → re-subscribes. Both legs green (24 native + 34 SWCanvas + 7 file); NO rig change
+  — a `seconds` cell's value is wall-clock, so it must not join the value-equality rig.
+- **Verification:** `fg build` 0 violations; a headless object-graph probe (23/23: binding = integer epoch
+  / frame counter, edges, subscriber count 1→2→1→0 with `steppingWdgts` tracking, deregister-at-0,
+  singleton reuse, forced-tick propagation) verified the graph BEFORE the macro; new
+  `SystemTest_macroSpreadsheetSecondsCell` (displays time COMPARISONS — `seconds > 1e9`/`frame >= 0`, always
+  true — so the reference is byte-exact while the instant is not; numeric + subscriber-lifecycle facts proven
+  by `assertValuesEqual`) captured + verified dpr1 + dpr2 + webkit-verified + eyeballed (a row of `true`);
+  `fg gauntlet` **180 dpr1/dpr2/webkit + apps + tiernaming/settle/capstone all PASS** (capstone flaked ONCE
+  as a 22-min dropped-shard hang at `--shards=6` — the memory-noted capstone churn flake; a fresh isolated
+  capstone re-run = 180/180, careless=0); `fg homepage` BOOT OK (the sources + engine ship in homepage).
+  **NO inspector recapture** (the sources are plain classes and the readers landed on the engine/compiler/
+  cell — nothing added to the base `Widget`).
+- **Testing rule landed (same commit):** `../Fizzygum-tests/DETERMINISM.md` §3d — all time enters through
+  mockable sources; a formula must not read the wall clock; frame/second-driven cells are excluded from
+  pixel refs unless the macro drives ticks (display an invariant comparison or inject a fixed value).
 
 ### Phase 6 — patch-programming port (strangler; spec §8)
 
