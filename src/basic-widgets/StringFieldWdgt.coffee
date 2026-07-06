@@ -2,7 +2,7 @@
 # The field BOX follows @width() (flexible, set by the containing menu/prompt layout);
 # the inner StringWdgt is given a generous fixed width + SCALEDOWN so short values never
 # render "cropped" — that keeps StringWdgt.edit on its INLINE branch (e.g.
-# PromptWdgt.reactToSliderAction calls @text.edit() on every
+# PromptWdgt.takeSliderValue calls @text.edit() on every
 # slider step and must NOT pop the "edit:" prompt).
 # A stringWidget that can "scroll" as the cursor moves along the text
 # but note that there are no scrollbars, since the container

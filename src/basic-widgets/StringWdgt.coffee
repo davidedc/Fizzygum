@@ -1379,9 +1379,25 @@ class StringWdgt extends Widget
     true
 
   # StringWdgt editing:
+  # thin-wrap-exempt: edit BRANCHES (inline world.edit when the text fits, else editPopup) and returns a fit
+  # flag -- not the bare @_settleLayoutsAfter => @_editNoSettle wrap. Its NoSettle sibling _editNoSettle below
+  # mirrors the branch, routing the inline case to world._editNoSettle (the drain-safe caret core).
   edit: ->
     if @textPossiblyCroppedToFit == @transformTextOneToOne @text
       world.edit @
+      return true
+    else
+      @editPopup()
+      return nil
+
+  # The NoSettle sibling of edit, for a caller already inside a layout flush/pass -- a dataflow connection sink
+  # delivering into a prompt slider's editable field (PromptWdgt._takeSliderValueConnector). Routes the
+  # inline-edit case to world._editNoSettle (the non-settling caret core, joining the enclosing settle); the
+  # overflow branch hands off to editPopup exactly as edit does (not reached for a short prompt value, which
+  # fits inline).
+  _editNoSettle: ->
+    if @textPossiblyCroppedToFit == @transformTextOneToOne @text
+      world._editNoSettle @
       return true
     else
       @editPopup()

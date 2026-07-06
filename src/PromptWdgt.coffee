@@ -45,7 +45,7 @@ class PromptWdgt extends MenuWdgt
       slider.__commitHeight WorldWdgt.preferencesAndSettings.prompterSliderSize
       slider.target = @
       slider.argumentToAction = @
-      slider.action = "reactToSliderAction"
+      slider.action = "takeSliderValue"
       @__add slider
     @addLine 2
 
@@ -59,15 +59,28 @@ class PromptWdgt extends MenuWdgt
 
     @_reLayoutSelf()
 
-  reactToSliderAction: (num) ->
+  takeSliderValue: (num) ->
+    @_settleLayoutsAfter => @_takeSliderValueNoSettle num
+
+  # The reactive-CONNECTOR entrypoint (check-layering [P]): the dataflow engine delivers the prompt slider's wire
+  # HERE (its @action is "takeSliderValue", so _applyWireValue / _fireConnection resolve `_<action>Connector`
+  # first). It JOINS the drain's enclosing settle instead of opening its own, so the mid-drain _editNoSettle in the
+  # core below is legal (edit() is public/self-settling -- illegal mid-flush, Widget:824). Same NoSettle core as the
+  # public takeSliderValue above -- the setFontSize / _setFontSizeConnector pattern. NO connectionsCalculation
+  # Token guard: this is a pure SINK (it never calls updateTarget), so a circuit cannot cycle through it; the
+  # dispatch's extra (argumentToAction, token) arguments are simply ignored, exactly as the public entry ignores them.
+  _takeSliderValueConnector: (num) ->
+    @_settleLayoutsAfterOrJoinEnclosingPass => @_takeSliderValueNoSettle num
+
+  _takeSliderValueNoSettle: (num) ->
     @tempPromptEntryField.changed()
-    # the field's inner text is a StringWdgt. Use setText
+    # the field's inner text is a StringWdgt. Use _setTextNoSettle
     # -- which re-runs synchroniseTextAndActualText so textPossiblyCroppedToFit tracks the new
     # value -- instead of poking .text + _reLayoutSelf (StringWdgt has no _reLayoutSelf that refits).
-    # Otherwise edit() below sees a stale cropped text and defers to the "edit:" prompt.
-    @tempPromptEntryField.text.setText Math.round(num).toString()
+    # Otherwise _editNoSettle below sees a stale cropped text and defers to the "edit:" prompt.
+    @tempPromptEntryField.text._setTextNoSettle Math.round(num).toString()
     @tempPromptEntryField.text.changed()
-    @tempPromptEntryField.text.edit()
+    @tempPromptEntryField.text._editNoSettle()
 
   _reLayoutSelf: ->
     super()

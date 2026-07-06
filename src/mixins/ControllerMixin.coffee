@@ -32,13 +32,14 @@ ControllerMixin =
         if @target[@action + "IsConnected"]?
           @target[@action + "IsConnected"] = true
         @connectionsCalculationToken = world.makeNewConnectionsCalculationToken()
-        # 6b -- a wire IS a dataflow edge (spec §8): declare producer(me) -> target in the engine index, with
-        # the action + the Phase-6a firesPerEvent policy riding the edge record. Re-wiring drops my single old
-        # out-edge first. The index is derived/disposable (spec §2), re-declared by the client on load/copy --
-        # here the client is the wire itself, re-declaring on every (re)connection.
+        # 6b/6c -- a wire IS a dataflow edge (spec §8): declare producer(me) -> target in the engine index, with
+        # the action + the Phase-6a firesPerEvent policy riding the edge record (ensureWireEdge drops my single
+        # old out-edge first on a re-wire). The index is derived/disposable (spec §2), re-declared by the client
+        # on load/copy -- here the client is the wire itself. Declaring EAGERLY here is an optimisation (the edge
+        # exists the moment a menu wire is made); _fireConnection re-derives it LAZILY too, which is what covers
+        # the wires that never reach this method (direct @target/@action assignment -- scrollbars, prompt sliders).
         if world.dataflowWiresEnabled
-          world.dataflow.removeOutgoingEdgesOf @
-          world.dataflow.addEdge @, @target, {action: @action, firesPerEvent: @firesPerEvent}
+          world.dataflow.ensureWireEdge @, @target, {action: @action, firesPerEvent: @firesPerEvent}
         # reactToTargetConnection is left UNCHANGED across every controller: via the gated _fireConnection it
         # markStale's me (the initial fire), so each keeps its exact on-connect semantics -- a slider/text fires
         # its current value, PaletteWdgt's empty override fires nothing, Example3DPlot recomputes its plot.
@@ -61,6 +62,12 @@ ControllerMixin =
         # echo-suppressed while the engine is applying me (DataflowEngine.markStale). A wire-less widget still
         # returns above, matching legacy (no target = no fire).
         if world.dataflowWiresEnabled
+          # derive my edge from @target/@action if it isn't declared yet: a scrollbar (ScrollPanelWdgt) or a
+          # prompt slider (PromptWdgt) wires by DIRECT @target/@action assignment, never through the menu that
+          # declares the edge -- spec §8 says edges DERIVE from @target/@action, so make that derivation total.
+          # Without this such a wire would markStale with no out-edge and deliver nothing (silently broken scroll,
+          # 6c). Idempotent for a menu-wired connection (the eager declaration already matches); no-op mid-drain.
+          world.dataflow.ensureWireEdge @, @target, {action: @action, firesPerEvent: @firesPerEvent}
           world.dataflow.markStale @
           return
         connectorName = "_#{@action}Connector"

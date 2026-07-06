@@ -66,8 +66,22 @@ engine's SECOND client, ported by a strangler. Landed so far:
   spreadsheet is untouched. Everything is switch-gated → switch-OFF is byte-identical legacy. The `firesPerEvent`
   PER-EVENT synchronous mini-pass is DEFERRED (the flag rides the edge record; delivery pools — screen-
   indistinguishable, spec §13). Acceptance: the °C↔°F ring is frame-identical ON≡OFF both directions, 1 pass,
-  entry never re-applied, capstone 0 with the switch ON. NEXT (6c) flips the default and reconciles the
-  connection-driving macros; 6d deletes the `connectionsCalculationToken` machinery.
+  entry never re-applied, capstone 0 with the switch ON.
+
+- **6c — default ON + reconciliation.** `world.dataflowWiresEnabled` now DEFAULTS ON, so the whole suite
+  runs engine delivery. Flipping it exposed that 6b declared the edge ONLY in the connect-to-➜ menu path,
+  so wires set up by DIRECT `@target`/`@action` assignment (a `ScrollPanelWdgt` scrollbar, the prompt
+  slider) had no edge and delivered nothing. Fix: **`DataflowEngine.ensureWireEdge`** — the total
+  realisation of spec §8 "edges derive from `@target`/`@action`" — called eagerly by
+  `setTargetAndActionWithOnesPickedFromMenu` AND lazily by `_fireConnection` (no-op mid-drain), so every
+  wire declares its edge however established; engine-delivered scroll is frame-identical to legacy. The
+  prompt slider's action reaches `edit()` (public/self-settling, illegal mid-drain-flush), so it was made
+  drain-safe with the standard `_*NoSettle` lattice: `WorldWdgt.edit`/`_editNoSettle` share a body via a
+  teardown/add strategy thunk (`edit` keeps its exact self-settling behaviour), `StringWdgt._editNoSettle`,
+  and `PromptWdgt`'s action `takeSliderValue` (renamed off the reserved `reactTo*` notification prefix) as
+  a `public / _NoSettle / _Connector` trio that JOINS the drain settle. Kept the switch as a 1-release
+  kill-switch; 6d deletes it + the token machinery. 11 benign inspector recaptures (`_editNoSettle` on the
+  inspected `StringWdgt`).
 
 ## The model in one breath
 

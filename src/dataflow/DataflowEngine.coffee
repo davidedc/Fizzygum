@@ -153,9 +153,9 @@ class DataflowEngine
     @edgesTo.delete consumer
     return
 
-  # Remove every edge whose PRODUCER is this node — the inverse of removeEdgesInto. A re-wired controller
-  # (ControllerMixin.setTargetAndActionWithOnesPickedFromMenu pointing @target somewhere new) drops its single
-  # old out-edge before declaring the new one, so a stale edge is never left behind as a ghost (6b).
+  # Remove every edge whose PRODUCER is this node — the inverse of removeEdgesInto. Called by ensureWireEdge when
+  # a controller is re-wired (its @target/@action changed): it drops the single old out-edge before declaring the
+  # new one, so a stale edge is never left behind as a ghost (6b/6c).
   removeOutgoingEdgesOf: (producer) ->
     outSet = @edgesFrom.get producer
     return unless outSet?
@@ -167,6 +167,27 @@ class DataflowEngine
     @edgesFrom.delete producer
     # producer just lost all its subscribers; a time source would deregister here (a plain controller no-ops).
     @_notifySubscriberCount producer
+    return
+
+  # Ensure the edge index MIRRORS this live wire (producer's @target/@action) — the TOTAL realisation of spec §8
+  # "edges derive from @target/@action". Idempotent: a no-op when the edge already matches, so it is cheap to
+  # call on every fire. Called both EAGERLY (setTargetAndActionWithOnesPickedFromMenu, so a menu wire's edge
+  # exists the moment it is made) and LAZILY (ControllerMixin._fireConnection, so a wire established by DIRECT
+  # @target/@action assignment — a ScrollPanelWdgt scrollbar, a PromptWdgt slider — that never goes through the
+  # menu still declares its edge the first time it fires; without this it would markStale with NO out-edge and
+  # deliver nothing, silently breaking scroll under the switch, 6c). On a mismatch (a re-wired producer, or a
+  # firesPerEvent toggle) it drops the single old out-edge and re-declares — a ControllerMixin producer owns at
+  # most one out-edge (one @target/@action), so clearing all of them clears exactly the old wire. Skipped mid-
+  # drain (@_recalculatingDataflow): the initiating _fireConnection runs at EVENT time, before the cycle's drain,
+  # so the edge is already declared by the time the drain walks the index; a mid-drain echo-fire (a ring
+  # intermediate's onward tail) is for an already-declared edge, so the drain never mutates the index it is
+  # walking. Wire edges are never cycle-checked (the ring is intentional, spec §7), mirroring addEdge's callers.
+  ensureWireEdge: (producer, consumer, opts = {}) ->
+    return if @_recalculatingDataflow
+    existing = @_wireEdgeRecord producer, consumer
+    return if existing? and existing.action is (opts.action ? nil) and existing.firesPerEvent is (opts.firesPerEvent ? false)
+    @removeOutgoingEdgesOf producer
+    @addEdge producer, consumer, opts
     return
 
   # The node-death entry: remove this node as BOTH producer and consumer, and forget any pooled

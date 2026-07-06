@@ -35,3 +35,4 @@ identifyBlockEnd
 #     dispatch resolves the connector by "_#{@action}Connector" (ControllerMixin._fireConnection), so the literal
 #     method name never appears as a token. See connection-cascade-settle-fix-plan.md. ---
 _setFontSizeConnector    # reactive connector for setFontSize; reached only via @target["_setFontSizeConnector"] computed dispatch
+_takeSliderValueConnector # reactive connector for takeSliderValue (PromptWdgt prompt slider); reached only via @target["_takeSliderValueConnector"] computed dispatch

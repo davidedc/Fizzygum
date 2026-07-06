@@ -23,7 +23,7 @@ unchecked, then update the ledger in the same commit that completes the phase.**
 - [x] Phase 5 — time sources (`seconds` / `frame`)
 - [x] Phase 6a — `firesPerEvent` wire property + menu toggle
 - [x] Phase 6b — patch-programming port behind A/B switch (default OFF)
-- [ ] Phase 6c — A/B default ON, suite reconciliation
+- [x] Phase 6c — A/B default ON, suite reconciliation
 - [ ] Phase 6d — token retirement
 - [ ] Phase 7 — docs closeout
 - [ ] Phase 8 — widgetise the grid (one CellWdgt per VISIBLE cell; viewport-bounded) — follow-on
@@ -1014,6 +1014,58 @@ in the tests repo; list every recaptured test in the commit message with a one-l
 cause, and verify EVERY recapture on the WebKit leg (§0 recapture rule — a recapture can
 bake in an error frame that Chrome then vacuously accepts). Run the full §0 phase-close
 battery. Keep the switch for one release as a kill-switch.
+
+**Landed 2026-07-06 (this session) — all green.** The A/B default is flipped ON
+(`WorldWdgt.dataflowWiresEnabled: true`, ~102), so the whole suite runs ENGINE delivery.
+Flipping it exposed that 6b declared the edge ONLY for wires made through the connect-to-➜
+MENU; two classes of wire that bypass the menu broke, so 6c is **flip + two real engine-path
+fixes + benign recaptures**, not the "flip + recapture" scoped above (deviation, rule 7).
+- **Fix 1 — direct-assignment wires had no edge (`ensureWireEdge`).** A scrollbar
+  (`ScrollPanelWdgt` `@hBar`/`@vBar`) and the prompt slider set `@target`/`@action` DIRECTLY,
+  never through `setTargetAndActionWithOnesPickedFromMenu` (the ONLY 6b `addEdge` site), so
+  under the switch they `markStale`d a producer with NO out-edge and the drain delivered
+  nothing — **scroll silently broke** (12 tests, byte-identical dpr1/dpr2/webkit = a behavioural
+  break, not a frame shift). Fix: new idempotent `DataflowEngine.ensureWireEdge` — the TOTAL
+  realisation of spec §8 "edges DERIVE from `@target`/`@action`" — called BOTH eagerly
+  (`setTargetAndActionWith…`) AND lazily (`ControllerMixin._fireConnection`), so every wire
+  declares its edge however established; no-op mid-drain (`@_recalculatingDataflow`) so it never
+  mutates the index the drain walks; on a mismatch it drops the single old out-edge and
+  re-declares. `adjustContentsBasedOnHBar` is settle-safe (bare `_applyMoveTo` +
+  `_positionAndResizeChildren`), so engine-delivered scroll is FRAME-IDENTICAL to legacy — **9
+  scrollbar/inspector-scroll tests restored byte-identical, no recapture** (final-frame equality).
+- **Fix 2 — the prompt slider's interactive action wasn't drain-safe (the `_*NoSettle`
+  lattice).** `PromptWdgt`'s slider action ends in `text.edit()`; `edit()`/`stopEditing` are
+  public/self-settling and a mid-flush call throws the flow-rule (`Widget:824`, documented at
+  `StringWdgt:1393`), so under the engine it ran inside the drain flush → 2 tests threw. Fix
+  (owner-directed = the standard NoSettle lattice, NOT `firesPerEvent`, NOT off-the-wire): keep
+  the slider a normal engine wire, make its action drain-safe via a connector lane that JOINS the
+  drain settle + NoSettle cores. `WorldWdgt`: `edit` + new `_editNoSettle` share ONE body via a
+  teardown/add STRATEGY THUNK `_editTearingAndAddingCaretWith` (the `_stopEditingTearingCaretDownWith`
+  pattern) — `edit` keeps its EXACT self-settling behaviour (public `add`/`fullDestroy`); `_editNoSettle`
+  routes it through `_addNoSettle`/`_fullDestroyNoSettle`. `StringWdgt`: new `_editNoSettle` sibling.
+  `PromptWdgt`: `reactToSliderAction` RENAMED → `takeSliderValue` (the `reactTo*` prefix is reserved
+  for tree-notification hooks, layering rule [L]) as a canonical trio `takeSliderValue` (public
+  `@_settleLayoutsAfter` wrap) + `_takeSliderValueNoSettle` (core: `_setTextNoSettle` +
+  `text._editNoSettle`) + `_takeSliderValueConnector` (`@_settleLayoutsAfterOrJoinEnclosingPass` → same
+  core; computed-dispatch → dead-method-allowlisted like `_setFontSizeConnector`). **`SliderWdgt`
+  UNTOUCHED.** BoxTransparencyAndColorChanging + PopoverStaysOpenWhenSliderDraggedOut pass with
+  legacy-identical frames.
+- **11 BENIGN inspector recaptures.** `_editNoSettle` on the heavily-inspected `StringWdgt` adds one
+  `methods:` row → every test inspecting a text widget's member list shifts (confirmed benign by 3
+  frame dumps — proper Object Inspectors, `_editNoSettle` the only new row, no crash):
+  AddEditSaveRenameRemoveProperty, DuplicatedInspectorsCloseIndependently, InspectorRejectsDrops,
+  InspectorResizingOKEvenWhenTakenApart (also re-renders `_fireConnection`'s edited source),
+  InspectorScrollbarUnplugged, MovingSlidersSidewaysDoesntCauseContentToMoveSideways,
+  MultilineTextInputScrollsWell, PickingUpPartsFromInspector, ResizingPristineInspector,
+  SimpleDocumentHandlesOldInspector, WrappingTextFieldResizesOK. NO code contortion (calling
+  `world._editNoSettle` directly to dodge them was rejected: it drops `edit()`'s fit→inline /
+  overflow→popup dispatch).
+- **Verification:** `fg build` 0 violations; `fg gauntlet` dpr1/dpr2/webkit **181/0** + apps +
+  tiernaming/settle/**capstone (careless pushes=0)** all PASS (the whole suite runs engine delivery,
+  the drain's apply-settle discipline stays clean §1.14); `fg homepage` BOOT OK; both serialization
+  legs green (24 native + 34 SWCanvas + 7 file; surface UNCHANGED — the switch is a prototype default,
+  no fixture toggles a wire). Fizzygum 7 files (WorldWdgt, ControllerMixin, DataflowEngine, StringWdgt,
+  PromptWdgt, StringFieldWdgt comment, dead-method-allowlist); Fizzygum-tests 11 benign recaptures.
 
 **6d — token retirement.** Delete `_acceptsConnectionToken`, the
 `connectionsCalculationToken` fields and threading (≈146 matching lines across 19 src

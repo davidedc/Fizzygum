@@ -90,16 +90,17 @@ class WorldWdgt extends PanelWdgt
   # ON keeps current behaviour: the *DeferredSettle calls are byte-identical to the _NoSettle cores they wrap.)
   deferredSettlingEnabled: true
 
-  # The A/B switch for the patch-programming → dataflow-engine migration (spec §8, implementation-plan Phase 6b).
-  # OFF (default): connection wires (@target/@action via ControllerMixin) deliver the LEGACY way -- a source's
-  # updateTarget fires @target[@action] directly (ControllerMixin._fireConnection), termination guarded by the
-  # connectionsCalculationToken cascade stamps. ON: a wire ALSO declares a dataflow EDGE (setTargetAndActionWith...
-  # → world.dataflow.addEdge), _fireConnection becomes markStale, and the once-per-cycle drain delivers every wire
-  # -- the patch family (Calculating/Diffing/Regex nodes, Fanout) becomes the engine's SECOND client. Kept a switch
-  # (not a hard cut) so the whole suite stays green on the legacy path while 6b lands, then 6c flips the default and
-  # reconciles, then 6d deletes the token machinery. A PROTOTYPE default (own-only-when-set), so with the switch
-  # untouched the serialized surface is byte-identical -- no widget ever writes an own `dataflowWiresEnabled`.
-  dataflowWiresEnabled: false
+  # The A/B switch for the patch-programming → dataflow-engine migration (spec §8, implementation-plan Phase 6).
+  # ON (default since Phase 6c): a connection wire (@target/@action via ControllerMixin) declares a dataflow EDGE
+  # (setTargetAndActionWith... → world.dataflow.addEdge), _fireConnection becomes markStale, and the once-per-cycle
+  # drain delivers every wire -- the patch family (Calculating/Diffing/Regex nodes, Fanout) is the engine's SECOND
+  # client. OFF: connection wires deliver the LEGACY way -- a source's updateTarget fires @target[@action] directly
+  # (ControllerMixin._fireConnection), termination guarded by the connectionsCalculationToken cascade stamps.
+  # Kept a switch (not a hard cut) for one release as a KILL-SWITCH -- 6b landed the engine path dark (default OFF),
+  # 6c flips the default to ON + reconciles the suite, 6d deletes the switch AND the legacy token machinery. A
+  # PROTOTYPE default (own-only-when-set), so with the switch untouched the serialized surface is byte-identical
+  # -- no widget ever writes an own `dataflowWiresEnabled`.
+  dataflowWiresEnabled: true
 
   # *DeferredSettle DECLARATION tracking (Widget._deferredSettleDeclare / _setMaxDimDeferredSettle). _deferredSettleDeclarationDepth
   # is > 0 while a DECLARED deferred-settle mutation runs, so the off-settle invalidates it schedules are known to be
@@ -2334,7 +2335,26 @@ class WorldWdgt extends PanelWdgt
   # this part is excluded from the fizzygum homepage build <<«
 
   
+  # edit self-settles via the public add / fullDestroy (EACH opens its own settle) exactly as it always has --
+  # every event-time editing caller (inspectors, text fields) depends on that unchanged timing. _editNoSettle
+  # shares the IDENTICAL caret-teardown-and-creation body via a strategy thunk (the _stopEditingTearingCaretDownWith
+  # pattern below), but routes it through the NON-settling _fullDestroyNoSettle / _addNoSettle for a caller ALREADY
+  # inside a layout flush/pass -- a dataflow connection sink delivering into a prompt slider's editable field
+  # (PromptWdgt._takeSliderValueConnector -> StringWdgt._editNoSettle), where the public self-settling add /
+  # fullDestroy would throw the flow-rule (Widget:824).
+  # thin-wrap-exempt: shares its body with _editNoSettle via a teardown/add-strategy thunk -- NOT the bare
+  # @_settleLayoutsAfter => @_editNoSettle wrap.
   edit: (aStringWidgetOrTextWidget) ->
+    @_editTearingAndAddingCaretWith aStringWidgetOrTextWidget,
+      ((caret) -> caret.fullDestroy()),
+      ((parent, caret) -> parent.add caret)
+
+  _editNoSettle: (aStringWidgetOrTextWidget) ->
+    @_editTearingAndAddingCaretWith aStringWidgetOrTextWidget,
+      ((caret) -> caret._fullDestroyNoSettle()),
+      ((parent, caret) -> parent._addNoSettle caret)
+
+  _editTearingAndAddingCaretWith: (aStringWidgetOrTextWidget, tearDownCaret, addCaret) ->
     # first off, if the Widget is not editable
     # then there is nothing to do
     # return nil  unless aStringWidgetOrTextWidget.isEditable
@@ -2348,11 +2368,11 @@ class WorldWdgt extends PanelWdgt
       @lastEditedText = @caret.target
       if @lastEditedText != previouslyEditedText
         @lastEditedText.clearSelection()
-      @caret = @caret.fullDestroy()
+      @caret = tearDownCaret @caret
 
     # create the new Caret
     @caret = new CaretWdgt aStringWidgetOrTextWidget
-    aStringWidgetOrTextWidget.parent.add @caret
+    addCaret aStringWidgetOrTextWidget.parent, @caret
     # the only place where the caret is added to the keyboardEventsReceivers
     @keyboardEventsReceivers.add @caret
 
