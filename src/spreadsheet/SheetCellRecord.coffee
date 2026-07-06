@@ -89,17 +89,17 @@ class SheetCellRecord
   dataflowNoteError: (error) ->
     @_cacheValue new SheetError "ERR", (error?.message ? "" + error)
 
-  # Cache the computed value AND reconcile the cell's SOCKET (spec §9.4 classify → present): the sheet
-  # mounts a swatch (branch 2), hosts/RETAINS a live widget (branch 1), or drops any socket for a
-  # scalar (branch 3). The reconcile RETURNS the value to actually cache — for a widget-valued cell
-  # that keeps its existing widget, the RETAINED instance (so a dragged/restored widget survives its
-  # own markStale, spec §13), else `v` unchanged. This runs inside the drain's layout settle
-  # (DataflowEngine._drainOnePass wraps the pass), so the reconcile is a NoSettle core. Then RETURN
-  # the EXPORTED form — the engine's cutoff compares old vs returned (NOMENCLATURE: dataflow
+  # Cache the computed value AND reconcile the cell's CellWdgt (spec §9.4 classify → present): the sheet
+  # hosts/RETAINS a live widget (branch 1), mounts a swatch (branch 2), or paints the scalar text
+  # (branch 3) into the cell's widget. The reconcile RETURNS the value to actually cache — for a
+  # widget-valued cell that keeps its existing widget, the RETAINED instance (so a dragged/restored
+  # widget survives its own markStale, spec §13), else `v` unchanged. This runs inside the drain's
+  # layout settle (DataflowEngine._drainOnePass wraps the pass), so the reconcile is a NoSettle core.
+  # Then RETURN the EXPORTED form — the engine's cutoff compares old vs returned (NOMENCLATURE: dataflow
   # "caches/recomputes", it does not "settle"; `changed()` marks a broken rect, never a relayout).
   _cacheValue: (v) ->
     sheetWidget = @sheet.sheetWidget
-    @value     = if sheetWidget? then (sheetWidget._reconcileCellSocketNoSettle this, v) else v
+    @value     = if sheetWidget? then (sheetWidget._reconcileCellNoSettle this, v) else v
     @errorFlag = @value instanceof SheetError
     sheetWidget?.changed()
     @exportedCellValue()

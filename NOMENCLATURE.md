@@ -85,7 +85,7 @@ equal-value cutoff terminate a cascade instead. Do not reintroduce the retired t
 | **cell / formula / commit** | a grid slot; its CoffeeScript source; the moment an edit is accepted |
 | **exported value** | the principal value a widget offers to references (`exportedValue()`) |
 | **presenter / `cellPresenter`** | the widget chosen to display a value; one-way glass |
-| **socket** | the cell's widget host: presenter mount + connection target |
+| **cell widget (`CellWdgt`)** | the per-VISIBLE-cell widget: renders the value (painted scalar / hosted value-widget / presenter) + is the connection target (`cellInput`). Phase 8 generalised the Phase-4 **socket** (`CellSocketWdgt`, one per RICH cell) into this |
 
 ## Contested words — explicit rulings
 

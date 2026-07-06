@@ -13,10 +13,12 @@ The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
   subclass; `slot: nil` ⇒ a fresh window per launch, multiple sheets allowed). `buildWindow`
   wraps a `SpreadsheetWdgt` in a window via `world.openWindowWith`. Registered at the WorldWdgt
   boot site into the desktop "examples" folder.
-- `SpreadsheetWdgt.coffee` — the painted grid + editor (Phases 2a/2b): custom paint (the
-  AnalogClockWdgt model) draws gridlines, headers, the selection, and the committed cell VALUES
-  directly; click + arrow-key selection; type-to-edit through a buffer-driven overlay editor.
-  Owns `@model` and is the formula SCOPE (`@` inside a formula is this widget).
+- `SpreadsheetWdgt.coffee` — the grid + editor (Phases 2a/2b/8): its own paint draws only the CHROME
+  (gridlines, headers, selection); every visible cell is a `CellWdgt` child that renders its own value
+  (Phase 8 "widgetise the grid" — see below). Materialises the fixed 6×14 grid of cell widgets
+  (`_buildGridNoSettle`), reconciles each cell's value into its widget (`_reconcileCellNoSettle`),
+  handles click + arrow-key selection, and type-to-edit through a buffer-driven overlay editor. Owns
+  `@model` and is the formula SCOPE (`@` inside a formula is this widget).
 - `SheetModel.coffee` (2b) — the sparse data model: a Map keyed `"A1"` of `SheetCellRecord`s +
   the address algebra (`colToLetters`/`lettersToCol`, `addressFor`/`colRowFor`, `cellAt`/
   `getOrCreateCellAt`/`valueAt`). A plain class (not a Widget); back-ref `@sheetWidget`.
@@ -37,14 +39,16 @@ The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
 - `FormulaHelpers.coffee` (3) — the optional free-function veneer (`mix A1, B1`) over the value
   classes' method algebra (spec §9.5). Static methods only; each own-property name is a bindable
   helper (the compiler's scan + `SheetCellRecord._resolveBoundName` already resolve it).
-- `CellSocketWdgt.coffee` (4) — the live boundary a cell mounts a RICH value in (spec §9.3/§9.4):
-  a transparent freefloating child at the cell's rect that hosts the cell's value-widget (branch 1,
-  a `new SliderWdgt`) or presenter (branch 2, a Color → a swatch). Two-way: presentation DOWN
-  (`hostNoSettle`), interaction UP (an interactive value-widget is wired via `wireValueWidget` so its
-  firings hit the socket's `cellInput` → `markStale` on the cell). Serializes its `@address` +
-  hosted widget (so a slider's dragged position rides the tree); the address→socket index is
-  transient. Deliberately generalisable from one-socket-per-RICH-cell to Phase 8's
-  one-per-VISIBLE-cell `CellWdgt`.
+- `CellWdgt.coffee` (4/8) — one VISIBLE cell, as a real widget. It renders whichever value form the
+  cell holds (spec §9.4 classify → present): a hosted value-widget (branch 1, a `new SliderWdgt`), a
+  hosted presenter (branch 2, a Color → a swatch), or its own PAINTED scalar text (branch 3,
+  `showScalarNoSettle` + `paintIntoAreaOrBlitFromBackBuffer`). Transparent, so the sheet's gridline
+  chrome shows through. Two-way: presentation DOWN (`hostNoSettle` / `showScalarNoSettle`), interaction
+  UP (an interactive value-widget is wired via `wireValueWidget` so its firings hit the cell's
+  `cellInput` → `markStale` on the cell). Serializes its `@address` + hosted widget (so a slider's
+  dragged position rides the tree); the address→cell index is transient. In Phase 4 this was
+  `CellSocketWdgt`, one per RICH cell; Phase 8 GENERALISED it to one-per-VISIBLE-cell (widgetise the
+  grid) — the scalar-text branch and the full-grid materialisation are the additions.
 
 ## The evaluation flow (2b)
 
@@ -89,12 +93,12 @@ the SAME cycle as the Enter event (deterministic, spec §10). `@` inside a formu
   method to a value class (even live, via the class inspector) makes it available to the next
   recompute, since formulas compile from source.
 - **Classify → present (spec §9.4), in `SpreadsheetWdgt`.** Per recompute, `_cacheValue` calls
-  `_reconcileCellSocketNoSettle`: a value that answers `cellPresenter()` (a `Color` → a
-  `RectangleWdgt` swatch) gets that widget hosted in a `CellSocketWdgt` in the cell's rect (branch 2);
-  a value that IS a Widget is hosted live (branch 1 — see the Phase-4 section below); anything else
-  falls back to the painted `toString()` text (branch 3 — the grid's default; the value-paint loop
-  skips a cell that has a socket). The reconcile runs INSIDE the drain's layout settle
-  (`DataflowEngine._drainOnePass` wraps the pass), so every helper is a NoSettle core.
+  `_reconcileCellNoSettle`, which routes the value into the cell's (always-present) `CellWdgt`: a value
+  that answers `cellPresenter()` (a `Color` → a `RectangleWdgt` swatch) is hosted (branch 2); a value
+  that IS a Widget is hosted live (branch 1 — see the Phase-4 section below); anything else the cell
+  PAINTS as `toString()` text (branch 3 — `showScalarNoSettle`; Phase 8 moved this off the sheet's old
+  value-paint loop). The reconcile runs INSIDE the drain's layout settle (`DataflowEngine._drainOnePass`
+  wraps the pass), so every helper is a NoSettle core.
 - **Presenter lifecycle (spec §13 decision): REBUILD on value change, not reuse-and-update.** A
   branch-2 presenter is pure display with no interactive state to keep, so the sheet disposes the
   old widget and calls `cellPresenter()` again — which keeps the sheet value-class-agnostic (no
@@ -103,10 +107,14 @@ the SAME cycle as the Enter event (deterministic, spec §10). `@` inside a formu
   cell whose value is unchanged keeps its widget and rebuilds nothing. Interactive value-widgets that
   must preserve state are the widget-VALUED branch (Phase 4), which is RETAINED, never rebuilt.
 
-## Widget-valued cells & sockets (4)
+## Widget-valued cells & their cell widget (4; the `CellSocketWdgt` became `CellWdgt` in 8)
 
-- **Branch 1 — a cell value that IS a Widget** (`new SliderWdgt`) mounts that widget LIVE in a
-  `CellSocketWdgt` (branch 1 of classify→present; presenters, branch 2, mount in a socket too).
+*(This Phase-4 section describes the per-cell host it introduced as the "socket"; Phase 8 renamed that
+class `CellSocketWdgt` → `CellWdgt` and generalised it to every visible cell — read "socket" below as
+"the cell's `CellWdgt`".)*
+
+- **Branch 1 — a cell value that IS a Widget** (`new SliderWdgt`) mounts that widget LIVE in its
+  `CellWdgt` (branch 1 of classify→present; presenters, branch 2, mount in the cell too).
   `@value` stays the raw widget (so the sheet presents it); a REFERENCE yields its EXPORTED value —
   `SheetCellRecord.exportedCellValue` runs `widget.exportedValue()` (`Widget.exportedValue`'s first
   live consumer), so `B1 = A1` on a slider-valued A1 shows the slider's number. The engine's cutoff
@@ -119,28 +127,28 @@ the SAME cycle as the Enter event (deterministic, spec §10). `@` inside a formu
   resetting the widget being dragged, and it is the SAME rule that (a) survives save/load and (b)
   Phase 8's scroll-virtualisation will reuse. The widget is (re)built only on first mount or a class
   change.
-- **Interactivity IN (spec §9.3 Scenario A).** The socket wires an interactive value-widget
-  (`wireValueWidget` → `setTargetAndActionWithOnesPickedFromMenu nil, nil, socket, "cellInput"`): a
-  drag fires `cellInput` → `SpreadsheetWdgt._markCellStaleFromSocketNoSettle` → `markStale` on the
+- **Interactivity IN (spec §9.3 Scenario A).** The cell wires an interactive value-widget
+  (`wireValueWidget` → `setTargetAndActionWithOnesPickedFromMenu nil, nil, cell, "cellInput"`): a
+  drag fires `cellInput` → `SpreadsheetWdgt._markCellStaleFromHostedWidgetNoSettle` → `markStale` on the
   cell → the pooled drain recomputes the cell (retaining the widget) and its dependents in one cycle.
   A presenter (branch 2) is "one-way glass" and is NOT wired. Drag-and-DROP of desktop widgets INTO
   cells is OUT of Phase-4 scope (deferred).
 - **`SliderWdgt.getValue: -> @value`** joins the export chain (§1.15) — without it `exportedValue`
   falls through for a slider. `SpreadsheetWdgt.hostedWidgetAt address` is the PUBLIC reach into a
-  mounted cell widget (a macro drags `sheet.hostedWidgetAt "A1"`, never the private `_cellSockets`).
-- **Save/load semantics — retain-and-remount (decided, spec §13).** The socket serializes its
+  mounted cell widget (a macro drags `sheet.hostedWidgetAt "A1"`, never the private `_cells`).
+- **Save/load semantics — retain-and-remount (decided, spec §13).** The cell serializes its
   `@address` + its hosted widget, so a widget-valued cell's live widget (with its dragged position)
-  RIDES the tree. On restore `recommitAllCells` RE-INDEXES the sockets (address→socket) and recompute
+  RIDES the tree. On restore `recommitAllCells` RE-INDEXES the cells (address→`CellWdgt`) and recompute
   RETAINS the restored widget (class match) instead of rebuilding it to the formula default — a moved
   slider comes back moved. The alternative (recompute-and-replace, discarding runtime state) was
   rejected: retain-and-remount is the same rule the live drag and Phase 8 scroll use, so save/load and
-  scroll are one problem. The socket's wiring (`@target`/`@action`) serialises too, so a restored
+  scroll are one problem. The cell's wiring (`@target`/`@action`) serialises too, so a restored
   slider is still live. (Pinned by the serialization rig's `sliderRetain` check: drag→77, save, load,
-  assert 77 survived.)
-- **v1 limitation (documented).** Sockets are freefloating children positioned at mount; a sheet that
-  MOVES after mounting rich cells would leave them behind (shared with the Phase-3 presenter mount).
-  Not hit by any test (the sheet is placed once); Phase 8's laid-out cells retire it. The retain check
-  also re-CONSTRUCTS a throwaway widget each recompute (to read its class) — a minor v1 cost.
+  assert 77 survived — and its `grid` check: 84 cells materialised both ways, rich cells host.)
+- **v1 limitation (documented).** The retain check re-CONSTRUCTS a throwaway widget each recompute (to
+  read its class) — a minor v1 cost. (Phase 8 RESOLVED the old "freefloating sockets left behind when
+  the sheet moves" limitation: the whole grid is freefloating and float-follows the sheet, so cells
+  move with it.)
 
 ## Time sources — `seconds` / `frame` (5)
 
@@ -171,17 +179,20 @@ the SAME cycle as the Enter event (deterministic, spec §10). `@` inside a formu
 
 ## Serialization & duplication (spec §2 — the engine index is derived, never serialized)
 
-The SHEET serializes its model + cell SOURCES + geometry (and, Phase 4, its socket children + their
-hosted value-widgets); the engine's edges are NOT serialized or deep-copied. On **restore**
+The SHEET serializes its model + cell SOURCES + geometry (and, Phase 4/8, its `CellWdgt` children +
+their hosted value-widgets); the engine's edges are NOT serialized or deep-copied. On **restore**
 (`_afterDeserialization`) and **duplicate** (`_reactToBeingCopied`) the sheet calls `recommitAllCells`
-— first `_reindexCellSocketsNoSettle` (rebuild the transient address→socket index from the
-restored/copied socket children, re-attach their back-ref, destroy any non-socket stray child), then
-recommit every cell (rebuild `compiledFn`/`value` AND re-declare edges), mark all stale, one drain —
-so a restored/duplicated sheet re-declares its OWN edges, RETAINS its widget-valued cells' live
-widgets (class match) and REBUILDS its presenters from values (a Color's swatch is DERIVED, spec §9.4;
-its churn-skip `presentedValue` is nil after restore, forcing the rebuild — no orphan/double), needing
-no engine fix-up. (This replaced Phase 3's "sweep every derived child then rebuild" — the socket makes
-widget state survive, which the sweep destroyed.) This requires the plain data classes to be
+— first `_reindexCellsNoSettle` (rebuild the transient address→cell index from the restored/copied
+`CellWdgt` children, re-attach their back-ref, `_buildGridNoSettle` any cell the snapshot lacked,
+destroy any non-cell stray child), then recommit every cell (rebuild `compiledFn`/`value` AND
+re-declare edges), mark all stale, one drain — so a restored/duplicated sheet re-declares its OWN
+edges, RETAINS its widget-valued cells' live widgets (class match) and REBUILDS its presenters from
+values (a Color's swatch is DERIVED, spec §9.4; its churn-skip `presentedValue` is nil after restore,
+forcing the rebuild — no orphan/double), needing no engine fix-up. **The constructor builds the full
+grid, but the deserialize/duplicate path SKIPS the constructor (`Object.create`), so the restored/copied
+cells ride the snapshot and are adopted by the re-index — never a double grid.** (This replaced Phase 3's
+"sweep every derived child then rebuild" — the cell widget makes widget state survive, which the sweep
+destroyed.) This requires the plain data classes to be
 deep-copyable: `SheetModel`/`SheetCellRecord` `@augmentWith DeepCopierMixin`, `SheetError`
 `keptByReferenceOnDeepCopy` (immutable), and the general `Map::deepCopy`/`Set::deepCopy`
 (`src/boot/extensions/Map-extensions.coffee`). Derived fields are dropped on serialize
@@ -189,16 +200,39 @@ deep-copyable: `SheetModel`/`SheetCellRecord` `@augmentWith DeepCopierMixin`, `S
 focus:** `_takeKeyboardFocus` removes other sheets from `world.keyboardEventsReceivers` first, so a
 duplicated sheet (which inherits receiver membership via the copier) doesn't edit in lockstep.
 
-## Design north star (spec §9)
+## Design north star (spec §9, as of Phase 8)
 
-**Painted chrome, widgetized contents.** The sheet's appearance paints gridlines, headers and
-plain text/number values DIRECTLY — no widget-per-cell (that would defeat the framework's lack
-of widget virtualization; paint is already clipped). A live child widget — the **socket**
-(`CellSocketWdgt`, Phase 4) — exists only for cells that hold/present rich widgets or are currently
-selected/being edited (Phases 2b/4). The socket is the two-way boundary adapter: it hosts the
-value/presenter widget and is the connection target interactive widget-sources (slider, picker, clock)
-fire into — each firing a `markStale` on the cell. Phase 8 generalises it from one-socket-per-RICH-cell
-to one-`CellWdgt`-per-VISIBLE-cell (widgetise the grid).
+**Widgetized viewport over painted chrome.** The sheet's appearance paints only the CHROME —
+gridlines, headers, selection — and every VISIBLE cell is a real child widget (a `CellWdgt`) that
+renders its own value (painted scalar text, a hosted value-widget, or a presenter swatch). This is the
+Phase-8 flip of the original "painted chrome, widgetized contents" (where only rich cells got a widget
+— the `CellSocketWdgt`): a `CellWdgt` is the general form the socket seeded. Widget count stays bounded
+by the VIEWPORT, not the sparse model — an off-screen cell (Z99 in a formula) is a live dataflow node
+whose record recomputes with NO widget; scroll (a later sub-phase) materialises/recycles the viewport's
+cells. The cell is the two-way boundary adapter: it hosts the value/presenter widget and is the
+connection target interactive widget-sources (slider, picker, clock) fire into — each firing a
+`markStale` on the cell.
+
+## Phase 8 decisions / deviations (recorded also in the plan)
+
+- **Data cells only (owner-confirmed scope).** One `CellWdgt` per visible DATA cell (the 6×14 grid);
+  headers, gridlines and the outer border stay PAINTED chrome (not data — no inspect/edit/drag payoff,
+  and v1 has no column resize). Headers-as-widgets would be a purely additive later step.
+- **Byte-identical, zero recaptures.** The widgetisation preserved the exact paint offsets (scalar
+  text at cell-local `(4, h−6)`) and the 2px host inset, so the grid renders pixel-for-pixel as the
+  old painted grid — the whole suite (dpr1/dpr2/webkit) + both serialization legs stayed green with NO
+  reference change. The architecture changed; the pixels did not. (The plan had budgeted for recaptures.)
+- **Full grid materialised at construction; deserialize/duplicate adopt the snapshot's cells.** The
+  constructor builds all 6×14 `CellWdgt`s (`_buildGridNoSettle`, freefloating + absolute — they
+  float-follow the sheet). The deserialize/duplicate path SKIPS the constructor (`Object.create`), so
+  the restored/copied cells ride the snapshot and `_reindexCellsNoSettle` adopts them; `_buildGridNoSettle`
+  is idempotent (skips an already-indexed address) so it only fills a gap — never a double grid.
+- **Selection + editing stay sheet-driven (v1).** Clicks on a cell escalate to the sheet's
+  `mouseClickLeft` (Widget's default `mouseClickLeft` escalates to the parent), which hit-tests via
+  `_cellAtLocal`; the buffer-driven overlay editor still sits over the editing cell, whose `CellWdgt`
+  suppresses its own text (`_isCellBeingEdited`) so nothing doubles. Moving selection-border and the
+  editor FULLY into the `CellWdgt` is a deliberate optional follow-on (it would force recaptures for
+  marginal gain, so it was not done in v1).
 
 ## Phase 2a decisions / deviations (recorded also in the plan)
 

@@ -26,7 +26,7 @@ unchecked, then update the ledger in the same commit that completes the phase.**
 - [x] Phase 6c — A/B default ON, suite reconciliation
 - [x] Phase 6d — token retirement
 - [x] Phase 7 — docs closeout
-- [ ] Phase 8 — widgetise the grid (one CellWdgt per VISIBLE cell; viewport-bounded) — follow-on
+- [x] Phase 8 — widgetise the grid (one CellWdgt per VISIBLE cell; viewport-bounded) — follow-on
 
 Each phase = one or more commits, independently green and revertable. Do not start a phase
 with the previous one unverified. **Phase 8 is a planned follow-on** (owner direction 2026-07-05):
@@ -1217,6 +1217,35 @@ listed in the commit. Scroll + a real grid layout (the deferred `ScrollPanelWdgt
 here or in a sub-phase. Update `src/spreadsheet/CLAUDE.md` (the design north star flips from
 "painted chrome, widgetized contents" to "widgetized viewport over a sparse model") and root
 `CLAUDE.md`. Full §0 phase-close battery.
+
+**Landed** ✅ (committed, NOT pushed — Fizzygum + tests lockstep; SHAs in the memory note + git log,
+this plan edit riding the Fizzygum commit). NEW `CellWdgt.coffee`
+= the Phase-4 `CellSocketWdgt` RENAMED + GENERALISED to every visible cell: it keeps the host/wire/
+`cellInput` two-way boundary and ADDS scalar-text paint (branch 3, `showScalarNoSettle` +
+`paintIntoAreaOrBlitFromBackBuffer` at the same cell-local offsets the sheet's old value loop used) +
+the 2px host inset (moved off the sheet). `SpreadsheetWdgt`: `_buildGridNoSettle` materialises the fixed
+6×14 grid in the constructor (freefloating + absolute from `@position()` → float-follows the sheet; the
+DegreesConverterApp orphan-construction idiom); the value-paint loop is DELETED (`_paintGrid` paints only
+chrome now); `_reconcileCellSocketNoSettle`→`_reconcileCellNoSettle` routes into the always-present cell
+(no create/dispose dance); `_cellSockets`→`_cells`, `_reindexCellSocketsNoSettle`→`_reindexCellsNoSettle`
+(adopts restored/copied cells; calls the now-idempotent `_buildGridNoSettle` to fill any gap),
+`_markCellStaleFromSocketNoSettle`→`_markCellStaleFromHostedWidgetNoSettle`; NEW `_isCellBeingEdited`
+(the editing cell suppresses its own text so the overlay editor is the sole thing shown). **Deserialize/
+duplicate SKIP the constructor (`Object.create`), so the snapshot's cells ride the tree and are adopted —
+never a double grid.** `SheetModel.colRowFor` (the old value loop's only caller) → dead-method-allowlisted
+as symmetric address-algebra API (inverse of `addressFor`). **Scope = data cells only** (owner-confirmed
+2026-07-06); headers/gridlines/selection stay PAINTED chrome; selection + the overlay editor stay
+sheet-driven (clicks on a cell escalate to the sheet's `mouseClickLeft`). **DEVIATION from the "expect
+recaptures" plan: BYTE-IDENTICAL** — preserving the exact paint offsets + host inset made the widgetised
+grid render pixel-for-pixel as the painted grid, so the WHOLE suite (dpr1/dpr2/webkit **181/0**) + both
+serialization legs stayed green with ZERO reference changes. The architecture changed; the pixels did
+not. Serialization rig's `spreadsheet.roundtrip.sockets`→`.grid` now witnesses the full grid (84 cells ==
+children, both ways; D1/F1 host, A1 doesn't). Moving selection-border + the editor FULLY into the
+`CellWdgt` (my earlier 8.2/8.3) is a deliberate OPTIONAL follow-on — it would force recaptures for
+marginal gain, so v1 stops at the byte-identical widgetisation. Gauntlet dpr1/dpr2/webkit 181/0 + apps +
+tiernaming/settle/capstone (careless=0); `fg homepage` BOOT OK; serialization same-page + file legs green.
+No new SystemTest (byte-identical, no new user-facing interaction; the rig's `grid` check + the existing
+SliderCell/ColorCell/Duplicate tests witness the widgetisation).
 
 ---
 

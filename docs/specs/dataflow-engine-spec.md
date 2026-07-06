@@ -1,11 +1,12 @@
 # Dataflow engine & spreadsheet — design spec
 
-**Status:** **IMPLEMENTED** (Phases 0–7, 2026-07-06). The design shipped; the
-`docs/dataflow-engine-implementation-plan.md` status ledger + its per-phase "Landed" receipts are the
-build record, and `docs/dataflow-measurements.md` carries the measured drain-convergence numbers (typical
-1 pass, peak 2 for a sink-onto-source chain). **Vocabulary:** `NOMENCLATURE.md` (root) is normative for
-every term used here; the layout-side renames it depended on landed in
-`docs/coalesced-nomenclature-rename-plan.md`.
+**Status:** **IMPLEMENTED** (Phases 0–7, 2026-07-06; + the Phase 8 view follow-on "widgetise the grid").
+The design shipped; the `docs/dataflow-engine-implementation-plan.md` status ledger + its per-phase
+"Landed" receipts are the build record, and `docs/dataflow-measurements.md` carries the measured
+drain-convergence numbers (typical 1 pass, peak 2 for a sink-onto-source chain). Phase 8 is a
+VIEW-only refactor — the engine/model/value-protocol/serialization design below is untouched by it.
+**Vocabulary:** `NOMENCLATURE.md` (root) is normative for every term used here; the layout-side renames
+it depended on landed in `docs/coalesced-nomenclature-rename-plan.md`.
 
 **Deviations decided during execution** (each recorded in its phase's commit message):
 - **2a** — direct-paint viewport, no `ScrollPanelWdgt` yet; fixed-size window content (elasticity 0) for a
@@ -28,6 +29,11 @@ every term used here; the layout-side renames it depended on landed in
 - **6d** — the connection token machinery (`_acceptsConnectionToken` / `connectionsCalculationToken` /
   `makeNewConnectionsCalculationToken`) AND the A/B switch are DELETED; engine delivery is the ONLY path. The
   visit-once + equal-value cutoff provide the cascade termination the token used to.
+- **8 (view follow-on)** — "widgetise the grid" REVERSES §9.1's "no widget-per-cell": every VISIBLE cell is
+  now a real `CellWdgt` (the Phase-4 `CellSocketWdgt` generalised — it also paints the scalar text the sheet
+  used to). This does NOT reintroduce widget virtualisation: widget count is bounded by the VIEWPORT, not the
+  sparse model (an off-screen cell is a live node with no widget). Data cells only (headers/gridlines stay
+  painted chrome). Byte-identical — the whole suite + serialization legs stayed green with no reference change.
 - **STILL DEFERRED** — the `firesPerEvent` PER-EVENT synchronous mini-pass (§4 / §13): the per-wire flag rides
   the edge record, but delivery POOLS regardless (the two are screen-indistinguishable; §13 open point).
   `true` is stored against the day the scoped mini-pass lands.
@@ -232,11 +238,17 @@ client's:
   record holds `{source, kind-of-entry metadata}` plus derived state
   `{compiledFn, value, presenter}` (derived state is rebuildable, never serialized —
   same philosophy as the engine index).
-- **Painted chrome, widgetized contents:** the sheet widget's appearance paints gridlines,
-  headers, and plain text/number values directly; a live child widget (the **socket**)
-  exists only for cells that hold/present rich widgets or are currently selected/being
-  edited. This sidesteps the framework's lack of widget virtualization (paint is already
-  clipped; layout and memory stay bounded). Hosted in a `ScrollPanelWdgt`.
+- **Painted chrome, widgetized contents** *(as originally designed; SUPERSEDED by Phase 8 — see next
+  bullet)*: the sheet widget's appearance paints gridlines, headers, and plain text/number values
+  directly; a live child widget (the **socket**) exists only for cells that hold/present rich widgets
+  or are currently selected/being edited. This sidesteps the framework's lack of widget virtualization
+  (paint is already clipped; layout and memory stay bounded). Hosted in a `ScrollPanelWdgt`.
+- **Widgetized viewport over painted chrome** *(Phase 8, the shipped form)*: the sheet paints only the
+  chrome (gridlines, headers, selection); every VISIBLE cell is a real `CellWdgt` child that renders
+  its own value (painted scalar text, or a hosted value-widget / presenter). Widget count is bounded by
+  the VIEWPORT, not the sparse model (an off-screen cell is a live node with NO widget; scroll
+  materialises/recycles the viewport's cells) — so this is NOT open-ended widget virtualization, just
+  the standard bounded-viewport trick. The `CellWdgt` is the Phase-4 socket generalised to every cell.
 - Layout discipline: the `StretchablePanelWdgt` pattern — immediate `_apply*` mutators
   inside `_reLayout`, bulk child moves inside `disableTrackChanges()` …
   `maybeEnableTrackChanges()` + one `fullChanged()`.
