@@ -1332,6 +1332,7 @@ class WorldWdgt extends PanelWdgt
         @dragEmbedLabelWdgt._ephemeralOverlay = true
         @add @dragEmbedLabelWdgt
         @dragEmbedLabelWdgt.setColor Color.create(40, 40, 40, 1)
+        @dragEmbedLabelWdgt.setWidth 320   # roomy enough for the full text (else a StringWdgt crops it)
       @dragEmbedLabelWdgt._applyMoveTo @dragEmbedLabelDeclared.point
     else if @dragEmbedLabelWdgt?
       @dragEmbedLabelWdgt.fullDestroy()

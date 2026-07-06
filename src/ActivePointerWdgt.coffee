@@ -237,10 +237,15 @@ class ActivePointerWdgt extends Widget
       style = if @dragEmbedCandidate? then HighlighterWdgt.candidateOutlineStyle() else HighlighterWdgt.reluctantOutlineStyle()
       world.widgetsToBeHighlighted.set outlineTarget, style
 
+    # Affordance anchor: just BELOW the carried payload's bottom edge. The payload hangs from / around
+    # the cursor, and the hand paints OVER the world's ephemeral overlays, so a cursor-anchored ring/label
+    # would be hidden behind it — anchor them below the payload so they stay visible and follow the drag.
+    affordanceTop = payload.bottom() + 6
+
     # 2. charging ring — window payload, over a candidate, not yet armed
     if isWindow and @dragEmbedCandidate? and not @dragEmbedArmed
       world.dragEmbedChargeRingDeclared =
-        centerPoint: @position().add new Point(16, 16)
+        centerPoint: new Point(payload.left() + 12, affordanceTop + 11)
         lingerOriginEventTime: @dragEmbedLingerOriginEventTime
         lingerOriginWallTime: @dragEmbedLingerOriginWallTime
     else
@@ -250,7 +255,7 @@ class ActivePointerWdgt extends Widget
     if isWindow and @dragEmbedArmed and @dragEmbedCandidate?
       candidateTitle = @_dragEmbedCandidateTitle()   # hoisted out of the string so the ref is visible
       world.dragEmbedLabelDeclared =
-        point: @position().add new Point(16, 20)
+        point: new Point(payload.left(), affordanceTop)
         text: "Drop to insert into '#{candidateTitle}'"
     else
       world.dragEmbedLabelDeclared = nil

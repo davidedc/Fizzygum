@@ -237,8 +237,25 @@ migration). **Deliverable:** the EMPIRICAL changed-test list replacing §13's pr
 
 ### Phase 2 — Dwell state machine + all drag visuals; RULES UNCHANGED (~1.5 days)
 
-> **IN PROGRESS 2026-07-06 — ALL CODE LANDED + BUILDS CLEAN (0 violations); tests NOT yet done.**
-> Uncommitted working tree (Fizzygum only; nothing staged). What's done:
+> **✅ LANDED 2026-07-06 — Phase 2 COMPLETE; all gates green.** Commits: Fizzygum `1f36e63c` (WIP —
+> the code below) + a completion commit (affordance positioning + label sizing + this doc);
+> Fizzygum-tests commit (the 2 dwell macros + 4 benign recaptures). **Gates:** `fg gauntlet` — dpr1
+> 183/0 · dpr2 183/0 · webkit 183/0 · apps · tiernaming · settle · capstone ALL PASS; `fg homepage`
+> native BOOT OK. **2 NEW macros** — `macroDragEmbedWindowLingerArms` (still hold → armed label +
+> candidate outline) and `macroDragEmbedWindowTransitNeverArms` (>7px sweep → candidate outline +
+> EMPTY ring, no label) — arm deterministically at ALL three backends/densities (the linger is a
+> NON-SCALED `yield`, the ring's fill is event-time under the harness / wall-time in production).
+> **4 BENIGN recaptures**: the candidate outline now shows mid-drag in
+> `macroCompositeDragsAsUnitIntoScrollPanel` / `macroListWdgtAutoScrollsNearDraggedEdge` /
+> `macroSubMenuDroppedIntoPanelPinsItself`, and `macroDuplicatedInspectorDrivesCopiedTargetOnly`'s
+> inherited-member list gains `requiresDeliberateEmbedding`. **DEVIATIONS from spec §11 (visual only,
+> no rule change):** (1) the ring/label anchor just BELOW the carried payload's bottom edge, not at
+> cursor+(16,16) — the hand paints OVER the world's ephemeral overlays, so a cursor-anchored overlay
+> is hidden behind the carried window; below-payload keeps them visible and following the drag. (2)
+> the armed label (a StringWdgt) gets an explicit `setWidth 320`, else it crops. Suite 181 → 183.
+>
+> Code below is as originally committed in `1f36e63c` (the completion commit only tweaks the ring/label
+> anchor + label width):
 > - **Capabilities + constants:** `Widget.requiresDeliberateEmbedding -> false` / `WindowWdgt -> true`;
 >   `PreferencesAndSettings.dwellToArmMs:450 / dwellRingSteps:5 / dwellOffsetLandingPx:24` (LINGER_RADIUS
 >   reuses `grabDragThreshold:7`).
