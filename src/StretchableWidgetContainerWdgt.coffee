@@ -195,7 +195,7 @@ class StretchableWidgetContainerWdgt extends Widget
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
-    @parent?.makePencilYellow?()
+    @parent?.showEditModeInBar?()
     if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
       @parent._enableDragsDropsAndEditingNoSettle @
     else
@@ -208,7 +208,7 @@ class StretchableWidgetContainerWdgt extends Widget
     if !triggeringWidget? then triggeringWidget = @
     if !@dragsDropsAndEditingEnabled
       return
-    @parent?.makePencilClear?()
+    @parent?.showViewModeInBar?()
     if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
       @parent._disableDragsDropsAndEditingNoSettle @
     else

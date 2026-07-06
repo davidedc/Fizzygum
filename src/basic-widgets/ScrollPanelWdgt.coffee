@@ -867,7 +867,7 @@ class ScrollPanelWdgt extends PanelWdgt
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
-    @parent?.makePencilYellow?()
+    @parent?.showEditModeInBar?()
 
     @enableDrops()
     @dragsDropsAndEditingEnabled = true
@@ -881,7 +881,7 @@ class ScrollPanelWdgt extends PanelWdgt
     if !triggeringWidget? then triggeringWidget = @
     if !@dragsDropsAndEditingEnabled
       return
-    @parent?.makePencilClear?()
+    @parent?.showViewModeInBar?()
 
     @disableDrops()
     @dragsDropsAndEditingEnabled = false

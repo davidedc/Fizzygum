@@ -133,7 +133,7 @@ class StretchableEditableWdgt extends Widget
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
-    @parent?.makePencilYellow?()
+    @parent?.showEditModeInBar?()
     @dragsDropsAndEditingEnabled = true
     @_createToolsPanelNoSettle()
     @stretchableWidgetContainer._enableDragsDropsAndEditingNoSettle @
@@ -173,7 +173,7 @@ class StretchableEditableWdgt extends Widget
     if !triggeringWidget? then triggeringWidget = @
     if !@dragsDropsAndEditingEnabled
       return
-    @parent?.makePencilClear?()
+    @parent?.showViewModeInBar?()
     @dragsDropsAndEditingEnabled = false
     if @toolsPanel?
       # DETACH-then-teardown (mirror of the enable sibling-reorder). For ReconfigurablePaint's RadioButtonsHolder

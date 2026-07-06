@@ -3494,7 +3494,7 @@ class Widget extends TreeNode
       whereToAct = @
 
 
-    @parent?.makePencilYellow?()
+    @parent?.showEditModeInBar?()
     whereToAct.dragsDropsAndEditingEnabled = true
 
     whereToAct.enableDrops()
@@ -3531,7 +3531,7 @@ class Widget extends TreeNode
       whereToAct = @
 
 
-    @parent?.makePencilClear?()
+    @parent?.showViewModeInBar?()
     whereToAct.disableDrops()
 
     whereToAct.dragsDropsAndEditingEnabled = false

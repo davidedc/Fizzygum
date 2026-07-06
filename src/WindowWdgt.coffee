@@ -531,14 +531,21 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @_addNoSettle resizer, nil, resizer.defaultLayoutSpecWhenAddedTo(@)
       @resizer = resizer
 
-  makePencilYellow: ->
+  # Reflect the content's edit/view mode in the title-bar edit button: the glyph
+  # NAMES the current mode (pencil = editing now, eye = viewing now) and the
+  # existing colour reinforces it (editing-yellow / clear). Driven from the 8
+  # enable/disable state-reflection callers, not from clicks — see
+  # docs/pencil-eye-edit-mode-toggle-plan.md §1/§3.
+  showEditModeInBar: ->
+      @editButton?.showPencilGlyph()
       # TODO assigning to color_normal is not enough
       # there should be a way to do these two lines with one line
       @editButton?.color_normal = Color.create 248, 188, 58
       @editButton?.setColor Color.create 248, 188, 58
       @editButton?.changed()
 
-  makePencilClear: ->
+  showViewModeInBar: ->
+      @editButton?.showEyeGlyph()
       # TODO assigning to color_normal is not enough
       # there should be a way to do these two lines with one line
       @editButton?.color_normal = Color.create 245, 244, 245
@@ -551,9 +558,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @_addNoSettle @editButton, nil, nil, nil, true
 
       if @contents.dragsDropsAndEditingEnabled
-        @makePencilYellow()
+        @showEditModeInBar()
       else
-        @makePencilClear()
+        @showViewModeInBar()
 
   initialiseDefaultWindowContentLayoutSpec: ->
     super
