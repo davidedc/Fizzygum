@@ -377,18 +377,50 @@ class ActivePointerWdgt extends Widget
 
       wdgtToDrop = @children[0]
 
-      # tear down the drag-embed affordances on release (spec §6/§7). Phase 3 will branch the drop
-      # OUTCOME on @dragEmbedArmed; Phase 2 leaves the drop rule otherwise unchanged.
+      # THE RULE FLIP (spec §6/§7). The release is itself an evaluation point for the dwell (§6: the
+      # arm decision is evaluated at EVERY event over the candidate, INCLUDING the release), so re-run
+      # the state machine once more here: a frozen hold that has already reached DWELL_ARM_MS of elapsed
+      # event-time then ARMS exactly on release, with no final micro-move needed — the S2-validated
+      # still-hold case. Capture the verdict, THEN tear the affordances down (teardown clears the state
+      # we just read).
+      @updateDragEmbedStateMachine()
+      wasArmed = @dragEmbedArmed
+      overReluctantOnly = @dragEmbedReluctant?
       @_endDragEmbedInteraction()
 
-      if not wdgtToDrop.wantsToBeDropped()
+      if overReluctantOnly
+        # LOCKED_CUE (spec §7): the destination is in view mode — it never accepts a mid-drag drop. Land
+        # on the WORLD (and OFFSET below, so the payload can NEVER masquerade as nested — the false-success
+        # killer). Applies to BOTH window and plain payloads (§7 — "insert into this document" is equally
+        # plausible for a snippet). The land-and-offer pill that turns this into a one-click insert is Phase 4.
         target = world
+      else if wdgtToDrop.requiresDeliberateEmbedding()
+        # WINDOW payload over an eager/willing candidate (or nothing): the internal/external gate is GONE
+        # — the dwell alone decides (spec §7). Armed → embed at the resolved candidate (the SAME climb
+        # the preview used, so preview and outcome cannot disagree); not armed → plain move-over, lands
+        # on the world at the release point (this IS the common gesture — no bounce, no scold).
+        if wasArmed
+          target = @dropTargetFor wdgtToDrop
+        else
+          target = world
       else
-        target = @dropTargetFor wdgtToDrop
+        # Plain payload, not over a view-mode-only target: unchanged accept behavior. Base
+        # wantsToBeDropped is true (instant embed over an eager/willing target via the climb);
+        # BasementOpenerWdgt keeps its override that forces itself onto the world.
+        if not wdgtToDrop.wantsToBeDropped()
+          target = world
+        else
+          target = @dropTargetFor wdgtToDrop
 
       @fullChanged()
       target._beforeChildDropped? wdgtToDrop
       target.add wdgtToDrop, nil, nil, true, nil, @position()
+      if overReluctantOnly
+        # Displace the refused payload off the exact release point by dwellOffsetLandingPx (add() left it
+        # AT the cursor — position is kept from the on-hand spot), so a view-mode drop can never LOOK
+        # nested (spec §7). Same idiom as duplicateMenuAction's offset-a-copy move.
+        offset = WorldWdgt.preferencesAndSettings.dwellOffsetLandingPx
+        wdgtToDrop.moveTo wdgtToDrop.position().add new Point offset, offset
       wdgtToDrop.fullChanged()
 
       # when you click the buttons, sometimes you end up
@@ -1084,9 +1116,12 @@ class ActivePointerWdgt extends Widget
       # autoScrolling support:
       if @isThisPointerFloatDraggingSomething()
         widgetBeingFloatDragged = @children[0]
-        # if we are dragging stuff that can't be dropped
-        # (e.g. external windows) then nothing happens
-        if widgetBeingFloatDragged.wantsToBeDropped()
+        # Window payloads never edge-auto-scroll a scroll panel (spec §12): dragging a window across a
+        # big panel must not scroll it — the mouse wheel is the explicit, first-class way to reach an
+        # off-view insertion point mid-drag (§6.1). Plain payloads keep edge-auto-scroll. (Was
+        # `wantsToBeDropped()` — the old internal/external gate; the flip to the payload-class capability
+        # is the drag-embed rule change, and it also drops the BasementOpenerWdgt special-case here.)
+        if not widgetBeingFloatDragged.requiresDeliberateEmbedding()
           # a scroll panel decides whether to auto-scroll for the dragged widget near its edge
           # (was `newWdgt instanceof ScrollPanelWdgt` + the wantsDropOfChild / edge / start logic here).
           # (type-test-elimination campaign)

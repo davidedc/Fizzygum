@@ -986,9 +986,37 @@ class MacroToolkit
         intWin.pickUp()
         @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf extWin, [0.5, 0.55]), "no button", 700
         yield "waitNoInputsOngoing"
+        # Phase 3 (drag-embed dwell-to-arm, spec section 6): a WINDOW payload embeds only after the dwell.
+        # The window is now held STILL over the external window's content, so a NON-SCALED linger past
+        # dwellToArmMs of elapsed EVENT-time ARMS it (a numeric "yield N" is real wall-clock: queueInputEvent
+        # scales event.time by spanFactor, so a scaled linger would arm at one speed but not another), and the
+        # release then nests it — the pre-Phase-3 outcome. The affordances are torn down on release, so the
+        # composite the callers screenshot AFTER the drop is byte-identical to before.
+        yield 600
         @syntheticEventsMouseClick_InputEvents()
         yield "waitNoInputsOngoing"
         return extWin
+    """
+
+    # Phase 3 (drag-embed dwell-to-arm): float-drag a WINDOW by grabPoint (typically its title bar) and
+    # DWELL-ARM-embed it at destPoint. After the rule flip a window payload nests ONLY after the dwell (spec
+    # section 6/7: the internal/external gate is gone — the dwell alone decides), so this presses at grabPoint,
+    # drags to destPoint (the window grabs past grabDragThreshold and rides the hand), LINGERS past dwellToArmMs
+    # of NON-SCALED real wall-clock — a numeric "yield" (queueInputEvent scales event.time by spanFactor, so a
+    # scaled linger would arm at one speed only) — then releases: the release is an evaluation point (ActivePointer
+    # Wdgt.drop re-runs the state machine), so it ARMS and the window embeds at destPoint. The grab point + dest are
+    # the SAME as a plain syntheticEventsMouseMovePressDragRelease, so the nested result is byte-identical; only the
+    # (torn-down-on-release) linger differs. Use THIS wherever a window must NEST — the plain press-drag-release
+    # drops with no linger, which after the flip lands a window on the WORLD. Takes NO screenshots.
+    macroSubroutines.add Macro.fromString """
+      dwellDragWindowByGrabToEmbed_InputEvents_Macro = (grabPoint, destPoint) ->
+        @moveToAndMouseDown_InputEvents grabPoint, "left button", 200
+        yield "waitNoInputsOngoing"
+        @syntheticEventsMouseMove_InputEvents destPoint, "left button", 400
+        yield "waitNoInputsOngoing"
+        yield 600
+        @syntheticEventsMouseUp_InputEvents "left button"
+        yield "waitNoInputsOngoing"
     """
 
     # Overflowing-scroll-panel fixture, SHARED by the scroll-panel drag-behaviour tests (default → the panel MOVES;

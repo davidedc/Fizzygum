@@ -593,12 +593,33 @@ assertion a recapture after a regression silently stores two different hashes an
   the original bar untouched. Reach "duplicate" through the ancestor HIERARCHY menu: a right-click on the bar lands on a chrome
   CHILD (label/background), so descend `"a Window"` by prefix first; then the standard carry-drop (no-button move + click).
   Locate the copy STRUCTURALLY (`world.topWdgtSuchThat` on class + position) — original and copy share their title. No new verb.
-- **Internal vs external window drop** (`macroInternalVsExternalWindowDrop`): a `WindowWdgt`'s 4th ctor arg is `internal`
-  (default false). `WindowWdgt.wantsToBeDropped` returns `@internal`, and `ActivePointerWdgt.drop` forces `target = world`
-  for a widget that does not want to be dropped (`:248`) — so an EXTERNAL window dropped over a container lands on the desktop (NOT
-  nested) while an INTERNAL window nests into the morph under the point (e.g. a PanelWdgt, `_acceptsDrops:true`). Carry on the
-  hand with `win.pickUp()` + a no-button `@syntheticEventsMouseMove_InputEvents`, drop with `@syntheticEventsMouseClick_InputEvents()`.
-  Prove nesting with `panel.moveTo …` (only the nested internal window travels).
+- **Window drop = DWELL-TO-ARM** (`macroInternalVsExternalWindowDrop` + the drag-embed dwell family — spec
+  `docs/specs/drag-embed-interaction-spec.md` §6/§7): a WINDOW payload (`requiresDeliberateEmbedding → true`) embeds into a
+  container ONLY after a **dwell** — held still over an eager/willing candidate for ≥ `dwellToArmMs` of elapsed EVENT-time
+  (`ActivePointerWdgt.updateDragEmbedStateMachine`; the release is itself an evaluation point). `ActivePointerWdgt.drop` branches
+  on the armed bit: armed → nests (`@dropTargetFor`); unarmed → lands on the WORLD at the release point; over a VIEW-MODE
+  (reluctant) container → OFFSET landing on the world by `dwellOffsetLandingPx` (the false-success killer). The old
+  internal/external gate is GONE (`WindowWdgt.wantsToBeDropped` no longer decides nesting — Phase 5 derives `@internal`). **KEY
+  DETERMINISM CONSTRAINT:** `MacroToolkit.queueInputEvent` SCALES `event.time` by `spanFactor`, so the arming linger MUST be a
+  NON-SCALED numeric `yield N` (real wall-clock) — a scaled linger would arm at one speed but not another. To ARM: carry over
+  the candidate (`win.pickUp()` + no-button `@syntheticEventsMouseMove_InputEvents`), `yield <past dwellToArmMs>`, then release
+  (`@syntheticEventsMouseClick_InputEvents()`) — the frozen hold arms on release. To assert deterministically: assert the armed
+  LABEL (binary) or an EMPTY ring (elapsed ~0), NEVER a partial ring (it quantises nondeterministically across densities); and
+  avoid a post-drop frame captured right after a rapid move→release (the charging ring's invisible alpha=0 teardown residue can
+  differ between capture/run at dpr2 — assert a mid-drag state instead). Prove nesting with `panel.moveTo …` (only the nested
+  window travels). This test is the armed/unarmed PAIR (two identical windows: one released at once → world, one held then
+  released → nests). Family: `macroDragEmbedWindowLingerArms` / `…TransitNeverArms` (Phase 2 visuals),
+  `macroDragEmbedArmedPersistsWhileAiming` / `…CandidateChangeResets` / `…ReleaseWhileChargingLandsOnWorld` (Phase 3).
+- **Dwell-embed a window by its TITLE BAR** (`dwellDragWindowByGrabToEmbed_InputEvents_Macro grabPoint, destPoint` —
+  `macroMenuInWindowInScrollStackStaysLive`, `macroWindowCellsInConstrainedScrollStackReflow`,
+  `macroSimpleDocumentHandlesOldInspector`): the press-drag-release counterpart of the pickUp+click carry, for a window that
+  must NEST via a title-bar drag. It presses at `grabPoint` (the window grabs past `grabDragThreshold` and rides the hand),
+  drags to `destPoint`, LINGERS past `dwellToArmMs` (non-scaled `yield`), then releases → the release arms and embeds. The plain
+  `@syntheticEventsMouseMovePressDragRelease_InputEvents` drops a window with NO linger → after the rule flip that lands it on
+  the WORLD; use THIS verb wherever a window must nest (grab point + dest identical, so the nested result is byte-identical — only
+  the torn-down-on-release linger differs). ⚠ REPOSITIONING a nested window by its title ALSO re-parents via `drop()`, so an
+  unarmed title-drag DETACHES it to the world — use this verb (dwell) to keep it nested (see
+  `macroScrollPanelUpdatesCorrectlyOnCollapsingAndUncollapsingAndClosingWindow`).
 - **Internal window dropped INTO a window → becomes its content** (`macroInternalWindowDroppedIntoWindowFits` /
   `macroResizeWindowContainingInternalWindow`): drop an internal window over an EMPTY external window — `WindowWdgt.add`
   (`:179`) re-parents it `ATTACHEDAS_WINDOW_CONTENT`, `adjustContentsBounds` (`:384`) COUPLES their bounds (the free-floating

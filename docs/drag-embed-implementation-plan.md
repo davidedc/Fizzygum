@@ -317,6 +317,67 @@ migration). **Deliverable:** the EMPIRICAL changed-test list replacing §13's pr
   linger-arms (visual assert) · transit-never-arms.
 
 ### Phase 3 — THE RULE FLIP (~1.5 days)
+
+> **✅ LANDED 2026-07-06 — Phase 3 COMPLETE; all gates green.** Commits: Fizzygum `<this commit>` + Fizzygum-tests
+> `18ff1976e` (lockstep). **Gates:** `fg gauntlet` — dpr1 186/0 · dpr2 186/0 · webkit 186/0 · apps · tiernaming ·
+> settle · capstone ALL PASS; `fg homepage` native BOOT OK. Suite 183 → **186**.
+>
+> **SOURCE (`ActivePointerWdgt.coffee`, ~2 surgical edits):**
+> - `drop()` THE RULE FLIP: the release is re-run through `updateDragEmbedStateMachine` FIRST (spec §6 — the
+>   release is an evaluation point, so a frozen hold arms on release with no final micro-move; this is what the
+>   armed leg of `macroInternalVsExternalWindowDrop` exercises). Then the verdict is captured and the branch is:
+>   `overReluctantOnly` → world + OFFSET by `dwellOffsetLandingPx` · else window (`requiresDeliberateEmbedding`)
+>   → armed ? `@dropTargetFor` : world · else plain payload → unchanged (`wantsToBeDropped` — BasementOpenerWdgt
+>   keeps forcing world). **DEVIATION (offset application):** `add()`'s position is its 2nd arg, not the (dead,
+>   ignored) 6th arg that the old code passed `@position()` into — so the offset is applied by a post-add
+>   `wdgtToDrop.moveTo` (the `duplicateMenuAction` idiom), not by a position arg. The offset direction is a fixed
+>   down-right diagonal (spec §7's "nearest free direction" is a banked refinement; the fixed offset suffices and
+>   is deterministic). Both `wantsToBeDropped` (base + BasementOpenerWdgt) SURVIVE as planned; `WindowWdgt.wants
+>   ToBeDropped` is now unreferenced-for-windows but left in place (Phase 5 deletes it).
+> - Autoscroll gate flips `wantsToBeDropped()` → `!requiresDeliberateEmbedding()` (windows never edge-autoscroll
+>   a panel; §6.1 wheel is their scroll channel).
+>
+> **EMPIRICAL BLAST RADIUS = 10 tests (not the ~4–5 predicted); enumerated by running the suite post-flip:**
+> - `macroInternalVsExternalWindowDrop` → REWRITTEN as the armed/unarmed pair (two IDENTICAL `new WindowWdgt`s;
+>   one released at once → world, one held with a non-scaled `yield 600` → nests; proven by moving the panel).
+>   image_1 stayed BYTE-IDENTICAL (the unarmed external window is the same as the old external); image_2/3
+>   recaptured. Metadata fully rewritten.
+> - `macroLockedDocumentRejectsDrop` → box2 (a PLAIN payload) over the LOCKED (view-mode/reluctant) doc now takes
+>   the LOCKED_CUE offset landing (the reluctant detection fires: `providesAmenitiesForEditing && !dragsDrops
+>   AndEditingEnabled`). image_2 recaptured (box now offset + overhanging), assertion text updated. image_1
+>   unchanged.
+> - **8 window-drop tests restored by LINGER INSERTION** (they dropped a window that used to nest; now they must
+>   arm): 5 via the SHARED verb `dropInternalWindowIntoExternalWindow_InputEvents_Macro` (a single `yield 600`
+>   fixed all 5 — `macroInternalWindowDroppedIntoWindowFits`, `…WindowWithAClockInAWindowConstructionTwo`,
+>   `…ResizeWindowContainingInternalWindow`, `…ClosingInnerWindowKeepsOuter`, `…WindowsNestedCollapsingUncollapsing`);
+>   `macroScrollPanelUpdates…` via a `yield 600` before its pickUp+click drop; and 3 title-bar press-drag-release
+>   drops via a NEW reusable verb `dwellDragWindowByGrabToEmbed_InputEvents_Macro` (`macroMenuInWindowInScrollStack
+>   StaysLive`, `macroWindowCellsInConstrainedScrollStackReflow` ×2, `macroSimpleDocumentHandlesOldInspector`
+>   drag-in). ALL 8 post-drop screenshots stayed BYTE-IDENTICAL (the linger is transient; the nested result is
+>   unchanged) → **zero recaptures** for the 8.
+>
+> **⚠ EMERGENT UX CONSEQUENCE (flagged for owner, not a bug): repositioning a NESTED window by its title-drag now
+> DETACHES it to the world unless you dwell** — because `drop()`'s unarmed→world applies to re-parenting too
+> (`macroScrollPanelUpdates…`'s "park the collapsed bar" step exposed this: without a dwell the window popped out
+> of the panel). Fixed in-test by using the dwell-embed drag for the repositions. This is the literal spec §7
+> (unarmed→world), but a "sticky re-embed over the CURRENT parent" refinement (keep a window nested when released
+> over its own container, no dwell) may be worth a later phase — OWNER DECISION banked, not implemented.
+>
+> **3 NEW macros** (plan gate list): `macroDragEmbedArmedPersistsWhileAiming` (arm, then a big aiming move within
+> the candidate stays armed → nests at the aimed spot), `macroDragEmbedCandidateChangeResets` (armed over A →
+> moved onto B, the armed label is gone + a fresh EMPTY ring shows = disarmed; asserts the mid-drag DISARM, not a
+> post-drop frame), `macroDragEmbedReleaseWhileChargingLandsOnWorld` (held ~250ms < dwell, released → world).
+> All arm deterministically at dpr1/dpr2/webkit. **The 4th gate macro (wheel-charges / scroll-chaining-disarms,
+> §6.1) is DEFERRED to Phase 6** (more complex; the 3 core behaviors are covered).
+>
+> **DETERMINISM NOTE (no falsification budget spent):** the dwell DECISION + ring are byte-deterministic at
+> dpr1/dpr2/webkit (gauntlet 186/0 ×3). ONE transient snag — `macroDragEmbedCandidateChangeResets`'s ORIGINAL
+> post-drop frame flaked at dpr2 (capture vs run) — was diagnosed to INVISIBLE alpha=0 charging-ring teardown
+> residue from a rapid move→immediate-release (the two PNGs were pixel-identical; fresh runs were STABLE, so NOT a
+> decision nondeterminism — image_0/the armed state passed dpr2). Resolved by asserting the mid-drag DISARM
+> directly instead of the post-drop frame (a sharper proof anyway). The dwell mechanic's 1-of-2 falsification
+> budget is INTACT.
+
 - `drop()`: remove the `wantsToBeDropped`→world forcing for windows (base `wantsToBeDropped` and the
   `BasementOpenerWdgt:60` override SURVIVE); armed→embed / unarmed→world-at-release; OFFSET landing (24px)
   for LOCKED_CUE releases; autoscroll gate at `:957` flips from `wantsToBeDropped()` to

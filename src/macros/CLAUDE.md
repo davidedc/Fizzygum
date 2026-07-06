@@ -155,7 +155,9 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   later shot with both full image names, earlier first). All `…_InputEvents`.
 - **L3 verbs** (generators, `…_InputEvents_Macro`): `takeScreenshot`, `clickMenuItemOfWidget`, `bringUpInspector`,
   `bringUpInspectorAndSelectListItem`, `bringInViewAndClickOnListItemFromTopInspector`,
-  `setControllerTargetToWidgetProperty`, the window-in-window fixture pair.
+  `setControllerTargetToWidgetProperty`, the window-in-window fixture pair, `dwellDragWindowByGrabToEmbed`
+  (float-drag a WINDOW by a grab point and DWELL-ARM-embed it at a destination — press, drag, non-scaled
+  linger past `dwellToArmMs`, release; use wherever a window must NEST after the drag-embed rule flip).
 
 ## Adding to the toolkit
 
