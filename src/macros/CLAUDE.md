@@ -223,8 +223,8 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   it is only editable after a list-row is selected; it HIDES inherited properties by default (toggle
   `showInheritedToggle`, and scroll the list to a row by name since e.g. `alpha` sorts below the first rows);
   property editing is via the `add.../rename.../remove/save` footer buttons (`save` → `@target.injectProperty`); and
-  being an EXTERNAL window it refuses to nest into a container (`wantsToBeDropped` is false for external) — call `win.makeInternal()`
-  first to drop it into a document/panel.
+  to nest it into a document/panel, drag it by its title and linger past `dwellToArmMs` (the dwell-to-arm embed — there is no
+  internal/external gate any more; a window's skin is derived from its parentage, `WindowWdgt.isInternal`).
 
 ## Composing macros (args, return values, DRY for code AND assets)
 

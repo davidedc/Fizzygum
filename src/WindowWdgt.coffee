@@ -27,12 +27,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   contents: nil
   titlebarBackground: nil
   contentNeverSetInPlaceYet: true
-  internal: false
   defaultContents: nil
   reInflating: false
-
-  internalExternalSwitchButton: nil
-  alwaysShowInternalExternalButton: nil
 
   # §4.1 pure measure (Stage D): a window's preferred height-at-width, side-effect-free (no
   # @bounds write, no seam) -- it MIRRORS the steady-state _positionAndResizeChildren WITHOUT
@@ -103,13 +99,15 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # you add a widget to the window it overwrites the
   # title which means that this one parameter passed in
   # the constructor has no effect
-  constructor: (@labelContent = "my window", @closeButton, @contents, @internal = false, @alwaysShowInternalExternalButton = false) ->
+  # NOTE: `internal` and `alwaysShowInternalExternalButton` are now INERT constructor arguments,
+  # kept only so the ~30 positional call sites still parse (their retirement is a deferred
+  # cleanup). `internal` used to seed a stored flag; a window's internal-ness is now DERIVED from
+  # its parentage (see isInternal), and the internal/external switch button that `alwaysShow...`
+  # forced is gone. Neither is bound to `@`, so neither is stored on the instance or serialized.
+  constructor: (@labelContent = "my window", @closeButton, @contents, internal, alwaysShowInternalExternalButton) ->
     super nil, nil, 40, true
 
-    if @internal
-      @appearance = new RectangularAppearance @
-    else
-      @appearance = new BoxyAppearance @
+    @_deriveAndSetBodyAppearance()
 
     @strokeColor = Color.create 125,125,125
     @tight = true
@@ -174,32 +172,17 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       super
 
 
-  makeInternal: ->
-    if !@internal
-      @internal = true
-      @setAppearanceAndColorOfTitleBackground()
-
-  makeExternal: ->
-    if @internal
-      @internal = false
-      # in case the internal window was part of an uneditable
-      # document, then it was set to lock to the panel so it
-      # couldn't be dragged. But we have to change that now since
-      # we ought to be free on the desktop
-      @unlockFromPanels()
-      @setAppearanceAndColorOfTitleBackground()
-
-      previousParent = @parent
-      world.add @
-
-      @contents?.holderWindowMadeIntoExternal?()
-
-      # make it jump out a little, but still, fit it
-      # in the world
-      if previousParent != world
-        @_applyMoveTo @position().add new Point 10, 10
-        @_moveWithin world
-        @rememberFractionalSituationInHoldingPanel()
+  # A window is "internal" -- drawn with the flat, embedded title-bar skin and called an
+  # "internal window" -- exactly when it is NESTED inside a real container: its parent is
+  # neither the desktop (world) nor the hand (world.hand, its transient parent while being
+  # float-dragged). DERIVED from parentage rather than a stored flag, so the skin simply
+  # FOLLOWS where the window lives -- drag it into a container and it reads internal, out to
+  # the desktop and it reads external -- re-applied on every (re)parenting by _reactToBeingAdded.
+  # This is what let us delete makeInternal / makeExternal and the manual internal/external
+  # switch button: nesting a window (drag-with-dwell) or ejecting it (drag-out, Phase 3 rule
+  # flip) now updates the skin automatically, no toggle needed.
+  isInternal: ->
+    @parent? and @parent isnt world and @parent isnt world?.hand
 
   setTitle: (newTitle) ->
     @label.setText @contents.colloquialName() + ": " + newTitle
@@ -253,9 +236,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     return false
 
 
-  wantsToBeDropped: ->
-    return @internal
-
   # A window is the DELIBERATE-EMBED payload class (drag-embed spec §4): dropping it into a container
   # must be armed by a dwell (spec §6), so windows are never nested by accident during the constant
   # move-a-window gesture. (Overrides Widget's plain default.)
@@ -275,7 +255,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # would open a nested settle mid-pass. (The label is FIT_TEXT_TO_BOX, so the text swap changes
   # no geometry anyway; @changed() in the core repaints it.)
   _setEmptyWindowLabelNoSettle: ->
-    if @internal
+    if @isInternal()
       @label._setTextNoSettle "empty internal window"
     else
       @label._setTextNoSettle "empty window"
@@ -287,7 +267,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   isWindow: -> true
 
   colloquialName: ->
-    if @internal
+    if @isInternal()
       return "internal window"
     else
       return "window"
@@ -367,15 +347,11 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @editButton?._destroyNoSettle()
       @editButton = nil
 
-      @internalExternalSwitchButton?._destroyNoSettle()
-      @internalExternalSwitchButton = nil
-
   _beforeChildUnCollapsed: (child) ->
     if child == @contents
       @widthWhenCollapsed = @width()
 
     @createAndAddEditButton()
-    @createAndAddInternalExternalSwitchButton()
 
   _reactToChildCollapsed: (child) ->
     if child == @contents
@@ -421,6 +397,24 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   _reactToBeingGrabbed: (whereFrom) ->
     @contents?._reactToHolderWindowGrabbed? whereFrom
 
+  # The whole-window skin follows the window's nesting (isInternal, derived from parentage), so
+  # re-apply it whenever the window lands in a new home: a container makes it internal (flat,
+  # embedded skin), the desktop makes it external (boxy). This is the ONE place the skin used to
+  # be flipped manually by makeInternal/makeExternal via the internal/external switch button --
+  # now it is automatic on every (re)parenting (drag-drop AND programmatic add both route through
+  # here after the reparent, so a dashboard/document that builds a nested window via `container.add`
+  # gets the internal skin too). We re-derive BOTH the window body appearance and the title-bar
+  # appearance/colors so the whole window flips consistently (a window built internal=true and then
+  # nested via container.add ends up byte-identical to the old stored-flag path). We SKIP the
+  # transient pick-up by the hand (whereTo is world.hand) so the skin stays put during a drag and
+  # settles on release, exactly as the old stored flag did.
+  _reactToBeingAdded: (whereTo, beingDropped) ->
+    super
+    if whereTo isnt world?.hand
+      @_deriveAndSetBodyAppearance()
+      @setAppearanceAndColorOfTitleBackground()
+      @changed()
+
   _reactToChildDropped: (theWidget) ->
     @contents = theWidget
     super
@@ -430,13 +424,23 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # as the resetToDefaultContents lifecycle path above.
     @_buildAndConnectChildrenNoSettle()
 
+  # The window BODY appearance half of the internal/external skin (the title-bar half is
+  # setAppearanceAndColorOfTitleBackground): flat RectangularAppearance when nested (internal),
+  # boxy BoxyAppearance when free on the desktop (external). Derived from isInternal (parentage),
+  # set at construction and re-derived on every re-parenting by _reactToBeingAdded.
+  _deriveAndSetBodyAppearance: ->
+    if @isInternal()
+      @appearance = new RectangularAppearance @
+    else
+      @appearance = new BoxyAppearance @
+
   setAppearanceAndColorOfTitleBackground: ->
-    if @internal
+    if @isInternal()
       @titlebarBackground.appearance = new RectangularAppearance @titlebarBackground
     else
       @titlebarBackground.appearance = new BoxyAppearance @titlebarBackground
 
-    if @internal
+    if @isInternal()
       @titlebarBackground.setColor WorldWdgt.preferencesAndSettings.internalWindowBarBackgroundColor
       @titlebarBackground.strokeColor = WorldWdgt.preferencesAndSettings.internalWindowBarStrokeColor
     else
@@ -457,7 +461,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # as the window changes from internal to external and vice versa
     # HOWEVER a bunch of tests would fail if I do the proper
     # thing so we are doing this for the time being.
-    if @internal
+    if @isInternal()
       @titlebarBackground = new RectangleWdgt
     else
       @titlebarBackground = new BoxWdgt
@@ -514,7 +518,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @_addNoSettle @collapseUncollapseSwitchButton, nil, nil, nil, true
 
 
-    @createAndAddInternalExternalSwitchButton()
     @createAndAddEditButton()
 
     @_addNoSettle @contents
@@ -527,17 +530,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       resizer = new HandleWdgt
       @_addNoSettle resizer, nil, resizer.defaultLayoutSpecWhenAddedTo(@)
       @resizer = resizer
-
-  createAndAddInternalExternalSwitchButton: ->
-    if (@contents?.providesAmenitiesForEditing or @alwaysShowInternalExternalButton) and !@internalExternalSwitchButton?
-      externalButton = new ExternalIconButtonWdgt
-      internalButton = new InternalIconButtonWdgt
-      if @internal
-        listOfButtons = [internalButton, externalButton]
-      else
-        listOfButtons = [externalButton, internalButton]
-      @internalExternalSwitchButton = new SwitchButtonWdgt listOfButtons
-      @_addNoSettle @internalExternalSwitchButton, nil, nil, nil, true
 
   makePencilYellow: ->
       # TODO assigning to color_normal is not enough
@@ -697,15 +689,12 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # NON-settling cores (not the public collapse/unCollapse): this is a layout pass, so reaching the
     # self-settling wrapper would re-enter the flush. The cores are idempotent, so an already-correct
     # button is a no-op exactly as the public guards made it. (check-layering [G])
-    if @width() < 4 * (closeIconSize + @padding) + @padding
+    # The edit button is now the rightmost title-bar button (the internal/external switch that used to
+    # sit to its right is gone), so it collapses at the tighter width the switch used to.
+    if @width() < 3 * (closeIconSize + @padding) + @padding
       @editButton?._collapseNoSettle()
     else
       @editButton?._unCollapseNoSettle()
-
-    if @width() < 3 * (closeIconSize + @padding) + @padding
-      @internalExternalSwitchButton?._collapseNoSettle()
-    else
-      @internalExternalSwitchButton?._unCollapseNoSettle()
 
     # label
     if @label? and @label.parent == @
@@ -714,25 +703,18 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       labelRight = @right() - @padding
       if @editButton? and !@editButton.isInCollapsedSubtree()
         labelRight -= 1 * (closeIconSize + @padding)
-      if @internalExternalSwitchButton? and !@internalExternalSwitchButton.isInCollapsedSubtree()
-        labelRight -= 1 * (closeIconSize + @padding)
       labelWidth = labelRight - labelLeft
 
       labelBounds = new Rectangle new Point labelLeft, labelTop
       labelBounds = labelBounds.setBoundsWidthAndHeight labelWidth, WorldWdgt.preferencesAndSettings.titleBarTextHeight
       @label._applyBounds labelBounds
 
-    # edit button
+    # edit button -- now the sole right-hand title-bar button (the internal/external switch that
+    # used to occupy the rightmost slot is gone), so it takes that rightmost slot.
     if @editButton? and !@editButton.isInCollapsedSubtree() and @editButton.parent == @
-      buttonBounds = new Rectangle new Point @right() - 2 * (closeIconSize + @padding), @top() + @padding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
-      @editButton._reLayout buttonBounds
-
-    # internal/external button
-    if @internalExternalSwitchButton? and !@internalExternalSwitchButton.isInCollapsedSubtree() and @internalExternalSwitchButton.parent == @
       buttonBounds = new Rectangle new Point @right() - 1 * (closeIconSize + @padding), @top() + @padding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
-      @internalExternalSwitchButton._reLayout buttonBounds
+      @editButton._reLayout buttonBounds
 
     # TODO there is *already* a way to make handles do the right thing, and that is
     # to have this sort of code in a _reLayout function, and calling super in there,

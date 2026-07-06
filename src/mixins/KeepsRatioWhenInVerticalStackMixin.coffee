@@ -22,9 +22,6 @@ KeepsRatioWhenInVerticalStackMixin =
       if whereFrom?.releasesRatioConstraintOnGrabbedChildren?()
         @freeFromRatioConstraints()
 
-    holderWindowMadeIntoExternal: ->
-      @freeFromRatioConstraints()
-
     freeFromRatioConstraints: ->
       if @layoutSpecDetails?
         @layoutSpecDetails.canSetHeightFreely = true

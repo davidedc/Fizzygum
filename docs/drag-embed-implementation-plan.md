@@ -493,6 +493,40 @@ external switch has no remaining job and is simply DELETED, not repurposed.
   batch-recapture via full `fg recapture` (NOT `--no-build` — multi-image skip trap); webkit-verify per the
   recapture-masks-crash safeguard. (Smaller sweep than the original Phase 5, since the pencil is untouched.)
 
+> **✅ LANDED 2026-07-06 (Opus) — awaiting owner review; NOT yet committed.** Fizzygum + Fizzygum-tests, lockstep.
+> **WHAT LANDED (`src/WindowWdgt.coffee`, net −65 lines):**
+> - `isInternal()` DERIVED — `@parent? and @parent isnt world and @parent isnt world?.hand` (nested = a real,
+>   non-desktop/non-hand parent). Replaced the stored `internal` field + the ctor's `@internal`/`@`-binding; the
+>   `internal` / `alwaysShowInternalExternalButton` ctor args stay as INERT positional params (56-site retirement
+>   deferred). Every read (`ctor appearance`, `_setEmptyWindowLabelNoSettle`, `colloquialName`,
+>   `setAppearanceAndColorOfTitleBackground`, `buildTitlebarBackground`) converted to `@isInternal()`.
+> - **FULL-WINDOW skin re-derive on reparent** via a `_reactToBeingAdded(whereTo, beingDropped)` override (fires
+>   after `@__add` on BOTH drag-drop AND programmatic `container.add`, so dashboards/docs get it too; skips
+>   `whereTo is world.hand` so the skin stays put mid-drag). It re-derives the BODY `@appearance`
+>   (`_deriveAndSetBodyAppearance`, new helper) AND the title bar (`setAppearanceAndColorOfTitleBackground`) — a
+>   **design refinement over the plan's "title-bar skin follows":** flipping the whole window is more correct AND
+>   makes windows built `internal=true` then nested (dashboard plots, patch nodes) byte-identical to the old
+>   stored-flag path (so they did NOT recapture). Title-bar-only would have been 19 recaptures + regressed those bodies.
+> - **DELETED:** the internal/external `SwitchButtonWdgt` (`createAndAddInternalExternalSwitchButton`, field,
+>   `alwaysShowInternalExternalButton` handling, collapse/layout refs), `makeInternal`, `makeExternal`,
+>   `wantsToBeDropped` (unref'd-for-windows since Phase 3 — `drop()` takes the `requiresDeliberateEmbedding` branch,
+>   never the `wantsToBeDropped` else), the 6-file internal/external icon family
+>   (`buttons/{Internal,External}IconButtonWdgt`, `icons/{Internal,External}Icon{Wdgt,Appearance}` — the IconWdgts
+>   were already zero-ref), and the now-dead `KeepsRatioWhenInVerticalStackMixin.holderWindowMadeIntoExternal`
+>   (its ratio-freeing survives via the grab hook `_reactToHolderWindowGrabbed`).
+> - **Edit pencil → rightmost title-bar slot** (the switch's old slot): label extends one slot, collapse threshold
+>   `<4*`→`<3*`. NO pencil↔eye (owner cut it); `makePencilYellow/Clear` stay.
+> - **Serialization:** deserialize uses `Object.create` (ctor not run) + all reads via `isInternal()`, so a stored
+>   `internal` on an old snapshot is an inert vestigial own-prop; new snapshots omit it. Confirmed by both roundtrip legs.
+> - **`SampleDashboardApp:120`** LEFT as-is (owner: keep dashboards view-locked, non-intrusive).
+> **RECAPTURE: 18 tests** (measured empirically: make change → `fg suite --dpr=1` → 18 fails, all benign =
+> skin-follows-nesting / pencil-moved / empty-`,true`-window-now-external; 3 spot-verified by pixel-diff, no crashes).
+> 2 tests dropped their `makeInternal()` setup call (skin now auto-derives on nest); narratives across ~10 tests +
+> spec §10 + MACRO-PATTERNS + macros/CLAUDE updated (deleted-symbol refs → derived-model; history preserved).
+> **GATES ALL GREEN:** `fg gauntlet` dpr1 187/0 · dpr2 187/0 · **webkit 187/0** · apps · tiernaming/settle/capstone
+> (0 violations each) · serialization world-roundtrip (native 24 + SWCanvas 36) + file-roundtrip (7) · `fg homepage`
+> boot OK. All 18 visualisations regenerated. **Falsification budget for the dwell mechanic: still 1/2 (untouched).**
+
 ### Phase 6 — Test completion + docs closeout (~1.5 days)
 - Author the remaining spec-§13 macros not yet landed (target: all ~13, incl.
   frozen-then-release-does-not-retroactively-arm · eager-empty-window-still-requires-dwell ·

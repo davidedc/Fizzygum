@@ -270,22 +270,30 @@ dragging."* Same event-driven dismissal as the pill (next pointer-down), no time
 buttons. This is the discoverability backstop: the mechanic explains itself at the exact moment of failed
 intent, at zero cost to deliberate move-over users (who click next and never parse it).
 
-## §10 — Title-bar changes
+## §10 — Title-bar changes (Phase 5 as-built — SLIMMED)
 
-1. **Pencil ↔ eye** (owner-endorsed): the edit button becomes a `SwitchButtonWdgt [pencilButton, eyeButton]` —
-   pencil glyph = editing, eye glyph = view — matching the two existing title-bar switches
-   (collapse/uncollapse, internal/external are already `SwitchButtonWdgt`s; the recolored single pencil is the
-   odd one out). `makePencilYellow`/`makePencilClear` retire in favor of the glyph swap (keep a yellow accent on
-   the pencil face if wanted; color is no longer the only channel). Needs a new `EyeIconAppearance` (+Wdgt).
-2. **Internal/external switch → eject button.** `@internal` becomes DERIVED ("currently nested" = owner chain
-   contains a non-world container), not user-set: `wantsToBeDropped` override deleted; `makeInternal` retires;
-   `makeExternal` survives as the eject action. Nested window: show a single eject (pop-out) button — click →
-   today's `makeExternal` (unlock, reparent to world, re-skin). Top-level window: button hidden. The
-   `alwaysShowInternalExternalButton` constructor arg and the `internal` constructor arg (4th/5th args at every
-   `new WindowWdgt nil, nil, <content>, true, true` site — plot creators, video, samples) become dead;
-   retire them in a follow-up sweep, not in the first patch.
-3. Optional: subtle title-bar tint while content is in edit mode (precedent:
-   `setAppearanceAndColorOfTitleBackground` already re-skins for internal/external).
+The internal/external switch button is DELETED outright (not repurposed). A window's internal-ness is now
+DERIVED from parentage (`WindowWdgt.isInternal` = "am I nested" = my parent is neither the world nor the hand),
+and the whole-window skin (body appearance + title-bar appearance/colors) FOLLOWS it automatically on every
+re-parenting (`_reactToBeingAdded` re-applies it, skipping the transient pick-up by the hand): drag a window into
+a container → flat internal skin; out to the desktop → boxy external skin. So the manual toggle has no job left.
+(A window built `internal=true` and then nested via `container.add` — a dashboard/document plot — ends up
+byte-identical to the old stored-flag path, because the full skin re-derives to internal on that add.)
+
+1. **Internal/external switch → DELETED.** `wantsToBeDropped` (the `@internal` self-gate), `makeInternal`,
+   `makeExternal`, `createAndAddInternalExternalSwitchButton`, the `internalExternalSwitchButton` field, the
+   `alwaysShowInternalExternalButton` handling, and the whole internal/external icon family (the two icon-button
+   classes + their icon widgets + their appearances) are all removed, plus the now-dead
+   `KeepsRatioWhenInVerticalStackMixin.holderWindowMadeIntoExternal`. **No eject button:** dragging a nested
+   window OUT to the desktop already ejects it (Phase 3's rule flip — an unarmed release over the world detaches;
+   sticky re-embed only keeps it nested when released over its own container). The `internal` /
+   `alwaysShowInternalExternalButton` constructor args (4th/5th at every `new WindowWdgt …, true, true` site)
+   become INERT (retirement is a deferred sweep); deserialization ignores any stored `internal`.
+2. **Edit button (pencil) unchanged in kind, moved in place.** NO pencil↔eye glyph swap (owner cut it 2026-07-06);
+   `makePencilYellow`/`makePencilClear` stay (yellow = editing, clear = view). With the switch gone, the pencil
+   simply takes the now-vacant rightmost title-bar slot (the label extends by one slot; the pencil's collapse
+   threshold retightens to match).
+3. Not done: the optional edit-mode title-bar tint (deferred).
 
 ## §11 — Visuals: nearly everything is an EPHEMERAL (owner direction 2026-07-06)
 

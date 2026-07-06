@@ -578,7 +578,8 @@ assertion a recapture after a regression silently stores two different hashes an
   round-trip REVERT for the EXPANDED size. But the COLLAPSED-bar size and the expanded size are tracked SEPARATELY, and the collapsed-bar
   size is STICKY: a later re-collapse returns the bar to its last resized (narrowed) width. So resizing while collapsed changes ONLY the
   collapsed-bar size (sticky across collapse cycles), never the expanded size. Reuse the empty-window fixture of
-  macroWindowsEmptyCollapsingUncollapsing (`new WindowWdgt nil,nil,nil` external / `…,true` internal) and run collapse → resize-narrow →
+  macroWindowsEmptyCollapsingUncollapsing (two `new WindowWdgt nil,nil,nil`; the second's `…,true` arg is now INERT — post-Phase-5 both are
+  external desktop windows, since internal-ness is derived from nesting, not the constructor arg) and run collapse → resize-narrow →
   uncollapse → RE-collapse → uncollapse IN THAT ORDER. Park the pointer on a clear spot (`@syntheticEventsMouseMove_InputEvents pt, "no
   button"`) before each shot so no collapse-button hover tooltip lands on a window. image_1 two full 300×300 windows → image_2 collapsed
   FULL-WIDTH bars → image_3 NARROWED bars → image_4 back to full 300×300 (== image_1, expanded size preserved) → image_5 RE-collapsed =
@@ -1085,12 +1086,12 @@ assertion a recapture after a regression silently stores two different hashes an
   duplicated-heart targets. The size-preserving sibling of the flow-in (`macroIconDroppedIntoDocumentFlows`) and reject
   (`macroLockedDocumentRejectsDrop`) document-drop facets.
 - **A document HOSTS the inspector as flowing content** (`macroSimpleDocumentHandlesOldInspector`): a `SimpleDocumentScrollPanelWdgt` can host
-  the inspector window. KEY: the inspector is an EXTERNAL `WindowWdgt`, which REFUSES to nest (`wantsToBeDropped = @internal` is false for external → forces a drop to
-  the world) — so first `win.makeInternal()` (the genuine internal/external toggle affordance, `WindowWdgt.coffee:106-109`). An INTERNAL window
-  dropped into the doc (drag it by its TITLE — a per-test `dragWindowByTitleTo` helper; pressing a pane would grab the pane) becomes flowing content
-  below the default text, kept at its own size and CLIPPED at the doc's right edge if oversized; dragged back out by its title it returns to a
-  free-floating window. (Re-authored from the old naked-inspector version: the naked inspector was a plain nestable widget, so the windowed one
-  needs `makeInternal`; the original's ctor-resizer-grows and doc-resize-reflow beats were dropped — the embed/release is the core law.)
+  the inspector window. KEY: a WINDOW nests into a container only after the DWELL-TO-ARM gesture (drag-embed spec §6) — there is no internal/external
+  gate any more (Phase 3 removed it; Phase 5 deleted the toggle button, and a window's skin is now DERIVED from parentage via `WindowWdgt.isInternal`).
+  Drag the inspector window by its TITLE (a per-test `dragWindowByTitleTo` helper; pressing a pane would grab the pane) and linger past `dwellToArmMs`
+  to embed; it becomes flowing content below the default text, kept at its own size and CLIPPED at the doc's right edge if oversized; dragged back out
+  by its title it returns to a free-floating window. Its skin follows where it lives: boxy external on the desktop, flat internal once nested.
+  (Re-authored from the old naked-inspector version; an earlier draft called `win.makeInternal()` before the gate was removed — the embed/release is the core law.)
 - **The NAKED (chrome-less) inspector renders, edits and self-resizes** (`macroNakedInspectorRendersResizesAndEdits`): a bare
   `world.add new InspectorWdgt target` (no `WindowWdgt`) is now a first-class widget. When free-floating it paints its own opaque background
   (`InspectorWdgt` sets a `RectangularAppearance`, dropped on becoming window content via `setLayoutSpec`, so the windowed path stays
