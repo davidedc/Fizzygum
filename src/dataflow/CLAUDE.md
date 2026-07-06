@@ -125,8 +125,9 @@ A node with neither `dataflowRecompute` nor `dataflowValue` is treated as **alwa
 ## The two verbs, and the drain
 
 - **`markStale(node, forced)`** — the public, policy-aware verb sources call (demotes to the
-  bare pool atom during a drain; the `firesPerEvent` per-event LANE lands in Phase 6b — the
-  per-wire property itself landed in 6a, see "Connections client" above).
+  bare pool atom during a drain). The `firesPerEvent` per-event LANE is still DEFERRED —
+  delivery always POOLS regardless of the per-wire flag (which landed dark in 6a); see
+  "Connections client" above and `docs/dataflow-measurements.md`.
 - **`__poolStale(node, forced)`** — the bare atom: push into the stale pool, nothing else.
 - **`recalculateDataflow()`** — the once-per-cycle drain, called from `WorldWdgt.doOneCycle`
   BETWEEN `runChildrensStepFunction` and `recalculateLayouts`. **Two parallel drain stations:
@@ -152,7 +153,8 @@ A node with neither `dataflowRecompute` nor `dataflowValue` is treated as **alwa
 
 ## Verifying (from the umbrella `fg`)
 
-- Inner loop: `fg build` (0 violations / `done!!!`) + `fg suite` (dpr1, headless). While the
-  engine is dark (Phase 1), the suite is unaffected — the drain early-returns every cycle.
-- The world grew a well-known singleton, so run the serialization legs
+- Inner loop: `fg build` (0 violations / `done!!!`) + `fg suite` (dpr1, headless). The drain is
+  dark-cheap when nothing is stale (empty-pool early return), so a cycle that touches no
+  cell/wire is unaffected; measured convergence is in `docs/dataflow-measurements.md`.
+- The world holds a well-known singleton (`world.dataflow`), so run the serialization legs
   (`npm run test:serialization` + `:file`) whenever the serialized surface changes.

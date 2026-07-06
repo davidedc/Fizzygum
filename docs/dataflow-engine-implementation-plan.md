@@ -25,7 +25,7 @@ unchecked, then update the ledger in the same commit that completes the phase.**
 - [x] Phase 6b — patch-programming port behind A/B switch (default OFF)
 - [x] Phase 6c — A/B default ON, suite reconciliation
 - [x] Phase 6d — token retirement
-- [ ] Phase 7 — docs closeout
+- [x] Phase 7 — docs closeout
 - [ ] Phase 8 — widgetise the grid (one CellWdgt per VISIBLE cell; viewport-bounded) — follow-on
 
 Each phase = one or more commits, independently green and revertable. Do not start a phase
@@ -1143,6 +1143,32 @@ phase is the completeness pass, not the first write.)
 - Update the spec header: status → implemented; list any deviations decided during
   execution (each deviation must have been recorded in its phase's commit message).
 
+**Landed 2026-07-06 (this session) — DOCS ONLY, the ARC's completion pass. THE DATAFLOW ARC (Phases 0–7)
+IS COMPLETE.**
+- **Spec** (`docs/specs/dataflow-engine-spec.md`): header → **status IMPLEMENTED** + a full DEVIATIONS list
+  (2a direct-paint/fixed-window · 2b buffer-overlay-editor-no-caret · 3 value-class algebra · 4 CellSocket +
+  retain-and-remount · 5 time sources = NUMBERs · 6a firesPerEvent DARK · 6b engine-delivery-behind-switch +
+  echo-suppression · 6c ensureWireEdge + edit-NoSettle lattice · 6d token/switch deletion · **STILL-DEFERRED**
+  firesPerEvent per-event mini-pass). §8 "Tokens retire last" got a LANDED note (the 3-step strangler = Phase 1
+  / 6a–6c / 6d).
+- **Root `Fizzygum/CLAUDE.md`**: a new Architecture bullet — the **TWO-DRAIN** station sentence
+  (`recalculateDataflow` [values] between `runChildrensStepFunction` and `recalculateLayouts` [geometry];
+  one-way coupling) + pointers to spec / `src/dataflow` / `src/spreadsheet` / measurements. Suite count 160→181.
+  (The only OTHER `doOneCycle` station enumeration is `src/dataflow/CLAUDE.md`, already correct; `src/macros/
+  CLAUDE.md`'s mention is the macro-pump context, not a normative station list.)
+- **NEW `docs/dataflow-measurements.md`** — MEASURED drain convergence (fresh, `--speed=fastest` dpr1, a
+  `PRELUDE_JS` probe on `recalculateDataflow`): **typical 1 pass** (every driven ring, DAG circuit, reference
+  chain, presenter, time cell); **peak 2** (`macroSpreadsheetSliderCell` — a widget-VALUED cell = sink-onto-source,
+  exactly the plan's §1 prediction); recomputes/drain 1–4; bound = `dataflowPassesSanityLimit` 1000. Records the
+  three live counters + the re-measure recipe.
+- **Completeness pass**: `src/dataflow/CLAUDE.md` — fixed the stale "firesPerEvent per-event LANE lands in Phase
+  6b" (it's still DEFERRED) + the "engine is dark (Phase 1)" Verifying note (no longer dark). `src/spreadsheet/
+  CLAUDE.md` reviewed cold-operable, no edit. **Tests-repo**: `CLAUDE.md` suite description 160→181 + a spreadsheet
+  /dataflow area note; `DETERMINISM.md` verified (its §3d dataflow-time-sources section already matches shipped).
+- **Verification:** `fg build` 0 violations (this phase edited NO `.coffee` — docs only). No §0 battery, no
+  recaptures (nothing rendered changed). Fizzygum docs-only files; Fizzygum-tests `CLAUDE.md` only.
+- **Follow-on:** Phase 8 (below) remains the deliberately-separate PLANNED end-state.
+
 ### Phase 8 — widgetise the grid (one CellWdgt per VISIBLE cell) — planned follow-on
 
 **Goal (owner direction 2026-07-05):** the spreadsheet's end state is full Fizzygum
@@ -1254,14 +1280,16 @@ here or in a sub-phase. Update `src/spreadsheet/CLAUDE.md` (the design north sta
 
 ## §6 Definition of done (overall)
 
-- [ ] Ledger fully checked; every phase's verification tier recorded.
-- [ ] Full-tier run green; new SystemTests exist for phases 2a–4 (and 5 if the tick hook
-      was built); recaptures (if any) listed in 6c's commit and WebKit-verified.
-- [ ] §0 phase-close battery green at 2c, 4, 5, 6c, 6d; serialization rig green with the
+- [x] Ledger fully checked; every phase's verification tier recorded. (Arc = Phases 0–7 all
+      checked; Phase 8 "widgetise the grid" is the deliberately-separate PLANNED FOLLOW-ON.)
+- [x] Full-tier run green; new SystemTests exist for phases 2a–4 (and 5 — the tick hook was
+      built, `macroSpreadsheetSecondsCell`); recaptures listed in 6c's + 6d's commits and WebKit-verified.
+- [x] §0 phase-close battery green at 2c, 4, 5, 6c, 6d; serialization rig green with the
       sheet / color-cell / widget-cell fixtures and their EXPECTATIONS rows.
-- [ ] `world.dataflow` drains dark-cheap (empty-pool early return first).
+- [x] `world.dataflow` drains dark-cheap (empty-pool early return first) — measured typical 1
+      pass, peak 2 (`docs/dataflow-measurements.md`).
 - [x] Token machinery deleted (6d); `grep -rn connectionsCalculationToken src` → 0.
-- [ ] In-phase docs (rule 8) landed as they went: subsystem CLAUDE.mds,
+- [x] In-phase docs (rule 8) landed as they went: subsystem CLAUDE.mds,
       serialization reference, DETERMINISM.md; Phase 7 completeness pass done.
-- [ ] Docs closeout (Phase 7) landed; spec marked implemented with deviations.
-- [ ] `NOMENCLATURE.md` consistent with the shipped names.
+- [x] Docs closeout (Phase 7) landed; spec marked implemented with deviations.
+- [x] `NOMENCLATURE.md` consistent with the shipped names.

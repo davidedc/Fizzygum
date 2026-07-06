@@ -1,11 +1,36 @@
 # Dataflow engine & spreadsheet — design spec
 
-**Status:** agreed design, pre-implementation; fact-checked against the tree 2026-07-05
-(every cited API/behavior re-verified — the plan's §1 carries the receipts; refinements
-folded in here: §4.2 item 5 apply-settle mechanics, §9.3 exported-value cluster, one §13
-addition). **Vocabulary:** `NOMENCLATURE.md` (root) is
-normative for every term used here; the layout-side renames it depends on are in
+**Status:** **IMPLEMENTED** (Phases 0–7, 2026-07-06). The design shipped; the
+`docs/dataflow-engine-implementation-plan.md` status ledger + its per-phase "Landed" receipts are the
+build record, and `docs/dataflow-measurements.md` carries the measured drain-convergence numbers (typical
+1 pass, peak 2 for a sink-onto-source chain). **Vocabulary:** `NOMENCLATURE.md` (root) is normative for
+every term used here; the layout-side renames it depended on landed in
 `docs/coalesced-nomenclature-rename-plan.md`.
+
+**Deviations decided during execution** (each recorded in its phase's commit message):
+- **2a** — direct-paint viewport, no `ScrollPanelWdgt` yet; fixed-size window content (elasticity 0) for a
+  one-cycle settle (determinism).
+- **2b** — a buffer-driven overlay editor, NO caret (deterministic Enter-commits / Escape-cancels; the
+  framework provides no accept/cancel handlers, and a live caret blinks under a screenshot).
+- **3** — the value-class algebra lives as METHODS on the value classes (`Color.mixed` / `lighter` /
+  `darker`); `FormulaHelpers` is a thin free-function veneer.
+- **4** — `CellSocketWdgt` + RETAIN-AND-REMOUNT: a widget-VALUED cell keeps its live widget across
+  recompute / save / scroll, never destroy-rebuild (§13).
+- **5** — `seconds` / `frame` pull a NUMBER, not a `Date`, so the equal-value cutoff is a scalar compare.
+- **6a** — `firesPerEvent` landed DARK (stored + menu-toggled; nothing read it yet).
+- **6b** — engine delivery behind an A/B switch (`world.dataflowWiresEnabled`, default OFF); the ECHO (a
+  ported controller's onward-fire tail re-marking the node being applied) is suppressed via `@_applyingNode`
+  ⇒ a driven ring is 1 pass (measured — `docs/dataflow-measurements.md`).
+- **6c** — `DataflowEngine.ensureWireEdge` makes "edges derive from `@target`/`@action`" TOTAL (covers wires
+  set by DIRECT assignment — scrollbars, the prompt slider — not only menu-wired ones); the prompt slider's
+  `edit()` action was made drain-safe via the standard `_*NoSettle` lattice (`WorldWdgt.edit`/`_editNoSettle`;
+  `PromptWdgt.reactToSliderAction`→`takeSliderValue`, off the reserved `reactTo*` prefix).
+- **6d** — the connection token machinery (`_acceptsConnectionToken` / `connectionsCalculationToken` /
+  `makeNewConnectionsCalculationToken`) AND the A/B switch are DELETED; engine delivery is the ONLY path. The
+  visit-once + equal-value cutoff provide the cascade termination the token used to.
+- **STILL DEFERRED** — the `firesPerEvent` PER-EVENT synchronous mini-pass (§4 / §13): the per-wire flag rides
+  the edge record, but delivery POOLS regardless (the two are screen-indistinguishable; §13 open point).
+  `true` is stored against the day the scoped mini-pass lands.
 
 This spec defines ONE dataflow engine that serves two clients: the existing
 **patch-programming** circuits (widgets wired by connections) and the upcoming
@@ -191,7 +216,9 @@ client's:
   sinks via the connector lane), with connection setters accepting-and-ignoring the token
   argument during transition; (3) `_acceptsConnectionToken` and the token threading are
   deleted. If (2) stalls, the honest boundary remains: two engines, connections at the
-  sheet's edge.
+  sheet's edge. **LANDED (Phase 6, 2026-07-06):** (1) = Phase 1, (2) = Phases 6a–6c behind a
+  kill-switch, (3) = Phase 6d — the two engines are now ONE; `connectionsCalculationToken` and
+  `world.dataflowWiresEnabled` are gone from the tree (0 matches).
 - Expected test impact: final frames identical for DAG circuits and for the ring (visit-once
   emulates token termination); intermediate frames may shift ⇒ possibly a few SystemTest
   screenshot recaptures, per the usual rules.
