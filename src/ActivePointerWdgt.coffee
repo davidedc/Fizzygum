@@ -389,10 +389,10 @@ class ActivePointerWdgt extends Widget
       @_endDragEmbedInteraction()
 
       if overReluctantOnly
-        # LOCKED_CUE (spec §7): the destination is in view mode — it never accepts a mid-drag drop. Land
-        # on the WORLD (and OFFSET below, so the payload can NEVER masquerade as nested — the false-success
-        # killer). Applies to BOTH window and plain payloads (§7 — "insert into this document" is equally
-        # plausible for a snippet). The land-and-offer pill that turns this into a one-click insert is Phase 4.
+        # LOCKED_CUE (spec §7): the destination is in view mode — it never accepts a mid-drag drop, so the
+        # payload lands on the WORLD at the release point (a plain move-over, NO offset). Applies to BOTH
+        # window and plain payloads. (Earlier drafts offset the landing and offered a land-and-offer pill;
+        # both were dropped 2026-07-06 — the payload just lands normally where it was released.)
         target = world
       else if wdgtToDrop.requiresDeliberateEmbedding()
         # WINDOW payload over an eager/willing candidate (or nothing): the internal/external gate is GONE
@@ -427,12 +427,6 @@ class ActivePointerWdgt extends Widget
       @fullChanged()
       target._beforeChildDropped? wdgtToDrop
       target.add wdgtToDrop, nil, nil, true, nil, @position()
-      if overReluctantOnly
-        # Displace the refused payload off the exact release point by dwellOffsetLandingPx (add() left it
-        # AT the cursor — position is kept from the on-hand spot), so a view-mode drop can never LOOK
-        # nested (spec §7). Same idiom as duplicateMenuAction's offset-a-copy move.
-        offset = WorldWdgt.preferencesAndSettings.dwellOffsetLandingPx
-        wdgtToDrop.moveTo wdgtToDrop.position().add new Point offset, offset
       wdgtToDrop.fullChanged()
 
       # when you click the buttons, sometimes you end up

@@ -224,14 +224,19 @@ edge-auto-scroll OFF for them (explicit intent replaces implicit surprise). Rule
 | Release while… | Outcome |
 |---|---|
 | `FREE` (no candidate / over world) | Lands on world at release point. Today's move-over, byte-for-byte the goal. |
-| `CANDIDATE`/`CHARGING` (not yet armed) | Lands on world at release point (it IS the common move-over — no bounce, no scold). Plus the one-shot teaching hint, §9. **EXCEPTION — sticky re-embed (owner-approved 2026-07-06, plan Phase 3.5):** if the resolved container IS the payload's CURRENT parent (a nested window merely being repositioned within its own container), it STAYS nested with no dwell — only embedding into a NEW container requires arming. |
+| `CANDIDATE`/`CHARGING` (not yet armed) | Lands on world at release point (it IS the common move-over — no bounce, no scold). **EXCEPTION — sticky re-embed (owner-approved 2026-07-06, plan Phase 3.5):** if the resolved container IS the payload's CURRENT parent (a nested window merely being repositioned within its own container), it STAYS nested with no dwell — only embedding into a NEW container requires arming. |
 | `ARMED` | Embeds: same call sequence as today's accepted drop (`_beforeChildDropped` → `add` → settle → `_reactToChildDropped`/`_reactToBeingDropped`, `ActivePointerWdgt.drop`). |
-| `LOCKED_CUE` (over reluctant only) | **Offset landing**: lands on world displaced by OFFSET_LANDING_PX toward the nearest free direction so it can NEVER masquerade as nested — the false-success killer — plus the §8 pill. |
+| `LOCKED_CUE` (over reluctant only) | Lands on world at the release point — a plain move-over, NO offset. (An earlier draft offset the landing + offered a pill, §8; both were DROPPED 2026-07-06 — the payload just lands normally where released.) |
 
-Plain payloads: unchanged accept behavior (instant embed over eager/willing); over reluctant they get the same
-offset landing + pill (the intent "insert into this document" is equally plausible for a snippet).
+Plain payloads: unchanged accept behavior (instant embed over eager/willing); over a reluctant (view-mode)
+container they land on the world at the release point, same as a window (the container refuses the drop, so the
+payload stays on the desktop where it was released).
 
-## §8 — The land-and-offer pill (reluctant destinations)
+## §8 — The land-and-offer pill (reluctant destinations) — ❌ DROPPED 2026-07-06
+
+> **NOT IMPLEMENTED / owner-rejected 2026-07-06.** The pill was built and working (a MenuWdgt transient with
+> Insert / Edit & insert) but the owner found the popup too intrusive. A reluctant drop now simply lands the
+> payload on the world at the release point (§7). The design below is kept as a record, not a spec to build.
 
 A small transient widget placed adjacent to the landed payload (world child, above it):
 
@@ -252,7 +257,11 @@ A small transient widget placed adjacent to the landed payload (world child, abo
 This replaces "abort drag → find pencil → click → re-drag" with one click, without ever letting a timer pierce
 the view-mode promise: modifying a view-mode container always requires an explicit click.
 
-## §9 — Unarmed-release teaching hint
+## §9 — Unarmed-release teaching hint — ❌ DROPPED 2026-07-06
+
+> **NOT IMPLEMENTED / owner-rejected 2026-07-06.** The hint was built and working (a click-through text
+> ephemeral) but it fired on EVERY unarmed window release over a container — far too often. An unarmed release
+> now just lands on the world (§7) with no hint. The design below is kept as a record, not a spec to build.
 
 Releasing a window payload over a willing candidate *before* armed is ambiguous (move-over vs. failed embed
 attempt by someone who doesn't know the dwell). The drop behaves as move-over (§7) — but show a small

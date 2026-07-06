@@ -458,28 +458,40 @@ NEW container (or from the desktop into one) requires the dwell.
   DIFFERENT container → lands on world (no sticky, since the target isn't the current parent).
 - Gates: gauntlet + the new macro(s); no serialization/defaults touched. Spec §7 + §12 updated to record the clause.
 
-### Phase 4 — Reluctant flow: pill + hint (~1 day)
-- Land-and-offer pill = MENU-family transient (NOT ephemeral; dismiss-on-outside-click is menu behavior):
-  title line + [Insert] (programmatic add into the view-mode container, mode unchanged — reuse the drop
-  reaction sequence `_beforeChildDropped`→`add`→`_reactToChildDropped`) + [✎ Edit & insert]
-  (`enableDragsDropsAndEditing` then insert). §9 teaching hint = text ephemeral, dismissed by next
-  pointer-down.
-- Gates: gauntlet + `macroLockedDocumentRejectsDrop` extended (pill-Insert leg) + pill-Edit&insert macro +
-  hint macro.
+### Phase 4 — Reluctant flow: pill + hint — ❌ REJECTED 2026-07-06
 
-### Phase 5 — Title bar: pencil↔eye, eject, derived `internal`, dashboard default (~1.5 days + recapture sweep)
-- Edit button → `SwitchButtonWdgt [pencil, eye]` (NEW `EyeIconWdgt`/`EyeIconAppearance`); retire
-  `makePencilYellow/Clear` (grep: only WindowWdgt + StretchableEditableWdgt callbacks).
-- `@internal` DERIVED (owner-chain query); `makeInternal` retires; `makeExternal` → the eject action behind a
-  nested-only eject button (reuse/replace the internal/external `SwitchButtonWdgt` slot); deserialization of
-  old snapshots ignores stored `internal` (S3 informs the exact migration; `@serializationTransients` is the
-  protocol if it stays a cached prop). The 56 `new WindowWdgt nil, nil, …` arg-retirement sweep is DEFERRED
-  (args become inert this phase, deleted in a later cleanup).
-- `SampleDashboardApp.coffee:120`: drop the `disableDragsDropsAndEditing()` (dashboards open edit-ON).
-- Gates: gauntlet + both serialization legs + `./fg homepage`. ⚠ **RECAPTURE SWEEP: every reference frame
-  showing a view-mode pencil or the internal/external switch changes** — potentially a large fraction of 181.
-  Pre-measure with a cheap grep/probe run at phase start; batch-recapture via full `fg recapture` (NOT
-  `--no-build` — known multi-image skip trap); webkit-verify per the recapture-masks-crash safeguard.
+> **BUILT, WORKING, then OWNER-REJECTED 2026-07-06 — fully reverted, nothing committed.** The pill (a MenuWdgt
+> transient with Insert / Edit & insert) and the §9 teaching hint (a click-through text ephemeral) both worked,
+> but the hint fired on EVERY unarmed window release over a container ("so often it's ridiculous") and the owner
+> found the whole popup flow too intrusive. **Replacement decision (owner-approved):** a reluctant (view-mode)
+> drop now simply LANDS THE PAYLOAD ON THE WORLD AT THE RELEASE POINT — no offset, no pill, no hint (the offset
+> "false-success killer" was also dropped; the un-clipped overhang already proves the payload isn't nested).
+> Landed: `drop()` reluctant branch = `target = world` with NO post-add offset; `dwellOffsetLandingPx` retired
+> from `PreferencesAndSettings`; spec §7 updated + §8/§9 marked DROPPED; `macroLockedDocumentRejectsDrop` image_2
+> recaptured (box at the release point, not offset). LESSON: `MenuItemWdgt.trigger` does `@target[@action]` — a
+> menu-item action must be a STRING method name + `arg1`/`arg2`, NOT a function closure.
+
+### Phase 5 (SLIMMED, owner-approved 2026-07-06) — derived `internal` + remove the internal/external switch
+**Scope trimmed by owner:** NO pencil↔eye glyph swap (the edit-button pencil stays as-is), and NO eject button —
+dragging a nested window OUT to the desktop already ejects it (Phase 3's rule flip: an unarmed release over the
+world detaches; sticky re-embed only keeps it nested when released over its OWN container). So the internal/
+external switch has no remaining job and is simply DELETED, not repurposed.
+- **`@internal` DERIVED** — replace the stored/constructor flag with an owner-chain query ("am I nested" = a
+  non-world container ancestor exists). The title-bar skin (`setAppearanceAndColorOfTitleBackground`) then follows
+  automatically whenever a window is dragged in or out — no manual re-skin call.
+- **Delete the internal/external `SwitchButtonWdgt`** (`createAndAddInternalExternalSwitchButton`, its button
+  field, and the `alwaysShowInternalExternalButton` handling). **Retire BOTH `makeInternal` and `makeExternal`**
+  (nesting = drag-with-dwell; un-nesting = drag-out; skin = the derived query). `WindowWdgt.wantsToBeDropped`
+  (already unreferenced-for-windows since Phase 3) is deleted here too.
+- **Deserialization** of old snapshots ignores any stored `internal` (derive from parentage on load). VERIFY vs
+  `docs/serialization-duplication-reference.md`. The `internal` / `alwaysShowInternalExternalButton` constructor
+  args become inert (the 56 `new WindowWdgt nil, nil, …` arg-retirement sweep stays DEFERRED to a later cleanup).
+- **`SampleDashboardApp.coffee:120`**: drop the `disableDragsDropsAndEditing()` (dashboards open edit-ON) — keep
+  IF the owner still wants it; confirm at phase start (it's an independent default flip).
+- Gates: gauntlet + both serialization legs + `./fg homepage`. ⚠ **RECAPTURE SWEEP: every window frame that shows
+  the internal/external switch changes** (the switch disappears). Pre-measure with a grep/probe at phase start;
+  batch-recapture via full `fg recapture` (NOT `--no-build` — multi-image skip trap); webkit-verify per the
+  recapture-masks-crash safeguard. (Smaller sweep than the original Phase 5, since the pencil is untouched.)
 
 ### Phase 6 — Test completion + docs closeout (~1.5 days)
 - Author the remaining spec-§13 macros not yet landed (target: all ~13, incl.

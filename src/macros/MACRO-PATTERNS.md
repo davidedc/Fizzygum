@@ -598,7 +598,8 @@ assertion a recapture after a regression silently stores two different hashes an
   container ONLY after a **dwell** — held still over an eager/willing candidate for ≥ `dwellToArmMs` of elapsed EVENT-time
   (`ActivePointerWdgt.updateDragEmbedStateMachine`; the release is itself an evaluation point). `ActivePointerWdgt.drop` branches
   on the armed bit: armed → nests (`@dropTargetFor`); unarmed → lands on the WORLD at the release point; over a VIEW-MODE
-  (reluctant) container → OFFSET landing on the world by `dwellOffsetLandingPx` (the false-success killer). The old
+  (reluctant) container → also lands on the WORLD at the release point (the container refuses; no offset, no pill — the
+  offset-landing + land-and-offer pill were DROPPED 2026-07-06). The old
   internal/external gate is GONE (`WindowWdgt.wantsToBeDropped` no longer decides nesting — Phase 5 derives `@internal`). **KEY
   DETERMINISM CONSTRAINT:** `MacroToolkit.queueInputEvent` SCALES `event.time` by `spanFactor`, so the arming linger MUST be a
   NON-SCALED numeric `yield N` (real wall-clock) — a scaled linger would arm at one speed but not another. To ARM: carry over

@@ -57,11 +57,9 @@ class PreferencesAndSettings
   # into a receptive container only after the pointer LINGERS dwellToArmMs of ELAPSED EVENT-TIME within
   # the linger radius of its origin — and the linger radius REUSES grabDragThreshold (one notion of
   # "stationary", so no separate constant). dwellRingSteps = the quantised charging-ring segments
-  # (presentation only; the arm decision is pure event-time). dwellOffsetLandingPx = how far a refused
-  # (view-mode) release lands displaced so it can never masquerade as embedded (used from Phase 3).
+  # (presentation only; the arm decision is pure event-time).
   dwellToArmMs: 450
   dwellRingSteps: 5
-  dwellOffsetLandingPx: 24
 
   # decimalFloatFiguresOfFontSizeGranularity allows you to go into sub-points
   # in the font size. This is so the resizing of the
