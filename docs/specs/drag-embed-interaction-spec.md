@@ -224,7 +224,7 @@ edge-auto-scroll OFF for them (explicit intent replaces implicit surprise). Rule
 | Release while… | Outcome |
 |---|---|
 | `FREE` (no candidate / over world) | Lands on world at release point. Today's move-over, byte-for-byte the goal. |
-| `CANDIDATE`/`CHARGING` (not yet armed) | Lands on world at release point (it IS the common move-over — no bounce, no scold). Plus the one-shot teaching hint, §9. |
+| `CANDIDATE`/`CHARGING` (not yet armed) | Lands on world at release point (it IS the common move-over — no bounce, no scold). Plus the one-shot teaching hint, §9. **EXCEPTION — sticky re-embed (owner-approved 2026-07-06, plan Phase 3.5):** if the resolved container IS the payload's CURRENT parent (a nested window merely being repositioned within its own container), it STAYS nested with no dwell — only embedding into a NEW container requires arming. |
 | `ARMED` | Embeds: same call sequence as today's accepted drop (`_beforeChildDropped` → `add` → settle → `_reactToChildDropped`/`_reactToBeingDropped`, `ActivePointerWdgt.drop`). |
 | `LOCKED_CUE` (over reluctant only) | **Offset landing**: lands on world displaced by OFFSET_LANDING_PX toward the nearest free direction so it can NEVER masquerade as nested — the false-success killer — plus the §8 pill. |
 

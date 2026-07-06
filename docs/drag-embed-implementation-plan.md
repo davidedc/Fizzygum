@@ -361,7 +361,8 @@ migration). **Deliverable:** the EMPIRICAL changed-test list replacing §13's pr
 > (`macroScrollPanelUpdates…`'s "park the collapsed bar" step exposed this: without a dwell the window popped out
 > of the panel). Fixed in-test by using the dwell-embed drag for the repositions. This is the literal spec §7
 > (unarmed→world), but a "sticky re-embed over the CURRENT parent" refinement (keep a window nested when released
-> over its own container, no dwell) may be worth a later phase — OWNER DECISION banked, not implemented.
+> over its own container, no dwell) is the fix — **OWNER-APPROVED 2026-07-06, now scheduled as Phase 3.5** (which
+> also lets the in-test reposition workaround revert to a plain no-dwell drag).
 >
 > **3 NEW macros** (plan gate list): `macroDragEmbedArmedPersistsWhileAiming` (arm, then a big aiming move within
 > the candidate stays armed → nests at the aimed spot), `macroDragEmbedCandidateChangeResets` (armed over A →
@@ -389,6 +390,39 @@ migration). **Deliverable:** the EMPIRICAL changed-test list replacing §13's pr
   comes in Phase 4).
 - Gates: gauntlet + 3 new macros (release-while-charging→world · armed-persists-while-aiming ·
   candidate-change-resets · wheel-charges/scroll-chaining-disarms — from spec §13).
+
+### Phase 3.5 — Sticky re-embed over the current parent (~0.5 day) — OWNER-APPROVED 2026-07-06
+
+**Motivation:** Phase 3's rule flip made an unarmed release land on the world — which, applied to a window that
+is ALREADY nested and merely being REPOSITIONED within its container, DETACHES it to the desktop unless the user
+dwells (the emergent UX consequence flagged in the Phase 3 LANDED box; `macroScrollPanelUpdates…`'s "park the
+collapsed bar" step had to be switched to the dwell-embed drag to keep the window nested). Owner approved a
+"sticky re-embed" refinement so repositioning-within-the-current-container needs NO dwell; only embedding into a
+NEW container (or from the desktop into one) requires the dwell.
+
+- **The rule (spec §7 gains this clause — update the release matrix too):** on an UNARMED window release, if the
+  resolved drop-target (the innermost `wantsDropOfChild` container under the point — i.e. what `@dropTargetFor`
+  would return, EXCLUDING `world`) **IS the payload's CURRENT parent** (`wdgtToDrop.parent`), keep it nested there
+  (embed as normal, no dwell) instead of landing on the world. Embedding into a DIFFERENT container still requires
+  the dwell (armed); releasing over the world / a non-container still lands on the world; the LOCKED_CUE (view-mode)
+  offset landing is unchanged (a view-mode container never `wantsDropOfChild`, so it can't be a sticky parent).
+- **`drop()` change (`ActivePointerWdgt.coffee`, the window branch):** in the `requiresDeliberateEmbedding` /
+  `not wasArmed` case, before defaulting to `world`, compute `stickyTarget = @dropTargetFor wdgtToDrop` and, if
+  `stickyTarget isnt world and stickyTarget is wdgtToDrop.parent`, use it as the target (nest, no offset). Keep it
+  a tight, well-commented clause; the armed branch and the reluctant/offset branch are untouched. VERIFY the
+  drag-detach mechanics: a nested window dragged by its title becomes a hand float-drag whose `.parent` is the
+  hand — so capture the ORIGINAL parent (before `grab`/`pickUp` reparents it to the hand) if `wdgtToDrop.parent`
+  is no longer the container at drop time. (`ActivePointerWdgt.grab`/`_reactToChildGrabbed` record the old parent;
+  reuse or stash it — spike this first.)
+- **Test impact (mostly a SIMPLIFICATION):** `macroScrollPanelUpdatesCorrectlyOnCollapsingAndUncollapsingAndClosing
+  Window`'s two reposition title-drags can REVERT from `dwellDragWindowByGrabToEmbed_InputEvents_Macro` back to the
+  plain `@syntheticEventsMouseMovePressDragRelease_InputEvents` (no dwell) and the window stays nested → should be
+  BYTE-IDENTICAL to the pre-Phase-3 references (VERIFY; recapture only if not). NEW macro
+  `macroDragEmbedRepositionNestedWindowStaysWithoutDwell`: nest a window (dwell), then a quick un-dwelled title-drag
+  to a new spot WITHIN the same container → it stays nested (proven by moving the container). Contrast macro (or a
+  second leg): a quick un-dwelled drag OUT to the desktop → detaches (lands on world), and a quick drag into a
+  DIFFERENT container → lands on world (no sticky, since the target isn't the current parent).
+- Gates: gauntlet + the new macro(s); no serialization/defaults touched. Spec §7 + §12 updated to record the clause.
 
 ### Phase 4 — Reluctant flow: pill + hint (~1 day)
 - Land-and-offer pill = MENU-family transient (NOT ephemeral; dismiss-on-outside-click is menu behavior):
