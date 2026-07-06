@@ -611,7 +611,10 @@ assertion a recapture after a regression silently stores two different hashes an
   differ between capture/run at dpr2 — assert a mid-drag state instead). Prove nesting with `panel.moveTo …` (only the nested
   window travels). This test is the armed/unarmed PAIR (two identical windows: one released at once → world, one held then
   released → nests). Family: `macroDragEmbedWindowLingerArms` / `…TransitNeverArms` (Phase 2 visuals),
-  `macroDragEmbedArmedPersistsWhileAiming` / `…CandidateChangeResets` / `…ReleaseWhileChargingLandsOnWorld` (Phase 3).
+  `macroDragEmbedArmedPersistsWhileAiming` / `…CandidateChangeResets` / `…ReleaseWhileChargingLandsOnWorld` (Phase 3),
+  `macroDragEmbedStillHoldReleaseArms` (Phase 6 — the isolated S2 arms-on-release witness: exactly two events
+  `dwellToArmMs` apart with NO move between, so the RELEASE itself is the evaluation point that arms; `…LingerArms`
+  instead nudges 3px within the radius to arm mid-hold so it can screenshot the armed LABEL).
 - **Dwell-embed a window by its TITLE BAR** (`dwellDragWindowByGrabToEmbed_InputEvents_Macro grabPoint, destPoint` —
   `macroMenuInWindowInScrollStackStaysLive`, `macroWindowCellsInConstrainedScrollStackReflow`,
   `macroSimpleDocumentHandlesOldInspector`): the press-drag-release counterpart of the pickUp+click carry, for a window that
@@ -876,6 +879,11 @@ assertion a recapture after a regression silently stores two different hashes an
   `pickUp` a rectangle (don't drop), then `@syntheticEventsMouseMove_InputEvents (a point in an edge band), "no button", …` and
   yield generously. MUST hold long enough that the `autoScroll` 500ms `Date.now()` settle elapses and the scroll CLAMPS — via a
   NON-scaled numeric `yield N` (real-time settle, speed-independent), so it's deterministic at every speed and needs no speed metadata.
+  The NEGATIVE — a WINDOW payload does NOT edge-auto-scroll (`macroDragEmbedWindowDoesNotAutoscrollPanel`): the same fixture +
+  edge-band hold, but the payload is a window, so `ActivePointerWdgt` gates `maybeStartAutoScrollForDraggedWidget` on `not
+  …requiresDeliberateEmbedding()` (`:1130`, drag-embed spec §12 — the wheel is a window's explicit mid-drag scroll channel) and the
+  thumbs never move. ⚠ the window IS a drop candidate for the panel, so a still hold paints an animated (nondeterministic) charging
+  ring — screenshot only when NO drag is active over the panel (before pickup / after carrying the window off and dropping it).
 - **Unplug an inspector scrollbar + the duplicate ASYMMETRY** (`macroInspectorScrollbarUnplugged`): inspect a string
   (`clickMenuItemOfWidget_InputEvents_Macro str, "inspect"`) → an `InspectorWdgt` window; park the window left so the strip
   to its right is clear for the detached scrollbars. Capture `scrollbar1 = inspector.list.vBar` BEFORE detaching (the list doesn't rebuild it). Right-click its knob → hierarchy

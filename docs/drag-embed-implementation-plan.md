@@ -472,6 +472,11 @@ NEW container (or from the desktop into one) requires the dwell.
 > menu-item action must be a STRING method name + `arg1`/`arg2`, NOT a function closure.
 
 ### Phase 5 (SLIMMED, owner-approved 2026-07-06) — derived `internal` + remove the internal/external switch
+> ↪ The cut pencil↔eye piece now has its OWN dedicated plan: **`docs/pencil-eye-edit-mode-toggle-plan.md`**
+> (2026-07-06; state-semantics decision + eye-icon code included; it deliberately REJECTS the SwitchButtonWdgt
+> of spec §10 for an appearance swap, and corrects a fact — `makePencilYellow/Clear` has EIGHT caller classes,
+> not two). Do not implement any pencil↔eye work from THIS plan.
+
 **Scope trimmed by owner:** NO pencil↔eye glyph swap (the edit-button pencil stays as-is), and NO eject button —
 dragging a nested window OUT to the desktop already ejects it (Phase 3's rule flip: an unarmed release over the
 world detaches; sticky re-embed only keeps it nested when released over its OWN container). So the internal/
@@ -528,6 +533,34 @@ external switch has no remaining job and is simply DELETED, not repurposed.
 > boot OK. All 18 visualisations regenerated. **Falsification budget for the dwell mechanic: still 1/2 (untouched).**
 
 ### Phase 6 — Test completion + docs closeout (~1.5 days)
+
+> **✅ LANDED 2026-07-06 (Opus) — awaiting owner review; NOT yet committed.** The FINAL phase of the arc.
+> **MACROS AUTHORED (2, suite 187 → 189)** — the genuinely-missing, non-redundant §13 items:
+> - `SystemTest_macroDragEmbedStillHoldReleaseArms` — the S2-validated still-hold case: a window held perfectly
+>   still (NO intermediate move event) ARMS on the RELEASE itself (`ActivePointerWdgt.drop` re-runs the state
+>   machine at :386) and embeds. Mirrors `…ReleaseWhileChargingLandsOnWorld` but with a ~600ms hold (> the 450ms
+>   `dwellToArmMs`) so it arms instead of landing on the world. Proven by the panel-move (window travels = nested).
+> - `SystemTest_macroDragEmbedWindowDoesNotAutoscrollPanel` — the §12 gate: a window held in a scroll panel's
+>   edge band for a non-scaled 2500ms does NOT edge-auto-scroll it (the `not …requiresDeliberateEmbedding()`
+>   gate at `ActivePointerWdgt.coffee:1130`), whereas a plain payload does (`macroListWdgtAutoScrollsNearDraggedEdge`,
+>   the same-fixture POSITIVE). Screenshots are taken with no drag active over the list, so the (nondeterministic)
+>   charging ring is never in frame.
+>
+> **DELIBERATELY NOT AUTHORED (documented in spec §13, not silent):** `eager-empty-window-still-requires-dwell`
+> (redundant — identical code path to `…ReleaseWhileChargingLandsOnWorld`, only the target's appearance differs);
+> `wheel-mid-drag-scrolls-destination-while-elapsed-grows` + `scroll-chaining-mid-drag-disarms` (deferred — heavy
+> nested-panel / scroll-chaining fixtures, real determinism risk, behavior pre-existing per §6.1; banked). All the
+> pill / hint / eject-button / pencil↔eye / dashboard-edit-on macros are MOOT (features cut in Phase 4 + slim Phase 5).
+> **DOCS:** spec header → ✅ IMPLEMENTED + full deviations list; spec §13 → as-built AUTHORED/MOOT/DEFERRED status;
+> root + `Fizzygum/CLAUDE.md` breadcrumbs; suite-count mentions 181/187 → 189; memory updated.
+> **GATES ALL GREEN:** `fg gauntlet` — dpr1 189/0 · dpr2 189/0 · **webkit 189/0** · apps PASS · tiernaming
+> (0 leaks/189) · settle (0 violations/189) · capstone (0 careless pushes/189) — + serialization world-roundtrip
+> (native 24 + SWCanvas 36) + file-roundtrip (7) + `fg homepage` boot OK.
+> **Falsification budget for the dwell mechanic: still 1/2 (untouched — the new tests only witness existing behavior).**
+> The two new tests + `…RepositionNestedWindowStaysWithoutDwell` visualisations regenerated.
+>
+> **ORIGINAL PHASE-6 PLAN (for reference; the ~13-macro target was pruned to 2 after Phase 4/5 cut most items):**
+
 - Author the remaining spec-§13 macros not yet landed (target: all ~13, incl.
   frozen-then-release-does-not-retroactively-arm · eager-empty-window-still-requires-dwell ·
   eject-button · dashboard-edit-on · window-drag-no-autoscroll).

@@ -1,8 +1,28 @@
 # Drag-embed interaction spec — replacing the two-toggle window-drop gate with dwell-to-arm
 
-**Status: SPEC ONLY — no code changed** (authored 2026-07-05 while window/drag code was being modified in a
-concurrent session; re-verify every file:line anchor against the tree at implementation time — **line numbers
-drift: grep the named symbol**). Owner decisions baked in (2026-07-05):
+**Status: ✅ IMPLEMENTED (2026-07-06).** Built across the drag-embed arc's Phases 1–3, 3.5, 5, and 6 (Phase 4
+rejected); per-phase landed status + commit hashes live in `docs/drag-embed-implementation-plan.md`. Every
+file:line anchor below was verified at implementation time, but **line numbers drift — grep the named symbol.**
+
+**Deviations from this spec, as-built** (all owner-approved during execution; the plan's per-phase LANDED boxes
+carry the detail):
+- **§8 land-and-offer pill + §9 teaching hint — DROPPED** (owner-rejected 2026-07-06, Phase 4: too intrusive).
+  A reluctant, or merely unarmed, release now just lands the payload on the world at the release point (§7). So
+  decision 7's "one interactable element (the pill)" is moot — EVERY drag visual is now an ephemeral.
+- **Internal/external SWITCH BUTTON deleted; eject button never built; pencil↔eye glyph swap deferred** (Phase 5,
+  slimmed). A window's internal-ness is DERIVED from its parentage (`WindowWdgt.isInternal`) and the whole-window
+  skin (body + title bar) is re-derived on every re-parenting; the manual switch is deleted. Drag-OUT already
+  ejects a nested window (Phase 3's rule flip), so there is no eject button. The pencil↔eye edit-mode glyph was
+  cut from this arc and extracted to its own owner-requested follow-up plan (separate, not part of this spec).
+  §10 is the as-built title-bar record.
+- **Decision 4 (dashboards default edit-ON) — REVERSED** (owner "keep view-locked" 2026-07-06): `SampleDashboardApp`
+  stays view-locked at construction. Only the payload-class dwell rule changed, not app editing defaults.
+- **§8's OFFSET_LANDING_PX landing offset — DROPPED** with the pill: the payload lands normally where released.
+- **§6 charge mechanic — REVISED** (2026-07-06, the single pre-authorized reframe): the per-event GAP-CREDIT
+  accumulator was FALSIFIED by the S2 hardware spike → replaced by a pure elapsed-event-time decision + a
+  clock-pattern ring feedback (revision record in §6). Falsification budget: 1 of 2 spent.
+
+Owner decisions baked in (2026-07-05; **items 4 and 7 were later revised — see the deviations above**):
 
 1. **Anchor point for "over" = the cursor** (not the dragged window's center/bounds).
 2. **Drag-OUT of view-mode containers stays blocked forever** ("solid to read" is a permanent promise; this
@@ -380,16 +400,28 @@ Implementation note (when code opens up): the drag ephemerals are PRODUCT featur
 `macroConstrainingStackForcesDroppedWidgetsToFullWidth`, `macroCompositeDragsAsUnitIntoScrollPanel`,
 `macroSubMenuDroppedIntoPanelPinsItself`, `macroInspectorRejectsDrops`.
 
-**NEW macros to author** (via `/author-macro-test`): linger-arms-then-drop-embeds ·
-slow-transit-never-arms (movement > 7px keeps resetting) · release-while-charging-lands-on-world (+hint) ·
-armed-persists-while-aiming-within-candidate · candidate-change-resets (slide → nested container) ·
-view-mode-cue + pill-Insert · pill-Edit&insert (pencil→eye flip + tools palette + embed) ·
-eject-button-pops-out-nested-window · window-drag-does-not-autoscroll-scrollpanel ·
-eager-empty-window-still-requires-dwell-for-window-payload ·
-wheel-mid-drag-scrolls-destination-while-elapsed-grows (candidate stable under content churn) ·
-scroll-chaining-mid-drag-disarms (inner panel at limit, outer scrolls candidate away) ·
-still-hold-then-release-ARMS (two events DWELL_ARM_MS apart, no moves between — the S2-validated case) ·
-slow-transit-re-anchors-never-arms (moves >7px keep re-anchoring the origin).
+**NEW macros — as-built status** (Phase 6 closeout, 2026-07-06):
+
+- ✅ **AUTHORED** (spec name = actual `SystemTest_macro…` name): linger-arms-then-drop-embeds =
+  `DragEmbedWindowLingerArms` · slow-transit-never-arms (= slow-transit-re-anchors-never-arms) =
+  `DragEmbedWindowTransitNeverArms` · release-while-charging-lands-on-world =
+  `DragEmbedReleaseWhileChargingLandsOnWorld` · armed-persists-while-aiming-within-candidate =
+  `DragEmbedArmedPersistsWhileAiming` · candidate-change-resets = `DragEmbedCandidateChangeResets` ·
+  still-hold-then-release-ARMS = `DragEmbedStillHoldReleaseArms` (Phase 6) ·
+  window-drag-does-not-autoscroll-scrollpanel = `DragEmbedWindowDoesNotAutoscrollPanel` (Phase 6). Drag-OUT
+  ejection (what the cut eject-button did) is covered by `DragEmbedRepositionNestedWindowStaysWithoutDwell`
+  case B (Phase 3.5); the internal/external rework is `InternalVsExternalWindowDrop` (armed-nests vs
+  unarmed-lands, Phase 3).
+- ❌ **MOOT** (feature cut/rejected — nothing to author): view-mode-cue + pill-Insert · pill-Edit&insert
+  (pencil→eye + tools palette) · eject-button-pops-out-nested-window · dashboard-edit-on · the "+hint" on
+  release-while-charging. (§8/§9 dropped; pencil↔eye / eject / switch cut in Phase 5; dashboards kept view-locked.)
+- ⏸ **NOT AUTHORED — deliberate, documented** (not silent): **eager-empty-window-still-requires-dwell-for-window-
+  payload** — skipped as a duplicate: its code path is identical to release-while-charging-lands-on-world (an
+  unarmed window → sticky-fail → lands on world), differing only in the target widget's appearance (empty window
+  vs panel), so it adds no mechanism coverage. **wheel-mid-drag-scrolls-destination-while-elapsed-grows** and
+  **scroll-chaining-mid-drag-disarms** — deferred: the underlying wheel-during-drag behavior is pre-existing
+  (§6.1 receipts, unchanged by this arc), and a byte-exact screenshot test needs heavy nested-panel /
+  scroll-chaining fixtures with real determinism risk for low marginal assurance. Banked for a future session.
 
 ## §14 — Open items
 
