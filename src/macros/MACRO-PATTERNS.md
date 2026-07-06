@@ -616,10 +616,22 @@ assertion a recapture after a regression silently stores two different hashes an
   must NEST via a title-bar drag. It presses at `grabPoint` (the window grabs past `grabDragThreshold` and rides the hand),
   drags to `destPoint`, LINGERS past `dwellToArmMs` (non-scaled `yield`), then releases → the release arms and embeds. The plain
   `@syntheticEventsMouseMovePressDragRelease_InputEvents` drops a window with NO linger → after the rule flip that lands it on
-  the WORLD; use THIS verb wherever a window must nest (grab point + dest identical, so the nested result is byte-identical — only
-  the torn-down-on-release linger differs). ⚠ REPOSITIONING a nested window by its title ALSO re-parents via `drop()`, so an
-  unarmed title-drag DETACHES it to the world — use this verb (dwell) to keep it nested (see
-  `macroScrollPanelUpdatesCorrectlyOnCollapsingAndUncollapsingAndClosingWindow`).
+  the WORLD; use THIS verb wherever a window must nest into a NEW container (grab point + dest identical, so the nested result is
+  byte-identical — only the torn-down-on-release linger differs). ⚠ REPOSITIONING a nested window WITHIN its own container is the
+  EXCEPTION — Phase 3.5 sticky re-embed (below) keeps it nested with a PLAIN no-dwell drag; only embedding into a NEW container (or
+  from the desktop) needs this dwell verb.
+- **Sticky re-embed = reposition a nested window with NO dwell** (`macroDragEmbedRepositionNestedWindowStaysWithoutDwell` — spec
+  `docs/specs/drag-embed-interaction-spec.md` §7/§12, plan Phase 3.5): after the rule flip an unarmed window release normally lands
+  on the WORLD, but `ActivePointerWdgt.drop`'s window/not-armed branch first checks `@dropTargetFor wdgtToDrop is @grabOrigin.origin`
+  (the PRE-grab container — `situation()` captured it at grab time, since the live `.parent` is the hand) and, if so, keeps the window
+  nested there (no dwell, no offset). So a plain `@syntheticEventsMouseMovePressDragRelease_InputEvents` on the title bar REPOSITIONS a
+  nested window inside its own container without detaching it — which is why `macroScrollPanelUpdatesCorrectlyOnCollapsingAndUncollapsing
+  AndClosingWindow`'s reposition drags are the plain (no-dwell) form, byte-identical to pre-rule-flip. The plain drag never arms (its
+  linger origin re-anchors every ~7px of travel), so it is unarmed at every speed; sticky is the ONLY thing keeping it nested. Prove
+  each outcome by MOVING the relevant container and seeing whether the window travels: reposition-within → travels (sticky); drag OUT to
+  desktop → stays behind (detached to world); drag into a DIFFERENT container → stays behind (lands on world on top, no sticky since the
+  target isn't its container). ⚠ Take every screenshot AFTER the settling `container.moveTo`, never the raw post-drag-release frame (the
+  charging-ring invisible-alpha teardown residue can differ at dpr2 — same caveat as the DWELL-TO-ARM entry).
 - **Internal window dropped INTO a window → becomes its content** (`macroInternalWindowDroppedIntoWindowFits` /
   `macroResizeWindowContainingInternalWindow`): drop an internal window over an EMPTY external window — `WindowWdgt.add`
   (`:179`) re-parents it `ATTACHEDAS_WINDOW_CONTENT`, `adjustContentsBounds` (`:384`) COUPLES their bounds (the free-floating

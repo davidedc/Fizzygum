@@ -306,6 +306,18 @@ Implementation note (when code opens up): the drag ephemerals are PRODUCT featur
   (`ActivePointerWdgt.coffee:933-963`); the hit-test already runs there every move, so the added cost is the
   short parent-climb. `drop()` (`:247`) loses the `wantsToBeDropped`→world forcing branch for windows (keeps it
   for `BasementOpenerWdgt`-style widgets) and gains the ARMED/unarmed branch.
+- **Sticky re-embed (§7 exception, Phase 3.5): identify the window's OWN container by the pre-grab parent, not
+  the live parent.** While float-dragging, the payload's `.parent` is the HAND (`grab()` reparents it to the
+  hand via `@add`), so `wdgtToDrop.parent` at drop time is useless for "is this the same container it came
+  from?". Instead read **`@grabOrigin.origin`** — `situation()` records `{origin: @parent, …}` at grab time
+  (`ActivePointerWdgt.coffee`, in `grab()` just BEFORE `@add aWdgt`), so it is exactly the PRE-grab container.
+  In the window / not-armed branch: `stickyTarget = @dropTargetFor wdgtToDrop` (the same climb the preview and
+  the armed branch use); if `stickyTarget isnt world and stickyTarget is @grabOrigin.origin`, nest there (no
+  dwell, no offset) instead of defaulting to world. This turned `grabOrigin` from write-only dead state into a
+  live read; it is set on every hand-grab path (direct `grab()`, and `pickUp()` → `grab()`) and overwritten by
+  each grab, so it is always the current payload's origin at `drop()`. `world.hand` is not in `world.children`,
+  so the dragged payload is excluded from `topWdgtUnderPointer`/`dropTargetFor` — the climb resolves to the real
+  container under the cursor, never the payload itself.
 - **Ephemerals: separation of concerns + a free synergy.** The state machine (§6) only mutates declarative
   state (which candidate, which charge step, armed?, lock cue?); the reconciler turns state into pixels once
   per cycle pre-paint. Because the reconciler already repositions overlays when the target's paint bounds
@@ -370,8 +382,10 @@ anchor table verified on `b91cd9b5`.
 - ~~NEEDS OWNER SIGN-OFF: the §4 payload-class rule~~ → **APPROVED 2026-07-05** (header decision 5). All
   design decisions are now owner-settled.
 - VERIFY items CLOSED 2026-07-06 (receipts in the plan §1): **Esc-cancel of drags does NOT exist**
-  (`grabOrigin` is write-only dead state — snap-back would be NEW functionality; out of scope, offset landing
-  suffices); **the world serializer walks ALL world children as snapshot roots** → live ephemerals are NOT
+  (snap-back would be NEW functionality; out of scope, offset landing suffices — NOTE: `grabOrigin` WAS
+  write-only dead state as of this verify, but Phase 3.5 now READS `grabOrigin.origin` for the sticky-re-embed
+  parent check, §12; it is still not used for any Esc-cancel/snap-back); **the world serializer walks ALL world
+  children as snapshot roots** → live ephemerals are NOT
   auto-excluded; the plan's Phase 1 adds explicit exclusion via the `isEphemeral` capability + witness probe.
 - VERIFY items remaining (owned by plan phases): programmatic-add path into slide containers for the pill's
   Insert (Phase 4); which changed-tests construct vs. drop (spike S3); whether real-mouse hover event streams

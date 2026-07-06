@@ -393,6 +393,40 @@ migration). **Deliverable:** the EMPIRICAL changed-test list replacing §13's pr
 
 ### Phase 3.5 — Sticky re-embed over the current parent (~0.5 day) — OWNER-APPROVED 2026-07-06
 
+> **✅ LANDED 2026-07-06 — Phase 3.5 COMPLETE; all gates green.** Commits: Fizzygum `<this commit>` + Fizzygum-tests
+> `709b54736` (lockstep). **Gates:** `fg gauntlet` — dpr1 187/0 · dpr2 187/0 · webkit 187/0 · apps · tiernaming
+> (0 leaks) · settle (0 violations) · capstone (0 careless pushes) ALL PASS. Suite 186 → **187**. No serialization/
+> defaults touched, so gauntlet is the full gate (no homepage/serialization legs — per this phase's gate line).
+>
+> **SPIKE (done first, as required):** the window's OWN container = its PRE-grab parent, read as `@grabOrigin.origin`.
+> `situation()` records `{origin: @parent, …}` in `grab()` JUST BEFORE `@add aWdgt` reparents the payload to the hand,
+> so at `drop()` time `wdgtToDrop.parent` is the HAND (useless) but `@grabOrigin.origin` is the real source container.
+> `grabOrigin` is set on every hand-grab path (direct `grab()`, `pickUp()` → `grab()`) and overwritten each grab, so
+> it is always the current payload's origin. `world.hand` is NOT in `world.children`, so `topWdgtUnderPointer`/
+> `dropTargetFor` already exclude the dragged payload (the fact the armed-embed path relies on) — the climb resolves
+> to the real container under the cursor. This turned `grabOrigin` from write-only dead state into a live read.
+>
+> **SOURCE (`ActivePointerWdgt.drop`, the window / not-armed branch, ~6 lines):** before defaulting to `world`,
+> `stickyTarget = @dropTargetFor wdgtToDrop`; if `stickyTarget isnt world and stickyTarget is @grabOrigin?.origin`
+> → nest there (no dwell, no offset); else `world`. The armed branch and the reluctant/offset branch are untouched.
+>
+> **TESTS (mostly a SIMPLIFICATION):** `macroScrollPanelUpdatesCorrectlyOnCollapsingAndUncollapsingAndClosingWindow`'s
+> TWO reposition title-drags REVERTED from `dwellDragWindowByGrabToEmbed_InputEvents_Macro` back to the plain
+> `@syntheticEventsMouseMovePressDragRelease_InputEvents` (no dwell) — sticky re-embed keeps them nested, and the test
+> passed against the EXISTING references BYTE-IDENTICAL at dpr1 AND dpr2 (incl. the image_5≡image_7 assertion) → ZERO
+> recaptures. (The INITIAL carry-drop into the panel keeps its `yield 600` — embedding into a NEW container still
+> arms.) NEW macro `macroDragEmbedRepositionNestedWindowStaysWithoutDwell` (4 shots): dwell-embed a window into a left
+> panel, then prove three unarmed outcomes by MOVING the relevant container — (A) reposition WITHIN → travels (sticky);
+> (B) drag OUT to desktop → stays (detached to world); (C) drag into a DIFFERENT panel → stays (lands on world on top,
+> no sticky). Every shot is taken AFTER the settling `panel.moveTo` (never the raw post-drag frame), both a clean
+> nesting proof and a dodge of the parked charging-ring invisible-alpha teardown residue — stable across 3 fresh dpr2
+> runs. **DOCS:** spec §12 (grabOrigin.origin mechanism + hand-exclusion) + §14 (grabOrigin no longer dead) updated;
+> §7's sticky clause was already in place (de99a89e). MACRO-PATTERNS.md: the title-bar entry's ⚠ tail corrected + a new
+> "Sticky re-embed" pattern entry. No new verb (the quick drags use the plain press-drag-release, unarmed at every speed).
+>
+> **FALSIFICATION BUDGET (dwell mechanic, spec §6): 1-of-2 INTACT.** No new evidence against the dwell — the plain
+> reposition drags never arm (linger origin re-anchors every ~7px), and the sticky rule is orthogonal to arming.
+
 **Motivation:** Phase 3's rule flip made an unarmed release land on the world — which, applied to a window that
 is ALREADY nested and merely being REPOSITIONED within its container, DETACHES it to the desktop unless the user
 dwells (the emergent UX consequence flagged in the Phase 3 LANDED box; `macroScrollPanelUpdates…`'s "park the

@@ -402,7 +402,19 @@ class ActivePointerWdgt extends Widget
         if wasArmed
           target = @dropTargetFor wdgtToDrop
         else
-          target = world
+          # STICKY RE-EMBED (spec §7, Phase 3.5): an unarmed window normally lands on the world, but
+          # merely REPOSITIONING a window within its OWN container must not require a dwell. If the
+          # release resolves (the SAME climb dropTargetFor uses) to the very container the window was
+          # grabbed from, keep it nested there — no dwell, no offset. Embedding into a DIFFERENT
+          # container still needs arming; a release over the world / a non-container still lands on the
+          # world. @grabOrigin.origin is the PRE-GRAB parent (situation() recorded it at grab time,
+          # before @add reparented the payload to the hand — so it is NOT wdgtToDrop.parent, which is
+          # the hand while float-dragging).
+          stickyTarget = @dropTargetFor wdgtToDrop
+          if stickyTarget isnt world and stickyTarget is @grabOrigin?.origin
+            target = stickyTarget
+          else
+            target = world
       else
         # Plain payload, not over a view-mode-only target: unchanged accept behavior. Base
         # wantsToBeDropped is true (instant embed over an eager/willing target via the climb);
