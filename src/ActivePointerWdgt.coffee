@@ -14,6 +14,15 @@ class ActivePointerWdgt extends Widget
   mouseDownPosition: nil
   wdgtToGrab: nil
   grabOrigin: nil
+  # --- drag-embed dwell-to-arm state (docs/specs/drag-embed-interaction-spec.md §6) -------------
+  # Live only while float-dragging a payload; all cleared by _endDragEmbedInteraction on release.
+  dragEmbedCandidate: nil              # innermost receptive widget under the cursor (nil = none / world)
+  dragEmbedReluctant: nil              # innermost view-mode editing-amenity widget, when NO candidate
+  dragEmbedLingerOriginPoint: nil      # pointer position where the current linger began
+  dragEmbedLingerOriginEventTime: nil  # EVENT.time (never wall-clock) at that origin — the arm clock
+  dragEmbedLingerOriginWallTime: nil   # wall time at that origin (ring animation only, never the decision)
+  dragEmbedArmed: false                # window payload: has the dwell elapsed?
+  _dragEmbedOutlinedWdgt: nil          # which widget we currently declare into the highlight style channel
   mouseOverList: nil
   doubleClickWdgt: nil
   tripleClickWdgt: nil
@@ -157,7 +166,120 @@ class ActivePointerWdgt extends Widget
     until target.wantsDropOfChild aWdgt
       target = target.parent
     target
-  
+
+  # === drag-embed dwell-to-arm state machine (docs/specs/drag-embed-interaction-spec.md §6) =======
+  # Runs once per pointer dispatch while float-dragging a payload (from dispatchEventsFollowingMouseMove,
+  # which fires per move AND per cycle on the hover re-sync). The ARM DECISION is pure elapsed EVENT-time
+  # (never wall-clock — the doubleClickWindowMs template, NOT the autoscroll anomaly). It only mutates
+  # declarative state (candidate / linger origin / armed) and declares ephemeral visuals; it does NOT
+  # touch drop() — Phase 2 PREVIEWS the interaction, Phase 3 makes the release obey it.
+
+  # Resolve the candidates on the parent-climb from the cursor hit (spec §5): the innermost widget that
+  # wantsDropOfChild wins (world is never a candidate); else the innermost view-mode editing-amenity
+  # widget is the reluctant cue. Same climb dropTargetFor uses, so preview and outcome cannot disagree.
+  resolveDragEmbedCandidates: (payload) ->
+    wdgt = @topWdgtUnderPointer()
+    reluctant = nil
+    while wdgt? and wdgt isnt world
+      if wdgt.wantsDropOfChild payload
+        return {candidate: wdgt, reluctant: nil}
+      if !reluctant? and wdgt.providesAmenitiesForEditing and not wdgt.dragsDropsAndEditingEnabled
+        reluctant = wdgt
+      wdgt = wdgt.parent
+    {candidate: nil, reluctant: reluctant}
+
+  _reAnchorDragEmbedLinger: (eventTime) ->
+    @dragEmbedLingerOriginPoint = @position()
+    @dragEmbedLingerOriginEventTime = eventTime
+    @dragEmbedLingerOriginWallTime = WorldWdgt.dateOfCurrentCycleStart
+
+  updateDragEmbedStateMachine: ->
+    payload = @children[0]
+    return unless payload?
+    {candidate, reluctant} = @resolveDragEmbedCandidates payload
+    eventTime = WorldWdgt.timeOfEventBeingProcessed
+
+    # candidate change => reset the linger + disarm (spec §5: per-candidate dwell, full reset)
+    if candidate isnt @dragEmbedCandidate
+      @dragEmbedCandidate = candidate
+      @_reAnchorDragEmbedLinger eventTime
+      @dragEmbedArmed = false
+    @dragEmbedReluctant = if candidate? then nil else reluctant
+
+    if candidate? and payload.requiresDeliberateEmbedding()
+      unless @dragEmbedArmed
+        # a >radius pointer move RE-ANCHORS the origin — a slow transit never arms (spec §6). After
+        # arming this guard is skipped, so the user may move to aim within the SAME candidate.
+        if @dragEmbedLingerOriginPoint? and
+         (@dragEmbedLingerOriginPoint.distanceTo(@position()) > WorldWdgt.preferencesAndSettings.grabDragThreshold)
+          @_reAnchorDragEmbedLinger eventTime
+        # ARM = elapsed EVENT-time >= dwellToArmMs, evaluated at THIS event (incl. the release)
+        if eventTime? and @dragEmbedLingerOriginEventTime? and
+         (eventTime - @dragEmbedLingerOriginEventTime >= WorldWdgt.preferencesAndSettings.dwellToArmMs)
+          @dragEmbedArmed = true
+    else
+      @dragEmbedArmed = false          # plain payloads have no armed state; free/reluctant never arm
+
+    @_declareDragEmbedEphemerals payload
+
+  # Turn the state into declarative ephemeral requests (the reconcilers turn these into pixels
+  # pre-paint). Candidate/reluctant OUTLINE rides the Phase-1 highlight style channel; the ring / label /
+  # lock badge ride WorldWdgt.addDragAffordanceWidgets. Non-interactable visuals only — the §8 pill is Phase 4.
+  _declareDragEmbedEphemerals: (payload) ->
+    isWindow = payload.requiresDeliberateEmbedding()
+
+    # 1. candidate (accent) or reluctant (neutral) outline via the highlight style channel
+    outlineTarget = @dragEmbedCandidate ? @dragEmbedReluctant
+    if outlineTarget isnt @_dragEmbedOutlinedWdgt
+      world.widgetsToBeHighlighted.delete @_dragEmbedOutlinedWdgt if @_dragEmbedOutlinedWdgt?
+      @_dragEmbedOutlinedWdgt = outlineTarget
+    if outlineTarget?
+      style = if @dragEmbedCandidate? then HighlighterWdgt.candidateOutlineStyle() else HighlighterWdgt.reluctantOutlineStyle()
+      world.widgetsToBeHighlighted.set outlineTarget, style
+
+    # 2. charging ring — window payload, over a candidate, not yet armed
+    if isWindow and @dragEmbedCandidate? and not @dragEmbedArmed
+      world.dragEmbedChargeRingDeclared =
+        centerPoint: @position().add new Point(16, 16)
+        lingerOriginEventTime: @dragEmbedLingerOriginEventTime
+        lingerOriginWallTime: @dragEmbedLingerOriginWallTime
+    else
+      world.dragEmbedChargeRingDeclared = nil
+
+    # 3. armed label — window payload, armed
+    if isWindow and @dragEmbedArmed and @dragEmbedCandidate?
+      candidateTitle = @_dragEmbedCandidateTitle()   # hoisted out of the string so the ref is visible
+      world.dragEmbedLabelDeclared =
+        point: @position().add new Point(16, 20)
+        text: "Drop to insert into '#{candidateTitle}'"
+    else
+      world.dragEmbedLabelDeclared = nil
+
+    # 4. lock badge — reluctant (view-mode) target, no candidate
+    if @dragEmbedReluctant?
+      world.dragEmbedLockBadgeDeclared = target: @dragEmbedReluctant
+    else
+      world.dragEmbedLockBadgeDeclared = nil
+
+  _dragEmbedCandidateTitle: ->
+    name = @dragEmbedCandidate?.colloquialName?() ? "here"
+    if name.length > 24 then name.substr(0, 23) + "…" else name
+
+  # Clear ALL drag-embed state + undeclare every ephemeral (on release, or if a drag ends without a
+  # drop). The reconcilers destroy the overlays on the next pre-paint pass.
+  _endDragEmbedInteraction: ->
+    world.widgetsToBeHighlighted.delete @_dragEmbedOutlinedWdgt if @_dragEmbedOutlinedWdgt?
+    @_dragEmbedOutlinedWdgt = nil
+    world.dragEmbedChargeRingDeclared = nil
+    world.dragEmbedLabelDeclared = nil
+    world.dragEmbedLockBadgeDeclared = nil
+    @dragEmbedCandidate = nil
+    @dragEmbedReluctant = nil
+    @dragEmbedLingerOriginPoint = nil
+    @dragEmbedLingerOriginEventTime = nil
+    @dragEmbedLingerOriginWallTime = nil
+    @dragEmbedArmed = false
+
   grab: (aWdgt, displacementDueToGrabDragThreshold,  switcherooHappened) ->
     return nil  if aWdgt == world
     oldParent = aWdgt.parent
@@ -249,6 +371,10 @@ class ActivePointerWdgt extends Widget
     if @isThisPointerFloatDraggingSomething()
 
       wdgtToDrop = @children[0]
+
+      # tear down the drag-embed affordances on release (spec §6/§7). Phase 3 will branch the drop
+      # OUTCOME on @dragEmbedArmed; Phase 2 leaves the drop rule otherwise unchanged.
+      @_endDragEmbedInteraction()
 
       if not wdgtToDrop.wantsToBeDropped()
         target = world
@@ -962,3 +1088,10 @@ class ActivePointerWdgt extends Widget
           newWdgt.maybeStartAutoScrollForDraggedWidget? widgetBeingFloatDragged, @position()
 
     @mouseOverList = mouseOverNew
+
+    # drag-embed dwell state machine (spec §6): resolve candidate + arm, declare the visuals. Runs per
+    # move AND per cycle (via the hover re-sync), so a moving drag and a stationary hold both update.
+    if @isThisPointerFloatDraggingSomething()
+      @updateDragEmbedStateMachine()
+    else if @_dragEmbedOutlinedWdgt? or world.dragEmbedChargeRingDeclared? or world.dragEmbedLabelDeclared? or world.dragEmbedLockBadgeDeclared?
+      @_endDragEmbedInteraction()   # a drag ended some other way than drop() — clean up

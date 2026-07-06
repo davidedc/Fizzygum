@@ -224,6 +224,17 @@ class WorldWdgt extends PanelWdgt
   widgetsBeingPinouted: new Set
   # this part is excluded from the fizzygum homepage build <<«
 
+  # --- drag-embed affordance overlays (docs/specs/drag-embed-interaction-spec.md §6/§11) --------
+  # The hand's state machine sets the *Declared slots each cycle (nil = not wanted); the pre-paint
+  # reconciler addDragAffordanceWidgets creates/moves/destroys the reconciler-owned overlay widgets.
+  # PRODUCT code (unlike the pinout debug path) — ships in the homepage build.
+  dragEmbedChargeRingDeclared: nil
+  dragEmbedLabelDeclared: nil
+  dragEmbedLockBadgeDeclared: nil
+  dragEmbedChargeRingWdgt: nil
+  dragEmbedLabelWdgt: nil
+  dragEmbedLockBadgeWdgt: nil
+
   steppingWdgts: new Set
 
   # scroll panels whose post-release MOMENTUM glide is still running
@@ -1296,6 +1307,49 @@ class WorldWdgt extends PanelWdgt
         @currentHighlightingWidgets.add hM
         @widgetsBeingHighlighted.add eachWidgetNeedingHighlight
 
+  # Reconcile the drag-embed AFFORDANCE overlays (charging ring / armed label / lock badge) to the
+  # hand's declarative *Declared slots — created/moved/destroyed once per cycle just before paint, the
+  # same declare-and-reconcile shape as addHighlightingWidgets. All are EPHEMERALS (isEphemeral ->
+  # hit-test-excluded, shadow-free, snapshot-excluded). docs/specs/drag-embed-interaction-spec.md §11-12.
+  addDragAffordanceWidgets: ->
+    # charging ring — the DragChargingRingWdgt computes its own fill from the declared linger origin
+    if @dragEmbedChargeRingDeclared?
+      unless @dragEmbedChargeRingWdgt?
+        @dragEmbedChargeRingWdgt = new DragChargingRingWdgt
+        @add @dragEmbedChargeRingWdgt
+      @dragEmbedChargeRingWdgt.updateChargeDeclaration @dragEmbedChargeRingDeclared
+    else if @dragEmbedChargeRingWdgt?
+      @dragEmbedChargeRingWdgt.fullDestroy()
+      @dragEmbedChargeRingWdgt = nil
+
+    # armed label — a StringWdgt overlay near the cursor
+    if @dragEmbedLabelDeclared?
+      if @dragEmbedLabelWdgt? and @dragEmbedLabelWdgt.text isnt @dragEmbedLabelDeclared.text
+        @dragEmbedLabelWdgt.fullDestroy()
+        @dragEmbedLabelWdgt = nil
+      unless @dragEmbedLabelWdgt?
+        @dragEmbedLabelWdgt = new StringWdgt @dragEmbedLabelDeclared.text
+        @dragEmbedLabelWdgt._ephemeralOverlay = true
+        @add @dragEmbedLabelWdgt
+        @dragEmbedLabelWdgt.setColor Color.create(40, 40, 40, 1)
+      @dragEmbedLabelWdgt._applyMoveTo @dragEmbedLabelDeclared.point
+    else if @dragEmbedLabelWdgt?
+      @dragEmbedLabelWdgt.fullDestroy()
+      @dragEmbedLabelWdgt = nil
+
+    # lock badge — a small StringWdgt at the reluctant (view-mode) target's title-bar right
+    if @dragEmbedLockBadgeDeclared?
+      unless @dragEmbedLockBadgeWdgt?
+        @dragEmbedLockBadgeWdgt = new StringWdgt "view-only"
+        @dragEmbedLockBadgeWdgt._ephemeralOverlay = true
+        @add @dragEmbedLockBadgeWdgt
+        @dragEmbedLockBadgeWdgt.setColor Color.create(120, 120, 120, 1)
+      box = @dragEmbedLockBadgeDeclared.target.clippedThroughBounds()
+      @dragEmbedLockBadgeWdgt._applyMoveTo new Point(box.right() - 70, box.top() + 4)
+    else if @dragEmbedLockBadgeWdgt?
+      @dragEmbedLockBadgeWdgt.fullDestroy()
+      @dragEmbedLockBadgeWdgt = nil
+
 
   # »>> this part is only needed for VideoPlayer
   draftRunVideoPlayer: ->
@@ -1447,6 +1501,7 @@ class WorldWdgt extends PanelWdgt
     @addPinoutingWidgets()
     # this part is excluded from the fizzygum homepage build <<«
     @addHighlightingWidgets()
+    @addDragAffordanceWidgets()
 
     # here is where the repainting on screen happens
     @updateBroken()

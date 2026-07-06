@@ -2916,6 +2916,13 @@ class Widget extends TreeNode
   wantsToBeDropped: ->
     return true
 
+  # Drag-embed PAYLOAD CLASS (docs/specs/drag-embed-interaction-spec.md §4). A payload that
+  # requiresDeliberateEmbedding must be ARMED by a dwell (spec §6) before a release embeds it into a
+  # receptive container; plain payloads embed instantly, as today. Base = plain (false); WindowWdgt
+  # overrides true. (Capability, not `isWindow` at call sites — type-test-elimination convention.)
+  requiresDeliberateEmbedding: ->
+    return false
+
   enableDrops: ->
     @_acceptsDrops = true
 

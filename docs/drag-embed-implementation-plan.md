@@ -236,6 +236,54 @@ migration). **Deliverable:** the EMPIRICAL changed-test list replacing §13's pr
   `serialization/Serializer.coffee`.
 
 ### Phase 2 — Dwell state machine + all drag visuals; RULES UNCHANGED (~1.5 days)
+
+> **IN PROGRESS 2026-07-06 — ALL CODE LANDED + BUILDS CLEAN (0 violations); tests NOT yet done.**
+> Uncommitted working tree (Fizzygum only; nothing staged). What's done:
+> - **Capabilities + constants:** `Widget.requiresDeliberateEmbedding -> false` / `WindowWdgt -> true`;
+>   `PreferencesAndSettings.dwellToArmMs:450 / dwellRingSteps:5 / dwellOffsetLandingPx:24` (LINGER_RADIUS
+>   reuses `grabDragThreshold:7`).
+> - **State machine on the hand** (`ActivePointerWdgt.coffee`): fields `dragEmbed{Candidate,Reluctant,
+>   LingerOriginPoint,LingerOriginEventTime,LingerOriginWallTime,Armed}` + `_dragEmbedOutlinedWdgt`;
+>   methods `resolveDragEmbedCandidates` (innermost-receptive climb, world excluded, records innermost
+>   reluctant), `_reAnchorDragEmbedLinger`, `updateDragEmbedStateMachine` (ARM = elapsed EVENT-time ≥
+>   dwellToArmMs, >7px move re-anchors, armed latches while candidate unchanged), `_declareDragEmbed
+>   Ephemerals`, `_dragEmbedCandidateTitle`, `_endDragEmbedInteraction`. Hooked at the END of
+>   `dispatchEventsFollowingMouseMove` (runs per move AND per-cycle hover re-sync); torn down at the top
+>   of `drop()`'s drag block. **`drop()` OUTCOME is UNCHANGED (Phase 3 branches it on `dragEmbedArmed`).**
+> - **Visuals = ephemerals.** Candidate/reluctant OUTLINE rides the Phase-1 highlight style channel:
+>   `HighlighterWdgt.candidateOutlineStyle` (accent 248,188,58) / `reluctantOutlineStyle` (gray) +
+>   `applyHighlightStyle` grew a `form:"outline"` branch (transparent fill + `@strokeColor` → the built-in
+>   `RectangularAppearance.paintStroke`; NO new appearance needed). Ring/label/lock-badge ride a NEW
+>   declare-and-reconcile slot: `WorldWdgt.dragEmbed{ChargeRing,Label,LockBadge}Declared` + live widgets,
+>   reconciled by NEW `WorldWdgt.addDragAffordanceWidgets` (wired into `doOneCycle` right after
+>   `addHighlightingWidgets`). Label/badge are `StringWdgt`s marked `_ephemeralOverlay` (Phase-1 flag).
+>   Ring = NEW `DragChargingRingWdgt` + `DragChargingRingAppearance` (radial arc segments); NOT a stepping
+>   widget — the reconciler calls `updateChargeDeclaration` every cycle, which recomputes the fill from
+>   the analog-clock dual time source (event-time under `Automator.animationsPacingControl`, wall-time in
+>   production) so it fills smoothly during a frozen hold yet stays byte-exact under tests.
+> - **VERIFIED:** candidate outline renders correctly (pencil-yellow border around the drop target,
+>   dumped `macroCompositeDragsAsUnitIntoScrollPanel` image_4 — clean, not a loud wash, S1 concern met).
+> - **BLAST RADIUS = exactly S1's prediction, 4 tests (all benign/expected):** the 3 plain-payload
+>   mid-drag tests now show the outline (`macroCompositeDragsAsUnitIntoScrollPanel`,
+>   `macroListWdgtAutoScrollsNearDraggedEdge`, `macroSubMenuDroppedIntoPanelPinsItself`) + the recurring
+>   `macroDuplicatedInspectorDrivesCopiedTargetOnly` inspector member-list shift (`requiresDeliberate
+>   Embedding` is one more inherited Widget row). No window-drag test screenshots mid-drag (S1), so the
+>   ring/label cost 0 existing recaptures.
+>
+> **REMAINING (the context-expensive, DETERMINISM-CRITICAL tail — ideal for a fresh budget):**
+> 1. Author 2 macros via `/author-macro-test`: **linger-arms** (window over an edit-mode/empty-window
+>    candidate → non-scaled linger → armed LABEL shot) + **transit-never-arms** (>7px moves → empty ring
+>    + outline, NO label). **KEY DETERMINISM CONSTRAINT (verified in MacroToolkit):** `queueInputEvent`
+>    SCALES event.time by `spanFactor` (0.03 at fastest), so the dwell linger MUST be built from the
+>    NON-SCALED real-wall-clock channel — `yield N` waits (like `clickGuardWindowMs`), or push events at
+>    explicit absolute times with `nonScaled=true` — else the arm/ring differs across speeds. The feature
+>    itself is correct (production events carry real times); only the macro timing needs this. To avoid
+>    the ring's step-boundary jitter at dpr2, DON'T byte-assert a partial ring — assert the armed LABEL
+>    (elapsed comfortably ≥450) and the transit EMPTY ring (elapsed ~0); the partial fill is eyeballed.
+> 2. `./fg recapture` the 4 blast-radius tests (all benign; webkit-verify after).
+> 3. `./fg gauntlet` (dpr2 is the ring-determinism stress test) + `./fg homepage`.
+> 4. LANDED-STATUS line + commit (lockstep). Suite 181 → 183.
+
 - Hand-side state machine (spec §6, POST-S2 REVISION): candidate resolution per move (S1's wiring,
   productionized), elapsed-event-time arming with >7px re-anchor, FREE/CANDIDATE/CHARGING/ARMED/LOCKED_CUE,
   `requiresDeliberateEmbedding()` on Widget (false) + `WindowWdgt` (true).

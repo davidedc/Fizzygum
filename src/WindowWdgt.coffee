@@ -256,6 +256,12 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   wantsToBeDropped: ->
     return @internal
 
+  # A window is the DELIBERATE-EMBED payload class (drag-embed spec §4): dropping it into a container
+  # must be armed by a dwell (spec §6), so windows are never nested by accident during the constant
+  # move-a-window gesture. (Overrides Widget's plain default.)
+  requiresDeliberateEmbedding: ->
+    return true
+
   # A window is a SimpleVerticalStackPanelWdgt but does NOT impose its ratio on dropped
   # children (was the `!(whereIn instanceof WindowWdgt)` exclusion in the ratio mixin /
   # Example3DPlotWdgt). It still RELEASES the constraint on grab, via the inherited default.
