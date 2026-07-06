@@ -21,11 +21,6 @@ class DiffingPatchNodeWdgt extends Widget
   setInput1HotIsConnected: false
   setInput2HotConnected: false
 
-  # to keep track of whether each input is
-  # up-to-date or not
-  input1connectionsCalculationToken: 0
-  input2connectionsCalculationToken: 0
-
   # the external padding is the space between the edges
   # of the container and all of its internals. The reason
   # you often set this to zero is because windows already put
@@ -47,113 +42,50 @@ class DiffingPatchNodeWdgt extends Widget
   colloquialName: ->
     "Diffing patch node"
 
-  setInput1: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall, "input1connectionsCalculationToken"
+  setInput1: (newvalue, ignored) ->
     @input1 = newvalue
-    @updateTarget @input1connectionsCalculationToken
+    @updateTarget()
 
-  setInput2: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall, "input2connectionsCalculationToken"
+  setInput2: (newvalue, ignored) ->
     @input1 = newvalue
-    @updateTarget @input2connectionsCalculationToken
+    @updateTarget()
 
-  # TODO note that only the first hot input will cause the widget to fire
-  # in this cycle - so the order of arrivals might matter.
-  setInput1Hot: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
+  setInput1Hot: (newvalue, ignored) ->
     @input1 = newvalue
-    @updateTarget @connectionsCalculationToken, false, true
+    @updateTarget()
 
-  setInput2Hot: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
+  setInput2Hot: (newvalue, ignored) ->
     @input2 = newvalue
-    @updateTarget @connectionsCalculationToken, false, true
+    @updateTarget()
 
   # the bang makes the node fire the current output value
-  bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
-    @updateTarget @connectionsCalculationToken, true
+  bang: (newvalue) ->
+    @updateTarget true
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     @_popUpTargetPropertyMenu theTarget, theTarget.numericalSetters()
 
-  updateTarget: (connectionsCalculationToken, fireBecauseBang, fireBecauseOneHotInputHasBeenUpdated) ->
-    # 6b — under the engine, skip the legacy freshness gate (the allConnectedInputsAreFresh deadlock, spec §8):
-    # ANY input change marks me STALE and the drain recomputes me (dataflowRecompute pulls both stored inputs).
-    # The "hot input" one-input-fires mode collapses into this engine default; a bang marks me forced.
-    if world.dataflowWiresEnabled
-      world.dataflow.markStale @, (fireBecauseBang is true)
-      return
-    # if there is no input connected, then bail
-    # TODO we could be more lenient, one could enter the node value in a box in the widget for example
-    # and we might issue a bang, so we'd expect the output to be pushed to the target
-    if !@setInput1IsConnected and
-     !@setInput2IsConnected and
-     !@setInput1HotIsConnected and
-     !@setInput2HotIsConnected
-      return
-
-    # if all connected inputs are updated in the very same connectors update cycle,
-    # (althought of course they would get updated one at a time)
-    # then allConnectedInputsAreFresh is true, and we'll fire for sure
-    allConnectedInputsAreFresh = true
-    if @setInput1IsConnected
-      if @input1connectionsCalculationToken != connectionsCalculationToken
-        allConnectedInputsAreFresh = false
-    if @setInput2IsConnected
-      if @input2connectionsCalculationToken != connectionsCalculationToken
-        allConnectedInputsAreFresh = false
-
-    # if we are firing via bang then we use
-    # the existing output value, we don't
-    # recalculate a new one
-    #
-    # otherwise (we are not firing via bang)
-    # if both inputs are fresh OR only one of them is but it's a HOT input, then
-    # we have to recalculate the diff
-    if (allConnectedInputsAreFresh or fireBecauseOneHotInputHasBeenUpdated) and !fireBecauseBang
-      # note that we calculate an output value
-      # even if this node has no target. This
-      # is because the node might be visualising the
-      # output in some other way.
-      @recalculateOutput()
-
-    # if
-    #   * all the connected inputs are fresh OR
-    #   * we are firing via bang OR
-    #   * one hot input has been updated
-    if allConnectedInputsAreFresh or fireBecauseOneHotInputHasBeenUpdated or fireBecauseBang
-      # AND if the widget still has to fire
-      if connectionPropagationToken != @connectionPropagationToken
-        # THEN we update the target with the output value
-        @fireOutputToTarget connectionsCalculationToken
-
+  # any input change (or a bang) marks me STALE — the drain recomputes me via dataflowRecompute (pulling both
+  # stored inputs) then delivers @output along my out-edge. This replaces the legacy freshness gate (the
+  # allConnectedInputsAreFresh deadlock, spec §8); the "hot input" one-input-fires mode collapses into this
+  # engine default (any input fires, all inputs pulled). A bang marks me forced.
+  updateTarget: (fireBecauseBang) ->
+    world.dataflow.markStale @, (fireBecauseBang is true)
     return
 
-  fireOutputToTarget: (calculationToken) ->
-    # mark this node as fired.
-    # if the update DOES come from the "bang!", then
-    # @connectionsCalculationToken has already been updated
-    # but we keep it simple and re-assign it here, not
-    # worth complicating things with an additional check
-    @connectionsCalculationToken = calculationToken
-
+  fireOutputToTarget: ->
     @_fireConnection @output
 
   reactToTargetConnection: ->
-    # we generate a new calculation token, that's OK because
-    # we are definitely not in the middle of the calculation here
-    # but we might be starting a new chain of calculations
-    @fireOutputToTarget world.makeNewConnectionsCalculationToken()
+    @fireOutputToTarget()
 
   recalculateOutput: ->
     @output = @formattedDiff @input1, @input2
     @textWidget._setTextConnector @output
 
-  # ── dataflow node protocol (6b, spec §8) ─────────────────────────────────────────────────
+  # ── dataflow node protocol (spec §8) ─────────────────────────────────────────────────────
   # A COMPUTING node: recompute = re-diff the stored inputs (recalculateOutput refreshes the on-node display too),
   # handing the engine the fresh @output; dataflowValue lets a consumer PULL @output and the cutoff compare it.
-  # Reached only while world.dataflowWiresEnabled.
   dataflowRecompute: ->
     @recalculateOutput()
     @output

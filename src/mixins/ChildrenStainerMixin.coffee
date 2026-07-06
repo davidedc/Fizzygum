@@ -13,8 +13,7 @@ ChildrenStainerMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
 
-      setColor: (theColor, ignored, connectionsCalculationToken, superCall) ->
-        return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
-        super theColor, ignored, connectionsCalculationToken, true
+      setColor: (theColor, ignored) ->
+        super theColor, ignored
         for w in @children
-          w.setColor theColor, ignored, connectionsCalculationToken
+          w.setColor theColor, ignored

@@ -281,8 +281,6 @@ class Widget extends TreeNode
   positionFractionalInHoldingPanel: nil
   wasPositionedSlightlyOutsidePanel: false
 
-  connectionsCalculationToken: 0
-
   initialiseDefaultWindowContentLayoutSpec: ->
     @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.THIS_ONE_I_HAVE_NOW , PreferredSize.THIS_ONE_I_HAVE_NOW, 1
 
@@ -528,11 +526,10 @@ class Widget extends TreeNode
     @unregisterThisInstance()
     world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
     world.keyboardEventsReceivers.delete @
-    # a connection-bearing widget that became a dataflow node (6b, wires switch ON) drops its edges from the
-    # shared engine index on death — a dead node left in @edgesFrom/@edgesTo is a leak AND a ghost recompute
-    # (spec §2, the node-death API). A cheap no-op for a widget that was never a node; gated on the switch so
-    # the switch-OFF teardown is byte-identical (no widget is ever a node then).
-    world.dataflow?.removeAllEdgesOf @ if world.dataflowWiresEnabled
+    # a connection-bearing widget that became a dataflow node drops its edges from the shared engine index on
+    # death — a dead node left in @edgesFrom/@edgesTo is a leak AND a ghost recompute (spec §2, the node-death
+    # API). A cheap no-op for a widget that was never a node.
+    world.dataflow?.removeAllEdgesOf @
     # TODO note that there might be other data structures that
     # reference this widget that should have that reference removed.
     # The duplication method deals with a similar situation, so you
@@ -1749,30 +1746,7 @@ class Widget extends TreeNode
     # cache-break under the did-anything-change guard, like __commitExtent (the D4/E1 discipline)
     @__breakMoveResizeCaches()
   
-  # The reactive-connection cycle guard, extracted from the ~34 verbatim copies it used to be inlined as
-  # (Tier H2, 2026-07-03). A wired controller stamps every value it propagates with a
-  # connectionsCalculationToken; a receiver that has ALREADY seen this token (the cascade has come back
-  # around) must fire nothing. Returns:
-  #   false -- REJECT: the caller must `return` at once (exactly the old `... then return`);
-  #   true  -- ACCEPT: a FRESH token was minted (a user-initiated change, token nil) or the incoming one
-  #            ADOPTED (mid-cascade), stamped onto @[tokenField]; the caller proceeds.
-  # `superCall` forces acceptance (an override delegating to super with its own already-checked token).
-  # `tokenField` names the per-input token slot for the multi-input patch nodes (setInputN); it defaults to
-  # the shared field every single-input controller uses.
-  # Caller idiom: `return unless @_acceptsConnectionToken connectionsCalculationToken, superCall`
-  # (per-input variants pass e.g. "input1connectionsCalculationToken").
-  _acceptsConnectionToken: (connectionsCalculationToken, superCall, tokenField = "connectionsCalculationToken") ->
-    if !superCall and connectionsCalculationToken == @[tokenField]
-      return false
-    if !connectionsCalculationToken?
-      @[tokenField] = world.makeNewConnectionsCalculationToken()
-    else
-      @[tokenField] = connectionsCalculationToken
-    true
-
-  setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
-
+  setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor) ->
     if widgetGivingColor?.getColor?
       aColor = widgetGivingColor.getColor()
     else
@@ -1787,9 +1761,7 @@ class Widget extends TreeNode
         
     return aColor
   
-  setBackgroundColor: (aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
-
+  setBackgroundColor: (aColorOrAWidgetGivingAColor, widgetGivingColor) ->
     if widgetGivingColor?.getColor?
       aColor = widgetGivingColor.getColor()
     else
@@ -1815,8 +1787,8 @@ class Widget extends TreeNode
     @getColor?() ? @getValue?() ? @text
 
   # The dataflow node-protocol value reader (spec §3; DataflowEngine header): a widget node's current value IS
-  # its exported value, so when a ported wire (plan Phase 6b, world.dataflowWiresEnabled) delivers, the engine
-  # PULLS the producer widget's exportedValue, and the equal-value cutoff compares it after each edge apply.
+  # its exported value, so when a ported wire delivers, the engine PULLS the producer widget's exportedValue,
+  # and the equal-value cutoff compares it after each edge apply.
   # Plain widgets (slider, text) inherit this; computing patch nodes override it to return their @output.
   dataflowValue: -> @exportedValue()
 
@@ -3588,9 +3560,8 @@ class Widget extends TreeNode
   # Deliberately on Widget, NOT ControllerMixin: as an INHERITED member it is hidden from the inspector's
   # default own-props view, so the 8 controllers' inspected member lists are unshifted -- a ControllerMixin
   # method would be copied in as an OWN member of all 8 and shift every one of them. (It DOES surface in the
-  # rarer inherited-props inspector view, alongside _acceptsConnectionToken; one such SystemTest,
-  # macroDuplicatedInspectorDrivesCopiedTargetOnly, was recaptured.) The thin per-class
-  # openTargetPropertySelector stays (own, menu-dispatched).
+  # rarer inherited-props inspector view; one such SystemTest, macroDuplicatedInspectorDrivesCopiedTargetOnly,
+  # was recaptured.) The thin per-class openTargetPropertySelector stays (own, menu-dispatched).
   _popUpTargetPropertyMenu: (theTarget, setters) ->
     [menuEntriesStrings, functionNamesStrings] = setters
     menu = new MenuWdgt @, false, @, true, true, "choose target property:"

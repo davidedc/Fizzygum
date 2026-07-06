@@ -40,14 +40,16 @@ The deferred-layout system: `_reLayout`, `recalculateLayouts`, settle tiers.
 | **step / stepping / fps** | the `steppingWdgts` per-cycle callback machinery |
 | **cycle / frame** | one `doOneCycle` run; `WorldWdgt.frameCount` |
 
-### Connection domain (LEGACY — retiring with the dataflow migration)
-Do not use these terms for new mechanisms; they name the pre-dataflow wiring machinery.
+### Connection domain (patch-programming wiring — ported onto the dataflow engine, Phase 6)
+`fire` / `wire` / `target` / `action` SURVIVE into the dataflow domain (a wire declares an edge). The
+token / cascade cycle-guard machinery was DELETED in Phase 6d — the engine's visit-once recompute pass +
+equal-value cutoff terminate a cascade instead. Do not reintroduce the retired terms.
 
 | Term | Meaning |
 |---|---|
-| **fire / `_fireConnection`** | delivering a value along a wire to `@target[@action]` |
-| **connection (calculation) token** | the cycle-guard stamps (`_acceptsConnectionToken`) — subsumed by dataflow passes |
-| **cascade** | a token-stamped chain of connection firings — subsumed by dataflow passes |
+| **fire / `_fireConnection`** | a wire's producer marks ITSELF stale (derives its edge from `@target`/`@action`, then `markStale`); the drain PULLS the value and delivers it — no value travels on the fire |
+| **connection (calculation) token** | RETIRED (Phase 6d): the `_acceptsConnectionToken` cycle-guard stamps, DELETED — the engine's visit-once + equal-value cutoff replace them |
+| **cascade** | RETIRED (Phase 6d): a token-stamped chain of connection firings — now a dataflow recompute pass |
 | **wire, target, action** | these SURVIVE into the dataflow domain (a wire declares an edge) |
 
 ### Dataflow domain (NEW — the calculation engine; see `docs/specs/dataflow-engine-spec.md`)
@@ -99,4 +101,4 @@ Do not use these terms for new mechanisms; they name the pre-dataflow wiring mac
 | **fire** | Wire-level delivery only (`firesPerEvent`, a wire fires). Never used for layout or repaint. |
 | **volatile** | Banned. There is no volatile-cell concept: a "ticking" cell is an ordinary node with an edge from a time source. |
 | **recalculate\*** | Shared verb prefix, one per domain: `recalculateLayouts`, `recalculateDataflow`. The parallel naming is deliberate — it documents the adjacent stations in `doOneCycle`. |
-| **token** | Legacy connection domain; retires with the migration. Not reused. |
+| **token** | Legacy connection domain, RETIRED (Phase 6d — the `connectionsCalculationToken` machinery was deleted). Not reused. |

@@ -6,15 +6,12 @@ class FizzytilesCodeWdgt extends TextWdgt
 
 
   # compileTiles (my only caller, via FridgeWdgt's drop/grab gesture hooks) runs inside the gesture's
-  # settle, so set the text through the NON-settling core. Mirrors the old self-settling path
-  # (setText superCall:true, skipCompilation:true = a fresh connection token + _setTextNoSettle) minus
-  # the now-redundant settle.
+  # settle, so set the text through the NON-settling core (minus the now-redundant settle).
   showCompiledCode: (theTextContent) ->
-    @connectionsCalculationToken = world.makeNewConnectionsCalculationToken()
     @_setTextNoSettle theTextContent
 
-  setText: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall, skipCompilation) ->
-    super theTextContent, stringFieldWidget, connectionsCalculationToken, true
+  setText: (theTextContent, stringFieldWidget, skipCompilation) ->
+    super theTextContent, stringFieldWidget
     if !skipCompilation?
       @fridgeMagnetsCanvas?.newGraphicsCode @text
 

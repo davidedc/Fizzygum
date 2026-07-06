@@ -1234,9 +1234,9 @@ class StringWdgt extends Widget
   # LAYOUT PASS -- call this directly ("cores call cores"): structural re-titles (WindowWdgt.
   # _addNoSettle / _setEmptyWindowLabelNoSettle), layout code (AxisWdgt._reLayout's tick labels),
   # menu re-ticking (updateFontsMenuEntriesTicks), per-frame updates (the video time labels). The
-  # change rides the enclosing settle / the frame's recalculateLayouts. The connection token +
-  # stringFieldWidget decoding is setText-specific and stays in setText (these callers have no
-  # connection, so the core needs neither).
+  # change rides the enclosing settle / the frame's recalculateLayouts. The stringFieldWidget
+  # decoding is setText-specific and stays in setText (these callers pass plain text, so the core
+  # needs none).
   _setTextNoSettle: (theTextContent) ->
     theNewText = theTextContent + ""
     if @text != theNewText
@@ -1263,22 +1263,16 @@ class StringWdgt extends Widget
   # and set it to target this.
   #
   # SELF-SETTLES via the single @_settleLayoutsAfter -- the ordinary self-settling-setter convention.
-  # It is thin-wrap-exempt only because it does arg-decoding FIRST (the connection token guard + the
-  # stringFieldWidget unwrap), so it is not the BARE canonical wrap. Single is SAFE here because the one
+  # It is thin-wrap-exempt only because it does arg-decoding FIRST (the stringFieldWidget unwrap), so it
+  # is not the BARE canonical wrap. Single is SAFE here because the one
   # flow that used to reach setText MID-PASS -- a window RE-TITLING its label from inside an add's settle
   # -- now calls @_setTextNoSettle DIRECTLY (see WindowWdgt._addNoSettle), so NO flow reaches setText
   # under a layout pass anymore (VERIFIED: full suite green with the single settler). The single settler's
   # flow-violation throw stays as the NET: if some future caller (e.g. a connection's updateTarget
   # dynamically dispatching to setText) reaches it mid-pass, it SURFACES the violation rather than
   # silently deferring it.
-  # thin-wrap-exempt: decodes the connection token + stringFieldWidget arg before the single-settle delegate.
-  setText: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall) ->
-    # early-return-sanctioned: the connectionsCalculationToken cycle-guard is arg-DECODING that must gate BEFORE
-    # the settle -- it can't move into the token-less _setTextNoSettle core (which _setTextConnector and the
-    # mid-pass window-retitle path both reach WITHOUT a token). Same reason this method is thin-wrap-exempt
-    # (above). [H] only started flagging it once Tier H2 rewrote the guard from an inline `if…then return` (which
-    # [H] does not recognise) to the readable `return unless @_acceptsConnectionToken`.
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
+  # thin-wrap-exempt: decodes the stringFieldWidget arg before the single-settle delegate.
+  setText: (theTextContent, stringFieldWidget) ->
     if stringFieldWidget?
       # in this case, the stringFieldWidget has a
       # string widget in "text". The string widget has the
@@ -1289,12 +1283,11 @@ class StringWdgt extends Widget
 
   # The reactive-CONNECTOR entrypoint for setText (the connection lane -- see Widget.
   # _settleLayoutsAfterOrJoinEnclosingPass and check-layering [P]). IDENTICAL to the public setText -- same
-  # connectionsCalculationToken cycle-guard, same stringFieldWidget decode -- EXCEPT it JOINS an already-open layout
-  # pass instead of opening a nested settle (which the public setText's _settleLayoutsAfter would reject mid-pass).
-  # The reactive dispatch (ControllerMixin._fireConnection) routes wired "setText" connections here; direct/API
-  # callers keep using the public setText.
-  _setTextConnector: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
+  # stringFieldWidget decode -- EXCEPT it JOINS an already-open layout pass instead of opening a nested settle
+  # (which the public setText's _settleLayoutsAfter would reject mid-pass). The engine's edge apply
+  # (DataflowEngine._applyWireValue) routes wired "setText" deliveries here; direct/API callers keep using the
+  # public setText.
+  _setTextConnector: (theTextContent, stringFieldWidget) ->
     if stringFieldWidget?
       theTextContent = stringFieldWidget.text.text
     @_settleLayoutsAfterOrJoinEnclosingPass =>
@@ -1337,9 +1330,7 @@ class StringWdgt extends Widget
     @_settleLayoutsAfter => @_setFontSizeNoSettle sizeOrWidgetGivingSize, widgetGivingSize
 
   # The reactive-CONNECTOR entrypoint for setFontSize (see _setTextConnector above / check-layering [P]).
-  # NO connectionsCalculationToken guard: setFontSize is a SINK -- it never calls updateTarget, so a circuit
-  # cannot cycle through it; the dispatch's extra (token) argument is simply ignored, exactly as the public
-  # setter ignores it today.
+  # setFontSize is a SINK -- it never calls updateTarget, so a circuit cannot cycle through it.
   _setFontSizeConnector: (sizeOrWidgetGivingSize, widgetGivingSize) ->
     @_settleLayoutsAfterOrJoinEnclosingPass =>
       @_setFontSizeNoSettle sizeOrWidgetGivingSize, widgetGivingSize

@@ -38,8 +38,7 @@ class Example3DPlotWdgt extends Widget
   colloquialName: ->
     "3D plot"
 
-  setParameter: (parameterValue, ignored, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
+  setParameter: (parameterValue, ignored) ->
     @parameterValue = parameterValue
     @calculateNewPlotValues()
 

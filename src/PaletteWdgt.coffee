@@ -54,12 +54,10 @@ class PaletteWdgt extends Widget
 
   nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
     @choice = @getPixelColor pos.add (deltaDragFromPreviousCall or new Point 0, 0)
-    @connectionsCalculationToken = world.makeNewConnectionsCalculationToken()
     @updateTarget()
 
   mouseDownLeft: (pos) ->
     @choice = @getPixelColor pos
-    @connectionsCalculationToken = world.makeNewConnectionsCalculationToken()
     @updateTarget()
 
   # the three setter flavours each append the same "bang!" entry on top of the
@@ -82,12 +80,11 @@ class PaletteWdgt extends Widget
     @addBangSetter menuEntriesStrings, functionNamesStrings
 
   # the bang makes the node fire the current output value
-  bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
+  bang: (newvalue) ->
     if !@choice? then return
-    # 6b — a bang is a FORCE-fire (spec §8): mark stale+forced so it propagates despite the equal-value cutoff.
-    return world.dataflow.markStale @, true if world.dataflowWiresEnabled
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
-    @updateTarget()
+    # a bang is a FORCE-fire (spec §8): mark stale+forced so it propagates despite the equal-value cutoff.
+    world.dataflow.markStale @, true
+    return
 
   updateTarget: ->
     if !@target? then return
@@ -98,8 +95,8 @@ class PaletteWdgt extends Widget
     @_fireConnection @choice
     return
 
-  # 6b node protocol: a palette's fired value is its picked @choice colour (Widget.exportedValue doesn't cover
-  # it — a palette defines no getColor). Reached only while world.dataflowWiresEnabled.
+  # node protocol: a palette's fired value is its picked @choice colour (Widget.exportedValue doesn't cover it
+  # — a palette defines no getColor).
   dataflowValue: -> @choice
 
   reactToTargetConnection: ->

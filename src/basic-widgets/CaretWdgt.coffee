@@ -409,7 +409,7 @@ class CaretWdgt extends BlinkerWdgt
         @bringTextAndCaretToState redoState
 
   bringTextAndCaretToState: (state) ->
-    @target.setText state.textContent, nil, nil
+    @target.setText state.textContent, nil
     @gotoSlot state.cursorPos   # discrete (undo/redo restore) -> public self-settling gotoSlot
     if state.selectionStart? and state.selectionEnd?
       @target.selectBetween state.selectionStart, state.selectionEnd
@@ -461,7 +461,7 @@ class CaretWdgt extends BlinkerWdgt
       # this is a setText that will trigger the text
       # connections "from within", starting a new connections
       # update round
-      @target.setText text, nil, nil
+      @target.setText text, nil
       # The text just GREW: if it no longer fits a CROP-overflow field, hand off to the pop-out editor NOW, at
       # event time (off the flush). This is the explicit home of what used to fire lazily + impurely inside
       # slotCoordinates -- insert (typing + paste) is the only path that can grow inline-edited text past the
@@ -492,7 +492,7 @@ class CaretWdgt extends BlinkerWdgt
     else
       text = @target.text
       text = text.slice(0, @slot) + text.slice(@slot + 1)
-      @target.setText text, nil, nil
+      @target.setText text, nil
   
   deleteLeft: ->
     if @target.selection()
@@ -500,7 +500,7 @@ class CaretWdgt extends BlinkerWdgt
       @target.deleteSelection()
     else
       text = @target.text
-      @target.setText text.substring(0, @slot - 1) + text.substr(@slot), nil, nil
+      @target.setText text.substring(0, @slot - 1) + text.substr(@slot), nil
       @_goLeftNoSettle()   # internal: rides setText's flush, must NOT self-settle early (see goLeft/goRight)
 
     @updateSelection false

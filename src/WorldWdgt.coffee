@@ -90,18 +90,6 @@ class WorldWdgt extends PanelWdgt
   # ON keeps current behaviour: the *DeferredSettle calls are byte-identical to the _NoSettle cores they wrap.)
   deferredSettlingEnabled: true
 
-  # The A/B switch for the patch-programming → dataflow-engine migration (spec §8, implementation-plan Phase 6).
-  # ON (default since Phase 6c): a connection wire (@target/@action via ControllerMixin) declares a dataflow EDGE
-  # (setTargetAndActionWith... → world.dataflow.addEdge), _fireConnection becomes markStale, and the once-per-cycle
-  # drain delivers every wire -- the patch family (Calculating/Diffing/Regex nodes, Fanout) is the engine's SECOND
-  # client. OFF: connection wires deliver the LEGACY way -- a source's updateTarget fires @target[@action] directly
-  # (ControllerMixin._fireConnection), termination guarded by the connectionsCalculationToken cascade stamps.
-  # Kept a switch (not a hard cut) for one release as a KILL-SWITCH -- 6b landed the engine path dark (default OFF),
-  # 6c flips the default to ON + reconciles the suite, 6d deletes the switch AND the legacy token machinery. A
-  # PROTOTYPE default (own-only-when-set), so with the switch untouched the serialized surface is byte-identical
-  # -- no widget ever writes an own `dataflowWiresEnabled`.
-  dataflowWiresEnabled: true
-
   # *DeferredSettle DECLARATION tracking (Widget._deferredSettleDeclare / _setMaxDimDeferredSettle). _deferredSettleDeclarationDepth
   # is > 0 while a DECLARED deferred-settle mutation runs, so the off-settle invalidates it schedules are known to be
   # intentional. auditUndeclaredEndOfCycle (DEBUG, default off) turns on the end-of-cycle check that LOGS every
@@ -293,8 +281,6 @@ class WorldWdgt extends PanelWdgt
 
   untitledNamingService: nil
   widgetFactory: nil
-
-  lastUsedConnectionsCalculationToken: 0
 
   isIndexPage: nil
 
@@ -500,14 +486,6 @@ class WorldWdgt extends PanelWdgt
 
   wantsDropOfChild: (aWdgt) ->
     return @_acceptsDrops
-
-  makeNewConnectionsCalculationToken: ->
-    # not nice to read but this means:
-    # first increment and then return the value
-    # this is so the first token we use is 1
-    # and we can initialise all input/node tokens to 0
-    # so to make them receptive to the first token generated
-    ++@lastUsedConnectionsCalculationToken
 
   createErrorConsole: ->
     errorsLogViewerWdgt = new ErrorsLogViewerWdgt "Errors", @, "modifyCodeToBeInjected", ""

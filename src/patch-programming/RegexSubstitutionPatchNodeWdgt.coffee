@@ -29,13 +29,6 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
   setInput3IsConnected: false
   setInput4IsConnected: false
 
-  # to keep track of whether each input is
-  # up-to-date or not
-  input1connectionsCalculationToken: 0
-  input2connectionsCalculationToken: 0
-  input3connectionsCalculationToken: 0
-  input4connectionsCalculationToken: 0
-
   # the external padding is the space between the edges
   # of the container and all of its internals. The reason
   # you often set this to zero is because windows already put
@@ -55,96 +48,42 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
   colloquialName: ->
     "Regex subst. patch node"
 
-  setInput1: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall, "input1connectionsCalculationToken"
+  setInput1: (newvalue, ignored) ->
     @input1 = newvalue
-    @updateTarget @input1connectionsCalculationToken
+    @updateTarget()
 
-  setInput2: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall, "input2connectionsCalculationToken"
+  setInput2: (newvalue, ignored) ->
     @input2 = newvalue
-    @updateTarget @input2connectionsCalculationToken
+    @updateTarget()
 
-  setInput3: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall, "input3connectionsCalculationToken"
+  setInput3: (newvalue, ignored) ->
     @input3 = newvalue
-    @updateTarget @input3connectionsCalculationToken
+    @updateTarget()
 
-  setInput4: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall, "input4connectionsCalculationToken"
+  setInput4: (newvalue, ignored) ->
     @input4 = newvalue
-    @updateTarget @input4connectionsCalculationToken
+    @updateTarget()
 
   # the bang makes the node fire the current output value
-  bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
-    @updateTarget @connectionsCalculationToken, true
+  bang: (newvalue) ->
+    @updateTarget true
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     @_popUpTargetPropertyMenu theTarget, theTarget.numericalSetters()
 
-  updateTarget: (connectionsCalculationToken, fireBecauseBang) ->
-    # 6b — under the engine, skip the legacy multi-input FRESHNESS GATE entirely (the allConnectedInputsAreFresh
-    # deadlock, spec §8): any input change just marks me STALE (a bang marks me forced), and the drain recomputes
-    # me via dataflowRecompute (pulling all stored inputs) then delivers @output along my out-edge. markStale is
-    # echo-suppressed while the engine is applying an input into me.
-    if world.dataflowWiresEnabled
-      world.dataflow.markStale @, (fireBecauseBang is true)
-      return
-    if !@setInput1IsConnected and
-     !@setInput2IsConnected and
-     !@setInput3IsConnected and
-     !@setInput4IsConnected
-      return
-
-    allConnectedInputsAreFresh = true
-    if @setInput1IsConnected
-      if @input1connectionsCalculationToken != connectionsCalculationToken
-        allConnectedInputsAreFresh = false
-    if @setInput2IsConnected
-      if @input2connectionsCalculationToken != connectionsCalculationToken
-        allConnectedInputsAreFresh = false
-    if @setInput3IsConnected
-      if @input3connectionsCalculationToken != connectionsCalculationToken
-        allConnectedInputsAreFresh = false
-    if @setInput4IsConnected
-      if @input4connectionsCalculationToken != connectionsCalculationToken
-        allConnectedInputsAreFresh = false
-
-    # if we are firing via bang then we use
-    # the existing output value, we don't
-    # recalculate a new one
-    if allConnectedInputsAreFresh and !fireBecauseBang
-      # note that we calculate an output value
-      # even if this node has no target. This
-      # is because the node might be visualising the
-      # output in some other way.
-      @recalculateOutput()
-
-    # if all the connected inputs are fresh OR we
-    # are firing via bang, then at this point we
-    # are going to update the target with the output
-    # value.
-    if allConnectedInputsAreFresh or fireBecauseBang
-      @fireOutputToTarget connectionsCalculationToken
-
+  # any input change (or a bang) marks me STALE — the drain recomputes me via dataflowRecompute (pulling all
+  # stored inputs) then delivers @output along my out-edge. This replaces the legacy multi-input FRESHNESS GATE
+  # (the allConnectedInputsAreFresh deadlock, spec §8). A bang marks me forced; markStale is echo-suppressed
+  # while the engine is applying an input into me.
+  updateTarget: (fireBecauseBang) ->
+    world.dataflow.markStale @, (fireBecauseBang is true)
     return
 
-  fireOutputToTarget: (calculationToken) ->
-    # mark this node as fired.
-    # if the update DOES come from the "bang!", then
-    # @connectionsCalculationToken has already been updated
-    # but we keep it simple and re-assign it here, not
-    # worth complicating things with an additional check
-    @connectionsCalculationToken = calculationToken
-
+  fireOutputToTarget: ->
     @_fireConnection @output
 
   reactToTargetConnection: ->
-    # we generate a new calculation token, that's OK because
-    # we are definitely not in the middle of the calculation here
-    # but we might be starting a new chain of calculations
-    @fireOutputToTarget world.makeNewConnectionsCalculationToken()
+    @fireOutputToTarget()
 
   recalculateOutput: ->
     if @textWidget.text != ""
@@ -161,10 +100,10 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
       @output = @input1.replace regexp, @substitutionTextAreaText.text
       @outputTextAreaText._setTextConnector @output
 
-  # ── dataflow node protocol (6b, spec §8) ─────────────────────────────────────────────────
+  # ── dataflow node protocol (spec §8) ─────────────────────────────────────────────────────
   # A COMPUTING node: recompute = re-run the substitution over the stored inputs (recalculateOutput refreshes the
   # on-node display too), handing the engine the fresh @output; dataflowValue lets a consumer PULL @output and the
-  # cutoff compare it. Reached only while world.dataflowWiresEnabled.
+  # cutoff compare it.
   dataflowRecompute: ->
     @recalculateOutput()
     @output

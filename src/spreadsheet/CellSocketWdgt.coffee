@@ -79,8 +79,8 @@ class CellSocketWdgt extends Widget
     return
 
   # the connection target the hosted value-widget fires into: mark this socket's cell STALE so the
-  # drain recomputes its dependents, and accept-and-ignore the connection token (this is a pooled
-  # dataflow markStale, NOT a layout settle — so no settle is opened here; the drain owns any settle).
-  cellInput: (value, argumentToAction, connectionsCalculationToken) ->
+  # drain recomputes its dependents (this is a pooled dataflow markStale, NOT a layout settle — so no
+  # settle is opened here; the drain owns any settle).
+  cellInput: (value, argumentToAction) ->
     @_sheetWidget?._markCellStaleFromSocketNoSettle @address
     return

@@ -1267,9 +1267,9 @@ assertion a recapture after a regression silently stores two different hashes an
   (`@getTextMenuItemFromMenuByPrefix propertyMenu, "color"` + a no-button move) before the shot to clear the tint (and match
   the recording's hover-highlighted row). Prefix "color" is unambiguous: "background color" does not START with it. No new verb.
 - **A two-way slider↔text patch cycle, text as SOURCE, guarded** (`macroSliderTextTwoWayPatchCycle`): wire `slider.value → text
-  "text"` AND `text → slider "value"` so the two bind into a 2-node LOOP; driving either end chases the value to the other and
-  `world.makeNewConnectionsCalculationToken()` (minted in `SliderWdgt.setValue`/`SimplePlainTextWdgt.setText`, propagated by
-  `updateTarget`, re-seen → early `return`) stops the loop after one hop. The TEXT is a controller SOURCE — TYPING into it moves the
+  "text"` AND `text → slider "value"` so the two bind into a 2-node LOOP; driving either end chases the value to the other and the
+  dataflow engine's visit-once rule (each node is applied at most once per drain pass, plus the equal-value cutoff) stops the loop
+  after one hop. The TEXT is a controller SOURCE — TYPING into it moves the
   slider (visible, not just an internal back-edge). KEY: both controllers are world children positioned to OVERLAP, so each "set
   target" menu lists exactly ONE candidate of the wanted class (one text / one slider) and is unambiguous — **so NOTHING is
   repositioned to wire, and nothing jumps.** The minimal form of the cycle. A naive 3-node `slider→text→slider` ring tempts you to

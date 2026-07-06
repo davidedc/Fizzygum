@@ -31,61 +31,53 @@ ControllerMixin =
         @action = each
         if @target[@action + "IsConnected"]?
           @target[@action + "IsConnected"] = true
-        @connectionsCalculationToken = world.makeNewConnectionsCalculationToken()
-        # 6b/6c -- a wire IS a dataflow edge (spec §8): declare producer(me) -> target in the engine index, with
-        # the action + the Phase-6a firesPerEvent policy riding the edge record (ensureWireEdge drops my single
-        # old out-edge first on a re-wire). The index is derived/disposable (spec §2), re-declared by the client
-        # on load/copy -- here the client is the wire itself. Declaring EAGERLY here is an optimisation (the edge
+        # a wire IS a dataflow edge (spec §8): declare producer(me) -> target in the engine index, with the
+        # action + the Phase-6a firesPerEvent policy riding the edge record (ensureWireEdge drops my single old
+        # out-edge first on a re-wire). The index is derived/disposable (spec §2), re-declared by the client on
+        # load/copy -- here the client is the wire itself. Declaring EAGERLY here is an optimisation (the edge
         # exists the moment a menu wire is made); _fireConnection re-derives it LAZILY too, which is what covers
         # the wires that never reach this method (direct @target/@action assignment -- scrollbars, prompt sliders).
-        if world.dataflowWiresEnabled
-          world.dataflow.ensureWireEdge @, @target, {action: @action, firesPerEvent: @firesPerEvent}
-        # reactToTargetConnection is left UNCHANGED across every controller: via the gated _fireConnection it
+        world.dataflow.ensureWireEdge @, @target, {action: @action, firesPerEvent: @firesPerEvent}
+        # reactToTargetConnection is left UNCHANGED across every controller: via _fireConnection it
         # markStale's me (the initial fire), so each keeps its exact on-connect semantics -- a slider/text fires
         # its current value, PaletteWdgt's empty override fires nothing, Example3DPlot recomputes its plot.
         # Non-forced is sufficient (a fresh wire's producer value differs from the target's, so it propagates).
         @reactToTargetConnection?()
 
-      # The ONE reactive-connection dispatch: fire @action on @target with `value` (+ the optional per-connection
-      # argument), routing to the target's dedicated _<action>Connector variant when it defines one (the reactive
-      # settle lane that JOINS an enclosing settle -- Widget._settleLayoutsAfterOrJoinEnclosingPass /
-      # check-layering [P]) and to the public @action otherwise (setValue / setInput1 / setColor / ... never open
-      # a settle, so the public name is already sound -- census: connection-cascade-settle-fix-plan.md fact 13).
-      # Resolving HERE -- not at the call sites -- keeps @action the menu-friendly public name everywhere
-      # (menus, <action>IsConnected flags, hard-wired app circuits) and gives the routing a single home.
+      # A wire's producer marks ITSELF stale -- the ONE onward-fire every controller's updateTarget calls. It
+      # derives the producer->target edge from @target/@action (ensureWireEdge) and marks me stale; the engine's
+      # drain then PULLS my dataflowValue and DELIVERS it to @target (DataflowEngine._applyWireValue), routing to
+      # the target's dedicated _<action>Connector variant when it defines one (the reactive settle lane that
+      # JOINS an enclosing settle -- Widget._settleLayoutsAfterOrJoinEnclosingPass / check-layering [P]) and to
+      # the public @action otherwise (setValue / setInput1 / setColor / ... never open a settle, so the public
+      # name is already sound -- census: connection-cascade-settle-fix-plan.md fact 13). @action stays the
+      # menu-friendly public name everywhere (menus, <action>IsConnected flags, hard-wired app circuits).
       _fireConnection: (value, argumentToAction = nil) ->
         return unless @target? and @action and @action != ""
-        # 6b -- under the engine a wire carries NO value: it only marks me STALE, and the drain PULLS my
-        # dataflowValue when it delivers along my edge (spec §3, notifications carry no values). So every
-        # controller's updateTarget (`@_fireConnection <myValue>`) becomes a markStale with no per-controller
-        # change; the pushed value/argumentToAction are ignored (the pull is the source of truth). markStale is
-        # echo-suppressed while the engine is applying me (DataflowEngine.markStale). A wire-less widget still
-        # returns above, matching legacy (no target = no fire).
-        if world.dataflowWiresEnabled
-          # derive my edge from @target/@action if it isn't declared yet: a scrollbar (ScrollPanelWdgt) or a
-          # prompt slider (PromptWdgt) wires by DIRECT @target/@action assignment, never through the menu that
-          # declares the edge -- spec §8 says edges DERIVE from @target/@action, so make that derivation total.
-          # Without this such a wire would markStale with no out-edge and deliver nothing (silently broken scroll,
-          # 6c). Idempotent for a menu-wired connection (the eager declaration already matches); no-op mid-drain.
-          world.dataflow.ensureWireEdge @, @target, {action: @action, firesPerEvent: @firesPerEvent}
-          world.dataflow.markStale @
-          return
-        connectorName = "_#{@action}Connector"
-        actionToCall = if @target[connectorName]? then connectorName else @action
-        @target[actionToCall].call @target, value, argumentToAction, @connectionsCalculationToken
+        # under the engine a wire carries NO value: it only marks me STALE, and the drain PULLS my dataflowValue
+        # when it delivers along my edge (spec §3, notifications carry no values). So every controller's
+        # updateTarget (`@_fireConnection <myValue>`) is a markStale with no per-controller change; the pushed
+        # value/argumentToAction are ignored (the pull is the source of truth). markStale is echo-suppressed
+        # while the engine is applying me (DataflowEngine.markStale). A wire-less widget returns above (no fire).
+        #   Derive my edge from @target/@action if it isn't declared yet: a scrollbar (ScrollPanelWdgt) or a
+        # prompt slider (PromptWdgt) wires by DIRECT @target/@action assignment, never through the menu that
+        # declares the edge -- spec §8 says edges DERIVE from @target/@action, so make that derivation total.
+        # Without this such a wire would markStale with no out-edge and deliver nothing (silently broken scroll).
+        # Idempotent for a menu-wired connection (the eager declaration already matches); no-op mid-drain.
+        world.dataflow.ensureWireEdge @, @target, {action: @action, firesPerEvent: @firesPerEvent}
+        world.dataflow.markStale @
+        return
 
-      # ---- firesPerEvent: per-wire delivery policy (dataflow migration; spec §4/§8, ----
-      # ---- implementation-plan Phase 6a) --------------------------------------------------
-      # false (default) = POOLED: under the engine, ten drag events + a tick in one frame collapse
-      #   to ONE recompute batch, drained once per cycle using final values.
+      # ---- firesPerEvent: per-wire delivery policy (dataflow; spec §4/§8) ------------------
+      # false (default) = POOLED: ten drag events + a tick in one frame collapse to ONE recompute
+      #   batch, drained once per cycle using final values.
       # true = PER-EVENT: a synchronous mini-pass inside each event (side-effects-per-event,
       #   read-your-writes within a frame), at N× the evaluation cost.
-      # In Phase 6a this is DARK: the flag is stored and toggled from the menu, but nothing READS it
-      # yet -- legacy _fireConnection delivery still runs unchanged, so pixels are unaffected. Phase 6b
-      # (engine delivery behind world.dataflowWiresEnabled) reads it when it declares the edge, letting
-      # it ride the edge record's opts. Declared as a PROTOTYPE default (not assigned per instance),
-      # so an untoggled wire carries NO own `firesPerEvent` property and serializes byte-for-byte as
-      # before -- the same own-only-when-set idiom as @target / @action.
+      # The flag rides the edge record's opts (ensureWireEdge). The PER-EVENT lane is still DEFERRED
+      # -- delivery POOLS regardless of the flag (the two are screen-indistinguishable, spec §13); the
+      # menu toggle stores it against the day the mini-pass lands. Declared as a PROTOTYPE default (not
+      # assigned per instance), so an untoggled wire carries NO own `firesPerEvent` property and
+      # serializes byte-for-byte as before -- the same own-only-when-set idiom as @target / @action.
       firesPerEvent: false
 
       # Flip the per-wire delivery policy (the "✓ fires per event" menu toggle). A plain boolean flip:

@@ -6,7 +6,6 @@ ParentStainerMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
 
-      setColor: (theColor, ignored, connectionsCalculationToken, superCall) ->
-        return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
-        super theColor, ignored, connectionsCalculationToken, true
-        @parent?.setColor theColor, ignored, connectionsCalculationToken
+      setColor: (theColor, ignored) ->
+        super theColor, ignored
+        @parent?.setColor theColor, ignored

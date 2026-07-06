@@ -104,8 +104,7 @@ class SliderWdgt extends CircleBoxWdgt
     @value = Number(newvalue)
     @_reLayoutSelfAndButton()
 
-  setValue: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
+  setValue: (newvalue, ignored) ->
     @value = Number(newvalue)
     @updateTarget()
     @_reLayoutSelfAndButton()
@@ -141,14 +140,13 @@ class SliderWdgt extends CircleBoxWdgt
     newvalue = Math.round relPos / @unitSize() + @start
 
     if @value != newvalue
-      @setValue newvalue, nil, nil
+      @setValue newvalue, nil
 
   # the bang makes the node fire the current output value
-  bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    # 6b — a bang is a FORCE-fire (spec §8): mark stale+forced so it propagates despite the equal-value cutoff.
-    return world.dataflow.markStale @, true if world.dataflowWiresEnabled
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
-    @updateTarget()
+  bang: (newvalue) ->
+    # a bang is a FORCE-fire (spec §8): mark stale+forced so it propagates despite the equal-value cutoff.
+    world.dataflow.markStale @, true
+    return
 
 
   updateTarget: ->

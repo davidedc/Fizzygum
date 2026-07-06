@@ -16,8 +16,7 @@
 # What's left specific to THIS class is its CONTROLLER chrome: pinning
 # layoutSpecDetails.canSetHeightFreely = false (height is content-driven), the
 # scroll-panel soft-wrap toggle (softWrapOn/Off), the "set target" controller menu +
-# the dataflow plumbing (setText's connectionsCalculationToken guard + updateTarget,
-# bang), and the panel-colour blend helpers.
+# the dataflow plumbing (updateTarget + bang), and the panel-colour blend helpers.
 
 class SimplePlainTextWdgt extends TextWdgt
 
@@ -149,22 +148,17 @@ class SimplePlainTextWdgt extends TextWdgt
     @parent?.parent?._invalidateLayout()   # (proper-layouts) re-fit the scroll-panel grandparent; the trigger form @parent._invalidateLayout(@) gets dropped at the non-tracking @contents PanelWdgt, so reach past it (bare)
 
   # the bang makes the node fire the current output value
-  bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    # 6b — a bang is a FORCE-fire (spec §8): mark stale+forced so it propagates despite the equal-value cutoff.
-    return world.dataflow.markStale @, true if world.dataflowWiresEnabled
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
-    @updateTarget()
+  bang: (newvalue) ->
+    # a bang is a FORCE-fire (spec §8): mark stale+forced so it propagates despite the equal-value cutoff.
+    world.dataflow.markStale @, true
+    return
 
-  # This is also invoked for example when you take a slider and set it to target
-  # this. Only the controller plumbing (the connectionsCalculationToken guard +
-  # updateTarget) is SPTW-specific now; the box re-flow on a text change is the
-  # inherited TextWdgt::setText (gated by FIT_BOX_TO_TEXT), reached via super.
-  setText: (theTextContent, stringFieldWidget, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
-    super theTextContent, stringFieldWidget, connectionsCalculationToken, true
-    # No trailing @updateTarget() here: super -> StringWdgt::_setTextNoSettle already fired it (StringWdgt
-    # ~:1258) with THIS same connectionsCalculationToken -- a second fire would be a duplicate that the
-    # receiver's token guard always absorbs (a no-op). Removed 2026-07-03 (Tier H1).
+  # This is also invoked for example when you take a slider and set it to target this. The box re-flow on a
+  # text change is the inherited TextWdgt::setText (gated by FIT_BOX_TO_TEXT), reached via super.
+  setText: (theTextContent, stringFieldWidget) ->
+    super theTextContent, stringFieldWidget
+    # No trailing @updateTarget() here: super -> StringWdgt::_setTextNoSettle already fires it (StringWdgt
+    # ~:1258). Removed 2026-07-03 (Tier H1).
     return
 
   updateTarget: ->

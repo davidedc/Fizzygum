@@ -24,7 +24,7 @@ unchecked, then update the ledger in the same commit that completes the phase.**
 - [x] Phase 6a — `firesPerEvent` wire property + menu toggle
 - [x] Phase 6b — patch-programming port behind A/B switch (default OFF)
 - [x] Phase 6c — A/B default ON, suite reconciliation
-- [ ] Phase 6d — token retirement
+- [x] Phase 6d — token retirement
 - [ ] Phase 7 — docs closeout
 - [ ] Phase 8 — widgetise the grid (one CellWdgt per VISIBLE cell; viewport-bounded) — follow-on
 
@@ -1078,6 +1078,49 @@ the tests-repo docs (`MACRO-PATTERNS.md`, tests-repo `CLAUDE.md`) for token voca
 update `NOMENCLATURE.md`: mark the legacy connection domain rows as historical. This is
 the largest mechanical sweep — the full §0 phase-close battery is mandatory.
 
+**Landed 2026-07-06 (this session) — all green, behaviour-invariant.** The token machinery and the A/B
+switch are DELETED; engine delivery is the ONLY path. `rg -n connectionsCalculationToken src` → 0,
+`rg -n dataflowWiresEnabled src` → 0. (25 `.coffee` + 2 docs; the sweep was ~148 matching lines, not the
+plan's estimated ~146 across 19 files — the true count was 21 files.)
+- **Deleted:** `Widget._acceptsConnectionToken` + the `Widget.connectionsCalculationToken: 0` prototype
+  default; `WorldWdgt.makeNewConnectionsCalculationToken` + `lastUsedConnectionsCalculationToken`; the per-input
+  `input1..4connectionsCalculationToken` fields on the calc/diff/regex nodes; the trailing
+  `(connectionsCalculationToken, superCall)` args on EVERY connection setter (Widget setColor/setBackgroundColor,
+  StringWdgt setText/_setTextConnector, SliderWdgt setValue/bang, the patch nodes' setInput1..4/bang, Fanout/
+  FanoutPin setInput, Example3DPlot setParameter, Panel/ScrollPanel/the two stainer mixins/GlassBoxTop/
+  WidgetHolder setColor, CellSocket cellInput) + the token args their super/child calls threaded + the vestigial
+  trailing nils at the CaretWdgt/SliderWdgt call sites.
+- **Switch removed:** `world.dataflowWiresEnabled` + every `if world.dataflowWiresEnabled` branch.
+  `_fireConnection` keeps only the engine body (`ensureWireEdge` + `markStale @`); each patch node's
+  `updateTarget` keeps only `markStale` and DROPS the whole legacy `allConnectedInputsAreFresh` FRESHNESS GATE
+  (the spec-§8 two-independent-inputs deadlock) with its per-input token threading and the collapsed Diffing
+  "hot input" mode; `markStale`'s echo-suppression, `_applyIncomingWireEdges`, `_processNode`'s sink cutoff, and
+  `Widget._destroyNoSettle`'s edge-drop lose their switch guards.
+- **Why behaviour-invariant (VERIFIED, not assumed):** with the switch ON since 6c, the ONLY site threading a
+  stored token into a setter was `_fireConnection`'s legacy tail — dead behind the ON-branch's early return. So
+  every live setter call already passed `connectionsCalculationToken = undefined`, and `_acceptsConnectionToken
+  (undefined,…)` could never reject (the `:0` prototype default made undefined ≠ stored, thereafter ≠ any minted
+  number) — it always minted-and-accepted. Deleting it ⇒ every setter runs unconditionally = the same. The
+  engine's visit-once + equal-value cutoff terminate a cascade (spec §8). The stainer mixins' internal colour
+  cascade was already token-free in EFFECT (direct calls thread undefined, so each hop minted its OWN token — no
+  shared token ever broke a cycle; the equal-value cutoff + the tree's acyclicity are what terminate it).
+- **Screenshots: ONLY 2 BENIGN inspector recaptures** (the 6c class — a deleted inspected member / an edited
+  rendered method source, NOT a delivery change; this REFINES the bullet's "expect NO pixel changes / a recapture
+  = a BUG", which holds for the DELIVERY path, not for inspector member/source render):
+  `macroDuplicatedInspectorDrivesCopiedTargetOnly` (the inherited-props view lost the `_acceptsConnectionToken`
+  row — the copied target is still driven to a DISTINCT colour/alpha 0.25 vs 0.6, frame-dump confirmed) +
+  `macroInspectorResizingOKEvenWhenTakenApart` (re-renders `_fireConnection`'s now-detokenized source). NO
+  delivery frame changed. Both dpr1+dpr2 recaptured, frame-dump eyeballed, WebKit-verified by the gauntlet.
+- **Docs swept:** `NOMENCLATURE.md` (token/cascade rows RETIRED, `_fireConnection`/wire/target/action rows
+  clarified as surviving); `MACRO-PATTERNS.md` (the 2-node slider↔text loop terminates by the engine's
+  visit-once, not a re-seen token); `src/dataflow/CLAUDE.md` (a 6d bullet records the end-state); `ControllerMixin`
+  `_fireConnection` header (the `_<action>Connector` routing lives in the engine's `_applyWireValue` now); this
+  ledger + the §6 checkbox. Tests-repo docs carried NO token vocabulary (verified) → no change there.
+- **Verification:** `fg build` 0 violations (dead-methods 0 new — no method orphaned by the deletion); `fg
+  gauntlet` dpr1/dpr2/webkit **181/0** + apps + tiernaming/settle/**capstone (careless pushes=0)** all PASS; `fg
+  homepage` BOOT OK; both serialization legs green (24 native + 34 SWCanvas + 7 file — surface UNCHANGED, the
+  round-trip is behavioural). Fizzygum 27 files; Fizzygum-tests 2 benign recaptures.
+
 ### Phase 7 — docs closeout
 
 (The subsystem docs were SEEDED in Phases 1/2a and grown per phase — rule 8 below. This
@@ -1217,7 +1260,7 @@ here or in a sub-phase. Update `src/spreadsheet/CLAUDE.md` (the design north sta
 - [ ] §0 phase-close battery green at 2c, 4, 5, 6c, 6d; serialization rig green with the
       sheet / color-cell / widget-cell fixtures and their EXPECTATIONS rows.
 - [ ] `world.dataflow` drains dark-cheap (empty-pool early return first).
-- [ ] Token machinery deleted (6d); `grep -rn connectionsCalculationToken src` → 0.
+- [x] Token machinery deleted (6d); `grep -rn connectionsCalculationToken src` → 0.
 - [ ] In-phase docs (rule 8) landed as they went: subsystem CLAUDE.mds,
       serialization reference, DETERMINISM.md; Phase 7 completeness pass done.
 - [ ] Docs closeout (Phase 7) landed; spec marked implemented with deviations.

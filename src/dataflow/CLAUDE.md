@@ -80,8 +80,23 @@ engine's SECOND client, ported by a strangler. Landed so far:
   teardown/add strategy thunk (`edit` keeps its exact self-settling behaviour), `StringWdgt._editNoSettle`,
   and `PromptWdgt`'s action `takeSliderValue` (renamed off the reserved `reactTo*` notification prefix) as
   a `public / _NoSettle / _Connector` trio that JOINS the drain settle. Kept the switch as a 1-release
-  kill-switch; 6d deletes it + the token machinery. 11 benign inspector recaptures (`_editNoSettle` on the
-  inspected `StringWdgt`).
+  kill-switch; 6d (below) deletes it + the token machinery. 11 benign inspector recaptures (`_editNoSettle`
+  on the inspected `StringWdgt`).
+
+- **6d — token retirement + switch removal (the strangler's last step).** The A/B switch
+  (`world.dataflowWiresEnabled`) and the legacy `connectionsCalculationToken` cascade-termination
+  machinery are DELETED — engine delivery is now the ONLY path. Gone: `Widget._acceptsConnectionToken`
+  (the per-value cycle-guard), `WorldWdgt.makeNewConnectionsCalculationToken`, the `connectionsCalculationToken`
+  prototype default + the per-input token fields on the patch nodes, and the trailing token args on every
+  connection setter (`setValue` / `setText` / `setColor` / `setInput1..4` / `bang` / …). `_fireConnection` is
+  now unconditionally `ensureWireEdge` + `markStale @`; the calc/diff/regex nodes' `updateTarget` is
+  unconditionally `markStale` (the legacy `allConnectedInputsAreFresh` freshness gate — the spec-§8 deadlock —
+  is gone, with it the per-input `updateTarget(token,…)` threading). Behaviour-invariant: with the switch
+  already ON since 6c, every live token was already `undefined` (the `Widget.connectionsCalculationToken: 0`
+  default made the guard always mint-and-accept, never reject), so deleting it changes no delivery frame — the
+  engine's visit-once + equal-value cutoff provide cascade termination (spec §8 "tokens retire last"). The only
+  screenshot movement is BENIGN inspector member-list shifts (a deleted inspected member = one fewer row, the
+  6c-class recapture).
 
 ## The model in one breath
 

@@ -175,7 +175,7 @@ class DataflowEngine
   # exists the moment it is made) and LAZILY (ControllerMixin._fireConnection, so a wire established by DIRECT
   # @target/@action assignment — a ScrollPanelWdgt scrollbar, a PromptWdgt slider — that never goes through the
   # menu still declares its edge the first time it fires; without this it would markStale with NO out-edge and
-  # deliver nothing, silently breaking scroll under the switch, 6c). On a mismatch (a re-wired producer, or a
+  # deliver nothing, silently breaking scroll (what the 6c reconciliation fixed). On a mismatch (a re-wired producer, or a
   # firesPerEvent toggle) it drops the single old out-edge and re-declares — a ControllerMixin producer owns at
   # most one out-edge (one @target/@action), so clearing all of them clears exactly the old wire. Skipped mid-
   # drain (@_recalculatingDataflow): the initiating _fireConnection runs at EVENT time, before the cycle's drain,
@@ -265,14 +265,14 @@ class DataflowEngine
     # that node's own unconditional onward-fire tail (a ported controller's updateTarget) re-marks the very
     # node being applied. That is redundant — the engine already owns that node's downstream traversal — so
     # it is DROPPED, which keeps a driven circuit at ONE pass (no pooled echo to drain next pass). Any OTHER
-    # mid-drain marking (a genuine sink-onto-source, a formula side effect) still pools. The suppression is
-    # gated on the wires switch so the switch-OFF spreadsheet drain is byte-identical (its cells never
-    # re-mark the applying node; only ported wires emit the echo).
-    #   The per-event mini-pass lane (firesPerEvent=true, spec §4) is DEFERRED in 6b: the flag rides the edge
+    # mid-drain marking (a genuine sink-onto-source, a formula side effect) still pools. Only a ported wire
+    # ever re-marks the node being applied (the echo); a sheet cell never does, so this suppression is a
+    # no-op for the spreadsheet client.
+    #   The per-event mini-pass lane (firesPerEvent=true, spec §4) is DEFERRED: the flag rides the edge
     # record (addEdge opts) but delivery POOLS for now — the two lanes are screen-indistinguishable (§4), no
-    # test exercises per-event DELIVERY (6a only asserts the flag flips), and a truly synchronous scoped
-    # mini-pass fights the drain's per-pass settle-open (spec §13 open: per-event downstream scoping).
-    return if world.dataflowWiresEnabled and @_recalculatingDataflow and (node is @_applyingNode) and not forced
+    # test exercises per-event DELIVERY (the 6a menu toggle only asserts the flag flips), and a truly
+    # synchronous scoped mini-pass fights the drain's per-pass settle-open (spec §13 open: per-event scoping).
+    return if @_recalculatingDataflow and (node is @_applyingNode) and not forced
     @__poolStale node, forced
     return
 
@@ -338,7 +338,7 @@ class DataflowEngine
   # _<action>Connector lane if it defines one, else the public action — the SAME routing
   # ControllerMixin._fireConnection uses, so the non-settling connector lane (§1.5/§1.14) is preserved and
   # joins the pass settle. Sheet reference edges carry no action and are skipped, so the spreadsheet client is
-  # untouched. Called only while world.dataflowWiresEnabled (the only time wire edges carry an action).
+  # untouched (only wire edges carry an action).
   _applyIncomingWireEdges: (consumer, changed) ->
     producers = @edgesTo.get consumer
     return unless producers?
@@ -371,7 +371,7 @@ class DataflowEngine
       # producer changed this pass, pushing the producer's pulled value onto this node via the wire's action
       # (routed through the target's _<action>Connector lane, exactly as _fireConnection would). Sheet
       # reference edges carry no action, so they are skipped — the spreadsheet client is unaffected.
-      @_applyIncomingWireEdges node, changed if world.dataflowWiresEnabled
+      @_applyIncomingWireEdges node, changed
       newVal = nil
       if node.dataflowRecompute?
         oldVal = @lastValues.get node
@@ -387,8 +387,8 @@ class DataflowEngine
           changed.add node
       else
         newVal = @pullValue node
-        if world.dataflowWiresEnabled and @edgesTo.get(node)?.size > 0
-          # 6b widget SINK (a node reached via wire edges): equal-value cutoff on the APPLIED value — read
+        if @edgesTo.get(node)?.size > 0
+          # a widget SINK (a node reached via wire edges): equal-value cutoff on the APPLIED value — read
           # its value after the incoming applies and traverse onward only if it changed (spec §8). Alongside
           # the visit-once rule this walks a driven ring exactly one lap and stops a DAG limb early.
           if forcedSet.has(node) or not @_valuesEqual (@lastValues.get node), newVal
@@ -396,8 +396,7 @@ class DataflowEngine
           @lastValues.set node, newVal
         else
           # pure source / seed (a time source, an untargeted seed): no incoming edge to cut off on, so
-          # conservatively always-changed — the pre-6b behaviour, preserved byte-identical when the switch
-          # is OFF (no widget is ever a node then, so only sources reach here).
+          # conservatively always-changed.
           changed.add node
       # sink application hook — a node applying its OWN value (a cell → its socket/presenter); routes via
       # the node's _<action>Connector lane and joins the pass settle opened by _drainOnePass.

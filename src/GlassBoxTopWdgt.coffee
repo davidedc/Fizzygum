@@ -22,6 +22,5 @@ class GlassBoxTopWdgt extends Widget
   findRootForGrab: ->
     return @parent.children[0]
 
-  setColor: (theColor, ignored, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
-    @parent?.setColor theColor, ignored, connectionsCalculationToken
+  setColor: (theColor, ignored) ->
+    @parent?.setColor theColor, ignored

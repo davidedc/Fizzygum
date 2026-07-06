@@ -37,10 +37,8 @@ class PanelWdgt extends Widget
     world.untitledNamingService.noteShortcutCreated()
     return newFolderWindow
 
-  setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
-
-    aColor = super aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, true
+  setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor) ->
+    aColor = super aColorOrAWidgetGivingAColor, widgetGivingColor
     # keep in sync the value of the container scrollPanel
     # if there is one. Note that the container scrollPanel
     # is actually not painted.

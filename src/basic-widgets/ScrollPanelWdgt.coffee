@@ -101,14 +101,12 @@ class ScrollPanelWdgt extends PanelWdgt
     @_positionAndResizeChildren()
     @_reLayoutScrollbars()
 
-  setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
-
-    aColor = super aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken, true
+  setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor) ->
+    aColor = super aColorOrAWidgetGivingAColor, widgetGivingColor
     # keep in sync the color of the content.
     # Note that the container ScrollPanel.
     # is actually not painted.
-    @contents.setColor aColorOrAWidgetGivingAColor, widgetGivingColor, connectionsCalculationToken
+    @contents.setColor aColorOrAWidgetGivingAColor, widgetGivingColor
     return aColor
 
   setAlphaScaled: (alphaOrWidgetGivingAlpha, widgetGivingAlpha) ->

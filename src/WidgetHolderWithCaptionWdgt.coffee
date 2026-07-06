@@ -43,9 +43,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
     true
 
 
-  setColor: (theColor, ignored, connectionsCalculationToken, superCall) ->
-    return unless @_acceptsConnectionToken connectionsCalculationToken, superCall
-
+  setColor: (theColor, ignored) ->
     @icon.setColor theColor
 
   widthWithoutSpacing: ->
