@@ -87,10 +87,16 @@ class Serializer
   # walked into the object table. A snapshot restores a SETTLED world (§1), so mid-gesture
   # transients (the hand-held widget, open menus, the caret) are dropped by construction.
   @serializeWorld: (theWorld, opts = {}) ->
+    # EPHEMERAL overlays (live highlight / pinout / drag-affordance widgets) are reconciler-owned
+    # transient world children — never part of the persisted desktop. Exclude them up front so they
+    # ride NEITHER the snapshot-roots walk NOR the explicit `section.children` list below (with
+    # onExternal:"capture" a section.children ref would otherwise pull an excluded overlay back into
+    # the object table). The reconciler recreates them from live state after a restore.
+    snapshotChildren = (child for child in (theWorld.children or []) when not child.isEphemeral?())
     # snapshot roots (deduped by the widgetSet Set below); an app-slot window may also be a
     # desktop child, an orphan in the basement, or off-tree — all are captured here.
     roots = []
-    roots.push child for child in (theWorld.children or [])
+    roots.push child for child in snapshotChildren
     roots.push theWorld.basementWdgt if theWorld.basementWdgt?
     for slot in Serializer.WORLD_APP_SLOTS
       slotWindow = theWorld[slot]
@@ -111,7 +117,7 @@ class Serializer
 
     # --- the explicit world section (plain, greppable; outside the object table) ---
     section = {}
-    section.children = (ref(c, "the world → .children") for c in (theWorld.children or []))
+    section.children = (ref(c, "the world → .children") for c in snapshotChildren)
     section.desktopColor = ref(theWorld.color, "the world → .color") if theWorld.color?
     section.alpha = theWorld.alpha if theWorld.alpha?
     section.isDevMode = theWorld.isDevMode

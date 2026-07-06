@@ -20,8 +20,21 @@
 
 class HighlighterWdgt extends RectangleWdgt
 
-  # I am a transient highlight overlay (see above: I deliberately cast no shadow), so I am
-  # skipped by the add-time drop-shadow management in Widget.add (was `instanceof HighlighterWdgt`
-  # there). (type-test-elimination campaign)
-  skipsAddShadowManagement: -> true
+  # I am an EPHEMERAL overlay (owner's term): reconciler-owned, hit-test-excluded, shadow-free and
+  # snapshot-excluded — all derived from this one flag via the isEphemeral() capability on Widget
+  # (was a dedicated `skipsAddShadowManagement -> true` plus two per-marker hit-test predicates;
+  # type-test-elimination campaign). Prototype flag: EVERY HighlighterWdgt is an ephemeral.
+  _ephemeralOverlay: true
+
+  # --- highlight style channel (Phase 1 of the drag-embed arc) ---------------------------------
+  # A style descriptor is a plain record {form, color, alphaScaled}. Producers declare a target ->
+  # descriptor into world.widgetsToBeHighlighted (a Map); the reconciler builds one HighlighterWdgt
+  # per target and calls applyHighlightStyle. Today only the legacy translucent-blue FILL exists
+  # (menu hover-highlight); the drag arc adds OUTLINE styles (eager/willing/reluctant) in Phase 2.
+  @fillStyle: (color, alphaScaled) -> {form: "fill", color: color, alphaScaled: alphaScaled}
+
+  applyHighlightStyle: (style) ->
+    # form "fill" = the translucent wash (the only style today); "outline" arrives in Phase 2.
+    @setColor style.color
+    @setAlphaScaled style.alphaScaled
 

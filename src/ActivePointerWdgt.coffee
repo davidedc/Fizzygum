@@ -100,10 +100,11 @@ class ActivePointerWdgt extends Widget
         # but it was quite a bit more complicated.
         # the caret is a world singleton; was `m not instanceof CaretWdgt` (type-test-elimination campaign)
         (m != world.caret) and
-        # exclude widgets we use for highlighting
-        # other widgets
-        !m.wdgtThisWdgtIsHighlighting? and
-        !m.wdgtThisWdgtIsPinouting?
+        # exclude EPHEMERAL overlays (highlight / pinout / drag affordances): reconciler-owned,
+        # non-interactable by definition. The isEphemeral() capability replaces the two former
+        # per-marker predicates (!m.wdgtThisWdgtIsHighlighting? / !m.wdgtThisWdgtIsPinouting?); the
+        # markers survive as the overlays' back-references to their targets, no longer as the gate.
+        !m.isEphemeral()
     if result?
       return result
     else

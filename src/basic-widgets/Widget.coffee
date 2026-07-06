@@ -265,6 +265,13 @@ class Widget extends TreeNode
   # widget that this widget is supposed to highlight
   wdgtThisWdgtIsHighlighting: nil
 
+  # I am a transient EPHEMERAL overlay (highlight / pinout / — future — drag affordance),
+  # created and destroyed by the per-cycle reconciler in WorldWdgt.doOneCycle, not by normal
+  # widget code. Dedicated overlay classes (HighlighterWdgt) set this on their prototype; ad-hoc
+  # overlays (the pinout StringWdgt) set it per-instance at creation. Read via the isEphemeral()
+  # capability, which drives hit-test exclusion, shadow-skip and world-snapshot exclusion (below).
+  _ephemeralOverlay: false
+
   destroyed: false
 
   shadowInfo: nil
@@ -1842,10 +1849,26 @@ class Widget extends TreeNode
 
     return [area,sl,st,al,at,w,h]
 
+  # EPHEMERAL capability (owner's term). An ephemeral is a transient overlay owned wholly by the
+  # per-cycle reconciler (WorldWdgt.addHighlightingWidgets / addPinoutingWidgets): it is
+  # hit-test-excluded (never steals mouseEnter / clicks / drops — ActivePointerWdgt.topWdgtUnderPointer),
+  # casts no shadow (skipsAddShadowManagement below), and is skipped by world-snapshot serialization
+  # (Serializer.serializeWorld). Capability, not a type test (type-test-elimination convention): reads
+  # the _ephemeralOverlay flag, so dedicated overlay classes AND ad-hoc reconciler-marked instances qualify.
+  isEphemeral: -> @_ephemeralOverlay is true
+
+  # A widget added to the world normally gains a drop-shadow (Widget._addNoSettle). Ephemerals opt
+  # out — "not anything material the user clicks/drags". The caret ALSO opts out (it is not an
+  # ephemeral — it is excluded from hit-testing separately — but is likewise immaterial), so it
+  # overrides this directly. (Folded here from HighlighterWdgt's old dedicated override.)
+  skipsAddShadowManagement: -> @isEphemeral()
+
   turnOnHighlight: ->
     if !@highlighted
       @highlighted = true
-      world.widgetsToBeHighlighted.add @
+      # declare into the highlight style channel (target -> style descriptor) with the legacy
+      # translucent-blue fill — the only style today; the drag arc (Phase 2+) adds outline styles.
+      world.widgetsToBeHighlighted.set @, HighlighterWdgt.fillStyle(Color.BLUE, 50)
       @changed()
 
   turnOffHighlight: ->

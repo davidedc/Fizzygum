@@ -211,7 +211,10 @@ class WorldWdgt extends PanelWdgt
   numberOfDuplicatedBrokenRects: 0
   numberOfMergedSourceAndDestination: 0
 
-  widgetsToBeHighlighted: new Set
+  # target -> style descriptor (HighlighterWdgt.fillStyle / — Phase 2 — outline styles). A Map, not
+  # a Set: the drag-embed arc needs per-target highlight styles (the style channel). The two tracking
+  # sets below stay Sets (membership only).
+  widgetsToBeHighlighted: new Map
   currentHighlightingWidgets: new Set
   widgetsBeingHighlighted: new Set
 
@@ -1259,6 +1262,9 @@ class WorldWdgt extends PanelWdgt
     @widgetsToBePinouted.forEach (eachWidgetNeedingPinout) =>
       unless @widgetsBeingPinouted.has eachWidgetNeedingPinout
         hM = new StringWdgt eachWidgetNeedingPinout.toString()
+        # this bare StringWdgt is used as an ephemeral overlay — mark the INSTANCE before @add so it
+        # is hit-test-excluded and shadow-free (isEphemeral capability), like the HighlighterWdgt.
+        hM._ephemeralOverlay = true
         @add hM
         hM.wdgtThisWdgtIsPinouting = eachWidgetNeedingPinout
         peekThroughBox = eachWidgetNeedingPinout.clippedThroughBounds()
@@ -1280,14 +1286,13 @@ class WorldWdgt extends PanelWdgt
         eachHighlightingWidget.wdgtThisWdgtIsHighlighting = nil
         eachHighlightingWidget.fullDestroy()
 
-    @widgetsToBeHighlighted.forEach (eachWidgetNeedingHighlight) =>
+    @widgetsToBeHighlighted.forEach (styleDescriptor, eachWidgetNeedingHighlight) =>
       unless @widgetsBeingHighlighted.has eachWidgetNeedingHighlight
         hM = new HighlighterWdgt
         @add hM
         hM.wdgtThisWdgtIsHighlighting = eachWidgetNeedingHighlight
         hM._applyBounds eachWidgetNeedingHighlight.clippedThroughBounds()
-        hM.setColor Color.BLUE
-        hM.setAlphaScaled 50
+        hM.applyHighlightStyle styleDescriptor
         @currentHighlightingWidgets.add hM
         @widgetsBeingHighlighted.add eachWidgetNeedingHighlight
 
