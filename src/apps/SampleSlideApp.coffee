@@ -71,15 +71,14 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
 
     slideWdgt.disableDragsDropsAndEditing()
 
-    # Re-anchor the NYC viewport AFTER the mode flip: the container shifts left by
-    # toolsPanel(95)+internalPadding(5) when editing turns off, and post-orphan-settledness
-    # (ce21dcf7) the offset no longer re-derives -- scrolling last anchors it in the
-    # geometry the user actually sees. (2026-07 mis-scrolled-slide regression.) scrollTo is
-    # ABSOLUTE (content._moveLeftSideTo -whereTo), so the value is tied to the panel's final
-    # world position; re-issuing the edit-mode (1484,246) lands the pin at [-31,-66] now, so
-    # this point is measurement-derived to put the NYC pin at [89,23] rel. to the scroll frame
-    # (Appendix-B B.3 target) in the CURRENT view geometry.
-    windowWithScrollingPanel.contents.scrollTo new Point 1364, 157
+    # Re-anchor the NYC viewport AFTER the mode flip: the container shifts left when editing
+    # turns off, and post-orphan-settledness (ce21dcf7) the scroll no longer re-derives, so
+    # scrolling LAST anchors it in the geometry the user actually sees (2026-07 mis-scrolled
+    # -slide regression). Expressed in the pin's OWN content coordinates -- scroll so the pin
+    # sits at (89,23) inside the frame -- so it is robust to the frame's final position/size
+    # (ScrollPanelWdgt.scrollTo is frame-relative). No magic viewport constant.
+    pinOffsetInScrolledContent = mapPin.position().subtract windowWithScrollingPanel.contents.contents.position()
+    windowWithScrollingPanel.contents.scrollTo pinOffsetInScrolledContent.subtract new Point 89, 23
     
     # if we don't do this, the window would ask to save content
     # when closed. Just close it instead.

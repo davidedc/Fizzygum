@@ -502,9 +502,14 @@ class ScrollPanelWdgt extends PanelWdgt
     else
       return false
 
+  # Scroll so CONTENT-point `whereTo` sits at my top-left. FRAME-RELATIVE (offset from my own
+  # origin), so the result is independent of where I am in the world -- a caller's scroll survives
+  # my being moved/resized (e.g. the sample-slide edit->view container shift). Was `-whereTo.x/.y`,
+  # i.e. absolute world coords that only landed right for a frame at the world origin -- the root of
+  # the 2026-07 mis-scrolled-slide magic constant. SampleSlideApp is the sole caller.
   scrollTo: (whereTo) ->
-    @contents._moveLeftSideTo -whereTo.x
-    @contents._moveTopSideTo -whereTo.y
+    @contents._moveLeftSideTo @left() - whereTo.x
+    @contents._moveTopSideTo @top() - whereTo.y
     # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
     @_reLayoutScrollbars()
 
