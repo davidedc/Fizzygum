@@ -40,6 +40,20 @@ class GenericShortcutIconWdgt extends Widget
     @_reLayout()
     @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
 
+  # Self-protecting resize (INV-2): I am a composite (icon + arrow placed by my
+  # _reLayout), but parents size me with the raw _applyExtent core (e.g.
+  # WidgetHolderWithCaptionWdgt._reLayout), which alone would leave my children at
+  # stale geometry -- the 2026-07 broken-shortcut-icons regression. Same idiom as
+  # StretchablePanelWdgt/StretchableWidgetContainerWdgt._applyExtent. The children? guard
+  # skips the re-layout during construction (my ctor _applyExtents 95x95 BEFORE the arrow
+  # is built); the trailing _invalidateLayout/settle lays the children out then.
+  _applyExtent: (extent) ->
+    if extent.equals @extent()
+      return
+    super
+    if @icon? and @referenceArrowIcon?
+      @_reLayout @bounds
+
   _reLayout: (newBoundsForThisLayout) ->
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout

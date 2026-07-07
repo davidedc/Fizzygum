@@ -41,6 +41,18 @@ class GenericObjectIconWdgt extends Widget
     @_reLayout()
     @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
 
+  # Self-protecting resize (INV-2): I am a composite (object icon + shortcut/droplet icon
+  # placed by my _reLayout), but parents size me with the raw _applyExtent core, which
+  # alone would leave my children at stale geometry -- the 2026-07 broken-icons
+  # regression. Same idiom as StretchablePanelWdgt/StretchableWidgetContainerWdgt._applyExtent.
+  # The children? guard skips the re-layout during construction (before both are built).
+  _applyExtent: (extent) ->
+    if extent.equals @extent()
+      return
+    super
+    if @icon? and @objectIcon?
+      @_reLayout @bounds
+
   _reLayout: (newBoundsForThisLayout) ->
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
