@@ -31,7 +31,6 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
     usaMap = new SimpleUSAMapIconWdgt Color.create 183, 183, 183
     usaMap._applyExtent new Point 1808, 1115
     windowWithScrollingPanel.contents.add usaMap
-    windowWithScrollingPanel.contents.scrollTo new Point 1484, 246
     usaMap.rememberFractionalSituationInHoldingPanel()
 
     mapPin = new MapPinIconWdgt
@@ -71,6 +70,16 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
     wm.setTitleWithoutPrependedContentName "Sample slide"
 
     slideWdgt.disableDragsDropsAndEditing()
+
+    # Re-anchor the NYC viewport AFTER the mode flip: the container shifts left by
+    # toolsPanel(95)+internalPadding(5) when editing turns off, and post-orphan-settledness
+    # (ce21dcf7) the offset no longer re-derives -- scrolling last anchors it in the
+    # geometry the user actually sees. (2026-07 mis-scrolled-slide regression.) scrollTo is
+    # ABSOLUTE (content._moveLeftSideTo -whereTo), so the value is tied to the panel's final
+    # world position; re-issuing the edit-mode (1484,246) lands the pin at [-31,-66] now, so
+    # this point is measurement-derived to put the NYC pin at [89,23] rel. to the scroll frame
+    # (Appendix-B B.3 target) in the CURRENT view geometry.
+    windowWithScrollingPanel.contents.scrollTo new Point 1364, 157
     
     # if we don't do this, the window would ask to save content
     # when closed. Just close it instead.
