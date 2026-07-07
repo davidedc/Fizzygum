@@ -9,6 +9,21 @@ class GraphsPlotsChartsWdgt extends Widget
     @setColor Color.create 255, 125, 125
     @_applyExtent new Point 200, 200
 
+  # true while a SystemTest replays with animations-pacing control on -- animated widgets must then
+  # render a FIXED, deterministic frame (mirrors AnalogClockWdgt.calculateHandsAngles, which pins
+  # @dateLastTicked to a fixed date under the same condition). Turned on by the macro's
+  # AutomatorEventCommandTurnOnAnimationsPacingControl.
+  _animationFrozenForDeterministicReplay: ->
+    Automator? and Automator.animationsPacingControl and Automator.state == Automator.PLAYING
+
+  # The example plots animate by advancing @graphNumber each step (each concrete plot's
+  # renderingHelper seeds its RNG off @graphNumber). Freeze that advance under replay so the plot
+  # renders a fixed frame. Subclasses that animate differently (Example3DPlotWdgt, via @currentAngle)
+  # override step() but reuse the guard above. (Concrete 2D plots supply the @graphNumber field.)
+  step: ->
+    @graphNumber++ unless @_animationFrozenForDeterministicReplay()
+    @changed()
+
 
   # This method only paints this very widget's "image",
   # it doesn't descend the children

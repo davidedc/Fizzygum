@@ -18,9 +18,7 @@ class ExampleScatterPlotWdgt extends GraphsPlotsChartsWdgt
   # supplies only its renderingHelper below.
 
 
-  step: ->
-    @graphNumber++
-    @changed()
+  # step() (advance @graphNumber, frozen under SystemTest replay) is inherited from GraphsPlotsChartsWdgt.
 
   renderingHelper: (context, color, appliedShadow) ->
 
