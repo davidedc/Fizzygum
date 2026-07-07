@@ -378,6 +378,26 @@ if ! $noSyntaxCheck ; then
   echo "... relayout-bounds-first check OK"
 fi
 
+# --- build-time RELAYOUT-REPAINTS gate ([INV-1]) --------------------------------------
+# Static sibling to the runtime paint-truthfulness capstone (Fizzygum-tests/scripts/run-paint-audit.js).
+# Enforces [INV-1] (docs/layout-regressions-2026-07-icons-plots-editghosts-plan.md): a `_reLayoutSelf` that
+# opens a `world.disableTrackChanges()` frame MUST issue a covering `@fullChanged()` after its LAST
+# `world.maybeEnableTrackChanges()` -- else a raw-applied child move made inside the suppressed frame leaves
+# a stale/"ghost" region (the 2026-07 D2 edit/view-toggle ghosts, Fizzygum a88a1673). Scoped to _reLayoutSelf
+# (the covering-repaint owner); genuine exceptions carry a `# relayout-repaint-exempt: <reason>` marker.
+# (buildSystem/check-relayout-repaints.js -- same --noSyntaxCheck escape hatch + explicit $? abort as the
+# gates above; scans src/ only, so it runs for every build flavour incl. --homepage.)
+if ! $noSyntaxCheck ; then
+  echo "checking tracking-suppressing _reLayoutSelf issues its covering fullChanged ([INV-1]) ..."
+  node ./buildSystem/check-relayout-repaints.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: relayout-repaints gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... relayout-repaints check OK"
+fi
+
 # --- build-time test-.js syntax gate (only when tests are part of this build) ---------
 # Each SystemTest's _automationCommands.js carries its macro inside a backtick-delimited JS
 # template literal; a stray backtick silently corrupts the file so the test never loads (with
