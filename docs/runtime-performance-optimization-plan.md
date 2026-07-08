@@ -1,10 +1,11 @@
 # Runtime performance — measured profile & ranked optimization plan
 
 **Status**: AUTHORED 2026-07-07 from a full profiling campaign of the live system.
-**Progress**: H1 ✅ landed (2026-07-08). **Arc 2 (2026-07-08): F2 + S1 + S6a + S5 ✅ landed** —
-full `fg gauntlet` green (build + dpr1/dpr2/webkit 196/196 each + apps + paint-truthfulness +
-tiernaming/settle/capstone gates) **and** `fg homepage` native boot-smoke green; **zero reference
-churn** (byte-identical, cross-engine). Remaining: S2, S3, S4, S6b, F1, F3. See §8 ledger + §7.
+**Progress**: H1 ✅ landed. **Arc 2: F2 + S1 + S6a + S5 ✅**. **Arc 3 (2026-07-08): S2 Tier 1 + S4 ✅
+landed** — the genuine production rendering wins; full `fg gauntlet` (dpr1/dpr2/webkit 196/196 + apps
++ paint + gates) **and** `fg homepage` green, **zero reference churn**, and a direct A/B micro-bench
+measured **S2 = 1.46× / S4 = 2.28× on-path with an identical surface hash** (byte-identical proven two
+ways). Remaining: **S3** (next major — tier-0 clipping), S2 Tier 2, S6b, F1, F3. See §8 ledger + §7.
 **⚠️ Verified-fact correction (2026-07-08):** S1's headline "−33% busy / −8.3% wall" is an artifact
 of the **unminified profiling build only** — the shipped build strips the log via minification and
 never pays it. See the S1 section in §5 and the methodology note below. This does NOT affect any
@@ -58,9 +59,9 @@ Where busy CPU goes (self time; "busy" = idle/program excluded):
 |---|---|---|---|---|---|---|
 | **S1** ✅ | Delete the per-call debug `console.log` in `Context2D.drawImage` | SWCanvas | A/B −33% busy @dpr1 **on the UNMINIFIED build only** — shipped build minifies the log away (see §2 caveat) | **shipped: ~0** (hygiene + honest profiles) | trivial | none |
 | **H1** | SHA-256 screenshot hashing → `crypto.subtle.digest` (same digest) | Fizzygum-tests | 6.9% dpr1 / 24.7% dpr2 busy; impl also makes 2 full-buffer copies per hash | most of that back | medium | low |
-| **S2** | drawImage fast path: hoist per-call invariants; axis-aligned 1:1 source-over row loop; kill per-pixel allocations | SWCanvas | `_drawImageInternal` 12.4% busy post-S1; 662,474 calls/suite, avg 1,163px, all unclipped | ~8–11% | medium | medium (byte-identical gate) |
+| **S2** ✅ | drawImage fast path: hoist per-call invariants (scalar inverse transform, no per-pixel object); inline source-over write-in-place | SWCanvas | `_drawImageInternal` 12.4% busy post-S1 — landed 2026-07-08 Tier 1, **A/B 1.46× (31.5% faster) on the blit path, byte-identical** | measured 1.46× on-path | medium | none (byte-identical, gauntlet green) |
 | **S3** | Tier-0 rectangular clipping — execute the SWCanvas clipping plan §9 | SWCanvas | clip build 2.6–2.8% + reads 6.4–10.3% + span detours; **76,675 clips/suite, 100.000% axis-aligned integer rects** | ~10–18% | large | medium |
-| **S4** | `blendPixel`: composite-op specialization, no per-pixel result object | SWCanvas | blendPixel 5.8% busy post-S1 + feeds 4.8–7.2% GC | ~4–6% (+GC) | small-med | medium (byte-identical gate) |
+| **S4** ✅ | `blendPixel`: source-over specialization in the span path, no per-pixel result object/switch, α hoisted per span | SWCanvas | blendPixel 5.8% busy post-S1 + feeds GC — landed 2026-07-08, **A/B 2.28× (56% faster) on the path-fill span, byte-identical** | measured 2.28× on-path | small-med | none (byte-identical, gauntlet green) |
 | **F2** ✅ | Cache `WorldWdgt.getCanvasPosition` (forced reflow per synthesized mouse event) | Fizzygum | **5.8% busy post-S1** (single method!) — landed 2026-07-08, gauntlet+homepage green | ~5% (mostly suite CPU) | small | low |
 | **S5** ✅ | Hoist `_evaluatePaintSource` out of per-pixel span loops for solid colors | SWCanvas | 4.3% busy post-S1 — landed 2026-07-08 (span-level memoize; byte-identical, gauntlet green) | ~3–5% | small | low |
 | **F1** | Boot the test harness from a pre-compiled image | Fizzygum | boot = 3.5–3.7s/page in-browser compile; `js/pre-compiled.js` in normal builds is a 257-byte stub | ~2.5–3s × every page × every shard × every gauntlet leg | medium | medium |
@@ -281,9 +282,22 @@ and inline `rotr`.
 **Verify**: self-test vector already in SHA256.coffee; suite dpr1+dpr2+webkit; digests of a
 few committed references recomputed and compared before/after.
 
-### S2 — drawImage fast paths 【SWCanvas; medium; byte-identical gate】
+### S2 — drawImage fast paths 【SWCanvas; medium; ✅ LANDED Tier 1】
 
-**Where**: `src/core/Rasterizer.js:555-725` (`_drawImageInternal`).
+**✅ LANDED 2026-07-08 (Tier 1).** In `_drawImageInternal`: (a) hoisted the inverse-transform
+coefficients and apply them as scalars per pixel (`destPointX = invA·x + invC·y + invE`, same
+`a*x+c*y+e` order as `Transform2D.transformPoint`) — kills the per-pixel `{x,y}` object; (b) resolve
+the composite op ONCE and, for source-over (100% of Fizzygum's blit traffic), blend **in place** with
+no per-pixel `{r,g,b,a}` result object and no string switch — other ops fall back to
+`CompositeOperations.blendPixel` unchanged. Every arithmetic step (FP-stable source mapping,
+`Math.floor`, `effectiveAlpha`/`finalSrcA`, the `_sourceOver` rounding) is reproduced verbatim.
+**Byte-identical**: SWCanvas 218/218, `fg gauntlet` (dpr1/dpr2/webkit) + `fg homepage` green, zero
+ref churn; an independent A/B hash of the rendered surface (old dist vs new) is identical.
+**Measured A/B: 1.46× (31.5% faster)** on a drawImage-heavy source-over workload.
+**Tier 2 (analytic axis-aligned integer rect + opaque-run `dst.set`) NOT done** — Tier 1 removed the
+profiled costs (the two per-pixel objects + switch); Tier 2 is a smaller marginal gain, deferred.
+
+**Where**: `src/core/Rasterizer.js` `_drawImageInternal`.
 
 **Why**: post-S1 it is the top SWCanvas function (12.4% busy dpr1, ~11.6% dpr2 for the loop).
 The inner loop, per device pixel: allocates `inverseTransform.transformPoint({x,y})` (object),
@@ -341,10 +355,22 @@ can stay skipped.
 pixel-center sampling semantics exactly (a clip rect [5,25) exposes columns 5..24 — see the
 comment block at `PolygonFiller.js:767+`). Derive the tier-0 rect from the SAME rounding.
 
-### S4 — `blendPixel` de-allocation & specialization 【SWCanvas; small-medium】
+### S4 — `blendPixel` de-allocation & specialization 【SWCanvas; small-medium; ✅ LANDED】
 
-**Where**: `src/utils/CompositeOperations.js` (`blendPixel`), callers:
-`Rasterizer._drawImageInternal:708`, `PolygonFiller._blendPixel:468→476`, shadow pipeline.
+**✅ LANDED 2026-07-08.** In `PolygonFiller._fillPixelSpan`, added a source-over fast path for a
+solid `Color` (Fizzygum's ~entire fill/stroke/text span traffic): the source channels **and**
+`srcA/255`/`1−srcA/255` are hoisted out of the loop (S5 already made the color span-constant), and the
+blend writes **in place** — no per-pixel `{r,g,b,a}` object, no string switch. Reproduces
+`blendPixel`'s source-over exactly (`srcA===0`→dest unchanged / whole-span no-op; `srcA===255`→write
+source; `dstA===0`→write source; else `Math.round(src*α + dst*(1−α))`). The drawImage caller is
+covered by S2's inline blend; gradients/patterns/non-source-over keep the general
+`CompositeOperations.blendPixel`. **Byte-identical**: SWCanvas 218/218, `fg gauntlet` + `fg homepage`
+green, zero ref churn, independent surface-hash A/B identical. **Measured A/B: 2.28× (56% faster)** on
+a path-fill span workload. (Note: unclipped `fillRect` uses the direct rect path, not `_fillPixelSpan`
+— the span path is `ctx.fill()`/`stroke()`/text, which the profile put at ~13% busy.)
+
+**Where**: `src/renderers/PolygonFiller.js` (`_fillPixelSpan` / `_blendPixel`),
+`src/utils/CompositeOperations.js` (`blendPixel`, retained for the general path).
 
 **Why**: 5.8% busy post-S1 (dpr1) + a large share of the 4.8–7.2% GC bucket: a string
 `switch` and a fresh `{r,g,b,a}` object **per blended pixel**.
@@ -492,13 +518,12 @@ The change itself is easy (world already has per-frame broken rects; use the
    unminified-build drawImage measurement).
 2. ~~F2~~ ✅ and ~~S6a~~ ✅ — small, independent, low-risk.
 3. ~~H1~~ ✅ — dominant *suite-speed* item at dpr2.
-4. ~~S5~~ ✅ (landed early — it re-vendored cleanly alongside S1/S6a and is byte-identical).
-   **Next real rendering wins:** **S2** (drawImage fast path, 2–3 days) then **S4** (1 day, shares
-   the blend-specialization machinery). These are the genuine *production* rendering wins (SWCanvas
-   raster) as opposed to the suite-speed items above; both are byte-identical-gated.
-5. **S3** (the companion plan's §9 Stages 1–3; ~1 week) — after S2/S4 so its win is measured
-   against the already-cleaned span/blend baseline. Largest single production win (`_getBit`
-   clip-mask reads 9.6% + mask build + span detours).
+4. ~~S5~~ ✅ · ~~S2 (Tier 1)~~ ✅ · ~~S4~~ ✅ — the genuine *production* rendering wins, all landed
+   byte-identically (measured A/B: S2 1.46×, S4 2.28× on-path). S2 Tier 2 (analytic axis-aligned rect)
+   deferred as a smaller marginal gain.
+5. **S3** (the companion plan's §9 Stages 1–3; ~1 week) — **now the next major item**; its win is
+   measured against the already-cleaned span/blend baseline. Largest single production win (`_getBit`
+   clip-mask reads 9.6% + mask build 2.6–2.8% + span detours). 100% of clips are axis-aligned int rects.
 6. **F1** (1–2 days) — orthogonal; any time. Suite/dev-loop boot speed.
 7. **S6b** (with the S4 blend work, under the byte-identical gate) + the
    `_performCanvasWideCompositing` investigation.
@@ -512,6 +537,7 @@ The change itself is easy (world already has per-frame broken rects; use the
 | — | — | — | — | — | baseline rows above |
 | 2026-07-08 | **H1** (crypto.subtle) | — (not re-profiled) | — (not re-profiled) | 1.49 / 1.91 min (parallel, 5 shards) | Per-hash A/B: 80.95→2.92 ms = **27.7×** on a 6.45 MB dpr2 frame, digests identical. Full-suite busy-CPU delta not yet measured with the profiling harness (was 6.9% dpr1 / 24.7% dpr2 of busy; expect ~all recovered). Gauntlet green, zero ref churn. |
 | 2026-07-08 | **F2 + S1 + S6a + S5** (arc 2) | — (not re-profiled) | — (not re-profiled) | dpr1 2.50 / dpr2 1.99 min (parallel, 5 shards) | Full `fg gauntlet` green (dpr1/dpr2/webkit 196/196 + apps + paint + tiernaming/settle/capstone) **and** `fg homepage` boot-smoke green; **zero reference churn**, cross-engine. dpr2 first-pass showed a **flaky parallel-boot stall** (shards 0/3/4: `ReferenceError: CoffeeScript is not defined` at boot → "did not start within 90s"; 0 pixel failures); clean re-run 5/5. Targeted busy-CPU deltas (F2 5.8%, S5 4.3%, S6a ~1%; S1 shipped ~0) not yet re-profiled — run the §6.4 loop next. |
+| 2026-07-08 | **S2 (Tier 1) + S4** (arc 3) | — (not re-profiled) | — (not re-profiled) | dpr1 1.58 / dpr2 1.74 / webkit 1.52 min | Full `fg gauntlet` green (dpr1/dpr2/webkit 196/196, no flake this run) **and** `fg homepage` green; **zero reference churn**, cross-engine. **Direct A/B micro-bench (old dist 4bce2cd vs new, identical surface hash): drawImage/S2 = 1.46× (31.5% faster), path-fill span/S4 = 2.28× (56% faster).** Full-suite busy-CPU delta pending §6.4 re-profile (was S2 `_drawImageInternal` 12.4% + S4 span/blend ~13%). |
 
 ## 9. Explicitly considered and rejected / deferred
 
