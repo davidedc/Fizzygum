@@ -1,6 +1,15 @@
 # Runtime performance — measured profile & ranked optimization plan
 
-**Status**: AUTHORED 2026-07-07 from a full profiling campaign of the live system. Not started.
+**Status**: AUTHORED 2026-07-07 from a full profiling campaign of the live system.
+**Progress**: H1 ✅ landed (2026-07-08). **Arc 2 (2026-07-08): F2 + S1 + S6a + S5 ✅ landed** —
+full `fg gauntlet` green (build + dpr1/dpr2/webkit 196/196 each + apps + paint-truthfulness +
+tiernaming/settle/capstone gates) **and** `fg homepage` native boot-smoke green; **zero reference
+churn** (byte-identical, cross-engine). Remaining: S2, S3, S4, S6b, F1, F3. See §8 ledger + §7.
+**⚠️ Verified-fact correction (2026-07-08):** S1's headline "−33% busy / −8.3% wall" is an artifact
+of the **unminified profiling build only** — the shipped build strips the log via minification and
+never pays it. See the S1 section in §5 and the methodology note below. This does NOT affect any
+other item: §4.3's log-stripped profile is exactly the shipped build's cost profile, so S2–S6/F1/F2
+remain ranked against the correct baseline.
 **Scope**: Fizzygum runtime + vendored SWCanvas + SystemTest harness.
 **Provenance of every number**: measured on this workspace on 2026-07-07 — build of 12:25
 (framework `6f6c834e` + the then-uncommitted WorldWdgt edit; SWCanvas repo HEAD `f463993`,
@@ -47,21 +56,24 @@ Where busy CPU goes (self time; "busy" = idle/program excluded):
 
 | # | Item | Repo | Measured basis | Expected win (busy CPU) | Effort | Risk |
 |---|---|---|---|---|---|---|
-| **S1** | Delete the per-call debug `console.log` in `Context2D.drawImage` | SWCanvas | **A/B measured: −33% busy, −8.3% wall @dpr1, 190/190 green** | ~33% dpr1 / ~12% dpr2 | trivial | none |
+| **S1** ✅ | Delete the per-call debug `console.log` in `Context2D.drawImage` | SWCanvas | A/B −33% busy @dpr1 **on the UNMINIFIED build only** — shipped build minifies the log away (see §2 caveat) | **shipped: ~0** (hygiene + honest profiles) | trivial | none |
 | **H1** | SHA-256 screenshot hashing → `crypto.subtle.digest` (same digest) | Fizzygum-tests | 6.9% dpr1 / 24.7% dpr2 busy; impl also makes 2 full-buffer copies per hash | most of that back | medium | low |
 | **S2** | drawImage fast path: hoist per-call invariants; axis-aligned 1:1 source-over row loop; kill per-pixel allocations | SWCanvas | `_drawImageInternal` 12.4% busy post-S1; 662,474 calls/suite, avg 1,163px, all unclipped | ~8–11% | medium | medium (byte-identical gate) |
 | **S3** | Tier-0 rectangular clipping — execute the SWCanvas clipping plan §9 | SWCanvas | clip build 2.6–2.8% + reads 6.4–10.3% + span detours; **76,675 clips/suite, 100.000% axis-aligned integer rects** | ~10–18% | large | medium |
 | **S4** | `blendPixel`: composite-op specialization, no per-pixel result object | SWCanvas | blendPixel 5.8% busy post-S1 + feeds 4.8–7.2% GC | ~4–6% (+GC) | small-med | medium (byte-identical gate) |
-| **F2** | Cache `WorldWdgt.getCanvasPosition` (forced reflow per synthesized mouse event) | Fizzygum | **5.8% busy post-S1** (single method!) | ~5% | small | low |
-| **S5** | Hoist `_evaluatePaintSource` out of per-pixel span loops for solid colors | SWCanvas | 4.3% busy post-S1 (+`withGlobalAlpha`/Color getters ~2%) | ~3–5% | small | low |
+| **F2** ✅ | Cache `WorldWdgt.getCanvasPosition` (forced reflow per synthesized mouse event) | Fizzygum | **5.8% busy post-S1** (single method!) — landed 2026-07-08, gauntlet+homepage green | ~5% (mostly suite CPU) | small | low |
+| **S5** ✅ | Hoist `_evaluatePaintSource` out of per-pixel span loops for solid colors | SWCanvas | 4.3% busy post-S1 — landed 2026-07-08 (span-level memoize; byte-identical, gauntlet green) | ~3–5% | small | low |
 | **F1** | Boot the test harness from a pre-compiled image | Fizzygum | boot = 3.5–3.7s/page in-browser compile; `js/pre-compiled.js` in normal builds is a 257-byte stub | ~2.5–3s × every page × every shard × every gauntlet leg | medium | medium |
-| **S6** | SWCanvas micro batch: `_requiresCanvasWideCompositing` allocates array per op; `withGlobalAlpha` identity fast-path; explain 0.7–1.3% `_performCanvasWideCompositing` | SWCanvas | ~1–2% combined | small | low |
+| **S6a** ✅ | `_requiresCanvasWideCompositing` allocated a fresh array + `.includes` per op → module-const `Set` | SWCanvas | landed 2026-07-08 (byte-identical, gauntlet green) | ~1% | small | low |
+| **S6b/c** | `withGlobalAlpha` identity fast-path (⚠ premultiplied-rounding risk — deferred); investigate 0.7–1.3% `_performCanvasWideCompositing` (likely profiler misattribution — Fizzygum never sets a canvas-wide op) | SWCanvas | ~1% combined | small | med (S6b) |
 | **F3** | Dirty-rect DOM present in `blitRenderCanvasToDOM` | Fizzygum | measured only 0.3% busy headless — **deprioritized by measurement** | headless ~0; real browsers unknown | small | low |
 
-S1 alone was A/B-proven: suite wall 374s→343s at frame-bound dpr1, busy CPU 128.0s→86.1s.
-Stacking S1+H1+S2+S4+S5+F2 addresses ≈60% of dpr1 busy and ≈70% of dpr2 busy **before** the
-larger S3 clipping work. Detailed items in §5; measured evidence in §3–4; verification
-protocol in §6; sequencing in §7.
+S1's A/B (suite wall 374s→343s at frame-bound dpr1, busy CPU 128.0s→86.1s) was measured on the
+**unminified** build; the shipped build already sits at that 86.1s post-S1 state (minification
+strips the log), so S1 lands as source hygiene, not a shipped speedup (§2 caveat, S1 in §5).
+Stacking H1+S2+S4+S5+F2 (+the landed S6a) addresses ≈60% of dpr1 busy and ≈70% of dpr2 busy
+**before** the larger S3 clipping work. Detailed items in §5; measured evidence in §3–4;
+verification protocol in §6; sequencing in §7.
 
 ---
 
@@ -84,6 +96,18 @@ protocol in §6; sequencing in §7.
 Known instrument caveat: the counter harness's transform tracker misses `canvas.width=`
 transform resets, so cumulative 'areas' sums drift at dpr2 (a resize-heavy run) — all
 point-classified stats (clip kinds, call counts, per-call areas at dpr1) are unaffected.
+
+**Minification caveat (added 2026-07-08, important for S1):** the CPU profiles run on the
+**unminified** shadow build (`mk-shadow-build.sh` appends `vendor/swcanvas/swcanvas.js`) so
+SWCanvas frames carry real names. The **shipped** build concatenates `swcanvas.min.js`, produced
+by SWCanvas `minify.sh` with terser `--compress drop_console=true,…,pure_funcs=['console.log',…]`.
+That is an *entirely different code path for anything terser removes*: the drawImage debug
+`console.log` (S1) is **deleted outright by minification**, so it costs nothing in the shipped
+build, the real `?sw=1` runtime, or `fg gauntlet` — its measured cost lives only in the profiled
+unminified build. This is unique to code minification *removes*; ordinary hot-loop functions are
+renamed/inlined, not deleted, so their profiled costs remain a faithful proxy. Net consequence:
+treat §4.1/§4.2's raw drawImage self-time as inflated by the log, and use **§4.3 (log-stripped) as
+the shipped-cost baseline** — which is exactly how every non-S1 item is already ranked.
 
 ---
 
@@ -169,10 +193,26 @@ dpr1: 374s → 343s wall (−8.3% at a frame-bound density). dpr2: 478s → 442s
 
 ## 5. The ranked items, in detail
 
-### S1 — Delete the debug `console.log` in `Context2D.drawImage` 【SWCanvas; trivial; A/B-proven】
+### S1 — Delete the debug `console.log` in `Context2D.drawImage` 【SWCanvas; trivial; LANDED as hygiene】
 
-**Where**: SWCanvas repo `src/core/Context2D.js:1855` (vendored copy: same code inside
-`Fizzygum/vendor/swcanvas/swcanvas{.min,}.js`, prepended into `fizzygum-boot-min.js`).
+**✅ LANDED 2026-07-08.** Deleted the block from `Context2D.drawImage` in the SWCanvas repo,
+rebuilt dist, re-vendored, `fg gauntlet` + `fg homepage` green.
+
+**⚠️ Reclassified — NOT a shipped-runtime win.** The vendored bundle that ships is
+`swcanvas.min.js`, and SWCanvas `minify.sh` runs terser with
+`drop_console=true,…,pure_funcs=['console.log',…]`, which **removes the drawImage log (and its
+argument-object construction) outright** — verified: 0 occurrences of `Core drawImage called with`
+in `swcanvas.min.js`, and `build_it_please.sh:553` cats the `.min.js`. So the shipped build, the
+real `?sw=1` runtime, and `fg gauntlet` **never executed this log**; its measured −33%/−8.3% (§4.5)
+lives only in the *unminified* profiling shadow build (`mk-shadow-build.sh:46` appends
+`swcanvas.js`). Deleting it from source is still worth it: it removes genuinely dead debug from a
+hot path AND makes the profiling harness honest — with the log present, every drawImage sample in
+the §6.4 re-profile loop was inflated. Because terser dropped it either way, the shipped
+`.min.js` is byte-identical w.r.t. S1 alone (the vendored `.min.js` changed here only because S6a+S5
+rode along in the same re-vendor).
+
+**Where**: SWCanvas repo `src/core/Context2D.js:1852` (the vendored `.min.js` never contained it —
+terser strips it; the unminified `swcanvas.js`/shadow build did).
 
 ```js
 // Debug logging for browser troubleshooting
@@ -315,9 +355,20 @@ first — it's ~100% of Fizzygum's traffic); have it write into the surface arra
 arithmetic. S2's fast path subsumes the drawImage caller; this item covers the span/polygon
 callers. Same byte-identical gate as S2.
 
-### F2 — Cache `WorldWdgt.getCanvasPosition` 【Fizzygum; small】
+### F2 — Cache `WorldWdgt.getCanvasPosition` 【Fizzygum; small; LANDED】
 
-**Where**: `src/WorldWdgt.coffee:455` (walks `offsetLeft/offsetTop/offsetParent` up the DOM);
+**✅ LANDED 2026-07-08.** `getCanvasPosition` now memoises into `_cachedCanvasPosition` and returns
+a **fresh copy per call** (a caller — `stretchWorldToFillEntirePage` — mutates the returned object,
+so handing back the cached object would corrupt it). Invalidated via `invalidateCanvasPositionCache`
+at the two canvas-geometry mutation sites (`sizeCanvasToTestScreenResolution`,
+`stretchWorldToFillEntirePage`) and eagerly in `resizeBrowserEventListener`; the per-test reset
+paths (`softResetWorld`/`_resetWorldNoSettle`) don't touch canvas geometry, so the cache stays valid
+across resets. `fg gauntlet` (every macro drives synthesised input through this) + `fg homepage`
+green. Note: the 5.8% is largely a *test-harness* effect (the control panel dirties the DOM, forcing
+a reflow on each read) — in production the fixed full-page canvas rarely moves — so this is mostly a
+suite-CPU win, plus a correct memoisation for production.
+
+**Where**: `src/WorldWdgt.coffee` `getCanvasPosition` (walks `offsetLeft/offsetTop/offsetParent` up the DOM);
 called per synthesized mouse event from `MousemoveInputEvent`'s constructor
 (`src/events-input/MousemoveInputEvent.coffee:13`) and from
 `ActivePointerWdgt.coffee:915/929`.
@@ -336,10 +387,20 @@ but the cache alone removes the interaction.)
 **Verify**: `fg gauntlet` (input positions feed every macro; a wrong offset shifts every
 synthesized click — failures would be loud and immediate).
 
-### S5 — Hoist `_evaluatePaintSource` for solid colors 【SWCanvas; small】
+### S5 — Hoist `_evaluatePaintSource` for solid colors 【SWCanvas; small; LANDED】
 
-**Where**: `src/renderers/PolygonFiller.js` `_evaluatePaintSource` (called per pixel from
-`_fillPixelSpan`), plus `Color.withGlobalAlpha` (`src/core/Color.js`).
+**✅ LANDED 2026-07-08.** In `PolygonFiller._fillPixelSpan`, when `paintSource instanceof Color`
+(Fizzygum: always, bar ~11 gradient uses/suite) the paint is now evaluated **once per span** and the
+resulting immutable `Color` reused for every pixel; gradients/patterns keep the per-pixel path.
+**Byte-identical by construction**: for a solid `Color`, `_evaluatePaintSource` ignores x/y and
+`globalAlpha`/`subPixelOpacity` are span-level scalars, so the hoisted call is the *same pure call
+with the same arguments*, just memoised — and `_blendPixel` only reads the color via getters (never
+mutates it). Verified: SWCanvas's own 218 tests + `fg gauntlet` (dpr1/dpr2/webkit) green, zero ref
+churn. (The other `_evaluatePaintSource` caller, `Rasterizer._performCanvasWideCompositing:345`, is a
+path Fizzygum never triggers — left as-is.)
+
+**Where**: `src/renderers/PolygonFiller.js` `_evaluatePaintSource` / `_fillPixelSpan`, plus
+`Color.withGlobalAlpha` (`src/core/Color.js`).
 
 **Why**: 4.3% busy post-S1: per PIXEL it runs a 5-way `instanceof` chain, then
 `withGlobalAlpha` (a new Color unless alpha is 1 — and it showed 0.8% self), plus r/g/b/a
@@ -375,16 +436,22 @@ inner loop noticeably snappier, browser-watched runs boot near-instantly.
 
 ### S6 — SWCanvas micro batch 【SWCanvas; small】
 
-- `Rasterizer._requiresCanvasWideCompositing` (`Rasterizer.js:116-119`): allocates the
-  `globalOps` array and runs `.includes` on EVERY draw op. Hoist to a module-const `Set`
-  (or a boolean cached when `globalCompositeOperation` is assigned).
-- `Color.withGlobalAlpha`: early-return `this` when `globalAlpha === 1` (the common case) —
-  removes a per-pixel/per-span allocation.
-- **Investigate**: `_performCanvasWideCompositing` showed 0.7% (dpr1) / 1.3% (dpr2) busy,
-  yet Fizzygum never sets a canvas-wide op (`grep globalCompositeOperation src/` is empty) —
-  find what path triggers it (fillText batch? putImageData? an internal 'copy'?); it may be
-  an unintended full-surface pass on some common operation. If so the win is bigger than the
-  line item suggests.
+- **S6a ✅ LANDED 2026-07-08**: `Rasterizer._requiresCanvasWideCompositing` allocated a fresh
+  `globalOps` array + `.includes` on EVERY draw op (called from `beginOp` + fill/stroke paths).
+  Hoisted to a module-const `CANVAS_WIDE_COMPOSITE_OPS = new Set([...])` before the class (the build
+  wraps every file in one IIFE, so a module-scoped const is safe — precedent: `SWCanvasConstants.js`)
+  and switched to `.has(...)`. Pure de-allocation, byte-identical; `fg gauntlet` green.
+- **S6b (DEFERRED — ⚠ not byte-identical-trivial)**: `Color.withGlobalAlpha` returning `this` when
+  `globalAlpha === 1` looked free, but `withGlobalAlpha` currently returns a **new** Color with
+  `premultiplied=false`, whereas `this` may be premultiplied. Downstream, `_evaluatePaintSource`'s
+  `subPixelOpacity < 1` branch reads `resultColor.premultiplied` and reconstructs via the r/g/b
+  getters, which round differently for premultiplied vs non-premultiplied storage — a possible ±1
+  drift. Excluded from the safe batch; revisit with the S2/S4 blend work under the byte-identical gate.
+- **Investigate (DEFERRED)**: `_performCanvasWideCompositing` showed 0.7% (dpr1) / 1.3% (dpr2) busy,
+  yet Fizzygum never sets a canvas-wide op (`grep globalCompositeOperation src/` empty; confirmed
+  2026-07-08) and `_requiresCanvasWideCompositing('source-over')` is false so the gated call at
+  `Rasterizer.js:415/431` never fires for Fizzygum — so this is **most likely profiler
+  self-time misattribution** (inlining), not a real Fizzygum path. Confirm before spending effort.
 
 ### F3 — Dirty-rect DOM present 【Fizzygum; small; DEPRIORITIZED】
 
@@ -419,16 +486,24 @@ The change itself is easy (world already has per-frame broken rects; use the
 
 ## 7. Suggested sequencing
 
-1. **S1** (hours, including re-vendor + gauntlet) — largest win per line of diff; unblocks
-   honest profiles for everything after (the log distorts every drawImage measurement).
-2. **F2** (hours) and **S6** (hours) — small, independent, low-risk.
-3. **H1** (1–2 days incl. webkit verification) — dominant *suite-speed* item at dpr2.
-4. **S2** (2–3 days) then **S4** (1 day, shares the blend-specialization machinery),
-   then **S5** (half day).
-5. **S3** (the companion plan's §9 Stages 1–3; ~1 week) — after S2/S4/S5 so its win is
-   measured against the already-cleaned span/blend baseline.
-6. **F1** (1–2 days) — orthogonal; any time.
-7. Re-profile; decide on S3 Stage 4 (Cohen-Sutherland / 1px strokes) and F3 with fresh data.
+**Done:** ✅ H1 (2026-07-08) · ✅ **S1 + F2 + S6a + S5** (2026-07-08, arc 2). Remaining below.
+
+1. ~~S1~~ ✅ (landed as hygiene — see §5; unblocks honest profiles: the log distorted every
+   unminified-build drawImage measurement).
+2. ~~F2~~ ✅ and ~~S6a~~ ✅ — small, independent, low-risk.
+3. ~~H1~~ ✅ — dominant *suite-speed* item at dpr2.
+4. ~~S5~~ ✅ (landed early — it re-vendored cleanly alongside S1/S6a and is byte-identical).
+   **Next real rendering wins:** **S2** (drawImage fast path, 2–3 days) then **S4** (1 day, shares
+   the blend-specialization machinery). These are the genuine *production* rendering wins (SWCanvas
+   raster) as opposed to the suite-speed items above; both are byte-identical-gated.
+5. **S3** (the companion plan's §9 Stages 1–3; ~1 week) — after S2/S4 so its win is measured
+   against the already-cleaned span/blend baseline. Largest single production win (`_getBit`
+   clip-mask reads 9.6% + mask build + span detours).
+6. **F1** (1–2 days) — orthogonal; any time. Suite/dev-loop boot speed.
+7. **S6b** (with the S4 blend work, under the byte-identical gate) + the
+   `_performCanvasWideCompositing` investigation.
+8. Re-profile (§6.4 loop — not yet re-run after arc 2); decide on S3 Stage 4
+   (Cohen-Sutherland / 1px strokes) and F3 with fresh data.
 
 ## 8. Post-landing measurement ledger
 
@@ -436,6 +511,7 @@ The change itself is easy (world already has per-frame broken rects; use the
 |---|---|---|---|---|---|
 | — | — | — | — | — | baseline rows above |
 | 2026-07-08 | **H1** (crypto.subtle) | — (not re-profiled) | — (not re-profiled) | 1.49 / 1.91 min (parallel, 5 shards) | Per-hash A/B: 80.95→2.92 ms = **27.7×** on a 6.45 MB dpr2 frame, digests identical. Full-suite busy-CPU delta not yet measured with the profiling harness (was 6.9% dpr1 / 24.7% dpr2 of busy; expect ~all recovered). Gauntlet green, zero ref churn. |
+| 2026-07-08 | **F2 + S1 + S6a + S5** (arc 2) | — (not re-profiled) | — (not re-profiled) | dpr1 2.50 / dpr2 1.99 min (parallel, 5 shards) | Full `fg gauntlet` green (dpr1/dpr2/webkit 196/196 + apps + paint + tiernaming/settle/capstone) **and** `fg homepage` boot-smoke green; **zero reference churn**, cross-engine. dpr2 first-pass showed a **flaky parallel-boot stall** (shards 0/3/4: `ReferenceError: CoffeeScript is not defined` at boot → "did not start within 90s"; 0 pixel failures); clean re-run 5/5. Targeted busy-CPU deltas (F2 5.8%, S5 4.3%, S6a ~1%; S1 shipped ~0) not yet re-profiled — run the §6.4 loop next. |
 
 ## 9. Explicitly considered and rejected / deferred
 

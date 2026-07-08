@@ -451,23 +451,42 @@ class WorldWdgt extends PanelWdgt
 
     @changed()
 
+  # Memoised absolute position of the world canvas within the document.
+  # Reading offsetLeft/offsetTop/offsetParent forces a synchronous style+layout
+  # reflow whenever the DOM is dirty; the SystemTests control panel writes to the
+  # DOM on every logged message, so recomputing this per synthesised input event
+  # was ~5.8% of suite CPU (a forced reflow each time). The world canvas is
+  # absolutely positioned and only moves on a resize / explicit reposition — and
+  # appending control-panel messages (not an ancestor of the canvas) never moves
+  # it — so we cache the value and invalidate it only where the canvas geometry
+  # actually changes (see invalidateCanvasPositionCache callers). Fizzygum's world
+  # canvas fills a fixed viewport, so page scroll is not a factor; add scroll
+  # invalidation here if the canvas is ever embedded in a scrollable container.
+  _cachedCanvasPosition: nil
+
+  invalidateCanvasPositionCache: ->
+    @_cachedCanvasPosition = nil
+
   # answer the absolute coordinates of the world canvas within the document
   getCanvasPosition: ->
-    if !@worldCanvas?
-      return {x: 0, y: 0}
-    pos =
-      x: @worldCanvas.offsetLeft
-      y: @worldCanvas.offsetTop
-
-    offsetParent = @worldCanvas.offsetParent
-    while offsetParent?
-      pos.x += offsetParent.offsetLeft
-      pos.y += offsetParent.offsetTop
-      if offsetParent isnt document.body and offsetParent isnt document.documentElement
-        pos.x -= offsetParent.scrollLeft
-        pos.y -= offsetParent.scrollTop
-      offsetParent = offsetParent.offsetParent
-    pos
+    unless @_cachedCanvasPosition?
+      if !@worldCanvas?
+        # not cached: recompute once worldCanvas exists
+        return {x: 0, y: 0}
+      x = @worldCanvas.offsetLeft
+      y = @worldCanvas.offsetTop
+      offsetParent = @worldCanvas.offsetParent
+      while offsetParent?
+        x += offsetParent.offsetLeft
+        y += offsetParent.offsetTop
+        if offsetParent isnt document.body and offsetParent isnt document.documentElement
+          x -= offsetParent.scrollLeft
+          y -= offsetParent.scrollTop
+        offsetParent = offsetParent.offsetParent
+      @_cachedCanvasPosition = {x: x, y: y}
+    # always hand back a fresh object — callers (e.g. stretchWorldToFillEntirePage)
+    # mutate the returned position, which must never corrupt the cache
+    {x: @_cachedCanvasPosition.x, y: @_cachedCanvasPosition.y}
 
   colloquialName: ->
     "Desktop"
@@ -1590,6 +1609,7 @@ class WorldWdgt extends PanelWdgt
     @worldCanvas.height = Math.round(440 * ceilPixelRatio)
     @worldCanvas.style.width = "960px"
     @worldCanvas.style.height = "440px"
+    @invalidateCanvasPositionCache()
     @syncRenderCanvasToWorldCanvas()
 
     bkground = document.getElementById("background")
@@ -1626,7 +1646,10 @@ class WorldWdgt extends PanelWdgt
       @syncRenderCanvasToWorldCanvas()
       @_applyExtent new Point clientWidth, clientHeight
       @_reLayoutDesktop()
-  
+    # the canvas may have been repositioned (style.left/top above) and/or resized —
+    # drop the memoised position so the next read reflects the new geometry
+    @invalidateCanvasPositionCache()
+
 
   _reLayoutDesktop: ->
     basementOpenerWdgt = @firstChildSuchThat (w) ->
@@ -1934,6 +1957,9 @@ class WorldWdgt extends PanelWdgt
     window.addEventListener "drop", @dropBrowserEventListener, false
 
     @resizeBrowserEventListener = =>
+      # a window resize can move the canvas within the document even when it does
+      # not route through stretchWorldToFillEntirePage — invalidate eagerly
+      @invalidateCanvasPositionCache()
       @inputEventsQueue.push ResizeInputEvent.fromBrowserEvent event
 
     # this is a DOM thing, little to do with other r e s i z e methods
