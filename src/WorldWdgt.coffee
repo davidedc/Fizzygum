@@ -540,6 +540,10 @@ class WorldWdgt extends PanelWdgt
     (new PatchProgrammingApp).createOpener()
     (new GenericPanelApp).createOpener()
     (new ToolbarsApp).createOpener()
+    # »>> this part is excluded from the fizzygum homepage build
+    # (FridgeMagnetsApp and the whole fizzytiles family ship only in the full build)
+    (new FridgeMagnetsApp).createOpener()
+    # this part is excluded from the fizzygum homepage build <<«
     exampleDocsFolder = @makeFolder nil, nil, "examples"
     (new DegreesConverterApp).createOpener exampleDocsFolder
     (new SampleSlideApp).createOpener exampleDocsFolder
