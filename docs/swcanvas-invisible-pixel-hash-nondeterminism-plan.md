@@ -1,20 +1,34 @@
 # SWCanvas invisible-pixel hash nondeterminism — problem + handling (DRAFT)
 
-**Status:** DRAFT / parked (2026-07-06). Not scheduled. Written after the drag-embed Phase 3 arc surfaced a
-concrete instance. This is a *diagnosis + options* draft, not a fully-designed solution — it deliberately leaves
-the mechanism confirmation and the final choice open.
+**Status:** ⛔ PARKED / NOT-ACTIONABLE (as of 2026-07-08 confirmation). DRAFT written 2026-07-06 after the
+drag-embed Phase 3 arc. **Facts re-verified + confirmations RUN 2026-07-08:**
+- **§2 mechanism confirmation → the A=0-residue hypothesis is CONTRADICTED** (the hashed whole-desktop buffer is
+  always fully opaque; Option A would be a no-op). The §1 flake does not reproduce by the single-run raw-vs-PNG
+  form NOR by the faithful §2.5(a) capture→verify path (a reconstructed post-drop test captured + re-verified,
+  dpr1+dpr2 both PASSED). See the **§2 CONFIRMATION RESULTS** box. Recommendation (§4) superseded → park until a
+  fresh repro exists.
+- **§2.7 H1 secure-context probe → ✅ GREEN** (`crypto.subtle` available + correct over `file://` on Chrome AND
+  WebKit). H1 (perf) is INDEPENDENT of this plan and unaffected by the parking.
+Line refs refreshed in §1; §2.7 added on the H1 interaction + the cross-engine hash-identity invariant.
 
 ## §1 — The problem, precisely
 
 The SystemTest suite matches SWCanvas renders by a **raw-pixel SHA-256** (`dataHash`), NOT by comparing the PNG
 files. Two code paths compute it and MUST agree (`Fizzygum-tests/CLAUDE.md` records this sync constraint):
 
-- **Live (in-browser, at run/capture time):** `AutomatorPlayer.coffee:180` —
+- **Live (in-browser, at run/capture time):** `AutomatorPlayer.compareScreenshots` (`AutomatorPlayer.coffee:248`
+  as of 2026-07-08 — the old ":180" is stale; the audit code below shifted it) —
   `liveHash = SHA256.hashRawPixels renderCanvas.width, renderCanvas.height, renderCanvas.data`. The input is the
   SWCanvas framebuffer `renderCanvas.data` — the raw, non-premultiplied RGBA byte array, **including every
-  pixel's R,G,B even where A (alpha) is 0**.
-- **Offline (Node, recompress/verify):** `scripts/recompress-swcanvas-references.js` `rawPixelHash()` — SHA-256
-  of `[width u32 BE][height u32 BE][raw RGBA8 bytes]`, where the RGBA comes from decoding the stored `.png`.
+  pixel's R,G,B even where A (alpha) is 0**. (`renderCanvas` = `world.fullRenderCanvasAsItAppearsOnScreen()`,
+  `Widget.coffee:2286` — a **fresh** disposable canvas per call, drawn from the pristine SWCanvas software surface;
+  relevant below because a canonicalisation pass can mutate it in place.) The **same** `hashRawPixels` runs at TWO
+  more sites: `AutomatorPlayer.coffee:62` (`liveCanvasFingerprintNow`, the paint-truthfulness audit/capstone) and
+  the `SystemTestsReferenceImage` **constructor** (`SystemTestsReferenceImage.coffee:28`, capture + failure-dump
+  paths only — not per-frame). All three must stay in sync with the offline hasher; H1 (below) may split them.
+- **Offline (Node, recompress/verify):** `scripts/recompress-swcanvas-references.js` `rawPixelHash()`
+  (`:86-94`) — Node `crypto.createHash('sha256')` over `[width u32 BE][height u32 BE][raw RGBA8 bytes]`, where the
+  RGBA comes from decoding the stored `.png`.
 
 A reference stores its `dataHash` in its filename; the loader matches `liveHash` against it. **The `.png` is
 "same bytes, for browsing" — it is NOT the thing compared.**
@@ -48,6 +62,56 @@ repro (`macroDragEmbedCandidateChangeResets` post-drop frame is a ready-made rep
 to emit the raw buffer), diff byte-by-byte, and for each differing byte record its pixel's alpha. Expected: all
 differing bytes are R/G/B of A=0 (or otherwise not-composited) pixels. If instead they are visible pixels, this
 is a *different* bug (a real render nondeterminism) and belongs in `DETERMINISM.md`, not here.
+
+### ⚠ §2 CONFIRMATION RESULTS — 2026-07-08: the A=0 hypothesis is CONTRADICTED by direct measurement
+
+Ran the confirmation (headless Chrome, SWCanvas, dpr2, against the build from that morning). Instead of the
+two-process capture-vs-run byte diff, used the equivalent single-run form — on a chosen frame, compare the raw
+buffer hash against (a) a copy canonicalised `A==0 → RGB=0` (Option A's predicate) and (b) the frame's OWN PNG
+round-trip decoded by the actual offline decoder (`recompress-swcanvas-references.js`). Scenes measured:
+
+1. fresh booted world; 2. the "cheapest repro" (one panel + window, brief charge, drop AT ONCE); 3. the **exact
+committed `macroDragEmbedCandidateChangeResets` scene** (two panels, arm over A, move onto B, release AT ONCE),
+**fast-sampled 15×** at 30 ms through the release + the settled post-drop frame; 4. a widget deliberately
+positioned to **overflow** the desktop's right edge.
+
+**Every frame — 20+ samples across all four scenes — was 100 % opaque:** `A==255` on every pixel, ZERO `A==0`,
+ZERO partial-alpha, ZERO residue. And in every case `rawHash == canonHash == pngHash` (the PNG round-trip is
+byte-lossless for these buffers). The overflow scene still produced the plain `960×440`-logical desktop rectangle
+(`fullRenderCanvasAsItAppearsOnScreen()` on `world` yields the opaque desktop; the child did not add A=0 margin).
+
+**What this means:**
+- The buffer the suite actually hashes — `world.fullRenderCanvasAsItAppearsOnScreen().data`, whole-desktop only
+  (`AutomatorPlayer.coffee:240` comment) — is a **fully-opaque rectangle**. There are **no A=0 pixels** in it to
+  carry invisible residue, so **Option A's `if A==0 → RGB=0` predicate never fires: Option A is a NO-OP** and
+  cannot fix anything as specified. Option B (canonicalise the render/clear path) likewise has no A=0 target here.
+- **No raw-vs-PNG divergence reproduced** in a single run, and the original §1 capture-vs-run divergence did **not**
+  reproduce. Given full opacity it also **could not** have been A=0 residue: any RGB difference would be in a
+  *visible* (A=255) pixel and the PNGs would then differ — but §1 recorded them as pixel-identical. So the §1
+  diagnosis (this doc's own leading hypothesis) is **either wrong or no longer triggerable in the current tree**
+  (several arcs landed 2026-07-06 → 07-08, incl. the paint-truthfulness capstone/audit and layout/paint-gate work,
+  any of which could have removed the transient).
+
+**Consequence for this plan:** do **NOT** implement Option A or B now — there is no reproducing bug and the
+diagnosed mechanism is contradicted. **H1 (perf) is independent and unaffected** — it changes only the hash
+*function* (§2.7), not the input, and stands on its own.
+
+**Extra-mile follow-up (2026-07-08) — the faithful §2.5(a) capture→verify path also does NOT reproduce it.**
+Not content with the single-run form, reconstructed the *original* abandoned shape as a throwaway test
+(`SystemTest_zzPostDropResidueProbe`: the committed 2-panel scene + a trailing **post-drop** screenshot — exactly
+the frame the committed test dropped), full-built to register it, and ran the real
+`capture-macro-test-references.js --dprs=1,2` (the same `--capture-ref` capture then fresh verify legs that
+ORIGINALLY surfaced the flake). Result: **capture baked dpr2 `dataHash 0d167205fc1a4886…`; the fresh verify leg
+re-matched it — dpr2 AND dpr1 both `TEST PASSED`, `failedTests: []`.** So the capture-env and run-env buffers
+produce the IDENTICAL hash — the §1 capture-vs-run divergence is GONE in the current tree. (Cross-check: that dpr2
+`dataHash` is byte-identical to what the single-run in-page probe computed across 3 separate processes — the probe
+measured the right frame.) The throwaway test was deleted and both repos left clean afterwards.
+
+**Net:** the flake does not reproduce by EITHER method (single-run raw-vs-PNG, or the faithful capture→verify), and
+the hashed buffer is structurally always-opaque. The plan is **parked as not-actionable**. If it ever recurs,
+re-run the §2.5(a) capture→verify to catch it live, then byte-diff the two real divergent buffers and classify the
+differing bytes by alpha BEFORE choosing any fix; if the differing bytes are *visible* (A>0), it is a
+`DETERMINISM.md` render-nondeterminism, not this bug.
 
 ## §2.5 — How to reproduce
 
@@ -116,6 +180,75 @@ Cheapest smallest-possible repro to try first: a single receptive panel + a wind
 AT ONCE, screenshot the post-drop frame at dpr2 — minimise everything else and see if the ring teardown alone is
 enough (it isolates the charging-ring `DragChargingRingWdgt`/reconciler-teardown path as the suspected source).
 
+## §2.7 — Cross-engine hash identity + interaction with the H1 perf change (crypto.subtle)
+
+This plan and **H1** in `runtime-performance-optimization-plan.md` (SHA-256 → `crypto.subtle.digest`) touch the
+SAME hashing path, so decide them together. Verified 2026-07-08 against the live source.
+
+**They act on ORTHOGONAL axes:**
+- **H1 changes the hash FUNCTION** (hand-rolled JS SHA-256 loop → native `crypto.subtle.digest('SHA-256', …)`).
+  Same algorithm ⇒ **byte-identical digest for identical input ⇒ zero reference churn.**
+- **This plan (Option A) changes the hash INPUT** (canonicalise invisible pixels before hashing). Different input
+  ⇒ every stored `dataHash` changes ⇒ **mass backfill** (re-hash + rename).
+
+They **compose cleanly**: canonicalise the input bytes, *then* digest. Order of operations is independent of which
+engine computes the digest.
+
+**The cross-browser / cross-platform identity requirement is FREE for the hash function — because SHA-256 is a
+bit-exact spec (FIPS 180-4), not an implementation detail.** Given identical input bytes, the hand-rolled JS
+SHA-256, `crypto.subtle`'s SHA-256, and Node's `crypto.createHash('sha256')` ALL emit the identical 64-hex digest,
+on V8 (Chrome), JSC (WebKit), and Node alike — no floating point, no platform variance. The suite ALREADY leans on
+this (Chrome-captured live hash == WebKit-verify live hash == Node recompress hash today). The `"abc"` NIST vector
+self-test in `SHA256.coffee:22` is the conformance proof. Consequences:
+- **H1's engine swap cannot break cross-engine identity.** ✓
+- **Option A's canonicalisation must ALSO be cross-engine identical** — trivially satisfied *iff* it is a plain
+  integer byte op (`if A==0 → R=G=B=0`), no float. Keep it that way. ✓
+- **The real cross-platform risk is the INPUT bytes, not the hash** — i.e. the framebuffer residue, which is
+  exactly this bug. Option A moots it (canonicalises it away); Option B tries to make the raw buffer deterministic
+  on both engines (and must be *proven* engine-identical — see §5).
+
+**Load-bearing question for H1's *preferred* path — ✅ RESOLVED empirically 2026-07-08.** `SHA256.coffee:11-12`
+asserts *"SubtleCrypto is async and unavailable over `file://`"*, which **contradicted** H1's claim that "`file://`
+pages in Chrome ARE a secure context, so `crypto.subtle` is available." Probed both engines via the real
+`headless-driver.js` launch config (Chrome `--allow-file-access-from-files`; WebKit `bypassCSP`), over a `file://`
+page, and actually PERFORMED a digest:
+
+| engine | `location.protocol` | `isSecureContext` | `typeof crypto.subtle.digest` | `digest('SHA-256','abc')` | pageErrors |
+|---|---|---|---|---|---|
+| Chrome (Puppeteer) | `file:` | `true` | `function` | `ba7816bf…20015ad` ✓ vector | none |
+| WebKit (Playwright) | `file:` | `true` | `function` | `ba7816bf…20015ad` ✓ vector | none |
+
+So `crypto.subtle.digest('SHA-256', …)` **is available and correct over `file://` on BOTH engines**, and returns
+the SAME digest — matching the JS impl's own `"abc"` self-test vector. The `SHA256.coffee:11-12` comment is
+**outdated** (correct it during execution). H1's crypto.subtle path is viable on both legs — no `http://` fallback
+needed. (`window.isSecureContext` for `file:` is scheme-based, so the minimal probe page is representative of the
+real harness's `file://` origin.) A sync JS fallback is therefore optional, not forced — but see the async-ripple
+note below for why the cold `SystemTestsReferenceImage` constructor path keeps it anyway.
+
+**Copy-count caveat (why H1 alone can't reach zero copies):** WebCrypto `crypto.subtle.digest` is **one-shot** —
+it takes a single contiguous `BufferSource`; there is NO streaming `.update()` (unlike Node's `createHash`). So the
+crypto.subtle path MUST still concatenate `[8-byte header][RGBA]` into one buffer = **one** copy. Today's code does
+**two** (`SHA256.coffee:53` builds `[8+len]`, then `:84` builds the padded SHA block); crypto.subtle removes the
+*second* (native internal padding) but not the *first*. H1's "drop BOTH copies" applies only to its *synchronous
+fallback* (a hand-rolled, streamable loop). — This matters for Option A: since `renderCanvas` is a fresh disposable
+canvas (§1), Option A's canonicalisation can run **in place** on `renderCanvas.data` (a write pass, no new alloc),
+then the one header-concat copy, then the digest. So Option A + H1 = one in-place write pass + one copy + native
+digest — still strictly cheaper than today's two copies + slow JS loop; Option A does NOT double memory traffic.
+
+**Async ripple (H1) is wider than "compareScreenshots + callers":** the `SystemTestsReferenceImage` constructor
+(`:28`) also hashes, and a constructor cannot `await`. That path is capture/failure-only (cold), so the clean split
+is: crypto.subtle (async) on the hot compare/fingerprint path; **keep** the synchronous JS `SHA256` for the
+constructor/capture path (identical digest by spec). **Implication for Option A:** if H1 keeps a sync fallback, the
+canonicalisation predicate must be applied in **three** lockstep sites — the crypto.subtle hot path, the retained
+JS sync path, AND Node's `rawPixelHash` — not two. Weigh that against Option A's "one subtle rule, forever" con.
+
+**Sequencing / synergy:** if Option A is chosen, **fold H1 into its backfill.** Option A already forces a one-time
+re-hash + rename of every SWCanvas reference; that is the natural moment to also adopt crypto.subtle (Node backfill
+uses `crypto`, browser live uses `crypto.subtle` — same digest), so the reference set is disrupted ONCE, with one
+cross-engine re-verify, instead of twice. Conversely, if H1 ships FIRST and alone, its selling point is precisely
+**zero churn** (references untouched) — a later Option A is then a separate, second backfill. (Breadcrumb added to
+the H1 section noting that Option A voids H1's zero-churn premise.)
+
 ## §3 — Options for handling
 
 ### Option A — Make the hash perceptual (canonicalise invisible pixels before hashing) + BACKFILL
@@ -125,7 +258,8 @@ minimally `if A == 0: R=G=B=0` — before feeding bytes to SHA-256. The hash the
   renamed (the hash is in the filename). Mechanical and scriptable (decode PNG → canonicalise → re-hash → rename;
   the recompress script already has a from-scratch PNG decoder to build on). ~all SWCanvas refs across the suite.
 - **Sync constraint:** `SHA256.coffee` (`hashRawPixels`) and `recompress-swcanvas-references.js` (`rawPixelHash`)
-  must apply the IDENTICAL canonicalisation, forever (they already must produce identical digests).
+  must apply the IDENTICAL canonicalisation, forever (they already must produce identical digests). **If H1 lands
+  a crypto.subtle hot path + a retained sync fallback, that becomes THREE lockstep sites (see §2.7).**
 - **Pro:** robust — invisible differences can NEVER fail a test again, whatever the render leaves behind. Aligns
   the contract with intent ("test what's visible").
 - **Con:** one-time mass backfill; widens the hashing contract; a subtle rule both hashers must keep in lockstep.
@@ -149,8 +283,16 @@ Keep asserting only settled/visible frames and avoid capturing right after a rap
 Phase 3 did). Cheap, but leaves a latent trap for every future author and every ephemeral-heavy frame. Not
 recommended as the end state; fine as the interim.
 
-## §4 — Recommendation lean (not final)
+## §4 — Recommendation lean
 
+**SUPERSEDED by the §2 confirmation (2026-07-08).** The original lean was **Option A** (perceptual hash +
+backfill). The §2 measurement shows the hashed buffer is always fully opaque, so **Option A is a no-op and is no
+longer recommended**; Option B has no A=0 target either. **Current recommendation: park the plan** (no reproducing
+bug; diagnosed mechanism contradicted) and, if the flake recurs, first capture the two real divergent raw buffers
+(§2.5(a)) and characterise the differing bytes' alpha before choosing ANY fix. Do not backfill references or widen
+the hashing contract on the strength of the (now-contradicted) A=0 hypothesis.
+
+--- *original lean, retained for history:* ---
 Lean **Option A** (perceptual hash + backfill): it kills the entire class rather than one instance, and the
 backfill — while broad — is mechanical and one-time. Option B is cleaner in spirit (the raw buffer *should* be
 deterministic) but is open-ended (no guarantee all erase paths are found, and new ones will regress silently).
@@ -158,10 +300,15 @@ A pragmatic combo is possible: do A for the guarantee, AND fix the specific egre
 raw buffer is also cleaner. Decide after the §2 confirmation.
 
 ## §5 — Open questions
-- Confirm the residue is exactly A=0 pixels (or characterise precisely what's invisible-yet-hashed) — §2.
+- ~~Confirm the residue is exactly A=0 pixels~~ — ✅ RESOLVED 2026-07-08 (§2 CONFIRMATION RESULTS): there is NO
+  A=0 residue; the hashed whole-desktop buffer is fully opaque, so the A=0 hypothesis is CONTRADICTED. Plan parked.
 - Does the PNG export flatten over an opaque background, or store RGBA and just happen to match? (Affects whether
   "invisible" == "A==0" or something broader.) Inspect the capture/export path in the harness.
 - Backfill blast radius: count SWCanvas refs; confirm the rename+manifest update is fully scriptable and that a
   `--check-only` re-verify passes suite-wide after.
 - Cross-engine: the same canonicalisation must hold on V8 (Chrome) and JSC (WebKit) — the shim already makes trig
   identical; verify the transparent-pixel residue (if render-side) is also engine-identical, or Option A moots it.
+- H1 conjunction (§2.7): ✅ `crypto.subtle.digest` availability over `file://` CONFIRMED on both engines
+  (2026-07-08) — H1's preferred path is viable; correct the stale `SHA256.coffee:11-12` comment during execution.
+  Still to decide: sequencing — fold H1 into Option A's backfill, or ship H1 first (zero-churn) and Option A as a
+  separate later backfill.
