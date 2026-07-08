@@ -88,6 +88,13 @@ class Macro
           # a macro's screenshot step: hold until the (SWCanvas) software surface
           # is settled + warm so the captured pixels are deterministic.
           return unless @readyForMacroScreenshot()
+        else if @returnFromLastMacroStep is "waitForScreenshotHash"
+          # the SWCanvas screenshot hash (crypto.subtle) is ASYNC (perf item H1): hold the
+          # macro — and thus the end of the test — until the pending digest has resolved and
+          # its verdict + live fingerprint are recorded, so a later assertScreenshotsIdentical
+          # sees the fingerprint and the test cannot finish mid-hash. Native/HTML5 hashing is
+          # synchronous, so nothing is pending and this settles instantly.
+          return unless world.automator.player.screenshotHashSettled()
         else if @returnFromLastMacroStep? # it's the number of milliseconds
           # numeric `yield N` = wait N ms of REAL wall-clock (msSinceLastExecutedMacroStep
           # accrues real per-cycle deltas). This is the NON-scaled real-time SETTLE channel,

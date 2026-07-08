@@ -195,9 +195,18 @@ dist → re-vendor into Fizzygum (`./scripts/vendor-swcanvas.sh`, updates `vendo
 
 ### H1 — SHA-256 screenshot hashing via `crypto.subtle.digest` 【Fizzygum-tests; medium】
 
+**✅ LANDED 2026-07-08 (the preferred async path).** Added `SHA256.hashRawPixelsAsync` (native
+`crypto.subtle`); `compareScreenshots` snapshots the surface synchronously then hashes off-thread and
+records the match when it resolves; a new `"waitForScreenshotHash"` Macro pump gate holds the macro (and
+test completion) until each digest settles (so `assertScreenshotsIdentical` still sees fingerprints). Cold
+paths (the `SystemTestsReferenceImage` ctor + the paint-truthfulness fingerprint) keep the sync JS impl —
+same digest by spec. **Verified:** full `fg gauntlet` green (dpr1/dpr2/webkit/apps + paint/tiernaming/
+settle/capstone, 194 tests, 0 failed) → **zero reference churn, cross-engine**; and a direct A/B on a real
+dpr2 frame (1920×880, 6.45 MB) measured **80.95 ms → 2.92 ms per hash = 27.7×**, digests identical. See §8.
+
 **Where**: `Fizzygum-tests/Automator-and-test-harness-src/SHA256.coffee` (`hashBytes`,
-`hashRawPixels`), consumed by `AutomatorPlayer.compareScreenshots`
-(`AutomatorPlayer.coffee:171/180`) and `SystemTestsReferenceImage.coffee:28`.
+`hashRawPixels`, `hashRawPixelsAsync`), consumed by `AutomatorPlayer.compareScreenshots`
+(`AutomatorPlayer.coffee:248`) and `SystemTestsReferenceImage.coffee:28`.
 
 **Why**: 6.9% of busy at dpr1 and **24.7% at dpr2** (72.3s — the hottest single function;
 each dpr2 screenshot hashes 2200×1600×4 = 14.08MB). On top of the JS compression loop,
@@ -426,6 +435,7 @@ The change itself is easy (world already has per-frame broken rects; use the
 | Date | Item landed | dpr1 busy (was 128.0s / 86.1s post-S1) | dpr2 busy (was 292.3s) | Suite wall dpr1/dpr2 | Notes |
 |---|---|---|---|---|---|
 | — | — | — | — | — | baseline rows above |
+| 2026-07-08 | **H1** (crypto.subtle) | — (not re-profiled) | — (not re-profiled) | 1.49 / 1.91 min (parallel, 5 shards) | Per-hash A/B: 80.95→2.92 ms = **27.7×** on a 6.45 MB dpr2 frame, digests identical. Full-suite busy-CPU delta not yet measured with the profiling harness (was 6.9% dpr1 / 24.7% dpr2 of busy; expect ~all recovered). Gauntlet green, zero ref churn. |
 
 ## 9. Explicitly considered and rejected / deferred
 

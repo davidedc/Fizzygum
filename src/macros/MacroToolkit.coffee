@@ -1053,6 +1053,7 @@ class MacroToolkit
         yield "waitNoInputsOngoing"
         yield "waitForScreenshotReady"
         world.automator.player.compareScreenshots screenShotImageName
+        yield "waitForScreenshotHash"
     """
 
     macroSubroutines
