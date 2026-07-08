@@ -198,7 +198,14 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
       @engine.drawMesh @surface, @depth, mesh, translation, linear9
 
     appendedFunction.apply @ if appendedFunction?
-    return
+    # Return TRUTHY. When a primitive is a qualifying command's scoped block
+    # (e.g. `rotate box` -> rotate(this.box)), LCLTransforms pops its matrix only
+    # if the block returns non-null; a null/undefined return is the LCL "fake
+    # function" signal (a conditional that drew nothing) which instead DISCARDS
+    # the push so the transform PERSISTS. A real primitive always drew, so it
+    # must return truthy — else `rotate box` would leak its rotation onto every
+    # later shape (the second box in `rotate box` / `box` would rotate too).
+    true
 
   # ---- transform commands: delegate to the matrix stack ---------------------
   # (LCLTransforms owns the appended-function block semantics; it applies each
@@ -214,12 +221,28 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
   # ---- color / background ---------------------------------------------------
 
   fill: ->
-    a = arguments[0]
-    if typeof a is "number" and typeof arguments[1] is "number" and typeof arguments[2] is "number"
-      @currentFillRGB = [a, arguments[1], arguments[2]]
+    args = arguments
+    a = args[0]
+    newColor = nil
+    if typeof a is "number" and typeof args[1] is "number" and typeof args[2] is "number"
+      newColor = [a, args[1], args[2]]
     else if a? and a.r? and a.g? and a.b?
-      @currentFillRGB = [a.r, a.g, a.b]
-    @_passBlock arguments
+      newColor = [a.r, a.g, a.b]
+    # A trailing function is the scoped block: the fill then applies ONLY inside
+    # it (save the colour, set it, run the block, restore) — the colour analogue
+    # of the matrix commands' push/pop. With no block the fill is global (it
+    # persists to the following shapes). This scopes `fill red box` to the box.
+    hasBlock = false
+    for arg in args when Utils.isFunction arg
+      hasBlock = true
+    if hasBlock
+      saved = @currentFillRGB
+      @currentFillRGB = newColor if newColor?
+      @_passBlock args
+      @currentFillRGB = saved
+    else
+      @currentFillRGB = newColor if newColor?
+    true
 
   background: ->
     a = arguments[0]
@@ -233,6 +256,7 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
   run: (functionToBeRun, chainedFunction) ->
     functionToBeRun.apply @ if Utils.isFunction functionToBeRun
     chainedFunction.apply @ if Utils.isFunction chainedFunction
+    true
 
   # ---- v1 no-op commands ----------------------------------------------------
   # Every LCL command that the preprocessor @-binds must EXIST as a method here
@@ -241,7 +265,9 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
   _passBlock: (args) ->
     for arg in args when Utils.isFunction arg
       arg.apply @
-    return
+    # truthy for the same nested-closure reason as _drawMesh (so a no-op used as
+    # `rotate line` scopes rather than leaks the transform)
+    true
 
   # noOpLCLCommand (deferred): drawing styles / lighting / sound / server
   stroke: -> @_passBlock arguments

@@ -724,3 +724,41 @@ homepage` = BOOT OK (twgl-removed homepage boots clean; normal build restored).
    (`docs/dataflow-engine-*`, `docs/accidental-complexity-*`,
    `docs/livecodelang-*`, `docs/profiling/`, `docs/done/`) stay unstaged.
 3. Fizzygum-tests: the new macro test (+ its captured refs + visualisation).
+
+**LANDED + PUSHED 2026-07-08:** SWCanvas `f463993..f5f3f12`→main;
+Fizzygum `e7510fa0..b8463ab7`→master (launcher `1284a6fc` + arc `b8463ab7`);
+Fizzygum-tests `899a86775..24e46f242`→master. From-pin round-trip verified
+against the pushed SHA.
+
+---
+
+## §10 POST-LANDING FIX — LCL block scoping (2026-07-08, owner-reported)
+
+After the arc landed, the owner reported that `rotate box` ⏎ `box` rotated BOTH
+boxes (should be one rotating, one still). Diagnosis (compiled-source dump): the
+preprocessor is correct — `rotate box` compiles to `this.rotate(this.box)` (box
+as rotate's scoped block) — the bug was in the RUNTIME. **Root cause:** the
+primitives (`box`/`ball`, via `_drawMesh`) returned `undefined`, which
+`LCLTransforms.{rotate,move,scale}` read as the LCL "fake function" signal (a
+conditional that drew nothing) → `discardPushedMatrix` (KEEP the transform)
+instead of `popMatrix` (restore it) → the transform leaked onto every following
+shape. The ported `LCLTransforms` comment describes this distinction; the port
+just never gave the primitives a truthy return.
+
+**Fix (both in `FridgeMagnets3DCanvasWdgt.coffee`):** (1) `box`/`ball` (+ the
+block-passing no-op commands + `run`) return truthy, so a qualifying command
+`popMatrix`-restores its matrix and the transform scopes to its block; (2) the
+same latent leak existed for **`fill`** (set the colour with no save/restore) —
+`fill` now saves/sets/runs-block/restores when it has a block (a block-less
+`fill` stays global), the colour analogue of push/pop. Verified structurally
+(`worldMatrix` + `currentFillRGB` per box draw): rotate/move/scale/fill scope
+inline, indented, and nested; block-less forms stay global.
+
+**Regression test:** `SystemTest_macroFizzytilesBlockScoping` — sets
+`fill 60,120,220 move 0.55,0,0 box` ⏎ `box` in the code pane; the SW3D pane must
+show a blue box moved right (scoped) + a default-red box centred. Guards both
+leaks in one static (deterministic) frame. Refs dpr1+dpr2. Suite **195 → 196.**
+
+Gauntlet / homepage: GREEN (2026-07-08) — dpr1 **196/0** · dpr2 **196/0** ·
+webkit **196/0** · apps/paint/tiernaming/settle/capstone PASS · `fg homepage`
+BOOT OK.
