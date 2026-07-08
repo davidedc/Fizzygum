@@ -1,0 +1,75 @@
+== total sampled: 6778 ms over 23022 samples; BUSY 2405 ms (35.5% of total) — busy-% shown as [b:x%]
+
+== buckets (self time):
+   64.5% [b:181.8%]     4373 ms  idle/program
+   15.0% [b:42.3%]     1018 ms  other-url
+   14.1% [b:39.8%]      958 ms  SWCanvas
+    3.4% [b:9.6%]      230 ms  fizzygum-classes
+    1.6% [b:4.6%]      111 ms  gc
+    1.0% [b:2.8%]       67 ms  eval-unknown
+    0.1% [b:0.4%]       10 ms  harness(Automator/Macro)
+    0.1% [b:0.3%]        8 ms  boot-bundle(compiler,boot)
+    0.1% [b:0.2%]        4 ms  DetTrig
+
+== top 30 by SELF time:
+   61.8% [b:174.1%]     4187 ms  [idle/program]  (idle) [eval 0]
+    3.7% [b:10.5%]      253 ms  [other-url]  (anonymous) coffee-script_2.0.3.js:8
+    3.4% [b:9.4%]      227 ms  [SWCanvas]  drawImage SWCanvas:24987
+    2.7% [b:7.7%]      186 ms  [idle/program]  (program) [eval 0]
+    2.1% [b:5.9%]      143 ms  [SWCanvas]  _getBit SWCanvas:19313
+    2.0% [b:5.7%]      136 ms  [other-url]  parse coffee-script_2.0.3.js:8
+    1.6% [b:4.6%]      111 ms  [gc]  (garbage collector) [eval 0]
+    1.2% [b:3.3%]       80 ms  [SWCanvas]  _fillPixelSpan SWCanvas:17893
+    1.1% [b:3.2%]       78 ms  [fizzygum-classes]  Class [class AnalogClockWdgt:244]
+    0.9% [b:2.6%]       62 ms  [SWCanvas]  _fillPolygonsDirect SWCanvas:17557
+    0.9% [b:2.5%]       60 ms  [SWCanvas]  fill_AA_Opaq SWCanvas:8884
+    0.8% [b:2.2%]       54 ms  [other-url]  compileToFragments coffee-script_2.0.3.js:8
+    0.8% [b:2.2%]       53 ms  [other-url]  performAction coffee-script_2.0.3.js:8
+    0.8% [b:2.1%]       51 ms  [SWCanvas]  _blendPixel SWCanvas:17942
+    0.7% [b:1.9%]       47 ms  [SWCanvas]  blendPixel SWCanvas:15599
+    0.7% [b:1.9%]       46 ms  [other-url]  compileNode coffee-script_2.0.3.js:8
+    0.7% [b:1.9%]       45 ms  [SWCanvas]  fillPolygonsToClipMask SWCanvas:18192
+    0.6% [b:1.6%]       38 ms  [SWCanvas]  _evaluatePaintSource SWCanvas:18030
+    0.5% [b:1.4%]       34 ms  [SWCanvas]  _drawImageInternal SWCanvas:22963
+    0.5% [b:1.3%]       31 ms  [fizzygum-classes]  (anonymous) [class SHA256:47]
+    0.4% [b:1.2%]       30 ms  [other-url]  e.extend coffee-script_2.0.3.js:8
+    0.4% [b:1.1%]       26 ms  [other-url]  compileWithDeclarations coffee-script_2.0.3.js:8
+    0.4% [b:1.1%]       26 ms  [other-url]  T coffee-script_2.0.3.js:8
+    0.4% [b:1.1%]       26 ms  [other-url]  W coffee-script_2.0.3.js:8
+    0.4% [b:1.1%]       26 ms  [other-url]  literalToken coffee-script_2.0.3.js:8
+    0.3% [b:1.0%]       23 ms  [SWCanvas]  addFontIDs SWCanvas:3584
+    0.3% [b:0.9%]       21 ms  [other-url]  a coffee-script_2.0.3.js:8
+    0.3% [b:0.8%]       18 ms  [other-url]  joinFragmentArrays coffee-script_2.0.3.js:8
+    0.3% [b:0.8%]       18 ms  [other-url]  updateLocationDataIfMissing coffee-script_2.0.3.js:8
+    0.3% [b:0.7%]       18 ms  [other-url]  identifierToken coffee-script_2.0.3.js:8
+
+== top 30 by TOTAL time (stack-attributed):
+   61.8%     4187 ms  [idle/program]  (idle) [eval 0]
+   16.3%     1108 ms  [other-url]  (anonymous) loading-and-compiling-coffeescript-sourc:1
+   16.3%     1104 ms  [other-url]  storeSourceAndPotentiallyCompileItAndExecuteIt loading-and-compiling-coffeescript-sourc:1
+   15.9%     1078 ms  [fizzygum-classes]  Class [class AnalogClockWdgt:244]
+   15.5%     1048 ms  [boot-bundle(compiler,boot)]  animloop FizzygumBoot:27309
+   15.4%     1047 ms  [fizzygum-classes]  (anonymous) [class WorldWdgt:1504]
+   15.1%     1024 ms  [other-url]  (anonymous) coffee-script_2.0.3.js:8
+   15.1%     1021 ms  [other-url]  compileFGCode loading-and-compiling-coffeescript-sourc:1
+   13.8%      937 ms  [fizzygum-classes]  (anonymous) [class WorldWdgt:1082]
+   13.7%      927 ms  [fizzygum-classes]  fullPaintIntoAreaOrBlitFromBackBuffer [class properties:111]
+   13.7%      927 ms  [fizzygum-classes]  (anonymous) [class WorldWdgt:619]
+   13.7%      927 ms  [fizzygum-classes]  (anonymous) [class WorldWdgt:1111]
+   13.7%      927 ms  [fizzygum-classes]  (anonymous) [class Widget:1696]
+   13.7%      926 ms  [fizzygum-classes]  fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow [class properties:122]
+   13.2%      892 ms  [fizzygum-classes]  (anonymous) [class properties:179]
+    7.9%      539 ms  [fizzygum-classes]  (anonymous) [class Widget:301]
+    7.6%      518 ms  [SWCanvas]  renderWithShadow SWCanvas:20572
+    7.5%      507 ms  [fizzygum-classes]  (anonymous) [class Widget:1721]
+    6.6%      445 ms  [SWCanvas]  fillPolygons SWCanvas:17506
+    6.5%      438 ms  [fizzygum-classes]  (anonymous) [class BoxyAppearance:53]
+    5.6%      381 ms  [SWCanvas]  _fillInternal SWCanvas:22815
+    5.5%      374 ms  [SWCanvas]  _fillPolygonsStandard SWCanvas:17648
+    5.5%      372 ms  [SWCanvas]  _fillScanline SWCanvas:17730
+    5.4%      368 ms  [SWCanvas]  fill SWCanvas:24636
+    5.4%      368 ms  [SWCanvas]  fill SWCanvas:26126
+    5.4%      367 ms  [SWCanvas]  (anonymous) SWCanvas:22804
+    5.3%      358 ms  [other-url]  parse coffee-script_2.0.3.js:8
+    5.2%      353 ms  [SWCanvas]  _fillSpans SWCanvas:17817
+    5.1%      345 ms  [SWCanvas]  _fillPixelSpan SWCanvas:17893

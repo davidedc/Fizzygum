@@ -1,0 +1,918 @@
+{
+ "url": "file:///Users/davidedellacasa/code/Fizzygum-all/Fizzygum-builds/latest/worldWithSystemTestHarness.html?sw=1&dpr=1&speed=fastest&intro=0",
+ "build": "/Users/davidedellacasa/code/Fizzygum-all/Fizzygum-builds/latest",
+ "sw": "1",
+ "dpr": "1",
+ "speed": "fastest",
+ "tests": "all",
+ "sampleUs": 300,
+ "profile": false,
+ "counters": true,
+ "loadMs": 12,
+ "bootMs": 3671,
+ "runMs": 341014,
+ "finalStatus": {
+  "state": 2,
+  "idle": true,
+  "idx": 190,
+  "total": 190,
+  "failed": 0,
+  "failedNames": [],
+  "current": null
+ },
+ "pageErrors": [
+  "DATAFLOW_ERROR: a dataflowRecompute() threw: ReferenceError: boom is not defined\n    at Object.eval (<anonymous>:1:2)\n    at Object.eval [as dataflowRecompute] (<anonymous>:1:1)\n    at Object.eval [as _processNode] (<anonymous>:1:1)\n    at Object.eval [as _walkOrderedPass] (<anonymous>:1:1)\n    at eval (<anonymous>:1:1)\n    at Object.eval [as _settleLayoutsAfter] (<anonymous>:1:1)\n    at Object.eval [as _drainOnePass] (<anonymous>:1:1)\n    at Object.eval [as recalculateDataflow] (<anonymous>:1:1)\n    at Object.eval (<anonymous>:1:1)\n    at Object.WorldWdgt.doOneCycle (<anonymous>:1:1)\n    at e (file:///Users/davidedellacasa/code/Fizzygum-all/Fizzygum-builds/latest/js/fizzygum-boot-min.js:352:5575)\n"
+ ],
+ "perTest": [
+  {
+   "idx": 0,
+   "name": null,
+   "atMs": 1019
+  },
+  {
+   "idx": 1,
+   "name": null,
+   "atMs": 6372
+  },
+  {
+   "idx": 2,
+   "name": null,
+   "atMs": 7374
+  },
+  {
+   "idx": 3,
+   "name": null,
+   "atMs": 9392
+  },
+  {
+   "idx": 4,
+   "name": null,
+   "atMs": 11396
+  },
+  {
+   "idx": 5,
+   "name": null,
+   "atMs": 12398
+  },
+  {
+   "idx": 6,
+   "name": null,
+   "atMs": 13400
+  },
+  {
+   "idx": 7,
+   "name": null,
+   "atMs": 14401
+  },
+  {
+   "idx": 8,
+   "name": null,
+   "atMs": 16404
+  },
+  {
+   "idx": 9,
+   "name": null,
+   "atMs": 17405
+  },
+  {
+   "idx": 10,
+   "name": null,
+   "atMs": 18406
+  },
+  {
+   "idx": 11,
+   "name": null,
+   "atMs": 19408
+  },
+  {
+   "idx": 12,
+   "name": null,
+   "atMs": 21412
+  },
+  {
+   "idx": 13,
+   "name": null,
+   "atMs": 24423
+  },
+  {
+   "idx": 14,
+   "name": null,
+   "atMs": 25424
+  },
+  {
+   "idx": 15,
+   "name": null,
+   "atMs": 27456
+  },
+  {
+   "idx": 16,
+   "name": null,
+   "atMs": 28460
+  },
+  {
+   "idx": 17,
+   "name": null,
+   "atMs": 29462
+  },
+  {
+   "idx": 19,
+   "name": null,
+   "atMs": 30463
+  },
+  {
+   "idx": 20,
+   "name": null,
+   "atMs": 31478
+  },
+  {
+   "idx": 21,
+   "name": null,
+   "atMs": 33483
+  },
+  {
+   "idx": 22,
+   "name": null,
+   "atMs": 34483
+  },
+  {
+   "idx": 23,
+   "name": null,
+   "atMs": 37498
+  },
+  {
+   "idx": 24,
+   "name": null,
+   "atMs": 39501
+  },
+  {
+   "idx": 25,
+   "name": null,
+   "atMs": 40504
+  },
+  {
+   "idx": 26,
+   "name": null,
+   "atMs": 41506
+  },
+  {
+   "idx": 27,
+   "name": null,
+   "atMs": 43510
+  },
+  {
+   "idx": 28,
+   "name": null,
+   "atMs": 44537
+  },
+  {
+   "idx": 29,
+   "name": null,
+   "atMs": 45539
+  },
+  {
+   "idx": 30,
+   "name": null,
+   "atMs": 56576
+  },
+  {
+   "idx": 31,
+   "name": null,
+   "atMs": 58587
+  },
+  {
+   "idx": 32,
+   "name": null,
+   "atMs": 59588
+  },
+  {
+   "idx": 33,
+   "name": null,
+   "atMs": 60590
+  },
+  {
+   "idx": 34,
+   "name": null,
+   "atMs": 61596
+  },
+  {
+   "idx": 35,
+   "name": null,
+   "atMs": 64662
+  },
+  {
+   "idx": 36,
+   "name": null,
+   "atMs": 65663
+  },
+  {
+   "idx": 37,
+   "name": null,
+   "atMs": 67666
+  },
+  {
+   "idx": 38,
+   "name": null,
+   "atMs": 68668
+  },
+  {
+   "idx": 39,
+   "name": null,
+   "atMs": 69670
+  },
+  {
+   "idx": 40,
+   "name": null,
+   "atMs": 71673
+  },
+  {
+   "idx": 41,
+   "name": null,
+   "atMs": 72675
+  },
+  {
+   "idx": 42,
+   "name": null,
+   "atMs": 76682
+  },
+  {
+   "idx": 44,
+   "name": null,
+   "atMs": 77683
+  },
+  {
+   "idx": 45,
+   "name": null,
+   "atMs": 79687
+  },
+  {
+   "idx": 46,
+   "name": null,
+   "atMs": 80689
+  },
+  {
+   "idx": 47,
+   "name": null,
+   "atMs": 81690
+  },
+  {
+   "idx": 48,
+   "name": null,
+   "atMs": 83715
+  },
+  {
+   "idx": 49,
+   "name": null,
+   "atMs": 86781
+  },
+  {
+   "idx": 50,
+   "name": null,
+   "atMs": 89808
+  },
+  {
+   "idx": 51,
+   "name": null,
+   "atMs": 90810
+  },
+  {
+   "idx": 52,
+   "name": null,
+   "atMs": 91811
+  },
+  {
+   "idx": 53,
+   "name": null,
+   "atMs": 92813
+  },
+  {
+   "idx": 54,
+   "name": null,
+   "atMs": 93815
+  },
+  {
+   "idx": 55,
+   "name": null,
+   "atMs": 95819
+  },
+  {
+   "idx": 56,
+   "name": null,
+   "atMs": 96821
+  },
+  {
+   "idx": 57,
+   "name": null,
+   "atMs": 97823
+  },
+  {
+   "idx": 58,
+   "name": null,
+   "atMs": 98827
+  },
+  {
+   "idx": 60,
+   "name": null,
+   "atMs": 99828
+  },
+  {
+   "idx": 62,
+   "name": null,
+   "atMs": 101832
+  },
+  {
+   "idx": 63,
+   "name": null,
+   "atMs": 102834
+  },
+  {
+   "idx": 64,
+   "name": null,
+   "atMs": 104837
+  },
+  {
+   "idx": 65,
+   "name": null,
+   "atMs": 106875
+  },
+  {
+   "idx": 66,
+   "name": null,
+   "atMs": 108916
+  },
+  {
+   "idx": 67,
+   "name": null,
+   "atMs": 110988
+  },
+  {
+   "idx": 68,
+   "name": null,
+   "atMs": 113992
+  },
+  {
+   "idx": 69,
+   "name": null,
+   "atMs": 114993
+  },
+  {
+   "idx": 70,
+   "name": null,
+   "atMs": 116995
+  },
+  {
+   "idx": 71,
+   "name": null,
+   "atMs": 117996
+  },
+  {
+   "idx": 72,
+   "name": null,
+   "atMs": 119001
+  },
+  {
+   "idx": 73,
+   "name": null,
+   "atMs": 120002
+  },
+  {
+   "idx": 74,
+   "name": null,
+   "atMs": 122003
+  },
+  {
+   "idx": 75,
+   "name": null,
+   "atMs": 123005
+  },
+  {
+   "idx": 77,
+   "name": null,
+   "atMs": 134026
+  },
+  {
+   "idx": 78,
+   "name": null,
+   "atMs": 136030
+  },
+  {
+   "idx": 79,
+   "name": null,
+   "atMs": 139035
+  },
+  {
+   "idx": 80,
+   "name": null,
+   "atMs": 141039
+  },
+  {
+   "idx": 82,
+   "name": null,
+   "atMs": 142040
+  },
+  {
+   "idx": 84,
+   "name": null,
+   "atMs": 143041
+  },
+  {
+   "idx": 85,
+   "name": null,
+   "atMs": 146053
+  },
+  {
+   "idx": 86,
+   "name": null,
+   "atMs": 147055
+  },
+  {
+   "idx": 87,
+   "name": null,
+   "atMs": 148057
+  },
+  {
+   "idx": 88,
+   "name": null,
+   "atMs": 151062
+  },
+  {
+   "idx": 89,
+   "name": null,
+   "atMs": 152063
+  },
+  {
+   "idx": 90,
+   "name": null,
+   "atMs": 153065
+  },
+  {
+   "idx": 91,
+   "name": null,
+   "atMs": 155074
+  },
+  {
+   "idx": 92,
+   "name": null,
+   "atMs": 157098
+  },
+  {
+   "idx": 93,
+   "name": null,
+   "atMs": 159160
+  },
+  {
+   "idx": 94,
+   "name": null,
+   "atMs": 160162
+  },
+  {
+   "idx": 95,
+   "name": null,
+   "atMs": 162169
+  },
+  {
+   "idx": 96,
+   "name": null,
+   "atMs": 163171
+  },
+  {
+   "idx": 98,
+   "name": null,
+   "atMs": 165175
+  },
+  {
+   "idx": 99,
+   "name": null,
+   "atMs": 171186
+  },
+  {
+   "idx": 100,
+   "name": null,
+   "atMs": 174192
+  },
+  {
+   "idx": 101,
+   "name": null,
+   "atMs": 176195
+  },
+  {
+   "idx": 103,
+   "name": null,
+   "atMs": 177197
+  },
+  {
+   "idx": 104,
+   "name": null,
+   "atMs": 179200
+  },
+  {
+   "idx": 105,
+   "name": null,
+   "atMs": 181204
+  },
+  {
+   "idx": 106,
+   "name": null,
+   "atMs": 182207
+  },
+  {
+   "idx": 107,
+   "name": null,
+   "atMs": 184213
+  },
+  {
+   "idx": 108,
+   "name": null,
+   "atMs": 187221
+  },
+  {
+   "idx": 109,
+   "name": null,
+   "atMs": 189224
+  },
+  {
+   "idx": 110,
+   "name": null,
+   "atMs": 190228
+  },
+  {
+   "idx": 111,
+   "name": null,
+   "atMs": 191229
+  },
+  {
+   "idx": 112,
+   "name": null,
+   "atMs": 193233
+  },
+  {
+   "idx": 113,
+   "name": null,
+   "atMs": 194235
+  },
+  {
+   "idx": 114,
+   "name": null,
+   "atMs": 195237
+  },
+  {
+   "idx": 116,
+   "name": null,
+   "atMs": 196238
+  },
+  {
+   "idx": 117,
+   "name": null,
+   "atMs": 198241
+  },
+  {
+   "idx": 118,
+   "name": null,
+   "atMs": 199243
+  },
+  {
+   "idx": 119,
+   "name": null,
+   "atMs": 200246
+  },
+  {
+   "idx": 120,
+   "name": null,
+   "atMs": 201248
+  },
+  {
+   "idx": 121,
+   "name": null,
+   "atMs": 205257
+  },
+  {
+   "idx": 122,
+   "name": null,
+   "atMs": 206272
+  },
+  {
+   "idx": 124,
+   "name": null,
+   "atMs": 208296
+  },
+  {
+   "idx": 125,
+   "name": null,
+   "atMs": 211305
+  },
+  {
+   "idx": 126,
+   "name": null,
+   "atMs": 214310
+  },
+  {
+   "idx": 127,
+   "name": null,
+   "atMs": 216313
+  },
+  {
+   "idx": 129,
+   "name": null,
+   "atMs": 218315
+  },
+  {
+   "idx": 130,
+   "name": null,
+   "atMs": 221363
+  },
+  {
+   "idx": 131,
+   "name": null,
+   "atMs": 223378
+  },
+  {
+   "idx": 132,
+   "name": null,
+   "atMs": 224380
+  },
+  {
+   "idx": 133,
+   "name": null,
+   "atMs": 225382
+  },
+  {
+   "idx": 134,
+   "name": null,
+   "atMs": 229390
+  },
+  {
+   "idx": 135,
+   "name": null,
+   "atMs": 231393
+  },
+  {
+   "idx": 136,
+   "name": null,
+   "atMs": 232395
+  },
+  {
+   "idx": 138,
+   "name": null,
+   "atMs": 237401
+  },
+  {
+   "idx": 139,
+   "name": null,
+   "atMs": 239412
+  },
+  {
+   "idx": 140,
+   "name": null,
+   "atMs": 241416
+  },
+  {
+   "idx": 141,
+   "name": null,
+   "atMs": 242493
+  },
+  {
+   "idx": 142,
+   "name": null,
+   "atMs": 243495
+  },
+  {
+   "idx": 143,
+   "name": null,
+   "atMs": 244496
+  },
+  {
+   "idx": 144,
+   "name": null,
+   "atMs": 245498
+  },
+  {
+   "idx": 145,
+   "name": null,
+   "atMs": 246499
+  },
+  {
+   "idx": 146,
+   "name": null,
+   "atMs": 247521
+  },
+  {
+   "idx": 147,
+   "name": null,
+   "atMs": 248523
+  },
+  {
+   "idx": 148,
+   "name": null,
+   "atMs": 250535
+  },
+  {
+   "idx": 149,
+   "name": null,
+   "atMs": 251537
+  },
+  {
+   "idx": 150,
+   "name": null,
+   "atMs": 253541
+  },
+  {
+   "idx": 151,
+   "name": null,
+   "atMs": 254543
+  },
+  {
+   "idx": 152,
+   "name": null,
+   "atMs": 257565
+  },
+  {
+   "idx": 153,
+   "name": null,
+   "atMs": 258566
+  },
+  {
+   "idx": 154,
+   "name": null,
+   "atMs": 259576
+  },
+  {
+   "idx": 155,
+   "name": null,
+   "atMs": 267588
+  },
+  {
+   "idx": 156,
+   "name": null,
+   "atMs": 268589
+  },
+  {
+   "idx": 157,
+   "name": null,
+   "atMs": 269591
+  },
+  {
+   "idx": 158,
+   "name": null,
+   "atMs": 274604
+  },
+  {
+   "idx": 159,
+   "name": null,
+   "atMs": 276607
+  },
+  {
+   "idx": 160,
+   "name": null,
+   "atMs": 277635
+  },
+  {
+   "idx": 161,
+   "name": null,
+   "atMs": 278636
+  },
+  {
+   "idx": 162,
+   "name": null,
+   "atMs": 280638
+  },
+  {
+   "idx": 163,
+   "name": null,
+   "atMs": 285672
+  },
+  {
+   "idx": 164,
+   "name": null,
+   "atMs": 286674
+  },
+  {
+   "idx": 165,
+   "name": null,
+   "atMs": 287676
+  },
+  {
+   "idx": 166,
+   "name": null,
+   "atMs": 290707
+  },
+  {
+   "idx": 167,
+   "name": null,
+   "atMs": 291709
+  },
+  {
+   "idx": 168,
+   "name": null,
+   "atMs": 293716
+  },
+  {
+   "idx": 169,
+   "name": null,
+   "atMs": 295731
+  },
+  {
+   "idx": 170,
+   "name": null,
+   "atMs": 296745
+  },
+  {
+   "idx": 171,
+   "name": null,
+   "atMs": 297747
+  },
+  {
+   "idx": 172,
+   "name": null,
+   "atMs": 301761
+  },
+  {
+   "idx": 173,
+   "name": null,
+   "atMs": 303766
+  },
+  {
+   "idx": 174,
+   "name": null,
+   "atMs": 304767
+  },
+  {
+   "idx": 175,
+   "name": null,
+   "atMs": 306769
+  },
+  {
+   "idx": 176,
+   "name": null,
+   "atMs": 308772
+  },
+  {
+   "idx": 177,
+   "name": null,
+   "atMs": 314822
+  },
+  {
+   "idx": 178,
+   "name": null,
+   "atMs": 315846
+  },
+  {
+   "idx": 179,
+   "name": null,
+   "atMs": 316848
+  },
+  {
+   "idx": 180,
+   "name": null,
+   "atMs": 317849
+  },
+  {
+   "idx": 181,
+   "name": null,
+   "atMs": 320864
+  },
+  {
+   "idx": 182,
+   "name": null,
+   "atMs": 322887
+  },
+  {
+   "idx": 183,
+   "name": null,
+   "atMs": 325913
+  },
+  {
+   "idx": 184,
+   "name": null,
+   "atMs": 326915
+  },
+  {
+   "idx": 185,
+   "name": null,
+   "atMs": 327915
+  },
+  {
+   "idx": 186,
+   "name": null,
+   "atMs": 328928
+  },
+  {
+   "idx": 187,
+   "name": null,
+   "atMs": 334964
+  },
+  {
+   "idx": 188,
+   "name": null,
+   "atMs": 335970
+  },
+  {
+   "idx": 189,
+   "name": null,
+   "atMs": 337982
+  },
+  {
+   "idx": 190,
+   "name": null,
+   "atMs": 341014
+  }
+ ]
+}

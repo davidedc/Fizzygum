@@ -1,0 +1,36 @@
+{
+ "url": "file:///private/tmp/claude-501/-Users-davidedellacasa-code-Fizzygum-all/feff11ac-382c-4acb-aba0-944bce96eb92/scratchpad/shadow-build/worldWithSystemTestHarness.html?sw=1&dpr=1&speed=fastest&intro=0",
+ "build": "/private/tmp/claude-501/-Users-davidedellacasa-code-Fizzygum-all/feff11ac-382c-4acb-aba0-944bce96eb92/scratchpad/shadow-build",
+ "sw": "1",
+ "dpr": "1",
+ "speed": "fastest",
+ "tests": "macroAnalogClockInspectEdit",
+ "sampleUs": 200,
+ "profile": true,
+ "counters": false,
+ "loadMs": 26,
+ "bootMs": 3548,
+ "runMs": 3100,
+ "finalStatus": {
+  "state": 2,
+  "idle": true,
+  "idx": 1,
+  "total": 1,
+  "failed": 0,
+  "failedNames": [],
+  "current": "SystemTest_macroAnalogClockInspectEdit"
+ },
+ "pageErrors": [],
+ "perTest": [
+  {
+   "idx": 0,
+   "name": "SystemTest_macroAnalogClockInspectEdit",
+   "atMs": 1064
+  },
+  {
+   "idx": 1,
+   "name": "SystemTest_macroAnalogClockInspectEdit",
+   "atMs": 3100
+  }
+ ]
+}

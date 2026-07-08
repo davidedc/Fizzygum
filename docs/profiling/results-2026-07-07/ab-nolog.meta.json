@@ -1,0 +1,908 @@
+{
+ "url": "file:///private/tmp/claude-501/-Users-davidedellacasa-code-Fizzygum-all/feff11ac-382c-4acb-aba0-944bce96eb92/scratchpad/shadow-build-nolog/worldWithSystemTestHarness.html?sw=1&dpr=1&speed=fastest&intro=0",
+ "build": "/private/tmp/claude-501/-Users-davidedellacasa-code-Fizzygum-all/feff11ac-382c-4acb-aba0-944bce96eb92/scratchpad/shadow-build-nolog",
+ "sw": "1",
+ "dpr": "1",
+ "speed": "fastest",
+ "tests": "all",
+ "sampleUs": 300,
+ "profile": false,
+ "counters": false,
+ "loadMs": 16,
+ "bootMs": 3689,
+ "runMs": 343330,
+ "finalStatus": {
+  "state": 2,
+  "idle": true,
+  "idx": 190,
+  "total": 190,
+  "failed": 0,
+  "failedNames": [],
+  "current": "SystemTest_macroWrappingTextFieldResizesOK"
+ },
+ "pageErrors": [
+  "DATAFLOW_ERROR: a dataflowRecompute() threw: ReferenceError: boom is not defined\n    at Object.eval (<anonymous>:1:2)\n    at Object.eval [as dataflowRecompute] (<anonymous>:1:1)\n    at Object.eval [as _processNode] (<anonymous>:1:1)\n    at Object.eval [as _walkOrderedPass] (<anonymous>:1:1)\n    at eval (<anonymous>:1:1)\n    at Object.eval [as _settleLayoutsAfter] (<anonymous>:1:1)\n    at Object.eval [as _drainOnePass] (<anonymous>:1:1)\n    at Object.eval [as recalculateDataflow] (<anonymous>:1:1)\n    at Object.eval [as doOneCycle] (<anonymous>:1:1)\n    at animloop (file:///private/tmp/claude-501/-Users-davidedellacasa-code-Fizzygum-all/feff11ac-382c-4acb-aba0-944bce96eb92/scratchpad/shadow-build-nolog/profile-boot.js:27303:13)\n"
+ ],
+ "perTest": [
+  {
+   "idx": 0,
+   "name": "SystemTest_macroAddEditSaveRenameRemoveProperty",
+   "atMs": 1020
+  },
+  {
+   "idx": 1,
+   "name": "SystemTest_macroAddingWidgetToListUpdatesScroll",
+   "atMs": 6442
+  },
+  {
+   "idx": 2,
+   "name": "SystemTest_macroAnalogClockInspectEdit",
+   "atMs": 7442
+  },
+  {
+   "idx": 3,
+   "name": "SystemTest_macroAttachResizingHandleToWidget",
+   "atMs": 10496
+  },
+  {
+   "idx": 4,
+   "name": "SystemTest_macroAttachShowsNoTargetsMessage",
+   "atMs": 11498
+  },
+  {
+   "idx": 5,
+   "name": "SystemTest_macroAttachTargetExcludesClippedWidget",
+   "atMs": 12501
+  },
+  {
+   "idx": 6,
+   "name": "SystemTest_macroBareButtonFloatDragsWithoutTriggering",
+   "atMs": 13505
+  },
+  {
+   "idx": 7,
+   "name": "SystemTest_macroBareTextWdgtAsWindowContentReflowsOnResize",
+   "atMs": 14509
+  },
+  {
+   "idx": 8,
+   "name": "SystemTest_macroBareTextWdgtInVerticalStackReflows",
+   "atMs": 16512
+  },
+  {
+   "idx": 9,
+   "name": "SystemTest_macroBareTextWdgtReflowsOnSetText",
+   "atMs": 17514
+  },
+  {
+   "idx": 10,
+   "name": "SystemTest_macroBareTextWidgetDropShadowRestAndDrag",
+   "atMs": 18528
+  },
+  {
+   "idx": 11,
+   "name": "SystemTest_macroBasicWorldMenuAndBubble",
+   "atMs": 19531
+  },
+  {
+   "idx": 12,
+   "name": "SystemTest_macroBoxTransparencyAndColorChanging",
+   "atMs": 21535
+  },
+  {
+   "idx": 13,
+   "name": "SystemTest_macroButtonTriggersOnlyOnSameWidgetMouseUp",
+   "atMs": 24540
+  },
+  {
+   "idx": 14,
+   "name": "SystemTest_macroCanMoveAndResizeColorPaletteWdgt",
+   "atMs": 25541
+  },
+  {
+   "idx": 15,
+   "name": "SystemTest_macroCaretArrowKeyNavigation",
+   "atMs": 27627
+  },
+  {
+   "idx": 16,
+   "name": "SystemTest_macroCaretResizesOKOnUndo",
+   "atMs": 28658
+  },
+  {
+   "idx": 17,
+   "name": "SystemTest_macroCenteredWidgetStaysCenteredWhenAlone",
+   "atMs": 29686
+  },
+  {
+   "idx": 19,
+   "name": "SystemTest_macroClippingBoxClipsChildAtBounds",
+   "atMs": 30688
+  },
+  {
+   "idx": 20,
+   "name": "SystemTest_macroClockInWindowKeepsSquareOnResize",
+   "atMs": 31691
+  },
+  {
+   "idx": 21,
+   "name": "SystemTest_macroClosingInnerWindowKeepsOuter",
+   "atMs": 33696
+  },
+  {
+   "idx": 22,
+   "name": "SystemTest_macroCollapsedWindowBarResizeRevertsOnUncollapse",
+   "atMs": 34710
+  },
+  {
+   "idx": 23,
+   "name": "SystemTest_macroCompositeDragsAsUnitIntoScrollPanel",
+   "atMs": 37727
+  },
+  {
+   "idx": 24,
+   "name": "SystemTest_macroCompositeWidgetsHaveCorrectShadow",
+   "atMs": 39732
+  },
+  {
+   "idx": 25,
+   "name": "SystemTest_macroConnectionFiresPerEventToggle",
+   "atMs": 40733
+  },
+  {
+   "idx": 26,
+   "name": "SystemTest_macroConstrainingStackForcesDroppedWidgetsToFullWidth",
+   "atMs": 41735
+  },
+  {
+   "idx": 27,
+   "name": "SystemTest_macroDataflowEngineSmoke",
+   "atMs": 43739
+  },
+  {
+   "idx": 28,
+   "name": "SystemTest_macroDegreesConverterFourWayDrive",
+   "atMs": 44741
+  },
+  {
+   "idx": 29,
+   "name": "SystemTest_macroDemoMenuCatalogueParade",
+   "atMs": 45746
+  },
+  {
+   "idx": 30,
+   "name": "SystemTest_macroDetachedWidgetStaysFloatDraggable",
+   "atMs": 56800
+  },
+  {
+   "idx": 31,
+   "name": "SystemTest_macroDocumentCaretBroughtIntoViewWhenMoved",
+   "atMs": 58807
+  },
+  {
+   "idx": 32,
+   "name": "SystemTest_macroDocumentPreservesDroppedWidgetSizes",
+   "atMs": 59808
+  },
+  {
+   "idx": 33,
+   "name": "SystemTest_macroDocumentScrollsMixedTextAndClocks",
+   "atMs": 60809
+  },
+  {
+   "idx": 34,
+   "name": "SystemTest_macroDoubleAndTripleClickThroughCaretWdgt",
+   "atMs": 61811
+  },
+  {
+   "idx": 35,
+   "name": "SystemTest_macroDoubleClickSelectsWord",
+   "atMs": 64813
+  },
+  {
+   "idx": 36,
+   "name": "SystemTest_macroDragEmbedArmedPersistsWhileAiming",
+   "atMs": 66818
+  },
+  {
+   "idx": 37,
+   "name": "SystemTest_macroDragEmbedCandidateChangeResets",
+   "atMs": 67819
+  },
+  {
+   "idx": 38,
+   "name": "SystemTest_macroDragEmbedReleaseWhileChargingLandsOnWorld",
+   "atMs": 68822
+  },
+  {
+   "idx": 39,
+   "name": "SystemTest_macroDragEmbedRepositionNestedWindowStaysWithoutDwell",
+   "atMs": 69828
+  },
+  {
+   "idx": 40,
+   "name": "SystemTest_macroDragEmbedStillHoldReleaseArms",
+   "atMs": 72834
+  },
+  {
+   "idx": 41,
+   "name": "SystemTest_macroDragEmbedWindowDoesNotAutoscrollPanel",
+   "atMs": 73838
+  },
+  {
+   "idx": 42,
+   "name": "SystemTest_macroDragEmbedWindowLingerArms",
+   "atMs": 76845
+  },
+  {
+   "idx": 43,
+   "name": "SystemTest_macroDragEmbedWindowTransitNeverArms",
+   "atMs": 77849
+  },
+  {
+   "idx": 44,
+   "name": "SystemTest_macroDrawingsMakerReEnableEditing",
+   "atMs": 78857
+  },
+  {
+   "idx": 45,
+   "name": "SystemTest_macroDuplicateComplexWidgetRidesHand",
+   "atMs": 79870
+  },
+  {
+   "idx": 47,
+   "name": "SystemTest_macroDuplicatedCollapsedWindowKeepsStateAndContent",
+   "atMs": 81873
+  },
+  {
+   "idx": 48,
+   "name": "SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly",
+   "atMs": 83879
+  },
+  {
+   "idx": 49,
+   "name": "SystemTest_macroDuplicatedInspectorsCloseIndependently",
+   "atMs": 87886
+  },
+  {
+   "idx": 50,
+   "name": "SystemTest_macroDuplicatedMenuAutoPinsOnDesktop",
+   "atMs": 89893
+  },
+  {
+   "idx": 51,
+   "name": "SystemTest_macroEditButtonLabelText",
+   "atMs": 91898
+  },
+  {
+   "idx": 52,
+   "name": "SystemTest_macroEditModeTogglePencilEyeGlyph",
+   "atMs": 92899
+  },
+  {
+   "idx": 53,
+   "name": "SystemTest_macroEditingStringInScrollablePanelCaretAlwaysVisible",
+   "atMs": 93902
+  },
+  {
+   "idx": 54,
+   "name": "SystemTest_macroEmbeddedDuplicateButtonReduplicates",
+   "atMs": 94904
+  },
+  {
+   "idx": 55,
+   "name": "SystemTest_macroEmptyStringDoesntGiveSelectAllOption",
+   "atMs": 96909
+  },
+  {
+   "idx": 56,
+   "name": "SystemTest_macroEvaluateString",
+   "atMs": 97911
+  },
+  {
+   "idx": 57,
+   "name": "SystemTest_macroEvaluationMenuReflectsTextSelection",
+   "atMs": 98912
+  },
+  {
+   "idx": 59,
+   "name": "SystemTest_macroHandleAttachedToNothing",
+   "atMs": 99913
+  },
+  {
+   "idx": 60,
+   "name": "SystemTest_macroHandleWdgtIsItselfResizable",
+   "atMs": 100915
+  },
+  {
+   "idx": 62,
+   "name": "SystemTest_macroHierarchyMenuHoverHighlightsExactSubtree",
+   "atMs": 102920
+  },
+  {
+   "idx": 63,
+   "name": "SystemTest_macroHoppingBetweenSubMenus",
+   "atMs": 103924
+  },
+  {
+   "idx": 64,
+   "name": "SystemTest_macroIconDroppedIntoDocumentFlows",
+   "atMs": 105928
+  },
+  {
+   "idx": 65,
+   "name": "SystemTest_macroInspectorRejectsDrops",
+   "atMs": 107950
+  },
+  {
+   "idx": 66,
+   "name": "SystemTest_macroInspectorResizingOKEvenWhenTakenApart",
+   "atMs": 108952
+  },
+  {
+   "idx": 67,
+   "name": "SystemTest_macroInspectorScrollbarUnplugged",
+   "atMs": 111981
+  },
+  {
+   "idx": 68,
+   "name": "SystemTest_macroInspectorWorkAreaEvaluatesCoffeeScript",
+   "atMs": 114986
+  },
+  {
+   "idx": 69,
+   "name": "SystemTest_macroInternalVsExternalWindowDrop",
+   "atMs": 115988
+  },
+  {
+   "idx": 70,
+   "name": "SystemTest_macroInternalWindowDroppedIntoWindowFits",
+   "atMs": 117992
+  },
+  {
+   "idx": 71,
+   "name": "SystemTest_macroLayoutBasicProportions",
+   "atMs": 118994
+  },
+  {
+   "idx": 72,
+   "name": "SystemTest_macroLayoutSpacerEatsSpareSpace",
+   "atMs": 119996
+  },
+  {
+   "idx": 73,
+   "name": "SystemTest_macroLayoutsAndCollapsing",
+   "atMs": 120998
+  },
+  {
+   "idx": 74,
+   "name": "SystemTest_macroLayoutsAndVisibility",
+   "atMs": 123020
+  },
+  {
+   "idx": 75,
+   "name": "SystemTest_macroListWdgtAutoScrollsNearDraggedEdge",
+   "atMs": 124022
+  },
+  {
+   "idx": 77,
+   "name": "SystemTest_macroLockToDesktopPreventsDrag",
+   "atMs": 135053
+  },
+  {
+   "idx": 78,
+   "name": "SystemTest_macroLockedCompositeWidgetPreventsDrag",
+   "atMs": 137056
+  },
+  {
+   "idx": 79,
+   "name": "SystemTest_macroLockedDocumentRejectsDrop",
+   "atMs": 140062
+  },
+  {
+   "idx": 80,
+   "name": "SystemTest_macroLockedScrollPanelScrollsWhenDragged",
+   "atMs": 142065
+  },
+  {
+   "idx": 82,
+   "name": "SystemTest_macroLonelySliderTargetsWorldOnly",
+   "atMs": 143067
+  },
+  {
+   "idx": 83,
+   "name": "SystemTest_macroMenuFromFramedItemNotClipped",
+   "atMs": 144069
+  },
+  {
+   "idx": 84,
+   "name": "SystemTest_macroMenuInWindowInScrollStackStaysLive",
+   "atMs": 145070
+  },
+  {
+   "idx": 85,
+   "name": "SystemTest_macroMenuItemDuplicatesToStandaloneWidget",
+   "atMs": 147074
+  },
+  {
+   "idx": 86,
+   "name": "SystemTest_macroMenuPinnedByHeaderClick",
+   "atMs": 149078
+  },
+  {
+   "idx": 87,
+   "name": "SystemTest_macroMenuPinnedInScrollPanel",
+   "atMs": 150079
+  },
+  {
+   "idx": 88,
+   "name": "SystemTest_macroMenuRepositionsToStayOnScreen",
+   "atMs": 152084
+  },
+  {
+   "idx": 89,
+   "name": "SystemTest_macroMenuShadowCorrectWhileAndAfterDrag",
+   "atMs": 154086
+  },
+  {
+   "idx": 90,
+   "name": "SystemTest_macroMenusAndSubMenusRemainOpenWhileDraggingMenusOnly",
+   "atMs": 155108
+  },
+  {
+   "idx": 91,
+   "name": "SystemTest_macroMenusCloseOnMouseDownOutside",
+   "atMs": 156114
+  },
+  {
+   "idx": 92,
+   "name": "SystemTest_macroMovingSlidersSidewaysDoesntCauseContentToMoveSideways",
+   "atMs": 158117
+  },
+  {
+   "idx": 93,
+   "name": "SystemTest_macroMultilineTextInputScrollsWell",
+   "atMs": 160120
+  },
+  {
+   "idx": 94,
+   "name": "SystemTest_macroNakedInspectorRendersResizesAndEdits",
+   "atMs": 162123
+  },
+  {
+   "idx": 95,
+   "name": "SystemTest_macroNestedScrollPanelsRouteWheel",
+   "atMs": 164126
+  },
+  {
+   "idx": 96,
+   "name": "SystemTest_macroNoSpuriousScrollbarsOnScrollPanelResize",
+   "atMs": 165133
+  },
+  {
+   "idx": 97,
+   "name": "SystemTest_macroNonWrappingTextResizesToContent",
+   "atMs": 166137
+  },
+  {
+   "idx": 98,
+   "name": "SystemTest_macroPaddingAreaIsPartOfWidget",
+   "atMs": 167139
+  },
+  {
+   "idx": 99,
+   "name": "SystemTest_macroPaletteRetargetsToNewWidget",
+   "atMs": 173183
+  },
+  {
+   "idx": 100,
+   "name": "SystemTest_macroPaletteSetTargetRecolorsPanel",
+   "atMs": 176189
+  },
+  {
+   "idx": 102,
+   "name": "SystemTest_macroPanelPaintedOkAsSoonAsPickedUp",
+   "atMs": 178195
+  },
+  {
+   "idx": 103,
+   "name": "SystemTest_macroPickingUpPartsFromInspector",
+   "atMs": 179197
+  },
+  {
+   "idx": 104,
+   "name": "SystemTest_macroPinnedMenuKeepsCorrectShadowWhenBroughtToForeground",
+   "atMs": 180198
+  },
+  {
+   "idx": 105,
+   "name": "SystemTest_macroPopoverStaysOpenWhenSliderDraggedOut",
+   "atMs": 182202
+  },
+  {
+   "idx": 106,
+   "name": "SystemTest_macroPromptShadowFollowsOnDrag",
+   "atMs": 184234
+  },
+  {
+   "idx": 107,
+   "name": "SystemTest_macroResizeMoveModeIsLosslessAndReenterable",
+   "atMs": 186237
+  },
+  {
+   "idx": 108,
+   "name": "SystemTest_macroResizeWindowContainingInternalWindow",
+   "atMs": 188242
+  },
+  {
+   "idx": 109,
+   "name": "SystemTest_macroResizingButtonDoesntCauseItToClick",
+   "atMs": 190245
+  },
+  {
+   "idx": 110,
+   "name": "SystemTest_macroResizingPristineInspector",
+   "atMs": 191248
+  },
+  {
+   "idx": 111,
+   "name": "SystemTest_macroResizingScrollFrameThenImmediatelyScrollingTheHandlesDontStickToScrollPanelContent",
+   "atMs": 193251
+  },
+  {
+   "idx": 112,
+   "name": "SystemTest_macroRightClickClosesDownstreamSubMenus",
+   "atMs": 195254
+  },
+  {
+   "idx": 113,
+   "name": "SystemTest_macroRoundedBoxCornerClickThrough",
+   "atMs": 196255
+  },
+  {
+   "idx": 115,
+   "name": "SystemTest_macroScrollPanelCaretBroughtIntoViewWhenMoved",
+   "atMs": 197257
+  },
+  {
+   "idx": 116,
+   "name": "SystemTest_macroScrollPanelDragToScrollFlags",
+   "atMs": 198259
+  },
+  {
+   "idx": 118,
+   "name": "SystemTest_macroScrollPanelMergesChildMenu",
+   "atMs": 200263
+  },
+  {
+   "idx": 119,
+   "name": "SystemTest_macroScrollPanelNotMovedViaNonFloatDragChild",
+   "atMs": 201265
+  },
+  {
+   "idx": 120,
+   "name": "SystemTest_macroScrollPanelUpdatesCorrectlyOnCollapsingAndUncollapsingAndClosingWindow",
+   "atMs": 202275
+  },
+  {
+   "idx": 122,
+   "name": "SystemTest_macroShiftClickExtendsSelection",
+   "atMs": 207346
+  },
+  {
+   "idx": 123,
+   "name": "SystemTest_macroSierpinskiInCanvas",
+   "atMs": 209379
+  },
+  {
+   "idx": 124,
+   "name": "SystemTest_macroSimpleDocumentAllReflowsCorrectlyAsIChangeFontSize",
+   "atMs": 210381
+  },
+  {
+   "idx": 125,
+   "name": "SystemTest_macroSimpleDocumentCanAddIndentedParagraph",
+   "atMs": 213395
+  },
+  {
+   "idx": 126,
+   "name": "SystemTest_macroSimpleDocumentHandlesOldInspector",
+   "atMs": 216401
+  },
+  {
+   "idx": 127,
+   "name": "SystemTest_macroSimpleDocumentManualBuildAndScroll",
+   "atMs": 218416
+  },
+  {
+   "idx": 128,
+   "name": "SystemTest_macroSimpleDocumentProgrammaticBuildAndScroll",
+   "atMs": 219417
+  },
+  {
+   "idx": 129,
+   "name": "SystemTest_macroSimpleDocumentRemovingLastParagraphUpdatesScrollbarAndLeavesViewportAtEndOfDocument",
+   "atMs": 220419
+  },
+  {
+   "idx": 130,
+   "name": "SystemTest_macroSimplePlainTextScrollPanelUpdatesWellWhenWrappingUnwrappingFromTheBottomOfContent",
+   "atMs": 223425
+  },
+  {
+   "idx": 131,
+   "name": "SystemTest_macroSliderButtonStateColors",
+   "atMs": 225428
+  },
+  {
+   "idx": 132,
+   "name": "SystemTest_macroSliderDraggedAcrossSurfacesKeepsButton",
+   "atMs": 226433
+  },
+  {
+   "idx": 133,
+   "name": "SystemTest_macroSliderTextSliderPatchCycle",
+   "atMs": 227435
+  },
+  {
+   "idx": 134,
+   "name": "SystemTest_macroSliderTextTwoWayPatchCycle",
+   "atMs": 230441
+  },
+  {
+   "idx": 135,
+   "name": "SystemTest_macroSliderTrackClickMovesButton",
+   "atMs": 233445
+  },
+  {
+   "idx": 136,
+   "name": "SystemTest_macroSlidersControlTextWidget",
+   "atMs": 234447
+  },
+  {
+   "idx": 138,
+   "name": "SystemTest_macroSoftWrapping",
+   "atMs": 239457
+  },
+  {
+   "idx": 139,
+   "name": "SystemTest_macroSpreadsheetColorCell",
+   "atMs": 241461
+  },
+  {
+   "idx": 140,
+   "name": "SystemTest_macroSpreadsheetDuplicate",
+   "atMs": 243472
+  },
+  {
+   "idx": 141,
+   "name": "SystemTest_macroSpreadsheetEditCancel",
+   "atMs": 244633
+  },
+  {
+   "idx": 142,
+   "name": "SystemTest_macroSpreadsheetErrorPropagation",
+   "atMs": 245635
+  },
+  {
+   "idx": 143,
+   "name": "SystemTest_macroSpreadsheetLiteralEntry",
+   "atMs": 246637
+  },
+  {
+   "idx": 144,
+   "name": "SystemTest_macroSpreadsheetLoopRejected",
+   "atMs": 247639
+  },
+  {
+   "idx": 145,
+   "name": "SystemTest_macroSpreadsheetOpenGrid",
+   "atMs": 248640
+  },
+  {
+   "idx": 146,
+   "name": "SystemTest_macroSpreadsheetRefsRecalc",
+   "atMs": 249705
+  },
+  {
+   "idx": 147,
+   "name": "SystemTest_macroSpreadsheetSecondsCell",
+   "atMs": 250707
+  },
+  {
+   "idx": 148,
+   "name": "SystemTest_macroSpreadsheetSelection",
+   "atMs": 252710
+  },
+  {
+   "idx": 149,
+   "name": "SystemTest_macroSpreadsheetSliderCell",
+   "atMs": 253712
+  },
+  {
+   "idx": 150,
+   "name": "SystemTest_macroStackDividerReproportionsCells",
+   "atMs": 255720
+  },
+  {
+   "idx": 151,
+   "name": "SystemTest_macroStackPanelLooseWhenEmptyTightWhenFilled",
+   "atMs": 256728
+  },
+  {
+   "idx": 152,
+   "name": "SystemTest_macroStringEllipsisation",
+   "atMs": 259733
+  },
+  {
+   "idx": 153,
+   "name": "SystemTest_macroStringWdgtAlignments",
+   "atMs": 260770
+  },
+  {
+   "idx": 154,
+   "name": "SystemTest_macroStringWdgtAndTextWdgtResizingInLayout",
+   "atMs": 261775
+  },
+  {
+   "idx": 155,
+   "name": "SystemTest_macroStringWdgtEditDefersToPromptWhenCropped",
+   "atMs": 269815
+  },
+  {
+   "idx": 157,
+   "name": "SystemTest_macroStringWdgtImprovedSelection",
+   "atMs": 271852
+  },
+  {
+   "idx": 158,
+   "name": "SystemTest_macroStringWdgtInlineTypingRefitsUnderFittingModes",
+   "atMs": 276866
+  },
+  {
+   "idx": 159,
+   "name": "SystemTest_macroSubMenuDroppedIntoPanelPinsItself",
+   "atMs": 278873
+  },
+  {
+   "idx": 160,
+   "name": "SystemTest_macroTargetingHighlightsCandidateWidget",
+   "atMs": 279877
+  },
+  {
+   "idx": 161,
+   "name": "SystemTest_macroTextRelayoutsCorrectlyOnResize",
+   "atMs": 281882
+  },
+  {
+   "idx": 162,
+   "name": "SystemTest_macroTextWdgtCaretKeepsCorrectAlignment",
+   "atMs": 282886
+  },
+  {
+   "idx": 163,
+   "name": "SystemTest_macroTextWdgtCaretPlacementByClick",
+   "atMs": 287949
+  },
+  {
+   "idx": 164,
+   "name": "SystemTest_macroTextWdgtCaretPlacementUnderAlignments",
+   "atMs": 288952
+  },
+  {
+   "idx": 165,
+   "name": "SystemTest_macroTextWdgtCaretResizing",
+   "atMs": 289955
+  },
+  {
+   "idx": 167,
+   "name": "SystemTest_macroTextWdgtFillModesWeightAndPasteOverSelection",
+   "atMs": 293978
+  },
+  {
+   "idx": 168,
+   "name": "SystemTest_macroTextWdgtNoJumpsInLayoutOfLongLine",
+   "atMs": 295995
+  },
+  {
+   "idx": 169,
+   "name": "SystemTest_macroTextWdgtPointingAtLastRow",
+   "atMs": 299006
+  },
+  {
+   "idx": 171,
+   "name": "SystemTest_macroTripleClickSelection",
+   "atMs": 300009
+  },
+  {
+   "idx": 172,
+   "name": "SystemTest_macroTwoPalettesShareOneTarget",
+   "atMs": 304015
+  },
+  {
+   "idx": 173,
+   "name": "SystemTest_macroUniqueTargetAndPropertyAreStillPresented",
+   "atMs": 306019
+  },
+  {
+   "idx": 174,
+   "name": "SystemTest_macroVerticalStackPanelGrowsWithContent",
+   "atMs": 308033
+  },
+  {
+   "idx": 175,
+   "name": "SystemTest_macroVerticalStackPanelShrinksOnParagraphRemoval",
+   "atMs": 309034
+  },
+  {
+   "idx": 176,
+   "name": "SystemTest_macroWindowCellsInConstrainedScrollStackReflow",
+   "atMs": 311038
+  },
+  {
+   "idx": 177,
+   "name": "SystemTest_macroWindowContentKeepsFixedWidth",
+   "atMs": 317119
+  },
+  {
+   "idx": 178,
+   "name": "SystemTest_macroWindowContentResizesFreely",
+   "atMs": 318137
+  },
+  {
+   "idx": 179,
+   "name": "SystemTest_macroWindowResizesToTextContent",
+   "atMs": 319139
+  },
+  {
+   "idx": 180,
+   "name": "SystemTest_macroWindowWithAClockInAWindowConstructionTwo",
+   "atMs": 320142
+  },
+  {
+   "idx": 181,
+   "name": "SystemTest_macroWindowWithPlainWrappingTextResizingFollowsContentSize",
+   "atMs": 323175
+  },
+  {
+   "idx": 182,
+   "name": "SystemTest_macroWindowWithSimpleVerticalPanelResizesAsContentChanges",
+   "atMs": 325181
+  },
+  {
+   "idx": 183,
+   "name": "SystemTest_macroWindowsEmptyClosing",
+   "atMs": 329220
+  },
+  {
+   "idx": 184,
+   "name": "SystemTest_macroWindowsEmptyCollapsingUncollapsing",
+   "atMs": 330221
+  },
+  {
+   "idx": 185,
+   "name": "SystemTest_macroWindowsEmptyResizing",
+   "atMs": 331237
+  },
+  {
+   "idx": 186,
+   "name": "SystemTest_macroWindowsNestedCollapsingUncollapsing",
+   "atMs": 332238
+  },
+  {
+   "idx": 188,
+   "name": "SystemTest_macroWrappingSimpleTextScrollPanelResizesCorrectlyAsTexSizeIsChangedPartTwo",
+   "atMs": 338268
+  },
+  {
+   "idx": 189,
+   "name": "SystemTest_macroWrappingTextFieldResizesOK",
+   "atMs": 340304
+  },
+  {
+   "idx": 190,
+   "name": "SystemTest_macroWrappingTextFieldResizesOK",
+   "atMs": 343330
+  }
+ ]
+}

@@ -1,0 +1,105 @@
+== total sampled: 373975 ms over 890309 samples; BUSY 128038 ms (34.2% of total) — busy-% shown as [b:x%]
+
+== buckets (self time):
+   65.8% [b:192.1%]   245937 ms  idle/program
+   24.4% [b:71.4%]    91359 ms  SWCanvas
+    6.5% [b:19.0%]    24358 ms  fizzygum-classes
+    2.1% [b:6.2%]     7911 ms  gc
+    0.4% [b:1.3%]     1668 ms  harness(Automator/Macro)
+    0.3% [b:0.9%]     1157 ms  other-url
+    0.2% [b:0.7%]      885 ms  eval-unknown
+    0.2% [b:0.5%]      625 ms  boot-bundle(compiler,boot)
+    0.0% [b:0.1%]       75 ms  DetTrig
+
+== top 45 by SELF time:
+   64.1% [b:187.1%]   239563 ms  [idle/program]  (idle) [eval 0]
+   10.3% [b:30.2%]    38644 ms  [SWCanvas]  drawImage SWCanvas:24987
+    2.8% [b:8.1%]    10420 ms  [SWCanvas]  _drawImageInternal SWCanvas:22963
+    2.4% [b:6.9%]     8876 ms  [fizzygum-classes]  (anonymous) [class SHA256]
+    2.1% [b:6.2%]     7911 ms  [gc]  (garbage collector) [eval 0]
+    2.1% [b:6.2%]     7905 ms  [SWCanvas]  _getBit SWCanvas:19313
+    2.0% [b:5.9%]     7537 ms  [SWCanvas]  _fillPixelSpan SWCanvas:17893
+    1.7% [b:5.0%]     6374 ms  [idle/program]  (program) [eval 0]
+    1.4% [b:4.0%]     5058 ms  [fizzygum-classes]  (anonymous) [class WorldWdgt]
+    1.3% [b:3.9%]     5022 ms  [SWCanvas]  blendPixel SWCanvas:15599
+    1.0% [b:2.8%]     3626 ms  [SWCanvas]  _fillPolygonsDirect SWCanvas:17557
+    0.7% [b:2.1%]     2690 ms  [SWCanvas]  fillPolygonsToClipMask SWCanvas:18192
+    0.6% [b:1.6%]     2059 ms  [SWCanvas]  Color SWCanvas:717
+    0.4% [b:1.2%]     1517 ms  [fizzygum-classes]  (anonymous) [class ActivePointerWdgt]
+    0.4% [b:1.1%]     1442 ms  [fizzygum-classes]  (anonymous) [class WorldWdgt]
+    0.3% [b:0.9%]     1103 ms  [SWCanvas]  fill_AA_Alpha SWCanvas:8921
+    0.3% [b:0.8%]     1047 ms  [SWCanvas]  withGlobalAlpha SWCanvas:821
+    0.3% [b:0.8%]      992 ms  [SWCanvas]  fillRect SWCanvas:23762
+    0.3% [b:0.7%]      938 ms  [SWCanvas]  get r SWCanvas:754
+    0.2% [b:0.7%]      933 ms  [SWCanvas]  _performCanvasWideCompositing SWCanvas:22722
+    0.2% [b:0.7%]      839 ms  [SWCanvas]  get b SWCanvas:766
+    0.2% [b:0.6%]      785 ms  [SWCanvas]  _fillScanline SWCanvas:17730
+    0.2% [b:0.6%]      773 ms  [SWCanvas]  get g SWCanvas:760
+    0.2% [b:0.6%]      754 ms  [harness(Automator/Macro)]  (anonymous) [class SystemTestsControlPanelUpdater]
+    0.2% [b:0.5%]      656 ms  [SWCanvas]  _evaluatePaintSource SWCanvas:18030
+    0.1% [b:0.4%]      508 ms  [fizzygum-classes]  (anonymous) [class TextWdgt]
+    0.1% [b:0.4%]      475 ms  [boot-bundle(compiler,boot)]  Object.hashCode FizzygumBoot:27608
+    0.1% [b:0.3%]      438 ms  [SWCanvas]  fill_AA_Opaq SWCanvas:8884
+    0.1% [b:0.3%]      397 ms  [SWCanvas]  BitBuffer SWCanvas:19120
+    0.1% [b:0.3%]      359 ms  [fizzygum-classes]  (anonymous) [class TextWdgt]
+    0.1% [b:0.3%]      357 ms  [SWCanvas]  _clearRectDirect SWCanvas:24065
+    0.1% [b:0.3%]      350 ms  [eval-unknown]  putImageData [eval 0]
+    0.1% [b:0.3%]      342 ms  [SWCanvas]  _fillAxisAlignedRect SWCanvas:22663
+    0.1% [b:0.3%]      339 ms  [other-url]  (anonymous) coffee-script_2.0.3.js:8
+    0.1% [b:0.3%]      334 ms  [SWCanvas]  parse SWCanvas:21254
+    0.1% [b:0.3%]      320 ms  [fizzygum-classes]  (anonymous) [class TreeNode]
+    0.1% [b:0.2%]      304 ms  [fizzygum-classes]  (anonymous) [class ActivePointerWdgt]
+    0.1% [b:0.2%]      288 ms  [SWCanvas]  _findPolygonIntersections SWCanvas:17776
+    0.1% [b:0.2%]      270 ms  [harness(Automator/Macro)]  (anonymous) [class Automator]
+    0.1% [b:0.2%]      270 ms  [SWCanvas]  getPixel SWCanvas:19172
+    0.1% [b:0.2%]      231 ms  [fizzygum-classes]  (anonymous) [class WorldWdgt]
+    0.1% [b:0.2%]      213 ms  [fizzygum-classes]  (anonymous) [class LRUCache]
+    0.1% [b:0.2%]      205 ms  [SWCanvas]  _parseHSL SWCanvas:21363
+    0.1% [b:0.1%]      191 ms  [SWCanvas]  Point SWCanvas:990
+    0.1% [b:0.1%]      191 ms  [SWCanvas]  _setBit SWCanvas:19330
+
+== top 45 by TOTAL time (stack-attributed):
+   64.1%   239563 ms  [idle/program]  (idle) [eval 0]
+   32.0%   119575 ms  [boot-bundle(compiler,boot)]  animloop FizzygumBoot:27309
+   31.9%   119462 ms  [fizzygum-classes]  (anonymous) [class WorldWdgt]
+   24.4%    91140 ms  [fizzygum-classes]  (anonymous) [class WorldWdgt]
+   24.2%    90398 ms  [fizzygum-classes]  (anonymous) [class WorldWdgt]
+   24.2%    90391 ms  [fizzygum-classes]  (anonymous) [class WorldWdgt]
+   24.1%    90298 ms  [fizzygum-classes]  (anonymous) [class Widget]
+   23.6%    88302 ms  [fizzygum-classes]  fullPaintIntoAreaOrBlitFromBackBuffer [class properties]
+   23.4%    87557 ms  [fizzygum-classes]  fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow [class properties]
+   23.1%    86447 ms  [fizzygum-classes]  (anonymous) [class properties]
+   18.1%    67764 ms  [fizzygum-classes]  (anonymous) [class Widget]
+   14.1%    52731 ms  [fizzygum-classes]  paintIntoAreaOrBlitFromBackBuffer [class properties]
+   13.9%    51877 ms  [SWCanvas]  drawImage SWCanvas:24987
+   11.9%    44464 ms  [SWCanvas]  renderWithShadow SWCanvas:20572
+   11.5%    42914 ms  [SWCanvas]  drawImage SWCanvas:26179
+   11.2%    41735 ms  [boot-bundle(compiler,boot)]  swContextProto.fillText FizzygumBoot:27910
+   11.1%    41628 ms  [SWCanvas]  fillText SWCanvas:26258
+   11.1%    41619 ms  [SWCanvas]  fillText SWCanvas:22215
+   11.1%    41574 ms  [SWCanvas]  drawTextFromAtlas SWCanvas:4853
+   10.3%    38395 ms  [fizzygum-classes]  (anonymous) [class TextWdgt]
+   10.3%    38358 ms  [SWCanvas]  #drawColoredTextBatched SWCanvas:5435
+    9.2%    34532 ms  [SWCanvas]  needsShadow SWCanvas:20558
+    9.2%    34316 ms  [SWCanvas]  fillText SWCanvas:25048
+    8.3%    30884 ms  [fizzygum-classes]  (anonymous) [class Widget]
+    8.0%    30045 ms  [fizzygum-classes]  (anonymous) [class Widget]
+    7.4%    27673 ms  [SWCanvas]  fillPolygons SWCanvas:17506
+    7.2%    26820 ms  [SWCanvas]  _fillInternal SWCanvas:22815
+    6.9%    25791 ms  [fizzygum-classes]  (anonymous) [class BoxyAppearance]
+    6.8%    25255 ms  [fizzygum-classes]  (anonymous) [class Widget]
+    6.4%    23780 ms  [SWCanvas]  _fillPolygonsStandard SWCanvas:17648
+    6.4%    23777 ms  [SWCanvas]  _fillScanline SWCanvas:17730
+    6.1%    22853 ms  [SWCanvas]  _fillSpans SWCanvas:17817
+    6.0%    22422 ms  [SWCanvas]  fill SWCanvas:24636
+    6.0%    22420 ms  [SWCanvas]  fill SWCanvas:26126
+    6.0%    22408 ms  [SWCanvas]  _fillPixelSpan SWCanvas:17893
+    5.1%    18988 ms  [SWCanvas]  fill SWCanvas:22800
+    4.5%    16983 ms  [fizzygum-classes]  fullPaintIntoAreaOrBlitFromBackBufferJustShadow [class properties]
+    3.8%    14376 ms  [harness(Automator/Macro)]  (anonymous) [class AutomatorPlayer]
+    3.5%    13150 ms  [SWCanvas]  drawImage SWCanvas:22941
+    3.5%    12904 ms  [SWCanvas]  _drawImageInternal SWCanvas:22963
+    2.4%     9071 ms  [fizzygum-classes]  (anonymous) [class SHA256]
+    2.4%     8885 ms  [fizzygum-classes]  (anonymous) [class SHA256]
+    2.2%     8176 ms  [SWCanvas]  getPixel SWCanvas:19172
+    2.1%     7911 ms  [gc]  (garbage collector) [eval 0]

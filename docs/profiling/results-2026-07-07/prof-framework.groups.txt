@@ -1,0 +1,25 @@
+busy 86146 ms; SWCanvas 51826 ms (60.2% busy)
+   19.5%busy    16798 ms  polygon-fill+span
+   12.4%busy    10705 ms  drawImage-pipeline
+   10.0%busy     8579 ms  clip-mask-read
+    8.3%busy     7140 ms  blend+color
+    3.6%busy     3141 ms  clip-mask-build
+    1.3%busy     1143 ms  compositing-wide
+    0.4%busy      360 ms  clearRect
+    0.4%busy      358 ms  transform
+    0.1%busy       93 ms  text
+    0.1%busy       67 ms  save-restore
+    0.1%busy       63 ms  stroke-gen
+  -- ungrouped SW top:
+    1.1%busy      970 ms  fillRect
+    0.4%busy      326 ms  parse
+    0.3%busy      279 ms  setPixel
+    0.2%busy      206 ms  _parseHSL
+    0.2%busy      170 ms  
+    0.2%busy      144 ms  Surface
+    0.1%busy      104 ms  #drawColoredTextBatched
+    0.1%busy       74 ms  #resolveRenderContext
+    0.1%busy       69 ms  parsePct
+    0.1%busy       57 ms  _applyFillStyle
+    0.1%busy       56 ms  ColorParser
+    0.1%busy       54 ms  _initializeToDefault

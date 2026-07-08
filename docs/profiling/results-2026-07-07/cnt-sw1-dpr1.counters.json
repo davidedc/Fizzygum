@@ -1,0 +1,146 @@
+{
+ "tags": {
+  "native": {
+   "counts": {
+    "putImageData": 6498,
+    "drawImage": 87,
+    "getImageData": 87
+   },
+   "clip": {
+    "calls": 0,
+    "axisAlignedIntRect": 0,
+    "axisAlignedNonIntRect": 0,
+    "nonRect": 0,
+    "underRotation": 0,
+    "nested": 0,
+    "bboxRatioSum": 0,
+    "bboxRatioN": 0,
+    "bboxRatioBuckets": {}
+   },
+   "saves": {
+    "total": 0,
+    "whileClipped": 0
+   },
+   "draws": {
+    "drawImage": {
+     "none": 87,
+     "rect": 0,
+     "mask": 0
+    }
+   },
+   "areas": {
+    "drawImage": {
+     "sum": 10657490,
+     "n": 87,
+     "max": 845942
+    }
+   }
+  },
+  "sw": {
+   "counts": {
+    "createCanvas": 19397,
+    "createLinearGradient": 11,
+    "measureText": 35398,
+    "fillText": 61973,
+    "getImageData": 3969,
+    "fillRect": 1381877,
+    "drawImage": 662474,
+    "clearRect": 56000,
+    "fill": 54163,
+    "stroke": 124949,
+    "strokeRect": 19907
+   },
+   "clip": {
+    "calls": 76675,
+    "axisAlignedIntRect": 76675,
+    "axisAlignedNonIntRect": 0,
+    "nonRect": 0,
+    "underRotation": 0,
+    "nested": 0,
+    "bboxRatioSum": 2585.0566027456616,
+    "bboxRatioN": 76675,
+    "bboxRatioBuckets": {
+     "<=15%": 7648,
+     "<=1%": 54489,
+     "<=5%": 8297,
+     "<=50%": 5837,
+     "<100%": 404
+    }
+   },
+   "saves": {
+    "total": 382794,
+    "whileClipped": 12494
+   },
+   "draws": {
+    "fillText": {
+     "none": 38466,
+     "rect": 23507,
+     "mask": 0
+    },
+    "fillRect": {
+     "none": 1376797,
+     "rect": 5080,
+     "mask": 0
+    },
+    "drawImage": {
+     "none": 662474,
+     "rect": 0,
+     "mask": 0
+    },
+    "clearRect": {
+     "none": 56000,
+     "rect": 0,
+     "mask": 0
+    },
+    "fill": {
+     "none": 0,
+     "rect": 54163,
+     "mask": 0
+    },
+    "stroke": {
+     "none": 406,
+     "rect": 124543,
+     "mask": 0
+    },
+    "strokeRect": {
+     "none": 0,
+     "rect": 19907,
+     "mask": 0
+    }
+   },
+   "areas": {
+    "createCanvasArea": {
+     "sum": 322962306,
+     "n": 19397,
+     "max": 422400
+    },
+    "fillTextChars": {
+     "sum": 737643,
+     "n": 61973,
+     "max": 904
+    },
+    "fillRect": {
+     "sum": 1876762233,
+     "n": 1381877,
+     "max": 740196
+    },
+    "drawImage": {
+     "sum": 770787516,
+     "n": 662474,
+     "max": 422400
+    },
+    "clearRect": {
+     "sum": 76615455,
+     "n": 56000,
+     "max": 163800
+    }
+   }
+  }
+ },
+ "frames": {
+  "updateBrokenCalls": 19412,
+  "brokenRects": 24743,
+  "brokenArea": 896205255.4187539
+ },
+ "errors": []
+}

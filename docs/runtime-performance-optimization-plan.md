@@ -24,6 +24,20 @@ fill now **4.3 ns/px = SOLID speed** (17.7→3.82 ms/fill; 858%→23% of a 60 Hz
 original**). Byte-identical (218 + 13-scene A/B vs the ORIGINAL path incl. fall-back cases + gauntlet +
 homepage, zero churn). Patterned wallpaper is now as cheap as `plain` → resolves the sluggishness.
 SWCanvas pin now `60ba1a3`. Remaining overall: S2 Tier 2, S6b, F1, F3. See §8 ledger + §7.
+
+**INTERACTIVE (busy-desktop) profiling — 2026-07-08.** A new felt-cost harness
+(`docs/profiling/prof-interactive.js`, documented in `docs/profiling/README.md`) drove a busy
+21-window SWCanvas drag (the owner runs `?sw=1`; production defaults to native — memory
+`fizzygum-runtime-backend-swcanvas`). Findings + two NEW self-contained plans:
+- **`docs/interactive-render-perf-A-C-plan.md`** — **A**: SWCanvas full-cover canvas-wide
+  composite fast path (the ~19% `source-in` cluster is colored-glyph tinting in vendored
+  BitmapText; a full-cover source-in fillRect can skip the two-pass SourceMask, byte-identical);
+  **C**: back-buffer static-face re-renders (AnalogClockWdgt tick-face; SpreadsheetWdgt grid/row-
+  number headers `SpreadsheetWdgt.coffee:212/217` + CellWdgt scalar text — drawn directly every
+  repaint, unlike the 99.9%-cached TextWdgt).
+- **`docs/occlusion-culling-plan.md`** — skip painting widgets occluded by a fully-covering opaque
+  rect within a broken rect (the ~35% fill-rasterization cluster is largely overdraw). The exact
+  optimization is a documented TODO (issue #149, `ClippingAtRectangularBoundsMixin.coffee:152-159`).
 **⚠️ Verified-fact correction (2026-07-08):** S1's headline "−33% busy / −8.3% wall" is an artifact
 of the **unminified profiling build only** — the shipped build strips the log via minification and
 never pays it. See the S1 section in §5 and the methodology note below. This does NOT affect any
