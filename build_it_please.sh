@@ -138,8 +138,8 @@ coffee --version
 # "git clone && build" Just Works (needs GitHub access on the first build only).
 SWCANVAS_VENDOR=vendor/swcanvas
 SWCANVAS_PIN=vendor/swcanvas.pin
-if [ ! -f "$SWCANVAS_VENDOR/swcanvas.min.js" ] || [ ! -f "$SWCANVAS_VENDOR/VERSION" ]; then
-  echo "SWCanvas bundle missing — fetching from $SWCANVAS_PIN ..."
+if [ ! -f "$SWCANVAS_VENDOR/swcanvas.min.js" ] || [ ! -f "$SWCANVAS_VENDOR/sw3d.js" ] || [ ! -f "$SWCANVAS_VENDOR/VERSION" ]; then
+  echo "SWCanvas bundle (incl. sw3d.js) missing — fetching from $SWCANVAS_PIN ..."
   ./scripts/vendor-swcanvas.sh
 elif [ -f "$SWCANVAS_PIN" ]; then
   PINNED_SHA=$(tr -d '[:space:]' < "$SWCANVAS_PIN")
@@ -537,7 +537,7 @@ fi
 # SWCanvas engine code (mirroring swcanvas.min.js containing BitmapText); font
 # atlases are never embedded — they are loaded at runtime. SWCanvas is always
 # bundled and only *used* when the runtime flag (?sw=1) is on.
-echo "prepending the deterministic-trig shim + SWCanvas engine to the boot bundle..."
+echo "prepending the deterministic-trig shim + SWCanvas engine + SW3D to the boot bundle..."
 # DETERMINISM: install engine-independent sin/cos/tan/atan2/asin/acos (a pure-arithmetic fdlibm
 # port — only +,-,*,/ and sqrt, all IEEE-754-exact) over Math.* BEFORE anything renders, so
 # SWCanvas's rotate()/arc()/round-joins rasterize bit-identically on every JS engine. Without it
@@ -552,9 +552,16 @@ cat runtime-prelude/deterministic-trig.js > $BUILD_PATH/js/fizzygum-boot-min.js.
 printf '\n;try { DetTrig.install(Math); } catch (e) {}\n;\n' >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
 cat $SWCANVAS_VENDOR/swcanvas.min.js >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
 printf '\n;\n' >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
+# SW3D — the software-3D userland engine (examples/sw3d.js), bundled UNMINIFIED
+# right after SWCanvas so window.SW3D exists at boot. It reads SWCanvas.Core.*
+# lazily (only inside makeEngine at render time), so loading it after SWCanvas
+# is sufficient. Ships in ALL builds (symmetric with SWCanvas-always-bundled);
+# fizzytiles software-renders through it, replacing the removed twgl WebGL demo.
+cat $SWCANVAS_VENDOR/sw3d.js >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
+printf '\n;\n' >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
 cat $BUILD_PATH/js/fizzygum-boot-min.js >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
 mv $BUILD_PATH/js/fizzygum-boot-min.js.tmp $BUILD_PATH/js/fizzygum-boot-min.js
-echo "... done prepending deterministic-trig + SWCanvas"
+echo "... done prepending deterministic-trig + SWCanvas + SW3D"
 
 # Copy the vendored SWCanvas font assets (metrics + positioning bundles, and
 # the wrapped atlas .js if vendored) so the SWCanvas text backend can load them
@@ -574,7 +581,7 @@ cp src/index.html $BUILD_PATH/
 cp auxiliary\ files/FileSaver/FileSaver.min.js $BUILD_PATH/js/libs/
 cp auxiliary\ files/JSZip/jszip.min.js $BUILD_PATH/js/libs/
 cp auxiliary\ files/CoffeeScript/coffee-script_2.0.3.js $BUILD_PATH/js/libs/
-cp auxiliary\ files/twgl/twgl-full.js $BUILD_PATH/js/libs/
+# (twgl-full.js removed: fizzytiles now software-renders through SW3D, not WebGL)
 
 # code that can be loaded after a pre-compiled world has started
 coffee -b -c -o $BUILD_PATH/js/src/ src/boot/dependencies-finding.coffee

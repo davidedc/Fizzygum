@@ -1,17 +1,23 @@
 # this file is excluded from the fizzygum homepage build
 
 
+# The matrix-stack runtime behind Fizzytiles' scale / rotate / move / box.
+# Column-major 4x4 (translation in [12..14], like Three.Matrix4 / gl-matrix),
+# owned by one FridgeMagnets3DCanvasWdgt. It runs the LCL "appended function"
+# block semantics (push on entry, run the block with this = the widget, pop on
+# exit; a block that returns null undoes the push and leaves).
 class LCLTransforms
 
   matrixStack: nil
   worldMatrix: nil
+  widget: nil
 
-  constructor: ->
+  constructor: (@widget) ->
     @resetMatrixStack()
 
 
   # same shape and basically same implementation as most
-  # matrix libraries e.g. Three.Matrix4, twgl.m4, gl-matrix.mat4
+  # matrix libraries e.g. Three.Matrix4, gl-matrix.mat4
   createIdentityMatrix: ->
     out = new Float32Array(16)
     # all other elements are zero by default
@@ -32,7 +38,10 @@ class LCLTransforms
     @matrixStack.push @worldMatrix
     @worldMatrix = @copyMatrix @worldMatrix
 
-  scaleMatrix = (m, v, dst = new Float32Array(16)) ->
+  # Post-scale: scales m's linear columns by v (= m . diag(v0,v1,v2,1)),
+  # preserving the translation column. A method (not a private `=`) so the
+  # widget and `scale` below can call it as @scaleMatrix.
+  scaleMatrix: (m, v, dst = new Float32Array(16)) ->
     v0 = v[0]
     v1 = v[1]
     v2 = v[2]
@@ -185,38 +194,41 @@ class LCLTransforms
     te[15] = 1
     te
 
+  # Column-major translation: the offset goes in the last COLUMN ([12..14]),
+  # matching scaleMatrix / makeRotationFromEuler / multiplyMatrix. (The draft
+  # wrote it into [3],[7],[11] — the transpose slot — which the rest of the
+  # class does not use; that was bug (c).)
   makeTranslation: (x, y, z) ->
     dst = new Float32Array(16)
     dst[0] = 1
     dst[1] = 0
     dst[2] = 0
-    dst[3] = x
+    dst[3] = 0
     dst[4] = 0
     dst[5] = 1
     dst[6] = 0
-    dst[7] = y
+    dst[7] = 0
     dst[8] = 0
     dst[9] = 0
     dst[10] = 1
-    dst[11] = z
-    dst[12] = 0
-    dst[13] = 0
-    dst[14] = 0
+    dst[11] = 0
+    dst[12] = x
+    dst[13] = y
+    dst[14] = z
     dst[15] = 1
     dst
 
 
-  # TODO pulse function probably should go somewhere else?
+  # A recurring 0..1 pulse. Phase comes from the widget clock (event time under
+  # the Automator, wall clock live) — never `new Date` — so animated scenes are
+  # deterministic per event stream. (Was bug (d): read the wall clock directly.)
   pulse: (frequency) ->
-
-    d = new Date
-    n = d.getMilliseconds()
-
     if typeof frequency != "number"
       frequency = 1
+    phase = ((@widget.timeNowSeconds() * frequency) % 1 + 1) % 1
     return Math.exp(
       -Math.pow(
-        Math.pow(((n/1000) * frequency) % 1, 0.3) - 0.5, 2
+        Math.pow(phase, 0.3) - 0.5, 2
       ) / 0.05
     )
 
@@ -255,7 +267,7 @@ class LCLTransforms
 
     if appendedFunctionsStartIndex?
       while Utils.isFunction arguments[appendedFunctionsStartIndex]
-        result = arguments[appendedFunctionsStartIndex].apply @
+        result = arguments[appendedFunctionsStartIndex].apply @widget
         # we find out that the function is actually
         # a fake so we have to undo the push and leave
         if !result?
@@ -287,20 +299,16 @@ class LCLTransforms
     else if Utils.isFunction arg_d
       appendedFunctionsStartIndex = 3
 
-    context = @backBufferContext
-    if appendedFunctionsStartIndex?
-      context.save()
-
     @pushMatrix() if appendedFunctionsStartIndex?
     @multiplyMatrix @worldMatrix, @makeRotationFromEuler([arg_a, arg_b, arg_c]), @worldMatrix
 
     if appendedFunctionsStartIndex?
       while Utils.isFunction arguments[appendedFunctionsStartIndex]
-        result = arguments[appendedFunctionsStartIndex].apply @
+        result = arguments[appendedFunctionsStartIndex].apply @widget
         # we find out that the function is actually
         # a fake so we have to undo the push and leave
         if !result?
-          discardPushedMatrix()
+          @discardPushedMatrix()
           return
         appendedFunctionsStartIndex++
       @popMatrix()
@@ -328,20 +336,16 @@ class LCLTransforms
     else if Utils.isFunction arg_d
       appendedFunctionsStartIndex = 3
 
-    context = @backBufferContext
-    if appendedFunctionsStartIndex?
-      context.save()
-
     @pushMatrix() if appendedFunctionsStartIndex?
     @multiplyMatrix @worldMatrix, @makeTranslation(arg_a, arg_b, arg_c), @worldMatrix
 
     if appendedFunctionsStartIndex?
       while Utils.isFunction arguments[appendedFunctionsStartIndex]
-        result = arguments[appendedFunctionsStartIndex].apply @
+        result = arguments[appendedFunctionsStartIndex].apply @widget
         # we find out that the function is actually
         # a fake so we have to undo the push and leave
         if !result?
-          discardPushedMatrix()
+          @discardPushedMatrix()
           return
         appendedFunctionsStartIndex++
       @popMatrix()
