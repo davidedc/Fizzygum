@@ -5,12 +5,13 @@
 landed** — the genuine production rendering wins; full `fg gauntlet` (dpr1/dpr2/webkit 196/196 + apps
 + paint + gates) **and** `fg homepage` green, **zero reference churn**, and a direct A/B micro-bench
 measured **S2 = 1.46× / S4 = 2.28× on-path with an identical surface hash** (byte-identical proven two
-ways). **Arc 4 (2026-07-08): S3 Stage 1 + partial Stage 2 ✅ landed** — tier-0 rectangular clipping for
-`fill`/`stroke`/`drawImage` (~178k of 227k clipped draws, 78%); byte-identical (218 + per-primitive A/B +
-`fg gauntlet` dpr1/dpr2/webkit 196/196 + homepage, zero ref churn). **Outstanding on S3**: wire
-`fillRect`/`strokeRect` DIRECT paths (RectOpsAA) + `fillText` (TextRenderer), then flip `clip()` to skip
-the mask BUILD (Stage 2 final), then Stage 3 (clone-free save/restore). SWCanvas pin now `c1ec7ef`.
-Remaining overall: **S3 finish**, S2 Tier 2, S6b, F1, F3. See §8 ledger + §7.
+ways). **Arc 4 (2026-07-08): S3 Stage 1 + Stage 2 ✅ landed** — tier-0 rectangular clipping now covers
+ALL rect + image primitives (`fill`/`stroke`/`drawImage` + `fillRect`/`strokeRect` direct RectOpsAA);
+~203k of 227k clipped draws (~89%); byte-identical (218 + per-primitive A/B + `fg gauntlet`
+dpr1/dpr2/webkit 196/196 + homepage, zero ref churn). **Outstanding on S3**: wire `fillText`
+(TextRenderer, last ~10%), then flip `clip()` to skip the mask BUILD, then Stage 3 (clone-free
+save/restore). SWCanvas pin now `767d058`. Remaining overall: **S3 finish**, S2 Tier 2, S6b, F1, F3.
+See §8 ledger + §7.
 **⚠️ Verified-fact correction (2026-07-08):** S1's headline "−33% busy / −8.3% wall" is an artifact
 of the **unminified profiling build only** — the shipped build strips the log via minification and
 never pays it. See the S1 section in §5 and the methodology note below. This does NOT affect any
@@ -65,7 +66,7 @@ Where busy CPU goes (self time; "busy" = idle/program excluded):
 | **S1** ✅ | Delete the per-call debug `console.log` in `Context2D.drawImage` | SWCanvas | A/B −33% busy @dpr1 **on the UNMINIFIED build only** — shipped build minifies the log away (see §2 caveat) | **shipped: ~0** (hygiene + honest profiles) | trivial | none |
 | **H1** | SHA-256 screenshot hashing → `crypto.subtle.digest` (same digest) | Fizzygum-tests | 6.9% dpr1 / 24.7% dpr2 busy; impl also makes 2 full-buffer copies per hash | most of that back | medium | low |
 | **S2** ✅ | drawImage fast path: hoist per-call invariants (scalar inverse transform, no per-pixel object); inline source-over write-in-place | SWCanvas | `_drawImageInternal` 12.4% busy post-S1 — landed 2026-07-08 Tier 1, **A/B 1.46× (31.5% faster) on the blit path, byte-identical** | measured 1.46× on-path | medium | none (byte-identical, gauntlet green) |
-| **S3** ◑ | Tier-0 rectangular clipping — execute the SWCanvas clipping plan §9 | SWCanvas | clip build 2.6–2.8% + reads 6.4–10.3% + span detours; **76,675 clips/suite, 100.000% axis-aligned integer rects** — Stage 1 + partial Stage 2 (fill/stroke/drawImage) ✅ landed 2026-07-08, byte-identical | ~10–18% (partial banked: the `_getBit` bucket for 78% of clipped draws) | large | medium |
+| **S3** ◑ | Tier-0 rectangular clipping — execute the SWCanvas clipping plan §9 | SWCanvas | clip build 2.6–2.8% + reads 6.4–10.3% + span detours; **76,675 clips/suite, 100.000% axis-aligned integer rects** — Stage 1 + Stage 2 (fill/stroke/drawImage + fillRect/strokeRect RectOpsAA) ✅ landed 2026-07-08, byte-identical | ~10–18% (partial banked: the `_getBit` bucket for ~89% of clipped draws) | large | medium |
 | **S4** ✅ | `blendPixel`: source-over specialization in the span path, no per-pixel result object/switch, α hoisted per span | SWCanvas | blendPixel 5.8% busy post-S1 + feeds GC — landed 2026-07-08, **A/B 2.28× (56% faster) on the path-fill span, byte-identical** | measured 2.28× on-path | small-med | none (byte-identical, gauntlet green) |
 | **F2** ✅ | Cache `WorldWdgt.getCanvasPosition` (forced reflow per synthesized mouse event) | Fizzygum | **5.8% busy post-S1** (single method!) — landed 2026-07-08, gauntlet+homepage green | ~5% (mostly suite CPU) | small | low |
 | **S5** ✅ | Hoist `_evaluatePaintSource` out of per-pixel span loops for solid colors | SWCanvas | 4.3% busy post-S1 — landed 2026-07-08 (span-level memoize; byte-identical, gauntlet green) | ~3–5% | small | low |
@@ -333,11 +334,12 @@ Fizzygum `fg gauntlet` — any reference mismatch = the arithmetic differs somew
 
 ### S3 — Tier-0 rectangular clipping 【SWCanvas; large; the companion plan】
 
-**◑ STATUS 2026-07-08 — Stage 1 + partial Stage 2 LANDED (SWCanvas `c1ec7ef`, pinned).** Byte-identical
-(SWCanvas 218/218 + a per-primitive A/B harness [tier-0 vs forced-bitmask → identical surface hashes] +
-a rect==mask pixel-set proof; vendored → `fg gauntlet` dpr1/dpr2/webkit 196/196 + apps + paint + gates
-and `fg homepage`, **zero reference churn** — the strong proof, since Fizzygum's clips are 100% tier-0
-rects so every clipped fill/stroke/blit exercises the new path).
+**◑ STATUS 2026-07-08 — Stage 1 + Stage 2 (all rect + image primitives) LANDED (SWCanvas `767d058`, pinned).**
+Byte-identical (SWCanvas 218/218 + a per-primitive A/B harness [tier-0 vs forced-bitmask → identical surface
+hashes] + a rect==mask pixel-set proof; vendored → `fg gauntlet` dpr1/dpr2/webkit 196/196 + apps + paint +
+gates and `fg homepage`, **zero reference churn** — the strong proof, since Fizzygum's clips are 100% tier-0
+rects so every clipped fill/stroke/blit exercises the new path). Read-side coverage is now ~203k/227k clipped
+draws (~89%); only `fillText` (~10%) still reads the bitmask.
 
 - **Done (Stage 1, `Context2D.js`):** `_clipRect`/`_clipIsRect` state (half-open `[x0,x1)×[y0,y1)` device
   ints), saved/restored in `_createSnapshot`/`_applySnapshot`; `_detectAxisAlignedRect` (4 distinct
@@ -351,17 +353,23 @@ rects so every clipped fill/stroke/blit exercises the new path).
   (canvas-wide ops + shadows affect pixels the source doesn't cover → they keep the real mask).
   `drawImage` (`Rasterizer._drawImageInternal` bbox-clamp) + `fill`/`stroke` (`clipRect` threaded through
   `PolygonFiller.fillPolygons` → both `_fillPolygonsDirect` and the standard span path; scanline-Y +
-  per-span-X clamp, `clipBuffer=null`). Covers ~178k/227k clipped draws (78%). Static `_disableTier0Clip`
-  flag forces the legacy path for A/B.
-- **Outstanding (follow-up):** (a) `fillRect`/`strokeRect` DIRECT paths — `RectOpsAA.fill_AA_*`/`stroke*`,
-  which use **raw `Uint8Array` bit math + build-time `@inline` macros** (delicate; needs a clip-rect span
-  clamp, not the clean method-based clamp PolygonFiller has); (b) `fillText` — the **TextRenderer**
-  subsystem (its clip path is NOT the drawImage one — confirmed it does not engage the wired paths);
-  (c) **Stage-2 flip**: once (a)+(b) are wired, drop the mask BUILD for tier-0 (`clip()` sets
-  `_clipMask=null`), banking the 2.6–2.8% build + alloc + GC — only safe when no path can read a null
-  mask; a `_rectToClipMask` materialiser is needed for a non-rect clip composed over a prior tier-0 rect;
-  (d) **Stage 3**: clone-free tier-0 save/restore (12,494 clones/suite). Verification tooling for the
-  follow-up: the A/B + rect-proof harnesses (recreate them; they were throwaway in scratchpad).
+  per-span-X clamp, `clipBuffer=null`). Static `_disableTier0Clip` flag forces the legacy path for A/B.
+- **Done (item 1 — RectOpsAA direct, SWCanvas `767d058` 2026-07-08):** the six clip-aware `RectOpsAA`
+  methods (`fill_AA_Opaq/Alpha`, `stroke1px_AA_Opaq/Alpha`, `strokeThick_AA_Opaq/Alpha`) took an optional
+  trailing `clipRect` param that clamps each loop's write extent / row-column guard to `[x0,x1)×[y0,y1)`
+  and skips the per-pixel bit test (byte-identical since the rect exposes exactly the mask's set pixels;
+  `clipRect=null` ⇒ surface-extent fallback ⇒ non-tier-0 callers unchanged). `Context2D.fillRect/strokeRect`
+  pass `_tier0ClipRect()` + `clipBuffer=null` on the axis-aligned branch; the rotated `RectOpsRot` branch
+  and `fillStroke_AA_Any`/`fillStrokeRect` (unused by Fizzygum) stay on the still-built bitmask backstop.
+  Adds the 5,080 `fillRect` + 19,907 `strokeRect` clipped draws → read-side coverage 78% → ~89%.
+- **Outstanding (follow-up):** (a) `fillText` — the **TextRenderer** subsystem (its clip path is NOT the
+  drawImage one — confirmed it does not engage the wired paths); last big read-side chunk (23,507 draws,
+  ~10%); (b) **mask-BUILD skip flip**: once (a) is wired, drop the mask BUILD for tier-0 (`clip()` sets
+  `_clipMask=null`), banking the 2.6–2.8% build + alloc + GC — only safe when no path can read a null mask
+  (needs a `_rectToClipMask` materialiser for a non-rect clip composed over a prior tier-0 rect, and either
+  wiring `RectOpsRot`/`fillStroke_AA_Any` or proving they never fire under a null-mask clip); (c) **Stage 3**:
+  clone-free tier-0 save/restore (12,494 clones/suite). Verification tooling for the follow-up: the A/B +
+  rect-proof harnesses (recreate them; they were throwaway in scratchpad).
 
 **What**: execute `plans/clipping-optimization.md` §9 Stages 1–3 (+4 if profiles then still
 show 1px-stroke bit-tests): detect axis-aligned integer rect clips post-flatten, keep
@@ -556,10 +564,10 @@ The change itself is easy (world already has per-frame broken rects; use the
 4. ~~S5~~ ✅ · ~~S2 (Tier 1)~~ ✅ · ~~S4~~ ✅ — the genuine *production* rendering wins, all landed
    byte-identically (measured A/B: S2 1.46×, S4 2.28× on-path). S2 Tier 2 (analytic axis-aligned rect)
    deferred as a smaller marginal gain.
-5. **S3** ◑ (the companion plan's §9 Stages 1–3) — Stage 1 + partial Stage 2 (`fill`/`stroke`/`drawImage`)
-   ✅ landed 2026-07-08, byte-identical (banks the `_getBit` bucket for 78% of clipped draws). **Remaining:
-   wire `fillRect`/`strokeRect` DIRECT (RectOpsAA, raw-buffer + macros) + `fillText` (TextRenderer), then
-   flip `clip()` to skip the mask BUILD (banks 2.6–2.8% + alloc/GC), then Stage 3 clone-free save/restore.**
+5. **S3** ◑ (the companion plan's §9 Stages 1–3) — Stage 1 + Stage 2 (`fill`/`stroke`/`drawImage` +
+   `fillRect`/`strokeRect` direct RectOpsAA) ✅ landed 2026-07-08, byte-identical (banks the `_getBit`
+   bucket for ~89% of clipped draws). **Remaining: wire `fillText` (TextRenderer, last ~10%), then flip
+   `clip()` to skip the mask BUILD (banks 2.6–2.8% + alloc/GC), then Stage 3 clone-free save/restore.**
    Largest single production win (`_getBit` reads 6.4–10.3% + build 2.6–2.8% + span detours). See §5 S3.
 6. **F1** (1–2 days) — orthogonal; any time. Suite/dev-loop boot speed.
 7. **S6b** (with the S4 blend work, under the byte-identical gate) + the
@@ -576,6 +584,7 @@ The change itself is easy (world already has per-frame broken rects; use the
 | 2026-07-08 | **F2 + S1 + S6a + S5** (arc 2) | — (not re-profiled) | — (not re-profiled) | dpr1 2.50 / dpr2 1.99 min (parallel, 5 shards) | Full `fg gauntlet` green (dpr1/dpr2/webkit 196/196 + apps + paint + tiernaming/settle/capstone) **and** `fg homepage` boot-smoke green; **zero reference churn**, cross-engine. dpr2 first-pass showed a **flaky parallel-boot stall** (shards 0/3/4: `ReferenceError: CoffeeScript is not defined` at boot → "did not start within 90s"; 0 pixel failures); clean re-run 5/5. Targeted busy-CPU deltas (F2 5.8%, S5 4.3%, S6a ~1%; S1 shipped ~0) not yet re-profiled — run the §6.4 loop next. |
 | 2026-07-08 | **S2 (Tier 1) + S4** (arc 3) | — (not re-profiled) | — (not re-profiled) | dpr1 1.58 / dpr2 1.74 / webkit 1.52 min | Full `fg gauntlet` green (dpr1/dpr2/webkit 196/196, no flake this run) **and** `fg homepage` green; **zero reference churn**, cross-engine. **Direct A/B micro-bench (old dist 4bce2cd vs new, identical surface hash): drawImage/S2 = 1.46× (31.5% faster), path-fill span/S4 = 2.28× (56% faster).** Full-suite busy-CPU delta pending §6.4 re-profile (was S2 `_drawImageInternal` 12.4% + S4 span/blend ~13%). |
 | 2026-07-08 | **S3 Stage 1 + partial Stage 2** (arc 4): tier-0 rect clip for `fill`/`stroke`/`drawImage` (SWCanvas `905c649..c1ec7ef`, pin bumped) | — (not re-profiled) | — (not re-profiled) | dpr1 1.58 / dpr2 1.65 / webkit 1.51 min | Byte-identical: SWCanvas 218/218 + per-primitive A/B (tier-0 vs forced-bitmask → identical surface hashes) + rect==mask pixel proof; full `fg gauntlet` (dpr1/dpr2/webkit 196/196 + apps + paint + tiernaming/settle/capstone) **and** `fg homepage` green; **zero reference churn**. Banks the `_getBit` read bucket (6.4–10.3% busy) for ~178k/227k clipped draws (78%). Mask BUILD still paid (backstop) — the 2.6–2.8% + alloc/GC win awaits wiring `fillRect`/`strokeRect` direct + `fillText`, then the Stage-2 mask-skip flip. **No tests-repo change.** |
+| 2026-07-08 | **S3 item 1** (arc 4 cont.): tier-0 rect clip for `fillRect`/`strokeRect` **direct** RectOpsAA paths (SWCanvas `c1ec7ef..767d058`, pin bumped) | — (not re-profiled) | — (not re-profiled) | dpr1 1.59 / dpr2 2.82 / webkit 1.51 min | Byte-identical: SWCanvas 218/218 + per-primitive A/B (6 rect primitives, tier-0 vs forced-bitmask → identical surface hashes, each ≠ unclipped so the clamp branch is exercised, `_clipIsRect` true/false across runs); full `fg gauntlet` (dpr1/dpr2/webkit 196/196 + apps + paint + gates) **and** `fg homepage` green; **zero reference churn**. Adds 5,080 `fillRect` + 19,907 `strokeRect` clipped draws → read-side coverage 78% → **~89%**. `fillText` (~10%) still on the bitmask; mask BUILD still paid (backstop). **No tests-repo change.** |
 
 ## 9. Explicitly considered and rejected / deferred
 
