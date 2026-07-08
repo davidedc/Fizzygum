@@ -138,8 +138,6 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
-      world.alignIDsOfNextWidgetsInSystemTests()
 
     @regexEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
     @regexEntryField.disableDrops()
@@ -218,8 +216,6 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
 
     world.maybeEnableTrackChanges()
     @fullChanged()
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
-      world.alignIDsOfNextWidgetsInSystemTests()
 
     super
     @markLayoutAsFixed()

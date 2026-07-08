@@ -28,10 +28,6 @@ class FridgeMagnetsWdgt extends Widget
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
-    if Automator? and
-     Automator.state != Automator.IDLE and
-     Automator.alignmentOfWidgetIDsMechanism
-      world.alignIDsOfNextWidgetsInSystemTests()
 
     #super
 
@@ -196,10 +192,6 @@ class FridgeMagnetsWdgt extends Widget
 
 
     world.maybeEnableTrackChanges()
-    if Automator? and
-     Automator.state != Automator.IDLE and
-     Automator.alignmentOfWidgetIDsMechanism
-      world.alignIDsOfNextWidgetsInSystemTests()
 
     super
     @markLayoutAsFixed()

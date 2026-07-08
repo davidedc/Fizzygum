@@ -89,7 +89,5 @@ class SpeechBubbleWdgt extends Widget
     super
     @markLayoutAsFixed()
 
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
-      world.alignIDsOfNextWidgetsInSystemTests()
 
 

@@ -638,23 +638,6 @@ class WorldWdgt extends PanelWdgt
 
     return mostRecentPopUp
 
-  # »>> this part is excluded from the fizzygum homepage build
-  # see roundNumericIDsToNextThousand method in
-  # Widget for an explanation of why we need this
-  # method.
-  alignIDsOfNextWidgetsInSystemTests: ->
-    if Automator? and Automator.state != Automator.IDLE
-      # Check which objects end with the word Widget
-      theWordWdgt = "Wdgt"
-      theWordWidget = "Widget"
-      listOfWidgetsClasses = (Object.keys(window)).filter (i) ->
-        i.includes(theWordWdgt, i.length - theWordWdgt.length) or
-        i.includes(theWordWidget, i.length - theWordWidget.length)
-      for eachWidgetClass in listOfWidgetsClasses
-        #console.log "bumping up ID of class: " + eachWidgetClass
-        window[eachWidgetClass].roundNumericIDsToNextThousand?()
-  # this part is excluded from the fizzygum homepage build <<«
-
   # used to close temporary menus
   # thin-wrap-exempt: NOT the canonical wrap over its _NoSettle twin -- the two are PARALLEL closers, not
   # wrapper/core. This one closes each marked popup via the self-settling close() (correct for the top-level
@@ -2086,7 +2069,6 @@ class WorldWdgt extends PanelWdgt
     # »>> this part is excluded from the fizzygum homepage build
     if Automator?
       Automator.animationsPacingControl = false
-      Automator.alignmentOfWidgetIDsMechanism = false
       Automator.hidingOfWidgetsContentExtractInLabels = false
       Automator.hidingOfWidgetsNumberIDInLabels = false
     # this part is excluded from the fizzygum homepage build <<«

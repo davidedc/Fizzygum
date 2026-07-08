@@ -149,8 +149,6 @@ class PopUpWdgt extends Widget
     # nopainting happening and the widget doesn't
     # know its extent.
     @_moveWithin world
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
-      world.alignIDsOfNextWidgetsInSystemTests()
     # shadow must be added after the widget
     # has been placed somewhere because
     # otherwise there is no visible image

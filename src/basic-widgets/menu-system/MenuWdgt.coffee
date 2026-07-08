@@ -17,8 +17,6 @@ class MenuWdgt extends PopUpWdgt
     true
 
   constructor: (@widgetOpeningThePopUp, @isListContents = false, @target, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true, @title = nil, @environment = nil, @fontSize = nil) ->
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
-      world.alignIDsOfNextWidgetsInSystemTests()
     if !@isListContents
       if @killThisPopUpIfClickOutsideDescendants
         @onClickOutsideMeOrAnyOfMyChildren "close"

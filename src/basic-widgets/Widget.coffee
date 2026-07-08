@@ -24,9 +24,9 @@ class Widget extends TreeNode
   # has instanceNumericID of 1.
   # instanceNumericID is initialised in the constructor.
   @instancesCounter: 0
-  # see roundNumericIDsToNextThousand method for an
-  # explanation of why we need to keep this extra
-  # count
+  # lastBuiltInstanceNumericID is the source of instanceNumericID (see assignUniqueID). Unlike
+  # instancesCounter (the never-reset lifetime/profiling count) it is RESET to 0 per widget class
+  # at ResetWorld (WorldWdgt), so SystemTest widget IDs restart deterministically each test.
   @lastBuiltInstanceNumericID: 0
   instanceNumericID: 0
 
@@ -331,26 +331,6 @@ class Widget extends TreeNode
     @constructor.instancesCounter++
     @constructor.lastBuiltInstanceNumericID++
     @instanceNumericID = @constructor.lastBuiltInstanceNumericID
-
-  # »>> this part is excluded from the fizzygum homepage build
-  # some test commands specify widgets via
-  # their uniqueIDString. This means that
-  # if there is one more text widget anywhere during
-  # the playback, for example because
-  # one new menu item is added, then
-  # all the subsequent IDs for the text widget will be off.
-  # In order to sort that out, we occasionally re-align
-  # the counts to the next 1000, so the next Widgets
-  # being created will all be aligned and
-  # minor discrepancies are ironed-out
-  @roundNumericIDsToNextThousand: ->
-    #console.log "@roundNumericIDsToNextThousand"
-    # this if is because zero and multiples of 1000
-    # don't go up to 1000
-    if @lastBuiltInstanceNumericID % 1000 == 0
-      @lastBuiltInstanceNumericID++
-    @lastBuiltInstanceNumericID = 1000 * Math.ceil @lastBuiltInstanceNumericID / 1000
-  # this part is excluded from the fizzygum homepage build <<«
 
   startCountdownForBubbleHelp: (contents) ->
     ToolTipWdgt.createInAWhileIfHandStillContainedInWidget @, contents

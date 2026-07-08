@@ -152,8 +152,6 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
 
     world.maybeEnableTrackChanges()
     @fullChanged()
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
-      world.alignIDsOfNextWidgetsInSystemTests()
 
     @markLayoutAsFixed()
 

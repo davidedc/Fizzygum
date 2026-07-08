@@ -33,8 +33,6 @@ class CodePromptWdgt extends Widget
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
-      world.alignIDsOfNextWidgetsInSystemTests()
 
     @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
     @tempPromptEntryField.disableDrops()
@@ -147,8 +145,6 @@ class CodePromptWdgt extends Widget
 
     world.maybeEnableTrackChanges()
     @fullChanged()
-    if Automator? and Automator.state != Automator.IDLE and Automator.alignmentOfWidgetIDsMechanism
-      world.alignIDsOfNextWidgetsInSystemTests()
 
     super
     @markLayoutAsFixed()
