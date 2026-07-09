@@ -106,7 +106,13 @@ class TransformSpec
   inverseMapPoint: (p, slotBounds) ->
     @_applyMatrixToPoint @inverseMatrixForSlot(slotBounds), p
 
-  # (mapPoint / inverseMapRect land with their first callers in Phase 2/4.)
+  # Forward point map (the exact inverse of inverseMapPoint): a slot/virtual-plane point up
+  # to the island's PARENT plane. First caller: Widget::localPointToScreen, which a macro uses
+  # to click an island-inner widget at the on-screen pixel its virtual point maps to.
+  mapPoint: (p, slotBounds) ->
+    @_applyMatrixToPoint @matrixForSlot(slotBounds), p
+
+  # (inverseMapRect lands with its first caller in Phase 2/4.)
 
   # Map a Rectangle through `m` and return the integer, axis-aligned AABB of the
   # 4 transformed corners: floor the mins, ceil the maxes, then pad by 1px (AA

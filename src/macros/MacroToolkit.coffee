@@ -444,6 +444,32 @@ class MacroToolkit
   moveToAndClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @moveToAndClick_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), whichButton, milliseconds, startTime
 
+  # Affine transforms (docs/affine-transforms-plan.md §4.6): the SCREEN-plane point at
+  # fractional position [fx,fy] inside a widget. pointAtFractionOf gives the point in the
+  # widget's OWN plane; a widget inside a scaled/rotated TransformFrameWdgt ("island") lives in
+  # that island's VIRTUAL plane, so its plane point must be mapped UP through each ancestor
+  # island's forward transform (Widget::localPointToScreen) to reach the on-screen pixel a user
+  # would actually click — an island-inner widget's screen position is NOT its bounds position.
+  # For a widget not inside any non-identity island this returns exactly what pointAtFractionOf
+  # does, so it is safe for any widget. The mapped screen point can lie OUTSIDE the widget's
+  # un-mapped bounds — that is the whole point: only the inverse-mapped hit-test (§4.6) lands it
+  # back on the widget, so a click here is a genuine click-THROUGH test.
+  screenPointAtFractionOf: (widgetOrIdentifier, fraction) ->
+    widget = if (typeof widgetOrIdentifier == "string") or (widgetOrIdentifier instanceof Array)
+      @findWidgetByTextDescription widgetOrIdentifier
+    else
+      widgetOrIdentifier
+    widget.localPointToScreen (@pointAtFractionOf widget, fraction)
+
+  # Move to a widget's SCREEN point at fraction [fx,fy] (default its centre) and click — the
+  # island analogue of moveToAndClickAtFractionOf_InputEvents, whose point is in the widget's
+  # own plane and would miss inside a scaled/rotated island. NOTE the click still dispatches
+  # the RAW screen position to the widget's handler, so sub-widget geometry that reads the
+  # click position (a caret slot, a slider fraction) is not itself plane-mapped yet (Phase 4);
+  # this verb only guarantees the click ROUTES to (focuses/triggers) the island-inner widget.
+  moveToAndClickAtScreenFractionOf_InputEvents: (widgetOrIdentifier, fraction = [0.5, 0.5], whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    @moveToAndClick_InputEvents (@screenPointAtFractionOf widgetOrIdentifier, fraction), whichButton, milliseconds, startTime
+
   # Push N consecutive left click-pairs (down+up) at the CURRENT pointer position, spaced so the hand
   # recognises them as a double-/triple-click. The hand only counts a fresh click as a double/triple while
   # the previous one is still "remembered" — a 300ms EVENT-TIME window (the forget gate in

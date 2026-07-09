@@ -618,14 +618,17 @@ discussion.
 
 ### Phase 1 — `TransformSpec` + `TransformFrameWdgt`, scale-only (all plumbing, zero quads)
 
-> **PHASE 1 (2026-07-09) — COMPLETE + ALL GATES GREEN + COMMITTED (owner-reviewed, not pushed).**
-> Steps 1–6 done; the ONE deferred item is the click-through MACRO (behaviour is
-> headless-probe-verified; the macro needs a `Widget::localPointToScreen` forward-map + a verb).
-> GATES: `fg gauntlet` = dpr1 **200/200** · dpr2 **200/200** · webkit **200/200** · apps · **paint**
-> (no over-repaint offenders) · settle · capstone — ALL PASS. `fg homepage` production build boots
-> clean. `doubleCheckCachedMethodsResults` coherence probe PASS (island two-faces == SLOW twins,
-> incl. nested in a clipping panel). Dormant guarantee held (zero reference changes; the sole
-> recapture was the benign inspector member-list, from the 2 new `Widget` members). Details below.
+> **PHASE 1 (2026-07-09) — COMPLETE, incl. the click-through macro (the last deferred item, landed
+> as a follow-up — see the "CLICK-THROUGH MACRO" note further down). Steps 1–6 + click-through all
+> done.** The foundation was COMMITTED earlier (Fizzygum `44b42161`, Fizzygum-tests `f25030f0e`,
+> not pushed); the click-through follow-up (3 source files + 1 new macro + a benign inspector
+> recapture) is verified but NOT YET committed.
+> GATES (foundation): `fg gauntlet` = dpr1 **200/200** · dpr2 **200/200** · webkit **200/200** ·
+> apps · **paint** (no over-repaint offenders) · settle · capstone — ALL PASS. `fg homepage`
+> production build boots clean. `doubleCheckCachedMethodsResults` coherence probe PASS (island
+> two-faces == SLOW twins, incl. nested in a clipping panel). Dormant guarantee held. The
+> click-through follow-up adds one macro (suite → **201**) and its gauntlet re-run is recorded in
+> the click-through note below. Details follow.
 >
 > **PHASE 1 FOUNDATION (Stage A) LANDED + VERIFIED.**
 > Landed `src/TransformSpec.coffee` (scalars + isIdentity + matrixForSlot + mapRect; rotation
@@ -687,13 +690,30 @@ discussion.
 > nondeterministic frame. Fixed with the BackBufferMixin-style `Math.min` clamp (dst keeps its
 > extent; ≤ sub-pixel edge strip, deterministic).
 >
-> STILL TODO for Phase 1: the click-through MACRO (behaviour is probe-verified; needs a
-> `Widget::localPointToScreen` forward-map + a macro verb that clicks a widget at its SCREEN
-> centre) and the full 3-engine gauntlet incl. a `doubleCheckCachedMethodsResults` leg. NOTE:
-> `mapPoint`/`inverseMapRect` and `setRotationDegrees`/`setAnchor` remain deferred (dead-method
-> gate) — re-introduced with their first callers (Phase 2 / Phase 4). Adding `mapRectToScreen` +
-> `screenPointToMyPlane` to `Widget` shifted one inspector member-list test
-> (`macroDuplicatedInspectorDrivesCopiedTargetOnly`) — recaptured (benign, per standing rule).
+> **CLICK-THROUGH MACRO (the last Phase-1 item) — LANDED + VERIFIED (2026-07-09, follow-up).**
+> Added `TransformSpec::mapPoint` (forward point map, exact inverse of `inverseMapPoint`) and
+> `Widget::localPointToScreen` (the inverse of `screenPointToMyPlane`: maps a point in a
+> widget's virtual plane UP to screen through each ancestor island's forward matrix, innermost →
+> outermost; returns the SAME object when not inside an island ⇒ dormant byte-identical), plus
+> the MacroToolkit verb `moveToAndClickAtScreenFractionOf_InputEvents` (via `screenPointAtFractionOf`).
+> New macro `macroTransformFrameScaledClickThrough` (dpr1+2): a short editable string at the LEFT
+> of a wide box wrapped in a scale-2 island, so the string's SCREEN centre is pushed well LEFT of
+> its virtual bounds; a click there focuses the string (only the inverse-mapped hit-test lands it)
+> and select-all + type replaces "edit me" → "HIT" (a value assertion `label.text=="HIT"` FAILS if
+> the click missed; image_2 shows "HIT" scaled). ⚠ NOTE recorded for Phase 4: the click still
+> dispatches the RAW screen position to the widget's handler (`ActivePointerWdgt:759` `w[click]
+> @position()`), so sub-widget geometry that reads the click position (caret slot, slider fraction,
+> drag delta) is NOT itself plane-mapped yet — this verb/test only prove the click ROUTES to the
+> island-inner widget; select-all makes the outcome independent of the exact caret slot.
+> Adding `localPointToScreen` to `Widget` shifted `macroDuplicatedInspectorDrivesCopiedTargetOnly`
+> image_2/image_3 again — recaptured (benign, per standing rule).
+> GATES (click-through follow-up): `fg gauntlet` = dpr1 **201/201** · dpr2 **201/201** · webkit
+> **201/201** · apps · paint · tiernaming · settle · capstone — ALL PASS; `fg homepage` boots
+> clean. Files: Fizzygum `src/TransformSpec.coffee`, `src/basic-widgets/Widget.coffee`,
+> `src/macros/MacroToolkit.coffee` (M); Fizzygum-tests `SystemTest_macroTransformFrameScaledClickThrough`
+> (NEW, dpr1+2) + `macroDuplicatedInspectorDrivesCopiedTargetOnly` image_2/3 recapture.
+> NOTE: `inverseMapRect` and `setRotationDegrees`/`setAnchor` remain deferred (dead-method gate) —
+> re-introduced with their first callers (Phase 2 / Phase 4).
 
 Rationale: uniform scale exercises every choke point (buffer, composite, damage mapping,
 pointer mapping, flesh-out hook, clipThrough integration) while every mapped rect remains an

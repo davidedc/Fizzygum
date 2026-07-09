@@ -1293,6 +1293,22 @@ class Widget extends TreeNode
       result = island.transformSpec.inverseMapPoint result, island.bounds
     result
 
+  # Affine transforms (§4.6): the exact inverse of screenPointToMyPlane — map a point in THIS
+  # widget's (virtual) plane UP to the SCREEN plane, applying each ancestor island's FORWARD
+  # transform innermost → outermost. A widget not inside any non-identity island gets the point
+  # back UNCHANGED (same object), so this is byte-identical when dormant. Used by the macro
+  # toolkit to click an island-inner widget at the on-screen pixel its virtual point maps to:
+  # once an ancestor island scales/rotates, a widget's screen position is NOT its bounds
+  # position, so `.center()` alone would click the wrong pixel (and miss).
+  localPointToScreen: (aPoint) ->
+    result = aPoint
+    ancestor = @parent
+    while ancestor?
+      if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
+        result = ancestor.transformSpec.mapPoint result, ancestor.bounds
+      ancestor = ancestor.parent
+    result
+
 
   # Widget accessing - simple changes: translate me + my children + repaint.
   # (Stage 5, 2026-07-01) The re-fit seam this used to fire is DELETED -- the settle loop now re-fits my tracking
