@@ -80,6 +80,25 @@ class AnalogClockWdgt extends Widget
       # rather than logical pixels, this is why
       # it's called before the scaling.
       @paintRectangle aContext, al, at, w, h, @backgroundColor
+
+      # C1: blit the cached STATIC face (the 12 hour + 48 minute tick marks) instead of
+      # re-stroking all 60 marks every repaint. It's rendered once per size into an
+      # immutable back buffer (see _getFaceBuffer) and blitted here in DEVICE space,
+      # integer-aligned to the SAME al/at/sl/st as the background rect — so, with
+      # SWCanvas's hard-edged (non-AA) rasterisation and integer widget positions, it
+      # lands byte-for-byte where the old in-renderingHelper tick strokes did. The ticks
+      # are the BOTTOM layer (drawn first, under the hands); the dynamic hands and the
+      # centre dot + outer arc that sit IN FRONT of the hands are still drawn live by
+      # renderingHelper, so the z-order is unchanged. globalAlpha matches the ticks' old
+      # alpha (renderingHelper uses appliedShadowAlpha * @alpha), and the blit works
+      # identically in the shadow pass — the caller has already translated the context
+      # by the shadow offset, and drawImage rides that translate like any other draw.
+      faceBuffer = @_getFaceBuffer()
+      aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
+      aContext.drawImage faceBuffer,
+        Math.round(sl), Math.round(st), Math.round(w), Math.round(h),
+        Math.round(al), Math.round(at), Math.round(w), Math.round(h)
+
       aContext.useLogicalPixelsUntilRestore()
 
       widgetPosition = @position()
@@ -137,8 +156,72 @@ class AnalogClockWdgt extends Widget
     context.lineWidth = 6 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
     context.lineCap = 'round'
 
+    # C1: the 12 hour + 48 minute tick marks (the STATIC face) are no longer stroked
+    # here — they are pre-rendered once per size into a cached back buffer and blitted
+    # in paintIntoAreaOrBlitFromBackBuffer BEFORE this method runs, so they remain the
+    # bottom layer (under the hands). _renderStaticFace reproduces exactly the strokes
+    # that used to be here. What follows (hands + centre dot + outer arc) is the dynamic
+    # / front content and is still drawn live, preserving the original z-order.
+
+    context.fillStyle = Color.BLACK.toString()
+
+    @calculateHandsAngles()
+
+    @drawHoursHand context, squareDim
+    @drawMinutesHand context, squareDim
+    @drawSecondsHand context, squareDim
+    @drawDotInMiddleOfFace context, squareDim
+
+    context.beginPath()
+    context.lineWidth = 10 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
+    context.strokeStyle = '#325FA2'
+    context.arc 0, 0, squareDim, 0, Math.PI * 2
+    context.stroke()
+
+
+    context.restore()
+
+    context.strokeStyle = color.toString()
+
+
+  # C1: render the STATIC clock face (tick marks only) into an offscreen buffer, cached
+  # by device size in world.cacheForImmutableBackBuffers. The face depends ONLY on the
+  # clock's size (colours + strokeSizeToClockDimensionRatio are constants), so every
+  # same-size clock shares one immutable buffer — cheap for the many-clocks scenes.
+  # Blitted by paintIntoAreaOrBlitFromBackBuffer (see the byte-identity note there).
+  _getFaceBuffer: ->
+    cacheKey = "AnalogClockWdgtFace-" + @extent().toString()
+    cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
+    if cacheHit? then return cacheHit
+
+    faceBuffer = HTMLCanvasElement.createOfPhysicalDimensions @extent().scaleBy ceilPixelRatio
+    faceBufferContext = faceBuffer.getContext "2d"
+    faceBufferContext.useLogicalPixelsUntilRestore()
+    @_renderStaticFace faceBufferContext
+
+    world.cacheForImmutableBackBuffers.set cacheKey, faceBuffer
+    return faceBuffer
+
+  # Draws ONLY the hour + minute tick marks, in the clock's local logical space (buffer
+  # origin = clock origin). This is exactly the tick portion that used to live at the
+  # top of renderingHelper — identical transform, stroke widths, caps and iteration
+  # order — so blitting the result is byte-identical to stroking them live. Drawn
+  # pristine: globalAlpha 1, no shadow (opaque black on transparent); the clock's alpha
+  # and any shadow are applied at blit time in paintIntoAreaOrBlitFromBackBuffer.
+  _renderStaticFace: (context) ->
+    height = @height()
+    width = @width()
+    squareDim = Math.min width/2, height/2
+
+    context.translate width/2, height/2
+    context.scale 0.9, 0.9
+    context.rotate -Math.PI / 2
+    context.strokeStyle = Color.BLACK.toString()
+    context.lineCap = 'round'
+
     # hour face ticks
     context.save()
+    context.lineWidth = 6 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
     i = 0
     while i < 12
       context.beginPath()
@@ -162,26 +245,6 @@ class AnalogClockWdgt extends Widget
       context.rotate Math.PI / 30
       i++
     context.restore()
-
-    context.fillStyle = Color.BLACK.toString()
-
-    @calculateHandsAngles()
-
-    @drawHoursHand context, squareDim
-    @drawMinutesHand context, squareDim
-    @drawSecondsHand context, squareDim
-    @drawDotInMiddleOfFace context, squareDim
-
-    context.beginPath()
-    context.lineWidth = 10 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
-    context.strokeStyle = '#325FA2'
-    context.arc 0, 0, squareDim, 0, Math.PI * 2
-    context.stroke()
-
-
-    context.restore()
-
-    context.strokeStyle = color.toString()
 
 
   drawHoursHand: (context, squareDim) ->

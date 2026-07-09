@@ -181,6 +181,31 @@ part on top.
 
 ### 3.1 C1 — AnalogClockWdgt static face
 
+> **✅ LANDED 2026-07-09 (Fizzygum-only; NOT byte-identical — 6 refs recaptured).**
+> `src/apps/AnalogClockWdgt.coffee`: the 12 hour + 48 minute tick marks (the static face) are
+> pre-rendered once per size into an immutable back buffer (`_getFaceBuffer` +
+> `_renderStaticFace`, cached in `world.cacheForImmutableBackBuffers` keyed by device size) and
+> blitted in `paintIntoAreaOrBlitFromBackBuffer` **in device space**, integer-aligned to the same
+> `al/at/sl/st` as the background rect; the hands and the centre dot + outer arc stay drawn live
+> (z-order: ticks < hands < dot < arc). **The determinism note below was FALSIFIED**: back-buffering
+> IS pixel-exact when the clock is at an INTEGER device transform (the common case — ticking in
+> place, or a window dragged over a stationary clock), but when a clock is painted under a
+> FRACTIONAL device transform (its `@position()` stays integer, but an ancestor scroll panel / close
+> animation applies a fractional context translate), a rounded-origin `drawImage` blit cannot
+> reproduce SWCanvas's non-AA rasterisation-at-a-fractional-position — they diverge by a handful of
+> tick-boundary pixels (1–54 px, visually identical). This is **not cleanly gate-able** (the widget
+> can't read the context's effective transform: SWCanvas compat has no `getTransform`, nor do the
+> Fizzygum context extensions track it). Owner decision: **ship + recapture**. Six SystemTests were
+> recaptured (owner-approved): four with the tick-shift artifact — `macroDocumentScrollsMixedTextAndClocks`
+> (scroll), `macroClosingInnerWindowKeepsOuter` (window close), `macroClockInWindowKeepsSquareOnResize`
+> (resize, dpr2), `macroWindowWithAClockInAWindowConstructionTwo` (nested, dpr2) — plus two BENIGN
+> inspector member-list shifts from the two new methods (`macroAnalogClockInspectEdit`,
+> `macroNakedInspectorRendersResizesAndEdits`). 32 frames recaptured (11 dpr1 + 21 dpr2). Full
+> `fg gauntlet` (dpr1/dpr2/webkit 196/196 + apps + paint + gates) + `fg homepage` green over the new
+> refs. ⚠ **Lesson for C2 and any future back-buffer conversion of a directly-drawn widget: a back
+> buffer is byte-identical to a direct draw ONLY at integer device transforms; under a fractional
+> ancestor transform (scroll/animation) it shifts non-AA pixels.** See §8 ledger.
+
 `src/apps/AnalogClockWdgt.coffee`: `@fps = 1` (`:11`), `step` → `@changed()` (`:99-101`), and
 `renderingHelper` (`:119`) re-strokes the STATIC face every paint: 12 hour ticks (`:143-149`),
 60 minute ticks (`:156-163`), centre dot + outer `#325FA2` arc (`:175-178`). Only the 3 hands
@@ -194,11 +219,14 @@ Cache the face in a back buffer keyed by device size (a per-size immutable face;
 `paintIntoAreaOrBlitFromBackBuffer`, blit the cached face then draw the hands live. Keep the
 existing clip + logical-pixel + translate/scale scaffolding (`:70-90`).
 
-**Determinism note**: the hands' angles derive from `@dateLastTicked`, which under the Automator
-is pinned (`AnalogClockWdgt.coffee:105-108` sets a fixed date when `Automator.animationsPacingControl`).
-The face has no time dependence, so back-buffering it cannot change any pixel. The existing
-SystemTest `SystemTest_macroAnalogClockInspectEdit` (Fizzygum-tests) covers this widget — it MUST
-stay pixel-identical (no reference recapture).
+**Determinism note (as-authored — see the LANDED box above for the CORRECTION)**: the hands'
+angles derive from `@dateLastTicked`, which under the Automator is pinned
+(`AnalogClockWdgt.coffee:105-108` sets a fixed date when `Automator.animationsPacingControl`). The
+face has no *time* dependence — but "no time dependence" does NOT imply "no pixel change": as the
+landed box records, the back buffer diverges by a few non-AA tick pixels when the clock is painted
+under a fractional device transform (scroll / close animation), which required recapturing 6
+SystemTests (4 clock-tick + 2 benign inspector member-list). The original "MUST stay pixel-identical"
+expectation was wrong.
 
 ### 3.2 C2 — SpreadsheetWdgt static grid + headers
 
@@ -238,8 +266,15 @@ then scope C2 carefully. Item A independently reduces C2's per-glyph cost meanwh
 ## 4. Sequencing & ledger
 
 1. **A** (SWCanvas full-cover canvas-wide fast path) — ✅ **DONE 2026-07-09** (SWCanvas `cf5eea8`).
-2. **C1** (clock face back-buffer) — NEXT; small, establishes the pattern.
-3. **C2** (spreadsheet grid back-buffer) — larger; scope after C1.
+2. **C1** (clock face back-buffer) — ✅ **DONE 2026-07-09** (Fizzygum-only; NOT byte-identical —
+   6 SystemTests recaptured, owner-approved; see §3.1 landed box). Established the pattern AND the
+   sharp lesson below.
+3. **C2** (spreadsheet grid back-buffer) — larger; scope after C1. ⚠ **Heed the C1 lesson**: a
+   back-buffer blit is byte-identical to a direct draw ONLY at integer device transforms. The
+   spreadsheet grid is drawn under whatever transform its window/scroll context imposes; if that is
+   ever fractional (scroll offset, animation), back-buffering the grid will shift non-AA pixels and
+   force a recapture — decide up front whether that's acceptable (it was for C1) or whether C2 needs
+   a fractional-transform guard first.
 
 Record each landing in `docs/runtime-performance-optimization-plan.md` §8 ledger (date, item,
 SWCanvas range + pin bump for A, byte-identity evidence, before/after `prof-interactive` numbers).
