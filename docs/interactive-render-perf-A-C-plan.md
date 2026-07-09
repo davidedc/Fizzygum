@@ -1,6 +1,7 @@
 # Interactive-render perf plan — A (SWCanvas full-cover canvas-wide fast path) + C (static-face back-buffering)
 
-**Status**: AUTHORED 2026-07-08, NOT STARTED. Self-contained / cold-runnable.
+**Status**: Item **A LANDED 2026-07-09** (SWCanvas `60ba1a3..cf5eea8`, Fizzygum pin
+bumped to `cf5eea8`). Items **C1/C2 NOT STARTED**. Self-contained / cold-runnable.
 **Provenance**: the 2026-07-08 interactive-profiling investigation (see
 `docs/profiling/prof-interactive.js` + `docs/profiling/README.md`; memory
 `fizzygum-runtime-backend-swcanvas`). Follows the S3/W1/W2 wins in
@@ -79,6 +80,21 @@ Do A first (cheap, broad, byte-identical). C is a larger, higher-ceiling follow-
 ---
 
 ## 2. Item A — full-cover canvas-wide composite fast path (SWCanvas)
+
+> **✅ LANDED 2026-07-09** — SWCanvas `cf5eea8` (`perf(rasterizer): full-cover
+> canvas-wide composite fast path`), Fizzygum pin bumped `60ba1a3→cf5eea8`.
+> `_fillRectInternal` detects the safe case (no clip, axis-aligned transform, device
+> rect ⊇ `[0,W]×[0,H]`) and runs a single `blendPixel` pass (`_fillFullCoverCanvasWide`);
+> the SourceMask is now lazily allocated (`_ensureSourceMask`) so the fast path allocates
+> nothing. Byte-identical: SWCanvas **218/218** + a 36-scene old-vs-new A/B (every op ×
+> full-cover/oversized/scaled-cover + gradient + back-to-back tints fire the fast path;
+> partial / scaled-miss-corner / rect-clip / rotated / `fill(path)` / source-over fall
+> back — all identical hashes); full `fg gauntlet` (dpr1/dpr2/webkit 196/196 + apps +
+> paint + gates) **and** `fg homepage` green, **zero reference churn** (built
+> `js/fizzygum-boot-min.js` confirmed to ship the fast path). Tint micro-bench
+> **1.55–1.71× faster**; busy-drag re-measure (`--sw --cwc`) shows canvas-wide
+> compositing calls **12,807 → 0**. See §8 ledger in
+> `docs/runtime-performance-optimization-plan.md`. **No tests-repo change.**
 
 ### 2.1 Current mechanism (why it's wasteful)
 
@@ -221,8 +237,8 @@ then scope C2 carefully. Item A independently reduces C2's per-glyph cost meanwh
 
 ## 4. Sequencing & ledger
 
-1. **A** (SWCanvas full-cover canvas-wide fast path) — do first; broad, byte-identical, low-risk.
-2. **C1** (clock face back-buffer) — small, establishes the pattern.
+1. **A** (SWCanvas full-cover canvas-wide fast path) — ✅ **DONE 2026-07-09** (SWCanvas `cf5eea8`).
+2. **C1** (clock face back-buffer) — NEXT; small, establishes the pattern.
 3. **C2** (spreadsheet grid back-buffer) — larger; scope after C1.
 
 Record each landing in `docs/runtime-performance-optimization-plan.md` §8 ledger (date, item,
