@@ -833,6 +833,48 @@ unchanged.
 
 ### Phase 3 — layout coupling (`claimsSpace`)
 
+> **PHASE 3 (2026-07-09) — COMPLETE + VERIFIED (owner "commit and then continue"). NOT yet
+> committed.** `'footprint'` and `'sweep'` are wired; the paint-only `'slot'` firewall holds.
+> IMPLEMENTATION (all gated so the blast radius is contained — no existing test has an island in a
+> stack, and everything keys off `!isIdentity()` / `claimsSpace != 'slot'`):
+> - `TransformSpec` — `setClaimsSpace`; `_claimedBoxFor`/`claimedExtentFor` (the box/extent the
+>   parent reserves: slot box for 'slot', corner-mapped AABB for 'footprint', anchor-aware
+>   circumscribed square for 'sweep'); `slotOffsetWithinClaim` (translation-invariant offset —
+>   the §10.8 claimed-box = extent AND offset); `_sweepSquareFor` (radius = max scaled corner
+>   distance from the anchor; `Math.sqrt` is IEEE-correctly-rounded ⇒ deterministic, and the
+>   square is rotation-invariant by construction).
+> - `TransformFrameWdgt` — `setClaimsSpace` (reflows once on mode change); `_transformChanged` now
+>   calls `_reflowIfClaimChanged` (reflows via `_invalidateLayout` — the SAME entry a resize uses,
+>   `_setExtentNoSettle`→`_invalidateLayout`, found by reading the resize path — ONLY when the
+>   claimed extent actually changed: so 'footprint' reflows on angle/scale, 'sweep' reflows on
+>   scale/extent but NOT rotation, and 'slot' NEVER reflows). A NON-IDENTITY island is a fixed
+>   figure for layout: `preferredExtentForWidth` reports the claimed extent (not stretched);
+>   `_applyExtentBase` is a no-op (⇒ `@bounds` stays the SLOT box — Phases 1-2 untouched);
+>   `_applyMoveToBase` offsets the slot box by `slotOffsetWithinClaim` within the reserved claimed
+>   box (arrange-leaf placement only — a drag/direct move goes through `_applyMoveTo`/`moveTo`, not
+>   offset). Identity islands fall through to super (dormant).
+> VERIFIED (2 macros, all value-asserted + visually inspected):
+> - `macroTransformFrameFootprintReflow` — the FIREWALL (rotating a 'slot' plot in a stack does not
+>   move the footer below) + footprint reflow (coupling to 'footprint' claims the rotated AABB, one
+>   reflow, footer drops below it) + the 90° exact integer transpose (claimed extent = slot box
+>   swapped, within the 1px AA pad).
+> - `macroTransformFrameSweepReserve` — 'sweep' reserves the circumscribed square ONCE (footer
+>   drops on entry), then spinning to 40°/80° does NOT reflow (footer steady — rotation-invariant).
+> GATES: `fg gauntlet` = dpr1 **209/209** · dpr2 **209/209** · webkit **209/209** · apps · paint ·
+> tiernaming · settle · **capstone** — ALL PASS; `fg homepage` boots clean. Suite 207→209. Phase-1/2
+> island refs UNCHANGED (the 'slot' path invalidates nothing, so its self-settle is a no-op —
+> verified byte-identical). Files: Fizzygum `src/TransformSpec.coffee`, `src/TransformFrameWdgt.coffee`
+> (M). BANKED: container-level 'freeze' veto (§4.9); anchor setter + `mapPoint`/`inverseMapRect`
+> (Phase 4).
+> ⚠ LESSONS: (1) invalidating layout from a public mutator leaves a CARELESS end-of-cycle push
+> (capstone gate) unless it self-settles — wrap the mutator as the canonical `set*` → `_settleLayouts-
+> After => @_set*NoSettle` with a bare `_invalidateLayout` reached inside the core (the `_inLayout-
+> Mutation` window suppresses the careless-push audit, `Widget.coffee:3956`). The self-settle must
+> live at the PUBLIC tier (layering rule [G] rejects a low-level `_` method calling a self-settling
+> wrapper). (2) The layering gate's textual scanner false-trips when a `_…NoSettle` core calls a
+> `@member.setX` whose name collides with THIS widget's self-settling `setX` wrapper — set the
+> member's canonical scalar field DIRECTLY instead (`@transformSpec.scale = s`).
+
 1. Wire `'footprint'` and `'sweep'` per §4.9 (extent reporting + the resize-equivalent layout
    invalidation; find the invalidation entry by reading the resize path — do NOT add a new
    one).

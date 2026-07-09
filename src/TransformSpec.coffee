@@ -45,17 +45,49 @@ class TransformSpec
   isIdentity: ->
     (@rotationDegrees % 360 == 0) and (@scale == 1)
 
-  # ---- setters (scale + rotation mutable through Phase 2; anchor setter lands in
-  #      Phase 4 — re-introduced with its first caller). ----
-  setScale: (s) ->
-    @scale = s if s > 0
-    @
+  # The canonical scalars (scale / rotationDegrees / claimsSpace) are mutated DIRECTLY by
+  # TransformFrameWdgt's guarded _set*NoSettle cores (a thin setter here would collide, by name,
+  # with the widget's self-settling public wrappers and false-trip the layering gate). The anchor
+  # setter lands in Phase 4 with its first caller.
 
-  # Phase 2: rotation is live. Any angle is valid; a non-zero angle makes the matrix
-  # depend on DetTrig (see _cosSin). First caller: TransformFrameWdgt::setRotation.
-  setRotationDegrees: (deg) ->
-    @rotationDegrees = deg
-    @
+  # ---- layout coupling (plan §4.9) — the extent this island CLAIMS from its parent's ----
+  #      layout, and where the slot box sits inside that claimed box.
+  #
+  # The claimed BOX in the slot box's own coordinate frame (before layout moves it):
+  #  'slot'      → the slot box itself (paint-only; parent reserves nothing extra).
+  #  'footprint' → the corner-mapped integer AABB of the transformed slot box (§4.3) — changes
+  #                with angle/scale, so the parent reflows on a transform change.
+  #  'sweep'     → the anchor-aware circumscribed square (§4.3) — depends on scale/extent/anchor
+  #                but NOT on angle, so a spinning figure reflows once then stays put.
+  _claimedBoxFor: (slotBounds) ->
+    switch @claimsSpace
+      when "footprint" then @mapRect slotBounds, slotBounds
+      when "sweep"     then @_sweepSquareFor slotBounds
+      else slotBounds
+
+  # the claimed EXTENT (Point) the parent layout reserves.
+  claimedExtentFor: (slotBounds) ->
+    @_claimedBoxFor(slotBounds).extent()
+
+  # offset from the claimed box's top-left to the slot box's top-left. Translation-invariant
+  # (depends only on slot EXTENT + θ + s + anchor — the similitude AABB moves with the slot box),
+  # so there is NO position→extent feedback. When layout places the claimed box at P, the slot box
+  # commits to P + slotOffset (plan §4.9: claimed box = extent AND offset).
+  slotOffsetWithinClaim: (slotBounds) ->
+    slotBounds.topLeft().subtract @_claimedBoxFor(slotBounds).topLeft()
+
+  # circumscribed square for 'sweep' (§4.3): radius r = max over slot-box corners of the SCALED
+  # distance to the anchor; the integer AABB of the circle of radius r centred on the anchor.
+  # Rotation-invariant by construction (a rotation about the anchor preserves each corner's
+  # distance to it). Math.sqrt is IEEE-correctly-rounded ⇒ cross-engine deterministic (unlike trig).
+  _sweepSquareFor: (slotBounds) ->
+    A = @_anchorFor slotBounds
+    r = 0
+    for x in [slotBounds.left(), slotBounds.right()]
+      for y in [slotBounds.top(), slotBounds.bottom()]
+        d = Math.sqrt((x - A.x) * (x - A.x) + (y - A.y) * (y - A.y)) * @scale
+        r = d if d > r
+    new Rectangle (Math.floor(A.x - r)), (Math.floor(A.y - r)), (Math.ceil(A.x + r)), (Math.ceil(A.y + r))
 
   # cos/sin of the rotation. Rotation==0 fast path (Phase 1: always) returns exact
   # [1,0] with no trig call; the deterministic branch is ready for Phase 2.

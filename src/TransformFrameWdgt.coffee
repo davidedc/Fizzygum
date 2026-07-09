@@ -38,6 +38,9 @@
 class TransformFrameWdgt extends PanelWdgt
 
   transformSpec: nil
+  # Phase 3 (§4.9): last claimed extent reported to the parent layout, for reflow-on-change
+  # detection. nil for a 'slot' island (the default — never reflows).
+  _lastClaimedExtent: nil
 
   constructor: (contentWidget = nil, transformSpec = nil) ->
     super()   # PanelWdgt ctor (sets appearance/color/stroke) — we blank them below
@@ -74,30 +77,109 @@ class TransformFrameWdgt extends PanelWdgt
     @
 
   # ---------------------------------------------------------------------------
-  # the transform spec + its mutation (invalidation mirrors a move: §6 step 2)
+  # the transform spec + its mutation (invalidation mirrors a move: §6 step 2).
+  # Each public mutator is the canonical self-settling wrapper (@_settleLayoutsAfter
+  # => the _<name>NoSettle core) — the SAME public tier moveTo/setExtent use. The
+  # settle is where a coupled island's reflow (_invalidateLayout, reached bare inside
+  # the core) is resolved; for a 'slot' island the core invalidates NOTHING, so the
+  # settle is a genuine no-op and Phase-1/2 rendering is byte-identical.
   # ---------------------------------------------------------------------------
   setScale: (s) ->
+    @_settleLayoutsAfter => @_setScaleNoSettle s
+
+  _setScaleNoSettle: (s) ->
     return if !(s > 0) or s == @transformSpec.scale
-    @transformSpec.setScale s
-    @_transformChanged()
+    @transformSpec.scale = s   # set the canonical scalar directly (guarded above)
+    @_transformChangedNoSettle()
 
   # Phase 2: rotate the island by `deg` degrees about its anchor (default the slot centre).
-  # Same invalidation as setScale — a transform change damages the screen (old ∪ new footprint)
-  # but never dirties the buffer (§4.5 invariant).
+  # A transform change damages the screen (old ∪ new footprint) but never dirties the buffer
+  # (§4.5 invariant).
   setRotation: (deg) ->
-    return if deg == @transformSpec.rotationDegrees
-    @transformSpec.setRotationDegrees deg
-    @_transformChanged()
+    @_settleLayoutsAfter => @_setRotationNoSettle deg
 
-  # A transform change damages the SCREEN (old footprint ∪ new footprint) but never
-  # dirties the buffer (buffer content depends only on virtual content — plan §4.5
-  # invariant). It invalidates the version-keyed bounds caches exactly as a move
-  # does (__breakMoveResizeCaches bumps WorldWdgt.geometryVersion) and queues the
-  # new footprint via fullChanged(); the OLD footprint is the last-painted snapshot
-  # the flesh-out lane already reads as the "source" rect.
-  _transformChanged: ->
+  _setRotationNoSettle: (deg) ->
+    return if deg == @transformSpec.rotationDegrees
+    @transformSpec.rotationDegrees = deg   # set the canonical scalar directly
+    @_transformChangedNoSettle()
+
+  # Phase 3: change the layout-coupling mode (plan §4.9). Entering/leaving a coupled mode
+  # ('footprint'/'sweep') changes the claimed extent, so it reflows the parent's layout —
+  # through the SAME entry a resize uses (_invalidateLayout), settled by the wrapper above.
+  setClaimsSpace: (mode) ->
+    @_settleLayoutsAfter => @_setClaimsSpaceNoSettle mode
+
+  _setClaimsSpaceNoSettle: (mode) ->
+    return if mode == @transformSpec.claimsSpace
+    @transformSpec.claimsSpace = mode   # set the canonical scalar directly
+    @_lastClaimedExtent = nil
     @__breakMoveResizeCaches()
     @fullChanged()
+    @_invalidateLayout()
+
+  # The immediate (no-settle) transform-change core: invalidates the version-keyed bounds caches
+  # exactly as a move does (__breakMoveResizeCaches bumps WorldWdgt.geometryVersion), queues the
+  # new footprint via fullChanged() (the OLD footprint is the last-painted snapshot the flesh-out
+  # lane reads as the "source" rect), and — for a coupled island — invalidates the parent's layout.
+  _transformChangedNoSettle: ->
+    @__breakMoveResizeCaches()
+    @fullChanged()
+    @_reflowIfClaimChangedNoSettle()
+
+  # ---------------------------------------------------------------------------
+  # layout coupling (plan §4.9). A NON-IDENTITY island is a FIXED FIGURE for its
+  # parent's layout: it reports its CLAIMED box (slot box for 'slot'; footprint
+  # AABB / sweep square for the coupled modes) as a fixed extent, is never
+  # stretched, and offsets its slot box within the claimed box. An IDENTITY island
+  # falls through to super — byte-identically the bare wrapped widget, incl. in a
+  # stack (dormant guarantee). No Phase-1/2 test puts an island in a stack, so this
+  # changes nothing existing. Only the REFLOW-on-transform-change is further gated on
+  # claimsSpace != 'slot' — the paint-only Lively firewall.
+  # ---------------------------------------------------------------------------
+  _claimsFixedFigure: ->
+    !@transformSpec.isIdentity()
+
+  # 'slot' NEVER reflows (paint-only firewall). A coupled island reflows its parent — through the
+  # resize entry (_invalidateLayout) — but ONLY when the claimed extent actually changed. Correct
+  # by construction: 'footprint' reflows on angle/scale (its AABB changes); 'sweep' reflows on
+  # scale/extent but NOT rotation (its circumscribed square is rotation-invariant).
+  # 'slot' NEVER reflows (paint-only firewall) — it invalidates nothing, so the enclosing
+  # wrapper's settle is a no-op and Phase-1/2 rendering is byte-identical. A coupled island
+  # invalidates the parent's layout (bare — the public wrapper's _settleLayoutsAfter settles it)
+  # but ONLY when the claimed extent actually changed: 'footprint' reflows on angle/scale (its
+  # AABB changes), 'sweep' reflows on scale/extent but NOT rotation (its square is rotation-
+  # invariant). Correct by construction — no need to know what changed.
+  _reflowIfClaimChangedNoSettle: ->
+    return if @transformSpec.claimsSpace == "slot"
+    newClaim = @transformSpec.claimedExtentFor @bounds
+    return if @_lastClaimedExtent? and newClaim.equals @_lastClaimedExtent
+    @_lastClaimedExtent = newClaim
+    @_invalidateLayout()
+
+  # what we report to the parent's arrange: a non-identity island claims a FIXED figure size (the
+  # slot box / footprint AABB / sweep square, §4.9), independent of the offered width — measured,
+  # not stretched. An identity island measures normally (super).
+  preferredExtentForWidth: (availW) ->
+    return super availW if !@_claimsFixedFigure()
+    @_lastClaimedExtent = @transformSpec.claimedExtentFor @bounds
+    @_lastClaimedExtent
+
+  # the parent's arrange sizes leaf children to their reported (claimed) extent; a non-identity
+  # island IGNORES that so @bounds stays the SLOT box (Phases 1-2 build the buffer + composite
+  # from it — the slot box is fixed by wrapContent, never stretched). Identity islands size normally.
+  _applyExtentBase: (aPoint) ->
+    return if @_claimsFixedFigure()
+    super aPoint
+
+  # the parent's arrange hands us the top-left of our CLAIMED box; commit the SLOT box at
+  # claimedOrigin + slotOffset so the slot sits correctly inside the reserved footprint/sweep
+  # region (§4.9; the offset is ZERO for 'slot', whose claimed box IS the slot box). Only the
+  # arrange-leaf placement comes through _applyMoveToBase; a drag/direct move comes through
+  # _applyMoveTo/moveTo and is NOT offset. Identity islands place directly.
+  _applyMoveToBase: (aPoint) ->
+    if @_claimsFixedFigure()
+      aPoint = aPoint.add @transformSpec.slotOffsetWithinClaim(@bounds)
+    super aPoint
 
   # ---------------------------------------------------------------------------
   # compositing (plan §4.2)
