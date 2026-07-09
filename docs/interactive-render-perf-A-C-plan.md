@@ -187,15 +187,21 @@ part on top.
 > `_renderStaticFace`, cached in `world.cacheForImmutableBackBuffers` keyed by device size) and
 > blitted in `paintIntoAreaOrBlitFromBackBuffer` **in device space**, integer-aligned to the same
 > `al/at/sl/st` as the background rect; the hands and the centre dot + outer arc stay drawn live
-> (z-order: ticks < hands < dot < arc). **The determinism note below was FALSIFIED**: back-buffering
-> IS pixel-exact when the clock is at an INTEGER device transform (the common case — ticking in
-> place, or a window dragged over a stationary clock), but when a clock is painted under a
-> FRACTIONAL device transform (its `@position()` stays integer, but an ancestor scroll panel / close
-> animation applies a fractional context translate), a rounded-origin `drawImage` blit cannot
-> reproduce SWCanvas's non-AA rasterisation-at-a-fractional-position — they diverge by a handful of
-> tick-boundary pixels (1–54 px, visually identical). This is **not cleanly gate-able** (the widget
-> can't read the context's effective transform: SWCanvas compat has no `getTransform`, nor do the
-> Fizzygum context extensions track it). Owner decision: **ship + recapture**. Six SystemTests were
+> (z-order: ticks < hands < dot < arc). **NOT byte-identical — but the mechanism is NOT what the
+> determinism note below guessed** (it is not a fractional transform). Measured ground truth: the
+> clock's `@bounds` are integer (`Widget.__commitExtent` rounds the extent, positions round in the
+> move path) AND the context transform at the blit is **identity** (`a1 b0 c0 d1 e0 f0` — logged in
+> the scroll test). The ≤1px tick divergence is **floating-point non-associativity** in tick-endpoint
+> rasterisation: drawing the ticks DIRECTLY bakes the widget position into the float CTM, so an
+> endpoint rasterises as `floor(a·squareDim + position + w/2)`; drawing them into an origin buffer +
+> integer-offset blit rasterises as `floor(a·squareDim + w/2) + position`. Equal in exact arithmetic,
+> but IEEE-754 addition is **not associative**, so they differ by ≤1px (more at large size/dpr) when
+> the endpoint sits near a pixel boundary. Confirmed by isolated reproduction (`scratchpad/clock-*.js`)
+> that matches the suite exactly: byte-exact for 70/130 px clocks at dpr1, **diverges for 130 px at
+> dpr2 (867/900 positions) and 200 px at both dprs** — precisely why the resize/nested-window clock
+> tests (130 px) pass at dpr1 but fail at dpr2. It is **not gate-able by an integer-position check**
+> (positions ARE already integer; the divergence is in the internal float rasterisation of the
+> rotated ticks). Owner decision: **ship + recapture**. Six SystemTests were
 > recaptured (owner-approved): four with the tick-shift artifact — `macroDocumentScrollsMixedTextAndClocks`
 > (scroll), `macroClosingInnerWindowKeepsOuter` (window close), `macroClockInWindowKeepsSquareOnResize`
 > (resize, dpr2), `macroWindowWithAClockInAWindowConstructionTwo` (nested, dpr2) — plus two BENIGN
@@ -223,10 +229,12 @@ existing clip + logical-pixel + translate/scale scaffolding (`:70-90`).
 angles derive from `@dateLastTicked`, which under the Automator is pinned
 (`AnalogClockWdgt.coffee:105-108` sets a fixed date when `Automator.animationsPacingControl`). The
 face has no *time* dependence — but "no time dependence" does NOT imply "no pixel change": as the
-landed box records, the back buffer diverges by a few non-AA tick pixels when the clock is painted
-under a fractional device transform (scroll / close animation), which required recapturing 6
-SystemTests (4 clock-tick + 2 benign inspector member-list). The original "MUST stay pixel-identical"
-expectation was wrong.
+landed box records, moving the tick draw into an origin buffer changes a few tick-endpoint pixels via
+**floating-point non-associativity** (position baked into the float CTM vs added as an integer blit
+offset — equal in exact math, ≤1px apart in IEEE-754 near pixel boundaries; size/dpr-dependent). This
+required recapturing 6 SystemTests (4 clock-tick + 2 benign inspector member-list). The original "MUST
+stay pixel-identical" expectation was wrong, and — note — it is **NOT** fixable by keeping positions
+integer (they already are); the divergence is in the internal rasterisation of the rotated ticks.
 
 ### 3.2 C2 — SpreadsheetWdgt static grid + headers
 
@@ -269,12 +277,14 @@ then scope C2 carefully. Item A independently reduces C2's per-glyph cost meanwh
 2. **C1** (clock face back-buffer) — ✅ **DONE 2026-07-09** (Fizzygum-only; NOT byte-identical —
    6 SystemTests recaptured, owner-approved; see §3.1 landed box). Established the pattern AND the
    sharp lesson below.
-3. **C2** (spreadsheet grid back-buffer) — larger; scope after C1. ⚠ **Heed the C1 lesson**: a
-   back-buffer blit is byte-identical to a direct draw ONLY at integer device transforms. The
-   spreadsheet grid is drawn under whatever transform its window/scroll context imposes; if that is
-   ever fractional (scroll offset, animation), back-buffering the grid will shift non-AA pixels and
-   force a recapture — decide up front whether that's acceptable (it was for C1) or whether C2 needs
-   a fractional-transform guard first.
+3. **C2** (spreadsheet grid back-buffer) — larger; scope after C1. ⚠ **Heed the C1 lesson**:
+   back-buffering a directly-drawn widget is NOT automatically byte-identical, even at integer
+   positions. Relocating a draw into an origin buffer changes the float CTM (position no longer baked
+   in), so any content whose rasterisation is FP-sensitive near pixel boundaries — rotated/scaled
+   strokes especially — can shift ≤1px (size/dpr-dependent; see the C1 landed box). The spreadsheet
+   grid is mostly axis-aligned rects + text at integer positions, which is FP-robust, so C2 is likely
+   safer than C1 — but VERIFY with the gauntlet and expect that any FP-sensitive sub-content may still
+   force a recapture. Integer positions are necessary but NOT sufficient for back-buffer byte-identity.
 
 Record each landing in `docs/runtime-performance-optimization-plan.md` §8 ledger (date, item,
 SWCanvas range + pin bump for A, byte-identity evidence, before/after `prof-interactive` numbers).
