@@ -206,6 +206,12 @@ class WorldWdgt extends PanelWdgt
     @visibilityVersion++
     @geometryVersion++
 
+  # Occlusion culling (docs/occlusion-culling-plan.md P2, Avenue A). CLASS property so it is
+  # untouched by world-snapshot serialization, and so a test / the profiler's --cull A/B and
+  # DETERMINISM.md's "disable the mechanism" move can flip it globally. See
+  # @fullPaintIntoAreaOrBlitFromBackBuffer / @_paintedFromFrontmostCoverer below.
+  @occlusionCullingEnabled: true
+
   broken: nil
   duplicatedBrokenRectsTracker: nil
   numberOfDuplicatedBrokenRects: 0
@@ -695,11 +701,55 @@ class WorldWdgt extends PanelWdgt
     #  * this implementation which just takes into account that the hand
     #    (which could contain a Widget being floatDragged)
     #    is painted on top of everything.
-    super aContext, aRect
+    #
+    # Occlusion culling (docs/occlusion-culling-plan.md P2): if some top-level opaque widget fully
+    # covers this broken rect, paint STARTING FROM it (skipping the desktop fill + every child behind
+    # it, within this rect) instead of the full back-to-front super() pass. _paintedFromFrontmostCoverer
+    # returns true iff it did that painting; otherwise we fall back to the normal super() path.
+    if !@_paintedFromFrontmostCoverer aContext, aRect
+      super aContext, aRect
 
     # the mouse cursor is always drawn on top of everything
     # and it's not attached to the WorldWdgt.
     @hand.fullPaintIntoAreaOrBlitFromBackBuffer aContext, aRect
+
+  # Occlusion culling (docs/occlusion-culling-plan.md P2, Avenue A -- a stateless per-rect pre-scan).
+  # Reverse-scan world.children (the array is BACK-to-front, so reverse = front-to-back) for the
+  # frontmost widget that provably paints a fully-opaque fill covering the WHOLE broken rect; if one
+  # is found, paint only it and the widgets in front of it -- skipping the desktop self-paint and
+  # every child behind the coverer (all pure overdraw in this rect). Returns true iff it painted (the
+  # caller then skips super()); false = no coverer, caller paints the normal full-depth way.
+  # CONSERVATIVE: opaqueCoveredRect and clippedThroughBounds both err to "not covered", so a wrong
+  # answer here can only be a false NEGATIVE -> a redundant repaint, never a dropped pixel.
+  _paintedFromFrontmostCoverer: (aContext, aRect) ->
+    return false if !WorldWdgt.occlusionCullingEnabled
+    # cull ONLY the live on-screen paint; scratch / back-buffer contexts (and their damage
+    # bookkeeping) must be left exactly as they are
+    return false if aContext != @worldCanvasContext
+    dirtyPart = aRect.intersect @boundingBox()          # identical to the mixin's narrowing of the dirty rect to the desktop
+    return false if dirtyPart.isEmpty()
+    testRect = dirtyPart.expandBy 1                      # +1px margin: painting rounds on the logical grid (calculateKeyValues)
+    covererIndex = nil
+    for i in [@children.length - 1 .. 0] by -1          # front-to-back
+      child = @children[i]
+      coveredRect = child.opaqueCoveredRect()
+      if coveredRect? and coveredRect.containsRectangle(testRect) and
+          child.clippedThroughBounds().containsRectangle dirtyPart
+        covererIndex = i
+        break
+    return false if !covererIndex?
+    # A coverer owns every pixel of dirtyPart. Preserve the world's OWN paint-record bookkeeping even
+    # though its self-paint is bypassed -- the world can itself be a brokenWidget (e.g. wallpaper
+    # change), see occlusion-culling-plan.md §1b(b).
+    @recordDrawnAreaForNextBrokenRects()
+    # paint the coverer and everything in front of it, narrowed to dirtyPart (byte-identical child
+    # trajectory to the mixin's own children loop, which narrows to the same rect)
+    for i in [covererIndex ... @children.length]
+      @children[i].fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPart
+    # replicate the mixin's trailing panel-stroke pass (a no-op for the world unless a strokeColor is
+    # ever set -- RectangularAppearance.paintStroke gates on @widget.strokeColor?)
+    @paintStroke aContext, aRect
+    return true
 
   clippedThroughBounds: ->
     # always recompute -- the world is the clip terminal, so its clipped bounds ARE its boundingBox; trivial, no version cache.

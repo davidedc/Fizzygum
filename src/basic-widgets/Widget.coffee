@@ -1927,6 +1927,45 @@ class Widget extends TreeNode
       @clippedBoundsWhenLastPainted = @clippedThroughBounds()
       @fullClippedBoundsWhenLastPainted = @fullClippedBounds()
 
+  # Occlusion culling (docs/occlusion-culling-plan.md P1): the axis-aligned rectangle this widget
+  # provably paints FULLY OPAQUE, in LOGICAL px world coordinates, or nil. It is the geometry both
+  # avenues of the plan share (Avenue A scans it per broken rect; Avenue B would cache it).
+  # CONSERVATIVE BY DESIGN: any uncertainty MUST yield nil -- a wrong (too-big) rect silently drops
+  # pixels of whatever is painted beneath the coverer, caught only by the pixel-exact SystemTests.
+  # Every gate is evaluated at RUNTIME (never baked per class): appearances are swapped live
+  # (e.g. WindowWdgt._deriveAndSetBodyAppearance flips Rectangular<->Boxy on re-parenting).
+  opaqueCoveredRect: ->
+    # (1) The paint must route through the plain appearance delegation. Widget::paintIntoAreaOrBlit-
+    # FromBackBuffer just delegates to @appearance, but nine widget classes override it to draw
+    # arbitrary pixels (HandleWdgt, LayoutChromeWdgt, LabelButtonWdgt, PenWdgt, CellWdgt,
+    # SpreadsheetWdgt, AnalogClockWdgt, Example3DPlotWdgt, GraphsPlotsChartsWdgt) and BackBufferMixin
+    # blits an offscreen buffer of unknown per-pixel opacity. This one prototype-identity check
+    # excludes them ALL (it subsumes the back-buffer exclusion).
+    return nil if @paintIntoAreaOrBlitFromBackBuffer isnt Widget::paintIntoAreaOrBlitFromBackBuffer
+    # (2) ephemeral overlays (highlights, drag affordances) are translucent screen-toppers, never coverers
+    return nil if @isEphemeral()
+    # (3) the fill runs at globalAlpha = @alpha (RectangularAppearance), and (4) @color must be a
+    # solid opaque colour (else fillStyle emits rgba(...) -- Color.toString gates on _a == 1)
+    return nil if @alpha != 1
+    return nil if !@color? or @color._a != 1
+    # Dispatch on the EXACT appearance class (CoffeeScript switch compares with ===): a subclass
+    # appearance may add arbitrary drawing (drawAdditionalPartsOnBaseShape) and must NOT inherit a
+    # coverage claim. DesktopAppearance falls to the else -> nil (the world occludes nothing).
+    switch @appearance?.constructor
+      when RectangularAppearance
+        if @backgroundColor? and @backgroundColor._a == 1
+          # an opaque backgroundColor fills the FULL clipped bounds, padding ring included
+          @boundingBox()
+        else
+          # the main @color fill clips to the tight box (bounds inset by the four paddings)
+          @boundingBoxTight()
+      when BoxyAppearance
+        # inscribed box: the straight edges between corners fill crisply to the bounds, only the
+        # corner arcs anti-alias -> inset every side by cornerRadius + 1 (conservative)
+        @boundingBox().insetBy Math.max(@appearance.getCornerRadius(), 0) + 1
+      else
+        nil
+
   # in general, the children of a Widget could be outside the
   # bounds of the parent (they could also be much larger
   # then the parent). This means that we have to traverse
