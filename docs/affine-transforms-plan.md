@@ -762,8 +762,8 @@ GATES (all must pass before Phase 1 is declared done — verify, don't assert):
 
 ### Phase 2 — rotation
 
-> **PHASE 2 (2026-07-09) — COMPLETE + VERIFIED (owner said "commit and then continue" after
-> Phase 1). Steps 1–4 all done; NOT yet committed.** Rotation is live end to end: the general warp
+> **PHASE 2 (2026-07-09) — COMPLETE + VERIFIED + COMMITTED (Fizzygum `a5f4ef97`, Fizzygum-tests
+> `188404618`; NOT pushed).** Steps 1–4 all done. Rotation is live end to end: the general warp
 > composite, the setter + its damage, exact quad hit-testing, rotated shadows, ancestor clipping,
 > occlusion invariant, and 6 macros.
 > IMPLEMENTATION:
@@ -833,8 +833,8 @@ unchanged.
 
 ### Phase 3 — layout coupling (`claimsSpace`)
 
-> **PHASE 3 (2026-07-09) — COMPLETE + VERIFIED (owner "commit and then continue"). NOT yet
-> committed.** `'footprint'` and `'sweep'` are wired; the paint-only `'slot'` firewall holds.
+> **PHASE 3 (2026-07-09) — COMPLETE + VERIFIED + COMMITTED (Fizzygum `707f9720`, Fizzygum-tests
+> `0d720b550`; NOT pushed).** `'footprint'` and `'sweep'` are wired; the paint-only `'slot'` firewall holds.
 > IMPLEMENTATION (all gated so the blast radius is contained — no existing test has an island in a
 > stack, and everything keys off `!isIdentity()` / `claimsSpace != 'slot'`):
 > - `TransformSpec` — `setClaimsSpace`; `_claimedBoxFor`/`claimedExtentFor` (the box/extent the
@@ -891,29 +891,183 @@ GATES: `fg gauntlet` green; the `'slot'` macro must prove the layout engine neve
 the animation (assert via geometry equality; if a cheap layout-run counter exists in the
 settle machinery, assert on it too).
 
-### Phase 4 — UX + the Lively-flavored API
+### Phase 4 — UX + the Lively-flavored API (sub-step plan authored 2026-07-09; owner-gated)
 
-1. Halo/handle rotation (precedent: `src/HandleWdgt.coffee`): drag to rotate around the
-   anchor; snap to 0/90/180/270 within ~3°.
-2. Property sugar: `widget.rotation = θ` / `widget.scale = s` auto-materializes a
-   `TransformFrameWdgt` around the widget (or adjusts the existing one), and REMOVES it when
-   the spec returns to identity (structural identity restored — important for the dormant
-   guarantee and for serialization cleanliness). Note the standing inspector lesson: adding
-   members to a common base is inspector-safe only if the member panel hides inherited
-   members — check how the inspector treats new `Widget`-level accessors before adding them.
-3. Pick/drop across islands: picking a widget out of a non-identity island wraps it in a
-   fresh single-child island carrying the accumulated similitude (concatenate specs if
-   nested); dropping INTO an island inverse-maps the drop point and unwraps if the target
-   plane matches (Phase 1's no-drop restriction is lifted here).
-4. Resize handles on transformed widgets: map drag deltas through the inverse rotation so
-   edge-drags move the visually-correct edge.
-5. Macro tests: rotate-via-handle (scripted pointer drag); snap behavior; pick from rotated
-   window → floating widget stays visually rotated → drop on desktop; drop into a rotated
-   window lands at the correct inner position.
+Phases 0–3 shipped the ENGINE (islands composite, hit-test, damage, layout coupling, all
+gate-green + committed). Phase 4 is the INTERACTION layer — the largest phase, and unlike
+0–3 it is not one shippable unit but four distinct sub-features with a dependency order. It
+is therefore executed as ordered sub-steps **4A → 4E**, each independently gate-green and
+each ending at a resting point (present a summary, wait for the owner, commit on approval —
+standing rule). The recommended order below is **foundation-first** (fix the content-
+interaction seam before building UX on top of it); it is adjustable — if the owner wants an
+early *visible* win, 4B (halo rotation on an explicitly-wrapped island) can lead, since it
+does not strictly depend on 4A. Each sub-step lists: goal · depends-on · seams (file:line,
+verified 2026-07-09) · approach · macros · risks.
 
-GATES: `fg gauntlet`; plus one full `fg recapture`-free run (recaptures in this phase should
-be limited to genuinely new references; recapturing an EXISTING reference needs the standing
-justification — benign inspector member-list changes only).
+**As-built vs plan drift (verified 2026-07-09, fold into the executor's mental model):**
+- The Phase-1 "refuse `HandleWdgt` on widgets inside a non-identity island" scope-cut named in
+  §4.6 was **never actually wired** — there is no such guard in `HandleWdgt`/`Widget`. Phase 1
+  simply never *put* a handle inside an island. So 4C/4A "lift the refusal" is really "add the
+  delta mapping that was never needed before," not "remove a guard."
+- The Phase-1 "islands refuse drops" scope-cut IS wired, minimally: `TransformFrameWdgt`
+  ctor sets `@_acceptsDrops = false` (`TransformFrameWdgt.coffee:53`), and `wantsDropOfChild`
+  returns `@_acceptsDrops` (`Widget.coffee:2998`). A drop over island content today climbs
+  past the island (`dropTargetFor`, `ActivePointerWdgt.coffee:171-175`) to an accepting
+  ancestor — it doesn't error, it just won't nest INTO the island. 4D lifts this.
+- The hit-test predicate ALREADY plane-maps the pointer (`topWdgtUnderPointer`,
+  `ActivePointerWdgt.coffee:104` — `m.screenPointToMyPlane @position()`), so widget
+  *identification* inside islands is correct today. The gap 4A closes is the *position passed
+  to the handler*, not identification.
+
+#### 4A — Interaction-plane dispatch plumbing (the foundation)
+
+- **Goal:** every pointer POSITION and DELTA handed to a handler is expressed in the
+  receiver's own plane, so caret slot, slider fraction, button-relative clicks, and
+  handle-drag deltas are correct for widgets INSIDE a non-identity island. Dormant-identical
+  by construction (`screenPointToMyPlane` returns the same object when not inside an island).
+- **Depends on:** nothing (pure correctness fix; foundation for 4B/4C/4D).
+- **Seams (raw `@position()` handed to handlers — all in `src/ActivePointerWdgt.coffee`):**
+  `processMouseDown` dispatch `w[actualClick] @position()` (`:607`); `processMouseUp` main
+  dispatch `w[expectedClick] @position(), …` (`:759`), `mouseUpLeft?/mouseUpRight?` (`:656,658`);
+  double/triple-click `mouseDoubleClick/mouseTripleClick @position()` (`:885,894`). Drag
+  handler: `HandleWdgt::nonFloatDragging(startOffset, pos, deltaFromPrev)` computes
+  `newPos = pos.subtract startOffset` and calls `@target._setExtentDeferredSettle` /
+  `_moveToDeferredSettle` / `_setWidthDeferredSettle` / `_setHeightDeferredSettle`
+  (`HandleWdgt.coffee:252-269`) — all in screen space today.
+- **Approach:**
+  - Dispatch position: replace `@position()` at the handler-dispatch call sites with
+    `w.screenPointToMyPlane @position()` (the helper already exists, `Widget.coffee:1282`;
+    it no-ops off-island). Audit each handler that RE-EMITS the received position into screen
+    space (menu-at-point, prompt-at-point) — those must re-forward via `localPointToScreen`
+    (`Widget.coffee:1303`); most open at the hand (`popUpAtHand`, already screen) and need no
+    change. The audit is the real work, not the substitution.
+  - Handle/drag deltas: a delta is a VECTOR — it maps through the inverse of the island
+    matrix's **linear part only** (a,b,c,d — drop the translation e,f), not the full affine.
+    Add `TransformSpec::inverseMapVector(v, slotBounds)` (first caller; sibling of the existing
+    `inverseMapPoint`) and a `Widget::screenVectorToMyPlane(v)` chain-walker (sibling of
+    `screenPointToMyPlane`). Map both `pos` and `startOffset` (or map the resulting delta) in
+    `nonFloatDragging` when `@target` is inside a non-identity island; leave the dormant path
+    byte-identical.
+- **Macros (new):** `macroTransformFrameScaledCaretSlot` (click into a text field inside a
+  scale-2 island → caret lands at the slot the on-screen pixel names, asserted via caret index
+  or a follow-up type); `macroTransformFrameRotatedResizeHandle` (drag a resize handle on a
+  widget inside a rotated island → the visually-correct edge moves; assert resulting slot
+  extent). Both must FAIL against pre-4A code (prove the seam) and pass after.
+- **Risks:** (1) some handler may read `@position()` again internally rather than the passed
+  arg — grep handlers for `world.hand.position()`/`activePointer.position()` and map at the
+  read site too. (2) Deltas vs points is the classic bug — a rotation delta mapped as a point
+  translates spuriously; the linear-only `inverseMapVector` is mandatory, add a unit-style
+  assertion macro if practical.
+
+#### 4B — Halo / handle rotation (the marquee gesture)
+
+- **Goal:** a rotation handle in the widget's halo; drag rotates the island about its anchor;
+  snap to 0/90/180/270 within ~3°.
+- **Depends on:** the engine (`setRotation`, live since Phase 2). Does NOT require 4A (the
+  rotate handle lives ON the island/world and computes in screen space). Benefits from 4C for
+  rotating arbitrary widgets, but is demonstrable on an explicitly-wrapped island.
+- **Seams:** `HandleWdgt` (`src/HandleWdgt.coffee`) is the precedent — a corner-attached
+  overlay whose `nonFloatDragging` mutates `@target`. The halo/handle-show entry is
+  `Widget::showResizeAndMoveHandlesAndLayoutAdjusters` (menu item wired at
+  `Widget.coffee:3322,3331`). `TransformFrameWdgt::setRotation(deg)` (`:98`) is the mutator to
+  call; anchor is `transformSpec._anchorFor(bounds)` (`TransformSpec.coffee:100`).
+- **Approach:** add a `"rotateHandle"` type (or a small `RotateHandleWdgt`) whose
+  `nonFloatDragging` computes the angle of (screen pointer − screen anchor) relative to the
+  grab-start angle, snap-rounds, and calls `island.setRotation`. `screenAnchor =
+  island.localPointToScreen(island.transformSpec._anchorFor(island.bounds))`. Attach the
+  rotate handle to the ISLAND (its slot box is ordinary geometry). Reuse `HandleWdgt`
+  machinery (`defaultLayoutSpecWhenAddedTo`, `updateVisibility`) as far as it fits.
+- **Macros (new):** `macroTransformFrameRotateViaHandle` (scripted pointer drag rotates a
+  wrapped widget to a target angle); `macroTransformFrameRotateSnap` (drag to ~88° → snaps to
+  90°; drag to ~85° → stays free).
+- **Risks (determinism — the sharp edge):** the handle computes the raw angle from integer
+  pointer coords via `atan2`, but `Math.atan2` is NOT guaranteed cross-engine bit-identical,
+  and the suite asserts byte-exact pixels under WebKit too. Mitigation, in order of
+  preference: (a) if `DetTrig` exposes `atan2`, use it (verify — Phase-2 only needed
+  `DetTrig.cos/sin`, `TransformSpec.coffee:98`; `atan2` may need a small fdlibm addition to the
+  SWCanvas shim, an owner-gated SWCanvas-repo change); OR (b) **quantize the committed
+  `rotationDegrees` to an integer grid** before `setRotation` AND choose macro drag endpoints
+  that land safely inside a grid cell (not on a rounding boundary), so ULP differences in
+  `atan2` can't flip the rounded result. (b) is self-contained and also gives clean snap
+  behavior — prefer it unless free-angle precision is required. Record the choice in §0-R/§8.
+
+#### 4C — Property sugar: `widget.rotation` / `widget.scale` (auto-materialize / auto-remove)
+
+- **Goal:** set rotation/scale on ANY widget; an enclosing `TransformFrameWdgt` is created on
+  demand and REMOVED when the spec returns to identity — structural identity restored (matters
+  for the dormant guarantee, serialization cleanliness, and byte-identical dormant references).
+- **Depends on:** the engine. Independent of 4A/4B. (Sequenced after 4A/4B because it is the
+  most structurally invasive — it reparents live widgets — so land it once the interaction
+  seams are proven.)
+- **Seams:** `TransformFrameWdgt::wrapContent(widget)` (`:74`) already does the wrap (slot box
+  = widget bounds, widget becomes the single free-floating child). Unwrap has no method yet.
+  Reparent primitives: `add`/`_addNoSettle`, `_reactToChildGrabbed`/`_reactToChildDropped`;
+  the self-settling wrapper is `_settleLayoutsAfter` (used throughout `TransformFrameWdgt`).
+- **Approach:** add Widget-level `setRotationDegrees(θ)` / `setScaleFactor(s)` (method form —
+  Fizzygum does not use JS property accessors; the `= θ` sugar, if wanted, is a thin
+  `Object.defineProperty` over the method, decided at implementation time). Logic: if my parent
+  is already a single-child island wrapping EXACTLY me → forward to it; else wrap me in a fresh
+  island in place (preserving my absolute position). On a set that returns the spec to identity
+  → unwrap: reparent the child back to the island's parent at the slot origin, drop the island.
+  "Adjusts the existing one" applies ONLY when the island wraps exactly this widget (else a
+  second set would nest).
+- **Macros (new):** `macroWidgetRotationSugarMaterializes` (set rotation on a bare widget →
+  island appears, renders rotated); `macroWidgetRotationSugarRemovesAtIdentity` (set back to 0
+  → island gone, tree structurally identical to before, pixel-identical to the bare widget).
+- **Risks:** (1) **inspector member-list recapture is expected** — adding `Widget`-level
+  methods shifts `macroDuplicatedInspectorDrivesCopiedTargetOnly` (the standing benign-
+  recapture rule; run the full gauntlet after, WebKit leg included). (2) Serialization: a
+  materialized island must round-trip (scalars only, §4.10); an unwrap must leave NO island in
+  the snapshot. (3) Reparent-during-interaction ordering — do the wrap/unwrap through the
+  self-settling public tier, never mid-settle.
+
+#### 4D — Pick / drop across islands (the hardest sub-feature)
+
+- **Goal:** pick a widget OUT of a non-identity island and it stays visually transformed while
+  floating; drop INTO an island and it lands at the correct inner position. Lifts the Phase-1
+  no-drop restriction.
+- **Depends on:** 4C (reuses materialize/unwrap) and 4A (drop-point plane mapping).
+- **Seams:** grab reparents to the hand (`ActivePointerWdgt::grab`, `:295`; records
+  `@grabOrigin = aWdgt.situation()`, `:331`; `_beforeBeingGrabbed`, `Widget.coffee:3650`). Drop
+  resolves `target = dropTargetFor wdgtToDrop` (`:410-432`) then `target.add wdgtToDrop, …,
+  @position()` (`:436`). Drop acceptance = `wantsDropOfChild` → `_acceptsDrops`
+  (`Widget.coffee:2998`); the island sets it false (`TransformFrameWdgt.coffee:53`).
+  `inverseMapRect` (deferred TransformSpec method) gets its first caller here.
+- **Approach:** pick-OUT — when the grabbed widget is inside a non-identity island, wrap it (on
+  the hand) in a fresh island carrying the ACCUMULATED similitude of its former ancestor
+  islands (concatenate specs innermost→outermost; a similitude ∘ similitude is a similitude, so
+  the scalars compose cleanly — scale multiplies, degrees add, anchor maps). Drop-IN — allow
+  the island (or its content container) to accept drops, inverse-map the drop point into the
+  target plane (`screenPointToMyPlane`), place the child there, and if the dropped payload is
+  itself a single-child island whose plane MATCHES the target, unwrap it (avoid nested-island
+  buildup). Reuse 4C's wrap/unwrap.
+- **Macros (new):** `macroTransformFramePickOutStaysRotated` (grab a widget from a rotated
+  island → floating copy stays visually rotated → drop on desktop lands as a rotated island);
+  `macroTransformFrameDropIntoRotatedLandsCorrectly` (drop onto a rotated window → payload
+  appears at the inner position the screen drop-point maps to).
+- **Risks:** (1) spec composition correctness (anchor mapping under composition is the subtle
+  part — derive and test at 90° first, where it's exact). (2) nested-island accumulation if
+  unwrap-on-match is wrong → growth over repeated pick/drop; assert structural identity after a
+  round-trip. (3) `@grabOrigin`/sticky-target logic (`:415-432`) already special-cases
+  re-nesting into the pre-grab parent — make sure island wrap/unwrap composes with it.
+
+#### 4E — Suite consolidation + final gate + doc close-out
+
+- Run the full `fg gauntlet` (dpr1/dpr2/webkit + apps/paint/tiernaming/settle/capstone) and
+  `fg homepage` after the last sub-step; confirm the ~209 dormant references are byte-
+  identical except the single expected inspector member-list recapture (4C).
+- Re-introduce the remaining deferred `TransformSpec` methods WITH their first callers only
+  (`inverseMapVector` in 4A, `inverseMapRect` in 4D, `setAnchor` if/when an anchor UI lands —
+  do NOT add speculative API).
+- Finalize §6 Phase-4 banners (implementation notes + gate results + commit hashes) and mirror
+  status into the memory note; then Phase 4 is the feature's shipping point (Phase 5 = §7
+  banked follow-ons, each its own future plan).
+
+GATES (every sub-step): `fg gauntlet` green incl. the sub-step's new macros; `fg homepage`
+clean; dormant references unchanged (the ONLY sanctioned recapture in the whole phase is the
+4C inspector member-list, under the standing benign-recapture justification). A NEW test's
+first `capture-macro-test-references.js` run fails (manifest lacks it) then its own rebuild
+adds it — RE-RUN once (recurring gotcha, not a bug).
 
 ### Phase 5 — BANKED follow-ons (owner-gated; each is its own future plan)
 
