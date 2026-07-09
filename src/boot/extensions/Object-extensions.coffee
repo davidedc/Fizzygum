@@ -49,12 +49,34 @@ Object::addInstanceProperties = (fromClass, obj) ->
 # ...see how Java does it for arrays at
 # https://github.com/openjdk-mirror/jdk7u-jdk/blob/master/src/share/classes/java/util/Arrays.java#L2893
 
-Object::hashCode = ->
-  stringToBeHashed = @toString()
-  hash = 0|0
-  return hash|0  if stringToBeHashed.length is 0
-  for i in [0...stringToBeHashed.length]
-    char = stringToBeHashed.charCodeAt i
-    hash = ((hash << 5) - hash) + char
-    hash |= 0 # Convert to 32bit integer
-  hash|0
+# Memoized by STRING VALUE (the hash is a pure function of @toString(), so caching
+# by that string is always correct regardless of receiver — no invalidation needed).
+# Why: StringWdgt/TextWdgt rebuild their back-buffer cache keys on EVERY paint by
+# re-hashing the full label / wrapped-paragraph string, so the same short strings are
+# hashed every frame (O2, docs/runtime-performance-optimization-plan.md §5B; measured
+# 1.5–5.4% of a busy-desktop frame). Byte-identical — identical hash values, just not
+# recomputed. Only SHORT strings are cached (the repeated cache-key texts): large blobs
+# like canvas data-URLs (hashed once for a screenshot fingerprint, not per frame — see
+# the note above) are skipped so the cache can't bloat, with a size-cap backstop.
+do ->
+  stringHashCache = new Map()
+  MAX_CACHED_HASHES = 16384
+  CACHEABLE_MAX_LEN = 2048
+  Object::hashCode = ->
+    stringToBeHashed = @toString()
+    len = stringToBeHashed.length
+    return 0|0  if len is 0
+    cacheable = len <= CACHEABLE_MAX_LEN
+    if cacheable
+      cachedHash = stringHashCache.get stringToBeHashed
+      return cachedHash if cachedHash?
+    hash = 0|0
+    for i in [0...len]
+      char = stringToBeHashed.charCodeAt i
+      hash = ((hash << 5) - hash) + char
+      hash |= 0 # Convert to 32bit integer
+    hash = hash|0
+    if cacheable
+      stringHashCache.clear()  if stringHashCache.size >= MAX_CACHED_HASHES
+      stringHashCache.set stringToBeHashed, hash
+    hash

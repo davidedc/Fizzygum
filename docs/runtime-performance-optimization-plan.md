@@ -631,16 +631,49 @@ free ~5%; but NOT a big lever. The real remaining headroom is **O3 (per-widget o
 micro-opt. **✅ LANDED 2026-07-09** — SWCanvas `e5f207b..468c5f7` (main), Fizzygum `vendor/swcanvas.pin`
 bumped to `468c5f7`. See §8 ledger.
 
-### O2 — memoize the back-buffer text hash 【Fizzygum; small; clean win】
+### O2 — memoize `Object::hashCode` by string value 【Fizzygum; ✅ LANDED, small】
 
-**Where**: `Object::hashCode` (`src/boot/extensions/Object-extensions.coffee:52`, O(length) over the
-string) is called from `StringWdgt`/`TextWdgt` cache-key builders (`StringWdgt.coffee:572,655-656`;
-`TextWdgt.coffee:68,76,89,201,318`) which re-hash the **full label string** (`@text.hashCode()` +
-`@textPossiblyCroppedToFit.hashCode()`) to build the back-buffer cache key **every paint**.
-**Measured**: `Object.hashCode` = 1.5% of the drag frame, up to **5.4%** in text-heavy phases.
-**Change**: cache the string hash on the widget, invalidate in the text setter (the memoization pattern
-already exists nearby as `@hashOfTextConsideredAsReference`, used only for modification detection).
-**Verify**: `fg gauntlet` (byte-identical — cache keys unchanged, just not recomputed).
+**Where**: `Object::hashCode` (`src/boot/extensions/Object-extensions.coffee`, an O(length)
+`charCodeAt` loop) is called from `StringWdgt`/`TextWdgt` to build back-buffer cache keys
+(`StringWdgt.coffee:655-656`; `TextWdgt.coffee:68,76,89,201,318`) — re-hashing the full label /
+wrapped-paragraph string **every paint**. Measured: `Object.hashCode` = 1.5% of the drag frame, up
+to **5.4%** text-heavy.
+**Change (done)**: memoize inside `Object::hashCode` a `Map<string, hash>` keyed by the string value.
+The hash is a PURE function of `@toString()`, so caching by that string is correct for ANY receiver
+with **no invalidation** — the deciding advantage over a widget-level cache (whose invalidation surface
+across the ~18 mutation sites was the risk). Only strings ≤ 2048 chars are cached (the repeated
+cache-key texts); large blobs like canvas data-URLs (hashed once per screenshot, not per frame) are
+skipped so the cache can't bloat, with a `.clear()` size-cap backstop at 16384 entries.
+**Measured**: technique micro-bench 4–6× on the hashCode calls (stable strings 6.17×, freshly-recreated
+4.46×), hashes identical. Byte-identical: full `fg gauntlet` (dpr1/dpr2/webkit 196/196 + apps + paint +
+gates), zero reference churn.
+
+**Design note — why the hash stays, and why NOT the alternatives** (the cache-key mechanism was
+examined in full; owner discussion 2026-07-09):
+- The back-buffer cache is a HIERARCHY of **content-addressed, world-level** caches, all keyed by
+  content hashes: `cacheForTextParagraphSplits` (text→paragraphs), `cacheForParagraphsWordsSplits`
+  (per-paragraph→words), `cacheForParagraphsWrappingData` (`(font,width,paragraph)`→wrapped layout —
+  the expensive line-breaking, **per paragraph**), and `cacheForImmutableBackBuffers` (full 18-field
+  key→bitmap). No key carries widget identity. This buys three things a per-widget scheme can't:
+  **(1) cross-widget dedup** (identical content computed/stored once, shared world-wide — every
+  repeated label/button/cell); **(2) per-paragraph incrementality** (edit one paragraph → only it
+  re-wraps); **(3) correctness BY CONSTRUCTION** (key IS the content → any change → new key → miss →
+  rebuild, automatically; a new style field just joins the key — no mutation site to wire).
+- **Rejected — per-widget dirty-flag retained buffer (c)**: wins only the per-frame unchanged cost;
+  regresses (1),(2),(3) — no dedup, whole-widget invalidation (dead-ends incremental text), and a
+  real invalidation surface (miss a setter → stale pixel).
+- **Rejected — raw text in the key (a)**: V8 builds `a+…+text` as a cheap ConsString, but using it as a
+  Map key FLATTENS + hashes it O(text length) and allocates a full copy **every lookup, every paint** →
+  re-couples key cost to text length and churns GC on long paragraphs. The hash exists precisely to keep
+  the key SHORT regardless of text size; (a) throws that away.
+- **Rejected — optimistic per-widget content-version gate**: could skip the rebuild while keeping (1),(2)
+  and the global cache, but only by sacrificing (3) — a forgotten version-bump = a silent stale-pixel
+  bug. A permanent maintenance tax not worth ~a few %.
+- **Conclusion**: no hybrid is BOTH correct-by-construction AND skips the key rebuild — those are
+  logically opposed (re-derive-from-content vs don't). The surface-free frontier is to make derivation
+  CHEAPER (O2 memoizes the hash; the `.toString()`s are already memoized, e.g. `Color._derived_String`)
+  and to run the path LESS OFTEN (occlusion culling / O3 — don't build keys for widgets not repainted).
+  O2 is the right-sized, zero-new-surface shave; it keeps every positive of the content-addressed design.
 
 ### O3 — per-widget / descend occlusion 【Fizzygum; large; = plan P4/P5】
 
@@ -714,6 +747,7 @@ Needs a targeted `--profile` with a drawImage-caller wrap to attribute the blits
 | 2026-07-09 | **Item C1**: AnalogClockWdgt static-face back-buffer — the 12 hour + 48 minute tick marks are pre-rendered once per size into an immutable back buffer (`world.cacheForImmutableBackBuffers`) and blitted instead of re-stroking 60 marks every repaint; hands + dot + arc stay live (Fizzygum-only, no SWCanvas change) | — | — | dpr1/dpr2/webkit 196/196 | **⚠ NOT byte-identical** (owner-approved ship + recapture). Mechanism (measured, NOT the fractional-transform first guess): `@bounds` are integer (`__commitExtent` rounds) and the blit CTM is **identity** — the ≤1px tick divergence is **floating-point non-associativity**: direct draw bakes position into the float CTM (`floor(a·squareDim + position + w/2)`) vs origin-buffer + integer-offset blit (`floor(a·squareDim + w/2) + position`); equal in exact math, ≤1px apart in IEEE-754 near pixel boundaries. Size/dpr-dependent, confirmed by isolated repro (`scratchpad/clock-*.js`): 70/130px byte-exact at dpr1, 130px diverges at dpr2 (867/900), 200px both dprs — exactly why the 130px resize/nested clock tests pass dpr1/fail dpr2. NOT gate-able by an integer-position check (positions already integer). **6 SystemTests recaptured (32 frames, 11 dpr1 + 21 dpr2):** 4 tick-shift (`macroDocumentScrollsMixedTextAndClocks`, `macroClosingInnerWindowKeepsOuter`, `macroClockInWindowKeepsSquareOnResize` [dpr2], `macroWindowWithAClockInAWindowConstructionTwo` [dpr2]) + 2 BENIGN inspector member-list (`macroAnalogClockInspectEdit`, `macroNakedInspectorRendersResizesAndEdits`, from the 2 new methods). Full `fg gauntlet` (dpr1/dpr2/webkit 196/196 + apps + paint + gates) + `fg homepage` green over the new refs. **Lesson: back-buffering a directly-drawn widget is byte-identical ONLY at integer device transforms** — see `docs/interactive-render-perf-A-C-plan.md` §3.1. Tests-repo change (6 tests' refs). |
 | 2026-07-08 | **S3 items 2+3+4** (arc 4 finish): `fillText` verified already-covered (via wired drawImage) + tier-0 **mask-BUILD skip** + lazy materialiser + clone-free save/restore (SWCanvas `767d058..3f6203d`, pin bumped) | — (not re-profiled) | — (not re-profiled) | dpr1 2.58 / dpr2 1.66 / webkit 1.52 min | Byte-identical: SWCanvas 218/218 (exercise rect/circular/polygon/rotated/shadow clips + clip×composite + clip+save/restore → materialiser covered) + mask-skip harness (pure tier-0 workload builds/materialises/clones **0**; unwired draws under a rect clip materialise on demand & hash-match forced-bitmask) + item-1/fillText harnesses still match; full `fg gauntlet` (dpr1/dpr2/webkit 196/196 + apps + paint + gates) **and** `fg homepage` green; **zero reference churn**. A rect `clip()` now builds NO bitmask → read-side ~100% + banks mask build (2.6–2.8%) + 76,675 allocs + 12,494 clones/suite. **S3 COMPLETE. No tests-repo change.** |
 | 2026-07-09 | **O1**: `data32.fill()` for opaque contiguous spans — replace the per-pixel JS write loop with a native `TypedArray.fill` on the no-clip fast paths of `SpanOps.fill_Opaq` (central primitive; circles/rounded-rects/arcs inherit) + `RectOpsAA.fill_AA_Opaq` (per row, invariant column span hoisted) + `PolygonFiller._fillPixelSpan` (SWCanvas `e5f207b..468c5f7`, pin bumped) | — | — | dpr1/dpr2/webkit 196/196 | Post-occlusion re-profile (§5B): the fill cluster is still ~62% of the busy-drag frame. Each optimised path writes one packed color to a contiguous `[start,end)` range → byte-identical. **Raw-technique micro-bench 6–7× for large opaque fills** (600×500 window body 7.15×, 1200×850 6.58×, 200×16 text row 6.10×; ~1× for tiny <16px). But same-session A/B on the **real minified build** = only **~4–6%** full-frame (drag mean 32.0→30.1 ms, draw 39.9→38.0, covered 11.9→11.5): occlusion (Avenue A) already removed the LARGE overdraw fills O1 speeds up, and the minified V8 JIT already runs the pixel loops well — the shadow (unminified) profile's 12.7% `fill_AA_Opaq` OVERSTATES the minified cost. Byte-identical: SWCanvas 218/218 + full `fg gauntlet` (dpr1/dpr2/webkit 196/196 + apps + paint + gates), **zero reference churn**. **⚠ Methodology lesson: treat shadow-build fill/loop % as an upper bound; confirm magnitude with a minified same-build A/B before ranking.** Next lever is O3 (per-widget occlusion), not more fill micro-opt. **No tests-repo change.** |
+| 2026-07-09 | **O2**: memoize `Object::hashCode` by string value — a `Map<string,hash>` inside `Object::hashCode` (`src/boot/extensions/Object-extensions.coffee`); StringWdgt/TextWdgt re-hash the full label/paragraph string every paint to build back-buffer cache keys | — | — | dpr1/dpr2/webkit 196/196 | The hash is a PURE function of the string, so caching by string value is correct for ANY receiver with **no invalidation** (the deciding advantage over widget-level caching). Caches only strings ≤2048 chars (skips canvas data-URL blobs), `.clear()` cap at 16384. Technique micro-bench **4–6×** on the hashCode calls (stable 6.17×, recreated 4.46×), hashes identical. Byte-identical: full `fg gauntlet` (dpr1/dpr2/webkit 196/196 + apps + paint + gates), zero reference churn. **Design decision recorded in §5B O2**: the content-addressed cache hierarchy (cross-widget dedup + per-paragraph incrementality + correctness-by-construction) is a GOOD design; a per-widget dirty-flag (regresses all three) and raw-text-in-key (ConsString flatten+hash O(len) per lookup) were examined and REJECTED — the surface-free frontier is cheaper key derivation (O2) + fewer key builds (occlusion). **No tests-repo change.** |
 
 ## 9. Explicitly considered and rejected / deferred
 
