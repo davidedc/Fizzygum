@@ -38,6 +38,9 @@ SWCanvas pin now `60ba1a3`. Remaining overall: S2 Tier 2, S6b, F1, F3. See §8 l
 - **`docs/occlusion-culling-plan.md`** — skip painting widgets occluded by a fully-covering opaque
   rect within a broken rect (the ~35% fill-rasterization cluster is largely overdraw). The exact
   optimization is a documented TODO (issue #149, `ClippingAtRectangularBoundsMixin.coffee:152-159`).
+  **✅ Avenue A LANDED 2026-07-09** (Fizzygum `1c3daece`; drag ~3.0× / draw ~2.1× / covered ~4.3×).
+  The busy desktop was then **re-profiled** to find the next levers — see **§5B (new items O1–O4)**;
+  the fill cluster is still ~62%, and **O1 (`data32.fill()` for opaque spans) is IN PROGRESS**.
 **⚠️ Verified-fact correction (2026-07-08):** S1's headline "−33% busy / −8.3% wall" is an artifact
 of the **unminified profiling build only** — the shipped build strips the log via minification and
 never pays it. See the S1 section in §5 and the methodology note below. This does NOT affect any
@@ -570,6 +573,91 @@ The change itself is easy (world already has per-frame broken rects; use the
 
 ---
 
+## 5B. Post-occlusion re-profile — new items O1–O4 (2026-07-09)
+
+**Context.** Occlusion culling (Avenue A, `docs/occlusion-culling-plan.md` + `docs/occlusion-culling.md`)
+LANDED 2026-07-09 (Fizzygum `1c3daece`): the broken-rect repaint now skips widgets behind a
+fully-covering opaque top-level widget. Same-build A/B: window-drag ~3.0×, pen-draw ~2.1×,
+clock-behind-window ~4.3× cheaper per frame. That shifted the profile, so the busy desktop was
+re-profiled to find the NEXT levers.
+
+**How.** Shadow build (`bash mk-shadow-build.sh` + a shadow `index.html` so `prof-interactive`'s
+`index.html` boot carries named SWCanvas frames), then
+`node prof-interactive.js --sw --wallpaper=plain --profile --build=<shadow>` (culling ON = shipping
+default), self-time aggregated from the per-phase `.cpuprofile`s. Shadow ms are ~3× inflated — read
+percentages (real-build medians with culling on: drag ~28 ms, draw ~40 ms, covered ~13 ms).
+
+**Drag-frame self-time (the felt busy-desktop workload):**
+
+| % | function | what |
+|---|---|---|
+| 14.0 | `_fillPolygonsDirect` | polygon scanline rasterization |
+| **12.7** | `RectOpsAA.fill_AA_Opaq` | **opaque rect fill — per-pixel JS loop** |
+| 10.8 | `_fillPixelSpan` | polygon span writer |
+| 9.6 | `_drawImageInternal` | blit back-buffers / glyph atlas |
+| 9.6 | `(anonymous)` [framework] | eval'd framework code |
+| 9.3 | `_fillAxisAlignedRect` | rect fill dispatch |
+| 5.4 | `blendPixel` | per-pixel blend |
+| 5.0 | `_evaluatePaintSource` | per-span paint-color eval |
+| 4.0 | `_fillFullCoverCanvasWide` | Item A's fast path |
+| 1.5 | `Object.hashCode` [framework] | back-buffer cache-key string hashing |
+
+The fill-rasterization cluster is still **~62%** of the frame (SWCanvas ≈ 84% overall, framework ≈ 10%):
+occlusion cut the *number* of fills; the fills that remain (visible windows + the dragged window) are
+inherent to software-rendering the screen.
+
+### O1 — `data32.fill()` for opaque contiguous spans 【SWCanvas; ✅ IMPLEMENTED + VERIFIED, modest】
+
+**Change (done)**: replaced the per-pixel JS write loop with `data32.fill(packedColor, start, end)` on the
+no-clip / no-clipBuffer fast paths of the three hottest opaque-span writers — `SpanOps.fill_Opaq` (the
+central primitive, so circles/rounded-rects/arcs inherit it), `RectOpsAA.fill_AA_Opaq` (per row, with the
+invariant column span hoisted), and `PolygonFiller._fillPixelSpan`. Each is a contiguous run of one packed
+color, so byte-identical (same value, same indices). SWCanvas already used `data32.fill()` in one newer
+scanline path but not these — an unfinished optimization now finished.
+**Correctness**: SWCanvas `npm test` **218/218**; full `fg gauntlet` (dpr1/dpr2/webkit **196/196** + apps
++ paint + gates) **zero reference churn**.
+**Measured — the honest result**: raw-technique micro-bench = **6–7× for large opaque fills** (600×500
+window body 7.15×, 1200×850 6.58×, 200×16 text row 6.10×; ~1× / slightly slower for tiny <16px fills).
+But the same-session A/B on the **real minified build** moves the busy-desktop frame only **~4–6%** (drag
+mean 32.0→30.1 ms, draw 39.9→38.0, covered 11.9→11.5). **Two reasons the full-frame win is small: (1)
+occlusion culling (Avenue A) already eliminated most of the LARGE overdraw fills — the very fills O1
+speeds up 7× — so post-occlusion the remaining fills are fewer/smaller; (2) methodology: the shadow
+(unminified) profile OVER-attributes time to JS pixel loops, which the minified V8 JIT already runs
+efficiently, so its 12.7% `fill_AA_Opaq` overstates the minified cost.** ⚠ **Lesson for future items:
+treat shadow-build fill/loop percentages as an upper bound; confirm magnitude with a same-build minified
+A/B before ranking.**
+**Disposition**: byte-identical, zero-risk, correct-form primitive that compounds with prior S-items — a
+free ~5%; but NOT a big lever. The real remaining headroom is **O3 (per-widget occlusion)**, not more fill
+micro-opt. **✅ LANDED 2026-07-09** — SWCanvas `e5f207b..468c5f7` (main), Fizzygum `vendor/swcanvas.pin`
+bumped to `468c5f7`. See §8 ledger.
+
+### O2 — memoize the back-buffer text hash 【Fizzygum; small; clean win】
+
+**Where**: `Object::hashCode` (`src/boot/extensions/Object-extensions.coffee:52`, O(length) over the
+string) is called from `StringWdgt`/`TextWdgt` cache-key builders (`StringWdgt.coffee:572,655-656`;
+`TextWdgt.coffee:68,76,89,201,318`) which re-hash the **full label string** (`@text.hashCode()` +
+`@textPossiblyCroppedToFit.hashCode()`) to build the back-buffer cache key **every paint**.
+**Measured**: `Object.hashCode` = 1.5% of the drag frame, up to **5.4%** in text-heavy phases.
+**Change**: cache the string hash on the widget, invalidate in the text setter (the memoization pattern
+already exists nearby as `@hashOfTextConsideredAsReference`, used only for modification detection).
+**Verify**: `fg gauntlet` (byte-identical — cache keys unchanged, just not recomputed).
+
+### O3 — per-widget / descend occlusion 【Fizzygum; large; = plan P4/P5】
+
+The fill cluster is still 62% because Avenue A only skips a broken rect when ONE top-level widget covers
+the WHOLE rect (drag/draw fire-rate ~70%). The residual ~30% are rects no single widget covers; a
+per-widget check against a maintained opaque-rect list would skip the individually-occluded widgets
+inside them. Highest structural upside, highest effort. Already scoped as P4 (maintained covered-rect
+list) / P5 (descend, per-widget, partial-coverage fringe) in `docs/occlusion-culling-plan.md` — owner-gated.
+
+### O4 — reduce `_drawImageInternal` blits 【SWCanvas/Fizzygum; investigate first】
+
+`_drawImageInternal` = 9.6% of the drag frame: back-buffer + glyph-atlas blits. BitmapText draws each
+glyph via a separate `drawImage`; if per-glyph blits dominate, a batched/wider glyph-run blit could help.
+Needs a targeted `--profile` with a drawImage-caller wrap to attribute the blits before committing to a fix.
+
+---
+
 ## 6. Verification protocol (applies to every item)
 
 1. **SWCanvas changes (S1–S6)**: run the SWCanvas repo's own visual suite first (218 tests,
@@ -625,6 +713,7 @@ The change itself is easy (world already has per-frame broken rects; use the
 | 2026-07-09 | **Item A**: full-cover canvas-wide composite fast path — a `fillRect` under a canvas-wide op (source-in/out, destination-in/atop, copy) covering the whole surface skips the two-pass SourceMask build + full-surface re-scan for one `blendPixel` pass; SourceMask now allocated lazily (SWCanvas `60ba1a3..cf5eea8`, pin bumped) | — | — | dpr1/dpr2/webkit 196/196 | Targets the ~19% "canvas-wide compositing" busy-drag cluster (`_performCanvasWideCompositing` 10.9% + `SourceMask.setPixel` 8.3%) — the vendored BitmapText colored-glyph tint (`source-in; fillRect(0,0,fullScratch)`, ~128×/frame). Full coverage ⇒ every pixel `Sa===1` ⇒ single pass is exactly the `Sa>0` arm of the two-pass path. Byte-identical: 218/218 + old-vs-new A/B over **36 canvas-wide scenes** (every op × full-cover/oversized/scaled-cover + gradient + back-to-back tints → fast path fires & identical; partial / scaled-miss-corner / rect-clip / rotated / `fill(path)` / source-over → fall back & identical); full `fg gauntlet` (dpr1/dpr2/webkit 196/196 + apps + paint + gates) **and** `fg homepage` green, **zero reference churn** (built `js/fizzygum-boot-min.js` confirmed to ship the fast path). **Tint micro-bench 1.55–1.71×**; busy-drag re-measure (`--sw --cwc`) canvas-wide compositing calls **12,807 → 0** (all tints on the fast path). Scoped to `fillRect` full-cover only (arbitrary-polygon full-cover not attempted). Plan: `docs/interactive-render-perf-A-C-plan.md` §2. **No tests-repo change.** |
 | 2026-07-09 | **Item C1**: AnalogClockWdgt static-face back-buffer — the 12 hour + 48 minute tick marks are pre-rendered once per size into an immutable back buffer (`world.cacheForImmutableBackBuffers`) and blitted instead of re-stroking 60 marks every repaint; hands + dot + arc stay live (Fizzygum-only, no SWCanvas change) | — | — | dpr1/dpr2/webkit 196/196 | **⚠ NOT byte-identical** (owner-approved ship + recapture). Mechanism (measured, NOT the fractional-transform first guess): `@bounds` are integer (`__commitExtent` rounds) and the blit CTM is **identity** — the ≤1px tick divergence is **floating-point non-associativity**: direct draw bakes position into the float CTM (`floor(a·squareDim + position + w/2)`) vs origin-buffer + integer-offset blit (`floor(a·squareDim + w/2) + position`); equal in exact math, ≤1px apart in IEEE-754 near pixel boundaries. Size/dpr-dependent, confirmed by isolated repro (`scratchpad/clock-*.js`): 70/130px byte-exact at dpr1, 130px diverges at dpr2 (867/900), 200px both dprs — exactly why the 130px resize/nested clock tests pass dpr1/fail dpr2. NOT gate-able by an integer-position check (positions already integer). **6 SystemTests recaptured (32 frames, 11 dpr1 + 21 dpr2):** 4 tick-shift (`macroDocumentScrollsMixedTextAndClocks`, `macroClosingInnerWindowKeepsOuter`, `macroClockInWindowKeepsSquareOnResize` [dpr2], `macroWindowWithAClockInAWindowConstructionTwo` [dpr2]) + 2 BENIGN inspector member-list (`macroAnalogClockInspectEdit`, `macroNakedInspectorRendersResizesAndEdits`, from the 2 new methods). Full `fg gauntlet` (dpr1/dpr2/webkit 196/196 + apps + paint + gates) + `fg homepage` green over the new refs. **Lesson: back-buffering a directly-drawn widget is byte-identical ONLY at integer device transforms** — see `docs/interactive-render-perf-A-C-plan.md` §3.1. Tests-repo change (6 tests' refs). |
 | 2026-07-08 | **S3 items 2+3+4** (arc 4 finish): `fillText` verified already-covered (via wired drawImage) + tier-0 **mask-BUILD skip** + lazy materialiser + clone-free save/restore (SWCanvas `767d058..3f6203d`, pin bumped) | — (not re-profiled) | — (not re-profiled) | dpr1 2.58 / dpr2 1.66 / webkit 1.52 min | Byte-identical: SWCanvas 218/218 (exercise rect/circular/polygon/rotated/shadow clips + clip×composite + clip+save/restore → materialiser covered) + mask-skip harness (pure tier-0 workload builds/materialises/clones **0**; unwired draws under a rect clip materialise on demand & hash-match forced-bitmask) + item-1/fillText harnesses still match; full `fg gauntlet` (dpr1/dpr2/webkit 196/196 + apps + paint + gates) **and** `fg homepage` green; **zero reference churn**. A rect `clip()` now builds NO bitmask → read-side ~100% + banks mask build (2.6–2.8%) + 76,675 allocs + 12,494 clones/suite. **S3 COMPLETE. No tests-repo change.** |
+| 2026-07-09 | **O1**: `data32.fill()` for opaque contiguous spans — replace the per-pixel JS write loop with a native `TypedArray.fill` on the no-clip fast paths of `SpanOps.fill_Opaq` (central primitive; circles/rounded-rects/arcs inherit) + `RectOpsAA.fill_AA_Opaq` (per row, invariant column span hoisted) + `PolygonFiller._fillPixelSpan` (SWCanvas `e5f207b..468c5f7`, pin bumped) | — | — | dpr1/dpr2/webkit 196/196 | Post-occlusion re-profile (§5B): the fill cluster is still ~62% of the busy-drag frame. Each optimised path writes one packed color to a contiguous `[start,end)` range → byte-identical. **Raw-technique micro-bench 6–7× for large opaque fills** (600×500 window body 7.15×, 1200×850 6.58×, 200×16 text row 6.10×; ~1× for tiny <16px). But same-session A/B on the **real minified build** = only **~4–6%** full-frame (drag mean 32.0→30.1 ms, draw 39.9→38.0, covered 11.9→11.5): occlusion (Avenue A) already removed the LARGE overdraw fills O1 speeds up, and the minified V8 JIT already runs the pixel loops well — the shadow (unminified) profile's 12.7% `fill_AA_Opaq` OVERSTATES the minified cost. Byte-identical: SWCanvas 218/218 + full `fg gauntlet` (dpr1/dpr2/webkit 196/196 + apps + paint + gates), **zero reference churn**. **⚠ Methodology lesson: treat shadow-build fill/loop % as an upper bound; confirm magnitude with a minified same-build A/B before ranking.** Next lever is O3 (per-widget occlusion), not more fill micro-opt. **No tests-repo change.** |
 
 ## 9. Explicitly considered and rejected / deferred
 
