@@ -547,6 +547,20 @@ class ActivePointerWdgt extends Widget
           world.stopEditing()
 
 
+  # Affine transforms (§4.6, Phase 4A): the pointer position expressed in the RECEIVER
+  # widget's own plane, for handlers that consume it as in-widget geometry (caret slot via
+  # StringWdgt.slotAt, position-dependent clicks). `screenPointToMyPlane` walks w's parent
+  # chain and inverse-maps through each non-identity island; for ANY widget not inside a
+  # non-identity island (⇒ always, when the feature is dormant) it returns @position()
+  # UNCHANGED (same object), so click dispatch is byte-identical. Only the position PASSED to
+  # a handler is mapped — the double/triple-click proximity recognition and @mouseDownPosition
+  # stay in SCREEN space (they compare successive @position()s and must share one plane). NB
+  # a handler that RE-EMITS the received position as SCREEN coords (open-a-menu-at-point) would
+  # misplace for island-inner content; none do in the current suite (menus open at the hand) —
+  # audit as such a case arises.
+  _pointerPositionInPlaneOf: (w) ->
+    w.screenPointToMyPlane @position()
+
   processMouseDown: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     world.destroyToolTips()
     @wdgtToGrab = nil
@@ -604,7 +618,7 @@ class ActivePointerWdgt extends Widget
           break
 
       if w[actualClick]?
-        w[actualClick] @position()
+        w[actualClick] @_pointerPositionInPlaneOf(w)
       #w = w.parent  until w[actualClick]
       #w[actualClick] @position()
   
@@ -653,9 +667,9 @@ class ActivePointerWdgt extends Widget
 
           switch expectedClick
             when "mouseClickLeft"
-              w.mouseUpLeft? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
+              w.mouseUpLeft? @_pointerPositionInPlaneOf(w), button, buttons, ctrlKey, shiftKey, altKey, metaKey
             when "mouseClickRight"
-              w.mouseUpRight? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
+              w.mouseUpRight? @_pointerPositionInPlaneOf(w), button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
           # also send doubleclick if the
           # two clicks happen on the same widget
@@ -756,7 +770,7 @@ class ActivePointerWdgt extends Widget
           # of a double/triple click
           if !w.editorContentPropertyChangerButton and !(w.excludedFromLastFocusTracking?())
             world.lastNonTextPropertyChangerButtonClickedOrDropped = w
-          w[expectedClick] @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey, doubleClickInvocation, tripleClickInvocation
+          w[expectedClick] @_pointerPositionInPlaneOf(w), button, buttons, ctrlKey, shiftKey, altKey, metaKey, doubleClickInvocation, tripleClickInvocation
           #console.log ">>> sent event " + expectedClick + " to: " + w
 
           # now send the double/triple clicks
@@ -882,7 +896,7 @@ class ActivePointerWdgt extends Widget
       @drop()
     else
       w = w.parent  while w and not w.mouseDoubleClick
-      w.mouseDoubleClick @position() if w
+      w.mouseDoubleClick @_pointerPositionInPlaneOf(w) if w
     @mouseButton = nil
 
   processTripleClick: (w = @topWdgtUnderPointer()) ->
@@ -891,7 +905,7 @@ class ActivePointerWdgt extends Widget
       @drop()
     else
       w = w.parent  while w and not w.mouseTripleClick
-      w.mouseTripleClick @position() if w
+      w.mouseTripleClick @_pointerPositionInPlaneOf(w) if w
     @mouseButton = nil
   
   # see https://developer.mozilla.org/en-US/docs/Web/Events/wheel
