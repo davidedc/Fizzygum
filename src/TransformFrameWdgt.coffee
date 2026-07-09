@@ -8,10 +8,18 @@
 # coordinates as if the island were untransformed (the "virtual plane"); the
 # transform is applied only at composite time.
 #
-# PHASE 1 SCOPE (scale-only, plan §6): rotation is locked to 0 by TransformSpec, so
-# the composite is a pure uniform scale — done with an unequal-src/dst drawImage
-# (axis-aligned, no setTransform, no ctx.clip — that is the §4.2 "scale-only fast
-# path"). Phase 2 adds the setTransform + path-clip rotation composite.
+# COMPOSITE (plan §4.2) has three paths, picked by the spec:
+#  - identity  → stock invisible-clipping-panel blit (byte-identical to the bare children).
+#  - pure scale (rotation 0, scale ≠ 1) → the "scale-only fast path": an unequal-src/dst
+#    drawImage (axis-aligned, no setTransform, no ctx.clip; the damage clip is a plain rect
+#    intersection of the dst rect).
+#  - rotation (Phase 2) → render-straight-then-warp: set the context transform to
+#    (device × island matrix) and drawImage the buffer onto the slot box, under a MANDATORY
+#    real path clip to (damage ∩ screen footprint) — a transformed drawImage cannot express
+#    the broken-rect clip via src/dst rects, and a spill would paint over un-repainted front
+#    content (z-order corruption, §4.2). For a non-zero angle the matrix trig comes from the
+#    deterministic DetTrig port (cross-engine-identical, Phase 0a); SWCanvas samples nearest-
+#    neighbour (Phase 0f, accepted for v1).
 #
 # WHY it extends PanelWdgt: PanelWdgt already augments ClippingAtRectangularBounds-
 # Mixin, giving us a clipping frame whose bounds-recursion terminates at itself
@@ -71,6 +79,14 @@ class TransformFrameWdgt extends PanelWdgt
   setScale: (s) ->
     return if !(s > 0) or s == @transformSpec.scale
     @transformSpec.setScale s
+    @_transformChanged()
+
+  # Phase 2: rotate the island by `deg` degrees about its anchor (default the slot centre).
+  # Same invalidation as setScale — a transform change damages the screen (old ∪ new footprint)
+  # but never dirties the buffer (§4.5 invariant).
+  setRotation: (deg) ->
+    return if deg == @transformSpec.rotationDegrees
+    @transformSpec.setRotationDegrees deg
     @_transformChanged()
 
   # A transform change damages the SCREEN (old footprint ∪ new footprint) but never
@@ -137,13 +153,20 @@ class TransformFrameWdgt extends PanelWdgt
     world.paintingIntoIslandBuffer = prevIslandBuffer
     buffer
 
-  # §4.2 scale-only fast path: a uniform scale needs no setTransform — an unequal
-  # src/dst drawImage suffices, every mapped rect stays axis-aligned, and the damage
-  # clip is a plain rect intersection of the dst rect (no ctx.clip()).
+  # Dispatch the non-identity composite (identity is handled by the caller). A pure uniform
+  # scale takes the axis-aligned fast path; any rotation takes the general warp path (§4.2).
   _compositeIslandBuffer: (aContext, clippingRectangle, appliedShadow) ->
     buffer = @_refreshIslandBuffer()
     return if !buffer?
+    if @transformSpec.rotationDegrees % 360 == 0
+      @_compositeScaleOnly aContext, clippingRectangle, appliedShadow, buffer
+    else
+      @_compositeTransformed aContext, clippingRectangle, appliedShadow, buffer
 
+  # §4.2 scale-only fast path: a uniform scale needs no setTransform — an unequal
+  # src/dst drawImage suffices, every mapped rect stays axis-aligned, and the damage
+  # clip is a plain rect intersection of the dst rect (no ctx.clip()).
+  _compositeScaleOnly: (aContext, clippingRectangle, appliedShadow, buffer) ->
     slot = @bounds
     s = @transformSpec.scale
     A = @transformSpec._anchorFor slot
@@ -190,6 +213,37 @@ class TransformFrameWdgt extends PanelWdgt
       Math.round(visibleDst.top() * cpr),
       Math.round(visibleDst.width() * cpr),
       Math.round(visibleDst.height() * cpr)
+    aContext.restore()
+
+  # §4.2 general warp path (Phase 2 — rotation, and rotation+scale): render-straight-then-warp.
+  # The buffer holds the content un-transformed at device resolution; we set the context
+  # transform to (device × island matrix) and drawImage the buffer onto the SLOT BOX in that
+  # user space, so the rasteriser warps it in one pass (seam-free — §4.2 step 3). Because a
+  # transformed drawImage cannot express the broken-rect clip via src/dst rects, a REAL path
+  # clip to (damage ∩ screen footprint) is MANDATORY (§4.2): the warped quad would otherwise
+  # spill outside the damage rect and paint over front content not being repainted this cycle
+  # (z-order corruption). We COMPOSE onto the incoming CTM (`transform`, not `setTransform`) so
+  # the unified shadow pass' pre-applied offset translate is honoured — a warped faint copy at
+  # the shadow offset IS the correctly rotated shadow (§4.8), no quad-silhouette special case.
+  # On the normal pass the incoming CTM is identity, so this equals setTransform. SWCanvas
+  # samples nearest-neighbour (Phase 0f, accepted). v1 warps the WHOLE buffer under the clip
+  # (correctness-first, like _refreshIslandBuffer); the §4.2 sub-rect optimisation is banked.
+  _compositeTransformed: (aContext, clippingRectangle, appliedShadow, buffer) ->
+    slot = @bounds
+    footprint = @_screenFootprintForDamage()          # rotated slot-box AABB (logical, padded)
+    visibleDst = footprint.intersect clippingRectangle
+    return if visibleDst.isEmpty()
+    m = @transformSpec.matrixForSlot slot             # virtual-logical → screen-logical
+    cpr = ceilPixelRatio
+    aContext.save()
+    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
+    # clip in the INCOMING coordinate space (device pixels — identity CTM on the normal pass,
+    # the shadow-offset translate on the shadow pass) BEFORE the warp, so the clip is the actual
+    # on-screen damage region and the warp transform below does not move it.
+    aContext.clipToRectangle visibleDst.left() * cpr, visibleDst.top() * cpr, visibleDst.width() * cpr, visibleDst.height() * cpr
+    # CTM ← (incoming CTM) · (device-scale · island matrix): maps virtual-logical slot coords → device.
+    aContext.transform cpr * m.a, cpr * m.b, cpr * m.c, cpr * m.d, cpr * m.e, cpr * m.f
+    aContext.drawImage buffer, 0, 0, buffer.width, buffer.height, slot.left(), slot.top(), slot.width(), slot.height()
     aContext.restore()
 
   # ---------------------------------------------------------------------------

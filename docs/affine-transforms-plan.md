@@ -762,6 +762,54 @@ GATES (all must pass before Phase 1 is declared done — verify, don't assert):
 
 ### Phase 2 — rotation
 
+> **PHASE 2 (2026-07-09) — COMPLETE + VERIFIED (owner said "commit and then continue" after
+> Phase 1). Steps 1–4 all done; NOT yet committed.** Rotation is live end to end: the general warp
+> composite, the setter + its damage, exact quad hit-testing, rotated shadows, ancestor clipping,
+> occlusion invariant, and 6 macros.
+> IMPLEMENTATION:
+> - `TransformSpec` — removed the Phase-1 rotation clamp; added `setRotationDegrees`. The matrix
+>   (`matrixForSlot`/`inverseMatrixForSlot`) already used `_cosSin`, which for a non-zero angle
+>   calls `DetTrig.cos/sin` (the rotation-0 fast path still returns `[1,0]` with no trig) — so a
+>   pure scale/identity spec has no trig dependency and rotated pixels are cross-engine identical.
+>   `mapRect` already corner-maps to a padded integer AABB (used for both damage and footprint).
+> - `TransformFrameWdgt` — added `setRotation(deg)` (same invalidation family as `setScale`).
+>   `_compositeIslandBuffer` now DISPATCHES: identity → super blit (caller); pure scale → the
+>   Phase-1 `_compositeScaleOnly` fast path (unchanged, so Phase-1 scale refs stay byte-identical);
+>   rotation → the new `_compositeTransformed`. That path is render-straight-then-warp: `save`;
+>   `clipToRectangle(visibleDst × cpr)` (the MANDATORY §4.2 real path clip — a transformed
+>   `drawImage` cannot express the broken-rect clip via src/dst rects); `transform(cpr·matrix)`
+>   (⚠ `transform` = COMPOSE, **not** `setTransform` — so the unified shadow pass' pre-applied
+>   offset-translate CTM is honoured, giving a correctly rotated shadow for free, §4.8; on the
+>   normal pass the incoming CTM is identity so it equals setTransform); `drawImage(buffer, full →
+>   slot box)`; `restore`. v1 warps the WHOLE buffer under the clip (correctness-first); the §4.2
+>   sub-rect optimisation is BANKED.
+> VERIFIED (all visually inspected + value-asserted where applicable):
+> - `macroTransformFrameRotatedRenders` — 30°, 45°+scale-1.5, 90° (crisp transpose); + a value
+>   assertion that `island.opaqueCoveredRect()` is `nil` (step 2: islands never occlude — holds by
+>   construction, `@color` is nil).
+> - `macroTransformFrameStepRotation` — `setRotation` in steps; the rotate-then-unrotate return to
+>   0 is asserted BYTE-IDENTICAL to the identity baseline (damage cleaning exact; identical dataHash
+>   confirmed).
+> - `macroTransformFrameRotatedCornerClickThrough` — EXACT quad hit-test: a click in the AABB ear
+>   (outside the rotated quad) falls through to the widget behind while a centre click reaches the
+>   inner string (value-asserted); also caret editing inside a rotated island. (⚠ inner-first
+>   ordering: a click raises the clicked widget to the foreground.)
+> - `macroTransformFrameRotatedShadow` — a rotated island's drop shadow is the rotated content
+>   silhouette (validates the `transform`-compose shadow handling).
+> - `macroTransformFrameRotatedInClippingFrame` — a rotated island nested in a `ClippingBoxWdgt`;
+>   the overhang is cut off at the frame's straight edge (§4.11 ancestor screen clip on the mapped
+>   footprint). Rotated SLOW-twins coherence separately verified (`doubleCheckCachedMethodsResults`
+>   probe with a 35° island in a clipping panel: cached == SLOW for all three faces, no alerts).
+> - `macroTransformFrameOverlappingRotatedIslands` — z-order + exactness: a click in the TOP
+>   island's ear falls through to the rotated island behind (value-asserted A/B).
+> GATES: `fg gauntlet` = dpr1 **207/207** · dpr2 **207/207** · webkit **207/207** · apps · paint ·
+> tiernaming · settle · capstone — ALL PASS; `fg homepage` boots clean. Suite 201→207 (6 new
+> rotation macros). Phase-1 scale references unchanged (the scale fast path is untouched, so the
+> dispatch adds nothing on the scale/identity/dormant paths). Files: Fizzygum
+> `src/TransformSpec.coffee`, `src/TransformFrameWdgt.coffee` (M). BANKED: the §4.2 composite
+> sub-rect optimisation (v1 warps the whole buffer under the clip); `mapPoint`/`inverseMapRect`
+> and the `setAnchor` setter (Phase 4 anchor UI).
+
 1. Unlock `rotationDegrees`; matrix per §4.3 with the Phase-0b deterministic trig; composite
    via `setTransform` + `drawImage`; `mapRect` = corner-map AABB (floor/ceil + 1px pad).
 2. Confirm islands yield `opaqueCoveredRect() == nil` (should hold via fact 3.5 gating — the

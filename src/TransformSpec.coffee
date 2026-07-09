@@ -15,10 +15,10 @@
 #  - Determinism: for a non-zero angle the matrix trig MUST come from the shared
 #    deterministic (fdlibm) port `DetTrig` (plan §0-R 0b) — the SAME sin/cos the
 #    build installs over Math.* before SWCanvas renders — or rotated references
-#    would differ across JS engines. PHASE 1 locks rotation to 0 (assert/clamp in
-#    setRotationDegrees), so the matrix is a pure uniform scale and there is NO
-#    trig dependency yet; the rotation==0 fast path returns cos=1/sin=0 directly.
-#    Phase 2 simply lifts the clamp.
+#    would differ across JS engines (verified byte-identical cross-engine in Phase
+#    0a). Rotation is LIVE (Phase 2); the rotation==0 fast path still returns
+#    cos=1/sin=0 directly with no trig call, so a pure scale or identity spec has no
+#    trig dependency.
 #
 # Canvas-2D matrix convention (a,b,c,d,e,f): x' = a·x + c·y + e ; y' = b·x + d·y + f.
 
@@ -27,19 +27,16 @@ class TransformSpec
   @augmentWith DeepCopierMixin
 
   # ---- canonical scalars (the ONLY serialized state) ----
-  rotationDegrees: 0        # float, canonical. PHASE 1: clamped to 0.
+  rotationDegrees: 0        # float, canonical (Phase 2: live)
   scale: 1                  # float > 0
   anchor: nil               # nil => centre of the slot box; else a Point in slot-box coords
-  # layout coupling (plan §4.9). Only 'slot' (paint-only) is wired in Phase 1;
+  # layout coupling (plan §4.9). Only 'slot' (paint-only) is wired through Phase 2;
   # 'footprint' / 'sweep' land in Phase 3.
   claimsSpace: "slot"
 
   constructor: (@rotationDegrees = 0, @scale = 1, @anchor = nil, @claimsSpace = "slot") ->
-    # PHASE 1 guard: rotation is not wired yet (no quads until Phase 2).
-    if @rotationDegrees % 360 != 0
-      # assert/clamp per plan §6 Phase 1 step 1
-      console.warn "TransformSpec: rotation is locked to 0 in Phase 1 (got #{@rotationDegrees}); clamping."
-      @rotationDegrees = 0
+    # Phase 2: rotation is live — for a non-zero angle the matrix trig comes from the shared
+    # deterministic DetTrig port (see _cosSin), so rotated composites are cross-engine identical.
     if @scale <= 0
       @scale = 1
 
@@ -48,10 +45,16 @@ class TransformSpec
   isIdentity: ->
     (@rotationDegrees % 360 == 0) and (@scale == 1)
 
-  # ---- setters (Phase 1: only scale is mutable; rotation lands in Phase 2,
-  #      anchor setter in Phase 4 — each re-introduced with its first caller). ----
+  # ---- setters (scale + rotation mutable through Phase 2; anchor setter lands in
+  #      Phase 4 — re-introduced with its first caller). ----
   setScale: (s) ->
     @scale = s if s > 0
+    @
+
+  # Phase 2: rotation is live. Any angle is valid; a non-zero angle makes the matrix
+  # depend on DetTrig (see _cosSin). First caller: TransformFrameWdgt::setRotation.
+  setRotationDegrees: (deg) ->
+    @rotationDegrees = deg
     @
 
   # cos/sin of the rotation. Rotation==0 fast path (Phase 1: always) returns exact
