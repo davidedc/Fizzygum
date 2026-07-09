@@ -1,0 +1,130 @@
+# TransformSpec — the canonical (scalar) description of a widget's affine transform.
+#
+# Part of the affine-transforms feature (see docs/affine-transforms-plan.md). A
+# TransformSpec belongs to a TransformFrameWdgt ("island") and describes a
+# SIMILITUDE: uniform scale + rotation about an anchor point, applied when the
+# island composites its buffered content onto the screen.
+#
+# DESIGN (plan §1.2 D3, §4.1, §4.3):
+#  - The SCALARS are canonical and exact: rotationDegrees, scale, anchor,
+#    claimsSpace. The 3x2 matrix is DERIVED on demand and NEVER stored as truth
+#    (extracting angle/scale back out of a matrix is what forced Lively's
+#    epsilon-hacks — we never do it). Because the matrix is cheap (~10 flops) and
+#    derived, there is no cached-matrix / rebuildDerivedValue bookkeeping to get
+#    wrong for deepCopy (plan §4.10): only the scalars serialize.
+#  - Determinism: for a non-zero angle the matrix trig MUST come from the shared
+#    deterministic (fdlibm) port `DetTrig` (plan §0-R 0b) — the SAME sin/cos the
+#    build installs over Math.* before SWCanvas renders — or rotated references
+#    would differ across JS engines. PHASE 1 locks rotation to 0 (assert/clamp in
+#    setRotationDegrees), so the matrix is a pure uniform scale and there is NO
+#    trig dependency yet; the rotation==0 fast path returns cos=1/sin=0 directly.
+#    Phase 2 simply lifts the clamp.
+#
+# Canvas-2D matrix convention (a,b,c,d,e,f): x' = a·x + c·y + e ; y' = b·x + d·y + f.
+
+class TransformSpec
+
+  @augmentWith DeepCopierMixin
+
+  # ---- canonical scalars (the ONLY serialized state) ----
+  rotationDegrees: 0        # float, canonical. PHASE 1: clamped to 0.
+  scale: 1                  # float > 0
+  anchor: nil               # nil => centre of the slot box; else a Point in slot-box coords
+  # layout coupling (plan §4.9). Only 'slot' (paint-only) is wired in Phase 1;
+  # 'footprint' / 'sweep' land in Phase 3.
+  claimsSpace: "slot"
+
+  constructor: (@rotationDegrees = 0, @scale = 1, @anchor = nil, @claimsSpace = "slot") ->
+    # PHASE 1 guard: rotation is not wired yet (no quads until Phase 2).
+    if @rotationDegrees % 360 != 0
+      # assert/clamp per plan §6 Phase 1 step 1
+      console.warn "TransformSpec: rotation is locked to 0 in Phase 1 (got #{@rotationDegrees}); clamping."
+      @rotationDegrees = 0
+    if @scale <= 0
+      @scale = 1
+
+  # exact identity test on the CANONICAL scalars (plan §4.3) — this is why scalars,
+  # not the matrix, are the source of truth: `== 0` / `== 1` are exact here.
+  isIdentity: ->
+    (@rotationDegrees % 360 == 0) and (@scale == 1)
+
+  # ---- setters (Phase 1: only scale is mutable; rotation lands in Phase 2,
+  #      anchor setter in Phase 4 — each re-introduced with its first caller). ----
+  setScale: (s) ->
+    @scale = s if s > 0
+    @
+
+  # cos/sin of the rotation. Rotation==0 fast path (Phase 1: always) returns exact
+  # [1,0] with no trig call; the deterministic branch is ready for Phase 2.
+  _cosSin: ->
+    deg = @rotationDegrees
+    return [1, 0] if deg % 360 == 0
+    theta = deg * Math.PI / 180   # Math.PI is IEEE-exact across engines
+    [DetTrig.cos(theta), DetTrig.sin(theta)]
+
+  _anchorFor: (slotBounds) ->
+    return slotBounds.center() if !@anchor?
+    # anchor is stored in slot-box coordinates: it is an absolute point in the
+    # island's plane (the slot box IS the plane at identity), so use it directly.
+    @anchor
+
+  # The forward matrix that maps slot-box (virtual) coordinates to the island's
+  # PARENT plane (plan §4.3):  p' = A + s·Rot(θ)·(p − A).
+  # Returns {a,b,c,d,e,f}. Works in whatever units slotBounds/anchor are in
+  # (the island composites in device pixels; damage/hit map in logical pixels —
+  # both feed a slot box + anchor in matching units).
+  matrixForSlot: (slotBounds) ->
+    [c, s] = @_cosSin()
+    sc = @scale
+    a = sc * c
+    b = sc * s
+    cc = -sc * s
+    d = sc * c
+    A = @_anchorFor slotBounds
+    e = A.x - sc * (c * A.x - s * A.y)
+    f = A.y - sc * (s * A.x + c * A.y)
+    { a: a, b: b, c: cc, d: d, e: e, f: f }
+
+  # inverse of matrixForSlot (§4.3: p = A + (1/s)·Rot(−θ)·(p'−A)) — maps a
+  # screen/parent-plane point back into the slot (virtual) plane, for hit-testing
+  # (§4.6). cos(−θ)=cos θ, sin(−θ)=−sin θ.
+  inverseMatrixForSlot: (slotBounds) ->
+    [c, s] = @_cosSin()
+    inv = 1 / @scale
+    A = @_anchorFor slotBounds
+    a = inv * c
+    cc = inv * s
+    b = -inv * s
+    d = inv * c
+    e = A.x - inv * (c * A.x + s * A.y)
+    f = A.y - inv * (-s * A.x + c * A.y)
+    { a: a, b: b, c: cc, d: d, e: e, f: f }
+
+  _applyMatrixToPoint: (m, p) ->
+    new Point m.a * p.x + m.c * p.y + m.e, m.b * p.x + m.d * p.y + m.f
+
+  inverseMapPoint: (p, slotBounds) ->
+    @_applyMatrixToPoint @inverseMatrixForSlot(slotBounds), p
+
+  # (mapPoint / inverseMapRect land with their first callers in Phase 2/4.)
+
+  # Map a Rectangle through `m` and return the integer, axis-aligned AABB of the
+  # 4 transformed corners: floor the mins, ceil the maxes, then pad by 1px (AA
+  # coverage bleeds < 1px past the geometric edge). Safe to feed into the existing
+  # broken-rect machinery unchanged (plan §4.3). For a pure uniform scale (Phase 1)
+  # the pre-image stays axis-aligned so this is exact-ish; padding is conservative.
+  _mapRectWithMatrix: (m, r) ->
+    xs = [r.left(), r.right(), r.left(),  r.right()]
+    ys = [r.top(),  r.top(),   r.bottom(), r.bottom()]
+    minX = Infinity ; minY = Infinity ; maxX = -Infinity ; maxY = -Infinity
+    for i in [0...4]
+      px = m.a * xs[i] + m.c * ys[i] + m.e
+      py = m.b * xs[i] + m.d * ys[i] + m.f
+      minX = px if px < minX
+      maxX = px if px > maxX
+      minY = py if py < minY
+      maxY = py if py > maxY
+    new Rectangle (Math.floor(minX) - 1), (Math.floor(minY) - 1), (Math.ceil(maxX) + 1), (Math.ceil(maxY) + 1)
+
+  mapRect: (r, slotBounds) ->
+    @_mapRectWithMatrix @matrixForSlot(slotBounds), r

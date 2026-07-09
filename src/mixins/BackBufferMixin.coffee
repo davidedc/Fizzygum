@@ -85,7 +85,12 @@ BackBufferMixin =
       getPixelColor: (aPoint) ->
         [@backBuffer, @backBufferContext] = @createRefreshOrGetBackBuffer()
         point = aPoint.toLocalCoordinatesOf @
-        data = @backBufferContext.getImageData point.x * ceilPixelRatio, point.y * ceilPixelRatio, 1, 1
+        # Math.floor AFTER the ×ceilPixelRatio (affine transforms §4.6): a widget
+        # inside a non-identity island is hit-tested at an INVERSE-mapped (float)
+        # point, so the physical sample coords must be floored to an integer pixel.
+        # For any ordinary (integer-pointer) hit test the product is already integer,
+        # so the floor is a no-op ⇒ byte-identical when dormant.
+        data = @backBufferContext.getImageData Math.floor(point.x * ceilPixelRatio), Math.floor(point.y * ceilPixelRatio), 1, 1
         Color.create data.data[0], data.data[1], data.data[2], data.data[3]
 
 

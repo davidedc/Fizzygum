@@ -1246,8 +1246,54 @@ class Widget extends TreeNode
         alert "clipThrough is broken"
 
     return result
-  
-  
+
+  # Affine transforms (docs/affine-transforms-plan.md §4.5): map a damage rect from
+  # THIS widget's plane up to the SCREEN plane, through each ancestor
+  # TransformFrameWdgt ("island") on my parent chain that currently has a
+  # non-identity transform. A widget not inside any non-identity island — the
+  # overwhelming common case, and ALWAYS when the feature is dormant — gets its rect
+  # back UNCHANGED (same object), so the broken-rect machinery stays byte-identical.
+  # The pre-image is an axis-aligned virtual-plane rect; each island maps it to an
+  # integer axis-aligned AABB (§4.3), so the result is a plain Rectangle safe to feed
+  # the existing merge/dedupe. The mapped inner damage is clipped in the correct
+  # (screen) plane against the OUTERMOST island's own visible rect (= its footprint ∩
+  # its ancestor screen clips) — clipping the pre-image plane would not commute with
+  # the transform (§4.11).
+  mapRectToScreen: (aRect) ->
+    result = aRect
+    outermostIsland = nil
+    ancestor = @parent
+    while ancestor?
+      if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
+        result = ancestor.transformSpec.mapRect result, ancestor.bounds
+        outermostIsland = ancestor
+      ancestor = ancestor.parent
+    if outermostIsland?
+      result = result.intersect outermostIsland.clippedThroughBounds()
+    result
+
+  # Affine transforms (§4.6): map a SCREEN point down into THIS widget's plane, by
+  # applying the INVERSE of each ancestor island's transform, OUTERMOST first (the
+  # inverse of mapRectToScreen's innermost-first forward chain). A widget not inside
+  # any non-identity island gets the point back UNCHANGED — so hit-testing is
+  # byte-identical when dormant. Used by the hit-test predicate so a widget's
+  # bounds/pixel test runs in the plane where its (virtual) geometry lives; corner
+  # fall-through and per-pixel transparency then come out exact for free (§10.4).
+  screenPointToMyPlane: (aPoint) ->
+    islands = nil
+    ancestor = @parent
+    while ancestor?
+      if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
+        islands ?= []
+        islands.push ancestor            # innermost first
+      ancestor = ancestor.parent
+    return aPoint if !islands?
+    result = aPoint
+    for island in islands by -1          # apply inverses outermost → innermost
+      result = island.transformSpec.inverseMapPoint result, island.bounds
+    result
+
+
   # Widget accessing - simple changes: translate me + my children + repaint.
   # (Stage 5, 2026-07-01) The re-fit seam this used to fire is DELETED -- the settle loop now re-fits my tracking
   # container AFTER I settle (see _reFitMyTrackingContainerAfterSettle) -- so this immediate mutator is PURE geometry
@@ -2016,7 +2062,14 @@ class Widget extends TreeNode
 
     # draw the proper contents of the tree. Potentially, draw them faintly as shadow.
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
-      if aContext == world.worldCanvasContext
+      # Record last-painted bounds when drawing to the world canvas OR into a
+      # TransformFrameWdgt island buffer (docs/affine-transforms-plan.md §4.5): a
+      # widget inside a non-identity island paints into the island's buffer (not the
+      # world canvas), so without this its virtual last-painted snapshot would never
+      # update and the flesh-out "source" (cleanup-of-old-position) rect would be
+      # missing. world.paintingIntoIslandBuffer is nil on every ordinary paint, so
+      # this is byte-identical when the feature is dormant.
+      if aContext == world.worldCanvasContext or world.paintingIntoIslandBuffer?
         @recordDrawnAreaForNextBrokenRects()
       @fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow aContext, clippingRectangle, appliedShadow
 
@@ -2996,6 +3049,15 @@ class Widget extends TreeNode
     @_settleLayoutsAfter => @_showResizeAndMoveHandlesAndLayoutAdjustersNoSettle()
 
   _showResizeAndMoveHandlesAndLayoutAdjustersNoSettle: ->
+    # Affine transforms (Phase 1, §4.6): refuse resize/move handles on a widget
+    # inside a non-identity island — a HandleWdgt drags @target's bounds with SCREEN
+    # deltas that are not yet mapped through the island's transform (Phase 4 maps
+    # them). Dormant-safe: with no island the walk finds none and falls through to
+    # the unchanged logic below.
+    ancestor = @parent
+    while ancestor?
+      return if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
+      ancestor = ancestor.parent
     if @isFreeFloating()
       @addAndTrackHandle "resizeHorizontalHandle"
       @addAndTrackHandle "resizeVerticalHandle"

@@ -81,6 +81,13 @@ class WorldWdgt extends PanelWdgt
   showRedraws: false
   doubleCheckCachedMethodsResults: false
 
+  # affine transforms (docs/affine-transforms-plan.md §4.5): set to the island
+  # currently refreshing its buffer while its content subtree paints INTO that
+  # buffer (not the world canvas), so those descendants still record their
+  # (virtual) last-painted bounds for the flesh-out "source" cleanup rect. nil on
+  # every ordinary paint — the whole affine machinery is dormant otherwise.
+  paintingIntoIslandBuffer: nil
+
   # The A/B switch for the _-private *DeferredSettle layout API (Widget._setMaxDimDeferredSettle, ...; _-private +
   # stream-handler-restricted by check-layering [O]). ON (default): a *DeferredSettle call defers its layout flush to
   # the ONE end-of-cycle settle (a gesture/stream draining many mutations per frame collapses N flushes into 1).
@@ -876,7 +883,12 @@ class WorldWdgt extends PanelWdgt
       # even if the Widget is not visible anymore
       if brokenWidget.clippedBoundsWhenLastPainted?
         if brokenWidget.clippedBoundsWhenLastPainted.isNotEmpty()
-          sourceBroken = brokenWidget.clippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
+          # affine transforms (§4.5): map the last-painted (virtual for island
+          # descendants) rect to the screen plane BEFORE the shadow-grow, which is a
+          # screen-space phenomenon. mapRectToScreen returns the rect unchanged (same
+          # object) for any widget not inside a non-identity island → byte-identical
+          # when dormant.
+          sourceBroken = (brokenWidget.mapRectToScreen brokenWidget.clippedBoundsWhenLastPainted).expandBy(1).growBy @maxShadowSize
 
         #if brokenWidget!= world and (brokenWidget.clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
         #  debugger
@@ -893,7 +905,10 @@ class WorldWdgt extends PanelWdgt
         boundsToBeChanged = brokenWidget.clippedThroughBounds()
 
         if boundsToBeChanged.isNotEmpty()
-          destinationBroken = boundsToBeChanged.spread().expandBy(1).growBy @maxShadowSize
+          # affine transforms (§4.5): map the current (virtual for island descendants)
+          # rect to screen BEFORE spread/expand/shadow-grow. Mapped BEFORE the merge/
+          # dedupe below so those never see mixed planes. Identity → unchanged object.
+          destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged).spread().expandBy(1).growBy @maxShadowSize
           #if brokenWidget!= world and (boundsToBeChanged.spread().containsPoint new Point 10, 10)
           #  debugger
 
@@ -924,7 +939,8 @@ class WorldWdgt extends PanelWdgt
 
       if brokenWidget.fullClippedBoundsWhenLastPainted?
         if brokenWidget.fullClippedBoundsWhenLastPainted.isNotEmpty()
-          sourceBroken = brokenWidget.fullClippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
+          # affine transforms (§4.5): map to screen before the shadow-grow (identity → unchanged).
+          sourceBroken = (brokenWidget.mapRectToScreen brokenWidget.fullClippedBoundsWhenLastPainted).expandBy(1).growBy @maxShadowSize
 
       # for the "destination" broken rectangle we can actually
       # check whether the Widget is still visible because we
@@ -935,7 +951,8 @@ class WorldWdgt extends PanelWdgt
         boundsToBeChanged = brokenWidget.fullClippedBounds()
 
         if boundsToBeChanged.isNotEmpty()
-          destinationBroken = boundsToBeChanged.spread().expandBy(1).growBy @maxShadowSize
+          # affine transforms (§4.5): map to screen before spread/expand/shadow-grow, before merge (identity → unchanged).
+          destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged).spread().expandBy(1).growBy @maxShadowSize
           #if brokenWidget!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
           #  debugger
       

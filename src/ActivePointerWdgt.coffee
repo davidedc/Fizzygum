@@ -95,10 +95,17 @@ class ActivePointerWdgt extends Widget
   # ActivePointerWdgt navigation:
   topWdgtUnderPointer: ->
     result = world.topWdgtSuchThat (m) =>
-      m.clippedThroughBounds().containsPoint(@position()) and
+      # Affine transforms (§4.6): test each candidate against the pointer mapped INTO
+      # that candidate's plane. For a widget inside a non-identity island this is the
+      # inverse-mapped (virtual) point — where the candidate's virtual bounds/pixels
+      # live; the exact rotated-quad / per-pixel test then falls out for free. For any
+      # widget NOT inside an island (⇒ always, when dormant) mappedPointerPosition IS
+      # @position(), so this is byte-identical.
+      mappedPointerPosition = m.screenPointToMyPlane @position()
+      m.clippedThroughBounds().containsPoint(mappedPointerPosition) and
         m.visibleBasedOnIsVisibleProperty() and
         !m.isInCollapsedSubtree() and
-        (m.noticesTransparentClick or (not m.isTransparentAt(@position()))) and
+        (m.noticesTransparentClick or (not m.isTransparentAt(mappedPointerPosition))) and
         # we exclude the Caret here because
         #  a) it messes up things on double-click as it appears under
         #     the mouse after the first clicks
