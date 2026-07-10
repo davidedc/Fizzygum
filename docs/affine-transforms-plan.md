@@ -7,8 +7,8 @@ rough edges R1 (mouseMove-pointer mapping / paint-in-rotated-window), R3 (resize
 clip, via the TrackingTransformFrameWdgt subclass), R2 (ephemeral-overlay rotation, via in-plane
 highlight parenting + a resetWorld teardown fix), and R4 (slider + palette nonFloatDragging pointer
 plane-mapping) COMPLETE + COMMITTED; 4D-1 (drop-IN, the smaller half of pick/drop) COMPLETE +
-COMMITTED; 4D-2 (pick-OUT, full N-deep composition), 4E (close-out)
-REMAINING. See the per-phase §6 banners for hashes + gate results
+COMMITTED; 4D-2a (pick-OUT to desktop) COMPLETE + COMMITTED; 4D-2b (drop-back-INTO + unwrap-on-match),
+4E (close-out) REMAINING. See the per-phase §6 banners for hashes + gate results
 (they are the authority on status). Owner-gated; a standing
 grant to "commit + continue while all gates pass" is in force as of 2026-07-10. Original design
 was AUTHORED 2026-07-09 and hardened same day by an adversarial fresh-eyes pass (§10 facet
@@ -1349,8 +1349,31 @@ cold-executable. **R1, R2, R3, R4 COMPLETE 2026-07-10.**
 > dpr1/dpr2/webkit 223/223 + apps/paint/tiernaming/settle/capstone + homepage green (suite 222 → 223).
 > The stack/menu insert-index (`positionOnScreen`, the raw `@position()` still passed at the drop `add`)
 > inside an island is the SAME latent screen-vs-plane point — banked §7.13.
-> **4D-2 (pick-OUT) REMAINING** (owner chose FULL N-deep similitude composition; see the 4D body +
-> §6 4D risks — derive + test the anchor mapping at 90° first).
+> **4D-2 SPLIT into 4D-2a (pick-OUT to desktop) + 4D-2b (drop-back-INTO + unwrap-on-match), owner-gated
+> ("4D-2a first, gate, then 4D-2b"; grab model = loose-unit rules decide).**
+> **4D-2a (pick-OUT to desktop) COMPLETE + COMMITTED** (Fizzygum `2dd55413`, tests `78f7512bd`; NOT
+> pushed). The Phase-1 escalation guard in `grabsToParentWhenDragged` is REMOVED;
+> `ActivePointerWdgt.determineGrabs` resolves the on-hand figure via `Widget._resolvePickOutFigureNoSettle`
+> — REUSE the existing island when the grabbed widget is its sole content (Phase-1 whole-figure grab, no
+> churn; `macroTransformFrameScaledDragged` relies on it — box.parent == island still holds) or EXTRACT +
+> wrap a genuine sub-part via `_pickOutRotatedFigureNoSettle`. **KEY DESIGN FINDING — no
+> `TransformSpec.compose`, no matrix decomposition needed.** The accumulated map's LINEAR part is exactly
+> (scale = ∏ ancestor scales, rotation = Σ ancestor degrees) — scalar rotations commute + multiply;
+> summing integer degrees is EXACT (dodges the atan2 wobble 4B quantized). Two similitudes with the same
+> linear part differ only by a translation, so matching ONE point (my centre) coincides the whole figure:
+> the fresh island pivots on its slot centre (= my centre), and `localPointToScreen(centre)` (composes all
+> N ancestors) says where it was → translate by the difference, no jump. So `TransformSpec.compose` /
+> `inverseMapRect` / `inverseMapVector` all stay UNIMPLEMENTED (no-speculative-API). The fresh island is a
+> `TrackingTransformFrameWdgt` marked `_materializedBySugar` (behaves exactly like a setRotation'd widget:
+> auto-unwrap at identity, scalar serialization). n=1 pixel-identical; n≥2 resamples once (crisper). Off
+> any island `_resolvePickOutFigureNoSettle` returns the widget unchanged ⇒ byte-identical dormant. Proven
+> by `macroTransformFramePickOutStaysRotated` (grab a loose child out of a 35° 2-child panel → extracted
+> into a fresh island carrying rotation 35, panel + sibling stay in the original island, fresh island lands
+> on the desktop). Gauntlet dpr1/dpr2/webkit 224/224 + apps/paint/tiernaming/settle/capstone + homepage
+> green (suite 223 → 224); ONE benign inspector member-list recapture
+> (`macroDuplicatedInspectorDrivesCopiedTargetOnly` image_2/3 — the 2 new Widget methods).
+> **4D-2b (drop-back-INTO + unwrap-on-match) REMAINING** — drop a picked figure into another island,
+> unwrap-on-match to avoid nested-island buildup, with a round-trip structural-identity assertion (risk 2).
 
 - **Goal:** pick a widget OUT of a non-identity island and it stays visually transformed while
   floating; drop INTO an island and it lands at the correct inner position. Lifts the Phase-1
