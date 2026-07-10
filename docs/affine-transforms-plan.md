@@ -1260,8 +1260,8 @@ Priority: **R1 (paint) > R3 (resize-clip) > R2 (highlight)**. All cold-executabl
 
 **R4 — slider thumb drag not axis-tracked in a rotated island (value snaps toward an extreme).**
 
-> **STATUS 2026-07-10: COMPLETE + COMMITTED** (Fizzygum `<pending>`, tests `<pending>`; NOT pushed; gauntlet
-> dpr1/dpr2/webkit + apps/paint/tiernaming/settle/capstone + homepage). Owner-reported: the C↔F converter
+> **STATUS 2026-07-10: COMPLETE + COMMITTED** (Fizzygum `0895b1d5`, tests `eaa852ea6`; NOT pushed; gauntlet
+> dpr1/dpr2/webkit 222/222 + apps/paint/tiernaming/settle/capstone + homepage). Owner-reported: the C↔F converter
 > window's sliders became very tricky as the window rotated toward 45° — the value SNAPPED all the way up or
 > down — while the thumb's hover/grab still worked. Root cause: 4A-2 fixed the drag-pointer plane mapping for
 > ONE `nonFloatDragging` consumer (`HandleWdgt`, which does `newPos = (@screenPointToMyPlane pos).subtract
