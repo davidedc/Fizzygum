@@ -1547,6 +1547,21 @@ See §7. None of these block declaring the feature shipped.
 - **Drag DELTAs need no new vector API** (4A-2) — mapping a displacement through the inverse LINEAR part
   is just point-mapping BOTH endpoints and subtracting: `screenPointToMyPlane(a) − screenPointToMyPlane(b)`
   cancels the affine translation. Reuse `screenPointToMyPlane`; don't add an `inverseMapVector`.
+- **Damage-on-detach erases the un-transformed slot** (bug fix 2026-07-10, Fizzygum `86d3ee5e`) — closing/
+  destroying (or reparenting-OUT) an island-interior widget left stale pixels in its rotated footprint:
+  `_closeNoSettle`/`_destroyNoSettle` call `fullChanged()` while attached, then sever `@parent`; the erase-rect
+  is computed LATER in `fleshOut(Full)Broken` via `mapRectToScreen(...WhenLastPainted)`, which walks the
+  now-severed chain → identity → erases only the un-transformed slot. FIX: `recordDrawnAreaForNextBrokenRects`
+  now freezes the SCREEN footprint at PAINT time (`mapRectToScreen` while attached); `fleshOutBroken`/
+  `fleshOutFullBroken` use it directly (byte-identical dormant + attached-island). Owner-reported via a tilted
+  DegreesConverterApp inner-window close.
+- **⚠ A SCREENSHOT MACRO CANNOT CATCH BROKEN-RECT STALENESS** (bug fix 2026-07-10) — `readyForMacroScreenshot`
+  (`MacroToolkit:227`) forces `world.fullChanged()` (a full repaint) before EVERY capture, erasing incremental
+  broken-rect staleness. To test a broken-rect bug: read the INCREMENTAL canvas pixels right after the gesture
+  (`world.worldCanvasContext.getImageData`, NO `takeScreenshot`), then `world.fullChanged()` + settle and read
+  again, and assert 0 RGB-differing pixels (assertion-only, no references) — proven by
+  `macroClosingRotatedIslandChildClearsFootprint` (diff 0 fixed / 5257 un-fixed). Use the EMPTY harness world
+  (no animated clock) so the fixed-build diff is exactly 0.
 - **Rotation input is SCREEN-plane** (4B) — the rotate handle reads `world.hand.position()` (raw) and
   `island.screenAnchor()`, NOT its 4A-1-mapped position: an in-plane handle reading the mapped
   position would measure the angle in the very plane it is rotating (a feedback loop). Quantize the
