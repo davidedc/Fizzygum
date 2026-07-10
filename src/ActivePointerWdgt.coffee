@@ -433,6 +433,25 @@ class ActivePointerWdgt extends Widget
 
       @fullChanged()
       target._beforeChildDropped? wdgtToDrop
+
+      # Affine transforms 4D-1 (§6): DROP-IN into a widget that lives inside a non-identity island.
+      # The payload arrives in SCREEN space (it was float-dragged on the hand, a world-level widget),
+      # but once it becomes target's child it composites THROUGH target's plane transform — so its
+      # bounds must be re-expressed in that plane or the island's transform double-applies and the
+      # payload jumps off the release point (lands rotated/scaled away from where it was dropped).
+      # Preserve the on-screen CENTRE (drag continuity): map it into target's plane and re-home the
+      # payload's UNCHANGED-size bounds there, so it appears at its native virtual size, correctly
+      # rotated/scaled, centred where it was released. (Centre-preserving, NOT a corner-bbox
+      # inverseMapRect: a rotated rect's screen-corner bounding box would inflate + mis-centre — the
+      # same reason 4A-2 point-maps instead of adding an inverseMapVector; extent is deliberately left
+      # native, the payload simply becomes content of the transformed thing.) screenPointToMyPlane
+      # composes ALL ancestor islands (N-deep) and returns the point UNCHANGED off any island, so the
+      # whole block is a no-op when dormant (byte-identical). NoSettle mutator — the target.add below
+      # carries the single settle.
+      if target._isInsideNonIdentityIsland()
+        virtualCentre = target.screenPointToMyPlane wdgtToDrop.center()
+        wdgtToDrop._applyMoveTo virtualCentre.subtract wdgtToDrop.extent().floorDivideBy 2
+
       target.add wdgtToDrop, nil, nil, true, nil, @position()
       wdgtToDrop.fullChanged()
 
