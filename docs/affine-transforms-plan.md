@@ -4,8 +4,9 @@
 PROGRESS — 4A-1 (click-position mapping), 4C (property sugar), 4B (halo rotation), 4A-2
 (drag-delta mapping), and 4B-universal (rotate ANY widget from its halo) COMPLETE + COMMITTED;
 rough edges R1 (mouseMove-pointer mapping / paint-in-rotated-window), R3 (resize-after-rotate
-clip, via the TrackingTransformFrameWdgt subclass), and R2 (ephemeral-overlay rotation, via in-plane
-highlight parenting + a resetWorld teardown fix) COMPLETE + COMMITTED; 4D (pick/drop), 4E (close-out)
+clip, via the TrackingTransformFrameWdgt subclass), R2 (ephemeral-overlay rotation, via in-plane
+highlight parenting + a resetWorld teardown fix), and R4 (slider + palette nonFloatDragging pointer
+plane-mapping) COMPLETE + COMMITTED; 4D (pick/drop), 4E (close-out)
 REMAINING. See the per-phase §6 banners for hashes + gate results
 (they are the authority on status). Owner-gated; a standing
 grant to "commit + continue while all gates pass" is in force as of 2026-07-10. Original design
@@ -1121,15 +1122,16 @@ lifted by the sub-step named):**
 > correct inside a rotated island, the whole halo stays coherent once a widget is rotated. Resize-GROW
 > past a sugar island's slot still clips (the deferred 4A-2 slot-tracking refinement).
 
-#### Phase 4 — ROUGH EDGES exposed by 4B-universal (rotation on real windows) — R1, R2, R3 DONE
+#### Phase 4 — ROUGH EDGES exposed by 4B-universal (rotation on real windows) — R1, R2, R3, R4 DONE
 
-Making rotation reachable on any window surfaced three coordinate gaps — two are the 4A-2 deferrals, one
-is ephemeral-overlay rotation. NOT regressions from the universal handle (it just made rotation easy to
-trigger); they are follow-ups to the transform feature. Reported by the owner 2026-07-10 testing the
-**Drawings Maker** app in a rotated window (hierarchy there: `TransformFrame → Window →
-StretchableWidgetContainer → StretchableCanvas → CanvasGlassTop`, plus a `ReconfigurablePaint`).
-Priority: **R1 (paint) > R3 (resize-clip) > R2 (highlight)**. All cold-executable. **R1, R2, R3 COMPLETE
-2026-07-10.**
+Making rotation reachable on any window surfaced several coordinate gaps — the 4A-2 deferrals,
+ephemeral-overlay rotation, and (found later) the slider/palette drag consumers 4A-2 missed. NOT
+regressions from the universal handle (it just made rotation easy to trigger); they are follow-ups to
+the transform feature. Reported by the owner 2026-07-10 testing the **Drawings Maker** app in a rotated
+window (hierarchy there: `TransformFrame → Window → StretchableWidgetContainer → StretchableCanvas →
+CanvasGlassTop`, plus a `ReconfigurablePaint`); R4 reported testing the **C↔F converter** window's sliders.
+Priority was **R1 (paint) > R3 (resize-clip) > R2 (highlight)**, then R4 (slider/palette drag). All
+cold-executable. **R1, R2, R3, R4 COMPLETE 2026-07-10.**
 
 **R1 — pointer position not mapped for `mouseMove` consumers (paint draws in the wrong place).**
 
