@@ -3,7 +3,9 @@
 **STATUS (updated 2026-07-10): Phases 0–3 COMPLETE + COMMITTED (not pushed); Phase 4 IN
 PROGRESS — 4A-1 (click-position mapping), 4C (property sugar), 4B (halo rotation), 4A-2
 (drag-delta mapping), and 4B-universal (rotate ANY widget from its halo) COMPLETE + COMMITTED;
-4D (pick/drop), 4E (close-out) REMAINING. See the per-phase §6 banners for hashes + gate results
+rough edge R1 (mouseMove-pointer mapping / paint-in-rotated-window) COMPLETE + COMMITTED;
+R3 (resize-after-rotate clip), R2 (ephemeral-overlay rotation), 4D (pick/drop), 4E (close-out)
+REMAINING. See the per-phase §6 banners for hashes + gate results
 (they are the authority on status). Owner-gated; a standing
 grant to "commit + continue while all gates pass" is in force as of 2026-07-10. Original design
 was AUTHORED 2026-07-09 and hardened same day by an adversarial fresh-eyes pass (§10 facet
@@ -1118,16 +1120,30 @@ lifted by the sub-step named):**
 > correct inside a rotated island, the whole halo stays coherent once a widget is rotated. Resize-GROW
 > past a sugar island's slot still clips (the deferred 4A-2 slot-tracking refinement).
 
-#### Phase 4 — ROUGH EDGES exposed by 4B-universal (rotation on real windows) — TO FIX
+#### Phase 4 — ROUGH EDGES exposed by 4B-universal (rotation on real windows) — R1 DONE; R2/R3 TO FIX
 
 Making rotation reachable on any window surfaced three coordinate gaps — two are the 4A-2 deferrals, one
 is ephemeral-overlay rotation. NOT regressions from the universal handle (it just made rotation easy to
 trigger); they are follow-ups to the transform feature. Reported by the owner 2026-07-10 testing the
 **Drawings Maker** app in a rotated window (hierarchy there: `TransformFrame → Window →
 StretchableWidgetContainer → StretchableCanvas → CanvasGlassTop`, plus a `ReconfigurablePaint`).
-Priority: **R1 (paint) > R3 (resize-clip) > R2 (highlight)**. All cold-executable.
+Priority: **R1 (paint) > R3 (resize-clip) > R2 (highlight)**. All cold-executable. **R1 COMPLETE
+2026-07-10; R3, R2 remain.**
 
 **R1 — pointer position not mapped for `mouseMove` consumers (paint draws in the wrong place).**
+
+> **STATUS 2026-07-10: COMPLETE + COMMITTED** (Fizzygum `b51062e9`, tests `1d54b5d11`; NOT pushed).
+> `ActivePointerWdgt` now maps the pointer PER-RECEIVER through `screenPointToMyPlane` at BOTH `mouseMove`
+> dispatch sites — `determineGrabs` (`topWdgt.mouseMove`, :1007) and `dispatchEventsFollowingMouseMove`
+> (`newWdgt.mouseMove`, :1149) — exactly the 4A-1 click-site mapping. Dormant-safe: identity off any island
+> ⇒ every existing test byte-identical (gauntlet 218/218 dpr1/dpr2/webkit + apps/paint/tiernaming/settle/
+> capstone + homepage all green). AUDIT of the other position-reading `mouseMove` consumers: `StringWdgt`
+> (`slotAt` text selection) and `Example3DPlotWdgt` (drag-delta) both just BECOME correct inside an island;
+> `SliderButtonWdgt.mouseMove` reads no position; no double-mapping (only `HandleWdgt`/`ActivePointerWdgt`
+> call `screenPointToMyPlane`). Proof: `macroMouseMovePositionMappedInRotatedIsland` (a box records the pos
+> its own `mouseMove` receives; rotated 40°; bare pointer moved to an OFF-CENTRE interior point because the
+> centre is the rotation's fixed point ⇒ maps trivially) value-asserts delivered-pos == plane-map,
+> non-trivial (>5px), island at 40°. The suggested extra audit (slider track-hover) came out clean.
 - Symptom: in a rotated window the paint stroke appears offset from the cursor (the green cursor square
   and the black stroke are far apart).
 - Root cause: `ActivePointerWdgt` dispatches `mouseMove` with the RAW screen `@position()` at two sites —
