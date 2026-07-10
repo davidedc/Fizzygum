@@ -1101,7 +1101,7 @@ lifted by the sub-step named):**
 
 #### 4B-universal — rotate ANY widget from its halo (built on 4A-2)
 
-> **STATUS 2026-07-10: COMPLETE + COMMITTED** (Fizzygum `<pending>`, tests `<pending>`; NOT pushed).
+> **STATUS 2026-07-10: COMPLETE + COMMITTED** (Fizzygum `b9770bb7`, tests `f20b81006`; NOT pushed).
 > The rotate handle is added to EVERY free-floating widget's halo (the island-only
 > `providesRotateHandleInHalo` gate is DROPPED). A Widget **halo rotation protocol** —
 > `rotationHalo_screenAnchor` (my centre → screen = the sugar island's fixed-point pivot),
