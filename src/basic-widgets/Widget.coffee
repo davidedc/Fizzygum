@@ -1314,11 +1314,20 @@ class Widget extends TreeNode
   # escalates to the island). Dormant returns false with no island. (This is the §9 memoization point:
   # a cached inside-an-island flag invalidated on reparent/spec change would replace this walk — banked.)
   _isInsideNonIdentityIsland: ->
+    @_enclosingNonIdentityIsland()?
+
+  # Affine transforms (§6 R2): the INNERMOST enclosing non-identity island (TransformFrameWdgt) on my
+  # parent chain, or nil. My (virtual) geometry lives in THIS island's plane — clippedThroughBounds and
+  # the mapRectToScreen / screenPointToMyPlane chain are all expressed there — so ephemeral chrome that
+  # must track me (a highlight) is parented HERE to composite through the transform for free (rotates +
+  # clips with me, §4.6 halo-handle model). Dormant returns nil (no island) ⇒ the highlight stays a
+  # world child, byte-identical. Backs _isInsideNonIdentityIsland above (its one caller is boolean-context).
+  _enclosingNonIdentityIsland: ->
     ancestor = @parent
     while ancestor?
-      return true if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
+      return ancestor if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
       ancestor = ancestor.parent
-    false
+    nil
 
   # ---------------------------------------------------------------------------
   # Affine transforms (§6 Phase 4C): the Lively-flavoured property sugar. Rotate / scale ANY widget
@@ -1421,6 +1430,17 @@ class Widget extends TreeNode
     pos = @position()
     islandParent._addNoSettle @, islandIndex, islandLayoutSpec   # reparent me back into the island's slot + spec
     @_moveToNoSettle pos                                          # preserve my absolute position (desktop case)
+    # R2 (§6 affine): a highlight (or any layout-inert ephemeral chrome, isEphemeral) parented INTO this
+    # island while it was rotated must ride OUT before we drop it — else _destroyNoSettle just nulls
+    # island.children (it does not orphan/clean them), leaving the world's highlight bookkeeping dangling
+    # on a dead widget. Dematerialize only happens at identity, where virtual ≡ screen, so each inert
+    # child's bounds are already screen-coincident: re-home it to the island's parent at unchanged
+    # position (the reconciler re-derives the exact parent next tick regardless). Iterate a COPY since
+    # _addNoSettle mutates island.children. (The content @ is already out, so these are only chrome.)
+    for inertChild in island.children.slice() when inertChild.isLayoutInert?()
+      inertChildPos = inertChild.position()
+      islandParent._addNoSettle inertChild                       # free-floating (default layoutSpec)
+      inertChild._moveToNoSettle inertChildPos
     island._destroyNoSettle()                                    # drop the now-empty island (I was inserted before it)
 
 

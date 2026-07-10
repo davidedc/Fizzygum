@@ -26,6 +26,18 @@ class HighlighterWdgt extends RectangleWdgt
   # type-test-elimination campaign). Prototype flag: EVERY HighlighterWdgt is an ephemeral.
   _ephemeralOverlay: true
 
+  # I am LAYOUT-INERT chrome, exactly like HandleWdgt / CaretWdgt (the only other isLayoutInert
+  # classes). Affine transforms rough edge R2 (§6): the reconciler now parents a highlight INTO its
+  # target's enclosing island so it warps + clips with the target (§4.6 halo-handle model). Being
+  # layout-inert excludes me from childrenNotHandlesNorCarets / subWidgetsMergedFullBounds, so I can
+  # never disturb a size-tracking container's content bounds — in particular I never count as the
+  # single content child of a sugar island (a highlighted rotated widget would otherwise fail the
+  # TrackingTransformFrameWdgt single-child check, and a second setRotationDegrees while hovered would
+  # nest a second island). Still PAINTED into the island buffer (painting iterates ALL children, not
+  # just the non-inert ones), so the highlight stays visible. No effect on the world-child path (those
+  # content-bounds enumerations run only on scroll / size-tracking containers, never the world).
+  isLayoutInert: -> true
+
   # --- highlight style channel (drag-embed arc) ------------------------------------------------
   # A style descriptor is a plain record. Producers declare a target -> descriptor into
   # world.widgetsToBeHighlighted (a Map); the reconciler builds one HighlighterWdgt per target and

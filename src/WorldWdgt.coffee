@@ -1361,19 +1361,31 @@ class WorldWdgt extends PanelWdgt
   
   addHighlightingWidgets: ->
     @currentHighlightingWidgets.forEach (eachHighlightingWidget) =>
-      if @widgetsToBeHighlighted.has eachHighlightingWidget.wdgtThisWdgtIsHighlighting
-        if eachHighlightingWidget.wdgtThisWdgtIsHighlighting.hasMaybeChangedPaintBounds()
-          eachHighlightingWidget._applyBounds eachHighlightingWidget.wdgtThisWdgtIsHighlighting.clippedThroughBounds()
+      target = eachHighlightingWidget.wdgtThisWdgtIsHighlighting
+      if @widgetsToBeHighlighted.has target
+        if target.hasMaybeChangedPaintBounds()
+          # R2 (§6 affine): keep the highlight parented in the TARGET'S PLANE — inside its innermost
+          # enclosing non-identity island — so it composites through the transform (rotates + clips with
+          # the target for free, §4.6). Re-derived each update so a mid-hover rotate/unwrap re-homes it;
+          # a target off any island resolves to the world ⇒ byte-identical dormant. add() re-parents and
+          # (highlighter having no intrinsic layoutSpec) keeps it free-floating; the common static case
+          # is already home, so this only fires on an actual island-membership transition.
+          desiredParent = target._enclosingNonIdentityIsland() ? @
+          desiredParent.add eachHighlightingWidget  if eachHighlightingWidget.parent != desiredParent
+          eachHighlightingWidget._applyBounds target.clippedThroughBounds()
       else
         @currentHighlightingWidgets.delete eachHighlightingWidget
-        @widgetsBeingHighlighted.delete eachHighlightingWidget.wdgtThisWdgtIsHighlighting
+        @widgetsBeingHighlighted.delete target
         eachHighlightingWidget.wdgtThisWdgtIsHighlighting = nil
         eachHighlightingWidget.fullDestroy()
 
     @widgetsToBeHighlighted.forEach (styleDescriptor, eachWidgetNeedingHighlight) =>
       unless @widgetsBeingHighlighted.has eachWidgetNeedingHighlight
         hM = new HighlighterWdgt
-        @add hM
+        # R2 (§6 affine): parent the highlight into the target's innermost enclosing non-identity island
+        # (its virtual plane) so it warps + clips with the target; the world when there is none (dormant
+        # ⇒ byte-identical to the prior @add hM).
+        (eachWidgetNeedingHighlight._enclosingNonIdentityIsland() ? @).add hM
         hM.wdgtThisWdgtIsHighlighting = eachWidgetNeedingHighlight
         hM._applyBounds eachWidgetNeedingHighlight.clippedThroughBounds()
         hM.applyHighlightStyle styleDescriptor
@@ -2126,6 +2138,21 @@ class WorldWdgt extends PanelWdgt
   _resetWorldNoSettle: ->
     @changed() # redraw the whole screen
     @fullDestroyChildren()
+    # EPHEMERAL-OVERLAY bookkeeping is world-level state NOT held in the widget tree, so
+    # fullDestroyChildren above (which destroys the reconciled highlighter/pinout WIDGETS as world
+    # children / island descendants) does NOT empty these declare/current/being structures — they keep
+    # DEAD references to the just-destroyed targets + overlays. A test that leaves a highlight or pinout
+    # active at teardown (e.g. one that never calls turnOffHighlight) would then leak those dead refs
+    # into the NEXT test in the same headless process: the reconciler (addHighlightingWidgets /
+    # addPinoutingWidgets) would touch a destroyed target and mis-render. resetWorld must reset ALL
+    # world state, so clear them here (found via the R2 highlight-tracking test, which deliberately
+    # leaves its highlight on to exercise this teardown). Product-safe: resetWorld is test/dev tooling.
+    @widgetsToBeHighlighted.clear()
+    @currentHighlightingWidgets.clear()
+    @widgetsBeingHighlighted.clear()
+    @widgetsToBePinouted.clear()
+    @currentPinoutingWidgets.clear()
+    @widgetsBeingPinouted.clear()
     # the "basementWdgt" is not attached to the
     # world tree so it's not in the children,
     # so we need to clean up separately

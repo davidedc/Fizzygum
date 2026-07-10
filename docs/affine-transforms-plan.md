@@ -3,9 +3,10 @@
 **STATUS (updated 2026-07-10): Phases 0–3 COMPLETE + COMMITTED (not pushed); Phase 4 IN
 PROGRESS — 4A-1 (click-position mapping), 4C (property sugar), 4B (halo rotation), 4A-2
 (drag-delta mapping), and 4B-universal (rotate ANY widget from its halo) COMPLETE + COMMITTED;
-rough edges R1 (mouseMove-pointer mapping / paint-in-rotated-window) and R3 (resize-after-rotate
-clip, via the TrackingTransformFrameWdgt subclass) COMPLETE + COMMITTED; R2 (ephemeral-overlay
-rotation), 4D (pick/drop), 4E (close-out) REMAINING. See the per-phase §6 banners for hashes + gate results
+rough edges R1 (mouseMove-pointer mapping / paint-in-rotated-window), R3 (resize-after-rotate
+clip, via the TrackingTransformFrameWdgt subclass), and R2 (ephemeral-overlay rotation, via in-plane
+highlight parenting + a resetWorld teardown fix) COMPLETE + COMMITTED; 4D (pick/drop), 4E (close-out)
+REMAINING. See the per-phase §6 banners for hashes + gate results
 (they are the authority on status). Owner-gated; a standing
 grant to "commit + continue while all gates pass" is in force as of 2026-07-10. Original design
 was AUTHORED 2026-07-09 and hardened same day by an adversarial fresh-eyes pass (§10 facet
@@ -1120,15 +1121,15 @@ lifted by the sub-step named):**
 > correct inside a rotated island, the whole halo stays coherent once a widget is rotated. Resize-GROW
 > past a sugar island's slot still clips (the deferred 4A-2 slot-tracking refinement).
 
-#### Phase 4 — ROUGH EDGES exposed by 4B-universal (rotation on real windows) — R1, R3 DONE; R2 TO FIX
+#### Phase 4 — ROUGH EDGES exposed by 4B-universal (rotation on real windows) — R1, R2, R3 DONE
 
 Making rotation reachable on any window surfaced three coordinate gaps — two are the 4A-2 deferrals, one
 is ephemeral-overlay rotation. NOT regressions from the universal handle (it just made rotation easy to
 trigger); they are follow-ups to the transform feature. Reported by the owner 2026-07-10 testing the
 **Drawings Maker** app in a rotated window (hierarchy there: `TransformFrame → Window →
 StretchableWidgetContainer → StretchableCanvas → CanvasGlassTop`, plus a `ReconfigurablePaint`).
-Priority: **R1 (paint) > R3 (resize-clip) > R2 (highlight)**. All cold-executable. **R1, R3 COMPLETE
-2026-07-10; R2 remains.**
+Priority: **R1 (paint) > R3 (resize-clip) > R2 (highlight)**. All cold-executable. **R1, R2, R3 COMPLETE
+2026-07-10.**
 
 **R1 — pointer position not mapped for `mouseMove` consumers (paint draws in the wrong place).**
 
@@ -1189,19 +1190,71 @@ Priority: **R1 (paint) > R3 (resize-clip) > R2 (highlight)**. All cold-executabl
 > Explicit-island content-resize has the SAME latent clip → future path banked §7.10. Lessons folded into §8.
 
 **R2 — ephemeral highlight overlays not rotated (highlight axis-aligned + offset).**
+
+> **STATUS 2026-07-10: COMPLETE + COMMITTED** (Fizzygum `<pending>`, tests `<pending>`; NOT pushed; gauntlet
+> dpr1/dpr2/webkit + apps/paint/tiernaming/settle/capstone + homepage). Owner-reviewed design (5 refinements
+> folded in). Symptom: the hierarchy-menu target highlight (blue wash) shows as a screen-aligned box OFFSET
+> from a rotated target. Root cause: `HighlighterWdgt` is built one-per-target by the reconciler
+> (`WorldWdgt.addHighlightingWidgets`, fed by the `world.widgetsToBeHighlighted` Map) as a WORLD child sized
+> to `target.clippedThroughBounds()` — which, for a target inside a non-identity island, is the target's rect
+> in the island's VIRTUAL plane (the transform is applied later, at composite time, via `mapRectToScreen`). A
+> world child interprets those bounds in the SCREEN plane ⇒ axis-aligned + offset. **Fix = the §4.6
+> halo-handle model: the reconciler now parents each highlight INTO its target's innermost enclosing
+> non-identity island** (`Widget._enclosingNonIdentityIsland`, or the world when there is none). The island
+> paints all its children into the buffer (`_refreshIslandBuffer` iterates every child) and composites through
+> the matrix, so the highlight **warps + clips with the target for free**; its damage maps to screen correctly
+> (`fleshOutBroken` already runs island-interior damage through `mapRectToScreen`). Off any island ⇒ world
+> parent ⇒ BYTE-IDENTICAL dormant (verified). Three edits + one lifecycle fix + one hardening:
+> - `HighlighterWdgt` gains `isLayoutInert: -> true` (it is layout-inert chrome exactly like `HandleWdgt`/
+>   `CaretWdgt`). This excludes it from `childrenNotHandlesNorCarets` / `subWidgetsMergedFullBounds`, so it can
+>   never disturb a size-tracking container's content bounds — in particular it can NEVER count as the single
+>   content child of a sugar island. **This flushed a latent bug that existed regardless of R2:** without it, a
+>   highlighted sugar island fails the `TrackingTransformFrameWdgt` single-child check and a second
+>   `setRotationDegrees` while hovered would NEST a second island. Still PAINTED into the buffer (painting
+>   iterates all children, not just the non-inert ones).
+> - `Widget._enclosingNonIdentityIsland()` (innermost non-identity `TransformFrameWdgt` ancestor, or nil);
+>   `_isInsideNonIdentityIsland` refactored to delegate to it (one boolean-context caller).
+> - `WorldWdgt.addHighlightingWidgets` resolves `desiredParent = target._enclosingNonIdentityIsland() ? world`
+>   in both the create branch and the update branch (re-parents if it changed, so a mid-hover rotate/unwrap
+>   re-homes it; `add` keeps the highlighter free-floating — it has no intrinsic `layoutSpec`).
+> - **Lifecycle (owner refinement 1):** `_dematerializeSugarIslandIfIdentityNoSettle` re-homes any layout-inert
+>   ephemeral chrome OUT to the island's parent (at unchanged position — dematerialize is at identity, so
+>   virtual ≡ screen) BEFORE `island._destroyNoSettle()`. `_destroyNoSettle` merely NULLS `island.children`
+>   (it does not orphan/clean them), so a highlight left inside would dangle the world's highlight bookkeeping
+>   on a dead widget. Now the SAME highlighter instance survives an unwrap-while-hovered.
+> - **resetWorld teardown gap (surfaced by the new test):** `WorldWdgt._resetWorldNoSettle` destroyed the
+>   world's children but NEVER cleared the ephemeral-overlay bookkeeping (`widgetsToBeHighlighted` /
+>   `currentHighlightingWidgets` / `widgetsBeingHighlighted`, + the pinout trio) — Sets/Map on the singleton
+>   world holding DEAD refs to the destroyed targets/overlays. Pre-existing latent gap (menu tests always
+>   dismiss their highlights, so it never bit); the new test deliberately leaves its highlight ON at teardown,
+>   which leaked dead refs into the NEXT test in the same headless process → 2 unrelated tests
+>   (`macroHoppingBetweenSubMenus`, `macroTextRelayoutsCorrectlyOnResize`) mis-rendered (passed alone, failed
+>   in-suite — the classic resetWorld-between-tests signature). Fix: `_resetWorldNoSettle` now `.clear()`s all
+>   six. The test KEEPS its dangling highlight on purpose, as a live regression guard for this teardown.
+> - **Z-ORDER semantic change (owner refinement 4), consciously accepted:** an in-plane highlight composites at
+>   the island's z-position, so a widget overlapping the rotated island now OCCLUDES the highlight (before, a
+>   world-child highlight painted above everything). This is MORE correct — an occluded target ⇒ an occluded
+>   highlight — but it is a behaviour change; recorded here so it is not later bisected as a regression.
+> - **Audit tail — resolved:** the drag-embed **candidate/reluctant outline** flows through the SAME
+>   `world.widgetsToBeHighlighted` channel (`ActivePointerWdgt:245`), so it is fixed by this change. The
+>   **charge-ring / armed-label / lock-badge** are cursor-relative (screen plane) and correct as-is.
+>   **CaretWdgt / text selection** are in-plane by parentage already. **Pinout labels** (`addPinoutingWidgets`)
+>   carry the SAME latent bug but are debug tooling out of the repro → BANKED §7.11 (identical one-liner via
+>   `_enclosingNonIdentityIsland`). Proof macro `macroHighlightTracksRotatedIslandTarget` (value-asserts parent
+>   ∈ island + bounds == virtual-plane `clippedThroughBounds`, then the unwrap-survives case; image_1 the
+>   rotated wash, image_2 the re-homed axis-aligned highlight). Possible ONE benign inspector member-list
+>   recapture from the new `Widget` method (the standing benign-recapture rule — run the WebKit leg).
+> - **Why NOT the rotated-quad alternative:** it is dead not because "no polygon-stroke primitive exists" (both
+>   backends stroke paths fine) but because a screen-plane quad highlighter would need its OWN painting code +
+>   quad damage accounting, and would neither clip with the island nor reuse the mapping machinery — it is
+>   architecturally FOREIGN, whereas in-plane is architecturally FREE (the same model as halos and carets:
+>   widget-attached chrome lives in-plane and warps/clips/damages with its target for nothing).
 - Symptom: the hierarchy-menu TARGET highlight (blue wash/outline) shows as a screen-aligned box offset
   from a rotated target; likely also hover / drag-embed outlines.
 - Root cause: `HighlighterWdgt` (extends `RectangleWdgt`) is built one-per-target by the reconciler
   (`world.widgetsToBeHighlighted` Map → `WorldWdgt`), positioned/sized to the target's bounds in the SCREEN
   plane with NO mapping through the enclosing island ⇒ axis-aligned rect at the wrong place/orientation.
   Same class as the §4.6 world-overlay-halo problem (screen-space overlays don't rotate).
-- Fix (design): make the highlighter IN-PLANE content of its target's island (attach like the halo handles,
-  so it warps + clips with the target for free — §4.6), OR draw a rotated quad from the target's
-  screen-mapped corners (`localPointToScreen` per corner; but no polygon-stroke primitive exists today, so
-  the in-plane route is the consistent one). Pin the exact reconciler-positioning line first
-  (`WorldWdgt`, search `widgetsToBeHighlighted`).
-- ⚠ Also audit the OTHER ephemerals for the same gap: drag-embed outline / charge-ring / label / lock-badge
-  (drag-embed spec), and any selection/caret overlay drawn in screen space.
 - Test: highlight a widget inside a rotated island (open its hierarchy menu) — the highlight tracks the
   rotated shape.
 
@@ -1357,6 +1410,13 @@ See §7. None of these block declaring the feature shipped.
    `TrackingTransformFrameWdgt` for the explicit wrap (it already exists and IS-A TransformFrameWdgt) —
    NOT a per-instance flag (capability is class here, §6 R3). Owner-gated; build only on demonstrated
    need (no current test/app authors an explicit island whose content resizes).
+11. **Pinout labels in a rotated island** (banked 2026-07-10, from the R2 audit) — `WorldWdgt.addPinoutingWidgets`
+   builds a `StringWdgt` overlay per pinouted widget and places it at `clippedThroughBounds().right()+10` as a
+   WORLD child — the SAME latent screen-vs-plane bug R2 fixed for highlights (a pinouted widget inside a rotated
+   island gets its label at the virtual-plane rect drawn in screen space → offset). Pinout is a debug/inspection
+   overlay, out of the reported repro, so it was left as KNOWN-LATENT. Fix is the identical one-liner pattern:
+   parent the label into `widget._enclosingNonIdentityIsland() ? world` (and the offset becomes an in-plane
+   offset that rotates with the island). Owner-gated; no current test drives pinout on a rotated target.
 
 ---
 
