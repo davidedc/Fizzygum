@@ -41,6 +41,11 @@ class TransformFrameWdgt extends PanelWdgt
   # Phase 3 (§4.9): last claimed extent reported to the parent layout, for reflow-on-change
   # detection. nil for a 'slot' island (the default — never reflows).
   _lastClaimedExtent: nil
+  # Phase 4C (§6): true when this island was MATERIALIZED by the Widget-level property sugar
+  # (widget.setRotationDegrees / setScaleFactor). Only a sugar-materialized island is auto-REMOVED
+  # when its spec returns to identity (an explicitly-authored island stays, merely dormant). Serializes
+  # as a plain boolean so a saved-then-reloaded sugar island stays sugar-removable.
+  _materializedBySugar: false
 
   constructor: (contentWidget = nil, transformSpec = nil) ->
     super()   # PanelWdgt ctor (sets appearance/color/stroke) — we blank them below

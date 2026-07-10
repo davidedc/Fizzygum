@@ -1309,6 +1309,74 @@ class Widget extends TreeNode
       ancestor = ancestor.parent
     result
 
+  # ---------------------------------------------------------------------------
+  # Affine transforms (§6 Phase 4C): the Lively-flavoured property sugar. Rotate / scale ANY widget
+  # by MATERIALIZING an enclosing TransformFrameWdgt island on demand, and REMOVING it when the
+  # transform returns to identity — so the widget's structural identity is restored at identity (the
+  # dormant guarantee + serialization cleanliness). These wrap the island's own setRotation/setScale.
+  # The names are deliberately NOT the island's setRotation/setScale, so there is no layering-gate
+  # name collision and calling them on a bare widget is unambiguous. Public tier owns the single
+  # settle (the wrap/adjust/unwrap all run NoSettle inside it).
+  # ---------------------------------------------------------------------------
+  setRotationDegrees: (deg) ->
+    @_settleLayoutsAfter => @_setRotationDegreesNoSettle deg
+
+  _setRotationDegreesNoSettle: (deg) ->
+    @_applyTransformSugarNoSettle deg, nil
+
+  setScaleFactor: (s) ->
+    @_settleLayoutsAfter => @_setScaleFactorNoSettle s
+
+  _setScaleFactorNoSettle: (s) ->
+    @_applyTransformSugarNoSettle nil, s
+
+  # shared core: find-or-materialize the enclosing sugar island, apply the (partial) spec change,
+  # then dematerialize if it returned to identity. degOrNil / sOrNil: nil means "leave unchanged".
+  _applyTransformSugarNoSettle: (degOrNil, sOrNil) ->
+    island = @_enclosingSugarIsland()
+    if !island?
+      # nothing exists yet: materialize only if the target is non-identity (else it is a no-op).
+      deg = degOrNil ? 0
+      s = sOrNil ? 1
+      return if (deg % 360 == 0) and (s == 1)
+      island = @_materializeSugarIslandNoSettle()
+    island._setRotationNoSettle degOrNil if degOrNil?
+    island._setScaleNoSettle sOrNil if sOrNil?
+    @_dematerializeSugarIslandIfIdentityNoSettle island
+
+  # the enclosing island IFF it was materialized by the sugar AND wraps EXACTLY me (so adjusting it
+  # only affects me). An explicitly-authored island (or one wrapping a larger subtree) is NOT reused —
+  # it stays put; the sugar wraps a fresh island around just me.
+  _enclosingSugarIsland: ->
+    p = @parent
+    return nil if !(p instanceof TransformFrameWdgt) or !p._materializedBySugar
+    kids = p.childrenNotHandlesNorCarets()
+    return p if kids? and kids.length == 1 and kids[0] == @
+    nil
+
+  # wrap me in a fresh sugar island IN PLACE: the island's slot box becomes my current bounds and I
+  # become its single free-floating child, keeping my absolute position (virtual ≡ screen at identity).
+  _materializeSugarIslandNoSettle: ->
+    formerParent = @parent
+    island = new TransformFrameWdgt()
+    island._materializedBySugar = true
+    island.bounds = new Rectangle @left(), @top(), @right(), @bottom()
+    island._addNoSettle @              # reparent me into the island
+    formerParent._addNoSettle island   # drop the island where I was
+    island
+
+  # if the sugar island is back at identity, unwrap: reparent me back out to the island's parent at my
+  # (identity ⇒ screen-coincident) position, then drop the now-empty island. Restores the exact
+  # pre-materialize structure (so the round-trip leaves no island behind).
+  _dematerializeSugarIslandIfIdentityNoSettle: (island) ->
+    return if !island._materializedBySugar or !island.transformSpec.isIdentity()
+    islandParent = island.parent
+    return if !islandParent?
+    pos = @position()
+    islandParent._addNoSettle @        # reparent me back out (removes me from the island)
+    @_moveToNoSettle pos               # preserve my absolute position
+    island._destroyNoSettle()          # drop the empty island
+
 
   # Widget accessing - simple changes: translate me + my children + repaint.
   # (Stage 5, 2026-07-01) The re-fit seam this used to fire is DELETED -- the settle loop now re-fits my tracking
