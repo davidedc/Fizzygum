@@ -7,6 +7,12 @@ class HandleWdgt extends Widget
   inset: nil
   type: nil
 
+  # Affine transforms (§6 Phase 4B): transient rotate-gesture reference frame — the island's rotation
+  # and the pointer's angle about the anchor, both captured at grab-start (mouseDownLeft), cleared at
+  # mouseUpLeft. nil at rest / for every non-rotate handle, so nothing to serialize.
+  _rotateGrabStartRotationDegrees: nil
+  _rotateGrabStartPointerAngleDegrees: nil
+
   state: 0
   STATE_NORMAL: 0
   STATE_HIGHLIGHTED: 1
@@ -50,6 +56,11 @@ class HandleWdgt extends Widget
       when "moveHandle"                 then LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT
       when "resizeHorizontalHandle"     then LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT
       when "resizeVerticalHandle"       then LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
+      # Affine transforms (§6 Phase 4B): the rotate handle takes the free TOP-RIGHT corner (the four
+      # resize/move handles hold the other corners/edges). Corner-INTERNAL like the rest, so on an
+      # island it is in-plane content painted into the island buffer — it warps with the content and
+      # tracks the transformed corner for free (§4.6 halo model).
+      when "rotateHandle"               then LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
 
   # HandleWdgt is overlay chrome (a resize/move handle), not a content child, so
   # it is excluded from content-bounds and real-children calculations (see
@@ -191,6 +202,18 @@ class HandleWdgt extends Widget
       @drawArrow context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown
 
 
+    # Affine transforms (§6 Phase 4B): the rotate handle draws a small "knob" ring — visually distinct
+    # from the resize arrows / striped triangle. The arc rasterises via SWCanvas (the tested backend),
+    # whose transcendentals are the deterministic DetTrig (installed over Math.* before SWCanvas at
+    # boot), so the ring is cross-engine byte-identical (the suite asserts exact pixels under WebKit).
+    if @type is "rotateHandle"
+      cx = @width() / 2
+      cy = @height() / 2
+      r  = Math.min(@width(), @height()) / 2 - 1
+      context.beginPath()
+      context.arc cx, cy, r, 0, 2 * Math.PI
+      context.stroke()
+
     # draw the traditional "striped triangle" resizer
     if @type is "resizeBothDimensionsHandle"
       bottomLeft = @bottomLeft().subtract(@position())
@@ -240,14 +263,46 @@ class HandleWdgt extends Widget
   # so the handle catches the clicks and
   # prevents the parent from doing anything.
   mouseClickLeft: ->
+  # Affine transforms (§6 Phase 4B): end of a rotate gesture — clear the grab-start state so the next
+  # grab re-captures its own reference angle. Harmless for the other handle types (fields stay nil).
   mouseUpLeft: ->
-  
+    @_rotateGrabStartRotationDegrees = nil
+    @_rotateGrabStartPointerAngleDegrees = nil
+
   # same here, the handle doesn't want to propagate
   # anything, otherwise the handle on a button
   # will trigger the button when resizing.
   mouseDownLeft: (pos) ->
     return nil  unless @target
     @target.bringToForeground()
+    # Affine transforms (§6 Phase 4B): capture the rotate gesture's reference frame AT PRESS — the
+    # island's current rotation plus the pointer's angle about the island's screen anchor. The drag
+    # then rotates RELATIVE to this (no jump on grab). Captured here (hand is exactly at the press
+    # point) rather than on the first drag sample, so the resulting angle is predictable from geometry.
+    if @type is "rotateHandle"
+      @_rotateGrabStartRotationDegrees = @target.transformSpec.rotationDegrees
+      @_rotateGrabStartPointerAngleDegrees = @_pointerAngleToTargetAnchorDegrees()
+
+  # Affine transforms (§6 Phase 4B): angle (degrees) of the RAW screen pointer about my island
+  # target's SCREEN anchor. DELIBERATELY screen-plane: the rotate handle is in-plane content that
+  # spins with the island, so reading its 4A-1-mapped position would measure the angle in the very
+  # plane it is rotating — a feedback loop (plan §4.6 / §6 4B). world.hand.position() is the raw
+  # pointer (never plane-mapped), immune to 4A-2 mapping the `pos` passed to nonFloatDragging.
+  # DetTrig.atan2 (not Math.atan2) keeps it cross-engine deterministic (§6 4B risk note).
+  _pointerAngleToTargetAnchorDegrees: ->
+    anchor = @target.screenAnchor()
+    p = world.hand.position()
+    DetTrig.atan2(p.y - anchor.y, p.x - anchor.x) * 180 / Math.PI
+
+  # Affine transforms (§6 Phase 4B): quantize a raw (float) rotation onto an integer-degree grid,
+  # snapping to a cardinal angle (0/90/180/270) within ~3°. Integer quantization is the determinism
+  # belt-and-braces over DetTrig.atan2 — any sub-ULP wobble rounds to the same integer, so the
+  # committed rotationDegrees (hence every rotated pixel) is cross-engine identical.
+  _quantizeRotationDegrees: (deg) ->
+    d = ((deg % 360) + 360) % 360                    # JS % can be negative — normalise into [0, 360)
+    for cardinal in [0, 90, 180, 270, 360]
+      return (cardinal % 360)  if Math.abs(d - cardinal) <= 3   # 360 → 0
+    Math.round d
 
   nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
     newPos = pos.subtract nonFloatDragPositionWithinWdgtAtStart
@@ -267,7 +322,17 @@ class HandleWdgt extends Widget
       when "resizeVerticalHandle"
         newHeight = newPos.y + @extent().y + @inset.y - @target.top()
         @target._setHeightDeferredSettle newHeight
-  
+      # Affine transforms (§6 Phase 4B): rotate the island target. newRot = rotation-at-grab + (current
+      # pointer angle − pointer angle at grab), all in the SCREEN plane about the island's anchor. Lazy
+      # re-capture if a drag ever arrives before mouseDownLeft ran. Deferred-settle like the resize
+      # family (a 'slot' island settles to nothing; a coupled one reflows once at end of cycle).
+      when "rotateHandle"
+        if !@_rotateGrabStartPointerAngleDegrees?
+          @_rotateGrabStartRotationDegrees = @target.transformSpec.rotationDegrees
+          @_rotateGrabStartPointerAngleDegrees = @_pointerAngleToTargetAnchorDegrees()
+        rawDegrees = @_rotateGrabStartRotationDegrees + (@_pointerAngleToTargetAnchorDegrees() - @_rotateGrabStartPointerAngleDegrees)
+        @target._setRotationDeferredSettle @_quantizeRotationDegrees rawDegrees
+
   
   # HandleWdgt events:
   mouseEnter: ->

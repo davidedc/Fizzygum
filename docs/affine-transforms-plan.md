@@ -1,8 +1,8 @@
 # Affine transforms for widgets (rotated / scaled windows) — design + phased execution plan
 
 **STATUS (updated 2026-07-10): Phases 0–3 COMPLETE + COMMITTED (not pushed); Phase 4 IN
-PROGRESS — 4A-1 (click-position mapping) and 4C (property sugar) COMPLETE + COMMITTED; 4A-2
-(drag-delta), 4B (halo rotation), 4D (pick/drop), 4E (close-out) REMAINING. See the per-phase
+PROGRESS — 4A-1 (click-position mapping), 4C (property sugar), and 4B (halo rotation) COMPLETE +
+COMMITTED; 4A-2 (drag-delta), 4D (pick/drop), 4E (close-out) REMAINING. See the per-phase
 §6 banners for hashes + gate results (they are the authority on status). Owner-gated; a standing
 grant to "commit + continue while all gates pass" is in force as of 2026-07-10. Original design
 was AUTHORED 2026-07-09 and hardened same day by an adversarial fresh-eyes pass (§10 facet
@@ -1017,6 +1017,27 @@ lifted by the sub-step named):**
 
 #### 4B — Halo / handle rotation (the marquee gesture)
 
+> **STATUS 2026-07-10: COMPLETE + COMMITTED** (Fizzygum `<pending>`, tests `<pending>`; NOT
+> pushed). A new `HandleWdgt` type **`"rotateHandle"`** corner-attaches at the island's TOP-RIGHT,
+> INSIDE the island (in-plane content — it warps with the content and tracks the transformed corner
+> for free, §4.6). `TransformFrameWdgt.providesRotateHandleInHalo` (dispatched via `?()` from the
+> show-handles path — plain widgets lack it, so every existing halo is byte-identical) adds it to a
+> free-floating island's halo. The handle's `nonFloatDragging` computes the angle in the SCREEN plane
+> — `DetTrig.atan2` of the RAW pointer (`world.hand.position()`, immune to a future 4A-2 mapping the
+> passed `pos`) about `island.screenAnchor()` (the anchor is the transform's FIXED POINT, so it is a
+> constant pivot) — captures the grab-start reference in `mouseDownLeft`, and drives
+> `island._setRotationDeferredSettle` (new deferred-settle sibling of `setRotation`; caller
+> `nonFloatDragging` is already in the rule-[O] allowlist). `_quantizeRotationDegrees` snaps to a
+> cardinal within ~3° AND rounds to an integer grid — clean snap + the determinism belt-and-braces
+> over `atan2` (any sub-ULP wobble rounds identically). The handle draws a small **ring glyph** (arc
+> via SWCanvas, deterministic since `DetTrig.install(Math)` runs before SWCanvas at boot). Macros:
+> `macroTransformFrameRotateViaHandle` (drag → rotate to 45°, value-asserted + pixel proof) +
+> `macroTransformFrameRotateSnap` (drag ~88° → snaps 90°; ~85° → stays free). Gauntlet
+> dpr1/dpr2/webkit + gates green; suite 213→215. ⚠ **GOTCHA:** CoffeeScript `%%` compiles to a
+> `modulo()` helper that Fizzygum's FRAGMENTED in-browser compile does NOT provide (runtime
+> `ReferenceError: modulo is not defined`) — use explicit `((x % 360) + 360) % 360`; the codebase
+> uses plain `%` everywhere for this reason.
+
 - **Goal:** a rotation handle in the widget's halo; drag rotates the island about its anchor;
   snap to 0/90/180/270 within ~3°.
 - **Depends on:** the engine (`setRotation`, live since Phase 2). Does NOT require 4A (the
@@ -1225,6 +1246,15 @@ See §7. None of these block declaring the feature shipped.
   ordering before suspecting the feature.
 - **deepCopy of derived state** — cached matrices/buffers need the `rebuildDerivedValue`
   stamp (`@serializationTransients` alone is insufficient).
+- **CoffeeScript `%%` is BANNED in Fizzygum source** (4B) — it compiles to a call to a `modulo()`
+  helper CoffeeScript injects per-file, but the FRAGMENTED in-browser meta-compile does not provide
+  it ⇒ runtime `ReferenceError: modulo is not defined` (NOT caught by the build syntax gate, only at
+  boot/replay). Use explicit `((x % 360) + 360) % 360`; the codebase uses plain `%` throughout.
+- **Rotation input is SCREEN-plane** (4B) — the rotate handle reads `world.hand.position()` (raw) and
+  `island.screenAnchor()`, NOT its 4A-1-mapped position: an in-plane handle reading the mapped
+  position would measure the angle in the very plane it is rotating (a feedback loop). Quantize the
+  committed `rotationDegrees` to integers (`_quantizeRotationDegrees`) so `DetTrig.atan2` wobble is
+  absorbed — clean cardinal snap AND cross-engine determinism in one step.
 - **`fg` guard hook** blocks cd-chained cross-repo commands — use `git -C <path>` and the `fg`
   wrappers; don't pipe the build through filters.
 - **Commit messages**: never inline backticks/`$()` in `git commit -m` from the Bash tool —

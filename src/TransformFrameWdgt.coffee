@@ -68,6 +68,13 @@ class TransformFrameWdgt extends PanelWdgt
   colloquialName: ->
     "transform frame"
 
+  # Phase 4B (§6): an island offers a ROTATE handle in its halo (Widget's show-handles path dispatches
+  # this via ?() — plain widgets lack it and get no rotate handle, so every existing halo is byte-
+  # identical). Offered even at IDENTITY: you must be able to START rotating an un-rotated island, and
+  # the halo is an explicit interaction overlay, outside the dormant-render guarantee.
+  providesRotateHandleInHalo: ->
+    true
+
   # never a hit target itself (see the ctor note): the descent still recurses into
   # the content subtree, whose widgets ARE hit-tested (with the plane-mapped point).
   isTransparentAt: (aPoint) ->
@@ -107,6 +114,18 @@ class TransformFrameWdgt extends PanelWdgt
     return if deg == @transformSpec.rotationDegrees
     @transformSpec.rotationDegrees = deg   # set the canonical scalar directly
     @_transformChangedNoSettle()
+
+  # Phase 4B (§6): PRIVATE DEFERRED-SETTLE rotation entrypoint — see the FAMILY comment on
+  # Widget::_setMaxDimDeferredSettle. The rotate HANDLE (HandleWdgt.nonFloatDragging, "rotateHandle" —
+  # an allowlisted per-event stream, check-layering rule [O]) drives many rotation mutations per drag;
+  # this DECLARES them intentional so their layout settle rides the ONE end-of-cycle flush (a 'slot'
+  # island settles to nothing; a coupled island reflows once). Both branches reach the
+  # _setRotationNoSettle CORE directly, never the public setRotation (rules [A]/[G]).
+  _setRotationDeferredSettle: (deg) ->
+    if world?.deferredSettlingEnabled
+      @_deferredSettleDeclare => @_setRotationNoSettle deg
+    else
+      @_settleLayoutsAfter => @_setRotationNoSettle deg
 
   # Phase 3: change the layout-coupling mode (plan §4.9). Entering/leaving a coupled mode
   # ('footprint'/'sweep') changes the claimed extent, so it reflows the parent's layout —
@@ -366,6 +385,13 @@ class TransformFrameWdgt extends PanelWdgt
   # screen footprint of the slot box under the current spec (padded integer AABB).
   _screenFootprintForDamage: ->
     @transformSpec.mapRect @bounds, @bounds
+
+  # Phase 4B (§6): the SCREEN position of the rotation anchor. The anchor is a FIXED POINT of the
+  # island's OWN transform (matrixForSlot maps A→A), so it is constant as the island spins — a stable
+  # pivot for the rotate handle. localPointToScreen applies any ANCESTOR islands' transforms (none for
+  # a top-level island ⇒ the anchor returns unchanged); it deliberately does NOT re-apply my own.
+  screenAnchor: ->
+    @localPointToScreen @transformSpec._anchorFor(@bounds)
 
   _ancestorScreenClip: ->
     fp = @firstParentClippingAtBounds()

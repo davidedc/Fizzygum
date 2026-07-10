@@ -3170,6 +3170,10 @@ class Widget extends TreeNode
       @addAndTrackHandle "resizeVerticalHandle"
       @addAndTrackHandle "moveHandle"
       @addAndTrackHandle "resizeBothDimensionsHandle"
+      # Affine transforms (§6 Phase 4B): a TransformFrameWdgt island also gets a rotate handle in its
+      # halo. Dispatched via ?() so plain widgets (which lack the method) get nothing — every existing
+      # halo stays byte-identical. The handle corner-attaches INTO the island (in-plane content, §4.6).
+      @addAndTrackHandle "rotateHandle"  if @providesRotateHandleInHalo?()
     else
       if (@lastSiblingBeforeMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingBeforeMeIsA(StackElementsSizeAdjustingWdgt)
         world.temporaryHandlesAndLayoutAdjusters.add \
