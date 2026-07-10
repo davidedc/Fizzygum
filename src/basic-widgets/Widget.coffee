@@ -1309,6 +1309,17 @@ class Widget extends TreeNode
       ancestor = ancestor.parent
     result
 
+  # Affine transforms (§4.6): true if a non-identity TransformFrameWdgt island is on my parent chain.
+  # The shared predicate behind the Phase-1-symmetric interaction guards (handles refuse, float-drag
+  # escalates to the island). Dormant returns false with no island. (This is the §9 memoization point:
+  # a cached inside-an-island flag invalidated on reparent/spec change would replace this walk — banked.)
+  _isInsideNonIdentityIsland: ->
+    ancestor = @parent
+    while ancestor?
+      return true if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
+      ancestor = ancestor.parent
+    false
+
   # ---------------------------------------------------------------------------
   # Affine transforms (§6 Phase 4C): the Lively-flavoured property sugar. Rotate / scale ANY widget
   # by MATERIALIZING an enclosing TransformFrameWdgt island on demand, and REMOVING it when the
@@ -1356,26 +1367,34 @@ class Widget extends TreeNode
 
   # wrap me in a fresh sugar island IN PLACE: the island's slot box becomes my current bounds and I
   # become its single free-floating child, keeping my absolute position (virtual ≡ screen at identity).
+  # The island inherits MY former index AND layoutSpec in my parent — so wrapping is position-invariant
+  # (no z-order raise on the desktop, no slot reshuffle in an arranged panel). Capture both BEFORE the
+  # reparent (which shrinks the sibling list). Orphan-safe: a parentless widget just gets an orphan island.
   _materializeSugarIslandNoSettle: ->
     formerParent = @parent
+    myIndex = formerParent?.children.indexOf @
+    myLayoutSpec = @layoutSpec
     island = new TransformFrameWdgt()
     island._materializedBySugar = true
     island.bounds = new Rectangle @left(), @top(), @right(), @bottom()
-    island._addNoSettle @              # reparent me into the island
-    formerParent._addNoSettle island   # drop the island where I was
+    island._addNoSettle @                                      # reparent me into the island (free-floating child)
+    formerParent?._addNoSettle island, myIndex, myLayoutSpec   # drop the island into MY former slot + spec
     island
 
-  # if the sugar island is back at identity, unwrap: reparent me back out to the island's parent at my
-  # (identity ⇒ screen-coincident) position, then drop the now-empty island. Restores the exact
-  # pre-materialize structure (so the round-trip leaves no island behind).
+  # if the sugar island is back at identity, unwrap: reparent me back into the island's parent at the
+  # island's index + layoutSpec (position-invariant, the exact inverse of the wrap), preserve my absolute
+  # position (identity ⇒ screen-coincident), then drop the now-empty island. Restores the exact
+  # pre-materialize structure — the round-trip leaves no island behind and no z-order/slot change.
   _dematerializeSugarIslandIfIdentityNoSettle: (island) ->
     return if !island._materializedBySugar or !island.transformSpec.isIdentity()
     islandParent = island.parent
     return if !islandParent?
+    islandIndex = islandParent.children.indexOf island
+    islandLayoutSpec = island.layoutSpec
     pos = @position()
-    islandParent._addNoSettle @        # reparent me back out (removes me from the island)
-    @_moveToNoSettle pos               # preserve my absolute position
-    island._destroyNoSettle()          # drop the empty island
+    islandParent._addNoSettle @, islandIndex, islandLayoutSpec   # reparent me back into the island's slot + spec
+    @_moveToNoSettle pos                                          # preserve my absolute position (desktop case)
+    island._destroyNoSettle()                                    # drop the now-empty island (I was inserted before it)
 
 
   # Widget accessing - simple changes: translate me + my children + repaint.
@@ -2887,6 +2906,14 @@ class Widget extends TreeNode
   # a Widget and then do a drag (which in that case would be a FLOATING drag).
 
   grabsToParentWhenDragged: ->
+    # Affine transforms (Phase 1-symmetric guard, §4.6): a widget INSIDE a non-identity island grabs to
+    # its parent, so a float-drag escalates up to the ISLAND (which moves the rotated/scaled figure
+    # rigidly) instead of extracting the inner widget onto the hand — where its virtual bounds would be
+    # misread as SCREEN bounds (a visual jump: a scale-2 island's content snapping to 1x at the wrong
+    # place). Proper pick-OUT that carries the accumulated similitude is Phase 4D; until then this keeps
+    # the gesture coherent. Dormant-safe: no non-identity island ⇒ falls through to the logic below.
+    # (Non-float drags — sliders — are unaffected: findFirstLooseWidget checks nonFloatDragging FIRST.)
+    return true if @_isInsideNonIdentityIsland()
     if @parent?
 
       if @parent == world
@@ -3133,15 +3160,11 @@ class Widget extends TreeNode
     @_settleLayoutsAfter => @_showResizeAndMoveHandlesAndLayoutAdjustersNoSettle()
 
   _showResizeAndMoveHandlesAndLayoutAdjustersNoSettle: ->
-    # Affine transforms (Phase 1, §4.6): refuse resize/move handles on a widget
-    # inside a non-identity island — a HandleWdgt drags @target's bounds with SCREEN
-    # deltas that are not yet mapped through the island's transform (Phase 4 maps
-    # them). Dormant-safe: with no island the walk finds none and falls through to
-    # the unchanged logic below.
-    ancestor = @parent
-    while ancestor?
-      return if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
-      ancestor = ancestor.parent
+    # Affine transforms (Phase 1, §4.6): refuse resize/move handles on a widget inside a non-identity
+    # island — a HandleWdgt drags @target's bounds with SCREEN deltas not yet mapped through the
+    # island's transform. ⚠ Phase 4A-2 (drag-delta mapping) MUST lift this guard, or handles stay
+    # inert on island-inner widgets. Dormant-safe: no island ⇒ falls through to the logic below.
+    return if @_isInsideNonIdentityIsland()
     if @isFreeFloating()
       @addAndTrackHandle "resizeHorizontalHandle"
       @addAndTrackHandle "resizeVerticalHandle"

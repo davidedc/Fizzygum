@@ -164,6 +164,14 @@ class TransformFrameWdgt extends PanelWdgt
   # what we report to the parent's arrange: a non-identity island claims a FIXED figure size (the
   # slot box / footprint AABB / sweep square, §4.9), independent of the offered width — measured,
   # not stretched. An identity island measures normally (super).
+  #
+  # PURE-MEASURE EXEMPTION (deliberate): this writes @_lastClaimedExtent, which the pure-measure
+  # campaign would normally forbid in a preferredExtentFor* method. It is load-bearing here:
+  # @_lastClaimedExtent is the reflow-detection memo (see _reflowIfClaimChangedNoSettle), and it must
+  # track the claim across BOTH a transform change AND a plain slot-box RESIZE. The transform path
+  # updates it itself; a slot resize does NOT go through that path — its only contact with the claim is
+  # this measure. So the memo lives here by necessity. It is idempotent (same @bounds ⇒ same value) and
+  # observed only by this widget's own reflow gate, so it introduces no cross-widget measure impurity.
   preferredExtentForWidth: (availW) ->
     return super availW if !@_claimsFixedFigure()
     @_lastClaimedExtent = @transformSpec.claimedExtentFor @bounds
@@ -294,12 +302,17 @@ class TransformFrameWdgt extends PanelWdgt
     return if sw < 1 or sh < 1
     aContext.save()
     aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
-    aContext.drawImage buffer,
-      sx, sy, sw, sh,
-      Math.round(visibleDst.left() * cpr),
-      Math.round(visibleDst.top() * cpr),
-      Math.round(visibleDst.width() * cpr),
-      Math.round(visibleDst.height() * cpr)
+    # Round the four device EDGES and derive extent from them (dr-dl, db-dt), NOT round(width)
+    # independently. If one cycle splits this island's damage into adjacent strips, strip A's right
+    # edge round(boundary*cpr) then equals strip B's left edge round(boundary*cpr) — gapless by
+    # construction. round(l)+round(w) could disagree with round(r) by 1px on a NON-INTEGER dst edge
+    # (a fractional scale/anchor), leaving a stale or doubled column at the seam. For an integer scale
+    # (all current refs) the edges are already integer, so this is byte-identical.
+    dl = Math.round visibleDst.left() * cpr
+    dt = Math.round visibleDst.top() * cpr
+    dr = Math.round visibleDst.right() * cpr
+    db = Math.round visibleDst.bottom() * cpr
+    aContext.drawImage buffer, sx, sy, sw, sh, dl, dt, dr - dl, db - dt
     aContext.restore()
 
   # §4.2 general warp path (Phase 2 — rotation, and rotation+scale): render-straight-then-warp.

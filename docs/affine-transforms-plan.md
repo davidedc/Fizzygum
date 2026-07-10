@@ -1,10 +1,13 @@
 # Affine transforms for widgets (rotated / scaled windows) — design + phased execution plan
 
-**STATUS: AUTHORED 2026-07-09, hardened same day by an adversarial fresh-eyes verification
-pass (§10 facet dossier; three correctness fixes folded into §4: composite damage-clip §4.2,
-plane-purity/two-faces §4.11, flesh-out mapping order §4.5; one new fact: SWCanvas drawImage
-is nearest-neighbor → Phase 0f owner decision). NOT STARTED. Owner-gated; do not begin a
-phase without owner go-ahead.**
+**STATUS (updated 2026-07-10): Phases 0–3 COMPLETE + COMMITTED (not pushed); Phase 4 IN
+PROGRESS — 4A-1 (click-position mapping) and 4C (property sugar) COMPLETE + COMMITTED; 4A-2
+(drag-delta), 4B (halo rotation), 4D (pick/drop), 4E (close-out) REMAINING. See the per-phase
+§6 banners for hashes + gate results (they are the authority on status). Owner-gated; a standing
+grant to "commit + continue while all gates pass" is in force as of 2026-07-10. Original design
+was AUTHORED 2026-07-09 and hardened same day by an adversarial fresh-eyes pass (§10 facet
+dossier; three correctness fixes folded into §4: composite damage-clip §4.2, plane-purity/two-
+faces §4.11, flesh-out mapping order §4.5; SWCanvas drawImage is nearest-neighbor → Phase 0f).**
 
 This document is self-contained: it embeds the history, the architectural facts it depends on
 (with `file:line` anchors), the design decisions with their rationale, the rejected
@@ -229,10 +232,13 @@ the native path; measurement is cached via `world.canvasContextForTextMeasuremen
   in-tree.
 - Atlases ship only Arial/Times/Courier in a limited size range with size snapping
   (`SWCanvasElement-extensions.coffee:13-23,179-189`) — relevant to zoom crispness (§7.4).
-- Deterministic trig: cross-engine trig differs by ~1 ULP; SWCanvas carries an fdlibm-based
-  shim (this was a past campaign; see memory note "SWCanvas deterministic trig"). **Any
-  Fizzygum-side matrix construction MUST use the same deterministic sin/cos** (Phase 0 task
-  0b locates and exposes it) or rotated references will differ across engines.
+- Deterministic trig: cross-engine trig differs by ~1 ULP. The fdlibm-based shim is a **Fizzygum-
+  side global, `DetTrig`** (`{sin, cos, ...}`, ~345 lines, +−×÷/sqrt only; see §0-R 0b), which the
+  boot sequence **installs over `Math.*` BEFORE SWCanvas renders** — it is NOT "carried by" or
+  internal to SWCanvas (that earlier wording was wrong; corrected per §0-R). **Any Fizzygum-side
+  matrix construction MUST call `DetTrig.cos/sin` explicitly** (`TransformSpec.coffee:98`) — relying
+  on `Math.*` being patched is fragile — or rotated references will differ across engines. (Past
+  campaign: memory note "SWCanvas deterministic trig".)
 
 ### 3.8 Existing matrix code (for reference, NOT for reuse as-is)
 
@@ -409,11 +415,30 @@ against `w.screenPointToMyPlane(screenPoint)`:
   multiplies by `ceilPixelRatio` — floor AFTER the multiply).
 - Everything that converts a plane point back to screen (opening a menu at a widget, caret
   screen position if ever needed) uses the forward mapping `localPointToScreen`.
-- **Cross-plane actors** (widgets that read/write ANOTHER widget's geometry — enumerated by
-  the fresh-eyes pass, §10.1): `HandleWdgt` lives on the world/hand and manipulates
-  `@target`'s bounds (`src/HandleWdgt.coffee:41,82-89`) — Phase 1 refuses handles on widgets
-  inside non-identity islands, Phase 4 maps drag deltas through the inverse rotation.
-  `CaretWdgt` does geometry math against `@parent`/`@target`
+- **Halo / handle model (DESIGN DECISION — inside-attachment survives intact, and the island
+  architecture rewards it):** resize/move handles attach INSIDE their target (corner-internal
+  children, `HandleWdgt.defaultLayoutSpecWhenAddedTo` — the owner's pre-transform 2015 decision so
+  handles "belong to" the widget, move with it, and clip with it). Under islands that config is the
+  free one: a handle is **in-plane content** → painted into the island buffer → composited through
+  the matrix, so it lands at the widget's TRANSFORMED corner on screen automatically (the
+  Figma/PowerPoint selection frame that follows a rotated shape — no new code). Hit-testing is free
+  too (it is a virtual-plane widget; the Phase-1 inverse-mapped predicate tests it exactly), and it
+  clips with its widget (the buffer edge is the clip). The Squeak-style **world-overlay halo is
+  REJECTED** here: it would need explicit re-positioning on every transform change and float
+  un-clipped over frames — re-introducing exactly what inside-attachment avoids. Two visual
+  side-effects to consciously ACCEPT for v1 (both Squeak-consistent, both compensable later WITHOUT
+  changing the attachment model): (1) handles **scale with the island** (double-size at scale 2, tiny
+  at 0.5) — the design-tool "screen-constant handle" compensation is local (a handle sizes its own
+  extent by the inverse accumulated ancestor scale) and is BANKED (§7.9), not built now; (2) handle
+  glyphs rotate and are nearest-neighbor-chunky on SW (fine under the 0f verdict). The one genuinely
+  missing piece is **4A-2**: `nonFloatDragging` computes `pos − startOffset` in screen space and
+  writes it into `@target`'s virtual-plane bounds — deltas are VECTORS, so they map through the
+  inverse of the LINEAR PART ONLY of the accumulated matrix. That is exactly why Phase 1 guards
+  handles OFF inside non-identity islands (`Widget.coffee` ~:3145); when 4A-2 lands the mapping AND
+  lifts the guard, inside-attachment works end-to-end (drag the bottom-right handle of a widget in a
+  30° island → the visually-correct edge moves along the rotated axes).
+- **Cross-plane actors** (widgets that read/write ANOTHER widget's geometry — §10.1): `HandleWdgt`
+  (above); `CaretWdgt` does geometry math against `@parent`/`@target`
   (`src/basic-widgets/CaretWdgt.coffee:223-274`) — expected in-plane (it is parented next to
   its target), VERIFY in the Phase 1 audit. Menus/prompts open at the hand position (screen
   plane — fine); audit any open-at-widget paths. There is NO visual line-connector widget in
@@ -904,20 +929,27 @@ early *visible* win, 4B (halo rotation on an explicitly-wrapped island) can lead
 does not strictly depend on 4A. Each sub-step lists: goal · depends-on · seams (file:line,
 verified 2026-07-09) · approach · macros · risks.
 
-**As-built vs plan drift (verified 2026-07-09, fold into the executor's mental model):**
-- The Phase-1 "refuse `HandleWdgt` on widgets inside a non-identity island" scope-cut named in
-  §4.6 was **never actually wired** — there is no such guard in `HandleWdgt`/`Widget`. Phase 1
-  simply never *put* a handle inside an island. So 4C/4A "lift the refusal" is really "add the
-  delta mapping that was never needed before," not "remove a guard."
-- The Phase-1 "islands refuse drops" scope-cut IS wired, minimally: `TransformFrameWdgt`
-  ctor sets `@_acceptsDrops = false` (`TransformFrameWdgt.coffee:53`), and `wantsDropOfChild`
-  returns `@_acceptsDrops` (`Widget.coffee:2998`). A drop over island content today climbs
-  past the island (`dropTargetFor`, `ActivePointerWdgt.coffee:171-175`) to an accepting
-  ancestor — it doesn't error, it just won't nest INTO the island. 4D lifts this.
+**As-built interaction guards (verified 2026-07-10 against the code — these EXIST and must be
+lifted by the sub-step named):**
+- **Handles refused on island-inner widgets IS wired** (correction of an earlier note that wrongly
+  said it wasn't): `_showResizeAndMoveHandlesAndLayoutAdjustersNoSettle` (`Widget.coffee` ~:3145)
+  returns early via `_isInsideNonIdentityIsland()`, so resize/move handles never appear on a widget
+  inside a non-identity island. ⚠ **4A-2 (drag-delta mapping) MUST remove this guard**, or handles
+  stay inert on island-inner widgets and 4A-2 looks mysteriously ineffective.
+- **Float-drag OUT of an island escalates to the island** (Phase-1-symmetric guard added 2026-07-10,
+  Widget `_isInsideNonIdentityIsland` used in `grabsToParentWhenDragged`): a widget inside a non-
+  identity island grabs-to-parent, so a float-drag lifts the whole ISLAND (rigid rotated figure)
+  instead of extracting the inner widget onto the hand — which would misread its virtual bounds as
+  screen bounds (a visual jump). ⚠ **4D (pick/drop) replaces this** with proper pick-OUT that carries
+  the accumulated similitude. (Non-float drags — sliders — are unaffected: `findFirstLooseWidget`
+  tests `nonFloatDragging` first.)
+- **Islands refuse drops** (Phase 1, minimal): `TransformFrameWdgt` ctor sets `@_acceptsDrops = false`
+  (`:53`); `wantsDropOfChild` returns it (`Widget.coffee:2998`). A drop over island content climbs
+  past the island (`dropTargetFor`, `ActivePointerWdgt.coffee:171-175`) to an accepting ancestor —
+  no error, just won't nest INTO the island. ⚠ **4D lifts this.**
 - The hit-test predicate ALREADY plane-maps the pointer (`topWdgtUnderPointer`,
-  `ActivePointerWdgt.coffee:104` — `m.screenPointToMyPlane @position()`), so widget
-  *identification* inside islands is correct today. The gap 4A closes is the *position passed
-  to the handler*, not identification.
+  `ActivePointerWdgt.coffee:104` — `m.screenPointToMyPlane @position()`), so widget *identification*
+  inside islands is correct today. The gap 4A-1 closed is only the *position passed to the handler*.
 
 #### 4A — Interaction-plane dispatch plumbing (the foundation)
 
@@ -928,10 +960,22 @@ verified 2026-07-09) · approach · macros · risks.
 > macro `macroTransformFrameScaledCaretSlot`; gauntlet dpr1/dpr2/webkit 210/210, existing refs
 > byte-identical (dormant). ⚠ Test-design lesson: a CROPPED StringWdgt routes `edit()` to the
 > pop-out editor (returns nil ⇒ no inline caret) — widen the string so it fits.
-> **4A-2 (drag DELTA mapping — `inverseMapVector`/`screenVectorToMyPlane` + `nonFloatDragging`
-> + mouseMove position) STILL DEFERRED**: narrower (a handle/slider INSIDE an island), and the
-> drag-start offset (`ActivePointerWdgt:1028`) itself mixes planes so it needs mapping too;
-> none of 4B/4C/4D depend on it. Do it as a completeness pass.
+> **4A-2 (drag DELTA mapping) STILL DEFERRED** — checklist when it lands: (1) add
+> `TransformSpec.inverseMapVector` (linear part only — drop e,f) + `Widget.screenVectorToMyPlane`;
+> (2) map both `pos` and the drag-start offset in `HandleWdgt.nonFloatDragging` — ⚠ the start
+> offset (`ActivePointerWdgt:1028`, `pos.subtract handle.position()`) ALSO mixes screen `pos` with
+> the handle's virtual position, so it needs mapping too; (3) ⚠ **REMOVE the handle-refusal guard**
+> in `_showResizeAndMoveHandlesAndLayoutAdjustersNoSettle` (else handles never appear on island-inner
+> widgets and the mapping looks inert); (4) map the mouseMove dispatch position
+> (`ActivePointerWdgt:1007,1137`); (5) ⚠ **sugar-island slot tracking** — a sugar island's slot box
+> is frozen to the wrapped widget's bounds at materialize time; once 4A-2 lets that widget be RESIZED
+> via its handles, its bounds change but the slot box does NOT → content overflows the slot and is
+> clipped at the buffer edge (a mystery clipped-corner bug in 4A-2's macro). Fix: the sugar island
+> tracks its single child's bounds (slot resync on child resize) OR the resize routes through the
+> island so slot and content stay coincident. Narrower than the others (a handle/slider INSIDE an
+> island) and nothing else depends on it, so it can be a completeness pass. Proving macro: a slider or
+> resize handle inside a scale/rotated island moving the visually-correct edge (and, for the sugar
+> case, the slot growing with the resized content).
 
 - **Goal:** every pointer POSITION and DELTA handed to a handler is expressed in the
   receiver's own plane, so caret slot, slider fraction, button-relative clicks, and
@@ -984,24 +1028,28 @@ verified 2026-07-09) · approach · macros · risks.
   `Widget.coffee:3322,3331`). `TransformFrameWdgt::setRotation(deg)` (`:98`) is the mutator to
   call; anchor is `transformSpec._anchorFor(bounds)` (`TransformSpec.coffee:100`).
 - **Approach:** add a `"rotateHandle"` type (or a small `RotateHandleWdgt`) whose
-  `nonFloatDragging` computes the angle of (screen pointer − screen anchor) relative to the
-  grab-start angle, snap-rounds, and calls `island.setRotation`. `screenAnchor =
-  island.localPointToScreen(island.transformSpec._anchorFor(island.bounds))`. Attach the
-  rotate handle to the ISLAND (its slot box is ordinary geometry). Reuse `HandleWdgt`
-  machinery (`defaultLayoutSpecWhenAddedTo`, `updateVisibility`) as far as it fits.
+  `nonFloatDragging` computes the angle of (pointer − anchor) relative to the grab-start angle,
+  snap-rounds, and calls `island.setRotation`. Reuse `HandleWdgt` machinery
+  (`defaultLayoutSpecWhenAddedTo`, `updateVisibility`) as far as it fits.
+- ⚠ **PLANE DECISION (make it explicit — this is a real feedback-loop bug if got wrong):** the
+  rotate handle may attach either ON the island (screen-plane geometry) OR, consistent with the halo
+  model above, INSIDE the island as in-plane content — the in-plane choice warps with the content, so
+  the grabbed handle **stays under the finger** as it spins (nice physics, like swinging an object by
+  its corner). EITHER way the angle math MUST be computed in the **SCREEN plane**: `angle(hand's RAW
+  screen `@position()` − `island.localPointToScreen(island.transformSpec._anchorFor(island.bounds))`)`
+  — NOT the 4A-1-mapped position that handlers now receive. If an in-plane rotate handle used its
+  received (plane-mapped) position, it would compute the angle in the very plane it is rotating → a
+  feedback loop. (This is the exception to 4A-1: rotation input is inherently screen-plane.)
 - **Macros (new):** `macroTransformFrameRotateViaHandle` (scripted pointer drag rotates a
   wrapped widget to a target angle); `macroTransformFrameRotateSnap` (drag to ~88° → snaps to
   90°; drag to ~85° → stays free).
-- **Risks (determinism — the sharp edge):** the handle computes the raw angle from integer
-  pointer coords via `atan2`, but `Math.atan2` is NOT guaranteed cross-engine bit-identical,
-  and the suite asserts byte-exact pixels under WebKit too. Mitigation, in order of
-  preference: (a) if `DetTrig` exposes `atan2`, use it (verify — Phase-2 only needed
-  `DetTrig.cos/sin`, `TransformSpec.coffee:98`; `atan2` may need a small fdlibm addition to the
-  SWCanvas shim, an owner-gated SWCanvas-repo change); OR (b) **quantize the committed
-  `rotationDegrees` to an integer grid** before `setRotation` AND choose macro drag endpoints
-  that land safely inside a grid cell (not on a rounding boundary), so ULP differences in
-  `atan2` can't flip the rounded result. (b) is self-contained and also gives clean snap
-  behavior — prefer it unless free-angle precision is required. Record the choice in §0-R/§8.
+- **Risks (determinism):** the handle computes the raw angle via `atan2`, and `Math.atan2` is NOT
+  cross-engine bit-identical (the suite asserts byte-exact pixels under WebKit). GOOD NEWS: **`DetTrig`
+  already exposes `atan2`** (confirmed §0-R 0b: `DetTrig = {sin,cos,tan,atan,atan2,asin,acos,install}`,
+  `runtime-prelude/deterministic-trig.js`) — call `DetTrig.atan2` directly, no SWCanvas-repo change
+  needed. Belt-and-suspenders: **quantize the committed `rotationDegrees` to an integer grid** before
+  `setRotation` (also gives clean snap) and choose macro drag endpoints safely inside a grid cell.
+  Record the choice in §8.
 
 #### 4C — Property sugar: `widget.rotation` / `widget.scale` (auto-materialize / auto-remove)
 
@@ -1078,10 +1126,19 @@ verified 2026-07-09) · approach · macros · risks.
 #### 4E — Suite consolidation + final gate + doc close-out
 
 - Run the full `fg gauntlet` (dpr1/dpr2/webkit + apps/paint/tiernaming/settle/capstone) and
-  `fg homepage` after the last sub-step; confirm the ~209 dormant references are byte-
-  identical except the single expected inspector member-list recapture (4C).
+  `fg homepage` after the last sub-step; confirm the dormant references are byte-identical except
+  the single expected inspector member-list recapture (4C, `macroDuplicatedInspectorDrivesCopiedTargetOnly`).
+- **Serialization round-trip tests (STILL OWED — named as a 4C risk, no macro yet):** (a) save/reload
+  a world with a rotated island → scalars only (`rotationDegrees/scale/anchor/claimsSpace`), NO buffer,
+  NO matrix; reloaded world renders pixel-identical. (b) save/reload a SUGAR island → must round-trip as
+  still-removable (`_materializedBySugar` serializes as a plain boolean — verify). (c) unwrap-leaves-no-
+  island: after a sugar widget returns to identity, the snapshot contains NO `TransformFrameWdgt`.
+- **Index/z-order-preservation macro (STILL OWED — the 4C fix landed; the existing macros used a lone
+  world widget so they don't cover it):** materialize a sugar island on a widget that has SIBLINGS
+  (both a desktop z-stack and an arranged panel) → assert the sibling order / z-order is unchanged, and
+  restored on unwrap.
 - Re-introduce the remaining deferred `TransformSpec` methods WITH their first callers only
-  (`inverseMapVector` in 4A, `inverseMapRect` in 4D, `setAnchor` if/when an anchor UI lands —
+  (`inverseMapVector` in 4A-2, `inverseMapRect` in 4D, `setAnchor` if/when an anchor UI lands —
   do NOT add speculative API).
 - Finalize §6 Phase-4 banners (implementation notes + gate results + commit hashes) and mirror
   status into the memory note; then Phase 4 is the feature's shipping point (Phase 5 = §7
@@ -1101,6 +1158,14 @@ See §7. None of these block declaring the feature shipped.
 
 ## §7 Banked / deferred work (recorded so ideas are not lost)
 
+0. **⭐ TOP PERF FOLLOW-UP — §4.4 island buffer cache** (promoted 2026-07-10): as-built
+   `_refreshIslandBuffer` allocates a fresh canvas and re-rasterizes the whole content subtree on
+   EVERY composite (twice per damaged frame: shadow + normal pass) — so the plan's headline "rotation
+   animation never re-rasterizes content" (§9/§10.9/§10.10) is NOT yet true. Wire the content-version-
+   keyed validity check + virtual-plane buffer-dirty accumulation (§4.4/§4.5): keep the buffer across
+   composites, rebuild only the dirty sub-rects, and reuse the same buffer for the shadow pass. This is
+   the single biggest island-perf win and makes the design's central claim true. (Distinct from item 1,
+   the general layer-policy engine — this is just the static per-island cache the current code stubs.)
 1. **Dynamic layer policy engine** — generalize island buffering into per-layer
    `cached-raster | vector-replay` chosen by measured cost (EWMA of replay time vs. rasterize
    cost vs. memory budget, with hysteresis and an LRU eviction pool; eviction falls back to
@@ -1137,6 +1202,13 @@ See §7. None of these block declaring the feature shipped.
    determinism preserved) would close most of the SW-vs-native visual gap for rotated
    composites AND improve the existing text slow path. SWCanvas-repo work, owner-gated;
    promoted to a prerequisite only if Phase 0f is rejected.
+9. **Screen-constant handle size under transform** — inside-attached handles scale with their island
+   (§4.6 halo model): double-size at scale 2, small hit targets at 0.5. Design tools keep handles
+   screen-constant. Compensation is LOCAL and needs no architecture change: a handle sizes its own
+   extent by the inverse of the accumulated ancestor-island scale (query the chain via the same walk
+   as `_isInsideNonIdentityIsland`). Bank until a real need; the v1 accepted look is Squeak-consistent
+   (handles are part of the transformed figure). Glyph rotation + nearest-neighbor chunkiness on SW is
+   the same accepted 0f trade-off, no compensation planned.
 
 ---
 
@@ -1166,17 +1238,28 @@ See §7. None of these block declaring the feature shipped.
 
 ---
 
-## §9 Performance expectations (estimates — UNMEASURED until Phase 0c/§0-R)
+## §9 Performance expectations (estimates; ⚠ two headline claims are NOT true AS-BUILT — see notes)
 
-- Dormant feature: zero overhead expected on all hot paths (one cached boolean per widget for
-  the inside-an-island flag; verify no measurable regression via the existing
-  `docs/profiling/prof-interactive.js --sw` harness).
+- Dormant feature: zero overhead on all hot paths was the DESIGN intent via **one cached
+  inside-an-island boolean**. **AS-BUILT (2026-07-10) that flag is NOT yet implemented** — the
+  dormant path instead does a *live parent-chain walk* per operation: `screenPointToMyPlane` per
+  hit-test candidate (every pointer move), `mapRectToScreen` per flesh-out rect (every damaged
+  widget, every frame), and `_isInsideNonIdentityIsland` per grab/handle-show. Each returns
+  false/unchanged with no island, so it is almost certainly noise — but it is NEW dormant hot-path
+  work under a byte-exact perf culture. **TOP dormant-perf follow-up: implement the cached flag
+  (invalidated on reparent / spec change) + the per-event hit-test memoization (§4.6), OR run a
+  minified `prof-interactive.js --sw` A/B and update this claim to the measured reality.** The walk
+  is consolidated behind `Widget._isInsideNonIdentityIsland` — the natural place to add the cache.
 - Identity island: one extra buffer + one extra equal-extent blit per composite (≈ the cost
   every text widget already pays).
-- Rotation animation of a static window: per step = matrix update + damage
-  (oldAABB ∪ newAABB) + one warped `drawImage`; the content subtree is NOT re-rasterized and
-  the layout engine does NOT run (in `'slot'` mode). This is the headline win over
-  render-through designs.
+- Rotation animation of a static window: per step = matrix update + damage (oldAABB ∪ newAABB) +
+  one warped `drawImage`; the layout engine does NOT run (in `'slot'` mode). ⚠ **The "content
+  subtree is NOT re-rasterized" claim is the DESIGN goal but is FALSE AS-BUILT: `_refreshIslandBuffer`
+  allocates a fresh canvas and re-rasterizes the whole content subtree on EVERY composite, and each
+  damaged frame composites TWICE (shadow pass + normal pass). This is correctness-first (documented
+  §4.4); the content-version-keyed buffer cache + buffer-dirty accumulation that make the claim true
+  are BANKED (§4.4/§4.5) and NOT yet wired. Promoting §4.4 buffer caching is the TOP island-perf
+  follow-up.**
 - SW warp throughput: estimate 3–10× per painted pixel vs. axis blit (Phase 0c measures).
   Native backend: GPU-composited, expected negligible.
 - Occlusion: no culling behind non-identity islands (= pre-2026-07-09 repaint behavior in
@@ -1355,8 +1438,10 @@ and travels with the widget.
 Per step, `'slot'` mode: setter updates the scalar → `geometryVersion++` + `fullChanged()`
 (cost identical to a `moveBy` of the same widget — the version-keyed caches already absorb
 exactly this every frame of any drag today, `Widget.coffee:1304` precedent) → damage
-`oldFootprint ∪ newFootprint` → one clipped, transformed `drawImage`. NO buffer
-re-rasterization, NO layout, NO text remeasure.
+`oldFootprint ∪ newFootprint` → one clipped, transformed `drawImage`. NO layout, NO text
+remeasure. ⚠ **"NO buffer re-rasterization" is the DESIGN goal, FALSE as-built** — `_refreshIsland-
+Buffer` re-rasterizes the whole subtree every composite (twice per damaged frame: shadow + normal);
+the §4.4 content-version buffer cache that makes this true is banked, not yet wired (see §9).
 
 - **[OK]** Ordering guarantee: spec mutations happen in the step/input phase, damage+composite
   in the same world cycle, hit tests between cycles — one consistent matrix per cycle; the
@@ -1371,14 +1456,16 @@ re-rasterization, NO layout, NO text remeasure.
 
 ### 10.10 Performance
 
-Cost ladder (estimates until §0-R): dormant = zero new hot-path work (one cached flag);
-identity island ≈ one extra window-sized buffer + equal-extent blit (= what a text widget
-already costs); scale-only ≈ same plus unequal-extent blit; rotated = per-pixel inverse-map +
-nearest sample within the damage clip (estimate 3–10× per painted pixel on SW — Phase 0c
-measures; native composites on GPU).
+Cost ladder (estimates until §0-R): dormant = ⚠ AS-BUILT a live parent-chain walk per op (the
+"one cached flag" is not yet wired — see §9); identity island ≈ one extra window-sized buffer +
+equal-extent blit (= what a text widget already costs); scale-only ≈ same plus unequal-extent
+blit; rotated = per-pixel inverse-map + nearest sample within the damage clip (estimate 3–10× per
+painted pixel on SW — Phase 0c measures; native composites on GPU).
 
-- Structural wins vs alternatives: animation never re-rasterizes content (buffer static,
-  matrix-only updates); occlusion/damage/layout engines never run for `'slot'` animation;
+- Structural wins vs alternatives — ⚠ these are the DESIGN targets, several NOT yet true as-built
+  (§9): animation is INTENDED to never re-rasterize content (needs the §4.4 buffer cache — banked;
+  as-built it re-rasterizes every composite); occlusion/damage/layout engines never run for `'slot'`
+  animation (TRUE as-built);
   the existing `data32.fill` opaque-span fast paths are untouched for everything
   untransformed.
 - Structural costs: damage AABB inflation (√2-ish typical, thin-widget-at-45° worst);
