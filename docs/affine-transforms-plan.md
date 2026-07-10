@@ -1017,7 +1017,7 @@ lifted by the sub-step named):**
 
 #### 4B — Halo / handle rotation (the marquee gesture)
 
-> **STATUS 2026-07-10: COMPLETE + COMMITTED** (Fizzygum `<pending>`, tests `<pending>`; NOT
+> **STATUS 2026-07-10: COMPLETE + COMMITTED** (Fizzygum `b84b19d2`, tests `03bf430b8`; NOT
 > pushed). A new `HandleWdgt` type **`"rotateHandle"`** corner-attaches at the island's TOP-RIGHT,
 > INSIDE the island (in-plane content — it warps with the content and tracks the transformed corner
 > for free, §4.6). `TransformFrameWdgt.providesRotateHandleInHalo` (dispatched via `?()` from the
