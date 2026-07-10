@@ -1118,6 +1118,67 @@ lifted by the sub-step named):**
 > correct inside a rotated island, the whole halo stays coherent once a widget is rotated. Resize-GROW
 > past a sugar island's slot still clips (the deferred 4A-2 slot-tracking refinement).
 
+#### Phase 4 — ROUGH EDGES exposed by 4B-universal (rotation on real windows) — TO FIX
+
+Making rotation reachable on any window surfaced three coordinate gaps — two are the 4A-2 deferrals, one
+is ephemeral-overlay rotation. NOT regressions from the universal handle (it just made rotation easy to
+trigger); they are follow-ups to the transform feature. Reported by the owner 2026-07-10 testing the
+**Drawings Maker** app in a rotated window (hierarchy there: `TransformFrame → Window →
+StretchableWidgetContainer → StretchableCanvas → CanvasGlassTop`, plus a `ReconfigurablePaint`).
+Priority: **R1 (paint) > R3 (resize-clip) > R2 (highlight)**. All cold-executable.
+
+**R1 — pointer position not mapped for `mouseMove` consumers (paint draws in the wrong place).**
+- Symptom: in a rotated window the paint stroke appears offset from the cursor (the green cursor square
+  and the black stroke are far apart).
+- Root cause: `ActivePointerWdgt` dispatches `mouseMove` with the RAW screen `@position()` at two sites —
+  `determineGrabs` (~:1007, `topWdgt.mouseMove pos`) and `dispatchEventsFollowingMouseMove` (~:1137,
+  `newWdgt.mouseMove?(@position(), @mouseButton)`). The paint tool's handler in
+  `src/apps/ReconfigurablePaintWdgt.coffee` (`mouseMove = (pos) -> … context.translate pos.x, pos.y`, at
+  ~:85/:99, :135/:143, :330/:338, :389/:397) draws at that raw pos, wrong-plane for a canvas inside a
+  rotated island. This is 4A-2's explicitly-DEFERRED item (a).
+- Fix: map the position PER-RECEIVER exactly like 4A-1's click sites —
+  `newWdgt.mouseMove?(newWdgt.screenPointToMyPlane(@position()), @mouseButton)` at :1137, and
+  `topWdgt.mouseMove topWdgt.screenPointToMyPlane(pos)` at :1007. Dormant-safe (screenPointToMyPlane
+  returns the same object off any island ⇒ byte-identical for every existing test; nothing today drives a
+  position-reading mouseMove inside a non-identity island).
+- ⚠ Audit other `mouseMove` position consumers (slider track-hover?) for the same benefit; hover
+  state (`mouseEnter`/`mouseLeave`) reads no position, unaffected.
+- Test: rotate a small paint window (or wrap a `CanvasWdgt` in an island), paint a short stroke, screenshot
+  the stroke landing under the mapped cursor. Value-assert is hard (paint → buffer); a lighter fixture is a
+  probe widget that records its last `mouseMove` pos inside an island and asserts the mapped value.
+
+**R3 — sugar-island slot not tracked: resize-after-rotate clips (ALL windows).**
+- Symptom: rotate a window, then enlarge it → content + right/bottom borders clip at the OLD footprint
+  (the top-right pencil + window borders cut off).
+- Root cause: the sugar island's slot (`@bounds`) is frozen to the wrapped widget's bounds at materialize;
+  `_refreshIslandBuffer` builds the buffer at that slot size. Resizing the wrapped window grows ITS bounds
+  but not the island's slot ⇒ the buffer clips. 4A-2's explicitly-DEFERRED item (b).
+- Fix: a MATERIALIZED (`_materializedBySugar`) island RESYNCs its slot to its single content child's bounds
+  when that child resizes — set `island.@bounds = content.bounds` (virtual plane) on the settle after a
+  content bounds change, then rebuild. Gate to sugar islands so explicit islands keep their authored slot.
+- ⚠ DESIGN DECISION: an asymmetric grow (bottom-right resize, top-left fixed) moves the slot CENTRE, so the
+  default anchor (= slot centre) shifts and the figure pivots as you resize. Option A: anchor follows the
+  new centre (simplest; shape re-centres). Option B: pin the anchor to the pre-resize point (store explicit
+  anchor). Recommend A for v1, note B as a refinement.
+- Test: rotate a window, enlarge via its resize handle, screenshot — content + borders no longer clipped.
+
+**R2 — ephemeral highlight overlays not rotated (highlight axis-aligned + offset).**
+- Symptom: the hierarchy-menu TARGET highlight (blue wash/outline) shows as a screen-aligned box offset
+  from a rotated target; likely also hover / drag-embed outlines.
+- Root cause: `HighlighterWdgt` (extends `RectangleWdgt`) is built one-per-target by the reconciler
+  (`world.widgetsToBeHighlighted` Map → `WorldWdgt`), positioned/sized to the target's bounds in the SCREEN
+  plane with NO mapping through the enclosing island ⇒ axis-aligned rect at the wrong place/orientation.
+  Same class as the §4.6 world-overlay-halo problem (screen-space overlays don't rotate).
+- Fix (design): make the highlighter IN-PLANE content of its target's island (attach like the halo handles,
+  so it warps + clips with the target for free — §4.6), OR draw a rotated quad from the target's
+  screen-mapped corners (`localPointToScreen` per corner; but no polygon-stroke primitive exists today, so
+  the in-plane route is the consistent one). Pin the exact reconciler-positioning line first
+  (`WorldWdgt`, search `widgetsToBeHighlighted`).
+- ⚠ Also audit the OTHER ephemerals for the same gap: drag-embed outline / charge-ring / label / lock-badge
+  (drag-embed spec), and any selection/caret overlay drawn in screen space.
+- Test: highlight a widget inside a rotated island (open its hierarchy menu) — the highlight tracks the
+  rotated shape.
+
 - **Goal:** set rotation/scale on ANY widget; an enclosing `TransformFrameWdgt` is created on
   demand and REMOVED when the spec returns to identity — structural identity restored (matters
   for the dormant guarantee, serialization cleanliness, and byte-identical dormant references).
