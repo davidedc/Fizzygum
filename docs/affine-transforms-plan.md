@@ -961,7 +961,7 @@ lifted by the sub-step named):**
 > macro `macroTransformFrameScaledCaretSlot`; gauntlet dpr1/dpr2/webkit 210/210, existing refs
 > byte-identical (dormant). ⚠ Test-design lesson: a CROPPED StringWdgt routes `edit()` to the
 > pop-out editor (returns nil ⇒ no inline caret) — widen the string so it fits.
-> **4A-2 (drag DELTA mapping) COMPLETE + COMMITTED** (Fizzygum `<pending>`, tests `<pending>`; NOT
+> **4A-2 (drag DELTA mapping) COMPLETE + COMMITTED** (Fizzygum `92e8b77e`, tests `a066b3b28`; NOT
 > pushed). Approach chosen: **point-map both endpoints**, not a separate `inverseMapVector`. The
 > drag-start offset (`ActivePointerWdgt` ~:1042) becomes `handle.screenPointToMyPlane(pos) −
 > handle.position()` and `HandleWdgt.nonFloatDragging` differences `@screenPointToMyPlane(pos) −
