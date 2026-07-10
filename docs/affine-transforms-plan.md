@@ -921,6 +921,18 @@ verified 2026-07-09) · approach · macros · risks.
 
 #### 4A — Interaction-plane dispatch plumbing (the foundation)
 
+> **STATUS 2026-07-10:** **4A-1 (click POSITION mapping) COMPLETE + COMMITTED** (Fizzygum
+> `354e6edf`, tests `f5098fb28`; NOT pushed). `ActivePointerWdgt._pointerPositionInPlaneOf`
+> maps the position at all six click-dispatch sites (mouseDown/Up L+R, main click, double,
+> triple); proven end-to-end (caret lands at the mapped slot, not the raw-screen slot) by
+> macro `macroTransformFrameScaledCaretSlot`; gauntlet dpr1/dpr2/webkit 210/210, existing refs
+> byte-identical (dormant). ⚠ Test-design lesson: a CROPPED StringWdgt routes `edit()` to the
+> pop-out editor (returns nil ⇒ no inline caret) — widen the string so it fits.
+> **4A-2 (drag DELTA mapping — `inverseMapVector`/`screenVectorToMyPlane` + `nonFloatDragging`
+> + mouseMove position) STILL DEFERRED**: narrower (a handle/slider INSIDE an island), and the
+> drag-start offset (`ActivePointerWdgt:1028`) itself mixes planes so it needs mapping too;
+> none of 4B/4C/4D depend on it. Do it as a completeness pass.
+
 - **Goal:** every pointer POSITION and DELTA handed to a handler is expressed in the
   receiver's own plane, so caret slot, slider fraction, button-relative clicks, and
   handle-drag deltas are correct for widgets INSIDE a non-identity island. Dormant-identical
@@ -992,6 +1004,18 @@ verified 2026-07-09) · approach · macros · risks.
   behavior — prefer it unless free-angle precision is required. Record the choice in §0-R/§8.
 
 #### 4C — Property sugar: `widget.rotation` / `widget.scale` (auto-materialize / auto-remove)
+
+> **STATUS 2026-07-10: COMPLETE + COMMITTED** (Fizzygum `07c789cc`, tests `9db75f989`; NOT
+> pushed). `Widget.setRotationDegrees` / `setScaleFactor` (method form) → `_applyTransformSugar`
+> finds-or-materializes the enclosing sugar island, applies via the island's NoSettle cores, and
+> dematerializes at identity — all NoSettle inside the one public-tier settle (`_addNoSettle` /
+> `_moveToNoSettle` / `_destroyNoSettle`). `TransformFrameWdgt._materializedBySugar` gates the
+> auto-remove (explicit islands stay, dormant). Macros: `macroWidgetRotationSugarMaterializes`
+> (island appears, reused not nested) + `macroWidgetRotationSugarRemovesAtIdentity` (removal →
+> box a direct world child, bounds preserved, frame PIXEL-IDENTICAL to never-transformed — same
+> dataHash). Gauntlet dpr1/dpr2/webkit 212/212 + capstone; the ONE benign recapture
+> (`macroDuplicatedInspectorDrivesCopiedTargetOnly` image_2/3, member-list shift from the new
+> Widget methods) is folded in. The `= θ` defineProperty sugar is left as an optional follow-up.
 
 - **Goal:** set rotation/scale on ANY widget; an enclosing `TransformFrameWdgt` is created on
   demand and REMOVED when the spec returns to identity — structural identity restored (matters
