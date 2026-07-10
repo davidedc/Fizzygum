@@ -1522,6 +1522,84 @@ See §7. None of these block declaring the feature shipped.
 
 ---
 
+## §7.5 KNOWN OPEN BUGS — owner-reported 2026-07-10, ROOT-CAUSED + confirmed headless, NOT yet fixed
+
+Both stem from the SUGAR-ISLAND wrap (`setRotationDegrees`/`setScaleFactor` → `_materializeSugarIslandNoSettle`
+wraps the widget in a `TrackingTransformFrameWdgt`, so the widget's `@parent` becomes the island). Confirmed
+against the actual `DegreesConverterApp` window in `index.html?sw=1` (scratch `investigate-2bugs.js`). They are
+INTERTWINED with the sugar-island lifecycle + 4E serialization/dormant-guarantee, so fix them together with
+full context (a fresh session), not piecemeal.
+
+### BUG A — a tilted window takes the INTERNAL skin (should stay external)
+
+- **Symptom (owner):** "as soon as you tilt a window, it takes the appearance of an internal window."
+- **Confirmed:** before tilt `wm.parent=WorldWdgt, isInternal=false, appearance=BoxyAppearance` (external, correct);
+  after `wm.setRotationDegrees 15` → `wm.parent=TrackingTransformFrameWdgt (_materializedBySugar=true),
+  isInternal=TRUE, appearance=RectangularAppearance` (internal skin — WRONG). Note `wm.parent.parent=WorldWdgt`.
+- **Root cause:** `WindowWdgt.isInternal` (`WindowWdgt.coffee:184`) = `@parent? and @parent isnt world and
+  @parent isnt world?.hand`. The internal/external SKIN is derived from parentage (no stored flag;
+  `_deriveAndSetBodyAppearance` runs on every `_reactToBeingAdded`: internal ⇒ `RectangularAppearance`, external
+  ⇒ `BoxyAppearance`). The sugar island is a container that is neither world nor hand, so a tilted window reads
+  as "nested in a container" ⇒ internal.
+- **Fix shape (clean, isolated):** make a `_materializedBySugar` island TRANSPARENT for the internal/external
+  classification — look THROUGH it to its parent (the window was tilted, not nested into a real container):
+  ```coffee
+  isInternal: ->
+    p = @parent
+    while p instanceof TransformFrameWdgt and p._materializedBySugar
+      p = p.parent
+    p? and p isnt world and p isnt world?.hand
+  ```
+  Verified by the headless data: `wm.parent._materializedBySugar=true`, `wm.parent.parent=WorldWdgt` ⇒ look-
+  through gives world ⇒ external. Works for an internal window tilted too (window→sugarIsland→realContainer ⇒
+  internal) and an external one (window→sugarIsland→world ⇒ external). ⚠ Confirm `_deriveAndSetBodyAppearance`
+  is RE-RUN when the sugar island materializes/dematerializes around an already-added window (materialize
+  reparents via `_addNoSettle` → `_reactToBeingAdded` → derive — likely fine, but verify the appearance flips
+  back to Boxy on de-tilt too).
+- **Test (no screenshot needed):** value-assert `wm.isInternal()` is false + `wm.appearance instanceof
+  BoxyAppearance` after `setRotationDegrees 15`, and back to external after `setRotationDegrees 0`. (A screenshot
+  test would ALSO work here since the skin is visible — this is NOT a broken-rect bug — but a value assert is
+  simpler and recapture-free.)
+
+### BUG B — closing a tilted window loses its rotation (basement + reopen both STRAIGHT)
+
+- **Symptom (owner):** "when you close a tilted window it gets put in the basement — STRAIGHT through. And when
+  brought back (its reference/link icon re-opens it) it's put back in the world STRAIGHT." (Try: open the C↔F
+  converter via its reference icon, rotate it, close it → it's straight in the basement; re-open via the icon →
+  straight in the world.)
+- **Confirmed:** after `wm.close()` on a tilted converter → `wm.parent=PanelWdgt (basement scrollPanel contents),
+  enclosingIsland=nil (STRAIGHT), inBasement=true`, AND `TransformFrameWdgt islands still in world tree: 1` (the
+  now-EMPTY sugar island is left ORPHANED in the world).
+- **Root cause (two parts):**
+  1. **Close** — `Widget._closeNoSettle` (`Widget.coffee:473`) re-homes `@` (the WINDOW, which is the sugar
+     island's content) to the basement via `world.basementWdgt._addLostWidgetNoSettle @`. The window LEAVES the
+     island ⇒ un-rotated; the empty sugar island is left behind in the world (a leak). The rotation lived ONLY on
+     the transient sugar island (dormant-guarantee: rotation is not a stored property of the widget), so it is lost.
+  2. **Re-open** — `IconicDesktopSystemWindowedApp.launch` (`IconicDesktopSystemWindowedApp.coffee:50-56`) for a
+     singleton (`@slot` set, e.g. `degreesConverterWindow`) does `existingWindow = world[@slot]; world.add
+     existingWindow; …` — re-parents the SAME (already-straight) window to the world. No rotation restored.
+- **Fix shape (harder — pick a model; ties into 4E):** the sugar rotation is EPHEMERAL and must be made to
+  SURVIVE the close→basement→reopen round-trip. Two candidate models:
+  - **(a) Move the whole FIGURE:** when closing a widget that is the sole content of a sugar island, close the
+    ISLAND (send the rotated island to the basement), and make `launch`/re-open bring back the ISLAND (or
+    re-wrap). Keeps the figure intact but `world[@slot]` references the window not the island, so `launch` (and
+    anything else keying off the window) needs to resolve the enclosing island — invasive.
+  - **(b) PERSIST the rotation on the content (preferred, aligns with 4E + the dormant guarantee):** the sugar
+    rotation should serialize/travel as a scalar PROPERTY of the content widget and re-materialize the island on
+    the far side. Then close (extract to basement) records the scalar, and re-open re-applies `setRotationDegrees`
+    (re-materializing the island). This is the SAME machinery 4E owes ("save/reload a SUGAR island → round-trips
+    as still-removable; scalars only"). Basement round-trip is just an in-memory form of that serialization.
+  - Also FIX THE LEAK: the emptied sugar island must be destroyed when its content is extracted (grep
+    "empty sugar island" — 4D-2a established that an island going content-empty needs cleanup; the close path
+    doesn't do it).
+- **Test:** open converter via reference (or `(new DegreesConverterApp).buildWindow()`), `setRotationDegrees 15`,
+  `close()`, then re-`launch` (`(new DegreesConverterApp).launch()` or drive the reference icon) → value-assert
+  the re-opened window's `rotationHalo_currentDegrees()` (or enclosing sugar island rotation) == 15, AND no
+  orphaned empty `TransformFrameWdgt` remains in the world tree. (Rotation persistence is a state invariant, so a
+  value assert — not a screenshot — is the right tool.)
+
+---
+
 ## §8 Gotchas ledger (standing lessons that WILL bite this work)
 
 - **Macro tests:** authored ONLY via `/author-macro-test`; a backtick in a macro COMMENT kills
