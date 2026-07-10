@@ -1048,8 +1048,19 @@ class ActivePointerWdgt extends Widget
 
           originalWdgtToGrab = @wdgtToGrab
           @wdgtToGrab = @wdgtToGrab.grabbedWidgetSwitcheroo()
+          switcherooHappened = (originalWdgtToGrab != @wdgtToGrab)
+          # Affine transforms (§6 Phase 4D-2a): PICK-OUT. For a widget grabbed from inside a non-identity
+          # island, resolve the FIGURE that comes onto the hand — the existing island (when the grabbed
+          # widget is its sole content — Phase-1's whole-figure grab, no churn) or a fresh island carrying
+          # the accumulated N-deep similitude (a genuine sub-part, extracted + re-homed screen-coincident).
+          # Off any island this returns the widget UNCHANGED ⇒ byte-identical dormant. Resolved HERE (once,
+          # at drag-start) so BOTH the grab below and the "pointer left its bounds, re-centre" re-grab (:1090)
+          # operate on the SAME figure. It does NOT set switcherooHappened (the fresh figure is already
+          # positioned to stay put, then follows the cursor via displacementDueToGrabDragThreshold — no
+          # centre-under-pointer snap).
+          @wdgtToGrab = @wdgtToGrab._resolvePickOutFigureNoSettle()
           w = @wdgtToGrab
-          @grab w, displacementDueToGrabDragThreshold, (originalWdgtToGrab != w)
+          @grab w, displacementDueToGrabDragThreshold, switcherooHappened
 
         else
           # non-float drags are for things such as sliders

@@ -1443,6 +1443,64 @@ class Widget extends TreeNode
       inertChild._moveToNoSettle inertChildPos
     island._destroyNoSettle()                                    # drop the now-empty island (I was inserted before it)
 
+  # ---------------------------------------------------------------------------
+  # Affine transforms (§6 Phase 4D-2a): PICK-OUT. When a widget inside a non-identity island is grabbed,
+  # resolve the FIGURE that comes onto the hand. Two cases (the grab dispatch calls this on the loose unit
+  # the normal grabsToParentWhenDragged rules already picked — a window title resolves to the window, a
+  # loose content child to the child):
+  #   • I am my innermost island's SOLE content ⇒ grabbing me ≡ grabbing that island (and any outer islands
+  #     it is in turn the sole content of), so REUSE the existing island (climb to the outermost sole-content
+  #     island) — no churn, Phase-1's whole-figure grab. macroTransformFrameScaledDragged relies on this.
+  #   • I am a genuine SUB-part (my innermost island wraps a larger subtree) ⇒ extract me and wrap me in a
+  #     FRESH island carrying the accumulated similitude (_pickOutRotatedFigureNoSettle).
+  # Off any island ⇒ returns me unchanged (byte-identical dormant). NoSettle: the grab's own settle covers
+  # the extraction's re-fit of my former container.
+  _resolvePickOutFigureNoSettle: ->
+    island = @_enclosingNonIdentityIsland()
+    return @ if !island?
+    kids = island.childrenNotHandlesNorCarets()
+    if kids? and kids.length == 1 and kids[0] == @
+      # sole content: reuse; climb to the outermost island of the sole-content chain
+      figure = island
+      loop
+        outer = figure._enclosingNonIdentityIsland()
+        break if !outer?
+        outerKids = outer.childrenNotHandlesNorCarets()
+        break if !(outerKids? and outerKids.length == 1 and outerKids[0] == figure)
+        figure = outer
+      return figure
+    # genuine sub-part: extract + wrap in a fresh island
+    return @_pickOutRotatedFigureNoSettle()
+
+  # Affine transforms (§6 Phase 4D-2a): extract me from my island chain into a FRESH sugar-style island that
+  # carries the ACCUMULATED similitude of ALL my ancestor islands, positioned so I stay screen-coincident
+  # (no jump). Returns the fresh island for the hand to grab. The accumulated map's LINEAR part is exactly
+  # (scale = ∏ ancestor scales, rotation = Σ ancestor degrees) — scalar rotations commute + multiply, so no
+  # matrix product / decomposition and no TransformSpec.compose is needed (and summing integer degrees is
+  # EXACT, dodging the atan2 wobble 4B had to quantize). Two similitudes with the same linear part differ
+  # only by a translation, so matching ONE point (my centre) makes the fresh figure coincide with the
+  # original everywhere: the fresh island pivots on its slot centre (= my centre), which renders my centre at
+  # my (virtual) centre, and localPointToScreen(centre) — which composes all N ancestors — is where it was,
+  # so translating by their difference re-homes the whole figure. For n=1 this is pixel-identical; for n≥2 it
+  # resamples once instead of per-level (crisper — a new state anyway).
+  _pickOutRotatedFigureNoSettle: ->
+    sStar = 1
+    degStar = 0
+    ancestor = @parent
+    while ancestor?
+      if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
+        sStar = sStar * ancestor.transformSpec.scale
+        degStar = degStar + ancestor.transformSpec.rotationDegrees
+      ancestor = ancestor.parent
+    degStar = ((degStar % 360) + 360) % 360
+    screenCentreBefore = @localPointToScreen @center()     # my on-screen centre BEFORE extraction
+    island = new TrackingTransformFrameWdgt()
+    island._materializedBySugar = true                     # behaves as a sugar island (auto-unwrap at identity, scalar serialization)
+    island.transformSpec = new TransformSpec degStar, sStar
+    island.bounds = new Rectangle @left(), @top(), @right(), @bottom()   # slot = my bounds ⇒ slot centre = my centre
+    island._addNoSettle @                                  # extract me from my old container into the fresh island
+    island._applyMoveTo island.position().add (screenCentreBefore.subtract @center())   # re-home so my centre lands where it was
+    island
 
   # Widget accessing - simple changes: translate me + my children + repaint.
   # (Stage 5, 2026-07-01) The re-fit seam this used to fire is DELETED -- the settle loop now re-fits my tracking
@@ -2953,14 +3011,13 @@ class Widget extends TreeNode
   # a Widget and then do a drag (which in that case would be a FLOATING drag).
 
   grabsToParentWhenDragged: ->
-    # Affine transforms (Phase 1-symmetric guard, §4.6): a widget INSIDE a non-identity island grabs to
-    # its parent, so a float-drag escalates up to the ISLAND (which moves the rotated/scaled figure
-    # rigidly) instead of extracting the inner widget onto the hand — where its virtual bounds would be
-    # misread as SCREEN bounds (a visual jump: a scale-2 island's content snapping to 1x at the wrong
-    # place). Proper pick-OUT that carries the accumulated similitude is Phase 4D; until then this keeps
-    # the gesture coherent. Dormant-safe: no non-identity island ⇒ falls through to the logic below.
-    # (Non-float drags — sliders — are unaffected: findFirstLooseWidget checks nonFloatDragging FIRST.)
-    return true if @_isInsideNonIdentityIsland()
+    # Affine transforms (§6 Phase 4D-2a): the Phase-1-symmetric escalation guard that USED to force a
+    # widget inside a non-identity island to grab-to-parent (so a float-drag lifted the whole island) is
+    # REMOVED — the loose unit is now resolved by the normal rules below, and ActivePointerWdgt's grab
+    # dispatch maps it to the on-hand figure via _resolvePickOutFigureNoSettle (reuse the existing island
+    # when the grabbed widget is its sole content — the Phase-1 whole-figure grab, no jump — or extract +
+    # re-wrap a genuine sub-part). This is what lets you pick a SUB-widget OUT of an island. (Non-float
+    # drags — sliders/handles — are unaffected: findFirstLooseWidget checks nonFloatDragging FIRST.)
     if @parent?
 
       if @parent == world
