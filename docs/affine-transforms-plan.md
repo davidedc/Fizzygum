@@ -1191,9 +1191,9 @@ Priority: **R1 (paint) > R3 (resize-clip) > R2 (highlight)**. All cold-executabl
 
 **R2 — ephemeral highlight overlays not rotated (highlight axis-aligned + offset).**
 
-> **STATUS 2026-07-10: COMPLETE + COMMITTED** (Fizzygum `<pending>`, tests `<pending>`; NOT pushed; gauntlet
-> dpr1/dpr2/webkit + apps/paint/tiernaming/settle/capstone + homepage). Owner-reviewed design (5 refinements
-> folded in). Symptom: the hierarchy-menu target highlight (blue wash) shows as a screen-aligned box OFFSET
+> **STATUS 2026-07-10: COMPLETE + COMMITTED** (Fizzygum `a8c4459d`, tests `9a58a18d8`; NOT pushed; gauntlet
+> dpr1/dpr2/webkit 220/220 + apps/paint/tiernaming/settle/capstone + homepage). Owner-reviewed design (5
+> refinements folded in). Symptom: the hierarchy-menu target highlight (blue wash) shows as a screen-aligned box OFFSET
 > from a rotated target. Root cause: `HighlighterWdgt` is built one-per-target by the reconciler
 > (`WorldWdgt.addHighlightingWidgets`, fed by the `world.widgetsToBeHighlighted` Map) as a WORLD child sized
 > to `target.clippedThroughBounds()` — which, for a target inside a non-identity island, is the target's rect
