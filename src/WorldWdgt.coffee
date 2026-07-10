@@ -883,12 +883,11 @@ class WorldWdgt extends PanelWdgt
       # even if the Widget is not visible anymore
       if brokenWidget.clippedBoundsWhenLastPainted?
         if brokenWidget.clippedBoundsWhenLastPainted.isNotEmpty()
-          # affine transforms (§4.5): map the last-painted (virtual for island
-          # descendants) rect to the screen plane BEFORE the shadow-grow, which is a
-          # screen-space phenomenon. mapRectToScreen returns the rect unchanged (same
-          # object) for any widget not inside a non-identity island → byte-identical
-          # when dormant.
-          sourceBroken = (brokenWidget.mapRectToScreen brokenWidget.clippedBoundsWhenLastPainted).expandBy(1).growBy @maxShadowSize
+          # affine transforms (§4.5): clippedBoundsWhenLastPainted is ALREADY the screen-plane footprint
+          # (recordDrawnAreaForNextBrokenRects mapped it at paint time, while the widget was still attached),
+          # so a widget detached between paint and flush (close/destroy) still erases its true rotated
+          # footprint. Off any island the recorded rect is the raw rect ⇒ byte-identical dormant.
+          sourceBroken = brokenWidget.clippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
 
         #if brokenWidget!= world and (brokenWidget.clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
         #  debugger
@@ -939,8 +938,10 @@ class WorldWdgt extends PanelWdgt
 
       if brokenWidget.fullClippedBoundsWhenLastPainted?
         if brokenWidget.fullClippedBoundsWhenLastPainted.isNotEmpty()
-          # affine transforms (§4.5): map to screen before the shadow-grow (identity → unchanged).
-          sourceBroken = (brokenWidget.mapRectToScreen brokenWidget.fullClippedBoundsWhenLastPainted).expandBy(1).growBy @maxShadowSize
+          # affine transforms (§4.5): fullClippedBoundsWhenLastPainted is ALREADY the screen-plane footprint
+          # (mapped at paint time), so a widget detached between paint and flush (close/destroy) erases its
+          # true rotated footprint, not the un-transformed slot. Off any island it is the raw rect ⇒ dormant-identical.
+          sourceBroken = brokenWidget.fullClippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
 
       # for the "destination" broken rectangle we can actually
       # check whether the Widget is still visible because we

@@ -2178,8 +2178,16 @@ class Widget extends TreeNode
   recordDrawnAreaForNextBrokenRects: ->
     if @childrenBoundsUpdatedAt < WorldWdgt.frameCount
       @childrenBoundsUpdatedAt = WorldWdgt.frameCount
-      @clippedBoundsWhenLastPainted = @clippedThroughBounds()
-      @fullClippedBoundsWhenLastPainted = @fullClippedBounds()
+      # Affine transforms: record the SCREEN footprint (mapped through my ancestor islands WHILE I am still
+      # attached and being painted), NOT the raw virtual rect. fleshOut(Full)Broken erases the "source"
+      # (where-I-was) rect from these; if it re-mapped a stored VIRTUAL rect at flush time instead, a widget
+      # DETACHED between paint and flush — a close/destroy (_destroyNoSettle / _closeNoSettle issue
+      # fullChanged() then sever @parent, re-homing me to the basement) — would map through a nil/basement
+      # chain (an identity) and erase the WRONG (un-transformed) rect, leaving the rotated on-screen footprint
+      # stale (owner bug: closing a tilted converter's inner window). mapRectToScreen returns the SAME rect
+      # off any island ⇒ byte-identical dormant. (Field names kept; they now hold the screen-plane footprint.)
+      @clippedBoundsWhenLastPainted = @mapRectToScreen @clippedThroughBounds()
+      @fullClippedBoundsWhenLastPainted = @mapRectToScreen @fullClippedBounds()
 
   # Occlusion culling (docs/occlusion-culling-plan.md P1): the axis-aligned rectangle this widget
   # provably paints FULLY OPAQUE, in LOGICAL px world coordinates, or nil. It is the geometry both
