@@ -1004,7 +1004,10 @@ class ActivePointerWdgt extends Widget
   determineGrabs: (pos, topWdgt, mouseOverNew) ->
     if !@isThisPointerDraggingSomething() and (@mouseButton is "left")
       w = topWdgt.findRootForGrab()
-      topWdgt.mouseMove pos  if topWdgt.mouseMove
+      # R1 (§6 affine): map into the RECEIVER's plane so a mouseMove consumer inside a rotated/
+      # scaled island (e.g. a paint canvas) draws under the cursor, not at the raw screen pos.
+      # screenPointToMyPlane returns the same point off any island ⇒ byte-identical dormant.
+      topWdgt.mouseMove topWdgt.screenPointToMyPlane(pos)  if topWdgt.mouseMove
 
       # if a widget is marked for grabbing, grab it
       if @wdgtToGrab
@@ -1146,7 +1149,9 @@ class ActivePointerWdgt extends Widget
       # otherwise it will fire also when the user
       # simply clicks
       if !@mouseDownPosition? or !@mouseDownPosition.equals @position()
-        newWdgt.mouseMove?(@position(), @mouseButton)
+        # R1 (§6 affine): map per-receiver into newWdgt's plane so a position-reading mouseMove
+        # inside a rotated/scaled island lands on the cursor (dormant-safe: identity off any island).
+        newWdgt.mouseMove?(newWdgt.screenPointToMyPlane(@position()), @mouseButton)
       
       unless @mouseOverList.has newWdgt
         newWdgt.mouseEnter?()
