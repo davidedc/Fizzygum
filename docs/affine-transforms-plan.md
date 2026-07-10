@@ -6,7 +6,8 @@ PROGRESS — 4A-1 (click-position mapping), 4C (property sugar), 4B (halo rotati
 rough edges R1 (mouseMove-pointer mapping / paint-in-rotated-window), R3 (resize-after-rotate
 clip, via the TrackingTransformFrameWdgt subclass), R2 (ephemeral-overlay rotation, via in-plane
 highlight parenting + a resetWorld teardown fix), and R4 (slider + palette nonFloatDragging pointer
-plane-mapping) COMPLETE + COMMITTED; 4D (pick/drop), 4E (close-out)
+plane-mapping) COMPLETE + COMMITTED; 4D-1 (drop-IN, the smaller half of pick/drop) COMPLETE +
+COMMITTED; 4D-2 (pick-OUT, full N-deep composition), 4E (close-out)
 REMAINING. See the per-phase §6 banners for hashes + gate results
 (they are the authority on status). Owner-gated; a standing
 grant to "commit + continue while all gates pass" is in force as of 2026-07-10. Original design
@@ -1326,6 +1327,31 @@ cold-executable. **R1, R2, R3, R4 COMPLETE 2026-07-10.**
 
 #### 4D — Pick / drop across islands (the hardest sub-feature)
 
+> **STATUS 2026-07-10 — 4D SPLIT into 4D-1 (drop-IN) + 4D-2 (pick-OUT), owner-gated
+> ("4D-1 first, gate, then 4D-2"; owner chose FULL N-deep similitude composition for 4D-2).**
+> **4D-1 (drop-IN) COMPLETE + COMMITTED** (Fizzygum `cd87222c`, tests `7dec60dee`; NOT pushed).
+> `ActivePointerWdgt.drop` now re-expresses a dropped payload's SCREEN bounds in the target's plane
+> when the drop target lives inside a non-identity island: it maps the payload's on-screen CENTRE via
+> `target.screenPointToMyPlane` and re-homes the payload's UNCHANGED-size bounds there, so the payload
+> becomes content of the transformed thing (native virtual size, correctly rotated/scaled, centred
+> where released) instead of keeping its raw screen bounds and double-transforming off the drop point.
+> Centre-preserving, NOT a corner-bbox `inverseMapRect` (a rotated rect's screen-corner bounding box
+> would inflate + mis-centre — the same reason 4A-2 point-maps instead of adding an `inverseMapVector`;
+> `inverseMapRect` stays unimplemented). Guarded by `_isInsideNonIdentityIsland()`, and
+> `screenPointToMyPlane` is identity off any island ⇒ byte-identical dormant (only the new macro trips
+> it; all 222 prior references unchanged). `screenPointToMyPlane` composes ALL ancestor islands, so the
+> remap is already N-deep-correct. NO `_acceptsDrops` flip was needed — a drop-accepting content
+> container INSIDE the island (`enableDrops()`) already resolves as the `dropTargetFor` climb target;
+> the frame's Phase-1 refusal only bites when the climb REACHES the frame (the single-content sugar
+> case, out of 4D-1 scope). Proven by `macroTransformFrameDropIntoRotatedLandsCorrectly` (drop a payload
+> onto a 35° container: value-asserts it nested into the island's content AND its on-screen centre
+> landed at the release point within 3px; image_2 shows it nested + rotated by the same 35°). Gauntlet
+> dpr1/dpr2/webkit 223/223 + apps/paint/tiernaming/settle/capstone + homepage green (suite 222 → 223).
+> The stack/menu insert-index (`positionOnScreen`, the raw `@position()` still passed at the drop `add`)
+> inside an island is the SAME latent screen-vs-plane point — banked §7.13.
+> **4D-2 (pick-OUT) REMAINING** (owner chose FULL N-deep similitude composition; see the 4D body +
+> §6 4D risks — derive + test the anchor mapping at 90° first).
+
 - **Goal:** pick a widget OUT of a non-identity island and it stays visually transformed while
   floating; drop INTO an island and it lands at the correct inner position. Lifts the Phase-1
   no-drop restriction.
@@ -1461,6 +1487,15 @@ See §7. None of these block declaring the feature shipped.
    `deltaDragFromPreviousCall.x` — a DELTA/vector that needs the inverse LINEAR-part mapping (not point mapping),
    so dragging a stack divider inside a rotated island would resize by the wrong amount. Niche (no app/test puts a
    resizable stack inside a rotated island); banked until a demonstrated need.
+13. **Stack/menu drop insert-index in a rotated island** (banked 2026-07-10, from 4D-1) — the drop passes
+   the RAW screen `@position()` as the 6th `add` arg (`positionOnScreen`), which the stack/menu panels
+   (`SimpleVerticalStackPanelWdgt`, `ToolPanelWdgt`, `HorizontalMenuPanelWdgt`) consume to compute a
+   child-insert INDEX. For such a panel INSIDE a non-identity island the un-mapped point picks the wrong
+   slot — the same screen-vs-plane class 4D-1 fixed for the payload's own bounds. 4D-1 fixed the
+   payload-bounds remap (every base container) but left this raw, because (a) those panels don't
+   `enableDrops()` by default so the path is rarely reachable and (b) there is no stack-in-island fixture.
+   Fix is the identical one-liner: map the point via `target.screenPointToMyPlane` before passing it when
+   `target._isInsideNonIdentityIsland()`. Owner-gated; build on demonstrated need.
 
 ---
 
