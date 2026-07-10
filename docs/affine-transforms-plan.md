@@ -1,8 +1,9 @@
 # Affine transforms for widgets (rotated / scaled windows) — design + phased execution plan
 
 **STATUS (updated 2026-07-10): Phases 0–3 COMPLETE + COMMITTED (not pushed); Phase 4 IN
-PROGRESS — 4A-1 (click-position mapping), 4C (property sugar), and 4B (halo rotation) COMPLETE +
-COMMITTED; 4A-2 (drag-delta), 4D (pick/drop), 4E (close-out) REMAINING. See the per-phase
+PROGRESS — 4A-1 (click-position mapping), 4C (property sugar), 4B (halo rotation), and 4A-2
+(drag-delta mapping) COMPLETE + COMMITTED; 4D (pick/drop), 4E (close-out) REMAINING — plus the
+universal (all-widgets) top-right rotate handle now in progress on top of 4A-2. See the per-phase
 §6 banners for hashes + gate results (they are the authority on status). Owner-gated; a standing
 grant to "commit + continue while all gates pass" is in force as of 2026-07-10. Original design
 was AUTHORED 2026-07-09 and hardened same day by an adversarial fresh-eyes pass (§10 facet
@@ -960,22 +961,34 @@ lifted by the sub-step named):**
 > macro `macroTransformFrameScaledCaretSlot`; gauntlet dpr1/dpr2/webkit 210/210, existing refs
 > byte-identical (dormant). ⚠ Test-design lesson: a CROPPED StringWdgt routes `edit()` to the
 > pop-out editor (returns nil ⇒ no inline caret) — widen the string so it fits.
-> **4A-2 (drag DELTA mapping) STILL DEFERRED** — checklist when it lands: (1) add
-> `TransformSpec.inverseMapVector` (linear part only — drop e,f) + `Widget.screenVectorToMyPlane`;
-> (2) map both `pos` and the drag-start offset in `HandleWdgt.nonFloatDragging` — ⚠ the start
-> offset (`ActivePointerWdgt:1028`, `pos.subtract handle.position()`) ALSO mixes screen `pos` with
-> the handle's virtual position, so it needs mapping too; (3) ⚠ **REMOVE the handle-refusal guard**
-> in `_showResizeAndMoveHandlesAndLayoutAdjustersNoSettle` (else handles never appear on island-inner
-> widgets and the mapping looks inert); (4) map the mouseMove dispatch position
-> (`ActivePointerWdgt:1007,1137`); (5) ⚠ **sugar-island slot tracking** — a sugar island's slot box
-> is frozen to the wrapped widget's bounds at materialize time; once 4A-2 lets that widget be RESIZED
-> via its handles, its bounds change but the slot box does NOT → content overflows the slot and is
-> clipped at the buffer edge (a mystery clipped-corner bug in 4A-2's macro). Fix: the sugar island
-> tracks its single child's bounds (slot resync on child resize) OR the resize routes through the
-> island so slot and content stay coincident. Narrower than the others (a handle/slider INSIDE an
-> island) and nothing else depends on it, so it can be a completeness pass. Proving macro: a slider or
-> resize handle inside a scale/rotated island moving the visually-correct edge (and, for the sugar
-> case, the slot growing with the resized content).
+> **4A-2 (drag DELTA mapping) COMPLETE + COMMITTED** (Fizzygum `<pending>`, tests `<pending>`; NOT
+> pushed). Approach chosen: **point-map both endpoints**, not a separate `inverseMapVector`. The
+> drag-start offset (`ActivePointerWdgt` ~:1042) becomes `handle.screenPointToMyPlane(pos) −
+> handle.position()` and `HandleWdgt.nonFloatDragging` differences `@screenPointToMyPlane(pos) −
+> startOffset`; since BOTH operands are now affine-mapped points, the translation cancels in the
+> subtraction and the pointer DELTA is left mapped through the inverse LINEAR part only — exactly the
+> vector semantics §4.6 wants, reusing existing `screenPointToMyPlane` (no new API, byte-identical off
+> every island). The Phase-1 handle-refusal guard in `_showResizeAndMoveHandlesAndLayoutAdjustersNoSettle`
+> is REMOVED. The generalized macro verb `dragResizeMoveHandleTo_InputEvents` now presses at
+> `handle.localPointToScreen(handle.center())` (the on-screen handle, not its virtual centre).
+> ⚠⚠ **THE REAL BUG was NOT the drag math** — it was a THIRD, pre-existing plane mismatch in the grab
+> path: `ActivePointerWdgt`'s "if the mouse left its fullBounds, center it" block tested the widget's
+> VIRTUAL `fullBounds()` against the RAW screen `pos`, so for an island-inner handle (pointer ON it on
+> screen, but outside its virtual bounds) it mis-fired and `@grab`bed the handle onto the hand —
+> yanking it OUT of the island, after which the drag saw an identity plane and resized at raw screen
+> scale (a 2× runaway at scale 2). Fixed by mapping: `fb.containsPoint w.screenPointToMyPlane(pos)`.
+> This is the kind of latent screen-vs-plane comparison that only an island exposes — grep the input
+> path for other `containsPoint(pos)` / bounds-vs-raw-`@position()` tests when touching 4D. Proven by
+> `macroTransformFrameResizeInsideScaledIsland` (scale-2 island: a −40,−40 screen drag shrinks the box
+> by −20,−20 so the on-screen corner tracks the pointer 1:1; value-asserts extent == inverse-linear of
+> the screen delta + that the handle appears at all). Probe confirmed scale/rotate-90/rotate-30 all map
+> to `inverseLinear(deltaScreen)` exactly. Gauntlet dpr1/dpr2/webkit + gates + homepage green.
+> **DEFERRED (not needed here; a refinement):** (a) `ActivePointerWdgt:1007,1137` mouseMove-position
+> mapping — no consumer needs it yet (resize/move use `nonFloatDragging`; revisit for a slider inside an
+> island); (b) **sugar-island slot tracking** — resizing a widget past the frozen slot box clips at the
+> buffer edge, so the macro drags INWARD (shrinks). Real design questions (anchor behaviour on
+> asymmetric grow), so it is its own follow-up; it matters mainly for resize-AFTER-rotate on a sugar
+> island (the universal-handle path).
 
 - **Goal:** every pointer POSITION and DELTA handed to a handler is expressed in the
   receiver's own plane, so caret slot, slider fraction, button-relative clicks, and
@@ -1250,6 +1263,14 @@ See §7. None of these block declaring the feature shipped.
   helper CoffeeScript injects per-file, but the FRAGMENTED in-browser meta-compile does not provide
   it ⇒ runtime `ReferenceError: modulo is not defined` (NOT caught by the build syntax gate, only at
   boot/replay). Use explicit `((x % 360) + 360) % 360`; the codebase uses plain `%` throughout.
+- **Latent screen-vs-plane comparisons bite inside islands** (4A-2) — the drag math wasn't the bug; a
+  pre-existing `fb.containsPoint(pos)` in the grab path compared VIRTUAL `fullBounds()` to the RAW screen
+  pointer, mis-firing only for an island-inner widget and yanking it onto the hand. When touching input/
+  drag/hit code for 4D, grep for bounds-vs-raw-`@position()`/`containsPoint(pos)` and map the point
+  (`w.screenPointToMyPlane(pos)`) — these are invisible until a non-identity island makes screen ≠ plane.
+- **Drag DELTAs need no new vector API** (4A-2) — mapping a displacement through the inverse LINEAR part
+  is just point-mapping BOTH endpoints and subtracting: `screenPointToMyPlane(a) − screenPointToMyPlane(b)`
+  cancels the affine translation. Reuse `screenPointToMyPlane`; don't add an `inverseMapVector`.
 - **Rotation input is SCREEN-plane** (4B) — the rotate handle reads `world.hand.position()` (raw) and
   `island.screenAnchor()`, NOT its 4A-1-mapped position: an in-plane handle reading the mapped
   position would measure the angle in the very plane it is rotating (a feedback loop). Quantize the

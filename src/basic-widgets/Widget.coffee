@@ -3160,11 +3160,11 @@ class Widget extends TreeNode
     @_settleLayoutsAfter => @_showResizeAndMoveHandlesAndLayoutAdjustersNoSettle()
 
   _showResizeAndMoveHandlesAndLayoutAdjustersNoSettle: ->
-    # Affine transforms (Phase 1, §4.6): refuse resize/move handles on a widget inside a non-identity
-    # island — a HandleWdgt drags @target's bounds with SCREEN deltas not yet mapped through the
-    # island's transform. ⚠ Phase 4A-2 (drag-delta mapping) MUST lift this guard, or handles stay
-    # inert on island-inner widgets. Dormant-safe: no island ⇒ falls through to the logic below.
-    return if @_isInsideNonIdentityIsland()
+    # Affine transforms (§6 4A-2): resize/move handles now work on a widget INSIDE a non-identity
+    # island — HandleWdgt.nonFloatDragging (and the grab-start offset in ActivePointerWdgt) map the
+    # drag pointer through screenPointToMyPlane, so the dragged edge follows the island's rotated/
+    # scaled axes. The Phase-1 refusal guard that used to `return` here is therefore lifted. (Float-
+    # drag still escalates to the whole island via grabsToParentWhenDragged/_isInsideNonIdentityIsland.)
     if @isFreeFloating()
       @addAndTrackHandle "resizeHorizontalHandle"
       @addAndTrackHandle "resizeVerticalHandle"

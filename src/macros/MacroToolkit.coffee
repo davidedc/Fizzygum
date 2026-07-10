@@ -600,7 +600,11 @@ class MacroToolkit
   # corner — resizes both dimensions), "moveHandle", "resizeHorizontalHandle", "resizeVerticalHandle".
   dragResizeMoveHandleTo_InputEvents: (handleType, destination, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     handle = world.topWdgtSuchThat (item) -> (item instanceof HandleWdgt) and (item.type == handleType)
-    @syntheticEventsMouseMovePressDragRelease_InputEvents handle.center(), destination, milliseconds, startTime
+    # Press at the handle's ON-SCREEN centre. localPointToScreen forward-maps through any enclosing
+    # non-identity island (affine transforms §6 4A-2), so a handle on a widget inside a scaled/rotated
+    # island is pressed where it actually renders — not at its virtual bounds centre, which would miss.
+    # Off every island localPointToScreen returns the same point ⇒ byte-identical for all existing tests.
+    @syntheticEventsMouseMovePressDragRelease_InputEvents handle.localPointToScreen(handle.center()), destination, milliseconds, startTime
 
   # Float-DRAG a widget (by reference, or by a recorded text-description identifier) and drop it at a
   # destination — a Point, or another widget / identifier (dropped on that target's centre). Presses at

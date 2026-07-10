@@ -1039,16 +1039,28 @@ class ActivePointerWdgt extends Widget
           # reason than to move it (as opposed to selecting them
           # or picking a position for a cursor), so it's OK.
           @nonFloatDraggedWdgt = @wdgtToGrab
+          # Affine transforms (§6 4A-2): capture the grab offset IN THE GRABBED WIDGET'S OWN PLANE.
+          # For a handle/slider inside a non-identity island the raw screen `pos` and the widget's
+          # (virtual) position() live in different planes; screenPointToMyPlane maps the pointer into
+          # the widget's plane so this offset — and the newPos differenced from it in nonFloatDragging
+          # — are plane-consistent. Off every island screenPointToMyPlane returns the SAME point ⇒
+          # byte-identical (dormant).
           @nonFloatDragPositionWithinWdgtAtStart =
             # if we ever will need to compensate for the grab/drag
             # treshold here, just add .subtract displacementDueToGrabDragThreshold
-            (pos.subtract @nonFloatDraggedWdgt.position())
+            (@nonFloatDraggedWdgt.screenPointToMyPlane(pos).subtract @nonFloatDraggedWdgt.position())
 
 
         # if the mouse has left its fullBounds, center it
         if w
           fb = w.fullBounds()
-          unless fb.containsPoint pos
+          # Affine transforms (§6 4A-2): w.fullBounds() is in w's OWN (virtual) plane, so test it
+          # against the pointer mapped INTO that plane — otherwise, for a widget inside a non-identity
+          # island, the on-screen pointer sits ON w yet lies outside w's virtual bounds, so this
+          # mis-fires and @grabs w onto the hand (yanking it — and its handle — out of the island, which
+          # then breaks the plane-mapped resize below). screenPointToMyPlane is identity off any island
+          # ⇒ byte-identical (dormant).
+          unless fb.containsPoint w.screenPointToMyPlane(pos)
             @_applyExtent @extent().subtract fb.extent().floorDivideBy 2
             @grab w
             @_applyMoveTo pos

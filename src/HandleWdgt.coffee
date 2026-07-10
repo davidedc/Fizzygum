@@ -305,7 +305,14 @@ class HandleWdgt extends Widget
     Math.round d
 
   nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
-    newPos = pos.subtract nonFloatDragPositionWithinWdgtAtStart
+    # Affine transforms (§6 4A-2): map the drag pointer into MY plane (my target's plane) before
+    # differencing the grab-start offset — so a resize/move handle on a widget inside a non-identity
+    # island drags the correct edge along the island's rotated/scaled axes. Because both operands are
+    # now affine-mapped points, the translation cancels in the subtraction, leaving the pointer DELTA
+    # mapped through the inverse LINEAR part only — exactly right for a vector displacement (plan §4.6).
+    # Off every island screenPointToMyPlane returns the same point ⇒ byte-identical (dormant). The
+    # "rotateHandle" case below ignores newPos (its angle uses the RAW pointer, deliberately screen-plane).
+    newPos = (@screenPointToMyPlane pos).subtract nonFloatDragPositionWithinWdgtAtStart
     switch @type
       # 1. all these changes applied to the target are all deferred
       # 2. the position of this handle will be changed when the
