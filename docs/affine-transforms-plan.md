@@ -1,10 +1,10 @@
 # Affine transforms for widgets (rotated / scaled windows) — design + phased execution plan
 
 **STATUS (updated 2026-07-10): Phases 0–3 COMPLETE + COMMITTED (not pushed); Phase 4 IN
-PROGRESS — 4A-1 (click-position mapping), 4C (property sugar), 4B (halo rotation), and 4A-2
-(drag-delta mapping) COMPLETE + COMMITTED; 4D (pick/drop), 4E (close-out) REMAINING — plus the
-universal (all-widgets) top-right rotate handle now in progress on top of 4A-2. See the per-phase
-§6 banners for hashes + gate results (they are the authority on status). Owner-gated; a standing
+PROGRESS — 4A-1 (click-position mapping), 4C (property sugar), 4B (halo rotation), 4A-2
+(drag-delta mapping), and 4B-universal (rotate ANY widget from its halo) COMPLETE + COMMITTED;
+4D (pick/drop), 4E (close-out) REMAINING. See the per-phase §6 banners for hashes + gate results
+(they are the authority on status). Owner-gated; a standing
 grant to "commit + continue while all gates pass" is in force as of 2026-07-10. Original design
 was AUTHORED 2026-07-09 and hardened same day by an adversarial fresh-eyes pass (§10 facet
 dossier; three correctness fixes folded into §4: composite damage-clip §4.2, plane-purity/two-
@@ -1098,6 +1098,25 @@ lifted by the sub-step named):**
 > dataHash). Gauntlet dpr1/dpr2/webkit 212/212 + capstone; the ONE benign recapture
 > (`macroDuplicatedInspectorDrivesCopiedTargetOnly` image_2/3, member-list shift from the new
 > Widget methods) is folded in. The `= θ` defineProperty sugar is left as an optional follow-up.
+
+#### 4B-universal — rotate ANY widget from its halo (built on 4A-2)
+
+> **STATUS 2026-07-10: COMPLETE + COMMITTED** (Fizzygum `<pending>`, tests `<pending>`; NOT pushed).
+> The rotate handle is added to EVERY free-floating widget's halo (the island-only
+> `providesRotateHandleInHalo` gate is DROPPED). A Widget **halo rotation protocol** —
+> `rotationHalo_screenAnchor` (my centre → screen = the sugar island's fixed-point pivot),
+> `rotationHalo_currentDegrees` (the enclosing sugar island's rotation, or 0), `rotationHalo_apply`
+> (`setRotationDegrees` — the 4C sugar) — lets the one handle drive any target; `TransformFrameWdgt`
+> overrides all three to drive its own spec (`rotationHalo_apply` → self-settling `setRotation`, NOT the
+> deferred setter, which is REMOVED — the protocol is a polymorphic dispatch, not a per-event stream, so
+> rule [O] forbids it textually calling a `*DeferredSettle`; a per-drag self-settle is a no-op for the
+> 'slot' island every sugar island is). Rotating a bare widget materialises a sugar island on the fly
+> and removes it at identity. Proof: `macroWidgetRotateViaHaloHandle` — the fully MOUSE-ONLY path
+> (right-click → "resize/move…" → drag the ring) rotates a plain box 40°, value-asserting the sugar
+> island materialised. Blast radius = 6 resize/move-halo tests recaptured (they now show the rotate
+> ring) + 1 benign inspector; owner approved the recapture. ⚠ Needed 4A-2 first: with resize/move now
+> correct inside a rotated island, the whole halo stays coherent once a widget is rotated. Resize-GROW
+> past a sugar island's slot still clips (the deferred 4A-2 slot-tracking refinement).
 
 - **Goal:** set rotation/scale on ANY widget; an enclosing `TransformFrameWdgt` is created on
   demand and REMOVED when the spec returns to identity — structural identity restored (matters

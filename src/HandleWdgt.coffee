@@ -280,7 +280,7 @@ class HandleWdgt extends Widget
     # then rotates RELATIVE to this (no jump on grab). Captured here (hand is exactly at the press
     # point) rather than on the first drag sample, so the resulting angle is predictable from geometry.
     if @type is "rotateHandle"
-      @_rotateGrabStartRotationDegrees = @target.transformSpec.rotationDegrees
+      @_rotateGrabStartRotationDegrees = @target.rotationHalo_currentDegrees()
       @_rotateGrabStartPointerAngleDegrees = @_pointerAngleToTargetAnchorDegrees()
 
   # Affine transforms (§6 Phase 4B): angle (degrees) of the RAW screen pointer about my island
@@ -290,7 +290,7 @@ class HandleWdgt extends Widget
   # pointer (never plane-mapped), immune to 4A-2 mapping the `pos` passed to nonFloatDragging.
   # DetTrig.atan2 (not Math.atan2) keeps it cross-engine deterministic (§6 4B risk note).
   _pointerAngleToTargetAnchorDegrees: ->
-    anchor = @target.screenAnchor()
+    anchor = @target.rotationHalo_screenAnchor()
     p = world.hand.position()
     DetTrig.atan2(p.y - anchor.y, p.x - anchor.x) * 180 / Math.PI
 
@@ -335,10 +335,10 @@ class HandleWdgt extends Widget
       # family (a 'slot' island settles to nothing; a coupled one reflows once at end of cycle).
       when "rotateHandle"
         if !@_rotateGrabStartPointerAngleDegrees?
-          @_rotateGrabStartRotationDegrees = @target.transformSpec.rotationDegrees
+          @_rotateGrabStartRotationDegrees = @target.rotationHalo_currentDegrees()
           @_rotateGrabStartPointerAngleDegrees = @_pointerAngleToTargetAnchorDegrees()
         rawDegrees = @_rotateGrabStartRotationDegrees + (@_pointerAngleToTargetAnchorDegrees() - @_rotateGrabStartPointerAngleDegrees)
-        @target._setRotationDeferredSettle @_quantizeRotationDegrees rawDegrees
+        @target.rotationHalo_apply @_quantizeRotationDegrees rawDegrees
 
   
   # HandleWdgt events:

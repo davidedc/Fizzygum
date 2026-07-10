@@ -68,12 +68,21 @@ class TransformFrameWdgt extends PanelWdgt
   colloquialName: ->
     "transform frame"
 
-  # Phase 4B (§6): an island offers a ROTATE handle in its halo (Widget's show-handles path dispatches
-  # this via ?() — plain widgets lack it and get no rotate handle, so every existing halo is byte-
-  # identical). Offered even at IDENTITY: you must be able to START rotating an un-rotated island, and
-  # the halo is an explicit interaction overlay, outside the dormant-render guarantee.
-  providesRotateHandleInHalo: ->
-    true
+  # Phase 4B-universal (§6): an EXPLICIT island drives the halo rotation protocol against its OWN spec
+  # (not the Widget base, which would wrap the island in ANOTHER sugar island). screenAnchor honours an
+  # explicit anchor; _setRotationDeferredSettle rides the ONE end-of-cycle flush for the drag stream.
+  rotationHalo_screenAnchor: ->
+    @screenAnchor()
+
+  rotationHalo_currentDegrees: ->
+    @transformSpec.rotationDegrees
+
+  # Self-settling (like the plain-widget sugar path), NOT the deferred setter: the halo protocol is a
+  # polymorphic dispatch, not a per-event stream handler, so it must not textually call a *DeferredSettle
+  # (check-layering rule [O] — the allowlist is for the actual stream, nonFloatDragging). A per-drag
+  # self-settle is a no-op for a 'slot' island (the default, incl. every sugar island).
+  rotationHalo_apply: (deg) ->
+    @setRotation deg
 
   # never a hit target itself (see the ctor note): the descent still recurses into
   # the content subtree, whose widgets ARE hit-tested (with the plane-mapped point).
@@ -115,17 +124,6 @@ class TransformFrameWdgt extends PanelWdgt
     @transformSpec.rotationDegrees = deg   # set the canonical scalar directly
     @_transformChangedNoSettle()
 
-  # Phase 4B (§6): PRIVATE DEFERRED-SETTLE rotation entrypoint — see the FAMILY comment on
-  # Widget::_setMaxDimDeferredSettle. The rotate HANDLE (HandleWdgt.nonFloatDragging, "rotateHandle" —
-  # an allowlisted per-event stream, check-layering rule [O]) drives many rotation mutations per drag;
-  # this DECLARES them intentional so their layout settle rides the ONE end-of-cycle flush (a 'slot'
-  # island settles to nothing; a coupled island reflows once). Both branches reach the
-  # _setRotationNoSettle CORE directly, never the public setRotation (rules [A]/[G]).
-  _setRotationDeferredSettle: (deg) ->
-    if world?.deferredSettlingEnabled
-      @_deferredSettleDeclare => @_setRotationNoSettle deg
-    else
-      @_settleLayoutsAfter => @_setRotationNoSettle deg
 
   # Phase 3: change the layout-coupling mode (plan §4.9). Entering/leaving a coupled mode
   # ('footprint'/'sweep') changes the claimed extent, so it reflows the parent's layout —

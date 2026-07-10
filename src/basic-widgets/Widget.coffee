@@ -1329,6 +1329,30 @@ class Widget extends TreeNode
   # name collision and calling them on a bare widget is unambiguous. Public tier owns the single
   # settle (the wrap/adjust/unwrap all run NoSettle inside it).
   # ---------------------------------------------------------------------------
+  # ---------------------------------------------------------------------------
+  # Affine transforms (§6 Phase 4B-universal): the halo ROTATION PROTOCOL. The rotate handle drives
+  # ANY widget through these three, so it needs no knowledge of whether its target is a plain widget
+  # (rotates by MATERIALIZING a sugar island via setRotationDegrees) or an explicit TransformFrameWdgt
+  # island (which overrides all three to drive its own spec directly). Base = the plain-widget case.
+  # ---------------------------------------------------------------------------
+  # The SCREEN pivot for a halo rotation: my centre mapped to screen. It is the FIXED POINT of the
+  # sugar island's rotation (the island's anchor is my bounds centre), so it stays put as I spin —
+  # localPointToScreen of my centre returns that same point through the rotating island (dormant: my
+  # plain centre off any island).
+  rotationHalo_screenAnchor: ->
+    @localPointToScreen @center()
+
+  # My current halo rotation in degrees: the enclosing sugar island's rotation, or 0 if I am not
+  # (yet) wrapped — so a re-grab continues from where a prior rotation left off.
+  rotationHalo_currentDegrees: ->
+    @_enclosingSugarIsland()?.transformSpec.rotationDegrees ? 0
+
+  # Apply a halo rotation: the 4C property sugar (materialises a sugar island on demand, removes it at
+  # identity). Self-settling; called per drag from the (allowlisted) rotate-handle stream — a 'slot'
+  # island settles to nothing, so per-call settling is a no-op there.
+  rotationHalo_apply: (deg) ->
+    @setRotationDegrees deg
+
   setRotationDegrees: (deg) ->
     @_settleLayoutsAfter => @_setRotationDegreesNoSettle deg
 
@@ -3170,10 +3194,12 @@ class Widget extends TreeNode
       @addAndTrackHandle "resizeVerticalHandle"
       @addAndTrackHandle "moveHandle"
       @addAndTrackHandle "resizeBothDimensionsHandle"
-      # Affine transforms (§6 Phase 4B): a TransformFrameWdgt island also gets a rotate handle in its
-      # halo. Dispatched via ?() so plain widgets (which lack the method) get nothing — every existing
-      # halo stays byte-identical. The handle corner-attaches INTO the island (in-plane content, §4.6).
-      @addAndTrackHandle "rotateHandle"  if @providesRotateHandleInHalo?()
+      # Affine transforms (§6 Phase 4B-universal): EVERY free-floating widget gets a rotate handle at
+      # the top-right of its halo. Dragging it rotates the widget via the halo rotation protocol
+      # (rotationHalo_apply → the 4C sugar materialises an island on demand; an explicit island drives
+      # its own spec). Requires 4A-2 (drag-delta mapping) so the sibling resize/move handles stay
+      # correct once a rotation is in play.
+      @addAndTrackHandle "rotateHandle"
     else
       if (@lastSiblingBeforeMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingBeforeMeIsA(StackElementsSizeAdjustingWdgt)
         world.temporaryHandlesAndLayoutAdjusters.add \
