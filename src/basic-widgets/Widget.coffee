@@ -1413,8 +1413,17 @@ class Widget extends TreeNode
     island = new TrackingTransformFrameWdgt()
     island._materializedBySugar = true
     island.bounds = new Rectangle @left(), @top(), @right(), @bottom()
-    island._addNoSettle @                                      # reparent me into the island (free-floating child)
-    formerParent?._addNoSettle island, myIndex, myLayoutSpec   # drop the island into MY former slot + spec
+    # HOME the (empty) island into MY former slot + spec FIRST, THEN reparent me into it. Order matters:
+    # _addNoSettle fires the added widget's _reactToBeingAdded, and a widget whose appearance is DERIVED from
+    # its nesting (a WindowWdgt's internal/external skin, via isInternal looking THROUGH this _materializedBySugar
+    # island to the real parent) must derive against the island's TRUE parent -- so the island has to be homed
+    # before I move in. The reverse order derived my skin while the island was still a detached root (parent
+    # nil), flipping a tilted window to the wrong skin. The final tree is identical either way (island ends at
+    # myIndex, me free-floating inside it); homing an empty tracking island is safe (its _reLayoutChildren
+    # no-ops with no content, and __add skips the extent recalculation). Orphan-safe: no formerParent => the
+    # island stays a detached root and I move into it, exactly as before.
+    formerParent?._addNoSettle island, myIndex, myLayoutSpec   # drop the (empty) island into MY former slot + spec
+    island._addNoSettle @                                      # then reparent me into the now-homed island (free-floating child)
     island
 
   # if the sugar island is back at identity, unwrap: reparent me back into the island's parent at the

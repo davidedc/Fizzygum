@@ -1522,44 +1522,58 @@ See §7. None of these block declaring the feature shipped.
 
 ---
 
-## §7.5 KNOWN OPEN BUGS — owner-reported 2026-07-10, ROOT-CAUSED + confirmed headless, NOT yet fixed
+## §7.5 KNOWN OPEN BUGS — owner-reported 2026-07-10, ROOT-CAUSED + confirmed headless
 
 Both stem from the SUGAR-ISLAND wrap (`setRotationDegrees`/`setScaleFactor` → `_materializeSugarIslandNoSettle`
 wraps the widget in a `TrackingTransformFrameWdgt`, so the widget's `@parent` becomes the island). Confirmed
-against the actual `DegreesConverterApp` window in `index.html?sw=1` (scratch `investigate-2bugs.js`). They are
-INTERTWINED with the sugar-island lifecycle + 4E serialization/dormant-guarantee, so fix them together with
-full context (a fresh session), not piecemeal.
+against the actual `DegreesConverterApp` window in `index.html?sw=1` (scratch `investigate-2bugs.js`).
 
-### BUG A — a tilted window takes the INTERNAL skin (should stay external)
+**STATUS: BUG A ✅ FIXED + COMMITTED (2026-07-10). BUG B still OPEN** (4E-adjacent; fix with the 4E
+sugar-island serialization/dormant-guarantee work — the rotation must survive close→basement→reopen).
+
+### BUG A — a tilted window takes the INTERNAL skin (should stay external) — ✅ FIXED 2026-07-10
 
 - **Symptom (owner):** "as soon as you tilt a window, it takes the appearance of an internal window."
-- **Confirmed:** before tilt `wm.parent=WorldWdgt, isInternal=false, appearance=BoxyAppearance` (external, correct);
-  after `wm.setRotationDegrees 15` → `wm.parent=TrackingTransformFrameWdgt (_materializedBySugar=true),
-  isInternal=TRUE, appearance=RectangularAppearance` (internal skin — WRONG). Note `wm.parent.parent=WorldWdgt`.
-- **Root cause:** `WindowWdgt.isInternal` (`WindowWdgt.coffee:184`) = `@parent? and @parent isnt world and
-  @parent isnt world?.hand`. The internal/external SKIN is derived from parentage (no stored flag;
-  `_deriveAndSetBodyAppearance` runs on every `_reactToBeingAdded`: internal ⇒ `RectangularAppearance`, external
-  ⇒ `BoxyAppearance`). The sugar island is a container that is neither world nor hand, so a tilted window reads
-  as "nested in a container" ⇒ internal.
-- **Fix shape (clean, isolated):** make a `_materializedBySugar` island TRANSPARENT for the internal/external
-  classification — look THROUGH it to its parent (the window was tilted, not nested into a real container):
-  ```coffee
-  isInternal: ->
-    p = @parent
-    while p instanceof TransformFrameWdgt and p._materializedBySugar
-      p = p.parent
-    p? and p isnt world and p isnt world?.hand
-  ```
-  Verified by the headless data: `wm.parent._materializedBySugar=true`, `wm.parent.parent=WorldWdgt` ⇒ look-
-  through gives world ⇒ external. Works for an internal window tilted too (window→sugarIsland→realContainer ⇒
-  internal) and an external one (window→sugarIsland→world ⇒ external). ⚠ Confirm `_deriveAndSetBodyAppearance`
-  is RE-RUN when the sugar island materializes/dematerializes around an already-added window (materialize
-  reparents via `_addNoSettle` → `_reactToBeingAdded` → derive — likely fine, but verify the appearance flips
-  back to Boxy on de-tilt too).
-- **Test (no screenshot needed):** value-assert `wm.isInternal()` is false + `wm.appearance instanceof
-  BoxyAppearance` after `setRotationDegrees 15`, and back to external after `setRotationDegrees 0`. (A screenshot
-  test would ALSO work here since the skin is visible — this is NOT a broken-rect bug — but a value assert is
-  simpler and recapture-free.)
+- **Confirmed (pre-fix):** before tilt `wm.parent=WorldWdgt, isInternal=false, appearance=BoxyAppearance`
+  (external, correct); after `wm.setRotationDegrees 15` → `wm.parent=TrackingTransformFrameWdgt
+  (_materializedBySugar=true), isInternal=TRUE, appearance=RectangularAppearance` (internal skin — WRONG).
+- **Root cause (TWO parts, both needed):**
+  1. `WindowWdgt.isInternal` (`WindowWdgt.coffee:184`) derived internal-ness straight from `@parent` (`@parent
+     isnt world and isnt hand`). The skin is parentage-derived (no stored flag; `_deriveAndSetBodyAppearance` +
+     `setAppearanceAndColorOfTitleBackground` run on every `_reactToBeingAdded`: internal ⇒ `RectangularAppearance`,
+     external ⇒ `BoxyAppearance`). The sugar island is a container that is neither world nor hand ⇒ tilted window
+     read as "nested" ⇒ internal. So `isInternal` gives the wrong answer while tilted.
+  2. Even with a corrected `isInternal`, `_materializeSugarIslandNoSettle` moved the window INTO the island and
+     THEN homed the island — so the `_reactToBeingAdded` skin-derive fired while the island was still a detached
+     root (`island.parent` nil), reading external. Homing the island afterwards fires `_reactToBeingAdded` on the
+     ISLAND, never re-deriving the window, so the wrong skin stuck. (An INTERNAL window tilted in place would
+     wrongly go external; the reported external case happened to look right only because external-at-nil matches
+     external-final.)
+- **Fix as-built (clean, no new method — `WindowWdgt.coffee` `849e79ed`..HEAD src `<this commit>`):**
+  1. `isInternal` looks THROUGH any `_materializedBySugar` island(s) to the REAL parent before classifying — a
+     sugar island is "this widget is tilted", not a real nesting:
+     ```coffee
+     isInternal: ->
+       p = @parent
+       while p instanceof TransformFrameWdgt and p._materializedBySugar
+         p = p.parent
+       p? and p isnt world and p isnt world?.hand
+     ```
+  2. `_materializeSugarIslandNoSettle` (`Widget.coffee`) now HOMES the empty island into my former slot FIRST,
+     THEN reparents me into it — so the EXISTING `_reactToBeingAdded` derives my skin against the island's true
+     (homed) parent, correctly, the first time. This ROOT-CAUSES the ⚠ "is the skin re-derived?" concern the old
+     fix-shape flagged — the answer is "derive it at the right moment," not "re-derive it afterward." No corrective
+     `_reDeriveSkinFromNesting` method (an early draft added one; deleted as redundant — the two skin-derivers
+     already exist and now simply run at the right time). Final tree is identical either way (island at my former
+     index, me free-floating inside); homing an empty tracking island is safe (`_reLayoutChildren` no-ops with no
+     content, `__add` skips the extent recalc). Byte-identical across the whole suite (gauntlet 226/226 dpr1/dpr2/
+     webkit + gates + homepage).
+- **Verified:** external window stays external/Boxy AND internal window stays internal/Rectangular, across
+  tilt→de-tilt (headless probe `probe-bugA.js` + the test below).
+- **Test:** `SystemTest_macroTiltingWindowKeepsInternalExternalSkin` (assertion-only, no screenshot) — builds the
+  real `DegreesConverterApp` (external outer + two internal inner windows), asserts `isInternal()` + body-appearance
+  class for both windows before/after tilt 15 / after de-tilt 0. Proven to catch the bug: on the buggy build the
+  "tilted outer window stays EXTERNAL" assertion fails (`expected true found false`).
 
 ### BUG B — closing a tilted window loses its rotation (basement + reopen both STRAIGHT)
 
