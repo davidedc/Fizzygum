@@ -3,9 +3,9 @@
 **STATUS (updated 2026-07-10): Phases 0–3 COMPLETE + COMMITTED (not pushed); Phase 4 IN
 PROGRESS — 4A-1 (click-position mapping), 4C (property sugar), 4B (halo rotation), 4A-2
 (drag-delta mapping), and 4B-universal (rotate ANY widget from its halo) COMPLETE + COMMITTED;
-rough edge R1 (mouseMove-pointer mapping / paint-in-rotated-window) COMPLETE + COMMITTED;
-R3 (resize-after-rotate clip), R2 (ephemeral-overlay rotation), 4D (pick/drop), 4E (close-out)
-REMAINING. See the per-phase §6 banners for hashes + gate results
+rough edges R1 (mouseMove-pointer mapping / paint-in-rotated-window) and R3 (resize-after-rotate
+clip, via the TrackingTransformFrameWdgt subclass) COMPLETE + COMMITTED; R2 (ephemeral-overlay
+rotation), 4D (pick/drop), 4E (close-out) REMAINING. See the per-phase §6 banners for hashes + gate results
 (they are the authority on status). Owner-gated; a standing
 grant to "commit + continue while all gates pass" is in force as of 2026-07-10. Original design
 was AUTHORED 2026-07-09 and hardened same day by an adversarial fresh-eyes pass (§10 facet
@@ -1120,15 +1120,15 @@ lifted by the sub-step named):**
 > correct inside a rotated island, the whole halo stays coherent once a widget is rotated. Resize-GROW
 > past a sugar island's slot still clips (the deferred 4A-2 slot-tracking refinement).
 
-#### Phase 4 — ROUGH EDGES exposed by 4B-universal (rotation on real windows) — R1 DONE; R2/R3 TO FIX
+#### Phase 4 — ROUGH EDGES exposed by 4B-universal (rotation on real windows) — R1, R3 DONE; R2 TO FIX
 
 Making rotation reachable on any window surfaced three coordinate gaps — two are the 4A-2 deferrals, one
 is ephemeral-overlay rotation. NOT regressions from the universal handle (it just made rotation easy to
 trigger); they are follow-ups to the transform feature. Reported by the owner 2026-07-10 testing the
 **Drawings Maker** app in a rotated window (hierarchy there: `TransformFrame → Window →
 StretchableWidgetContainer → StretchableCanvas → CanvasGlassTop`, plus a `ReconfigurablePaint`).
-Priority: **R1 (paint) > R3 (resize-clip) > R2 (highlight)**. All cold-executable. **R1 COMPLETE
-2026-07-10; R3, R2 remain.**
+Priority: **R1 (paint) > R3 (resize-clip) > R2 (highlight)**. All cold-executable. **R1, R3 COMPLETE
+2026-07-10; R2 remains.**
 
 **R1 — pointer position not mapped for `mouseMove` consumers (paint draws in the wrong place).**
 
@@ -1164,19 +1164,29 @@ Priority: **R1 (paint) > R3 (resize-clip) > R2 (highlight)**. All cold-executabl
   probe widget that records its last `mouseMove` pos inside an island and asserts the mapped value.
 
 **R3 — sugar-island slot not tracked: resize-after-rotate clips (ALL windows).**
-- Symptom: rotate a window, then enlarge it → content + right/bottom borders clip at the OLD footprint
-  (the top-right pencil + window borders cut off).
-- Root cause: the sugar island's slot (`@bounds`) is frozen to the wrapped widget's bounds at materialize;
-  `_refreshIslandBuffer` builds the buffer at that slot size. Resizing the wrapped window grows ITS bounds
-  but not the island's slot ⇒ the buffer clips. 4A-2's explicitly-DEFERRED item (b).
-- Fix: a MATERIALIZED (`_materializedBySugar`) island RESYNCs its slot to its single content child's bounds
-  when that child resizes — set `island.@bounds = content.bounds` (virtual plane) on the settle after a
-  content bounds change, then rebuild. Gate to sugar islands so explicit islands keep their authored slot.
-- ⚠ DESIGN DECISION: an asymmetric grow (bottom-right resize, top-left fixed) moves the slot CENTRE, so the
-  default anchor (= slot centre) shifts and the figure pivots as you resize. Option A: anchor follows the
-  new centre (simplest; shape re-centres). Option B: pin the anchor to the pre-resize point (store explicit
-  anchor). Recommend A for v1, note B as a refinement.
-- Test: rotate a window, enlarge via its resize handle, screenshot — content + borders no longer clipped.
+
+> **STATUS 2026-07-10: COMPLETE + COMMITTED** (Fizzygum `6ccf1ccc`, tests `dc712c27e`; NOT pushed; gauntlet
+> 219/219 dpr1/dpr2/webkit + apps/paint/tiernaming/settle/capstone + homepage). Owner-reviewed design.
+> Symptom: rotate a window, enlarge it → content + right/bottom borders clip at the OLD footprint. Root
+> cause: the sugar island's slot (`@bounds`) is frozen to the wrapped widget's bounds at materialize;
+> `_refreshIslandBuffer` builds the buffer at that slot size; resizing the wrapped window grows ITS bounds
+> but not the slot ⇒ clip. **Fix = a SUBCLASS, not a per-instance flag.** In this layout architecture the
+> size-tracking-container capability is a CLASS (a freefloating child's `_invalidateLayout` climbs THROUGH
+> to its parent iff the parent DEFINES `_reLayoutChildren`, `Widget:4039` — an existence/class check, and
+> there are FIVE such capability sites across Window/Stack/ScrollPanel). A class-wide `_reLayoutChildren`
+> on the base island turned EVERY island (incl. explicit COUPLED islands in a stack) into a tracking
+> container and destabilized the coupled-island reflow settle → `macroTransformFrameFootprintReflow` /
+> `macroTransformFrameSweepReserve` went NONDETERMINISTIC (screenshot raced the reflow). So R3 is a
+> capability VARIANT: `TrackingTransformFrameWdgt extends TransformFrameWdgt` defines `_reLayoutChildren`
+> (slot ← single content child's bounds), `_reLayout` (`super; @_reLayoutChildren`, the Stack/ScrollPanel
+> shape), and pins `implementsDeferredLayout` false; `Widget._materializeSugarIslandNoSettle` materializes
+> THIS class. The base stays a FIXED figure that does NOT define `_reLayoutChildren`, so Phases 1–3 are
+> byte-identical BY CONSTRUCTION (zero framework edits). The re-fit is a one-pass idempotent arrange (no
+> public setter, no `_invalidateLayout`, no reflow — a sugar island is 'slot'). Option A (chosen): default
+> anchor = slot centre, so an asymmetric grow re-centres the figure (Option B, pin the anchor, banked).
+> `_materializedBySugar` stays the orthogonal auto-remove-at-identity gate. Proof macro
+> `macroTransformFrameSlotTracksContentResize` (slot 100×80 → 200×160, image_2 all corners intact).
+> Explicit-island content-resize has the SAME latent clip → future path banked §7.10. Lessons folded into §8.
 
 **R2 — ephemeral highlight overlays not rotated (highlight axis-aligned + offset).**
 - Symptom: the hierarchy-menu TARGET highlight (blue wash/outline) shows as a screen-aligned box offset
@@ -1339,6 +1349,14 @@ See §7. None of these block declaring the feature shipped.
    as `_isInsideNonIdentityIsland`). Bank until a real need; the v1 accepted look is Squeak-consistent
    (handles are part of the transformed figure). Glyph rotation + nearest-neighbor chunkiness on SW is
    the same accepted 0f trade-off, no compensation planned.
+10. **Explicit hugging island for content-resize** (banked 2026-07-10, from the R3 review) — R3 gave
+   the SUGAR path a size-tracking island (`TrackingTransformFrameWdgt`, §6 R3), so a rotated/scaled
+   widget's slot grows with the widget. An EXPLICITLY-authored island (`new TransformFrameWdgt content,
+   spec`) is still a FIXED figure: resizing its content past the authored slot clips (the same symptom
+   R3 fixed for sugar). The clean future path is to let an author opt into hugging by instantiating
+   `TrackingTransformFrameWdgt` for the explicit wrap (it already exists and IS-A TransformFrameWdgt) —
+   NOT a per-instance flag (capability is class here, §6 R3). Owner-gated; build only on demonstrated
+   need (no current test/app authors an explicit island whose content resizes).
 
 ---
 
