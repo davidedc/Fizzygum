@@ -1258,6 +1258,42 @@ Priority: **R1 (paint) > R3 (resize-clip) > R2 (highlight)**. All cold-executabl
 - Test: highlight a widget inside a rotated island (open its hierarchy menu) — the highlight tracks the
   rotated shape.
 
+**R4 — slider thumb drag not axis-tracked in a rotated island (value snaps toward an extreme).**
+
+> **STATUS 2026-07-10: COMPLETE + COMMITTED** (Fizzygum `<pending>`, tests `<pending>`; NOT pushed; gauntlet
+> dpr1/dpr2/webkit + apps/paint/tiernaming/settle/capstone + homepage). Owner-reported: the C↔F converter
+> window's sliders became very tricky as the window rotated toward 45° — the value SNAPPED all the way up or
+> down — while the thumb's hover/grab still worked. Root cause: 4A-2 fixed the drag-pointer plane mapping for
+> ONE `nonFloatDragging` consumer (`HandleWdgt`, which does `newPos = (@screenPointToMyPlane pos).subtract
+> nonFloatDragPositionWithinWdgtAtStart`, `HandleWdgt.coffee:315`) but MISSED the other one,
+> `SliderButtonWdgt.nonFloatDragging` — it differenced the RAW screen `pos` (`ActivePointerWdgt:1093` passes it
+> un-mapped) against the slider's VIRTUAL-plane bounds (`@parent.top()/bottom()/left()/right()`) and clamped,
+> so the thumb position (hence value) drifted with rotation. The gap SCALES with the slider's distance from the
+> island's rotation anchor: on a widget rotated about its own centre the error is modest (a 40° drag to 75%
+> gave 73 vs the correct 80); in a real window the slider sits far from the window centre, so the screen-vs-
+> virtual gap is large and the clamp pins to an extreme — the reported snap. Hover/grab work because the
+> hit-test (§4.6) and click dispatch (`_pointerPositionInPlaneOf`, R1/4A-1) already plane-map; only the
+> nonFloatDragging `pos` was raw. **Fix: one line — map `pos` into the button's plane exactly like `HandleWdgt`**
+> (`@offset = (@screenPointToMyPlane pos).subtract nonFloatDragPositionWithinWdgtAtStart`). Off any island
+> `screenPointToMyPlane` is identity ⇒ byte-identical dormant. Proof macro `macroSliderDragTracksAxisInRotated-
+> Island`: the SAME visual drag (thumb → 75% down the track) yields the SAME value rotated-or-not (80==80;
+> pre-fix 73≠80) — a magnitude-free discriminator that also exercises the reproduction.
+> - **Audit tail (all four `nonFloatDragging` consumers):** `HandleWdgt` ✅ (4A-2). `SliderButtonWdgt` ✅ (R4).
+>   `PaletteWdgt.nonFloatDragging` ✅ ALSO FIXED (owner-requested in the same pass): it sampled `@getPixelColor
+>   pos` with a RAW `pos` (its `mouseDownLeft` is fine — clicks are plane-mapped), so drag-picking a colour from a
+>   palette inside a rotated island read the wrong pixel (often out of the short backbuffer ⇒ transparent). Fix =
+>   the same pattern, mapping the whole screen sample point: `@getPixelColor @screenPointToMyPlane (pos.add …)`.
+>   Proof macro `macroPaletteDragPicksCorrectColourInRotatedIsland` (a gray palette picks the SAME colour rotated
+>   or not). Needed a public colour reader for the tolerance assert ⇒ added `Color.channelDistanceTo` (macros may
+>   not touch private `_r/_g/_b`, layering rule [D]). The FOURTH consumer, `StackElementsSizeAdjustingWdgt.nonFloat-
+>   Dragging`, resizes stack cells from the screen `deltaDragFromPreviousCall.x` — a DELTA (vector) needing
+>   linear-part mapping; niche (a stack divider inside a rotated island), BANKED (§7.12).
+- Symptom: in a rotated window the slider value snaps to an extreme as rotation → 45°; hover/grab are fine.
+- Root cause: `SliderButtonWdgt.nonFloatDragging` used the raw screen `pos` against the slider's virtual bounds
+  (the second `nonFloatDragging` consumer, missed by 4A-2 which only fixed `HandleWdgt`).
+- Test: drag a rotated slider's thumb along its (rotated) axis — the value tracks the axis (identical to the
+  un-rotated slider), rather than snapping.
+
 - **Goal:** set rotation/scale on ANY widget; an enclosing `TransformFrameWdgt` is created on
   demand and REMOVED when the spec returns to identity — structural identity restored (matters
   for the dormant guarantee, serialization cleanliness, and byte-identical dormant references).
@@ -1417,6 +1453,12 @@ See §7. None of these block declaring the feature shipped.
    overlay, out of the reported repro, so it was left as KNOWN-LATENT. Fix is the identical one-liner pattern:
    parent the label into `widget._enclosingNonIdentityIsland() ? world` (and the offset becomes an in-plane
    offset that rotates with the island). Owner-gated; no current test drives pinout on a rotated target.
+12. **`StackElementsSizeAdjustingWdgt.nonFloatDragging` in a rotated island** (banked 2026-07-10, from the R4
+   audit) — R4 fixed `SliderButtonWdgt` AND `PaletteWdgt` (the two position-reading consumers); this fourth
+   consumer (`src/StackElementsSizeAdjustingWdgt.coffee:55`) resizes stack cells from the screen
+   `deltaDragFromPreviousCall.x` — a DELTA/vector that needs the inverse LINEAR-part mapping (not point mapping),
+   so dragging a stack divider inside a rotated island would resize by the wrong amount. Niche (no app/test puts a
+   resizable stack inside a rotated island); banked until a demonstrated need.
 
 ---
 

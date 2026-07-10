@@ -212,6 +212,13 @@ class Color
   # Color comparison:
   equals: (aColor) ->
     @==aColor or (aColor and @_r == aColor._r and @_g == aColor._g and @_b == aColor._b and @_a == aColor._a)
+
+  # Sum of absolute per-channel (RGB) differences to another colour — a cheap colour "distance" for
+  # TOLERANCE comparisons where exact equality is too strict (e.g. a SystemTest checking a pick / blend
+  # landed NEAR an expected colour, robust to sub-pixel float rounding). Alpha is ignored (the opaque
+  # case). Public so a macro can read colour closeness without touching the private _r/_g/_b channels.
+  channelDistanceTo: (aColor) ->
+    Math.abs(@_r - aColor._r) + Math.abs(@_g - aColor._g) + Math.abs(@_b - aColor._b)
   
   
   # Color mixing (dataflow spec §9.5 — the value-class method algebra a spreadsheet formula operates

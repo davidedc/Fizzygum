@@ -73,7 +73,15 @@ class SliderButtonWdgt extends CircleBoxWdgt
     return super
 
   nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
-    @offset = pos.subtract nonFloatDragPositionWithinWdgtAtStart
+    # Affine transforms (§6 4A-2): map the drag pointer into MY plane before differencing the
+    # grab-start offset — the SAME fix HandleWdgt.nonFloatDragging has. ActivePointerWdgt captures
+    # nonFloatDragPositionWithinWdgtAtStart in the widget's (virtual) plane but passes `pos` RAW (screen);
+    # for a slider inside a non-identity island the two live in different planes, so the un-mapped
+    # difference — and the clamp against the slider's VIRTUAL @parent.top()/bottom()/left()/right() below —
+    # drifts with rotation and pins the value to an extreme near 45° (owner report: the C<->F converter's
+    # sliders). Mapping both operands into MY plane makes @offset a virtual-plane position, consistent with
+    # the clamp bounds. Off every island screenPointToMyPlane returns the same point ⇒ byte-identical (dormant).
+    @offset = (@screenPointToMyPlane pos).subtract nonFloatDragPositionWithinWdgtAtStart
     if world.hand.mouseButton and
     @visibleBasedOnIsVisibleProperty() and
     !@isInCollapsedSubtree()

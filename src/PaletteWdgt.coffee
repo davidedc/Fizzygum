@@ -53,7 +53,15 @@ class PaletteWdgt extends Widget
     return cacheEntry
 
   nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
-    @choice = @getPixelColor pos.add (deltaDragFromPreviousCall or new Point 0, 0)
+    # Affine transforms (§6 R4 audit tail): map the drag sample point into MY plane before reading the
+    # pixel. getPixelColor does aPoint.toLocalCoordinatesOf @ and samples my OWN un-rotated backbuffer, so
+    # it needs a point in my (virtual) plane; ActivePointerWdgt passes `pos` RAW (screen), so for a palette
+    # inside a non-identity island the un-mapped sample reads the WRONG pixel (often out of the backbuffer ⇒
+    # transparent). mouseDownLeft is fine (click dispatch plane-maps via _pointerPositionInPlaneOf); only the
+    # nonFloatDragging pos was raw — the same 4A-2 gap the slider had. Map the whole screen sample point
+    # (pos + the screen lookahead delta) through the inverse. Off any island screenPointToMyPlane is identity
+    # ⇒ byte-identical (dormant).
+    @choice = @getPixelColor @screenPointToMyPlane (pos.add (deltaDragFromPreviousCall or new Point 0, 0))
     @updateTarget()
 
   mouseDownLeft: (pos) ->
