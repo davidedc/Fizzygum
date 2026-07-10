@@ -1398,7 +1398,10 @@ class Widget extends TreeNode
     formerParent = @parent
     myIndex = formerParent?.children.indexOf @
     myLayoutSpec = @layoutSpec
-    island = new TransformFrameWdgt()
+    # A sugar island TRACKS its single content's size (rough edge R3): materialize the tracking capability
+    # variant, so resizing the wrapped widget grows the slot instead of clipping. TrackingTransformFrameWdgt
+    # IS-A TransformFrameWdgt (every instanceof / serialization / dematerialize path is unchanged).
+    island = new TrackingTransformFrameWdgt()
     island._materializedBySugar = true
     island.bounds = new Rectangle @left(), @top(), @right(), @bottom()
     island._addNoSettle @                                      # reparent me into the island (free-floating child)
