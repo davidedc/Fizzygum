@@ -389,6 +389,16 @@ Implementation shape and ordering (verified against the flesh-out code, fresh-ey
   (`oldFootprint ∪ newFootprint`) but never dirties the buffer; a content change dirties the
   buffer region AND (via mapping) the screen. A slot-box RESIZE dirties both (the buffer is
   reallocated).
+- **⚠ HOW `oldFootprint ∪ newFootprint` is achieved (do NOT "fix" this):** the implementation does
+  NOT push two explicit rects. `_transformChangedNoSettle` (`TransformFrameWdgt.coffee`) queues a single
+  `fullChanged()`; the OLD footprint rides the **last-painted-snapshot lane**
+  (`fullClippedBoundsWhenLastPainted`, frozen in screen coords at paint time by
+  `recordDrawnAreaForNextBrokenRects`) as the flesh-out SOURCE rect, and the NEW footprint is the current
+  bounds as the DESTINATION rect. This equivalence is now **trace-proven** (2026-07-10, §7.5 Bug C forensics),
+  including the hard **destroy-in-same-batch** case (de-tilt → dematerialize → `_destroyNoSettle` all in one
+  NoSettle batch): the instrumented `fleshOutFullBroken` showed both the island and its content push the
+  correct rotated source rect. So a future reader who notices the "deviation" from an explicit `old ∪ new`
+  push must NOT add redundant damage to this proven path.
 
 ### 4.6 Hit testing and pointer events
 
@@ -1408,18 +1418,39 @@ cold-executable. **R1, R2, R3, R4 COMPLETE 2026-07-10.**
 - Run the full `fg gauntlet` (dpr1/dpr2/webkit + apps/paint/tiernaming/settle/capstone) and
   `fg homepage` after the last sub-step; confirm the dormant references are byte-identical except
   the single expected inspector member-list recapture (4C, `macroDuplicatedInspectorDrivesCopiedTargetOnly`).
-- **Serialization round-trip tests (STILL OWED — named as a 4C risk, no macro yet):** (a) save/reload
-  a world with a rotated island → scalars only (`rotationDegrees/scale/anchor/claimsSpace`), NO buffer,
-  NO matrix; reloaded world renders pixel-identical. (b) save/reload a SUGAR island → must round-trip as
-  still-removable (`_materializedBySugar` serializes as a plain boolean — verify). (c) unwrap-leaves-no-
-  island: after a sugar widget returns to identity, the snapshot contains NO `TransformFrameWdgt`.
+- **⚡ SERIALIZATION MAP (2026-07-10, Explore agent): the island round-trip is ALREADY CORRECT BY CONSTRUCTION —
+  4E's serialization half collapses to TEST-AUTHORING, no new machinery.** `TransformSpec` is pure scalars +
+  optional `Point` anchor (`TransformSpec.coffee:29-37`), serialized structurally as a `{class:"TransformSpec"}`
+  record via the registered-class branch (`Serializer.coffee:323-334`) — NO cached matrix (recomputed live on load),
+  NO transients, NO `rebuildDerivedValue` (§4.10 intent holds). The island holds NO canvas as an instance field
+  (`_refreshIslandBuffer` returns a local); `backBuffer`/`backBufferContext` + the clip caches are already in
+  `Widget.@serializationTransients` (`Widget.coffee:42,46-47`). `_materializedBySugar` is a plain boolean serialized
+  as-is (intentional, `TransformFrameWdgt.coffee:48`). deepCopy already works (no stamp needed — no cached derived
+  state). `TransformFrameWdgt`/`TrackingTransformFrameWdgt` are globals ⇒ `record.class` resolves. The ONLY existing
+  serialize macro is `macroSerializeRoundTripWindow` (a plain window — no transform). **Minor hygiene: mark
+  `_lastClaimedExtent` (`TransformFrameWdgt.coffee:43`) a serialization transient** (a stale reflow memo re-derived
+  on next measure — transients-by-default is the cleaner posture).
+- **Serialization round-trip tests (verify by GATE, not code-reading — no conclusions before evidence):**
+  - **(a) ✅ LANDED `SystemTest_macroSerializeRoundTripRotatedIsland`** (2026-07-10): explicit rotated
+    `TransformFrameWdgt` serialize→destroy→deserialize is PIXEL-IDENTICAL (screenshot refs dpr1/dpr2) and the
+    restored `transformSpec` scalars survive. **This is the evidence gate for Bug B model (a)'s premise.** Also
+    landed the position-invariance macro **`SystemTest_macroSugarIslandPreservesSiblingOrder`** (desktop z-order +
+    arranged-stack slot order preserved across tilt/de-tilt).
+  - **(b)/(c) ✅ LANDED `SystemTest_macroSugarIslandSurvivesSerializationRoundTrip`** (2026-07-10): a reloaded
+    SUGAR island is still auto-removable ((b): de-tilt the reloaded content ⇒ the island count drops to 0, a
+    BEHAVIOURAL proof that `_materializedBySugar` round-tripped — a macro can't read the `_`-prefixed flag), and a
+    tilt-then-untilt widget reloads with NO island ((c)). Ends with a trailing settle + a paint-truthful self-
+    assert (the earlier paint-audit trip was a MISSING-SETTLE test artifact, not a bug — see §7.5 Bug C, resolved).
 - **Index/z-order-preservation macro (STILL OWED — the 4C fix landed; the existing macros used a lone
   world widget so they don't cover it):** materialize a sugar island on a widget that has SIBLINGS
   (both a desktop z-stack and an arranged panel) → assert the sibling order / z-order is unchanged, and
   restored on unwrap.
 - Re-introduce the remaining deferred `TransformSpec` methods WITH their first callers only
-  (`inverseMapVector` in 4A-2, `inverseMapRect` in 4D, `setAnchor` if/when an anchor UI lands —
-  do NOT add speculative API).
+  (`setAnchor` if/when an anchor UI lands — do NOT add speculative API). **`inverseMapVector` and
+  `inverseMapRect` are PROVEN UNNEEDED and must NOT be added "for tidiness":** mapping a displacement is
+  just point-mapping BOTH endpoints and subtracting — `M⁻¹p₁ − M⁻¹p₂ = L⁻¹(p₁−p₂)` cancels the affine
+  translation, so 4A-2 got the correct delta semantics from `screenPointToMyPlane` alone, and 4D-2a coincided
+  whole figures by matching ONE point (no rect/vector inverse). Record this identity so nobody re-adds them.
 - Finalize §6 Phase-4 banners (implementation notes + gate results + commit hashes) and mirror
   status into the memory note; then Phase 4 is the feature's shipping point (Phase 5 = §7
   banked follow-ons, each its own future plan).
@@ -1592,25 +1623,83 @@ sugar-island serialization/dormant-guarantee work — the rotation must survive 
   2. **Re-open** — `IconicDesktopSystemWindowedApp.launch` (`IconicDesktopSystemWindowedApp.coffee:50-56`) for a
      singleton (`@slot` set, e.g. `degreesConverterWindow`) does `existingWindow = world[@slot]; world.add
      existingWindow; …` — re-parents the SAME (already-straight) window to the world. No rotation restored.
-- **Fix shape (harder — pick a model; ties into 4E):** the sugar rotation is EPHEMERAL and must be made to
-  SURVIVE the close→basement→reopen round-trip. Two candidate models:
-  - **(a) Move the whole FIGURE:** when closing a widget that is the sole content of a sugar island, close the
-    ISLAND (send the rotated island to the basement), and make `launch`/re-open bring back the ISLAND (or
-    re-wrap). Keeps the figure intact but `world[@slot]` references the window not the island, so `launch` (and
-    anything else keying off the window) needs to resolve the enclosing island — invasive.
-  - **(b) PERSIST the rotation on the content (preferred, aligns with 4E + the dormant guarantee):** the sugar
-    rotation should serialize/travel as a scalar PROPERTY of the content widget and re-materialize the island on
-    the far side. Then close (extract to basement) records the scalar, and re-open re-applies `setRotationDegrees`
-    (re-materializing the island). This is the SAME machinery 4E owes ("save/reload a SUGAR island → round-trips
-    as still-removable; scalars only"). Basement round-trip is just an in-memory form of that serialization.
-  - Also FIX THE LEAK: the emptied sugar island must be destroyed when its content is extracted (grep
-    "empty sugar island" — 4D-2a established that an island going content-empty needs cleanup; the close path
-    doesn't do it).
-- **Test:** open converter via reference (or `(new DegreesConverterApp).buildWindow()`), `setRotationDegrees 15`,
-  `close()`, then re-`launch` (`(new DegreesConverterApp).launch()` or drive the reference icon) → value-assert
-  the re-opened window's `rotationHalo_currentDegrees()` (or enclosing sugar island rotation) == 15, AND no
-  orphaned empty `TransformFrameWdgt` remains in the world tree. (Rotation persistence is a state invariant, so a
-  value assert — not a screenshot — is the right tool.)
+- **✅ DESIGN LOCKED by owner 2026-07-10 — MODEL (a) "move the FIGURE", GENERIC scope, SEQUENCED AFTER the 4E
+  round-trip tests.** Rejected model (b) "persist scalar on content": it is a second store of the same scalar,
+  violates the dormant guarantee, needs explicit orphan cleanup, AND makes close/reopen a destroy-and-rebuild of
+  the island (anything holding island state across the cycle — `claimsSpace`, a future anchor, `_materializedBySugar`
+  itself — would need re-plumbing). Model (a) preserves it all by construction, and it is the SAME shape the
+  serializer already round-trips (island-in-tree ⇒ basement-holds-island-in-tree is congruent). Two enabling facts:
+  the basement is a FREE-FORM scatter (`_addLostWidgetNoSettle` → `_addInPseudoRandomPositionNoSettle`), so a rotated
+  island lands with no layout fight and its scatter `moveTo` targets the island's ordinary parent-plane slot box (no
+  plane mismatch); and since R3 sugar islands are `TrackingTransformFrameWdgt`, so content-bounds fixups on reopen
+  are absorbed by slot tracking (no stale-slot clipping).
+- **Model (a) implementation shape:**
+  1. **ONE canonical figure-resolution helper** (reuse/rename 4D-2a's "resolve the figure" verb — do NOT re-derive
+     `_enclosingSugarIsland() ? @` inline at each site; keep re-homing sites greppable). Close/launch route through it.
+  2. **`_closeNoSettle`: swap only the RE-HOMING TARGET.** The window's own close bookkeeping (stepping, focus, app
+     registry, `_beforeChildClosed`) MUST keep running on the WINDOW; only the `_addLostWidgetNoSettle` ARGUMENT
+     becomes the figure (the enclosing sugar island).
+  3. **`launch` (reopen): `world.add figure`** and, if it repositions, reposition the FIGURE — moving the bare
+     window by screen coords while it is island-resident is a plane mismatch (4A-2 territory).
+  4. **Do NOT push figure-resolution into `add` itself** — auto-resolving there would break `dematerialize`, which
+     legitimately extracts content FROM its island.
+- **⚠ AUDIT before/while coding — every basement/reopen consumer that assumes "basement child == the window" is a
+  latent break (fix each with the Bug-A LOOK-THROUGH idiom, not per-site bespoke checks):**
+  | site | file:line | risk | disposition |
+  |---|---|---|---|
+  | `BasementWdgt.holds(w)` = `w.parent == @scrollPanel.contents` | `BasementWdgt.coffee:147` | CONFIRMED breaks — child is the island, so `holds(window)` goes false while the window IS in the basement (the launch "is it closed?" check keys off this) | FIX: look through `w.parent`→its sugar island |
+  | `hideUsedWidgets` / `showAllWidgets` + "referenced/used children" classification | iterate `scrollPanel.contents.children` | see islands where they expect windows; hide/show mechanics work, but the "still referenced elsewhere?" classification runs on the island not the window | VERIFY it classifies THROUGH the wrapper, else lost-items filter miscounts tilted windows |
+  | other by-reference RE-HOMING sites (window ejection from containers, other launch/restore variants, "send to desktop"-style menu items) | grep | same latent bug | fix now if one-line, else record here |
+  | explicit (NON-sugar) island wrapping a closed window | — | strands an empty invisible frame on the desktop | KNOWN-LATENT, out of scope for sugar-figure resolution (record only) |
+- **Also FIX THE LEAK** — under model (a) the leak SELF-FIXES (the island is not emptied; it travels whole).
+- **Test (macro):** rotate a window, close → screenshot (basement shows it TILTED — this is intended UX under (a),
+  surface to owner) → reopen → value-assert the reopened figure's rotation scalar == the set angle, the island is
+  parented to `world`, and a STRUCTURAL assert that EXACTLY ONE `TransformFrameWdgt` exists end-to-end (catches both
+  the orphan leak and a double-wrap). Assert GENERICITY by also closing+reopening a tilted NON-window widget. If
+  cheap, fold in a serialize→reload WHILE basement-resident (discharges part of 4E's basement-resident coverage).
+
+### BUG C — ❌ NOT A BUG — an AUDIT-PHASE error, FIXED IN THE GATE 2026-07-10
+
+- **What triggered the investigation:** the 4E removability test `SystemTest_macroSugarIslandSurvivesSerializationRoundTrip`
+  tripped the **paint-truthfulness gate** (`fg gauntlet` `--paint` leg, `run-paint-audit.js`). Owner (design-first)
+  called for forensics BEFORE assuming a framework damage bug, or that Bug B was independent, or (a later trap) that
+  the macro was at fault — each demand of evidence was correct, and each successive framing was too pessimistic.
+- **Root cause (evidence, not inference): a PHASE ERROR in the audit, not a broken-rect bug and not test hygiene.**
+  Paint is frame-cadenced BY DESIGN: a public mutator self-settles LAYOUT (geometry converges on return via
+  `recalculateLayouts`), but `changed()`/`fullChanged()` only QUEUE damage rects — pixels update once per frame when
+  `doOneCycle` reaches `updateBroken()`. So a settled world with queued-but-unpainted damage is the NORMAL mid-frame
+  state every mutation passes through, NOT something a macro must clean up. `AutomatorPlayer.checkPaintTruthfulness`
+  fingerprinted the live canvas at `stopTestPlaying` — which can land INSIDE the frame (after the last mutation,
+  before that frame's paint) — then did `fullChanged()+updateBroken()` and compared. When the last mutation was still
+  mid-frame, the audit's own repaint painted it ⇒ before≠after ⇒ FALSE ghost. `takeScreenshot` never had this
+  problem: it force-settles via `readyForMacroScreenshot` first. The screenshot path encoded "complete the frame
+  before observing pixels"; the audit path forgot it. Proven with a minimal control (`SystemTest_macroGateFixVerify`,
+  deleted): a value-assert-ending macro with a final `world.add` and NO trailing yield FAILED the old audit and
+  PASSES the fixed one.
+- **THE FIX (gate, not tests): `checkPaintTruthfulness` now COMPLETES THE FRAME before baselining** —
+  `world.recalculateLayouts()` (also flushes the deferred-settle input lanes) + `world.updateBroken()`, then the
+  before-fingerprint. Strictly one-sided: an already-settled test is unaffected (no-ops); a merely-pending frame is
+  completed, not flagged; a REAL stale region survives settling by definition (stale pixels are exactly the ones
+  nothing queued for repaint). ~2 lines in `AutomatorPlayer.coffee` (guarded on `_recalculatingLayouts`; only ever
+  runs under `FIZZYGUM_PAINT_AUDIT`). Macros need NO knowledge of paint — Test 2 ends on its value assertions like
+  any other macro (its earlier trailing-settle + self-assert compensations were REMOVED).
+- **The de-tilt / dematerialize path is CLEAN (independently established).** The instrumented flesh-out trace
+  (temporary log in `WorldWdgt.fleshOutFullBroken`, reverted) showed the de-tilt correctly pushes BOTH the island's
+  and the content's frozen 40° footprint (`fullClippedBoundsWhenLastPainted` = `[410@177|110@106]`) as the erase
+  source; a step-by-step empty-world diff of the whole round-trip was **0 at every step**.
+- **⚠ Measurement note (rigor):** the "~150 px ghost" in the earlier `index.html?sw=1` probes was LOCATED at box
+  `[1127,44→1160,72]` — the animated desktop **CLOCK** (top-right), NOT the widget (40° footprint at `[409,176]`);
+  the "~84 px" case was the same contamination by INFERENCE (not separately located), but the empty-world zeros carry
+  the conclusion regardless. Measure broken-rect diffs in the EMPTY harness world, never `index.html?sw=1`.
+- **Bug B:** no shared framework damage bug exists, AND the close-path footprint erase already has its own
+  regression macro (`macroClosingRotatedIslandChildClearsFootprint`) — enough to proceed; phrased as what was shown,
+  not "confirmed independent" in the abstract.
+- **PROCESS LESSON:** "no conclusions before evidence" applies to bug REPORTS, not just fixes. The first Bug C
+  write-up asserted a confident SYMPTOM ("user-visible: stale corners linger") derived from the clock-contaminated
+  probes — a symptom statement is itself a conclusion. Locate the evidence before writing the symptom.
+- **Note (still true):** `_materializedBySugar` is a `_`-prefixed field, so a macro CANNOT read it (layering rule [D]
+  regex `/[@.]\s*_[A-Za-z]\w*/` matches field reads too) — the removability test is BEHAVIOURAL (de-tilt ⇒ island
+  count drops), which round-trips the flag through actual behaviour.
 
 ---
 
@@ -1654,6 +1743,19 @@ sugar-island serialization/dormant-guarantee work — the rotation must survive 
   again, and assert 0 RGB-differing pixels (assertion-only, no references) — proven by
   `macroClosingRotatedIslandChildClearsFootprint` (diff 0 fixed / 5257 un-fixed). Use the EMPTY harness world
   (no animated clock) so the fixed-build diff is exactly 0.
+- **⚠ PAINT IS FRAME-CADENCED; the paint audit OBSERVES POST-FRAME STATE by construction** (2026-07-10, §7.5 Bug
+  C). A public mutator self-settles LAYOUT, but `changed()`/`fullChanged()` only QUEUE damage — pixels land once
+  per frame at `updateBroken()`. So pending paint at macro end is the NORMAL mid-frame state, NOT an offender, and
+  a macro needs NO knowledge of paint (no trailing `yield` "to settle the canvas"). The suite-wide
+  **paint-truthfulness audit** (`AutomatorPlayer.checkPaintTruthfulness`, run at `stopTestPlaying` when
+  `FIZZYGUM_PAINT_AUDIT`) was fixed 2026-07-10 to COMPLETE the frame (`recalculateLayouts()` + `updateBroken()`)
+  before baselining — matching what `takeScreenshot`/`readyForMacroScreenshot` always did. (Earlier it fingerprinted
+  mid-frame → false ghosts; that cost a full Bug-C forensic pass — do NOT re-chase it or re-impose a "macros must
+  end settled" rule.) The ONLY real macro-side settle obligation is EVENT-DRAIN sequencing: `yield
+  "waitNoInputsOngoing"` between steps when a later step reads state that earlier SYNTHESIZED input events produce —
+  unrelated to paint. Also: measure broken-rect diffs in the EMPTY harness world, never `index.html?sw=1` — the
+  desktop CLOCK (top-right) ticks between reads and contaminates the diff (LOCATED at box `[1127,44]`, nowhere near
+  the widget). Suite-wide lesson mirrored in `Fizzygum-tests/DETERMINISM.md`.
 - **Rotation input is SCREEN-plane** (4B) — the rotate handle reads `world.hand.position()` (raw) and
   `island.screenAnchor()`, NOT its 4A-1-mapped position: an in-plane handle reading the mapped
   position would measure the angle in the very plane it is rotating (a feedback loop). Quantize the

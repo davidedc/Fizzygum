@@ -47,6 +47,15 @@ class TransformFrameWdgt extends PanelWdgt
   # as a plain boolean so a saved-then-reloaded sugar island stays sugar-removable.
   _materializedBySugar: false
 
+  # Serialization: _lastClaimedExtent is a pure reflow memo (re-derived on the next
+  # preferredExtentForWidth), NOT truth -- skip it so a restored island carries no stale claimed-extent
+  # Point. transformSpec (the only real serialized state) round-trips structurally as scalars, and
+  # _materializedBySugar as a plain boolean. Merged up the chain by Serializer.transientsForClass --
+  # this ADDS to Widget's list.
+  @serializationTransients: [
+    "_lastClaimedExtent"
+  ]
+
   constructor: (contentWidget = nil, transformSpec = nil) ->
     super()   # PanelWdgt ctor (sets appearance/color/stroke) — we blank them below
     @transformSpec = transformSpec ? new TransformSpec()
