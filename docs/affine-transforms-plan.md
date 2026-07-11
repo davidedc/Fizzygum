@@ -13,12 +13,12 @@ serialization round-trip tests + deferred-methods identity + final gate + this b
 two owner-reported bugs LANDED, §7.5 Bug D (collapse moved the tilted title bar → anchor-stability: pin the
 sugar-island anchor across extent changes) and Bug E (save-as prompt buried → interaction-transparency:
 escalate-only `mouseClickLeft` on the island); includes the 4D-1 pinned-anchor interplay one-liner.**
-**⚠ STATUS UPDATE (2026-07-11, later): §7.5 BUG F — owner-reported (bare payload dropped into a tilted
+**✅ STATUS UPDATE (2026-07-11): §7.5 BUG F — owner-reported (bare payload dropped into a tilted
 container visibly rotates at the drop) — resolved as a DESIGN DECISION superseding 4D-1's bare-payload
 semantic: REPARENT-TRANSPARENCY (re-parenting never changes user-observed appearance). BOTH halves
-(drop-side compensating wrapper + pick-side ancestor fold) PROTOTYPED + probe-verified IN THE WORKING TREE
-(uncommitted, not gauntleted; dpr1 236/237 — the one failure is the superseded 4D-1 macro, which needs an
-ASSERTION UPDATE + recapture, spelled out in §7.5 Bug F). FINISH BUG F FIRST.** REMAINING
+(drop-side compensating wrapper + pick-side ancestor fold), plus a move-level pinned-anchor ride found
+during review, LANDED + PUSHED — Fizzygum `e9aabe72`, tests `2a6da0787`; `fg gauntlet` 8/8 +
+`fg homepage` green, suite 238 (see §7.5 Bug F execution log). THE AFFINE ARC IS FULLY CLOSED again.** REMAINING
 = only the BANKED §7 follow-ons (Phase 5, each its own future plan) + Bug B's 2 known-latents — NOT shipping
 blockers. See the per-phase §6 banners for hashes + gate results
 (they are the authority on status). Owner-gated; a standing
