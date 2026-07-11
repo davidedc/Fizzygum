@@ -1540,6 +1540,67 @@ class Widget extends TreeNode
   _parentThroughSugarIslands: ->
     @_enclosingSugarFigure().parent
 
+  # Affine transforms (§6 Phase 4D-2b): RE-EXPRESS a dropped SUGAR FIGURE relative to the plane it lands in.
+  # When a _materializedBySugar figure (from a 4D-2a pick-out or a 4C rotate/scale) is float-dropped into a
+  # container that lives inside a non-identity island, its spec is ABSOLUTE (Σ degrees / ∏ scales over its
+  # former ancestor islands) but it is about to composite THROUGH the destination plane's transform as well --
+  # so without re-expression a 30° figure dropped into a 30° window would render at 60° (transforms compose;
+  # the 4D-1 block maps only POSITION). Re-express the figure's spec RELATIVE to the destination plane:
+  #     rel_r = figure.deg − Σ(destination-plane island degrees),  rel_s = figure.scale ÷ ∏(… island scales)
+  # so composited through the plane it renders at its ORIGINAL absolute look. When rel is identity (a
+  # return-to-SAME-plane round-trip: x−x, x÷x are IEEE-exact and the absolute spec was BUILT as Σ/∏ over the
+  # same chain in the same order at pick-out) the figure becomes an identity sugar island -- the drop's
+  # post-add _unwrapIfIdentitySugarNoSettle then dissolves it (the 4C auto-unwrap), so a round-trip leaves no
+  # island behind. Returns me (the re-spec'd figure) for the 4D-1 position-map + target.add to place. SCOPE
+  # (locked): ONLY _materializedBySugar figures re-express; an EXPLICIT island nest-composes like any content
+  # (the user authored that frame -- mutating its spec on drop would rewrite their structure). Off any sugar
+  # figure, or into an identity plane, a no-op returning me unchanged: a non-island payload lacks
+  # _materializedBySugar (⇒ byte-identical dormant), and a rotated figure dropped onto the plain desktop
+  # re-specs to its own value (the setters early-return unchanged). Inverse of _pickOutRotatedFigureNoSettle's
+  # accumulation; NoSettle -- the drop's target.add carries the settle.
+  _reExpressFigureForPlaneOfNoSettle: (target) ->
+    return @ if !@_materializedBySugar
+    # Accumulate the destination plane's linear part over the non-identity islands the dropped payload will
+    # composite through -- target and its ancestors. target is never itself a non-identity island (islands
+    # refuse drops, so dropTargetFor climbs past them), so this matches the ancestor chain target.screenPoint
+    # ToMyPlane walks for the 4D-1 position map. Mirrors _pickOutRotatedFigureNoSettle's walk (its inverse).
+    sPlane = 1
+    degPlane = 0
+    ancestor = target
+    while ancestor?
+      if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
+        sPlane = sPlane * ancestor.transformSpec.scale
+        degPlane = degPlane + ancestor.transformSpec.rotationDegrees
+      ancestor = ancestor.parent
+    relDeg = (((@transformSpec.rotationDegrees - degPlane) % 360) + 360) % 360
+    relScale = @transformSpec.scale / sPlane
+    @_setRotationNoSettle relDeg   # the island's own spec cores; each early-returns when unchanged (identity
+    @_setScaleNoSettle relScale    # plane ⇒ no-op ⇒ dormant byte-identical). rel identity ⇒ I become identity.
+    @
+
+  # Affine transforms (§6 Phase 4D-2b): the UNWRAP half of the drop re-expression, invoked on a JUST-DROPPED
+  # figure. Self-settling twin of _unwrapIfIdentitySugarNoSettle -- the drop calls it AFTER target.add's settle
+  # has closed, so the dematerialize's NoSettle re-home needs its own settle (else a careless end-of-cycle
+  # push). The canonical thin wrap; the core self-guards, so a non-identity / non-sugar receiver just returns
+  # itself (the settle then flushes nothing).
+  _unwrapIfIdentitySugar: ->
+    @_settleLayoutsAfter => @_unwrapIfIdentitySugarNoSettle()
+
+  # If _reExpressFigureForPlaneOfNoSettle re-spec'd me to identity (rel was identity) I am now a
+  # _materializedBySugar island at identity nested in my drop target, so I should DISSOLVE -- my content
+  # becomes the target's own child at my slot, no nested-island buildup (the 4D risk-2 round-trip guarantee).
+  # This is EXACTLY the 4C auto-unwrap, so I delegate to the proven _dematerializeSugarIslandIfIdentityNoSettle
+  # (which reparents my sole content into my parent at my slot + preserves its position + rides inert chrome
+  # out + drops me) rather than re-homing by hand -- and I am placed by the SAME 4D-1 path a non-identity
+  # re-expressed figure uses, so there is no bespoke positioning. Returns my content on unwrap, else me
+  # unchanged (not a sugar island, or still non-identity ⇒ I stay a relative wrapper). Off any island ⇒ me.
+  _unwrapIfIdentitySugarNoSettle: ->
+    return @ if !(@_materializedBySugar and @transformSpec?.isIdentity())
+    content = @childrenNotHandlesNorCarets()?[0]
+    return @ if !content?
+    content._dematerializeSugarIslandIfIdentityNoSettle @
+    content
+
   # Widget accessing - simple changes: translate me + my children + repaint.
   # (Stage 5, 2026-07-01) The re-fit seam this used to fire is DELETED -- the settle loop now re-fits my tracking
   # container AFTER I settle (see _reFitMyTrackingContainerAfterSettle) -- so this immediate mutator is PURE geometry

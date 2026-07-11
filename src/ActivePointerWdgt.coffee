@@ -432,6 +432,17 @@ class ActivePointerWdgt extends Widget
           target = @dropTargetFor wdgtToDrop
 
       @fullChanged()
+
+      # Affine transforms 4D-2b (§6): a dropped SUGAR FIGURE is re-spec'd RELATIVE to the destination plane, so
+      # a rotated/scaled figure dropped INTO a rotated container composites to its original absolute look
+      # instead of double-applying the plane transform on top of its own spec. Runs AFTER @fullChanged (which
+      # damages the hand's CURRENT footprint) but BEFORE the 4D-1 position map / target.add / _beforeChildDropped
+      # so all of them see the re-spec'd figure; when the relative similitude is identity the figure becomes an
+      # identity sugar island that _unwrapIfIdentitySugarNoSettle then dissolves AFTER target.add (below). Off
+      # any sugar figure, or into an identity plane (target == world, or a plain container), returns wdgtToDrop
+      # unchanged ⇒ byte-identical dormant.
+      wdgtToDrop = wdgtToDrop._reExpressFigureForPlaneOfNoSettle target
+
       target._beforeChildDropped? wdgtToDrop
 
       # Affine transforms 4D-1 (§6): DROP-IN into a widget that lives inside a non-identity island.
@@ -453,6 +464,18 @@ class ActivePointerWdgt extends Widget
         wdgtToDrop._applyMoveTo virtualCentre.subtract wdgtToDrop.extent().floorDivideBy 2
 
       target.add wdgtToDrop, nil, nil, true, nil, @position()
+      # Affine transforms 4D-2b (§6): the UNWRAP half of the re-expression. _reExpressFigureForPlaneOfNoSettle
+      # above re-spec'd a dropped sugar figure to its RELATIVE similitude; when that was identity the figure is
+      # now a _materializedBySugar island at identity NESTED in target, so the 4C auto-unwrap dissolves it in
+      # place (content becomes target's own child at the figure's slot). This runs AFTER target.add so the
+      # figure is placed by the SAME proven path a non-identity re-expressed figure uses (no bespoke re-home).
+      # _unwrapIfIdentitySugar SELF-SETTLES (its own thin wrap): the dematerialize's NoSettle re-home runs
+      # after target.add's settle has closed, so a bare NoSettle call here would be a careless end-of-cycle
+      # push (capstone gate). Gated on _materializedBySugar so a plain-widget drop -- the common path --
+      # neither calls in nor pays the settle; a non-identity sugar figure (a cross-plane drop) returns
+      # unchanged (the wrapper survives).
+      if wdgtToDrop._materializedBySugar
+        wdgtToDrop = wdgtToDrop._unwrapIfIdentitySugar()
       wdgtToDrop.fullChanged()
 
       # when you click the buttons, sometimes you end up
