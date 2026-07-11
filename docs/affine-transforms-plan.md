@@ -7,11 +7,10 @@ rough edges R1 (mouseMove-pointer mapping / paint-in-rotated-window), R3 (resize
 clip, via the TrackingTransformFrameWdgt subclass), R2 (ephemeral-overlay rotation, via in-plane
 highlight parenting + a resetWorld teardown fix), and R4 (slider + palette nonFloatDragging pointer
 plane-mapping) COMPLETE + COMMITTED; 4D-1 (drop-IN, the smaller half of pick/drop) COMPLETE +
-COMMITTED; 4D-2a (pick-OUT to desktop) COMPLETE + COMMITTED; 4D-2b stage 2b-i (drop-back-INTO +
-relative re-expression + unwrap) COMPLETE + COMMITTED, stage 2b-ii (payload-policy transparency:
-`_dropPolicyProxy` + the tilted-window-dwell marquee macro) REMAINING — **execute from its DESIGN BRIEF
-(§6 Phase 4D, authored 2026-07-11: sugar-figure-only relative re-spec + unwrap, the payload-policy-transparency
-gap, staged 2b-i/2b-ii)**; 4E (close-out) REMAINING. **✅ 2026-07-11: two owner-reported bugs LANDED, §7.5
+COMMITTED; 4D-2a (pick-OUT to desktop) COMPLETE + COMMITTED; 4D-2b (drop-back-INTO + relative
+re-expression + unwrap [2b-i] + payload-policy transparency via `_dropPolicyProxy` [2b-ii]) COMPLETE +
+COMMITTED — the whole of Phase 4D is now done; ONLY **4E (close-out: final gauntlet + banner finalization)
+REMAINING**. **✅ 2026-07-11: two owner-reported bugs LANDED, §7.5
 Bug D (collapse moved the tilted title bar → anchor-stability: pin the sugar-island anchor across extent
 changes) and Bug E (save-as prompt buried → interaction-transparency: escalate-only `mouseClickLeft` on the
 island) — COMMITTED (Fizzygum `3809b2ea`, tests `a72cfbdec`; NOT pushed), gauntlet 234/234 + apps/paint/
@@ -1423,8 +1422,19 @@ cold-executable. **R1, R2, R3, R4 COMPLETE 2026-07-10.**
 > compositing to 30° absolute). Gauntlet dpr1/dpr2/webkit **232/232** + apps/paint/tiernaming/settle/capstone
 > (careless pushes=0) + homepage green (suite 230 → 232); ONE benign inspector member-list recapture
 > (`macroDuplicatedInspectorDrivesCopiedTargetOnly` image_2/3 — the 3 new Widget methods; image_1
-> byte-identical). **STAGE 2b-ii (payload-policy transparency: `_dropPolicyProxy` look-through + the
-> tilted-window-dwell marquee macro) REMAINING** — see the brief below.
+> byte-identical). **STAGE 2b-ii (payload-policy transparency) — COMPLETE + COMMITTED** (Fizzygum `7d3c7ad8`, tests `1748ca3f6`; NOT pushed). A tilted window rides the hand as a sugar `TransformFrameWdgt`, which HID its
+> window class from every drop-policy predicate (pre-fix a tilted window embedded INSTANTLY like a plain payload,
+> no dwell). `Widget._dropPolicyProxy()` (payload-side sibling of `_parentThroughSugarIslands`) returns the sole
+> content THROUGH sugar wrapper(s), else self, and is consulted at the **7 enumerated payload-policy sites** in
+> `ActivePointerWdgt` (`dropTargetFor` + `resolveDragEmbedCandidates` `wantsDropOfChild` arg; `updateDragEmbed
+> StateMachine` + `_declareDragEmbedEphemerals` `requiresDeliberateEmbedding`; `drop`'s `requiresDeliberate
+> Embedding`/`wantsToBeDropped`; the mouseMove edge-autoscroll gate — the brief's 6 + a 7th, edge-autoscroll,
+> found during the audit). GEOMETRY/add sites keep the FIGURE (the `@grabOrigin.origin` sticky check composes for
+> a sole-content window figure). Off any sugar figure the proxy is the widget unchanged ⇒ byte-identical dormant.
+> Marquee macro `macroTiltedWindowDropRequiresDwell` (Phase A: unarmed release lands on the WORLD — FAILS
+> un-fixed, embeds instantly; Phase B: dwell-armed release embeds into the panel, still 20° tilted, internal skin
+> — composes §7.5 Bug A). Gauntlet dpr1/dpr2/webkit **235/235** + apps/paint/tiernaming/settle/capstone + homepage
+> green (suite 234 → 235). **4D-2b (both stages) COMPLETE; NEXT = 4E close-out.**
 
 ##### 4D-2b — DESIGN BRIEF (authored 2026-07-11; execute design-first, stage as 2b-i then 2b-ii)
 
