@@ -1,21 +1,20 @@
 # Affine transforms for widgets (rotated / scaled windows) — design + phased execution plan
 
-**STATUS (updated 2026-07-10): Phases 0–3 COMPLETE + COMMITTED (not pushed); Phase 4 IN
-PROGRESS — 4A-1 (click-position mapping), 4C (property sugar), 4B (halo rotation), 4A-2
-(drag-delta mapping), and 4B-universal (rotate ANY widget from its halo) COMPLETE + COMMITTED;
-rough edges R1 (mouseMove-pointer mapping / paint-in-rotated-window), R3 (resize-after-rotate
-clip, via the TrackingTransformFrameWdgt subclass), R2 (ephemeral-overlay rotation, via in-plane
-highlight parenting + a resetWorld teardown fix), and R4 (slider + palette nonFloatDragging pointer
-plane-mapping) COMPLETE + COMMITTED; 4D-1 (drop-IN, the smaller half of pick/drop) COMPLETE +
-COMMITTED; 4D-2a (pick-OUT to desktop) COMPLETE + COMMITTED; 4D-2b (drop-back-INTO + relative
-re-expression + unwrap [2b-i] + payload-policy transparency via `_dropPolicyProxy` [2b-ii]) COMPLETE +
-COMMITTED — the whole of Phase 4D is now done; ONLY **4E (close-out: final gauntlet + banner finalization)
-REMAINING**. **✅ 2026-07-11: two owner-reported bugs LANDED, §7.5
-Bug D (collapse moved the tilted title bar → anchor-stability: pin the sugar-island anchor across extent
-changes) and Bug E (save-as prompt buried → interaction-transparency: escalate-only `mouseClickLeft` on the
-island) — COMMITTED (Fizzygum `3809b2ea`, tests `a72cfbdec`; NOT pushed), gauntlet 234/234 + apps/paint/
-tiernaming/settle/capstone + homepage green. Includes the 4D-1 pinned-anchor interplay one-liner. NEXT = 2b-ii.** See the
-per-phase §6 banners for hashes + gate results
+**STATUS (updated 2026-07-11): ✅ PHASE 4 COMPLETE — THE AFFINE-TRANSFORMS FEATURE IS AT ITS SHIPPING POINT
+(all committed, NOT pushed; heads Fizzygum `58bec471`, tests `1748ca3f6`; final gauntlet dpr1/dpr2/webkit
+235/235 + apps/paint/tiernaming/settle/capstone + homepage green).** Phases 0–3 COMPLETE + COMMITTED; Phase 4
+COMPLETE: 4A-1 (click-position mapping), 4C (property sugar), 4B (halo rotation), 4A-2 (drag-delta mapping),
+4B-universal (rotate ANY widget from its halo); rough edges R1 (mouseMove-pointer mapping / paint-in-rotated-
+window), R3 (resize-after-rotate clip, via the TrackingTransformFrameWdgt subclass), R2 (ephemeral-overlay
+rotation, via in-plane highlight parenting + a resetWorld teardown fix), R4 (slider + palette nonFloatDragging
+pointer plane-mapping); 4D-1 (drop-IN); 4D-2a (pick-OUT to desktop); 4D-2b (drop-back-INTO + relative
+re-expression + unwrap [2b-i] + payload-policy transparency via `_dropPolicyProxy` [2b-ii]); 4E (close-out:
+serialization round-trip tests + deferred-methods identity + final gate + this banner). **✅ 2026-07-11 also:
+two owner-reported bugs LANDED, §7.5 Bug D (collapse moved the tilted title bar → anchor-stability: pin the
+sugar-island anchor across extent changes) and Bug E (save-as prompt buried → interaction-transparency:
+escalate-only `mouseClickLeft` on the island); includes the 4D-1 pinned-anchor interplay one-liner.** REMAINING
+= only the BANKED §7 follow-ons (Phase 5, each its own future plan) + Bug B's 2 known-latents — NOT shipping
+blockers. See the per-phase §6 banners for hashes + gate results
 (they are the authority on status). Owner-gated; a standing
 grant to "commit + continue while all gates pass" is in force as of 2026-07-10. Original design
 was AUTHORED 2026-07-09 and hardened same day by an adversarial fresh-eyes pass (§10 facet
@@ -1577,9 +1576,22 @@ generalized to relative re-expression [this brief].)*
 
 #### 4E — Suite consolidation + final gate + doc close-out
 
+> **✅ COMPLETE 2026-07-11 — PHASE 4 (AND THE AFFINE-TRANSFORMS FEATURE) IS AT ITS SHIPPING POINT.** Final
+> gauntlet dpr1/dpr2/webkit **235/235** + apps/paint/tiernaming/settle/capstone (careless pushes=0) + `fg
+> homepage` green, on committed heads Fizzygum `58bec471` / tests `1748ca3f6` (the later doc commits do not
+> change the build). Serialization round-trip is correct-by-construction (below) and the (a)/(b)/(c) tests
+> landed; the deferred-`TransformSpec`-methods identity is recorded (`inverseMapVector`/`inverseMapRect`/
+> `compose` PROVEN UNNEEDED — do NOT add); the §6 per-phase banners carry their hashes + gate results;
+> status is mirrored into the memory topic `affine-transforms-plan-authored.md`. Across the whole arc the ONLY
+> recaptures were the sanctioned 4C inspector member-list (benign, image_1 byte-identical, re-captured each
+> time a Widget method was added) + the intended §7.5 Bug-D R3-macro image (resize no longer re-centres). What
+> REMAINS is exclusively the BANKED §7.10–7.13 follow-ons (Phase 5) + Bug B's 2 known-latents (basement
+> GC-filter look-through; explicit-island empty frame) — none are shipping blockers; each is its own future,
+> owner-gated plan. Owner decides the push of the whole (unpushed) arc.
+
 - Run the full `fg gauntlet` (dpr1/dpr2/webkit + apps/paint/tiernaming/settle/capstone) and
   `fg homepage` after the last sub-step; confirm the dormant references are byte-identical except
-  the single expected inspector member-list recapture (4C, `macroDuplicatedInspectorDrivesCopiedTargetOnly`).
+  the single expected inspector member-list recapture (4C, `macroDuplicatedInspectorDrivesCopiedTargetOnly`). ✅ done.
 - **⚡ SERIALIZATION MAP (2026-07-10, Explore agent): the island round-trip is ALREADY CORRECT BY CONSTRUCTION —
   4E's serialization half collapses to TEST-AUTHORING, no new machinery.** `TransformSpec` is pure scalars +
   optional `Point` anchor (`TransformSpec.coffee:29-37`), serialized structurally as a `{class:"TransformSpec"}`
@@ -1603,19 +1615,18 @@ generalized to relative re-expression [this brief].)*
     BEHAVIOURAL proof that `_materializedBySugar` round-tripped — a macro can't read the `_`-prefixed flag), and a
     tilt-then-untilt widget reloads with NO island ((c)). Ends with a trailing settle + a paint-truthful self-
     assert (the earlier paint-audit trip was a MISSING-SETTLE test artifact, not a bug — see §7.5 Bug C, resolved).
-- **Index/z-order-preservation macro (STILL OWED — the 4C fix landed; the existing macros used a lone
-  world widget so they don't cover it):** materialize a sugar island on a widget that has SIBLINGS
-  (both a desktop z-stack and an arranged panel) → assert the sibling order / z-order is unchanged, and
-  restored on unwrap.
+- **✅ Index/z-order-preservation macro — COVERED by `SystemTest_macroSugarIslandPreservesSiblingOrder`**
+  (landed 4E (a)): materialize a sugar island on a widget with SIBLINGS (both a desktop z-stack and an
+  arranged panel) → the sibling order / z-order is unchanged and restored on unwrap.
 - Re-introduce the remaining deferred `TransformSpec` methods WITH their first callers only
   (`setAnchor` if/when an anchor UI lands — do NOT add speculative API). **`inverseMapVector` and
   `inverseMapRect` are PROVEN UNNEEDED and must NOT be added "for tidiness":** mapping a displacement is
   just point-mapping BOTH endpoints and subtracting — `M⁻¹p₁ − M⁻¹p₂ = L⁻¹(p₁−p₂)` cancels the affine
   translation, so 4A-2 got the correct delta semantics from `screenPointToMyPlane` alone, and 4D-2a coincided
   whole figures by matching ONE point (no rect/vector inverse). Record this identity so nobody re-adds them.
-- Finalize §6 Phase-4 banners (implementation notes + gate results + commit hashes) and mirror
-  status into the memory note; then Phase 4 is the feature's shipping point (Phase 5 = §7
-  banked follow-ons, each its own future plan).
+- **✅ DONE:** §6 Phase-4 banners carry their implementation notes + gate results + commit hashes; status
+  mirrored into the memory note. Phase 4 is the feature's shipping point (Phase 5 = §7 banked follow-ons, each
+  its own future plan).
 
 GATES (every sub-step): `fg gauntlet` green incl. the sub-step's new macros; `fg homepage`
 clean; dormant references unchanged (the ONLY sanctioned recapture in the whole phase is the
@@ -1712,6 +1723,15 @@ See §7. None of these block declaring the feature shipped.
    `enableDrops()` by default so the path is rarely reachable and (b) there is no stack-in-island fixture.
    Fix is the identical one-liner: map the point via `target.screenPointToMyPlane` before passing it when
    `target._isInsideNonIdentityIsland()`. Owner-gated; build on demonstrated need.
+14. **Public geometry API unit — PLAN AUTHORED + OWNER-APPROVED 2026-07-11, its own doc:**
+   `docs/affine-geometry-api-plan.md` (self-contained, cold-executable). The two-vocabulary LAW
+   (layout-box family stays untransformed forever; every screen-family name contains "screen"),
+   plus the missing methods — `screenBounds()`, `rotationDegrees()`/`scaleFactor()` getters,
+   `accumulatedRotationDegrees()`/`accumulatedScaleFactor()` (extracting the inlined Σ/∏ walks),
+   `isVisuallyTransformed()` — with first-caller refactors (pick-out, 2b-i plane accumulation,
+   `rotationHalo_currentDegrees` alias, `rotationHalo_screenAnchor` pinned-anchor fix). Sequenced
+   AFTER Bugs D/E → 2b-ii → 4E. ⚠ Owner EXCLUDED any inspector change ("inspector honesty") from
+   the unit's scope.
 
 ---
 
