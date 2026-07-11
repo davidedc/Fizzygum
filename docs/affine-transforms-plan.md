@@ -1801,6 +1801,14 @@ See §7. None of these block declaring the feature shipped.
    must invalidate off the SAME signal that reloads the upstream cache, NOT a liveness flag whose transition
    races the re-render (an `anyTextDirty()` gate fixed Chrome but flipped WebKit). ⚠ The "identity
    blit==replay" / "tiling stays raster-under-warp" guards belong to §7.1/§7.2 (vector-replay), NOT here.
+   - **§4.4 rect-list dirty refinement — ✅ LANDED 2026-07-11, its own doc:
+     `docs/island-buffer-cache-rectlist-plan.md`.** v1 kept ONE merged bounding dirty-rect; v2 keeps a
+     COALESCED DISJOINT rect-LIST so a frame damaging several far-apart regions rebuilds only those
+     sub-rects (a bounded cost ceiling — `_coalesceDirtyList` collapses to the bounding box past
+     `ISLAND_DIRTY_MAX_RECTS`/`ISLAND_DIRTY_AREA_FRACTION` so worst case == v1). No new instance fields ⇒
+     ZERO recaptures; A/B via `WorldWdgt.dirtyRectListEnabled`; byte-identity macro CASE 8/9; measured
+     2.75× on a two-far-apart-edits scenario. Correctness is cost-only by the coverage invariant (the
+     list's union only grows).
 
 ---
 

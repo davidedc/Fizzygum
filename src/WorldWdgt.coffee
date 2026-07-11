@@ -226,6 +226,14 @@ class WorldWdgt extends PanelWdgt
   # TransformFrameWdgt::cachesBuffer; the cache is active iff BOTH are on.
   @islandBufferCacheEnabled: true
 
+  # §4.4 rect-list dirty coalescing A/B (docs/island-buffer-cache-rectlist-plan.md). Default ON: a frame
+  # damaging several disjoint content regions rebuilds only those sub-rects. Flip OFF to force the v1
+  # policy (collapse every deposit to one bounding box) — the instrument that proves the rect-list is
+  # byte-identical to the bbox policy (macroIslandBufferCacheByteIdentity CASE 9) and measures the
+  # multi-region win. Runtime-flippable; a flip is pixel-invisible (both policies keep the coverage
+  # invariant). Class property, like islandBufferCacheEnabled.
+  @dirtyRectListEnabled: true
+
   # §4.4 island buffer cache — the async-atlas invalidation epoch. SWCanvas loads glyph atlases
   # asynchronously; until warm, text rasterises as placeholder BLOCKS into cached back buffers
   # (SWCanvasElement-extensions swCanvasScheduleTextRefresh). When an atlas warms, the immutable

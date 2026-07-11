@@ -55,13 +55,22 @@ class TransformFrameWdgt extends PanelWdgt
   # @cachesBuffer (both default ON) -- OFF path is byte-identical to the pre-cache rebuild-every-time.
   _islandBuffer: nil                 # the kept content canvas (physical pixels), or nil
   _islandBufferSlotExtent: nil       # Point: the slot extent the buffer was built at (the realloc key)
-  _islandBufferDirtyRect: nil        # nil (clean) | Rectangle (VIRTUAL coords) | "all" (force full rebuild)
+  _islandBufferDirtyRect: nil        # nil (clean) | Array<Rectangle> (coalesced disjoint, VIRTUAL coords) | "all"
   _islandBufferGeneration: -1        # WorldWdgt.immutableBackBufferGeneration the buffer was built at
                                      # (async glyph-atlas warmup invalidation; -1 ⇒ never built)
   # Per-island opt-out of the cache. Public + macro-readable (no `_`). Serialises as a plain boolean
   # (like _materializedBySugar) so a saved island keeps its policy; the GLOBAL kill-switch is the class
   # property WorldWdgt.islandBufferCacheEnabled.
   cachesBuffer: true
+
+  # §4.4 rect-list dirty coalescing (docs/island-buffer-cache-rectlist-plan.md). A frame that damages
+  # several disjoint regions keeps them as SEPARATE dirty rects (rebuild only those) instead of one
+  # bounding box that spans them. These two constants are the cost ceiling that keeps the worst case ==
+  # v1's single-bbox behaviour: collapse the list to its bounding box once it grows past MAX_RECTS
+  # separate rects (N clipped subtree walks would then cost more than one), or once the rects already
+  # cover AREA_FRACTION of their bounding box (one bbox walk is as cheap). Tunable.
+  @ISLAND_DIRTY_MAX_RECTS: 8
+  @ISLAND_DIRTY_AREA_FRACTION: 0.75
 
   # Serialization: _lastClaimedExtent is a pure reflow memo (re-derived on the next
   # preferredExtentForWidth), NOT truth -- skip it so a restored island carries no stale claimed-extent
@@ -311,10 +320,14 @@ class TransformFrameWdgt extends PanelWdgt
     WorldWdgt.islandBufferCacheEnabled and @cachesBuffer
 
   # §3.2 invalidation: record a content-dirty region (VIRTUAL coords, THIS island's plane) to be
-  # re-rasterised at the next composite. v1 keeps ONE merged bounding rect (conservative; a rect-list
-  # is banked). The "all" sentinel forces a full rebuild and is sticky. Called ONLY from the §4.5
-  # damage lanes (Widget.mapRectToScreen's destination deposit + the flesh-out source lane) — never
-  # from a spec change (the §4.5 invariant: a transform change damages the screen, not the buffer).
+  # re-rasterised at the next composite. v2 keeps a COALESCED DISJOINT rect-LIST (rects that touch are
+  # merged), so a frame damaging several far-apart regions rebuilds only those instead of one bounding
+  # box that spans them (docs/island-buffer-cache-rectlist-plan.md §3.2). The "all" sentinel forces a
+  # full rebuild and is sticky. Called ONLY from the §4.5 damage lanes (Widget.mapRectToScreen's
+  # destination deposit + the flesh-out source lane) — never from a spec change (the §4.5 invariant: a
+  # transform change damages the screen, not the buffer). Coverage invariant (§3.0): the list's union
+  # only ever GROWS, so it always ⊇ every deposited grown rect ⇒ the partial rebuild stays byte-identical
+  # to a full rebuild for any coalesce policy.
   _depositIslandBufferDirtyRect: (aRect) ->
     return if !@_islandBufferCacheActive()
     return if @_islandBufferDirtyRect == "all"
@@ -325,8 +338,36 @@ class TransformFrameWdgt extends PanelWdgt
     # ghosts under the partial rebuild (the byte-identity gate would catch it). Clamped to the slot in
     # _refreshIslandBuffer. Kept virtual (this island's plane) — the composite maps it to screen.
     dirty = aRect.expandBy(1).growBy world.maxShadowSize
-    @_islandBufferDirtyRect =
-      if @_islandBufferDirtyRect? then @_islandBufferDirtyRect.merge dirty else dirty
+    if !@_islandBufferDirtyRect?
+      @_islandBufferDirtyRect = [dirty]
+      return
+    # Fold every rect `dirty` touches into it, keeping the rest disjoint. Repeat to a fixpoint: a merge
+    # grows `dirty` and may make it touch a rect that was clear before. isIntersecting is edge-inclusive
+    # so adjacent rects coalesce too. Then apply the cost-ceiling collapse (_coalesceDirtyList).
+    remainder = @_islandBufferDirtyRect
+    loop
+      touching = (r for r in remainder when dirty.isIntersecting r)
+      break if touching.length == 0
+      remainder = (r for r in remainder when not dirty.isIntersecting r)
+      dirty = touching.reduce ((acc, r) -> acc.merge r), dirty
+    remainder.push dirty
+    @_islandBufferDirtyRect = @_coalesceDirtyList remainder
+
+  # Cost ceiling for the rect-list (§3.4): a disjoint list in, the list to store out. NEVER shrinks
+  # coverage — only trades separate rects for their single bounding box, so byte-identity is preserved.
+  # Collapses to the bounding box when the rect-list is disabled (the A/B baseline = v1 policy), when the
+  # list grows past MAX_RECTS (N clipped subtree walks would cost more than one bbox walk), or when the
+  # rects already cover AREA_FRACTION of their bounding box (one bbox walk is then as cheap).
+  _coalesceDirtyList: (list) ->
+    return [@_boundingBoxOfRects list] if !WorldWdgt.dirtyRectListEnabled
+    bbox = @_boundingBoxOfRects list
+    return [bbox] if list.length > TransformFrameWdgt.ISLAND_DIRTY_MAX_RECTS
+    totalArea = list.reduce ((a, r) -> a + r.area()), 0
+    return [bbox] if totalArea >= TransformFrameWdgt.ISLAND_DIRTY_AREA_FRACTION * bbox.area()
+    list
+
+  _boundingBoxOfRects: (list) ->
+    list.reduce ((acc, r) -> acc.merge r), list[0]
 
   # (re)build / reuse the island buffer: the content subtree rasterised UN-transformed at device
   # resolution, exactly as Widget#…RenderCanvas does for a subtree snapshot. §4.4 cache:
@@ -361,8 +402,15 @@ class TransformFrameWdgt extends PanelWdgt
       @_islandBufferSlotExtent = slotExtent
       @_islandBufferGeneration = WorldWdgt.immutableBackBufferGeneration
     else if @_islandBufferDirtyRect?
-      clip = if @_islandBufferDirtyRect == "all" then slot else @_islandBufferDirtyRect.intersect slot
-      @_rasterizeIslandContent slot, physExtent, clip if clip.isNotEmpty()
+      # "all" -> one whole-slot rebuild; otherwise clear+HARD-clip+repaint EACH disjoint dirty rect (each
+      # reuses the same per-rect path that is already byte-identical to a full rebuild). N is capped by
+      # _coalesceDirtyList so this never costs more than one bbox walk.
+      if @_islandBufferDirtyRect == "all"
+        @_rasterizeIslandContent slot, physExtent, slot
+      else
+        for dirtyRect in @_islandBufferDirtyRect
+          clip = dirtyRect.intersect slot
+          @_rasterizeIslandContent slot, physExtent, clip if clip.isNotEmpty()
     # else: clean -> reuse @_islandBuffer as-is.
     @_islandBufferDirtyRect = nil
     @_islandBuffer

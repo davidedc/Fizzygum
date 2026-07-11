@@ -84,8 +84,8 @@ byte-identity macro, §4 step 5).
 
 - **Content damage:** in the §4.5 mapping walk (`mapRectToScreen`), when crossing a non-identity
   island, DEPOSIT the pre-mapping virtual rect: `island._islandBufferDirtyRect =
-  merge(existing, rect)` (v1 = ONE merged bounding rect — conservative, simple; a rect-list
-  refinement is banked). Both flesh-out lanes and both source/destination rects flow through this
+  merge(existing, rect)` (v1 = ONE merged bounding rect — conservative, simple; the rect-list
+  refinement ✅ LANDED 2026-07-11, `docs/island-buffer-cache-rectlist-plan.md`). Both flesh-out lanes and both source/destination rects flow through this
   walk already, so old-position erase and new-position paint both land in the union. Zero dormant
   cost (the walk early-returns off-island).
 - **Structural changes** (add/remove child) already `fullChanged()` through the same lane. ✓
