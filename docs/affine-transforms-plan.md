@@ -7,10 +7,11 @@ rough edges R1 (mouseMove-pointer mapping / paint-in-rotated-window), R3 (resize
 clip, via the TrackingTransformFrameWdgt subclass), R2 (ephemeral-overlay rotation, via in-plane
 highlight parenting + a resetWorld teardown fix), and R4 (slider + palette nonFloatDragging pointer
 plane-mapping) COMPLETE + COMMITTED; 4D-1 (drop-IN, the smaller half of pick/drop) COMPLETE +
-COMMITTED; 4D-2a (pick-OUT to desktop) COMPLETE + COMMITTED; 4D-2b (drop-back-INTO + relative
-re-expression) REMAINING — **execute from its DESIGN BRIEF (§6 Phase 4D, authored 2026-07-11:
-sugar-figure-only relative re-spec + unwrap, the payload-policy-transparency gap, staged 2b-i/2b-ii)**;
-4E (close-out) REMAINING. See the per-phase §6 banners for hashes + gate results
+COMMITTED; 4D-2a (pick-OUT to desktop) COMPLETE + COMMITTED; 4D-2b stage 2b-i (drop-back-INTO +
+relative re-expression + unwrap) COMPLETE + COMMITTED, stage 2b-ii (payload-policy transparency:
+`_dropPolicyProxy` + the tilted-window-dwell marquee macro) REMAINING — **execute from its DESIGN BRIEF
+(§6 Phase 4D, authored 2026-07-11: sugar-figure-only relative re-spec + unwrap, the payload-policy-transparency
+gap, staged 2b-i/2b-ii)**; 4E (close-out) REMAINING. See the per-phase §6 banners for hashes + gate results
 (they are the authority on status). Owner-gated; a standing
 grant to "commit + continue while all gates pass" is in force as of 2026-07-10. Original design
 was AUTHORED 2026-07-09 and hardened same day by an adversarial fresh-eyes pass (§10 facet
@@ -1384,9 +1385,41 @@ cold-executable. **R1, R2, R3, R4 COMPLETE 2026-07-10.**
 > on the desktop). Gauntlet dpr1/dpr2/webkit 224/224 + apps/paint/tiernaming/settle/capstone + homepage
 > green (suite 223 → 224); ONE benign inspector member-list recapture
 > (`macroDuplicatedInspectorDrivesCopiedTargetOnly` image_2/3 — the 2 new Widget methods).
-> **4D-2b (drop-back-INTO + unwrap-on-match) REMAINING** — full design brief below (authored
-> 2026-07-11 after a fresh study of the as-landed 4D-1/2a code; supersedes the original sketch
-> bullets further down where they conflict).
+> **4D-2b (drop-back-INTO + relative re-expression) — STAGE 2b-i COMPLETE + COMMITTED** (Fizzygum
+> `db01f1af`, tests `eee365c4d`; NOT pushed). Realised the design brief's core rule: two Widget verbs +
+> two edits in `ActivePointerWdgt.drop`. `Widget._reExpressFigureForPlaneOfNoSettle(target)` (called on the
+> payload right after target resolution, before the 4D-1 position map) RE-SPECS a `_materializedBySugar`
+> figure to its plane-relative similitude — `rel_r = fig.deg − Σ(dest-plane island degrees)`,
+> `rel_s = fig.scale ÷ ∏(… scales)`, accumulated over target's ancestor islands (the inverse of
+> `_pickOutRotatedFigureNoSettle`'s walk) — so composited through the plane it renders at its ORIGINAL absolute
+> look. When rel is identity the figure becomes an identity sugar island, and AFTER `target.add` a gated
+> (`if wdgtToDrop._materializedBySugar`) self-settling `Widget._unwrapIfIdentitySugar` (thin wrap over
+> `_unwrapIfIdentitySugarNoSettle`) dissolves it by DELEGATING to the proven 4C
+> `_dematerializeSugarIslandIfIdentityNoSettle` — no bespoke re-home. **KEY as-built decision (deviates from the
+> brief's "extract onto the hand" sketch): DON'T hand-extract the content. Re-spec the wrapper to identity, let
+> it nest through the SAME 4D-1 + `target.add` path a non-identity re-expressed figure uses, then let the 4C
+> auto-unwrap dissolve it in place.** This is what makes the round-trip BIT-EXACT (macro
+> `macroTransformFrameDropBackUnwraps` image_1 ≡ image_2 dataHash): only the transient wrapper passes through a
+> float map; the content's own virtual bounds are preserved exactly by dematerialize. SCOPE (locked): only
+> `_materializedBySugar` figures re-express; explicit islands and identity-plane drops are byte-identical
+> no-ops (dormancy). **THREE forensic lessons (worked during 2b-i, banked here):** (1) the FIRST design
+> (extract content onto the hand, let 4D-1 place it) drifted 25px — a plain widget's pre-`add` `_applyMoveTo`
+> is REVERTED by `target.add` whenever the drop point ≠ the island's fixed point; `macroTransformFrameDropInto…`
+> and the 2b-i cross-plane macro only ever drop AT the fixed point (container centre, where screen≡virtual), so
+> this 4D-1 latent is masked there — the reuse-based unwrap sidesteps it entirely by never routing the content
+> through 4D-1. (2) the post-`add` unwrap MUST self-settle (its dematerialize's NoSettle re-home runs after
+> `add`'s settle closes) or it is a careless end-of-cycle push (capstone gate) — hence the `_unwrapIfIdentity
+> Sugar` thin wrap, gated so the common plain-widget drop pays no settle. (3) a grabbable sub-part must live in
+> a PanelWdgt: `grabsToParentWhenDragged` returns false (loose) only for world/PanelWdgt children; a Rectangle
+> Wdgt child ESCALATES on grab. Macros: `macroTransformFrameDropBackUnwraps` (rel-identity round-trip →
+> structural identity: exactly ONE island again, content back in its container within a pixel, bit-exact size,
+> A's spec untouched; the 4D risk-2 no-buildup guard) + `macroTransformFrameCrossPlaneDropKeepsRelative`
+> (rel≠identity: a 30° sugar figure dropped into a 20° container becomes a 10° relative wrapper nested in it,
+> compositing to 30° absolute). Gauntlet dpr1/dpr2/webkit **232/232** + apps/paint/tiernaming/settle/capstone
+> (careless pushes=0) + homepage green (suite 230 → 232); ONE benign inspector member-list recapture
+> (`macroDuplicatedInspectorDrivesCopiedTargetOnly` image_2/3 — the 3 new Widget methods; image_1
+> byte-identical). **STAGE 2b-ii (payload-policy transparency: `_dropPolicyProxy` look-through + the
+> tilted-window-dwell marquee macro) REMAINING** — see the brief below.
 
 ##### 4D-2b — DESIGN BRIEF (authored 2026-07-11; execute design-first, stage as 2b-i then 2b-ii)
 
