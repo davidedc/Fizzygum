@@ -1540,6 +1540,24 @@ class Widget extends TreeNode
   _parentThroughSugarIslands: ->
     @_enclosingSugarFigure().parent
 
+  # Affine transforms (§6 Phase 4D-2b): the PAYLOAD-side look-through for drop POLICY. When a widget is
+  # rotated/scaled it rides the hand as a transient _materializedBySugar TransformFrameWdgt, which HIDES its
+  # content's class from every drop-policy predicate -- so a tilted WINDOW arrives as a "transform frame" and
+  # bypasses the dwell-to-arm gate (requiresDeliberateEmbedding), sticky re-embed, and the wantsDropOfChild
+  # type checks. This returns my sole content THROUGH sugar wrapper(s) so those predicates see the real payload
+  # class; off any sugar figure (a plain widget, or an EXPLICIT authored island -- a real container, not
+  # sugar) it returns ME. The payload-side sibling of _parentThroughSugarIslands (the container-side
+  # look-through). Consult it ONLY where the payload's CLASS/policy is inspected -- NEVER at geometry/add sites,
+  # which must keep the figure (it is what actually gets placed + parented).
+  _dropPolicyProxy: ->
+    figure = @
+    loop
+      break if !(figure instanceof TransformFrameWdgt) or !figure._materializedBySugar
+      content = figure.childrenNotHandlesNorCarets()?[0]
+      break if !content?
+      figure = content
+    figure
+
   # Affine transforms (§6 Phase 4D-2b): RE-EXPRESS a dropped SUGAR FIGURE relative to the plane it lands in.
   # When a _materializedBySugar figure (from a 4D-2a pick-out or a 4C rotate/scale) is float-dropped into a
   # container that lives inside a non-identity island, its spec is ABSOLUTE (Σ degrees / ∏ scales over its

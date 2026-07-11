@@ -169,8 +169,13 @@ class ActivePointerWdgt extends Widget
   #   _reactToChildDropped(droppedWdgt, activePointerWdgt) -> newParent
   #
   dropTargetFor: (aWdgt) ->
+    # §6 4D-2b: a container decides acceptance by the payload's real class, not the transient sugar wrapper's
+    # (a tilted window must still resolve to a window-accepting container). Climb by the payload-policy proxy;
+    # the returned target is used by the caller for GEOMETRY on the figure itself (off any sugar figure the
+    # proxy is the widget unchanged ⇒ byte-identical dormant).
+    payloadPolicy = aWdgt._dropPolicyProxy()
     target = @topWdgtUnderPointer()
-    until target.wantsDropOfChild aWdgt
+    until target.wantsDropOfChild payloadPolicy
       target = target.parent
     target
 
@@ -185,10 +190,13 @@ class ActivePointerWdgt extends Widget
   # wantsDropOfChild wins (world is never a candidate); else the innermost view-mode editing-amenity
   # widget is the reluctant cue. Same climb dropTargetFor uses, so preview and outcome cannot disagree.
   resolveDragEmbedCandidates: (payload) ->
+    # §6 4D-2b: match candidates by the payload's real class (see dropTargetFor) so the dwell preview and the
+    # drop outcome agree for a tilted window too.
+    payloadPolicy = payload._dropPolicyProxy()
     wdgt = @topWdgtUnderPointer()
     reluctant = nil
     while wdgt? and wdgt isnt world
-      if wdgt.wantsDropOfChild payload
+      if wdgt.wantsDropOfChild payloadPolicy
         return {candidate: wdgt, reluctant: nil}
       if !reluctant? and wdgt.providesAmenitiesForEditing and not wdgt.dragsDropsAndEditingEnabled
         reluctant = wdgt
@@ -213,7 +221,7 @@ class ActivePointerWdgt extends Widget
       @dragEmbedArmed = false
     @dragEmbedReluctant = if candidate? then nil else reluctant
 
-    if candidate? and payload.requiresDeliberateEmbedding()
+    if candidate? and payload._dropPolicyProxy().requiresDeliberateEmbedding()   # §6 4D-2b: a tilted WINDOW still needs the dwell
       unless @dragEmbedArmed
         # a >radius pointer move RE-ANCHORS the origin — a slow transit never arms (spec §6). After
         # arming this guard is skipped, so the user may move to aim within the SAME candidate.
@@ -233,7 +241,7 @@ class ActivePointerWdgt extends Widget
   # pre-paint). Candidate/reluctant OUTLINE rides the Phase-1 highlight style channel; the ring / label /
   # lock badge ride WorldWdgt.addDragAffordanceWidgets. Non-interactable visuals only — the §8 pill is Phase 4.
   _declareDragEmbedEphemerals: (payload) ->
-    isWindow = payload.requiresDeliberateEmbedding()
+    isWindow = payload._dropPolicyProxy().requiresDeliberateEmbedding()   # §6 4D-2b: window affordances for a tilted window too
 
     # 1. candidate (accent) or reluctant (neutral) outline via the highlight style channel
     outlineTarget = @dragEmbedCandidate ? @dragEmbedReluctant
@@ -395,13 +403,18 @@ class ActivePointerWdgt extends Widget
       overReluctantOnly = @dragEmbedReluctant?
       @_endDragEmbedInteraction()
 
+      # §6 4D-2b: the window-vs-plain drop decision keys off the payload's real class -- a tilted window rides
+      # the hand as a sugar TransformFrameWdgt, so look THROUGH it (dropPolicy) for requiresDeliberateEmbedding /
+      # wantsToBeDropped. Geometry + add still use wdgtToDrop (the figure); the @grabOrigin.origin sticky check
+      # below compares the figure's pre-grab parent, which composes for a sole-content window figure (§7.5 brief).
+      dropPolicy = wdgtToDrop._dropPolicyProxy()
       if overReluctantOnly
         # LOCKED_CUE (spec §7): the destination is in view mode — it never accepts a mid-drag drop, so the
         # payload lands on the WORLD at the release point (a plain move-over, NO offset). Applies to BOTH
         # window and plain payloads. (Earlier drafts offset the landing and offered a land-and-offer pill;
         # both were dropped 2026-07-06 — the payload just lands normally where it was released.)
         target = world
-      else if wdgtToDrop.requiresDeliberateEmbedding()
+      else if dropPolicy.requiresDeliberateEmbedding()
         # WINDOW payload over an eager/willing candidate (or nothing): the internal/external gate is GONE
         # — the dwell alone decides (spec §7). Armed → embed at the resolved candidate (the SAME climb
         # the preview used, so preview and outcome cannot disagree); not armed → plain move-over, lands
@@ -425,8 +438,9 @@ class ActivePointerWdgt extends Widget
       else
         # Plain payload, not over a view-mode-only target: unchanged accept behavior. Base
         # wantsToBeDropped is true (instant embed over an eager/willing target via the climb);
-        # BasementOpenerWdgt keeps its override that forces itself onto the world.
-        if not wdgtToDrop.wantsToBeDropped()
+        # BasementOpenerWdgt keeps its override that forces itself onto the world. (dropPolicy = the payload's
+        # real class through any sugar wrapper, §6 4D-2b.)
+        if not dropPolicy.wantsToBeDropped()
           target = world
         else
           target = @dropTargetFor wdgtToDrop
@@ -1225,7 +1239,9 @@ class ActivePointerWdgt extends Widget
         # off-view insertion point mid-drag (§6.1). Plain payloads keep edge-auto-scroll. (Was
         # `wantsToBeDropped()` — the old internal/external gate; the flip to the payload-class capability
         # is the drag-embed rule change, and it also drops the BasementOpenerWdgt special-case here.)
-        if not widgetBeingFloatDragged.requiresDeliberateEmbedding()
+        # §6 4D-2b: a tilted WINDOW rides the hand as a sugar wrapper, so classify through the payload-policy
+        # proxy — a rotated window must not edge-auto-scroll either. The GEOMETRY arg below keeps the figure.
+        if not widgetBeingFloatDragged._dropPolicyProxy().requiresDeliberateEmbedding()
           # a scroll panel decides whether to auto-scroll for the dragged widget near its edge
           # (was `newWdgt instanceof ScrollPanelWdgt` + the wantsDropOfChild / edge / start logic here).
           # (type-test-elimination campaign)
