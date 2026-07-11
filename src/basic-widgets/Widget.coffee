@@ -46,6 +46,9 @@ class Widget extends TreeNode
     "cachedClippedThroughBounds", "checkClippedThroughBoundsCache"
     "cachedClipThrough", "checkClipThroughCache"
     "cachedIsInCollapsedSubtree", "checkIsInCollapsedSubtreeCache"
+    # §4.4 island buffer cache source-lane fields: ephemeral per-frame paint state (a widget ref +
+    # a virtual rect), consumed at flesh-out — never persist them (a snapshot must not pin an island).
+    "_islandBufferSourceIsland", "_islandBufferSourceVirtualRect"
   ]
 
   appearance: nil
@@ -230,6 +233,13 @@ class Widget extends TreeNode
   # so just use the method.
   fullPaintBoundsMaybeChanged: false
   fullClippedBoundsWhenLastPainted: nil
+
+  # §4.4 island buffer cache — the "source" (old-position) lane. When this widget last painted INTO
+  # an island's buffer, these hold the PRE-mapping virtual full-bounds and that island, so a later
+  # move-within-island can erase the vacated buffer region (recordDrawnAreaForNextBrokenRects sets
+  # them; the flesh-out source lane consumes+clears them). nil on every ordinary (non-island) paint.
+  _islandBufferSourceIsland: nil
+  _islandBufferSourceVirtualRect: nil
 
   cachedFullBounds: nil
   checkFullBoundsCache: nil
@@ -1263,12 +1273,19 @@ class Widget extends TreeNode
   # (screen) plane against the OUTERMOST island's own visible rect (= its footprint ∩
   # its ancestor screen clips) — clipping the pre-image plane would not commute with
   # the transform (§4.11).
-  mapRectToScreen: (aRect) ->
+  mapRectToScreen: (aRect, depositBufferDirty = false) ->
     result = aRect
     outermostIsland = nil
     ancestor = @parent
     while ancestor?
       if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
+        # §4.4 buffer cache — the "destination" (new-position) deposit: the PRE-mapping rect is in
+        # THIS island's virtual (buffer) plane, so it is exactly the region this widget now occupies
+        # in the island's buffer. Deposit it as content-dirty. Only the two damage-flesh-out lanes
+        # pass depositBufferDirty=true; the OTHER caller (recordDrawnAreaForNextBrokenRects, the
+        # paint-time snapshot) passes false, so a mere repaint never dirties the buffer. Depositing
+        # on EACH crossed island handles nesting for free. Zero dormant cost (off-island never enters).
+        ancestor._depositIslandBufferDirtyRect result if depositBufferDirty
         result = ancestor.transformSpec.mapRect result, ancestor.bounds
         outermostIsland = ancestor
       ancestor = ancestor.parent
@@ -2379,8 +2396,20 @@ class Widget extends TreeNode
       # chain (an identity) and erase the WRONG (un-transformed) rect, leaving the rotated on-screen footprint
       # stale (owner bug: closing a tilted converter's inner window). mapRectToScreen returns the SAME rect
       # off any island ⇒ byte-identical dormant. (Field names kept; they now hold the screen-plane footprint.)
+      fullVirtual = @fullClippedBounds()
       @clippedBoundsWhenLastPainted = @mapRectToScreen @clippedThroughBounds()
-      @fullClippedBoundsWhenLastPainted = @mapRectToScreen @fullClippedBounds()
+      @fullClippedBoundsWhenLastPainted = @mapRectToScreen fullVirtual
+      # §4.4 buffer cache — the "source" (old-position) lane. When painting INTO an island buffer,
+      # stash the PRE-mapping virtual full-bounds and the island. If this widget later MOVES within
+      # (or is removed from) the stationary island, the flesh-out source lane deposits this OLD
+      # footprint as buffer-dirty so the partial rebuild erases the vacated region — the buffer-plane
+      # twin of the screen-footprint erase above (the NEW footprint rides the mapRectToScreen deposit).
+      # nil on every ordinary (non-island) paint ⇒ dormant-free; consumed+cleared at flesh-out.
+      if world.paintingIntoIslandBuffer?
+        @_islandBufferSourceIsland = world.paintingIntoIslandBuffer
+        @_islandBufferSourceVirtualRect = fullVirtual
+      else if @_islandBufferSourceIsland?
+        @_islandBufferSourceIsland = nil
 
   # Occlusion culling (docs/occlusion-culling-plan.md P1): the axis-aligned rectangle this widget
   # provably paints FULLY OPAQUE, in LOGICAL px world coordinates, or nil. It is the geometry both

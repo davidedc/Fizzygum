@@ -81,7 +81,9 @@ swCanvasScheduleTextRefresh = ->
   swCanvasRefreshScheduled = true
   doRefresh = ->
     swCanvasRefreshScheduled = false
-    window.world?.cacheForImmutableBackBuffers?.reset?()
+    # resetImmutableBackBuffersCache resets the text cache AND bumps the island-buffer epoch, so a
+    # rotated/scaled island (a further cache downstream) also rebuilds from the now-warm text (§4.4).
+    window.world?.resetImmutableBackBuffersCache?()
     window.world?.fullChanged?()
   if window.requestAnimationFrame?
     window.requestAnimationFrame doRefresh

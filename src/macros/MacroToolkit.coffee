@@ -223,7 +223,9 @@ class MacroToolkit
     if world.anyTextDirty()
       return false
     if !@macroScreenshotWarmRepaintFrame?
-      world.cacheForImmutableBackBuffers?.reset?()
+      # resetImmutableBackBuffersCache resets the text cache AND bumps the island-buffer epoch, so a
+      # rotated/scaled island buffer (a further cache downstream) rebuilds from warm text before capture (§4.4).
+      world.resetImmutableBackBuffersCache?()
       world.fullChanged()
       @macroScreenshotWarmRepaintFrame = WorldWdgt.frameCount
       return false

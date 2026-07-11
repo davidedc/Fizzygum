@@ -47,13 +47,34 @@ class TransformFrameWdgt extends PanelWdgt
   # as a plain boolean so a saved-then-reloaded sugar island stays sugar-removable.
   _materializedBySugar: false
 
+  # §4.4 island buffer cache (docs/island-buffer-cache-plan.md): the content subtree, rasterised
+  # UN-transformed ONCE and KEPT across composites, so a transform-only change (rotation/scale step,
+  # island drag) re-warps it with ZERO re-rasterisation and a content change re-rasterises only the
+  # dirty sub-rect. All three are DERIVED render state (never truth) -> serializationTransients below;
+  # a deepCopy drops them (see _reactToBeingCopied). Active iff world.islandBufferCacheEnabled AND
+  # @cachesBuffer (both default ON) -- OFF path is byte-identical to the pre-cache rebuild-every-time.
+  _islandBuffer: nil                 # the kept content canvas (physical pixels), or nil
+  _islandBufferSlotExtent: nil       # Point: the slot extent the buffer was built at (the realloc key)
+  _islandBufferDirtyRect: nil        # nil (clean) | Rectangle (VIRTUAL coords) | "all" (force full rebuild)
+  _islandBufferGeneration: -1        # WorldWdgt.immutableBackBufferGeneration the buffer was built at
+                                     # (async glyph-atlas warmup invalidation; -1 ⇒ never built)
+  # Per-island opt-out of the cache. Public + macro-readable (no `_`). Serialises as a plain boolean
+  # (like _materializedBySugar) so a saved island keeps its policy; the GLOBAL kill-switch is the class
+  # property WorldWdgt.islandBufferCacheEnabled.
+  cachesBuffer: true
+
   # Serialization: _lastClaimedExtent is a pure reflow memo (re-derived on the next
   # preferredExtentForWidth), NOT truth -- skip it so a restored island carries no stale claimed-extent
-  # Point. transformSpec (the only real serialized state) round-trips structurally as scalars, and
-  # _materializedBySugar as a plain boolean. Merged up the chain by Serializer.transientsForClass --
-  # this ADDS to Widget's list.
+  # Point. The three _islandBuffer* fields are DERIVED render state (a canvas + its cache keys) that a
+  # restored island rebuilds on first composite -- never persist a canvas. transformSpec (the only real
+  # serialized state) round-trips structurally as scalars, and _materializedBySugar / cachesBuffer as
+  # plain booleans. Merged up the chain by Serializer.transientsForClass -- this ADDS to Widget's list.
   @serializationTransients: [
     "_lastClaimedExtent"
+    "_islandBuffer"
+    "_islandBufferSlotExtent"
+    "_islandBufferDirtyRect"
+    "_islandBufferGeneration"
   ]
 
   constructor: (contentWidget = nil, transformSpec = nil) ->
@@ -162,9 +183,35 @@ class TransformFrameWdgt extends PanelWdgt
   # new footprint via fullChanged() (the OLD footprint is the last-painted snapshot the flesh-out
   # lane reads as the "source" rect), and — for a coupled island — invalidates the parent's layout.
   _transformChangedNoSettle: ->
+    # §4.5 invariant (buffer cache): a transform change damages the SCREEN (old ∪ new footprint),
+    # NEVER the buffer -- buffer content depends only on VIRTUAL content, the matrix affects only
+    # compositing. So we deliberately do NOT deposit a buffer-dirty rect here. The one exception is
+    # hygiene: if the spec just returned to IDENTITY, the identity composite path bypasses the buffer
+    # entirely, so drop it (else a window-sized canvas would linger on a de-tilted explicit island).
+    @_dropIslandBufferIfIdentity()
     @__breakMoveResizeCaches()
     @fullChanged()
     @_reflowIfClaimChangedNoSettle()
+
+  # §3.6 lifecycle: release the cached buffer when the island is identity (the identity path never
+  # reads it) or on any teardown. Cheap; keeps a de-tilted explicit island from pinning a big canvas.
+  _dropIslandBufferIfIdentity: ->
+    return if !@transformSpec.isIdentity()
+    @_dropIslandBuffer()
+
+  _dropIslandBuffer: ->
+    @_islandBuffer = nil
+    @_islandBufferSlotExtent = nil
+    @_islandBufferDirtyRect = nil
+    @_islandBufferGeneration = -1
+
+  # deepCopy safety (§3.1): the buffer fields are DERIVED render state. HTMLCanvasElement::deepCopy
+  # clones the canvas into the copy (a DISTINCT canvas -- no sharing), but a copied island must not
+  # silently reuse a snapshot (the fizzytiles rebuildDerivedValue lesson: transients alone don't
+  # guarantee copy-coherence). Drop them on the CLONE so it rebuilds from its own content on first
+  # composite. Runs after recursivelyCloneContent (DeepCopierMixin), so it eagerly frees the clone.
+  _reactToBeingCopied: ->
+    @_dropIslandBuffer()
 
   # ---------------------------------------------------------------------------
   # layout coupling (plan §4.9). A NON-IDENTITY island is a FIXED FIGURE for its
@@ -259,28 +306,102 @@ class TransformFrameWdgt extends PanelWdgt
       @fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow aContext, clippingRectangle, appliedShadow
       aContext.restore()
 
-  # (re)build the island buffer: the content subtree rasterised UN-transformed at
-  # device resolution, exactly as Widget#…RenderCanvas does for a subtree snapshot
-  # (translate the buffer context by -slotOrigin×ceilPixelRatio, then paint the
-  # children into it). PHASE 1: rebuilt on every composite — correctness-first; the
-  # content-version-keyed cache + buffer-dirty accumulation (plan §4.4/§4.5) is a
-  # later optimisation and is not needed for correctness.
+  # the cache is live only when BOTH the global kill-switch and this island's opt-in are on.
+  _islandBufferCacheActive: ->
+    WorldWdgt.islandBufferCacheEnabled and @cachesBuffer
+
+  # §3.2 invalidation: record a content-dirty region (VIRTUAL coords, THIS island's plane) to be
+  # re-rasterised at the next composite. v1 keeps ONE merged bounding rect (conservative; a rect-list
+  # is banked). The "all" sentinel forces a full rebuild and is sticky. Called ONLY from the §4.5
+  # damage lanes (Widget.mapRectToScreen's destination deposit + the flesh-out source lane) — never
+  # from a spec change (the §4.5 invariant: a transform change damages the screen, not the buffer).
+  _depositIslandBufferDirtyRect: (aRect) ->
+    return if !@_islandBufferCacheActive()
+    return if @_islandBufferDirtyRect == "all"
+    return if !aRect? or aRect.isEmpty()
+    # Grow by the SAME allowance the screen flesh-out lane uses (`.expandBy(1).growBy maxShadowSize`):
+    # a changed child paints its own shadow into the buffer beyond its bounds (down-right), and AA
+    # touches a 1px fringe, so the cleared+repainted region MUST cover them or the old shadow/fringe
+    # ghosts under the partial rebuild (the byte-identity gate would catch it). Clamped to the slot in
+    # _refreshIslandBuffer. Kept virtual (this island's plane) — the composite maps it to screen.
+    dirty = aRect.expandBy(1).growBy world.maxShadowSize
+    @_islandBufferDirtyRect =
+      if @_islandBufferDirtyRect? then @_islandBufferDirtyRect.merge dirty else dirty
+
+  # (re)build / reuse the island buffer: the content subtree rasterised UN-transformed at device
+  # resolution, exactly as Widget#…RenderCanvas does for a subtree snapshot. §4.4 cache:
+  #  - cache OFF  -> a fresh throwaway buffer every composite (byte-identical to the pre-cache code).
+  #  - no buffer / slot EXTENT changed (realloc) -> full rebuild into a NEW canvas.
+  #  - dirty       -> partial rebuild: clear + clipped repaint of the dirty sub-rect (or the whole
+  #                   slot for the "all" sentinel), INTO the kept canvas.
+  #  - clean       -> reuse as-is (the transform-animation fast path: ZERO rasterisation). Each
+  #                   damaged frame composites the island twice (shadow pass, then normal pass); the
+  #                   first refresh cleans the dirty state so the second reuses — no special-casing.
+  # A pure slot MOVE keeps the buffer: content and origin move together and the per-refresh ctx
+  # translate uses the CURRENT origin, so the cached pixels stay valid (§3.2).
   _refreshIslandBuffer: ->
     slot = @bounds
     physExtent = slot.extent().scaleBy ceilPixelRatio
     return nil if physExtent.x < 1 or physExtent.y < 1
-    buffer = HTMLCanvasElement.createOfPhysicalDimensions physExtent
+
+    if !@_islandBufferCacheActive()
+      return @_rasterizeIslandContent slot, physExtent, nil
+
+    # A full rebuild is forced by: no buffer yet; a slot EXTENT change (realloc); OR a stale text-back-
+    # buffer epoch. The last is the ⚠ async glyph-atlas invalidation: SWCanvas loads atlases
+    # asynchronously and text rasterises as placeholder BLOCKS until warm; when an atlas warms the
+    # immutable text-back-buffer cache is reset (WorldWdgt.immutableBackBufferGeneration bumps), and this
+    # buffer — a cache DOWNSTREAM of those text back buffers — must rebuild from the now-warm text or it
+    # would re-blit frozen block glyphs (the render changes with NO changed()/deposit event, so the
+    # event-driven dirty lane cannot see it). Native never loads an atlas ⇒ the epoch never bumps ⇒ zero
+    # effect. This is the one non-event invalidation the cache needs (docs plan §5/§6 "missed lane").
+    slotExtent = slot.extent()
+    if !@_islandBuffer? or !(@_islandBufferSlotExtent? and @_islandBufferSlotExtent.equals slotExtent) or @_islandBufferGeneration != WorldWdgt.immutableBackBufferGeneration
+      @_islandBuffer = @_rasterizeIslandContent slot, physExtent, nil
+      @_islandBufferSlotExtent = slotExtent
+      @_islandBufferGeneration = WorldWdgt.immutableBackBufferGeneration
+    else if @_islandBufferDirtyRect?
+      clip = if @_islandBufferDirtyRect == "all" then slot else @_islandBufferDirtyRect.intersect slot
+      @_rasterizeIslandContent slot, physExtent, clip if clip.isNotEmpty()
+    # else: clean -> reuse @_islandBuffer as-is.
+    @_islandBufferDirtyRect = nil
+    @_islandBuffer
+
+  # Rasterise the content subtree into the buffer, UN-transformed at device resolution. clip nil =>
+  # a FULL build into a FRESH canvas (returned); a sub-rect => a PARTIAL rebuild INTO the kept canvas
+  # (@_islandBuffer), clearing the region first — the island background is TRANSPARENT, so an
+  # un-cleared region would ghost the old pixels under alpha. The buffer context is a SINGLETON per
+  # canvas (getContext returns the same object), so save/restore is MANDATORY on the reused path to
+  # keep the -slotOrigin translate from accumulating across composites. While the subtree paints, the
+  # world is flagged so descendants record their (virtual) last-painted bounds (§4.5) — save/restore
+  # for nested islands.
+  _rasterizeIslandContent: (slot, physExtent, clip) ->
+    if clip?
+      buffer = @_islandBuffer
+      clipRect = clip
+    else
+      buffer = HTMLCanvasElement.createOfPhysicalDimensions physExtent
+      clipRect = slot
     bctx = buffer.getContext "2d"
+    bctx.save()
     bctx.translate -slot.origin.x * ceilPixelRatio, -slot.origin.y * ceilPixelRatio
-    # paint the content subtree into the buffer, un-transformed, clipped to the slot
-    # box. No appliedShadow here: shadow faintness is applied at composite time.
-    # While the subtree paints, flag the world so descendants record their (virtual)
-    # last-painted bounds (§4.5) — save/restore for nested islands.
+    if clip?
+      # clear the dirty region to transparent before repaint (device px; the translate above is
+      # already applied, so this is the VIRTUAL rect × ceilPixelRatio). No appliedShadow here —
+      # shadow faintness is applied at composite time.
+      bctx.clearRect clipRect.left() * ceilPixelRatio, clipRect.top() * ceilPixelRatio, clipRect.width() * ceilPixelRatio, clipRect.height() * ceilPixelRatio
+      # HARD-clip the repaint to the cleared region. The clippingRectangle arg below is only a CULLING
+      # hint — a child's SHADOW (painted via a ctx translate) or an over-hanging blit can escape it and
+      # paint OUTSIDE the cleared region, over the still-valid old pixels there → a doubled (alpha-
+      # accumulated) shadow. A real ctx clip guarantees the partial rebuild touches ONLY the cleared
+      # rect, so it is byte-identical to a full rebuild there and leaves the rest of the buffer intact.
+      bctx.clipToRectangle clipRect.left() * ceilPixelRatio, clipRect.top() * ceilPixelRatio, clipRect.width() * ceilPixelRatio, clipRect.height() * ceilPixelRatio
     prevIslandBuffer = world.paintingIntoIslandBuffer
     world.paintingIntoIslandBuffer = @
     @children.forEach (child) =>
-      child.fullPaintIntoAreaOrBlitFromBackBuffer bctx, slot, nil
+      child.fullPaintIntoAreaOrBlitFromBackBuffer bctx, clipRect, nil
     world.paintingIntoIslandBuffer = prevIslandBuffer
+    bctx.restore()
     buffer
 
   # Dispatch the non-identity composite (identity is handled by the caller). A pure uniform

@@ -1657,14 +1657,12 @@ See §7. None of these block declaring the feature shipped.
 
 ## §7 Banked / deferred work (recorded so ideas are not lost)
 
-0. **⭐ TOP PERF FOLLOW-UP — §4.4 island buffer cache** (promoted 2026-07-10): as-built
-   `_refreshIslandBuffer` allocates a fresh canvas and re-rasterizes the whole content subtree on
-   EVERY composite (twice per damaged frame: shadow + normal pass) — so the plan's headline "rotation
-   animation never re-rasterizes content" (§9/§10.9/§10.10) is NOT yet true. Wire the content-version-
-   keyed validity check + virtual-plane buffer-dirty accumulation (§4.4/§4.5): keep the buffer across
-   composites, rebuild only the dirty sub-rects, and reuse the same buffer for the shadow pass. This is
-   the single biggest island-perf win and makes the design's central claim true. (Distinct from item 1,
-   the general layer-policy engine — this is just the static per-island cache the current code stubs.)
+0. **⭐ TOP PERF FOLLOW-UP — §4.4 island buffer cache — ✅ LANDED 2026-07-11 (= item 15 below; its own
+   doc `docs/island-buffer-cache-plan.md`).** The buffer is now kept across composites and warped for a
+   transform-only step (both shadow + normal pass reuse it); a content change rebuilds only the dirty
+   sub-rect. The plan's headline "rotation animation never re-rasterizes content" (§9/§10.9/§10.10) is now
+   TRUE, measured 1.40×/step (sw=1). See item 15 + the plan doc §6 for the full landing (incl. the async
+   glyph-atlas gate and the hard-clip fix). (Distinct from item 1, the general layer-policy engine.)
 1. **Dynamic layer policy engine** — generalize island buffering into per-layer
    `cached-raster | vector-replay` chosen by measured cost (EWMA of replay time vs. rasterize
    cost vs. memory budget, with hysteresis and an LRU eviction pool; eviction falls back to
@@ -1687,6 +1685,41 @@ See §7. None of these block declaring the feature shipped.
    resamples). Watch the SWCanvas atlas size-snapping limits (fact 3.7). Long-term this
    unifies `ceilPixelRatio`, per-window zoom, and warp into one per-layer number; world zoom
    = one root island.
+   **REFINEMENT (owner discussion 2026-07-11) — QUANTIZED DENSITY, never font-size change.**
+   Two owner objections kill the naive "render text at bigger font sizes" reading: (a) atlases
+   are bitmaps at a limited size set — arbitrary sizes can't exist; (b) font metrics don't scale
+   (size-10 text at 2× ≠ size-20 text: different advances/kerning ⇒ layout would REFLOW under
+   zoom, breaking the virtual-plane invariant). The correct mechanism is the EXISTING
+   `pixelDensity` machinery (dpr-2 is the daily suite-green proof): font SIZE stays fixed,
+   density changes. **PRECISE data-model facts (verified 2026-07-11 — the owner-remembered
+   nuance is real):** SWCanvas splits font data into TWO stores with OPPOSITE density policies:
+   (i) LAYOUT metrics (advances/kerning/baselines — what determines text width and wrapping):
+   ONE density-agnostic record per (family,style,weight,size), "ships with pd=null; the runtime
+   supplies the density" (`MetricsBundleStore`/`MetricsExpander`, `swcanvas.js:3092-3108,6285`)
+   — cross-density layout invariance holds BY DELIBERATE DESIGN FIAT (one record, runtime-
+   scaled), NOT because fonts naturally scale (they don't);
+   (ii) ATLAS positioning (glyph ink boxes/offsets): PER-DENSITY records — "physical-pixel
+   offsets and rasteriser rounding genuinely differ across densities"
+   (`PositioningBundleStore`, `swcanvas.js:3195-3218`) — the INK is independently rasterized
+   per density (that is what makes density 2 crisp) while pen ADVANCES are exactly scaled.
+   Net: density switching can never REFLOW text; ink shifts sub-pixel (intended). So §7.4 =
+   **quantize the island's rasterization density to the SHIPPED density set** (today {1,2}):
+   zoom 1.37 ⇒ rasterize the buffer at density 2, warp DOWN 0.685; beyond the max shipped
+   density ⇒ honestly soft. Layout NEVER changes with zoom (pinch-zoom model, not text-zoom —
+   "really bigger text" is a layout operation via the font-size property, not a transform).
+   Composes with §4.4 + soft-then-snap: animate by warping the cached buffer; at rest, snap the
+   density to the quantized target and re-rasterize ONCE (cache key gains a density component).
+   **⚠ PRIORITY DOWNGRADE (owner discussion 2026-07-11): the benefit window is NARROW.** On
+   retina (dpr 2) the base density is already 2, and density-3/4 assets do not exist — shipping
+   them would be the real atlas-proliferation cost, rejected — so §7.4 buys retina NOTHING
+   (and per Phase-0f, zoomed text on dpr2 already looks near-indistinguishable). The entire win
+   is **dpr-1 displays, zoom ∈ (1,2]**, at 4× per-island buffer memory while zoomed (asset cost
+   zero — density-2 bundles already ship for retina). Implement ONLY if a concrete dpr-1 zoom
+   use case demands it (projector/presentation world-zoom, accessibility zoom on non-retina);
+   until then the standing 0f verdict (accept soft) covers scale too, and the soft-then-snap
+   policy above stays pre-decided at zero cost (without §7.4 there is no density to snap —
+   scale just warps, as today). Downscale-warp under NEAREST sampling is speckly — §7.8
+   bilinear makes it properly good (strengthens the case for §7.8).
 5. **Native crisp-rotated-text mode** — render-through on the native backend only;
    pixel-test-excluded by construction. Low priority; Squeak-soft is the accepted look.
 6. **Container-level "freeze" veto** for `claimsSpace` (presentation mode: treat all children
@@ -1751,6 +1784,23 @@ See §7. None of these block declaring the feature shipped.
    screenshots). The law is documented in three places (that doc normative, §4.13 pointer here, CLAUDE.md
    one-liner). ⚠ Owner EXCLUDED any inspector change ("inspector honesty") from the unit's scope — recorded
    as a future item.
+15. **⭐ Island buffer cache (completes §4.4; the TOP perf follow-up) — ✅ LANDED 2026-07-11, its own doc:
+   `docs/island-buffer-cache-plan.md`** (design LOCKED + executed; §6 = results). Makes §9/§10.9/§10.10's
+   "transform animation never re-rasterizes content" TRUE (now flipped there; measured 1.40×/step, sw=1):
+   keeps the buffer across composites and warps it for a transform-only step; event-driven dirty deposit via
+   the §4.5 mapping walk (destination) + a recordDrawn source-lane stash (old-position erase for
+   move-within-island); partial rebuild = clear + HARD-clip + repaint (a soft clippingRectangle lets a
+   child's shadow escape → doubled); global `islandBufferCacheEnabled` kill-switch + per-island
+   `cachesBuffer`; new fields ⇒ serializationTransients + `_reactToBeingCopied` drop (copy-coherence). Gate:
+   ZERO reference changes bar the pre-authorized inspector recapture (2 new `_islandBufferSource*` Widget
+   fields). ⚠ **The one non-event invalidation:** SWCanvas loads glyph atlases ASYNC, so text rasterises as
+   blocks until warm with NO changed()/deposit — the island buffer (a cache downstream of the text back
+   buffers) invalidates off the immutable text-back-buffer cache RESET, which now bumps
+   `WorldWdgt.immutableBackBufferGeneration` (the buffer full-rebuilds when its epoch is stale). Banked
+   lesson: an island-cached render that changes across composites without a changed() (async resource load)
+   must invalidate off the SAME signal that reloads the upstream cache, NOT a liveness flag whose transition
+   races the re-render (an `anyTextDirty()` gate fixed Chrome but flipped WebKit). ⚠ The "identity
+   blit==replay" / "tiling stays raster-under-warp" guards belong to §7.1/§7.2 (vector-replay), NOT here.
 
 ---
 
@@ -2109,13 +2159,16 @@ pinned-anchor interplay line).**
 - Identity island: one extra buffer + one extra equal-extent blit per composite (≈ the cost
   every text widget already pays).
 - Rotation animation of a static window: per step = matrix update + damage (oldAABB ∪ newAABB) +
-  one warped `drawImage`; the layout engine does NOT run (in `'slot'` mode). ⚠ **The "content
-  subtree is NOT re-rasterized" claim is the DESIGN goal but is FALSE AS-BUILT: `_refreshIslandBuffer`
-  allocates a fresh canvas and re-rasterizes the whole content subtree on EVERY composite, and each
-  damaged frame composites TWICE (shadow pass + normal pass). This is correctness-first (documented
-  §4.4); the content-version-keyed buffer cache + buffer-dirty accumulation that make the claim true
-  are BANKED (§4.4/§4.5) and NOT yet wired. Promoting §4.4 buffer caching is the TOP island-perf
-  follow-up.**
+  one warped `drawImage`; the layout engine does NOT run (in `'slot'` mode). ✅ **The "content
+  subtree is NOT re-rasterized" claim is now TRUE AS-BUILT** (island buffer cache LANDED 2026-07-11,
+  `docs/island-buffer-cache-plan.md`): `_refreshIslandBuffer` keeps the content buffer ACROSS composites and
+  reuses it for a transform-only step (both the shadow pass and the normal pass); a content change
+  re-rasterises only the dirty sub-rect. **Measured (minified sw=1, 460×400 text window, 90 × 1°): 1.40×
+  per step** (the eliminated re-rasterisation; the SW warp still dominates, so the win is bounded by the
+  raster fraction). ⚠ One non-event invalidation was required: SWCanvas loads glyph atlases async (text
+  rasterises as block glyphs until warm, no changed() event), so the buffer invalidates off the immutable
+  text-back-buffer cache RESET (`WorldWdgt.immutableBackBufferGeneration`) — the same signal that re-renders
+  the warm text — else a pre-atlas block-glyph render would freeze into the buffer.
 - SW warp throughput: estimate 3–10× per painted pixel vs. axis blit (Phase 0c measures).
   Native backend: GPU-composited, expected negligible.
 - Occlusion: no culling behind non-identity islands (= pre-2026-07-09 repaint behavior in
@@ -2295,9 +2348,9 @@ Per step, `'slot'` mode: setter updates the scalar → `geometryVersion++` + `fu
 (cost identical to a `moveBy` of the same widget — the version-keyed caches already absorb
 exactly this every frame of any drag today, `Widget.coffee:1304` precedent) → damage
 `oldFootprint ∪ newFootprint` → one clipped, transformed `drawImage`. NO layout, NO text
-remeasure. ⚠ **"NO buffer re-rasterization" is the DESIGN goal, FALSE as-built** — `_refreshIsland-
-Buffer` re-rasterizes the whole subtree every composite (twice per damaged frame: shadow + normal);
-the §4.4 content-version buffer cache that makes this true is banked, not yet wired (see §9).
+remeasure. ✅ **"NO buffer re-rasterization" is now TRUE as-built** — the §4.4 island buffer cache
+(LANDED 2026-07-11, `docs/island-buffer-cache-plan.md`) keeps the buffer across composites and warps it for
+a transform-only step; measured 1.40×/step (sw=1, 460×400 text window). See §9.
 
 - **[OK]** Ordering guarantee: spec mutations happen in the step/input phase, damage+composite
   in the same world cycle, hit tests between cycles — one consistent matrix per cycle; the
@@ -2318,10 +2371,9 @@ equal-extent blit (= what a text widget already costs); scale-only ≈ same plus
 blit; rotated = per-pixel inverse-map + nearest sample within the damage clip (estimate 3–10× per
 painted pixel on SW — Phase 0c measures; native composites on GPU).
 
-- Structural wins vs alternatives — ⚠ these are the DESIGN targets, several NOT yet true as-built
-  (§9): animation is INTENDED to never re-rasterize content (needs the §4.4 buffer cache — banked;
-  as-built it re-rasterizes every composite); occlusion/damage/layout engines never run for `'slot'`
-  animation (TRUE as-built);
+- Structural wins vs alternatives (§9): animation never re-rasterizes content — ✅ now TRUE as-built (the
+  §4.4 island buffer cache LANDED 2026-07-11; measured 1.40×/step, sw=1); occlusion/damage/layout engines
+  never run for `'slot'` animation (TRUE as-built);
   the existing `data32.fill` opaque-span fast paths are untouched for everything
   untransformed.
 - Structural costs: damage AABB inflation (√2-ish typical, thin-widget-at-45° worst);

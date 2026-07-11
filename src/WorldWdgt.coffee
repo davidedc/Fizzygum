@@ -219,6 +219,30 @@ class WorldWdgt extends PanelWdgt
   # @fullPaintIntoAreaOrBlitFromBackBuffer / @_paintedFromFrontmostCoverer below.
   @occlusionCullingEnabled: true
 
+  # §4.4 island buffer cache (docs/island-buffer-cache-plan.md). CLASS property (untouched by
+  # world-snapshot serialization; flippable by a test / the byte-identity A/B macro / the profiler's
+  # --cache A/B). Default ON; a flip is pixel-invisible (the cache is byte-identical to rebuild-always
+  # by construction, so it may simply drop caches). The per-island opt-out is
+  # TransformFrameWdgt::cachesBuffer; the cache is active iff BOTH are on.
+  @islandBufferCacheEnabled: true
+
+  # §4.4 island buffer cache — the async-atlas invalidation epoch. SWCanvas loads glyph atlases
+  # asynchronously; until warm, text rasterises as placeholder BLOCKS into cached back buffers
+  # (SWCanvasElement-extensions swCanvasScheduleTextRefresh). When an atlas warms, the immutable
+  # text-back-buffer cache is RESET so the text re-renders — and an island buffer is a FURTHER cache
+  # downstream of those, so it must invalidate too (else a plain composite re-blits the frozen block
+  # glyphs). This counter bumps on every immutable-cache reset (via resetImmutableBackBuffersCache
+  # below); a TransformFrameWdgt full-rebuilds when its stored epoch is stale. Class property (survives
+  # world-snapshot serialization; matched to islandBufferCacheEnabled). See docs/island-buffer-cache-plan.md §6.
+  @immutableBackBufferGeneration: 0
+
+  # The single reset entry for the immutable text-back-buffer cache: resets it AND bumps the epoch so
+  # downstream island buffers rebuild from the now-warm text. Callers: swCanvasScheduleTextRefresh (atlas
+  # warm, real usage) and the macro screenshot gate (readyForMacroScreenshot).
+  resetImmutableBackBuffersCache: ->
+    @cacheForImmutableBackBuffers?.reset?()
+    WorldWdgt.immutableBackBufferGeneration++
+
   broken: nil
   duplicatedBrokenRectsTracker: nil
   numberOfDuplicatedBrokenRects: 0
@@ -892,6 +916,13 @@ class WorldWdgt extends PanelWdgt
         #if brokenWidget!= world and (brokenWidget.clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
         #  debugger
 
+      # §4.4 island buffer cache — source (old-position) lane (see fleshOutFullBroken). Consumed by
+      # whichever lane runs first (fleshOutFullBroken is called before fleshOutBroken); the field is
+      # nil'd on consumption so this second lane is a no-op when the full lane already handled it.
+      if brokenWidget._islandBufferSourceIsland?
+        brokenWidget._islandBufferSourceIsland._depositIslandBufferDirtyRect brokenWidget._islandBufferSourceVirtualRect
+        brokenWidget._islandBufferSourceIsland = nil
+
       # for the "destination" broken rectangle we can actually
       # check whether the Widget is still visible because we
       # can skip the destination rectangle in that case
@@ -907,7 +938,8 @@ class WorldWdgt extends PanelWdgt
           # affine transforms (§4.5): map the current (virtual for island descendants)
           # rect to screen BEFORE spread/expand/shadow-grow. Mapped BEFORE the merge/
           # dedupe below so those never see mixed planes. Identity → unchanged object.
-          destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged).spread().expandBy(1).growBy @maxShadowSize
+          # depositBufferDirty=true deposits the NEW (destination) virtual footprint onto the island (§4.4).
+          destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged, true).spread().expandBy(1).growBy @maxShadowSize
           #if brokenWidget!= world and (boundsToBeChanged.spread().containsPoint new Point 10, 10)
           #  debugger
 
@@ -943,6 +975,13 @@ class WorldWdgt extends PanelWdgt
           # true rotated footprint, not the un-transformed slot. Off any island it is the raw rect ⇒ dormant-identical.
           sourceBroken = brokenWidget.fullClippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
 
+      # §4.4 island buffer cache — source (old-position) lane: erase the vacated buffer region of a
+      # widget that MOVED within (or was removed from) its stationary island. The stashed island stays
+      # alive even when the widget detached, so removal is ghost-free (recordDrawnAreaForNextBrokenRects).
+      if brokenWidget._islandBufferSourceIsland?
+        brokenWidget._islandBufferSourceIsland._depositIslandBufferDirtyRect brokenWidget._islandBufferSourceVirtualRect
+        brokenWidget._islandBufferSourceIsland = nil
+
       # for the "destination" broken rectangle we can actually
       # check whether the Widget is still visible because we
       # can skip the destination rectangle in that case
@@ -953,7 +992,8 @@ class WorldWdgt extends PanelWdgt
 
         if boundsToBeChanged.isNotEmpty()
           # affine transforms (§4.5): map to screen before spread/expand/shadow-grow, before merge (identity → unchanged).
-          destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged).spread().expandBy(1).growBy @maxShadowSize
+          # depositBufferDirty=true deposits the NEW (destination) virtual footprint onto each crossed island (§4.4).
+          destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged, true).spread().expandBy(1).growBy @maxShadowSize
           #if brokenWidget!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
           #  debugger
       
