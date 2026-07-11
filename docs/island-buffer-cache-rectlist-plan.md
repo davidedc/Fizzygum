@@ -1,7 +1,7 @@
 # Island buffer cache — §4.4 rect-list dirty refinement (v1 → v2)
 
-**STATUS: ✅ LANDED 2026-07-11 (design LOCKED + executed; results in §6). Committed under the standing
-grant; NOT pushed (awaits owner approval). Phase-5 follow-on to the landed island buffer cache
+**STATUS: ✅ LANDED + PUSHED 2026-07-11 (owner-approved) — Fizzygum `d845a79f`, tests `88b2c7d4e` (design
+LOCKED + executed; results in §6). Phase-5 follow-on to the landed island buffer cache
 (`docs/island-buffer-cache-plan.md`, Fizzygum `17803fc0`). Owner picked this next 2026-07-11.
 Self-contained + cold-executable. Line numbers verified 2026-07-11 and WILL drift — every anchor has a
 symbol; grep the symbol, scoped to `src/` (never the workspace root).**
