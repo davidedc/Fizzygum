@@ -169,3 +169,26 @@ class TransformSpec
 
   mapRect: (r, slotBounds) ->
     @_mapRectWithMatrix @matrixForSlot(slotBounds), r
+
+  # The EXACT, unpadded twin of _mapRectWithMatrix: the raw float min/max of the 4
+  # transformed corners with NO floor/ceil and NO +1px pad. This is the SCREEN-family
+  # backing store (docs/affine-geometry-api-plan.md §3.1) — a screen-plane AABB is an
+  # exact, possibly-FRACTIONAL query result; it must NEVER be fed to layout / moveTo
+  # (which are integer, own-plane). Kept as a PARALLEL method rather than a shared
+  # helper so mapRect's proven damage path (whose padding correctness is load-bearing,
+  # plan §4.5) stays byte-untouched. First caller: Widget::screenBounds.
+  _mapRectExactWithMatrix: (m, r) ->
+    xs = [r.left(), r.right(), r.left(),  r.right()]
+    ys = [r.top(),  r.top(),   r.bottom(), r.bottom()]
+    minX = Infinity ; minY = Infinity ; maxX = -Infinity ; maxY = -Infinity
+    for i in [0...4]
+      px = m.a * xs[i] + m.c * ys[i] + m.e
+      py = m.b * xs[i] + m.d * ys[i] + m.f
+      minX = px if px < minX
+      maxX = px if px > maxX
+      minY = py if py < minY
+      maxY = py if py > maxY
+    new Rectangle minX, minY, maxX, maxY
+
+  mapRectExact: (r, slotBounds) ->
+    @_mapRectExactWithMatrix @matrixForSlot(slotBounds), r

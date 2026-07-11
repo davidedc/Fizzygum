@@ -1334,6 +1334,83 @@ class Widget extends TreeNode
     nil
 
   # ---------------------------------------------------------------------------
+  # PUBLIC GEOMETRY API UNDER TRANSFORMS — the two-vocabulary law.
+  # Canonical spec: docs/affine-geometry-api-plan.md (§1 is the normative text).
+  #
+  # THE LAW: a widget's geometry API is split into two families distinguishable BY NAME:
+  #  - LAYOUT-BOX family (width/height/extent/bounds/boundingBox/position/center/left/…): the
+  #    widget's OWN-plane layout box — plane-local, untransformed, integer. Inside an island these
+  #    are virtual-plane values; outside, screen values. Transforms NEVER affect them; layout /
+  #    settle / arrange / content code operate on these (the load-bearing invariant, plan §4.1).
+  #  - SCREEN family (every name contains "screen": screenBounds/localPointToScreen/screenPoint-
+  #    ToMyPlane/…): post-transform screen-plane values, possibly FRACTIONAL. NEVER feed them to
+  #    layout / moveTo.
+  # No non-"screen" method ever returns transformed geometry; no "screen" method ever returns
+  # plane-local geometry. (The island's clippedThroughBounds/fullClippedBounds two-faces overrides
+  # are framework-internal damage/hit machinery, NOT a public screen-bounds proxy — that is exactly
+  # why screenBounds() exists; plan §1.2 / §4.11.)
+  # ---------------------------------------------------------------------------
+
+  # SCREEN family. The screen-plane axis-aligned bounding box of my layout box under all ancestor
+  # island transforms — an exact, possibly-FRACTIONAL Rectangle (never feed it to layout / moveTo).
+  # Walk @parent innermost→outermost (same order as localPointToScreen), mapping the rect's 4
+  # corners through each non-identity island's EXACT (unpadded) matrix. NO ancestor-clip
+  # intersection (that is mapRectToScreen's damage-lane job) and NO padding. Identity fast path: no
+  # non-identity ancestor island ⇒ return @boundingBox() (the same object — zero-alloc dormant,
+  # matching boundingBox / localPointToScreen). For the ISLAND itself the walk starts at @parent, so
+  # its OWN transform (which applies to its CONTENT, not its slot box) is correctly excluded.
+  screenBounds: ->
+    result = @boundingBox()
+    ancestor = @parent
+    while ancestor?
+      if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
+        result = ancestor.transformSpec.mapRectExact result, ancestor.bounds
+      ancestor = ancestor.parent
+    result
+
+  # My OWN sugar transform — getter symmetry with the 4C setters setRotationDegrees / setScaleFactor
+  # (reads what they wrote). 0 / 1 for a bare widget AND for a widget that is CONTENT of an EXPLICIT
+  # (non-sugar) island: the sugar getters mirror the sugar setters' scope. For the TOTAL visual
+  # transform of my rendering (through explicit + nested islands) use accumulated*() below.
+  rotationDegrees: ->
+    @_enclosingSugarIsland()?.transformSpec.rotationDegrees ? 0
+
+  scaleFactor: ->
+    @_enclosingSugarIsland()?.transformSpec.scale ? 1
+
+  # The TOTAL visual transform of my rendering: Σ rotationDegrees (normalized to [0,360)) and
+  # ∏ scale over ALL ancestor non-identity islands (sugar AND explicit) — the linear part of the
+  # accumulated similitude (plan 4D-2a: scalar rotations commute + multiply, so no matrix product /
+  # decomposition; summing integer degrees is EXACT). The walk starts at @parent (STRICT ancestors),
+  # and my own sugar island IS an ancestor, so my own transform is included. ONE greppable
+  # accumulation shared with the pick-out (_pickOutRotatedFigureNoSettle) and drop-re-express
+  # (_reExpressFigureForPlaneOfNoSettle) verbs. Off any island ⇒ 0 / 1.
+  accumulatedRotationDegrees: ->
+    total = 0
+    ancestor = @parent
+    while ancestor?
+      if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
+        total = total + ancestor.transformSpec.rotationDegrees
+      ancestor = ancestor.parent
+    ((total % 360) + 360) % 360
+
+  accumulatedScaleFactor: ->
+    product = 1
+    ancestor = @parent
+    while ancestor?
+      if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
+        product = product * ancestor.transformSpec.scale
+      ancestor = ancestor.parent
+    product
+
+  # Public, macro-callable predicate: true iff at least one STRICT ancestor island has a non-identity
+  # spec — i.e. "my layout-box geometry does not coincide with my screen appearance". For an island
+  # itself: false (its slot box IS plane geometry — its CONTENT is what transforms). The blessed
+  # public name for the private _isInsideNonIdentityIsland (macros cannot call `_`-prefixed members).
+  isVisuallyTransformed: ->
+    @_enclosingNonIdentityIsland()?
+
+  # ---------------------------------------------------------------------------
   # Affine transforms (§6 Phase 4C): the Lively-flavoured property sugar. Rotate / scale ANY widget
   # by MATERIALIZING an enclosing TransformFrameWdgt island on demand, and REMOVING it when the
   # transform returns to identity — so the widget's structural identity is restored at identity (the
@@ -1348,17 +1425,24 @@ class Widget extends TreeNode
   # (rotates by MATERIALIZING a sugar island via setRotationDegrees) or an explicit TransformFrameWdgt
   # island (which overrides all three to drive its own spec directly). Base = the plain-widget case.
   # ---------------------------------------------------------------------------
-  # The SCREEN pivot for a halo rotation: my centre mapped to screen. It is the FIXED POINT of the
-  # sugar island's rotation (the island's anchor is my bounds centre), so it stays put as I spin —
-  # localPointToScreen of my centre returns that same point through the rotating island (dormant: my
-  # plain centre off any island).
+  # The SCREEN pivot for a halo rotation: the FIXED POINT of my sugar island's rotation. That fixed
+  # point is the island's ANCHOR (its transformSpec._anchorFor) — which for an un-pinned island is my
+  # bounds centre, but after §7.5 Bug D a collapse/resize can PIN it OFF the centre, so we must ask the
+  # island for its true anchor rather than assume the centre (that assumption was one of the two
+  # trip-ups this API unit exists to close — geometry-api-plan §1.4). Delegate to the island's own
+  # screenAnchor() (the authoritative anchor→screen map). Bare-widget (no island yet, e.g. the FIRST
+  # halo grab) fallback: my centre mapped to screen — dormant that is my plain centre, and it matches
+  # the slot-centre anchor the about-to-materialise sugar island will use.
   rotationHalo_screenAnchor: ->
+    island = @_enclosingSugarIsland()
+    return island.screenAnchor() if island?
     @localPointToScreen @center()
 
-  # My current halo rotation in degrees: the enclosing sugar island's rotation, or 0 if I am not
-  # (yet) wrapped — so a re-grab continues from where a prior rotation left off.
+  # My current halo rotation in degrees: my own sugar transform (the public getter), or 0 if I am not
+  # (yet) wrapped — so a re-grab continues from where a prior rotation left off. rotationHalo_* is the
+  # documented halo-consumer family; this stays as its blessed alias of rotationDegrees().
   rotationHalo_currentDegrees: ->
-    @_enclosingSugarIsland()?.transformSpec.rotationDegrees ? 0
+    @rotationDegrees()
 
   # Apply a halo rotation: the 4C property sugar (materialises a sugar island on demand, removes it at
   # identity). Self-settling; called per drag from the (allowlisted) rotate-handle stream — a 'slot'
@@ -1497,19 +1581,15 @@ class Widget extends TreeNode
   # so translating by their difference re-homes the whole figure. For n=1 this is pixel-identical; for n≥2 it
   # resamples once instead of per-level (crisper — a new state anyway).
   _pickOutRotatedFigureNoSettle: ->
-    sStar = 1
-    degStar = 0
-    ancestor = @parent
-    while ancestor?
-      if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
-        sStar = sStar * ancestor.transformSpec.scale
-        degStar = degStar + ancestor.transformSpec.rotationDegrees
-      ancestor = ancestor.parent
-    degStar = ((degStar % 360) + 360) % 360
+    # the accumulated similitude of ALL my ancestor islands (∏ scales, Σ degrees normalized) — the
+    # public getters ARE this walk, extracted (byte-equivalent). Read them BEFORE _addNoSettle re-parents
+    # me (they walk MY current ancestors).
+    accScale = @accumulatedScaleFactor()
+    accDeg = @accumulatedRotationDegrees()
     screenCentreBefore = @localPointToScreen @center()     # my on-screen centre BEFORE extraction
     island = new TrackingTransformFrameWdgt()
     island._materializedBySugar = true                     # behaves as a sugar island (auto-unwrap at identity, scalar serialization)
-    island.transformSpec = new TransformSpec degStar, sStar
+    island.transformSpec = new TransformSpec accDeg, accScale
     island.bounds = new Rectangle @left(), @top(), @right(), @bottom()   # slot = my bounds ⇒ slot centre = my centre
     island._addNoSettle @                                  # extract me from my old container into the fresh island
     island._applyMoveTo island.position().add (screenCentreBefore.subtract @center())   # re-home so my centre lands where it was
@@ -1578,18 +1658,14 @@ class Widget extends TreeNode
   # accumulation; NoSettle -- the drop's target.add carries the settle.
   _reExpressFigureForPlaneOfNoSettle: (target) ->
     return @ if !@_materializedBySugar
-    # Accumulate the destination plane's linear part over the non-identity islands the dropped payload will
-    # composite through -- target and its ancestors. target is never itself a non-identity island (islands
-    # refuse drops, so dropTargetFor climbs past them), so this matches the ancestor chain target.screenPoint
-    # ToMyPlane walks for the 4D-1 position map. Mirrors _pickOutRotatedFigureNoSettle's walk (its inverse).
-    sPlane = 1
-    degPlane = 0
-    ancestor = target
-    while ancestor?
-      if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
-        sPlane = sPlane * ancestor.transformSpec.scale
-        degPlane = degPlane + ancestor.transformSpec.rotationDegrees
-      ancestor = ancestor.parent
+    # The destination plane's linear part: the accumulated similitude over the non-identity islands the
+    # dropped payload will composite through -- target's ancestors. target is never itself a non-identity
+    # island (islands refuse drops, so dropTargetFor climbs past them), so target.accumulated*() (STRICT
+    # ancestors) equals the target-inclusive walk this used to inline -- byte-equivalent (a normalized Σ
+    # differs from the raw sum only by a multiple of 360, which relDeg's own mod cancels; the ∏ is the
+    # same ordered product). Mirrors _pickOutRotatedFigureNoSettle's accumulation (this is its inverse).
+    degPlane = target.accumulatedRotationDegrees()
+    sPlane = target.accumulatedScaleFactor()
     relDeg = (((@transformSpec.rotationDegrees - degPlane) % 360) + 360) % 360
     relScale = @transformSpec.scale / sPlane
     @_setRotationNoSettle relDeg   # the island's own spec cores; each early-returns when unchanged (identity

@@ -590,6 +590,21 @@ the identity-bypass gate.
 `occlusionCullingEnabled`, `src/WorldWdgt.coffee:213`). When false, `TransformSpec` setters
 clamp to identity. This is a kill-switch, not a semantics switch.
 
+### 4.13 Public geometry API contract (the two-vocabulary law) — LANDED 2026-07-11
+
+A widget's geometry API is split into two families distinguishable BY NAME. The **layout-box family**
+(`width()`/`height()`/`extent()`/`bounds`/`boundingBox()`/`position()`/`center()`/`left()`/…) is the
+widget's OWN-plane layout box — plane-local, untransformed, integer; a transform NEVER changes it (this
+is the load-bearing island invariant, §4.1). The **screen family** (every name contains `screen`:
+`screenBounds()`/`localPointToScreen()`/`screenPointToMyPlane()`/…) returns post-transform, possibly-
+fractional screen geometry that must never be fed to layout/`moveTo`. **The full normative spec, the
+missing-method list, the accumulation getters, and the pinned-anchor `rotationHalo_screenAnchor` fix are
+in `docs/affine-geometry-api-plan.md` (that doc is canonical); this section is the pointer.** Shipped
+methods: `Widget::screenBounds`/`rotationDegrees`/`scaleFactor`/`accumulatedRotationDegrees`/
+`accumulatedScaleFactor`/`isVisuallyTransformed` + `TransformSpec::mapRectExact` (the exact/unpadded twin
+of `mapRect`). Test: `SystemTest_macroGeometryApiTwoVocabularies` (value-assert, no screenshots). Owner
+EXCLUSION: no inspector change (a future item).
+
 ---
 
 ## §5 Rejected alternatives — do NOT re-attempt without new evidence
@@ -1723,15 +1738,19 @@ See §7. None of these block declaring the feature shipped.
    `enableDrops()` by default so the path is rarely reachable and (b) there is no stack-in-island fixture.
    Fix is the identical one-liner: map the point via `target.screenPointToMyPlane` before passing it when
    `target._isInsideNonIdentityIsland()`. Owner-gated; build on demonstrated need.
-14. **Public geometry API unit — PLAN AUTHORED + OWNER-APPROVED 2026-07-11, its own doc:**
-   `docs/affine-geometry-api-plan.md` (self-contained, cold-executable). The two-vocabulary LAW
-   (layout-box family stays untransformed forever; every screen-family name contains "screen"),
-   plus the missing methods — `screenBounds()`, `rotationDegrees()`/`scaleFactor()` getters,
-   `accumulatedRotationDegrees()`/`accumulatedScaleFactor()` (extracting the inlined Σ/∏ walks),
-   `isVisuallyTransformed()` — with first-caller refactors (pick-out, 2b-i plane accumulation,
-   `rotationHalo_currentDegrees` alias, `rotationHalo_screenAnchor` pinned-anchor fix). Sequenced
-   AFTER Bugs D/E → 2b-ii → 4E. ⚠ Owner EXCLUDED any inspector change ("inspector honesty") from
-   the unit's scope.
+14. **Public geometry API unit — ✅ LANDED 2026-07-11 (Phase 5, first banked item), its own doc:**
+   `docs/affine-geometry-api-plan.md` (self-contained; top banner now LANDED). Shipped the two-vocabulary
+   LAW (layout-box family stays untransformed forever; every screen-family name contains "screen") + the
+   missing methods — `screenBounds()`, `rotationDegrees()`/`scaleFactor()` getters,
+   `accumulatedRotationDegrees()`/`accumulatedScaleFactor()` (extracted the inlined Σ/∏ walks —
+   byte-equivalent), `isVisuallyTransformed()`, and `TransformSpec::mapRectExact` (the exact/unpadded twin
+   of `mapRect`, backing `screenBounds`) — with first-caller refactors (pick-out + 2b-i drop-re-express now
+   call `accumulated*()`; `rotationHalo_currentDegrees` aliases `rotationDegrees()`; `rotationHalo_screenAnchor`
+   routes through the true/pinned anchor via `_enclosingSugarIsland().screenAnchor()`, fixing the stale-centre
+   assumption under §7.5 Bug D). Value-assert macro `SystemTest_macroGeometryApiTwoVocabularies` (no
+   screenshots). The law is documented in three places (that doc normative, §4.13 pointer here, CLAUDE.md
+   one-liner). ⚠ Owner EXCLUDED any inspector change ("inspector honesty") from the unit's scope — recorded
+   as a future item.
 
 ---
 
