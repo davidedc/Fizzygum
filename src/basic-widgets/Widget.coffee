@@ -483,7 +483,11 @@ class Widget extends TreeNode
     world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
     @parent?._beforeChildClosed? @
     if world.basementWdgt?
-      world.basementWdgt._addLostWidgetNoSettle @
+      # §7.5 Bug B (model a): re-home the whole FIGURE, not just me -- if I am the sole content of a sugar
+      # island (a tilted/scaled widget), the transient island IS my rotation, so sending only me to the
+      # basement would strand the empty island and drop my transform. Only the re-homing TARGET changes; my
+      # own close bookkeeping above still runs on me. Off any sugar island this is me (byte-identical).
+      world.basementWdgt._addLostWidgetNoSettle @_enclosingSugarFigure()
     else
       world.inform "There is no\nbasement to go in!"
 
@@ -1510,6 +1514,31 @@ class Widget extends TreeNode
     island._addNoSettle @                                  # extract me from my old container into the fresh island
     island._applyMoveTo island.position().add (screenCentreBefore.subtract @center())   # re-home so my centre lands where it was
     island
+
+  # Affine transforms (§7.5 Bug B): the outermost SUGAR island of which I am (transitively) the sole content
+  # -- the whole "figure" that a RE-HOME (close-to-basement, reopen, a future "send to desktop") must move AS
+  # A UNIT so its rotation/scale travels with it -- or ME when I am not sugar-wrapped. This is the re-home
+  # SIBLING of the pick-OUT verb _resolvePickOutFigureNoSettle (4D-2a): pick-OUT may EXTRACT a sub-part onto
+  # the hand; re-home never extracts -- it moves the intact sugar figure. ONE greppable home for every re-home
+  # site: route close/reopen/eject through this, NEVER inline `_enclosingSugarIsland() ? @`. Pure (no
+  # mutation, no settle): a sugar island is transient rotation plumbing so re-homing it keeps the content's
+  # transform; an EXPLICIT island is a real container (not sole-content sugar) and is deliberately left alone
+  # (_enclosingSugarIsland only climbs `_materializedBySugar` sole-content islands). Off any sugar island ⇒ me.
+  _enclosingSugarFigure: ->
+    figure = @
+    loop
+      island = figure._enclosingSugarIsland()
+      break if !island?
+      figure = island
+    figure
+
+  # The container I really live in, seen THROUGH my transient sugar island(s) -- my @parent off any sugar
+  # wrap, or the sugar figure's parent when I am tilted/scaled. The ONE look-through idiom for "where does
+  # this widget really belong" (§7.5 Bug A/B): a widget's CLASSIFICATION must not be fooled by the transient
+  # rotation plumbing. WindowWdgt.isInternal (internal/external skin) and BasementWdgt.holds (basement
+  # residency) both classify against THIS, so a tilted widget is judged by its real home, not the sugar island.
+  _parentThroughSugarIslands: ->
+    @_enclosingSugarFigure().parent
 
   # Widget accessing - simple changes: translate me + my children + repaint.
   # (Stage 5, 2026-07-01) The re-fit seam this used to fire is DELETED -- the settle loop now re-fits my tracking

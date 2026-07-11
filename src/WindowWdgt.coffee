@@ -182,16 +182,13 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # switch button: nesting a window (drag-with-dwell) or ejecting it (drag-out, Phase 3 rule
   # flip) now updates the skin automatically, no toggle needed.
   isInternal: ->
-    # A sugar island -- the transient TransformFrameWdgt that setRotationDegrees/setScaleFactor
-    # wraps a widget in to tilt/scale it (marked _materializedBySugar) -- is an IMPLEMENTATION
-    # DETAIL of "this window is tilted", NOT a real container the window was nested into. So look
-    # THROUGH any such island(s) to the real parent before classifying: tilting an EXTERNAL window
-    # must keep it external (its true parent is still world), and tilting an INTERNAL window must
-    # keep it internal (its true parent is still the real container). Without this look-through the
-    # window would flip to the embedded skin merely because @parent became the sugar island.
-    p = @parent
-    while p instanceof TransformFrameWdgt and p._materializedBySugar
-      p = p.parent
+    # A sugar island -- the transient TransformFrameWdgt that setRotationDegrees/setScaleFactor wraps a
+    # widget in to tilt/scale it -- is an IMPLEMENTATION DETAIL of "this window is tilted", NOT a real
+    # container the window was nested into. Classify against my REAL container (through any sugar wrap):
+    # tilting an EXTERNAL window keeps it external (true parent still world), a tilted INTERNAL window keeps
+    # it internal (true parent still the real container). The look-through idiom is shared with
+    # BasementWdgt.holds (§7.5 Bug A/B) -- one _parentThroughSugarIslands, not a bespoke check per site.
+    p = @_parentThroughSugarIslands()
     p? and p isnt world and p isnt world?.hand
 
   setTitle: (newTitle) ->

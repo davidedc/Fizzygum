@@ -142,9 +142,13 @@ class BasementWdgt extends BoxWdgt
   _addLostWidgetNoSettle: (w) ->
     @scrollPanel.contents._addInPseudoRandomPositionNoSettle w
 
-  # is w currently sitting in the basement's contents?
+  # is w currently sitting in the basement's contents? §7.5 Bug B (model a): a tilted/scaled widget is
+  # re-homed to the basement AS ITS SUGAR FIGURE (w.parent is then the island, whose parent is the contents),
+  # so classify against w's REAL container through any sugar wrap -- the same look-through idiom
+  # WindowWdgt.isInternal uses -- else holds(w) would go false while w is demonstrably in the basement.
   holds: (w) ->
-    w.parent? and w.parent == @scrollPanel.contents
+    p = w._parentThroughSugarIslands()
+    p? and p == @scrollPanel.contents
 
   # if a child has been added to the scrollPanel,
   # the scrollPanel checks its parent to see if it

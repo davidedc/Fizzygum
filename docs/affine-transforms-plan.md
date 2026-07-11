@@ -1559,8 +1559,9 @@ Both stem from the SUGAR-ISLAND wrap (`setRotationDegrees`/`setScaleFactor` → 
 wraps the widget in a `TrackingTransformFrameWdgt`, so the widget's `@parent` becomes the island). Confirmed
 against the actual `DegreesConverterApp` window in `index.html?sw=1` (scratch `investigate-2bugs.js`).
 
-**STATUS: BUG A ✅ FIXED + COMMITTED (2026-07-10). BUG B still OPEN** (4E-adjacent; fix with the 4E
-sugar-island serialization/dormant-guarantee work — the rotation must survive close→basement→reopen).
+**STATUS (2026-07-10): BUG A ✅ FIXED + COMMITTED. BUG B ✅ FIXED (model a "move the figure", generic — see
+its section). BUG C ❌ was NOT A BUG (an audit-phase error, fixed in the gate).** Two audit follow-ons are
+recorded KNOWN-LATENT under Bug B (the basement "only show lost items" GC filter; explicit-island empty frame).
 
 ### BUG A — a tilted window takes the INTERNAL skin (should stay external) — ✅ FIXED 2026-07-10
 
@@ -1606,8 +1607,30 @@ sugar-island serialization/dormant-guarantee work — the rotation must survive 
   class for both windows before/after tilt 15 / after de-tilt 0. Proven to catch the bug: on the buggy build the
   "tilted outer window stays EXTERNAL" assertion fails (`expected true found false`).
 
-### BUG B — closing a tilted window loses its rotation (basement + reopen both STRAIGHT)
+### BUG B — closing a tilted window loses its rotation (basement + reopen both STRAIGHT) — ✅ FIXED 2026-07-10
 
+- **✅ AS-BUILT (model a, generic) — Fizzygum src `<this commit>`:** `Widget._enclosingSugarFigure` resolves the
+  re-home FIGURE (climbs `_enclosingSugarIsland` to the outermost sole-content sugar island, or me) — the ONE
+  greppable re-home verb, sibling of 4D-2a's `_resolvePickOutFigureNoSettle` (pick-OUT extracts; re-home never
+  does). `Widget._closeNoSettle` swaps ONLY its `_addLostWidgetNoSettle` argument to `@_enclosingSugarFigure()`
+  (my own close bookkeeping still runs on me; `_beforeChildClosed` is a dead no-op hook, never defined).
+  `IconicDesktopSystemWindowedApp.launch` re-homes + repositions the FIGURE (`existingWindow._enclosingSugarFigure()`)
+  not the plane-resident bare window. **Classification look-through unified:** `Widget._parentThroughSugarIslands`
+  (= `_enclosingSugarFigure().parent`) is the ONE idiom for "where does this widget really live"; `BasementWdgt.holds`
+  now uses it (else a tilted widget in the basement reads not-held), and `WindowWdgt.isInternal` (Bug A) was
+  refactored onto it — no bespoke per-site loop. Verified (probe + test): tilt 15° → close → the island travels
+  WHOLE to the basement (rotation preserved, `holds`=true, ZERO desktop islands = leak self-fixes) → reopen →
+  island re-homed to world still at 15°, exactly one island; a tilted NON-window widget behaves identically
+  (generic). Test `SystemTest_macroTiltedWindowKeepsRotationThroughCloseReopen` (value-assert; catches the bug —
+  buggy build fails rotation-preserved / no-orphan / reopen-still-tilted).
+- **⚠ AUDIT outcomes (from the design-locked table below):** `BasementWdgt.holds` ✅ FIXED (look-through).
+  `hideUsedWidgets` / "only show lost items" filter — **KNOWN-LATENT, RECORDED (not fixed):** its reachability
+  (`isInBasementButReachable` via `doGC` GC-session marks, `TreeNode.coffee:160`) walks UP; a sugar island's
+  content-window is referenced but the ISLAND (the basement child) is not, so a used tilted window reads as "lost"
+  and shows in the filter. Minor basement-UI cosmetic, NOT the core rotation path (reopen keys off `world[@slot]` +
+  `existingWindow.parent?`, never `holds`/reachability). Fix later = make basement reachability look through the
+  sugar figure to its content. The explicit (non-sugar) island wrapping a closed window (strands an empty frame)
+  stays KNOWN-LATENT too (out of scope for sugar-figure resolution).
 - **Symptom (owner):** "when you close a tilted window it gets put in the basement — STRAIGHT through. And when
   brought back (its reference/link icon re-opens it) it's put back in the world STRAIGHT." (Try: open the C↔F
   converter via its reference icon, rotate it, close it → it's straight in the basement; re-open via the icon →

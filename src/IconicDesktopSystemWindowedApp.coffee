@@ -51,11 +51,17 @@ class IconicDesktopSystemWindowedApp
     if @slot?
       existingWindow = world[@slot]
       if existingWindow? and !existingWindow.destroyed and existingWindow.parent?
-        world.add existingWindow
-        existingWindow.bringToForeground()
-        existingWindow._applyMoveTo world.hand.position().add new Point 100, -50
-        existingWindow._moveWithin world
-        existingWindow.rememberFractionalSituationInHoldingPanel()
+        # §7.5 Bug B (model a): the singleton may have been closed to the basement AS A FIGURE -- if it was
+        # tilted/scaled, world[@slot] is the window but its enclosing sugar island is what carries the
+        # transform, so re-home and reposition the FIGURE, not the bare window (moving an island-resident
+        # window by SCREEN coords would be a plane mismatch, 4A-2). Off any sugar island the figure is the
+        # window itself ⇒ byte-identical to the pre-Bug-B path.
+        figure = existingWindow._enclosingSugarFigure()
+        world.add figure
+        figure.bringToForeground()
+        figure._applyMoveTo world.hand.position().add new Point 100, -50
+        figure._moveWithin world
+        figure.rememberFractionalSituationInHoldingPanel()
         return
       world[@slot] = @buildWindow()
     else
