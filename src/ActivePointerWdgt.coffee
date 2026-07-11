@@ -460,7 +460,14 @@ class ActivePointerWdgt extends Widget
       # whole block is a no-op when dormant (byte-identical). NoSettle mutator — the target.add below
       # carries the single settle.
       if target._isInsideNonIdentityIsland()
-        virtualCentre = target.screenPointToMyPlane wdgtToDrop.center()
+        # §7.5 Bug-D interplay: a nil anchor makes center() the rotation fixed point, so it IS the on-screen
+        # visual centre — but a figure picked up after a resize can carry a PINNED anchor (anchor-stability),
+        # and then its bounds center() is spun about the pinned anchor and is NOT the visual centre. Map the
+        # bounds centre through the payload's OWN spec to get the true visual centre before mapping it into
+        # target's plane (a nil/centre anchor makes mapPoint the identity on the centre ⇒ unchanged for fresh
+        # pick-out islands; a plain-widget payload has no transformSpec ⇒ bare center()).
+        payloadVisualCentre = if wdgtToDrop.transformSpec? then wdgtToDrop.transformSpec.mapPoint(wdgtToDrop.center(), wdgtToDrop.bounds) else wdgtToDrop.center()
+        virtualCentre = target.screenPointToMyPlane payloadVisualCentre
         wdgtToDrop._applyMoveTo virtualCentre.subtract wdgtToDrop.extent().floorDivideBy 2
 
       target.add wdgtToDrop, nil, nil, true, nil, @position()

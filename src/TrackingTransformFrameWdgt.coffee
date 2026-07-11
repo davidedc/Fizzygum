@@ -47,7 +47,20 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
     return if !content?
     newSlot = new Rectangle content.left(), content.top(), content.right(), content.bottom()
     return if newSlot.equals @bounds
+    # PROTOTYPE Bug-D fix (anchor stability): a nil anchor means "slot centre", so an
+    # EXTENT change moves the anchor and rigidly translates every persisting screen
+    # point by (I - sR)delta (collapse: the title bar visibly jumps). Pin the anchor at
+    # its current absolute point across extent changes; translate a pinned anchor on
+    # pure moves; un-pin when it coincides with the centre again (canonical minimal form).
+    if !@transformSpec.isIdentity()
+      if newSlot.extent().equals @bounds.extent()
+        if @transformSpec.anchor?
+          @transformSpec.anchor = @transformSpec.anchor.add newSlot.topLeft().subtract @bounds.topLeft()
+      else
+        @transformSpec.anchor = @transformSpec._anchorFor @bounds
     @bounds = newSlot
+    if @transformSpec.anchor? and @transformSpec.anchor.equals newSlot.center()
+      @transformSpec.anchor = nil
     @__breakMoveResizeCaches()
     @_lastClaimedExtent = nil
     @fullChanged()
