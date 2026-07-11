@@ -4,8 +4,8 @@
 follow-up) of the affine-transforms arc — see `docs/affine-transforms-plan.md` §7 item 15 for the menu
 pointer, §4.4/§4.5 for the original design this completes, §9/§10.9/§10.10 (now flipped to TRUE
 as-built, measured 1.40×). The design claim "transform animation never re-rasterizes content" is now
-TRUE. Commit pending under the standing grant; never pushed without owner approval. §1-§5 below are the
-original executed plan, preserved.**
+TRUE. COMMITTED + PUSHED to origin/master (owner-approved 2026-07-11) — Fizzygum `17803fc0`, tests
+`50b240814`. §1-§5 below are the original executed plan, preserved.**
 
 Self-contained and cold-executable. Line numbers verified 2026-07-11 and WILL drift — every anchor
 has a symbol; grep the symbol, scoped to `src/` (never the workspace root).
@@ -203,7 +203,7 @@ on the cache-enabled path).
 - **Byte-identity A/B macro** `SystemTest_macroIslandBufferCacheByteIdentity` (deterministic box fixture):
   all 7 cache paths byte-identical (reuse, in-place partial rebuild, move-within-island source-erase,
   island-drag slot move, rotation warp, deepCopy no-shared-buffer, per-island opt-out) at dpr1 + dpr2.
-- **Gauntlet**: dpr1/dpr2/webkit + apps/paint/tiernaming/settle/capstone + homepage GREEN (suite 236→237, +1 macro);
+- **Gauntlet**: `GAUNTLET OK — dpr1:PASS dpr2:PASS webkit:PASS apps:PASS paint:PASS tiernaming:PASS settle:PASS capstone:PASS` + `fg homepage` BOOT OK (suite 236→237, +1 macro);
   only reference delta = the pre-authorized benign inspector recapture (`macroDuplicatedInspectorDrivesCopiedTargetOnly`,
   image_1 byte-identical) — the 2 new `_islandBufferSource*` Widget fields shift the inspector Properties list.
 
@@ -227,4 +227,7 @@ on the cache-enabled path).
    **Lesson banked: an island-cached render that changes across composites without a changed() (async
    resource load) must invalidate off the SAME signal that reloads the upstream cache, not off a
    liveness flag whose transition races the re-render.**
-- Commit hashes: _pending owner-gated commit_
+- Commit hashes: Fizzygum `17803fc0` (7 files +519/-43), tests `50b240814` (18 files +189/-4);
+  **PUSHED to origin/master** (owner-approved 2026-07-11). ⚠ the Fizzygum commit also carries a
+  PRE-EXISTING §7.4 "quantized density" refinement hunk in `affine-transforms-plan.md` (authored in a
+  prior session) — owner decided 2026-07-11 to KEEP it folded (it is affine-plan doc content).
