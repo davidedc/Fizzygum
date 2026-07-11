@@ -22,9 +22,9 @@ during review, LANDED + PUSHED — Fizzygum `e9aabe72`, tests `2a6da0787`; `fg g
 **✅ STATUS UPDATE (2026-07-11, latest): §7.5 BUG G — owner-reported (tilted-then-RESIZED figure dropped
 into a counter-tilted container lands offset/way off; un-resized is fine) — ROOT-CAUSED (the Bug-D PINNED
 anchor breaks the two hand-carry apply-sites that assume pivot == slot centre) and FIXED by PICK-UP ANCHOR
-NORMALIZATION (`_normalizePinnedAnchorNoSettle`, one seam) — LANDED + COMMITTED (NOT pushed): the macro
-`macroDropKeepsHandOrientation` gained the pinned-anchor scenario (SCEN 4/4b — git-stash-verified to fail
-~50px on the un-fixed build), and `fg gauntlet` dpr1/dpr2/webkit 238/238/0-failed +
+NORMALIZATION (`_normalizePinnedAnchorNoSettle`, one seam) — LANDED + PUSHED (Fizzygum `530a2846` / tests
+`7c906b7b7`): the macro `macroDropKeepsHandOrientation` gained the pinned-anchor scenario (SCEN 4/4b —
+git-stash-verified to fail ~50px on the un-fixed build), and `fg gauntlet` dpr1/dpr2/webkit 238/238/0-failed +
 apps/paint/tiernaming/settle/capstone + `fg homepage` are all green with ZERO reference changes (probe delta
 (−50.4,+49.1) → (0.0,0.0); the value-only scenario adds no images). THE AFFINE ARC IS FULLY CLOSED again.**
 REMAINING
@@ -2212,7 +2212,7 @@ pinned-anchor interplay line).**
     fudge: that mechanism is for per-event-STREAM coalescing / connectors, not a one-shot discrete dissolve.)
     Capstone gate → 0 careless pushes across 238 tests.
 
-### BUG G — a tilted-then-RESIZED figure dropped into a counter-tilted container lands OFFSET or WAY OFF — ✅ LANDED + COMMITTED 2026-07-11 (NOT pushed)
+### BUG G — a tilted-then-RESIZED figure dropped into a counter-tilted container lands OFFSET or WAY OFF — ✅ LANDED + PUSHED 2026-07-11 (Fizzygum `530a2846` / tests `7c906b7b7`)
 
 - **Symptom (owner-reported):** two Dashboards; tilt one 45° CCW; tilt the other 45° CW **and then resize
   it**; drag the second into the first → it lands offset from the perceived hand position, or so far off it
@@ -2263,7 +2263,7 @@ pinned-anchor interplay line).**
   4. `fg gauntlet` dpr1/dpr2/webkit **238/238/0-failed** + apps/paint/tiernaming/settle/capstone + `fg
      homepage` all green, **ZERO reference changes** (the scenario is value-only — no new images; the one
      non-fatal `[H]` warning is the pre-existing `loadWorldSnapshot()` one, unrelated). Committed under the
-     grant; banner flipped; mirrored to memory. NOT pushed (owner-gated).
+     grant, banner flipped, mirrored to memory, and PUSHED (owner-approved 2026-07-11).
 
 ---
 
