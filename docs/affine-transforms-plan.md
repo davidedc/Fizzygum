@@ -7,7 +7,9 @@ rough edges R1 (mouseMove-pointer mapping / paint-in-rotated-window), R3 (resize
 clip, via the TrackingTransformFrameWdgt subclass), R2 (ephemeral-overlay rotation, via in-plane
 highlight parenting + a resetWorld teardown fix), and R4 (slider + palette nonFloatDragging pointer
 plane-mapping) COMPLETE + COMMITTED; 4D-1 (drop-IN, the smaller half of pick/drop) COMPLETE +
-COMMITTED; 4D-2a (pick-OUT to desktop) COMPLETE + COMMITTED; 4D-2b (drop-back-INTO + unwrap-on-match),
+COMMITTED; 4D-2a (pick-OUT to desktop) COMPLETE + COMMITTED; 4D-2b (drop-back-INTO + relative
+re-expression) REMAINING — **execute from its DESIGN BRIEF (§6 Phase 4D, authored 2026-07-11:
+sugar-figure-only relative re-spec + unwrap, the payload-policy-transparency gap, staged 2b-i/2b-ii)**;
 4E (close-out) REMAINING. See the per-phase §6 banners for hashes + gate results
 (they are the authority on status). Owner-gated; a standing
 grant to "commit + continue while all gates pass" is in force as of 2026-07-10. Original design
@@ -1382,19 +1384,131 @@ cold-executable. **R1, R2, R3, R4 COMPLETE 2026-07-10.**
 > on the desktop). Gauntlet dpr1/dpr2/webkit 224/224 + apps/paint/tiernaming/settle/capstone + homepage
 > green (suite 223 → 224); ONE benign inspector member-list recapture
 > (`macroDuplicatedInspectorDrivesCopiedTargetOnly` image_2/3 — the 2 new Widget methods).
-> **4D-2b (drop-back-INTO + unwrap-on-match) REMAINING** — drop a picked figure into another island,
-> unwrap-on-match to avoid nested-island buildup, with a round-trip structural-identity assertion (risk 2).
+> **4D-2b (drop-back-INTO + unwrap-on-match) REMAINING** — full design brief below (authored
+> 2026-07-11 after a fresh study of the as-landed 4D-1/2a code; supersedes the original sketch
+> bullets further down where they conflict).
+
+##### 4D-2b — DESIGN BRIEF (authored 2026-07-11; execute design-first, stage as 2b-i then 2b-ii)
+
+**The core rule — RELATIVE RE-EXPRESSION, not just "unwrap-on-match".** When the payload on the
+hand is a **sugar figure** (a `_materializedBySugar` island — from pick-out 4D-2a or from 4C) and
+the resolved drop target lives inside a non-identity plane, the figure's spec must be re-expressed
+**relative to the destination plane**, because transforms compose: dropping a 30° figure into a 30°
+window today renders it at 60° (the 4D-1 block maps only POSITION). Rule:
+
+```
+r_plane = Σ rotationDegrees, s_plane = ∏ scale     over target's ancestor non-identity islands
+          (the SAME walk _pickOutRotatedFigureNoSettle uses — Widget.coffee, symbol grep)
+rel_r   = ((figure.rotationDegrees − r_plane) % 360 + 360) % 360
+rel_s   = figure.scale / s_plane
+rel == identity  →  UNWRAP (the payload becomes the bare content)
+rel != identity  →  re-spec the figure's island to (rel_r, rel_s) and drop the island
+```
+
+- **Exactness:** for the return-to-same-plane case, `figure.rotationDegrees`/`figure.scale` were
+  BUILT as Σ/∏ over the same ancestor chain in the same order at pick-out time → `rel_r` is an
+  exact 0 and `rel_s` an exact 1 (x−x and x/x are IEEE-exact) → the unwrap branch is guaranteed,
+  bit-exactly, for round-trips. Cross-plane drops (30° figure into a 20° plane) give exact integer
+  degree arithmetic (4B quantizes committed rotations to integer degrees) and a possibly-inexact
+  `rel_s` — which merely keeps the wrapper alive with an imperceptibly-off-1 scale: visually
+  correct, structurally conservative, NOT a bug. `isIdentity()` stays an exact scalar test.
+- **SCOPE RULE (locked):** relative re-expression + unwrap applies to **sugar figures ONLY**
+  (`_materializedBySugar`). An EXPLICIT island dropped into a plane nest-composes like any other
+  content (the user authored that frame; mutating its spec on drop would rewrite their structure).
+  This also makes "unwrap-on-match" unambiguous: an explicit island is never unwrapped.
+- **Position for an island payload is already solved:** pick-out islands pivot on their slot
+  centre (anchor nil ⇒ centre = fixed point of the spec), so the island's `center()` IS its
+  on-screen visual centre, and the existing 4D-1 centre-mapping block places it correctly. The
+  re-spec also pivots on that same centre → re-speccing causes NO visual jump. (ASSUMPTION to
+  assert in code: figure anchor is nil/centre — true for every sugar island today; if an anchor
+  UI ever lands, revisit.)
+
+**Implementation shape (minimal surgery, all inside the existing drop flow):** one block in
+`ActivePointerWdgt.drop`, AFTER target resolution and BEFORE the existing 4D-1 centre-map block:
+if `wdgtToDrop` is a sugar figure → compute `(r_plane, s_plane)` from `target`; if rel == identity
+→ replace `wdgtToDrop` with the figure's sole content (content coincides with the slot box, so
+extract-on-hand is position-preserving) and destroy the wrapper; else re-spec via the island's
+existing `_setRotationNoSettle`/`_setScaleNoSettle` cores. Then fall through — the UNCHANGED 4D-1
+block + `target.add` handle placement for both branches. All of this is synchronous inside the one
+drop gesture (no frame boundary → the momentary rel-spec is never painted; the gesture's settle
+covers it — same pattern as the 4D-1 block). Suggested greppable verb (sibling of the pick-out /
+re-home verbs): `Widget::_reExpressFigureForPlaneOfNoSettle(target)` returning the
+possibly-replaced payload.
+
+**⚠ PAYLOAD-POLICY TRANSPARENCY — the discovered gap (2b-ii, the drag-embed half).** A figure on
+the hand HIDES its content's payload class from every drop-policy predicate. Verified in code:
+`requiresDeliberateEmbedding` is overridden by `WindowWdgt` (`WindowWdgt.coffee:249`) but a tilted
+window arrives as a `TransformFrameWdgt` → the dwell gate treats it as a PLAIN payload (instant
+embed, no arming), sticky re-embed's window branch is bypassed, and every
+`wantsDropOfChild(payload)` type inspection sees "transform frame" instead of the window. 4D-2a's
+macro never caught this (it dropped onto the desktop, which accepts everything with no dwell).
+Fix: a look-through — `Widget::_dropPolicyProxy()` returning the sole content through sugar
+wrappers (else self; the payload-side sibling of `_parentThroughSugarIslands`) — consulted at the
+enumerated payload-policy sites: `drop`'s `requiresDeliberateEmbedding()` / `wantsToBeDropped()`
+tests, `dropTargetFor`'s and `resolveDragEmbedCandidates`'s `wantsDropOfChild payload` argument
+(`ActivePointerWdgt.coffee:171-197`), and the dwell state machine's payload classification
+(`updateDragEmbedStateMachine`). Audit each; do NOT blanket-replace — sites that need the FIGURE
+(geometry, add) keep the figure.
+
+**Structural-identity round-trip (the 4D risk-2 assertion) — define it precisely so the macro
+doesn't over-assert:** pick a sub-part out of island A (fresh sugar wrapper), drop it back over
+its original spot inside A → rel is bit-exactly identity → unwrap → assert: exactly ONE
+`TransformFrameWdgt` in the world (A), content's parent == its original container, A's spec
+unchanged, content bounds within ≤1px of pre-grab (the centre round-trips through forward+inverse
+float maps and `moveTo` rounds — do NOT assert bit-equal bounds; alternatively normalize with an
+explicit final `moveTo` and assert exact). Child INDEX / z-order is NOT restored — that is normal
+drop semantics (a re-dropped widget raises), same as for untransformed widgets; assert accordingly,
+don't "fix" it (the stack insert-index item stays banked, §7.13).
+
+**Edge ledger (checked against as-landed code):**
+- Sole-content grabs REUSE the existing island (4D-2a) — including EXPLICIT islands; with the
+  scope rule those drop as-is (nest-compose), only `_materializedBySugar` figures re-express.
+- A figure's content subtree may itself contain explicit islands — they ride along untouched
+  (their specs are already relative to the wrapper's plane).
+- Pick-out can never leave an EMPTY island behind (sole-content grabs reuse; sub-part grabs leave
+  the rest of the subtree) — no cleanup transaction needed on cancel, and there is no cancel path:
+  drops always land (world is the universal fallback), `@grabOrigin` is only read by the window
+  sticky-re-embed branch (`ActivePointerWdgt.coffee:417-421`), which composes: for a sole-content
+  window figure, `grabOrigin.origin` is the figure's pre-grab parent, and the sticky comparison
+  target-vs-origin is plane-consistent. Verify with the window macro (2b-ii).
+- Dwell stillness tracking is hand/screen-plane (correct as-is); candidate highlight overlays are
+  already in-plane (R2) — dropping INTO a rotated container shows the outline warped with it.
+- `_reactToBeingDropped`/`defaultLayoutSpecWhenAddedTo` run on the ISLAND when a figure lands in a
+  stack/ratio container — the island is a fixed figure for layout (Phase 3) so this is coherent;
+  the known insert-index gap stays banked (§7.13).
+
+**Staging + macros + gates:**
+- **2b-i (core):** relative re-expression + unwrap + round-trip. Macros:
+  `macroTransformFrameDropBackUnwraps` (pick sub-part out of 35° island, drop back in → the
+  structural-identity assertion above); `macroTransformFrameCrossPlaneDropKeepsRelative` (pick out
+  of a 30° island, drop into a 20°-island container → value-assert the nested wrapper's spec is
+  exactly rotation 10 and the content's on-screen look is continuous [screenshot], exercising the
+  rel≠identity branch).
+- **2b-ii (policy):** `_dropPolicyProxy` + the site audit. Macro:
+  `macroTiltedWindowDropRequiresDwell` (float-drag a tilted window over a container: unarmed
+  release lands on world; dwell-armed release embeds INTO the container, window lands rotated,
+  skin derives internal — composes Bug A). This is the marquee scenario of the whole unit.
+- Gates per stage: `fg gauntlet` (all legs incl. paint) + `fg homepage`; dormant references
+  unchanged (every new branch is behind `_materializedBySugar`/`_isInsideNonIdentityIsland`
+  guards that are false when dormant).
+
+*(The bullets below are the ORIGINAL pre-execution 4D sketch, kept for provenance — the 4D-1/2a
+banners above + this brief supersede them where they conflict: no `_acceptsDrops` flip is needed
+[4D-1 finding], `inverseMapRect` stays unimplemented [4D-2a finding], and "unwrap-on-match" is
+generalized to relative re-expression [this brief].)*
 
 - **Goal:** pick a widget OUT of a non-identity island and it stays visually transformed while
-  floating; drop INTO an island and it lands at the correct inner position. Lifts the Phase-1
-  no-drop restriction.
+  floating; drop INTO an island and it lands at the correct inner position. ~~Lifts the Phase-1
+  no-drop restriction~~ (4D-1: no lift needed — accepting content inside the island already
+  resolves as the climb target).
 - **Depends on:** 4C (reuses materialize/unwrap) and 4A (drop-point plane mapping).
 - **Seams:** grab reparents to the hand (`ActivePointerWdgt::grab`, `:295`; records
   `@grabOrigin = aWdgt.situation()`, `:331`; `_beforeBeingGrabbed`, `Widget.coffee:3650`). Drop
   resolves `target = dropTargetFor wdgtToDrop` (`:410-432`) then `target.add wdgtToDrop, …,
   @position()` (`:436`). Drop acceptance = `wantsDropOfChild` → `_acceptsDrops`
   (`Widget.coffee:2998`); the island sets it false (`TransformFrameWdgt.coffee:53`).
-  `inverseMapRect` (deferred TransformSpec method) gets its first caller here.
+  ~~`inverseMapRect` (deferred TransformSpec method) gets its first caller here~~ (proven
+  unneeded — see 4E's deferred-methods identity note).
 - **Approach:** pick-OUT — when the grabbed widget is inside a non-identity island, wrap it (on
   the hand) in a fresh island carrying the ACCUMULATED similitude of its former ancestor
   islands (concatenate specs innermost→outermost; a similitude ∘ similitude is a similitude, so
