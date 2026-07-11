@@ -11,7 +11,12 @@ COMMITTED; 4D-2a (pick-OUT to desktop) COMPLETE + COMMITTED; 4D-2b stage 2b-i (d
 relative re-expression + unwrap) COMPLETE + COMMITTED, stage 2b-ii (payload-policy transparency:
 `_dropPolicyProxy` + the tilted-window-dwell marquee macro) REMAINING — **execute from its DESIGN BRIEF
 (§6 Phase 4D, authored 2026-07-11: sugar-figure-only relative re-spec + unwrap, the payload-policy-transparency
-gap, staged 2b-i/2b-ii)**; 4E (close-out) REMAINING. See the per-phase §6 banners for hashes + gate results
+gap, staged 2b-i/2b-ii)**; 4E (close-out) REMAINING. **✅ 2026-07-11: two owner-reported bugs LANDED, §7.5
+Bug D (collapse moved the tilted title bar → anchor-stability: pin the sugar-island anchor across extent
+changes) and Bug E (save-as prompt buried → interaction-transparency: escalate-only `mouseClickLeft` on the
+island) — COMMITTED (Fizzygum `3809b2ea`, tests `a72cfbdec`; NOT pushed), gauntlet 234/234 + apps/paint/
+tiernaming/settle/capstone + homepage green. Includes the 4D-1 pinned-anchor interplay one-liner. NEXT = 2b-ii.** See the
+per-phase §6 banners for hashes + gate results
 (they are the authority on status). Owner-gated; a standing
 grant to "commit + continue while all gates pass" is in force as of 2026-07-10. Original design
 was AUTHORED 2026-07-09 and hardened same day by an adversarial fresh-eyes pass (§10 facet
@@ -1710,6 +1715,13 @@ against the actual `DegreesConverterApp` window in `index.html?sw=1` (scratch `i
 its section). BUG C ❌ was NOT A BUG (an audit-phase error, fixed in the gate).** Two audit follow-ons are
 recorded KNOWN-LATENT under Bug B (the basement "only show lost items" GC filter; explicit-island empty frame).
 
+**STATUS UPDATE (2026-07-11): two NEW owner-reported bugs, D (collapse moves the tilted title bar) and
+E (save-as prompt buried under the tilted window) — both ROOT-CAUSED by probes and their fixes PROTOTYPED
++ probe-verified IN THE WORKING TREE (uncommitted, not gauntleted; dpr1 suite 231/232 with the single
+failure being Bug D's INTENDED reference change in `macroTransformFrameSlotTracksContentResize` image_2).
+See their sections below for the exact remaining work (2 macros, 1 recapture, gauntlet, the 4D
+pinned-anchor interplay line).**
+
 ### BUG A — a tilted window takes the INTERNAL skin (should stay external) — ✅ FIXED 2026-07-10
 
 - **Symptom (owner):** "as soon as you tilt a window, it takes the appearance of an internal window."
@@ -1870,6 +1882,95 @@ recorded KNOWN-LATENT under Bug B (the basement "only show lost items" GC filter
 - **Note (still true):** `_materializedBySugar` is a `_`-prefixed field, so a macro CANNOT read it (layering rule [D]
   regex `/[@.]\s*_[A-Za-z]\w*/` matches field reads too) — the removability test is BEHAVIOURAL (de-tilt ⇒ island
   count drops), which round-trips the flag through actual behaviour.
+
+### BUG D — collapsing a tilted window MOVES the title bar (should stay screen-still) — ROOT-CAUSED + FIX PROTOTYPED 2026-07-11 (in working tree, NOT committed, NOT gauntleted)
+
+- **Symptom (owner-reported):** collapse a tilted window → the window collapses to its title bar, but the
+  title bar TRANSLATES on screen instead of staying exactly where it was.
+- **Root cause (probe-PROVEN, `scratchpad/probe-bug1.js` — quantitative match to the hundredth of a px):**
+  a nil `TransformSpec.anchor` means "slot centre" (`_anchorFor`). Collapse shrinks the window's EXTENT in
+  place (top-left unchanged, `WindowWdgt:50` "a collapsed window is just its titlebar"); the tracking sync
+  (`TrackingTransformFrameWdgt._reLayoutChildren`) re-fits the slot → the CENTRE moves by δ → the similitude
+  re-anchors → **every persisting virtual point translates rigidly by `(I − sR)δ`**. Probe: 460×400 window,
+  20°, collapse → δ=(0,−187), both title-bar reference points shifted exactly **(−63.96, −11.28)** = the
+  predicted `(I−sR)δ` to 2 decimals. (The old `_reLayoutChildren` comment even documented the v1 choice:
+  "the default anchor IS the slot centre, so an asymmetric grow re-centres the figure" — Bug D is that
+  choice biting. General class: ANY tracked content-extent change — collapse, R3 handle-resize, text grow —
+  re-anchored the figure.)
+- **Fix (PROTOTYPED in `TrackingTransformFrameWdgt._reLayoutChildren`, verified by probe): ANCHOR STABILITY.**
+  On a tracked slot re-fit while non-identity:
+  - **extent changed** → PIN the anchor at its current absolute point (`anchor = _anchorFor(oldSlot)`,
+    materializing nil→explicit) — the similitude is then UNCHANGED, so all persisting content is
+    screen-still BY CONSTRUCTION (probe: title-bar shift **0.00,0.00** exactly);
+  - **pure move** (extent equal) → translate a PINNED anchor by the origin delta (nil anchor rides the
+    centre naturally — no-op) — preserves "virtual drag = screen drag 1:1" move semantics;
+  - **un-pin hygiene** → whenever the pinned anchor coincides with the new slot centre, reset to nil
+    (canonical minimal scalars). Probe: collapse pins at `450@440`; UNcollapse restores the slot, the
+    anchor AUTO-UN-PINS to nil, and the title bar is at **0.00,0.00** vs original — the round-trip
+    self-heals.
+- **Suite impact (dpr1 run, 2026-07-11): 231/232.** The ONE failure is `macroTransformFrameSlotTracksContentResize`
+  — ALL its value asserts PASS (slot tracks 200×160, same island, still 35°), image_1 byte-identical; only the
+  post-resize image differs because the figure no longer re-centres on resize — **the intended behavior change;
+  recapture that image with this justification** after review.
+- **✅ 4D INTERPLAY (LANDED):** pinned anchors BREAK the 2b brief's "figure anchor is nil/centre" assumption. A
+  sole-content-reuse figure picked up AFTER a resize can carry a pinned anchor, so its `center()` is no longer
+  its visual fixed point: 4D-1's drop-in centre-mapping now uses the figure's MAPPED visual centre
+  (`payload.transformSpec.mapPoint(payload.center(), payload.bounds)` for island payloads, bare `center()` for
+  plain payloads) — one line in `ActivePointerWdgt.drop`. Fresh pick-out islands stay nil-anchor (mapPoint is
+  the identity on the centre ⇒ unchanged); 4B's `screenAnchor` already routes through `_anchorFor`
+  (anchor-general ✓); footprint/claims/sweep are already anchor-general ✓.
+- **✅ DONE + COMMITTED** (Fizzygum `3809b2ea`, tests `a72cfbdec`; NOT pushed). Macro
+  `macroCollapsingTiltedWindowKeepsTitleBarStill` (value-asserts both title-bar screen points via
+  `localPointToScreen` stay within 1px through collapse AND uncollapse — pre-fix they jump ~64px on collapse —
+  plus the island's `transformSpec.anchor` round-trips to nil; collapses via `contents.collapse()` directly, the
+  switch-button action, since the button's screen position on a rotated window is not its virtual `center()`;
+  image_1 ≡ image_3 dataHash proves the pixel-perfect round-trip). Recaptured `macroTransformFrameSlotTracks
+  ContentResize` image_2 (dpr1+2; image_1 byte-identical) — the intended behavior change (resize keeps the
+  anchored top-left instead of re-centring). FAILS on the un-fixed build (git-stash-verified: both title-bar
+  points jump on collapse).
+
+### BUG E — the "save as..." prompt appears UNDER a tilted window — ROOT-CAUSED + FIX PROTOTYPED 2026-07-11 (in working tree, NOT committed, NOT gauntleted)
+
+- **Symptom (owner-reported):** close a tilted window with unsaved content → the `SaveShortcutPromptWdgt`
+  pops UNDER the window (untilted: correctly on top).
+- **Root cause (probe-PROVEN, `scratchpad/probe-bug2.js`, `moveAsLastChild` instrumented with stacks):** the
+  prompt IS spawned as the last world child (on top: `popUpAtHand → popUp → world.add`,
+  `PopUpWdgt.coffee:141`). But the click-UP dispatch then ESCALATES past the close button and the window —
+  whose effective `mouseClickLeft` is escalate-only (base `Widget`) — and reaches the ISLAND, which inherits
+  **`PanelWdgt.mouseClickLeft` = `@bringToForeground()`** (`PanelWdgt.coffee:62-63`, the click-on-empty-panel
+  raise) → `rootForFocus().moveAsLastChild()` raises the island ABOVE the just-spawned prompt. Trace:
+  `bringToForeground ← island.mouseClickLeft ← escalateEvent ← window.mouseClickLeft ← button.escalateEvent`;
+  world order after mouseUp was `[SaveShortcutPromptWdgt, TrackingTransformFrameWdgt]` (prompt idx 0 = buried).
+  **The asymmetry:** untilted, the escalation ends at the window (no raise on click-up); the invisible wrapper
+  ADDED an interaction behavior the wrapped content never had.
+- **Fix (PROTOTYPED in `TransformFrameWdgt`, verified by probe): INTERACTION TRANSPARENCY.** Override
+  `mouseClickLeft` to the Widget-base escalate-only form (no raise) — a click inside the island behaves
+  exactly as it would untransformed; the escalation continues past the island to the world, same as the
+  untilted chain. Probe after fix: world order `[island, prompt]`, `promptUnderIsland=false` ✓. The
+  mouse-DOWN raise (base `Widget.mouseDownLeft` → island via `rootForFocus`) is UNTOUCHED — clicking a tilted
+  window still brings it to the foreground at press, exactly like an untilted one.
+- **Principle (island design note):** the island must be transparent to EVERY PanelWdgt-added INTERACTION
+  behavior, not just painting/geometry — `PanelWdgt.mouseClickLeft` was the first instance (its
+  caret-forwarding scroll-panel branch is also skipped by the override: the island is never a ScrollPanel's
+  contents).
+- **✅ AUDIT DONE (2026-07-11):** `mouseClickLeft` is the SOLE escalation-reachable PanelWdgt interaction. The
+  island is `isTransparentAt: true` ⇒ never the topmost hit ⇒ never a DIRECT click/menu target; the only way
+  an event reaches it is a child ESCALATING via `escalateEvent`, and among PanelWdgt's overrides only
+  `mouseClickLeft` escalates through the base (`Widget.mouseClickLeft` = escalate-only). `mouseClickRight`
+  opens a context menu on the DIRECTLY-hit widget (base does not escalate) so the island's
+  `addWidgetSpecificMenuEntries` ("move all inside") is unreachable; `mouseDoubleClick` has no base/Panel
+  handler. So the single `mouseClickLeft` override is complete — no further neutralizations needed.
+- **Suite impact:** included in the 231/232 dpr1 run above — NO existing reference changed from this fix
+  (the only failure is Bug D's intended one). The Phase-2 "a click raises the clicked widget to the
+  foreground" note stays true via the mouse-DOWN raise.
+- **✅ DONE + COMMITTED** (Fizzygum `3809b2ea`, tests `a72cfbdec`; NOT pushed). Macro
+  `macroSaveAsPromptAboveTiltedWindow` opens a Slides-Maker (SimpleSlide) window DIRECTLY via
+  `world.openWindowWith` (the SampleSlide info popup overrides `closeFromContainerWindow` to just destroy — no
+  prompt; the directly-opened editable slide uses the default close-to-save path), tilts it 15° positioned so
+  the tilted close button stays on-canvas, marks it changed (`stretchableWidgetContainer.ratio = 1.0`), clicks
+  the close button through the REAL pointer pipeline at its `localPointToScreen` position, and value-asserts
+  the `SaveShortcutPromptWdgt`'s world-child index > the island's (+ screenshot). FAILS on the un-fixed build
+  (git-stash-verified: island index > prompt index, prompt buried).
 
 ---
 
