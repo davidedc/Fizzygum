@@ -312,6 +312,29 @@ class TransformFrameWdgt extends PanelWdgt
     super delta
     @transformSpec.anchor = @transformSpec.anchor.add delta if @transformSpec?.anchor? and !delta.isZero()
 
+  # §7.5 Bug G (reparent-transparency, PICK-UP NORMALIZATION): re-express a PINNED anchor
+  # (Bug-D anchor-stability, set by a tracked resize) as the equivalent NIL-anchor similitude before
+  # this figure travels across planes. An (anchor A, slot B) similitude renders identically to
+  # (anchor nil, whole figure translated by t = (I − sR)(A − centre)) — the Bug-D compensation algebra,
+  # inverted. Every hand-carry apply-site assumes the pivot IS the slot centre (the 2b-i relative
+  # re-spec, the 4D-1 slot-centre placement, the Bug-F pick re-home): true only for nil anchors, so the
+  # pick-up seam normalizes once and they all stay in their simple exact math. ORDER MATTERS: nil the
+  # anchor FIRST — the move-level anchor-ride overrides above would otherwise drag A along with the
+  # compensating translate and void the algebra. Integer rounding of t ⇒ ≤1px, acceptable at a grab
+  # (a new state). No-op for nil anchors (every un-resized figure) and at identity (anchor is inert).
+  _normalizePinnedAnchorNoSettle: ->
+    return if !@transformSpec?.anchor? or @transformSpec.isIdentity()
+    [c, s] = @transformSpec._cosSin()
+    sc = @transformSpec.scale
+    A = @transformSpec.anchor
+    ctr = @bounds.center()
+    ex = A.x - ctr.x
+    ey = A.y - ctr.y
+    tx = ex - sc * (c * ex - s * ey)
+    ty = ey - sc * (s * ex + c * ey)
+    @transformSpec.anchor = nil
+    @_applyMoveBy (new Point tx, ty).round()
+
   # ---------------------------------------------------------------------------
   # compositing (plan §4.2)
   # ---------------------------------------------------------------------------

@@ -18,7 +18,16 @@ container visibly rotates at the drop) — resolved as a DESIGN DECISION superse
 semantic: REPARENT-TRANSPARENCY (re-parenting never changes user-observed appearance). BOTH halves
 (drop-side compensating wrapper + pick-side ancestor fold), plus a move-level pinned-anchor ride found
 during review, LANDED + PUSHED — Fizzygum `e9aabe72`, tests `2a6da0787`; `fg gauntlet` 8/8 +
-`fg homepage` green, suite 238 (see §7.5 Bug F execution log). THE AFFINE ARC IS FULLY CLOSED again.** REMAINING
+`fg homepage` green, suite 238 (see §7.5 Bug F execution log). THE AFFINE ARC IS FULLY CLOSED again.**
+**✅ STATUS UPDATE (2026-07-11, latest): §7.5 BUG G — owner-reported (tilted-then-RESIZED figure dropped
+into a counter-tilted container lands offset/way off; un-resized is fine) — ROOT-CAUSED (the Bug-D PINNED
+anchor breaks the two hand-carry apply-sites that assume pivot == slot centre) and FIXED by PICK-UP ANCHOR
+NORMALIZATION (`_normalizePinnedAnchorNoSettle`, one seam) — LANDED + COMMITTED (NOT pushed): the macro
+`macroDropKeepsHandOrientation` gained the pinned-anchor scenario (SCEN 4/4b — git-stash-verified to fail
+~50px on the un-fixed build), and `fg gauntlet` dpr1/dpr2/webkit 238/238/0-failed +
+apps/paint/tiernaming/settle/capstone + `fg homepage` are all green with ZERO reference changes (probe delta
+(−50.4,+49.1) → (0.0,0.0); the value-only scenario adds no images). THE AFFINE ARC IS FULLY CLOSED again.**
+REMAINING
 = only the BANKED §7 follow-ons (Phase 5, each its own future plan) + Bug B's 2 known-latents — NOT shipping
 blockers. See the per-phase §6 banners for hashes + gate results
 (they are the authority on status). Owner-gated; a standing
@@ -2202,6 +2211,59 @@ pinned-anchor interplay line).**
     forbids the NoSettle resolver from self-settling. (An interim `_deferredSettleDeclare` was rejected as a
     fudge: that mechanism is for per-event-STREAM coalescing / connectors, not a one-shot discrete dissolve.)
     Capstone gate → 0 careless pushes across 238 tests.
+
+### BUG G — a tilted-then-RESIZED figure dropped into a counter-tilted container lands OFFSET or WAY OFF — ✅ LANDED + COMMITTED 2026-07-11 (NOT pushed)
+
+- **Symptom (owner-reported):** two Dashboards; tilt one 45° CCW; tilt the other 45° CW **and then resize
+  it**; drag the second into the first → it lands offset from the perceived hand position, or so far off it
+  disappears. Does NOT happen without the resize.
+- **Root cause (probe-PROVEN, `scratchpad/probe-bugG.js`):** the resize PINS the payload figure's anchor
+  (Bug-D anchor-stability — probe: anchor `170@195` vs slot centre `205@210`). Two hand-carry apply-sites
+  assume the pivot IS the slot centre, true only for NIL anchors:
+  1. the 2b-i relative re-spec (`_setRotationNoSettle`/`_setScaleNoSettle` to rel) pivots about the PINNED
+     anchor, shifting the figure's visual centre before placement runs;
+  2. the 4D-1 placement homes the SLOT centre at the mapped point instead of the own-map visual centre.
+  Both error terms are `O((I−sR_rel)(A−centre))` and vanish at `A == centre` — measured: drop delta
+  **(−50.4, +49.1) px** at 45°→−45° (rel = 90°), un-resized control **(0.2, 0.5)**. (The third candidate —
+  anchors not riding island moves — was ALREADY fixed by Bug F's move-level anchor-ride, probe-confirmed:
+  desktop drag rigid at 0.0,0.0.)
+- **Fix (PROTOTYPED, probe-verified): PICK-UP ANCHOR NORMALIZATION — one seam, kills the whole class.**
+  `TransformFrameWdgt::_normalizePinnedAnchorNoSettle()`: re-express the pinned-anchor similitude as its
+  equivalent NIL-anchor form — rendering-identical by the inverted Bug-D algebra, **translate the whole
+  figure by `t = (I − sR)(A − centre)` and nil the anchor**. Called once in
+  `Widget._resolvePickOutFigureNoSettle`'s sole-content REUSE path (before the Bug-F ancestor fold), so
+  EVERY figure on the hand has a nil anchor and the entire downstream pipeline (drag, 2b-i re-spec, 4D-1
+  placement, Bug-F pick re-home) runs its already-exact centre-pivot math unchanged. **ORDER MATTERS
+  (documented at the method): nil the anchor BEFORE the compensating `_applyMoveBy` — the Bug-F move-level
+  anchor-ride overrides would otherwise drag the anchor along with the translate and void the algebra.**
+  ≤1px integer rounding at the grab (a new state — same acceptance as the 4D-2a extract re-home). No-op for
+  nil anchors (every un-resized figure) and at identity ⇒ dormant byte-identical.
+  Extract-path and drop-minted wrappers are always nil-anchor already; pinned anchors now exist ONLY on
+  figures AT REST (where Bug D needs them, with zero rounding) and never travel.
+- **Evidence:** probe after fix — drop delta **(0.0, 0.0)** exact, post-drop anchor nil, orientation
+  preserved (accumulated 45°), desktop drag still rigid (−0.1,−0.4 = the one-time grab rounding), control
+  unchanged. Bug-F probe fully green. **Full dpr1 suite 238/238, ZERO reference changes** (no existing
+  macro exercises a pinned-anchor pick-up).
+- **EXECUTION LOG (2026-07-11):** all four remaining-work items done.
+  1. Reviewed the two diffs (`TransformFrameWdgt::_normalizePinnedAnchorNoSettle` + the one-line call in
+     `Widget._resolvePickOutFigureNoSettle`); dropped the `PROTOTYPE` comment prefixes.
+  2. Extended `macroDropKeepsHandOrientation` with the pinned-anchor scenario **through PUBLIC gestures
+     only** (SCEN 4): `setRotationDegrees -45` materialises a sugar `TrackingTransformFrameWdgt`, then an
+     asymmetric `setExtent` grows the content from its top-left so the Bug-D re-fit PINS the sugar island's
+     anchor — asserted public via `transformSpec.anchor?` (the Bug-D collapse macro reads it the same way,
+     so no `_`-field is touched). The figure is dropped into the +45 container (Panel A) through the real
+     pointer pipeline; value-asserts: on-screen visual centre lands ≤1px from the release point,
+     `accumulatedRotationDegrees()` preserved, and the anchor is normalised to nil at pick-up.
+     **git-stash-verified:** the pinned-anchor precondition PASSES un-fixed (Bug-D is landed) but the ≤1px
+     landing FAILS un-fixed (the ~50px offset), and flips to PASS with the fix restored.
+  3. SCEN 4b picks the figure back OUT to the desktop: value-asserts it is a sugar figure on the world, its
+     −45 orientation survives, and its on-screen centre lands at the drop point (normalisation + Bug-F fold
+     together). (SCEN 4b passes either way — the pick-out re-homes regardless — so its value is round-trip
+     integrity, not the primary bug-catch; SCEN 4's ≤1px landing is the catcher.)
+  4. `fg gauntlet` dpr1/dpr2/webkit **238/238/0-failed** + apps/paint/tiernaming/settle/capstone + `fg
+     homepage` all green, **ZERO reference changes** (the scenario is value-only — no new images; the one
+     non-fatal `[H]` warning is the pre-existing `loadWorldSnapshot()` one, unrelated). Committed under the
+     grant; banner flipped; mirrored to memory. NOT pushed (owner-gated).
 
 ---
 

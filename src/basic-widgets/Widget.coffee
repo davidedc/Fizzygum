@@ -1582,6 +1582,15 @@ class Widget extends TreeNode
         outerKids = outer.childrenNotHandlesNorCarets()
         break if !(outerKids? and outerKids.length == 1 and outerKids[0] == figure)
         figure = outer
+      # §7.5 Bug G (reparent-transparency, PICK-UP NORMALIZATION): a PINNED anchor (Bug-D
+      # anchor-stability, set by a tracked resize) breaks every downstream apply-site that assumes the
+      # pivot is the slot centre — the 2b-i relative re-spec pivots about the pinned anchor and the 4D-1
+      # placement homes the SLOT centre, so a tilted+RESIZED figure dropped into a counter-tilted
+      # container lands off by O((I−sR)(A−centre)) (probe: −50,+49 px at 45°/−45°; the un-resized
+      # control is exact). Normalize at the pick-up seam: re-express the similitude as its equivalent
+      # nil-anchor form (identical rendering, ≤1px rounding), so the ENTIRE hand-carry pipeline
+      # (drag, re-spec, placement, re-home) runs its already-exact centre-pivot math.
+      figure._normalizePinnedAnchorNoSettle()
       # §7.5 Bug F (reparent-transparency, PICK half): the reused figure keeps its user-observed look
       # when lifted to the hand (the identity plane). When the figure still has non-identity ANCESTOR
       # islands (e.g. a compensating wrapper living inside a tilted container), its own spec alone would
