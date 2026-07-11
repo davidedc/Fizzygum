@@ -12,7 +12,13 @@ re-expression + unwrap [2b-i] + payload-policy transparency via `_dropPolicyProx
 serialization round-trip tests + deferred-methods identity + final gate + this banner). **✅ 2026-07-11 also:
 two owner-reported bugs LANDED, §7.5 Bug D (collapse moved the tilted title bar → anchor-stability: pin the
 sugar-island anchor across extent changes) and Bug E (save-as prompt buried → interaction-transparency:
-escalate-only `mouseClickLeft` on the island); includes the 4D-1 pinned-anchor interplay one-liner.** REMAINING
+escalate-only `mouseClickLeft` on the island); includes the 4D-1 pinned-anchor interplay one-liner.**
+**⚠ STATUS UPDATE (2026-07-11, later): §7.5 BUG F — owner-reported (bare payload dropped into a tilted
+container visibly rotates at the drop) — resolved as a DESIGN DECISION superseding 4D-1's bare-payload
+semantic: REPARENT-TRANSPARENCY (re-parenting never changes user-observed appearance). BOTH halves
+(drop-side compensating wrapper + pick-side ancestor fold) PROTOTYPED + probe-verified IN THE WORKING TREE
+(uncommitted, not gauntleted; dpr1 236/237 — the one failure is the superseded 4D-1 macro, which needs an
+ASSERTION UPDATE + recapture, spelled out in §7.5 Bug F). FINISH BUG F FIRST.** REMAINING
 = only the BANKED §7 follow-ons (Phase 5, each its own future plan) + Bug B's 2 known-latents — NOT shipping
 blockers. See the per-phase §6 banners for hashes + gate results
 (they are the authority on status). Owner-gated; a standing
@@ -2078,6 +2084,124 @@ pinned-anchor interplay line).**
   the close button through the REAL pointer pipeline at its `localPointToScreen` position, and value-asserts
   the `SaveShortcutPromptWdgt`'s world-child index > the island's (+ screenshot). FAILS on the un-fixed build
   (git-stash-verified: island index > prompt index, prompt buried).
+
+### BUG F — a bare payload dropped into a tilted container VISIBLY ROTATES at the drop — DESIGN DECISION (reparent-transparency) + FIX PROTOTYPED 2026-07-11 (in working tree, NOT committed, NOT gauntleted)
+
+- **Symptom (owner-reported):** open Dashboard (or any Stretchable-family app), tilt it 45° via the halo, grab a
+  toolbar item (e.g. a Text box — horizontal on the hand, correct) and drop it in the content area → at the
+  moment of drop it VISIBLY rotates 45° and sticks tilted with the container.
+- **This is a DESIGN DECISION, not an implementation bug:** 4D-1 deliberately made a bare payload "become
+  content of the transformed thing" (the CSS/`appendChild` inherit-the-frame semantic — its banner says so).
+  The owner's expectation SUPERSEDES it, and is hereby locked as the drop semantic — the named invariant:
+  **REPARENT-TRANSPARENCY: re-parenting a widget never changes its user-observed appearance.** Any widget,
+  any orientation, dropped anywhere, keeps the look it had on the hand at release.
+- **Why this is the architecturally correct rule (do not relitigate):**
+  1. It is the UNIFORM COMPLETION of what the arc already does — pick-out preserves look (4D-2a wraps with the
+     accumulated similitude), figure drop-in preserves look (2b-i relative re-expression, whose macro asserts
+     "the content's on-screen look is continuous"), close/reopen preserves the figure (Bug B), collapse
+     preserves the title bar (Bug D), position-at-drop preserves the release point (4D-1 centre map). Bare
+     drop-in was the ONE seam still violating it. A bare payload is just a figure whose own transform is
+     identity: `rel = identity − plane`. One rule, zero cases.
+  2. The OLD semantic is NOT ROUND-TRIP STABLE: horizontal item → drop into 45° container (renders 45°) → pick
+     back out → 4D-2a wraps it with the accumulated 45° → it lands on the desktop PERMANENTLY tilted. A
+     drop+pick round trip through a tilted container mutated apparent orientation forever. Under
+     reparent-transparency the compensating −45° wrapper and the container's +45° cancel exactly on pick-out
+     (integer-degree Σ is exact) and the widget comes home BARE and horizontal — probe-verified below.
+  3. Precedent: mature design tools (Figma, Illustrator) make re-parenting into rotated frames/groups visually
+     invisible — they compensate exactly this way. The inherit-the-frame semantic is the naive scene-graph one.
+  4. Expressibility is asymmetric: under the new rule the "align WITH the container" intent stays expressible
+     (drop, then halo-zero the item — the wrapper dissolves); under the old rule the "keep my orientation"
+     intent was inexpressible. Later container rotation stays coherent: the dropped item keeps a constant
+     OFFSET from its container (rotates with it thereafter).
+- **Fix (PROTOTYPED in the working tree, probe-verified) — BOTH halves of the invariant:**
+  1. **DROP half** — `Widget._reExpressFigureForPlaneOfNoSettle` (the `!@_materializedBySugar` early-return
+     was the fork): a bare payload (NOT a sugar figure, NOT an explicit island — explicit islands keep the
+     2b-i nest-compose scope rule) into a non-identity plane gets wrapped in a fresh
+     `TrackingTransformFrameWdgt` (`_materializedBySugar`, spec `rel = (((0−degPlane)%360)+360)%360,
+     1/sPlane`, slot = payload bounds, `_addNoSettle`). The wrapper pivots on the slot centre so the on-hand
+     look is unchanged; the existing 4D-1 visual-centre block then places the WRAPPER (it already handles
+     wrapper payloads + pinned anchors); the existing post-add `_unwrapIfIdentitySugar` is unreachable for
+     this branch (rel ≠ identity by construction). Identity plane → exact early-return (`accumulated*()`
+     return exactly 0/1 off islands) ⇒ the common path is byte-identical dormant.
+  2. **PICK half** — `Widget._resolvePickOutFigureNoSettle` sole-content REUSE path: the reused figure now
+     folds its non-identity ANCESTORS into its own spec (degrees add, scales multiply) and re-homes so its
+     visual centre stays put (pinned-anchor-safe via `transformSpec.mapPoint(center(), bounds)`, mirroring
+     the 4D-1 Bug-D-interplay pattern); when the fold lands on identity (the round-trip case: wrapper −45
+     inside container +45) the wrapper DISSOLVES via `_unwrapIfIdentitySugarNoSettle` and the BARE content is
+     lifted, homed to its old visual centre. Desktop figures (ancestors identity — the entire pre-Bug-F
+     population) skip the block exactly ⇒ byte-identical. Transient mid-gesture re-specs are never painted
+     (the synchronous-gesture argument 2b-i established).
+- **Probe evidence (`scratchpad/probe-bugF.js`, real pointer pipeline, empty harness world):** bare 60×28 box
+  dropped onto the centre of a 45°-tilted drops-enabled panel → `box.accumulatedRotationDegrees() == 0`
+  (look preserved), wrapper spec 315, wrapper nested in the panel, screen centre EXACTLY at the release point
+  (delta 0.0, 0.0). Picked back out to the desktop → `box.parent == world`, bare, accumulated 0, world island
+  count back to 1 (round-trip STRUCTURAL identity). Control drop into an untilted panel → direct child, no
+  wrapper, island count unchanged.
+- **Suite impact (dpr1 run, 2026-07-11): 236/237.** The ONE failure is
+  `macroTransformFrameDropIntoRotatedLandsCorrectly` — the superseded 4D-1 semantic's own macro: image_1
+  byte-identical; the centre-landing assert still PASSES (position semantics untouched); "payload nested
+  inside the rotated island's content" FAILS because the payload's parent is now the compensating wrapper;
+  image_2 changes (payload stays horizontal). **Required macro update, not a recapture-only:** assert
+  (a) `payload.accumulatedRotationDegrees() == 0` (the NEW headline — look preserved), (b) nesting THROUGH
+  the wrapper (`payload.parent.parent == content` via public `parent` reads — macros cannot call
+  `_`-members), (c) the centre assert unchanged; then recapture image_2 (dpr 1+2) with this justification.
+  `macroTiltedWindowDropRequiresDwell` PASSES unchanged (a tilted window is a FIGURE — sugar path untouched).
+- **Remaining work (executing session):**
+  1. Review the two working-tree diffs (`Widget.coffee`: `_reExpressFigureForPlaneOfNoSettle` +
+     `_resolvePickOutFigureNoSettle`), incl. the comment polish (drop the PROTOTYPE prefix).
+  2. Update + recapture `macroTransformFrameDropIntoRotatedLandsCorrectly` as specified above.
+  3. Author `macroDropKeepsHandOrientation`: the probe's three scenarios as one macro — bare drop into a 45°
+     panel (accumulated == 0 + wrapper-through nesting + centre ≤1px + screenshot showing it HORIZONTAL in
+     the tilted container), pick-out round-trip (bare on desktop, island count back to baseline), untilted
+     control (direct child, no wrapper). Must FAIL on the un-fixed build (git-stash-verify).
+  4. Edge notes to verify/record: FP residue on scale reciprocals (a cross-SCALE drop's wrapper may sit at
+     0.9999… ⇒ persists instead of dissolving — harmless conservatism, same class as 2b-i cross-plane; record,
+     don't fix); `lastNonTextPropertyChangerButtonClickedOrDropped` now stores the WRAPPER for bare-into-tilted
+     drops — consistent with as-built figure drops (2b-i already does this); stack/menu insert-index stays
+     banked (§7.13).
+  5. `fg gauntlet` (dpr1/dpr2/webkit + apps/paint/tiernaming/settle/capstone) + `fg homepage`; commit under
+     the grant if still in force (the arc is at its shipping point — confirm with the owner if uncertain).
+- **Execution log (2026-07-11, executing session — owner-directed augmentation of the review):**
+  - Item 1 DONE. The nil-anchor frame concern raised in review was ILLUSORY (both re-home centre points are
+    NUMERIC values interpreted on the identity hand plane after the grab's numeric-bounds-preserving
+    reparent, so they need not share a frame here — same synchronous-gesture argument as 2b-i). The comments'
+    "pinned-anchor-safe" claim on the APPLY step was an overstatement and is corrected: the READ (mapPoint)
+    is pinned-safe; the APPLY is correct under a pinned anchor only via the move-level fix below. PROTOTYPE
+    prefixes dropped (both halves).
+  - **REAL sub-case found + FIXED: a latent Bug-D-adjacent MOVE-LEVEL gap.** A PINNED anchor
+    (`transformSpec.anchor`, set by the Bug-D asymmetric-extent-change rule) is a stored ABSOLUTE point; the
+    tracking re-fit translates it only on CONTENT-relative moves (it early-returns when slot+content move
+    together, i.e. a DIRECT island move), and no move override rode it — so **plain-dragging ANY pinned-anchor
+    figure swung it by (sR−I)·delta** (probe `scratchpad/probe-bugF-anchor.js`: a 40° figure dragged (40,30)
+    moved its centre (11,49) = R(40°)·(40,30), 34px off; anchor unchanged after the move). This is
+    independent of Bug F and strictly bigger than the pick branch. FIX: `TransformFrameWdgt` overrides the
+    three primitives that rigidly translate an island's bounds — `_applyMoveBy`
+    (ClippingAtRectangularBoundsMixin's move-and-notify path: drag + the pick-out re-home; it bypasses
+    `_applyMoveByBase`), `_applyMoveByBase` (arrange-leaf placement), `__commitMoveBy` (moved as a descendant)
+    — to translate a non-nil anchor by the move delta (dormant off pinned anchors). Restoring the fixed-point
+    property makes the pick-out re-home's numeric delta correct under a pinned anchor **for free**. Re-probe:
+    5a drag now RIGID (0px). ⚠ Note: `TrackingTransformFrameWdgt._reLayoutChildren` still carries a stray
+    "PROTOTYPE Bug-D fix" comment prefix (committed in the Bug-D landing, NOT this unit) — flagged, left as-is.
+  - Item 3 augmented (owner): probes cover scenario 4 (nil-anchor pick-out: fold 30→75, centre preserved
+    0.5px) and scenario 5b (PINNED-anchor pick-out: fold 40→85, centre preserved 0.5px, pinned=true) via
+    `scratchpad/probe-bugF-pick.js`. Both GREEN. The macro drives the real-gesture scenarios (bare drop /
+    round-trip / untilted control); the pinned-anchor sub-cases stay probe-verified (macro-awkward: pinning
+    needs an asymmetric extent change of a rotated tracking figure).
+  - Item 4 edge note CONFIRMED: the re-home rounds its delta to integer px, so a fractional pre-pick centre
+    lands ≤1px off (measured 0.5px) — harmless conservatism, same class as the 2b-i cross-plane FP residue.
+  - **Capstone gate finding + fix.** The first full gauntlet flagged 1 careless end-of-cycle push on a
+    `TrackingTransformFrameWdgt` in `macroDropKeepsHandOrientation` (the new macro is the first test to
+    create a compensating wrapper). Root cause (stack-traced): the PICK-half DISSOLVE branch called the
+    NoSettle `_unwrapIfIdentitySugarNoSettle`, which reparents the wrapper's content into its ATTACHED
+    parent — an off-settle layout mutation during `determineGrabs`. The other pick-out paths escape this by
+    reparenting into a FRESH ORPHAN island (orphan pushes are audit-exempt); a dissolve reparents into an
+    attached parent, so it must settle. FIX (mirrors the drop side exactly): `_resolvePickOutFigureNoSettle`
+    folds to identity and RETURNS the positioned wrapper (still NoSettle); `ActivePointerWdgt.determineGrabs`
+    dissolves it via the SELF-SETTLING `_unwrapIfIdentitySugar()` before the grab — the same pattern the
+    drop uses (post-`target.add` self-settling dissolve). Done at the non-NoSettle caller because rule [G]
+    forbids the NoSettle resolver from self-settling. (An interim `_deferredSettleDeclare` was rejected as a
+    fudge: that mechanism is for per-event-STREAM coalescing / connectors, not a one-shot discrete dissolve.)
+    Capstone gate → 0 careless pushes across 238 tests.
 
 ---
 

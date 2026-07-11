@@ -1582,6 +1582,45 @@ class Widget extends TreeNode
         outerKids = outer.childrenNotHandlesNorCarets()
         break if !(outerKids? and outerKids.length == 1 and outerKids[0] == figure)
         figure = outer
+      # §7.5 Bug F (reparent-transparency, PICK half): the reused figure keeps its user-observed look
+      # when lifted to the hand (the identity plane). When the figure still has non-identity ANCESTOR
+      # islands (e.g. a compensating wrapper living inside a tilted container), its own spec alone would
+      # render differently on the hand than the accumulated look it had nested — so fold the ancestors
+      # into its spec (degrees add, scales multiply — the 4D-2a scalar-composition finding) and re-home
+      # so its visual centre stays put. Off nested planes (a figure sitting directly on the desktop — the
+      # entire pre-Bug-F population) both accumulators are exactly 0/1 and this block is byte-identical
+      # dormant. The transient mid-gesture re-spec is never painted (the synchronous-gesture argument):
+      # both centre points below are NUMERIC values used only to compute the re-homed bounds that render
+      # on the identity hand plane AFTER the grab reparents (which preserves numeric bounds), so they need
+      # not share a coordinate frame here. NIL-anchor correct by that numeric argument; PINNED-anchor
+      # correct because the move-level override (TransformFrameWdgt._applyMoveBy et al.) rides the anchor
+      # on the re-home _applyMoveTo, restoring the fixed-point property (probe-verified 0.5px, scenarios
+      # 4 + 5b — see docs §7.5 Bug F).
+      degAnc = figure.accumulatedRotationDegrees()
+      sAnc = figure.accumulatedScaleFactor()
+      if !(degAnc == 0 and sAnc == 1)
+        # visual centre BEFORE (pinned-anchor-safe READ: own-map via mapPoint honours a pinned anchor,
+        # then up the ancestor planes)
+        screenCentreBefore = figure.parent.localPointToScreen figure.transformSpec.mapPoint(figure.center(), figure.bounds)
+        figure._setRotationNoSettle (((figure.transformSpec.rotationDegrees + degAnc) % 360) + 360) % 360
+        figure._setScaleNoSettle figure.transformSpec.scale * sAnc
+        if figure._materializedBySugar and figure.transformSpec.isIdentity()
+          # the ancestors exactly cancel my spec (the drop→pick round-trip): the figure is now an IDENTITY
+          # compensating sugar wrapper. Position it at the visual centre and RETURN it — determineGrabs
+          # dissolves it self-settling before the grab, exactly as the drop side dissolves its re-expressed
+          # sugar figure via the self-settling wrap AFTER target.add. The dissolve reparents the wrapper's
+          # content into its ATTACHED parent (an off-settle layout mutation → a careless end-of-cycle push
+          # if done bare), and this is a NoSettle method that must not self-settle (rule [G]) — so the
+          # settle belongs at the non-NoSettle caller, NOT here. Dematerialize preserves the content's
+          # position and the sugar wrapper hugs its content, so positioning the wrapper positions the
+          # content. (The other pick-out paths reparent into a FRESH orphan island, which is audit-exempt.)
+          figure._applyMoveTo screenCentreBefore.round().subtract figure.extent().floorDivideBy 2
+          return figure
+        # non-identity total: post-reparent the figure renders its own map at its numeric bounds — home
+        # its visual centre back to where it was. The move-level anchor-ride (see the block comment)
+        # keeps this exact for a pinned anchor too; nil anchor is exact by the numeric argument.
+        centreAfter = figure.transformSpec.mapPoint(figure.center(), figure.bounds)
+        figure._applyMoveTo figure.position().add (screenCentreBefore.subtract centreAfter).round()
       return figure
     # genuine sub-part: extract + wrap in a fresh island
     return @_pickOutRotatedFigureNoSettle()
@@ -1674,7 +1713,26 @@ class Widget extends TreeNode
   # re-specs to its own value (the setters early-return unchanged). Inverse of _pickOutRotatedFigureNoSettle's
   # accumulation; NoSettle -- the drop's target.add carries the settle.
   _reExpressFigureForPlaneOfNoSettle: (target) ->
-    return @ if !@_materializedBySugar
+    # §7.5 Bug F (reparent-transparency, DROP half): EVERY payload keeps the look it had on
+    # the hand — not just sugar figures. A bare payload is a figure whose own transform is identity, so
+    # its relative similitude vs the destination plane is (0 − plane, 1/plane): when the plane is
+    # non-identity, wrap it in a fresh COMPENSATING sugar island at rel so it does not visibly rotate/
+    # scale at the moment of drop ("what you see while dragging is what you get"). Explicit (non-sugar)
+    # islands still nest-compose untouched (the 4D-2b scope rule).
+    if !@_materializedBySugar
+      return @ if @ instanceof TransformFrameWdgt   # explicit island payload: nest-compose, never re-spec
+      degPlane = target.accumulatedRotationDegrees()
+      sPlane = target.accumulatedScaleFactor()
+      return @ if degPlane == 0 and sPlane == 1     # identity plane — the common path, byte-identical dormant
+      relDeg = (((0 - degPlane) % 360) + 360) % 360
+      island = new TrackingTransformFrameWdgt()
+      island._materializedBySugar = true
+      island.transformSpec = new TransformSpec relDeg, 1 / sPlane
+      # slot = my bounds (I am on the hand, screen coords); the wrapper pivots on the slot centre so my
+      # on-screen look is unchanged, and the 4D-1 block below places the wrapper by its visual centre.
+      island.bounds = new Rectangle @left(), @top(), @right(), @bottom()
+      island._addNoSettle @
+      return island
     # The destination plane's linear part: the accumulated similitude over the non-identity islands the
     # dropped payload will composite through -- target's ancestors. target is never itself a non-identity
     # island (islands refuse drops, so dropTargetFor climbs past them), so target.accumulated*() (STRICT

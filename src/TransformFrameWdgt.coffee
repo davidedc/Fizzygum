@@ -285,6 +285,33 @@ class TransformFrameWdgt extends PanelWdgt
       aPoint = aPoint.add @transformSpec.slotOffsetWithinClaim(@bounds)
     super aPoint
 
+  # §7.5 Bug F (reparent-transparency, MOVE level): a PINNED anchor (transformSpec.anchor non-nil, set by
+  # the Bug-D asymmetric-extent-change rule) is stored as an ABSOLUTE point in the island's plane, so it
+  # must RIDE a rigid translation of the island — else the figure renders about a STALE anchor and its
+  # content swings by (sR − I)·delta on a plain drag (probe-verified: a 40° figure dragged by (40,30) moved
+  # its centre by (11,49), i.e. R(40°)·(40,30)). A NIL anchor derives from the slot centre and rides for
+  # free; the tracking re-fit translates a pinned anchor only on CONTENT-relative moves (it sets @bounds
+  # directly, bypassing these primitives), so these overrides cover exactly the DIRECT-move paths it
+  # early-returns on — the THREE distinct primitives that rigidly translate this island's bounds (each
+  # fires for a different move kind, never two for one move): _applyMoveBy (I am the mover — a drag or the
+  # 4D-2a / Bug-F pick-out re-home; ClippingAtRectangularBoundsMixin's move-and-notify path, which bypasses
+  # _applyMoveByBase), _applyMoveByBase (I am arrange-placed as a leaf — the base path), and __commitMoveBy
+  # (I am moved as a child of a moving ancestor). Restoring the fixed-point property also makes the pick-out
+  # re-home's numeric delta correct under a pinned anchor. Dormant off pinned anchors (the entire pre-Bug-D
+  # population — nil anchor ⇒ the guard skips).
+  _applyMoveBy: (delta) ->
+    super delta
+    @transformSpec.anchor = @transformSpec.anchor.add delta if @transformSpec?.anchor? and !delta.isZero()
+
+  _applyMoveByBase: (delta) ->
+    moved = super delta
+    @transformSpec.anchor = @transformSpec.anchor.add delta if moved and @transformSpec?.anchor?
+    moved
+
+  __commitMoveBy: (delta) ->
+    super delta
+    @transformSpec.anchor = @transformSpec.anchor.add delta if @transformSpec?.anchor? and !delta.isZero()
+
   # ---------------------------------------------------------------------------
   # compositing (plan §4.2)
   # ---------------------------------------------------------------------------

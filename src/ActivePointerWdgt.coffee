@@ -1103,6 +1103,16 @@ class ActivePointerWdgt extends Widget
           # positioned to stay put, then follows the cursor via displacementDueToGrabDragThreshold — no
           # centre-under-pointer snap).
           @wdgtToGrab = @wdgtToGrab._resolvePickOutFigureNoSettle()
+          # §7.5 Bug F (reparent-transparency): a drop→pick round-trip leaves an IDENTITY compensating sugar
+          # wrapper (the -deg wrapper's spec folded to identity against its +deg container on pick-out).
+          # DISSOLVE it here, self-settling, BEFORE the grab, so the BARE content is what goes on the hand —
+          # the sibling of the drop side's post-add self-settling _unwrapIfIdentitySugar. Done at THIS
+          # non-NoSettle caller because the dissolve reparents the wrapper's content into its attached
+          # parent (a settling layout mutation) and the pick-out resolver is NoSettle (rule [G] forbids it
+          # from self-settling). Guarded so it fires ONLY for the identity round-trip wrapper: a plain
+          # widget has no _materializedBySugar, a genuinely rotated/scaled figure is non-identity.
+          if @wdgtToGrab._materializedBySugar and @wdgtToGrab.transformSpec?.isIdentity()
+            @wdgtToGrab = @wdgtToGrab._unwrapIfIdentitySugar()
           w = @wdgtToGrab
           @grab w, displacementDueToGrabDragThreshold, switcherooHappened
 
