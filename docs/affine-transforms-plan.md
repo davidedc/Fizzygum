@@ -27,9 +27,25 @@ NORMALIZATION (`_normalizePinnedAnchorNoSettle`, one seam) — LANDED + PUSHED (
 git-stash-verified to fail ~50px on the un-fixed build), and `fg gauntlet` dpr1/dpr2/webkit 238/238/0-failed +
 apps/paint/tiernaming/settle/capstone + `fg homepage` are all green with ZERO reference changes (probe delta
 (−50.4,+49.1) → (0.0,0.0); the value-only scenario adds no images). THE AFFINE ARC IS FULLY CLOSED again.**
+**✅ STATUS UPDATE (2026-07-12): RESIDUALS SWEEP — all six §7 small residuals resolved, IN TREE (uncommitted,
+awaiting owner review): §7.11 pinout labels + drag-embed lock badge FIXED (screen-anchoring via mapRectToScreen;
+the banked in-plane-parenting shape was FALSIFIED — see item 11) with macro
+`macroPinoutLabelScreenAnchoredOnTiltedWidget`; §7.13 stack/menu drop insert-index FIXED (plane-map the add()
+positionOnScreen arg; reachability doubt was wrong — stacks accept drops by default) with macro
+`macroDropIntoTiltedStackInsertsAtVisualSlot`; §7.12 adjuster drag-delta FIXED (inverse-linear delta map) with
+macro `macroStackAdjusterInTiltedIslandMapsDragDelta` — all three stash-verified fail-un-fixed, suite 241/241
+dpr1 green, zero recaptures. Bug B latent 1 (basement lost-items filter) REFUTED BY PROBE (the up-walk already
+marks the island — not a bug); §7.10 explicit hugging island PROBE-RESOLVED (the `new TrackingTransformFrameWdgt
+content, spec` opt-in already works end-to-end; recommend keeping the base island fixed). Bug B latent 2
+(explicit-island empty frame on close + isInternal misread + transform lost across close/reopen) RESOLVED —
+owner chose OPTION B (2026-07-12), IMPLEMENTED IN TREE: verbs generalized to sole-content islands + renamed
+(`_enclosingIslandFigure` / `_parentThroughIslands`), macro `macroExplicitIslandTravelsWholeThroughCloseReopen`
+(stash-verified); §7.10 owner-confirmed "fixed + test" → lock-in macro `macroExplicitIslandFixedVsTrackingResize`.
+See the "EXPLICIT-ISLAND CLOSE dossier" in §7.5 for the as-built record.**
 REMAINING
-= only the BANKED §7 follow-ons (Phase 5, each its own future plan) + Bug B's 2 known-latents — NOT shipping
-blockers. See the per-phase §6 banners for hashes + gate results
+= ONLY the BIG §7 items (7.1 policy engine, 7.2 leaf self-warp, 7.3 quad damage+occlusion, 7.4 density folding
+[owner-downgraded], 7.8 SWCanvas bilinear [separate repo]) — each design-first, owner-gated, its own plan doc.
+See the per-phase §6 banners for hashes + gate results
 (they are the authority on status). Owner-gated; a standing
 grant to "commit + continue while all gates pass" is in force as of 2026-07-10. Original design
 was AUTHORED 2026-07-09 and hardened same day by an adversarial fresh-eyes pass (§10 facet
@@ -1756,36 +1772,72 @@ See §7. None of these block declaring the feature shipped.
    as `_isInsideNonIdentityIsland`). Bank until a real need; the v1 accepted look is Squeak-consistent
    (handles are part of the transformed figure). Glyph rotation + nearest-neighbor chunkiness on SW is
    the same accepted 0f trade-off, no compensation planned.
-10. **Explicit hugging island for content-resize** (banked 2026-07-10, from the R3 review) — R3 gave
-   the SUGAR path a size-tracking island (`TrackingTransformFrameWdgt`, §6 R3), so a rotated/scaled
-   widget's slot grows with the widget. An EXPLICITLY-authored island (`new TransformFrameWdgt content,
-   spec`) is still a FIXED figure: resizing its content past the authored slot clips (the same symptom
-   R3 fixed for sugar). The clean future path is to let an author opt into hugging by instantiating
-   `TrackingTransformFrameWdgt` for the explicit wrap (it already exists and IS-A TransformFrameWdgt) —
-   NOT a per-instance flag (capability is class here, §6 R3). Owner-gated; build only on demonstrated
-   need (no current test/app authors an explicit island whose content resizes).
-11. **Pinout labels in a rotated island** (banked 2026-07-10, from the R2 audit) — `WorldWdgt.addPinoutingWidgets`
-   builds a `StringWdgt` overlay per pinouted widget and places it at `clippedThroughBounds().right()+10` as a
-   WORLD child — the SAME latent screen-vs-plane bug R2 fixed for highlights (a pinouted widget inside a rotated
-   island gets its label at the virtual-plane rect drawn in screen space → offset). Pinout is a debug/inspection
-   overlay, out of the reported repro, so it was left as KNOWN-LATENT. Fix is the identical one-liner pattern:
-   parent the label into `widget._enclosingNonIdentityIsland() ? world` (and the offset becomes an in-plane
-   offset that rotates with the island). Owner-gated; no current test drives pinout on a rotated target.
-12. **`StackElementsSizeAdjustingWdgt.nonFloatDragging` in a rotated island** (banked 2026-07-10, from the R4
-   audit) — R4 fixed `SliderButtonWdgt` AND `PaletteWdgt` (the two position-reading consumers); this fourth
-   consumer (`src/StackElementsSizeAdjustingWdgt.coffee:55`) resizes stack cells from the screen
-   `deltaDragFromPreviousCall.x` — a DELTA/vector that needs the inverse LINEAR-part mapping (not point mapping),
-   so dragging a stack divider inside a rotated island would resize by the wrong amount. Niche (no app/test puts a
-   resizable stack inside a rotated island); banked until a demonstrated need.
-13. **Stack/menu drop insert-index in a rotated island** (banked 2026-07-10, from 4D-1) — the drop passes
-   the RAW screen `@position()` as the 6th `add` arg (`positionOnScreen`), which the stack/menu panels
-   (`SimpleVerticalStackPanelWdgt`, `ToolPanelWdgt`, `HorizontalMenuPanelWdgt`) consume to compute a
-   child-insert INDEX. For such a panel INSIDE a non-identity island the un-mapped point picks the wrong
-   slot — the same screen-vs-plane class 4D-1 fixed for the payload's own bounds. 4D-1 fixed the
-   payload-bounds remap (every base container) but left this raw, because (a) those panels don't
-   `enableDrops()` by default so the path is rarely reachable and (b) there is no stack-in-island fixture.
-   Fix is the identical one-liner: map the point via `target.screenPointToMyPlane` before passing it when
-   `target._isInsideNonIdentityIsland()`. Owner-gated; build on demonstrated need.
+10. **Explicit hugging island for content-resize — ✅ PROBE-RESOLVED 2026-07-12 (residuals sweep): the
+   capability ALREADY EXISTS and works end-to-end; no code needed, owner decision reduced to
+   defaults/documentation.** An explicitly-authored BASE island (`new TransformFrameWdgt content, spec`) is
+   (still, probe-confirmed) a FIXED figure: content `setExtent` past the authored slot clips (slot stays 80@60
+   while content grows 200@140). But the banked "clean future path" turns out to need ZERO work:
+   **`new TrackingTransformFrameWdgt content, spec` works TODAY as the author-facing hugging opt-in** — the
+   subclass inherits the `(content, spec)` constructor, and the probe verified the full behavior stack: slot
+   hugs the resize (80@60 → 200@140), the §7.5 Bug-D pinned-anchor stability engages correctly on an
+   asymmetric grow (anchor pinned, no visual jump), and — `_materializedBySugar` false — it does NOT
+   auto-dissolve at identity (correct for an authored container; the class header even anticipated this: "a
+   future explicitly-authored hugging island would be this class with the flag false"). **Recommendation
+   (owner to confirm): keep the base explicit island FIXED** — a fixed slot is a legitimate authored
+   viewport/crop semantic, and flipping the default would forfeit the Phases-1–3 byte-identity guarantee for
+   coupled explicit islands in stacks (the base deliberately does not define `_reLayoutChildren`).
+   **✅ OWNER CONFIRMED 2026-07-12 ("fixed frame + test"): plain `TransformFrameWdgt` stays the fixed
+   viewport/crop; `TrackingTransformFrameWdgt` is the documented authored hugging opt-in; both semantics locked
+   by the value-assert macro `SystemTest_macroExplicitIslandFixedVsTrackingResize` (fixed slot stays 80×60 under
+   a 200×140 content grow; tracking slot follows; authored tracking island survives identity — behavior lock-in,
+   no fail-un-fixed leg by design).**
+11. **Pinout labels in a rotated island — ✅ FIXED IN TREE 2026-07-12 (residuals sweep), macro
+   `SystemTest_macroPinoutLabelScreenAnchoredOnTiltedWidget` (stash-verified: fails un-fixed by (10,16)px).**
+   `WorldWdgt.addPinoutingWidgets` placed the world-child `StringWdgt` label at the target's PLANE-LOCAL
+   `clippedThroughBounds().right()+10` → offset beside a tilted target (probe: 30°-tilted 80×60 rect, label
+   (490,150) vs true screen anchor (500,134)). **⚠ The fix shape banked here originally — in-plane parenting via
+   `_enclosingNonIdentityIsland`, the R2-highlighter pattern — was FALSIFIED during implementation; do NOT
+   re-attempt it for pinout:** (a) a label at right()+10 sits OUTSIDE the island's slot box, and islands clip
+   descendants to the slot (§4.11) — the label would be clipped away entirely; (b) the label (unlike
+   `HighlighterWdgt`, which declares `isLayoutInert`) is a plain StringWdgt — as an island child it would break
+   the sugar island's sole-content predicate (`childrenNotHandlesNorCarets`) and grow a tracking island's slot.
+   The R2 pattern is right only for overlays that COVER the target's box. **Shipped fix: SCREEN-anchoring** —
+   `peekThroughBox = target.mapRectToScreen target.clippedThroughBounds()` in both reconciler branches (the same
+   composition the paint lane uses at `recordDrawnAreaForNextBrokenRects`); identity ⇒ mapRectToScreen returns
+   the box unchanged, so untransformed pinout is byte-identical (macro's identity control asserts EXACT legacy
+   position). **Same one-line idiom applied to the drag-embed LOCK BADGE** (`addDragAffordanceWidgets`,
+   world-child badge at the drop target's box right−70/top+4 — reachable when a view-only window sits inside a
+   tilted container): probe-verified against a tilted target ((410,154)→(421,137) ≈ screen (420,138)); no
+   dedicated macro (dwell-drag-in-island fixture cost ≫ value; identity path covered by the existing drag-embed
+   suite, transformed path shares the pinout mechanism + mapping verb).
+12. **`StackElementsSizeAdjustingWdgt.nonFloatDragging` in a rotated island — ✅ FIXED IN TREE 2026-07-12
+   (residuals sweep), macro `SystemTest_macroStackAdjusterInTiltedIslandMapsDragDelta` (stash-verified: fails
+   un-fixed).** R4 fixed `SliderButtonWdgt` AND `PaletteWdgt` (the two position-reading consumers); this fourth
+   consumer resizes stack cells from the screen `deltaDragFromPreviousCall.x` — a DELTA/vector needing the
+   inverse LINEAR-part mapping. Probe (180°-tilted holder, the WidgetFactory [cell|adjuster|cell] shape): an
+   on-screen right-drag toward the visually-right cell GREW it 92→134 (backwards); fixed it shrinks 92→49;
+   untilted control numerically identical pre/post (dormant untouched). Shipped fix, top of `nonFloatDragging`:
+   `if @_isInsideNonIdentityIsland() then deltaDragFromPreviousCall = (@screenPointToMyPlane pos).subtract
+   @screenPointToMyPlane pos.subtract deltaDragFromPreviousCall` — the 4A-2 idiom (difference of two mapped
+   POINTS; a delta must never be point-mapped, the translation would double-apply), gated so the dormant path
+   pays nothing. **Reachability (the banked "niche" doubt resolved): PUBLIC** — the adjuster ships in the
+   new-widget menu ("adjuster widget") and the WidgetFactory demo stacks, and any holder tilts via public
+   gestures. Fixture lesson as §7.13: use 180° (sign inversion); at 90° the symptom is a dead axis (delta.x≈0),
+   harder to assert.
+13. **Stack/menu drop insert-index in a rotated island — ✅ FIXED IN TREE 2026-07-12 (residuals sweep), macro
+   `SystemTest_macroDropIntoTiltedStackInsertsAtVisualSlot` (stash-verified: fails un-fixed, index 3 vs 1).**
+   The drop passed the RAW screen `@position()` as the 6th `add` arg (`positionOnScreen`), which the stack/menu
+   panels (`SimpleVerticalStackPanelWdgt`, `ToolPanelWdgt`, `HorizontalMenuPanelWdgt`) compare against their
+   children's PLANE-LOCAL spans to compute the child-insert INDEX. **⚠ The banked reachability doubt ("those
+   panels don't enableDrops() by default") was WRONG: `SimpleVerticalStackPanelWdgt._acceptsDrops` is `true` by
+   default** — any user who tilts a stack (public halo/sugar gesture) reaches this path. Shipped fix (the banked
+   one-liner, at the drop site right above `target.add`): `dropPositionInTargetPlane = if
+   target._isInsideNonIdentityIsland() then target.screenPointToMyPlane @position() else @position()` — dormant
+   path passes `@position()` through, byte-identical (suite 240/240, zero recaptures). **Fixture lesson (bake
+   into any future probe): at 45° the bug often SELF-MASKS** — the screen y at a child's visual centre can still
+   fall inside that child's plane span (probe measured exactly that) — **use 180°** (visual order inverts; a drop
+   on the first child inserted after the LAST, index 3-of-3 vs expected 1). Probe + macro assert both the tilted
+   insert (index 1) and the untilted control (index 2, unchanged).
 14. **Public geometry API unit — ✅ LANDED 2026-07-11 (Phase 5, first banked item), its own doc:**
    `docs/affine-geometry-api-plan.md` (self-contained; top banner now LANDED). Shipped the two-vocabulary
    LAW (layout-box family stays untransformed forever; every screen-family name contains "screen") + the
@@ -1905,13 +1957,19 @@ pinned-anchor interplay line).**
   (generic). Test `SystemTest_macroTiltedWindowKeepsRotationThroughCloseReopen` (value-assert; catches the bug —
   buggy build fails rotation-preserved / no-orphan / reopen-still-tilted).
 - **⚠ AUDIT outcomes (from the design-locked table below):** `BasementWdgt.holds` ✅ FIXED (look-through).
-  `hideUsedWidgets` / "only show lost items" filter — **KNOWN-LATENT, RECORDED (not fixed):** its reachability
-  (`isInBasementButReachable` via `doGC` GC-session marks, `TreeNode.coffee:160`) walks UP; a sugar island's
-  content-window is referenced but the ISLAND (the basement child) is not, so a used tilted window reads as "lost"
-  and shows in the filter. Minor basement-UI cosmetic, NOT the core rotation path (reopen keys off `world[@slot]` +
-  `existingWindow.parent?`, never `holds`/reachability). Fix later = make basement reachability look through the
-  sugar figure to its content. The explicit (non-sugar) island wrapping a closed window (strands an empty frame)
-  stays KNOWN-LATENT too (out of scope for sugar-figure resolution).
+  `hideUsedWidgets` / "only show lost items" filter — **✅ REFUTED BY PROBE 2026-07-12 (residuals sweep): NOT a
+  bug, no fix needed.** The latent was recorded from static reasoning ("a sugar island's content-window is
+  referenced but the ISLAND — the basement child — is not"), but that reasoning missed that
+  `markItAndItsParentsAsReachable` (`TreeNode.coffee:130`) walks UP from the referenced target: the island, being
+  the content's PARENT, is marked by that walk one step before it stops at the basement boundary
+  (`isDirectlyInBasement`), so the mark walk and the filter's `isInBasementButReachable` check meet exactly at the
+  island. The look-through is implicit in the up-walk — by construction, not by accident: ANY wrapper between the
+  referenced widget and the direct basement child gets marked the same way. Probe (headless, 3 cases): tilted+
+  shortcut-referenced rect → basement child is the `TrackingTransformFrameWdgt`, `reachable=true`, filter HIDES it
+  (correct); untilted+referenced → hidden (correct); unreferenced → stays visible as lost (correct). No code
+  change; behavior is additionally exercised by the Bug B round-trip macro's `holds` asserts. The explicit
+  (non-sugar) island wrapping a closed window (strands an empty frame) stays KNOWN-LATENT (see the table row —
+  addressed separately in the residuals sweep).
 - **Symptom (owner):** "when you close a tilted window it gets put in the basement — STRAIGHT through. And when
   brought back (its reference/link icon re-opens it) it's put back in the world STRAIGHT." (Try: open the C↔F
   converter via its reference icon, rotate it, close it → it's straight in the basement; re-open via the icon →
@@ -1954,13 +2012,72 @@ pinned-anchor interplay line).**
   | `BasementWdgt.holds(w)` = `w.parent == @scrollPanel.contents` | `BasementWdgt.coffee:147` | CONFIRMED breaks — child is the island, so `holds(window)` goes false while the window IS in the basement (the launch "is it closed?" check keys off this) | FIX: look through `w.parent`→its sugar island |
   | `hideUsedWidgets` / `showAllWidgets` + "referenced/used children" classification | iterate `scrollPanel.contents.children` | see islands where they expect windows; hide/show mechanics work, but the "still referenced elsewhere?" classification runs on the island not the window | VERIFY it classifies THROUGH the wrapper, else lost-items filter miscounts tilted windows |
   | other by-reference RE-HOMING sites (window ejection from containers, other launch/restore variants, "send to desktop"-style menu items) | grep | same latent bug | fix now if one-line, else record here |
-  | explicit (NON-sugar) island wrapping a closed window | — | strands an empty invisible frame on the desktop | KNOWN-LATENT, out of scope for sugar-figure resolution (record only) |
+  | explicit (NON-sugar) island wrapping a closed window | — | strands an empty invisible frame on the desktop | ✅ PROBED + DESIGN-OPTIONS WRITTEN 2026-07-12 (residuals sweep) — see "EXPLICIT-ISLAND CLOSE dossier" right below this Bug B section; OWNER DECISION pending |
 - **Also FIX THE LEAK** — under model (a) the leak SELF-FIXES (the island is not emptied; it travels whole).
 - **Test (macro):** rotate a window, close → screenshot (basement shows it TILTED — this is intended UX under (a),
   surface to owner) → reopen → value-assert the reopened figure's rotation scalar == the set angle, the island is
   parented to `world`, and a STRUCTURAL assert that EXACTLY ONE `TransformFrameWdgt` exists end-to-end (catches both
   the orphan leak and a double-wrap). Assert GENERICITY by also closing+reopening a tilted NON-window widget. If
   cheap, fold in a serialize→reload WHILE basement-resident (discharges part of 4E's basement-resident coverage).
+
+### EXPLICIT-ISLAND CLOSE dossier (Bug B latent 2, residuals sweep 2026-07-12) — ✅ OPTION B CHOSEN BY OWNER + IMPLEMENTED IN TREE 2026-07-12
+
+> **AS-BUILT:** the verb family is generalized to SOLE-CONTENT islands and renamed for honesty —
+> `Widget._enclosingSoleContentIsland` (new predicate: `_enclosingSugarIsland` minus the `_materializedBySugar`
+> requirement), `_enclosingSugarFigure` → **`_enclosingIslandFigure`**, `_parentThroughSugarIslands` →
+> **`_parentThroughIslands`**; the 4 call sites (`Widget._closeNoSettle`, `IconicDesktopSystemWindowedApp.launch`,
+> `WindowWdgt.isInternal`, `BasementWdgt.holds`) follow. Sugar-only machinery (`_enclosingSugarIsland`,
+> materialize/dissolve/unwrap, halo anchor, `_dropPolicyProxy`) deliberately untouched — an explicit island never
+> auto-dissolves and never re-expresses on drop. Probes re-run green: figure travels WHOLE (zero stranded
+> islands), `holds` true through the explicit wrap, transform survives close→reopen, `isInternal` false for an
+> explicitly-islanded desktop window. Macro `SystemTest_macroExplicitIslandTravelsWholeThroughCloseReopen`
+> (stash-verified: 5/8 asserts fail on the un-fixed build). The pick-out-empties-explicit-island leftover stays
+> out of scope as recorded below. The verb rename/addition shifts the inspector's alphabetical member list by
+> one row ⇒ ONE benign inspector recapture (`macroDuplicatedInspectorDrivesCopiedTargetOnly` images 2+3,
+> dpr 1+2 — live-vs-reference diff visually verified to be only the list scroll rows; the pre-authorized
+> class). Original dossier follows for the record.
+
+- **Probe-confirmed (headless, 2 fixtures + 1 skin check).** Closing the sole content of an EXPLICIT
+  (non-`_materializedBySugar`) `TransformFrameWdgt` — a plain rect at 30° and a `WindowWdgt` at 20° — re-homes the
+  bare CONTENT to the basement (straight; `holds`=true via the sugar-only look-through's fallback-to-me) and leaves
+  the island in the world with `children.length == 0`: an invisible, click-transparent (`isTransparentAt`=true),
+  drop-refusing (`_acceptsDrops`=false), immortal leftover that also SERIALIZES with the world. Two further
+  symptoms of the SAME root: (1) the authored transform does NOT survive close→reopen (unlike a sugar tilt — the
+  Bug B guarantee); (2) **`WindowWdgt.isInternal` misreads an explicitly-islanded desktop window as INTERNAL**
+  (probe: bare=false, sugar-tilted=false, explicit-islanded=**true**) — the window wears the internal skin while
+  visually sitting on the desktop, because `_parentThroughSugarIslands` resolves to the island (≠ world).
+- **Root**: the re-home/classification verb family (`_enclosingSugarFigure` / `_parentThroughSugarIslands`,
+  `Widget.coffee` — grep the symbols) deliberately climbs only `_materializedBySugar` sole-content islands ("an
+  explicit island is a real container"). For close/basement/skin semantics that doctrine is wrong-shaped: a
+  SOLE-CONTENT transform island — sugar or explicit — is transform plumbing around one figure, not a nesting
+  container the user put the widget "inside".
+- **Blast radius (grepped 2026-07-12): exactly 4 consumer sites** — `Widget._closeNoSettle` (re-home target,
+  `Widget.coffee:500`), `IconicDesktopSystemWindowedApp.launch` reopen (`:59`), `WindowWdgt.isInternal` (`:191`),
+  `BasementWdgt.holds` (`:150`). Sugar-ONLY machinery (`_enclosingSugarIsland`, materialize/dissolve/unwrap,
+  halo anchor) is NOT touched by either option below.
+- **OPTION A (conservative): destroy-when-emptied-by-close.** In `_closeNoSettle`, after re-homing the figure,
+  walk my former enclosing explicit sole-content island chain; destroy any island left with zero children. Fixes
+  ONLY the leak. Reopen still loses the authored transform; the `isInternal` misread stays; `holds` through an
+  explicit island stays fallback-correct only because content travels bare.
+- **OPTION B (RECOMMENDED): generalize the FIGURE from "sugar sole-content" to "sole-content island, sugar or
+  explicit".** `_enclosingSugarFigure`'s climb accepts any `TransformFrameWdgt` whose sole child is the figure
+  (rename to `_enclosingIslandFigure`, and `_parentThroughSugarIslands` → `_parentThroughIslands`, to keep the
+  verbs honest — 4 call sites + 2 definitions). Then: close re-homes the explicit island WHOLE (leak self-fixes
+  exactly as Bug B model (a) did for sugar; basement shows it tilted — the already-accepted UX); reopen restores
+  the authored transform (round-trip uniform with sugar); `isInternal` reads external on the desktop (misread
+  fixed); `holds` stays true through the explicit wrap (REQUIRED under B — the launch "is it closed?" check).
+  Precedents: sugar figures travel whole (Bug B), and a window travels whole WITH its content when the content is
+  closed (`_closeNoSettle`'s first branch) — the explicit sole-content island is the same shape of dedicated
+  container. A MULTI-child explicit island is not sole-content → not climbed → content travels bare and siblings
+  stay (correct under both options).
+- **Out of scope either way (record):** float-dragging content OUT of an explicit island also leaves the empty
+  invisible frame (pick-out extracts; the island stays as the author's reusable container). Deliberate user
+  action on an authored container — not folded into this fix; revisit only if it bites in practice.
+- **Test shape (must-fail-unfixed under B):** extend/side-car the Bug B round-trip macro: explicitly island a
+  window at 20°, close → assert figure-in-basement keeps 20° + ZERO islands left in the world; reopen → 20°
+  restored, exactly ONE island; plus `isInternal`=false for an explicitly-islanded desktop window. Value-assert
+  only (no screenshots ⇒ no recapture). Under A instead: assert zero world islands after close + bare content in
+  basement.
 
 ### BUG C — ❌ NOT A BUG — an AUDIT-PHASE error, FIXED IN THE GATE 2026-07-10
 

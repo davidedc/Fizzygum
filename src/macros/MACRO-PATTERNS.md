@@ -1622,6 +1622,27 @@ assertion a recapture after a regression silently stores two different hashes an
   fiddlingWithResizerHandles, whose own references already held the law (its image_4 ≡ image_3 byte-identical in all six
   reference families: native/SWCanvas/Windows × dpr 1/2). No new verb.
 
+## Affine transforms (islands)
+
+- **Tilted-island fixture discipline** (`macroDropIntoTiltedStackInsertsAtVisualSlot`, `macroStackAdjusterInTiltedIslandMapsDragDelta`):
+  tilt via the public sugar (`widget.setRotationDegrees deg` + `yield "waitNoInputsOngoing"` — wraps in a `TrackingTransformFrameWdgt`).
+  **Prefer 180° for screen-vs-plane catch tests**: it inverts the visual order / flips the sign EXACTLY, while at 45° the bug class
+  often SELF-MASKS (the screen coordinate still falls inside the intended child's plane span) and at 90° a mapped axis just goes dead —
+  both make the un-fixed build pass. Compute every on-screen anchor from the live world with the geometry API:
+  `w.localPointToScreen w.center()` (a point), `w.screenBounds()` (the mapped footprint — exact; `mapRectToScreen` of a box pads ≤2px,
+  so assert with a small tolerance). A cross-plane DROP wraps the payload in a compensating sugar island (reparent-transparency), so
+  locate it among the target's children as "IS the payload or CONTAINS it" before asserting its sibling index.
+- **Overlay-position asserts (pinout)** (`macroPinoutLabelScreenAnchoredOnTiltedWidget`): trigger the pinout reconciler with the
+  public method the menu item calls — `w.showOutputPins nil, w` (arg 2 is the target) — then find the label in
+  `world.currentPinoutingWidgets` by its `wdgtThisWdgtIsPinouting`. World-child overlays anchored NEXT TO a widget (pinout label,
+  drag-embed lock badge) must sit at the SCREEN-mapped box (`mapRectToScreen clippedThroughBounds()`); overlays that COVER the
+  target's box (highlighters) are instead parented IN-PLANE — that in-plane pattern is WRONG for beside-the-box overlays (clipped at
+  the island slot + breaks the sugar sole-content predicate; see affine plan §7 item 11).
+- **Divider/handle drags inside an island**: the raw
+  `@syntheticEventsMouseMovePressDragRelease_InputEvents (adj.localPointToScreen adj.center()), (from.add new Point dx, dy)` drives the
+  non-float drag stream through the island's hit-testing; assert the resize DIRECTION (grew/shrank) rather than magnitudes (the
+  adjuster's transfer function is nonlinear).
+
 ## The verb-establishing pilots
 
 - **`macroBasicWorldMenuAndBubble`** (from 89 cmds): open the world menu, hover "demo", `yield <ms>` for the help bubble, screenshot.
