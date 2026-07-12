@@ -16,6 +16,10 @@ class PromptWdgt extends MenuWdgt
 
   tempPromptEntryField: nil
 
+  # constructor-build-exempt: menu-family ctor (see MenuWdgt) — composes its entry field and
+  # optional slider through the __add structural leaf alongside addMenuItem, then re-lays
+  # itself (_reLayoutSelf) at the end; not the panel _buildAndConnectChildrenNoSettle
+  # pattern. Recorded 2026-07-12 when the gate learned to see @__add.
   constructor: (widgetOpeningThePopUp, @msg, @target, @callback, @defaultContents, @intendedWidth, @floorNum,
     @ceilingNum, @isRounded) ->
 

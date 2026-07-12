@@ -566,14 +566,7 @@ class Widget extends TreeNode
 
     if @parent?
       previousParent = @parent
-      # if the widget contributes to a shadow, unfortunately
-      # we have to walk towards the top to
-      # break the widget that has the shadow.
-      firstParentOwningMyShadow = @firstParentOwningMyShadow()
-      if firstParentOwningMyShadow?
-        firstParentOwningMyShadow.fullChanged()
-      else
-        @fullChanged()
+      @fullChangedIncludingShadowOwner()
 
       previousParent.removeChild @
       if previousParent._reactToChildRemoved?
@@ -659,16 +652,6 @@ class Widget extends TreeNode
     isThereAnHandle?.updateVisibility()
 
 
-  # »>> this part is excluded from the fizzygum homepage build
-  # not used within Fizzygum yet.
-  nextSteps: (lst = []) ->
-    nxt = lst.shift()
-    if nxt
-      @onNextStep = =>
-        nxt.call @
-        @nextSteps lst
-  # this part is excluded from the fizzygum homepage build <<«
-  
   # leaving this function as step means that the widget wants to do nothing
   # but the children *are* traversed and their step function is invoked.
   # If a Widget wants to do nothing and wants to prevent the children to be
@@ -899,11 +882,6 @@ class Widget extends TreeNode
 
     @__commitExtent newBounds.extent()
   
-  # »>> this part is excluded from the fizzygum homepage build
-  # unused code
-  corners: ->
-    @bounds.corners()
-  # this part is excluded from the fizzygum homepage build <<«
   
   leftCenter: ->
     @bounds.leftCenter()
@@ -2195,10 +2173,17 @@ class Widget extends TreeNode
   # _invalidateLayout at the semantic points). docs/proper-layouts-geometry-seam-removal-plan.md.
   _reFitContainer: (container = @) ->
     return unless container?._reLayoutChildren?
+    container._scheduleRelayoutRespectingPhase()
+
+  # The PHASE-VALVE, shared by the re-fit seam (_reFitContainer) and the collapse/unCollapse
+  # cores: schedule MY re-layout correctly in EITHER phase. In-pass, enqueue just me with the
+  # no-climb atom (a bare _invalidateLayout THROWS mid-pass; the directly-affected widget needs
+  # no climb); off-pass, take the canonical climbing _invalidateLayout.
+  _scheduleRelayoutRespectingPhase: ->
     if world?._recalculatingLayouts
-      container.__markForRelayout()   # in-pass: enqueue just this directly-affected container, no climb (shared atom)
+      @__markForRelayout()
     else
-      container._invalidateLayout()
+      @_invalidateLayout()
 
 
   _applyWidth: (width) ->
@@ -2639,17 +2624,7 @@ class Widget extends TreeNode
 
     @__hide()
 
-    # TODO refactor this, it appears more than one time
-    # if the widget contributes to a shadow, unfortunately
-    # we have to walk towards the top to
-    # break the widget that has the shadow.
-    # ALSO there are many other "@fullChanged" that really
-    # should do this instead.
-    firstParentOwningMyShadow = @firstParentOwningMyShadow()
-    if firstParentOwningMyShadow?
-      firstParentOwningMyShadow.fullChanged()
-    else
-      @fullChanged()
+    @fullChangedIncludingShadowOwner()
 
 
   show: ->
@@ -2660,11 +2635,7 @@ class Widget extends TreeNode
     @isVisible = true
     WorldWdgt.noteVisibilityOrCollapseChange()
 
-    firstParentOwningMyShadow = @firstParentOwningMyShadow()
-    if firstParentOwningMyShadow?
-      firstParentOwningMyShadow.fullChanged()
-    else
-      @fullChanged()
+    @fullChangedIncludingShadowOwner()
   
   toggleVisibility: ->
     @isVisible = not @isVisible
@@ -2691,7 +2662,7 @@ class Widget extends TreeNode
     @parent?._beforeChildCollapsed? @
     @collapsed = true
     WorldWdgt.noteVisibilityOrCollapseChange()
-    if world?._recalculatingLayouts then @__markForRelayout() else @_invalidateLayout()
+    @_scheduleRelayoutRespectingPhase()
     @fullChanged()
     @parent?._reactToChildCollapsed? @
 
@@ -2717,7 +2688,7 @@ class Widget extends TreeNode
     @parent?._beforeChildUnCollapsed? @
     @collapsed = false
     WorldWdgt.noteVisibilityOrCollapseChange()
-    if world?._recalculatingLayouts then @__markForRelayout() else @_invalidateLayout()
+    @_scheduleRelayoutRespectingPhase()
     @fullChanged()
     @parent?._reactToChildUnCollapsed? @
 
@@ -2989,6 +2960,17 @@ class Widget extends TreeNode
       if !@fullPaintBoundsMaybeChanged
         world.widgetsWithMaybeChangedFullPaintBounds.push @
         @fullPaintBoundsMaybeChanged = true
+
+  # fullChanged, but shadow-aware: if I contribute to an ancestor's shadow, the repaint
+  # must start from the first parent OWNING that shadow (breaking only my own rect would
+  # leave its stale shadow on screen), so walk up to it. Used by the structural verbs
+  # (destroy/hide/show/add); many other bare @fullChanged sites could arguably use this too.
+  fullChangedIncludingShadowOwner: ->
+    firstParentOwningMyShadow = @firstParentOwningMyShadow()
+    if firstParentOwningMyShadow?
+      firstParentOwningMyShadow.fullChanged()
+    else
+      @fullChanged()
   
   # Widget accessing - structure //////////////////////////////////////////////
 
@@ -3083,14 +3065,7 @@ class Widget extends TreeNode
     # container is invalidated AFTER setLayoutSpec, further down, also via the param.)
     aWdgt.parent?._invalidateLayout(aWdgt)
 
-    # if the widget contributes to a shadow, unfortunately
-    # we have to walk towards the top to
-    # break the widget that has the shadow.
-    firstParentOwningMyShadow = aWdgt.firstParentOwningMyShadow()
-    if firstParentOwningMyShadow?
-      firstParentOwningMyShadow.fullChanged()
-    else
-      aWdgt.fullChanged()
+    aWdgt.fullChangedIncludingShadowOwner()
 
     aWdgt.setLayoutSpec layoutSpec
     # NEW-container invalidate via the param: setLayoutSpec above set aWdgt.layoutSpec to the NEW

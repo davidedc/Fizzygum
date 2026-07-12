@@ -16,6 +16,10 @@ class MenuWdgt extends PopUpWdgt
   isMenu: ->
     true
 
+  # constructor-build-exempt: menu-family ctor — a menu composes its label (and, via
+  # addMenuItem/addLine, its items) through the __add structural leaf and lays itself out
+  # on popup, not through the panel _buildAndConnectChildrenNoSettle pattern (which
+  # predates it here). Recorded 2026-07-12 when the gate learned to see @__add.
   constructor: (@widgetOpeningThePopUp, @isListContents = false, @target, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true, @title = nil, @environment = nil, @fontSize = nil) ->
     if !@isListContents
       if @killThisPopUpIfClickOutsideDescendants

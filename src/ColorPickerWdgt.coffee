@@ -22,7 +22,7 @@ class ColorPickerWdgt extends Widget
     @appearance = new RectangularAppearance @
     @color = Color.WHITE
     @_applyExtent new Point 80, 80
-    @buildSubwidgets()
+    @_buildAndConnectChildren()
 
   colloquialName: ->
     "color picker"
@@ -31,13 +31,19 @@ class ColorPickerWdgt extends Widget
   # calls this polymorphically instead of type-checking the entry).
   menuEntryPreferredWidth: -> @width()
 
-  buildSubwidgets: ->
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
+  # (Was `buildSubwidgets`, an ad-hoc one-hop indirection that hid the ctor child-building from the
+  # constructor-build gate; converted to the canonical pattern, matching ButtonWdgt.)
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
     @feedback = new RectangleWdgt new Point(20, 20), @choice
     @colorPalette = new ColorPaletteWdgt @feedback, new Point @width(), 50
     @grayPalette = new GrayPaletteWdgt @feedback, new Point @width(), 5
-    @add @colorPalette
-    @add @grayPalette
-    @add @feedback
+    @_addNoSettle @colorPalette
+    @_addNoSettle @grayPalette
+    @_addNoSettle @feedback
     @_invalidateLayout()
 
   _reactToBeingAdded: (whereTo, beingDropped) ->

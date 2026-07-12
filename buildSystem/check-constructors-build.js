@@ -30,7 +30,10 @@ const path = require('path');
 const SRC = path.resolve(__dirname, '../src');
 
 const METHOD = /^  ([A-Za-z_]\w*)\s*:/;             // 2-space-indent class method/field header
-const BUILD  = /@_?add(Many)?(NoSettle)?[ (]/;      // @add / @addMany / @addNoSettle / @_addNoSettle / … on `this`
+const BUILD  = /@_{0,2}add(Many)?(NoSettle)?[ (]/;  // @add / @addMany / @addNoSettle / @_addNoSettle / @__add / … on `this`
+                                                    // (the __add structural LEAF counts too — a ctor building through it
+                                                    // is still inline child-building, one tier deeper; the menu/slider
+                                                    // family carries explicit exemption markers for it)
 const EXEMPT = /#\s*constructor-build-exempt:\s*\S/; // marker WITH a non-empty reason
 
 function walk(dir, acc) {

@@ -8,6 +8,10 @@ class SaveShortcutPromptWdgt extends MenuWdgt
 
   tempPromptEntryField: nil
 
+  # constructor-build-exempt: menu-family ctor (see MenuWdgt/PromptWdgt) — composes its entry
+  # field through the __add structural leaf alongside addMenuItem, then re-lays itself
+  # (_reLayoutSelf) at the end; not the panel _buildAndConnectChildrenNoSettle pattern.
+  # Recorded 2026-07-12 when the gate learned to see @__add.
   constructor: (widgetOpeningThePopUp, @target, @defaultContents, @intendedWidth = 100, @wdgtWhereReferenceWillGo) ->
     
     if !@defaultContents

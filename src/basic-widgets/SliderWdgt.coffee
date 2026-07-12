@@ -25,6 +25,10 @@ class SliderWdgt extends CircleBoxWdgt
 
   idealRatioWidthToHeight: 1/4
 
+  # constructor-build-exempt: builds its one button child through the __add structural
+  # leaf + __commitExtent (no shadow/notification/invalidate semantics wanted during
+  # construction); predates the panel _buildAndConnectChildrenNoSettle pattern.
+  # Recorded 2026-07-12 when the gate learned to see @__add.
   constructor: (
     @start = 1,
     @stop = 100,

@@ -41,10 +41,8 @@ class PreferencesAndSettings
 
   wheelScaleX: 1
   wheelScaleY: 1
-  wheelScaleZ: 1
   invertWheelX: true
   invertWheelY: true
-  invertWheelZ: true
 
   useSliderForInput: nil
   useVirtualKeyboard: nil
@@ -148,10 +146,8 @@ class PreferencesAndSettings
 
     @wheelScaleX = 1
     @wheelScaleY = 1
-    @wheelScaleZ = 1
     @invertWheelX = true
     @invertWheelY = true
-    @invertWheelZ = true
 
     @useSliderForInput = false
     @useVirtualKeyboard = true
@@ -177,10 +173,8 @@ class PreferencesAndSettings
 
     @wheelScaleX = 1
     @wheelScaleY = 1
-    @wheelScaleZ = 1
     @invertWheelX = true
     @invertWheelY = true
-    @invertWheelZ = true
 
     @useSliderForInput = true
     @useVirtualKeyboard = true
