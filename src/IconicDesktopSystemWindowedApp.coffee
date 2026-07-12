@@ -51,12 +51,12 @@ class IconicDesktopSystemWindowedApp
     if @slot?
       existingWindow = world[@slot]
       if existingWindow? and !existingWindow.destroyed and existingWindow.parent?
-        # §7.5 Bug B (model a): the singleton may have been closed to the basement AS A FIGURE -- if it was
-        # tilted/scaled, world[@slot] is the window but its enclosing sugar island is what carries the
-        # transform, so re-home and reposition the FIGURE, not the bare window (moving an island-resident
-        # window by SCREEN coords would be a plane mismatch, 4A-2). Off any sugar island the figure is the
-        # window itself ⇒ byte-identical to the pre-Bug-B path.
-        figure = existingWindow._enclosingSugarFigure()
+        # §7.5 Bug B (model a) + latent 2 (Option B): the singleton may have been closed to the basement AS
+        # A FIGURE -- if it was tilted/scaled (sugar) or explicitly islanded, world[@slot] is the window but
+        # its enclosing sole-content island is what carries the transform, so re-home and reposition the
+        # FIGURE, not the bare window (moving an island-resident window by SCREEN coords would be a plane
+        # mismatch, 4A-2). Off any island the figure is the window itself ⇒ byte-identical to the pre-Bug-B path.
+        figure = existingWindow._enclosingIslandFigure()
         world.add figure
         figure.bringToForeground()
         figure._applyMoveTo world.hand.position().add new Point 100, -50

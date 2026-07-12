@@ -493,11 +493,11 @@ class Widget extends TreeNode
     world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
     @parent?._beforeChildClosed? @
     if world.basementWdgt?
-      # §7.5 Bug B (model a): re-home the whole FIGURE, not just me -- if I am the sole content of a sugar
-      # island (a tilted/scaled widget), the transient island IS my rotation, so sending only me to the
-      # basement would strand the empty island and drop my transform. Only the re-homing TARGET changes; my
-      # own close bookkeeping above still runs on me. Off any sugar island this is me (byte-identical).
-      world.basementWdgt._addLostWidgetNoSettle @_enclosingSugarFigure()
+      # §7.5 Bug B (model a) + latent 2 (Option B): re-home the whole FIGURE, not just me -- if I am the
+      # sole content of an island (sugar OR explicit), the island IS my transform, so sending only me to
+      # the basement would strand the empty island and drop my transform. Only the re-homing TARGET
+      # changes; my own close bookkeeping above still runs on me. Off any island this is me (byte-identical).
+      world.basementWdgt._addLostWidgetNoSettle @_enclosingIslandFigure()
     else
       world.inform "There is no\nbasement to go in!"
 
@@ -1660,30 +1660,46 @@ class Widget extends TreeNode
     island._applyMoveTo island.position().add (screenCentreBefore.subtract @center())   # re-home so my centre lands where it was
     island
 
-  # Affine transforms (§7.5 Bug B): the outermost SUGAR island of which I am (transitively) the sole content
-  # -- the whole "figure" that a RE-HOME (close-to-basement, reopen, a future "send to desktop") must move AS
-  # A UNIT so its rotation/scale travels with it -- or ME when I am not sugar-wrapped. This is the re-home
-  # SIBLING of the pick-OUT verb _resolvePickOutFigureNoSettle (4D-2a): pick-OUT may EXTRACT a sub-part onto
-  # the hand; re-home never extracts -- it moves the intact sugar figure. ONE greppable home for every re-home
-  # site: route close/reopen/eject through this, NEVER inline `_enclosingSugarIsland() ? @`. Pure (no
-  # mutation, no settle): a sugar island is transient rotation plumbing so re-homing it keeps the content's
-  # transform; an EXPLICIT island is a real container (not sole-content sugar) and is deliberately left alone
-  # (_enclosingSugarIsland only climbs `_materializedBySugar` sole-content islands). Off any sugar island ⇒ me.
-  _enclosingSugarFigure: ->
+  # Affine transforms (§7.5 Bug B latent 2, Option B): the enclosing island IFF it wraps EXACTLY me —
+  # sugar OR explicitly authored. The SOLE-CONTENT predicate of _enclosingSugarIsland minus the
+  # `_materializedBySugar` requirement: for re-homing/classification, a sole-content transform island
+  # is transform plumbing around ONE figure regardless of who authored it. Sugar-ONLY machinery
+  # (materialize/dissolve/unwrap, halo anchor) keeps using _enclosingSugarIsland — an explicit island
+  # must never auto-dissolve or be reused by the property sugar.
+  _enclosingSoleContentIsland: ->
+    p = @parent
+    return nil if !(p instanceof TransformFrameWdgt)
+    kids = p.childrenNotHandlesNorCarets()
+    return p if kids? and kids.length == 1 and kids[0] == @
+    nil
+
+  # Affine transforms (§7.5 Bug B + latent 2, Option B): the outermost island of which I am (transitively)
+  # the SOLE content — sugar or explicit — i.e. the whole "figure" that a RE-HOME (close-to-basement,
+  # reopen, a future "send to desktop") must move AS A UNIT so its rotation/scale travels with it — or ME
+  # when I am not island-wrapped. This is the re-home SIBLING of the pick-OUT verb
+  # _resolvePickOutFigureNoSettle (4D-2a): pick-OUT may EXTRACT a sub-part onto the hand; re-home never
+  # extracts — it moves the intact figure. ONE greppable home for every re-home site: route
+  # close/reopen/eject through this, NEVER inline the climb. Pure (no mutation, no settle). Explicit
+  # sole-content islands travel too (Option B): the island IS the authored transform, so leaving it behind
+  # would strand an empty invisible frame AND lose the transform across close/reopen — the same principle
+  # that locked Bug B's model (a) for sugar. A MULTI-child explicit island is not sole-content ⇒ not
+  # climbed (content travels bare, siblings stay). Off any island ⇒ me.
+  _enclosingIslandFigure: ->
     figure = @
     loop
-      island = figure._enclosingSugarIsland()
+      island = figure._enclosingSoleContentIsland()
       break if !island?
       figure = island
     figure
 
-  # The container I really live in, seen THROUGH my transient sugar island(s) -- my @parent off any sugar
-  # wrap, or the sugar figure's parent when I am tilted/scaled. The ONE look-through idiom for "where does
-  # this widget really belong" (§7.5 Bug A/B): a widget's CLASSIFICATION must not be fooled by the transient
-  # rotation plumbing. WindowWdgt.isInternal (internal/external skin) and BasementWdgt.holds (basement
-  # residency) both classify against THIS, so a tilted widget is judged by its real home, not the sugar island.
-  _parentThroughSugarIslands: ->
-    @_enclosingSugarFigure().parent
+  # The container I really live in, seen THROUGH my sole-content island(s) — my @parent off any island
+  # wrap, or the figure's parent when I am tilted/scaled (sugar) or explicitly islanded. The ONE
+  # look-through idiom for "where does this widget really belong" (§7.5 Bug A/B + latent 2 Option B): a
+  # widget's CLASSIFICATION must not be fooled by transform plumbing. WindowWdgt.isInternal
+  # (internal/external skin) and BasementWdgt.holds (basement residency) both classify against THIS, so a
+  # tilted or explicitly-islanded widget is judged by its real home, not the island.
+  _parentThroughIslands: ->
+    @_enclosingIslandFigure().parent
 
   # Affine transforms (§6 Phase 4D-2b): the PAYLOAD-side look-through for drop POLICY. When a widget is
   # rotated/scaled it rides the hand as a transient _materializedBySugar TransformFrameWdgt, which HIDES its
@@ -1691,7 +1707,7 @@ class Widget extends TreeNode
   # bypasses the dwell-to-arm gate (requiresDeliberateEmbedding), sticky re-embed, and the wantsDropOfChild
   # type checks. This returns my sole content THROUGH sugar wrapper(s) so those predicates see the real payload
   # class; off any sugar figure (a plain widget, or an EXPLICIT authored island -- a real container, not
-  # sugar) it returns ME. The payload-side sibling of _parentThroughSugarIslands (the container-side
+  # sugar) it returns ME. The payload-side sibling of _parentThroughIslands (the container-side
   # look-through). Consult it ONLY where the payload's CLASS/policy is inspected -- NEVER at geometry/add sites,
   # which must keep the figure (it is what actually gets placed + parented).
   _dropPolicyProxy: ->

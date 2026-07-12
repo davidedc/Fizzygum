@@ -187,8 +187,10 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # container the window was nested into. Classify against my REAL container (through any sugar wrap):
     # tilting an EXTERNAL window keeps it external (true parent still world), a tilted INTERNAL window keeps
     # it internal (true parent still the real container). The look-through idiom is shared with
-    # BasementWdgt.holds (§7.5 Bug A/B) -- one _parentThroughSugarIslands, not a bespoke check per site.
-    p = @_parentThroughSugarIslands()
+    # BasementWdgt.holds (§7.5 Bug A/B) -- one _parentThroughIslands, not a bespoke check per site.
+    # Option B (latent 2): the look-through also climbs EXPLICIT sole-content islands, so an
+    # explicitly-islanded window on the desktop reads EXTERNAL (its real home is the world).
+    p = @_parentThroughIslands()
     p? and p isnt world and p isnt world?.hand
 
   setTitle: (newTitle) ->
