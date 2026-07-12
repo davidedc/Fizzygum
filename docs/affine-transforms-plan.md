@@ -27,8 +27,11 @@ NORMALIZATION (`_normalizePinnedAnchorNoSettle`, one seam) — LANDED + PUSHED (
 git-stash-verified to fail ~50px on the un-fixed build), and `fg gauntlet` dpr1/dpr2/webkit 238/238/0-failed +
 apps/paint/tiernaming/settle/capstone + `fg homepage` are all green with ZERO reference changes (probe delta
 (−50.4,+49.1) → (0.0,0.0); the value-only scenario adds no images). THE AFFINE ARC IS FULLY CLOSED again.**
-**✅ STATUS UPDATE (2026-07-12): RESIDUALS SWEEP — all six §7 small residuals resolved, IN TREE (uncommitted,
-awaiting owner review): §7.11 pinout labels + drag-embed lock badge FIXED (screen-anchoring via mapRectToScreen;
+**✅ STATUS UPDATE (2026-07-12): RESIDUALS SWEEP — all six §7 small residuals resolved, LANDED + PUSHED
+(Fizzygum `c3c61037`/`316a1814`/`3747cbfd`/`62577d03`/`21ca1973` + this doc-sync; tests `85c99bd28`/`7681f416d`/
+`c894cd241`/`2486e31b3`/`7fae4cc69`/`8ccb88f4d`; final gates gauntlet 8/8 — dpr1/dpr2/webkit 243/243 —
++ homepage green; ONE benign inspector member-list recapture): §7.11 pinout labels + drag-embed lock badge
+FIXED (screen-anchoring via mapRectToScreen;
 the banked in-plane-parenting shape was FALSIFIED — see item 11) with macro
 `macroPinoutLabelScreenAnchoredOnTiltedWidget`; §7.13 stack/menu drop insert-index FIXED (plane-map the add()
 positionOnScreen arg; reachability doubt was wrong — stacks accept drops by default) with macro
@@ -38,7 +41,7 @@ dpr1 green, zero recaptures. Bug B latent 1 (basement lost-items filter) REFUTED
 marks the island — not a bug); §7.10 explicit hugging island PROBE-RESOLVED (the `new TrackingTransformFrameWdgt
 content, spec` opt-in already works end-to-end; recommend keeping the base island fixed). Bug B latent 2
 (explicit-island empty frame on close + isInternal misread + transform lost across close/reopen) RESOLVED —
-owner chose OPTION B (2026-07-12), IMPLEMENTED IN TREE: verbs generalized to sole-content islands + renamed
+owner chose OPTION B (2026-07-12), LANDED + PUSHED (Fizzygum `62577d03` / tests `2486e31b3`): verbs generalized to sole-content islands + renamed
 (`_enclosingIslandFigure` / `_parentThroughIslands`), macro `macroExplicitIslandTravelsWholeThroughCloseReopen`
 (stash-verified); §7.10 owner-confirmed "fixed + test" → lock-in macro `macroExplicitIslandFixedVsTrackingResize`.
 See the "EXPLICIT-ISLAND CLOSE dossier" in §7.5 for the as-built record.**
@@ -1791,7 +1794,7 @@ See §7. None of these block declaring the feature shipped.
    by the value-assert macro `SystemTest_macroExplicitIslandFixedVsTrackingResize` (fixed slot stays 80×60 under
    a 200×140 content grow; tracking slot follows; authored tracking island survives identity — behavior lock-in,
    no fail-un-fixed leg by design).**
-11. **Pinout labels in a rotated island — ✅ FIXED IN TREE 2026-07-12 (residuals sweep), macro
+11. **Pinout labels in a rotated island — ✅ LANDED + PUSHED 2026-07-12 (residuals sweep, Fizzygum `c3c61037` / tests `85c99bd28`), macro
    `SystemTest_macroPinoutLabelScreenAnchoredOnTiltedWidget` (stash-verified: fails un-fixed by (10,16)px).**
    `WorldWdgt.addPinoutingWidgets` placed the world-child `StringWdgt` label at the target's PLANE-LOCAL
    `clippedThroughBounds().right()+10` → offset beside a tilted target (probe: 30°-tilted 80×60 rect, label
@@ -1810,7 +1813,7 @@ See §7. None of these block declaring the feature shipped.
    tilted container): probe-verified against a tilted target ((410,154)→(421,137) ≈ screen (420,138)); no
    dedicated macro (dwell-drag-in-island fixture cost ≫ value; identity path covered by the existing drag-embed
    suite, transformed path shares the pinout mechanism + mapping verb).
-12. **`StackElementsSizeAdjustingWdgt.nonFloatDragging` in a rotated island — ✅ FIXED IN TREE 2026-07-12
+12. **`StackElementsSizeAdjustingWdgt.nonFloatDragging` in a rotated island — ✅ LANDED + PUSHED 2026-07-12 (Fizzygum `3747cbfd` / tests `c894cd241`)
    (residuals sweep), macro `SystemTest_macroStackAdjusterInTiltedIslandMapsDragDelta` (stash-verified: fails
    un-fixed).** R4 fixed `SliderButtonWdgt` AND `PaletteWdgt` (the two position-reading consumers); this fourth
    consumer resizes stack cells from the screen `deltaDragFromPreviousCall.x` — a DELTA/vector needing the
@@ -1824,7 +1827,7 @@ See §7. None of these block declaring the feature shipped.
    new-widget menu ("adjuster widget") and the WidgetFactory demo stacks, and any holder tilts via public
    gestures. Fixture lesson as §7.13: use 180° (sign inversion); at 90° the symptom is a dead axis (delta.x≈0),
    harder to assert.
-13. **Stack/menu drop insert-index in a rotated island — ✅ FIXED IN TREE 2026-07-12 (residuals sweep), macro
+13. **Stack/menu drop insert-index in a rotated island — ✅ LANDED + PUSHED 2026-07-12 (residuals sweep, Fizzygum `316a1814` / tests `7681f416d`), macro
    `SystemTest_macroDropIntoTiltedStackInsertsAtVisualSlot` (stash-verified: fails un-fixed, index 3 vs 1).**
    The drop passed the RAW screen `@position()` as the 6th `add` arg (`positionOnScreen`), which the stack/menu
    panels (`SimpleVerticalStackPanelWdgt`, `ToolPanelWdgt`, `HorizontalMenuPanelWdgt`) compare against their
@@ -2020,7 +2023,7 @@ pinned-anchor interplay line).**
   the orphan leak and a double-wrap). Assert GENERICITY by also closing+reopening a tilted NON-window widget. If
   cheap, fold in a serialize→reload WHILE basement-resident (discharges part of 4E's basement-resident coverage).
 
-### EXPLICIT-ISLAND CLOSE dossier (Bug B latent 2, residuals sweep 2026-07-12) — ✅ OPTION B CHOSEN BY OWNER + IMPLEMENTED IN TREE 2026-07-12
+### EXPLICIT-ISLAND CLOSE dossier (Bug B latent 2, residuals sweep 2026-07-12) — ✅ OPTION B CHOSEN BY OWNER, LANDED + PUSHED 2026-07-12 (Fizzygum `62577d03` / tests `2486e31b3` + recapture `8ccb88f4d`)
 
 > **AS-BUILT:** the verb family is generalized to SOLE-CONTENT islands and renamed for honesty —
 > `Widget._enclosingSoleContentIsland` (new predicate: `_enclosingSugarIsland` minus the `_materializedBySugar`
