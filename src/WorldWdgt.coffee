@@ -2396,11 +2396,6 @@ class WorldWdgt extends PanelWdgt
     if @isDevMode
       menu.addMenuItem "demo ➜", false, @, "popUpDemoMenu", "sample widgets"
       menu.addLine()
-      # TODO remove these two, they do nothing now — NB removing them changes the world
-      # menu's extent: 12 menu macros need recapture + macroCheckNumberOfItemsInWorldMenu
-      # asserts 19 items (evidence: 2026-07-12 simplification pass, batch D probe)
-      menu.addMenuItem "show all", true, @, "noOperation"
-      menu.addMenuItem "hide all", true, @, "noOperation"
       menu.addMenuItem "delete all", true, @, "closeChildren"
       menu.addMenuItem "move all inside", true, @, "keepAllSubwidgetsWithin", "keep all subwidgets\nwithin and visible"
       menu.addMenuItem "inspect", true, @, "inspect", "open a window on\nall properties"
