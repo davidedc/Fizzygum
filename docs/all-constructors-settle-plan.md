@@ -24,6 +24,14 @@ ScrollPanelWdgt uses a DISTINCT `_buildScrollFrame` name (not the leaf `_buildAn
 base ctor does NOT dispatch into ListWdgt's overridden contents-core during `super()` — CoffeeScript binds a
 subclass's ctor params (`@elements`) only AFTER `super()`, so a virtual call there would read them nil.
 
+**COMPLETION NOTE (2026-07-12).** The gate's original `BUILD` regex (`/@_?add…/`) could not match `@__add`
+(double underscore), so FOUR constructors that built children through the `__add` structural leaf passed
+invisibly: MenuWdgt, PromptWdgt, SaveShortcutPromptWdgt, SliderWdgt. When the regex was widened
+(`/@_{0,2}add…/`, simplification follow-ons) they got factual `# constructor-build-exempt:` markers; the
+dedicated conversion arc `docs/menu-slider-ctor-conversion-plan.md` then CONVERTED all four (byte-identical,
+zero recaptures) — exemption count is back to ZERO. MenuWdgt mirrors the ScrollPanelWdgt precedent with its
+own distinct pair (`_buildMenuLabel`/`_buildMenuLabelNoSettle`) because its prompt subclasses build children.
+
 ### THE ARGUMENT — refined (the one real obstacle + its resolution)
 THE ARGUMENT (below) was right that the in-flush+orphan AUTO-DEFER neutralizes the old "a settle leaks into a
 settle-neutral callback" fear — **at runtime**. But it MISSED a second, independent constraint: **rule [J]'s

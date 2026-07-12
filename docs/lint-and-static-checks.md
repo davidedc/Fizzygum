@@ -86,7 +86,7 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
 | dead-method | `buildSystem/check-dead-methods.js` | ~:297 | a method defined in src but referenced nowhere (src + harness + macro `.js`) | allowlist `dead-method-allowlist.txt`; fails only on a NEW dead method |
 | stinks | `buildSystem/check-stinks.js` | ~:315 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
 | thin-wrap | `buildSystem/check-thin-wraps.js` | ~:333 | a public method owning a `_<name>NoSettle` twin is the ONE canonical mechanical wrap | per-method `# thin-wrap-exempt: <reason>`; SKIPS a twinless `*NoSettle` |
-| **constructor-build** | **`buildSystem/check-constructors-build.js`** | **~:353** | a `constructor:` body must not build its own children inline — `@add`/`@addMany`/`@addNoSettle`/`@_addNoSettle`/`@__add`/… on `this` belong in `_buildAndConnectChildrenNoSettle`, reached via the settling wrapper | per-constructor `# constructor-build-exempt: <reason>` (no central allowlist; 4 menu/slider-family ctors carry it for their deep-tier `@__add` builds) |
+| **constructor-build** | **`buildSystem/check-constructors-build.js`** | **~:353** | a `constructor:` body must not build its own children inline — `@add`/`@addMany`/`@addNoSettle`/`@_addNoSettle`/`@__add`/… on `this` belong in `_buildAndConnectChildrenNoSettle`, reached via the settling wrapper | per-constructor `# constructor-build-exempt: <reason>` (no central allowlist; currently ZERO — the 4 menu/slider-family `@__add` ctors were converted 2026-07-12, `docs/menu-slider-ctor-conversion-plan.md`) |
 | relayout-bounds-first | `buildSystem/check-relayout-bounds-first.js` | ~:372 | a `_reLayout` override must APPLY its own bounds before its first own-geometry read (else children lay out against the previous pass's frame — the "one-cadence-lag" flake) | `# relayout-bounds-first-exempt: <reason>` above the method header |
 | relayout-repaints [INV-1] | `buildSystem/check-relayout-repaints.js` | ~:392 | a `_reLayoutSelf` that opens a `disableTrackChanges` suppression frame must issue a covering `fullChanged()` AFTER the last re-enable (scoped to `_reLayoutSelf` by design — see the gate header; runtime twin = the paint-truthfulness audit) | `# relayout-repaint-exempt: <reason>` above the method header |
 | test-.js syntax | `Fizzygum-tests/scripts/check-tests-syntax.js` | ~:411 | JS syntax of the macro SystemTest `.js` files, before the build copies them in | — (self-skips on `--homepage`/`--notests`/absent sibling) |
@@ -120,7 +120,8 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
   part 2): a `constructor:` body must NOT build its own children inline. An `inctor` state machine (set on `constructor:`,
   cleared by the next 2-space class header — so it handles multi-line ctor headers, mirroring the FNR audit awk) scans
   each constructor and FAILS on `@_{0,2}add(Many)?(NoSettle)?` called on `this` (the `__add` structural leaf counts
-  too — 2026-07-12; the menu/slider-family ctors that legitimately build through it carry the exemption marker). The child-building belongs in
+  too — 2026-07-12; the menu/slider-family ctors that built through it were converted the same day,
+  `docs/menu-slider-ctor-conversion-plan.md`). The child-building belongs in
   `_buildAndConnectChildrenNoSettle`, reached from the ctor via the settling wrapper `@_buildAndConnectChildren()` (or
   `@_buildScrollFrame()` for the ScrollPanelWdgt base) — so the settle-tier FLUSHES a top-level `new X()` and AUTO-DEFERS
   one built in-flush (inside a callback). Building INTO a sub-child (`@contents._addNoSettle …`) is NOT matched — that

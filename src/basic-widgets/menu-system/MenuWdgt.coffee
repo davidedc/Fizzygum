@@ -16,10 +16,6 @@ class MenuWdgt extends PopUpWdgt
   isMenu: ->
     true
 
-  # constructor-build-exempt: menu-family ctor — a menu composes its label (and, via
-  # addMenuItem/addLine, its items) through the __add structural leaf and lays itself out
-  # on popup, not through the panel _buildAndConnectChildrenNoSettle pattern (which
-  # predates it here). Recorded 2026-07-12 when the gate learned to see @__add.
   constructor: (@widgetOpeningThePopUp, @isListContents = false, @target, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true, @title = nil, @environment = nil, @fontSize = nil) ->
     if !@isListContents
       if @killThisPopUpIfClickOutsideDescendants
@@ -34,10 +30,25 @@ class MenuWdgt extends PopUpWdgt
       world.freshlyCreatedPopUps.delete @
       world.openPopUps.delete @
 
+    @_buildMenuLabel()
+
+  # Build the label via the NoSettle core, settling ONCE at the end (orphan-settledness:
+  # `new MenuWdgt` returns settled). Only the LABEL is ctor-built: a menu's ITEMS are composed
+  # by the opener after construction (addMenuItem/addLine), and it lays itself out at popup.
+  # The name is deliberately DISTINCT from `_buildAndConnectChildren` — same reason as
+  # ScrollPanelWdgt._buildScrollFrame: MenuWdgt is a base whose subclasses (PromptWdgt,
+  # SaveShortcutPromptWdgt) build their own children, and CoffeeScript binds a subclass's
+  # constructor params only AFTER super(), so a virtual `_buildAndConnectChildren` called
+  # from THIS base constructor would dispatch into the subclass's core too early.
+  _buildMenuLabel: ->
+    @_settleLayoutsAfter => @_buildMenuLabelNoSettle()
+
+  _buildMenuLabelNoSettle: ->
     unless @isListContents
       if @title
+        # createLabel is shared with the label-REBUILD path (title changes) — reuse, don't inline
         @createLabel()
-        @__add @label
+        @_addNoSettle @label
 
   colloquialName: ->
     if @title

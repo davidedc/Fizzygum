@@ -25,10 +25,6 @@ class SliderWdgt extends CircleBoxWdgt
 
   idealRatioWidthToHeight: 1/4
 
-  # constructor-build-exempt: builds its one button child through the __add structural
-  # leaf + __commitExtent (no shadow/notification/invalidate semantics wanted during
-  # construction); predates the panel _buildAndConnectChildrenNoSettle pattern.
-  # Recorded 2026-07-12 when the gate learned to see @__add.
   constructor: (
     @start = 1,
     @stop = 100,
@@ -37,11 +33,21 @@ class SliderWdgt extends CircleBoxWdgt
     @color = Color.BLACK,
     @smallestValueIsAtBottomEnd = false
     ) ->
-    @button = new SliderButtonWdgt
     super # if nil, then a vertical one will be created
     @alpha = 0.1
     @__commitExtent new Point 20, 100
-    @__add @button
+    @_buildAndConnectChildren()
+
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  # The button used to be built BEFORE super -- legacy placement, nothing in the
+  # constructor chain reads @button (Widget/CircleBoxWdgt ctors size through the
+  # _commitBounds/__commitExtent leaves, which never dispatch to _applyExtent).
+  _buildAndConnectChildrenNoSettle: ->
+    @button = new SliderButtonWdgt
+    @_addNoSettle @button
 
   colloquialName: ->
     "slider"

@@ -33,7 +33,8 @@ const METHOD = /^  ([A-Za-z_]\w*)\s*:/;             // 2-space-indent class meth
 const BUILD  = /@_{0,2}add(Many)?(NoSettle)?[ (]/;  // @add / @addMany / @addNoSettle / @_addNoSettle / @__add / … on `this`
                                                     // (the __add structural LEAF counts too — a ctor building through it
                                                     // is still inline child-building, one tier deeper; the menu/slider
-                                                    // family carries explicit exemption markers for it)
+                                                    // family that used it was converted 2026-07-12, see
+                                                    // docs/menu-slider-ctor-conversion-plan.md)
 const EXEMPT = /#\s*constructor-build-exempt:\s*\S/; // marker WITH a non-empty reason
 
 function walk(dir, acc) {

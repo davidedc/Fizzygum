@@ -8,15 +8,12 @@ class SaveShortcutPromptWdgt extends MenuWdgt
 
   tempPromptEntryField: nil
 
-  # constructor-build-exempt: menu-family ctor (see MenuWdgt/PromptWdgt) — composes its entry
-  # field through the __add structural leaf alongside addMenuItem, then re-lays itself
-  # (_reLayoutSelf) at the end; not the panel _buildAndConnectChildrenNoSettle pattern.
-  # Recorded 2026-07-12 when the gate learned to see @__add.
   constructor: (widgetOpeningThePopUp, @target, @defaultContents, @intendedWidth = 100, @wdgtWhereReferenceWillGo) ->
-    
+
     if !@defaultContents
       @defaultContents = world.untitledNamingService.getNextUntitledShortcutName()
 
+    # built BEFORE super on purpose: it is PASSED to super as the menu's environment-slot arg
     @tempPromptEntryField = new StringFieldWdgt(
       @defaultContents,
       150,
@@ -29,7 +26,7 @@ class SaveShortcutPromptWdgt extends MenuWdgt
 
     super widgetOpeningThePopUp, false, @target, true, true, @msg, @tempPromptEntryField
 
-    @__add @tempPromptEntryField
+    @_buildAndConnectChildren()
 
     @addMenuItem "Don't save", true, @target, "destroy"
     # "Cancel" here just dismisses this prompt, but the target
@@ -40,6 +37,16 @@ class SaveShortcutPromptWdgt extends MenuWdgt
     @_reLayoutSelf()
     @_applyWidth 150
     @tempPromptEntryField.text.edit()
+
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
+    @_addNoSettle @tempPromptEntryField
+    # the old bare `@__add` ran the child's calculateAndUpdateExtent (StringFieldWdgt's measures
+    # the text and applies width >= minTextWidth); _addNoSettle skips it, so run it explicitly.
+    @tempPromptEntryField.calculateAndUpdateExtent()
 
   _reLayoutSelf: ->
     super()

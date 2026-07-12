@@ -16,14 +16,11 @@ class PromptWdgt extends MenuWdgt
 
   tempPromptEntryField: nil
 
-  # constructor-build-exempt: menu-family ctor (see MenuWdgt) — composes its entry field and
-  # optional slider through the __add structural leaf alongside addMenuItem, then re-lays
-  # itself (_reLayoutSelf) at the end; not the panel _buildAndConnectChildrenNoSettle
-  # pattern. Recorded 2026-07-12 when the gate learned to see @__add.
   constructor: (widgetOpeningThePopUp, @msg, @target, @callback, @defaultContents, @intendedWidth, @floorNum,
     @ceilingNum, @isRounded) ->
 
     isNumeric = true  if @ceilingNum
+    # built BEFORE super on purpose: it is PASSED to super as the menu's environment-slot arg
     @tempPromptEntryField = new StringFieldWdgt(
       @defaultContents or "",
       @intendedWidth or 100,
@@ -35,8 +32,29 @@ class PromptWdgt extends MenuWdgt
 
     super widgetOpeningThePopUp, false, @target, true, true, @msg or "", @tempPromptEntryField
 
+    @_buildAndConnectChildren()
+    @addLine 2
 
-    @__add @tempPromptEntryField
+    @addMenuItem "Ok", true, @target, @callback
+    # we name the button "Close" instead of "Cancel"
+    # because we are not undoing any change we made
+    # that would be rather difficult in case of
+    # multiple prompts being pinned down and changing
+    # the property concurrently
+    @addMenuItem "Close", true, @, "close"
+
+    @_reLayoutSelf()
+
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  _buildAndConnectChildrenNoSettle: ->
+    @_addNoSettle @tempPromptEntryField
+    # the old bare `@__add` ran the child's calculateAndUpdateExtent (StringFieldWdgt's measures
+    # the text and applies width >= minTextWidth — the menu's width derives from it via
+    # menuEntryPreferredWidth); _addNoSettle skips it, so run it explicitly.
+    @tempPromptEntryField.calculateAndUpdateExtent()
     if @ceilingNum or WorldWdgt.preferencesAndSettings.useSliderForInput
       slider = new SliderWdgt(
         @floorNum or 0,
@@ -50,18 +68,7 @@ class PromptWdgt extends MenuWdgt
       slider.target = @
       slider.argumentToAction = @
       slider.action = "takeSliderValue"
-      @__add slider
-    @addLine 2
-
-    @addMenuItem "Ok", true, @target, @callback
-    # we name the button "Close" instead of "Cancel"
-    # because we are not undoing any change we made
-    # that would be rather difficult in case of
-    # multiple prompts being pinned down and changing
-    # the property concurrently
-    @addMenuItem "Close", true, @, "close"
-
-    @_reLayoutSelf()
+      @_addNoSettle slider
 
   takeSliderValue: (num) ->
     @_settleLayoutsAfter => @_takeSliderValueNoSettle num
