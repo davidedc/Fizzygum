@@ -40,8 +40,9 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # from @bounds every composite, so it grows to the new slot and the content no longer clips. Setting
   # @bounds directly is the established island slot-set idiom (wrapContent / _materializeSugarIslandNoSettle
   # both do it) — _applyExtent would no-op here (the fixed-figure _applyExtentBase override early-returns).
-  # Option A (recommended v1): the default anchor IS the slot centre (_anchorFor), so an asymmetric grow
-  # re-centres the figure. The cache-break + fullChanged mirror what a transform change does.
+  # The cache-break + fullChanged mirror what a transform change does. (The original R3 "Option A" —
+  # let an asymmetric grow re-centre the figure via the nil slot-centre anchor — was superseded by the
+  # §7.5 Bug-D anchor-stability rule below: persisting content must stay screen-still across a re-fit.)
   _reLayoutChildren: ->
     content = @childrenNotHandlesNorCarets()?[0]
     return if !content?

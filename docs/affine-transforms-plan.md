@@ -1882,7 +1882,7 @@ See §7. None of these block declaring the feature shipped.
 
 ---
 
-## §7.5 KNOWN OPEN BUGS — owner-reported 2026-07-10, ROOT-CAUSED + confirmed headless
+## §7.5 KNOWN BUGS dossier — owner-reported 2026-07-10; ALL FIXED + LANDED (A/B/D/E/F/G; C was an audit-phase error) — kept as the as-built record
 
 Both stem from the SUGAR-ISLAND wrap (`setRotationDegrees`/`setScaleFactor` → `_materializeSugarIslandNoSettle`
 wraps the widget in a `TrackingTransformFrameWdgt`, so the widget's `@parent` becomes the island). Confirmed
@@ -2125,7 +2125,7 @@ pinned-anchor interplay line).**
   regex `/[@.]\s*_[A-Za-z]\w*/` matches field reads too) — the removability test is BEHAVIOURAL (de-tilt ⇒ island
   count drops), which round-trips the flag through actual behaviour.
 
-### BUG D — collapsing a tilted window MOVES the title bar (should stay screen-still) — ROOT-CAUSED + FIX PROTOTYPED 2026-07-11 (in working tree, NOT committed, NOT gauntleted)
+### BUG D — collapsing a tilted window MOVES the title bar (should stay screen-still) — ✅ FIXED + LANDED 2026-07-11 (Fizzygum `3809b2ea` / tests `a72cfbdec`; see the ✅ DONE bullet below)
 
 - **Symptom (owner-reported):** collapse a tilted window → the window collapses to its title bar, but the
   title bar TRANSLATES on screen instead of staying exactly where it was.
@@ -2171,7 +2171,7 @@ pinned-anchor interplay line).**
   anchored top-left instead of re-centring). FAILS on the un-fixed build (git-stash-verified: both title-bar
   points jump on collapse).
 
-### BUG E — the "save as..." prompt appears UNDER a tilted window — ROOT-CAUSED + FIX PROTOTYPED 2026-07-11 (in working tree, NOT committed, NOT gauntleted)
+### BUG E — the "save as..." prompt appears UNDER a tilted window — ✅ FIXED + LANDED 2026-07-11 (Fizzygum `3809b2ea` / tests `a72cfbdec`; see the ✅ DONE bullet below)
 
 - **Symptom (owner-reported):** close a tilted window with unsaved content → the `SaveShortcutPromptWdgt`
   pops UNDER the window (untilted: correctly on top).
@@ -2214,7 +2214,7 @@ pinned-anchor interplay line).**
   the `SaveShortcutPromptWdgt`'s world-child index > the island's (+ screenshot). FAILS on the un-fixed build
   (git-stash-verified: island index > prompt index, prompt buried).
 
-### BUG F — a bare payload dropped into a tilted container VISIBLY ROTATES at the drop — DESIGN DECISION (reparent-transparency) + FIX PROTOTYPED 2026-07-11 (in working tree, NOT committed, NOT gauntleted)
+### BUG F — a bare payload dropped into a tilted container VISIBLY ROTATES at the drop — DESIGN DECISION (reparent-transparency) — ✅ LANDED + PUSHED 2026-07-11 (Fizzygum `e9aabe72` / tests `2a6da0787`)
 
 - **Symptom (owner-reported):** open Dashboard (or any Stretchable-family app), tilt it 45° via the halo, grab a
   toolbar item (e.g. a Text box — horizontal on the hand, correct) and drop it in the content area → at the
@@ -2310,7 +2310,8 @@ pinned-anchor interplay line).**
     — to translate a non-nil anchor by the move delta (dormant off pinned anchors). Restoring the fixed-point
     property makes the pick-out re-home's numeric delta correct under a pinned anchor **for free**. Re-probe:
     5a drag now RIGID (0px). ⚠ Note: `TrackingTransformFrameWdgt._reLayoutChildren` still carries a stray
-    "PROTOTYPE Bug-D fix" comment prefix (committed in the Bug-D landing, NOT this unit) — flagged, left as-is.
+    "PROTOTYPE Bug-D fix" comment prefix (committed in the Bug-D landing, NOT this unit) — flagged then,
+    since REMOVED (the `619db579` dev-marker cleanup; the comment now reads plain "Bug-D fix").
   - Item 3 augmented (owner): probes cover scenario 4 (nil-anchor pick-out: fold 30→75, centre preserved
     0.5px) and scenario 5b (PINNED-anchor pick-out: fold 40→85, centre preserved 0.5px, pinned=true) via
     `scratchpad/probe-bugF-pick.js`. Both GREEN. The macro drives the real-gesture scenarios (bare drop /
@@ -2360,6 +2361,9 @@ pinned-anchor interplay line).**
   nil anchors (every un-resized figure) and at identity ⇒ dormant byte-identical.
   Extract-path and drop-minted wrappers are always nil-anchor already; pinned anchors now exist ONLY on
   figures AT REST (where Bug D needs them, with zero rounding) and never travel.
+  *(As-built refinement, 2026-07-12 simplification pass: the `t` formula moved into
+  `TransformSpec._nilAnchorEquivalentTranslation(slotBounds)` — same arithmetic, same order, FP-identical;
+  the widget seam keeps the guard + the load-bearing nil-anchor-then-translate ORDERING.)*
 - **Evidence:** probe after fix — drop delta **(0.0, 0.0)** exact, post-drop anchor nil, orientation
   preserved (accumulated 45°), desktop drag still rigid (−0.1,−0.4 = the one-time grab rounding), control
   unchanged. Bug-F probe fully green. **Full dpr1 suite 238/238, ZERO reference changes** (no existing

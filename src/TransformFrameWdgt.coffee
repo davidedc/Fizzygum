@@ -93,7 +93,11 @@ class TransformFrameWdgt extends PanelWdgt
     @appearance = nil
     @color = nil
     @strokeColor = nil
-    # Phase 1: islands refuse to be drop targets (plan §4.6 scope cut).
+    # The invisible frame itself never accepts drops — permanent design, not just the Phase-1
+    # §4.6 scope cut it began as: 4D confirmed no flip is needed (a drop-accepting CONTENT
+    # container inside the island resolves as the dropTargetFor climb target; when the climb
+    # reaches the frame — the sole-content sugar-figure case — it continues up the parent
+    # chain past it, like any other non-accepting widget).
     @_acceptsDrops = false
     # The island is invisible PLUMBING and never claims a pointer hit itself — its
     # CONTENT provides the clickable surface (the descent tests children first, then
@@ -109,7 +113,7 @@ class TransformFrameWdgt extends PanelWdgt
 
   # Phase 4B-universal (§6): an EXPLICIT island drives the halo rotation protocol against its OWN spec
   # (not the Widget base, which would wrap the island in ANOTHER sugar island). screenAnchor honours an
-  # explicit anchor; _setRotationDeferredSettle rides the ONE end-of-cycle flush for the drag stream.
+  # explicit anchor; rotationHalo_apply drives the self-settling setRotation (see its note below).
   rotationHalo_screenAnchor: ->
     @screenAnchor()
 
@@ -235,10 +239,6 @@ class TransformFrameWdgt extends PanelWdgt
   _claimsFixedFigure: ->
     !@transformSpec.isIdentity()
 
-  # 'slot' NEVER reflows (paint-only firewall). A coupled island reflows its parent — through the
-  # resize entry (_invalidateLayout) — but ONLY when the claimed extent actually changed. Correct
-  # by construction: 'footprint' reflows on angle/scale (its AABB changes); 'sweep' reflows on
-  # scale/extent but NOT rotation (its circumscribed square is rotation-invariant).
   # 'slot' NEVER reflows (paint-only firewall) — it invalidates nothing, so the enclosing
   # wrapper's settle is a no-op and Phase-1/2 rendering is byte-identical. A coupled island
   # invalidates the parent's layout (bare — the public wrapper's _settleLayoutsAfter settles it)
@@ -316,7 +316,8 @@ class TransformFrameWdgt extends PanelWdgt
   # (Bug-D anchor-stability, set by a tracked resize) as the equivalent NIL-anchor similitude before
   # this figure travels across planes. An (anchor A, slot B) similitude renders identically to
   # (anchor nil, whole figure translated by t = (I − sR)(A − centre)) — the Bug-D compensation algebra,
-  # inverted. Every hand-carry apply-site assumes the pivot IS the slot centre (the 2b-i relative
+  # inverted, computed by TransformSpec._nilAnchorEquivalentTranslation (the spec owns its own
+  # algebra). Every hand-carry apply-site assumes the pivot IS the slot centre (the 2b-i relative
   # re-spec, the 4D-1 slot-centre placement, the Bug-F pick re-home): true only for nil anchors, so the
   # pick-up seam normalizes once and they all stay in their simple exact math. ORDER MATTERS: nil the
   # anchor FIRST — the move-level anchor-ride overrides above would otherwise drag A along with the
@@ -324,16 +325,9 @@ class TransformFrameWdgt extends PanelWdgt
   # (a new state). No-op for nil anchors (every un-resized figure) and at identity (anchor is inert).
   _normalizePinnedAnchorNoSettle: ->
     return if !@transformSpec?.anchor? or @transformSpec.isIdentity()
-    [c, s] = @transformSpec._cosSin()
-    sc = @transformSpec.scale
-    A = @transformSpec.anchor
-    ctr = @bounds.center()
-    ex = A.x - ctr.x
-    ey = A.y - ctr.y
-    tx = ex - sc * (c * ex - s * ey)
-    ty = ey - sc * (s * ex + c * ey)
+    t = @transformSpec._nilAnchorEquivalentTranslation @bounds   # read t while the anchor is still pinned
     @transformSpec.anchor = nil
-    @_applyMoveBy (new Point tx, ty).round()
+    @_applyMoveBy t.round()
 
   # ---------------------------------------------------------------------------
   # compositing (plan §4.2)

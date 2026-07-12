@@ -1403,15 +1403,6 @@ class Widget extends TreeNode
     @_enclosingNonIdentityIsland()?
 
   # ---------------------------------------------------------------------------
-  # Affine transforms (§6 Phase 4C): the Lively-flavoured property sugar. Rotate / scale ANY widget
-  # by MATERIALIZING an enclosing TransformFrameWdgt island on demand, and REMOVING it when the
-  # transform returns to identity — so the widget's structural identity is restored at identity (the
-  # dormant guarantee + serialization cleanliness). These wrap the island's own setRotation/setScale.
-  # The names are deliberately NOT the island's setRotation/setScale, so there is no layering-gate
-  # name collision and calling them on a bare widget is unambiguous. Public tier owns the single
-  # settle (the wrap/adjust/unwrap all run NoSettle inside it).
-  # ---------------------------------------------------------------------------
-  # ---------------------------------------------------------------------------
   # Affine transforms (§6 Phase 4B-universal): the halo ROTATION PROTOCOL. The rotate handle drives
   # ANY widget through these three, so it needs no knowledge of whether its target is a plain widget
   # (rotates by MATERIALIZING a sugar island via setRotationDegrees) or an explicit TransformFrameWdgt
@@ -1442,6 +1433,15 @@ class Widget extends TreeNode
   rotationHalo_apply: (deg) ->
     @setRotationDegrees deg
 
+  # ---------------------------------------------------------------------------
+  # Affine transforms (§6 Phase 4C): the Lively-flavoured property sugar. Rotate / scale ANY widget
+  # by MATERIALIZING an enclosing TransformFrameWdgt island on demand, and REMOVING it when the
+  # transform returns to identity — so the widget's structural identity is restored at identity (the
+  # dormant guarantee + serialization cleanliness). These wrap the island's own setRotation/setScale.
+  # The names are deliberately NOT the island's setRotation/setScale, so there is no layering-gate
+  # name collision and calling them on a bare widget is unambiguous. Public tier owns the single
+  # settle (the wrap/adjust/unwrap all run NoSettle inside it).
+  # ---------------------------------------------------------------------------
   setRotationDegrees: (deg) ->
     @_settleLayoutsAfter => @_setRotationDegreesNoSettle deg
 
@@ -1470,13 +1470,12 @@ class Widget extends TreeNode
 
   # the enclosing island IFF it was materialized by the sugar AND wraps EXACTLY me (so adjusting it
   # only affects me). An explicitly-authored island (or one wrapping a larger subtree) is NOT reused —
-  # it stays put; the sugar wraps a fresh island around just me.
+  # it stays put; the sugar wraps a fresh island around just me. The sole-content test is
+  # _enclosingSoleContentIsland's — this just adds the sugar gate up front (only islands define
+  # _materializedBySugar, so the guard also rejects any non-island parent before the delegate runs).
   _enclosingSugarIsland: ->
-    p = @parent
-    return nil if !(p instanceof TransformFrameWdgt) or !p._materializedBySugar
-    kids = p.childrenNotHandlesNorCarets()
-    return p if kids? and kids.length == 1 and kids[0] == @
-    nil
+    return nil if !@parent?._materializedBySugar
+    @_enclosingSoleContentIsland()
 
   # wrap me in a fresh sugar island IN PLACE: the island's slot box becomes my current bounds and I
   # become its single free-floating child, keeping my absolute position (virtual ≡ screen at identity).
@@ -1636,9 +1635,9 @@ class Widget extends TreeNode
     island
 
   # Affine transforms (§7.5 Bug B latent 2, Option B): the enclosing island IFF it wraps EXACTLY me —
-  # sugar OR explicitly authored. The SOLE-CONTENT predicate of _enclosingSugarIsland minus the
-  # `_materializedBySugar` requirement: for re-homing/classification, a sole-content transform island
-  # is transform plumbing around ONE figure regardless of who authored it. Sugar-ONLY machinery
+  # sugar OR explicitly authored. The ONE sole-content predicate (_enclosingSugarIsland delegates
+  # here, adding its `_materializedBySugar` gate): for re-homing/classification, a sole-content
+  # transform island is transform plumbing around ONE figure regardless of who authored it. Sugar-ONLY machinery
   # (materialize/dissolve/unwrap, halo anchor) keeps using _enclosingSugarIsland — an explicit island
   # must never auto-dissolve or be reused by the property sugar.
   _enclosingSoleContentIsland: ->
@@ -3545,7 +3544,9 @@ class Widget extends TreeNode
     # island — HandleWdgt.nonFloatDragging (and the grab-start offset in ActivePointerWdgt) map the
     # drag pointer through screenPointToMyPlane, so the dragged edge follows the island's rotated/
     # scaled axes. The Phase-1 refusal guard that used to `return` here is therefore lifted. (Float-
-    # drag still escalates to the whole island via grabsToParentWhenDragged/_isInsideNonIdentityIsland.)
+    # drag of island content resolves the on-hand figure via ActivePointerWdgt.determineGrabs →
+    # _resolvePickOutFigureNoSettle — reuse the island when I am its sole content, else pick-out;
+    # the old Phase-1 grabsToParentWhenDragged island-escalation was removed by 4D-2a.)
     if @isFreeFloating()
       @addAndTrackHandle "resizeHorizontalHandle"
       @addAndTrackHandle "resizeVerticalHandle"

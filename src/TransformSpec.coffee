@@ -30,8 +30,8 @@ class TransformSpec
   rotationDegrees: 0        # float, canonical (Phase 2: live)
   scale: 1                  # float > 0
   anchor: nil               # nil => centre of the slot box; else a Point in slot-box coords
-  # layout coupling (plan §4.9). Only 'slot' (paint-only) is wired through Phase 2;
-  # 'footprint' / 'sweep' land in Phase 3.
+  # layout coupling (plan §4.9): 'slot' (paint-only, the default) / 'footprint' / 'sweep' —
+  # all three live since Phase 3 (see _claimedBoxFor below + TransformFrameWdgt.setClaimsSpace).
   claimsSpace: "slot"
 
   constructor: (@rotationDegrees = 0, @scale = 1, @anchor = nil, @claimsSpace = "slot") ->
@@ -48,7 +48,9 @@ class TransformSpec
   # The canonical scalars (scale / rotationDegrees / claimsSpace) are mutated DIRECTLY by
   # TransformFrameWdgt's guarded _set*NoSettle cores (a thin setter here would collide, by name,
   # with the widget's self-settling public wrappers and false-trip the layering gate). The anchor
-  # setter lands in Phase 4 with its first caller.
+  # is mutated directly too, by its owning island's lifecycle seams only (the Bug-D pin/un-pin in
+  # TrackingTransformFrameWdgt._reLayoutChildren, the Bug-F move-level anchor-rides, the Bug-G
+  # pick-up normalization) — no setter exists by design.
 
   # ---- layout coupling (plan §4.9) — the extent this island CLAIMS from its parent's ----
   #      layout, and where the slot box sits inside that claimed box.
@@ -89,8 +91,9 @@ class TransformSpec
         r = d if d > r
     new Rectangle (Math.floor(A.x - r)), (Math.floor(A.y - r)), (Math.ceil(A.x + r)), (Math.ceil(A.y + r))
 
-  # cos/sin of the rotation. Rotation==0 fast path (Phase 1: always) returns exact
-  # [1,0] with no trig call; the deterministic branch is ready for Phase 2.
+  # cos/sin of the rotation. The rotation==0 fast path returns exact [1,0] with no trig
+  # call (so identity / pure-scale specs have no trig dependency); a non-zero angle goes
+  # through the deterministic DetTrig port (cross-engine-identical — the live Phase-2 path).
   _cosSin: ->
     deg = @rotationDegrees
     return [1, 0] if deg % 360 == 0
@@ -102,6 +105,21 @@ class TransformSpec
     # anchor is stored in slot-box coordinates: it is an absolute point in the
     # island's plane (the slot box IS the plane at identity), so use it directly.
     @anchor
+
+  # §7.5 Bug G backing math: the translation that re-expresses a PINNED-anchor similitude as its
+  # rendering-identical NIL-anchor (slot-centre) form — t = (I − sR)(A − centre), the Bug-D
+  # compensation algebra inverted. A plane-local vector (anchor and slot both live in the island's
+  # own plane, hence no `screen` in the name). Caller contract (TransformFrameWdgt.
+  # _normalizePinnedAnchorNoSettle): read t while the anchor is still PINNED, then nil the anchor,
+  # THEN translate — the ordering lives at the caller, this method only computes.
+  _nilAnchorEquivalentTranslation: (slotBounds) ->
+    [c, s] = @_cosSin()
+    sc = @scale
+    A = @anchor
+    ctr = slotBounds.center()
+    ex = A.x - ctr.x
+    ey = A.y - ctr.y
+    new Point (ex - sc * (c * ex - s * ey)), (ey - sc * (s * ex + c * ey))
 
   # The forward matrix that maps slot-box (virtual) coordinates to the island's
   # PARENT plane (plan §4.3):  p' = A + s·Rot(θ)·(p − A).
@@ -147,7 +165,9 @@ class TransformSpec
   mapPoint: (p, slotBounds) ->
     @_applyMatrixToPoint @matrixForSlot(slotBounds), p
 
-  # (inverseMapRect lands with its first caller in Phase 2/4.)
+  # (There is deliberately NO inverseMapRect / inverseMapVector / compose: all three were PROVEN
+  # unneeded during 4D — point-map both endpoints and subtract for deltas; match one point for
+  # placement. Do not add them without a real consumer — geometry-api plan §1.3 deferred list.)
 
   # Map a Rectangle through `m` and return the integer, axis-aligned AABB of the
   # 4 transformed corners: floor the mins, ceil the maxes, then pad by 1px (AA

@@ -465,10 +465,10 @@ class MacroToolkit
 
   # Move to a widget's SCREEN point at fraction [fx,fy] (default its centre) and click — the
   # island analogue of moveToAndClickAtFractionOf_InputEvents, whose point is in the widget's
-  # own plane and would miss inside a scaled/rotated island. NOTE the click still dispatches
-  # the RAW screen position to the widget's handler, so sub-widget geometry that reads the
-  # click position (a caret slot, a slider fraction) is not itself plane-mapped yet (Phase 4);
-  # this verb only guarantees the click ROUTES to (focuses/triggers) the island-inner widget.
+  # own plane and would miss inside a scaled/rotated island. The pointer pipeline plane-maps the
+  # dispatched position per-receiver (4A-1 click dispatch, R1 mouseMove, R4 drag consumers), so
+  # island-inner sub-widget geometry that reads it (a caret slot, a slider fraction) is correct;
+  # this verb's job is just to AIM the pointer at the right on-screen pixel.
   moveToAndClickAtScreenFractionOf_InputEvents: (widgetOrIdentifier, fraction = [0.5, 0.5], whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @moveToAndClick_InputEvents (@screenPointAtFractionOf widgetOrIdentifier, fraction), whichButton, milliseconds, startTime
 
