@@ -1382,8 +1382,12 @@ class WorldWdgt extends PanelWdgt
     @currentPinoutingWidgets.forEach (eachPinoutingWidget) =>
       if @widgetsToBePinouted.has eachPinoutingWidget.wdgtThisWdgtIsPinouting
         if eachPinoutingWidget.wdgtThisWdgtIsPinouting.hasMaybeChangedPaintBounds()
-          # reposition the pinout widget if needed
-          peekThroughBox = eachPinoutingWidget.wdgtThisWdgtIsPinouting.clippedThroughBounds()
+          # reposition the pinout widget if needed. The label is a WORLD child, so it must anchor to the
+          # target's SCREEN footprint: clippedThroughBounds is plane-local, and for a target inside a
+          # rotated/scaled island the un-mapped box is the wrong plane (§7.11) — off any island
+          # mapRectToScreen returns the box unchanged.
+          target = eachPinoutingWidget.wdgtThisWdgtIsPinouting
+          peekThroughBox = target.mapRectToScreen target.clippedThroughBounds()
           eachPinoutingWidget._applyMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
 
       else
@@ -1400,7 +1404,8 @@ class WorldWdgt extends PanelWdgt
         hM._ephemeralOverlay = true
         @add hM
         hM.wdgtThisWdgtIsPinouting = eachWidgetNeedingPinout
-        peekThroughBox = eachWidgetNeedingPinout.clippedThroughBounds()
+        # SCREEN-anchor, same mapping as the reposition branch above (§7.11)
+        peekThroughBox = eachWidgetNeedingPinout.mapRectToScreen eachWidgetNeedingPinout.clippedThroughBounds()
         hM._applyMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
         hM.setColor Color.BLUE
         hM.setWidth 400
@@ -1479,7 +1484,11 @@ class WorldWdgt extends PanelWdgt
         @dragEmbedLockBadgeWdgt._ephemeralOverlay = true
         @add @dragEmbedLockBadgeWdgt
         @dragEmbedLockBadgeWdgt.setColor Color.create(120, 120, 120, 1)
-      box = @dragEmbedLockBadgeDeclared.target.clippedThroughBounds()
+      # the badge is a world child, so anchor it to the target's SCREEN footprint — the target can sit
+      # inside a rotated/scaled island, where the plane-local box is the wrong plane (§7.11 mapping;
+      # off any island mapRectToScreen returns the box unchanged)
+      badgeTarget = @dragEmbedLockBadgeDeclared.target
+      box = badgeTarget.mapRectToScreen badgeTarget.clippedThroughBounds()
       @dragEmbedLockBadgeWdgt._applyMoveTo new Point(box.right() - 70, box.top() + 4)
     else if @dragEmbedLockBadgeWdgt?
       @dragEmbedLockBadgeWdgt.fullDestroy()
