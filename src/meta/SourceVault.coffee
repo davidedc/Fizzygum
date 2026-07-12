@@ -159,7 +159,7 @@ class SourceVault
       doLayoutMethod = NonStaticPropertyOfClassSource.fromFileAndMethodName eachSource, "_reLayout"
       doLayoutMethod = doLayoutMethod.stripComments().collapseLinesWithOnlySpaces().collapseLastEmptyLines()
       if doLayoutMethod.match /newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout\s*if @_handleCollapsedStateShouldWeReturn\(\) then return\s*@_applyBounds newBoundsForThisLayout\s*world.disableTrackChanges\(\)/m
-        if doLayoutMethod.match /world.maybeEnableTrackChanges\(\)\s*super\s*@markLayoutAsFixed\(\)/
+        if doLayoutMethod.match /world.maybeEnableTrackChanges\(\)\s*super\s*@_markLayoutAsFixed\(\)/
           return false
       console.log eachSource + "-------------------------"
       console.log doLayoutMethod.toString()

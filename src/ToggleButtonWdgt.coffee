@@ -14,7 +14,7 @@ class ToggleButtonWdgt extends SwitchButtonWdgt
   # (i.e. changed by something else than the user clicking this toggle)
   # TODO this probably needs a better name, and also
   # TODO this should probably be in SwitchButtonWdgt
-  setToggleState: (whichOne) ->
+  _setToggleState: (whichOne) ->
     if @buttonShown != whichOne
       @buttonShown = whichOne
       @_invalidateLayout()

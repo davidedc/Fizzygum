@@ -20,9 +20,9 @@ KeepsRatioWhenInVerticalStackMixin =
       # capability query replaces `whereFrom instanceof SimpleVerticalStackPanelWdgt`
       # (type-test-elimination campaign)
       if whereFrom?.releasesRatioConstraintOnGrabbedChildren?()
-        @freeFromRatioConstraints()
+        @_freeFromRatioConstraints()
 
-    freeFromRatioConstraints: ->
+    _freeFromRatioConstraints: ->
       if @layoutSpecDetails?
         @layoutSpecDetails.canSetHeightFreely = true
 
@@ -36,9 +36,9 @@ KeepsRatioWhenInVerticalStackMixin =
       # capability query replaces `(whereIn instanceof SimpleVerticalStackPanelWdgt) and
       # !(whereIn instanceof WindowWdgt)` (type-test-elimination campaign)
       if whereIn?.imposesRatioConstraintOnDroppedChildren?()
-        @constrainToRatio()
+        @_constrainToRatio()
 
-    constrainToRatio: ->
+    _constrainToRatio: ->
       if @layoutSpecDetails?
         @layoutSpecDetails.canSetHeightFreely = false
         # force a resize, so widget

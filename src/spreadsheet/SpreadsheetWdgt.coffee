@@ -45,7 +45,7 @@ class SpreadsheetWdgt extends Widget
   # not-editing sheet). The cell INDEX (@_cells: address → CellWdgt) is transient too — but note the
   # CellWdgts themselves are ordinary children and DO ride the tree, so a widget-valued cell's live
   # widget (a dragged slider's position) survives save/load (spec §13 retain-and-remount). On restore
-  # the index is rebuilt from those cell children (_reindexCellsNoSettle → recommitAllCells → drain →
+  # the index is rebuilt from those cell children (_reindexCellsNoSettle → _recommitAllCells → drain →
   # reconcile): a DERIVED presenter (a Color's swatch, spec §9.4 "one-way glass") is rebuilt from the
   # value, a scalar repaints, a state-bearing value-widget is RETAINED. @model / @selected* ARE
   # document state and serialize normally.
@@ -488,7 +488,7 @@ class SpreadsheetWdgt extends Widget
   # DETACHED sheet (orphan). First RE-INDEX the cells (below) from the restored/copied cell children,
   # so the recompute RETAINS a widget-valued cell's live widget instead of rebuilding it (spec §13);
   # presenters (derived) rebuild from values, scalars repaint.
-  recommitAllCells: ->
+  _recommitAllCells: ->
     return unless @model?
     @_reindexCellsNoSettle()
     @model.forEachCell (cell) -> FormulaCompiler.commit cell, cell.source
@@ -526,11 +526,11 @@ class SpreadsheetWdgt extends Widget
   # whole subtree — model + records — is cloned, so the copy's fresh records wire THEIR OWN edges
   # (independent of the original's), and a subsequent edit to the original leaves the copy alone.
   _reactToBeingCopied: ->
-    @recommitAllCells()
+    @_recommitAllCells()
 
   # after deserialize (loading a saved world/sheet): the same source-driven rebuild.
   _afterDeserialization: ->
-    @recommitAllCells()
+    @_recommitAllCells()
 
   # drop keyboard focus + any live editor when this sheet goes away, so a dead widget never
   # receives keys (the editor child is also torn down by super's child destruction). Also perform

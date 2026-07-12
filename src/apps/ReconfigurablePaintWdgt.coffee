@@ -37,11 +37,13 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     if @isToolPressed whichButtonHasNewCode
       whichButtonHasNewCode.injectCodeIntoTarget()
 
-  createNewStretchablePanel: ->
+  # NON-settling core override (rule [S] convert — see the base StretchableEditableWdgt note):
+  # genuinely different from the base (canvas-backed container + overlay glass), kept.
+  _createNewStretchablePanelNoSettle: ->
     # mainCanvas
     @stretchableWidgetContainer = new StretchableWidgetContainerWdgt new StretchableCanvasWdgt
     @stretchableWidgetContainer.disableDrops()
-    @add @stretchableWidgetContainer
+    @_addNoSettle @stretchableWidgetContainer
 
     @mainCanvas = @stretchableWidgetContainer.contents
 
@@ -510,5 +512,5 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     world.maybeEnableTrackChanges()
     @fullChanged()
 
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 

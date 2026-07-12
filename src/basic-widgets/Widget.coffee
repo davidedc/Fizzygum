@@ -37,7 +37,7 @@ class Widget extends TreeNode
   @serializationTransients: [
     "lastTime"
     # the back-buffer render cache (BackBufferMixin) — rebuilt on demand by
-    # createRefreshOrGetBackBuffer, so it is never serialized; the restored widget
+    # _createRefreshOrGetBackBuffer, so it is never serialized; the restored widget
     # re-renders it on its first paint.
     "backBuffer", "backBufferContext"
     "cachedFullBounds", "checkFullBoundsCache", "childrenBoundsUpdatedAt"
@@ -233,7 +233,7 @@ class Widget extends TreeNode
 
   # §4.4 island buffer cache — the "source" (old-position) lane. When this widget last painted INTO
   # an island's buffer, these hold the PRE-mapping virtual full-bounds and that island, so a later
-  # move-within-island can erase the vacated buffer region (recordDrawnAreaForNextBrokenRects sets
+  # move-within-island can erase the vacated buffer region (_recordDrawnAreaForNextBrokenRects sets
   # them; the flesh-out source lane consumes+clears them). nil on every ordinary (non-island) paint.
   _islandBufferSourceIsland: nil
   _islandBufferSourceVirtualRect: nil
@@ -512,8 +512,8 @@ class Widget extends TreeNode
     # the START (I'm still attached) then flushes globally, so my parent settles even though _destroyNoSettle
     # orphans me.
     # The one hook that rebuilds during destroy -- a window losing its @contents
-    # (_beforeChildDestroyed -> resetToDefaultContents) -- is safe inside this _inLayoutMutation:
-    # resetToDefaultContents rebuilds through the non-settling @_buildAndConnectChildrenNoSettle (not the
+    # (_beforeChildDestroyed -> _resetToDefaultContents) -- is safe inside this _inLayoutMutation:
+    # _resetToDefaultContents rebuilds through the non-settling @_buildAndConnectChildrenNoSettle (not the
     # public self-settler), and the chrome it constructs adds to ORPHANS, which are exempt from the
     # flush-throw (see _settleLayoutsAfter's orphan guard). So nothing re-enters a settle mid-destroy.
     @_settleLayoutsAfter => @_destroyNoSettle()
@@ -635,7 +635,7 @@ class Widget extends TreeNode
   isFreeFloating: ->
     @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
 
-  setLayoutSpec: (newLayoutSpec) ->
+  _setLayoutSpec: (newLayoutSpec) ->
     if @layoutSpec == newLayoutSpec
       return
 
@@ -967,7 +967,7 @@ class Widget extends TreeNode
 
   # both methods invoked in here
   # are cached
-  # used in the method fleshOutBroken
+  # used in the method _fleshOutBroken
   # to skip the "destination" broken rects
   # for widgets that marked themselves
   # as broken but at moment of destination
@@ -1257,7 +1257,7 @@ class Widget extends TreeNode
         # §4.4 buffer cache — the "destination" (new-position) deposit: the PRE-mapping rect is in
         # THIS island's virtual (buffer) plane, so it is exactly the region this widget now occupies
         # in the island's buffer. Deposit it as content-dirty. Only the two damage-flesh-out lanes
-        # pass depositBufferDirty=true; the OTHER caller (recordDrawnAreaForNextBrokenRects, the
+        # pass depositBufferDirty=true; the OTHER caller (_recordDrawnAreaForNextBrokenRects, the
         # paint-time snapshot) passes false, so a mere repaint never dirties the buffer. Depositing
         # on EACH crossed island handles nesting for free. Zero dormant cost (off-island never enters).
         ancestor._depositIslandBufferDirtyRect result if depositBufferDirty
@@ -1898,7 +1898,7 @@ class Widget extends TreeNode
         # the stretchable panel will get them to the
         # correct positions
         if widgetStartingTheChange?.changeShouldRememberFractionalGeometry?() and @parent?
-          @rememberFractionalPositionInHoldingPanel()
+          @_rememberFractionalPositionInHoldingPanel()
 
   # PRIVATE DEFERRED-SETTLE move entrypoint -- see the FAMILY comment on _setMaxDimDeferredSettle (rule [O]
   # caller-allowlist; world.deferredSettlingEnabled A/B switch; BOTH branches reach the _moveToNoSettle core).
@@ -1909,10 +1909,10 @@ class Widget extends TreeNode
       @_settleLayoutsAfter => @_moveToNoSettle aPoint, widgetStartingTheChange
 
 
-  rememberFractionalPositionInHoldingPanel: ->
+  _rememberFractionalPositionInHoldingPanel: ->
     @positionFractionalInHoldingPanel = @positionFractionalInWidget @parent
 
-  rememberFractionalExtentInHoldingPanel: ->
+  _rememberFractionalExtentInHoldingPanel: ->
     @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
 
   # TODO this is used a lot, where I suspect all we need to do
@@ -1920,9 +1920,9 @@ class Widget extends TreeNode
   # to a new parent. I don't dare to do this now because I don't
   # have enough tests in the new environment to check for
   # bad implications.
-  rememberFractionalSituationInHoldingPanel: ->
-    @rememberFractionalPositionInHoldingPanel()
-    @rememberFractionalExtentInHoldingPanel()
+  _rememberFractionalSituationInHoldingPanel: ->
+    @_rememberFractionalPositionInHoldingPanel()
+    @_rememberFractionalExtentInHoldingPanel()
     @wasPositionedSlightlyOutsidePanel = ! @parent.bounds.containsRectangle @bounds
   
   __commitMoveTo: (aPoint) ->
@@ -2449,7 +2449,7 @@ class Widget extends TreeNode
 
     return false
 
-  recordDrawnAreaForNextBrokenRects: ->
+  _recordDrawnAreaForNextBrokenRects: ->
     if @childrenBoundsUpdatedAt < WorldWdgt.frameCount
       @childrenBoundsUpdatedAt = WorldWdgt.frameCount
       # Affine transforms: record the SCREEN footprint (mapped through my ancestor islands WHILE I am still
@@ -2560,7 +2560,7 @@ class Widget extends TreeNode
     # content as shadow, so we skip this paragraph because we don't have
     # to paint a shadow for a shadow.
     if !appliedShadow? and @shadowInfo?
-      @fullPaintIntoAreaOrBlitFromBackBufferJustShadow aContext, clippingRectangle, @shadowInfo
+      @_fullPaintIntoAreaOrBlitFromBackBufferJustShadow aContext, clippingRectangle, @shadowInfo
 
     # draw the proper contents of the tree. Potentially, draw them faintly as shadow.
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
@@ -2572,8 +2572,8 @@ class Widget extends TreeNode
       # missing. world.paintingIntoIslandBuffer is nil on every ordinary paint, so
       # this is byte-identical when the feature is dormant.
       if aContext == world.worldCanvasContext or world.paintingIntoIslandBuffer?
-        @recordDrawnAreaForNextBrokenRects()
-      @fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow aContext, clippingRectangle, appliedShadow
+        @_recordDrawnAreaForNextBrokenRects()
+      @_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow aContext, clippingRectangle, appliedShadow
 
 
   # to draw the shadow, most of the times you have to draw the whole
@@ -2586,14 +2586,14 @@ class Widget extends TreeNode
   #
   # In this function the parameter "appliedShadow" MUST contain a shadow info.
   # This parameter will cause the whole widget to be painted recursively as shadow.
-  fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
+  _fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
     clippingRectangle = clippingRectangle.translateBy -appliedShadow.offset.x, -appliedShadow.offset.y
 
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
       aContext.save()
       aContext.translate appliedShadow.offset.x * ceilPixelRatio, appliedShadow.offset.y * ceilPixelRatio
 
-      @fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow aContext, clippingRectangle, appliedShadow
+      @_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow aContext, clippingRectangle, appliedShadow
 
       aContext.restore()
   
@@ -2603,7 +2603,7 @@ class Widget extends TreeNode
   # The only variant is that the Panel
   # draws its background, then its contents AND THEN its stroke
   # (because otherwise its content would paint over its stroke)
-  fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
+  _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
     @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
     @children.forEach (child) ->
       child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
@@ -2781,6 +2781,8 @@ class Widget extends TreeNode
     placeToDropItIn._addNoSettle widgetToAdd
     widgetToAdd._applyExtent new Point 75, 75
     widgetToAdd.fullChanged()
+    # public-call-sanctioned: bringToForeground is the heavily-public z-order verb (macros/user
+    # code drive it) — settle-free, consciously reused by this core.
     @bringToForeground()
 
   # PUBLIC self-settling entry; _createReferenceAndCloseNoSettle is the core a drop recipient calls
@@ -3060,14 +3062,14 @@ class Widget extends TreeNode
     previousParent = aWdgt.parent
     # FREEFLOATING-skip via _invalidateLayout(triggeringChild): pass aWdgt so its OLD parent skips
     # when aWdgt is freefloating (removing it only changes that parent's layout if it laid it out).
-    # This runs BEFORE setLayoutSpec below, so the param reads aWdgt's OLD spec -- correct. (The NEW
-    # container is invalidated AFTER setLayoutSpec, further down, also via the param.)
+    # This runs BEFORE _setLayoutSpec below, so the param reads aWdgt's OLD spec -- correct. (The NEW
+    # container is invalidated AFTER _setLayoutSpec, further down, also via the param.)
     aWdgt.parent?._invalidateLayout(aWdgt)
 
     aWdgt.fullChangedIncludingShadowOwner()
 
-    aWdgt.setLayoutSpec layoutSpec
-    # NEW-container invalidate via the param: setLayoutSpec above set aWdgt.layoutSpec to the NEW
+    aWdgt._setLayoutSpec layoutSpec
+    # NEW-container invalidate via the param: _setLayoutSpec above set aWdgt.layoutSpec to the NEW
     # spec, so passing aWdgt makes me (the new container) skip iff aWdgt is now freefloating -- same
     # as the old `if layoutSpec != FREEFLOATING` guard, now centralized in _invalidateLayout.
     @_invalidateLayout(aWdgt)
@@ -3084,7 +3086,7 @@ class Widget extends TreeNode
     # fractional-position recording (folded in from add()): only meaningful for a world-level
     # widget, skipped otherwise -- so a no-op for the internal adders.
     if @ == world
-      aWdgt.rememberFractionalPositionInHoldingPanel()
+      aWdgt._rememberFractionalPositionInHoldingPanel()
 
     return aWdgt
 
@@ -3115,7 +3117,7 @@ class Widget extends TreeNode
       owner.removeChild aWdgt
     if aWdgt.isPopUpMarkedForClosure?
       aWdgt.isPopUpMarkedForClosure = false
-    @addChild aWdgt, position
+    @_addChild aWdgt, position
     if !avoidExtentCalculation
       aWdgt.calculateAndUpdateExtent()
     
@@ -3125,10 +3127,10 @@ class Widget extends TreeNode
 
   duplicateMenuAction: ->
     aFullCopy = @fullCopy()
-    aFullCopy.unlockFromPanels()
+    aFullCopy._unlockFromPanels()
     world.add aFullCopy
     aFullCopy._applyMoveTo @position().add new Point 10, 10
-    aFullCopy.rememberFractionalSituationInHoldingPanel()
+    aFullCopy._rememberFractionalSituationInHoldingPanel()
 
   duplicateMenuActionAndPickItUp: ->
     aFullCopy = @fullCopy()
@@ -3430,7 +3432,7 @@ class Widget extends TreeNode
         return @
     @parent.rootForFocus()
 
-  moveInFrontOfSiblings: ->
+  _moveInFrontOfSiblings: ->
     @moveAsLastChild()
     @fullChanged()
 
@@ -3467,7 +3469,7 @@ class Widget extends TreeNode
       world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
 
   _reactToBeingDropped: (whereIn) ->
-    @rememberFractionalSituationInHoldingPanel()
+    @_rememberFractionalSituationInHoldingPanel()
     
   wantsDropOfChild: (aWdgt) ->
     return @_acceptsDrops
@@ -3503,7 +3505,13 @@ class Widget extends TreeNode
       @_applyMoveTo world.hand.position().subtract @desiredExtent.floorDivideBy 2
     else
       @_applyMoveTo world.hand.position().subtract @fullBounds().extent().floorDivideBy 2
-    oldParent?._reactToChildPickedUp? @
+    # the DISPATCHER owns the callback's settle (rule [J] — the _reactToChildGrabbed twin in
+    # ActivePointerWdgt.grab): the hook is a settle-neutral core (StretchableEditableWdgt rebuilds its
+    # panel through _createNewStretchablePanelNoSettle + _invalidateLayout), and this single settle
+    # flushes it at the gesture — consistent on return, not riding the end-of-cycle flush. grab's own
+    # settles above are already closed (dotted .grab — not a [T] subject pairing), so this opens
+    # cleanly outside any pass.
+    @_settleLayoutsAfter => oldParent?._reactToChildPickedUp? @
 
   grabbedWidgetSwitcheroo: ->
     @
@@ -3526,13 +3534,13 @@ class Widget extends TreeNode
   # attach. The explicit defaultLayoutSpecWhenAddedTo(@) is needed because a DIRECT _addNoSettle bypasses add()'s
   # default-arg resolution (and an intermediate container _addNoSettle, e.g. a windowed target, would otherwise
   # re-default the unset spec to FREEFLOATING before it reaches the handle).
-  addAndTrackHandle: (type) ->
+  _addAndTrackHandle: (type) ->
     handle = new HandleWdgt type
     @_addNoSettle handle, nil, handle.defaultLayoutSpecWhenAddedTo(@)
     world.temporaryHandlesAndLayoutAdjusters.add handle
 
   # CONVERT (end-of-cycle-flush-drawdown): showing the resize/move handles is a DISCRETE menu/click action, so it
-  # SELF-SETTLES (one flush per outermost public mutation). The handles attach via _addNoSettle (addAndTrackHandle /
+  # SELF-SETTLES (one flush per outermost public mutation). The handles attach via _addNoSettle (_addAndTrackHandle /
   # addAsSibling*), which only RIDE a settle; the trigger chain (mouseClickLeft -> trigger) provided none, so the
   # _addNoSettle invalidate rode the per-frame end-of-cycle flush. The recursion to @parent goes through the
   # NON-settling core so the whole show-handles tree flushes ONCE. (ScrollPanelWdgt overrides the core, not this.)
@@ -3548,16 +3556,16 @@ class Widget extends TreeNode
     # _resolvePickOutFigureNoSettle — reuse the island when I am its sole content, else pick-out;
     # the old Phase-1 grabsToParentWhenDragged island-escalation was removed by 4D-2a.)
     if @isFreeFloating()
-      @addAndTrackHandle "resizeHorizontalHandle"
-      @addAndTrackHandle "resizeVerticalHandle"
-      @addAndTrackHandle "moveHandle"
-      @addAndTrackHandle "resizeBothDimensionsHandle"
+      @_addAndTrackHandle "resizeHorizontalHandle"
+      @_addAndTrackHandle "resizeVerticalHandle"
+      @_addAndTrackHandle "moveHandle"
+      @_addAndTrackHandle "resizeBothDimensionsHandle"
       # Affine transforms (§6 Phase 4B-universal): EVERY free-floating widget gets a rotate handle at
       # the top-right of its halo. Dragging it rotates the widget via the halo rotation protocol
       # (rotationHalo_apply → the 4C sugar materialises an island on demand; an explicit island drives
       # its own spec). Requires 4A-2 (drag-delta mapping) so the sibling resize/move handles stay
       # correct once a rotation is in play.
-      @addAndTrackHandle "rotateHandle"
+      @_addAndTrackHandle "rotateHandle"
     else
       if (@lastSiblingBeforeMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingBeforeMeIsA(StackElementsSizeAdjustingWdgt)
         world.temporaryHandlesAndLayoutAdjusters.add \
@@ -3962,6 +3970,9 @@ class Widget extends TreeNode
   newParentChoice: (ignored, theWidgetToBeAttached) ->
     # this is what happens when "each" is
     # selected: we attach the selected widget
+    # double-settle-sanctioned: deliberate SEQUENTIAL pair — @add self-settles the attach, then the
+    # trailing settle flushes the ScrollPanel re-fit once; one extra flush, idempotent with @add's
+    # (see the long CONVERT comment below).
     @add theWidgetToBeAttached
     # I just attached the selected widget; if I am a scroll panel my contents changed, so re-fit my contents +
     # scrollbars. SELF-SETTLE it (CONVERT, end-of-cycle-flush-drawdown): this menu action is a DISCRETE public
@@ -3977,6 +3988,7 @@ class Widget extends TreeNode
   newParentChoiceWithHorizLayout: (ignored, theWidgetToBeAttached) ->
     # this is what happens when "each" is
     # selected: we attach the selected widget
+    # double-settle-sanctioned: deliberate SEQUENTIAL pair, exactly as newParentChoice above.
     @add theWidgetToBeAttached, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     # SELF-SETTLE my contents/scrollbar re-fit exactly as newParentChoice above (CONVERT, discrete menu action;
     # ScrollPanel-only pre-guard; @add already self-settled the attach).
@@ -4043,7 +4055,7 @@ class Widget extends TreeNode
   lockToPanels: ->
     @isLockingToPanels = true
 
-  unlockFromPanels: ->
+  _unlockFromPanels: ->
     @isLockingToPanels = false
 
   # ---------------------------------------------------------------------
@@ -4079,7 +4091,7 @@ class Widget extends TreeNode
 
     if childrenNotHandlesNorCarets?
       for each in childrenNotHandlesNorCarets
-        each.unlockFromPanels()
+        each._unlockFromPanels()
         each.contrastOutFromPanelColor?()
         if each.isEditable?
           each.isEditable = true
@@ -4128,8 +4140,8 @@ class Widget extends TreeNode
 
   _beforeBeingGrabbed: ->
     @userMovedThisFromComputedPosition = true
-    @unlockFromPanels()
-    @setLayoutSpec LayoutSpec.ATTACHEDAS_FREEFLOATING
+    @_unlockFromPanels()
+    @_setLayoutSpec LayoutSpec.ATTACHEDAS_FREEFLOATING
 
   deduplicateSettersAndSortByMenuEntryString: (menuEntriesStrings, functionNamesStrings) ->
     menuEntriesStrings = menuEntriesStrings.uniqueKeepOrder()
@@ -4611,11 +4623,11 @@ class Widget extends TreeNode
 
   _handleCollapsedStateShouldWeReturn: ->
     if @isInCollapsedSubtree()
-      @markLayoutAsFixed()
+      @_markLayoutAsFixed()
       return true
     return false
 
-  markLayoutAsFixed: ->
+  _markLayoutAsFixed: ->
     @layoutIsValid = true
 
   _reLayout: (newBoundsForThisLayout) ->
@@ -4764,7 +4776,7 @@ class Widget extends TreeNode
         C._reLayout childBounds
     # this part is excluded from the fizzygum homepage build <<«
 
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 
     # if I just did my layout, also do the layout
     # of all children that have position/size depending on mine

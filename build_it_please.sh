@@ -359,6 +359,28 @@ if ! $noSyntaxCheck ; then
   echo "... constructor-build check OK"
 fi
 
+# --- build-time CALL-SEPARATION gate ([S]/[U]) ----------------------------------------
+# Enforces the public/private call-separation ratchets (docs/public-private-call-separation-plan.md):
+# [S] a PRIVATE method must not @-self-call a public COMMAND (settling / effectful callee -- queries and
+# the changed/fullChanged react verbs stay free); [U] a public method referenced ONLY by @-self calls is
+# provably not external API and must be _-tier (deliberate end-user inspector/scripting API goes in
+# buildSystem/public-api-allowlist.txt). Both are inline count-BASELINES (the check-stinks idiom): the
+# gate FAILS only when a count EXCEEDS its baseline; tighten the baseline to lock gains. Per-site escape
+# hatch for [S]: mark the CALLER `# public-call-sanctioned: <why>`. Measurement engine:
+# buildSystem/census-public-private-calls.js (also a standalone census CLI). [U] self-skips without the
+# sibling Fizzygum-tests repo (e.g. --homepage), like the dead-method gate. (buildSystem/
+# check-call-separation.js -- same --noSyntaxCheck escape hatch + explicit $? abort as the gates above.)
+if ! $noSyntaxCheck ; then
+  echo "checking public/private call separation ..."
+  node ./buildSystem/check-call-separation.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: call-separation gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... call-separation check OK"
+fi
+
 # --- build-time RELAYOUT-BOUNDS-FIRST gate --------------------------------------------
 # Enforces that a `_reLayout` override APPLIES ITS OWN BOUNDS before it reads its own geometry to position
 # children -- else the children lay out against the PREVIOUS pass's frame and lag one layout cadence on a

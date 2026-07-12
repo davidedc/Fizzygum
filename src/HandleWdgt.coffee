@@ -100,7 +100,7 @@ class HandleWdgt extends Widget
       pad = Math.max (@target.padding ? 2), 2
       @inset = new Point pad, pad
       @layoutSpec_cornerInternal_inset = @inset
-    @moveInFrontOfSiblings()
+    @_moveInFrontOfSiblings()
 
   updateVisibility: ->
     # TODO rather than updating the visibility, we could

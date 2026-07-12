@@ -1,0 +1,35 @@
+# Public-API allowlist for buildSystem/check-call-separation.js (rule [U]).
+# A method listed here is PUBLIC ON PURPOSE despite being referenced only by @-self calls in
+# code: it is deliberate end-user surface (Fizzygum is live-editable — a method can exist solely
+# for a user to call from the in-world Object Inspector or scripting), so rule [U] must not push
+# it to _-tier. One name per line, with a trailing  # <reason>.  Owner-triaged (plan §6 T4/§7-1).
+# Delete an entry when the method gains real external callers or gets renamed/deleted.
+
+# --- T4 owner triage, 2026-07-12 (public/private call-separation plan §6/App-F) ---
+# Caret keyboard command surface (user scripting/inspector verbs):
+goHome        # caret keyboard verb — user command surface
+goEnd         # caret keyboard verb — user command surface
+deleteLeft    # caret keyboard verb — user command surface
+deleteRight   # caret keyboard verb — user command surface
+setSoftWrap   # user-facing text-wrapping toggle
+# Protocol-shaped hooks (likely to gain dynamic/external callers; renaming a protocol invites churn):
+recalculateOutput         # patch nodes' reactive recompute protocol verb
+reactToTargetConnection   # connection protocol hook
+paintFunction             # icon appearances' polymorphic paint hook
+# Deliberate end-user API (inspector / live-code surface):
+setHeading          # PenWdgt turtle API
+unTouch             # MouseSensorWdgt touch API
+setMouseInputMode   # PreferencesAndSettings user setting
+setTouchInputMode   # PreferencesAndSettings user setting
+toggleVisibility    # Widget user verb
+saveScript          # ScriptWdgt user action
+setProgram          # LCLProgramRunner programming API
+# Kept public for structural reasons (T5 execution findings, 2026-07-12):
+processDoubleClick  # ActivePointerWdgt public process* event-dispatch family (dispatches to the settling drop)
+processTripleClick  # ActivePointerWdgt public process* event-dispatch family (dispatches to the settling drop)
+addText             # ErrorsLogViewerWdgt log-append verb; its body drives the public .setText on the text pane — rule [A] forbids the _-form
+updatePatternsMenuEntriesTicks  # Wallpaper menu-tick refresher; drives public .setText on its menu entries — rule [A] forbids the _-form
+createErrorConsole        # WorldWdgt error-path builder; drives public setExtent/moveTo/add — rules [A]/[G] forbid the _-form
+addDragAffordanceWidgets  # WorldWdgt frame-driven affordance rebuilder; drives public add/fullDestroy/setWidth — [A]/[G] forbid the _-form
+bringTextAndCaretToState  # CaretWdgt undo/redo restore verb; drives the public text setter + gotoSlot — [A] forbids the _-form
+createWidgetToBeHandled   # creator-button build protocol (5-class family); builds via public addMany/setExtent — [A]/[G] forbid the _-form

@@ -73,4 +73,4 @@ class PatchProgrammingInfoWdgt extends SimpleDocumentWdgt
       containerWindow.destroy()
 
     wm._moveToSideOf nextToThisWidget
-    wm.rememberFractionalSituationInHoldingPanel()
+    wm._rememberFractionalSituationInHoldingPanel()

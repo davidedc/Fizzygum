@@ -322,7 +322,7 @@ Two facts make this a *fixed-point* loop, not a fixed *number* of passes:
    one place, the param guard ~:3906) — so one deep change
    enqueues the whole ancestor chain, and the loop then does a single top-down `_reLayout` from the topmost
    dirty ancestor. **In the common case a localized change is "climb up once, lay out down once" — effectively
-   one top-down arrange.** `_reLayout` ends in `markLayoutAsFixed()` (~:4377), popping the node.
+   one top-down arrange.** `_reLayout` ends in `_markLayoutAsFixed()` (~:4377), popping the node.
 2. **A `_reLayout` can re-dirty something *outside* the subtree it just settled** — via the **settle-time up-edge**
    (this is what *replaced* the notify-by-mutation seam, deleted 2026-07-01). After the loop `_reLayout`s a chain-top,
    it calls `_reFitMyTrackingContainerAfterSettle` (`Widget.coffee` ~:1635) — which, *iff the chain-top's frame
@@ -344,7 +344,7 @@ Two facts make this a *fixed-point* loop, not a fixed *number* of passes:
 > *up/down/up/down* fixed-point iteration only across **container boundaries that re-dirty each other**
 > (freefloating content ↔ its container). The iteration is concentrated in a small, specific part of behavior.
 
-Termination is guarded by: each `_reLayout` ending in `markLayoutAsFixed`; each container arrange being an idempotent
+Termination is guarded by: each `_reLayout` ending in `_markLayoutAsFixed`; each container arrange being an idempotent
 **fixed point** (the proper-layouts campaign deleted the old per-container `@_adjustingContentsBounds`
 re-entrancy/suppression boolean precisely because Phase C made the arrange idempotent and Phase E removed the last
 synchronous self-re-entry — §2.6/§4.1; §4.2 Objective A then made the arrange *non-notifying*, so it no longer
@@ -392,7 +392,7 @@ keeps the sanctioned re-dirtying from being open-ended is §2.6's convergence ca
 (a settled container never re-dirties *itself*), the Stage-6 unchanged-frame skip on the up-edge, `elasticity 0` on the
 genuine width↔height cycles, and the never-fire assert converting a hypothetical residual cycle into a loud
 `RECALC_NONCONVERGENCE` throw. Even a **crashing** `_reLayout` cannot wedge or re-dirty the drain: the loop's catch
-force-marks the thrower `markLayoutAsFixed` (it died before popping itself — without this the until-loop would spin on
+force-marks the thrower `_markLayoutAsFixed` (it died before popping itself — without this the until-loop would spin on
 it forever), silently `__hide`s it (nils caches only — no invalidate, no flush), and defers the report to the next
 cycle's `showLayoutErrorsFromPreviousCycle`, outside the flush (task #18).
 
@@ -454,7 +454,7 @@ out (the deferred-layout capstone record) — is exactly right: it **breaks the 
 
 The previous revision titled this section *"empirical and capped, not structural"* and argued the notify-by-mutation
 seam made it irreducibly so. **The 2026-07-01 seam deletion changed that.** Termination now rests on: each `_reLayout`
-ending in `markLayoutAsFixed`; each container arrange being an idempotent fixed point (Phase C — which let the campaign
+ending in `_markLayoutAsFixed`; each container arrange being an idempotent fixed point (Phase C — which let the campaign
 delete the `@_adjustingContentsBounds` re-entrancy boolean, §4.1) *and* non-notifying (§4.2 Objective A — a settled
 container never re-enqueues *itself*); the **settle-time up-edge** that replaced the seam (§2.3 — a container re-fits
 *once*, from its content's final geometry, after the content settles); manual cycle-breaking for the genuine
@@ -1024,7 +1024,7 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
   (loop) ~:939 (until-loop; **never-fire assert** `layoutIterationsSanityLimit = 100000` + `RECALC_NONCONVERGENCE`
   throw — Stage 6, ex-`recalcIterationsCap`; walk-up; freefloating stop; `_reLayout` call; **settle-time up-edge**
   `_reFitMyTrackingContainerAfterSettle` after each chain-top settles, gated on the Stage-6 no-op early-return
-  `if myFrameChanged`; non-flushing catch — force-`markLayoutAsFixed` + silent `__hide` of a throwing widget so the
+  `if myFrameChanged`; non-flushing catch — force-`_markLayoutAsFixed` + silent `__hide` of a throwing widget so the
   drain cannot spin on it, report deferred to next cycle's `showLayoutErrorsFromPreviousCycle`).
 - **Settle-time up-edge (replaced the deleted seam, 2026-07-01):** `Widget._reFitMyTrackingContainerAfterSettle`
   ~:1635 (`@_reFitContainer @parent.parent` if inside a non-text-wrapping scroll panel, then `@_reFitContainer @parent`)
@@ -1070,8 +1070,8 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
   explanatory comments. `_reFitContainer` is **retained** and is now driven by the up-edge, not by the mutators. The
   immediate mutators (`__commitExtent`, `_applyMoveBy`) and the non-notifying arrange
   twins are all pure geometry now — none fires a seam.
-- **Apply bodies:** base `Widget._reLayout` ~:4212 (`markLayoutAsFixed` call ~:4377 — followed by a corner-layouted
-  child re-layout loop ~:4381; `markLayoutAsFixed` def ~:4209; horizontal-stack 3-case distribution ~:4286–4374) ·
+- **Apply bodies:** base `Widget._reLayout` ~:4212 (`_markLayoutAsFixed` call ~:4377 — followed by a corner-layouted
+  child re-layout loop ~:4381; `_markLayoutAsFixed` def ~:4209; horizontal-stack 3-case distribution ~:4286–4374) ·
   `_setWidthSizeHeightAccordingly` (née `rawSetWidthSizeHeightAccordingly`) ~:750 (synchronous `_reLayout` ~:755 when `implementsDeferredLayout()`, returns
   height ~:756) · `getRecursiveDesiredDim` / `getRecursiveMinDim` / `getRecursiveMaxDim` ~:3976–3987 (thin wrappers over the
   shared `_getRecursiveStackDim` walker since F7; no dim-cache — the scaffolding was deleted in Tier A).

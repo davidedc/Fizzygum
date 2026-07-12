@@ -73,4 +73,4 @@ class GenericObjectIconWdgt extends GenericCompositeIconWdgt
     @fullChanged()
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()

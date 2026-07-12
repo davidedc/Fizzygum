@@ -54,7 +54,7 @@ class MacroToolkit
   # There are TWO independent axes (do not conflate — see src/macros/CLAUDE.md):
   #   • SPAN  = a verb's gesture `milliseconds` × spanFactor. Because synthetic
   #     events drain over ~their timestamp span of REAL wall-clock (the per-cycle
-  #     virtual clock IS wall-clock; see WorldWdgt.playQueuedEvents), span is the
+  #     virtual clock IS wall-clock; see WorldWdgt._playQueuedEvents), span is the
   #     ONLY real speed lever — compressing it is what makes a headless sweep fast.
   #   • COUNT = events-per-millisecond → intra-gesture path smoothness / sampling
   #     fidelity. Thinning count is PATH-RISKY (a drag that must pass over a drop
@@ -160,7 +160,7 @@ class MacroToolkit
 
   # Remember a just-scheduled LEFT click gesture's last-release time + position for the
   # guard above (only left clicks fold into double/triple-clicks).
-  rememberClickGesture: (upAbs, position) ->
+  _rememberClickGesture: (upAbs, position) ->
     @lastClickGestureUpTime = upAbs
     @lastClickGesturePosition = position
 
@@ -317,7 +317,7 @@ class MacroToolkit
   # mouse moves need an origin and a destination, so we
   # need to place the mouse in _some_ place to begin with
   # in order to do that.
-  syntheticEventsMousePlace_InputEvents: (place = new Point(0,0), scheduledTimeOfEvent = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+  _syntheticEventsMousePlace_InputEvents: (place = new Point(0,0), scheduledTimeOfEvent = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @currentPointerTarget = place
     @queueInputEvent new MousemoveInputEvent place.x, place.y, 0, 0, false, false, false, false, true, scheduledTimeOfEvent
 
@@ -367,7 +367,7 @@ class MacroToolkit
     isLeft = (whichButton == "left button")
     downAbs = if isLeft then (@guardedClickStart (@scaledAbs startTime), @currentPointerTarget) else (@scaledAbs startTime)
     upAbs = downAbs + @clickHoldWithFloor milliseconds
-    if isLeft then @rememberClickGesture upAbs, @currentPointerTarget
+    if isLeft then @_rememberClickGesture upAbs, @currentPointerTarget
     @syntheticEventsMouseDown_InputEvents whichButton, downAbs, true
     @syntheticEventsMouseUp_InputEvents whichButton, upAbs, true
 
@@ -382,7 +382,7 @@ class MacroToolkit
     # double-click with a prior same-spot click once recognition is ungated.
     downAbs = @guardedClickStart (@scaledAbs startTime), @currentPointerTarget
     upAbs = downAbs + milliseconds * @spanFactor()
-    @rememberClickGesture upAbs, @currentPointerTarget
+    @_rememberClickGesture upAbs, @currentPointerTarget
     @queueInputEvent (new MousedownInputEvent 0, 1, false, true, false, false, true, downAbs), true
     @queueInputEvent (new MouseupInputEvent 0, 0, false, true, false, false, true, upAbs), true
 
@@ -482,13 +482,13 @@ class MacroToolkit
   # inter-click 120ms / 50ms spacing is kept NON-scaled so the clicks always land inside the 300ms
   # event-time window at every speed. The false-double-click guard is applied ONCE to the first click (vs a prior
   # distinct gesture); clicks 2..N are the DELIBERATE repeats that MUST fold, so they skip it.
-  syntheticEventsConsecutiveLeftClicks_InputEvents: (numberOfClicks = 2, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), millisecondsBetweenClicks = 120, clickMilliseconds = 50) ->
+  _syntheticEventsConsecutiveLeftClicks_InputEvents: (numberOfClicks = 2, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), millisecondsBetweenClicks = 120, clickMilliseconds = 50) ->
     firstDownAbs = @guardedClickStart (@scaledAbs startTime), @currentPointerTarget
     for i in [0...numberOfClicks]
       t = firstDownAbs + i * millisecondsBetweenClicks
       @syntheticEventsMouseDown_InputEvents "left button", t, true
       @syntheticEventsMouseUp_InputEvents "left button", t + clickMilliseconds, true
-    @rememberClickGesture (firstDownAbs + (numberOfClicks - 1) * millisecondsBetweenClicks + clickMilliseconds), @currentPointerTarget
+    @_rememberClickGesture (firstDownAbs + (numberOfClicks - 1) * millisecondsBetweenClicks + clickMilliseconds), @currentPointerTarget
 
   # Double- / triple-click at a fractional point inside a located widget, driven through the INPUT-EVENT
   # QUEUE like a real user — a positioning move (so the fake pointer shows) then two/three consecutive
@@ -501,11 +501,11 @@ class MacroToolkit
   # Queues input events — follow with `yield "waitNoInputsOngoing"`.
   doubleClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, nil, startTime, nil
-    @syntheticEventsConsecutiveLeftClicks_InputEvents 2, startTime + milliseconds + 100
+    @_syntheticEventsConsecutiveLeftClicks_InputEvents 2, startTime + milliseconds + 100
 
   tripleClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, nil, startTime, nil
-    @syntheticEventsConsecutiveLeftClicks_InputEvents 3, startTime + milliseconds + 100
+    @_syntheticEventsConsecutiveLeftClicks_InputEvents 3, startTime + milliseconds + 100
 
   # SHIFT+left-click at a fractional point inside a located widget — move the pointer there (no button),
   # then click with Shift held. In editable text a plain click sets the caret while a shift-click EXTENDS the

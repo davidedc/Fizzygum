@@ -98,7 +98,7 @@ class ButtonWdgt extends Widget
       @faceWidget._applyBounds newBoundsForThisLayout.insetBy @padding
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 
   # TODO
   getTextDescription: ->

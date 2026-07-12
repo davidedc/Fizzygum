@@ -87,7 +87,7 @@ class SpeechBubbleWdgt extends Widget
     @fullChanged()
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 
 
 

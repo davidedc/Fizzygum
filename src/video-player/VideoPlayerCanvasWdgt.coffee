@@ -18,12 +18,12 @@ class VideoPlayerCanvasWdgt extends CanvasWdgt
   video: nil
   _extentWhenPreviousBackgroundWasPainted: nil
 
-  createRefreshOrGetBackBuffer: ->
+  _createRefreshOrGetBackBuffer: ->
     [@backBuffer, @backBufferContext] = super
     # TODO we don't actually need to put the current video frame on the backbuffer
     # every time this widget needs to draw itself (e.g. because something is being moved
     # briefly over it). We should just draw the backbuffer as is.
-    @paintNewFrame()
+    @_paintNewFrame()
     return [@backBuffer, @backBufferContext]
 
   constructor: (videoPath = "videos/big-buck-bunny_trailer.webm") ->
@@ -69,13 +69,13 @@ class VideoPlayerCanvasWdgt extends CanvasWdgt
       @video.pause()
 
   step: ->
-    @paintNewFrame()
+    @_paintNewFrame()
     @changed()
 
   # draw the frame on black background such that it's fully contained
   # within the bounding box of the canvas, maintaining the aspect ratio
   # of the video
-  paintNewFrame: ->
+  _paintNewFrame: ->
     # we get the context already with the correct pixel scaling
     # (ALWAYS leave the context with the correct pixel scaling.)
 

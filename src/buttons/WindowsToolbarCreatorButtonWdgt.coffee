@@ -24,6 +24,6 @@ class WindowsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
     switcherooWm._applyExtent new Point 61, 192
     readmeWindow = WindowsToolbarInfoWdgt.createNextTo switcherooWm
     readmeWindow?._applyMoveTo new Point 300, 200
-    readmeWindow?.rememberFractionalSituationInHoldingPanel()
+    readmeWindow?._rememberFractionalSituationInHoldingPanel()
 
     return switcherooWm

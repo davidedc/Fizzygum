@@ -4,7 +4,7 @@
 # is draggable (rejectDrags=false) rather than a menu row. The generic
 # flat-label-button machinery it relies on (label, flat paint, centring) lives in
 # LabelButtonWdgt, so it needs no label/paint code of its own -- the base's
-# single-line StringWdgt createLabel is exactly what a magnet wants (a self-sized
+# single-line StringWdgt _createLabel is exactly what a magnet wants (a self-sized
 # label, no box resize).
 
 class MagnetWdgt extends LabelButtonWdgt

@@ -156,7 +156,7 @@ class DataflowEngine
   # Remove every edge whose PRODUCER is this node — the inverse of removeEdgesInto. Called by ensureWireEdge when
   # a controller is re-wired (its @target/@action changed): it drops the single old out-edge before declaring the
   # new one, so a stale edge is never left behind as a ghost (6b/6c).
-  removeOutgoingEdgesOf: (producer) ->
+  _removeOutgoingEdgesOf: (producer) ->
     outSet = @edgesFrom.get producer
     return unless outSet?
     outSet.forEach (rec) =>
@@ -186,7 +186,7 @@ class DataflowEngine
     return if @_recalculatingDataflow
     existing = @_wireEdgeRecord producer, consumer
     return if existing? and existing.action is (opts.action ? nil) and existing.firesPerEvent is (opts.firesPerEvent ? false)
-    @removeOutgoingEdgesOf producer
+    @_removeOutgoingEdgesOf producer
     @addEdge producer, consumer, opts
     return
 

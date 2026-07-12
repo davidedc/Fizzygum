@@ -216,7 +216,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
       if widget.layoutSpec != LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
         widget.initialiseDefaultVerticalStackLayoutSpec()
         widget.layoutSpecDetails.rememberInitialDimensions widget, @
-        widget.setLayoutSpec LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
+        widget._setLayoutSpec LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
 
     childrenNotHandlesNorCarets.forEach (widget) =>
       verticalPadding += @padding

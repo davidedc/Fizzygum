@@ -31,7 +31,7 @@ class VideoScrubberWdgt extends SliderWdgt
       # only update the bar if it's not been moved by the user
       # in the last 250ms
       if (!@timeWhenScrubWasLastMoved?) or (Date.now() - @timeWhenScrubWasLastMoved) > 750
-        @updateHandlePosition 100 * @videoPlayerCanvas.video.currentTime / @videoPlayerCanvas.video.duration
+        @_updateHandlePosition 100 * @videoPlayerCanvas.video.currentTime / @videoPlayerCanvas.video.duration
 
 
   # TODO this is a private method, should have an underscore

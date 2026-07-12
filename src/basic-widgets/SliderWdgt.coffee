@@ -110,7 +110,7 @@ class SliderWdgt extends CircleBoxWdgt
   # This is useful when the slider needs to reflect the
   # state of something that has been independently changed
   # (i.e. changed by something else than the user moving the slider)
-  updateHandlePosition: (newvalue) ->
+  _updateHandlePosition: (newvalue) ->
     @value = Number(newvalue)
     @_reLayoutSelfAndButton()
 

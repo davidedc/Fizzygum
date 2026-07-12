@@ -340,6 +340,9 @@ class ActivePointerWdgt extends Widget
       @grabOrigin = aWdgt.situation()
       aWdgt._beforeBeingGrabbed?()
 
+      # double-settle-sanctioned: the grab gesture hand-rolls TWO deliberate sequential flushes — @add
+      # self-settles the re-home into the hand, then the trailing @_settleLayoutsAfter flushes the old
+      # parent's _reactToChildGrabbed re-fit once (the drop's symmetric twin — see the comment there).
       @add aWdgt
       aWdgt._reactToBeingGrabbed? oldParent
       # you must add the shadow
@@ -517,9 +520,9 @@ class ActivePointerWdgt extends Widget
       @_applyExtent new Point
 
       # Notify the recipient (it may initialise the dropped widget's layout spec) and then the dropped
-      # widget (it may tweak its OWN spec -- e.g. constrainToRatio when dropped into a ratio container).
+      # widget (it may tweak its OWN spec -- e.g. _constrainToRatio when dropped into a ratio container).
       # Both run AFTER add()'s self-settle ON PURPOSE -- _reactToBeingDropped reads the dropped widget's SETTLED
-      # geometry (rememberFractionalSituationInHoldingPanel, constrainToRatio's @width()/@height()), so we
+      # geometry (_rememberFractionalSituationInHoldingPanel, _constrainToRatio's @width()/@height()), so we
       # must NOT absorb add's settle. The recipient re-fit (_reactToChildDropped) + the post-_reactToBeingDropped spec
       # change used to DEFER to end-of-cycle. A drop is one discrete re-parent gesture, so settle them HERE:
       # consistent on return, not on the next doOneCycle. SINGLE settle (_settleLayoutsAfter): every
@@ -759,7 +762,7 @@ class ActivePointerWdgt extends Widget
           if @doubleClickWdgt? and @doubleClickArmedAtEventTime? and
            WorldWdgt.timeOfEventBeingProcessed? and
            (WorldWdgt.timeOfEventBeingProcessed - @doubleClickArmedAtEventTime) > @doubleClickWindowMs
-            @forgetDoubleClickWdgts()
+            @_forgetDoubleClickWdgts()
 
           if @doubleClickWdgt?
             # three conditions:
@@ -786,7 +789,7 @@ class ActivePointerWdgt extends Widget
               # like chaining a second double-click detection
               # once this double-click has just been detected
               # right here.
-              @rememberTripleClickWdgtsForAWhile w
+              @_rememberTripleClickWdgtsForAWhile w
             else
               # This click does NOT complete a double-click with the remembered widget
               # (different widget/position — a SAME-spot stale candidate from a previous
@@ -796,11 +799,11 @@ class ActivePointerWdgt extends Widget
               # silently degrade (its first click eaten). A non-left click just clears the
               # (left) candidate.
               if @mouseButton == "left"
-                @rememberDoubleClickWdgtsForAWhile w
+                @_rememberDoubleClickWdgtsForAWhile w
               else
-                @forgetDoubleClickWdgts()
+                @_forgetDoubleClickWdgts()
           else
-            @rememberDoubleClickWdgtsForAWhile w
+            @_rememberDoubleClickWdgtsForAWhile w
 
           tripleClickInvocation = false
 
@@ -810,7 +813,7 @@ class ActivePointerWdgt extends Widget
           if @tripleClickWdgt? and @tripleClickArmedAtEventTime? and
            WorldWdgt.timeOfEventBeingProcessed? and
            (WorldWdgt.timeOfEventBeingProcessed - @tripleClickArmedAtEventTime) > @doubleClickWindowMs
-            @forgetTripleClickWdgts()
+            @_forgetTripleClickWdgts()
 
           # also send tripleclick if the
           # three clicks happen on the same widget
@@ -835,7 +838,7 @@ class ActivePointerWdgt extends Widget
                 # EVENT-TIME window — see the double-click branch above.)
                 tripleClickInvocation = true
               else
-                @forgetTripleClickWdgts()
+                @_forgetTripleClickWdgts()
 
           # fire the click, sending info on whether this was part
           # of a double/triple click
@@ -865,12 +868,12 @@ class ActivePointerWdgt extends Widget
     @nonFloatDraggedWdgt = nil
 
 
-  forgetDoubleClickWdgts: ->
+  _forgetDoubleClickWdgts: ->
     @doubleClickWdgt = nil
     @doubleClickPosition = nil
     @doubleClickArmedAtEventTime = nil
 
-  rememberDoubleClickWdgtsForAWhile: (w) ->
+  _rememberDoubleClickWdgtsForAWhile: (w) ->
     @doubleClickWdgt = w
     @doubleClickPosition = @position()
     # Arm the candidate with the EVENT-TIME of the click that created it. The event-time
@@ -881,16 +884,16 @@ class ActivePointerWdgt extends Widget
     # the widget/position identity checks prevent any wrong fold).
     @doubleClickArmedAtEventTime = WorldWdgt.timeOfEventBeingProcessed
 
-  # basically the same as rememberDoubleClickWdgtsForAWhile
-  forgetTripleClickWdgts: ->
+  # basically the same as _rememberDoubleClickWdgtsForAWhile
+  _forgetTripleClickWdgts: ->
     @tripleClickWdgt = nil
     @tripleClickPosition = nil
     @tripleClickArmedAtEventTime = nil
 
-  rememberTripleClickWdgtsForAWhile: (w) ->
+  _rememberTripleClickWdgtsForAWhile: (w) ->
     @tripleClickWdgt = w
     @tripleClickPosition = @position()
-    # event-time arm, exactly as rememberDoubleClickWdgtsForAWhile — the event-time gate in
+    # event-time arm, exactly as _rememberDoubleClickWdgtsForAWhile — the event-time gate in
     # processMouseUp is the authoritative, deterministic forget; no wall-clock timer needed.
     @tripleClickArmedAtEventTime = WorldWdgt.timeOfEventBeingProcessed
 
@@ -1216,7 +1219,7 @@ class ActivePointerWdgt extends Widget
     @dispatchEventsFollowingMouseMove mouseOverNew
 
   # Per-cycle hover re-sync for widgets that MOVED under a STATIONARY pointer (pointer MOTION is handled
-  # per-event inside playQueuedEvents; this catches stepping animations, event-driven relayouts, teleports,
+  # per-event inside _playQueuedEvents; this catches stepping animations, event-driven relayouts, teleports,
   # opens/closes). It runs AFTER @recalculateLayouts() in WorldWdgt.doOneCycle, so it re-derives the
   # widgets-under-pointer set against SETTLED geometry (the same fixed point paint reads). Hover handlers
   # must not make a careless (off-settle) layout push -- self-settling mutations (e.g. a tooltip fullDestroy)

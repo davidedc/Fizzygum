@@ -65,7 +65,7 @@ class TreeNode
     "a TreeNode" + "[" + childrenLength + "]"
 
   # TreeNode accessing:
-  addChild: (node, position = nil) ->
+  _addChild: (node, position = nil) ->
     WorldWdgt.noteStructureChange()
     if !position?
       @children.push node

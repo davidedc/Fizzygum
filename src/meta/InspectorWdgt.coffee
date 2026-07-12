@@ -47,7 +47,7 @@ class InspectorWdgt extends Widget
 
   # opaque background appearance, painted ONLY while the inspector is
   # free-floating (naked); dropped while it is WindowWdgt content (the
-  # window supplies the background) — see the constructor + setLayoutSpec
+  # window supplies the background) — see the constructor + _setLayoutSpec
   inspectorBackgroundAppearance: nil
 
   externalPadding: 0
@@ -120,7 +120,7 @@ class InspectorWdgt extends Widget
     # When free-floating (naked on the desktop) the inspector paints its own
     # opaque background; inside a WindowWdgt the window supplies it. The
     # appearance is toggled off when the inspector becomes window content
-    # (setLayoutSpec, below) so the windowed render stays byte-identical.
+    # (_setLayoutSpec, below) so the windowed render stays byte-identical.
     @color = Color.create 248, 248, 248
     @inspectorBackgroundAppearance = new RectangularAppearance @
     @appearance = @inspectorBackgroundAppearance
@@ -131,8 +131,8 @@ class InspectorWdgt extends Widget
   # WindowWdgt content the window provides it, so drop the appearance then
   # (keeping the windowed inspector byte-identical). This mirrors how the
   # @resizer HandleWdgt shows only when free-floating — both are driven off
-  # the same layout-spec change in Widget::setLayoutSpec.
-  setLayoutSpec: (newLayoutSpec) ->
+  # the same layout-spec change in Widget::_setLayoutSpec.
+  _setLayoutSpec: (newLayoutSpec) ->
     super
     @appearance =
       if @isFreeFloating()
@@ -254,7 +254,7 @@ class InspectorWdgt extends Widget
     @showInheritedToggle = new ToggleButtonWdgt @showInheritedOnButton, @showInheritedOffButton, if @showingInherited then 0 else 1
     @_addNoSettle @showInheritedToggle
 
-    @buildAndConnectObjOwnPropsButton()
+    @_buildAndConnectObjOwnPropsButton()
 
     @addPropertyButton = new SimpleButtonWdgt true, @, "addPropertyPopout", "add..."
     @_addNoSettle @addPropertyButton
@@ -348,7 +348,7 @@ class InspectorWdgt extends Widget
 
     # The inspector's own resize handle. It is shown ONLY when the inspector
     # is free-floating (naked on the desktop) and hidden when it is WindowWdgt
-    # content (HandleWdgt::updateVisibility, driven by Widget::setLayoutSpec),
+    # content (HandleWdgt::updateVisibility, driven by Widget::_setLayoutSpec),
     # so a naked inspector is self-resizable while a windowed one defers to the
     # window's resizer. Covered by
     # SystemTest_macroNakedInspectorRendersResizesAndEdits.
@@ -374,7 +374,7 @@ class InspectorWdgt extends Widget
     @saveTextWdgt.setColor Color.create 200, 200, 200
 
 
-  buildAndConnectObjOwnPropsButton: ->
+  _buildAndConnectObjOwnPropsButton: ->
     @showOwnPropsOnlyOnButton = new SimpleButtonWdgt true, @, "hideOwnPropsOnly", "obj own props only: on"
     @showOwnPropsOnlyOffButton = new SimpleButtonWdgt true, @, "showOwnPropsOnly", "obj own props only: off"
     @showOwnPropsOnlyToggle = new ToggleButtonWdgt @showOwnPropsOnlyOnButton, @showOwnPropsOnlyOffButton, if @showingOwnPropsOnly then 0 else 1
@@ -585,7 +585,7 @@ class InspectorWdgt extends Widget
     @fullChanged()
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 
 
   layoutOwnPropsOnlyToggle: (height, listWidth, detailWidth) ->

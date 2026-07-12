@@ -48,9 +48,9 @@ class PopUpWdgt extends Widget
   propagateKillPopUps: ->
     if @killThisPopUpIfClickOnDescendantsTriggers
       @getParentPopUp()?.propagateKillPopUps()
-      @markPopUpForClosure()
+      @_markPopUpForClosure()
 
-  markPopUpForClosure: ->
+  _markPopUpForClosure: ->
     world.popUpsMarkedForClosure.add @
     @isPopUpMarkedForClosure = true
 
@@ -89,7 +89,7 @@ class PopUpWdgt extends Widget
 
     # leave the menu attached to whatever it's attached,
     # just change the shadow.
-    @updatePopUpShadow()
+    @_updatePopUpShadow()
 
 
   fullCopy: ->
@@ -110,9 +110,11 @@ class PopUpWdgt extends Widget
     if whereIn != world
       @pinPopUp()
 
-    @updatePopUpShadow()
+    @_updatePopUpShadow()
 
-  updatePopUpShadow: ->
+  _updatePopUpShadow: ->
+    # public-call-sanctioned: addShadow/removeShadow are the public shadow API (also driven
+    # externally, e.g. by the grab gesture) — consciously reused by this shadow-policy core.
     if @isPopUpPinned()
       if @parent == world
         @addShadow()

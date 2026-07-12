@@ -87,7 +87,8 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
 | stinks | `buildSystem/check-stinks.js` | ~:315 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
 | thin-wrap | `buildSystem/check-thin-wraps.js` | ~:333 | a public method owning a `_<name>NoSettle` twin is the ONE canonical mechanical wrap | per-method `# thin-wrap-exempt: <reason>`; SKIPS a twinless `*NoSettle` |
 | **constructor-build** | **`buildSystem/check-constructors-build.js`** | **~:353** | a `constructor:` body must not build its own children inline — `@add`/`@addMany`/`@addNoSettle`/`@_addNoSettle`/`@__add`/… on `this` belong in `_buildAndConnectChildrenNoSettle`, reached via the settling wrapper | per-constructor `# constructor-build-exempt: <reason>` (no central allowlist; currently ZERO — the 4 menu/slider-family `@__add` ctors were converted 2026-07-12, `docs/menu-slider-ctor-conversion-plan.md`) |
-| relayout-bounds-first | `buildSystem/check-relayout-bounds-first.js` | ~:372 | a `_reLayout` override must APPLY its own bounds before its first own-geometry read (else children lay out against the previous pass's frame — the "one-cadence-lag" flake) | `# relayout-bounds-first-exempt: <reason>` above the method header |
+| **call-separation** | **`buildSystem/check-call-separation.js`** | **~:372** | **rules [S]/[U]: [S] a private method must not `@`-self-call a public COMMAND (settling/effectful callee; queries + `changed`/`fullChanged` stay free); [U] a public method referenced ONLY by `@`-self calls is not external API and must be `_`-tier. Measurement engine: `census-public-private-calls.js`. [U] self-skips without the sibling tests repo** | inline count baselines (`BASELINE_S_*`/`BASELINE_U_*`, the stinks idiom); per-caller `# public-call-sanctioned: <why>` for [S]; `public-api-allowlist.txt` for [U] (deliberate end-user inspector/scripting API) |
+| relayout-bounds-first | `buildSystem/check-relayout-bounds-first.js` | ~:394 | a `_reLayout` override must APPLY its own bounds before its first own-geometry read (else children lay out against the previous pass's frame — the "one-cadence-lag" flake) | `# relayout-bounds-first-exempt: <reason>` above the method header |
 | relayout-repaints [INV-1] | `buildSystem/check-relayout-repaints.js` | ~:392 | a `_reLayoutSelf` that opens a `disableTrackChanges` suppression frame must issue a covering `fullChanged()` AFTER the last re-enable (scoped to `_reLayoutSelf` by design — see the gate header; runtime twin = the paint-truthfulness audit) | `# relayout-repaint-exempt: <reason>` above the method header |
 | test-.js syntax | `Fizzygum-tests/scripts/check-tests-syntax.js` | ~:411 | JS syntax of the macro SystemTest `.js` files, before the build copies them in | — (self-skips on `--homepage`/`--notests`/absent sibling) |
 | ref-image integrity | `Fizzygum-tests/scripts/check-refs.js` | ~:429 | >1 `dataHash` per `(test,image,dpr,OS)` or an orphaned `.js`/`.png` reference | — (self-skips like the test gate) |
@@ -150,9 +151,18 @@ paint-readonly gates and wired into `fg gauntlet`:
 They verify the *behaviour* the names promise (the ground truth the static scanner can't follow through dynamic
 dispatch). Full description: `docs/layering-naming-convention.md`.
 
+**One ANALYSIS tool (not a gate).** `buildSystem/census-public-private-calls.js` measures public/private
+SELF-call mixing (private→public-command calls, double-settle shapes, and public methods only ever
+`@`-self-called, i.e. privatization candidates). It always exits 0 — it is the MEASUREMENT behind the
+call-separation rules: `check-call-separation.js` requires it as a module and enforces the [S]/[U] count
+baselines on its numbers, and rule [T] (in `check-layering.js`) is the static twin of its narrowed-R2
+report. The campaign that owns the drawdown is **`docs/public-private-call-separation-plan.md`** — re-run
+the census at every tranche start. Methodology and blind spots are documented in the tool's header. Run
+from `Fizzygum/`: `node ./buildSystem/census-public-private-calls.js [--full|--json out.json|--self-test]`.
+
 ---
 
-## 4. `check-layering.js` rules [A]–[O]
+## 4. `check-layering.js` rules
 
 The scanner strips `#` comments and string literals (carrying multi-line state) so a call-regex never matches a name in
 a throw-message or comment, groups lines into 2-space-indent methods (`METHOD_HEADER`, now mixin-DSL aware so a method
@@ -179,6 +189,7 @@ lint works at all (§6).
 | **[N]** | any method DEF | a name matching `/^_announce\w*ToContainer$/` (the retired notify-by-mutation container seam) | the mutation-time re-fit seam was deleted 2026-07-01 and replaced by the settle-time up-edge `_reFitMyTrackingContainerAfterSettle`; this bans reviving the announce-up verbs on the DEF side (the CALL side is already [I]/[K]) | — | — |
 | **[O]** | any method NOT in `COALESCED_CALLER_ALLOWLIST` (seeded `{nonFloatDragging}`) | a `[@.]…Coalesced` CALL to a `*Coalesced` entrypoint (`_setMaxDimCoalesced`/`_setExtentCoalesced`/`_moveToCoalesced`/`_setWidthCoalesced`/`_setHeightCoalesced`) | a `*Coalesced` entrypoint DEFERS its layout settle to the ONE end-of-cycle flush — byte-identical (sound) only for a per-event STREAM handler that never reads back the settled layout mid-cycle; a discrete caller must use the self-settling setter. These entrypoints are `_`-private for the same reason (only stream handlers may reach them) | — | — (add a genuine new stream handler's method name to `COALESCED_CALLER_ALLOWLIST`) |
 | **[P]** | any method whose name does NOT end `Connector` | a `[@.]_settleLayoutsAfterOrJoinEnclosingPass` CALL | `_settleLayoutsAfterOrJoinEnclosingPass` is the reactive-connection settle lane — reached mid-pass it JOINS the open layout pass instead of throwing (so a wired reactive circuit — the °C↔°F converter — settles once); sound ONLY for a dedicated `_<name>Connector` entrypoint carrying the `connectionsCalculationToken` cycle-guard. A general/internal caller must use the self-settling `_settleLayoutsAfter` (surfaces the flow violation) or a `_<name>NoSettle` core | `Widget._settleLayoutsAfter` throw (§1) | — |
+| **[T]** | a method whose own body calls `@_settleLayoutsAfter` (the same textual subject `discoverSettlingWrappers` keys off; the settle tiers in `RECALC_WHITELIST` are exempt) | ALSO `@`-self-calling a settling public method — a geometry setter, a text setter, a discovered settling wrapper (name-qualified via `nearestDefinerKind` like [G]), or the self-add `@add` | two flushes for one logical mutation — the whole-settling-surface generalization of [C]. `@`-self-scoped (a dotted receiver settles ANOTHER widget — untypeable). Branch-exclusive pairs (one flush per path, sound) are textually indistinguishable → marker. At rule birth (2026-07-12) exactly 3 sites, all conscious+marked: `grab` (hand-rolled sequential gesture settles) and `newParentChoice{,WithHorizLayout}` (documented idempotent re-fit flush after `@add`) | the one-flush throw | **`# double-settle-sanctioned: <why>`** |
 
 **[G] specifics.** The wrapper set is **discovered**, never hand-listed: `discoverSettlingWrappers` collects every method
 whose body calls `@_settleLayoutsAfter` (the SINGLE-mutation tier only — a `_settleLayoutsAfterBatch` wrapper ABSORBS
@@ -189,7 +200,7 @@ nested settles and is safe), minus the geometry/text setters ([A] reports those,
 
 ---
 
-## 5. The four in-code markers + the two ratchet idioms
+## 5. The in-code markers + the two ratchet idioms
 
 **Markers — "the justification lives AT the method, no central allowlist."** Each exempts a single method/line via a
 comment, with a *required reason*:
@@ -199,6 +210,8 @@ comment, with a *required reason*:
 | `# layout-apply-sanctioned: <why>` | `check-layering` [F] | a non-mutator method consciously applying a container refit off-settle (an in-pass deferred-seam arm, or a determinism-exempt family: scroll-input / collapse / construction) |
 | `# nosettle-sanctioned: <why>` | `check-layering` [G] | a low-level method consciously reaching a settling wrapper / `@add` (e.g. a method mis-tagged low-level, or a genuinely safe outside-any-pass case) |
 | `# early-return-sanctioned: <why>` | `check-layering` [H] *(warning)* | a public settle-wrapper that consciously keeps a guard `return` BEFORE its `_settleLayoutsAfter` (suppresses the non-fatal [H] warning) |
+| `# double-settle-sanctioned: <why>` | `check-layering` [T] | a directly-settling method that consciously ALSO `@`-calls a settling public method — a deliberate sequential-flush design (`grab`, `newParentChoice`) or a branch-exclusive pair the line scanner cannot tell apart |
+| `# public-call-sanctioned: <why>` | `check-call-separation` [S] | a private method consciously `@`-self-calling a public COMMAND (the census subtracts the site; use sparingly — the default fix is rename-to-`_` or the `_<name>NoSettle` core) |
 | `# thin-wrap-exempt: <reason>` | `check-thin-wraps` | a public method that owns a `_<name>NoSettle` twin but legitimately cannot be the canonical mechanical wrap |
 
 A marker is detected anywhere in the method's body (it resets at each method header). The reason is mandatory — a bare
@@ -330,7 +343,10 @@ source to satisfy a new rule.
   `CALLBACK_PREFIX`/`CALLBACK_SHAPE`/`LEGACY_CALLBACK_FRAGMENT` ([L]); `FRAGMENT_BANNED` ([M]);
   `SEAM_VERB_BANNED` ([N]); `COALESCED_CALL`/`COALESCED_CALLER_ALLOWLIST` ([O]);
   `stripLine` / `METHOD_HEADER` / `methodBoundary` (mixin-DSL aware); `discoverSettlingWrappers`; `checkFile` (rules
-  [A]–[O]); `checkMacroFile` (rule [D]).
+  [A]–[O]); `checkMacroFile` (rule [D]); `DOUBLE_SETTLE_MARKER`/`T_SELF_PUB_CALL`/`checkDoubleSettle` ([T]).
+- `buildSystem/check-call-separation.js` — `BASELINE_S_SETTLING`/`BASELINE_S_EFFECTFUL` ([S]) +
+  `BASELINE_U_EFFECTFUL`/`BASELINE_U_QUERY` ([U]) inline ratchets; reads `public-api-allowlist.txt`;
+  requires `census-public-private-calls.js` (`runCensus`, `PUBLIC_CALL_MARKER`).
 - `buildSystem/check-thin-wraps.js` — `HEADER`/`GUARD`/`EXEMPT`; twinless skip (`if (!byName.has(base)) continue`).
 - `buildSystem/check-constructors-build.js` — `METHOD`/`BUILD`/`EXEMPT`; the `inctor` state machine (multi-line-ctor-header aware).
 - `buildSystem/check-dead-methods.js` + `buildSystem/dead-method-allowlist.txt`.
@@ -346,6 +362,10 @@ source to satisfy a new rule.
   (perspective × phase) grid) and its two runtime audit gates; rules [I]/[K]/[L]/[M] (and the [M] fragment-ban) enforce it.
 - `docs/layout-system-architecture-assessment.md` — the runtime flush model + the invariant in depth (the *why*).
 - `docs/lint-ratchet-static-checks-plan.md` — the arc that built rule [G] (STATUS: EXECUTED); the rejected-transitive record.
+- `docs/public-private-call-separation-plan.md` — the AUTHORED (not started) command/query call-separation
+  campaign: planned rules [S] (private must not self-call a public command) / [T] (a settling method must not
+  call another settling public method) / [U] (self-only public methods must be `_`-tier), sized by
+  `buildSystem/census-public-private-calls.js` (the analysis tool noted in §3).
 - `docs/end-of-cycle-flush-drawdown-plan.md` / `end-of-cycle-flush-inventory.md` — the campaign that owns the
   collapse/unCollapse convert.
 - Memory `fizzygum-layering-naming-tiers` — the tier predicates + the `NoSettle` convention.

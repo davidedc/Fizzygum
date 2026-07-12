@@ -74,7 +74,7 @@ class HowToSaveMessageApp extends IconicDesktopSystemWindowedApp
     wm._applyMoveTo new Point 114, 10
     wm._applyExtent new Point 365, 447
     world.add wm
-    wm.rememberFractionalSituationInHoldingPanel()
+    wm._rememberFractionalSituationInHoldingPanel()
     wm.setTitleWithoutPrependedContentName "How to save?"
 
     simpleDocument.disableDragsDropsAndEditing()

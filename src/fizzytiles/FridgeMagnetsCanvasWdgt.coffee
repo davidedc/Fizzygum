@@ -11,9 +11,9 @@ class FridgeMagnetsCanvasWdgt extends CanvasWdgt
   # things in the constructor
   lclCodeCompiler: nil
 
-  createRefreshOrGetBackBuffer: ->
+  _createRefreshOrGetBackBuffer: ->
     [@backBuffer, @backBufferContext] = super
-    @paintNewFrame()
+    @_paintNewFrame()
     return [@backBuffer, @backBufferContext]
 
   oldGraphicsCode: ->
@@ -44,10 +44,12 @@ class FridgeMagnetsCanvasWdgt extends CanvasWdgt
 
   step: ->
     #console.log "stepping FridgeMagnetsCanvasWdgt"
-    @paintNewFrame()
+    @_paintNewFrame()
     @changed()
 
-  paintNewFrame: ->
+  _paintNewFrame: ->
+    # public-call-sanctioned: clear is the public canvas API (user-facing live-code surface on the
+    # canvas family) — consciously reused by the frame painter.
     # we get the context already with the correct pixel scaling
     # (ALWAYS leave the context with the correct pixel scaling.)
     @clear()
@@ -213,9 +215,9 @@ class FridgeMagnetsCanvasWdgt extends CanvasWdgt
       detailLevel: 0
 
     # end of primitive-specific initialisations:
-    @commonPrimitiveDrawingLogic a, b, c, d, primitiveProperties
+    @_commonPrimitiveDrawingLogic a, b, c, d, primitiveProperties
   
-  commonPrimitiveDrawingLogic: (a, b, c, d, primitiveProperties) ->
+  _commonPrimitiveDrawingLogic: (a, b, c, d, primitiveProperties) ->
 
     
     #if @liveCodeLabCoreInstance.animationLoop.noDrawFrame

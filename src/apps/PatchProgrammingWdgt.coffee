@@ -25,10 +25,9 @@ class PatchProgrammingWdgt extends StretchableEditableWdgt
     @dragsDropsAndEditingEnabled = true
     @_invalidateLayout()
 
-  createNewStretchablePanel: ->
-    @stretchableWidgetContainer = new StretchableWidgetContainerWdgt
-    @add @stretchableWidgetContainer
-
+  # (_createNewStretchablePanelNoSettle is inherited from StretchableEditableWdgt — this class's
+  # createNewStretchablePanel override was a byte-identical copy of the base and was deleted in the
+  # rule-[S] convert, like the hoisted _reLayoutSelf below.)
 
   # (_reLayoutSelf is inherited from StretchableEditableWdgt — the byte-identical
   # Dashboards/PatchProgramming/SimpleSlide copies were hoisted there 2026-07-12.)

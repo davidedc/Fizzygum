@@ -40,10 +40,10 @@ class Example3DPlotWdgt extends Widget
 
   setParameter: (parameterValue, ignored) ->
     @parameterValue = parameterValue
-    @calculateNewPlotValues()
+    @_calculateNewPlotValues()
 
   reactToTargetConnection: ->
-    @calculateNewPlotValues()
+    @_calculateNewPlotValues()
 
   numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
     if !menuEntriesStrings?
@@ -70,13 +70,13 @@ class Example3DPlotWdgt extends Widget
   _reactToBeingDropped: (whereIn) ->
     super
     if whereIn?.imposesRatioConstraintOnDroppedChildren?()
-      @constrainToRatio()
+      @_constrainToRatio()
 
   _reactToHolderWindowDropped: (whereIn) ->
     if whereIn?.imposesRatioConstraintOnDroppedChildren?()
-      @constrainToRatio()
+      @_constrainToRatio()
 
-  constrainToRatio: ->
+  _constrainToRatio: ->
     if @layoutSpecDetails?
       @ratio = @width() / @height()
       @layoutSpecDetails.canSetHeightFreely = false
@@ -90,13 +90,13 @@ class Example3DPlotWdgt extends Widget
 
   _reactToHolderWindowGrabbed: (whereFrom) ->
     if whereFrom?.releasesRatioConstraintOnGrabbedChildren?()
-      @freeFromRatioConstraints()
+      @_freeFromRatioConstraints()
 
   _reactToBeingGrabbed: (whereFrom) ->
     if whereFrom?.releasesRatioConstraintOnGrabbedChildren?()
-      @freeFromRatioConstraints()
+      @_freeFromRatioConstraints()
 
-  freeFromRatioConstraints: ->
+  _freeFromRatioConstraints: ->
     if @layoutSpecDetails?
       @layoutSpecDetails.canSetHeightFreely = true
       @ratio = nil
@@ -117,18 +117,18 @@ class Example3DPlotWdgt extends Widget
 
   step: ->
     # freeze the auto-rotation under SystemTest replay so the mesh renders a fixed frame -- mirrors
-    # AnalogClockWdgt.calculateHandsAngles / GraphsPlotsChartsWdgt. (Inlined, not shared: unlike the 2D
+    # AnalogClockWdgt._calculateHandsAngles / GraphsPlotsChartsWdgt. (Inlined, not shared: unlike the 2D
     # plots I extend Widget directly, not GraphsPlotsChartsWdgt -- I keep my own paint/anim copy.)
     frozenForReplay = Automator? and Automator.animationsPacingControl and Automator.state == Automator.PLAYING
     if @autoRotate and not frozenForReplay
       @currentAngle++
-    @calculateNewPlotValues()
+    @_calculateNewPlotValues()
 
   
   # TODO seems like in a plot and a grid like these
   # one could really reuse past vertices and just modify them
   # and avoid aaaaaall these constructions every time
-  calculateNewPlotValues: ->
+  _calculateNewPlotValues: ->
     @vertices = []
 
     @graphGrid = new Grid3D 21, 21, []
@@ -194,7 +194,7 @@ class Example3DPlotWdgt extends Widget
     widgetPosition = @position()
     aContext.translate widgetPosition.x, widgetPosition.y
 
-    @renderingHelper aContext, Color.WHITE, appliedShadow
+    @_renderingHelper aContext, Color.WHITE, appliedShadow
 
     aContext.restore()
 
@@ -222,7 +222,7 @@ class Example3DPlotWdgt extends Widget
   mouseLeave: ->
     @autoRotate = true
 
-  renderingHelper: (context, color, appliedShadow) ->
+  _renderingHelper: (context, color, appliedShadow) ->
 
     height = @height()
     width = @width()

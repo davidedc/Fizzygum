@@ -125,5 +125,5 @@ class AxisWdgt extends Widget
     @fullChanged()
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 

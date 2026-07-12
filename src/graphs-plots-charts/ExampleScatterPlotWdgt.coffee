@@ -15,12 +15,12 @@ class ExampleScatterPlotWdgt extends GraphsPlotsChartsWdgt
 
   # paintIntoAreaOrBlitFromBackBuffer is inherited from GraphsPlotsChartsWdgt
   # (the whole plot family shares the identical paint scaffold); this class
-  # supplies only its renderingHelper below.
+  # supplies only its _renderingHelper below.
 
 
   # step() (advance @graphNumber, frozen under SystemTest replay) is inherited from GraphsPlotsChartsWdgt.
 
-  renderingHelper: (context, color, appliedShadow) ->
+  _renderingHelper: (context, color, appliedShadow) ->
 
     @seed = @graphNumber
     circleRadius = 5

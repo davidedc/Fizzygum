@@ -31,7 +31,7 @@ class UpperRightTriangleAppearance extends Appearance
     widgetPosition = @widget.position()
     aContext.translate widgetPosition.x, widgetPosition.y
 
-    @renderingHelper aContext, @widget.color
+    @_renderingHelper aContext, @widget.color
 
     aContext.restore()
 
@@ -42,7 +42,7 @@ class UpperRightTriangleAppearance extends Appearance
     # of the ceilPixelRatio (i.e. after the restore)
     @paintHighlight aContext, al, at, w, h
 
-  renderingHelper: (context, color) ->
+  _renderingHelper: (context, color) ->
     context.lineWidth = 1
     context.lineCap = "round"
 

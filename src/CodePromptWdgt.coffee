@@ -147,5 +147,5 @@ class CodePromptWdgt extends Widget
     @fullChanged()
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 

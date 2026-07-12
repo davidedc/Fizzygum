@@ -88,5 +88,5 @@ class ColorPickerWdgt extends Widget
     @fullChanged()
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 

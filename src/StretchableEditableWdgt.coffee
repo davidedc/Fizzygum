@@ -40,7 +40,7 @@ class StretchableEditableWdgt extends Widget
   smartPlace: (widgetToBePlaced, creator) ->
     widgetToBePlaced._applyMoveTo @stretchableWidgetContainer.center().round().subtract widgetToBePlaced.extent().floorDivideBy 2
     @stretchableWidgetContainer.add widgetToBePlaced
-    widgetToBePlaced.rememberFractionalSituationInHoldingPanel()
+    widgetToBePlaced._rememberFractionalSituationInHoldingPanel()
     @stretchableWidgetContainer.bringToForeground()
     creator.bringToForeground()
 
@@ -50,9 +50,16 @@ class StretchableEditableWdgt extends Widget
   # _buildAndConnectChildrenNoSettle), so there is no public createToolsPanel to self-settle.
   _createToolsPanelNoSettle: ->
 
-  createNewStretchablePanel: ->
+  # NON-settling core (rule [S] convert, public/private call-separation plan T2): both callers are
+  # settle-neutral private code (_buildAndConnectChildrenNoSettle runs inside the ctor's one settle;
+  # _reactToChildPickedUp is a settle-neutral callback whose dispatcher owns the settle), so the old
+  # public @add-and-self-settle shape was a one-hop [G] evasion — _addNoSettle + the callers'
+  # _invalidateLayout carry the same semantics without opening a second flush.
+  # (The Dashboards/PatchProgramming/SimpleSlide overrides were byte-identical copies of this body
+  # and were DELETED in the same convert; ReconfigurablePaintWdgt keeps its genuinely different one.)
+  _createNewStretchablePanelNoSettle: ->
     @stretchableWidgetContainer = new StretchableWidgetContainerWdgt
-    @add @stretchableWidgetContainer
+    @_addNoSettle @stretchableWidgetContainer
 
 
   # Lays out the (optional) tools panel and the stretchable container. ONE shared body: the
@@ -105,7 +112,7 @@ class StretchableEditableWdgt extends Widget
     world.maybeEnableTrackChanges()
     @fullChanged()
 
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 
   _applyExtent: (aPoint) ->
     super
@@ -131,7 +138,7 @@ class StretchableEditableWdgt extends Widget
     else
       @enableDragsDropsAndEditing @
 
-  constrainToRatio: ->
+  _constrainToRatio: ->
     if @layoutSpecDetails?
       @layoutSpecDetails.canSetHeightFreely = false
       # force a resize, so the slide and the window
@@ -209,22 +216,21 @@ class StretchableEditableWdgt extends Widget
     @_invalidateLayout()
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  # createNewStretchablePanel does a public @add on the ORPHAN (defers in-flush) and _createToolsPanelNoSettle
-  # is a non-settling core; both are flushed once here. createNewStretchablePanel stays self-settling when
-  # called post-construction (from _reactToChildPickedUp on the attached widget).
+  # Cores call cores: _createNewStretchablePanelNoSettle + _createToolsPanelNoSettle are both
+  # non-settling, flushed once here.
   _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
 
-    @createNewStretchablePanel()
+    @_createNewStretchablePanelNoSettle()
     @_createToolsPanelNoSettle()
 
     @_invalidateLayout()
 
   _reactToChildPickedUp: (_reactToChildPickedUp) ->
     if _reactToChildPickedUp == @stretchableWidgetContainer
-      @createNewStretchablePanel()
+      @_createNewStretchablePanelNoSettle()
       @_invalidateLayout()
 
   # same as simpledocumentscrollpanel, you can lock the contents.

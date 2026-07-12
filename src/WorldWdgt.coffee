@@ -26,7 +26,7 @@ class WorldWdgt extends PanelWdgt
   # to the canvas and reaches the currently
   # blinking caret if there is one.
   # See below for the other potential
-  # handler. See "initVirtualKeyboard"
+  # handler. See "_initVirtualKeyboard"
   # method to see where and when this input and
   # these handlers are set up.
   keydownBrowserEventListener: nil
@@ -70,7 +70,7 @@ class WorldWdgt extends PanelWdgt
   @dateOfPreviousCycleStart: nil
   @dateOfCurrentCycleStart: nil
 
-  # The .time of the input event currently being dispatched by playQueuedEvents
+  # The .time of the input event currently being dispatched by _playQueuedEvents
   # (a deterministic scheduled ms for macro playback; a real ms for browser users).
   # Exposed so event handlers can reason in EVENT time rather than wall-clock time —
   # used by the hand's multi-click recognition to forget a stale double/triple-click
@@ -433,7 +433,7 @@ class WorldWdgt extends PanelWdgt
     if @automaticallyAdjustToFillEntireBrowserAlsoOnResize and @isIndexPage
       @stretchWorldToFillEntirePage()
     else
-      @sizeCanvasToTestScreenResolution()
+      @_sizeCanvasToTestScreenResolution()
 
     # @worldCanvas.width and height here are in physical pixels
     # so we want to bring them back to logical pixels
@@ -536,7 +536,7 @@ class WorldWdgt extends PanelWdgt
   colloquialName: ->
     "Desktop"
 
-  makePrettier: ->
+  _makePrettier: ->
     WorldWdgt.preferencesAndSettings.menuFontSize = 14
     WorldWdgt.preferencesAndSettings.menuHeaderFontSize = 13
     WorldWdgt.preferencesAndSettings.menuHeaderColor = Color.create 125, 125, 125
@@ -583,7 +583,7 @@ class WorldWdgt extends PanelWdgt
 
   createDesktop: ->
     @setColor Color.create 244,243,244
-    @makePrettier()
+    @_makePrettier()
 
     acm = new AnalogClockWdgt
     acm._applyExtent new Point 80, 80
@@ -777,7 +777,7 @@ class WorldWdgt extends PanelWdgt
     # A coverer owns every pixel of dirtyPart. Preserve the world's OWN paint-record bookkeeping even
     # though its self-paint is bypassed -- the world can itself be a brokenWidget (e.g. wallpaper
     # change), see occlusion-culling-plan.md §1b(b).
-    @recordDrawnAreaForNextBrokenRects()
+    @_recordDrawnAreaForNextBrokenRects()
     # paint the coverer and everything in front of it, narrowed to dirtyPart (byte-identical child
     # trajectory to the mixin's own children loop, which narrows to the same rect)
     for i in [covererIndex ... @children.length]
@@ -805,7 +805,7 @@ class WorldWdgt extends PanelWdgt
   SLOWclipThrough: ->
     return @boundingBox()
 
-  pushBrokenRect: (brokenWidget, theRect, isSrc) ->
+  _pushBrokenRect: (brokenWidget, theRect, isSrc) ->
     if @duplicatedBrokenRectsTracker[theRect.toString()]?
       @numberOfDuplicatedBrokenRects++
     else
@@ -818,20 +818,20 @@ class WorldWdgt extends PanelWdgt
       @broken.push theRect
     @duplicatedBrokenRectsTracker[theRect.toString()] = true
 
-  # two live call sites (fleshOutBroken / fleshOutFullBroken), but Chrome's code-coverage
+  # two live call sites (_fleshOutBroken / fleshOutFullBroken), but Chrome's code-coverage
   # tool showed it never firing at runtime
   # TODO investigate and see whether this is needed
-  mergeBrokenRectsIfCloseOrPushBoth: (brokenWidget, sourceBroken, destinationBroken) ->
+  _mergeBrokenRectsIfCloseOrPushBoth: (brokenWidget, sourceBroken, destinationBroken) ->
     mergedBrokenRect = sourceBroken.merge destinationBroken
     mergedBrokenRectArea = mergedBrokenRect.area()
     sumArea = sourceBroken.area() + destinationBroken.area()
     #console.log "mergedBrokenRectArea: " + mergedBrokenRectArea + " (sumArea + sumArea/10): " + (sumArea + sumArea/10)
     if mergedBrokenRectArea < sumArea + sumArea/10
-      @pushBrokenRect brokenWidget, mergedBrokenRect, true
+      @_pushBrokenRect brokenWidget, mergedBrokenRect, true
       @numberOfMergedSourceAndDestination++
     else
-      @pushBrokenRect brokenWidget, sourceBroken, true
-      @pushBrokenRect brokenWidget, destinationBroken, false
+      @_pushBrokenRect brokenWidget, sourceBroken, true
+      @_pushBrokenRect brokenWidget, destinationBroken, false
 
 
   checkARectWithHierarchy: (aRect, brokenWidget, isSrc) ->
@@ -894,7 +894,7 @@ class WorldWdgt extends PanelWdgt
       brokenWidget.dstBrokenRect = nil
 
 
-  fleshOutBroken: ->
+  _fleshOutBroken: ->
     sourceBroken = nil
     destinationBroken = nil
 
@@ -908,13 +908,13 @@ class WorldWdgt extends PanelWdgt
       if brokenWidget.clippedBoundsWhenLastPainted?
         if brokenWidget.clippedBoundsWhenLastPainted.isNotEmpty()
           # affine transforms (§4.5): clippedBoundsWhenLastPainted is ALREADY the screen-plane footprint
-          # (recordDrawnAreaForNextBrokenRects mapped it at paint time, while the widget was still attached),
+          # (_recordDrawnAreaForNextBrokenRects mapped it at paint time, while the widget was still attached),
           # so a widget detached between paint and flush (close/destroy) still erases its true rotated
           # footprint. Off any island the recorded rect is the raw rect ⇒ byte-identical dormant.
           sourceBroken = brokenWidget.clippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
 
       # §4.4 island buffer cache — source (old-position) lane (see fleshOutFullBroken). Consumed by
-      # whichever lane runs first (fleshOutFullBroken is called before fleshOutBroken); the field is
+      # whichever lane runs first (fleshOutFullBroken is called before _fleshOutBroken); the field is
       # nil'd on consumption so this second lane is a no-op when the full lane already handled it.
       if brokenWidget._islandBufferSourceIsland?
         brokenWidget._islandBufferSourceIsland._depositIslandBufferDirtyRect brokenWidget._islandBufferSourceVirtualRect
@@ -939,12 +939,12 @@ class WorldWdgt extends PanelWdgt
           destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged, true).spread().expandBy(1).growBy @maxShadowSize
 
       if sourceBroken? and destinationBroken?
-        @mergeBrokenRectsIfCloseOrPushBoth brokenWidget, sourceBroken, destinationBroken
+        @_mergeBrokenRectsIfCloseOrPushBoth brokenWidget, sourceBroken, destinationBroken
       else if sourceBroken? or destinationBroken?
         if sourceBroken?
-          @pushBrokenRect brokenWidget, sourceBroken, true
+          @_pushBrokenRect brokenWidget, sourceBroken, true
         else
-          @pushBrokenRect brokenWidget, destinationBroken, true
+          @_pushBrokenRect brokenWidget, destinationBroken, true
 
       brokenWidget.paintBoundsMaybeChanged = false
       brokenWidget.clippedBoundsWhenLastPainted = nil
@@ -968,7 +968,7 @@ class WorldWdgt extends PanelWdgt
 
       # §4.4 island buffer cache — source (old-position) lane: erase the vacated buffer region of a
       # widget that MOVED within (or was removed from) its stationary island. The stashed island stays
-      # alive even when the widget detached, so removal is ghost-free (recordDrawnAreaForNextBrokenRects).
+      # alive even when the widget detached, so removal is ghost-free (_recordDrawnAreaForNextBrokenRects).
       if brokenWidget._islandBufferSourceIsland?
         brokenWidget._islandBufferSourceIsland._depositIslandBufferDirtyRect brokenWidget._islandBufferSourceVirtualRect
         brokenWidget._islandBufferSourceIsland = nil
@@ -987,12 +987,12 @@ class WorldWdgt extends PanelWdgt
           destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged, true).spread().expandBy(1).growBy @maxShadowSize
 
       if sourceBroken? and destinationBroken?
-        @mergeBrokenRectsIfCloseOrPushBoth brokenWidget, sourceBroken, destinationBroken
+        @_mergeBrokenRectsIfCloseOrPushBoth brokenWidget, sourceBroken, destinationBroken
       else if sourceBroken? or destinationBroken?
         if sourceBroken?
-          @pushBrokenRect brokenWidget, sourceBroken, true
+          @_pushBrokenRect brokenWidget, sourceBroken, true
         else
-          @pushBrokenRect brokenWidget, destinationBroken, true
+          @_pushBrokenRect brokenWidget, destinationBroken, true
 
       brokenWidget.fullPaintBoundsMaybeChanged = false
       brokenWidget.fullClippedBoundsWhenLastPainted = nil
@@ -1154,12 +1154,12 @@ class WorldWdgt extends PanelWdgt
         # block must do the ABSOLUTE MINIMUM and stay strictly non-flushing / non-invalidating:
         #   - createErrorConsole uses public, self-flushing setters -> it would re-enter
         #     recalculateLayouts and throw BEFORE @errorConsole is assigned (masking the real error);
-        #   - even softResetWorld is unsafe here (its hand.drop -> target.add can flush too).
-        # And because the throwing _reLayout() never reached its trailing markLayoutAsFixed(),
+        #   - even _softResetWorld is unsafe here (its hand.drop -> target.add can flush too).
+        # And because the throwing _reLayout() never reached its trailing _markLayoutAsFixed(),
         # tryThisWidget is still layoutIsValid==false, so unless we settle it here this until-loop
         # would spin forever. So: settle + ban the offender (both layout-clean), then defer the
         # softReset + reporting to the next cycle's drain, outside the flush. (task #18)
-        tryThisWidget.markLayoutAsFixed()   # it threw before doing this itself; do it now so the loop converges
+        tryThisWidget._markLayoutAsFixed()   # it threw before doing this itself; do it now so the loop converges
         tryThisWidget.__hide()          # ban from paint -- silent: nils caches only, no _invalidateLayout/flush
         @layoutErrorsToReport.push err
 
@@ -1186,7 +1186,7 @@ class WorldWdgt extends PanelWdgt
     @numberOfMergedSourceAndDestination = 0
 
     @fleshOutFullBroken()
-    @fleshOutBroken()
+    @_fleshOutBroken()
     @rectAlreadyIncludedInParentBrokenWidget()
     @cleanupSrcAndDestRectsOfWidgets()
 
@@ -1220,9 +1220,9 @@ class WorldWdgt extends PanelWdgt
           @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvasContext, rect
         catch err
           @resetWorldCanvasContext()
-          @queueErrorForLaterReporting err
-          @hideOffendingWidget()
-          @softResetWorld()
+          @_queueErrorForLaterReporting err
+          @_hideOffendingWidget()
+          @_softResetWorld()
 
     # IF we got errors while repainting, the
     # screen might be in a bad state (because everything in front of the
@@ -1233,7 +1233,7 @@ class WorldWdgt extends PanelWdgt
     # (i.e. the offending widgets are progressively hidden so eventually
     # we should repaint the whole screen without errors, hopefully)
     if @errorsWhileRepainting.length != 0
-      @findOutAllOtherOffendingWidgetsAndPaintWholeScreen()
+      @_findOutAllOtherOffendingWidgetsAndPaintWholeScreen()
 
     if @showRedraws
       @showBrokenRects @worldCanvasContext
@@ -1244,7 +1244,7 @@ class WorldWdgt extends PanelWdgt
     if @domBlitContext? and @broken.length != 0
       @blitRenderCanvasToDOM()
 
-    @resetDataStructuresForBrokenRects()
+    @_resetDataStructuresForBrokenRects()
 
     @healingRectanglesPhase = false
 
@@ -1278,7 +1278,7 @@ class WorldWdgt extends PanelWdgt
   # SWCanvas backend only: keep the software render canvas the same physical size
   # as the DOM world canvas after a resize. Setting the size recreates the
   # SWCanvas surface (which resets textPixelDensity), so re-apply it.
-  syncRenderCanvasToWorldCanvas: ->
+  _syncRenderCanvasToWorldCanvas: ->
     return unless @worldRenderCanvas? and @worldRenderCanvas isnt @worldCanvas
     @worldRenderCanvas.width = @worldCanvas.width
     @worldRenderCanvas.height = @worldCanvas.height
@@ -1294,7 +1294,7 @@ class WorldWdgt extends PanelWdgt
     else
       false
 
-  findOutAllOtherOffendingWidgetsAndPaintWholeScreen: ->
+  _findOutAllOtherOffendingWidgetsAndPaintWholeScreen: ->
     # we keep repainting the whole screen until there are no
     # errors.
     # Why do we need multiple repaints and not just one?
@@ -1311,12 +1311,14 @@ class WorldWdgt extends PanelWdgt
     until previousErrorsCount == currentErrorsCount
       numberOfTotalRepaints++
       try
+        # public-call-sanctioned: fullPaintIntoAreaOrBlitFromBackBuffer is the public paint-pipeline
+        # verb (externally driven); this error-recovery loop consciously re-drives the world repaint.
         @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvasContext, @bounds
       catch err
         @resetWorldCanvasContext()
-        @queueErrorForLaterReporting err
-        @hideOffendingWidget()
-        @softResetWorld()
+        @_queueErrorForLaterReporting err
+        @_hideOffendingWidget()
+        @_softResetWorld()
 
       previousErrorsCount = currentErrorsCount
       currentErrorsCount = @errorsWhileRepainting.length
@@ -1337,7 +1339,7 @@ class WorldWdgt extends PanelWdgt
     for j in [1...2000]
       @worldCanvasContext.restore()
 
-  queueErrorForLaterReporting: (err) ->
+  _queueErrorForLaterReporting: (err) ->
     # now record the error so we can report it in the
     # next cycle, and add the offending widget to a
     # "banned" list
@@ -1346,12 +1348,12 @@ class WorldWdgt extends PanelWdgt
       @widgetsGivingErrorWhileRepainting.push @paintingWidget
       @paintingWidget.__hide()
 
-  hideOffendingWidget: ->
+  _hideOffendingWidget: ->
     if !@widgetsGivingErrorWhileRepainting.includes @paintingWidget
       @widgetsGivingErrorWhileRepainting.push @paintingWidget
       @paintingWidget.__hide()
 
-  resetDataStructuresForBrokenRects: ->
+  _resetDataStructuresForBrokenRects: ->
     @broken = []
     @duplicatedBrokenRectsTracker = {}
     @numberOfDuplicatedBrokenRects = 0
@@ -1487,7 +1489,7 @@ class WorldWdgt extends PanelWdgt
   # this part is only needed for VideoPlayer <<«
 
 
-  playQueuedEvents: ->
+  _playQueuedEvents: ->
     try
 
       timeOfCurrentCycleStart = WorldWdgt.dateOfCurrentCycleStart.getTime()
@@ -1513,7 +1515,10 @@ class WorldWdgt extends PanelWdgt
         event.processEvent()
 
     catch err
-      @softResetWorld()
+      # public-call-sanctioned: createErrorConsole stays public (its body drives the public
+      # setExtent/moveTo/add — rule [A] forbids the _-form); this discrete error-recovery path
+      # consciously pops it outside any pass.
+      @_softResetWorld()
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError err
 
@@ -1531,7 +1536,9 @@ class WorldWdgt extends PanelWdgt
       resolvingFunction = window.framePacedPromises.shift()
       resolvingFunction.call()
 
-  showErrorsHappenedInRepaintingStepInPreviousCycle: ->
+  _showErrorsHappenedInRepaintingStepInPreviousCycle: ->
+    # public-call-sanctioned: createErrorConsole stays public ([A] forbids the _-form — see its
+    # public-api-allowlist entry); this discrete error-report path consciously pops it.
     for eachErr in @errorsWhileRepainting
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError eachErr
@@ -1539,24 +1546,26 @@ class WorldWdgt extends PanelWdgt
   # Drains layout errors stashed during the previous cycle's recalculateLayouts flush (see the
   # catch in _recalculateLayoutsBody). Runs at cycle start, OUTSIDE the flush, so building the
   # error console via the public setters is safe here. (task #18)
-  showLayoutErrorsFromPreviousCycle: ->
+  _showLayoutErrorsFromPreviousCycle: ->
     if @layoutErrorsToReport.length == 0 then return
     errorsToShow = @layoutErrorsToReport
     @layoutErrorsToReport = []
     # We run at cycle start, OUTSIDE the recalculateLayouts flush, so the operations that were
-    # unsafe in the catch are safe here: softResetWorld (its hand.drop -> add may flush) and
+    # unsafe in the catch are safe here: _softResetWorld (its hand.drop -> add may flush) and
     # createErrorConsole (public setters). This is the deferred tail of that catch. (task #18)
-    @softResetWorld()
+    @_softResetWorld()
     for eachErr in errorsToShow
       # Loud in the browser console too -- not only in the in-world error console. A _reLayout()
       # that throws is a real bug, and CI / the smoke-apps app-launch gate key off console.error;
       # without this a broken app would no longer freeze (good) but would also go undetected (bad).
+      # public-call-sanctioned: createErrorConsole stays public ([A] forbids the _-form); discrete
+      # error-report path, consciously popped.
       console.error "LAYOUT_ERROR: a _reLayout() threw during recalculateLayouts: " + (eachErr?.stack ? eachErr)
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError eachErr
 
 
-  updateTimeReferences: ->
+  _updateTimeReferences: ->
     WorldWdgt.dateOfCurrentCycleStart = new Date
     if !WorldWdgt.dateOfPreviousCycleStart?
       WorldWdgt.dateOfPreviousCycleStart = new Date WorldWdgt.dateOfCurrentCycleStart.getTime() - 30
@@ -1569,16 +1578,16 @@ class WorldWdgt extends PanelWdgt
     # this part is only needed for Macros <<«
 
   doOneCycle: ->
-    @updateTimeReferences()
+    @_updateTimeReferences()
 
-    @showErrorsHappenedInRepaintingStepInPreviousCycle()
-    @showLayoutErrorsFromPreviousCycle()
+    @_showErrorsHappenedInRepaintingStepInPreviousCycle()
+    @_showLayoutErrorsFromPreviousCycle()
 
     # »>> this part is only needed for Macros
     @macroToolkit?.progressOnMacroSteps()
     # this part is only needed for Macros <<«
 
-    @playQueuedEvents()
+    @_playQueuedEvents()
 
     # replays test actions at the right time
     if AutomatorPlayer? and Automator.state == Automator.PLAYING
@@ -1590,7 +1599,7 @@ class WorldWdgt extends PanelWdgt
     # used to load fizzygum sources progressively
     @progressFramePacedActions()
     
-    @runChildrensStepFunction()
+    @_runChildrensStepFunction()
     # Drain the dataflow engine's stale pool (spec docs/specs/dataflow-engine-spec.md §4.1). Two
     # deliberately-parallel drain stations sit here: recalculateDataflow settles VALUES,
     # recalculateLayouts settles GEOMETRY. Placed AFTER stepping so this frame's time-source ticks
@@ -1636,7 +1645,7 @@ class WorldWdgt extends PanelWdgt
     WorldWdgt.dateOfCurrentCycleStart = nil
 
   # Widget stepping:
-  runChildrensStepFunction: ->
+  _runChildrensStepFunction: ->
 
 
     # note that a widget can remove itself while stepping using the
@@ -1671,7 +1680,7 @@ class WorldWdgt extends PanelWdgt
       
       # when the firing time comes (or as soon as it's past):
       if millisecondsRemainingToWaitedFrame <= 0
-        @stepWidget eachSteppingWidget
+        @_stepWidget eachSteppingWidget
 
         # Increment "lastTime" by millisBetweenSteps. Two notes:
         # 1) We don't just set it to timeOfCurrentCycleStart so that there is no drifting
@@ -1699,7 +1708,7 @@ class WorldWdgt extends PanelWdgt
 
 
 
-  stepWidget: (whichWidget) ->
+  _stepWidget: (whichWidget) ->
     if whichWidget.onNextStep
       nxt = whichWidget.onNextStep
       whichWidget.onNextStep = nil
@@ -1710,7 +1719,10 @@ class WorldWdgt extends PanelWdgt
       whichWidget.step()
       #console.log "stepping " + whichWidget
     catch err
-      @softResetWorld()
+      # public-call-sanctioned: createErrorConsole stays public (its body drives the public
+      # setExtent/moveTo/add — rule [A] forbids the _-form); this discrete error-recovery path
+      # consciously pops it outside any pass.
+      @_softResetWorld()
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError err
 
@@ -1721,13 +1733,13 @@ class WorldWdgt extends PanelWdgt
       task()
 
   # »>> this part is excluded from the fizzygum homepage build
-  sizeCanvasToTestScreenResolution: ->
+  _sizeCanvasToTestScreenResolution: ->
     @worldCanvas.width = Math.round(960 * ceilPixelRatio)
     @worldCanvas.height = Math.round(440 * ceilPixelRatio)
     @worldCanvas.style.width = "960px"
     @worldCanvas.style.height = "440px"
     @invalidateCanvasPositionCache()
-    @syncRenderCanvasToWorldCanvas()
+    @_syncRenderCanvasToWorldCanvas()
 
     bkground = document.getElementById("background")
     bkground.style.width = "960px"
@@ -1760,7 +1772,7 @@ class WorldWdgt extends PanelWdgt
       @worldCanvas.style.width = clientWidth + "px"
       @worldCanvas.height = (clientHeight * ceilPixelRatio)
       @worldCanvas.style.height = clientHeight + "px"
-      @syncRenderCanvasToWorldCanvas()
+      @_syncRenderCanvasToWorldCanvas()
       @_applyExtent new Point clientWidth, clientHeight
       @_reLayoutDesktop()
     # the canvas may have been repositioned (style.left/top above) and/or resized —
@@ -1802,7 +1814,7 @@ class WorldWdgt extends PanelWdgt
   # WorldWdgt events:
 
   # »>> this part is excluded from the fizzygum homepage build
-  initVirtualKeyboard: ->
+  _initVirtualKeyboard: ->
     if @inputDOMElementForVirtualKeyboard
       document.body.removeChild @inputDOMElementForVirtualKeyboard
       @inputDOMElementForVirtualKeyboard = nil
@@ -1861,7 +1873,7 @@ class WorldWdgt extends PanelWdgt
   # -----------------------------------------------------
 
 
-  initMouseEventListeners: ->
+  _initMouseEventListeners: ->
     canvas = @worldCanvas
     # there is indeed a "dblclick" JS event
     # but we reproduce it internally.
@@ -1899,7 +1911,7 @@ class WorldWdgt extends PanelWdgt
 
     canvas.addEventListener "mousemove", @mousemoveBrowserEventListener, false
 
-  initTouchEventListeners: ->
+  _initTouchEventListeners: ->
     canvas = @worldCanvas
     
     @touchstartBrowserEventListener = (event) =>
@@ -1933,7 +1945,7 @@ class WorldWdgt extends PanelWdgt
     canvas.addEventListener "gesturechange", @gesturechangeBrowserEventListener, false
 
 
-  initKeyboardEventListeners: ->
+  _initKeyboardEventListeners: ->
     canvas = @worldCanvas
     @keydownBrowserEventListener = (event) =>
       @inputEventsQueue.push KeydownInputEvent.fromBrowserEvent event
@@ -1990,7 +2002,7 @@ class WorldWdgt extends PanelWdgt
 
     canvas.addEventListener "keypress", @keypressBrowserEventListener, false
 
-  initClipboardEventListeners: ->
+  _initClipboardEventListeners: ->
     # snippets of clipboard-handling code taken from
     # http://codebits.glennjones.net/editing/setclipboarddata.htm
     # Note that this works only in Chrome. Firefox and Safari need a piece of
@@ -2030,7 +2042,7 @@ class WorldWdgt extends PanelWdgt
 
     document.body.addEventListener "paste", @pasteBrowserEventListener, false
 
-  initOtherMiscEventListeners: ->
+  _initOtherMiscEventListeners: ->
     canvas = @worldCanvas
 
     @contextmenuEventListener = (event) ->
@@ -2085,11 +2097,11 @@ class WorldWdgt extends PanelWdgt
   # note that we don't register the normal click,
   # we figure that out independently.
   initEventListeners: ->
-    @initMouseEventListeners()
-    @initTouchEventListeners()
-    @initKeyboardEventListeners()
-    @initClipboardEventListeners()
-    @initOtherMiscEventListeners()
+    @_initMouseEventListeners()
+    @_initTouchEventListeners()
+    @_initKeyboardEventListeners()
+    @_initClipboardEventListeners()
+    @_initOtherMiscEventListeners()
 
   # »>> this part is excluded from the fizzygum homepage build
   removeEventListeners: ->
@@ -2153,7 +2165,9 @@ class WorldWdgt extends PanelWdgt
   # be messy, for example the pointer might be
   # dragging an invisible widget, etc.
   # So, try to clean-up things as much as possible.
-  softResetWorld: ->
+  _softResetWorld: ->
+    # nosettle-sanctioned: error-recovery reset, reached only from the catch paths outside any
+    # settle/pass — the hand's public self-settling drop() is exactly what a cleanup wants here.
     @hand.drop()
     @hand.mouseOverList.clear()
     @hand.nonFloatDraggedWdgt = nil
@@ -2164,13 +2178,13 @@ class WorldWdgt extends PanelWdgt
   # resetWorld self-settles like any public API method: it is a SEQUENCE of two self-settling
   # operations (each flushes once -- _settleLayoutsAfter's doc blesses sequential setters), and
   # the geometry teardown lives in _resetWorldNoSettle so an internal caller already inside a settle can
-  # reach it without re-entering the flush. softResetWorld stays OUTSIDE the settle on purpose: its
+  # reach it without re-entering the flush. _softResetWorld stays OUTSIDE the settle on purpose: its
   # @hand.drop() does a real re-parenting drop (target.add, which self-flushes), so running it inside
   # the settle below would re-enter recalculateLayouts and throw the flow-violation (see ~:930).
   # thin-wrap-exempt: softReset (its hand.drop self-flushes) must precede the settle, so this is a
   # two-statement sequence, not the bare @_settleLayoutsAfter => @_resetWorldNoSettle wrap (see above).
   resetWorld: ->
-    @softResetWorld()
+    @_softResetWorld()
     @_settleLayoutsAfter => @_resetWorldNoSettle()
 
   _resetWorldNoSettle: ->
@@ -2197,6 +2211,8 @@ class WorldWdgt extends PanelWdgt
     @basementWdgt?.empty()
     # some tests might change the background
     # color of the world so let's reset it.
+    # public-call-sanctioned: setColor is the polymorphic public color API (heavily driven by
+    # macros/user code); the world reset runs outside any pass, so the react inside is harmless.
     @setColor Color.create 205, 205, 205
     # make sure thw window is scrolled to top
     # so we can see the test results while tests
@@ -2557,7 +2573,7 @@ class WorldWdgt extends PanelWdgt
     @keyboardEventsReceivers.add @caret
 
     if WorldWdgt.preferencesAndSettings.isTouchDevice and WorldWdgt.preferencesAndSettings.useVirtualKeyboard
-      @initVirtualKeyboard()
+      @_initVirtualKeyboard()
       # For touch devices, giving focus on the textbox causes
       # the keyboard to slide up, and since the page viewport
       # shrinks, the page is scrolled to where the texbox is.

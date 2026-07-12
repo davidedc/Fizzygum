@@ -259,7 +259,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     false
 
   # Re-title the (content-less) window through the NON-settling label core (hence the NoSettle
-  # name): reached either during construction (orphan -> deferred) or from resetToDefaultContents
+  # name): reached either during construction (orphan -> deferred) or from _resetToDefaultContents
   # inside a close/destroy settle, so the enclosing settle flushes it -- a self-settling setText
   # would open a nested settle mid-pass. (The label is FIT_TEXT_TO_BOX, so the text swap changes
   # no geometry anyway; @changed() in the core repaints it.)
@@ -330,19 +330,19 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       super aWdgt, position, LayoutSpec.ATTACHEDAS_WINDOW_CONTENT, beingDropped
     else
       super aWdgt, position, layoutSpec, beingDropped
-    @resizer?.moveInFrontOfSiblings()
+    @resizer?._moveInFrontOfSiblings()
 
   _beforeChildDestroyed: (child) ->
     if child == @contents
-      @resetToDefaultContents()
+      @_resetToDefaultContents()
 
   _beforeChildPickedUp: (child) ->
     if child == @contents
-      @resetToDefaultContents()
+      @_resetToDefaultContents()
 
   _beforeChildClosed: (child) ->
     if child == @contents
-      @resetToDefaultContents()
+      @_resetToDefaultContents()
 
   _beforeChildCollapsed: (child) ->
     if child == @contents
@@ -360,7 +360,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     if child == @contents
       @widthWhenCollapsed = @width()
 
-    @createAndAddEditButton()
+    @_createAndAddEditButton()
 
   _reactToChildCollapsed: (child) ->
     if child == @contents
@@ -381,11 +381,13 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # layout-apply-sanctioned: uncollapse re-fit, reInflating-coupled (must stay synchronous, residuals-audit fam 4)
       @_reLayoutChildren()
       @reInflating = false
-      @rememberFractionalSituationInHoldingPanel()
+      @_rememberFractionalSituationInHoldingPanel()
       @_invalidateLayout()   # (property sub-seam deletion) uniform climb replaces the property re-fit seam
       @parent.parent._invalidateLayout() if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()   # (proper-layouts) reach the scroll-panel grandparent; the window's bare climb is dropped at the non-tracking @contents PanelWdgt
 
-  resetToDefaultContents: ->
+  _resetToDefaultContents: ->
+    # public-call-sanctioned: enableDrops is the trivial public drop-acceptance setter (macros and
+    # cross-object code drive it) — settle-free, consciously reused here.
     @enableDrops()
     @contents = @defaultContents
     # Reached only from a child-lifecycle hook (_beforeChildDestroyed/PickedUp/Closed). Rebuild through
@@ -421,20 +423,22 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     super
     if whereTo isnt world?.hand
       @_deriveAndSetBodyAppearance()
-      @setAppearanceAndColorOfTitleBackground()
+      @_setAppearanceAndColorOfTitleBackground()
       @changed()
 
   _reactToChildDropped: (theWidget) ->
     @contents = theWidget
     super
+    # public-call-sanctioned: disableDrops is the trivial public drop-acceptance setter (macro-visible
+    # behaviour: an occupied window stops accepting drops) — settle-free, consciously reused here.
     @disableDrops()
     # _reactToChildDropped runs inside the drop's single settle, so rebuild through the NON-settling core
     # (not the public _buildAndConnectChildren wrapper, which would re-enter the flush guard) -- same
-    # as the resetToDefaultContents lifecycle path above.
+    # as the _resetToDefaultContents lifecycle path above.
     @_buildAndConnectChildrenNoSettle()
 
   # The window BODY appearance half of the internal/external skin (the title-bar half is
-  # setAppearanceAndColorOfTitleBackground): flat RectangularAppearance when nested (internal),
+  # _setAppearanceAndColorOfTitleBackground): flat RectangularAppearance when nested (internal),
   # boxy BoxyAppearance when free on the desktop (external). Derived from isInternal (parentage),
   # set at construction and re-derived on every re-parenting by _reactToBeingAdded.
   _deriveAndSetBodyAppearance: ->
@@ -443,7 +447,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       @appearance = new BoxyAppearance @
 
-  setAppearanceAndColorOfTitleBackground: ->
+  _setAppearanceAndColorOfTitleBackground: ->
     if @isInternal()
       @titlebarBackground.appearance = new RectangularAppearance @titlebarBackground
     else
@@ -457,7 +461,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @titlebarBackground.strokeColor = WorldWdgt.preferencesAndSettings.externalWindowBarStrokeColor
 
 
-  buildTitlebarBackground: ->
+  _buildTitlebarBackground: ->
     if @titlebarBackground?
       # tear down through the non-settling core: this runs inside _buildAndConnectChildren's settle, so
       # the public self-settling fullDestroy() would throw under the single-mutation tier. The enclosing
@@ -475,7 +479,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       @titlebarBackground = new BoxWdgt
 
-    @setAppearanceAndColorOfTitleBackground()
+    @_setAppearanceAndColorOfTitleBackground()
     @_addNoSettle @titlebarBackground, nil, nil, nil, true
   
   # ONE settle around the whole rebuild via the single-mutation tier (_settleLayoutsAfter). The
@@ -486,7 +490,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   #
   # This PUBLIC self-settler is only ever called STANDALONE (the constructor). Every rebuild path that
   # fires from inside an enclosing settle -- a child-lifecycle hook (_beforeChildDestroyed/Closed/PickedUp)
-  # -> resetToDefaultContents -> rebuild, or _reactToChildDropped inside the drop's settle -- goes through the
+  # -> _resetToDefaultContents -> rebuild, or _reactToChildDropped inside the drop's settle -- goes through the
   # non-settling @_buildAndConnectChildrenNoSettle directly, never this wrapper, so the wrapper never
   # re-enters a flush. The chrome the core constructs adds to ORPHANS, exempt from the flush-throw
   # (Widget._settleLayoutsAfter's orphan guard precedes the throw). (Phase 3b; window-rebuild follow-up.)
@@ -496,9 +500,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   _buildAndConnectChildrenNoSettle: ->
 
     if !@titlebarBackground?
-      @buildTitlebarBackground()
+      @_buildTitlebarBackground()
 
-    # label -- tear down through the non-settling core (inside the rebuild's settle; see buildTitlebarBackground)
+    # label -- tear down through the non-settling core (inside the rebuild's settle; see _buildTitlebarBackground)
     @label?._fullDestroyNoSettle()
     @label = new StringWdgt @labelContent, WorldWdgt.preferencesAndSettings.titleBarTextFontSize
 
@@ -527,13 +531,13 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @_addNoSettle @collapseUncollapseSwitchButton, nil, nil, nil, true
 
 
-    @createAndAddEditButton()
+    @_createAndAddEditButton()
 
     @_addNoSettle @contents
 
     if !@resizer?
       # Attach the resizer, then record it. @resizer stays nil DURING its own add so the
-      # `@resizer?.moveInFrontOfSiblings()` in _addNoSettle (above) is a no-op for the resizer
+      # `@resizer?._moveInFrontOfSiblings()` in _addNoSettle (above) is a no-op for the resizer
       # itself -- it only re-fronts the resizer when LATER content is added. (Byte-identical to the
       # old `@resizer = new HandleWdgt @`, whose in-constructor add also ran while @resizer was nil.)
       resizer = new HandleWdgt
@@ -561,7 +565,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @editButton?.setColor Color.create 245, 244, 245
       @editButton?.changed()
 
-  createAndAddEditButton: ->
+  _createAndAddEditButton: ->
+    # public-call-sanctioned: showEditModeInBar/showViewModeInBar are the window-bar mode PROTOCOL —
+    # content widgets drive them cross-object (`@parent?.showEditModeInBar?()`), so they stay public.
     if @contents?.providesAmenitiesForEditing and !@editButton?
       @editButton = new EditIconButtonWdgt @
       @_addNoSettle @editButton, nil, nil, nil, true
@@ -601,7 +607,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # so the old tag-only gate would skip init and this would deref an uninitialised/stack-typed spec.
       if @contents.layoutSpec != LayoutSpec.ATTACHEDAS_WINDOW_CONTENT or !(@contents.layoutSpecDetails instanceof WindowContentLayoutSpec)
         @contents.initialiseDefaultWindowContentLayoutSpec()
-        @contents.setLayoutSpec LayoutSpec.ATTACHEDAS_WINDOW_CONTENT
+        @contents._setLayoutSpec LayoutSpec.ATTACHEDAS_WINDOW_CONTENT
 
       if @contentNeverSetInPlaceYet
         # in this case the contents has just been added

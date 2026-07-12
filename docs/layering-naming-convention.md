@@ -110,6 +110,22 @@ marks the *property* "nothing downstream settles" and is twin-optional (a struct
 twin, e.g. `_addInPseudoRandomPositionNoSettle`). *(The `_settleLayoutsAfterBatch` nested-absorbing tier was deleted
 2026-07-01 — zero callers; reintroduce from git history if ever needed.)*
 
+**The TWO sanctioned settle-thunk shapes** (what may legitimately sit inside a `_settleLayoutsAfter` thunk —
+rationale recorded 2026-07-12 during the public/private call-separation arc, answering "why isn't the thunk
+always a `*NoSettle` core?"):
+1. **The public wrapper** — `foo: -> @_settleLayoutsAfter => @_fooNoSettle args`: a public mutation verb over its
+   OWN core; `check-thin-wraps.js` enforces this exact pairing whenever a `_<name>NoSettle` twin exists.
+2. **The dispatcher around a notification hook** — `@_settleLayoutsAfter => counterparty?._reactTo<Event>? @`:
+   a gesture/lifecycle DISPATCHER settling around a §3 callback. The hook is settle-neutral **by rule [J]**
+   (deliberately NOT `NoSettle`-suffixed — §3.2), so it plays the same role as a core inside the thunk; there is
+   no self-core to name because the callee is the counterparty's polymorphic hook. Confined to the re-parent
+   gestures — `ActivePointerWdgt.grab`/`.drop` (trailing `_reactToChildGrabbed`/drop re-fits) and `Widget.pickUp`
+   (`_reactToChildPickedUp`) — where the body is an inherent SEQUENCE of settles (grab hand-rolls its own), so a
+   `_<name>NoSettle` restructure is impossible without re-entering the flush guard. Fenced from three sides:
+   [J] (static), the notification-settle runtime audit (dynamic), and rule [T] (a subject that double-settles
+   on `@`-self). Anything not matching either shape is a smell — see `check-layering.js` [T] and
+   `check-call-separation.js` [S].
+
 **Sibling on the SETTLE axis — the reactive-connector lane** (`connection-cascade-settle-fix-plan.md`,
 2026-07-03): `_settleLayoutsAfterOrJoinEnclosingPass` is `_settleLayoutsAfter` minus the MUTATION-WINDOW throw —
 reached inside an enclosing settle's mutation window (`world._inLayoutMutation`) it JOINS it (runs the

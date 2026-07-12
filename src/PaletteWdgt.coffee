@@ -34,7 +34,7 @@ class PaletteWdgt extends Widget
   # no changes of position or extent should be performed in here. The cache
   # shell (key -> lookup -> allocate -> fill -> store) is shared; the subclass
   # paints the pixels via fillPaletteBuffer.
-  createRefreshOrGetBackBuffer: ->
+  _createRefreshOrGetBackBuffer: ->
     cacheKey =
       @constructor.name + "-" + @extent().toString()
 

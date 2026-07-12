@@ -48,11 +48,8 @@ class SaveShortcutPromptWdgt extends MenuWdgt
     # the text and applies width >= minTextWidth); _addNoSettle skips it, so run it explicitly.
     @tempPromptEntryField.calculateAndUpdateExtent()
 
-  _reLayoutSelf: ->
-    super()
-    @buildSubwidgets()
-
-  buildSubwidgets: ->
+  # (a vestigial `_reLayoutSelf: -> super(); @buildSubwidgets()` override with an EMPTY
+  # buildSubwidgets hook was deleted 2026-07-12, exactly as in PromptWdgt — see the note there.)
 
   _reactToBeingAdded: (whereTo, beingDropped) ->
   

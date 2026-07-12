@@ -112,13 +112,13 @@ class SliderButtonWdgt extends CircleBoxWdgt
       @color = @normalColor
       @changed()
 
-  setHiglightedColor: ->
+  _setHighlightedColor: ->
     if @state != @STATE_HIGHLIGHTED
       @state = @STATE_HIGHLIGHTED
       @color = @highlightColor
       @changed()
 
-  setNormalColor: ->
+  _setNormalColor: ->
     if @state != @STATE_NORMAL
       @state = @STATE_NORMAL
       @color = @normalColor
@@ -138,18 +138,18 @@ class SliderButtonWdgt extends CircleBoxWdgt
     # being set. So we also check for the "pressed" state.
     if @state == @STATE_PRESSED or world.hand.isThisPointerDraggingSomething()
       return
-    @setHiglightedColor()
+    @_setHighlightedColor()
   
   #SliderButtonWdgt events:
   mouseEnter: ->
     if world.hand.isThisPointerDraggingSomething()
       return
-    @setHiglightedColor()
+    @_setHighlightedColor()
   
   mouseLeave: ->
     if world.hand.isThisPointerDraggingSomething()
       return
-    @setNormalColor()
+    @_setNormalColor()
   
   mouseDownLeft: (pos) ->
     @bringToForeground()
@@ -157,5 +157,5 @@ class SliderButtonWdgt extends CircleBoxWdgt
 
   mouseClickLeft: ->
     @bringToForeground()
-    @setHiglightedColor()
+    @_setHighlightedColor()
   

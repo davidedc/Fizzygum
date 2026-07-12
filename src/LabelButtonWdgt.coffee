@@ -67,7 +67,7 @@ class LabelButtonWdgt extends ButtonWdgt
   # the default label: a self-sized single-line StringWdgt that does NOT resize
   # the button's box. Subclasses that need the box to hug the label (e.g.
   # MenuItemWdgt) override this.
-  createLabel: ->
+  _createLabel: ->
     @label = new StringWdgt(
       @labelString or "",
       @fontSize,
@@ -78,17 +78,17 @@ class LabelButtonWdgt extends ButtonWdgt
       false, # isNumeric
       @labelColor
     )
-    # _addNoSettle (NOT add): createLabel is driven by _reLayoutSelf (a layout pass), so a
+    # _addNoSettle (NOT add): _createLabel is driven by _reLayoutSelf (a layout pass), so a
     # self-settle here would re-enter the flush guard and throw.
     @_addNoSettle @label
     # the modern family does not self-size; make the label hug its text so
-    # _reLayoutSelf's centring math (which reads @label.extent()) works. createLabel is driven by
+    # _reLayoutSelf's centring math (which reads @label.extent()) works. _createLabel is driven by
     # _reLayoutSelf (a layout pass), so use the NoSettle core -- the wrapper would throw mid-pass.
     @label._sizeToTextAndDisableFittingNoSettle()
 
   _reLayoutSelf: ->
     if not @label?
-      @createLabel()
+      @_createLabel()
     if @centered
       @label._applyMoveTo @center().subtract @label.extent().floorDivideBy 2
 
@@ -104,7 +104,7 @@ class LabelButtonWdgt extends ButtonWdgt
 
   # »>> this part is excluded from the fizzygum homepage build
   # THIN public wrapper over the non-settling core (canonical self-settling form): recreate the label, then
-  # SELF-SETTLE (public tier, like setExtent/add) so the button's FULL re-layout -- createLabel + centre, via
+  # SELF-SETTLE (public tier, like setExtent/add) so the button's FULL re-layout -- _createLabel + centre, via
   # _reLayout -- runs synchronously and the world is consistent on return. This is the public label-setter
   # API; its one historical caller (FridgeMagnetsWdgt construction) now labels via the core directly, so the
   # wrapper has no in-tree caller and is intentionally dead-method-allowlisted (a runtime label change settles).
@@ -167,6 +167,8 @@ class LabelButtonWdgt extends ButtonWdgt
   # a copied label button usually wants to un-highlight itself (e.g. when you
   # duplicate by clicking a "duplicate" button INSIDE it).
   _reactToBeingCopied: ->
+    # public-call-sanctioned: mouseLeave is the public pointer-event PROTOCOL verb (dispatched by
+    # ActivePointerWdgt); reused to reset the copy's hover state — renaming it is not an option.
     @mouseLeave()
 
   mouseEnter: ->
@@ -184,7 +186,7 @@ class LabelButtonWdgt extends ButtonWdgt
     @changed()
     # replicate Widget.mouseDownLeft inline (bringToForeground + escalate) rather
     # than calling super: ButtonWdgt's HighlightableMixin mouseDownLeft would run
-    # updateColor, clobbering @color (our normal fill).
+    # _updateColor, clobbering @color (our normal fill).
     @bringToForeground()
     @escalateEvent "mouseDownLeft", pos
 

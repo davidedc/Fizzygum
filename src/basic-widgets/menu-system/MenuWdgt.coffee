@@ -46,8 +46,8 @@ class MenuWdgt extends PopUpWdgt
   _buildMenuLabelNoSettle: ->
     unless @isListContents
       if @title
-        # createLabel is shared with the label-REBUILD path (title changes) — reuse, don't inline
-        @createLabel()
+        # _createLabel is shared with the label-REBUILD path (title changes) — reuse, don't inline
+        @_createLabel()
         @_addNoSettle @label
 
   colloquialName: ->
@@ -76,7 +76,7 @@ class MenuWdgt extends PopUpWdgt
     item = @createLine height
     @__add item,nil,0
   
-  createLabel: ->
+  _createLabel: ->
     @label = new MenuHeader @title
 
   # Builds a MenuItemWdgt from a MenuItemSpec (the per-item fields) and this
@@ -184,6 +184,8 @@ class MenuWdgt extends PopUpWdgt
         y = @top()
     y += 1
 
+    # public-call-sanctioned: removeShadow is the public shadow API (the pop-up shadow policy also
+    # drives it) — this pass re-baselines the menu's shadow before re-laying out; pre-existing design.
     @removeShadow()
 
     # note that menus can contain:

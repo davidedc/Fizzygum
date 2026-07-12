@@ -171,7 +171,7 @@ class DiffingPatchNodeWdgt extends Widget
     @fullChanged()
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 
   # Simple Diff function
   # (C) Paul Butler 2008 <http://www.paulbutler.org/>

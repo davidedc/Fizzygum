@@ -5,7 +5,7 @@
 #
 # ── CADENCE: EVERY CYCLE ─────────────────────────────────────────────────────────────────────
 # fps:0 means the stepping loop's "run as fast as possible" branch fires step() EVERY doOneCycle
-# (WorldWdgt.runChildrensStepFunction) — no lastTime / synchronised bookkeeping is consulted for a
+# (WorldWdgt._runChildrensStepFunction) — no lastTime / synchronised bookkeeping is consulted for a
 # non-positive fps. step() marks SELF stale, so while a `frame` cell exists the drain runs every
 # frame and re-runs the frame-dependent subgraph. This is per-frame by design (spec §9.7); the
 # drain's empty-pool early return is simply not taken while such a cell lives, and deleting the last

@@ -45,10 +45,10 @@ class VideoPlayPauseToggle extends ToggleButtonWdgt
       if (!@timeWhenPlayPauseButtonWasLastClicked?) or (Date.now() - @timeWhenPlayPauseButtonWasLastClicked) > 250
         if @videoPlayerCanvas.video.paused
           # show the play button
-          @setToggleState 1
+          @_setToggleState 1
         else
           # show the pause button
-          @setToggleState 0
+          @_setToggleState 0
 
   # TODO this is a private method, should have an underscore
   pause: ->

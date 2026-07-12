@@ -19,7 +19,7 @@ HighlightableMixin =
       STATE_PRESSED: 2
 
 
-      updateColor: ->
+      _updateColor: ->
         @setColor switch @state
           when @STATE_NORMAL
             @color_normal
@@ -32,17 +32,17 @@ HighlightableMixin =
       
       mouseEnter: ->
         @state = @STATE_HIGHLIGHTED
-        @updateColor()
+        @_updateColor()
         @startCountdownForBubbleHelp? @toolTipMessage  if @toolTipMessage
       
       mouseLeave: ->
         @state = @STATE_NORMAL
-        @updateColor()
+        @_updateColor()
         world.destroyToolTips()  if @toolTipMessage
       
       mouseDownLeft: ->
         @state = @STATE_PRESSED
-        @updateColor()
+        @_updateColor()
 
         if !window[@[arguments.callee.name + "_class_injected_in"]]?
           debugger
@@ -51,4 +51,4 @@ HighlightableMixin =
 
       mouseUpLeft: ->
         @state = @STATE_NORMAL
-        @updateColor()
+        @_updateColor()

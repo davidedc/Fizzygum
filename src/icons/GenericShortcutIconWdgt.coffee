@@ -71,4 +71,4 @@ class GenericShortcutIconWdgt extends GenericCompositeIconWdgt
     @fullChanged()
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()

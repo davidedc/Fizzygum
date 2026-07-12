@@ -210,7 +210,7 @@ class SimpleDocumentWdgt extends Widget
     @fullChanged()
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 
   # same as simpledocumentscrollpanel, you can lock the contents.
   # worth factoring it out as a mixin?

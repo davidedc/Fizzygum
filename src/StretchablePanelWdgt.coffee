@@ -77,7 +77,7 @@ class StretchablePanelWdgt extends PanelWdgt
     @fullChanged()
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->

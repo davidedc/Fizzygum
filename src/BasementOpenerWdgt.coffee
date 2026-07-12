@@ -44,13 +44,13 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
       world.add windowedBasementWdgt
       windowedBasementWdgt._applyExtent new Point 460, 400
       windowedBasementWdgt._applyMoveTo new Point 140, 90
-      windowedBasementWdgt.rememberFractionalSituationInHoldingPanel()
+      windowedBasementWdgt._rememberFractionalSituationInHoldingPanel()
       BasementInfoWdgt.createNextTo windowedBasementWdgt
     else
       # if the basement is not an orphan, then it's
       # visible somewhere and it's in a window
       @target.parent.spawnNextTo @
-      @target.parent.rememberFractionalSituationInHoldingPanel()
+      @target.parent._rememberFractionalSituationInHoldingPanel()
 
 
   # Runs inside the drop's single settle, so add through the non-settling core.

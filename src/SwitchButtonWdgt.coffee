@@ -40,7 +40,7 @@ class SwitchButtonWdgt extends Widget
   # and you pick it up and you attach it somewhere else
   # it gets automatically unselected
   _reactToBeingAdded: (whereTo, beingDropped) ->
-    @resetSwitchButton()
+    @_resetSwitchButton()
 
   _reLayout: (newBoundsForThisLayout) ->
 
@@ -88,6 +88,6 @@ class SwitchButtonWdgt extends Widget
     # none of which is a widget
     @escalateEvent "mouseClickLeft", @
 
-  resetSwitchButton: ->
+  _resetSwitchButton: ->
     @buttonShown = 0
     @_invalidateLayout()

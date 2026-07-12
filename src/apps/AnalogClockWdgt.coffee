@@ -86,11 +86,11 @@ class AnalogClockWdgt extends Widget
       # immutable back buffer (see _getFaceBuffer) and blitted here in DEVICE space,
       # integer-aligned to the SAME al/at/sl/st as the background rect — so, with
       # SWCanvas's hard-edged (non-AA) rasterisation and integer widget positions, it
-      # lands byte-for-byte where the old in-renderingHelper tick strokes did. The ticks
+      # lands byte-for-byte where the old in-_renderingHelper tick strokes did. The ticks
       # are the BOTTOM layer (drawn first, under the hands); the dynamic hands and the
       # centre dot + outer arc that sit IN FRONT of the hands are still drawn live by
-      # renderingHelper, so the z-order is unchanged. globalAlpha matches the ticks' old
-      # alpha (renderingHelper uses appliedShadowAlpha * @alpha), and the blit works
+      # _renderingHelper, so the z-order is unchanged. globalAlpha matches the ticks' old
+      # alpha (_renderingHelper uses appliedShadowAlpha * @alpha), and the blit works
       # identically in the shadow pass — the caller has already translated the context
       # by the shadow offset, and drawImage rides that translate like any other draw.
       faceBuffer = @_getFaceBuffer()
@@ -104,7 +104,7 @@ class AnalogClockWdgt extends Widget
       widgetPosition = @position()
       aContext.translate widgetPosition.x, widgetPosition.y
 
-      @renderingHelper aContext, Color.WHITE, appliedShadow
+      @_renderingHelper aContext, Color.WHITE, appliedShadow
 
       aContext.restore()
 
@@ -119,7 +119,7 @@ class AnalogClockWdgt extends Widget
     @dateLastTicked = WorldWdgt.dateOfCurrentCycleStart
     @changed()
 
-  calculateHandsAngles: ->
+  _calculateHandsAngles: ->
 
     if Automator? and
      Automator.animationsPacingControl and
@@ -135,7 +135,7 @@ class AnalogClockWdgt extends Widget
     @minutesHandAngle = Math.PI / 30 * min + Math.PI / 1800 * sec
     @secondsHandAngle = sec * Math.PI / 30
 
-  renderingHelper: (context, color, appliedShadow) ->
+  _renderingHelper: (context, color, appliedShadow) ->
     height = @height()
     width = @width()
 
@@ -165,7 +165,7 @@ class AnalogClockWdgt extends Widget
 
     context.fillStyle = Color.BLACK.toString()
 
-    @calculateHandsAngles()
+    @_calculateHandsAngles()
 
     @drawHoursHand context, squareDim
     @drawMinutesHand context, squareDim
@@ -204,7 +204,7 @@ class AnalogClockWdgt extends Widget
 
   # Draws ONLY the hour + minute tick marks, in the clock's local logical space (buffer
   # origin = clock origin). This is exactly the tick portion that used to live at the
-  # top of renderingHelper — identical transform, stroke widths, caps and iteration
+  # top of _renderingHelper — identical transform, stroke widths, caps and iteration
   # order — so blitting the result is byte-identical to stroking them live. Drawn
   # pristine: globalAlpha 1, no shadow (opaque black on transparent); the clock's alpha
   # and any shadow are applied at blit time in paintIntoAreaOrBlitFromBackBuffer.

@@ -163,5 +163,5 @@ class ErrorsLogViewerWdgt extends Widget
 
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 

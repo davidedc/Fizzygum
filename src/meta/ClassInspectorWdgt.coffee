@@ -31,7 +31,7 @@ class ClassInspectorWdgt extends InspectorWdgt
     @showInheritedToggle._reLayout toggleBounds
 
 
-  buildAndConnectObjOwnPropsButton: ->
+  _buildAndConnectObjOwnPropsButton: ->
 
   # TODO: when inspecting objects, we added the functionality to
   # inject code in the objects themselves.

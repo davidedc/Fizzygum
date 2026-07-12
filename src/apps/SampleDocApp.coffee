@@ -35,9 +35,9 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
 
     plot3D = new WindowWdgt nil, nil, new Example3DPlotWdgt, true, true
     plot3D._applyExtent new Point 400, 255
-    # "constrainToRatio" makes it so the plot in the doc gets taller
+    # "_constrainToRatio" makes it so the plot in the doc gets taller
     # as the page is made wider
-    plot3D.contents.constrainToRatio()
+    plot3D.contents._constrainToRatio()
     sdspw.add plot3D
 
     sdspw.addSpacer()

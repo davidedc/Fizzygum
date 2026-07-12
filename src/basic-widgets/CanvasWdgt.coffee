@@ -27,7 +27,7 @@ class CanvasWdgt extends PanelWdgt
   # order of all the primitives and their
   # parameters. So if user wants a cache it will have to specify
   # a dedicated one in here. See textWidget for an example.
-  createRefreshOrGetBackBuffer: ->
+  _createRefreshOrGetBackBuffer: ->
 
     extent = @extent()
 
@@ -74,7 +74,7 @@ class CanvasWdgt extends PanelWdgt
 
 
   clear: (color = @color) ->
-    if !@backBuffer? then @createRefreshOrGetBackBuffer()
+    if !@backBuffer? then @_createRefreshOrGetBackBuffer()
     # @backBuffer.width and @backBuffer.height are already in
     # physical coordinates so no need to adjust for pixelratio
     backBufferExtent = new Point @backBuffer.width, @backBuffer.height
@@ -96,7 +96,7 @@ class CanvasWdgt extends PanelWdgt
 
   # TODO id: DRAW_LINE_SHOULD_BE_IN_TURTLE_NOT_IN_CANVAS date: 3-May-2023
   drawLine: (start, dest, lineWidth, color) ->
-    if !@backBuffer? then @createRefreshOrGetBackBuffer()
+    if !@backBuffer? then @_createRefreshOrGetBackBuffer()
 
     context = @backBufferContext
 

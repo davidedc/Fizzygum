@@ -867,6 +867,8 @@ class ScrollPanelWdgt extends PanelWdgt
       return
     @parent?.showEditModeInBar?()
 
+    # public-call-sanctioned: enableDrops is the trivial public drop-acceptance setter
+    # (macro/cross-object surface) — settle-free, consciously reused by this core.
     @enableDrops()
     @dragsDropsAndEditingEnabled = true
 
@@ -881,6 +883,7 @@ class ScrollPanelWdgt extends PanelWdgt
       return
     @parent?.showViewModeInBar?()
 
+    # public-call-sanctioned: disableDrops — see the enableDrops note in the enable core above.
     @disableDrops()
     @dragsDropsAndEditingEnabled = false
 

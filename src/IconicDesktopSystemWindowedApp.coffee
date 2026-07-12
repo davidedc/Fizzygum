@@ -61,7 +61,7 @@ class IconicDesktopSystemWindowedApp
         figure.bringToForeground()
         figure._applyMoveTo world.hand.position().add new Point 100, -50
         figure._moveWithin world
-        figure.rememberFractionalSituationInHoldingPanel()
+        figure._rememberFractionalSituationInHoldingPanel()
         return
       world[@slot] = @buildWindow()
     else

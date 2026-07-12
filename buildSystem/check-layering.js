@@ -665,6 +665,71 @@ function checkFile(file, violations, gCtx, warnings) {
   }
 }
 
+// [T] the DOUBLE-SETTLE rule (public/private call-separation plan §4.1 — the generalization of [C]):
+// a method that DIRECTLY self-settles (its own body calls @_settleLayoutsAfter — the same textual
+// subject discoverSettlingWrappers keys off) must NOT also @-self-call ANOTHER settling public
+// method — a geometry setter, a text setter, a discovered settling wrapper, or the unambiguous
+// self-add @add. That is two flushes for one logical mutation ([C] is the geometry-setter special
+// case; [T] covers the whole settling surface). Scoped to @-SELF calls (a dotted receiver can't be
+// typed — it settles ANOTHER widget, a different concern); @-self wrapper calls are name-qualified
+// through nearestDefinerKind exactly like [G], so a same-named plain setter never false-trips.
+// The settle tiers themselves (RECALC_WHITELIST) are exempt subjects. Branch-exclusive pairs
+// (settle on one path, settling callee on another — one flush per path, sound) are textually
+// indistinguishable: bless those with the marker. Census ground truth at rule birth (2026-07-12):
+// exactly 3 sites, all conscious — ActivePointerWdgt.grab -> @add (the hand-rolled gesture settle)
+// and Widget.newParentChoice{,WithHorizLayout} -> @add (documented idempotent re-fit flush).
+const DOUBLE_SETTLE_MARKER = 'double-settle-sanctioned';   // the [T] per-method conscious sign-off
+const T_SELF_PUB_CALL = new RegExp('@\\s*(' + PUBLIC_SETTERS.join('|') + ')\\b');
+const T_SELF_TEXT_CALL = new RegExp('@\\s*(' + TEXT_SETTERS.join('|') + ')\\b');
+
+function checkDoubleSettle(file, gCtx, violations) {
+  const rel = path.relative(path.join(__dirname, '..'), file);
+  const selfClass = path.basename(file, '.coffee');
+  const lines = fs.readFileSync(file, 'utf8').split('\n');
+  let mixinHashIndent = null, strState = null;
+  let m = null;   // current method accumulator: { name, settleLine, marked, sites: [{n, label}] }
+  const flush = () => {
+    if (m && m.settleLine >= 0 && !RECALC_WHITELIST.has(m.name) && !m.marked) {
+      for (const s of m.sites) {
+        violations.push(`[T] ${m.name}() self-settles (${rel}:${m.settleLine}) AND @-calls settling ${s.label} — two flushes for one logical mutation; route the second call through its _<name>NoSettle core inside the ONE settle, or bless a deliberate/branch-exclusive pair with # ${DOUBLE_SETTLE_MARKER}: <why>  — ${rel}:${s.n}`);
+      }
+    }
+    m = null;
+  };
+  for (let n = 0; n < lines.length; n++) {
+    const raw = lines[n];
+    const { code, state } = stripLine(raw, strState);
+    strState = state;
+    if (strState === null) {
+      const b = methodBoundary(raw, mixinHashIndent);
+      if (b) {
+        flush();
+        mixinHashIndent = b.mixinHashIndent;
+        if (b.kind === 'header' && b.method) m = { name: b.method, settleLine: -1, marked: false, sites: [] };
+        continue;
+      }
+    }
+    if (!m) continue;
+    if (raw.includes(DOUBLE_SETTLE_MARKER)) m.marked = true;
+    if (m.settleLine < 0 && SETTLE_CALL.test(code)) m.settleLine = n + 1;
+    let pub = code.match(T_SELF_PUB_CALL);
+    if (pub && pub[1] === 'moveTo' && (CANVAS_EXT_FILE.test(rel) || CANVAS_MOVETO.test(code))) pub = null;
+    if (pub) m.sites.push({ n: n + 1, label: `public setter @${pub[1]}()` });
+    const txt = code.match(T_SELF_TEXT_CALL);
+    if (txt) m.sites.push({ n: n + 1, label: `text setter @${txt[1]}()` });
+    if (gCtx.WRAPPER_CALL) {
+      const wrap = code.match(gCtx.WRAPPER_CALL);
+      // @-SELF only; resolve to the nearest definer up the extends-chain so a same-named PLAIN
+      // (non-settling) method on this class never false-trips (mirrors the [G] name qualification)
+      if (wrap && wrap[1] === '@' && nearestDefinerKind(wrap[2], selfClass, gCtx) !== 'plain') {
+        m.sites.push({ n: n + 1, label: `wrapper @${wrap[2]}()` });
+      }
+    }
+    if (SELF_ADD_CALL.test(code)) m.sites.push({ n: n + 1, label: '@add (self == Widget.add)' });
+  }
+  flush();
+}
+
 function collectMacros(dir, out) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name);
@@ -722,6 +787,8 @@ function main() {
   for (const f of files) {
     try { checkFile(f, violations, gCtx, warnings); }
     catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
+    try { checkDoubleSettle(f, gCtx, violations); }   // [T] — needs its own buffered pass (subject known only at method end)
+    catch (e) { console.error(`check-layering: [T] operational error in ${f}:`, e.message); process.exit(2); }
   }
   let macroCount = 0;
   if (fs.existsSync(MACROS_DIR)) {           // absent in a --homepage/--notests build — skip [D] then
@@ -760,6 +827,7 @@ function main() {
     console.error('O: a *DeferredSettle entrypoint (defers its layout settle to the end-of-cycle flush) may be CALLED only from an allowlisted per-event stream handler — DEFERRED_SETTLE_CALLER_ALLOWLIST (a discrete/programmatic caller must use the self-settling setter) (layering/naming convention §4).');
     console.error('P: _settleLayoutsAfterOrJoinEnclosingPass (the reactive-connection settle lane — JOINS an open layout pass instead of throwing) may be CALLED only from a dedicated _<name>Connector entrypoint (connection-cascade-settle-fix-plan.md).');
     console.error('Q: a _<name>Connector entrypoint (which joins an open layout pass instead of throwing — rule P) may be textually CALLED only from an allowlisted mid-cascade self-render — CONNECTOR_CALLER_ALLOWLIST; the reactive dispatch resolves it at runtime and needs no textual call (connection-cascade-settle-fix-plan.md §7e).');
+    console.error('T: a method that self-settles (@_settleLayoutsAfter) must not ALSO @-call a settling public method (setter/wrapper/@add) — one flush per logical mutation; bless a deliberate/branch-exclusive pair with `# double-settle-sanctioned: <why>` (public/private call-separation plan §4.1).');
     process.exit(1);
   }
   console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N/O/P/Q/R; ${wrapperNames.length} settling wrappers guarded, name-qualified)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);

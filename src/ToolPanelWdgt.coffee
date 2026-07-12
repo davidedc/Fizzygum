@@ -149,6 +149,6 @@ class ToolPanelWdgt extends PanelWdgt
     @fullChanged()
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 
 

@@ -159,6 +159,9 @@ class BasementWdgt extends BoxWdgt
   # filter is respected. Just re-invoke the
   # methods that calculate the visibility
   _reactToChildAddedInScrollPanel: (child) ->
+    # public-call-sanctioned: hideUsedWidgets/showAllWidgets are this widget's own BUTTON-ACTION
+    # surface (the SimpleButtonWdgt dispatch strings in the ctor) — a de-facto public command
+    # surface, so they stay public; this callback consciously reuses them to re-apply the filter.
     if @showingLostItemsOnly
       @hideUsedWidgets()
     else
@@ -198,4 +201,4 @@ class BasementWdgt extends BoxWdgt
     world.maybeEnableTrackChanges()
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()

@@ -86,18 +86,17 @@ class PromptWdgt extends MenuWdgt
   _takeSliderValueNoSettle: (num) ->
     @tempPromptEntryField.changed()
     # the field's inner text is a StringWdgt. Use _setTextNoSettle
-    # -- which re-runs synchroniseTextAndActualText so textPossiblyCroppedToFit tracks the new
+    # -- which re-runs _synchroniseTextAndActualText so textPossiblyCroppedToFit tracks the new
     # value -- instead of poking .text + _reLayoutSelf (StringWdgt has no _reLayoutSelf that refits).
     # Otherwise _editNoSettle below sees a stale cropped text and defers to the "edit:" prompt.
     @tempPromptEntryField.text._setTextNoSettle Math.round(num).toString()
     @tempPromptEntryField.text.changed()
     @tempPromptEntryField.text._editNoSettle()
 
-  _reLayoutSelf: ->
-    super()
-    @buildSubwidgets()
-
-  buildSubwidgets: ->
+  # (a vestigial `_reLayoutSelf: -> super(); @buildSubwidgets()` override with an EMPTY
+  # buildSubwidgets hook was deleted 2026-07-12 — a layout pass dispatching to an overridable
+  # public builder is the structure-mutation-inside-a-pass shape the flow rules exist to prevent,
+  # and the hook had no implementor. public/private call-separation plan T2.)
 
   _reactToBeingAdded: (whereTo, beingDropped) ->
   

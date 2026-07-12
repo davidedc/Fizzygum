@@ -384,7 +384,7 @@ class TextWdgt extends StringWdgt
   # count (width = maxLineWidth, height = lines × fontHeight). softWrap is turned
   # OFF so the text never re-wraps to the container; the box just hugs the text.
   # See StringWdgt::sizeToTextAndDisableFitting for the full rationale.
-  # PUBLIC self-settling entry for STANDALONE callers; the in-pass / in-settle callers (createLabel
+  # PUBLIC self-settling entry for STANDALONE callers; the in-pass / in-settle callers (_createLabel
   # driven by _reLayoutSelf, _setTextNoSettle, setFontSize) call the NoSettle core directly -- a single
   # self-settle reached mid-pass/mid-settle THROWS (the wanted discipline). See
   # StringWdgt::sizeToTextAndDisableFitting for the full standalone-vs-in-settle rationale. Returns @
@@ -417,7 +417,7 @@ class TextWdgt extends StringWdgt
   # the contained-text engine — gated by the mode, so ANY TextWdgt used as window
   # / panel / scroll content (not just a SimplePlainTextWdgt) re-wraps +
   # auto-heights. It belongs in this LAYOUT pass, NOT in reflowText / the paint
-  # path (createRefreshOrGetBackBuffer must not change the extent — it only
+  # path (_createRefreshOrGetBackBuffer must not change the extent — it only
   # recomputes the paint height).
   #   - softWrap ON  → HEIGHT_ADJUSTS_TO_WIDTH: keep the width (the container
   #     feeds it), wrap the text to it, the height follows the line count.
@@ -467,7 +467,7 @@ class TextWdgt extends StringWdgt
 
   # no changes of position or extent should be
   # performed in here
-  createRefreshOrGetBackBuffer: ->
+  _createRefreshOrGetBackBuffer: ->
     
     cacheKey = @createBufferCacheKey()
 

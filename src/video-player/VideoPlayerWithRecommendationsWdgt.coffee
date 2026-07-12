@@ -30,7 +30,7 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     (loadJSFilePromise "./videos/Fizzygum-videos-private/privateVideosManifest.js").then \
       (result) =>
         #console.log "loaded manifest"
-        @parseVideosIndex()
+        @_parseVideosIndex()
         # TODO id: NO_STEPPING_ONLY_ONCE_TO_HANDLE_CALLBACK date: 6-May-2023
         world.steppingWdgts.add @
       , (error) ->
@@ -52,7 +52,7 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     @setUpVideoThumbsPage()
     world.steppingWdgts.delete @
 
-  parseVideosIndex: ->
+  _parseVideosIndex: ->
     # filter the names in privateVideos.files ending in .webm or .mp4
 
     filteredNames = privateVideos.files.filter (name) ->

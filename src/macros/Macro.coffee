@@ -76,7 +76,7 @@ class Macro
       @progressOnMacroSteps = ->
         # we do this only once to initialise things
         if !@macroGenerator?
-          @syntheticEventsMousePlace_InputEvents()
+          @_syntheticEventsMousePlace_InputEvents()
           @msSinceLastExecutedMacroStep = 0
           @macroGenerator = #{@getName()}.call @
           return

@@ -10,14 +10,14 @@ class GraphsPlotsChartsWdgt extends Widget
     @_applyExtent new Point 200, 200
 
   # true while a SystemTest replays with animations-pacing control on -- animated widgets must then
-  # render a FIXED, deterministic frame (mirrors AnalogClockWdgt.calculateHandsAngles, which pins
+  # render a FIXED, deterministic frame (mirrors AnalogClockWdgt._calculateHandsAngles, which pins
   # @dateLastTicked to a fixed date under the same condition). Turned on by the macro's
   # AutomatorEventCommandTurnOnAnimationsPacingControl.
   _animationFrozenForDeterministicReplay: ->
     Automator? and Automator.animationsPacingControl and Automator.state == Automator.PLAYING
 
   # The example plots animate by advancing @graphNumber each step (each concrete plot's
-  # renderingHelper seeds its RNG off @graphNumber). Freeze that advance under replay so the plot
+  # _renderingHelper seeds its RNG off @graphNumber). Freeze that advance under replay so the plot
   # renders a fixed frame. Subclasses that animate differently (Example3DPlotWdgt, via @currentAngle)
   # override step() but reuse the guard above. (Concrete 2D plots supply the @graphNumber field.)
   step: ->
@@ -33,7 +33,7 @@ class GraphsPlotsChartsWdgt extends Widget
   # it's not a "leaf".
   #
   # The whole plot/chart family shares this identical paint scaffold; each
-  # concrete plot supplies only its renderingHelper (the drawing tail) plus its
+  # concrete plot supplies only its _renderingHelper (the drawing tail) plus its
   # backgroundColor / backgroundTransparency. (Example3DPlotWdgt keeps its own
   # copy because it extends Widget directly, not this base.)
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
@@ -62,7 +62,7 @@ class GraphsPlotsChartsWdgt extends Widget
     widgetPosition = @position()
     aContext.translate widgetPosition.x, widgetPosition.y
 
-    @renderingHelper aContext, Color.WHITE, appliedShadow
+    @_renderingHelper aContext, Color.WHITE, appliedShadow
 
     aContext.restore()
 

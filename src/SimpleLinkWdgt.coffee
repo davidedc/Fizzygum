@@ -52,12 +52,12 @@ class SimpleLinkWdgt extends Widget
     @outputTextArea.alignMiddle()
     @outputTextArea.alignRight()
     @_addNoSettle @outputTextArea
-    @createLinkIcon()
+    @_createLinkIcon()
     @_addNoSettle @externalLinkIcon
 
     @_invalidateLayout()
 
-  createLinkIcon: ->
+  _createLinkIcon: ->
     @externalLinkIcon = new ExternalLinkButtonWdgt
 
   _reLayout: (newBoundsForThisLayout) ->
@@ -105,5 +105,5 @@ class SimpleLinkWdgt extends Widget
     @fullChanged()
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 

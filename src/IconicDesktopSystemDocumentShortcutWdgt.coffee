@@ -43,7 +43,7 @@ class IconicDesktopSystemDocumentShortcutWdgt extends IconicDesktopSystemShortcu
       # visible
       whatToBringUp.show()
       whatToBringUp.spawnNextTo @, world
-      whatToBringUp.rememberFractionalSituationInHoldingPanel()
+      whatToBringUp._rememberFractionalSituationInHoldingPanel()
       whatToBringUp.setTitle? @label.text
 
 

@@ -95,9 +95,9 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
     @dragsDropsAndEditingEnabled = true
     @_invalidateLayout()
 
-  createNewStretchablePanel: ->
-    @stretchableWidgetContainer = new StretchableWidgetContainerWdgt
-    @add @stretchableWidgetContainer
+  # (_createNewStretchablePanelNoSettle is inherited from StretchableEditableWdgt — this class's
+  # createNewStretchablePanel override was a byte-identical copy of the base and was deleted in the
+  # rule-[S] convert, like the hoisted _reLayoutSelf below.)
 
   # I coordinate drags/drops/editing for my stretchable container, which delegates its
   # enable/disable up to me (replacing its `@parent instanceof SimpleSlideWdgt` test

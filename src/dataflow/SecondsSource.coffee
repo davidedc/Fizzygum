@@ -30,11 +30,11 @@
 # cutoff (_valuesEqual) both want a scalar: two consecutive cycles in the SAME wall second pull the
 # SAME integer, so the cutoff stops propagation until the second actually ticks. The value is pulled
 # from the world's ONE-timestamp-per-cycle (WorldWdgt.dateOfCurrentCycleStart, set in
-# updateTimeReferences, live throughout the drain), so every cell in a batch sees the SAME instant.
+# _updateTimeReferences, live throughout the drain), so every cell in a batch sees the SAME instant.
 class SecondsSource
 
   # fps:1 → the stepping loop calls step() about once per second; synchronised to the wall-clock
-  # second boundary (WorldWdgt.runChildrensStepFunction), so no per-member lastTime is needed.
+  # second boundary (WorldWdgt._runChildrensStepFunction), so no per-member lastTime is needed.
   fps: 1
   synchronisedStepping: true
 

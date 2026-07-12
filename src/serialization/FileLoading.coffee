@@ -54,7 +54,7 @@ class FileLoading
         widget = result.widget
         world.add widget
         widget._applyMoveTo dropPoint if dropPoint?
-        widget.rememberFractionalSituationInHoldingPanel?()
+        widget._rememberFractionalSituationInHoldingPanel?()
         # a repaint once any async image/canvas assets have decoded
         result.whenReady?.then? -> widget.fullChanged?()
       when "world"

@@ -52,7 +52,7 @@ class RasterImageWdgt extends CanvasWdgt
       world.steppingWdgts.add @
     @img.src = @imagePath
 
-  createRefreshOrGetBackBuffer: ->
+  _createRefreshOrGetBackBuffer: ->
     [@backBuffer, @backBufferContext] = super
     # This is so we draw the image on the backbuffer every time the
     # widget (and, consequently, the backbuffer) is resized.
@@ -60,7 +60,7 @@ class RasterImageWdgt extends CanvasWdgt
     # and if it's same as current size, and repaint the image if
     # the size has changed.
     if !@lastPaintedImageSize? or !@lastPaintedImageSize.equals @extent()
-      @paintImageOnBackBuffer()
+      @_paintImageOnBackBuffer()
       @lastPaintedImageSize = @extent()
     return [@backBuffer, @backBufferContext]
 
@@ -70,8 +70,8 @@ class RasterImageWdgt extends CanvasWdgt
   # (i.e. painted black), and one when the image is loaded
   # and it is painted on the backbuffer.
   # This should _also_ get called when the widget is resized.
-  paintImageOnBackBuffer: ->
-    if !@backBuffer? then @createRefreshOrGetBackBuffer()
+  _paintImageOnBackBuffer: ->
+    if !@backBuffer? then @_createRefreshOrGetBackBuffer()
 
     context = @backBufferContext
 
@@ -103,7 +103,7 @@ class RasterImageWdgt extends CanvasWdgt
   # at the next frame cycle, e.g. "onNextFrameCycleCall(method, args...)" or
   # something like that.
   step: ->
-    @paintImageOnBackBuffer()
+    @_paintImageOnBackBuffer()
     @changed()
     world.steppingWdgts.delete @
 

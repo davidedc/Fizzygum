@@ -49,16 +49,16 @@ class MenuItemWdgt extends LabelButtonWdgt
   # MenuItemWdgt hugs its box to its (multi-line, modern TextWdgt) label -- the
   # opposite of LabelButtonWdgt's default single-line StringWdgt label, which
   # leaves the box alone.
-  createLabel: ->
-    # console.log "menuitem createLabel"
+  _createLabel: ->
+    # console.log "menuitem _createLabel"
     @label = new TextWdgt @labelString, @fontSize, @fontStyle
     @label.setColor @labelColor
 
-    # _addNoSettle (NOT add): createLabel is driven by _reLayoutSelf (a layout pass), so a
+    # _addNoSettle (NOT add): _createLabel is driven by _reLayoutSelf (a layout pass), so a
     # self-settle here would re-enter the flush guard and throw.
     @_addNoSettle @label
     # the modern family does not self-size; make the label hug its text before
-    # we read @label.extent() below to size this menu item around it. createLabel is driven by
+    # we read @label.extent() below to size this menu item around it. _createLabel is driven by
     # _reLayoutSelf (a layout pass), so use the NoSettle core -- the wrapper would throw mid-pass.
     @label._sizeToTextAndDisableFittingNoSettle()
 

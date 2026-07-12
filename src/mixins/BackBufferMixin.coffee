@@ -83,7 +83,7 @@ BackBufferMixin =
 
       # Widget pixel access:
       getPixelColor: (aPoint) ->
-        [@backBuffer, @backBufferContext] = @createRefreshOrGetBackBuffer()
+        [@backBuffer, @backBufferContext] = @_createRefreshOrGetBackBuffer()
         point = aPoint.toLocalCoordinatesOf @
         # Math.floor AFTER the ×ceilPixelRatio (affine transforms §4.6): a widget
         # inside a non-identity island is hit-tested at an INVERSE-mapped (float)
@@ -106,7 +106,7 @@ BackBufferMixin =
         if !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
           return nil
 
-        [@backBuffer, @backBufferContext] = @createRefreshOrGetBackBuffer()
+        [@backBuffer, @backBufferContext] = @_createRefreshOrGetBackBuffer()
 
         if !@backBuffer?
           return nil

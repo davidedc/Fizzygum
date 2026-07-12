@@ -14,7 +14,7 @@ class RadioButtonsHolderWdgt extends Widget
   mouseClickLeft: (widgetThatFired) ->
     for w in @children
       if w != widgetThatFired
-        w.resetSwitchButton?()
+        w._resetSwitchButton?()
 
   whichButtonSelected: ->
     @firstChildSuchThat (w) =>

@@ -40,12 +40,12 @@ class StretchableCanvasWdgt extends CanvasWdgt
   # order of all the primitives and their
   # parameters. So if user wants a cache it will have to specify
   # a dedicated one in here. See textWidget for an example.
-  createRefreshOrGetBackBuffer: ->
+  _createRefreshOrGetBackBuffer: ->
 
     extent = @extent()
 
     if !@backBuffer?
-      @createNewFrontFacingBuffer extent
+      @_createNewFrontFacingBuffer extent
 
     # little shortcut: if nothing has been painted yet then
     # we can omit painting the big canvas on the small one,
@@ -76,7 +76,7 @@ class StretchableCanvasWdgt extends CanvasWdgt
   clear: (color = @color) ->
     throw new Error "not implemented yet"
 
-  createNewBehindTheScenesBuffer: (extent) ->
+  _createNewBehindTheScenesBuffer: (extent) ->
     @behindTheScenesBackBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
     @behindTheScenesBackBufferContext = @behindTheScenesBackBuffer.getContext "2d"
 
@@ -88,7 +88,7 @@ class StretchableCanvasWdgt extends CanvasWdgt
     # ALWAYS leave the context with the correct pixel scaling.
     @behindTheScenesBackBufferContext.useLogicalPixelsUntilRestore()
 
-  createNewFrontFacingBuffer: (extent) ->
+  _createNewFrontFacingBuffer: (extent) ->
     @backBuffer = HTMLCanvasElement.createOfPhysicalDimensions extent.scaleBy ceilPixelRatio
     @backBufferContext = @backBuffer.getContext "2d"
 
@@ -104,9 +104,9 @@ class StretchableCanvasWdgt extends CanvasWdgt
       return
 
     if !@behindTheScenesBackBuffer? or !@anythingPaintedYet
-      @createNewBehindTheScenesBuffer extent
+      @_createNewBehindTheScenesBuffer extent
 
-    @createNewFrontFacingBuffer extent
+    @_createNewFrontFacingBuffer extent
 
     super
     @_reLayout @bounds
@@ -139,14 +139,16 @@ class StretchableCanvasWdgt extends CanvasWdgt
   drawLine: (start, dest, lineWidth, color) ->
     throw new Error "not implemented yet"
 
-  paintImage: (pos, image) ->
+  _paintImage: (pos, image) ->
+    # public-call-sanctioned: getContextForPainting is public canvas API — user-facing injected
+    # live-code calls it (ReconfigurablePaintWdgt's injectProperty heredocs), so it stays public.
 
     extent = @extent()
     if !@backBuffer?
-      @createNewFrontFacingBuffer extent
+      @_createNewFrontFacingBuffer extent
 
     if !@behindTheScenesBackBuffer?
-      @createNewBehindTheScenesBuffer extent
+      @_createNewBehindTheScenesBuffer extent
 
     contextForPainting = @getContextForPainting()
 
@@ -173,7 +175,7 @@ class StretchableCanvasWdgt extends CanvasWdgt
 
   # Runs inside the drop's single settle: re-home the dropped widget through the non-settling add core.
   _reactToChildDropped: (droppedWidget) ->
-    @paintImage droppedWidget.position(), droppedWidget.fullImage(nil, false, true)
+    @_paintImage droppedWidget.position(), droppedWidget.fullImage(nil, false, true)
     world._addNoSettle droppedWidget, nil, nil, true
   
   _reLayout: (newBoundsForThisLayout) ->
@@ -208,5 +210,5 @@ class StretchableCanvasWdgt extends CanvasWdgt
     @fullChanged()
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 

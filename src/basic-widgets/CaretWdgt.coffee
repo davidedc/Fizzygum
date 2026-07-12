@@ -25,7 +25,7 @@ class CaretWdgt extends BlinkerWdgt
     # account for the per-line shift — so no force-left is needed; see
     # SystemTest_macroTextWdgtCaretPlacementUnderAlignments and
     # SystemTest_macroTextWdgtCaretKeepsCorrectAlignment.
-    @adjustAccordingToTargetText()
+    @_adjustAccordingToTargetText()
 
   # CaretWdgt is overlay chrome (the text-editing caret), not a content child, so
   # it is excluded from content-bounds and real-children calculations (see
@@ -43,15 +43,15 @@ class CaretWdgt extends BlinkerWdgt
   # layout (moves @target / @contents) and must happen out of paint -- that is the caret's _reLayout, drained
   # by the per-event IN-PLACE settle (see _requestScrollFollow / _reLayout; the follow never rides the
   # end-of-cycle flush). (Also called from the constructor.)
-  adjustAccordingToTargetText: ->
-    @updateDimension()
+  _adjustAccordingToTargetText: ->
+    @_updateDimension()
     @_repositionToSlotNoSettle()
 
   # PAINT is read-only: the only caret work here is the inert re-place above (no scroll-follow, no layout).
   justBeforeBeingPainted: ->
-    @adjustAccordingToTargetText()
+    @_adjustAccordingToTargetText()
 
-  updateDimension: ->
+  _updateDimension: ->
     ls = @target.fontHeight @target.actualFontSizeUsedInRendering()
     if ls != @currentCaretFontSize
       @currentCaretFontSize = ls
@@ -66,7 +66,7 @@ class CaretWdgt extends BlinkerWdgt
     #   https://w3c.github.io/uievents/tools/key-event-viewer.html
 
     if ctrlKey
-      @ctrl key, shiftKey
+      @_ctrl key, shiftKey
     else if metaKey
       @cmd key, shiftKey
     else
@@ -122,7 +122,7 @@ class CaretWdgt extends BlinkerWdgt
 
     # notify target's parent of key event
     @target.escalateEvent "reactToKeystroke", key, code, shiftKey, ctrlKey, altKey, metaKey
-    @updateDimension()
+    @_updateDimension()
     # The target geometry is now final (reactToKeystroke re-fit done): converge any deferred caret scroll-follow
     # IN-PLACE, during this keystroke event, rather than leaving it to ride the end-of-cycle flush. (No-op for a
     # nav/no-move keystroke -- see _settleScrollFollow. Typing/delete enqueue off-settle here, so this is
@@ -181,12 +181,14 @@ class CaretWdgt extends BlinkerWdgt
       @target.pushUndoState? @slot, true
 
   # The INERT re-place (no layout): put the caret at the target's current slot coordinate. Called only by the
-  # paint/ctor re-sync (adjustAccordingToTargetText); a caret MOVE places itself UN-clamped inside
+  # paint/ctor re-sync (_adjustAccordingToTargetText); a caret MOVE places itself UN-clamped inside
   # _oneScrollCaretIntoViewPassNoSettle instead (Point.floor() here clamps to >=0 -- exactly the clamp the
   # 2026-07-01 single-pass follow fix removed for moves; see the note there).
   _repositionToSlotNoSettle: ->
     pos = @target.slotCoordinates @slot
     if pos?
+      # public-call-sanctioned: show is the heavily-public visibility verb (settle-free one-liner);
+      # consciously reused by this core.
       @show()
       @_applyMoveTo pos.floor()
 
@@ -242,7 +244,7 @@ class CaretWdgt extends BlinkerWdgt
     #   surfaces loudly and is diagnosable -- it does not hang the tab or render 1px-off unnoticed.
     stable = @parent?.top() == beforeParentT and @parent?.left() == beforeParentL and @target?.top() == beforeTargetT and @target?.left() == beforeTargetL
     if stable
-      @markLayoutAsFixed()
+      @_markLayoutAsFixed()
     # else: stay layoutIsValid==false -- still in the queue, re-processed after the just-enqueued panel settles
 
   # Converge the caret's pending scroll-follow IN-PLACE, during the event -- called at the tail of each caret
@@ -285,6 +287,8 @@ class CaretWdgt extends BlinkerWdgt
         if @target.right() < right and right - @target.width() < left
           pos.x += right - @target.right()
           @target._moveRightSideTo right
+      # public-call-sanctioned: show is the heavily-public visibility verb (settle-free one-liner);
+      # consciously reused by this core.
       @show()
       # Place the caret at its TRUE slot position, integer-floored but WITHOUT Point.floor()'s clamp-to->=0
       # (Math.max(_, 0)): when the content is scrolled up, a slot above the world origin has a NEGATIVE absolute y.
@@ -304,7 +308,7 @@ class CaretWdgt extends BlinkerWdgt
   # high-traffic stream, so it does not defer its settle (see the comment on gotoSlot). goLeft / goRight are ALSO called
   # INTERNALLY (insert -> goRight to advance past the typed char; deleteLeft -> goLeft), where the caret advance
   # must NOT self-settle early -- doing so reorders the fit (it broke macroStringWdgtInlineTypingRefitsUnderFitting-
-  # Modes: the advance scroll flushed before updateDimension/escalateEvent). The advance instead enqueues the
+  # Modes: the advance scroll flushed before _updateDimension/escalateEvent). The advance instead enqueues the
   # follow off-settle and lets the editing handler's tail settle it in-place once the reactToKeystroke re-fit is
   # done (processKeyDown -> _settleScrollFollow). So goLeft/goRight split into a self-settling public
   # wrapper (the keystroke path) + a non-settling _go*NoSettle core (the internal path). goUp/goDown/goHome/
@@ -412,6 +416,10 @@ class CaretWdgt extends BlinkerWdgt
         @bringTextAndCaretToState redoState
 
   bringTextAndCaretToState: (state) ->
+    # gotoSlot is the designed public one-settle caret-move entry; an undo/redo restore is a
+    # discrete event outside any pass, so the self-settling form is exactly right here. (This
+    # method stays PUBLIC: its setText drive makes the _-form an [A] violation — see the
+    # public-api-allowlist entry.)
     @target.setText state.textContent, nil
     @gotoSlot state.cursorPos   # discrete (undo/redo restore) -> public self-settling gotoSlot
     if state.selectionStart? and state.selectionEnd?
@@ -471,10 +479,12 @@ class CaretWdgt extends BlinkerWdgt
       # fit. If it hands off, the inline caret is gone, so stop here (no advance / dimension / undo to do).
       return if @target.handOffToPopoutEditorIfOverflowing()
       @_goRightNoSettle false, key.length   # internal advance: rides setText's flush, must NOT self-settle early
-      @updateDimension()
+      @_updateDimension()
       @target.pushUndoState? @slot
   
-  ctrl: (key, shiftKey) ->
+  _ctrl: (key, shiftKey) ->
+    # public-call-sanctioned: the keystroke DISPATCHER branch — undo is the public self-settling
+    # command, one settle per discrete ctrl-Z keystroke (same shape as the public cmd sibling below).
     switch key
       when "a", "A"
         @target.selectAll()

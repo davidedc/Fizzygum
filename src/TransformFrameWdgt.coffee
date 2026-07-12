@@ -335,7 +335,7 @@ class TransformFrameWdgt extends PanelWdgt
   # We intercept at the content-recursion point (…ContentPotentiallyAsShadow), which
   # the base fullPaintIntoAreaOrBlitFromBackBuffer calls for both the normal pass
   # and the "paint as shadow" pass — so honouring appliedShadow here covers both.
-  fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
+  _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
     if @transformSpec.isIdentity()
       # stock invisible-clipping-panel behaviour: children painted, clipped to the
       # slot box, no chrome (appearance is nil). Byte-identical to the children alone.
@@ -351,12 +351,12 @@ class TransformFrameWdgt extends PanelWdgt
   # shadow (⇒ an identity island is pixel-identical to the bare wrapped widget, which
   # as a world child would itself cast that shadow) and a non-identity island casts a
   # correctly SCALED content shadow for free (plan §4.8).
-  fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
+  _fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
     clippingRectangle = clippingRectangle.translateBy -appliedShadow.offset.x, -appliedShadow.offset.y
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
       aContext.save()
       aContext.translate appliedShadow.offset.x * ceilPixelRatio, appliedShadow.offset.y * ceilPixelRatio
-      @fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow aContext, clippingRectangle, appliedShadow
+      @_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow aContext, clippingRectangle, appliedShadow
       aContext.restore()
 
   # the cache is live only when BOTH the global kill-switch and this island's opt-in are on.

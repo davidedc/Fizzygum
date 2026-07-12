@@ -194,5 +194,5 @@ class FridgeMagnetsWdgt extends Widget
     world.maybeEnableTrackChanges()
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 

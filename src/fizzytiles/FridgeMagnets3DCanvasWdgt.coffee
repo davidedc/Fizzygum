@@ -21,7 +21,7 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
   lclCodeCompiler: nil
   transforms: nil
 
-  # SW3D runtime, all rebuilt lazily by @ensureEngine / @_ensureRuntime (see
+  # SW3D runtime, all rebuilt lazily by @_ensureEngine / @_ensureRuntime (see
   # @serializationTransients): a duplicated or restored pane carries none of
   # these and rebuilds them on its next render.
   surface: nil
@@ -81,7 +81,7 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
   # property whose value carries a rebuildDerivedValue method (same idiom canvas
   # contexts use), rather than trying to clone the Surface / typed-array / engine
   # and crashing. Stamp that no-op onto each runtime object so the clone gets nil
-  # and rebuilds it lazily on its next render (@_ensureRuntime / @ensureEngine).
+  # and rebuilds it lazily on its next render (@_ensureRuntime / @_ensureEngine).
   # Belt-and-suspenders with @serializationTransients, which also covers the
   # compiled-program Functions the Serializer can't emit.
   _transientRebuild: -> # intentionally empty — the widget rebuilds it lazily
@@ -91,7 +91,7 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
     obj
 
   step: ->
-    @renderScene()
+    @_renderScene()
     @changed()
 
   # Animation clock: event time under the Automator (deterministic screenshots),
@@ -108,7 +108,7 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
   # Build (or rebuild on resize) the Surface / DepthBuffer / engine / ImageData
   # at the pane's PHYSICAL pixel size. Sized to the back-buffer's own dimensions
   # (already physical integers) so the putImageData blit maps 1:1.
-  ensureEngine: ->
+  _ensureEngine: ->
     physW = @backBuffer.width
     physH = @backBuffer.height
     return if @surface? and @surface.width == physW and @surface.height == physH
@@ -133,11 +133,11 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
         window.SW3D.makeBoxMesh 1, @currentFillRGB
     @meshCache[key]
 
-  renderScene: ->
+  _renderScene: ->
     return unless @extent().x > 0 and @extent().y > 0
     @_ensureRuntime()
-    if !@backBuffer? then @createRefreshOrGetBackBuffer()
-    @ensureEngine()
+    if !@backBuffer? then @_createRefreshOrGetBackBuffer()
+    @_ensureEngine()
 
     # Per-frame reset: fill state + a fresh matrix stack. backgroundRGB persists
     # across frames (the clear below uses it), so a `background` call this frame

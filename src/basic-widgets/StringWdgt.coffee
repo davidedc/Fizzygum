@@ -98,7 +98,7 @@ class StringWdgt extends Widget
   # @originallySetFontSize — without that, SCALEUP's searchLargestFittingFont would
   # blow the font up, since the render leaks force every fit-measure to the set
   # size). The box-to-text SIZING lives in TextWdgt::_reLayoutSelf — a LAYOUT pass, NOT
-  # the paint path (createRefreshOrGetBackBuffer must never change @extent()):
+  # the paint path (_createRefreshOrGetBackBuffer must never change @extent()):
   #   - softWrap ON  → HEIGHT_ADJUSTS_TO_WIDTH: keep the width (the container feeds
   #     it), wrap the text to it, the height follows the line count.
   #   - softWrap OFF → the box hugs the natural, un-wrapped text width (the
@@ -552,7 +552,7 @@ class StringWdgt extends Widget
     return fittingText
 
 
-  synchroniseTextAndActualText: ->
+  _synchroniseTextAndActualText: ->
     textToFit = @transformTextOneToOne @text
     if @doesTextFitInExtent textToFit, @originallySetFontSize
       @textPossiblyCroppedToFit = textToFit
@@ -636,7 +636,7 @@ class StringWdgt extends Widget
   calculateTextWidth: (text, overrideFontSize) ->
     return @measureText overrideFontSize, text
 
-  setFittingFontSize: (theValue) ->
+  _setFittingFontSize: (theValue) ->
     if @fittingFontSize != theValue
       @fittingFontSize = theValue
       @changed()
@@ -686,7 +686,7 @@ class StringWdgt extends Widget
 
   # no changes of position or extent should be
   # performed in here
-  createRefreshOrGetBackBuffer: ->
+  _createRefreshOrGetBackBuffer: ->
 
     cacheKey = @createBufferCacheKey @horizontalAlignment, @verticalAlignment
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
@@ -701,6 +701,7 @@ class StringWdgt extends Widget
           world.caret.changed()
       return cacheHit
 
+    # public-call-sanctioned: reflowText is macro-called public text API (see _sizeToTextAndDisableFittingNoSettle).
     @reflowText()
 
     # if we are calculating a new buffer then
@@ -1152,7 +1153,7 @@ class StringWdgt extends Widget
   # into rows?
   # this method doesn't draw anything.
   reflowText: ->
-    @synchroniseTextAndActualText()
+    @_synchroniseTextAndActualText()
     # FIT_BOX_TO_TEXT sizes the BOX to the text at the SET font size (see
     # TextWdgt::_reLayoutSelf), so the font must NOT be scaled — render at
     # @originallySetFontSize. We must skip fitToExtent here because its
@@ -1163,9 +1164,9 @@ class StringWdgt extends Widget
     # pins fittingSpecWhenBoundsTooLarge = FLOAT (no scale-up search); a bare
     # TextWdgt defaults to SCALEUP, so the mode itself must force the set size.
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
-      @setFittingFontSize @originallySetFontSize
+      @_setFittingFontSize @originallySetFontSize
     else
-      @setFittingFontSize @fitToExtent()
+      @_setFittingFontSize @fitToExtent()
 
   # Make "the BOX sizes itself to the TEXT" behaviour for chrome labels (menu
   # items, menu headers, tooltips, plain buttons). The default model does the
@@ -1184,7 +1185,7 @@ class StringWdgt extends Widget
   # the text at its exact set size.
   # (TextWdgt overrides this with a multi-line, soft-wrap-off variant.)
   # PUBLIC self-settling entry for STANDALONE callers (a tick toggle on an open menu, a header/tooltip
-  # build on an orphan). The IN-PASS / IN-SETTLE callers -- createLabel (driven by _reLayoutSelf),
+  # build on an orphan). The IN-PASS / IN-SETTLE callers -- _createLabel (driven by _reLayoutSelf),
   # _setTextNoSettle, setFontSize -- call _sizeToTextAndDisableFittingNoSettle DIRECTLY, because a single
   # self-settle reached mid-pass/mid-settle re-enters the flush guard and THROWS. That throw is the wanted
   # discipline (it surfaces a mis-routed caller); an absorbing batch settler would silently swallow it.
@@ -1207,6 +1208,8 @@ class StringWdgt extends Widget
     widthOfText = Math.max (Math.ceil measuredWidth), 1
     heightOfText = @fontHeight @originallySetFontSize
     @__commitExtent new Point widthOfText, heightOfText
+    # public-call-sanctioned: reflowText is public text API — macros call it directly
+    # (macroBoxTransparencyAndColorChanging), so it stays public; consciously reused by this core.
     @reflowText()
     @parent?._invalidateLayout() unless world?._recalculatingLayouts
     @  # return self so the public wrapper is chainable (macros do `(new StringWdgt …).sizeToTextAndDisableFitting()`)
@@ -1243,10 +1246,12 @@ class StringWdgt extends Widget
       # other widgets might send something like a
       # number or a color so let's make sure we
       # convert to a string.
+      # public-call-sanctioned: clearSelection is the public text-selection API (driven
+      # cross-object by the caret machinery) — settle-free, consciously reused by this core.
       @clearSelection()
       @text = theNewText
       @checkIfTextContentWasModifiedFromTextAtStart()
-      @synchroniseTextAndActualText()
+      @_synchroniseTextAndActualText()
       # chrome labels (menu items, button captions, …) keep their box hugging the
       # text on every edit; without this the new text would be crammed/scaled into
       # the box sized to the OLD text. Generic StringWdgts leave the flag off and
@@ -1438,7 +1443,7 @@ class StringWdgt extends Widget
     @endMark = nil
     @changed()
 
-  setEndMark: (slot) ->
+  _setEndMark: (slot) ->
     @endMark = slot
     @changed()
   
@@ -1479,7 +1484,7 @@ class StringWdgt extends Widget
     if (!@endMark?) and (!@startMark?)
       @selectBetween slot, slot
     else if @endMark isnt slot
-      @setEndMark slot
+      @_setEndMark slot
 
   # Collapse a zero-width selection (the two marks met) back to no selection. Used to be done in
   # CaretWdgt.clearSelectionIfStartAndEndMeet by reading the marks directly. (Phase 7a)
@@ -1560,9 +1565,10 @@ class StringWdgt extends Widget
           @endMark = newMark
           @changed()
       else
-        @disableSelecting()
+        @_disableSelecting()
   
-  disableSelecting: ->
+  _disableSelecting: ->
+    # public-call-sanctioned: clearSelection is the public text-selection API (see _setTextNoSettle).
     # re-establish the original definition of the method
     @clearSelection()
     @mouseDownLeft = StringWdgt::mouseDownLeft

@@ -160,7 +160,7 @@ class StretchableWidgetContainerWdgt extends Widget
     @fullChanged()
 
     super
-    @markLayoutAsFixed()
+    @_markLayoutAsFixed()
 
 
   # same as simpledocumentscrollpanel, you can lock the contents.
