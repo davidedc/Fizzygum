@@ -206,6 +206,15 @@ class Widget extends TreeNode
 - **Derived values** keep the existing `rebuildDerivedValue` protocol (canvas 2D
   contexts): the serializer skips them; the deserializer runs `rebuildDerivedValues` to
   regenerate them ([Ph 3]).
+  - ⚠ **The two mechanisms do NOT cover each other** (2026-07-08 SW3D-port incident, ~1 h):
+    `@serializationTransients` is read by the FILE Serializer ONLY. The in-memory
+    **DeepCopier** skips a property iff its **VALUE** exposes `rebuildDerivedValue` — a
+    property that is only listed in `@serializationTransients` still gets deep-copied, and
+    a runtime-only object there crashes `deepCopy` with
+    `this[property].deepCopy is not a function`. **Fix: stamp a no-op
+    `rebuildDerivedValue` on the runtime-only object itself** (that both skips the copy
+    and marks it derived); listing it in `@serializationTransients` as well is correct but
+    not sufficient.
 - **Functions** ([Ph 2] policy): for an own function-valued property `foo` —
   - if a `foo_source` sibling exists (a user-injected method) → serialize `{"$src":
     <source>}` and let `foo_source` ride as a normal string; restore recompiles via the

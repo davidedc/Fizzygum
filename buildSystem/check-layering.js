@@ -426,29 +426,68 @@ function methodBoundary(raw, mixinHashIndent) {
 // [G] pre-pass: the set of public methods that self-settle via the SINGLE-mutation tier (their body
 // calls @_settleLayoutsAfter) -- the structural wrappers a low-level method must NOT call (it must reach
 // the _<name>NoSettle core instead). Computed from source so it tracks the codebase as wrappers are
-// added/removed. The 2-space-method grouping mirrors checkFile's exactly. Returns the FORBIDDEN set:
-// the discovered wrappers minus the geometry/text setters ([A] covers those) and minus WRAPPER_EXCLUDED.
+// added/removed. The 2-space-method grouping mirrors checkFile's exactly.
+//
+// NAME-QUALIFIED (dev-workflow plan P4.3): the old pass kept a bare NAME set, so a plain data-holder
+// setter sharing a name with a settling wrapper was confused with it — the 2026-07-09 incident:
+// TransformSpec.setScale (plain field setter) vs TransformFrameWdgt.setScale (self-settling wrapper)
+// forced deleting legitimate setters. Now every definition is keyed (class, method) — one class per
+// file with filename == class name is a build invariant — and split into SETTLING vs PLAIN definers:
+//   settlingClassesByName: name -> Set of classes whose def settles (the wrappers)
+//   plainClassesByName:    name -> Set of classes whose def does NOT settle
+// checkFile resolves an @-SELF call up the `class X extends Y` chain to its NEAREST definer; a dotted
+// call's receiver is not statically inferable, so it stays conservative (flagged, with the plain
+// definers named so a false positive is sanctioned instead of "fixed" by deleting the setter).
 function discoverSettlingWrappers(files) {
-  const wrappers = new Set();
+  const settlingClassesByName = new Map();   // method name -> Set(defining class) where the def settles
+  const plainClassesByName = new Map();      // method name -> Set(defining class) where it does NOT
+  const parentOf = new Map();                // class -> superclass (from `class X extends Y`)
+  const addTo = (map, name, klass) => {
+    let s = map.get(name);
+    if (!s) map.set(name, (s = new Set()));
+    s.add(klass);
+  };
   for (const file of files) {
+    const klass = path.basename(file, '.coffee');   // one class per file; filename == class name
     const lines = fs.readFileSync(file, 'utf8').split('\n');
-    let method = null, mixinHashIndent = null, strState = null;
+    let method = null, mixinHashIndent = null, strState = null, methodSettles = false;
+    const flush = () => { if (method) addTo(methodSettles ? settlingClassesByName : plainClassesByName, method, klass); };
     for (let n = 0; n < lines.length; n++) {
       const { code, state } = stripLine(lines[n], strState);
       strState = state;
+      const ext = code.match(/^class\s+([A-Za-z_]\w*)\s+extends\s+([A-Za-z_]\w*)/);
+      if (ext) parentOf.set(ext[1], ext[2]);
       if (strState === null) {
         const b = methodBoundary(lines[n], mixinHashIndent);
-        if (b) { method = b.method; mixinHashIndent = b.mixinHashIndent; if (b.kind === 'header') continue; }
+        if (b) {
+          flush();
+          method = b.method; mixinHashIndent = b.mixinHashIndent; methodSettles = false;
+          if (b.kind === 'header') continue;
+        }
       }
-      if (method && SETTLE_CALL.test(code)) wrappers.add(method);
+      if (method && SETTLE_CALL.test(code)) methodSettles = true;
     }
+    flush();
   }
-  for (const n of [...PUBLIC_SETTERS, ...TEXT_SETTERS, ...WRAPPER_EXCLUDED]) wrappers.delete(n);
-  return wrappers;
+  for (const n of [...PUBLIC_SETTERS, ...TEXT_SETTERS, ...WRAPPER_EXCLUDED]) settlingClassesByName.delete(n);
+  return { settlingClassesByName, plainClassesByName, parentOf };
 }
 
-function checkFile(file, violations, wrapperCall, warnings) {
+// [G] @-self resolution: walk `klass` + its ancestors to the NEAREST class defining `name`.
+// Returns 'settling' | 'plain' | null (not found in the chain — e.g. a mixin-provided method).
+function nearestDefinerKind(name, klass, g) {
+  const seen = new Set();                                   // cycle guard (defensive)
+  for (let c = klass; c && !seen.has(c); c = g.parentOf.get(c)) {
+    seen.add(c);
+    if (g.settlingClassesByName.get(name)?.has(c)) return 'settling';
+    if (g.plainClassesByName.get(name)?.has(c)) return 'plain';
+  }
+  return null;
+}
+
+function checkFile(file, violations, gCtx, warnings) {
   const rel = path.relative(path.join(__dirname, '..'), file);
+  const selfClass = path.basename(file, '.coffee');   // one class per file; filename == class name
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   let method = null;          // current method name (null = not inside a 2-space method)
   let mixinHashIndent = null; // mixin-DSL grouping state (see methodBoundary): null = not in a mixin block
@@ -519,8 +558,27 @@ function checkFile(file, violations, wrapperCall, warnings) {
       // must reach the _<name>NoSettle core, never the public wrapper (it re-enters the single-mutation
       // flush). The settle tiers themselves (RECALC_WHITELIST) ARE the flush, so they are not [G] subjects.
       if (!RECALC_WHITELIST.has(method) && !methodNoSettleMarked) {
-        const wrap = wrapperCall && code.match(wrapperCall);
-        if (wrap) violations.push(`[G] low-level ${method}() calls self-settling wrapper .${wrap[1]}() — reach the non-settling core (e.g. _${wrap[1]}NoSettle), not the public self-settling wrapper (or mark # ${NOSETTLE_MARKER}: <why>)  — ${at}`);
+        const wrap = gCtx.WRAPPER_CALL && code.match(gCtx.WRAPPER_CALL);
+        if (wrap) {
+          const sigil = wrap[1], wname = wrap[2];
+          // NAME-QUALIFIED [G] (plan P4.3; regression pair: TransformSpec.setScale — a plain
+          // data-holder setter — vs TransformFrameWdgt.setScale — a self-settling wrapper).
+          // @-SELF call: resolve to the NEAREST definer up this file's extends-chain; a 'plain'
+          // nearest definer means THIS class's own method, not the same-named wrapper — clean.
+          // Dotted call: the receiver class is not statically inferable — stay conservative,
+          // but NAME the plain definers so a false positive gets sanctioned, not "fixed" by
+          // deleting the legitimate setter.
+          const selfKind = sigil === '@' ? nearestDefinerKind(wname, selfClass, gCtx) : null;
+          if (sigil === '@' && selfKind === 'plain') {
+            // resolved to this class's own (or nearest ancestor's) NON-settling method — not a wrapper call
+          } else {
+            const plains = gCtx.plainClassesByName.get(wname);
+            const alsoPlain = plains && plains.size
+              ? ` NB ${wname} is ALSO a plain (non-settling) method on ${[...plains].join(', ')} — if the receiver is one of those, mark # ${NOSETTLE_MARKER}: receiver is <that class>.`
+              : '';
+            violations.push(`[G] low-level ${method}() calls self-settling wrapper ${sigil === '@' ? '@' : '.'}${wname}() — reach the non-settling core (e.g. _${wname}NoSettle), not the public self-settling wrapper (or mark # ${NOSETTLE_MARKER}: <why>).${alsoPlain}  — ${at}`);
+          }
+        }
         // the unambiguous self-add @add (Widget.add) — the one add shape a name scanner can attribute (`.add` member
         // stays excluded as Point#add-ambiguous). Low-level code must use @_addNoSettle, not the self-settling add().
         if (SELF_ADD_CALL.test(code)) violations.push(`[G] low-level ${method}() calls @add (self == Widget.add) — reach @_addNoSettle, not the self-settling add() (or mark # ${NOSETTLE_MARKER}: <why>)  — ${at}`);
@@ -655,15 +713,17 @@ function main() {
     process.exit(2);
   }
   // [G] pre-pass: discover the structural self-settling wrappers (single-tier), then a regex that
-  // matches a CALL to one. Empty-set guard keeps the regex well-formed (a few dozen names in practice;
+  // matches a CALL to one — capturing the @/. sigil so checkFile can resolve @-SELF calls by class
+  // (plan P4.3). Empty-set guard keeps the regex well-formed (a few dozen names in practice;
   // now mixin-aware -- see methodBoundary -- so a settling wrapper defined inside a mixin is attributed too).
-  const FORBIDDEN_WRAPPERS = discoverSettlingWrappers(files);
-  const WRAPPER_CALL = FORBIDDEN_WRAPPERS.size
-    ? new RegExp('[@.]\\s*(' + [...FORBIDDEN_WRAPPERS].join('|') + ')\\b') : null;
+  const gCtx = discoverSettlingWrappers(files);
+  const wrapperNames = [...gCtx.settlingClassesByName.keys()];
+  gCtx.WRAPPER_CALL = wrapperNames.length
+    ? new RegExp('([@.])\\s*(' + wrapperNames.join('|') + ')\\b') : null;
   const violations = [];
   const warnings = [];
   for (const f of files) {
-    try { checkFile(f, violations, WRAPPER_CALL, warnings); }
+    try { checkFile(f, violations, gCtx, warnings); }
     catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
   }
   let macroCount = 0;
@@ -705,7 +765,7 @@ function main() {
     console.error('Q: a _<name>Connector entrypoint (which joins an open layout pass instead of throwing — rule P) may be textually CALLED only from an allowlisted mid-cascade self-render — CONNECTOR_CALLER_ALLOWLIST; the reactive dispatch resolves it at runtime and needs no textual call (connection-cascade-settle-fix-plan.md §7e).');
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N/O/P/Q/R; ${FORBIDDEN_WRAPPERS.size} settling wrappers guarded)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N/O/P/Q/R; ${wrapperNames.length} settling wrappers guarded, name-qualified)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
   process.exit(0);
 }
 

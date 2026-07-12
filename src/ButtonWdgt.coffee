@@ -107,6 +107,12 @@ class ButtonWdgt extends Widget
   # trigger button action:
   trigger: ->
     if @action? and @action != ""
+      # dev-build type tripwire (2026-07-06 incident: an @action passed as a function CLOSURE fails
+      # obscurely here — @target[<function>] coerces to an undefined key; SliderWdgt carried the same
+      # latent misuse). @action must be a STRING method name on @target. `if Automator?` ⇒ stripped
+      # from the --homepage production build like all test-only code.
+      if Automator? and typeof @action isnt 'string'
+        throw new Error "ButtonWdgt action must be a STRING method name on the target (dispatched as @target[@action]) — got #{typeof @action}"
       #console.log "@target: " + @target + " @widgetEnv: " + @widgetEnv
       @target[@action].call @target, @dataSourceWidgetForTarget, @widgetEnv, @argumentToAction1, @argumentToAction2
     return

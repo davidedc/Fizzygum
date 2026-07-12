@@ -39,7 +39,17 @@ function walk(dir, ext, acc) {
   }
   return acc;
 }
-function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); }
+function stripComment(line) {
+  // '#{' opens CoffeeScript string INTERPOLATION, not a comment: a method referenced ONLY inside
+  // "…#{@foo()}…" used to be cut off here and falsely flagged dead (2026-07-06
+  // `_dragEmbedCandidateTitle` incident; dev-workflow plan P4.2). Cut at the first '#' NOT
+  // immediately followed by '{'. ('#{' inside a 'single-quoted' string is not interpolation, so
+  // this can over-count a reference there — errs fail-open: fewer dead flags, never a false flag.)
+  for (let k = line.indexOf('#'); k >= 0; k = line.indexOf('#', k + 1)) {
+    if (line[k + 1] !== '{') return line.slice(0, k);
+  }
+  return line;
+}
 
 // ── settle-tier symmetry helpers (pure; unit-tested via --self-test) ────────────────────────────────
 // A public `<name>` and its private core `_<name>NoSettle` form ONE self-settling pair. When one side is
@@ -76,6 +86,19 @@ if (process.argv.includes('--self-test')) {
     const got = independentlyReferenced(twinName(n), n, referrers);
     console[(got === expect) ? 'log' : 'error'](`  ${got === expect ? 'ok  ' : 'FAIL'} ${n}: retained=${got} (expected ${expect})`);
     if (got !== expect) ok = false;
+  }
+  // stripComment must treat '#{…}' as CODE (interpolation), not a comment (plan P4.2 regression).
+  const stripCases = [
+    ['x = "#{@onlyCalledInInterpolation()}" # real comment', 'x = "#{@onlyCalledInInterpolation()}" '],
+    ['s = "#{@a()} then #{@b()}"',                           's = "#{@a()} then #{@b()}"'],
+    ['# a pure comment line',                                ''],
+    ['y = 1 # note',                                         'y = 1 '],
+    ['plain code, no hash',                                  'plain code, no hash'],
+  ];
+  for (const [inp, want] of stripCases) {
+    const got = stripComment(inp);
+    console[(got === want) ? 'log' : 'error'](`  ${got === want ? 'ok  ' : 'FAIL'} stripComment(${JSON.stringify(inp)}) -> ${JSON.stringify(got)}`);
+    if (got !== want) ok = false;
   }
   console.log(ok ? '[dead-methods] self-test PASS' : '[dead-methods] self-test FAIL');
   process.exit(ok ? 0 : 1);
