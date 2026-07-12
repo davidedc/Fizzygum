@@ -163,9 +163,10 @@ class ActivePointerWdgt extends Widget
   # floatDrag 'n' drop events, method(arg) -> receiver:
   #
   #   _beforeBeingGrabbed() -> grabTarget
+  #   _reactToBeingGrabbed(oldParent) -> grabbedWdgt
   #   _reactToChildGrabbed(grabbedWdgt) -> oldParent
   #   wantsDropOfChild(wdgtToDrop) ->  newParent
-  #   _reactToBeingDropped(activePointerWdgt) -> droppedWdgt
+  #   _reactToBeingDropped(whereIn) -> droppedWdgt
   #   _reactToChildDropped(droppedWdgt, activePointerWdgt) -> newParent
   #
   dropTargetFor: (aWdgt) ->
@@ -524,8 +525,8 @@ class ActivePointerWdgt extends Widget
       # consistent on return, not on the next doOneCycle. SINGLE settle (_settleLayoutsAfter): every
       # _reactToChildDropped / _reactToBeingDropped override re-homes / rebuilds / re-fits through the NON-settling cores
       # (WindowWdgt._buildAndConnectChildrenNoSettle, _fullDestroyNoSettle, _addNoSettle / _addInPseudoRandom
-      # PositionNoSettle, _createReferenceAndCloseNoSettle, _closePopUpsMarkedForClosureNoSettle, and raw
-      # setters), so nothing re-enters the flush guard mid-pass; the single tier flushes ONCE at the end and
+      # PositionNoSettle, _createReferenceAndCloseNoSettle, _closePopUpsMarkedForClosureNoSettle, and immediate
+      # mutators), so nothing re-enters the flush guard mid-pass; the single tier flushes ONCE at the end and
       # THROWS if a future override sneaks in a public setter (the wanted cores-call-cores discipline -- the
       # batch tier used to silently absorb that). (end-of-cycle-flush drawdown: the drop was the biggest
       # residual, ~62 records, all flushed here once now.)

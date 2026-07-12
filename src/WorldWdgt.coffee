@@ -111,7 +111,7 @@ class WorldWdgt extends PanelWdgt
   # Scheduling (DEBUG, default off) turns on the check that LOGS every layout (re-)schedule reached DURING the
   # paint pass (healingRectanglesPhase true) -- i.e. a widget that scheduled layout while being painted, crossing
   # the render/layout boundary. The caret's paint-time scroll-follow (the original offender) was moved off paint
-  # and now settles inside the flush as the caret's _reLayout (CaretWdgt._requestScrollFollow). Off => ~zero overhead.
+  # and now settles per-event IN PLACE as the caret's _reLayout (CaretWdgt._requestScrollFollow). Off => ~zero overhead.
   auditPaintTimeLayoutScheduling: false
   _paintTimeLayoutSchedules: nil
 
@@ -562,9 +562,6 @@ class WorldWdgt extends PanelWdgt
 
     @changed()
 
-  wantsDropOfChild: (aWdgt) ->
-    return @_acceptsDrops
-
   createErrorConsole: ->
     errorsLogViewerWdgt = new ErrorsLogViewerWdgt "Errors", @, "modifyCodeToBeInjected", ""
     wm = new WindowWdgt nil, nil, errorsLogViewerWdgt
@@ -818,13 +815,11 @@ class WorldWdgt extends PanelWdgt
         brokenWidget.dstBrokenRect = @broken.length
       if !theRect?
         debugger
-      # if @broken.length == 0
-      #  debugger
       @broken.push theRect
     @duplicatedBrokenRectsTracker[theRect.toString()] = true
 
-  # using the code coverage tool from Chrome, it
-  # doesn't seem that this is ever used
+  # two live call sites (fleshOutBroken / fleshOutFullBroken), but Chrome's code-coverage
+  # tool showed it never firing at runtime
   # TODO investigate and see whether this is needed
   mergeBrokenRectsIfCloseOrPushBoth: (brokenWidget, sourceBroken, destinationBroken) ->
     mergedBrokenRect = sourceBroken.merge destinationBroken
@@ -900,9 +895,6 @@ class WorldWdgt extends PanelWdgt
 
 
   fleshOutBroken: ->
-    #if @widgetsWithMaybeChangedPaintBounds.length > 0
-    #  debugger
-
     sourceBroken = nil
     destinationBroken = nil
 
@@ -920,9 +912,6 @@ class WorldWdgt extends PanelWdgt
           # so a widget detached between paint and flush (close/destroy) still erases its true rotated
           # footprint. Off any island the recorded rect is the raw rect ⇒ byte-identical dormant.
           sourceBroken = brokenWidget.clippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
-
-        #if brokenWidget!= world and (brokenWidget.clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
-        #  debugger
 
       # §4.4 island buffer cache — source (old-position) lane (see fleshOutFullBroken). Consumed by
       # whichever lane runs first (fleshOutFullBroken is called before fleshOutBroken); the field is
@@ -948,9 +937,6 @@ class WorldWdgt extends PanelWdgt
           # dedupe below so those never see mixed planes. Identity → unchanged object.
           # depositBufferDirty=true deposits the NEW (destination) virtual footprint onto the island (§4.4).
           destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged, true).spread().expandBy(1).growBy @maxShadowSize
-          #if brokenWidget!= world and (boundsToBeChanged.spread().containsPoint new Point 10, 10)
-          #  debugger
-
 
       if sourceBroken? and destinationBroken?
         @mergeBrokenRectsIfCloseOrPushBoth brokenWidget, sourceBroken, destinationBroken
@@ -966,9 +952,6 @@ class WorldWdgt extends PanelWdgt
     
 
   fleshOutFullBroken: ->
-    #if @widgetsWithMaybeChangedFullPaintBounds.length > 0
-    #  debugger
-
     sourceBroken = nil
     destinationBroken = nil
 
@@ -1002,10 +985,7 @@ class WorldWdgt extends PanelWdgt
           # affine transforms (§4.5): map to screen before spread/expand/shadow-grow, before merge (identity → unchanged).
           # depositBufferDirty=true deposits the NEW (destination) virtual footprint onto each crossed island (§4.4).
           destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged, true).spread().expandBy(1).growBy @maxShadowSize
-          #if brokenWidget!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
-          #  debugger
-      
-   
+
       if sourceBroken? and destinationBroken?
         @mergeBrokenRectsIfCloseOrPushBoth brokenWidget, sourceBroken, destinationBroken
       else if sourceBroken? or destinationBroken?

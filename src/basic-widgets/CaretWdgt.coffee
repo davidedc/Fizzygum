@@ -40,8 +40,9 @@ class CaretWdgt extends BlinkerWdgt
   # on the target's CURRENT slot coordinate. The caret is isLayoutInert, so this schedules / mutates NO
   # layout -- it is READ-ONLY w.r.t. the layout tree and therefore safe to run at PAINT time
   # (justBeforeBeingPainted). It deliberately does NOT scroll-follow: bringing the caret into view mutates
-  # layout (moves @target / @contents) and must happen out of paint -- that is the caret's _reLayout, settled
-  # inside the end-of-cycle flush (see _requestScrollFollow / _reLayout). (Also called from the constructor.)
+  # layout (moves @target / @contents) and must happen out of paint -- that is the caret's _reLayout, drained
+  # by the per-event IN-PLACE settle (see _requestScrollFollow / _reLayout; the follow never rides the
+  # end-of-cycle flush). (Also called from the constructor.)
   adjustAccordingToTargetText: ->
     @updateDimension()
     @_repositionToSlotNoSettle()
@@ -179,8 +180,10 @@ class CaretWdgt extends BlinkerWdgt
     if becauseOfMouseClick and @target.undoHistory?.length == 0
       @target.pushUndoState? @slot, true
 
-  # The INERT re-place (no layout): put the caret at the target's current slot coordinate. Shared by the
-  # paint/ctor re-sync (adjustAccordingToTargetText) and every caret move (_gotoSlotNoSettle).
+  # The INERT re-place (no layout): put the caret at the target's current slot coordinate. Called only by the
+  # paint/ctor re-sync (adjustAccordingToTargetText); a caret MOVE places itself UN-clamped inside
+  # _oneScrollCaretIntoViewPassNoSettle instead (Point.floor() here clamps to >=0 -- exactly the clamp the
+  # 2026-07-01 single-pass follow fix removed for moves; see the note there).
   _repositionToSlotNoSettle: ->
     pos = @target.slotCoordinates @slot
     if pos?

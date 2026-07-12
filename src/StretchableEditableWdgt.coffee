@@ -55,10 +55,16 @@ class StretchableEditableWdgt extends Widget
     @add @stretchableWidgetContainer
 
 
+  # Lays out the (optional) tools panel and the stretchable container. ONE shared body: the
+  # Dashboards / PatchProgramming / SimpleSlide overrides were byte-identical copies of each other
+  # and were hoisted here (2026-07-12); on this base ("Generic panel") @toolsPanel stays nil
+  # (empty _createToolsPanelNoSettle), so the toolsPanel arms reduce away and the container takes
+  # the full padded bounds — exactly the old base body. (ReconfigurablePaintWdgt keeps its own,
+  # genuinely different _reLayoutSelf — 4 tool buttons.)
   _reLayoutSelf: ->
     # here we are disabling all the broken
     # rectangles. The reason is that all the
-    # subwidgets of the inspector are within the
+    # subwidgets of this panel are within the
     # bounds of the parent Widget. This means that
     # if only the parent widget breaks its rectangle
     # then everything is OK.
@@ -69,13 +75,25 @@ class StretchableEditableWdgt extends Widget
 
     labelBottom = @top() + @externalPadding
 
+    # tools -------------------------------
+
+    if @toolsPanel?.parent == @
+      @toolsPanel._applyMoveTo new Point @left() + @externalPadding, labelBottom
+      @toolsPanel._applyExtent new Point 95, @height() - 2 * @externalPadding
+
 
     # stretchableWidgetContainer --------------------------
 
     stretchableWidgetContainerWidth = @width() - 2*@externalPadding
-    
+
+    if @dragsDropsAndEditingEnabled and @toolsPanel?
+      stretchableWidgetContainerWidth -= @toolsPanel.width() + @internalPadding
+
     stretchableWidgetContainerHeight =  @height() - 2 * @externalPadding
-    stretchableWidgetContainerLeft = @left() + @externalPadding
+    if @dragsDropsAndEditingEnabled and @toolsPanel?
+      stretchableWidgetContainerLeft = @toolsPanel.right() + @internalPadding
+    else
+      stretchableWidgetContainerLeft = @left() + @externalPadding
 
     if @stretchableWidgetContainer.parent == @
       @stretchableWidgetContainer._applyMoveTo new Point stretchableWidgetContainerLeft, labelBottom

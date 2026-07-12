@@ -95,16 +95,13 @@ const PUBLIC_SET = new Set(PUBLIC_SETTERS);
 const RECALC_WHITELIST = new Set(['doOneCycle', '_settleLayoutsAfter', '_settleLayoutsAfterOrJoinEnclosingPass']);
 
 const isLowLevel = (name) =>
-  /^raw[A-Z]/.test(name) ||  // raw* is now ONLY the pixel accessors (rawPixelInfo/rawPixelHash/rawRGBA).
-                            // (the structural silent* setters were renamed to __hide/__addShadow/__add LEAVES in §3d/B13,
-                            //  caught by /^_/ below — the old /^silent/ arm was retired with them. The old /^fullRaw/ arm
-                            //  was likewise REMOVED with the §6-1/§6-5 move+mutator renames: every fullRaw* mover is now an
-                            //  _apply* corner or a _move* convenience — both leading-underscore, so caught by /^_/
-                            //  below; the low-level classification is unchanged.)
+  // (the old /^raw[A-Z]/, /^silent/ and /^fullRaw/ arms are all RETIRED: zero raw*/silent*/fullRaw*
+  //  method DEFS exist in src — the geometry/structural families were renamed onto the _/__ tiers
+  //  (§6/§3d), rule [M] bans them from reappearing, and the raw-PIXEL accessors
+  //  (rawPixelInfo/rawPixelHash/rawRGBA) live in the tests-repo harness, which this gate never scans.)
   /^_/.test(name) ||        // leading-underscore = private (incl. __ and the re-layout machinery
                             // _positionAndResizeChildren / _reLayoutScrollbars / _reLayoutChildrenAndScrollbars /
-                            // _reLayoutChildren / _reLayoutSelf / _reLayoutDesktop /
-                            // _announceLayoutPropertyChangeToContainer / _amIDirectlyInside*)
+                            // _reLayoutChildren / _reLayoutSelf / _reLayoutDesktop / _amIDirectlyInside*)
   /NoSettle$/.test(name);    // the _xxxNoSettle cores (do the mutation, no settle)
 // NB the old `|| /Layout$/.test(name)` arm was REMOVED (lint-ratchet C4, 2026-06-25): after the
 // layout-method-family rename every real layout pass is _reLayout*-prefixed (already caught by /^_/
@@ -269,13 +266,13 @@ const LEGACY_CALLBACK_FRAGMENT = /^(child[A-Z]|justBeen|iHaveBeen|aboutTo|prepar
 
 // [M] terminology fragment-ban (layering/naming convention §4): the retired GEOMETRY/STRUCTURAL prefixes must not
 // reappear as method names. The geometry raw* setters/movers (rawSet*/fullRawMove*) were eliminated in §6, and the
-// structural silent* setters (silentHide/silentAdd/silentAddShadow) in §3d -- this locks them out for good. A small
-// allowlist holds the legit raw-PIXEL accessors (raw = raw pixel DATA, not raw geometry). NB `full[A-Z]` is
+// structural silent* setters (silentHide/silentAdd/silentAddShadow) in §3d -- this locks them out for good. NB `full[A-Z]` is
 // DELIBERATELY NOT banned: the geometry full* (fullMoveTo/fullRawMove*) are gone, but full* remains a legitimate
 // SUBTREE-AWARE vocabulary (fullChanged / fullCopy / fullDestroy / fullBounds / fullPaintInto / fullImage* -- ~25
 // live defs), out of scope for this campaign. Only the specific retired `fullRaw` mover prefix is caught.
 const FRAGMENT_BANNED = /^(silent[A-Z]|raw[A-Z]|fullRaw)/;
-const FRAGMENT_ALLOWLIST = new Set(['rawPixelInfo', 'rawPixelHash', 'rawRGBA']);  // raw-PIXEL accessors keep "raw" (raw pixel data, not raw geometry)
+// (no allowlist: the raw-PIXEL accessors (rawPixelInfo/rawPixelHash/rawRGBA — raw pixel DATA, not raw
+// geometry) live in the tests-repo harness, which this gate never scans, so the ban is unconditional in src.)
 const APPLY_ANDNOTIFY_BANNED = /^_apply\w*AndNotify$/;  // [M] the retired _apply*AndNotify polymorphic-apply suffix (Tier B, 2026-07-02): the corners dropped it to the bare _apply* once the notify seam was deleted (2026-07-01). NB _commit*AndNotify is a DIFFERENT (collapsed) corner, deliberately not caught here.
 
 // [N] the retired notify-by-mutation CONTAINER SEAM must not be re-defined (Opt-4 hygiene guard, 2026-07-01). The two
@@ -515,7 +512,7 @@ function checkFile(file, violations, gCtx, warnings) {
             }
             if (LEGACY_CALLBACK_FRAGMENT.test(b.method)) violations.push(`[L] legacy callback fragment ${b.method}() — use the _(reactTo|before)(Being|Child|HolderWindow)<Event> scheme (layering/naming convention §3/§4)  — ${rel}:${n + 1}`);
             // [M] retired geometry/structural naming fragments (raw* / silent* / fullRaw — see consts above; raw-pixel accessors allowlisted).
-            if (FRAGMENT_BANNED.test(b.method) && !FRAGMENT_ALLOWLIST.has(b.method)) violations.push(`[M] retired naming fragment ${b.method}() — the raw*/silent*/fullRaw geometry+structural prefixes were eliminated (§6/§3d); use the _apply*/_commit*/__ tier names (raw PIXEL data uses the rawPixel*/rawRGBA accessors). (layering/naming convention §4)  — ${rel}:${n + 1}`);
+            if (FRAGMENT_BANNED.test(b.method)) violations.push(`[M] retired naming fragment ${b.method}() — the raw*/silent*/fullRaw geometry+structural prefixes were eliminated (§6/§3d); use the _apply*/_commit*/__ tier names. (layering/naming convention §4)  — ${rel}:${n + 1}`);
             if (APPLY_ANDNOTIFY_BANNED.test(b.method)) violations.push(`[M] retired apply-notify suffix ${b.method}() — the _apply*AndNotify corners were renamed to the bare polymorphic _apply* (Tier B, 2026-07-02, docs/layout-optimizations-and-oo-cleanup-plan.md §3); "AndNotify" asserted a notify seam deleted 2026-07-01. Use _apply* (polymorphic) or _apply*Base (override-bypass twin). (layering/naming convention §4)  — ${rel}:${n + 1}`);
             // [N] retired notify-by-mutation container seam (see the SEAM_VERB_BANNED const above): the deleted _announce*ToContainer verbs must not return as a def.
             if (SEAM_VERB_BANNED.test(b.method)) violations.push(`[N] retired container-seam verb ${b.method}() — the notify-by-mutation re-fit seam (_announce*ToContainer) was deleted 2026-07-01 and replaced by the settle-time up-edge _reFitMyTrackingContainerAfterSettle; do NOT re-introduce a mutation-driven container notification (assessment §4.1 / §6 rulebook rule 2)  — ${rel}:${n + 1}`);

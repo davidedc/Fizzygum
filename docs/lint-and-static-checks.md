@@ -51,9 +51,9 @@ The layout-method layering is **formally defined**, once, in `buildSystem/check-
 ```js
 // LOW-LEVEL (rule [A]/[G] subject): must not reach UP into the public self-flushing layer.
 const isLowLevel = (name) =>
-  /^raw[A-Z]/.test(name) ||   // raw* is now ONLY the pixel accessors (rawPixelInfo/rawPixelHash/rawRGBA)
   /^_/.test(name) ||          // any leading underscore — the _ internal + __ leaf private tiers
   /NoSettle$/.test(name);     // the *NoSettle cores
+// (the old /^raw[A-Z]/ arm is retired: zero raw* defs exist in src; rule [M] keeps them out)
 // the strict INNER subset (rule [E] subject): may MUTATE geometry, never SCHEDULE.
 const isImmediateMutator = (name) =>
   /^_apply(Extent|Bounds|Width|Height|MoveBy|MoveTo)$/.test(name) ||            // the polymorphic apply corners (bare _apply*, ex *AndNotify — Tier B; NB _apply*Base is NOT matched)
@@ -87,8 +87,10 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
 | stinks | `buildSystem/check-stinks.js` | ~:315 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
 | thin-wrap | `buildSystem/check-thin-wraps.js` | ~:333 | a public method owning a `_<name>NoSettle` twin is the ONE canonical mechanical wrap | per-method `# thin-wrap-exempt: <reason>`; SKIPS a twinless `*NoSettle` |
 | **constructor-build** | **`buildSystem/check-constructors-build.js`** | **~:353** | a `constructor:` body must not build its own children inline — `@add`/`@addMany`/`@addNoSettle`/`@_addNoSettle`/… on `this` belong in `_buildAndConnectChildrenNoSettle`, reached via the settling wrapper | per-constructor `# constructor-build-exempt: <reason>` (no central allowlist) |
-| test-.js syntax | `Fizzygum-tests/scripts/check-tests-syntax.js` | ~:372 | JS syntax of the macro SystemTest `.js` files, before the build copies them in | — (self-skips on `--homepage`/`--notests`/absent sibling) |
-| ref-image integrity | `Fizzygum-tests/scripts/check-refs.js` | ~:390 | >1 `dataHash` per `(test,image,dpr,OS)` or an orphaned `.js`/`.png` reference | — (self-skips like the test gate) |
+| relayout-bounds-first | `buildSystem/check-relayout-bounds-first.js` | ~:372 | a `_reLayout` override must APPLY its own bounds before its first own-geometry read (else children lay out against the previous pass's frame — the "one-cadence-lag" flake) | `# relayout-bounds-first-exempt: <reason>` above the method header |
+| relayout-repaints [INV-1] | `buildSystem/check-relayout-repaints.js` | ~:392 | a `_reLayoutSelf` that opens a `disableTrackChanges` suppression frame must issue a covering `fullChanged()` AFTER the last re-enable (scoped to `_reLayoutSelf` by design — see the gate header; runtime twin = the paint-truthfulness audit) | `# relayout-repaint-exempt: <reason>` above the method header |
+| test-.js syntax | `Fizzygum-tests/scripts/check-tests-syntax.js` | ~:411 | JS syntax of the macro SystemTest `.js` files, before the build copies them in | — (self-skips on `--homepage`/`--notests`/absent sibling) |
+| ref-image integrity | `Fizzygum-tests/scripts/check-refs.js` | ~:429 | >1 `dataHash` per `(test,image,dpr,OS)` or an orphaned `.js`/`.png` reference | — (self-skips like the test gate) |
 
 **Per-gate notes:**
 
@@ -171,7 +173,7 @@ lint works at all (§6).
 | **[J]** | a notification callback (`_reactTo*`/`_before*`) | calling `_settleLayoutsAfter` | a callback is a settle-neutral core; the gesture/structural DISPATCHER owns the one settle | notification-settle runtime audit | — |
 | **[K]** | a 2×2 apply CORNER (`_apply<Geom>` polymorphic / `_apply<Geom>Base` override-bypass twin / `_commit<Geom>AndNotify` notify-only) | a `_apply*Base` bypass twin firing the container re-fit seam (`_reFitContainer*`/`_announce*`) or DISPATCHING to its polymorphic `_apply*` sibling; a `_commit*AndNotify` corner reacting (`changed`/`_reLayout*`) | post-Tier-B the corners are REACT × DISPATCH: a `_apply*Base` reacts but must BYPASS the override — not fire the seam, not route the arrange apply back through `_apply*`; the notify-only corner must not react. The two statically-sound NEGATIVES; the old positive "*AndNotify reaches the seam" is retired with the seam (deleted 2026-07-01) | tier-naming runtime audit (now vacuous) | — |
 | **[L]** | a notification callback DEF (`_reactTo*`/`_before*`) | a name not matching `_(reactTo\|before)(Being\|Child\|HolderWindow)<Event>`, a `NoSettle` suffix, or a legacy fragment (`childX`/`justBeen`/`iHaveBeen`/`aboutTo`/`prepareTo`) | callbacks follow the derivable (perspective × phase) scheme; the legacy spellings were retired | — | — |
-| **[M]** | any method DEF | a retired geometry/structural naming fragment as the name — `raw[A-Z]…` / `^silent[A-Z]` / `^fullRaw` (allowlist: the raw-PIXEL accessors `rawPixelInfo`/`rawPixelHash`/`rawRGBA`) | the `raw*`/`silent*`/`fullRaw*` geometry+structural prefixes were eliminated (§2 of the convention); lock them out — note `full[A-Z]` stays legitimate (`fullBounds`/`fullPaintInto`/…) | — | — |
+| **[M]** | any method DEF | a retired geometry/structural naming fragment as the name — `raw[A-Z]…` / `^silent[A-Z]` / `^fullRaw`, unconditionally (the raw-PIXEL accessors `rawPixelInfo`/`rawPixelHash`/`rawRGBA` live in the tests-repo harness, never scanned — the old allowlist never matched anything in src and was removed) | the `raw*`/`silent*`/`fullRaw*` geometry+structural prefixes were eliminated (§2 of the convention); lock them out — note `full[A-Z]` stays legitimate (`fullBounds`/`fullPaintInto`/…) | — | — |
 | **[N]** | any method DEF | a name matching `/^_announce\w*ToContainer$/` (the retired notify-by-mutation container seam) | the mutation-time re-fit seam was deleted 2026-07-01 and replaced by the settle-time up-edge `_reFitMyTrackingContainerAfterSettle`; this bans reviving the announce-up verbs on the DEF side (the CALL side is already [I]/[K]) | — | — |
 | **[O]** | any method NOT in `COALESCED_CALLER_ALLOWLIST` (seeded `{nonFloatDragging}`) | a `[@.]…Coalesced` CALL to a `*Coalesced` entrypoint (`_setMaxDimCoalesced`/`_setExtentCoalesced`/`_moveToCoalesced`/`_setWidthCoalesced`/`_setHeightCoalesced`) | a `*Coalesced` entrypoint DEFERS its layout settle to the ONE end-of-cycle flush — byte-identical (sound) only for a per-event STREAM handler that never reads back the settled layout mid-cycle; a discrete caller must use the self-settling setter. These entrypoints are `_`-private for the same reason (only stream handlers may reach them) | — | — (add a genuine new stream handler's method name to `COALESCED_CALLER_ALLOWLIST`) |
 | **[P]** | any method whose name does NOT end `Connector` | a `[@.]_settleLayoutsAfterOrJoinEnclosingPass` CALL | `_settleLayoutsAfterOrJoinEnclosingPass` is the reactive-connection settle lane — reached mid-pass it JOINS the open layout pass instead of throwing (so a wired reactive circuit — the °C↔°F converter — settles once); sound ONLY for a dedicated `_<name>Connector` entrypoint carrying the `connectionsCalculationToken` cycle-guard. A general/internal caller must use the self-settling `_settleLayoutsAfter` (surfaces the flow violation) or a `_<name>NoSettle` core | `Widget._settleLayoutsAfter` throw (§1) | — |
@@ -323,7 +325,7 @@ source to satisfy a new rule.
 - `buildSystem/check-layering.js` — `PUBLIC_SETTERS`/`TEXT_SETTERS`/`RECALC_WHITELIST`; `isLowLevel` /
   `isImmediateMutator` (the tier predicates, §2); `SETTLE_CALL`/`WRAPPER_EXCLUDED`/`SELF_ADD_CALL`/`NOSETTLE_MARKER` (the
   [G] constants); `LEAF_FORBIDDEN` ([I]); `APPLY_CORNER`/`K_SEAM_CALL`/`K_REACT_CALL`/`K_POLY_APPLY` ([K]);
-  `CALLBACK_PREFIX`/`CALLBACK_SHAPE`/`LEGACY_CALLBACK_FRAGMENT` ([L]); `FRAGMENT_BANNED`/`FRAGMENT_ALLOWLIST` ([M]);
+  `CALLBACK_PREFIX`/`CALLBACK_SHAPE`/`LEGACY_CALLBACK_FRAGMENT` ([L]); `FRAGMENT_BANNED` ([M]);
   `SEAM_VERB_BANNED` ([N]); `COALESCED_CALL`/`COALESCED_CALLER_ALLOWLIST` ([O]);
   `stripLine` / `METHOD_HEADER` / `methodBoundary` (mixin-DSL aware); `discoverSettlingWrappers`; `checkFile` (rules
   [A]–[O]); `checkMacroFile` (rule [D]).

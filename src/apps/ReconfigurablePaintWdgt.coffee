@@ -456,8 +456,6 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     world.disableTrackChanges()
 
     # label
-    labelLeft = @left() + @externalPadding
-    labelRight = @right() - @externalPadding
     labelBottom = @top() + @externalPadding
 
     # tools -------------------------------

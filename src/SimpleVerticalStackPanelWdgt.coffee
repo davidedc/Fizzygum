@@ -26,8 +26,8 @@ class SimpleVerticalStackPanelWdgt extends Widget
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position, layoutSpec, beingDropped, unused, positionOnScreen
 
   # _addNoSettle -- the non-settling core of add(), mirroring Widget.add/_addNoSettle. The stack-specific
-  # work (rawResize-without-spacing + sibling-position computation) only uses raw/structural setters,
-  # so build-time / layout-time / teardown adders can call it directly without flushing layouts.
+  # work (_resizeToWithoutSpacing + sibling-position computation) only uses immediate mutators / structural
+  # cores, so build-time / layout-time / teardown adders can call it directly without flushing layouts.
   # (window-rebuild follow-up: lets WindowWdgt._buildAndConnectChildrenNoSettle add chrome + content through cores.)
   _addNoSettle: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
     aWdgt._resizeToWithoutSpacing()
@@ -97,11 +97,11 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # own re-fit DEFERS to the cycle (else arm; my _reLayout is 'super; @_reLayoutChildren'). These run
   # outside a pass (drop gesture / destroy / add-flush re-parent -- where invalidate is legal); the
   # in-pass arm keeps the synchronous re-fit. (fam 2 -- deferred-layout-residuals-audit.md)
-  _reactToChildRemoved: ->
+  _reactToChildRemoved: (child) ->
     return if @parent?._reLayOutAfterContainedPanelChange?()
     @_reFitContainer()
 
-  _reactToChildDropped: ->
+  _reactToChildDropped: (child) ->
     return if @parent?._reLayOutAfterContainedPanelChange?()
     @_reFitContainer()
 

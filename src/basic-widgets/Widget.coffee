@@ -65,9 +65,6 @@ class Widget extends TreeNode
   strokeColor: nil
   texture: nil # optional url of a fill-image
 
-  # unused
-  #cachedTexture: nil # internal cache of actual bg image
-
   lastTime: nil
   # when you use the high-level geometry-change APIs
   # you don't actually change the geometry right away,
@@ -738,7 +735,7 @@ class Widget extends TreeNode
   #    re-dirty the container in the SAME pass -> the until-loop never converges. So settle
   #    this child IN PLACE with a synchronous @_reLayout() (no invalidate, no climb), making
   #    the container's _reLayout a FIXED POINT -- the same outcome ScrollPanelWdgt reaches via
-  #    silent setters. (See docs/deferred-layout-refit-and-add-design.md, "Phase 3b -- Slice 2".)
+  #    the non-notifying _apply*Base twins. (See docs/deferred-layout-refit-and-add-design.md, "Phase 3b -- Slice 2".)
   # RETURNS the RESULTING height (Path B de-read-back). A container re-fit that sizes a child this way
   # (WindowWdgt / SimpleVerticalStackPanelWdgt _positionAndResizeChildren) must NOT then read the child's
   # geometry back to learn its new height -- that synchronous mutate-then-read-back is exactly what forces
@@ -1812,7 +1809,7 @@ class Widget extends TreeNode
   # The bare move primitives _applyMoveByBase / _applyMoveToBase, used by the top-down arrange for LEAF children: translate me
   # + my children + repaint via the UNIFORM base translate. A leaf child is placed through these rather than
   # _applyMoveBy / _applyMoveTo precisely so its move takes the base path and NOT the
-  # ClippingAtRectangularBoundsMixin / ActivePointerWdgt override those *AndNotify names dispatch to (see the
+  # ClippingAtRectangularBoundsMixin / ActivePointerWdgt override those polymorphic names dispatch to (see the
   # _applyMoveBy note above -- that override difference is why the two are not collapsible). _applyMoveByBase is
   # the shared move core (returns true iff it actually moved).
   _applyMoveByBase: (delta) ->
@@ -2986,14 +2983,7 @@ class Widget extends TreeNode
   # See comment on the fullPaintBoundsMaybeChanged
   # property above for more info.
   fullChanged: ->
-    # tests should all pass even if you don't
-    # use the world.trackChanges flag, perhaps things
-    # should just be a bit slower (but probably not
-    # significantly). This is because there is no
-    # harm into changing children of a widget
-    # that is fullChanged, the checks should
-    # simplify the situation.
-    # I tested this was OK in December 2017
+    # (on the trackChanges flag see the note in `changed` above)
     if world.trackChanges[world.trackChanges.length - 1]
       # check if we already issued a fullChanged on this widget
       if !@fullPaintBoundsMaybeChanged
@@ -3002,14 +2992,12 @@ class Widget extends TreeNode
   
   # Widget accessing - structure //////////////////////////////////////////////
 
-  # EXPLANATION of "silent" vs. "raw" vs. "normal" hierarchy/bounds change methods
-  # ------------------------------------------------------------------------------
-  # “normal”: these are the highest-level methods and take into account layouts.
-  #           Should use these ones as much as possible. Call the "raw"
-  #           versions below
-  # “raw”: lower level. This is what the re-layout routines use. Usually call the
-  #        silent version below.
-  # “silent”: doesn't mark the widget as changed
+  # Hierarchy/bounds change methods come in tiers (see
+  # docs/layering-naming-convention.md): public self-settling setters at the top,
+  # then the `_<name>NoSettle` cores and the `_apply*`/`_apply*Base` corners the
+  # re-layout routines use, down to the `__commit*` leaves that trigger no
+  # orchestration. (The old "silent"/"raw" method families were renamed away
+  # 2026-07-02.)
   #
   # It's important that lower-level functions don't ever call the higher-level
   # functions, as that's architecturally incorrect and can cause infinite loops in
@@ -3510,9 +3498,10 @@ class Widget extends TreeNode
   wantsDropOfChild: (aWdgt) ->
     return @_acceptsDrops
 
-  # the SELF drop gate (public, pure, positive — §9.2): the base default is "yes, droppable"; WindowWdgt
-  # (external) / BasementOpenerWdgt override to refuse. (ex-rejectsBeingDropped, polarity-flipped — §9.7-3;
-  # a base default is required so a widget with no override still defaults droppable — R4.)
+  # the SELF drop gate (public, pure, positive — layering/naming convention §3): the base default is
+  # "yes, droppable"; BasementOpenerWdgt overrides to refuse (the old WindowWdgt internal/external override
+  # was replaced by the drag-embed dwell gate — see ActivePointerWdgt ~:1257). (ex-rejectsBeingDropped,
+  # polarity-flipped; a base default is required so a widget with no override still defaults droppable.)
   wantsToBeDropped: ->
     return true
 
@@ -4546,37 +4535,17 @@ class Widget extends TreeNode
       world._deferredSettleDeclarationDepth -= 1
 
   _setMaxDimNoSettle: (overridingMaxDim) ->
-
-    #   currentMax = @getRecursiveMaxDim()
-    #   ratio = currentMax.x / overridingMaxDim.x
-    #
-    #   for C in @children
-    #     if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    #       C.setMaxDim C.getRecursiveMaxDim().divideBy ratio
-
-
+    # (a proportional rescale of ATTACHEDAS_STACK_* children was once sketched
+    # here — see git history — but never enabled)
     @maxWidth = overridingMaxDim.x
     @maxHeight = overridingMaxDim.y
 
     @_invalidateLayout()
 
-  # if you use this paragraph, then
-  # we have a system where you CAN easily resize things to any
-  # size, so to have maximum flexibility we are not binding the
-  # minimum of a container to the minimums of the contents.
-  # getDesiredDim: ->
-  #   desiredDim = new Point @desiredWidth, @desiredHeight
-  #   return desiredDim.min @getMaxDim()
-  # getMinDim: ->
-  #   minDim = new Point @minWidth, @minHeight
-  #   return minDim.min @getMaxDim()
-  # getMaxDim: ->
-  #   maxDim = new Point @maxWidth, @maxHeight
-  #   return maxDim
-
-  # if you use this paragraph, then the container of further
-  # layouts will have a minimum equal to the sum of minimums
-  # of the contents.
+  # These bind the container's minimum to the sum of its contents' minimums. (A
+  # discarded alternative — see git history — read the plain @desired*/@min* fields
+  # instead, NOT binding a container's minimum to its contents, for maximum resize
+  # flexibility.)
   getDesiredDim: ->
     if @isInCollapsedSubtree() then return new Point 0,0
     @getRecursiveDesiredDim()

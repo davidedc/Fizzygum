@@ -54,9 +54,6 @@ class ScrollPanelWdgt extends PanelWdgt
     # contained Panel
     @color = @contents.color
     @alpha = @contents.alpha
-    
-    #@setColor = @contents.setColor
-    #@setAlphaScaled = @contents.setAlphaScaled
 
     @hBar = new SliderWdgt nil, nil, nil, nil, @sliderColor
     @hBar._applyHeight @scrollBarsThickness
@@ -767,7 +764,6 @@ class ScrollPanelWdgt extends PanelWdgt
 
     x = xArg
     y = yArg
-    z = zArg
 
     # if we don't destroy the resizing handles,
     # they'll follow the contents being moved!
@@ -789,9 +785,6 @@ class ScrollPanelWdgt extends PanelWdgt
       x *= -1
     if WorldWdgt.preferencesAndSettings.invertWheelY
       y *= -1
-    # unused
-    if WorldWdgt.preferencesAndSettings.invertWheelZ
-      z *= -1
 
     if y != 0
       # TODO this escalation should also
@@ -896,7 +889,7 @@ class ScrollPanelWdgt extends PanelWdgt
     # re-fit here (@_invalidateLayout) -- a careless end-of-cycle push (it reaches the flush from the menu trigger,
     # outside any settle; the suite-wide production audit flagged exactly this site). A disable-probe proved it
     # REDUNDANT: disabling changes appearance + drop-handling, not this panel's settled geometry, and the cascade's
-    # @contents.disableDragsDropsAndEditing above already did its synchronous work, so the deferred re-fit changed
+    # @contents._disableDragsDropsAndEditingNoSettle above already did its synchronous work, so the deferred re-fit changed
     # nothing -- removing it is byte-identical (full gauntlet incl. the 12 panel-locking apps) and clears the
     # macroLockedDocumentRejectsDrop record. (Was `@_invalidateLayout()`.)
 
