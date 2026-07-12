@@ -32,6 +32,13 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
     if !deltaDragFromPreviousCall?
       return
 
+    # Affine transforms §7.12: deltaDragFromPreviousCall is a SCREEN-space vector, but the cell
+    # widths below live in MY plane — inside a rotated/scaled island map it through the inverse
+    # linear part, as the difference of two plane-mapped points (a delta must never be point-mapped:
+    # the translation would double-apply). Gated so the dormant path never pays the ancestor walk.
+    if @_isInsideNonIdentityIsland()
+      deltaDragFromPreviousCall = (@screenPointToMyPlane pos).subtract @screenPointToMyPlane pos.subtract deltaDragFromPreviousCall
+
     leftWidget = @lastSiblingBeforeMeSuchThat (m) ->
       m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
