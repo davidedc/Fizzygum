@@ -43,7 +43,17 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # The cache-break + fullChanged mirror what a transform change does. (The original R3 "Option A" —
   # let an asymmetric grow re-centre the figure via the nil slot-centre anchor — was superseded by the
   # §7.5 Bug-D anchor-stability rule below: persisting content must stay screen-still across a re-fit.)
-  _reLayoutChildren: ->
+  # arrangeDriven distinguishes the TWO re-fit regimes on an EXTENT change (follow-up F1,
+  # docs/…-layout-transparency-plan.md §9): a CONTENT-driven re-fit (bare call — the settle-loop
+  # up-edge, my own _reLayout) keeps the Bug-D pin so a user handle-resizing the wrapped widget
+  # sees persisting screen points stay still; an ARRANGE-driven re-fit (true — forwarded from my
+  # §5a _applyExtent / _setWidthSizeHeightAccordingly under a laying-out parent) NILs the anchor,
+  # because the parent's fractional model OWNS placement (§5c records SLOT-box fractions) and a
+  # pinned anchor inherited from an earlier user gesture decouples the render from the slot the
+  # model is placing — telescoping d = A − c by extΔ/2 each frame, rendering the content offset
+  # by (I − sR)(A − c) (probe leg E: 14.7px drift). Nil-ing re-glues the render to the slot and
+  # converges. See §9.3/§9.4 for the algebra and why nil (not Bug-G normalize) is the locked choice.
+  _reLayoutChildren: (arrangeDriven = false) ->
     content = @childrenNotHandlesNorCarets()?[0]
     return if !content?
     newSlot = new Rectangle content.left(), content.top(), content.right(), content.bottom()
@@ -57,11 +67,91 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
       if newSlot.extent().equals @bounds.extent()
         if @transformSpec.anchor?
           @transformSpec.anchor = @transformSpec.anchor.add newSlot.topLeft().subtract @bounds.topLeft()
-      else
-        @transformSpec.anchor = @transformSpec._anchorFor @bounds
+      else   # extent changed
+        if arrangeDriven
+          @transformSpec.anchor = nil                                 # arrange owns placement: render GLUED to the slot (F1)
+        else
+          @transformSpec.anchor = @transformSpec._anchorFor @bounds    # content-driven: Bug-D pin, unchanged
     @bounds = newSlot
     if @transformSpec.anchor? and @transformSpec.anchor.equals newSlot.center()
       @transformSpec.anchor = nil
     @__breakMoveResizeCaches()
     @_lastClaimedExtent = nil
     @fullChanged()
+
+  # ---------------------------------------------------------------------------
+  # LAYOUT TRANSPARENCY — the FOURTH member of the sugar-island transparency family (hit /
+  # interaction / reparent / LAYOUT), docs/drop-into-rotated-container-layout-transparency-plan.md §5.
+  # The invisible sugar/compensating island is plumbing, so a PARENT-DRIVEN sizing protocol must
+  # pass THROUGH to my sole content — otherwise the base island's §4.9 FIXED-FIGURE policy blocks it
+  # (TransformFrameWdgt._applyExtentBase early-returns; preferredExtentForWidth reports the frozen
+  # claimed extent), and a widget dropped into / rotated inside a StretchablePanelWdgt or a vertical
+  # stack never stretches or width-fits on a container resize. I forward extent / width-size / measure
+  # to my content; the existing CONTENT→SLOT tracking re-fit (_reLayoutChildren above, incl. the Bug-D
+  # anchor-pinning) then re-hugs the slot, so I settle AT the requested extent. The content's own
+  # subtree is re-laid-out by its OWN polymorphic _applyExtent override (StretchablePanel / Stack /
+  # ScrollPanel / TextWdgt all override it), which content._applyExtent dispatches to — so no explicit
+  # content._reLayout() forward is needed.
+  #
+  # DORMANT GUARANTEE: IDENTITY (or EMPTY, no content) ⇒ super on every override, byte-identical to the
+  # base island — no non-transformed / empty island is touched. Scope is THIS class only (the sugar/
+  # compensating wrappers); the base fixed-figure TransformFrameWdgt keeps §4.9 unchanged, so an
+  # authored explicit island in a stack stays a fixed figure (SystemTest_macroExplicitIslandFixed-
+  # VsTrackingResize pins that distinction — it drives the CONTENT→SLOT direction, unaffected here).
+  # ---------------------------------------------------------------------------
+  _soleContent: ->
+    @childrenNotHandlesNorCarets()?[0]
+
+  # Parent arrange sizes ME → size my content, then re-hug the slot to it. I override the POLYMORPHIC
+  # _applyExtent (like StretchablePanel / Stack / ScrollPanel / TextWdgt add their re-fit here), NOT the
+  # bypass twin _applyExtentBase — a _apply*Base must bypass the override, never route the apply back
+  # through the polymorphic _applyExtent (layering rule [K]); and the arrange sizes a tracking island
+  # (a _reLayoutChildren? child) only through _applyExtent / _setWidthSizeHeightAccordingly, never a
+  # direct _applyExtentBase (that path is for LEAF children). The `aPoint.equals @extent()` guard is the
+  # SAME one Widget._applyExtentBase uses, and is LOAD-BEARING: my own _reLayout (super ⇒ Widget._reLayout
+  # ⇒ _applyExtent) re-applies my CURRENT slot extent every settle pass, and because the slot is
+  # invariantly content-coincident that extent equals my content's — so without the guard a content-first
+  # growth (the authored-tracking case) would re-forward the STALE pre-re-hug slot extent onto the
+  # just-grown content and shrink it back. A genuine parent resize passes a DIFFERENT extent, so it still
+  # forwards. (When aPoint == @extent(), content._applyExtent would no-op anyway; the guard just also
+  # keeps _reLayout's spurious self-apply inert.)
+  _applyExtent: (aPoint) ->
+    content = @_soleContent()
+    return super aPoint if @transformSpec.isIdentity() or !content?
+    return if aPoint.equals @extent()
+    content._applyExtent aPoint
+    @_reLayoutChildren true    # ARRANGE-driven re-fit: nil the anchor so the render stays glued to the slot (F1)
+
+  # Path B (the width→height container protocol a vertical stack drives its tracking-container children
+  # through, SimpleVerticalStackPanelWdgt._positionAndResizeChildren): size my content to the width by
+  # ITS OWN width→height policy (text wrap / clock square / ratio) and HAND BACK the resulting height —
+  # in my plane that IS my slot height after the re-hug (the slot being content-coincident), = the
+  # content height. EVERY _setWidthSizeHeightAccordingly override must return its height (the historical
+  # break point, Widget.coffee §720-727). Only the stack arrange calls this — never my own _reLayout —
+  # so no stale-extent guard is needed.
+  _setWidthSizeHeightAccordingly: (newWidth) ->
+    content = @_soleContent()
+    return super newWidth if @transformSpec.isIdentity() or !content?
+    resultingHeight = content._setWidthSizeHeightAccordingly newWidth
+    @_reLayoutChildren true    # ARRANGE-driven re-fit: nil the anchor so the render stays glued to the slot (F1)
+    resultingHeight
+
+  # Keep MEASURE and ARRANGE coherent: report what my content would take at the offered width (the
+  # arrange sizes it exactly so, via _setWidthSizeHeightAccordingly above). Bypassing the base's
+  # @_lastClaimedExtent reflow memo is safe — it is read only by _reflowIfClaimChangedNoSettle, gated on
+  # claimsSpace != 'slot', and every sugar/compensating island is 'slot' (the paint-only firewall).
+  preferredExtentForWidth: (availW) ->
+    content = @_soleContent()
+    return super availW if @transformSpec.isIdentity() or !content?
+    content.preferredExtentForWidth availW
+
+  # The stack min-clamps a child's measured extent to its getMinimumExtent (SimpleVerticalStackPanelWdgt.
+  # _childMeasuredExtentInStack); forward my content's minimum so measure and arrange clamp to the SAME
+  # value (the arrange applies through content._applyExtent, whose __commitExtent clamps to the content's
+  # own min). Dormant at identity/empty (super ⇒ @minimumExtent). My OWN __commitExtent reads the
+  # @minimumExtent FIELD directly (Widget.coffee:2103), not this getter, so overriding it here does not
+  # perturb my own slot commits.
+  getMinimumExtent: ->
+    content = @_soleContent()
+    return super() if @transformSpec.isIdentity() or !content?
+    content.getMinimumExtent()

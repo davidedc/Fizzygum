@@ -55,6 +55,12 @@ class StretchablePanelWdgt extends PanelWdgt
     # inside of them, so you have to call _reLayout on them in some form.
     # the bad news here is that _reLayout cannot take in input a fractional position yet
     for w in childrenNotHandlesNorCarets
+      # Hardening (§5b): a child that somehow lacks its fractional bookkeeping — a stale/foreign child,
+      # or a wrapper that reached me without the materialize/drop transfer — must NOT abort my WHOLE
+      # relayout by dereferencing nil[0] in the two consumers below (that TypeError is caught as
+      # LAYOUT_ERROR and silently aborts the pass). Lazily derive it from the child's current place in
+      # me (self-healing; byte-identical when the data is already present — the common case).
+      w._rememberFractionalSituationInHoldingPanel() if !w.positionFractionalInHoldingPanel? or !w.extentFractionalInHoldingPanel?
       w._moveInStretchablePanelToFractionalPosition newBoundsForThisLayout
       w._setExtentToFractionalExtentInPaneUserHasSet newBoundsForThisLayout
 

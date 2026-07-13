@@ -1475,6 +1475,27 @@ class Widget extends TreeNode
     return nil if !@parent?._materializedBySugar
     @_enclosingSoleContentIsland()
 
+  # Affine transforms (§7.5 latent 3): MOVE my holding-panel / stack bookkeeping to `target` across a
+  # sugar-island materialize (content→island) or dematerialize (island→content), so the container's
+  # _reLayout finds it on the child it actually iterates (the panel/stack sees the ISLAND, not the wrapped
+  # content). The index + the layoutSpec ENUM already ride with the reparent (_addNoSettle args); these are
+  # the fields it does NOT carry: the STRETCHABLE-PANEL fractional geometry (positionFractionalInHolding-
+  # Panel / extentFractionalInHoldingPanel / wasPositionedSlightlyOutsidePanel — else the panel's _reLayout
+  # reads @positionFractionalInHoldingPanel[0] on a nil and aborts the whole relayout as LAYOUT_ERROR), and
+  # the STACK layoutSpecDetails object (else the island has layoutSpec == VERTICAL_STACK_ELEMENT but nil
+  # details, the stack's init block is skipped because the enum already matches, and _childWidthInStack
+  # falls back to raw available width instead of proportional tracking). MOVE (nil the source) keeps a
+  # single owner, so a fullCopy of the wrapped figure never double-references the shared spec object.
+  _moveHoldingPanelBookkeepingTo: (target) ->
+    target.positionFractionalInHoldingPanel = @positionFractionalInHoldingPanel
+    target.extentFractionalInHoldingPanel = @extentFractionalInHoldingPanel
+    target.wasPositionedSlightlyOutsidePanel = @wasPositionedSlightlyOutsidePanel
+    target.layoutSpecDetails = @layoutSpecDetails
+    @positionFractionalInHoldingPanel = nil
+    @extentFractionalInHoldingPanel = nil
+    @wasPositionedSlightlyOutsidePanel = false
+    @layoutSpecDetails = nil
+
   # wrap me in a fresh sugar island IN PLACE: the island's slot box becomes my current bounds and I
   # become its single free-floating child, keeping my absolute position (virtual ≡ screen at identity).
   # The island inherits MY former index AND layoutSpec in my parent — so wrapping is position-invariant
@@ -1499,6 +1520,7 @@ class Widget extends TreeNode
     # myIndex, me free-floating inside it); homing an empty tracking island is safe (its _reLayoutChildren
     # no-ops with no content, and __add skips the extent recalculation). Orphan-safe: no formerParent => the
     # island stays a detached root and I move into it, exactly as before.
+    @_moveHoldingPanelBookkeepingTo island                     # the fractional/stack bookkeeping rides to the panel/stack's new child (the island)
     formerParent?._addNoSettle island, myIndex, myLayoutSpec   # drop the (empty) island into MY former slot + spec
     island._addNoSettle @                                      # then reparent me into the now-homed island (free-floating child)
     island
@@ -1514,6 +1536,7 @@ class Widget extends TreeNode
     islandIndex = islandParent.children.indexOf island
     islandLayoutSpec = island.layoutSpec
     pos = @position()
+    island._moveHoldingPanelBookkeepingTo @                      # hand the fractional/stack bookkeeping back to me (the panel/stack's child once more)
     islandParent._addNoSettle @, islandIndex, islandLayoutSpec   # reparent me back into the island's slot + spec
     @_moveToNoSettle pos                                          # preserve my absolute position (desktop case)
     # R2 (§6 affine): a highlight (or any layout-inert ephemeral chrome, isEphemeral) parented INTO this
@@ -1934,11 +1957,22 @@ class Widget extends TreeNode
       @_settleLayoutsAfter => @_moveToNoSettle aPoint, widgetStartingTheChange
 
 
+  # §5c: record the fractional geometry on the FIGURE (my enclosing sole-content island) w.r.t. the
+  # figure's REAL holding panel — not on ME w.r.t. @parent. When I am wrapped in a sugar island a
+  # handle-resize/move mutates ME against @parent == the ISLAND, but the panel iterates + reads the
+  # ISLAND's fractional fields (I am not its child), so recording on me leaves the figure's panel-relative
+  # data stale (it then never re-tracks on a panel resize). _enclosingIslandFigure() is identity off any
+  # island ⇒ fig == @ ⇒ byte-identical dormant for the entire un-wrapped population. Guarded on fig.parent?
+  # so a content wrapped in an ORPHAN island (fig.parent nil) skips instead of throwing.
   _rememberFractionalPositionInHoldingPanel: ->
-    @positionFractionalInHoldingPanel = @positionFractionalInWidget @parent
+    fig = @_enclosingIslandFigure()
+    return if !fig.parent?
+    fig.positionFractionalInHoldingPanel = fig.positionFractionalInWidget fig.parent
 
   _rememberFractionalExtentInHoldingPanel: ->
-    @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
+    fig = @_enclosingIslandFigure()
+    return if !fig.parent?
+    fig.extentFractionalInHoldingPanel = fig.extentFractionalInWidget fig.parent
 
   # TODO this is used a lot, where I suspect all we need to do
   # is to do this automatically ALSO when a widget is added/moved
@@ -1948,7 +1982,10 @@ class Widget extends TreeNode
   _rememberFractionalSituationInHoldingPanel: ->
     @_rememberFractionalPositionInHoldingPanel()
     @_rememberFractionalExtentInHoldingPanel()
-    @wasPositionedSlightlyOutsidePanel = ! @parent.bounds.containsRectangle @bounds
+    # the outside-panel flag rides the figure too (§5c), for the SAME reason: the panel reads it off its
+    # child (the figure), not off my wrapped self.
+    fig = @_enclosingIslandFigure()
+    fig.wasPositionedSlightlyOutsidePanel = ! fig.parent.bounds.containsRectangle fig.bounds  if fig.parent?
   
   __commitMoveTo: (aPoint) ->
     # no cache-break here: __commitMoveBy breaks the caches itself, so a zero-delta move
@@ -2080,7 +2117,7 @@ class Widget extends TreeNode
         # the stretchable panel will get them to the
         # correct dimensions
         if widgetStartingTheChange?.changeShouldRememberFractionalGeometry?() and @parent?
-          @extentFractionalInHoldingPanel = @extentFractionalInWidget @parent
+          @_rememberFractionalExtentInHoldingPanel()   # §5c: route through the figure (was an inline write against @parent, stale when I am island-wrapped)
 
   # PRIVATE DEFERRED-SETTLE extent entrypoint -- see the FAMILY comment on _setMaxDimDeferredSettle (rule [O]
   # caller-allowlist; world.deferredSettlingEnabled A/B switch; BOTH branches reach the _setExtentNoSettle core).
