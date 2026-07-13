@@ -1767,6 +1767,33 @@ class Widget extends TreeNode
     content._dematerializeSugarIslandIfIdentityNoSettle @
     content
 
+  # Affine transforms (§6 Phase 4D-2a): the shared figure resolution for BOTH pick-up entry points — the
+  # drag pipeline (ActivePointerWdgt.determineGrabs) and the menu "pick up" item (pickUpMenuAction) — so
+  # the two cannot drift. Two steps:
+  #   1. Resolve the FIGURE that comes onto the hand (_resolvePickOutFigureNoSettle): when I am grabbed from
+  #      inside a non-identity island, either REUSE the existing island (I am its sole content — Phase-1's
+  #      whole-figure grab, no churn) or a FRESH island carrying the accumulated N-deep similitude (I am a
+  #      genuine sub-part, extracted + re-homed screen-coincident). Off any island this returns me UNCHANGED
+  #      ⇒ byte-identical dormant. NoSettle: the extraction's re-fit of my former container rides the
+  #      caller's own grab settle (the drag's @grab, pickUpMenuAction's pickUp).
+  #   2. §7.5 Bug F (reparent-transparency): a drop→pick round-trip can leave an IDENTITY compensating sugar
+  #      wrapper (the -deg wrapper's spec folded to identity against its +deg container on pick-out).
+  #      DISSOLVE it — self-settling (_unwrapIfIdentitySugar) — so the BARE content is what goes on the hand,
+  #      the sibling of the drop side's post-add self-settling unwrap. Guarded so it fires ONLY for the
+  #      identity round-trip wrapper: a plain widget has no _materializedBySugar, a genuinely rotated/scaled
+  #      figure is non-identity. (The dissolve reparents into the ATTACHED parent — a settling layout
+  #      mutation — which is why THIS is a non-NoSettle helper and the pick-out resolver stays NoSettle.)
+  # Returns the figure to grab.
+  _resolvePickUpFigure: ->
+    figure = @_resolvePickOutFigureNoSettle()
+    if figure._materializedBySugar and figure.transformSpec?.isIdentity()
+      # nosettle-sanctioned: called ONLY from event-stream contexts (the drag pipeline determineGrabs and
+      # the menu pickUpMenuAction), never mid-pass, so the deliberate self-settling dissolve is correct —
+      # and keeping it self-settling (rather than the NoSettle core) preserves determineGrabs' exact,
+      # byte-identical pre-extraction cadence (this whole two-step was inline there before).
+      figure = figure._unwrapIfIdentitySugar()
+    figure
+
   # Widget accessing - simple changes: translate me + my children + repaint.
   # (Stage 5, 2026-07-01) The re-fit seam this used to fire is DELETED -- the settle loop now re-fits my tracking
   # container AFTER I settle (see _reFitMyTrackingContainerAfterSettle) -- so this immediate mutator is PURE geometry
@@ -3123,15 +3150,33 @@ class Widget extends TreeNode
   # Duplication and Serialization /////////////////////////////////////////
 
 
+  # Duplicate the whole FIGURE — the widget PLUS any enclosing transform-island plumbing — not just the
+  # content widget. A widget's rotation/scale does not live on the widget: it lives on an enclosing
+  # TransformFrameWdgt island of which the widget is the sole content (materialized by the
+  # setRotationDegrees/setScaleFactor sugar). @fullCopy's scope is @allChildrenBottomToTop() — my own
+  # subtree — so copying the CONTENT leaves the island out and the copy "resets" its transform.
+  # _enclosingIslandFigure() resolves that island (or returns me off any island — the entire
+  # un-transformed population, so this is byte-identical dormant there). The island's fullCopy deep-copies
+  # the transform for free (§1a: TransformSpec @augmentWith DeepCopierMixin). Offset the copy from the
+  # FIGURE's position; the island's _applyMoveTo rides a pinned anchor along (Bug-G), so a plain offset
+  # move of the copied figure is anchor-safe.
   duplicateMenuAction: ->
-    aFullCopy = @fullCopy()
+    figure = @_enclosingIslandFigure()
+    aFullCopy = figure.fullCopy()
+    return if !aFullCopy?
     aFullCopy._unlockFromPanels()
     world.add aFullCopy
-    aFullCopy._applyMoveTo @position().add new Point 10, 10
+    aFullCopy._applyMoveTo figure.position().add new Point 10, 10
     aFullCopy._rememberFractionalSituationInHoldingPanel()
 
+  # Same figure resolution as duplicateMenuAction, but the copy goes ONTO THE HAND. Normalize a
+  # possibly-pinned anchor first, matching the Bug-G pick-up seam (the whole hand-carry pipeline assumes a
+  # slot-centre pivot). Only islands define _normalizePinnedAnchorNoSettle (the `?.` no-ops off any
+  # island); the copy is a detached root, so no settle is needed here — pickUp's own settle covers it.
   duplicateMenuActionAndPickItUp: ->
-    aFullCopy = @fullCopy()
+    figure = @_enclosingIslandFigure()
+    aFullCopy = figure.fullCopy()
+    aFullCopy?._normalizePinnedAnchorNoSettle?()
     aFullCopy?.pickUp()
 
   # in case we copy a widget, if the original was in some
@@ -3196,8 +3241,18 @@ class Widget extends TreeNode
   # feature — ships in all builds). A SerializationError (an external pointer that can't be
   # encoded, ...) becomes a friendly, path-carrying dialog rather than an uncaught throw.
   saveToFile: ->
+    # Serialize the whole FIGURE (widget + transform-island plumbing), the same figure resolution as
+    # duplicateMenuAction, so a rotated/scaled widget saves WITH its transform. Serializing the bare
+    # CONTENT loses it: the Serializer nils the ROOT's parent by policy (the island is the parent), and
+    # because the content also keeps a non-parent reference to its island the walk actually THROWS a
+    # SerializationError ("… is outside the serialized structure") rather than silently dropping it —
+    # either way the saved *.fzw.json is wrong. Off any island the figure IS me (byte-identical). The
+    # filename stays derived from the CONTENT — the thing the user believes they are saving — not the
+    # invisible frame. Restore needs no change: FileLoading attaches whatever the envelope's root is, and
+    # a restored TransformFrameWdgt root is proven live (§1a).
+    figure = @_enclosingIslandFigure()
     try
-      envelope = @serialize prettyPrint: true
+      envelope = figure.serialize prettyPrint: true
     catch error
       if error instanceof SerializationError
         world.inform error.toString()
@@ -3509,6 +3564,17 @@ class Widget extends TreeNode
     # cleanly outside any pass.
     @_settleLayoutsAfter => oldParent?._reactToChildPickedUp? @
 
+  # The menu "pick up" item (buildBaseWidgetClassContextMenu). Bare `pickUp` grabs the CONTENT widget the
+  # menu opened on — which, for a rotated/scaled widget, rips the content off the hand un-transformed AND
+  # strands the now-empty sugar island in the tree (nothing dissolves a contentless island). Resolve the
+  # pick-up FIGURE first (the SAME resolution the drag path uses — reuse the sole-content island, so the
+  # transform rides the hand and no island is stranded), then grab it via pickUp. Off any island the figure
+  # IS me ⇒ identical to the old behaviour. Left as a distinct entry point (not a change to bare `pickUp`)
+  # because pickUp has programmatic callers on DETACHED widgets (deserialiseFromMemoryAndAttachToHand,
+  # test helpers) for which figure resolution is a no-op anyway.
+  pickUpMenuAction: ->
+    @_resolvePickUpFigure().pickUp()
+
   grabbedWidgetSwitcheroo: ->
     @
   
@@ -3806,14 +3872,14 @@ class Widget extends TreeNode
       menu.addMenuItem "duplicate", true, @, "duplicateMenuAction" , "make a copy"
       menu.addMenuItem "save to file…", true, @, "saveToFile", "save this widget\nto a *.fzw.json file"
       menu.addMenuItem "create shortcut", true, @, "createReference", "creates a reference to this wdgt and leaves it on the desktop"
-      menu.addMenuItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
+      menu.addMenuItem "pick up", true, @, "pickUpMenuAction", "disattach and put \ninto the hand"
     else
       menu.addMenuItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this widget"
       menu.addMenuItem "transparency...", true, @, "transparencyPopout", "set this widget's\nalpha value"
       menu.addMenuItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this widget's" + " extent"
       menu.addLine()
       menu.addMenuItem "duplicate", true, @, "duplicateMenuActionAndPickItUp" , "make a copy\nand pick it up"
-      menu.addMenuItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
+      menu.addMenuItem "pick up", true, @, "pickUpMenuAction", "disattach and put \ninto the hand"
       menu.addMenuItem "attach...", true, @, "attach", "stick this widget\nto another one"
       menu.addMenuItem "inspect", true, @, "inspect", "open a window\non all properties"
       menu.addMenuItem "create shortcut", true, @, "createReference", "creates a reference to this wdgt and leaves it on the desktop"

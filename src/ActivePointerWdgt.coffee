@@ -1063,26 +1063,17 @@ class ActivePointerWdgt extends Widget
           originalWdgtToGrab = @wdgtToGrab
           @wdgtToGrab = @wdgtToGrab.grabbedWidgetSwitcheroo()
           switcherooHappened = (originalWdgtToGrab != @wdgtToGrab)
-          # Affine transforms (§6 Phase 4D-2a): PICK-OUT. For a widget grabbed from inside a non-identity
-          # island, resolve the FIGURE that comes onto the hand — the existing island (when the grabbed
-          # widget is its sole content — Phase-1's whole-figure grab, no churn) or a fresh island carrying
-          # the accumulated N-deep similitude (a genuine sub-part, extracted + re-homed screen-coincident).
-          # Off any island this returns the widget UNCHANGED ⇒ byte-identical dormant. Resolved HERE (once,
+          # Affine transforms (§6 Phase 4D-2a): PICK-OUT + Bug-F identity-wrapper dissolve. Resolve the
+          # FIGURE that comes onto the hand — reuse the sole-content island, extract a genuine sub-part into
+          # a fresh island, or (off any island) return the widget UNCHANGED ⇒ byte-identical dormant — then
+          # dissolve an identity compensating sugar wrapper so the BARE content grabs. The whole two-step is
+          # _resolvePickUpFigure, SHARED with the menu "pick up" entry point (pickUpMenuAction) so the two
+          # cannot drift; its doc comment carries the full pick-out / Bug-F reasoning. Resolved HERE (once,
           # at drag-start) so BOTH the grab below and the "pointer left its bounds, re-centre" re-grab (:1090)
           # operate on the SAME figure. It does NOT set switcherooHappened (the fresh figure is already
           # positioned to stay put, then follows the cursor via displacementDueToGrabDragThreshold — no
           # centre-under-pointer snap).
-          @wdgtToGrab = @wdgtToGrab._resolvePickOutFigureNoSettle()
-          # §7.5 Bug F (reparent-transparency): a drop→pick round-trip leaves an IDENTITY compensating sugar
-          # wrapper (the -deg wrapper's spec folded to identity against its +deg container on pick-out).
-          # DISSOLVE it here, self-settling, BEFORE the grab, so the BARE content is what goes on the hand —
-          # the sibling of the drop side's post-add self-settling _unwrapIfIdentitySugar. Done at THIS
-          # non-NoSettle caller because the dissolve reparents the wrapper's content into its attached
-          # parent (a settling layout mutation) and the pick-out resolver is NoSettle (rule [G] forbids it
-          # from self-settling). Guarded so it fires ONLY for the identity round-trip wrapper: a plain
-          # widget has no _materializedBySugar, a genuinely rotated/scaled figure is non-identity.
-          if @wdgtToGrab._materializedBySugar and @wdgtToGrab.transformSpec?.isIdentity()
-            @wdgtToGrab = @wdgtToGrab._unwrapIfIdentitySugar()
+          @wdgtToGrab = @wdgtToGrab._resolvePickUpFigure()
           w = @wdgtToGrab
           @grab w, displacementDueToGrabDragThreshold, switcherooHappened
 
