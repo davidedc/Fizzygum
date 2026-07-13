@@ -33,7 +33,6 @@ extractDependenciesFromDependenciesMap = (dependenciesMap) ->
 
   for key from dependenciesMap.keys()
     #value = dependenciesMap[key]
-    #console.log value
     # recursively find out what this needed thing needs
     # and add those to the dependency list
     visit dependenciesMap, key, loadOrder
@@ -74,38 +73,32 @@ extractDependenciesFromSource = ->
 
     lines = window[eachFile + "_coffeSource"].split '\n'
     for eachLine in lines
-      #console.log eachLine
 
       # everything depends on globalFunctions, let's get that out of the way
       fileDependenciesSet.add "globalFunctions"
 
       matches = eachLine.match EXTENDS
       if goodMatch matches, eachFile
-        #console.log matches
         fileDependenciesSet.add matches[1]
         if srcLoadCompileDebugWrites then console.log eachFile + " extends " + matches[1]
 
       matches = eachLine.match REQUIRES
       if goodMatch matches, eachFile
-        #console.log matches
         fileDependenciesSet.add matches[1]
         if srcLoadCompileDebugWrites then console.log eachFile + " requires " + matches[1]
 
       matches = eachLine.match REQUIRES_MIXIN
       if goodMatch matches, eachFile
-        #console.log matches
         fileDependenciesSet.add matches[1]
         if srcLoadCompileDebugWrites then console.log eachFile + " requires the mixin" + matches[1]
 
       matches = eachLine.match CONSTRUCTION_IN_CLASS_DECLARATION
       if goodMatch matches, eachFile
-        #console.log matches
         fileDependenciesSet.add matches[1]
         if srcLoadCompileDebugWrites then console.log eachFile + " has construction in class declaration " + matches[1]
 
       matches = eachLine.match CLASS_USE_IN_CLASS_DECLARATION
       if goodMatch matches, eachFile
-        #console.log matches
         fileDependenciesSet.add matches[1]
         if srcLoadCompileDebugWrites then console.log eachFile + " has class use in class declaration " + matches[1]
 

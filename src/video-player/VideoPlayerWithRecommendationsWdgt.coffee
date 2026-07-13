@@ -29,7 +29,6 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
 
     (loadJSFilePromise "./videos/Fizzygum-videos-private/privateVideosManifest.js").then \
       (result) =>
-        #console.log "loaded manifest"
         @_parseVideosIndex()
         # TODO id: NO_STEPPING_ONLY_ONCE_TO_HANDLE_CALLBACK date: 6-May-2023
         world.steppingWdgts.add @
@@ -59,9 +58,8 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
       (name.endsWith ".webm") or (name.endsWith ".mp4")
     
     @videosIndex = filteredNames
-    #console.log "videosIndex: " + @videosIndex
 
-    @shuffledVideosIndex = @videosIndex.shallowCopy()
+    @shuffledVideosIndex = @videosIndex.slice()
     # TODO according to StackOverflow, this is a biased and slow way to shuffle an array :-(
     @shuffledVideosIndex.sort (a, b) ->
       Math.random() - 0.5
@@ -108,13 +106,11 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     @_invalidateLayout()
 
   prev: ->
-    #console.log "prev"
     if @recommendationsPage > 0
       @recommendationsPage--
       @setUpVideoThumbsPage()
   
   next: ->
-    #console.log "next"
     @recommendationsPage++
     @setUpVideoThumbsPage()
 
@@ -153,7 +149,6 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
 
     videoPlayerBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() - 5
     videoPlayerBounds = videoPlayerBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, @externalPadding + Math.floor newBoundsForThisLayout.height()/2 + 24 + newBoundsForThisLayout.height()*0.1125 + 5 + 7
-    #console.log "videoPlayerBounds: " + videoPlayerBounds
     @videoPlayer._reLayout videoPlayerBounds
 
     recommendationPaneBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() + 2* @externalPadding + @internalPadding + newBoundsForThisLayout.height()/2 + 24 + newBoundsForThisLayout.height()*0.1125 - 10 + 15

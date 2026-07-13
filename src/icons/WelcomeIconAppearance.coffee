@@ -1,13 +1,11 @@
 class WelcomeIconAppearance extends IconAppearance
 
-  constructor: (@widget) ->
-    super
-    @preferredSize = new Point 100, 100
-    @specificationSize = new Point 100, 100
+  preferredSize: new Point 100, 100
+  specificationSize: new Point 100, 100
 
   paintFunction: (context) ->
-    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @widget.color.toString()
-    outlineColorString = WorldWdgt.preferencesAndSettings.outlineColorString
+    iconColorString = @_iconColorString()
+    outlineColorString = @_outlineColorString()
     #// outline
     #// body and hat outline Drawing
     context.beginPath()

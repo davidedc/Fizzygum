@@ -95,7 +95,6 @@ class VideoPlayerWdgt extends Widget
     # put the videoControlsPane in the bottom part
     videoControlsBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, videoPlayerCanvasBounds.bottom() + 2
     videoControlsBounds = videoControlsBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, 22 + 7 + 14
-    #console.log "videoControlsBounds: #{videoControlsBounds}"
     @videoControlsPane._reLayout videoControlsBounds
 
 

@@ -241,7 +241,7 @@ class TreeNode
     result
 
   # the easiest way here would be to just return
-  #   @allChildrenBottomToTop().shallowCopy().reverse()
+  #   @allChildrenBottomToTop().slice().reverse()
   # but that's slower.
   # So we do the proper visit here instead.
   allChildrenTopToBottomSuchThat: (predicate) ->
@@ -390,7 +390,7 @@ class TreeNode
   # currently unused
   siblings: ->
     return []  unless @parent
-    siblings = @parent.children.shallowCopy()
+    siblings = @parent.children.slice()
     # now remove myself
     siblings.remove @
     return siblings

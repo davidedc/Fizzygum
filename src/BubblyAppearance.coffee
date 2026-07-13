@@ -4,7 +4,6 @@ class BubblyAppearance extends BoxyAppearance
     super widget
 
   outlinePath: (context, radius) ->
-    # console.log "bubble outlinePath"
 
     padding = radius
     w = @widget.width()

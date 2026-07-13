@@ -92,7 +92,6 @@ class VideoPlayerCanvasWdgt extends CanvasWdgt
           @backBufferContext?.fillRect 0, 0, @width(), @height()
           # remember the extent of the canvas 
           @_extentWhenPreviousBackgroundWasPainted = @extent()
-          #console.log "painting black background"
 
     # paint the frame so that it is fully contained in the canvas
     # and also centered

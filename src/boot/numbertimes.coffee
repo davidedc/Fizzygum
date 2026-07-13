@@ -40,11 +40,6 @@ Number::timesWithVariable = (scope, func) ->
     func.call scope, i
     i++
 
-Number::times = (scope, func) ->
-  v = @valueOf()
-  i = 0
-
-  while i < v
-    func.call scope, i
-    i++
+# identical to timesWithVariable -- the LCL preprocessor emits both spellings.
+Number::times = Number::timesWithVariable
 

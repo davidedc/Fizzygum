@@ -118,27 +118,6 @@ class TextWdgt extends StringWdgt
       # So this can be done only if the textbox is
       # constrained horizontally but not vertically...
 
-      #if !word.substr(0, word.length-1).includes(" ")
-      #  checkingLongerSingleWorld = Math.ceil @measureText overrideFontSize, word
-      #
-      #  while checkingLongerSingleWorld > maxTextWidth
-      #    maxLengthNotOverflowing = 0
-      #    for scanning in [0..word.length]
-      #      subword = word.substring 0, scanning
-      #      checkingLongerSingleWorld2 = Math.ceil @measureText overrideFontSize, subword
-      #      if checkingLongerSingleWorld2 > maxTextWidth
-      #        maxLengthNotOverflowing = scanning - 1
-      #        break
-      #    if maxLengthNotOverflowing == 0
-      #      word = word.substring 1, word.length
-      #    else
-      #      currentLineCanStayInLine = word.substring 0, maxLengthNotOverflowing
-      #      carryoverFromWrappingLine = word.substring maxLengthNotOverflowing, word.length
-      #      slotsInParagraph += currentLineCanStayInLine.length
-      #      wrappedLinesOfThisParagraph.push currentLineCanStayInLine
-      #      wrappedLineSlotsOfThisParagraph.push slotsInParagraph
-      #      word = carryoverFromWrappingLine
-      #    checkingLongerSingleWorld = Math.ceil @measureText overrideFontSize, word
 
       if word is "\n"
         # we reached the end of the line in the

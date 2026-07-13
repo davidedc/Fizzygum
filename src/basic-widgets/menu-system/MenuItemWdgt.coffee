@@ -15,7 +15,6 @@ class MenuItemWdgt extends LabelButtonWdgt
   # historical default). (spec.label may itself be a Widget, a Canvas, or an
   # [icon, string] tuple.)
   constructor: (menuItemSpec, fontSize, fontStyle, centered, environment, widgetEnv) ->
-    #console.log "menuitem constructing"
     super menuItemSpec.ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, menuItemSpec.target, menuItemSpec.action, (menuItemSpec.label or "close"), fontSize, fontStyle, centered, environment, widgetEnv, menuItemSpec.toolTipMessage, menuItemSpec.color, menuItemSpec.bold, menuItemSpec.italic, menuItemSpec.doubleClickAction, menuItemSpec.argumentToAction1, menuItemSpec.argumentToAction2, menuItemSpec.representsAWidget
     @actionableAsThumbnail = true
 
@@ -50,7 +49,6 @@ class MenuItemWdgt extends LabelButtonWdgt
   # opposite of LabelButtonWdgt's default single-line StringWdgt label, which
   # leaves the box alone.
   _createLabel: ->
-    # console.log "menuitem _createLabel"
     @label = new TextWdgt @labelString, @fontSize, @fontStyle
     @label.setColor @labelColor
 
@@ -101,7 +99,6 @@ class MenuItemWdgt extends LabelButtonWdgt
 
   # MenuItemWdgt events:
   mouseEnter: ->
-    #console.log "@target: " + @target + " @widgetEnv: " + @widgetEnv
 
     # this could be a way to catch menu entries that should cause
     # an highlighting but don't

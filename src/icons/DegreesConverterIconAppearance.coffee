@@ -1,20 +1,24 @@
 class DegreesConverterIconAppearance extends IconAppearance
 
-  constructor: (@widget) ->
-    super
-    @preferredSize = new Point 100, 100
-    @specificationSize = new Point 100, 100
+  preferredSize: new Point 100, 100
+  specificationSize: new Point 100, 100
+
+  # Fill for the little "degrees" ring (the "degrees of F outline" oval below).
+  # Overridable so CFDegreesConverterIconAppearance can tint just that one ring grey
+  # while sharing the rest of this paintFunction verbatim (was a 230-line copy).
+  _degreesSymbolFillStyle: ->
+    @_outlineColorString()
 
   paintFunction: (context) ->
     #// Color Declarations
-    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @widget.color.toString()
-    outlineColorString = WorldWdgt.preferencesAndSettings.outlineColorString
+    iconColorString = @_iconColorString()
+    outlineColorString = @_outlineColorString()
 
     #// degrees writings
     #// degrees F
     #// degrees of F outline Drawing
     @oval context, 67, 6.5, 13, 13
-    context.fillStyle = outlineColorString
+    context.fillStyle = @_degreesSymbolFillStyle()
     context.fill()
     #// F letter outline Drawing
     context.beginPath()

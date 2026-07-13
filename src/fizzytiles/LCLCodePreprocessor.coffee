@@ -168,11 +168,7 @@ class LCLCodePreprocessor
     #    flickering = ifFunctional(random() > 0.5, scale function taking the block as argument)
     # so flickering is a function that can take the block as argument.
     window.ifFunctional = (condition, thenCode, elseCode) ->
-      #console.log "outside: " + thenCode
       (afterBlocks...) ->
-        #console.log "inside: " + thenCode
-        #console.log "afterBlocks: " + afterBlocks
-        #console.log "condition: " + condition
         if condition
           thenCode.apply this, afterBlocks
         else
@@ -481,34 +477,6 @@ class LCLCodePreprocessor
     # that was passed
     return [code, error]
 
-  ##
-  ## Some of the functions can be used with postfix notation
-  ##
-  ## e.g.
-  ##
-  ##      60 bpm
-  ##      red fill
-  ##      yellow stroke
-  ##      black background
-  ##
-  ## We need to switch this round before coffee script compilation
-  
-  #adjustPostfixNotations: (code, error) ->
-  #  # if there is an error, just propagate it
-  #  return [undefined, error] if error?
-  #
-  #  # red background
-  #  # red fill;box
-  #
-  #  # if there is an error, just propagate it
-  #  return [undefined, error] if error?
-  #
-  #  code = code.replace(/(\d+)[ ]+bpm(\s|$|;)/g, "bpm $1$2")
-  #  code = code.replace(/([a-zA-Z]+)[ ]+fill(\s|$|;)/g, "fill $1$2")
-  #  code = code.replace(/([a-zA-Z]+)[ ]+stroke(\s|$|;)/g, "stroke $1$2")
-  #  code = code.replace(/([a-zA-Z]+)[ ]+background(\s|$|;)/g, "background $1$2")
-  #  return [code, error]
-
   normaliseCode:(code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
@@ -549,7 +517,6 @@ class LCLCodePreprocessor
     functionsRegex = @allCommandsRegex + userDefinedFunctions + bracketsVariables
 
     rx = RegExp("\\([ \\t]*(" + functionsRegex + ")[ \\t]*\\)[ \\t]*$",'gm')
-    #console.log rx
     code = code.replace(rx, "$1")
 
 
@@ -746,13 +713,6 @@ class LCLCodePreprocessor
 
 
     if @detailedDebug then console.log "transformTimesSyntax-0\n" + code + " error: " + error
-    #code = code.replace(/(else)\s+([a-zA-Z1-9])([^;\r\n]*) times[:]?([^a-zA-Z0-9])/g, "$1 ($2$3).times -> $4")
-    #if @detailedDebug then console.log "transformTimesSyntax-1\n" + code + " error: " + error
-    #code = code.replace(/(then)\s+([a-zA-Z1-9])([^;\r\n]*) times[:]?([^a-zA-Z0-9])/g, "$1 ($2$3).times -> $4")
-    #if @detailedDebug then console.log "transformTimesSyntax-2\n" + code + " error: " + error
-    # without the following, "if 2 times a" becomes "(if 2).times a"
-    #code = code.replace(/(if)\s+([a-zA-Z1-9])([^;\r\n]*) times[:]?([^a-zA-Z0-9])/g, "$1 ($2$3).times -> $4")
-    #if @detailedDebug then console.log "transformTimesSyntax-3\n" + code + " error: " + error
 
     code = code.replace(/then/g, "then;")
     code = code.replace(/else/g, ";else;")
@@ -1277,7 +1237,6 @@ class LCLCodePreprocessor
     if userDefinedFunctionsWithArguments != ""
       userDefinedFunctionsWithArguments = "|"+userDefinedFunctionsWithArguments
 
-    #console.log "*****" + userDefinedFunctions
     return [code, error, userDefinedFunctions, userDefinedFunctionsWithArguments]
 
   findBracketVariables: (code, error) ->
@@ -1483,16 +1442,6 @@ class LCLCodePreprocessor
     code = code.replace(rx, "$1$2♠$3♠")
     if @detailedDebug then console.log "rearrangeColorCommands-2\n" + code + " error: " + error
 
-    #rx = RegExp("(^[\\t ]*|[^♠\\r\\n][\\t ]+)♦([^♦]*)♦[\\t ]+♦([^♦]*)♦[\\t ]+([^♦♠\\r\\n]|$)",'gm')
-    #if rx.test code
-    #  if @detailedDebug then console.log "missing color command - 1"
-    #  return [undefined, "missing color command"]
-
-    # fill red red box
-    # stroke red red box
-    #rx = RegExp("(^[\\t ]*|[^♦\\r\\n][\\t ]+)♠("+@colorsCommandsRegex+")♠[\\t ]+♦([^♦]*)♦[\\t ]+♦([^♦]*)♦[\\t ]+([^♠\\r\\n]|$)",'gm')
-    #if rx.test code
-    #  return [undefined, "redundant color"]
 
     # stroke green red box
     # fill red red box which is kind of silly
@@ -1730,9 +1679,7 @@ class LCLCodePreprocessor
     if @detailedDebug then console.log "preprocess-3\n" + code + " error: " + error
 
     #@qualifyingCommandsRegex = @qualifyingCommands + bracketsVariables
-    #console.log "all commands plus bracket variables BEFORE: " + @primitivesAndMatrixRegex + bracketsVariables
     #@allCommandsRegex = @allCommandsRegex + bracketsVariables
-    #console.log "all commands plus bracket variables: " + @primitivesAndMatrixRegex + bracketsVariables
 
     [code, codeWithoutStringsOrComments, error] = @stripCommentsAndStrings(code, error)
     if @detailedDebug then console.log "preprocess-4\n" + code + " error: " + error
@@ -1861,20 +1808,16 @@ class LCLCodePreprocessor
     
     for eachLine in [0...sourceByLine.length]
       line = sourceByLine[eachLine]
-      #console.log "checking " + line
       rx = RegExp("^(\\s*)",'gm')
       match = rx.exec line
       continue if not match?
       startOfThisLine = match[1]
-      #console.log "start of line: >" + startOfThisLine + "<"
       if startOfThisLine.length > startOfPreviousLine.length
         linesWithBlockStart.push eachLine-1
         #blockStart = eachLine-1
         #blockEnd = @identifyBlockEnd(sourceByLine, eachLine)
-        #console.log 'block ' + blockStart + ' to ' + blockEnd
       startOfPreviousLine = startOfThisLine
 
-    #console.log "code length at identifyBlockStarts: " + code.split("\n").length
     return [code, linesWithBlockStart, undefined]
 
   # we might not need this function, leaving it here,
@@ -1886,7 +1829,6 @@ class LCLCodePreprocessor
 
     rx = RegExp("^(\\s*)",'gm')
     match = rx.exec sourceByLine[startLine]
-    #console.log "start of line: >" + startOfThisLine + "<"
     lengthToBeat = (match[1]).length
 
     linesWithBlockStart = []
@@ -1916,7 +1858,6 @@ class LCLCodePreprocessor
     for line in sourceByLine
       countingLines++
       if countingLines in linesWithBlockStart
-        #console.log "checking " + line
         
         # if the line already ends with an arrow
         # then there is nothing to do
@@ -1959,6 +1900,5 @@ class LCLCodePreprocessor
 
     transformedCode = transformedLines.join "\n"
 
-    #console.log "code length at completeImplicitFunctionPasses: " + transformedCode.split("\n").length
     return [transformedCode, undefined]
 

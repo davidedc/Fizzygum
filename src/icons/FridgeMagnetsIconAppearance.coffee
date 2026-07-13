@@ -5,14 +5,12 @@
 # app icons (cf. PatchProgrammingIconAppearance).
 class FridgeMagnetsIconAppearance extends IconAppearance
 
-  constructor: (@widget) ->
-    super
-    @preferredSize = new Point 100, 100
-    @specificationSize = new Point 100, 100
+  preferredSize: new Point 100, 100
+  specificationSize: new Point 100, 100
 
   paintFunction: (context) ->
-    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @widget.color.toString()
-    outlineColorString = WorldWdgt.preferencesAndSettings.outlineColorString
+    iconColorString = @_iconColorString()
+    outlineColorString = @_outlineColorString()
 
     #// fridge body: light halo fill so the glyph reads on the wallpaper
     #// dots, then the outline stroke

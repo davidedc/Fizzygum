@@ -46,9 +46,7 @@ class StringFieldWdgt extends PanelWdgt
     # note: StringWdgt takes isHeaderLine as its 6th arg, so isNumeric is the 7th
     text = new StringWdgt txt, @fontSize, @fontStyle, @isBold, @isItalic, false, @isNumeric
     text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
-    #console.log "text widget extent: " + text.text + " : " + text.extent()
     @_applyWidth Math.max @minTextWidth, text.width()
-    #console.log "string field widget extent: " + @extent()
 
   _reLayoutSelf: ->
     super()

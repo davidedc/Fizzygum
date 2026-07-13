@@ -296,7 +296,7 @@ class Widget extends TreeNode
   wasPositionedSlightlyOutsidePanel: false
 
   initialiseDefaultWindowContentLayoutSpec: ->
-    @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.THIS_ONE_I_HAVE_NOW , PreferredSize.THIS_ONE_I_HAVE_NOW, 1
+    @layoutSpecDetails = new WindowContentLayoutSpec WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW , WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 1
 
   initialiseDefaultVerticalStackLayoutSpec: ->
     # use the existing VerticalStackLayoutSpec (if it's there)
@@ -313,10 +313,8 @@ class Widget extends TreeNode
 
   getTextDescription: ->
     if @textDescription?
-      #console.log "got name: " + @textDescription + "" + @constructor.name + " (adhoc description of widget)"
       return @textDescription + "" + (@constructor.name.replace "Wdgt", "") + " (adhoc description of widget)"
     else
-      #console.log "got name: " + @constructor.name + " (class name)"
       return (@constructor.name.replace "Wdgt", "") + " (class name)"
 
   uniqueIDString: ->
@@ -3242,7 +3240,6 @@ class Widget extends TreeNode
         regex.lastIndex++
       # The result can be accessed through the `m`-variable.
       #m.forEach (match, groupIndex) ->
-      #  console.log ''
       @injectProperty m[1],m[2]
   
   # Widget dragging (and dropping) /////////////////////////////////////////
@@ -3465,7 +3462,6 @@ class Widget extends TreeNode
       @clickOutsideMeOrAnyOfMeChildrenCallback = [functionName, arg1, arg2, arg3]
       world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.add @
     else
-      #console.log "****** onClickOutsideMeOrAnyOfMyChildren removing element"
       world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
 
   _reactToBeingDropped: (whereIn) ->
@@ -3574,7 +3570,6 @@ class Widget extends TreeNode
             nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
-      #console.log "@: " + @.toString() + " amITheLastSibling: " + @amITheLastSibling()
 
       if (@firstSiblingAfterMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingAfterMeIsA(StackElementsSizeAdjustingWdgt)
         world.temporaryHandlesAndLayoutAdjusters.add \
@@ -3888,7 +3883,6 @@ class Widget extends TreeNode
     else
       padding = paddingOrWidgetGivingPadding
 
-    #console.log " >>>>>>>>>>>>> padding: " + padding
     #if padding == 1
     #  debugger
     if @paddingTop != padding or @paddingBottom != padding or @paddingLeft != padding or @paddingRight != padding
@@ -4144,8 +4138,8 @@ class Widget extends TreeNode
     @_setLayoutSpec LayoutSpec.ATTACHEDAS_FREEFLOATING
 
   deduplicateSettersAndSortByMenuEntryString: (menuEntriesStrings, functionNamesStrings) ->
-    menuEntriesStrings = menuEntriesStrings.uniqueKeepOrder()
-    functionNamesStrings = functionNamesStrings.uniqueKeepOrder()
+    menuEntriesStrings = Array.from(new Set(menuEntriesStrings))
+    functionNamesStrings = Array.from(new Set(functionNamesStrings))
 
     #1) combine the arrays:
     list = []
@@ -4279,27 +4273,6 @@ class Widget extends TreeNode
     else @parent.backTab editField  if @parent
   
   
-  #
-  #	the following are examples of what the navigation methods should
-  #	look like. Insert these at the World level for fallback, and at lower
-  #	levels in the Widgetic tree (e.g. dialog boxes) for a more fine-grained
-  #	control over the tabbing cycle.
-  #
-  # Widget::nextTab = function (editField) {
-  #	var	next = this.nextEntryField(editField);
-  #	editField.clearSelection();
-  #	next.selectAll();
-  #	next.edit();
-  #};
-  #
-  # Widget::previousTab = function (editField) {
-  #	var	prev = this.previousEntryField(editField);
-  #	editField.clearSelection();
-  #	prev.selectAll();
-  #	prev.edit();
-  #};
-  #
-  #
   
   # Widget events --------------------------------------------
 
@@ -4315,7 +4288,6 @@ class Widget extends TreeNode
   # Widget eval. Used by the Inspector and the text widget.
   evaluateString: (codeSource) ->
     JSCode = compileFGCode codeSource, true
-    #console.log JSCode
     result = eval JSCode
     @_reLayoutSelf()
     @changed()

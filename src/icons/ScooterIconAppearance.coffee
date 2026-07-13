@@ -1,8 +1,6 @@
 class ScooterIconAppearance extends IconAppearance
 
-  constructor: (@widget) ->
-    super
-    @preferredSize = new Point 100, 100
+  preferredSize: new Point 100, 100
 
   paintFunction: (context) ->
     #// Color Declarations

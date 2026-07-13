@@ -20,15 +20,12 @@ class ToolTipWdgt extends Widget
    @color = WorldWdgt.preferencesAndSettings.menuBackgroundColor,
    cornerRadius,
    @padding = 0) ->
-    # console.log "bubble super"
     super()
     @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
     @cornerRadius = cornerRadius or 6
     @appearance = new BubblyAppearance @
-    # console.log @color
   
   @createBubbleHelpIfHandStillOnWidget: (contents, widgetInvokingThis) ->
-    # console.log "bubble createBubbleHelpIfHandStillOnWidget"
     # let's check that the item that the
     # bubble is about is still actually there
     # and the mouse is still over it, otherwise
@@ -43,7 +40,6 @@ class ToolTipWdgt extends Widget
     @ongoingTimeouts.clear()
 
   @createInAWhileIfHandStillContainedInWidget: (widgetInvokingThis, contents, delay = 500) ->
-    # console.log "bubble createInAWhileIfHandStillContainedInWidget"
     if Automator? and Automator.animationsPacingControl and
      Automator.state != Automator.IDLE
         @createBubbleHelpIfHandStillOnWidget contents, widgetInvokingThis
@@ -68,7 +64,6 @@ class ToolTipWdgt extends Widget
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
-    # console.log "bubble _buildAndConnectChildren"
     # re-build my contents
     if @contentsWidget
       @contentsWidget = @contentsWidget._destroyNoSettle()

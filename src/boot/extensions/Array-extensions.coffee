@@ -2,9 +2,6 @@
 # just create a class that extends this one, and has the extra
 # functionality that you want
 
-Array::shallowCopy = ->
-  @concat()
-
 Array::deepCopy = (objOriginalsClonedAlready, objectClones, allWidgetsInStructure) ->
   # TODO id: DUPLICATED_CODE_IN_DEEPCOPY date: 6-Jun-2023
 
@@ -29,6 +26,9 @@ Array::deepCopy = (objOriginalsClonedAlready, objectClones, allWidgetsInStructur
 
   return cloneOfMe
 
+# splits the array into consecutive sub-arrays of chunkSize.
+# NOTE: consumed by the test harness (Fizzygum-tests Automator-and-test-harness-src/
+# AutomatorLoader.coffee) to partition tests into parallel shards/groups -- keep it.
 Array::chunk = (chunkSize) ->
   array = this
   [].concat.apply [], array.map (elem, i) ->
@@ -43,20 +43,3 @@ Array::remove = (theElement) ->
   if index isnt -1
     @splice index, 1
   return @
-
-# de-duplicates array entries
-# does NOT modify array in place
-Array::unique = ->
-  output = {}
-  output[@[key]] = @[key] for key in [0...@length]
-  value for key, value of output
-
-# de-duplicates array entries
-# keeping the current order
-# see https://stackoverflow.com/a/14438954
-# does NOT modify array in place
-uniqueKeepOrder = (value, index, self) ->
-  self.indexOf(value) == index
-
-Array::uniqueKeepOrder = ->
-  return @filter uniqueKeepOrder

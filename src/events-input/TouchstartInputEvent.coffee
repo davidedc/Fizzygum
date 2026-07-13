@@ -10,4 +10,3 @@ class TouchstartInputEvent extends TouchInputEvent
     world.hand.processMouseMove Math.round(@touches[0].pageX), Math.round(@touches[0].pageY), 0, 0, @ctrlKey, @shiftKey, @altKey, @metaKey
     world.hand.processMouseDown 0,1, @ctrlKey, @shiftKey, @altKey, @metaKey
 
-    #console.log "touchstartBrowserEvent"

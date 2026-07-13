@@ -113,7 +113,6 @@ class ButtonWdgt extends Widget
       # from the --homepage production build like all test-only code.
       if Automator? and typeof @action isnt 'string'
         throw new Error "ButtonWdgt action must be a STRING method name on the target (dispatched as @target[@action]) — got #{typeof @action}"
-      #console.log "@target: " + @target + " @widgetEnv: " + @widgetEnv
       @target[@action].call @target, @dataSourceWidgetForTarget, @widgetEnv, @argumentToAction1, @argumentToAction2
     return
 

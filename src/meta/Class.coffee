@@ -142,7 +142,6 @@ class Class
 
         # the first line of remainingSourceLinesIncludingStopPositive
         # now is the stop positive
-        #console.log "stop positive: " + remainingSourceLinesIncludingStopPositive[0]
         stopPositiveLine = remainingSourceLinesIncludingStopPositive[0]
         if window.srcLoadCompileDebugWrites
           console.log "stopPositiveLine: " + stopPositiveLine + " ================"

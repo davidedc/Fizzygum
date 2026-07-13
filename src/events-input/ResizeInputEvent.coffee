@@ -5,6 +5,5 @@ class ResizeInputEvent extends InputEvent
     new @()
 
   processEvent: ->
-    #console.log "processing resize"
     if world.automaticallyAdjustToFillEntireBrowserAlsoOnResize
       world.stretchWorldToFillEntirePage()

@@ -35,10 +35,6 @@ class Point
     # <
     @x < aPoint.x and @y < aPoint.y
   
-  gt: (aPoint) ->
-    # >
-    @x > aPoint.x and @y > aPoint.y
-  
   ge: (aPoint) ->
     # >=
     @x >= aPoint.x and @y >= aPoint.y

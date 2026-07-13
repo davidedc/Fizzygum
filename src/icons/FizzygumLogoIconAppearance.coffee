@@ -1,14 +1,12 @@
 class FizzygumLogoIconAppearance extends IconAppearance
 
-  constructor: (@widget) ->
-    super
-    @preferredSize = new Point 100, 100
-    @specificationSize = new Point 100, 100
+  preferredSize: new Point 100, 100
+  specificationSize: new Point 100, 100
 
   paintFunction: (context) ->
     #// Color Declarations
     whiteColorString = Color.WHITE.toString()
-    outlineColorString = WorldWdgt.preferencesAndSettings.outlineColorString
+    outlineColorString = @_outlineColorString()
 
     #// bubble outline Drawing
     context.beginPath()

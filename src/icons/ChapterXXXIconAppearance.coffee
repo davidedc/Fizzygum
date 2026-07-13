@@ -2,14 +2,12 @@
 
 class ChapterXXXIconAppearance extends IconAppearance
 
-  constructor: (@widget) ->
-    super
-    @preferredSize = new Point 100, 100
-    @specificationSize = new Point 100, 100
+  preferredSize: new Point 100, 100
+  specificationSize: new Point 100, 100
 
   paintFunction: (context) ->
     #// Color Declarations
-    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @widget.color.toString()
+    iconColorString = @_iconColorString()
     #// Text Drawing
     context.beginPath()
     context.moveTo 34.57, 40.55

@@ -98,7 +98,6 @@ compileFGCode = (codeSource, bare) ->
     throw new Error errorMessage
 
   #t1 = performance.now()
-  #console.log "compileFGCode time: " + (t1 - t0) + " milliseconds."
 
   return compiled
 

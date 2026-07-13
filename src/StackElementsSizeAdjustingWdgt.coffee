@@ -106,15 +106,6 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   mouseLeave: ->
     document.getElementById("world").style.cursor = "auto"
 
-  #adoptWidgetsColor: (paneColor) ->
-  #  super adoptWidgetsColor paneColor
-  #  @color = paneColor
-  #
-  #cursor: ->
-  #  if @owner.direction == "#horizontal"
-  #    Cursor.resizeLeft()
-  #  else
-  #    Cursor.resizeTop()
 
   # The size-adjuster's glyph: a grey filled circle. (The shared background
   # fill + clip + translate live in

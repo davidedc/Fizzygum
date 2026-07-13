@@ -356,7 +356,6 @@ class MacroToolkit
       if nextX != prevX or nextY != prevY
         prevX = nextX
         prevY = nextY
-        #console.log nextX + " " + nextY + " scheduled at: " + scheduledTimeOfEvent
         @queueInputEvent new MousemoveInputEvent nextX, nextY, button, buttons, false, false, false, false, true, scheduledTimeOfEvent
 
   # Schedules the down/up in ABSOLUTE (already-spanFactor-scaled) time and pushes them

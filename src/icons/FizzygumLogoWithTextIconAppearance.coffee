@@ -1,9 +1,7 @@
 class FizzygumLogoWithTextIconAppearance extends IconAppearance
 
-  constructor: (@widget) ->
-    super
-    @preferredSize = new Point 100, 100
-    @specificationSize = new Point 100, 100
+  preferredSize: new Point 100, 100
+  specificationSize: new Point 100, 100
 
   # TODO this should be a composition of the existing logo
   # and the text, we are duplicating the logo data instead...

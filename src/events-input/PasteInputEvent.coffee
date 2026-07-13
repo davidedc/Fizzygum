@@ -20,6 +20,5 @@ class PasteInputEvent extends ClipboardInputEvent
     new @ text, isSynthetic, time
 
   processEvent: ->
-    #console.log "processing paste"
     world.caret?.processPaste @text
     # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED

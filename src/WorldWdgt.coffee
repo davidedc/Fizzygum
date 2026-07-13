@@ -415,7 +415,6 @@ class WorldWdgt extends PanelWdgt
     @wallpaper = new Wallpaper
     @appearance = new DesktopAppearance @
 
-    #console.log WorldWdgt.preferencesAndSettings.menuFontName
     @color = Color.create 205, 205, 205 # (130, 130, 130)
     @strokeColor = nil
 
@@ -825,7 +824,6 @@ class WorldWdgt extends PanelWdgt
     mergedBrokenRect = sourceBroken.merge destinationBroken
     mergedBrokenRectArea = mergedBrokenRect.area()
     sumArea = sourceBroken.area() + destinationBroken.area()
-    #console.log "mergedBrokenRectArea: " + mergedBrokenRectArea + " (sumArea + sumArea/10): " + (sumArea + sumArea/10)
     if mergedBrokenRectArea < sumArea + sumArea/10
       @_pushBrokenRect brokenWidget, mergedBrokenRect, true
       @numberOfMergedSourceAndDestination++
@@ -957,7 +955,6 @@ class WorldWdgt extends PanelWdgt
 
     for brokenWidget in @widgetsWithMaybeChangedFullPaintBounds
 
-      #console.log "fleshOutFullBroken: " + brokenWidget
 
       if brokenWidget.fullClippedBoundsWhenLastPainted?
         if brokenWidget.fullClippedBoundsWhenLastPainted.isNotEmpty()
@@ -1179,7 +1176,6 @@ class WorldWdgt extends PanelWdgt
     @trackChanges.pop()
 
   updateBroken: ->
-    #console.log "number of broken rectangles: " + @broken.length
     @broken = []
     @duplicatedBrokenRectsTracker = {}
     @numberOfDuplicatedBrokenRects = 0
@@ -1323,7 +1319,6 @@ class WorldWdgt extends PanelWdgt
       previousErrorsCount = currentErrorsCount
       currentErrorsCount = @errorsWhileRepainting.length
 
-    #console.log "total repaints: " + numberOfTotalRepaints
 
   resetWorldCanvasContext: ->
     # when an error is thrown while painting, it's
@@ -1673,7 +1668,6 @@ class WorldWdgt extends PanelWdgt
           if eachSteppingWidget.previousMillisecondsRemainingToWaitedFrame != 0 and millisecondsRemainingToWaitedFrame > eachSteppingWidget.previousMillisecondsRemainingToWaitedFrame
             millisecondsRemainingToWaitedFrame = 0
           eachSteppingWidget.previousMillisecondsRemainingToWaitedFrame = millisecondsRemainingToWaitedFrame
-          #console.log millisBetweenSteps + " " + millisecondsRemainingToWaitedFrame
         else
           elapsedMilliseconds = timeOfCurrentCycleStart - eachSteppingWidget.lastTime
           millisecondsRemainingToWaitedFrame = millisBetweenSteps - elapsedMilliseconds
@@ -1717,7 +1711,6 @@ class WorldWdgt extends PanelWdgt
       debugger
     try
       whichWidget.step()
-      #console.log "stepping " + whichWidget
     catch err
       # public-call-sanctioned: createErrorConsole stays public (its body drives the public
       # setExtent/moveTo/add — rule [A] forbids the _-form); this discrete error-recovery path
@@ -1729,7 +1722,6 @@ class WorldWdgt extends PanelWdgt
   
   runOtherTasksStepFunction : ->
     for task in @otherTasksToBeRunOnStep
-      #console.log "running a task: " + task
       task()
 
   # »>> this part is excluded from the fizzygum homepage build
@@ -2238,7 +2230,6 @@ class WorldWdgt extends PanelWdgt
       i.includes(theWordWidget, i.length - theWordWidget.length)
     for eachWidgetClass in ListOfWidgets
       if eachWidgetClass != "WorldWdgt"
-        #console.log "resetting " + eachWidgetClass + " from " + window[eachWidgetClass].instancesCounter
         # the actual count is in another variable "instancesCounter"
         # but all labels are built using instanceNumericID
         # which is set based on lastBuiltInstanceNumericID

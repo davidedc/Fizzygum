@@ -43,7 +43,7 @@ class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
     return "text"
 
   initialiseDefaultWindowContentLayoutSpec: ->
-    @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.DONT_MIND , PreferredSize.DONT_MIND, 1
+    @layoutSpecDetails = new WindowContentLayoutSpec WindowContentLayoutSpec.DONT_MIND , WindowContentLayoutSpec.DONT_MIND, 1
 
   checkIfTextContentWasModifiedFromTextAtStart: ->
     @textWdgt.checkIfTextContentWasModifiedFromTextAtStart()

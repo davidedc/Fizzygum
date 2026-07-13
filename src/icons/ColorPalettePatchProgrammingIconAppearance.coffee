@@ -2,13 +2,11 @@ class ColorPalettePatchProgrammingIconAppearance extends IconAppearance
 
   colorGradient: nil
 
-  constructor: (@widget) ->
-    super
-    @preferredSize = new Point 100, 100
-    @specificationSize = new Point 100, 100
+  preferredSize: new Point 100, 100
+  specificationSize: new Point 100, 100
 
   paintFunction: (context) ->
-    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @widget.color.toString()
+    iconColorString = @_iconColorString()
 
     #// Gradient Declarations
 

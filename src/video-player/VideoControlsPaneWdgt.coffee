@@ -79,11 +79,9 @@ class VideoControlsPaneWdgt extends RectangleWdgt
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    #console.log "newBounds For VideoControlsPaneWdgt: " + newBoundsForThisLayout
 
     playPauseToggleBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() + @externalPadding
     playPauseToggleBounds = playPauseToggleBounds.setBoundsWidthAndHeight new Point 44, 23 + 7 + 14
-    #console.log "playPauseToggleBounds: " + playPauseToggleBounds
     @playPauseToggle._reLayout playPauseToggleBounds
 
     videoScrubberBounds = new Rectangle new Point newBoundsForThisLayout.left() +  2 * (44 + @internalPadding), newBoundsForThisLayout.top() + @externalPadding

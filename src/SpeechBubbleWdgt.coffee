@@ -12,7 +12,6 @@ class SpeechBubbleWdgt extends Widget
   widgetInvokingThis: nil
 
   constructor: (@contents="hello") ->
-    # console.log "bubble super"
     super()
     @color = WorldWdgt.preferencesAndSettings.menuBackgroundColor
     @padding = 0
@@ -24,7 +23,6 @@ class SpeechBubbleWdgt extends Widget
     @minimumExtent = new Point 10,10
     @extentToGetWhenDraggedFromGlassBox = new Point 105,80
 
-    # console.log @color
 
   colloquialName: ->
     "speech bubble"

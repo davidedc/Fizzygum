@@ -33,3 +33,4 @@ createErrorConsole        # WorldWdgt error-path builder; drives public setExten
 addDragAffordanceWidgets  # WorldWdgt frame-driven affordance rebuilder; drives public add/fullDestroy/setWidth — [A]/[G] forbid the _-form
 bringTextAndCaretToState  # CaretWdgt undo/redo restore verb; drives the public text setter + gotoSlot — [A] forbids the _-form
 createWidgetToBeHandled   # creator-button build protocol (5-class family); builds via public addMany/setExtent — [A]/[G] forbid the _-form
+bringUpTarget             # IconicDesktopSystemShortcut shared "open the referenced target" ritual; drives public show/spawnNextTo/setTitle on other widgets — [A]/[G] forbid the _-form

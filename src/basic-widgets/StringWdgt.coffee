@@ -138,8 +138,17 @@ class StringWdgt extends Widget
   # in TextWdgt::_reLayoutSelf and are part of createBufferCacheKey so a mode/sub-axis
   # change re-renders the cached back-buffer.
   fittingSpec: FittingSpecText.FIT_TEXT_TO_BOX
-  fittingSpecBoxTightOrLoose: FittingSpecTextBoxFittingTextTightOrLoose.TIGHT
-  fittingSpecBoxWhichDimensionAdjusts: FittingSpecTextBoxFittingTextWhichDimensionAdjusts.HEIGHT_ADJUSTS_TO_WIDTH
+  # FIT_BOX_TO_TEXT sub-axes (honoured by TextWdgt::_reLayoutSelf, keyed into the
+  # buffer-cache key). Each had two values but only one ever shipped, so they are
+  # inlined here as raw booleans rather than carrying a single-valued spec class.
+  # Re-introduce a named axis only if a second value ships.
+  #   TIGHT box: false = the box is exactly the text extent, no padding.
+  #     (was FittingSpecTextBoxFittingTextTightOrLoose.TIGHT; LOOSE=true never shipped.)
+  fittingSpecBoxTightOrLoose: false
+  #   HEIGHT_ADJUSTS_TO_WIDTH: true = width is given, height follows the wrapped lines.
+  #     (was FittingSpecTextBoxFittingTextWhichDimensionAdjusts.HEIGHT_ADJUSTS_TO_WIDTH;
+  #      WIDTH_ADJUSTS_TO_HEIGHT=false never shipped.)
+  fittingSpecBoxWhichDimensionAdjusts: true
 
   caretHorizPositionForVertMovement: nil
 

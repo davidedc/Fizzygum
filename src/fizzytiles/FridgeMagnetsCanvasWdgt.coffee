@@ -43,7 +43,6 @@ class FridgeMagnetsCanvasWdgt extends CanvasWdgt
     @primitiveTypes.ball = numberOfPrimitives++
 
   step: ->
-    #console.log "stepping FridgeMagnetsCanvasWdgt"
     @_paintNewFrame()
     @changed()
 

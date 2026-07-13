@@ -612,14 +612,14 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       if @contentNeverSetInPlaceYet
         # in this case the contents has just been added
 
-        if @contents.layoutSpecDetails.preferredStartingWidth == PreferredSize.THIS_ONE_I_HAVE_NOW
+        if @contents.layoutSpecDetails.preferredStartingWidth == WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW
           recommendedElementWidth = @contents.width()
           if @recursivelyAttachedAsFreeFloating()
             windowWidth = recommendedElementWidth + @padding * 2
           else
             windowWidth = Math.min @width(), recommendedElementWidth + @padding * 2
           @_applyExtentBase new Point windowWidth, @height()
-        else if @contents.layoutSpecDetails.preferredStartingWidth == PreferredSize.DONT_MIND
+        else if @contents.layoutSpecDetails.preferredStartingWidth == WindowContentLayoutSpec.DONT_MIND
           recommendedElementWidth = @width()  - 2 * @padding
         else
           recommendedElementWidth = @contents.layoutSpecDetails.preferredStartingWidth
@@ -641,13 +641,13 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # this re-layouts each widget to fit the width.
       if @contentNeverSetInPlaceYet
         # in this case the contents has just been added
-        if @contents.layoutSpecDetails.preferredStartingHeight == PreferredSize.THIS_ONE_I_HAVE_NOW
+        if @contents.layoutSpecDetails.preferredStartingHeight == WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW
           desiredHeight = @contents.height()
           if !@recursivelyAttachedAsFreeFloating()
             desiredHeight = Math.min desiredHeight, @height() - partOfHeightUsedUp
           @contents._applyWidth recommendedElementWidth
           @contents._applyHeight desiredHeight
-        else if @contents.layoutSpecDetails.preferredStartingHeight == PreferredSize.DONT_MIND
+        else if @contents.layoutSpecDetails.preferredStartingHeight == WindowContentLayoutSpec.DONT_MIND
           @contents._applyWidth recommendedElementWidth
           desiredHeight = Math.round @height() - partOfHeightUsedUp
           @contents._applyHeight desiredHeight

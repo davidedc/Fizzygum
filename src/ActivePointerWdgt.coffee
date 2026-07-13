@@ -772,8 +772,6 @@ class ActivePointerWdgt extends Widget
             if @mouseButton == "left" and
              @doubleClickWdgt == w and
              ((@doubleClickPosition.distanceTo @position()) < WorldWdgt.preferencesAndSettings.grabDragThreshold)
-              #console.log "@doubleClickPosition.distanceTo @position():" + @doubleClickPosition.distanceTo @position()
-              #console.log "WorldWdgt.preferencesAndSettings.grabDragThreshold:" + WorldWdgt.preferencesAndSettings.grabDragThreshold
               @doubleClickWdgt = nil
               # remember we are going to send a double click
               # but let's do it after. That's because we first
@@ -845,7 +843,6 @@ class ActivePointerWdgt extends Widget
           if !w.editorContentPropertyChangerButton and !(w.excludedFromLastFocusTracking?())
             world.lastNonTextPropertyChangerButtonClickedOrDropped = w
           w[expectedClick] @_pointerPositionInPlaneOf(w), button, buttons, ctrlKey, shiftKey, altKey, metaKey, doubleClickInvocation, tripleClickInvocation
-          #console.log ">>> sent event " + expectedClick + " to: " + w
 
           # now send the double/triple clicks
           if doubleClickInvocation
@@ -947,9 +944,6 @@ class ActivePointerWdgt extends Widget
     # i.e. check from the notification list which ones are not
     # in the hierarchy of the clicked widgets
     # and call their callback.
-    #console.log "widgets wanting to be notified: " + world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren
-    #console.log "hierarchy of clicked widgets: " + world.hierarchyOfClickedWdgts
-    #console.log "hierarchy of clicked menus: " + world.hierarchyOfClickedMenus
     
 
     # because we might remove elements of the set while we
@@ -1164,11 +1158,9 @@ class ActivePointerWdgt extends Widget
             @_applyMoveTo pos
     #endProcessMouseMove = new Date().getTime()
     #timeProcessMouseMove = endProcessMouseMove - startProcessMouseMove
-    #console.log('Execution time ProcessMouseMove: ' + timeProcessMouseMove)
 
 
     if @isThisPointerNonFloatDraggingSomething()
-      #console.log "nonFloatDraggedWdgt: " + @nonFloatDraggedWdgt
 
       # OK so this is an interesting choice. You can avoid
       # this next line and have Fizzygum to behave like OSX where you

@@ -1,13 +1,11 @@
 class LittleWorldIconAppearance extends IconAppearance
 
-  constructor: (@widget) ->
-    super
-    @preferredSize = new Point 100, 100
-    @specificationSize = new Point 100, 100
+  preferredSize: new Point 100, 100
+  specificationSize: new Point 100, 100
 
   paintFunction: (context) ->
     #// Color Declarations
-    if @ownColorInsteadOfWidgetColor? then iconColorString = @ownColorInsteadOfWidgetColor.toString() else iconColorString = @widget.color.toString()
+    iconColorString = @_iconColorString()
     #// Group 3
     #// Bezier 4 Drawing
     context.beginPath()

@@ -57,7 +57,7 @@ class MenuWdgt extends PopUpWdgt
       return "menu"
 
   initialiseDefaultWindowContentLayoutSpec: ->
-    @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.THIS_ONE_I_HAVE_NOW , PreferredSize.THIS_ONE_I_HAVE_NOW, 0
+    @layoutSpecDetails = new WindowContentLayoutSpec WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW , WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 0
     @layoutSpecDetails.canSetHeightFreely = false
 
 

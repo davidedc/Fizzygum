@@ -8,6 +8,17 @@ class IconAppearance extends Appearance
   # that the actual code paints on.
   specificationSize: new Point 200, 200
 
+  # Icon fill color as a string: the explicit ownColorInsteadOfWidgetColor if set,
+  # otherwise the host widget's color. Subclass paintFunctions call this instead of
+  # repeating the ownColorInsteadOfWidgetColor?-ternary inline (was copied ~64×).
+  # _-tier: internal paint helper, only ever @-self-called from paintFunctions.
+  _iconColorString: ->
+    (@ownColorInsteadOfWidgetColor ? @widget.color).toString()
+
+  # The system-wide icon outline color (from preferences).
+  _outlineColorString: ->
+    WorldWdgt.preferencesAndSettings.outlineColorString
+
   # default icon is a circle
   paintFunction: (context) ->
     fillColor = @color

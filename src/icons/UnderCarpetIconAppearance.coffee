@@ -2,10 +2,8 @@
 
 class UnderCarpetIconAppearance extends IconAppearance
 
-  constructor: (@widget) ->
-    super
-    @preferredSize = new Point 100, 100
-    @specificationSize = new Point 400, 400
+  preferredSize: new Point 100, 100
+  specificationSize: new Point 400, 400
 
   paintFunction: (context) ->
     #// Color Declarations

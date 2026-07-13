@@ -44,7 +44,8 @@ Object::addInstanceProperties = (fromClass, obj) ->
 # values and b) to generate keys for some caches.
 # adapted from http://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
 #
-# TODO search for "HashCalculator" to find a duplicate of this
+# This is the single implementation of the string hash: HashCalculator.calculateHash
+# delegates here (it used to be a byte-identical copy of the loop below).
 # TODO you can optimise for particular types of data, e.g. canvas image data, boolean arrays etc.
 # ...see how Java does it for arrays at
 # https://github.com/openjdk-mirror/jdk7u-jdk/blob/master/src/share/classes/java/util/Arrays.java#L2893

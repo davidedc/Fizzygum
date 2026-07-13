@@ -141,7 +141,6 @@ class PopUpWdgt extends Widget
     @popUp world.hand.position(), world
 
   popUp: (pos, widgetToAttachTo) ->
-    # console.log "menu popup"
     @__commitMoveTo pos
     widgetToAttachTo.add @
     # the @_moveWithin method

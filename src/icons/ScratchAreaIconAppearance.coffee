@@ -1,9 +1,7 @@
 # based on https://thenounproject.com/term/organization/153374/
 class ScratchAreaIconAppearance extends IconAppearance
 
-  constructor: (@widget) ->
-    super
-    @preferredSize = new Point 100, 100
+  preferredSize: new Point 100, 100
 
   paintFunction: (context) ->
     #// Color Declarations

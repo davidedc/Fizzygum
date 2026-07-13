@@ -14,7 +14,6 @@ class Mixin
   name: ""
 
   _equivalentforSuper: (aString) ->
-    #console.log "removing super from: " + aString
 
     # coffeescript won't compile "super" unless it's an instance
     # method (i.e. if it comes inside a class), so we need to
