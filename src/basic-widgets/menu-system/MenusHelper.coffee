@@ -155,30 +155,18 @@ class MenusHelper
 
   createCalculatingPatchNode: ->
     calculatingPatchNodeWdgt = new CalculatingPatchNodeWdgt
-    wm = new WindowWdgt nil, nil, calculatingPatchNodeWdgt, true
-    wm.setExtent new Point 460, 400
-    wm.moveTo world.hand.position().subtract new Point 50, 100
-    wm.moveWithin world
-    world.add wm
+    world.openWindowWith calculatingPatchNodeWdgt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
 
   createDiffingPatchNode: ->
     diffingPatchNodeWdgt = new DiffingPatchNodeWdgt
-    wm = new WindowWdgt nil, nil, diffingPatchNodeWdgt, true
-    wm.setExtent new Point 460, 400
-    wm.moveTo world.hand.position().subtract new Point 50, 100
-    wm.moveWithin world
-    world.add wm
+    world.openWindowWith diffingPatchNodeWdgt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
 
   createSliderWithSmallestValueAtBottomEnd: ->
     world.create new SliderWdgt nil, nil, nil, nil, nil, true
 
   createRegexSubstitutionPatchNodeWdgt: ->
     regexSubstitutionPatchNodeWdgt = new RegexSubstitutionPatchNodeWdgt
-    wm = new WindowWdgt nil, nil, regexSubstitutionPatchNodeWdgt, true
-    wm.setExtent new Point 460, 400
-    wm.moveTo world.hand.position().subtract new Point 50, 100
-    wm.moveWithin world
-    world.add wm
+    world.openWindowWith regexSubstitutionPatchNodeWdgt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
 
   throwAnError: ->
     throw new Error "you manually threw an error!"
@@ -190,19 +178,11 @@ class MenusHelper
 
   createToolsPanel: ->
     toolPanel = new ScrollPanelWdgt new ToolPanelWdgt
-    wm = new WindowWdgt nil, nil, toolPanel, true
-    wm.setExtent new Point 200, 400
-    wm.moveTo world.hand.position().subtract new Point 50, 100
-    wm.moveWithin world
-    world.add wm
+    world.openWindowWith toolPanel, (new Point 200, 400), world.hand.position().subtract(new Point 50, 100)
 
   createHorizontalMenuPanelPanel: ->
     horizontalMenuPanel = new HorizontalMenuPanelWdgt
-    wm = new WindowWdgt nil, nil, horizontalMenuPanel, true
-    wm.setExtent new Point 200, 400
-    wm.moveTo world.hand.position().subtract new Point 50, 100
-    wm.moveWithin world
-    world.add wm
+    world.openWindowWith horizontalMenuPanel, (new Point 200, 400), world.hand.position().subtract(new Point 50, 100)
 
 
   popUpMore1IconsMenu: (widgetOpeningThePopUp) ->
