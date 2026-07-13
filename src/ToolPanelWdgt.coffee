@@ -24,14 +24,18 @@ class ToolPanelWdgt extends PanelWdgt
   # bare _invalidateLayout() that rode the end-of-cycle flush, plus a hand-rolled
   # `dontLayout` batching flag -- the pre-convert shape everywhere else already left.
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
-    @_settleLayoutsAfter => @_addNoSettle aWdgt, position, layoutSpec, beingDropped, unused, positionOnScreen
+    @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, positionOnScreen: positionOnScreen
 
-  _addNoSettle: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
+  _addNoSettle: (aWdgt, opts = {}) ->
+    position = opts.position
+    layoutSpec = opts.layoutSpec ? LayoutSpec.ATTACHEDAS_FREEFLOATING
+    beingDropped = opts.beingDropped
+    positionOnScreen = opts.positionOnScreen
 
     # annotation + handle both attach to the scroll frame directly (was their two instanceof)
     # (type-test-elimination campaign)
     if aWdgt.attachesToScrollFrameDirectly?()
-      super
+      super aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
     else
       # if aWdgt specifies a non-default switcharoo then it
       # means it's like the TextBoxCreatorButtonWdgt, which creates a textbox
@@ -76,9 +80,9 @@ class ToolPanelWdgt extends PanelWdgt
           positionNumberAmongSiblings++
       
       if foundDrop
-        super aWdgt, positionNumberAmongSiblings, layoutSpec, beingDropped
+        super aWdgt, position: positionNumberAmongSiblings, layoutSpec: layoutSpec, beingDropped: beingDropped
       else
-        super aWdgt, @numberOfIconsOnPanel, layoutSpec, beingDropped
+        super aWdgt, position: @numberOfIconsOnPanel, layoutSpec: layoutSpec, beingDropped: beingDropped
 
       @numberOfIconsOnPanel++
 

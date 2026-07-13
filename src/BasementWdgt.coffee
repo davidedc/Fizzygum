@@ -52,7 +52,7 @@ class BasementWdgt extends BoxWdgt
     # resizer -- attach, then record (@resizer stays nil during its own add; byte-identical to the old
     # `@resizer = new HandleWdgt @` whose in-constructor add ran while @resizer was nil; see WindowWdgt).
     resizer = new HandleWdgt
-    @_addNoSettle resizer, nil, resizer.defaultLayoutSpecWhenAddedTo(@)
+    @_addNoSettle resizer, layoutSpec: resizer.defaultLayoutSpecWhenAddedTo(@)
     @resizer = resizer
 
     @_invalidateLayout()

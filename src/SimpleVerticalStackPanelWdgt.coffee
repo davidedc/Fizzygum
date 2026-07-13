@@ -23,13 +23,17 @@ class SimpleVerticalStackPanelWdgt extends Widget
     true
 
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
-    @_settleLayoutsAfter => @_addNoSettle aWdgt, position, layoutSpec, beingDropped, unused, positionOnScreen
+    @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, positionOnScreen: positionOnScreen
 
   # _addNoSettle -- the non-settling core of add(), mirroring Widget.add/_addNoSettle. The stack-specific
   # work (_resizeToWithoutSpacing + sibling-position computation) only uses immediate mutators / structural
   # cores, so build-time / layout-time / teardown adders can call it directly without flushing layouts.
   # (window-rebuild follow-up: lets WindowWdgt._buildAndConnectChildrenNoSettle add chrome + content through cores.)
-  _addNoSettle: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
+  _addNoSettle: (aWdgt, opts = {}) ->
+    position = opts.position
+    layoutSpec = opts.layoutSpec ? LayoutSpec.ATTACHEDAS_FREEFLOATING
+    beingDropped = opts.beingDropped
+    positionOnScreen = opts.positionOnScreen
     aWdgt._resizeToWithoutSpacing()
 
     # find out WHERE to add the widget. Find the existing widget in the
@@ -54,9 +58,9 @@ class SimpleVerticalStackPanelWdgt extends Widget
           break
 
     if positionNumberAmongSiblings?
-      super aWdgt, positionNumberAmongSiblings, layoutSpec, beingDropped
+      super aWdgt, position: positionNumberAmongSiblings, layoutSpec: layoutSpec, beingDropped: beingDropped
     else
-      super aWdgt, position, layoutSpec, beingDropped
+      super aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
 
   constructor: (extent, color, @padding = 5, @constrainContentWidth = true) ->
     super()

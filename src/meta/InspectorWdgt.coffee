@@ -355,7 +355,7 @@ class InspectorWdgt extends Widget
     # Attach the resizer, then record it -- @resizer stays nil during its own add (byte-identical to the old
     # `@resizer = new HandleWdgt @`, whose in-constructor add ran while @resizer was still nil; see WindowWdgt).
     resizer = new HandleWdgt
-    @_addNoSettle resizer, nil, resizer.defaultLayoutSpecWhenAddedTo(@)
+    @_addNoSettle resizer, layoutSpec: resizer.defaultLayoutSpecWhenAddedTo(@)
     @resizer = resizer
 
     # update layout

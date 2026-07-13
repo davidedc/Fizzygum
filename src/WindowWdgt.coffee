@@ -301,7 +301,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     true
 
   add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
-    @_settleLayoutsAfter => @_addNoSettle aWdgt, position, layoutSpec, beingDropped, notContent
+    @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, notContent: notContent
 
   # _addNoSettle -- the non-settling core of add() (mirrors Widget.add/_addNoSettle and
   # SimpleVerticalStackPanelWdgt.add/_addNoSettle). Folds in the window's content bookkeeping (title,
@@ -310,7 +310,11 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # down through SimpleVerticalStackPanelWdgt._addNoSettle to Widget._addNoSettle, all non-settling. Note the
   # content branch sets contentNeverSetInPlaceYet -- @_addNoSettle @contents (vs the bare base _addNoSettle)
   # is exactly what keeps @stack wired by the deferred re-fit.
-  _addNoSettle: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
+  _addNoSettle: (aWdgt, opts = {}) ->
+    position = opts.position
+    layoutSpec = opts.layoutSpec
+    beingDropped = opts.beingDropped
+    notContent = opts.notContent
     # caret + handle are the layout decorations (was their two instanceof) (type-test-elimination campaign)
     unless notContent or aWdgt.isLayoutInert?()
       @contentNeverSetInPlaceYet = true
@@ -330,9 +334,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # Init the content's WindowContentLayoutSpec up-front -- the pre-fit used to do this implicitly
       # via _positionAndResizeChildren, so without it the deferred re-fit would deref an uninitialised spec.
       aWdgt.initialiseDefaultWindowContentLayoutSpec() unless aWdgt.layoutSpecDetails instanceof WindowContentLayoutSpec
-      super aWdgt, position, LayoutSpec.ATTACHEDAS_WINDOW_CONTENT, beingDropped
+      super aWdgt, position: position, layoutSpec: LayoutSpec.ATTACHEDAS_WINDOW_CONTENT, beingDropped: beingDropped
     else
-      super aWdgt, position, layoutSpec, beingDropped
+      super aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
     @resizer?._moveInFrontOfSiblings()
 
   _beforeChildDestroyed: (child) ->
@@ -483,7 +487,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @titlebarBackground = new BoxWdgt
 
     @_setAppearanceAndColorOfTitleBackground()
-    @_addNoSettle @titlebarBackground, nil, nil, nil, true
+    @_addNoSettle @titlebarBackground, notContent: true
   
   # ONE settle around the whole rebuild via the single-mutation tier (_settleLayoutsAfter). The
   # core is non-settling: it adds every chrome widget AND the content through @_addNoSettle (the cores
@@ -518,20 +522,20 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @label.isBold = WorldWdgt.preferencesAndSettings.titleBarBoldText
 
     @label.color = Color.WHITE
-    @_addNoSettle @label, nil, nil, nil, true
+    @_addNoSettle @label, notContent: true
 
     # upper-left button, often a close button
     # but it can be anything
     if !@closeButton?
       @closeButton = new CloseIconButtonWdgt
-    @_addNoSettle @closeButton, nil, nil, nil, true
+    @_addNoSettle @closeButton, notContent: true
 
 
     if !@collapseUncollapseSwitchButton?
       collapseButton = new CollapseIconButtonWdgt
       uncollapseButton = new UncollapseIconButtonWdgt
       @collapseUncollapseSwitchButton = new SwitchButtonWdgt [collapseButton, uncollapseButton]
-    @_addNoSettle @collapseUncollapseSwitchButton, nil, nil, nil, true
+    @_addNoSettle @collapseUncollapseSwitchButton, notContent: true
 
 
     @_createAndAddEditButton()
@@ -544,7 +548,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # itself -- it only re-fronts the resizer when LATER content is added. (Byte-identical to the
       # old `@resizer = new HandleWdgt @`, whose in-constructor add also ran while @resizer was nil.)
       resizer = new HandleWdgt
-      @_addNoSettle resizer, nil, resizer.defaultLayoutSpecWhenAddedTo(@)
+      @_addNoSettle resizer, layoutSpec: resizer.defaultLayoutSpecWhenAddedTo(@)
       @resizer = resizer
 
   # Reflect the content's edit/view mode in the title-bar edit button: the glyph
@@ -573,7 +577,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # content widgets drive them cross-object (`@parent?.showEditModeInBar?()`), so they stay public.
     if @contents?.providesAmenitiesForEditing and !@editButton?
       @editButton = new EditIconButtonWdgt @
-      @_addNoSettle @editButton, nil, nil, nil, true
+      @_addNoSettle @editButton, notContent: true
 
       if @contents.dragsDropsAndEditingEnabled
         @showEditModeInBar()

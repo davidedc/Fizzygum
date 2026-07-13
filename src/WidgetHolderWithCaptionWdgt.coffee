@@ -24,7 +24,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
     @label.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
     @label.color = Color.WHITE
     @label.hasDarkOutline = true
-    @_addNoSettle @label, nil, nil, true
+    @_addNoSettle @label, beingDropped: true
     @label.alignCenter()
     @label.alignMiddle()
     @label.isEditable = true

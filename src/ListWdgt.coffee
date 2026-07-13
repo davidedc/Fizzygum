@@ -98,7 +98,7 @@ class ListWdgt extends ScrollPanelWdgt
     @listContents.__commitMoveTo @contents.position()
     @listContents._reLayoutSelf()
 
-    @contents._addNoSettle @listContents, nil, LayoutSpec.ATTACHEDAS_FREEFLOATING
+    @contents._addNoSettle @listContents, layoutSpec: LayoutSpec.ATTACHEDAS_FREEFLOATING
 
   # A ListWdgt is excluded from the "scroll panel re-fits its contained stack
   # panel" notification (the old amIPanelOfScrollPanelWdgt returned false for

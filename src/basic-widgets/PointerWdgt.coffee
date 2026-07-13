@@ -42,9 +42,9 @@ class PointerWdgt extends BoxWdgt
 
     lmContent3 = new CloseIconButtonWdgt
 
-    @_addNoSettle lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    @_addNoSettle lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    @_addNoSettle lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    @_addNoSettle lmContent1, layoutSpec: LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    @_addNoSettle lmContent2, layoutSpec: LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    @_addNoSettle lmContent3, layoutSpec: LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
     #lmContent1.setColor Color.LIME
     #lmContent2.setColor Color.BLUE

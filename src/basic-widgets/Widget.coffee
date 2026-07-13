@@ -1521,7 +1521,7 @@ class Widget extends TreeNode
     # no-ops with no content, and __add skips the extent recalculation). Orphan-safe: no formerParent => the
     # island stays a detached root and I move into it, exactly as before.
     @_moveHoldingPanelBookkeepingTo island                     # the fractional/stack bookkeeping rides to the panel/stack's new child (the island)
-    formerParent?._addNoSettle island, myIndex, myLayoutSpec   # drop the (empty) island into MY former slot + spec
+    formerParent?._addNoSettle island, position: myIndex, layoutSpec: myLayoutSpec   # drop the (empty) island into MY former slot + spec
     island._addNoSettle @                                      # then reparent me into the now-homed island (free-floating child)
     island
 
@@ -1537,7 +1537,7 @@ class Widget extends TreeNode
     islandLayoutSpec = island.layoutSpec
     pos = @position()
     island._moveHoldingPanelBookkeepingTo @                      # hand the fractional/stack bookkeeping back to me (the panel/stack's child once more)
-    islandParent._addNoSettle @, islandIndex, islandLayoutSpec   # reparent me back into the island's slot + spec
+    islandParent._addNoSettle @, position: islandIndex, layoutSpec: islandLayoutSpec   # reparent me back into the island's slot + spec
     @_moveToNoSettle pos                                          # preserve my absolute position (desktop case)
     # R2 (§6 affine): a highlight (or any layout-inert ephemeral chrome, isEphemeral) parented INTO this
     # island while it was rotated must ride OUT before we drop it — else _destroyNoSettle just nulls
@@ -3058,11 +3058,11 @@ class Widget extends TreeNode
   # because the frame settles anyway.
   addAsSiblingAfterMe: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
     myPosition = @positionAmongSiblings()
-    @parent._addNoSettle aWdgt, (myPosition + 1), layoutSpec
+    @parent._addNoSettle aWdgt, position: (myPosition + 1), layoutSpec: layoutSpec
 
   addAsSiblingBeforeMe: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
     myPosition = @positionAmongSiblings()
-    @parent._addNoSettle aWdgt, myPosition, layoutSpec
+    @parent._addNoSettle aWdgt, position: myPosition, layoutSpec: layoutSpec
   # this part is excluded from the fizzygum homepage build <<«
 
   # The layoutSpec a widget takes when added with NO explicit one -- the default for add() / _addNoSettle()'s
@@ -3085,7 +3085,7 @@ class Widget extends TreeNode
   # byte-identical to going through add(): for a fresh non-world child the shadow step is a no-op
   # removeShadow and the fractional step is skipped. See docs/deferred-layout-refit-and-add-design.md (D3).
   add: (aWdgt, position = nil, layoutSpec = aWdgt.defaultLayoutSpecWhenAddedTo(@), beingDropped) ->
-    @_settleLayoutsAfter => @_addNoSettle aWdgt, position, layoutSpec, beingDropped
+    @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
 
   # _addNoSettle -- the COMPLETE add minus the settle. The single NON-settling core behind add() and
   # every internal layout-time / construction-time / teardown adder (it must NOT
@@ -3098,7 +3098,10 @@ class Widget extends TreeNode
   #     being added to itself and the case of
   # ??? TODO a Widget being added to one of its
   #     children
-  _addNoSettle: (aWdgt, position = nil, layoutSpec = aWdgt.defaultLayoutSpecWhenAddedTo(@), beingDropped) ->
+  _addNoSettle: (aWdgt, opts = {}) ->
+    position = opts.position
+    layoutSpec = opts.layoutSpec ? aWdgt.defaultLayoutSpecWhenAddedTo(@)
+    beingDropped = opts.beingDropped
 
     # let's check if we are trying to add
     # an ancestor of me below me.
@@ -3635,7 +3638,7 @@ class Widget extends TreeNode
   # re-default the unset spec to FREEFLOATING before it reaches the handle).
   _addAndTrackHandle: (type) ->
     handle = new HandleWdgt type
-    @_addNoSettle handle, nil, handle.defaultLayoutSpecWhenAddedTo(@)
+    @_addNoSettle handle, layoutSpec: handle.defaultLayoutSpecWhenAddedTo(@)
     world.temporaryHandlesAndLayoutAdjusters.add handle
 
   # CONVERT (end-of-cycle-flush-drawdown): showing the resize/move handles is a DISCRETE menu/click action, so it
