@@ -5,7 +5,7 @@ class WindowWithScrollPanelCreatorButtonWdgt extends CreatorButtonWdgt
   createAppearance: -> new WindowWithScrollingPanelIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-    switcherooWm = new WindowWdgt nil, nil, new ScrollPanelWdgt, true, true
+    switcherooWm = new WindowWdgt new ScrollPanelWdgt
     switcherooWm._applyExtent new Point 200, 200
     return switcherooWm
 

@@ -986,17 +986,17 @@ class StringWdgt extends Widget
 
 
   fontsMenu: (a,targetWidget)->
-    menu = new MenuWdgt @, false, targetWidget, true, true, "Fonts"
+    menu = new MenuWdgt @, target: targetWidget, title: "Fonts"
 
-    menu.addMenuItem untick + "Arial", true, @, "setFontName", nil, nil, nil, nil, nil, @justArialFontStack
-    menu.addMenuItem untick + "Times", true, @, "setFontName", nil, nil, nil, nil, nil, @timesFontStack
-    menu.addMenuItem untick + "Georgia", true, @, "setFontName", nil, nil, nil, nil, nil, @georgiaFontStack
-    menu.addMenuItem untick + "Garamo", true, @, "setFontName", nil, nil, nil, nil, nil, @garamoFontStack
-    menu.addMenuItem untick + "Helve", true, @, "setFontName", nil, nil, nil, nil, nil, @helveFontStack
-    menu.addMenuItem untick + "Verda", true, @, "setFontName", nil, nil, nil, nil, nil, @verdaFontStack
-    menu.addMenuItem untick + "Treby", true, @, "setFontName", nil, nil, nil, nil, nil, @trebuFontStack
-    menu.addMenuItem untick + "Heavy", true, @, "setFontName", nil, nil, nil, nil, nil, @heavyFontStack
-    menu.addMenuItem untick + "Mono", true, @, "setFontName", nil, nil, nil, nil, nil, @monoFontStack
+    menu.addMenuItem untick + "Arial", @, "setFontName", arg1: @justArialFontStack
+    menu.addMenuItem untick + "Times", @, "setFontName", arg1: @timesFontStack
+    menu.addMenuItem untick + "Georgia", @, "setFontName", arg1: @georgiaFontStack
+    menu.addMenuItem untick + "Garamo", @, "setFontName", arg1: @garamoFontStack
+    menu.addMenuItem untick + "Helve", @, "setFontName", arg1: @helveFontStack
+    menu.addMenuItem untick + "Verda", @, "setFontName", arg1: @verdaFontStack
+    menu.addMenuItem untick + "Treby", @, "setFontName", arg1: @trebuFontStack
+    menu.addMenuItem untick + "Heavy", @, "setFontName", arg1: @heavyFontStack
+    menu.addMenuItem untick + "Mono", @, "setFontName", arg1: @monoFontStack
 
     @updateFontsMenuEntriesTicks menu
 
@@ -1033,66 +1033,66 @@ class StringWdgt extends Widget
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
-    menu.addMenuItem "edit...", true, @, "editPopup", "set this String's\ncontent"
-    menu.addMenuItem "font size...", true, @, "fontSizePopup", "set this String's\nfont point size"
+    menu.addMenuItem "edit...", @, "editPopup", toolTip: "set this String's\ncontent"
+    menu.addMenuItem "font size...", @, "fontSizePopup", toolTip: "set this String's\nfont point size"
 
-    menu.addMenuItem "font ➜", false, @, "fontsMenu", "pick a font"
+    menu.addMenuItem "font ➜", @, "fontsMenu", closesUnpinnedPopUps: false, toolTip: "pick a font"
 
     if @isBold
-      menu.addMenuItem "normal weight", true, @, "toggleWeight"
+      menu.addMenuItem "normal weight", @, "toggleWeight"
     else
-      menu.addMenuItem "bold", true, @, "toggleWeight"
+      menu.addMenuItem "bold", @, "toggleWeight"
 
     if @isItalic
-      menu.addMenuItem "non-italic", true, @, "toggleItalic"
+      menu.addMenuItem "non-italic", @, "toggleItalic"
     else
-      menu.addMenuItem "italic", true, @, "toggleItalic"
+      menu.addMenuItem "italic", @, "toggleItalic"
 
     if @isHeaderLine
-      menu.addMenuItem "no header line", true, @, "toggleHeaderLine"
+      menu.addMenuItem "no header line", @, "toggleHeaderLine"
     else
-      menu.addMenuItem "header line", true, @, "toggleHeaderLine"
+      menu.addMenuItem "header line", @, "toggleHeaderLine"
 
 
     if @isPassword
-      menu.addMenuItem "show characters", true, @, "toggleIsPassword"
+      menu.addMenuItem "show characters", @, "toggleIsPassword"
     else
-      menu.addMenuItem "hide characters", true, @, "toggleIsPassword"
+      menu.addMenuItem "hide characters", @, "toggleIsPassword"
 
     menu.addLine()
     if @horizontalAlignment != AlignmentSpecHorizontal.LEFT
-      menu.addMenuItem "← align left", true, @, "alignLeft"
+      menu.addMenuItem "← align left", @, "alignLeft"
     if @horizontalAlignment != AlignmentSpecHorizontal.CENTER
-      menu.addMenuItem "∸ align center", true, @, "alignCenter"
+      menu.addMenuItem "∸ align center", @, "alignCenter"
     if @horizontalAlignment != AlignmentSpecHorizontal.RIGHT
-      menu.addMenuItem "→ align right", true, @, "alignRight"
+      menu.addMenuItem "→ align right", @, "alignRight"
 
     menu.addLine()
     if @verticalAlignment != AlignmentSpecVertical.TOP
-      menu.addMenuItem "↑ align top", true, @, "alignTop"
+      menu.addMenuItem "↑ align top", @, "alignTop"
     if @verticalAlignment != AlignmentSpecVertical.MIDDLE
-      menu.addMenuItem "⍿ align middle", true, @, "alignMiddle"
+      menu.addMenuItem "⍿ align middle", @, "alignMiddle"
     if @verticalAlignment != AlignmentSpecVertical.BOTTOM
-      menu.addMenuItem "↓ align bottom", true, @, "alignBottom"
+      menu.addMenuItem "↓ align bottom", @, "alignBottom"
 
     menu.addLine()
 
     if @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.SCALEUP
-      menu.addMenuItem "←☓→ don't expand to fill", true, @, "togglefittingSpecWhenBoundsTooLarge"
+      menu.addMenuItem "←☓→ don't expand to fill", @, "togglefittingSpecWhenBoundsTooLarge"
     else
-      menu.addMenuItem "←→ expand to fill", true, @, "togglefittingSpecWhenBoundsTooLarge"
+      menu.addMenuItem "←→ expand to fill", @, "togglefittingSpecWhenBoundsTooLarge"
 
     if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
-      menu.addMenuItem "→← shrink to fit", true, @, "togglefittingSpecWhenBoundsTooSmall"
+      menu.addMenuItem "→← shrink to fit", @, "togglefittingSpecWhenBoundsTooSmall"
     else
-      menu.addMenuItem "→⋯← crop to fit", true, @, "togglefittingSpecWhenBoundsTooSmall"
+      menu.addMenuItem "→⋯← crop to fit", @, "togglefittingSpecWhenBoundsTooSmall"
 
     if world.isIndexPage
       menu.addLine()
       if world.isIndexPage
-        menu.addMenuItem "connect to ➜", true, @, "openTargetSelector", "connect to\nanother widget"
+        menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: "connect to\nanother widget"
       else
-        menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another widget\nwhose numerical property\n will be" + " controlled by this one"
+        menu.addMenuItem "set target", @, "openTargetSelector", toolTip: ("choose another widget\nwhose numerical property\n will be" + " controlled by this one")
     @addFiresPerEventMenuEntry menu
 
 

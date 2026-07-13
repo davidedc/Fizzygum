@@ -5,7 +5,7 @@ class WindowWithPanelCreatorButtonWdgt extends CreatorButtonWdgt
   createAppearance: -> new WindowWithCroppingPanelIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-    switcherooWm = new WindowWdgt nil, nil, new PanelWdgt, true, true
+    switcherooWm = new WindowWdgt new PanelWdgt
     switcherooWm._applyExtent new Point 200, 200
     return switcherooWm
 

@@ -24,15 +24,15 @@ class SaveShortcutPromptWdgt extends MenuWdgt
       false
     )
 
-    super widgetOpeningThePopUp, false, @target, true, true, @msg, @tempPromptEntryField
+    super widgetOpeningThePopUp, target: @target, title: @msg, environment: @tempPromptEntryField
 
     @_buildAndConnectChildren()
 
-    @addMenuItem "Don't save", true, @target, "destroy"
+    @addMenuItem "Don't save", @target, "destroy"
     # "Cancel" here just dismisses this prompt, but the target
     # wdgt remains open
-    @addMenuItem "Cancel", true, @, "close"
-    @addMenuItem "Ok", true, @, "createReferenceAndClose"
+    @addMenuItem "Cancel", @, "close"
+    @addMenuItem "Ok", @, "createReferenceAndClose"
 
     @_reLayoutSelf()
     @_applyWidth 150

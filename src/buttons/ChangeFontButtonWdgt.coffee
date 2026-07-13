@@ -20,16 +20,16 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
      !@simpleDocument.fontSelectionMenu.destroyed
       @simpleDocument.fontSelectionMenu.popUp @position().subtract(new Point 80,0), world
     else
-      menu = new MenuWdgt @, false, @, true, true, "Fonts"
-      menu.addMenuItem "Arial", true, @, "setFontName", nil, nil, nil, nil, nil, "justArialFontStack"
-      menu.addMenuItem "Times", true, @, "setFontName", nil, nil, nil, nil, nil, "timesFontStack"
-      menu.addMenuItem "Georgia", true, @, "setFontName", nil, nil, nil, nil, nil, "georgiaFontStack"
-      menu.addMenuItem "Garamo", true, @, "setFontName", nil, nil, nil, nil, nil, "garamoFontStack"
-      menu.addMenuItem "Helve", true, @, "setFontName", nil, nil, nil, nil, nil, "helveFontStack"
-      menu.addMenuItem "Verda", true, @, "setFontName", nil, nil, nil, nil, nil, "verdaFontStack"
-      menu.addMenuItem "Treby", true, @, "setFontName", nil, nil, nil, nil, nil, "trebuFontStack"
-      menu.addMenuItem "Heavy", true, @, "setFontName", nil, nil, nil, nil, nil, "heavyFontStack"
-      menu.addMenuItem "Mono", true, @, "setFontName", nil, nil, nil, nil, nil, "monoFontStack"
+      menu = new MenuWdgt @, target: @, title: "Fonts"
+      menu.addMenuItem "Arial", @, "setFontName", arg1: "justArialFontStack"
+      menu.addMenuItem "Times", @, "setFontName", arg1: "timesFontStack"
+      menu.addMenuItem "Georgia", @, "setFontName", arg1: "georgiaFontStack"
+      menu.addMenuItem "Garamo", @, "setFontName", arg1: "garamoFontStack"
+      menu.addMenuItem "Helve", @, "setFontName", arg1: "helveFontStack"
+      menu.addMenuItem "Verda", @, "setFontName", arg1: "verdaFontStack"
+      menu.addMenuItem "Treby", @, "setFontName", arg1: "trebuFontStack"
+      menu.addMenuItem "Heavy", @, "setFontName", arg1: "heavyFontStack"
+      menu.addMenuItem "Mono", @, "setFontName", arg1: "monoFontStack"
 
       menu.popUp @position().subtract(new Point 80,0), world
 

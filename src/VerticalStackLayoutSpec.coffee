@@ -41,15 +41,15 @@ class VerticalStackLayoutSpec
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     menu.addLine()
-    menu.addMenuItem "layout in stack ➜", false, @, "vertStackMenu", ""
+    menu.addMenuItem "layout in stack ➜", @, "vertStackMenu", closesUnpinnedPopUps: false, toolTip: ""
 
   vertStackMenu: (widgetOpeningThePopUp,targetWidget,a,b,c)->
-    menu = new MenuWdgt widgetOpeningThePopUp,  false, targetWidget, true, true, nil
-    menu.addMenuItem "base width...", true, @, "baseWidthPopout", ""
-    menu.addMenuItem "elasticity...", true, @, "elasticityPopout", ""
-    menu.addMenuItem "align left", true, @, "setAlignmentToLeft"  if @alignment isnt "left"
-    menu.addMenuItem "align right", true, @, "setAlignmentToRight"  if @alignment isnt "right"
-    menu.addMenuItem "align center", true, @, "setAlignmentToCenter"  if @alignment isnt "center"
+    menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
+    menu.addMenuItem "base width...", @, "baseWidthPopout", toolTip: ""
+    menu.addMenuItem "elasticity...", @, "elasticityPopout", toolTip: ""
+    menu.addMenuItem "align left", @, "setAlignmentToLeft"  if @alignment isnt "left"
+    menu.addMenuItem "align right", @, "setAlignmentToRight"  if @alignment isnt "right"
+    menu.addMenuItem "align center", @, "setAlignmentToCenter"  if @alignment isnt "center"
     menu.popUpAtHand()
 
   # The spec's layout setters below (align / elasticity / base-width) are DISCRETE public mutations -- driven

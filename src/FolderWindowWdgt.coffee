@@ -3,7 +3,7 @@ class FolderWindowWdgt extends WindowWdgt
 
   constructor: (@labelContent, @closeButton, @contents, @internal = false) ->
     @contents = new ScrollPanelWdgt new FolderPanelWdgt
-    super "", @closeButton, @contents, @internal
+    super @contents, labelContent: "", closeButton: @closeButton
 
 
   representativeIcon: ->

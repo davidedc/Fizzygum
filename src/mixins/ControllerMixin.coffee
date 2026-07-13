@@ -17,13 +17,13 @@ ControllerMixin =
       openTargetSelector: ->
         choices = world.plausibleTargetAndDestinationWidgets @
         if choices.length > 0
-          menu = new MenuWdgt @, false, @, true, true, "choose target:"
+          menu = new MenuWdgt @, target: @, title: "choose target:"
           #choices.push @world()
           choices.forEach (each) =>
             if !(each.isConnectionPin?())
-              menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ➜", false, @, "openTargetPropertySelector", nil, nil, nil, nil, nil, each, nil, true
+              menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ➜", @, "openTargetPropertySelector", closesUnpinnedPopUps: false, arg1: each, representsAWidget: true
         else
-          menu = new MenuWdgt @, false, @, true, true, "no targets available"
+          menu = new MenuWdgt @, target: @, title: "no targets available"
         menu.popUpAtHand()
 
       setTargetAndActionWithOnesPickedFromMenu: (ignored, ignored2, theTarget, each) ->
@@ -92,5 +92,5 @@ ControllerMixin =
       addFiresPerEventMenuEntry: (menu) ->
         return unless @target?
         label = "fires per event"
-        menu.addMenuItem (if @firesPerEvent then label.tick() else label), true, @, "toggleFiresPerEvent", "deliver on every event (a synchronous mini-pass)\ninstead of once per cycle"
+        menu.addMenuItem (if @firesPerEvent then label.tick() else label), @, "toggleFiresPerEvent", toolTip: "deliver on every event (a synchronous mini-pass)\ninstead of once per cycle"
 

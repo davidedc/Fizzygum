@@ -563,7 +563,7 @@ class WorldWdgt extends PanelWdgt
 
   createErrorConsole: ->
     errorsLogViewerWdgt = new ErrorsLogViewerWdgt "Errors", @, "modifyCodeToBeInjected", ""
-    wm = new WindowWdgt nil, nil, errorsLogViewerWdgt
+    wm = new WindowWdgt errorsLogViewerWdgt
     wm.setExtent new Point 460, 400
     @add wm
 
@@ -1474,7 +1474,7 @@ class WorldWdgt extends PanelWdgt
 
   # »>> this part is only needed for VideoPlayer
   draftRunVideoPlayer: ->
-      videoPlayer = new WindowWdgt nil, nil, new VideoPlayerWithRecommendationsWdgt, true, true
+      videoPlayer = new WindowWdgt new VideoPlayerWithRecommendationsWdgt
       world.add videoPlayer
       videoPlayer.setExtent new Point 934, 896
       # it would be -28 instead of zero here below, but the system doesn't allow
@@ -2386,64 +2386,63 @@ class WorldWdgt extends PanelWdgt
   buildContextMenu: ->
 
     if @isIndexPage
-      menu = new MenuWdgt @, false, @, true, true, "Desktop"
-      menu.addMenuItem "wallpapers ➜", false, @wallpaper, "wallpapersMenu", "choose a wallpaper for the Desktop"
-      menu.addMenuItem "new folder", true, @, "makeFolder"
-      menu.addMenuItem "save world snapshot…", true, @, "saveWorldSnapshotToFile", "save the whole desktop\nto a *.fzw.json file"
-      menu.addMenuItem "open from file…", true, @, "openFromFile", "load a widget or world\nfrom a *.fzw.json file"
+      menu = new MenuWdgt @, target: @, title: "Desktop"
+      menu.addMenuItem "wallpapers ➜", @wallpaper, "wallpapersMenu", closesUnpinnedPopUps: false, toolTip: "choose a wallpaper for the Desktop"
+      menu.addMenuItem "new folder", @, "makeFolder"
+      menu.addMenuItem "save world snapshot…", @, "saveWorldSnapshotToFile", toolTip: "save the whole desktop\nto a *.fzw.json file"
+      menu.addMenuItem "open from file…", @, "openFromFile", toolTip: "load a widget or world\nfrom a *.fzw.json file"
       return menu
 
     if @isDevMode
-      menu = new MenuWdgt(@, false,
-        @, true, true, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
+      menu = new MenuWdgt @, target: @, title: (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     else
-      menu = new MenuWdgt @, false, @, true, true, "Widgetic"
+      menu = new MenuWdgt @, target: @, title: "Widgetic"
 
     # »>> this part is excluded from the fizzygum homepage build
     if @isDevMode
-      menu.addMenuItem "demo ➜", false, @, "popUpDemoMenu", "sample widgets"
+      menu.addMenuItem "demo ➜", @, "popUpDemoMenu", closesUnpinnedPopUps: false, toolTip: "sample widgets"
       menu.addLine()
-      menu.addMenuItem "delete all", true, @, "closeChildren"
-      menu.addMenuItem "move all inside", true, @, "keepAllSubwidgetsWithin", "keep all subwidgets\nwithin and visible"
-      menu.addMenuItem "inspect", true, @, "inspect", "open a window on\nall properties"
-      menu.addMenuItem "test menu ➜", false, menusHelper, "testMenu", "debugging and testing operations"
+      menu.addMenuItem "delete all", @, "closeChildren"
+      menu.addMenuItem "move all inside", @, "keepAllSubwidgetsWithin", toolTip: "keep all subwidgets\nwithin and visible"
+      menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window on\nall properties"
+      menu.addMenuItem "test menu ➜", menusHelper, "testMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"
       menu.addLine()
-      menu.addMenuItem "restore display", true, @, "changed", "redraw the\nscreen once"
-      menu.addMenuItem "fit whole page", true, @, "stretchWorldToFillEntirePage", "let the World automatically\nadjust to browser resizings"
-      menu.addMenuItem "color...", true, @, "popUpColorSetter", "choose the World's\nbackground color"
-      menu.addMenuItem "wallpapers ➜", false, @wallpaper, "wallpapersMenu", "choose a wallpaper for the Desktop"
+      menu.addMenuItem "restore display", @, "changed", toolTip: "redraw the\nscreen once"
+      menu.addMenuItem "fit whole page", @, "stretchWorldToFillEntirePage", toolTip: "let the World automatically\nadjust to browser resizings"
+      menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose the World's\nbackground color"
+      menu.addMenuItem "wallpapers ➜", @wallpaper, "wallpapersMenu", closesUnpinnedPopUps: false, toolTip: "choose a wallpaper for the Desktop"
 
       if WorldWdgt.preferencesAndSettings.inputMode is PreferencesAndSettings.INPUT_MODE_MOUSE
-        menu.addMenuItem "touch screen settings", true, WorldWdgt.preferencesAndSettings, "toggleInputMode", "bigger menu fonts\nand sliders"
+        menu.addMenuItem "touch screen settings", WorldWdgt.preferencesAndSettings, "toggleInputMode", toolTip: "bigger menu fonts\nand sliders"
       else
-        menu.addMenuItem "standard settings", true, WorldWdgt.preferencesAndSettings, "toggleInputMode", "smaller menu fonts\nand sliders"
+        menu.addMenuItem "standard settings", WorldWdgt.preferencesAndSettings, "toggleInputMode", toolTip: "smaller menu fonts\nand sliders"
       menu.addLine()
     # this part is excluded from the fizzygum homepage build <<«
     
     if Automator?
-      menu.addMenuItem "system tests ➜", false, @, "popUpSystemTestsMenu", ""
+      menu.addMenuItem "system tests ➜", @, "popUpSystemTestsMenu", closesUnpinnedPopUps: false, toolTip: ""
 
     if @isDevMode
-      menu.addMenuItem "switch to user mode", true, @, "toggleDevMode", "disable developers'\ncontext menus"
+      menu.addMenuItem "switch to user mode", @, "toggleDevMode", toolTip: "disable developers'\ncontext menus"
     else
-      menu.addMenuItem "switch to dev mode", true, @, "toggleDevMode"
+      menu.addMenuItem "switch to dev mode", @, "toggleDevMode"
 
-    menu.addMenuItem "new folder", true, @, "makeFolder"
-    menu.addMenuItem "about Fizzygum...", true, @, "about"
+    menu.addMenuItem "new folder", @, "makeFolder"
+    menu.addMenuItem "about Fizzygum...", @, "about"
     menu
 
 
 
   # »>> this part is excluded from the fizzygum homepage build
   popUpSystemTestsMenu: ->
-    menu = new MenuWdgt @, false, @, true, true, "system tests"
+    menu = new MenuWdgt @, target: @, title: "system tests"
 
-    menu.addMenuItem "run system tests (normal)", true, @automator.player, "runAllSystemTestsNormalSpeed", "runs all the system tests at the normal (slowest, watchable) speed level"
-    menu.addMenuItem "run system tests (fast)", true, @automator.player, "runAllSystemTestsFastSpeed", "runs all the system tests at the fast (intermediate) speed level"
-    menu.addMenuItem "run system tests (fastest)", true, @automator.player, "runAllSystemTestsFastestSpeed", "runs all the system tests at the fastest speed level"
+    menu.addMenuItem "run system tests (normal)", @automator.player, "runAllSystemTestsNormalSpeed", toolTip: "runs all the system tests at the normal (slowest, watchable) speed level"
+    menu.addMenuItem "run system tests (fast)", @automator.player, "runAllSystemTestsFastSpeed", toolTip: "runs all the system tests at the fast (intermediate) speed level"
+    menu.addMenuItem "run system tests (fastest)", @automator.player, "runAllSystemTestsFastestSpeed", toolTip: "runs all the system tests at the fastest speed level"
 
-    menu.addMenuItem "show test source", true, @automator, "showTestSource", "opens a window with the source of the latest test"
-    menu.addMenuItem "save failed screenshots", true, @automator.player, "saveFailedScreenshots", "save failed screenshots"
+    menu.addMenuItem "show test source", @automator, "showTestSource", toolTip: "opens a window with the source of the latest test"
+    menu.addMenuItem "save failed screenshots", @automator.player, "saveFailedScreenshots", toolTip: "save failed screenshots"
 
     menu.popUpAtHand()
   # this part is excluded from the fizzygum homepage build <<«
@@ -2456,7 +2455,7 @@ class WorldWdgt extends PanelWdgt
   # "fresh window" wrap (windowed apps' buildWindow, menusHelper's window demos, the
   # inspector/console/prompt spawners). Titled / _applyExtent windows build directly.
   openWindowWith: (contentWidget, extent, position) ->
-    wm = new WindowWdgt nil, nil, contentWidget
+    wm = new WindowWdgt contentWidget
     wm.setExtent extent
     wm._applyMoveTo position
     wm._moveWithin @
@@ -2466,54 +2465,54 @@ class WorldWdgt extends PanelWdgt
   # »>> this part is excluded from the fizzygum homepage build
   popUpDemoMenu: (widgetOpeningThePopUp,b,c,d) ->
     if @isIndexPage
-      menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "parts bin"
-      menu.addMenuItem "rectangle", true, @widgetFactory, "createNewRectangleWdgt"
-      menu.addMenuItem "box", true, @widgetFactory, "createNewBoxWdgt"
-      menu.addMenuItem "circle box", true, @widgetFactory, "createNewCircleBoxWdgt"
-      menu.addMenuItem "slider", true, @widgetFactory, "createNewSliderWdgt"
-      menu.addMenuItem "speech bubble", true, @widgetFactory, "createNewSpeechBubbleWdgt"
+      menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "parts bin"
+      menu.addMenuItem "rectangle", @widgetFactory, "createNewRectangleWdgt"
+      menu.addMenuItem "box", @widgetFactory, "createNewBoxWdgt"
+      menu.addMenuItem "circle box", @widgetFactory, "createNewCircleBoxWdgt"
+      menu.addMenuItem "slider", @widgetFactory, "createNewSliderWdgt"
+      menu.addMenuItem "speech bubble", @widgetFactory, "createNewSpeechBubbleWdgt"
       menu.addLine()
-      menu.addMenuItem "gray scale palette", true, @widgetFactory, "createNewGrayPaletteWdgtInWindow"
-      menu.addMenuItem "color palette", true, @widgetFactory, "createNewColorPaletteWdgtInWindow"
+      menu.addMenuItem "gray scale palette", @widgetFactory, "createNewGrayPaletteWdgtInWindow"
+      menu.addMenuItem "color palette", @widgetFactory, "createNewColorPaletteWdgtInWindow"
       menu.addLine()
-      menu.addMenuItem "analog clock", true, menusHelper, "analogClock"
+      menu.addMenuItem "analog clock", menusHelper, "analogClock"
     else
-      menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "make a widget"
-      menu.addMenuItem "rectangle", true, @widgetFactory, "createNewRectangleWdgt"
-      menu.addMenuItem "box", true, @widgetFactory, "createNewBoxWdgt"
-      menu.addMenuItem "circle box", true, @widgetFactory, "createNewCircleBoxWdgt"
+      menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "make a widget"
+      menu.addMenuItem "rectangle", @widgetFactory, "createNewRectangleWdgt"
+      menu.addMenuItem "box", @widgetFactory, "createNewBoxWdgt"
+      menu.addMenuItem "circle box", @widgetFactory, "createNewCircleBoxWdgt"
       menu.addLine()
-      menu.addMenuItem "slider", true, @widgetFactory, "createNewSliderWdgt"
-      menu.addMenuItem "panel", true, @widgetFactory, "createNewPanelWdgt"
-      menu.addMenuItem "scrollable panel", true, @widgetFactory, "createNewScrollPanelWdgt"
-      menu.addMenuItem "canvas", true, @widgetFactory, "createNewCanvas"
-      menu.addMenuItem "handle", true, @widgetFactory, "createNewHandle"
+      menu.addMenuItem "slider", @widgetFactory, "createNewSliderWdgt"
+      menu.addMenuItem "panel", @widgetFactory, "createNewPanelWdgt"
+      menu.addMenuItem "scrollable panel", @widgetFactory, "createNewScrollPanelWdgt"
+      menu.addMenuItem "canvas", @widgetFactory, "createNewCanvas"
+      menu.addMenuItem "handle", @widgetFactory, "createNewHandle"
       menu.addLine()
-      menu.addMenuItem "string", true, @widgetFactory, "createNewString"
-      menu.addMenuItem "text", true, @widgetFactory, "createNewText"
-      menu.addMenuItem "tool tip", true, @widgetFactory, "createNewToolTipWdgt"
-      menu.addMenuItem "speech bubble", true, @widgetFactory, "createNewSpeechBubbleWdgt"
+      menu.addMenuItem "string", @widgetFactory, "createNewString"
+      menu.addMenuItem "text", @widgetFactory, "createNewText"
+      menu.addMenuItem "tool tip", @widgetFactory, "createNewToolTipWdgt"
+      menu.addMenuItem "speech bubble", @widgetFactory, "createNewSpeechBubbleWdgt"
       menu.addLine()
-      menu.addMenuItem "gray scale palette", true, @widgetFactory, "createNewGrayPaletteWdgt"
-      menu.addMenuItem "color palette", true, @widgetFactory, "createNewColorPaletteWdgt"
-      menu.addMenuItem "color picker", true, @widgetFactory, "createNewColorPickerWdgt"
+      menu.addMenuItem "gray scale palette", @widgetFactory, "createNewGrayPaletteWdgt"
+      menu.addMenuItem "color palette", @widgetFactory, "createNewColorPaletteWdgt"
+      menu.addMenuItem "color picker", @widgetFactory, "createNewColorPickerWdgt"
       menu.addLine()
-      menu.addMenuItem "sensor demo", true, @widgetFactory, "createNewSensorDemo"
-      menu.addMenuItem "animation demo", true, @widgetFactory, "createNewAnimationDemo"
-      menu.addMenuItem "pen", true, @widgetFactory, "createNewPenWdgt"
+      menu.addMenuItem "sensor demo", @widgetFactory, "createNewSensorDemo"
+      menu.addMenuItem "animation demo", @widgetFactory, "createNewAnimationDemo"
+      menu.addMenuItem "pen", @widgetFactory, "createNewPenWdgt"
         
       menu.addLine()
-      menu.addMenuItem "layout tests ➜", false, @, "layoutTestsMenu", "sample widgets"
+      menu.addMenuItem "layout tests ➜", @, "layoutTestsMenu", closesUnpinnedPopUps: false, toolTip: "sample widgets"
       menu.addLine()
-      menu.addMenuItem "under the carpet", true, @widgetFactory, "underTheCarpet"
+      menu.addMenuItem "under the carpet", @widgetFactory, "underTheCarpet"
 
     menu.popUpAtHand()
 
   layoutTestsMenu: (widgetOpeningThePopUp) ->
-    menu = new MenuWdgt widgetOpeningThePopUp,  false, @, true, true, "Layout tests"
-    menu.addMenuItem "adjuster widget", true, @widgetFactory, "createNewStackElementsSizeAdjustingWdgt"
-    menu.addMenuItem "adder/droplet", true, @widgetFactory, "createNewLayoutElementAdderOrDropletWdgt"
-    menu.addMenuItem "test screen 1", true, @widgetFactory, "setupTestScreen1"
+    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Layout tests"
+    menu.addMenuItem "adjuster widget", @widgetFactory, "createNewStackElementsSizeAdjustingWdgt"
+    menu.addMenuItem "adder/droplet", @widgetFactory, "createNewLayoutElementAdderOrDropletWdgt"
+    menu.addMenuItem "test screen 1", @widgetFactory, "setupTestScreen1"
     menu.popUpAtHand()
     
   

@@ -3690,7 +3690,7 @@ class Widget extends TreeNode
       text = msg.toString()  if msg.toString
     else
       text = "NULL"
-    m = new MenuWdgt @, false, @, true, true, text
+    m = new MenuWdgt @, target: @, title: text
     m.addMenuItem "Ok"
     m.popUpCenteredAtHand world
 
@@ -3714,17 +3714,17 @@ class Widget extends TreeNode
   
   pickColor: (msg, callback, defaultContents) ->
     colorPicker = new ColorPickerWdgt defaultContents
-    menu = new MenuWdgt @, false, @, true, true, msg or "", colorPicker
+    menu = new MenuWdgt @, target: @, title: (msg or ""), environment: colorPicker
     menu.__add colorPicker
     menu.addLine 2
 
-    menu.addMenuItem "Ok", true, @, callback
+    menu.addMenuItem "Ok", @, callback
     # we name the button "Close" instead of "Cancel"
     # because we are not undoing any change we made
     # that would be rather difficult in case of
     # multiple prompts being pinned down and changing
     # the property concurrently
-    menu.addMenuItem "Close", true, menu, "close"
+    menu.addMenuItem "Close", menu, "close"
 
     menu.popUpAtHand()
 
@@ -3839,11 +3839,11 @@ class Widget extends TreeNode
   buildHierarchyMenu: (widgetsHierarchy) ->
     if !widgetsHierarchy?
       widgetsHierarchy = @getHierarchyMenuWidgets()
-    menu = new MenuWdgt @, false, @, true, true, nil
+    menu = new MenuWdgt @, target: @
     widgetsHierarchy.forEach (each) ->
       textLabelForWidget = each.toString().slice 0, 50
       textLabelForWidget = textLabelForWidget.replace "Wdgt", ""
-      menu.addMenuItem textLabelForWidget + " ➜", false, each, "popupDeveloperMenu", nil, nil, nil, nil, nil, nil, nil, true
+      menu.addMenuItem textLabelForWidget + " ➜", each, "popupDeveloperMenu", closesUnpinnedPopUps: false, representsAWidget: true
 
     menu
 
@@ -3895,32 +3895,28 @@ class Widget extends TreeNode
 
   buildBaseWidgetClassContextMenu: (widgetOpeningThePopUp) ->
 
-    menu = new MenuWdgt(widgetOpeningThePopUp, false,
-      @,
-      true,
-      true,
-      (@constructor.name.replace "Wdgt", "") or (@constructor.toString().replace "Wdgt", "").split(" ")[1].split("(")[0])
+    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: ((@constructor.name.replace "Wdgt", "") or (@constructor.toString().replace "Wdgt", "").split(" ")[1].split("(")[0])
 
     if world.isIndexPage
-      menu.addMenuItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this widget"
-      menu.addMenuItem "transparency...", true, @, "transparencyPopout", "set this widget's\nalpha value"
-      menu.addMenuItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this widget's" + " extent"
+      menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose another color \nfor this widget"
+      menu.addMenuItem "transparency...", @, "transparencyPopout", toolTip: "set this widget's\nalpha value"
+      menu.addMenuItem "resize/move...", @, "showResizeAndMoveHandlesAndLayoutAdjusters", toolTip: ("show a handle\nwhich can be floatDragged\nto change this widget's" + " extent")
       menu.addLine()
-      menu.addMenuItem "duplicate", true, @, "duplicateMenuAction" , "make a copy"
-      menu.addMenuItem "save to file…", true, @, "saveToFile", "save this widget\nto a *.fzw.json file"
-      menu.addMenuItem "create shortcut", true, @, "createReference", "creates a reference to this wdgt and leaves it on the desktop"
-      menu.addMenuItem "pick up", true, @, "pickUpMenuAction", "disattach and put \ninto the hand"
+      menu.addMenuItem "duplicate", @, "duplicateMenuAction", toolTip: "make a copy"
+      menu.addMenuItem "save to file…", @, "saveToFile", toolTip: "save this widget\nto a *.fzw.json file"
+      menu.addMenuItem "create shortcut", @, "createReference", toolTip: "creates a reference to this wdgt and leaves it on the desktop"
+      menu.addMenuItem "pick up", @, "pickUpMenuAction", toolTip: "disattach and put \ninto the hand"
     else
-      menu.addMenuItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this widget"
-      menu.addMenuItem "transparency...", true, @, "transparencyPopout", "set this widget's\nalpha value"
-      menu.addMenuItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this widget's" + " extent"
+      menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose another color \nfor this widget"
+      menu.addMenuItem "transparency...", @, "transparencyPopout", toolTip: "set this widget's\nalpha value"
+      menu.addMenuItem "resize/move...", @, "showResizeAndMoveHandlesAndLayoutAdjusters", toolTip: ("show a handle\nwhich can be floatDragged\nto change this widget's" + " extent")
       menu.addLine()
-      menu.addMenuItem "duplicate", true, @, "duplicateMenuActionAndPickItUp" , "make a copy\nand pick it up"
-      menu.addMenuItem "pick up", true, @, "pickUpMenuAction", "disattach and put \ninto the hand"
-      menu.addMenuItem "attach...", true, @, "attach", "stick this widget\nto another one"
-      menu.addMenuItem "inspect", true, @, "inspect", "open a window\non all properties"
-      menu.addMenuItem "create shortcut", true, @, "createReference", "creates a reference to this wdgt and leaves it on the desktop"
-      menu.addMenuItem "test menu ➜", false, menusHelper, "testMenu", "debugging and testing operations"
+      menu.addMenuItem "duplicate", @, "duplicateMenuActionAndPickItUp", toolTip: "make a copy\nand pick it up"
+      menu.addMenuItem "pick up", @, "pickUpMenuAction", toolTip: "disattach and put \ninto the hand"
+      menu.addMenuItem "attach...", @, "attach", toolTip: "stick this widget\nto another one"
+      menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window\non all properties"
+      menu.addMenuItem "create shortcut", @, "createReference", toolTip: "creates a reference to this wdgt and leaves it on the desktop"
+      menu.addMenuItem "test menu ➜", menusHelper, "testMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"
       menu.addLine()
 
     if (@parent instanceof PanelWdgt) and !(@parent instanceof ScrollPanelWdgt)
@@ -3929,23 +3925,23 @@ class Widget extends TreeNode
       else
         whereToOrFrom = "panel"
       if @isLockingToPanels
-        menu.addMenuItem "unlock from " + whereToOrFrom, true, @, "toggleIsLockingToPanels", "make this widget\nunmovable"
+        menu.addMenuItem "unlock from " + whereToOrFrom, @, "toggleIsLockingToPanels", toolTip: "make this widget\nunmovable"
       else
-        menu.addMenuItem "lock to " + whereToOrFrom, true, @, "toggleIsLockingToPanels", "make this widget\nmovable"
+        menu.addMenuItem "lock to " + whereToOrFrom, @, "toggleIsLockingToPanels", toolTip: "make this widget\nmovable"
 
     if !world.isIndexPage
-      menu.addMenuItem "hide", true, @, "hide"
+      menu.addMenuItem "hide", @, "hide"
 
     if @isWindow?()
-      menu.addMenuItem "close", true, @, "close"
+      menu.addMenuItem "close", @, "close"
     else
-      menu.addMenuItem "delete", true, @, "close"
+      menu.addMenuItem "delete", @, "close"
 
     if world.isIndexPage or world.macroToolkit?.aMacroIsRunning?
       menu.addLine()
-      menu.addMenuItem "dev ➜", false, menusHelper, "popUpDevToolsMenu", "dev tools"
+      menu.addMenuItem "dev ➜", menusHelper, "popUpDevToolsMenu", closesUnpinnedPopUps: false, toolTip: "dev tools"
     else
-      menu.addMenuItem "destroy", true, @, "fullDestroy"
+      menu.addMenuItem "destroy", @, "fullDestroy"
 
     menu
 
@@ -4103,9 +4099,9 @@ class Widget extends TreeNode
         choicesExcludingParent.push each
 
     if choicesExcludingParent.length > 0
-      menu = new MenuWdgt @, false, @, true, true, "choose new parent:"
+      menu = new MenuWdgt @, target: @, title: "choose new parent:"
       choicesExcludingParent.forEach (each) =>
-        menu.addMenuItem each.toString().slice(0, 50), true, each, "newParentChoice", nil, nil, nil, nil, nil, nil, nil, true
+        menu.addMenuItem each.toString().slice(0, 50), each, "newParentChoice", representsAWidget: true
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
@@ -4115,7 +4111,7 @@ class Widget extends TreeNode
       # this list if the user invokes the
       # command, and if there are no good
       # widgets then show some kind of message.
-      menu = new MenuWdgt @, false, @, true, true, "no widgets to attach to"
+      menu = new MenuWdgt @, target: @, title: "no widgets to attach to"
     menu.popUpAtHand()
 
   # »>> this part is excluded from the fizzygum homepage build
@@ -4130,9 +4126,9 @@ class Widget extends TreeNode
         choicesExcludingParent.push each
 
     if choicesExcludingParent.length > 0
-      menu = new MenuWdgt @, false, @, true, true, "choose new parent:"
+      menu = new MenuWdgt @, target: @, title: "choose new parent:"
       choicesExcludingParent.forEach (each) =>
-        menu.addMenuItem each.toString().slice(0, 50), true, each, "newParentChoiceWithHorizLayout", nil, nil, nil, nil, nil, nil, nil, true
+        menu.addMenuItem each.toString().slice(0, 50), each, "newParentChoiceWithHorizLayout", representsAWidget: true
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
@@ -4142,7 +4138,7 @@ class Widget extends TreeNode
       # this list if the user invokes the
       # command, and if there are no good
       # widgets then show some kind of message.
-      menu = new MenuWdgt @, false, @, true, true, "no widgets to attach to"
+      menu = new MenuWdgt @, target: @, title: "no widgets to attach to"
     menu.popUpAtHand()
   # this part is excluded from the fizzygum homepage build <<«
   
@@ -4279,11 +4275,11 @@ class Widget extends TreeNode
   # was recaptured.) The thin per-class openTargetPropertySelector stays (own, menu-dispatched).
   _popUpTargetPropertyMenu: (theTarget, setters) ->
     [menuEntriesStrings, functionNamesStrings] = setters
-    menu = new MenuWdgt @, false, @, true, true, "choose target property:"
+    menu = new MenuWdgt @, target: @, title: "choose target property:"
     for i in [0...menuEntriesStrings.length]
-      menu.addMenuItem menuEntriesStrings[i], true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil, theTarget, functionNamesStrings[i]
+      menu.addMenuItem menuEntriesStrings[i], @, "setTargetAndActionWithOnesPickedFromMenu", arg1: theTarget, arg2: functionNamesStrings[i]
     if menuEntriesStrings.length == 0
-      menu = new MenuWdgt @, false, @, true, true, "no target properties available"
+      menu = new MenuWdgt @, target: @, title: "no target properties available"
     menu.popUpAtHand()
 
   colorSetters: (menuEntriesStrings, functionNamesStrings) ->

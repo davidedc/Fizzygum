@@ -27,5 +27,5 @@ class FolderPanelWdgt extends PanelWdgt
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
-    menu.addMenuItem "new folder", true, @, "makeFolder", "make a new folder"
+    menu.addMenuItem "new folder", @, "makeFolder", toolTip: "make a new folder"
 

@@ -30,18 +30,18 @@ class PromptWdgt extends MenuWdgt
       false,
       isNumeric)
 
-    super widgetOpeningThePopUp, false, @target, true, true, @msg or "", @tempPromptEntryField
+    super widgetOpeningThePopUp, target: @target, title: (@msg or ""), environment: @tempPromptEntryField
 
     @_buildAndConnectChildren()
     @addLine 2
 
-    @addMenuItem "Ok", true, @target, @callback
+    @addMenuItem "Ok", @target, @callback
     # we name the button "Close" instead of "Cancel"
     # because we are not undoing any change we made
     # that would be rather difficult in case of
     # multiple prompts being pinned down and changing
     # the property concurrently
-    @addMenuItem "Close", true, @, "close"
+    @addMenuItem "Close", @, "close"
 
     @_reLayoutSelf()
 

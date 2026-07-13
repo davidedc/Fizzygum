@@ -20,25 +20,25 @@ class SampleDashboardApp extends IconicDesktopSystemWindowedApp
     container = slideWdgt.stretchableWidgetContainer.contents
     container._applyExtent new Point 725,556
 
-    scatterPlot = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleScatterPlotWdgt), true, true
+    scatterPlot = new WindowWdgt new PlotWithAxesWdgt(new ExampleScatterPlotWdgt)
     scatterPlot._applyMoveTo container.position().add new Point 19, 86
     scatterPlot._applyExtent new Point 200, 200
     container.add scatterPlot
     scatterPlot._rememberFractionalSituationInHoldingPanel()
 
-    functionPlot = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleFunctionPlotWdgt), true, true
+    functionPlot = new WindowWdgt new PlotWithAxesWdgt(new ExampleFunctionPlotWdgt)
     functionPlot._applyMoveTo container.position().add new Point 251, 86
     functionPlot._applyExtent new Point 200, 200
     container.add functionPlot
     functionPlot._rememberFractionalSituationInHoldingPanel()
 
-    barPlot = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleBarPlotWdgt), true, true
+    barPlot = new WindowWdgt new PlotWithAxesWdgt(new ExampleBarPlotWdgt)
     barPlot._applyMoveTo container.position().add new Point 19, 327
     barPlot._applyExtent new Point 200, 200
     container.add barPlot
     barPlot._rememberFractionalSituationInHoldingPanel()
 
-    plot3D = new WindowWdgt nil, nil, new Example3DPlotWdgt, true, true
+    plot3D = new WindowWdgt new Example3DPlotWdgt
     plot3D._applyMoveTo container.position().add new Point 491, 327
     plot3D._applyExtent new Point 200, 150
     container.add plot3D
@@ -110,7 +110,7 @@ class SampleDashboardApp extends IconicDesktopSystemWindowedApp
 
     slider1.setTargetAndActionWithOnesPickedFromMenu nil, nil, plot3D.contents, "setParameter"
 
-    wm = new WindowWdgt nil, nil, slideWdgt
+    wm = new WindowWdgt slideWdgt
     wm._applyMoveTo new Point 114, 10
     wm._applyExtent new Point 596, 592
     world.add wm

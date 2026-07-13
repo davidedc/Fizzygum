@@ -46,7 +46,7 @@ class GenericPanelInfoWdgt extends SimpleDocumentWdgt
 
     # ---------------------
 
-    wm = new WindowWdgt nil, nil, simpleDocument
+    wm = new WindowWdgt simpleDocument
     wm._applyExtent new Point 365, 405
     wm._moveFullCenterTo world.center()
     world.add wm

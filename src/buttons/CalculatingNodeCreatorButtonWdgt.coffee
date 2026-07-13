@@ -5,6 +5,6 @@ class CalculatingNodeCreatorButtonWdgt extends CreatorButtonWdgt
   createAppearance: -> new CalculatingNodeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-    switcherooWm = new WindowWdgt nil, nil, new CalculatingPatchNodeWdgt, true
+    switcherooWm = new WindowWdgt new CalculatingPatchNodeWdgt
     switcherooWm._applyExtent new Point 260, 265
     return switcherooWm

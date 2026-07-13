@@ -33,7 +33,7 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
     sdspw.addNormalParagraph "Text documents (or simply: docs) don't just contain text or images: they can embed any widget."
     sdspw.addNormalParagraph "For example, here is an interactive 3D plot:\n"
 
-    plot3D = new WindowWdgt nil, nil, new Example3DPlotWdgt, true, true
+    plot3D = new WindowWdgt new Example3DPlotWdgt
     plot3D._applyExtent new Point 400, 255
     # "_constrainToRatio" makes it so the plot in the doc gets taller
     # as the page is made wider
@@ -57,7 +57,7 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
 
     sdspw.addNormalParagraph "What else could be added? Anything! Scripts, maps, maps inside scrolling views, maps with graphs, slides, other docs, and on and on and on..."
 
-    wm = new WindowWdgt nil, nil, simpleDocument
+    wm = new WindowWdgt simpleDocument
     wm._applyExtent new Point 331, 545
     wm._applyMoveTo new Point 257, 110
     world.add wm

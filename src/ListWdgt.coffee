@@ -62,7 +62,7 @@ class ListWdgt extends ScrollPanelWdgt
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
-    @listContents = new MenuWdgt @, true, @, false, false, nil, nil
+    @listContents = new MenuWdgt @, isListContents: true, target: @, killOutside: false, killOnTriggers: false
     @listContents.isLockingToPanels = true
     @elements = ["(empty)"]  if !@elements.length
     world.disableTrackChanges()
@@ -88,17 +88,11 @@ class ListWdgt extends ScrollPanelWdgt
       #italic = false,
       #doubleClickAction # optional, when used as list contents
 
-      @listContents.addMenuItem(
-        @labelGetter(element), # labelString
-        true,
-        @, # target
-        "select", # action
-        nil, # toolTipMessage
-        color, # color
-        bold, # bold
-        italic, # italic
-        @doubleClickAction # doubleClickAction
-      )
+      @listContents.addMenuItem @labelGetter(element), @, "select",
+        color: color
+        bold: bold
+        italic: italic
+        doubleClickAction: @doubleClickAction
 
     world.maybeEnableTrackChanges()
     @listContents.__commitMoveTo @contents.position()

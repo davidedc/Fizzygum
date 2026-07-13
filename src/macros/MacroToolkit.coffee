@@ -1000,11 +1000,11 @@ class MacroToolkit
     # are scanned for reference-image names, so the per-test assertions stay in each test's main macro.
     macroSubroutines.add Macro.fromString """
       buildExternalAndFreeInternalWindow_Macro = ->
-        extWin = new WindowWdgt nil, nil, nil
+        extWin = new WindowWdgt()
         extWin.setExtent new Point 290, 240
         extWin.moveTo new Point 75, 90
         world.add extWin
-        intWin = new WindowWdgt nil, nil, nil, true
+        intWin = new WindowWdgt()
         intWin.setExtent new Point 250, 160
         intWin.moveTo new Point 600, 200
         world.add intWin

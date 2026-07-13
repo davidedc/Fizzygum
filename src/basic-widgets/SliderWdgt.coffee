@@ -177,8 +177,8 @@ class SliderWdgt extends CircleBoxWdgt
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
-    menu.addMenuItem "show value", true, @, "showValue", "display a dialog box\nshowing the selected number"
-    menu.addMenuItem "floor...", true, @, (->
+    menu.addMenuItem "show value", @, "showValue", toolTip: "display a dialog box\nshowing the selected number"
+    menu.addMenuItem "floor...", @, (->
       @prompt menu.title + "\nfloor:",
         @setStart,
         @start.toString(),
@@ -187,7 +187,7 @@ class SliderWdgt extends CircleBoxWdgt
         @stop - @size,
         true
     ), "set the minimum value\nwhich can be selected"
-    menu.addMenuItem "ceiling...", true, @, (->
+    menu.addMenuItem "ceiling...", @, (->
       @prompt menu.title + "\nceiling:",
         @setStop,
         @stop.toString(),
@@ -196,7 +196,7 @@ class SliderWdgt extends CircleBoxWdgt
         @size * 100,
         true
     ), "set the maximum value\nwhich can be selected"
-    menu.addMenuItem "button size...", true, @, (->
+    menu.addMenuItem "button size...", @, (->
       @prompt menu.title + "\nbutton size:",
         @setSize,
         @size.toString(),
@@ -207,9 +207,9 @@ class SliderWdgt extends CircleBoxWdgt
     ), "set the range\ncovered by\nthe slider button"
     menu.addLine()
     if world.isIndexPage
-      menu.addMenuItem "connect to ➜", true, @, "openTargetSelector", "connect to\nanother widget"
+      menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: "connect to\nanother widget"
     else
-      menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another widget\nwhose numerical property\n will be" + " controlled by this one"
+      menu.addMenuItem "set target", @, "openTargetSelector", toolTip: ("choose another widget\nwhose numerical property\n will be" + " controlled by this one")
     @addFiresPerEventMenuEntry menu
 
   showValue: ->

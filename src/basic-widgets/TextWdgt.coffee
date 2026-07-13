@@ -665,9 +665,9 @@ class TextWdgt extends StringWdgt
     super
     menu.addLine()
     if @softWrap
-      menu.addMenuItem "soft wrap".tick(), true, @, "toggleSoftWrap"
+      menu.addMenuItem "soft wrap".tick(), @, "toggleSoftWrap"
     else
-      menu.addMenuItem "soft wrap", true, @, "toggleSoftWrap"
+      menu.addMenuItem "soft wrap", @, "toggleSoftWrap"
     menu.addLine()
 
     # a console contributes its own run-menu entries (run selection / run all); a text not in a
@@ -677,7 +677,7 @@ class TextWdgt extends StringWdgt
     if console?.addRunMenuEntriesForText?
       console.addRunMenuEntriesForText menu, @
     else
-      menu.addMenuItem "run contents", true, @, "doContents"
+      menu.addMenuItem "run contents", @, "doContents"
   
   setAlignmentToLeft: ->
     @alignment = "left"
@@ -699,16 +699,16 @@ class TextWdgt extends StringWdgt
 
     if @text.length > 0
       menu.prependLine()
-      menu.prependMenuItem "select all", true, @, "selectAllAndEdit"
-      menu.prependMenuItem "do all", true, @, "doAll"
+      menu.prependMenuItem "select all", @, "selectAllAndEdit"
+      menu.prependMenuItem "do all", @, "doAll"
 
     # only show the do it / show it / inspect it entries
     # if there is actually something selected.
     if @selection().replace(/^\s\s*/, '').replace(/\s\s*$/, '') != ''
       menu.prependLine()
-      menu.prependMenuItem "inspect selection", true, @, "inspectSelection", "evaluate the\nselected expression\nand inspect the result"
-      menu.prependMenuItem "show selection", true, @, "showSelection", "evaluate the\nselected expression\nand show the result"
-      menu.prependMenuItem "do selection", true, @, "doSelection", "evaluate the\nselected expression"
+      menu.prependMenuItem "inspect selection", @, "inspectSelection", toolTip: "evaluate the\nselected expression\nand inspect the result"
+      menu.prependMenuItem "show selection", @, "showSelection", toolTip: "evaluate the\nselected expression\nand show the result"
+      menu.prependMenuItem "do selection", @, "doSelection", toolTip: "evaluate the\nselected expression"
     menu
 
   # Multi-line text inserts a newline on Enter rather than accepting -- override of

@@ -16,7 +16,17 @@ class MenuWdgt extends PopUpWdgt
   isMenu: ->
     true
 
-  constructor: (@widgetOpeningThePopUp, @isListContents = false, @target, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true, @title = nil, @environment = nil, @fontSize = nil) ->
+  # widgetOpeningThePopUp is the one required argument; everything else rides an opts object
+  # (P5 arg-object conversion). Defaults match the old positional signature: isListContents
+  # false; killOutside / killOnTriggers true; target / title / environment / fontSize nil.
+  constructor: (@widgetOpeningThePopUp, opts = {}) ->
+    @isListContents = opts.isListContents ? false
+    @target = opts.target
+    @killThisPopUpIfClickOutsideDescendants = opts.killOutside ? true
+    @killThisPopUpIfClickOnDescendantsTriggers = opts.killOnTriggers ? true
+    @title = opts.title
+    @environment = opts.environment
+    @fontSize = opts.fontSize
     if !@isListContents
       if @killThisPopUpIfClickOutsideDescendants
         @onClickOutsideMeOrAnyOfMyChildren "close"
@@ -113,19 +123,21 @@ class MenuWdgt extends PopUpWdgt
       else
         destroyNextLines = false
 
-  # NOTE: the positional (label, closes-unpinned, target, action, ...) signature
-  # is the public menu API used by hundreds of call sites, so it is deliberately
-  # NOT changed. We just bundle the arguments into a MenuItemSpec internally; the
-  # spec's constructor defaults reproduce the old createMenuItem defaults exactly.
-  addMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic, doubleClickAction, arg1, arg2, representsAWidget)->
-    menuItemSpec = new MenuItemSpec label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic, doubleClickAction, arg1, arg2, representsAWidget
-    item = @createMenuItem menuItemSpec
-    @__add item
+  # Public menu-row API (P5 arg-object conversion): label / target / action are the three
+  # everyday positional arguments; anything else — closesUnpinnedPopUps, toolTip, color, bold,
+  # italic, doubleClickAction, arg1, arg2, representsAWidget — rides an opts object. The spec's
+  # own constructor defaults (closes-unpinned true; bold/italic/representsAWidget false) fill
+  # any opt the caller omits, so the old defaults are reproduced exactly.
+  addMenuItem: (label, target, action, opts = {}) ->
+    @__add @createMenuItem @_menuItemSpecFrom label, target, action, opts
 
-  prependMenuItem: (label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic, doubleClickAction, arg1, arg2, representsAWidget)->
-    menuItemSpec = new MenuItemSpec label, ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, toolTipMessage, color, bold, italic, doubleClickAction, arg1, arg2, representsAWidget
-    item = @createMenuItem menuItemSpec
-    @__add item, nil, 0
+  prependMenuItem: (label, target, action, opts = {}) ->
+    @__add (@createMenuItem @_menuItemSpecFrom label, target, action, opts), nil, 0
+
+  _menuItemSpecFrom: (label, target, action, opts) ->
+    new MenuItemSpec label, opts.closesUnpinnedPopUps, target, action,
+      opts.toolTip, opts.color, opts.bold, opts.italic,
+      opts.doubleClickAction, opts.arg1, opts.arg2, opts.representsAWidget
 
   # »>> this part is excluded from the fizzygum homepage build
 

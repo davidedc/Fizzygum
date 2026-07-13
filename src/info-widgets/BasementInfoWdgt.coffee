@@ -29,7 +29,7 @@ class BasementInfoWdgt extends SimpleDocumentWdgt
 
     sdspw.addNormalParagraph "Drag things in here to recycle them.\n\nClosed or invisible items also end up in here, and the items that can't be used again are automatically recycled."
 
-    wm = new WindowWdgt nil, nil, simpleDocument
+    wm = new WindowWdgt simpleDocument
     wm._applyExtent new Point 365, 405
     wm._moveFullCenterTo world.center()
     world.add wm

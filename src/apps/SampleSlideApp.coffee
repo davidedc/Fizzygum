@@ -20,7 +20,7 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
     container = slideWdgt.stretchableWidgetContainer.contents
     container._applyExtent new Point 575,454
 
-    windowWithScrollingPanel = new WindowWdgt nil, nil, new ScrollPanelWdgt, true, true
+    windowWithScrollingPanel = new WindowWdgt new ScrollPanelWdgt
     windowWithScrollingPanel.setTitleWithoutPrependedContentName "New York City"
     windowWithScrollingPanel._applyMoveTo container.position().add new Point 28, 43
     windowWithScrollingPanel._applyExtent new Point 322, 268
@@ -38,7 +38,7 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
     mapPin._applyMoveTo windowWithScrollingPanel.contents.contents.position().add new Point 1606, 343
     mapPin._rememberFractionalSituationInHoldingPanel()
 
-    sampleBarPlot = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleBarPlotWdgt), true, true
+    sampleBarPlot = new WindowWdgt new PlotWithAxesWdgt(new ExampleBarPlotWdgt)
     sampleBarPlot._applyExtent new Point 240, 104
     windowWithScrollingPanel.contents.add sampleBarPlot
     sampleBarPlot._applyMoveTo windowWithScrollingPanel.contents.contents.position().add new Point 1566, 420
@@ -63,7 +63,7 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
     wikiLink._rememberFractionalSituationInHoldingPanel()
 
 
-    wm = new WindowWdgt nil, nil, slideWdgt
+    wm = new WindowWdgt slideWdgt
     wm._applyMoveTo new Point 114, 10
     wm._applyExtent new Point 596, 592
     world.add wm

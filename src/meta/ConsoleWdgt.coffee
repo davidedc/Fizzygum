@@ -77,8 +77,8 @@ class ConsoleWdgt extends Widget
   # console adds its own plain "run contents" instead. (type-test-elimination campaign)
   addRunMenuEntriesForText: (menu, textWidget) ->
     if textWidget.currentlySelecting()
-      menu.addMenuItem "run selection", true, @, "doSelection"
-    menu.addMenuItem "run contents", true, @, "doAll"
+      menu.addMenuItem "run selection", @, "doSelection"
+    menu.addMenuItem "run contents", @, "doAll"
 
   _reLayout: (newBoundsForThisLayout) ->
 

@@ -171,7 +171,7 @@ class PanelWdgt extends Widget
     super
     if @children.length
       menu.addLine()
-      menu.addMenuItem "move all inside", true, @, "keepAllSubwidgetsWithin", "keep all subwidgets\nwithin and visible"
+      menu.addMenuItem "move all inside", @, "keepAllSubwidgetsWithin", toolTip: "keep all subwidgets\nwithin and visible"
   
   keepAllSubwidgetsWithin: ->
     @children.forEach (m) =>

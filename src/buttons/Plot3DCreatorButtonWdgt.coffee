@@ -5,7 +5,7 @@ class Plot3DCreatorButtonWdgt extends CreatorButtonWdgt
   createAppearance: -> new Plot3DIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-    switcherooWm = new WindowWdgt nil, nil, new Example3DPlotWdgt, true, true
+    switcherooWm = new WindowWdgt new Example3DPlotWdgt
     switcherooWm._applyExtent new Point 200, 200
     return switcherooWm
 

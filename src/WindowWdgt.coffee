@@ -99,13 +99,16 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # you add a widget to the window it overwrites the
   # title which means that this one parameter passed in
   # the constructor has no effect
-  # NOTE: `internal` and `alwaysShowInternalExternalButton` are now INERT constructor arguments,
-  # kept only so the ~30 positional call sites still parse (their retirement is a deferred
-  # cleanup). `internal` used to seed a stored flag; a window's internal-ness is now DERIVED from
-  # its parentage (see isInternal), and the internal/external switch button that `alwaysShow...`
-  # forced is gone. Neither is bound to `@`, so neither is stored on the instance or serialized.
-  constructor: (@labelContent = "my window", @closeButton, @contents, internal, alwaysShowInternalExternalButton) ->
+  # `contents` (the widget this window wraps) is the one meaningful argument; every call site
+  # passes only it. labelContent / closeButton are optional, supplied via the opts object
+  # (labelContent defaults to "my window"). The former `internal` / `alwaysShowInternalExternalButton`
+  # positional args are GONE (P5 arg-object conversion): internal-ness is DERIVED from parentage
+  # (see isInternal) and the internal/external switch button is gone, so both were inert — neither
+  # was ever bound to `@`, stored, or serialized.
+  constructor: (@contents, opts = {}) ->
     super nil, nil, 40, true
+    @labelContent = opts.labelContent ? "my window"
+    @closeButton = opts.closeButton
 
     @_deriveAndSetBodyAppearance()
 

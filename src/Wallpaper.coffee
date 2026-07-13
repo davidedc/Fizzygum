@@ -34,19 +34,19 @@ class Wallpaper
     @patternName = @pattern1
 
   wallpapersMenu: (a,targetWidget)->
-    menu = new MenuWdgt world, false, targetWidget, true, true, "Wallpapers"
+    menu = new MenuWdgt world, target: targetWidget, title: "Wallpapers"
 
     # we add the "untick" prefix to all entries
     # so we allocate the right amount of space for
     # the labels, we are going to put the
     # right ticks soon after
-    menu.addMenuItem untick + @pattern1, true, @, "setPattern", nil, nil, nil, nil, nil, @pattern1
-    menu.addMenuItem untick + @pattern2, true, @, "setPattern", nil, nil, nil, nil, nil, @pattern2
-    menu.addMenuItem untick + @pattern3, true, @, "setPattern", nil, nil, nil, nil, nil, @pattern3
-    menu.addMenuItem untick + @pattern4, true, @, "setPattern", nil, nil, nil, nil, nil, @pattern4
-    menu.addMenuItem untick + @pattern5, true, @, "setPattern", nil, nil, nil, nil, nil, @pattern5
-    menu.addMenuItem untick + @pattern6, true, @, "setPattern", nil, nil, nil, nil, nil, @pattern6
-    menu.addMenuItem untick + @pattern7, true, @, "setPattern", nil, nil, nil, nil, nil, @pattern7
+    menu.addMenuItem untick + @pattern1, @, "setPattern", arg1: @pattern1
+    menu.addMenuItem untick + @pattern2, @, "setPattern", arg1: @pattern2
+    menu.addMenuItem untick + @pattern3, @, "setPattern", arg1: @pattern3
+    menu.addMenuItem untick + @pattern4, @, "setPattern", arg1: @pattern4
+    menu.addMenuItem untick + @pattern5, @, "setPattern", arg1: @pattern5
+    menu.addMenuItem untick + @pattern6, @, "setPattern", arg1: @pattern6
+    menu.addMenuItem untick + @pattern7, @, "setPattern", arg1: @pattern7
 
     @updatePatternsMenuEntriesTicks menu
 

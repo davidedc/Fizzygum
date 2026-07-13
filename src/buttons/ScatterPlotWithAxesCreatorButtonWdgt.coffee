@@ -5,7 +5,7 @@ class ScatterPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
   createAppearance: -> new ScatterPlotIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-    switcherooWm = new WindowWdgt nil, nil, new PlotWithAxesWdgt(new ExampleScatterPlotWdgt), true, true
+    switcherooWm = new WindowWdgt new PlotWithAxesWdgt(new ExampleScatterPlotWdgt)
     switcherooWm._applyExtent new Point 200, 200
 
     return switcherooWm

@@ -52,13 +52,13 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
     container._addNoSettle fText
     fText._rememberFractionalSituationInHoldingPanel()
 
-    calc1 = new WindowWdgt nil, nil, new CalculatingPatchNodeWdgt("# °C → °F formula\n(in1)->Math.round in1*9/5+32"), true
+    calc1 = new WindowWdgt new CalculatingPatchNodeWdgt("# °C → °F formula\n(in1)->Math.round in1*9/5+32")
     calc1._applyMoveTo container.position().add new Point 148+xCorrection/2, 19
     calc1._applyExtent new Point 241, 167
     container._addNoSettle calc1
     calc1._rememberFractionalSituationInHoldingPanel()
 
-    calc2 = new WindowWdgt nil, nil, new CalculatingPatchNodeWdgt("# °F → °C formula\n(in1)->Math.round (in1-32)*5/9"), true
+    calc2 = new WindowWdgt new CalculatingPatchNodeWdgt("# °F → °C formula\n(in1)->Math.round (in1-32)*5/9")
     calc2._applyMoveTo container.position().add new Point 148+xCorrection/2, 365
     calc2._applyExtent new Point 241, 167
     container._addNoSettle calc2
@@ -88,7 +88,7 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
 
     #@inform (@position().subtract @parent.position()) + " " +  @extent()
 
-    wm = new WindowWdgt nil, nil, patchProgrammingWdgt
+    wm = new WindowWdgt patchProgrammingWdgt
     wm._applyMoveTo new Point 114, 10
     wm._applyExtent new Point 596, 592
     # disableDragsDropsAndEditing now self-settles (wrapper + _disableDragsDropsAndEditingNoSettle core -- the

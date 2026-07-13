@@ -362,10 +362,10 @@ class HandleWdgt extends Widget
   # HandleWdgt menu:
   attach: ->
     choices = world.plausibleTargetAndDestinationWidgets @
-    menu = new MenuWdgt @, false, @, true, true, "choose target:"
+    menu = new MenuWdgt @, target: @, title: "choose target:"
     if choices.length > 0
       choices.forEach (each) =>
-        menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ➜", true, @, 'makeHandleSolidWithParentWidget', nil, nil, nil, nil, nil, each, nil, true
+        menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ➜", @, 'makeHandleSolidWithParentWidget', arg1: each, representsAWidget: true
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
@@ -375,5 +375,5 @@ class HandleWdgt extends Widget
       # this list if the user invokes the
       # command, and if there are no good
       # widgets then show some kind of message.
-      menu = new MenuWdgt @, false, @, true, true, "no widgets to attach to"
+      menu = new MenuWdgt @, target: @, title: "no widgets to attach to"
     menu.popUpAtHand() if choices.length

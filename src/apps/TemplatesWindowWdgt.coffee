@@ -126,7 +126,7 @@ class TemplatesWindowWdgt extends WindowWdgt
 
     sdspw.makeAllContentIntoTemplates()
 
-    wm = new WindowWdgt nil, nil, sdspw
+    wm = new WindowWdgt sdspw
     wm.setExtent new Point 370, 335
     wm.setTitleWithoutPrependedContentName "useful snippets"
 

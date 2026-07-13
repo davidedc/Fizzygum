@@ -87,9 +87,9 @@ class SimplePlainTextWdgt extends TextWdgt
 
     menu.addLine()
     if world.isIndexPage
-      menu.addMenuItem "connect to ➜", true, @, "openTargetSelector", "connect to\nanother widget"
+      menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: "connect to\nanother widget"
     else
-      menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another widget\nwhose numerical property\n will be" + " controlled by this one"
+      menu.addMenuItem "set target", @, "openTargetSelector", toolTip: ("choose another widget\nwhose numerical property\n will be" + " controlled by this one")
     @addFiresPerEventMenuEntry menu
 
     if @_amIDirectlyInsideScrollPanelWdgt()
@@ -99,9 +99,9 @@ class SimplePlainTextWdgt extends TextWdgt
       if childrenNotCarets.length == 1
         menu.addLine()
         if @parent.parent.isTextLineWrapping
-          menu.addMenuItem "☒ soft wrap", true, @, "softWrapOff"
+          menu.addMenuItem "☒ soft wrap", @, "softWrapOff"
         else
-          menu.addMenuItem "☐ soft wrap", true, @, "softWrapOn"
+          menu.addMenuItem "☐ soft wrap", @, "softWrapOn"
 
     menu.removeConsecutiveLines()
 
