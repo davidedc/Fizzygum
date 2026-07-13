@@ -24,13 +24,11 @@ class ActivePointerWdgt extends Widget
   dragEmbedArmed: false                # window payload: has the dwell elapsed?
   _dragEmbedOutlinedWdgt: nil          # which widget we currently declare into the highlight style channel
   mouseOverList: nil
-  doubleClickWdgt: nil
-  tripleClickWdgt: nil
-  # The EVENT-TIME (not wall-clock) at which each candidate above was armed, so
-  # processMouseUp can forget a candidate older than doubleClickWindowMs of event
-  # time before matching the next click — deterministically, load-immune.
-  doubleClickArmedAtEventTime: nil
-  tripleClickArmedAtEventTime: nil
+  # One multi-click candidate each — widget + position + EVENT-TIME armed; see
+  # MultiClickRecognizer. Replaces the six hand-mirrored double/triple fields. Instantiated
+  # per-instance in the constructor (mutable state — must not be shared prototype objects).
+  doubleClick: nil
+  tripleClick: nil
   # The multi-click recognition window: two same-spot left clicks fold into a double-
   # / triple-click only if they land within this many ms of each other. Enforced by the
   # EVENT-TIME forget gate in processMouseUp (deterministic, load-immune).
@@ -43,6 +41,8 @@ class ActivePointerWdgt extends Widget
 
   constructor: ->
     @mouseOverList = new Set
+    @doubleClick = new MultiClickRecognizer 2
+    @tripleClick = new MultiClickRecognizer 3
     super()
     @minimumExtent = new Point 0,0
     @_commitBounds Rectangle.EMPTY
@@ -759,20 +759,17 @@ class ActivePointerWdgt extends Widget
           # under parallel test shards), the race this replaced. So two distinct same-spot
           # gestures — spaced > the window apart — never fold, while a gesture's own clicks
           # (~120ms apart, < the window) still do.
-          if @doubleClickWdgt? and @doubleClickArmedAtEventTime? and
-           WorldWdgt.timeOfEventBeingProcessed? and
-           (WorldWdgt.timeOfEventBeingProcessed - @doubleClickArmedAtEventTime) > @doubleClickWindowMs
-            @_forgetDoubleClickWdgts()
+          if @doubleClick.isStale WorldWdgt.timeOfEventBeingProcessed, @doubleClickWindowMs
+            @doubleClick.forget()
 
-          if @doubleClickWdgt?
+          if @doubleClick.wdgt?
             # three conditions:
             #  - both clicks are left-button clicks
             #  - both clicks on same widget
             #  - both clicks nearby
             if @mouseButton == "left" and
-             @doubleClickWdgt == w and
-             ((@doubleClickPosition.distanceTo @position()) < WorldWdgt.preferencesAndSettings.grabDragThreshold)
-              @doubleClickWdgt = nil
+             @doubleClick.recognizes w, @position(), WorldWdgt.preferencesAndSettings.grabDragThreshold
+              @doubleClick.forget()
               # remember we are going to send a double click
               # but let's do it after. That's because we first
               # want to send the normal click AND we want to tell
@@ -787,7 +784,7 @@ class ActivePointerWdgt extends Widget
               # like chaining a second double-click detection
               # once this double-click has just been detected
               # right here.
-              @_rememberTripleClickWdgtsForAWhile w
+              @tripleClick.arm w, @position(), WorldWdgt.timeOfEventBeingProcessed
             else
               # This click does NOT complete a double-click with the remembered widget
               # (different widget/position — a SAME-spot stale candidate from a previous
@@ -797,21 +794,19 @@ class ActivePointerWdgt extends Widget
               # silently degrade (its first click eaten). A non-left click just clears the
               # (left) candidate.
               if @mouseButton == "left"
-                @_rememberDoubleClickWdgtsForAWhile w
+                @doubleClick.arm w, @position(), WorldWdgt.timeOfEventBeingProcessed
               else
-                @_forgetDoubleClickWdgts()
+                @doubleClick.forget()
           else
-            @_rememberDoubleClickWdgtsForAWhile w
+            @doubleClick.arm w, @position(), WorldWdgt.timeOfEventBeingProcessed
 
           tripleClickInvocation = false
 
           # event-time forget for the triple-click candidate (same rationale as the
           # double-click gate above): a triple candidate armed more than doubleClickWindowMs
           # of event time ago belongs to a previous gesture — drop it before matching.
-          if @tripleClickWdgt? and @tripleClickArmedAtEventTime? and
-           WorldWdgt.timeOfEventBeingProcessed? and
-           (WorldWdgt.timeOfEventBeingProcessed - @tripleClickArmedAtEventTime) > @doubleClickWindowMs
-            @_forgetTripleClickWdgts()
+          if @tripleClick.isStale WorldWdgt.timeOfEventBeingProcessed, @doubleClickWindowMs
+            @tripleClick.forget()
 
           # also send tripleclick if the
           # three clicks happen on the same widget
@@ -821,22 +816,18 @@ class ActivePointerWdgt extends Widget
           # This pargraph of code is basically the same
           # as the previous one.
           if !doubleClickInvocation
-            # same three conditions as double click
+            # same three conditions as double click. (The old inner `if @tripleClickWdgt == w`
+            # re-checked what `recognizes` already requires — a dead branch — so it's gone.)
             if @mouseButton == "left" and
-             @tripleClickWdgt == w and
-             ((@tripleClickPosition.distanceTo @position()) < WorldWdgt.preferencesAndSettings.grabDragThreshold)
-              #debugger
-              if @tripleClickWdgt == w
-                @tripleClickWdgt = nil
-                # remember we are going to send a triple click
-                # but let's do it after. That's because we first
-                # want to send the normal click AND we want to tell
-                # in the normal click that that normal click is part
-                # of a triple click. (Recognition is proximity + the doubleClickWindowMs
-                # EVENT-TIME window — see the double-click branch above.)
-                tripleClickInvocation = true
-              else
-                @_forgetTripleClickWdgts()
+             @tripleClick.recognizes w, @position(), WorldWdgt.preferencesAndSettings.grabDragThreshold
+              @tripleClick.forget()
+              # remember we are going to send a triple click
+              # but let's do it after. That's because we first
+              # want to send the normal click AND we want to tell
+              # in the normal click that that normal click is part
+              # of a triple click. (Recognition is proximity + the doubleClickWindowMs
+              # EVENT-TIME window — see the double-click branch above.)
+              tripleClickInvocation = true
 
           # fire the click, sending info on whether this was part
           # of a double/triple click
@@ -864,35 +855,6 @@ class ActivePointerWdgt extends Widget
     @mouseButton = nil
     @nonFloatDraggedWdgt = nil
 
-
-  _forgetDoubleClickWdgts: ->
-    @doubleClickWdgt = nil
-    @doubleClickPosition = nil
-    @doubleClickArmedAtEventTime = nil
-
-  _rememberDoubleClickWdgtsForAWhile: (w) ->
-    @doubleClickWdgt = w
-    @doubleClickPosition = @position()
-    # Arm the candidate with the EVENT-TIME of the click that created it. The event-time
-    # gate in processMouseUp is the sole, authoritative forget: it drops this candidate the
-    # moment the NEXT click arrives more than doubleClickWindowMs (event time) later —
-    # deterministically, load-immune. No wall-clock timer is needed; a candidate that
-    # lingers during idle is harmless (consulted only on the next click, where the gate +
-    # the widget/position identity checks prevent any wrong fold).
-    @doubleClickArmedAtEventTime = WorldWdgt.timeOfEventBeingProcessed
-
-  # basically the same as _rememberDoubleClickWdgtsForAWhile
-  _forgetTripleClickWdgts: ->
-    @tripleClickWdgt = nil
-    @tripleClickPosition = nil
-    @tripleClickArmedAtEventTime = nil
-
-  _rememberTripleClickWdgtsForAWhile: (w) ->
-    @tripleClickWdgt = w
-    @tripleClickPosition = @position()
-    # event-time arm, exactly as _rememberDoubleClickWdgtsForAWhile — the event-time gate in
-    # processMouseUp is the authoritative, deterministic forget; no wall-clock timer needed.
-    @tripleClickArmedAtEventTime = WorldWdgt.timeOfEventBeingProcessed
 
   cleanupMenuWdgts: (expectedClick, w, alsoKillFreshMenus)->
 
@@ -1080,10 +1042,14 @@ class ActivePointerWdgt extends Widget
       # if a widget is marked for grabbing, grab it
       if @wdgtToGrab
         
+        # Grab/drag threshold, computed ONCE for all three arms below (was duplicated in the
+        # two float-drag arms). checkDraggingTreshold is a pure read; the non-float else-arm
+        # ignores the result, exactly as before (it never gated on the threshold).
+        [skipDragging, displacementDueToGrabDragThreshold] = @checkDraggingTreshold()
+
         # these first two cases are for float dragging
         # the third case is non-float drag
         if @wdgtToGrab.isTemplate
-          [skipDragging, displacementDueToGrabDragThreshold] = @checkDraggingTreshold()
           if skipDragging then return
 
           w = @wdgtToGrab.fullCopy()
@@ -1092,7 +1058,6 @@ class ActivePointerWdgt extends Widget
           @grabOrigin = @wdgtToGrab.situation()
 
         else if @wdgtToGrab.detachesWhenDragged()
-          [skipDragging, displacementDueToGrabDragThreshold] = @checkDraggingTreshold()
           if skipDragging then return
 
           originalWdgtToGrab = @wdgtToGrab
