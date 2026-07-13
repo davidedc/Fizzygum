@@ -67,18 +67,15 @@ class Deserializer
     # ---- Pass 2: populate & link ----
     for record, i in records
       shell = shells[i]
-      switch record.class
-        when "$Array"
-          shell[j] = resolveRef(item) for item, j in record.items
-        when "$Set"
-          shell.add resolveRef(item) for item in record.items
-        when "$Map"
-          shell.set resolveRef(pair[0]), resolveRef(pair[1]) for pair in record.entries
-        when "$Date", "$Image", "$Canvas", "$Video", "Color"
-          # fully built in pass 1 — nothing to populate
-          nil
-        else
-          assignProps shell, record.props
+      builder = Deserializer.TAG_BUILDERS[record.class]
+      if builder?.populate?
+        # a native-container tag whose populate links its items ($Array/$Set/$Map), or a
+        # tag fully built in pass 1 whose populate is an explicit no-op ($Date/$Image/
+        # $Canvas/$Video/Color)
+        builder.populate shell, record, resolveRef
+      else
+        # $Object tags and every user class: resolve & assign the recorded props
+        assignProps shell, record.props
 
     # ---- Pass 3: identity & registration ----
     for record, i in records
@@ -123,22 +120,40 @@ class Deserializer
     whenReady = if asyncPromises.length then Promise.all(asyncPromises) else Promise.resolve()
     { widget: shells[envelope.root], whenReady: whenReady, shells: shells }
 
-  # --- pass-1 factory: shell (or fully-built native value) for one record ---
-  @instantiate: (record, asyncPromises) ->
-    switch record.class
-      when "$Array"  then []
-      when "$Object" then {}
-      when "$Map"    then new Map
-      when "$Set"    then new Set
-      when "$Date"   then new Date record.ms
-      when "$Image"
+  # --- native-type tag registry ---
+  # One entry per serialization tag, consulted by BOTH passes: the pass-1 factory
+  # (@instantiate, via .build) and the pass-2 linker (@deserialize, via .populate). Having
+  # ONE table keeps the two passes from drifting apart on the tag set. Tags NOT listed here
+  # (user classes) fall to the generic branch in each pass. A tag with a `build` but no
+  # `populate` ($Object) links via the generic assignProps, exactly like a user class.
+  # Kept a simple literal for the fragment-compile gate: build fns take (record,
+  # asyncPromises), populate fns take (shell, record, resolveRef); neither uses `this`.
+  @TAG_BUILDERS:
+    "$Array":
+      build:    (record, asyncPromises) -> []
+      populate: (shell, record, resolveRef) -> shell[j] = resolveRef(item) for item, j in record.items
+    "$Object":
+      build:    (record, asyncPromises) -> {}
+    "$Map":
+      build:    (record, asyncPromises) -> new Map
+      populate: (shell, record, resolveRef) -> shell.set resolveRef(pair[0]), resolveRef(pair[1]) for pair in record.entries
+    "$Set":
+      build:    (record, asyncPromises) -> new Set
+      populate: (shell, record, resolveRef) -> shell.add resolveRef(item) for item in record.items
+    "$Date":
+      build:    (record, asyncPromises) -> new Date record.ms
+      populate: -> # fully built in pass 1 — nothing to populate
+    "$Image":
+      build: (record, asyncPromises) ->
         img = new Image
         asyncPromises.push new Promise (resolve) ->
           img.onload = -> resolve()
           img.onerror = -> resolve()
         img.src = record.src
         img
-      when "$Canvas"
+      populate: -> # fully built in pass 1 — nothing to populate
+    "$Canvas":
+      build: (record, asyncPromises) ->
         canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point record.w, record.h
         ctx = canvas.getContext "2d"
         img = new Image
@@ -151,21 +166,29 @@ class Deserializer
           img.onerror = -> resolve()
         img.src = record.data
         canvas
-      when "$Video"
+      populate: -> # fully built in pass 1 — nothing to populate
+    "$Video":
+      build: (record, asyncPromises) ->
         v = document.createElement "video"
         v.src = record.src
         v.autoplay = record.autoplay
         v.currentTime = record.currentTime if record.currentTime?
         v
-      when "Color"
-        Color.create record.rgba[0], record.rgba[1], record.rgba[2], record.rgba[3]
-      else
-        klass = window[record.class]
-        unless klass?
-          throw new SerializationError ("this file references the class '" + record.class +
-            "', which does not exist in this build")
-        # constructor NOT run — the established, SliderWdgt-guarded convention
-        Object.create klass.prototype
+      populate: -> # fully built in pass 1 — nothing to populate
+    "Color":
+      build:    (record, asyncPromises) -> Color.create record.rgba[0], record.rgba[1], record.rgba[2], record.rgba[3]
+      populate: -> # fully built in pass 1 — nothing to populate
+
+  # --- pass-1 factory: shell (or fully-built native value) for one record ---
+  @instantiate: (record, asyncPromises) ->
+    builder = Deserializer.TAG_BUILDERS[record.class]
+    return builder.build record, asyncPromises if builder?
+    # a user class: bare shell, constructor NOT run — the established, SliderWdgt-guarded convention
+    klass = window[record.class]
+    unless klass?
+      throw new SerializationError ("this file references the class '" + record.class +
+        "', which does not exist in this build")
+    Object.create klass.prototype
 
   @resolveWellKnown: (key) ->
     resolved = WellKnownObjects.resolve key

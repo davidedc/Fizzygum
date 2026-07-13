@@ -1002,6 +1002,21 @@ class StringWdgt extends Widget
 
     menu.popUpAtHand()
 
+  # [ fontStackPropertyName, menuLabel ] rows in fonts-menu order (menu.children[1..9]);
+  # drives updateFontsMenuEntriesTicks below. Kept a simple literal for the fragment-compile
+  # gate. NB the index-7 label "Treby" intentionally differs from its trebuFontStack prop name.
+  @FONT_STACK_MENU_ENTRIES: [
+    [ "justArialFontStack", "Arial"   ]
+    [ "timesFontStack",     "Times"   ]
+    [ "georgiaFontStack",   "Georgia" ]
+    [ "garamoFontStack",    "Garamo"  ]
+    [ "helveFontStack",     "Helve"   ]
+    [ "verdaFontStack",     "Verda"   ]
+    [ "trebuFontStack",     "Treby"   ]
+    [ "heavyFontStack",     "Heavy"   ]
+    [ "monoFontStack",      "Mono"    ]
+  ]
+
   # cheap way to keep menu consistency when pinned
   # note that there is no consistency in case
   # there are multiple copies of this menu changing
@@ -1009,40 +1024,10 @@ class StringWdgt extends Widget
   # of a menu to react to property change coming
   # from other menus or other means (e.g. API)...
   updateFontsMenuEntriesTicks: (menu) ->
-    justArialFontStackTick = timesFontStackTick = georgiaFontStackTick =
-    garamoFontStackTick = helveFontStackTick = verdaFontStackTick =
-    trebuFontStackTick = heavyFontStackTick = monoFontStackTick = untick
-
-
-    switch @fontName
-      when @justArialFontStack
-        justArialFontStackTick = tick
-      when @timesFontStack
-        timesFontStackTick = tick
-      when @georgiaFontStack
-        georgiaFontStackTick = tick
-      when @garamoFontStack
-        garamoFontStackTick = tick
-      when @helveFontStack
-        helveFontStackTick = tick
-      when @verdaFontStack
-        verdaFontStackTick = tick
-      when @trebuFontStack
-        trebuFontStackTick = tick
-      when @heavyFontStack
-        heavyFontStackTick = tick
-      when @monoFontStack
-        monoFontStackTick = tick
-
-    menu.children[1].label._setTextNoSettle justArialFontStackTick + "Arial"
-    menu.children[2].label._setTextNoSettle timesFontStackTick + "Times"
-    menu.children[3].label._setTextNoSettle georgiaFontStackTick + "Georgia"
-    menu.children[4].label._setTextNoSettle garamoFontStackTick + "Garamo"
-    menu.children[5].label._setTextNoSettle helveFontStackTick + "Helve"
-    menu.children[6].label._setTextNoSettle verdaFontStackTick + "Verda"
-    menu.children[7].label._setTextNoSettle trebuFontStackTick + "Treby"
-    menu.children[8].label._setTextNoSettle heavyFontStackTick + "Heavy"
-    menu.children[9].label._setTextNoSettle monoFontStackTick + "Mono"
+    # tick the single entry whose font stack equals the current @fontName, untick the rest.
+    for [ fontStackProperty, menuLabel ], i in StringWdgt.FONT_STACK_MENU_ENTRIES
+      tickMark = if @fontName == @[fontStackProperty] then tick else untick
+      menu.children[i + 1].label._setTextNoSettle tickMark + menuLabel
 
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
