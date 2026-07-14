@@ -32,7 +32,6 @@ class FridgeMagnetsWdgt extends Widget
     #super
 
     # visual output
-    #@visualOutput = new FridgeMagnetsCanvasWdgt
     @visualOutput = new FridgeMagnets3DCanvasWdgt
     @visualOutput.disableDrops()
     @_addNoSettle @visualOutput
