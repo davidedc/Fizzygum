@@ -66,21 +66,10 @@ class ToolPanelWdgt extends PanelWdgt
 
       childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
-      foundDrop = false
+      dropSlot = @_findDropSlot positionOnScreen, childrenNotHandlesNorCarets
 
-      if positionOnScreen? and childrenNotHandlesNorCarets.length > 0
-        positionNumberAmongSiblings = 0
-
-        for w in childrenNotHandlesNorCarets
-          if w.bounds.growBy(@internalPadding).containsPoint positionOnScreen
-            foundDrop = true
-            if w.bounds.growBy(@internalPadding).rightHalf().containsPoint positionOnScreen
-              positionNumberAmongSiblings++
-            break
-          positionNumberAmongSiblings++
-      
-      if foundDrop
-        super aWdgt, position: positionNumberAmongSiblings, layoutSpec: layoutSpec, beingDropped: beingDropped
+      if dropSlot?
+        super aWdgt, position: dropSlot, layoutSpec: layoutSpec, beingDropped: beingDropped
       else
         super aWdgt, position: @numberOfIconsOnPanel, layoutSpec: layoutSpec, beingDropped: beingDropped
 

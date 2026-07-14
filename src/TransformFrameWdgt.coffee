@@ -352,12 +352,11 @@ class TransformFrameWdgt extends PanelWdgt
   # as a world child would itself cast that shadow) and a non-identity island casts a
   # correctly SCALED content shadow for free (plan §4.8).
   _fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
-    clippingRectangle = clippingRectangle.translateBy -appliedShadow.offset.x, -appliedShadow.offset.y
-    if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
-      aContext.save()
-      aContext.translate appliedShadow.offset.x * ceilPixelRatio, appliedShadow.offset.y * ceilPixelRatio
-      @_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow aContext, clippingRectangle, appliedShadow
-      aContext.restore()
+    # Explicit GRANDPARENT delegation to the base Widget shadow-paint (was a byte-for-byte inline copy of it,
+    # kept in sync by hand): `super` can't reach it — it binds to PanelWdgt/ClippingAtRectangularBoundsMixin's
+    # opaque-box override. The @…ContentPotentiallyAsShadow call inside Widget's body still dispatches on `@`
+    # to THIS class's override, so the routing (and pixels) are identical.
+    Widget::_fullPaintIntoAreaOrBlitFromBackBufferJustShadow.call @, aContext, clippingRectangle, appliedShadow
 
   # the cache is live only when BOTH the global kill-switch and this island's opt-in are on.
   _islandBufferCacheActive: ->

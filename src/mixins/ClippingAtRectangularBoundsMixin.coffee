@@ -22,11 +22,7 @@ ClippingAtRectangularBoundsMixin =
         # to one of its subwidgets or for it to
         # control the properties of one of its subwidgets)
         result = []
-        if @visibleBasedOnIsVisibleProperty() and
-            !@isInCollapsedSubtree() and
-            !theWidget.isAncestorOf(@) and
-            @areBoundsIntersecting(theWidget) and
-            !@anyParentPopUpMarkedForClosure()
+        if @_isSelfPlausibleAttachTargetFor theWidget
           result = [@]
 
         # Since the PanelWdgt clips its children

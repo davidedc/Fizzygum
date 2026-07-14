@@ -7,6 +7,41 @@ class MenusHelper
 
   @augmentWith DeepCopierMixin
 
+  # Placeholder body text reused verbatim by the demo text-widget menu actions below, hoisted to two
+  # constants so each string lives (and is edited) in one place. LOREM_LONG: 4 sites; LOREM_SHORT: 2 sites.
+  # (The one medium-length variant in createNewNonWrappingSimplePlainTextWdgtWithBackground is unique, so
+  # it stays inline.) Kept as the exact same "+"-concatenation the call sites used, so the value is identical.
+  LOREM_LONG:
+    "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+    "elit. Integer rhoncus pharetra nulla, vel maximus " +
+    "lectus posuere a. Phasellus finibus blandit ex vitae " +
+    "varius. Vestibulum blandit velit elementum, ornare " +
+    "ipsum sollicitudin, blandit nunc. Mauris a sapien " +
+    "nibh. Nulla nec bibendum quam, eu condimentum nisl. " +
+    "Cras consequat efficitur nisi sed ornare. " +
+    "Pellentesque vitae urna vitae libero malesuada " +
+    "pharetra." +
+    "\n\n" +
+    "Pellentesque commodo, nulla mattis vulputate " +
+    "porttitor, elit augue vestibulum est, nec congue " +
+    "ex dui a velit. Nullam lectus leo, lobortis eget " +
+    "erat ac, lobortis dignissim magna. Morbi ac odio " +
+    "in purus blandit dignissim. Maecenas at sagittis " +
+    "odio. Suspendisse tempus mattis erat id euismod. " +
+    "Duis semper mauris nec odio sagittis vulputate. " +
+    "Praesent varius ac erat id fringilla. Suspendisse " +
+    "porta sollicitudin bibendum. Pellentesque imperdiet " +
+    "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
+    "nisi."
+
+  LOREM_SHORT:
+    "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+    "elit. Integer rhoncus pharetra nulla, vel maximus " +
+    "\n\n" +
+    "Pellentesque commodo, nulla mattis vulputate " +
+    "porttitor, elit augue vestibulum est, nec congue " +
+    "nisi."
+
   popUpDevToolsMenu: (widgetOpeningThePopUp, widgetThisMenuIsAbout) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Dev Tools"
     menu.addMenuItem "inspect", widgetThisMenuIsAbout, "inspect", toolTip: "open a window\non all properties"
@@ -539,27 +574,7 @@ class MenusHelper
 
   createNewWrappingSimplePlainTextWdgtWithBackground: ->
     newWdgt = new SimplePlainTextWdgt(
-      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
-      "elit. Integer rhoncus pharetra nulla, vel maximus " +
-      "lectus posuere a. Phasellus finibus blandit ex vitae " +
-      "varius. Vestibulum blandit velit elementum, ornare " +
-      "ipsum sollicitudin, blandit nunc. Mauris a sapien " +
-      "nibh. Nulla nec bibendum quam, eu condimentum nisl. " +
-      "Cras consequat efficitur nisi sed ornare. " +
-      "Pellentesque vitae urna vitae libero malesuada " +
-      "pharetra." +
-      "\n\n" +
-      "Pellentesque commodo, nulla mattis vulputate " +
-      "porttitor, elit augue vestibulum est, nec congue " +
-      "ex dui a velit. Nullam lectus leo, lobortis eget " +
-      "erat ac, lobortis dignissim magna. Morbi ac odio " +
-      "in purus blandit dignissim. Maecenas at sagittis " +
-      "odio. Suspendisse tempus mattis erat id euismod. " +
-      "Duis semper mauris nec odio sagittis vulputate. " +
-      "Praesent varius ac erat id fringilla. Suspendisse " +
-      "porta sollicitudin bibendum. Pellentesque imperdiet " +
-      "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
-      "nisi.",nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
+      @LOREM_LONG,nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     newWdgt.isEditable = true
 
     world.add newWdgt
@@ -590,38 +605,13 @@ class MenusHelper
 
   createWrappingSimplePlainTextScrollPanelWdgt: ->
     SfA = new SimplePlainTextScrollPanelWdgt(
-      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
-      "elit. Integer rhoncus pharetra nulla, vel maximus " +
-      "lectus posuere a. Phasellus finibus blandit ex vitae " +
-      "varius. Vestibulum blandit velit elementum, ornare " +
-      "ipsum sollicitudin, blandit nunc. Mauris a sapien " +
-      "nibh. Nulla nec bibendum quam, eu condimentum nisl. " +
-      "Cras consequat efficitur nisi sed ornare. " +
-      "Pellentesque vitae urna vitae libero malesuada " +
-      "pharetra." +
-      "\n\n" +
-      "Pellentesque commodo, nulla mattis vulputate " +
-      "porttitor, elit augue vestibulum est, nec congue " +
-      "ex dui a velit. Nullam lectus leo, lobortis eget " +
-      "erat ac, lobortis dignissim magna. Morbi ac odio " +
-      "in purus blandit dignissim. Maecenas at sagittis " +
-      "odio. Suspendisse tempus mattis erat id euismod. " +
-      "Duis semper mauris nec odio sagittis vulputate. " +
-      "Praesent varius ac erat id fringilla. Suspendisse " +
-      "porta sollicitudin bibendum. Pellentesque imperdiet " +
-      "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
-      "nisi.",true, 10)
+      @LOREM_LONG,true, 10)
     world.add SfA
     SfA.setBounds new Point(20, 25), new Point(390, 305)
 
   createNonWrappingSimplePlainTextScrollPanelWdgt: ->
     SfB = new SimplePlainTextScrollPanelWdgt(
-      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
-      "elit. Integer rhoncus pharetra nulla, vel maximus " +
-      "\n\n" +
-      "Pellentesque commodo, nulla mattis vulputate " +
-      "porttitor, elit augue vestibulum est, nec congue " +
-      "nisi.",false, 10)
+      @LOREM_SHORT,false, 10)
     world.add SfB
     SfB.setBounds new Point(430, 25), new Point(390, 305)
 
@@ -634,27 +624,7 @@ class MenusHelper
   # incomplete and why this widget is not useful anyways
   createWrappingSimplePlainTextPanelWdgt: ->
     SfA = new SimplePlainTextPanelWdgt(
-      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
-      "elit. Integer rhoncus pharetra nulla, vel maximus " +
-      "lectus posuere a. Phasellus finibus blandit ex vitae " +
-      "varius. Vestibulum blandit velit elementum, ornare " +
-      "ipsum sollicitudin, blandit nunc. Mauris a sapien " +
-      "nibh. Nulla nec bibendum quam, eu condimentum nisl. " +
-      "Cras consequat efficitur nisi sed ornare. " +
-      "Pellentesque vitae urna vitae libero malesuada " +
-      "pharetra." +
-      "\n\n" +
-      "Pellentesque commodo, nulla mattis vulputate " +
-      "porttitor, elit augue vestibulum est, nec congue " +
-      "ex dui a velit. Nullam lectus leo, lobortis eget " +
-      "erat ac, lobortis dignissim magna. Morbi ac odio " +
-      "in purus blandit dignissim. Maecenas at sagittis " +
-      "odio. Suspendisse tempus mattis erat id euismod. " +
-      "Duis semper mauris nec odio sagittis vulputate. " +
-      "Praesent varius ac erat id fringilla. Suspendisse " +
-      "porta sollicitudin bibendum. Pellentesque imperdiet " +
-      "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
-      "nisi.",true, 10)
+      @LOREM_LONG,true, 10)
     world.add SfA
     SfA.setBounds new Point(20, 25), new Point(390, 305)
 
@@ -663,12 +633,7 @@ class MenusHelper
   # incomplete and why this widget is not useful anyways
   createNonWrappingSimplePlainTextPanelWdgt: ->
     SfB = new SimplePlainTextPanelWdgt(
-      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
-      "elit. Integer rhoncus pharetra nulla, vel maximus " +
-      "\n\n" +
-      "Pellentesque commodo, nulla mattis vulputate " +
-      "porttitor, elit augue vestibulum est, nec congue " +
-      "nisi.",false, 10)
+      @LOREM_SHORT,false, 10)
     world.add SfB
     SfB.setBounds new Point(430, 25), new Point(390, 305)
 
@@ -721,27 +686,7 @@ class MenusHelper
 
   createNewTextWdgtWithBackground: ->
     newWdgt = new TextWdgt(
-      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
-      "elit. Integer rhoncus pharetra nulla, vel maximus " +
-      "lectus posuere a. Phasellus finibus blandit ex vitae " +
-      "varius. Vestibulum blandit velit elementum, ornare " +
-      "ipsum sollicitudin, blandit nunc. Mauris a sapien " +
-      "nibh. Nulla nec bibendum quam, eu condimentum nisl. " +
-      "Cras consequat efficitur nisi sed ornare. " +
-      "Pellentesque vitae urna vitae libero malesuada " +
-      "pharetra." +
-      "\n\n" +
-      "Pellentesque commodo, nulla mattis vulputate " +
-      "porttitor, elit augue vestibulum est, nec congue " +
-      "ex dui a velit. Nullam lectus leo, lobortis eget " +
-      "erat ac, lobortis dignissim magna. Morbi ac odio " +
-      "in purus blandit dignissim. Maecenas at sagittis " +
-      "odio. Suspendisse tempus mattis erat id euismod. " +
-      "Duis semper mauris nec odio sagittis vulputate. " +
-      "Praesent varius ac erat id fringilla. Suspendisse " +
-      "porta sollicitudin bibendum. Pellentesque imperdiet " +
-      "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
-      "nisi.",nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
+      @LOREM_LONG,nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     newWdgt.isEditable = true
     world.create newWdgt
 

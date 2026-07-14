@@ -966,6 +966,17 @@ class Widget extends TreeNode
   # to check that we don't consider overlaps with
   # widgets contained in a Panel that are clipped and
   # hence *actually* not overlapping).
+  # The 5-clause "is THIS widget itself a plausible attach/set-target for theWidget" predicate — shared
+  # verbatim by plausibleTargetAndDestinationWidgets below and by its clipping variant in
+  # ClippingAtRectangularBoundsMixin (the two differ only in whether they recurse into the children).
+  # Pure query, no side effects.
+  _isSelfPlausibleAttachTargetFor: (theWidget) ->
+    @visibleBasedOnIsVisibleProperty() and
+      !@isInCollapsedSubtree() and
+      !theWidget.isAncestorOf(@) and
+      @areBoundsIntersecting(theWidget) and
+      !@anyParentPopUpMarkedForClosure()
+
   plausibleTargetAndDestinationWidgets: (theWidget) ->
     # find if I intersect theWidget,
     # then check my children recursively
@@ -974,11 +985,7 @@ class Widget extends TreeNode
     # to one of its subwidgets or for it to
     # control the properties of one of its subwidgets)
     result = []
-    if @visibleBasedOnIsVisibleProperty() and
-        !@isInCollapsedSubtree() and
-        !theWidget.isAncestorOf(@) and
-        @areBoundsIntersecting(theWidget) and
-        !@anyParentPopUpMarkedForClosure()
+    if @_isSelfPlausibleAttachTargetFor theWidget
       result = [@]
 
     @children.forEach (child) ->

@@ -499,12 +499,21 @@ class MacroToolkit
   # event-time forget gate, keep two separate clicks from folding into a false double-click.)
   # Queues input events — follow with `yield "waitNoInputsOngoing"`.
   doubleClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, nil, startTime, nil
-    @_syntheticEventsConsecutiveLeftClicks_InputEvents 2, startTime + milliseconds + 100
+    @_nLeftClicksAtFractionOf_InputEvents 2, widgetOrIdentifier, fraction, milliseconds, startTime
 
   tripleClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    @_nLeftClicksAtFractionOf_InputEvents 3, widgetOrIdentifier, fraction, milliseconds, startTime
+
+  # Shared body of double/tripleClickAtFractionOf_InputEvents: position the pointer at the fractional point
+  # (so the fake pointer shows), then fire `numberOfClicks` consecutive left clicks that the hand folds into a
+  # double/triple click. The +100ms lead-in after the positioning move is non-scaled at every speed level (see
+  # the comment above on the deterministic event-time recognition window).
+  _nLeftClicksAtFractionOf_InputEvents: (numberOfClicks, widgetOrIdentifier, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    # public-call-sanctioned: syntheticEventsMouseMove_InputEvents is an L1 event-synthesis primitive (it
+    # pushes a queued mouse-move, not any settling/orchestration) — this is the SAME call the public
+    # double/tripleClick verbs made inline before their shared body was factored here; behaviour is unchanged.
     @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, nil, startTime, nil
-    @_syntheticEventsConsecutiveLeftClicks_InputEvents 3, startTime + milliseconds + 100
+    @_syntheticEventsConsecutiveLeftClicks_InputEvents numberOfClicks, startTime + milliseconds + 100
 
   # SHIFT+left-click at a fractional point inside a located widget — move the pointer there (no button),
   # then click with Shift held. In editable text a plain click sets the caret while a shift-click EXTENDS the
@@ -582,13 +591,20 @@ class MacroToolkit
   # cut/paste itself happens when the event is consumed. Select first (e.g. Shift+Arrow) and `yield
   # "waitNoInputsOngoing"`, then call these and `yield "waitNoInputsOngoing"` again before a screenshot.
   cutSelection_InputEvents: (startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    text = world.caret?.target?.selection()
-    @queueInputEvent new CutInputEvent text, true, startTime
-    text
+    @_selectionToClipboardEvent_InputEvents CutInputEvent, startTime
 
   copySelection_InputEvents: (startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    @_selectionToClipboardEvent_InputEvents CopyInputEvent, startTime
+
+  # Shared body of cut/copySelection_InputEvents: read the current selection synchronously (it still exists
+  # at call time), enqueue a Cut/Copy event CARRYING that text (Fizzygum keeps no internal clipboard — see the
+  # comment above), and RETURN the text so the caller can paste it back. `eventClass` is CutInputEvent or
+  # CopyInputEvent, passed as a value; both still load and are ordered correctly (build.py bundles every class;
+  # the dependency finder orders by new/extends/@augmentWith edges, and each carries its own `extends
+  # ClipboardInputEvent` edge — so dropping the two literal `new`s here changes nothing).
+  _selectionToClipboardEvent_InputEvents: (eventClass, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     text = world.caret?.target?.selection()
-    @queueInputEvent new CopyInputEvent text, true, startTime
+    @queueInputEvent new eventClass text, true, startTime
     text
 
   pasteText_InputEvents: (text, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
