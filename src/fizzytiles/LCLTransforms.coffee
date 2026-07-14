@@ -232,6 +232,23 @@ class LCLTransforms
       ) / 0.05
     )
 
+  # Run any trailing appended blocks (the `(f) ->` bodies passed after the numeric
+  # args, starting at startIndex in the caller's arguments) against @widget, then pop
+  # the pushed matrix. If a block turns out to be a "fake" (returns nil) undo the push
+  # and bail without popping. Shared verbatim by scale/rotate/move.
+  _runAppendedBlocks: (args, startIndex) ->
+    # public-call-sanctioned: driving the public matrix-stack protocol (pop/discard) IS
+    # this epilogue's job — it is LCLTransforms' own matrix bookkeeping, not Widget settling.
+    while Utils.isFunction args[startIndex]
+      result = args[startIndex].apply @widget
+      # we find out that the function is actually
+      # a fake so we have to undo the push and leave
+      if !result?
+        @discardPushedMatrix()
+        return
+      startIndex++
+    @popMatrix()
+
   scale: (a, b = 1, c = 1, d = nil) ->
     arg_a = a
     arg_b = b
@@ -266,15 +283,7 @@ class LCLTransforms
     @scaleMatrix @worldMatrix,[arg_a,arg_b,arg_c], @worldMatrix
 
     if appendedFunctionsStartIndex?
-      while Utils.isFunction arguments[appendedFunctionsStartIndex]
-        result = arguments[appendedFunctionsStartIndex].apply @widget
-        # we find out that the function is actually
-        # a fake so we have to undo the push and leave
-        if !result?
-          @discardPushedMatrix()
-          return
-        appendedFunctionsStartIndex++
-      @popMatrix()
+      @_runAppendedBlocks arguments, appendedFunctionsStartIndex
 
   rotate: (a, b, c = 0, d = nil) ->
     arg_a = a
@@ -303,15 +312,7 @@ class LCLTransforms
     @multiplyMatrix @worldMatrix, @makeRotationFromEuler([arg_a, arg_b, arg_c]), @worldMatrix
 
     if appendedFunctionsStartIndex?
-      while Utils.isFunction arguments[appendedFunctionsStartIndex]
-        result = arguments[appendedFunctionsStartIndex].apply @widget
-        # we find out that the function is actually
-        # a fake so we have to undo the push and leave
-        if !result?
-          @discardPushedMatrix()
-          return
-        appendedFunctionsStartIndex++
-      @popMatrix()
+      @_runAppendedBlocks arguments, appendedFunctionsStartIndex
 
   move: (a, b, c = 0, d = nil) ->
     arg_a = a
@@ -340,12 +341,4 @@ class LCLTransforms
     @multiplyMatrix @worldMatrix, @makeTranslation(arg_a, arg_b, arg_c), @worldMatrix
 
     if appendedFunctionsStartIndex?
-      while Utils.isFunction arguments[appendedFunctionsStartIndex]
-        result = arguments[appendedFunctionsStartIndex].apply @widget
-        # we find out that the function is actually
-        # a fake so we have to undo the push and leave
-        if !result?
-          @discardPushedMatrix()
-          return
-        appendedFunctionsStartIndex++
-      @popMatrix()
+      @_runAppendedBlocks arguments, appendedFunctionsStartIndex

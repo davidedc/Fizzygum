@@ -17,16 +17,22 @@ class FridgeWdgt extends PanelWdgt
 
     return filtered[calcIndex]
 
-  magnetToLeftOf: (aMagnet) ->
-    # first, filter all the widgets that are roughly at the same level
-    # of the passed widget
-    correctHeight = @children.filter (m) ->
+  # The magnets roughly at the same vertical level as aMagnet (a horizontal band
+  # around it): my non-word children whose vertical extent overlaps aMagnet's top
+  # or bottom edge. Shared by magnetToLeftOf and magnetFollowing.
+  _magnetsAtSimilarHeight: (aMagnet) ->
+    @children.filter (m) ->
       m.putIntoWords? and !m.putIntoWords and
       (
         (m.bottom() >= aMagnet.top() and m.top() <= aMagnet.top()) or
         (m.top() <= aMagnet.bottom() and m.bottom() >= aMagnet.bottom())
       )
-    
+
+  magnetToLeftOf: (aMagnet) ->
+    # first, filter all the widgets that are roughly at the same level
+    # of the passed widget
+    correctHeight = @_magnetsAtSimilarHeight aMagnet
+
     # then filter all the widgets that are on the left
     correctSide = correctHeight.filter (m) ->
       m.right() < aMagnet.right()
@@ -57,13 +63,8 @@ class FridgeWdgt extends PanelWdgt
   # So in order to find the correct magnet we need to verify
   # that they are reciprocally the closest ones.
   magnetFollowing: (aMagnet) ->
-    correctHeight = @children.filter (m) ->
-      m.putIntoWords? and !m.putIntoWords and
-      (
-        (m.bottom() >= aMagnet.top() and m.top() <= aMagnet.top()) or
-        (m.top() <= aMagnet.bottom() and m.bottom() >= aMagnet.bottom())
-      )
-    
+    correctHeight = @_magnetsAtSimilarHeight aMagnet
+
     correctSide = correctHeight.filter (m) ->
       m.left() > aMagnet.left()
 
