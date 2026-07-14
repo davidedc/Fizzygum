@@ -6,42 +6,7 @@ class SlidesToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   createWidgetToBeHandled: ->
 
-    toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
-
-    toolsPanel.addMany [
-      new TextBoxCreatorButtonWdgt
-      new ExternalLinkCreatorButtonWdgt
-      new VideoPlayCreatorButtonWdgt
-
-      new WorldMapCreatorButtonWdgt
-      new USAMapCreatorButtonWdgt
-
-      new RectangleWdgt
-
-      new MapPinIconWdgt
-
-      new SpeechBubbleWdgt
-
-      new DestroyIconWdgt
-      new ScratchAreaIconWdgt
-      new FloraIconWdgt
-      new ScooterIconWdgt
-      new HeartIconWdgt
-
-      new FizzygumLogoIconWdgt
-      new FizzygumLogoWithTextIconWdgt
-      new VaporwaveBackgroundIconWdgt
-      new VaporwaveSunIconWdgt
-
-      new ArrowNIconWdgt
-      new ArrowSIconWdgt
-      new ArrowWIconWdgt
-      new ArrowEIconWdgt
-      new ArrowNWIconWdgt
-      new ArrowNEIconWdgt
-      new ArrowSWIconWdgt
-      new ArrowSEIconWdgt
-    ]
+    toolsPanel = new SlidesToolPanelWdgt
 
     toolsPanel.disableDragsDropsAndEditing()
 
