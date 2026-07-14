@@ -1,10 +1,17 @@
-# Duplicated-code detection (`./find_duplicated_code.sh`)
+# Duplicated-code detection (`./find_duplicated_code.sh` + `./find_similar_code.sh`)
 
-One command, run from the `Fizzygum/` repo root (or via its absolute path — it cd's itself):
+Two complementary scanners, run from the `Fizzygum/` repo root (or via absolute path — both cd themselves):
 
 ```sh
-./find_duplicated_code.sh
+./find_duplicated_code.sh   # EXACT copy/paste clones (jscpd, token-based)   — .coffee line numbers
+./find_similar_code.sh      # SIMILAR/structural clones (jsinspect, AST)     — compiled-JS line numbers
 ```
+
+Run both: they see different things. The exact scan misses a clone the moment one identifier
+is renamed — or when an interleaved comment breaks the token run, or when CoffeeScript's
+terseness keeps a whole duplicated method under the token window. The structural scan
+(section below) catches those; on 2026-07-14 it found 125 matches the exact scan was blind to
+(verified example: `SimpleVerticalStackPanelWdgt`'s `add`/`_addNoSettle` ≈ `ToolPanelWdgt`'s).
 
 Scans `src/**/*.coffee` for copy/paste duplication with [jscpd](https://github.com/kucherenko/jscpd)
 (pinned devDependency — `npm install` once) and writes reports to `duplication-report/`
@@ -84,10 +91,43 @@ script overrides them (e.g. `./find_duplicated_code.sh --min-tokens 35`).
    capture it into `jscpd-report.ai.txt` (jscpd does not wipe the output dir between runs;
    ANSI codes and the trailing timing/sponsor banner are stripped).
 
+## Structural similarity: `./find_similar_code.sh` (Type-2 / renamed clones)
+
+jscpd cannot see "similar" code, only exact token runs. For structural matching the modern
+tool would be `similarity-ts` (mizchi/similarity, Rust, APTED tree-edit distance) — but its
+v0.5.0 prebuilt macOS binary is **broken** (finds nothing even on byte-identical functions;
+sanity-tested 2026-07-14; re-check future releases). What *does* work — nicely — is
+**jsinspect 0.12.7, the very tool of the 2019 experiment**, on a compiled-ES5 mirror:
+
+1. `buildSystem/coffee-to-js-mirror.js` compiles all of `src/` with **CoffeeScript 1**
+   (devDependency alias `coffeescript-v1`): CS 2.7 rejects ~106 files over bare-`super`
+   idioms that the bundled in-browser compiler accepts; CS1 fails only the 6 `super`-bearing
+   mixins, rescued by a textual `super`→`__SUPER__` shim (AST shape is all that matters
+   here). 484/484 compile. It also strips the byte-identical compiler-preamble helpers —
+   without that, the top "duplicate" is the preamble, ×394 (the 2019 note's manual-cleanup
+   step, now automated).
+   ⚠ Never invoke CS1 via `node_modules/.bin/coffee` or the alias package's `bin/coffee`:
+   CS1's stock bin silently *prefers* a locally-installed `node_modules/coffeescript` (the
+   2.7.0 devDep). The mirror script uses the compiler API to bypass it.
+2. jsinspect matches AST **node types** (identifier-insensitive by default, threshold =
+   `-t` nodes, default 30) over the mirror. Exit code 5 means "matches found" — its CI-gate
+   convention, not an error.
+3. `buildSystem/jsinspect-compact-report.js` condenses the JSON into
+   `jsinspect-report.ai.txt`, mapping mirror names back to `src/**/*.coffee` and recovering
+   `@method` names from `X.prototype.method` assignments.
+
+**The one caveat: line numbers are compiled-JS mirror lines (`jsL…`), not `.coffee` lines.**
+Locate findings by file (one class per file) + `@method` name. Baseline 2026-07-14 (post
+opener-batch dedup): **133 structural matches** at `-t 30`, including families invisible to
+jscpd — a 25× icon `paintFunction` wrapper, an 18× `stringSetters`/`numericalSetters`/
+`colorSetters` boilerplate family, `Widget`-internal `setPadding*` quintuplets.
+
 ## Feeding the results to an LLM
 
 - `jscpd-report.ai.txt` — the cheap, token-efficient starting point (~1 line per clone pair
   + summary). Good for "cluster these, rank by refactoring value, propose extractions".
+- `jsinspect-report.ai.txt` — same idea for the structural matches (remind the LLM that
+  `jsL` ranges are compiled-JS lines; navigate by file + `@method`).
 - `duplication-report/jscpd-report.json` — adds the actual duplicated code fragments and
   token counts per clone, for when the LLM should judge content without opening files.
 - `duplication-report/html/index.html` — for humans.

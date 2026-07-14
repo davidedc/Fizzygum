@@ -21,6 +21,7 @@ Prerequisites are installed **globally, not via `npm`**: `coffee` (`npm i -g cof
 - **Watch + rebuild on save:** `./build_as_soon_as_anything_changes.sh` (`fswatch` over `src/`; the syntax gate runs on every save).
 - **Run:** open `../Fizzygum-builds/latest/index.html` in a browser. It loads over `file://`; no dev server needed.
 - **Find duplicated code:** `./find_duplicated_code.sh` — jscpd (devDependency) over `src/**/*.coffee`, no compile step (CoffeeScript is tokenized natively); console/JSON/markdown/HTML reports plus an LLM-handoff clone-pair list land in `duplication-report/` (gitignored). Tuning + gotchas (jscpd silently skips >1000-line files at its defaults — config raises the caps): `docs/duplicated-code-detection.md`.
+- **Find SIMILAR (renamed/structural) code:** `./find_similar_code.sh` — jsinspect AST matching over a CoffeeScript-1-compiled ES5 mirror (`buildSystem/coffee-to-js-mirror.js`); catches the renamed/near-miss clones jscpd's exact-token scan can't. ⚠ its reports carry compiled-JS line numbers — navigate by file + `@method` name. Same docs file.
 
 The build **requires** this sibling layout and aborts without it:
 ```
