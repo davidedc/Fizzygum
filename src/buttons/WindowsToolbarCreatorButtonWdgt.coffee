@@ -17,11 +17,7 @@ class WindowsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
     toolsPanel.disableDragsDropsAndEditing()
 
-    switcherooWm = new WindowWdgt toolsPanel
-    switcherooWm._applyMoveTo new Point 90, Math.floor((world.height()-192)/2)
-    switcherooWm._moveWithin world
-    world.add switcherooWm
-    switcherooWm._applyExtent new Point 61, 192
+    switcherooWm = @_buildToolWindow toolsPanel, new Point 61, 192
     readmeWindow = WindowsToolbarInfoWdgt.createNextTo switcherooWm
     readmeWindow?._applyMoveTo new Point 300, 200
     readmeWindow?._rememberFractionalSituationInHoldingPanel()

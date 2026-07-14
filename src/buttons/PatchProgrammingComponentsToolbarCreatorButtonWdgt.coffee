@@ -17,11 +17,5 @@ class PatchProgrammingComponentsToolbarCreatorButtonWdgt extends ToolbarCreatorB
 
     toolsPanel.disableDragsDropsAndEditing()
 
-    switcherooWm = new WindowWdgt toolsPanel
-    switcherooWm._applyMoveTo new Point 90, Math.floor((world.height()-192)/2)
-    switcherooWm._moveWithin world
-    world.add switcherooWm
-    switcherooWm._applyExtent new Point 61, 192
-
-    return switcherooWm
+    return @_buildToolWindow toolsPanel, new Point 61, 192
 
