@@ -113,15 +113,11 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "bang!", "in1", "in2", "in3", "in4"
-    functionNamesStrings.push "bang", "setInput1", "setInput2", "setInput3", "setInput4"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!", "in1", "in2", "in3", "in4"], ["bang", "setInput1", "setInput2", "setInput3", "setInput4"]
 
   numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "bang!", "in1", "in2", "in3", "in4"
-    functionNamesStrings.push "bang", "setInput1", "setInput2", "setInput3", "setInput4"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!", "in1", "in2", "in3", "in4"], ["bang", "setInput1", "setInput2", "setInput3", "setInput4"]
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super

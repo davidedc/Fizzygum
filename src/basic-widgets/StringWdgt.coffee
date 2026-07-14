@@ -1339,15 +1339,11 @@ class StringWdgt extends Widget
   
   numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "alpha 0-100", "font size", "text"
-    functionNamesStrings.push "setAlphaScaled", "setFontSize", "setText"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["alpha 0-100", "font size", "text"], ["setAlphaScaled", "setFontSize", "setText"]
   
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "bang!", "text"
-    functionNamesStrings.push "bang", "setText"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!", "text"], ["bang", "setText"]
 
   updateTarget: ->
     @_fireConnection @text

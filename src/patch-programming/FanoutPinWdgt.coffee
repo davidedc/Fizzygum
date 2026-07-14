@@ -25,21 +25,15 @@ class FanoutPinWdgt extends Widget
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "bang!"
-    functionNamesStrings.push "bang"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!"], ["bang"]
 
   numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "bang!"
-    functionNamesStrings.push "bang"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!"], ["bang"]
 
   colorSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "bang!"
-    functionNamesStrings.push "bang"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!"], ["bang"]
 
 
   # the bang makes the node fire the current output value

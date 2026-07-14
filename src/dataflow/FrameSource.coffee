@@ -25,28 +25,14 @@
 # (Both time sources bind a scalar so the equal-value cutoff and formula arithmetic behave; unlike
 # `seconds`, a distinct `frame` value every cycle means no cutoff and the subgraph recomputes each
 # frame — the point of a per-frame cell.)
-class FrameSource
+class FrameSource extends DataflowSource
 
   # fps:0 → step() runs every cycle (the "as fast as possible" stepping branch); no synchronised /
   # lastTime bookkeeping applies to a non-positive fps.
   fps: 0
 
-  constructor: ->
-    @subscriberCount = 0
-
-  # The engine calls this from addEdge / removeEdgesInto as this source gains or loses subscriber
-  # cells. Register in the stepping loop while depended-upon, deregister at zero — every-frame ticks
-  # exist only while a `frame` cell needs them (spec §6).
-  subscriberCountChanged: (n) ->
-    @subscriberCount = n
-    if n > 0 then world?.steppingWdgts.add this else world?.steppingWdgts.delete this
-    return
-
-  # The stepping loop calls this EVERY cycle while subscribed. Mark SELF stale so the drain re-runs
-  # the dependent cells; the value is PULLED at recompute (dataflowValue), never pushed here.
-  step: ->
-    world?.dataflow?.markStale this
-    return
+  # subscriberCountChanged / step / constructor are shared verbatim with SecondsSource — see the
+  # DataflowSource base.
 
   # Pulled by the drain (pure source) and by a `frame` cell's SheetCellRecord._resolveBoundName:
   # the running frame counter (see the header for which frame a formula therefore sees).

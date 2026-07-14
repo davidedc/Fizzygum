@@ -31,30 +31,15 @@
 # SAME integer, so the cutoff stops propagation until the second actually ticks. The value is pulled
 # from the world's ONE-timestamp-per-cycle (WorldWdgt.dateOfCurrentCycleStart, set in
 # _updateTimeReferences, live throughout the drain), so every cell in a batch sees the SAME instant.
-class SecondsSource
+class SecondsSource extends DataflowSource
 
   # fps:1 → the stepping loop calls step() about once per second; synchronised to the wall-clock
   # second boundary (WorldWdgt._runChildrensStepFunction), so no per-member lastTime is needed.
   fps: 1
   synchronisedStepping: true
 
-  constructor: ->
-    @subscriberCount = 0
-
-  # The engine calls this from addEdge / removeEdgesInto as this source gains or loses subscriber
-  # cells. Register in the stepping loop while depended-upon, deregister at zero — the source ticks
-  # ONLY while something needs it (spec §6). Idempotent Set add/delete, so repeated same-count calls
-  # are harmless.
-  subscriberCountChanged: (n) ->
-    @subscriberCount = n
-    if n > 0 then world?.steppingWdgts.add this else world?.steppingWdgts.delete this
-    return
-
-  # The stepping loop calls this ~once/second while subscribed. Mark SELF stale so the next drain
-  # re-runs the dependent cells; the value is PULLED at recompute (dataflowValue), never pushed here.
-  step: ->
-    world?.dataflow?.markStale this
-    return
+  # subscriberCountChanged / step / constructor are shared verbatim with FrameSource — see the
+  # DataflowSource base.
 
   # Pulled by the drain (this is a pure source: no dataflowRecompute, so _processNode reads this) and
   # by a `seconds` cell's SheetCellRecord._resolveBoundName. dateOfCurrentCycleStart is the one

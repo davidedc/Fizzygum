@@ -247,44 +247,32 @@ class AnalogClockWdgt extends Widget
     context.restore()
 
 
-  drawHoursHand: (context, squareDim) ->
-    height = @height()
-    width = @width()
+  # Shared hand drawing. The three hands differ only in angle, stroke-width multiplier, the two
+  # length divisors (inner tail / outer tip), and colour: hours & minutes inherit the black stroke/
+  # fill set by _renderingHelper (color=nil → left untouched), the seconds hand alone sets its own
+  # red. Every op is in the same order as the old per-hand bodies, and colour is scoped by save/
+  # restore exactly as before, so the pixels are identical. (@width()/@height() are pure getters.)
+  _drawHand: (context, squareDim, angle, widthMultiplier, innerDivisor, outerDivisor, color = nil) ->
     context.save()
-    context.rotate @hoursHandAngle
-    context.lineWidth = 8 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
+    context.rotate angle
+    if color?
+      context.strokeStyle = color
+      context.fillStyle = color
+    context.lineWidth = widthMultiplier * Math.min(@width(), @height()) * @strokeSizeToClockDimensionRatio
     context.beginPath()
-    context.moveTo -squareDim/7, 0
-    context.lineTo squareDim/2, 0
+    context.moveTo -squareDim/innerDivisor, 0
+    context.lineTo squareDim/outerDivisor, 0
     context.stroke()
     context.restore()
 
+  drawHoursHand: (context, squareDim) ->
+    @_drawHand context, squareDim, @hoursHandAngle, 8, 7, 2
 
   drawMinutesHand: (context, squareDim) ->
-    height = @height()
-    width = @width()
-    context.save()
-    context.rotate @minutesHandAngle
-    context.lineWidth = 5 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
-    context.beginPath()
-    context.moveTo -squareDim/5, 0
-    context.lineTo squareDim/1.3, 0
-    context.stroke()
-    context.restore()
+    @_drawHand context, squareDim, @minutesHandAngle, 5, 5, 1.3
 
   drawSecondsHand: (context, squareDim) ->
-    height = @height()
-    width = @width()
-    context.save()
-    context.rotate @secondsHandAngle
-    context.strokeStyle = '#D40000'
-    context.fillStyle = '#D40000'
-    context.lineWidth = 6 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
-    context.beginPath()
-    context.moveTo -squareDim/5, 0
-    context.lineTo squareDim/1.3, 0
-    context.stroke()
-    context.restore()
+    @_drawHand context, squareDim, @secondsHandAngle, 6, 5, 1.3, '#D40000'
 
   drawDotInMiddleOfFace: (context, squareDim) ->
     height = @height()

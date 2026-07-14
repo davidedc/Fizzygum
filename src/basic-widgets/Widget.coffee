@@ -4115,7 +4115,12 @@ class Widget extends TreeNode
     @_settleLayoutsAfter(=> @_reFitContainer()) if @_reLayoutChildrenAndScrollbars?
   # this part is excluded from the fizzygum homepage build <<«
 
-  attach: ->
+  # Shared body of attach / attachWithHorizLayout: a menu of the plausible new parents (minus the current
+  # parent); each item invokes `newParentActionName` on the chosen widget. The two entry points differ ONLY
+  # in that action name. Ordinary widget behaviour, so a Widget method (not a global). attachWithHorizLayout
+  # keeps its homepage-exclusion markers -- this shared helper is included (attach ships), the excluded caller
+  # is stripped.
+  _attachToChosenParent: (newParentActionName) ->
     choices = world.plausibleTargetAndDestinationWidgets @
 
     # my direct parent might be in the
@@ -4128,7 +4133,7 @@ class Widget extends TreeNode
     if choicesExcludingParent.length > 0
       menu = new MenuWdgt @, target: @, title: "choose new parent:"
       choicesExcludingParent.forEach (each) =>
-        menu.addMenuItem each.toString().slice(0, 50), each, "newParentChoice", representsAWidget: true
+        menu.addMenuItem each.toString().slice(0, 50), each, newParentActionName, representsAWidget: true
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
@@ -4140,33 +4145,13 @@ class Widget extends TreeNode
       # widgets then show some kind of message.
       menu = new MenuWdgt @, target: @, title: "no widgets to attach to"
     menu.popUpAtHand()
+
+  attach: ->
+    @_attachToChosenParent "newParentChoice"
 
   # »>> this part is excluded from the fizzygum homepage build
   attachWithHorizLayout: ->
-    choices = world.plausibleTargetAndDestinationWidgets @
-
-    # my direct parent might be in the
-    # options which is silly, leave that one out
-    choicesExcludingParent = []
-    choices.forEach (each) =>
-      if each != @parent
-        choicesExcludingParent.push each
-
-    if choicesExcludingParent.length > 0
-      menu = new MenuWdgt @, target: @, title: "choose new parent:"
-      choicesExcludingParent.forEach (each) =>
-        menu.addMenuItem each.toString().slice(0, 50), each, "newParentChoiceWithHorizLayout", representsAWidget: true
-    else
-      # the ideal would be to not show the
-      # "attach" menu entry at all but for the
-      # time being it's quite costly to
-      # find the eligible widgets to attach
-      # to, so for now let's just calculate
-      # this list if the user invokes the
-      # command, and if there are no good
-      # widgets then show some kind of message.
-      menu = new MenuWdgt @, target: @, title: "no widgets to attach to"
-    menu.popUpAtHand()
+    @_attachToChosenParent "newParentChoiceWithHorizLayout"
   # this part is excluded from the fizzygum homepage build <<«
   
   toggleIsLockingToPanels: ->
@@ -4288,6 +4273,18 @@ class Widget extends TreeNode
       k++
 
     return [menuEntriesStrings, functionNamesStrings]
+
+  # Shared "append my own entries, then dedupe+sort" tail of the connect-to-target property-setter menus. Each
+  # controller's stringSetters / numericalSetters / colorSetters calls `super` (to accumulate the inherited
+  # entries), then adds its OWN entry/function-name pairs; this holds that once-copied append+dedupe tail
+  # (byte-identical across ~19 setter overrides on 9 controllers; PaletteWdgt had already localized it as
+  # addBangSetter). A sibling of deduplicateSettersAndSortByMenuEntryString / _popUpTargetPropertyMenu --
+  # deliberately on Widget (see that method's note: an INHERITED member is hidden from the inspector's default
+  # own-props view). (`super` stays in each override -- it binds to the caller's hierarchy position, not here.)
+  _appendSettersAndDedup: (menuEntriesStrings, functionNamesStrings, entries, functionNames) ->
+    menuEntriesStrings.push entries...
+    functionNamesStrings.push functionNames...
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
 
   # The shared body of every controller widget's openTargetPropertySelector (Tier H3, 2026-07-03): pop up the
   # "choose target property" menu -- one item per (label, setter) pair the caller resolved from `theTarget`'s

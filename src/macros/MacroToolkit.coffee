@@ -812,17 +812,35 @@ class MacroToolkit
 
     [vBarHandleCenter, vBarHandleCenter.translateBy new Point(0,handleCenterOffset)]
 
+  # Robustly scroll an inspector member/property `list` so `itemString`'s row lands a couple of rows
+  # BELOW the pane's top edge -- clear of both clip edges and reliably clickable -- regardless of how
+  # long the list is. It uses the REAL row height + visible pane height (not the vBar handle-fraction
+  # heuristic in calculateVertBarMovement, which maps index/(total-1) and so lands the target at the
+  # pane's BOTTOM edge for large indices; adding a single inherited member then tips it out of view and
+  # a click on the clipped row selects the wrong property). Number of scroll positions = total -
+  # visibleRows (rows you can put at the top), so aiming (index - 2) at the top puts the target 2 rows
+  # down. Robust to member-list length: the target always lands at the same safe offset.
+  scrollInspectorListItemIntoView_InputEvents: (list, itemString) ->
+    index = list.elements.indexOf itemString
+    vBar = list.vBar
+    vBarHandle = vBar.children[0]
+
+    # a currently-rendered row gives the true row height (the list shows its top rows before any scroll)
+    sampleRow = list.topWdgtSuchThat (m) -> m.text?
+    rowHeight = if sampleRow? and sampleRow.height() > 0 then sampleRow.height() else 1
+    visibleRows = Math.max 1, Math.floor(list.height() / rowHeight)
+    scrollPositions = Math.max 1, list.elements.length - visibleRows
+    topIndex = Math.max 0, Math.min(scrollPositions, index - 2)
+    scrollFraction = topIndex / scrollPositions
+
+    handleTravel = (vBar.bottom() - vBarHandle.height()) - vBar.top()
+    handleTargetCenterY = vBar.top() + Math.round(scrollFraction * handleTravel) + vBarHandle.height()/2
+    handleCurrentCenter = vBarHandle.center()
+    @syntheticEventsMouseMovePressDragRelease_InputEvents handleCurrentCenter, (new Point handleCurrentCenter.x, handleTargetCenterY)
+
   bringListItemFromTopInspectorInView_InputEvents: (listItemString) ->
     inspectorNaked = @findTopWidgetByClassNameOrClass InspectorWdgt
-    list = inspectorNaked.list
-    elements = list.elements
-
-    vBar = list.vBar
-    index = elements.indexOf listItemString
-    total = elements.length
-    [vBarCenterFromHere, vBarCenterToHere] = @calculateVertBarMovement vBar, index, total
-
-    @syntheticEventsMouseMovePressDragRelease_InputEvents vBarCenterFromHere, vBarCenterToHere
+    @scrollInspectorListItemIntoView_InputEvents inspectorNaked.list, listItemString
 
   clickOnListItemFromTopInspector_InputEvents: (listItemString, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     inspectorNaked = @findTopWidgetByClassNameOrClass InspectorWdgt

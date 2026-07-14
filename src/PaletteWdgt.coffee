@@ -70,10 +70,9 @@ class PaletteWdgt extends Widget
 
   # the three setter flavours each append the same "bang!" entry on top of the
   # ControllerMixin's list, then dedupe — factored here to kill the triplication.
+  # (The append+dedupe tail itself is Widget._appendSettersAndDedup, shared with the other controllers.)
   addBangSetter: (menuEntriesStrings, functionNamesStrings) ->
-    menuEntriesStrings.push "bang!"
-    functionNamesStrings.push "bang"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!"], ["bang"]
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings

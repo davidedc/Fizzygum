@@ -50,21 +50,15 @@ class FanoutWdgt extends Widget
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "input"
-    functionNamesStrings.push "setInput"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["input"], ["setInput"]
 
   numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "input"
-    functionNamesStrings.push "setInput"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["input"], ["setInput"]
 
   colorSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "input"
-    functionNamesStrings.push "setInput"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["input"], ["setInput"]
 
   _reLayout: (newBoundsForThisLayout) ->
 

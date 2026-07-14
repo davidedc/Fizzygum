@@ -63,9 +63,7 @@ class SimplePlainTextWdgt extends TextWdgt
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "bang!", "text"
-    functionNamesStrings.push "bang", "setText"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!", "text"], ["bang", "setText"]
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super

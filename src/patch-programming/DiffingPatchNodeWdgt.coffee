@@ -95,15 +95,11 @@ class DiffingPatchNodeWdgt extends Widget
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "bang!", "in1", "in2", "in1 hot", "in2 hot"
-    functionNamesStrings.push "bang", "setInput1", "setInput2", "setInput1Hot", "setInput2Hot"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!", "in1", "in2", "in1 hot", "in2 hot"], ["bang", "setInput1", "setInput2", "setInput1Hot", "setInput2Hot"]
 
   numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "bang!", "in1", "in2", "in1 hot", "in2 hot"
-    functionNamesStrings.push "bang", "setInput1", "setInput2", "setInput1Hot", "setInput2Hot"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!", "in1", "in2", "in1 hot", "in2 hot"], ["bang", "setInput1", "setInput2", "setInput1Hot", "setInput2Hot"]
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
