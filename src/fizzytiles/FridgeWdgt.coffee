@@ -50,7 +50,7 @@ class FridgeWdgt extends PanelWdgt
   #    |   ||   |
   #    | C |
   #    |   |
-  # 
+  #
   # A's closest magnet to the right is B, but it's not the
   # correct one, because B's closest magnet to the left is NOT A
   # (it's C).

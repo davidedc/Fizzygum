@@ -339,6 +339,41 @@ if ! $noSyntaxCheck ; then
   echo "... thin-wrap check OK"
 fi
 
+# --- build-time HYGIENE gates (ported from the retired SourceVault console tool, P2-T3 follow-up) ------
+# Three cheap line-scanner lints, each with the same --noSyntaxCheck escape hatch + explicit $? abort as
+# the gates above; all scan src/ only, so they run for every build flavour (incl. --homepage):
+#   * check-trailing-whitespace.js — no trailing whitespace after content on a line.
+#   * check-scheduled-checks.js     — no OVERDUE `# CHECK AFTER <date>` reminder (a build-dated time bomb).
+#   * check-stringified-scripts.js  — no `new ScriptWdgt """..."""` stringified-code literal in core.
+if ! $noSyntaxCheck ; then
+  echo "checking for trailing whitespace ..."
+  node ./buildSystem/check-trailing-whitespace.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: trailing-whitespace gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... trailing-whitespace check OK"
+
+  echo "checking for overdue CHECK-AFTER markers ..."
+  node ./buildSystem/check-scheduled-checks.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: scheduled-checks gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... scheduled-checks OK"
+
+  echo "checking for stringified scripts in core ..."
+  node ./buildSystem/check-stringified-scripts.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: stringified-scripts gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... stringified-scripts check OK"
+fi
+
 # --- build-time CONSTRUCTOR-BUILD gate ------------------------------------------------
 # Enforces the "all constructors settle" end-state (Topic 4 part 2): a `constructor:` body must NOT build
 # its own children inline (@add / @addNoSettle / @addMany / @_addNoSettle / … on `this`). Child-building

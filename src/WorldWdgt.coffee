@@ -2051,7 +2051,8 @@ class WorldWdgt extends PanelWdgt
 
     canvas.addEventListener "wheel", @wheelBrowserEventListener, false
 
-    # CHECK AFTER 15 Jan 2021 00:00:00 GMT
+    # (Mobile-Safari wheel-event workaround, Oct 2020. The Jan-2021 re-check reminder went
+    # unactioned 4+ yrs with no reported regression — reviewed & retained 2026-07-14.)
     # As of Oct 2020, using mouse/trackpad in
     # Mobile Safari, the wheel event is not sent.
     # See:

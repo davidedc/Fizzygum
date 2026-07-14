@@ -172,7 +172,7 @@ class InspectorWdgt extends Widget
     #
     #   a) some of these are DECLARED as part of the class that defines the object
     #   and are proprietary to the object. These are shown RED
-    # 
+    #
     #   b) some of these are proprietary to the object but are initialised by
     #   code higher in the prototype chain. These are shown GREEN
     #

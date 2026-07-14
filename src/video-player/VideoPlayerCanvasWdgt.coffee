@@ -33,10 +33,10 @@ class VideoPlayerCanvasWdgt extends CanvasWdgt
     # @fps = 5 # you can do that
     world.steppingWdgts.add @
 
-  loadVideo: (videoPath) ->    
+  loadVideo: (videoPath) ->
     @_createVideoTagAndLoadVideo videoPath
 
-  _createVideoTagAndLoadVideo: (videoPath) ->    
+  _createVideoTagAndLoadVideo: (videoPath) ->
     # how to safely dispose of a video
     # https://stackoverflow.com/a/28060352
     if @video?
@@ -90,7 +90,7 @@ class VideoPlayerCanvasWdgt extends CanvasWdgt
           # paint the black background
           @backBufferContext?.fillStyle = "black"
           @backBufferContext?.fillRect 0, 0, @width(), @height()
-          # remember the extent of the canvas 
+          # remember the extent of the canvas
           @_extentWhenPreviousBackgroundWasPainted = @extent()
 
     # paint the frame so that it is fully contained in the canvas

@@ -31,7 +31,7 @@ class Class
   # the constructor always calling "super", so constructors
   # up the chain cause the object to register itself
   # with all the superclasses.
-  # 
+  #
   # TODO this mechanism can be tested like so:
   # open AnalogClockWdgt and then from the console:
   #    window.AnalogClockWdgt.instances
@@ -44,7 +44,7 @@ class Class
   # should show empty set
   #    window.AnalogClockWdgt.__super__.constructor.instances.forEach((each) => console.log(each.constructor.name==="AnalogClockWdgt"));
   # should type all 'false'
-  # 
+  #
   # Note that only Widgets have that kind
   # of tracking and hence the existence check of
   # the registerThisInstance function

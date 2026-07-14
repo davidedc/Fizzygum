@@ -1135,7 +1135,7 @@ class LCLCodePreprocessor
 
     # the transformations above add lots of redundant
     # semicolons and spaces like so:
-    #    ...tate (-> rotate (-> box())))))))))); ;  ;   
+    #    ...tate (-> rotate (-> box())))))))))); ;  ;
     # so fixing that
     code = code.replace(/\);([; ]*)/g, "); ")
 
@@ -1376,22 +1376,22 @@ class LCLCodePreprocessor
 
   
   # Errors cases, subdivided by number of colors involved
-  # 
+  #
   # --- 0 colors
   # stroke stroke -> redundant stroke
   # fill fill -> redundant fill
-  # 
+  #
   # --- 1 color
   # stroke color1 stroke -> redundant stroke
   # fill color1 fill -> redundant fill
   # noColor fill color stroke noColor -> missing color
-  # 
+  #
   # ---2 colors
   # noFill/Stroke color color noFill/Stroke -> redundant color
   # fill color color noFill/Stroke -> redundant color
   # noFill/Stroke color color fill -> redundant color
   # noFill/Stroke color fill colour noFill/Stroke
-  # 
+  #
   # ----3 colors
   # color stroke/fill color color
   # color color stroke/fill color
@@ -1518,7 +1518,7 @@ class LCLCodePreprocessor
   #   rotate 3, a 1 box 3, 4, a 1
   # so it's translated in
   #   a = (val) -> val * 2
-  #   rotate 3, (a 1), -> box 3, 4, a 1 
+  #   rotate 3, (a 1), -> box 3, 4, a 1
   # same for
   #   rotate 3, wave wave 2 box 3, 4
   # ...turned into

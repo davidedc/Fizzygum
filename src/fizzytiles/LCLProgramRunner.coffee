@@ -48,7 +48,7 @@ class LCLProgramRunner
   # after "run", so that
   #   run <box> 2
   # becomes
-  #   
+  #
   run: (functionToBeRun, chainedFunction) ->
     # in the case "run <box> 2" the box is
     # already painted here.

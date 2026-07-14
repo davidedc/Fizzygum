@@ -118,7 +118,7 @@ class Macro
 
   linkTo: (macroSubroutines) ->
 
-    theWholeCode = @_body    
+    theWholeCode = @_body
     # do the same for all the macroSubroutines
     for eachMacro from macroSubroutines
       theWholeCode += "\n\n" + eachMacro._body

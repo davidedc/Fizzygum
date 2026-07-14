@@ -109,20 +109,20 @@ extractDependenciesFromSource = ->
 # In Javascript when you define a bunch of classes/mixins (just define them,
 # before even running/instantiating/invoking them in any way) you have to
 # define them in _some_ order.
-# 
+#
 # There are the three rules that apply to us:
 #  1. To extend a class A, A must have been defined first.
 #  2. if you augment a class with a mixin A, the mixin A must have been
 #     defined first.
 #  3. if a class defines its fields (static or non-static) values mentioning
 #     another class A, then A must have been defined first.
-# 
+#
 # If you don't follow these rules, the definitions will reference unknown
 # needed things (classes, mixins) and there will be an error.
-# 
+#
 # Once the definitions happen in the right order, all definitions are ready
 # and classes/mixins can then reference each other freely at "run" time.
-# 
+#
 # TODO we should check that we have some sort of error/communication when
 # there are circular dependencies or missing parts
 

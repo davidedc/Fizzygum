@@ -947,9 +947,9 @@ class MacroToolkit
     macroSubroutines.add Macro.fromString """
       bringInViewAndClickOnListItemFromTopInspector_InputEvents_Macro = (whichItem) ->
         @bringListItemFromTopInspectorInView_InputEvents whichItem
-        yield "waitNoInputsOngoing" 
+        yield "waitNoInputsOngoing"
         @clickOnListItemFromTopInspector_InputEvents whichItem
-        yield "waitNoInputsOngoing" 
+        yield "waitNoInputsOngoing"
     """
 
     macroSubroutines.add Macro.fromString """

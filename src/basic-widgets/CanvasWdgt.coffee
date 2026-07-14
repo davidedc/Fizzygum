@@ -2,7 +2,7 @@
 # and event handling.
 # Also I always use a canvas to retain my graphical representation and respond
 # to the HTML5 commands.
-# 
+#
 # "container"/"contained" scenario going on.
 
 class CanvasWdgt extends PanelWdgt

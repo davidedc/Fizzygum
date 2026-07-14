@@ -450,7 +450,7 @@ class CaretWdgt extends BlinkerWdgt
       #    It's nominally "functional" to only jump to text changes,
       #    but it's quite unnatural, it's not how undos work
       #    in real editors.
-      # 
+      #
       # In the "normal" case of continuous typing this
       # would be indeed redundant, HOWEVER we avoid such
       # redundancy, because the sequences of:

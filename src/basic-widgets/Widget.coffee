@@ -3240,7 +3240,7 @@ class Widget extends TreeNode
   # in case we copy a widget, if the original was receiving
   # keyboard events, then we have to add the copy too.
   alignCopiedWidgetToKeyboardEventsReceiversSet: (copiedWidget) ->
-    if world.keyboardEventsReceivers.has @ 
+    if world.keyboardEventsReceivers.has @
       world.keyboardEventsReceivers.add copiedWidget
 
   # note that the entire copying mechanism

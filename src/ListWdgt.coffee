@@ -39,7 +39,7 @@ class ListWdgt extends ScrollPanelWdgt
     #    the given format category (color, bold, italic).
     #    If no condition is met, the default format (color black, non-bold,
     #    non-italic) will be assigned.
-    #    
+    #
     #    An example of how to use formats can be found in the InspectorWdgt's
     #    "markOwnProperties" mechanism.
     #
