@@ -62,16 +62,8 @@ class ErrorsLogViewerWdgt extends Widget
   _buildAndConnectChildrenNoSettle: ->
 
     @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
-    @tempPromptEntryField.disableDrops()
-    @tempPromptEntryField.contents.disableDrops()
-    @tempPromptEntryField.color = Color.WHITE
-
+    @tempPromptEntryField.configureAsMonoTextPanel true
     @textWidget = @tempPromptEntryField.textWdgt
-    @textWidget.backgroundColor = Color.TRANSPARENT
-    @textWidget._setFontNameNoSettle nil, nil, @textWidget.monoFontStack
-    @textWidget.isEditable = true
-    @textWidget.enableSelecting()
-
     @_addNoSettle @tempPromptEntryField
 
     # buttons -------------------------------

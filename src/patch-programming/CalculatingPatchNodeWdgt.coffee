@@ -1,10 +1,10 @@
-class CalculatingPatchNodeWdgt extends Widget
+class CalculatingPatchNodeWdgt extends PatchNodeWdgt
 
-  @augmentWith ControllerMixin
+  # shared dataflow-node behaviour (dataflow protocol, connect-to-target menu, setter menus, _reLayout
+  # scaffold, padding, and the input1/input2/output/textWidget preamble) lives on PatchNodeWdgt.
 
   tempPromptEntryField: nil
   defaultFormulaBoxContents: nil
-  textWidget: nil
 
   formulaTextBoxLabel: nil
   outputTextBoxLabel: nil
@@ -12,10 +12,6 @@ class CalculatingPatchNodeWdgt extends Widget
   outputTextArea: nil
   outputTextAreaText: nil
 
-  output: nil
-
-  input1: nil
-  input2: nil
   input3: nil
   input4: nil
 
@@ -26,18 +22,6 @@ class CalculatingPatchNodeWdgt extends Widget
   setInput2IsConnected: false
   setInput3IsConnected: false
   setInput4IsConnected: false
-
-  # the external padding is the space between the edges
-  # of the container and all of its internals. The reason
-  # you often set this to zero is because windows already put
-  # contents inside themselves with a little padding, so this
-  # external padding is not needed. Useful to keep it
-  # separate and know that it's working though.
-  externalPadding: 0
-  # the internal padding is the space between the internal
-  # components. It doesn't necessarily need to be equal to the
-  # external padding
-  internalPadding: 5
 
   constructor: (@defaultFormulaBoxContents = "# function with formula here e.g.\n# (in1) -> in1 * 2\n") ->
     super new Point 200,400
@@ -62,28 +46,6 @@ class CalculatingPatchNodeWdgt extends Widget
     @input4 = Number(newvalue)
     @updateTarget()
 
-  # the bang makes the node fire the current output value
-  bang: (newvalue) ->
-    @updateTarget true
-
-  openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    @_popUpTargetPropertyMenu theTarget, theTarget.numericalSetters()
-
-  # any input change (or a bang) marks me STALE — the drain recomputes me via dataflowRecompute (which pulls
-  # ALL my stored inputs) then delivers @output along my out-edge. This replaces the legacy multi-input
-  # FRESHNESS GATE (the allConnectedInputsAreFresh deadlock where two independently-sourced inputs never share
-  # a token, spec §8). A bang marks me forced; markStale is echo-suppressed while the engine is applying an
-  # input into me (setInput1..4's own updateTarget tail).
-  updateTarget: (fireBecauseBang) ->
-    world.dataflow.markStale @, (fireBecauseBang is true)
-    return
-
-  fireOutputToTarget: ->
-    @_fireConnection @output
-
-  reactToTargetConnection: ->
-    @fireOutputToTarget()
-
   recalculateOutput: ->
     if @textWidget.text != ""
       @evaluateString "@functionFromCompiledCode = " + @textWidget.text
@@ -91,56 +53,16 @@ class CalculatingPatchNodeWdgt extends Widget
       @output = @functionFromCompiledCode?.call world, @input1, @input2, @input3, @input4
       @outputTextAreaText._setTextConnector @output + ""
 
-  # ── dataflow node protocol (spec §8) ─────────────────────────────────────────────────────
-  # A calc node is a COMPUTING node: recompute = run the user formula over the stored inputs (recalculateOutput,
-  # which also refreshes the on-node output display), handing the engine the fresh @output. dataflowValue lets a
-  # consumer PULL @output along my out-edge and lets the cutoff compare it — a plain Widget.exportedValue would
-  # read my chrome text, not the computed output.
-  dataflowRecompute: ->
-    @recalculateOutput()
-    @output
-
-  dataflowValue: -> @output
-
-
-  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!", "in1", "in2", "in3", "in4"], ["bang", "setInput1", "setInput2", "setInput3", "setInput4"]
-
-  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!", "in1", "in2", "in3", "in4"], ["bang", "setInput1", "setInput2", "setInput3", "setInput4"]
-
-  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
-    super
-    @_addTargetConnectionMenuEntries menu, "numerical"
-
-
-  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  _buildAndConnectChildren: ->
-    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
-
   _buildAndConnectChildrenNoSettle: ->
 
     @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultFormulaBoxContents, false, 5
-    @tempPromptEntryField.disableDrops()
-    @tempPromptEntryField.contents.disableDrops()
-    @tempPromptEntryField.color = Color.WHITE
+    @tempPromptEntryField.configureAsMonoTextPanel true
     @textWidget = @tempPromptEntryField.textWdgt
-    @textWidget.backgroundColor = Color.TRANSPARENT
-    @textWidget._setFontNameNoSettle nil, nil, @textWidget.monoFontStack
-    @textWidget.isEditable = true
-    @textWidget.enableSelecting()
     @_addNoSettle @tempPromptEntryField
 
     @outputTextArea = new SimplePlainTextScrollPanelWdgt "", false, 5
-    @outputTextArea.disableDrops()
-    @outputTextArea.contents.disableDrops()
-    @outputTextArea.color = Color.WHITE
+    @outputTextArea.configureAsMonoTextPanel false
     @outputTextAreaText = @outputTextArea.textWdgt
-    @outputTextAreaText.backgroundColor = Color.TRANSPARENT
-    @outputTextAreaText._setFontNameNoSettle nil, nil, @outputTextAreaText.monoFontStack
-    @outputTextAreaText.isEditable = false
     @_addNoSettle @outputTextArea
 
 
@@ -157,27 +79,8 @@ class CalculatingPatchNodeWdgt extends Widget
 
     @_invalidateLayout()
 
-  _reLayout: (newBoundsForThisLayout) ->
-
-    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
-
-    if @_handleCollapsedStateShouldWeReturn() then return
-
-    # Apply my own bounds FIRST, so the children laid out below read the FINAL frame and
-    # not the previous pass's (else they lag one cadence on resize -- see InspectorWdgt._reLayout /
-    # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
-    @_applyBounds newBoundsForThisLayout
-
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of the inspector are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+  # subclass hook for PatchNodeWdgt::_reLayout — position my own children within the (already-applied) frame.
+  _layOutNodeContents: ->
 
     availableHeight = @height() - 2 * @externalPadding - 3 * @internalPadding - 2 * 15
     text1Height = Math.round(availableHeight * 2/3)
@@ -200,11 +103,3 @@ class CalculatingPatchNodeWdgt extends Widget
     if @outputTextArea.parent == @
       @outputTextArea._applyMoveTo new Point @left() + @externalPadding, textBottom + @internalPadding + 15 + @internalPadding
       @outputTextArea._applyExtent new Point @width() - 2 * @externalPadding, text2Height
-
-
-    world.maybeEnableTrackChanges()
-    @fullChanged()
-
-    super
-    @_markLayoutAsFixed()
-

@@ -1,17 +1,12 @@
 # this file is excluded from the fizzygum homepage build
 
-class DiffingPatchNodeWdgt extends Widget
+class DiffingPatchNodeWdgt extends PatchNodeWdgt
 
-  @augmentWith ControllerMixin
+  # shared dataflow-node behaviour (dataflow protocol, connect-to-target menu, setter menus, _reLayout
+  # scaffold, padding, and the input1/input2/output/textWidget preamble) lives on PatchNodeWdgt.
 
   tempPromptEntryField: nil
   defaultContents: nil
-  textWidget: nil
-
-  output: nil
-
-  input1: nil
-  input2: nil
 
   # we need to keep track of which inputs are
   # connected because we wait for those to be
@@ -20,18 +15,6 @@ class DiffingPatchNodeWdgt extends Widget
   setInput2IsConnected: false
   setInput1HotIsConnected: false
   setInput2HotConnected: false
-
-  # the external padding is the space between the edges
-  # of the container and all of its internals. The reason
-  # you often set this to zero is because windows already put
-  # contents inside themselves with a little padding, so this
-  # external padding is not needed. Useful to keep it
-  # separate and know that it's working though.
-  externalPadding: 0
-  # the internal padding is the space between the internal
-  # components. It doesn't necessarily need to be equal to the
-  # external padding
-  internalPadding: 5
 
   constructor: (@defaultContents = "") ->
     super new Point 200,400
@@ -58,111 +41,34 @@ class DiffingPatchNodeWdgt extends Widget
     @input2 = newvalue
     @updateTarget()
 
-  # the bang makes the node fire the current output value
-  bang: (newvalue) ->
-    @updateTarget true
-
-  openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    @_popUpTargetPropertyMenu theTarget, theTarget.numericalSetters()
-
-  # any input change (or a bang) marks me STALE — the drain recomputes me via dataflowRecompute (pulling both
-  # stored inputs) then delivers @output along my out-edge. This replaces the legacy freshness gate (the
-  # allConnectedInputsAreFresh deadlock, spec §8); the "hot input" one-input-fires mode collapses into this
-  # engine default (any input fires, all inputs pulled). A bang marks me forced.
-  updateTarget: (fireBecauseBang) ->
-    world.dataflow.markStale @, (fireBecauseBang is true)
-    return
-
-  fireOutputToTarget: ->
-    @_fireConnection @output
-
-  reactToTargetConnection: ->
-    @fireOutputToTarget()
-
   recalculateOutput: ->
     @output = @formattedDiff @input1, @input2
     @textWidget._setTextConnector @output
 
-  # ── dataflow node protocol (spec §8) ─────────────────────────────────────────────────────
-  # A COMPUTING node: recompute = re-diff the stored inputs (recalculateOutput refreshes the on-node display too),
-  # handing the engine the fresh @output; dataflowValue lets a consumer PULL @output and the cutoff compare it.
-  dataflowRecompute: ->
-    @recalculateOutput()
-    @output
-
-  dataflowValue: -> @output
-
-
-  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!", "in1", "in2", "in1 hot", "in2 hot"], ["bang", "setInput1", "setInput2", "setInput1Hot", "setInput2Hot"]
-
-  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!", "in1", "in2", "in1 hot", "in2 hot"], ["bang", "setInput1", "setInput2", "setInput1Hot", "setInput2Hot"]
-
-  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
-    super
-    @_addTargetConnectionMenuEntries menu, "numerical"
-
-
-  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  _buildAndConnectChildren: ->
-    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+  # Diffing's inputs differ from the default in1..in4 (it has in1/in2 + hot inputs), so it overrides ONLY this
+  # data hook; PatchNodeWdgt::stringSetters / numericalSetters (and their `super`-into-Widget chaining) stay
+  # shared and unchanged.
+  _inputSetterMenuEntries: ->
+    [["bang!", "in1", "in2", "in1 hot", "in2 hot"], ["bang", "setInput1", "setInput2", "setInput1Hot", "setInput2Hot"]]
 
   _buildAndConnectChildrenNoSettle: ->
 
     @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
-    @tempPromptEntryField.disableDrops()
-    @tempPromptEntryField.contents.disableDrops()
-    @tempPromptEntryField.color = Color.WHITE
-
+    @tempPromptEntryField.configureAsMonoTextPanel true
     @textWidget = @tempPromptEntryField.textWdgt
-    @textWidget.backgroundColor = Color.TRANSPARENT
-    @textWidget._setFontNameNoSettle nil, nil, @textWidget.monoFontStack
-    @textWidget.isEditable = true
-    @textWidget.enableSelecting()
-
     @_addNoSettle @tempPromptEntryField
 
 
     @_invalidateLayout()
 
-  _reLayout: (newBoundsForThisLayout) ->
-
-    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
-
-    if @_handleCollapsedStateShouldWeReturn() then return
-
-    # Apply my own bounds FIRST, so the children laid out below read the FINAL frame and
-    # not the previous pass's (else they lag one cadence on resize -- see InspectorWdgt._reLayout /
-    # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
-    @_applyBounds newBoundsForThisLayout
-
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of the inspector are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+  # subclass hook for PatchNodeWdgt::_reLayout — position my own children within the (already-applied) frame.
+  _layOutNodeContents: ->
 
     textHeight = @height() - 2 * @externalPadding
 
     if @tempPromptEntryField.parent == @
       @tempPromptEntryField._applyMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
       @tempPromptEntryField._applyExtent new Point @width() - 2 * @externalPadding, textHeight
-
-
-
-    world.maybeEnableTrackChanges()
-    @fullChanged()
-
-    super
-    @_markLayoutAsFixed()
 
   # Simple Diff function
   # (C) Paul Butler 2008 <http://www.paulbutler.org/>
@@ -222,4 +128,3 @@ class DiffingPatchNodeWdgt extends Widget
           '+': ((x) -> '+(' + x + ')'),
           '-': ((x) -> '-(' + x + ')')
       ((con[a])(b.join ' ') for [a, b] in @stringDiff(before, after)).join ' '
-
