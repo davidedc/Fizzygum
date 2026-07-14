@@ -1,12 +1,6 @@
 class ExampleFunctionPlotWdgt extends GraphsPlotsChartsWdgt
 
-  graphNumber: 1
-  drawOnlyPartOfBoundingRect: false
-
-  constructor: (@drawOnlyPartOfBoundingRect)->
-    super()
-    @fps = 2
-    world.steppingWdgts.add @
+  fps: 2
 
   colloquialName: ->
     "Function plot"

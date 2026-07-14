@@ -1,12 +1,6 @@
 class ExampleBarPlotWdgt extends GraphsPlotsChartsWdgt
 
-  graphNumber: 1
-  drawOnlyPartOfBoundingRect: false
-
-  constructor: (@drawOnlyPartOfBoundingRect)->
-    super()
-    @fps = 0.5
-    world.steppingWdgts.add @
+  fps: 0.5
 
   colloquialName: ->
     "Bar plot"

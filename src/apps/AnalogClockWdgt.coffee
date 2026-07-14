@@ -135,6 +135,18 @@ class AnalogClockWdgt extends Widget
     @minutesHandAngle = Math.PI / 30 * min + Math.PI / 1800 * sec
     @secondsHandAngle = sec * Math.PI / 30
 
+  # The shared clock-face transform: recentre to the clock's middle, scale to 0.9,
+  # rotate so 12 o'clock points up, and set the black stroke. Used by both the live
+  # _renderingHelper and the cached _renderStaticFace so the two stay pixel-identical
+  # (the C1 face-buffer byte-identity invariant).
+  _applyFaceTransform: (context) ->
+    width = @width()
+    height = @height()
+    context.translate width/2, height/2
+    context.scale 0.9, 0.9
+    context.rotate -Math.PI / 2
+    context.strokeStyle = Color.BLACK.toString()
+
   _renderingHelper: (context, color, appliedShadow) ->
     height = @height()
     width = @width()
@@ -147,11 +159,7 @@ class AnalogClockWdgt extends Widget
 
     squareDim = Math.min width/2, height/2
 
-    context.translate width/2, height/2
-    context.scale 0.9, 0.9
-
-    context.rotate -Math.PI / 2
-    context.strokeStyle = Color.BLACK.toString()
+    @_applyFaceTransform context
     context.fillStyle = Color.WHITE.toString()
     context.lineWidth = 6 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
     context.lineCap = 'round'
@@ -213,10 +221,7 @@ class AnalogClockWdgt extends Widget
     width = @width()
     squareDim = Math.min width/2, height/2
 
-    context.translate width/2, height/2
-    context.scale 0.9, 0.9
-    context.rotate -Math.PI / 2
-    context.strokeStyle = Color.BLACK.toString()
+    @_applyFaceTransform context
     context.lineCap = 'round'
 
     # hour face ticks

@@ -1,13 +1,6 @@
 class ExampleScatterPlotWdgt extends GraphsPlotsChartsWdgt
 
-
-  graphNumber: 1
-  drawOnlyPartOfBoundingRect: false
-
-  constructor: (@drawOnlyPartOfBoundingRect)->
-    super()
-    @fps = 1
-    world.steppingWdgts.add @
+  fps: 1
 
   colloquialName: ->
     "Scatter plot"

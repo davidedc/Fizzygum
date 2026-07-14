@@ -3,11 +3,13 @@ class GraphsPlotsChartsWdgt extends Widget
   @augmentWith KeepsRatioWhenInVerticalStackMixin, @name
 
   drawOnlyPartOfBoundingRect: false
+  graphNumber: 1
 
   constructor: (@drawOnlyPartOfBoundingRect)->
     super()
     @setColor Color.create 255, 125, 125
     @_applyExtent new Point 200, 200
+    world.steppingWdgts.add @
 
   # true while a SystemTest replays with animations-pacing control on -- animated widgets must then
   # render a FIXED, deterministic frame (mirrors AnalogClockWdgt._calculateHandsAngles, which pins
@@ -19,7 +21,8 @@ class GraphsPlotsChartsWdgt extends Widget
   # The example plots animate by advancing @graphNumber each step (each concrete plot's
   # _renderingHelper seeds its RNG off @graphNumber). Freeze that advance under replay so the plot
   # renders a fixed frame. Subclasses that animate differently (Example3DPlotWdgt, via @currentAngle)
-  # override step() but reuse the guard above. (Concrete 2D plots supply the @graphNumber field.)
+  # override step() but reuse the guard above. (@graphNumber is declared on this base; each concrete
+  # plot supplies only its own @fps and _renderingHelper — the shared ctor adds them to steppingWdgts.)
   step: ->
     @graphNumber++ unless @_animationFrozenForDeterministicReplay()
     @changed()
