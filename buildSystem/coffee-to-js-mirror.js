@@ -2,7 +2,9 @@
 // .js files, for tools that analyze JavaScript (currently: find_similar_code.sh's
 // structural-duplication scan via jsinspect; see docs/duplicated-code-detection.md).
 //
-// Usage:  node buildSystem/coffee-to-js-mirror.js <outDir>     (run from the Fizzygum repo root)
+// Usage:  node buildSystem/coffee-to-js-mirror.js <outDir> [srcRoot]   (run from the Fizzygum repo root)
+//         srcRoot defaults to this repo's src/; pass e.g. ../Fizzygum-tests/Automator-and-test-harness-src
+//         to mirror another CoffeeScript tree (same CS1 + __SUPER__ + preamble-strip treatment).
 //
 // Why CoffeeScript 1 (the `coffeescript-v1` npm-aliased devDependency), not the ^2.7.0 one:
 // the sources use CS1 idioms (notably bare `super`) that the bundled IN-BROWSER compiler
@@ -36,7 +38,7 @@ if (!outDir) {
   process.exit(2);
 }
 
-const srcRoot = path.join(__dirname, '..', 'src');
+const srcRoot = process.argv[3] || path.join(__dirname, '..', 'src');
 
 // CS1 emits these helper definitions verbatim at the top of any file that needs them.
 const PREAMBLE_HELPERS = [
