@@ -481,26 +481,7 @@ class TextWdgt extends StringWdgt
     backBuffer.width = @width() * ceilPixelRatio
     backBuffer.height = @height() * ceilPixelRatio
 
-    backBufferContext.useLogicalPixelsUntilRestore()
-    backBufferContext.font = @buildCanvasFontProperty()
-    backBufferContext.textAlign = "left"
-    backBufferContext.textBaseline = "bottom"
-
-    # paint the background so we have a better sense of
-    # where the text is fitting into.
-    # paintRectangle here is passed logical pixels
-    # rather than actual pixels, contrary to how it's used
-    # most other places. This is because it's inside
-    # the scope of the "useLogicalPixelsUntilRestore()".
-    if @backgroundColor
-      backBufferContext.save()
-      backBufferContext.fillStyle = @backgroundColor.toString()
-      backBufferContext.globalAlpha = @backgroundTransparency
-      backBufferContext.fillRect  0,
-          0,
-          Math.round(@width()),
-          Math.round(@height())
-      backBufferContext.restore()
+    @_prepareTextBufferContext backBufferContext
 
     textVerticalPosition = @textVerticalPosition contentHeight
 
@@ -526,21 +507,11 @@ class TextWdgt extends StringWdgt
       backBufferContext.fillText (@eliminateInvisibleCharacter line), x, y + textVerticalPosition
 
       # header line
-      # TODO string2 has very similar code, can be factored-out
-      # paying attention that in string2 some variables with the same
-      # name as here actually have slightly different meaning
+      # NB the same-named locals mean slightly different things here than in the
+      # StringWdgt call site (one wrapped line vs the whole fitting line), so only
+      # the drawing is shared — the geometry is computed here and passed in.
       if @isHeaderLine and @wrappedLines.length <= 1
-        heightOfText = @fontHeight @fittingFontSize
-        textHorizontalPosition = x
-        textVertPosition = y + textVerticalPosition
-        widthOfText = width
-        backBufferContext.strokeStyle = (Color.create 198, 198, 198).toString()
-        backBufferContext.beginPath()
-        backBufferContext.moveTo 0, textVertPosition - heightOfText / 2
-        backBufferContext.lineTo textHorizontalPosition - 5, textVertPosition - heightOfText / 2
-        backBufferContext.moveTo textHorizontalPosition + widthOfText + 5, textVertPosition - heightOfText / 2
-        backBufferContext.lineTo @width(), textVertPosition - heightOfText / 2
-        backBufferContext.stroke()
+        @_drawHeaderUnderline backBufferContext, (y + textVerticalPosition), (@fontHeight @fittingFontSize), x, width
 
     @drawSelection backBufferContext
 
