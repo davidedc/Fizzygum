@@ -1,18 +1,5 @@
 class CopyInputEvent extends ClipboardInputEvent
 
-  # cut and copy implementations are the same
-  @fromBrowserEvent: (event, isSynthetic, time) ->
-    # see https://developer.mozilla.org/en-US/docs/Web/API/ClipboardEvent
-
-    selectedText = ""
-    if world.caret
-      selectedText = world.caret.target.selection()
-      if event?.clipboardData
-        event.preventDefault()
-        setStatus = event.clipboardData.setData "text/plain", selectedText
-
-      if window.clipboardData
-        event.returnValue = false
-        setStatus = window.clipboardData.setData "Text", selectedText
-
-    new @ selectedText, isSynthetic, time
+  # Copy is Cut without the processEvent side-effect: the clipboard write already
+  # happened in the inherited @fromBrowserEvent (on ClipboardInputEvent), so Copy
+  # needs no processEvent — InputEvent's empty default is correct.

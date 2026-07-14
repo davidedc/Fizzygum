@@ -16,3 +16,24 @@ class ClipboardInputEvent extends InputEvent
 
   constructor: (@text, isSynthetic, time) ->
     super isSynthetic, time
+
+  # Cut and copy capture the selection identically, so this lives here on the
+  # base and is inherited by CutInputEvent and CopyInputEvent (which add only
+  # their own processEvent). PasteInputEvent overrides it (it READS the
+  # clipboard instead), so this base flavour never reaches paste. `new @`
+  # constructs the actual subclass the static was invoked on.
+  @fromBrowserEvent: (event, isSynthetic, time) ->
+    # see https://developer.mozilla.org/en-US/docs/Web/API/ClipboardEvent
+
+    selectedText = ""
+    if world.caret
+      selectedText = world.caret.target.selection()
+      if event?.clipboardData
+        event.preventDefault()
+        setStatus = event.clipboardData.setData "text/plain", selectedText
+
+      if window.clipboardData
+        event.returnValue = false
+        setStatus = window.clipboardData.setData "Text", selectedText
+
+    new @ selectedText, isSynthetic, time

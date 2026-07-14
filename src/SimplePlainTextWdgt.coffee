@@ -85,12 +85,7 @@ class SimplePlainTextWdgt extends TextWdgt
     menu.removeMenuItem "⍿ align middle"
     menu.removeMenuItem "↓ align bottom"
 
-    menu.addLine()
-    if world.isIndexPage
-      menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: "connect to\nanother widget"
-    else
-      menu.addMenuItem "set target", @, "openTargetSelector", toolTip: ("choose another widget\nwhose numerical property\n will be" + " controlled by this one")
-    @addFiresPerEventMenuEntry menu
+    @_addTargetConnectionMenuEntries menu, "numerical"
 
     if @_amIDirectlyInsideScrollPanelWdgt()
       # the caret is a world singleton; was `!(m instanceof CaretWdgt)` (type-test-elimination campaign)

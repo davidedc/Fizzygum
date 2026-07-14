@@ -125,12 +125,7 @@ class RegexSubstitutionPatchNodeWdgt extends Widget
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
-    menu.addLine()
-    if world.isIndexPage
-      menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: "connect to\nanother widget"
-    else
-      menu.addMenuItem "set target", @, "openTargetSelector", toolTip: ("choose another widget\nwhose numerical property\n will be" + " controlled by this one")
-    @addFiresPerEventMenuEntry menu
+    @_addTargetConnectionMenuEntries menu, "numerical"
 
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).

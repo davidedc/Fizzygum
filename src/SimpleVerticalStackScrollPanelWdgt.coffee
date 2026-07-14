@@ -28,14 +28,7 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
     if @contents?
       childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets @contents
 
-    if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
-      menu.addLine()
-      if !@dragsDropsAndEditingEnabled
-        menu.addMenuItem "enable editing", @, "enableDragsDropsAndEditing", toolTip: "lets you drag content in and out"
-      else
-        menu.addMenuItem "disable editing", @, "disableDragsDropsAndEditing", toolTip: "prevents dragging content in and out"
-
-    menu.removeConsecutiveLines()
+    @_addEditingLockMenuEntries menu, childrenNotHandlesNorCarets
 
   # Bubble enable/disable-editing up to my editing-coordinating parent if it is one
   # (was `@parent instanceof SimpleDocumentWdgt`), otherwise do the local Widget work

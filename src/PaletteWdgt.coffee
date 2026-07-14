@@ -112,12 +112,7 @@ class PaletteWdgt extends Widget
   # palette menu:
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
-    menu.addLine()
-    if world.isIndexPage
-      menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: "connect to\nanother widget"
-    else
-      menu.addMenuItem "set target", @, "openTargetSelector", toolTip: ("choose another widget\nwhose color property\n will be" + " controlled by this one")
-    @addFiresPerEventMenuEntry menu
+    @_addTargetConnectionMenuEntries menu, "color"
 
   # openTargetSelector: -> taken from the ControllerMixin
 

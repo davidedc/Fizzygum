@@ -498,7 +498,31 @@ class Widget extends TreeNode
 
   closeFromContainerWindow: (containerWindow) ->
     containerWindow.close()
-  
+
+  # The window title-bar "edit" (pencil) button announces its press to the window's
+  # contents (WindowWdgt.editButtonInBarPressed -> @contents.editButtonPressedFromWindowBar?()).
+  # The button is only shown when the contents set providesAmenitiesForEditing, which is set
+  # ONLY by PanelWdgt / StretchableEditableWdgt / SimpleDocumentWdgt -- the exact three
+  # classes that shared this body verbatim -- so it lives here on the base.
+  editButtonPressedFromWindowBar: ->
+    if @dragsDropsAndEditingEnabled
+      @disableDragsDropsAndEditing @
+    else
+      @enableDragsDropsAndEditing @
+
+  # The shared "enable/disable editing" lock menu entry appended by the content-locking
+  # containers (StretchableWidgetContainerWdgt, StretchablePanelWdgt, StretchableEditableWdgt,
+  # SimpleDocumentWdgt, SimpleVerticalStackScrollPanelWdgt). The children list varies by
+  # container (the scroll panel sources it from @contents), so it is passed in.
+  _addEditingLockMenuEntries: (menu, childrenNotHandlesNorCarets) ->
+    if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
+      menu.addLine()
+      if !@dragsDropsAndEditingEnabled
+        menu.addMenuItem "enable editing", @, "enableDragsDropsAndEditing", toolTip: "lets you drag content in and out"
+      else
+        menu.addMenuItem "disable editing", @, "disableDragsDropsAndEditing", toolTip: "prevents dragging content in and out"
+    menu.removeConsecutiveLines()
+
   # Widgets destroying ======
   # this is different from a widget being closed/deleted
   # when a widget is destroyed, it's removed from the stepping

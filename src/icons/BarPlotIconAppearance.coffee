@@ -8,17 +8,7 @@ class BarPlotIconAppearance extends IconAppearance
     iconColorString = @_iconColorString()
 
     #// axes Drawing
-    context.beginPath()
-    context.moveTo 7, 8
-    context.lineTo 11.25, 8
-    context.lineTo 11.25, 88.76
-    context.lineTo 92, 88.76
-    context.lineTo 92, 93
-    context.lineTo 7, 93
-    context.lineTo 7, 8
-    context.closePath()
-    context.fillStyle = iconColorString
-    context.fill()
+    @_paintPlotAxes context, iconColorString
     #// bars
     #// bar 5 Drawing
     context.beginPath()

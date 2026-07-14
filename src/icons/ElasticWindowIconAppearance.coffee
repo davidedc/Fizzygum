@@ -8,27 +8,9 @@ class ElasticWindowIconAppearance extends IconAppearance
     iconColorString = @_iconColorString()
 
     #// Oval Drawing
-    @oval context, 11, 11, 6, 6
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Oval 2 Drawing
-    @oval context, 22, 11, 6, 6
-    context.fillStyle = iconColorString
-    context.fill()
-    #// window bar bottom Drawing
-    context.beginPath()
-    context.moveTo 5, 24
-    context.lineTo 91, 24
-    context.strokeStyle = iconColorString
-    context.lineWidth = 4
-    context.stroke()
-    #// window border Drawing
-    context.beginPath()
-    context.rect 4, 4, 88, 88
-    context.strokeStyle = iconColorString
-    context.lineWidth = 3.5
-    context.lineJoin = 'round'
-    context.stroke()
+    @_paintWindowTitleDots context, iconColorString
+    #// window frame
+    @_paintWindowFrame context, iconColorString
     #// Group 4
     #// Bezier 20 Drawing
     context.beginPath()

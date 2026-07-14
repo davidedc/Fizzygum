@@ -177,9 +177,3 @@ class PanelWdgt extends Widget
     @children.forEach (m) =>
       m._moveWithin @
 
-  editButtonPressedFromWindowBar: ->
-    if @dragsDropsAndEditingEnabled
-      @disableDragsDropsAndEditing @
-    else
-      @enableDragsDropsAndEditing @
-

@@ -132,12 +132,6 @@ class StretchableEditableWdgt extends Widget
     else
       containerWindow.close()
 
-  editButtonPressedFromWindowBar: ->
-    if @dragsDropsAndEditingEnabled
-      @disableDragsDropsAndEditing @
-    else
-      @enableDragsDropsAndEditing @
-
   _constrainToRatio: ->
     if @layoutSpecDetails?
       @layoutSpecDetails.canSetHeightFreely = false
@@ -237,14 +231,4 @@ class StretchableEditableWdgt extends Widget
   # worth factoring it out as a mixin?
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
-
-    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
-
-    if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
-      menu.addLine()
-      if !@dragsDropsAndEditingEnabled
-        menu.addMenuItem "enable editing", @, "enableDragsDropsAndEditing", toolTip: "lets you drag content in and out"
-      else
-        menu.addMenuItem "disable editing", @, "disableDragsDropsAndEditing", toolTip: "prevents dragging content in and out"
-
-    menu.removeConsecutiveLines()
+    @_addEditingLockMenuEntries menu, @childrenNotHandlesNorCarets()

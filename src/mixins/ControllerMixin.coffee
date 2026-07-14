@@ -94,3 +94,19 @@ ControllerMixin =
         label = "fires per event"
         menu.addMenuItem (if @firesPerEvent then label.tick() else label), @, "toggleFiresPerEvent", toolTip: "deliver on every event (a synchronous mini-pass)\ninstead of once per cycle"
 
+      # The shared "connect a target" menu block, appended identically by every
+      # controller (SliderWdgt, SimplePlainTextWdgt, PaletteWdgt, FanoutPinWdgt and
+      # the patch nodes) right after its `super`: a divider, then the index-page
+      # "connect to ➜" vs in-app "set target" item, then the firesPerEvent toggle.
+      # The only thing that varied between sites was the property-kind word in the
+      # "set target" toolTip, so it is a parameter ("color" or "numerical").
+      # (StringWdgt keeps its own hand-rolled variant — it guards the whole block
+      # behind isIndexPage, so it is deliberately NOT routed through here.)
+      _addTargetConnectionMenuEntries: (menu, propertyKind) ->
+        menu.addLine()
+        if world.isIndexPage
+          menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: "connect to\nanother widget"
+        else
+          menu.addMenuItem "set target", @, "openTargetSelector", toolTip: ("choose another widget\nwhose " + propertyKind + " property\n will be" + " controlled by this one")
+        @addFiresPerEventMenuEntry menu
+

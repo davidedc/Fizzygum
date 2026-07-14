@@ -58,12 +58,7 @@ class FanoutPinWdgt extends Widget
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
-    menu.addLine()
-    if world.isIndexPage
-      menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: "connect to\nanother widget"
-    else
-      menu.addMenuItem "set target", @, "openTargetSelector", toolTip: ("choose another widget\nwhose color property\n will be" + " controlled by this one")
-    @addFiresPerEventMenuEntry menu
+    @_addTargetConnectionMenuEntries menu, "color"
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     @_popUpTargetPropertyMenu theTarget, theTarget.allSetters()

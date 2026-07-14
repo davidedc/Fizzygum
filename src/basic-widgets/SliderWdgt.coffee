@@ -205,12 +205,7 @@ class SliderWdgt extends CircleBoxWdgt
         @stop - @start,
         true
     ), "set the range\ncovered by\nthe slider button"
-    menu.addLine()
-    if world.isIndexPage
-      menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: "connect to\nanother widget"
-    else
-      menu.addMenuItem "set target", @, "openTargetSelector", toolTip: ("choose another widget\nwhose numerical property\n will be" + " controlled by this one")
-    @addFiresPerEventMenuEntry menu
+    @_addTargetConnectionMenuEntries menu, "numerical"
 
   showValue: ->
     @inform @value
