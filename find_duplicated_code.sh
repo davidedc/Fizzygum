@@ -11,6 +11,9 @@
 # Usage (invocable from anywhere; the script cd's itself to the repo root):
 #   ./find_duplicated_code.sh                  # defaults from .jscpd.json (min-tokens 50)
 #   ./find_duplicated_code.sh --min-tokens 35  # finer sweep; any jscpd flag forwards
+#   ./find_duplicated_code.sh --tests          # scan the sibling Fizzygum-tests repo instead
+#                                              # (harness .coffee + node scripts) -> reports in
+#                                              # duplication-report/tests/ (src reports untouched)
 # (Don't override --output / -o: the LLM-handoff file below is written to the
 #  default duplication-report/ regardless.)
 #
@@ -31,6 +34,39 @@ JSCPD=node_modules/.bin/jscpd
 if [ ! -x "$JSCPD" ]; then
   echo "find_duplicated_code: $JSCPD not found -- run \`npm install\` in Fizzygum/ first." 1>&2
   exit 2
+fi
+
+# --tests: scan the sibling Fizzygum-tests repo (never covered by the src scan). Everything
+# is passed via CLI (CLI args override .jscpd.json). ⚠ jscpd's --ignore globs cannot exclude
+# DOT-directories (`**/.scratch/**` silently matches nothing), so .scratch pairs are filtered
+# out of the ai handoff file below; the json/console output still contains them.
+if [ "$1" = "--tests" ]; then
+  shift
+  TESTS_ARGS=(../Fizzygum-tests/Automator-and-test-harness-src ../Fizzygum-tests/scripts
+    --format coffeescript,javascript --min-tokens 50 --min-lines 5
+    --max-lines 20000 --max-size 2mb --ignore '**/node_modules/**'
+    --output duplication-report/tests "$@")
+  echo "==> jscpd scan of Fizzygum-tests (harness + scripts; extra args: $*) ..."
+  "$JSCPD" "${TESTS_ARGS[@]}" --reporters console,json,markdown
+  RC=$?
+  if [ "$RC" != "0" ]; then
+    echo "find_duplicated_code: jscpd (--tests) FAILED (exit $RC)." 1>&2
+    exit "$RC"
+  fi
+  ESC=$(printf '\033')
+  "$JSCPD" "${TESTS_ARGS[@]}" --reporters ai,silent 2>/dev/null \
+    | sed "s/${ESC}\[[0-9;]*m//g" \
+    | awk '/^time:/{exit} {print}' \
+    | grep -v '\.scratch' > duplication-report/tests/jscpd-report.ai.txt
+  RC=${PIPESTATUS[0]}
+  if [ "$RC" != "0" ]; then
+    echo "find_duplicated_code: ai-reporter pass (--tests) FAILED (exit $RC)." 1>&2
+    exit "$RC"
+  fi
+  echo ""
+  echo "find_duplicated_code: DONE (Fizzygum-tests). Reports in duplication-report/tests/ ;"
+  echo "LLM handoff file: duplication-report/tests/jscpd-report.ai.txt (.scratch pairs filtered)"
+  exit 0
 fi
 
 echo "==> jscpd scan (defaults from .jscpd.json; extra args: $*) ..."

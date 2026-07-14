@@ -1,11 +1,17 @@
 # Duplicated-code detection (`./find_duplicated_code.sh` + `./find_similar_code.sh`)
 
-Two complementary scanners, run from the `Fizzygum/` repo root (or via absolute path — both cd themselves):
+Two complementary scanners over two surfaces, run from the `Fizzygum/` repo root (or via
+absolute path — both cd themselves):
 
 ```sh
-./find_duplicated_code.sh   # EXACT copy/paste clones (jscpd, token-based)   — .coffee line numbers
-./find_similar_code.sh      # SIMILAR/structural clones (jsinspect, AST)     — compiled-JS line numbers
+./find_duplicated_code.sh           # EXACT copy/paste clones (jscpd, token-based) — .coffee lines
+./find_similar_code.sh              # SIMILAR/structural clones (jsinspect, AST)   — compiled-JS lines
+./find_duplicated_code.sh --tests   # same, over the sibling Fizzygum-tests repo (harness + scripts)
+./find_similar_code.sh --tests      # same; node scripts are scanned DIRECTLY (real line numbers)
 ```
+
+The full recurring workflow (scan → triage ledger → LLM session → land → rescan) is the
+["re-audit / re-triage cycle" section](#the-recurring-re-audit--re-triage-cycle) below.
 
 Run both: they see different things. The exact scan misses a clone the moment one identifier
 is renamed — or when an interleaved comment breaks the token run, or when CoffeeScript's
@@ -90,6 +96,17 @@ script overrides them (e.g. `./find_duplicated_code.sh --min-tokens 35`).
 4. The `ai` reporter writes to **stdout only**, so the script runs a second, silent pass to
    capture it into `jscpd-report.ai.txt` (jscpd does not wipe the output dir between runs;
    ANSI codes and the trailing timing/sponsor banner are stripped).
+5. **jsinspect's CLI hard-codes ignoring any path matching `node_modules|bower_components|
+   test|spec`** — its `--ignore` only APPENDS patterns. "Fizzygum-tests", ".../tests/...",
+   and even "Inspector" (In-**spec**-tor, lowercase substring match) all trip it: the two
+   `meta/*Inspector*` files were silently missing from every directory-based structural scan
+   until 2026-07-14. Explicit FILE arguments bypass the filter, so `find_similar_code.sh`
+   always expands the file lists itself — **never call the jsinspect bin with a directory
+   argument.**
+6. **jscpd's `--ignore` globs cannot exclude dot-directories** (`**/.scratch/**` silently
+   matches nothing; `--gitignore` doesn't catch it either from a sibling cwd). The `--tests`
+   mode therefore greps `.scratch` pairs out of the ai handoff file; the json/console output
+   still contains them.
 
 ## Structural similarity: `./find_similar_code.sh` (Type-2 / renamed clones)
 
@@ -121,6 +138,50 @@ Locate findings by file (one class per file) + `@method` name. Baseline 2026-07-
 opener-batch dedup): **133 structural matches** at `-t 30`, including families invisible to
 jscpd — a 25× icon `paintFunction` wrapper, an 18× `stringSetters`/`numericalSetters`/
 `colorSetters` boilerplate family, `Widget`-internal `setPadding*` quintuplets.
+
+## The recurring re-audit / re-triage cycle
+
+The scanners are step one of a repeatable campaign loop (first campaign: 2026-07, rounds 1–3,
+EXACT clones 104 → 45, duplicated lines 3.4% → ~1.4%). The loop:
+
+1. **Scan all four**: `./find_duplicated_code.sh`, `./find_similar_code.sh`, and both with
+   `--tests`. Each writes a token-efficient `*.ai.txt` handoff list (src →
+   `duplication-report/`, tests → `duplication-report/tests/`).
+2. **Reconcile the ledger** — `duplication-report/triage-report.md`. This is the campaign's
+   persistent memory: ranked refactor items with win/risk/effort, per-round ✅ PUSHED history
+   with commit SHAs, the LEAVE-ALONE list *with reasons*, and hard-won case law (layering
+   rules, inspector-churn handling, ctor-build rule, deliberate seams). New scan results get
+   triaged INTO it; done/dropped items get marked; it is updated in place, append-friendly.
+3. **Owner decides** anything the ledger flags as owner-call (deletions, non-pixel work,
+   borderline families, new surfaces).
+4. **Regenerate the starting prompt** — `duplication-report/llm-triage-prompt.md` — for a
+   fresh LLM session with no context. It must be fully self-contained: the two-phase contract
+   (Phase 1 = triage/plan then STOP; Phase 2 = implement one item at a time, only after
+   approval), the owner decisions, the codebase hard rules and the pixel bar, the
+   verification loop (`fg presuite` per item, `fg gauntlet` to close; background, never
+   foreground-poll), pointers to the ledger, ALL fresh `*.ai.txt` lists embedded verbatim,
+   the regeneration commands, and the current baselines so the session can log the trend.
+   The current file is the template — reuse its structure.
+5. **Run the session**; after each landed batch it rescans and logs the count trend.
+
+**Artifact lifecycle — read this before `git clean`:** everything under `duplication-report/`
+is gitignored. The scan reports are disposable (one command away). **`triage-report.md` and
+`llm-triage-prompt.md` are NOT** — they are the campaign's accumulated judgment, and an
+untracked file is one `git clean -fdx` from oblivion. Convention: when a campaign arc closes,
+snapshot the ledger to `docs/done/duplication-triage-<date>.md` and commit it; the LEAVE-ALONE
+list and case law are what future rounds must not re-litigate.
+
+Baseline history (per-scan totals, for trend context):
+
+| Date · commit | src exact | src structural | tests exact | tests structural |
+| --- | --- | --- | --- | --- |
+| 2026-07-14 · campaign start | 104 | 133 | — | — |
+| 2026-07-14 · `62fa50f0` (round 1 landed) | 82 | 133 | — | — |
+| 2026-07-14 · `0b51b0c8` (round 2 landed) | 49 | 118* | 29* | 28* |
+| 2026-07-14 · `fc0aef7c` (round 3 items 1–2) | 45 | 113 | 24 | 24 |
+
+\* pre-fix numbers: structural scans before `fc0aef7c`-era tooling silently excluded the two
+`Inspector*` files (gotcha 5 below), and the first tests scans were ad-hoc CLI runs.
 
 ## Feeding the results to an LLM
 
