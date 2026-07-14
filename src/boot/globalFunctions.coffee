@@ -37,6 +37,37 @@ noOperation = ->
 
 # -------------------------------------------
 
+# Shared identity-bookkeeping for the deepCopy graph copier (DeepCopierMixin).
+# Every *-extensions.coffee ::deepCopy that patches a native prototype
+# (Array / CanvasGradient / Date / HTMLCanvasElement / HTMLVideoElement /
+# Image / Map / Set) shared the same "seen-before -> return the existing clone;
+# else register the original, build the clone, register it, return it" preamble
+# (this is the old `# TODO id: DUPLICATED_CODE_IN_DEEPCOPY`). Factored here as a
+# template-with-callback rather than a pull-up because those patches sit on
+# distinct native prototypes with no shared base.
+#   buildEmpty()    -> makes the clone: a fully-built value for leaf types, or an
+#                      EMPTY container for Array/Map/Set.
+#   populate(clone) -> optional; fills a container AFTER it is registered in
+#                      objectClones, so a cyclic reference back to the original
+#                      resolves to the (partially-built) clone. Leaf types (whose
+#                      whole clone is built by buildEmpty) pass no populate, so
+#                      the op order stays byte-identical to the old inline code.
+# Both callbacks are fat-arrows at the call site so `@` stays the original being
+# copied; `allWidgetsInStructure` is threaded by the populate closure, not here.
+deepCopyWithIdentity = (original, objOriginalsClonedAlready, objectClones, buildEmpty, populate) ->
+  haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf original
+  if haveIBeenCopiedAlready >= 0
+    return objectClones[haveIBeenCopiedAlready]
+
+  objOriginalsClonedAlready.push original
+  cloneOfMe = buildEmpty()
+  objectClones.push cloneOfMe
+  populate? cloneOfMe
+
+  return cloneOfMe
+
+# -------------------------------------------
+
 # Helper function to use Promise style
 # instead of callback style when loading a JS
 loadJSFilePromise = (fileName) ->

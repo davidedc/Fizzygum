@@ -4,14 +4,4 @@
 
 # cloning a date object, see: https://stackoverflow.com/a/1090817
 Date::deepCopy = (objOriginalsClonedAlready, objectClones, allWidgetsInStructure) ->
-  # TODO id: DUPLICATED_CODE_IN_DEEPCOPY date: 6-Jun-2023
-
-  haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf @
-  if haveIBeenCopiedAlready >= 0
-    return objectClones[haveIBeenCopiedAlready]
-
-  objOriginalsClonedAlready.push @
-  cloneOfMe = new Date @getTime()
-  objectClones.push  cloneOfMe
-
-  return cloneOfMe
+  deepCopyWithIdentity @, objOriginalsClonedAlready, objectClones, => new Date @getTime()

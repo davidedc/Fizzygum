@@ -15,14 +15,6 @@
 #            copy canvas and create the copy gradient from that?
 
 CanvasGradient::deepCopy = (objOriginalsClonedAlready, objectClones, allWidgetsInStructure) ->
-  # TODO id: DUPLICATED_CODE_IN_DEEPCOPY date: 6-Jun-2023
-
-  haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf @
-  if haveIBeenCopiedAlready >= 0
-    return objectClones[haveIBeenCopiedAlready]
-
-  objOriginalsClonedAlready.push @
-  cloneOfMe = nil
-  objectClones.push  cloneOfMe
-
-  return cloneOfMe
+  # canvas gradients are returned as nil (see the file header) — the copier only
+  # needs the identity mapping registered so it can walk past them.
+  deepCopyWithIdentity @, objOriginalsClonedAlready, objectClones, => nil

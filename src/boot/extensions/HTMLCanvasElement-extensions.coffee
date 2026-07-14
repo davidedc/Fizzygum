@@ -3,25 +3,16 @@
 # functionality that you want
 
 HTMLCanvasElement::deepCopy = (objOriginalsClonedAlready, objectClones, allWidgetsInStructure) ->
-  # TODO id: DUPLICATED_CODE_IN_DEEPCOPY date: 6-Jun-2023
+  deepCopyWithIdentity @, objOriginalsClonedAlready, objectClones, =>
+    # width and height here are not the widget's,
+    # which would be in logical units and hence would need ceilPixelRatio
+    # correction,
+    # but in actual physical units i.e. the actual buffer size
+    cloneOfMe = HTMLCanvasElement.createOfPhysicalDimensions new Point @width, @height
 
-  haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf(@)
-  if  haveIBeenCopiedAlready >= 0
-    return objectClones[haveIBeenCopiedAlready]
-
-  objOriginalsClonedAlready.push @
-  # with and height here are not the widget's,
-  # which would be in logical units and hence would need ceilPixelRatio
-  # correction,
-  # but in actual physical units i.e. the actual buffer size
-  cloneOfMe = HTMLCanvasElement.createOfPhysicalDimensions new Point @width, @height
-
-  ctx = cloneOfMe.getContext "2d"
-  ctx.drawImage @, 0, 0
-
-  objectClones.push cloneOfMe
-
-  return cloneOfMe
+    ctx = cloneOfMe.getContext "2d"
+    ctx.drawImage @, 0, 0
+    cloneOfMe
 
 # HTMLCanvasElement.createOfPhysicalDimensions takes physical size, i.e. actual buffer pixels.
 # On non-retina displays, that's just the amount of logical pixels,
