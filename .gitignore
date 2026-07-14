@@ -8,3 +8,5 @@ src/.idea/
 vendor/swcanvas/
 # Vendored SWCanvas font atlases (downloaded from the release pin at build time).
 font-assets/
+# find_duplicated_code.sh (jscpd) output — regenerated on every run.
+duplication-report/

@@ -1,0 +1,10 @@
+{
+  "path": ["src"],
+  "format": ["coffeescript"],
+  "minTokens": 50,
+  "minLines": 5,
+  "maxLines": 20000,
+  "maxSize": "2mb",
+  "reporters": ["console", "json", "markdown", "html"],
+  "output": "duplication-report"
+}

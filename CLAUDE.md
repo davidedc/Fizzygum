@@ -20,6 +20,7 @@ Prerequisites are installed **globally, not via `npm`**: `coffee` (`npm i -g cof
 - **Build + boot-smoke gate:** `./build_and_smoke.sh` builds (incl. the syntax gate) then headless-boots the world (native + SWCanvas), failing on any console error — a lighter boot-only check (use when a full suite run is overkill).
 - **Watch + rebuild on save:** `./build_as_soon_as_anything_changes.sh` (`fswatch` over `src/`; the syntax gate runs on every save).
 - **Run:** open `../Fizzygum-builds/latest/index.html` in a browser. It loads over `file://`; no dev server needed.
+- **Find duplicated code:** `./find_duplicated_code.sh` — jscpd (devDependency) over `src/**/*.coffee`, no compile step (CoffeeScript is tokenized natively); console/JSON/markdown/HTML reports plus an LLM-handoff clone-pair list land in `duplication-report/` (gitignored). Tuning + gotchas (jscpd silently skips >1000-line files at its defaults — config raises the caps): `docs/duplicated-code-detection.md`.
 
 The build **requires** this sibling layout and aborts without it:
 ```
