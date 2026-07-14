@@ -10,11 +10,9 @@ class DragChargingRingAppearance extends Appearance
     # an ephemeral overlay casts no shadow — nothing to draw on the shadow pass
     return nil if appliedShadow?
 
-    if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return nil
-
-    [area,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
-    return nil if w < 1 or h < 1 or area.isEmpty()
+    keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
+    return nil unless keyValues?
+    [area,sl,st,al,at,w,h] = keyValues
 
     aContext.save()
     aContext.clipToRectangle al, at, w, h

@@ -51,6 +51,10 @@ class RectangularAppearance extends Appearance
     if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
       return nil
 
+    # Soft hook (a no-op for every plain rectangular widget): DesktopAppearance overrides it to build its
+    # wallpaper-tile pattern here, BEFORE the size guard, exactly where its old inlined copy of this method did.
+    @_setUpBackgroundPattern? aContext
+
     [area,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
     return nil if w < 1 or h < 1 or area.isEmpty()
 
@@ -92,6 +96,10 @@ class RectangularAppearance extends Appearance
     if !appliedShadow?
       @paintStroke aContext, clippingRectangle
 
+    # Soft hook (a no-op for every plain rectangular widget): DesktopAppearance overrides it to fill its
+    # wallpaper pattern over `toBePainted` here, after the stroke and before restore — its old epilogue position.
+    @_paintBackgroundPatternFill? aContext, toBePainted
+
     aContext.restore()
 
     # paintHighlight is usually made to work with
@@ -103,11 +111,9 @@ class RectangularAppearance extends Appearance
 
   paintStroke: (aContext, clippingRectangle) ->
 
-    if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return nil
-
-    [area,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
-    return nil if w < 1 or h < 1 or area.isEmpty()
+    keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
+    return nil unless keyValues?
+    [area,sl,st,al,at,w,h] = keyValues
 
     @widget.justBeforeBeingPainted?()
 

@@ -7,19 +7,17 @@ class DesktopAppearance extends RectangularAppearance
 
   currentPattern: nil
 
-  # This method only paints this very widget
-  # i.e. it doesn't descend the children
-  # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer,
-  # which eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this widget might paint something on the screen even if
-  # it's not a "leaf".
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
+  # The desktop paints exactly like a plain rectangular widget PLUS a repeating wallpaper tile behind it.
+  # Rather than re-copy RectangularAppearance::paintIntoAreaOrBlitFromBackBuffer (which it used to reproduce
+  # line-for-line — the single most dangerous clone in the codebase, since a fix to the rectangular paint
+  # silently skipped the desktop), it hooks into the two soft `?`-call sites the base paint offers:
+  #   _setUpBackgroundPattern     — after the preliminaryCheckNothingToDraw guard, before the size guard
+  #   _paintBackgroundPatternFill — after paintStroke, before restore
+  # Op order is therefore identical to the old inlined method.
 
-    if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return nil
+  # build (once per pattern change) the 5×5 wallpaper tile and turn it into a repeating CanvasPattern
+  _setUpBackgroundPattern: (aContext) ->
 
-
-    # set up a pattern
     if @widget.wallpaper.patternName? && @widget.wallpaper.patternName == @widget.wallpaper.pattern1
       @currentPattern = @widget.wallpaper.patternName
       @pattern = nil
@@ -82,59 +80,8 @@ class DesktopAppearance extends RectangularAppearance
 
       @pattern = aContext.createPattern(@pattern, 'repeat')
 
-
-
-    [area,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
-    return nil if w < 1 or h < 1 or area.isEmpty()
-
-    @widget.justBeforeBeingPainted?()
-
-    aContext.save()
-    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
-    if !@widget.color? then debugger
-    aContext.fillStyle = @widget.color.toString()
-
-    # paintRectangle is usually made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, so it's generally used
-    # outside the effect of the scaling because
-    # of the ceilPixelRatio
-
-    # paint the background
-    toBePainted = new Rectangle al, at, al + w, at + h
-
-    if @widget.backgroundColor?
-      color = @widget.backgroundColor
-      if appliedShadow?
-        color = Color.BLACK
-      @widget.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
-
-
-    # now paint the actual widget, which is a rectangle
-    # (potentially inset because of the padding)
-    toBePainted = toBePainted.intersect @widget.boundingBoxTight().scaleBy ceilPixelRatio
-
-    color = @widget.color
-    if appliedShadow?
-      color = Color.BLACK
-
-    @widget.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
-
-    @drawAdditionalPartsOnBaseShape? false, false, appliedShadow, aContext, al, at, w, h
-
-    if !appliedShadow?
-      @paintStroke aContext, clippingRectangle
-
+  # fill the built pattern over the just-painted rectangle
+  _paintBackgroundPatternFill: (aContext, toBePainted) ->
     if @pattern?
       aContext.fillStyle = @pattern
       aContext.fillRect toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height()
-
-    aContext.restore()
-
-    # paintHighlight is usually made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, so it's generally used
-    # outside the effect of the scaling because
-    # of the ceilPixelRatio
-    @paintHighlight aContext, al, at, w, h
-

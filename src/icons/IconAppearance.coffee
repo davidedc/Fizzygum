@@ -84,11 +84,9 @@ class IconAppearance extends Appearance
   # Note that this widget might paint something on the screen even if
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
-    if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return
-
-    [area,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
-    return nil if w < 1 or h < 1 or area.isEmpty()
+    keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
+    return nil unless keyValues?
+    [area,sl,st,al,at,w,h] = keyValues
 
     aContext.save()
 

@@ -51,23 +51,11 @@ class BoxyAppearance extends Appearance
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
-    if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return nil
+    keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
+    return nil unless keyValues?
+    [area,sl,st,al,at,w,h] = keyValues
 
-    [area,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
-    return nil if w < 1 or h < 1 or area.isEmpty()
-
-    aContext.save()
-
-    # clip out the dirty rectangle as we are
-    # going to paint the whole of the box
-    aContext.clipToRectangle al,at,w,h
-
-    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
-
-    aContext.useLogicalPixelsUntilRestore()
-    widgetPosition = @widget.position()
-    aContext.translate widgetPosition.x, widgetPosition.y
+    @_beginLogicalPixelsBox aContext, appliedShadow, al, at, w, h
     if !@widget.color? then debugger
     aContext.fillStyle = @widget.color.toString()
     
