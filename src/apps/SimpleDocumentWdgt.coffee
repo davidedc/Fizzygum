@@ -33,6 +33,60 @@ class SimpleDocumentWdgt extends Widget
     super new Point 368, 335
     @_buildAndConnectChildren()
 
+  # Shared builder for the one-shot "*InfoWdgt" info documents (Docs / Dashboards / Slides / Generic-panel /
+  # Patch-programming / Drawings / Super-toolbar / Windows). It lays out the common frame — the icon +
+  # centred title + divider header, then the per-subclass body via the `buildBody sdspw` callback, then the
+  # window footer (place centred, set the window title, lock editing, set the once-only `world[flagName]`,
+  # monkey-patch close-to-destroy, position next to nextToThisWidget) — and RETURNS the WindowWdgt
+  # (WindowsToolbarInfoWdgt's caller captures it; the other callers discard it). Each subclass's thin
+  # @createNextTo keeps its own once-only guard FIRST (so nothing is built on a repeat call) and constructs
+  # `simpleDocument` + `iconWidget` itself (so every `new X` literal stays in the subclass file for the
+  # dependency finder), then passes them in.
+  @_buildInfoDocNextTo: (nextToThisWidget, flagName, simpleDocument, iconWidget, title, windowTitle, buildBody) ->
+    sdspw = simpleDocument.simpleDocumentScrollPanel
+
+    sdspw._applyMoveTo new Point 114, 10
+    sdspw._applyExtent new Point 365, 405
+
+    iconWidget._applyExtent new Point 85, 85
+    sdspw.setContents iconWidget, 5
+    iconWidget.layoutSpecDetails.setElasticity 0
+    iconWidget.layoutSpecDetails.setAlignmentToCenter()
+
+    titleWidget = new SimplePlainTextWdgt(
+      title,nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
+    titleWidget.alignCenter()
+    titleWidget.setFontSize 22
+    titleWidget.isEditable = true
+    titleWidget.enableSelecting()
+    sdspw.add titleWidget
+
+    sdspw.addDivider()
+
+    buildBody sdspw
+
+    wm = new WindowWdgt simpleDocument
+    wm._applyExtent new Point 365, 405
+    wm._moveFullCenterTo world.center()
+    world.add wm
+    wm.setTitleWithoutPrependedContentName windowTitle
+
+    simpleDocument.disableDragsDropsAndEditing()
+    world[flagName] = true
+
+    # if we don't do this, the window would ask to save content
+    # when closed. Just destroy it instead, since we only show
+    # it once.
+    # TODO: should be done using a flag, we don't like
+    # to inject code like this: the source is not tracked
+    simpleDocument.closeFromContainerWindow = (containerWindow) ->
+      containerWindow.destroy()
+
+    wm._moveToSideOf nextToThisWidget
+    wm._rememberFractionalSituationInHoldingPanel()
+
+    return wm
+
   colloquialName: ->
     "Docs Maker"
 
