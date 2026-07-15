@@ -211,6 +211,13 @@ counts are additive, not comparable to the exact/structural ones:
 | 2026-07-15 · `3d038959` (tranche C landed) | **1** | 0 | 0 | 10 (7 same-default) | 36 (+49 withheld) |
 | 2026-07-15 · Phase 0 (write-only DEMOTE bug FIXED) | 1 | 0 | 0 | 10 (7 same-default) | **20** (+3 withheld ·name, +62 write-only) |
 | 2026-07-15 · Phase 3 (13 DEMOTEs actioned) | 1 | 0 | 0 | **10 — CLOSED, zero actionable** | **7** (+3, +62) |
+| 2026-07-15 · Phase 1 (`BubblyAppearance.constructor` deleted) | **0** | 0 | 0 | 10 — CLOSED | 7 |
+
+✅ **The hierarchy-duplication census is now driven to ZERO on all three of its reports** (`IDENTICAL-TO-INHERITED` /
+`SHADOWS-MIXIN` / `JUST-SENDS-SUPER`). ⚠ The last one had been gated for two rounds behind a "constructor risk class"
+that dissolved entirely on reading `meta/Class.coffee` — see case law 16. The property census's PULL-UP is CLOSED at 10
+(none actionable) and DEMOTE rests at 7 (all with recorded reasons), so **the whole hierarchy axis is now at its
+correct floor — a zero is not always reachable, and a non-zero is not always a debt.**
 
 ⚠ The Phase 0 row is a **tooling** fix, not a code change: `census-property-placement.js`'s DEMOTE rule never required
 the property to be READ, so 16 of the 36 were write-only false positives — 12 of them `SystemInfo` fields that ARE the

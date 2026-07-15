@@ -1,7 +1,12 @@
 class BubblyAppearance extends BoxyAppearance
 
-  constructor: (widget) ->
-    super widget
+  # No constructor: it was `(widget) -> super widget`, byte-identical to BoxyAppearance's, and the
+  # meta-compiler synthesises exactly that for a class without one — `__super__.constructor.apply this,
+  # arguments` plus `registerThisInstance?()` (meta/Class.coffee, the `else` branch of the
+  # `hasOwnProperty('constructor')` test, which is also what _addInstancesTracker injects into an
+  # explicit one). 286 of 455 classes already rely on that path, including 4 of the 8 Appearance-family
+  # classes. Both call sites pass one argument (`new BubblyAppearance @`), so the synthesised
+  # forward-everything is equivalent to the explicit forward-one anyway.
 
   outlinePath: (context, radius) ->
 

@@ -75,7 +75,7 @@ node ./buildSystem/census-property-placement.js    [--full] [--json out.json]
 
 | Report | Count | Status |
 |---|---|---|
-| IDENTICAL-TO-INHERITED | **1** | `BubblyAppearance.constructor` — Phase 1, owner-gated, probably never |
+| IDENTICAL-TO-INHERITED | **0** | ✅ Phase 1 DONE 2026-07-15 — `BubblyAppearance.constructor` deleted; the report is now driven to zero |
 | SHADOWS-MIXIN / JUST-SENDS-SUPER | 0 / 0 | — |
 | PULL-UP | **10** (7 same-default) | ⛔ Phase 2 CLOSED — **all 10 triaged, ZERO actionable.** The report stays at 10 forever unless the code changes; that is the correct answer, not a backlog. |
 | DEMOTE | **7** (was 20) | ✅ Phase 3 done — 13 actioned; the 7 survivors each have a recorded reason |
@@ -174,7 +174,34 @@ the enumeration analysis the census cannot do — **the 62-strong write-only buc
 
 ---
 
-## Phase 1 — `BubblyAppearance.constructor` (the last IDENTICAL-TO-INHERITED) — owner-gated
+## Phase 1 — `BubblyAppearance.constructor` — ✅ DONE 2026-07-15. **IDENTICAL-TO-INHERITED: 1 → 0.**
+
+> **⚠ The risk assessment below was WRONG — recorded because being wrong here is the lesson.** Owner
+> asked for the evidence; reading the meta-compiler dissolved every hazard this section lists:
+> - **`meta/Class.coffee` has an explicit `else` branch for a class with NO constructor** (the
+>   `hasOwnProperty('constructor')` test) that synthesises
+>   `window.X.__super__.constructor.apply this, arguments` + `@registerThisInstance?()` + `return` —
+>   exactly what the explicit ctor produces once `_addInstancesTracker` injects the same call.
+>   **286 of 455 classes already rely on that path**, including 4 of the 8 Appearance-family classes
+>   (`DragChargingRingAppearance extends Appearance` with no ctor is a working next-door precedent).
+>   Far from exotic, it is the MAJORITY path.
+> - **Arg forwarding is moot.** The synthesised ctor forwards `arguments` (all) where the explicit one
+>   forwarded `widget` (one) — but `BoxyAppearance`'s own ctor truncates to one regardless, and both
+>   call sites pass exactly one: `new BubblyAppearance @` (`SpeechBubbleWdgt:20`, `ToolTipWdgt:26`).
+> - **`check-constructors-build.js` does not care** — it only enforces "a constructor must not build
+>   its own children inline".
+> - **The `WindowWdgt`/`FolderWindowWdgt` case law does not apply** — that trap was about REORDERING a
+>   ctor's args breaking a subclass that called `super` positionally. `BubblyAppearance` **has no
+>   subclasses**.
+> - **`Object.create` (duplication/serialization) BYPASSES constructors entirely** — which *lowers* the
+>   risk. This section had cited it as if it raised it.
+>
+> **Verified: gauntlet 9/9 PASS, zero screenshot diffs, zero recaptures.** The honest reason to have
+> skipped it was only ever "it is two lines" — *not* "it is a dangerous risk class". ⚠ **Do not let a
+> risk class be asserted from a distance: READ the mechanism before pricing the risk.** The original
+> analysis is retained verbatim below as the record of that mistake.
+
+### Original (WRONG) analysis — retained deliberately, see above
 
 `src/BubblyAppearance.coffee:3` — `constructor: (widget) -> super widget`, byte-identical to
 `src/basic-widgets/BoxyAppearance.coffee:9` (`BubblyAppearance extends BoxyAppearance`).
@@ -275,9 +302,14 @@ owner already holds the reference, so the field was redundant state:
 
 - **`WorldWdgt` × 3** (`inputDOMElementForVirtualKeyboard*BrowserEventListener`) — ⛔ **case law 13.**
   Siblings of a ~20-strong browser-listener-field family whose entire purpose is
-  `removeEventListeners` (`WorldWdgt.coffee:2100`), which removes each BY FIELD REFERENCE. These 3 are
-  missing from it only because they attach to `@inputDOMElementForVirtualKeyboard` rather than
-  `canvas` — which looks like a **latent leak to FIX**, not handles to delete.
+  `removeEventListeners` (`WorldWdgt.coffee:2100`), which removes each BY FIELD REFERENCE.
+  ✅ **Followed up 2026-07-15 (case law 15) — and the follow-up found a REAL bug, though not the one
+  suspected.** These 3 are NOT a leak: that hidden input only exists on a touch device with
+  `useVirtualKeyboard` and an open caret, and closing the caret already `removeChild`s it and nils it,
+  taking its listeners to GC — and it is never created at all in any environment tests run in. But
+  auditing the family to check that turned up **7 listeners that `removeEventListeners` silently
+  failed to detach** (wrong target — see case law 15). Fixed. The 3 fields stay, and the removals were
+  added for contract completeness.
 - **`VideoPlayPauseToggle` × 2** (`playPausePlay/PauseButton`) — ⛔ worst combination: they live in a
   **`constructor`** (the Phase 1 risk class: meta-compiled, fragmented, `check-constructors-build`
   governs it, and the ctor passes them straight to `super`) AND the `video-player` family has **ZERO
@@ -326,10 +358,24 @@ owner already holds the reference, so the field was redundant state:
   correct, not a debt.
 - **Phase 3** ✅ — 13 of 20 actioned, DEMOTE 20 → 7, gauntlet 9/9, **zero recaptures** (the budgeted
   cost never materialised — the tag over-warns).
-- **Phase 1** — `BubblyAppearance.constructor`, owner-gated, 2 lines against the constructor risk
-  class. Unchanged: not worth it on its own.
+- **Phase 1** ✅ — `BubblyAppearance.constructor` deleted. **IDENTICAL-TO-INHERITED 1 → 0**, so
+  `census-hierarchy-duplication` now reports ZERO on all three of its reports. The "constructor risk
+  class" that gated it for two rounds dissolved on reading the meta-compiler (case law 16).
 
-**All that remains of this plan is Phase 1.** Everything else is closed with reasons.
+**THIS PLAN IS CLOSED.** Every phase is done or closed with a recorded reason. The censuses are at
+their correct floor: hierarchy-duplication at 0/0/0; PULL-UP at 10 with none actionable; DEMOTE at 7,
+all reasoned. **A zero is not always reachable, and a non-zero is not always a debt.**
+
+### An unplanned bug fix came out of this (case law 15)
+
+Following case law 13's "that looks like a latent leak" hunch to the source found no leak — but did
+find that **`WorldWdgt.removeEventListeners` silently failed to detach 7 of its 20 listeners**, because
+they are added across three targets (`@worldCanvas` / `document.body` / `window`) and it removed all of
+them from `canvas`; a wrong-target `removeEventListener` is a silent no-op. That method exists for
+DETERMINISM (its only caller runs it at the start of every SystemTest), and one of the survivors pushes
+a `ResizeInputEvent` into the input queue. No gate could ever have caught it. Fixed and audited
+mechanically. **The transferable lesson: when a teardown pairs with a setup, verify the pairing
+mechanically — silent-failure APIs give no signal when the pairing drifts.**
 
 ### If you are tempted to re-open the censuses, read this first
 

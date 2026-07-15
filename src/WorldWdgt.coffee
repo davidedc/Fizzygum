@@ -2097,8 +2097,26 @@ class WorldWdgt extends PanelWdgt
     @_initOtherMiscEventListeners()
 
   # »>> this part is excluded from the fizzygum homepage build
+  # Detach every browser event listener the _init*EventListeners family attached.
+  #
+  # ⚠ THIS IS A DETERMINISM MECHANISM, NOT MEMORY CLEANUP. Its only caller is
+  # AutomatorPlayer.startTestPlaying, which calls it at the START of every SystemTest so that the
+  # macro's synthetic events are the ONLY input: a listener that survives here can push a REAL browser
+  # event into @inputEventsQueue mid-test and break the byte-exact contract (../Fizzygum-tests/DETERMINISM.md).
+  #
+  # ⚠⚠ EVERY LISTENER MUST BE REMOVED FROM THE SAME TARGET IT WAS ADDED TO — the listeners are spread
+  # over THREE targets (@worldCanvas / document.body / window) and removeEventListener on the wrong
+  # target is a SILENT NO-OP: no error, nothing removed, nothing logged. That is exactly the bug this
+  # method shipped with (fixed 2026-07-15): it removed all 20 from `canvas`, so the 7 that had been
+  # added to document.body (cut/copy/paste) or window (scroll/dragover/drop/resize) were never
+  # detached at all, and stayed live through every test — including @resizeBrowserEventListener, which
+  # pushes a ResizeInputEvent into the queue.
+  #
+  # So: keep the GROUPS below in sync with their _init* counterparts, and match the target exactly.
   removeEventListeners: ->
     canvas = @worldCanvas
+
+    # ── added to @worldCanvas ──────────────────────────────────────────────────────────────────────
     # canvas.removeEventListener 'dblclick', @dblclickEventListener
     canvas.removeEventListener 'mousedown', @mousedownBrowserEventListener
     canvas.removeEventListener 'mouseup', @mouseupBrowserEventListener
@@ -2115,16 +2133,30 @@ class WorldWdgt extends PanelWdgt
     canvas.removeEventListener 'keyup', @keyupBrowserEventListener
     canvas.removeEventListener 'keypress', @keypressBrowserEventListener
     canvas.removeEventListener 'wheel', @wheelBrowserEventListener
+
+    # ── added to document.body by _initClipboardEventListeners ─────────────────────────────────────
+    document.body.removeEventListener 'cut', @cutBrowserEventListener
+    document.body.removeEventListener 'copy', @copyBrowserEventListener
+    document.body.removeEventListener 'paste', @pasteBrowserEventListener
+
+    # ── added to window by _initOtherMiscEventListeners ────────────────────────────────────────────
+    # the mobile-Safari fake-wheel workaround; guarded to mirror the add site (removing a listener
+    # that was never added is a harmless no-op, but keep the pair symmetric so the reason stays visible)
     if Utils.runningInMobileSafari()
-      canvas.removeEventListener 'scroll', @wheelBrowserEventListener
+      window.removeEventListener 'scroll', @wheelBrowserEventListener
+    window.removeEventListener 'dragover', @dragoverEventListener
+    window.removeEventListener 'drop', @dropBrowserEventListener
+    window.removeEventListener 'resize', @resizeBrowserEventListener
 
-    canvas.removeEventListener 'cut', @cutBrowserEventListener
-    canvas.removeEventListener 'copy', @copyBrowserEventListener
-    canvas.removeEventListener 'paste', @pasteBrowserEventListener
-
-    canvas.removeEventListener 'dragover', @dragoverEventListener
-    canvas.removeEventListener 'resize', @resizeBrowserEventListener
-    canvas.removeEventListener 'drop', @dropBrowserEventListener
+    # ── added to @inputDOMElementForVirtualKeyboard by _initVirtualKeyboard ────────────────────────
+    # Defensive completeness, not a leak fix: that hidden input only exists on a touch device with
+    # useVirtualKeyboard AND an open caret, and closing the caret already removes it from the DOM and
+    # nils it (taking its listeners to GC), so this is a no-op in every environment tests run in.
+    # It is here so the "detach everything" contract holds if a touch-device test ever exists.
+    if @inputDOMElementForVirtualKeyboard
+      @inputDOMElementForVirtualKeyboard.removeEventListener 'keydown', @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener
+      @inputDOMElementForVirtualKeyboard.removeEventListener 'keyup', @inputDOMElementForVirtualKeyboardKeyupBrowserEventListener
+      @inputDOMElementForVirtualKeyboard.removeEventListener 'keypress', @inputDOMElementForVirtualKeyboardKeypressBrowserEventListener
   # this part is excluded from the fizzygum homepage build <<«
   
   mouseDownLeft: ->

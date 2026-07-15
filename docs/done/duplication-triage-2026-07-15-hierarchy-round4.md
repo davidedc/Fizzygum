@@ -175,7 +175,8 @@ nothing from that report (its findings all cost an inspector recapture; see the 
       (`WorldWdgt.coffee:2100`), which removes each one BY FIELD REFERENCE (`@dragoverEventListener`,
       `@resizeBrowserEventListener`, …). These 3 are absent from it only because they attach to
       `@inputDOMElementForVirtualKeyboard` rather than `canvas` — which looks like a latent leak to
-      FIX, not a reason to delete the handles.
+      FIX, not a reason to delete the handles. ✅ **Followed up 2026-07-15 — see case law 15. It was
+      NOT a leak; but the audit it prompted found a real bug next door.**
     - `SpreadsheetWdgt.backgroundColorGrid` — one of 8 sibling colour fields in a palette block whose
       comment explains why they are instance fields and not class statics ("class-level Color statics
       would run at class-definition time, before Color loads"). Demoting the one that happens to be
@@ -194,6 +195,44 @@ nothing from that report (its findings all cost an inspector recapture; see the 
     costly; everything else is free"**. The expensive case is a COMMON BASE (e.g. `Widget` itself),
     whose members appear in every inspected object's list. Budget the recapture when you touch one of
     those — not merely because the tag is present.
+15. **⚠⚠ A SILENT NO-OP can defeat a whole mechanism — and `removeEventListener` on the wrong target is
+    one.** Chasing case law 13's "latent leak" hunch found no leak but did find a real bug, which is
+    the argument for following such hunches to the source.
+    - **What it is:** `WorldWdgt.removeEventListeners` (`:2100`) removed all 20 listeners from
+      `@worldCanvas`, but the `_init*EventListeners` family adds them across **THREE** targets:
+      `@worldCanvas` (13), `document.body` (cut/copy/paste), and `window` (scroll/dragover/drop/
+      resize). `removeEventListener` against a target the listener was never registered on does
+      **nothing, silently** — no error, no return value, no log. So **7 of 20 were never detached.**
+    - **Why it mattered:** this method is NOT memory cleanup. Its ONLY caller is
+      `AutomatorPlayer.startTestPlaying`, which runs it at the start of EVERY SystemTest precisely so
+      the macro's synthetic events are the only input. A surviving listener can push a REAL browser
+      event into `@inputEventsQueue` mid-test — and `@resizeBrowserEventListener` does exactly that
+      (`ResizeInputEvent`), so this was a live determinism hazard (`../Fizzygum-tests/DETERMINISM.md`).
+    - **Why nothing caught it:** every gate is green either way. There is no signal — not a failed
+      test, not a console error — because the no-op is invisible. The pairing is only checkable by
+      auditing add-target against remove-target, which is now done mechanically (0 mismatched, 0
+      never-removed across all 20 pairs) rather than by eye.
+    - **The virtual-keyboard 3 were never a leak:** that hidden input only exists on a touch device
+      with `useVirtualKeyboard` AND an open caret; closing the caret `removeChild`s and nils it, taking
+      its listeners to GC, and it is never created in any environment tests run in. Their removals were
+      added for contract completeness only.
+    **The general form: when a cleanup/teardown routine pairs with a setup routine, verify the PAIRING
+    mechanically.** An API that fails silently (`removeEventListener`, `delete`, `Set.delete`,
+    `clearTimeout`) gives no feedback when the pairing drifts, so the drift is invisible until someone
+    diffs the two lists.
+16. **A "risk class" asserted from a distance is not evidence — READ the mechanism before pricing the
+    risk.** `BubblyAppearance.constructor` (`(widget) -> super widget`, byte-identical to
+    `BoxyAppearance`'s) was left through two rounds behind a documented wall of constructor hazards.
+    Every one dissolved on inspection: `meta/Class.coffee` has an explicit `else` branch synthesising
+    `__super__.constructor.apply this, arguments` + `registerThisInstance?()` for a class with no ctor,
+    and **286 of 455 classes already ride it**; `check-constructors-build` only bans building children
+    inline; the `WindowWdgt`/`FolderWindowWdgt` trap was about REORDERING args for a subclass that
+    supers positionally, and this class has NO subclass; and `Object.create` (dup/serialization)
+    bypasses constructors entirely, which LOWERS the risk — it had been cited as if it raised it.
+    Deleted 2026-07-15, gauntlet 9/9, zero diffs. **IDENTICAL-TO-INHERITED: 1 → 0** — all three
+    hierarchy-duplication reports are now zero. The honest reason to skip it was only ever "it is two
+    lines"; that is a different claim from "it is dangerous", and conflating them let a wrong risk
+    assessment stand unexamined.
 
 ## ✅ ACTIONED — Tranche C (2026-07-15): the 3 remaining removable IDENTICAL findings
 
