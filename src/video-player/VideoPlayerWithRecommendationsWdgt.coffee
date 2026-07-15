@@ -33,8 +33,8 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
         # TODO id: NO_STEPPING_ONLY_ONCE_TO_HANDLE_CALLBACK date: 6-May-2023
         world.steppingWdgts.add @
       , (error) ->
-        console.log "error loading manifest"
-        console.log error
+        console.error "error loading manifest"
+        console.error error
   
   setUpVideoThumbsPage: ->
     for i in [0...@thumbs.length]

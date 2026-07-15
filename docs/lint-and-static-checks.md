@@ -243,12 +243,20 @@ last rule are COUNTED and printed, never dropped silently.
 state; conventions in `docs/duplicated-code-detection.md`). The report IS the deliverable — acting on it is a separate,
 verified arc.
 
-**Considered and REJECTED** (so they are not re-proposed): a `constructor.name` stink — `new @constructor` /
-`@constructor.name` is a legitimate universal idiom here, so it would ratchet an idiom, not a smell. A `console.log`
-stink — owner-parked; note the VERIFIED 2026-07-15 finding that console.logs are **NOT** stripped from production
-(`drop_console` appears nowhere in `build_it_please.sh`, and `terser --compress` keeps `console.*` by default), so 213
-sites ship in every build including `--homepage`; options are recorded in the carryover plan §8.6 and need an owner
-decision. Anything TRANSITIVE — already rejected as intractable, see §7.
+**Considered and REJECTED** (so they are not re-proposed):
+- A **`constructor.name` stink** — `new @constructor` / `@constructor.name` is a legitimate universal idiom here, so it
+  would ratchet an idiom, not a smell.
+- A **`console.log` stink, and `drop_console` in the production build — both rejected 2026-07-15, decided, do not
+  re-open without new evidence.** It is true that console.logs are NOT stripped from production (`drop_console` appears
+  nowhere in `build_it_please.sh`; `terser --compress` keeps `console.*`), but that fact is operationally empty: of 224
+  non-comment sites, **201 are behind an explicit debug flag** (`@detailedDebug`, `window.srcLoadCompileDebugWrites`)
+  and all 23 others are multi-line guards, audit blocks, Automator-only paths, or error handlers — **nothing logs in
+  normal operation**. `drop_console` would be actively HARMFUL (it strips the error diagnostics we want in prod), and it
+  could not shrink the bundle anyway: class sources ship as escaped TEXT and compile in-browser, so terser never sees
+  them. A stink at ~213 would ratchet a disciplined idiom — the `constructor.name` mistake again. The one real finding
+  inside the item (6 error paths using `console.log` where `console.error` is the verb the gates key off) was fixed.
+  Full evidence: carryover plan §8.6.
+- Anything **TRANSITIVE** — already rejected as intractable, see §7.
 
 **On `census-public-private-calls.js` specifically** (the oldest of the three, and the only one that is also a gate
 ENGINE): it measures public/private SELF-call mixing — private→public-command calls, double-settle shapes, and public

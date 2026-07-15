@@ -100,7 +100,7 @@ class Class
     if (aString.includes "[].indexOf") or
      (aString.includes "{}.hasProp") or
      (aString.includes "[].slice")
-      console.log "code contains a helper var, it shouldn't: " +  aString
+      console.error "code contains a helper var, it shouldn't: " +  aString
       debugger
 
     return aString
@@ -415,7 +415,7 @@ class Class
           if window.srcLoadCompileDebugWrites then console.log "actually evalling " + @name + " to create the class"
           eval.call window, JS_string_definitions
         catch err
-          console.log " error " + err + " evaling : " + JS_string_definitions
+          console.error " error " + err + " evaling : " + JS_string_definitions
           alert " error " + err + " evaling : " + JS_string_definitions
 
 

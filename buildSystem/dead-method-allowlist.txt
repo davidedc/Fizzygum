@@ -13,7 +13,6 @@
 #     unused; deleting it would leave a lopsided surface). ---
 asArray                 # Point [x,y] / Rectangle [l,t,r,b] conversion API (the _xywh variant was deleted)
 divideBy                # Point arithmetic, parallel to the live multiplyBy
-rotateZ                 # Point3D, completes the rotateX / rotateY / rotateZ family
 colRowFor               # SheetModel address algebra, the inverse of the live addressFor (colToLetters/lettersToCol/addressFor/colRowFor); the view's old value-paint loop used it, widgetised away in Phase 8 — kept as the symmetric public API (hit-test/scroll sub-phases resolve addresses back to col/row)
 getBody                 # Macro immutable value-class accessor
 toggleShowBlanks        # StringWdgt menu-toggle action, same shape as toggleWeight / toggleItalic / ...

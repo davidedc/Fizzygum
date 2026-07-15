@@ -61,7 +61,7 @@ class Mixin
     if (aString.includes "[].indexOf") or
      (aString.includes "{}.hasProp") or
      (aString.includes "[].slice")
-      console.log "code contains a helper var, it shouldn't: " +  aString
+      console.error "code contains a helper var, it shouldn't: " +  aString
       debugger
 
     return aString
@@ -113,7 +113,7 @@ class Mixin
         try
           eval.call window, JS_string_definitions
         catch err
-          console.log " error " + err + " evaling : " + JS_string_definitions
+          console.error " error " + err + " evaling : " + JS_string_definitions
           debugger
         # Register this parsed mixin so the inspector can recover a mixin method's real CoffeeScript source
         # from @nonStaticPropertiesSources (InspectorWdgt.selectionFromList) instead of falling back to the

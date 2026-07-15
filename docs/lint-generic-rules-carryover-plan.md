@@ -36,9 +36,17 @@ list) makes the property public API (`ListWdgt.elements`). A third — `Inspecto
 hand-verification wrongly cleared — was caught only by the automated `.name` veto (`MacroToolkit.coffee:879`
 reads it). Recorded in the ledger: hand spot-checking is not a substitute for the exclusions.
 
-**Banked, NOT done (owner-gated):** everything in §8 below, plus two ratchets `fg critique` now surfaces
-as tightenable — the dead-method allowlist entry `rotateZ` is stale, and `BASELINE_U_QUERY` is 150 against
-a count of 148. Both are one-line tooling edits, deliberately left alone as out of this arc's scope.
+**Closed straight after the arc commit (owner decisions, 2026-07-15):**
+- **§8.6 console.log — RESOLVED: accept as-is.** The premise did not survive measurement: 201 of 224 sites
+  are behind explicit debug flags and the other 23 are all guards/audits/Automator-paths/error-handlers, so
+  nothing logs in normal operation; `drop_console` would have stripped the error diagnostics we want. The
+  one real finding inside it — 6 genuine error paths using the wrong verb — was fixed (`console.log` →
+  `console.error`, making them visible to the gates that key off `console.error`). Full detail in §8.6.
+- **Both tightenable ratchets closed:** the stale `rotateZ` dead-method entry deleted (`Point3D.coffee` has
+  `rotateX`/`rotateY` but no `rotateZ` — the method does not exist, so the entry could never match), and
+  `BASELINE_U_QUERY` tightened 150 → 148 to lock a gain a previous arc had already banked.
+
+**Still banked, NOT done (owner-gated):** everything else in §8 below.
 
 ---
 
@@ -541,7 +549,32 @@ Each carries enough context to spawn a future arc cold.
    (`Widget.coffee` = 4,950 lines) to support `docs/god-class-decomposition-plan.md` ("must not
    grow while the plan is pending"). Advisory `fg metrics` first; promote to ratchet when the
    decomposition arc starts.
-6. **console.log policy — VERIFIED FINDING 2026-07-15:** contrary to prior belief, console.logs are
+6. **console.log policy — ✅ RESOLVED 2026-07-15 (owner decision: ACCEPT AS-IS + fix the error verbs).**
+   The finding below is literally true but **operationally empty**, and the follow-up measurement is the
+   part worth keeping: of **224** non-comment `console.log` sites, **201 sit behind an explicit debug
+   flag** (`if @detailedDebug` — 154 in `LCLCodePreprocessor.coffee` alone; `if
+   window.srcLoadCompileDebugWrites` in `meta/Class.coffee`), and **every one of the remaining 23** was
+   read and is inside a multi-line debug guard, an audit block (`UNDECLARED-EOC`/`PAINT-SCHEDULES`), an
+   Automator-only path (`TreeNode`), or a genuine error handler. **Nothing logs during normal
+   operation.** So:
+   - **(a) `drop_console` was REJECTED as actively harmful** — it would strip the error diagnostics we
+     WANT in production (`Class.coffee:418` "error evaling", `VideoPlayerWithRecommendationsWdgt` "error
+     loading manifest"). The size argument does not hold either: class sources ship as escaped TEXT and
+     compile in-browser, so terser never sees them — it only touches boot, the loaders, and the homepage
+     pre-compiled image; the `console.log` text ships regardless.
+   - **(b) a ratcheted `console-log` stink was REJECTED** — it would ratchet a disciplined, flag-guarded
+     debug idiom, not a smell. Exactly the `constructor.name` mistake already rejected above.
+   - **(c) ACCEPTED as-is.** The one real finding inside the item: **6 genuine error paths used
+     `console.log` where `console.error` is the right verb** — converted 2026-07-15
+     (`meta/Class.coffee:103,418`, `meta/Mixin.coffee:64,116`,
+     `VideoPlayerWithRecommendationsWdgt:36,37`). That is not cosmetic: `console.error` is the
+     ESTABLISHED failure signal the gates key off ("CI / the smoke-apps app-launch gate key off
+     console.error" — `WorldWdgt.coffee:1554`), alongside `RECALC_NONCONVERGENCE` / `LAYOUT_ERROR` /
+     `DATAFLOW_ERROR`. So those six failures are now visible to the boot-smoke and apps gates instead of
+     scrolling past as logs. Verified: build + boot smoke green on native AND SWCanvas (none of the six
+     fires in a healthy build), full gauntlet green.
+
+   *(Original finding, kept for the record:)* contrary to prior belief, console.logs are
    **NOT stripped from the production build**: `drop_console` appears nowhere in
    `build_it_please.sh`, and `terser --compress` (used at ~:587 boot, ~:650-657 loaders, ~:782
    pre-compiled homepage image) keeps `console.*` by default; no runtime override reroutes
