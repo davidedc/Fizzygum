@@ -20,6 +20,18 @@
  *            is an assignment, and which no super/subclass touches. It is a local wearing a field's
  *            clothes: it widens the object's state and its serialization surface for nothing.
  *
+ *   ⚠⚠ KNOWN BUG (found 2026-07-15, UNFIXED — docs/census-findings-triage-plan.md Phase 0):
+ *   DEMOTE does NOT require the property to be READ, so a WRITE-ONLY field (assigned once, never
+ *   read) is reported as demotable. Wrong twice over: demoting a write-only field makes it DEAD, not
+ *   local; and a write-only field is usually ENUMERATION PAYLOAD — reached by `JSON.stringify(obj)`,
+ *   `DeepCopierMixin`'s `@[property]` walk, or the serializer, none of which a name scanner can see.
+ *   16 of 36 findings have exactly 1 use, and 12 of those are `SystemInfo` fields that ARE the
+ *   reference-image identity (Fizzygum-tests/.../SystemTestsReferenceImage.coffee:31 hashes
+ *   `JSON.stringify(@systemInfo)` into every reference filename's systemInfoHash) — demoting them
+ *   would invalidate the whole committed reference set.
+ *   FIX: require at least one non-assignment occurrence (`uses >= 2`). Until then, treat every
+ *   1-use DEMOTE finding as a false positive.
+ *
  * ── WHY THIS CAN NEVER BE A GATE (severity policy — do not "promote" it) ────────────────────────
  * Property access here is partly DYNAMIC and therefore invisible to a name scanner: DeepCopierMixin
  * walks `@[property]`, and the serialization protocol drives off property-NAME STRINGS. A property
@@ -336,8 +348,15 @@ for (const r of trunc(pullUp, 40)) {
 }
 if (!FULL && pullUp.length > 40) console.log(`  … ${pullUp.length - 40} more (--full)`);
 
+const writeOnly = demote.filter((r) => r.uses === 1).length;
 console.log(`\n--- DEMOTE (${demote.length}) — property -> local (one method, assigned before read) ---`);
 console.log(`    (${vetoedByMemberRead} candidate${vetoedByMemberRead === 1 ? '' : 's'} withheld: read as \`.name\` from another file, so locality is not provable — see exclusion 3)`);
+if (writeOnly) {
+  console.log(`    ⚠ KNOWN BUG: ${writeOnly} of these have 1 use — WRITE-ONLY (assigned, never read), so they are`);
+  console.log(`      almost certainly enumeration payload (JSON.stringify / DeepCopier @[property]), NOT locals.`);
+  console.log(`      Treat 1-use findings as FALSE POSITIVES. Fix = require uses >= 2. See`);
+  console.log(`      docs/census-findings-triage-plan.md Phase 0.`);
+}
 for (const r of trunc(demote, 40)) {
   console.log(`  DEMOTE  ${r.cls}.${r.prop}: only used in @${r.method} (${r.uses} use${r.uses === 1 ? '' : 's'}${r.hasDefault ? ', has a class-body default' : ''})  ${r.at}${tag(r)}`);
 }

@@ -252,7 +252,17 @@ last rule are COUNTED and printed, never dropped silently.
 
 **Findings land in the triage ledger, not in a commit:** `duplication-report/triage-report.md` (gitignored working
 state; conventions in `docs/duplicated-code-detection.md`). The report IS the deliverable — acting on it is a separate,
-verified arc.
+verified arc. The closed round-4 record + its case law: `docs/done/duplication-triage-2026-07-15-hierarchy-round4.md`.
+**The remaining, un-actioned findings have their own plan: `docs/census-findings-triage-plan.md`** (AUTHORED, not
+started) — which opens with a KNOWN BUG in the property census (below), so read it before acting on a DEMOTE finding.
+
+⚠ **KNOWN BUG (`census-property-placement.js`, found 2026-07-15, unfixed — plan Phase 0): the DEMOTE rule does not
+require the property to be READ**, so a WRITE-ONLY field is reported as demotable. That is wrong twice: demoting a
+write-only field makes it dead, not local; and a write-only field is usually **enumeration payload** — reached by
+`JSON.stringify(obj)` / `DeepCopierMixin`'s `@[property]` walk / the serializer, none of which a name scanner sees.
+16 of 36 findings have exactly 1 use; 12 are `SystemInfo` fields that ARE the reference-image identity
+(`SystemTestsReferenceImage.coffee:31` hashes `JSON.stringify(@systemInfo)` into every reference filename's
+`systemInfoHash`). Fix = require a read (`uses >= 2`). Until then, treat any 1-use DEMOTE finding as a false positive.
 
 **Considered and REJECTED** (so they are not re-proposed):
 - A **`constructor.name` stink** — `new @constructor` / `@constructor.name` is a legitimate universal idiom here, so it
