@@ -284,10 +284,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       return "window"
 
-  # The re-fit chokepoint for a window (no scrollbars): re-fit chrome + content.
-  # See Widget._reLayoutChildren.
-  _reLayoutChildren: ->
-    @_positionAndResizeChildren()
+  # (no _reLayoutChildren override: SimpleVerticalStackPanelWdgt's is already `@_positionAndResizeChildren()`,
+  # and that dispatches to the window's own override below -- which is what re-fits chrome + content.)
 
   # A window fits its OWN width to its content (fit-to-content in BOTH axes), unlike a plain stack whose
   # width its container sets. So re-laying a window synchronously while its CONTAINER is mid-arrange
@@ -588,6 +586,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     super
     @layoutSpecDetails.canSetHeightFreely = false
 
+  # The re-fit chokepoint for a window (no scrollbars): re-fit chrome + content. Reached via the
+  # inherited SimpleVerticalStackPanelWdgt._reLayoutChildren, which dispatches back here.
   # should this just be the _reLayout function? Why do we need this extra one?
   _positionAndResizeChildren: ->
 

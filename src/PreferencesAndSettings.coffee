@@ -36,7 +36,8 @@ class PreferencesAndSettings
   handleSize: nil
   scrollBarsThickness: nil
 
-  outlineColor: nil
+  # (no outlineColor field: it is a local in setMouseInputMode -- nothing but the
+  # outlineColorString shortcut below ever reads the Color object itself.)
   outlineColorString: nil
 
   wheelScaleX: 1
@@ -129,10 +130,10 @@ class PreferencesAndSettings
     @defaultPanelsStrokeColor = Color.create 100, 100, 100
     @editableItemBackgroundColor = Color.create 240, 240, 240
 
-    @outlineColor = Color.create 244,243,244
+    outlineColor = Color.create 244,243,244
     # let's create this shortcut just because
     # we use this string so many times
-    @outlineColorString = @outlineColor.toString()
+    @outlineColorString = outlineColor.toString()
 
     @iconDarkLineColor = Color.BLACK
 

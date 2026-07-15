@@ -35,9 +35,8 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
   # via super. Widget defines a base enableDragsDropsAndEditing, so a bare
   # `@parent.enableDragsDropsAndEditing?()` would bubble to ANY parent -- the capability
   # query keeps it to the coordinator. (type-test-elimination campaign)
-  enableDragsDropsAndEditing: (triggeringWidget) ->
-    @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle triggeringWidget
-
+  # Only the CORES are overridden here: ScrollPanelWdgt's public enable/disableDragsDropsAndEditing
+  # wrappers are the canonical settle-wraps and dispatch straight back to these.
   _enableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
@@ -47,9 +46,6 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
       @parent._enableDragsDropsAndEditingNoSettle @
     else
       super @
-
-  disableDragsDropsAndEditing: (triggeringWidget) ->
-    @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle triggeringWidget
 
   _disableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @

@@ -58,9 +58,6 @@ class SimplePlainTextWdgt extends TextWdgt
     super
     @layoutSpecDetails.canSetHeightFreely = false
 
-  openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    @_popUpTargetPropertyMenu theTarget, theTarget.stringSetters()
-
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
     @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!", "text"], ["bang", "setText"]
@@ -158,8 +155,9 @@ class SimplePlainTextWdgt extends TextWdgt
     @_fireConnection @text
     return
 
-  reactToTargetConnection: ->
-    @updateTarget()
+  # (no reactToTargetConnection / openTargetPropertySelector overrides: StringWdgt's are already
+  # exactly `@updateTarget()` and `@_popUpTargetPropertyMenu theTarget, theTarget.stringSetters()`
+  # -- both late-bound, so they reach this class's members with no override needed here.)
 
   # setText (above) + the inherited setFontSize / setFontName / toggleShowBlanks /
   # toggleWeight / toggleItalic / toggleIsPassword all re-flow the box AND nudge the

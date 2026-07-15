@@ -362,15 +362,10 @@ class TextWdgt extends StringWdgt
   # un-soft-wrapped text — the widest hard-newline-separated line × the line
   # count (width = maxLineWidth, height = lines × fontHeight). softWrap is turned
   # OFF so the text never re-wraps to the container; the box just hugs the text.
-  # See StringWdgt::sizeToTextAndDisableFitting for the full rationale.
-  # PUBLIC self-settling entry for STANDALONE callers; the in-pass / in-settle callers (_createLabel
-  # driven by _reLayoutSelf, _setTextNoSettle, setFontSize) call the NoSettle core directly -- a single
-  # self-settle reached mid-pass/mid-settle THROWS (the wanted discipline). See
-  # StringWdgt::sizeToTextAndDisableFitting for the full standalone-vs-in-settle rationale. Returns @
-  # (the core ends with @) so callers can chain -- several macros do `(new TextWdgt …).sizeToTextAndDisableFitting()`.
-  sizeToTextAndDisableFitting: ->
-    @_settleLayoutsAfter => @_sizeToTextAndDisableFittingNoSettle()
-
+  # See StringWdgt::sizeToTextAndDisableFitting for the full rationale — only the CORE is overridden
+  # here; StringWdgt's public sizeToTextAndDisableFitting is the canonical settle-wrap and dispatches
+  # straight to it.
+  #
   # The multi-line box-hug, minus the settle. A chrome label (menu item / button caption -- a freefloating
   # TextWdgt at .label) is laid out by its container, which centres it in _reLayoutSelf (LabelButton /
   # MenuItem). On re-hug the container must re-layout, but it is NOT a scroll-panel/stack so the generic
