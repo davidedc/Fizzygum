@@ -1881,11 +1881,9 @@ class Widget extends TreeNode
     return true
 
   _applyMoveToBase: (aPoint) ->
-    aPoint.debugIfFloats()
     delta = aPoint.toLocalCoordinatesOf @
     if !delta.isZero()
       @_applyMoveByBase delta
-    @bounds.debugIfFloats()
 
   __commitMoveBy: (delta) ->
     @__breakMoveResizeCaches()
@@ -1945,11 +1943,9 @@ class Widget extends TreeNode
   # this one actually immediately changes the position and
   # bounds of widgets
   _applyMoveTo: (aPoint) ->
-    aPoint.debugIfFloats()
     delta = aPoint.toLocalCoordinatesOf @
     if !delta.isZero()
       @_applyMoveBy delta
-    @bounds.debugIfFloats()
 
   # high-level geometry-change API,
   # you don't actually change the geometry right away,
@@ -2181,8 +2177,10 @@ class Widget extends TreeNode
   # fail on (see Fizzygum-tests). console.error, NOT throw -- non-fatal, so the guard never itself becomes
   # the crash it guards against. Born from the 2026-07-15 plot-uncollapse NaN
   # (KeepsRatioWhenInVerticalStackMixin returned undefined -> WindowWdgt `stackHeight += undefined` -> NaN
-  # window height -> NaN dirty rect). This gives real teeth, scoped to bounds-commit, to the checking the
-  # dormant Point/Rectangle debugIfFloats hooks were meant to do.
+  # window height -> NaN dirty rect). (This supersedes the old dormant no-op Point/Rectangle `debugIfFloats`
+  # hooks, deleted in the same arc: a per-accessor check there was too hot AND would false-positive on the
+  # legitimate fractional values that flow through those accessors; the never-legitimate non-finite case is
+  # better caught once, HERE, at the bounds-commit source with the owning widget in hand.)
   _assertBoundsFinite: (where) ->
     o = @bounds.origin
     c = @bounds.corner

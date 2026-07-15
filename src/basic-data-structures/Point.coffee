@@ -10,14 +10,6 @@ class Point
    
   constructor: (@x = 0, @y = 0) ->
 
-  # DORMANT no-op hook (kept as a call-site marker). A general per-accessor fractional/finiteness assert
-  # here is too hot to run always-on, and fractional coordinates are LEGITIMATE (rotated strokes, sub-pixel
-  # content). The one never-legitimate case -- a NaN/Infinity coordinate reaching a widget's committed
-  # @bounds -- is caught cheaply at the SOURCE instead: Widget._assertBoundsFinite (the NON_FINITE_GEOMETRY
-  # guard), called from Widget's ~6 bounds-commit leaves. See it for the why (SWCanvas clip() throw).
-  debugIfFloats: ->
-    return
-
   # Point string representation: e.g. '12@68'
   toString: ->
     Math.round(@x) + "@" + Math.round(@y)
@@ -49,11 +41,9 @@ class Point
     @x <= aPoint.x and @y <= aPoint.y
   
   max: (aPoint) ->
-    @debugIfFloats()
     new @constructor Math.max(@x, aPoint.x), Math.max(@y, aPoint.y)
   
   min: (aPoint) ->
-    @debugIfFloats()
     new @constructor Math.min(@x, aPoint.x), Math.min(@y, aPoint.y)
   
   # Point conversion:
@@ -61,16 +51,13 @@ class Point
     new @constructor Math.round(@x), Math.round(@y)
   
   abs: ->
-    @debugIfFloats()
     new @constructor Math.abs(@x), Math.abs(@y)
   
   neg: ->
-    @debugIfFloats()
     new @constructor -@x, -@y
 
   # »>> this part is excluded from the fizzygum homepage build
   mirror: ->
-    @debugIfFloats()
     new @constructor @y, @x
   # this part is excluded from the fizzygum homepage build <<«
   
@@ -93,29 +80,24 @@ class Point
   
   # Point arithmetic:
   add: (other) ->
-    @debugIfFloats()
     return new @constructor @x + other.x, @y + other.y  if other instanceof Point
     new @constructor @x + other, @y + other
   
   subtract: (other) ->
-    @debugIfFloats()
     return new @constructor @x - other.x, @y - other.y  if other instanceof Point
     new @constructor @x - other, @y - other
   
   multiplyBy: (other) ->
-    @debugIfFloats()
     return new @constructor @x * other.x, @y * other.y  if other instanceof Point
     new @constructor @x * other, @y * other
   
   # »>> this part is excluded from the fizzygum homepage build
   divideBy: (other) ->
-    @debugIfFloats()
     return new @constructor @x / other.x, @y / other.y  if other instanceof Point
     new @constructor @x / other, @y / other
   # this part is excluded from the fizzygum homepage build <<«
   
   floorDivideBy: (other) ->
-    @debugIfFloats()
     if other instanceof Point
       return new @constructor Math.floor(@x / other.x), Math.floor(@y / other.y)
     new @constructor Math.floor(@x / other), Math.floor(@y / other)

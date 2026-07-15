@@ -73,7 +73,6 @@ BackBufferMixin =
         return [area,sl,st,al,at,w,h]
 
       isTransparentAt: (aPoint) ->
-        @bounds.debugIfFloats()
         if @boundsContainPoint aPoint
           return false  if @texture
           data = @getPixelColor aPoint

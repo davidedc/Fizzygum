@@ -24,7 +24,6 @@ HTMLCanvasElement::deepCopy = (objOriginalsClonedAlready, objectClones, allWidge
 # then those are in logical coordinates and need to be
 # corrected with ceilPixelRatio before being passed here.
 HTMLCanvasElement.createOfPhysicalDimensions = (extentPoint) ->
-  extentPoint?.debugIfFloats()
   # answer a new empty instance of Canvas, don't display anywhere
   ext = extentPoint or
     x: 0

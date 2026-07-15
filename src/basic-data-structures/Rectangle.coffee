@@ -66,17 +66,8 @@ class Rectangle
   toString: ->
     "[" + @origin + " | " + @extent() + "]"
 
-  # DORMANT no-op hook (kept as a call-site marker). A general per-accessor fractional/finiteness assert
-  # here is too hot to run always-on, and fractional coordinates are LEGITIMATE (rotated strokes, sub-pixel
-  # content). The one never-legitimate case -- a NaN/Infinity coordinate reaching a widget's committed
-  # @bounds -- is caught cheaply at the SOURCE instead: Widget._assertBoundsFinite (the NON_FINITE_GEOMETRY
-  # guard), called from Widget's ~6 bounds-commit leaves. See it for the why (SWCanvas clip() throw).
-  debugIfFloats: ->
-    return
-
   # Rectangle copying:
   copy: ->
-    @debugIfFloats()
     new @constructor @left(), @top(), @right(), @bottom()
   
   # Rectangle accessing - setting
@@ -99,144 +90,113 @@ class Rectangle
   
   # Rectangle accessing - getting:
   area: ->
-    @debugIfFloats()
     #requires width() and height() to be defined
     w = @width()
     return 0  if w < 0
     Math.max w * @height(), 0
   
   bottom: ->
-    @debugIfFloats()
     @corner.y
   
   bottomCenter: ->
-    @debugIfFloats()
     new Point @center().x, @bottom()
   
   bottomLeft: ->
-    @debugIfFloats()
     new Point @origin.x, @corner.y
   
   bottomRight: ->
-    @debugIfFloats()
     @corner.copy()
   
   boundingBox: ->
-    @debugIfFloats()
     @
   
   center: ->
-    @debugIfFloats()
     @origin.add @corner.subtract(@origin).floorDivideBy(2)
   
   # »>> this part is excluded from the fizzygum homepage build
   # unused code
   corners: ->
-    @debugIfFloats()
     [@origin, @bottomLeft(), @corner, @topRight()]
   # this part is excluded from the fizzygum homepage build <<«
   
   extent: ->
-    @debugIfFloats()
     @corner.subtract @origin
   
   isEmpty: ->
-    @debugIfFloats()
     return ((@width() <= 0) or (@height() <= 0))
 
   isNotEmpty: ->
     !@isEmpty()
   
   height: ->
-    @debugIfFloats()
     @corner.y - @origin.y
   
   left: ->
-    @debugIfFloats()
     @origin.x
   
   leftCenter: ->
-    @debugIfFloats()
     new Point @left(), @center().y
   
   right: ->
-    @debugIfFloats()
     @corner.x
   
   rightCenter: ->
-    @debugIfFloats()
     new Point @right(), @center().y
   
   top: ->
-    @debugIfFloats()
     @origin.y
   
   topCenter: ->
-    @debugIfFloats()
     new Point @center().x, @top()
   
   topLeft: ->
-    @debugIfFloats()
     @origin
   
   topRight: ->
-    @debugIfFloats()
     new Point @corner.x, @origin.y
   
   width: ->
-    @debugIfFloats()
     @corner.x - @origin.x
   
   position: ->
-    @debugIfFloats()
     @origin
   
   # Rectangle comparison:
   equals: (aRect) ->
     if !aRect? then return false
-    @debugIfFloats()
     @origin.equals(aRect.origin) and @corner.equals(aRect.corner)
   
   abs: ->
-    @debugIfFloats()
     newOrigin = @origin.abs()
     newCorner = @corner.max newOrigin
     newOrigin.corner newCorner
   
   # Rectangle functions:
   insetBy: (delta) ->
-    @debugIfFloats()
     # delta can be either a Point or a Number
     result = new @constructor()
     result.origin = @origin.add delta
     result.corner = @corner.subtract delta
-    result.debugIfFloats()
     result
 
   rightHalf: ->
-    @debugIfFloats()
     result = new @constructor()
     result.origin = @origin.add new Point Math.round(@width()/2),0
     result.corner = @corner.copy()
-    result.debugIfFloats()
     result
   
   expandBy: (delta) ->
-    @debugIfFloats()
     # delta can be either a Point or a Number
     result = new @constructor()
     result.origin = @origin.subtract delta
     result.corner = @corner.add delta
-    result.debugIfFloats()
     result
   
   growBy: (delta) ->
-    @debugIfFloats()
     # delta can be either a Point or a Number
     result = new @constructor()
     result.origin = @origin.copy()
     result.corner = @corner.add delta
-    result.debugIfFloats()
     result
   
   # Note that "negative" rectangles can come
@@ -244,7 +204,6 @@ class Rectangle
   # new Rectangle(10,10,20,20).intersect(new Rectangle(15,25,19,25))
   # gives a rectangle with the corner above the origin.
   intersect: (aRect) ->
-    @debugIfFloats()
     a = @zeroIfNegative()
     b = aRect.zeroIfNegative()
     if a.isEmpty() or b.isEmpty()
@@ -253,17 +212,14 @@ class Rectangle
     result.origin = a.origin.max b.origin
     result.corner = a.corner.min b.corner
     result = result.zeroIfNegative()
-    result.debugIfFloats()
     result
 
   zeroIfNegative: () ->
-    @debugIfFloats()
     if @isEmpty()
       return @constructor.EMPTY
     return @
   
   merge: (aRect) ->
-    @debugIfFloats()
     a = @zeroIfNegative()
     b = aRect.zeroIfNegative()
     if a.isEmpty()
@@ -273,7 +229,6 @@ class Rectangle
     result = new @constructor()
     result.origin = a.origin.min b.origin
     result.corner = a.corner.max aRect.corner
-    result.debugIfFloats()
     result
   
   round: ->
@@ -286,7 +241,6 @@ class Rectangle
     @origin.ceil().corner @corner.ceil()
   
   spread: ->
-    @debugIfFloats()
     # round me by applying floor() to my origin and ceil() to my corner
     @origin.floor().corner @corner.ceil()
   
@@ -295,15 +249,12 @@ class Rectangle
   
   # Rectangle testing:
   containsPoint: (aPoint) ->
-    @debugIfFloats()
     @origin.le(aPoint) and aPoint.lt(@corner)
   
   containsRectangle: (aRect) ->
-    @debugIfFloats()
     aRect.origin.ge(@origin) and aRect.corner.le(@corner)
 
   isIntersecting: (aRect) ->
-    @debugIfFloats()
     ro = aRect.origin
     rc = aRect.corner
     rc.x >= @origin.x and
@@ -314,26 +265,22 @@ class Rectangle
   
   # Rectangle transforming:
   scaleBy: (scale) ->
-    @debugIfFloats()
     # scale can be either a Point or a scalar
     o = @origin.multiplyBy scale
     c = @corner.multiplyBy scale
     new @constructor o.x, o.y, c.x, c.y
   
   translateBy: (factor) ->
-    @debugIfFloats()
     # factor can be either a Point or a scalar
     o = @origin.add factor
     c = @corner.add factor
     new @constructor o.x, o.y, c.x, c.y
   
   translateTo: (aPoint) ->
-    @debugIfFloats()
     c = @corner
     new @constructor aPoint.x, aPoint.y, c.x, c.y
   
   
   # Rectangle converting:
   asArray: ->
-    @debugIfFloats()
     [@left(), @top(), @right(), @bottom()]
