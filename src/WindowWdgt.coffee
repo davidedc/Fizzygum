@@ -549,26 +549,16 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @_addNoSettle resizer, layoutSpec: resizer.defaultLayoutSpecWhenAddedTo(@)
       @resizer = resizer
 
-  # Reflect the content's edit/view mode in the title-bar edit button: the glyph
-  # NAMES the current mode (pencil = editing now, eye = viewing now) and the
-  # existing colour reinforces it (editing-yellow / clear). Driven from the 8
-  # enable/disable state-reflection callers, not from clicks — see
-  # docs/pencil-eye-edit-mode-toggle-plan.md §1/§3.
+  # Reflect the content's edit/view mode in the title-bar edit button. The glyph
+  # NAMES the current mode (pencil = editing now, eye = viewing now); the button
+  # owns its own rest/hover appearance + colour (monochrome at rest, colour on
+  # hover as feedforward — see EditIconButtonWdgt), so this just sets the mode.
+  # Driven from the enable/disable state-reflection callers, not from clicks.
   showEditModeInBar: ->
       @editButton?.showPencilGlyph()
-      # TODO assigning to color_normal is not enough
-      # there should be a way to do these two lines with one line
-      @editButton?.color_normal = Color.create 248, 188, 58
-      @editButton?.setColor Color.create 248, 188, 58
-      @editButton?.changed()
 
   showViewModeInBar: ->
       @editButton?.showEyeGlyph()
-      # TODO assigning to color_normal is not enough
-      # there should be a way to do these two lines with one line
-      @editButton?.color_normal = Color.create 245, 244, 245
-      @editButton?.setColor Color.create 245, 244, 245
-      @editButton?.changed()
 
   _createAndAddEditButton: ->
     # public-call-sanctioned: showEditModeInBar/showViewModeInBar are the window-bar mode PROTOCOL —

@@ -1,6 +1,10 @@
 # Plan — pencil ↔ eye: the window-bar edit-mode toggle shows the CURRENT MODE as a glyph
 
-**Status: ✅ IMPLEMENTED 2026-07-06 (Opus) — awaiting owner review + commit.** Executed by the drag-embed
+**Status: ✅ IMPLEMENTED + PUSHED.** The state glyph (§1–§7) shipped 2026-07-06 (Fizzygum `6f6c834e` / tests
+`7214a8193`); the **§8 HOVER-FEEDFORWARD REFINEMENT** (monochrome-at-rest + next-state-on-hover-in-yellow +
+immediate tooltip, owner-driven) landed 2026-07-15 — **see §8, which supersedes §1's resting colour.** History below.
+
+**(Original 2026-07-06 status.)** Executed by the drag-embed
 executor session as its next step after the drag-embed arc landed (Fizzygum `5e8d152e` / tests `276b26b84`),
 per §6's recommendation. Built exactly per §4 (the §2 one-button appearance-swap design, NOT a SwitchButtonWdgt);
 §1 STATE semantics kept (owner saw the eye live at the eyeball checkpoint and approved: "Proceed"). The eye glyph
@@ -267,3 +271,48 @@ serialization legs round-trip windows pixel-identically, and the edit button's a
 way the pencil already did — so the eye is free (no regression). §5.5 (drag-embed lock-cue): the cue anchors to
 `@editButton` BOUNDS, which this change does not touch (only the button's appearance/tooltip), so the amber
 pulse-on-an-eye composition follows automatically — confirmed by inspection, no bounds/layout change.
+
+## §8 — HOVER-FEEDFORWARD REFINEMENT (2026-07-15, owner-driven; supersedes §1's rest colouring)
+
+A follow-up UX pass, brainstormed + prototyped live with the owner (eyeball board, teal/green/yellow compared),
+then locked in. It re-splits the two jobs of the button — INDICATE the current mode vs AFFORD switching it —
+across the two interaction states:
+
+- **MONOCHROME AT REST.** The resting glyph is uncoloured (near-white on the gray bar) for BOTH modes; the SHAPE
+  alone names the current mode (pencil = editing, eye = viewing). The editing-yellow of §1 is dropped at rest —
+  rest becomes a calm pure-status indicator, reading like the close/collapse icon family. (Accepted tradeoff: the
+  cross-window "which is editable?" scan now needs a look, not a glance; the owner chose calm over pop.)
+- **FEEDFORWARD ON HOVER.** While hovered (or pressed) the button morphs to the glyph of the mode a click switches
+  TO, in a single **"this button does something" YELLOW** (owner decision: NOT a mode-specific teal/green — the
+  shape carries the meaning, the colour just says "active"). Rest = status (shape); hover = control (next glyph +
+  affordance colour + text). The colour arriving on hover is itself the "this is a preview" cue.
+- **IMMEDIATE tooltip.** The action bubble ("switch to view mode" / "edit contents") pops on hover with ~no delay
+  (next frame) instead of the shipped 500ms, so the text explanation lands with the visual preview.
+
+**As-built (Fizzygum):**
+- `EditIconButtonWdgt` owns all its rest/hover appearance now: `restColor` (near-white) + `hoverColor` (yellow);
+  `_updateColor` (overriding the `HighlightableMixin` colour hook) swaps BOTH the glyph and the colour by state —
+  rest = current-mode glyph mono, highlighted/pressed = OTHER-mode glyph in yellow. `showPencilGlyph`/`showEyeGlyph`
+  just set `@_editModeNow` and re-derive. The `_updateColor → @setColor` call is `# public-call-sanctioned` (it
+  mirrors the mixin method it overrides; setColor is the pure paint-colour setter, no settle).
+- `startCountdownForBubbleHelp` overridden to pass delay `1` (≈ next frame). Edit-button-specific — other buttons
+  keep the 500ms. (SystemTests already bypass the delay, so this changes only the live/interactive timing.)
+- `WindowWdgt.showEditModeInBar`/`showViewModeInBar` simplified to just call the button's glyph setter (the button
+  owns the colour now; the old `color_normal`/`setColor` yellow/clear lines are gone).
+
+**Tests:** blast radius = **7 tests** (the edit-mode pencil went yellow→white; view-mode eye was already near-white,
+unchanged): `macroDesktopShortcutIcons`, `macroDrawingsMakerReEnableEditing`, `macroEditModeTogglePencilEyeGlyph`
+(also EXTENDED with an image_3 hover frame covering the yellow-eye feedforward + immediate tooltip),
+`macroSampleSlideEditViewToggle`, `macroSaveAsPromptAboveTiltedWindow`, `macroWindowCellsInConstrainedScrollStackReflow`,
+`macroWindowWithSimpleVerticalPanelResizesAsContentChanges`. All benign glyph-colour recaptures.
+
+**GATES ALL GREEN:** `fg gauntlet` — dpr1 248/0 · dpr2 248/0 · **webkit 248/0** · apps · paint · tiernaming/settle/
+capstone (0 each) — + serialization world-roundtrip (SWCanvas 36) + file-roundtrip (7) + `fg homepage` boot OK.
+
+**⚠ CLICK-THEN-PARK (case law):** the feedforward means the edit button, still under the pointer right after a
+click, shows the NEXT-state preview glyph — so any test that clicks the edit button and screenshots a "resting"
+mode must first move the pointer OFF it. Three tests needed a park added (`macroDrawingsMakerReEnableEditing`,
+`macroEditModeTogglePencilEyeGlyph`, `macroSampleSlideEditViewToggle`); the DrawingsMaker `image_0==image_2`
+idempotency assert broke until parked. **⚠ Also:** the churn had DELETED `AutomatorEventCommandTurnOnAlignmentOf
+WidgetIDsMechanism`; a stale rewrite of `macroEditModeTogglePencilEyeGlyph` re-added it and threw at setup
+(`Cannot read properties of undefined (reading 'prototype')`) — grep the harness for a command before using it.
