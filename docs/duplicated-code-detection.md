@@ -208,9 +208,16 @@ counts are additive, not comparable to the exact/structural ones:
 | --- | --- | --- | --- | --- | --- |
 | 2026-07-15 · `2dbf123d` (censuses born) | 10 | 0 | 0 | 10 (7 same-default) | 37 (+49 withheld) |
 | 2026-07-15 · `83209869` (tranche A+B landed) | **4** | 0 | 0 | 10 (7 same-default) | 36 (+49 withheld) |
+| 2026-07-15 · `3d038959` (tranche C landed) | **1** | 0 | 0 | 10 (7 same-default) | 36 (+49 withheld) |
+| 2026-07-15 · Phase 0 (write-only DEMOTE bug FIXED) | 1 | 0 | 0 | 10 (7 same-default) | **20** (+3 withheld ·name, +62 write-only) |
+
+⚠ The last row is a **tooling** fix, not a code change: `census-property-placement.js`'s DEMOTE rule never required the
+property to be READ, so 16 of the 36 were write-only false positives — 12 of them `SystemInfo` fields that ARE the
+reference-image identity. See case law 10. It also re-attributed the withheld bucket: the `.name` veto's real cost is
+**3**, not 49. Counts here are only comparable within a row's own tooling version.
 
 Closed-arc snapshot with the full case law (the removability test, the inspector-churn finding, the
-`super`-chaining trap, the three census exclusions):
+`super`-chaining trap, the four census exclusions, the write-only/enumeration rule):
 [`docs/done/duplication-triage-2026-07-15-hierarchy-round4.md`](done/duplication-triage-2026-07-15-hierarchy-round4.md).
 
 \* pre-fix numbers: structural scans before `fc0aef7c`-era tooling silently excluded the two

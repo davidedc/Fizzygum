@@ -106,6 +106,29 @@ nothing from that report (its findings all cost an inspector recapture; see the 
 9. **`offset` on `CircleBoxWdgt` is a name COLLISION, not a shared concept** — the DEMOTE report
    independently finds `SliderButtonWdgt.offset` is a one-method local. That is what the weak
    differing-defaults PULL-UP tier is for.
+10. **⚠⚠ A WRITE-ONLY field is not a local — it is ENUMERATION PAYLOAD until proven otherwise.** The
+    DEMOTE rule shipped requiring "first use is an assignment" but never requiring a READ, so a field
+    assigned once and never read was reported as demotable. That is wrong twice over: demoting a
+    write-only field does not make it a local, it makes it **dead**; and it usually is not dead at all
+    — `JSON.stringify(obj)`, `DeepCopierMixin`'s `@[property]` walk and the serializer all reach every
+    own property **without naming any of them**, so no name scanner can see those reads.
+    **The near-miss:** 16 of 36 findings were write-only, and **12 were `SystemInfo` fields**, assigned
+    in the ctor and never read in src — because `SystemTestsReferenceImage.coffee:31` hashes
+    `JSON.stringify(@systemInfo)` into the `systemInfoHash` of **every reference-image filename**.
+    Acting on that report would have invalidated the whole committed reference set.
+    `SystemTestsSystemInfo.coffee` states the mechanism outright — *"cannot just initialise the numbers
+    here cause we are going to make a JSON out of this and these would not be picked up"*: class-body
+    defaults are PROTOTYPE properties and are not serialized; only the ctor's `@x = …` OWN properties
+    are. That is also why those findings read "1 use, has a class-body default" — the default and the
+    ctor assignment are **not** redundant, they play different roles.
+    Fixed 2026-07-15 as **exclusion 4** (DEMOTE 36 → 20). ⚠ The test is "at least one NON-ASSIGNMENT
+    occurrence", NOT the `uses >= 2` first proposed — `@x = 0; @x += 1` is two uses and still
+    write-only in effect.
+    **Corollary — a suppression that works for the wrong reason hides the real one.** The fix dropped
+    exclusion 3's withheld count from **49 to 3**: the `.name` veto had been credited with withholding
+    49 findings when its true cost is 3, because 46 were write-only false positives it suppressed by
+    luck. Case law 6's example (`SliderButtonWdgt.offset`) survives as one of the real 3. **Report each
+    exclusion's cost separately** — a lumped counter let a wrong rule look load-bearing.
 
 ## ✅ ACTIONED — Tranche C (2026-07-15): the 3 remaining removable IDENTICAL findings
 
@@ -136,7 +159,9 @@ is the coherent end state, and it is documented in the class.
 - **23 inspector-visible DEMOTEs**: mostly ctor-built child widgets parked in a field only the
   builder reads (the widget TREE already holds the reference); `InspectorWdgt.show*On/OffButton` is
   the archetype. Low value against a recapture each.
-- **49 withheld DEMOTEs**: cannot be proven local (case law 6). Includes true findings — e.g.
-  `SliderButtonWdgt.offset` is genuinely local to `@nonFloatDragging`, but the other `.offset` reads
-  in src are `appliedShadow.offset`, a different object the scanner cannot distinguish. That is the
-  honest cost of the veto, which is why the withheld COUNT is printed rather than hidden.
+- **49 withheld DEMOTEs**: cannot be proven local (case law 6). ⚠ **Superseded by case law 10** — after
+  the write-only fix this bucket splits into **3** genuinely withheld by the `.name` veto (including
+  case law 6's own example: `SliderButtonWdgt.offset` IS genuinely local to `@nonFloatDragging`, but
+  the other `.offset` reads in src are `appliedShadow.offset`, a different object the scanner cannot
+  distinguish — that is the honest cost of the veto) and **46** that were write-only false positives
+  all along. Withheld COUNTS are printed rather than hidden, and now printed per-exclusion.

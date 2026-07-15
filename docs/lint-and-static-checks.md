@@ -246,23 +246,37 @@ human asks (`fg critique`, or directly). The clone scanners are on-demand only (
 Both censuses therefore carry SOUNDNESS RULES earned from false positives they actually produced — documented in their
 headers and in the `duplication-report/triage-report.md` ROUND-4/4b sections. Do not "simplify" them away: the method
 SIGNATURE is compared, not just the body (`(@color) -> super` is not removable); occurrences outside any method body
-count as a distinct user (a multi-line ctor param list is public API); and a `.name` member read from another file vetoes
-a DEMOTE (22 `PreferencesAndSettings` fields looked local but are the global settings surface). Findings withheld by that
-last rule are COUNTED and printed, never dropped silently.
+count as a distinct user (a multi-line ctor param list is public API); a `.name` member read from another file vetoes
+a DEMOTE (22 `PreferencesAndSettings` fields looked local but are the global settings surface); and a WRITE-ONLY
+property is never a DEMOTE (it is presumed enumeration payload — see the fix note below). Findings withheld by those
+last two rules are COUNTED and printed **separately**, never dropped silently.
 
 **Findings land in the triage ledger, not in a commit:** `duplication-report/triage-report.md` (gitignored working
 state; conventions in `docs/duplicated-code-detection.md`). The report IS the deliverable — acting on it is a separate,
 verified arc. The closed round-4 record + its case law: `docs/done/duplication-triage-2026-07-15-hierarchy-round4.md`.
-**The remaining, un-actioned findings have their own plan: `docs/census-findings-triage-plan.md`** (AUTHORED, not
-started) — which opens with a KNOWN BUG in the property census (below), so read it before acting on a DEMOTE finding.
+**The remaining, un-actioned findings have their own plan: `docs/census-findings-triage-plan.md`** — its Phase 0 (fix
+the write-only DEMOTE bug) is DONE; Phases 1–3 remain, and every one of them costs a risk class or an inspector
+recapture. Read it before acting on any finding.
 
-⚠ **KNOWN BUG (`census-property-placement.js`, found 2026-07-15, unfixed — plan Phase 0): the DEMOTE rule does not
-require the property to be READ**, so a WRITE-ONLY field is reported as demotable. That is wrong twice: demoting a
-write-only field makes it dead, not local; and a write-only field is usually **enumeration payload** — reached by
-`JSON.stringify(obj)` / `DeepCopierMixin`'s `@[property]` walk / the serializer, none of which a name scanner sees.
-16 of 36 findings have exactly 1 use; 12 are `SystemInfo` fields that ARE the reference-image identity
-(`SystemTestsReferenceImage.coffee:31` hashes `JSON.stringify(@systemInfo)` into every reference filename's
-`systemInfoHash`). Fix = require a read (`uses >= 2`). Until then, treat any 1-use DEMOTE finding as a false positive.
+✅ **FIXED 2026-07-15 (was a KNOWN BUG; plan Phase 0) — the DEMOTE rule now requires the property to be READ.** As
+originally shipped it did not, so a **WRITE-ONLY** field was reported as demotable. That was wrong twice: demoting a
+write-only field makes it **dead**, not local; and a write-only field is usually **enumeration payload** — reached by
+`JSON.stringify(obj)` / `DeepCopierMixin`'s `@[property]` walk / the serializer, none of which a name scanner sees
+(the census's KNOWN BLIND SPOT, now stated in its header). It cost **16 false positives out of 36 findings**, of which
+**12 were `SystemInfo` fields that ARE the reference-image identity** — `SystemTestsReferenceImage.coffee:31` hashes
+`JSON.stringify(@systemInfo)` into every reference filename's `systemInfoHash`, so acting on them would have
+invalidated the entire committed reference set. The fix is **exclusion 4**: at least one occurrence must be a
+non-assignment. **DEMOTE 36 → 20**; PULL-UP unaffected (byte-identical).
+
+⚠ The test is *"at least one NON-ASSIGNMENT occurrence"*, **not** the `uses >= 2` originally proposed: `@x = 0` followed
+by `@x += 1` is two uses and still write-only in effect. Compound assignments count as writes here, deliberately, to
+keep the census conservative.
+
+⚠ **The fix also corrected a misleading statistic** — exclusion 3's withheld count fell **49 → 3** (write-only is now
+tested first). The `.name` member-read veto was being *blamed* for withholding 49 findings when its true cost is **3**:
+the other 46 were write-only false positives it happened to suppress for the wrong reason. Both counts are printed
+separately, so neither exclusion can hide behind the other again. The write-only bucket (62) is **not a backlog**:
+separating dead state from enumeration payload needs exactly the analysis a name scanner cannot do.
 
 **Considered and REJECTED** (so they are not re-proposed):
 - A **`constructor.name` stink** — `new @constructor` / `@constructor.name` is a legitimate universal idiom here, so it

@@ -1,7 +1,26 @@
 # Hierarchy/property census findings — remaining triage
 
-**STATUS: AUTHORED 2026-07-15 — not started.** Written to be executed **cold, by an LLM with zero
-prior context**: everything needed is embedded or pointed at by absolute path.
+**STATUS: Phase 0 EXECUTED 2026-07-15 (tooling only, no `src` change). Phases 1–3 not started.**
+Written to be executed **cold, by an LLM with zero prior context**: everything needed is embedded or
+pointed at by absolute path.
+
+> **Phase 0 outcome (2026-07-15).** The write-only DEMOTE bug is FIXED as **exclusion 4** in
+> `buildSystem/census-property-placement.js`: a DEMOTE candidate must now have at least one
+> **non-assignment** occurrence. **DEMOTE 36 → 20**, all 12 dangerous `SystemInfo` findings gone;
+> PULL-UP unaffected and byte-identical; IDENTICAL unaffected (1). Verified by A/B of `--json` before
+> and after: **0 findings added, 16 removed, every removal had exactly 1 use** — the candidate set was
+> only re-partitioned, never gained or lost (36+49 = 20+3+62 = 85). The shared engine's `--self-test`
+> passes and the `[S]/[U]` gate is unmoved (148/148). Two things were learned beyond the plan:
+> - The test must be **"at least one non-assignment occurrence"**, NOT the `uses >= 2` this plan
+>   proposed: `@x = 0` followed by `@x += 1` is two uses and still write-only in effect. The shipped
+>   rule is the stricter one.
+> - **The `.name` veto's withheld count fell 49 → 3.** It had been credited with withholding 49
+>   findings when its true cost is 3 — the other 46 were write-only false positives it suppressed for
+>   the wrong reason. The two exclusions now report separately so neither can hide behind the other.
+>   Case law 6's example (`SliderButtonWdgt.offset`) survives as one of the real 3.
+>
+> **Phase 3 is now re-scoped — read its section before acting; its "~20 survivors" premise held, but
+> the recapture arithmetic did not improve.**
 
 **What this is.** The two advisory censuses added by the Pharo generic-rules carryover
 (`docs/lint-generic-rules-carryover-plan.md`, EXECUTED 2026-07-15) still report findings. Tranches
@@ -42,14 +61,18 @@ node ./buildSystem/census-property-placement.js    [--full] [--json out.json]
 /Users/davidedellacasa/code/Fizzygum-all/fg critique     # both + every ratchet's "tighten me" note
 ```
 
-### Baseline at plan-authoring time (2026-07-15, after Tranche A/B/C, at `3d038959`)
+### Baseline — CURRENT (2026-07-15, after Tranche A/B/C + Phase 0)
 
 | Report | Count |
 |---|---|
-| IDENTICAL-TO-INHERITED | **1** |
+| IDENTICAL-TO-INHERITED | **1** (`BubblyAppearance.constructor` — Phase 1, owner-gated) |
 | SHADOWS-MIXIN / JUST-SENDS-SUPER | 0 / 0 |
-| PULL-UP | **10** (7 same-default; 9 of 10 `[inspector-visible]`) |
-| DEMOTE | **36** (23 `[inspector-visible]`; +49 withheld by the `.name` veto) |
+| PULL-UP | **10** (7 same-default; 9 of 10 `[inspector-visible]`) — Phase 2 |
+| DEMOTE | **20** (**20 of 20 `[inspector-visible]`**, 9 classes; +3 withheld `.name`, +62 write-only) — Phase 3 |
+
+*Superseded pre-Phase-0 baseline, for reading older notes: DEMOTE was **36** (23 `[inspector-visible]`;
++49 withheld). The 49 and the 36 are both tooling artefacts of the write-only bug — do not compare
+them to the current row.*
 
 ### The cost model you are trading against
 
@@ -63,9 +86,15 @@ node ./buildSystem/census-property-placement.js    [--full] [--json out.json]
 
 ---
 
-## Phase 0 — FIX the census first: the write-only DEMOTE bug (do this before Phase 3)
+## Phase 0 — ✅ DONE 2026-07-15 — FIX the census first: the write-only DEMOTE bug
 
-**This is the highest-value item in the plan, and it is pure tooling (no `src`, no gauntlet).**
+**Shipped as exclusion 4 in `buildSystem/census-property-placement.js`** (a DEMOTE candidate must have
+at least one non-assignment occurrence), with the enumeration BLIND SPOT now documented in the census
+header and the exclusion list renumbered 1–4 (the header had said "THE TWO SAFETY EXCLUSIONS" while
+the code and case law already referred to an undocumented "exclusion 3"). **DEMOTE 36 → 20.** The
+analysis below is retained as the durable rationale — it is case law 10 now.
+
+**This was the highest-value item in the plan, and it was pure tooling (no `src`, no gauntlet).**
 
 `census-property-placement.js`'s DEMOTE rule fires when every `@prop` use sits in ONE method and the
 first use is an assignment. It does **not** require the property to be READ. So a **write-only**
@@ -86,25 +115,40 @@ constructor and never read in src — because they are read by **`JSON.stringify
   picked up"* — i.e. class-body defaults are PROTOTYPE properties and are NOT serialized; the
   constructor's `@x = …` assignments are the OWN properties that are.
 
-**Two distinct holes this exposes — fix both:**
+**Two distinct holes this exposed — both fixed:**
 
-1. **Require a READ.** A genuine property→local needs a write AND a read. Add `uses >= 2` (or
-   explicitly: at least one non-assignment occurrence) to the DEMOTE condition. **Measured
-   2026-07-15: 16 of the 36 findings have exactly 1 use** ⇒ expect DEMOTE 36 → ~20, and all 12
-   SystemInfo findings to vanish. Re-measure; do not trust this number.
-2. **Whole-object ENUMERATION is a reach mechanism the census is blind to** — `JSON.stringify(obj)`,
-   `DeepCopierMixin`'s `@[property]` walk, the serializer. The existing exclusions only see
-   `.name` member reads (exclusion 3) and name-strings (exclusion 1). Document this in the census
-   header as a KNOWN BLIND SPOT alongside the others, and say plainly that a **write-only field is
-   presumed enumeration payload**. (Fixing hole 1 covers the known cases; do not attempt to detect
-   enumeration statically — that way lies unsoundness.)
+1. ✅ **Require a READ.** A genuine property→local needs a write AND a read. **Shipped as: at least one
+   non-assignment occurrence** — deliberately NOT the `uses >= 2` first proposed here, because
+   `@x = 0` followed by `@x += 1` is two uses and still write-only in effect. (Compound assignments do
+   technically read, but a value only ever fed back into itself is not consumed by anything
+   observable, so they count as writes — the conservative direction for an advisory census.)
+   Measured: 16 of 36 had exactly 1 use ⇒ **DEMOTE 36 → 20**, all 12 SystemInfo findings gone.
+2. ✅ **Whole-object ENUMERATION is a reach mechanism the census is blind to** — `JSON.stringify(obj)`,
+   `DeepCopierMixin`'s `@[property]` walk, the serializer. The other exclusions only see `.name`
+   member reads (3) and name-strings (1); enumeration names nothing. Now a KNOWN BLIND SPOT section in
+   the census header, which states plainly that a **write-only field is presumed enumeration payload**.
+   Not detected statically, by design — that way lies unsoundness; presume in the safe direction.
+   *(Confirmed in the wild while verifying: `Class.coffee:379` does
+   `for own fieldName, fieldValue of @staticPropertiesSources` — a real enumeration read of a field a
+   name scanner sees only as write-only.)*
 
-Also update the case-law file (`docs/done/duplication-triage-2026-07-15-hierarchy-round4.md`) with
-this as case law 10, and re-state the new DEMOTE baseline in
-`docs/duplicated-code-detection.md`'s round-4 trend table.
+✅ Case law 10 added to `docs/done/duplication-triage-2026-07-15-hierarchy-round4.md`; new baseline in
+`docs/duplicated-code-detection.md`'s round-4 trend table; §3c of `docs/lint-and-static-checks.md`
+flipped from KNOWN BUG to FIXED.
 
-**Verification:** `node ./buildSystem/census-property-placement.js` (counts move), re-run
-`fg critique`. No build or suite needed — `buildSystem/*.js` is not compiled into the world.
+**Verification (done):** `--json` A/B before vs after — 0 added, 16 removed, all with exactly 1 use;
+85 candidates conserved (36+49 before = 20+3+62 after). Engine `--self-test` PASS; `check-call-separation`
+unmoved at 148/148; hierarchy census unmoved at IDENTICAL 1; `fg critique` clean. No build or suite
+needed — `buildSystem/*.js` is not compiled into the world.
+
+**Spot-check of the 16 suppressed (all confirmed genuinely write-only, i.e. correctly suppressed):**
+12 `SystemInfo.*` (enumeration payload — the reference-image identity); `Mixin.staticPropertiesSources`
+(assigned `{}`, never read in `Mixin.coffee` — note `Class.coffee` enumerates its own copy);
+`ListWdgt.active` (never read anywhere in src or harness); `RegexSubstitutionPatchNodeWdgt.input3`/
+`input4` (the patch-node family exposes a uniform 4-input surface — `CalculatingPatchNodeWdgt` reads
+all four at `:53`, the regex node consumes only two, so these are interface conformance, not dead).
+⚠ None of these is a DEMOTE. Several may be genuinely vestigial state, but proving that needs exactly
+the enumeration analysis the census cannot do — **the 62-strong write-only bucket is not a backlog.**
 
 ---
 
@@ -167,28 +211,40 @@ subclasses' member lists SHRINK. That is the churn; it is benign, recapture it.
 
 ---
 
-## Phase 3 — DEMOTE (36 today; ~20 after Phase 0) — do Phase 0 FIRST
+## Phase 3 — DEMOTE (**20** after Phase 0) — the weakest item in the plan; read this before starting
 
-**Do not start here.** Phase 0 removes ~16 write-only false positives including the dangerous
-SystemInfo dozen. Acting on this report before that fix risks breaking the reference-image identity.
+Phase 0 is done, so the report is now honest. **The economics got worse, not better, and that is the
+key fact for whoever picks this up:**
 
-After Phase 0, the survivors are dominated by ONE family: **a ctor-built child widget parked in a
-field that only the builder ever reads** (16 constructor-scoped + 10 in
-`_buildAndConnectChildrenNoSettle`) — the widget TREE already holds the reference, so the field is
-redundant. `InspectorWdgt.show*On/OffButton` is the archetype. **23 are `[inspector-visible]` ⇒ one
-recapture per batch.** Low value each; only worth doing as one batched sweep, if at all.
+- Pre-Phase-0, 23 of 36 were `[inspector-visible]`. **Post-Phase-0, 20 of 20 are** — every one of the
+  13 non-Widget-family findings was a write-only false positive (`SystemInfo`, `Mixin`). So there is
+  **no "free" subset left**: every remaining DEMOTE is a FIELD change on a Widget-family class, and
+  fields churn the 15-test inspector set (methods do not — case law 2).
+- The 20 span just **9 classes** and are dominated by ONE family: **a ctor-built child widget parked in
+  a field that only the builder ever reads** — 10 in `_buildAndConnectChildrenNoSettle`, 3 in a
+  `constructor`, 2 in `_buildAndConnectObjOwnPropsButton`. The widget TREE already holds the
+  reference, so the field is redundant. `InspectorWdgt.show*On/OffButton` is the archetype (8 of the
+  20 are `InspectorWdgt` itself).
 
-Spot-verified genuine (survive Phase 0 — they have a real read):
-`VideoPlayPauseToggle.playPausePlayButton`/`playPausePauseButton` (3 uses each, `@constructor`),
-`ReconfigurablePaintWdgt.mainCanvas`, `ScriptWdgt.saveTextWdgt`,
-`UpperRightTriangleIconicButtonWdgt.pencilIconWdgt` (4 uses).
+**Recommendation: do not do this as its own arc.** The whole report is worth ONE `fg recapture-inspector`
+(~20 min) plus a gauntlet, to delete 20 redundant fields across 9 classes — and the payoff is a
+slightly narrower serialization surface, nothing behavioural. It is a reasonable *rider* on any arc
+that is already recapturing the inspector for another reason, and a poor use of a recapture on its own.
+If it is done, do it as ONE batch to pay the recapture once.
 
-**The 49 WITHHELD are not a backlog** — they are findings the census cannot prove, withheld by the
-`.name` member-read veto (case law 6/7). Do not "unlock" them by weakening the veto: it caught a false
-positive that hand-verification had already cleared (`InspectorWdgt.textWidget` — `MacroToolkit.coffee:879`
-reads it). Its cost is real and accepted: e.g. `SliderButtonWdgt.offset` IS genuinely local to
-`@nonFloatDragging`, but the other `.offset` reads in src are `appliedShadow.offset` — a different
-object the scanner cannot distinguish.
+Spot-verified genuine (they have a real read): `VideoPlayPauseToggle.playPausePlayButton`/
+`playPausePauseButton` (3 uses each, `@constructor`), `ReconfigurablePaintWdgt.mainCanvas`,
+`ScriptWdgt.saveTextWdgt`, `UpperRightTriangleIconicButtonWdgt.pencilIconWdgt` (4 uses).
+
+**Neither withheld bucket is a backlog:**
+- **3 withheld by the `.name` veto** (case law 6/7). Do not "unlock" them by weakening the veto: it
+  caught a false positive that hand-verification had already cleared (`InspectorWdgt.textWidget` —
+  `MacroToolkit.coffee:879` reads it). Its cost is real, accepted, and now known to be **small**: e.g.
+  `SliderButtonWdgt.offset` IS genuinely local to `@nonFloatDragging`, but the other `.offset` reads in
+  src are `appliedShadow.offset` — a different object the scanner cannot distinguish.
+- **62 withheld as write-only** (case law 10). Presumed enumeration payload. Separating the genuinely
+  vestigial from the payload needs precisely the analysis a name scanner cannot do; a wrong guess here
+  is how you invalidate the reference set.
 
 ---
 
@@ -211,7 +267,20 @@ object the scanner cannot distinguish.
 
 ## Suggested order
 
-**Phase 0 first (tooling, free, and it makes Phase 3 honest).** Then stop and re-read the reports —
-Phase 0 may well leave nothing in Phase 3 worth the recapture, which is a legitimate outcome. Phase 2's
-3-colour batch is the best remaining *code* win. Phase 1 stays owner-gated and probably never happens
-on its own.
+~~**Phase 0 first**~~ — ✅ DONE 2026-07-15. It was the right call: it removed 16 false positives
+including 12 that would have invalidated the reference set, and it made Phase 3 honest.
+
+**The re-read that Phase 0 mandated has been done, and the answer is: Phase 3 is not worth its
+recapture on its own** (20 findings, all inspector-visible, all redundant-ctor-child fields, zero
+behavioural payoff — see its section). That is the legitimate "stop" outcome the plan anticipated, so
+it is recorded rather than worked around.
+
+**What is actually left, in order of value:**
+1. **Phase 2's 3-colour batch** (`IconicDesktopSystemLinkWdgt.color_normal/_hover/_pressed`) — the best
+   remaining *code* win: one parent, one recapture, verbatim-identical defaults.
+2. **Phase 3** — only as a rider on an arc already recapturing the inspector. Never on its own.
+3. **Phase 1** (`BubblyAppearance.constructor`) — owner-gated, 2 lines against a real risk class;
+   probably never happens on its own.
+
+⚠ Phases 2 and 3 both cost the SAME `fg recapture-inspector`. If both are ever wanted, do them as one
+batch and pay it once.

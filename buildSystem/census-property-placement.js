@@ -17,20 +17,9 @@
  *            when the defaults agree; informational when they differ (that is a shared CONCEPT with
  *            per-subclass values — often still worth a pulled-up declaration, but it is a judgement).
  *   DEMOTE   a property whose every `@prop` use sits inside exactly ONE method, where the first use
- *            is an assignment, and which no super/subclass touches. It is a local wearing a field's
- *            clothes: it widens the object's state and its serialization surface for nothing.
- *
- *   ⚠⚠ KNOWN BUG (found 2026-07-15, UNFIXED — docs/census-findings-triage-plan.md Phase 0):
- *   DEMOTE does NOT require the property to be READ, so a WRITE-ONLY field (assigned once, never
- *   read) is reported as demotable. Wrong twice over: demoting a write-only field makes it DEAD, not
- *   local; and a write-only field is usually ENUMERATION PAYLOAD — reached by `JSON.stringify(obj)`,
- *   `DeepCopierMixin`'s `@[property]` walk, or the serializer, none of which a name scanner can see.
- *   16 of 36 findings have exactly 1 use, and 12 of those are `SystemInfo` fields that ARE the
- *   reference-image identity (Fizzygum-tests/.../SystemTestsReferenceImage.coffee:31 hashes
- *   `JSON.stringify(@systemInfo)` into every reference filename's systemInfoHash) — demoting them
- *   would invalidate the whole committed reference set.
- *   FIX: require at least one non-assignment occurrence (`uses >= 2`). Until then, treat every
- *   1-use DEMOTE finding as a false positive.
+ *            is an assignment AND at least one use is a READ, and which no super/subclass touches.
+ *            It is a local wearing a field's clothes: it widens the object's state and its
+ *            serialization surface for nothing.
  *
  * ── WHY THIS CAN NEVER BE A GATE (severity policy — do not "promote" it) ────────────────────────
  * Property access here is partly DYNAMIC and therefore invisible to a name scanner: DeepCopierMixin
@@ -38,7 +27,14 @@
  * whose name appears in a string may be read by machinery this census cannot see, so "unused" is
  * never provable statically. An unsound signal must never gate.
  *
- * ── THE TWO SAFETY EXCLUSIONS (each has bitten before — do not remove) ──────────────────────────
+ * ⚠ KNOWN BLIND SPOT — whole-object ENUMERATION. `JSON.stringify(obj)`, DeepCopierMixin's
+ * `@[property]` walk and the serializer reach EVERY own property of an object without ever naming
+ * one, so no name scanner can see those reads. Exclusions 1 and 3 only catch properties named by a
+ * string or read as a dotted `.member`; enumeration names nothing. This is why exclusion 4 presumes
+ * a WRITE-ONLY field is enumeration payload rather than dead code. Do NOT try to detect enumeration
+ * statically — that way lies unsoundness; presume in the safe direction instead.
+ *
+ * ── THE FOUR SAFETY EXCLUSIONS (each has bitten before — do not remove) ─────────────────────────
  * 1. STRING-NAMED properties are dropped entirely. If a property's name appears as a quoted string
  *    ANYWHERE in src or the harness, it may be serialization protocol (`serializationTransients`),
  *    a dynamic `@[property]` walk, or menu/connection dispatch. Same strings-count-as-references
@@ -48,6 +44,24 @@
  *    exactly 15 SystemTest screenshots (the `fg recapture-inspector` set — measured empirically
  *    2026-07-12). Any future arc acting on a tagged finding must BUDGET that recapture. This is a
  *    cost tag, not a veto.
+ * 3. A `.name` MEMBER READ from another file VETOES a DEMOTE (see MEMBER_FILES below). Withheld,
+ *    counted, and printed — never dropped silently.
+ * 4. WRITE-ONLY properties are VETOED as DEMOTE candidates (every occurrence is an assignment, none
+ *    is a read). Added 2026-07-15, after the original rule shipped without it and produced 16 false
+ *    positives out of 36 findings. Demoting a write-only field does not make it a local, it makes it
+ *    DEAD — and a write-only field is usually not dead at all, it is enumeration payload (the blind
+ *    spot above). The decisive case: 12 of those 16 were `SystemInfo` fields, assigned in the ctor
+ *    and never read in src because they are read by `JSON.stringify(@systemInfo)` at
+ *    Fizzygum-tests/Automator-and-test-harness-src/SystemTestsReferenceImage.coffee:31, whose hash is
+ *    the `systemInfoHash` in EVERY reference-image filename. Acting on them would have invalidated
+ *    the entire committed reference set. `SystemTestsSystemInfo.coffee` says the mechanism outright:
+ *    "cannot just initialise the numbers here cause we are going to make a JSON out of this and these
+ *    would not be picked up" — class-body defaults are PROTOTYPE properties and are not serialized;
+ *    only the constructor's `@x = …` OWN properties are. Withheld, counted, and printed.
+ *    ⚠ The test is "at least one NON-ASSIGNMENT occurrence", NOT `uses >= 2`: `@x = 0` followed by
+ *    `@x += 1` is two uses and still write-only in effect. Compound assignments (`+=`, `?=`, …) do
+ *    technically read, but a value only ever fed back into itself is not consumed by anything
+ *    observable — so they count as writes here, deliberately, to keep the census conservative.
  *
  * METHOD (heuristics, no type inference — the house style):
  *   - Class model (parent, mixins, methods, chain order) REUSED from census-public-private-calls.js.
@@ -287,6 +301,7 @@ function anyMentions(names, prop) {
 
 const demote = [];
 let vetoedByMemberRead = 0;
+let vetoedByWriteOnly = 0;
 for (const info of classInfo.values()) {
   const props = declared.get(info.name) || new Map();
   const recs = methodsByClass.get(info.name) || [];
@@ -315,6 +330,12 @@ for (const info of classInfo.values()) {
     if (method === '@classlevel') continue;   // not confined to a method at all
     hits.sort((a, b) => a.n - b.n || a.end - b.end);
     if (!isAssignmentAfter(hits[0].code, hits[0].end)) continue;           // first use must be a write
+    // exclusion 4 — a property->local needs a WRITE *and* a READ. If every occurrence is an
+    // assignment the field is WRITE-ONLY: demoting it would make it dead, not local, and it is far
+    // more likely enumeration payload this scanner cannot see (see the header). Checked BEFORE
+    // exclusion 3 so that each withheld counter keeps a clean meaning.
+    const reads = hits.filter((h) => !isAssignmentAfter(h.code, h.end)).length;
+    if (reads === 0) { vetoedByWriteOnly++; continue; }
     // exclusion 3 LAST, so the withheld count means "real findings this exclusion cost us", not
     // "properties it happened to touch"
     if (readAsMemberElsewhere(prop, info.file)) { vetoedByMemberRead++; continue; }
@@ -322,6 +343,7 @@ for (const info of classInfo.values()) {
       cls: info.name, prop, method,
       at: `${info.file}:${hits[0].n}`,
       uses: hits.length,
+      reads,
       hasDefault: rec0.def !== null,
       inspectorVisible: isWidgetFamily(info.name),
     });
@@ -348,17 +370,11 @@ for (const r of trunc(pullUp, 40)) {
 }
 if (!FULL && pullUp.length > 40) console.log(`  … ${pullUp.length - 40} more (--full)`);
 
-const writeOnly = demote.filter((r) => r.uses === 1).length;
-console.log(`\n--- DEMOTE (${demote.length}) — property -> local (one method, assigned before read) ---`);
+console.log(`\n--- DEMOTE (${demote.length}) — property -> local (one method, written and read there only) ---`);
 console.log(`    (${vetoedByMemberRead} candidate${vetoedByMemberRead === 1 ? '' : 's'} withheld: read as \`.name\` from another file, so locality is not provable — see exclusion 3)`);
-if (writeOnly) {
-  console.log(`    ⚠ KNOWN BUG: ${writeOnly} of these have 1 use — WRITE-ONLY (assigned, never read), so they are`);
-  console.log(`      almost certainly enumeration payload (JSON.stringify / DeepCopier @[property]), NOT locals.`);
-  console.log(`      Treat 1-use findings as FALSE POSITIVES. Fix = require uses >= 2. See`);
-  console.log(`      docs/census-findings-triage-plan.md Phase 0.`);
-}
+console.log(`    (${vetoedByWriteOnly} candidate${vetoedByWriteOnly === 1 ? '' : 's'} withheld: WRITE-ONLY — never read, so presumed enumeration payload, not a local — see exclusion 4)`);
 for (const r of trunc(demote, 40)) {
-  console.log(`  DEMOTE  ${r.cls}.${r.prop}: only used in @${r.method} (${r.uses} use${r.uses === 1 ? '' : 's'}${r.hasDefault ? ', has a class-body default' : ''})  ${r.at}${tag(r)}`);
+  console.log(`  DEMOTE  ${r.cls}.${r.prop}: only used in @${r.method} (${r.uses} use${r.uses === 1 ? '' : 's'}, ${r.reads} read${r.reads === 1 ? '' : 's'}${r.hasDefault ? ', has a class-body default' : ''})  ${r.at}${tag(r)}`);
 }
 if (!FULL && demote.length > 40) console.log(`  … ${demote.length - 40} more (--full)`);
 
