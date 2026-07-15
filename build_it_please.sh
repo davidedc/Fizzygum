@@ -303,13 +303,35 @@ if ! $noSyntaxCheck ; then
   echo "... dead-method check OK"
 fi
 
+# --- build-time UNRESOLVED-SENDS gate -------------------------------------------------
+# The exact INVERSE of the dead-method gate above: it flags a CALL `[@.]name(` whose name is
+# IMPLEMENTED NOWHERE in src + harness -- a guaranteed runtime TypeError on any path reaching it.
+# (Pharo's ReSentNotImplementedRule, carried over 2026-07-15.) Deliberately built for ZERO false
+# positives at the cost of reach: the def set is over-approximated, paren-less/string-dispatched
+# sends are out of scope. Vendor + genuinely-dynamic names are exempted, with a REASON, in
+# buildSystem/unresolved-sends-allowlist.txt; standard JS/DOM/canvas API lives in the checker's
+# in-file BUILTINS set. (buildSystem/check-unresolved-sends.js -- self-skips if the sibling
+# Fizzygum-tests repo is absent, since its harness is part of the definition universe; same
+# --noSyntaxCheck escape hatch and explicit $? check as the gates above.)
+if ! $noSyntaxCheck ; then
+  echo "checking for unresolved sends (calls nobody implements) ..."
+  node ./buildSystem/check-unresolved-sends.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: unresolved-sends gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... unresolved-sends check OK"
+fi
+
 # --- build-time STINK gate (baseline-ratcheted) ---------------------------------------
-# Enforces "stinks": smells driven to a baseline count (e.g. settleLayoutsOnceAfter wrapping a single
-# *Core, which should be mutateGeometryThenSettle once the core is pure). Each stink has a baseline in
+# Enforces "stinks": named smells ratcheted at a baseline COUNT. Each stink has its baseline inline in
 # buildSystem/check-stinks.js; the gate FAILS only when a stink EXCEEDS its baseline (a regression) --
-# mirroring the dead-method allowlist ratchet above. settle-batch-with-core is now at baseline 0 (a
-# hard rule). Same --noSyntaxCheck escape hatch and explicit $? check as the gates above; scans src/
-# only, so it runs for every build flavour (incl. --homepage).
+# mirroring the dead-method allowlist ratchet above -- and prints a "tighten me" note when one drops
+# BELOW. Seven are seeded (2026-07-15, docs/lint-generic-rules-carryover-plan.md Phase 2): debugger 36,
+# undefined 89, null 10, wall-clock 19, timer 3, Math.random 5, instanceof 105 -- the determinism and
+# nil-convention rules that were manual-only until then. Same --noSyntaxCheck escape hatch and explicit
+# $? check as the gates above; scans src/ only, so it runs for every build flavour (incl. --homepage).
 if ! $noSyntaxCheck ; then
   echo "checking for stinks (smells ratcheted to a baseline) ..."
   node ./buildSystem/check-stinks.js

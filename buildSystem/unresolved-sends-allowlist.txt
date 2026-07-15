@@ -1,0 +1,31 @@
+# Unresolved-sends allowlist for buildSystem/check-unresolved-sends.js
+# Names CALLED as `[@.]name(` in src/harness but implemented nowhere in either — i.e. VENDOR APIs
+# and genuinely-dynamic sends. The gate FAILS on any unresolved send not listed here.
+#
+# Platform (standard JS/DOM/canvas) names do NOT belong here — they live in the in-file BUILTINS set
+# in check-unresolved-sends.js. The line is: BUILTINS = ubiquitous platform vocabulary; this file =
+# one named third-party/host API we depend on at a few specific sites, where the reason (below) is
+# worth more than the suppression.
+#
+# Format: `name  # reason`. The reason is the point — a bare name is an unexplained hole.
+# The gate prints a NOTE when an entry here starts resolving (delete it then).
+#
+# Seeded 2026-07-15 (docs/lint-generic-rules-carryover-plan.md Phase 1). Every entry was triaged
+# against its real call site; there were exactly these 9 and no others.
+
+# ── JSZip (vendored: js/jszip.min.js) ──
+file            # JSZip: zip.file(...) — harness screenshot zips + the src source-download path
+generateAsync   # JSZip: zip.generateAsync(...) — same
+
+# ── host APIs used at one or two sites ──
+digest          # WebCrypto: crypto.subtle.digest("SHA-256", ...) in the harness SHA256 fallback
+load            # HTMLVideoElement: @video.load() (VideoPlayerCanvasWdgt)
+toSource        # Firefox-legacy: existence-GUARDED call (`element.toSource() if element.toSource`, ListWdgt)
+
+# ── LiveCodeLang / fizzytiles vendored eventing + scope API ──
+emit            # LCL eventRouter: @eventRouter.emit(...) (LCLCodeCompiler, LCLProgramRunner)
+addFunction     # LCL scope API: scope.addFunction(name, fn) (LCLProgramRunner)
+
+# ── SWCanvas bitmapText API (vendored: vendor/swcanvas.pin) ──
+loadFont                   # SWCanvas: bitmapText.loadFont(...)
+ensureMetricsBundleLoaded  # SWCanvas: bitmapText.ensureMetricsBundleLoaded()

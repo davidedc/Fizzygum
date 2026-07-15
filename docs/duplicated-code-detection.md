@@ -1,7 +1,8 @@
 # Duplicated-code detection (`./find_duplicated_code.sh` + `./find_similar_code.sh`)
 
 Two complementary scanners over two surfaces, run from the `Fizzygum/` repo root (or via
-absolute path — both cd themselves):
+absolute path — both cd themselves). A third, hierarchy-aware axis was added in 2026-07 — see
+the box under the table:
 
 ```sh
 ./find_duplicated_code.sh           # EXACT copy/paste clones (jscpd, token-based) — .coffee lines
@@ -12,6 +13,22 @@ absolute path — both cd themselves):
 
 The full recurring workflow (scan → triage ledger → LLM session → land → rescan) is the
 ["re-audit / re-triage cycle" section](#the-recurring-re-audit--re-triage-cycle) below.
+
+**A THIRD axis, added 2026-07-15 — hierarchy-aware duplication:**
+
+```sh
+node ./buildSystem/census-hierarchy-duplication.js   # overrides that add NOTHING (~0.4 s, advisory)
+node ./buildSystem/census-property-placement.js      # fields at the wrong level/scope (~0.6 s, advisory)
+```
+
+Both scanners above are **blind to inheritance**: jscpd matches exact token runs and jsinspect matches
+AST shapes, so neither can ever say *"this override is REMOVABLE"* — an override and the parent method
+it duplicates are not textual twins sitting in one file. The censuses close exactly that gap
+(`IDENTICAL-TO-INHERITED` / `SHADOWS-MIXIN` / `JUST-SENDS-SUPER`; `PULL-UP` / `DEMOTE`). They are
+seconds-fast, so unlike jscpd/jsinspect they also run inside **`fg critique`**. They feed the SAME
+ledger (`duplication-report/triage-report.md`, ROUND 4 / 4b) and follow the same cycle below.
+⚠ Their findings are CANDIDATES, never proofs — `super` is meta-compiled and property access is partly
+dynamic. Details + the soundness rules: `docs/lint-and-static-checks.md` §3c.
 
 Run both: they see different things. The exact scan misses a clone the moment one identifier
 is renamed — or when an interleaved comment breaks the token run, or when CoffeeScript's

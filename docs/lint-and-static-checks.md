@@ -84,7 +84,8 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
 | syntax | `buildSystem/check-coffee-syntax.js` | ~:257 | CoffeeScript *parse* errors, compiled the **fragmented** way the browser does | — |
 | **layering** | **`buildSystem/check-layering.js`** | **~:279** | **flow soundness + the naming convention — rules [A]–[O] (§4)** | per-method `# layout-apply-sanctioned` [F] / `# nosettle-sanctioned` [G] / `# early-return-sanctioned` [H] markers |
 | dead-method | `buildSystem/check-dead-methods.js` | ~:297 | a method defined in src but referenced nowhere (src + harness + macro `.js`) | allowlist `dead-method-allowlist.txt`; fails only on a NEW dead method |
-| stinks | `buildSystem/check-stinks.js` | ~:315 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
+| **unresolved-sends** | **`buildSystem/check-unresolved-sends.js`** | **~:318** | the INVERSE of dead-method: a CALL `[@.]name(` in src+harness that NOBODY implements — a guaranteed runtime `TypeError` on any path reaching it | allowlist `unresolved-sends-allowlist.txt` (vendor + dynamic, `name # reason`); in-file `BUILTINS` for platform API |
+| stinks | `buildSystem/check-stinks.js` | ~:336 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
 | thin-wrap | `buildSystem/check-thin-wraps.js` | ~:333 | a public method owning a `_<name>NoSettle` twin is the ONE canonical mechanical wrap | per-method `# thin-wrap-exempt: <reason>`; SKIPS a twinless `*NoSettle` |
 | **constructor-build** | **`buildSystem/check-constructors-build.js`** | **~:353** | a `constructor:` body must not build its own children inline — `@add`/`@addMany`/`@addNoSettle`/`@_addNoSettle`/`@__add`/… on `this` belong in `_buildAndConnectChildrenNoSettle`, reached via the settling wrapper | per-constructor `# constructor-build-exempt: <reason>` (no central allowlist; currently ZERO — the 4 menu/slider-family `@__add` ctors were converted 2026-07-12, `docs/menu-slider-ctor-conversion-plan.md`) |
 | **call-separation** | **`buildSystem/check-call-separation.js`** | **~:372** | **rules [S]/[U]: [S] a private method must not `@`-self-call a public COMMAND (settling/effectful callee; queries + `changed`/`fullChanged` stay free); [U] a public method referenced ONLY by `@`-self calls is not external API and must be `_`-tier. Measurement engine: `census-public-private-calls.js`. [U] self-skips without the sibling tests repo** | inline count baselines (`BASELINE_S_*`/`BASELINE_U_*`, the stinks idiom); per-caller `# public-call-sanctioned: <why>` for [S]; `public-api-allowlist.txt` for [U] (deliberate end-user inspector/scripting API) |
@@ -107,12 +108,54 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
   (DeepCopierMixin walks `@[property]`), not name-built, so the false-positive rate is low; genuine exceptions go in
   `dead-method-allowlist.txt`. `--update-allowlist` re-seeds the baseline. Needs the sibling tests repo for an accurate
   reference set; SKIPS (not false-fails) if it is absent.
+- **unresolved-sends (`check-unresolved-sends.js`).** The exact INVERSE of the dead-method gate (that one: defined but
+  never sent; this one: sent but never defined). Pharo's `ReSentNotImplementedRule`, carried over 2026-07-15. It harvests
+  every call-shaped `[@.]name(` across src + the harness and fails on any name that NOTHING in that universe implements.
+  Like dead-method it **SKIPS** (exit 0 + a loud note) when the sibling tests repo is absent — the harness is part of the
+  definition universe (src calls into it behind `if Automator?`). It landed green on day one (7046 calls, 0 unresolved,
+  ~0.1 s).
+  It is deliberately built for **ZERO false positives at the cost of reach** — a false FAIL breaks the build on correct
+  code, while a miss merely leaves a fault for the boot smoke / SystemTests. That trade is an ASYMMETRY in masking, and
+  both halves err toward "fewer flags": **defs are OVER-approximated** (naive `#{`-aware comment strip that KEEPS
+  strings; the last def-form counts ANY `name:`/`name =` key, since a property may hold a closure), while **calls are
+  UNDER-approximated** (`stripLine`-grade — strings and comments masked, `#{…}` interpolation kept as the code it is).
+  Keeping the naive strip on the DEF side is load-bearing, not laziness: `TRIPLE_QUOTES = ///'''///`
+  (`src/boot/dependencies-finding.coffee:59`) is a BLOCK REGEX whose `'''` reads to `stripLine` as an unterminated
+  heredoc and blanks the rest of that file — blanked *defs* would cause false POSITIVES, blanked *calls* only cost
+  coverage.
+  Accepted reach limits (each a miss, never a false-fail): paren-calls only (paren-less `@foo arg` is too noisy to gate
+  on — §8.7 of the carryover plan); string-dispatched sends are invisible (menu/button actions — that hole needs the
+  action-string checker); capital-initial names are skipped (the boot dependency finder's jurisdiction); macro `.js` is
+  not scanned (rule [D] polices it); no receiver typing, so a name defined ANYWHERE resolves a call EVERYWHERE.
+  **Two exemption lists, on purpose:** the in-file `BUILTINS` set is a fact about the PLATFORM (JS/DOM/canvas), while
+  `unresolved-sends-allowlist.txt` is a fact about Fizzygum's VENDOR dependencies — one named API we reach at a few
+  sites, where the recorded reason is worth more than the suppression (JSZip, WebCrypto, the LCL event router, the
+  SWCanvas bitmapText API, a Firefox-legacy guarded `toSource`). Seeded at exactly 9 entries, each triaged against its
+  real call site.
 - **stinks (`check-stinks.js`).** A "stink" is a smell driven to zero, ratcheted at a `baseline` (max tolerated count)
   that lives **inline** next to the rule (a smell is a count, not a named set — no separate allowlist). Build FAILS when
-  a stink EXCEEDS its baseline; when it drops below, tighten the baseline to lock the gain (the gate prints a reminder).
-  Baseline 0 = a HARD rule. **Current stinks:** `settle-batch-with-core` (baseline **0**) — using the BATCHING settler
-  `_settleLayoutsAfterBatch` with a single `_<name>NoSettle` thunk, which means the core still reaches a nested public
-  setter and the batch is masking it; fix = make the core pure, switch to `_settleLayoutsAfter`.
+  a stink EXCEEDS its baseline; when it drops below, tighten the baseline to lock the gain (the gate prints a reminder;
+  `fg critique` resurfaces it). Baseline 0 = a HARD rule. Scans `src/` only (not the harness — a stink is a statement
+  about the SHIPPED framework's idiom), per-LINE, over `#`-comment-stripped lines.
+  **Current stinks — seven, seeded 2026-07-15** (the original `settle-batch-with-core` stink was retired when its target
+  `_settleLayoutsAfterBatch` was deleted, leaving the table empty until then). Every baseline was MEASURED by the engine
+  that day and every stink spot-checked against its real hits; they are ratchets recording today's count, not verdicts —
+  driving any of them down is a future arc:
+
+  | stink | baseline | why |
+  |---|---|---|
+  | `debugger-statement` | 36 | left-in debug cruft; hard-stops execution whenever devtools are open (Pharo: `ReCodeCruftLeftInMethodsRule`) |
+  | `undefined-literal` | 89 | the codebase uses `nil`, never `undefined` — a CLAUDE.md convention that was manual-only until now |
+  | `null-literal` | 10 | the codebase uses `nil`; the JS-interop sites (`JSON.stringify`'s arg, `onload = null`) are the tolerated tail |
+  | `wall-clock` | 19 | `Date.now()`/`new Date()` breaks event-stream determinism (DETERMINISM.md — recognition keys off EVENT timestamps) |
+  | `timer` | 3 | `setTimeout`/`setInterval` diverge at dpr2 under parallel load (bug-class B); the cycle/step machinery is the sanctioned clock |
+  | `math-random` | 5 | breaks byte-exact screenshot determinism in render/layout/input code |
+  | `instanceof-type-test` | 105 | locks the type-test-elimination campaign's tail against regrowth — prefer polymorphism (Pharo: `ReBadMessageRule`) |
+
+  ⚠ The engine's `stripComment` is a naive `#` cut that does **not** mask STRINGS, so e.g. `undefined-literal` counts
+  `typeof x is 'undefined'`. That is ACCEPTED, not a bug: a ratchet measures REGRESSION, not an absolute. (Upgrading it
+  to the shared `stripLine` masking is banked as §8.8 of the carryover plan.) There is also no multi-line matcher — an
+  empty-catch stink would need one (§8.9).
 - **thin-wrap (`check-thin-wraps.js`).** For a private `_<name>NoSettle`, the public `<name>` in the SAME class must be,
   after comments/blanks: `[zero+ return if/unless guards]` then `@_settleLayoutsAfter => @_<name>NoSettle <args>` — it
   does no work of its own. Complements `check-layering` (which enforces the CORE reaches no public setter). A twinless
@@ -151,14 +194,69 @@ paint-readonly gates and wired into `fg gauntlet`:
 They verify the *behaviour* the names promise (the ground truth the static scanner can't follow through dynamic
 dispatch). Full description: `docs/layering-naming-convention.md`.
 
-**One ANALYSIS tool (not a gate).** `buildSystem/census-public-private-calls.js` measures public/private
-SELF-call mixing (private→public-command calls, double-settle shapes, and public methods only ever
-`@`-self-called, i.e. privatization candidates). It always exits 0 — it is the MEASUREMENT behind the
-call-separation rules: `check-call-separation.js` requires it as a module and enforces the [S]/[U] count
-baselines on its numbers, and rule [T] (in `check-layering.js`) is the static twin of its narrowed-R2
-report. The campaign that owns the drawdown is **`docs/public-private-call-separation-plan.md`** — re-run
-the census at every tranche start. Methodology and blind spots are documented in the tool's header. Run
-from `Fizzygum/`: `node ./buildSystem/census-public-private-calls.js [--full|--json out.json|--self-test]`.
+---
+
+## 3b. The THREE tiers, and which one a new rule belongs in (severity policy)
+
+Make the implicit explicit — the tier is decided by the SIGNAL's soundness, never by how much we care:
+
+- **A sound NEGATIVE ⇒ a HARD GATE.** If a true finding is *provably* wrong code and the checker cannot produce a false
+  positive, fail the build (`check-layering`, `check-unresolved-sends`, the syntax gate). Land it green.
+- **A count-shaped smell ⇒ a RATCHETED stink/baseline.** Real but tolerated-at-today's-count, driven down over time
+  (`check-stinks`, `check-call-separation`'s `BASELINE_*`, the dead-method allowlist).
+- **A SUSPECTED / heuristic signal ⇒ an ADVISORY exit-0 census.** If the finding needs a human to confirm it, it must
+  never gate (`census-*.js`).
+
+**An unsound signal must never gate.** The asymmetry is the point: a false gate-FAIL blocks correct work and trains
+people to reach for `--noSyntaxCheck`, and — worse — a false gate-PASS bakes regressions into byte-exact references.
+The same safety asymmetry is documented for `fg classify` (a BENIGN? verdict is a hint for reading a diff faster, never
+permission to recapture). When in doubt, ship the rule one tier weaker and promote it once the evidence is in.
+
+## 3c. The ANALYSIS tools (censuses — never gates)
+
+Three read-only censuses, all exit 0 (2 on operational error), all `--json`-capable, all ≲1 s. Run them from `Fizzygum/`
+— or all at once, with every ratchet's "tighten me" note, via **`fg critique`** (~5 s, read-only; `fg` is LOCAL
+workspace tooling, not committed to any repo). `fg critique` deliberately excludes jscpd/jsinspect (minutes-slow — those
+stay on-demand behind `./find_duplicated_code.sh` / `./find_similar_code.sh`).
+
+| Census | Measures | Notes |
+|---|---|---|
+| `census-public-private-calls.js` | public/private SELF-call mixing (R1–R4) | ALSO the measurement ENGINE behind the [S]/[U] gate. Its `runCensus()` exports the whole-system **class model** (`classInfo` / `chainOf` / `resolve` — parent + `@augmentWith` mixins + methods + resolution order) and `maskLine`; the two censuses below REUSE it rather than re-implement it. |
+| `census-hierarchy-duplication.js` | overrides that add nothing: `IDENTICAL-TO-INHERITED`, `SHADOWS-MIXIN`, `JUST-SENDS-SUPER` | Pharo `ReEquivalentSuperclassMethods`/`ReJustSendsSuper`/`ReLocalMethodsSameThanTrait`. The hierarchy-aware complement to jscpd/jsinspect, which know nothing of inheritance and so can never say "REMOVABLE". |
+| `census-property-placement.js` | properties at the wrong level (`PULL-UP`) or wrong scope (`DEMOTE`) | Pharo `ReInstVarInSubclasses`/`ReVariableReferencedOnce`. |
+
+**Why those two can never be promoted to gates** — the reasons are specific, not ceremonial:
+- **`super` is META-COMPILED** (`src/meta/Class.coffee` `_equivalentforSuper` rewrites every super form at fragment
+  compile time; a trailing space after a bare `super` once silently dropped forwarded args — the reason
+  `check-trailing-whitespace.js` exists). So textual body equivalence is **not** dispatch equivalence.
+- **Property access is partly DYNAMIC** (`DeepCopierMixin` walks `@[property]`; serialization drives off name STRINGS),
+  so "unused" is never statically provable.
+
+Both censuses therefore carry SOUNDNESS RULES earned from false positives they actually produced — documented in their
+headers and in the `duplication-report/triage-report.md` ROUND-4/4b sections. Do not "simplify" them away: the method
+SIGNATURE is compared, not just the body (`(@color) -> super` is not removable); occurrences outside any method body
+count as a distinct user (a multi-line ctor param list is public API); and a `.name` member read from another file vetoes
+a DEMOTE (22 `PreferencesAndSettings` fields looked local but are the global settings surface). Findings withheld by that
+last rule are COUNTED and printed, never dropped silently.
+
+**Findings land in the triage ledger, not in a commit:** `duplication-report/triage-report.md` (gitignored working
+state; conventions in `docs/duplicated-code-detection.md`). The report IS the deliverable — acting on it is a separate,
+verified arc.
+
+**Considered and REJECTED** (so they are not re-proposed): a `constructor.name` stink — `new @constructor` /
+`@constructor.name` is a legitimate universal idiom here, so it would ratchet an idiom, not a smell. A `console.log`
+stink — owner-parked; note the VERIFIED 2026-07-15 finding that console.logs are **NOT** stripped from production
+(`drop_console` appears nowhere in `build_it_please.sh`, and `terser --compress` keeps `console.*` by default), so 213
+sites ship in every build including `--homepage`; options are recorded in the carryover plan §8.6 and need an owner
+decision. Anything TRANSITIVE — already rejected as intractable, see §7.
+
+**On `census-public-private-calls.js` specifically** (the oldest of the three, and the only one that is also a gate
+ENGINE): it measures public/private SELF-call mixing — private→public-command calls, double-settle shapes, and public
+methods only ever `@`-self-called (privatization candidates). `check-call-separation.js` requires it as a module and
+enforces the [S]/[U] count baselines on its numbers, and rule [T] (in `check-layering.js`) is the static twin of its
+narrowed-R2 report. The campaign that owns the drawdown is **`docs/public-private-call-separation-plan.md`** — re-run
+the census at every tranche start. Methodology and blind spots are in the tool's header. Run from `Fizzygum/`:
+`node ./buildSystem/census-public-private-calls.js [--full|--json out.json|--self-test]`.
 
 ---
 
@@ -219,9 +317,16 @@ marker does not exempt.
 
 **Two ratchet idioms** (a convention that isn't a gate rots; new rules should use one so they land green today and
 tighten incrementally):
-- **baseline / allowlist** (`check-dead-methods`, `check-stinks`): record the current count/set, fail on *regression*,
-  drive the baseline down over time. To drive down: fix occurrences, then tighten the inline `baseline` (stinks) or
-  remove from `dead-method-allowlist.txt` (dead-method) to lock the gain. Baseline 0 / empty allowlist = a hard rule.
+- **baseline / allowlist** (`check-dead-methods`, `check-stinks`, `check-unresolved-sends`, `check-call-separation`):
+  record the current count/set, fail on *regression*, drive the baseline down over time. To drive down: fix occurrences,
+  then tighten the inline `baseline` (stinks, call-separation) or remove from `dead-method-allowlist.txt` /
+  `unresolved-sends-allowlist.txt` to lock the gain. Baseline 0 / empty allowlist = a hard rule.
+  **The central allowlist files** (each `name # reason`, one per line, `#` comments):
+  `buildSystem/dead-method-allowlist.txt` (dead-method) · `buildSystem/unresolved-sends-allowlist.txt`
+  (unresolved-sends: vendor + genuinely-dynamic names; platform API goes in that checker's in-file `BUILTINS` instead) ·
+  `buildSystem/public-api-allowlist.txt` (call-separation [U]: deliberate end-user inspector/scripting API).
+  Each of those gates prints a **stale-entry NOTE** when an entry stops being needed — `fg critique` is the one place
+  that resurfaces every such note at once.
 - **per-method marker** (`# layout-apply-sanctioned`, `# nosettle-sanctioned`, `# early-return-sanctioned`, `# thin-wrap-exempt`): the justification
   lives at the method, no central list; a NEW unmarked violation fails the build. Best when the exception is a property
   of one method, not a count.
@@ -302,6 +407,9 @@ branch). (3) If it needs an escape hatch, add a per-method marker (mirror the `m
 central allowlist. (4) Update the summary line + the failure footer to name the new letter. (5) **Land it green** — see
 self-test below; triage every hit (fix the code, or mark with a reason); record the marker count.
 
+**Add a new rule — pick the TIER first (§3b): sound negative ⇒ gate · count-shaped ⇒ ratcheted stink ⇒ heuristic ⇒
+advisory census.** Shipping a heuristic as a gate is the one mistake this system cannot absorb.
+
 **Add a new gate.** Clone an existing `buildSystem/check-*.js` (line scanner: exit `0`/`1`/`2`; reuse the `stripLine` +
 `METHOD_HEADER` parsing from `check-layering.js`), then clone its **wiring block** in `build_it_please.sh`:
 ```sh
@@ -318,6 +426,16 @@ fi
 ```
 Place it among the other gates (~:255–390). If it scans the sibling tests, guard it
 (`&& ! $homepage && ! $notests && [ -d ../Fizzygum-tests ]`) so a tests-stripped build self-skips.
+
+**Add an advisory census.** `require('./census-public-private-calls.js')` and call `runCensus()` — it hands you the
+whole-system class model (`classInfo` / `chainOf` / `resolve`), `allMethods` with per-method body lines and markers, and
+`maskLine`. Do NOT re-implement the parse: Fizzygum is image-like (no module system, one class per file, every class a
+global), so that model is the subtle part and a second copy would drift. Then: always exit 0 (2 on operational error),
+support `--json <file>`, print SUMMARY COUNTS by default with `--full` for the lists, add a step to `fg critique`, and
+write findings to the `duplication-report/triage-report.md` ledger rather than to a commit.
+⚠ `runCensus()`'s `bodyLines` carry STRING-STRIPPED code (fine for call extraction, wrong for comparing bodies) — if
+you need text with strings intact, re-read the source and cut comments with `maskLine`, as
+`census-hierarchy-duplication.js` does.
 
 **Self-test a rule (a lint that can't fail is worthless).** Plant a known violation in a throwaway source file, confirm
 the build/gate **aborts loudly** with the right message, confirm the marker exempts it, then **delete the fixture**:
@@ -350,7 +468,12 @@ source to satisfy a new rule.
 - `buildSystem/check-thin-wraps.js` — `HEADER`/`GUARD`/`EXEMPT`; twinless skip (`if (!byName.has(base)) continue`).
 - `buildSystem/check-constructors-build.js` — `METHOD`/`BUILD`/`EXEMPT`; the `inctor` state machine (multi-line-ctor-header aware).
 - `buildSystem/check-dead-methods.js` + `buildSystem/dead-method-allowlist.txt`.
-- `buildSystem/check-stinks.js` — the inline `baseline` per stink.
+- `buildSystem/check-unresolved-sends.js` + `buildSystem/unresolved-sends-allowlist.txt` — `DEF_FORMS` (the
+  over-approximated implementor harvest) / `CALL_RE` / `BUILTINS` / `stripLine` + `interpolatedCode`; `--self-test`.
+- `buildSystem/check-stinks.js` — the inline `baseline` per stink (seven, seeded 2026-07-15).
+- `buildSystem/census-hierarchy-duplication.js` — `bodyTextOf` / `signatureOf` / `signatureHasEffect`.
+- `buildSystem/census-property-placement.js` — `STRING_WORDS` / `MEMBER_FILES` + `readAsMemberElsewhere` (the three
+  exclusions); `lineOwnerOf` (the `@classlevel` attribution).
 - `buildSystem/check-coffee-syntax.js` — loads `src/meta/Class.coffee`/`Mixin.coffee` to compile fragmented.
 - `Fizzygum-tests/scripts/check-tests-syntax.js`, `Fizzygum-tests/scripts/check-refs.js`.
 - `build_it_please.sh` — gate wiring (~:255–390), each `if ! $noSyntaxCheck` + `$?`-gated `exit 1`.
@@ -362,6 +485,11 @@ source to satisfy a new rule.
   (perspective × phase) grid) and its two runtime audit gates; rules [I]/[K]/[L]/[M] (and the [M] fragment-ban) enforce it.
 - `docs/layout-system-architecture-assessment.md` — the runtime flush model + the invariant in depth (the *why*).
 - `docs/lint-ratchet-static-checks-plan.md` — the arc that built rule [G] (STATUS: EXECUTED); the rejected-transitive record.
+- `docs/lint-generic-rules-carryover-plan.md` — the arc that carried over the generic (Pharo SmallLint/Renraku) rules:
+  the unresolved-sends gate, the seven stinks, the two advisory censuses, `fg critique`. Its §8 is the surveyed-but-
+  DEFERRED backlog (action-string resolution, must-call-super, paired-method contracts, dead classes, metrics ratchet,
+  the console.log decision, paren-less call harvesting, the stink-masking upgrade, empty-catch).
+- `docs/duplicated-code-detection.md` — the two clone scanners + the triage-ledger cycle the censuses feed.
 - `docs/public-private-call-separation-plan.md` — the AUTHORED (not started) command/query call-separation
   campaign: planned rules [S] (private must not self-call a public command) / [T] (a settling method must not
   call another settling public method) / [U] (self-only public methods must be `_`-tier), sized by

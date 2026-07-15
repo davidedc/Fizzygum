@@ -10,16 +10,54 @@
 // allowlist file: the baseline lives inline next to the rule, since a smell is a count, not a set of
 // named methods.
 //
-// No stinks are currently defined (the settle-batch-with-core stink was retired when its target,
-// _settleLayoutsAfterBatch, was deleted). The framework stays ready: add a new {id, baseline, why, re}
-// to STINKS below to ratchet the next smell.
+// Add a new {id, baseline, why, re} to STINKS below to ratchet the next smell. `why` is not
+// decoration — it is what a future reader gets INSTEAD of the arguing; write it for someone who
+// does not already agree.
+//
+// Scope: src/**/*.coffee only (NOT the sibling test harness) — a stink is a statement about the
+// SHIPPED framework's idiom. Per-LINE regex over `#`-comment-stripped lines; there is no multi-line
+// matcher (an empty-catch stink would need one — plan §8.9).
+//
+// (Historical: the original settle-batch-with-core stink was retired when its target,
+// _settleLayoutsAfterBatch, was deleted, leaving the table empty until the 2026-07-15 seeding.)
 
 const fs = require('fs');
 const path = require('path');
 
 const SRC = path.resolve(__dirname, '../src');
 
-const STINKS = [];
+// Seeded 2026-07-15 (docs/lint-generic-rules-carryover-plan.md Phase 2), carrying over the generic
+// cruft/idiom rules from Pharo's SmallLint/Renraku catalogue. Every baseline below was MEASURED by
+// this engine on the day (never estimated) and every stink was spot-checked against its real hits.
+// These are RATCHETS, not verdicts: each records today's count so the number can only fall. Driving
+// any of them down is a FUTURE arc — the seeding arc deliberately changed no src.
+//
+// NB the counts are the ENGINE's, and stripComment (below) is a naive `#` cut that does NOT mask
+// STRINGS — so e.g. undefined-literal counts `typeof x is 'undefined'`. That is accepted: a ratchet
+// measures REGRESSION, not an absolute. (Masking upgrade = plan §8.8 backlog.)
+const STINKS = [
+  { id: 'debugger-statement', baseline: 36,   // Pharo: ReCodeCruftLeftInMethodsRule
+    why: 'a debugger statement is left-in debug cruft; it hard-stops execution whenever devtools are open',
+    re: /^\s*debugger\b/ },
+  { id: 'undefined-literal', baseline: 89,
+    why: "the codebase uses `nil` (src/boot/globalFunctions.coffee), never `undefined` — a CLAUDE.md convention that until now was manual-only",
+    re: /\bundefined\b/ },
+  { id: 'null-literal', baseline: 10,
+    why: "the codebase uses `nil` (which IS undefined), never `null` — the JS-interop sites (JSON.stringify's arg, DOM `onload = null`) are the tolerated tail",
+    re: /\bnull\b/ },
+  { id: 'wall-clock', baseline: 19,
+    why: 'Date.now()/new Date() in framework code breaks event-stream determinism (Fizzygum-tests/DETERMINISM.md; multi-click recognition keys off EVENT timestamps, never the wall clock)',
+    re: /\b(Date\.now\s*\(|new Date\s*\()/ },
+  { id: 'timer', baseline: 3,
+    why: 'setTimeout/setInterval diverge at dpr2 under parallel load (DETERMINISM.md bug-class B: heavy cycles starve timers); the cycle/step machinery is the sanctioned clock',
+    re: /\b(setTimeout|setInterval)\s*\(/ },
+  { id: 'math-random', baseline: 5,
+    why: 'Math.random in render/layout/input code breaks byte-exact screenshot determinism',
+    re: /\bMath\.random\b/ },
+  { id: 'instanceof-type-test', baseline: 105,   // Pharo: ReBadMessageRule (isKindOf:)
+    why: 'the type-test-elimination campaign drove instanceof down; this locks the tail against regrowth — prefer polymorphism',
+    re: /\binstanceof\b/ },
+];
 
 function walk(dir, acc) {
   if (!fs.existsSync(dir)) return acc;

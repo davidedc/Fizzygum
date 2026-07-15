@@ -132,6 +132,52 @@ function stripLine(line, state) {
   return { code: out, state };
 }
 
+// Per-char mask for one raw line: 'code' | 'str' | 'cut' (comment), carrying the same multi-line
+// string state stripLine tracks (""" ''' `), so heredoc bodies mask as 'str'. Where stripLine
+// DELETES strings, this only LABELS them — so a caller can keep string CONTENT while still cutting
+// comments, and can tell "inside a string" from "code". R4's occurrence harvest needs that (strings
+// are dynamic-dispatch surface and must DISQUALIFY a privatization candidate); so does
+// census-hierarchy-duplication.js, which must compare method bodies with their string literals
+// INTACT (two bodies differing only in a string literal are NOT duplicates). Exported for that
+// reason — module-scope, and it captures nothing.
+function maskLine(line, state) {
+  const mask = new Array(line.length).fill('code');
+  let i = 0;
+  if (state) {
+    const end = line.indexOf(state);
+    if (end < 0) { mask.fill('str'); return { mask, state }; }
+    for (let j = 0; j < end + state.length; j++) mask[j] = 'str';
+    i = end + state.length;
+    state = null;
+  }
+  while (i < line.length) {
+    const three = line.substr(i, 3);
+    if (three === '"""' || three === "'''") {
+      const close = line.indexOf(three, i + 3);
+      const stop = close < 0 ? line.length : close + 3;
+      for (let j = i; j < stop; j++) mask[j] = 'str';
+      if (close < 0) return { mask, state: three };
+      i = stop; continue;
+    }
+    const c = line[i];
+    if (c === '`' || c === '"' || c === "'") {
+      let j = i + 1;
+      while (j < line.length) {
+        if (line[j] === '\\') { j += 2; continue; }
+        if (line[j] === c) break;
+        j++;
+      }
+      const stop = j >= line.length ? line.length : j + 1;
+      for (let k = i; k < stop; k++) mask[k] = 'str';
+      if (j >= line.length) return { mask, state: c === '`' ? '`' : null };  // unterminated: only ` spans lines
+      i = stop; continue;
+    }
+    if (c === '#') { for (let j = i; j < line.length; j++) mask[j] = 'cut'; break; }
+    i++;
+  }
+  return { mask, state };
+}
+
 const METHOD_HEADER = /^  ([A-Za-z_]\w*): (\(.*?\) )?[-=]>/;
 const MIXIN_CONTAINER = 'onceAddedClassProperties';
 const MIXIN_METHOD_HEADER = /^( {4,})([A-Za-z_]\w*): (\(.*?\) )?[-=]>/;
@@ -422,45 +468,6 @@ function runCensus() {
     o[kind]++;
   };
   const WORD = /[A-Za-z_]\w*/g;
-  // per-char mask for one raw line: 'code' | 'str' | 'cut' (comment — not counted), carrying the
-  // same multi-line string state stripLine tracks (""" ''' `), so heredoc bodies mask as 'str'.
-  function maskLine(line, state) {
-    const mask = new Array(line.length).fill('code');
-    let i = 0;
-    if (state) {
-      const end = line.indexOf(state);
-      if (end < 0) { mask.fill('str'); return { mask, state }; }
-      for (let j = 0; j < end + state.length; j++) mask[j] = 'str';
-      i = end + state.length;
-      state = null;
-    }
-    while (i < line.length) {
-      const three = line.substr(i, 3);
-      if (three === '"""' || three === "'''") {
-        const close = line.indexOf(three, i + 3);
-        const stop = close < 0 ? line.length : close + 3;
-        for (let j = i; j < stop; j++) mask[j] = 'str';
-        if (close < 0) return { mask, state: three };
-        i = stop; continue;
-      }
-      const c = line[i];
-      if (c === '`' || c === '"' || c === "'") {
-        let j = i + 1;
-        while (j < line.length) {
-          if (line[j] === '\\') { j += 2; continue; }
-          if (line[j] === c) break;
-          j++;
-        }
-        const stop = j >= line.length ? line.length : j + 1;
-        for (let k = i; k < stop; k++) mask[k] = 'str';
-        if (j >= line.length) return { mask, state: c === '`' ? '`' : null };  // unterminated: only ` spans lines
-        i = stop; continue;
-      }
-      if (c === '#') { for (let j = i; j < line.length; j++) mask[j] = 'cut'; break; }
-      i++;
-    }
-    return { mask, state };
-  }
   for (const file of srcFiles) {
     let mState = null;
     for (const raw of fs.readFileSync(file, 'utf8').split('\n')) {
@@ -511,10 +518,22 @@ function runCensus() {
   }
   out.allMethodNames = new Set(allMethods.map(r => r.name));
   out.allMethods = allMethods;
+  // The whole-system CLASS MODEL, exposed so sibling censuses don't re-implement it. Fizzygum is
+  // image-like (no module system, one class per file, every class a global), so this model — every
+  // class's parent, @augmentWith mixins, methods, and the resolution order over them — is the
+  // expensive, subtle part that any hierarchy-aware analysis needs. Consumers:
+  // census-hierarchy-duplication.js and census-property-placement.js (2026-07-15). Purely
+  // additive: nothing here changes the four censuses or the [S]/[U] gate numbers.
+  //   classInfo : Map(className -> { name, parent, mixins[], methods: Map(name -> rec), file })
+  //   chainOf   : (cls) -> [classInfo…] in RESOLUTION order (own, then mixins, then parent chain)
+  //   resolve   : (cls, methodName) -> the winning method rec, or null
+  out.classInfo = classInfo;
+  out.chainOf = chainOf;
+  out.resolve = resolve;
   return out;
 }
 
-module.exports = { runCensus, PUBLIC_CALL_MARKER, DOUBLE_SETTLE_MARKER, tierOf, classifyOccurrence };
+module.exports = { runCensus, PUBLIC_CALL_MARKER, DOUBLE_SETTLE_MARKER, tierOf, classifyOccurrence, maskLine, METHOD_HEADER };
 
 // ============================== THE CLI ==============================
 if (require.main === module) {
@@ -603,7 +622,8 @@ if (require.main === module) {
   }
 
   if (JSON_OUT) {
-    const dump = { ...out, nameOcc: undefined, allMethods: undefined, allMethodNames: undefined };
+    const dump = { ...out, nameOcc: undefined, allMethods: undefined, allMethodNames: undefined,
+                   classInfo: undefined, chainOf: undefined, resolve: undefined };
     fs.writeFileSync(JSON_OUT, JSON.stringify(dump, null, 1));
     console.log('\n[census] JSON written to ' + JSON_OUT);
   }
