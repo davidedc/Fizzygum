@@ -23,7 +23,6 @@ class ScriptWdgt extends Widget
 
   runItButton: nil
   saveButton: nil
-  saveTextWdgt: nil
 
   savedScript: nil
   functionFromCompiledCode: nil
@@ -93,9 +92,10 @@ class ScriptWdgt extends Widget
     @runItButton = new SimpleButtonWdgt true, @, "tryIt", "try it"
     @_addNoSettle @runItButton
 
-    @saveTextWdgt = new StringWdgt "save + close", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
-    @saveTextWdgt.alignCenter()
-    @saveButton = new SimpleButtonWdgt true, @, "saveScriptAndClose", @saveTextWdgt
+    # local: @saveButton keeps it as its face widget, so a second copy on `this` was redundant state.
+    saveTextWdgt = new StringWdgt "save + close", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
+    saveTextWdgt.alignCenter()
+    @saveButton = new SimpleButtonWdgt true, @, "saveScriptAndClose", saveTextWdgt
     @_addNoSettle @saveButton
     # ---------------------------------------
 

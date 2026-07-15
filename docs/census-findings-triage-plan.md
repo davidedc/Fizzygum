@@ -1,8 +1,18 @@
 # Hierarchy/property census findings — remaining triage
 
-**STATUS: Phase 0 EXECUTED 2026-07-15 (tooling only, no `src` change). Phases 1–3 not started.**
-Written to be executed **cold, by an LLM with zero prior context**: everything needed is embedded or
-pointed at by absolute path.
+**STATUS 2026-07-15: Phase 0 ✅ DONE (tooling) · Phase 2 ⛔ CLOSED, zero actionable (all 10 falsified
+or forbidden) · Phase 3 ✅ DONE (13 of 20 actioned) · Phase 1 remains owner-gated.**
+**This plan is now essentially CLOSED** — what is left is one owner-gated 2-line constructor. Written
+to be read **cold, by an LLM with zero prior context**: everything needed is embedded or pointed at by
+absolute path.
+
+> **The three headline results, if you read nothing else:**
+> 1. **The censuses' two most-recommended items were both FALSE POSITIVES.** Phase 0's write-only bug
+>    would have invalidated the entire reference set; Phase 2's "best batch" would have turned the
+>    desktop icons near-white (case law 11). A census finding is a QUESTION, never an instruction.
+> 2. **Phase 3 was free.** 13 field deletions, gauntlet 9/9, zero recaptures — the `[inspector-visible]`
+>    cost tag over-warns badly (see the corrected cost model below).
+> 3. **What is left is not a backlog.** Every un-actioned finding has a recorded, specific reason.
 
 > **Phase 0 outcome (2026-07-15).** The write-only DEMOTE bug is FIXED as **exclusion 4** in
 > `buildSystem/census-property-placement.js`: a DEMOTE candidate must now have at least one
@@ -61,28 +71,40 @@ node ./buildSystem/census-property-placement.js    [--full] [--json out.json]
 /Users/davidedellacasa/code/Fizzygum-all/fg critique     # both + every ratchet's "tighten me" note
 ```
 
-### Baseline — CURRENT (2026-07-15, after Tranche A/B/C + Phase 0)
+### Baseline — CURRENT (2026-07-15, after Tranche A/B/C + Phases 0/2/3)
 
-| Report | Count |
-|---|---|
-| IDENTICAL-TO-INHERITED | **1** (`BubblyAppearance.constructor` — Phase 1, owner-gated) |
-| SHADOWS-MIXIN / JUST-SENDS-SUPER | 0 / 0 |
-| PULL-UP | **10** (7 same-default; 9 of 10 `[inspector-visible]`) — Phase 2 |
-| DEMOTE | **20** (**20 of 20 `[inspector-visible]`**, 9 classes; +3 withheld `.name`, +62 write-only) — Phase 3 |
+| Report | Count | Status |
+|---|---|---|
+| IDENTICAL-TO-INHERITED | **1** | `BubblyAppearance.constructor` — Phase 1, owner-gated, probably never |
+| SHADOWS-MIXIN / JUST-SENDS-SUPER | 0 / 0 | — |
+| PULL-UP | **10** (7 same-default) | ⛔ Phase 2 CLOSED — **all 10 triaged, ZERO actionable.** The report stays at 10 forever unless the code changes; that is the correct answer, not a backlog. |
+| DEMOTE | **7** (was 20) | ✅ Phase 3 done — 13 actioned; the 7 survivors each have a recorded reason |
+| DEMOTE withheld | +3 `.name`, +62 write-only | Not backlogs (case law 6/7 and 10) |
 
-*Superseded pre-Phase-0 baseline, for reading older notes: DEMOTE was **36** (23 `[inspector-visible]`;
-+49 withheld). The 49 and the 36 are both tooling artefacts of the write-only bug — do not compare
-them to the current row.*
+*Superseded numbers, for reading older notes: DEMOTE was **36** (+49 withheld) before Phase 0 fixed the
+write-only bug, then **20** (+3, +62) before Phase 3. The 36 and the 49 are tooling artefacts of that
+bug — never compare them to the current row.*
 
-### The cost model you are trading against
+### The cost model you are trading against — ⚠ CORRECTED 2026-07-15, it over-warns
 
-- **`[inspector-visible]` = the class is Widget-family.** The inspector renders live member lists, so
-  adding/removing a **FIELD** there churns exactly the 15-screenshot `fg recapture-inspector` set
-  (~20 min, background). It is a COST to budget, not a veto — and per owner policy a benign inspector
-  recapture is fine: **just recapture; never contort the code to avoid one.**
-- ⚠ **Methods are free; fields are not.** Verified empirically 2026-07-15: deleting 9 methods from
-  Widget-family classes produced ZERO inspector churn (gauntlet 9/9). Do NOT budget a recapture for a
-  method-only change. (The pre-run assumption was the opposite and was wrong.)
+- **`[inspector-visible]` asks only "is the class Widget-family?"** — a CRUDE over-approximation of
+  the real predicate, which is *"do the tests inspect an instance of this class, or of something that
+  inherits the member?"* Treat the tag as "check whether this class is ever a test's inspection
+  TARGET", not as "budget a recapture".
+- ⚠⚠ **MEASURED 2026-07-15: 13 FIELD deletions across 5 Widget-family classes, every one tagged
+  `[inspector-visible]`, cost ZERO recaptures** (gauntlet 9/9, `Fizzygum-tests` dirty=0). The
+  inspector renders its TARGET's member list; the 15 inspector tests inspect things like an analog
+  clock, never an `InspectorWdgt` / `BasementWdgt` / `ScriptWdgt` / `ReconfigurablePaintWdgt` /
+  `UpperRightTriangleIconicButtonWdgt`. Removing a field from a class nothing inspects is invisible.
+  **This corrects an earlier entry in this very plan** which claimed "20 of 20 are inspector-visible ⇒
+  no free subset remains". That was wrong: the subset was free.
+- ⚠ **Methods are free too.** Verified 2026-07-15: deleting 9 methods from Widget-family classes
+  produced ZERO inspector churn.
+- **So what DOES cost a recapture?** Changing a member on a class the tests actually inspect — above
+  all a COMMON BASE such as `Widget` itself, whose members appear in every inspected object's list
+  (see `oo-smells-backlog`: "adding to a common base is inspector-safe only when the panel hides
+  inherited members"). Per owner policy a benign recapture is fine when it does happen: **just
+  recapture; never contort the code to avoid one.**
 
 ---
 
@@ -176,13 +198,34 @@ regression is visible: check the tooltip/menu tests.
 
 ---
 
-## Phase 2 — PULL-UP (10) — every one costs an inspector recapture
+## Phase 2 — PULL-UP (10) — ⛔ CLOSED 2026-07-15: **ZERO actionable. All 10 falsified or forbidden.**
+
+> **Do not re-open without new evidence.** Every finding was READ and triaged 2026-07-15; the two
+> "strong" batches are FALSE POSITIVES with proven mechanisms (case law 11 and 12). The PULL-UP report
+> is kept for future rounds, but its current 10 findings are all accounted for below. **Nothing here
+> should be attempted.**
+>
+> | Finding | Verdict |
+> |---|---|
+> | 3 × `IconicDesktopSystemLinkWdgt` colours | ⛔ **FALSIFIED — case law 11.** All 3 subclasses `@augmentWith HighlightableMixin`, which injects its OWN `color_normal`/`color_hover` **onto the subclass prototype** (`addInstanceProperties` does `@::[key] = value`). `meta/Class.coffee:350-373` emits augmentWith BEFORE class-body fields, so the class-body colour EXISTS TO OVERRIDE THE MIXIN. Pull it up and the mixin's value shadows the parent: **icons render near-white instead of black, hover silver instead of grey.** Simulated and confirmed. |
+> | 2 × `PatchNodeWdgt.setInputNIsConnected` | ⛔ **FALSIFIED — case law 12** (= case law 8's `fps` shape). Read only dynamically (`ControllerMixin:32-33`, `@target[@action + "IsConnected"]`), and the EXISTENCE of the flag declares the node's input surface. `PatchNodeWdgt:74-76` documents per-subclass input surfaces; Diffing declares `setInput1Hot` and deliberately not 3/4. 1+2 in all three is an INTERSECTION, not an abstraction. |
+> | `videoPlayerCanvas` (`HhmmssLabelWdgt`) | ⛔ Skipped: `video-player` family has ZERO SystemTest coverage (unverifiable), and both subclasses auto-assign it via `constructor: (@videoPlayerCanvas) ->` — case law 4's shape. |
+> | `tempPromptEntryField` (`MenuWdgt`) | ⛔ Rejected on design: both subclasses are PROMPTS, so the shared concept is "prompt", not "menu". Pulling a prompt-specific field onto the general menu class worsens cohesion. The honest refactor is an intermediate prompt base — a design change, not a census tidy. |
+> | `seed`, `offset` | ⛔ Differing defaults (weak informational tier); `offset` is a name COLLISION — case law 9. |
+> | `fps` (`DataflowSource`) | ⛔ Documented-deliberate — case law 8. **DO NOT "fix".** |
+>
+> **The durable lesson (now case law 11): before ANY pull-up, check every subclass for `@augmentWith`
+> of a mixin supplying the same property.** The census structurally cannot: it inspects the PARENT's
+> chain, while the mixin sits on the SUBCLASS and declares its properties inside a nested
+> `addInstanceProperties` call that the class-body harvester never sees.
+
+### Original analysis (retained — the candidate list and the cost model still describe the report)
 
 A property declared in EVERY direct subclass of `P` but nowhere in `P` or above it. **9 of 10 are
 `[inspector-visible]`, and PULL-UP moves FIELDS — so unlike the method work, these DO churn the
 15-test inspector set.** Budget `fg recapture-inspector` (~20 min) per batch; batch them to pay once.
 
-**The 5 strong candidates (same default in every subclass):**
+**The 5 candidates that LOOKED strong (same default in every subclass) — all now falsified above:**
 
 | Property | Parent | Subclasses | Default |
 |---|---|---|---|
@@ -211,30 +254,40 @@ subclasses' member lists SHRINK. That is the churn; it is benign, recapture it.
 
 ---
 
-## Phase 3 — DEMOTE (**20** after Phase 0) — the weakest item in the plan; read this before starting
+## Phase 3 — DEMOTE — ✅ DONE 2026-07-15: **13 of 20 actioned. DEMOTE 20 → 7.**
 
-Phase 0 is done, so the report is now honest. **The economics got worse, not better, and that is the
-key fact for whoever picks this up:**
+**Gauntlet 9/9 PASS (248 tests × dpr1/dpr2/webkit), ZERO screenshot diffs, ZERO recaptures,
+`Fizzygum-tests` dirty=0.** It cost nothing — see the CORRECTED cost model above; the recapture this
+plan budgeted never materialised, because the tests inspect none of the 5 classes touched.
 
-- Pre-Phase-0, 23 of 36 were `[inspector-visible]`. **Post-Phase-0, 20 of 20 are** — every one of the
-  13 non-Widget-family findings was a write-only false positive (`SystemInfo`, `Mixin`). So there is
-  **no "free" subset left**: every remaining DEMOTE is a FIELD change on a Widget-family class, and
-  fields churn the 15-test inspector set (methods do not — case law 2).
-- The 20 span just **9 classes** and are dominated by ONE family: **a ctor-built child widget parked in
-  a field that only the builder ever reads** — 10 in `_buildAndConnectChildrenNoSettle`, 3 in a
-  `constructor`, 2 in `_buildAndConnectObjOwnPropsButton`. The widget TREE already holds the
-  reference, so the field is redundant. `InspectorWdgt.show*On/OffButton` is the archetype (8 of the
-  20 are `InspectorWdgt` itself).
+**Actioned (13) — one shape: a ctor-built child parked in a field only the builder reads.** The real
+owner already holds the reference, so the field was redundant state:
 
-**Recommendation: do not do this as its own arc.** The whole report is worth ONE `fg recapture-inspector`
-(~20 min) plus a gauntlet, to delete 20 redundant fields across 9 classes — and the payoff is a
-slightly narrower serialization surface, nothing behavioural. It is a reasonable *rider* on any arc
-that is already recapturing the inspector for another reason, and a poor use of a recapture on its own.
-If it is done, do it as ONE batch to pay the recapture once.
+| Class | Fields | Why it was safe |
+|---|---|---|
+| `InspectorWdgt` | 8 (`show{Methods,Fields,Inherited,OwnPropsOnly}{On,Off}Button`) | Each `ToggleButtonWdgt` OWNS its two buttons (`SwitchButtonWdgt` keeps them in `@buttons`). Only the 4 TOGGLES remain fields — the honest ownership. |
+| `BasementWdgt` | 2 (`hideUsedWdgts{On,Off}Button`) | Same toggle-owns-its-buttons shape. |
+| `UpperRightTriangleIconicButtonWdgt` | 1 (`pencilIconWdgt`) | The widget TREE holds it (`_addNoSettle`). |
+| `ReconfigurablePaintWdgt` | 1 (`mainCanvas`) | An ALIAS of `@stretchableWidgetContainer.contents`; `@overlayCanvas.underlyingCanvasWdgt` keeps the reference it needs. |
+| `ScriptWdgt` | 1 (`saveTextWdgt`) | `@saveButton` keeps it as its face widget. |
 
-Spot-verified genuine (they have a real read): `VideoPlayPauseToggle.playPausePlayButton`/
-`playPausePauseButton` (3 uses each, `@constructor`), `ReconfigurablePaintWdgt.mainCanvas`,
-`ScriptWdgt.saveTextWdgt`, `UpperRightTriangleIconicButtonWdgt.pencilIconWdgt` (4 uses).
+**NOT actioned (7) — the survivors, each with a reason. Do not re-triage without new evidence:**
+
+- **`WorldWdgt` × 3** (`inputDOMElementForVirtualKeyboard*BrowserEventListener`) — ⛔ **case law 13.**
+  Siblings of a ~20-strong browser-listener-field family whose entire purpose is
+  `removeEventListeners` (`WorldWdgt.coffee:2100`), which removes each BY FIELD REFERENCE. These 3 are
+  missing from it only because they attach to `@inputDOMElementForVirtualKeyboard` rather than
+  `canvas` — which looks like a **latent leak to FIX**, not handles to delete.
+- **`VideoPlayPauseToggle` × 2** (`playPausePlay/PauseButton`) — ⛔ worst combination: they live in a
+  **`constructor`** (the Phase 1 risk class: meta-compiled, fragmented, `check-constructors-build`
+  governs it, and the ctor passes them straight to `super`) AND the `video-player` family has **ZERO
+  SystemTest coverage**, so the gauntlet could not verify the change.
+- **`VideoPlayerWithRecommendationsWdgt.videosIndex` × 1** — ⛔ `video-player`: zero coverage,
+  unverifiable. Mechanically trivial, but an unverifiable change for a 1-field payoff is a bad trade.
+- **`SpreadsheetWdgt.backgroundColorGrid` × 1** — ⛔ **case law 13.** One of 8 sibling colour fields in
+  a palette block whose comment explains why they are instance fields and not class statics
+  ("class-level Color statics would run at class-definition time, before Color loads"). Demoting the
+  one that happens to be read once leaves a lone local amid seven fields.
 
 **Neither withheld bucket is a backlog:**
 - **3 withheld by the `.name` veto** (case law 6/7). Do not "unlock" them by weakening the veto: it
@@ -265,22 +318,27 @@ Spot-verified genuine (they have a real read): `VideoPlayPauseToggle.playPausePl
    lifecycle rule — and add your file **by path**, never `git add docs/done/` (it holds other arcs'
    untracked files).
 
-## Suggested order
+## Outcome (this section replaces the original "suggested order" — the order is now history)
 
-~~**Phase 0 first**~~ — ✅ DONE 2026-07-15. It was the right call: it removed 16 false positives
-including 12 that would have invalidated the reference set, and it made Phase 3 honest.
+- **Phase 0** ✅ — removed 16 false positives, 12 of which would have invalidated the reference set.
+- **Phase 2** ⛔ — **zero actionable; all 10 falsified or forbidden.** Its "best batch" would have
+  turned the desktop icons near-white (case law 11). The report will keep printing 10; that is
+  correct, not a debt.
+- **Phase 3** ✅ — 13 of 20 actioned, DEMOTE 20 → 7, gauntlet 9/9, **zero recaptures** (the budgeted
+  cost never materialised — the tag over-warns).
+- **Phase 1** — `BubblyAppearance.constructor`, owner-gated, 2 lines against the constructor risk
+  class. Unchanged: not worth it on its own.
 
-**The re-read that Phase 0 mandated has been done, and the answer is: Phase 3 is not worth its
-recapture on its own** (20 findings, all inspector-visible, all redundant-ctor-child fields, zero
-behavioural payoff — see its section). That is the legitimate "stop" outcome the plan anticipated, so
-it is recorded rather than worked around.
+**All that remains of this plan is Phase 1.** Everything else is closed with reasons.
 
-**What is actually left, in order of value:**
-1. **Phase 2's 3-colour batch** (`IconicDesktopSystemLinkWdgt.color_normal/_hover/_pressed`) — the best
-   remaining *code* win: one parent, one recapture, verbatim-identical defaults.
-2. **Phase 3** — only as a rider on an arc already recapturing the inspector. Never on its own.
-3. **Phase 1** (`BubblyAppearance.constructor`) — owner-gated, 2 lines against a real risk class;
-   probably never happens on its own.
+### If you are tempted to re-open the censuses, read this first
 
-⚠ Phases 2 and 3 both cost the SAME `fg recapture-inspector`. If both are ever wanted, do them as one
-batch and pay it once.
+Across Phases 0/2/3 the two censuses produced **26 findings that were technically true and wrong to
+act on** (16 write-only, 10 pull-up) against **13 that were worth taking**. Both of the items this
+plan itself once called "the best remaining win" were false positives. The reason is structural and
+will not improve: the censuses reason **per-property, textually**, and this codebase resolves
+properties through **mixin injection onto subclass prototypes** (case law 11), **dynamic
+`@[name + suffix]` access** (case law 12), **whole-object enumeration** (case law 10), and
+**deliberate per-family conventions** (case law 8/13) — none of which a name scanner can see. That is
+exactly why they are advisory and can never be gates (`docs/lint-and-static-checks.md` §3b/§3c).
+**Treat every finding as a question to investigate, never an instruction to follow.**

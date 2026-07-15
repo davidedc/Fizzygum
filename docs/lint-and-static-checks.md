@@ -254,9 +254,21 @@ last two rules are COUNTED and printed **separately**, never dropped silently.
 **Findings land in the triage ledger, not in a commit:** `duplication-report/triage-report.md` (gitignored working
 state; conventions in `docs/duplicated-code-detection.md`). The report IS the deliverable — acting on it is a separate,
 verified arc. The closed round-4 record + its case law: `docs/done/duplication-triage-2026-07-15-hierarchy-round4.md`.
-**The remaining, un-actioned findings have their own plan: `docs/census-findings-triage-plan.md`** — its Phase 0 (fix
-the write-only DEMOTE bug) is DONE; Phases 1–3 remain, and every one of them costs a risk class or an inspector
-recapture. Read it before acting on any finding.
+**The findings have their own plan — now essentially CLOSED: `docs/census-findings-triage-plan.md`.** Phase 0 (fix the
+write-only DEMOTE bug) DONE; Phase 3 DONE (13 of 20 actioned, DEMOTE 20 → 7, zero recaptures); **Phase 2 CLOSED with
+ZERO actionable — all 10 PULL-UP findings falsified or forbidden**; only the owner-gated
+`BubblyAppearance.constructor` remains. Read it before acting on ANY finding.
+
+⚠⚠ **A non-zero census count is not a backlog, and both censuses' most-recommended items were FALSE POSITIVES.**
+Across the arc they produced **26 findings that were technically true and wrong to act on** (16 write-only, 10
+pull-up) against **13 worth taking**. PULL-UP's own strongest finding — 3 verbatim-identical colour defaults —
+would have turned the desktop icons near-white, because each subclass `@augmentWith`es a mixin that injects the same
+properties **onto the subclass prototype**, so the class-body default exists to OVERRIDE the mixin, not to duplicate
+the parent (`Object-extensions.coffee:18` writes `@::[key] = value`; `meta/Class.coffee:350-373` emits all
+`augmentWith` before all class-body fields). The other rejections: dynamic `@[name + "IsConnected"]` access
+(`ControllerMixin:32-33`), whole-object enumeration, and deliberate per-family conventions. None is visible to a name
+scanner — which is exactly why these are advisory and can never be gates. **Treat a finding as a question, never an
+instruction.** Full case law (14 entries): `docs/done/duplication-triage-2026-07-15-hierarchy-round4.md`.
 
 ✅ **FIXED 2026-07-15 (was a KNOWN BUG; plan Phase 0) — the DEMOTE rule now requires the property to be READ.** As
 originally shipped it did not, so a **WRITE-ONLY** field was reported as demotable. That was wrong twice: demoting a

@@ -13,20 +13,11 @@ class InspectorWdgt extends Widget
   hierarchyHeaderString: nil
   propertyHeaderString: nil
 
-  showMethodsOnButton: nil
-  showMethodsOffButton: nil
+  # only the TOGGLES are fields: each toggle owns its own on/off buttons (SwitchButtonWdgt keeps them
+  # in @buttons), so the inspector parking a second reference to each was redundant state.
   showMethodsToggle: nil
-
-  showFieldsOnButton: nil
-  showFieldsOffButton: nil
   showFieldsToggle: nil
-
-  showInheritedOnButton: nil
-  showInheritedOffButton: nil
   showInheritedToggle: nil
-
-  showOwnPropsOnlyOnButton: nil
-  showOwnPropsOnlyOffButton: nil
   showOwnPropsOnlyToggle: nil
 
   lastLabelInHierarchy: nil
@@ -239,19 +230,19 @@ class InspectorWdgt extends Widget
     @lastArrowInHierarchy = new AngledArrowUpLeftIconWdgt Color.BLACK
     @_addNoSettle @lastArrowInHierarchy
 
-    @showMethodsOnButton = new SimpleButtonWdgt true, @, "hideMethods", "methods: on"
-    @showMethodsOffButton = new SimpleButtonWdgt true, @, "showMethods", "methods: off"
-    @showMethodsToggle = new ToggleButtonWdgt @showMethodsOnButton, @showMethodsOffButton, if @showingMethods then 0 else 1
+    showMethodsOnButton = new SimpleButtonWdgt true, @, "hideMethods", "methods: on"
+    showMethodsOffButton = new SimpleButtonWdgt true, @, "showMethods", "methods: off"
+    @showMethodsToggle = new ToggleButtonWdgt showMethodsOnButton, showMethodsOffButton, if @showingMethods then 0 else 1
     @_addNoSettle @showMethodsToggle
 
-    @showFieldsOnButton = new SimpleButtonWdgt true, @, "hideFields", "fields: on"
-    @showFieldsOffButton = new SimpleButtonWdgt true, @, "showFields", "fields: off"
-    @showFieldsToggle = new ToggleButtonWdgt @showFieldsOnButton, @showFieldsOffButton, if @showingFields then 0 else 1
+    showFieldsOnButton = new SimpleButtonWdgt true, @, "hideFields", "fields: on"
+    showFieldsOffButton = new SimpleButtonWdgt true, @, "showFields", "fields: off"
+    @showFieldsToggle = new ToggleButtonWdgt showFieldsOnButton, showFieldsOffButton, if @showingFields then 0 else 1
     @_addNoSettle @showFieldsToggle
 
-    @showInheritedOnButton = new SimpleButtonWdgt true, @, "hideInherited", "inherited: on"
-    @showInheritedOffButton = new SimpleButtonWdgt true, @, "showInherited", "inherited: off"
-    @showInheritedToggle = new ToggleButtonWdgt @showInheritedOnButton, @showInheritedOffButton, if @showingInherited then 0 else 1
+    showInheritedOnButton = new SimpleButtonWdgt true, @, "hideInherited", "inherited: on"
+    showInheritedOffButton = new SimpleButtonWdgt true, @, "showInherited", "inherited: off"
+    @showInheritedToggle = new ToggleButtonWdgt showInheritedOnButton, showInheritedOffButton, if @showingInherited then 0 else 1
     @_addNoSettle @showInheritedToggle
 
     @_buildAndConnectObjOwnPropsButton()
@@ -375,9 +366,9 @@ class InspectorWdgt extends Widget
 
 
   _buildAndConnectObjOwnPropsButton: ->
-    @showOwnPropsOnlyOnButton = new SimpleButtonWdgt true, @, "hideOwnPropsOnly", "obj own props only: on"
-    @showOwnPropsOnlyOffButton = new SimpleButtonWdgt true, @, "showOwnPropsOnly", "obj own props only: off"
-    @showOwnPropsOnlyToggle = new ToggleButtonWdgt @showOwnPropsOnlyOnButton, @showOwnPropsOnlyOffButton, if @showingOwnPropsOnly then 0 else 1
+    showOwnPropsOnlyOnButton = new SimpleButtonWdgt true, @, "hideOwnPropsOnly", "obj own props only: on"
+    showOwnPropsOnlyOffButton = new SimpleButtonWdgt true, @, "showOwnPropsOnly", "obj own props only: off"
+    @showOwnPropsOnlyToggle = new ToggleButtonWdgt showOwnPropsOnlyOnButton, showOwnPropsOnlyOffButton, if @showingOwnPropsOnly then 0 else 1
     @_addNoSettle @showOwnPropsOnlyToggle
 
   openClassInspector: (ignored,ignored2,className) ->

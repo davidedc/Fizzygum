@@ -1,6 +1,5 @@
 class ReconfigurablePaintWdgt extends StretchableEditableWdgt
 
-  mainCanvas: nil
   overlayCanvas: nil
   pencilToolButton: nil
   brushToolButton: nil
@@ -45,13 +44,15 @@ class ReconfigurablePaintWdgt extends StretchableEditableWdgt
     @stretchableWidgetContainer.disableDrops()
     @_addNoSettle @stretchableWidgetContainer
 
-    @mainCanvas = @stretchableWidgetContainer.contents
+    # local: the tree holds it (@stretchableWidgetContainer.contents), and @overlayCanvas keeps the
+    # reference it needs in @underlyingCanvasWdgt — a second copy on `this` was redundant state.
+    mainCanvas = @stretchableWidgetContainer.contents
 
     # overlayCanvas
     @overlayCanvas = new CanvasGlassTopWdgt
-    @overlayCanvas.underlyingCanvasWdgt = @mainCanvas
+    @overlayCanvas.underlyingCanvasWdgt = mainCanvas
     @overlayCanvas.disableDrops()
-    @mainCanvas.add @overlayCanvas
+    mainCanvas.add @overlayCanvas
 
     # if you clear the overlay to perfectly
     # transparent, then we need to set this flag

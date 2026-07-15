@@ -4,8 +4,8 @@ class BasementWdgt extends BoxWdgt
   scrollPanel: nil
   resizer: nil
 
-  hideUsedWdgtsOnButton: nil
-  hideUsedWdgtsOffButton: nil
+  # only the TOGGLE is a field: it owns its own on/off buttons (SwitchButtonWdgt keeps them in
+  # @buttons), so parking a second reference to each here was redundant state.
   hideUsedWdgtsToggle: nil
 
   showingLostItemsOnly: false
@@ -43,9 +43,9 @@ class BasementWdgt extends BoxWdgt
     @scrollPanel = new ScrollPanelWdgt
     @_addNoSettle @scrollPanel
 
-    @hideUsedWdgtsOnButton = new SimpleButtonWdgt true, @, "showAllWidgets", "☒ only show lost items"
-    @hideUsedWdgtsOffButton = new SimpleButtonWdgt true, @, "hideUsedWidgets", "☐ only show lost items"
-    @hideUsedWdgtsToggle = new ToggleButtonWdgt @hideUsedWdgtsOffButton, @hideUsedWdgtsOnButton, 0
+    hideUsedWdgtsOnButton = new SimpleButtonWdgt true, @, "showAllWidgets", "☒ only show lost items"
+    hideUsedWdgtsOffButton = new SimpleButtonWdgt true, @, "hideUsedWidgets", "☐ only show lost items"
+    @hideUsedWdgtsToggle = new ToggleButtonWdgt hideUsedWdgtsOffButton, hideUsedWdgtsOnButton, 0
     @_addNoSettle @hideUsedWdgtsToggle
 
 

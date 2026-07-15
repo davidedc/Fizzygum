@@ -129,6 +129,71 @@ nothing from that report (its findings all cost an inspector recapture; see the 
     49 findings when its true cost is 3, because 46 were write-only false positives it suppressed by
     luck. Case law 6's example (`SliderButtonWdgt.offset`) survives as one of the real 3. **Report each
     exclusion's cost separately** — a lumped counter let a wrong rule look load-bearing.
+11. **⚠⚠ A MIXIN augmented onto the SUBCLASS injects properties onto the SUBCLASS's prototype — so a
+    subclass class-body default that looks redundant may be OVERRIDING the mixin, and PULLING IT UP
+    inverts it.** This falsifies the PULL-UP report's own strongest finding, the 3
+    `IconicDesktopSystemLinkWdgt` colours (`color_normal: Color.BLACK` etc., verbatim in all 3
+    subclasses) — the batch previously recommended as "the best remaining code win". **Do not attempt.**
+    The mechanism, verified end to end:
+    - `Object::addInstanceProperties` (`boot/extensions/Object-extensions.coffee:18`) does
+      `@::[key] = value` — the mixin writes onto the AUGMENTED CLASS's own prototype, i.e. the subclass.
+    - `meta/Class.coffee` emits **all** `augmentWith` calls (`:350-354`) BEFORE **all** class-body
+      prototype fields (`:357-373`), so the class-body default always lands last and wins. Confirmed
+      against `coffee -bcp` too: `Sub.augmentWith(...)` then `Sub.prototype.color_normal = "BLACK"`.
+    - Each of the 3 subclasses does `@augmentWith HighlightableMixin` AND declares the colours;
+      `HighlightableMixin` supplies its own `color_normal: Color.create 245,244,245` / `color_hover:
+      Color.SILVER`. So the class-body colours EXIST PRECISELY TO OVERRIDE THE MIXIN.
+    - Pull them up to the parent (which has no mixin) and the mixin's values stay on the SUBCLASS
+      prototype, **shadowing** the parent: icons would render near-white instead of black, hover silver
+      instead of grey. Simulated and confirmed.
+    The census cannot see this: `declaredAtOrAbove(parent, …)` inspects the PARENT's chain, and the
+    mixin is on the SUBCLASS; worse, the mixin declares its properties inside a nested
+    `addInstanceProperties` call, not as a 2-space class-body default, so the harvester never sees them
+    at all. **Rule: before any PULL-UP, check every subclass for `@augmentWith` of a mixin that supplies
+    the same property.** The colour class-body default is the established way to configure
+    `HighlightableMixin` — `ButtonWdgt`, `CreatorButtonWdgt`, `SimpleDropletWdgt`, `GlassBoxTopWdgt`,
+    `EditorContentPropertyChangerButtonWdgt`, `UpperRightTriangleIconicButtonWdgt` all do it.
+12. **A per-subclass DECLARATION SURFACE is not a pull-up candidate — this is case law 8 (`fps`) in a
+    new costume, so expect it to recur.** `setInput1IsConnected`/`setInput2IsConnected` are declared
+    `false` in all 3 `PatchNodeWdgt` subclasses; pulling them up is WRONG.
+    - They are read only DYNAMICALLY — `ControllerMixin.coffee:32-33` does
+      `if @target[@action + "IsConnected"]? then @target[@action + "IsConnected"] = true`. A name
+      scanner sees zero reads (the same enumeration/dynamic-access blind spot as case law 10).
+    - The guard is an EXISTENCE test, so the flag's mere presence DECLARES "this node accepts a
+      `setInput1` connection". `PatchNodeWdgt:74-76` states the design: *"The default is in1..in4
+      (Calculating / Regex); a subclass whose inputs differ (Diffing's hot inputs) overrides just
+      this"* — and `DiffingPatchNodeWdgt` indeed declares `setInput1HotIsConnected` and deliberately
+      NOT 3/4. Each node declares its OWN input surface; 1+2 appearing in all three is an
+      INTERSECTION, not a shared abstraction.
+    - Pulling up would silently grant input1/input2 to every future subclass, which would then claim
+      connections it does not implement.
+13. **A member of a documented, deliberate FAMILY is not a demote candidate, even when it is genuinely
+    read once.** Three DEMOTE findings were correctly left for this reason (they are true statements
+    about use-counts and still wrong to act on):
+    - `WorldWdgt`'s 3 `inputDOMElementForVirtualKeyboard*BrowserEventListener` fields — siblings of a
+      ~20-strong browser-listener-field family whose entire purpose is `removeEventListeners`
+      (`WorldWdgt.coffee:2100`), which removes each one BY FIELD REFERENCE (`@dragoverEventListener`,
+      `@resizeBrowserEventListener`, …). These 3 are absent from it only because they attach to
+      `@inputDOMElementForVirtualKeyboard` rather than `canvas` — which looks like a latent leak to
+      FIX, not a reason to delete the handles.
+    - `SpreadsheetWdgt.backgroundColorGrid` — one of 8 sibling colour fields in a palette block whose
+      comment explains why they are instance fields and not class statics ("class-level Color statics
+      would run at class-definition time, before Color loads"). Demoting the one that happens to be
+      read once leaves a lone local amid seven fields.
+    The general form: the census reasons per-property, so it cannot see that a property's REASON FOR
+    EXISTING is conformance to a family. Read the neighbours, not just the finding.
+14. **⚠ `[inspector-visible]` OVER-WARNS — a field change is NOT automatically a recapture.** The tag
+    asks only *"is the class Widget-family?"*. The real predicate is *"do the tests INSPECT an instance
+    of this class, or of something that inherits the member?"* **Measured 2026-07-15: 13 field
+    deletions across 5 Widget-family classes — `InspectorWdgt` (8), `BasementWdgt` (2),
+    `UpperRightTriangleIconicButtonWdgt`, `ReconfigurablePaintWdgt`, `ScriptWdgt` — every one tagged
+    `[inspector-visible]`, cost ZERO recaptures** (gauntlet 9/9, `Fizzygum-tests` dirty=0). The
+    inspector renders its TARGET's member list, and the 15 inspector tests inspect things like an
+    analog clock; none of them inspects an inspector's own chrome fields. This refines case law 2: it
+    is not "methods free, fields costly" but **"members of classes the tests actually inspect are
+    costly; everything else is free"**. The expensive case is a COMMON BASE (e.g. `Widget` itself),
+    whose members appear in every inspected object's list. Budget the recapture when you touch one of
+    those — not merely because the tag is present.
 
 ## ✅ ACTIONED — Tranche C (2026-07-15): the 3 remaining removable IDENTICAL findings
 
@@ -145,6 +210,28 @@ is the coherent end state, and it is documented in the class.
 
 **Result: IDENTICAL-TO-INHERITED 4 → 1.**
 
+## ✅ ACTIONED — Phase 3 (2026-07-15): 13 of the 20 DEMOTE findings. DEMOTE 20 → 7.
+
+After Phase 0 made the report honest (case law 10), the survivors were triaged one by one. All 13
+actioned findings are ONE shape — **a ctor-built child parked in a field that only the builder reads**,
+where the real owner already holds the reference:
+
+- `InspectorWdgt` × 8 — `show{Methods,Fields,Inherited,OwnPropsOnly}{On,Off}Button`. Each
+  `ToggleButtonWdgt` OWNS its two buttons (`SwitchButtonWdgt` keeps them in `@buttons`). Only the 4
+  TOGGLES stay fields, which is the honest ownership: the inspector keeps the toggle, the toggle keeps
+  its buttons.
+- `BasementWdgt` × 2 — `hideUsedWdgts{On,Off}Button`, same shape.
+- `UpperRightTriangleIconicButtonWdgt.pencilIconWdgt` — the widget TREE holds it (`_addNoSettle`).
+- `ReconfigurablePaintWdgt.mainCanvas` — an ALIAS of `@stretchableWidgetContainer.contents`;
+  `@overlayCanvas.underlyingCanvasWdgt` keeps the reference it needs.
+- `ScriptWdgt.saveTextWdgt` — `@saveButton` keeps it as its face widget.
+
+**Gauntlet 9/9 PASS (248 × dpr1/dpr2/webkit), zero screenshot diffs, ZERO recaptures** — which is
+itself the finding recorded as case law 14. The 7 survivors are NOT a backlog: 3 `WorldWdgt` listener
+fields + `SpreadsheetWdgt.backgroundColorGrid` (case law 13, deliberate families), and 3 `video-player`
+findings (zero SystemTest coverage ⇒ unverifiable; 2 of them also sit in a `constructor`, the Phase 1
+risk class).
+
 ## NOT actioned — the deliberate remainder
 
 - **`BubblyAppearance.constructor == BoxyAppearance.constructor`** (`super widget`) — the last
@@ -156,9 +243,18 @@ is the coherent end state, and it is documented in the class.
 - **9 PULL-UP**: the real ones are the 3 `IconicDesktopSystemLinkWdgt` colours (`color_normal:
   Color.BLACK` etc., verbatim in all 3 subclasses) and the 2 `PatchNodeWdgt`
   `setInputNIsConnected: false` flags — all Widget-family, so each costs an inspector recapture.
+  ⚠⚠ **SUPERSEDED — every word of that sentence turned out to be wrong.** Triaged 2026-07-15:
+  **ZERO of the 10 PULL-UP findings is actionable.** The 3 colours would turn the icons NEAR-WHITE
+  (case law 11 — mixin-on-subclass shadowing); the 2 patch flags are a per-subclass declaration
+  surface read only dynamically (case law 12); and the "costs a recapture" claim over-warns (below).
+  See `docs/census-findings-triage-plan.md` Phase 2. **Do not re-open.**
 - **23 inspector-visible DEMOTEs**: mostly ctor-built child widgets parked in a field only the
   builder reads (the widget TREE already holds the reference); `InspectorWdgt.show*On/OffButton` is
   the archetype. Low value against a recapture each.
+  ⚠ **SUPERSEDED on BOTH counts.** (a) After the write-only fix the report was 20, of which **13 were
+  actioned 2026-07-15** (DEMOTE 20 → 7). (b) **The recapture never happened**: gauntlet 9/9,
+  `Fizzygum-tests` dirty=0. See case law 14 — `[inspector-visible]` merely means "Widget-family",
+  which is a crude over-approximation of "the tests inspect an instance of this class".
 - **49 withheld DEMOTEs**: cannot be proven local (case law 6). ⚠ **Superseded by case law 10** — after
   the write-only fix this bucket splits into **3** genuinely withheld by the `.name` veto (including
   case law 6's own example: `SliderButtonWdgt.offset` IS genuinely local to `@nonFloatDragging`, but

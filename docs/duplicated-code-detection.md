@@ -210,11 +210,23 @@ counts are additive, not comparable to the exact/structural ones:
 | 2026-07-15 · `83209869` (tranche A+B landed) | **4** | 0 | 0 | 10 (7 same-default) | 36 (+49 withheld) |
 | 2026-07-15 · `3d038959` (tranche C landed) | **1** | 0 | 0 | 10 (7 same-default) | 36 (+49 withheld) |
 | 2026-07-15 · Phase 0 (write-only DEMOTE bug FIXED) | 1 | 0 | 0 | 10 (7 same-default) | **20** (+3 withheld ·name, +62 write-only) |
+| 2026-07-15 · Phase 3 (13 DEMOTEs actioned) | 1 | 0 | 0 | **10 — CLOSED, zero actionable** | **7** (+3, +62) |
 
-⚠ The last row is a **tooling** fix, not a code change: `census-property-placement.js`'s DEMOTE rule never required the
-property to be READ, so 16 of the 36 were write-only false positives — 12 of them `SystemInfo` fields that ARE the
+⚠ The Phase 0 row is a **tooling** fix, not a code change: `census-property-placement.js`'s DEMOTE rule never required
+the property to be READ, so 16 of the 36 were write-only false positives — 12 of them `SystemInfo` fields that ARE the
 reference-image identity. See case law 10. It also re-attributed the withheld bucket: the `.name` veto's real cost is
 **3**, not 49. Counts here are only comparable within a row's own tooling version.
+
+⚠⚠ **PULL-UP is CLOSED at 10 and will stay there — all 10 were triaged 2026-07-15 and NONE is actionable** (case law
+11/12; `docs/census-findings-triage-plan.md` Phase 2). It is not a debt, and re-triaging it is wasted work. Its own
+strongest finding — 3 verbatim-identical colour defaults — would have turned the desktop icons near-white, because each
+subclass `@augmentWith`es a mixin that injects the same properties onto the SUBCLASS prototype. **A non-zero census
+count is not automatically a backlog.**
+
+**Scoreboard for the hierarchy axis (2026-07-15, arc complete):** 23 findings actioned across all tranches
+(9 no-op overrides + 1 field in A/B/C, 13 fields in Phase 3) against **26 triaged-and-correctly-rejected**
+(16 write-only, 10 pull-up). The rejection rate is the point, not a failure: these censuses are heuristic by
+construction and can never be gates (`docs/lint-and-static-checks.md` §3b).
 
 Closed-arc snapshot with the full case law (the removability test, the inspector-churn finding, the
 `super`-chaining trap, the four census exclusions, the write-only/enumeration rule):
