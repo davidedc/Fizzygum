@@ -255,7 +255,7 @@ last two rules are COUNTED and printed **separately**, never dropped silently.
 state; conventions in `docs/duplicated-code-detection.md`). The report IS the deliverable — acting on it is a separate,
 verified arc. The closed round-4 record + its case law: `docs/done/duplication-triage-2026-07-15-hierarchy-round4.md`.
 **The findings have their own plan — now CLOSED: `docs/census-findings-triage-plan.md`.** Phase 0 (fix the write-only
-DEMOTE bug) DONE; Phase 3 DONE (13 of 20 actioned, DEMOTE 20 → 7, zero recaptures); Phase 1 DONE
+DEMOTE bug) DONE; Phase 3 DONE (13 of 20 actioned, DEMOTE 20 → 7 → 4, zero recaptures); Phase 1 DONE
 (`BubblyAppearance.constructor` deleted ⇒ **`census-hierarchy-duplication` is now ZERO on all three of its reports**);
 **Phase 2 CLOSED with ZERO actionable — all 10 PULL-UP findings falsified or forbidden.** Read it before acting on ANY
 finding.

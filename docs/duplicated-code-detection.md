@@ -211,7 +211,7 @@ counts are additive, not comparable to the exact/structural ones:
 | 2026-07-15 · `3d038959` (tranche C landed) | **1** | 0 | 0 | 10 (7 same-default) | 36 (+49 withheld) |
 | 2026-07-15 · Phase 0 (write-only DEMOTE bug FIXED) | 1 | 0 | 0 | 10 (7 same-default) | **20** (+3 withheld ·name, +62 write-only) |
 | 2026-07-15 · Phase 3 (13 DEMOTEs actioned) | 1 | 0 | 0 | **10 — CLOSED, zero actionable** | **7** (+3, +62) |
-| 2026-07-15 · Phase 1 (`BubblyAppearance.constructor` deleted) | **0** | 0 | 0 | 10 — CLOSED | 7 |
+| 2026-07-15 · Phase 1 (`BubblyAppearance.constructor` deleted) + the case-law-15 listener fix | **0** | 0 | 0 | 10 — CLOSED | **4** (+3, +62) |
 
 ✅ **The hierarchy-duplication census is now driven to ZERO on all three of its reports** (`IDENTICAL-TO-INHERITED` /
 `SHADOWS-MIXIN` / `JUST-SENDS-SUPER`). ⚠ The last one had been gated for two rounds behind a "constructor risk class"

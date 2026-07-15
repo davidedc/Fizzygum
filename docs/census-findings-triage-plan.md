@@ -78,7 +78,7 @@ node ./buildSystem/census-property-placement.js    [--full] [--json out.json]
 | IDENTICAL-TO-INHERITED | **0** | ✅ Phase 1 DONE 2026-07-15 — `BubblyAppearance.constructor` deleted; the report is now driven to zero |
 | SHADOWS-MIXIN / JUST-SENDS-SUPER | 0 / 0 | — |
 | PULL-UP | **10** (7 same-default) | ⛔ Phase 2 CLOSED — **all 10 triaged, ZERO actionable.** The report stays at 10 forever unless the code changes; that is the correct answer, not a backlog. |
-| DEMOTE | **7** (was 20) | ✅ Phase 3 done — 13 actioned; the 7 survivors each have a recorded reason |
+| DEMOTE | **4** (was 20) | ✅ Phase 3 done — 13 actioned; 3 more RESOLVED THEMSELVES when the listener bug was fixed (below); the 4 survivors each have a recorded reason |
 | DEMOTE withheld | +3 `.name`, +62 write-only | Not backlogs (case law 6/7 and 10) |
 
 *Superseded numbers, for reading older notes: DEMOTE was **36** (+49 withheld) before Phase 0 fixed the
@@ -281,7 +281,7 @@ subclasses' member lists SHRINK. That is the churn; it is benign, recapture it.
 
 ---
 
-## Phase 3 — DEMOTE — ✅ DONE 2026-07-15: **13 of 20 actioned. DEMOTE 20 → 7.**
+## Phase 3 — DEMOTE — ✅ DONE 2026-07-15: **13 of 20 actioned. DEMOTE 20 → 7, then → 4.**
 
 **Gauntlet 9/9 PASS (248 tests × dpr1/dpr2/webkit), ZERO screenshot diffs, ZERO recaptures,
 `Fizzygum-tests` dirty=0.** It cost nothing — see the CORRECTED cost model above; the recapture this
@@ -298,18 +298,25 @@ owner already holds the reference, so the field was redundant state:
 | `ReconfigurablePaintWdgt` | 1 (`mainCanvas`) | An ALIAS of `@stretchableWidgetContainer.contents`; `@overlayCanvas.underlyingCanvasWdgt` keeps the reference it needs. |
 | `ScriptWdgt` | 1 (`saveTextWdgt`) | `@saveButton` keeps it as its face widget. |
 
-**NOT actioned (7) — the survivors, each with a reason. Do not re-triage without new evidence:**
+**NOT actioned: 4 survivors, plus 3 that RESOLVED THEMSELVES. Do not re-triage without new evidence:**
 
-- **`WorldWdgt` × 3** (`inputDOMElementForVirtualKeyboard*BrowserEventListener`) — ⛔ **case law 13.**
-  Siblings of a ~20-strong browser-listener-field family whose entire purpose is
-  `removeEventListeners` (`WorldWdgt.coffee:2100`), which removes each BY FIELD REFERENCE.
-  ✅ **Followed up 2026-07-15 (case law 15) — and the follow-up found a REAL bug, though not the one
-  suspected.** These 3 are NOT a leak: that hidden input only exists on a touch device with
-  `useVirtualKeyboard` and an open caret, and closing the caret already `removeChild`s it and nils it,
-  taking its listeners to GC — and it is never created at all in any environment tests run in. But
-  auditing the family to check that turned up **7 listeners that `removeEventListeners` silently
-  failed to detach** (wrong target — see case law 15). Fixed. The 3 fields stay, and the removals were
-  added for contract completeness.
+- ✅ **`WorldWdgt` × 3** (`inputDOMElementForVirtualKeyboard*BrowserEventListener`) — **GONE from the
+  report, and the most interesting result in this plan.** They were withheld under case law 13
+  (members of the ~20-strong listener-field family whose whole purpose is `removeEventListeners` at
+  `WorldWdgt.coffee:2100`, which removes each BY FIELD REFERENCE). Following that up found no leak —
+  the hidden input only exists on a touch device with `useVirtualKeyboard` and an open caret, closing
+  the caret already `removeChild`s and nils it, and it is never created in any environment tests run
+  in — **but the audit it prompted found 7 listeners that `removeEventListeners` silently failed to
+  detach (case law 15).** Fixing that added the missing removals, so each field is now used in TWO
+  methods (`_initVirtualKeyboard` + `removeEventListeners`), the "every use in exactly ONE method" rule
+  stops firing, and **DEMOTE 7 → 4 because the code became CORRECT, not because anything was
+  suppressed.**
+  ⚠⚠ **The durable lesson — a DEMOTE finding on a FAMILY member can mean THE FAMILY IS BROKEN, not
+  that the member is redundant.** The census was right that something was anomalous here: a field
+  claiming membership of a family that the family's own teardown never touched. The correct resolution
+  was to make the family whole. **When case law 13 makes you withhold a finding, ask "why is this
+  member the odd one out?" — the answer may be a bug.** This is the one case in the whole arc where a
+  census finding led to a real defect being fixed.
 - **`VideoPlayPauseToggle` × 2** (`playPausePlay/PauseButton`) — ⛔ worst combination: they live in a
   **`constructor`** (the Phase 1 risk class: meta-compiled, fragmented, `check-constructors-build`
   governs it, and the ctor passes them straight to `super`) AND the `video-player` family has **ZERO
@@ -356,14 +363,14 @@ owner already holds the reference, so the field was redundant state:
 - **Phase 2** ⛔ — **zero actionable; all 10 falsified or forbidden.** Its "best batch" would have
   turned the desktop icons near-white (case law 11). The report will keep printing 10; that is
   correct, not a debt.
-- **Phase 3** ✅ — 13 of 20 actioned, DEMOTE 20 → 7, gauntlet 9/9, **zero recaptures** (the budgeted
+- **Phase 3** ✅ — 13 of 20 actioned, DEMOTE 20 → 7 (then → 4 when the case-law-15 fix landed), gauntlet 9/9, **zero recaptures** (the budgeted
   cost never materialised — the tag over-warns).
 - **Phase 1** ✅ — `BubblyAppearance.constructor` deleted. **IDENTICAL-TO-INHERITED 1 → 0**, so
   `census-hierarchy-duplication` now reports ZERO on all three of its reports. The "constructor risk
   class" that gated it for two rounds dissolved on reading the meta-compiler (case law 16).
 
 **THIS PLAN IS CLOSED.** Every phase is done or closed with a recorded reason. The censuses are at
-their correct floor: hierarchy-duplication at 0/0/0; PULL-UP at 10 with none actionable; DEMOTE at 7,
+their correct floor: hierarchy-duplication at 0/0/0; PULL-UP at 10 with none actionable; DEMOTE at 4,
 all reasoned. **A zero is not always reachable, and a non-zero is not always a debt.**
 
 ### An unplanned bug fix came out of this (case law 15)

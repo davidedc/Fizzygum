@@ -266,10 +266,10 @@ where the real owner already holds the reference:
 - `ScriptWdgt.saveTextWdgt` — `@saveButton` keeps it as its face widget.
 
 **Gauntlet 9/9 PASS (248 × dpr1/dpr2/webkit), zero screenshot diffs, ZERO recaptures** — which is
-itself the finding recorded as case law 14. The 7 survivors are NOT a backlog: 3 `WorldWdgt` listener
-fields + `SpreadsheetWdgt.backgroundColorGrid` (case law 13, deliberate families), and 3 `video-player`
-findings (zero SystemTest coverage ⇒ unverifiable; 2 of them also sit in a `constructor`, the Phase 1
-risk class).
+itself the finding recorded as case law 14. The survivors are NOT a backlog: `SpreadsheetWdgt.backgroundColorGrid`
+(case law 13, a deliberate family) and 3 `video-player` findings (zero SystemTest coverage ⇒ unverifiable;
+2 of them also sit in a `constructor`). The 3 `WorldWdgt` listener fields later left the report on their
+own when the case-law-15 fix made them used in two methods — DEMOTE 7 → 4 because the code became correct.
 
 ## NOT actioned — the deliberate remainder
 
