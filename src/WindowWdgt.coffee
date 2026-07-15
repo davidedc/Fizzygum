@@ -582,9 +582,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       else
         @showViewModeInBar()
 
-  initialiseDefaultWindowContentLayoutSpec: ->
-    super
-    @layoutSpecDetails.canSetHeightFreely = false
+  # (no initialiseDefaultWindowContentLayoutSpec override: SimpleVerticalStackPanelWdgt's already ends
+  # with the same `@layoutSpecDetails.canSetHeightFreely = false`, so re-asserting it here was a no-op.)
 
   # The re-fit chokepoint for a window (no scrollbars): re-fit chrome + content. Reached via the
   # inherited SimpleVerticalStackPanelWdgt._reLayoutChildren, which dispatches back here.

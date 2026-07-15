@@ -58,10 +58,6 @@ class SimplePlainTextWdgt extends TextWdgt
     super
     @layoutSpecDetails.canSetHeightFreely = false
 
-  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!", "text"], ["bang", "setText"]
-
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.removeMenuItem "soft wrap"
@@ -151,13 +147,12 @@ class SimplePlainTextWdgt extends TextWdgt
     # ~:1258). Removed 2026-07-03 (Tier H1).
     return
 
-  updateTarget: ->
-    @_fireConnection @text
-    return
-
-  # (no reactToTargetConnection / openTargetPropertySelector overrides: StringWdgt's are already
-  # exactly `@updateTarget()` and `@_popUpTargetPropertyMenu theTarget, theTarget.stringSetters()`
-  # -- both late-bound, so they reach this class's members with no override needed here.)
+  # The whole CONTROLLER surface is inherited from StringWdgt -- updateTarget, reactToTargetConnection,
+  # openTargetPropertySelector and stringSetters were all byte-identical overrides here and were dropped
+  # 2026-07-15. A plain-text controller drives its target exactly the way a StringWdgt does, so there is
+  # nothing to specialise: StringWdgt's stringSetters already contributes the same ["bang!", "text"] pair
+  # (re-adding it here was a no-op -- _appendSettersAndDedup dedupes), and its openTargetPropertySelector
+  # already passes the stringSetters table, which is the right one for this family.
 
   # setText (above) + the inherited setFontSize / setFontName / toggleShowBlanks /
   # toggleWeight / toggleItalic / toggleIsPassword all re-flow the box AND nudge the

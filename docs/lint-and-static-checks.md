@@ -215,9 +215,20 @@ permission to recapture). When in doubt, ship the rule one tier weaker and promo
 ## 3c. The ANALYSIS tools (censuses — never gates)
 
 Three read-only censuses, all exit 0 (2 on operational error), all `--json`-capable, all ≲1 s. Run them from `Fizzygum/`
-— or all at once, with every ratchet's "tighten me" note, via **`fg critique`** (~5 s, read-only; `fg` is LOCAL
-workspace tooling, not committed to any repo). `fg critique` deliberately excludes jscpd/jsinspect (minutes-slow — those
-stay on-demand behind `./find_duplicated_code.sh` / `./find_similar_code.sh`).
+— or all at once, with every ratchet's "tighten me" note, via **`fg critique`** (~2 s, read-only). It deliberately
+excludes jscpd/jsinspect (minutes-slow — those stay on-demand behind `./find_duplicated_code.sh` /
+`./find_similar_code.sh`).
+
+⚠ **`fg` is LOCAL workspace tooling and is committed to NO repo** (the umbrella `Fizzygum-all/` is not a git repo), so
+`fg critique` does not exist in a fresh checkout — only the `node ./buildSystem/census-*.js` commands below do. That is
+by design, but it means this doc, not `fg`, is the durable description. `fg critique` runs, in order: `check-stinks`,
+`check-dead-methods`, `check-unresolved-sends`, `check-call-separation` (reprinting only each one's `UNDER` / stale-entry
+NOTE), then the three censuses' summary counts, then an advisory-only footer.
+
+**When do these run?** The GATES run automatically on every build (any `build_it_please.sh`, `fg build/presuite/gauntlet`,
+`build_and_test.sh`, the save-watcher) — there is no CI here, so "automatic" means the build on your machine, and
+`--noSyntaxCheck` skips all of them. The CENSUSES never run automatically: they are advisory, so they run only when a
+human asks (`fg critique`, or directly). The clone scanners are on-demand only (minutes).
 
 | Census | Measures | Notes |
 |---|---|---|

@@ -164,6 +164,10 @@ EXACT clones 104 → 45, duplicated lines 3.4% → ~1.4%). The loop:
 1. **Scan all four**: `./find_duplicated_code.sh`, `./find_similar_code.sh`, and both with
    `--tests`. Each writes a token-efficient `*.ai.txt` handoff list (src →
    `duplication-report/`, tests → `duplication-report/tests/`).
+   **Plus the two hierarchy-aware censuses** (`census-hierarchy-duplication.js`,
+   `census-property-placement.js` — seconds, `--json`), which cover the axis the two clone
+   scanners are blind to. They are also in `fg critique`, so their counts surface without a
+   scan round.
 2. **Reconcile the ledger** — `duplication-report/triage-report.md`. This is the campaign's
    persistent memory: ranked refactor items with win/risk/effort, per-round ✅ PUSHED history
    with commit SHAs, the LEAVE-ALONE list *with reasons*, and hard-won case law (layering
@@ -196,6 +200,18 @@ Baseline history (per-scan totals, for trend context):
 | 2026-07-14 · `62fa50f0` (round 1 landed) | 82 | 133 | — | — |
 | 2026-07-14 · `0b51b0c8` (round 2 landed) | 49 | 118* | 29* | 28* |
 | 2026-07-14 · `fc0aef7c` (round 3 items 1–2) | 45 | 113 | 24 | 24 |
+
+Round 4 (2026-07-15) opened a THIRD axis rather than moving those columns — hierarchy-aware, so its
+counts are additive, not comparable to the exact/structural ones:
+
+| Date · commit | IDENTICAL-TO-INHERITED | SHADOWS-MIXIN | JUST-SENDS-SUPER | PULL-UP | DEMOTE |
+| --- | --- | --- | --- | --- | --- |
+| 2026-07-15 · `2dbf123d` (censuses born) | 10 | 0 | 0 | 10 (7 same-default) | 37 (+49 withheld) |
+| 2026-07-15 · `83209869` (tranche A+B landed) | **4** | 0 | 0 | 10 (7 same-default) | 36 (+49 withheld) |
+
+Closed-arc snapshot with the full case law (the removability test, the inspector-churn finding, the
+`super`-chaining trap, the three census exclusions):
+[`docs/done/duplication-triage-2026-07-15-hierarchy-round4.md`](done/duplication-triage-2026-07-15-hierarchy-round4.md).
 
 \* pre-fix numbers: structural scans before `fc0aef7c`-era tooling silently excluded the two
 `Inspector*` files (gotcha 5 below), and the first tests scans were ad-hoc CLI runs.
