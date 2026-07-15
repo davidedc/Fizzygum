@@ -776,6 +776,7 @@ class Widget extends TreeNode
 
     unless @bounds.origin.equals newBounds.origin
       @bounds = @bounds.translateTo newBounds.origin
+      @_assertBoundsFinite "_applyBounds"
       @__breakMoveResizeCaches()
       @changed()
 
@@ -900,6 +901,7 @@ class Widget extends TreeNode
 
     unless @bounds.origin.equals newBounds.origin
       @bounds = @bounds.translateTo newBounds.origin
+      @_assertBoundsFinite "_commitBounds"
       @__breakMoveResizeCaches()
 
     @__commitExtent newBounds.extent()
@@ -1873,6 +1875,7 @@ class Widget extends TreeNode
     @__breakMoveResizeCaches()
     @fullChanged()
     @bounds = @bounds.translateBy delta
+    @_assertBoundsFinite "_applyMoveByBase"   # move ROOT: children inherit this (finite) delta via __commitMoveBy, so the root check covers the subtree
     @children.forEach (child) ->
       child.__commitMoveBy delta
     return true
@@ -2166,6 +2169,26 @@ class Widget extends TreeNode
   # pass-through to this leaf once the re-fit seam it used to fire was deleted -- it is gone, and its ~20 callers
   # reach the leaf directly. The §4.2 arrange still applies geometry through the non-notifying _apply* path; this
   # leaf is what those apply methods, and _commitBounds, commit through.)
+  # GEOMETRY FINITENESS GUARD (always-on; ONE cheap check per bounds-COMMIT, not per read). My committed
+  # @bounds must be FINITE: a NaN/Infinity coordinate is NEVER legitimate (a FRACTIONAL one IS -- vector
+  # icons, rotated strokes -- so we assert ONLY finiteness, never integer-ness, and false-positive on
+  # nothing). The native canvas silently TOLERATES non-finite draw args, so such a bug stays invisible
+  # until it surfaces far downstream as an SWCanvas clip() throw ("Point ... must be a finite number") --
+  # an error console + many widgets stop painting. Catch it HERE instead, at the commit SOURCE (my ~6
+  # `@bounds =` leaves: __commitExtent/Width/Height + the move commits), on BOTH backends, naming the
+  # widget + the value + a stack: a mystery paint crash becomes a pinpointed error. The distinctive
+  # NON_FINITE_GEOMETRY signature is what the boot-smoke / apps-launch gates and the SystemTest runners
+  # fail on (see Fizzygum-tests). console.error, NOT throw -- non-fatal, so the guard never itself becomes
+  # the crash it guards against. Born from the 2026-07-15 plot-uncollapse NaN
+  # (KeepsRatioWhenInVerticalStackMixin returned undefined -> WindowWdgt `stackHeight += undefined` -> NaN
+  # window height -> NaN dirty rect). This gives real teeth, scoped to bounds-commit, to the checking the
+  # dormant Point/Rectangle debugIfFloats hooks were meant to do.
+  _assertBoundsFinite: (where) ->
+    o = @bounds.origin
+    c = @bounds.corner
+    unless isFinite(o.x) and isFinite(o.y) and isFinite(c.x) and isFinite(c.y)
+      console.error "NON_FINITE_GEOMETRY: #{@constructor.name} committed non-finite @bounds #{@bounds} via #{where}\n" + (new Error()).stack
+
   __commitExtent: (aPoint) ->
     aPoint = aPoint.round()
     minExtent = @minimumExtent  # the __ leaf reads the field directly (getMinimumExtent is the non-overridden accessor -> @minimumExtent, so byte-identical); keeps __commitExtent a pure bottom (§3c)
@@ -2176,6 +2199,7 @@ class Widget extends TreeNode
     newBounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + newWidth, @bounds.origin.y + newHeight
     if @bounds.equals newBounds then return false
     @bounds = newBounds
+    @_assertBoundsFinite "__commitExtent"
     @__breakMoveResizeCaches()
     return true
 
@@ -2313,6 +2337,7 @@ class Widget extends TreeNode
     newBounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + w, @bounds.corner.y
     return if @bounds.equals newBounds
     @bounds = newBounds
+    @_assertBoundsFinite "__commitWidth"
     # cache-break under the did-anything-change guard, like __commitExtent (the D4/E1 discipline)
     @__breakMoveResizeCaches()
   
@@ -2351,6 +2376,7 @@ class Widget extends TreeNode
     newBounds = new Rectangle @bounds.origin, new Point @bounds.corner.x, @bounds.origin.y + h
     return if @bounds.equals newBounds
     @bounds = newBounds
+    @_assertBoundsFinite "__commitHeight"
     # cache-break under the did-anything-change guard, like __commitExtent (the D4/E1 discipline)
     @__breakMoveResizeCaches()
   

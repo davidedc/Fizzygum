@@ -10,9 +10,14 @@ class Point
    
   constructor: (@x = 0, @y = 0) ->
 
+  # DORMANT no-op hook (kept as a call-site marker). A general per-accessor fractional/finiteness assert
+  # here is too hot to run always-on, and fractional coordinates are LEGITIMATE (rotated strokes, sub-pixel
+  # content). The one never-legitimate case -- a NaN/Infinity coordinate reaching a widget's committed
+  # @bounds -- is caught cheaply at the SOURCE instead: Widget._assertBoundsFinite (the NON_FINITE_GEOMETRY
+  # guard), called from Widget's ~6 bounds-commit leaves. See it for the why (SWCanvas clip() throw).
   debugIfFloats: ->
     return
-  
+
   # Point string representation: e.g. '12@68'
   toString: ->
     Math.round(@x) + "@" + Math.round(@y)
