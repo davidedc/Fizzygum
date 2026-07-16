@@ -225,7 +225,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     childrenNotHandlesNorCarets.forEach (widget) =>
       if widget.layoutSpec != LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
         widget.initialiseDefaultVerticalStackLayoutSpec()
-        widget.layoutSpecDetails.rememberInitialDimensions widget, @
+        widget.layoutSpecDetails.captureInitialPlacement widget, @
         widget._setLayoutSpec LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
 
     childrenNotHandlesNorCarets.forEach (widget) =>

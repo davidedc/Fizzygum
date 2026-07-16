@@ -413,7 +413,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # via _positionAndResizeChildren, so without it the deferred re-fit would deref an uninitialised spec.
       aWdgt.initialiseDefaultWindowContentLayoutSpec() unless aWdgt.layoutSpecDetails instanceof WindowContentLayoutSpec
       # (U2) re-arm the first-placement ONE-SHOT for this mount: content (re)mounted into a
-      # window re-negotiates its placement. The old model re-ran rememberInitialDimensions via
+      # window re-negotiates its placement. The old model re-ran the capture via
       # the contentNeverSetInPlaceYet flag; the CAPTURE is now itself the latch, so un-latch it
       # (a fresh spec is already unlatched; this covers content carrying a spec from a prior
       # life) -- but NOT for a same-widget chrome-rebuild re-add (§9.7-Q above): the standing
@@ -694,7 +694,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
       # (U2) the first-placement ONE-SHOT is CONTENT-owned: an uncaptured spec (desiredWidth
       # unset -- fresh init above, or re-armed on content (re)mount in _addNoSettle) selects
-      # the negotiation branch ONCE; rememberInitialDimensions below is itself the latch.
+      # the negotiation branch ONCE; captureInitialPlacement below is itself the latch.
       # This replaced the window-level contentNeverSetInPlaceYet boolean (decl + set + two
       # branch selectors + clear, all deleted). Computed BEFORE the capture latches, and used
       # by BOTH the width branch here and the height branch below.
@@ -720,7 +720,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
             windowWidth = Math.min @width(), recommendedElementWidth + @padding * 2
           @_applyExtentBase new Point windowWidth, @height()
 
-        @contents.layoutSpecDetails.rememberInitialDimensions @contents, @
+        @contents.layoutSpecDetails.captureInitialPlacement @contents, @
 
 
       else
@@ -747,7 +747,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
           # Path B: the sizing HANDS its resulting height back -- no read-back of @contents.height().
           desiredHeight = @contents._setWidthSizeHeightAccordingly recommendedElementWidth
 
-        # (no flag clear -- rememberInitialDimensions above latched the one-shot)
+        # (no flag clear -- captureInitialPlacement above latched the one-shot)
       else
         # the content was already there
         # Path B: take the resulting height from the sizing call, not a read-back of @contents.height().

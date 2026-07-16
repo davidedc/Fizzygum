@@ -11,7 +11,7 @@ class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
     startingContent._applyExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
-    startingContent.layoutSpecDetails.setElasticity 0
+    startingContent.layoutSpecDetails.setGrow 0
     startingContent.layoutSpecDetails.setAlignmentToCenter()
 
 

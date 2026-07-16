@@ -34,14 +34,14 @@ class VerticalStackLayoutSpec
     return nil
 
   # Capture the spec's initial desiredWidth from the element's natural width at THIS
-  # placement — re-run at every (re)placement, exactly the old rememberInitialDimensions
-  # timing (the arrange initialises every spec before asking). Also binds @element/@stack
-  # for the no-arg getWidthInStack. An element WIDER than the available width is clamped
-  # and FORCED fill-class (grow 1, trampling an explicit grow — the old model forced
-  # elasticity 1 the same way); at or below it, an undecided grow is DERIVED (see the
-  # field comment above) and an explicit grow is preserved (the aspect trio's 0 keeps a
-  # clock added at exactly the hugged window width fixed).
-  rememberInitialDimensions: (@element, @stack) ->
+  # placement — re-run at every (re)placement, exactly the old capture timing (the arrange
+  # initialises every spec before asking; pre-U4 name: rememberInitialDimensions). Also
+  # binds @element/@stack for the no-arg getWidthInStack. An element WIDER than the
+  # available width is clamped and FORCED fill-class (grow 1, trampling an explicit grow —
+  # the old model forced elasticity 1 the same way); at or below it, an undecided grow is
+  # DERIVED (see the field comment above) and an explicit grow is preserved (the aspect
+  # trio's 0 keeps a clock added at exactly the hugged window width fixed).
+  captureInitialPlacement: (@element, @stack) ->
 
     availableWidthInStack = @stack.availableWidthForContents()
     elementWidthWithoutSpacing = @element.widthWithoutSpacing()
@@ -79,8 +79,8 @@ class VerticalStackLayoutSpec
 
   vertStackMenu: (widgetOpeningThePopUp,targetWidget,a,b,c)->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
-    menu.addMenuItem "base width...", @, "baseWidthPopout", toolTip: ""
-    menu.addMenuItem "elasticity...", @, "elasticityPopout", toolTip: ""
+    menu.addMenuItem "base width...", @, "desiredWidthPopout", toolTip: ""
+    menu.addMenuItem "elasticity...", @, "growPopout", toolTip: ""
     menu.addMenuItem "align left", @, "setAlignmentToLeft"  if @alignment isnt "left"
     menu.addMenuItem "align right", @, "setAlignmentToRight"  if @alignment isnt "right"
     menu.addMenuItem "align center", @, "setAlignmentToCenter"  if @alignment isnt "center"
@@ -98,9 +98,10 @@ class VerticalStackLayoutSpec
   # seam (a freefloating child's invalidate climbs THROUGH the freefloating boundary to its size-tracking
   # container off-pass). (Off-world content hits _settleLayoutsAfter's orphan early-return, so it still just
   # defers, unchanged.) (end-of-cycle-flush-drawdown -- CONVERT)
-  # NB the setter NAMES (setElasticity / setWidthOfElementWhenAdded) predate the U1 model swap and are KEPT
-  # for now — menu plumbing and macros address them by name; renaming is U4 cleanup
-  # (docs/sizing-model-unification-plan.md §9.4).
+  # NB (U4) the setters carry the MODEL's names (setGrow / setDesiredWidth — pre-U4:
+  # setElasticity / setWidthOfElementWhenAdded); the USER-FACING wording ("elasticity...",
+  # "base width...", the prompt titles) deliberately keeps the old menu vocabulary — labels
+  # are product wording and pixel-asserted, methods are code vocabulary.
   # thin-wrap-exempt: the spec is NOT a Widget, so each setter settles on @element (the stack element), not @
   # -- the thin-wrap gate's canonical form anchors _settleLayoutsAfter on @ (a self-settle). This is the same
   # canonical thin wrap, just delegated to @element. (All 5 setters below are exempt for this reason.)
@@ -122,10 +123,10 @@ class VerticalStackLayoutSpec
       @alignment = newAlignment
       @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
 
-  elasticityPopout: (menuItem,a,b,c,d,e,f)->
+  growPopout: (menuItem,a,b,c,d,e,f)->
     @element.prompt menuItem.parent.title + "\nelasticity:",
       @,
-      "setElasticity",
+      "setGrowFromPercent",
       ((@grow ? 1) * 100).toString(),
       nil,
       0,
@@ -133,25 +134,32 @@ class VerticalStackLayoutSpec
       true
 
   # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
-  setElasticity: (elasticityOrWidgetGivingElasticity, widgetGivingElasticity) ->
-    @element._settleLayoutsAfter => @_setElasticityNoSettle elasticityOrWidgetGivingElasticity, widgetGivingElasticity
-  _setElasticityNoSettle: (elasticityOrWidgetGivingElasticity, widgetGivingElasticity) ->
-    if widgetGivingElasticity?.getValue?
-      elasticity = widgetGivingElasticity.getValue()
+  # The prompt's adapter: the user-facing "elasticity" knob speaks 0..100, the model's grow
+  # is 0..1 -- this converts and delegates (StringFieldWdgt-value-aware, the prompt's
+  # calling convention).
+  setGrowFromPercent: (percentOrWidgetGivingPercent, widgetGivingPercent) ->
+    @element._settleLayoutsAfter => @_setGrowFromPercentNoSettle percentOrWidgetGivingPercent, widgetGivingPercent
+  _setGrowFromPercentNoSettle: (percentOrWidgetGivingPercent, widgetGivingPercent) ->
+    if widgetGivingPercent?.getValue?
+      percent = widgetGivingPercent.getValue()
     else
-      elasticity = elasticityOrWidgetGivingElasticity
+      percent = percentOrWidgetGivingPercent
+    @_setGrowNoSettle Number(percent) / 100
 
-    elasticity = Number(elasticity)
-
-    elasticity = elasticity/100
-    unless @grow == elasticity
-      @grow = elasticity
+  # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
+  # MODEL scale: grow is the 0..1 share of the extra space (pre-U4 name: setElasticity,
+  # which took the prompt's 0..100 scale -- that conversion now lives in the adapter above).
+  setGrow: (newGrow) ->
+    @element._settleLayoutsAfter => @_setGrowNoSettle newGrow
+  _setGrowNoSettle: (newGrow) ->
+    unless @grow == newGrow
+      @grow = newGrow
       @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
 
-  baseWidthPopout: (menuItem,a,b,c,d,e,f)->
+  desiredWidthPopout: (menuItem,a,b,c,d,e,f)->
     @element.prompt menuItem.parent.title + "\nbase width:",
       @,
-      "setWidthOfElementWhenAdded",
+      "setDesiredWidth",
       @desiredWidth.toString(),
       nil,
       10,
@@ -159,23 +167,24 @@ class VerticalStackLayoutSpec
       true
 
   # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
-  setWidthOfElementWhenAdded: (widthOfElementWhenAddedOrWidgetGivingWidthOfElementWhenAdded, widgetGivingWidthOfElementWhenAdded) ->
-    @element._settleLayoutsAfter => @_setWidthOfElementWhenAddedNoSettle widthOfElementWhenAddedOrWidgetGivingWidthOfElementWhenAdded, widgetGivingWidthOfElementWhenAdded
+  # (pre-U4 name: setWidthOfElementWhenAdded; the user-facing prompt still says "base width".)
+  setDesiredWidth: (desiredWidthOrWidgetGivingDesiredWidth, widgetGivingDesiredWidth) ->
+    @element._settleLayoutsAfter => @_setDesiredWidthNoSettle desiredWidthOrWidgetGivingDesiredWidth, widgetGivingDesiredWidth
   # An explicit base-width edit PINS the element (grow 0): "I want THIS width" — under the grow
   # model a desired width is moot at grow 1 (the element fills regardless), so without the pin
   # the menu's base-width knob would silently do nothing on a fill-class element (the old
   # proportional model re-anchored the ratio instead, so the knob always bit). The user can
   # raise elasticity again afterwards — the knobs stay independent edits.
-  _setWidthOfElementWhenAddedNoSettle: (widthOfElementWhenAddedOrWidgetGivingWidthOfElementWhenAdded, widgetGivingWidthOfElementWhenAdded) ->
-    if widgetGivingWidthOfElementWhenAdded?.getValue?
-      widthOfElementWhenAdded = widgetGivingWidthOfElementWhenAdded.getValue()
+  _setDesiredWidthNoSettle: (desiredWidthOrWidgetGivingDesiredWidth, widgetGivingDesiredWidth) ->
+    if widgetGivingDesiredWidth?.getValue?
+      newDesiredWidth = widgetGivingDesiredWidth.getValue()
     else
-      widthOfElementWhenAdded = widthOfElementWhenAddedOrWidgetGivingWidthOfElementWhenAdded
+      newDesiredWidth = desiredWidthOrWidgetGivingDesiredWidth
 
-    widthOfElementWhenAdded = Math.round(widthOfElementWhenAdded)
+    newDesiredWidth = Math.round(newDesiredWidth)
 
-    if widthOfElementWhenAdded
-      unless @desiredWidth == widthOfElementWhenAdded and @grow == 0
-        @desiredWidth = widthOfElementWhenAdded
+    if newDesiredWidth
+      unless @desiredWidth == newDesiredWidth and @grow == 0
+        @desiredWidth = newDesiredWidth
         @grow = 0
         @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel

@@ -49,7 +49,7 @@ class WindowContentLayoutSpec extends VerticalStackLayoutSpec
 
   resizerCanOverlapContents: true
 
-  rememberInitialDimensions: (@element, @stack) ->
+  captureInitialPlacement: (@element, @stack) ->
     super
 
     availableWidthInStack = @stack.availableWidthForContents()
@@ -58,6 +58,6 @@ class WindowContentLayoutSpec extends VerticalStackLayoutSpec
       @grow = 1
 
   # NB every in-tree caller passes a grow explicitly (0 or 1) — an explicit grow survives
-  # the capture's derivation (see VerticalStackLayoutSpec.rememberInitialDimensions).
+  # the capture's derivation (see VerticalStackLayoutSpec.captureInitialPlacement).
   constructor: (@preferredStartingWidth, @preferredStartingHeight, grow) ->
     super grow

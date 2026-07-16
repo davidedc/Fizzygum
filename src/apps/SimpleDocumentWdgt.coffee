@@ -50,7 +50,7 @@ class SimpleDocumentWdgt extends Widget
 
     iconWidget._applyExtent new Point 85, 85
     sdspw.setContents iconWidget, 5
-    iconWidget.layoutSpecDetails.setElasticity 0
+    iconWidget.layoutSpecDetails.setGrow 0
     iconWidget.layoutSpecDetails.setAlignmentToCenter()
 
     titleWidget = new SimplePlainTextWdgt(
