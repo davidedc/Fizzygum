@@ -30,21 +30,19 @@ class GenericCompositeIconWdgt extends Widget
     @_reLayout()
     @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
 
-  # Self-protecting resize (INV-2): I am a composite whose children are placed by my
+  # Self-protecting resize (INV-2): I am a composite whose children are placed by my subclasses'
   # _reLayout, but parents size me with the raw _applyExtent core (e.g.
-  # WidgetHolderWithCaptionWdgt._reLayout), which alone would leave my children at
-  # stale geometry -- the 2026-07 broken-icons regression. Same idiom as
-  # StretchablePanelWdgt/StretchableWidgetContainerWdgt._applyExtent. The
-  # _compositeChildrenBuilt() guard skips the re-layout during construction (the ctor
-  # _applyExtents 95x95 BEFORE the second child is built); the trailing
-  # _invalidateLayout/settle lays the children out then.
-  _applyExtent: (extent) ->
-    if extent.equals @extent()
-      return
-    super
-    if @_compositeChildrenBuilt()
-      @_reLayout @bounds
+  # WidgetHolderWithCaptionWdgt._reLayout), which alone would leave my children at stale
+  # geometry -- the 2026-07 broken-icons regression. Declaring the capability makes the base
+  # Widget._applyExtent re-lay my children when an immediate resize commits my frame (the
+  # unified INV-2 mechanism, 2026-07-16 -- this class carried the first of the 8 hand-copied
+  # _applyExtent overrides that mechanism replaced).
+  _placesChildrenInLayout: ->
+    true
 
-  # per-class predicate: BOTH composite children exist (see _applyExtent's guard note)
+  # per-class predicate gating the base's composite-child re-lay: BOTH composite children must
+  # exist (the ctor _applyExtents 95x95 BEFORE the second child is built; the trailing
+  # _invalidateLayout/settle lays the children out then). Abstract-false at this level; the
+  # subclasses (GenericShortcutIconWdgt / GenericObjectIconWdgt) answer for their own child pairs.
   _compositeChildrenBuilt: ->
     false

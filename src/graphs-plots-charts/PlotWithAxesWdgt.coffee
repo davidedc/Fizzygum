@@ -29,15 +29,17 @@ class PlotWithAxesWdgt extends Widget
   # Self-protecting resize (INV-2): I am a composite (plot + 2 axes placed by my _reLayout),
   # but window-content / fractional-rescale paths size me with the raw _applyExtent core
   # (KeepsRatioWhenInVerticalStackMixin._setWidthSizeHeightAccordingly), which alone would
-  # leave my children at construction geometry -- the 2026-07 plot-collapse regression. Same
-  # idiom as StretchablePanelWdgt._applyExtent; the axes? guard skips the re-layout during a
-  # construction-time _applyExtent (before the axes are built).
-  _applyExtent: (extent) ->
-    if extent.equals @extent()
-      return
-    super
-    if @vertAxis? and @horizAxis?
-      @_reLayout @bounds
+  # leave my children at construction geometry -- the 2026-07 plot-collapse regression.
+  # Declaring the capability makes the base Widget._applyExtent re-lay my children on an
+  # immediate resize (the unified mechanism, 2026-07-16 -- replaces this class's hand-copied
+  # _applyExtent override; the inline axes? guard became _compositeChildrenBuilt below).
+  _placesChildrenInLayout: ->
+    true
+
+  # both axes exist -- skips the base's re-layout during a construction-time _applyExtent
+  # (before the axes are built); the trailing settle lays the children out then.
+  _compositeChildrenBuilt: ->
+    @vertAxis? and @horizAxis?
 
   _reLayout: (newBoundsForThisLayout) ->
 

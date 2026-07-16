@@ -77,6 +77,7 @@ class ToolPanelWdgt extends PanelWdgt
 
       @_invalidateLayout()
 
+  # immediate-resize-relay-exempt: LATENT-FINDING(2026-07-16): SimpleDocumentWdgt/StretchableEditableWdgt._reLayout raw-resize me WITHOUT a re-lay and my arrangement WRAPS by width, so stale children are possible -- pre-existing, suite-invisible; declaring true = behaviour change, deferred as a follow-on (INV-2 unification plan)
   _reLayout: (newBoundsForThisLayout) ->
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout

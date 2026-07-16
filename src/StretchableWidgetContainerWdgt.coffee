@@ -95,13 +95,13 @@ class StretchableWidgetContainerWdgt extends Widget
     @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
 
 
-  _applyExtent: (extent) ->
-
-    if extent.equals @extent()
-      return
-
-    super
-    @_reLayout @bounds
+  # Self-protecting resize (INV-2): my _reLayout places my children, so the base
+  # Widget._applyExtent must re-lay them when an immediate resize commits my frame
+  # (the unified mechanism, 2026-07-16 -- replaces this class's hand-copied
+  # _applyExtent override; _setWidthSizeHeightAccordingly above leans on exactly that
+  # re-lay when it sizes me through the polymorphic @_applyExtent).
+  _placesChildrenInLayout: ->
+    true
 
 
   _reLayout: (newBoundsForThisLayout) ->

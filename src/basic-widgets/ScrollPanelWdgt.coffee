@@ -270,19 +270,26 @@ class ScrollPanelWdgt extends PanelWdgt
     @add aWdgt
 
 
-  _applyExtent: (aPoint) ->
-    unless aPoint.equals @extent()
-      # TODO this part seems like it should be in a _reLayout function
-      # rather than here
-      if @isTextLineWrapping and !(@contents instanceof SimpleVerticalStackPanelWdgt)
-        @contents._applyMoveTo @position()
-      super aPoint
-      @contents._applyExtent aPoint
-      # immediate mutator: APPLY the re-fit NOW -- synchronous, single-container, TERMINAL
-      # (_reLayoutChildren -> _positionAndResizeChildren + _reLayoutScrollbars, neither climbs to my
-      # parent). Never SCHEDULE it (no _invalidateLayout): the sanctioned immediate-mutator
-      # apply, like TextWdgt._applyExtent -> @_reLayoutSelf (task #17). Rule [E] forbids the SCHEDULE.
-      @_reLayoutChildren()
+  # Self-protecting resize (INV-2, unified 2026-07-16): the base Widget._applyExtent runs the
+  # hook below when an immediate resize commits my frame -- the sanctioned immediate-mutator
+  # APPLY, like TextWdgt._applyExtent -> @_reLayoutSelf (task #17); check-layering.js rule [E]
+  # forbids the SCHEDULE (no _invalidateLayout), not this APPLY. ListWdgt + the other scroll
+  # panels inherit this declaration (replaces this class's hand-copied _applyExtent override).
+  _placesChildrenInLayout: ->
+    true
+
+  # tracking container: move+size my @contents to the new viewport, then the terminal re-fit
+  # (_reLayoutChildren -> _positionAndResizeChildren + _reLayoutScrollbars, neither climbs to
+  # my parent). The contents MOVE ran pre-commit in the old _applyExtent override; an extent
+  # commit never changes my origin, so post-commit @position() is identical (byte-exact-gated).
+  # aPoint = the RAW requested extent, exactly what the old override handed @contents._applyExtent.
+  # TODO (pre-existing): this contents move/size seems like it should be in a _reLayout function
+  # rather than here.
+  _reLayoutMyChildrenAfterImmediateResize: (aPoint) ->
+    if @isTextLineWrapping and !(@contents instanceof SimpleVerticalStackPanelWdgt)
+      @contents._applyMoveTo @position()
+    @contents._applyExtent aPoint
+    @_reLayoutChildren()
 
 
   # Gesture-driven container re-fit (a widget was dropped into / grabbed out of me): DEFER it to

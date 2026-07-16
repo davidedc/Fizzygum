@@ -473,6 +473,7 @@ class InspectorWdgt extends Widget
     cnts.considerCurrentTextAsReferenceText()
     @detail.checkIfTextContentWasModifiedFromTextAtStart()
   
+  # immediate-resize-relay-exempt: no polymorphic raw _applyExtent receiver of this class (2026-07-16 census); containers size me via the settle-driven _reLayout handing bounds, or the override-BYPASSING _applyExtentBase (deliberately outside this mechanism)
   _reLayout: (newBoundsForThisLayout) ->
 
     if @_handleCollapsedStateShouldWeReturn() then return

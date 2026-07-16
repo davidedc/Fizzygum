@@ -121,6 +121,7 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     @videoPlayer.loadVideo videoPath
     # TODO reshuffle the video recommandation thumbnails
 
+  # immediate-resize-relay-exempt: no polymorphic raw _applyExtent receiver of this class (2026-07-16 census); containers size me via the settle-driven _reLayout handing bounds, or the override-BYPASSING _applyExtentBase (deliberately outside this mechanism)
   _reLayout: (newBoundsForThisLayout) ->
 
     if @_handleCollapsedStateShouldWeReturn() then return

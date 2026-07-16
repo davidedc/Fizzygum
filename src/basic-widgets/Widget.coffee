@@ -2108,14 +2108,52 @@ class Widget extends TreeNode
   setMinimumExtent: (@minimumExtent) ->
 
   # Widget accessing - dimensional changes requiring a complete redraw
-  # The polymorphic extent-apply -- the override DISPATCH POINT (SimpleVerticalStackPanelWdgt / ScrollPanelWdgt /
-  # TextWdgt / SliderWdgt / ListWdgt / the stretchables specialize it). The base is a pure pass-through to
-  # _applyExtentBase, exactly like _applyMoveBy -> _applyMoveByBase: ONE body per behaviour, two names for
-  # dispatch (the bare twin is the override-BYPASSING base apply the top-down arrange uses). Nothing notifies:
-  # the notify-by-mutation seam was deleted 2026-07-01 (the settle-time up-edge does any container re-fit), and
-  # the historical *AndNotify names were renamed away 2026-07-02 (Tier B -- this method WAS _applyExtentAndNotify).
+  # The polymorphic extent-apply -- the override DISPATCH POINT (TextWdgt / SliderWdgt / ListWdgt /
+  # StretchableEditableWdgt / TrackingTransformFrameWdgt specialize it for their own, non-composite reasons).
+  # The base is _applyExtentBase (exactly like _applyMoveBy -> _applyMoveByBase: ONE body per behaviour, two
+  # names for dispatch; the bare twin is the override-BYPASSING base apply the top-down arrange uses) PLUS the
+  # unified composite-child re-lay: a composite whose _reLayout places its own children declares that via the
+  # _placesChildrenInLayout capability below, and gets them re-laid HERE when an immediate resize commits its
+  # frame. That is the INV-2 self-protecting-resize idiom
+  # (docs/done/layout-regressions-2026-07-icons-plots-editghosts-plan.md), hand-copied as 8 per-class
+  # _applyExtent overrides until 2026-07-16, when the 9th forgotten copy (WidgetHolderWithCaptionWdgt -- the
+  # oversized-Basement-icon regression) proved the opt-in unenforceable; now the composite DECLARES and the
+  # base APPLIES, and buildSystem/check-composite-relay.js makes forgetting a build failure. This stays the
+  # sanctioned terminal in-place re-fit APPLY (rule [E] forbids the SCHEDULE, not this): synchronous,
+  # single-container, never climbs, never _invalidateLayout. Nothing notifies: the notify-by-mutation seam
+  # was deleted 2026-07-01 (the settle-time up-edge does any container re-fit), and the historical *AndNotify
+  # names were renamed away 2026-07-02 (Tier B -- this method WAS _applyExtentAndNotify). Ordering is
+  # load-bearing: _applyExtentBase COMMITS first, so when the composite's _reLayout re-commits its own frame
+  # (bounds-first) the equal-extent top guard here absorbs that re-entry as a no-op.
   _applyExtent: (aPoint) ->
+    if aPoint.equals @extent()
+      return
     @_applyExtentBase aPoint
+    if @_placesChildrenInLayout() and @_compositeChildrenBuilt()
+      @_reLayoutMyChildrenAfterImmediateResize aPoint
+
+  # Capability query (assessment §6.1 rule 6): "my _reLayout places my own children -- re-lay them when an
+  # immediate resize commits my frame". Composites answer true, possibly by inheritance (WindowWdgt through
+  # SimpleVerticalStackPanelWdgt; the icon subclasses through GenericCompositeIconWdgt). Enforced by
+  # check-composite-relay.js: a _reLayout-overriding class must declare this or carry an explicit
+  # immediate-resize-relay-exempt marker.
+  _placesChildrenInLayout: ->
+    false
+
+  # Construction-order guard for the composite-child re-lay: a composite that _applyExtents a placeholder
+  # size from _buildAndConnectChildrenNoSettle BEFORE its last child is built answers false then (the
+  # trailing _invalidateLayout/settle lays the children out once, when they all exist). Base: any children
+  # are always "built".
+  _compositeChildrenBuilt: ->
+    true
+
+  # HOW a declaring composite re-lays its children on an immediate resize: default = the full self re-lay at
+  # the just-committed frame. Size-tracking containers override to the terminal @_reLayoutChildren();
+  # StretchableCanvasWdgt prepends its back-buffer recreation. Receives the RAW requested extent (pre
+  # round/min-clamp -- __commitExtent may commit something slightly else) because StretchableCanvasWdgt
+  # sizes its buffers from exactly that value.
+  _reLayoutMyChildrenAfterImmediateResize: (aPoint) ->
+    @_reLayout @bounds
 
   # high-level geometry-change API,
   # you don't actually change the geometry right away,

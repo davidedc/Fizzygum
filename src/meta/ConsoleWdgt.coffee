@@ -72,6 +72,7 @@ class ConsoleWdgt extends Widget
       menu.addMenuItem "run selection", @, "doSelection"
     menu.addMenuItem "run contents", @, "doAll"
 
+  # immediate-resize-relay-exempt: no polymorphic raw _applyExtent receiver of this class (2026-07-16 census); containers size me via the settle-driven _reLayout handing bounds, or the override-BYPASSING _applyExtentBase (deliberately outside this mechanism)
   _reLayout: (newBoundsForThisLayout) ->
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout

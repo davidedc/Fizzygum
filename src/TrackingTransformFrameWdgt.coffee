@@ -25,6 +25,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # _reLayout does not flip the (@_reLayout != Widget::_reLayout) classification — the SAME reason
   # SimpleVerticalStackPanelWdgt / ScrollPanelWdgt pin it — keeping subWidgetsMergedFullBounds and the
   # resize classification exactly as the base fixed-figure island's.
+  # immediate-resize-relay-exempt: affine island -- my own _applyExtent override forwards the extent to my sole content and re-fits (the F1 anchor-nil form); the composite-relay hook would be a second, uncoordinated re-lay
   _reLayout: (newBoundsForThisLayout) ->
     super
     @_reLayoutChildren()

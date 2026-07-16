@@ -224,6 +224,7 @@ class CaretWdgt extends BlinkerWdgt
   # and bounded (only a true NON-TERMINATING cycle would ever hit WorldWdgt._recalculateLayoutsBody's sanity-limit
   # assert). The caret is isLayoutInert + childless, so there is no base _reLayout work to do (no bounds to fit,
   # no children to place) -- this override is the whole layout step.
+  # immediate-resize-relay-exempt: places no children -- my _reLayout repositions MYSELF (caret slot + scroll-into-view); nothing derives child geometry from my extent
   _reLayout: ->
     beforeParentT = @parent?.top() ; beforeParentL = @parent?.left()
     beforeTargetT = @target?.top() ; beforeTargetL = @target?.left()
