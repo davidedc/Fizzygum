@@ -315,12 +315,3 @@ class SimpleVerticalStackPanelWdgt extends Widget
     # vs "notify") died with the seam: both arms had become this same call, differing only by a redundant
     # unconditional cache-break (Tier D, 2026-07-02).
     @_applyExtentBase new Point @width(), newHeight
-
-  # Self-protecting resize (INV-2 unified 2026-07-16; hook RETIRED for the schedule-valve the same
-  # day -- ordered-downwalk plan §9-N1): my _reLayoutChildren places my stack children, so an
-  # immediate resize SCHEDULES my re-lay through the base Widget._applyExtent valve (the engine
-  # heals my interior; the old synchronous terminal-_reLayoutChildren override is gone -- my full
-  # _reLayout ends in _reLayoutChildren anyway). WindowWdgt + the other stacks inherit this
-  # declaration (replaces this class's hand-copied _applyExtent override).
-  _placesChildrenInLayout: ->
-    true

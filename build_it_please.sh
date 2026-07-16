@@ -477,27 +477,6 @@ if ! $noSyntaxCheck ; then
   echo "... relayout-repaints check OK"
 fi
 
-# --- build-time COMPOSITE-RELAY gate ([INV-2] unified) ---------------------------------
-# A composite (a class defining `_reLayout`/`_reLayoutChildren`) must declare
-# `_placesChildrenInLayout: -> true` (own or inherited -- the extends-chain is resolved) so the
-# base Widget._applyExtent re-lays its children when an immediate resize commits its frame, or
-# carry a `# immediate-resize-relay-exempt: <reason>` marker naming why stale children are
-# impossible. Replaces the 8 hand-copied per-class `_applyExtent` INV-2 overrides (unified
-# 2026-07-16 after the 9th forgotten copy -- the oversized-Basement-icon regression -- reached
-# production unseen): forgetting is now a build failure, not a rendering bug.
-# (buildSystem/check-composite-relay.js -- same --noSyntaxCheck escape hatch + explicit $? abort
-# as the gates above; scans src/ only, so it runs for every build flavour incl. --homepage.)
-if ! $noSyntaxCheck ; then
-  echo "checking composites declare the immediate-resize child re-lay ([INV-2]) ..."
-  node ./buildSystem/check-composite-relay.js
-  if [ "$?" != "0" ]; then
-    tput bel
-    echo "!!!!!!!!!!! error: composite-relay gate failed -- aborting build." 1>&2
-    exit 1
-  fi
-  echo "... composite-relay check OK"
-fi
-
 # --- build-time test-.js syntax gate (only when tests are part of this build) ---------
 # Each SystemTest's _automationCommands.js carries its macro inside a backtick-delimited JS
 # template literal; a stray backtick silently corrupts the file so the test never loads (with

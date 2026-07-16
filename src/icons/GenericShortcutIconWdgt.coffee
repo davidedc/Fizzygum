@@ -19,9 +19,6 @@ class GenericShortcutIconWdgt extends GenericCompositeIconWdgt
     # update layout
     @_invalidateLayout()
 
-  _compositeChildrenBuilt: ->
-    @icon? and @referenceArrowIcon?
-
   _reLayout: (newBoundsForThisLayout) ->
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout

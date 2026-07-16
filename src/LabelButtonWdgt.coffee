@@ -100,7 +100,6 @@ class LabelButtonWdgt extends ButtonWdgt
   # pass applies the new bounds, then _reLayoutSelf re-centres the label against
   # them (a no-op when not centered). This is why a caller resizing a centered
   # label button no longer needs an explicit re-centre.
-  # immediate-resize-relay-exempt: self-only -- base re-lay + @_reLayoutSelf (label recentre); no child placement of its own
   _reLayout: (newBoundsForThisLayout) ->
     Widget::_reLayout.call @, newBoundsForThisLayout
     @_reLayoutSelf()

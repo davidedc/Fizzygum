@@ -270,15 +270,6 @@ class ScrollPanelWdgt extends PanelWdgt
     @add aWdgt
 
 
-  # Self-protecting resize (INV-2 unified 2026-07-16; hook RETIRED for the schedule-valve the same
-  # day -- ordered-downwalk plan §9-N1): an immediate resize SCHEDULES my re-lay through the base
-  # Widget._applyExtent valve; my _reLayout (super + _reLayoutChildren, with the V1 absorption of
-  # the old hook's contents normalization into _positionAndResizeChildren) then re-fits contents +
-  # scrollbars, whichever route ran it. ListWdgt + the other scroll panels inherit this
-  # declaration (replaces this class's hand-copied _applyExtent override).
-  _placesChildrenInLayout: ->
-    true
-
   # SCROLL-POSITION POLICY, not a child re-lay (schedule-valve arc V1, 2026-07-16 — absorbs the old
   # _reLayoutMyChildrenAfterImmediateResize override, whose re-lay half is now the base default /
   # the engine's job): a REAL immediate resize of a text-wrapping panel re-pins its contents to my
@@ -482,14 +473,21 @@ class ScrollPanelWdgt extends PanelWdgt
       # the content; the seam only delivered a confirm pass that the §4.1 measure already makes a no-op.
       @contents._commitBounds newBounds
       @contents._reLayoutSelf()
-      # (schedule-valve V1) a DECLARED contents places its own children in its _reLayout (ToolPanelWdgt
-      # wraps its buttons -- the 2026-07-16 census-day bug, healed until now by the retired hook's
-      # polymorphic contents._applyExtent chain); committing its new frame via the non-notifying twin
-      # re-fits only its SELF layer, so schedule its full re-lay through the phase-valve -- in-pass the
-      # same flush's next round heals it, off-pass the wrapping settle does. The engine heals the
-      # interior; this arrange never re-lays it synchronously. (Also covers the WindowWdgt early-settle
-      # route, where the later engine re-visit sees no frame delta for the injection to act on.)
-      if @contents._placesChildrenInLayout()
+      # (schedule-valve V1; gate made STRUCTURAL by §9-N4) a contents WITH ITS OWN ARRANGE places its
+      # children in its _reLayout (ToolPanelWdgt wraps its buttons -- the 2026-07-16 census-day bug,
+      # healed until now by the retired hook's polymorphic contents._applyExtent chain); committing its
+      # new frame via the non-notifying twin re-fits only its SELF layer, so schedule its full re-lay
+      # through the phase-valve -- in-pass the same flush's next round heals it, off-pass the wrapping
+      # settle does. The engine heals the interior; this arrange never re-lays it synchronously. (Also
+      # covers the WindowWdgt early-settle route, where the later engine re-visit sees no frame delta
+      # for the injection to act on.) The gate is implementsDeferredLayout, NOT children.length: a
+      # base-_reLayout contents (the plain PanelWdgt of every ordinary scroll panel) gets nothing from
+      # a full re-lay beyond the _reLayoutSelf above, and this arrange is ALSO reached off-settle by
+      # the sanctioned synchronous content-change endpoints (public add/addMany -> _reLayoutChildren)
+      # and the drag-to-scroll step -- a children.length gate made every such call push the contents
+      # onto the end-of-cycle flush (the capstone gate caught 34 careless pushes across 10 scroll
+      # tests, N4 close; plan §11).
+      if @contents.implementsDeferredLayout()
         @contents._scheduleRelayoutRespectingPhase()
 
     # you'd think that if @contents.boundingBox().equals newBounds

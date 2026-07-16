@@ -473,15 +473,6 @@ class InspectorWdgt extends Widget
     cnts.considerCurrentTextAsReferenceText()
     @detail.checkIfTextContentWasModifiedFromTextAtStart()
   
-  # (ordered-downwalk plan §9-N3, 2026-07-16) Replaces the Stage-A-era exempt marker: its census
-  # boilerplate answered "who raw-_applyExtents me?", but Stage B3 changed the question to "can an
-  # ARRANGE move/resize me without my _reLayout running?" -- yes: I ship as WindowWdgt contents (every inspector window),
-  # so I can sit bypass-sized (_applyExtentBase) with my children laid for the OLD frame. Declaring
-  # puts me under the settle engine's frame-changed child re-lay (__reLayoutOneSettleNode injection)
-  # and the base Widget._applyExtent immediate-resize SCHEDULE (the phase-valve).
-  _placesChildrenInLayout: ->
-    true
-
   _reLayout: (newBoundsForThisLayout) ->
 
     if @_handleCollapsedStateShouldWeReturn() then return

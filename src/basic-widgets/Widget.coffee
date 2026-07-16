@@ -2125,17 +2125,23 @@ class Widget extends TreeNode
   # StretchableEditableWdgt / TrackingTransformFrameWdgt / ScrollPanelWdgt specialize it for their own,
   # non-composite reasons). The base is _applyExtentBase (exactly like _applyMoveBy -> _applyMoveByBase: ONE
   # body per behaviour, two names for dispatch; the bare twin is the override-BYPASSING base apply the
-  # top-down arrange uses) PLUS the SCHEDULE-VALVE (B4 hook retirement, ordered-downwalk plan §9-N1,
-  # 2026-07-16): a composite whose _reLayout places its own children declares that via the
-  # _placesChildrenInLayout capability below, and an immediate resize SCHEDULES its re-lay through the
-  # phase-valve -- in-pass the same flush's next round heals it, off-pass the wrapping settle / the
-  # end-of-cycle flush does, always before the next paint. This RETIRES the Stage-A SYNCHRONOUS hook
-  # (_reLayoutMyChildrenAfterImmediateResize -- itself the unification of the INV-2 self-protecting-resize
-  # idiom, docs/done/layout-regressions-2026-07-icons-plots-editghosts-plan.md, whose 9th forgotten
-  # hand-copy proved the opt-in unenforceable): the settle ENGINE is now the one healer of composite
-  # interiors on every route -- the ordered walk, the B3 frame-changed injection (the bypass path), and
-  # this valve (the immediate path). check-composite-relay.js still makes forgetting to declare a build
-  # failure. Scheduling from an apply is the DELIBERATE, SANCTIONED exception to rule [E]'s schedule ban
+  # top-down arrange uses) PLUS the SCHEDULE-VALVE (B4 hook retirement §9-N1, gate made STRUCTURAL by
+  # §9-N4, ordered-downwalk plan, 2026-07-16): an immediate resize of any widget WITH CHILDREN schedules
+  # its re-lay through the phase-valve -- in-pass the same flush's next round heals it, off-pass the
+  # wrapping settle / the end-of-cycle flush does, always before the next paint. No declared capability
+  # gates this (N4 deleted _placesChildrenInLayout + its lint): "has children" is the structural fact --
+  # a childless widget's COMPLETE heal is _reLayoutSelf, which _applyExtentBase fires on every real
+  # commit, so scheduling it would buy nothing (measured: the ungated variant adds ~12k schedules per
+  # suite run for zero healing, incl. 142 end-of-cycle CaretWdgt scroll-follow re-lays -- plan §11).
+  # This valve RETIRED the Stage-A SYNCHRONOUS hook (_reLayoutMyChildrenAfterImmediateResize -- itself
+  # the unification of the INV-2 self-protecting-resize idiom,
+  # docs/done/layout-regressions-2026-07-icons-plots-editghosts-plan.md, whose 9th forgotten hand-copy
+  # proved the opt-in unenforceable): the settle ENGINE is the one healer of composite interiors on
+  # every route -- the ordered walk, the B3 frame-changed injection (the bypass path, also ungated by
+  # N4), and this valve (the immediate path). A ctor that _applyExtents a placeholder size does so
+  # BEFORE its first child add (verified per class, §11), so the gate is inert mid-construction and the
+  # ctor-tail settle lays the built children out -- the retired _compositeChildrenBuilt guard's job.
+  # Scheduling from an apply is the DELIBERATE, SANCTIONED exception to rule [E]'s schedule ban
   # (check-layering.js names exactly this line): the valve enqueues SELF only (no climb in-pass),
   # converges (a re-lay's own re-commit hits the equal-extent top guard, so no re-enqueue), and never
   # runs feature code synchronously. Mid-re-lay self-applies (base _reLayout applies its own new extent
@@ -2149,25 +2155,8 @@ class Widget extends TreeNode
     if aPoint.equals @extent()
       return
     @_applyExtentBase aPoint
-    if @_placesChildrenInLayout() and @_compositeChildrenBuilt()
+    if @children.length != 0
       @_scheduleRelayoutRespectingPhase()
-
-  # Capability query (assessment §6.1 rule 6): "my _reLayout places my own children -- schedule my re-lay
-  # when an immediate resize commits my frame (the valve above), and watch my frame under the settle
-  # engine's B3 injection". Composites answer true, possibly by inheritance (WindowWdgt through
-  # SimpleVerticalStackPanelWdgt; the icon subclasses through GenericCompositeIconWdgt). Enforced by
-  # check-composite-relay.js: a _reLayout-overriding class must declare this or carry an explicit
-  # immediate-resize-relay-exempt marker.
-  _placesChildrenInLayout: ->
-    false
-
-  # Construction-order guard for the composite-child schedule: a composite that _applyExtents a placeholder
-  # size from _buildAndConnectChildrenNoSettle BEFORE its last child is built answers false then (the
-  # trailing _invalidateLayout/settle lays the children out once, when they all exist). Base: any children
-  # are always "built". (Under the schedule-valve a premature enqueue would heal at the build-tail settle
-  # anyway -- the guard is kept as cheap ctor hygiene, and N4 revisits it.)
-  _compositeChildrenBuilt: ->
-    true
 
   # high-level geometry-change API,
   # you don't actually change the geometry right away,

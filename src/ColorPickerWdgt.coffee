@@ -48,25 +48,9 @@ class ColorPickerWdgt extends Widget
 
   _reactToBeingAdded: (whereTo, beingDropped) ->
 
-  # Construction-order guard for the composite-child schedule (the WidgetHolderWithCaptionWdgt
-  # pattern): my ctor _applyExtents 80x80 BEFORE _buildAndConnectChildren, so the immediate-resize
-  # valve must stay inert until my palettes/feedback exist (the trailing _invalidateLayout/settle
-  # lays them out once, when they all do).
-  _compositeChildrenBuilt: ->
-    @feedback?
-
   getColor: ->
     @feedback.color
   
-
-  # (ordered-downwalk plan §9-N3, 2026-07-16) Replaces the Stage-A-era exempt marker: its census
-  # boilerplate answered "who raw-_applyExtents me?", but Stage B3 changed the question to "can an
-  # ARRANGE move/resize me without my _reLayout running?" -- yes: I am desktop-creatable and droppable into windows/stacks,
-  # so I can sit bypass-sized (_applyExtentBase) with my children laid for the OLD frame. Declaring
-  # puts me under the settle engine's frame-changed child re-lay (__reLayoutOneSettleNode injection)
-  # and the base Widget._applyExtent immediate-resize SCHEDULE (the phase-valve).
-  _placesChildrenInLayout: ->
-    true
 
   _reLayout: (newBoundsForThisLayout) ->
 

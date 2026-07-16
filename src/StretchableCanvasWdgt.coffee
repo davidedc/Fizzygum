@@ -98,12 +98,6 @@ class StretchableCanvasWdgt extends CanvasWdgt
     @backBufferContext.useLogicalPixelsUntilRestore()
 
 
-  # Self-protecting resize (INV-2, unified 2026-07-16): the base Widget._applyExtent runs the
-  # hook below when an immediate resize commits my frame (replaces this class's hand-copied
-  # _applyExtent override).
-  _placesChildrenInLayout: ->
-    true
-
   # (schedule-valve arc V2, 2026-07-16 -- absorbs the old _reLayoutMyChildrenAfterImmediateResize
   # override) Reconcile my paint buffers to the COMMITTED extent. _applyExtentBase calls
   # _reLayoutSelf on every real extent commit, so this now covers EVERY resize route -- the

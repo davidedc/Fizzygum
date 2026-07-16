@@ -1248,15 +1248,17 @@ class WorldWdgt extends PanelWdgt
       # BasementWdgt instance (scrollPanel ~100px short after the basement opens). The predicate is
       # PER-CHILD frame delta (not my own frame delta, which the plan sketched): a divider drag
       # redistributes children while MY frame stays put, so gating on me would miss it. Snapshot
-      # only the _placesChildrenInLayout children (the Stage-A capability names exactly the classes
-      # whose _reLayout places children); skip already-invalid ones (the walk/fallback settles them
+      # EVERY valid child (§9-N4, 2026-07-16: the _placesChildrenInLayout capability gate is GONE —
+      # the engine guarantees every arrange-moved child a re-lay, no per-class declaration; a moved
+      # LEAF's re-visit is a no-op via the equal-extent top guard, measured ~27 extra idempotent
+      # re-lays per test, plan §11); skip already-invalid ones (the walk/fallback settles them
       # this flush anyway). Re-laying a CONVERGED child is idempotent (the order-independent
       # fixpoint), so extra visits are pixel-neutral; a STALE one heals — the deliberate behaviour
       # fix. Runs through this same method recursively, so heals cascade, the up-edge applies
       # (no-op unless the child's OWN _reLayout moved its frame — an arrange-placed child re-applies
       # the same frame), the error containment applies, and the RECALC counter bounds it.
       watchedChildren = nil
-      for c in node.children when c._placesChildrenInLayout?() and c.layoutIsValid
+      for c in node.children when c.layoutIsValid
         (watchedChildren ?= []).push [c, c.left(), c.top(), c.width(), c.height()]
       preL = node.left(); preT = node.top(); preW = node.width(); preH = node.height()
       node._reLayout()

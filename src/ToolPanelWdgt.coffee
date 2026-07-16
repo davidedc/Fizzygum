@@ -77,16 +77,6 @@ class ToolPanelWdgt extends PanelWdgt
 
       @_invalidateLayout()
 
-  # Self-protecting resize (INV-2, declared 2026-07-16 as a BUG FIX, not code motion): my
-  # _reLayout WRAPS my tool buttons by the available width, and I live as a ScrollPanelWdgt's
-  # @contents -- which the scroll panel's immediate-resize hook sizes with the polymorphic
-  # @contents._applyExtent. Without this declaration that resize never re-wrapped me: the
-  # staleness-census oracle (2026-07-16) caught my buttons still stacked in a COLUMN wrapped
-  # for a ~40px-wide panel inside a 610px-wide frame after a toolbar-window resize. Declaring
-  # routes that resize through the base's child re-lay, so the buttons re-wrap.
-  _placesChildrenInLayout: ->
-    true
-
   _reLayout: (newBoundsForThisLayout) ->
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout

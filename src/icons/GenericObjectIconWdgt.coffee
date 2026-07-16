@@ -20,9 +20,6 @@ class GenericObjectIconWdgt extends GenericCompositeIconWdgt
     # update layout
     @_invalidateLayout()
 
-  _compositeChildrenBuilt: ->
-    @icon? and @objectIcon?
-
   _reLayout: (newBoundsForThisLayout) ->
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
